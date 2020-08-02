@@ -12,6 +12,25 @@ PATCH_RELEASES_DIRECTORY="${ROOT}/cli/patch_releases"
 PATCH_RELEASES_GCLOUD_BUCKET="gs://hasura-oss-cli-cdn/test-releases"
 OUTPUT_DIR="${ROOT}/cli/_output"
 
+# install required tools
+if ! command -v hub&> /dev/null
+then
+  cd /tmp
+
+  echo "installing hub"
+  curl -LO https://github.com/github/hub/releases/download/v2.14.2/hub-linux-amd64-2.14.2.tgz
+  tar -xvf hub-linux-amd64-2.14.2.tgz
+  mv hub-linux-amd64-2.14.2/bin/hub /usr/bin/hub
+
+  cd -
+fi
+
+if ! command -v jq&> /dev/null
+then
+  echo "installing jq"
+  apt-get -qq update && apt-get -qq install -y jq
+fi
+
 create_patch_release_file() {
   PATCH_NUMBER=1
 
@@ -35,12 +54,6 @@ create_patch_release_file() {
 }
 
 is_patch_release() {
-  if ! command -v hub&> /dev/null
-  then
-    echo "installing hub"
-    apt -qq update && apt -qq install -y hub
-  fi
-
   # check if a Github PR is a valid candidate for a patch release
   # this function can take an argument
   # which is expected to be the PR number
