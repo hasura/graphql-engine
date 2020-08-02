@@ -10,7 +10,7 @@ import { TypedInput } from './TypedInput';
 const getColumnInfo = (
   col: TableColumn,
   prevValue?: unknown,
-  clone?: Record<string, any>
+  clone?: Record<string, unknown>
 ) => {
   const isEditing = prevValue !== undefined;
 
