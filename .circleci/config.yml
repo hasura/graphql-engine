@@ -407,7 +407,15 @@ jobs:
         working_directory: cli
         command: |
           # if a patch release build and push assets, otherwise do a normal build
-          (scripts/patch-releases.sh is_patch_release && scripts/patch_releases build_and_push_patch_release) || ( make build && make compress)
+          scripts/patch-releases.sh is_patch_release 
+          if [ $? -eq 0 ]; then
+            echo building and pushing patch release
+            scripts/patch_releases build_and_push_patch_release
+          else
+            echo building cli
+            make build && make compress
+          fi
+          
           make ci-copy-binary
     - store_artifacts:
         path: /build/_cli_output
