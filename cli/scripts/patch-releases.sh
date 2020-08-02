@@ -86,8 +86,8 @@ is_patch_release() {
   FILE_REGEX="^cli\/patch_releases\/v${SEMVER_REGEX}\.md$"
 
   echo "getting details of PR"
-  NO_OF_FILES=$( hub api ${GITHUB_API_BASE_URL}/${PR_NUMBER}/files | jq '. | length')
-  PR_FILES=$(hub api "${GITHUB_API_BASE_URL}/${PR_NUMBER}/files" | jq)
+  PR_FILES=$(hub api "${GITHUB_API_BASE_URL}/${PR_NUMBER}/files")
+  NO_OF_FILES=$(echo "${PR_FILES}" | jq '. | length')
   echo ${NO_OF_FILES} ${PR_FILES}
   # validate number of changed files
   if [[ ! $NO_OF_FILES -eq 1 ]]
