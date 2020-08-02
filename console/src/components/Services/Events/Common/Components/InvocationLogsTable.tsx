@@ -118,9 +118,9 @@ const InvocationLogsTable: React.FC<Props> = props => {
             }}
           >
             {isExpanded ? (
-              <i className={'fa fa-expand'} />
+              <i className="fa fa-expand" />
             ) : (
-              <i className={'fa fa-compress'} />
+              <i className="fa fa-compress" />
             )}
           </Button>
         );
