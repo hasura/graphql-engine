@@ -97,7 +97,7 @@ IS 'trigger to set value of column "${columnName}" to current timestamp on row u
 const getFreqUsedColDisplayInfo = (c: FrequentlyUsedColumn) => {
   const title = c.name;
 
-  const typeText = c.typeText + '; ';
+  const typeText = `${c.typeText}; `;
   const defaultText =
     c.defaultText || c.default
       ? `default: ${c.defaultText || c.default}; `
