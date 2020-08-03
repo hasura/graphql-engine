@@ -400,7 +400,8 @@ const HasuraNotifications: React.FC<Props> = ({
     if (
       readValue === 'all' ||
       readValue === 'default' ||
-      readValue === 'error'
+      readValue === 'error' ||
+      readValue === []
     ) {
       // after `Mark all as read` or no new notifications case
       numberNotifications = 0;
