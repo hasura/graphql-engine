@@ -7,12 +7,3 @@ Date:   Fri Jul 31 13:50:32 2020 +0200
     server: Fix compiler warning caused by GHC upgrade (#5489)
 
     Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
-
-commit 091fd86538ccf03da04eb6c8d30fdeefc119844f
-Merge: 7045fffef 40f87487e
-Author: Brandon Simmons <brandon@hasura.io>
-Date:   Thu Jul 30 15:01:47 2020 -0400
-
-    Merge pull request #5474 from jberryman/5363-default-bounded-plan-cache
-
-    Support only bounded plan cache, with default of 4000
