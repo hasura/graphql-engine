@@ -123,32 +123,30 @@ const FrequentlyUsedColumnSelector = ({
   action = null,
   dispatch = null,
 }: FrequentlyUsedColumnSelectorProps) => {
-  const frequentlyUsedColumnsOptions = () => {
-    return frequentlyUsedColumns
-      .filter(fuc => !action || fuc.validFor.includes(action))
-      .map(fuc => {
-        const { title, subTitle } = getFreqUsedColDisplayInfo(fuc);
-        return {
-          content: (
+  const frequentlyUsedColumnsOptions = frequentlyUsedColumns
+    .filter(fuc => !action || fuc.validFor.includes(action))
+    .map(fuc => {
+      const { title, subTitle } = getFreqUsedColDisplayInfo(fuc);
+      return {
+        content: (
+          <div>
             <div>
-              <div>
-                <b>{title}</b>
-              </div>
-              <div>{subTitle}</div>
+              <b>{title}</b>
             </div>
-          ),
-          onClick: () => (dispatch ? dispatch(onSelect(fuc)) : onSelect(fuc)),
-        };
-      });
-  };
+            <div>{subTitle}</div>
+          </div>
+        ),
+        onClick: () => (dispatch ? dispatch(onSelect(fuc)) : onSelect(fuc)),
+      };
+    });
 
   return (
     <Dropdown
-      testId={'frequently-used-columns'}
-      options={frequentlyUsedColumnsOptions()}
+      testId="frequently-used-columns"
+      options={frequentlyUsedColumnsOptions}
       position="bottom"
-      key={'frequently-used-columns'}
-      keyPrefix={'frequently-used-columns'}
+      key="frequently-used-columns"
+      keyPrefix="frequently-used-columns"
     >
       <Button color="white" size="xs">
         + Frequently used columns
