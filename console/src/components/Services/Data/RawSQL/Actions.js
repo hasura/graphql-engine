@@ -112,32 +112,32 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
         dispatch(fetchTrackedFunctions());
       },
       err => {
-        const parsedErrorMsg = err;
-        parsedErrorMsg.message = JSON.parse(err.message);
+        const title = 'SQL Execution Failed';
         dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
-        dispatch(
-          showErrorNotification(
-            'SQL execution failed!',
-            'Something is wrong. Received an invalid response json.',
-            parsedErrorMsg
-          )
-        );
-        dispatch({
-          type: REQUEST_ERROR,
-          data: 'Something is wrong. Received an invalid response json.',
-        });
-        console.err('RunSQL error: ', err);
+        dispatch({ type: REQUEST_ERROR, data: err });
+        if (isMigration) {
+          dispatch(handleMigrationErrors(title, err));
+        } else {
+          dispatch(showErrorNotification(title, err.code, err));
+        }
       }
     )
     .catch(errorMsg => {
-      const title = 'SQL Execution Failed';
+      const parsedErrorMsg = errorMsg;
+      parsedErrorMsg.message = JSON.parse(errorMsg.message);
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: errorMsg });
-      dispatch({ type: REQUEST_ERROR, data: errorMsg });
-      if (isMigration) {
-        dispatch(handleMigrationErrors(title, errorMsg));
-      } else {
-        dispatch(showErrorNotification(title, errorMsg.code, errorMsg));
-      }
+      dispatch(
+        showErrorNotification(
+          'SQL execution failed!',
+          'Something is wrong. Received an invalid response json.',
+          parsedErrorMsg
+        )
+      );
+      dispatch({
+        type: REQUEST_ERROR,
+        data: 'Something is wrong. Received an invalid response json.',
+      });
+      console.err('RunSQL error: ', errorMsg);
     });
 };
 
