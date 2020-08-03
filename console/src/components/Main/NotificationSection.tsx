@@ -30,50 +30,53 @@ const getDateString = (date: NotificationDate) => {
 
 // TODO: Perhaps have to add a close/hide button for some updates
 
-const Update: React.FC<ConsoleNotification> = ({
-  subject,
-  content,
-  type,
-  is_active = true,
-  ...props
-}) => {
-  if (!is_active) {
-    return null;
-  }
+interface ConsoleUpdateProps extends ConsoleNotification {
+  children?: React.ReactNode;
+}
 
-  return (
-    <Box className={styles.updateBox}>
-      <Flex px="25px" justifyContent="space-between">
-        <Flex justifyContent="space-between" bg="white">
-          {type ? <Badge type={type} mr="12px" /> : null}
-          <Heading as="h4" color="#1cd3c6" fontSize="16px">
-            {subject}
-          </Heading>
+const Update = React.forwardRef<HTMLDivElement, ConsoleUpdateProps>(
+  ({ subject, content, type, is_active = true, ...props }, forwardedRef) => {
+    if (!is_active) {
+      return null;
+    }
+    return (
+      <Box
+        className={styles.updateBox}
+        ref={forwardedRef}
+        id={props?.id ? `${props.id}` : subject}
+      >
+        <Flex px="25px" justifyContent="space-between">
+          <Flex justifyContent="space-between" bg="white">
+            {type ? <Badge type={type} mr="12px" /> : null}
+            <Heading as="h4" color="#1cd3c6" fontSize="16px">
+              {subject}
+            </Heading>
+          </Flex>
+          <Text color="grey" fontSize={13} fontWeight="bold">
+            {props?.start_date ? getDateString(props.start_date) : null}
+          </Text>
         </Flex>
-        <Text color="grey" fontSize={13} fontWeight="bold">
-          {props?.start_date ? getDateString(props.start_date) : null}
-        </Text>
-      </Flex>
-      <Flex pt="4px">
-        <Text fontSize={15} fontWeight="normal" px={25} py={2}>
-          {content}
-          <br />
-          {props.external_link ? (
-            <div className={styles.linkContainer}>
-              <a
-                href={props.external_link}
-                className={styles.notificationExternalLink}
-              >
-                Click here &rarr;
-              </a>
-            </div>
-          ) : null}
-          {props.children}
-        </Text>
-      </Flex>
-    </Box>
-  );
-};
+        <Flex pt="4px">
+          <Text fontSize={15} fontWeight="normal" px={25} py={2}>
+            {content}
+            <br />
+            {props.external_link ? (
+              <div className={styles.linkContainer}>
+                <a
+                  href={props.external_link}
+                  className={styles.notificationExternalLink}
+                >
+                  Click here &rarr;
+                </a>
+              </div>
+            ) : null}
+            {props?.children ? props.children : null}
+          </Text>
+        </Flex>
+      </Box>
+    );
+  }
+);
 
 type NotificationProps = {
   data: ConsoleNotification[];
@@ -83,6 +86,7 @@ type NotificationProps = {
   onClickMarkAllAsRead: () => void;
   disableMarkAllAsReadBtn: boolean;
   onClickViewMore: () => void;
+  updateRefs: Record<string, React.RefObject<HTMLDivElement>>;
 };
 
 type PreReleaseProps = Pick<NotificationProps, 'optOutCallback'>;
@@ -119,6 +123,7 @@ const VersionUpdateNotification: React.FC<VersionUpdateNotificationProps> = ({
       type="version update"
       content={`Hey There! There's a new server version ${latestVersion} available.`}
       start_date={Date.now()}
+      ref={null}
     >
       <a
         href={
@@ -205,6 +210,7 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
       disableMarkAllAsReadBtn,
       onClickMarkAllAsRead,
       onClickViewMore,
+      updateRefs,
     },
     forwardedRef
   ) => (
@@ -248,6 +254,8 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
         {data.length &&
           data.map(({ subject, content, is_active, ...props }) => (
             <Update
+              ref={props?.id ? updateRefs[props.id] : undefined}
+              id={props.id}
               key={subject}
               subject={subject}
               content={content}
@@ -358,9 +366,51 @@ const HasuraNotifications: React.FC<Props> = ({
     false
   );
   const [latestVersion, setLatestVersion] = React.useState(props.serverVersion);
-  const dropDownRef = React.useRef(null);
+  const dropDownRef = React.useRef<HTMLDivElement>(null);
   const wrapperRef = React.useRef(null);
-  useOnClickOutside([dropDownRef, wrapperRef], closeDropDown);
+  const updateRefs = consoleNotifications.reduce(
+    (
+      acc: Record<string, React.RefObject<HTMLDivElement>>,
+      value: ConsoleNotification
+    ) => {
+      if (value.id) {
+        acc[value.id] = React.createRef();
+      }
+      return acc;
+    },
+    {}
+  );
+  const updateRefObjects = Object.values(updateRefs);
+  const observerCallback = (entries: IntersectionObserverEntry[]) => {
+    // TODO: change this callback to
+    // 1. change the read count
+    // 2. update the read [] in console_state within the DB
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        console.log(entry.target.id);
+      }
+    });
+  };
+  const observer = new IntersectionObserver(observerCallback, {
+    root: dropDownRef.current,
+    threshold: [1],
+  });
+
+  React.useEffect(() => {
+    updateRefObjects.forEach(value => {
+      if (value.current) {
+        observer.observe(value.current);
+      }
+    });
+
+    // return () => {
+    //   updateRefObjects.forEach(value => {
+    //     if (value.current) {
+    //       observer.unobserve(value.current);
+    //     }
+    //   });
+    // };
+  }, [updateRefObjects, updateRefs, observer]);
 
   React.useEffect(() => {
     const [versionUpdateCheck, latestReleasedVersion] = checkVersionUpdate(
@@ -408,6 +458,8 @@ const HasuraNotifications: React.FC<Props> = ({
     }
   }
 
+  useOnClickOutside([dropDownRef, wrapperRef], closeDropDown);
+
   return (
     <>
       <div
@@ -428,6 +480,7 @@ const HasuraNotifications: React.FC<Props> = ({
         onClickMarkAllAsRead={onClickMarkAllAsRead}
         onClickViewMore={onClickViewMore}
         disableMarkAllAsReadBtn={!numberNotifications}
+        updateRefs={updateRefs}
       />
     </>
   );
