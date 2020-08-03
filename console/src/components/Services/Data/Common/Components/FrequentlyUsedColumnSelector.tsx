@@ -2,7 +2,7 @@ import React from 'react';
 import Dropdown from '../../../../Common/Dropdown/Dropdown';
 import Button from '../../../../Common/Button/Button';
 import { Dispatch } from '../../../../../types';
-import { Column } from '../../../../../shared/utils/postgresColumnTypes';
+import { Column } from '../../../../../utils/postgresColumnTypes';
 
 type ColumnAction = 'add' | 'modify';
 interface FrequentlyUsedColumn {
