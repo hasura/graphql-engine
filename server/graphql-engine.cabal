@@ -110,6 +110,8 @@ library
                      , uuid
                      , vector
                      , vector-builder
+                     , binary
+                     , base16-bytestring
 
                      -- Logging related
                      , network
