@@ -243,8 +243,6 @@ class ModifyTable extends React.Component {
               columnDefaultFunctions={columnDefaultFunctions}
               customColumnNames={getTableCustomColumnNames(table)}
             />
-            <hr />
-            <h4 className={styles.subheading_text}>Add a new column</h4>
             <ColumnCreator
               dispatch={dispatch}
               tableName={tableName}
