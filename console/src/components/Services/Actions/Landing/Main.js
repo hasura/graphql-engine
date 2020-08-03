@@ -10,8 +10,6 @@ import styles from '../Actions.scss';
 
 // import TryItOut from '../../Common/Landing/TryItOut';
 
-const actionsArchDiagram = `${globals.assetsPath}/common/img/actions.png`;
-
 class Landing extends React.Component {
   render() {
     const { readOnlyMode } = this.props;
@@ -22,10 +20,10 @@ class Landing extends React.Component {
         <div>
           <TopicDescription
             title="What are Actions?"
-            // imgUrl={`${globals.assetsPath}/common/img/remote_schema.png`} // TODO: update image & description
-            imgUrl={actionsArchDiagram}
+            imgUrl={`${globals.assetsPath}/common/img/actions.png`}
             imgAlt="Actions"
             description="Actions are custom queries or mutations that are resolved via HTTP handlers. Actions can be used to carry out complex data validations, data enrichment from external sources or execute just about any custom business logic."
+            knowMoreHref="https://hasura.io/docs/1.0/graphql/manual/actions/index.html"
           />
           <hr className={styles.clear_fix} />
         </div>
