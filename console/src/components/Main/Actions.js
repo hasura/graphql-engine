@@ -82,7 +82,10 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
 
   let lastReadAllTimeStamp;
 
-  if (consoleStateDB.console_notifications) {
+  if (
+    consoleStateDB.console_notifications &&
+    consoleStateDB.console_notifications.read === 'all'
+  ) {
     lastReadAllTimeStamp = consoleStateDB.console_notifications.date;
   }
 
