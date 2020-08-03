@@ -86,7 +86,7 @@ const RedeliverEvent: React.FC<Props> = ({ dispatch, eventId }) => {
                 null,
                 4
               )}
-              minLines={10}
+              minLines={8}
               maxLines={30}
               width="100%"
               showPrintMargin={false}
