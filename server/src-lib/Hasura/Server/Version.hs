@@ -93,7 +93,6 @@ consoleAssetsVersion = case currentVersion of
     getChannelFromPreRelease :: String -> Maybe String
     getChannelFromPreRelease sv = sv =~~ ("^([a-z]+)"::String)
 
-
     getTextFromId :: V.Identifier -> Maybe Text
     getTextFromId i = Just i ^? (toTextualM . V._Textual)
       where

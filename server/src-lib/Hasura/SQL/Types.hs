@@ -322,7 +322,7 @@ type QualifiedFunction = QualifiedObject FunctionName
 
 newtype PGDescription
   = PGDescription { getPGDescription :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Q.FromCol, NFData, Cacheable)
+  deriving (Show, Eq, FromJSON, ToJSON, Q.FromCol, NFData, Cacheable, Hashable)
 
 newtype PGCol
   = PGCol { getPGColTxt :: T.Text }

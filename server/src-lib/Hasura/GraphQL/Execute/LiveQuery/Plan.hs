@@ -25,6 +25,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Plan
   ) where
 
 import           Hasura.Prelude
+import           Hasura.Session
 
 import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.Extended                    as J
@@ -57,7 +58,6 @@ import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Query
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.RQL.Types
-import           Hasura.Session
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -260,7 +260,7 @@ data LiveQueryPlan
   = LiveQueryPlan
   { _lqpParameterizedPlan :: !ParameterizedLiveQueryPlan
   , _lqpVariables         :: !CohortVariables
-  }
+  } deriving Show
 
 data ParameterizedLiveQueryPlan
   = ParameterizedLiveQueryPlan

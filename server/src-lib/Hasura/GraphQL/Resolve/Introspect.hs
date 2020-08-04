@@ -14,6 +14,7 @@ import qualified Hasura.SQL.Types                     as S
 import qualified Hasura.SQL.Value                     as S
 import qualified Language.GraphQL.Draft.Syntax        as G
 
+import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Validate.Context
@@ -232,6 +233,7 @@ dummyReadIncludeDeprecated fld = do
       "enumValues" -> readIncludeDeprecated subFld
       _            -> return False
 
+
 -- 4.5.2.6
 inputObjR
   :: ( MonadReader r m, Has TypeMap r
@@ -336,7 +338,7 @@ inputValueR fld (InpValInfo descM n defM ty) =
     "name"         -> retJ $ G.unName n
     "description"  -> retJ $ fmap G.unDescription descM
     "type"         -> J.toJSON <$> gtypeR ty subFld
-    -- TODO(not in PDV): figure out what the spec means by 'string encoding'
+    -- TODO: figure out what the spec means by 'string encoding'
     "defaultValue" -> retJ $ pPrintValueC <$> defM
     _              -> return J.Null
 
@@ -396,9 +398,9 @@ schemaR fld =
     "__typename"   -> retJT "__Schema"
     "types"        -> fmap J.toJSON $ mapM (namedTypeR' subFld) $
                       sortOn getNamedTy $ Map.elems tyMap
-    "queryType"    -> J.toJSON <$> namedTypeR (G.NamedType "query_root") subFld
-    "mutationType" -> typeR' "mutation_root" subFld
-    "subscriptionType" -> typeR' "subscription_root" subFld
+    "queryType"    -> J.toJSON <$> namedTypeR queryRootNamedType subFld
+    "mutationType" -> typeR' mutationRootNamedType subFld
+    "subscriptionType" -> typeR' subscriptionRootNamedType subFld
     "directives"   -> J.toJSON <$> mapM (directiveR subFld)
                       (sortOn _diName defaultDirectives)
     _              -> return J.Null
@@ -408,15 +410,15 @@ typeR
   => Field -> m J.Value
 typeR fld = do
   name <- asPGColText =<< getArg args "name"
-  typeR' (G.Name name) fld
+  typeR' (G.NamedType $ G.Name name) fld
   where
     args = _fArguments fld
 
 typeR'
-  :: (MonadReader r m, Has TypeMap r, MonadError QErr m)
-  => G.Name -> Field -> m J.Value
+  :: (MonadReader r m, Has TypeMap r, MonadError QErr m, MonadReusability m)
+  => G.NamedType -> Field -> m J.Value
 typeR' n fld = do
   tyMap <- asks getter
-  case Map.lookup (G.NamedType n) tyMap of
+  case Map.lookup n tyMap of
     Nothing     -> return J.Null
     Just tyInfo -> J.Object <$> namedTypeR' fld tyInfo

@@ -96,11 +96,15 @@ library
   import: common-all
   hs-source-dirs:      src-lib
   build-depends:       base
+                     , bifunctors
+                     , witherable
+                     , validation
                      , lifted-base
                      , pg-client
                      , validation
                      , text
                      , text-builder >= 0.6
+                     , vector-builder
                      , bytestring
                      , postgresql-libpq
                      , mtl
@@ -139,6 +143,7 @@ library
                      -- Encoder related
                      , uuid
                      , vector
+                     , vector-builder
 
                      -- Logging related
                      , network
@@ -252,14 +257,29 @@ library
                      -- scheduled triggers
                      , cron >= 0.6.2
 
+                     , random
+                     , mmorph
+                     , http-api-data
+                     , lens-aeson
+                     , safe
+
+                     , semigroups >= 0.19.1
+
+                     -- scheduled triggers
+                     , cron >= 0.6.2
+
   exposed-modules:     Control.Arrow.Extended
                      , Control.Arrow.Trans
                      , Control.Concurrent.Extended
                      , Control.Lens.Extended
                      , Control.Monad.Stateless
                      , Control.Monad.Unique
-
-                     -- -- exposed for tests
+                     , Data.Aeson.Extended
+                     , Data.Aeson.Ordered
+                     , Data.Environment
+                     , Data.HashMap.Strict.Extended
+                     , Data.HashMap.Strict.InsOrd.Extended
+                     , Data.List.Extended
                      , Data.Parser.CacheControl
                      , Data.Parser.Expires
                      , Data.Parser.JSONPath
@@ -288,7 +308,6 @@ library
                      , Hasura.Server.API.PGDump
                      , Hasura.Prelude
 
-                     , Data.Aeson.Ordered
                      , Hasura.EncJSON
                      , Hasura.GraphQL.Execute.Query
                      , Hasura.GraphQL.Logging
@@ -446,13 +465,8 @@ library
                      , Hasura.Eventing.EventTrigger
                      , Hasura.Eventing.ScheduledTrigger
                      , Hasura.Eventing.Common
-                     , Data.Aeson.Extended
                      , Data.GADT.Compare.Extended
-                     , Data.HashMap.Strict.Extended
-                     , Data.HashMap.Strict.InsOrd.Extended
-                     , Data.List.Extended
                      , Data.Tuple.Extended
-                     , Data.Environment
                      , Hasura.SQL.DML
                      , Hasura.SQL.Error
                      , Hasura.SQL.GeoJSON

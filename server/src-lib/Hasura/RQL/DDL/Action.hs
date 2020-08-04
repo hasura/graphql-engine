@@ -35,7 +35,6 @@ import qualified Data.Aeson.Casing             as J
 import qualified Data.Aeson.TH                 as J
 import qualified Data.Environment              as Env
 import qualified Data.HashMap.Strict           as Map
-
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 
@@ -339,15 +338,15 @@ runCreateActionPermission
   => CreateActionPermission -> m EncJSON
 runCreateActionPermission createActionPermission = do
   actionInfo <- getActionInfo actionName
-  void $ onJust (Map.lookup role $ _aiPermissions actionInfo) $ const $
-    throw400 AlreadyExists $ "permission for role " <> role
+  void $ onJust (Map.lookup roleName $ _aiPermissions actionInfo) $ const $
+    throw400 AlreadyExists $ "permission for role " <> roleName
     <<> " is already defined on " <>> actionName
   persistCreateActionPermission createActionPermission
-  buildSchemaCacheFor $ MOActionPermission actionName role
+  buildSchemaCacheFor $ MOActionPermission actionName roleName
   pure successMsg
   where
     actionName = _capAction createActionPermission
-    role = _capRole createActionPermission
+    roleName = _capRole createActionPermission
 
 persistCreateActionPermission :: (MonadTx m) => CreateActionPermission -> m ()
 persistCreateActionPermission CreateActionPermission{..}= do
@@ -369,15 +368,15 @@ runDropActionPermission
   => DropActionPermission -> m EncJSON
 runDropActionPermission dropActionPermission = do
   actionInfo <- getActionInfo actionName
-  void $ onNothing (Map.lookup role $ _aiPermissions actionInfo) $
+  void $ onNothing (Map.lookup roleName $ _aiPermissions actionInfo) $
     throw400 NotExists $
-    "permission for role: " <> role <<> " is not defined on " <>> actionName
-  liftTx $ deleteActionPermissionFromCatalog actionName role
-  buildSchemaCacheFor $ MOActionPermission actionName role
+    "permission for role: " <> roleName <<> " is not defined on " <>> actionName
+  liftTx $ deleteActionPermissionFromCatalog actionName roleName
+  buildSchemaCacheFor $ MOActionPermission actionName roleName
   return successMsg
   where
     actionName = _dapAction dropActionPermission
-    role = _dapRole dropActionPermission
+    roleName = _dapRole dropActionPermission
 
 deleteActionPermissionFromCatalog :: ActionName -> RoleName -> Q.TxE QErr ()
 deleteActionPermissionFromCatalog actionName role =

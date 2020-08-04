@@ -54,7 +54,6 @@ import qualified Data.HashMap.Strict                      as Map
 import qualified Data.Time.Clock                          as Clock
 import qualified Data.UUID                                as UUID
 import qualified Data.UUID.V4                             as UUID
---import qualified Language.GraphQL.Draft.Syntax            as G
 import qualified Database.PG.Query                        as Q
 import qualified ListT
 import qualified StmContainers.Map                        as STMMap

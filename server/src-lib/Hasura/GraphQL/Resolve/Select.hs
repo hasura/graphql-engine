@@ -19,12 +19,14 @@ import           Data.Parser.JSONPath
 import           Hasura.Prelude
 
 import qualified Data.Aeson                           as J
+import qualified Data.Aeson.Extended                  as J
 import qualified Data.Aeson.Internal                  as J
 import qualified Data.ByteString.Lazy                 as BL
 import qualified Data.HashMap.Strict                  as Map
 import qualified Data.HashMap.Strict.InsOrd           as OMap
 import qualified Data.List.NonEmpty                   as NE
 import qualified Data.Sequence                        as Seq
+import qualified Data.Sequence.NonEmpty               as NESeq
 import qualified Data.Text                            as T
 import qualified Language.GraphQL.Draft.Syntax        as G
 
@@ -45,11 +47,11 @@ import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-
-jsonPathToColExp :: (MonadError QErr m) => T.Text -> m S.SQLExp
+jsonPathToColExp :: (MonadError QErr m) => T.Text -> m (Maybe S.SQLExp)
 jsonPathToColExp t = case parseJSONPath t of
   Left s       -> throw400 ParseFailed $ T.pack $ "parse json path error: " ++ s
-  Right jPaths -> return $ S.SEArray $ map elToColExp jPaths
+  Right []     -> return Nothing
+  Right jPaths -> return $ Just $ S.SEArray $ map elToColExp jPaths
   where
     elToColExp (Key k)   = S.SELit k
     elToColExp (Index i) = S.SELit $ T.pack (show i)
@@ -77,7 +79,7 @@ resolveComputedField computedField fld = fieldAsPath fld $ do
     CFTScalar scalarTy -> do
       colOpM <- argsToColumnOp $ _fArguments fld
       pure $ RS.CFSScalar $
-        RS.ComputedFieldScalarSelectect qf argsWithTableArgument scalarTy colOpM
+        RS.ComputedFieldScalarSelect qf argsWithTableArgument scalarTy colOpM
     CFTTable (ComputedFieldTable _ cols permFilter permLimit) -> do
       let functionFrom = RS.FromFunction qf argsWithTableArgument Nothing
       RS.CFSTable RS.JASMultipleRows <$> fromField functionFrom cols permFilter permLimit fld
@@ -485,7 +487,7 @@ convertAggregateField colGNameMap ty selSet = fmap toFields $
   traverseObjectSelectionSet selSet $ \Field{..} ->
     case _fName of
       "__typename" -> return $ RS.AFExp $ G.unName $ G.unNamedType ty
-      "count"      -> RS.AFCount <$> convertCount colGNameMap (_fArguments fld)
+      "count"      -> RS.AFCount <$> convertCount colGNameMap _fArguments
       n            -> do
         fSelSet <- asObjectSelectionSet _fSelSet
         colFlds <- convertColumnFields colGNameMap _fType fSelSet
@@ -593,7 +595,7 @@ parseConnectionArgs pKeyColumns args = do
       cursorValue <- either (const throwInvalidCursor) pure $
                       J.eitherDecode cursorSplit
       case maybeOrderBys of
-        Nothing -> forM pKeyColumns $
+        Nothing -> forM (NESeq.toNonEmpty pKeyColumns) $
           \pgColumnInfo -> do
             let columnJsonPath = [J.Key $ getPGColTxt $ pgiColumn pgColumnInfo]
             pgColumnValue <- maybe throwInvalidCursor pure $ iResultToMaybe $
@@ -760,32 +762,33 @@ convertConnectionFuncQuery pkCols funcOpCtx fld =
   where
     FuncQOpCtx qf argSeq _ _ permFilter permLimit = funcOpCtx
 
+throwInvalidNodeId :: MonadError QErr m => Text -> m a
+throwInvalidNodeId t = throwVE $ "the node id is invalid: " <> t
+
 resolveNodeId
-  :: forall m. ( MonadError QErr m
-               , MonadReusability m
-               )
-  => Field -> m NodeIdData
+  :: ( MonadError QErr m
+     , MonadReusability m
+     )
+  => Field -> m NodeId
 resolveNodeId field =
-  withPathK "selectionSet" $ fieldAsPath field $ do
-    nodeIdText <- asPGColText =<< getArg (_fArguments field) "id"
-    either (const throwInvalidNodeId) pure $
-      J.eitherDecode $ base64Decode nodeIdText
-  where
-    throwInvalidNodeId = throwVE "the node id is invalid"
+  withPathK "selectionSet" $ fieldAsPath field $
+  withArg (_fArguments field) "id" $ asPGColText >=>
+  either (throwInvalidNodeId . T.pack) pure . J.eitherDecode . base64Decode
 
 convertNodeSelect
-  :: ( MonadReusability m
-     , MonadError QErr m
-     , MonadReader r m
-     , Has FieldMap r
-     , Has OrdByCtx r
-     , Has SQLGenCtx r
-     )
+  :: forall m r. ( MonadReusability m
+                 , MonadError QErr m
+                 , MonadReader r m
+                 , Has FieldMap r
+                 , Has OrdByCtx r
+                 , Has SQLGenCtx r
+                 )
   => SelOpCtx
-  -> Map.HashMap PGCol J.Value
+  -> PrimaryKeyColumns
+  -> NESeq.NESeq J.Value
   -> Field
   -> m (RS.AnnSimpleSelG UnresolvedVal)
-convertNodeSelect selOpCtx pkeyColumnValues field =
+convertNodeSelect selOpCtx pkeyColumns columnValues field =
   withPathK "selectionSet" $ fieldAsPath field $ do
     -- Parse selection set as interface
     ifaceSelectionSet <- asInterfaceSelectionSet $ _fSelSet field
@@ -796,11 +799,15 @@ convertNodeSelect selOpCtx pkeyColumnValues field =
     -- Resolve the table selection set
     annFields <- processTableSelectionSet tableObjectType selSet
     -- Resolve the Node id primary key column values
+    pkeyColumnValues <- alignPkeyColumnValues
     unresolvedPkeyValues <- flip Map.traverseWithKey pkeyColumnValues $
-      \pgColumn jsonValue -> case Map.lookup pgColumn pgColumnMap of
-        Nothing -> throwVE $ "column " <> pgColumn <<> " not found"
-        Just columnInfo -> (,columnInfo) . UVPG . AnnPGVal Nothing False <$>
-                           parsePGScalarValue (pgiType columnInfo) jsonValue
+      \columnInfo jsonValue ->
+        let modifyErrFn t = "value of column " <> pgiColumn columnInfo
+                             <<> " in node id: " <> t
+        in modifyErr modifyErrFn $
+           (,columnInfo) . UVPG . AnnPGVal Nothing False <$>
+           parsePGScalarValue (pgiType columnInfo) jsonValue
+
     -- Generate the bool expression from the primary key column values
     let pkeyBoolExp = BoolAnd $ flip map (Map.elems unresolvedPkeyValues) $
           \(unresolvedValue, columnInfo) -> (BoolFld . AVCol columnInfo) [AEQ True unresolvedValue]
@@ -808,5 +815,19 @@ convertNodeSelect selOpCtx pkeyColumnValues field =
     strfyNum <- stringifyNum <$> asks getter
     pure $ RS.AnnSelectG annFields (RS.FromTable table) tablePerm selectArgs strfyNum
   where
-    SelOpCtx table _ allColumns permFilter permLimit = selOpCtx
-    pgColumnMap = mapFromL pgiColumn $ Map.elems allColumns
+    SelOpCtx table _ _ permFilter permLimit = selOpCtx
+
+    alignPkeyColumnValues :: m (Map.HashMap PGColumnInfo J.Value)
+    alignPkeyColumnValues = do
+        let NESeq.NESeq (firstPkColumn, remainingPkColumns) = pkeyColumns
+            NESeq.NESeq (firstColumnValue, remainingColumns) = columnValues
+            (nonAlignedPkColumns, nonAlignedColumnValues, alignedTuples) =
+              partitionThese $ toList $ align remainingPkColumns remainingColumns
+
+        when (not $ null nonAlignedPkColumns) $ throwInvalidNodeId $
+          "primary key columns " <> dquoteList (map pgiColumn nonAlignedPkColumns) <> " are missing"
+
+        when (not $ null nonAlignedColumnValues) $ throwInvalidNodeId $
+          "unexpected column values " <> J.encodeToStrictText nonAlignedColumnValues
+
+        pure $ Map.fromList $ (firstPkColumn, firstColumnValue):alignedTuples

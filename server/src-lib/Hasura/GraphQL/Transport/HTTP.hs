@@ -33,7 +33,6 @@ import qualified Data.HashMap.Strict                    as Map
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.Query           as EQ
--- import qualified Hasura.GraphQL.Resolve                 as R
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
 import qualified Hasura.Tracing                         as Tracing

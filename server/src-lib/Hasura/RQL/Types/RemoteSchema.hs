@@ -1,7 +1,6 @@
 module Hasura.RQL.Types.RemoteSchema where
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Common    (NonEmptyText)
 import           Language.Haskell.TH.Syntax (Lift)
 
 import qualified Data.Aeson                 as J
@@ -14,8 +13,9 @@ import qualified Data.Environment           as Env
 
 import           Hasura.Incremental         (Cacheable)
 import           Hasura.RQL.DDL.Headers     (HeaderConf (..))
+import           Hasura.RQL.Types.Common    (NonEmptyText (..))
 import           Hasura.RQL.Types.Error
-import           Hasura.SQL.Types           (DQuote)
+import           Hasura.SQL.Types
 
 type UrlFromEnv = Text
 
@@ -34,6 +34,7 @@ data RemoteSchemaInfo
   , rsFwdClientHeaders :: !Bool
   , rsTimeoutSeconds   :: !Int
   } deriving (Show, Eq, Lift, Generic)
+instance NFData RemoteSchemaInfo
 instance Cacheable RemoteSchemaInfo
 instance Hashable RemoteSchemaInfo
 

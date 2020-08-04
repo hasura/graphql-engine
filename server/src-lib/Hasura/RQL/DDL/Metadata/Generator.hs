@@ -314,6 +314,9 @@ instance Arbitrary RemoteRelationshipMeta where
 instance Arbitrary CronTriggerMetadata where
   arbitrary = genericArbitrary
 
+instance Arbitrary WebhookConf where
+  arbitrary = genericArbitrary
+
 instance Arbitrary STRetryConf where
   arbitrary = genericArbitrary
 

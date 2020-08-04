@@ -10,18 +10,18 @@ module Hasura.GraphQL.Execute.Plan
   , dumpPlanCache
   ) where
 
-import           Hasura.Prelude
-
 import qualified Data.Aeson                             as J
 import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.TH                          as J
 
+import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Session
 
 import qualified Hasura.Cache.Bounded                   as Cache
 import qualified Hasura.GraphQL.Execute.LiveQuery       as LQ
 import qualified Hasura.GraphQL.Execute.Query           as EQ
+
 import qualified Hasura.GraphQL.Execute.Types           as ET
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 

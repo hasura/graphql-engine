@@ -52,7 +52,6 @@ import           Data.List                         as M (find, findIndex, foldl'
                                                          intercalate, intersect, lookup, sort,
                                                          sortBy, sortOn, union, unionBy, (\\))
 import           Data.List.NonEmpty                as M (NonEmpty (..), nonEmpty)
-
 import           Data.Maybe                        as M (catMaybes, fromMaybe, isJust, isNothing,
                                                          listToMaybe, mapMaybe, maybeToList)
 import           Data.Monoid                       as M (getAlt)

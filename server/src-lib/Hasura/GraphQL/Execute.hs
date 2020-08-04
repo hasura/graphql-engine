@@ -46,12 +46,14 @@ import           Hasura.Session
 
 import qualified Hasura.GraphQL.Context                 as C
 import qualified Hasura.GraphQL.Execute.Inline          as EI
+
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Mutation        as EM
 import qualified Hasura.GraphQL.Execute.Plan            as EP
 import qualified Hasura.GraphQL.Execute.Prepare         as EPr
 import qualified Hasura.GraphQL.Execute.Query           as EQ
 import qualified Hasura.GraphQL.Execute.Types           as ET
+
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
 import qualified Hasura.Tracing                         as Tracing
@@ -341,6 +343,7 @@ getResolvedExecPlan env logger pgExecCtx planCache userInfo sqlGenCtx
       --       (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability (restrictActionExecuter "query actions cannot be run as a subscription") fld
       --       traverse_ (addPlanToCache . EP.RPSubs) plan
       --       return $ ExOpSubs lqOp
+
 execRemoteGQ
   :: ( HasVersion
      , MonadIO m

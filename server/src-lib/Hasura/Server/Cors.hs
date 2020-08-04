@@ -17,7 +17,7 @@ import           Hasura.Prelude
 import           Hasura.Server.Utils  (fmapL)
 
 import           Control.Applicative  (optional)
-import           Data.Aeson
+import           Data.Aeson           ((.:))
 
 import qualified Data.Aeson           as J
 import qualified Data.Aeson.Casing    as J
@@ -25,7 +25,6 @@ import qualified Data.Aeson.TH        as J
 import qualified Data.Attoparsec.Text as AT
 import qualified Data.HashSet         as Set
 import qualified Data.Text            as T
-
 
 data DomainParts =
   DomainParts

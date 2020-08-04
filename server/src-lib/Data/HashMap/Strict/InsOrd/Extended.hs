@@ -5,8 +5,8 @@ module Data.HashMap.Strict.InsOrd.Extended
   ) where
 
 import           Data.HashMap.Strict.InsOrd as OMap
-import qualified Data.List                  as L
 import qualified Data.Sequence.NonEmpty     as NE
+import qualified Data.List                  as L
 
 import           Data.Hashable              (Hashable)
 

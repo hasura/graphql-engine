@@ -1,3 +1,5 @@
+{-# LANGUAGE ViewPatterns #-}
+
 -- | Functions for mutating the catalog (with integrity checking) to incorporate schema changes
 -- discovered after applying a user-supplied SQL query. None of these functions modify the schema
 -- cache, so it must be reloaded after the catalog is updated.
@@ -155,7 +157,6 @@ updateRelDefs qt rn renameTable = do
   case riType ri of
     ObjRel -> updateObjRelDef qt rn renameTable
     ArrRel -> updateArrRelDef qt rn renameTable
-
 
 updateObjRelDef
   :: (MonadTx m)

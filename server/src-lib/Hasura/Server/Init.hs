@@ -320,7 +320,7 @@ serveCmdFooter =
     eventEnvs = [ eventsHttpPoolSizeEnv, eventsFetchIntervalEnv ]
 
 eventsHttpPoolSizeEnv :: (String, String)
-eventsHttpPoolSizeEnv = 
+eventsHttpPoolSizeEnv =
   ( "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
   , "Max event threads"
   )
@@ -848,7 +848,7 @@ enableAllowlistEnv =
 --   being 70kb. 128mb per-HEC seems like a reasonable default upper bound
 --   (note there is a distinct stripe per-HEC, for now; so this would give 1GB
 --   for an 8-core machine), which gives us a range of 2,000 to 18,000 here.
---     Analysis of telemetry is hazy here; see 
+--     Analysis of telemetry is hazy here; see
 --   https://github.com/hasura/graphql-engine/issues/5363 for some discussion.
 planCacheSizeEnv :: (String, String)
 planCacheSizeEnv =

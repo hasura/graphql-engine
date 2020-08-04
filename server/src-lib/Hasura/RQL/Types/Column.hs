@@ -35,8 +35,8 @@ import           Control.Lens.TH
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Sequence.NonEmpty
 import           Language.Haskell.TH.Syntax    (Lift)
-
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.Instances          ()
 import           Hasura.RQL.Types.Error

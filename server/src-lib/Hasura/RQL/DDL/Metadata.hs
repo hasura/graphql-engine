@@ -29,7 +29,8 @@ import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.DDL.Permission.Internal (dropPermFromCatalog)
 import           Hasura.RQL.DDL.RemoteSchema        (addRemoteSchemaToCatalog, fetchRemoteSchemas,
                                                      removeRemoteSchemaFromCatalog)
-import           Hasura.RQL.DDL.ScheduledTrigger    (addCronTriggerToCatalog,deleteCronTriggerFromCatalog)
+import           Hasura.RQL.DDL.ScheduledTrigger    (addCronTriggerToCatalog,
+                                                     deleteCronTriggerFromCatalog)
 import           Hasura.RQL.DDL.Schema.Catalog      (saveTableToCatalog)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -92,6 +93,7 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta schemas
           delPerms = map Permission.pdRole $ table ^. tmDeletePermissions
           eventTriggers = map etcName $ table ^. tmEventTriggers
           computedFields = map _cfmName $ table ^. tmComputedFields
+          remoteRelationships = map _rrmName $ table ^. tmRemoteRelationships
 
       checkMultipleDecls "relationships" allRels
       checkMultipleDecls "insert permissions" insPerms
@@ -100,6 +102,7 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta schemas
       checkMultipleDecls "delete permissions" delPerms
       checkMultipleDecls "event triggers" eventTriggers
       checkMultipleDecls "computed fields" computedFields
+      checkMultipleDecls "remote relationships" remoteRelationships
 
   withPathK "functions" $
     case functionsMeta of
@@ -166,6 +169,14 @@ saveMetadata (ReplaceMetadata _ tables functionsMeta
             ComputedField.addComputedFieldToCatalog $
               ComputedField.AddComputedField _tmTable name definition comment
 
+      -- Remote Relationships
+      withPathK "remote_relationships" $
+        indexedForM_ _tmRemoteRelationships $
+          \(RemoteRelationshipMeta name def) -> do
+             let RemoteRelationshipDef rs hf rf = def
+             liftTx $ RemoteRelationship.persistRemoteRelationship $
+                      RemoteRelationship name _tmTable hf rs rf
+
       -- Permissions
       withPathK "insert_permissions" $ processPerms _tmTable _tmInsertPermissions
       withPathK "select_permissions" $ processPerms _tmTable _tmSelectPermissions
@@ -196,11 +207,6 @@ saveMetadata (ReplaceMetadata _ tables functionsMeta
   -- remote schemas
   withPathK "remote_schemas" $
     indexedMapM_ (liftTx . addRemoteSchemaToCatalog) schemas
-
-  -- cron triggers
-  withPathK "cron_triggers" $
-    indexedForM_ cronTriggers $ \ct -> liftTx $ do
-    addCronTriggerToCatalog ct
 
   -- custom types
   withPathK "custom_types" $
@@ -267,6 +273,9 @@ fetchMetadata = do
   -- Fetch all computed fields
   computedFields <- fetchComputedFields
 
+  -- Fetch all remote relationships
+  remoteRelationships <- Q.catchE defaultTxErrorHandler fetchRemoteRelationships
+
   let (_, postRelMap) = flip runState tableMetaMap $ do
         modMetaMap tmObjectRelationships objRelDefs
         modMetaMap tmArrayRelationships arrRelDefs
@@ -276,11 +285,12 @@ fetchMetadata = do
         modMetaMap tmDeletePermissions delPermDefs
         modMetaMap tmEventTriggers triggerMetaDefs
         modMetaMap tmComputedFields computedFields
+        modMetaMap tmRemoteRelationships remoteRelationships
 
   -- fetch all functions
   functions <- FMVersion2 <$> Q.catchE defaultTxErrorHandler fetchFunctions
 
-  -- -- fetch all custom resolvers
+  -- fetch all remote schemas
   remoteSchemas <- fetchRemoteSchemas
 
   -- fetch all collections
@@ -462,6 +472,17 @@ fetchMetadata = do
               ap.action_name = a.action_name
           ) ap on true;
                             |] [] False
+
+    fetchRemoteRelationships = do
+      r <- Q.listQ [Q.sql|
+                SELECT table_schema, table_name,
+                       remote_relationship_name, definition::json
+                FROM hdb_catalog.hdb_remote_relationship
+             |] () False
+      pure $ flip map r $ \(schema, table, name, Q.AltJ definition) ->
+                          ( QualifiedObject schema table
+                          , RemoteRelationshipMeta name definition
+                          )
 
 runExportMetadata
   :: (QErrM m, MonadTx m)

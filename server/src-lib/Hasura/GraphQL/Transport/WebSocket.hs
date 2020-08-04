@@ -270,7 +270,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead ipAddress = do
       "/v1/graphql"       -> return (ERTGraphqlCompliant, E.QueryHasura)
       "/v1beta1/relay"    -> return (ERTGraphqlCompliant, E.QueryRelay)
       _                   ->
-        throw404 "only '/v1/graphql', '/v1alpha1/graphql' are supported on websockets"
+        throw404 "only '/v1/graphql', '/v1alpha1/graphql' and '/v1beta1/relay' are supported on websockets"
 
     getOrigin =
       find ((==) "Origin" . fst) (WS.requestHeaders requestHead)
