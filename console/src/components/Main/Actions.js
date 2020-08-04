@@ -101,7 +101,6 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
 
   const query = {
     args: {
-      limit: 20,
       table: 'console_notification',
       columns: ['*'],
       where: {
@@ -147,32 +146,34 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
       const currentNotifications = getState().main.consoleNotifications;
       let responseData = data;
 
-      if (!responseData.length) {
-        if (currentNotifications) {
+      // TODO: set up telemetry state if not present
+      if (currentNotifications.length) {
+        if (!responseData.length) {
+          dispatch({ type: FETCH_CONSOLE_NOTIFICATIONS_SET_DEFAULT });
+          dispatch(
+            updateConsoleNotificationsInDB({
+              read: 'default',
+              date: timeNow,
+            })
+          );
           return;
         }
 
-        dispatch({ type: FETCH_CONSOLE_NOTIFICATIONS_SET_DEFAULT });
-        dispatch(
-          updateConsoleNotificationsInDB({
-            read: 'default',
-            date: timeNow,
-          })
+        const responseDiff = notificationDiff(
+          currentNotifications,
+          responseData
         );
-        return;
-      }
 
-      const responseDiff = notificationDiff(currentNotifications, responseData);
-
-      if (responseDiff.length) {
-        dispatch(
-          updateConsoleNotificationsInDB({
-            read: [],
-            date: timeNow,
-          })
-        );
-        // TODO: fix the order in which the notifications will appear in
-        responseData = [...responseDiff, ...responseData];
+        if (responseDiff.length) {
+          dispatch(
+            updateConsoleNotificationsInDB({
+              read: [],
+              date: timeNow,
+            })
+          );
+          // TODO: fix the order in which the notifications will appear in
+          responseData = [...responseDiff, ...responseData];
+        }
       }
 
       dispatch({
