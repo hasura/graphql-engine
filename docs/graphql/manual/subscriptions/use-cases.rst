@@ -49,7 +49,7 @@ Now we can use the following subscription to fetch the latest location of a vehi
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -83,9 +83,9 @@ Now we can use the following subscription to fetch the latest location of a vehi
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
-    .. code-block:: json
+    .. code-block:: text
 
       /v1/graphql WS/1.1
       Content-Type: application/json
@@ -134,7 +134,7 @@ Now we can use the following subscription to display the latest messages in a ch
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -177,9 +177,9 @@ Now we can use the following subscription to display the latest messages in a ch
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
-    .. code-block:: json
+    .. code-block:: text
 
       /v1/graphql WS/1.1
       Content-Type: application/json
@@ -266,7 +266,7 @@ Now we can use the following subscription to display the latest poll result:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -326,9 +326,9 @@ Now we can use the following subscription to display the latest poll result:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
-    .. code-block:: json
+    .. code-block:: text
 
       /v1/graphql WS/1.1
       Content-Type: application/json

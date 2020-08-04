@@ -31,7 +31,7 @@ Creating & exposing views
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: Console
 
     Views can be created using SQL which can be run in the Hasura console:
 
@@ -40,9 +40,9 @@ Creating & exposing views
     - Select the ``Track this`` checkbox to expose the new view over the GraphQL API
     - Hit the ``Run`` button
 
-  .. tab:: Via CLI
+  .. tab:: CLI
 
-    1. :ref:`Create a migration manually <manual_migrations>` and add your `create view SQL statement <https://www.postgresql.org/docs/current/static/sql-createview.html>`__ to it.
+    1. :ref:`Create a migration manually <manual_migrations>` and add your `create view SQL statement <https://www.postgresql.org/docs/current/static/sql-createview.html>`__ to the ``up.sql`` file. Also, add an SQL statement to the ``down.sql`` file that reverts the previous statement.
 
     2. Apply the migration by running:
 
@@ -65,7 +65,7 @@ Creating & exposing views
             schema: public
             name: <name of view>
 
-  .. tab:: Via API
+  .. tab:: API
 
     You can add a view by using the :ref:`run_sql metadata API <run_sql>`:
 

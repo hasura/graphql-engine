@@ -40,20 +40,26 @@ Modify the table ``sql_function_table`` and make its ``output`` column nullable.
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: Console
 
     Open the console and head to ``Data -> sql_function_table -> Modify``:
 
     .. thumbnail:: /img/graphql/manual/schema/modify-sql-fn-table.png
       :alt: Modify the table
 
-  .. tab:: Via CLI
+  .. tab:: CLI
 
-    :ref:`Create a migration manually <manual_migrations>` and add the following statement to it:
+    :ref:`Create a migration manually <manual_migrations>` and add the following SQL statement to the ``up.sql`` file:
 
     .. code-block:: SQL
 
       ALTER TABLE "public"."sql_function_table" ALTER COLUMN "output" DROP NOT NULL;
+
+    Add the following statement to the ``down.sql`` file in case you need to :ref:`roll back <roll_back_migrations>` the above statement:
+
+    .. code-block:: sql
+
+      ALTER TABLE "public"."sql_function_table" ALTER COLUMN "output" SET NOT NULL;    
 
     Apply the migration by running:
 
@@ -61,7 +67,7 @@ Modify the table ``sql_function_table`` and make its ``output`` column nullable.
 
       hasura migrate apply
 
-  .. tab:: Via API
+  .. tab:: API
 
     You can modify a table column by using the :ref:`run_sql metadata API <run_sql>`:
 
@@ -99,16 +105,16 @@ the ``output`` field whenever an insert or update is made to the ``sql_function_
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: Console
 
     Head to ``Data -> SQL`` and run the above SQL:
 
     .. thumbnail:: /img/graphql/manual/schema/create-trigger.png
       :alt: Create a trigger with SQL
 
-  .. tab:: Via CLI
+  .. tab:: CLI
 
-    :ref:`Create a migration manually <manual_migrations>` and add the above SQL to it.
+    :ref:`Create a migration manually <manual_migrations>` and add the above SQL to the ``up.sql`` file. Also, add a statement to revert the previous statement to the ``down.sql``.
 
     Apply the migration by running:
 
@@ -116,7 +122,7 @@ the ``output`` field whenever an insert or update is made to the ``sql_function_
 
       hasura migrate apply
 
-  .. tab:: Via API
+  .. tab:: API
 
     You can create a trigger by using the :ref:`run_sql metadata API <run_sql>`:
 

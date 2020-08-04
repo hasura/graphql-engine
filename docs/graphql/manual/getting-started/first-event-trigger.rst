@@ -31,20 +31,26 @@ Let's add the following table:
 .. rst-class:: api_tabs
 .. tabs::
 
-   .. tab:: Via console
+   .. tab:: Console
 
       Head to the Hasura console, navigate to ``Data -> Create table`` and create a sample table called ``profile`` with the following columns:
 
       .. thumbnail:: /img/graphql/manual/getting-started/create-profile-table.png
          :alt: Create a table
 
-   .. tab:: Via CLI
+   .. tab:: CLI
 
-      :ref:`Create a migration manually <manual_migrations>` and add the following statement to it:
+      :ref:`Create a migration manually <manual_migrations>` and add the following SQL statement to the ``up.sql`` file:
 
       .. code-block:: sql
 
          CREATE TABLE profile(id serial NOT NULL, name text NOT NULL);
+
+      Add the following statement to the ``down.sql`` file in case you need to :ref:`roll back <roll_back_migrations>` the above statement:
+
+      .. code-block:: sql
+
+         DROP TABLE profile;
 
       Apply the migration by running:
 
@@ -58,8 +64,8 @@ Let's add the following table:
          :emphasize-lines: 1-3
 
          - table:
-               schema: public
-               name: profile
+             schema: public
+             name: profile
 
       Apply the metadata by running:
 
@@ -67,7 +73,7 @@ Let's add the following table:
 
          hasura metadata apply
 
-   .. tab:: Via API
+   .. tab:: API
 
       Create a table by by using the :ref:`run_sql metadata API <run_sql>`:
 
@@ -106,7 +112,7 @@ Set up an event trigger
 .. rst-class:: api_tabs
 .. tabs::
 
-   .. tab:: Via console
+   .. tab:: Console
 
       In the Hasura console, navigate to ``Events -> Create trigger`` and:
 
@@ -118,7 +124,7 @@ Set up an event trigger
       .. thumbnail:: /img/graphql/manual/getting-started/create-event-trigger.png
          :alt: Set up an event trigger
 
-   .. tab:: Via CLI
+   .. tab:: CLI
 
       Add an event trigger in the ``tables.yaml`` file in the ``metadata`` directory as follows:
 
@@ -126,25 +132,25 @@ Set up an event trigger
          :emphasize-lines: 4-20
 
          - table:
-               schema: public
-               name: profile
-            event_triggers:
-            - name: echo
-               definition:
-                  enable_manual: false
-                  insert:
-                  columns: '*'
-                  delete:
-                  columns: '*'
-                  update:
-                  columns:
-                  - id
-                  - name
-               retry_conf:
-                  num_retries: 0
-                  interval_sec: 10
-                  timeout_sec: 60
-               webhook: https://httpbin.org/post
+             schema: public
+             name: profile
+           event_triggers:
+           - name: echo
+             definition:
+               enable_manual: false
+               insert:
+                 columns: '*'
+               delete:
+                 columns: '*'
+               update:
+                 columns:
+                 - id
+                 - name
+             retry_conf:
+               num_retries: 0
+               interval_sec: 10
+               timeout_sec: 60
+             webhook: https://httpbin.org/post
 
       Apply the metadata by running:
 
@@ -152,7 +158,7 @@ Set up an event trigger
 
          hasura metadata apply
 
-   .. tab:: Via API
+   .. tab:: API
 
       Add an event trigger by using the :ref:`create_event_trigger metadata API <create_event_trigger>`.
 

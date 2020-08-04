@@ -108,7 +108,7 @@ Now let's define an access control rule for the ``author`` table for a role ``us
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: Console
 
     Head to the
     **Permissions** section of the table (``Data`` --> <table> --> ``Permissions`` tab) and define permissions
@@ -117,7 +117,7 @@ Now let's define an access control rule for the ``author`` table for a role ``us
     .. thumbnail:: /img/graphql/manual/auth/permission-basics-simple-example.png
       :alt: Define access control rules
 
-  .. tab:: Via CLI
+  .. tab:: CLI
 
     You can add permissions in the ``tables.yaml`` file inside the ``metadata`` directory:
 
@@ -127,15 +127,15 @@ Now let's define an access control rule for the ``author`` table for a role ``us
         - table:
             schema: public
             name: author
-          select_permissions:
-          - role: user
-            permission:
-              columns:
-              - id
-              - name
-              filter:
-                id:
-                  _eq: X-Hasura-User-Id
+            select_permissions:
+            - role: user
+              permission:
+                columns:
+                - id
+                - name
+                filter:
+                  id:
+                    _eq: X-Hasura-User-Id
 
     Apply the metadata by running:
 
@@ -143,7 +143,7 @@ Now let's define an access control rule for the ``author`` table for a role ``us
 
       hasura metadata apply
 
-  .. tab:: Via API
+  .. tab:: API
 
     You can add select permissions by using the :ref:`create_select_permission metadata API <create_select_permission>`:
 
@@ -183,12 +183,12 @@ the ``Request Headers`` section of ``GraphiQL`` as highlighted below:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. thumbnail:: /img/graphql/manual/auth/permission-basics-query-with-access-control.png
       :alt: Run a query with access control
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 

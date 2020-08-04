@@ -150,7 +150,7 @@ we need to tell Hasura that this table represents an enum.
     .. thumbnail:: /img/graphql/manual/schema/enum-set.png
        :alt: Set table as enum
 
-  .. tab:: Via CLI
+  .. tab:: CLI
 
     To set a table as an enum, change the ``tables.yaml`` file in the ``metadata`` directory as follows:
 

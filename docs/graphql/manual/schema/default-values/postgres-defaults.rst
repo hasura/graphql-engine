@@ -31,20 +31,26 @@ Edit the ``created_at`` field and set its default value as the SQL function ``no
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: Console
 
     Open the console and head to ``Data -> article -> Modify``:
 
     .. thumbnail:: /img/graphql/manual/schema/add-default-value.png
       :alt: Modify the table in the console
 
-  .. tab:: Via CLI
+  .. tab:: CLI
 
-    :ref:`Create a migration manually <manual_migrations>` and add the following statement to it:
+    :ref:`Create a migration manually <manual_migrations>` and add the following SQL statement to the ``up.sql`` file:
 
     .. code-block:: SQL
 
       ALTER TABLE ONLY "public"."article" ALTER COLUMN "created_at" SET DEFAULT now();
+
+    Add the following statement to the ``down.sql`` file in case you need to :ref:`roll back <roll_back_migrations>` the above statement:
+
+    .. code-block:: sql
+
+      ALTER TABLE article ALTER COLUMN created_at DROP DEFAULT;
 
     Apply the migration by running:
 
@@ -52,7 +58,7 @@ Edit the ``created_at`` field and set its default value as the SQL function ``no
 
       hasura migrate apply
 
-  .. tab:: Via API
+  .. tab:: API
 
     You can add a default value by using the :ref:`run_sql metadata API <run_sql>`:
 

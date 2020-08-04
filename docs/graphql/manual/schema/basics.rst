@@ -43,7 +43,7 @@ Create tables
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: Console
 
     Open the Hasura console and head to the ``Data`` tab and click the ``Create Table`` button to open up an interface to
     create tables.
@@ -53,13 +53,19 @@ Create tables
     .. thumbnail:: /img/graphql/manual/schema/create-table-graphql.png
       :alt: Schema for an article table
 
-  .. tab:: Via CLI
+  .. tab:: CLI
 
-    :ref:`Create a migration manually <manual_migrations>` and add the following statement to it:
+    :ref:`Create a migration manually <manual_migrations>` and add the following SQL statement to the ``up.sql`` file:
 
     .. code-block:: sql
 
       CREATE TABLE article(id serial NOT NULL, title text NOT NULL, content text NOT NULL, rating integer NOT NULL, author_id serial NOT NULL, PRIMARY KEY (id));
+
+    Add the following statement to the ``down.sql`` file in case you need to :ref:`roll back <roll_back_migrations>` the above statement:
+
+    .. code-block:: sql
+
+        DROP TABLE article;
 
     Apply the migration by running:
 
@@ -85,7 +91,7 @@ Create tables
 
       hasura metadata apply
 
-  .. tab:: Via API
+  .. tab:: API
 
     You can create a table by making an API call to the :ref:`run_sql metadata API <run_sql>`:
 

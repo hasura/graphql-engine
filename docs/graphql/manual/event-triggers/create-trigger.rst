@@ -17,7 +17,7 @@ Event triggers can be created using the Hasura console or metadata APIs.
 .. rst-class:: api_tabs
 .. tabs::
 
-   .. tab:: Via console
+   .. tab:: Console
 
       Open the Hasura console, head to the ``Events`` tab and click on the ``Create`` button to open the
       page below:
@@ -25,7 +25,7 @@ Event triggers can be created using the Hasura console or metadata APIs.
       .. thumbnail:: /img/graphql/manual/event-triggers/create-event-trigger.png
          :alt: Create an event trigger
 
-   .. tab:: Via CLI
+   .. tab:: CLI
 
       You can add an event triggers in the ``tables.yaml`` file inside the ``metadata`` directory:
 
@@ -35,17 +35,17 @@ Event triggers can be created using the Hasura console or metadata APIs.
          - table:
             schema: public
             name: author
-         event_triggers:
-         - name: my_special_trigger
-            definition:
+           event_triggers:
+           - name: my_special_trigger
+             definition:
                enable_manual: false
                insert:
                columns: '*'
-            retry_conf:
+             retry_conf:
                num_retries: 0
                interval_sec: 10
                timeout_sec: 60
-            webhook: https://httpbin.org/post
+             webhook: https://httpbin.org/post
 
       Apply the metadata by running:
 
@@ -53,7 +53,7 @@ Event triggers can be created using the Hasura console or metadata APIs.
 
          hasura metadata apply
 
-   .. tab:: Via API
+   .. tab:: API
 
       Add an event trigger by using the :ref:`create_event_trigger metadata API<create_event_trigger>`.
 
@@ -106,12 +106,12 @@ Advanced Settings
 .. rst-class:: api_tabs
 .. tabs::
 
-   .. tab:: Via console
+   .. tab:: Console
 
       .. thumbnail:: /img/graphql/manual/event-triggers/create-event-trigger-advanced-settings.png
          :alt: Advanced settings for event triggers
 
-   .. tab:: Via CLI
+   .. tab:: CLI
 
       You can configure advanced settings for event triggers in the ``tables.yaml`` file inside the ``metadata`` directory:
 
@@ -121,17 +121,17 @@ Advanced Settings
          - table:
             schema: public
             name: author
-         event_triggers:
-         - name: my_special_trigger
-            definition:
+           event_triggers:
+           - name: my_special_trigger
+             definition:
                enable_manual: false
                insert:
                columns: '*'
-            retry_conf:
+             retry_conf:
                num_retries: 0
                interval_sec: 10
                timeout_sec: 60
-            webhook: https://httpbin.org/post
+             webhook: https://httpbin.org/post
 
       Apply the metadata by running:
 
@@ -139,7 +139,7 @@ Advanced Settings
 
          hasura metadata apply
 
-   .. tab:: Via API
+   .. tab:: API
 
       You can configure advanced settings via the :ref:`create_event_trigger metadata API<create_event_trigger>`.
 

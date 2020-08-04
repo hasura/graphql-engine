@@ -29,7 +29,7 @@ Let's add the following table:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: Console
 
     Head to the Hasura console, navigate to ``Data -> Create table`` and create a sample table called ``profile`` with
     the following columns:
@@ -37,13 +37,19 @@ Let's add the following table:
     .. thumbnail:: /img/graphql/manual/getting-started/create-profile-table.png
       :alt: Create a table
 
-  .. tab:: Via CLI
+  .. tab:: CLI
 
-    :ref:`Create a migration manually <manual_migrations>` and add the following statement to it:
+    :ref:`Create a migration manually <manual_migrations>` and add the following SQL statement to the ``up.sql`` file:
 
     .. code-block:: sql
 
       CREATE TABLE profile(id serial NOT NULL, name text NOT NULL);
+
+    Add the following statement to the ``down.sql`` file in case you need to :ref:`roll back <roll_back_migrations>` the above statement:
+
+    .. code-block:: sql
+
+        DROP TABLE profile;
 
     Apply the migration by running:
 
@@ -66,7 +72,7 @@ Let's add the following table:
 
       hasura metadata apply
 
-  .. tab:: Via API
+  .. tab:: API
 
     Create a table by using the :ref:`run_sql metadata API <run_sql>`:
 

@@ -38,7 +38,7 @@ To merge your remote schema with the GraphQL engine's auto-generated schema:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: Console
 
     Head to the ``Remote Schemas`` tab of the console and click on the ``Add`` button.
 
@@ -51,16 +51,16 @@ To merge your remote schema with the GraphQL engine's auto-generated schema:
     - **GraphQL server URL**: the endpoint at which your remote GraphQL server is available. This value can be entered
       manually or by specifying an environment variable that contains this information.
 
-  .. tab:: Via CLI
+  .. tab:: CLI
 
-    To add a remote schema, edit the ``remote_schemas.yaml`` file in the ``metadata`` directory as follows:
+    To add a remote schema, edit the ``remote_schemas.yaml`` file in the ``metadata`` directory as in this example:
 
     .. code-block:: yaml
       :emphasize-lines: 1-5
 
       - name: my-remote-schema
         definition:
-          url: https://business-logic.domain/graphql
+          url: https://graphql-pokemon.now.sh/
           timeout_seconds: 60
           forward_client_headers: true
 
@@ -70,7 +70,7 @@ To merge your remote schema with the GraphQL engine's auto-generated schema:
 
       hasura metadata apply
 
-  .. tab:: Via API
+  .. tab:: API
 
     You can add a remote schema by using the :ref:`add_remote_schema metadata API <add_remote_schema>`:
 
@@ -85,7 +85,7 @@ To merge your remote schema with the GraphQL engine's auto-generated schema:
           "args": {
               "name": "my-remote-schema",
               "definition": {
-                  "url": "https://business-logic.domain/graphql",
+                  "url": "https://graphql-pokemon.now.sh/",
                   "forward_client_headers": true,
                   "timeout_seconds": 60
               }
@@ -163,7 +163,7 @@ explicitly reloads the remote schema.
 
   .. tab:: Via API
 
-    Make a request to the :ref:`reload_remote_schema<api_remote_schemas>` API.
+    Make a request to the :ref:`reload_remote_schema<reload_remote_schema>` API.
 
 Current limitations
 ^^^^^^^^^^^^^^^^^^^

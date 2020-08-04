@@ -45,7 +45,7 @@ Creating & exposing SQL functions
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: Console
 
     Custom SQL functions can be created using SQL which can be run in the Hasura console:
 
@@ -54,7 +54,7 @@ Creating & exposing SQL functions
     - Select the ``Track this`` checkbox to expose the new function over the GraphQL API
     - Hit the ``Run`` button
 
-  .. tab:: Via CLI
+  .. tab:: CLI
 
     1. :ref:`Create a migration manually <manual_migrations>` and add your `create function SQL statement <https://www.postgresql.org/docs/current/sql-createfunction.html>`__ to it.
 
@@ -73,7 +73,7 @@ Creating & exposing SQL functions
             schema: public
             name: <function name>
 
-  .. tab:: Via API
+  .. tab:: API
 
     You can add a function by making an API call to the :ref:`run_sql metadata API <run_sql>`:
 

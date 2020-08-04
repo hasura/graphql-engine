@@ -187,16 +187,16 @@ Adding a computed field to a table
        :emphasize-lines: 4-11
 
         - table:
-          schema: public
-          name: author
-        computed_fields:
-        - name: full_name
-          definition:
-            function:
-              schema: public
-              name: author_full_name
-            table_argument: null
-          comment: ""
+            schema: public
+            name: author
+          computed_fields:
+          - name: full_name
+            definition:
+              function:
+                schema: public
+                name: author_full_name
+              table_argument: null
+            comment: ""
 
     Apply the metadata by running:
 

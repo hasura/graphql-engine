@@ -55,7 +55,7 @@ Set action permissions
      Save the changes and run ``hasura metadata apply`` to set the
      permissions.
 
-  .. tab:: Via API
+  .. tab:: API
 
     Action permissions can be set by using the :ref:`create_action_permission metadata API <create_action_permission>`:
 

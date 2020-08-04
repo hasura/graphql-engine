@@ -32,7 +32,7 @@ Step 1: Configure a column preset
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: Console
 
     The column preset option is available under the ``Permissions`` tab of a table. Open the console and head to
     ``Data -> article -> Permissions``:
@@ -49,7 +49,7 @@ Step 1: Configure a column preset
     For our chosen example, we'll use the ``from session variable`` option and configure the ``user_id`` column to be
     automatically populated based on the value of the ``X-Hasura-User-Id`` session variable.
 
-  .. tab:: Via CLI
+  .. tab:: CLI
 
     You can set column presets in the ``tables.yaml`` file inside the ``metadata`` directory:
 
@@ -69,7 +69,6 @@ Step 1: Configure a column preset
               - content
               - rating
               - title
-              columns: []
               backend_only: false
 
     Apply the metadata by running:
@@ -78,7 +77,7 @@ Step 1: Configure a column preset
 
       hasura metadata apply
 
-  .. tab:: Via API
+  .. tab:: API
 
     You can add column presets by using the :ref:`create_insert_permission metadata API <create_insert_permission>`:
 
@@ -114,7 +113,7 @@ Step 2: Run an insert mutation
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     Head to the GraphiQL interface in the console and try making an insert mutation on the ``article`` table with the
     following headers (*to run through this example, don't forget to also grant the* ``user`` *role sufficient permissions
@@ -135,7 +134,7 @@ Step 2: Run an insert mutation
     .. thumbnail:: /img/graphql/manual/schema/column-preset-mutation-result.png
       :alt: Run the insert mutation
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 

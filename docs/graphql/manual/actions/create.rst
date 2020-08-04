@@ -70,7 +70,7 @@ Setup
      Run ``hasura metadata export`` so that you get server's metadata into the
      ``metadata/`` directory.
 
-  .. tab:: Via API
+  .. tab:: API
 
     There is no setup required for defining actions via the :ref:`actions metadata API <api_actions>`.
 
@@ -143,7 +143,7 @@ in the GraphQL schema.
           accessToken: String!
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     It is essential that the custom types used in the action are defined *beforehand* via the :ref:`set_custom_types metadata API <set_custom_types>`:
 
@@ -256,7 +256,7 @@ Now, set the handler for the action:
     Go to ``metadata/actions.yaml``. You must see a handler like ``http://localhost:3000`` or ``http://host.docker.internal:3000`` under the action named ``login``. This is a default value taken from ``config.yaml``. 
     Update the ``handler`` to the above endpoint.
 
-  .. tab:: Via API
+  .. tab:: API
 
     The action handler must be set when creating an action via the :ref:`create_action metadata API <create_action>`.
 
@@ -286,7 +286,7 @@ Finally, to save the action:
 
     Run ``hasura metadata apply``.
 
-  .. tab:: Via API
+  .. tab:: API
 
     An action will be created when sending a request to the :ref:`create_action metadata API <create_action>`.
 
@@ -403,7 +403,7 @@ the GraphQL schema.
           sum: Int
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     It is essential that the custom types used in the action are defined *beforehand* via the :ref:`set_custom_types metadata API <set_custom_types>`:
 
@@ -518,7 +518,7 @@ Now, set the handler for the action:
 
      Update the ``handler`` to the above endpoint.
 
-  .. tab:: Via API
+  .. tab:: API
 
     The action handler must be set when creating an action via the Once the custom types are defined, we can create an action via the :ref:`create_action metadata API <create_action>`.
 
@@ -548,7 +548,7 @@ Finally, to save the action:
 
      Run ``hasura metadata apply``.
 
-  .. tab:: Via API
+  .. tab:: API
 
     An action will be created when sending a request to the :ref:`create_action metadata API <create_action>`.
 

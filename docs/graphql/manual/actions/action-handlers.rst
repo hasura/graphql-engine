@@ -203,15 +203,15 @@ For your action, add a header that will act as an action secret.
                definition:
                   kind: synchronous
                   handler: http://localhost:3000
-                forward_client_headers: true
-                headers:
-                  - name: ACTION_SECRET
-                    value_from_env: ACTION_SECRET_ENV
+                  forward_client_headers: true
+                  headers:
+                    - name: ACTION_SECRET
+                      value_from_env: ACTION_SECRET_ENV
 
      Save the changes and run ``hasura metadata apply`` to set the
      headers.
 
-  .. tab:: Via API
+  .. tab:: API
 
     Headers can be set when creating :ref:`creating <create_action>` or :ref:`updating <update_action>` an action via the metadata API.
 

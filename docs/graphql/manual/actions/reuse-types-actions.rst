@@ -127,7 +127,7 @@ You can create relationships for custom output types by:
 
      Save the changes and run ``hasura metadata apply`` to create the relationship.
 
-  .. tab:: Via API
+  .. tab:: API
 
     Action relationships can be added while defining custom types for an action via the :ref:`set_custom_types metadata API <set_custom_types>`:
 

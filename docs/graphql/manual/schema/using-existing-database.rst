@@ -29,12 +29,12 @@ To track a table or a view:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: Console
 
    #. Head to the ``Data -> Schema`` section of the console.
    #. Under the heading ``Untracked Tables/Views``, click on the ``Track`` button next to the table/view name.
 
-  .. tab:: Via CLI
+  .. tab:: CLI
 
    To track the table and expose it over the GraphQL API, add it to the ``tables.yaml`` file in the ``metadata`` directory as follows:
 
@@ -51,7 +51,7 @@ To track a table or a view:
 
       hasura metadata apply
 
-  .. tab:: Via API
+  .. tab:: API
 
    To track a table and expose it over the GraphQL API, use the :ref:`track_table metadata API <track_table>`:
 
@@ -75,12 +75,12 @@ To track all tables and views present in the database:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: Console
 
    #. Head to the ``Data -> Schema`` section of the console.
    #. Under the heading ``Untracked Tables/Views``, click the ``Track All`` button.
 
-  .. tab:: Via CLI
+  .. tab:: CLI
 
    To track all tables and expose them over the GraphQL API, add them to the ``tables.yaml`` file in the ``metadata`` directory as follows:
 
@@ -99,7 +99,7 @@ To track all tables and views present in the database:
 
       hasura metadata apply
 
-  .. tab:: Via API 
+  .. tab:: API 
 
    To track all tables and expose them over the GraphQL API, use the :ref:`track_table metadata API <track_table>`:
 
@@ -131,7 +131,7 @@ To track a foreign-key between two tables in the database:
 .. rst-class:: api_tabs
 .. tabs::
 
-   .. tab:: Via console
+   .. tab:: Console
 
       #. Head to the ``Data -> Schema`` section of the console.
       #. Click on a table involved in the foreign-key and head to the ``Relationships`` tab.
@@ -140,7 +140,7 @@ To track a foreign-key between two tables in the database:
          hit ``Save`` to create the relationship.
       #. Repeat with the other table involved in the foreign-key.
 
-   .. tab:: Via CLI
+   .. tab:: CLI
 
       To track a relationship and expose it over the GraphQL API, add it to the ``tables.yaml`` file in the ``metadata`` directory as follows:
 
@@ -180,7 +180,7 @@ To track a foreign-key between two tables in the database:
 
          hasura metadata apply
 
-   .. tab:: Via API
+   .. tab:: API
 
       **Object relationship**
 
@@ -233,13 +233,13 @@ To track all the foreign-keys of all tables in the database:
 .. rst-class:: api_tabs
 .. tabs::
 
-   .. tab:: Via console
+   .. tab:: Console
 
       #. Head to the ``Data -> Schema`` section of the console.
       #. Under the heading ``Untracked foreign-key relations``, click the ``Track All`` button to automatically
          create relationships based on the foreign-keys.
 
-   .. tab:: Via CLI
+   .. tab:: CLI
 
       To track all relationships and expose them over the GraphQL API, add them to the ``tables.yaml`` file in the ``metadata`` directory as follows:
 
@@ -262,16 +262,16 @@ To track all the foreign-keys of all tables in the database:
          :emphasize-lines: 4-11
 
          - table:
-               schema: public
-               name: <table name>
-            array_relationships:
-            - name: <relationship name>
-               using:
+             schema: public
+             name: <table name>
+           array_relationships:
+           - name: <relationship name>
+             using:
                foreign_key_constraint_on:
-                  column: <reference key>
-                  table:
-                     schema: public
-                     name: <reference table name>
+                 column: <reference key>
+                 table:
+                   schema: public
+                   name: <reference table name>
 
       To automate this, add the relationships in a loop through a script.
 
@@ -281,7 +281,7 @@ To track all the foreign-keys of all tables in the database:
 
          hasura metadata apply
 
-   .. tab:: Via API
+   .. tab:: API
 
       To track all relationships and expose them over the GraphQL API, there are two APIs you can use depending on the kind of relationship.
 

@@ -51,7 +51,7 @@ Let's say we have a table:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: Console
 
     Now, we can head to the ``Modify`` tab in the table page and add a check
     constraint in the ``Check Constraints`` section:
@@ -59,14 +59,20 @@ Let's say we have a table:
     .. thumbnail:: /img/graphql/manual/schema/validation-add-check-constraint.png
       :alt: Add check constraint
 
-  .. tab:: Via CLI
+  .. tab:: CLI
 
-    :ref:`Create a migration manually <manual_migrations>` and add the following statement to it:
+    :ref:`Create a migration manually <manual_migrations>` and add the following SQL statement to the ``up.sql`` file:
 
     .. code-block:: sql
 
       ALTER TABLE author
       ADD CONSTRAINT authors_rating_check CHECK (rating > 0 AND rating <= 10);
+
+    Add the following statement to the ``down.sql`` file in case you need to :ref:`roll back <roll_back_migrations>` the above statement:
+
+    .. code-block:: sql
+
+      ALTER TABLE author DROP CONSTRAINT authors_rating_check;
 
     Apply the migration by running:
 
@@ -74,7 +80,7 @@ Let's say we have a table:
 
       hasura migrate apply
 
-  .. tab:: Via API
+  .. tab:: API
 
     You can add a check constraint by using the :ref:`run_sql metadata API <run_sql>`:
 
@@ -139,7 +145,7 @@ Suppose we have the following table:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: Console
 
     Now, we can head to the ``Data -> SQL`` tab in the console and
     create a `Postgres function <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
@@ -147,10 +153,10 @@ Suppose we have the following table:
     and then add a `Postgres trigger <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__
     that will call this function every time before an article is inserted or updated.
 
-  .. tab:: Via CLI
+  .. tab:: CLI
 
     :ref:`Create a migration manually <manual_migrations>` and add your `Postgres function <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
-    and your `Postgres trigger <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__ to it.
+    and your `Postgres trigger <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__ to the ``up.sql`` file. Also, add an SQL statement to the ``down.sql`` to revert the statement.
 
     Apply the migration by running:
 
@@ -158,7 +164,7 @@ Suppose we have the following table:
 
       hasura migrate apply
 
-  .. tab:: Via API
+  .. tab:: API
 
     You can add a `Postgres function <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
     and a `Postgres trigger <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__ by using the :ref:`run_sql metadata API <run_sql>`:
@@ -259,12 +265,12 @@ Now, we can create a role ``user`` and add the following rule:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: Console
 
     .. thumbnail:: /img/graphql/manual/schema/validation-not-empty.png
       :alt: validation using permission: title cannot be empty
 
-  .. tab:: Via CLI
+  .. tab:: CLI
   
     You can add roles and permissions in the ``tables.yaml`` file inside the ``metadata`` directory:
 
@@ -287,7 +293,7 @@ Now, we can create a role ``user`` and add the following rule:
 
       hasura metadata apply
 
-  .. tab:: Via API
+  .. tab:: API
 
     You can add column presets by using the :ref:`create_insert_permission metadata API <create_insert_permission>`:
 
@@ -360,12 +366,12 @@ Now, we can create a role ``user`` and add the following rule:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: Console
 
     .. thumbnail:: /img/graphql/manual/schema/validation-author-isactive.png
       :alt: validation using permissions: author should be active
 
-  .. tab:: Via CLI
+  .. tab:: CLI
 
     You can add roles and permissions in the ``tables.yaml`` file inside the ``metadata`` directory:
 
@@ -389,7 +395,7 @@ Now, we can create a role ``user`` and add the following rule:
 
       hasura metadata apply
 
-  .. tab:: Via API
+  .. tab:: API
 
     You can add column presets by using the :ref:`create_insert_permission metadata API <create_insert_permission>`:
 
@@ -482,12 +488,12 @@ returns an object of type ``AuthorOutput``:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: Console
 
     .. thumbnail:: /img/graphql/manual/schema/validation-actions-def.png
       :alt: Create action
 
-  .. tab:: Via CLI
+  .. tab:: CLI
 
     To create an action, run
 
@@ -516,7 +522,7 @@ returns an object of type ``AuthorOutput``:
         id: Int!
       }
 
-  .. tab:: Via API
+  .. tab:: API
 
     It is essential that the custom types used in the action are defined *beforehand* via the :ref:`set_custom_types metadata API <set_custom_types>`:
 

@@ -39,7 +39,7 @@ Let's add a foreign-key constraint to the ``author_id`` column in the ``article`
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: Console
 
     In the console, navigate to the ``Modify`` tab of the ``article`` table. Click the ``Add`` button in
     the Foreign Keys section and configure the ``author_id`` column as a foreign-key for the ``id`` column in
@@ -48,14 +48,21 @@ Let's add a foreign-key constraint to the ``author_id`` column in the ``article`
     .. thumbnail:: /img/graphql/manual/schema/add-foreign-key.png
       :alt: Add foreign-key constraint
 
-  .. tab:: Via CLI
+  .. tab:: CLI
 
-    :ref:`Create a migration manually <manual_migrations>` and add the following statement to it:
+    :ref:`Create a migration manually <manual_migrations>` and add the following SQL statement to the ``up.sql`` file:
 
     .. code-block:: sql
 
       ALTER TABLE article
       ADD FOREIGN KEY (author_id) REFERENCES author(id);
+
+    Add the following statement to the ``down.sql`` file in case you need to :ref:`roll back <roll_back_migrations>` the above statement:
+
+    .. code-block:: sql
+
+      ALTER TABLE article
+      DROP CONSTRAINT (article_author_id_fkey)
 
     Apply the migration by running:
 
@@ -63,7 +70,7 @@ Let's add a foreign-key constraint to the ``author_id`` column in the ``article`
 
       hasura migrate apply
 
-  .. tab:: Via API
+  .. tab:: API
 
     You can add a foreign-key constraint using the :ref:`run_sql metadata API <run_sql>`:
 
@@ -88,7 +95,7 @@ Each article has one author. This is an ``object relationship``.
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: Console
 
     The console infers potential relationships using the foreign-key created above and recommends these in the
     ``Relationships`` tab of the ``article`` table.
@@ -98,7 +105,7 @@ Each article has one author. This is an ``object relationship``.
     .. thumbnail:: /img/graphql/manual/schema/add-1-1-relationship.png
       :alt: Create an object relationship
 
-  .. tab:: Via CLI
+  .. tab:: CLI
 
     You can add an object relationship in the ``tables.yaml`` file inside the ``metadata`` directory:
 
@@ -122,7 +129,7 @@ Each article has one author. This is an ``object relationship``.
 
       hasura metadata apply
 
-  .. tab:: Via API
+  .. tab:: API
 
     You can create an object relationship by using the :ref:`create_object_relationship metadata API <create_object_relationship>`:
 
@@ -219,7 +226,7 @@ You can add an ``array relationship`` in the same fashion as an ``object relatio
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: Console
 
     On the console, add an ``array relationship`` named ``articles`` for the ``author`` table as shown here:
 
@@ -228,7 +235,7 @@ You can add an ``array relationship`` in the same fashion as an ``object relatio
 
     We can now run a nested object query that is based on this ``array relationship``.
 
-  .. tab:: Via CLI
+  .. tab:: CLI
 
     You can add an array relationship in the ``tables.yaml`` file inside the ``metadata`` directory:
 
@@ -260,7 +267,7 @@ You can add an ``array relationship`` in the same fashion as an ``object relatio
 
       hasura metadata apply
 
-  .. tab:: Via API
+  .. tab:: API
 
     You can create an array relationship by using the :ref:`create_array_relationship metadata API <create_array_relationship>`:
 
@@ -386,7 +393,7 @@ Let us now create an ``object relationship`` called ``avg_rating`` from the ``au
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: Console
 
     Step 1: Open the manual relationship section
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -416,7 +423,7 @@ Let us now create an ``object relationship`` called ``avg_rating`` from the ``au
 
     Now click on the ``Save`` button to create the relationship.
 
-  .. tab:: Via CLI
+  .. tab:: CLI
 
     You can add a manual relationship in the ``tables.yaml`` file inside the ``metadata`` directory:
 
@@ -448,7 +455,7 @@ Let us now create an ``object relationship`` called ``avg_rating`` from the ``au
 
       hasura metadata apply
 
-  .. tab:: Via API
+  .. tab:: API
 
     You can add a manual relationship by using the :ref:`create_object_relationship metadata API <create_object_relationship>`:
 

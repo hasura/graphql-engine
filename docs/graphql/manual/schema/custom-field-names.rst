@@ -24,14 +24,14 @@ Expose columns with a different name in the GraphQL API
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: Console
 
      Head to the ``Data -> [table-name] -> Modify``
 
      .. thumbnail:: /img/graphql/manual/schema/custom-field-name-column.png
         :alt: Customise GraphQL field name
 
-  .. tab:: Via CLI
+  .. tab:: CLI
 
     You can customize auto-generated field names in the ``tables.yaml`` file inside the ``metadata`` directory:
 
@@ -51,7 +51,7 @@ Expose columns with a different name in the GraphQL API
 
       hasura metadata apply
 
-  .. tab:: Via API
+  .. tab:: API
 
     A custom field name can be set for a column via the following 2 methods:
 
@@ -101,14 +101,14 @@ Expose table root fields with a different name in the GraphQL API
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: Console
 
      Head to the ``Data -> [table-name] -> Modify``
 
      .. thumbnail:: /img/graphql/manual/schema/custom-field-name-root-fields.png
         :alt: Customise GraphQL root field
 
-  .. tab:: Via CLI
+  .. tab:: CLI
 
     You can expose table root fields with a different name in the GraphQL API in the ``tables.yaml`` file inside the ``metadata`` directory:
 
@@ -129,7 +129,7 @@ Expose table root fields with a different name in the GraphQL API
 
       hasura metadata apply
 
-  .. tab:: Via API
+  .. tab:: API
 
     A custom field name can be set for a table root field via the following 2 methods:
 

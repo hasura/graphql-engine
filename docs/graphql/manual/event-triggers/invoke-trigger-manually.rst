@@ -15,7 +15,7 @@ Invoke event trigger manually
 .. rst-class:: api_tabs
 .. tabs::
 
-   .. tab:: Via console
+   .. tab:: Console
 
       You can select the ``Via console`` trigger operation while :ref:`creating an event trigger <create_trigger>`
       to allow invoking the event trigger on rows manually using the Hasura console *(available after version v1.0.0-beta.1)*.
@@ -32,7 +32,7 @@ Invoke event trigger manually
       .. thumbnail:: /img/graphql/manual/event-triggers/run-manual-trigger.png
          :alt: Request and response of event trigger
 
-   .. tab:: Via API
+   .. tab:: API
 
       When creating an event trigger over the :ref:`create_event_trigger metadata API<create_event_trigger>`, you can set the argument ``enable_manual`` to true.
 
