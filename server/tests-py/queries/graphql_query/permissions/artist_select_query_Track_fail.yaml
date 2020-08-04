@@ -8,7 +8,7 @@ response:
   - extensions:
       code: not-found
       path: "$"
-    message: '"x-hasura-artist-id" header is expected but not found'
+    message: 'missing session variables: "x-hasura-artist-id"'
 query:
   query: |
     query {
