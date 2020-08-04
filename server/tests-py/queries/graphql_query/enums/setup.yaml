@@ -16,9 +16,10 @@ args:
         ('purple', '#FF00FF');
 
       CREATE TABLE users
-        ( id serial PRIMARY KEY
+        ( id serial
         , name text NOT NULL
-        , favorite_color text NOT NULL REFERENCES colors );
+        , favorite_color text NOT NULL REFERENCES colors
+        , PRIMARY KEY (id, favorite_color) );
       INSERT INTO users (name, favorite_color) VALUES
         ('Alyssa', 'red'),
         ('Ben', 'blue');
@@ -37,4 +38,13 @@ args:
     role: anonymous
     permission:
       columns: [id, name, favorite_color]
+      filter: {}
+
+# A user can query only name but not favorite_color
+- type: create_select_permission
+  args:
+    table: users
+    role: user
+    permission:
+      columns: [id, name]
       filter: {}
