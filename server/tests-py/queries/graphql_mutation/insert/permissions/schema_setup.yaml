@@ -464,6 +464,15 @@ args:
             id: X-Hasura-User-Id
             is_admin: true
 
+- type: create_update_permission
+  args:
+    table: user
+    role: backend_user
+    permission:
+      check: {}
+      filter: {}
+      columns: '*'
+
 - type: create_insert_permission
   args:
     table: user
@@ -475,10 +484,29 @@ args:
       set:
         is_admin: true
 
+- type: create_insert_permission
+  args:
+    table: user
+    role: backend_user_2
+    permission:
+      check: {}
+      columns: '*'
+      backend_only: true
+      set:
+        is_admin: true
+
 - type: create_select_permission
   args:
     table: user
     role: backend_user
+    permission:
+      columns: '*'
+      filter: {}
+
+- type: create_select_permission
+  args:
+    table: user
+    role: backend_user_2
     permission:
       columns: '*'
       filter: {}
