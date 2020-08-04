@@ -1667,7 +1667,7 @@ class Permissions extends Component {
 
             return (
               <div key={index} className={styles.add_mar_bottom_mid}>
-                {getSelect('table', tableOptions, permissionsState.table)}
+                {getSelect('name', tableOptions, permissionsState.table)}
                 {getSelect('action', actionsList, permissionsState.query)}
                 {getSelect('role', roleList)}
                 {getRemoveIcon()}
