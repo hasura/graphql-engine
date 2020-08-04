@@ -353,23 +353,7 @@ nullable parser = gcastWith (inputParserInput @k) Parser
       value               -> Just <$> pParser parser value
   }
   where
-    schemaType = case pType parser of
-      NonNullable t -> Nullable t
-      Nullable t    -> Nullable t
-
--- | Decorate a type as NON_NULL
-nonNullableType :: forall k . Type k -> Type k
-nonNullableType = \case
-  NonNullable t -> NonNullable t
-  Nullable t    -> NonNullable t
-
--- | Decorate a type as NULL.  Note that regardless of what we think, a nullable
--- value read from the user should be represented by a 'Maybe' Haskell type (or
--- another kind of partial data).
-nullableType :: forall k . Type k -> Type k
-nullableType = \case
-  NonNullable t -> Nullable t
-  Nullable t    -> Nullable t
+    schemaType = nullableType $ pType parser
 
 -- | Decorate a schema field as NON_NULL
 nonNullableField :: forall m a . FieldParser m a -> FieldParser m a

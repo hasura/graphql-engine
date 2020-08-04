@@ -16,6 +16,8 @@ module Hasura.GraphQL.Parser.Schema (
   , eqNonNullableType
   , eqTypeInfo
   , discardNullability
+  , nullableType
+  , nonNullableType
   , toGraphQLType
   , getObjectInfo
   , getInterfaceInfo
@@ -299,6 +301,12 @@ instance HasDefinition (Type k) (TypeInfo k) where
 discardNullability :: Type k -> NonNullableType k
 discardNullability (NonNullable t) = t
 discardNullability (Nullable t)    = t
+
+nullableType :: Type k -> Type k
+nullableType = Nullable . discardNullability
+
+nonNullableType :: Type k -> Type k
+nonNullableType = NonNullable . discardNullability
 
 data NonNullableType k
   = TNamed (Definition (TypeInfo k))
