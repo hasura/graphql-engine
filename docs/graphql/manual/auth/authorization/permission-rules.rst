@@ -151,15 +151,15 @@ the value in the ``id`` column is greater than 10:
          :emphasize-lines: 8-10
 
             - table:
-               schema: public
-               name: author
-               select_permissions:
-               - role: user
-                 permission:
-                   columns: []
-                   filter:
-                     id:
-                       _gt: 10
+                schema: public
+                name: author
+              select_permissions:
+              - role: user
+                permission:
+                  columns: []
+                    filter:
+                      id:
+                        _gt: 10
 
       Apply the metadata by running:
 
@@ -217,16 +217,16 @@ or "A":
          :emphasize-lines: 8-13
 
             - table:
-               schema: public
-               name: author
-               select_permissions:
-               - role: user
-                 permission:
-                   columns: []
-                   filter:
-                     _and:
-                       - id: {_gt: 10}
-                       - name: {_ilike: a%}
+                schema: public
+                name: author
+              select_permissions:
+              - role: user
+                permission:
+                  columns: []
+                  filter:
+                    _and:
+                      - id: {_gt: 10}
+                      - name: {_ilike: a%}
 
       Apply the metadata by running:
 
@@ -299,15 +299,15 @@ the author's ID*):
             - table:
                 schema: public
                 name: article
-                select_permissions:
-                - role: author
-                  permission:
-                    columns:
-                    - title
-                    - content
-                    filter:
-                      id:
-                        _eq: X-Hasura-User-Id
+              select_permissions:
+              - role: author
+                permission:
+                  columns:
+                  - title
+                  - content
+                filter:
+                  id:
+                    _eq: X-Hasura-User-Id
 
       Apply the metadata by running:
 
@@ -623,8 +623,8 @@ using this configuration:
          :emphasize-lines: 13
 
             - table:
-              schema: public
-              name: author
+                schema: public
+                name: author
               select_permissions:
               - role: user
                 permission:
@@ -698,8 +698,8 @@ can be restricted for a given role using this configuration.
          :emphasize-lines: 13
 
             - table:
-              schema: public
-              name: author
+                schema: public
+                name: author
               select_permissions:
               - role: user
                 permission:

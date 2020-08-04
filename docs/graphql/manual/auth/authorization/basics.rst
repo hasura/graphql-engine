@@ -127,15 +127,15 @@ Now let's define an access control rule for the ``author`` table for a role ``us
         - table:
             schema: public
             name: author
-            select_permissions:
-            - role: user
-              permission:
-                columns:
-                - id
-                - name
-                filter:
-                  id:
-                    _eq: X-Hasura-User-Id
+          select_permissions:
+          - role: user
+            permission:
+              columns:
+              - id
+              - name
+              filter:
+                id:
+                  _eq: X-Hasura-User-Id
 
     Apply the metadata by running:
 

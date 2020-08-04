@@ -157,11 +157,11 @@ explicitly reloads the remote schema.
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: Console
 
     Click the ``Reload`` button on the console.
 
-  .. tab:: Via API
+  .. tab:: API
 
     Make a request to the :ref:`reload_remote_schema<reload_remote_schema>` API.
 

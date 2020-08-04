@@ -56,7 +56,7 @@ Creating & exposing SQL functions
 
   .. tab:: CLI
 
-    1. :ref:`Create a migration manually <manual_migrations>` and add your `create function SQL statement <https://www.postgresql.org/docs/current/sql-createfunction.html>`__ to it.
+    1. :ref:`Create a migration manually <manual_migrations>` and add your `create function SQL statement <https://www.postgresql.org/docs/current/sql-createfunction.html>`__ to the ``up.sql`` file. Also, add an SQL statement to the ``down.sql`` file in case you need to roll back the migrations.
 
     2. Apply the migration by running:
 

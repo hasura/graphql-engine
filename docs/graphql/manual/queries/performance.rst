@@ -215,7 +215,7 @@ Whenever there is a sequential scan, it can be optimized by adding an index.
 
   .. tab:: CLI
 
-   :ref:`Create a migration manually <manual_migrations>` and add your create index statement to it.
+   :ref:`Create a migration manually <manual_migrations>` and add your create index statement to the ``up.sql`` file. Also, add an SQL statement to revert that statement to the ``down.sql`` file.
 
    Apply the migration by running:
 
