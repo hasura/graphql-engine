@@ -25,6 +25,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Plan
   ) where
 
 import           Hasura.Prelude
+import           Hasura.Session
 
 import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.Extended                    as J
@@ -48,7 +49,6 @@ import           Data.UUID                              (UUID)
 import qualified Hasura.GraphQL.Parser.Schema           as PS
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.RQL.DML.Select                  as DS
-import qualified Hasura.Logging                         as L
 import qualified Hasura.SQL.DML                         as S
 import qualified Hasura.Tracing                         as Tracing
 
@@ -58,7 +58,6 @@ import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Query
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.RQL.Types
-import           Hasura.Session
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -261,7 +260,7 @@ data LiveQueryPlan
   = LiveQueryPlan
   { _lqpParameterizedPlan :: !ParameterizedLiveQueryPlan
   , _lqpVariables         :: !CohortVariables
-  }
+  } deriving Show
 
 data ParameterizedLiveQueryPlan
   = ParameterizedLiveQueryPlan

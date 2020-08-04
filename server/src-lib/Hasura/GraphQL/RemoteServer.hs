@@ -8,7 +8,6 @@ import           Control.Exception                      (try)
 import           Control.Lens                           ((^.))
 import           Control.Monad.Unique
 import           Data.Aeson                             ((.:), (.:?))
-import           Data.FileEmbed                         (embedStringFile)
 import           Hasura.HTTP
 import           Hasura.Prelude
 
@@ -193,8 +192,7 @@ fetchRemoteSchema env manager schemaName schemaInfo@(RemoteSchemaInfo url header
 --                               (VT.TIObj mr) newTyMap') newMR
 
 
--- parsing the introspection query result
-
+-- | Parsing the introspection query result
 newtype FromIntrospection a
   = FromIntrospection { fromIntrospection :: a }
   deriving (Show, Eq, Generic)

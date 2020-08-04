@@ -404,8 +404,6 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
                runExceptT $ addRemoteSchemaP2Setup env remoteSchema)
            |) (mkRemoteSchemaMetadataObject remoteSchema)
 
-
-
 -- | @'withMetadataCheck' cascade action@ runs @action@ and checks if the schema changed as a
 -- result. If it did, it checks to ensure the changes do not violate any integrity constraints, and
 -- if not, incorporates them into the schema cache.

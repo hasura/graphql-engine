@@ -52,9 +52,6 @@ import qualified Network.HTTP.Client           as HTTP
 import qualified Network.HTTP.Types            as HTTP
 
 import           Control.Exception             (try)
--- import           Control.Monad.IO.Class        (MonadIO, liftIO)
--- import           Control.Monad.Reader          (MonadReader)
-
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH

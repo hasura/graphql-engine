@@ -41,6 +41,7 @@ import           Hasura.Server.Init                 (InstanceId (..))
 import           Hasura.Server.Utils
 import           Hasura.Server.Version              (HasVersion)
 import           Hasura.Session
+
 import qualified Hasura.Tracing                     as Tracing
 
 data RQLQueryV1

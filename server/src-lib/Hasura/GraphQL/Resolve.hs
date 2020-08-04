@@ -19,6 +19,7 @@ module Hasura.GraphQL.Resolve
   ) where
 
 import           Data.Has
+import           Hasura.Session
 
 import qualified Data.Environment                  as Env
 import qualified Data.HashMap.Strict               as Map
@@ -76,7 +77,7 @@ traverseQueryRootFldAST f = \case
   QRFActionExecuteList s   -> QRFActionExecuteList <$> DS.traverseAnnSimpleSelect f s
   QRFConnection s   -> QRFConnection <$> DS.traverseConnectionSelect f s
 
-toPGQuery :: QueryRootFldResolved -> Q.Query
+toPGQuery :: QueryRootFldResolved -> (Q.Query, Maybe RR.RemoteJoins)
 toPGQuery = \case
   QRFNode s                -> first (toQuery . DS.mkSQLSelect DS.JASSingleObject) $ RR.getRemoteJoins s
   QRFPk s                  -> first (toQuery . DS.mkSQLSelect DS.JASSingleObject) $ RR.getRemoteJoins s
@@ -93,9 +94,9 @@ toPGQuery = \case
 validateHdrs
   :: (Foldable t, QErrM m) => UserInfo -> t Text -> m ()
 validateHdrs userInfo hdrs = do
-  let receivedVars = userVars userInfo
+  let receivedVars = _uiSession userInfo
   forM_ hdrs $ \hdr ->
-    unless (isJust $ getVarVal hdr receivedVars) $
+    unless (isJust $ getSessionVariableValue (mkSessionVariable hdr) receivedVars) $
     throw400 NotFound $ hdr <<> " header is expected but not found"
 
 queryFldToPGAST
@@ -187,8 +188,12 @@ mutFldToTx
   -> m (tx EncJSON, HTTP.ResponseHeaders)
 mutFldToTx env fld = do
   userInfo <- asks getter
+  reqHeaders <- asks getter
+  httpManager <- asks getter
+  let rjCtx = (httpManager, reqHeaders, userInfo)
   opCtx <- getOpCtx $ V._fName fld
   let noRespHeaders = fmap (,[])
+      roleName = _uiRole userInfo
   case opCtx of
     MCInsert ctx -> do
       validateHdrs userInfo (_iocHeaders ctx)

@@ -5,6 +5,7 @@ import qualified Data.HashMap.Strict.Extended   as M
 import           Control.Lens                   hiding ((.=))
 import           Data.Aeson
 import           Hasura.Prelude
+import           Hasura.Session
 
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Common
@@ -14,7 +15,6 @@ import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Types
-import           Hasura.Session
 
 data TableMetadataObjId
   = MTORel !RelName !RelType
@@ -70,7 +70,7 @@ moiName objectId = moiTypeName objectId <> " " <> case objectId of
     in tableObjectName <> " in " <> moiName (MOTable tableName)
   MOCustomTypes -> "custom_types"
   MOAction name -> dquoteTxt name
-  MOActionPermission name role -> dquoteTxt role <> " permission in " <> dquoteTxt name
+  MOActionPermission name roleName -> dquoteTxt roleName <> " permission in " <> dquoteTxt name
 
 data MetadataObject
   = MetadataObject

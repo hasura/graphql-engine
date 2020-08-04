@@ -66,8 +66,6 @@ import           Hasura.RQL.Types.SchemaCache        as R
 import           Hasura.RQL.Types.SchemaCache.Build  as R
 import           Hasura.RQL.Types.Table              as R
 
--- import qualified Hasura.GraphQL.Context              as GC
-
 import qualified Data.HashMap.Strict                 as M
 import qualified Data.Text                           as T
 import qualified Network.HTTP.Client                 as HTTP

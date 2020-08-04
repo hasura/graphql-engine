@@ -1,3 +1,4 @@
+{-# LANGUAGE ViewPatterns #-}
 module Hasura.RQL.DDL.RemoteSchema
   ( runAddRemoteSchema
   , runRemoveRemoteSchema
@@ -25,7 +26,7 @@ import qualified Data.HashSet                as S
 import qualified Database.PG.Query           as Q
 
 import           Hasura.RQL.Types
-import           Hasura.Server.Version       (HasVersion)
+import           Hasura.Server.Version             (HasVersion)
 import           Hasura.SQL.Types
 
 import qualified Data.Environment                  as Env

@@ -12,6 +12,7 @@ import           Hasura.GraphQL.Context        (defaultTypes)
 import           Hasura.GraphQL.Schema.Common  (mkTableTy)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.Session
 import           Hasura.SQL.Types
 
 import qualified Hasura.GraphQL.Validate.Types as VT

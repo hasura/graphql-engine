@@ -55,7 +55,6 @@ import           Hasura.Server.Utils                   (executeJSONPath)
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-
 type SelectExp       = RQL.AnnSimpleSelG UnpreparedValue
 type AggSelectExp    = RQL.AnnAggregateSelectG UnpreparedValue
 type ConnectionSelectExp = RQL.ConnectionSelect UnpreparedValue

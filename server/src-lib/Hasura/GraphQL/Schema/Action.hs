@@ -22,8 +22,8 @@ import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 import           Hasura.Session
+import           Hasura.SQL.Types
 
 actionExecute
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)

@@ -42,6 +42,8 @@ import           Hasura.Prelude
 import qualified Data.Aeson.Types           as J
 import qualified Data.HashMap.Strict        as M
 
+import qualified Hasura.SQL.DML             as S
+
 import           Control.Lens.Plated
 import           Control.Lens.TH
 import           Data.Aeson
@@ -50,8 +52,6 @@ import           Data.Aeson.Internal
 import           Data.Aeson.TH
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
-
-import qualified Hasura.SQL.DML             as S
 
 import           Hasura.Incremental         (Cacheable)
 import           Hasura.RQL.Types.Column

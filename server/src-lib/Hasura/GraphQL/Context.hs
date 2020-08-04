@@ -38,6 +38,7 @@ import           Hasura.GraphQL.Schema.Insert  (AnnInsert)
 -- | For storing both a normal GQLContext and one for the backend variant.
 -- Currently, this is to enable the backend variant to have certain insert
 -- permissions which the frontend variant does not.
+
 data RoleContext a
   = RoleContext
   { _rctxDefault :: !a -- ^ The default context for normal sessions

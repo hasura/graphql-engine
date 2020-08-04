@@ -320,6 +320,7 @@ data PreparedSql
     -- prepared argument (PGScalarValue) and not the binary encoding in PG format (Q.PrepArg)
   , _psRemoteJoins :: !(Maybe RemoteJoins)
   }
+  deriving Show
 
 -- | Required to log in `query-log`
 instance J.ToJSON PreparedSql where

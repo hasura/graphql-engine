@@ -35,6 +35,7 @@ import           Hasura.RQL.Types
 import           Hasura.Session
 import           Hasura.SQL.Types
 
+
 -- | Whether the request is sent with `x-hasura-use-backend-only-permissions` set to `true`.
 data Scenario = Backend | Frontend deriving (Enum, Show, Eq)
 
