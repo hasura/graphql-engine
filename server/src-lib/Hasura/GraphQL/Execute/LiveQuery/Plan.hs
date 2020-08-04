@@ -48,7 +48,6 @@ import           Data.UUID                              (UUID)
 import qualified Hasura.GraphQL.Parser.Schema           as PS
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.RQL.DML.Select                  as DS
-import qualified Hasura.Logging                         as L
 import qualified Hasura.SQL.DML                         as S
 import qualified Hasura.Tracing                         as Tracing
 
