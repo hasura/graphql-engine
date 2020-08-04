@@ -1,5 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import throttle from 'lodash.throttle';
 
 import { Box, Flex, Heading, Text, Badge } from '../UIKit/atoms';
 import { ConsoleNotification, NotificationDate } from './ConsoleNotification';
@@ -166,12 +167,8 @@ const ViewMoreOptions: React.FC<ViewMoreProps> = ({
     numberNotifications > 20
       ? 'View older notifications'
       : 'View more notifications';
-  // if all read - no button
   // new > read notifs - See More notifications
   // if current < old - See older notifications
-  // if (numberNotifications === 10) {
-  //   buttonText = 'View Older Notifications';
-  // }
   // TODO: think about the part where we might have to change the text
   return (
     <Button className={styles.viewMoreNotifications} onClick={onClickViewMore}>
@@ -368,6 +365,8 @@ const HasuraNotifications: React.FC<Props> = ({
   const [latestVersion, setLatestVersion] = React.useState(props.serverVersion);
   const dropDownRef = React.useRef<HTMLDivElement>(null);
   const wrapperRef = React.useRef(null);
+  const previouslyRead = props.console_opts?.console_notifications?.read;
+  const readNotifications: string[] = [];
   const updateRefs = consoleNotifications.reduce(
     (
       acc: Record<string, React.RefObject<HTMLDivElement>>,
@@ -380,37 +379,6 @@ const HasuraNotifications: React.FC<Props> = ({
     },
     {}
   );
-  const updateRefObjects = Object.values(updateRefs);
-  const observerCallback = (entries: IntersectionObserverEntry[]) => {
-    // TODO: change this callback to
-    // 1. change the read count
-    // 2. update the read [] in console_state within the DB
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        console.log(entry.target.id);
-      }
-    });
-  };
-  const observer = new IntersectionObserver(observerCallback, {
-    root: dropDownRef.current,
-    threshold: [1],
-  });
-
-  React.useEffect(() => {
-    updateRefObjects.forEach(value => {
-      if (value.current) {
-        observer.observe(value.current);
-      }
-    });
-
-    // return () => {
-    //   updateRefObjects.forEach(value => {
-    //     if (value.current) {
-    //       observer.unobserve(value.current);
-    //     }
-    //   });
-    // };
-  }, [updateRefObjects, updateRefs, observer]);
 
   React.useEffect(() => {
     const [versionUpdateCheck, latestReleasedVersion] = checkVersionUpdate(
@@ -428,7 +396,73 @@ const HasuraNotifications: React.FC<Props> = ({
     }
 
     setDisplayNewVersionNotif(false);
-  }, [props]);
+  }, []);
+
+  let defaultNumberNotifications =
+    consoleNotifications.length +
+    (displayNewVersionNotif ? 1 : 0) -
+    (Array.isArray(previouslyRead) ? previouslyRead.length : 0);
+  if (previouslyRead) {
+    if (
+      previouslyRead === 'all' ||
+      previouslyRead === 'default' ||
+      previouslyRead === 'error' ||
+      previouslyRead === []
+    ) {
+      defaultNumberNotifications = 0;
+    }
+  }
+  const [numberNotifications, changeNumberNotifications] = React.useState(
+    defaultNumberNotifications
+  );
+  const throttledCb = throttle((notifications: string[]) => {
+    props.dispatch(
+      updateConsoleNotificationsInDB({
+        read: notifications,
+        date: new Date().toISOString(),
+      })
+    );
+  }, 3000);
+
+  const updateRefObjects = Object.values(updateRefs);
+  const observerCallback = (entries: IntersectionObserverEntry[]) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const currentReadNotifID = entry.target.id;
+        if (!readNotifications.includes(currentReadNotifID)) {
+          readNotifications.push(currentReadNotifID);
+          changeNumberNotifications(number => number - 1);
+          if (consoleNotifications.length !== readNotifications.length) {
+            throttledCb(readNotifications);
+          } else {
+            throttledCb.cancel();
+          }
+        }
+      }
+    });
+  };
+
+  React.useEffect(() => {
+    if (numberNotifications <= 0) {
+      markAllAsRead(props.dispatch, props.hasura_uuid);
+    }
+  }, [numberNotifications]);
+
+  const observer = new window.IntersectionObserver(observerCallback, {
+    root: dropDownRef.current,
+    threshold: [1],
+  });
+
+  React.useEffect(() => {
+    updateRefObjects.forEach(value => {
+      if (value.current) {
+        observer.observe(value.current);
+      }
+    });
+
+    // FIXME: intersection observer stops working at times
+    // return () => observer.disconnect();
+  }, []);
 
   const optOutCallback = () => {
     props.dispatch(setPreReleaseNotificationOptOutInDB());
@@ -441,22 +475,6 @@ const HasuraNotifications: React.FC<Props> = ({
   const onClickMarkAllAsRead = () => {
     markAllAsRead(props.dispatch, props.hasura_uuid);
   };
-
-  let numberNotifications =
-    consoleNotifications.length + (displayNewVersionNotif ? 1 : 0);
-  // TODO: handle read logic here and send the appropriate number
-  if (props.console_opts?.console_notifications) {
-    const readValue = props.console_opts.console_notifications.read;
-    if (
-      readValue === 'all' ||
-      readValue === 'default' ||
-      readValue === 'error' ||
-      readValue === []
-    ) {
-      // after `Mark all as read` or no new notifications case
-      numberNotifications = 0;
-    }
-  }
 
   useOnClickOutside([dropDownRef, wrapperRef], closeDropDown);
 
