@@ -154,6 +154,7 @@ cabal new-run -- test:graphql-engine-tests \
    ```
    env EVENT_WEBHOOK_HEADER=MyEnvValue \
        WEBHOOK_FROM_ENV=http://localhost:5592/ \
+       SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN=http://127.0.0.1:5594 \
      cabal new-run -- exe:graphql-engine \
        --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>' \
        serve --stringify-numeric-types
