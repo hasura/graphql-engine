@@ -68,7 +68,7 @@ const AddManualRelationship = ({
   return (
     <div key="add_manual_relationship">
       <div className={styles.add_mar_bottom}>
-        <label> Add a new relationship manually </label>
+        Add a new relationship <b>manually</b>
       </div>
       <ExpandableEditor
         editorExpanded={expandedContent}

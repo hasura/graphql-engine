@@ -7,10 +7,10 @@
 
 <script type="text/javascript">
   const showLoading = function() {
-    $('.loading_overlay').removeClass('hide');
+    Array.from(document.getElementsByClassName('loading_overlay')).forEach(el => el.classList.remove('hide'));
   };
 
   const hideLoading = function() {
-    $('.loading_overlay').addClass('hide');
+    Array.from(document.getElementsByClassName('loading_overlay')).forEach(el => el.classList.add('hide'));
   };
 </script>
