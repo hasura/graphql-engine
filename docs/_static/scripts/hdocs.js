@@ -5,6 +5,8 @@ window.hdocs = (function () {
     setup: function () {
       Array.from(document.getElementsByClassName('menuLink')).forEach(function (el) { el.addEventListener('click', hdocs.toggleMenu) });
 
+      Array.from(document.getElementsByClassName('tracked')).forEach(function (el) { el.addEventListener('click', function () { hdocs.trackGA(el.getAttribute('data-label')) }) });
+
       document.getElementById('nav_tree_icon').addEventListener('click', hdocs.handleNavClick);
       document.getElementById('sidebar-close').addEventListener('click', hdocs.handleNavClick);
 
@@ -26,6 +28,15 @@ window.hdocs = (function () {
       hdocs.setExternalLinks();
       hdocs.setupIntercom();
       hdocs.setupGraphiQL();
+    },
+    trackGA: function (label, action) {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: 'Click Events',
+        category: 'Docs Custom',
+        action: action || 'Link Click',
+        label: label
+      })
     },
     toggleMenu: function () {
       var x = document.getElementById("navbar")
