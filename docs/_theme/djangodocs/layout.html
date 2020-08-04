@@ -339,7 +339,9 @@
     const HDOCS_GRAPHIQL_DEFAULT_ENDPOINT = "{{ GRAPHIQL_DEFAULT_ENDPOINT }}";
 
     document.addEventListener('DOMContentLoaded', function () {
-      hdocs && hdocs.setup();
+      if (hdocs) {
+        hdocs.setup();
+      }
     });
   </script>
 
