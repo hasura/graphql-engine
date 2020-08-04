@@ -449,7 +449,7 @@ object name description parser = Parser
       -- handles parsing the fields it cares about
       for_ (M.keys fields) \fieldName -> do
         unless (fieldName `S.member` fieldNames) $ withPath (++[Key (unName fieldName)]) $
-          parseError $ name <<> " has no field named " <>> fieldName
+          parseError $ "field " <> dquote fieldName <> " not found in type: " <> squote name
       ifParser parser fields
 
 field
