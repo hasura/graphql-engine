@@ -1,3 +1,6 @@
+{-# LANGUAGE DeriveAnyClass     #-}
+{-# LANGUAGE DerivingStrategies #-}
+
 module Hasura.GraphQL.Execute.Query
   ( convertQuerySelSet
   -- , queryOpFromPlan
@@ -7,6 +10,10 @@ module Hasura.GraphQL.Execute.Query
   , traverseQueryRootField -- for live query planning
   , irToRootFieldPlan
   , parseGraphQLQuery
+
+  , MonadQueryInstrumentation(..)
+  , ExtractProfile(..)
+  , noProfile
   ) where
 
 import qualified Data.Aeson                             as J
@@ -121,7 +128,7 @@ actionQueryToRootFieldPlan vars prepped = \case
 mkCurPlanTx
   :: ( HasVersion
      , MonadError QErr m
-     , Tracing.MonadTrace m
+     , MonadQueryInstrumentation m
      , MonadIO tx
      , MonadTx tx
      , Tracing.MonadTrace tx
@@ -130,9 +137,10 @@ mkCurPlanTx
   -> HTTP.Manager
   -> [HTTP.Header]
   -> UserInfo
+  -> [G.Directive G.Name]
   -> FieldPlans
   -> m (tx EncJSON, GeneratedSqlMap)
-mkCurPlanTx env manager reqHdrs userInfo fldPlans = do
+mkCurPlanTx env manager reqHdrs userInfo directives fldPlans = do
   -- generate the SQL and prepared vars or the bytestring
   resolved <- forM fldPlans $ \(alias, fldPlan) -> do
     fldResp <- case fldPlan of
@@ -143,7 +151,7 @@ mkCurPlanTx env manager reqHdrs userInfo fldPlans = do
       RFPActionQuery tx -> pure $ RRActionQuery tx
     return (alias, fldResp)
 
-  (,) <$> mkLazyRespTx env manager reqHdrs userInfo resolved <*> pure (mkGeneratedSqlMap resolved)
+  (,) <$> mkLazyRespTx env manager reqHdrs userInfo directives resolved <*> pure (mkGeneratedSqlMap resolved)
 
 -- convert a query from an intermediate representation to... another
 irToRootFieldPlan
@@ -200,12 +208,42 @@ parseGraphQLQuery gqlContext varDefs varValsM fields =
       ParseError{ pePath, peMessage, peCode } ->
         throwError (err400 peCode peMessage){ qePath = pePath }
 
+-- | A method for extracting profiling data from instrumented query results.
+newtype ExtractProfile = ExtractProfile 
+  { runExtractProfile :: forall m. (MonadIO m, Tracing.MonadTrace m) => EncJSON -> m EncJSON
+  }
+  
+-- | A default implementation for queries with no instrumentation
+noProfile :: ExtractProfile
+noProfile = ExtractProfile pure
+
+-- | Monads which support query instrumentation
+class Monad m => MonadQueryInstrumentation m where
+  -- | Add instrumentation to a query, based on the provided directives,
+  -- and also return an 'ExtractProfile' structure to extract any profiling data
+  -- from the instrumented result.
+  askInstrumentQuery 
+    :: [G.Directive G.Name]
+    -> m (Q.Query -> Q.Query, ExtractProfile)
+
+  -- A default for monad transformer instances
+  default askInstrumentQuery 
+    :: (m ~ t n, MonadTrans t, MonadQueryInstrumentation n) 
+    => [G.Directive G.Name]
+    -> m (Q.Query -> Q.Query, ExtractProfile)
+  askInstrumentQuery = lift . askInstrumentQuery
+
+instance MonadQueryInstrumentation m => MonadQueryInstrumentation (ReaderT r m)
+instance MonadQueryInstrumentation m => MonadQueryInstrumentation (ExceptT e m)
+instance MonadQueryInstrumentation m => MonadQueryInstrumentation (Tracing.TraceT m)
+
 convertQuerySelSet
   :: forall m tx .
      ( MonadError QErr m
      , HasVersion
      , MonadIO m
      , Tracing.MonadTrace m
+     , MonadQueryInstrumentation m
      , MonadIO tx
      , MonadTx tx
      , Tracing.MonadTrace tx
@@ -216,6 +254,7 @@ convertQuerySelSet
   -> UserInfo
   -> HTTP.Manager
   -> HTTP.RequestHeaders
+  -> [G.Directive G.Name]
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
@@ -223,7 +262,7 @@ convertQuerySelSet
        -- , Maybe ReusableQueryPlan
        , [QueryRootField UnpreparedValue]
        )
-convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varDefs varValsM = do
+convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives fields varDefs varValsM = do
   -- Parse the GraphQL query into the RQL AST
   (unpreparedQueries, _reusability) <- parseGraphQLQuery gqlContext varDefs varValsM fields
 
@@ -262,7 +301,7 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
 
 
   executionPlan <- case (dbPlans, remoteFields) of
-    (dbs, Seq.Empty) -> ExecStepDB <$> mkCurPlanTx env manager reqHeaders userInfo (toList dbs)
+    (dbs, Seq.Empty) -> ExecStepDB <$> mkCurPlanTx env manager reqHeaders userInfo directives (toList dbs)
     (Seq.Empty, remotes@(firstRemote Seq.:<| _)) -> do
       let (remoteOperation, _) =
             buildTypedOperation
@@ -350,7 +389,7 @@ type GeneratedSqlMap = [(G.Name, Maybe PreparedSql)]
 
 mkLazyRespTx
   :: ( HasVersion
-     , Tracing.MonadTrace m
+     , MonadQueryInstrumentation m
      , MonadIO tx
      , MonadTx tx
      , Tracing.MonadTrace tx
@@ -359,16 +398,18 @@ mkLazyRespTx
   -> HTTP.Manager
   -> [HTTP.Header]
   -> UserInfo
+  -> [G.Directive G.Name]
   -> [(G.Name, ResolvedQuery)]
   -> m (tx EncJSON)
-mkLazyRespTx env manager reqHdrs userInfo resolved =
+mkLazyRespTx env manager reqHdrs userInfo directives resolved = do
+  (instrument, ep) <- askInstrumentQuery directives
   pure $ fmap encJFromAssocList $ forM resolved $ \(alias, node) -> do
     resp <- case node of
      RRRaw bs                   -> return $ encJFromBS bs
      RRSql (PreparedSql q args maybeRemoteJoins) -> do
         let prepArgs = map fst args
         case maybeRemoteJoins of
-          Nothing -> Tracing.trace "Postgres" . liftTx $ asSingleRowJsonResp q prepArgs
+          Nothing -> Tracing.trace "Postgres" . (runExtractProfile ep =<<) . liftTx $ asSingleRowJsonResp (instrument q) prepArgs
           Just remoteJoins ->
             executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs remoteJoins
      RRActionQuery actionTx           -> actionTx
