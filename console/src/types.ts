@@ -12,7 +12,7 @@ export type ReduxState = {
   tables: {
     schemaList: Schema[];
     allSchemas: Table[];
-    dataHeaders: Record<string, string>;
+    dataHeaders: Headers | Record<string, string>;
   };
   events: EventsState;
   main: {

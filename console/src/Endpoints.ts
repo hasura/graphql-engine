@@ -20,6 +20,8 @@ const Endpoints = {
   hasuractlMetadata: `${hasuractlUrl}/apis/metadata`,
   hasuractlMigrateSettings: `${hasuractlUrl}/apis/migrate/settings`,
   telemetryServer: 'wss://telemetry.hasura.io/v1/ws',
+  voyagerWorker:
+    'https://cdn.jsdelivr.net/npm/graphql-voyager@1.0.0-rc.30/dist/voyager.worker.min.js',
 };
 
 const globalCookiePolicy = 'same-origin';

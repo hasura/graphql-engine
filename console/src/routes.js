@@ -25,8 +25,6 @@ import { getEventsRouter } from './components/Services/Events';
 
 import generatedApiExplorer from './components/Services/ApiExplorer/ApiExplorer';
 
-import generatedVoyagerConnector from './components/Services/VoyagerView/VoyagerView';
-
 import generatedLoginConnector from './components/Login/Login';
 
 import settingsContainer from './components/Services/Settings/Container';
@@ -40,6 +38,7 @@ import { showErrorNotification } from './components/Services/Common/Notification
 import { CLI_CONSOLE_MODE } from './constants';
 import UIKit from './components/UIKit/';
 import { Heading } from './components/UIKit/atoms';
+import ConnectedVoyagerView from './components/Services/VoyagerView/VoyagerView';
 
 const routes = store => {
   // load hasuractl migration status
@@ -120,10 +119,7 @@ const routes = store => {
             path="api-explorer"
             component={generatedApiExplorer(connect)}
           />
-          <Route
-            path="voyager-view"
-            component={generatedVoyagerConnector(connect)}
-          />
+          <Route path="voyager-view" component={ConnectedVoyagerView} />
           <Route path="settings" component={settingsContainer(connect)}>
             <IndexRedirect to="metadata-actions" />
             <Route
