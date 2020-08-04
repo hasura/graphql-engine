@@ -12,6 +12,7 @@ window.hdocs = (function () {
       document.getElementById('thumb_down_button').addEventListener('click', function () { hdocs.sendFeedback('negative', 'Sorry to hear that. Please tell us what you were looking for:') });
       document.getElementById('feedback_btn').addEventListener('click', hdocs.handleSubmitFeedback);
 
+      document.getElementById('product-menu').addEventListener('click', hdocs.productMenu);
       docsearch({
         appId: 'WCBB1VVLRC',
         apiKey: '298d448cd9d7ed93fbab395658da19e8',
@@ -33,6 +34,14 @@ window.hdocs = (function () {
         x.className += " responsive"
       } else {
         x.className = "topnav"
+      }
+    },
+    productMenu: function() {
+      var productList = document.getElementById("product-menu-list")
+      if(productList.className === "hide") {
+        productList.className = ""
+      } else {
+        productList.className = "hide"
       }
     },
     request: function (url, data, type) {
