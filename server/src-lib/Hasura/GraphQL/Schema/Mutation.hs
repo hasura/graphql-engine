@@ -13,25 +13,22 @@ module Hasura.GraphQL.Schema.Mutation
 import           Data.Has
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict            as Map
-import qualified Data.HashSet                   as Set
-import qualified Data.List                      as L
-import qualified Data.Text                      as T
-import qualified Language.GraphQL.Draft.Syntax  as G
-import qualified Data.Environment               as Env
+import qualified Data.HashMap.Strict                 as Map
+import qualified Data.HashMap.Strict.InsOrd.Extended as OMap
+import qualified Data.HashSet                        as Set
+import qualified Data.Text                           as T
+import qualified Language.GraphQL.Draft.Syntax       as G
 
-import qualified Hasura.GraphQL.Parser          as P
-import qualified Hasura.RQL.DML.Delete.Types    as RQL
-import qualified Hasura.RQL.DML.Insert.Types    as RQL
-import qualified Hasura.RQL.DML.Returning.Types as RQL
-import qualified Hasura.RQL.DML.Update          as RQL
-import qualified Hasura.RQL.DML.Update.Types    as RQL
-import qualified Hasura.SQL.DML                 as S
-import qualified Hasura.Tracing                 as Tracing
+import qualified Hasura.GraphQL.Parser               as P
+import qualified Hasura.RQL.DML.Delete.Types         as RQL
+import qualified Hasura.RQL.DML.Insert.Types         as RQL
+import qualified Hasura.RQL.DML.Returning.Types      as RQL
+import qualified Hasura.RQL.DML.Update               as RQL
+import qualified Hasura.RQL.DML.Update.Types         as RQL
+import qualified Hasura.SQL.DML                      as S
 
-
-import           Hasura.GraphQL.Parser          (FieldParser, InputFieldsParser, Kind (..), Parser,
-                                                 UnpreparedValue (..), mkParameter)
+import           Hasura.GraphQL.Parser               (FieldParser, InputFieldsParser, Kind (..),
+                                                      Parser, UnpreparedValue (..), mkParameter)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
@@ -390,11 +387,10 @@ updateOperators table updatePermissions = do
 
         -- no column should appear twice
         let flattenedExps = concat opExps
-            groupedExps   = L.groupBy ((==) `on` fst) $ sortOn (getPGColTxt . fst) flattenedExps
-            erroneousExps = concat $ filter ((> 1) . length) groupedExps
-        when (not $ null erroneousExps) $ parseError $ "column found in multiple operators; "
-          <> (T.intercalate ", " $ flip map erroneousExps \(column, opExp) ->
-                 getPGColTxt column <> " in " <> RQL.updateOperatorText opExp)
+            erroneousExps = OMap.filter ((>1) . length) $ OMap.groupTuples flattenedExps
+        when (not $ OMap.null erroneousExps) $ parseError $ "column found in multiple operators; "
+          <> (T.intercalate ". " $ flip map (OMap.toList erroneousExps) \(column, ops) ->
+                 dquote column <> " in " <> T.intercalate ", " (toList $ RQL.updateOperatorText <$> ops))
 
         pure $ presetColumns <> flattenedExps
   where
