@@ -363,10 +363,12 @@ const HasuraNotifications: React.FC<Props> = ({
     false
   );
   const [latestVersion, setLatestVersion] = React.useState(props.serverVersion);
+  const [numberNotifications, changeNumberNotifications] = React.useState(10);
   const dropDownRef = React.useRef<HTMLDivElement>(null);
   const wrapperRef = React.useRef(null);
-  const previouslyRead = props.console_opts?.console_notifications?.read;
-  const readNotifications: string[] = [];
+  const [readNotifications, updateReadNotifications] = React.useState<string[]>(
+    []
+  );
   const updateRefs = consoleNotifications.reduce(
     (
       acc: Record<string, React.RefObject<HTMLDivElement>>,
@@ -398,23 +400,31 @@ const HasuraNotifications: React.FC<Props> = ({
     setDisplayNewVersionNotif(false);
   }, []);
 
-  let defaultNumberNotifications =
-    consoleNotifications.length +
-    (displayNewVersionNotif ? 1 : 0) -
-    (Array.isArray(previouslyRead) ? previouslyRead.length : 0);
-  if (previouslyRead) {
-    if (
-      previouslyRead === 'all' ||
-      previouslyRead === 'default' ||
-      previouslyRead === 'error' ||
-      previouslyRead === []
-    ) {
-      defaultNumberNotifications = 0;
+  React.useEffect(() => {
+    const previouslyRead = props.console_opts?.console_notifications?.read;
+    const newCount =
+      consoleNotifications.length +
+      (displayNewVersionNotif ? 1 : 0) -
+      (Array.isArray(previouslyRead) ? previouslyRead.length : 0);
+
+    changeNumberNotifications(newCount);
+
+    if (previouslyRead) {
+      if (
+        previouslyRead === 'all' ||
+        previouslyRead === 'default' ||
+        previouslyRead === 'error' ||
+        previouslyRead === []
+      ) {
+        changeNumberNotifications(0);
+      }
     }
-  }
-  const [numberNotifications, changeNumberNotifications] = React.useState(
-    defaultNumberNotifications
-  );
+  }, [
+    consoleNotifications,
+    displayNewVersionNotif,
+    props.console_opts?.console_notifications?.read,
+  ]);
+
   const throttledCb = throttle((notifications: string[]) => {
     props.dispatch(
       updateConsoleNotificationsInDB({
@@ -429,30 +439,31 @@ const HasuraNotifications: React.FC<Props> = ({
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         const currentReadNotifID = entry.target.id;
-        if (!readNotifications.includes(currentReadNotifID)) {
-          readNotifications.push(currentReadNotifID);
+        if (readNotifications.indexOf(currentReadNotifID) === -1) {
+          updateReadNotifications(read =>
+            Array.from(new Set([...read, currentReadNotifID]))
+          );
           changeNumberNotifications(number => number - 1);
-          if (consoleNotifications.length !== readNotifications.length) {
-            throttledCb(readNotifications);
-          } else {
-            throttledCb.cancel();
-          }
         }
       }
     });
   };
 
   React.useEffect(() => {
-    if (numberNotifications <= 0) {
+    throttledCb(readNotifications);
+  }, [readNotifications]);
+
+  React.useEffect(() => {
+    // TODO: change the condition
+    if (numberNotifications <= 0 && readNotifications.length > 0) {
       markAllAsRead(props.dispatch, props.hasura_uuid);
     }
-  }, [numberNotifications]);
+  }, [numberNotifications, readNotifications]);
 
-  const observer = new window.IntersectionObserver(observerCallback, {
+  const observer = new IntersectionObserver(observerCallback, {
     root: dropDownRef.current,
     threshold: [1],
   });
-
   React.useEffect(() => {
     updateRefObjects.forEach(value => {
       if (value.current) {
@@ -460,8 +471,7 @@ const HasuraNotifications: React.FC<Props> = ({
       }
     });
 
-    // FIXME: intersection observer stops working at times
-    // return () => observer.disconnect();
+    return () => observer.disconnect();
   }, []);
 
   const optOutCallback = () => {
@@ -469,6 +479,7 @@ const HasuraNotifications: React.FC<Props> = ({
   };
 
   const onClickViewMore = () => {
+    // TODO: to change the
     props.dispatch(fetchConsoleNotifications());
   };
 
@@ -491,7 +502,12 @@ const HasuraNotifications: React.FC<Props> = ({
       </div>
       <Notifications
         ref={dropDownRef}
-        data={consoleNotifications}
+        // TODO: check edge cases
+        data={
+          consoleNotifications.length > 20
+            ? consoleNotifications.slice(0, 20)
+            : consoleNotifications
+        }
         showVersionUpdate={displayNewVersionNotif}
         latestVersion={latestVersion}
         optOutCallback={optOutCallback}
