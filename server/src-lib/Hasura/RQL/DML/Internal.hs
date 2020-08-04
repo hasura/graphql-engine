@@ -226,7 +226,7 @@ sessVarFromCurrentSetting' ty sessVar =
                  [currentSession, S.SELit $ sessionVariableToText sessVar]
 
 currentSession :: S.SQLExp
-currentSession = S.SEUnsafe "current_setting('hasura.user')::json"
+currentSession = S.SEUnsafe "hdb_catalog.current_setting('user')"
 
 checkSelPerm
   :: (UserInfoM m, QErrM m, CacheRM m)
