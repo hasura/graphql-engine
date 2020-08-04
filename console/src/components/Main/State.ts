@@ -1,7 +1,4 @@
-import {
-  ConsoleNotification,
-  defaultNotification,
-} from './ConsoleNotification';
+import { ConsoleNotification } from './ConsoleNotification';
 
 export interface MainState {
   migrationError: unknown | null;
@@ -62,7 +59,7 @@ const defaultState: MainState = {
     isFetching: false,
   },
   featuresCompatibility: {},
-  consoleNotifications: [defaultNotification],
+  consoleNotifications: [],
 };
 
 export default defaultState;
