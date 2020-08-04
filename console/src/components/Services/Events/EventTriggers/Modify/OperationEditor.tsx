@@ -14,6 +14,7 @@ import {
 } from '../../utils';
 
 import Operations from '../Common/Operations';
+import Button from '../../../../Common/Button/Button';
 
 type OperationEditorProps = {
   currentTrigger: EventTrigger;
@@ -50,6 +51,16 @@ const OperationEditor = (props: OperationEditorProps) => {
     setOperationColumns(existingOpColumns);
   };
 
+  const editorToggle = (opCols: ETOperationColumn[]) => {
+    const newCols = opCols.map(oc => {
+      return {
+        ...oc,
+        enabled: !oc.enabled,
+      };
+    });
+    setOperationColumns(newCols);
+  };
+
   const renderEditor = (
     ops: Record<EventTriggerOperation, boolean>,
     opCols: ETOperationColumn[],
@@ -70,6 +81,15 @@ const OperationEditor = (props: OperationEditorProps) => {
       <div className={styles.modifyOpsCollapsedContent}>
         <div className={`col-md-12 ${styles.padd_remove}`}>
           Listen columns for update:&nbsp;
+          {ops.update && !readOnly ? (
+            <Button
+              color="white"
+              size="xs"
+              onClick={() => editorToggle(operationColumns)}
+            >
+              Toggle
+            </Button>
+          ) : null}
         </div>
         <div className={`col-md-12 ${styles.padd_remove}`}>
           {ops.update ? (
@@ -118,7 +138,6 @@ const OperationEditor = (props: OperationEditorProps) => {
   const collapsed = () => renderEditor(existingOps, existingOpColumns, true);
 
   const expanded = () => renderEditor(operations, operationColumns, false);
-
   return (
     <div className={`${styles.container} ${styles.borderBottom}`}>
       <div className={styles.modifySection}>
