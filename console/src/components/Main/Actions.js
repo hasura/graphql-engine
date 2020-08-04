@@ -79,14 +79,14 @@ const getReadAllNotificationsState = () => {
 const fetchConsoleNotifications = () => (dispatch, getState) => {
   const url = getConsoleNotificationsURL();
   const consoleStateDB = getState().telemetry.console_opts;
-
+  let previousRead = null;
   let lastReadAllTimeStamp;
 
-  if (
-    consoleStateDB.console_notifications &&
-    consoleStateDB.console_notifications.read === 'all'
-  ) {
-    lastReadAllTimeStamp = consoleStateDB.console_notifications.date;
+  if (consoleStateDB.console_notifications) {
+    previousRead = consoleStateDB.console_notifications.read;
+    if (previousRead) {
+      lastReadAllTimeStamp = consoleStateDB.console_notifications.date;
+    }
   }
 
   const timeNow = now();
