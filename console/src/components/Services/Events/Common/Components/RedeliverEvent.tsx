@@ -14,24 +14,20 @@ type Props = {
 };
 
 const RedeliverEvent: React.FC<Props> = ({ dispatch, eventId }) => {
-  // const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<any>(null);
+  const [error, setError] = React.useState<null | Error>(null);
   const [logs, setLogs] = React.useState<InvocationLog[]>([]);
 
   React.useEffect(() => {
     const intervalId = setInterval(() => {
-      // setLoading(true);
       dispatch(
         getEventLogs(
           eventId,
           'data',
           l => {
             setLogs(l);
-            //    setLoading(false);
           },
           e => {
             setError(e);
-            //    setLoading(false);
           }
         )
       );
@@ -68,7 +64,7 @@ const RedeliverEvent: React.FC<Props> = ({ dispatch, eventId }) => {
               name="event_payload"
               value={JSON.stringify(latestLog.request, null, 4)}
               minLines={10}
-              maxLines={10}
+              maxLines={30}
               width="100%"
               showPrintMargin={false}
               showGutter={false}
@@ -81,39 +77,25 @@ const RedeliverEvent: React.FC<Props> = ({ dispatch, eventId }) => {
                 Latest Invocation Response
               </div>
             </div>
-            {error === null ? (
-              <AceEditor
-                mode="json"
-                theme="github"
-                name="event_payload"
-                value={JSON.stringify(latestLog.response, null, 4)}
-                minLines={10}
-                maxLines={10}
-                width="100%"
-                showPrintMargin={false}
-                showGutter={false}
-                style={{
-                  backgroundColor: '#fdf9ed',
-                  marginTop: '10px',
-                }}
-              />
-            ) : (
-              <AceEditor
-                mode="json"
-                theme="github"
-                name="event_payload"
-                value={JSON.stringify(error, null, 4)}
-                minLines={8}
-                maxLines={10}
-                width="100%"
-                showPrintMargin={false}
-                showGutter={false}
-                style={{
-                  backgroundColor: '#fdf9ed',
-                  marginTop: '10px',
-                }}
-              />
-            )}
+            <AceEditor
+              mode="json"
+              theme="github"
+              name="event_payload"
+              value={JSON.stringify(
+                error === null ? latestLog.response : error,
+                null,
+                4
+              )}
+              minLines={8}
+              maxLines={30}
+              width="100%"
+              showPrintMargin={false}
+              showGutter={false}
+              style={{
+                backgroundColor: '#fdf9ed',
+                marginTop: '10px',
+              }}
+            />
           </div>
         </div>
         <div
