@@ -4,18 +4,17 @@
 
 ### Breaking change
 
-Environment variables starting with `HASURA_GRAPHQL_` are restricted to configure `value_from_env` key
-in headers definition of event triggers, actions & remote schemas. The GraphQL Engine isn't upgradable
-to this version if the metadata contains any action/event trigger/remote schema whose headers are defined
-with restricted environment variable.
+Environment variables starting with `HASURA_GRAPHQL_` are not allowed to be set in header configuration 
+of event triggers, actions & remote schemas.
 
-To upgrade, recreate or update the action/event trigger/remote without restricted environment variable.
+If you do have such headers configured, then you must update the header configuration before upgrading.
 
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
-- server: restrict env variables start with HASURA_GRAPHQL_ for headers definition in actions, event triggers & remote schemas (#5519)
+- server: disallow env variables starting with `HASURA_GRAPHQL_` for headers in actions, event triggers & remote schemas (#5519)
+**WARNING**: This might break certain deployments. See `Breaking change` section above.
 - server: bugfix to allow HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE of 0 (#5363)
 - server: support only a bounded plan cache, with a default size of 4000 (closes #5363)
 - server: add logs for action handlers
