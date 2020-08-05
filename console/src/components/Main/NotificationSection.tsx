@@ -342,6 +342,10 @@ function mapStateToProps(state: ReduxState) {
   };
 }
 
+const throttledCb = throttle((callback: () => void) => {
+  callback();
+}, 3000);
+
 type StateProps = ReturnType<typeof mapStateToProps>;
 
 type HasuraNotificationProps = {
@@ -359,6 +363,7 @@ const HasuraNotifications: React.FC<Props> = ({
   closeDropDown,
   ...props
 }) => {
+  const { dispatch } = props;
   const [displayNewVersionNotif, setDisplayNewVersionNotif] = React.useState(
     false
   );
@@ -382,6 +387,7 @@ const HasuraNotifications: React.FC<Props> = ({
     {}
   );
 
+  // for running the version update code on mounting
   React.useEffect(() => {
     const [versionUpdateCheck, latestReleasedVersion] = checkVersionUpdate(
       props.latestStableServerVersion,
@@ -398,8 +404,14 @@ const HasuraNotifications: React.FC<Props> = ({
     }
 
     setDisplayNewVersionNotif(false);
-  }, []);
+  }, [
+    props.latestPreReleaseServerVersion,
+    props.latestStableServerVersion,
+    props.console_opts,
+    props.serverVersion,
+  ]);
 
+  // for the number of notifications case
   React.useEffect(() => {
     const previouslyRead = props.console_opts?.console_notifications?.read;
     const newCount =
@@ -425,15 +437,6 @@ const HasuraNotifications: React.FC<Props> = ({
     props.console_opts?.console_notifications?.read,
   ]);
 
-  const throttledCb = throttle((notifications: string[]) => {
-    props.dispatch(
-      updateConsoleNotificationsInDB({
-        read: notifications,
-        date: new Date().toISOString(),
-      })
-    );
-  }, 3000);
-
   const updateRefObjects = Object.values(updateRefs);
   const observerCallback = (entries: IntersectionObserverEntry[]) => {
     entries.forEach(entry => {
@@ -449,21 +452,44 @@ const HasuraNotifications: React.FC<Props> = ({
     });
   };
 
+  // upon updating readNotifications state
   React.useEffect(() => {
-    throttledCb(readNotifications);
+    // TODO: should be run if it is less than or equal to currently displayed number
+    throttledCb(() => {
+      dispatch(
+        updateConsoleNotificationsInDB({
+          read: readNotifications,
+          date: new Date().toISOString(),
+        })
+      );
+    });
   }, [readNotifications]);
 
+  // for the read-all case
   React.useEffect(() => {
     // TODO: change the condition
-    if (numberNotifications <= 0 && readNotifications.length > 0) {
-      markAllAsRead(props.dispatch, props.hasura_uuid);
+    if (
+      numberNotifications <= 0 &&
+      readNotifications.length === consoleNotifications.length &&
+      readNotifications.length > 0 &&
+      consoleNotifications.length > 0
+    ) {
+      markAllAsRead(dispatch, props.hasura_uuid);
     }
-  }, [numberNotifications, readNotifications]);
+  }, [
+    numberNotifications,
+    readNotifications.length,
+    consoleNotifications.length,
+    props.hasura_uuid,
+    dispatch,
+  ]);
 
   const observer = new IntersectionObserver(observerCallback, {
     root: dropDownRef.current,
     threshold: [1],
   });
+
+  // for the observer
   React.useEffect(() => {
     updateRefObjects.forEach(value => {
       if (value.current) {
@@ -475,16 +501,16 @@ const HasuraNotifications: React.FC<Props> = ({
   }, []);
 
   const optOutCallback = () => {
-    props.dispatch(setPreReleaseNotificationOptOutInDB());
+    dispatch(setPreReleaseNotificationOptOutInDB());
   };
 
   const onClickViewMore = () => {
     // TODO: to change the
-    props.dispatch(fetchConsoleNotifications());
+    dispatch(fetchConsoleNotifications());
   };
 
   const onClickMarkAllAsRead = () => {
-    markAllAsRead(props.dispatch, props.hasura_uuid);
+    markAllAsRead(dispatch, props.hasura_uuid);
   };
 
   useOnClickOutside([dropDownRef, wrapperRef], closeDropDown);
