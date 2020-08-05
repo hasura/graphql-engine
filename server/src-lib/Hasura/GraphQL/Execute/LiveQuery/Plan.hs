@@ -50,6 +50,7 @@ import qualified Hasura.GraphQL.Parser.Schema           as PS
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.RQL.DML.Select                  as DS
 import qualified Hasura.SQL.DML                         as S
+import qualified Hasura.RQL.DML.RemoteJoin              as RR
 import qualified Hasura.Tracing                         as Tracing
 
 import           Hasura.Db
@@ -313,10 +314,18 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
 -}
   (preparedAST, (queryVariableValues, querySyntheticVariableValues)) <- flip runStateT (mempty, Seq.empty) $
     for unpreparedAST \unpreparedQuery -> do
-    traverseQueryRootField resolveMultiplexedValue unpreparedQuery
-    >>= traverseAction (DS.traverseAnnSimpleSelect resolveMultiplexedValue . resolveAsyncActionQuery userInfo)
-
-
+      resolvedRootField <- traverseQueryRootField resolveMultiplexedValue unpreparedQuery
+      case resolvedRootField of
+        RFDB qDB   -> do
+          let remoteJoins = case qDB of
+                QDBSimple s      -> snd $ RR.getRemoteJoins s
+                QDBPrimaryKey s  -> snd $ RR.getRemoteJoins s
+                QDBAggregation s -> snd $ RR.getRemoteJoinsAggregateSelect s
+                QDBConnection s  -> snd $ RR.getRemoteJoinsConnectionSelect s
+          when (remoteJoins /= mempty)
+            $ throw400 NotSupported "Remote relationships are not allowed in subscriptions"
+        _ -> pure ()
+      traverseAction (DS.traverseAnnSimpleSelect resolveMultiplexedValue . resolveAsyncActionQuery userInfo) $ resolvedRootField
 
   let multiplexedQuery = mkMultiplexedQuery preparedAST
       roleName = _uiRole userInfo
