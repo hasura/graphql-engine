@@ -1,13 +1,18 @@
 .. meta::
-   :description: Delete a project on Hasura Cloud
+   :description: Deleting projects on Hasura Cloud
    :keywords: hasura, docs, delete
 
 .. _delete_project:
 
-Delete a project
-================
+Deleting projects
+=================
 
-Delete a project from your Hasura account with the "Delete project" button at the bottom of the project's general details page:
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
+You can delete a project with the ``Delete Project`` button at the bottom of the project's details view.
 
 .. thumbnail:: /img/cloud/projects/projects-delete.png
    :alt: delete a project

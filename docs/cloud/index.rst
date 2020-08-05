@@ -4,14 +4,57 @@
 
 .. title:: Hasura Cloud Documentation
 
-Hasura Cloud documentation
+Hasura Cloud Documentation
 ==========================
 
-Hasura Cloud offers hosted GraphQL Engine projects with extra features for reliability and security. Connect your project to an existing PostgreSQL database or start fresh with a new database on Heroku.
+`Hasura Cloud <https://cloud.hasura.io/>`__ offers hosted `GraphQL Engine <https://github.com/hasura/graphql-engine>`__
+projects with extra features for reliability and security. It includes all the `core features <https://hasura.io/docs/1.0/graphql/manual/index.html>`__
+of GraphQL Engine, while taking care of infrastructure concerns, such as the number of instances, cores, memory, concurrent users, high-availability,
+realtime monitoring, caching, tracing, and rate-limiting. It supports both new and existing PostgreSQL databases.
+
+.. container:: toc-list
+
+  .. container:: toc-list-section
+
+    .. container:: toc-list-head
+
+      Basics
+
+    .. container:: toc-list-content
+
+      - :ref:`getting_started`
+      - :ref:`projects`
+
+  .. container:: toc-list-section
+
+    .. container:: toc-list-head
+
+      Features
+
+    .. container:: toc-list-content
+
+      - :ref:`metrics`
+      - :ref:`api_limits`
+      - :ref:`allow_lists`
+      - :ref:`regression_tests`
+      - :ref:`read_replicas`
+
+  .. container:: toc-list-section
+
+    .. container:: toc-list-head
+
+      Reference
+
+    .. container:: toc-list-content
+
+      - :ref:`api_reference`
+      - :ref:`glossary`
+      - :ref:`hasurapro_cli`
 
 .. toctree::
   :maxdepth: 1
   :titlesonly:
+  :hidden:
 
   Getting Started <getting-started/index>
   projects/index
@@ -21,4 +64,5 @@ Hasura Cloud offers hosted GraphQL Engine projects with extra features for relia
   regression-tests
   read-replicas
   hasurapro-cli/index
-  reference/index
+  api-reference
+  glossary

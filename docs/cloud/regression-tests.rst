@@ -12,6 +12,9 @@ Regression tests
   :depth: 2
   :local:
 
+Introduction
+------------
+
 Hasura Cloud includes a comprehensive test bench that lets you seamlessly compile a test suite on each project, executable on any GraphQL Engine instance (ex: staging, prod).
 
 Here's a reference development workflow that is enabled by Hasura Cloud:

@@ -1,13 +1,11 @@
 .. meta::
-   :description: Hasura Cloud Reference Docs
-   :keywords: hasura, docs, cloud, security, limits
+   :description: Hasura Cloud glossary
+   :keywords: hasura, docs, cloud, glossary
 
-.. _reference:
+.. _glossary:
 
-Reference
-=========
-
-Reference documentation for Hasura Cloud.
+Glossary
+========
 
 .. contents:: Table of contents
   :backlinks: none
@@ -32,10 +30,10 @@ Editing the Project name and adding custom domains will be available soon.
 For example, a project might be called ``usable-cobra-29`` with ID
 ``bf0ea856-76a2-42c2-8a91-66ca9b9206e8``.
 
-Database Connection IP
-----------------------
+Hasura Cloud IP
+---------------
 
-A database connection IP will be listed on the Hasura Cloud Dashboard for
+A Hasura Cloud IP will be listed on the Hasura Cloud Dashboard for
 each project. Hasura will be connecting to your database from this IP address.
 If your database is not exposed to the internet, you must allow connections 
 from this IP address on your firewall settings
@@ -66,14 +64,3 @@ Hasura Client Name
 ``Hasura-Client-Name`` will be set to ``hasura-console`` by default. It is
 used to identify the client who is making the request in Hasura Pro metrics
 and monitoring tools.
-
-Other reference docs
---------------------
-
-.. toctree::
-  :maxdepth: 1
-  :titlesonly:
-
-  postgres-permissions
-  api
-

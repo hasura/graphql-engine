@@ -12,11 +12,13 @@ Read replicas
   :depth: 1
   :local:
 
+Introduction
+------------
+
+Hasura Cloud can load balance queries and subscriptions across read replicas while sending all mutations and metadata API calls to the master.
 
 Adding read replica urls
 ------------------------
-
-Hasura Cloud can load balance queries and subscriptions across read replicas while sending all mutations and metadata API calls to the master.
 
 If you have configured your Postgres instances with replicas, the replica URLs can be added to Hasura using the following environment variable in your project ENV Vars tab:
 

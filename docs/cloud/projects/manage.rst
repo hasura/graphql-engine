@@ -1,77 +1,76 @@
 .. meta::
-   :description: Manage a project on Hasura Cloud
+   :description: Managing projects on Hasura Cloud
    :keywords: hasura, docs, project
 
 .. _manage_project:
 
-Manage a project
-================
+Managing projects
+=================
 
 .. contents:: Table of contents
   :backlinks: none
   :depth: 2
   :local:
 
-You can manage project teams and environment variables directly from the Hasura Cloud account. Click on the project's "Project details" to access the following admin tabs:
+Introduction
+------------
 
-General
--------
+To view a project's details, and manage its teams and environment variables, navigate to the ``Projects`` page and click the gear icon on the project.
 
-Your project's general details are provided here, including:
+.. thumbnail:: /img/cloud/projects/projects-manage.png
+   :alt: Manage project
+   :width: 865px
 
-- **Project name**: unique auto-generated name
-- **Project Id**: unique auto-generated ID
-- **Owner**: the email of the project owner (creator)
-- **End point**: the base URL of the project
+**General** tab
+---------------
+
+This tab shows the project's general details, including:
+
+- **Name**: Unique auto-generated name for the project
+- **ID**: Unique auto-generated ID for the project
+- **GraphQL API**: GraphQL endpoint for the project
+- **Admin Secret**: Secret for securing the GraphQL endpoint
+- **Owner**: Email of the project owner
 
 .. thumbnail:: /img/cloud/projects/project-details.png
-   :alt: project details page
+   :alt: General tab
+   :width: 1163px
 
-Team
-----
+**Team** tab
+------------
 
-The teams tab shows the current people with access to the Hasura Cloud project:
+This tab shows the current people with access to the project. Click ``New Collaborator`` to invite a new team member.
 
 .. thumbnail:: /img/cloud/projects/team-view.png
-   :alt: project team list
+   :alt: Team tab
+   :width: 1146px
 
 Team roles
 ^^^^^^^^^^
 
-Team members can have different levels of access in the Console:
+Team members can have different levels of access in the Hasura console.
 
-**User**: limited privileges
+- **Admin** has complete access to all project tools and configurations.
+- **User** has limited privileges:
 
-* Execute GraphQL: can run queries / mutations / subscriptions
-* View metrics: can inspect operation data and performance dashboard
+  - The ``Execute GraphQL`` permission allows running queries, mutations, and subscriptions.
+  - The ``View Metrics`` permission allows inspecting operation data and the performance dashboard.
 
-**Admin**: complete access to all project tools and configurations
+.. thumbnail:: /img/cloud/projects/add-collaborator.png
+   :alt: Add collaborator
+   :width: 437px
 
-Adding a team member
-^^^^^^^^^^^^^^^^^^^^
+.. note::
 
-You can invite people to your project with a specific role:
+  Invitations can be accepted or declined via the ``Invitations`` tab of your Hasura Cloud settings.
 
-.. thumbnail:: /img/cloud/projects/cloud-add-collaborator.png
-   :alt: add to team options
 
-Invitations are sent via email with a link to accept the invitation. Clicking the link brings them to the Hasura Cloud login page. If they don’t already have an account, they can sign-up to create a new account. 
+**Env vars** tab
+----------------
 
-.. admonition:: Invitation email must match account email
-
-  If a new account is created, make sure the invitation email matches to the account email.
-
-Invitations can be accepted or declined via the Invitations tab of your Hasura Cloud Settings:
-
-.. thumbnail:: /img/cloud/projects/project-collaboration-invitation.png
-   :alt: accept or decline an invitation
-   :width: 400
-
-ENV Vars
---------
-
-You can also manage the `Hasura GraphQL Engine environment variables 
-<https://hasura.io/docs/1.0/graphql/manual/deployment/graphql-engine-flags/reference.html#command-flags>`__ or add your own custom environment variables in the Env Vars section:
+This tab shows `Hasura GraphQL Engine environment variables 
+<https://hasura.io/docs/1.0/graphql/manual/deployment/graphql-engine-flags/reference.html#command-flags>`__. Click ``New Env Var`` to add your own custom environment variables.
 
 .. thumbnail:: /img/cloud/projects/add-env-var.png
    :alt: add env var options
+   :width: 1200px

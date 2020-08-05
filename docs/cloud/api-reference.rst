@@ -1,10 +1,24 @@
-.. _cloud_api_reference:
+.. meta::
+   :description: Hasura Cloud API reference
+   :keywords: hasura, cloud, docs, API, API reference
+
+.. _api_reference:
 
 API Reference
 =============
 
-Hasura Cloud also offers an API for you to create and manage your Projects
-programmatically.
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
+Introduction
+------------
+
+Hasura Cloud provides a GraphQL API to interact with the services to create
+and manage your projects.
+
+You can use any GraphQL client and use the API with the right authentication header.
 
 .. note::
 
@@ -30,16 +44,20 @@ Once you have the token it can be used with the header:
    This token can be used to authenticate against Hasura Cloud APIs and your Hasura Cloud projects.
    Make sure you keep it secure. The token will be valid until you delete it from the dashboard.
 
-API
----
+APIs
+----
 
-Hasura Cloud provides a GraphQL API to interact with the services. You can use
-any GraphQL client and use the API with the right authentication header.
-
-Each Hasura Cloud project is backed by an API entity called "Tenant", with a 
+Each Hasura Cloud project is backed by an API entity called "Tenant", with a
 distinct "Tenant ID" which is different from "Project ID". Each Project is
 associated with a Tenant. In some cases, like Metrics API, the Project ID is
 used instead of Tenant ID.
+
+List of APIs:
+
+.. contents::
+  :backlinks: none
+  :depth: 1
+  :local:
 
 Create a Tenant
 ^^^^^^^^^^^^^^^

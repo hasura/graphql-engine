@@ -12,7 +12,10 @@ Allow lists
   :depth: 1
   :local:
 
-You can specify a list of safe operations (GraphQL queries, mutations or subscriptions) for your project. This list restricts your project's GraphQL Engine to execuse only queries that are present in the list.
+Introduction
+------------
+
+You can specify a list of safe operations (GraphQL queries, mutations or subscriptions) for your project. This list restricts your project's GraphQL Engine to execute only queries that are present in the list.
 
 Manage the allow list
 ---------------------

@@ -7,13 +7,21 @@
 Metrics
 =======
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
+Introduction
+------------
+
 Hasura Cloud projects include Pro features for enhanced reliability and performance
 
 .. thumbnail:: /img/cloud/metrics/pro-tab-overview.png
    :alt: Hasura Cloud Console overview tab
 
-Learn more:
------------
+Learn more
+----------
 
 .. toctree::
    :maxdepth: 1

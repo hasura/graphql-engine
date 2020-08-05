@@ -12,6 +12,9 @@ API limits
   :depth: 1
   :local:
 
+Introduction
+------------
+
 Limiting the depth and/or rate of API requests can help prevent API performance issues caused by malicious or poorly implemented queries. 
 
 Configuring an API limit

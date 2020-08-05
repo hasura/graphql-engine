@@ -2,27 +2,72 @@
    :description: Hasura Cloud getting started
    :keywords: hasura, docs, cloud, signup
 
-.. _cloud_getting_started:
+.. _getting_started:
 
 Getting Started with Hasura Cloud
 =================================
 
-Sign in to your Hasura Cloud account, or create a new one, at `cloud.hasura.io 
-<https://cloud.hasura.io/login>`__.
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
 
-You can authenticate with email/password or social login (Gmail or GitHub)
+Step 1: Create an account
+-------------------------
 
-.. thumbnail:: /img/cloud/getting-started/cloud-signin-signup.png
-   :alt: Sign in or Sign up for Hasura Cloud
+Navigate to `cloud.hasura.io 
+<https://cloud.hasura.io/login>`__, and create a new Hasura Cloud account.
 
-Once authenticated, you'll be taken to your projects dashboard:
+.. _cloud_connect_db:
 
-.. thumbnail:: /img/cloud/getting-started/cloud-projects-empty.png
-   :alt: Hasura Cloud dashboard
+Step 2: Connect new/existing database
+-------------------------------------
+
+- To use an existing database, choose ``I have an existing Postgres database``.
+- To create a new database, choose ``Try a free database with Heroku``.
+
+.. thumbnail:: /img/cloud/getting-started/connect-db.png
+   :alt: Connect new or existing database
+   :width: 591px
+
+Step 2a: Enter database URL (for existing database)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you chose ``I have an existing Postgres database`` in :ref:`Step 2 <cloud_connect_db>`, enter a database URL.
+
+.. thumbnail:: /img/cloud/getting-started/connect-existing-db.png
+   :alt: Enter URL for existing database
+   :width: 556px
+
+Step 3: Create project
+----------------------
+
+Click ``Create Project``.
+
+.. thumbnail:: /img/cloud/getting-started/create-project-new-db.png
+   :alt: Create project for new database
+   :width: 539px
+   :group: create
+   :class: inline-block
+
+.. thumbnail:: /img/cloud/getting-started/create-project-existing-db.png
+   :alt: Create project for existing database
+   :width: 552px
+   :group: create
+   :class: inline-block
 
 Next steps
 ----------
 
-- :ref:`Create a project <create_project>`
-- `Go to Hasura GraphQL Engine Core docs <https://hasura.io/docs/1.0/graphql/manual/index.html>`__
-- `Pricing information <https://hasura.io/pricing/>`__
+Once you've created your project, you can:
+
+- Click the gear icon to :ref:`manage your project <manage_project>`, or
+- Click ``Launch Console`` to open the Hasura console in your browser, and navigate to the ``Pro`` tab to check out the Pro features that Hasura Cloud has set up for you.
+
+.. thumbnail:: /img/cloud/getting-started/project-actions.png
+   :alt: Project actions
+   :width: 860px
+
+.. thumbnail:: /img/cloud/metrics/pro-tab-overview.png
+   :alt: Hasura Console: Pro tab
+   :width: 1118px

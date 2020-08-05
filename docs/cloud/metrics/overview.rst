@@ -7,6 +7,11 @@
 Overview
 ========
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 The Overview displays aggregate stats over the last hour:
 
 .. thumbnail:: /img/cloud/metrics/pro-tab-overview.png

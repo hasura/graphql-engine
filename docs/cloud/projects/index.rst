@@ -7,27 +7,45 @@
 Projects & teams
 ================
 
-The Hasura Cloud dashboard lists your available projects and has the option to create a new project. For each project, you have a quick-access "Launch" button and a link to project details:
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
+Introduction
+------------
+
+The ``Projects`` page show a list of your projects.
 
 .. thumbnail:: /img/cloud/projects/projects-list.png
-   :alt: projects dashboard
+   :alt: Projects list
+   :width: 1200px
 
-Click the "Launch" button to access your Hasura GraphQL Engine console. Your project's Console will also feature a new Pro tab with additional features:
+For each project, you can:
+
+- Click the gear icon to :ref:`manage your project <manage_project>`, or
+- Click ``Launch Console`` to open the Hasura console in your browser, and navigate to the ``Pro`` tab to check out the Pro features that Hasura Cloud has set up for you.
+
+.. thumbnail:: /img/cloud/getting-started/project-actions.png
+   :alt: Project actions
+   :width: 860px
 
 .. thumbnail:: /img/cloud/metrics/pro-tab-overview.png
-   :alt: Hasura Cloud project console
+   :alt: Hasura Console: Pro tab
+   :width: 1118px
 
 .. note::
 
    Please see the :ref:`API reference <api_reference>` to create and manage Hasura Cloud projects programmatically.
 
-Manage your projects
---------------------
+Dig deeper
+----------
 
 .. toctree::
    :maxdepth: 1
    :titlesonly:
 
-   Create a new project <create>
-   Manage a project and team <manage>
-   Delete a project <delete>
+   Creating projects <create>
+   Managing projects <manage>
+   Deleting projects <delete>
+   
