@@ -6,7 +6,7 @@
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
-- server: bugfix for failing introspection if any enum column present in primary key (fixes #5200)
+- server: fix failing introspection query when an enum column is part of a primary key (fixes #5200)
 - server: bugfix to allow HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE of 0 (#5363)
 - server: support only a bounded plan cache, with a default size of 4000 (closes #5363)
 - server: add logs for action handlers
