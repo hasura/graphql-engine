@@ -88,7 +88,6 @@ h1:hover>.headerlink,h2:hover>.headerlink,h3:hover>.headerlink,h4:hover>.headerl
 .note p,.admonition p{margin:0.8em 0}
 .note .first,.admonition .first{margin-top:0}
 .note .admonition-title,.admonition .admonition-title{font-weight:bold}
-
 .note .last,.note .highlight,.admonition .last,.admonition .highlight{margin-bottom:0px}
 #docs-content{font-family:Avenir, "Lucida Grande", "Lucida Sans", sans-serif;font-size:14px;font-size:1.4rem;line-height:1.5em}
 #docs-content h1,#docs-content h2,#docs-content h3,#docs-content h4,#docs-content h5,#docs-content h6{margin:1.2em 0;line-height:1.1em;
@@ -125,7 +124,6 @@ form button:hover{background:#44B78B}
 }
 .messages{list-style-type:none;width:100%;padding-left:0}
 .messages li{padding:15px;background-color:#f1fbf6;color:#0C4B33;border:1px solid #0C4B33;border-radius:4px}
-.messages li::before{display:inline-block;font:normal normal normal 14px/1 FontAwesome;font-size:inherit;text-rendering:auto;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-size:30px;width:34px;text-align:center;float:left;margin-left:-5px;margin-right:10px}
 .messages li.info::before{content:""}
 .messages li.success{background-color:#ddf6ea;content:""}
 .messages li.success::before{content:""}
