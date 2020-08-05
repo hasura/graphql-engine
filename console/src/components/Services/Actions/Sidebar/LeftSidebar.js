@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 
 import LeftSubSidebar from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
 import styles from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
+import { prioritySearch } from '../../../Common/utils/jsUtils';
 
 const LeftSidebar = ({
   appPrefix,
@@ -26,24 +27,11 @@ const LeftSidebar = ({
   };
 
   // TODO test search
-  let actionsList = [];
-  if (searchText) {
-    const secondaryResults = [];
-    actions.forEach(a => {
-      if (a.action_name.startsWith(searchText)) {
-        actionsList.push(a);
-      } else if (a.action_name.includes(searchText)) {
-        secondaryResults.push(a);
-      }
-    });
-    actionsList = [...actionsList, ...secondaryResults];
-  } else {
-    actionsList = [...actions];
-  }
+  const actionsList = prioritySearch(searchText, actions, 'action_name');
 
   const getChildList = () => {
     let childList;
-    if (actionsList.length === 0) {
+    if (!actionsList.length) {
       childList = (
         <li
           className={styles.noChildren}
