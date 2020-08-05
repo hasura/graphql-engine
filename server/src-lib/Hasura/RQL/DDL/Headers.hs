@@ -37,7 +37,7 @@ instance FromJSON HeaderConf where
       (Just val, Nothing) -> return $ HeaderConf name (HVValue val)
       (Nothing, Just val) -> do
         when (T.isPrefixOf "HASURA_GRAPHQL_" val) $
-          fail "env variables start with \"HASURA_GRAPHQL_\" are not allowed for value_from_env"
+          fail $ "env variables starting with \"HASURA_GRAPHQL_\" are not allowed in value_from_env: " <> T.unpack val
         return $ HeaderConf name (HVEnv val)
       (Just _, Just _)    -> fail "expecting only one of value or value_from_env keys"
   parseJSON _ = fail "expecting object for headers"
