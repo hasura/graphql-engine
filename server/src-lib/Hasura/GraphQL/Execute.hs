@@ -149,7 +149,7 @@ getExecPlanPartial userInfo sc queryType req = do
           let n = _unOperationName opName
               opDefM = find (\opDef -> G._todName opDef == Just n) opDefs
           onNothing opDefM $ throw400 ValidationFailed $
-            "no such operation found in the document: " <> _showName n
+            "no such operation found in the document: " <> G.unName n
         (Just _, _, _)  ->
           throw400 ValidationFailed $ "operationName cannot be used when " <>
           "an anonymous operation exists in the document"
@@ -227,17 +227,21 @@ getResolvedExecPlan
 getResolvedExecPlan env logger pgExecCtx planCache userInfo sqlGenCtx
   sc scVer queryType httpManager reqHeaders (reqUnparsed, reqParsed) = do
 
+-- Commented out until we figure out if we need query plan caching.
+{-
   planM <- liftIO $ EP.getPlan scVer (_uiRole userInfo) opNameM queryStr
            queryType planCache
   case planM of
     -- plans are only for queries and subscriptions
     Just plan -> (Telem.Hit,) <$> case plan of
-      EP.RPQuery queryPlan -> do
+--      EP.RPQuery queryPlan -> do
 --        (tx, genSql) <- EQ.queryOpFromPlan env httpManager reqHeaders userInfo queryVars queryPlan
-        return $ QueryExecutionPlan _ -- tx (Just genSql)
+--        return $ QueryExecutionPlan _ -- tx (Just genSql)
       EP.RPSubs subsPlan ->
         return $ SubscriptionExecutionPlan _ -- <$> EL.reuseLiveQueryPlan pgExecCtx usrVars queryVars subsPlan
     Nothing -> (Telem.Miss,) <$> noExistingPlan
+-}
+  (Telem.Miss,) <$> noExistingPlan
   where
     GQLReq opNameM queryStr queryVars = reqUnparsed
     -- addPlanToCache plan =
@@ -258,7 +262,7 @@ getResolvedExecPlan env logger pgExecCtx planCache userInfo sqlGenCtx
         G.TypedOperationDefinition G.OperationTypeQuery _ varDefs _ selSet -> do
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
-          (execPlan, plan, _unprepared) <-
+          (execPlan, _plan, _unprepared) <-
             EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
           return $ QueryExecutionPlan $ execPlan

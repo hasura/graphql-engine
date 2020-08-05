@@ -56,7 +56,8 @@ data ReusablePlan
 
 instance J.ToJSON ReusablePlan where
   toJSON = \case
-    RPQuery queryPlan  -> J.toJSON queryPlan
+-- Commented out until we figure out if we need query plan caching.
+--    RPQuery queryPlan  -> J.toJSON queryPlan
     RPSubs subsPlan    -> J.toJSON subsPlan
 
 newtype PlanCacheOptions
