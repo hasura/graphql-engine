@@ -418,9 +418,9 @@ object name description parser = Parser
       GraphQLValue (VObject fields) -> parseFields $ GraphQLValue <$> fields
       JSONValue (A.Object fields) -> do
         translatedFields <- M.fromList <$> for (M.toList fields) \(key, val) -> do
-          name <- mkName key `onNothing` parseError
+          name' <- mkName key `onNothing` parseError
             ("variable value contains object with key " <> key <<> ", which is not a legal GraphQL name")
-          pure (name, JSONValue val)
+          pure (name', JSONValue val)
         parseFields translatedFields
       other -> typeMismatch name "an object" other
   }
