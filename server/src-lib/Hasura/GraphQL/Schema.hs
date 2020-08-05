@@ -86,11 +86,11 @@ buildGQLContext =
           SQLGenCtx{ stringifyNum } <- askSQLGenCtx
           let gqlContext =
                 (,)
-                <$> ( queryWithIntrospection (Set.fromMap $ validTables $> ())
+                <$> queryWithIntrospection (Set.fromMap $ validTables $> ())
                       validFunctions mempty mempty
-                      allActionInfos nonObjectCustomTypes)
-                <*> (mutation (Set.fromMap $ validTables $> ()) mempty
-                     allActionInfos nonObjectCustomTypes)
+                      allActionInfos nonObjectCustomTypes
+                <*> mutation (Set.fromMap $ validTables $> ()) mempty
+                      allActionInfos nonObjectCustomTypes
           flip runReaderT (adminRoleName, validTables, Frontend, QueryContext stringifyNum queryType queryRemotesMap) $
             P.runSchemaT gqlContext
 
@@ -118,14 +118,13 @@ buildGQLContext =
 
     -- This block of code checks that there are no conflicting root field names between remotes.
     remotes ::
-      ( [ ( RemoteSchemaName
-          , ( [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-            , Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-            , Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-            )
+      [ ( RemoteSchemaName
+        , ( [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+          , Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+          , Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
           )
-        ]
-      ) <- (| foldlA' (\okSchemas (newSchemaName, (newSchemaContext, newMetadataObject)) -> do
+        )
+      ] <- (| foldlA' (\okSchemas (newSchemaName, (newSchemaContext, newMetadataObject)) -> do
                 checkedDuplicates <- (| withRecordInconsistency (do
                      let (queryOld, mutationOld, _subscriptionOld) = unzip3 $ fmap snd okSchemas
                      let (queryNew, mutationNew, _subscriptionNew) = rscParsed newSchemaContext
@@ -142,7 +141,7 @@ buildGQLContext =
                        Nothing -> returnA -< ()
                        Just ms -> do
                          bindErrorA -<
-                           checkFieldNamesUnique (fmap (P.getName . fDefinition) (ms ++ (concat $ catMaybes mutationOld)))
+                           checkFieldNamesUnique (fmap (P.getName . fDefinition) (ms ++ concat (catMaybes mutationOld)))
                            (\name -> throw400 Unexpected $ "Duplicate remote field " <> squote name)
                          -- Ditto, but for mutations
                          bindErrorA -<
@@ -161,13 +160,13 @@ buildGQLContext =
           let gqlContext = GQLContext . finalizeParser <$>
                 unauthenticatedQueryWithIntrospection queryRemotes mutationRemotes
           halfContext <- P.runSchemaT gqlContext
-          return $ halfContext $ finalizeParser <$> (unauthenticatedMutation mutationRemotes)
+          return $ halfContext $ finalizeParser <$> unauthenticatedMutation mutationRemotes
 
         -- | The 'query' type of the remotes. TODO: also expose mutation
         -- remotes. NOT TODO: subscriptions, as we do not yet aim to support
         -- these.
-        queryRemotes = concat $ map (\(q,_,_)->q) $ map snd remotes
-        mutationRemotes = concat $ fmap concat $ map (\(_,m,_)->m) $ map snd remotes
+        queryRemotes = concatMap ((\(q,_,_)->q) . snd) remotes
+        mutationRemotes = concatMap (concat . (\(_,m,_)->m) . snd) remotes
         queryHasuraOrRelay = case queryType of
           QueryHasura -> queryWithIntrospection (Set.fromMap $ validTables $> ())
                          validFunctions queryRemotes mutationRemotes
@@ -179,7 +178,7 @@ buildGQLContext =
           SQLGenCtx{ stringifyNum } <- askSQLGenCtx
           let gqlContext = GQLContext
                 <$> (finalizeParser <$> queryHasuraOrRelay)
-                <*> (fmap (fmap finalizeParser) $ mutation (Set.fromList $ Map.keys validTables) mutationRemotes
+                <*> (fmap finalizeParser <$> mutation (Set.fromList $ Map.keys validTables) mutationRemotes
                      allActionInfos nonObjectCustomTypes)
           flip runReaderT (roleName, validTables, scenario, QueryContext stringifyNum queryType queryRemotesMap) $
             P.runSchemaT gqlContext
@@ -247,8 +246,8 @@ query' allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
         ]
   actionParsers <- for allActions $ \actionInfo ->
     case _adType (_aiDefinition actionInfo) of
-      ActionMutation (ActionSynchronous) -> pure Nothing
-      ActionMutation (ActionAsynchronous) ->
+      ActionMutation ActionSynchronous -> pure Nothing
+      ActionMutation ActionAsynchronous ->
         fmap (fmap (RFAction . AQAsync)) <$> actionAsyncQuery actionInfo
       ActionQuery ->
         fmap (fmap (RFAction . AQQuery)) <$> actionExecute nonObjectCustomTypes actionInfo
@@ -346,7 +345,7 @@ emptyIntrospection = do
   let introspectionSchema = Schema
         { sDescription = Nothing
         , sTypes = introspectionTypes
-        , sQueryType = P.parserType (emptyQueryP)
+        , sQueryType = P.parserType emptyQueryP
         , sMutationType = Nothing
         , sSubscriptionType = Nothing
         , sDirectives = mempty
@@ -500,7 +499,7 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
       scenario <- asks getter
       let scenarioInsertPermissionM = do
             insertPermission <- _permIns permissions
-            if (scenario == Frontend && ipiBackendOnly insertPermission)
+            if scenario == Frontend && ipiBackendOnly insertPermission
               then Nothing
               else return insertPermission
       inserts <- for scenarioInsertPermissionM \insertPerms -> do
@@ -526,8 +525,8 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
         -- likewise; furthermore, primary keys can only be tested in
         -- the `where` clause if the user has select permissions for
         -- them, which at the very least requires select permissions
-        updateByPk <- join <$> for selectPerms \selPerms ->
-          updateTableByPk table (fromMaybe updateByPkName $ _tcrfUpdateByPk customRootFields) (Just updateByPkDesc) updatePerms selPerms
+        updateByPk <- join <$> for selectPerms
+          (updateTableByPk table (fromMaybe updateByPkName $ _tcrfUpdateByPk customRootFields) (Just updateByPkDesc) updatePerms)
         pure $ fmap (RFDB . MDBUpdate) <$> catMaybes [update, updateByPk]
 
       deletes <- for (_permDel permissions) \deletePerms -> do
@@ -537,21 +536,21 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
             deleteByPkDesc = G.Description $ "delete single row from the table: " <>> table
         delete <- deleteFromTable table (fromMaybe deleteName $ _tcrfDelete customRootFields) (Just deleteDesc) deletePerms selectPerms
         -- ditto
-        deleteByPk <- join <$> for selectPerms \selPerms ->
-          deleteFromTableByPk table (fromMaybe deleteByPkName $ _tcrfDeleteByPk customRootFields) (Just deleteByPkDesc) deletePerms selPerms
+        deleteByPk <- join <$> for selectPerms
+          (deleteFromTableByPk table (fromMaybe deleteByPkName $ _tcrfDeleteByPk customRootFields) (Just deleteByPkDesc) deletePerms)
         pure $ fmap (RFDB . MDBDelete) delete : maybe [] (pure . fmap (RFDB . MDBDelete)) deleteByPk
 
       pure $ concat $ catMaybes [inserts, updates, deletes]
 
   actionParsers <- for allActions $ \actionInfo ->
     case _adType (_aiDefinition actionInfo) of
-      ActionMutation (ActionSynchronous) ->
+      ActionMutation ActionSynchronous ->
         fmap (fmap (RFAction . AMSync)) <$> actionExecute nonObjectCustomTypes actionInfo
-      ActionMutation (ActionAsynchronous) ->
+      ActionMutation ActionAsynchronous ->
         fmap (fmap (RFAction . AMAsync)) <$> actionAsyncMutation nonObjectCustomTypes actionInfo
       ActionQuery -> pure Nothing
 
-  let mutationFieldsParser = concat (catMaybes mutationParsers) <> catMaybes actionParsers <> (fmap (fmap RFRemote)) allRemotes
+  let mutationFieldsParser = concat (catMaybes mutationParsers) <> catMaybes actionParsers <> fmap (fmap RFRemote) allRemotes
   pure if null mutationFieldsParser
        then Nothing
        else Just $ P.selectionSet $$(G.litName "mutation_root") Nothing mutationFieldsParser
