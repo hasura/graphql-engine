@@ -2,10 +2,19 @@
 
 ## Next release
 
+### Breaking change
+
+Headers from environment variables starting with `HASURA_GRAPHQL_` are not allowed  
+in event triggers, actions & remote schemas.
+
+If you do have such headers configured, then you must update the header configuration before upgrading.
+
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: disallow headers from env variables starting with `HASURA_GRAPHQL_` in actions, event triggers & remote schemas (#5519)
+**WARNING**: This might break certain deployments. See `Breaking change` section above.
 - server: bugfix to allow HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE of 0 (#5363)
 - server: support only a bounded plan cache, with a default size of 4000 (closes #5363)
 - server: add logs for action handlers
@@ -39,7 +48,7 @@
 - server: have haskell runtime release blocks of memory back to the OS eagerly (related to #3388)
 - server: unlock locked scheduled events on graceful shutdown (#4928)
 - server: disable prepared statements for mutations as we end up with single-use objects which result in excessive memory consumption for mutation heavy workloads (#5255)
-- server: include scheduled event metadata (`created_at`,`scheduled_time`,`id`, etc) along with the configured payload in the request body to the webhook. 
+- server: include scheduled event metadata (`created_at`,`scheduled_time`,`id`, etc) along with the configured payload in the request body to the webhook.
 **WARNING:** This is breaking for beta versions as the payload is now inside a key called `payload`.
 - console: allow configuring statement timeout on console RawSQL page (close #4998) (#5045)
 - console: support tracking partitioned tables (close #5071) (#5258)
