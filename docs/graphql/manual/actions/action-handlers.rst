@@ -183,7 +183,7 @@ For your action, add a header that will act as an action secret.
      Head to the ``Actions -> [action-name]`` tab in the console and scroll down to ``Headers``.
      You can now configure an action secret by adding a header:
 
-     .. thumbnail:: /img/core/actions/action-secret-header.png
+     .. thumbnail:: /img/graphql/manual/actions/action-secret-header.png
         :alt: Console action secret
         :width: 75%
 

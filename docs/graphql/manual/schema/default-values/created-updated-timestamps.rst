@@ -29,7 +29,7 @@ Add a created_at timestamp
     On the Hasura console, click on the ``Modify`` tab of a table. When clicking on the ``+Frequently used columns`` button, 
     choose ``created_at``:
 
-    .. thumbnail:: /img/core/schema/created-at.png
+    .. thumbnail:: /img/graphql/manual/schema/created-at.png
         :alt: Add a created_at time on the Hasura console
 
     Click the ``Add column`` button.
@@ -83,7 +83,7 @@ Add an updated_at timestamp
     On the Hasura console, click on the ``Modify`` tab of a table. When clicking on the ``+Frequently used columns`` button, 
     choose ``updated_at``:
 
-    .. thumbnail:: /img/core/schema/updated-at.png
+    .. thumbnail:: /img/graphql/manual/schema/updated-at.png
         :alt: Add an updated_at time on the Hasura console
 
     Click the ``Add column`` button.

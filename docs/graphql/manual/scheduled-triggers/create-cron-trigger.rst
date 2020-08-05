@@ -26,7 +26,7 @@ Step 1: Navigate to Cron Triggers
 - Click ``Cron Triggers``.
 - Click ``Create``.
 
-.. thumbnail:: /img/core/event-triggers/create-cron.png
+.. thumbnail:: /img/graphql/manual/event-triggers/create-cron.png
    :alt: Adding a cron trigger
    :width: 1000px
 
@@ -47,7 +47,7 @@ Let's define the cron trigger.
       - **Cron schedule**: Enter a schedule for the cron. You can use the link next to the field to help `build a cron expression <https://crontab.guru/#*_*_*_*_*>`__, or use the ``Frequently used crons`` dropdown as a shortcut. Cron events are created based on the UTC timezone.
       - **Payload**: The JSON payload which will be sent to the webhook.
 
-      .. thumbnail:: /img/core/event-triggers/define-cron-trigger.png
+      .. thumbnail:: /img/graphql/manual/event-triggers/define-cron-trigger.png
          :alt: Defining a cron trigger
          :width: 550px
 
@@ -109,7 +109,7 @@ If you like, you can also define the following values:
 
       Expand the ``Advanced`` section.
 
-      .. thumbnail:: /img/core/event-triggers/advanced-cron.png
+      .. thumbnail:: /img/graphql/manual/event-triggers/advanced-cron.png
          :alt: Defining advanced options for a cron trigger
          :width: 700px
 
@@ -170,6 +170,6 @@ Schedule & logs
 
 Once you've created your cron trigger, you can see ``Pending events``, ``Processed events``, and ``Invocation logs`` in their respective tabs.
 
-.. thumbnail:: /img/core/event-triggers/pending-cron.png
+.. thumbnail:: /img/graphql/manual/event-triggers/pending-cron.png
    :alt: Schedule and logs for cron triggers
    :width: 1200px

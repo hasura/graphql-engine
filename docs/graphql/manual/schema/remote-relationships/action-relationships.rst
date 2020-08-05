@@ -32,7 +32,7 @@ Step 1: Open the action relationship section
 - From your action, go to the ``Relationships`` tab.
 - Click ``Add a relationship``.
 
-.. thumbnail:: /img/core/remote-joins/action-rel.png
+.. thumbnail:: /img/graphql/manual/remote-joins/action-rel.png
    :alt: Opening the action relationship section
    :width: 559px
 
@@ -61,7 +61,7 @@ The following values can be defined for an action relationship:
 
     In the section opened by the above step, fill out the following fields:
 
-    .. thumbnail:: /img/core/remote-joins/define-action-rel.png
+    .. thumbnail:: /img/graphql/manual/remote-joins/define-action-rel.png
       :alt: Defining the relationship
       :width: 850px
 

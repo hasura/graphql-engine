@@ -23,7 +23,7 @@ Set up user pools and hosted web UI
 Follow `these instructions <https://docs.aws.amazon.com/cognito/latest/developerguide/getting-started-with-cognito-user-pools.html>`__ 
 to set up a user pool, add an app and enable the hosted web UI in AWS cognito. While enabling the hosted web UI, you need to select the checkbox ``Implicit Grant``.
 
-.. thumbnail:: /img/core/guides/cognito-app-client-settings.png
+.. thumbnail:: /img/graphql/manual/guides/cognito-app-client-settings.png
    :alt: Cognito App Client Settings
 
 
@@ -53,7 +53,7 @@ To add custom claims to the JWT, we need to create a lambda function and configu
         callback(null, event)
     }
 
-.. thumbnail:: /img/core/guides/cognito-lambda.png
+.. thumbnail:: /img/graphql/manual/guides/cognito-lambda.png
    :alt: Cognito Lambda function to add claims to the JWT
 
 Configure Cognito to trigger the lambda function
@@ -61,11 +61,11 @@ Configure Cognito to trigger the lambda function
 
 In cognito, select ``Triggers`` -> ``Pre Token Generation`` and choose the lambda function created above:
 
-.. thumbnail:: /img/core/guides/cognito-triggers-1.png
+.. thumbnail:: /img/graphql/manual/guides/cognito-triggers-1.png
    :alt: Select lambda for the trigger
 
 
-.. thumbnail:: /img/core/guides/cognito-triggers-2.png
+.. thumbnail:: /img/graphql/manual/guides/cognito-triggers-2.png
    :alt: Select lambda for the trigger
 
 
@@ -76,13 +76,13 @@ You don't need to integrate your UI with Cognito for testing. You can follow the
 
 1. Launch the hosted UI from AWS Cognito.
 
-.. thumbnail:: /img/core/guides/cognito-launch-hosted-ui.png
+.. thumbnail:: /img/graphql/manual/guides/cognito-launch-hosted-ui.png
    :alt: Launch Cognito Login UI
 
 
 2. You should see the Cognito login page where you can log in or sign up.
 
-.. thumbnail:: /img/core/guides/cognito-login.png
+.. thumbnail:: /img/graphql/manual/guides/cognito-login.png
    :alt: Cognito Login Page
 
 .. _test-cognito:
@@ -90,13 +90,13 @@ You don't need to integrate your UI with Cognito for testing. You can follow the
 3. After successfully logging in, you will be redirected to ``https://localhost:3000/cognito-callback#id_token=xxxxxx&yyyyyy``.
 This page may be a 404 if you don't have a UI running on localhost:3000. Extract the ``id_token`` value from this URL.
 
-.. thumbnail:: /img/core/guides/cognito-redirect.png
+.. thumbnail:: /img/graphql/manual/guides/cognito-redirect.png
    :alt: JWT from id_token query param
 
 
 4. To test this JWT, and to see if all the Hasura claims are added as per the sections above, let's test this out with `jwt.io <https://jwt.io>`__!
 
-.. thumbnail:: /img/core/guides/cognito-jwt.png
+.. thumbnail:: /img/graphql/manual/guides/cognito-jwt.png
    :alt: JWT debug on jwt.io
 
 **Save this JWT token value so that we can use it later to test the authorization using the Hasura console.**

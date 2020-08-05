@@ -267,7 +267,7 @@ mounted onto directories.
 If you now open the console of the new instance, you can see that the three tables have
 been created and are tracked:
 
-.. thumbnail:: /img/core/migrations/tracked-tables.png
+.. thumbnail:: /img/graphql/manual/migrations/tracked-tables.png
    :alt: Tracked tables from Hasura migrations
    :width: 30%
 

@@ -26,7 +26,7 @@ Step 1: Navigate to One-off Scheduled Events
 - Click ``One-off Scheduled Events``.
 - Click ``Schedule an event``.
 
-.. thumbnail:: /img/core/event-triggers/one-off.png
+.. thumbnail:: /img/graphql/manual/event-triggers/one-off.png
    :alt: Adding a one-off scheduled event
    :width: 900px
 
@@ -46,7 +46,7 @@ Define the following values for a scheduled event:
 
       In the form opened by the above step, fill out the following fields:
 
-      .. thumbnail:: /img/core/event-triggers/define-one-off-event.png
+      .. thumbnail:: /img/graphql/manual/event-triggers/define-one-off-event.png
          :alt: Defining the scheduled event
          :width: 550px
 
@@ -85,7 +85,7 @@ If you like, you can also define advanced values:
 
       Expand the ``Advanced`` section.
 
-      .. thumbnail:: /img/core/event-triggers/advanced-one-off.png
+      .. thumbnail:: /img/graphql/manual/event-triggers/advanced-one-off.png
          :alt: Defining advanced options for a scheduled event
          :width: 700px
 
@@ -128,6 +128,6 @@ Schedule & logs
 
 Once you've created your scheduled trigger, you can see ``Pending events``, ``Processed events``, and ``Invocation logs`` in their respective tabs.
 
-.. thumbnail:: /img/core/event-triggers/pending-one-off.png
+.. thumbnail:: /img/graphql/manual/event-triggers/pending-one-off.png
    :alt: Schedule and logs for scheduled events
    :width: 1200px

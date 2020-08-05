@@ -30,7 +30,7 @@ Edit the ``created_at`` field and set its default value as the SQL function ``no
 
 Open the console and head to ``Data -> article -> Modify``:
 
-.. thumbnail:: /img/core/schema/add-default-value.png
+.. thumbnail:: /img/graphql/manual/schema/add-default-value.png
    :alt: Modify the table in the console
 
 .. admonition:: To set an auto-incrementing default value
