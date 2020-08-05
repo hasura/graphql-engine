@@ -51,7 +51,6 @@ import qualified Hasura.GraphQL.Parser.Schema  as PS
 import qualified Hasura.RQL.DML.RemoteJoin     as RR
 import qualified Hasura.RQL.DML.Select         as DS
 import qualified Hasura.SQL.DML                as S
-import qualified Hasura.Tracing                as Tracing
 
 import           Hasura.Db
 import           Hasura.GraphQL.Context
@@ -283,7 +282,6 @@ $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ReusableLiveQueryPlan)
 buildLiveQueryPlan
   :: ( MonadError QErr m
      , MonadIO m
-     , Tracing.MonadTrace m
      )
   => PGExecCtx
   -> UserInfo
