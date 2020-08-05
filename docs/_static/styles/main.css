@@ -276,8 +276,9 @@ p {
 
 #docs-content .note,
 #docs-content .admonition {
-  background: #f1f9ff;
+  background: #f1f9ff url("/_images/layout/note.svg") 8px 16px no-repeat;
   border: 1px solid #c9e0f0;
+  padding-left: 50px;
 }
 
 #docs-content .docutils {

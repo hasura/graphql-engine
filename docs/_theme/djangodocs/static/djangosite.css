@@ -88,7 +88,6 @@ h1:hover>.headerlink,h2:hover>.headerlink,h3:hover>.headerlink,h4:hover>.headerl
 .note p,.admonition p{margin:0.8em 0}
 .note .first,.admonition .first{margin-top:0}
 .note .admonition-title,.admonition .admonition-title{font-weight:bold}
-.note .admonition-title::before,.admonition .admonition-title::before{display:inline-block;font:normal normal normal 14px/1 FontAwesome;font-size:inherit;text-rendering:auto;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;position:absolute;top:20px;left:20px;font-size:30px;width:34px;text-align:center;content:"";opacity:0.5}
 
 .note .last,.note .highlight,.admonition .last,.admonition .highlight{margin-bottom:0px}
 #docs-content{font-family:Avenir, "Lucida Grande", "Lucida Sans", sans-serif;font-size:14px;font-size:1.4rem;line-height:1.5em}
