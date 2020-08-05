@@ -44,7 +44,7 @@ wait_for_port() {
         nc -z localhost $PORT > /dev/null 2>&1 && log "port $PORT is ready" && return
         sleep 1
     done
-    log "migrations-startup" "failed waiting for $PORT" && exit 1
+    log "migrations-startup" "failed waiting for $PORT, try increasing HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT (default: 30)" && exit 1
 }
 
 log "migrations-startup" "starting graphql engine temporarily on port $HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT"
