@@ -340,7 +340,7 @@ logHeadersFromEnvEnv =
 retriesNumEnv :: (String, String)
 retriesNumEnv =
   ( "HASURA_GRAPHQL_NO_OF_RETRIES"
-  , "No.of retries if Postgres connection error occurs (default: 1)"
+  , "No.of retries if Postgres connection error occurs (default: 3)"
   )
 
 servePortEnv :: (String, String)
@@ -585,7 +585,7 @@ mkConnInfo (RawConnInfo mHost mPort mUser password mURL mDB opts mRetries) =
                     ++ "(host, port, user, dbname, password) or "
                     ++ "database-url (HASURA_GRAPHQL_DATABASE_URL)"
   where
-    retries = fromMaybe 1 mRetries
+    retries = fromMaybe 3 mRetries
 
 parseTxIsolation :: Parser (Maybe Q.TxIsolation)
 parseTxIsolation = optional $
