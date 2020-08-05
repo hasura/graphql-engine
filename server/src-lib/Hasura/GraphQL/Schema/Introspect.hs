@@ -8,9 +8,9 @@ import qualified Data.HashMap.Strict                 as Map
 import qualified Data.HashMap.Strict.InsOrd          as OMap
 import qualified Data.List.NonEmpty                  as NE
 import qualified Data.Text                           as T
+import qualified Text.Builder                        as T
 import qualified Data.Vector                         as V
 import qualified Language.GraphQL.Draft.Printer      as GP
-import qualified Language.GraphQL.Draft.Printer.Text as GPT
 import qualified Language.GraphQL.Draft.Syntax       as G
 
 import qualified Hasura.GraphQL.Parser               as P
@@ -340,7 +340,7 @@ inputValue =
     defaultValue :: FieldParser n (P.Definition P.InputFieldInfo -> J.Value)
     defaultValue = P.selection_ $$(G.litName "defaultValue") Nothing P.string $>
       \defInfo -> case P.dInfo defInfo of
-        P.IFOptional _ (Just val) -> J.String $ GPT.render GP.value val
+        P.IFOptional _ (Just val) -> J.String $ T.run $ GP.value $ val
         _                         -> J.Null
   in
     applyPrinter <$>

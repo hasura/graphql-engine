@@ -41,9 +41,9 @@ import qualified Data.Aeson.TH                       as J
 import qualified Data.HashMap.Strict                 as Map
 import qualified Data.List.NonEmpty                  as NEList
 import qualified Data.Text                           as T
+import qualified Text.Builder                        as T
 import qualified Language.GraphQL.Draft.Parser       as GParse
 import qualified Language.GraphQL.Draft.Printer      as GPrint
-import qualified Language.GraphQL.Draft.Printer.Text as GPrintText
 import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Hasura.Incremental                  (Cacheable)
@@ -58,7 +58,7 @@ newtype GraphQLType
   deriving (Show, Eq, Lift, Generic, NFData, Cacheable)
 
 instance J.ToJSON GraphQLType where
-  toJSON = J.toJSON . GPrintText.render GPrint.graphQLType . unGraphQLType
+  toJSON = J.toJSON . T.run . GPrint.graphQLType . unGraphQLType
 
 instance J.FromJSON GraphQLType where
   parseJSON =
