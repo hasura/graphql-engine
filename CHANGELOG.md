@@ -4,7 +4,7 @@
 
 ### Breaking change
 
-Headers from environment variables starting with `HASURA_GRAPHQL_` are not allowed  
+Headers from environment variables starting with `HASURA_GRAPHQL_` are not allowed
 in event triggers, actions & remote schemas.
 
 If you do have such headers configured, then you must update the header configuration before upgrading.
