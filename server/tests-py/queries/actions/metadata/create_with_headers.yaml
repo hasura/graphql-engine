@@ -17,5 +17,5 @@ query:
         value_from_env: HASURA_GRAPHQL_CLIENT_NAME
 response:
   path: $.definition.headers[0]
-  error: env variables starting with "HASURA_GRAPHQL_" are not allowed in value_from_env: HASURA_GRAPHQL_CLIENT_NAME
+  error: 'env variables starting with "HASURA_GRAPHQL_" are not allowed in value_from_env: HASURA_GRAPHQL_CLIENT_NAME'
   code: parse-failed
