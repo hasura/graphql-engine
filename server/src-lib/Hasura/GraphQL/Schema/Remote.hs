@@ -182,20 +182,9 @@ remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name inter
       = True -- TODO write appropriate check (may require saving 'possibleTypes' in Syntax.hs)
     validateSubTypeDefinition _ _ = False
 
-objectsImplementingInterface
-  :: SchemaIntrospection
-  -> G.Name
-  -> [G.ObjectTypeDefinition]
-objectsImplementingInterface (SchemaIntrospection tps) interfaceName = catMaybes $ fmap go tps
-  where
-    go :: TypeDefinition possibleTypes -> Maybe G.ObjectTypeDefinition
-    go (TypeDefinitionObject obj@(G.ObjectTypeDefinition _desc _name interfaces _directives _fields))
-      | interfaceName `elem` interfaces = Just obj
-    go _ = Nothing
-
 -- In the Draft GraphQL spec, interfaces can themselves implement
 -- superinterfaces.  In the future, we may need to support this.  Currently,
--- this function always returns false.
+-- this function always returns an empty list.
 interfaceImplementingInterface
   :: SchemaIntrospection
   -> G.Name
