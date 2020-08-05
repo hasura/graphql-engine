@@ -1074,6 +1074,28 @@ article ol ol {
 }
 
 /* common Header */
+.productWd100 {
+  width: 100% !important;
+  height: auto !important;
+}
+.clearBothPad {
+  clear: both;
+  padding-left: 32px !important;
+  padding-right: 32px !important;
+  width: calc(100% - 64px) !important;
+}
+.productWd50 {
+  width: calc(50% - 66px);
+  float: left;
+  padding: 32px 32px !important;
+  border-right: 1px solid #e4e4e4;
+}
+.articleDesc {
+  font-size: 16px;
+  margin: 0 0;
+  font-family: 'Poppins';
+}
+
 .boderBottom {
   border-bottom: 1px solid rgba(255, 255, 255, .2);
 }
@@ -1083,7 +1105,7 @@ article ol ol {
 .commonBlueNavBtn {
   font-weight: 600;
   font-size: 12px;
-  font-family: 'Poppins'
+  font-family: 'Poppins';
   line-height: 140%;
   width: auto;
   padding: 8px 20px;
@@ -1234,6 +1256,7 @@ article ol ol {
 	 display: inline-flex;
 	 align-items: center;
 	 padding: 0 0 !important;
+   text-decoration: none;
 }
 .gitHubBtn .gitHubStars {
 	 display: flex;
@@ -1421,6 +1444,7 @@ article ol ol {
  .navDrapdownWrapper .navDrapdownListWrapper .navDrapdownList, .navDrapdownWrapper .navDrapdownListWrapper .navDrapdownListResources {
 	 padding: 15px 15px;
 	 cursor: pointer;
+   text-align: center;
 }
  .navDrapdownWrapper .navDrapdownListWrapper .navDrapdownList:hover, .navDrapdownWrapper .navDrapdownListWrapper .navDrapdownListResources:hover {
 	 background-color: #f2f2f2;
@@ -1504,6 +1528,45 @@ article ol ol {
 	 color: #717780;
 }
 /* common header ends */
+/* footer starts here */
+.footerWrappper {
+	 display: flex;
+	 justify-content: center;
+	 padding-top: 100px;
+	 display: -ms-flexbox;
+	 display: flex;
+	 -ms-flex-wrap: wrap;
+	 flex-wrap: wrap;
+}
+ .footerWrappper .articleDesc, .footerWrappper .articleDescSmall {
+	 font-family: 'Poppins';
+	 font-weight: 600;
+	 font-size: 16px;
+	 line-height: 220%;
+	 color: #717780;
+}
+ .footerWrappper .footerLinks {
+	 padding: 0 35px;
+	 padding-bottom: 72px;
+}
+ .footerWrappper .footerLinks .links {
+	 font-size: 12px;
+}
+ .footerWrappper .footerLinks .links a {
+	 color: rgba(255, 255, 255, .8);
+	 display: contents;
+}
+ .footerWrappper .footerLinks .links a:hover {
+	 color: rgba(255, 255, 255, 1);
+	 border-bottom: 1px solid fff;
+}
+ .footerWrappper .footerLinks .links .anchorBtn {
+	 color: rgba(255, 255, 255, .8);
+}
+ .footerWrappper .footerLinks .links .anchorBtn:hover, .footerWrappper .footerLinks .links .anchorBtn:focus {
+	 color: rgba(255, 255, 255, 1);
+}
+
  .visibleMobile {
 	 display: none;
 }
@@ -1571,7 +1634,12 @@ article ol ol {
     width: calc(100% - 30px);
     padding: 0 15px !important;
 }
-
+.containerWrapper {
+  max-width: 1132px;
+  margin: 0 auto;
+  clear: both;
+  padding: 0 15px;
+}
 .tabbarContainerWrapper {
   display: flex;
   justify-content: center;
@@ -1603,6 +1671,29 @@ article ol ol {
 .tabbarContainerWrapper .tabbarTabActive span {
   color: rgba(255, 255, 255, 1) !important;
   border-bottom: 2px solid white !important;
+}
+.pagination-nav {
+  display: flex;
+}
+.pagination-nav .pagination-prev, .pagination-nav .pagination-next {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 140%;
+  color: #717780;
+}
+.pagination-nav .pagination-prev {
+  margin-right: 15px;
+}
+.pagination-nav .pagination-next {
+  margin-left: 15px;
+}
+.pagination-nav .pagination-prev img {
+  margin-right: 6px;
+}
+.pagination-nav .pagination-next img {
+  margin-left: 6px;
 }
 @media (min-width: 1050px) {
   .containerWidth {
@@ -1753,6 +1844,7 @@ article ol ol {
    .headerWrapper .topnav .visibleMobile .navBarULMobile .fullWidth .navDrapdownList, .headerWrapper .topnav .visibleMobile .navBarULMobile li .navDrapdownList, .headerWrapper .topnav .visibleMobile .navBarULMobile .fullWidth .navDrapdownListResources, .headerWrapper .topnav .visibleMobile .navBarULMobile li .navDrapdownListResources {
   	 padding: 0px 0px;
   	 cursor: pointer;
+     text-transform: none;
   }
    .headerWrapper .topnav .visibleMobile .navBarULMobile .fullWidth .navDrapdownList:hover, .headerWrapper .topnav .visibleMobile .navBarULMobile li .navDrapdownList:hover, .headerWrapper .topnav .visibleMobile .navBarULMobile .fullWidth .navDrapdownListResources:hover, .headerWrapper .topnav .visibleMobile .navBarULMobile li .navDrapdownListResources:hover {
   	 background-color: #f2f2f2;
@@ -1767,6 +1859,7 @@ article ol ol {
    .headerWrapper .topnav .visibleMobile .navBarULMobile .fullWidth .navDrapdownList .navDrapdownRight, .headerWrapper .topnav .visibleMobile .navBarULMobile li .navDrapdownList .navDrapdownRight, .headerWrapper .topnav .visibleMobile .navBarULMobile .fullWidth .navDrapdownListResources .navDrapdownRight, .headerWrapper .topnav .visibleMobile .navBarULMobile li .navDrapdownListResources .navDrapdownRight {
   	 padding-left: 10px;
   }
+  .headerWrapper .topnav .visibleMobile .navBarULMobile .fullWidth .productList .navDrapdownList .navDrapdownRight .articleDesc,
    .headerWrapper .topnav .visibleMobile .navBarULMobile .fullWidth .navDrapdownList .navDrapdownRight .articleDesc,
    .headerWrapper .topnav .visibleMobile .navBarULMobile li .navDrapdownList .navDrapdownRight .articleDesc, .headerWrapper .topnav .visibleMobile .navBarULMobile .fullWidth .navDrapdownListResources .navDrapdownRight .articleDesc, .headerWrapper .topnav .visibleMobile .navBarULMobile li .navDrapdownListResources .navDrapdownRight .articleDesc {
   	 font-weight: 600;
@@ -1790,6 +1883,7 @@ article ol ol {
   }
    .headerWrapper .topnav .visibleMobile .navBarULMobile .fullWidth .navDrapdownListResources, .headerWrapper .topnav .visibleMobile .navBarULMobile li .navDrapdownListResources {
   	 padding: 0 0;
+     text-align: center;
   }
    .headerWrapper .topnav .visibleMobile .navBarULMobile .fullWidth .navDrapdownListResources .icon, .headerWrapper .topnav .visibleMobile .navBarULMobile li .navDrapdownListResources .icon {
   	 text-align: center;
@@ -1862,10 +1956,11 @@ article ol ol {
     overflow-y: auto;
   }
   .productList {
-    padding: 32px 0;
+    padding: 32px 32px;
     border-bottom: 1px solid #e4e4e4;
   }
-  .productList:last-child {
-    border-bottom: 0;
+  .productList .navDrapdownList .navDrapdownRight .articleDesc, .productList .navDrapdownList .navDrapdownRight .articleDescSmall {
+    text-transform: none !important;
+    margin: 0 0;
   }
 }

@@ -53,7 +53,13 @@
                 </a>
               </div>
               <div class='gitHubBtnMobile'>
-
+                <a id="gitHubBtnMobile" class='socialBtn gitHubBtn hide' href="https://github.com/hasura/graphql-engine/" target="_blank" rel="noopener noreferrer">
+                  <div class='gitHubStars'>
+                    <img src="{{ pathto('_images/layout/github-header.svg', 1) }}" alt='Github'/>
+                    <span>Star</span>
+                  </div>
+                  <div id="gitHubCountMobile" class='gitHubCount'></div>
+                </a>
               </div>
               <div class='hideMobile m-b-5 navWhiteBG'>
                 <ul class="navBarUL">
@@ -252,7 +258,7 @@
                               </a>
                             </div>
                             <div class='wd50'>
-                              <a href='https://discord.com/invite/hasura'>
+                              <a href='https://discord.com/invite/hasura' target="_blank" rel='noopener noreferrer'>
                                 <div class='navContainer'>
                                   <div class='boxContainer'>
                                     <img src="{{ pathto('_images/layout/join-discord.svg', 1) }}" alt='Join Discord' />
@@ -294,14 +300,6 @@
                   <img src="{{ pathto('_images/layout/twitter-header.svg', 1) }}" alt="Twitter" />
                 </div>
               </a>
-              <a id="gitHubBtn" href="https://github.com/hasura/graphql-engine/" target="_blank" rel="noopener noreferrer"
-                class='gitHubBtn'>
-                <div class='gitHubStars'>
-                  <img src="{{ pathto('_images/layout/github-header.svg', 1) }}" alt='Github'/>
-                  <span>Star</span>
-                </div>
-                <div id="gitHubCount" class='gitHubCount'></div>
-              </a>
               <a id="gitHubBtn" class='socialBtn gitHubBtn hide' href="https://github.com/hasura/graphql-engine/" target="_blank" rel="noopener noreferrer">
                 <div class='gitHubStars'>
                   <img src="{{ pathto('_images/layout/github-header.svg', 1) }}" alt='Github'/>
@@ -320,8 +318,7 @@
                   </a>
                 </li>
                 <li>
-                  <a
- class=               href='https://cloud.hasura.io/'
+                  <a href='https://cloud.hasura.io/'
                   >
                     LOG IN
                   </a>
@@ -360,8 +357,7 @@
                       class="closeNavBar"
                       role="button"
                       tabIndex="0"
-                      onClick="closeMenuBar()"
-                      id="closeMenu"
+                      id="close-menu"
                     >
                       <img src="{{ pathto('_images/layout/close-banner.svg', 1) }}" alt="Close" />
                     </div>
@@ -387,30 +383,188 @@
                         <button class='commonBlueNavBtn'>GET HASURA</button>
                       </a>
                     </li>
-                    <li id='product-menu' class='cursorPointer fullWidth'>
-                      PRODUCTS
-                      <span class='menuArrow'><img src="{{ pathto('_images/layout/menu-arrow.svg', 1) }}" alt='Arrow' /></span>
-                        <div id='product-menu-list' class='hide'>
-                          <div class='wd50 productList'>
-                            <a href='/cloud/'>
-                              <div class='navDrapdownList'>
-                                <div class='icon'>
-                                  <img src="{{ pathto('_images/layout/cloud.svg', 1) }}" alt='Icon' />
-                                </div>
-                                <div class='navDrapdownRight'>
-                                  <h3 class='articleDesc'>Hasura Cloud</h3>
-                                  <div class='articleDescSmall'>The managed GraphQL service to access your data instantly</div>
-                                </div>
+                    <li id='product-menu' class='cursorPointer productWd100'>
+                      <div class="fullWidth">
+                        PRODUCTS
+                      </div>
+                      <span class='menuArrow'><img id='product-arrow' src="{{ pathto('_images/layout/menu-arrow.svg', 1) }}" alt='Arrow' /></span>
+                      <div id='product-menu-list' class='hide'>
+                        <div class='productList'>
+                          <a href='https://hasura.io/cloud/'>
+                            <div class='navDrapdownList'>
+                              <div class='icon'>
+                                <img src="{{ pathto('_images/layout/cloud.svg', 1) }}" alt='Icon' />
                               </div>
-                            </a>
-                          </div>
+                              <div class='navDrapdownRight'>
+                                <h3 class='articleDesc'>Hasura Cloud</h3>
+                                <div class='articleDescSmall'>The managed GraphQL service to access your data instantly</div>
+                              </div>
+                            </div>
+                          </a>
                         </div>
+                        <div class='productList'>
+                          <a href='https://hasura.io/opensource/'>
+                            <div class='navDrapdownList'>
+                              <div class='icon'>
+                                <img src="{{ pathto('_images/layout/graphql-engine.svg', 1) }}" alt='Icon' />
+                              </div>
+                              <div class='navDrapdownRight'>
+                                <h3 class='articleDesc'>Hasura Open Source</h3>
+                                <div class='articleDescSmall'>An overview of the features that make Hasura Open Source a powerful part of your tech stack</div>
+                              </div>
+                            </div>
+                          </a>
+                        </div>
+                        <div class='productList'>
+                          <a href='https://hasura.io/enterprise/'>
+                            <div class='navDrapdownList'>
+                              <div class='icon'>
+                                <img src="{{ pathto('_images/layout/enterprise.svg', 1) }}" alt='Icon' />
+                              </div>
+                              <div class='navDrapdownRight'>
+                                <h3 class='articleDesc'>Hasura Enterprise</h3>
+                                <div class='articleDescSmall'>On-prem Hasura for all your data access requirements</div>
+                              </div>
+                            </div>
+                          </a>
+                        </div>
+                        <div class='productList'>
+                          <a href="https://hasura.io/events/webinar/graphql-in-production-with-hasura/">
+                            <div class='navContainer'>
+                              <div class='boxContainer'>
+                                <img loading="lazy" src="{{ pathto('_images/layout/production.svg', 1) }}" alt='Hasura Con' />
+                              </div>
+                              <h3 class='articleDesc'>Webinar: GraphQL in Production with Hasura</h3>
+                              <div class='articleDescSmall'>Learn how Hasura allows you to build and manage production apps faster</div>
+                            </div>
+                          </a>
+                        </div>
+                        <div class='productList'>
+                          <a href="https://hasura.io/how-hasura-works/">
+                            <div class='navContainer'>
+                              <div class='boxContainer'>
+                                <img src="{{ pathto('_images/layout/how-hasura.svg', 1) }}" alt='How Hasura' />
+                              </div>
+                              <h3 class='articleDesc'>Learn How Hasura Works</h3>
+                              <div class='articleDescSmall'>Understand how you can leverage Hasura’s features to build powerful apps</div>
+                            </div>
+                          </a>
+                        </div>
+                      </div>
                     </li>
 
-                    <li class='cursorPointer fullWidth'
+                    <li class='cursorPointer productWd100'
                       id='resources-menu'>
-                      RESOURCES
-                      <span class='menuArrow'><img src="{{ pathto('_images/layout/menu-arrow.svg', 1) }}" alt='Arrow' /></span>
+                      <div class="fullWidth">RESOURCES</div>
+                      <span class='menuArrow'><img id='resources-arrow' src="{{ pathto('_images/layout/menu-arrow.svg', 1) }}" alt='Arrow' /></span>
+                      <div id='resources-menu-list' class='hide'>
+                        <div class='productWd50 productList heightAuto'>
+                          <a href='https://hasura.io/docs/'>
+                            <div class='navDrapdownListResources'>
+                              <div class='icon'>
+                                <img src="{{ pathto('_images/layout/docs.svg', 1) }}" alt='docs' />
+                              </div>
+                              <div class='navDrapdownRight'>
+                                <h3 class='articleDesc removePaddBottom'>Docs</h3>
+                              </div>
+                            </div>
+                          </a>
+                        </div>
+                        <div class='productWd50 productList heightAuto'>
+                          <a href='https://hasura.io/learn/'>
+                            <div class='navDrapdownListResources'>
+                              <div class='icon'>
+                                <img src="{{ pathto('_images/layout/tutorials.svg', 1) }}" alt='docs' />
+                              </div>
+                              <div class='navDrapdownRight'>
+                                <h3 class='articleDesc removePaddBottom'>Tutorials</h3>
+                              </div>
+                            </div>
+                          </a>
+                        </div>
+                        <div class='productWd50 productList heightAuto'>
+                          <a href='https://hasura.io/blog/'>
+                            <div class='navDrapdownListResources'>
+                              <div class='icon'>
+                                <img src="{{ pathto('_images/layout/blog.svg', 1) }}" alt='blog' />
+                              </div>
+                              <div class='navDrapdownRight'>
+                                <h3 class='articleDesc removePaddBottom'>Blog</h3>
+                              </div>
+                            </div>
+                          </a>
+                        </div>
+                        <div class='productWd50 productList heightAuto'>
+                          <a href='https://hasura.io/user-stories/'>
+                            <div class='navDrapdownListResources'>
+                              <div class='icon'>
+                                <img src="{{ pathto('_images/layout/use-cases.svg', 1) }}" alt='useCases' />
+                              </div>
+                              <div class='navDrapdownRight'>
+                                <h3 class='articleDesc removePaddBottom'>Use Cases</h3>
+                              </div>
+                            </div>
+                          </a>
+                        </div>
+                        <div class='productWd50 productList heightAuto'>
+                          <a href='https://hasura.io/community/'>
+                            <div class='navDrapdownListResources'>
+                              <div class='icon'>
+                                <img src="{{ pathto('_images/layout/community.svg', 1) }}" alt='community' />
+                              </div>
+                              <div class='navDrapdownRight'>
+                                <h3 class='articleDesc removePaddBottom'>Community</h3>
+                              </div>
+                            </div>
+                          </a>
+                        </div>
+                        <div class='productWd50 productList heightAuto'>
+                          <a href='https://hasura.io/graphql/'>
+                            <div class='navDrapdownListResources'>
+                              <div class='icon'>
+                                <img src="{{ pathto('_images/layout/graphql.svg', 1) }}" alt='graphql' />
+                              </div>
+                              <div class='navDrapdownRight'>
+                                <h3 class='articleDesc removePaddBottom'>GraphQL</h3>
+                              </div>
+                            </div>
+                          </a>
+                        </div>
+                        <div class='productWd50 productList heightAuto'>
+                          <a href='https://hasura.io/help/'>
+                            <div class='navDrapdownListResources'>
+                              <div class='icon'>
+                                <img src="{{ pathto('_images/layout/help-icon.svg', 1) }}" alt='help' />
+                              </div>
+                              <div class='navDrapdownRight'>
+                                <h3 class='articleDesc removePaddBottom'>Help</h3>
+                              </div>
+                            </div>
+                          </a>
+                        </div>
+                        <div class='productWd100 productList heightAuto clearBothPad'>
+                          <a href='https://hasura.io/learn/'>
+                          <div class='navContainer'>
+                            <div class='boxContainer'>
+                              <img src="{{ pathto('_images/layout/learn-hasura.svg', 1) }}" alt='Learn Hasura' />
+                            </div>
+                            <h3 class='articleDesc'>Learn with Hasura</h3>
+                            <div class='articleDescSmall'>Get started with GraphQL and Hasura from our selection of over 15 courses</div>
+                          </div>
+                          </a>
+                        </div>
+                        <div class='productWd100 productList heightAuto clearBothPad'>
+                          <a href='https://discord.com/invite/hasura'>
+                            <div class='navContainer'>
+                              <div class='boxContainer'>
+                                <img src="{{ pathto('_images/layout/join-discord.svg', 1) }}" alt='Join Discord' />
+                              </div>
+                              <h3 class='articleDesc'>Join us on Discord</h3>
+                              <div class='articleDescSmall'>Join our Discord channel and stay connected with Hasura users from over 83 countries</div>
+                            </div>
+                          </a>
+                        </div>
+                      </div>
                     </li>
                   </ul>
                 </div>
@@ -509,8 +663,18 @@
                 </div>
               </div>
 
-              <div class="nav">{{ secondnav() }}</div>
-
+              <!-- <div class="nav">{{ secondnav() }}</div> -->
+              <div>
+              <div class="nav pagination-nav">
+                <span class="pagination-prev">
+                  <img src="{{ pathto('_images/layout/previous.svg', 1) }}" alt="Prev"/>
+                  Previous
+                </span>
+                <span class="pagination-next">
+                  Next
+                  <img src="{{ pathto('_images/layout/next.svg', 1) }}" alt="Next"/>
+                </span>
+              </div>
               <div class="feedback_wrapper">
                 <div id="feedback" class="feedback">
                   Was this page helpful?
@@ -592,9 +756,248 @@
             </div>
           </div>
           <div style="clear: both;"></div>
-        {%- endif %}
+          {%- endif %}
       </div>
     </div>
+    <footer className="commonSectionWrapper commonFooterBgColor">
+      <div className="containerWrapper">
+        <div className="footerWrappper wd100">
+          <div className="footerLinks articleDesc">
+            <div className="footerHeader">Hasura</div>
+            <div className="links">
+              <a href="https://hasura.io/about/">About Us</a>
+            </div>
+            <div className="links">
+              <a href="https://hasura.io/press/">Press</a>
+            </div>
+            <div className="links">
+              <a href="https://hasura.io/careers/">Careers</a>
+            </div>
+            <div className="links">
+              <a href="https://hasura.io/contact-us/">Contact Us</a>
+            </div>
+            <div className="links">
+              <a href="https://hasura.io/legal/">Legal Stuff</a>
+            </div>
+          </div>
+          <div className="footerLinks articleDesc">
+            <div className="footerHeader">Support</div>
+            <div className="links">
+              <a
+                href="https://hasura.io/docs/"
+              >
+                Documentation
+              </a>
+            </div>
+            <div className="links">
+              <a
+                href="https://discordapp.com/invite/hasura"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Community Forum
+              </a>
+            </div>
+            <div className="links">
+              <button className="anchorBtn">
+                Website chat
+              </button>
+            </div>
+            <div className="links">
+              <a
+                href="https://github.com/hasura"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Github
+              </a>
+            </div>
+          </div>
+          <div className="footerLinks articleDesc">
+            <div className="footerHeader">Tools</div>
+            <div className="links">
+              <a
+                href="https://github.com/hasura/graphqurl"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Graphqurl
+              </a>
+            </div>
+            <div className="links">
+              <a
+                href="https://github.com/hasura/firebase2graphql"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Firebase2GraphQL
+              </a>
+            </div>
+            <div className="links">
+              <a
+                href="https://github.com/hasura/json2graphql"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                JSON2GraphQL
+              </a>
+            </div>
+            <div className="links">
+              <a
+                href="https://github.com/hasura/graphql2chartjs"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                GraphQL2ChartJS
+              </a>
+            </div>
+          </div>
+          <div className="footerLinks articleDesc">
+            <div className="footerHeader">Product</div>
+            <div className="links">
+              <a href="/opensource/">Hasura Open Source</a>
+            </div>
+            <div className="links">
+              <a href="https://hasura.io/cloud/">
+                Hasura Cloud
+              </a>
+            </div>
+            <div className="links">
+              <a href="https://hasura.io/enterprise/">
+                Hasura Enterprise
+              </a>
+            </div>
+            <div className="links">
+              <a href="https://hasura.io/pricing/">Pricing</a>
+            </div>
+            <div className="links">
+              <a
+                href="https://github.com/hasura/graphql-engine/releases"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Changelog
+              </a>
+            </div>
+          </div>
+          <div className="footerLinks articleDesc">
+            <div className="footerHeader">Resources</div>
+            <div className="links">
+              <a href="https://hasura.io/blog/">
+                Blog
+              </a>
+            </div>
+            <div className="links">
+              <a href="https://hasura.io/user-stories/">User Stories</a>
+            </div>
+            <div className="links">
+              <a
+                href="https://3factor.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                3Factor Apps
+              </a>
+            </div>
+            <div className="links">
+              <a href="https://hasura.io/react-graphql/">React GraphQL</a>
+            </div>
+            <div className="links">
+              <a href="https://hasura.io/vue-graphql/">Vue GraphQL</a>
+            </div>
+            <div className="links">
+              <a href="https://hasura.io/diy-graphql-baas/">DIY GraphQL BaaS</a>
+            </div>
+            <div className="links">
+              <a href="https://hasura.io/graphql/">GraphQL & Hasura</a>
+            </div>
+          </div>
+          <div className="footerLinks articleDesc">
+            <div className="footerHeader">Community</div>
+            <div className="links">
+              <a href="https://hasura.io/community/">Community Resources</a>
+            </div>
+            <div className="links">
+              <a
+                href='https://hasura.io/learn/'
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                GraphQL Tutorials
+              </a>
+            </div>
+            <div className="links">
+              <a
+                href="https://github.com/hasura/graphql-engine/wiki"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Community Wiki
+              </a>
+            </div>
+            <div className="links">
+              <a href="https://hasura.io/sample-apps/">Sample Apps</a>
+            </div>
+            <div className="links">
+              <a href="https://hasura.io/partner-agencies/">Partnership Program</a>
+            </div>
+            <div className="links">
+              <a
+                href="https://graphql.asia/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                GraphQL Asia
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="containerWrapper">
+        <div className="copyWriteWrapper">
+          <div className="copyWrite articleDescSmall">
+            © 2020 Hasura Inc. All rights reserved
+          </div>
+          <div className="footerSocialIconsWrapper">
+            <div className="socialBrands">
+              <a href="https://github.com/hasura/graphql-engine" rel="noopener noreferrer" aria-label="Github">
+                <img loading="lazy" src="{{ pathto('_images/layout/github-brands-white.svg', 1) }}" alt="Github" />
+              </a>
+            </div>
+            <div className="socialBrands">
+              <a href="https://twitter.com/hasurahq" rel="noopener noreferrer" aria-label="Titter">
+                <img loading="lazy" src="{{ pathto('_images/layout/twitter-brands-white.svg', 1) }}" alt="Titter" />
+              </a>
+            </div>
+            <div className="socialBrands">
+              <a href="https://discordapp.com/invite/hasura" rel="noopener noreferrer" aria-label="Discord">
+                <img loading="lazy" src="{{ pathto('_images/layout/discord-brands-white.svg', 1) }}" alt="Discord" />
+              </a>
+            </div>
+            <div className="socialBrands">
+              <a href="https://www.facebook.com/HasuraHQ" rel="noopener noreferrer" aria-label="Facebook">
+                <img loading="lazy" src="{{ pathto('_images/layout/facebook-brands-white.svg', 1) }}" alt="Facebook" />
+              </a>
+            </div>
+            <div className="socialBrands">
+              <a href="https://www.instagram.com/hasurahq/?hl=en" rel="noopener noreferrer" aria-label="Instagram">
+                <img loading="lazy" src="{{ pathto('_images/layout/instagram-brands-white.svg', 1) }}" alt="Instagram" />
+              </a>
+            </div>
+            <div className="socialBrands">
+              <a href="https://www.youtube.com/channel/UCZo1ciR8pZvdD3Wxp9aSNhQ" rel="noopener noreferrer" aria-label="Youtube">
+                <img loading="lazy" src="{{ pathto('_images/layout/youtube-brands-white.svg', 1) }}" alt="Youtube" />
+              </a>
+            </div>
+            <div className="socialBrands">
+              <a href="https://www.linkedin.com/company/hasura" rel="noopener noreferrer" aria-label="Linkedin">
+                <img loading="lazy" src="{{ pathto('_images/layout/linkedin-brands-white.svg', 1) }}" alt="Linkedin" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
 {% endblock %}
 
 {# Empty some default blocks out #}

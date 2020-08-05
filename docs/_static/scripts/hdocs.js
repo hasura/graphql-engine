@@ -13,6 +13,8 @@ window.hdocs = (function () {
       document.getElementById('feedback_btn').addEventListener('click', hdocs.handleSubmitFeedback);
 
       document.getElementById('product-menu').addEventListener('click', hdocs.productMenu);
+      document.getElementById('resources-menu').addEventListener('click', hdocs.resourcesMenu);
+      document.getElementById('close-menu').addEventListener('click', hdocs.toggleMenu);
       docsearch({
         appId: 'WCBB1VVLRC',
         apiKey: '298d448cd9d7ed93fbab395658da19e8',
@@ -30,6 +32,23 @@ window.hdocs = (function () {
     },
     toggleMenu: function () {
       var x = document.getElementById("navbar")
+      window.addEventListener('click', function(e){
+        if (document.getElementById('close-menu').contains(e.target)) {
+          if (x.className === "topnav responsive") {
+            x.className = "topnav"
+          }
+        } else {
+          if (document.getElementById('navbar').contains(e.target)) {
+            if (x.className === "topnav") {
+              x.className += " responsive"
+            }
+          } else{
+            if (x.className === "topnav responsive") {
+              x.className = "topnav"
+            }
+          }
+        }
+      });
       if (x.className === "topnav") {
         x.className += " responsive"
       } else {
@@ -38,10 +57,25 @@ window.hdocs = (function () {
     },
     productMenu: function() {
       var productList = document.getElementById("product-menu-list")
+      var productArrow = document.getElementById("product-arrow")
+      var resourcesArrow = document.getElementById("resources-arrow")
       if(productList.className === "hide") {
         productList.className = ""
+        productArrow.className = "rotateImg"
       } else {
         productList.className = "hide"
+        productArrow.className = ""
+      }
+    },
+    resourcesMenu: function() {
+      var productList = document.getElementById("resources-menu-list")
+      var resourcesArrow = document.getElementById("resources-arrow")
+      if(productList.className === "hide") {
+        productList.className = ""
+        resourcesArrow.className = "rotateImg"
+      } else {
+        productList.className = "hide"
+        resourcesArrow.className = ""
       }
     },
     request: function (url, data, type) {
@@ -88,6 +122,8 @@ window.hdocs = (function () {
           const githubStar = data[0].star_count;
           document.getElementById("gitHubCount").innerHTML = hdocs.formatNumber(githubStar);
           document.getElementById("gitHubBtn").classList.remove("hide");
+          document.getElementById("gitHubCountMobile").innerHTML = hdocs.formatNumber(githubStar);
+          document.getElementById("gitHubBtnMobile").classList.remove("hide");
         })
         .catch(function (e) { {console.error(e);} })
     },
