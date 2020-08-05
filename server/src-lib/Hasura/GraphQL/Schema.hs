@@ -77,10 +77,7 @@ buildGQLContext =
 
         allActionInfos = Map.elems allActions
         queryRemotesMap =
-          Map.fromList $
-          map (\(remoteSchemaName, (queryFieldParser, _, _) ) ->
-                 (remoteSchemaName, map (\(FieldParser defn _) -> defn) queryFieldParser))
-          $ Map.toList $ fmap (rscParsed . fst) allRemoteSchemas
+          fmap (map fDefinition . (\(x,_,_)->x) . rscParsed . fst) allRemoteSchemas
         buildFullestDBSchema
           :: m ( Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
                , Maybe (Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
