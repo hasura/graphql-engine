@@ -1,6 +1,5 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import throttle from 'lodash.throttle';
 
 import { Box, Flex, Heading, Text, Badge } from '../UIKit/atoms';
 import { ConsoleNotification, NotificationDate } from './ConsoleNotification';
@@ -31,34 +30,37 @@ const getDateString = (date: NotificationDate) => {
 
 // TODO: Perhaps have to add a close/hide button for some updates
 
-interface ConsoleUpdateProps extends ConsoleNotification {
-  children?: React.ReactNode;
-}
-
-const Update = React.forwardRef<HTMLDivElement, ConsoleUpdateProps>(
-  ({ subject, content, type, is_active = true, ...props }, forwardedRef) => {
-    if (!is_active) {
-      return null;
-    }
-    return (
-      <Box
-        className={styles.updateBox}
-        ref={forwardedRef}
-        id={props?.id ? `${props.id}` : subject}
-      >
-        <Flex px="25px" justifyContent="space-between">
-          <Flex justifyContent="space-between" bg="white">
-            {type ? <Badge type={type} mr="12px" /> : null}
-            <Heading as="h4" color="#1cd3c6" fontSize="16px">
-              {subject}
-            </Heading>
-          </Flex>
-          <Text color="grey" fontSize={13} fontWeight="bold">
-            {props?.start_date ? getDateString(props.start_date) : null}
-          </Text>
+const Update: React.FC<ConsoleNotification> = ({
+  subject,
+  content,
+  type,
+  is_active = true,
+  ...props
+}) => {
+  if (!is_active) {
+    return null;
+  }
+  return (
+    <Box className={`${styles.updateBox} ${styles.read}`}>
+      <Flex px="25px" justifyContent="space-between">
+        <Flex justifyContent="space-between">
+          {type ? <Badge type={type} mr="12px" /> : null}
+          <Heading as="h4" color="#1cd3c6" fontSize="16px">
+            {subject}
+          </Heading>
         </Flex>
-        <Flex pt="4px">
-          <Text fontSize={15} fontWeight="normal" px={25} py={2}>
+        <Text color="grey" fontSize={13} fontWeight="bold">
+          {props?.start_date ? getDateString(props.start_date) : null}
+        </Text>
+      </Flex>
+      <Flex
+        pt="4px"
+        alignItems="center"
+        justifyContent="space-between"
+        width="100%"
+      >
+        <Flex px={25} py={2} width="80%">
+          <Text fontSize={15} fontWeight="normal">
             {content}
             <br />
             {props.external_link ? (
@@ -74,10 +76,13 @@ const Update = React.forwardRef<HTMLDivElement, ConsoleUpdateProps>(
             {props?.children ? props.children : null}
           </Text>
         </Flex>
-      </Box>
-    );
-  }
-);
+        <Flex width="20%" alignItems="center" justifyContent="center">
+          <div className={styles.yellowDot} />
+        </Flex>
+      </Flex>
+    </Box>
+  );
+};
 
 type NotificationProps = {
   data: ConsoleNotification[];
@@ -87,7 +92,6 @@ type NotificationProps = {
   onClickMarkAllAsRead: () => void;
   disableMarkAllAsReadBtn: boolean;
   onClickViewMore: () => void;
-  updateRefs: Record<string, React.RefObject<HTMLDivElement>>;
 };
 
 type PreReleaseProps = Pick<NotificationProps, 'optOutCallback'>;
@@ -124,7 +128,6 @@ const VersionUpdateNotification: React.FC<VersionUpdateNotificationProps> = ({
       type="version update"
       content={`Hey There! There's a new server version ${latestVersion} available.`}
       start_date={Date.now()}
-      ref={null}
     >
       <a
         href={
@@ -207,7 +210,6 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
       disableMarkAllAsReadBtn,
       onClickMarkAllAsRead,
       onClickViewMore,
-      updateRefs,
     },
     forwardedRef
   ) => (
@@ -218,19 +220,19 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
       {/* TODO: Use style system colors here */}
       <Flex
         alignItems="center"
-        p={20}
-        bg="#e1e1e1"
+        p={16}
+        bg="#f2f2f2"
         justifyContent="space-between"
       >
         <Flex alignItems="center" justifyContent="center">
-          <Heading as="h2" color="#000" fontSize="20px">
-            Latest updates
-          </Heading>
           <ConsoleLogo
             className={styles.consoleLogoNotifications}
-            width={24}
-            height={24}
+            width={18}
+            height={18}
           />
+          <Heading as="h4" color="#000" fontSize="16px" marginLeft="8px">
+            Latest updates
+          </Heading>
         </Flex>
         <Button
           title="Mark all as read"
@@ -251,7 +253,6 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
         {data.length &&
           data.map(({ subject, content, is_active, ...props }) => (
             <Update
-              ref={props?.id ? updateRefs[props.id] : undefined}
               id={props.id}
               key={subject}
               subject={subject}
@@ -342,10 +343,6 @@ function mapStateToProps(state: ReduxState) {
   };
 }
 
-const throttledCb = throttle((callback: () => void) => {
-  callback();
-}, 3000);
-
 type StateProps = ReturnType<typeof mapStateToProps>;
 
 type HasuraNotificationProps = {
@@ -364,31 +361,27 @@ const HasuraNotifications: React.FC<Props> = ({
   ...props
 }) => {
   const { dispatch } = props;
-  const [displayNewVersionNotif, setDisplayNewVersionNotif] = React.useState(
-    false
-  );
+  const [
+    displayNewVersionNotification,
+    setDisplayNewVersionNotification,
+  ] = React.useState(false);
   const [latestVersion, setLatestVersion] = React.useState(props.serverVersion);
-  const [numberNotifications, changeNumberNotifications] = React.useState(10);
   const dropDownRef = React.useRef<HTMLDivElement>(null);
   const wrapperRef = React.useRef(null);
-  const [readNotifications, updateReadNotifications] = React.useState<string[]>(
-    []
-  );
-  const updateRefs = consoleNotifications.reduce(
-    (
-      acc: Record<string, React.RefObject<HTMLDivElement>>,
-      value: ConsoleNotification
-    ) => {
-      if (value.id) {
-        acc[value.id] = React.createRef();
-      }
-      return acc;
-    },
-    {}
-  );
+  // TODO: the number should become zero once it is opened for the first time
+  const [numberNotifications, updateNumberNotifications] = React.useState(0);
 
   // for running the version update code on mounting
   React.useEffect(() => {
+    if (
+      !props.console_opts ||
+      !props.latestStableServerVersion ||
+      !props.latestPreReleaseServerVersion ||
+      !props.serverVersion
+    ) {
+      return;
+    }
+
     const [versionUpdateCheck, latestReleasedVersion] = checkVersionUpdate(
       props.latestStableServerVersion,
       props.latestPreReleaseServerVersion,
@@ -399,11 +392,11 @@ const HasuraNotifications: React.FC<Props> = ({
     setLatestVersion(latestReleasedVersion);
 
     if (versionUpdateCheck) {
-      setDisplayNewVersionNotif(true);
+      setDisplayNewVersionNotification(true);
       return;
     }
 
-    setDisplayNewVersionNotif(false);
+    setDisplayNewVersionNotification(false);
   }, [
     props.latestPreReleaseServerVersion,
     props.latestStableServerVersion,
@@ -411,94 +404,33 @@ const HasuraNotifications: React.FC<Props> = ({
     props.serverVersion,
   ]);
 
-  // for the number of notifications case
   React.useEffect(() => {
-    const previouslyRead = props.console_opts?.console_notifications?.read;
-    const newCount =
-      consoleNotifications.length +
-      (displayNewVersionNotif ? 1 : 0) -
-      (Array.isArray(previouslyRead) ? previouslyRead.length : 0);
+    const readNotifications = props.console_opts?.console_notifications?.read;
 
-    changeNumberNotifications(newCount);
-
-    if (previouslyRead) {
-      if (
-        previouslyRead === 'all' ||
-        previouslyRead === 'default' ||
-        previouslyRead === 'error' ||
-        previouslyRead === []
-      ) {
-        changeNumberNotifications(0);
-      }
-    }
-  }, [
-    consoleNotifications,
-    displayNewVersionNotif,
-    props.console_opts?.console_notifications?.read,
-  ]);
-
-  const updateRefObjects = Object.values(updateRefs);
-  const observerCallback = (entries: IntersectionObserverEntry[]) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const currentReadNotifID = entry.target.id;
-        if (readNotifications.indexOf(currentReadNotifID) === -1) {
-          updateReadNotifications(read =>
-            Array.from(new Set([...read, currentReadNotifID]))
-          );
-          changeNumberNotifications(number => number - 1);
-        }
-      }
-    });
-  };
-
-  // upon updating readNotifications state
-  React.useEffect(() => {
-    // TODO: should be run if it is less than or equal to currently displayed number
-    throttledCb(() => {
-      dispatch(
-        updateConsoleNotificationsInDB({
-          read: readNotifications,
-          date: new Date().toISOString(),
-        })
-      );
-    });
-  }, [readNotifications]);
-
-  // for the read-all case
-  React.useEffect(() => {
-    // TODO: change the condition
+    // once mark all as read is clicked
     if (
-      numberNotifications <= 0 &&
-      readNotifications.length === consoleNotifications.length &&
-      readNotifications.length > 0 &&
-      consoleNotifications.length > 0
+      readNotifications === 'all' ||
+      readNotifications === 'default' ||
+      readNotifications === 'error'
     ) {
-      markAllAsRead(dispatch, props.hasura_uuid);
+      updateNumberNotifications(0);
+      return;
     }
+
+    let readNumber = consoleNotifications.length;
+    if (displayNewVersionNotification) {
+      readNumber++;
+    }
+    if (Array.isArray(readNotifications)) {
+      readNumber -= readNotifications.length;
+    }
+
+    updateNumberNotifications(readNumber);
   }, [
-    numberNotifications,
-    readNotifications.length,
     consoleNotifications.length,
-    props.hasura_uuid,
-    dispatch,
+    props.console_opts?.console_notifications?.read,
+    displayNewVersionNotification,
   ]);
-
-  const observer = new IntersectionObserver(observerCallback, {
-    root: dropDownRef.current,
-    threshold: [1],
-  });
-
-  // for the observer
-  React.useEffect(() => {
-    updateRefObjects.forEach(value => {
-      if (value.current) {
-        observer.observe(value.current);
-      }
-    });
-
-    return () => observer.disconnect();
-  }, []);
 
   const optOutCallback = () => {
     dispatch(setPreReleaseNotificationOptOutInDB());
@@ -511,6 +443,7 @@ const HasuraNotifications: React.FC<Props> = ({
 
   const onClickMarkAllAsRead = () => {
     markAllAsRead(dispatch, props.hasura_uuid);
+    updateNumberNotifications(0);
   };
 
   useOnClickOutside([dropDownRef, wrapperRef], closeDropDown);
@@ -523,6 +456,7 @@ const HasuraNotifications: React.FC<Props> = ({
         onClick={toggleDropDown}
         ref={wrapperRef}
       >
+        {/* TODO: use font-awesome bell icon here */}
         <ConsoleLogo width={25} height={25} />
         <ToReadBadge numberNotifications={numberNotifications} />
       </div>
@@ -531,16 +465,15 @@ const HasuraNotifications: React.FC<Props> = ({
         // TODO: check edge cases
         data={
           consoleNotifications.length > 20
-            ? consoleNotifications.slice(0, 20)
+            ? consoleNotifications.slice(0, 21)
             : consoleNotifications
         }
-        showVersionUpdate={displayNewVersionNotif}
+        showVersionUpdate={displayNewVersionNotification}
         latestVersion={latestVersion}
         optOutCallback={optOutCallback}
         onClickMarkAllAsRead={onClickMarkAllAsRead}
         onClickViewMore={onClickViewMore}
         disableMarkAllAsReadBtn={!numberNotifications}
-        updateRefs={updateRefs}
       />
     </>
   );
