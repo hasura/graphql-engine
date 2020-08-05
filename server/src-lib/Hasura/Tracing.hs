@@ -26,6 +26,7 @@ import           Control.Monad.Trans.Control
 import           Control.Monad.Morph
 import           Control.Monad.Unique
 import           Data.String                 (fromString)
+import           Network.URI                 (URI)
 
 import qualified Data.Aeson                  as J
 import qualified Data.Aeson.Lens             as JL
@@ -237,22 +238,25 @@ extractEventContext e = do
 -- | Perform HTTP request which supports Trace headers
 tracedHttpRequest 
   :: MonadTrace m 
-  =>  HTTP.Request
+  => HTTP.Request
   -- ^ http request that needs to be made
   -> (HTTP.Request -> m a)
   -- ^ a function that takes the traced request and executes it
   -> m a
-tracedHttpRequest req f = trace (bsToTxt (HTTP.path req)) do
-  let reqBytes = case HTTP.requestBody req of
-        HTTP.RequestBodyBS bs -> Just (fromIntegral (BS.length bs))
-        HTTP.RequestBodyLBS bs -> Just (BL.length bs)
-        HTTP.RequestBodyBuilder len _ -> Just len
-        HTTP.RequestBodyStream len _ -> Just len
-        _ -> Nothing
-  for_ reqBytes \b ->
-    attachMetadata [("request_body_bytes", fromString (show b))]
-  ctx <- currentContext
-  let req' = req { HTTP.requestHeaders =
-                     injectHttpContext ctx <> HTTP.requestHeaders req
-                 }
-  f req'
+tracedHttpRequest req f = do
+  let method = bsToTxt (HTTP.method req)
+      uri = show @URI (HTTP.getUri req)
+  trace (method <> " " <> fromString uri) do
+    let reqBytes = case HTTP.requestBody req of
+          HTTP.RequestBodyBS bs -> Just (fromIntegral (BS.length bs))
+          HTTP.RequestBodyLBS bs -> Just (BL.length bs)
+          HTTP.RequestBodyBuilder len _ -> Just len
+          HTTP.RequestBodyStream len _ -> Just len
+          _ -> Nothing
+    for_ reqBytes \b ->
+      attachMetadata [("request_body_bytes", fromString (show b))]
+    ctx <- currentContext
+    let req' = req { HTTP.requestHeaders =
+                       injectHttpContext ctx <> HTTP.requestHeaders req
+                   }
+    f req'
