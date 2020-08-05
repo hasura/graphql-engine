@@ -1319,10 +1319,10 @@
 
 .notificationsContainer {
   box-shadow: 0px 12px 27px 0px rgba(0, 0, 0, 0.2);
-  background: white;
+  background-color: white;
   overflow-y: auto;
   overflow-x: hidden;
-  max-height: 60vh;
+  max-height: 50vh;
   text-transform: none;
   border-bottom-right-radius: 5px;
   border-bottom-left-radius: 5px;
@@ -1351,6 +1351,20 @@
   &:last-child {
     border-bottom: none;
   }
+  &.unread {
+    background-color: white;
+  }
+  &.read {
+    background-color: #f5f5f5;
+  }
+}
+
+.yellowDot {
+  border-radius: 50%;
+  width: 12px;
+  height: 12px;
+  border: 1px solid #ffc627;
+  background-color: #fff427;
 }
 
 .consoleLogoNotifications {
