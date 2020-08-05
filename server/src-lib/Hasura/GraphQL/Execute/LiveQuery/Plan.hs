@@ -279,6 +279,9 @@ $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ReusableLiveQueryPlan)
 
 -- | Constructs a new execution plan for a live query and returns a reusable version of the plan if
 -- possible.
+
+-- NOTE: This function has a 'MonadTrace' constraint in master, but we don't need it
+-- here. We should evaluate if we need it here.
 buildLiveQueryPlan
   :: ( MonadError QErr m
      , MonadIO m

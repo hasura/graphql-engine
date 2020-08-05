@@ -69,6 +69,8 @@ resolveUnpreparedValue userInfo = \case
       PGTypeScalar colTy -> withConstructorFn colTy sessionVariableValue
       PGTypeArray _      -> sessionVariableValue
 
+-- NOTE: This function has a 'MonadTrace' constraint in master, but we don't need it
+-- here. We should evaluate if we need it here.
 explainQueryField
   :: (MonadError QErr m, MonadTx m)
   => UserInfo
@@ -97,6 +99,8 @@ explainQueryField userInfo fieldName rootField = do
                    Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
       pure $ FieldPlan fieldName (Just textSQL) $ Just planLines
 
+-- NOTE: This function has a 'MonadTrace' constraint in master, but we don't need it
+-- here. We should evaluate if we need it here.
 explainGQLQuery
   :: forall m
   . ( MonadError QErr m
