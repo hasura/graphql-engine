@@ -81,7 +81,7 @@ toSQLFromItem alias = \case
   -- QRFActionExecuteObject s -> DS.mkSQLSelect DS.JASSingleObject s
   -- QRFActionExecuteList s -> DS.mkSQLSelect DS.JASSingleObject s
 
-mkMultiplexedQuery :: Map.HashMap G.Name SubscriptionRootFieldResolved -> MultiplexedQuery
+mkMultiplexedQuery :: OMap.InsOrdHashMap G.Name SubscriptionRootFieldResolved -> MultiplexedQuery
 mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkSelect
   { S.selExtr =
     -- SELECT _subs.result_id, _fld_resp.root AS result
@@ -102,13 +102,13 @@ mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkS
     selectRootFields = S.mkSelect
       { S.selExtr = [S.Extractor rootFieldsJsonAggregate (Just . S.Alias $ Iden "root")]
       , S.selFrom = Just . S.FromExp $
-          flip map (Map.toList rootFields) $ \(fieldAlias, resolvedAST) ->
+          flip map (OMap.toList rootFields) $ \(fieldAlias, resolvedAST) ->
             toSQLFromItem (S.Alias $ aliasToIden fieldAlias) resolvedAST
       }
 
     -- json_build_object('field1', field1.root, 'field2', field2.root, ...)
     rootFieldsJsonAggregate = S.SEFnApp "json_build_object" rootFieldsJsonPairs Nothing
-    rootFieldsJsonPairs = flip concatMap (Map.keys rootFields) $ \fieldAlias ->
+    rootFieldsJsonPairs = flip concatMap (OMap.keys rootFields) $ \fieldAlias ->
       [ S.SELit (G.unName fieldAlias)
       , mkQualIden (aliasToIden fieldAlias) (Iden "root") ]
 
@@ -318,7 +318,7 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
 
 
 
-  let multiplexedQuery = mkMultiplexedQuery $ OMap.toHashMap preparedAST
+  let multiplexedQuery = mkMultiplexedQuery preparedAST
       roleName = _uiRole userInfo
       parameterizedPlan = ParameterizedLiveQueryPlan roleName multiplexedQuery
 
