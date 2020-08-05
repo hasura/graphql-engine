@@ -136,7 +136,7 @@ column columnType (Nullability isNullable) =
     opaque :: MonadParse m => Parser 'Both m a -> Parser 'Both m (Opaque a)
     opaque parser = parser
       { pParser = \case
-          GraphQLValue (VVariable (var@Variable{ vInfo, vValue })) -> do
+          GraphQLValue (VVariable Variable{ vInfo, vValue }) -> do
             -- FIXME: add typechecking
             -- typeCheck (toGraphQLType $ pType parser) var
             Opaque (Just vInfo) <$> pParser parser (absurd <$> vValue)

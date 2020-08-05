@@ -777,7 +777,7 @@ jsonToGraphQL = \case
     (graphQLName,) <$> jsonToGraphQL val
 
 peelVariable :: MonadParse m => Maybe GType -> InputValue Variable -> m (InputValue Variable)
-peelVariable expected = \case
+peelVariable _expected = \case
   GraphQLValue (VVariable var) -> do
     -- TODO: typecheck here?
     -- onJust expected \locationType -> typeCheck locationType var

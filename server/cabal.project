@@ -37,7 +37,7 @@ package *
   haddock-quickjump: true
 
 package graphql-engine
-  ghc-options: -j -fdefer-typed-holes
+  ghc-options: -j
   haddock-options: "--show-all"
 
 source-repository-package
