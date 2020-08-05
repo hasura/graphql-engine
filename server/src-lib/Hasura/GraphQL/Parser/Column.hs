@@ -105,10 +105,11 @@ column columnType (Nullability isNullable) =
       --   finally, while not the most important criterion, it *feels* wrong.
       _  -> do
         name <- mkScalarTypeName scalarType
+        let schemaType = NonNullable $ TNamed $ mkDefinition name Nothing TIScalar
         pure $ Parser
-          { pType = NonNullable $ TNamed $ mkDefinition name Nothing TIScalar
+          { pType = schemaType
           , pParser =
-              valueToJSON >=>
+              valueToJSON (toGraphQLType schemaType) >=>
               either (parseErrorWith ParseFailed . qeError) pure . runAesonParser (parsePGValue scalarType)
           }
     PGColumnEnumReference (EnumReference tableName enumValues) ->
@@ -136,9 +137,8 @@ column columnType (Nullability isNullable) =
     opaque :: MonadParse m => Parser 'Both m a -> Parser 'Both m (Opaque a)
     opaque parser = parser
       { pParser = \case
-          GraphQLValue (VVariable Variable{ vInfo, vValue }) -> do
-            -- FIXME: add typechecking
-            -- typeCheck (toGraphQLType $ pType parser) var
+          GraphQLValue (VVariable (var@Variable{ vInfo, vValue })) -> do
+            typeCheck (toGraphQLType $ pType parser) var
             Opaque (Just vInfo) <$> pParser parser (absurd <$> vValue)
           value -> Opaque Nothing <$> pParser parser value
       }

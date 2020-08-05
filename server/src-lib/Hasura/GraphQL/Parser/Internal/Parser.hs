@@ -301,9 +301,11 @@ identifier = scalar $$(litName "ID") Nothing SRString
 
 namedJSON :: MonadParse m => Name -> Parser 'Both m A.Value
 namedJSON name = Parser
-  { pType = NonNullable $ TNamed $ mkDefinition name Nothing TIScalar
-  , pParser = valueToJSON
+  { pType = schemaType
+  , pParser = valueToJSON $ toGraphQLType schemaType
   }
+  where
+    schemaType = NonNullable $ TNamed $ mkDefinition name Nothing TIScalar
 
 json, jsonb :: MonadParse m => Parser 'Both m A.Value
 json  = namedJSON $$(litName "json")
@@ -466,14 +468,13 @@ fieldWithDefault name description defaultValue parser = InputFieldsParser
   , ifParser = M.lookup name >>> withPath (++[Key (unName name)]) . \case
       Just value -> parseValue (toGraphQLType $ pType parser) value
       Nothing    -> pInputParser parser $ GraphQLValue $ literal defaultValue
-      -- FIXME: we use the literal without checking that its value can
-      -- in theory be assigned to the declared type
   }
   where
     parseValue _ value = pInputParser parser value
     {-
     FIXME!!!!
     FIXME!!!!
+
     parseValue expectedType value = case value of
       VVariable (var@Variable { vInfo, vValue }) -> do
         typeCheck expectedType var
@@ -529,9 +530,11 @@ fieldOptional
 fieldOptional name description parser = InputFieldsParser
   { ifDefinitions = [mkDefinition name description $
       IFOptional (discardNullability $ pType parser) Nothing]
-  , ifParser = M.lookup name >>> withPath (++[Key (unName name)])
-      . traverse (pInputParser parser)
+  , ifParser = M.lookup name >>> withPath (++[Key (unName name)]) .
+               traverse (pInputParser parser <=< peelVariable expectedType)
   }
+  where
+    expectedType = Just $ toGraphQLType $ nullableType $ pType parser
 
 -- | A variant of 'selectionSetObject' which doesn't implement any interfaces
 selectionSet
@@ -740,8 +743,8 @@ subselection_ name description bodyParser =
 -- -----------------------------------------------------------------------------
 -- helpers
 
-valueToJSON :: MonadParse m => InputValue Variable -> m A.Value
-valueToJSON = peelVariable Nothing >=> \case
+valueToJSON :: MonadParse m => GType -> InputValue Variable -> m A.Value
+valueToJSON expected = peelVariable (Just expected) >=> \case
   JSONValue    j -> pure j
   GraphQLValue g -> graphQLToJSON g
   where
@@ -755,12 +758,12 @@ valueToJSON = peelVariable Nothing >=> \case
       VList values        -> A.toJSON <$> traverse graphQLToJSON values
       VObject objects     -> A.toJSON <$> traverse graphQLToJSON objects
       -- this should not be possible, as we peel any variable first
-      VVariable _         -> error "FIMXE(this should be a 500 with a descriptive message): found variable within variable"
+      VVariable _         -> error "FIXME(this should be a 500 with a descriptive message): found variable within variable"
 
 valueToGraphQL :: MonadParse m => InputValue Variable -> m (Value Void)
 valueToGraphQL = peelVariable Nothing >=> \case
   JSONValue    j -> either parseError pure $ jsonToGraphQL j
-  GraphQLValue g -> pure $ error "FIMXE(this should be a 500 with a descriptive message): found variable within variable" <$> g
+  GraphQLValue g -> pure $ error "FIXME(this should be a 500 with a descriptive message): found variable within variable" <$> g
 
 jsonToGraphQL :: (MonadError Text m) => A.Value -> m (Value Void)
 jsonToGraphQL = \case
@@ -777,22 +780,19 @@ jsonToGraphQL = \case
     (graphQLName,) <$> jsonToGraphQL val
 
 peelVariable :: MonadParse m => Maybe GType -> InputValue Variable -> m (InputValue Variable)
-peelVariable _expected = \case
+peelVariable expected = \case
   GraphQLValue (VVariable var) -> do
-    -- TODO: typecheck here?
-    -- onJust expected \locationType -> typeCheck locationType var
+    onJust expected \locationType -> typeCheck locationType var
     -- TODO: mark as not reusable?
     pure $ absurd <$> vValue var
   value -> pure value
 
-{-
 typeCheck :: MonadParse m => GType -> Variable -> m ()
 typeCheck expectedType (Variable { vInfo, vType }) =
-  unless (True {-expectedType `accepts` vType -}) $ parseError
-    $ "variable " <> unName (getName vInfo) <> " of type "
-    <> showGT vType <> " is used in position expecting "
-    <> showGT expectedType
--}
+  unless (expectedType `accepts` vType) $ parseError
+    $ "variable " <> dquote (getName vInfo) <> " is declared as "
+    <> showGT vType <> ", but used where "
+    <> showGT expectedType <> " is expected"
 
 typeMismatch :: MonadParse m => Name -> Text -> InputValue Variable -> m a
 typeMismatch name expected given = parseError $
@@ -824,7 +824,6 @@ describeValueWith describeVariable = \case
       VList _       -> "a list"
       VObject _     -> "an object"
 
-{-
 -- | Checks whether the type of a variable is compatible with the type
 --   at the location at which it is used.
 accepts :: GType -> GType -> Bool
@@ -837,4 +836,3 @@ expected `accepts` actual = case (expected, actual) of
   where
     checkNullability (Nullability expectedNullability) (Nullability actualNullability) =
       expectedNullability || not actualNullability
--}

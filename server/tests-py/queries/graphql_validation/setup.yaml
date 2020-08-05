@@ -1,13 +1,20 @@
 type: bulk
 args:
 
+- type: run_sql
+  args:
+    sql: |
+     CREATE EXTENSION IF NOT EXISTS postgis;
+
+
 #Author table
 - type: run_sql
   args:
     sql: |
       create table author(
-          id serial primary key,
-          name text unique
+          id       SERIAL PRIMARY KEY,
+          name     TEXT UNIQUE,
+          location GEOGRAPHY(Point)
       );
 - type: track_table
   args:

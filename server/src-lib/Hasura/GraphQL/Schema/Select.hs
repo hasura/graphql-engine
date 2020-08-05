@@ -45,6 +45,7 @@ import qualified Hasura.SQL.DML                        as SQL
 import           Hasura.GraphQL.Parser                 (FieldParser, InputFieldsParser, Kind (..),
                                                         Parser, UnpreparedValue (..), mkParameter)
 import           Hasura.GraphQL.Parser.Class
+import           Hasura.GraphQL.Parser.Schema          (toGraphQLType)
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.OrderBy
@@ -603,14 +604,15 @@ tableArgs table selectPermissions = do
     -- accepts a string
     fakeBigInt :: Parser 'Both n PGScalarValue
     fakeBigInt = P.Parser
-      { pType = P.NonNullable $ P.TNamed $ P.mkDefinition $$(G.litName "Int") Nothing P.TIScalar
-      , pParser = P.peelVariable Nothing >=> \case
+      { pType = fakeBigIntSchemaType
+      , pParser = P.peelVariable (Just $ toGraphQLType fakeBigIntSchemaType) >=> \case
           P.GraphQLValue (G.VInt    i) -> PGValBigInt <$> convertWith scientificToInteger (fromInteger i)
           P.JSONValue    (J.Number  n) -> PGValBigInt <$> convertWith scientificToInteger n
           P.GraphQLValue (G.VString s) -> pure $ PGValUnknown s
           P.JSONValue    (J.String  s) -> pure $ PGValUnknown s
           v ->  P.typeMismatch $$(G.litName "Int") "a 32-bit integer, or a 64-bit integer represented as a string" v
       }
+    fakeBigIntSchemaType = P.NonNullable $ P.TNamed $ P.mkDefinition $$(G.litName "Int") Nothing P.TIScalar
     convertWith f = either (parseErrorWith ParseFailed . qeError) pure . runAesonParser f
 
     -- TH splices mess up ApplicativeDo
