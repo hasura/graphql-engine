@@ -8,12 +8,12 @@ module Hasura.GraphQL.Execute
   , validateSubscriptionRootField
   -- , getSubsOp
 
-  , EP.PlanCache
-  , EP.mkPlanCacheOptions
-  , EP.PlanCacheOptions(..)
-  , EP.initPlanCache
-  , EP.clearPlanCache
-  , EP.dumpPlanCache
+  -- , EP.PlanCache
+  -- , EP.mkPlanCacheOptions
+  -- , EP.PlanCacheOptions(..)
+  -- , EP.initPlanCache
+  -- , EP.clearPlanCache
+  -- , EP.dumpPlanCache
   , EQ.PreparedSql(..)
   , ExecutionCtx(..)
 
@@ -38,6 +38,7 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging
 import           Hasura.GraphQL.RemoteServer            (execRemoteGQ')
 import           Hasura.GraphQL.Transport.HTTP.Protocol
+import           Hasura.GraphQL.Utils                   (showName)
 import           Hasura.HTTP
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                    (RequestId)
@@ -49,7 +50,7 @@ import qualified Hasura.GraphQL.Execute.Inline          as EI
 
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Mutation        as EM
-import qualified Hasura.GraphQL.Execute.Plan            as EP
+-- import qualified Hasura.GraphQL.Execute.Plan            as EP
 import qualified Hasura.GraphQL.Execute.Prepare         as EPr
 import qualified Hasura.GraphQL.Execute.Query           as EQ
 import qualified Hasura.GraphQL.Execute.Types           as ET
@@ -67,7 +68,7 @@ data ExecutionCtx
   { _ecxLogger          :: !(L.Logger L.Hasura)
   , _ecxSqlGenCtx       :: !SQLGenCtx
   , _ecxPgExecCtx       :: !PGExecCtx
-  , _ecxPlanCache       :: !EP.PlanCache
+  -- , _ecxPlanCache       :: !EP.PlanCache
   , _ecxSchemaCache     :: !SchemaCache
   , _ecxSchemaCacheVer  :: !SchemaCacheVer
   , _ecxHttpManager     :: !HTTP.Manager
@@ -112,7 +113,7 @@ getExecPlanPartial
   -> ET.GraphQLQueryType
   -> GQLReqParsed
   -> m (C.GQLContext, QueryParts)
-getExecPlanPartial userInfo sc queryType req = do
+getExecPlanPartial userInfo sc queryType req =
   (getGCtx ,) <$> getQueryParts req
   where
     roleName = _uiRole userInfo
@@ -149,7 +150,7 @@ getExecPlanPartial userInfo sc queryType req = do
           let n = _unOperationName opName
               opDefM = find (\opDef -> G._todName opDef == Just n) opDefs
           onNothing opDefM $ throw400 ValidationFailed $
-            "no such operation found in the document: " <> G.unName n
+            "no such operation found in the document: " <> showName n
         (Just _, _, _)  ->
           throw400 ValidationFailed $ "operationName cannot be used when " <>
           "an anonymous operation exists in the document"
@@ -214,7 +215,7 @@ getResolvedExecPlan
   => Env.Environment
   -> L.Logger L.Hasura
   -> PGExecCtx
-  -> EP.PlanCache
+  -- -> EP.PlanCache
   -> UserInfo
   -> SQLGenCtx
   -> SchemaCache
@@ -224,23 +225,21 @@ getResolvedExecPlan
   -> [HTTP.Header]
   -> (GQLReqUnparsed, GQLReqParsed)
   -> m (Telem.CacheHit, ResolvedExecutionPlan tx)
-getResolvedExecPlan env logger pgExecCtx planCache userInfo sqlGenCtx
-  sc scVer queryType httpManager reqHeaders (reqUnparsed, reqParsed) = do
+getResolvedExecPlan env logger pgExecCtx {- planCache-} userInfo sqlGenCtx
+  sc scVer queryType httpManager reqHeaders (reqUnparsed, reqParsed) = -- do
 
--- Commented out until we figure out if we need query plan caching.
-{-
-  planM <- liftIO $ EP.getPlan scVer (_uiRole userInfo) opNameM queryStr
-           queryType planCache
-  case planM of
-    -- plans are only for queries and subscriptions
-    Just plan -> (Telem.Hit,) <$> case plan of
---      EP.RPQuery queryPlan -> do
---        (tx, genSql) <- EQ.queryOpFromPlan env httpManager reqHeaders userInfo queryVars queryPlan
---        return $ QueryExecutionPlan _ -- tx (Just genSql)
-      EP.RPSubs subsPlan ->
-        return $ SubscriptionExecutionPlan _ -- <$> EL.reuseLiveQueryPlan pgExecCtx usrVars queryVars subsPlan
-    Nothing -> (Telem.Miss,) <$> noExistingPlan
--}
+  -- See Note [Temporarily disabling query plan caching]
+  -- planM <- liftIO $ EP.getPlan scVer (_uiRole userInfo) opNameM queryStr
+  --          queryType planCache
+--   case planM of
+--     -- plans are only for queries and subscriptions
+--     Just plan -> (Telem.Hit,) <$> case plan of
+--       EP.RPQuery queryPlan -> do
+-- --        (tx, genSql) <- EQ.queryOpFromPlan env httpManager reqHeaders userInfo queryVars queryPlan
+--         return $ QueryExecutionPlan _ -- tx (Just genSql)
+--       EP.RPSubs subsPlan ->
+--         return $ SubscriptionExecutionPlan _ -- <$> EL.reuseLiveQueryPlan pgExecCtx usrVars queryVars subsPlan
+--     Nothing -> (Telem.Miss,) <$> noExistingPlan
   (Telem.Miss,) <$> noExistingPlan
   where
     GQLReq opNameM queryStr queryVars = reqUnparsed
@@ -262,17 +261,19 @@ getResolvedExecPlan env logger pgExecCtx planCache userInfo sqlGenCtx
         G.TypedOperationDefinition G.OperationTypeQuery _ varDefs _ selSet -> do
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
-          (execPlan, _plan, _unprepared) <-
+          (execPlan, {-plan,-} _unprepared) <-
             EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders inlinedSelSet varDefs (_grVariables reqUnparsed)
+          -- See Note [Temporarily disabling query plan caching]
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
-          return $ QueryExecutionPlan $ execPlan
+          return $ QueryExecutionPlan execPlan
         G.TypedOperationDefinition G.OperationTypeMutation _ varDefs _ selSet -> do
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
           queryTx <- EM.convertMutationSelectionSet env logger gCtx sqlGenCtx userInfo httpManager reqHeaders
                      inlinedSelSet varDefs (_grVariables reqUnparsed)
+          -- See Note [Temporarily disabling query plan caching]
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
-          return $ MutationExecutionPlan $ queryTx
+          return $ MutationExecutionPlan queryTx
         G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives selSet -> do
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
@@ -281,8 +282,8 @@ getResolvedExecPlan env logger pgExecCtx planCache userInfo sqlGenCtx
           -- root fields in a subcription. First, we check if the corresponding directive
           -- (@_multiple_top_level_fields) is set.
           -- Parse as query to check correctness
-          (_execPlan :: EPr.ExecutionPlan (tx EncJSON, EQ.GeneratedSqlMap) EPr.RemoteCall (G.Name,J.Value)
-            , _plan, unpreparedAST) <-
+          (_ :: EPr.ExecutionPlan (tx EncJSON, EQ.GeneratedSqlMap) EPr.RemoteCall (G.Name,J.Value)
+            {-, _plan -}, unpreparedAST) <-
             EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders inlinedSelSet varDefs (_grVariables reqUnparsed)
           case NE.nonEmpty inlinedSelSet of
             Nothing -> throw500 "empty selset for subscription"
@@ -290,7 +291,7 @@ getResolvedExecPlan env logger pgExecCtx planCache userInfo sqlGenCtx
               let multipleAllowed = G.Directive $$(G.litName "_multiple_top_level_fields") mempty `elem` directives
               in
               unless (multipleAllowed || null rst) $
-                throw400 ValidationFailed $  "subscriptions must select one top level field"
+                throw400 ValidationFailed "subscriptions must select one top level field"
           validSubscriptionAST <- for unpreparedAST validateSubscriptionRootField
           (lqOp, _plan) <- EL.buildLiveQueryPlan pgExecCtx userInfo validSubscriptionAST
           -- getSubsOpM pgExecCtx userInfo inlinedSelSet

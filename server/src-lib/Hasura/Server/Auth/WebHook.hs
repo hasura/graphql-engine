@@ -82,11 +82,11 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
           AHTGet  -> do
             let isCommonHeader  = (`elem` commonClientHeadersIgnored)
                 filteredHeaders = filter (not . isCommonHeader . fst) reqHeaders
-            H.httpLbs (req { H.requestHeaders = addDefaultHeaders filteredHeaders }) manager
+            H.httpLbs (req' { H.requestHeaders = addDefaultHeaders filteredHeaders }) manager
           AHTPost -> do
             let contentType = ("Content-Type", "application/json")
                 headersPayload = J.toJSON $ Map.fromList $ hdrsToText reqHeaders
-            H.httpLbs (req { H.method         = "POST"
+            H.httpLbs (req' { H.method         = "POST"
                            , H.requestHeaders = addDefaultHeaders [contentType]
                            , H.requestBody    = H.RequestBodyLBS . J.encode $ object ["headers" J..= headersPayload]
                            }) manager

@@ -100,8 +100,8 @@ prepareWithPlan = \case
 prepareWithoutPlan :: (MonadState (Set.HashSet SessionVariable) m) => UnpreparedValue -> m S.SQLExp
 prepareWithoutPlan = \case
   UVParameter pgValue _   -> pure $ toTxtValue $ pcvValue pgValue
-  UVLiteral sqlExp        -> pure $ sqlExp
-  UVSession               -> pure $ currentSession
+  UVLiteral sqlExp        -> pure sqlExp
+  UVSession               -> pure currentSession
   UVSessionVar ty sessVar -> do
     sessVarVal <- retrieveAndFlagSessionVariableValue Set.insert sessVar currentSession
     -- TODO: this piece of code appears at least three times: twice here

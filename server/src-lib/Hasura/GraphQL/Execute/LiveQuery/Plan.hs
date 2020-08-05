@@ -18,7 +18,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Plan
   , ReusableLiveQueryPlan
   , ValidatedQueryVariables
   , buildLiveQueryPlan
-  , reuseLiveQueryPlan
+  -- , reuseLiveQueryPlan
 
   , LiveQueryPlanExplanation
   , explainLiveQueryPlan
@@ -27,31 +27,31 @@ module Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.Prelude
 import           Hasura.Session
 
-import qualified Data.Aeson.Casing                      as J
-import qualified Data.Aeson.Extended                    as J
-import qualified Data.Aeson.TH                          as J
-import qualified Data.ByteString                        as B
-import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashMap.Strict.InsOrd             as OMap
-import qualified Data.Sequence                          as Seq
-import qualified Data.Text                              as T
-import qualified Data.UUID.V4                           as UUID
-import qualified Database.PG.Query                      as Q
-import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Data.Aeson.Casing             as J
+import qualified Data.Aeson.Extended           as J
+import qualified Data.Aeson.TH                 as J
+import qualified Data.ByteString               as B
+import qualified Data.HashMap.Strict           as Map
+import qualified Data.HashMap.Strict.InsOrd    as OMap
+import qualified Data.Sequence                 as Seq
+import qualified Data.Text                     as T
+import qualified Data.UUID.V4                  as UUID
+import qualified Database.PG.Query             as Q
+import qualified Language.GraphQL.Draft.Syntax as G
 
 -- remove these when array encoding is merged
-import qualified Database.PG.Query.PTI                  as PTI
-import qualified PostgreSQL.Binary.Encoding             as PE
+import qualified Database.PG.Query.PTI         as PTI
+import qualified PostgreSQL.Binary.Encoding    as PE
 
 import           Control.Lens
-import           Data.UUID                              (UUID)
+import           Data.UUID                     (UUID)
 
-import qualified Hasura.GraphQL.Parser.Schema           as PS
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
-import qualified Hasura.RQL.DML.Select                  as DS
-import qualified Hasura.SQL.DML                         as S
-import qualified Hasura.RQL.DML.RemoteJoin              as RR
-import qualified Hasura.Tracing                         as Tracing
+import qualified Hasura.GraphQL.Parser.Schema  as PS
+-- import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+import qualified Hasura.RQL.DML.RemoteJoin     as RR
+import qualified Hasura.RQL.DML.Select         as DS
+import qualified Hasura.SQL.DML                as S
+import qualified Hasura.Tracing                as Tracing
 
 import           Hasura.Db
 import           Hasura.GraphQL.Context
@@ -341,9 +341,10 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
       cohortVariables = CohortVariables (_uiSession userInfo) validatedQueryVars validatedSyntheticVars
 
       plan = LiveQueryPlan parameterizedPlan cohortVariables
-      -- varTypes = finalReusability ^? GV._Reusable -- TODO(PDV): Depends on query plan caching
-      reusablePlan = ReusableLiveQueryPlan parameterizedPlan validatedSyntheticVars <$> _varTypes
-  pure (plan, reusablePlan)
+      -- See Note [Temporarily disabling query plan caching]
+      -- varTypes = finalReusability ^? GV._Reusable
+      reusablePlan = ReusableLiveQueryPlan parameterizedPlan validatedSyntheticVars mempty {- <$> _varTypes -}
+  pure (plan, Just reusablePlan)
 
   -- (astResolved, (queryVariableValues, syntheticVariableValues)) <- flip runStateT mempty $
   --   GEQ.traverseSubscriptionRootField resolveMultiplexedValue _astUnresolved
@@ -361,18 +362,19 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
   --     reusablePlan = ReusableLiveQueryPlan parameterizedPlan validatedSyntheticVars <$> _varTypes
   -- pure (plan, reusablePlan)
 
-reuseLiveQueryPlan
-  :: (MonadError QErr m, MonadIO m)
-  => PGExecCtx
-  -> SessionVariables
-  -> Maybe GH.VariableValues
-  -> ReusableLiveQueryPlan
-  -> m LiveQueryPlan
-reuseLiveQueryPlan pgExecCtx sessionVars queryVars reusablePlan = do
-  let ReusableLiveQueryPlan parameterizedPlan syntheticVars queryVarTypes = reusablePlan
-  annVarVals <- _validateVariablesForReuse queryVarTypes queryVars
-  validatedVars <- validateVariables pgExecCtx annVarVals
-  pure $ LiveQueryPlan parameterizedPlan (CohortVariables sessionVars validatedVars syntheticVars)
+-- See Note [Temporarily disabling query plan caching]
+-- reuseLiveQueryPlan
+--   :: (MonadError QErr m, MonadIO m)
+--   => PGExecCtx
+--   -> SessionVariables
+--   -> Maybe GH.VariableValues
+--   -> ReusableLiveQueryPlan
+--   -> m LiveQueryPlan
+-- reuseLiveQueryPlan pgExecCtx sessionVars queryVars reusablePlan = do
+--   let ReusableLiveQueryPlan parameterizedPlan syntheticVars queryVarTypes = reusablePlan
+--   annVarVals <- _validateVariablesForReuse queryVarTypes queryVars
+--   validatedVars <- validateVariables pgExecCtx annVarVals
+--   pure $ LiveQueryPlan parameterizedPlan (CohortVariables sessionVars validatedVars syntheticVars)
 
 data LiveQueryPlanExplanation
   = LiveQueryPlanExplanation

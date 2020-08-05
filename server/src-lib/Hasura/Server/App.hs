@@ -61,6 +61,7 @@ import           Hasura.SQL.Types
 import qualified Hasura.GraphQL.Execute                    as E
 import qualified Hasura.GraphQL.Execute.LiveQuery          as EL
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll     as EL
+import qualified Hasura.GraphQL.Execute.Plan               as E
 import qualified Hasura.GraphQL.Explain                    as GE
 import qualified Hasura.GraphQL.Transport.HTTP             as GH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
@@ -104,7 +105,7 @@ data ServerCtx
   , scSQLGenCtx                    :: !SQLGenCtx
   , scEnabledAPIs                  :: !(S.HashSet API)
   , scInstanceId                   :: !InstanceId
-  , scPlanCache                    :: !E.PlanCache
+  -- , scPlanCache                    :: !E.PlanCache -- See Note [Temporarily disabling query plan caching]
   , scLQState                      :: !EL.LiveQueriesState
   , scEnableAllowlist              :: !Bool
   , scEkgStore                     :: !EKG.Store
@@ -149,7 +150,7 @@ logInconsObjs logger objs =
 withSCUpdate
   :: (MonadIO m, MonadBaseControl IO m)
   => SchemaCacheRef -> L.Logger L.Hasura -> m (a, RebuildableSchemaCache Run) -> m a
-withSCUpdate scr logger action = do
+withSCUpdate scr logger action =
   withMVarMasked lk $ \() -> do
     (!res, !newSC) <- action
     liftIO $ do
@@ -387,13 +388,13 @@ v1Alpha1GQHandler queryType query = do
   (sc, scVer)          <- liftIO $ readIORef $ _scrCache scRef
   pgExecCtx            <- asks (scPGExecCtx . hcServerCtx)
   sqlGenCtx            <- asks (scSQLGenCtx . hcServerCtx)
-  planCache            <- asks (scPlanCache . hcServerCtx)
+  -- planCache            <- asks (scPlanCache . hcServerCtx)
   enableAL             <- asks (scEnableAllowlist . hcServerCtx)
   logger               <- asks (scLogger . hcServerCtx)
   responseErrorsConfig <- asks (scResponseInternalErrorsConfig . hcServerCtx)
   env                  <- asks (scEnvironment . hcServerCtx)
 
-  let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx planCache
+  let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx {- planCache -}
                 (lastBuiltSchemaCache sc) scVer manager enableAL
 
   flip runReaderT execCtx $
@@ -600,9 +601,11 @@ mkWaiApp
   -> (RebuildableSchemaCache Run, Maybe UTCTime)
   -> m HasuraApp
 mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpManager mode corsCfg enableConsole consoleAssetsDir
-         enableTelemetry instanceId apis lqOpts planCacheOptions responseErrorsConfig liveQueryHook (schemaCache, cacheBuiltTime) = do
+         enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig liveQueryHook (schemaCache, cacheBuiltTime) = do
 
-    (planCache, schemaCacheRef) <- initialiseCache
+    -- See Note [Temporarily disabling query plan caching]
+    -- (planCache, schemaCacheRef) <- initialiseCache
+    schemaCacheRef <- initialiseCache
     let getSchemaCache = first lastBuiltSchemaCache <$> readIORef (_scrCache schemaCacheRef)
 
     let corsPolicy = mkDefaultCorsPolicy corsCfg
@@ -611,7 +614,7 @@ mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpMana
 
     lqState <- liftIO $ EL.initLiveQueriesState lqOpts pgExecCtx postPollHook
     wsServerEnv <- WS.createWSServerEnv logger pgExecCtx lqState getSchemaCache httpManager
-                                        corsPolicy sqlGenCtx enableAL planCache
+                                        corsPolicy sqlGenCtx enableAL {- planCache -}
 
     ekgStore <- liftIO EKG.newStore
 
@@ -625,7 +628,7 @@ mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpMana
                     , scSQLGenCtx       =  sqlGenCtx
                     , scEnabledAPIs     =  apis
                     , scInstanceId      =  instanceId
-                    , scPlanCache       =  planCache
+                    -- , scPlanCache       =  planCache
                     , scLQState         =  lqState
                     , scEnableAllowlist =  enableAL
                     , scEkgStore        =  ekgStore
@@ -652,13 +655,15 @@ mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpMana
     getTimeMs :: IO Int64
     getTimeMs = (round . (* 1000)) `fmap` getPOSIXTime
 
-    initialiseCache :: m (E.PlanCache, SchemaCacheRef)
+    -- initialiseCache :: m (E.PlanCache, SchemaCacheRef)
+    initialiseCache :: m SchemaCacheRef
     initialiseCache = do
       cacheLock <- liftIO $ newMVar ()
       cacheCell <- liftIO $ newIORef (schemaCache, initSchemaCacheVer)
-      planCache <- liftIO $ E.initPlanCache planCacheOptions
-      let cacheRef = SchemaCacheRef cacheLock cacheCell (E.clearPlanCache planCache)
-      pure (planCache, cacheRef)
+      -- planCache <- liftIO $ E.initPlanCache planCacheOptions
+      let cacheRef = SchemaCacheRef cacheLock cacheCell (E.clearPlanCache {- planCache -})
+      -- pure (planCache, cacheRef)
+      pure cacheRef
 
 
 httpApp
@@ -744,7 +749,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       Spock.get "dev/plan_cache" $ spockAction encodeQErr id $
         mkGetHandler $ do
           onlyAdmin
-          respJ <- liftIO $ E.dumpPlanCache $ scPlanCache serverCtx
+          respJ <- liftIO $ E.dumpPlanCache {- $ scPlanCache serverCtx -}
           return $ JSONResp $ HttpResponse (encJFromJValue respJ) []
       Spock.get "dev/subscriptions" $ spockAction encodeQErr id $
         mkGetHandler $ do

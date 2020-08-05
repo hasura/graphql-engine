@@ -23,8 +23,8 @@ import           Network.Wai.Handler.Warp         (HostPreference)
 import           Options.Applicative
 
 import qualified Hasura.Cache.Bounded             as Cache
-import qualified Hasura.GraphQL.Execute           as E
 import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
+import qualified Hasura.GraphQL.Execute.Plan      as E
 import qualified Hasura.Logging                   as L
 
 import           Hasura.Db

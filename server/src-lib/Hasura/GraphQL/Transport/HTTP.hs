@@ -84,17 +84,17 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   -- The response and misc telemetry data:
   let telemTransport = Telem.HTTP
   (telemTimeTot_DT, (telemCacheHit, telemLocality, (telemTimeIO_DT, telemQueryType, !resp))) <- withElapsedTime $ do
-    E.ExecutionCtx _ sqlGenCtx pgExecCtx planCache sc scVer httpManager enableAL <- ask
+    E.ExecutionCtx _ sqlGenCtx pgExecCtx {- planCache -} sc scVer httpManager enableAL <- ask
 
     -- run system authorization on the GraphQL API
     reqParsed <- E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed
                  >>= flip onLeft throwError
 
-    (telemCacheHit, execPlan) <- E.getResolvedExecPlan env logger pgExecCtx planCache
+    (telemCacheHit, execPlan) <- E.getResolvedExecPlan env logger pgExecCtx {- planCache -}
                                  userInfo sqlGenCtx sc scVer queryType
                                  httpManager reqHeaders (reqUnparsed, reqParsed)
     case execPlan of
-      E.QueryExecutionPlan queryPlan -> do
+      E.QueryExecutionPlan queryPlan ->
         case queryPlan of
           E.ExecStepDB txGenSql -> do
             (telemTimeIO, telemQueryType, resp) <- runQueryDB reqId (reqUnparsed,reqParsed) userInfo txGenSql
@@ -102,10 +102,10 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
           E.ExecStepRemote (rsi, opDef, _varValsM) ->
             runRemoteGQ telemCacheHit rsi opDef
           E.ExecStepRaw (name, json) -> do
-            (telemTimeIO, obj) <- withElapsedTime $ do
+            (telemTimeIO, obj) <- withElapsedTime $
               return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
             return (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj []))
-      E.MutationExecutionPlan mutationPlan -> do
+      E.MutationExecutionPlan mutationPlan ->
         case mutationPlan of
           E.ExecStepDB (tx, responseHeaders) -> do
             (telemTimeIO, telemQueryType, resp) <- runMutationDB reqId reqUnparsed userInfo tx
@@ -113,10 +113,10 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
           E.ExecStepRemote (rsi, opDef, _varValsM) ->
             runRemoteGQ telemCacheHit rsi opDef
           E.ExecStepRaw (name, json) -> do
-            (telemTimeIO, obj) <- withElapsedTime $ do
+            (telemTimeIO, obj) <- withElapsedTime $
               return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
             return (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj []))
-      E.SubscriptionExecutionPlan _sub -> do
+      E.SubscriptionExecutionPlan _sub ->
         throw400 UnexpectedPayload "subscriptions are not supported over HTTP, use websockets instead"
 {-
       E.GExPHasura resolvedOp -> do
@@ -161,7 +161,7 @@ runGQBatched
   -> GQLBatchedReqs GQLQueryText
   -- ^ the batched request with unparsed GraphQL query
   -> m (HttpResponse EncJSON)
-runGQBatched env logger reqId responseErrorsConfig userInfo ipAddress reqHdrs queryType query = do
+runGQBatched env logger reqId responseErrorsConfig userInfo ipAddress reqHdrs queryType query =
   case query of
     GQLSingleRequest req ->
       runGQ env logger reqId userInfo ipAddress reqHdrs queryType req
@@ -197,9 +197,9 @@ runQueryDB
   -- spent in the PG query; for telemetry.
 runQueryDB reqId (query, queryParsed) _userInfo (tx, genSql) =  do
   -- log the generated SQL and the graphql query
-  E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _ <- ask
+  E.ExecutionCtx logger _ pgExecCtx _ _ _ _ <- ask
   logQueryLog logger query (Just genSql) reqId
-  (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ trace "pg" $ do
+  (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ trace "pg" $
     Tracing.interpTraceT id $ executeQuery queryParsed (Just genSql) pgExecCtx Q.ReadOnly tx
   resp <- liftEither respE
   let !json = encodeGQResp $ GQSuccess $ encJToLBS $ snd resp
@@ -221,11 +221,11 @@ runMutationDB
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
 runMutationDB reqId query userInfo tx =  do
-  E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _ <- ask
+  E.ExecutionCtx logger _ pgExecCtx _ _ _ _ <- ask
   -- log the graphql query
   logQueryLog logger query Nothing reqId
   ctx <- Tracing.currentContext
-  (telemTimeIO, respE) <- withElapsedTime $  runExceptT $ trace "pg" $ do
+  (telemTimeIO, respE) <- withElapsedTime $  runExceptT $ trace "pg" $
     Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx .  withUserInfo userInfo)  tx
   resp <- liftEither respE
   let !json = encodeGQResp $ GQSuccess $ encJToLBS resp

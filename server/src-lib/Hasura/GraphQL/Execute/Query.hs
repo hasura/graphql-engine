@@ -1,7 +1,7 @@
 module Hasura.GraphQL.Execute.Query
   ( convertQuerySelSet
-  , queryOpFromPlan
-  , ReusableQueryPlan
+  -- , queryOpFromPlan
+  -- , ReusableQueryPlan
   , GeneratedSqlMap
   , PreparedSql(..)
   , traverseQueryRootField -- for live query planning
@@ -25,8 +25,8 @@ import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
-import           Hasura.Server.Version                  (HasVersion)
 import qualified Hasura.Logging                         as L
+import           Hasura.Server.Version                  (HasVersion)
 import qualified Hasura.SQL.DML                         as S
 import qualified Hasura.Tracing                         as Tracing
 
@@ -42,7 +42,7 @@ import           Hasura.RQL.DML.RemoteJoin
 import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.Session
-import           Hasura.SQL.Types
+-- import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
 import qualified Hasura.RQL.DML.Select                  as DS
@@ -86,35 +86,36 @@ actionQueryToRootFieldPlan vars prepped = \case
     PGPlan (DS.selectQuerySQL DS.JASSingleObject s) vars prepped Nothing
   AQPQuery tx     -> RFPActionQuery tx
 
-data ReusableVariableTypes  -- FIXME
-data ReusableVariableValues -- FIXME
+-- See Note [Temporarily disabling query plan caching]
+-- data ReusableVariableTypes
+-- data ReusableVariableValues
 
-data ReusableQueryPlan
-  = ReusableQueryPlan
-  { _rqpVariableTypes :: !ReusableVariableTypes
-  , _rqpFldPlans      :: !FieldPlans
-  }
+-- data ReusableQueryPlan
+--   = ReusableQueryPlan
+--   { _rqpVariableTypes :: !ReusableVariableTypes
+--   , _rqpFldPlans      :: !FieldPlans
+--   }
 
-instance J.ToJSON ReusableQueryPlan where
-  toJSON (ReusableQueryPlan varTypes fldPlans) =
-    J.object [ "variables"       J..= () -- varTypes    FIXME!!
-             , "field_plans"     J..= fldPlans
-             ]
+-- instance J.ToJSON ReusableQueryPlan where
+--   toJSON (ReusableQueryPlan varTypes fldPlans) =
+--     J.object [ "variables"       J..= () -- varTypes
+--              , "field_plans"     J..= fldPlans
+--              ]
 
-withPlan
-  :: (MonadError QErr m)
-  => SessionVariables -> PGPlan -> HashMap G.Name (WithScalarType PGScalarValue) -> m PreparedSql
-withPlan usrVars (PGPlan q reqVars prepMap remoteJoins) annVars = do
-  prepMap' <- foldM getVar prepMap (Map.toList reqVars)
-  let args = withUserVars usrVars $ IntMap.elems prepMap'
-  return $ PreparedSql q args remoteJoins
-  where
-    getVar accum (var, prepNo) = do
-      let varName = G.unName var
-      colVal <- onNothing (Map.lookup var annVars) $
-        throw500 $ "missing variable in annVars : " <> varName
-      let prepVal = (toBinaryValue colVal, pstValue colVal)
-      return $ IntMap.insert prepNo prepVal accum
+-- withPlan
+--   :: (MonadError QErr m)
+--   => SessionVariables -> PGPlan -> HashMap G.Name (WithScalarType PGScalarValue) -> m PreparedSql
+-- withPlan usrVars (PGPlan q reqVars prepMap remoteJoins) annVars = do
+--   prepMap' <- foldM getVar prepMap (Map.toList reqVars)
+--   let args = withUserVars usrVars $ IntMap.elems prepMap'
+--   return $ PreparedSql q args remoteJoins
+--   where
+--     getVar accum (var, prepNo) = do
+--       let varName = G.unName var
+--       colVal <- onNothing (Map.lookup var annVars) $
+--         throw500 $ "missing variable in annVars : " <> varName
+--       let prepVal = (toBinaryValue colVal, pstValue colVal)
+--       return $ IntMap.insert prepNo prepVal accum
 
 -- turn the current plan into a transaction
 mkCurPlanTx
@@ -219,7 +220,7 @@ convertQuerySelSet
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
   -> m ( ExecutionPlan (tx EncJSON, GeneratedSqlMap) RemoteCall (G.Name, J.Value)
-       , Maybe ReusableQueryPlan
+       -- , Maybe ReusableQueryPlan
        , InsOrdHashMap G.Name (QueryRootField UnpreparedValue)
        )
 convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varDefs varValsM = do
@@ -263,7 +264,7 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
   executionPlan <- case (dbPlans, remoteFields) of
     (dbs, Seq.Empty) -> ExecStepDB <$> mkCurPlanTx env manager reqHeaders userInfo (toList dbs)
     (Seq.Empty, remotes@(firstRemote Seq.:<| _)) -> do
-      let (remoteOperation, varValsM) =
+      let (remoteOperation, _) =
             buildTypedOperation
             G.OperationTypeQuery
             varDefs
@@ -273,7 +274,7 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
         then return $ ExecStepRemote (fst (snd firstRemote), remoteOperation, varValsM)
         else throw400 NotSupported "Mixed remote schemas are not supported"
     _ -> throw400 NotSupported "Heterogeneous execution of database and remote schemas not supported"
-  pure (executionPlan, Nothing, unpreparedQueries) -- FIXME ReusableQueryPlan
+  pure (executionPlan, unpreparedQueries) -- See Note [Temporarily disabling query plan caching]
   where
     usrVars = _uiSession userInfo
 
@@ -286,31 +287,32 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
       AQAsync s -> AQPAsyncQuery <$>
         DS.traverseAnnSimpleSelect prepareWithPlan (resolveAsyncActionQuery userInfo s)
 
+-- See Note [Temporarily disabling query plan caching]
 -- use the existing plan and new variables to create a pg query
-queryOpFromPlan
-  :: ( HasVersion
-     , MonadError QErr m
-     , Tracing.MonadTrace m
-     , MonadIO tx
-     , MonadTx tx
-     , Tracing.MonadTrace tx
-     )
-  => Env.Environment
-  -> HTTP.Manager
-  -> [HTTP.Header]
-  -> UserInfo
-  -> Maybe GH.VariableValues
-  -> ReusableQueryPlan
-  -> m (tx EncJSON, GeneratedSqlMap)
-queryOpFromPlan env  manager reqHdrs userInfo varValsM (ReusableQueryPlan varTypes fldPlans) = do
-  validatedVars <- _validateVariablesForReuse varTypes varValsM
-  -- generate the SQL and prepared vars or the bytestring
-  resolved <- forM fldPlans $ \(alias, fldPlan) ->
-    (alias,) <$> case fldPlan of
-      RFPRaw resp        -> return $ RRRaw resp
-      RFPPostgres pgPlan -> RRSql <$> withPlan (_uiSession userInfo) pgPlan validatedVars
+-- queryOpFromPlan
+--   :: ( HasVersion
+--      , MonadError QErr m
+--      , Tracing.MonadTrace m
+--      , MonadIO tx
+--      , MonadTx tx
+--      , Tracing.MonadTrace tx
+--      )
+--   => Env.Environment
+--   -> HTTP.Manager
+--   -> [HTTP.Header]
+--   -> UserInfo
+--   -> Maybe GH.VariableValues
+--   -> ReusableQueryPlan
+--   -> m (tx EncJSON, GeneratedSqlMap)
+-- queryOpFromPlan env  manager reqHdrs userInfo varValsM (ReusableQueryPlan varTypes fldPlans) = do
+--   validatedVars <- _validateVariablesForReuse varTypes varValsM
+--   -- generate the SQL and prepared vars or the bytestring
+--   resolved <- forM fldPlans $ \(alias, fldPlan) ->
+--     (alias,) <$> case fldPlan of
+--       RFPRaw resp        -> return $ RRRaw resp
+--       RFPPostgres pgPlan -> RRSql <$> withPlan (_uiSession userInfo) pgPlan validatedVars
 
-  (,) <$> mkLazyRespTx env manager reqHdrs userInfo resolved <*> pure (mkGeneratedSqlMap resolved)
+--   (,) <$> mkLazyRespTx env manager reqHdrs userInfo resolved <*> pure (mkGeneratedSqlMap resolved)
 
 data PreparedSql
   = PreparedSql

@@ -45,8 +45,8 @@ import           GHC.AssertNF
 #endif
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Transport.HTTP               (MonadExecuteQuery(..))
 import           Hasura.GraphQL.Logging                      (MonadQueryLog (..))
+import           Hasura.GraphQL.Transport.HTTP               (MonadExecuteQuery (..))
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import           Hasura.HTTP
@@ -55,8 +55,7 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Auth                          (AuthMode, UserAuthentication,
                                                               resolveUserInfo)
 import           Hasura.Server.Cors
-import           Hasura.Server.Utils                         (RequestId,
-                                                              getRequestId)
+import           Hasura.Server.Utils                         (RequestId, getRequestId)
 import           Hasura.Server.Version                       (HasVersion)
 import           Hasura.Session
 
@@ -220,7 +219,7 @@ data WSServerEnv
   , _wseHManager        :: !H.Manager
   , _wseCorsPolicy      :: !CorsPolicy
   , _wseSQLCtx          :: !SQLGenCtx
-  , _wseQueryCache      :: !E.PlanCache
+  -- , _wseQueryCache      :: !E.PlanCache -- See Note [Temporarily disabling query plan caching]
   , _wseServer          :: !WSServer
   , _wseEnableAllowlist :: !Bool
   }
@@ -344,10 +343,10 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   reqParsedE <- lift $ E.checkGQLExecution userInfo (reqHdrs, ipAddress) enableAL sc q
   reqParsed <- either (withComplete . preExecErr requestId) return reqParsedE
   execPlanE <- runExceptT $ E.getResolvedExecPlan env logger pgExecCtx
-               planCache userInfo sqlGenCtx sc scVer queryType httpMgr reqHdrs (q, reqParsed)
+               {- planCache -} userInfo sqlGenCtx sc scVer queryType httpMgr reqHdrs (q, reqParsed)
 
   (telemCacheHit, execPlan) <- either (withComplete . preExecErr requestId) return execPlanE
-  let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx planCache sc scVer httpMgr enableAL
+  let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx {- planCache -} sc scVer httpMgr enableAL
 
   case execPlan of
     E.QueryExecutionPlan queryPlan ->
@@ -524,7 +523,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     invalidGqlErr err = err500 Unexpected $
       "Failed parsing GraphQL response from remote: " <> err
 
-    WSServerEnv logger pgExecCtx lqMap getSchemaCache httpMgr _ sqlGenCtx planCache
+    WSServerEnv logger pgExecCtx lqMap getSchemaCache httpMgr _ sqlGenCtx {- planCache -}
       _ enableAL = serverEnv
 
     WSConnData userInfoR opMap errRespTy queryType = WS.getData wsConn
@@ -768,14 +767,14 @@ createWSServerEnv
   -> CorsPolicy
   -> SQLGenCtx
   -> Bool
-  -> E.PlanCache
+  -- -> E.PlanCache
   -> m WSServerEnv
 createWSServerEnv logger isPgCtx lqState getSchemaCache httpManager
-  corsPolicy sqlGenCtx enableAL planCache = do
+  corsPolicy sqlGenCtx enableAL {- planCache -} = do
   wsServer <- liftIO $ STM.atomically $ WS.createWSServer logger
   return $
     WSServerEnv logger isPgCtx lqState getSchemaCache httpManager corsPolicy
-    sqlGenCtx planCache wsServer enableAL
+    sqlGenCtx {- planCache -} wsServer enableAL
 
 createWSServerApp
   :: ( HasVersion
