@@ -53,6 +53,9 @@ class TestGraphQLInsert:
     def test_insert_null_col_value(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/order_col_shipped_null.yaml")
 
+    def test_insert_valid_variable_but_invalid_graphql_value(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/person_valid_variable_but_invalid_graphql_value.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/insert/basic"
