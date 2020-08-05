@@ -6,36 +6,28 @@ headers:
   X-Hasura-Role: user
 response:
   data:
-    colors:
-      name: colors_enum
+    country:
       kind: ENUM
+      name: country_enum
       enumValues:
-      - name: blue
-        description: '#0000FF'
-      - name: green
-        description: '#00FF00'
-      - name: orange
-        description: '#FFFF00'
-      - name: purple
-        description: '#FF00FF'
-      - name: red
-        description: '#FF0000'
-      - name: yellow
-        description: '#00FFFF'
-    users:
+      - name: India
+        description: Republic of India
+      - name: USA
+        description: United States of America
+    zones:
       fields:
+      - name: code
+        type:
+          ofType:
+            name: String
       - name: id
         type:
           ofType:
             name: Int
-      - name: name
-        type:
-          ofType:
-            name: String
 query:
   query: |
     {
-      colors: __type(name: "colors_enum") {
+      country: __type(name: "country_enum") {
         name
         kind
         enumValues {
@@ -43,7 +35,7 @@ query:
           description
         }
       }
-      users: __type(name: "users") {
+      zones: __type(name: "zones") {
         fields {
           name
           type {
