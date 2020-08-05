@@ -26,6 +26,7 @@ export interface MainState {
     isFetching: boolean;
   };
   featuresCompatibility: object;
+  postgresVersion: string | null;
 }
 
 const defaultState: MainState = {
@@ -56,6 +57,7 @@ const defaultState: MainState = {
     isFetching: false,
   },
   featuresCompatibility: {},
+  postgresVersion: null,
 };
 
 export default defaultState;
