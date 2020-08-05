@@ -666,14 +666,22 @@
               <!-- <div class="nav">{{ secondnav() }}</div> -->
               <div>
               <div class="nav pagination-nav">
-                <span class="pagination-prev">
-                  <img src="{{ pathto('_images/layout/previous.svg', 1) }}" alt="Prev"/>
-                  Previous
-                </span>
-                <span class="pagination-next">
-                  Next
-                  <img src="{{ pathto('_images/layout/next.svg', 1) }}" alt="Next"/>
-                </span>
+                {%- if prev %}
+                <a href="{{ prev.link|e }}" title="{{ prev.title|e }}">
+                  <span class="pagination-prev">
+                    <img src="{{ pathto('_images/layout/previous.svg', 1) }}" alt="Prev"/>
+                    Previous
+                  </span>
+                </a>
+                {%- endif %}
+                {%- if next %}
+                <a href="{{ next.link|e }}" title="{{ next.title|e }}">
+                  <span class="pagination-next">
+                    Next
+                    <img src="{{ pathto('_images/layout/next.svg', 1) }}" alt="Next"/>
+                  </span>
+                </a>
+                {%- endif %}
               </div>
               <div class="feedback_wrapper">
                 <div id="feedback" class="feedback">
@@ -734,6 +742,7 @@
 
                 </div>
               </div>
+              <!--
               <div class="footer-hasura-custom">
                 <img class="responsive footer_logo" src="{{ pathto('_images/layout/hasura_logo.svg', 1) }}" alt="Hasura Logo Dark"/>
                 <div class="footer_text">
@@ -753,43 +762,44 @@
                   </div>
                 </div>
               </div>
+              -->
             </div>
           </div>
           <div style="clear: both;"></div>
           {%- endif %}
       </div>
     </div>
-    <footer className="commonSectionWrapper commonFooterBgColor">
-      <div className="containerWrapper">
-        <div className="footerWrappper wd100">
-          <div className="footerLinks articleDesc">
-            <div className="footerHeader">Hasura</div>
-            <div className="links">
+    <footer class="commonFooterBgColor">
+      <div class="containerWrapper">
+        <div class="footerWrappper wd100">
+          <div class="footerLinks articleDesc">
+            <div class="footerHeader">Hasura</div>
+            <div class="links">
               <a href="https://hasura.io/about/">About Us</a>
             </div>
-            <div className="links">
+            <div class="links">
               <a href="https://hasura.io/press/">Press</a>
             </div>
-            <div className="links">
+            <div class="links">
               <a href="https://hasura.io/careers/">Careers</a>
             </div>
-            <div className="links">
+            <div class="links">
               <a href="https://hasura.io/contact-us/">Contact Us</a>
             </div>
-            <div className="links">
+            <div class="links">
               <a href="https://hasura.io/legal/">Legal Stuff</a>
             </div>
           </div>
-          <div className="footerLinks articleDesc">
-            <div className="footerHeader">Support</div>
-            <div className="links">
+          <div class="footerLinks articleDesc">
+            <div class="footerHeader">Support</div>
+            <div class="links">
               <a
                 href="https://hasura.io/docs/"
               >
                 Documentation
               </a>
             </div>
-            <div className="links">
+            <div class="links">
               <a
                 href="https://discordapp.com/invite/hasura"
                 target="_blank"
@@ -798,12 +808,12 @@
                 Community Forum
               </a>
             </div>
-            <div className="links">
-              <button className="anchorBtn">
+            <div class="links">
+              <button id='chat-open' class="anchorBtn">
                 Website chat
               </button>
             </div>
-            <div className="links">
+            <div class="links">
               <a
                 href="https://github.com/hasura"
                 target="_blank"
@@ -813,9 +823,9 @@
               </a>
             </div>
           </div>
-          <div className="footerLinks articleDesc">
-            <div className="footerHeader">Tools</div>
-            <div className="links">
+          <div class="footerLinks articleDesc">
+            <div class="footerHeader">Tools</div>
+            <div class="links">
               <a
                 href="https://github.com/hasura/graphqurl"
                 target="_blank"
@@ -824,7 +834,7 @@
                 Graphqurl
               </a>
             </div>
-            <div className="links">
+            <div class="links">
               <a
                 href="https://github.com/hasura/firebase2graphql"
                 target="_blank"
@@ -833,7 +843,7 @@
                 Firebase2GraphQL
               </a>
             </div>
-            <div className="links">
+            <div class="links">
               <a
                 href="https://github.com/hasura/json2graphql"
                 target="_blank"
@@ -842,7 +852,7 @@
                 JSON2GraphQL
               </a>
             </div>
-            <div className="links">
+            <div class="links">
               <a
                 href="https://github.com/hasura/graphql2chartjs"
                 target="_blank"
@@ -852,25 +862,25 @@
               </a>
             </div>
           </div>
-          <div className="footerLinks articleDesc">
-            <div className="footerHeader">Product</div>
-            <div className="links">
+          <div class="footerLinks articleDesc">
+            <div class="footerHeader">Product</div>
+            <div class="links">
               <a href="/opensource/">Hasura Open Source</a>
             </div>
-            <div className="links">
+            <div class="links">
               <a href="https://hasura.io/cloud/">
                 Hasura Cloud
               </a>
             </div>
-            <div className="links">
+            <div class="links">
               <a href="https://hasura.io/enterprise/">
                 Hasura Enterprise
               </a>
             </div>
-            <div className="links">
+            <div class="links">
               <a href="https://hasura.io/pricing/">Pricing</a>
             </div>
-            <div className="links">
+            <div class="links">
               <a
                 href="https://github.com/hasura/graphql-engine/releases"
                 target="_blank"
@@ -880,17 +890,17 @@
               </a>
             </div>
           </div>
-          <div className="footerLinks articleDesc">
-            <div className="footerHeader">Resources</div>
-            <div className="links">
+          <div class="footerLinks articleDesc">
+            <div class="footerHeader">Resources</div>
+            <div class="links">
               <a href="https://hasura.io/blog/">
                 Blog
               </a>
             </div>
-            <div className="links">
+            <div class="links">
               <a href="https://hasura.io/user-stories/">User Stories</a>
             </div>
-            <div className="links">
+            <div class="links">
               <a
                 href="https://3factor.app/"
                 target="_blank"
@@ -899,25 +909,25 @@
                 3Factor Apps
               </a>
             </div>
-            <div className="links">
+            <div class="links">
               <a href="https://hasura.io/react-graphql/">React GraphQL</a>
             </div>
-            <div className="links">
+            <div class="links">
               <a href="https://hasura.io/vue-graphql/">Vue GraphQL</a>
             </div>
-            <div className="links">
+            <div class="links">
               <a href="https://hasura.io/diy-graphql-baas/">DIY GraphQL BaaS</a>
             </div>
-            <div className="links">
+            <div class="links">
               <a href="https://hasura.io/graphql/">GraphQL & Hasura</a>
             </div>
           </div>
-          <div className="footerLinks articleDesc">
-            <div className="footerHeader">Community</div>
-            <div className="links">
+          <div class="footerLinks articleDesc">
+            <div class="footerHeader">Community</div>
+            <div class="links">
               <a href="https://hasura.io/community/">Community Resources</a>
             </div>
-            <div className="links">
+            <div class="links">
               <a
                 href='https://hasura.io/learn/'
                 target="_blank"
@@ -926,7 +936,7 @@
                 GraphQL Tutorials
               </a>
             </div>
-            <div className="links">
+            <div class="links">
               <a
                 href="https://github.com/hasura/graphql-engine/wiki"
                 target="_blank"
@@ -935,13 +945,13 @@
                 Community Wiki
               </a>
             </div>
-            <div className="links">
+            <div class="links">
               <a href="https://hasura.io/sample-apps/">Sample Apps</a>
             </div>
-            <div className="links">
+            <div class="links">
               <a href="https://hasura.io/partner-agencies/">Partnership Program</a>
             </div>
-            <div className="links">
+            <div class="links">
               <a
                 href="https://graphql.asia/"
                 target="_blank"
@@ -953,43 +963,43 @@
           </div>
         </div>
       </div>
-      <div className="containerWrapper">
-        <div className="copyWriteWrapper">
-          <div className="copyWrite articleDescSmall">
+      <div class="containerWrapper">
+        <div class="copyWriteWrapper">
+          <div class="copyWrite articleDescSmall">
             © 2020 Hasura Inc. All rights reserved
           </div>
-          <div className="footerSocialIconsWrapper">
-            <div className="socialBrands">
+          <div class="footerSocialIconsWrapper">
+            <div class="socialBrands">
               <a href="https://github.com/hasura/graphql-engine" rel="noopener noreferrer" aria-label="Github">
                 <img loading="lazy" src="{{ pathto('_images/layout/github-brands-white.svg', 1) }}" alt="Github" />
               </a>
             </div>
-            <div className="socialBrands">
+            <div class="socialBrands">
               <a href="https://twitter.com/hasurahq" rel="noopener noreferrer" aria-label="Titter">
                 <img loading="lazy" src="{{ pathto('_images/layout/twitter-brands-white.svg', 1) }}" alt="Titter" />
               </a>
             </div>
-            <div className="socialBrands">
+            <div class="socialBrands">
               <a href="https://discordapp.com/invite/hasura" rel="noopener noreferrer" aria-label="Discord">
                 <img loading="lazy" src="{{ pathto('_images/layout/discord-brands-white.svg', 1) }}" alt="Discord" />
               </a>
             </div>
-            <div className="socialBrands">
+            <div class="socialBrands">
               <a href="https://www.facebook.com/HasuraHQ" rel="noopener noreferrer" aria-label="Facebook">
                 <img loading="lazy" src="{{ pathto('_images/layout/facebook-brands-white.svg', 1) }}" alt="Facebook" />
               </a>
             </div>
-            <div className="socialBrands">
+            <div class="socialBrands">
               <a href="https://www.instagram.com/hasurahq/?hl=en" rel="noopener noreferrer" aria-label="Instagram">
                 <img loading="lazy" src="{{ pathto('_images/layout/instagram-brands-white.svg', 1) }}" alt="Instagram" />
               </a>
             </div>
-            <div className="socialBrands">
+            <div class="socialBrands">
               <a href="https://www.youtube.com/channel/UCZo1ciR8pZvdD3Wxp9aSNhQ" rel="noopener noreferrer" aria-label="Youtube">
                 <img loading="lazy" src="{{ pathto('_images/layout/youtube-brands-white.svg', 1) }}" alt="Youtube" />
               </a>
             </div>
-            <div className="socialBrands">
+            <div class="socialBrands">
               <a href="https://www.linkedin.com/company/hasura" rel="noopener noreferrer" aria-label="Linkedin">
                 <img loading="lazy" src="{{ pathto('_images/layout/linkedin-brands-white.svg', 1) }}" alt="Linkedin" />
               </a>

@@ -15,6 +15,7 @@ window.hdocs = (function () {
       document.getElementById('product-menu').addEventListener('click', hdocs.productMenu);
       document.getElementById('resources-menu').addEventListener('click', hdocs.resourcesMenu);
       document.getElementById('close-menu').addEventListener('click', hdocs.toggleMenu);
+      document.getElementById('chat-open').addEventListener('click', hdocs.chatOpen);
       docsearch({
         appId: 'WCBB1VVLRC',
         apiKey: '298d448cd9d7ed93fbab395658da19e8',
@@ -76,6 +77,15 @@ window.hdocs = (function () {
       } else {
         productList.className = "hide"
         resourcesArrow.className = ""
+      }
+    },
+    chatOpen: function() {
+      if (window.Intercom) {
+        const interCom = window.Intercom
+        const showIntercom = () => {
+          return interCom("show")
+        }
+        showIntercom()
       }
     },
     request: function (url, data, type) {
