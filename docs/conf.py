@@ -38,13 +38,6 @@ StandaloneHTMLBuilder.script_files = ["_static/scripts/vendor.js"]
 CURRENT_ENV = os.getenv("ENV") if os.getenv("ENV") else "development"
 RELEASE_MODE = os.getenv("RELEASE_MODE", "development")
 
-# GraphiQL defaults
-GRAPHIQL_DEFAULT_ENDPOINT = "http://localhost:8080/v1/graphql"
-
-# Get from env if set
-if os.getenv("GRAPHIQL_DEFAULT_ENDPOINT"):
-    GRAPHIQL_DEFAULT_ENDPOINT = os.getenv("GRAPHIQL_DEFAULT_ENDPOINT")
-
 BASE_DOMAIN = "hasura.io" if RELEASE_MODE == "production" else "hasura-stg.hasura-app.io"
 
 SITEMAP_DOMAIN = BASE_DOMAIN + '/docs'
@@ -54,7 +47,6 @@ html_context = {
     "BASE_DOMAIN": BASE_DOMAIN,
     "RELEASE_MODE": RELEASE_MODE,
     "SITEMAP_DOMAIN": SITEMAP_DOMAIN,
-    "GRAPHIQL_DEFAULT_ENDPOINT": GRAPHIQL_DEFAULT_ENDPOINT,
 }
 
 # End of it

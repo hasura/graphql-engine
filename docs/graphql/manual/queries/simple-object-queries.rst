@@ -19,7 +19,6 @@ Fetch list of objects
 **Example:** Fetch a list of authors:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       author {
@@ -57,7 +56,6 @@ Fetch an object using its primary key
 **Example:** Fetch an author using their primary key:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       author_by_pk(id: 1) {
@@ -81,7 +79,6 @@ Fetch value from JSON/JSONB column at particular path
 address column:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       author_by_pk(id: 1) {

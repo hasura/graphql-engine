@@ -30,7 +30,6 @@ Limit results
 **Example:** Fetch the first 5 authors from the list of all authors:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       author(
@@ -73,7 +72,6 @@ Limit results from an offset
 **Example:** Fetch 5 authors from the list of all authors, starting with the 6th one:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       author(
@@ -119,7 +117,6 @@ Limit results in a nested object
 **Example:** Fetch a list of authors and a list of their first 2 articles:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       author {
@@ -212,7 +209,6 @@ position of the row in the dataset as done by ``offset``, and that duplicate rec
 ``offset``:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       author(
@@ -279,7 +275,6 @@ the number of pages based on the limit that is set.
 articles to return.
 
 .. graphiql::
-  :view_only:
   :query:
     query articles ($where: articles_bool_exp!) {
       articles_aggregate(where: $where) {

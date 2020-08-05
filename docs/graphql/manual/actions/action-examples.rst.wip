@@ -48,7 +48,6 @@ This page provides reference examples of typical action use cases.
   It's now possible to return the author from the ``updateAddress`` action through the newly created relationship:
 
   .. graphiql::
-    :view_only:
     :query:
       mutation {
         updateAddress(address:
@@ -104,7 +103,6 @@ This page provides reference examples of typical action use cases.
   It's now possible to return articles from the ``updateAuthor`` action through the newly created relationship:
 
   .. graphiql::
-    :view_only:
     :query:
       mutation {
         updateAuthor(author:

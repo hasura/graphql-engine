@@ -59,7 +59,6 @@ error is thrown:
 
 
 .. graphiql::
-  :view_only:
   :query:
     mutation {
       insert_author(
@@ -134,7 +133,6 @@ Now, if we try to insert an article whose content has more than 100 words, we'll
 the following error:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation {
       insert_article(
@@ -191,7 +189,6 @@ Now, we can create a role ``user`` and add the following rule:
 If we try to insert an article with ``title = ""``, we will get a ``permission-error``:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation {
       insert_article(
@@ -240,7 +237,6 @@ If we try to insert an article for an author for whom ``is_active = false``, we
 will receive a ``permission-error`` :
 
 .. graphiql::
-  :view_only:
   :query:
     mutation {
       insert_article(
@@ -334,7 +330,6 @@ If it's not, the author will be inserted and the ``id`` will be returned. If the
 we get the following error message:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation insertArticle {
       InsertAuthor(author: { name: "Thanos" }) {

@@ -45,7 +45,6 @@ Fetch results with distinct values of a particular field
 **For example**, fetch the employee with the highest salary from each department:
 
 .. graphiql::
-   :view_only:
    :query:
       query {
         employee (

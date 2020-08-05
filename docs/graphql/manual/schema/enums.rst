@@ -202,7 +202,6 @@ When making queries that filter on the ``role`` column, use the name of the enum
 a string:
 
 .. graphiql::
-  :view_only:
   :query:
     {
       users(

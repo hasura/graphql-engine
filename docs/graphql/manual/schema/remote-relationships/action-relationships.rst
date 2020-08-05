@@ -141,7 +141,6 @@ Step 3: Explore with GraphiQL
 In the GraphiQL tab, test out your action relationship.
 
 .. graphiql::
-  :view_only:
   :query:
     mutation {
       createUser(name: "Hodor") {
@@ -168,7 +167,6 @@ In the GraphiQL tab, test out your action relationship.
 If your table has an existing :ref:`remote relationship <remote_schema_relationships>`, you can also query the fields from the remote schema.
 
 .. graphiql::
-  :view_only:
   :query:
     mutation {
       createUser(name: "Hodor") {

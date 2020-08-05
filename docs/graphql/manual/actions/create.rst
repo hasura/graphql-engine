@@ -226,7 +226,6 @@ Step 4: Try it out
 In the Hasura console, head to the ``GraphiQL`` tab and try out the new action.
 
 .. graphiql::
-  :view_only:
   :query:
     mutation {
       login (username: "jondoe", password: "mysecretpassword") {
@@ -403,7 +402,6 @@ Step 4: Try it out
 In the Hasura console, head to the ``GraphiQL`` tab and try out the new action.
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       addNumbers(numbers: [1, 2, 3, 4]) {

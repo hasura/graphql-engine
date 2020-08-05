@@ -65,7 +65,6 @@ We can now:
 - fetch a list of authors with their ``articles``:
 
   .. graphiql::
-    :view_only:
     :query:
       query {
         author {
@@ -117,7 +116,6 @@ We can now:
 - fetch a list of articles with their ``author``:
 
   .. graphiql::
-    :view_only:
     :query:
       query {
         article {

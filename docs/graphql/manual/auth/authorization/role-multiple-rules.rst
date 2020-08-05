@@ -80,7 +80,6 @@ Now we can fetch the required data with the appropriate access control by using 
 If the ``X-Hasura-Role`` and the ``X-Hasura-User-Id`` session variables are set to ``user`` and ``2`` respectively, we'll get the following result:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       user_info {

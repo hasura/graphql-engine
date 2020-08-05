@@ -70,7 +70,6 @@ Define an SQL function called ``author_full_name``:
 Query data from the ``author`` table:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       author {
@@ -126,7 +125,6 @@ Define an SQL function called ``filter_author_articles``:
 Query data from the ``author`` table:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       author {
@@ -247,7 +245,6 @@ as shown in the following example.
    }
 
 .. graphiql::
-  :view_only:
   :query:
      query {
        article(where: {id: {_eq: 3}}) {

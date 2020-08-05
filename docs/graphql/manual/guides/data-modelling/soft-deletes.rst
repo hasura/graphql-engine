@@ -109,7 +109,6 @@ permission rule to ensure this:
 Now the role ``user`` can only access non-deleted ``todos``:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       todos {

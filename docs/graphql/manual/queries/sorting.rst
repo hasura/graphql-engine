@@ -41,7 +41,6 @@ Sorting objects
 **Example:** Fetch a list of authors sorted by their names in an ascending order:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       author (
@@ -91,7 +90,6 @@ Sorting nested objects
 their rating:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       author (order_by: {name: asc}) {
@@ -176,7 +174,6 @@ For object relationships only columns can be used for sorting.
 **Example:** Fetch a list of articles that are sorted by their author's ids in descending order:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       article (
@@ -233,7 +230,6 @@ For array relationships only aggregates can be used for sorting.
 **Example:** Fetch a list of authors sorted in descending order of their article count:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       author (
@@ -288,7 +284,6 @@ For array relationships only aggregates can be used for sorting.
 **Example:** Fetch a list of authors sorted in increasing order of their highest article rating:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       author(
@@ -388,7 +383,6 @@ Sorting by multiple fields
 date (ascending with nulls first):
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       article (

@@ -82,7 +82,6 @@ We can now:
 - fetch a list of articles with their tags:
 
   .. graphiql::
-    :view_only:
     :query:
       query {
         article {
@@ -143,7 +142,6 @@ We can now:
 - fetch a list of tags with their articles:
 
   .. graphiql::
-    :view_only:
     :query:
       query {
         tag {
@@ -203,7 +201,6 @@ information about the relationship. For example, you can have a column like ``ta
 table which you can fetch as follows:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       article {
@@ -296,7 +293,6 @@ We can now:
 - fetch articles with their tags without an intermediate field:
 
   .. graphiql::
-    :view_only:
     :query:
       query {
         article {
@@ -347,7 +343,6 @@ We can now:
   - fetch tags with their articles without an intermediate field:
 
     .. graphiql::
-      :view_only:
       :query:
         query {
           tag {

@@ -25,7 +25,6 @@ Run multiple top level queries in the same request
 **For example**, fetch a list of ``authors`` and a list of ``articles``:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       author(limit: 2) {

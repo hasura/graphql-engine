@@ -4,6 +4,7 @@ window.hdocs = (function () {
   return {
     setup: function () {
       Array.from(document.getElementsByClassName('menuLink')).forEach(function (el) { el.addEventListener('click', hdocs.toggleMenu) });
+      Array.from(document.getElementsByClassName('.external')).forEach(function (el) { el.setAttribute('target', '_blank') });
 
       document.getElementById('nav_tree_icon').addEventListener('click', hdocs.handleNavClick);
       document.getElementById('sidebar-close').addEventListener('click', hdocs.handleNavClick);
@@ -23,9 +24,7 @@ window.hdocs = (function () {
 
       hdocs.getGithubStarCount();
       hdocs.setReleaseTags();
-      hdocs.setExternalLinks();
       hdocs.setupIntercom();
-      hdocs.setupGraphiQL();
     },
     toggleMenu: function () {
       var x = document.getElementById("navbar")
@@ -94,9 +93,6 @@ window.hdocs = (function () {
             console.log(err);
           });
       }
-    },
-    setExternalLinks: function () {
-      Array.from(document.getElementsByClassName('.external')).forEach(function (el) { el.setAttribute('target', '_blank') });
     },
     setupIntercom: function () {
       window.intercomSettings = {
@@ -198,61 +194,6 @@ window.hdocs = (function () {
           alert('Error capturing feedback');
           console.log(err);
         });
-    },
-    graphQLFetcher: function (endpoint) {
-      endpoint = endpoint || HDOCS_GRAPHIQL_DEFAULT_ENDPOINT;
-
-      return function (graphQLParams) {
-        const params = {
-          method: 'post',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(graphQLParams),
-          credentials: 'include'
-        };
-
-        return fetch(endpoint, params)
-          .then(function (response) {
-            return response.text();
-          })
-          .then(function (responseBody) {
-            try {
-              return JSON.parse(responseBody);
-            } catch (error) {
-              return responseBody;
-            }
-          });
-      }
-    },
-    setupGraphiQL: function () {
-      if (typeof (React) === 'undefined' || typeof (ReactDOM) === 'undefined' || typeof (GraphiQL) === 'undefined') {
-        return;
-      }
-
-      const targets = document.getElementsByClassName('graphiql');
-
-      for (var i = 0; i < targets.length; i++) {
-        const target = targets[i];
-
-        const endpoint = target.getElementsByClassName("endpoint")[0].innerHTML.trim();
-        const query = target.getElementsByClassName("query")[0].innerHTML.trim();
-        const response = target.getElementsByClassName("response")[0].innerHTML.trim();
-        const variables = target.getElementsByClassName("variables")[0].innerHTML.trim();
-
-        const graphiQLElement = React.createElement(GraphiQL, {
-          fetcher: hdocs.graphQLFetcher(endpoint),
-          schema: null, // TODO: pass undefined if introspection supported
-          query: query,
-          response: response,
-          variables: variables
-        });
-
-        ReactDOM.render(graphiQLElement, target);
-      }
-
-      Array.from(document.getElementsByClassName('variable-editor')).forEach(function (el) { el.style.height = '120px' });
     },
     formatNumber: function (number) {
       if (typeof number !== "number") return number;

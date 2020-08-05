@@ -29,7 +29,6 @@ author.
 **Example:** Fetch a list of articles and the name of each article’s author:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       article {
@@ -77,7 +76,6 @@ articles.
 **Example:** Fetch a list of authors and a nested list of each author’s articles:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       author {

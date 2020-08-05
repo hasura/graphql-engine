@@ -24,7 +24,6 @@ Run multiple top level mutations in the same request
 **Example:** Delete all ``article`` objects written by an author and update the ``author`` object:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation reset_author {
       delete_article (
@@ -73,7 +72,6 @@ If you are trying to insert multiple objects which have relationships between th
 in the response:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation insert_article {
       insert_article(

@@ -57,10 +57,10 @@ argument to filter on equality.
 
 You can see the complete specification of the ``where`` argument in the :ref:`API reference <WhereExp>`.
 
-Comparision operators
----------------------
+Comparison operators
+--------------------
 
-Let’s take a look at different comparision operators that can be used to filter results.
+Let’s take a look at different comparison operators that can be used to filter results.
 
 Equality operators (_eq, _neq)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -78,7 +78,6 @@ The following are examples of using the equality operators on different types.
 Fetch data about author whose ``id`` *(an integer field)* is equal to 3:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       author(
@@ -105,7 +104,6 @@ Fetch data about author whose ``id`` *(an integer field)* is equal to 3:
 Fetch a list of authors with ``name`` *(a text field)* as "Sidney":
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       author(
@@ -132,7 +130,6 @@ Fetch a list of authors with ``name`` *(a text field)* as "Sidney":
 Fetch a list of articles that have not been published (``is_published`` is a boolean field):
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       article(
@@ -177,7 +174,6 @@ Fetch a list of articles that have not been published (``is_published`` is a boo
 Fetch a list of articles that were published on a certain date (``published_on`` is a Date field):
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       article(
@@ -218,7 +214,6 @@ The following are examples of using these operators on different types:
 Fetch a list of articles rated 4 or more (``rating`` is an integer field):
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       article(
@@ -258,7 +253,6 @@ Fetch a list of authors whose names begin with M or any letter that follows M *(
 dictionary sort)*:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       author(
@@ -289,7 +283,6 @@ dictionary sort)*:
 Fetch a list of articles that were published on or after date "01/01/2018":
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       article(
@@ -344,7 +337,6 @@ The following are examples of using these operators on different types:
 Fetch a list of articles rated 1, 3 or 5:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       article(
@@ -388,7 +380,6 @@ Fetch a list of articles rated 1, 3 or 5:
 Fetch a list of those authors whose names are NOT part of a list:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       author(
@@ -435,7 +426,6 @@ For more details on text search operators and Postgres equivalents, refer to the
 Fetch a list of articles whose titles contain the word “amet”:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       article(
@@ -473,7 +463,6 @@ Fetch a list of articles whose titles contain the word “amet”:
 Fetch a list of authors whose names begin with A or C:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       author(
@@ -524,7 +513,6 @@ For more details on JSONB operators and Postgres equivalents, refer to the :ref:
 Fetch all authors living within a particular pincode (present in ``address`` JSONB column):
 
 .. graphiql::
-  :view_only:
   :query:
     query get_authors_in_pincode ($jsonFilter: jsonb){
       author(
@@ -567,7 +555,6 @@ Fetch all authors living within a particular pincode (present in ``address`` JSO
 Fetch authors if the ``phone`` key is present in their JSONB ``address`` column:
 
 .. graphiql::
-  :view_only:
   :query:
     query get_authors_if_phone {
       author(
@@ -619,7 +606,6 @@ Use JSON representation (see `GeoJSON <https://tools.ietf.org/html/rfc7946>`_) o
 Fetch a list of geometry values which are within the given ``polygon`` value:
 
 .. graphiql::
-  :view_only:
   :query:
     query geom_table($polygon: geometry){
       geom_table(
@@ -667,7 +653,6 @@ Fetch a list of geometry values which are within the given ``polygon`` value:
 Fetch a list of ``geometry`` values which are 3 units from given ``point`` value:
 
 .. graphiql::
-  :view_only:
   :query:
     query geom_table($point: geometry){
       geom_table(
@@ -724,7 +709,6 @@ For more details on the ``_is_null`` operator and Postgres equivalent, refer to 
 Fetch a list of articles that have a value in the ``published_on`` field:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       article(
@@ -784,7 +768,6 @@ Executes the following SQL function:
 
 
 .. graphiql::
-  :view_only:
   :query:
    query getIntersectingValues ($rast: raster){
      dummy_rast(where: {rast: {_st_intersects_rast: $rast}}){
@@ -824,7 +807,6 @@ Executes the following SQL function:
 
 
 .. graphiql::
-  :view_only:
   :query:
     query getIntersectingValues ($point: geometry!){
       dummy_rast(where: {rast: {_st_intersects_geom_nband: {geommin: $point}}}){
@@ -876,7 +858,6 @@ Executes the following SQL function:
 
 
 .. graphiql::
-  :view_only:
   :query:
     query getIntersectingValues ($point: geometry!){
       dummy_rast(where: {rast: {_st_intersects_nband_geom: {nband: 5 geommin: $point}}}){
@@ -927,7 +908,6 @@ filter set for a condition.
 Fetch all authors who don't have any published articles:
 
 .. graphiql::
-  :view_only:
   :query:
     {
       author(
@@ -992,7 +972,6 @@ results based on more than one criteria.
 Fetch a list of articles published in a specific time-frame (for example: in year 2017):
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       article (
@@ -1047,7 +1026,6 @@ Fetch a list of articles published in a specific time-frame (for example: in yea
 Fetch a list of articles rated more than 4 or published after "01/01/2018":
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       article (
@@ -1115,7 +1093,6 @@ The ``where`` argument can be used in **array relationships** as well to filter 
 Fetch all authors with only their 5 rated articles:
 
 .. graphiql::
-  :view_only:
   :query:
     {
       author {
@@ -1178,7 +1155,7 @@ For example:
         }
       }
 
-The behaviour of the comparision operators depends on whether the nested objects are a single object related via an
+The behaviour of the comparison operators depends on whether the nested objects are a single object related via an
 object relationship or an array of objects related via an array relationship.
 
 - In case of an **object relationship**, a row will be returned if the single nested object satisfies the defined
@@ -1196,7 +1173,6 @@ Fetch if the single nested object defined via an object relationship satisfies a
 Fetch all articles whose author's name starts with "A":
 
 .. graphiql::
-  :view_only:
   :query:
     {
       article (
@@ -1265,7 +1241,6 @@ Fetch if **any** of the nested objects defined via an array relationship satisfy
 Fetch all authors which have written at least one article which is rated 1:
 
 .. graphiql::
-  :view_only:
   :query:
     {
       author(
@@ -1357,7 +1332,6 @@ For example:
 Fetch all authors which have all of their articles published i.e. have ``{is_published {_eq: true}``.
 
 .. graphiql::
-  :view_only:
   :query:
     {
       author (
@@ -1458,7 +1432,6 @@ For example,
 Fetch all authors which have none of their articles published i.e. have ``{is_published {_eq: true}``:
 
 .. graphiql::
-  :view_only:
   :query:
     {
       author (
@@ -1516,7 +1489,6 @@ achieved by using the expression ``{}`` which evaluates to ``true`` if any objec
 Fetch all authors which have at least one article written by them:
 
 .. graphiql::
-  :view_only:
   :query:
     {
       author (
@@ -1564,7 +1536,6 @@ Fetch all authors which have at least one article written by them:
 Fetch all authors which have not written any articles:
 
 .. graphiql::
-  :view_only:
   :query:
     {
       author (
@@ -1625,7 +1596,6 @@ Filtering using ``_st_d_within`` over large distances can be inaccurate for loca
 ``geometry`` columns. For accurate queries, cast the field to ``geography`` before comparing:
 
 .. graphiql::
-  :view_only:
   :query:
     query cities_near($point: geography!, $distance: Float!) {
       cities(
@@ -1666,7 +1636,6 @@ Columns of type ``geography`` are more accurate, but they don’t support as man
 ``geometry``. Cast to ``geometry`` to use those operations in a filter:
 
 .. graphiql::
-  :view_only:
   :query:
     query cities_inside($polygon: geometry) {
       cities(
@@ -1737,10 +1706,10 @@ The expression ``{}`` evaluates to ``true`` if an object exists (even if it's ``
 
 .. _null_value_evaluation:
 
-Evaluation of **null** values in comparision expressions
---------------------------------------------------------
+Evaluation of **null** values in comparison expressions
+-------------------------------------------------------
 
-If in any comparision expression a ``null`` (or ``undefined``) value is passed, the expression currently gets
+If in any comparison expression a ``null`` (or ``undefined``) value is passed, the expression currently gets
 reduced to ``{}`` (:ref:`TRUE expression <true_expression>`)
 
 **For example**, the expression ``{ where: { _eq: null } }`` will be reduced to ``{ where: {} }``

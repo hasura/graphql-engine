@@ -67,7 +67,6 @@ We can now:
 - fetch a list of authors with their ``passport_info``:
 
   .. graphiql::
-    :view_only:
     :query:
         query {
           author {
@@ -107,7 +106,6 @@ We can now:
 - fetch a list of passport_infos with their ``owner``:
 
   .. graphiql::
-    :view_only:
     :query:
         query {
           passport_info {

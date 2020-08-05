@@ -68,7 +68,6 @@ row object or ``null`` if the row does not exist.
 **Example:** Update an article where ``id`` is ``1``:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation update_an_article {
       update_article_by_pk (
@@ -92,7 +91,6 @@ row object or ``null`` if the row does not exist.
 **Example:** Update a non-existent article:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation update_an_article {
       update_article_by_pk (
@@ -125,7 +123,6 @@ Update objects based on their fields
 **Example:** Update the ``rating`` and ``is_published`` of articles with a low ``rating``:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation update_article {
       update_article(
@@ -173,7 +170,6 @@ Update objects based on their fields
 Using variables:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation update_article($rating: Int, $changes: article_set_input) {
       update_article(
@@ -226,7 +222,6 @@ Using variables:
 OR
 
 .. graphiql::
-  :view_only:
   :query:
     mutation update_article($ratingLimit: Int, $rating: Int, $isPublished: Boolean) {
       update_article(
@@ -282,7 +277,6 @@ Update objects based on nested objects' fields
 **Example:** Reset the ``rating`` of all articles authored by "Sidney":
 
 .. graphiql::
-  :view_only:
   :query:
     mutation update_ratings {
       update_article(
@@ -310,7 +304,6 @@ evaluates to ``true`` for all objects.
 **Example:** Reset rating of all articles:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation reset_rating {
       update_article (
@@ -336,7 +329,6 @@ You can increment an ``int`` column with a given value using the ``_inc`` operat
 **Example:** Increment the ``likes`` of an article by 2:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation update_likes {
       update_article(
@@ -400,7 +392,6 @@ Since the input is a json value, it should be provided through a variable.
 **Example:** Append the json ``{"key1": "value1"}`` to the ``jsonb`` column ``extra_info`` of the ``article`` table:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation update_extra_info($value: jsonb) {
       update_article(
@@ -443,7 +434,6 @@ Since the input is a json value, it should be provided through a variable.
 **Example:** Prepend the json ``{"key0": "value0"}`` to the ``jsonb`` column ``extra_info`` of the ``article`` table:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation update_extra_info($value: jsonb) {
       update_article(
@@ -487,7 +477,6 @@ The input value should be a ``String``.
 **Example:** Delete the key ``key`` in the ``jsonb`` column ``extra_info`` of the ``article`` table:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation update_extra_info {
       update_article(
@@ -528,7 +517,6 @@ The input value should be an ``Int``.
 of the ``article`` table:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation update_extra_info {
       update_article(
@@ -564,7 +552,6 @@ The input value should be a ``String Array``.
 **Example:** Delete element at json path ``name.last`` in the ``jsonb`` column ``extra_info`` of the author table:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation update_extra_info {
       update_author(
@@ -604,7 +591,6 @@ one to delete all the existing objects and one to add a list of new nested objec
 **Example:** Replace all articles of an author with a new list:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation updateAuthorArticles($author_id: Int!) {
       delete_articles(
