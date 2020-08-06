@@ -77,7 +77,6 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
     strictChecks = true;
     lastReadAllTimeStamp = consoleStateDB.console_notifications.date;
     previousRead = consoleStateDB.console_notifications.read;
-    alert('asdasd');
   }
 
   const now = new Date().toISOString();
