@@ -242,7 +242,7 @@ migrateCatalogSchema env logger pool httpManager sqlGenCtx = do
     initialiseResult `onLeft` \err -> do
       unLogger logger StartupLog
         { slLogLevel = LevelError
-        , slKind = "db_migrate"
+        , slKind = "catalog_migrate"
         , slInfo = A.toJSON err
         }
       liftIO (printErrExit DatabaseMigrationError (BLC.unpack $ A.encode err))

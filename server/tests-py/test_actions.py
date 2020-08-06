@@ -455,6 +455,9 @@ class TestActionsMetadata:
     def test_recreate_permission(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/recreate_permission.yaml')
 
+    def test_create_with_headers(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_with_headers.yaml')
+
 # Test case for bug reported at https://github.com/hasura/graphql-engine/issues/5166
 @pytest.mark.usefixtures('per_class_tests_db_state')
 class TestActionIntrospection:
