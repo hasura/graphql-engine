@@ -61,8 +61,8 @@ export interface MiscellaneousColumnType {
 }
 
 export interface JSONColumnType {
-  json: object;
-  jsonb: object;
+  json: Record<string, unknown>;
+  jsonb: Record<string, unknown>;
 }
 
 export type JSONColumn = keyof JSONColumnType;

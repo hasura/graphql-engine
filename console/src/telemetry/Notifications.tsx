@@ -6,13 +6,13 @@ import { setTelemetryNotificationShownInDB } from './Actions';
 import { ReduxState } from '../types';
 
 const onRemove = () => {
-  return (dispatch: ThunkDispatch<ReduxState, {}, AnyAction>) => {
+  return (dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>) => {
     dispatch(setTelemetryNotificationShownInDB());
   };
 };
 
 const showTelemetryNotification = () => {
-  return (dispatch: ThunkDispatch<ReduxState, {}, AnyAction>) => {
+  return (dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>) => {
     dispatch(
       Notifications.show({
         position: 'tr',

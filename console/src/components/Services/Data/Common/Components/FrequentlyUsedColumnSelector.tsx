@@ -115,7 +115,7 @@ const getFreqUsedColDisplayInfo = (c: FrequentlyUsedColumn) => {
 };
 
 interface FrequentlyUsedColumnSelectorProps {
-  onSelect: Function;
+  onSelect: any;
   action: ColumnAction | null;
   dispatch: Dispatch | null;
   postgresVersion: string | null;

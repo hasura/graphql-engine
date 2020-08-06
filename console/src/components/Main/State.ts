@@ -25,7 +25,7 @@ export interface MainState {
     error: Error | null;
     isFetching: boolean;
   };
-  featuresCompatibility: object;
+  featuresCompatibility: Record<string, unknown>;
   postgresVersion: string | null;
 }
 
