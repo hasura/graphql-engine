@@ -143,6 +143,9 @@ class TestGraphQLQueryAggPerm:
     def test_author_post_agg_order_by(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/author_post_agg_order_by.yaml', transport)
 
+    def test_article_agg_without_select_access_to_any_col(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/article_agg_with_role_without_select_access.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/agg_perm'
