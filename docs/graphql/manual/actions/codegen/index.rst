@@ -109,12 +109,15 @@ Generating handler code for your action
 Codegen for your framework
 --------------------------
 
-Refer to the following page for examples about using existing codegen:
+As of now, Hasura provides codegen for a few frameworks (``nodejs-express``,
+``typescript-zeit``, ``python-flask`` and many more). You can see the full list in the ``Codegen`` tab on the console after you've :ref:`created an action <create_actions>`. 
+
+We will continue adding more examples to the documentation.
 
 .. toctree::
   :maxdepth: 1
 
-  Codegen examples <examples/index>
+  Python & Flask <python-flask>
 
 Building your own codegen
 ^^^^^^^^^^^^^^^^^^^^^^^^^
