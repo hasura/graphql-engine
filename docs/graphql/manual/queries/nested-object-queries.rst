@@ -28,63 +28,47 @@ author.
 
 **Example:** Fetch a list of articles and the name of each article’s author:
 
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: GraphiQL
-
-    .. graphiql::
-      :view_only:
-      :query:
-        query {
-          article {
-            id
-            title
-            author {
-              name
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      article {
+        id
+        title
+        author {
+          name
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 1,
+            "title": "sit amet",
+            "author": {
+              "name": "Anjela"
+            }
+          },
+          {
+            "id": 2,
+            "title": "a nibh",
+            "author": {
+              "name": "Beltran"
+            }
+          },
+          {
+            "id": 3,
+            "title": "amet justo morbi",
+            "author": {
+              "name": "Anjela"
             }
           }
-        }
-      :response:
-        {
-          "data": {
-            "article": [
-              {
-                "id": 1,
-                "title": "sit amet",
-                "author": {
-                  "name": "Anjela"
-                }
-              },
-              {
-                "id": 2,
-                "title": "a nibh",
-                "author": {
-                  "name": "Beltran"
-                }
-              },
-              {
-                "id": 3,
-                "title": "amet justo morbi",
-                "author": {
-                  "name": "Anjela"
-                }
-              }
-            ]
-          }
-        }
-
-  .. tab:: API
-
-    .. code-block:: http
-
-      POST /v1/graphql HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "query": "query { article { id title author { name }}}"
+        ]
       }
+    }
+
 
 Fetch nested objects using an array relationship
 ------------------------------------------------
@@ -93,89 +77,72 @@ articles.
 
 **Example:** Fetch a list of authors and a nested list of each author’s articles:
 
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: GraphiQL
-
-    .. graphiql::
-      :view_only:
-      :query:
-        query {
-          author {
-            id
-            name
-            articles {
-              id
-              title
-            }
-          }
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      author {
+        id
+        name
+        articles {
+          id
+          title
         }
-      :response:
-        {
-          "data": {
-            "author": [
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 1,
+            "name": "Justin",
+            "articles": [
               {
-                "id": 1,
-                "name": "Justin",
-                "articles": [
-                  {
-                    "id": 15,
-                    "title": "vel dapibus at"
-                  },
-                  {
-                    "id": 16,
-                    "title": "sem duis aliquam"
-                  }
-                ]
+                "id": 15,
+                "title": "vel dapibus at"
               },
+              {
+                "id": 16,
+                "title": "sem duis aliquam"
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "name": "Beltran",
+            "articles": [
               {
                 "id": 2,
-                "name": "Beltran",
-                "articles": [
-                  {
-                    "id": 2,
-                    "title": "a nibh"
-                  },
-                  {
-                    "id": 9,
-                    "title": "sit amet"
-                  }
-                ]
+                "title": "a nibh"
               },
               {
-                "id": 3,
-                "name": "Sidney",
-                "articles": [
-                  {
-                    "id": 6,
-                    "title": "sapien ut"
-                  },
-                  {
-                    "id": 11,
-                    "title": "turpis eget"
-                  },
-                  {
-                    "id": 14,
-                    "title": "congue etiam justo"
-                  }
-                ]
+                "id": 9,
+                "title": "sit amet"
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "name": "Sidney",
+            "articles": [
+              {
+                "id": 6,
+                "title": "sapien ut"
+              },
+              {
+                "id": 11,
+                "title": "turpis eget"
+              },
+              {
+                "id": 14,
+                "title": "congue etiam justo"
               }
             ]
           }
-        }
-
-  .. tab:: API
-
-    .. code-block:: http
-
-      POST /v1/graphql HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "query": "query { author { id name articles { id title }}}"
+        ]
       }
+    }
 
 
 .. note::

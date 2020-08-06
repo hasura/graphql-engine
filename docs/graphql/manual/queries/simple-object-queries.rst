@@ -18,145 +18,96 @@ Fetch list of objects
 ---------------------
 **Example:** Fetch a list of authors:
 
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: GraphiQL
-
-    .. graphiql::
-      :view_only:
-      :query:
-        query {
-          author {
-            id
-            name
-          }
-        }
-      :response:
-        {
-          "data": {
-            "author": [
-              {
-                "id": 1,
-                "name": "Justin"
-              },
-              {
-                "id": 2,
-                "name": "Beltran"
-              },
-              {
-                "id": 3,
-                "name": "Sidney"
-              },
-              {
-                "id": 4,
-                "name": "Anjela"
-              }
-            ]
-          }
-        }
-
-  .. tab:: API
-
-    .. code-block:: http
-
-      POST /v1/graphql HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "query": "query { author { id name }}"
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      author {
+        id
+        name
       }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 1,
+            "name": "Justin"
+          },
+          {
+            "id": 2,
+            "name": "Beltran"
+          },
+          {
+            "id": 3,
+            "name": "Sidney"
+          },
+          {
+            "id": 4,
+            "name": "Anjela"
+          }
+        ]
+      }
+    }
 
 
 Fetch an object using its primary key
 -------------------------------------
 **Example:** Fetch an author using their primary key:
 
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: GraphiQL
-
-    .. graphiql::
-      :view_only:
-      :query:
-        query {
-          author_by_pk(id: 1) {
-            id
-            name
-          }
-        }
-      :response:
-        {
-          "data": {
-            "author_by_pk": {
-              "id": 1,
-              "name": "Justin"
-            }
-          }
-        }
-
-  .. tab:: API
-
-    .. code-block:: http
-
-      POST /v1/graphql HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "query": "query { author_by_pk(id: 1) { id name } }"
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      author_by_pk(id: 1) {
+        id
+        name
       }
+    }
+  :response:
+    {
+      "data": {
+        "author_by_pk": {
+          "id": 1,
+          "name": "Justin"
+        }
+      }
+    }
+
 
 Fetch value from JSON/JSONB column at particular path
 -----------------------------------------------------
 **Example:** Fetch the city and phone number of an author from their JSONB
 address column:
 
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: GraphiQL
-
-    .. graphiql::
-      :view_only:
-      :query:
-        query {
-          author_by_pk(id: 1) {
-            id
-            name
-            address
-            city: address(path: "$.city")
-            phone: address(path: "$.phone_numbers.[0]")
-          }
-        }
-      :response:
-        {
-          "data": {
-            "author_by_pk": {
-              "id": 1,
-              "name": "Justin",
-              "address": {
-                "city": "Bengaluru",
-                "phone_numbers": [9090909090, 8080808080]
-              },
-              "city": "Bengaluru",
-              "phone": 9090909090
-            }
-          }
-        }
-
-  .. tab:: API
-
-    .. code-block:: http
-
-      POST /v1/graphql HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "query": "query { author_by_pk(id: 1) { id name address city: address(path: \"$.city\") phone: address(path: \"$.phone_num.[0]\")}}"
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      author_by_pk(id: 1) {
+        id
+        name
+        address
+        city: address(path: "$.city")
+        phone: address(path: "$.phone_numbers.[0]")
       }
+    }
+  :response:
+    {
+      "data": {
+        "author_by_pk": {
+          "id": 1,
+          "name": "Justin",
+          "address": {
+            "city": "Bengaluru",
+            "phone_numbers": [9090909090, 8080808080]
+          },
+          "city": "Bengaluru",
+          "phone": 9090909090
+        }
+      }
+    }
+    
 
 See the :ref:`API reference <SimpleObject>` for more details.

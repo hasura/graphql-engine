@@ -24,58 +24,41 @@ Run multiple top level queries in the same request
 
 **For example**, fetch a list of ``authors`` and a list of ``articles``:
 
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: GraphiQL
-
-    .. graphiql::
-      :view_only:
-      :query:
-        query {
-          author(limit: 2) {
-            id
-            name
-          }
-          article(limit: 2) {
-            id
-            title
-          }
-        }
-      :response:
-        {
-          "data": {
-            "author": [
-              {
-                "id": 1,
-                "name": "Justin"
-              },
-              {
-                "id": 2,
-                "name": "Beltran"
-              }
-            ],
-            "article": [
-              {
-                "id": 1,
-                "title": "sit amet"
-              },
-              {
-                "id": 2,
-                "title": "a nibh"
-              }
-            ]
-          }
-        }
-
-  .. tab:: API
-
-    .. code-block:: http
-
-      POST /v1/graphql HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "query": "query { author(limit: 2) { id name } article(limit: 2) { id title }}"
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      author(limit: 2) {
+        id
+        name
       }
+      article(limit: 2) {
+        id
+        title
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 1,
+            "name": "Justin"
+          },
+          {
+            "id": 2,
+            "name": "Beltran"
+          }
+        ],
+        "article": [
+          {
+            "id": 1,
+            "title": "sit amet"
+          },
+          {
+            "id": 2,
+            "title": "a nibh"
+          }
+        ]
+      }
+    }
