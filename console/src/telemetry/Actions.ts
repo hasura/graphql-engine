@@ -148,8 +148,7 @@ const updateConsoleNotificationsInDB = (
       console_notifications: updatedState,
     };
     const updatedReadNotifications = getUpdateConsoleStateQuery(
-      composedUpdatedState,
-      getState().telemetry.hasura_uuid
+      composedUpdatedState
     );
     const options: RequestInit = {
       credentials: globalCookiePolicy,
