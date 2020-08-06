@@ -17,7 +17,8 @@ Let's create a sample table and query data from it using the Hasura console, a U
 Create a table
 --------------
 
-Let's add the following table:
+Head to the Hasura console, navigate to ``Data -> Create table`` and create a sample table called ``profile`` with
+the following columns:
 
 .. code-block:: sql
 
@@ -26,11 +27,8 @@ Let's add the following table:
     name TEXT
   )
 
-Head to the Hasura console, navigate to ``Data -> Create table`` and create a sample table called ``profile`` with
-the following columns:
-
 .. thumbnail:: /img/graphql/manual/getting-started/create-profile-table.png
-  :alt: Create a table
+   :alt: Create a table
 
 Now, insert some sample data into the table using the ``Insert Row`` tab of the ``profile`` table.
 
@@ -48,10 +46,10 @@ Head to the ``GraphiQL`` tab in the console and try running the following query:
       }
     }
 
-.. thumbnail:: /img/graphql/manual/getting-started/profile-query.png
-  :alt: Try out a query
-
 You'll see that you get all the inserted data!
+
+.. thumbnail:: /img/graphql/manual/getting-started/profile-query.png
+   :alt: Try out a query
 
 Next steps
 ----------

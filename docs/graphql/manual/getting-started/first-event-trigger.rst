@@ -19,7 +19,8 @@ Let's create a sample event trigger with https://httpbin.org as our simple webho
 Create a table
 --------------
 
-Let's add the following table:
+Head to the Hasura console, navigate to ``Data -> Create table`` and create a sample table called ``profile`` with
+the following columns:
 
 .. code-block:: sql
 
@@ -27,8 +28,6 @@ Let's add the following table:
     id INT PRIMARY KEY,
     name TEXT
   )
-
-Head to the Hasura console, navigate to ``Data -> Create table`` and create a sample table called ``profile`` with the following columns:
 
 .. thumbnail:: /img/graphql/manual/getting-started/create-profile-table.png
    :alt: Create a table
