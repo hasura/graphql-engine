@@ -154,67 +154,50 @@ We can now run a nested object query that is based on this ``object relationship
 
 Fetch a list of articles and each article's author:
 
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: GraphiQL
-
-    .. graphiql::
-      :view_only:
-      :query:
-        query {
-          article {
-            id
-            title
-            author {
-              id
-              name
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      article {
+        id
+        title
+        author {
+          id
+          name
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 1,
+            "title": "sit amet",
+            "author": {
+              "name": "Anjela",
+              "id": 4
+            }
+          },
+          {
+            "id": 2,
+            "title": "a nibh",
+            "author": {
+              "name": "Beltran",
+              "id": 2
+            }
+          },
+          {
+            "id": 3,
+            "title": "amet justo morbi",
+            "author": {
+              "name": "Anjela",
+              "id": 4
             }
           }
-        }
-      :response:
-        {
-          "data": {
-            "article": [
-              {
-                "id": 1,
-                "title": "sit amet",
-                "author": {
-                  "name": "Anjela",
-                  "id": 4
-                }
-              },
-              {
-                "id": 2,
-                "title": "a nibh",
-                "author": {
-                  "name": "Beltran",
-                  "id": 2
-                }
-              },
-              {
-                "id": 3,
-                "title": "amet justo morbi",
-                "author": {
-                  "name": "Anjela",
-                  "id": 4
-                }
-              }
-            ]
-          }
-        }
-
-  .. tab:: API
-
-    .. code-block:: http
-
-      POST /v1/graphql HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "query": "query { article { id title author { id name }}}"
+        ]
       }
+    }
 
 Step 3: Create an array relationship
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -293,91 +276,72 @@ You can add an ``array relationship`` in the same fashion as an ``object relatio
 
 Fetch a list of authors and a nested list of each author's articles:
 
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: GraphiQL
-
-    Make the following GraphQL query on the Hasura console:
-
-    .. graphiql::
-      :view_only:
-      :query:
-        query {
-          author {
-            id
-            name
-            articles {
-              id
-              title
-            }
-          }
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      author {
+        id
+        name
+        articles {
+          id
+          title
         }
-      :response:
-        {
-          "data": {
-            "author": [
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 1,
+            "name": "Justin",
+            "articles": [
               {
-                "id": 1,
-                "name": "Justin",
-                "articles": [
-                  {
-                    "id": 15,
-                    "title": "vel dapibus at"
-                  },
-                  {
-                    "id": 16,
-                    "title": "sem duis aliquam"
-                  }
-                ]
+                "id": 15,
+                "title": "vel dapibus at"
               },
+              {
+                "id": 16,
+                "title": "sem duis aliquam"
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "name": "Beltran",
+            "articles": [
               {
                 "id": 2,
-                "name": "Beltran",
-                "articles": [
-                  {
-                    "id": 2,
-                    "title": "a nibh"
-                  },
-                  {
-                    "id": 9,
-                    "title": "sit amet"
-                  }
-                ]
+                "title": "a nibh"
               },
               {
-                "id": 3,
-                "name": "Sidney",
-                "articles": [
-                  {
-                    "id": 6,
-                    "title": "sapien ut"
-                  },
-                  {
-                    "id": 11,
-                    "title": "turpis eget"
-                  },
-                  {
-                    "id": 14,
-                    "title": "congue etiam justo"
-                  }
-                ]
+                "id": 9,
+                "title": "sit amet"
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "name": "Sidney",
+            "articles": [
+              {
+                "id": 6,
+                "title": "sapien ut"
+              },
+              {
+                "id": 11,
+                "title": "turpis eget"
+              },
+              {
+                "id": 14,
+                "title": "congue etiam justo"
               }
             ]
           }
-        }
-
-  .. tab:: API
-
-    .. code-block:: http
-
-      POST /v1/graphql HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "query": "query { author { id name articles { id title }}}"
+        ]
       }
+    }
 
 .. _create_manual_relationships:
 
@@ -485,60 +449,43 @@ We can now run a nested object query that is based on this ``object relationship
 
 Fetch a list of authors with the average rating of their articles:
 
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: GraphiQL
-
-    .. graphiql::
-      :view_only:
-      :query:
-        query {
-          author {
-            id
-            name
-            avg_rating {
-              avg
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      author {
+        id
+        name
+        avg_rating {
+          avg
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 1,
+            "name": "Justin",
+            "avg_rating": {
+              "avg": 2.5
+            }
+          },
+          {
+            "id": 2,
+            "name": "Beltran",
+            "avg_rating": {
+              "avg": 3
+            }
+          },
+          {
+            "id": 3,
+            "name": "Sidney",
+            "avg_rating": {
+              "avg": 2.6666666666666665
             }
           }
-        }
-      :response:
-        {
-          "data": {
-            "author": [
-              {
-                "id": 1,
-                "name": "Justin",
-                "avg_rating": {
-                  "avg": 2.5
-                }
-              },
-              {
-                "id": 2,
-                "name": "Beltran",
-                "avg_rating": {
-                  "avg": 3
-                }
-              },
-              {
-                "id": 3,
-                "name": "Sidney",
-                "avg_rating": {
-                  "avg": 2.6666666666666665
-                }
-              }
-            ]
-          }
-        }
-
-  .. tab:: API
-
-    .. code-block:: http
-
-      POST /v1/graphql HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "query": "query { authors { id name avg_rating { avg }}}"
+        ]
       }
+    }

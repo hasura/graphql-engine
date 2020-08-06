@@ -293,43 +293,24 @@ Finally, to save the action:
 Step 4: Try it out
 ~~~~~~~~~~~~~~~~~~
 
-Now let's try out our new action.
+In the Hasura console, head to the ``GraphiQL`` tab and try out the new action.
 
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: GraphiQL
-
-    In the Hasura console, head to the ``GraphiQL`` tab and try out the new action.
-
-    .. graphiql::
-      :view_only:
-      :query:
-        mutation {
-          login (username: "jondoe", password: "mysecretpassword") {
-            accessToken
-          }
-        }
-      :response:
-        {
-          "data": {
-            "login": {
-              "accessToken": "Ew8jkGCNDGAo7p35RV72e0Lk3RGJoJKB"
-            }
-          }
-        }
-
-  .. tab:: API
-
-    .. code-block:: http
-
-      POST /v1/graphql HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "query": "mutation { Login (username: \"jondoe\", password: \"mysecretpassword\") { accessToken }}"
+.. graphiql::
+  :view_only:
+  :query:
+    mutation {
+      login (username: "jondoe", password: "mysecretpassword") {
+        accessToken
       }
+    }
+  :response:
+    {
+      "data": {
+        "login": {
+          "accessToken": "Ew8jkGCNDGAo7p35RV72e0Lk3RGJoJKB"
+        }
+      }
+    }
 
 And that's it. You have extended your Hasura schema with a new mutation.
 
@@ -556,42 +537,23 @@ Finally, to save the action:
 Step 4: Try it out
 ~~~~~~~~~~~~~~~~~~
 
-Now let's try out our new action.
+In the Hasura console, head to the ``GraphiQL`` tab and try out the new action.
 
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: GraphiQL
-
-    In the Hasura console, head to the ``GraphiQL`` tab and try out the new action.
-
-    .. graphiql::
-      :view_only:
-      :query:
-        query {
-          addNumbers(numbers: [1, 2, 3, 4]) {
-            sum
-          }
-        }
-      :response:
-        {
-          "data": {
-            "addNumbers": {
-              "sum": 10
-            }
-          }
-        }
-
-  .. tab:: API
-
-    .. code-block:: http
-
-      POST /v1/graphql HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "query": "query { addNumbers(numbers: [1, 2, 3, 4]) { sum }}"
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      addNumbers(numbers: [1, 2, 3, 4]) {
+        sum
       }
+    }
+  :response:
+    {
+      "data": {
+        "addNumbers": {
+          "sum": 10
+        }
+      }
+    }
 
 And that's it. You have extended your Hasura schema with a new query.

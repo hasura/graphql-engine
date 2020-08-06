@@ -213,6 +213,7 @@ Using variables:
       ]
     }
 
+
 Insert an object and get a nested object in response
 ----------------------------------------------------
 **Example:** Insert a new ``article`` object and return the inserted article object with its author in the response:

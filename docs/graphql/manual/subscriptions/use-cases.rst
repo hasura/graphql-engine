@@ -46,55 +46,37 @@ Let's say we have the following database schema:
 
 Now we can use the following subscription to fetch the latest location of a vehicle to display it on a map:
 
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: GraphiQL
-
-    .. graphiql::
-      :view_only:
-      :query:
-        # $vehicleId = 3
-        subscription getLocation($vehicleId: Int!) {
-          vehicle(where: {id: {_eq: $vehicleId}}) {
-            id
-            vehicle_number
-            locations(order_by: {timestamp: desc}, limit: 1) {
-              location
-              timestamp
-            }
-          }
+.. graphiql::
+  :view_only:
+  :query:
+    # $vehicleId = 3
+    subscription getLocation($vehicleId: Int!) {
+      vehicle(where: {id: {_eq: $vehicleId}}) {
+        id
+        vehicle_number
+        locations(order_by: {timestamp: desc}, limit: 1) {
+          location
+          timestamp
         }
-      :response:
-        {
-          "data": {
-            "vehicle": [
+      }
+    }
+  :response:
+    {
+      "data": {
+        "vehicle": [
+          {
+            "id": 3,
+            "vehicle_number": "KA04AD4583",
+            "locations": [
               {
-                "id": 3,
-                "vehicle_number": "KA04AD4583",
-                "locations": [
-                  {
-                    "location": "(12.93623,77.61701)",
-                    "timestamp": "2018-09-05T06:52:44.383588+00:00"
-                  }
-                ]
+                "location": "(12.93623,77.61701)",
+                "timestamp": "2018-09-05T06:52:44.383588+00:00"
               }
             ]
           }
-        }
-
-  .. tab:: API
-
-    .. code-block:: text
-
-      /v1/graphql WS/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "query": "subscription getLocation($vehicleId: Int!) { vehicle(where: {id: {_eq: $vehicleId}}) { id vehicle_number locations(order_by: {timestamp: desc}, limit: 1) { location timestamp }}}"
+        ]
       }
-
+    }
 
 Check this `sample app <https://realtime-location-tracking.demo.hasura.app/>`__ for a working demo
 (`source code <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-location-tracking>`__).
@@ -131,63 +113,46 @@ Let's say we have the following database schema:
 
 Now we can use the following subscription to display the latest messages in a chatroom:
 
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: GraphiQL
-
-    .. graphiql::
-      :view_only:
-      :query:
-        subscription getMessages {
-          message(order_by: {timestamp: desc}) {
-            text
-            timestamp
-            author {
-              username
+.. graphiql::
+  :view_only:
+  :query:
+    subscription getMessages {
+      message(order_by: {timestamp: desc}) {
+        text
+        timestamp
+        author {
+          username
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "message": [
+          {
+            "text": "I am fine.",
+            "timestamp": "2018-09-05T10:52:23.522223+00:00",
+            "author": {
+              "username": "Jane"
+            }
+          },
+          {
+            "text": "Hi! How are you?",
+            "timestamp": "2018-09-05T10:52:04.75283+00:00",
+            "author": {
+              "username": "Jose"
+            },
+          },
+          {
+            "text": "Hi!",
+            "timestamp": "2018-09-05T10:51:43.622839+00:00",
+            "author": {
+              "username": "Jane"
             }
           }
-        }
-      :response:
-        {
-          "data": {
-            "message": [
-              {
-                "text": "I am fine.",
-                "timestamp": "2018-09-05T10:52:23.522223+00:00",
-                "author": {
-                  "username": "Jane"
-                }
-              },
-              {
-                "text": "Hi! How are you?",
-                "timestamp": "2018-09-05T10:52:04.75283+00:00",
-                "author": {
-                  "username": "Jose"
-                },
-              },
-              {
-                "text": "Hi!",
-                "timestamp": "2018-09-05T10:51:43.622839+00:00",
-                "author": {
-                  "username": "Jane"
-                }
-              }
-            ]
-          }
-        }
-
-  .. tab:: API
-
-    .. code-block:: text
-
-      /v1/graphql WS/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "query": "subscription getMessages { message(order_by: {timestamp: desc}) { text timestamp author { username }}}"
+        ]
       }
+    }
 
 Check this `sample app <https://realtime-chat.demo.hasura.app/>`__ for a working demo
 (`source code <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-chat>`__).
@@ -263,80 +228,63 @@ and the ``poll`` and ``option`` tables using the ``poll_id`` and ``option_id`` f
 
 Now we can use the following subscription to display the latest poll result:
 
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: GraphiQL
-
-    .. graphiql::
-      :view_only:
-      :query:
-        # $pollId = 1
-        subscription getResult($pollId: Int!) {
-          poll_results (
-            where: { poll_id: {_eq: $pollId} }
-          ) {
-            poll_id
-            option {
-              text
-            }
-            votes
-          }
+.. graphiql::
+  :view_only:
+  :query:
+    # $pollId = 1
+    subscription getResult($pollId: Int!) {
+      poll_results (
+        where: { poll_id: {_eq: $pollId} }
+      ) {
+        poll_id
+        option {
+          text
         }
-      :response:
-        {
-          "data": {
-            "poll_results": [
-              {
-                "poll_id": 1,
-                "votes": 1,
-                "option": {
-                  "text": "Pizza"
-                }
-              },
-              {
-                "poll_id": 1,
-                "votes": 1,
-                "option": {
-                  "text": "Salad"
-                }
-              },
-              {
-                "poll_id": 1,
-                "votes": 2,
-                "option": {
-                  "text": "Sandwich"
-                }
-              },
-              {
-                "poll_id": 1,
-                "votes": 3,
-                "option": {
-                  "text": "Burger"
-                }
-              },
-              {
-                "poll_id": 1,
-                "votes": 1,
-                "option": {
-                  "text": "Lasagna"
-                }
-              }
-            ]
-          }
-        }
-
-  .. tab:: API
-
-    .. code-block:: text
-
-      /v1/graphql WS/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "query": "subscription getResult($pollId: Int!) { poll_results (where: { poll_id: {_eq: $pollId} }) { poll_id option { text } votes }}"
+        votes
       }
+    }
+  :response:
+    {
+      "data": {
+        "poll_results": [
+          {
+            "poll_id": 1,
+            "votes": 1,
+            "option": {
+              "text": "Pizza"
+            }
+          },
+          {
+            "poll_id": 1,
+            "votes": 1,
+            "option": {
+              "text": "Salad"
+            }
+          },
+          {
+            "poll_id": 1,
+            "votes": 2,
+            "option": {
+              "text": "Sandwich"
+            }
+          },
+          {
+            "poll_id": 1,
+            "votes": 3,
+            "option": {
+              "text": "Burger"
+            }
+          },
+          {
+            "poll_id": 1,
+            "votes": 1,
+            "option": {
+              "text": "Lasagna"
+            }
+          }
+        ]
+      }
+    }
 
 Check this `sample app <https://realtime-poll.demo.hasura.app/>`__ for a working demo
 (`source code <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-poll>`__).

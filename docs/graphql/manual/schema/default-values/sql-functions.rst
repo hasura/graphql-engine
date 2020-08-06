@@ -145,51 +145,34 @@ Step 3: Run an insert mutation
 Run a mutation to insert an object with (input = "yabba dabba doo!", output=null) and you'll see the output
 value (output="YABBA DABBA DOO!") will be set automatically.
 
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: GraphiQL
-
-    .. graphiql::
-      :view_only:
-      :query:
-        mutation {
-          insert_sql_function_table (
-            objects: [
-              {input: "yabba dabba doo!"}
-            ]
-          ) {
-            returning {
-              input
-              output
-            }
-          }
+.. graphiql::
+  :view_only:
+  :query:
+    mutation {
+      insert_sql_function_table (
+        objects: [
+          {input: "yabba dabba doo!"}
+        ]
+      ) {
+        returning {
+          input
+          output
         }
-      :response:
-        {
-          "data": {
-            "insert_sql_function_table": {
-              "returning": [
-                {
-                  "input": "yabba dabba doo!",
-                  "output": "YABBA DABBA DOO!"
-                }
-              ]
-            }
-          }
-        }
-
-  .. tab:: API
-
-    .. code-block:: http
-
-      POST /v1/graphql HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "query": "mutation { insert_sql_function_table (objects: [{input: \"yabba dabba doo!\"}]) { returning { input output }}}"
       }
+    }
+  :response:
+    {
+      "data": {
+        "insert_sql_function_table": {
+          "returning": [
+            {
+              "input": "yabba dabba doo!",
+              "output": "YABBA DABBA DOO!"
+            }
+          ]
+        }
+      }
+    }
 
 Also see
 --------

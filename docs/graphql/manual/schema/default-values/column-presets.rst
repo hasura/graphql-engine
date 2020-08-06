@@ -110,42 +110,24 @@ Step 1: Configure a column preset
 Step 2: Run an insert mutation
 ------------------------------
 
-.. rst-class:: api_tabs
-.. tabs::
+Head to the GraphiQL interface in the console and try making an insert mutation on the ``article`` table with the
+following headers (*to run through this example, don't forget to also grant the* ``user`` *role sufficient permissions
+to select from the* ``article`` *table*):
 
-  .. tab:: GraphiQL
+- ``X-Hasura-Role`` --> ``user`` (*to test the behaviour for the configured role*)
+- ``X-Hasura-User-Id`` --> ``1`` (*this is the value we should expect in the* ``user_id`` *field*)
 
-    Head to the GraphiQL interface in the console and try making an insert mutation on the ``article`` table with the
-    following headers (*to run through this example, don't forget to also grant the* ``user`` *role sufficient permissions
-    to select from the* ``article`` *table*):
+As mentioned earlier, you'll notice when you add the ``X-Hasura-Role`` header that the field, ``user_id``, is no longer
+available as the mutation type's field:
 
-    - ``X-Hasura-Role`` --> ``user`` (*to test the behaviour for the configured role*)
-    - ``X-Hasura-User-Id`` --> ``1`` (*this is the value we should expect in the* ``user_id`` *field*)
+.. thumbnail:: /img/graphql/manual/schema/column-preset-schema-change-for-role.png
+  :alt: Write an insert mutation
 
-    As mentioned earlier, you'll notice when you add the ``X-Hasura-Role`` header that the field, ``user_id``, is no longer
-    available as the mutation type's field:
+Now, if we run the following insert mutation, we'll see that the ``user_id`` field is indeed being set with the value
+passed in the ``X-Hasura-User-Id`` variable:
 
-    .. thumbnail:: /img/graphql/manual/schema/column-preset-schema-change-for-role.png
-      :alt: Write an insert mutation
-
-    Now, if we run the following insert mutation, we'll see that the ``user_id`` field is indeed being set with the value
-    passed in the ``X-Hasura-User-Id`` variable:
-
-    .. thumbnail:: /img/graphql/manual/schema/column-preset-mutation-result.png
-      :alt: Run the insert mutation
-
-  .. tab:: API
-
-    .. code-block:: http
-
-      POST /v1/graphql HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: user
-      X-Hasura-User-Id: 1
-
-      {
-        "query": "mutation article { insert_article(objects: [{title: \"Software is eating the world\"}]) { returning { id title user_id }}}"
-      }
+.. thumbnail:: /img/graphql/manual/schema/column-preset-mutation-result.png
+  :alt: Run the insert mutation
 
 .. note::
 
