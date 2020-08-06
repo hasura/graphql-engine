@@ -23,6 +23,7 @@ import {
   getReadAllNotificationsState,
   fetchConsoleNotifications,
 } from './Actions';
+import { Nullable } from '../Common/utils/tsUtils';
 
 const getDateString = (date: NotificationDate) => {
   if (!date) {
@@ -44,7 +45,7 @@ const Update: React.FC<ConsoleNotification> = ({
     return null;
   }
   return (
-    <Box className={`${styles.updateBox} ${styles.read}`}>
+    <Box className={`${styles.updateBox} ${styles.unread}`}>
       <Flex px="25px" justifyContent="space-between">
         <Flex justifyContent="space-between">
           {type ? <Badge type={type} mr="12px" /> : null}
@@ -79,7 +80,7 @@ const Update: React.FC<ConsoleNotification> = ({
             {props?.children ? props.children : null}
           </Text>
         </Flex>
-        <Flex width="20%" alignItems="center" justifyContent="center">
+        <Flex width="20%" alignItems="center" justifyContent="flex-end">
           <div className={styles.yellowDot} />
         </Flex>
       </Flex>
@@ -323,11 +324,15 @@ const checkVersionUpdate = (
   return [false, ''];
 };
 
-const ToReadBadge: React.FC<BadgeViewMoreProps> = ({ numberNotifications }) => {
-  if (!numberNotifications || numberNotifications <= 0) {
-    return null;
-  }
+interface ToReadBadgeProps extends BadgeViewMoreProps {
+  show: Nullable<boolean>;
+}
 
+const ToReadBadge: React.FC<ToReadBadgeProps> = ({
+  numberNotifications,
+  show,
+}) => {
+  const showBadge = !show || numberNotifications <= 0 ? styles.hideBadge : '';
   let display = `${numberNotifications}`;
   if (numberNotifications > 20) {
     display = '20+';
@@ -335,7 +340,7 @@ const ToReadBadge: React.FC<BadgeViewMoreProps> = ({ numberNotifications }) => {
 
   return (
     // TODO: change to design system colors
-    <Flex className={styles.numBadge}>{display}</Flex>
+    <Flex className={`${styles.numBadge} ${showBadge}`}>{display}</Flex>
   );
 };
 
@@ -377,6 +382,7 @@ const HasuraNotifications: React.FC<Props> = ({
   const wrapperRef = React.useRef(null);
   // TODO: the number should become zero once it is opened for the first time
   const [numberNotifications, updateNumberNotifications] = React.useState(0);
+  const showBadge = props.console_opts?.console_notifications?.showBadge;
 
   // for running the version update code on mounting
   React.useEffect(() => {
@@ -463,9 +469,11 @@ const HasuraNotifications: React.FC<Props> = ({
         onClick={toggleDropDown}
         ref={wrapperRef}
       >
-        {/* TODO: use font-awesome bell icon here */}
-        <ConsoleLogo width={25} height={25} />
-        <ToReadBadge numberNotifications={numberNotifications} />
+        <i className="fa fa-bell" />
+        <ToReadBadge
+          numberNotifications={numberNotifications}
+          show={showBadge}
+        />
       </div>
       <Notifications
         ref={dropDownRef}
