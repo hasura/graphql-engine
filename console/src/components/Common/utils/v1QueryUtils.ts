@@ -680,7 +680,7 @@ export const getConsoleOptsQuery = () =>
     null
   );
 
-export const getUpdateConsoleNotificationsQuery = (
+export const getUpdateConsoleStateQuery = (
   updatedConsoleState: Record<string, any>,
   hasura_uuid: string
 ) => {

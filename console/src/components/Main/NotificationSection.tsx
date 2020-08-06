@@ -354,6 +354,7 @@ const HasuraNotifications: React.FC<
   const dropDownRef = React.useRef<HTMLDivElement>(null);
   const wrapperRef = React.useRef(null);
   // TODO: the number should become zero once it is opened for the first time
+  // we can store `opened` in local storage
   const [numberNotifications, updateNumberNotifications] = React.useState(0);
   const showBadge = console_opts?.console_notifications?.showBadge;
 

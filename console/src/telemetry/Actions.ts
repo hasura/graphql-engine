@@ -6,7 +6,7 @@ import dataHeaders from '../components/Services/Data/Common/Headers';
 import {
   getRunSqlQuery,
   getConsoleOptsQuery,
-  getUpdateConsoleNotificationsQuery,
+  getUpdateConsoleStateQuery,
 } from '../components/Common/utils/v1QueryUtils';
 import {
   showErrorNotification,
@@ -147,7 +147,7 @@ const updateConsoleNotificationsInDB = (
       ...getState().telemetry.console_opts,
       console_notifications: updatedState,
     };
-    const updatedReadNotifications = getUpdateConsoleNotificationsQuery(
+    const updatedReadNotifications = getUpdateConsoleStateQuery(
       composedUpdatedState,
       getState().telemetry.hasura_uuid
     );
