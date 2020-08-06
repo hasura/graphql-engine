@@ -812,7 +812,6 @@ Executes the following SQL function:
      "rast": "0100000100000000000000004000000000000000C00000000000000000000000000000084000000000000000000000000000000000E610000001000100440001"
    }
 
-
 **Example: _st_intersects_geom_nband**
 
 Filter the raster values which intersect the input geometry value and optional band number.
@@ -865,7 +864,6 @@ Executes the following SQL function:
      }
    }
 
-
 **Example: _st_intersects_nband_geom**
 
 Filter the raster values (with specified band number) which intersect the input geometry value.
@@ -917,7 +915,6 @@ Executes the following SQL function:
        }
      }
    }
-
 
 Filter based on failure of some criteria (_not)
 -----------------------------------------------
