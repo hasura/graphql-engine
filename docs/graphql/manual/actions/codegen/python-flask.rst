@@ -17,8 +17,8 @@ Introduction
 
 In this example, we will discuss how to use Hasura actions and codegen to build a Python & Flask API for JWT authentication.
 
-Create action definition & custom types
----------------------------------------
+Step 1: Create action definition & custom types
+-----------------------------------------------
 
 We assume a ``user`` table with fields ``email`` and ``password``.
 
@@ -57,8 +57,8 @@ Example: creating the ``Signup`` action
         :alt: Python Flask signup types
         :class: no-shadow
 
-Action handler implementation for signup
-----------------------------------------
+Step 2: Action handler implementation for signup
+------------------------------------------------
 
 If we check the ``Codegen`` tab, we can see that a nice scaffold has been generated for us from the GraphQL types we defined.
 
@@ -191,8 +191,8 @@ You should get a successful response like this:
 
 Now our ``Signup`` action is functional! The last piece is create the ``Login`` handler, which will do a password comparison, and then return a signed JWT if successful.
 
-Action handler implementation for login
----------------------------------------
+Step 3: Action handler implementation for login
+-----------------------------------------------
 
 The first thing we need is a new request method on our ``Client`` class to find a user by email, so that we can look them up to compare the password. Under ``create_user``, create the following new method:
 
@@ -285,8 +285,8 @@ And finally, ``client.update_password()``:
       {"id": id, "password": password},
   )
 
-Testing out the handler routes
-------------------------------
+Step 4: Testing out the handler routes
+--------------------------------------
 
 Call the ``/signup`` endpoint with ``email`` and ``password``:
 
@@ -331,8 +331,8 @@ Decode the JWT token to access the Hasura claims:
   }
   
 
-Calling the finished actions
-----------------------------
+Step 5: Calling the finished actions
+------------------------------------
 
 Let's try out our defined actions from the GraphQL API.
 
