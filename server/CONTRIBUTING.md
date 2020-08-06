@@ -146,7 +146,7 @@ cabal new-run -- test:graphql-engine-tests \
 3. Install the dependencies for the Node server used by the remote schema tests:
 
    ```
-   (cd tests-py/remote_schemas/nodejs && npm install)
+   (cd tests-py/remote_schemas/nodejs && npm ci)
    ```
 
 4. Start an instance of `graphql-engine` for the test suite to use:
