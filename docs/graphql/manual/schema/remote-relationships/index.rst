@@ -35,6 +35,11 @@ Hasura's remote joins architecture provides the following benefits.
 
 - **Data federation**: With remote joins, the join, authorization, and consistency checks of added sources all happen at the Hasura layer via metadata. This allows underlying data sources and APIs to evolve independently. Your applications have a unified API to query the full data landscape in your org.
 
+Additional resources
+--------------------
+
+**Data federation webinar:** Join data across your databases, microservices & SaaS services (GraphQL & REST) with Hasura. `Watch webinar -> <https://us02web.zoom.us/rec/play/7JR4JLyqqm43TNKctwSDA_Z9W464e6OsgSRN_fsPzkrmUSUHO1L0b7cWr1EpRAtxfyHyWMRdgGIh-g?continueMode=true>`__
+
 .. toctree::
   :maxdepth: 1
   :hidden:
