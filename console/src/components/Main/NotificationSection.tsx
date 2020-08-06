@@ -7,7 +7,10 @@ import styles from './Main.scss';
 import ConsoleLogo from './images/components/ConsoleLogo';
 import useOnClickOutside from '../../hooks/useOnClickOutside';
 import { ReduxState, Dispatch } from '../../types';
-import { TelemetryState } from '../../telemetry/state';
+import {
+  TelemetryState,
+  TelemetryConsoleNotification,
+} from '../../telemetry/state';
 import { versionGT, checkStableVersion } from '../../helpers/versionUtils';
 import ToolTip from '../Common/Tooltip/Tooltip';
 import {
@@ -192,7 +195,11 @@ const markAllAsRead = (dispatch: Dispatch, uuid: string) => {
   }
   try {
     const readAllState = getReadAllNotificationsState();
-    dispatch(updateConsoleNotificationsInDB(readAllState));
+    dispatch(
+      updateConsoleNotificationsInDB(
+        readAllState as TelemetryConsoleNotification
+      )
+    );
   } catch (err) {
     dispatch(
       showErrorNotification('Failed to mark all notifications as read', err)
