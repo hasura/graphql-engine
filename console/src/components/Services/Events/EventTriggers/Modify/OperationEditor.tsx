@@ -52,7 +52,7 @@ const OperationEditor = (props: OperationEditorProps) => {
   };
 
   const [select,setSelect] = React.useState(false);
-  const editorToggle = (operationColumns: ETOperationColumn[]) => {
+  const editorToggle = () => {
     setSelect(!select);
     const newCols = operationColumns.map(oc => {
       return {
@@ -87,7 +87,7 @@ const OperationEditor = (props: OperationEditorProps) => {
             <Button
               color="white"
               size="xs"
-              onClick={() => editorToggle(operationColumns)}
+              onClick={editorToggle}
             >
               Toggle
             </Button>
