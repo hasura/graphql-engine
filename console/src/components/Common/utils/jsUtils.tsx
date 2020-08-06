@@ -361,28 +361,29 @@ export const prioritySearch = (
 ) => {
   let searchResults: Record<string, any>[] = [];
   if (searchText) {
-    const primaryResults: Record<string, any>[] = [];
-    const secondaryResults: Record<string, any>[] = [];
-    const tertResults: Record<string, any>[] = [];
+    const primarySameCaseResults: Record<string, any>[] = [];
+    const secondarySameCaseResults: Record<string, any>[] = [];
+    const primaryOppCaseResults: Record<string, any>[] = [];
+    const secondaryOppCaseResults: Record<string, any>[] = [];
     searchList.forEach(term => {
       const currentTerm = term[searchProp];
       if (currentTerm.startsWith(searchText)) {
-        searchResults.push(term);
+        primarySameCaseResults.push(term);
       } else if (currentTerm.includes(searchText)) {
-        primaryResults.push(term);
+        secondarySameCaseResults.push(term);
       } else if (
         currentTerm.toLowerCase().startsWith(searchText.toLowerCase())
       ) {
-        secondaryResults.push(term);
+        primaryOppCaseResults.push(term);
       } else if (currentTerm.toLowerCase().includes(searchText.toLowerCase())) {
-        tertResults.push(term);
+        secondaryOppCaseResults.push(term);
       }
     });
     searchResults = [
-      ...searchResults,
-      ...primaryResults,
-      ...secondaryResults,
-      ...tertResults,
+      ...primarySameCaseResults,
+      ...secondarySameCaseResults,
+      ...primaryOppCaseResults,
+      ...secondaryOppCaseResults,
     ];
   } else {
     searchResults = [...searchList];
