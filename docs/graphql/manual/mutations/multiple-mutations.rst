@@ -23,62 +23,45 @@ Run multiple top level mutations in the same request
 
 **Example:** Delete all ``article`` objects written by an author and update the ``author`` object:
 
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: GraphiQL
-
-    .. graphiql::
-      :view_only:
-      :query:
-        mutation reset_author {
-          delete_article (
-            where: {author_id: {_eq: 6}}
-          ) {
-            affected_rows
-          }
-          update_author (
-            where: {id: {_eq: 6}}
-            _set: {name: "Cory"}
-          ) {
-            returning {
-              id
-              name
-              articles {
-                id
-                title
-              }
-            }
+.. graphiql::
+  :view_only:
+  :query:
+    mutation reset_author {
+      delete_article (
+        where: {author_id: {_eq: 6}}
+      ) {
+        affected_rows
+      }
+      update_author (
+        where: {id: {_eq: 6}}
+        _set: {name: "Cory"}
+      ) {
+        returning {
+          id
+          name
+          articles {
+            id
+            title
           }
         }
-      :response:
-        {
-            "data": {
-              "delete_article": {
-                "affected_rows": 2
-              },
-              "update_author": {
-                "returning": [
-                  {
-                    "id": 6,
-                    "name": "Cory",
-                    "articles": []
-                  }
-                ]
+      }
+    }
+  :response:
+    {
+        "data": {
+          "delete_article": {
+            "affected_rows": 2
+          },
+          "update_author": {
+            "returning": [
+              {
+                "id": 6,
+                "name": "Cory",
+                "articles": []
               }
-            }
+            ]
           }
-
-  .. tab:: API
-
-    .. code-block:: http
-
-      POST /v1/graphql HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "query": "mutation reset_author { delete_article (where: {author_id: {_eq: 6}}) { affected_rows } update_author (where: {id: {_eq: 6}} _set: {name: \"Cory\"}) { returning { id name articles { id title }}}}"
+        }
       }
 
 Insert an object and a nested object in the same mutation
@@ -89,66 +72,50 @@ If you are trying to insert multiple objects which have relationships between th
 **Example:** Insert a new ``article`` object with its ``author`` and return the inserted article object with its author
 in the response:
 
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: GraphiQL
-
-    .. graphiql::
-      :view_only:
-      :query:
-        mutation insert_article {
-          insert_article(
-            objects: [
-              {
-                title: "Article 1",
-                content: "Sample article content",
-                author: {
-                  data: {
-                    name: "Cory"
-                  }
-                }
-              }
-            ]
-          ) {
-            affected_rows
-            returning {
-              id
-              title
-              author {
-                id
-                name
+.. graphiql::
+  :view_only:
+  :query:
+    mutation insert_article {
+      insert_article(
+        objects: [
+          {
+            title: "Article 1",
+            content: "Sample article content",
+            author: {
+              data: {
+                name: "Cory"
               }
             }
           }
-        }
-      :response:
-        {
-          "data": {
-            "insert_article": {
-              "affected_rows": 2,
-              "returning": [
-                {
-                    "id": 21,
-                    "title": "Article 1",
-                    "author": {
-                      "id": 11,
-                      "name": "Cory"
-                    }
-                }
-              ]
-            }
+        ]
+      ) {
+        affected_rows
+        returning {
+          id
+          title
+          author {
+            id
+            name
           }
         }
-
-  .. tab:: API
-
-    .. code-block:: http
-
-      POST /v1/graphql HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "query": "mutation insert_article { insert_article(objects: [{ title: \"Article 1\", content: \"Sample article content\", author: { data: { name: \"Cory\" }}}]) { affected_rows returning { id title author { id name }}}}"
       }
+    }
+  :response:
+    {
+      "data": {
+        "insert_article": {
+          "affected_rows": 2,
+          "returning": [
+            {
+                "id": 21,
+                "title": "Article 1",
+                "author": {
+                  "id": 11,
+                  "name": "Cory"
+                }
+            }
+          ]
+        }
+      }
+    }
+

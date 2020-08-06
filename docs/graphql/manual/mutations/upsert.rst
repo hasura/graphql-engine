@@ -72,63 +72,46 @@ The ``update_columns`` field can be used to specify which columns to update in c
 **Example**: Insert a new object in the ``article`` table or, if the unique constraint ``article_title_key`` is 
 violated, update the ``content`` column of the existing article:
 
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: GraphiQL
-
-    .. graphiql::
-      :view_only:
-      :query:
-        mutation upsert_article {
-          insert_article (
-            objects: [
-              {
-                title: "Article 1",
-                content: "Article 1 content",
-                published_on: "2018-10-12"
-              }
-            ],
-            on_conflict: {
-              constraint: article_title_key,
-              update_columns: [content]
-            }
-          ) {
-            returning {
-              id
-              title
-              content
-              published_on
-            }
+.. graphiql::
+  :view_only:
+  :query:
+    mutation upsert_article {
+      insert_article (
+        objects: [
+          {
+            title: "Article 1",
+            content: "Article 1 content",
+            published_on: "2018-10-12"
           }
+        ],
+        on_conflict: {
+          constraint: article_title_key,
+          update_columns: [content]
         }
-      :response:
-        {
-          "data": {
-            "insert_article": {
-              "returning": [
-                {
-                  "id": 1,
-                  "title": "Article 1",
-                  "content": "Article 1 content",
-                  "published_on": "2018-06-15"
-                }
-              ]
-            }
-          }
+      ) {
+        returning {
+          id
+          title
+          content
+          published_on
         }
-
-  .. tab:: API
-
-    .. code-block:: http
-
-      POST /v1/graphql HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "query": "mutation upsert_article { insert_article (objects: [{ title: \"Article 1\", content: \"Article 1 content\", published_on: \"2018-10-12\" }], on_conflict: { constraint: article_title_key, update_columns: [content]}) { returning { id title content published_on }}}"
       }
+    }
+  :response:
+    {
+      "data": {
+        "insert_article": {
+          "returning": [
+            {
+              "id": 1,
+              "title": "Article 1",
+              "content": "Article 1 content",
+              "published_on": "2018-06-15"
+            }
+          ]
+        }
+      }
+    }
 
 Note that the ``published_on`` column is left unchanged as it wasn't present in ``update_columns``.
 
@@ -142,63 +125,46 @@ conflict occurs
 violated, update the ``published_on`` columns specified in ``update_columns`` only if the previous ``published_on`` 
 value is lesser than the new value:
 
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: GraphiQL
-
-    .. graphiql::
-      :view_only:
-      :query:
-        mutation upsert_article {
-          insert_article (
-            objects: [
-              {
-                title: "Article 2",
-                published_on: "2018-10-12"
-              }
-            ],
-            on_conflict: {
-              constraint: article_title_key,
-              update_columns: [published_on],
-              where: {
-                published_on: {_lt: "2018-10-12"}
-              }
-            }
-          ) {
-            returning {
-              id
-              title
-              published_on
-            }
+.. graphiql::
+  :view_only:
+  :query:
+    mutation upsert_article {
+      insert_article (
+        objects: [
+          {
+            title: "Article 2",
+            published_on: "2018-10-12"
+          }
+        ],
+        on_conflict: {
+          constraint: article_title_key,
+          update_columns: [published_on],
+          where: {
+            published_on: {_lt: "2018-10-12"}
           }
         }
-      :response:
-        {
-          "data": {
-            "insert_article": {
-              "returning": [
-                {
-                  "id": 2,
-                  "title": "Article 2",
-                  "published_on": "2018-10-12"
-                }
-              ]
-            }
-          }
+      ) {
+        returning {
+          id
+          title
+          published_on
         }
-
-  .. tab:: API
-
-    .. code-block:: http
-
-      POST /v1/graphql HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "query": "mutation upsert_article { insert_article (objects: [{ title: \"Article 2\", published_on: \"2018-10-12\" }], on_conflict: { constraint: article_title_key, update_columns: [published_on], where: { published_on: {_lt: \"2018-10-12\"}}}) { returning { id title published_on }}}"
       }
+    }
+  :response:
+    {
+      "data": {
+        "insert_article": {
+          "returning": [
+            {
+              "id": 2,
+              "title": "Article 2",
+              "published_on": "2018-10-12"
+            }
+          ]
+        }
+      }
+    }
 
 Ignore request on conflict
 --------------------------
@@ -207,47 +173,30 @@ If ``update_columns`` is an **empty array** then on conflict the changes are ign
 **Example**: Insert a new object into the author table or, if the unique constraint ``author_name_key`` is violated, 
 ignore the request.
 
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: GraphiQL
-
-    .. graphiql::
-      :view_only:
-      :query:
-        mutation upsert_author {
-          insert_author(
-            objects: [
-              { name: "John" }
-            ],
-            on_conflict: {
-              constraint: author_name_key,
-              update_columns: []
-            }
-          ) {
-            affected_rows
-          }
+.. graphiql::
+  :view_only:
+  :query:
+    mutation upsert_author {
+      insert_author(
+        objects: [
+          { name: "John" }
+        ],
+        on_conflict: {
+          constraint: author_name_key,
+          update_columns: []
         }
-      :response:
-        {
-          "data": {
-            "insert_author": {
-              "affected_rows": 0
-            }
-          }
-        }
-
-  .. tab:: API
-
-    .. code-block:: http
-
-      POST /v1/graphql HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "query": "mutation upsert_author { insert_author(objects: [{ name: \"John\" }], on_conflict: { constraint: author_name_key, update_columns: [] }) { affected_rows }}"
+      ) {
+        affected_rows
       }
+    }
+  :response:
+    {
+      "data": {
+        "insert_author": {
+          "affected_rows": 0
+        }
+      }
+    }
 
 In this case, the insert mutation is ignored because there is a conflict and ``update_columns`` is empty.
 
@@ -258,58 +207,40 @@ You can specify the ``on_conflict`` clause while inserting nested objects:
 
 **Example**: 
 
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: GraphiQL
-
-    .. graphiql::
-      :view_only:
-      :query:
-        mutation upsert_author_article {
-          insert_author(
-            objects: [
-              {
-                name: "John",
-                articles: {
-                  data: [
-                    {
-                      title: "Article 3",
-                      content: "Article 3 content"
-                    }
-                  ],
-                  on_conflict: {
-                    constraint: article_title_key,
-                    update_columns: [content]
-                  }
+.. graphiql::
+  :view_only:
+  :query:
+    mutation upsert_author_article {
+      insert_author(
+        objects: [
+          {
+            name: "John",
+            articles: {
+              data: [
+                {
+                  title: "Article 3",
+                  content: "Article 3 content"
                 }
+              ],
+              on_conflict: {
+                constraint: article_title_key,
+                update_columns: [content]
               }
-            ]
-          ) {
-            affected_rows
-          }
-        }
-      :response:
-        {
-          "data": {
-            "insert_author": {
-              "affected_rows": 2
             }
           }
-        }
-
-  .. tab:: API
-
-    .. code-block:: http
-
-      POST /v1/graphql HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "query": "mutation upsert_author_article { insert_author(objects: [{ name: \"John\", articles: { data: [{ title: \"Article 3\", content: \"Article 3 content\" }], on_conflict: { constraint: article_title_key, update_columns: [content] }}}]) { affected_rows }}"
+        ]
+      ) {
+        affected_rows
       }
-
+    }
+  :response:
+    {
+      "data": {
+        "insert_author": {
+          "affected_rows": 2
+        }
+      }
+    }
 
 .. _nested-upsert-caveats:
 
