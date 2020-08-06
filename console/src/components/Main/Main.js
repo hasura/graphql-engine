@@ -11,7 +11,6 @@ import { getPathRoot } from '../Common/utils/urlUtils';
 import Spinner from '../Common/Spinner/Spinner';
 import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
 import logo from './images/white-logo.svg';
-import { fetchConsoleNotificationDataFromDB } from '../../telemetry/Actions';
 
 import NotificationSection from './NotificationSection';
 
@@ -67,9 +66,7 @@ class Main extends React.Component {
       dispatch(loadLatestServerVersion());
     });
 
-    dispatch(fetchConsoleNotificationDataFromDB()).then(() => {
-      dispatch(fetchConsoleNotifications());
-    });
+    dispatch(fetchConsoleNotifications());
     dispatch(fetchServerConfig());
   }
 

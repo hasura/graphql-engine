@@ -70,14 +70,14 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
   // new notifs, then show the last response, if not, then update the data accordingly
 
   if (
-    !consoleStateDB.console_notifications ||
-    !consoleStateDB.console_notifications.date
+    consoleStateDB &&
+    consoleStateDB.console_notifications &&
+    consoleStateDB.console_notifications.date
   ) {
-    strictChecks = false;
-  } else {
     strictChecks = true;
     lastReadAllTimeStamp = consoleStateDB.console_notifications.date;
-    previousRead = consoleStateDB.console.console_notifications.read;
+    previousRead = consoleStateDB.console_notifications.read;
+    alert('asdasd');
   }
 
   const now = new Date().toISOString();
