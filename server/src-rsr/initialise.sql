@@ -605,12 +605,20 @@ CREATE OR REPLACE FUNCTION
     session_variables json;
     server_version_num int;
     trace_context json;
+    trace_context_text text;
   BEGIN
     id := gen_random_uuid();
     server_version_num := current_setting('server_version_num');
+    trace_context_text := current_setting('hasura.tracecontext', 't');
     IF server_version_num >= 90600 THEN
       session_variables := current_setting('hasura.user', 't');
-      trace_context := current_setting('hasura.tracecontext', 't');
+      -- See graphql-engine/issues/5542
+      -- We need to check trace_context_text != '' because of a Postgres bug
+      IF trace_context_text != '' THEN
+        trace_context := trace_context_text;
+      ELSE
+        trace_context := NULL;
+      END IF;
     ELSE
       BEGIN
         session_variables := current_setting('hasura.user');
