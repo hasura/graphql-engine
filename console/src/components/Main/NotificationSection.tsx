@@ -1,12 +1,12 @@
 import React from 'react';
-import { connect } from 'react-redux';
+import { connect, ConnectedProps } from 'react-redux';
 
 import { Box, Flex, Heading, Text, Badge } from '../UIKit/atoms';
 import { ConsoleNotification, NotificationDate } from './ConsoleNotification';
 import styles from './Main.scss';
 import ConsoleLogo from './images/components/ConsoleLogo';
 import useOnClickOutside from '../../hooks/useOnClickOutside';
-import { ReduxState, Dispatch } from '../../types';
+import { ReduxState, Dispatch, Thunk } from '../../types';
 import {
   TelemetryState,
   TelemetryConsoleNotification,
@@ -18,12 +18,12 @@ import {
   updateConsoleNotificationsInDB,
 } from '../../telemetry/Actions';
 import Button from '../Common/Button';
-import { showErrorNotification } from '../Services/Common/Notification';
 import {
   getReadAllNotificationsState,
   fetchConsoleNotifications,
 } from './Actions';
 import { Nullable } from '../Common/utils/tsUtils';
+import { mapDispatchToPropsEmpty } from '../Common/utils/reactUtils';
 
 const getDateString = (date: NotificationDate) => {
   if (!date) {
@@ -185,27 +185,8 @@ const ViewMoreOptions: React.FC<ViewMoreProps> = ({
 };
 
 const markAllAsRead = (dispatch: Dispatch, uuid: string) => {
-  if (!uuid) {
-    dispatch(
-      showErrorNotification(
-        'hasura-uuid absent in the server',
-        'You may need to update the server version in order to fix this'
-      )
-    );
-    return;
-  }
-  try {
-    const readAllState = getReadAllNotificationsState();
-    dispatch(
-      updateConsoleNotificationsInDB(
-        readAllState as TelemetryConsoleNotification
-      )
-    );
-  } catch (err) {
-    dispatch(
-      showErrorNotification('Failed to mark all notifications as read', err)
-    );
-  }
+  const readAllState = getReadAllNotificationsState() as TelemetryConsoleNotification;
+  dispatch(updateConsoleNotificationsInDB(readAllState));
 };
 
 const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
@@ -259,17 +240,7 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
           />
         ) : null}
         {data.length &&
-          data.map(({ subject, content, is_active, ...props }) => (
-            <Update
-              id={props.id}
-              key={subject}
-              subject={subject}
-              content={content}
-              type={props.type}
-              is_active={is_active}
-              {...props}
-            />
-          ))}
+          data.map(({ id, ...props }) => <Update key={id} {...props} />)}
         <ViewMoreOptions
           numberNotifications={data.length}
           onClickViewMore={onClickViewMore}
@@ -344,7 +315,7 @@ const ToReadBadge: React.FC<ToReadBadgeProps> = ({
   );
 };
 
-function mapStateToProps(state: ReduxState) {
+const mapStateToProps = (state: ReduxState) => {
   return {
     consoleNotifications: state.main.consoleNotifications,
     latestPreReleaseServerVersion: state.main.latestPreReleaseServerVersion,
@@ -353,23 +324,25 @@ function mapStateToProps(state: ReduxState) {
     console_opts: state.telemetry.console_opts,
     hasura_uuid: state.telemetry.hasura_uuid,
   };
-}
+};
 
 type StateProps = ReturnType<typeof mapStateToProps>;
 
-type HasuraNotificationProps = {
+type HasuraNotificationOwnProps = {
   toggleDropDown: (e: React.MouseEvent<HTMLDivElement>) => void;
   closeDropDown: () => void;
 };
 
-interface Props extends HasuraNotificationProps, StateProps {
-  dispatch: Dispatch;
-}
-
-const HasuraNotifications: React.FC<Props> = ({
+const HasuraNotifications: React.FC<
+  HasuraNotificationsProps & HasuraNotificationOwnProps
+> = ({
   consoleNotifications,
   toggleDropDown,
   closeDropDown,
+  console_opts,
+  latestStableServerVersion,
+  latestPreReleaseServerVersion,
+  serverVersion,
   ...props
 }) => {
   const { dispatch } = props;
@@ -377,29 +350,29 @@ const HasuraNotifications: React.FC<Props> = ({
     displayNewVersionNotification,
     setDisplayNewVersionNotification,
   ] = React.useState(false);
-  const [latestVersion, setLatestVersion] = React.useState(props.serverVersion);
+  const [latestVersion, setLatestVersion] = React.useState(serverVersion);
   const dropDownRef = React.useRef<HTMLDivElement>(null);
   const wrapperRef = React.useRef(null);
   // TODO: the number should become zero once it is opened for the first time
   const [numberNotifications, updateNumberNotifications] = React.useState(0);
-  const showBadge = props.console_opts?.console_notifications?.showBadge;
+  const showBadge = console_opts?.console_notifications?.showBadge;
 
   // for running the version update code on mounting
   React.useEffect(() => {
     if (
-      !props.console_opts ||
-      !props.latestStableServerVersion ||
-      !props.latestPreReleaseServerVersion ||
-      !props.serverVersion
+      !console_opts ||
+      !latestStableServerVersion ||
+      !latestPreReleaseServerVersion ||
+      !serverVersion
     ) {
       return;
     }
 
     const [versionUpdateCheck, latestReleasedVersion] = checkVersionUpdate(
-      props.latestStableServerVersion,
-      props.latestPreReleaseServerVersion,
-      props.serverVersion,
-      props.console_opts
+      latestStableServerVersion,
+      latestPreReleaseServerVersion,
+      serverVersion,
+      console_opts
     );
 
     setLatestVersion(latestReleasedVersion);
@@ -411,14 +384,14 @@ const HasuraNotifications: React.FC<Props> = ({
 
     setDisplayNewVersionNotification(false);
   }, [
-    props.latestPreReleaseServerVersion,
-    props.latestStableServerVersion,
-    props.console_opts,
-    props.serverVersion,
+    latestPreReleaseServerVersion,
+    latestStableServerVersion,
+    console_opts,
+    serverVersion,
   ]);
 
   React.useEffect(() => {
-    const readNotifications = props.console_opts?.console_notifications?.read;
+    const readNotifications = console_opts?.console_notifications?.read;
 
     // once mark all as read is clicked
     if (
@@ -441,7 +414,7 @@ const HasuraNotifications: React.FC<Props> = ({
     updateNumberNotifications(readNumber);
   }, [
     consoleNotifications.length,
-    props.console_opts?.console_notifications?.read,
+    console_opts?.console_notifications?.read,
     displayNewVersionNotification,
   ]);
 
@@ -455,8 +428,9 @@ const HasuraNotifications: React.FC<Props> = ({
   };
 
   const onClickMarkAllAsRead = () => {
-    markAllAsRead(dispatch, props.hasura_uuid);
-    updateNumberNotifications(0);
+    const readAllState = getReadAllNotificationsState() as TelemetryConsoleNotification;
+    dispatch(updateConsoleNotificationsInDB(readAllState));
+    // updateNumberNotifications(0);
   };
 
   useOnClickOutside([dropDownRef, wrapperRef], closeDropDown);
@@ -477,12 +451,7 @@ const HasuraNotifications: React.FC<Props> = ({
       </div>
       <Notifications
         ref={dropDownRef}
-        // TODO: check edge cases
-        data={
-          consoleNotifications.length > 20
-            ? consoleNotifications.slice(0, 21)
-            : consoleNotifications
-        }
+        data={consoleNotifications}
         showVersionUpdate={displayNewVersionNotification}
         latestVersion={latestVersion}
         optOutCallback={optOutCallback}
@@ -494,6 +463,15 @@ const HasuraNotifications: React.FC<Props> = ({
   );
 };
 
-const NotificationSection = connect(mapStateToProps)(HasuraNotifications);
+const notificationSectionConnector = connect(
+  mapStateToProps,
+  mapDispatchToPropsEmpty
+);
+
+type HasuraNotificationsProps = ConnectedProps<
+  typeof notificationSectionConnector
+>;
+
+const NotificationSection = notificationSectionConnector(HasuraNotifications);
 
 export default NotificationSection;
