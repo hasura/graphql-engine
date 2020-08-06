@@ -559,3 +559,24 @@ args:
       columns:
       - id
       - bid_price
+
+- type: create_select_permission
+  args:
+    table: article
+    role: critic
+    permission:
+      columns:
+      - title
+      - content
+      - is_published
+      filter:
+        id:
+          _eq: X-Hasura-Critic-Id
+
+- type: create_select_permission
+  args:
+    table: author
+    role: critic
+    permission:
+      columns: ["name"]
+      filter: {}

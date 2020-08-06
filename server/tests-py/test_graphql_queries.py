@@ -337,6 +337,9 @@ class TestGraphqlQueryPermissions:
     def test_user_accessing_books_by_pk_should_fail(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/user_should_not_be_able_to_access_books_by_pk.yaml')
 
+    def test_author_articles_without_required_headers_set(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_articles_without_required_headers.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/permissions'

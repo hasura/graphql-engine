@@ -1,0 +1,23 @@
+- description: Select related articles while querying authors, but without setting the headers required for selecting articles
+  url: /v1/graphql
+  status: 200
+  headers:
+    x-hasura-role: critic
+  response:
+    errors:
+    - extensions:
+        path: "$"
+        code: not-found
+      message: 'missing session variables: "x-hasura-critic-id"'
+  query:
+    query: |
+      query {
+        author {
+          name
+          articles {
+            title
+            content
+            is_published
+          }
+        }
+      }
