@@ -221,7 +221,6 @@ convertQuerySelSet
   -> Maybe GH.VariableValues
   -> m ( ExecutionPlan (tx EncJSON, GeneratedSqlMap) RemoteCall (G.Name, J.Value)
        -- , Maybe ReusableQueryPlan
-       , InsOrdHashMap G.Name (QueryRootField UnpreparedValue)
        )
 convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varDefs varValsM = do
   -- Parse the GraphQL query into the RQL AST
@@ -274,7 +273,7 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
         then return $ ExecStepRemote (fst (snd firstRemote), remoteOperation, varValsM)
         else throw400 NotSupported "Mixed remote schemas are not supported"
     _ -> throw400 NotSupported "Heterogeneous execution of database and remote schemas not supported"
-  pure (executionPlan, unpreparedQueries) -- See Note [Temporarily disabling query plan caching]
+  pure executionPlan -- See Note [Temporarily disabling query plan caching]
   where
     usrVars = _uiSession userInfo
 

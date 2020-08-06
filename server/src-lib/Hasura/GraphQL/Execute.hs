@@ -261,7 +261,7 @@ getResolvedExecPlan env logger pgExecCtx {- planCache-} userInfo sqlGenCtx
         G.TypedOperationDefinition G.OperationTypeQuery _ varDefs _ selSet -> do
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
-          (execPlan, {-plan,-} _unprepared) <-
+          execPlan {-, plan-} <-
             EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- See Note [Temporarily disabling query plan caching]
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
@@ -277,18 +277,18 @@ getResolvedExecPlan env logger pgExecCtx {- planCache-} userInfo sqlGenCtx
         G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives selSet -> do
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
+          -- Parse as query to check correctness
+          (unpreparedAST, _reusability) <-
+            EQ.parseGraphQLQuery gCtx varDefs (_grVariables reqUnparsed) inlinedSelSet
           -- A subscription should have exactly one root field
           -- As an internal testing feature, we support subscribing to multiple
           -- root fields in a subcription. First, we check if the corresponding directive
           -- (@_multiple_top_level_fields) is set.
-          -- Parse as query to check correctness
-          (_ :: EPr.ExecutionPlan (tx EncJSON, EQ.GeneratedSqlMap) EPr.RemoteCall (G.Name,J.Value)
-            {-, _plan -}, unpreparedAST) <-
-            EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders inlinedSelSet varDefs (_grVariables reqUnparsed)
           case NE.nonEmpty inlinedSelSet of
             Nothing -> throw500 "empty selset for subscription"
             Just (_ :| rst) ->
-              let multipleAllowed = G.Directive $$(G.litName "_multiple_top_level_fields") mempty `elem` directives
+              let multipleAllowed =
+                    G.Directive $$(G.litName "_multiple_top_level_fields") mempty `elem` directives
               in
               unless (multipleAllowed || null rst) $
                 throw400 ValidationFailed "subscriptions must select one top level field"
