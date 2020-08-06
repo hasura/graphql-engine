@@ -86,24 +86,24 @@ row object or ``null`` if the row does not exist.
 
 **Example:** Delete a non-existent article:
 
-    .. graphiql::
-      :view_only:
-      :query:
-        mutation delete_an_object {
-          delete_article_by_pk (
-            id: 100
-          ) {
-            id
-            title
-            user_id
-          }
-        }
-      :response:
-        {
-          "data": {
-            "delete_article_by_pk": null
-          }
-        }
+.. graphiql::
+  :view_only:
+  :query:
+    mutation delete_an_object {
+      delete_article_by_pk (
+        id: 100
+      ) {
+        id
+        title
+        user_id
+      }
+    }
+  :response:
+    {
+      "data": {
+        "delete_article_by_pk": null
+      }
+    }
 
 .. note:: 
 
@@ -137,6 +137,7 @@ Delete objects based on an their fields
         }
       }
     }
+
 
 Delete objects based on nested objects' fields
 ----------------------------------------------
@@ -187,4 +188,3 @@ evaluates to ``true`` for all objects.
         }
       }
     }
-    

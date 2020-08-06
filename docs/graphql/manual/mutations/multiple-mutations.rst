@@ -118,4 +118,3 @@ in the response:
         }
       }
     }
-

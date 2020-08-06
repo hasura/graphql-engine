@@ -576,6 +576,7 @@ To insert fields of array types, you currently have to pass them as a `Postgres 
       }
     }
 
+
 Using variables:
 
 .. graphiql::

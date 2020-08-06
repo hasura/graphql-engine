@@ -242,6 +242,7 @@ You can specify the ``on_conflict`` clause while inserting nested objects:
       }
     }
 
+
 .. _nested-upsert-caveats:
 
 Nested upsert caveats

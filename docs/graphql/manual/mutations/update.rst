@@ -644,4 +644,3 @@ one to delete all the existing objects and one to add a list of new nested objec
     {
       "author_id": 21
     }
-
