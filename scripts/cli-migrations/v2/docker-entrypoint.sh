@@ -42,7 +42,7 @@ wait_for_port() {
     log "migrations-startup" "waiting $HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT for $PORT to be ready"
     for i in `seq 1 $HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT`;
     do
-        nc -z localhost $PORT > /dev/null 2>&1 && log "port $PORT is ready" && return
+        nc -z localhost $PORT > /dev/null 2>&1 && log "migrations-startup" "port $PORT is ready" && return
         sleep 1
     done
     log "migrations-startup" "failed waiting for $PORT, try increasing HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT (default: 30)" && exit 1
@@ -61,14 +61,12 @@ PID=$!
 wait_for_port $HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT
 
 # check if migration directory is set, default otherwise
-log "checking for migrations directory"
 if [ -z ${HASURA_GRAPHQL_MIGRATIONS_DIR+x} ]; then
     log "migrations-startup" "env var HASURA_GRAPHQL_MIGRATIONS_DIR is not set, defaulting to $DEFAULT_MIGRATIONS_DIR"
     HASURA_GRAPHQL_MIGRATIONS_DIR="$DEFAULT_MIGRATIONS_DIR"
 fi
 
 # check if metadata directory is set, default otherwise
-log "checking for metadata directory"
 if [ -z ${HASURA_GRAPHQL_METADATA_DIR+x} ]; then
     log "migrations-startup" "env var HASURA_GRAPHQL_METADATA_DIR is not set, defaulting to $DEFAULT_METADATA_DIR"
     HASURA_GRAPHQL_METADATA_DIR="$DEFAULT_METADATA_DIR"
