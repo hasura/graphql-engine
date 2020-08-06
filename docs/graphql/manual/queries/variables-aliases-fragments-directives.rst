@@ -50,7 +50,6 @@ In order to make a query re-usable, it can be made dynamic by using variables.
       "author_id": 1
     }
 
-
 .. admonition:: Variables and performance
 
   Variables have an impact on query performance. Refer to :ref:`query performance <query_performance>` to learn more about Hasura's query plan caching and about optimizing when using variables.
@@ -122,7 +121,6 @@ fetching the same type of objects with different arguments in the same query.
       }
     }
 
-
 Using fragments
 ---------------
 
@@ -179,7 +177,6 @@ can then be used to represent the defined set.
       }
     }
 
-
 Using directives
 ----------------
 
@@ -226,7 +223,6 @@ With ``@include(if: Boolean)``, it is possible to include a field in the query r
       "with_publisher": true
     }
 
-
 **Example:** The query result doesn't include the field ``publisher``, as ``$with_publisher`` is set to ``false``:
 
 .. graphiql::
@@ -258,7 +254,6 @@ With ``@include(if: Boolean)``, it is possible to include a field in the query r
     {
       "with_publisher": false
     }
-
 
 @skip(if: Boolean)
 ^^^^^^^^^^^^^^^^^^
@@ -297,7 +292,6 @@ With ``@skip(if: Boolean)``, it is possible to exclude (skip) a field in the que
       "with_publisher": true
     }
 
-
 **Example:** The query result includes the field ``publisher``, as ``$with_publisher`` is set to ``false``:
 
 .. graphiql::
@@ -332,4 +326,3 @@ With ``@skip(if: Boolean)``, it is possible to exclude (skip) a field in the que
     {
       "with_publisher": false
     }
-

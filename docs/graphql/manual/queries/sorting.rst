@@ -83,7 +83,6 @@ Sorting objects
       }
     }
 
-
 .. _nested_sort:
 
 Sorting nested objects
@@ -166,7 +165,6 @@ their rating:
       }
     }
 
-
 Sorting based on nested object's fields
 ---------------------------------------
 Only **columns from object relationships** and **aggregates from array relationships** can be used for sorting.
@@ -228,7 +226,6 @@ For object relationships only columns can be used for sorting.
       }
     }
 
-
 For array relationships
 ^^^^^^^^^^^^^^^^^^^^^^^
 For array relationships only aggregates can be used for sorting.
@@ -287,7 +284,6 @@ For array relationships only aggregates can be used for sorting.
         ]
       }
     }
-
 
 **Example:** Fetch a list of authors sorted in increasing order of their highest article rating:
 

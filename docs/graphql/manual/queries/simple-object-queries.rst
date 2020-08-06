@@ -75,7 +75,6 @@ Fetch an object using its primary key
       }
     }
 
-
 Fetch value from JSON/JSONB column at particular path
 -----------------------------------------------------
 **Example:** Fetch the city and phone number of an author from their JSONB
@@ -108,6 +107,5 @@ address column:
         }
       }
     }
-    
 
 See the :ref:`API reference <SimpleObject>` for more details.

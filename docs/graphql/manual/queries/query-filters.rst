@@ -100,7 +100,6 @@ Fetch data about author whose ``id`` *(an integer field)* is equal to 3:
       }
     }
 
-
 **Example: String or Text**
 
 Fetch a list of authors with ``name`` *(a text field)* as "Sidney":
@@ -127,7 +126,6 @@ Fetch a list of authors with ``name`` *(a text field)* as "Sidney":
         ]
       }
     }
-
 
 **Example: Boolean**
 
@@ -203,7 +201,6 @@ Fetch a list of articles that were published on a certain date (``published_on``
       }
     }
 
-
 Greater than or less than operators (_gt, _lt, _gte, _lte)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -255,7 +252,6 @@ Fetch a list of articles rated 4 or more (``rating`` is an integer field):
       }
     }
 
-
 **Example: String or Text**
 
 Fetch a list of authors whose names begin with M or any letter that follows M *(essentially, a filter based on a
@@ -287,7 +283,6 @@ dictionary sort)*:
         ]
       }
     }
-
 
 **Example: Date (works with Time, Timezone, etc.)**
 
@@ -332,7 +327,6 @@ Fetch a list of articles that were published on or after date "01/01/2018":
         ]
       }
     }
-
 
 List based search operators (_in, _nin)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -389,7 +383,6 @@ Fetch a list of articles rated 1, 3 or 5:
       }
     }
 
-
 **Example: String or Text**
 
 Fetch a list of those authors whose names are NOT part of a list:
@@ -428,7 +421,6 @@ Fetch a list of those authors whose names are NOT part of a list:
         ]
       }
     }
-
 
 Text search or pattern matching operators (_like, _similar, etc.)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -570,7 +562,6 @@ Fetch all authors living within a particular pincode (present in ``address`` JSO
       }
     }
 
-
 **Example: _has_key**
 
 Fetch authors if the ``phone`` key is present in their JSONB ``address`` column:
@@ -671,7 +662,6 @@ Fetch a list of geometry values which are within the given ``polygon`` value:
       }
     }
 
-
 **Example: _st_d_within**
 
 Fetch a list of ``geometry`` values which are 3 units from given ``point`` value:
@@ -721,7 +711,6 @@ Fetch a list of ``geometry`` values which are 3 units from given ``point`` value
         "coordinates": [ 0, 0 ]
       }
     }
-
 
 Filter or check for null values (_is_null)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -774,7 +763,6 @@ Fetch a list of articles that have a value in the ``published_on`` field:
       }
     }
 
-
 Intersect operators on RASTER columns (_st_intersects_rast, etc)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -794,34 +782,35 @@ Executes the following SQL function:
 
    boolean ST_Intersects( raster <raster-col> , raster <raster-value> );
 
+
 .. graphiql::
   :view_only:
   :query:
-    query getIntersectingValues ($rast: raster){
-      dummy_rast(where: {rast: {_st_intersects_rast: $rast}}){
-        rid
-        rast
-      }
-    }
+   query getIntersectingValues ($rast: raster){
+     dummy_rast(where: {rast: {_st_intersects_rast: $rast}}){
+       rid
+       rast
+     }
+   }
   :response:
-    {
-      "data": {
-        "dummy_rast": [
-          {
-            "rid": 1,
-            "rast": "01000001009A9999999999E93F9A9999999999E9BF000000000000F0BF000000000000104000000000000000000000000000000000E610000005000500440000010101000101010101010101010101010101010001010100"
-          },
-          {
-            "rid": 2,
-            "rast": "0100000100166C8E335B91F13FE2385B00285EF6BF360EE40064EBFFBF8D033900D9FA134000000000000000000000000000000000E610000005000500440000000101010001010101010101010101010101000101010000"
-          }
-        ]
-      }
-    }
+   {
+     "data": {
+       "dummy_rast": [
+         {
+           "rid": 1,
+           "rast": "01000001009A9999999999E93F9A9999999999E9BF000000000000F0BF000000000000104000000000000000000000000000000000E610000005000500440000010101000101010101010101010101010101010001010100"
+         },
+         {
+           "rid": 2,
+           "rast": "0100000100166C8E335B91F13FE2385B00285EF6BF360EE40064EBFFBF8D033900D9FA134000000000000000000000000000000000E610000005000500440000000101010001010101010101010101010101000101010000"
+         }
+       ]
+     }
+   }
   :variables:
-    {
-      "rast": "0100000100000000000000004000000000000000C00000000000000000000000000000084000000000000000000000000000000000E610000001000100440001"
-    }
+   {
+     "rast": "0100000100000000000000004000000000000000C00000000000000000000000000000084000000000000000000000000000000000E610000001000100440001"
+   }
 
 
 **Example: _st_intersects_geom_nband**
@@ -834,6 +823,7 @@ Executes the following SQL function:
 
    boolean ST_Intersects( raster <raster-col> , geometry geommin , integer nband=NULL );
 
+
 .. graphiql::
   :view_only:
   :query:
@@ -844,36 +834,36 @@ Executes the following SQL function:
       }
     }
   :response:
-    {
-      "data": {
-        "dummy_rast": [
-          {
-            "rid": 1,
-            "rast": "01000001009A9999999999E93F9A9999999999E9BF000000000000F0BF000000000000104000000000000000000000000000000000E610000005000500440000010101000101010101010101010101010101010001010100"
-          },
-          {
-            "rid": 2,
-            "rast": "0100000100166C8E335B91F13FE2385B00285EF6BF360EE40064EBFFBF8D033900D9FA134000000000000000000000000000000000E610000005000500440000000101010001010101010101010101010101000101010000"
-          }
-        ]
-      }
-    }
+   {
+     "data": {
+       "dummy_rast": [
+         {
+           "rid": 1,
+           "rast": "01000001009A9999999999E93F9A9999999999E9BF000000000000F0BF000000000000104000000000000000000000000000000000E610000005000500440000010101000101010101010101010101010101010001010100"
+         },
+         {
+           "rid": 2,
+           "rast": "0100000100166C8E335B91F13FE2385B00285EF6BF360EE40064EBFFBF8D033900D9FA134000000000000000000000000000000000E610000005000500440000000101010001010101010101010101010101000101010000"
+         }
+       ]
+     }
+   }
   :variables:
-    {
-      "point": {
-        "type": "Point",
-        "coordinates": [
-          1,
-          2
-        ],
-        "crs": {
-          "type": "name",
-          "properties": {
-            "name": "urn:ogc:def:crs:EPSG::4326"
-          }
-        }
-      }
-    }
+   {
+     "point": {
+       "type": "Point",
+       "coordinates": [
+         1,
+         2
+       ],
+       "crs": {
+         "type": "name",
+         "properties": {
+           "name": "urn:ogc:def:crs:EPSG::4326"
+         }
+       }
+     }
+   }
 
 
 **Example: _st_intersects_nband_geom**
@@ -886,6 +876,7 @@ Executes the following SQL function:
 
    boolean ST_Intersects( raster <raster-col> , integer nband , geometry geommin );
 
+
 .. graphiql::
   :view_only:
   :query:
@@ -896,36 +887,36 @@ Executes the following SQL function:
       }
     }
   :response:
-    {
-      "data": {
-        "dummy_rast": [
-          {
-            "rid": 1,
-            "rast": "01000001009A9999999999E93F9A9999999999E9BF000000000000F0BF000000000000104000000000000000000000000000000000E610000005000500440000010101000101010101010101010101010101010001010100"
-          },
-          {
-            "rid": 2,
-            "rast": "0100000100166C8E335B91F13FE2385B00285EF6BF360EE40064EBFFBF8D033900D9FA134000000000000000000000000000000000E610000005000500440000000101010001010101010101010101010101000101010000"
-          }
-        ]
-      }
-    }
+   {
+     "data": {
+       "dummy_rast": [
+         {
+           "rid": 1,
+           "rast": "01000001009A9999999999E93F9A9999999999E9BF000000000000F0BF000000000000104000000000000000000000000000000000E610000005000500440000010101000101010101010101010101010101010001010100"
+         },
+         {
+           "rid": 2,
+           "rast": "0100000100166C8E335B91F13FE2385B00285EF6BF360EE40064EBFFBF8D033900D9FA134000000000000000000000000000000000E610000005000500440000000101010001010101010101010101010101000101010000"
+         }
+       ]
+     }
+   }
   :variables:
-    {
-      "point": {
-        "type": "Point",
-        "coordinates": [
-          1,
-          2
-        ],
-        "crs": {
-          "type": "name",
-          "properties": {
-            "name": "urn:ogc:def:crs:EPSG::4326"
-          }
-        }
-      }
-    }
+   {
+     "point": {
+       "type": "Point",
+       "coordinates": [
+         1,
+         2
+       ],
+       "crs": {
+         "type": "name",
+         "properties": {
+           "name": "urn:ogc:def:crs:EPSG::4326"
+         }
+       }
+     }
+   }
 
 
 Filter based on failure of some criteria (_not)
@@ -989,7 +980,6 @@ Fetch all authors who don't have any published articles:
       }
     }
 
-
 Using multiple filters in the same query (_and, _or)
 ----------------------------------------------------
 
@@ -1050,7 +1040,6 @@ Fetch a list of articles published in a specific time-frame (for example: in yea
       }
     }
 
-
 .. note::
 
   Certain ``_and`` expressions can be expressed in a simpler format using some syntactic sugar. See the
@@ -1110,7 +1099,6 @@ Fetch a list of articles rated more than 4 or published after "01/01/2018":
         ]
       }
     }
-
 
 .. note::
 
@@ -1350,7 +1338,6 @@ Fetch all authors which have written at least one article which is rated 1:
       }
     }
 
-
 Fetch if **all** of the nested objects defined via an array relationship satisfy a condition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1520,7 +1507,6 @@ Fetch all authors which have none of their articles published i.e. have ``{is_pu
       }
     }
 
-
 Fetch if nested object(s) exist/do not exist
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1576,7 +1562,6 @@ Fetch all authors which have at least one article written by them:
       }
     }
 
-
 **Example where nested object(s) do not exist:**
 
 Fetch all authors which have not written any articles:
@@ -1626,7 +1611,6 @@ Fetch all authors which have not written any articles:
         ]
       }
     }
-
 
 Cast a field to a different type before filtering (_cast)
 ---------------------------------------------------------
@@ -1679,7 +1663,6 @@ Filtering using ``_st_d_within`` over large distances can be inaccurate for loca
       "distance": 1000000
     }
 
-
 **Example: cast ``geography`` to ``geometry``**
 
 Columns of type ``geography`` are more accurate, but they don’t support as many operations as
@@ -1728,7 +1711,6 @@ Columns of type ``geography`` are more accurate, but they don’t support as man
         ]
       }
     }
-
 
 .. note::
 

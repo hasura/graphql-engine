@@ -127,7 +127,6 @@ Fetch aggregated data of an object
       }
     }
 
-
 .. _nested_aggregate:
 
 Fetch aggregated data on nested objects
@@ -196,4 +195,3 @@ and articles.
         ]
       }
     }
-

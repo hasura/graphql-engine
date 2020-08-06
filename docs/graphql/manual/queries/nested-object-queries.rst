@@ -69,7 +69,6 @@ author.
       }
     }
 
-
 Fetch nested objects using an array relationship
 ------------------------------------------------
 The following is an example of a nested object query using the **array relationship** between an author and

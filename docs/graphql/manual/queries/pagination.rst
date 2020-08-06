@@ -68,7 +68,6 @@ Limit results
       }
     }
 
-
 Limit results from an offset
 ----------------------------
 **Example:** Fetch 5 authors from the list of all authors, starting with the 6th one:
@@ -112,7 +111,6 @@ Limit results from an offset
         ]
       }
     }
-
 
 .. _nested_paginate:
 
@@ -200,7 +198,6 @@ Limit results in a nested object
       }
     }
 
-
 Keyset cursor based pagination
 ------------------------------
 
@@ -253,7 +250,6 @@ position of the row in the dataset as done by ``offset``, and that duplicate rec
         ]
       }
     }
-
 
 Here we are fetching authors where the value of ``id`` is greater than 5. This will always skip the previously fetched
 results which would have been ids 1 to 5, ensuring no duplicate results. Column ``id`` is acting as the cursor here,
@@ -324,7 +320,6 @@ articles to return.
         ]
       }
     }
-
 
 .. admonition:: Caveat
 
