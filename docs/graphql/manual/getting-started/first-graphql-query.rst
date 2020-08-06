@@ -26,85 +26,11 @@ Let's add the following table:
     name TEXT
   )
 
-.. rst-class:: api_tabs
-.. tabs::
+Head to the Hasura console, navigate to ``Data -> Create table`` and create a sample table called ``profile`` with
+the following columns:
 
-  .. tab:: Console
-
-    Head to the Hasura console, navigate to ``Data -> Create table`` and create a sample table called ``profile`` with
-    the following columns:
-
-    .. thumbnail:: /img/graphql/manual/getting-started/create-profile-table.png
-      :alt: Create a table
-
-  .. tab:: CLI
-
-    :ref:`Create a migration manually <manual_migrations>` and add the following SQL statement to the ``up.sql`` file:
-
-    .. code-block:: sql
-
-      CREATE TABLE profile(id serial NOT NULL, name text NOT NULL);
-
-    Add the following statement to the ``down.sql`` file in case you need to :ref:`roll back <roll_back_migrations>` the above statement:
-
-    .. code-block:: sql
-
-        DROP TABLE profile;
-
-    Apply the migration by running:
-
-    .. code-block:: bash
-
-      hasura migrate apply
-
-    To track the table and expose it over the GraphQL API, add it to the ``tables.yaml`` file in the ``metadata`` directory as follows:
-
-    .. code-block:: yaml
-       :emphasize-lines: 1-3
-
-        - table:
-            schema: public
-            name: profile
-
-    Apply the metadata by running:
-
-    .. code-block:: bash
-
-      hasura metadata apply
-
-  .. tab:: API
-
-    Create a table by using the :ref:`run_sql metadata API <run_sql>`:
-
-    .. code-block:: http
-
-      POST /v1/query HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "type": "run_sql",
-        "args": {
-          "sql": "CREATE TABLE profile(id serial NOT NULL, name text NOT NULL);"
-        }
-      }
-
-    To track the table and expose it over the GraphQL API, make the following API call to the :ref:`track_table metadata API <track_table>`:
-
-    .. code-block:: http
-
-      POST /v1/query HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "type": "track_table",
-        "args": {
-          "schema": "public",
-          "name": "profile"
-        }
-      }
-
+.. thumbnail:: /img/graphql/manual/getting-started/create-profile-table.png
+  :alt: Create a table
 
 Now, insert some sample data into the table using the ``Insert Row`` tab of the ``profile`` table.
 
@@ -122,25 +48,8 @@ Head to the ``GraphiQL`` tab in the console and try running the following query:
       }
     }
 
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: GraphiQL
-
-    .. thumbnail:: /img/graphql/manual/getting-started/profile-query.png
-      :alt: Try out a query
-
-  .. tab:: API
-
-    .. code-block:: http
-
-      POST /v1/graphql HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "query": "query { profile { id name }}"
-      }
+.. thumbnail:: /img/graphql/manual/getting-started/profile-query.png
+  :alt: Try out a query
 
 You'll see that you get all the inserted data!
 
