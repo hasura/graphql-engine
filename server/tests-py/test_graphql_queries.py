@@ -561,6 +561,9 @@ class TestGraphQLQueryEnums:
     def test_introspect(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/introspect.yaml', transport)
 
+    def test_introspect_user_role(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/introspect_user_role.yaml', transport)
+
     def test_select_enum_field(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_enum_field.yaml', transport)
 

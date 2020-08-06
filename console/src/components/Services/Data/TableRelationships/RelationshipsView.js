@@ -9,6 +9,8 @@ import RelationshipEditor from './RelationshipEditor';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import RemoteRelationships from './RemoteRelationships/RemoteRelationships';
 import { fetchRemoteSchemas } from '../../RemoteSchema/Actions';
+import ToolTip from '../../../Common/Tooltip/Tooltip';
+import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 
 class RelationshipsView extends Component {
   componentDidMount() {
@@ -138,7 +140,6 @@ class RelationshipsView extends Component {
     const remoteRelationshipsSection = () => {
       return (
         <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
-          <h4 className={styles.subheading_text}>Remote Relationships</h4>
           <RemoteRelationships
             relationships={tableSchema.remote_relationships}
             reduxDispatch={dispatch}
@@ -160,18 +161,25 @@ class RelationshipsView extends Component {
         />
         <br />
         <div className={`${styles.padd_left_remove} container-fluid`}>
-          <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
-            <h4 className={styles.subheading_text}>Relationships</h4>
+          <div
+            className={`${styles.padd_left_remove} ${styles.add_mar_bottom} col-xs-10 col-md-10`}
+          >
+            <h4 className={styles.subheading_text}>
+              Table Relationships
+              <ToolTip message={'Relationships to tables / views'} />
+              &nbsp;
+              <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/table-relationships/index.html" />
+            </h4>
             {addedRelationshipsView}
-            <br />
-            <AddManualRelationship
-              tableSchema={tableSchema}
-              allSchemas={allSchemas}
-              schemaList={schemaList}
-              relAdd={manualRelAdd}
-              dispatch={dispatch}
-            />
-            <hr />
+            <div className={styles.activeEdit}>
+              <AddManualRelationship
+                tableSchema={tableSchema}
+                allSchemas={allSchemas}
+                schemaList={schemaList}
+                relAdd={manualRelAdd}
+                dispatch={dispatch}
+              />
+            </div>
           </div>
           {remoteRelationshipsSection()}
         </div>
