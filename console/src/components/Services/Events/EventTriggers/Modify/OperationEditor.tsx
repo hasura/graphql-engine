@@ -51,11 +51,13 @@ const OperationEditor = (props: OperationEditorProps) => {
     setOperationColumns(existingOpColumns);
   };
 
-  const editorToggle = (opCols: ETOperationColumn[]) => {
-    const newCols = opCols.map(oc => {
+  const [select,setSelect] = React.useState(false);
+  const editorToggle = (operationColumns: ETOperationColumn[]) => {
+    setSelect(!select);
+    const newCols = operationColumns.map(oc => {
       return {
         ...oc,
-        enabled: !oc.enabled,
+        enabled: select,
       };
     });
     setOperationColumns(newCols);
