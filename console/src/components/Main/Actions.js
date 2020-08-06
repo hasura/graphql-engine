@@ -45,31 +45,11 @@ const SERVER_CONFIG_FETCH_FAIL = 'Main/SERVER_CONFIG_FETCH_FAIL';
 
 // helper methods
 
-function getConsoleNotificationsURL() {
-  const url = !globals.isProduction
-    ? Endpoints.consoleNotificationsStg
-    : Endpoints.consoleNotificationsProd;
-  return url;
-}
-
-function now() {
-  return new Date().toISOString();
-}
-
-function notificationDiff(listA, listB) {
-  if (listA.length !== listB.length) {
-    return [];
-  }
-
-  return listA.filter(
-    notif => !listB.some(newNotif => newNotif.id === notif.id)
-  );
-}
-
 const getReadAllNotificationsState = () => {
   return {
     read: 'all',
     date: new Date().toISOString(),
+    showBadge: false,
   };
 };
 
@@ -77,25 +57,35 @@ const getReadAllNotificationsState = () => {
 
 // to fetch and filter notifications
 const fetchConsoleNotifications = () => (dispatch, getState) => {
-  const url = getConsoleNotificationsURL();
+  const url = !globals.isProduction
+    ? Endpoints.consoleNotificationsStg
+    : Endpoints.consoleNotificationsProd;
   const consoleStateDB = getState().telemetry.console_opts;
   let previousRead = null;
-  let lastReadAllTimeStamp;
+  let strictChecks = false;
+  let lastReadAllTimeStamp = null;
 
-  if (consoleStateDB.console_notifications) {
-    previousRead = consoleStateDB.console_notifications.read;
-    // FIXME: there may be more edge cases here, check again
-    if (previousRead === 'all') {
-      lastReadAllTimeStamp = consoleStateDB.console_notifications.date;
-    }
+  // TODO: check date is null, if so then directly update the data
+  // if not we are making a new query to update the current data. if there are no
+  // new notifs, then show the last response, if not, then update the data accordingly
+
+  if (
+    !consoleStateDB.console_notifications ||
+    !consoleStateDB.console_notifications.date
+  ) {
+    strictChecks = false;
+  } else {
+    strictChecks = true;
+    lastReadAllTimeStamp = consoleStateDB.console_notifications.date;
+    previousRead = consoleStateDB.console.console_notifications.read;
   }
 
-  const timeNow = now();
+  const now = new Date().toISOString();
   const startDateClause = {
-    $lte: timeNow,
+    $lte: now,
   };
 
-  if (lastReadAllTimeStamp) {
+  if (strictChecks) {
     startDateClause.$gt = lastReadAllTimeStamp;
   }
 
@@ -109,7 +99,7 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
             $or: [
               {
                 expiry_date: {
-                  $gt: timeNow,
+                  $gt: now,
                 },
               },
               {
@@ -144,41 +134,49 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
   return dispatch(requestAction(url, options))
     .then(data => {
       const currentNotifications = getState().main.consoleNotifications;
-      let responseData = data;
 
-      // TODO: set up telemetry state if not present
-      if (currentNotifications.length) {
-        if (!responseData.length) {
+      if (strictChecks) {
+        if (!data.length) {
+          // NOTE: this might be because of an error
           dispatch({ type: FETCH_CONSOLE_NOTIFICATIONS_SET_DEFAULT });
           dispatch(
             updateConsoleNotificationsInDB({
               read: 'default',
-              date: timeNow,
+              date: now,
+              showBadge: false,
             })
           );
           return;
         }
 
-        const responseDiff = notificationDiff(
-          currentNotifications,
-          responseData
-        );
-
-        if (responseDiff.length) {
+        if (
+          !previousRead ||
+          (!previousRead.length && Array.isArray(previousRead)) ||
+          previousRead !== 'all'
+        ) {
           dispatch(
             updateConsoleNotificationsInDB({
               read: [],
-              date: timeNow,
+              date: now,
+              showBadge: true,
             })
           );
-          // TODO: fix the order in which the notifications will appear in
-          responseData = [...responseDiff, ...responseData];
+        }
+
+        if (currentNotifications.length) {
+          const resDiff = data.filter(
+            (notif, notifIdx) => currentNotifications[notifIdx].id !== notif.id
+          );
+          if (!resDiff.length) {
+            // since the data hasn't changed since the last call
+            return;
+          }
         }
       }
 
       dispatch({
         type: FETCH_CONSOLE_NOTIFICATIONS_SUCCESS,
-        data: responseData,
+        data,
       });
     })
     .catch(err => {
@@ -187,7 +185,8 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
       dispatch(
         updateConsoleNotificationsInDB({
           read: 'error',
-          date: timeNow,
+          date: now,
+          showBadge: false,
         })
       );
     });
