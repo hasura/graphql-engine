@@ -7,7 +7,6 @@ import {
   getRunSqlQuery,
   getConsoleOptsQuery,
   getUpdateConsoleNotificationsQuery,
-  getSelectQuery,
 } from '../components/Common/utils/v1QueryUtils';
 import {
   showErrorNotification,
@@ -136,57 +135,6 @@ const setPreReleaseNotificationOptOutInDB = () => (
   return dispatch(setConsoleOptsInDB(options, successCb, errorCb));
 };
 
-const fetchConsoleNotificationDataFromDB = () => (
-  dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
-  getState: GetReduxState
-) => {
-  const url = Endpoints.schemaChange;
-  const payload = getSelectQuery(
-    'select',
-    { name: 'hdb_version', schema: 'hdb_catalog' },
-    ['console_state'],
-    {},
-    null,
-    null,
-    null
-  );
-  const options: RequestInit = {
-    method: 'POST',
-    credentials: globalCookiePolicy,
-    headers: dataHeaders(getState),
-    body: JSON.stringify(payload),
-  };
-
-  return dispatch(requestAction(url, options))
-    .then(data => {
-      const res = data.returning[0].console_state;
-
-      if (!res.console_notifications) {
-        dispatch({
-          type: UPDATE_CONSOLE_NOTIFICATIONS,
-          data: {
-            read: [],
-            date: null,
-            showBadge: false,
-          },
-        });
-        return;
-      }
-
-      // TODO: if present then update redux as it is
-      dispatch({
-        type: UPDATE_CONSOLE_NOTIFICATIONS,
-        data: res.console_notifications,
-      });
-    })
-    .catch(err => {
-      console.error(
-        'There was an error in fetching console notification data from DB',
-        err
-      );
-    });
-};
-
 const updateConsoleNotificationsInDB = (
   updatedState: TelemetryConsoleNotification
 ) => {
@@ -244,18 +192,31 @@ const loadConsoleOpts = () => {
 
     return dispatch(requestAction(url, options) as any).then(
       (data: Telemetry[]) => {
-        if (data.length !== 0) {
+        if (data.length) {
+          const { hasura_uuid, console_state } = data[0];
+
           dispatch({
             type: SET_HASURA_UUID,
-            data: data[0].hasura_uuid,
+            data: hasura_uuid,
           });
-          globals.hasuraUUID = data[0].hasura_uuid;
+          globals.hasuraUUID = hasura_uuid;
+
           dispatch({
             type: SET_CONSOLE_OPTS,
-            data: data[0].console_state,
+            data: console_state,
           });
-          globals.telemetryNotificationShown = !!data[0].console_state
-            ?.telemetryNotificationShown;
+          globals.telemetryNotificationShown = !!console_state?.telemetryNotificationShown;
+
+          if (!console_state?.console_notifications) {
+            dispatch({
+              type: UPDATE_CONSOLE_NOTIFICATIONS,
+              data: {
+                read: [],
+                date: null,
+                showBadge: true,
+              },
+            });
+          }
         }
         return Promise.resolve();
       },
@@ -349,5 +310,4 @@ export {
   setPreReleaseNotificationOptOutInDB,
   setTelemetryNotificationShownInDB,
   updateConsoleNotificationsInDB,
-  fetchConsoleNotificationDataFromDB,
 };
