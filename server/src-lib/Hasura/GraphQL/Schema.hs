@@ -214,6 +214,7 @@ mkMutationTypesAndFieldsRole tn insPermM selFldsM updColsM delPermM pkeyCols con
                (selFldsM ^.. _Just.traverse._SFPGColumn)
             <> (insPermM ^. _Just._1)
             <> (updColsM ^. _Just)
+            <> (pkeyCols ^. _Just.pkColumns.to toList)
           allEnumReferences = allColumnInfos ^.. traverse.to pgiType._PGColumnEnumReference
       in flip map allEnumReferences $ \enumReference@(EnumReference referencedTableName _) ->
            let typeName = mkTableEnumType referencedTableName
