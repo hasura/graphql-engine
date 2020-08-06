@@ -1,8 +1,9 @@
 import { Nullable } from '../components/Common/utils/tsUtils';
 
 export type TelemetryConsoleNotification = {
-  read: string | string[];
-  date: string;
+  read: 'all' | 'default' | 'error' | string[];
+  date: string | null; // ISO String
+  showBadge: boolean;
 };
 
 export type TelemetryState = {
