@@ -924,7 +924,7 @@
 .shareSection {
   display: flex;
   align-items: center;
-  padding: 5px;
+  padding: 12px 15px;
   color: white;
   cursor: pointer;
 
@@ -1334,15 +1334,19 @@
   text-align: center;
   display: flex;
   align-items: center;
-  font-size: 9px;
+  font-size: 8px;
   justify-content: center;
-  height: 18px;
+  height: 16px;
   position: relative;
-  width: 18px;
-  top: 10px;
-  right: 12px;
+  width: 16px;
+  top: 6px;
+  right: 8px;
   border-radius: 50%;
   user-select: none;
+  visibility: visible;
+  &.hideBadge {
+    visibility: hidden;
+  }
 }
 
 .updateBox {
@@ -1363,8 +1367,8 @@
   border-radius: 50%;
   width: 12px;
   height: 12px;
-  border: 1px solid #ffc627;
-  background-color: #fff427;
+  background-color: #ffc627;
+  margin-right: 22px;
 }
 
 .consoleLogoNotifications {
