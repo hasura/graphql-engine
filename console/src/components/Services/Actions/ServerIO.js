@@ -139,7 +139,7 @@ export const createAction = () => (dispatch, getState) => {
   }
 
   const state = {
-    handler: rawState.handler,
+    handler: rawState.handler.trim(),
     kind: rawState.kind,
     types,
     actionType,
@@ -262,7 +262,7 @@ export const saveAction = currentAction => (dispatch, getState) => {
   }
 
   const state = {
-    handler: rawState.handler,
+    handler: rawState.handler.trim(),
     kind: rawState.kind,
     types,
     actionType,

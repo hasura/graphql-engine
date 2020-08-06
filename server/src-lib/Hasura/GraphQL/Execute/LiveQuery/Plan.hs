@@ -50,6 +50,7 @@ import           Data.UUID                              (UUID)
 import qualified Hasura.GraphQL.Resolve                 as GR
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
+import qualified Hasura.Logging                         as L
 import qualified Hasura.SQL.DML                         as S
 import qualified Hasura.Tracing                         as Tracing
 
@@ -277,6 +278,7 @@ buildLiveQueryPlan
      , Has OrdByCtx r
      , Has QueryCtxMap r
      , Has SQLGenCtx r
+     , Has (L.Logger L.Hasura) r
      , MonadIO m
      , Tracing.MonadTrace m
      , HasVersion
