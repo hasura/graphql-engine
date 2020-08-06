@@ -489,11 +489,13 @@ mutation
   -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue))))
 mutation allTables allRemotes allActions nonObjectCustomTypes = do
   mutationParsers <- for (toList allTables) \table -> do
-    customRootFields <- _tcCustomRootFields . _tciCustomConfig . _tiCoreInfo <$> askTableInfo table
-    displayName <- qualifiedObjectToName table
-    tablePerms  <- tablePermissions table
+    tableCoreInfo <- _tiCoreInfo <$> askTableInfo table
+    displayName   <- qualifiedObjectToName table
+    tablePerms    <- tablePermissions table
     for tablePerms \permissions -> do
-      let selectPerms = _permSel permissions
+      let customRootFields = _tcCustomRootFields $ _tciCustomConfig tableCoreInfo
+          viewInfo         = _tciViewInfo tableCoreInfo
+          selectPerms      = _permSel permissions
 
       -- If we're in a frontend scenario, we should not include backend_only inserts
       scenario <- asks getter
@@ -502,7 +504,7 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
             if scenario == Frontend && ipiBackendOnly insertPermission
               then Nothing
               else return insertPermission
-      inserts <- for scenarioInsertPermissionM \insertPerms -> do
+      inserts <- fmap join $ whenMaybe (isMutable viIsInsertable viewInfo) $ for scenarioInsertPermissionM \insertPerms -> do
         let insertName = $$(G.litName "insert_") <> displayName
             insertDesc = G.Description $ "insert data into the table: " <>> table
             insertOneName = $$(G.litName "insert_") <> displayName <> $$(G.litName "_one")
@@ -516,7 +518,7 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
           insertOneIntoTable table (fromMaybe insertOneName $ _tcrfInsertOne customRootFields) (Just insertOneDesc) insertPerms selPerms (_permUpd permissions)
         pure $ fmap (RFDB . MDBInsert) insert : maybe [] (pure . fmap (RFDB . MDBInsert)) insertOne
 
-      updates <- for (_permUpd permissions) \updatePerms -> do
+      updates <- fmap join $ whenMaybe (isMutable viIsUpdatable viewInfo) $ for (_permUpd permissions) \updatePerms -> do
         let updateName = $$(G.litName "update_") <> displayName
             updateDesc = G.Description $ "update data of the table: " <>> table
             updateByPkName = $$(G.litName "update_") <> displayName <> $$(G.litName "_by_pk")
@@ -529,12 +531,13 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
           (updateTableByPk table (fromMaybe updateByPkName $ _tcrfUpdateByPk customRootFields) (Just updateByPkDesc) updatePerms)
         pure $ fmap (RFDB . MDBUpdate) <$> catMaybes [update, updateByPk]
 
-      deletes <- for (_permDel permissions) \deletePerms -> do
+      deletes <- fmap join $ whenMaybe (isMutable viIsDeletable viewInfo) $ for (_permDel permissions) \deletePerms -> do
         let deleteName = $$(G.litName "delete_") <> displayName
             deleteDesc = G.Description $ "delete data from the table: " <>> table
             deleteByPkName = $$(G.litName "delete_") <> displayName <> $$(G.litName "_by_pk")
             deleteByPkDesc = G.Description $ "delete single row from the table: " <>> table
         delete <- deleteFromTable table (fromMaybe deleteName $ _tcrfDelete customRootFields) (Just deleteDesc) deletePerms selectPerms
+
         -- ditto
         deleteByPk <- join <$> for selectPerms
           (deleteFromTableByPk table (fromMaybe deleteByPkName $ _tcrfDeleteByPk customRootFields) (Just deleteByPkDesc) deletePerms)

@@ -56,6 +56,12 @@ class TestGraphQLInsert:
     def test_insert_valid_variable_but_invalid_graphql_value(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/person_valid_variable_but_invalid_graphql_value.yaml")
 
+    def test_can_insert_in_insertable_view(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/can_insert_in_insertable_view.yaml")
+
+    def test_cannot_insert_in_non_insertable_view(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/cannot_insert_in_non_insertable_view.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/insert/basic"
