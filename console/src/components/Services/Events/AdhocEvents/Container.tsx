@@ -22,6 +22,19 @@ interface Props {
 }
 
 const STContainer: React.FC<Props> = ({ children, tabName }) => {
+  let activeTab = tabName as string;
+  if (tabName === 'processed') {
+    activeTab = 'Processed';
+  } else if (tabName === 'pending') {
+    activeTab = 'Pending';
+  } else if (tabName === 'add') {
+    activeTab = 'Create';
+  } else if (tabName === 'logs') {
+    activeTab = 'Invocation Logs';
+  } else if (tabName === 'info') {
+    activeTab = 'Info';
+  }
+
   const breadCrumbs = [
     {
       title: 'Events',
@@ -32,7 +45,7 @@ const STContainer: React.FC<Props> = ({ children, tabName }) => {
       url: getAdhocEventsRoute(),
     },
     {
-      title: tabName,
+      title: activeTab,
       url: '',
     },
   ];
