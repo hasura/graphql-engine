@@ -42,6 +42,7 @@ import           Hasura.SQL.Types
 
 -- insert
 
+-- | Construct a root field, normally called insert_tablename, that can be used to add several rows to a DB table
 insertIntoTable
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
@@ -73,6 +74,7 @@ insertIntoTable table fieldName description insertPerms selectPerms updatePerms 
        , RQL.MOutMultirowFields output
        )
 
+-- | Variant of 'insertIntoTable' that inserts a single row
 insertOneIntoTable
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
@@ -104,7 +106,7 @@ insertOneIntoTable table fieldName description insertPerms selectPerms updatePer
        , RQL.MOutSinglerowObject output
        )
 
-
+-- | We specify the data of an individual row to insert through this input parser.
 tableFieldsInput
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable -- ^ qualified name of the table
@@ -146,6 +148,7 @@ tableFieldsInput table insertPerms = memoizeOn 'tableFieldsInput table do
   pure $ P.object objectName (Just objectDesc) $ catMaybes <$> sequenceA objectFields
     <&> mconcat
 
+-- | Used by 'tableFieldsInput' for object data that is nested through object relationships
 objectRelationshipInput
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
@@ -172,6 +175,7 @@ objectRelationshipInput table insertPerms selectPerms updatePerms =
         pure $ mkInsertObject object table columns conflictClause insertPerms updatePerms
   pure $ P.object inputName (Just inputDesc) inputParser
 
+-- | Used by 'tableFieldsInput' for object data that is nested through object relationships
 arrayRelationshipInput
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
@@ -198,7 +202,6 @@ arrayRelationshipInput table insertPerms selectPerms updatePerms =
         pure $ mkInsertObject objects table columns conflictClause insertPerms updatePerms
   pure $ P.object inputName (Just inputDesc) inputParser
 
-
 mkInsertObject
   :: a
   -> QualifiedTable
@@ -220,6 +223,7 @@ mkInsertObject objects table columns conflictClause insertPerms updatePerms =
         defaultValues = Map.union (partialSQLExpToUnpreparedValue <$> ipiSet insertPerms)
           $ fmap UVLiteral $ S.mkColDefValMap $ map pgiColumn columns
 
+-- | Specifies the "ON CONFLICT" SQL clause
 conflictObject
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
@@ -268,6 +272,8 @@ conflictConstraint constraints table = memoizeOn 'conflictConstraint table $ do
 
 -- update
 
+-- | Construct a root field, normally called update_tablename, that can be used
+-- to update rows in a DB table specified by filters
 updateTable
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
@@ -287,6 +293,8 @@ updateTable table fieldName description updatePerms selectPerms = runMaybeT $ do
   pure $ P.subselection fieldName description argsParser selection
     <&> mkUpdateObject table columns updatePerms . fmap RQL.MOutMultirowFields
 
+-- | Construct a root field, normally called update_tablename, that can be used
+-- to update a single in a DB table, specified by primary key
 updateTableByPk
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
@@ -333,7 +341,7 @@ mkUpdateObject table columns updatePerms ((opExps, whereExp), mutationOutput) =
     permissionFilter = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ upiFilter updatePerms
     checkExp = maybe annBoolExpTrue (fmapAnnBoolExp partialSQLExpToUnpreparedValue) $ upiCheck updatePerms
 
-
+-- | Various update operators
 updateOperators
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   => QualifiedTable -- ^ qualified name of the table
@@ -425,6 +433,8 @@ updateOperators table updatePermissions = do
 
 -- delete
 
+-- | Construct a root field, normally called delete_tablename, that can be used
+-- to delete several rows from a DB table
 deleteFromTable
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
@@ -442,6 +452,8 @@ deleteFromTable table fieldName description deletePerms selectPerms = do
   pure $ P.subselection fieldName description whereArg selection
     <&> mkDeleteObject table columns deletePerms . fmap RQL.MOutMultirowFields
 
+-- | Construct a root field, normally called delete_tablename, that can be used
+-- to delete an individual rows from a DB table, specified by primary key
 deleteFromTableByPk
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
@@ -476,6 +488,8 @@ mkDeleteObject table columns deletePerms (whereExp, mutationOutput) =
 
 -- common
 
+-- | All mutations allow returning results, such as what the updated database
+-- rows look like.  This parser allows a query to specify what data to fetch.
 mutationSelectionSet
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => QualifiedTable
@@ -503,6 +517,7 @@ mutationSelectionSet table selectPerms =
   pure $ P.selectionSet selectionName (Just selectionDesc) selectionFields
     <&> parsedSelectionsToFields RQL.MExp
 
+-- | How to specify a database row by primary key.
 primaryKeysArguments
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   => QualifiedTable
@@ -516,6 +531,3 @@ primaryKeysArguments table selectPerms = runMaybeT $ do
     field <- P.column (pgiType columnInfo) (G.Nullability False)
     pure $ BoolFld . AVCol columnInfo . pure . AEQ True . mkParameter <$>
       P.field (pgiName columnInfo) (pgiDescription columnInfo) field
-
-third :: (c -> d) -> (a,b,c) -> (a,b,d)
-third f (a,b,c) = (a,b,f c)
