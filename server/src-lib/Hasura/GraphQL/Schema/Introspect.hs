@@ -200,7 +200,8 @@ typeField =
   let
     includeDeprecated :: P.InputFieldsParser n Bool
     includeDeprecated =
-      P.fieldWithDefault $$(G.litName "includeDeprecated") Nothing (G.VBoolean False) P.boolean
+      P.fieldWithDefault $$(G.litName "includeDeprecated") Nothing (G.VBoolean False) (P.nullable P.boolean)
+        <&> fromMaybe False
     kind :: FieldParser n (SomeType -> J.Value)
     kind = P.selection_ $$(G.litName "kind") Nothing typeKind $>
       \case SomeType tp ->
@@ -337,7 +338,7 @@ inputValue =
       printer <- P.subselection_ $$(G.litName "type") Nothing typeField
       return $ \defInfo -> case P.dInfo defInfo of
         P.IFRequired tp   -> printer $ SomeType $ P.NonNullable tp
-        P.IFOptional tp _ -> printer $ SomeType $ P.Nullable tp
+        P.IFOptional tp _ -> printer $ SomeType $ tp
     defaultValue :: FieldParser n (P.Definition P.InputFieldInfo -> J.Value)
     defaultValue = P.selection_ $$(G.litName "defaultValue") Nothing P.string $>
       \defInfo -> case P.dInfo defInfo of

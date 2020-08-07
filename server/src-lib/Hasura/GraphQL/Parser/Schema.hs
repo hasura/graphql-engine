@@ -472,11 +472,11 @@ data InputFieldInfo
   -- specification allows distinguishing provided @null@ values from values left
   -- completely absent; see Note [Optional fields and nullability] in
   -- Hasura.GraphQL.Parser.Internal.Parser.
-  | forall k. ('Input <: k) => IFOptional (NonNullableType k) (Maybe (Value Void))
+  | forall k. ('Input <: k) => IFOptional (Type k) (Maybe (Value Void))
 
 instance Eq InputFieldInfo where
   IFRequired t1    == IFRequired t2    = eqNonNullableType t1 t2
-  IFOptional t1 v1 == IFOptional t2 v2 = eqNonNullableType t1 t2 && v1 == v2
+  IFOptional t1 v1 == IFOptional t2 v2 = eqType t1 t2 && v1 == v2
   _                == _                = False
 
 data FieldInfo = forall k. ('Output <: k) => FieldInfo

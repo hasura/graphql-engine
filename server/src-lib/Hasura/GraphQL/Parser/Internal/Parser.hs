@@ -591,14 +591,13 @@ fieldWithDefault
   -> Parser k m a
   -> InputFieldsParser m a
 fieldWithDefault name description defaultValue parser = InputFieldsParser
-  { ifDefinitions = [mkDefinition name description $
-      IFOptional (discardNullability $ pType parser) (Just defaultValue)]
+  { ifDefinitions = [mkDefinition name description $ IFOptional (pType parser) (Just defaultValue)]
   , ifParser = M.lookup name >>> withPath (++[Key (unName name)]) . \case
       Just value -> peelVariableWith True expectedType value >>= parseValue expectedType
       Nothing    -> pInputParser parser $ GraphQLValue $ literal defaultValue
   }
   where
-    expectedType = Just $ toGraphQLType $ nullableType $ pType parser
+    expectedType = Just $ toGraphQLType $ pType parser
     parseValue _ value = pInputParser parser value
     {-
     FIXME!!!!
@@ -661,7 +660,7 @@ fieldOptional
   -> InputFieldsParser m (Maybe a)
 fieldOptional name description parser = InputFieldsParser
   { ifDefinitions = [mkDefinition name description $
-      IFOptional (discardNullability $ pType parser) Nothing]
+      IFOptional (nullableType $ pType parser) Nothing]
   , ifParser = M.lookup name >>> withPath (++[Key (unName name)]) .
                traverse (pInputParser parser <=< peelVariable expectedType)
   }
