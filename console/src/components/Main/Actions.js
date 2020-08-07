@@ -63,7 +63,6 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
   const consoleStateDB = getState().telemetry.console_opts;
   let previousRead = null;
   let strictChecks = false;
-  let lastReadAllTimeStamp = null;
 
   if (
     consoleStateDB &&
@@ -71,19 +70,12 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
     consoleStateDB.console_notifications.date
   ) {
     strictChecks = true;
-    lastReadAllTimeStamp = consoleStateDB.console_notifications.date;
     previousRead = consoleStateDB.console_notifications.read;
   }
 
   const now = new Date().toISOString();
-  const startDateClause = {
-    $lte: now,
-  };
 
-  if (strictChecks) {
-    startDateClause.$gt = lastReadAllTimeStamp;
-  }
-
+  // TODO: add this query to query utils
   const query = {
     args: {
       table: 'console_notification',
@@ -105,7 +97,7 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
             ],
           },
           {
-            created_at: startDateClause,
+            created_at: { $lte: now },
           },
         ],
       },
@@ -128,22 +120,22 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
 
   return dispatch(requestAction(url, options))
     .then(data => {
+      if (!data.length) {
+        // NOTE: this might be because of an error
+        dispatch({ type: FETCH_CONSOLE_NOTIFICATIONS_SET_DEFAULT });
+        dispatch(
+          updateConsoleNotificationsInDB({
+            read: 'default',
+            date: now,
+            showBadge: false,
+          })
+        );
+        return;
+      }
+
       const currentNotifications = getState().main.consoleNotifications;
 
       if (strictChecks) {
-        if (!data.length) {
-          // NOTE: this might be because of an error
-          dispatch({ type: FETCH_CONSOLE_NOTIFICATIONS_SET_DEFAULT });
-          dispatch(
-            updateConsoleNotificationsInDB({
-              read: 'default',
-              date: now,
-              showBadge: false,
-            })
-          );
-          return;
-        }
-
         if (
           !previousRead ||
           (!previousRead.length && Array.isArray(previousRead)) ||
