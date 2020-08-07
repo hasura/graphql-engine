@@ -201,6 +201,9 @@ class TestGraphqlInsertPermission:
         else:
             pytest.skip("authorization not configured, skipping the test")
 
+    def test_check_set_headers_while_doing_upsert(self,hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/leads_upsert_check_with_headers.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/insert/permissions"

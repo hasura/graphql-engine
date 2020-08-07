@@ -521,3 +521,41 @@ args:
       backend_only: false
       set:
         is_admin: false
+
+- type: run_sql
+  args:
+    sql: |
+      create table leads (
+        id serial primary key,
+        name text not null,
+        added_by text not null
+      );
+
+- type: track_table
+  args:
+    schema: public
+    name: leads
+
+
+# a sales role can add a new lead without any check
+- type: create_insert_permission
+  args:
+    table: leads
+    role:  sales
+    permission:
+      columns: [id, name, added_by]
+      check: {}
+      set: {}
+
+# a sales role can only update the leads added by them
+- type: create_update_permission
+  args:
+    table: leads
+    role: sales
+    permission:
+      columns: [name]
+      filter:
+        added_by: "X-Hasura-User-Id"
+      check:
+        name:
+          _ne: ""
