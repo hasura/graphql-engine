@@ -13,11 +13,13 @@ import {
   showSuccessNotification,
 } from '../components/Services/Common/Notification';
 import globals from '../Globals';
-import defaultTelemetryState, {
-  TelemetryState,
-  TelemetryConsoleNotification,
-} from './state';
-import { GetReduxState, ReduxState } from '../types';
+import defaultTelemetryState from './state';
+import {
+  GetReduxState,
+  ReduxState,
+  ConsoleState,
+  NotificationsState,
+} from '../types';
 
 const SET_CONSOLE_OPTS = 'Telemetry/SET_CONSOLE_OPTS';
 const SET_NOTIFICATION_SHOWN = 'Telemetry/SET_NOTIFICATION_SHOWN';
@@ -25,12 +27,12 @@ const SET_HASURA_UUID = 'Telemetry/SET_HASURA_UUID';
 const UPDATE_CONSOLE_NOTIFICATIONS = 'Telemetry/UPDATE_CONSOLE_NOTIFICATIONS';
 
 type Telemetry = {
-  console_state: TelemetryState['console_opts'];
+  console_state: ConsoleState['console_opts'];
   hasura_uuid: string;
 };
 
 const setConsoleOptsInDB = (
-  opts: TelemetryState['console_opts'],
+  opts: ConsoleState['console_opts'],
   successCb: (arg: object) => void,
   errorCb: (arg: Error) => void
 ) => (
@@ -135,9 +137,7 @@ const setPreReleaseNotificationOptOutInDB = () => (
   return dispatch(setConsoleOptsInDB(options, successCb, errorCb));
 };
 
-const updateConsoleNotificationsInDB = (
-  updatedState: TelemetryConsoleNotification
-) => {
+const updateConsoleNotificationsInDB = (updatedState: NotificationsState) => {
   return (
     dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
     getState: GetReduxState

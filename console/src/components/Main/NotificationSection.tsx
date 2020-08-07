@@ -6,11 +6,7 @@ import { ConsoleNotification, NotificationDate } from './ConsoleNotification';
 import styles from './Main.scss';
 import ConsoleLogo from './images/components/ConsoleLogo';
 import useOnClickOutside from '../../hooks/useOnClickOutside';
-import { ReduxState } from '../../types';
-import {
-  TelemetryState,
-  TelemetryConsoleNotification,
-} from '../../telemetry/state';
+import { ReduxState, NotificationsState, ConsoleState } from '../../types';
 import { versionGT, checkStableVersion } from '../../helpers/versionUtils';
 import ToolTip from '../Common/Tooltip/Tooltip';
 import {
@@ -245,7 +241,7 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
   )
 );
 
-type ConsoleOptions = TelemetryState['console_opts'];
+type ConsoleOptions = ConsoleState['console_opts'];
 
 const checkVersionUpdate = (
   latestStable: string,
@@ -424,7 +420,7 @@ const HasuraNotifications: React.FC<
   };
 
   const onClickMarkAllAsRead = () => {
-    const readAllState = getReadAllNotificationsState() as TelemetryConsoleNotification;
+    const readAllState = getReadAllNotificationsState() as NotificationsState;
     dispatch(updateConsoleNotificationsInDB(readAllState));
     // updateNumberNotifications(0);
   };

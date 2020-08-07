@@ -5,8 +5,23 @@ import { RouterAction } from 'react-router-redux';
 import { Table, Schema } from './components/Common/utils/pgUtils';
 import { EventsState } from './components/Services/Events/state';
 import { RAEvents } from './components/Services/Events/types';
-import { TelemetryState } from './telemetry/state';
 import { ConsoleNotification } from './components/Main/ConsoleNotification';
+import { Nullable } from './components/Common/utils/tsUtils';
+
+export type NotificationsState = {
+  read: 'all' | 'default' | 'error' | string[];
+  date: string | null; // ISO String
+  showBadge: boolean;
+};
+
+export type ConsoleState = {
+  console_opts: Nullable<{
+    telemetryNotificationShown?: boolean;
+    disablePreReleaseUpdateNotifications?: boolean;
+    console_notifications?: NotificationsState;
+  }>;
+  hasura_uuid: string;
+};
 
 // Redux Utils
 export type ReduxState = {
@@ -23,7 +38,7 @@ export type ReduxState = {
     latestStableServerVersion: string;
     consoleNotifications: ConsoleNotification[];
   };
-  telemetry: TelemetryState;
+  telemetry: ConsoleState;
 };
 
 export type ReduxAction = RAEvents | RouterAction;
