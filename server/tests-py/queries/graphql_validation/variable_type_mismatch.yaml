@@ -115,3 +115,26 @@
       }
     variables:
       name: "asdfdsfllhjh"
+
+- description: Variable type match default
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      __type:
+        fields:
+        - name: id
+        - name: location
+        - name: name
+
+  query:
+    query: |
+      query author_type($includeDeprecated: Boolean) {
+        __type(name: "author") {
+          fields(includeDeprecated: $includeDeprecated) {
+            name
+          }
+        }
+      }
+    variables:
+      includeDeprecated: False
