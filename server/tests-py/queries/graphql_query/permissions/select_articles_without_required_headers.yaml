@@ -21,3 +21,35 @@
           }
         }
       }
+
+- description: Select related articles while querying authors with a role which doesn't require any headers
+               to be set to query articles
+  status: 200
+  url: /v1/graphql
+  headers:
+    x-hasura-role: anonymous
+  response:
+    data:
+      author:
+        - name: Author 1
+          articles:
+          - title: Article 2
+            content: Sample article content 2
+            is_published: true
+        - name: Author 2
+          articles:
+          - title: Article 3
+            content: Sample article content 3
+            is_published: true
+  query:
+    query: |
+      query {
+        author {
+          name
+          articles {
+            title
+            content
+            is_published
+          }
+        }
+      }
