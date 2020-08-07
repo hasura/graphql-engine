@@ -143,7 +143,7 @@ const updateConsoleNotificationsInDB = (updatedState: NotificationsState) => {
     getState: GetReduxState
   ) => {
     const url = Endpoints.schemaChange;
-    const composedUpdatedState = {
+    const composedUpdatedState: ConsoleState['console_opts'] = {
       ...getState().telemetry.console_opts,
       console_notifications: updatedState,
     };

@@ -6,6 +6,7 @@ import { RemoteRelationshipPayload } from '../../Services/Data/TableRelationship
 import { transformHeaders } from '../Headers/utils';
 import { generateTableDef } from './pgUtils';
 import { Nullable } from './tsUtils';
+import { ConsoleState } from '../../../types';
 
 // TODO add type for the where clause
 
@@ -681,7 +682,7 @@ export const getConsoleOptsQuery = () =>
   );
 
 export const getUpdateConsoleStateQuery = (
-  updatedConsoleState: Record<string, any> // todo
+  updatedConsoleState: ConsoleState['console_opts']
 ) => {
   return {
     type: 'update',
