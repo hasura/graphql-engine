@@ -495,10 +495,10 @@ variables’ values are passed as JSON, so we actually need to be able to parse
 values expressed in both languages.
 
 It’s tempting to contain this complexity by simply converting the JSON values to
-GraphQL input values up front, and for booleans, numbers, arrays, and objects,
-this conversion is viable. But JSON strings pose a problem, since they are used
-to represent both GraphQL strings and GraphQL enums. For example, consider a
-query like this:
+GraphQL input values up front, and for booleans, numbers, arrays, and most
+objects, this conversion is viable. But JSON strings pose a problem, since they
+are used to represent both GraphQL strings and GraphQL enums. For example,
+consider a query like this:
 
     enum FooBar {
       FOO
@@ -523,13 +523,17 @@ should be parsed as the GraphQL enum value FOO.
 
 We could do this type-directed parsing, but there are some advantages to being
 lazier. For one, we can use JSON values directly when used as a column value of
-type json or jsonb, rather than converting them to GraphQL and back. (Arguably
-such columns should really be represented as strings containing encoded JSON,
-not GraphQL lists/objects, but the decision to treat them otherwise is old, and
-it would be backwards-incompatible to change now.) We can also avoid needing to
-interpret the values of variables for types outside our control (i.e. those from
-a remote schema), which can be useful in the case of custom scalars or
-extensions of the GraphQL protocol.
+type json or jsonb, rather than converting them to GraphQL and back; which, in
+turn, solves another problem with JSON objects: JSON object keys are arbitrary
+strings, while GraphQL input object keys are GraphQL names, and therefore
+restricted: not all JSON objects can be represented by a GraphQL input object.
+
+Arguably such columns should really be represented as strings containing encoded
+JSON, not GraphQL lists/objects, but the decision to treat them otherwise is
+old, and it would be backwards-incompatible to change now. We can also avoid
+needing to interpret the values of variables for types outside our control
+(i.e. those from a remote schema), which can be useful in the case of custom
+scalars or extensions of the GraphQL protocol.
 
 So instead we use the InputValue type to represent that an input value might be
 a GraphQL literal value or a JSON value from the variables payload. This means
