@@ -6,7 +6,7 @@ import { ConsoleNotification, NotificationDate } from './ConsoleNotification';
 import styles from './Main.scss';
 import ConsoleLogo from './images/components/ConsoleLogo';
 import useOnClickOutside from '../../hooks/useOnClickOutside';
-import { ReduxState, Dispatch, Thunk } from '../../types';
+import { ReduxState } from '../../types';
 import {
   TelemetryState,
   TelemetryConsoleNotification,
@@ -182,11 +182,6 @@ const ViewMoreOptions: React.FC<ViewMoreProps> = ({
       {buttonText} &rarr;
     </Button>
   );
-};
-
-const markAllAsRead = (dispatch: Dispatch, uuid: string) => {
-  const readAllState = getReadAllNotificationsState() as TelemetryConsoleNotification;
-  dispatch(updateConsoleNotificationsInDB(readAllState));
 };
 
 const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
