@@ -29,6 +29,17 @@ const LeftSidebar = ({
   // TODO test search
   const actionsList = prioritySearch(searchText, actions, 'action_name');
 
+  const getActionIcon = action => {
+    switch (action.action_defn.type) {
+      case 'mutation':
+        return 'fa-pencil-square-o';
+      case 'query':
+        return 'fa-book';
+      default:
+        return 'fa-wrench';
+    }
+  };
+
   const getChildList = () => {
     let childList;
     if (!actionsList.length) {
@@ -47,6 +58,8 @@ const LeftSidebar = ({
           activeTableClass = styles.activeLink;
         }
 
+        const actionIcon = getActionIcon(a);
+
         return (
           <li
             className={activeTableClass}
@@ -58,7 +71,7 @@ const LeftSidebar = ({
               data-test={a.action_name}
             >
               <i
-                className={styles.tableIcon + ' fa fa-wrench'}
+                className={styles.tableIcon + ' fa ' + actionIcon}
                 aria-hidden="true"
               />
               {a.action_name}

@@ -26,9 +26,9 @@ endpoint to Hasura. Your GraphQL service can be written in any language or frame
 This is what Hasura running with "Remote schemas" looks like:
 
 
-.. thumbnail:: /img/graphql/manual/remote-schemas/remote-schemas-arch.png
+.. thumbnail:: /img/graphql/manual/remote-schemas/remote-schema-arch.png
    :class: no-shadow
-   :width: 55%
+   :width: 900px
    :alt: Architecture of Hasura with remote schemas
 
 Use cases

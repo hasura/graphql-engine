@@ -9,18 +9,19 @@ module Hasura.GraphQL.Execute.Plan
   , dumpPlanCache
   ) where
 
-import           Hasura.Prelude
-import           Hasura.Session
-
 import qualified Data.Aeson                             as J
 import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.TH                          as J
 
-import qualified Hasura.Cache                           as Cache
+import           Hasura.Prelude
+import           Hasura.RQL.Types
+import           Hasura.Session
+
+import qualified Hasura.Cache.Bounded                   as Cache
 import qualified Hasura.GraphQL.Execute.LiveQuery       as LQ
 import qualified Hasura.GraphQL.Execute.Query           as EQ
+import qualified Hasura.GraphQL.Resolve                 as R
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
-import           Hasura.RQL.Types
 
 data PlanId
   = PlanId
@@ -44,19 +45,19 @@ instance J.ToJSON PlanId where
     ]
 
 newtype PlanCache
-  = PlanCache {_unPlanCache :: Cache.Cache PlanId ReusablePlan}
+  = PlanCache {_unPlanCache :: Cache.BoundedCache PlanId ReusablePlan}
 
 data ReusablePlan
-  = RPQuery !EQ.ReusableQueryPlan
+  = RPQuery !EQ.ReusableQueryPlan ![R.QueryRootFldUnresolved]
   | RPSubs !LQ.ReusableLiveQueryPlan
 
 instance J.ToJSON ReusablePlan where
   toJSON = \case
-    RPQuery queryPlan -> J.toJSON queryPlan
-    RPSubs subsPlan -> J.toJSON subsPlan
+    RPQuery queryPlan _ -> J.toJSON queryPlan
+    RPSubs subsPlan     -> J.toJSON subsPlan
 
 newtype PlanCacheOptions
-  = PlanCacheOptions { unPlanCacheSize :: Maybe Cache.CacheSize }
+  = PlanCacheOptions { unPlanCacheSize :: Cache.CacheSize }
   deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 2 J.snakeCase) ''PlanCacheOptions)
 
