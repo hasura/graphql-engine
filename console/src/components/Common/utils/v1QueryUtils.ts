@@ -682,13 +682,17 @@ export const getConsoleOptsQuery = () =>
   );
 
 export const getUpdateConsoleStateQuery = (
-  updatedConsoleState: ConsoleState['console_opts']
+  updatedConsoleState: ConsoleState['console_opts'],
+  hasura_uuid: string
 ) => {
   return {
     type: 'update',
     args: {
       table: { name: 'hdb_version', schema: 'hdb_catalog' },
       $set: { console_state: updatedConsoleState },
+      where: {
+        hasura_uuid: { $eq: hasura_uuid },
+      },
       returning: ['console_state'],
     },
   };
