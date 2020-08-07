@@ -486,9 +486,61 @@ data FieldInfo = forall k. ('Output <: k) => FieldInfo
 instance Eq FieldInfo where
   FieldInfo args1 t1 == FieldInfo args2 t2 = args1 == args2 && eqType t1 t2
 
-data InputValue v = GraphQLValue (Value v)
-                  | JSONValue J.Value
-                  deriving (Show, Eq, Functor)
+{- Note [Parsing variable values]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+GraphQL includes its own tiny language for input values, which is similar to
+JSON but not quite the same---GraphQL input values can be enum values, and there
+are restrictions on the names of input object keys. Despite these differences,
+variables’ values are passed as JSON, so we actually need to be able to parse
+values expressed in both languages.
+
+It’s tempting to contain this complexity by simply converting the JSON values to
+GraphQL input values up front, and for booleans, numbers, arrays, and objects,
+this conversion is viable. But JSON strings pose a problem, since they are used
+to represent both GraphQL strings and GraphQL enums. For example, consider a
+query like this:
+
+    enum FooBar {
+      FOO
+      BAR
+    }
+
+    query some_query($a: String, $b: FooBar) {
+      ...
+    }
+
+We might receive an accompany variables payload like this:
+
+    {
+      "a": "FOO",
+      "b": "FOO"
+    }
+
+To properly convert these JSON values to GraphQL, we’d need to use the type
+information to guide the parsing. Since $a has type String, its value should be
+parsed as the GraphQL string "FOO", while $b has type FooBar, so its value
+should be parsed as the GraphQL enum value FOO.
+
+We could do this type-directed parsing, but there are some advantages to being
+lazier. For one, we can use JSON values directly when used as a column value of
+type json or jsonb, rather than converting them to GraphQL and back. (Arguably
+such columns should really be represented as strings containing encoded JSON,
+not GraphQL lists/objects, but the decision to treat them otherwise is old, and
+it would be backwards-incompatible to change now.) We can also avoid needing to
+interpret the values of variables for types outside our control (i.e. those from
+a remote schema), which can be useful in the case of custom scalars or
+extensions of the GraphQL protocol.
+
+So instead we use the InputValue type to represent that an input value might be
+a GraphQL literal value or a JSON value from the variables payload. This means
+each input parser constructor needs to be able to parse both GraphQL values and
+JSON values, but fortunately, the duplication of logic is minimal. -}
+
+-- | See Note [Parsing variable values].
+data InputValue v
+  = GraphQLValue (Value v)
+  | JSONValue J.Value
+  deriving (Show, Eq, Functor)
 
 data Variable = Variable
   { vInfo  :: VariableInfo
