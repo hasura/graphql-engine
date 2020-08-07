@@ -760,11 +760,6 @@ valueToJSON expected = peelVariable (Just expected) >=> \case
       -- this should not be possible, as we peel any variable first
       VVariable _         -> error "FIXME(this should be a 500 with a descriptive message): found variable within variable"
 
-valueToGraphQL :: MonadParse m => InputValue Variable -> m (Value Void)
-valueToGraphQL = peelVariable Nothing >=> \case
-  JSONValue    j -> either parseError pure $ jsonToGraphQL j
-  GraphQLValue g -> pure $ error "FIXME(this should be a 500 with a descriptive message): found variable within variable" <$> g
-
 jsonToGraphQL :: (MonadError Text m) => A.Value -> m (Value Void)
 jsonToGraphQL = \case
   A.Null        -> pure $ VNull
@@ -783,7 +778,7 @@ peelVariable :: MonadParse m => Maybe GType -> InputValue Variable -> m (InputVa
 peelVariable expected = \case
   GraphQLValue (VVariable var) -> do
     onJust expected \locationType -> typeCheck locationType var
-    -- TODO: mark as not reusable?
+    markNotReusable
     pure $ absurd <$> vValue var
   value -> pure value
 
