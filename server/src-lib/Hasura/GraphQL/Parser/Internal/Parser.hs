@@ -744,10 +744,11 @@ subselection_ name description bodyParser =
 -- helpers
 
 valueToJSON :: MonadParse m => GType -> InputValue Variable -> m A.Value
-valueToJSON expected = peelVariable (Just expected) >=> \case
-  JSONValue    j -> pure j
-  GraphQLValue g -> graphQLToJSON g
+valueToJSON expected = peelVariable (Just expected) >=> valueToJSON'
   where
+    valueToJSON' = \case
+      JSONValue    j -> pure j
+      GraphQLValue g -> graphQLToJSON g
     graphQLToJSON = \case
       VNull               -> pure A.Null
       VInt i              -> pure $ A.toJSON i
@@ -757,8 +758,7 @@ valueToJSON expected = peelVariable (Just expected) >=> \case
       VEnum (EnumValue n) -> pure $ A.toJSON n
       VList values        -> A.toJSON <$> traverse graphQLToJSON values
       VObject objects     -> A.toJSON <$> traverse graphQLToJSON objects
-      -- this should not be possible, as we peel any variable first
-      VVariable _         -> error "FIXME(this should be a 500 with a descriptive message): found variable within variable"
+      VVariable variable  -> valueToJSON' $ absurd <$> vValue variable
 
 jsonToGraphQL :: (MonadError Text m) => A.Value -> m (Value Void)
 jsonToGraphQL = \case

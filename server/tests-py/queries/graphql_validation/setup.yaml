@@ -7,7 +7,7 @@ args:
      CREATE EXTENSION IF NOT EXISTS postgis;
 
 
-#Author table
+# Author table
 - type: run_sql
   args:
     sql: |
@@ -20,3 +20,17 @@ args:
   args:
     schema: public
     name: author
+
+
+# Article table
+- type: run_sql
+  args:
+    sql: |
+      create table article(
+          id       SERIAL PRIMARY KEY,
+          body     JSONB
+      );
+- type: track_table
+  args:
+    schema: public
+    name: article
