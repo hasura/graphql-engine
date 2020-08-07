@@ -298,7 +298,7 @@ library
                      , Data.URL.Template
                      , Hasura.App
                      , Hasura.Db
-                     -- -- Exposed for benchmark:
+                     -- Exposed for benchmark:
                      , Hasura.Cache.Bounded
                      , Hasura.Logging
                      , Hasura.HTTP
@@ -332,7 +332,6 @@ library
                      , Hasura.Server.Auth.JWT
                      , Hasura.GraphQL.Execute
                      , Hasura.GraphQL.Execute.LiveQuery
---                     , Hasura.GraphQL.Validate
                      , Hasura.GraphQL.Transport.HTTP
                      , Hasura.GraphQL.Transport.HTTP.Protocol
                      , Hasura.GraphQL.Transport.WebSocket
@@ -420,11 +419,6 @@ library
                      , Hasura.RQL.DML.Update.Types
                      , Hasura.RQL.DML.Count
                      , Hasura.RQL.GBoolExp
-                     -- , Hasura.GraphQL.Validate
-                     -- , Hasura.GraphQL.Validate.Types
-                     -- , Hasura.GraphQL.Validate.Context
-                     -- , Hasura.GraphQL.Validate.Field
-                     -- , Hasura.GraphQL.Validate.InputValue
                      , Hasura.GraphQL.Explain
                      , Hasura.GraphQL.Execute.Action
                      , Hasura.GraphQL.Execute.Inline
@@ -439,16 +433,6 @@ library
                      , Hasura.GraphQL.Execute.LiveQuery.Poll
                      , Hasura.GraphQL.Execute.LiveQuery.State
                      , Hasura.GraphQL.Execute.LiveQuery.TMap
-                     -- , Hasura.GraphQL.Resolve
-                     -- , Hasura.GraphQL.Resolve.Action
-                     -- , Hasura.GraphQL.Resolve.Types
-                     -- , Hasura.GraphQL.Resolve.Context
-                     -- , Hasura.GraphQL.Resolve.BoolExp
-                     -- , Hasura.GraphQL.Resolve.InputValue
-                     -- , Hasura.GraphQL.Resolve.Introspect
-                     -- , Hasura.GraphQL.Resolve.Insert
-                     -- , Hasura.GraphQL.Resolve.Mutation
-                     -- , Hasura.GraphQL.Resolve.Select
                      , Hasura.GraphQL.RemoteServer
                      , Hasura.GraphQL.Context
                      , Hasura.GraphQL.Parser
@@ -486,6 +470,7 @@ library
                      , Network.URI.Extended
                      , Network.Wai.Extended
                      , Network.Wai.Handler.WebSockets.Custom
+
 executable graphql-engine
   import: common-all, common-exe
   hs-source-dirs:    src-exec
