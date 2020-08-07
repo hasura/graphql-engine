@@ -231,6 +231,7 @@ mkSpockAction
   -> APIHandler m a
   -> Spock.ActionT m ()
 mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
+    L.unLogger logger (HttpDebugLog "incoming_request" (object ["request_id" .= String "TBA"]))
     req <- Spock.request
     -- Bytes are actually read from the socket here. Time this.
     (ioWaitTime, reqBody) <- withElapsedTime $ liftIO $ Wai.strictRequestBody req
@@ -240,7 +241,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
         ipAddress = Wai.getSourceFromFallback req
 
     requestId <- getRequestId headers
-
+    L.unLogger logger (HttpDebugLog "incoming_request" (object ["request_id" .= requestId]))
     userInfoE <- fmap fst <$> lift (resolveUserInfo logger manager headers authMode)
     userInfo  <- either (logErrorAndResp Nothing requestId req (Left reqBody) False headers . qErrModifier)
                  return userInfoE
