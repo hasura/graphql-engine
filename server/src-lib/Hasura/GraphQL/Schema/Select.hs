@@ -1,6 +1,8 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ViewPatterns    #-}
-
+-- | Generate table selection schema both for ordinary Hasura-type and
+-- relay-type queries.  All schema with "relay" or "connection" in the name is
+-- used exclusively by relay.
 module Hasura.GraphQL.Schema.Select
   ( selectTable
   , selectTableByPk
@@ -259,17 +261,12 @@ cause errors on the client side, for the following reasons:
   valid GraphQL schemas, and so any errors in the exposed schema can be caught
   at development time: when a developer is building a GraphQL query using schema
   introspection, they will eventually find out that the selection they aim to do
-  is not valid GraphQL.
+  is not valid GraphQL.  Put differently: exposing a given field through
+  introspection is not the same as claiming that there is a valid GraphQL query
+  that selects that field.
 
 - We only support tables that have at least one column (since we require primary
   keys), so that the admin role can select every table anyway.
-
-However, at the time of writing this note I am not convinced that all we are
-doing is exposing non-existent schema: we should also make sure not to parse
-invalid GraphQL.  So we probably eventually need to figure out the graph theory
-underlying this and fix this, or altenatively convince ourselves that we have
-set up our parsers in such a way that selections of fields of type objects do
-require non-empty subselections.
 -}
 
 -- | Fields of a table

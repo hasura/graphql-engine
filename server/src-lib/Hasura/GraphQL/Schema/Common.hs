@@ -8,9 +8,9 @@ import qualified Data.HashMap.Strict.InsOrd    as OMap
 import           Language.GraphQL.Draft.Syntax as G
 
 import qualified Data.Text                     as T
-import qualified Hasura.GraphQL.Execute.Types  as ET
+import qualified Hasura.GraphQL.Execute.Types  as ET (GraphQLQueryType)
 import qualified Hasura.GraphQL.Parser         as P
-import qualified Hasura.RQL.DML.Select.Types   as RQL
+import qualified Hasura.RQL.DML.Select.Types   as RQL (Fields)
 
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -87,10 +87,10 @@ defaultDirectives :: [P.DirectiveInfo]
 defaultDirectives =
   [mkDirective $$(G.litName "skip"), mkDirective $$(G.litName "include")]
   where
+    ifInputField =
+      P.mkDefinition $$(G.litName "if") Nothing $ P.IFRequired $ P.TNamed $
+      P.mkDefinition $$(G.litName "Boolean") Nothing P.TIScalar
+    dirLocs = map G.DLExecutable
+      [G.EDLFIELD, G.EDLFRAGMENT_SPREAD, G.EDLINLINE_FRAGMENT]
     mkDirective name =
-      let ifInputField =
-            P.mkDefinition $$(G.litName "if") Nothing $ P.IFRequired $ P.TNamed $
-            P.mkDefinition $$(G.litName "Boolean") Nothing P.TIScalar
-          dirLocs = map G.DLExecutable
-            [G.EDLFIELD, G.EDLFRAGMENT_SPREAD, G.EDLINLINE_FRAGMENT]
-      in P.DirectiveInfo name Nothing [ifInputField] dirLocs
+      P.DirectiveInfo name Nothing [ifInputField] dirLocs

@@ -1,3 +1,4 @@
+-- | Helper functions for generating the schema of database tables
 module Hasura.GraphQL.Schema.Table
   ( tableSelectColumnsEnum
   , tableUpdateColumnsEnum
