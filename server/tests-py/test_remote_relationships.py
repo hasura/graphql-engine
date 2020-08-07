@@ -227,6 +227,11 @@ class TestExecution:
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'subscription_with_remote_join_fields.yaml')
 
+    def test_remote_joins_in_mutation_response(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic_with_authors.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'mutation_output_with_remote_join_fields.yaml')
+
 class TestDeepExecution:
 
     @classmethod
