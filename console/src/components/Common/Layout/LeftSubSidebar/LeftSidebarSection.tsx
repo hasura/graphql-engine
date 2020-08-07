@@ -40,19 +40,6 @@ const LeftSidebarSection = ({
 
   // TODO test search
   const itemList = prioritySearch(searchText, items, 'name');
-  // if (searchText) {
-  //   const secondaryResults: LeftSidebarItem[] = [];
-  //   items.forEach(a => {
-  //     if (a.name.startsWith(searchText)) {
-  //       itemList.push(a);
-  //     } else if (a.name.includes(searchText)) {
-  //       secondaryResults.push(a);
-  //     }
-  //   });
-  //   itemList = [...itemList, ...secondaryResults];
-  // } else {
-  //   itemList = [...items];
-  // }
 
   const getChildList = () => {
     let childList;

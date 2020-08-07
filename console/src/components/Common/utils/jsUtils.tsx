@@ -359,7 +359,6 @@ export const prioritySearch = (
   searchList: Record<string, any>[],
   searchProp: string
 ) => {
-  // let searchResults: Record<string, any>[] = [];
   if (searchText) {
     const primarySameCaseResults: Record<string, any>[] = [];
     const secondarySameCaseResults: Record<string, any>[] = [];
