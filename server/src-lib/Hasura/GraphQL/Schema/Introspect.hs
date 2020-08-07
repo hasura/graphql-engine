@@ -3,19 +3,19 @@ module Hasura.GraphQL.Schema.Introspect where
 import           Hasura.Prelude
 -- import qualified Hasura.RQL.Types
 
-import qualified Data.Aeson                          as J
-import qualified Data.HashMap.Strict                 as Map
-import qualified Data.HashMap.Strict.InsOrd          as OMap
-import qualified Data.List.NonEmpty                  as NE
-import qualified Data.Text                           as T
-import qualified Text.Builder                        as T
-import qualified Data.Vector                         as V
-import qualified Language.GraphQL.Draft.Printer      as GP
-import qualified Language.GraphQL.Draft.Syntax       as G
+import qualified Data.Aeson                     as J
+import qualified Data.HashMap.Strict            as Map
+import qualified Data.HashMap.Strict.InsOrd     as OMap
+import qualified Data.List.NonEmpty             as NE
+import qualified Data.Text                      as T
+import qualified Data.Vector                    as V
+import qualified Language.GraphQL.Draft.Printer as GP
+import qualified Language.GraphQL.Draft.Syntax  as G
+import qualified Text.Builder                   as T
 
-import qualified Hasura.GraphQL.Parser               as P
+import qualified Hasura.GraphQL.Parser          as P
 
-import           Hasura.GraphQL.Parser               (FieldParser, Kind (..), Parser, Schema (..))
+import           Hasura.GraphQL.Parser          (FieldParser, Kind (..), Parser, Schema (..))
 import           Hasura.GraphQL.Parser.Class
 
 {-
@@ -330,7 +330,8 @@ inputValue =
     name = P.selection_ $$(G.litName "name") Nothing P.string $>
       nameAsJSON . P.dName
     description :: FieldParser n (P.Definition P.InputFieldInfo -> J.Value)
-    description = P.selection_ $$(G.litName "description") Nothing P.string $> const J.Null
+    description = P.selection_ $$(G.litName "description") Nothing P.string $>
+      maybe J.Null (J.String . G.unDescription) . P.dDescription
     typeF :: FieldParser n (P.Definition P.InputFieldInfo -> J.Value)
     typeF = do
       printer <- P.subselection_ $$(G.litName "type") Nothing typeField
