@@ -2,7 +2,7 @@
   url: /v1/graphql
   status: 200
   headers:
-    x-hasura-role: critic
+    X-Hasura-Role: critic
   response:
     errors:
     - extensions:
@@ -27,7 +27,7 @@
   status: 200
   url: /v1/graphql
   headers:
-    x-hasura-role: anonymous
+    X-Hasura-Role: anonymous
   response:
     data:
       author:
