@@ -373,9 +373,7 @@ export const prioritySearch = (
         primarySameCaseResults.push(term);
       } else if (currentTerm.includes(searchText)) {
         secondarySameCaseResults.push(term);
-      } else if (
-        lowerCurrentTerm.startsWith(lowerSearchText)
-      ) {
+      } else if (lowerCurrentTerm.startsWith(lowerSearchText)) {
         primaryOppCaseResults.push(term);
       } else if (lowerCurrentTerm.includes(lowerSearchText)) {
         secondaryOppCaseResults.push(term);
@@ -387,6 +385,6 @@ export const prioritySearch = (
       ...primaryOppCaseResults,
       ...secondaryOppCaseResults,
     ];
-  } 
+  }
   return searchResults;
 };
