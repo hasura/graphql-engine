@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router';
 import styles from './LeftSubSidebar.scss';
+import { prioritySearch } from '../../utils/jsUtils';
 
 interface LeftSidebarItem {
   name: string;
@@ -38,20 +39,20 @@ const LeftSidebarSection = ({
   };
 
   // TODO test search
-  let itemList: LeftSidebarItem[] = [];
-  if (searchText) {
-    const secondaryResults: LeftSidebarItem[] = [];
-    items.forEach(a => {
-      if (a.name.startsWith(searchText)) {
-        itemList.push(a);
-      } else if (a.name.includes(searchText)) {
-        secondaryResults.push(a);
-      }
-    });
-    itemList = [...itemList, ...secondaryResults];
-  } else {
-    itemList = [...items];
-  }
+  const itemList = prioritySearch(searchText, items, 'name');
+  // if (searchText) {
+  //   const secondaryResults: LeftSidebarItem[] = [];
+  //   items.forEach(a => {
+  //     if (a.name.startsWith(searchText)) {
+  //       itemList.push(a);
+  //     } else if (a.name.includes(searchText)) {
+  //       secondaryResults.push(a);
+  //     }
+  //   });
+  //   itemList = [...itemList, ...secondaryResults];
+  // } else {
+  //   itemList = [...items];
+  // }
 
   const getChildList = () => {
     let childList;
