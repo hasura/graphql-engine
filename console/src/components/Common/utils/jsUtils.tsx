@@ -359,6 +359,7 @@ export const prioritySearch = (
   searchList: Record<string, any>[],
   searchProp: string
 ) => {
+  let searchResults = searchList;
   if (searchText) {
     const primarySameCaseResults: Record<string, any>[] = [];
     const secondarySameCaseResults: Record<string, any>[] = [];
@@ -380,12 +381,12 @@ export const prioritySearch = (
         secondaryOppCaseResults.push(term);
       }
     });
-    searchList = [
+    searchResults = [
       ...primarySameCaseResults,
       ...secondarySameCaseResults,
       ...primaryOppCaseResults,
       ...secondaryOppCaseResults,
     ];
   } 
-  return searchList;
+  return searchResults;
 };
