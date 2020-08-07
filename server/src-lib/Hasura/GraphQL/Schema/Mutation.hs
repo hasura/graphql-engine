@@ -57,15 +57,10 @@ insertIntoTable table fieldName description insertPerms selectPerms updatePerms 
   selectionParser <- mutationSelectionSet table selectPerms
   objectsParser   <- P.list <$> tableFieldsInput table insertPerms
   conflictParser  <- fmap join $ sequenceA $ conflictObject table selectPerms <$> updatePerms
-  let conflictName = $$(G.litName "on_conflict")
-      conflictDesc = "on conflict condition"
-      objectsName  = $$(G.litName "objects")
+  let objectsName  = $$(G.litName "objects")
       objectsDesc  = "the rows to be inserted"
       argsParser   = do
-        conflictClause <- maybe
-          (pure Nothing)
-          (P.fieldOptional conflictName (Just conflictDesc))
-          conflictParser
+        conflictClause <- mkConflictClause conflictParser
         objects <- P.field objectsName (Just objectsDesc) objectsParser
         pure (conflictClause, objects)
   pure $ P.subselection fieldName description argsParser selectionParser
@@ -73,6 +68,16 @@ insertIntoTable table fieldName description insertPerms selectPerms updatePerms 
        ( mkInsertObject objects table columns conflictClause insertPerms updatePerms
        , RQL.MOutMultirowFields output
        )
+
+mkConflictClause :: MonadParse n => Maybe (Parser 'Input n a) -> InputFieldsParser n (Maybe a)
+mkConflictClause conflictParser
+  = maybe
+    (pure Nothing) -- Empty InputFieldsParser (no arguments allowed)
+    (P.fieldOptional conflictName (Just conflictDesc))
+    conflictParser
+  where
+    conflictName = $$(G.litName "on_conflict")
+    conflictDesc = "on conflict condition"
 
 -- | Variant of 'insertIntoTable' that inserts a single row
 insertOneIntoTable
@@ -89,15 +94,10 @@ insertOneIntoTable table fieldName description insertPerms selectPerms updatePer
   selectionParser <- tableSelectionSet table selectPerms
   objectParser    <- tableFieldsInput table insertPerms
   conflictParser  <- fmap join $ sequenceA $ conflictObject table (Just selectPerms) <$> updatePerms
-  let conflictName  = $$(G.litName "on_conflict")
-      conflictDesc  = "on conflict condition"
-      objectName    = $$(G.litName "object")
+  let objectName    = $$(G.litName "object")
       objectDesc    = "the row to be inserted"
       argsParser    = do
-        conflictClause <- maybe
-          (pure Nothing)
-          (P.fieldOptional conflictName (Just conflictDesc))
-          conflictParser
+        conflictClause <- mkConflictClause conflictParser
         object <- P.field objectName (Just objectDesc) objectParser
         pure (conflictClause, object)
   pure $ P.subselection fieldName description argsParser selectionParser
@@ -162,15 +162,11 @@ objectRelationshipInput table insertPerms selectPerms updatePerms =
   columns        <- tableColumns table
   objectParser   <- tableFieldsInput table insertPerms
   conflictParser <- fmap join $ sequenceA $ conflictObject table selectPerms <$> updatePerms
-  let conflictName = $$(G.litName "on_conflict")
-      objectName   = $$(G.litName "data")
+  let objectName   = $$(G.litName "data")
       inputName    = tableName <> $$(G.litName "_obj_rel_insert_input")
       inputDesc    = G.Description $ "input type for inserting object relation for remote table " <>> table
       inputParser = do
-        conflictClause <- maybe
-          (pure Nothing)
-          (P.fieldOptional conflictName Nothing)
-          conflictParser
+        conflictClause <- mkConflictClause conflictParser
         object <- P.field objectName Nothing objectParser
         pure $ mkInsertObject object table columns conflictClause insertPerms updatePerms
   pure $ P.object inputName (Just inputDesc) inputParser
@@ -189,15 +185,11 @@ arrayRelationshipInput table insertPerms selectPerms updatePerms =
   columns        <- tableColumns table
   objectParser   <- tableFieldsInput table insertPerms
   conflictParser <- fmap join $ sequenceA $ conflictObject table selectPerms <$> updatePerms
-  let conflictName = $$(G.litName "on_conflict")
-      objectsName  = $$(G.litName "data")
+  let objectsName  = $$(G.litName "data")
       inputName    = tableName <> $$(G.litName "_arr_rel_insert_input")
       inputDesc    = G.Description $ "input type for inserting array relation for remote table " <>> table
       inputParser = do
-        conflictClause <- maybe
-          (pure Nothing)
-          (P.fieldOptional conflictName Nothing)
-          conflictParser
+        conflictClause <- mkConflictClause conflictParser
         objects <- P.field objectsName Nothing $ P.list objectParser
         pure $ mkInsertObject objects table columns conflictClause insertPerms updatePerms
   pure $ P.object inputName (Just inputDesc) inputParser
