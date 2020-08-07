@@ -78,6 +78,7 @@ Now we can use the following subscription to fetch the latest location of a vehi
       }
     }
 
+
 Check this `sample app <https://realtime-location-tracking.demo.hasura.app/>`__ for a working demo
 (`source code <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-location-tracking>`__).
 

@@ -4,54 +4,113 @@
 
 .. _schema_basics:
 
-Schema design basics
-====================
+Basics & workflows
+==================
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
-The Hasura GraphQL engine creates GraphQL schema object types and corresponding query/mutation fields with resolvers
-automatically as we create tables/views in the Postgres database.
+Introduction
+------------
 
-Let's take a look at how to create tables using the Hasura console, a UI tool meant for doing exactly this, and the
-GraphQL schema it generates.
+This page introduces the basics of how to manipulate and consume your GraphQL schema, and the workflows that can be followed to do so.
 
-Let's say we want to create two simple tables for an article/author schema:
+Workflows
+---------
+
+When developing with Hasura, there are different possible workflows that can be followed, depending on your requirements.
+
+Console
+^^^^^^^
+
+The Hasura console is the UI that can be used to build your schema. For example, you can create tables and relationships, as well as perform different types of data validation.
+
+.. thumbnail:: /img/graphql/manual/schema/console.png
+   :alt: Hasura console
+
+CLI
+^^^
+
+The CLI workflow is used if you'd like to work with migrations. This can be useful if you have several environments, such as development, staging and production.
+
+Setup
+*****
+
+1. :ref:`Install the Hasura CLI <install_hasura_cli>`.
+
+2. `Set up a project directory <https://hasura.io/docs/1.0/graphql/manual/migrations/migrations-setup.html#step-2-set-up-a-project-directory>`__.
+
+3. If you'd like to work with the Hasura console, `use the console from the CLI <https://hasura.io/docs/1.0/graphql/manual/migrations/migrations-setup.html#step-4-use-the-console-from-the-cli>`__.
+
+The newly created project directory contains a ``migrations`` folder and a ``metadata`` folder.
+
+Migrations
+**********
+
+Migrations are used if the underlying Postgres database is to be manipulated. For example, migrations are created when a new table is created or altered.
+The ``migrations`` directory contains one directory for each migration that has been created. 
+If you use the console using the Hasura CLI, migrations get automatically added to this folder. However, you can also add a migration :ref:`manually <manual_migrations>`.
+
+Inside the migrations directory, there are two files:
+
+- ``up.sql``: This file contains the SQL statement used to do the required database manipulation.
+- ``down.sql``: This file contains the SQL statement used to :ref:`roll back <roll_back_migrations>` the statement defined in ``up.sql``. 
+
+.. note::
+
+  Depending on the complexity of the statement in ``up.sql``, the ``down.sql`` file will not always be automatically filled by Hasura. You might want to add it yourself.
+
+Learn more about the :ref:`migrations file format <migration_file_format_v2>`.
+
+Metadata
+********
+
+Metadata in Hasura is all information and configuration of the schema that is on top of the Postgres database. 
+The ``metadata`` directory contains several files related to metadata. They include ``tables.yaml`` (containing all information around tables and views, such as relationships, permissions etc.), ``functions.yaml`` (containing all tracked custom functions) and others.
+
+When working on the Hasura console, the metadata will be updated in these files. However, it's also possible to update metadata manually in their respective files.
+
+Learn more about the :ref:`metadata file format <metadata_file_format_v1>`.
+
+API
+^^^
+
+The API can be used if the database or the GraphQL schema is accessed programatically i.e. through a computer program.
+
+- The :ref:`schema & metadata APIs <metadata_apis>` are used for performing schema manipulations.
+- The :ref:`GraphQL API <api_reference_graphql>` is used for querying or mutating GraphQL tables.
+
+Examples
+--------
+
+Schema manipulation
+^^^^^^^^^^^^^^^^^^^
+
+To illustrate the three different workflows presented above, we'll look at an example of creating and tracking the following table:
 
 .. code-block:: sql
 
   author (
     id SERIAL PRIMARY KEY,
     name TEXT
+    rating INT
   )
-
-  article (
-    id SERIAL PRIMARY KEY,
-    title TEXT,
-    content TEXT,
-    rating INT,
-    author_id INT
-  )
-
-.. _create-tables:
-
-Create tables
--------------
 
 .. rst-class:: api_tabs
 .. tabs::
 
   .. tab:: Console
 
-    Open the Hasura console and head to the ``Data`` tab and click the ``Create Table`` button to open up an interface to
-    create tables.
+    On the Hasura console, navigate to the ``Data`` tab and then click on the button ``Create table``.
 
-    For example, here is the schema for the ``article`` table in this interface:
+    .. thumbnail:: /img/graphql/manual/schema/console-create-table.png
+      :alt: Create a table with Hasura console  
 
-    .. thumbnail:: /img/graphql/manual/schema/create-table-graphql.png
-      :alt: Schema for an article table
+    .. note::
+
+      When adding a table over the Hasura console, it's tracked by default.
 
   .. tab:: CLI
 
@@ -59,13 +118,13 @@ Create tables
 
     .. code-block:: sql
 
-      CREATE TABLE article(id serial NOT NULL, title text NOT NULL, content text NOT NULL, rating integer NOT NULL, author_id serial NOT NULL, PRIMARY KEY (id));
+      CREATE TABLE author(id serial NOT NULL, name text NOT NULL, rating integer);
 
     Add the following statement to the ``down.sql`` file in case you need to :ref:`roll back <roll_back_migrations>` the above statement:
 
     .. code-block:: sql
 
-        DROP TABLE article;
+      DROP TABLE author;
 
     Apply the migration by running:
 
@@ -76,14 +135,11 @@ Create tables
     To track the table and expose it over the GraphQL API, edit the ``tables.yaml`` file in the ``metadata`` directory as follows:
 
     .. code-block:: yaml
-       :emphasize-lines: 4-6
+       :emphasize-lines: 1-3
 
         - table:
             schema: public
             name: author
-        - table:
-            schema: public
-            name: article
 
     Apply the metadata by running:
 
@@ -104,7 +160,7 @@ Create tables
       {
         "type": "run_sql",
         "args": {
-          "sql": "CREATE TABLE article(id serial NOT NULL, title text NOT NULL, content text NOT NULL, rating integer NOT NULL, author_id serial NOT NULL, PRIMARY KEY (id));"
+          "sql": "CREATE TABLE author(id serial NOT NULL, name text NOT NULL, rating integer);"
         }
       }
 
@@ -120,103 +176,50 @@ Create tables
         "type": "track_table",
         "args": {
           "schema": "public",
-          "name": "article"
+          "name": "author"
         }
       }
 
-As soon as a table is created, the corresponding GraphQL schema types and query/mutation resolvers will be automatically generated.
+GraphQL queries
+^^^^^^^^^^^^^^^
 
-The following object type and query/mutation fields are generated for the ``article`` table we just created:
-
-.. code-block:: graphql
-
-  # Object type
-  type Article {
-    id: Int
-    title: String
-    content: String
-    rating: Int
-    author_id: Int
-  }
-
-  # Query field
-  article (
-    where: article_bool_exp
-    limit: Int
-    offset: Int
-    order_by: [article_order_by!]
-  ): [article!]!
-
-  # insert/upsert mutation field
-  insert_article (
-    objects: [article_insert_input!]!
-    on_conflict: article_on_conflict
-  ): article_mutation_response
-
-  # update mutation field
-  update_article (
-    where: article_bool_exp!
-    _inc: article_inc_input
-    _set: article_set_input
-  ): article_mutation_response
-
-  # delete mutation field
-  delete_article (
-    where: article_bool_exp!
-  ): article_mutation_response
-
-See the :ref:`query <graphql_api_query>` and :ref:`mutation <graphql_api_mutation>`
-API references for the full specifications.
-
-You can insert some sample data into the tables using the ``Insert Row`` tab of the created tables.
-
-Try out basic GraphQL queries
------------------------------
-
-At this point, you should be able to try out basic GraphQL queries/mutations on the newly created tables (*you may want to add some sample data into the tables first*).
-
-Here are a couple of examples of GraphQL requests:
-
-- Query all rows in the ``article`` table
+You can perform GraphQL queries either from the Hasura console or over the GraphQL API.
 
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: GraphiQL
+  .. tab:: Console
+
+    On the console, you can perform queries in the GraphiQL field:
 
     .. graphiql::
       :view_only:
       :query:
         query {
-          article {
+          author {
             id
-            title
-            author_id
+            name
+            rating
           }
         }
       :response:
         {
           "data": {
-            "article": [
+            "author": [
               {
                 "id": 1,
-                "title": "sit amet",
-                "author_id": 4
+                "name": "Jenny",
+                "rating": 10
               },
               {
                 "id": 2,
-                "title": "a nibh",
-                "author_id": 2
+                "name": "John",
+                "rating": 9
               },
               {
                 "id": 3,
-                "title": "amet justo morbi",
-                "author_id": 4
-              },
-              {
-                "id": 4,
-                "title": "vestibulum ac est",
-                "author_id": 5
+                "name": "Betty",
+                "rating": 8
               }
             ]
           }
@@ -231,57 +234,5 @@ Here are a couple of examples of GraphQL requests:
       X-Hasura-Role: admin
 
       {
-        "query": "query { article { id title author_id } }"
+        "query": "query { author { id name rating }}"
       }
-
-- Insert data in the ``author`` table
-
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: GraphiQL
-
-    .. graphiql::
-      :view_only:
-      :query:
-        mutation add_author {
-          insert_author(
-            objects: [
-              { name: "Jane" }
-            ]
-          ) {
-            affected_rows
-            returning {
-              id
-              name
-            }
-          }
-        }
-      :response:
-        {
-          "data": {
-            "insert_author": {
-              "affected_rows": 1,
-              "returning": [
-                {
-                  "id": 11,
-                  "name": "Jane"
-                }
-              ]
-            }
-          }
-        }
-
-  .. tab:: API
-
-    .. code-block:: http
-
-      POST /v1/graphql HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "query": "mutation add_author { insert_author(objects: [ { name: \"Jane\" } ]) { affected_rows returning { id name }} }"
-      }
-    
-Note that the author's ``id`` does not need to passed as an input as it is of type ``serial`` (auto incrementing integer).
