@@ -289,5 +289,5 @@ We avoid this problem by making the column value non-nullable (which is correct,
 since we never treat a null value as a SQL NULL), then creating the field using
 fieldOptional. This creates a parser that rejects nulls, but won’t be called at
 all if the field is not specified, which is permitted by the GraphQL
-specification. See the Haddock documentation for IFOptional and fieldOptional
-for more details. -}
+specification. See Note [Optional fields and nullability] in
+Hasura.GraphQL.Parser.Internal.Parser for more details. -}

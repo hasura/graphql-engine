@@ -470,7 +470,8 @@ data InputFieldInfo
   -- Note that a default value of 'VNull' is subtly different from having no
   -- default value at all. If no default value is provided, the GraphQL
   -- specification allows distinguishing provided @null@ values from values left
-  -- completely absent; see <http://spec.graphql.org/June2018/#CoerceArgumentValues()>.
+  -- completely absent; see Note [Optional fields and nullability] in
+  -- Hasura.GraphQL.Parser.Internal.Parser.
   | forall k. ('Input <: k) => IFOptional (NonNullableType k) (Maybe (Value Void))
 
 instance Eq InputFieldInfo where
