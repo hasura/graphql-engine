@@ -138,7 +138,7 @@ column columnType (Nullability isNullable) =
     opaque parser = parser
       { pParser = \case
           GraphQLValue (VVariable (var@Variable{ vInfo, vValue })) -> do
-            typeCheck (toGraphQLType $ pType parser) var
+            typeCheck False (toGraphQLType $ pType parser) var
             Opaque (Just vInfo) <$> pParser parser (absurd <$> vValue)
           value -> Opaque Nothing <$> pParser parser value
       }

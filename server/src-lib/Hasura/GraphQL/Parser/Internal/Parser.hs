@@ -594,7 +594,7 @@ fieldWithDefault name description defaultValue parser = InputFieldsParser
   { ifDefinitions = [mkDefinition name description $
       IFOptional (discardNullability $ pType parser) (Just defaultValue)]
   , ifParser = M.lookup name >>> withPath (++[Key (unName name)]) . \case
-      Just value -> peelVariable expectedType value >>= parseValue expectedType
+      Just value -> peelVariableWith True expectedType value >>= parseValue expectedType
       Nothing    -> pInputParser parser $ GraphQLValue $ literal defaultValue
   }
   where
@@ -907,19 +907,22 @@ jsonToGraphQL = \case
     (graphQLName,) <$> jsonToGraphQL val
 
 peelVariable :: MonadParse m => Maybe GType -> InputValue Variable -> m (InputValue Variable)
-peelVariable expected = \case
+peelVariable = peelVariableWith False
+
+peelVariableWith :: MonadParse m => Bool -> Maybe GType -> InputValue Variable -> m (InputValue Variable)
+peelVariableWith hasLocationDefaultValue expected = \case
   GraphQLValue (VVariable var) -> do
-    onJust expected \locationType -> typeCheck locationType var
+    onJust expected \locationType -> typeCheck hasLocationDefaultValue locationType var
     markNotReusable
     pure $ absurd <$> vValue var
   value -> pure value
 
-typeCheck :: MonadParse m => GType -> Variable -> m ()
-typeCheck expectedType (Variable { vInfo, vType }) =
-  unless (expectedType `accepts` vType) $ parseError
+typeCheck :: MonadParse m => Bool -> GType -> Variable -> m ()
+typeCheck hasLocationDefaultValue locationType variable@(Variable { vInfo, vType }) =
+  unless (isVariableUsageAllowed hasLocationDefaultValue locationType variable) $ parseError
     $ "variable " <> dquote (getName vInfo) <> " is declared as "
     <> showGT vType <> ", but used where "
-    <> showGT expectedType <> " is expected"
+    <> showGT locationType <> " is expected"
 
 typeMismatch :: MonadParse m => Name -> Text -> InputValue Variable -> m a
 typeMismatch name expected given = parseError $
@@ -952,14 +955,43 @@ describeValueWith describeVariable = \case
       VObject _     -> "an object"
 
 -- | Checks whether the type of a variable is compatible with the type
---   at the location at which it is used.
-accepts :: GType -> GType -> Bool
-expected `accepts` actual = case (expected, actual) of
-  (TypeNamed expectedNullability expectedType, TypeNamed actualNullability actualType)
-    -> checkNullability expectedNullability actualNullability && (expectedType == actualType)
-  (TypeList expectedNullability expectedType, TypeList actualNullability actualType)
-    -> checkNullability expectedNullability actualNullability && (expectedType `accepts` actualType)
-  _ -> False
+--   at the location at which it is used. This is an implementation of
+--   the function described in section 5.8.5 of the spec:
+--   http://spec.graphql.org/June2018/#sec-All-Variable-Usages-are-Allowed
+--   No input type coercion is allowed between variables: coercion
+--   rules only allow when translating a value from a literal. It is
+--   therefore not allowed to use an Int variable at a Float location,
+--   despite the fact that it is legal to use an Int literal at a
+--   Float location.
+--   Furthermore, it's also worth noting that there's one tricky case
+--   where we might allow a nullable variable at a non-nullable
+--   location: when either side has a non-null default value. That's
+--   because GraphQL conflates nullability and optinal fields (see
+--   Note [Optional fields and nullability] for more details).
+isVariableUsageAllowed
+  :: Bool      -- ^ does the location have a default value
+  -> GType     -- ^ the location type
+  -> Variable  -- ^ the variable
+  -> Bool
+isVariableUsageAllowed hasLocationDefaultValue locationType variable
+  | isNullable locationType       = areTypesCompatible locationType variableType
+  | not $ isNullable variableType = areTypesCompatible locationType variableType
+  | hasLocationDefaultValue       = areTypesCompatible locationType variableType
+  | hasNonNullDefault variable    = areTypesCompatible locationType variableType
+  | otherwise                     = False
   where
-    checkNullability (Nullability expectedNullability) (Nullability actualNullability) =
-      expectedNullability || not actualNullability
+    areTypesCompatible = compareTypes `on` \case
+      TypeNamed _ n -> TypeNamed (Nullability True) n
+      TypeList  _ n -> TypeList  (Nullability True) n
+    variableType = vType variable
+    hasNonNullDefault = vInfo >>> \case
+      VIRequired _       -> False
+      VIOptional _ value -> value /= VNull
+    compareTypes = curry \case
+      (TypeList lNull lType, TypeList vNull vType)
+        -> checkNull lNull vNull && areTypesCompatible lType vType
+      (TypeNamed lNull lType, TypeNamed vNull vType)
+        -> checkNull lNull vNull && lType == vType
+      _ -> False
+    checkNull (Nullability expectedNull) (Nullability actualNull) =
+      expectedNull || not actualNull
