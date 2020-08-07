@@ -14,10 +14,7 @@ import {
   updateConsoleNotificationsInDB,
 } from '../../telemetry/Actions';
 import Button from '../Common/Button';
-import {
-  getReadAllNotificationsState,
-  fetchConsoleNotifications,
-} from './Actions';
+import { getReadAllNotificationsState } from './Actions';
 import { Nullable } from '../Common/utils/tsUtils';
 import { mapDispatchToPropsEmpty } from '../Common/utils/reactUtils';
 
@@ -92,6 +89,8 @@ type NotificationProps = {
   onClickMarkAllAsRead: () => void;
   disableMarkAllAsReadBtn: boolean;
   onClickViewMore: () => void;
+  readAll: boolean;
+  displayViewMore: boolean;
 };
 
 type PreReleaseProps = Pick<NotificationProps, 'optOutCallback'>;
@@ -154,25 +153,18 @@ const VersionUpdateNotification: React.FC<VersionUpdateNotificationProps> = ({
   );
 };
 
-interface BadgeViewMoreProps {
-  numberNotifications: number;
-}
-
-interface ViewMoreProps extends BadgeViewMoreProps {
+type ViewMoreProps = {
   onClickViewMore: () => void;
-}
+  readAll: boolean;
+};
 
 const ViewMoreOptions: React.FC<ViewMoreProps> = ({
-  numberNotifications,
   onClickViewMore,
+  readAll,
 }) => {
-  const buttonText =
-    numberNotifications > 20
-      ? 'View older notifications'
-      : 'View more notifications';
-  // new > read notifs - See More notifications
-  // if current < old - See older notifications
-  // TODO: think about the part where we might have to change the text
+  const buttonText = !readAll
+    ? 'View more notifications'
+    : 'View older notifications';
   return (
     <Button className={styles.viewMoreNotifications} onClick={onClickViewMore}>
       {buttonText} &rarr;
@@ -190,6 +182,8 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
       disableMarkAllAsReadBtn,
       onClickMarkAllAsRead,
       onClickViewMore,
+      readAll,
+      displayViewMore,
     },
     forwardedRef
   ) => (
@@ -232,10 +226,12 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
         ) : null}
         {data.length &&
           data.map(({ id, ...props }) => <Update key={id} {...props} />)}
-        <ViewMoreOptions
-          numberNotifications={data.length}
-          onClickViewMore={onClickViewMore}
-        />
+        {displayViewMore ? (
+          <ViewMoreOptions
+            onClickViewMore={onClickViewMore}
+            readAll={readAll}
+          />
+        ) : null}
       </Box>
     </Box>
   )
@@ -286,9 +282,10 @@ const checkVersionUpdate = (
   return [false, ''];
 };
 
-interface ToReadBadgeProps extends BadgeViewMoreProps {
+type ToReadBadgeProps = {
+  numberNotifications: number;
   show: Nullable<boolean>;
-}
+};
 
 const ToReadBadge: React.FC<ToReadBadgeProps> = ({
   numberNotifications,
@@ -317,8 +314,6 @@ const mapStateToProps = (state: ReduxState) => {
   };
 };
 
-type StateProps = ReturnType<typeof mapStateToProps>;
-
 type HasuraNotificationOwnProps = {
   toggleDropDown: (e: React.MouseEvent<HTMLDivElement>) => void;
   closeDropDown: () => void;
@@ -345,8 +340,9 @@ const HasuraNotifications: React.FC<
   const dropDownRef = React.useRef<HTMLDivElement>(null);
   const wrapperRef = React.useRef(null);
   // TODO: the number should become zero once it is opened for the first time
-  // we can store `opened` in local storage
+  const [opened, updateOpenState] = React.useState(false);
   const [numberNotifications, updateNumberNotifications] = React.useState(0);
+  const [numDisplayed, updateNumDisplayed] = React.useState(20);
   const showBadge = console_opts?.console_notifications?.showBadge;
 
   // for running the version update code on mounting
@@ -415,24 +411,73 @@ const HasuraNotifications: React.FC<
   };
 
   const onClickViewMore = () => {
-    // TODO: to change the
-    dispatch(fetchConsoleNotifications());
+    // TODO: to change the number of notifications that are being displayed.
+    const totalNotifs = consoleNotifications.length;
+    if (numDisplayed < totalNotifs) {
+      const diff = totalNotifs - numDisplayed;
+      if (diff > 20) {
+        updateNumDisplayed(num => num + 20);
+        return;
+      }
+      updateNumDisplayed(num => num + diff);
+    }
   };
 
   const onClickMarkAllAsRead = () => {
     const readAllState = getReadAllNotificationsState() as NotificationsState;
     dispatch(updateConsoleNotificationsInDB(readAllState));
-    // updateNumberNotifications(0);
   };
 
-  useOnClickOutside([dropDownRef, wrapperRef], closeDropDown);
+  const onClickOutside = () => {
+    updateOpenState(false);
+    closeDropDown();
+  };
+
+  useOnClickOutside([dropDownRef, wrapperRef], onClickOutside);
+
+  const onClickShareSection = (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>
+  ) => {
+    if (showBadge) {
+      if (console_opts?.console_notifications) {
+        let updatedState = {};
+        if (console_opts.console_notifications.date) {
+          updatedState = {
+            ...console_opts.console_notifications,
+            showBadge: false,
+          };
+        } else {
+          updatedState = {
+            ...console_opts.console_notifications,
+            date: new Date().toISOString(),
+            showBadge: false,
+          };
+        }
+        dispatch(
+          updateConsoleNotificationsInDB(updatedState as NotificationsState)
+        );
+      }
+    }
+
+    if (!opened) {
+      updateOpenState(true);
+    }
+
+    toggleDropDown(e);
+  };
+
+  React.useEffect(() => {
+    if (!opened) {
+      updateNumDisplayed(20);
+    }
+  }, [opened]);
 
   return (
     <>
       <div
         className={`${styles.shareSection} dropdown-toggle`}
         aria-expanded="false"
-        onClick={toggleDropDown}
+        onClick={onClickShareSection}
         ref={wrapperRef}
       >
         <i className="fa fa-bell" />
@@ -443,13 +488,18 @@ const HasuraNotifications: React.FC<
       </div>
       <Notifications
         ref={dropDownRef}
-        data={consoleNotifications}
+        data={consoleNotifications.slice(0, numDisplayed + 1)}
         showVersionUpdate={displayNewVersionNotification}
         latestVersion={latestVersion}
         optOutCallback={optOutCallback}
         onClickMarkAllAsRead={onClickMarkAllAsRead}
         onClickViewMore={onClickViewMore}
         disableMarkAllAsReadBtn={!numberNotifications}
+        readAll={console_opts?.console_notifications?.read === 'all'}
+        displayViewMore={
+          consoleNotifications.length > 20 &&
+          numDisplayed !== consoleNotifications.length
+        }
       />
     </>
   );
