@@ -65,10 +65,6 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
   let strictChecks = false;
   let lastReadAllTimeStamp = null;
 
-  // TODO: check date is null, if so then directly update the data
-  // if not we are making a new query to update the current data. if there are no
-  // new notifs, then show the last response, if not, then update the data accordingly
-
   if (
     consoleStateDB &&
     consoleStateDB.console_notifications &&
