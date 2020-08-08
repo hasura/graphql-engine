@@ -1850,7 +1850,7 @@ func (m *Migrate) ExportDataDump(tableNames []string) ([]byte, error) {
 	// to support tables starting with capital letters
 	modifiedTableNames := make([]string, len(tableNames))
 	for idx, val := range tableNames {
-		modifiedTableNames[idx] = "\"" + val + "\""
+		modifiedTableNames[idx] = fmt.Sprintf(`"%s"`, val) 
 	}
 	return m.databaseDrv.ExportDataDump(modifiedTableNames)
 }
