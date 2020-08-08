@@ -561,6 +561,9 @@ class TestGraphQLQueryEnums:
     def test_introspect(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/introspect.yaml', transport)
 
+    def test_introspect_user_role(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/introspect_user_role.yaml', transport)
+
     def test_select_enum_field(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_enum_field.yaml', transport)
 
@@ -751,7 +754,6 @@ class TestRelayQueriesPermissions:
 
     def test_article_pagination_backward(self, hge_ctx, transport):
         _test_relay_pagination(hge_ctx, transport, self.dir() + '/article_pagination/backward', 2)
-
 
 def _test_relay_pagination(hge_ctx, transport, test_file_prefix, no_of_pages):
     for i in range(no_of_pages):

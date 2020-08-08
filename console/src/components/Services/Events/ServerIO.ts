@@ -409,9 +409,6 @@ export const modifyEventTrigger = (
               columns: state.operationColumns
                 .filter(c => !!c.enabled)
                 .map(c => c.name),
-              payload: state.operationColumns
-                .filter(c => !!c.enabled)
-                .map(c => c.name),
             }
           : null,
         delete: state.operations.delete ? { columns: '*' } : null,
@@ -633,4 +630,37 @@ export const getEventLogs = (
   ).then((data: InvocationLog[]) => {
     successCallback(data);
   }, errorCallback);
+};
+
+export const cancelEvent = (
+  type: 'one-off scheduled' | 'cron',
+  tableName: string,
+  id: string,
+  onSuccessCallback: () => void
+): Thunk => dispatch => {
+  const url = Endpoints.query;
+  const payload = {
+    type: 'delete',
+    args: {
+      table: { name: tableName, schema: 'hdb_catalog' },
+      where: {
+        id: { $eq: id },
+      },
+    },
+  };
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  };
+  const successText = `Successfully deleted ${type} event`;
+  const errorText = 'Error in cancelling the event';
+
+  dispatch(requestAction(url, options, successText, errorText, true, true))
+    .then(() => {
+      dispatch(showSuccessNotification(successText));
+      onSuccessCallback();
+    })
+    .catch(err => {
+      dispatch(showErrorNotification(errorText, err.message, err));
+    });
 };

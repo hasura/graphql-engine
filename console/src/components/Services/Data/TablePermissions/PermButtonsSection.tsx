@@ -26,10 +26,6 @@ const PermButtonSection: React.FC<PermButtonSectionProps> = ({
   permsChanged,
   currQueryPermissions,
 }) => {
-  if (readOnlyMode) {
-    return null;
-  }
-
   const dispatchSavePermissions = useCallback(() => {
     const isInvalid = Object.values(localFilterString).some(val => {
       if (val && !isJsonString(val)) {
@@ -59,6 +55,10 @@ const PermButtonSection: React.FC<PermButtonSectionProps> = ({
       dispatch(permChangePermissions(permChangeTypes.delete));
     }
   }, [dispatch]);
+
+  if (readOnlyMode) {
+    return null;
+  }
 
   return (
     <div className={`${styles.add_mar_top} ${styles.add_pad_left}`}>
