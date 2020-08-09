@@ -12,25 +12,22 @@ Getting Started
   :depth: 1
   :local:
 
+Introduction
+------------
+
 To use the Hasura GraphQL engine, you need to:
 
-#. Run the Hasura GraphQL engine with access to a Postgres database
-#. Use the Hasura console (an admin UI) that connects to the Hasura GraphQL engine to help you build your schema and
-   run GraphQL queries
-
-.. thumbnail:: /img/graphql/manual/getting-started/running-hasura.png
-   :width: 75%
-   :class: no-shadow
-   :alt: Running Hasura
+- Deploy the Hasura GraphQL engine with access to a Postgres database
+- Set up and test your GraphQL API using the Hasura console UI *(also possible via the CLI or API)*
+- Consume the generated GraphQL API from your client apps
 
 Get started from scratch
 ------------------------
 
-- `Using Hasura Cloud <https://hasura.io/docs/cloud/1.0/manual/getting-started/index.html>`__ **(recommended)**: Create a new Hasura Cloud project with just one click.
+- `Using Hasura Cloud <https://hasura.io/docs/cloud/1.0/manual/getting-started/index.html>`__ **(recommended)**: Create
+  a new Hasura Cloud project with just a few clicks.
 - :ref:`Using Docker <docker_simple>`: Run a **local development** setup that sets up both the Hasura GraphQL
-  engine and Postgres using Docker.
-- :ref:`Using Heroku <heroku_one_click>`: Get started quickly with no setup required to
-  host the Hasura GraphQL engine and Postgres on Heroku.
+  engine and Postgres using Docker Compose.
 
 Get started using an existing database
 --------------------------------------

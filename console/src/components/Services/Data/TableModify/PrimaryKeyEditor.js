@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   DELETE_PK_WARNING,
   setPrimaryKeys,
@@ -94,6 +94,8 @@ const PrimaryKeyEditor = ({
       savePrimaryKeys(tableSchema.table_name, currentSchema, pkConstraintName)
     );
   };
+
+  useEffect(setPkEditState, [columns]);
 
   // remove
   const onRemove = () => {
