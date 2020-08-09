@@ -18,23 +18,18 @@ const RedeliverEvent: React.FC<Props> = ({ dispatch, eventId }) => {
   const [logs, setLogs] = React.useState<InvocationLog[]>([]);
 
   React.useEffect(() => {
-    const intervalId = setInterval(() => {
-      dispatch(
-        getEventLogs(
-          eventId,
-          'data',
-          l => {
-            setLogs(l);
-          },
-          e => {
-            setError(e);
-          }
-        )
-      );
-    }, 2000);
-    return () => {
-      clearInterval(intervalId);
-    };
+    dispatch(
+      getEventLogs(
+        eventId,
+        'data',
+        l => {
+          setLogs(l);
+        },
+        e => {
+          setError(e);
+        }
+      )
+    );
   }, []);
 
   const gridHeadings = ['status', 'id', 'created_at'].map(column => {
