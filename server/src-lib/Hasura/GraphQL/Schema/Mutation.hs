@@ -365,16 +365,16 @@ updateOperators table updatePermissions = do
 
     , let desc = "delete key/value pair or string element. key/value pairs are matched based on their key value"
       in updateOperator tableName $$(G.litName "_delete_key")
-         textParser RQL.UpdDeleteKey jsonCols desc desc
+         nullableTextParser RQL.UpdDeleteKey jsonCols desc desc
 
     , let desc = "delete the array element with specified index (negative integers count from the end). "
                  <> "throws an error if top level container is not an array"
       in updateOperator tableName $$(G.litName "_delete_elem")
-         intParser RQL.UpdDeleteElem jsonCols desc desc
+         nonNullableIntParser RQL.UpdDeleteElem jsonCols desc desc
 
     , let desc = "delete the field or element with specified path (for JSON arrays, negative integers count from the end)"
       in updateOperator tableName $$(G.litName "_delete_at_path")
-         (fmap P.list . textParser) RQL.UpdDeleteAtPath jsonCols desc desc
+         (fmap P.list . nonNullableTextParser) RQL.UpdDeleteAtPath jsonCols desc desc
     ]
   whenMaybe (not $ null parsers) do
     let allowedOperators = fst <$> parsers
@@ -395,8 +395,9 @@ updateOperators table updatePermissions = do
         pure $ presetColumns <> flattenedExps
   where
     columnParser columnInfo = fmap P.mkParameter <$> P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
-    textParser   _          = fmap P.mkParameter <$> P.column (PGColumnScalar PGText)    (G.Nullability False)
-    intParser    _          = fmap P.mkParameter <$> P.column (PGColumnScalar PGInteger) (G.Nullability False)
+    nonNullableTextParser _ = fmap P.mkParameter <$> P.column (PGColumnScalar PGText)    (G.Nullability False)
+    nullableTextParser    _ = fmap P.mkParameter <$> P.column (PGColumnScalar PGText)    (G.Nullability True)
+    nonNullableIntParser  _ = fmap P.mkParameter <$> P.column (PGColumnScalar PGInteger) (G.Nullability False)
 
     updateOperator
       :: G.Name

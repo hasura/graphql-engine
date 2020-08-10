@@ -1134,7 +1134,7 @@ functionArgs functionName (toList -> inputArgs) = do
                named <- Map.fromList . catMaybes <$> traverse (namedArgument foundArguments) left
                pure $ RQL.FunctionArgsExp positional named
 
-         pure $ P.fieldOptional fieldName (Just fieldDesc) objectParser <&> fromMaybe defaultArguments
+         pure $ P.field fieldName (Just fieldDesc) objectParser
 
   where
     sessionPlaceholder :: RQL.ArgumentExp UnpreparedValue
