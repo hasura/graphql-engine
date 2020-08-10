@@ -219,7 +219,7 @@ func (h *HasuraDB) ApplyMetadata() error {
 					if err != nil {
 						return err
 					}
-					herror.migrationQuery = "offending object: \n\r\n\r" + string(queryData)
+					h.logger.Debugf("offending object: \n\r\n\r" + string(queryData))
 				}
 			}
 			return herror
