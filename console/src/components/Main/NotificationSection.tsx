@@ -39,7 +39,12 @@ const Update: React.FC<UpdateProps> = ({
   is_read,
   ...props
 }) => {
-  const [linkClicked, updateLinkClicked] = React.useState(is_read ?? true);
+  const [linkClicked, updateLinkClicked] = React.useState(is_read);
+
+  React.useEffect(() => {
+    updateLinkClicked(is_read);
+  }, [is_read]);
+
   const onClickLink = () => {
     if (!linkClicked) {
       updateLinkClicked(true);
@@ -57,6 +62,7 @@ const Update: React.FC<UpdateProps> = ({
       className={`${styles.updateBox} ${
         !linkClicked ? styles.unread : styles.read
       }`}
+      onClick={onClickLink}
     >
       <Flex px="25px" justifyContent="space-between">
         <Flex justifyContent="space-between">
@@ -112,7 +118,7 @@ type NotificationProps = {
   disableMarkAllAsReadBtn: boolean;
   onClickViewMore: () => void;
   displayViewMore: boolean;
-  onClickUpdateLink: (id?: number) => void;
+  onClickUpdate: (id?: number) => void;
   previouslyRead?: string | string[];
 };
 
@@ -200,7 +206,7 @@ const checkIsRead = (prevRead?: string | string[], id?: number) => {
     return false;
   }
 
-  if (typeof prevRead === 'string') {
+  if (prevRead === 'all' || prevRead === 'default' || prevRead === 'error') {
     return true;
   }
 
@@ -218,7 +224,7 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
       onClickMarkAllAsRead,
       onClickViewMore,
       displayViewMore,
-      onClickUpdateLink,
+      onClickUpdate,
       previouslyRead,
     },
     forwardedRef
@@ -247,7 +253,6 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
         <Button
           title="Mark all as read"
           onClick={onClickMarkAllAsRead}
-          // TODO: this can change to a state dependent on when all we show the `View more button`
           disabled={disableMarkAllAsReadBtn}
         >
           Mark all as read
@@ -265,7 +270,7 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
             <Update
               key={id}
               id={id}
-              onClickAction={onClickUpdateLink}
+              onClickAction={onClickUpdate}
               is_read={checkIsRead(previouslyRead, id)}
               {...props}
             />
@@ -384,7 +389,6 @@ const HasuraNotifications: React.FC<
   const [latestVersion, setLatestVersion] = React.useState(serverVersion);
   const dropDownRef = React.useRef<HTMLDivElement>(null);
   const wrapperRef = React.useRef(null);
-  // TODO: the number should become zero once it is opened for the first time
   const [opened, updateOpenState] = React.useState(false);
   const [numberNotifications, updateNumberNotifications] = React.useState(0);
   const [numDisplayed, updateNumDisplayed] = React.useState(20);
@@ -456,7 +460,6 @@ const HasuraNotifications: React.FC<
   };
 
   const onClickViewMore = () => {
-    // TODO: to change the number of notifications that are being displayed.
     const totalNotifs = consoleNotifications.length;
     if (numDisplayed < totalNotifs) {
       const diff = totalNotifs - numDisplayed;
@@ -471,6 +474,7 @@ const HasuraNotifications: React.FC<
   const onClickMarkAllAsRead = () => {
     const readAllState = getReadAllNotificationsState() as NotificationsState;
     dispatch(updateConsoleNotificationsState(readAllState));
+    updateNumDisplayed(20);
     // This is being done to persist the id's that were present at the time of marking it as all read
     window.localStorage.setItem(
       'main:console_notifications',
@@ -522,13 +526,19 @@ const HasuraNotifications: React.FC<
     }
   }, [opened]);
 
-  const onClickUpdateLink = (id?: number) => {
+  const onClickUpdate = (id?: number) => {
     if (!id) {
       return;
     }
+
     const previousRead = console_opts?.console_notifications?.read;
 
-    if (typeof previousRead === 'string' || !previousRead) {
+    if (
+      previousRead === 'all' ||
+      previousRead === 'default' ||
+      previousRead === 'error' ||
+      !previousRead
+    ) {
       return;
     }
 
@@ -570,7 +580,7 @@ const HasuraNotifications: React.FC<
           consoleNotifications.length > 20 &&
           numDisplayed !== consoleNotifications.length
         }
-        onClickUpdateLink={onClickUpdateLink}
+        onClickUpdate={onClickUpdate}
         previouslyRead={console_opts?.console_notifications?.read}
       />
     </>
