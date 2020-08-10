@@ -515,8 +515,7 @@ different combinators for parsing input fields:
        taken directly from the nullability of the field’s value parser.
   2. `fieldOptional` — Defines a field with no default value that is always
        nullable. Returns Nothing if (and only if!) the field is omitted.
-  3. `fieldWithDefault` — Defines a field with a default value (and is therefore
-       always nullable by definition).
+  3. `fieldWithDefault` — Defines a field with a default value.
 
 The last of the three, `fieldWithDefault`, is actually the simplest. It
 corresponds to a field with a default value, and the underlying value parser
