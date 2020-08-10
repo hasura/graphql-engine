@@ -39,9 +39,11 @@ const Update: React.FC<UpdateProps> = ({
   is_read,
   ...props
 }) => {
-  const [linkClicked, updateLinkClicked] = React.useState(false);
+  const [linkClicked, updateLinkClicked] = React.useState(is_read ?? true);
   const onClickLink = () => {
-    updateLinkClicked(true);
+    if (!linkClicked) {
+      updateLinkClicked(true);
+    }
     if (onClickAction) {
       onClickAction(props.id);
     }
@@ -94,9 +96,7 @@ const Update: React.FC<UpdateProps> = ({
           </Text>
         </Flex>
         <Flex width="20%" alignItems="center" justifyContent="flex-end">
-          {!linkClicked || !is_read ? (
-            <div className={styles.yellowDot} />
-          ) : null}
+          {!linkClicked ? <div className={styles.yellowDot} /> : null}
         </Flex>
       </Flex>
     </Box>
@@ -471,6 +471,11 @@ const HasuraNotifications: React.FC<
   const onClickMarkAllAsRead = () => {
     const readAllState = getReadAllNotificationsState() as NotificationsState;
     dispatch(updateConsoleNotificationsState(readAllState));
+    // This is being done to persist the id's that were present at the time of marking it as all read
+    window.localStorage.setItem(
+      'main:console_notifications',
+      JSON.stringify(consoleNotifications)
+    );
   };
 
   const onClickOutside = () => {
@@ -527,13 +532,15 @@ const HasuraNotifications: React.FC<
       return;
     }
 
-    dispatch(
-      updateConsoleNotificationsState({
-        read: [...previousRead, `${id}`],
-        date: new Date().toISOString(),
-        showBadge: false,
-      })
-    );
+    if (!previousRead.includes(`${id}`)) {
+      dispatch(
+        updateConsoleNotificationsState({
+          read: [...previousRead, `${id}`],
+          date: new Date().toISOString(),
+          showBadge: false,
+        })
+      );
+    }
   };
 
   return (
