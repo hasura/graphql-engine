@@ -1847,7 +1847,12 @@ func (m *Migrate) ApplySeed(q interface{}) error {
 }
 
 func (m *Migrate) ExportDataDump(tableNames []string) ([]byte, error) {
-	return m.databaseDrv.ExportDataDump(tableNames)
+	// to support tables starting with capital letters
+	modifiedTableNames := make([]string, len(tableNames))
+	for idx, val := range tableNames {
+		modifiedTableNames[idx] = fmt.Sprintf(`"%s"`, val) 
+	}
+	return m.databaseDrv.ExportDataDump(modifiedTableNames)
 }
 
 func printDryRunStatus(migrations []*Migration) *bytes.Buffer {
