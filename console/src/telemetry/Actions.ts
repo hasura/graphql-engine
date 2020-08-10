@@ -137,7 +137,7 @@ const setPreReleaseNotificationOptOutInDB = () => (
   return dispatch(setConsoleOptsInDB(options, successCb, errorCb));
 };
 
-const updateConsoleNotificationsInDB = (updatedState: NotificationsState) => {
+const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
   return (
     dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
     getState: GetReduxState
@@ -310,5 +310,5 @@ export {
   telemetryNotificationShown,
   setPreReleaseNotificationOptOutInDB,
   setTelemetryNotificationShownInDB,
-  updateConsoleNotificationsInDB,
+  updateConsoleNotificationsState,
 };
