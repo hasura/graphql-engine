@@ -361,7 +361,8 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
              case typeDef of
                G.TypeDefinitionScalar (G.ScalarTypeDefinition _ name' _) ->
                  fieldConstructor' . doNullability nullability <$> remoteFieldScalarParser name'
-               G.TypeDefinitionEnum defn -> pure $ fieldConstructor' $ remoteFieldEnumParser defn
+               G.TypeDefinitionEnum defn ->
+                 pure $ fieldConstructor' $ doNullability nullability $ remoteFieldEnumParser defn
                G.TypeDefinitionObject _ -> throw400 RemoteSchemaError $ "expected input type, but got output type" -- couldn't find the equivalent error in Validate/Types.hs, so using a new error message
                G.TypeDefinitionInputObject defn ->
                  pure . fieldConstructor' . doNullability nullability =<< remoteSchemaInputObject schemaDoc defn
