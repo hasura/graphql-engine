@@ -111,7 +111,6 @@ type NotificationProps = {
   onClickMarkAllAsRead: () => void;
   disableMarkAllAsReadBtn: boolean;
   onClickViewMore: () => void;
-  readAll: boolean;
   displayViewMore: boolean;
   onClickUpdateLink: (id?: number) => void;
   previouslyRead?: string | string[];
@@ -218,7 +217,6 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
       disableMarkAllAsReadBtn,
       onClickMarkAllAsRead,
       onClickViewMore,
-      readAll,
       displayViewMore,
       onClickUpdateLink,
       previouslyRead,
@@ -275,7 +273,7 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
         {displayViewMore ? (
           <ViewMoreOptions
             onClickViewMore={onClickViewMore}
-            readAll={readAll}
+            readAll={previouslyRead === 'all'}
           />
         ) : null}
       </Box>
@@ -561,7 +559,6 @@ const HasuraNotifications: React.FC<
         onClickMarkAllAsRead={onClickMarkAllAsRead}
         onClickViewMore={onClickViewMore}
         disableMarkAllAsReadBtn={!numberNotifications}
-        readAll={console_opts?.console_notifications?.read === 'all'}
         displayViewMore={
           consoleNotifications.length > 20 &&
           numDisplayed !== consoleNotifications.length
