@@ -225,7 +225,13 @@ geographyWithinDistanceInput
   => m (Parser 'Input n (DWithinGeogOp UnpreparedValue))
 geographyWithinDistanceInput = do
   geographyParser <- P.column (PGColumnScalar PGGeography) (G.Nullability False)
-  booleanParser   <- P.column (PGColumnScalar PGBoolean)   (G.Nullability False)
+  -- FIXME
+  -- It doesn't make sense for this value to be nullable; it only is for
+  -- backwards compatibility; if an explicit Null value is given, it will be
+  -- forwarded to the underlying SQL function, that in turns treat a null value
+  -- as an error. We can fix this by rejecting explicit null values, by marking
+  -- this field non-nullable in a future release.
+  booleanParser   <- P.column (PGColumnScalar PGBoolean)   (G.Nullability True)
   floatParser     <- P.column (PGColumnScalar PGFloat)     (G.Nullability False)
   pure $ P.object $$(G.litName "st_d_within_geography_input") Nothing $
     DWithinGeogOp <$> (mkParameter <$> P.field $$(G.litName "distance") Nothing floatParser)
