@@ -109,16 +109,16 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
             );
             if (previousList.length) {
               const resDiff = data.filter(
-                (notif, notifIdx) => previousList[notifIdx].id !== `${notif.id}`
+                (notif, notifIdx) => previousList[notifIdx].id !== notif.id
               );
               if (!resDiff.length) {
                 // since the data hasn't changed since the last call
-                return;
+                newReadValue = previousRead;
+              } else {
+                newReadValue = data
+                  .filter(notif => !previousList.includes(notif.id))
+                  .map(notif => `${notif.id}`);
               }
-
-              newReadValue = data.filter(
-                notif => !previousList.includes(`${notif.id}`)
-              );
             }
           } else {
             newReadValue = previousRead;
