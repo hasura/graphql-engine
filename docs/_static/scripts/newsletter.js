@@ -7,7 +7,6 @@ email_input.addEventListener('input', function() {
     submit_btn.value = 'Subscribe';
     submit_btn.disabled = false;
 
-    const mcStatusError = document.querySelector('.mce-error-response');
     mcStatusError.innerHTML = '';
     mcStatusError.classList.add('hide');
 });

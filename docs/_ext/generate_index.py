@@ -55,7 +55,7 @@ def on_finish_building(app, exception):
 
     for link in indexObjs:
         url = ET.SubElement(root, "url")
-        ET.SubElement(url, "loc").text = base_domain + str(current_version) + "/" + link["url"]
+        ET.SubElement(url, "loc").text = "https://" + base_domain + "/" + str(current_version) + "/" + link["url"]
         ET.SubElement(url, "changefreq").text = "daily"
         ET.SubElement(url, "priority").text = "1" if (current_version == latest_version) else "0.5"
 

@@ -352,7 +352,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     E.GExPRemote rsi opDef  ->
       runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
   where
-    telemTransport = Telem.HTTP
+    telemTransport = Telem.WebSocket
     runHasuraGQ
       :: ExceptT () m DiffTime
       -> Telem.CacheHit
