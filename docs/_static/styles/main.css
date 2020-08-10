@@ -1074,6 +1074,9 @@ article ol ol {
 }
 
 /* common Header */
+.removePaddBottom {
+  padding-bottom: 0 !important;
+}
 .productWd100 {
   width: 100% !important;
   height: auto !important;
@@ -1351,13 +1354,14 @@ article ol ol {
 }
 .headerWrapper .navBlueBG .navBarUL li a, .headerWrapper .navWhiteBG .navBarUL li a {
 	 padding: 14px 0;
+   padding-bottom: 30px;
 	 position: relative;
    text-decoration: none;
    cursor: pointer;
 }
 .headerWrapper .navBlueBG .navBarUL li a .dropDownArrow, .headerWrapper .navWhiteBG .navBarUL li a .dropDownArrow {
 	 position: absolute;
-	 bottom: 4px;
+	 top: 51px;
 	 left: 50%;
 	 transform: translateX(-50%);
 	 opacity: 0;
@@ -1422,8 +1426,8 @@ article ol ol {
 	 border-radius: 8px;
 	 position: absolute;
 	 z-index: 1;
-	 top: 10px;
-	 padding: 35px 15px;
+	 top: 30px;
+	 padding: 0px 15px;
 	 display: flex;
 }
  .navDrapdownWrapper .productBorRight {
@@ -1431,14 +1435,21 @@ article ol ol {
 }
 .navDrapdownWrapper .navDrapdownLeftWrapper {
   width: 41.66666667%;
-  padding: 0 15px;
+  padding: 35px 15px;
+}
+.navDrapdownWrapper .navDrapdownLeftWrapper .navDrapdownListWrapper {
+  padding-right: 15px;
 }
 .navDrapdownWrapper .navDrapdownRightWrapper {
   width: 58.33333333%;
-  padding: 0 15px;
+  padding: 35px 15px;
 }
 .navDrapdownWrapper .navDrapdownListWrapper .wd33 {
   width: 33.33333333%;
+  float: left;
+}
+.navDrapdownWrapper .navDrapdownListWrapper .wd50 {
+  width: 50%;
   float: left;
 }
  .navDrapdownWrapper .navDrapdownListWrapper .navDrapdownList, .navDrapdownWrapper .navDrapdownListWrapper .navDrapdownListResources {
@@ -1449,23 +1460,26 @@ article ol ol {
 	 background-color: #f2f2f2;
 	 border-radius: 8px;
 }
+.navDrapdownWrapper .navDrapdownListWrapper .navDrapdownList:hover .navDrapdownRight .articleDesc, .navDrapdownWrapper .navDrapdownListWrapper .navDrapdownListResources:hover .navDrapdownRight .articleDesc{
+  color: #1B2738;
+}
  .navDrapdownWrapper .navDrapdownListWrapper .navDrapdownList .icon, .navDrapdownWrapper .navDrapdownListWrapper .navDrapdownListResources .icon {
-	 min-width: 56px;
+	 min-width: 24px;
 }
  .navDrapdownWrapper .navDrapdownListWrapper .navDrapdownList .icon img, .navDrapdownWrapper .navDrapdownListWrapper .navDrapdownListResources .icon img {
-	 width: 56px;
+	 width: 24px;
 }
  .navDrapdownWrapper .navDrapdownListWrapper .navDrapdownList .navDrapdownRight, .navDrapdownWrapper .navDrapdownListWrapper .navDrapdownListResources .navDrapdownRight {
-	 padding-left: 24px;
+	 padding-left: 16px;
 	 padding-right: 30px;
 }
  .navDrapdownWrapper .navDrapdownListWrapper .navDrapdownList .navDrapdownRight .articleDesc, .navDrapdownWrapper .navDrapdownListWrapper .navDrapdownListResources .navDrapdownRight .articleDesc {
-	 color: #000;
+	 color: #717780;
 	 padding-bottom: 3px;
 	 line-height: 150%;
    margin: 0 0;
    font-size: 16px;
-   font-weight: 400;
+   font-weight: 600;
 }
  .navDrapdownWrapper .navDrapdownListWrapper .navDrapdownList .navDrapdownRight .articleDescSmall, .navDrapdownWrapper .navDrapdownListWrapper .navDrapdownListResources .navDrapdownRight .articleDescSmall {
 	 font-weight: normal;
@@ -1479,17 +1493,23 @@ article ol ol {
  .navDrapdownWrapper .navDrapdownListWrapper .navDrapdownListResources {
 	 padding: 14px 15px;
    text-align: center;
+   padding: 14px 15px;
+  margin: 10px 0;
+  display: flex;
+  align-items: center;
+  max-height: 56px;
 }
  .navDrapdownWrapper .navDrapdownListWrapper .navDrapdownListResources .icon {
 	 text-align: center;
 	 padding-bottom: 7px;
 }
  .navDrapdownWrapper .navDrapdownListWrapper .navDrapdownListResources .icon img {
-	 min-height: 54px;
-	 max-height: 54px;
+	 min-height: 28px;
+	 max-height: 28px;
 }
  .navDrapdownWrapper .navDrapdownListWrapper .navDrapdownListResources .navDrapdownRight {
 	 padding: 0;
+   padding-left: 16px;
 }
  .navDrapdownWrapper .navDrapdownListWrapper .navDrapdownListResources .navDrapdownRight .articleDesc {
 	 text-align: center;
@@ -1507,18 +1527,22 @@ article ol ol {
 	 background-color: #f2f2f2;
 	 border-radius: 8px;
 }
+.navDrapdownWrapper .navDrapdownRightWrapper .navDrapdownListWrapperRight .navContainer:hover .articleDesc{
+  color: #1B2738;
+}
  .navDrapdownWrapper .navDrapdownRightWrapper .navDrapdownListWrapperRight .navContainer .boxContainer {
 	 max-height: 150px;
 	 overflow: hidden;
 	 border-radius: 8px;
 }
  .navDrapdownWrapper .navDrapdownRightWrapper .navDrapdownListWrapperRight .navContainer .articleDesc {
-	 color: #000;
+	 color: #717780;
 	 padding-top: 20px;
 	 padding-bottom: 8px;
 	 line-height: 150%;
    margin: 0 0;
    font-size: 16px;
+   font-weight: 600;
 }
  .navDrapdownWrapper .navDrapdownRightWrapper .navDrapdownListWrapperRight .navContainer .articleDescSmall {
 	 font-weight: normal;
@@ -1872,7 +1896,7 @@ article ol ol {
   	 font-weight: 600;
   	 font-size: 16px;
   	 line-height: 150%;
-  	 color: #1b2738;
+  	 color: #717780;
   	 text-transform: none;
   	 padding-bottom: 12px;
   }
@@ -1893,10 +1917,10 @@ article ol ol {
   	 border-radius: 8px;
   }
    .headerWrapper .topnav .visibleMobile .navBarULMobile .fullWidth .navDrapdownList .icon, .headerWrapper .topnav .visibleMobile .navBarULMobile li .navDrapdownList .icon, .headerWrapper .topnav .visibleMobile .navBarULMobile .fullWidth .navDrapdownListResources .icon, .headerWrapper .topnav .visibleMobile .navBarULMobile li .navDrapdownListResources .icon {
-  	 min-width: 56px;
+  	 min-width: 30px;
   }
    .headerWrapper .topnav .visibleMobile .navBarULMobile .fullWidth .navDrapdownList .icon img, .headerWrapper .topnav .visibleMobile .navBarULMobile li .navDrapdownList .icon img, .headerWrapper .topnav .visibleMobile .navBarULMobile .fullWidth .navDrapdownListResources .icon img, .headerWrapper .topnav .visibleMobile .navBarULMobile li .navDrapdownListResources .icon img {
-  	 width: 56px;
+  	 width: 30px;
   }
    .headerWrapper .topnav .visibleMobile .navBarULMobile .fullWidth .navDrapdownList .navDrapdownRight, .headerWrapper .topnav .visibleMobile .navBarULMobile li .navDrapdownList .navDrapdownRight, .headerWrapper .topnav .visibleMobile .navBarULMobile .fullWidth .navDrapdownListResources .navDrapdownRight, .headerWrapper .topnav .visibleMobile .navBarULMobile li .navDrapdownListResources .navDrapdownRight {
   	 padding-left: 10px;
@@ -1907,10 +1931,13 @@ article ol ol {
   	 font-weight: 600;
   	 font-size: 16px;
   	 line-height: 150%;
-  	 color: #1b2738;
+     color: #717780;
   	 text-transform: none;
   	 padding-bottom: 12px;
      margin: 0 0;
+  }
+  .headerWrapper .topnav .visibleMobile .navBarULMobile .fullWidth .navDrapdownListResources .navDrapdownRight .articleDesc {
+    padding-bottom: 0;
   }
    .headerWrapper .topnav .visibleMobile .navBarULMobile .fullWidth .navDrapdownList .navDrapdownRight .articleDescSmall,
    .headerWrapper .topnav .visibleMobile .navBarULMobile li .navDrapdownList .navDrapdownRight .articleDescSmall, .headerWrapper .topnav .visibleMobile .navBarULMobile .fullWidth .navDrapdownListResources .navDrapdownRight .articleDescSmall, .headerWrapper .topnav .visibleMobile .navBarULMobile li .navDrapdownListResources .navDrapdownRight .articleDescSmall {
@@ -1932,8 +1959,8 @@ article ol ol {
   	 padding-bottom: 7px;
   }
    .headerWrapper .topnav .visibleMobile .navBarULMobile .fullWidth .navDrapdownListResources .icon img, .headerWrapper .topnav .visibleMobile .navBarULMobile li .navDrapdownListResources .icon img {
-  	 min-height: 54px;
-  	 max-height: 54px;
+  	 min-height: 30px;
+  	 max-height: 30px;
   	 margin-right: 0;
   }
    .headerWrapper .topnav .visibleMobile .navBarULMobile .fullWidth .navDrapdownListResources .navDrapdownRight, .headerWrapper .topnav .visibleMobile .navBarULMobile li .navDrapdownListResources .navDrapdownRight {
