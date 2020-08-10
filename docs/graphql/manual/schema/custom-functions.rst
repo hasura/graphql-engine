@@ -51,12 +51,12 @@ Creating & exposing SQL functions
 
     - Head to the ``Data -> SQL`` section of the Hasura console
     - Enter your `create function SQL statement <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
-    - Select the ``Track this`` checkbox to expose the new function over the GraphQL API
+    - Select the ``Track this`` checkbox if you'd like to expose the new function over the GraphQL API
     - Hit the ``Run`` button
 
   .. tab:: CLI
 
-    1. :ref:`Create a migration manually <manual_migrations>` and add your `create function SQL statement <https://www.postgresql.org/docs/current/sql-createfunction.html>`__ to the ``up.sql`` file. Also, add an SQL statement to the ``down.sql`` file in case you need to roll back the migrations.
+    1. :ref:`Create a migration manually <manual_migrations>` and add your `create function SQL statement <https://www.postgresql.org/docs/current/sql-createfunction.html>`__ to the ``up.sql`` file. Also, add an SQL statement that reverts the previous statement to the ``down.sql`` file in case you need to :ref:`roll back <roll_back_migrations>` the migrations.
 
     2. Apply the migration by running:
 
@@ -72,6 +72,12 @@ Creating & exposing SQL functions
         - function:
             schema: public
             name: <function name>
+
+    4. Apply the metadata by running:
+
+    .. code-block:: bash
+
+      hasura metadata apply
 
   .. tab:: API
 

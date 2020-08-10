@@ -27,7 +27,7 @@ Console
 
 The Hasura console is the UI that can be used to build your schema. For example, you can create tables and relationships, as well as perform different types of data validation.
 
-.. thumbnail:: /img/graphql/manual/schema/console.png
+.. thumbnail:: /img/graphql/manual/schema/hasura-console.png
    :alt: Hasura console
 
 CLI

@@ -12,7 +12,11 @@ Customise auto-generated field names
   :depth: 2
   :local:
 
-It is possible to override the auto-generated table and column field names exposed over the GraphQL API.
+Introduction
+------------
+
+Hasura auto-generates GrapqhQL field names based on your database column names. If you'd like to change the default, 
+it is possible to override the auto-generated table and column field names exposed over the GraphQL API.
 
 ..  note::
 
@@ -26,7 +30,7 @@ Expose columns with a different name in the GraphQL API
 
   .. tab:: Console
 
-     Head to the ``Data -> [table-name] -> Modify``
+     Head to the ``Data -> [table-name] -> Modify``. On the relevant field, click ``Edit`` and change the GraphQL field name to a name of your choice.
 
      .. thumbnail:: /img/graphql/manual/schema/custom-field-name-column.png
         :alt: Customise GraphQL field name
@@ -103,7 +107,7 @@ Expose table root fields with a different name in the GraphQL API
 
   .. tab:: Console
 
-     Head to the ``Data -> [table-name] -> Modify``
+     Head to the ``Data -> [table-name] -> Modify``. Click the ``Edit`` button in the ``Custom GraphQL Root Fields`` section and define names over which you'd like to expose the table root fields.
 
      .. thumbnail:: /img/graphql/manual/schema/custom-field-name-root-fields.png
         :alt: Customise GraphQL root field

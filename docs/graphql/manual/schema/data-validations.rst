@@ -156,7 +156,7 @@ Suppose we have the following table:
   .. tab:: CLI
 
     :ref:`Create a migration manually <manual_migrations>` and add your `Postgres function <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
-    and your `Postgres trigger <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__ to the ``up.sql`` file. Also, add an SQL statement to the ``down.sql`` to revert the statement.
+    and your `Postgres trigger <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__ to the ``up.sql`` file. Also, add an SQL statement to the ``down.sql`` to revert the previous statement in case you need to :ref:`roll back <roll_back_migrations>` the migration.
 
     Apply the migration by running:
 
@@ -584,24 +584,11 @@ returns an object of type ``AuthorOutput``:
             "name": "InsertAuthor",
             "type": "mutation",
             "definition": {
-                "kind": "synchronous",
-                "arguments": [
-                  {
-                    "name": "name",
-                    "type": "String!"
-                  },
-                  {
-                    "name": "rating",
-                    "type": "Int!"
-                  },
-                  {
-                    "name": "is_active",
-                    "type": "Boolean!"
-                  }
-                ],
-                "output_type": "AuthorOutput",
-                "handler": "https://action.my_app.com/create-user"
-              }
+              "kind": "synchronous",
+              "input_type": "AuthorInput",
+              "output_type": "AuthorOutput",
+              "handler": "https://action.my_app.com/insert-author"
+            }
           }
         }
  

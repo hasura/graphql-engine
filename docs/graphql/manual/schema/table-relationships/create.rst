@@ -62,7 +62,7 @@ Let's add a foreign-key constraint to the ``author_id`` column in the ``article`
     .. code-block:: sql
 
       ALTER TABLE article
-      DROP CONSTRAINT (article_author_id_fkey)
+      DROP CONSTRAINT article_author_id_fkey;
 
     Apply the migration by running:
 
@@ -348,7 +348,7 @@ Fetch a list of authors and a nested list of each author's articles:
 Using manual relationships
 --------------------------
 
-Let's say you have a table ``author (id, name)`` and a view ``author_avg_rating (id, avg)`` which has the
+Let's say you have a table ``author (id, name)`` and a :ref:`view <custom_views>` ``author_avg_rating (id, avg)`` which has the
 average rating of articles for each author.
 
 Let us now create an ``object relationship`` called ``avg_rating`` from the ``author`` table to the

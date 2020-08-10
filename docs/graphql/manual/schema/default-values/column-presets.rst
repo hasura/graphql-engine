@@ -95,7 +95,7 @@ Step 1: Configure a column preset
           "permission" : {
             "check" : {},
             "set":{
-              "id":"X-Hasura-User-Id"
+              "user_id":"X-Hasura-User-Id"
             },
             "columns":["title","content", "rating"]
           }
