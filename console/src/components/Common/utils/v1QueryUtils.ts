@@ -697,3 +697,40 @@ export const getUpdateConsoleStateQuery = (
     },
   };
 };
+
+export const getConsoleNotificationQuery = (time: Date | string | number) => {
+  return {
+    args: {
+      table: 'console_notification',
+      columns: ['*'],
+      where: {
+        $and: [
+          {
+            $or: [
+              {
+                expiry_date: {
+                  $gt: time,
+                },
+              },
+              {
+                expiry_date: {
+                  $eq: null,
+                },
+              },
+            ],
+          },
+          {
+            created_at: { $lte: time },
+          },
+        ],
+      },
+      order_by: [
+        {
+          type: 'desc',
+          column: ['created_at'],
+        },
+      ],
+    },
+    type: 'select',
+  };
+};
