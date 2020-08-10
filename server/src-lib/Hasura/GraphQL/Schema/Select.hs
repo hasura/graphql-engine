@@ -1079,15 +1079,10 @@ customSQLFunctionArgs FunctionInfo{..} = functionArgs fiName fiInputArgs
 --   Note that collisions are possible, but ignored for now, if a named argument
 --   is also named "arg_$n". (FIXME: link to an issue?)
 --
---   Depending on the arguments the SQL function requires, there are three possible outcomes:
---   1. if the function requires no argument, or if its only argument is not
---      user-provided (the session argument in the case of custom functions, the
---      table row argument in the case of computed fields), the args object will
---      NOT be part of the schema;
---   2. if all non-session arguments have a default value, then the args object will be in
---      the schema as an optional field;
---   3. otherwise, if there is at least one field that doesn't have a default value, the
---      args object will be a required field.
+--   If the function requires no argument, or if its only argument is not
+--   user-provided (the session argument in the case of custom functions, the
+--   table row argument in the case of computed fields), the args object will
+--   be omitted.
 functionArgs
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   => QualifiedFunction
@@ -1097,7 +1092,8 @@ functionArgs functionName (toList -> inputArgs) = do
   -- First, we iterate through the original sql arguments in order, to find the
   -- corresponding graphql names. At the same time, we create the input field
   -- parsers, in three groups: session argument, optional arguments, and
-  -- mandatory arguments.
+  -- mandatory arguments. Optional arguments have a default value, mandatory
+  -- arguments don't.
   let (names, session, optional, mandatory) = mconcat $ snd $ mapAccumL splitArguments 1 inputArgs
       defaultArguments = RQL.FunctionArgsExp (snd <$> session) Map.empty
 
@@ -1133,15 +1129,17 @@ functionArgs functionName (toList -> inputArgs) = do
                -- argument (that does not have a name in the sql function), as:
                --   * only the last positional arguments can be omitted;
                --   * it has no name we can use.
+               -- We also fail if we find a mandatory argument that was not
+               -- provided by the user.
                named <- Map.fromList . catMaybes <$> traverse (namedArgument foundArguments) left
                pure $ RQL.FunctionArgsExp positional named
 
-         -- If all fields are optional, the object itself is optional.
-         pure $ if null mandatory
-                then P.fieldOptional fieldName (Just fieldDesc) objectParser <&> fromMaybe defaultArguments
-                else P.field fieldName (Just fieldDesc) objectParser
+         pure $ P.fieldOptional fieldName (Just fieldDesc) objectParser <&> fromMaybe defaultArguments
 
   where
+    sessionPlaceholder :: RQL.ArgumentExp UnpreparedValue
+    sessionPlaceholder = RQL.AEInput P.UVSession
+
     splitArguments
       :: Int
       -> FunctionInputArgument
@@ -1153,7 +1151,7 @@ functionArgs functionName (toList -> inputArgs) = do
          )
     splitArguments positionalIndex (IASessionVariables name) =
       let argName = getFuncArgNameTxt name
-      in (positionalIndex, ([argName], [(argName, RQL.AEInput P.UVSession)], [], []))
+      in (positionalIndex, ([argName], [(argName, sessionPlaceholder)], [], []))
     splitArguments positionalIndex (IAUserProvided arg) =
       let (argName, newIndex) = case faName arg of
                                   Nothing   -> ("arg_" <> T.pack (show positionalIndex), positionalIndex + 1)
@@ -1166,17 +1164,32 @@ functionArgs functionName (toList -> inputArgs) = do
     parseArgument arg name = do
       columnParser <- P.column (PGColumnScalar $ _qptName $ faType arg) (G.Nullability True)
       fieldName    <- textToName name
-      let argParser = if unHasDefault $ faHasDefault arg
-                      then P.fieldOptional  fieldName Nothing columnParser
-                      else Just <$> P.field fieldName Nothing columnParser
+
+      -- While some arguments are "mandatory" (i.e. they don't have a default
+      -- value), we don't enforce the distinction at the GraphQL type system
+      -- level, because all postgres function arguments are nullable, and
+      -- GraphQL conflates nullability and optionality (see Note [Optional
+      -- fields and nullability]). Making the field "mandatory" in the GraphQL
+      -- sense would mean giving a default value of `null`, implicitly passing
+      -- `null` to the postgres function if the user were to omit the
+      -- argument. For backwards compatibility reasons, and also to avoid
+      -- surprises, we prefer to reject the query if a mandatory argument is
+      -- missing rather than filling the blanks for the user.
+      let argParser = P.fieldOptional fieldName Nothing columnParser
       pure $ argParser `mapField` ((name,) . RQL.AEInput . mkParameter)
 
-    namedArgument dictionary (name, inputArgument) = for (Map.lookup name dictionary) \parsedValue ->
-      case inputArgument of
-        IASessionVariables _ -> pure (name, parsedValue)
-        IAUserProvided arg   -> case faName arg of
-          Just _  -> pure (name, parsedValue)
+    namedArgument
+      :: HashMap Text (RQL.ArgumentExp UnpreparedValue)
+      -> (Text, InputArgument FunctionArg)
+      -> n (Maybe (Text, RQL.ArgumentExp UnpreparedValue))
+    namedArgument dictionary (name, inputArgument) = case inputArgument of
+      IASessionVariables _ -> pure $ Just (name, sessionPlaceholder)
+      IAUserProvided arg   -> case Map.lookup name dictionary of
+        Just parsedValue -> case faName arg of
+          Just _  -> pure $ Just (name, parsedValue)
           Nothing -> parseErrorWith NotSupported "Only last set of positional arguments can be omitted"
+        Nothing -> whenMaybe (not $ unHasDefault $ faHasDefault arg) $
+          parseErrorWith NotSupported "Non default arguments cannot be omitted"
 
 
 -- | The "path" argument for json column fields
