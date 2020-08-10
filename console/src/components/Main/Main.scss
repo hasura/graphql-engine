@@ -1352,6 +1352,9 @@
 .updateBox {
   padding: 15px 0px;
   border-bottom: 1px solid #e1e1e1;
+  &:hover {
+    cursor: pointer;
+  }
   &:last-child {
     border-bottom: none;
   }
