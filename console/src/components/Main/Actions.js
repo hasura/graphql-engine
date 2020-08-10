@@ -5,7 +5,8 @@ import requestActionPlain from '../../utils/requestActionPlain';
 import Endpoints, { globalCookiePolicy } from '../../Endpoints';
 import { getFeaturesCompatibility } from '../../helpers/versionUtils';
 import { defaultNotification, errorNotification } from './ConsoleNotification';
-import { updateConsoleNotificationsInDB } from '../../telemetry/Actions';
+import { updateConsoleNotificationsState } from '../../telemetry/Actions';
+import { getConsoleNotificationQuery } from '../Common/utils/v1QueryUtils';
 
 const SET_MIGRATION_STATUS_SUCCESS = 'Main/SET_MIGRATION_STATUS_SUCCESS';
 const SET_MIGRATION_STATUS_ERROR = 'Main/SET_MIGRATION_STATUS_ERROR';
@@ -43,16 +44,6 @@ const SERVER_CONFIG_FETCH_SUCCESS = 'Main/SERVER_CONFIG_FETCH_SUCCESS';
 const SERVER_CONFIG_FETCH_FAIL = 'Main/SERVER_CONFIG_FETCH_FAIL';
 /* End */
 
-// helper methods
-
-const getReadAllNotificationsState = () => {
-  return {
-    read: 'all',
-    date: new Date().toISOString(),
-    showBadge: false,
-  };
-};
-
 // action definitions
 
 // to fetch and filter notifications
@@ -76,40 +67,7 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
   const now = new Date().toISOString();
 
   // TODO: add this query to query utils
-  const query = {
-    args: {
-      table: 'console_notification',
-      columns: ['*'],
-      where: {
-        $and: [
-          {
-            $or: [
-              {
-                expiry_date: {
-                  $gt: now,
-                },
-              },
-              {
-                expiry_date: {
-                  $eq: null,
-                },
-              },
-            ],
-          },
-          {
-            created_at: { $lte: now },
-          },
-        ],
-      },
-      order_by: [
-        {
-          type: 'desc',
-          column: ['created_at'],
-        },
-      ],
-    },
-    type: 'select',
-  };
+  const query = getConsoleNotificationQuery(now);
   const options = {
     body: JSON.stringify(query),
     method: 'POST',
@@ -124,7 +82,7 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
         // NOTE: this might be because of an error
         dispatch({ type: FETCH_CONSOLE_NOTIFICATIONS_SET_DEFAULT });
         dispatch(
-          updateConsoleNotificationsInDB({
+          updateConsoleNotificationsState({
             read: 'default',
             date: now,
             showBadge: false,
@@ -142,7 +100,7 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
           previousRead !== 'all'
         ) {
           dispatch(
-            updateConsoleNotificationsInDB({
+            updateConsoleNotificationsState({
               read: [],
               date: now,
               showBadge: true,
@@ -170,7 +128,7 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
       console.error(err);
       dispatch({ type: FETCH_CONSOLE_NOTIFICATIONS_ERROR });
       dispatch(
-        updateConsoleNotificationsInDB({
+        updateConsoleNotificationsState({
           read: 'error',
           date: now,
           showBadge: false,
@@ -502,5 +460,4 @@ export {
   RUN_TIME_ERROR,
   registerRunTimeError,
   fetchConsoleNotifications,
-  getReadAllNotificationsState,
 };

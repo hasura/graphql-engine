@@ -27,4 +27,12 @@ const getProClickState = () => {
   }
 };
 
-export { getProClickState, setProClickState };
+const getReadAllNotificationsState = () => {
+  return {
+    read: 'all',
+    date: new Date().toISOString(),
+    showBadge: false,
+  };
+};
+
+export { getProClickState, setProClickState, getReadAllNotificationsState };
