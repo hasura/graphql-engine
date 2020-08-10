@@ -220,7 +220,7 @@ or "A":
       You can define permissions using the ``_and`` operator in the ``tables.yaml`` file inside the ``metadata`` directory:
 
       .. code-block:: yaml
-         :emphasize-lines: 8-13
+         :emphasize-lines: 8-11
 
             - table:
                 schema: public

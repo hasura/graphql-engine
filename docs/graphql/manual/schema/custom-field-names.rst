@@ -40,7 +40,7 @@ Expose columns with a different name in the GraphQL API
     You can customize auto-generated field names in the ``tables.yaml`` file inside the ``metadata`` directory:
 
     .. code-block:: yaml
-       :emphasize-lines: 4-7
+       :emphasize-lines: 4-6
 
         - table:
             schema: public

@@ -60,7 +60,6 @@ Set action permissions
     Action permissions can be set by using the :ref:`create_action_permission metadata API <create_action_permission>`:
 
     .. code-block:: http
-      :emphasize-lines: 12-17
 
       POST /v1/query HTTP/1.1
       Content-Type: application/json
