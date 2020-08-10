@@ -92,7 +92,7 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
   textParser         <- P.column (PGColumnScalar PGText) (G.Nullability False)
   maybeCastParser    <- castExp columnType
   let name = P.getName columnParser <> $$(G.litName "_comparison_exp")
-      desc = G.Description $ "expression to compare columns of type "
+      desc = G.Description $ "Boolean expression to compare columns of type "
         <>  P.getName columnParser
         <<> ". All fields are combined with logical 'AND'."
       textListParser = P.list textParser `P.bind` traverse P.openOpaque
