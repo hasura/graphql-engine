@@ -211,11 +211,12 @@ Whenever there is a sequential scan, it can be optimized by adding an index.
 
   .. tab:: Console
 
-   An index can be added in the ``SQL -> Data`` tab in the Hasura console:
+   An index can be added in the ``Data -> SQL`` tab in the Hasura console.
 
   .. tab:: CLI
 
-   :ref:`Create a migration manually <manual_migrations>` and add your create index statement to the ``up.sql`` file. Also, add an SQL statement to revert that statement to the ``down.sql`` file.
+   :ref:`Create a migration manually <manual_migrations>` and add your create index statement to the ``up.sql`` file. 
+   Also, add an SQL statement to revert that statement to the ``down.sql`` file in case you need to :ref:`roll back <roll_back_migrations>` the migration.
 
    Apply the migration by running:
 
@@ -225,7 +226,7 @@ Whenever there is a sequential scan, it can be optimized by adding an index.
 
   .. tab:: API
 
-   You can add a view by making an API call to the :ref:`run_sql metadata API <run_sql>`:
+   You can add an index by making an API call to the :ref:`run_sql metadata API <run_sql>`:
 
    .. code-block:: http
 

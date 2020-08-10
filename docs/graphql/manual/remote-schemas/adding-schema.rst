@@ -159,7 +159,7 @@ explicitly reloads the remote schema.
 
   .. tab:: Console
 
-    Click the ``Reload`` button on the console.
+    Click the ``Reload`` button in the ``Remote schema`` section on the Hasura console.
 
   .. tab:: API
 

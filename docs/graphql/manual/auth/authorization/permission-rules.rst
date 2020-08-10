@@ -23,6 +23,8 @@ level granularity:
 
    .. tab:: Console
 
+      You can add permission rules in the ``Permissions`` tab of a table:
+
       .. thumbnail:: /img/graphql/manual/auth/permission-rule-granularity.png
          :alt: Access control rules in Hasura
 
@@ -140,6 +142,8 @@ the value in the ``id`` column is greater than 10:
 
    .. tab:: Console
 
+      You can define permissions using boolean expressions on the Hasura console as follows:
+
       .. thumbnail:: /img/graphql/manual/auth/simple-boolean-expression.png
          :alt: Using boolean expressions to build rules
 
@@ -205,6 +209,8 @@ or "A":
 .. tabs::
 
    .. tab:: Console
+
+      You can define permissions using the ``_and`` operator on the Hasura console as follows:
 
       .. thumbnail:: /img/graphql/manual/auth/composite-boolean-expression.png
          :alt: Example of a rule with the _and operator
@@ -286,6 +292,8 @@ the author's ID*):
 
    .. tab:: Console
 
+      You can define session variables in permissions on the Hasura console:
+
       .. thumbnail:: /img/graphql/manual/auth/session-variables-in-permissions-simple-example.png
          :alt: Using session variables to build rules
 
@@ -357,6 +365,8 @@ that uses the aforementioned object relationship:
 .. tabs::
 
    .. tab:: Console
+
+      You can use a nested object to build rules on the Hasura console:
 
       .. thumbnail:: /img/graphql/manual/auth/nested-object-permission-simple-example.png
          :alt: Using a nested object to build rules
@@ -444,6 +454,8 @@ session variable.
 
    .. tab:: Console
 
+      You can set permissions using unrelated tables on the Hasura console as follows:
+
       .. thumbnail:: /img/graphql/manual/auth/exists-permission-example.png
          :alt: Use an unrelated table to build rules
 
@@ -492,13 +504,13 @@ session variable.
          X-Hasura-Role: admin
 
          {
-            "type": "create_select_permission",
+            "type": "create_insert_permission",
             "args": {
                "table": "article",
                "role": "user",
                "permission": {
                   "columns": "*",
-                  "filter": {
+                  "check": {
                      "$exists": {
                         "_table": "users",
                         "_where": {
@@ -524,6 +536,7 @@ This permission rule reads as "*if there exists a row in the table* ``users`` *w
 
 Column-level permissions
 ^^^^^^^^^^^^^^^^^^^^^^^^
+
 Column-level permissions determine access to columns in the rows that are accessible based on row-level
 permissions. 
 
@@ -532,7 +545,7 @@ permissions.
 
    .. tab:: Console
 
-      These permissions are simple selections on the Hasura console:
+      Column-level permissions are simple selections on the Hasura console:
 
       .. thumbnail:: /img/graphql/manual/auth/column-level-permissions.png
          :alt: Column level permissions
@@ -612,6 +625,8 @@ using this configuration:
 
    .. tab:: Console
 
+      You can set a row fetch limit on the Hasura console as follows:
+
       .. thumbnail:: /img/graphql/manual/auth/limit-rows-for-select.png
          :alt: Row fetch limit
 
@@ -680,12 +695,14 @@ Aggregation queries permissions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In the case of ``select`` operations, access to :ref:`aggregation queries <aggregation_queries>`
-can be restricted for a given role using this configuration.
+can be enabled for a given role using this configuration.
 
 .. rst-class:: api_tabs
 .. tabs::
 
    .. tab:: Console
+
+      You can enable aggregation queries permissions on the Hasura console as follows:
 
       .. thumbnail:: /img/graphql/manual/auth/aggregation-query-permissions.png
          :alt: Aggregation queries permissions

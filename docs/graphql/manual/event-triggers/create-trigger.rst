@@ -108,6 +108,8 @@ Advanced Settings
 
    .. tab:: Console
 
+      Expand the ``Advanced Settings`` section on the Hasura console to define advanced settings for an event trigger:
+
       .. thumbnail:: /img/graphql/manual/event-triggers/create-event-trigger-advanced-settings.png
          :alt: Advanced settings for event triggers
 
