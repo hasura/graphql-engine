@@ -360,8 +360,8 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
            Nothing -> throw400 RemoteSchemaError $ "Could not find type with name " <> G.unName typeName
            Just typeDef ->
              case typeDef of
-               G.TypeDefinitionScalar (G.ScalarTypeDefinition _ name' _) ->
-                 fieldConstructor' . doNullability nullability <$> remoteFieldScalarParser name'
+               G.TypeDefinitionScalar (G.ScalarTypeDefinition scalarDesc name' _) ->
+                 fieldConstructor' . doNullability nullability <$> remoteFieldScalarParser name' scalarDesc
                G.TypeDefinitionEnum defn ->
                  pure $ fieldConstructor' $ doNullability nullability $ remoteFieldEnumParser defn
                G.TypeDefinitionObject _ -> throw400 RemoteSchemaError $ "expected input type, but got output type" -- couldn't find the equivalent error in Validate/Types.hs, so using a new error message
@@ -400,8 +400,8 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
     G.TypeDefinitionObject objTypeDefn -> do
       remoteSchemaObj <- remoteSchemaObject sdoc objTypeDefn
       pure $ () <$ P.subselection fieldName description argsParser remoteSchemaObj
-    G.TypeDefinitionScalar (G.ScalarTypeDefinition _ name' _) ->
-      P.selection fieldName description argsParser <$> remoteFieldScalarParser name'
+    G.TypeDefinitionScalar (G.ScalarTypeDefinition desc name' _) ->
+      P.selection fieldName description argsParser <$> remoteFieldScalarParser name' desc
     G.TypeDefinitionEnum enumTypeDefn ->
       pure $ P.selection fieldName description argsParser $ remoteFieldEnumParser enumTypeDefn
     G.TypeDefinitionInterface ifaceTypeDefn -> do
@@ -416,8 +416,9 @@ remoteFieldScalarParser
   :: forall m n
    . (MonadParse n, MonadError QErr m)
   => G.Name
+  -> Maybe G.Description
   -> m (Parser 'Both n ())
-remoteFieldScalarParser name =
+remoteFieldScalarParser name description =
   case G.unName name of
     "Boolean" -> pure $ P.boolean $> ()
     "Int" -> pure $ P.int $> ()
@@ -426,7 +427,7 @@ remoteFieldScalarParser name =
     -- TODO IDs are allowed to be numbers, I think. But not floats. See
     -- http://spec.graphql.org/draft/#sec-ID
     "ID" -> pure $ P.string $> ()
-    _ -> pure $ P.unsafeRawScalar name Nothing $> () -- TODO pass correct description
+    _ -> pure $ P.unsafeRawScalar name description $> ()
 
 remoteFieldEnumParser
   :: MonadParse n

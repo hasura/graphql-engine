@@ -556,7 +556,7 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
   let mutationFieldsParser = concat (catMaybes mutationParsers) <> catMaybes actionParsers <> fmap (fmap RFRemote) allRemotes
   pure if null mutationFieldsParser
        then Nothing
-       else Just $ P.selectionSet $$(G.litName "mutation_root") Nothing mutationFieldsParser
+       else Just $ P.selectionSet $$(G.litName "mutation_root") (Just $ G.Description "mutation root") mutationFieldsParser
             <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
 
 unauthenticatedMutation

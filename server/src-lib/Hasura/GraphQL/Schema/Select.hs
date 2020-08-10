@@ -213,7 +213,7 @@ selectTableAggregate table fieldName description selectPermissions = runMaybeT d
   let selectionName = tableName <> $$(G.litName "_aggregate")
       aggregationParser = P.nonNullableParser $
         parsedSelectionsToFields RQL.TAFExp <$>
-        P.selectionSet selectionName (Just $ G.Description $ "aggregated selection of " <>> tableName)
+        P.selectionSet selectionName (Just $ G.Description $ "aggregated selection of " <>> table)
         [ RQL.TAFNodes <$> P.subselection_ $$(G.litName "nodes") Nothing nodesParser
         , RQL.TAFAgg <$> P.subselection_ $$(G.litName "aggregate") Nothing aggregateParser
         ]
@@ -432,7 +432,7 @@ selectFunction function fieldName description selectPermissions = do
   let table = fiReturnType function
   tableArgsParser    <- tableArgs table selectPermissions
   functionArgsParser <- customSQLFunctionArgs function
-  selectionSetParser <- tableSelectionSet table selectPermissions
+  selectionSetParser <- tableSelectionList table selectPermissions
   let argsParser = liftA2 (,) functionArgsParser tableArgsParser
   pure $ P.subselection fieldName description argsParser selectionSetParser
     <&> \((funcArgs, tableArgs'), fields) -> RQL.AnnSelectG
@@ -458,9 +458,10 @@ selectFunctionAggregate function fieldName description selectPermissions = runMa
   functionArgsParser <- lift $ customSQLFunctionArgs function
   aggregateParser    <- lift $ tableAggregationFields table selectPermissions
   selectionName      <- lift $ qualifiedObjectToName table <&> (<> $$(G.litName "_aggregate"))
-  nodesParser        <- lift $ tableSelectionSet table selectPermissions
+  nodesParser        <- lift $ tableSelectionList table selectPermissions
   let argsParser = liftA2 (,) functionArgsParser tableArgsParser
-      aggregationParser = parsedSelectionsToFields RQL.TAFExp <$>
+      aggregationParser = fmap (parsedSelectionsToFields RQL.TAFExp) $
+        P.nonNullableParser $
         P.selectionSet selectionName Nothing
         [ RQL.TAFNodes <$> P.subselection_ $$(G.litName "nodes") Nothing nodesParser
         , RQL.TAFAgg <$> P.subselection_ $$(G.litName "aggregate") Nothing aggregateParser
@@ -792,7 +793,7 @@ tableAggregationFields table selectPermissions = do
   let numericColumns   = onlyNumCols allColumns
       comparableColumns  = onlyComparableCols allColumns
       selectName   = tableName <> $$(G.litName "_aggregate_fields")
-      description  = G.Description $ "aggregate fields of \"" <> G.unName tableName <> "\""
+      description  = G.Description $ "aggregate fields of " <>> table
   count     <- countField
   numericAndComparable <- fmap concat $ sequenceA $ catMaybes
     [ -- operators on numeric columns
@@ -979,14 +980,14 @@ computedField ComputedFieldInfo{..} selectPermissions = runMaybeT do
               , RQL._cfssColumnOp  = colOp
               , RQL._cfssArguments = args
               }
-      dummyParser <- lift $ P.column (PGColumnScalar scalarReturnType) (G.Nullability False)
+      dummyParser <- lift $ P.column (PGColumnScalar scalarReturnType) (G.Nullability True)
       pure $ P.selection fieldName (Just fieldDescription) fieldArgsParser dummyParser
     CFRSetofTable tableName -> do
       remotePerms        <- MaybeT $ tableSelectPermissions tableName
       selectArgsParser   <- lift   $ tableArgs tableName remotePerms
-      selectionSetParser <- lift   $ tableSelectionSet tableName remotePerms
+      selectionSetParser <- lift   $ P.multiple . P.nonNullableParser <$> tableSelectionSet tableName remotePerms
       let fieldArgsParser = liftA2 (,) functionArgsParser selectArgsParser
-      pure $ P.subselection fieldName Nothing fieldArgsParser selectionSetParser <&>
+      pure $ P.subselection fieldName (Just fieldDescription) fieldArgsParser selectionSetParser <&>
         \((functionArgs', args), fields) ->
           RQL.AFComputedField $ RQL.CFSTable RQL.JASMultipleRows $ RQL.AnnSelectG
             { RQL._asnFields   = fields
