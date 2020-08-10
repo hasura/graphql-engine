@@ -1398,9 +1398,12 @@
 
 .notificationExternalLink {
   font-size: 15px;
+  color: rgb(34, 84, 192);
   &:hover {
     color: #e53935;
     text-transform: none;
+    cursor: pointer;
+    text-decoration: underline;
   }
 }
 
