@@ -65,9 +65,7 @@ export const passMTRenameTable = () => {
 export const passMTRenameColumn = () => {
   cy.wait(10000);
   cy.get(getElementFromAlias('modify-table-edit-column-0')).click();
-  cy.get(getElementFromAlias('edit-col-name'))
-    .clear()
-    .type(getColName(3));
+  cy.get(getElementFromAlias('edit-col-name')).clear().type(getColName(3));
   cy.get(getElementFromAlias('modify-table-column-0-save')).click();
   cy.wait(15000);
   validateColumn(
@@ -76,9 +74,7 @@ export const passMTRenameColumn = () => {
     ResultType.SUCCESS
   );
   cy.get(getElementFromAlias('modify-table-edit-column-0')).click();
-  cy.get(getElementFromAlias('edit-col-name'))
-    .clear()
-    .type('id');
+  cy.get(getElementFromAlias('edit-col-name')).clear().type('id');
   cy.get(getElementFromAlias('modify-table-column-0-save')).click();
   cy.wait(15000);
   validateColumn(getTableName(0, testName), ['id'], ResultType.SUCCESS);
@@ -87,9 +83,7 @@ export const passMTRenameColumn = () => {
 export const passMTChangeDefaultValueForPKey = () => {
   cy.wait(10000);
   cy.get(getElementFromAlias('modify-table-edit-column-0')).click();
-  cy.get(getElementFromAlias('edit-col-default'))
-    .clear()
-    .type('1234');
+  cy.get(getElementFromAlias('edit-col-default')).clear().type('1234');
   cy.get(getElementFromAlias('modify-table-column-0-save')).click();
   cy.wait(15000);
 };
@@ -103,7 +97,8 @@ export const passMTMoveToTable = () => {
 };
 
 export const failMTWithoutColName = () => {
-  cy.get(getElementFromAlias('add-column-button')).click();
+  cy.get(getElementFromAlias('modify-table-edit-add-new-column')).click();
+  cy.get(getElementFromAlias('modify-table-add-new-column-save')).click();
   cy.url().should(
     'eq',
     `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
@@ -118,7 +113,7 @@ export const failMTWithoutColName = () => {
 
 export const failMTWithoutColType = () => {
   cy.get(getElementFromAlias('column-name')).type(getColName(2));
-  cy.get(getElementFromAlias('add-column-button')).click();
+  cy.get(getElementFromAlias('modify-table-add-new-column-save')).click();
   cy.url().should(
     'eq',
     `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
@@ -138,7 +133,7 @@ export const Addcolumnnullable = () => {
     .first()
     .click();
   cy.get(getElementFromAlias('nullable-checkbox')).uncheck({ force: true });
-  cy.get(getElementFromAlias('add-column-button')).click();
+  cy.get(getElementFromAlias('modify-table-add-new-column-save')).click();
   cy.wait(2500);
   cy.url().should(
     'eq',
@@ -160,7 +155,7 @@ export const Addcolumnname = (name: string) => {
     .first()
     .click();
 
-  cy.get(getElementFromAlias('add-column-button')).click();
+  cy.get(getElementFromAlias('modify-table-add-new-column-save')).click();
   cy.wait(5000);
   validateColumn(getTableName(0, testName), [name], ResultType.SUCCESS);
 };
@@ -172,7 +167,7 @@ export const passMTAddColumn = () => {
   cy.get(getElementFromAlias('data_test_column_type_value_integer'))
     .first()
     .click();
-  cy.get(getElementFromAlias('add-column-button')).click();
+  cy.get(getElementFromAlias('modify-table-add-new-column-save')).click();
   cy.wait(5000);
   validateColumn(
     getTableName(0, testName),
@@ -193,9 +188,7 @@ export const failMCWithWrongDefaultValue = () => {
 };
 
 export const passMCWithRightDefaultValue = () => {
-  cy.get(getElementFromAlias('edit-col-default'))
-    .clear()
-    .type('1234');
+  cy.get(getElementFromAlias('edit-col-default')).clear().type('1234');
   cy.get(getElementFromAlias('modify-table-column-1-save')).click();
   cy.wait(10000);
 };
@@ -261,9 +254,7 @@ export const passMTDeleteCol = () => {
   setPromptValue(getColName(0));
   cy.get(getElementFromAlias('modify-table-edit-column-1')).click();
   cy.get(getElementFromAlias('modify-table-column-1-remove')).click();
-  cy.window()
-    .its('prompt')
-    .should('be.called');
+  cy.window().its('prompt').should('be.called');
   cy.wait(5000);
   cy.url().should(
     'eq',
@@ -279,9 +270,7 @@ export const passMTDeleteCol = () => {
 export const passMTDeleteTableCancel = () => {
   setPromptValue(null);
   cy.get(getElementFromAlias('delete-table')).click();
-  cy.window()
-    .its('prompt')
-    .should('be.called');
+  cy.window().its('prompt').should('be.called');
   cy.url().should(
     'eq',
     `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
@@ -293,9 +282,7 @@ export const passMTDeleteTableCancel = () => {
 export const passMTDeleteTable = () => {
   setPromptValue(getTableName(0, testName));
   cy.get(getElementFromAlias('delete-table')).click();
-  cy.window()
-    .its('prompt')
-    .should('be.called');
+  cy.window().its('prompt').should('be.called');
   cy.wait(5000);
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
   validateCT(getTableName(0, testName), ResultType.FAILURE);
@@ -313,9 +300,7 @@ export const createTable = (name: string, dict: { [key: string]: any }) => {
   const keys = Object.keys(dict).map(k => k);
   const values = Object.keys(dict).map(k => dict[k]);
   for (let i = 0; i < keys.length; i += 1) {
-    cy.get('input[placeholder="column_name"]')
-      .last()
-      .type(keys[i]);
+    cy.get('input[placeholder="column_name"]').last().type(keys[i]);
     cy.get('select')
       .find('option')
       .contains('-- type --')
@@ -324,9 +309,7 @@ export const createTable = (name: string, dict: { [key: string]: any }) => {
       .select(values[i]);
   }
 
-  cy.get('select')
-    .last()
-    .select('id');
+  cy.get('select').last().select('id');
   cy.get(getElementFromAlias('table-create')).click();
   cy.wait(7000);
   cy.url().should(
@@ -381,16 +364,12 @@ export const Checkviewtabledelete = () => {
   cy.get(getElementFromAlias('table-modify')).click();
   setPromptValue('author_average_rating_mod');
   cy.get(getElementFromAlias('delete-view')).click();
-  cy.window()
-    .its('prompt')
-    .should('be.called');
+  cy.window().its('prompt').should('be.called');
 
   cy.wait(7000);
   validateCT('author_average_rating_mod', ResultType.FAILURE);
 };
 
 export const Issue = () => {
-  cy.get('.ace_text-input')
-    .first()
-    .type('#include');
+  cy.get('.ace_text-input').first().type('#include');
 };
