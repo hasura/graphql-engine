@@ -11,10 +11,10 @@ import { versionGT, checkStableVersion } from '../../helpers/versionUtils';
 import ToolTip from '../Common/Tooltip/Tooltip';
 import {
   setPreReleaseNotificationOptOutInDB,
-  updateConsoleNotificationsInDB,
+  updateConsoleNotificationsState,
 } from '../../telemetry/Actions';
 import Button from '../Common/Button';
-import { getReadAllNotificationsState } from './Actions';
+import { getReadAllNotificationsState } from './utils';
 import { Nullable } from '../Common/utils/tsUtils';
 import { mapDispatchToPropsEmpty } from '../Common/utils/reactUtils';
 
@@ -472,7 +472,7 @@ const HasuraNotifications: React.FC<
 
   const onClickMarkAllAsRead = () => {
     const readAllState = getReadAllNotificationsState() as NotificationsState;
-    dispatch(updateConsoleNotificationsInDB(readAllState));
+    dispatch(updateConsoleNotificationsState(readAllState));
   };
 
   const onClickOutside = () => {
@@ -501,7 +501,7 @@ const HasuraNotifications: React.FC<
           };
         }
         dispatch(
-          updateConsoleNotificationsInDB(updatedState as NotificationsState)
+          updateConsoleNotificationsState(updatedState as NotificationsState)
         );
       }
     }
@@ -530,7 +530,7 @@ const HasuraNotifications: React.FC<
     }
 
     dispatch(
-      updateConsoleNotificationsInDB({
+      updateConsoleNotificationsState({
         read: [...previousRead, `${id}`],
         date: new Date().toISOString(),
         showBadge: false,
