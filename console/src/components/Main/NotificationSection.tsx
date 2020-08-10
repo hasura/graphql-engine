@@ -25,20 +25,37 @@ const getDateString = (date: NotificationDate) => {
   return new Date(date).toLocaleString().split(', ')[0];
 };
 
-// TODO: Perhaps have to add a close/hide button for some updates
+interface UpdateProps extends ConsoleNotification {
+  onClickAction?: (id?: number) => void;
+  is_read?: boolean;
+}
 
-const Update: React.FC<ConsoleNotification> = ({
+const Update: React.FC<UpdateProps> = ({
   subject,
   content,
   type,
   is_active = true,
+  onClickAction,
+  is_read,
   ...props
 }) => {
+  const [linkClicked, updateLinkClicked] = React.useState(false);
+  const onClickLink = () => {
+    updateLinkClicked(true);
+    if (onClickAction) {
+      onClickAction(props.id);
+    }
+  };
+
   if (!is_active) {
     return null;
   }
   return (
-    <Box className={`${styles.updateBox} ${styles.unread}`}>
+    <Box
+      className={`${styles.updateBox} ${
+        !linkClicked ? styles.unread : styles.read
+      }`}
+    >
       <Flex px="25px" justifyContent="space-between">
         <Flex justifyContent="space-between">
           {type ? <Badge type={type} mr="12px" /> : null}
@@ -65,6 +82,9 @@ const Update: React.FC<ConsoleNotification> = ({
                 <a
                   href={props.external_link}
                   className={styles.notificationExternalLink}
+                  onClick={onClickLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
                   Click here &rarr;
                 </a>
@@ -74,7 +94,9 @@ const Update: React.FC<ConsoleNotification> = ({
           </Text>
         </Flex>
         <Flex width="20%" alignItems="center" justifyContent="flex-end">
-          <div className={styles.yellowDot} />
+          {!linkClicked || !is_read ? (
+            <div className={styles.yellowDot} />
+          ) : null}
         </Flex>
       </Flex>
     </Box>
@@ -91,6 +113,8 @@ type NotificationProps = {
   onClickViewMore: () => void;
   readAll: boolean;
   displayViewMore: boolean;
+  onClickUpdateLink: (id?: number) => void;
+  previouslyRead?: string | string[];
 };
 
 type PreReleaseProps = Pick<NotificationProps, 'optOutCallback'>;
@@ -172,6 +196,18 @@ const ViewMoreOptions: React.FC<ViewMoreProps> = ({
   );
 };
 
+const checkIsRead = (prevRead?: string | string[], id?: number) => {
+  if (!prevRead || !id) {
+    return false;
+  }
+
+  if (typeof prevRead === 'string') {
+    return true;
+  }
+
+  return prevRead.includes(`${id}`);
+};
+
 const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
   (
     {
@@ -184,6 +220,8 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
       onClickViewMore,
       readAll,
       displayViewMore,
+      onClickUpdateLink,
+      previouslyRead,
     },
     forwardedRef
   ) => (
@@ -225,7 +263,15 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
           />
         ) : null}
         {data.length &&
-          data.map(({ id, ...props }) => <Update key={id} {...props} />)}
+          data.map(({ id, ...props }) => (
+            <Update
+              key={id}
+              id={id}
+              onClickAction={onClickUpdateLink}
+              is_read={checkIsRead(previouslyRead, id)}
+              {...props}
+            />
+          ))}
         {displayViewMore ? (
           <ViewMoreOptions
             onClickViewMore={onClickViewMore}
@@ -332,6 +378,7 @@ const HasuraNotifications: React.FC<
   ...props
 }) => {
   const { dispatch } = props;
+  // NOTE: Multiple useState's here maybe use useReducer for those
   const [
     displayNewVersionNotification,
     setDisplayNewVersionNotification,
@@ -472,6 +519,25 @@ const HasuraNotifications: React.FC<
     }
   }, [opened]);
 
+  const onClickUpdateLink = (id?: number) => {
+    if (!id) {
+      return;
+    }
+    const previousRead = console_opts?.console_notifications?.read;
+
+    if (typeof previousRead === 'string' || !previousRead) {
+      return;
+    }
+
+    dispatch(
+      updateConsoleNotificationsInDB({
+        read: [...previousRead, `${id}`],
+        date: new Date().toISOString(),
+        showBadge: false,
+      })
+    );
+  };
+
   return (
     <>
       <div
@@ -500,6 +566,8 @@ const HasuraNotifications: React.FC<
           consoleNotifications.length > 20 &&
           numDisplayed !== consoleNotifications.length
         }
+        onClickUpdateLink={onClickUpdateLink}
+        previouslyRead={console_opts?.console_notifications?.read}
       />
     </>
   );
