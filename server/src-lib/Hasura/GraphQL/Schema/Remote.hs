@@ -69,27 +69,27 @@ remoteField'
   => SchemaIntrospection
   -> G.FieldDefinition
   -> m (FieldParser n ())
-remoteField' schemaDoc (G.FieldDefinition _ name argsDefinition gType _) =
+remoteField' schemaDoc (G.FieldDefinition description name argsDefinition gType _) =
   let
     addNullableList :: FieldParser n () -> FieldParser n ()
-    addNullableList (P.FieldParser (Definition name' desc un (FieldInfo args typ)) parser)
-      = P.FieldParser (Definition name' desc un (FieldInfo args (Nullable (TList typ)))) parser
+    addNullableList (P.FieldParser (Definition name' un desc (FieldInfo args typ)) parser)
+      = P.FieldParser (Definition name' un desc (FieldInfo args (Nullable (TList typ)))) parser
 
     addNonNullableList :: FieldParser n () -> FieldParser n ()
-    addNonNullableList (P.FieldParser (Definition name' desc un (FieldInfo args typ)) parser)
-      = P.FieldParser (Definition name' desc un (FieldInfo args (NonNullable (TList typ)))) parser
+    addNonNullableList (P.FieldParser (Definition name' un desc (FieldInfo args typ)) parser)
+      = P.FieldParser (Definition name' un desc (FieldInfo args (NonNullable (TList typ)))) parser
 
     -- TODO add directives, deprecation
     convertType :: G.GType -> m (FieldParser n ())
     convertType gType' = do
         case gType' of
           G.TypeNamed (Nullability True) fieldTypeName -> do
-            remoteFld <- remoteFieldFromName schemaDoc name fieldTypeName argsDefinition
+            remoteFld <- remoteFieldFromName schemaDoc name description fieldTypeName argsDefinition
             pure . P.nullableField $ remoteFld
           G.TypeList (Nullability True) gType'' ->
             pure . addNullableList =<< convertType gType''
           G.TypeNamed (Nullability False) fieldTypeName -> do
-            remoteFld <- remoteFieldFromName schemaDoc name fieldTypeName argsDefinition
+            remoteFld <- remoteFieldFromName schemaDoc name description fieldTypeName argsDefinition
             pure . P.nonNullableField $ remoteFld
           G.TypeList (Nullability False) gType'' ->
             pure . addNonNullableList =<< convertType gType''
@@ -314,13 +314,14 @@ remoteFieldFromName
    . (MonadSchema n m, MonadError QErr m)
   => SchemaIntrospection
   -> G.Name
+  -> Maybe G.Description
   -> G.Name
   -> G.ArgumentsDefinition
   -> m (FieldParser n ())
-remoteFieldFromName sdoc fieldName fieldTypeName argsDefns =
+remoteFieldFromName sdoc fieldName description fieldTypeName argsDefns =
   case lookupType sdoc fieldTypeName of
     Nothing -> throw400 RemoteSchemaError $ "Could not find type with name " <> G.unName fieldName
-    Just typeDef -> remoteField sdoc fieldName argsDefns typeDef
+    Just typeDef -> remoteField sdoc fieldName description argsDefns typeDef
 
 -- | 'inputValuefinitionParser' accepts a 'G.InputValueDefinition' and will return an
 --   'InputFieldsParser' for it. If a non 'Input' GraphQL type is found in the 'type' of
@@ -388,26 +389,27 @@ remoteField
    . (MonadSchema n m, MonadError QErr m)
   => SchemaIntrospection
   -> G.Name
+  -> Maybe G.Description
   -> G.ArgumentsDefinition
   -> G.TypeDefinition [G.Name]
   -> m (FieldParser n ()) -- TODO return something useful, maybe?
-remoteField sdoc fieldName argsDefn typeDefn = do
+remoteField sdoc fieldName description argsDefn typeDefn = do
   -- TODO add directives
   argsParser <- argumentsParser argsDefn sdoc
   case typeDefn of
     G.TypeDefinitionObject objTypeDefn -> do
       remoteSchemaObj <- remoteSchemaObject sdoc objTypeDefn
-      pure $ () <$ P.subselection fieldName (G._otdDescription objTypeDefn) argsParser remoteSchemaObj
-    G.TypeDefinitionScalar (G.ScalarTypeDefinition desc name' _) ->
-      P.selection fieldName desc argsParser <$> remoteFieldScalarParser name'
-    G.TypeDefinitionEnum enumTypeDefn@(G.EnumTypeDefinition desc _ _ _) ->
-      pure $ P.selection fieldName desc argsParser $ remoteFieldEnumParser enumTypeDefn
+      pure $ () <$ P.subselection fieldName description argsParser remoteSchemaObj
+    G.TypeDefinitionScalar (G.ScalarTypeDefinition _ name' _) ->
+      P.selection fieldName description argsParser <$> remoteFieldScalarParser name'
+    G.TypeDefinitionEnum enumTypeDefn ->
+      pure $ P.selection fieldName description argsParser $ remoteFieldEnumParser enumTypeDefn
     G.TypeDefinitionInterface ifaceTypeDefn -> do
       remoteSchemaObj <- remoteSchemaInterface sdoc ifaceTypeDefn
-      pure $ () <$ P.subselection fieldName (G._itdDescription ifaceTypeDefn) argsParser remoteSchemaObj
+      pure $ () <$ P.subselection fieldName description argsParser remoteSchemaObj
     G.TypeDefinitionUnion unionTypeDefn -> do
       remoteSchemaObj <- remoteSchemaUnion sdoc unionTypeDefn
-      pure $ () <$ P.subselection fieldName (G._utdDescription unionTypeDefn) argsParser remoteSchemaObj
+      pure $ () <$ P.subselection fieldName description argsParser remoteSchemaObj
     _ -> throw400 RemoteSchemaError $ "expected output type, but got input type"
 
 remoteFieldScalarParser
