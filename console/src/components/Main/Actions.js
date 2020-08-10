@@ -65,8 +65,6 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
   }
 
   const now = new Date().toISOString();
-
-  // TODO: add this query to query utils
   const query = getConsoleNotificationQuery(now);
   const options = {
     body: JSON.stringify(query),
@@ -91,14 +89,8 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
         return;
       }
 
-      const currentNotifications = getState().main.consoleNotifications;
-
       if (strictChecks) {
-        if (
-          !previousRead ||
-          (!previousRead.length && Array.isArray(previousRead)) ||
-          previousRead !== 'all'
-        ) {
+        if (!previousRead) {
           dispatch(
             updateConsoleNotificationsState({
               read: [],
@@ -106,16 +98,38 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
               showBadge: true,
             })
           );
-        }
+        } else {
+          let newReadValue;
 
-        if (currentNotifications.length) {
-          const resDiff = data.filter(
-            (notif, notifIdx) => currentNotifications[notifIdx].id !== notif.id
-          );
-          if (!resDiff.length) {
-            // since the data hasn't changed since the last call
-            return;
+          if (previousRead === 'default' || previousRead === 'error') {
+            newReadValue = [];
+          } else if (previousRead === 'all') {
+            const previousList = JSON.parse(
+              localStorage.getItem('main:console_notifications')
+            );
+            if (previousList.length) {
+              const resDiff = data.filter(
+                (notif, notifIdx) => previousList[notifIdx].id !== `${notif.id}`
+              );
+              if (!resDiff.length) {
+                // since the data hasn't changed since the last call
+                return;
+              }
+
+              newReadValue = data.filter(
+                notif => !previousList.includes(`${notif.id}`)
+              );
+            }
+          } else {
+            newReadValue = previousRead;
           }
+          dispatch(
+            updateConsoleNotificationsState({
+              read: newReadValue,
+              date: consoleStateDB.console_notifications.date,
+              showBadge: true,
+            })
+          );
         }
       }
 
