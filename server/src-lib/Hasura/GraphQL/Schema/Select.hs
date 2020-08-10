@@ -204,15 +204,16 @@ selectTableAggregate
   -> SelPermInfo          -- ^ select permissions of the table
   -> m (Maybe (FieldParser n AggSelectExp))
 selectTableAggregate table fieldName description selectPermissions = runMaybeT do
-  stringifyNum <- asks $ qcStringifyNum . getter
   guard $ spiAllowAgg selectPermissions
+  stringifyNum    <- asks $ qcStringifyNum . getter
+  tableName       <- lift $ qualifiedObjectToName table
   tableArgsParser <- lift $ tableArgs table selectPermissions
   aggregateParser <- lift $ tableAggregationFields table selectPermissions
-  selectionName   <- lift $ qualifiedObjectToName table <&> (<> $$(G.litName "_aggregate"))
   nodesParser     <- lift $ tableSelectionList table selectPermissions
-  let aggregationParser = P.nonNullableParser $
+  let selectionName = tableName <> $$(G.litName "_aggregate")
+      aggregationParser = P.nonNullableParser $
         parsedSelectionsToFields RQL.TAFExp <$>
-        P.selectionSet selectionName Nothing
+        P.selectionSet selectionName (Just $ G.Description $ "aggregated selection of " <>> tableName)
         [ RQL.TAFNodes <$> P.subselection_ $$(G.litName "nodes") Nothing nodesParser
         , RQL.TAFAgg <$> P.subselection_ $$(G.litName "aggregate") Nothing aggregateParser
         ]
