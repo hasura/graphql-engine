@@ -171,7 +171,7 @@ runHasuraGQ reqId (query, queryParsed) userInfo resolvedOp = do
     E.ExOpQuery tx genSql asts -> trace "pg" $ do
       -- log the generated SQL and the graphql query
       logQueryLog logger query genSql reqId
-      Tracing.interpTraceT id $ executeQuery queryParsed asts genSql pgExecCtx Q.ReadOnly tx
+      Tracing.interpTraceT id $ executeQuery queryParsed asts genSql pgExecCtx Q.ReadOnly . withUserInfo userInfo tx
 
     E.ExOpMutation respHeaders tx -> trace "pg" $ do
       logQueryLog logger query Nothing reqId
