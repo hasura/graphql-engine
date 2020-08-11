@@ -205,7 +205,7 @@ Now, set the handler for the action:
 
 .. note::
 
-  During local development with the action handler on localhost, ensure that the Hasura Docker container can reach the handler endpoint on the host.
+  If you are running Hasura using Docker, ensure that the Hasura Docker container can reach the handler endpoint.
   See :ref:`this page <docker_networking>` for Docker networking.
 
 Step 3: Finish action creation

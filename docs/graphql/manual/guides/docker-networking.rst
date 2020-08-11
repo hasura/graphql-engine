@@ -21,48 +21,137 @@ Depending on the setting, the network config is different. This section shows ho
 Network config
 --------------
 
-.. list-table:: 
-   :stub-columns: 1
-   :header-rows: 1
+Hasura to API (outside Docker)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   * - 
-     - Mac
-     - Windows
-     - Linux
-     - Comment
-   * - **Hasura to API (outside Docker)**
-     - ``host.docker.internal:3000``
-     - ``docker.for.win.localhost:3000``
-     - 1. With ``--net=host``, e.g. ``localhost:3000 --net=host``
-       2. Otherwise, ``<docker-bridge-ip>:3000``, e.g. ``172.17.0.1:3000`` 
-     - 1. Assuming the API is running on port ``3000``  
-       2. The Docker bridge IP can be found via ``ifconfig``
-   * - **API (outside Docker) to Hasura** 
-     - ``localhost:8080``
-     - ``localhost:8080``
-     - ``localhost:8080``
-     - Hasura runs on port ``8080`` by default
-   * - **Hasura to API (both in docker-compose)** 
-     - service name, e.g.: ``api:3000``
-     - service name, e.g.: ``api:3000``
-     - service name, e.g.: ``api:3000``
-     - Assuming the API is running on port ``3000``
-   * - **API to Hasura (both in docker-compose)** 
-     - service name, e.g.: ``hasura:8080``
-     - service name, e.g.: ``hasura:8080``
-     - service name, e.g.: ``hasura:8080``
-     - Hasura runs on port ``8080`` by default
-   * - **Hasura to API (both running with separate docker run)** 
-     - Docker internal IP address 
-     - Docker internal IP address 
-     - Docker internal IP address 
-     - Can be obtained with ``docker inspect``
-   * - **API to Hasura (both running with separate docker run)** 
-     - Docker internal IP address 
-     - Docker internal IP address 
-     - Docker internal IP address 
-     - Can be obtained with ``docker inspect``
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Linux
+
+    1. With ``--net=host``, e.g. ``localhost:3000 --net=host``
+
+    2. Otherwise, ``<docker-bridge-ip>:3000``, e.g. ``172.17.0.1:3000`` 
+
+    .. note::
+    
+      The Docker bridge IP can be found via ``ifconfig``.
+
+  .. tab:: Mac
+
+    ``host.docker.internal:3000``
+
+  .. tab:: Windows
+
+    ``docker.for.win.localhost:3000``
+
+API (outside Docker) to Hasura
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Linux
+
+    ``localhost:8080``
+
+  .. tab:: Mac
+
+    ``localhost:8080``
+
+  .. tab:: Windows
+
+    ``localhost:8080``
 
 .. note::
 
-  Learn more about Docker specific networking in the `Docker documentation <https://docs.docker.com/network/>`__.
+  Hasura runs on port ``8080`` by default.
+
+Hasura to API (both in docker-compose)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Linux
+
+    Service name, e.g.: ``api:3000``
+
+  .. tab:: Mac
+
+    Service name, e.g.: ``api:3000``
+
+  .. tab:: Windows
+
+    Service name, e.g.: ``api:3000``
+
+API to Hasura (both in docker-compose)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Linux
+
+    Service name, e.g.: ``hasura:8080``
+
+  .. tab:: Mac
+
+    Service name, e.g.: ``hasura:8080``
+
+  .. tab:: Windows
+  
+    Service name, e.g.: ``hasura:8080``
+
+.. note::
+
+  Hasura runs on port ``8080`` by default.
+
+Hasura to API (both running with separate docker run)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Linux
+
+    Docker internal IP address 
+
+  .. tab:: Mac
+
+    Docker internal IP address 
+
+  .. tab:: Windows
+
+    Docker internal IP address 
+
+.. note::
+
+  The Docker internal address can be obtained with ``docker inspect``.
+
+API to Hasura (both running with separate docker run)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Linux
+
+    Docker internal IP address 
+
+  .. tab:: Mac
+
+    Docker internal IP address 
+
+  .. tab:: Windows
+
+    Docker internal IP address 
+
+.. note::
+
+  The Docker internal address can be obtained with ``docker inspect``.
+
+Advanced
+--------
+
+Learn more about Docker specific networking in the `Docker documentation <https://docs.docker.com/network/>`__.

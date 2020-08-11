@@ -48,8 +48,8 @@ You need to enter the following information:
 
   .. note::
 
-    During **local development** with the remote schema server on localhost, ensure that the Hasura Docker container can reach
-    the server endpoint on the host. See :ref:`this page <docker_networking>` for information about Docker networking.
+    If you are running Hasura using Docker, ensure that the Hasura Docker container can reach the server endpoint.
+    See :ref:`this page <docker_networking>` for Docker networking.
 
     If you are adding the URL using env variable, then run the Hasura docker container with the env variable added during `docker run`. Example ``-e REMOTE_SCHEMA_ENDPOINT=http://host.docker.internal:4000/mycustomgraphql``.
 

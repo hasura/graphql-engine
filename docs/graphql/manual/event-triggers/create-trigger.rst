@@ -43,7 +43,7 @@ before using it for this configuration*).
 
 .. note::
 
-  During local development with the webhook on localhost, ensure that the Hasura Docker container can reach the webhook on the host.
+  If you are running Hasura using Docker, ensure that the Hasura Docker container can reach the webhook.
   See :ref:`this page <docker_networking>` for Docker networking.
 
 Advanced Settings
