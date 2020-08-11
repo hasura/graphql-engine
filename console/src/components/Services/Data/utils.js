@@ -819,22 +819,22 @@ export const getDependencyError = (err = {}) => {
   if (err.code == ERROR_CODES.dependencyError.code) {
     // direct dependency error
     return { dependencyError: err };
-  } else if (err.code == ERROR_CODES.dataApiError.code) {
-    // message is coming as error, further parssing willbe based on message key
-    const actualError = isJsonString(err.message)
-      ? JSON.parse(err.message)
-      : {};
-    if (actualError.code == ERROR_CODES.dependencyError.code)
-      return {
-        dependencyError: { ...actualError, message: actualError.error },
-      };
-    else if (
-      actualError.code === ERROR_CODES.postgresError.code &&
-      actualError?.internal?.error?.status_code === '2BP01' // pg dependent error > https://www.postgresql.org/docs/current/errcodes-appendix.html
-    )
-      return {
-        pgDependencyError: { ...actualError, message: actualError.error },
-      };
   }
+  if (err.code == ERROR_CODES.dataApiError.code) {
+    // with CLI mode, error is getting as a string with the key `message`
+    err = isJsonString(err.message) ? JSON.parse(err.message) : {};
+  }
+
+  if (err.code == ERROR_CODES.dependencyError.code)
+    return {
+      dependencyError: { ...err, message: err.error },
+    };
+  if (
+    err.code === ERROR_CODES.postgresError.code &&
+    err?.internal?.error?.status_code === '2BP01' // pg dependent error > https://www.postgresql.org/docs/current/errcodes-appendix.html
+  )
+    return {
+      pgDependencyError: { ...err, message: err.error },
+    };
   return {};
 };
