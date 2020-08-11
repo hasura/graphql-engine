@@ -15,13 +15,10 @@ import           Data.Traversable
 import qualified Data.Vector                   as V
 import           Data.Word
 import           GHC.Clock
-import qualified Hasura.Cache.Bounded          as B
-import qualified Hasura.Cache.Unbounded        as U
+import qualified Hasura.Cache.Bounded          as Cache
 import           Prelude
 import           System.Random.MWC             as Rand
 import           System.Random.MWC.Probability as Rand
--- higher level interface to above, combined:
-import qualified Hasura.Cache                  as Cache
 
 -- Benchmarks for code backing the plan cache.
 
@@ -42,15 +39,12 @@ main = defaultMain [
       bgroup "insert x1000" [
         -- use perRunEnv so we can be sure we're not triggering cache
         -- evictions in bounded due to long bootstrap batch runs
-        bench "unbounded" $
-          perRunEnv (U.initialise) $ \cache ->
-            V.mapM_ (\k -> Cache.insert k k cache) rs
-      , bench "bounded" $
-          perRunEnv (B.initialise 4000) $ \cache ->
+        bench "bounded" $
+          perRunEnv (Cache.initialise 4000) $ \cache ->
             V.mapM_ (\k -> Cache.insert k k cache) rs
       -- an eviction on each insert, all LRU counters at zero. Simulates a scan.
       , bench "bounded evicting scan" $
-          let preloaded = populate 5000 (B.initialise 5000) B.insertAllStripes
+          let preloaded = populate 5000 (Cache.initialise 5000) Cache.insertAllStripes
            in perRunEnv (preloaded) $ \(cache, _) ->
                 V.mapM_ (\k -> Cache.insert k k cache) rs
       ]
@@ -113,14 +107,11 @@ realisticBenches name wrk =
         -- For oversubscribed case: can we see descheduled threads blocking global progress?
         flip map [2,100] $ \threadsPerHEC ->
           bgroup (show threadsPerHEC <>"xCPUs threads") [
-            bench "unbounded" $
-              perRunEnv (Cache.initialise Nothing) $ \cache ->
-                go threadsPerHEC cache payloads
-          , bench "bounded effectively unbounded" $
-              perRunEnv (Cache.initialise $ Just 40000) $ \cache ->
+            bench "bounded effectively unbounded" $
+              perRunEnv (Cache.initialise 40000) $ \cache ->
                 go threadsPerHEC cache payloads
           , bench "bounded 10pct ideal capacity" $
-              perRunEnv (Cache.initialise $ Just 2700) $ \cache ->
+              perRunEnv (Cache.initialise 2700) $ \cache ->
                 go threadsPerHEC cache payloads
           ]
     --  660K uniques, 40% in top 10% , 30% in top 1%, 33% cache hits ideally
@@ -128,20 +119,17 @@ realisticBenches name wrk =
       bgroup "realistic distribution" $
         flip map [2,100] $ \threadsPerHEC ->
           bgroup (show threadsPerHEC <>"xCPUs threads") [
-            bench "unbounded" $
-              perRunEnv (Cache.initialise Nothing) $ \cache ->
-                go threadsPerHEC cache payloads
-          , bench "bounded maxBound (10pct ideal capacity)" $
+            bench "bounded maxBound (10pct ideal capacity)" $
               -- this is our largest possible cache size will necessarily evict
-              perRunEnv (Cache.initialise $ Just maxBound) $ \cache ->
+              perRunEnv (Cache.initialise maxBound) $ \cache ->
                 go threadsPerHEC cache payloads
           , bench "bounded 6000 (1pct ideal capacity)" $
-              perRunEnv (Cache.initialise $ Just 6000) $ \cache ->
+              perRunEnv (Cache.initialise 6000) $ \cache ->
                 go threadsPerHEC cache payloads
           ]
   ]
   where
-    go :: Int -> Cache.Cache Int Int -> [Int] -> IO ()
+    go :: Int -> Cache.BoundedCache Int Int -> [Int] -> IO ()
     go threadFactor cache payload = do
       bef <- getMonotonicTimeNSec
       -- So that `go 0 ...`  will give us a single thread:
@@ -207,14 +195,7 @@ burnCycles = go 0XBEEF where
 readBenches :: Int -> Benchmark
 readBenches n =
   bgroup ("size "<>show n) [
-    env (populate n U.initialise U.insertAllStripes) $ \ ~(cache, k)->
-      bgroup "unbounded" [
-        bench "hit" $
-          nfAppIO (\k' -> Cache.lookup k' cache) k
-      , bench "miss" $
-          nfAppIO (\k' -> Cache.lookup k' cache) 0xDEAD
-      ]
-  , env (populate n (B.initialise (fromIntegral $ n*2)) B.insertAllStripes) $ \ ~(cache, k)->
+    env (populate n (Cache.initialise (fromIntegral $ n*2)) Cache.insertAllStripes) $ \ ~(cache, k)->
       bgroup "bounded" [
         bench "hit" $
           nfAppIO (\k' -> Cache.lookup k' cache) k
@@ -273,9 +254,5 @@ zipfianRandomInts n sk = do
 
 
 -- noops, orphans:
-instance NFData (B.BoundedCache k v) where
-  rnf _ = ()
-instance NFData (U.UnboundedCache k v) where
-  rnf _ = ()
-instance NFData (Cache.Cache k v) where
+instance NFData (Cache.BoundedCache k v) where
   rnf _ = ()

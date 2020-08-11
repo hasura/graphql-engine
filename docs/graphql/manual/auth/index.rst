@@ -44,3 +44,7 @@ As you can see from this:
 
   authentication/index
   authorization/index
+
+.. admonition:: Learn course
+
+  If you'd like to learn about authentication and authorization / access control by following a tutorial, check out our Learn course, `Authentication with Hasura <https://hasura.io/learn/graphql/hasura-auth-slack/introduction/>`__.

@@ -1,0 +1,48 @@
+# https://github.com/hasura/graphql-engine/issues/5200
+description: Test introspecting enum types as user role
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: user
+response:
+  data:
+    country:
+      kind: ENUM
+      name: country_enum
+      enumValues:
+      - name: India
+        description: Republic of India
+      - name: USA
+        description: United States of America
+    zones:
+      fields:
+      - name: code
+        type:
+          ofType:
+            name: String
+      - name: id
+        type:
+          ofType:
+            name: Int
+query:
+  query: |
+    {
+      country: __type(name: "country_enum") {
+        name
+        kind
+        enumValues {
+          name
+          description
+        }
+      }
+      zones: __type(name: "zones") {
+        fields {
+          name
+          type {
+            ofType {
+              name
+            }
+          }
+        }
+      }
+    }

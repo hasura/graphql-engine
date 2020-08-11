@@ -223,6 +223,7 @@ getResolvedExecPlan
      , Tracing.MonadTrace tx
      )
   => Env.Environment
+  -> L.Logger L.Hasura
   -> PGExecCtx
   -> EP.PlanCache
   -> UserInfo
@@ -234,7 +235,7 @@ getResolvedExecPlan
   -> [HTTP.Header]
   -> (GQLReqUnparsed, GQLReqParsed)
   -> m (Telem.CacheHit, GQExecPlanResolved tx)
-getResolvedExecPlan env pgExecCtx planCache userInfo sqlGenCtx
+getResolvedExecPlan env logger pgExecCtx planCache userInfo sqlGenCtx
   sc scVer queryType httpManager reqHeaders (reqUnparsed, reqParsed) = do
 
   planM <- liftIO $ EP.getPlan scVer (_uiRole userInfo) operationNameM queryStr
@@ -263,15 +264,15 @@ getResolvedExecPlan env pgExecCtx planCache userInfo sqlGenCtx
       forM partialExecPlan $ \(gCtx, rootSelSet) ->
         case rootSelSet of
           VQ.RMutation selSet -> do
-            (tx, respHeaders) <- getMutOp env gCtx sqlGenCtx userInfo httpManager reqHeaders selSet
+            (tx, respHeaders) <- getMutOp env logger gCtx sqlGenCtx userInfo httpManager reqHeaders selSet
             pure $ ExOpMutation respHeaders tx
           VQ.RQuery selSet -> do
-            (queryTx, plan, genSql, asts) <- getQueryOp env gCtx sqlGenCtx httpManager reqHeaders userInfo
+            (queryTx, plan, genSql, asts) <- getQueryOp env logger gCtx sqlGenCtx httpManager reqHeaders userInfo
                                        queryReusability (allowQueryActionExecuter httpManager reqHeaders) selSet
             traverse_ (addPlanToCache . flip EP.RPQuery asts) plan
             return $ ExOpQuery queryTx (Just genSql) asts
           VQ.RSubscription fields -> do
-            (lqOp, plan) <- getSubsOp env pgExecCtx gCtx sqlGenCtx userInfo queryReusability
+            (lqOp, plan) <- getSubsOp env logger pgExecCtx gCtx sqlGenCtx userInfo queryReusability
               (restrictActionExecuter "query actions cannot be run as a subscription") fields
             traverse_ (addPlanToCache . EP.RPSubs) plan
             return $ ExOpSubs lqOp
@@ -286,18 +287,20 @@ type E m =
           , OrdByCtx
           , InsCtxMap
           , SQLGenCtx
+          , L.Logger L.Hasura
           ) (ExceptT QErr m)
 
 runE
   :: (MonadError QErr m)
-  => GCtx
+  => L.Logger L.Hasura
+  -> GCtx
   -> SQLGenCtx
   -> UserInfo
   -> E m a
   -> m a
-runE ctx sqlGenCtx userInfo action = do
+runE logger ctx sqlGenCtx userInfo action = do
   res <- runExceptT $ runReaderT action
-    (userInfo, queryCtxMap, mutationCtxMap, typeMap, fldMap, ordByCtx, insCtxMap, sqlGenCtx)
+    (userInfo, queryCtxMap, mutationCtxMap, typeMap, fldMap, ordByCtx, insCtxMap, sqlGenCtx, logger)
   either throwError return res
   where
     queryCtxMap = _gQueryCtxMap ctx
@@ -317,6 +320,7 @@ getQueryOp
      , Tracing.MonadTrace tx
      )
   => Env.Environment
+  -> L.Logger L.Hasura
   -> GCtx
   -> SQLGenCtx
   -> HTTP.Manager
@@ -326,8 +330,8 @@ getQueryOp
   -> QueryActionExecuter
   -> VQ.ObjectSelectionSet
   -> m (tx EncJSON, Maybe EQ.ReusableQueryPlan, EQ.GeneratedSqlMap, [GR.QueryRootFldUnresolved])
-getQueryOp env gCtx sqlGenCtx manager reqHdrs userInfo queryReusability actionExecuter selSet =
-  runE gCtx sqlGenCtx userInfo $ EQ.convertQuerySelSet env manager reqHdrs queryReusability selSet actionExecuter
+getQueryOp env logger gCtx sqlGenCtx manager reqHdrs userInfo queryReusability actionExecuter selSet =
+  runE logger gCtx sqlGenCtx userInfo $ EQ.convertQuerySelSet env manager reqHdrs queryReusability selSet actionExecuter
 
 resolveMutSelSet
   :: ( HasVersion
@@ -341,6 +345,7 @@ resolveMutSelSet
      , Has InsCtxMap r
      , Has HTTP.Manager r
      , Has [HTTP.Header] r
+     , Has (L.Logger L.Hasura) r
      , MonadIO m
      , Tracing.MonadTrace m
      , MonadIO tx
@@ -377,6 +382,7 @@ getMutOp
      , Tracing.MonadTrace tx
      )
   => Env.Environment
+  -> L.Logger L.Hasura
   -> GCtx
   -> SQLGenCtx
   -> UserInfo
@@ -384,14 +390,14 @@ getMutOp
   -> [HTTP.Header]
   -> VQ.ObjectSelectionSet
   -> m (tx EncJSON, HTTP.ResponseHeaders)
-getMutOp env ctx sqlGenCtx userInfo manager reqHeaders selSet =
+getMutOp env logger ctx sqlGenCtx userInfo manager reqHeaders selSet =
   peelReaderT $ resolveMutSelSet env selSet
   where
     peelReaderT action =
       runReaderT action
         ( userInfo, queryCtxMap, mutationCtxMap
         , typeMap, fldMap, ordByCtx, insCtxMap, sqlGenCtx
-        , manager, reqHeaders
+        , manager, reqHeaders, logger
         )
       where
         queryCtxMap = _gQueryCtxMap ctx
@@ -408,6 +414,7 @@ getSubsOp
      , Tracing.MonadTrace m
      )
   => Env.Environment
+  -> L.Logger L.Hasura
   -> PGExecCtx
   -> GCtx
   -> SQLGenCtx
@@ -416,8 +423,8 @@ getSubsOp
   -> QueryActionExecuter
   -> VQ.ObjectSelectionSet
   -> m (EL.LiveQueryPlan, Maybe EL.ReusableLiveQueryPlan)
-getSubsOp env pgExecCtx gCtx sqlGenCtx userInfo queryReusability actionExecuter =
-  runE gCtx sqlGenCtx userInfo .
+getSubsOp env logger pgExecCtx gCtx sqlGenCtx userInfo queryReusability actionExecuter =
+  runE logger gCtx sqlGenCtx userInfo .
   EL.buildLiveQueryPlan env pgExecCtx queryReusability actionExecuter
 
 execRemoteGQ
