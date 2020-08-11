@@ -231,7 +231,7 @@ stripObject
   -> StateT (HashMap G.Name (G.TypeDefinition [G.Name])) (Either ValidationError) G.GType
 stripObject remoteRelationshipName schemaDoc originalGtype templateArguments =
   case originalGtype of
-    G.TypeNamed _ originalNamedType ->
+    G.TypeNamed nullability originalNamedType ->
       case lookupType schemaDoc (G.getBaseType originalGtype) of
         Just (G.TypeDefinitionInputObject originalInpObjTyInfo) -> do
           let originalSchemaArguments =
@@ -251,7 +251,7 @@ stripObject remoteRelationshipName schemaDoc originalGtype templateArguments =
                   { G._iotdValueDefinitions = HM.elems newSchemaArguments
                   , G._iotdName = newNamedType
                   }
-              newGtype = G.TypeNamed (G.Nullability True) newNamedType
+              newGtype = G.TypeNamed nullability newNamedType
           modify (HM.insert newNamedType (G.TypeDefinitionInputObject newInpObjTyInfo))
           pure newGtype
         _ -> lift (Left (InvalidGTypeForStripping originalGtype))
@@ -380,7 +380,7 @@ validateType permittedVariables value expectedGType schemaDocument =
                    throwError $ InvalidType (mkGraphQLType name) "not an input object type")
   where
     mkGraphQLType =
-      G.TypeNamed (G.Nullability True)
+      G.TypeNamed (G.Nullability False)
 
     mkScalarTy scalarType = do
       eitherScalar <- runExceptT $ mkScalarTypeName scalarType
