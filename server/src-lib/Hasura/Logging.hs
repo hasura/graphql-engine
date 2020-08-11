@@ -68,6 +68,7 @@ data instance EngineLogType Hasura
   | ELTQueryLog
   | ELTStartup
   | ELTLivequeryPollerLog
+  | ELTActionHandler
   -- internal log types
   | ELTInternal !InternalLogTypes
   deriving (Show, Eq, Generic)
@@ -82,6 +83,7 @@ instance J.ToJSON (EngineLogType Hasura) where
     ELTQueryLog -> "query-log"
     ELTStartup -> "startup"
     ELTLivequeryPollerLog -> "livequery-poller-log"
+    ELTActionHandler -> "action-handler-log"
     ELTInternal t -> J.toJSON t
 
 instance J.FromJSON (EngineLogType Hasura) where
@@ -92,6 +94,7 @@ instance J.FromJSON (EngineLogType Hasura) where
     "websocket-log" -> return ELTWebsocketLog
     "query-log" -> return ELTQueryLog
     "livequery-poller-log" -> return ELTLivequeryPollerLog
+    "action-handler-log" -> return ELTActionHandler
     _ -> fail $ "Valid list of comma-separated log types: "
          <> BLC.unpack (J.encode userAllowedLogTypes)
 

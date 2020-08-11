@@ -5,10 +5,6 @@ import { stripTrailingSlash } from './components/Common/utils/urlUtils';
 import { isEmpty } from './components/Common/utils/jsUtils';
 
 // TODO: move this section to a more appropriate location
-/* set helper tools into window */
-import sqlFormatter from './helpers/sql-formatter.min';
-
-const hljs = require('./helpers/highlight.min');
 
 declare global {
   interface Window {
@@ -27,20 +23,8 @@ declare global {
       consolePath: string;
       cliUUID: string;
     };
-    sqlFormatter: unknown;
-    hljs: unknown;
   }
   const CONSOLE_ASSET_VERSION: string;
-}
-
-if (
-  (window as Window) &&
-  typeof window === 'object' &&
-  !window.sqlFormatter &&
-  !window.hljs
-) {
-  window.sqlFormatter = sqlFormatter;
-  window.hljs = hljs;
 }
 
 /* initialize globals */

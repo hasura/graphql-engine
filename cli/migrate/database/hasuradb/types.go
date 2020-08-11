@@ -289,11 +289,35 @@ type HasuraError struct {
 	Code           string      `json:"code"`
 }
 
+type InconsistentMetadataError struct {
+	Definition interface{} `json:"definition,omitempty" mapstructure:"definition,omitempty"`
+	Reason     string      `json:"reason,omitempty" mapstructure:"reason,omitempty"`
+	Type       string      `json:"type,omitempty" mapstructure:"type,omitempty"`
+}
+
+func (mderror *InconsistentMetadataError) String() string {
+	var out string
+	if mderror.Reason != "" {
+		out = fmt.Sprintf("\nreason: %v\n", mderror.Reason)
+	}
+	if mderror.Type != "" {
+		out = fmt.Sprintf("%stype: %v\n", out, mderror.Type)
+	}
+	if mderror.Definition != nil {
+		m, err := json.MarshalIndent(mderror.Definition, "", "  ")
+		if err == nil {
+			out = fmt.Sprintf("%sdefinition: \n%s", out, string(m))
+		}
+	}
+	return out
+}
+
 type SQLInternalError struct {
-	Arguments []string      `json:"arguments" mapstructure:"arguments,omitempty"`
-	Error     PostgresError `json:"error" mapstructure:"error,omitempty"`
-	Prepared  bool          `json:"prepared" mapstructure:"prepared,omitempty"`
-	Statement string        `json:"statement" mapstructure:"statement,omitempty"`
+	Arguments                 []string      `json:"arguments" mapstructure:"arguments,omitempty"`
+	Error                     *PostgresError `json:"error" mapstructure:"error,omitempty"`
+	Prepared                  bool          `json:"prepared" mapstructure:"prepared,omitempty"`
+	Statement                 string        `json:"statement" mapstructure:"statement,omitempty"`
+	InconsistentMetadataError `mapstructure:",squash"`
 }
 type PostgresError struct {
 	StatusCode  string `json:"status_code" mapstructure:"status_code,omitempty"`
@@ -323,20 +347,7 @@ func (h HasuraError) Error() string {
 		err := mapstructure.Decode(v, &internalError)
 		if err == nil {
 			// postgres error
-			errorStrings = append(errorStrings, fmt.Sprintf("[%s] %s: %s", internalError.Error.StatusCode, internalError.Error.ExecStatus, internalError.Error.Message))
-			if len(internalError.Error.Description) > 0 {
-				errorStrings = append(errorStrings, fmt.Sprintf("Description: %s", internalError.Error.Description))
-			}
-			if len(internalError.Error.Hint) > 0 {
-				errorStrings = append(errorStrings, fmt.Sprintf("Hint: %s", internalError.Error.Hint))
-			}
-		}
-	}
-	if v, ok := h.Internal.([]interface{}); ok {
-		err := mapstructure.Decode(v, &internalErrors)
-		if err == nil {
-			for _, internalError := range internalErrors {
-				// postgres error
+			if internalError.Error != nil {
 				errorStrings = append(errorStrings, fmt.Sprintf("[%s] %s: %s", internalError.Error.StatusCode, internalError.Error.ExecStatus, internalError.Error.Message))
 				if len(internalError.Error.Description) > 0 {
 					errorStrings = append(errorStrings, fmt.Sprintf("Description: %s", internalError.Error.Description))
@@ -345,7 +356,34 @@ func (h HasuraError) Error() string {
 					errorStrings = append(errorStrings, fmt.Sprintf("Hint: %s", internalError.Error.Hint))
 				}
 			}
+			if e := internalError.InconsistentMetadataError.String(); e != "" {
+				errorStrings = append(errorStrings, e)
+			}
 		}
+	}
+	if v, ok := h.Internal.([]interface{}); ok {
+		err := mapstructure.Decode(v, &internalErrors)
+		if err == nil {
+			for _, internalError := range internalErrors {
+				// postgres error
+				if internalError.Error != nil {
+					errorStrings = append(errorStrings, fmt.Sprintf("[%s] %s: %s", internalError.Error.StatusCode, internalError.Error.ExecStatus, internalError.Error.Message))
+					if len(internalError.Error.Description) > 0 {
+						errorStrings = append(errorStrings, fmt.Sprintf("Description: %s", internalError.Error.Description))
+					}
+					if len(internalError.Error.Hint) > 0 {
+						errorStrings = append(errorStrings, fmt.Sprintf("Hint: %s", internalError.Error.Hint))
+					}
+				}
+
+				if e := internalError.InconsistentMetadataError.String(); e != "" {
+					errorStrings = append(errorStrings, e)
+				}
+			}
+		}
+	}
+	if len(errorStrings) == 0 {
+		return ""
 	}
 	return strings.Join(errorStrings, "\r\n")
 }

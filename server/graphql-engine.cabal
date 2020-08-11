@@ -244,10 +244,7 @@ library
                      , Data.Time.Clock.Units
                      , Data.URL.Template
                      , Hasura.App
-                     , Hasura.Cache
                      , Hasura.Cache.Bounded
-                     , Hasura.Cache.Types
-                     , Hasura.Cache.Unbounded
                      , Hasura.Db
                      , Hasura.EncJSON
                      , Hasura.Eventing.Common
@@ -467,6 +464,7 @@ test-suite graphql-engine-tests
     Hasura.RQL.MetadataSpec
     Hasura.Server.MigrateSpec
     Hasura.Server.TelemetrySpec
+    Hasura.CacheBoundedSpec
     Hasura.Server.AuthSpec
 
 -- Benchmarks related to caching (e.g. the plan cache).
