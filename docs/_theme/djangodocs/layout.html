@@ -41,7 +41,7 @@
 {% endblock %}
 
 {% block document %}
-    <div class="main_container_wrapper viewport">
+    <div id='main_container_viewport' class="main_container_wrapper viewport">
       {% include 'pages/loading.html' %}
       <header id="header" class='positionStickyHeader commonGrayBgColor'>
         <div class="containerWidth">
@@ -325,7 +325,7 @@
                 </li>
                 <li>
                   <a
-                    href='https://hasura.io/pricing/'
+                    href='https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html'
                   >
                     <button class='commonBlueNavBtn'>GET HASURA</button>
                   </a>
@@ -605,7 +605,7 @@
               <div id='sidebar-close' class='mobile-only closeIcon'>
                 <img src="{{ pathto('_images/layout/close-icon.svg', 1) }}" alt="Close"/>
               </div>
-              <div class="tabbarContainerWrapper blueBgColor boderBottom">
+              <div class="tabbarContainerWrapper blueBgColor">
                 <a href="" class="tabbarTabActive">
                   <span>
                     Hasura Core
@@ -643,10 +643,21 @@
                     <span class="fa fa-search search_icon"></span>
                     <input type="text" id="search_element" placeholder="Search docs..." />
                   </div>
+                  <span class="versionTxt">
+                    Docs v1.x
+                    <!-- <select value="{{ version }}" onchange="location = this.value;" class="selected" aria-label="Select Version">
+                      {%- if version == '1.0' %}
+                        <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html" selected="selected">v1.x</option>
+                      {%- else -%}
+                        <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html">v1.x</option>
+                      {% endif %}
+                    </select> -->
+                  </span>
                   <div class="edit-github-btn-wrap inline-block mobile-hide">
                     <a class="edit-github-btn" target="_blank" rel="noopener" href="https://github.com/hasura/graphql-engine/blob/master/docs/{{ pagename }}.rst">
-                      <img src="{{ pathto('_images/layout/github-32.png', 1) }}" alt='Github'/>
+                      <img  class="mr-6" src="{{ pathto('_images/layout/git-hub.svg', 1) }}" alt='Github'/>
                       <span>Edit on GitHub</span>
+                      <img class="ml-6 w-7" src="{{ pathto('_images/layout/arrow.svg', 1) }}" alt='Github'/>
                     </a>
                   </div>
                   <div class="inline-block mobile-only" id="nav_tree_icon">
@@ -664,113 +675,144 @@
               </div>
 
               <!-- <div class="nav">{{ secondnav() }}</div> -->
-              <div>
-              <div class="nav pagination-nav">
-                {%- if prev %}
-                <a href="{{ prev.link|e }}" title="{{ prev.title|e }}">
-                  <span class="pagination-prev">
-                    <img src="{{ pathto('_images/layout/previous.svg', 1) }}" alt="Prev"/>
-                    Previous
-                  </span>
-                </a>
-                {%- endif %}
-                {%- if next %}
-                <a href="{{ next.link|e }}" title="{{ next.title|e }}">
-                  <span class="pagination-next">
-                    Next
-                    <img src="{{ pathto('_images/layout/next.svg', 1) }}" alt="Next"/>
-                  </span>
-                </a>
-                {%- endif %}
-              </div>
-              <div class="feedback_wrapper">
-                <div id="feedback" class="feedback">
-                  Was this page helpful?
-                  <!-- inline svgs to allow color manipulation on hover -->
-                  <div id="thumb_up_button" class="display_inl actions thumb_up">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" width="21px" height="21px" viewBox="0 0 561 561" style="enable-background:new 0 0 561 561;" xml:space="preserve">
-                      <g>
-	                    <g id="thumb-up">
-		                  <path d="M0,535.5h102v-306H0V535.5z M561,255c0-28.05-22.95-51-51-51H349.35l25.5-117.3c0-2.55,0-5.1,0-7.65    c0-10.2-5.1-20.4-10.199-28.05L336.6,25.5L168.3,193.8c-10.2,7.65-15.3,20.4-15.3,35.7v255c0,28.05,22.95,51,51,51h229.5    c20.4,0,38.25-12.75,45.9-30.6l76.5-181.051c2.55-5.1,2.55-12.75,2.55-17.85v-51H561C561,257.55,561,255,561,255z" fill="#787878"/>
-	                    </g>
-                      </g>
-                    </svg>
-                  </div>
-                  <div id="thumb_down_button" class="display_inl actions thumb_down">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_2" x="0px" y="0px" width="21px" height="21px" viewBox="0 0 561 561" style="enable-background:new 0 0 561 561;" xml:space="preserve">
-                      <g>
-                        <g id="thumb-down">
-                            <path d="M357,25.5H127.5c-20.4,0-38.25,12.75-45.9,30.6L5.1,237.15C2.55,242.25,0,247.35,0,255v48.45l0,0V306    c0,28.05,22.95,51,51,51h160.65l-25.5,117.3c0,2.55,0,5.101,0,7.65c0,10.2,5.1,20.399,10.2,28.05l28.05,25.5l168.3-168.3    c10.2-10.2,15.3-22.95,15.3-35.7v-255C408,48.45,385.05,25.5,357,25.5z M459,25.5v306h102v-306H459z" fill="#787878"/>
-                        </g>
-                      </g>
-                    </svg>
-                  </div>
+              <div class="nav-feedback-wrapper">
+                <div class="nav pagination-nav">
+                  {%- if prev %}
+                  <a href="{{ prev.link|e }}" title="{{ prev.title|e }}">
+                    <span class="pagination-prev">
+                      <img src="{{ pathto('_images/layout/previous.svg', 1) }}" alt="Prev"/>
+                      Previous
+                    </span>
+                  </a>
+                  {%- endif %}
+                  {%- if next %}
+                  <a href="{{ next.link|e }}" title="{{ next.title|e }}">
+                    <span class="pagination-next">
+                      Next
+                      <img src="{{ pathto('_images/layout/next.svg', 1) }}" alt="Next"/>
+                    </span>
+                  </a>
+                  {%- endif %}
                 </div>
-                <div id="detailed_feedback" class="hide">
-                  <div id="feedback_detail_msg"></div>
-                  <textarea rows="4" cols="75" id="feedback_box" data-id="0"></textarea>
-                  <br/>
-                  <button id="feedback_btn">Submit</button>
-                </div>
-                <div id="thank_you" class="hide">
-                  Thank you for your feedback!
-                </div>
-              </div>
-              <div class="subscribe-form-wrapper">
-                <div id="mc_embed_signup">
-                  <div class="subscribe-form-content">
-                    Stay up to date with product & security news
-                    <a target="_blank" class="newsletter-link" href="https://us13.campaign-archive.com/home/?u=9b63e92a98ecdc99732456b0e&id=f5c4f66bcf" rel="noopener">See past editions</a>
-                  </div>
-                  <form id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate post-subscription-form newsletter-form" target="_blank" rel="noopener" novalidate>
-                    <div class="full-width">
-                      <div class="input-box">
-                        <input type="email" name="EMAIL" id="mce-EMAIL" aria-label="Email" placeholder="Your Email Address" pattern="^([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x22([^\x0d\x22\x5c\x80-\xff]|\x5c[\x00-\x7f])*\x22)(\x2e([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x22([^\x0d\x22\x5c\x80-\xff]|\x5c[\x00-\x7f])*\x22))*\x40([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x5b([^\x0d\x5b-\x5d\x80-\xff]|\x5c[\x00-\x7f])*\x5d)(\x2e([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x5b([^\x0d\x5b-\x5d\x80-\xff]|\x5c[\x00-\x7f])*\x5d))*(\.\w{2,})+$" required>
-                      </div>
-                      <div id="mce-responses" class="clear display-inline">
-                        <div class="mce-error-response response error-message hide">
-                        </div>
-                        <div class="mce-success-response response success-message hide">
-                        </div>
-                      </div>
+                <div class="feedback_wrapper">
+                  <div id="feedback" class="feedback">
+                    <span>Was this page helpful?</span>
+                    <!-- inline svgs to allow color manipulation on hover -->
+                    <div id="thumb_up_button" class="display_inl actions thumb_up">
+                      <img src="{{ pathto('_images/layout/hasura-happy.svg', 1) }}" alt='Hasura'/>
                     </div>
-                    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_9b63e92a98ecdc99732456b0e_f5c4f66bcf" tabindex="-1" value=""></div>
-                    <div class="clear submit-box">
-                      <input type="submit" disabled="true" value="Subscribe" name="subscribe" id="mc-embedded-subscribe" class="button">
+                    <div id="thumb_down_button" class="display_inl actions thumb_down">
+                      <img src="{{ pathto('_images/layout/hasura-sad.svg', 1) }}" alt='Hasura'/>
                     </div>
-                  </form>
-
-                </div>
-              </div>
-              <!--
-              <div class="footer-hasura-custom">
-                <img class="responsive footer_logo" src="{{ pathto('_images/layout/hasura_logo.svg', 1) }}" alt="Hasura Logo Dark"/>
-                <div class="footer_text">
-                  <div>Want to contribute or report missing content?</div>
-                  <div>
-                    <a target="_blank" rel="noopener" href="https://github.com/hasura/graphql-engine/blob/master/docs/{{ pagename }}.rst">edit this page on github</a>
-                    | <a target="_blank" rel="noopener" href="https://github.com/hasura/graphql-engine/blob/master/CONTRIBUTING.md">contributing guidelines</a>
-                    | <a target="_blank" rel="noopener" href="https://github.com/hasura/graphql-engine/issues">report an issue</a>
                   </div>
-                  <br/>
-                  <div>
-                    <a target="_blank" rel="noopener" href="https://github.com/hasura/graphql-engine">Hasura GraphQL engine</a> is open source. <a target="_blank" rel="noopener" href="https://github.com/hasura/graphql-engine/blob/master/LICENSE">See license</a>
+                  <div id="detailed_feedback" class="hide ">
+                    <div id="feedback_detail_msg"></div>
+                    <input cols="75" id="feedback_box" data-id="0">
+                    <button id="feedback_btn">Submit</button>
                   </div>
-                  <div>
-                    Powered by <a target="_blank" rel="noopener" href="http://www.sphinx-doc.org">Sphinx</a>.
-                    |  Copyright &copy; 2020 <a target="_blank" rel="noopener" href="https://hasura.io">Hasura</a>.
+                  <div id="thank_you" class="hide">
+                    Thank you for your feedback!
                   </div>
                 </div>
+                <!--
+                <div class="footer-hasura-custom">
+                  <img class="responsive footer_logo" src="{{ pathto('_images/layout/hasura_logo.svg', 1) }}" alt="Hasura Logo Dark"/>
+                  <div class="footer_text">
+                    <div>Want to contribute or report missing content?</div>
+                    <div>
+                      <a target="_blank" rel="noopener" href="https://github.com/hasura/graphql-engine/blob/master/docs/{{ pagename }}.rst">edit this page on github</a>
+                      | <a target="_blank" rel="noopener" href="https://github.com/hasura/graphql-engine/blob/master/CONTRIBUTING.md">contributing guidelines</a>
+                      | <a target="_blank" rel="noopener" href="https://github.com/hasura/graphql-engine/issues">report an issue</a>
+                    </div>
+                    <br/>
+                    <div>
+                      <a target="_blank" rel="noopener" href="https://github.com/hasura/graphql-engine">Hasura GraphQL engine</a> is open source. <a target="_blank" rel="noopener" href="https://github.com/hasura/graphql-engine/blob/master/LICENSE">See license</a>
+                    </div>
+                    <div>
+                      Powered by <a target="_blank" rel="noopener" href="http://www.sphinx-doc.org">Sphinx</a>.
+                      |  Copyright &copy; 2020 <a target="_blank" rel="noopener" href="https://hasura.io">Hasura</a>.
+                    </div>
+                  </div>
+                </div>
+                -->
               </div>
-              -->
-            </div>
           </div>
           <div style="clear: both;"></div>
           {%- endif %}
       </div>
+      <div id='floating-subscribe' class="floatingSubscribe">
+        <img id='close-subscribe' class='close-floating-subscribe' src="{{ pathto('_images/layout/close-subscribe.svg', 1) }}" alt='Close' />
+        <div class="containerWrapper">
+          <div class="floatingSubscribeWrapper">
+            <div id="floating_mc_embed_signup">
+              <div class="subscribe-form-title">
+                Stay up to date with Hasura product and security news
+              </div>
+              <form id="floating_mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate post-subscription-form newsletter-form" target="_blank" rel="noopener" novalidate>
+                <div class="floating-input-box">
+                  <input type="email" name="EMAIL" id="floating-mce-EMAIL" aria-label="Email" placeholder="Your Email Address" pattern="^([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x22([^\x0d\x22\x5c\x80-\xff]|\x5c[\x00-\x7f])*\x22)(\x2e([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x22([^\x0d\x22\x5c\x80-\xff]|\x5c[\x00-\x7f])*\x22))*\x40([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x5b([^\x0d\x5b-\x5d\x80-\xff]|\x5c[\x00-\x7f])*\x5d)(\x2e([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x5b([^\x0d\x5b-\x5d\x80-\xff]|\x5c[\x00-\x7f])*\x5d))*(\.\w{2,})+$" required>
+                  <img id='subscribe-default' class='labelIconGray' src="{{ pathto('_images/layout/email.svg', 1) }}" alt='Email' />
+                  <img id='subscribe-warning' class='labelIconGray hide' src="{{ pathto('_images/layout/warning.svg', 1) }}" alt='Email' />
+                  <img id='subscribe-error' class='labelIconGray hide' src="{{ pathto('_images/layout/error.svg', 1) }}" alt='Email' />
+                </div>
+                <div id="mce-responses" class="clear display-inline">
+                  <div class="mce-error-response response error-message hide">
+                  </div>
+                  <div class="mce-success-response response success-message hide">
+                  </div>
+                </div>
+                <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_9b63e92a98ecdc99732456b0e_f5c4f66bcf" tabindex="-1" value=""></div>
+                <div class="clear submit-box">
+                  <input type="submit" disabled="true" value="Subscribe" name="subscribe" id="floating-mc-embedded-subscribe" class="button">
+                  <div id='success-message' class="success hide">
+                    <img src="{{ pathto('_images/layout/sucess-tick.svg', 1) }}" alt='Success tick'/>
+                    Thank you for subscribing.
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     <footer class="commonFooterBgColor">
       <div class="containerWrapper">
+        <div class="subscribe-form-wrapper">
+          <div id="mc_embed_signup">
+            <div class="subscribe-form-title">
+              Stay in the know
+            </div>
+            <div class="subscribe-form-content articleDesc">
+              Sign up for full access to our community highlights, new features, and occasional baby animal gifs! Oh, and we have a strict no-spam rule. ✌️
+              <a target="_blank" class="newsletter-link" href="https://us13.campaign-archive.com/home/?u=9b63e92a98ecdc99732456b0e&id=f5c4f66bcf" rel="noopener">See past editions</a>
+            </div>
+            <form id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate post-subscription-form newsletter-form" target="_blank" rel="noopener" novalidate>
+              <div class="full-width">
+                <div class="input-box">
+                  <input type="email" name="EMAIL" id="mce-EMAIL" aria-label="Email" placeholder="Your Email Address" pattern="^([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x22([^\x0d\x22\x5c\x80-\xff]|\x5c[\x00-\x7f])*\x22)(\x2e([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x22([^\x0d\x22\x5c\x80-\xff]|\x5c[\x00-\x7f])*\x22))*\x40([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x5b([^\x0d\x5b-\x5d\x80-\xff]|\x5c[\x00-\x7f])*\x5d)(\x2e([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x5b([^\x0d\x5b-\x5d\x80-\xff]|\x5c[\x00-\x7f])*\x5d))*(\.\w{2,})+$" required>
+                  <img id='subscribe-default' class='labelIconGray' src="{{ pathto('_images/layout/email.svg', 1) }}" alt='Email' />
+                  <img id='subscribe-warning' class='labelIconGray hide' src="{{ pathto('_images/layout/warning.svg', 1) }}" alt='Email' />
+                  <img id='subscribe-error' class='labelIconGray hide' src="{{ pathto('_images/layout/error.svg', 1) }}" alt='Email' />
+                </div>
+                <div id="mce-responses" class="clear display-inline">
+                  <div class="mce-error-response response error-message hide">
+                  </div>
+                  <div class="mce-success-response response success-message hide">
+                  </div>
+                </div>
+              </div>
+              <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_9b63e92a98ecdc99732456b0e_f5c4f66bcf" tabindex="-1" value=""></div>
+              <div class="clear submit-box">
+                <input type="submit" disabled="true" value="Subscribe" name="subscribe" id="mc-embedded-subscribe" class="button">
+                <div id='success-message' class="success hide">
+                  <img src="{{ pathto('_images/layout/sucess-tick.svg', 1) }}" alt='Success tick'/>
+                  Thank you for subscribing.
+                </div>
+              </div>
+            </form>
+
+          </div>
+        </div>
         <div class="footerWrappper wd100">
           <div class="footerLinks articleDesc">
             <div class="footerHeader">Hasura</div>

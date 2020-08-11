@@ -1,6 +1,17 @@
 window.hdocs = (function () {
   const DB_URL = HDOCS_BASE_DOMAIN ? 'https://data.' + HDOCS_BASE_DOMAIN + '/v1/query' : 'https://data.hasura-stg.hasura-app.io/v1/query';
-
+  if (typeof window !== undefined) {
+    window.onscroll = function() {
+      var currentScrollPos = window.pageYOffset;
+      var mainWrapper = document.getElementById("main_container_viewport");
+      var floatingSubscribeVisible = document.getElementById('floating-subscribe')
+      if (currentScrollPos > 40 && mainWrapper !== null) {
+        floatingSubscribeVisible.className = 'floatingSubscribe floatingSubscribeShow'
+      } else {
+        floatingSubscribeVisible.className = 'floatingSubscribe'
+      }
+    }
+  }
   return {
     setup: function () {
       Array.from(document.getElementsByClassName('menuLink')).forEach(function (el) { el.addEventListener('click', hdocs.toggleMenu) });
@@ -16,6 +27,7 @@ window.hdocs = (function () {
       document.getElementById('resources-menu').addEventListener('click', hdocs.resourcesMenu);
       document.getElementById('close-menu').addEventListener('click', hdocs.toggleMenu);
       document.getElementById('chat-open').addEventListener('click', hdocs.chatOpen);
+      document.getElementById('close-subscribe').addEventListener('click', hdocs.closeFloatingSubscribe)
       docsearch({
         appId: 'WCBB1VVLRC',
         apiKey: '298d448cd9d7ed93fbab395658da19e8',
@@ -78,6 +90,9 @@ window.hdocs = (function () {
         productList.className = "hide"
         resourcesArrow.className = ""
       }
+    },
+    closeFloatingSubscribe: function() {
+      document.getElementById('floating-subscribe').classList.remove('floatingSubscribeShow');
     },
     chatOpen: function() {
       if (window.Intercom) {
@@ -198,6 +213,7 @@ window.hdocs = (function () {
       }
     },
     sendFeedback: function (feedback, feedbackDetailMsg) {
+      document.getElementById("detailed_feedback").classList.add('detailed_feedback_wd');
       const insertQuery = {
         'type': 'insert',
         'args': {

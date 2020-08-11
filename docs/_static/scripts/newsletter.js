@@ -1,8 +1,11 @@
 const email_input = document.getElementById('mce-EMAIL');
 const submit_btn = document.getElementById('mc-embedded-subscribe');
-const mcStatusSuccess = document.querySelector('.mce-success-response');
+// const mcStatusSuccess = document.querySelector('.mce-success-response');
 const mcStatusError = document.querySelector('.mce-error-response');
-
+const subscribeDefaultImg = document.getElementById('subscribe-default');
+const subscribeWarningImg = document.getElementById('subscribe-warning');
+const subscribeErrorImg = document.getElementById('subscribe-error');
+const successMessage = document.getElementById('success-message');
 email_input.addEventListener('input', function() {
     submit_btn.value = 'Subscribe';
     submit_btn.disabled = false;
@@ -32,10 +35,10 @@ const showErrorMsg = () => {
 
 const clearMsg = () => {
     setTimeout(function(){
-        mcStatusSuccess.innerHTML = '';
+        // mcStatusSuccess.innerHTML = '';
         mcStatusError.innerHTML = '';
 
-        mcStatusSuccess.classList.add('hide');
+        // mcStatusSuccess.classList.add('hide');
         mcStatusError.classList.add('hide');
         submit_btn.disabled = true;
         //reset input
@@ -83,11 +86,20 @@ const submitNewsletterForm = function (form) {
         submit_btn.value = 'Subscribe';
         submit_btn.disabled = false;
         if(data && data.data && data.data.signupNewsletter.affected_rows) {
-            mcStatusSuccess.innerHTML = 'Thank you for subscribing!';
-            mcStatusSuccess.classList.remove('hide');
+            // mcStatusSuccess.innerHTML = 'Thank you for subscribing!';
+            // mcStatusSuccess.classList.remove('hide');
+            successMessage.classList.remove('hide');
+            submit_btn.classList.add('hide');
+            subscribeErrorImg.classList.add('hide');
+            subscribeDefaultImg.classList.remove('hide');
+            subscribeWarningImg.classList.add('hide');
         } else {
             if(data.errors && data.errors[0].extensions.code === 'constraint-violation') {
                 mcStatusError.innerHTML = 'You have already subscribed';
+                subscribeErrorImg.classList.add('hide');
+                subscribeDefaultImg.classList.add('hide');
+                subscribeWarningImg.classList.remove('hide');
+
             } else {
                 mcStatusError.innerHTML = 'Something went wrong';
             }
@@ -116,6 +128,9 @@ document.addEventListener('submit', function (event) {
 
     if(!emailPattern.test(email_input.value)) {
       showErrorMsg();
+      subscribeErrorImg.classList.remove('hide');
+      subscribeDefaultImg.classList.add('hide');
+      subscribeWarningImg.classList.add('hide');
       return;
     }
 
