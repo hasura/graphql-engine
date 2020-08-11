@@ -3,10 +3,11 @@ package commands
 import (
 	"bytes"
 	"fmt"
-	"github.com/hasura/graphql-engine/cli/util"
 	"strconv"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/hasura/graphql-engine/cli/util"
 
 	"github.com/hasura/graphql-engine/cli/migrate"
 
@@ -29,7 +30,10 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Example: `  # NOTE: This command is in PREVIEW, correctness is not guaranteed and the usage may change.
 
   # squash all migrations from version 123 to the latest one:
-  hasura migrate squash --from 123
+	hasura migrate squash --from 123
+	
+	# squash all migrations from version 123 to migration 456:
+	hasura migrate squash --from 123 --to 456
 
   # Add a name for the new squashed migration
   hasura migrate squash --name "<name>" --from 123`,
@@ -42,6 +46,7 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f := migrateSquashCmd.Flags()
 	f.Uint64Var(&opts.from, "from", 0, "start squashing from this version")
+	f.Uint64Var(&opts.to, "to", 0, "squash until this version")
 	f.StringVar(&opts.name, "name", "squashed", "name for the new squashed migration")
 	f.BoolVar(&opts.deleteSource, "delete-source", false, "delete the source files after squashing without any confirmation")
 
@@ -55,6 +60,7 @@ type migrateSquashOptions struct {
 	EC *cli.ExecutionContext
 
 	from       uint64
+	to         uint64
 	name       string
 	newVersion int64
 
@@ -70,7 +76,7 @@ func (o *migrateSquashOptions) run() error {
 		return errors.Wrap(err, "unable to initialize migrations driver")
 	}
 
-	versions, err := mig.SquashCmd(migrateDrv, o.from, o.newVersion, o.name, o.EC.MigrationDir)
+	versions, err := mig.SquashCmd(migrateDrv, o.from, o.to, o.newVersion, o.name, o.EC.MigrationDir)
 	o.EC.Spinner.Stop()
 	if err != nil {
 		return errors.Wrap(err, "unable to squash migrations")

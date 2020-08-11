@@ -220,8 +220,8 @@ func DownCmd(m *migrate.Migrate, limit int64) error {
 	}
 }
 
-func SquashCmd(m *migrate.Migrate, from uint64, version int64, name, directory string) (versions []int64, err error) {
-	versions, upMeta, upSql, downMeta, downSql, err := m.Squash(from)
+func SquashCmd(m *migrate.Migrate, from uint64, to uint64, version int64, name, directory string) (versions []int64, err error) {
+	versions, upMeta, upSql, downMeta, downSql, err := m.Squash(from, to)
 	if err != nil {
 		return
 	}
