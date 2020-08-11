@@ -234,7 +234,7 @@ updateJwkRef (Logger logger) manager url jwkRef = do
 -- When no 'x-hasura-user-role' is specified in the request, the mandatory
 -- 'x-hasura-default-role' [2] from the JWT claims will be used.
 
--- [1]: https://hasura.io/docs/1.0/graphql/manual/auth/authentication/unauthenticated-access.html 
+-- [1]: https://hasura.io/docs/1.0/graphql/manual/auth/authentication/unauthenticated-access.html
 -- [2]: https://hasura.io/docs/1.0/graphql/manual/auth/authentication/jwt.html#the-spec
 processJwt
   :: ( MonadIO m
@@ -282,6 +282,7 @@ processJwt_ processAuthZHeader_ jwtCtx headers mUnAuthRole =
       metadata <- parseJwtClaim (J.Object finalClaims) "x-hasura-* claims"
       userInfo <- mkUserInfo (URBPreDetermined requestedRole) UAdminSecretNotSent $
                   mkSessionVariablesText $ Map.toList metadata
+      -- userInfo
       pure (userInfo, expTimeM)
 
     withoutAuthZHeader = do
@@ -376,8 +377,8 @@ processAuthZHeader jwtCtx@JWTCtx{jcxClaimNs, jcxClaimsFormat} authzHeader = do
 -- parse x-hasura-allowed-roles, x-hasura-default-role from JWT claims
 parseHasuraClaims :: forall m. (MonadError QErr m) => J.Object -> m HasuraClaims
 parseHasuraClaims claimsMap = do
-  HasuraClaims <$> 
-    parseClaim allowedRolesClaim "should be a list of roles" <*> 
+  HasuraClaims <$>
+    parseClaim allowedRolesClaim "should be a list of roles" <*>
     parseClaim defaultRoleClaim  "should be a single role name"
 
   where
