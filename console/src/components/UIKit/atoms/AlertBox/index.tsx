@@ -51,11 +51,11 @@ export const AlertBox: React.FC<AlertBoxProps> = props => {
     >
       <Icon type={type} />
       {type && (
-        <Text pl="md" fontWeight="medium">
+        <Text as="span" pl="md" fontWeight="medium">
           {type}
         </Text>
       )}
-      <Text pl="md" as='span'>{alertMessage}</Text>
+      <Text pl="md">{alertMessage}</Text>
     </StyledAlertBox>
   );
 };
