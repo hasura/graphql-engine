@@ -4,7 +4,7 @@
 
 ### Breaking change
 
-Headers from environment variables starting with `HASURA_GRAPHQL_` are not allowed  
+Headers from environment variables starting with `HASURA_GRAPHQL_` are not allowed
 in event triggers, actions & remote schemas.
 
 If you do have such headers configured, then you must update the header configuration before upgrading.
@@ -13,6 +13,7 @@ If you do have such headers configured, then you must update the header configur
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: add userinfo to RO queries for use in views/RLS (partially fixes #1848)
 - server: fix failing introspection query when an enum column is part of a primary key (fixes #5200)
 - server: disallow headers from env variables starting with `HASURA_GRAPHQL_` in actions, event triggers & remote schemas (#5519)
 **WARNING**: This might break certain deployments. See `Breaking change` section above.
