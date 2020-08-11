@@ -81,18 +81,20 @@ const JsonInput = props => {
 
   const getJsonEditor = () => {
     return (
-      <div id = "jsontoggler"
-         className = "ace_editor ace _hidpi ace_github styles.expandedJsonEditor"
-         style = {{width: 'px'}}>
+      <div
+        id="jsontoggler"
+        className="ace_editor ace _hidpi ace_github styles.expandedJsonEditor"
+        style={{ width: 'px' }}
+      >
         <AceEditor
           key="ace_json_editor"
-          {...allProps} 
+          {...allProps}
           mode="json"
           theme="github"
-          name="jsontoggler" 
+          name="jsontoggler"
           minLines={10}
           maxLines={100}
-          className = "styles.expandedJsonEditor"
+          className="styles.expandedJsonEditor"
           value={data}
           showPrintMargin={false}
           onChange={handleTextAreaChangeAndPropagate}
