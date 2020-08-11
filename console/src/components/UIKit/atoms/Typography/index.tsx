@@ -16,6 +16,7 @@ Heading.defaultProps = {
  *  fontSize: 'explain'
  *  fontWeight: 'bold'
  */
+
 export type TextProps = {
   type?: keyof Theme['lineHeights'];
   fontWeight?: keyof Theme['fontWeights'];
@@ -25,6 +26,7 @@ export type TextProps = {
   mr?: keyof Theme['space'];
   ml?: keyof Theme['space'];
   pl?: keyof Theme['space'];
+  as?: keyof JSX.IntrinsicElements | React.ComponentType<any>;
 };
 
 export const Text: React.FC<TextProps> = props => {
