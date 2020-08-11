@@ -84,7 +84,7 @@ const JsonInput = props => {
       <div
         id="jsontoggler"
         className="ace_editor ace _hidpi ace_github styles.expandedJsonEditor"
-        style={{ width: 'px' }}
+        style={{ width: '375px' }}
       >
         <AceEditor
           key="ace_json_editor"
