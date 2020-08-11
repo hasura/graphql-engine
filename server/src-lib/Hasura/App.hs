@@ -235,7 +235,7 @@ migrateCatalogSchema env logger pool httpManager sqlGenCtx = do
   let pgExecCtx = mkPGExecCtx Q.Serializable pool
       adminRunCtx = RunCtx adminUserInfo httpManager sqlGenCtx
   currentTime <- liftIO Clock.getCurrentTime
-  initialiseResult <- runExceptT $ peelRun adminRunCtx pgExecCtx Q.ReadWrite $
+  initialiseResult <- runExceptT $ peelRun adminRunCtx pgExecCtx Q.ReadWrite Nothing $
     (,) <$> migrateCatalog env currentTime <*> liftTx fetchLastUpdate
 
   ((migrationResult, schemaCache), lastUpdateEvent) <-
@@ -586,7 +586,7 @@ runAsAdmin
 runAsAdmin pool sqlGenCtx httpManager m = do
   let runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
       pgCtx = mkPGExecCtx Q.Serializable pool
-  runExceptT $ peelRun runCtx pgCtx Q.ReadWrite m
+  runExceptT $ peelRun runCtx pgCtx Q.ReadWrite Nothing m
 
 execQuery
   :: ( HasVersion
