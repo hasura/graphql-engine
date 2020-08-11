@@ -83,7 +83,7 @@ buildPostgresSpecs pgConnOptions = do
 
             runAsAdmin :: Run a -> IO a
             runAsAdmin =
-                  peelRun runContext pgContext Q.ReadWrite
+                  peelRun runContext pgContext Q.ReadWrite Nothing
               >>> runExceptT
               >=> flip onLeft printErrJExit
 
