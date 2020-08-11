@@ -364,8 +364,9 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       -> ExceptT () m ()
     runHasuraGQ timerTot telemCacheHit reqId query queryParsed userInfo = \case
       E.ExOpQuery opTx genSql asts -> Tracing.trace "pg" $
+        ctx <- Tracing.currentContext
         execQueryOrMut Telem.Query genSql . fmap snd $
-          Tracing.interpTraceT id $ (executeQuery queryParsed asts genSql pgExecCtx Q.ReadOnly . withUserInfo userInfo) opTx
+          Tracing.interpTraceT id $ (executeQuery queryParsed asts genSql pgExecCtx Q.ReadOnly . withTraceContext ctx . withUserInfo userInfo) opTx
       -- Response headers discarded over websockets
       E.ExOpMutation _ opTx -> Tracing.trace "pg" do
         ctx <- Tracing.currentContext
