@@ -50,6 +50,8 @@
   "dependencies": {
     "@graphql-codegen/core": "1.13.5",
     "@graphql-codegen/typescript": "1.13.5",
+    "@types/highlight.js": "9.12.4",
+    "@types/sql-formatter": "2.3.0",
     "ace-builds": "^1.4.11",
     "apollo-link": "1.2.14",
     "apollo-link-ws": "1.0.20",
@@ -59,6 +61,7 @@
     "graphiql-explorer": "0.6.2",
     "graphql": "14.5.8",
     "graphql-voyager": "1.0.0-rc.29",
+    "highlight.js": "9.15.8",
     "history": "3.3.0",
     "inflection": "1.12.0",
     "isomorphic-fetch": "2.2.1",
@@ -90,6 +93,7 @@
     "redux-thunk": "2.3.0",
     "sanitize-filename": "1.6.3",
     "semver": "5.5.1",
+    "sql-formatter": "2.3.3",
     "styled-components": "5.0.1",
     "styled-system": "5.1.5",
     "subscriptions-transport-ws": "0.9.16"

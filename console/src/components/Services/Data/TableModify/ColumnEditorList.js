@@ -70,7 +70,6 @@ const ColumnEditorList = ({
       }
       return col.data_type;
     };
-
     const getType = () =>
       isArrayDataType ? col.udt_name.replace('_', '') + '[]' : col.udt_name;
 
@@ -107,7 +106,6 @@ const ColumnEditorList = ({
         dispatch(deleteColumnSql(col, tableSchema));
       }
     };
-
     const gqlCompatibilityWarning = () => {
       return (
         <GqlCompatibilityWarning
@@ -121,7 +119,6 @@ const ColumnEditorList = ({
       const propertiesDisplay = [];
 
       const propertiesList = [];
-
       propertiesList.push(columnProperties.display_type_name);
 
       if (columnProperties.pkConstraint) {
