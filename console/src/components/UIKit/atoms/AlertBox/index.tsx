@@ -5,7 +5,7 @@ import { Icon, IconProps } from '../Icon';
 import { StyledAlertBox, StyledAlertBoxProps } from './AlertBox';
 import { Text } from '../Typography';
 
-const alertBoxWidth = "866";
+const alertBoxWidth = 866;
 
 export interface AlertBoxProps extends IconProps, Omit<StyledAlertBoxProps, 'size'> {
   type: keyof Theme['alertBox'] ;
@@ -55,7 +55,7 @@ export const AlertBox: React.FC<AlertBoxProps> = props => {
           {type}
         </Text>
       )}
-      <Text pl="md">{alertMessage}</Text>
+      <Text pl="md" as='span'>{alertMessage}</Text>
     </StyledAlertBox>
   );
 };
