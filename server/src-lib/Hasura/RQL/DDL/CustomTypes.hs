@@ -4,6 +4,7 @@ module Hasura.RQL.DDL.CustomTypes
   , persistCustomTypes
   , clearCustomTypes
   , resolveCustomTypes
+  , lookupPGScalar
   ) where
 
 import           Control.Monad.Validate
@@ -61,7 +62,7 @@ validateCustomTypeDefinitions tableCache customTypes allPGScalars = do
   annotatedObjects <- mapFromL (unObjectTypeName . _otdName) <$>
                       traverse validateObject objectDefinitions
   let scalarTypeMap = Map.map NOCTScalar $
-        scalarTypes <> mapFromL _stdName (toList reusedPGScalars)
+        Map.map ASTCustom scalarTypes <> Map.mapWithKey ASTReusedPgScalar reusedPGScalars
       enumTypeMap = Map.map NOCTEnum enumTypes
       inputObjectTypeMap = Map.map NOCTInputObject inputObjectTypes
       nonObjectTypeMap = scalarTypeMap <> enumTypeMap <> inputObjectTypeMap
@@ -101,7 +102,7 @@ validateCustomTypeDefinitions tableCache customTypes allPGScalars = do
 
     validateInputObject
       :: ( MonadValidate [CustomTypeValidationError] m
-         , MonadWriter (Set.HashSet ScalarTypeDefinition) m
+         , MonadWriter (Map.HashMap G.Name PGScalarType) m
          )
       => InputObjectTypeDefinition -> m ()
     validateInputObject inputObjectDefinition = do
@@ -123,8 +124,8 @@ validateCustomTypeDefinitions tableCache customTypes allPGScalars = do
       for_ (_iotdFields inputObjectDefinition) $ \inputObjectField -> do
         let fieldBaseType = G.getBaseType $ unGraphQLType $ _iofdType inputObjectField
         if | Set.member fieldBaseType inputTypes -> pure ()
-           | Just pgScalar <- lookupPGScalar fieldBaseType ->
-               tell $ Set.singleton $ fst pgScalar
+           | Just pgScalar <- lookupPGScalar allPGScalars fieldBaseType ->
+               tell $ Map.singleton fieldBaseType pgScalar
            | otherwise ->
                refute $ pure $ InputObjectFieldTypeDoesNotExist
                  (_iotdName inputObjectDefinition)
@@ -163,14 +164,14 @@ validateCustomTypeDefinitions tableCache customTypes allPGScalars = do
           -- and not other object types
           annotatedObjectFieldType <-
             if | Just scalarDef <- Map.lookup fieldBaseType scalarTypes ->
-                   pure $ AOFTScalar scalarDef Nothing
+                   pure $ AOFTScalar $ ASTCustom scalarDef
                | Just enumDef <- Map.lookup fieldBaseType enumTypes ->
                    pure $ AOFTEnum enumDef
                | Set.member fieldBaseType objectTypes ->
                    refute $ pure $ ObjectFieldObjectBaseType
                      objectTypeName fieldName fieldBaseType
-               | Just (scalarType, pgScalar) <- lookupPGScalar fieldBaseType ->
-                   pure $ AOFTScalar scalarType $ Just pgScalar
+               | Just pgScalar <- lookupPGScalar allPGScalars fieldBaseType ->
+                   pure $ AOFTScalar $ ASTReusedPgScalar fieldBaseType pgScalar
                | otherwise ->
                    refute $ pure $ ObjectFieldTypeDoesNotExist
                      objectTypeName fieldName fieldBaseType
@@ -210,10 +211,13 @@ validateCustomTypeDefinitions tableCache customTypes allPGScalars = do
       pure $ ObjectTypeDefinition objectTypeName (_otdDescription objectDefinition)
              scalarOrEnumFields annotatedRelationships
 
-    lookupPGScalar baseType = -- see Note [Postgres scalars in custom types]
-      find ((==) baseType . _stdName . fst) $ flip mapMaybe (toList allPGScalars) $
-      \pgScalar -> ((,pgScalar) . flip ScalarTypeDefinition Nothing)
-                   <$> (G.mkName $ toSQLTxt pgScalar)
+-- see Note [Postgres scalars in custom types]
+lookupPGScalar :: Set.HashSet PGScalarType -> G.Name -> Maybe PGScalarType
+lookupPGScalar allPGScalars baseType =
+  fmap snd
+  $ find ((==) baseType . fst)
+  $ flip mapMaybe (toList allPGScalars)
+  $ \pgScalar -> (,pgScalar) <$> G.mkName (toSQLTxt pgScalar)
 
 data CustomTypeValidationError
   = DuplicateTypeNames !(Set.HashSet G.Name)

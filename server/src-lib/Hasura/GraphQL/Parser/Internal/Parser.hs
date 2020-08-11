@@ -12,6 +12,7 @@ import qualified Data.Aeson                    as A
 import qualified Data.HashMap.Strict.Extended  as M
 import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.HashSet                  as S
+import qualified Data.Text                     as T
 
 import           Control.Lens.Extended         hiding (enum, index)
 import           Data.Int                      (Int32, Int64)
@@ -229,7 +230,6 @@ data ScalarRepresentation a where
   SRInt :: ScalarRepresentation Int32
   SRFloat :: ScalarRepresentation Double
   SRString :: ScalarRepresentation Text
-  SRAny :: ScalarRepresentation A.Value
 
 scalar
   :: MonadParse m
@@ -257,17 +257,6 @@ scalar name description representation = Parser
         GraphQLValue (VString  s) -> pure s
         JSONValue    (A.String s) -> pure s
         _                         -> typeMismatch name "a string" v
-      SRAny -> case v of
-        GraphQLValue (VNull)      -> pure A.Null
-        GraphQLValue (VInt i)     -> pure $ A.toJSON i
-        GraphQLValue (VFloat f)   -> pure $ A.toJSON f
-        GraphQLValue (VString t)  -> pure $ A.toJSON t
-        GraphQLValue (VBoolean b) -> pure $ A.toJSON b
-        JSONValue (A.Null)        -> pure A.Null
-        JSONValue (A.Number n)    -> pure $ A.Number n
-        JSONValue (A.String s)    -> pure $ A.String s
-        JSONValue (A.Bool b)      -> pure $ A.Bool b
-        _                         -> typeMismatch name "a scalar" v
   }
   where
     schemaType = NonNullable $ TNamed $ mkDefinition name description TIScalar
@@ -296,20 +285,35 @@ float = scalar $$(litName "Float") Nothing SRFloat
 string :: MonadParse m => Parser 'Both m Text
 string = scalar $$(litName "String") Nothing SRString
 
+-- | As an input type, any string or integer input value should be coerced to ID as Text
+-- https://spec.graphql.org/June2018/#sec-ID
 identifier :: MonadParse m => Parser 'Both m Text
-identifier = scalar $$(litName "ID") Nothing SRString
+identifier = Parser
+  { pType = schemaType
+  , pParser = peelVariable (Just $ toGraphQLType schemaType) >=> \case
+      GraphQLValue (VString  s) -> pure s
+      GraphQLValue (VInt     i) -> pure $ T.pack $ show i
+      JSONValue    (A.String s) -> pure s
+      JSONValue    (A.Number n) -> parseScientific n
+      v                         -> typeMismatch idName "a String or a 32-bit integer" v
+  }
+  where
+    idName = $$(litName "ID")
+    schemaType = NonNullable $ TNamed $ mkDefinition idName Nothing TIScalar
+    parseScientific = either (parseErrorWith ParseFailed . qeError)
+      (pure . T.pack . show @Int) . runAesonParser scientificToInteger
 
-namedJSON :: MonadParse m => Name -> Parser 'Both m A.Value
-namedJSON name = Parser
+namedJSON :: MonadParse m => Name -> Maybe Description -> Parser 'Both m A.Value
+namedJSON name description = Parser
   { pType = schemaType
   , pParser = valueToJSON $ toGraphQLType schemaType
   }
   where
-    schemaType = NonNullable $ TNamed $ mkDefinition name Nothing TIScalar
+    schemaType = NonNullable $ TNamed $ mkDefinition name description TIScalar
 
 json, jsonb :: MonadParse m => Parser 'Both m A.Value
-json  = namedJSON $$(litName "json")
-jsonb = namedJSON $$(litName "jsonb")
+json  = namedJSON $$(litName "json") Nothing
+jsonb = namedJSON $$(litName "jsonb") Nothing
 
 -- | Explicitly define any desired scalar type.  This is unsafe because it does
 -- not mark queries as unreusable when they should be.

@@ -7,6 +7,7 @@ module Hasura.RQL.Types.CustomTypes
   , EnumValueDefinition(..)
   , EnumTypeDefinition(..)
   , ScalarTypeDefinition(..)
+  , intScalar, floatScalar, stringScalar, boolScalar, idScalar
   , defaultScalars
   , InputObjectFieldName(..)
   , InputObjectFieldDefinition(..)
@@ -20,6 +21,7 @@ module Hasura.RQL.Types.CustomTypes
   , ObjectTypeName(..)
   , ObjectTypeDefinition(..)
   , ObjectType
+  , AnnotatedScalarType(..)
   , NonObjectCustomType(..)
   , NonObjectTypeMap
   , AnnotatedObjectFieldType(..)
@@ -30,25 +32,25 @@ module Hasura.RQL.Types.CustomTypes
   , emptyAnnotatedCustomTypes
   ) where
 
-import           Control.Lens.TH                     (makeLenses)
-import           Instances.TH.Lift                   ()
-import           Language.Haskell.TH.Syntax          (Lift)
+import           Control.Lens.TH                (makeLenses)
+import           Instances.TH.Lift              ()
+import           Language.Haskell.TH.Syntax     (Lift)
 
-import qualified Data.Aeson                          as J
-import qualified Data.Aeson.Casing                   as J
-import qualified Data.Aeson.TH                       as J
-import qualified Data.HashMap.Strict                 as Map
-import qualified Data.List.NonEmpty                  as NEList
-import qualified Data.Text                           as T
-import qualified Text.Builder                        as T
-import qualified Language.GraphQL.Draft.Parser       as GParse
-import qualified Language.GraphQL.Draft.Printer      as GPrint
-import qualified Language.GraphQL.Draft.Syntax       as G
+import qualified Data.Aeson                     as J
+import qualified Data.Aeson.Casing              as J
+import qualified Data.Aeson.TH                  as J
+import qualified Data.HashMap.Strict            as Map
+import qualified Data.List.NonEmpty             as NEList
+import qualified Data.Text                      as T
+import qualified Language.GraphQL.Draft.Parser  as GParse
+import qualified Language.GraphQL.Draft.Printer as GPrint
+import qualified Language.GraphQL.Draft.Syntax  as G
+import qualified Text.Builder                   as T
 
-import           Hasura.Incremental                  (Cacheable)
+import           Hasura.Incremental             (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Column
-import           Hasura.RQL.Types.Common             (RelType)
+import           Hasura.RQL.Types.Common        (RelType)
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Types
 
@@ -214,8 +216,14 @@ $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''CustomTypes)
 emptyCustomTypes :: CustomTypes
 emptyCustomTypes = CustomTypes Nothing Nothing Nothing Nothing
 
+data AnnotatedScalarType
+  = ASTCustom !ScalarTypeDefinition
+  | ASTReusedPgScalar !G.Name !PGScalarType
+  deriving (Show, Eq, Lift)
+$(J.deriveJSON J.defaultOptions ''AnnotatedScalarType)
+
 data NonObjectCustomType
-  = NOCTScalar !ScalarTypeDefinition
+  = NOCTScalar !AnnotatedScalarType
   | NOCTEnum !EnumTypeDefinition
   | NOCTInputObject !InputObjectTypeDefinition
   deriving (Show, Eq, Lift)
@@ -224,22 +232,25 @@ $(J.deriveJSON J.defaultOptions ''NonObjectCustomType)
 type NonObjectTypeMap = Map.HashMap G.Name NonObjectCustomType
 
 data AnnotatedObjectFieldType
-  = AOFTScalar !ScalarTypeDefinition !(Maybe PGScalarType)
+  = AOFTScalar !AnnotatedScalarType
   | AOFTEnum !EnumTypeDefinition
   deriving (Show, Eq)
 $(J.deriveToJSON J.defaultOptions ''AnnotatedObjectFieldType)
 
 fieldTypeToScalarType :: AnnotatedObjectFieldType -> PGScalarType
 fieldTypeToScalarType = \case
-  AOFTScalar ScalarTypeDefinition{..} maybePgScalar ->
-    flip fromMaybe maybePgScalar $
-      if | _stdName == idScalar     -> PGText
-         | _stdName == intScalar    -> PGInteger
-         | _stdName == floatScalar  -> PGFloat
-         | _stdName == stringScalar -> PGText
-         | _stdName == boolScalar   -> PGBoolean
-         | otherwise                -> PGJSON
-  AOFTEnum _                        -> PGText
+  AOFTEnum _                 -> PGText
+  AOFTScalar annotatedScalar -> annotatedScalarToPgScalar annotatedScalar
+  where
+    annotatedScalarToPgScalar = \case
+      ASTReusedPgScalar _ scalarType     -> scalarType
+      ASTCustom ScalarTypeDefinition{..} ->
+        if | _stdName == idScalar     -> PGText
+           | _stdName == intScalar    -> PGInteger
+           | _stdName == floatScalar  -> PGFloat
+           | _stdName == stringScalar -> PGText
+           | _stdName == boolScalar   -> PGBoolean
+           | otherwise                -> PGJSON
 
 type AnnotatedObjectType =
   ObjectTypeDefinition (G.GType, AnnotatedObjectFieldType) TableInfo PGColumnInfo

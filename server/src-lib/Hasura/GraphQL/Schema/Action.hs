@@ -24,6 +24,7 @@ import           Hasura.GraphQL.Schema.Select
 import           Hasura.RQL.Types
 import           Hasura.Session
 import           Hasura.SQL.Types
+import           Hasura.SQL.Value
 
 actionExecute
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
@@ -153,8 +154,8 @@ actionOutputFields outputObject = do
           pgColumnInfo = PGColumnInfo (unsafePGCol $ G.unName fieldName)
                          fieldName 0 (PGColumnScalar PGJSON) (G.isNullable gType) Nothing
           fieldParser = case objectFieldType of
-            AOFTScalar def _ -> customScalarParser def
-            AOFTEnum def     -> customEnumParser def
+            AOFTScalar def -> customScalarParser def
+            AOFTEnum def   -> customEnumParser def
       in bool P.nonNullableField id (G.isNullable gType) $
          P.selection_ (unObjectFieldName name) description fieldParser
          $> RQL.mkAnnColumnField pgColumnInfo Nothing
@@ -183,14 +184,17 @@ actionOutputFields outputObject = do
                         RQL.AnnRelationSelectG tableRelName columnMapping selectExp
 
 mkDefinitionList :: AnnotatedObjectType -> [(PGCol, PGScalarType)]
-mkDefinitionList =
-  map (
-    (unsafePGCol . G.unName . unObjectFieldName . _ofdName) &&&
-    (fieldTypeToScalarType . snd . _ofdType)
-  ) . toList . _otdFields
+mkDefinitionList ObjectTypeDefinition{..} =
+  flip map (toList _otdFields) $ \ObjectFieldDefinition{..} ->
+    (unsafePGCol . G.unName . unObjectFieldName $ _ofdName,) $
+    case Map.lookup _ofdName fieldReferences of
+      Nothing         -> fieldTypeToScalarType $ snd _ofdType
+      Just columnInfo -> unsafePGColumnToRepresentation $ pgiType columnInfo
+  where
+    fieldReferences =
+      Map.unions $ map _trFieldMapping $ maybe [] toList _otdRelationships
 
 
--- This should into schema/action.hs
 actionInputArguments
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   => NonObjectTypeMap
@@ -259,9 +263,23 @@ mkArgumentInputFieldParser name description gType parser =
 
 customScalarParser
   :: MonadParse m
-  => ScalarTypeDefinition -> Parser 'Both m J.Value
-customScalarParser (ScalarTypeDefinition name description) =
-  P.scalar name description P.SRAny
+  => AnnotatedScalarType -> Parser 'Both m J.Value
+customScalarParser = \case
+  ASTCustom ScalarTypeDefinition{..} ->
+        if | _stdName == idScalar     -> J.toJSON <$> P.identifier
+           | _stdName == intScalar    -> J.toJSON <$> P.int
+           | _stdName == floatScalar  -> J.toJSON <$> P.float
+           | _stdName == stringScalar -> J.toJSON <$> P.string
+           | _stdName == boolScalar   -> J.toJSON <$> P.boolean
+           | otherwise                -> P.namedJSON _stdName _stdDescription
+  ASTReusedPgScalar name pgScalarType ->
+    let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
+    in P.Parser
+       { pType = schemaType
+       , pParser = P.valueToJSON (P.toGraphQLType schemaType) >=>
+                   either (parseErrorWith ParseFailed . qeError)
+                   (pure . pgScalarValueToJson) . runAesonParser (parsePGValue pgScalarType)
+       }
 
 customEnumParser
   :: MonadParse m
