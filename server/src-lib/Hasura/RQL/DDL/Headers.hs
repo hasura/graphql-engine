@@ -8,8 +8,8 @@ import           Hasura.RQL.Types.Error
 import           Language.Haskell.TH.Syntax (Lift)
 
 import qualified Data.CaseInsensitive       as CI
-import qualified Data.Text                  as T
 import qualified Data.Environment           as Env
+import qualified Data.Text                  as T
 import qualified Network.HTTP.Types         as HTTP
 
 
@@ -35,7 +35,10 @@ instance FromJSON HeaderConf where
     case (value, valueFromEnv ) of
       (Nothing, Nothing)  -> fail "expecting value or value_from_env keys"
       (Just val, Nothing) -> return $ HeaderConf name (HVValue val)
-      (Nothing, Just val) -> return $ HeaderConf name (HVEnv val)
+      (Nothing, Just val) -> do
+        when (T.isPrefixOf "HASURA_GRAPHQL_" val) $
+          fail $ "env variables starting with \"HASURA_GRAPHQL_\" are not allowed in value_from_env: " <> T.unpack val
+        return $ HeaderConf name (HVEnv val)
       (Just _, Just _)    -> fail "expecting only one of value or value_from_env keys"
   parseJSON _ = fail "expecting object for headers"
 
