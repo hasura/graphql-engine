@@ -307,7 +307,14 @@ onConn (L.Logger logger) corsPolicy wsId requestHead ipAddress = do
             <> "HASURA_GRAPHQL_WS_READ_COOKIE to force read cookie when CORS is disabled."
 
 onStart
-  :: forall m. (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m, MonadQueryLog m, Tracing.MonadTrace m, MonadExecuteQuery m)
+  :: forall m.
+  ( HasVersion
+  , MonadIO m
+  , E.MonadGQLExecutionCheck m
+  , MonadQueryLog m
+  , Tracing.MonadTrace m
+  , MonadExecuteQuery m
+  )
   => Env.Environment -> WSServerEnv -> WSConn -> StartMsg -> m ()
 onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   timerTot <- startTimer
@@ -333,7 +340,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
   reqParsedE <- lift $ E.checkGQLExecution userInfo (reqHdrs, ipAddress) enableAL sc q
   reqParsed <- either (withComplete . preExecErr requestId) return reqParsedE
-  execPlanE <- runExceptT $ E.getResolvedExecPlan env pgExecCtx
+  execPlanE <- runExceptT $ E.getResolvedExecPlan env logger pgExecCtx
                planCache userInfo sqlGenCtx sc scVer queryType httpMgr reqHdrs (q, reqParsed)
 
   (telemCacheHit, execPlan) <- either (withComplete . preExecErr requestId) return execPlanE
@@ -345,7 +352,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     E.GExPRemote rsi opDef  ->
       runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
   where
-    telemTransport = Telem.HTTP
+    telemTransport = Telem.WebSocket
     runHasuraGQ
       :: ExceptT () m DiffTime
       -> Telem.CacheHit
@@ -361,8 +368,9 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           Tracing.interpTraceT id $ executeQuery queryParsed asts genSql pgExecCtx Q.ReadOnly opTx
       -- Response headers discarded over websockets
       E.ExOpMutation _ opTx -> Tracing.trace "pg" do
+        ctx <- Tracing.currentContext
         execQueryOrMut Telem.Mutation Nothing $
-          Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withUserInfo userInfo) opTx
+          Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx . withUserInfo userInfo) opTx
       E.ExOpSubs lqOp -> do
         -- log the graphql query
         logQueryLog logger query Nothing reqId
