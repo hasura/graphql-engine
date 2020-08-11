@@ -82,7 +82,7 @@ export const exportMetadata = (successCb, errorCb) => (dispatch, getState) => {
     });
 };
 
-export const exportSchema = () => (dispatch, getState) => {
+export const exportSchema = (dispatch, getState) => {
   const { dataHeaders } = getState().tables;
 
   const options = {

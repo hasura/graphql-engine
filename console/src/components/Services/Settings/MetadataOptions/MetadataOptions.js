@@ -101,7 +101,7 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
   return {
     // dispatching plain actions
-    exportSchema: () => dispatch(exportSchema()),
+    exportSchema: () => dispatch(exportSchema),
     dispatch,
   };
 };

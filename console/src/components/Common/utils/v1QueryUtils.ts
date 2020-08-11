@@ -432,7 +432,7 @@ export const exportMetadataQuery = {
 };
 
 export const exportSchemaQueryParams = {
-  opts: ['-O', '-x', '--schema-only', '--schema', 'public'],
+  opts: ['-O', '-x', '--schema-only'],
   clean_output: true,
 };
 
