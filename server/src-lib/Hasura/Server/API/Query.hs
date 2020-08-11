@@ -198,10 +198,11 @@ runQuery
   -> SQLGenCtx -> SystemDefined -> RQLQuery -> m (EncJSON, RebuildableSchemaCache Run)
 runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query = do
   accessMode <- getQueryAccessMode query
+  traceCtx <- Tracing.currentContext
   resE <- runQueryM env query & Tracing.interpTraceT \x -> do
     a <- x & runHasSystemDefinedT systemDefined
            & runCacheRWT sc
-           & peelRun runCtx pgExecCtx accessMode
+           & peelRun runCtx pgExecCtx accessMode (Just traceCtx)
            & runExceptT
            & liftIO
     pure (either 

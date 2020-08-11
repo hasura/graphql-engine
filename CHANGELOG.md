@@ -2,17 +2,31 @@
 
 ## Next release
 
+### Breaking change
+
+Headers from environment variables starting with `HASURA_GRAPHQL_` are not allowed  
+in event triggers, actions & remote schemas.
+
+If you do have such headers configured, then you must update the header configuration before upgrading.
+
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: fix failing introspection query when an enum column is part of a primary key (fixes #5200)
+- server: disallow headers from env variables starting with `HASURA_GRAPHQL_` in actions, event triggers & remote schemas (#5519)
+**WARNING**: This might break certain deployments. See `Breaking change` section above.
 - server: bugfix to allow HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE of 0 (#5363)
 - server: support only a bounded plan cache, with a default size of 4000 (closes #5363)
 - server: add logs for action handlers
-- server: add request/response sizes in event triggers (and scheduled trigger) logs
+- server: add request/response sizes in event triggers (and scheduled trigger) logs (#5463)
+- server: change startup log kind `db_migrate` to `catalog_migrate` (#5531)
 - console: handle nested fragments in allowed queries (close #5137) (#5252)
 - console: update sidebar icons for different action and trigger types (#5445)
 - console: make add column UX consistent with others (#5486)
+- cli: improve error messages thrown when metadata apply fails (#5513)
+- cli: fix issue with creating seed migrations while using tables with capital letters (closes #5532) (#5549)
+- build: introduce additional log kinds for cli-migrations image (#5529)
 
 ## `v1.3.0`
 
