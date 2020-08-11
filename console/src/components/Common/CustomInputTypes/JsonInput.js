@@ -81,28 +81,32 @@ const JsonInput = props => {
 
   const getJsonEditor = () => {
     return (
-      <AceEditor
-        key="ace_json_editor"
-        {...allProps}
-        mode="json"
-        theme="github"
-        name="jsontoggler"
-        minLines={10}
-        maxLines={100}
-        width="100%"
-        value={data}
-        showPrintMargin={false}
-        onChange={handleTextAreaChangeAndPropagate}
-        showGutter={false}
-        focus
-        commands={[
-          {
-            name: 'toggleEditor',
-            bindKey: { win: 'Ctrl-Space', mac: 'Command-Space' },
-            exec: handleEditorExec,
-          },
-        ]}
-      />
+      <div id = "jsontoggler"
+         className = "ace_editor ace _hidpi ace_github styles.expandedJsonEditor"
+         style = {{width: 'px'}}>
+        <AceEditor
+          key="ace_json_editor"
+          {...allProps} 
+          mode="json"
+          theme="github"
+          name="jsontoggler" 
+          minLines={10}
+          maxLines={100}
+          className = "styles.expandedJsonEditor"
+          value={data}
+          showPrintMargin={false}
+          onChange={handleTextAreaChangeAndPropagate}
+          showGutter={false}
+          focus
+          commands={[
+            {
+              name: 'toggleEditor',
+              bindKey: { win: 'Ctrl-Space', mac: 'Command-Space' },
+              exec: handleEditorExec,
+            },
+          ]}
+        />
+      </div>
     );
   };
 

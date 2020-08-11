@@ -64,6 +64,7 @@ const DDButton: React.FC<DropDownButtonProps> = props => {
       </DropdownButton>
       <input
         type="text"
+        style = {{width: '400px'}}
         data-key={dataKey}
         data-index-id={dataIndex}
         className="form-control"
