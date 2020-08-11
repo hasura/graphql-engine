@@ -1,4 +1,4 @@
-###############################################################################
+################################################################################
 ##
 ## This defines how our `hasura-bulldozer-mergebot` behaves on this repository. 
 ## See: https://github.com/palantir/bulldozer 
@@ -6,7 +6,7 @@
 ## Comments from the original example config are left here as documentation.
 ## "HASURA NOTE:" precedes comments about our choices here.
 ##
-###############################################################################
+################################################################################
 
 #
 # "version" is the configuration version, currently "1".
