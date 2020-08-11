@@ -50,7 +50,7 @@ const Landing: React.FC<Props> = props => {
         <div>
           <TopicDescription
             title="What are Cron Triggers?"
-            imgUrl={`${globals.assetsPath}/common/img/event-trigger.png`}
+            imgUrl={`${globals.assetsPath}/common/img/cron-trigger.png`}
             imgAlt={CRON_TRIGGER}
             description={topicDescription}
           />

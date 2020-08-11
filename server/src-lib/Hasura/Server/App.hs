@@ -62,6 +62,7 @@ import           Hasura.SQL.Types
 
 import qualified Hasura.GraphQL.Execute                    as E
 import qualified Hasura.GraphQL.Execute.LiveQuery          as EL
+import qualified Hasura.GraphQL.Execute.LiveQuery.Poll     as EL
 import qualified Hasura.GraphQL.Explain                    as GE
 import qualified Hasura.GraphQL.Transport.HTTP             as GH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
@@ -274,12 +275,16 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
           tracingCtx
           (fromString (B8.unpack pathInfo))
 
-    requestId <- getRequestId headers
-
+    requestId <- getRequestId headers    
+    
     mapActionT runTraceT $ do
+      -- Add the request ID to the tracing metadata so that we
+      -- can correlate requests and traces
+      lift $ Tracing.attachMetadata [("request_id", unRequestId requestId)]
+
       userInfoE <- fmap fst <$> lift (resolveUserInfo logger manager headers authMode)
-      userInfo  <- either (logErrorAndResp Nothing requestId req (Left reqBody) False headers . qErrModifier)
-                  return userInfoE
+      userInfo  <- either (logErrorAndResp Nothing requestId req (reqBody, Nothing) False headers . qErrModifier)
+                   return userInfoE
 
       let handlerState = HandlerCtx serverCtx userInfo headers requestId ipAddress
           includeInternal = shouldIncludeInternal (_uiRole userInfo) $
@@ -291,7 +296,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
           return (res, Nothing)
         AHPost handler -> do
           parsedReqE <- runExceptT $ parseBody reqBody
-          parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req (Left reqBody) includeInternal headers . qErrModifier)
+          parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) includeInternal headers . qErrModifier)
                         return parsedReqE
           res <- lift $ runReaderT (runExceptT $ handler parsedReq) handlerState
           return (res, Just parsedReq)
@@ -301,9 +306,8 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
 
       -- log and return result
       case modResult of
-        Left err  -> let jErr = maybe (Left reqBody) (Right . toJSON) q
-                    in logErrorAndResp (Just userInfo) requestId req jErr includeInternal headers err
-        Right res -> logSuccessAndResp (Just userInfo) requestId req (fmap toJSON q) res (Just (ioWaitTime, serviceTime)) headers
+        Left err  -> logErrorAndResp (Just userInfo) requestId req (reqBody, toJSON <$> q) includeInternal headers err
+        Right res -> logSuccessAndResp (Just userInfo) requestId req (reqBody, toJSON <$> q) res (Just (ioWaitTime, serviceTime)) headers
 
     where
       logger = scLogger serverCtx
@@ -313,31 +317,31 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
         => Maybe UserInfo
         -> RequestId
         -> Wai.Request
-        -> Either BL.ByteString Value
+        -> (BL.ByteString, Maybe Value)
         -> Bool
         -> [HTTP.Header]
         -> QErr
         -> Spock.ActionCtxT ctx m a
-      logErrorAndResp userInfo reqId req reqBody includeInternal headers qErr = do
-        lift $ logHttpError logger userInfo reqId req reqBody qErr headers
+      logErrorAndResp userInfo reqId waiReq req includeInternal headers qErr = do
+        lift $ logHttpError logger userInfo reqId waiReq req qErr headers
         Spock.setStatus $ qeStatus qErr
         Spock.json $ qErrEncoder includeInternal qErr
 
-      logSuccessAndResp userInfo reqId req reqBody result qTime reqHeaders =
+      logSuccessAndResp userInfo reqId waiReq reqBody result qTime reqHeaders =
         case result of
           JSONResp (HttpResponse encJson h) ->
-            possiblyCompressedLazyBytes userInfo reqId req reqBody qTime (encJToLBS encJson)
+            possiblyCompressedLazyBytes userInfo reqId waiReq reqBody qTime (encJToLBS encJson)
               (pure jsonHeader <> h) reqHeaders
           RawResp (HttpResponse rawBytes h) ->
-            possiblyCompressedLazyBytes userInfo reqId req reqBody qTime rawBytes h reqHeaders
+            possiblyCompressedLazyBytes userInfo reqId waiReq reqBody qTime rawBytes h reqHeaders
 
-      possiblyCompressedLazyBytes userInfo reqId req reqBody qTime respBytes respHeaders reqHeaders = do
+      possiblyCompressedLazyBytes userInfo reqId waiReq req qTime respBytes respHeaders reqHeaders = do
         let (compressedResp, mEncodingHeader, mCompressionType) =
-              compressResponse (Wai.requestHeaders req) respBytes
+              compressResponse (Wai.requestHeaders waiReq) respBytes
             encodingHeader = maybe [] pure mEncodingHeader
             reqIdHeader = (requestIdHeader, txtToBs $ unRequestId reqId)
             allRespHeaders = pure reqIdHeader <> encodingHeader <> respHeaders
-        lift $ logHttpSuccess logger userInfo reqId req reqBody respBytes compressedResp qTime mCompressionType reqHeaders
+        lift $ logHttpSuccess logger userInfo reqId waiReq req respBytes compressedResp qTime mCompressionType reqHeaders
         mapM_ setHeader allRespHeaders
         Spock.lazyBytes compressedResp
 
@@ -367,8 +371,15 @@ v1QueryHandler query = do
       runQuery env pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx (SystemDefined False) query
 
 v1Alpha1GQHandler
-  :: (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m, MonadQueryLog m, Tracing.MonadTrace m, GH.MonadExecuteQuery m)
-  => E.GraphQLQueryType -> GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
+  :: ( HasVersion
+     , MonadIO m
+     , E.MonadGQLExecutionCheck m
+     , MonadQueryLog m
+     , Tracing.MonadTrace m
+     , GH.MonadExecuteQuery m
+     )
+  => E.GraphQLQueryType -> GH.GQLBatchedReqs GH.GQLQueryText
+  -> Handler m (HttpResponse EncJSON)
 v1Alpha1GQHandler queryType query = do
   userInfo             <- asks hcUser
   reqHeaders           <- asks hcReqHeaders
@@ -389,25 +400,37 @@ v1Alpha1GQHandler queryType query = do
                 (lastBuiltSchemaCache sc) scVer manager enableAL
 
   flip runReaderT execCtx $
-    GH.runGQBatched env requestId responseErrorsConfig userInfo ipAddress reqHeaders queryType query
+    GH.runGQBatched env logger requestId responseErrorsConfig userInfo ipAddress reqHeaders queryType query
 
 v1GQHandler
-  :: (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m, MonadQueryLog m, Tracing.MonadTrace m, GH.MonadExecuteQuery m)
+  :: ( HasVersion
+     , MonadIO m
+     , E.MonadGQLExecutionCheck m
+     , MonadQueryLog m
+     , Tracing.MonadTrace m
+     , GH.MonadExecuteQuery m
+     )
   => GH.GQLBatchedReqs GH.GQLQueryText
   -> Handler m (HttpResponse EncJSON)
 v1GQHandler = v1Alpha1GQHandler E.QueryHasura
 
 v1GQRelayHandler
-  :: (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m, MonadQueryLog m, Tracing.MonadTrace m, GH.MonadExecuteQuery m)
+  :: ( HasVersion
+     , MonadIO m
+     , E.MonadGQLExecutionCheck m
+     , MonadQueryLog m
+     , Tracing.MonadTrace m
+     , GH.MonadExecuteQuery m
+     )
   => GH.GQLBatchedReqs GH.GQLQueryText
   -> Handler m (HttpResponse EncJSON)
 v1GQRelayHandler = v1Alpha1GQHandler E.QueryRelay
 
 gqlExplainHandler
-  :: forall m
-   . ( HasVersion
-     , MonadIO m
-     )
+  :: forall m .
+  ( HasVersion
+  , MonadIO m
+  )
   => GE.GQLExplain
   -> Handler (Tracing.TraceT m) (HttpResponse EncJSON)
 gqlExplainHandler query = do
@@ -417,13 +440,14 @@ gqlExplainHandler query = do
   pgExecCtx <- asks (scPGExecCtx . hcServerCtx)
   sqlGenCtx <- asks (scSQLGenCtx . hcServerCtx)
   env       <- asks (scEnvironment . hcServerCtx)
+  logger    <- asks (scLogger . hcServerCtx)
 
   -- let runTx :: ReaderT HandlerCtx (Tracing.TraceT (Tracing.NoReporter (LazyTx QErr))) a
   --           -> ExceptT QErr (ReaderT HandlerCtx (Tracing.TraceT m)) a
   let runTx rttx = ExceptT . ReaderT $ \ctx -> do
         runExceptT (Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadOnly) (runReaderT rttx ctx))
 
-  res <- GE.explainGQLQuery env pgExecCtx runTx sc sqlGenCtx
+  res <- GE.explainGQLQuery env logger pgExecCtx runTx sc sqlGenCtx
          (restrictActionExecuter "query actions cannot be explained") query
   return $ HttpResponse res []
 
@@ -578,18 +602,20 @@ mkWaiApp
   -> EL.LiveQueriesOptions
   -> E.PlanCacheOptions
   -> ResponseInternalErrorsConfig
+  -> Maybe EL.LiveQueryPostPollHook
   -> (RebuildableSchemaCache Run, Maybe UTCTime)
   -> m HasuraApp
 mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpManager mode corsCfg enableConsole consoleAssetsDir
-         enableTelemetry instanceId apis lqOpts planCacheOptions responseErrorsConfig (schemaCache, cacheBuiltTime) = do
+         enableTelemetry instanceId apis lqOpts planCacheOptions responseErrorsConfig liveQueryHook (schemaCache, cacheBuiltTime) = do
 
     (planCache, schemaCacheRef) <- initialiseCache
     let getSchemaCache = first lastBuiltSchemaCache <$> readIORef (_scrCache schemaCacheRef)
 
     let corsPolicy = mkDefaultCorsPolicy corsCfg
         pgExecCtx = fromMaybe (mkPGExecCtx isoLevel pool) pgExecCtxCustom
+        postPollHook = fromMaybe (EL.defaultLiveQueryPostPollHook logger) liveQueryHook
 
-    lqState <- liftIO $ EL.initLiveQueriesState lqOpts pgExecCtx
+    lqState <- liftIO $ EL.initLiveQueriesState lqOpts pgExecCtx postPollHook
     wsServerEnv <- WS.createWSServerEnv logger pgExecCtx lqState getSchemaCache httpManager
                                         corsPolicy sqlGenCtx enableAL planCache
 
@@ -787,7 +813,7 @@ raiseGenericApiError logger headers qErr = do
   req <- Spock.request
   reqBody <- liftIO $ Wai.strictRequestBody req
   reqId <- getRequestId $ Wai.requestHeaders req
-  lift $ logHttpError logger Nothing reqId req (Left reqBody) qErr headers
+  lift $ logHttpError logger Nothing reqId req (reqBody, Nothing) qErr headers
   setHeader jsonHeader
   Spock.setStatus $ qeStatus qErr
   Spock.lazyBytes $ encode qErr
