@@ -83,7 +83,7 @@ const JsonInput = props => {
     return (
       <div
         id="jsontoggler"
-        className="ace_editor ace _hidpi ace_github styles.expandedJsonEditor"
+        className={`ace_editor ace _hidpi ace_github ${styles.expandedJsonEditor}`}
         style={{ width: '375px' }}
       >
         <AceEditor
