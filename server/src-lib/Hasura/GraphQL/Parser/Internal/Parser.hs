@@ -723,29 +723,23 @@ selectionSetObject name description parsers implementsInterfaces = Parser
       & map (\FieldParser{ fDefinition, fParser } -> (getName fDefinition, fParser))
       & M.fromList
     interfaces = catMaybes $ fmap (getInterfaceInfo . pType) implementsInterfaces
-    collectNames :: Definition InterfaceInfo -> [Name]
-    collectNames defIface = (getName defIface :) $ concat $ map collectNames $
-      case dInfo defIface of
-        InterfaceInfo _fields subInterfaces _objs -> subInterfaces
-    parsedInterfaceNames = concat $ fmap collectNames interfaces
+    parsedInterfaceNames = fmap getName interfaces
 
 selectionSetInterface
-  :: (MonadParse n, Traversable tObjs, Traversable tIfaces)
+  :: (MonadParse n, Traversable tObjs)
   => Name
   -> Maybe Description
   -> [FieldParser n a]
   -- ^ Fields defined in this interface
   -> tObjs (Parser 'Output n b)
   -- ^ Object parsers.  The objects should implement this interface.
-  -> tIfaces (Parser 'Output n c)
-  -- ^ The interfaces that this interface implements (for typing information only).
   -> Parser 'Output n
        ( -- For each object or interface, give its parsing
          tObjs b
        )
-selectionSetInterface name description fields objectImplementations implementsInterfaces = Parser
+selectionSetInterface name description fields objectImplementations = Parser
   { pType = Nullable $ TNamed $ mkDefinition name description $
-      TIInterface $ InterfaceInfo (map fDefinition fields) interfaces objects
+      TIInterface $ InterfaceInfo (map fDefinition fields) objects
   , pParser = \input -> for objectImplementations (($ input) . pParser)
   -- TODO(PDV): This is somewhat suboptimal, since it parses a query against any
   -- possible object implementing this.  But in our intended use case (Relay),
@@ -755,7 +749,6 @@ selectionSetInterface name description fields objectImplementations implementsIn
   }
   where
     objects = catMaybes $ toList $ fmap (getObjectInfo . pType) objectImplementations
-    interfaces = catMaybes $ toList $ fmap (getInterfaceInfo . pType) implementsInterfaces
 
 selectionSetUnion
   :: (MonadParse n, Traversable tObjs)

@@ -345,22 +345,40 @@ data InputObjectInfo = InputObjectInfo ~[Definition InputFieldInfo]
 instance Eq InputObjectInfo where
   InputObjectInfo fields1 == InputObjectInfo fields2
     =  Set.fromList (fmap dName fields1)     == Set.fromList (fmap dName fields2)
-data ObjectInfo = ObjectInfo ~[Definition FieldInfo] ~[Definition InterfaceInfo]
+data ObjectInfo = ObjectInfo
+  { oiFields :: ~[Definition FieldInfo]
+    -- ^ The fields that this object adds on top of the fields of the interfaces
+    -- that it implements
+  , oiImplements :: ~[Definition InterfaceInfo]
+    -- ^ The interfaces that this object implements (inheriting all their
+    -- fields).  Note that in a draft GraphQL specification (> June 2018), these
+    -- interfaces may themselves implement other interfaces, although we
+    -- currently don't support this.
+  }
 -- Note that we can't check for equality of the fields and the interfaces since
 -- there may be circularity. So we rather check for equality of names.
 instance Eq ObjectInfo where
   ObjectInfo fields1 interfaces1 == ObjectInfo fields2 interfaces2
     =  Set.fromList (fmap dName fields1    ) == Set.fromList (fmap dName fields2    )
     && Set.fromList (fmap dName interfaces1) == Set.fromList (fmap dName interfaces2)
-data InterfaceInfo = InterfaceInfo ~[Definition FieldInfo] ~[Definition InterfaceInfo] ~[Definition ObjectInfo]
+data InterfaceInfo = InterfaceInfo
+  { iiFields :: ~[Definition FieldInfo]
+    -- ^ Fields declared by this interface. Every object implementing this
+    -- interface must support those fields.
+  , iiPossibleTypes :: ~[Definition ObjectInfo]
+    -- ^ Objects that implement this interface.
+  }
 -- Note that we can't check for equality of the fields and the interfaces since
 -- there may be circularity. So we rather check for equality of names.
 instance Eq InterfaceInfo where
-  InterfaceInfo fields1 interfaces1 objects1 == InterfaceInfo fields2 interfaces2 objects2
+  InterfaceInfo fields1 objects1 == InterfaceInfo fields2 objects2
     =  Set.fromList (fmap dName fields1    ) == Set.fromList (fmap dName fields2    )
-    && Set.fromList (fmap dName interfaces1) == Set.fromList (fmap dName interfaces2)
     && Set.fromList (fmap dName objects1   ) == Set.fromList (fmap dName objects2   )
-data UnionInfo = UnionInfo ~[Definition ObjectInfo]
+data UnionInfo = UnionInfo
+  { uiPossibleTypes :: ~[Definition ObjectInfo]
+    -- ^ A GraphQL UNION type has, as its possible values, the union of the
+    -- values of a list of object types.
+  }
 
 data TypeInfo k where
   TIScalar :: TypeInfo 'Both
@@ -649,9 +667,8 @@ instance HasTypeDefinitions (TypeInfo k) where
     TIInputObject (InputObjectInfo fields)                -> accumulateTypeDefinitions fields
     TIObject (ObjectInfo fields interfaces)               ->
       accumulateTypeDefinitions fields >> accumulateTypeDefinitions interfaces
-    TIInterface (InterfaceInfo fields interfaces objects) ->
+    TIInterface (InterfaceInfo fields objects) ->
          accumulateTypeDefinitions fields
-      >> accumulateTypeDefinitions interfaces
       >> accumulateTypeDefinitions objects
     TIUnion (UnionInfo objects)                           -> accumulateTypeDefinitions objects
 

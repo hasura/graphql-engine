@@ -148,11 +148,11 @@ typeIntrospection
 typeIntrospection fakeSchema = do
   let nameArg :: P.InputFieldsParser n G.Name
       nameArg = G.unsafeMkName <$> P.field $$(G.litName "name") Nothing P.string
-  nameAndPrinter <- P.subselection $$(G.litName "__type") Nothing nameArg typeField
-  return $ case Map.lookup (fst nameAndPrinter) (sTypes fakeSchema) of
+  name'printer <- P.subselection $$(G.litName "__type") Nothing nameArg typeField
+  return $ case Map.lookup (fst name'printer) (sTypes fakeSchema) of
     Nothing -> J.Null
     Just (P.Definition n u d (P.SomeTypeInfo i)) ->
-      snd nameAndPrinter (SomeType (P.Nullable (P.TNamed (P.Definition n u d i))))
+      snd name'printer (SomeType (P.Nullable (P.TNamed (P.Definition n u d i))))
 
 -- | Generate a __schema introspection parser.
 schema
@@ -238,15 +238,15 @@ typeField =
                 _ -> J.Null
     fields :: FieldParser n (SomeType -> J.Value)
     fields = do
-      -- TODO includeDeprecated
-      nameAndPrinter <- P.subselection $$(G.litName "fields") Nothing includeDeprecated fieldField
+      -- TODO handle the value of includeDeprecated
+      includeDeprecated'printer <- P.subselection $$(G.litName "fields") Nothing includeDeprecated fieldField
       return $
         \case SomeType tp ->
                 case tp of
                   P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIObject (P.ObjectInfo fields' _interfaces')))) ->
-                    J.Array $ V.fromList $ fmap (snd nameAndPrinter) $ sortOn P.dName fields'
-                  P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIInterface (P.InterfaceInfo fields' _interfaces' _objects')))) ->
-                    J.Array $ V.fromList $ fmap (snd nameAndPrinter) $ sortOn P.dName fields'
+                    J.Array $ V.fromList $ fmap (snd includeDeprecated'printer) $ sortOn P.dName fields'
+                  P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIInterface (P.InterfaceInfo fields' _objects')))) ->
+                    J.Array $ V.fromList $ fmap (snd includeDeprecated'printer) $ sortOn P.dName fields'
                   _ -> J.Null
     interfaces :: FieldParser n (SomeType -> J.Value)
     interfaces = do
@@ -256,8 +256,6 @@ typeField =
                 case tp of
                   P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIObject (P.ObjectInfo _fields' interfaces')))) ->
                     J.Array $ V.fromList $ fmap (printer . SomeType . P.Nullable . P.TNamed . fmap P.TIInterface) $ sortOn P.dName interfaces'
-                  P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIInterface (P.InterfaceInfo _fields' interfaces' _objects)))) ->
-                    J.Array $ V.fromList $ fmap (printer . SomeType . P.Nullable . P.TNamed . fmap P.TIInterface) $ sortOn P.dName interfaces'
                   _ -> J.Null
     possibleTypes :: FieldParser n (SomeType -> J.Value)
     possibleTypes = do
@@ -265,19 +263,20 @@ typeField =
       return $
         \case SomeType tp ->
                 case tp of
-                  P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIInterface (P.InterfaceInfo _fields' _interfaces' objects')))) ->
+                  P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIInterface (P.InterfaceInfo _fields' objects')))) ->
                     J.Array $ V.fromList $ fmap (printer . SomeType . P.Nullable . P.TNamed . fmap P.TIObject) $ sortOn P.dName objects'
                   P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIUnion (P.UnionInfo objects')))) ->
                     J.Array $ V.fromList $ fmap (printer . SomeType . P.Nullable . P.TNamed . fmap P.TIObject) $ sortOn P.dName objects'
                   _ -> J.Null
     enumValues :: FieldParser n (SomeType -> J.Value)
     enumValues = do
-      nameAndPrinter <- P.subselection $$(G.litName "enumValues") Nothing includeDeprecated enumValue
+      -- TODO handle the value of includeDeprecated
+      includeDeprecated'printer <- P.subselection $$(G.litName "enumValues") Nothing includeDeprecated enumValue
       return $
         \case SomeType tp ->
                 case tp of
                   P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIEnum vals))) ->
-                    J.Array $ V.fromList $ fmap (snd nameAndPrinter) $ sortOn P.dName $ toList vals
+                    J.Array $ V.fromList $ fmap (snd includeDeprecated'printer) $ sortOn P.dName $ toList vals
                   _ -> J.Null
     inputFields :: FieldParser n (SomeType -> J.Value)
     inputFields = do

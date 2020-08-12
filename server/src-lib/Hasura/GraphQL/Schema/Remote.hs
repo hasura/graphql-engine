@@ -182,22 +182,6 @@ remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name inter
       = True -- TODO write appropriate check (may require saving 'possibleTypes' in Syntax.hs)
     validateSubTypeDefinition _ _ = False
 
--- In the Draft GraphQL spec, interfaces can themselves implement
--- superinterfaces.  In the future, we may need to support this.  Currently,
--- this function always returns an empty list.
-interfaceImplementingInterface
-  :: SchemaIntrospection
-  -> G.Name
-  -> [G.InterfaceTypeDefinition [G.Name]]
-interfaceImplementingInterface (SchemaIntrospection tps) interfaceName = catMaybes $ fmap go tps
-  where
-    go :: TypeDefinition possibleTypes -> Maybe (G.InterfaceTypeDefinition possibleTypes)
-    go (TypeDefinitionInterface iface@(G.InterfaceTypeDefinition _desc _name _directives _fields _possibleTypes))
-      -- TODO in order to support interfaces implementing interfaces, fill in
-      -- the right value for [] here.
-      | interfaceName `elem` [] = Just iface
-    go _ = Nothing
-
 -- | 'remoteSchemaInterface' returns a output parser for a given 'InterfaceTypeDefinition'.
 remoteSchemaInterface
   :: forall n m
@@ -210,15 +194,16 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
   subFieldParsers <- traverse (remoteField' schemaDoc) fields
   objs :: [Parser 'Output n ()] <-
     traverse (\objName -> getObject objName >>= remoteSchemaObject schemaDoc) $ possibleTypes
-  ifaces :: [Parser 'Output n ()] <- traverse (remoteSchemaInterface schemaDoc) $
-    interfaceImplementingInterface schemaDoc name
-  when (null ifaces && null subFieldParsers) $
+  -- In the Draft GraphQL spec (> June 2018), interfaces can themselves
+  -- implement superinterfaces.  In the future, we may need to support this
+  -- here.
+  when (null subFieldParsers) $
     throw400 RemoteSchemaError $ "List of fields cannot be empty for interface " <> squote name
   -- TODO: another way to obtain 'possibleTypes' is to lookup all the object
   -- types in the schema document that claim to implement this interface.  We
   -- should have a check that expresses that that collection of objects is equal
   -- to 'possibelTypes'.
-  pure $ () <$ (P.selectionSetInterface name description subFieldParsers objs ifaces)
+  pure $ () <$ (P.selectionSetInterface name description subFieldParsers objs)
   where
     getObject :: G.Name -> m G.ObjectTypeDefinition
     getObject objectName =

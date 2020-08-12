@@ -1292,7 +1292,7 @@ node = memoizeOn 'node () do
       annotatedFieldsParser <- lift $ tableSelectionSet table selectPermissions
       pure $ (selectPermissions, tablePkeyColumns,) <$> annotatedFieldsParser
   pure $ P.selectionSetInterface $$(G.litName "Node")
-         (Just nodeInterfaceDescription) [idField] tables []
+         (Just nodeInterfaceDescription) [idField] tables
 
 nodeField
   :: forall m n r
