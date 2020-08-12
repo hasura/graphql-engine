@@ -85,7 +85,7 @@ const OperationEditor = (props: OperationEditorProps) => {
           Listen columns for update:&nbsp;
           {ops.update && !readOnly ? (
             <Button
-              className = {`${styles.toggle}`}
+              className={`${styles.toggle}`}
               color="white"
               size="xs"
               onClick={editorToggle}
