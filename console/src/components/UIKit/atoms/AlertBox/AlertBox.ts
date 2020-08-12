@@ -16,7 +16,7 @@ import {
   ShadowProps,
 } from 'styled-system';
 
-import{ BoxProps, Box } from '../Box';
+import { BoxProps, Box } from '../Box';
 
 interface StyledAlertBoxOwnProps
   extends FlexboxProps,
