@@ -834,7 +834,11 @@ export const getDependencyError = (err = {}) => {
     err?.internal?.error?.status_code === '2BP01' // pg dependent error > https://www.postgresql.org/docs/current/errcodes-appendix.html
   )
     return {
-      pgDependencyError: { ...err, message: err.error },
+      pgDependencyError: {
+        ...err,
+        message: `${err?.internal?.error?.message}
+         ${err?.internal?.error?.description || ''}`,
+      },
     };
   return {};
 };
