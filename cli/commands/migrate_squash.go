@@ -30,13 +30,13 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Example: `  # NOTE: This command is in PREVIEW, correctness is not guaranteed and the usage may change.
 
   # squash all migrations from version 123 to the latest one:
-	hasura migrate squash --from 123
-	
-	# squash all migrations from version 123 to migration 456:
-	hasura migrate squash --from 123 --to 456
+  hasura migrate squash --from 123
 
   # Add a name for the new squashed migration
-  hasura migrate squash --name "<name>" --from 123`,
+  hasura migrate squash --name "<name>" --from 123
+  
+  # squash all migrations from version 123 up to version 456:
+  hasura migrate squash --from 123 --to 456`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.newVersion = getTime()
@@ -70,7 +70,7 @@ type migrateSquashOptions struct {
 func (o *migrateSquashOptions) run() error {
 	o.EC.Logger.Warnln("This command is currently experimental and hence in preview, correctness of squashed migration is not guaranteed!")
 	if o.from > o.to && o.to != 0 {
-		return errors.Wrap(errors.New("invalid migration provided for to flag"), "the `to` flag has to have a version that is greater than that of `from` flag")
+		return errors.Wrap(errors.New("incorrect version provided for to flag"), "the `to` flag has to have a version that is greater than that of `from` flag")
 	}
 	if o.to != 0 {
 		o.EC.Spin(fmt.Sprintf("Squashing migrations from %d to %d...", o.from, o.to))
