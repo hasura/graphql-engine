@@ -392,6 +392,11 @@ const HasuraNotifications: React.FC<
   const [opened, updateOpenState] = React.useState(false);
   const [numberNotifications, updateNumberNotifications] = React.useState(0);
   const [numDisplayed, updateNumDisplayed] = React.useState(20);
+  const [showMarkAllAsRead, toShowMarkAllAsRead] = React.useState(false);
+  const [dataShown, updateDataShown] = React.useState<ConsoleNotification[]>(
+    []
+  );
+  const [toDisplayViewMore, updateViewMoreDisplay] = React.useState(true);
   const showBadge = console_opts?.console_notifications?.showBadge;
 
   // for running the version update code on mounting
@@ -414,8 +419,12 @@ const HasuraNotifications: React.FC<
 
     setLatestVersion(latestReleasedVersion);
 
-    if (versionUpdateCheck) {
+    if (
+      versionUpdateCheck &&
+      !console_opts?.disablePreReleaseUpdateNotifications
+    ) {
       setDisplayNewVersionNotification(true);
+      updateNumberNotifications(num => num++);
       return;
     }
 
@@ -425,6 +434,7 @@ const HasuraNotifications: React.FC<
     latestStableServerVersion,
     console_opts,
     serverVersion,
+    console_opts?.disablePreReleaseUpdateNotifications,
   ]);
 
   React.useEffect(() => {
@@ -436,7 +446,11 @@ const HasuraNotifications: React.FC<
       readNotifications === 'default' ||
       readNotifications === 'error'
     ) {
-      updateNumberNotifications(0);
+      if (displayNewVersionNotification) {
+        updateNumberNotifications(1);
+      } else {
+        updateNumberNotifications(0);
+      }
       return;
     }
 
@@ -456,6 +470,7 @@ const HasuraNotifications: React.FC<
   ]);
 
   const optOutCallback = () => {
+    closeDropDown();
     dispatch(setPreReleaseNotificationOptOutInDB());
   };
 
@@ -553,6 +568,37 @@ const HasuraNotifications: React.FC<
     }
   };
 
+  React.useEffect(() => {
+    if (
+      displayNewVersionNotification &&
+      console_opts?.console_notifications?.read === 'all'
+    ) {
+      toShowMarkAllAsRead(true);
+      return;
+    }
+
+    toShowMarkAllAsRead(!numberNotifications);
+  }, [
+    numberNotifications,
+    displayNewVersionNotification,
+    console_opts?.console_notifications?.read,
+  ]);
+
+  React.useEffect(() => {
+    updateDataShown(consoleNotifications.slice(0, numDisplayed + 1));
+  }, [consoleNotifications, numDisplayed]);
+
+  React.useEffect(() => {
+    if (
+      consoleNotifications.length > 20 &&
+      numDisplayed !== consoleNotifications.length
+    ) {
+      updateViewMoreDisplay(true);
+      return;
+    }
+    updateViewMoreDisplay(false);
+  }, [consoleNotifications.length, numDisplayed]);
+
   return (
     <>
       <div
@@ -569,17 +615,14 @@ const HasuraNotifications: React.FC<
       </div>
       <Notifications
         ref={dropDownRef}
-        data={consoleNotifications.slice(0, numDisplayed + 1)}
+        data={dataShown}
         showVersionUpdate={displayNewVersionNotification}
         latestVersion={latestVersion}
         optOutCallback={optOutCallback}
         onClickMarkAllAsRead={onClickMarkAllAsRead}
         onClickViewMore={onClickViewMore}
-        disableMarkAllAsReadBtn={!numberNotifications}
-        displayViewMore={
-          consoleNotifications.length > 20 &&
-          numDisplayed !== consoleNotifications.length
-        }
+        disableMarkAllAsReadBtn={showMarkAllAsRead}
+        displayViewMore={toDisplayViewMore}
         onClickUpdate={onClickUpdate}
         previouslyRead={console_opts?.console_notifications?.read}
       />
