@@ -13,7 +13,6 @@ export interface AlertBoxProps
   type: keyof Theme['alertBox'];
 }
 
-
 export const AlertBox: React.FC<AlertBoxProps> = props => {
   const { children, type } = props;
 
