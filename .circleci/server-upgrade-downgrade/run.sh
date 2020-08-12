@@ -178,7 +178,7 @@ run_server_upgrade_pytest() {
 		pytest --hge-urls "${HGE_URL}"  --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" \
 			--avoid-error-message-checks "$@" \
 			-m 'allow_server_upgrade_test and not skip_server_upgrade_test' \
-			--deselect test_graphql_mutations.py::TestGraphqlUpdateBasic::test_numerics_inc \
+			--deselect test_schema_stitching.py::TestRemoteSchemaBasic::test_introspection \
 			-v $tests_to_run
 		set +x
 		cd -
