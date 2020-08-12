@@ -142,15 +142,13 @@ const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
     dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
     getState: GetReduxState
   ) => {
-    const hasura_uuid = getState().telemetry.hasura_uuid;
     const url = Endpoints.schemaChange;
     const composedUpdatedState: ConsoleState['console_opts'] = {
       ...getState().telemetry.console_opts,
       console_notifications: updatedState,
     };
     const updatedReadNotifications = getUpdateConsoleStateQuery(
-      composedUpdatedState,
-      hasura_uuid
+      composedUpdatedState
     );
     const options: RequestInit = {
       credentials: globalCookiePolicy,
