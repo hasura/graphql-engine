@@ -53,6 +53,7 @@ body {
   min-width: 100%;
   overflow-y: auto;
   -webkit-font-smoothing: auto;
+  background-color: #fff;
 }
 
 h1 a:visited,
@@ -230,10 +231,10 @@ p {
   background-color: transparent;
   font-size: 16px;
 }
-.input-box input:-webkit-autofill, .floating-input-box input:-webkit-autofill,
-.input-box input:-webkit-autofill:hover, .floating-input-box input:-webkit-autofill:hover,
-.input-box input:-webkit-autofill:focus, .floating-input-box input:-webkit-autofill:focus,
-.input-box input:-webkit-autofill:active, .floating-input-box input:-webkit-autofill:active  {
+.input-box input:-webkit-autofill, .floating-input-box input:-webkit-autofill, #feedback_box:-webkit-autofill,
+.input-box input:-webkit-autofill:hover, .floating-input-box input:-webkit-autofill:hover, #feedback_box:-webkit-autofill:hover,
+.input-box input:-webkit-autofill:focus, .floating-input-box input:-webkit-autofill:focus, #feedback_box:-webkit-autofill:focus,
+.input-box input:-webkit-autofill:active, .floating-input-box input:-webkit-autofill:active, #feedback_box:-webkit-autofill:active {
   box-shadow: 0 0 0 35px #fff inset !important;
   -webkit-text-fill-color: #717780 !important;
   font-size: 16px;
@@ -476,12 +477,13 @@ article ol ol {
   color: #717780 !important; /* override django-site.css */
   border-radius: 0;
   border: 0;
-  font-weight: 600;
+  font-weight: 400;
   display: flex;
   align-items: center;
   text-decoration: none;
   white-space: nowrap;
   margin-left: 8px;
+  font-family: 'Poppins';
 }
 .edit-github-btn:hover {
   background-color: transparent;
@@ -669,11 +671,12 @@ article ol ol {
   display: flex;
   align-items: center;
   margin-left: auto;
+  font-family: 'Poppins';
 }
 .feedback_wrapper .feedback {
   display: flex;
   align-items: center;
-  width: 260px;
+  width: 270px;
 }
 .feedback_wrapper .feedback .feedback-content {
   padding-left: 16px;
@@ -708,7 +711,8 @@ article ol ol {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
   border: 0;
-  font-size: 16px;
+  font-size: 12px;
+  font-family: 'Poppins';
   font-weight: 600;
   height: 40px;
   width: 86px;
@@ -738,6 +742,8 @@ article ol ol {
   border-bottom-right-radius: 0;
   flex: 1;
   border-left: 0;
+  font-family: 'Poppins';
+  text-indent: 10px;
 }
 #feedback_box:focus {
   outline: none;
@@ -1817,7 +1823,8 @@ article ol ol {
   text-align: right;
   padding-right: 20px;
   color: #717780;
-  font-weight: 600;
+  font-weight: 400;
+  font-family: 'Poppins';
 }
 .versionTxt select {
   border-radius: 8px;
@@ -1893,9 +1900,11 @@ article ol ol {
   display: flex;
   justify-content: center;
   margin-top: 30px;
+  margin-bottom: 25px;
 }
 
 .tabbarContainerWrapper a {
+  font-family: 'Poppins';
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1938,7 +1947,7 @@ article ol ol {
 .pagination-nav .pagination-prev, .pagination-nav .pagination-next {
   font-family: 'Poppins';
   font-style: normal;
-  font-weight: 600;
+  font-weight: 400;
   font-size: 14px;
   line-height: 140%;
   color: #717780;
@@ -1963,6 +1972,7 @@ article ol ol {
 @media (min-width: 1388px) {
   .containerWidth {
     width: 1328px !important;
+    padding: 0 0;
   }
 }
 @media (min-width: 1030px) {
