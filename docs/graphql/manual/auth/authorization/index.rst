@@ -57,3 +57,9 @@ Follow the example at :ref:`access control basics <auth_basics>`.
   permission-rules
   common-roles-auth-examples
   role-multiple-rules
+
+
+Additional resources
+--------------------
+
+**Enterprise-grade GraphQL authorization workshop:** Learn how to connect your auth systems to Hasura and how to implement any kind of authorization: rules, roles, tags, hierarchies, attribute based systems. `Watch workshop -> <https://us02web.zoom.us/webinar/register/WN_LKQGoU24RXGJEEDfvnE_sA>`__

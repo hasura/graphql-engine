@@ -52,4 +52,3 @@ Get started using an existing database
    Using an existing database <using-existing-database>
    first-graphql-query
    first-event-trigger
-
