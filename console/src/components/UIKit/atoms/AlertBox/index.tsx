@@ -8,7 +8,7 @@ import { Text } from '../Typography';
 const alertBoxWidth = 866;
 
 export interface AlertBoxProps extends IconProps, Omit<StyledAlertBoxProps, 'size'> {
-  type: keyof Theme['alertBox'] ;
+  type: keyof Theme['alertBox'];
 }
 
 
