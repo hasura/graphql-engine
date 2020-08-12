@@ -18,6 +18,8 @@ import           Control.Monad.Morph                    (hoist)
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging                 (MonadQueryLog (..))
 import           Hasura.GraphQL.Transport.HTTP.Protocol
+import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Parser.Column           (UnpreparedValue)
 import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -44,6 +46,7 @@ import qualified Network.Wai.Extended                   as Wai
 class Monad m => MonadExecuteQuery m where
   executeQuery
     :: GQLReqParsed
+    -> [QueryRootField UnpreparedValue]
     -> Maybe EQ.GeneratedSqlMap
     -> PGExecCtx
     -> Q.TxAccess
@@ -51,13 +54,13 @@ class Monad m => MonadExecuteQuery m where
     -> TraceT (ExceptT QErr m) (HTTP.ResponseHeaders, EncJSON)
 
 instance MonadExecuteQuery m => MonadExecuteQuery (ReaderT r m) where
-  executeQuery a b c d e = hoist (hoist lift) $ executeQuery a b c d e
+  executeQuery a b c d e f = hoist (hoist lift) $ executeQuery a b c d e f
 
 instance MonadExecuteQuery m => MonadExecuteQuery (ExceptT r m) where
-  executeQuery a b c d e = hoist (hoist lift) $ executeQuery a b c d e
+  executeQuery a b c d e f = hoist (hoist lift) $ executeQuery a b c d e f
 
 instance MonadExecuteQuery m => MonadExecuteQuery (TraceT m) where
-  executeQuery a b c d e = hoist (hoist lift) $ executeQuery a b c d e
+  executeQuery a b c d e f = hoist (hoist lift) $ executeQuery a b c d e f
 
 
 -- | Run (execute) a single GraphQL query
@@ -94,10 +97,10 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                                  userInfo sqlGenCtx sc scVer queryType
                                  httpManager reqHeaders (reqUnparsed, reqParsed)
     case execPlan of
-      E.QueryExecutionPlan queryPlan ->
+      E.QueryExecutionPlan queryPlan asts ->
         case queryPlan of
           E.ExecStepDB txGenSql -> do
-            (telemTimeIO, telemQueryType, resp) <- runQueryDB reqId (reqUnparsed,reqParsed) userInfo txGenSql
+            (telemTimeIO, telemQueryType, resp) <- runQueryDB reqId (reqUnparsed,reqParsed) asts userInfo txGenSql
             return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp []))
           E.ExecStepRemote (rsi, opDef, _varValsM) ->
             runRemoteGQ telemCacheHit rsi opDef
@@ -190,17 +193,18 @@ runQueryDB
      )
   => RequestId
   -> (GQLReqUnparsed, GQLReqParsed)
+  -> [QueryRootField UnpreparedValue]
   -> UserInfo
   -> (Tracing.TraceT (LazyTx QErr) EncJSON, EQ.GeneratedSqlMap)
   -> m (DiffTime, Telem.QueryType, EncJSON)
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
-runQueryDB reqId (query, queryParsed) _userInfo (tx, genSql) =  do
+runQueryDB reqId (query, queryParsed) asts _userInfo (tx, genSql) =  do
   -- log the generated SQL and the graphql query
   E.ExecutionCtx logger _ pgExecCtx _ _ _ _ <- ask
   logQueryLog logger query (Just genSql) reqId
   (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ trace "pg" $
-    Tracing.interpTraceT id $ executeQuery queryParsed (Just genSql) pgExecCtx Q.ReadOnly tx
+    Tracing.interpTraceT id $ executeQuery queryParsed asts (Just genSql) pgExecCtx Q.ReadOnly tx
   resp <- liftEither respE
   let !json = encodeGQResp $ GQSuccess $ encJToLBS $ snd resp
       telemQueryType = Telem.Query

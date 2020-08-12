@@ -349,11 +349,11 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx {- planCache -} sc scVer httpMgr enableAL
 
   case execPlan of
-    E.QueryExecutionPlan queryPlan ->
+    E.QueryExecutionPlan queryPlan asts ->
       case queryPlan of
         E.ExecStepDB (tx, genSql) -> Tracing.trace "pg" $
           execQueryOrMut timerTot Telem.Query telemCacheHit (Just genSql) requestId $
-            fmap snd $ Tracing.interpTraceT id $ executeQuery reqParsed (Just genSql) pgExecCtx Q.ReadOnly tx
+            fmap snd $ Tracing.interpTraceT id $ executeQuery reqParsed asts (Just genSql) pgExecCtx Q.ReadOnly tx
         E.ExecStepRemote (rsi, opDef, _varValsM) ->
           runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
         E.ExecStepRaw (name, json) ->

@@ -39,6 +39,7 @@ import           Hasura.GraphQL.Logging
 import           Hasura.GraphQL.RemoteServer            (execRemoteGQ')
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Utils                   (showName)
+import           Hasura.GraphQL.Parser.Column           (UnpreparedValue)
 import           Hasura.HTTP
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                    (RequestId)
@@ -164,7 +165,8 @@ getExecPlanPartial userInfo sc queryType req =
 
 -- The graphql query is resolved into a sequence of execution operations
 data ResolvedExecutionPlan m
-  = QueryExecutionPlan (EPr.ExecutionPlan (m EncJSON, EQ.GeneratedSqlMap) EPr.RemoteCall (G.Name, J.Value))
+  = QueryExecutionPlan
+      (EPr.ExecutionPlan (m EncJSON, EQ.GeneratedSqlMap) EPr.RemoteCall (G.Name, J.Value)) [C.QueryRootField UnpreparedValue]
   -- ^ query execution; remote schemas and introspection possible
   | MutationExecutionPlan (EPr.ExecutionPlan (m EncJSON, HTTP.ResponseHeaders) EPr.RemoteCall (G.Name, J.Value))
   -- ^ mutation execution; only __typename introspection supported
@@ -261,11 +263,13 @@ getResolvedExecPlan env logger pgExecCtx {- planCache-} userInfo sqlGenCtx
         G.TypedOperationDefinition G.OperationTypeQuery _ varDefs _ selSet -> do
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
-          execPlan {-, plan-} <-
+          -- (unpreparedQueries, _) <-
+          --   E.parseGraphQLQuery gCtx varDefs
+          (execPlan,asts) {-, plan-} <-
             EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- See Note [Temporarily disabling query plan caching]
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
-          return $ QueryExecutionPlan execPlan
+          return $ QueryExecutionPlan execPlan asts
         G.TypedOperationDefinition G.OperationTypeMutation _ varDefs _ selSet -> do
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
