@@ -686,7 +686,9 @@ selectionSetObject
   => Name
   -> Maybe Description
   -> [FieldParser m a]
-  -> [Parser 'Output m b] -- ^ Interfaces implemented by this object
+  -> [Parser 'Output m b]
+  -- ^ Interfaces implemented by this object;
+  -- see Note [The interfaces story] in Hasura.GraphQL.Parser.Schema.
   -> Parser 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a))
 selectionSetObject name description parsers implementsInterfaces = Parser
   { pType = Nullable $ TNamed $ mkDefinition name description $
@@ -726,40 +728,38 @@ selectionSetObject name description parsers implementsInterfaces = Parser
     parsedInterfaceNames = fmap getName interfaces
 
 selectionSetInterface
-  :: (MonadParse n, Traversable tObjs)
+  :: (MonadParse n, Traversable t)
   => Name
   -> Maybe Description
   -> [FieldParser n a]
   -- ^ Fields defined in this interface
-  -> tObjs (Parser 'Output n b)
-  -- ^ Object parsers.  The objects should implement this interface.
-  -> Parser 'Output n
-       ( -- For each object or interface, give its parsing
-         tObjs b
-       )
+  -> t (Parser 'Output n b)
+  -- ^ Parsers for the object types that implement this interface; see
+  -- Note [The interfaces story] in Hasura.GraphQL.Parser.Schema for details.
+  -> Parser 'Output n (t b)
 selectionSetInterface name description fields objectImplementations = Parser
   { pType = Nullable $ TNamed $ mkDefinition name description $
       TIInterface $ InterfaceInfo (map fDefinition fields) objects
   , pParser = \input -> for objectImplementations (($ input) . pParser)
-  -- TODO(PDV): This is somewhat suboptimal, since it parses a query against any
-  -- possible object implementing this.  But in our intended use case (Relay),
-  -- based on a field argument, we can decide which object we are about to
-  -- retrieve.  So this implementation could save some work by only running that
-  -- parser.
+  -- Note: This is somewhat suboptimal, since it parses a query against every
+  -- possible object implementing this interface, possibly duplicating work for
+  -- fields defined on the interface itself.
+  --
+  -- Furthermore, in our intended use case (Relay), based on a field argument,
+  -- we can decide which object we are about to retrieve, so in theory we could
+  -- save some work by only parsing against that object type. But it’s still
+  -- useful to parse against all of them, since it checks the validity of any
+  -- fragments on the other types.
   }
   where
     objects = catMaybes $ toList $ fmap (getObjectInfo . pType) objectImplementations
 
 selectionSetUnion
-  :: (MonadParse n, Traversable tObjs)
+  :: (MonadParse n, Traversable t)
   => Name
   -> Maybe Description
-  -> tObjs (Parser 'Output n b)
-  -- ^ Possible objects
-  -> Parser 'Output n
-       ( -- For each object or interface, give its parsing
-         tObjs b
-       )
+  -> t (Parser 'Output n b) -- ^ The member object types.
+  -> Parser 'Output n (t b)
 selectionSetUnion name description objectImplementations = Parser
   { pType = Nullable $ TNamed $ mkDefinition name description $
       TIUnion $ UnionInfo objects
