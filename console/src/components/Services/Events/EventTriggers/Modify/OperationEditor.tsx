@@ -84,8 +84,13 @@ const OperationEditor = (props: OperationEditorProps) => {
         <div className={`col-md-12 ${styles.padd_remove}`}>
           Listen columns for update:&nbsp;
           {ops.update && !readOnly ? (
-            <Button color="white" size="xs" onClick={editorToggle}>
-              Toggle
+            <Button
+              className = {`${styles.toggle}`}
+              color="white"
+              size="xs"
+              onClick={editorToggle}
+            >
+              Toggle All
             </Button>
           ) : null}
         </div>

@@ -1386,6 +1386,10 @@ code {
   display: block;
 }
 
+.toggle{
+  margin-left: 10px;
+}
+
 /* container height subtracting top header and bottom scroll bar */
 $mainContainerHeight: calc(100vh - 50px - 20px);
 
