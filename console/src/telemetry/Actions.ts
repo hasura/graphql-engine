@@ -20,6 +20,7 @@ import {
   ConsoleState,
   NotificationsState,
 } from '../types';
+import { isUpdateIDsEqual } from './utils';
 
 const SET_CONSOLE_OPTS = 'Telemetry/SET_CONSOLE_OPTS';
 const SET_NOTIFICATION_SHOWN = 'Telemetry/SET_NOTIFICATION_SHOWN';
@@ -115,7 +116,8 @@ const setTelemetryNotificationShownInDB = () => {
 };
 
 const setPreReleaseNotificationOptOutInDB = () => (
-  dispatch: ThunkDispatch<ReduxState, {}, AnyAction>
+  dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
+  getState: GetReduxState
 ) => {
   const successCb = () => {
     dispatch(
@@ -134,6 +136,14 @@ const setPreReleaseNotificationOptOutInDB = () => (
     disablePreReleaseUpdateNotifications: true,
   };
 
+  dispatch({
+    type: SET_CONSOLE_OPTS,
+    data: {
+      ...getState().telemetry.console_opts,
+      disablePreReleaseUpdateNotifications: true,
+    },
+  });
+
   return dispatch(setConsoleOptsInDB(options, successCb, errorCb));
 };
 
@@ -143,10 +153,24 @@ const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
     getState: GetReduxState
   ) => {
     const url = Endpoints.schemaChange;
-    const composedUpdatedState: ConsoleState['console_opts'] = {
-      ...getState().telemetry.console_opts,
+    const currentRead = getState().main.consoleNotifications;
+    const restState = getState().telemetry.console_opts;
+    let composedUpdatedState: ConsoleState['console_opts'] = {
+      ...restState,
       console_notifications: updatedState,
     };
+    if (currentRead && Array.isArray(currentRead)) {
+      if (isUpdateIDsEqual(currentRead, updatedState.read)) {
+        composedUpdatedState = {
+          ...restState,
+          console_notifications: {
+            read: 'all',
+            showBadge: false,
+            date: updatedState.date,
+          },
+        };
+      }
+    }
     const updatedReadNotifications = getUpdateConsoleStateQuery(
       composedUpdatedState
     );
@@ -156,23 +180,20 @@ const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
       headers: dataHeaders(getState),
       body: JSON.stringify(updatedReadNotifications),
     };
-    return (
-      dispatch(requestAction(url, options))
-        // TODO: perhaps need to change the type for `data` here
-        .then((data: any) => {
-          dispatch({
-            type: UPDATE_CONSOLE_NOTIFICATIONS,
-            data: data.returning[0].console_state.console_notifications,
-          });
-        })
-        .catch(error => {
-          console.error(
-            'There was an error in updating the console notifications.',
-            error
-          );
-          return error;
-        })
-    );
+    return dispatch(requestAction(url, options))
+      .then((data: any) => {
+        dispatch({
+          type: UPDATE_CONSOLE_NOTIFICATIONS,
+          data: data.returning[0].console_state.console_notifications,
+        });
+      })
+      .catch(error => {
+        console.error(
+          'There was an error in updating the console notifications.',
+          error
+        );
+        return error;
+      });
   };
 };
 
