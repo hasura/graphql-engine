@@ -26,6 +26,17 @@ import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
+
+-- | actionExecute is used to execute either a query action or a synchronous
+--   mutation action. A query action or a synchronous mutation action accepts
+--   the field name and input arguments and a selectionset. The
+--   input argument and selectionset types are defined by the user.
+--
+--
+-- > action_name(action_input_arguments) {
+-- >   col1: col1_type
+-- >   col2: col2_type
+-- > }
 actionExecute
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => NonObjectTypeMap
@@ -55,6 +66,12 @@ actionExecute nonObjectTypeMap actionInfo = runMaybeT do
   where
     ActionInfo actionName outputObject definition permissions comment = actionInfo
 
+-- | actionAsyncMutation is used to execute a asynchronous mutation action. An
+--   asynchronous action expects the field name and the input arguments to the
+--   action. A selectionset is *not* expected. An action ID (UUID) will be
+--   returned after performing the action
+--
+-- > action_name(action_input_arguments)
 actionAsyncMutation
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => NonObjectTypeMap
@@ -72,6 +89,19 @@ actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
   where
     ActionInfo actionName _ definition permissions comment = actionInfo
 
+-- | actionAsyncQuery is used to query/subscribe to the result of an
+--   asynchronous mutation action. The only input argument to an
+--   asynchronous mutation action is the action ID (UUID) and a selection
+--   set is expected, the selection set contains 4 fields namely 'id',
+--   'created_at','errors' and 'output'. The result of the action can be queried
+--   through the 'output' field.
+--
+-- > action_name (id: UUID!) {
+-- >   id: UUID!
+-- >   created_at: timestampz!
+-- >   errors: JSON
+-- >   output: user_defined_type!
+-- > }
 actionAsyncQuery
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => ActionInfo
