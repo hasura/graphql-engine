@@ -59,6 +59,10 @@ func SquashCreateAPI(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 		return
 	}
+	if request.From > request.To && request.To != 0 {
+		c.JSON(http.StatusBadRequest, &Response{Code: "bad_request", Message: "`to` version has to be greater than `from` version"})
+		return
+	}
 	versions, err := cmd.SquashCmd(t, request.From, request.To, request.version, request.Name, sourceURL.Path)
 	if err != nil {
 		if strings.HasPrefix(err.Error(), DataAPIError) {

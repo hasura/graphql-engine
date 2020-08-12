@@ -69,7 +69,14 @@ type migrateSquashOptions struct {
 
 func (o *migrateSquashOptions) run() error {
 	o.EC.Logger.Warnln("This command is currently experimental and hence in preview, correctness of squashed migration is not guaranteed!")
-	o.EC.Spin(fmt.Sprintf("Squashing migrations from %d to latest...", o.from))
+	if o.from > o.to && o.to != 0 {
+		return errors.Wrap(errors.New("invalid migration provided for to flag"), "the `to` flag has to have a version that is greater than that of `from` flag")
+	}
+	if o.to != 0 {
+		o.EC.Spin(fmt.Sprintf("Squashing migrations from %d to %d...", o.from, o.to))
+	} else {
+		o.EC.Spin(fmt.Sprintf("Squashing migrations from %d to latest...", o.from))
+	}
 	defer o.EC.Spinner.Stop()
 	migrateDrv, err := migrate.NewMigrate(o.EC, true)
 	if err != nil {
