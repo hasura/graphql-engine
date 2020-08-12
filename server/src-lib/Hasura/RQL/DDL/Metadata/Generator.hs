@@ -1,21 +1,13 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Hasura.RQL.DDL.Metadata.Generator
-  (genReplaceMetadata)
+  (genMetadata)
 where
 
 import           Hasura.GraphQL.Utils                          (simpleGraphQLQuery)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-
-import qualified Hasura.RQL.DDL.ComputedField                  as ComputedField
-import qualified Hasura.RQL.DDL.Permission                     as Permission
-import qualified Hasura.RQL.DDL.Permission.Internal            as Permission
-import qualified Hasura.RQL.DDL.QueryCollection                as Collection
-import qualified Hasura.RQL.DDL.Relationship                   as Relationship
-import qualified Hasura.RQL.DDL.Schema                         as Schema
 
 import           System.Cron.Types
 
@@ -36,10 +28,10 @@ import           Test.QuickCheck.Instances.Semigroup           ()
 import           Test.QuickCheck.Instances.Time                ()
 import           Test.QuickCheck.Instances.UnorderedContainers ()
 
-genReplaceMetadata :: Gen ReplaceMetadata
-genReplaceMetadata = do
+genMetadata :: Gen Metadata
+genMetadata = do
   version <- arbitrary
-  ReplaceMetadata version
+  Metadata version
     <$> arbitrary
     <*> genFunctionsMetadata version
     <*> arbitrary
@@ -72,25 +64,25 @@ instance Arbitrary TableCustomRootFields where
 instance Arbitrary TableConfig where
   arbitrary = genericArbitrary
 
-instance (Arbitrary a) => Arbitrary (Relationship.RelUsing a) where
+instance (Arbitrary a) => Arbitrary (RelUsing a) where
   arbitrary = genericArbitrary
 
-instance (Arbitrary a) => Arbitrary (Relationship.RelDef a) where
+instance (Arbitrary a) => Arbitrary (RelDef a) where
   arbitrary = genericArbitrary
 
-instance Arbitrary Relationship.RelManualConfig where
+instance Arbitrary RelManualConfig where
   arbitrary = genericArbitrary
 
-instance Arbitrary Relationship.ArrRelUsingFKeyOn where
+instance Arbitrary ArrRelUsingFKeyOn where
   arbitrary = genericArbitrary
 
-instance (Arbitrary a) => Arbitrary (Permission.PermDef a) where
+instance (Arbitrary a) => Arbitrary (PermDef a) where
   arbitrary = genericArbitrary
 
-instance Arbitrary ComputedField.ComputedFieldDefinition where
+instance Arbitrary ComputedFieldDefinition where
   arbitrary = genericArbitrary
 
-instance Arbitrary ComputedFieldMeta where
+instance Arbitrary ComputedFieldMetadata where
   arbitrary = genericArbitrary
 
 instance Arbitrary Scientific where
@@ -122,19 +114,19 @@ instance Arbitrary (GBoolExp ColExp) where
 instance Arbitrary BoolExp where
   arbitrary = genericArbitrary
 
-instance Arbitrary Permission.PermColSpec where
+instance Arbitrary PermColSpec where
   arbitrary = genericArbitrary
 
-instance Arbitrary Permission.InsPerm where
+instance Arbitrary InsPerm where
   arbitrary = genericArbitrary
 
-instance Arbitrary Permission.SelPerm where
+instance Arbitrary SelPerm where
   arbitrary = genericArbitrary
 
-instance Arbitrary Permission.UpdPerm where
+instance Arbitrary UpdPerm where
   arbitrary = genericArbitrary
 
-instance Arbitrary Permission.DelPerm where
+instance Arbitrary DelPerm where
   arbitrary = genericArbitrary
 
 instance Arbitrary SubscribeColumns where
@@ -158,13 +150,13 @@ instance Arbitrary HeaderConf where
 instance Arbitrary EventTriggerConf where
   arbitrary = genericArbitrary
 
-instance Arbitrary TableMeta where
+instance Arbitrary TableMetadata where
   arbitrary = genericArbitrary
 
-instance Arbitrary Schema.FunctionConfig where
+instance Arbitrary FunctionConfig where
   arbitrary = genericArbitrary
 
-instance Arbitrary Schema.TrackFunctionV2 where
+instance Arbitrary TrackFunctionV2 where
   arbitrary = genericArbitrary
 
 instance Arbitrary QualifiedTable where
@@ -186,23 +178,23 @@ instance Arbitrary AddRemoteSchemaQuery where
 
 -- FIXME:- The GraphQL AST has 'Gen' by Hedgehog testing package which lacks the
 -- 'Arbitrary' class implementation. For time being, a single query is generated every time.
-instance Arbitrary Collection.GQLQueryWithText where
-  arbitrary = pure $ Collection.GQLQueryWithText ( simpleGraphQLQuery
-                                                 , Collection.GQLQuery simpleQuery
-                                                 )
+instance Arbitrary GQLQueryWithText where
+  arbitrary = pure $ GQLQueryWithText ( simpleGraphQLQuery
+                                      , GQLQuery simpleQuery
+                                      )
     where
       simpleQuery = $(either (fail . T.unpack) TH.lift $ G.parseExecutableDoc simpleGraphQLQuery)
 
-instance Arbitrary Collection.ListedQuery where
+instance Arbitrary ListedQuery where
   arbitrary = genericArbitrary
 
-instance Arbitrary Collection.CollectionDef where
+instance Arbitrary CollectionDef where
   arbitrary = genericArbitrary
 
-instance Arbitrary Collection.CreateCollection where
+instance Arbitrary CreateCollection where
   arbitrary = genericArbitrary
 
-instance Arbitrary Collection.CollectionReq where
+instance Arbitrary CollectionReq where
   arbitrary = genericArbitrary
 
 instance Arbitrary G.NamedType where

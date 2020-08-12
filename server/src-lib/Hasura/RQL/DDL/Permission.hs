@@ -85,18 +85,6 @@ TRUE            TRUE (OR NOT-SET)         FALSE                                 
 TRUE            TRUE (OR NOT-SET)         TRUE                                   Mutation is shown
 -}
 
--- Insert permission
-data InsPerm
-  = InsPerm
-  { ipCheck       :: !BoolExp
-  , ipSet         :: !(Maybe (ColumnValues Value))
-  , ipColumns     :: !(Maybe PermColSpec)
-  , ipBackendOnly :: !(Maybe Bool) -- see Note [Backend only permissions]
-  } deriving (Show, Eq, Lift, Generic)
-instance Cacheable InsPerm
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''InsPerm)
-
-type InsPermDef = PermDef InsPerm
 type CreateInsPerm = CreatePerm InsPerm
 
 procSetObj
@@ -152,27 +140,6 @@ instance IsPerm InsPerm where
 
   buildPermInfo = buildInsPermInfo
 
--- Select constraint
-data SelPerm
-  = SelPerm
-  { spColumns           :: !PermColSpec         -- ^ Allowed columns
-  , spFilter            :: !BoolExp             -- ^ Filter expression
-  , spLimit             :: !(Maybe Int)         -- ^ Limit value
-  , spAllowAggregations :: !Bool                -- ^ Allow aggregation
-  , spComputedFields    :: ![ComputedFieldName] -- ^ Allowed computed fields
-  } deriving (Show, Eq, Lift, Generic)
-instance Cacheable SelPerm
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SelPerm)
-
-instance FromJSON SelPerm where
-  parseJSON = withObject "SelPerm" $ \o ->
-    SelPerm
-    <$> o .: "columns"
-    <*> o .: "filter"
-    <*> o .:? "limit"
-    <*> o .:? "allow_aggregations" .!= False
-    <*> o .:? "computed_fields" .!= []
-
 buildSelPermInfo
   :: (QErrM m, TableCoreInfoRM m)
   => QualifiedTable
@@ -216,7 +183,6 @@ buildSelPermInfo tn fieldInfoMap sp = withPathK "permission" $ do
     computedFields = spComputedFields sp
     autoInferredErr = "permissions for relationships are automatically inferred"
 
-type SelPermDef = PermDef SelPerm
 type CreateSelPerm = CreatePerm SelPerm
 
 type instance PermInfo SelPerm = SelPermInfo
@@ -228,24 +194,7 @@ instance IsPerm SelPerm where
   buildPermInfo tn fieldInfoMap (PermDef _ a _) =
     buildSelPermInfo tn fieldInfoMap a
 
--- Update constraint
-data UpdPerm
-  = UpdPerm
-  { ucColumns :: !PermColSpec -- Allowed columns
-  , ucSet     :: !(Maybe (ColumnValues Value)) -- Preset columns
-  , ucFilter  :: !BoolExp     -- Filter expression (applied before update)
-  , ucCheck   :: !(Maybe BoolExp)
-  -- ^ Check expression, which must be true after update.
-  -- This is optional because we don't want to break the v1 API
-  -- but Nothing should be equivalent to the expression which always
-  -- returns true.
-  } deriving (Show, Eq, Lift, Generic)
-instance Cacheable UpdPerm
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''UpdPerm)
-
-type UpdPermDef = PermDef UpdPerm
 type CreateUpdPerm = CreatePerm UpdPerm
-
 
 buildUpdPermInfo
   :: (QErrM m, TableCoreInfoRM m)
@@ -286,14 +235,6 @@ instance IsPerm UpdPerm where
   buildPermInfo tn fieldInfoMap (PermDef _ a _) =
     buildUpdPermInfo tn fieldInfoMap a
 
--- Delete permission
-data DelPerm
-  = DelPerm { dcFilter :: !BoolExp }
-  deriving (Show, Eq, Lift, Generic)
-instance Cacheable DelPerm
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DelPerm)
-
-type DelPermDef = PermDef DelPerm
 type CreateDelPerm = CreatePerm DelPerm
 
 buildDelPermInfo

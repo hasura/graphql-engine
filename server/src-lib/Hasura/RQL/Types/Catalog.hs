@@ -18,13 +18,13 @@ module Hasura.RQL.Types.Catalog
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict              as M
+import qualified Data.HashMap.Strict                 as M
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
-import           Hasura.Incremental               (Cacheable)
+import           Hasura.Incremental                  (Cacheable)
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.Types.Action
@@ -32,16 +32,17 @@ import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.EventTrigger
+import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.RemoteSchema
-import           Hasura.RQL.Types.SchemaCache
 import           Hasura.RQL.Types.ScheduledTrigger
+import           Hasura.RQL.Types.SchemaCache
 import           Hasura.Session
 import           Hasura.SQL.Types
 
-import           System.Cron.Types                    (CronSchedule(..))
+import           System.Cron.Types                   (CronSchedule (..))
 
 newtype CatalogForeignKey
   = CatalogForeignKey
@@ -169,13 +170,13 @@ type CatalogAction = ActionMetadata
 
 data CatalogCronTrigger
   = CatalogCronTrigger
-  { _cctName           :: !TriggerName
-  , _cctWebhookConf    :: !InputWebhook
-  , _cctCronSchedule   :: !CronSchedule
-  , _cctPayload        :: !(Maybe Value)
-  , _cctRetryConf      :: !(Maybe STRetryConf)
-  , _cctHeaderConf     :: !(Maybe [HeaderConf])
-  , _cctComment        :: !(Maybe Text)
+  { _cctName         :: !TriggerName
+  , _cctWebhookConf  :: !InputWebhook
+  , _cctCronSchedule :: !CronSchedule
+  , _cctPayload      :: !(Maybe Value)
+  , _cctRetryConf    :: !(Maybe STRetryConf)
+  , _cctHeaderConf   :: !(Maybe [HeaderConf])
+  , _cctComment      :: !(Maybe Text)
   } deriving (Show, Eq, Generic)
 instance NFData CatalogCronTrigger
 instance Cacheable CatalogCronTrigger

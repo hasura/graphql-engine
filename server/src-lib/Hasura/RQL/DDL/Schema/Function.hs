@@ -181,17 +181,6 @@ newtype TrackFunction
   { tfName :: QualifiedFunction}
   deriving (Show, Eq, FromJSON, ToJSON, Lift)
 
-data FunctionConfig
-  = FunctionConfig
-  { _fcSessionArgument :: !(Maybe FunctionArgName)
-  } deriving (Show, Eq, Generic, Lift)
-instance NFData FunctionConfig
-instance Cacheable FunctionConfig
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields = True} ''FunctionConfig)
-
-emptyFunctionConfig :: FunctionConfig
-emptyFunctionConfig = FunctionConfig Nothing
-
 -- | Track function, Phase 1:
 -- Validate function tracking operation. Fails if function is already being
 -- tracked, or if a table with the same name is being tracked.
@@ -239,19 +228,6 @@ runTrackFunc
 runTrackFunc (TrackFunction qf)= do
   trackFunctionP1 qf
   trackFunctionP2 qf emptyFunctionConfig
-
-data TrackFunctionV2
-  = TrackFunctionV2
-  { _tfv2Function      :: !QualifiedFunction
-  , _tfv2Configuration :: !FunctionConfig
-  } deriving (Show, Eq, Lift, Generic)
-$(deriveToJSON (aesonDrop 5 snakeCase) ''TrackFunctionV2)
-
-instance FromJSON TrackFunctionV2 where
-  parseJSON = withObject "Object" $ \o ->
-    TrackFunctionV2
-    <$> o .: "function"
-    <*> o .:? "configuration" .!= emptyFunctionConfig
 
 runTrackFunctionV2
   :: ( QErrM m, CacheRWM m, HasSystemDefined m

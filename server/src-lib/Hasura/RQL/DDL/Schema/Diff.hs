@@ -22,7 +22,7 @@ module Hasura.RQL.DDL.Schema.Diff
   ) where
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types
+import           Hasura.RQL.Types         hiding (tmComputedFields, tmTable)
 import           Hasura.RQL.Types.Catalog
 import           Hasura.SQL.Types
 

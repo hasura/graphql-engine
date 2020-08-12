@@ -73,8 +73,8 @@ runClearMetadata _ = do
 
 applyQP1
   :: (QErrM m)
-  => ReplaceMetadata -> m ()
-applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections
+  => Metadata -> m ()
+applyQP1 (Metadata _ tables functionsMeta schemas collections
           allowlist _ actions cronTriggers) = do
   withPathK "tables" $ do
 
@@ -82,8 +82,8 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections
 
     -- process each table
     void $ indexedForM tables $ \table -> withTableName (table ^. tmTable) $ do
-      let allRels  = map Relationship.rdName (table ^. tmObjectRelationships) <>
-                     map Relationship.rdName (table ^. tmArrayRelationships)
+      let allRels  = map rdName (table ^. tmObjectRelationships) <>
+                     map rdName (table ^. tmArrayRelationships)
 
           insPerms = map Permission.pdRole $ table ^. tmInsertPermissions
           selPerms = map Permission.pdRole $ table ^. tmSelectPermissions
@@ -107,7 +107,7 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections
       FMVersion1 qualifiedFunctions ->
         checkMultipleDecls "functions" qualifiedFunctions
       FMVersion2 functionsV2 ->
-        checkMultipleDecls "functions" $ map Schema._tfv2Function functionsV2
+        checkMultipleDecls "functions" $ map _tfv2Function functionsV2
 
   withPathK "remote_schemas" $
     checkMultipleDecls "remote schemas" $ map _arsqName schemas
@@ -136,19 +136,19 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections
     getDups l =
       l L.\\ HS.toList (HS.fromList l)
 
-applyQP2 :: (CacheRWM m, MonadTx m, HasSystemDefined m) => ReplaceMetadata -> m EncJSON
+applyQP2 :: (CacheRWM m, MonadTx m, HasSystemDefined m) => Metadata -> m EncJSON
 applyQP2 replaceMetadata = do
   clearUserMetadata
   saveMetadata replaceMetadata
   buildSchemaCacheStrict
   pure successMsg
 
-saveMetadata :: (MonadTx m, HasSystemDefined m) => ReplaceMetadata -> m ()
-saveMetadata (ReplaceMetadata _ tables functionsMeta
+saveMetadata :: (MonadTx m, HasSystemDefined m) => Metadata -> m ()
+saveMetadata (Metadata _ tables functionsMeta
               schemas collections allowlist customTypes actions cronTriggers) = do
 
   withPathK "tables" $ do
-    indexedForM_ tables $ \TableMeta{..} -> do
+    indexedForM_ tables $ \TableMetadata{..} -> do
       -- Save table
       saveTableToCatalog _tmTable _tmIsEnum _tmConfiguration
 
@@ -163,7 +163,7 @@ saveMetadata (ReplaceMetadata _ tables functionsMeta
       -- Computed Fields
       withPathK "computed_fields" $
         indexedForM_ _tmComputedFields $
-          \(ComputedFieldMeta name definition comment) ->
+          \(ComputedFieldMetadata name definition comment) ->
             ComputedField.addComputedFieldToCatalog $
               ComputedField.AddComputedField _tmTable name definition comment
 
@@ -188,9 +188,9 @@ saveMetadata (ReplaceMetadata _ tables functionsMeta
   -- sql functions
   withPathK "functions" $ case functionsMeta of
     FMVersion1 qualifiedFunctions -> indexedForM_ qualifiedFunctions $
-      \qf -> Schema.saveFunctionToCatalog qf Schema.emptyFunctionConfig
+      \qf -> Schema.saveFunctionToCatalog qf emptyFunctionConfig
     FMVersion2 functionsV2 -> indexedForM_ functionsV2 $
-      \(Schema.TrackFunctionV2 function config) -> Schema.saveFunctionToCatalog function config
+      \(TrackFunctionV2 function config) -> Schema.saveFunctionToCatalog function config
 
   -- query collections
   systemDefined <- askSystemDefined
@@ -235,12 +235,12 @@ runReplaceMetadata
      , CacheRWM m
      , HasSystemDefined m
      )
-  => ReplaceMetadata -> m EncJSON
+  => Metadata -> m EncJSON
 runReplaceMetadata q = do
   applyQP1 q
   applyQP2 q
 
-fetchMetadata :: Q.TxE QErr ReplaceMetadata
+fetchMetadata :: Q.TxE QErr Metadata
 fetchMetadata = do
   tables <- Q.catchE defaultTxErrorHandler fetchTables
   let tableMetaMap = HMIns.fromList . flip map tables $
@@ -305,7 +305,7 @@ fetchMetadata = do
   cronTriggers <- fetchCronTriggers
 
 
-  return $ ReplaceMetadata currentMetadataVersion
+  return $ Metadata currentMetadataVersion
                            (HMIns.elems postRelMap)
                            functions
                            remoteSchemas
@@ -331,7 +331,7 @@ fetchMetadata = do
 
     relRowToDef (sn, tn, rn, _, Q.AltJ rDef, mComment) = do
       using <- decodeValue rDef
-      return (QualifiedObject sn tn, Relationship.RelDef rn using mComment)
+      return (QualifiedObject sn tn, RelDef rn using mComment)
 
     mkTriggerMetaDefs = mapM trigRowToDef
 
@@ -378,7 +378,7 @@ fetchMetadata = do
                 ORDER BY function_schema ASC, function_name ASC
                     |] () False
       pure $ flip map l $ \(sn, fn, Q.AltJ config) ->
-                            Schema.TrackFunctionV2 (QualifiedObject sn fn) config
+                            TrackFunctionV2 (QualifiedObject sn fn) config
 
     fetchCollections =
       map fromRow <$> Q.listQE defaultTxErrorHandler [Q.sql|
@@ -406,7 +406,7 @@ fetchMetadata = do
              |] () False
       pure $ flip map r $ \(schema, table, name, Q.AltJ definition, comment) ->
                           ( QualifiedObject schema table
-                          , ComputedFieldMeta name definition comment
+                          , ComputedFieldMetadata name definition comment
                           )
 
     fetchCronTriggers =
@@ -487,7 +487,7 @@ runExportMetadata
   :: (QErrM m, MonadTx m)
   => ExportMetadata -> m EncJSON
 runExportMetadata _ =
-  (AO.toEncJSON . replaceMetadataToOrdJSON) <$> liftTx fetchMetadata
+  (AO.toEncJSON . metadataToOrdJSON) <$> liftTx fetchMetadata
 
 runReloadMetadata :: (QErrM m, CacheRWM m) => ReloadMetadata -> m EncJSON
 runReloadMetadata (ReloadMetadata reloadRemoteSchemas) = do

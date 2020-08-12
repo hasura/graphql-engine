@@ -30,6 +30,16 @@ computedFieldNameToText = unNonEmptyText . unComputedFieldName
 fromComputedField :: ComputedFieldName -> FieldName
 fromComputedField = FieldName . computedFieldNameToText
 
+data ComputedFieldDefinition
+  = ComputedFieldDefinition
+  { _cfdFunction        :: !QualifiedFunction
+  , _cfdTableArgument   :: !(Maybe FunctionArgName)
+  , _cfdSessionArgument :: !(Maybe FunctionArgName)
+  } deriving (Show, Eq, Lift, Generic)
+instance NFData ComputedFieldDefinition
+instance Cacheable ComputedFieldDefinition
+$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields = True} ''ComputedFieldDefinition)
+
 -- | The function table argument is either the very first argument or the named
 -- argument with an index. The index is 0 if the named argument is the first.
 data FunctionTableArgument

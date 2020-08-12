@@ -115,7 +115,7 @@ data RQLQueryV1
 
   | RQRunSql !RunSQL
 
-  | RQReplaceMetadata !ReplaceMetadata
+  | RQReplaceMetadata !Metadata
   | RQExportMetadata !ExportMetadata
   | RQClearMetadata !ClearMetadata
   | RQReloadMetadata !ReloadMetadata
@@ -205,7 +205,7 @@ runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query
            & peelRun runCtx pgExecCtx accessMode (Just traceCtx)
            & runExceptT
            & liftIO
-    pure (either 
+    pure (either
       ((, mempty) . Left)
       (\((js, meta), rsc, ci) -> (Right (js, rsc, ci), meta)) a)
   either throwError withReload resE

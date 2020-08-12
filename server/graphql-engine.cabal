@@ -50,12 +50,12 @@ common common-exe
     -- than that is highly unlikely to ever be helpful. More benchmarking would be useful to know if
     -- this is the right decision. It’s possible it would better to just turn it off completely.
     --
-    -- `-kc8K` helps limit memory consumption in websockets (perhaps elsewhere) by making the 
-    -- cost of a thread's first (and probably only) stack overflow less severe. 
-    -- See:https://github.com/hasura/graphql-engine/issues/5190 
+    -- `-kc8K` helps limit memory consumption in websockets (perhaps elsewhere) by making the
+    -- cost of a thread's first (and probably only) stack overflow less severe.
+    -- See:https://github.com/hasura/graphql-engine/issues/5190
     --
-    -- `--disable-delayed-os-memory-return` seems to help lower reported residency, in particular 
-    -- in situations where we seem to be dealing with haskell heap fragmentation. This is more a 
+    -- `--disable-delayed-os-memory-return` seems to help lower reported residency, in particular
+    -- in situations where we seem to be dealing with haskell heap fragmentation. This is more a
     -- workaround for limitations in monitoring tools than anything...
     "-with-rtsopts=-N -I0 -T -qn2 -kc8K --disable-delayed-os-memory-return"
 
@@ -211,13 +211,13 @@ library
                      , ghc-heap-view
 
                      , directory
-                     
+
                      , random
                      , mmorph
                      , http-api-data
                      , lens-aeson
                      , safe
-                     
+
                      , semigroups >= 0.19.1
 
                      -- scheduled triggers
@@ -323,7 +323,6 @@ library
                      , Hasura.RQL.DDL.QueryCollection
                      , Hasura.RQL.DDL.Relationship
                      , Hasura.RQL.DDL.Relationship.Rename
-                     , Hasura.RQL.DDL.Relationship.Types
                      , Hasura.RQL.DDL.RemoteRelationship
                      , Hasura.RQL.DDL.RemoteRelationship.Validate
                      , Hasura.RQL.DDL.RemoteSchema
@@ -369,6 +368,7 @@ library
                      , Hasura.RQL.Types.Metadata
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.QueryCollection
+                     , Hasura.RQL.Types.Relationship
                      , Hasura.RQL.Types.RemoteRelationship
                      , Hasura.RQL.Types.RemoteSchema
                      , Hasura.RQL.Types.Run

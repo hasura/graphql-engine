@@ -26,20 +26,6 @@ import           Hasura.SQL.Value
 
 import qualified Database.PG.Query          as Q
 
-data PermColSpec
-  = PCStar
-  | PCCols ![PGCol]
-  deriving (Show, Eq, Lift, Generic)
-instance Cacheable PermColSpec
-
-instance FromJSON PermColSpec where
-  parseJSON (String "*") = return PCStar
-  parseJSON x            = PCCols <$> parseJSON x
-
-instance ToJSON PermColSpec where
-  toJSON (PCCols cols) = toJSON cols
-  toJSON PCStar        = "*"
-
 convColSpec :: FieldInfoMap FieldInfo -> PermColSpec -> [PGCol]
 convColSpec _ (PCCols cols) = cols
 convColSpec cim PCStar      = map pgiColumn $ getCols cim
@@ -131,25 +117,6 @@ dropPermFromCatalog (QualifiedObject sn tn) rn pt =
                 |] (sn, tn, rn, permTypeToCode pt) True
 
 type CreatePerm a = WithTable (PermDef a)
-
-data PermDef a =
-  PermDef
-  { pdRole       :: !RoleName
-  , pdPermission :: !a
-  , pdComment    :: !(Maybe T.Text)
-  } deriving (Show, Eq, Lift, Generic)
-instance (Cacheable a) => Cacheable (PermDef a)
-$(deriveFromJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''PermDef)
-
-instance (ToJSON a) => ToJSON (PermDef a) where
-  toJSON = object . toAesonPairs
-
-instance (ToJSON a) => ToAesonPairs (PermDef a) where
- toAesonPairs (PermDef rn perm comment) =
-  [ "role" .= rn
-  , "permission" .= perm
-  , "comment" .= comment
-  ]
 
 data CreatePermP1Res a
   = CreatePermP1Res

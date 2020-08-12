@@ -34,16 +34,6 @@ import qualified Data.Sequence                      as Seq
 import qualified Database.PG.Query                  as Q
 import qualified Language.GraphQL.Draft.Syntax      as G
 
-data ComputedFieldDefinition
-  = ComputedFieldDefinition
-  { _cfdFunction        :: !QualifiedFunction
-  , _cfdTableArgument   :: !(Maybe FunctionArgName)
-  , _cfdSessionArgument :: !(Maybe FunctionArgName)
-  } deriving (Show, Eq, Lift, Generic)
-instance NFData ComputedFieldDefinition
-instance Cacheable ComputedFieldDefinition
-$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields = True} ''ComputedFieldDefinition)
-
 data AddComputedField
   = AddComputedField
   { _afcTable      :: !QualifiedTable

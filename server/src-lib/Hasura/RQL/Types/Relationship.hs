@@ -1,12 +1,12 @@
-module Hasura.RQL.DDL.Relationship.Types where
+module Hasura.RQL.Types.Relationship where
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
+import           Hasura.RQL.Types.Common
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
