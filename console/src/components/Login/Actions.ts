@@ -5,7 +5,7 @@ import { ADMIN_SECRET_HEADER_KEY, CLI_CONSOLE_MODE } from '../../constants';
 import requestAction from '../../utils/requestAction';
 import { Dispatch } from '../../types';
 import globals from '../../Globals';
-// Type deffinition for the verifyLogin Action
+
 type VerifyLoginOptions = {
   adminSecret: string;
   shouldPersist: boolean;
