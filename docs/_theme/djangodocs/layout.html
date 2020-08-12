@@ -696,7 +696,7 @@
                 </div>
                 <div class="feedback_wrapper">
                   <div id="feedback" class="feedback">
-                    <span>Was this page helpful?</span>
+                    <div class="feedback-content">Was this page helpful?</div>
                     <!-- inline svgs to allow color manipulation on hover -->
                     <div id="thumb_up_button" class="display_inl actions thumb_up">
                       <img src="{{ pathto('_images/layout/hasura-happy.svg', 1) }}" alt='Hasura'/>
@@ -748,23 +748,23 @@
               <div class="subscribe-form-title">
                 Stay up to date with Hasura product and security news
               </div>
-              <form id="floating_mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate post-subscription-form newsletter-form" target="_blank" rel="noopener" novalidate>
+              <form id="floating_mc-embedded-subscribe-form" name="floating_mc-embedded-subscribe-form" class="validate post-subscription-form floating-newsletter-form" target="_blank" rel="noopener" novalidate>
                 <div class="floating-input-box">
                   <input type="email" name="EMAIL" id="floating-mce-EMAIL" aria-label="Email" placeholder="Your Email Address" pattern="^([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x22([^\x0d\x22\x5c\x80-\xff]|\x5c[\x00-\x7f])*\x22)(\x2e([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x22([^\x0d\x22\x5c\x80-\xff]|\x5c[\x00-\x7f])*\x22))*\x40([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x5b([^\x0d\x5b-\x5d\x80-\xff]|\x5c[\x00-\x7f])*\x5d)(\x2e([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x5b([^\x0d\x5b-\x5d\x80-\xff]|\x5c[\x00-\x7f])*\x5d))*(\.\w{2,})+$" required>
-                  <img id='subscribe-default' class='labelIconGray' src="{{ pathto('_images/layout/email.svg', 1) }}" alt='Email' />
-                  <img id='subscribe-warning' class='labelIconGray hide' src="{{ pathto('_images/layout/warning.svg', 1) }}" alt='Email' />
-                  <img id='subscribe-error' class='labelIconGray hide' src="{{ pathto('_images/layout/error.svg', 1) }}" alt='Email' />
+                  <img id='floating-subscribe-default' class='labelIconGray' src="{{ pathto('_images/layout/email.svg', 1) }}" alt='Email' />
+                  <img id='floating-subscribe-warning' class='labelIconGray hide' src="{{ pathto('_images/layout/warning.svg', 1) }}" alt='Email' />
+                  <img id='floating-subscribe-error' class='labelIconGray hide' src="{{ pathto('_images/layout/error.svg', 1) }}" alt='Email' />
                 </div>
-                <div id="mce-responses" class="clear display-inline">
-                  <div class="mce-error-response response error-message hide">
+                <div id="floating-mce-responses" class="clear display-inline">
+                  <div class="floating-mce-error-response response error-message hide">
                   </div>
-                  <div class="mce-success-response response success-message hide">
+                  <div class="floating-mce-success-response response success-message hide">
                   </div>
                 </div>
                 <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_9b63e92a98ecdc99732456b0e_f5c4f66bcf" tabindex="-1" value=""></div>
                 <div class="clear submit-box">
                   <input type="submit" disabled="true" value="Subscribe" name="subscribe" id="floating-mc-embedded-subscribe" class="button">
-                  <div id='success-message' class="success hide">
+                  <div id='floating-success-message' class="success hide">
                     <img src="{{ pathto('_images/layout/sucess-tick.svg', 1) }}" alt='Success tick'/>
                     Thank you for subscribing.
                   </div>

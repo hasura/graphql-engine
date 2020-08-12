@@ -5,8 +5,13 @@ window.hdocs = (function () {
       var currentScrollPos = window.pageYOffset;
       var mainWrapper = document.getElementById("main_container_viewport");
       var floatingSubscribeVisible = document.getElementById('floating-subscribe')
+      const subscribeConsent = window.localStorage.getItem("subscribeConsent")
       if (currentScrollPos > 40 && mainWrapper !== null) {
-        floatingSubscribeVisible.className = 'floatingSubscribe floatingSubscribeShow'
+        if (subscribeConsent !== "yes") {
+          floatingSubscribeVisible.className = 'floatingSubscribe floatingSubscribeShow'
+        } else {
+          floatingSubscribeVisible.className = 'floatingSubscribe'
+        }
       } else {
         floatingSubscribeVisible.className = 'floatingSubscribe'
       }
@@ -92,6 +97,7 @@ window.hdocs = (function () {
       }
     },
     closeFloatingSubscribe: function() {
+      window.localStorage.setItem('subscribeConsent', 'yes');
       document.getElementById('floating-subscribe').classList.remove('floatingSubscribeShow');
     },
     chatOpen: function() {

@@ -140,6 +140,7 @@ p {
   align-items: center;
   flex: 1;
   margin-bottom: 0;
+  position: relative;
 }
 #floating_mc-embedded-subscribe-form .floating-input-box{
   flex: 1;
@@ -159,7 +160,7 @@ p {
   padding-right: 0px;
   padding-bottom: 40px;
 }
-#mc_embed_signup form {
+#mc_embed_signup form, #floating_mc_embed_signup form {
   display: flex !important;
   align-items: center !important;
   padding: 0 0 0 0 !important;
@@ -175,7 +176,7 @@ p {
 #mc_embed_signup .clear {clear:both;}
 
 #mc_embed_signup div#mce-responses {float:left; top:-1.4em; padding:0em .5em 0em .5em; overflow:hidden; width:90%; margin: 0 5%; clear: both;}
-#mc_embed_signup div.response {margin:1em 0; padding:1em .5em .5em 0; font-weight:bold; float:left; top:-1.5em; z-index:1; width:80%;}
+#mc_embed_signup div.response, #floating_mc_embed_signup div.response {margin:1em 0; padding:1em .5em .5em 0; font-weight:bold; float:left; top:-1.5em; z-index:1; width:80%;}
 #mc_embed_signup #mce-error-response {display:none;}
 #mc_embed_signup #mce-success-response {color:#529214; display:none;}
 #mc_embed_signup label.error {display:block; float:none; width:auto; margin-left:1.05em; text-align:left; padding:.5em 0;}
@@ -284,7 +285,7 @@ p {
 .submit-box input:focus {
   outline: none;
 }
-#mce-responses .error-message, #mce-responses .success-message {
+#mce-responses .error-message, #mce-responses .success-message, #floating-mce-responses .error-message, #floating-mce-responses .success-message {
   padding: 0px 0px !important;
   font-size: 12px !important;
   position: absolute;
@@ -294,9 +295,14 @@ p {
   color: #fff !important;
   font-weight: 400 !important;
 }
-
+#floating-mce-responses .error-message, #floating-mce-responses .success-message {
+  color: #1B2738 !important;
+}
 #mce-responses .error-message a, #mce-responses .success-message a {
   color: #fff !important;
+}
+#floating-mce-responses .error-message a, #floating-mce-responses .success-message a {
+  color: #1B2738 !important;
 }
 #content_inner_wrapper {
   width: 75% !important;
@@ -645,7 +651,7 @@ article ol ol {
   align-items: center;
   margin-left: 40px;
   margin-right: 40px;
-  margin-bottom: 46px;
+  padding-bottom: 46px;
 }
 .feedback_wrapper {
   border: 1px solid #E4E4E4;
@@ -663,7 +669,7 @@ article ol ol {
   align-items: center;
   width: 260px;
 }
-.feedback_wrapper .feedback span {
+.feedback_wrapper .feedback .feedback-content {
   padding-left: 16px;
   padding-right: 4px;
 }
@@ -1146,7 +1152,7 @@ article ol ol {
   }
   #mc_embed_signup .subscribe-form-content {
     padding-right: 0;
-    text-align: center;
+    text-align: left;
   }
   #mce-responses .error-message, #mce-responses .success-message {
     top: 34px !important;
@@ -1163,10 +1169,17 @@ article ol ol {
   }
   #mc_embed_signup .subscribe-form-content {
     padding-right: 0;
-    text-align: center;
+    text-align: left;
   }
   #mc_embed_signup form {
     padding-top: 10px !important;
+    display: block !important;
+  }
+  .full-width {
+    padding-bottom: 15px;
+  }
+  .submit-box {
+    margin-left: 0;
   }
   .submit-box input {
     padding: 0 4px !important;
@@ -1193,9 +1206,42 @@ article ol ol {
   .footer-hasura-custom {
     display: block;
   }
-
+  .versionTxt {
+    display: none;
+  }
+  .versionTxt select {
+    margin-right: 0;
+    margin-left: 8px;
+  }
   .footer-hasura-custom .footer_logo {
     margin-right: 0;
+  }
+  .nav-feedback-wrapper {
+    display: block;
+    margin-left: 0;
+    margin-right: 0;
+  }
+  .pagination-nav {
+    margin-bottom: 20px;
+  }
+  .feedback_wrapper {
+    margin-left: 0;
+    width: 100%;
+  }
+  .feedback_wrapper .feedback {
+    width: 100%;
+  }
+  .feedback_wrapper .feedback .feedback-content {
+    flex: 1;
+  }
+  .detailed_feedback_wd {
+    width: 100% !important;
+  }
+  .subscribe-form-wrapper {
+    width: 100%;
+  }
+  .floatingSubscribe {
+    display: none;
   }
 }
 
@@ -1808,13 +1854,14 @@ article ol ol {
      margin-right: 0;
      margin-left: 8px;
    }
+   .subscribeNewsletterWrapper {
+     width: 100%;
+   }
+   .subscribe-form-wrapper {
+     width: 100%;
+   }
 }
- @media (max-width: 767px) {
-  .versionTxt select {
-    margin-right: 0;
-    margin-left: 8px;
-  }
-}
+
  @media (max-width: 359px) {
 	 .headerWrapper .navLeft .gitHubBtn {
 		 display: none;
@@ -2197,5 +2244,7 @@ article ol ol {
   	 padding-top: 20px;
   	 justify-content: center;
   }
-
+  .containerWrapper {
+    padding: 0 32px;
+  }
 }
