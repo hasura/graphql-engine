@@ -109,11 +109,18 @@ p {
 .floatingSubscribeWrapper {
   padding: 56px 0;
   position: relative;
+  width: 930px;
+  margin: 0 auto;
 }
 .floatingSubscribe .close-floating-subscribe {
   position: absolute;
   right: 40px;
   top: 28px;
+  cursor: pointer;
+  opacity: .7;
+}
+.floatingSubscribe .close-floating-subscribe:hover {
+  opacity: 1;
 }
 .subscribe-form-wrapper {
   border-radius: 2px;
@@ -207,7 +214,7 @@ p {
   color: #717780 !important;
   font-weight: 400 !important;
   padding: 12px 16px 12px 50px !important;
-  height: 62px !important;
+  height: 57px !important;
   background-color: #fff !important;
   width: 100% !important;
 }
@@ -238,8 +245,7 @@ p {
   font-size: 16px;
 }
 .submit-box {
-  width: 31%!important;
-  margin-left: 4%;
+  margin-left: 16px;
   display: inline-block;
 }
 .submit-box input {
@@ -254,7 +260,7 @@ p {
   width: 200px !important;
   background: linear-gradient(180deg,#1b2738,#1b2738) !important;
   color: #fff !important;
-  height: 62px !important;
+  height: 57px !important;
 }
 .submit-box  .success {
   font-weight: normal;
@@ -776,7 +782,7 @@ article ol ol {
 
 #sidebar {
   background-color: #001934;
-  width: 24% !important;
+  width: 348px !important;
   height: 100vh;
   overflow-y: auto;
   padding-left: 0 !important;
@@ -1198,11 +1204,12 @@ article ol ol {
     max-width: calc(111% + 10px);
     min-width: calc(111% + 10px);  /* 1 / width(input_search_box) + 10px */
   }
-
   .api-tabs .ui.tab {
     padding: 10px
   }
-
+  .floatingSubscribeWrapper {
+    width: 100%;
+  }
   .footer-hasura-custom {
     display: block;
   }
@@ -1239,9 +1246,6 @@ article ol ol {
   }
   .subscribe-form-wrapper {
     width: 100%;
-  }
-  .floatingSubscribe {
-    display: none;
   }
 }
 
@@ -1860,6 +1864,9 @@ article ol ol {
    .subscribe-form-wrapper {
      width: 100%;
    }
+   .floatingSubscribeWrapper {
+     width: 100%;
+   }
 }
 
  @media (max-width: 359px) {
@@ -1964,6 +1971,9 @@ article ol ol {
   }
 }
 @media (max-width: 1049px) {
+  .floatingSubscribe {
+    display: none;
+  }
   .gitHubBtnMobile {
   	 display: block;
   	 position: absolute;
