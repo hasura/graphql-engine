@@ -32,7 +32,7 @@ Examples
     # Add a name for the new squashed migration
     hasura migrate squash --name "<name>" --from 123
     
-    # squash all migrations from version 123 up to 456
+    # squash all migrations from version 123 up to version 456:
     hasura migrate squash --name "<name>" --from 123 --to 456
 
 Options
