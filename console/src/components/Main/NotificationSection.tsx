@@ -381,14 +381,14 @@ const HasuraNotifications: React.FC<
   ...props
 }) => {
   const { dispatch } = props;
+  const dropDownRef = React.useRef<HTMLDivElement>(null);
+  const wrapperRef = React.useRef<HTMLDivElement>(null);
   // NOTE: Multiple useState's here maybe use useReducer for those
+  const [latestVersion, setLatestVersion] = React.useState(serverVersion);
   const [
     displayNewVersionNotification,
     setDisplayNewVersionNotification,
   ] = React.useState(false);
-  const [latestVersion, setLatestVersion] = React.useState(serverVersion);
-  const dropDownRef = React.useRef<HTMLDivElement>(null);
-  const wrapperRef = React.useRef(null);
   const [opened, updateOpenState] = React.useState(false);
   const [numberNotifications, updateNumberNotifications] = React.useState(0);
   const [numDisplayed, updateNumDisplayed] = React.useState(20);
@@ -495,6 +495,10 @@ const HasuraNotifications: React.FC<
       'main:console_notifications',
       JSON.stringify(consoleNotifications)
     );
+    // to clear the beta-version update if you mark all as read
+    if (!checkStableVersion(latestVersion) && displayNewVersionNotification) {
+      optOutCallback();
+    }
   };
 
   const onClickOutside = () => {
