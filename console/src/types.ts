@@ -8,17 +8,21 @@ import { RAEvents } from './components/Services/Events/types';
 import { ConsoleNotification } from './components/Main/ConsoleNotification';
 import { Nullable } from './components/Common/utils/tsUtils';
 
+export type UserTypes = 'admin' | string;
+
 export type NotificationsState = {
   read: 'all' | 'default' | 'error' | string[];
   date: string | null; // ISO String
   showBadge: boolean;
 };
 
+export type TelemetryNotificationsState = Record<UserTypes, NotificationsState>;
+
 export type ConsoleState = {
   console_opts: Nullable<{
     telemetryNotificationShown?: boolean;
     disablePreReleaseUpdateNotifications?: boolean;
-    console_notifications?: NotificationsState;
+    console_notifications?: TelemetryNotificationsState;
   }>;
   hasura_uuid: string;
 };
