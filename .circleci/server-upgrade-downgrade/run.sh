@@ -168,6 +168,8 @@ get_server_upgrade_tests() {
 		-m 'allow_server_upgrade_test and not skip_server_upgrade_test' \
 		--deselect test_schema_stitching.py::TestRemoteSchemaBasic::test_introspection \
 		--deselect test_schema_stitching.py::TestAddRemoteSchemaCompareRootQueryFields::test_schema_check_arg_default_values_and_field_and_arg_types \
+                --deselect test_graphql_mutations.py::TestGraphqlInsertPermission::test_user_with_no_backend_privilege \
+                --deselect test_graphql_mutations.py::TestGraphqlInsertPermission::test_backend_user_no_admin_secret_fail \
 		"${args[@]}" 1>/dev/null 2>/dev/null
 	set +x
 	cat "$tmpfile"
@@ -197,6 +199,7 @@ run_server_upgrade_pytest() {
 		pytest --hge-urls "${HGE_URL}"  --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" \
 			--avoid-error-message-checks "$@" \
 			-m 'allow_server_upgrade_test and not skip_server_upgrade_test' \
+                        --deselect test_graphql_mutations.py::TestGraphqlInsertPermission::test_user_with_no_backend_privilege \
 			-v $tests_to_run
 		set +x
 		cd -
