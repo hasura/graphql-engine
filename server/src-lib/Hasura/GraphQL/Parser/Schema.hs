@@ -492,19 +492,19 @@ instance Eq (TypeInfo k) where
 
 -- | Like '==', but can compare 'TypeInfo's of different kinds.
 eqTypeInfo :: TypeInfo k1 -> TypeInfo k2 -> Bool
-eqTypeInfo TIScalar                TIScalar                = True
-eqTypeInfo (TIEnum values1)        (TIEnum values2)
+eqTypeInfo  TIScalar                       TIScalar            = True
+eqTypeInfo (TIEnum values1)               (TIEnum values2)
   = Set.fromList (toList values1) == Set.fromList (toList values2)
 -- NB the case for input objects currently has quadratic complexity, which is
 -- probably avoidable. HashSets should be able to get this down to
 -- O(n*log(n)). But this requires writing some Hashable instances by hand
 -- because we use some existential types and GADTs.
-eqTypeInfo (TIInputObject ioi1) (TIInputObject ioi2)       = ioi1 == ioi2
-eqTypeInfo (TIObject oi1) (TIObject oi2)                   = oi1 == oi2
-eqTypeInfo (TIInterface ii1) (TIInterface ii2)             = ii1 == ii2
-eqTypeInfo (TIUnion (UnionInfo objects1))       (TIUnion (UnionInfo objects2))
-  =  Set.fromList (fmap dName objects1) == Set.fromList (fmap dName objects2)
-eqTypeInfo _                       _                       = False
+eqTypeInfo (TIInputObject ioi1)           (TIInputObject ioi2) = ioi1 == ioi2
+eqTypeInfo (TIObject oi1)                 (TIObject oi2)       = oi1 == oi2
+eqTypeInfo (TIInterface ii1)              (TIInterface ii2)    = ii1 == ii2
+eqTypeInfo (TIUnion (UnionInfo objects1)) (TIUnion (UnionInfo objects2))
+  = Set.fromList (fmap dName objects1) == Set.fromList (fmap dName objects2)
+eqTypeInfo _                              _                    = False
 
 getObjectInfo :: Type k -> Maybe (Definition ObjectInfo)
 getObjectInfo = traverse getTI . (^.definitionLens)
