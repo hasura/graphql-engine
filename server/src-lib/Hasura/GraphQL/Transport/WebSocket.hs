@@ -361,9 +361,10 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
     E.MutationExecutionPlan mutationPlan ->
       case mutationPlan of
-        E.ExecStepDB (tx, _) -> Tracing.trace "pg" $
+        E.ExecStepDB (tx, _) -> Tracing.trace "pg" do
+          ctx <- Tracing.currentContext
           execQueryOrMut timerTot Telem.Mutation telemCacheHit Nothing requestId $
-            Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withUserInfo userInfo) tx
+            Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx . withUserInfo userInfo) tx
         E.ExecStepRemote (rsi, opDef, _varValsM) ->
           runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
         E.ExecStepRaw (name, json) ->
@@ -394,7 +395,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   --   E.GExPRemote rsi opDef  ->
   --     runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
   where
-    telemTransport = Telem.HTTP
+    telemTransport = Telem.WebSocket
     execQueryOrMut
       :: ExceptT () m DiffTime
       -> Telem.QueryType
