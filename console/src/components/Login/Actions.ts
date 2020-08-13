@@ -3,7 +3,16 @@ import { UPDATE_DATA_HEADERS } from '../Services/Data/DataActions';
 import { saveAdminSecretState } from '../AppState';
 import { ADMIN_SECRET_HEADER_KEY, CLI_CONSOLE_MODE } from '../../constants';
 import requestAction from '../../utils/requestAction';
+import { Dispatch } from '../../types';
 import globals from '../../Globals';
+
+type VerifyLoginOptions = {
+  adminSecret: string;
+  shouldPersist: boolean;
+  successCallback: () => void;
+  errorCallback: (err: Error) => void;
+  dispatch: Dispatch;
+};
 
 export const verifyLogin = ({
   adminSecret,
@@ -11,9 +20,9 @@ export const verifyLogin = ({
   successCallback,
   errorCallback,
   dispatch,
-}) => {
+}: VerifyLoginOptions) => {
   const url = Endpoints.getSchema;
-  const requestOptions = {
+  const requestOptions: RequestInit = {
     credentials: globalCookiePolicy,
     method: 'POST',
     headers: {
