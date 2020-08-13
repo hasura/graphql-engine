@@ -171,26 +171,32 @@ data RemoteRelationshipMeta
   } deriving (Show, Eq, Lift, Generic)
 $(deriveJSON (aesonDrop 4 snakeCase) ''RemoteRelationshipMeta)
 
+type Relationships a = M.HashMap RelName a
+type ComputedFields = M.HashMap ComputedFieldName ComputedFieldMetadata
+type RemoteRelationships = M.HashMap RemoteRelationshipName RemoteRelationshipMeta
+type Permissions a = M.HashMap RoleName a
+type EventTriggers = M.HashMap TriggerName EventTriggerConf
+
 data TableMetadata
   = TableMetadata
   { _tmTable               :: !QualifiedTable
   , _tmIsEnum              :: !Bool
   , _tmConfiguration       :: !TableConfig
-  , _tmObjectRelationships :: ![ObjRelDef]
-  , _tmArrayRelationships  :: ![ArrRelDef]
-  , _tmComputedFields      :: ![ComputedFieldMetadata]
-  , _tmRemoteRelationships :: ![RemoteRelationshipMeta]
-  , _tmInsertPermissions   :: ![InsPermDef]
-  , _tmSelectPermissions   :: ![SelPermDef]
-  , _tmUpdatePermissions   :: ![UpdPermDef]
-  , _tmDeletePermissions   :: ![DelPermDef]
-  , _tmEventTriggers       :: ![EventTriggerConf]
+  , _tmObjectRelationships :: !(Relationships ObjRelDef)
+  , _tmArrayRelationships  :: !(Relationships ArrRelDef)
+  , _tmComputedFields      :: !ComputedFields
+  , _tmRemoteRelationships :: !RemoteRelationships
+  , _tmInsertPermissions   :: !(Permissions InsPermDef)
+  , _tmSelectPermissions   :: !(Permissions SelPermDef)
+  , _tmUpdatePermissions   :: !(Permissions UpdPermDef)
+  , _tmDeletePermissions   :: !(Permissions DelPermDef)
+  , _tmEventTriggers       :: !EventTriggers
   } deriving (Show, Eq, Lift, Generic)
 $(makeLenses ''TableMetadata)
 
 mkTableMeta :: QualifiedTable -> Bool -> TableConfig -> TableMetadata
-mkTableMeta qt isEnum config =
-  TableMetadata qt isEnum config [] [] [] [] [] [] [] [] []
+mkTableMeta qt isEnum config = TableMetadata qt isEnum config
+  mempty mempty mempty mempty mempty mempty mempty mempty mempty
 
 instance FromJSON TableMetadata where
   parseJSON = withObject "Object" $ \o -> do
@@ -203,15 +209,15 @@ instance FromJSON TableMetadata where
      <$> o .: tableKey
      <*> o .:? isEnumKey .!= False
      <*> o .:? configKey .!= emptyTableConfig
-     <*> o .:? orKey .!= []
-     <*> o .:? arKey .!= []
-     <*> o .:? cfKey .!= []
-     <*> o .:? rrKey .!= []
-     <*> o .:? ipKey .!= []
-     <*> o .:? spKey .!= []
-     <*> o .:? upKey .!= []
-     <*> o .:? dpKey .!= []
-     <*> o .:? etKey .!= []
+     <*> (mapFromL rdName   <$> o .:? orKey .!= [])
+     <*> (mapFromL rdName   <$> o .:? arKey .!= [])
+     <*> (mapFromL _cfmName <$> o .:? cfKey .!= [])
+     <*> (mapFromL _rrmName <$> o .:? rrKey .!= [])
+     <*> (mapFromL pdRole   <$> o .:? ipKey .!= [])
+     <*> (mapFromL pdRole   <$> o .:? spKey .!= [])
+     <*> (mapFromL pdRole   <$> o .:? upKey .!= [])
+     <*> (mapFromL pdRole   <$> o .:? dpKey .!= [])
+     <*> (mapFromL etcName  <$> o .:? etKey .!= [])
 
     where
       tableKey = "table"
@@ -236,26 +242,36 @@ instance FromJSON TableMetadata where
                     , cfKey, rrKey
                     ]
 
+type Tables = M.HashMap QualifiedTable TableMetadata
+type Functions = M.HashMap QualifiedFunction TrackFunctionV2
+type RemoteSchemas = M.HashMap RemoteSchemaName AddRemoteSchemaQuery
+type QueryCollections = M.HashMap CollectionName CreateCollection
+type Allowlist = HS.HashSet CollectionReq
+type Actions = M.HashMap ActionName ActionMetadata
+type CronTriggers = M.HashMap TriggerName CronTriggerMetadata
+
 data FunctionsMetadata
-  = FMVersion1 ![QualifiedFunction]
-  | FMVersion2 ![TrackFunctionV2]
+  = FMVersion1 !(HS.HashSet QualifiedFunction)
+  | FMVersion2 !Functions
   deriving (Show, Eq, Lift, Generic)
 
 instance ToJSON FunctionsMetadata where
   toJSON (FMVersion1 qualifiedFunctions) = toJSON qualifiedFunctions
   toJSON (FMVersion2 functionsV2)        = toJSON functionsV2
 
+-- | A complete GraphQL Engine metadata representation to be stored,
+-- exported/replaced via metadata queries.
 data Metadata
   = Metadata
   { _metaVersion          :: !MetadataVersion
-  , _metaTables           :: ![TableMetadata]
+  , _metaTables           :: !Tables
   , _metaFunctions        :: !FunctionsMetadata
-  , _metaRemoteSchemas    :: ![AddRemoteSchemaQuery]
-  , _metaQueryCollections :: ![CreateCollection]
-  , _metaAllowlist        :: ![CollectionReq]
+  , _metaRemoteSchemas    :: !RemoteSchemas
+  , _metaQueryCollections :: !QueryCollections
+  , _metaAllowlist        :: !Allowlist
   , _metaCustomTypes      :: !CustomTypes
-  , _metaActions          :: ![ActionMetadata]
-  , _metaCronTriggers     :: ![CronTriggerMetadata]
+  , _metaActions          :: !Actions
+  , _metaCronTriggers     :: !CronTriggers
   } deriving (Show, Eq)
 $(makeLenses ''Metadata)
 
@@ -263,16 +279,16 @@ instance FromJSON Metadata where
   parseJSON = withObject "Object" $ \o -> do
     version <- o .:? "version" .!= MVVersion1
     Metadata version
-      <$> o .: "tables"
+      <$> (mapFromL _tmTable <$> o .: "tables")
       <*> (o .:? "functions" >>= parseFunctions version)
-      <*> o .:? "remote_schemas" .!= []
-      <*> o .:? "query_collections" .!= []
-      <*> o .:? "allowlist" .!= []
+      <*> (mapFromL _arsqName <$> o .:? "remote_schemas" .!= [])
+      <*> (mapFromL _ccName <$> o .:? "query_collections" .!= [])
+      <*> o .:? "allowlist" .!= HS.empty
       <*> o .:? "custom_types" .!= emptyCustomTypes
-      <*> o .:? "actions" .!= []
-      <*> o .:? "cron_triggers" .!= []
+      <*> (mapFromL _amName <$> o .:? "actions" .!= [])
+      <*> (mapFromL ctName <$> o .:? "cron_triggers" .!= [])
     where
       parseFunctions version maybeValue =
         case version of
-          MVVersion1 -> FMVersion1 <$> maybe (pure []) parseJSON maybeValue
-          MVVersion2 -> FMVersion2 <$> maybe (pure []) parseJSON maybeValue
+          MVVersion1 -> FMVersion1 <$> maybe (pure mempty) parseJSON maybeValue
+          MVVersion2 -> FMVersion2 <$> (mapFromL _tfv2Function <$> maybe (pure []) parseJSON maybeValue)

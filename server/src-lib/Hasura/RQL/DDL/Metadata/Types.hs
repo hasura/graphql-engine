@@ -13,7 +13,6 @@ module Hasura.RQL.DDL.Metadata.Types
 
 import           Hasura.Prelude
 
-import           Control.Lens                  hiding (set, (.=))
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -21,11 +20,9 @@ import           Language.Haskell.TH.Syntax    (Lift)
 
 import qualified Data.Aeson.Ordered            as AO
 import qualified Data.HashMap.Strict           as HM
-import qualified Data.HashSet                  as HS
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 
 data ClearMetadata
   = ClearMetadata
@@ -108,19 +105,19 @@ metadataToOrdJSON ( Metadata
                                            ]
   where
     versionPair = ("version", AO.toOrdered version)
-    tablesPair = ("tables", AO.array $ map tableMetaToOrdJSON tables)
+    tablesPair = ("tables", AO.array $ map tableMetaToOrdJSON $ HM.elems tables)
     functionsPair = ("functions",) <$> functionsMetadataToOrdJSON functions
 
-    remoteSchemasPair = listToMaybeOrdPair "remote_schemas" remoteSchemaQToOrdJSON remoteSchemas
+    remoteSchemasPair = listToMaybeOrdPair "remote_schemas" remoteSchemaQToOrdJSON $ HM.elems remoteSchemas
 
-    queryCollectionsPair = listToMaybeOrdPair "query_collections" createCollectionToOrdJSON queryCollections
+    queryCollectionsPair = listToMaybeOrdPair "query_collections" createCollectionToOrdJSON $ HM.elems queryCollections
 
-    allowlistPair = listToMaybeOrdPair "allowlist" AO.toOrdered allowlist
+    allowlistPair = listToMaybeOrdPair "allowlist" AO.toOrdered $ toList allowlist
     customTypesPair = if customTypes == emptyCustomTypes then Nothing
                       else Just ("custom_types", customTypesToOrdJSON customTypes)
-    actionsPair = listToMaybeOrdPair "actions" actionMetadataToOrdJSON actions
+    actionsPair = listToMaybeOrdPair "actions" actionMetadataToOrdJSON $ HM.elems actions
 
-    cronTriggersPair = listToMaybeOrdPair "cron_triggers" crontriggerQToOrdJSON cronTriggers
+    cronTriggersPair = listToMaybeOrdPair "cron_triggers" crontriggerQToOrdJSON $ HM.elems cronTriggers
 
     tableMetaToOrdJSON :: TableMetadata -> AO.Value
     tableMetaToOrdJSON ( TableMetadata
@@ -154,23 +151,23 @@ metadataToOrdJSON ( Metadata
         configPair = if config == emptyTableConfig then Nothing
                      else Just ("configuration" , AO.toOrdered config)
         objectRelationshipsPair = listToMaybeOrdPair "object_relationships"
-                                  relDefToOrdJSON objectRelationships
+                                  relDefToOrdJSON $ HM.elems objectRelationships
         arrayRelationshipsPair = listToMaybeOrdPair "array_relationships"
-                                 relDefToOrdJSON arrayRelationships
+                                 relDefToOrdJSON $ HM.elems arrayRelationships
         computedFieldsPair = listToMaybeOrdPair "computed_fields"
-                             computedFieldMetaToOrdJSON computedFields
+                             computedFieldMetaToOrdJSON $ HM.elems computedFields
         remoteRelationshipsPair = listToMaybeOrdPair "remote_relationships"
-                                  AO.toOrdered remoteRelationships
+                                  AO.toOrdered $ HM.elems remoteRelationships
         insertPermissionsPair = listToMaybeOrdPair "insert_permissions"
-                                insPermDefToOrdJSON insertPermissions
+                                insPermDefToOrdJSON $ HM.elems insertPermissions
         selectPermissionsPair = listToMaybeOrdPair "select_permissions"
-                                selPermDefToOrdJSON selectPermissions
+                                selPermDefToOrdJSON $ HM.elems selectPermissions
         updatePermissionsPair = listToMaybeOrdPair "update_permissions"
-                                updPermDefToOrdJSON updatePermissions
+                                updPermDefToOrdJSON $ HM.elems updatePermissions
         deletePermissionsPair = listToMaybeOrdPair "delete_permissions"
-                                delPermDefToOrdJSON deletePermissions
+                                delPermDefToOrdJSON $ HM.elems deletePermissions
         eventTriggersPair = listToMaybeOrdPair "event_triggers"
-                            eventTriggerConfToOrdJSON eventTriggers
+                            eventTriggerConfToOrdJSON $ HM.elems eventTriggers
 
         relDefToOrdJSON :: (ToJSON a) => RelDef a -> AO.Value
         relDefToOrdJSON (RelDef name using comment) =
@@ -249,8 +246,8 @@ metadataToOrdJSON ( Metadata
                         <> if config == emptyFunctionConfig then []
                            else pure ("configuration", AO.toOrdered config)
       in case fm of
-        FMVersion1 functionsV1 -> withList AO.toOrdered functionsV1
-        FMVersion2 functionsV2 -> withList (AO.array . map functionV2ToOrdJSON) functionsV2
+        FMVersion1 functionsV1 -> withList AO.toOrdered $ toList functionsV1
+        FMVersion2 functionsV2 -> withList (AO.array . map functionV2ToOrdJSON) $ HM.elems functionsV2
 
     remoteSchemaQToOrdJSON :: AddRemoteSchemaQuery -> AO.Value
     remoteSchemaQToOrdJSON (AddRemoteSchemaQuery name definition comment) =
