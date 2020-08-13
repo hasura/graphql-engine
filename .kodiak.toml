@@ -33,7 +33,7 @@ require_automerge_label = true
 blocking_title_regex = "" # default: "^WIP:.*", options: "" (disables regex), a regex string (e.g. ".*DONT\s*MERGE.*")
 
 # Kodiak will not merge a PR with any of these labels.
-blocking_labels = ["s/do-not-merge", "s/wip"][] # default: []
+blocking_labels = ["s/do-not-merge", "s/wip"] # default: []
 
 # Choose merge method for Kodiak to use.
 #
