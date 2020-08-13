@@ -100,8 +100,9 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
       E.QueryExecutionPlan queryPlan asts ->
         case queryPlan of
           E.ExecStepDB txGenSql -> do
-            (telemTimeIO, telemQueryType, resp) <- runQueryDB reqId (reqUnparsed,reqParsed) asts userInfo txGenSql
-            return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp []))
+            (telemTimeIO, telemQueryType, respHdrs, resp) <-
+              runQueryDB reqId (reqUnparsed,reqParsed) asts userInfo txGenSql
+            return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs))
           E.ExecStepRemote (rsi, opDef, _varValsM) ->
             runRemoteGQ telemCacheHit rsi opDef
           E.ExecStepRaw (name, json) -> do
@@ -196,7 +197,7 @@ runQueryDB
   -> [QueryRootField UnpreparedValue]
   -> UserInfo
   -> (Tracing.TraceT (LazyTx QErr) EncJSON, EQ.GeneratedSqlMap)
-  -> m (DiffTime, Telem.QueryType, EncJSON)
+  -> m (DiffTime, Telem.QueryType, HTTP.ResponseHeaders, EncJSON)
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
 runQueryDB reqId (query, queryParsed) asts _userInfo (tx, genSql) =  do
@@ -205,10 +206,10 @@ runQueryDB reqId (query, queryParsed) asts _userInfo (tx, genSql) =  do
   logQueryLog logger query (Just genSql) reqId
   (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ trace "pg" $
     Tracing.interpTraceT id $ executeQuery queryParsed asts (Just genSql) pgExecCtx Q.ReadOnly tx
-  resp <- liftEither respE
-  let !json = encodeGQResp $ GQSuccess $ encJToLBS $ snd resp
+  (respHdrs,resp) <- liftEither respE
+  let !json = encodeGQResp $ GQSuccess $ encJToLBS $ resp
       telemQueryType = Telem.Query
-  return (telemTimeIO, telemQueryType, json)
+  return (telemTimeIO, telemQueryType, respHdrs, json)
 
 runMutationDB
   :: ( MonadIO m
