@@ -17,6 +17,7 @@ import Button from '../Common/Button';
 import { getReadAllNotificationsState } from './utils';
 import { Nullable } from '../Common/utils/tsUtils';
 import { mapDispatchToPropsEmpty } from '../Common/utils/reactUtils';
+import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
 
 const getDateString = (date: NotificationDate) => {
   if (!date) {
@@ -360,6 +361,7 @@ const mapStateToProps = (state: ReduxState) => {
     serverVersion: state.main.serverVersion,
     console_opts: state.telemetry.console_opts,
     hasura_uuid: state.telemetry.hasura_uuid,
+    dataHeaders: state.tables.dataHeaders,
   };
 };
 
@@ -378,6 +380,7 @@ const HasuraNotifications: React.FC<
   latestStableServerVersion,
   latestPreReleaseServerVersion,
   serverVersion,
+  dataHeaders,
   ...props
 }) => {
   const { dispatch } = props;
@@ -397,7 +400,29 @@ const HasuraNotifications: React.FC<
     []
   );
   const [toDisplayViewMore, updateViewMoreDisplay] = React.useState(true);
-  const showBadge = console_opts?.console_notifications?.showBadge;
+  const [previouslyReadState, updatePreviouslyReadState] = React.useState<
+    NotificationsState['read']
+  >([]);
+  const [showBadge, updateShowBadgeState] = React.useState<
+    NotificationsState['showBadge']
+  >(true);
+
+  let userType = 'admin';
+
+  if (dataHeaders?.[HASURA_COLLABORATOR_TOKEN]) {
+    userType = dataHeaders[HASURA_COLLABORATOR_TOKEN];
+  }
+
+  React.useEffect(() => {
+    if (console_opts?.console_notifications?.[userType]) {
+      updatePreviouslyReadState(
+        console_opts.console_notifications[userType].read
+      );
+      updateShowBadgeState(
+        console_opts.console_notifications[userType].showBadge
+      );
+    }
+  }, [console_opts?.console_notifications, userType]);
 
   // for running the version update code on mounting
   React.useEffect(() => {
@@ -438,13 +463,11 @@ const HasuraNotifications: React.FC<
   ]);
 
   React.useEffect(() => {
-    const readNotifications = console_opts?.console_notifications?.read;
-
     // once mark all as read is clicked
     if (
-      readNotifications === 'all' ||
-      readNotifications === 'default' ||
-      readNotifications === 'error'
+      previouslyReadState === 'all' ||
+      previouslyReadState === 'default' ||
+      previouslyReadState === 'error'
     ) {
       if (displayNewVersionNotification) {
         updateNumberNotifications(1);
@@ -458,15 +481,16 @@ const HasuraNotifications: React.FC<
     if (displayNewVersionNotification) {
       readNumber++;
     }
-    if (Array.isArray(readNotifications)) {
-      readNumber -= readNotifications.length;
+    if (Array.isArray(previouslyReadState)) {
+      readNumber -= previouslyReadState.length;
     }
 
     updateNumberNotifications(readNumber);
   }, [
     consoleNotifications.length,
-    console_opts?.console_notifications?.read,
     displayNewVersionNotification,
+    userType,
+    previouslyReadState,
   ]);
 
   const optOutCallback = () => {
@@ -514,14 +538,14 @@ const HasuraNotifications: React.FC<
     if (showBadge) {
       if (console_opts?.console_notifications) {
         let updatedState = {};
-        if (console_opts.console_notifications.date) {
+        if (console_opts.console_notifications[userType].date) {
           updatedState = {
-            ...console_opts.console_notifications,
+            ...console_opts.console_notifications[userType],
             showBadge: false,
           };
         } else {
           updatedState = {
-            ...console_opts.console_notifications,
+            ...console_opts.console_notifications[userType],
             date: new Date().toISOString(),
             showBadge: false,
           };
@@ -550,21 +574,19 @@ const HasuraNotifications: React.FC<
       return;
     }
 
-    const previousRead = console_opts?.console_notifications?.read;
-
     if (
-      previousRead === 'all' ||
-      previousRead === 'default' ||
-      previousRead === 'error' ||
-      !previousRead
+      previouslyReadState === 'all' ||
+      previouslyReadState === 'default' ||
+      previouslyReadState === 'error' ||
+      !previouslyReadState
     ) {
       return;
     }
 
-    if (!previousRead.includes(`${id}`)) {
+    if (!previouslyReadState.includes(`${id}`)) {
       dispatch(
         updateConsoleNotificationsState({
-          read: [...previousRead, `${id}`],
+          read: [...previouslyReadState, `${id}`],
           date: new Date().toISOString(),
           showBadge: false,
         })
@@ -573,20 +595,13 @@ const HasuraNotifications: React.FC<
   };
 
   React.useEffect(() => {
-    if (
-      displayNewVersionNotification &&
-      console_opts?.console_notifications?.read === 'all'
-    ) {
+    if (displayNewVersionNotification && previouslyReadState === 'all') {
       toShowMarkAllAsRead(true);
       return;
     }
 
     toShowMarkAllAsRead(!numberNotifications);
-  }, [
-    numberNotifications,
-    displayNewVersionNotification,
-    console_opts?.console_notifications?.read,
-  ]);
+  }, [numberNotifications, displayNewVersionNotification, previouslyReadState]);
 
   React.useEffect(() => {
     updateDataShown(consoleNotifications.slice(0, numDisplayed + 1));
@@ -628,7 +643,7 @@ const HasuraNotifications: React.FC<
         disableMarkAllAsReadBtn={showMarkAllAsRead}
         displayViewMore={toDisplayViewMore}
         onClickUpdate={onClickUpdate}
-        previouslyRead={console_opts?.console_notifications?.read}
+        previouslyRead={previouslyReadState}
       />
     </>
   );
