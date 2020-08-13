@@ -7,6 +7,8 @@ import { getFeaturesCompatibility } from '../../helpers/versionUtils';
 import { defaultNotification, errorNotification } from './ConsoleNotification';
 import { updateConsoleNotificationsState } from '../../telemetry/Actions';
 import { getConsoleNotificationQuery } from '../Common/utils/v1QueryUtils';
+import dataHeaders from '../Services/Data/Common/Headers';
+import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
 
 const SET_MIGRATION_STATUS_SUCCESS = 'Main/SET_MIGRATION_STATUS_SUCCESS';
 const SET_MIGRATION_STATUS_ERROR = 'Main/SET_MIGRATION_STATUS_ERROR';
@@ -52,16 +54,23 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
     ? Endpoints.consoleNotificationsStg
     : Endpoints.consoleNotificationsProd;
   const consoleStateDB = getState().telemetry.console_opts;
+  const headers = dataHeaders(getState);
   let previousRead = null;
   let strictChecks = false;
+
+  let userType = 'admin';
+
+  if (headers.hasOwnProperty(HASURA_COLLABORATOR_TOKEN)) {
+    userType = headers[HASURA_COLLABORATOR_TOKEN];
+  }
 
   if (
     consoleStateDB &&
     consoleStateDB.console_notifications &&
-    consoleStateDB.console_notifications.date
+    consoleStateDB.console_notifications[userType].date
   ) {
     strictChecks = true;
-    previousRead = consoleStateDB.console_notifications.read;
+    previousRead = consoleStateDB.console_notifications[userType].read;
   }
 
   const now = new Date().toISOString();
@@ -126,7 +135,7 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
           dispatch(
             updateConsoleNotificationsState({
               read: newReadValue,
-              date: consoleStateDB.console_notifications.date,
+              date: consoleStateDB.console_notifications[userType].date,
               showBadge: true,
             })
           );

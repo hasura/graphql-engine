@@ -21,6 +21,7 @@ import {
   NotificationsState,
 } from '../types';
 import { isUpdateIDsEqual } from './utils';
+import { HASURA_COLLABORATOR_TOKEN } from '../constants';
 
 const SET_CONSOLE_OPTS = 'Telemetry/SET_CONSOLE_OPTS';
 const SET_NOTIFICATION_SHOWN = 'Telemetry/SET_NOTIFICATION_SHOWN';
@@ -153,20 +154,42 @@ const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
     getState: GetReduxState
   ) => {
     const url = Endpoints.schemaChange;
-    const currentRead = getState().main.consoleNotifications;
+    const currentNotifications = getState().main.consoleNotifications;
     const restState = getState().telemetry.console_opts;
+    const headers = dataHeaders(getState);
+    let userType = 'admin';
+    if (headers?.[HASURA_COLLABORATOR_TOKEN]) {
+      userType = headers[HASURA_COLLABORATOR_TOKEN];
+    }
     let composedUpdatedState: ConsoleState['console_opts'] = {
       ...restState,
-      console_notifications: updatedState,
+      console_notifications: {
+        [userType]: updatedState,
+      },
     };
-    if (currentRead && Array.isArray(currentRead)) {
-      if (isUpdateIDsEqual(currentRead, updatedState.read)) {
+    if (userType !== 'admin') {
+      const currentState = restState?.console_notifications;
+      if (Object.keys(currentState ?? {}).length > 1) {
         composedUpdatedState = {
           ...restState,
           console_notifications: {
-            read: 'all',
-            showBadge: false,
-            date: updatedState.date,
+            ...currentState,
+            [userType]: updatedState,
+          },
+        };
+      }
+    }
+    if (currentNotifications && Array.isArray(currentNotifications)) {
+      if (isUpdateIDsEqual(currentNotifications, updatedState.read)) {
+        composedUpdatedState = {
+          ...restState,
+          console_notifications: {
+            ...restState?.console_notifications,
+            [userType]: {
+              read: 'all',
+              showBadge: false,
+              date: updatedState.date,
+            },
           },
         };
       }
@@ -177,7 +200,7 @@ const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
     const options: RequestInit = {
       credentials: globalCookiePolicy,
       method: 'POST',
-      headers: dataHeaders(getState),
+      headers,
       body: JSON.stringify(updatedReadNotifications),
     };
     return dispatch(requestAction(url, options))
@@ -203,13 +226,17 @@ const loadConsoleOpts = () => {
     getState: GetReduxState
   ) => {
     const url = Endpoints.getSchema;
+    const headers = dataHeaders(getState);
     const options: RequestInit = {
       credentials: globalCookiePolicy,
       method: 'POST',
-      headers: dataHeaders(getState),
+      headers,
       body: JSON.stringify(getConsoleOptsQuery()),
     };
-
+    let userType = 'admin';
+    if (headers?.[HASURA_COLLABORATOR_TOKEN]) {
+      userType = headers[HASURA_COLLABORATOR_TOKEN];
+    }
     return dispatch(requestAction(url, options) as any).then(
       (data: Telemetry[]) => {
         if (data.length) {
@@ -231,12 +258,38 @@ const loadConsoleOpts = () => {
             dispatch({
               type: UPDATE_CONSOLE_NOTIFICATIONS,
               data: {
-                read: [],
+                [userType]: {
+                  read: [],
+                  date: null,
+                  showBadge: true,
+                },
+              },
+            });
+            return Promise.resolve();
+          }
+
+          let previouslyRead = [] as string[];
+          const currentDBState = console_state.console_notifications[userType];
+          if (currentDBState) {
+            if (
+              Array.isArray(currentDBState.read) &&
+              typeof currentDBState.read !== 'string'
+            ) {
+              previouslyRead = currentDBState.read;
+            }
+          }
+
+          dispatch({
+            type: UPDATE_CONSOLE_NOTIFICATIONS,
+            data: {
+              ...console_state?.console_notifications,
+              [userType]: {
+                read: previouslyRead,
                 date: null,
                 showBadge: true,
               },
-            });
-          }
+            },
+          });
         }
         return Promise.resolve();
       },
