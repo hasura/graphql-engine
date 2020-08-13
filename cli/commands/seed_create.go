@@ -70,26 +70,26 @@ func (o *SeedNewOptions) Run() error {
 	// If we are initializing from a database table
 	// create a hasura client and add table name opts
 	if createSeedOpts.Data == nil {
+		var body []byte
 		if len(o.FromTableNames) > 0 {
 			migrateDriver, err := migrate.NewMigrate(ec, true)
 			if err != nil {
 				return errors.Wrap(err, "cannot initialize migrate driver")
 			}
 			// Send the query
-			body, err := migrateDriver.ExportDataDump(o.FromTableNames)
+			body, err = migrateDriver.ExportDataDump(o.FromTableNames)
 			if err != nil {
 				return errors.Wrap(err, "exporting seed data")
 			}
-
-			createSeedOpts.Data = bytes.NewReader(body)
 		} else {
 			const defaultText = ""
-			data, err := editor.CaptureInputFromEditor(editor.GetPreferredEditorFromEnvironment, defaultText, "*.sql")
+			var err error
+			body, err = editor.CaptureInputFromEditor(editor.GetPreferredEditorFromEnvironment, defaultText, "*.sql")
 			if err != nil {
 				return errors.Wrap(err, "cannot find default editor from env")
 			}
-			createSeedOpts.Data = bytes.NewReader(data)
 		}
+		createSeedOpts.Data = bytes.NewReader(body)
 	}
 
 	fs := afero.NewOsFs()
