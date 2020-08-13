@@ -1450,3 +1450,16 @@
     }
   }
 }
+
+.pixelLoveSection {
+  display: flex;
+  align-items: center;
+  background-color: white;
+  padding: 12px 15px;
+  color: white;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.7;
+  }
+}

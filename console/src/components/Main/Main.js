@@ -38,6 +38,7 @@ import {
 } from '../Common/utils/localStorageUtils';
 import { Icon } from '../UIKit/atoms/Icon';
 import { ProPopup } from './components/ProPopup';
+import PixelHeart from './images/components/PixelHeart';
 
 class Main extends React.Component {
   constructor(props) {
@@ -388,6 +389,9 @@ class Main extends React.Component {
                 closeDropDown={this.closeDropDown}
                 toggleDropDown={this.toggleDropDown}
               />
+              <div className={styles.pixelLoveSection}>
+                <PixelHeart width={23} />
+              </div>
             </div>
           </div>
 
