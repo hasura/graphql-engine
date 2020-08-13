@@ -1,1 +1,93 @@
-**** Latest commit compared against master - 6ef70f963b20c15564d7ba6fa96d42ffef10f552
+**** Latest commit compared against master - b34f6952fc5988c102848699053cacf53adbaec9
+
+commit b34f6952fc5988c102848699053cacf53adbaec9
+Author: Brandon Simmons <brandon.m.simmons@gmail.com>
+Date:   Wed Aug 12 15:43:45 2020 -0400
+
+    Remove 'bulldozer' config, try 'kodiak' for auto-merge
+
+    see: https://github.com/chdsbd/kodiak
+
+    The main issue that bit us was not being able to auto update forked
+    branches, also:
+    https://github.com/palantir/bulldozer/issues/66
+    https://github.com/palantir/bulldozer/issues/145
+
+commit 8c5da552ac370426dbb318b3fc6251bd2ec1fdd2
+Author: Brandon Simmons <brandon.m.simmons@gmail.com>
+Date:   Mon Aug 10 16:06:30 2020 -0400
+
+    Add bulldozer auto-merge and -update configuration
+
+    We still need to add the github app (as of time of opening this PR)
+
+    Afterwards devs should be able to allow bulldozer to automatically
+    "update" the branch, merging in parent when it changes, as well as
+    automatically merge when all checks pass.
+
+    This is opt-in by adding the `auto-update-auto-merge` label to the PR.
+
+commit b2561a719bb586a74dc40515a6f4637c79b91f03
+Author: Phil Freeman <phil@hasura.io>
+Date:   Mon Aug 10 12:34:24 2020 -0700
+
+    server: set hasura.tracecontext in RQL mutations [#5542] (#5555)
+
+    * server: set hasura.tracecontext in RQL mutations [#5542]
+
+    * Update test suite
+
+    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
+
+commit f0e1195e4258d23a766b3a5fd3f68a2c2263160a
+Author: Tirumarai Selvan <tiru@hasura.io>
+Date:   Thu Aug 6 21:18:55 2020 +0530
+
+    add log kinds in cli-migrations image (#5529)
+
+    * add log kinds in cli-migrations image
+
+    * give hint to resolve timeout error
+
+    * minor changes and CHANGELOG
+
+commit 2254ee2cf2e8d3b19315f7f58cb1beeb773e5873
+Author: Brandon Simmons <brandon.m.simmons@gmail.com>
+Date:   Thu Aug 6 10:07:23 2020 -0400
+
+    Fix telemetry reporting of transport (websocket was reported as http)
+
+commit 34288e1eb5f2c5dad9e6d1e05453dd52397dc970
+Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
+Date:   Wed Aug 5 19:38:36 2020 +0530
+
+    fix introspection query if any enum column present in primary key (fix #5200) (#5522)
+
+commit cfd7944849e6dc653758146bdc1cf7e817a41b01
+Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
+Date:   Wed Aug 5 18:44:53 2020 +0530
+
+    restrict env variables start with HASURA_GRAPHQL_ for headers configuration in actions, event triggers & remote
+schemas (#5519)
+
+    * restrict env variables start with HASURA_GRAPHQL_ for headers definition in actions & event triggers
+
+    * update CHANGELOG.md
+
+    * Apply suggestions from code review
+
+    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
+
+commit 01a4ceeca9cc8cca27481395517a90a38d0622d1
+Author: Phil Freeman <phil@hasura.io>
+Date:   Wed Aug 5 03:24:43 2020 -0700
+
+    Show method and complete URI in traced HTTP calls (#5525)
+
+    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
+
+commit eb80d97b0af8d526593d5eaa92048c1fd8f591a7
+Author: Tirumarai Selvan <tiru@hasura.io>
+Date:   Wed Aug 5 15:53:14 2020 +0530
+
+    change log kind from db_migrate to catalog_migrate (#5531)
