@@ -116,13 +116,22 @@ window.hdocs = (function () {
         });
       }
 
+      const searchField = document.getElementById('search_element');
+      const searchHelp = document.getElementById('search_help');
+      const hideHelp = function () { searchHelp.classList.add('hide'); }
+
       if (suggestions.length === 0) {
-        setTimeout(function () { document.getElementById('search_help').classList.remove('hide'); }, 100);
-        document.getElementById('search_element').addEventListener('blur', function () {
-          setTimeout(function () { document.getElementById('search_help').classList.add('hide'); }, 100);
-        });
-      } else if (!document.getElementById('search_help').classList.contains('hide')) {
-        document.getElementById('search_help').classList.add('hide');
+        setTimeout(function () { searchHelp.classList.remove('hide'); }, 100);
+        searchField.addEventListener('blur', function () {
+          setTimeout(hideHelp, 100);
+        }, { once: true });
+        searchField.addEventListener('input', function () {
+          if (searchField.value === '') {
+            setTimeout(hideHelp, 100);
+          }
+        }, { once: true });
+      } else if (!searchHelp.classList.contains('hide')) {
+        hideHelp();
       }
 
       return suggestions;
