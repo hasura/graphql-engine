@@ -1,6 +1,10 @@
 const proClickState = 'console:pro';
+const loveConsentState = 'console:loveIcon';
 const defaultProClickState = {
   isProClicked: false,
+};
+const defaultState = {
+  isDismissed: false,
 };
 
 const setProClickState = (proStateData: { isProClicked: boolean }) => {
@@ -27,6 +31,19 @@ const getProClickState = () => {
   }
 };
 
+const setLoveConsentState = (stateData: { isDismissed: boolean }) => {
+  window.localStorage.setItem(loveConsentState, JSON.stringify(stateData));
+};
+
+const getLoveConsentState = () => {
+  const s = window.localStorage.getItem(loveConsentState);
+  if (s) {
+    return JSON.parse(s);
+  }
+  window.localStorage.setItem(loveConsentState, JSON.stringify(defaultState));
+  return defaultState;
+};
+
 const getReadAllNotificationsState = () => {
   return {
     read: 'all',
@@ -35,4 +52,10 @@ const getReadAllNotificationsState = () => {
   };
 };
 
-export { getProClickState, setProClickState, getReadAllNotificationsState };
+export {
+  getProClickState,
+  setProClickState,
+  setLoveConsentState,
+  getLoveConsentState,
+  getReadAllNotificationsState,
+};
