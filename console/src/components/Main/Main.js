@@ -22,6 +22,7 @@ import {
   loadLatestServerVersion,
   featureCompatibilityInit,
   emitProClickedEvent,
+  fetchPostgresVersion,
   fetchConsoleNotifications,
 } from './Actions';
 
@@ -73,8 +74,9 @@ class Main extends React.Component {
       dispatch(loadLatestServerVersion());
     });
 
+    dispatch(fetchPostgresVersion);
     dispatch(fetchConsoleNotifications());
-    dispatch(fetchServerConfig());
+    dispatch(fetchServerConfig);
   }
 
   toggleProPopup = () => {

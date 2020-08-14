@@ -221,7 +221,7 @@ refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef invalidations thre
     rebuildableCache <- fst <$> liftIO (readIORef $ _scrCache cacheRef)
     ((), cache, _) <- buildSchemaCacheWithOptions CatalogSync invalidations
       & runCacheRWT rebuildableCache
-      & peelRun runCtx pgCtx PG.ReadWrite
+      & peelRun runCtx pgCtx PG.ReadWrite Nothing
     pure ((), cache)
   case resE of
     Left e   -> logError logger threadType $ TEQueryError e

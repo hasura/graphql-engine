@@ -147,7 +147,7 @@
     "@types/webpack-dev-middleware": "3.7.0",
     "@types/webpack-hot-middleware": "2.25.0",
     "@types/ws": "7.2.3",
-    "@typescript-eslint/eslint-plugin": "2.24.0",
+    "@typescript-eslint/eslint-plugin": "3.8.0",
     "@typescript-eslint/parser": "2.24.0",
     "autoprefixer": "9.7.6",
     "babel-eslint": "10.1.0",
