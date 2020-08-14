@@ -1,5 +1,8 @@
+###############################################################################
 ## Configuration for auto-merge / auto-update bot
+##
 ## See: https://kodiakhq.com/ 
+###############################################################################
 
 # Kodiak's configuration file should be placed at `.kodiak.toml` (repository
 # root) or `.github/.kodiak.toml`.
