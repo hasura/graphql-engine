@@ -117,7 +117,7 @@ const setTelemetryNotificationShownInDB = () => {
 };
 
 const setPreReleaseNotificationOptOutInDB = () => (
-  dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>
+  dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>,
   getState: GetReduxState
 ) => {
   const successCb = () => {
