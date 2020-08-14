@@ -121,6 +121,7 @@ type NotificationProps = {
   displayViewMore: boolean;
   onClickUpdate: (id?: number) => void;
   previouslyRead?: string | string[];
+  fixedVersion: string;
 };
 
 type PreReleaseProps = Pick<NotificationProps, 'optOutCallback'>;
@@ -183,6 +184,38 @@ const VersionUpdateNotification: React.FC<VersionUpdateNotificationProps> = ({
   );
 };
 
+type VulnerableVersionProps = {
+  fixedVersion: string;
+};
+
+const VulnerableVersionNotification: React.FC<VulnerableVersionProps> = ({
+  fixedVersion,
+}) => (
+  <Update
+    type="security"
+    subject="Security Vulnerability Located!"
+    content={`This current server version has a security vulnerability. Please upgrade to ${fixedVersion} immediately.`}
+    start_date={Date.now()}
+  >
+    <a
+      href={`https://github.com/hasura/graphql-engine/releases/tag/${fixedVersion}`}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <span>View Changelog</span>
+    </a>
+    <span className={styles.middot}> &middot; </span>
+    <a
+      className={styles.updateLink}
+      href="https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <span>Update Now</span>
+    </a>
+  </Update>
+);
+
 type ViewMoreProps = {
   onClickViewMore: () => void;
   readAll: boolean;
@@ -227,6 +260,7 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
       displayViewMore,
       onClickUpdate,
       previouslyRead,
+      fixedVersion,
     },
     forwardedRef
   ) => (
@@ -265,6 +299,9 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
             latestVersion={latestVersion}
             optOutCallback={optOutCallback}
           />
+        ) : null}
+        {fixedVersion ? (
+          <VulnerableVersionNotification fixedVersion={fixedVersion} />
         ) : null}
         {data.length &&
           data.map(({ id, ...props }) => (
@@ -406,6 +443,7 @@ const HasuraNotifications: React.FC<
   const [showBadge, updateShowBadgeState] = React.useState<
     NotificationsState['showBadge']
   >(true);
+  const [fixedVersion, updateFixedVersion] = React.useState('');
 
   let userType = 'admin';
 
@@ -461,6 +499,18 @@ const HasuraNotifications: React.FC<
     serverVersion,
     console_opts?.disablePreReleaseUpdateNotifications,
   ]);
+
+  React.useEffect(() => {
+    const vulnerableVersionsMapping: Record<string, string> = {
+      'v1.2.0-beta.5': 'v1.2.1',
+      'v1.2.0': 'v1.2.1',
+    };
+
+    if (Object.keys(vulnerableVersionsMapping).includes(serverVersion)) {
+      const fixVersion = vulnerableVersionsMapping[serverVersion];
+      updateFixedVersion(fixVersion);
+    }
+  }, [serverVersion]);
 
   React.useEffect(() => {
     // once mark all as read is clicked
@@ -644,6 +694,7 @@ const HasuraNotifications: React.FC<
         displayViewMore={toDisplayViewMore}
         onClickUpdate={onClickUpdate}
         previouslyRead={previouslyReadState}
+        fixedVersion={fixedVersion}
       />
     </>
   );
