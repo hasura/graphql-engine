@@ -150,7 +150,7 @@ const setPreReleaseNotificationOptOutInDB = () => (
 
 const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
   return (
-    dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
+    dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>,
     getState: GetReduxState
   ) => {
     const url = Endpoints.schemaChange;
