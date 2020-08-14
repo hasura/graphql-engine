@@ -30,7 +30,12 @@ import {
   redirectToMetadataStatus,
 } from '../Services/Settings/Actions';
 
-import { getProClickState, setProClickState } from './utils';
+import {
+  getProClickState,
+  setProClickState,
+  getLoveConsentState,
+  setLoveConsentState,
+} from './utils';
 import { getSchemaBaseRoute } from '../Common/utils/routesUtils';
 import {
   LS_VERSION_UPDATE_CHECK_LAST_CLOSED,
@@ -38,7 +43,7 @@ import {
 } from '../Common/utils/localStorageUtils';
 import { Icon } from '../UIKit/atoms/Icon';
 import { ProPopup } from './components/ProPopup';
-import PixelHeart from './images/components/PixelHeart';
+import LoveSection from './LoveSection';
 
 class Main extends React.Component {
   constructor(props) {
@@ -47,8 +52,10 @@ class Main extends React.Component {
     this.state = {
       updateNotificationVersion: null,
       proClickState: getProClickState(),
+      loveConsentState: getLoveConsentState(),
       isPopUpOpen: false,
       isDropdownOpen: false,
+      isLoveSectionOpen: false,
     };
   }
 
@@ -118,6 +125,24 @@ class Main extends React.Component {
   toggleDropDown = () => {
     this.setState(prevState => ({
       isDropdownOpen: !prevState.isDropdownOpen,
+    }));
+  };
+
+  closeLoveSection = () => {
+    this.setState(
+      {
+        isLoveSectionOpen: false,
+      },
+      () => {
+        setLoveConsentState({ isDismissed: true });
+        this.setState({ loveConsentState: { ...getLoveConsentState() } });
+      }
+    );
+  };
+
+  toggleLoveSection = () => {
+    this.setState(prevState => ({
+      isLoveSectionOpen: !prevState.isLoveSectionOpen,
     }));
   };
 
@@ -389,12 +414,19 @@ class Main extends React.Component {
                 closeDropDown={this.closeDropDown}
                 toggleDropDown={this.toggleDropDown}
               />
-              <div className={styles.pixelLoveSection}>
-                <PixelHeart width={23} />
-              </div>
+              {!this.state.loveConsentState.isDismissed ? (
+                <div
+                  id="dropdown_wrapper"
+                  className={`${this.state.isLoveSectionOpen ? 'open' : ''}`}
+                >
+                  <LoveSection
+                    closeLoveSection={this.closeLoveSection}
+                    toggleLoveSection={this.toggleLoveSection}
+                  />
+                </div>
+              ) : null}
             </div>
           </div>
-
           <div className={styles.main + ' container-fluid'}>
             {getMainContent()}
           </div>
