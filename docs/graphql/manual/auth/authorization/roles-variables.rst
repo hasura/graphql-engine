@@ -226,6 +226,8 @@ The permission for ``org-member`` role changes to this:
    Support for using session variables for array operators like ``_in``, ``_nin``, ``_has_any_keys``,
    ``_has_all_keys`` is only added in ``beta.3`` release.
 
+When you use ``_in`` rule in Hasura portal, it might give you an array with your value in it. If your value is already an array, you can simply edit the result to remove the brackets.
+
 Format of session variables
 ---------------------------
 
