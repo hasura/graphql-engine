@@ -1,19 +1,15 @@
-.. meta::
-   :description: Use hasura seeds to manage seed data 
-   :keywords: hasura, docs, CLI, hasura seeds
-
 .. _hasura_seeds:
 
 Hasura CLI: hasura seeds
 ------------------------
 
-Manage seed data.
+Manage seed data
 
 Synopsis
 ~~~~~~~~
 
 
-Manage seed data.
+Manage seed data
 
 Alias: sd
 
@@ -22,9 +18,11 @@ Options
 
 ::
 
-      --admin-secret string   admin secret for Hasura GraphQL engine
-      --endpoint string       http(s) endpoint for Hasura GraphQL engine
-  -h, --help                  help for seeds
+      --admin-secret string            admin secret for Hasura GraphQL Engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
+      --certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
+      --endpoint string                http(s) endpoint for Hasura GraphQL Engine (env "HASURA_GRAPHQL_ENDPOINT")
+  -h, --help                           help for seeds
+      --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

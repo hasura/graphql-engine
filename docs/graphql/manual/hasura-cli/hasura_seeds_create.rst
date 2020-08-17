@@ -1,19 +1,15 @@
-.. meta::
-   :description: Use hasura seeds create to create a new seed file
-   :keywords: hasura, docs, CLI, hasura seeds create
-
 .. _hasura_seeds_create:
 
 Hasura CLI: hasura seeds create
 -------------------------------
 
-Create a new seed file.
+Create a new seed file
 
 Synopsis
 ~~~~~~~~
 
 
-Create a new seed file.
+Create a new seed file
 
 ::
 
@@ -46,13 +42,15 @@ Options inherited from parent commands
 
 ::
 
-      --admin-secret string   admin secret for Hasura GraphQL engine
-      --endpoint string       http(s) endpoint for Hasura GraphQL engine
-      --envfile string        .env filename to load ENV vars from (default ".env")
-      --log-level string      log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
-      --no-color              do not colorize output (default: false)
-      --project string        directory where commands are executed (default: current dir)
-      --skip-update-check     Skip automatic update check on command execution
+      --admin-secret string            admin secret for Hasura GraphQL Engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
+      --certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
+      --endpoint string                http(s) endpoint for Hasura GraphQL Engine (env "HASURA_GRAPHQL_ENDPOINT")
+      --envfile string                 .env filename to load ENV vars from (default ".env")
+      --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")
+      --log-level string               log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --no-color                       do not colorize output (default: false)
+      --project string                 directory where commands are executed (default: current dir)
+      --skip-update-check              Skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~
