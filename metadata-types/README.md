@@ -4,9 +4,9 @@
 - [Introduction](#introduction)
 - [How to use this (aka TL;DR)](#how-to-use-this-aka-tldr)
 - [Demos](#demos)
-    - [Typescript SDK](#typescript-sdk)
+    - [TypeScript SDK](#typescript-sdk)
     - [Type-Checking & Docs inside of Metadata YAML files](#type-checking--docs-inside-of-metadata-yaml-files)
-- [SDK Usage Examples (Typescript)](#sdk-usage-examples-typescript)
+- [SDK Usage Examples (TypeScript)](#sdk-usage-examples-typescript)
     - [Extending the Generated Class Functionality](#extending-the-generated-class-functionality)
     - [Programmatically Interacting with Metadata](#programmatically-interacting-with-metadata)
 - [Generator Config File Options](#generator-config-file-options)
@@ -18,7 +18,7 @@
 
 # Introduction
 
-This repo contains a script used to generate SDK's in various languages from either Typescript or JSON Schema sources. The script is configurable and built to be consumed from something such as a Github Action or a git hook.
+This repo contains a script used to generate SDK's in various languages from either TypeScript or JSON Schema sources. The script is configurable and built to be consumed from something such as a Github Action or a git hook.
 
 It is being used to generate SDK's for Hasura Metadata V2
 
@@ -33,7 +33,7 @@ _**"I want to..."**_
 - _Use an existing typed-language SDK in my project_
 
   - Download the SDK from the [`/generated`](./generated) directory
-  - Follow the guide in [SDK Usage Examples (Typescript)](#sdk-usage-examples-typescript)
+  - Follow the guide in [SDK Usage Examples (TypeScript)](#sdk-usage-examples-TypeScript)
 
 - _Generate a new SDK for a language that isn't already present in the `/generated` directory (or customize the generator options on existing ones)_
 
@@ -43,19 +43,19 @@ _**"I want to..."**_
 
 # Demos
 
-### Typescript SDK
+### TypeScript SDK
 
-![](typescript-typecheck-demo.gif)
+![](TypeScript-typecheck-demo.gif)
 
 ### Type-Checking & Docs inside of Metadata YAML files
 
 ![](json-schema-typecheck-demo.gif)
 
-# SDK Usage Examples (Typescript)
+# SDK Usage Examples (TypeScript)
 
 ### Extending the Generated Class Functionality
 
-The SDK generated for Typescript contains types, but also produces a top-level class called `Convert`, which contains methods to do runtime parsing and validation of types. These are named e.g. `Convert.toCronTrigger()` and `Convert.cronTriggerToJson()`:
+The SDK generated for TypeScript contains types, but also produces a top-level class called `Convert`, which contains methods to do runtime parsing and validation of types. These are named e.g. `Convert.toCronTrigger()` and `Convert.cronTriggerToJson()`:
 
 ```ts
 public static toCronTrigger(json: string): CronTrigger {
@@ -228,22 +228,22 @@ _Note: Run with `yarn generate-types`/`npm run generate-types`_
 
 The file `config.yaml` can be used to pass options to the program. It takes:
 
-- An input language target of either "Typescript" or "JsonSchema"
+- An input language target of either "TypeScript" or "JsonSchema"
 - A single file/glob expression, or an array of file/glob expressions for the input files used to generates the types
 - The output directory can be set, and the output filename will be the name of the input file (with the new language extension)
 - Any language name that exists in `quicktype_config` will be generated, and the object keys are options passed to Quicktype's `rendererOptions` config
 
 ```yaml
-# Accepts "Typescript" or "JsonSchema"
-# Override this with --typescript or --jsonschema from CLI
-selected_input_language: Typescript
+# Accepts "TypeScript" or "JsonSchema"
+# Override this with --TypeScript or --jsonschema from CLI
+selected_input_language: TypeScript
 
 # Glob patterns for the target input files of selected language
 # Only the matching SELECTED INPUT LANGUAGE file expression will be used
 input_files:
   # Paths can be either a string, or an array of strings
   JsonSchema: './src/types/**.schema.json'
-  Typescript: ['./src/types/**.ts', './src/otherfolder/**.ts']
+  TypeScript: ['./src/types/**.ts', './src/otherfolder/**.ts']
 
 # Output file directory
 output_directory: './generated'
@@ -274,7 +274,7 @@ quicktype_config:
   # rust: ~
   schema: ~
   # swift: ~
-  typescript: ~
+  TypeScript: ~
   # rendererOptions:
   #   just-types: true
 ```
@@ -283,9 +283,9 @@ quicktype_config:
 
 _Note: Run with `yarn test`/`npm run test`_
 
-The test config file is used to take sample input JSON files, and feed them to the generated Typescript SDK for automated testing. The idea is to have many samples of `metadata.json` (or even individual types, like a single `table.yaml` item as JSON) and have them be type-checked against the generated types for verification.
+The test config file is used to take sample input JSON files, and feed them to the generated TypeScript SDK for automated testing. The idea is to have many samples of `metadata.json` (or even individual types, like a single `table.yaml` item as JSON) and have them be type-checked against the generated types for verification.
 
-The input takes the location of a Typescript file containing the Metadata types, and then an array of `jsonInputTests` with `files` as a one or more file paths or glob expressions pointing to input JSON data to use as type inputs.
+The input takes the location of a TypeScript file containing the Metadata types, and then an array of `jsonInputTests` with `files` as a one or more file paths or glob expressions pointing to input JSON data to use as type inputs.
 
 For example:
 

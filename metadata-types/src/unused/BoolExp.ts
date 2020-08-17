@@ -43,8 +43,11 @@ interface JsonOperator extends GenericOperator<number | string | object> {
 export type Operator = NumberOperator | StringOperator | JsonOperator
 
 export interface BoolExp {
+  // @ts-ignore
   _and?: BoolExp[]
+  // @ts-ignore
   _or?: BoolExp[]
+  // @ts-ignore
   _not?: BoolExp
   [key: string]: Operator | BoolExp | BoolExp[]
 }

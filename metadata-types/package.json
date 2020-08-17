@@ -16,6 +16,7 @@
     "tsd": "^0.12.1"
   },
   "devDependencies": {
+    "@types/js-yaml": "^3.12.5",
     "@types/node": "^14.0.14",
     "ava": "^3.9.0",
     "ts-node": "^8.10.2",

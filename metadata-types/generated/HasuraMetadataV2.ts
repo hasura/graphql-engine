@@ -163,7 +163,7 @@ export interface Action {
     /**
      * Permissions of the action
      */
-    permissions?: Permissions;
+    permissions?: Permission[];
 }
 
 /**
@@ -222,10 +222,7 @@ export enum ActionDefinitionType {
     Query = "query",
 }
 
-/**
- * Permissions of the action
- */
-export interface Permissions {
+export interface Permission {
     role: string;
 }
 
@@ -1710,8 +1707,11 @@ export class Convert {
     }
 }
 
-function invalidValue(typ: any, val: any): never {
-    throw Error(`Invalid value ${JSON.stringify(val)} for type ${JSON.stringify(typ)}`);
+function invalidValue(typ: any, val: any, key: any = ''): never {
+    if (key) {
+        throw Error(`Invalid value for key "${key}". Expected type ${JSON.stringify(typ)} but got ${JSON.stringify(val)}`);
+    }
+    throw Error(`Invalid value ${JSON.stringify(val)} for type ${JSON.stringify(typ)}`, );
 }
 
 function jsonToJSProps(typ: any): any {
@@ -1732,10 +1732,10 @@ function jsToJSONProps(typ: any): any {
     return typ.jsToJSON;
 }
 
-function transform(val: any, typ: any, getProps: any): any {
+function transform(val: any, typ: any, getProps: any, key: any = ''): any {
     function transformPrimitive(typ: string, val: any): any {
         if (typeof typ === typeof val) return val;
-        return invalidValue(typ, val);
+        return invalidValue(typ, val, key);
     }
 
     function transformUnion(typs: any[], val: any): any {
@@ -1780,11 +1780,11 @@ function transform(val: any, typ: any, getProps: any): any {
         Object.getOwnPropertyNames(props).forEach(key => {
             const prop = props[key];
             const v = Object.prototype.hasOwnProperty.call(val, key) ? val[key] : undefined;
-            result[prop.key] = transform(v, prop.typ, getProps);
+            result[prop.key] = transform(v, prop.typ, getProps, prop.key);
         });
         Object.getOwnPropertyNames(val).forEach(key => {
             if (!Object.prototype.hasOwnProperty.call(props, key)) {
-                result[key] = transform(val[key], additional, getProps);
+                result[key] = transform(val[key], additional, getProps, key);
             }
         });
         return result;
@@ -1868,7 +1868,7 @@ const typeMap: any = {
         { json: "comment", js: "comment", typ: u(undefined, "") },
         { json: "definition", js: "definition", typ: r("ActionDefinition") },
         { json: "name", js: "name", typ: "" },
-        { json: "permissions", js: "permissions", typ: u(undefined, r("Permissions")) },
+        { json: "permissions", js: "permissions", typ: u(undefined, a(r("Permission"))) },
     ], "any"),
     "ActionDefinition": o([
         { json: "arguments", js: "arguments", typ: u(undefined, a(r("InputArgument"))) },
@@ -1888,7 +1888,7 @@ const typeMap: any = {
         { json: "value", js: "value", typ: u(undefined, "") },
         { json: "value_from_env", js: "value_from_env", typ: u(undefined, "") },
     ], "any"),
-    "Permissions": o([
+    "Permission": o([
         { json: "role", js: "role", typ: "" },
     ], "any"),
     "AllowList": o([

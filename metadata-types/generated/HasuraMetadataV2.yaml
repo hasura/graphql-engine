@@ -1334,13 +1334,15 @@ definitions:
         title: comment
       permissions:
         description: Permissions of the action
-        type: object
-        properties:
-          role:
-            type: string
-            title: role
-        required:
-          - role
+        type: array
+        items:
+          type: object
+          properties:
+            role:
+              type: string
+              title: role
+          required:
+            - role
         title: permissions
     required:
       - definition
