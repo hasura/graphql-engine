@@ -11,19 +11,24 @@ import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Types
 
 
--- WIP NOTE
---
--- An abstract representation of insert was tricky to pin down. The
--- following structures are taken from Resolve, and slightly
--- modified. What needs to be decided is where those should go and
--- what we should do with them, really.
---
--- They are currently in this file in order to be accessible from the
--- Context file without creating a dependency loop, but this is only a
--- temporary emplacement: they are not part of the Schema and don't
--- belong in this folder.
+-- At time of writing (August 2020), GraphQL queries and mutations get
+-- translated into corresponding RQL queries: RQL is used as the internal
+-- intermediary representation, before a query gets translated into
+-- SQL. However, RQL inserts represenation does not support nested insertions,
+-- which means that GraphQL inserts need a separate representation, found here.
 
--- FIXME: this deserves a better name / a complete overhaul
+-- FIXME: this code doesn't belong in this folder: arguably, since this is an
+-- internal representation of a mutation, it should belong alongside RQL rather
+-- than alongside the schema code, especially if we transition RQL to only be an
+-- intermediary representation library rather than an actual API (see [1] for
+-- more information).
+-- [1] https://gist.github.com/abooij/07165b5ac36097178a334bc03805c33b
+
+-- FIXME: this representation was lifted almost verbatim from pre-PDV code, and
+-- hasn't been adapted to reflect the changes that PDV brought. It is therefore
+-- quite likely that some of the information stored in those structures is
+-- redundant, and that they can be simplified.
+
 data AnnInsert v
   = AnnInsert
   { _aiFieldName :: !Text
