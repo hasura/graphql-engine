@@ -408,7 +408,7 @@ validateType permittedVariables value expectedGType types =
 assertType :: G.GType -> G.GType -> Validation (NonEmpty ValidationError) ()
 assertType actualType expectedType = do
   -- The GraphQL spec says that, we can coerce a singleton value into an array
-  -- value. Which means that if the 'actualType' is a singleton value, like
+  -- value. Which means that if the 'actualType' is a singleton type, like
   -- 'Int' we should be able to join this with a remote node, which expects an
   -- input argument of type '[Int]'
   -- http://spec.graphql.org/June2018/#sec-Type-System.List
