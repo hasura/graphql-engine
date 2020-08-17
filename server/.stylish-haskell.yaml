@@ -255,6 +255,7 @@ language_extensions:
 - QuantifiedConstraints
 - QuasiQuotes
 - RankNTypes
+- RecordWildCards
 - RoleAnnotations
 - ScopedTypeVariables
 - StandaloneDeriving
