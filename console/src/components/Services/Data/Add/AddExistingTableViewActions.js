@@ -14,7 +14,7 @@ import {
 } from '../../../Common/utils/routesUtils';
 import { checkIfTable } from '../../../Common/utils/pgUtils';
 import { exportMetadata } from '../../Settings/Actions';
-import { createMetadataFromTableList } from '../utils';
+import { createMetadata } from '../utils';
 import { isMetadataEmpty } from '../TableRelationships/utils';
 import { replaceMetadataMigration } from '../TableRelationships/Actions';
 
@@ -175,7 +175,7 @@ const addAllUntrackedTablesSql = (tableList, skipMetadataReplace = false) => {
         exportMetadata(metadata => {
           if (isMetadataEmpty(metadata)) {
             // nothing in the metadata => replace tablelist
-            const newMetadata = createMetadataFromTableList(tableList);
+            const newMetadata = createMetadata(tableList);
             if (tableList.length > 0 && newMetadata)
               dispatch({ type: MAKING_REQUEST });
 

@@ -821,12 +821,12 @@ export const getDependencyError = (err = {}) => {
 };
 
 /**
- * # createMetadataFromTableList
+ * # createMetadata
  *
  * @param {*} [tableList=[]] table list
  * @returns generated metadata
  */
-export const createMetadataFromTableList = (tableList = []) => {
+export const createMetadata = (tableList = []) => {
   const tables = tableList.map(({ table_name, table_schema }) => ({
     table: {
       schema: table_schema,

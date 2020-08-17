@@ -395,7 +395,7 @@ const getPrevRelationships = (tables, tableIx, relationshipType) =>
     ? tables[tableIx][relationshipType]
     : [];
 
-export const createMetadataWithRelationships = (metadata, trackPayload) => {
+export const addRelationships = (metadata, trackPayload) => {
   const result = { ...metadata, tables: [...metadata.tables] };
   trackPayload.forEach(({ upQuery = {} }) => {
     const { name, using, table } = upQuery.args;

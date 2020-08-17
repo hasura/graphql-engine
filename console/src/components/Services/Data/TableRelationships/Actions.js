@@ -16,7 +16,7 @@ import {
 import { exportMetadata } from '../../Settings/Actions';
 import {
   hasRelationshipsMetadata,
-  createMetadataWithRelationships,
+  addRelationships,
 } from './utils';
 
 export const SET_MANUAL_REL_ADD = 'ModifyTable/SET_MANUAL_REL_ADD';
@@ -762,7 +762,7 @@ const replaceMetadata = (autoTrackData, skipMetadataCheck = false) => (
     return dispatch(
       exportMetadata(metadata => {
         if (hasRelationshipsMetadata(metadata)) return fallback();
-        const newMetaData = createMetadataWithRelationships(
+        const newMetaData = addRelationships(
           { ...metadata },
           autoTrackData
         );
