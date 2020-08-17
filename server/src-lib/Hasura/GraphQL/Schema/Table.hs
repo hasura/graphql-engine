@@ -117,7 +117,6 @@ tableSelectFields
   -> SelPermInfo
   -> m [FieldInfo]
 tableSelectFields table permissions = do
-  -- TODO(PDV): memoize this?
   tableFields <- _tciFieldInfoMap . _tiCoreInfo <$> askTableInfo table
   filterM canBeSelected $ Map.elems tableFields
   where
@@ -161,7 +160,6 @@ tableUpdateColumns
   -> UpdPermInfo
   -> m [PGColumnInfo]
 tableUpdateColumns table permissions = do
-  -- TODO: memoize this?
   tableFields <- _tciFieldInfoMap . _tiCoreInfo <$> askTableInfo table
   pure $ mapMaybe isUpdatable $ Map.elems tableFields
   where
