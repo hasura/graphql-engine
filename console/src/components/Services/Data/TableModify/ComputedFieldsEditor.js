@@ -79,6 +79,8 @@ const ComputedFieldsEditor = ({
     const computedFieldFunctionName = computedFieldFunctionDef.name;
     const computedFieldFunctionSchema = computedFieldFunctionDef.schema;
     const computedFieldTableRowArg = computedField.definition.table_argument;
+    const computedFieldTableSessionArg =
+      computedField.definition.session_argument;
     const computedFieldComment = computedField.comment;
 
     let computedFieldFunction = null;
@@ -266,6 +268,20 @@ const ComputedFieldsEditor = ({
         setComputedFieldsState(newState);
       };
 
+      const handleTableSesssionArgChange = e => {
+        const newState = [...stateComputedFields];
+
+        newState[i] = {
+          ...newState[i],
+          definition: {
+            ...newState[i].definition,
+            session_argument: e.target.value || null,
+          },
+        };
+
+        setComputedFieldsState(newState);
+      };
+
       return (
         <div>
           <div>
@@ -294,7 +310,7 @@ const ComputedFieldsEditor = ({
                     zIndex: 5,
                   },
                 }}
-                filterOption={'prefix'}
+                filterOption="prefix"
                 placeholder="function_name"
               />
             </div>
@@ -325,7 +341,7 @@ const ComputedFieldsEditor = ({
                     zIndex: 5,
                   },
                 }}
-                filterOption={'prefix'}
+                filterOption="prefix"
                 placeholder="function_name"
               />
             </div>
@@ -341,8 +357,21 @@ const ComputedFieldsEditor = ({
             <input
               type="text"
               value={computedFieldTableRowArg}
-              placeholder={'default: first argument'}
+              placeholder="default: first argument"
               onChange={handleTableRowArgChange}
+              className={`form-control ${styles.wd50percent}`}
+            />
+          </div>
+          <div className={`${styles.add_mar_top}`}>
+            <div className={`${styles.add_mar_bottom_mid}`}>
+              <b>Session variable argument:</b>
+              <Tooltip message="the function argument into which hasura session variables will be passed" />
+            </div>
+            <input
+              type="text"
+              value={computedFieldTableSessionArg}
+              placeholder="hasura_session"
+              onChange={handleTableSesssionArgChange}
               className={`form-control ${styles.wd50percent}`}
             />
           </div>
