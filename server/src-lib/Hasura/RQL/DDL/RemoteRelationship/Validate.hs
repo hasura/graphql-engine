@@ -407,16 +407,18 @@ validateType permittedVariables value expectedGType types =
 
 assertType :: G.GType -> G.GType -> Validation (NonEmpty ValidationError) ()
 assertType actualType expectedType = do
-  -- check if both are list types or both are named types
-  (when
-     (isListType' actualType /= isListType' expectedType)
-     (Failure (pure $ ExpectedTypeButGot expectedType actualType)))
-  -- if list type then check over unwrapped type, else check base types
-  if isListType' actualType
-    then assertType (unwrapTy actualType) (unwrapTy expectedType)
-    else (when
-            (getBaseTy actualType /= getBaseTy expectedType)
-            (Failure (pure $ ExpectedTypeButGot expectedType actualType)))
+  -- The GraphQL spec says that, we can coerce a singleton value into an array
+  -- value. Which means that if the 'actualType' is a singleton value, like
+  -- 'Int' we should be able to join this with a remote node, which expects an
+  -- input argument of type '[Int]'
+  -- http://spec.graphql.org/June2018/#sec-Type-System.List
+  case (isListType' actualType,isListType' expectedType) of
+    (True, True) -> assertType (unwrapTy actualType) (unwrapTy expectedType)
+    (True, False) -> Failure (pure $ ExpectedTypeButGot expectedType actualType)
+    _ ->
+      (when
+       (getBaseTy actualType /= getBaseTy expectedType)
+       (Failure (pure $ ExpectedTypeButGot expectedType actualType)))
   pure ()
 
 assertListType :: G.GType -> Validation (NonEmpty ValidationError) ()
