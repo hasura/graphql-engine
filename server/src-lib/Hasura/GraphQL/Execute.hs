@@ -36,10 +36,10 @@ import qualified Network.Wai.Extended                   as Wai
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging
+import           Hasura.GraphQL.Parser.Column           (UnpreparedValue)
 import           Hasura.GraphQL.RemoteServer            (execRemoteGQ')
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Utils                   (showName)
-import           Hasura.GraphQL.Parser.Column           (UnpreparedValue)
 import           Hasura.HTTP
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                    (RequestId)
@@ -179,7 +179,7 @@ validateSubscriptionRootField
 validateSubscriptionRootField = \case
   C.RFDB x -> pure $ C.RFDB x
   C.RFAction (C.AQAsync s) -> pure $ C.RFAction s
-  C.RFAction (C.AQQuery _) -> throw400 NotSupported "action queries are not supported over subscriptions"
+  C.RFAction (C.AQQuery _) -> throw400 NotSupported "query actions cannot be run as a subscription"
   C.RFRemote _ -> throw400 NotSupported "subscription to remote server is not supported"
   C.RFRaw _ -> throw400 NotSupported "Introspection not supported over subscriptions"
 
