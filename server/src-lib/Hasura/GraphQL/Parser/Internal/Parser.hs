@@ -24,6 +24,7 @@ import           Language.GraphQL.Draft.Syntax hiding (Definition)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Collect
 import           Hasura.GraphQL.Parser.Schema
+import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Error
 import           Hasura.Server.Utils           (englishList)
 import           Hasura.SQL.Types
@@ -274,16 +275,16 @@ despite not having a JSON value.
 -}
 
 boolean :: MonadParse m => Parser 'Both m Bool
-boolean = scalar $$(litName "Boolean") Nothing SRBoolean
+boolean = scalar boolScalar Nothing SRBoolean
 
 int :: MonadParse m => Parser 'Both m Int32
-int = scalar $$(litName "Int") Nothing SRInt
+int = scalar intScalar Nothing SRInt
 
 float :: MonadParse m => Parser 'Both m Double
-float = scalar $$(litName "Float") Nothing SRFloat
+float = scalar floatScalar Nothing SRFloat
 
 string :: MonadParse m => Parser 'Both m Text
-string = scalar $$(litName "String") Nothing SRString
+string = scalar stringScalar Nothing SRString
 
 -- | As an input type, any string or integer input value should be coerced to ID as Text
 -- https://spec.graphql.org/June2018/#sec-ID
@@ -298,7 +299,7 @@ identifier = Parser
       v                         -> typeMismatch idName "a String or a 32-bit integer" v
   }
   where
-    idName = $$(litName "ID")
+    idName = idScalar
     schemaType = NonNullable $ TNamed $ mkDefinition idName Nothing TIScalar
     parseScientific = either (parseErrorWith ParseFailed . qeError)
       (pure . T.pack . show @Int) . runAesonParser scientificToInteger
