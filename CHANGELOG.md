@@ -26,6 +26,7 @@ If you do have such headers configured, then you must update the header configur
 - console: make add column UX consistent with others (#5486)
 - cli: improve error messages thrown when metadata apply fails (#5513)
 - cli: fix issue with creating seed migrations while using tables with capital letters (closes #5532) (#5549)
+- cli: add missing global flags for seeds command
 - build: introduce additional log kinds for cli-migrations image (#5529)
 
 ## `v1.3.0`
