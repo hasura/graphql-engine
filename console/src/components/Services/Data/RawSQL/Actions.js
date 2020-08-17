@@ -114,7 +114,7 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
         dispatch(fetchDataInit()).then(() => {
           dispatch({
             type: REQUEST_SUCCESS,
-            data: data && isStatementTimeout ? data[1] : data[0],
+            data: data && (isStatementTimeout ? data[1] : data[0]),
           });
         });
         dispatch(fetchTrackedFunctions());
