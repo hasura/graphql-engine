@@ -38,8 +38,8 @@ import           Control.Monad.Trans.Control          (MonadBaseControl)
 
 import qualified Control.Concurrent.Async.Lifted.Safe as LA
 import qualified Data.Environment                     as Env
-import qualified Hasura.Tracing                       as Tracing
 import qualified Hasura.Logging                       as L
+import qualified Hasura.Tracing                       as Tracing
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Prepare
@@ -538,8 +538,7 @@ processOutputSelectionSet
   -> RS.AnnFieldsG v
   -> Bool
   -> RS.AnnSimpleSelG v
-processOutputSelectionSet tableRowInput actionOutputType definitionList
-  annotatedFields =
+processOutputSelectionSet tableRowInput actionOutputType definitionList annotatedFields =
   RS.AnnSelectG annotatedFields selectFrom RS.noTablePermissions RS.noSelectArgs
   where
     jsonbToPostgresRecordFunction =
