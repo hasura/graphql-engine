@@ -21,6 +21,7 @@ If you do have such headers configured, then you must update the header configur
 - server: add logs for action handlers
 - server: add request/response sizes in event triggers (and scheduled trigger) logs (#5463)
 - server: change startup log kind `db_migrate` to `catalog_migrate` (#5531)
+- server: don't throw validation error when creating remote relationships joining singleton type with array type with same base type (fixes #5133)
 - console: handle nested fragments in allowed queries (close #5137) (#5252)
 - console: update sidebar icons for different action and trigger types (#5445)
 - console: make add column UX consistent with others (#5486)
