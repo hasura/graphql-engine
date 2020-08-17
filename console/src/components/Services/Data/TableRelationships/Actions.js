@@ -14,10 +14,7 @@ import {
   parseRemoteRelationship,
 } from './RemoteRelationships/utils';
 import { exportMetadata } from '../../Settings/Actions';
-import {
-  hasRelationshipsMetadata,
-  addRelationships,
-} from './utils';
+import { hasRelationshipsMetadata, addRelationships } from './utils';
 
 export const SET_MANUAL_REL_ADD = 'ModifyTable/SET_MANUAL_REL_ADD';
 export const MANUAL_REL_SET_TYPE = 'ModifyTable/MANUAL_REL_SET_TYPE';
@@ -762,10 +759,7 @@ const replaceMetadata = (autoTrackData, skipMetadataCheck = false) => (
     return dispatch(
       exportMetadata(metadata => {
         if (hasRelationshipsMetadata(metadata)) return fallback();
-        const newMetaData = addRelationships(
-          { ...metadata },
-          autoTrackData
-        );
+        const newMetaData = addRelationships({ ...metadata }, autoTrackData);
         return dispatch(
           replaceMetadataMigration(newMetaData, metadata, fallback, {
             migrationName,
