@@ -77,9 +77,6 @@ toSQLFromItem alias = \case
   RFAction s              -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
   where
     fromSelect s = S.mkSelFromItem s alias
-  -- QRFActionSelect s -> DS.mkSQLSelect DS.JASSingleObject s
-  -- QRFActionExecuteObject s -> DS.mkSQLSelect DS.JASSingleObject s
-  -- QRFActionExecuteList s -> DS.mkSQLSelect DS.JASSingleObject s
 
 mkMultiplexedQuery :: OMap.InsOrdHashMap G.Name SubscriptionRootFieldResolved -> MultiplexedQuery
 mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkSelect
