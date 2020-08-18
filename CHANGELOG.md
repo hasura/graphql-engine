@@ -2,6 +2,14 @@
 
 ## Next release
 
+
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+
+
+## `v1.3.1-beta.1`
+
 ### Breaking change
 
 Headers from environment variables starting with `HASURA_GRAPHQL_` are not allowed  
