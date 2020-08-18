@@ -223,7 +223,9 @@ const ComputedFieldsEditor = ({
         setComputedFieldsState(newState);
       };
 
-      const handleFnSchemaChange = (selectedOption: ValueType<OptionTypeBase> | string) => {
+      const handleFnSchemaChange = (
+        selectedOption: ValueType<OptionTypeBase> | string
+      ) => {
         // fetch schema fn
 
         if (!selectedOption) {
@@ -250,7 +252,9 @@ const ComputedFieldsEditor = ({
         setComputedFieldsState(newState);
       };
 
-      const handleFnNameChange = (selectedOption: ValueType<OptionTypeBase> | string) => {
+      const handleFnNameChange = (
+        selectedOption: ValueType<OptionTypeBase> | string
+      ) => {
         const newState = [...stateComputedFields];
 
         if (!selectedOption) {
@@ -282,7 +286,9 @@ const ComputedFieldsEditor = ({
         setComputedFieldsState(newState);
       };
 
-      const handleTableRowArgChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const handleTableRowArgChange = (
+        e: React.ChangeEvent<HTMLInputElement>
+      ) => {
         const newState = [...stateComputedFields];
 
         newState[i] = {
@@ -296,7 +302,9 @@ const ComputedFieldsEditor = ({
         setComputedFieldsState(newState);
       };
 
-      const handleTableSesssionArgChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const handleTableSesssionArgChange = (
+        e: React.ChangeEvent<HTMLInputElement>
+      ) => {
         const newState = [...stateComputedFields];
 
         newState[i] = {
