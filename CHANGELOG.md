@@ -2,6 +2,14 @@
 
 ## Next release
 
+
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+
+
+## `v1.3.1-beta.1`
+
 ### Breaking change
 
 Headers from environment variables starting with `HASURA_GRAPHQL_` are not allowed  
@@ -24,6 +32,7 @@ If you do have such headers configured, then you must update the header configur
 - console: handle nested fragments in allowed queries (close #5137) (#5252)
 - console: update sidebar icons for different action and trigger types (#5445)
 - console: make add column UX consistent with others (#5486)
+- console: add "identity" to frequently used columns (close #4279) (#5360)
 - cli: improve error messages thrown when metadata apply fails (#5513)
 - cli: fix issue with creating seed migrations while using tables with capital letters (closes #5532) (#5549)
 - build: introduce additional log kinds for cli-migrations image (#5529)
