@@ -27,6 +27,7 @@ module Hasura.Prelude
 import           Control.Applicative               as M (Alternative (..))
 import           Control.Arrow                     as M (first, second, (&&&), (***), (<<<), (>>>))
 import           Control.DeepSeq                   as M (NFData, deepseq, force)
+import           Control.Lens                      as M ((%~))
 import           Control.Monad.Base                as M
 import           Control.Monad.Except              as M
 import           Control.Monad.Identity            as M

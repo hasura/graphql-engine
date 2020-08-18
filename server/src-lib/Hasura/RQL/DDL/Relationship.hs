@@ -5,7 +5,8 @@ module Hasura.RQL.DDL.Relationship
   , arrRelP2Setup
 
   , runDropRel
-  , delRelFromCatalog
+  -- , delRelFromCatalog
+  , dropRelationshipInMetadata
 
   , runSetRelComment
   )
@@ -14,10 +15,11 @@ where
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Deps
-import           Hasura.RQL.DDL.Permission (purgePerm)
+import           Hasura.RQL.DDL.Permission (dropPermissionInMetadata)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
+import           Control.Lens              (ix)
 import           Data.Aeson.Types
 import           Data.Tuple                (swap)
 import           Instances.TH.Lift         ()
@@ -30,8 +32,22 @@ runCreateRelationship
   :: (MonadTx m, CacheRWM m, HasSystemDefined m, ToJSON a)
   => RelType -> WithTable (RelDef a) -> m EncJSON
 runCreateRelationship relType (WithTable tableName relDef) = do
-  insertRelationshipToCatalog tableName relType relDef
-  buildSchemaCacheFor $ MOTableObj tableName (MTORel (rdName relDef) relType)
+  -- FIXME: Add relationship validation
+  -- insertRelationshipToCatalog tableName relType relDef
+  let relName = _rdName relDef
+      comment = _rdComment relDef
+      metadataObj = MOTableObj tableName $ MTORel relName relType
+
+  addRelationshipToMetadata <- case relType of
+    ObjRel -> do
+      value <- decodeValue $ toJSON $ _rdUsing relDef
+      pure $ tmObjectRelationships %~ HM.insert relName (RelDef relName value comment)
+    ArrRel -> do
+      value <- decodeValue $ toJSON $ _rdUsing relDef
+      pure $ tmArrayRelationships %~ HM.insert relName (RelDef relName value comment)
+
+  buildSchemaCacheFor metadataObj $
+    metaTables.ix tableName %~ addRelationshipToMetadata
   pure successMsg
 
 insertRelationshipToCatalog
@@ -53,33 +69,39 @@ insertRelationshipToCatalog (QualifiedObject schema table) relType (RelDef name 
 
 runDropRel :: (MonadTx m, CacheRWM m) => DropRel -> m EncJSON
 runDropRel (DropRel qt rn cascade) = do
-  depObjs <- collectDependencies
+  (relType, depObjs) <- collectDependencies
   withNewInconsistentObjsCheck do
-    traverse_ purgeRelDep depObjs
-    liftTx $ delRelFromCatalog qt rn
-    buildSchemaCache
+    metadataModifiers <- traverse purgeRelDep depObjs
+    buildSchemaCache $ metaTables.ix qt %~
+      dropRelationshipInMetadata rn relType . foldr (.) id metadataModifiers
   pure successMsg
   where
     collectDependencies = do
       tabInfo <- askTableCoreInfo qt
-      _       <- askRelType (_tciFieldInfoMap tabInfo) rn ""
+      relType <- riType <$> askRelType (_tciFieldInfoMap tabInfo) rn ""
       sc      <- askSchemaCache
-      let depObjs = getDependentObjs sc (SOTableObj qt $ TORel rn)
+      let depObjs = getDependentObjs sc (SOTableObj qt $ TORel rn relType)
       when (depObjs /= [] && not (or cascade)) $ reportDeps depObjs
-      pure depObjs
+      pure (relType, depObjs)
 
-delRelFromCatalog
-  :: QualifiedTable
-  -> RelName
-  -> Q.TxE QErr ()
-delRelFromCatalog (QualifiedObject sn tn) rn =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-           DELETE FROM
-                  hdb_catalog.hdb_relationship
-           WHERE table_schema =  $1
-             AND table_name = $2
-             AND rel_name = $3
-                |] (sn, tn, rn) True
+dropRelationshipInMetadata
+  :: RelName -> RelType -> TableMetadata -> TableMetadata
+dropRelationshipInMetadata rn = \case
+  ObjRel -> tmObjectRelationships %~ HM.delete rn
+  ArrRel -> tmArrayRelationships %~ HM.delete rn
+
+-- delRelFromCatalog
+--   :: QualifiedTable
+--   -> RelName
+--   -> Q.TxE QErr ()
+-- delRelFromCatalog (QualifiedObject sn tn) rn =
+--   Q.unitQE defaultTxErrorHandler [Q.sql|
+--            DELETE FROM
+--                   hdb_catalog.hdb_relationship
+--            WHERE table_schema =  $1
+--              AND table_name = $2
+--              AND rel_name = $3
+--                 |] (sn, tn, rn) True
 
 objRelP2Setup
   :: (QErrM m)
@@ -133,10 +155,14 @@ arrRelP2Setup foreignKeys qt (RelDef rn ru _) = case ru of
         mapping = HM.fromList $ map swap $ HM.toList colMap
     pure (RelInfo rn ArrRel mapping refqt False, deps)
 
-purgeRelDep :: (MonadTx m) => SchemaObjId -> m ()
-purgeRelDep (SOTableObj tn (TOPerm rn pt)) = purgePerm tn rn pt
-purgeRelDep d = throw500 $ "unexpected dependency of relationship : "
-                <> reportSchemaObj d
+purgeRelDep
+  :: (QErrM m)
+  => SchemaObjId -> m (TableMetadata -> TableMetadata)
+purgeRelDep = \case
+  SOTableObj tn (TOPerm rn pt) -> pure $ dropPermissionInMetadata rn pt
+  d                            ->
+    throw500 $ "unexpected dependency of relationship : "
+    <> reportSchemaObj d
 
 validateRelP1
   :: (UserInfoM m, QErrM m, TableCoreInfoRM m)

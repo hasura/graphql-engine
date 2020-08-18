@@ -8,7 +8,8 @@ module Hasura.RQL.DDL.EventTrigger
   , runInvokeEventTrigger
 
   -- TODO: review
-  , delEventTriggerFromCatalog
+  -- , delEventTriggerFromCatalog
+  , dropEventTriggerInMetadata
   , subTableP2
   , subTableP2Setup
   , mkAllTriggersQ
@@ -19,6 +20,7 @@ module Hasura.RQL.DDL.EventTrigger
   , updateEventTriggerInCatalog
   ) where
 
+import           Control.Lens            (ix)
 import           Data.Aeson
 
 import           Hasura.EncJSON
@@ -30,8 +32,9 @@ import           Hasura.SQL.Types
 
 import qualified Hasura.SQL.DML          as S
 
-import qualified Data.Text               as T
 import qualified Data.Environment        as Env
+import qualified Data.HashMap.Strict     as HM
+import qualified Data.Text               as T
 import qualified Data.Text.Lazy          as TL
 import qualified Database.PG.Query       as Q
 import qualified Text.Shakespeare.Text   as ST
@@ -136,15 +139,15 @@ addEventTriggerToCatalog qt etc = do
     QualifiedObject sn tn = qt
     (EventTriggerConf name _ _ _ _ _) = etc
 
-delEventTriggerFromCatalog :: TriggerName -> Q.TxE QErr ()
-delEventTriggerFromCatalog trn = do
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-           DELETE FROM
-                  hdb_catalog.event_triggers
-           WHERE name = $1
-                |] (Identity trn) False
-  delTriggerQ trn
-  archiveEvents trn
+-- delEventTriggerFromCatalog :: TriggerName -> Q.TxE QErr ()
+-- delEventTriggerFromCatalog trn = do
+--   Q.unitQE defaultTxErrorHandler [Q.sql|
+--            DELETE FROM
+--                   hdb_catalog.event_triggers
+--            WHERE name = $1
+--                 |] (Identity trn) False
+--   delTriggerQ trn
+--   archiveEvents trn
 
 archiveEvents :: TriggerName -> Q.TxE QErr ()
 archiveEvents trn = do
@@ -257,17 +260,26 @@ runCreateEventTriggerQuery
   => CreateEventTriggerQuery -> m EncJSON
 runCreateEventTriggerQuery q = do
   (qt, replace, etc) <- subTableP1 q
-  subTableP2 qt replace etc
-  buildSchemaCacheFor $ MOTableObj qt (MTOTrigger $ etcName etc)
+  -- subTableP2 qt replace etc
+  let triggerName = etcName etc
+      metadataObj = MOTableObj qt $ MTOTrigger triggerName
+  buildSchemaCacheFor metadataObj $
+    metaTables.ix qt.tmEventTriggers %~ HM.insert triggerName etc
   return successMsg
 
 runDeleteEventTriggerQuery
   :: (MonadTx m, CacheRWM m)
   => DeleteEventTriggerQuery -> m EncJSON
 runDeleteEventTriggerQuery (DeleteEventTriggerQuery name) = do
-  liftTx $ delEventTriggerFromCatalog name
-  withNewInconsistentObjsCheck buildSchemaCache
+  -- liftTx $ delEventTriggerFromCatalog name
+  let table = undefined
+  withNewInconsistentObjsCheck $ buildSchemaCache $
+    metaTables.ix table %~ dropEventTriggerInMetadata name
   pure successMsg
+
+dropEventTriggerInMetadata :: TriggerName -> TableMetadata -> TableMetadata
+dropEventTriggerInMetadata name =
+  tmEventTriggers %~ HM.delete name
 
 deliverEvent
   :: (QErrM m, MonadTx m)

@@ -606,7 +606,7 @@ execQuery env queryBs = do
   query <- case A.decode queryBs of
     Just jVal -> decodeValue jVal
     Nothing   -> throw400 InvalidJSON "invalid json"
-  buildSchemaCacheStrict
+  buildSchemaCacheStrict id
   encJToLBS <$> runQueryM env query
 
 instance Tracing.HasReporter AppM

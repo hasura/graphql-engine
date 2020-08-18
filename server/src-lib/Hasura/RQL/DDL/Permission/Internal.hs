@@ -85,36 +85,36 @@ savePermToCatalog pt (QualifiedObject sn tn) (PermDef  rn qdef mComment) systemD
            VALUES ($1, $2, $3, $4, $5 :: jsonb, $6, $7)
                 |] (sn, tn, rn, permTypeToCode pt, Q.AltJ qdef, mComment, systemDefined) True
 
-updatePermDefInCatalog
-  :: (ToJSON a)
-  => PermType
-  -> QualifiedTable
-  -> RoleName
-  -> a
-  -> Q.TxE QErr ()
-updatePermDefInCatalog pt (QualifiedObject sn tn) rn qdef =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-           UPDATE hdb_catalog.hdb_permission
-              SET perm_def = $1 :: jsonb
-             WHERE table_schema = $2 AND table_name = $3
-               AND role_name = $4 AND perm_type = $5
-           |] (Q.AltJ qdef, sn, tn, rn, permTypeToCode pt) True
+-- updatePermDefInCatalog
+--   :: (ToJSON a)
+--   => PermType
+--   -> QualifiedTable
+--   -> RoleName
+--   -> a
+--   -> Q.TxE QErr ()
+-- updatePermDefInCatalog pt (QualifiedObject sn tn) rn qdef =
+--   Q.unitQE defaultTxErrorHandler [Q.sql|
+--            UPDATE hdb_catalog.hdb_permission
+--               SET perm_def = $1 :: jsonb
+--              WHERE table_schema = $2 AND table_name = $3
+--                AND role_name = $4 AND perm_type = $5
+--            |] (Q.AltJ qdef, sn, tn, rn, permTypeToCode pt) True
 
-dropPermFromCatalog
-  :: QualifiedTable
-  -> RoleName
-  -> PermType
-  -> Q.TxE QErr ()
-dropPermFromCatalog (QualifiedObject sn tn) rn pt =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-           DELETE FROM
-               hdb_catalog.hdb_permission
-           WHERE
-               table_schema = $1
-               AND table_name = $2
-               AND role_name = $3
-               AND perm_type = $4
-                |] (sn, tn, rn, permTypeToCode pt) True
+-- dropPermFromCatalog
+--   :: QualifiedTable
+--   -> RoleName
+--   -> PermType
+--   -> Q.TxE QErr ()
+-- dropPermFromCatalog (QualifiedObject sn tn) rn pt =
+--   Q.unitQE defaultTxErrorHandler [Q.sql|
+--            DELETE FROM
+--                hdb_catalog.hdb_permission
+--            WHERE
+--                table_schema = $1
+--                AND table_name = $2
+--                AND role_name = $3
+--                AND perm_type = $4
+--                 |] (sn, tn, rn, permTypeToCode pt) True
 
 type CreatePerm a = WithTable (PermDef a)
 
@@ -222,6 +222,9 @@ class (ToJSON a) => IsPerm a where
     :: DropPerm a -> PermAccessor (PermInfo a)
   getPermAcc2 _ = permAccessor
 
+  addPermToMetadata
+    :: PermDef a -> TableMetadata -> TableMetadata
+
 addPermP2 :: (IsPerm a, MonadTx m, HasSystemDefined m) => QualifiedTable -> PermDef a -> m ()
 addPermP2 tn pd = do
   let pt = permAccToType $ getPermAcc1 pd
@@ -232,9 +235,12 @@ runCreatePerm
   :: (UserInfoM m, CacheRWM m, IsPerm a, MonadTx m, HasSystemDefined m)
   => CreatePerm a -> m EncJSON
 runCreatePerm (WithTable tn pd) = do
-  addPermP2 tn pd
+  -- addPermP2 tn pd
   let pt = permAccToType $ getPermAcc1 pd
-  buildSchemaCacheFor $ MOTableObj tn (MTOPerm (pdRole pd) pt)
+      role = _pdRole pd
+      metadataObject = MOTableObj tn $ MTOPerm role pt
+  buildSchemaCacheFor metadataObject $
+    metaTables.ix tn %~ addPermToMetadata pd
   pure successMsg
 
 dropPermP1
@@ -244,18 +250,28 @@ dropPermP1 dp@(DropPerm tn rn) = do
   tabInfo <- askTabInfo tn
   askPermInfo tabInfo rn $ getPermAcc2 dp
 
-dropPermP2 :: forall a m. (MonadTx m, IsPerm a) => DropPerm a -> m ()
-dropPermP2 dp@(DropPerm tn rn) =
-  liftTx $ dropPermFromCatalog tn rn pt
-  where
-    pa = getPermAcc2 dp
-    pt = permAccToType pa
+-- dropPermP2 :: forall a m. (MonadTx m, IsPerm a) => DropPerm a -> m ()
+-- dropPermP2 dp@(DropPerm tn rn) =
+--   liftTx $ dropPermFromCatalog tn rn pt
+--   where
+--     pa = getPermAcc2 dp
+--     pt = permAccToType pa
 
 runDropPerm
   :: (IsPerm a, UserInfoM m, CacheRWM m, MonadTx m)
   => DropPerm a -> m EncJSON
-runDropPerm defn = do
+runDropPerm defn@(DropPerm tn rn) = do
   dropPermP1 defn
-  dropPermP2 defn
-  withNewInconsistentObjsCheck buildSchemaCache
+  -- dropPermP2 defn
+  let permType = permAccToType $ getPermAcc2 defn
+  withNewInconsistentObjsCheck $ buildSchemaCache $
+    metaTables.ix tn %~ dropPermissionInMetadata rn permType
   return successMsg
+
+dropPermissionInMetadata
+  :: RoleName -> PermType -> TableMetadata -> TableMetadata
+dropPermissionInMetadata rn = \case
+  PTInsert -> tmInsertPermissions %~ M.delete rn
+  PTSelect -> tmSelectPermissions %~ M.delete rn
+  PTDelete -> tmDeletePermissions %~ M.delete rn
+  PTUpdate -> tmUpdatePermissions %~ M.delete rn

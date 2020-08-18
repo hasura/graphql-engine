@@ -8,6 +8,7 @@ import           Hasura.RQL.Types.DML
 import           Hasura.Session
 import           Hasura.SQL.Types
 
+import           Control.Lens                   (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -95,12 +96,13 @@ instance ToJSON PermColSpec where
 
 data PermDef a =
   PermDef
-  { pdRole       :: !RoleName
-  , pdPermission :: !a
-  , pdComment    :: !(Maybe T.Text)
+  { _pdRole       :: !RoleName
+  , _pdPermission :: !a
+  , _pdComment    :: !(Maybe T.Text)
   } deriving (Show, Eq, Lift, Generic)
 instance (Cacheable a) => Cacheable (PermDef a)
-$(deriveFromJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''PermDef)
+$(deriveFromJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''PermDef)
+$(makeLenses ''PermDef)
 
 instance (ToJSON a) => ToJSON (PermDef a) where
   toJSON = object . toAesonPairs

@@ -312,7 +312,7 @@ mkMutationActionSchemaOne actionInfo kind =
   flip Map.map permissions $ \permission ->
     mkMutationActionFieldsAndTypes actionInfo permission kind
   where
-    adminPermission = ActionPermissionInfo adminRoleName
+    adminPermission = ActionPermissionInfo adminRoleName Nothing
     permissions = Map.insert adminRoleName adminPermission $ _aiPermissions actionInfo
 
 mkQueryActionSchemaOne
@@ -325,7 +325,7 @@ mkQueryActionSchemaOne actionInfo =
   flip Map.map permissions $ \permission ->
     mkQueryActionFieldsAndTypes actionInfo permission
   where
-    adminPermission = ActionPermissionInfo adminRoleName
+    adminPermission = ActionPermissionInfo adminRoleName Nothing
     permissions = Map.insert adminRoleName adminPermission $ _aiPermissions actionInfo
 
 mkActionsSchema

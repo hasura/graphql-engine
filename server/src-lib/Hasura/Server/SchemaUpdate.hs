@@ -3,9 +3,8 @@ module Hasura.Server.SchemaUpdate
 where
 
 import           Hasura.Db
-import           Hasura.Prelude
-import           Hasura.Session
 import           Hasura.Logging
+import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema       (runCacheRWT)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
@@ -13,6 +12,7 @@ import           Hasura.Server.API.Query
 import           Hasura.Server.App           (SchemaCacheRef (..), withSCUpdate)
 import           Hasura.Server.Init          (InstanceId (..))
 import           Hasura.Server.Logging
+import           Hasura.Session
 
 import           Data.Aeson
 import           Data.Aeson.Casing
@@ -219,7 +219,7 @@ refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef invalidations thre
   -- Reload schema cache from catalog
   resE <- liftIO $ runExceptT $ withSCUpdate cacheRef logger do
     rebuildableCache <- fst <$> liftIO (readIORef $ _scrCache cacheRef)
-    ((), cache, _) <- buildSchemaCacheWithOptions CatalogSync invalidations
+    ((), cache, _) <- buildSchemaCacheWithOptions CatalogSync invalidations id
       & runCacheRWT rebuildableCache
       & peelRun runCtx pgCtx PG.ReadWrite Nothing
     pure ((), cache)

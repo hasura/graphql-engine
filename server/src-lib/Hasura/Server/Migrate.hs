@@ -26,9 +26,9 @@ module Hasura.Server.Migrate
 import           Hasura.Prelude
 
 import qualified Data.Aeson                    as A
+import qualified Data.Environment              as Env
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.Text                     as T
-import qualified Data.Environment              as Env
 import qualified Data.Text.IO                  as TIO
 import qualified Database.PG.Query             as Q
 import qualified Database.PG.Query.Connection  as Q
@@ -41,11 +41,11 @@ import           Data.Time.Clock               (UTCTime)
 import           Hasura.Logging                (Hasura, LogLevel (..), ToEngineLog (..))
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Schema
-import           Hasura.Server.Init            (DowngradeOptions (..))
 import           Hasura.RQL.Types
+import           Hasura.Server.Init            (DowngradeOptions (..))
 import           Hasura.Server.Logging         (StartupLog (..))
-import           Hasura.Server.Version
 import           Hasura.Server.Migrate.Version (latestCatalogVersion, latestCatalogVersionString)
+import           Hasura.Server.Version
 import           Hasura.SQL.Types
 import           System.Directory              (doesFileExist)
 
@@ -81,7 +81,7 @@ instance ToEngineLog MigrationResult Hasura where
 -- used in the `migrations` function below.
 data MigrationPair m = MigrationPair
   { mpMigrate :: m ()
-  , mpDown :: Maybe (m ())
+  , mpDown    :: Maybe (m ())
   }
 
 migrateCatalog
@@ -109,6 +109,8 @@ migrateCatalog env migrationTime = do
       liftTx $ Q.catchE defaultTxErrorHandler $
         when createSchema $ do
           Q.unitQ "CREATE SCHEMA hdb_catalog" () False
+          -- create hdb_metadata table
+          Q.unitQ "CREATE TABLE hdb_catalog.hdb_metadata (id INTEGER PRIMARY KEY, metadata json not null)" () False
           -- This is where the generated views and triggers are stored
           Q.unitQ "CREATE SCHEMA hdb_views" () False
 
@@ -165,8 +167,9 @@ migrateCatalog env migrationTime = do
 
     buildCacheAndRecreateSystemMetadata :: m (RebuildableSchemaCache m)
     buildCacheAndRecreateSystemMetadata = do
-      schemaCache <- buildRebuildableSchemaCache env
-      view _2 <$> runCacheRWT schemaCache recreateSystemMetadata
+      -- schemaCache <- buildRebuildableSchemaCache env
+      buildRebuildableSchemaCache env
+      -- view _2 <$> runCacheRWT schemaCache recreateSystemMetadata
 
     doesSchemaExist schemaName =
       liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
@@ -350,11 +353,11 @@ recreateSystemMetadata :: (MonadTx m, CacheRWM m) => m ()
 recreateSystemMetadata = do
   runTx $(Q.sqlFromFile "src-rsr/clear_system_metadata.sql")
   runHasSystemDefinedT (SystemDefined True) $ for_ systemMetadata \(tableName, tableRels) -> do
-    saveTableToCatalog tableName False emptyTableConfig
+    undefined {- saveTableToCatalog-} tableName False emptyTableConfig
     for_ tableRels \case
       Left relDef -> insertRelationshipToCatalog tableName ObjRel relDef
       Right relDef -> insertRelationshipToCatalog tableName ArrRel relDef
-  buildSchemaCacheStrict
+  buildSchemaCacheStrict id
   where
     systemMetadata :: [(QualifiedTable, [Either ObjRelDef ArrRelDef])]
     systemMetadata =

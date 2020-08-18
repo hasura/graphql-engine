@@ -2,23 +2,24 @@ module Hasura.RQL.DDL.ScheduledTrigger
   ( runCreateCronTrigger
   , runDeleteCronTrigger
   , addCronTriggerToCatalog
-  , deleteCronTriggerFromCatalog
+  -- , deleteCronTriggerFromCatalog
+  , dropCronTriggerInMetadata
   , resolveCronTrigger
   , runCreateScheduledEvent
   ) where
 
 import           Hasura.Db
 import           Hasura.EncJSON
-import           Hasura.Prelude
-import           Hasura.RQL.DDL.EventTrigger (getHeaderInfosFromConf)
-import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Catalog    (CatalogCronTrigger(..))
 import           Hasura.Eventing.ScheduledTrigger
+import           Hasura.Prelude
+import           Hasura.RQL.DDL.EventTrigger      (getHeaderInfosFromConf)
+import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Catalog         (CatalogCronTrigger (..))
 
-import qualified Database.PG.Query     as Q
-import qualified Data.Time.Clock       as C
-import qualified Data.HashMap.Strict   as Map
-import qualified Data.Environment      as Env
+import qualified Data.Environment                 as Env
+import qualified Data.HashMap.Strict              as Map
+import qualified Data.Time.Clock                  as C
+import qualified Database.PG.Query                as Q
 
 -- | runCreateCronTrigger will update a existing cron trigger when the 'replace'
 --   value is set to @true@ and when replace is @false@ a new cron trigger will
@@ -45,7 +46,12 @@ runCreateCronTrigger CreateCronTrigger {..} = do
                     <> " already exists"
 
         addCronTriggerToCatalog q
-        buildSchemaCacheFor $ MOCronTrigger $ ctName q
+        let metadataObj = MOCronTrigger cctName
+            metadata = CronTriggerMetadata cctName cctWebhook cctCronSchedule
+                       cctPayload cctRetryConf cctHeaders cctIncludeInMetadata
+                       cctComment
+        buildSchemaCacheFor metadataObj $
+          metaCronTriggers %~ Map.insert cctName metadata
         return successMsg
 
 addCronTriggerToCatalog :: (MonadTx m) => CronTriggerMetadata ->  m ()
@@ -84,9 +90,11 @@ resolveCronTrigger env CatalogCronTrigger {..} = do
 
 updateCronTrigger :: (CacheRWM m, MonadTx m) => CronTriggerMetadata -> m EncJSON
 updateCronTrigger cronTriggerMetadata = do
-  checkExists $ ctName cronTriggerMetadata
-  updateCronTriggerInCatalog cronTriggerMetadata
-  buildSchemaCacheFor $ MOCronTrigger $ ctName cronTriggerMetadata
+  let triggerName = ctName cronTriggerMetadata
+  checkExists triggerName
+  -- updateCronTriggerInCatalog cronTriggerMetadata
+  buildSchemaCacheFor (MOCronTrigger triggerName) $
+    metaCronTriggers %~ Map.insert triggerName cronTriggerMetadata
   return successMsg
 
 updateCronTriggerInCatalog :: (MonadTx m) => CronTriggerMetadata -> m ()
@@ -118,17 +126,21 @@ updateCronTriggerInCatalog CronTriggerMetadata {..} = liftTx $ do
 runDeleteCronTrigger :: (CacheRWM m, MonadTx m) => ScheduledTriggerName -> m EncJSON
 runDeleteCronTrigger (ScheduledTriggerName stName) = do
   checkExists stName
-  deleteCronTriggerFromCatalog stName
-  withNewInconsistentObjsCheck buildSchemaCache
+  -- deleteCronTriggerFromCatalog stName
+  withNewInconsistentObjsCheck $ buildSchemaCache $ dropCronTriggerInMetadata stName
   return successMsg
 
-deleteCronTriggerFromCatalog :: (MonadTx m) => TriggerName -> m ()
-deleteCronTriggerFromCatalog triggerName = liftTx $ do
-  Q.unitQE defaultTxErrorHandler
-   [Q.sql|
-    DELETE FROM hdb_catalog.hdb_cron_triggers
-    WHERE name = $1
-   |] (Identity triggerName) False
+dropCronTriggerInMetadata :: TriggerName -> Metadata -> Metadata
+dropCronTriggerInMetadata name =
+  metaCronTriggers %~ Map.delete name
+
+-- deleteCronTriggerFromCatalog :: (MonadTx m) => TriggerName -> m ()
+-- deleteCronTriggerFromCatalog triggerName = liftTx $ do
+--   Q.unitQE defaultTxErrorHandler
+--    [Q.sql|
+--     DELETE FROM hdb_catalog.hdb_cron_triggers
+--     WHERE name = $1
+--    |] (Identity triggerName) False
 
 runCreateScheduledEvent :: (MonadTx m) => CreateScheduledEvent -> m EncJSON
 runCreateScheduledEvent CreateScheduledEvent {..} = do

@@ -6,7 +6,8 @@ module Hasura.RQL.DDL.RemoteRelationship
   , updateRemoteRelInCatalog
   , persistRemoteRelationship
   , resolveRemoteRelationship
-  , delRemoteRelFromCatalog
+  -- , delRemoteRelFromCatalog
+  , dropRemoteRelationshipInMetadata
   , getRemoteRelDefFromCatalog
   ) where
 
@@ -17,20 +18,24 @@ import           Hasura.RQL.DDL.RemoteRelationship.Validate
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
+import           Control.Lens                               (ix)
 import           Instances.TH.Lift                          ()
 
+import qualified Data.HashMap.Strict                        as HM
 import qualified Database.PG.Query                          as Q
 
 runCreateRemoteRelationship
   :: (MonadTx m, CacheRWM m) => RemoteRelationship -> m EncJSON
-runCreateRemoteRelationship remoteRelationship = do
+runCreateRemoteRelationship RemoteRelationship{..} = do
   -- Few checks
-  void $ askTabInfo $ rtrTable remoteRelationship
-  liftTx $ persistRemoteRelationship remoteRelationship
-  buildSchemaCacheFor $ MOTableObj table $ MTORemoteRelationship $ rtrName remoteRelationship
+  void $ askTabInfo rtrTable
+  -- liftTx $ persistRemoteRelationship remoteRelationship
+  let metadataObj = MOTableObj rtrTable $ MTORemoteRelationship rtrName
+      metadata = RemoteRelationshipMeta rtrName $
+        RemoteRelationshipDef rtrRemoteSchema rtrHasuraFields rtrRemoteField
+  buildSchemaCacheFor metadataObj $
+    metaTables.ix rtrTable.tmRemoteRelationships %~ HM.insert rtrName metadata
   pure successMsg
-  where
-    table = rtrTable remoteRelationship
 
 resolveRemoteRelationship
   :: QErrM m
@@ -62,14 +67,16 @@ resolveRemoteRelationship remoteRelationship pgColumns remoteSchemaMap = do
   pure (remoteField, typesMap, schemaDependencies)
 
 runUpdateRemoteRelationship :: (MonadTx m, CacheRWM m) => RemoteRelationship -> m EncJSON
-runUpdateRemoteRelationship remoteRelationship = do
-  fieldInfoMap <- askFieldInfoMap table
-  void $ askRemoteRel fieldInfoMap (rtrName remoteRelationship)
-  liftTx $ updateRemoteRelInCatalog remoteRelationship
-  buildSchemaCacheFor $ MOTableObj table $ MTORemoteRelationship $ rtrName remoteRelationship
+runUpdateRemoteRelationship RemoteRelationship{..} = do
+  fieldInfoMap <- askFieldInfoMap rtrTable
+  void $ askRemoteRel fieldInfoMap rtrName
+  -- liftTx $ updateRemoteRelInCatalog remoteRelationship
+  let metadataObj = MOTableObj rtrTable $ MTORemoteRelationship rtrName
+      metadata = RemoteRelationshipMeta rtrName $
+        RemoteRelationshipDef rtrRemoteSchema rtrHasuraFields rtrRemoteField
+  buildSchemaCacheFor metadataObj $
+    metaTables.ix rtrTable.tmRemoteRelationships %~ HM.insert rtrName metadata
   pure successMsg
-  where
-    table = rtrTable remoteRelationship
 
 mkRemoteRelationshipDef :: RemoteRelationship -> RemoteRelationshipDef
 mkRemoteRelationshipDef RemoteRelationship {..} =
@@ -103,20 +110,27 @@ runDeleteRemoteRelationship ::
 runDeleteRemoteRelationship (DeleteRemoteRelationship table relName)= do
   fieldInfoMap <- askFieldInfoMap table
   void $ askRemoteRel fieldInfoMap relName
-  liftTx $ delRemoteRelFromCatalog table relName
-  buildSchemaCacheFor $ MOTableObj table $ MTORemoteRelationship relName
+  -- liftTx $ delRemoteRelFromCatalog table relName
+  let metadataObj = MOTableObj table $ MTORemoteRelationship relName
+  buildSchemaCacheFor metadataObj $
+    metaTables.ix table %~ dropRemoteRelationshipInMetadata relName
   pure successMsg
 
-delRemoteRelFromCatalog
-  :: QualifiedTable -> RemoteRelationshipName -> Q.TxE QErr ()
-delRemoteRelFromCatalog (QualifiedObject sn tn) (RemoteRelationshipName relName) =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-           DELETE FROM
-                  hdb_catalog.hdb_remote_relationship
-           WHERE table_schema =  $1
-             AND table_name = $2
-             AND remote_relationship_name = $3
-                |] (sn, tn, relName) True
+dropRemoteRelationshipInMetadata
+  :: RemoteRelationshipName -> TableMetadata -> TableMetadata
+dropRemoteRelationshipInMetadata name =
+  tmRemoteRelationships %~ HM.delete name
+
+-- delRemoteRelFromCatalog
+--   :: QualifiedTable -> RemoteRelationshipName -> Q.TxE QErr ()
+-- delRemoteRelFromCatalog (QualifiedObject sn tn) (RemoteRelationshipName relName) =
+--   Q.unitQE defaultTxErrorHandler [Q.sql|
+--            DELETE FROM
+--                   hdb_catalog.hdb_remote_relationship
+--            WHERE table_schema =  $1
+--              AND table_name = $2
+--              AND remote_relationship_name = $3
+--                 |] (sn, tn, relName) True
 
 getRemoteRelDefFromCatalog :: RemoteRelationshipName -> QualifiedTable ->  Q.TxE QErr RemoteRelationshipDef
 getRemoteRelDefFromCatalog relName (QualifiedObject schemaName tableName) = do

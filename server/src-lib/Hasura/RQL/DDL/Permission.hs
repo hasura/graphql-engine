@@ -1,7 +1,7 @@
 module Hasura.RQL.DDL.Permission
     ( CreatePerm
     , runCreatePerm
-    , purgePerm
+    -- , purgePerm
     , PermDef(..)
 
     , InsPerm(..)
@@ -29,6 +29,7 @@ module Hasura.RQL.DDL.Permission
 
     , DropPerm
     , runDropPerm
+    , dropPermissionInMetadata
 
     , SetPermComment(..)
     , runSetPermComment
@@ -140,6 +141,9 @@ instance IsPerm InsPerm where
 
   buildPermInfo = buildInsPermInfo
 
+  addPermToMetadata permDef =
+    tmInsertPermissions %~ HM.insert (_pdRole permDef) permDef
+
 buildSelPermInfo
   :: (QErrM m, TableCoreInfoRM m)
   => QualifiedTable
@@ -194,6 +198,9 @@ instance IsPerm SelPerm where
   buildPermInfo tn fieldInfoMap (PermDef _ a _) =
     buildSelPermInfo tn fieldInfoMap a
 
+  addPermToMetadata permDef =
+    tmSelectPermissions %~ HM.insert (_pdRole permDef) permDef
+
 type CreateUpdPerm = CreatePerm UpdPerm
 
 buildUpdPermInfo
@@ -235,6 +242,9 @@ instance IsPerm UpdPerm where
   buildPermInfo tn fieldInfoMap (PermDef _ a _) =
     buildUpdPermInfo tn fieldInfoMap a
 
+  addPermToMetadata permDef =
+    tmUpdatePermissions %~ HM.insert (_pdRole permDef) permDef
+
 type CreateDelPerm = CreatePerm DelPerm
 
 buildDelPermInfo
@@ -258,6 +268,9 @@ instance IsPerm DelPerm where
 
   buildPermInfo tn fieldInfoMap (PermDef _ a _) =
     buildDelPermInfo tn fieldInfoMap a
+
+  addPermToMetadata permDef =
+    tmDeletePermissions %~ HM.insert (_pdRole permDef) permDef
 
 data SetPermComment
   = SetPermComment
@@ -305,16 +318,16 @@ setPermCommentTx (SetPermComment (QualifiedObject sn tn) rn pt comment) =
              AND perm_type = $5
                 |] (comment, sn, tn, rn, permTypeToCode pt) True
 
-purgePerm :: MonadTx m => QualifiedTable -> RoleName -> PermType -> m ()
-purgePerm qt rn pt =
-    case pt of
-      PTInsert -> dropPermP2 @InsPerm dp
-      PTSelect -> dropPermP2 @SelPerm dp
-      PTUpdate -> dropPermP2 @UpdPerm dp
-      PTDelete -> dropPermP2 @DelPerm dp
-  where
-    dp :: DropPerm a
-    dp = DropPerm qt rn
+-- purgePerm :: MonadTx m => QualifiedTable -> RoleName -> PermType -> m ()
+-- purgePerm qt rn pt =
+--     case pt of
+--       PTInsert -> dropPermP2 @InsPerm dp
+--       PTSelect -> dropPermP2 @SelPerm dp
+--       PTUpdate -> dropPermP2 @UpdPerm dp
+--       PTDelete -> dropPermP2 @DelPerm dp
+--   where
+--     dp :: DropPerm a
+--     dp = DropPerm qt rn
 
 fetchPermDef
   :: QualifiedTable

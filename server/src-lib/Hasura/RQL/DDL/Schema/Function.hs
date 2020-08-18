@@ -22,6 +22,7 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import qualified Control.Monad.Validate        as MV
 import qualified Data.HashMap.Strict           as M
+import qualified Data.HashSet                  as HS
 import qualified Data.Sequence                 as Seq
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
@@ -168,13 +169,13 @@ saveFunctionToCatalog (QualifiedObject sn fn) config = do
          VALUES ($1, $2, $3, $4)
                  |] (sn, fn, Q.AltJ config, systemDefined) False
 
-delFunctionFromCatalog :: QualifiedFunction -> Q.TxE QErr ()
-delFunctionFromCatalog (QualifiedObject sn fn) =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-         DELETE FROM hdb_catalog.hdb_function
-         WHERE function_schema = $1
-           AND function_name = $2
-         |] (sn, fn) False
+-- delFunctionFromCatalog :: QualifiedFunction -> Q.TxE QErr ()
+-- delFunctionFromCatalog (QualifiedObject sn fn) =
+--   Q.unitQE defaultTxErrorHandler [Q.sql|
+--          DELETE FROM hdb_catalog.hdb_function
+--          WHERE function_schema = $1
+--            AND function_name = $2
+--          |] (sn, fn) False
 
 newtype TrackFunction
   = TrackFunction
@@ -197,8 +198,9 @@ trackFunctionP1 qf = do
 trackFunctionP2 :: (MonadTx m, CacheRWM m, HasSystemDefined m)
                 => QualifiedFunction -> FunctionConfig -> m EncJSON
 trackFunctionP2 qf config = do
-  saveFunctionToCatalog qf config
-  buildSchemaCacheFor $ MOFunction qf
+  -- saveFunctionToCatalog qf config
+  buildSchemaCacheFor (MOFunction qf) $
+    metaFunctions._FMVersion2 %~ M.insert qf (TrackFunctionV2 qf config)
   return successMsg
 
 handleMultipleFunctions :: (QErrM m) => QualifiedFunction -> [a] -> m a
@@ -248,6 +250,12 @@ runUntrackFunc
   => UnTrackFunction -> m EncJSON
 runUntrackFunc (UnTrackFunction qf) = do
   void $ askFunctionInfo qf
-  liftTx $ delFunctionFromCatalog qf
-  withNewInconsistentObjsCheck buildSchemaCache
+  -- liftTx $ delFunctionFromCatalog qf
+  withNewInconsistentObjsCheck $ buildSchemaCache $ dropFunctionInMetadata qf
+    -- Delete function from metadata
   return successMsg
+
+dropFunctionInMetadata :: QualifiedFunction -> Metadata -> Metadata
+dropFunctionInMetadata function =
+  (metaFunctions._FMVersion1 %~ HS.delete function)
+  . (metaFunctions._FMVersion2 %~ M.delete function)

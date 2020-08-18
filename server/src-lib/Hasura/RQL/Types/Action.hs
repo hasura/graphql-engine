@@ -30,6 +30,10 @@ module Hasura.RQL.Types.Action
   , CreateActionPermission(..)
 
   , ActionMetadata(..)
+  , amName
+  , amComment
+  , amDefinition
+  , amPermissions
   , ActionPermissionMetadata(..)
   ) where
 
@@ -38,8 +42,8 @@ import           Control.Lens                  (makeLenses)
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.CustomTypes
 import           Hasura.Session
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax    (Lift)
@@ -138,7 +142,8 @@ type ResolvedActionDefinition = ActionDefinition ResolvedWebhook
 
 data ActionPermissionInfo
   = ActionPermissionInfo
-  { _apiRole   :: !RoleName
+  { _apiRole    :: !RoleName
+  , _apiComment :: !(Maybe Text)
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ActionPermissionInfo)
 
@@ -213,6 +218,7 @@ data ActionMetadata
   , _amDefinition  :: !ActionDefinitionInput
   , _amPermissions :: ![ActionPermissionMetadata]
   } deriving (Show, Eq, Lift, Generic)
+$(makeLenses ''ActionMetadata)
 instance NFData ActionMetadata
 instance Cacheable ActionMetadata
 

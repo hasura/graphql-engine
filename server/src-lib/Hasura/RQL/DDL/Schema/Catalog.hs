@@ -1,20 +1,27 @@
 -- | Functions for loading and modifying the catalog. See the module documentation for
 -- "Hasura.RQL.DDL.Schema" for more details.
 module Hasura.RQL.DDL.Schema.Catalog
-  ( fetchCatalogData
-  , saveTableToCatalog
-  , updateTableIsEnumInCatalog
-  , updateTableConfig
-  , deleteTableFromCatalog
-  , getTableConfig
+  ( buildCatalogMetadata
+  -- , fetchCatalogData
+  -- , saveTableToCatalog
+  -- , updateTableIsEnumInCatalog
+  -- , updateTableConfig
+  -- , deleteTableFromCatalog
+  -- , getTableConfig
   , purgeDependentObject
+  , fetchMetadata
+  , updateMetadata
   ) where
 
 import           Hasura.Prelude
 
+import qualified Data.HashMap.Strict                as HM
+import qualified Data.HashSet                       as HS
 import qualified Database.PG.Query                  as Q
 
+import           Control.Lens                       (ix)
 import           Data.Aeson
+import           Data.List                          (unzip6)
 
 import           Hasura.Db
 import           Hasura.RQL.DDL.ComputedField
@@ -27,60 +34,200 @@ import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.SQL.Types
 
-fetchCatalogData :: (MonadTx m) => m CatalogMetadata
-fetchCatalogData =
-  liftTx $ Q.getAltJ . runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
-  $(Q.sqlFromFile "src-rsr/catalog_metadata.sql") () True
 
-purgeDependentObject :: (MonadTx m) => SchemaObjId -> m ()
-purgeDependentObject = \case
-  SOTableObj tn (TOPerm rn pt) -> liftTx $ dropPermFromCatalog tn rn pt
-  SOTableObj qt (TORel rn) -> liftTx $ delRelFromCatalog qt rn
-  SOFunction qf -> liftTx $ delFunctionFromCatalog qf
-  SOTableObj _ (TOTrigger trn) -> liftTx $ delEventTriggerFromCatalog trn
-  SOTableObj qt (TOComputedField ccn) -> dropComputedFieldFromCatalog qt ccn
-  SOTableObj qt (TORemoteRel remoteRelName) -> liftTx $ delRemoteRelFromCatalog qt remoteRelName
-  schemaObjId -> throw500 $ "unexpected dependent object: " <> reportSchemaObj schemaObjId
+buildCatalogMetadata
+  :: forall m. (MonadTx m)
+  => Metadata -> m CatalogMetadata
+buildCatalogMetadata Metadata{..} = do
+  catalogTables <- fetchCatalogTableInfo
+  catalogFunctions <- fetchCatalogFunctionInfo
+  pgScalars <- fetchPgScalars
 
-saveTableToCatalog
-  :: (MonadTx m, HasSystemDefined m) => QualifiedTable -> Bool -> TableConfig -> m ()
-saveTableToCatalog (QualifiedObject sn tn) isEnum config = do
-  systemDefined <- askSystemDefined
-  liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
-    INSERT INTO "hdb_catalog"."hdb_table"
-      (table_schema, table_name, is_system_defined, is_enum, configuration)
-    VALUES ($1, $2, $3, $4, $5)
-  |] (sn, tn, systemDefined, isEnum, configVal) False
+  let _cmFunctions = flip map allFunctions $ \(function, config) ->
+        CatalogFunction function notSystemDefined config $ fromMaybe [] $
+        HM.lookup function catalogFunctions
+      (_cmTables, relations, computedFields, remoteRelations, permissions, eventTriggers) =
+        unzip6 $ flip map (HM.elems _metaTables) $ \table ->
+        transformTable table catalogFunctions $ HM.lookup (_tmTable table) catalogTables
+      _cmRelations = concat relations
+      _cmComputedFields = concat computedFields
+      _cmRemoteRelationships = concat remoteRelations
+      _cmPermissions = concat permissions
+      _cmEventTriggers = concat eventTriggers
+      _cmActions = HM.elems _metaActions
+      _cmCronTriggers = map transformCronTrigger $ HM.elems _metaCronTriggers
+      _cmRemoteSchemas = HM.elems _metaRemoteSchemas
+      _cmCustomTypes = CatalogCustomTypes _metaCustomTypes pgScalars
+      _cmAllowlistCollections = map _ccDefinition $
+        filter (flip HS.member _metaAllowlist . CollectionReq . _ccName)
+        (HM.elems _metaQueryCollections)
+  pure CatalogMetadata{..}
   where
-    configVal = Q.AltJ $ toJSON config
+    notSystemDefined = SystemDefined False
+    allFunctions = case _metaFunctions of
+      FMVersion1 v1Functions -> map (, emptyFunctionConfig) $ toList v1Functions
+      FMVersion2 v2Functions -> map ( _tfv2Function &&& _tfv2Configuration) $ HM.elems v2Functions
 
-updateTableIsEnumInCatalog :: (MonadTx m) => QualifiedTable -> Bool -> m ()
-updateTableIsEnumInCatalog (QualifiedObject sn tn) isEnum = liftTx $
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-      UPDATE "hdb_catalog"."hdb_table" SET is_enum = $3
-      WHERE table_schema = $1 AND table_name = $2
-    |] (sn, tn, isEnum) False
+    transformCronTrigger :: CronTriggerMetadata -> CatalogCronTrigger
+    transformCronTrigger CronTriggerMetadata{..} =
+      CatalogCronTrigger ctName ctWebhook ctSchedule ctPayload
+      (Just ctRetryConf) (Just ctHeaders) ctComment
 
-updateTableConfig :: (MonadTx m) => QualifiedTable -> TableConfig -> m ()
-updateTableConfig (QualifiedObject sn tn) config = liftTx $
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-           UPDATE "hdb_catalog"."hdb_table"
-              SET configuration = $1
-            WHERE table_schema = $2 AND table_name = $3
-                |] (configVal, sn, tn) False
-  where
-    configVal = Q.AltJ $ toJSON config
+    transformTable
+      :: TableMetadata
+      -> HM.HashMap QualifiedFunction [RawFunctionInfo]
+      -> Maybe CatalogTableInfo
+      -> ( CatalogTable
+         , [CatalogRelation]
+         , [CatalogComputedField]
+         , [RemoteRelationship]
+         , [CatalogPermission]
+         , [CatalogEventTrigger]
+         )
+    transformTable TableMetadata{..} catalogFunction tableInfo =
+      let catalogTable = CatalogTable _tmTable notSystemDefined _tmIsEnum
+                         _tmConfiguration tableInfo
+          relationships = map (transformRelation ObjRel) (HM.elems _tmObjectRelationships)
+                          <> map (transformRelation ArrRel) (HM.elems _tmArrayRelationships)
+          computedFields = map transformComputedField $ HM.elems _tmComputedFields
+          remoteRelations = map transformRemoteRelation $ HM.elems _tmRemoteRelationships
+          permissions = map (transformPermission PTSelect) (HM.elems _tmSelectPermissions)
+                        <> map (transformPermission PTInsert) (HM.elems _tmInsertPermissions)
+                        <> map (transformPermission PTUpdate) (HM.elems _tmUpdatePermissions)
+                        <> map (transformPermission PTDelete) (HM.elems _tmDeletePermissions)
+          eventTriggers = map transformEventTrigger $ HM.elems _tmEventTriggers
+      in (catalogTable, relationships, computedFields, remoteRelations, permissions, eventTriggers)
+      where
+        transformRelation :: ToJSON a => RelType -> RelDef a -> CatalogRelation
+        transformRelation relType RelDef{..} =
+          CatalogRelation _tmTable _rdName relType (toJSON _rdUsing) _rdComment
 
-deleteTableFromCatalog :: (MonadTx m) => QualifiedTable -> m ()
-deleteTableFromCatalog (QualifiedObject sn tn) = liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
-    DELETE FROM "hdb_catalog"."hdb_table"
-    WHERE table_schema = $1 AND table_name = $2
-  |] (sn, tn) False
+        transformComputedField :: ComputedFieldMetadata -> CatalogComputedField
+        transformComputedField ComputedFieldMetadata{..} =
+          let computedField = AddComputedField _tmTable _cfmName _cfmDefinition _cfmComment
+          in CatalogComputedField computedField $
+             fromMaybe [] $ HM.lookup (_cfdFunction _cfmDefinition) catalogFunction
 
-getTableConfig :: MonadTx m => QualifiedTable -> m TableConfig
-getTableConfig (QualifiedObject sn tn) = liftTx $
-  Q.getAltJ . runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
-    [Q.sql|
-       SELECT configuration::json FROM hdb_catalog.hdb_table
-        WHERE table_schema = $1 AND table_name = $2
-    |] (sn, tn) True
+        transformRemoteRelation :: RemoteRelationshipMeta -> RemoteRelationship
+        transformRemoteRelation RemoteRelationshipMeta{..} =
+          let RemoteRelationshipDef{..} = _rrmDefinition
+          in RemoteRelationship _rrmName _tmTable _rrdHasuraFields _rrdRemoteSchema _rrdRemoteField
+
+        transformPermission :: ToJSON a => PermType -> PermDef a -> CatalogPermission
+        transformPermission permType PermDef{..} =
+          CatalogPermission _tmTable _pdRole permType (toJSON _pdPermission) _pdComment
+
+        transformEventTrigger :: EventTriggerConf -> CatalogEventTrigger
+        transformEventTrigger etc =
+          CatalogEventTrigger _tmTable (etcName etc) $ toJSON etc
+
+    fetchCatalogTableInfo :: m (HM.HashMap QualifiedTable CatalogTableInfo)
+    fetchCatalogTableInfo = do
+      let tableList = HM.keys _metaTables
+      results <- liftTx $ Q.withQE defaultTxErrorHandler
+                 $(Q.sqlFromFile "src-rsr/pg_table_metadata.sql")
+                 (Identity $ Q.AltJ $ toJSON tableList) True
+      pure $ HM.fromList $ flip map results $
+        \(schema, table, Q.AltJ info) -> (QualifiedObject schema table, info)
+
+    fetchCatalogFunctionInfo :: m (HM.HashMap QualifiedFunction [RawFunctionInfo])
+    fetchCatalogFunctionInfo = do
+      let functionList = map fst allFunctions <> concatMap
+            (map (_cfdFunction . _cfmDefinition) . HM.elems . _tmComputedFields) (HM.elems _metaTables)
+      results <- liftTx $ Q.withQE defaultTxErrorHandler
+                 $(Q.sqlFromFile "src-rsr/pg_function_metadata.sql")
+                 (Identity $ Q.AltJ $ toJSON functionList) True
+      pure $ HM.fromList $ flip map results $
+        \(schema, table, Q.AltJ infos) -> (QualifiedObject schema table, infos)
+
+    fetchPgScalars :: m (HS.HashSet PGScalarType)
+    fetchPgScalars =
+      liftTx $ Q.getAltJ . runIdentity . Q.getRow
+      <$> Q.withQE defaultTxErrorHandler
+      [Q.sql|
+        SELECT coalesce(json_agg(typname), '[]')
+        FROM pg_catalog.pg_type where typtype = 'b'
+      |] () True
+
+fetchMetadata :: MonadTx m => m Metadata
+fetchMetadata = do
+  results <- liftTx $ Q.withQE defaultTxErrorHandler
+             [Q.sql|
+              SELECT metadata from hdb_catalog.hdb_metadata where id = 1
+             |] () True
+  case results of
+    []                             -> pure emptyMetadata
+    [(Identity (Q.AltJ metadata))] -> pure metadata
+    _                              -> throw500 "multiple rows found in hdb_metadata table"
+
+updateMetadata :: MonadTx m => Metadata -> m ()
+updateMetadata metadata =
+  liftTx $ Q.unitQE defaultTxErrorHandler
+  [Q.sql|
+   INSERT INTO hdb_catalog.hdb_metadata
+     (id, metadata) VALUES (1, $1::json)
+   ON CONFLICT (id) DO UPDATE SET metadata = $1::json
+  |] (Identity $ Q.AltJ metadata) True
+
+-- fetchCatalogData :: (MonadTx m) => m CatalogMetadata
+-- fetchCatalogData =
+--   liftTx $ Q.getAltJ . runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
+--   $(Q.sqlFromFile "src-rsr/catalog_metadata.sql") () True
+
+purgeDependentObject
+  :: (MonadError QErr m) => SchemaObjId -> m MetadataModifier
+purgeDependentObject = fmap MetadataModifier . \case
+  SOTableObj tn tableObj -> pure $
+    metaTables.ix tn %~ case tableObj of
+      TOPerm rn pt        -> dropPermissionInMetadata rn pt
+      TORel rn rt         -> dropRelationshipInMetadata rn rt
+      TOTrigger trn       -> dropEventTriggerInMetadata trn
+      TOComputedField ccn -> dropComputedFieldInMetadata ccn
+      TORemoteRel rrn     -> dropRemoteRelationshipInMetadata rrn
+      _                   -> id
+  SOFunction qf         -> pure $ dropFunctionInMetadata qf
+  schemaObjId           ->
+      throw500 $ "unexpected dependent object: " <> reportSchemaObj schemaObjId
+
+-- saveTableToCatalog
+--   :: (MonadTx m, HasSystemDefined m) => QualifiedTable -> Bool -> TableConfig -> m ()
+-- saveTableToCatalog (QualifiedObject sn tn) isEnum config = do
+--   systemDefined <- askSystemDefined
+--   liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
+--     INSERT INTO "hdb_catalog"."hdb_table"
+--       (table_schema, table_name, is_system_defined, is_enum, configuration)
+--     VALUES ($1, $2, $3, $4, $5)
+--   |] (sn, tn, systemDefined, isEnum, configVal) False
+--   where
+--     configVal = Q.AltJ $ toJSON config
+
+-- updateTableIsEnumInCatalog :: (MonadTx m) => QualifiedTable -> Bool -> m ()
+-- updateTableIsEnumInCatalog (QualifiedObject sn tn) isEnum = liftTx $
+--   Q.unitQE defaultTxErrorHandler [Q.sql|
+--       UPDATE "hdb_catalog"."hdb_table" SET is_enum = $3
+--       WHERE table_schema = $1 AND table_name = $2
+--     |] (sn, tn, isEnum) False
+
+-- updateTableConfig :: (MonadTx m) => QualifiedTable -> TableConfig -> m ()
+-- updateTableConfig (QualifiedObject sn tn) config = liftTx $
+--   Q.unitQE defaultTxErrorHandler [Q.sql|
+--            UPDATE "hdb_catalog"."hdb_table"
+--               SET configuration = $1
+--             WHERE table_schema = $2 AND table_name = $3
+--                 |] (configVal, sn, tn) False
+--   where
+--     configVal = Q.AltJ $ toJSON config
+
+-- deleteTableFromCatalog :: (MonadTx m) => QualifiedTable -> m ()
+-- deleteTableFromCatalog (QualifiedObject sn tn) = liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
+--     DELETE FROM "hdb_catalog"."hdb_table"
+--     WHERE table_schema = $1 AND table_name = $2
+--   |] (sn, tn) False
+
+-- getTableConfig :: MonadTx m => QualifiedTable -> m TableConfig
+-- getTableConfig (QualifiedObject sn tn) = liftTx $
+--   Q.getAltJ . runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
+--     [Q.sql|
+--        SELECT configuration::json FROM hdb_catalog.hdb_table
+--         WHERE table_schema = $1 AND table_name = $2
+--     |] (sn, tn) True

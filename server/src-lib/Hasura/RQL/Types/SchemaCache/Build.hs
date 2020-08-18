@@ -100,7 +100,11 @@ withRecordInconsistency f = proc (e, (metadataObject, s)) -> do
 -- operations for triggering a schema cache rebuild
 
 class (CacheRM m) => CacheRWM m where
-  buildSchemaCacheWithOptions :: BuildReason -> CacheInvalidations -> m ()
+  buildSchemaCacheWithOptions
+    :: BuildReason
+    -> CacheInvalidations
+    -> (Metadata -> Metadata)
+    -> m ()
 
 data BuildReason
   -- | The build was triggered by an update this instance made to the catalog (in the
@@ -129,19 +133,19 @@ instance Monoid CacheInvalidations where
   mempty = CacheInvalidations False mempty
 
 instance (CacheRWM m) => CacheRWM (ReaderT r m) where
-  buildSchemaCacheWithOptions a b = lift $ buildSchemaCacheWithOptions a b
+  buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
 instance (CacheRWM m) => CacheRWM (TraceT m) where
-  buildSchemaCacheWithOptions a b = lift $ buildSchemaCacheWithOptions a b
+  buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
 
-buildSchemaCache :: (CacheRWM m) => m ()
+buildSchemaCache :: (CacheRWM m) => (Metadata -> Metadata) -> m ()
 buildSchemaCache = buildSchemaCacheWithOptions CatalogUpdate mempty
 
 -- | Rebuilds the schema cache. If an object with the given object id became newly inconsistent,
 -- raises an error about it specifically. Otherwise, raises a generic metadata inconsistency error.
-buildSchemaCacheFor :: (QErrM m, CacheRWM m) => MetadataObjId -> m ()
-buildSchemaCacheFor objectId = do
+buildSchemaCacheFor :: (QErrM m, CacheRWM m) => MetadataObjId -> (Metadata -> Metadata) ->  m ()
+buildSchemaCacheFor objectId metadataModifier = do
   oldSchemaCache <- askSchemaCache
-  buildSchemaCache
+  buildSchemaCache metadataModifier
   newSchemaCache <- askSchemaCache
 
   let diffInconsistentObjects = M.difference `on` (groupInconsistentMetadataById . scInconsistentObjs)
@@ -156,9 +160,9 @@ buildSchemaCacheFor objectId = do
       { qeInternal = Just $ toJSON (nub . concatMap toList $ M.elems newInconsistentObjects) }
 
 -- | Like 'buildSchemaCache', but fails if there is any inconsistent metadata.
-buildSchemaCacheStrict :: (QErrM m, CacheRWM m) => m ()
-buildSchemaCacheStrict = do
-  buildSchemaCache
+buildSchemaCacheStrict :: (QErrM m, CacheRWM m) => (Metadata -> Metadata) -> m ()
+buildSchemaCacheStrict metadataModifier = do
+  buildSchemaCache metadataModifier
   sc <- askSchemaCache
   let inconsObjs = scInconsistentObjs sc
   unless (null inconsObjs) $ do

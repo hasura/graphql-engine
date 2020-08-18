@@ -3,6 +3,8 @@
 
 module Hasura.RQL.Types.Table
        ( TableConfig(..)
+       , tcCustomRootFields
+       , tcCustomColumnNames
        , emptyTableConfig
 
        , TableCoreCache
@@ -376,6 +378,7 @@ data TableConfig
 instance NFData TableConfig
 instance Cacheable TableConfig
 $(deriveToJSON (aesonDrop 3 snakeCase) ''TableConfig)
+$(makeLenses ''TableConfig)
 
 emptyTableConfig :: TableConfig
 emptyTableConfig =

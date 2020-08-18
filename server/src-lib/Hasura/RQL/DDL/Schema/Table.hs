@@ -18,7 +18,8 @@ module Hasura.RQL.DDL.Schema.Table
   , runSetTableCustomFieldsQV2
 
   , buildTableCache
-  , delTableAndDirectDeps
+  , dropTableInMetadata
+  -- , delTableAndDirectDeps
   , processTableChanges
   ) where
 
@@ -35,9 +36,8 @@ import           Hasura.RQL.Types.Catalog
 import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query                  as Q
-import qualified Hasura.GraphQL.Schema              as GS
 import qualified Hasura.GraphQL.Context             as GC
+import qualified Hasura.GraphQL.Schema              as GS
 import qualified Hasura.Incremental                 as Inc
 import qualified Language.GraphQL.Draft.Syntax      as G
 
@@ -105,8 +105,10 @@ trackExistingTableOrViewP2
 trackExistingTableOrViewP2 tableName isEnum config = do
   typeMap <- GC._gTypes . scDefaultRemoteGCtx <$> askSchemaCache
   GS.checkConflictingNode typeMap $ GS.qualObjectToName tableName
-  saveTableToCatalog tableName isEnum config
-  buildSchemaCacheFor (MOTable tableName)
+  -- saveTableToCatalog tableName isEnum config
+  let metadata = mkTableMeta tableName isEnum config
+  buildSchemaCacheFor (MOTable tableName) $
+    metaTables %~ M.insert tableName metadata
   return successMsg
 
 runTrackTableQ
@@ -131,8 +133,9 @@ runTrackTableV2Q (TrackTableV2 (TrackTable qt isEnum) config) = do
 runSetExistingTableIsEnumQ :: (MonadTx m, CacheRWM m) => SetTableIsEnum -> m EncJSON
 runSetExistingTableIsEnumQ (SetTableIsEnum tableName isEnum) = do
   void $ askTabInfo tableName -- assert that table is tracked
-  updateTableIsEnumInCatalog tableName isEnum
-  buildSchemaCacheFor (MOTable tableName)
+  -- updateTableIsEnumInCatalog tableName isEnum
+  buildSchemaCacheFor (MOTable tableName) $
+    metaTables.ix tableName.tmIsEnum .~ isEnum
   return successMsg
 
 data SetTableCustomFields
@@ -154,8 +157,10 @@ runSetTableCustomFieldsQV2
   :: (MonadTx m, CacheRWM m) => SetTableCustomFields -> m EncJSON
 runSetTableCustomFieldsQV2 (SetTableCustomFields tableName rootFields columnNames) = do
   void $ askTabInfo tableName -- assert that table is tracked
-  updateTableConfig tableName (TableConfig rootFields columnNames)
-  buildSchemaCacheFor (MOTable tableName)
+  let tableConfig = TableConfig rootFields columnNames
+  -- updateTableConfig tableName (TableConfig rootFields columnNames)
+  buildSchemaCacheFor (MOTable tableName) $
+    metaTables.ix tableName.tmConfiguration .~ tableConfig
   return successMsg
 
 unTrackExistingTableOrViewP1
@@ -182,16 +187,20 @@ unTrackExistingTableOrViewP2 (UntrackTable qtn cascade) = withNewInconsistentObj
   -- Report bach with an error if cascade is not set
   when (indirectDeps /= [] && not (or cascade)) $ reportDepsExt indirectDeps []
   -- Purge all the dependents from state
-  mapM_ purgeDependentObject indirectDeps
+  metadataModifier <- execWriterT do
+    mapM_ (purgeDependentObject >=> tell) indirectDeps
+    tell $ MetadataModifier $ dropTableInMetadata qtn
   -- delete the table and its direct dependencies
-  delTableAndDirectDeps qtn
-  buildSchemaCache
-
+  buildSchemaCache $ unMetadataModifier metadataModifier
   pure successMsg
   where
     isDirectDep = \case
       (SOTableObj dtn _) -> qtn == dtn
       _                  -> False
+
+dropTableInMetadata :: QualifiedTable -> Metadata -> Metadata
+dropTableInMetadata table =
+  metaTables %~ M.delete table
 
 runUntrackTableQ
   :: (CacheRWM m, MonadTx m)
@@ -200,7 +209,12 @@ runUntrackTableQ q = do
   unTrackExistingTableOrViewP1 q
   unTrackExistingTableOrViewP2 q
 
-processTableChanges :: (MonadTx m, CacheRM m) => TableCoreInfo -> TableDiff -> m ()
+processTableChanges
+  :: ( MonadError QErr m
+     , CacheRM m
+     , MonadWriter MetadataModifier m
+     )
+  => TableCoreInfo -> TableDiff -> m ()
 processTableChanges ti tableDiff = do
   -- If table rename occurs then don't replace constraints and
   -- process dropped/added columns, because schema reload happens eventually
@@ -215,8 +229,8 @@ processTableChanges ti tableDiff = do
         -- check for GraphQL schema conflicts on new name
         GS.checkConflictingNode typeMap tnGQL
         procAlteredCols sc tn
-        -- update new table in catalog
-        renameTableInCatalog newTN tn
+        -- update new table in metadata
+        renameTableInMetadata newTN tn
 
   -- Process computed field diff
   processComputedFieldDiff tn
@@ -230,12 +244,14 @@ processTableChanges ti tableDiff = do
       let TableConfig customFields customColumnNames = _tciCustomConfig ti
           modifiedCustomColumnNames = foldl' (flip M.delete) customColumnNames droppedCols
       when (modifiedCustomColumnNames /= customColumnNames) $
-        liftTx $ updateTableConfig tn $ TableConfig customFields modifiedCustomColumnNames
+        tell $ MetadataModifier $
+          metaTables.ix tn.tmConfiguration .~ (TableConfig customFields modifiedCustomColumnNames)
 
     procAlteredCols sc tn = for_ alteredCols $
       \( PGRawColumnInfo oldName _ oldType _ _
        , PGRawColumnInfo newName _ newType _ _ ) -> do
-        if | oldName /= newName -> renameColInCatalog oldName newName tn (_tciFieldInfoMap ti)
+        if | oldName /= newName ->
+             renameColumnInMetadata oldName newName tn (_tciFieldInfoMap ti)
 
            | oldType /= newType -> do
               let colId = SOTableObj tn $ TOCol oldName
@@ -262,30 +278,30 @@ processTableChanges ti tableDiff = do
              <<> " of table " <> table <<> " is being altered to \"VOLATILE\""
            | otherwise -> pure ()
 
-delTableAndDirectDeps :: (MonadTx m) => QualifiedTable -> m ()
-delTableAndDirectDeps qtn@(QualifiedObject sn tn) = do
-  liftTx $ Q.catchE defaultTxErrorHandler $ do
-    Q.unitQ [Q.sql|
-             DELETE FROM "hdb_catalog"."hdb_relationship"
-             WHERE table_schema = $1 AND table_name = $2
-              |] (sn, tn) False
-    Q.unitQ [Q.sql|
-             DELETE FROM "hdb_catalog"."hdb_permission"
-             WHERE table_schema = $1 AND table_name = $2
-              |] (sn, tn) False
-    Q.unitQ [Q.sql|
-             DELETE FROM "hdb_catalog"."event_triggers"
-             WHERE schema_name = $1 AND table_name = $2
-              |] (sn, tn) False
-    Q.unitQ [Q.sql|
-             DELETE FROM "hdb_catalog"."hdb_computed_field"
-             WHERE table_schema = $1 AND table_name = $2
-              |] (sn, tn) False
-    Q.unitQ [Q.sql|
-             DELETE FROM "hdb_catalog"."hdb_remote_relationship"
-             WHERE table_schema = $1 AND table_name = $2
-              |] (sn, tn) False
-  deleteTableFromCatalog qtn
+-- delTableAndDirectDeps :: (MonadTx m) => QualifiedTable -> m ()
+-- delTableAndDirectDeps qtn@(QualifiedObject sn tn) = do
+--   liftTx $ Q.catchE defaultTxErrorHandler $ do
+--     Q.unitQ [Q.sql|
+--              DELETE FROM "hdb_catalog"."hdb_relationship"
+--              WHERE table_schema = $1 AND table_name = $2
+--               |] (sn, tn) False
+--     Q.unitQ [Q.sql|
+--              DELETE FROM "hdb_catalog"."hdb_permission"
+--              WHERE table_schema = $1 AND table_name = $2
+--               |] (sn, tn) False
+--     Q.unitQ [Q.sql|
+--              DELETE FROM "hdb_catalog"."event_triggers"
+--              WHERE schema_name = $1 AND table_name = $2
+--               |] (sn, tn) False
+--     Q.unitQ [Q.sql|
+--              DELETE FROM "hdb_catalog"."hdb_computed_field"
+--              WHERE table_schema = $1 AND table_name = $2
+--               |] (sn, tn) False
+--     Q.unitQ [Q.sql|
+--              DELETE FROM "hdb_catalog"."hdb_remote_relationship"
+--              WHERE table_schema = $1 AND table_name = $2
+--               |] (sn, tn) False
+--   deleteTableFromCatalog qtn
 
 -- | Builds an initial @'TableCache' 'PGColumnInfo'@ from catalog information. Does not fill in
 -- '_tiRolePermInfoMap' or '_tiEventTriggerInfoMap' at all, and '_tiFieldInfoMap' only contains

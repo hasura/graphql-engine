@@ -3,6 +3,7 @@ module Hasura.RQL.Types.Relationship where
 import           Hasura.Prelude
 import           Hasura.SQL.Types
 
+import           Control.Lens               (makeLenses)
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
@@ -15,12 +16,13 @@ import qualified Data.Text                  as T
 
 data RelDef a
   = RelDef
-  { rdName    :: !RelName
-  , rdUsing   :: !a
-  , rdComment :: !(Maybe T.Text)
+  { _rdName    :: !RelName
+  , _rdUsing   :: !a
+  , _rdComment :: !(Maybe T.Text)
   } deriving (Show, Eq, Lift, Generic)
 
-$(deriveFromJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RelDef)
+$(deriveFromJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''RelDef)
+$(makeLenses ''RelDef)
 
 instance (ToJSON a) => ToJSON (RelDef a) where
   toJSON = object . toAesonPairs

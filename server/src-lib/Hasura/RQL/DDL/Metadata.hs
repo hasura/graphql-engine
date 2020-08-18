@@ -2,7 +2,6 @@
 module Hasura.RQL.DDL.Metadata
   ( runReplaceMetadata
   , runExportMetadata
-  , fetchMetadata
   , runClearMetadata
   , runReloadMetadata
   , runDumpInternalState
@@ -11,70 +10,61 @@ module Hasura.RQL.DDL.Metadata
   , module Hasura.RQL.DDL.Metadata.Types
   ) where
 
-import           Control.Lens                       hiding ((.=))
+import           Control.Lens                      hiding ((.=))
 import           Data.Aeson
 
-import qualified Data.Aeson.Ordered                 as AO
-import qualified Data.HashMap.Strict.InsOrd         as HMIns
-import qualified Data.HashSet                       as HS
-import qualified Data.List                          as L
-import qualified Data.Text                          as T
+import qualified Data.Aeson.Ordered                as AO
+import qualified Data.HashSet                      as HS
+import qualified Data.List                         as L
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.ComputedField       (dropComputedFieldFromCatalog)
-import           Hasura.RQL.DDL.EventTrigger        (delEventTriggerFromCatalog, subTableP2)
 import           Hasura.RQL.DDL.Metadata.Types
-import           Hasura.RQL.DDL.Permission.Internal (dropPermFromCatalog)
-import           Hasura.RQL.DDL.RemoteSchema        (addRemoteSchemaToCatalog, fetchRemoteSchemas,
-                                                     removeRemoteSchemaFromCatalog)
-import           Hasura.RQL.DDL.ScheduledTrigger    (addCronTriggerToCatalog,
-                                                     deleteCronTriggerFromCatalog)
-import           Hasura.RQL.DDL.Schema.Catalog      (saveTableToCatalog)
-import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 
-import qualified Database.PG.Query                  as Q
-import qualified Hasura.RQL.DDL.Action              as Action
-import qualified Hasura.RQL.DDL.ComputedField       as ComputedField
-import qualified Hasura.RQL.DDL.CustomTypes         as CustomTypes
-import qualified Hasura.RQL.DDL.Permission          as Permission
-import qualified Hasura.RQL.DDL.QueryCollection     as Collection
-import qualified Hasura.RQL.DDL.Relationship        as Relationship
-import qualified Hasura.RQL.DDL.RemoteRelationship  as RemoteRelationship
-import qualified Hasura.RQL.DDL.Schema              as Schema
+import           Hasura.RQL.Types
+
+import           Hasura.RQL.DDL.Action
+import           Hasura.RQL.DDL.ComputedField
+import           Hasura.RQL.DDL.CustomTypes
+import           Hasura.RQL.DDL.EventTrigger
+import           Hasura.RQL.DDL.Permission
+import           Hasura.RQL.DDL.Relationship
+import           Hasura.RQL.DDL.RemoteRelationship
+import           Hasura.RQL.DDL.RemoteSchema
+import           Hasura.RQL.DDL.ScheduledTrigger
+import           Hasura.RQL.DDL.Schema
 
 -- | Purge all user-defined metadata; metadata with is_system_defined = false
-clearUserMetadata :: MonadTx m => m ()
-clearUserMetadata = liftTx $ Q.catchE defaultTxErrorHandler $ do
-  Q.unitQ "DELETE FROM hdb_catalog.hdb_function WHERE is_system_defined <> 'true'" () False
-  Q.unitQ "DELETE FROM hdb_catalog.hdb_permission WHERE is_system_defined <> 'true'" () False
-  Q.unitQ "DELETE FROM hdb_catalog.hdb_relationship WHERE is_system_defined <> 'true'" () False
-  Q.unitQ "DELETE FROM hdb_catalog.event_triggers" () False
-  Q.unitQ "DELETE FROM hdb_catalog.hdb_computed_field" () False
-  Q.unitQ "DELETE FROM hdb_catalog.hdb_remote_relationship" () False
-  Q.unitQ "DELETE FROM hdb_catalog.hdb_table WHERE is_system_defined <> 'true'" () False
-  Q.unitQ "DELETE FROM hdb_catalog.remote_schemas" () False
-  Q.unitQ "DELETE FROM hdb_catalog.hdb_allowlist" () False
-  Q.unitQ "DELETE FROM hdb_catalog.hdb_query_collection WHERE is_system_defined <> 'true'" () False
-  Q.unitQ "DELETE FROM hdb_catalog.hdb_custom_types" () False
-  Q.unitQ "DELETE FROM hdb_catalog.hdb_action_permission" () False
-  Q.unitQ "DELETE FROM hdb_catalog.hdb_action WHERE is_system_defined <> 'true'" () False
-  Q.unitQ "DELETE FROM hdb_catalog.hdb_cron_triggers WHERE include_in_metadata" () False
+-- clearUserMetadata :: MonadTx m => m ()
+-- clearUserMetadata = liftTx $ Q.catchE defaultTxErrorHandler $ do
+--   Q.unitQ "DELETE FROM hdb_catalog.hdb_function WHERE is_system_defined <> 'true'" () False
+--   Q.unitQ "DELETE FROM hdb_catalog.hdb_permission WHERE is_system_defined <> 'true'" () False
+--   Q.unitQ "DELETE FROM hdb_catalog.hdb_relationship WHERE is_system_defined <> 'true'" () False
+--   Q.unitQ "DELETE FROM hdb_catalog.event_triggers" () False
+--   Q.unitQ "DELETE FROM hdb_catalog.hdb_computed_field" () False
+--   Q.unitQ "DELETE FROM hdb_catalog.hdb_remote_relationship" () False
+--   Q.unitQ "DELETE FROM hdb_catalog.hdb_table WHERE is_system_defined <> 'true'" () False
+--   Q.unitQ "DELETE FROM hdb_catalog.remote_schemas" () False
+--   Q.unitQ "DELETE FROM hdb_catalog.hdb_allowlist" () False
+--   Q.unitQ "DELETE FROM hdb_catalog.hdb_query_collection WHERE is_system_defined <> 'true'" () False
+--   Q.unitQ "DELETE FROM hdb_catalog.hdb_custom_types" () False
+--   Q.unitQ "DELETE FROM hdb_catalog.hdb_action_permission" () False
+--   Q.unitQ "DELETE FROM hdb_catalog.hdb_action WHERE is_system_defined <> 'true'" () False
+--   Q.unitQ "DELETE FROM hdb_catalog.hdb_cron_triggers WHERE include_in_metadata" () False
 
 runClearMetadata
   :: (MonadTx m, CacheRWM m)
   => ClearMetadata -> m EncJSON
 runClearMetadata _ = do
-  clearUserMetadata
-  buildSchemaCacheStrict
-  return successMsg
+  -- clearUserMetadata
+  buildSchemaCacheStrict $ const emptyMetadata
+  pure successMsg
 
-applyQP1
-  :: (QErrM m)
-  => Metadata -> m ()
-applyQP1 (Metadata _ tables functionsMeta schemas collections
-          allowlist _ actions cronTriggers) = undefined -- do
+-- applyQP1
+--   :: (QErrM m)
+--   => Metadata -> m ()
+-- applyQP1 (Metadata _ tables functionsMeta schemas collections
+--           allowlist _ actions cronTriggers) = undefined -- do
   -- withPathK "tables" $ do
 
   --   checkMultipleDecls "tables" $ map _tmTable tables
@@ -135,99 +125,99 @@ applyQP1 (Metadata _ tables functionsMeta schemas collections
   --   getDups l =
   --     l L.\\ HS.toList (HS.fromList l)
 
-applyQP2 :: (CacheRWM m, MonadTx m, HasSystemDefined m) => Metadata -> m EncJSON
-applyQP2 replaceMetadata = do
-  clearUserMetadata
-  saveMetadata replaceMetadata
-  buildSchemaCacheStrict
-  pure successMsg
+-- applyQP2 :: (CacheRWM m, MonadTx m, HasSystemDefined m) => Metadata -> m EncJSON
+-- applyQP2 replaceMetadata = undefined -- do
+  -- clearUserMetadata
+  -- saveMetadata replaceMetadata
+  -- buildSchemaCacheStrict
+  -- pure successMsg
 
-saveMetadata :: (MonadTx m, HasSystemDefined m) => Metadata -> m ()
-saveMetadata (Metadata _ tables functionsMeta
-              schemas collections allowlist customTypes actions cronTriggers) = do
+-- saveMetadata :: (MonadTx m, HasSystemDefined m) => Metadata -> m ()
+-- saveMetadata (Metadata _ tables functionsMeta
+--               schemas collections allowlist customTypes actions cronTriggers) = undefined -- do
 
-  withPathK "tables" $ do
-    indexedForM_ tables $ \TableMetadata{..} -> do
-      -- Save table
-      saveTableToCatalog _tmTable _tmIsEnum _tmConfiguration
+  -- withPathK "tables" $ do
+  --   indexedForM_ tables $ \TableMetadata{..} -> do
+  --     -- Save table
+  --     saveTableToCatalog _tmTable _tmIsEnum _tmConfiguration
 
-      -- Relationships
-      withPathK "object_relationships" $
-        indexedForM_ _tmObjectRelationships $ \objRel ->
-        Relationship.insertRelationshipToCatalog _tmTable ObjRel objRel
-      withPathK "array_relationships" $
-        indexedForM_ _tmArrayRelationships $ \arrRel ->
-        Relationship.insertRelationshipToCatalog _tmTable ArrRel arrRel
+  --     -- Relationships
+  --     withPathK "object_relationships" $
+  --       indexedForM_ _tmObjectRelationships $ \objRel ->
+  --       Relationship.insertRelationshipToCatalog _tmTable ObjRel objRel
+  --     withPathK "array_relationships" $
+  --       indexedForM_ _tmArrayRelationships $ \arrRel ->
+  --       Relationship.insertRelationshipToCatalog _tmTable ArrRel arrRel
 
-      -- Computed Fields
-      withPathK "computed_fields" $
-        indexedForM_ _tmComputedFields $
-          \(ComputedFieldMetadata name definition comment) ->
-            ComputedField.addComputedFieldToCatalog $
-              ComputedField.AddComputedField _tmTable name definition comment
+  --     -- Computed Fields
+  --     withPathK "computed_fields" $
+  --       indexedForM_ _tmComputedFields $
+  --         \(ComputedFieldMetadata name definition comment) ->
+  --           ComputedField.addComputedFieldToCatalog $
+  --             ComputedField.AddComputedField _tmTable name definition comment
 
-      -- Remote Relationships
-      withPathK "remote_relationships" $
-        indexedForM_ _tmRemoteRelationships $
-          \(RemoteRelationshipMeta name def) -> do
-             let RemoteRelationshipDef rs hf rf = def
-             liftTx $ RemoteRelationship.persistRemoteRelationship $
-                      RemoteRelationship name _tmTable hf rs rf
+  --     -- Remote Relationships
+  --     withPathK "remote_relationships" $
+  --       indexedForM_ _tmRemoteRelationships $
+  --         \(RemoteRelationshipMeta name def) -> do
+  --            let RemoteRelationshipDef rs hf rf = def
+  --            liftTx $ RemoteRelationship.persistRemoteRelationship $
+  --                     RemoteRelationship name _tmTable hf rs rf
 
-      -- Permissions
-      withPathK "insert_permissions" $ processPerms _tmTable _tmInsertPermissions
-      withPathK "select_permissions" $ processPerms _tmTable _tmSelectPermissions
-      withPathK "update_permissions" $ processPerms _tmTable _tmUpdatePermissions
-      withPathK "delete_permissions" $ processPerms _tmTable _tmDeletePermissions
+  --     -- Permissions
+  --     withPathK "insert_permissions" $ processPerms _tmTable _tmInsertPermissions
+  --     withPathK "select_permissions" $ processPerms _tmTable _tmSelectPermissions
+  --     withPathK "update_permissions" $ processPerms _tmTable _tmUpdatePermissions
+  --     withPathK "delete_permissions" $ processPerms _tmTable _tmDeletePermissions
 
-      -- Event triggers
-      withPathK "event_triggers" $
-        indexedForM_ _tmEventTriggers $ \etc -> subTableP2 _tmTable False etc
+  --     -- Event triggers
+  --     withPathK "event_triggers" $
+  --       indexedForM_ _tmEventTriggers $ \etc -> subTableP2 _tmTable False etc
 
-  -- sql functions
-  withPathK "functions" $ case functionsMeta of
-    FMVersion1 qualifiedFunctions -> indexedForM_ qualifiedFunctions $
-      \qf -> Schema.saveFunctionToCatalog qf emptyFunctionConfig
-    FMVersion2 functionsV2 -> indexedForM_ functionsV2 $
-      \(TrackFunctionV2 function config) -> Schema.saveFunctionToCatalog function config
+  -- -- sql functions
+  -- withPathK "functions" $ case functionsMeta of
+  --   FMVersion1 qualifiedFunctions -> indexedForM_ qualifiedFunctions $
+  --     \qf -> Schema.saveFunctionToCatalog qf emptyFunctionConfig
+  --   FMVersion2 functionsV2 -> indexedForM_ functionsV2 $
+  --     \(TrackFunctionV2 function config) -> Schema.saveFunctionToCatalog function config
 
-  -- query collections
-  systemDefined <- askSystemDefined
-  withPathK "query_collections" $
-    indexedForM_ collections $ \c -> liftTx $ Collection.addCollectionToCatalog c systemDefined
+  -- -- query collections
+  -- systemDefined <- askSystemDefined
+  -- withPathK "query_collections" $
+  --   indexedForM_ collections $ \c -> liftTx $ Collection.addCollectionToCatalog c systemDefined
 
-  -- allow list
-  withPathK "allowlist" $ do
-    indexedForM_ allowlist $ \(Collection.CollectionReq name) ->
-      liftTx $ Collection.addCollectionToAllowlistCatalog name
+  -- -- allow list
+  -- withPathK "allowlist" $ do
+  --   indexedForM_ allowlist $ \(Collection.CollectionReq name) ->
+  --     liftTx $ Collection.addCollectionToAllowlistCatalog name
 
-  -- remote schemas
-  withPathK "remote_schemas" $
-    indexedMapM_ (liftTx . addRemoteSchemaToCatalog) schemas
+  -- -- remote schemas
+  -- withPathK "remote_schemas" $
+  --   indexedMapM_ (liftTx . addRemoteSchemaToCatalog) schemas
 
-  -- custom types
-  withPathK "custom_types" $
-    CustomTypes.persistCustomTypes customTypes
+  -- -- custom types
+  -- withPathK "custom_types" $
+  --   CustomTypes.persistCustomTypes customTypes
 
-  -- cron triggers
-  withPathK "cron_triggers" $
-    indexedForM_ cronTriggers $ \ct -> liftTx $ do
-    addCronTriggerToCatalog ct
+  -- -- cron triggers
+  -- withPathK "cron_triggers" $
+  --   indexedForM_ cronTriggers $ \ct -> liftTx $ do
+  --   addCronTriggerToCatalog ct
 
-  -- actions
-  withPathK "actions" $
-    indexedForM_ actions $ \action -> do
-      let createAction =
-            CreateAction (_amName action) (_amDefinition action) (_amComment action)
-      Action.persistCreateAction createAction
-      withPathK "permissions" $
-        indexedForM_ (_amPermissions action) $ \permission -> do
-          let createActionPermission = CreateActionPermission (_amName action)
-                                       (_apmRole permission) Nothing (_apmComment permission)
-          Action.persistCreateActionPermission createActionPermission
+  -- -- actions
+  -- withPathK "actions" $
+  --   indexedForM_ actions $ \action -> do
+  --     let createAction =
+  --           CreateAction (_amName action) (_amDefinition action) (_amComment action)
+  --     Action.persistCreateAction createAction
+  --     withPathK "permissions" $
+  --       indexedForM_ (_amPermissions action) $ \permission -> do
+  --         let createActionPermission = CreateActionPermission (_amName action)
+  --                                      (_apmRole permission) Nothing (_apmComment permission)
+  --         Action.persistCreateActionPermission createActionPermission
 
-  where
-    processPerms tableName perms = indexedForM_ perms $ Permission.addPermP2 tableName
+  -- where
+  --   processPerms tableName perms = indexedForM_ perms $ Permission.addPermP2 tableName
 
 runReplaceMetadata
   :: ( MonadTx m
@@ -236,11 +226,14 @@ runReplaceMetadata
      )
   => Metadata -> m EncJSON
 runReplaceMetadata q = do
-  applyQP1 q
-  applyQP2 q
+  -- FIXME:- report duplicate declarations?
+  buildSchemaCacheStrict $ const q
+  pure successMsg
+  -- applyQP1 q
+  -- applyQP2 q
 
-fetchMetadata :: Q.TxE QErr Metadata
-fetchMetadata = undefined -- do
+-- fetchMetadata :: Q.TxE QErr Metadata
+-- fetchMetadata = undefined -- do
   -- tables <- Q.catchE defaultTxErrorHandler fetchTables
   -- let tableMetaMap = HMIns.fromList . flip map tables $
   --       \(schema, name, isEnum, maybeConfig) ->
@@ -493,10 +486,11 @@ runReloadMetadata (ReloadMetadata reloadRemoteSchemas) = do
   sc <- askSchemaCache
   let remoteSchemaInvalidations =
         if reloadRemoteSchemas then HS.fromList (getAllRemoteSchemas sc) else mempty
-  buildSchemaCacheWithOptions CatalogUpdate CacheInvalidations
-                                            { ciMetadata = True
-                                            , ciRemoteSchemas = remoteSchemaInvalidations
-                                            }
+  flip (buildSchemaCacheWithOptions CatalogUpdate) id
+    CacheInvalidations
+    { ciMetadata = True
+    , ciRemoteSchemas = remoteSchemaInvalidations
+    }
   pure successMsg
 
 runDumpInternalState
@@ -526,21 +520,22 @@ runDropInconsistentMetadata _ = do
   -- list of inconsistent objects, so reverse the list to start with dependents first. This is not
   -- perfect — a completely accurate solution would require performing a topological sort — but it
   -- seems to work well enough for now.
-  mapM_ purgeMetadataObj (reverse inconsSchObjs)
-  buildSchemaCacheStrict
+  metadataModifier <- execWriterT $ mapM_ (tell . purgeMetadataObj) (reverse inconsSchObjs)
+  buildSchemaCacheStrict $ unMetadataModifier metadataModifier
   return successMsg
 
-purgeMetadataObj :: MonadTx m => MetadataObjId -> m ()
-purgeMetadataObj = liftTx . \case
-  MOTable qt                                 -> Schema.deleteTableFromCatalog qt
-  MOFunction qf                              -> Schema.delFunctionFromCatalog qf
-  MORemoteSchema rsn                         -> removeRemoteSchemaFromCatalog rsn
-  MOTableObj qt (MTORel rn _)                -> Relationship.delRelFromCatalog qt rn
-  MOTableObj qt (MTOPerm rn pt)              -> dropPermFromCatalog qt rn pt
-  MOTableObj _ (MTOTrigger trn)              -> delEventTriggerFromCatalog trn
-  MOTableObj qt (MTOComputedField ccn)       -> dropComputedFieldFromCatalog qt ccn
-  MOTableObj qt (MTORemoteRelationship rn)   -> RemoteRelationship.delRemoteRelFromCatalog qt rn
-  MOCustomTypes                              -> CustomTypes.clearCustomTypes
-  MOAction action                            -> Action.deleteActionFromCatalog action Nothing
-  MOActionPermission action role             -> Action.deleteActionPermissionFromCatalog action role
-  MOCronTrigger ctName                       -> deleteCronTriggerFromCatalog ctName
+purgeMetadataObj :: MetadataObjId -> MetadataModifier
+purgeMetadataObj = MetadataModifier . \case
+  MOTable qt                                 -> dropTableInMetadata qt
+  MOTableObj qt tableObj -> metaTables.ix qt %~ case tableObj of
+    MTORel rn rt             -> dropRelationshipInMetadata rn rt
+    MTOPerm rn pt            -> dropPermissionInMetadata rn pt
+    MTOTrigger trn           -> dropEventTriggerInMetadata trn
+    MTOComputedField ccn     -> dropComputedFieldInMetadata ccn
+    MTORemoteRelationship rn -> dropRemoteRelationshipInMetadata rn
+  MOFunction qf                              -> dropFunctionInMetadata qf
+  MORemoteSchema rsn                         -> dropRemoteSchemaInMetadata rsn
+  MOCustomTypes                              -> clearCustomTypesInMetadata
+  MOAction action                            -> dropActionInMetadata action -- Nothing
+  MOActionPermission action role             -> dropActionPermissionInMetadata action role
+  MOCronTrigger ctName                       -> dropCronTriggerInMetadata ctName

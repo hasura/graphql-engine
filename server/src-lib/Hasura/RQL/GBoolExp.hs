@@ -469,7 +469,8 @@ getColExpDeps tn = \case
   AVRel relInfo relBoolExp ->
     let rn = riName relInfo
         relTN = riRTable relInfo
-        pd = SchemaDependency (SOTableObj tn (TORel rn)) DROnType
+        relType = riType relInfo
+        pd = SchemaDependency (SOTableObj tn (TORel rn relType)) DROnType
     in pd : getBoolExpDeps relTN relBoolExp
 
 getBoolExpDeps :: QualifiedTable -> AnnBoolExpPartialSQL -> [SchemaDependency]

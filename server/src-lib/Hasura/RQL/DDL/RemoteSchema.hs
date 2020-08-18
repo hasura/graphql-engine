@@ -2,7 +2,8 @@
 module Hasura.RQL.DDL.RemoteSchema
   ( runAddRemoteSchema
   , runRemoveRemoteSchema
-  , removeRemoteSchemaFromCatalog
+  -- , removeRemoteSchemaFromCatalog
+  , dropRemoteSchemaInMetadata
   , runReloadRemoteSchema
   , fetchRemoteSchemas
   , addRemoteSchemaP1
@@ -27,7 +28,7 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Version             (HasVersion)
 import           Hasura.SQL.Types
 
-import qualified Data.Environment            as Env
+import qualified Data.Environment                  as Env
 import qualified Hasura.GraphQL.Context            as GC
 import qualified Hasura.GraphQL.Resolve.Introspect as RI
 import qualified Hasura.GraphQL.Schema             as GS
@@ -47,8 +48,11 @@ runAddRemoteSchema
   -> m EncJSON
 runAddRemoteSchema env q = do
   addRemoteSchemaP1 name
-  addRemoteSchemaP2 env q
-  buildSchemaCacheFor $ MORemoteSchema name
+  -- addRemoteSchemaP2 env q
+  -- FIXME: Is this necessary?
+  void $ addRemoteSchemaP2Setup env q
+  buildSchemaCacheFor (MORemoteSchema name) $
+    metaRemoteSchemas %~ Map.insert name q
   pure successMsg
   where
     name = _arsqName q
@@ -80,19 +84,20 @@ addRemoteSchemaP2Setup env (AddRemoteSchemaQuery name def _) = do
                    , GS._gSubRoot   = GC._rgSubscriptionRoot rmGCtx
                    }
 
-addRemoteSchemaP2
-  :: (HasVersion, MonadTx m, MonadIO m, HasHttpManager m) => Env.Environment -> AddRemoteSchemaQuery -> m ()
-addRemoteSchemaP2 env q = do
-  void $ addRemoteSchemaP2Setup env q
-  liftTx $ addRemoteSchemaToCatalog q
+-- addRemoteSchemaP2
+--   :: (HasVersion, MonadTx m, MonadIO m, HasHttpManager m) => Env.Environment -> AddRemoteSchemaQuery -> m ()
+-- addRemoteSchemaP2 env q = do
+--   void $ addRemoteSchemaP2Setup env q
+--   liftTx $ addRemoteSchemaToCatalog q
 
 runRemoveRemoteSchema
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
   => RemoteSchemaNameQuery -> m EncJSON
 runRemoveRemoteSchema (RemoteSchemaNameQuery rsn) = do
   removeRemoteSchemaP1 rsn
-  liftTx $ removeRemoteSchemaFromCatalog rsn
-  withNewInconsistentObjsCheck buildSchemaCache
+  -- liftTx $ removeRemoteSchemaFromCatalog rsn
+  withNewInconsistentObjsCheck $ buildSchemaCache $
+    dropRemoteSchemaInMetadata rsn
   pure successMsg
 
 removeRemoteSchemaP1
@@ -103,9 +108,6 @@ removeRemoteSchemaP1 rsn = do
   let rmSchemas = scRemoteSchemas sc
   void $ onNothing (Map.lookup rsn rmSchemas) $
     throw400 NotExists "no such remote schema"
-  case Map.lookup rsn rmSchemas of
-    Just _  -> return ()
-    Nothing -> throw400 NotExists "no such remote schema"
   let depObjs = getDependentObjs sc remoteSchemaDepId
   when (depObjs /= []) $ reportDeps depObjs
   where
@@ -120,7 +122,8 @@ runReloadRemoteSchema (RemoteSchemaNameQuery name) = do
     "remote schema with name " <> name <<> " does not exist"
 
   let invalidations = mempty { ciRemoteSchemas = S.singleton name }
-  withNewInconsistentObjsCheck $ buildSchemaCacheWithOptions CatalogUpdate invalidations
+  withNewInconsistentObjsCheck $
+    buildSchemaCacheWithOptions CatalogUpdate invalidations id
   pure successMsg
 
 addRemoteSchemaToCatalog
@@ -133,12 +136,16 @@ addRemoteSchemaToCatalog (AddRemoteSchemaQuery name def comment) =
       VALUES ($1, $2, $3)
   |] (name, Q.AltJ $ J.toJSON def, comment) True
 
-removeRemoteSchemaFromCatalog :: RemoteSchemaName -> Q.TxE QErr ()
-removeRemoteSchemaFromCatalog name =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-    DELETE FROM hdb_catalog.remote_schemas
-      WHERE name = $1
-  |] (Identity name) True
+-- removeRemoteSchemaFromCatalog :: RemoteSchemaName -> Q.TxE QErr ()
+-- removeRemoteSchemaFromCatalog name =
+--   Q.unitQE defaultTxErrorHandler [Q.sql|
+--     DELETE FROM hdb_catalog.remote_schemas
+--       WHERE name = $1
+--   |] (Identity name) True
+
+dropRemoteSchemaInMetadata :: RemoteSchemaName -> Metadata -> Metadata
+dropRemoteSchemaInMetadata name =
+  metaRemoteSchemas %~ Map.delete name
 
 fetchRemoteSchemas :: Q.TxE QErr [AddRemoteSchemaQuery]
 fetchRemoteSchemas =

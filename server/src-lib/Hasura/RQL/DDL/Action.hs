@@ -10,7 +10,8 @@ module Hasura.RQL.DDL.Action
 
   , DropAction
   , runDropAction
-  , deleteActionFromCatalog
+  -- , deleteActionFromCatalog
+  , dropActionInMetadata
 
   , fetchActions
 
@@ -20,7 +21,8 @@ module Hasura.RQL.DDL.Action
 
   , DropActionPermission
   , runDropActionPermission
-  , deleteActionPermissionFromCatalog
+  -- , deleteActionPermissionFromCatalog
+  , dropActionPermissionInMetadata
   ) where
 
 import           Hasura.EncJSON
@@ -42,6 +44,7 @@ import qualified Data.HashSet                  as Set
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 
+import           Control.Lens                  (ix, (.~))
 import           Language.Haskell.TH.Syntax    (Lift)
 
 getActionInfo
@@ -64,8 +67,11 @@ runCreateAction createAction = do
   void $ onJust (Map.lookup actionName actionMap) $ const $
     throw400 AlreadyExists $
       "action with name " <> actionName <<> " already exists"
-  persistCreateAction createAction
-  buildSchemaCacheFor $ MOAction actionName
+  let metadata = ActionMetadata actionName (_caComment createAction)
+                 (_caDefinition createAction) []
+  -- persistCreateAction createAction
+  buildSchemaCacheFor (MOAction actionName) $
+    metaActions %~ Map.insert actionName metadata
   pure successMsg
   where
     actionName = _caName createAction
@@ -155,19 +161,24 @@ runUpdateAction
 runUpdateAction (UpdateAction actionName actionDefinition) = do
   sc <- askSchemaCache
   let actionsMap = scActions sc
-  void $ onNothing (Map.lookup actionName actionsMap) $
+  actionInfo <- onNothing (Map.lookup actionName actionsMap) $
     throw400 NotExists $ "action with name " <> actionName <<> " not exists"
-  updateActionInCatalog
-  buildSchemaCacheFor $ MOAction actionName
+  -- updateActionInCatalog
+  let permissions = map (uncurry ActionPermissionMetadata . second _apiComment) $
+                    Map.toList $ _aiPermissions actionInfo
+      metadata    =
+        ActionMetadata actionName (_aiComment actionInfo) actionDefinition permissions
+  buildSchemaCacheFor (MOAction actionName) $
+    metaActions %~ Map.insert actionName metadata
   pure successMsg
-  where
-    updateActionInCatalog :: m ()
-    updateActionInCatalog =
-      liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
-        UPDATE hdb_catalog.hdb_action
-           SET action_defn = $2
-         WHERE action_name = $1
-      |] (actionName, Q.AltJ actionDefinition) True
+  -- where
+  --   updateActionInCatalog :: m ()
+  --   updateActionInCatalog =
+  --     liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
+  --       UPDATE hdb_catalog.hdb_action
+  --          SET action_defn = $2
+  --        WHERE action_name = $1
+  --     |] (actionName, Q.AltJ actionDefinition) True
 
 newtype ClearActionData
   = ClearActionData { unClearActionData :: Bool }
@@ -191,33 +202,37 @@ runDropAction
   => DropAction -> m EncJSON
 runDropAction (DropAction actionName clearDataM)= do
   void $ getActionInfo actionName
-  liftTx $ do
-    deleteActionPermissionsFromCatalog
-    deleteActionFromCatalog actionName clearDataM
-  buildSchemaCacheStrict
+  -- liftTx $ do
+  --   deleteActionPermissionsFromCatalog
+  --   deleteActionFromCatalog actionName clearDataM
+  buildSchemaCacheStrict $ dropActionInMetadata actionName
   return successMsg
-  where
-    deleteActionPermissionsFromCatalog =
-      Q.unitQE defaultTxErrorHandler [Q.sql|
-          DELETE FROM hdb_catalog.hdb_action_permission
-            WHERE action_name = $1
-          |] (Identity actionName) True
+  -- where
+    -- deleteActionPermissionsFromCatalog =
+    --   Q.unitQE defaultTxErrorHandler [Q.sql|
+    --       DELETE FROM hdb_catalog.hdb_action_permission
+    --         WHERE action_name = $1
+    --       |] (Identity actionName) True
 
-deleteActionFromCatalog
-  :: ActionName
-  -> Maybe ClearActionData
-  -> Q.TxE QErr ()
-deleteActionFromCatalog actionName clearDataM = do
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-      DELETE FROM hdb_catalog.hdb_action
-        WHERE action_name = $1
-      |] (Identity actionName) True
-  when (shouldClearActionData clearData) $
-    clearActionDataFromCatalog actionName
-  where
-    -- When clearData is not present we assume that
-    -- the data needs to be retained
-    clearData = fromMaybe defaultClearActionData clearDataM
+dropActionInMetadata :: ActionName -> Metadata -> Metadata
+dropActionInMetadata name =
+  metaActions %~ Map.delete name
+
+-- deleteActionFromCatalog
+--   :: ActionName
+--   -> Maybe ClearActionData
+--   -> Q.TxE QErr ()
+-- deleteActionFromCatalog actionName clearDataM = do
+--   Q.unitQE defaultTxErrorHandler [Q.sql|
+--       DELETE FROM hdb_catalog.hdb_action
+--         WHERE action_name = $1
+--       |] (Identity actionName) True
+--   when (shouldClearActionData clearData) $
+--     clearActionDataFromCatalog actionName
+--   where
+--     -- When clearData is not present we assume that
+--     -- the data needs to be retained
+--     clearData = fromMaybe defaultClearActionData clearDataM
 
 clearActionDataFromCatalog :: ActionName -> Q.TxE QErr ()
 clearActionDataFromCatalog actionName =
@@ -250,8 +265,14 @@ runCreateActionPermission createActionPermission = do
   void $ onJust (Map.lookup roleName $ _aiPermissions actionInfo) $ const $
     throw400 AlreadyExists $ "permission for role " <> roleName
     <<> " is already defined on " <>> actionName
-  persistCreateActionPermission createActionPermission
-  buildSchemaCacheFor $ MOActionPermission actionName roleName
+  let newPermissions =
+        ActionPermissionMetadata roleName (_capComment createActionPermission) :
+        map (uncurry ActionPermissionMetadata . second _apiComment)
+        (Map.toList $ _aiPermissions actionInfo)
+
+  -- persistCreateActionPermission createActionPermission
+  buildSchemaCacheFor (MOActionPermission actionName roleName) $
+    metaActions.ix actionName.amPermissions .~ newPermissions
   pure successMsg
   where
     actionName = _capAction createActionPermission
@@ -280,17 +301,22 @@ runDropActionPermission dropActionPermission = do
   void $ onNothing (Map.lookup roleName $ _aiPermissions actionInfo) $
     throw400 NotExists $
     "permission for role: " <> roleName <<> " is not defined on " <>> actionName
-  liftTx $ deleteActionPermissionFromCatalog actionName roleName
-  buildSchemaCacheFor $ MOActionPermission actionName roleName
+  -- liftTx $ deleteActionPermissionFromCatalog actionName roleName
+  buildSchemaCacheFor (MOActionPermission actionName roleName) $
+    dropActionPermissionInMetadata actionName roleName
   return successMsg
   where
     actionName = _dapAction dropActionPermission
     roleName = _dapRole dropActionPermission
 
-deleteActionPermissionFromCatalog :: ActionName -> RoleName -> Q.TxE QErr ()
-deleteActionPermissionFromCatalog actionName role =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-      DELETE FROM hdb_catalog.hdb_action_permission
-        WHERE action_name = $1
-          AND role_name = $2
-      |] (actionName, role) True
+dropActionPermissionInMetadata :: ActionName -> RoleName -> Metadata -> Metadata
+dropActionPermissionInMetadata name role =
+    metaActions.ix name.amPermissions %~ filter ((/=) role . _apmRole)
+
+-- deleteActionPermissionFromCatalog :: ActionName -> RoleName -> Q.TxE QErr ()
+-- deleteActionPermissionFromCatalog actionName role =
+--   Q.unitQE defaultTxErrorHandler [Q.sql|
+--       DELETE FROM hdb_catalog.hdb_action_permission
+--         WHERE action_name = $1
+--           AND role_name = $2
+--       |] (actionName, role) True

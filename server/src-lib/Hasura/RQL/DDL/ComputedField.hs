@@ -8,7 +8,8 @@ module Hasura.RQL.DDL.ComputedField
   , addComputedFieldP2Setup
   , addComputedFieldToCatalog
   , DropComputedField
-  , dropComputedFieldFromCatalog
+  -- , dropComputedFieldFromCatalog
+  , dropComputedFieldInMetadata
   , runDropComputedField
   ) where
 
@@ -23,12 +24,14 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Utils                (makeReasonMessage)
 import           Hasura.SQL.Types
 
+import           Control.Lens                       (ix)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax         (Lift)
 
 import qualified Control.Monad.Validate             as MV
+import qualified Data.HashMap.Strict                as HM
 import qualified Data.HashSet                       as S
 import qualified Data.Sequence                      as Seq
 import qualified Database.PG.Query                  as Q
@@ -48,9 +51,15 @@ $(deriveJSON (aesonDrop 4 snakeCase) ''AddComputedField)
 runAddComputedField :: (MonadTx m, CacheRWM m) => AddComputedField -> m EncJSON
 runAddComputedField q = do
   withPathK "table" $ askTabInfo (_afcTable q)
-  addComputedFieldToCatalog q
-  buildSchemaCacheFor $ MOTableObj (_afcTable q) (MTOComputedField $ _afcName q)
+  let metadataObj = MOTableObj table $ MTOComputedField computedFieldName
+      metadata = ComputedFieldMetadata computedFieldName (_afcDefinition q) (_afcComment q)
+  -- addComputedFieldToCatalog q
+  buildSchemaCacheFor metadataObj $
+    metaTables.ix table.tmComputedFields %~ HM.insert computedFieldName metadata
   pure successMsg
+  where
+    table = _afcTable q
+    computedFieldName = _afcName q
 
 data ComputedFieldValidateError
   = CFVENotValidGraphQLName !ComputedFieldName
@@ -272,25 +281,31 @@ runDropComputedField (DropComputedField table computedField cascade) = do
   when (not cascade && not (null deps)) $ reportDeps deps
 
   withNewInconsistentObjsCheck do
-    mapM_ purgeComputedFieldDependency deps
-    dropComputedFieldFromCatalog table computedField
-    buildSchemaCache
+    metadataModifiers <- mapM purgeComputedFieldDependency deps
+    -- dropComputedFieldFromCatalog table computedField
+    buildSchemaCache $ metaTables.ix table %~
+      (dropComputedFieldInMetadata computedField) . foldr (.) id metadataModifiers
   pure successMsg
   where
     purgeComputedFieldDependency = \case
       SOTableObj qt (TOPerm roleName permType) | qt == table ->
-        liftTx $ dropPermFromCatalog qt roleName permType
+        pure $ dropPermissionInMetadata roleName permType
       d -> throw500 $ "unexpected dependency for computed field "
            <> computedField <<> "; " <> reportSchemaObj d
 
-dropComputedFieldFromCatalog
-  :: MonadTx m
-  => QualifiedTable -> ComputedFieldName -> m ()
-dropComputedFieldFromCatalog (QualifiedObject schema table) computedField =
-  liftTx $ Q.withQE defaultTxErrorHandler
-    [Q.sql|
-     DELETE FROM hdb_catalog.hdb_computed_field
-      WHERE table_schema = $1
-        AND table_name = $2
-        AND computed_field_name = $3
-    |] (schema, table, computedField) True
+dropComputedFieldInMetadata
+  :: ComputedFieldName -> TableMetadata -> TableMetadata
+dropComputedFieldInMetadata name =
+  tmComputedFields %~ HM.delete name
+
+-- dropComputedFieldFromCatalog
+--   :: MonadTx m
+--   => QualifiedTable -> ComputedFieldName -> m ()
+-- dropComputedFieldFromCatalog (QualifiedObject schema table) computedField =
+--   liftTx $ Q.withQE defaultTxErrorHandler
+--     [Q.sql|
+--      DELETE FROM hdb_catalog.hdb_computed_field
+--       WHERE table_schema = $1
+--         AND table_name = $2
+--         AND computed_field_name = $3
+--     |] (schema, table, computedField) True

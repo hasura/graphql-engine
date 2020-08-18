@@ -1,10 +1,12 @@
 module Hasura.RQL.DDL.CustomTypes
   ( runSetCustomTypes
-  , persistCustomTypes
-  , clearCustomTypes
+  -- , persistCustomTypes
+  -- , clearCustomTypes
+  , clearCustomTypesInMetadata
   , resolveCustomTypes
   ) where
 
+import           Control.Lens                      ((.~))
 import           Control.Monad.Validate
 
 import qualified Data.HashMap.Strict               as Map
@@ -294,24 +296,29 @@ runSetCustomTypes
      )
   => CustomTypes -> m EncJSON
 runSetCustomTypes customTypes = do
-  persistCustomTypes customTypes
-  buildSchemaCacheFor MOCustomTypes
+  -- persistCustomTypes customTypes
+  buildSchemaCacheFor MOCustomTypes $
+    metaCustomTypes .~ customTypes
   return successMsg
 
-persistCustomTypes :: MonadTx m => CustomTypes -> m ()
-persistCustomTypes customTypes = liftTx do
-  clearCustomTypes
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-    INSERT into hdb_catalog.hdb_custom_types
-      (custom_types)
-      VALUES ($1)
-  |] (Identity $ Q.AltJ customTypes) False
+clearCustomTypesInMetadata :: Metadata -> Metadata
+clearCustomTypesInMetadata =
+  metaCustomTypes .~ emptyCustomTypes
 
-clearCustomTypes :: Q.TxE QErr ()
-clearCustomTypes = do
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-    DELETE FROM hdb_catalog.hdb_custom_types
-  |] () False
+-- persistCustomTypes :: MonadTx m => CustomTypes -> m ()
+-- persistCustomTypes customTypes = liftTx do
+--   clearCustomTypes
+--   Q.unitQE defaultTxErrorHandler [Q.sql|
+--     INSERT into hdb_catalog.hdb_custom_types
+--       (custom_types)
+--       VALUES ($1)
+--   |] (Identity $ Q.AltJ customTypes) False
+
+-- clearCustomTypes :: Q.TxE QErr ()
+-- clearCustomTypes = do
+--   Q.unitQE defaultTxErrorHandler [Q.sql|
+--     DELETE FROM hdb_catalog.hdb_custom_types
+--   |] () False
 
 resolveCustomTypes
   :: (MonadError QErr m)

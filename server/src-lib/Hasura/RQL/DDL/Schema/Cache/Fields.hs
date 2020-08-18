@@ -11,8 +11,8 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict.Extended       as M
 import qualified Data.HashSet                       as HS
 import qualified Data.Sequence                      as Seq
-import qualified Language.GraphQL.Draft.Syntax      as G
 import qualified Hasura.GraphQL.Validate.Types      as VT
+import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Control.Arrow.Extended
 import           Data.Aeson
@@ -122,7 +122,7 @@ buildRelationship
 buildRelationship = proc (foreignKeys, relationship) -> do
   let CatalogRelation tableName rn rt rDef _ = relationship
       metadataObject = mkRelationshipMetadataObject relationship
-      schemaObject = SOTableObj tableName $ TORel rn
+      schemaObject = SOTableObj tableName $ TORel rn rt
       addRelationshipContext e = "in relationship " <> rn <<> ": " <> e
   (| withRecordInconsistency (
      (| modifyErrA (do

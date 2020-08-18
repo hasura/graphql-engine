@@ -107,7 +107,8 @@ buildRebuildableSchemaCache
   => Env.Environment
   -> m (RebuildableSchemaCache m)
 buildRebuildableSchemaCache env = do
-  catalogMetadata <- liftTx fetchCatalogData
+  metadata <- liftTx fetchMetadata
+  catalogMetadata <- buildCatalogMetadata metadata
   result <- flip runReaderT CatalogSync $
     Inc.build (buildSchemaCacheRule env) (catalogMetadata, initialInvalidationKeys)
   pure $ RebuildableSchemaCache (Inc.result result) initialInvalidationKeys (Inc.rebuildRule result)
@@ -135,16 +136,20 @@ instance (Monad m) => CacheRM (CacheRWT m) where
   askSchemaCache = CacheRWT $ gets (lastBuiltSchemaCache . fst)
 
 instance (MonadIO m, MonadTx m) => CacheRWM (CacheRWT m) where
-  buildSchemaCacheWithOptions buildReason invalidations = CacheRWT do
+  buildSchemaCacheWithOptions buildReason invalidations metadataModifier = CacheRWT do
     (RebuildableSchemaCache _ invalidationKeys rule, oldInvalidations) <- get
     let newInvalidationKeys = invalidateKeys invalidations invalidationKeys
-    catalogMetadata <- liftTx fetchCatalogData
+    -- catalogMetadata <- liftTx fetchCatalogData
+    metadata <- liftTx fetchMetadata
+    let modifiedMetadata = metadataModifier metadata
+    catalogMetadata <- buildCatalogMetadata modifiedMetadata
     result <- lift $ flip runReaderT buildReason $
       Inc.build rule (catalogMetadata, newInvalidationKeys)
     let schemaCache = Inc.result result
         prunedInvalidationKeys = pruneInvalidationKeys schemaCache newInvalidationKeys
         !newCache = RebuildableSchemaCache schemaCache prunedInvalidationKeys (Inc.rebuildRule result)
         !newInvalidations = oldInvalidations <> invalidations
+    updateMetadata modifiedMetadata
     put (newCache, newInvalidations)
     where
       -- Prunes invalidation keys that no longer exist in the schema to avoid leaking memory by
@@ -414,7 +419,7 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
              (| modifyErrA (do
                   (resolvedDef, outObject, reusedPgScalars) <- liftEitherA <<< bindA -<
                     runExceptT $ resolveAction env resolvedCustomTypes pgScalars def
-                  let permissionInfos = map (ActionPermissionInfo . _apmRole) actionPermissions
+                  let permissionInfos = map (uncurry ActionPermissionInfo . (_apmRole &&& _apmComment)) actionPermissions
                       permissionMap = mapFromL _apiRole permissionInfos
                   returnA -< ActionInfo name outObject resolvedDef permissionMap reusedPgScalars comment)
               |) addActionContext)
@@ -511,28 +516,29 @@ withMetadataCheck cascade action = do
   -- Report back with an error if cascade is not set
   when (indirectDeps /= [] && not cascade) $ reportDepsExt indirectDeps []
 
-  -- Purge all the indirect dependents from state
-  mapM_ purgeDependentObject indirectDeps
+  metadataUpdater <- execWriterT $ do
+    -- Purge all the indirect dependents from state
+    mapM_ (purgeDependentObject >=> tell) indirectDeps
 
-  -- Purge all dropped functions
-  let purgedFuncs = flip mapMaybe indirectDeps $ \dep ->
-        case dep of
-          SOFunction qf -> Just qf
-          _             -> Nothing
+    -- Purge all dropped functions
+    let purgedFuncs = flip mapMaybe indirectDeps $ \dep ->
+          case dep of
+            SOFunction qf -> Just qf
+            _             -> Nothing
 
-  forM_ (droppedFuncs \\ purgedFuncs) $ \qf -> do
-    liftTx $ delFunctionFromCatalog qf
+    forM_ (droppedFuncs \\ purgedFuncs) $ \qf -> do
+      tell $ MetadataModifier $ dropFunctionInMetadata qf
 
-  -- Process altered functions
-  forM_ alteredFuncs $ \(qf, newTy) -> do
-    when (newTy == FTVOLATILE) $
-      throw400 NotSupported $
-      "type of function " <> qf <<> " is altered to \"VOLATILE\" which is not supported now"
+    -- Process altered functions
+    forM_ alteredFuncs $ \(qf, newTy) -> do
+      when (newTy == FTVOLATILE) $
+        throw400 NotSupported $
+        "type of function " <> qf <<> " is altered to \"VOLATILE\" which is not supported now"
 
-  -- update the schema cache and hdb_catalog with the changes
-  processSchemaChanges schemaDiff
+    -- update the schema cache and hdb_catalog with the changes
+    processSchemaChanges schemaDiff
 
-  buildSchemaCache
+  buildSchemaCache $ unMetadataModifier metadataUpdater
   postSc <- askSchemaCache
 
   -- Recreate event triggers in hdb_views
@@ -550,10 +556,16 @@ withMetadataCheck cascade action = do
   where
     reportFuncs = T.intercalate ", " . map dquoteTxt
 
-    processSchemaChanges :: (MonadTx m, CacheRM m) => SchemaDiff -> m ()
+    processSchemaChanges
+      :: ( MonadError QErr m
+         , CacheRM m
+         , MonadWriter MetadataModifier m
+         )
+      => SchemaDiff -> m ()
     processSchemaChanges schemaDiff = do
       -- Purge the dropped tables
-      mapM_ delTableAndDirectDeps droppedTables
+      forM_ droppedTables $
+        \tn -> tell $ MetadataModifier $ metaTables %~ M.delete tn
 
       sc <- askSchemaCache
       for_ alteredTables $ \(oldQtn, tableDiff) -> do

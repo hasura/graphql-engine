@@ -19,7 +19,7 @@ import           Hasura.SQL.Types
 
 data TableObjId
   = TOCol !PGCol
-  | TORel !RelName
+  | TORel !RelName !RelType
   | TOComputedField !ComputedFieldName
   | TORemoteRel !RemoteRelationshipName
   | TOForeignKey !ConstraintName
@@ -42,7 +42,7 @@ reportSchemaObj (SOTable tn) = "table " <> qualObjectToText tn
 reportSchemaObj (SOFunction fn) = "function " <> qualObjectToText fn
 reportSchemaObj (SOTableObj tn (TOCol cn)) =
   "column " <> qualObjectToText tn <> "." <> getPGColTxt cn
-reportSchemaObj (SOTableObj tn (TORel cn)) =
+reportSchemaObj (SOTableObj tn (TORel cn _)) =
   "relationship " <> qualObjectToText tn <> "." <> relNameToTxt cn
 reportSchemaObj (SOTableObj tn (TOForeignKey cn)) =
   "constraint " <> qualObjectToText tn <> "." <> getConstraintTxt cn
