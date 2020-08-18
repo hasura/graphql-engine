@@ -119,7 +119,7 @@ type ExternalProps = RouteComponentProps<
   {
     triggerName: string;
   },
-  {}
+  unknown
 >;
 
 const mapStateToProps: MapStateToProps<PropsFromState, ExternalProps> = (

@@ -1,11 +1,10 @@
 import React from 'react';
-import { ThunkDispatch } from 'redux-thunk';
-import { AnyAction } from 'redux';
 import ReloadMetadata from '../../../Settings/MetadataOptions/ReloadMetadata';
+import { Dispatch } from '../../../../../types';
 
 export interface ReloadEnumValuesButtonProps {
   isEnum: boolean;
-  dispatch: ThunkDispatch<{}, {}, AnyAction>;
+  dispatch: Dispatch;
   tooltipStyle?: string;
 }
 
