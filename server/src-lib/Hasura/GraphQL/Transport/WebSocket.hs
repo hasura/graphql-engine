@@ -367,7 +367,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         execQueryOrMut Telem.Query genSql . fmap snd $
           Tracing.interpTraceT id $ executeQuery queryParsed asts genSql pgExecCtx Q.ReadOnly opTx
       -- Response headers discarded over websockets
-      E.ExOpMutation _ opTx -> Tracing.trace "Fetch data" do
+      E.ExOpMutation _ opTx -> Tracing.trace "Write data" do
         ctx <- Tracing.currentContext
         execQueryOrMut Telem.Mutation Nothing $
           Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx . withUserInfo userInfo) opTx
