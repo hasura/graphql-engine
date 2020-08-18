@@ -425,6 +425,7 @@ executable graphql-engine
                    , text
                    , text-conversions
                    , unix
+                   , ekg-core
 
 test-suite graphql-engine-tests
   import: common-all, common-exe
