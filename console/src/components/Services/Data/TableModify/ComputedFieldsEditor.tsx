@@ -392,7 +392,7 @@ const ComputedFieldsEditor = ({
             </div>
             <input
               type="text"
-              value={computedFieldTableRowArg ?? ''}
+              value={computedFieldTableRowArg ?? undefined}
               placeholder="default: first argument"
               onChange={handleTableRowArgChange}
               className={`form-control ${styles.wd50percent}`}
