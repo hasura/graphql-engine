@@ -18,9 +18,9 @@ const unwrapList = (wrappedTypename: string) => {
 export const unwrapType = (wrappedTypename: string) => {
   let typename = wrappedTypename;
   const typeWrapperStack = [];
+  let lastChar = typename.charAt(typename.length - 1);
 
-  while (true) {
-    const lastChar = typename.charAt(typename.length - 1);
+  while (lastChar) {
     if (lastChar === ']') {
       typename = unwrapList(typename);
       typeWrapperStack.push('l');
@@ -30,6 +30,7 @@ export const unwrapType = (wrappedTypename: string) => {
     } else {
       break;
     }
+    lastChar = typename.charAt(typename.length - 1);
   }
 
   return {
