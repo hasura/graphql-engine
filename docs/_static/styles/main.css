@@ -787,7 +787,7 @@ article ol ol {
 }
 
 #sidebar {
-  background-color: #001934;
+  background-color: #F8F8F8;
   width: 348px !important;
   height: 100vh;
   overflow-y: auto;
@@ -809,13 +809,16 @@ article ol ol {
 }
 
 #sidebar ul li {
-  color: rgba(214,214,214,1);
+  /* color: rgba(214,214,214,1); */
+  color: #000000;
   margin-top: 5px;
   margin-bottom: 5px;
+  line-height: 330%;
 }
 
 #sidebar ul li a {
-  color: rgba(214,214,214,1);
+  /* color: rgba(214,214,214,1); */
+  color: #000000;
   text-decoration: none;
 }
 
@@ -896,8 +899,8 @@ article ol ol {
   margin-left: calc(24vw - 240px);
 }
 
-#sidebar a.current.reference.internal {
-  color: #1CD3C6 !important;
+#sidebar ul .current, #sidebar a.current.reference.internal {
+  color: #5C94C8 !important;
 }
 
 #sidebar a.reference.internal > code.docutils.literal {
@@ -1895,6 +1898,28 @@ article ol ol {
   margin: 0 auto;
   clear: both;
   padding: 0 15px;
+}
+.select-style {
+  overflow: hidden;
+  margin: 15px;
+  margin-top: 30px;
+}
+
+.select-style select {
+    width: 100%;
+    padding: 5px 16px;
+    border: none;
+    height: 40px;
+    border-radius: 8px;
+    border: 1px solid #E4E4E4;
+    color: #717780;
+    box-shadow: none;
+    background: url('../../_images/layout/dropdown-arrow.svg') no-repeat right white;
+    -webkit-appearance: none;
+    background-position-x: calc(100% - 10px);
+}
+.select-style select:focus {
+    outline: none;
 }
 .tabbarContainerWrapper {
   display: flex;

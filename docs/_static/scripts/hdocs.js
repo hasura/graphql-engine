@@ -33,6 +33,7 @@ window.hdocs = (function () {
       document.getElementById('close-menu').addEventListener('click', hdocs.toggleMenu);
       document.getElementById('chat-open').addEventListener('click', hdocs.chatOpen);
       document.getElementById('close-subscribe').addEventListener('click', hdocs.closeFloatingSubscribe)
+      document.getElementById('select-product').addEventListener('change', hdocs.selectProduct)
       docsearch({
         appId: 'WCBB1VVLRC',
         apiKey: '298d448cd9d7ed93fbab395658da19e8',
@@ -47,6 +48,15 @@ window.hdocs = (function () {
       hdocs.setExternalLinks();
       hdocs.setupIntercom();
       hdocs.setupGraphiQL();
+    },
+    selectProduct: function () {
+      var currentValue = document.getElementById('select-product').value;
+      if(currentValue === 'hasura-core') {
+        window.location = `https://${HDOCS_BASE_DOMAIN}/docs/1.0/graphql/manual/index.html`
+      }
+      if(currentValue === 'hasura-cloud') {
+        window.location = `https://${HDOCS_BASE_DOMAIN}/docs/cloud/1.0/manual/index.html`
+      }
     },
     toggleMenu: function () {
       var x = document.getElementById("navbar")

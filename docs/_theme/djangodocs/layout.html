@@ -605,6 +605,7 @@
               <div id='sidebar-close' class='mobile-only closeIcon'>
                 <img src="{{ pathto('_images/layout/close-icon.svg', 1) }}" alt="Close"/>
               </div>
+              <!--
               <div class="tabbarContainerWrapper blueBgColor">
                 <a href="" class="tabbarTabActive">
                   <span>
@@ -616,6 +617,13 @@
                     Hasura Cloud
                   </span>
                 </a>
+              </div>
+              -->
+              <div class="select-style">
+                <select id='select-product'>
+                  <option value="hasura-core">Hasura Core Docs</option>
+                  <option value="hasura-cloud">Hasura Cloud Docs</option>
+                </select>
               </div>
               {{ sidebar() }}
             </div>
@@ -707,7 +715,7 @@
                   </div>
                   <div id="detailed_feedback" class="hide ">
                     <div id="feedback_detail_msg"></div>
-                    <input cols="75" id="feedback_box" data-id="0">
+                    <input cols="75" id="feedback_box" data-id="0" placeholder="Do you have any other feedback?">
                     <button id="feedback_btn">Submit</button>
                   </div>
                   <div id="thank_you" class="hide">
