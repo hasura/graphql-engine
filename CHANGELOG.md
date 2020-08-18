@@ -7,7 +7,7 @@
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
-- console: add session argument field for computed fields
+- console: add session argument field for computed fields (close #5154) (#5610)
 - docs: add docs page on networking with docker (close #4346) (#4811)
 
 ## `v1.3.1-beta.1`
