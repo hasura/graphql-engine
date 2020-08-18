@@ -27,7 +27,7 @@ import {
   inconsistentObjectsQuery,
   resetMetadataQuery,
 } from '../../Common/utils/v1QueryUtils';
-import { GetReduxState, ReduxState } from '../../../types';
+import { Dispatch, GetReduxState, ReduxState } from '../../../types';
 
 const LOAD_INCONSISTENT_OBJECTS = 'Metadata/LOAD_INCONSISTENT_OBJECTS';
 const LOADING_METADATA = 'Metadata/LOADING_METADATA';
@@ -66,12 +66,9 @@ const getReloadCacheAndGetInconsistentObjectsQuery = (
 });
 
 export const exportMetadata = (
-  successCb: (oldMetadata: object) => void,
+  successCb: (oldMetadata: MetadataObject) => void,
   errorCb: (e: Error) => void
-) => (
-  dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
-  getState: GetReduxState
-) => {
+) => (dispatch: Dispatch, getState: GetReduxState) => {
   const { dataHeaders } = getState().tables;
 
   const options: RequestInit = {
@@ -93,13 +90,10 @@ export const exportMetadata = (
 
 export const replaceMetadata = (
   newMetadata: object,
-  successCb: Function,
-  errorCb: Function
-) => (
-  dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
-  getState: GetReduxState
-) => {
-  const exportSuccessCb = (oldMetadata: object) => {
+  successCb: () => void,
+  errorCb: () => void
+) => (dispatch: Dispatch, getState: GetReduxState) => {
+  const exportSuccessCb = (oldMetadata: MetadataObject) => {
     const upQuery = generateReplaceMetadataQuery(newMetadata);
     const downQuery = generateReplaceMetadataQuery(oldMetadata);
 
@@ -147,10 +141,7 @@ export const replaceMetadata = (
 export const resetMetadata = (
   successCb: () => void,
   errorCb: (e: Error) => void
-) => (
-  dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
-  getState: GetReduxState
-) => {
+) => (dispatch: Dispatch, getState: GetReduxState) => {
   const headers = getState().tables.dataHeaders;
 
   const options: RequestInit = {
@@ -180,8 +171,8 @@ export const resetMetadata = (
 export const replaceMetadataFromFile = (
   fileContent: string,
   successCb: () => void,
-  errorCb: (err?: Error) => void
-) => (dispatch: ThunkDispatch<ReduxState, {}, AnyAction>) => {
+  errorCb: () => void
+) => (dispatch: Dispatch) => {
   let parsedFileContent;
   try {
     parsedFileContent = JSON.parse(fileContent);
@@ -207,11 +198,8 @@ export const replaceMetadataFromFile = (
 };
 
 const handleInconsistentObjects = (inconsistentObjects: MetadataObject[]) => {
-  return (
-    dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
-    getState: GetReduxState
-  ) => {
-    const allSchemas = getState().tables.allSchemas as MetadataObject[];
+  return (dispatch: Dispatch, getState: GetReduxState) => {
+    const allSchemas = getState().tables.allSchemas;
     const functions = getState().tables.trackedFunctions;
     const remoteSchemas = getState().remoteSchemas.listData.remoteSchemas;
     const actions = getState().actions.common.actions;
@@ -223,7 +211,7 @@ const handleInconsistentObjects = (inconsistentObjects: MetadataObject[]) => {
 
     if (inconsistentObjects.length > 0) {
       const filteredSchema = filterInconsistentMetadataObjects(
-        allSchemas,
+        allSchemas as Table[],
         inconsistentObjects,
         'tables'
       );
@@ -253,13 +241,10 @@ const handleInconsistentObjects = (inconsistentObjects: MetadataObject[]) => {
 
 export const loadInconsistentObjects = (
   reloadConfig: ReloadConfig,
-  successCb?: Function,
-  failureCb?: Function
+  successCb?: () => void,
+  failureCb?: (err: Error) => void
 ) => {
-  return (
-    dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
-    getState: GetReduxState
-  ) => {
+  return (dispatch: Dispatch, getState: GetReduxState) => {
     const headers = getState().tables.dataHeaders;
 
     const { shouldReloadMetadata, shouldReloadRemoteSchemas } = reloadConfig;
@@ -307,13 +292,10 @@ export const loadInconsistentObjects = (
 
 export const reloadRemoteSchema = (
   remoteSchemaName: string,
-  successCb?: Function,
-  failureCb?: Function
+  successCb?: () => void,
+  failureCb?: (err: Error) => void
 ) => {
-  return (
-    dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
-    getState: GetReduxState
-  ) => {
+  return (dispatch: Dispatch, getState: GetReduxState) => {
     const headers = getState().tables.dataHeaders;
 
     const reloadQuery = reloadRemoteSchemaCacheAndGetInconsistentObjectsQuery(
@@ -352,10 +334,10 @@ export const reloadRemoteSchema = (
 
 export const reloadMetadata = (
   shouldReloadRemoteSchemas: boolean,
-  successCb?: Function,
-  failureCb?: Function
+  successCb?: () => void,
+  failureCb?: (err?: Error) => void
 ) => {
-  return (dispatch: ThunkDispatch<ReduxState, {}, AnyAction>) => {
+  return (dispatch: Dispatch) => {
     return dispatch(
       loadInconsistentObjects(
         {
@@ -370,13 +352,10 @@ export const reloadMetadata = (
 };
 
 export const dropInconsistentObjects = (
-  successCb: Function,
-  failureCb: Function
+  successCb: () => void,
+  failureCb?: (err?: Error) => void
 ) => {
-  return (
-    dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
-    getState: GetReduxState
-  ) => {
+  return (dispatch: Dispatch, getState: GetReduxState) => {
     const headers = getState().tables.dataHeaders;
     dispatch({ type: DROP_INCONSISTENT_METADATA });
     return dispatch(
@@ -418,7 +397,7 @@ export const isMetadataStatusPage = () => {
 };
 
 export const redirectToMetadataStatus = () => {
-  return (dispatch: ThunkDispatch<ReduxState, {}, AnyAction>) => {
+  return (dispatch: Dispatch) => {
     return dispatch(
       push(`${globals.urlPrefix}/settings/metadata-status?is_redirected=true`)
     );
@@ -503,10 +482,7 @@ const updateAllowedQueryQuery = (queryName: string, newQuery: Query) => ({
 });
 
 export const loadAllowedQueries = () => {
-  return (
-    dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
-    getState: GetReduxState
-  ) => {
+  return (dispatch: Dispatch, getState: GetReduxState) => {
     const headers = getState().tables.dataHeaders;
 
     return dispatch(
@@ -538,10 +514,10 @@ export const loadAllowedQueries = () => {
 export const addAllowedQueries = (
   queries: Query[],
   isEmptyList: boolean,
-  callback: Function
-): Function => {
+  callback: () => void
+): ((dispatch: Dispatch, getState: GetReduxState) => void | Promise<void>) => {
   return (
-    dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
+    dispatch: Dispatch,
     getState: GetReduxState
   ): void | Promise<void> => {
     if (queries.length === 0) {
@@ -585,10 +561,7 @@ export const addAllowedQueries = (
 };
 
 export const deleteAllowList = () => {
-  return (
-    dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
-    getState: GetReduxState
-  ) => {
+  return (dispatch: Dispatch, getState: GetReduxState) => {
     const headers = getState().tables.dataHeaders;
 
     return dispatch(
@@ -619,10 +592,7 @@ export const deleteAllowList = () => {
 };
 
 export const deleteAllowedQuery = (queryName: string, isLastQuery: boolean) => {
-  return (
-    dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
-    getState: GetReduxState
-  ) => {
+  return (dispatch: Dispatch, getState: GetReduxState) => {
     const headers = getState().tables.dataHeaders;
 
     const deleteQuery = isLastQuery
@@ -655,10 +625,7 @@ export const deleteAllowedQuery = (queryName: string, isLastQuery: boolean) => {
 };
 
 export const updateAllowedQuery = (queryName: string, newQuery: Query) => {
-  return (
-    dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
-    getState: GetReduxState
-  ) => {
+  return (dispatch: Dispatch, getState: GetReduxState) => {
     const headers = getState().tables.dataHeaders;
 
     return dispatch(
@@ -772,18 +739,76 @@ type Query = { name: string; query: string };
 
 type UpdateAllowedQuery = { queryName: string; newQuery: Query };
 
-type MetadataReducerAction = {
-  type:
-    | typeof LOAD_INCONSISTENT_OBJECTS
-    | typeof LOADING_METADATA
-    | typeof LOAD_METADATA_ERROR
-    | typeof DROP_INCONSISTENT_METADATA
-    | typeof DROPPED_INCONSISTENT_METADATA
-    | typeof DROPPING_INCONSISTENT_METADATA_FAILED
-    | typeof LOAD_ALLOWED_QUERIES
-    | typeof ADD_ALLOWED_QUERIES
-    | typeof UPDATE_ALLOWED_QUERY
-    | typeof DELETE_ALLOWED_QUERY
-    | typeof DELETE_ALLOW_LIST;
-  data: Array<Query> | Query | string | Array<object> | UpdateAllowedQuery;
+type MetadataReducerAction =
+  | LoadInconsistentObjects
+  | LoadingMetadata
+  | LoadMetadataError
+  | DropInconsistentMetadata
+  | DroppedInconsistentMetadata
+  | DroppingInconsistentMetadataFailed
+  | LoadAllowedQueries
+  | AddAllowedQueries
+  | UpdateAllowedQueryAction
+  | DeleteAllowedQuery
+  | DeleteAllowedList;
+
+type MetadataActionTypes =
+  | typeof LOAD_INCONSISTENT_OBJECTS
+  | typeof LOADING_METADATA
+  | typeof LOAD_METADATA_ERROR
+  | typeof DROP_INCONSISTENT_METADATA
+  | typeof DROPPED_INCONSISTENT_METADATA
+  | typeof DROPPING_INCONSISTENT_METADATA_FAILED
+  | typeof LOAD_ALLOWED_QUERIES
+  | typeof ADD_ALLOWED_QUERIES
+  | typeof UPDATE_ALLOWED_QUERY
+  | typeof DELETE_ALLOWED_QUERY
+  | typeof DELETE_ALLOW_LIST;
+
+type LoadInconsistentObjects = {
+  type: typeof LOAD_INCONSISTENT_OBJECTS;
+  data: MetadataObject[];
+};
+type LoadingMetadata = {
+  type: typeof LOADING_METADATA;
+};
+
+type LoadMetadataError = {
+  type: typeof LOAD_METADATA_ERROR;
+};
+
+type DropInconsistentMetadata = {
+  type: typeof DROP_INCONSISTENT_METADATA;
+};
+
+type DroppedInconsistentMetadata = {
+  type: typeof DROPPED_INCONSISTENT_METADATA;
+};
+
+type DroppingInconsistentMetadataFailed = {
+  type: typeof DROPPING_INCONSISTENT_METADATA_FAILED;
+};
+
+type LoadAllowedQueries = {
+  type: typeof LOAD_ALLOWED_QUERIES;
+  data: Array<Query>;
+};
+
+type AddAllowedQueries = {
+  type: typeof ADD_ALLOWED_QUERIES;
+  data: Array<Query>;
+};
+
+type UpdateAllowedQueryAction = {
+  type: typeof UPDATE_ALLOWED_QUERY;
+  data: { queryName: string; newQuery: Query };
+};
+
+type DeleteAllowedQuery = {
+  type: typeof DELETE_ALLOWED_QUERY;
+  data: string;
+};
+
+type DeleteAllowedList = {
+  type: typeof DELETE_ALLOW_LIST;
 };
