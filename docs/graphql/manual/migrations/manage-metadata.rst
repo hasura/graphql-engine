@@ -26,6 +26,10 @@ controlled. The metadata file can be later imported to another Hasura instance t
 configuration. You can also manually edit the metadata file to add more objects to
 it and then use it to update the instance.
 
+.. note::
+
+   Hasura's metadata workflow is not dependent on the migrations setup. You can use the metadata workflow without using Hasura migrations.
+
 Exporting Hasura metadata
 -------------------------
 
