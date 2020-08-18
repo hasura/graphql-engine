@@ -1,5 +1,3 @@
-import { ThunkDispatch } from 'redux-thunk';
-import { AnyAction } from 'redux';
 import { push } from 'react-router-redux';
 import requestAction from '../../../utils/requestAction';
 import { clearIntrospectionSchemaCache } from '../RemoteSchema/graphqlUtils';
@@ -27,7 +25,7 @@ import {
   inconsistentObjectsQuery,
   resetMetadataQuery,
 } from '../../Common/utils/v1QueryUtils';
-import { Dispatch, GetReduxState, ReduxState } from '../../../types';
+import { Dispatch, GetReduxState } from '../../../types';
 
 const LOAD_INCONSISTENT_OBJECTS = 'Metadata/LOAD_INCONSISTENT_OBJECTS';
 const LOADING_METADATA = 'Metadata/LOADING_METADATA';
@@ -89,7 +87,7 @@ export const exportMetadata = (
 };
 
 export const replaceMetadata = (
-  newMetadata: object,
+  newMetadata: MetadataObject,
   successCb: () => void,
   errorCb: () => void
 ) => (dispatch: Dispatch, getState: GetReduxState) => {
@@ -211,7 +209,7 @@ const handleInconsistentObjects = (inconsistentObjects: MetadataObject[]) => {
 
     if (inconsistentObjects.length > 0) {
       const filteredSchema = filterInconsistentMetadataObjects(
-        allSchemas as Table[],
+        allSchemas as MetadataObject[],
         inconsistentObjects,
         'tables'
       );
@@ -725,7 +723,7 @@ export const metadataReducer = (
 };
 
 export type SettingsState = {
-  inconsistentObjects: object[];
+  inconsistentObjects: MetadataObject[];
   ongoingRequest: boolean;
   allowedQueries: Query[];
 };
