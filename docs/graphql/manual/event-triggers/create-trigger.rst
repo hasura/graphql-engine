@@ -41,6 +41,11 @@ The HTTP(s) URL which will be called with the event payload on configured operat
 can be entered manually or can be picked up from an environment variable (*the environment variable needs to be set
 before using it for this configuration*).
 
+.. note::
+
+  If you are running Hasura using Docker, ensure that the Hasura Docker container can reach the webhook.
+  See :ref:`this page <docker_networking>` for Docker networking.
+
 Advanced Settings
 -----------------
 
