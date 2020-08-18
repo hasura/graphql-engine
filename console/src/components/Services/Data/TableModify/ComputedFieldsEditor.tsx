@@ -1,5 +1,6 @@
 import React from 'react';
 import AceEditor from 'react-ace';
+import { ValueType, OptionTypeBase } from 'react-select';
 
 import styles from './ModifyTable.scss';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
@@ -13,10 +14,24 @@ import {
   getQualifiedTableDef,
   getSchemaFunctions,
   getSchemaName,
+  Table,
+  PGFunction,
+  PGSchema,
+  ComputedField,
 } from '../../../Common/utils/pgUtils';
 import { deleteComputedField, saveComputedField } from './ModifyActions';
 import { fetchFunctionInit } from '../DataActions';
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
+import { Dispatch } from '../../../../types';
+import { TableDefinition } from '../../../Common/utils/v1QueryUtils';
+
+type ComputedFieldsEditorProps = {
+  table: Table;
+  currentSchema: string;
+  functions: PGFunction[];
+  schemaList: PGSchema[];
+  dispatch: Dispatch;
+};
 
 const ComputedFieldsEditor = ({
   table,
@@ -24,16 +39,18 @@ const ComputedFieldsEditor = ({
   functions,
   schemaList,
   dispatch,
-}) => {
+}: ComputedFieldsEditorProps) => {
   const computedFields = table.computed_fields;
 
-  const emptyComputedField = {
+  const emptyComputedField: ComputedField = {
     computed_field_name: '',
     definition: {
       function: {
         name: '',
         schema: currentSchema,
       },
+      table_argument: '',
+      session_argument: '',
     },
     comment: '',
   };
@@ -64,7 +81,7 @@ const ComputedFieldsEditor = ({
     if (origComputedField) {
       const origComputedFieldFunctionDef = getQualifiedTableDef(
         origComputedField.definition.function
-      );
+      ) as TableDefinition;
 
       origComputedFieldName = origComputedField.computed_field_name;
       origComputedFieldFunctionName = origComputedFieldFunctionDef.name;
@@ -73,7 +90,7 @@ const ComputedFieldsEditor = ({
 
     const computedFieldFunctionDef = getQualifiedTableDef(
       computedField.definition.function
-    );
+    ) as TableDefinition;
 
     const computedFieldName = computedField.computed_field_name;
     const computedFieldFunctionName = computedFieldFunctionDef.name;
@@ -84,7 +101,7 @@ const ComputedFieldsEditor = ({
     const computedFieldComment = computedField.comment;
 
     let computedFieldFunction = null;
-    let computedFieldFunctionDefinition = null;
+    let computedFieldFunctionDefinition = '';
     if (functions) {
       computedFieldFunction = findFunction(
         functions,
@@ -116,7 +133,7 @@ const ComputedFieldsEditor = ({
 
     let saveFunc;
     if (computedFieldName && computedFieldFunctionDefinition) {
-      saveFunc = toggle => {
+      saveFunc = (toggle: any) => {
         dispatch(
           saveComputedField(computedField, table, origComputedField, toggle)
         );
@@ -136,7 +153,7 @@ const ComputedFieldsEditor = ({
           <b>{origComputedFieldName}</b>&nbsp;-&nbsp;
           <i>{origComputedFieldFunctionName}</i>
           <br />
-          <span key={'comment'} className={styles.text_gray}>
+          <span key="comment" className={styles.text_gray}>
             {origComputedFieldComment}
           </span>
         </div>
@@ -195,7 +212,7 @@ const ComputedFieldsEditor = ({
         );
       };
 
-      const handleNameChange = e => {
+      const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newState = [...stateComputedFields];
 
         newState[i] = {
@@ -206,9 +223,16 @@ const ComputedFieldsEditor = ({
         setComputedFieldsState(newState);
       };
 
-      const handleFnSchemaChange = selectedOption => {
-        // fetch schema fns
-        dispatch(fetchFunctionInit(selectedOption.value));
+      const handleFnSchemaChange = (selectedOption: ValueType<OptionTypeBase> | string) => {
+        // fetch schema fn
+
+        if (!selectedOption) {
+          return;
+        }
+
+        if (selectedOption) {
+          dispatch(fetchFunctionInit((selectedOption as OptionTypeBase).value));
+        }
 
         const newState = [...stateComputedFields];
 
@@ -218,7 +242,7 @@ const ComputedFieldsEditor = ({
             ...newState[i].definition,
             function: {
               ...newState[i].definition.function,
-              schema: selectedOption.value,
+              schema: (selectedOption as OptionTypeBase).value,
             },
           },
         };
@@ -226,8 +250,12 @@ const ComputedFieldsEditor = ({
         setComputedFieldsState(newState);
       };
 
-      const handleFnNameChange = selectedOption => {
+      const handleFnNameChange = (selectedOption: ValueType<OptionTypeBase> | string) => {
         const newState = [...stateComputedFields];
+
+        if (!selectedOption) {
+          return;
+        }
 
         newState[i] = {
           ...newState[i],
@@ -235,7 +263,7 @@ const ComputedFieldsEditor = ({
             ...newState[i].definition,
             function: {
               ...newState[i].definition.function,
-              name: selectedOption.value,
+              name: (selectedOption as OptionTypeBase).value,
             },
           },
         };
@@ -243,7 +271,7 @@ const ComputedFieldsEditor = ({
         setComputedFieldsState(newState);
       };
 
-      const handleCommentChange = e => {
+      const handleCommentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newState = [...stateComputedFields];
 
         newState[i] = {
@@ -254,7 +282,7 @@ const ComputedFieldsEditor = ({
         setComputedFieldsState(newState);
       };
 
-      const handleTableRowArgChange = e => {
+      const handleTableRowArgChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newState = [...stateComputedFields];
 
         newState[i] = {
@@ -268,7 +296,7 @@ const ComputedFieldsEditor = ({
         setComputedFieldsState(newState);
       };
 
-      const handleTableSesssionArgChange = e => {
+      const handleTableSesssionArgChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newState = [...stateComputedFields];
 
         newState[i] = {
@@ -304,7 +332,7 @@ const ComputedFieldsEditor = ({
                 options={schemaList.map(s => getSchemaName(s))}
                 onChange={handleFnSchemaChange}
                 value={computedFieldFunctionSchema}
-                bsClass={'function-schema-select'}
+                bsClass="function-schema-select"
                 styleOverrides={{
                   menu: {
                     zIndex: 5,
@@ -319,9 +347,9 @@ const ComputedFieldsEditor = ({
             <div className={`${styles.add_mar_bottom_mid}`}>
               <b>Function name: </b>
               <RawSqlButton
-                dataTestId={'create-function'}
+                dataTestId="create-function"
                 customStyles={`${styles.display_inline} ${styles.add_mar_left}`}
-                sql={''}
+                sql=""
                 dispatch={dispatch}
               >
                 Create new
@@ -335,7 +363,7 @@ const ComputedFieldsEditor = ({
                 ).map(fn => getFunctionName(fn))}
                 onChange={handleFnNameChange}
                 value={computedFieldFunctionName}
-                bsClass={'function-name-select'}
+                bsClass="function-name-select"
                 styleOverrides={{
                   menu: {
                     zIndex: 5,
@@ -356,7 +384,7 @@ const ComputedFieldsEditor = ({
             </div>
             <input
               type="text"
-              value={computedFieldTableRowArg}
+              value={computedFieldTableRowArg ?? ''}
               placeholder="default: first argument"
               onChange={handleTableRowArgChange}
               className={`form-control ${styles.wd50percent}`}
@@ -364,12 +392,12 @@ const ComputedFieldsEditor = ({
           </div>
           <div className={`${styles.add_mar_top}`}>
             <div className={`${styles.add_mar_bottom_mid}`}>
-              <b>Session variable argument:</b>
+              <b>Session argument:</b>
               <Tooltip message="the function argument into which hasura session variables will be passed" />
             </div>
             <input
               type="text"
-              value={computedFieldTableSessionArg}
+              value={computedFieldTableSessionArg ?? ''}
               placeholder="hasura_session"
               onChange={handleTableSesssionArgChange}
               className={`form-control ${styles.wd50percent}`}
@@ -420,7 +448,7 @@ const ComputedFieldsEditor = ({
           expandButtonText={expandButtonText}
           saveFunc={saveFunc}
           removeFunc={removeFunc}
-          isCollapsable
+          isCollapsible
         />
       </div>
     );
