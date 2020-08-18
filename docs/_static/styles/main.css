@@ -334,8 +334,9 @@ p {
 }
 
 #docs-content a.reference {
-  color: #DB0037 !important;
+  color: #285d8f !important;
   background-color: transparent !important;
+  border-bottom: 1px dotted #285d8f !important;
 }
 
 #docs-content img {
@@ -552,7 +553,7 @@ article ol ol {
   width: 100%;
   padding: 6px 12px;
   line-height: 1.42857143;
-  border-radius: 4px;
+  border-radius: 8px;
   color: #717780;
   background-color: #fff;
   background-image: none;
@@ -783,11 +784,11 @@ article ol ol {
 
 .sphinxsidebarwrapper {
   font-size: 92%;
-  margin: 15px;
+  margin: 15px 26px;
 }
 
 #sidebar {
-  background-color: #F8F8F8;
+  background-color: #EAEAEA;
   width: 348px !important;
   height: 100vh;
   overflow-y: auto;
@@ -810,15 +811,15 @@ article ol ol {
 
 #sidebar ul li {
   /* color: rgba(214,214,214,1); */
-  color: #000000;
+  color: #333;
   margin-top: 5px;
   margin-bottom: 5px;
-  line-height: 330%;
+  line-height: 270%;
 }
 
 #sidebar ul li a {
   /* color: rgba(214,214,214,1); */
-  color: #000000;
+  color: #333;
   text-decoration: none;
 }
 
@@ -900,7 +901,7 @@ article ol ol {
 }
 
 #sidebar ul .current, #sidebar a.current.reference.internal {
-  color: #5C94C8 !important;
+  color: #285d8f !important;
 }
 
 #sidebar a.reference.internal > code.docutils.literal {
@@ -1901,7 +1902,7 @@ article ol ol {
 }
 .select-style {
   overflow: hidden;
-  margin: 15px;
+  margin: 15px 26px;
   margin-top: 30px;
 }
 
