@@ -64,7 +64,7 @@ data MigrationResult
 instance ToEngineLog MigrationResult Hasura where
   toEngineLog result = toEngineLog $ StartupLog
     { slLogLevel = LevelInfo
-    , slKind = "db_migrate"
+    , slKind = "catalog_migrate"
     , slInfo = A.toJSON $ case result of
         MRNothingToDo ->
           "Already at the latest catalog version (" <> latestCatalogVersionString
