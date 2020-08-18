@@ -1109,7 +1109,7 @@ article ol ol {
   #sidebar {
     position: absolute;
     z-index: 10;
-    width: 90% !important;
+    width: 100% !important;
     /*max-width: 800px !important;*/
     left: 0;
     right: 0;
@@ -1117,7 +1117,6 @@ article ol ol {
     top: 120px;
     height: calc(100% - 120px);
   }
-
   #content_inner_wrapper {
     width: 100% !important;
   }
@@ -1177,8 +1176,8 @@ article ol ol {
 /*** Mobile overrides ***/
 @media (max-width: 767px) {
   #sidebar {
-    top: 170px;
-    height: calc(100% - 170px);
+    top: 140px;
+    height: calc(100% - 140px);
   }
   #mc_embed_signup {
     display: block;
@@ -2267,6 +2266,9 @@ article ol ol {
   }
 }
 @media (max-width: 767px) {
+  .select-style {
+    margin-top: 45px;
+  }
   .footerWrappper {
 	 padding-top: 40px;
   }
