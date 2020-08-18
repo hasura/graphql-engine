@@ -40,8 +40,9 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
   dispatch({ type: MAKING_REQUEST });
   dispatch(showSuccessNotification('Executing the Query...'));
 
-  const { isTableTrackChecked, isCascadeChecked } = getState().rawSQL;
+  const { isTableTrackChecked, isCascadeChecked, sql } = getState().rawSQL;
   const { migrationMode, readOnlyMode } = getState().main;
+  const isStatementTimeout = statementTimeout && !isMigration;
 
   const migrateUrl = returnMigrateUrl(migrationMode);
 
@@ -49,13 +50,17 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
 
   const schemaChangesUp = [];
 
-  const sql =
-    statementTimeout && !isMigration
-      ? `${getStatementTimeoutSql(statementTimeout)} ${getState().rawSQL.sql}`
-      : getState().rawSQL.sql;
+  if (isStatementTimeout) {
+    schemaChangesUp.push(
+      getRunSqlQuery(
+        getStatementTimeoutSql(statementTimeout),
+        false,
+        readOnlyMode
+      )
+    );
+  }
 
   schemaChangesUp.push(getRunSqlQuery(sql, isCascadeChecked, readOnlyMode));
-  // check if track view enabled
 
   if (isTableTrackChecked) {
     const objects = parseCreateSQL(sql);
@@ -107,37 +112,40 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
         }
         dispatch(showSuccessNotification('SQL executed!'));
         dispatch(fetchDataInit()).then(() => {
-          dispatch({ type: REQUEST_SUCCESS, data });
+          dispatch({
+            type: REQUEST_SUCCESS,
+            data: data && (isStatementTimeout ? data[1] : data[0]),
+          });
         });
         dispatch(fetchTrackedFunctions());
       },
       err => {
-        const parsedErrorMsg = err;
-        parsedErrorMsg.message = JSON.parse(err.message);
+        const title = 'SQL Execution Failed';
         dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
-        dispatch(
-          showErrorNotification(
-            'SQL execution failed!',
-            'Something is wrong. Received an invalid response json.',
-            parsedErrorMsg
-          )
-        );
-        dispatch({
-          type: REQUEST_ERROR,
-          data: 'Something is wrong. Received an invalid response json.',
-        });
-        console.err('RunSQL error: ', err);
+        dispatch({ type: REQUEST_ERROR, data: err });
+        if (isMigration) {
+          dispatch(handleMigrationErrors(title, err));
+        } else {
+          dispatch(showErrorNotification(title, err.code, err));
+        }
       }
     )
     .catch(errorMsg => {
-      const title = 'SQL Execution Failed';
+      const parsedErrorMsg = errorMsg;
+      parsedErrorMsg.message = JSON.parse(errorMsg.message);
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: errorMsg });
-      dispatch({ type: REQUEST_ERROR, data: errorMsg });
-      if (isMigration) {
-        dispatch(handleMigrationErrors(title, errorMsg));
-      } else {
-        dispatch(showErrorNotification(title, errorMsg.code, errorMsg));
-      }
+      dispatch(
+        showErrorNotification(
+          'SQL execution failed!',
+          'Something is wrong. Received an invalid response json.',
+          parsedErrorMsg
+        )
+      );
+      dispatch({
+        type: REQUEST_ERROR,
+        data: 'Something is wrong. Received an invalid response json.',
+      });
+      console.err('RunSQL error: ', errorMsg);
     });
 };
 
@@ -164,11 +172,7 @@ const rawSQLReducer = (state = defaultState, action) => {
         lastSuccess: null,
       };
     case REQUEST_SUCCESS:
-      if (
-        action.data &&
-        action.data[0] &&
-        action.data[0].result_type === 'CommandOk'
-      ) {
+      if (action.data && action.data.result_type === 'CommandOk') {
         return {
           ...state,
           ongoingRequest: false,
@@ -184,8 +188,8 @@ const rawSQLReducer = (state = defaultState, action) => {
         lastError: null,
         lastSuccess: true,
         resultType: 'tuples',
-        result: action.data[0].result.slice(1),
-        resultHeaders: action.data[0].result[0],
+        result: action.data.result.slice(1),
+        resultHeaders: action.data.result[0],
       };
     case REQUEST_ERROR:
       return {

@@ -28,7 +28,7 @@ export const requireAsyncGlobals = ({ dispatch }) => {
   return (nextState, finalState, callback) => {
     Promise.all([
       dispatch(loadConsoleOpts()),
-      dispatch(fetchServerConfig()),
+      dispatch(fetchServerConfig),
     ]).finally(callback);
   };
 };
