@@ -456,7 +456,7 @@ const ComputedFieldsEditor = ({
           expandButtonText={expandButtonText}
           saveFunc={saveFunc}
           removeFunc={removeFunc}
-          isCollapsible
+          isCollapsable
         />
       </div>
     );
