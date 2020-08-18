@@ -16,14 +16,17 @@ Heading.defaultProps = {
  *  fontSize: 'explain'
  *  fontWeight: 'bold'
  */
+
 export type TextProps = {
-  type: keyof Theme['lineHeights'];
-  fontWeight: keyof Theme['fontWeights'];
-  fontSize: keyof Theme['fontSizes'];
-  mb: keyof Theme['space'];
-  mt: keyof Theme['space'];
-  mr: keyof Theme['space'];
-  ml: keyof Theme['space'];
+  type?: keyof Theme['lineHeights'];
+  fontWeight?: keyof Theme['fontWeights'];
+  fontSize?: keyof Theme['fontSizes'];
+  mb?: keyof Theme['space'];
+  mt?: keyof Theme['space'];
+  mr?: keyof Theme['space'];
+  ml?: keyof Theme['space'];
+  pl?: keyof Theme['space'];
+  as?: keyof JSX.IntrinsicElements | React.ComponentType<any>;
 };
 
 export const Text: React.FC<TextProps> = props => {
@@ -64,6 +67,9 @@ Text.defaultProps = {
   mt: 'zero',
   mr: 'zero',
   ml: 'zero',
+  pl: 'zero',
+  fontWeight: 'normal',
+  fontSize: 'p',
 };
 
 type TextLinkProps = {

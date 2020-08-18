@@ -26,10 +26,10 @@ type Telemetry = {
 
 const setConsoleOptsInDB = (
   opts: TelemetryState['console_opts'],
-  successCb: (arg: object) => void,
+  successCb: (arg: Record<string, any>) => void,
   errorCb: (arg: Error) => void
 ) => (
-  dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
+  dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>,
   getState: GetReduxState
 ) => {
   const url = Endpoints.getSchema;
@@ -66,7 +66,7 @@ const setConsoleOptsInDB = (
 
   // eslint-disable-next-line consistent-return
   return dispatch(requestAction(url, options)).then(
-    (data: object) => {
+    (data: Record<string, unknown>) => {
       if (successCb) {
         successCb(data);
       }
@@ -86,7 +86,7 @@ const telemetryNotificationShown = () => (
 };
 
 const setTelemetryNotificationShownInDB = () => {
-  const successCb = (data: object) => {
+  const successCb = (data: Record<string, unknown>) => {
     console.log(
       `Updated telemetry notification status in db ${JSON.stringify(data)}`
     );
@@ -108,7 +108,7 @@ const setTelemetryNotificationShownInDB = () => {
 };
 
 const setPreReleaseNotificationOptOutInDB = () => (
-  dispatch: ThunkDispatch<ReduxState, {}, AnyAction>
+  dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>
 ) => {
   const successCb = () => {
     dispatch(
@@ -132,7 +132,7 @@ const setPreReleaseNotificationOptOutInDB = () => (
 
 const loadConsoleOpts = () => {
   return (
-    dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
+    dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>,
     getState: GetReduxState
   ) => {
     const url = Endpoints.getSchema;
@@ -172,12 +172,12 @@ const loadConsoleOpts = () => {
 
 interface SetConsoleOptsAction {
   type: typeof SET_CONSOLE_OPTS;
-  data: object;
+  data: Record<string, unknown>;
 }
 
 interface SetNotificationShowAction {
   type: typeof SET_NOTIFICATION_SHOWN;
-  data?: object;
+  data?: Record<string, unknown>;
 }
 
 interface SetHasuraUuid {
@@ -193,7 +193,7 @@ type TelemetryActionTypes =
 export const requireConsoleOpts = ({
   dispatch,
 }: {
-  dispatch: ThunkDispatch<ReduxState, {}, AnyAction>;
+  dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>;
 }) => (nextState: ReduxState, replaceState: ReduxState, callback: any) => {
   dispatch(loadConsoleOpts()).finally(callback);
 };

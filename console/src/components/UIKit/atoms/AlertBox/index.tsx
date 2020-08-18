@@ -1,13 +1,19 @@
 import React from 'react';
 
-import { theme } from '../../theme';
-import { Icon } from '../Icon';
-import { StyledAlertBox } from './AlertBox';
+import { theme, Theme } from '../../theme';
+import { Icon, IconProps } from '../Icon';
+import { StyledAlertBox, StyledAlertBoxProps } from './AlertBox';
 import { Text } from '../Typography';
 
 const alertBoxWidth = 866;
 
-export const AlertBox = props => {
+export interface AlertBoxProps
+  extends IconProps,
+    Omit<StyledAlertBoxProps, 'size'> {
+  type: keyof Theme['alertBox'];
+}
+
+export const AlertBox: React.FC<AlertBoxProps> = props => {
   const { children, type } = props;
 
   const backgroundColorValue = theme.alertBox[type]
