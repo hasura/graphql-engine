@@ -7,6 +7,7 @@
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- console: add session argument field for computed fields
 
 ## `v1.3.1-beta.1`
 
