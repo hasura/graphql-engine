@@ -123,12 +123,28 @@ class OneGraphExplorer extends React.Component {
           });
           return;
         }
+        let clientSchema = null;
+        try {
+          clientSchema = buildClientSchema(result.data);
+        } catch (err) {
+          dispatch(
+            showErrorNotification('Failed to build schema', err.message)
+          );
+        }
         this.setState({
-          schema: buildClientSchema(result.data),
+          schema: clientSchema,
           previousIntrospectionHeaders: headers,
         });
       })
-      .catch(() => {
+      .catch(err => {
+        console.error(err, err.message);
+        dispatch(
+          showErrorNotification(
+            'Schema introspection query failed',
+            err.message,
+            err
+          )
+        );
         this.setState({
           schema: null,
           previousIntrospectionHeaders: headers,
