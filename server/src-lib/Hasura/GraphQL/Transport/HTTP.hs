@@ -171,14 +171,13 @@ runHasuraGQ reqId (query, queryParsed) userInfo resolvedOp = do
     E.ExOpQuery tx genSql asts -> do
       -- log the generated SQL and the graphql query
       logQueryLog logger query genSql reqId
-      trace "Postgres" $
+      trace "Query" $
         Tracing.interpTraceT id $ executeQuery queryParsed asts genSql pgExecCtx Q.ReadOnly tx
 
-    E.ExOpMutation respHeaders tx -> trace "Fetch data" $ do
+    E.ExOpMutation respHeaders tx -> trace "Mutate" $ do
       logQueryLog logger query Nothing reqId
       ctx <- Tracing.currentContext
       (respHeaders,) <$>
-        trace "Postgres" do
           Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx . withUserInfo userInfo) tx
 
     E.ExOpSubs _ ->
