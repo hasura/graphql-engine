@@ -133,7 +133,7 @@ const ComputedFieldsEditor = ({
 
     let saveFunc;
     if (computedFieldName && computedFieldFunctionDefinition) {
-      saveFunc = (toggle: any) => {
+      saveFunc = (toggle: () => void) => {
         dispatch(
           saveComputedField(computedField, table, origComputedField, toggle)
         );
