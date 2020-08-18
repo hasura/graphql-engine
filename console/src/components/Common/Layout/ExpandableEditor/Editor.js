@@ -15,6 +15,8 @@ class Editor extends React.Component {
         };
       }
     }
+
+    return null;
   }
 
   toggleEditor = () => {
