@@ -49,10 +49,10 @@ const ComputedFieldsEditor = ({
         name: '',
         schema: currentSchema,
       },
-      table_argument: '',
-      session_argument: '',
+      table_argument: null,
+      session_argument: null,
     },
-    comment: '',
+    comment: null,
   };
 
   // State management - start
@@ -85,7 +85,9 @@ const ComputedFieldsEditor = ({
 
       origComputedFieldName = origComputedField.computed_field_name;
       origComputedFieldFunctionName = origComputedFieldFunctionDef.name;
-      origComputedFieldComment = origComputedField.comment;
+      if (origComputedField?.comment) {
+        origComputedFieldComment = origComputedField.comment;
+      }
     }
 
     const computedFieldFunctionDef = getQualifiedTableDef(
@@ -290,7 +292,6 @@ const ComputedFieldsEditor = ({
         e: React.ChangeEvent<HTMLInputElement>
       ) => {
         const newState = [...stateComputedFields];
-
         newState[i] = {
           ...newState[i],
           definition: {
@@ -298,7 +299,6 @@ const ComputedFieldsEditor = ({
             table_argument: e.target.value || null,
           },
         };
-
         setComputedFieldsState(newState);
       };
 
@@ -405,7 +405,7 @@ const ComputedFieldsEditor = ({
             </div>
             <input
               type="text"
-              value={computedFieldTableSessionArg ?? ''}
+              value={computedFieldTableSessionArg ?? undefined}
               placeholder="hasura_session"
               onChange={handleTableSesssionArgChange}
               className={`form-control ${styles.wd50percent}`}
@@ -417,7 +417,7 @@ const ComputedFieldsEditor = ({
             </div>
             <input
               type="text"
-              value={computedFieldComment}
+              value={computedFieldComment ?? undefined}
               onChange={handleCommentChange}
               className={`form-control ${styles.wd50percent}`}
             />

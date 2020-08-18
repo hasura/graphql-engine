@@ -55,7 +55,7 @@ export type ComputedField = {
     table_argument: string | null;
     session_argument: string | null;
   };
-  comment: string;
+  comment: string | null;
 };
 
 export type Schema = {
