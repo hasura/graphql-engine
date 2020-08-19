@@ -94,7 +94,7 @@ Unique constraints prevent database entries with a duplicate value of the respec
 Check constraints
 ^^^^^^^^^^^^^^^^^
 
-Check constraints allow you to specify a ``Boolean`` expression for a specific field. 
+Check constraints allow you to specify a Boolean expression for a specific field. 
 This Boolean expression must be satisfied (equal to ``true``) by the field value for the object to be inserted.
 
 **Validate that an author's ``rating`` is between 1 and 10:**
