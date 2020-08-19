@@ -27,22 +27,20 @@ class ImportMetadata extends Component {
       this.setState({ isImporting: false });
     };
 
+    this.setState({ isImporting: true });
+
     dispatch(replaceMetadataFromFile(fileContent, successCb, errorCb));
   }
 
   render() {
     const styles = require('../Settings.scss');
 
-    const { dispatch } = this.props;
-
     const { isImporting } = this.state;
 
     const handleImport = e => {
       e.preventDefault();
 
-      this.setState({ isImporting: true });
-
-      dispatch(uploadFile(this.importMetadata, 'json'));
+      uploadFile(this.importMetadata, 'json');
     };
 
     return (

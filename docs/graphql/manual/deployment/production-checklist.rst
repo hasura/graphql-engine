@@ -75,7 +75,7 @@ In most production scenarios, you would only need GraphQL API to be enabled.
    graphql-engine --database-url=<database-url> serve --enabled-apis=graphql
 
 By setting the above flag or env var, we are disabling the ``metadata``,
-``pg_dump`` and ``config`` APIs. ``health`` and ``version`` APIs are public and
+``pgdump`` and ``config`` APIs. ``health`` and ``version`` APIs are public and
 cannot be disabled.
 
 Read more about all the API types at the :ref:`API reference <api_reference>`.

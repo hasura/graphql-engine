@@ -35,7 +35,7 @@ class ViewStitchedSchema extends React.Component {
     ]);
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (
       nextProps.params.remoteSchemaName !== this.props.params.remoteSchemaName
     ) {

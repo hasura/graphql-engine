@@ -4,6 +4,7 @@ module Hasura.GraphQL.Validate.Context
   , getInpFieldInfo
   , getTyInfo
   , getTyInfoVE
+  , getFragmentTyInfo
   , module Hasura.GraphQL.Utils
   ) where
 
@@ -19,11 +20,11 @@ import           Hasura.RQL.Types
 
 getFieldInfo
   :: ( MonadError QErr m)
-  => ObjTyInfo -> G.Name -> m ObjFldInfo
-getFieldInfo oti fldName =
-  onNothing (Map.lookup fldName $ _otiFields oti) $ throwVE $
+  => G.NamedType -> ObjFieldMap -> G.Name -> m ObjFldInfo
+getFieldInfo typeName fieldMap fldName =
+  onNothing (Map.lookup fldName fieldMap) $ throwVE $
   "field " <> showName fldName <>
-  " not found in type: " <> showNamedTy (_otiName oti)
+  " not found in type: " <> showNamedTy typeName
 
 getInpFieldInfo
   :: ( MonadError QErr m)
@@ -65,3 +66,13 @@ getTyInfoVE namedTy = do
   tyMap <- asks getter
   onNothing (Map.lookup namedTy tyMap) $
     throwVE $ "no such type exists in the schema: " <> showNamedTy namedTy
+
+getFragmentTyInfo
+  :: (MonadReader r m, Has TypeMap r, MonadError QErr m)
+  => G.NamedType -> m FragmentTypeInfo
+getFragmentTyInfo onType =
+  getTyInfoVE onType >>= \case
+    TIObj tyInfo -> pure $ FragmentTyObject tyInfo
+    TIIFace tyInfo -> pure $ FragmentTyInterface tyInfo
+    TIUnion tyInfo -> pure $ FragmentTyUnion tyInfo
+    _ -> throwVE "fragments can only be defined on object/interface/union types"

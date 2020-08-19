@@ -1,6 +1,5 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import AceEditor from 'react-ace';
 import TableHeader from '../TableCommon/TableHeader';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import {
@@ -28,10 +27,11 @@ import RootFields from './RootFields';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import { changeViewRootFields } from '../Common/TooltipMessages';
 import styles from './ModifyTable.scss';
+import ViewDefinitions from './ViewDefinitions';
 
 const ModifyView = props => {
   const {
-    sql,
+    viewDefSql,
     tableName,
     tableType,
     allSchemas,
@@ -97,12 +97,6 @@ const ModifyView = props => {
       </div>
     );
   }
-
-  const modifyViewDefinition = viewName => {
-    // fetch the definition
-    dispatch(fetchViewDefinition(viewName, true));
-    // redirect the user to run_sql page and set state
-  };
 
   const getViewColumnsSection = () => {
     const columns = tableSchema.columns.sort(ordinalColSort);
@@ -200,21 +194,6 @@ const ModifyView = props => {
     );
   };
 
-  const modifyViewOnClick = () => {
-    modifyViewDefinition(tableName);
-  };
-  const modifyBtn = (
-    <Button
-      type="submit"
-      size="xs"
-      className={styles.add_mar_right}
-      onClick={modifyViewOnClick}
-      data-test="modify-view"
-    >
-      Modify
-    </Button>
-  );
-
   const untrackOnclick = () => {
     const confirmMessage = `This will remove the view "${tableName}" from the GraphQL schema`;
     const isOk = getConfirmation(confirmMessage);
@@ -276,21 +255,8 @@ const ModifyView = props => {
           <h4 className={styles.subheading_text}>Columns</h4>
           {getViewColumnsSection()}
           <br />
-          <h4 className={styles.subheading_text}>
-            View Definition:
-            <span className={styles.add_mar_left}>{modifyBtn}</span>
-          </h4>
-          <AceEditor
-            mode="sql"
-            theme="github"
-            value={sql}
-            name="raw_sql"
-            minLines={8}
-            maxLines={100}
-            width="100%"
-            showPrintMargin={false}
-            readOnly
-          />
+          <ViewDefinitions dispatch={dispatch} sql={viewDefSql} />
+
           <hr />
           {getViewRootFieldsSection()}
           {untrackBtn}
@@ -342,7 +308,6 @@ const mapStateToProps = (state, ownProps) => {
     tableType,
     currentSchema: schemaName,
     allSchemas: state.tables.allSchemas,
-    sql: state.rawSQL.sql,
     migrationMode: state.main.migrationMode,
     readOnlyMode: state.main.readOnlyMode,
     serverVersion: state.main.serverVersion,

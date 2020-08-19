@@ -21,6 +21,7 @@ import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Relationship
+import           Hasura.RQL.DDL.RemoteRelationship
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
@@ -38,6 +39,7 @@ purgeDependentObject = \case
   SOFunction qf -> liftTx $ delFunctionFromCatalog qf
   SOTableObj _ (TOTrigger trn) -> liftTx $ delEventTriggerFromCatalog trn
   SOTableObj qt (TOComputedField ccn) -> dropComputedFieldFromCatalog qt ccn
+  SOTableObj qt (TORemoteRel remoteRelName) -> liftTx $ delRemoteRelFromCatalog qt remoteRelName
   schemaObjId -> throw500 $ "unexpected dependent object: " <> reportSchemaObj schemaObjId
 
 saveTableToCatalog

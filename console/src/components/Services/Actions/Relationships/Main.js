@@ -12,6 +12,7 @@ const Relationships = ({
   allTables,
   allTypes,
   schemaList,
+  readOnlyMode,
 }) => {
   const { actionName } = params;
 
@@ -38,6 +39,7 @@ const Relationships = ({
             schemaList={schemaList}
             dispatch={dispatch}
             currentAction={action}
+            readOnlyMode={readOnlyMode}
           />
           <hr />
         </div>

@@ -18,6 +18,7 @@ import           Data.Functor.Classes          (Eq1 (..), Eq2 (..))
 import           Data.GADT.Compare
 import           Data.Int
 import           Data.Scientific               (Scientific)
+import           Data.Set                      (Set)
 import           Data.Time.Clock
 import           Data.Vector                   (Vector)
 import           GHC.Generics                  ((:*:) (..), (:+:) (..), Generic (..), K1 (..),
@@ -191,6 +192,8 @@ instance (Cacheable a) => Cacheable (HashSet a) where
   unchanged = liftEq . unchanged
 instance (Cacheable a) => Cacheable (CI a) where
   unchanged _ = (==)
+instance (Cacheable a) => Cacheable (Set a) where
+  unchanged = liftEq . unchanged
 
 instance Cacheable ()
 instance (Cacheable a, Cacheable b) => Cacheable (a, b)

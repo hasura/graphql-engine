@@ -110,6 +110,10 @@ Using variables:
       }
     }
 
+.. note:: 
+
+   ``insert_<object>_one`` will **only** be available if you have select permissions on the table, as it returns the inserted row.
+
 .. admonition:: Supported from
 
    The ``insert_<object>_one`` mutation is supported in versions ``v1.2.0``
@@ -533,7 +537,7 @@ Insert an object with a JSONB field
 Insert an object with an ARRAY field
 ------------------------------------
 
-To insert fields of array types, you currently have to pass them as a `Postgres array literal <https://www.postgresql.org/docs/current/arrays.html#ARRAYS-INPUT>`_.
+To insert fields of array types, you currently have to pass them as a `Postgres array literal <https://www.postgresql.org/docs/current/arrays.html#ARRAYS-INPUT>`__.
 
 **Example:** Insert a new ``author`` with a text array ``emails`` field:
 

@@ -1725,7 +1725,7 @@ Columns of type ``geography`` are more accurate, but they don’t support as man
 The TRUE expression ( **{ }** )
 -------------------------------
 
-The expression ``{}`` evaluates to ``true`` for all objects.
+The expression ``{}`` evaluates to ``true`` if an object exists (even if it's ``null``).
 
 **For example**:
 

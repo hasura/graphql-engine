@@ -113,6 +113,8 @@ type Driver interface {
 	GraphQLDriver
 
 	SchemaDriver
+
+	SeedDriver
 }
 
 // Open returns a new driver instance.

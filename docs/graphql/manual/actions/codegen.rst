@@ -113,7 +113,7 @@ As of now, Hasura provides codegen for a few frameworks (``nodejs-express``,
 ``typescript-zeit``, etc).
 
 If you wish to build a code generator for your framework
-`read the contrib guide <https://github.com/hasura/codegen-builder-contrib/>`_.
+`read the contrib guide <https://github.com/hasura/codegen-assets/blob/master/builder-kit/README.md>`__.
 
 
   

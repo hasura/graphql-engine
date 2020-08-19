@@ -281,6 +281,10 @@ delTableAndDirectDeps qtn@(QualifiedObject sn tn) = do
              DELETE FROM "hdb_catalog"."hdb_computed_field"
              WHERE table_schema = $1 AND table_name = $2
               |] (sn, tn) False
+    Q.unitQ [Q.sql|
+             DELETE FROM "hdb_catalog"."hdb_remote_relationship"
+             WHERE table_schema = $1 AND table_name = $2
+              |] (sn, tn) False
   deleteTableFromCatalog qtn
 
 -- | Builds an initial @'TableCache' 'PGColumnInfo'@ from catalog information. Does not fill in

@@ -1,11 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
 import { commonDataTypes } from '../utils';
 import { getDataOptions, inferDefaultValues } from '../Common/utils';
 
 import TableColumnDefault from './TableColumnDefault';
+import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
 
 /* Custom style object for searchable select box */
 const customSelectBoxStyles = {
@@ -99,14 +99,15 @@ const TableColumn = props => {
         className={`${styles.inputDefault} ${styles.defaultWidth}`}
         data-test={`col-type-${i}`}
       >
-        <SearchableSelectBox
+        <ColumnTypeSelector
           options={columnDataTypes}
           onChange={handleColTypeChange}
-          value={column.type && columnTypeValueMap[column.type]}
+          value={
+            (column.type && columnTypeValueMap[column.type]) || column.type
+          }
+          colIdentifier={i}
           bsClass={`col-type-${i} add_table_column_selector`}
           styleOverrides={customSelectBoxStyles}
-          filterOption={'prefix'}
-          placeholder="column_type"
         />
       </span>
       <span className={`${styles.inputDefault} ${styles.defaultWidth}`}>

@@ -5,6 +5,8 @@ module Hasura.RQL.Types.ScheduledTrigger
   , CreateCronTrigger(..)
   , STRetryConf(..)
   , CreateScheduledEvent(..)
+  , CronEventId
+  , StandAloneScheduledEventId
   , formatTime'
   , defaultSTRetryConf
   ) where
@@ -24,6 +26,10 @@ import           System.Cron.Types
 import qualified Data.Aeson                    as J
 import qualified Data.Text                     as T
 import qualified Hasura.RQL.Types.EventTrigger as ET
+
+type CronEventId = Text
+
+type StandAloneScheduledEventId = Text
 
 data STRetryConf
   = STRetryConf
