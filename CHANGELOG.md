@@ -9,6 +9,7 @@
 
 - docs: add docs page on networking with docker (close #4346) (#4811)
 - cli: add missing global flags for seeds command (#5565)
+- cli: update `hasura metadata diff` to accept filepaths (close #5433) (#)
 
 ## `v1.3.1-beta.1`
 
