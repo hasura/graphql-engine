@@ -98,15 +98,12 @@ buildGQLContext =
     -- build the admin context so that we can check against name clashes with remotes
     adminHasuraContext <- bindA -< buildFullestDBSchema
 
-    let queryFieldNames :: [G.Name]
-        queryFieldNames =
-          case P.discardNullability $ P.parserType $ fst adminHasuraContext of
-            P.TList _ -> []
-            P.TNamed def ->
-              case P.dInfo def of
-                -- It really ought to be this case; anything else is a programming error.
-                P.TIObject (P.ObjectInfo rootFields _interfaces) -> fmap P.dName rootFields
-                _                                                -> []
+    queryFieldNames :: [G.Name] <- bindA -<
+      case P.discardNullability $ P.parserType $ fst adminHasuraContext of
+        -- It really ought to be this case; anything else is a programming error.
+        P.TNamed (P.Definition _ _ _ (P.TIObject (P.ObjectInfo rootFields _interfaces))) ->
+          pure $ fmap P.dName rootFields
+        _ -> throw500 "We encountered an root query of unexpected GraphQL type.  It should be an object type."
     let mutationFieldNames :: [G.Name]
         mutationFieldNames =
           case P.discardNullability . P.parserType <$> snd adminHasuraContext of
