@@ -9,6 +9,7 @@
 
 - console: add session argument field for computed fields (close #5154) (#5610)
 - docs: add docs page on networking with docker (close #4346) (#4811)
+- cli: add missing global flags for seeds command (#5565)
 
 ## `v1.3.1-beta.1`
 
