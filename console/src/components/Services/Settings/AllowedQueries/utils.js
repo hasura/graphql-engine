@@ -14,22 +14,25 @@ export const readFile = (file, callback) => {
   reader.readAsText(file);
 };
 
-const getQueryFragments = queryDef => {
-  const fragments = [];
-
+function recurQueryDef(queryDef, fragments, definitionHash) {
   visit(queryDef, {
     FragmentSpread(node) {
-      fragments.push(node.name.value);
+      fragments.add(node.name.value);
+      recurQueryDef(definitionHash[node.name.value], fragments, definitionHash);
     },
   });
+}
 
-  return fragments;
+const getQueryFragments = (queryDef, definitionHash = {}) => {
+  const fragments = new Set();
+  recurQueryDef(queryDef, fragments, definitionHash);
+  return [...fragments];
 };
 
-const getQueryString = (queryDef, fragmentDefs) => {
+const getQueryString = (queryDef, fragmentDefs, definitionHash = {}) => {
   let queryString = print(queryDef);
 
-  const queryFragments = getQueryFragments(queryDef);
+  const queryFragments = getQueryFragments(queryDef, definitionHash);
 
   queryFragments.forEach(qf => {
     const fragmentDef = fragmentDefs.find(fd => fd.name.value === qf);
@@ -53,6 +56,14 @@ export const parseQueryString = queryString => {
     throw new Error('Parsing operation failed');
   }
 
+  const definitionHash = (parsedQueryString.definitions || []).reduce(
+    (defObj, queryObj) => {
+      defObj[queryObj.name.value] = queryObj;
+      return defObj;
+    },
+    {}
+  );
+
   const queryDefs = parsedQueryString.definitions.filter(
     def => def.kind === 'OperationDefinition'
   );
@@ -68,7 +79,7 @@ export const parseQueryString = queryString => {
 
     const query = {
       name: queryDef.name.value,
-      query: getQueryString(queryDef, fragmentDefs),
+      query: getQueryString(queryDef, fragmentDefs, definitionHash),
     };
 
     queries.push(query);

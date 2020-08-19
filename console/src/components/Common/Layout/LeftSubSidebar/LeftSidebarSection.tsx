@@ -11,12 +11,14 @@ interface LeftSidebarSectionProps extends React.ComponentProps<'div'> {
   currentItem?: LeftSidebarItem;
   getServiceEntityLink: (s: string) => string;
   service: string;
+  sidebarIcon?: string;
 }
 
-const getLeftSidebarSection = ({
+const LeftSidebarSection = ({
   items = [],
   currentItem,
   service,
+  sidebarIcon,
   getServiceEntityLink,
 }: LeftSidebarSectionProps) => {
   // TODO needs refactor to accomodate other services
@@ -76,7 +78,9 @@ const getLeftSidebarSection = ({
           >
             <Link to={getServiceEntityLink(a.name)} data-test={a.name}>
               <i
-                className={`${styles.tableIcon} fa fa-wrench`}
+                className={`${styles.tableIcon} fa ${
+                  sidebarIcon || 'fa-wrench'
+                }`}
                 aria-hidden="true"
               />
               {a.name}
@@ -96,4 +100,4 @@ const getLeftSidebarSection = ({
   };
 };
 
-export default getLeftSidebarSection;
+export default LeftSidebarSection;

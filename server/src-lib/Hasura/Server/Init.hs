@@ -18,10 +18,11 @@ import qualified Language.Haskell.TH.Syntax       as TH
 import qualified Text.PrettyPrint.ANSI.Leijen     as PP
 
 import           Data.FileEmbed                   (embedStringFile)
+import           Data.Time                        (NominalDiffTime)
 import           Network.Wai.Handler.Warp         (HostPreference)
 import           Options.Applicative
 
-import qualified Hasura.Cache                     as Cache
+import qualified Hasura.Cache.Bounded             as Cache
 import qualified Hasura.GraphQL.Execute           as E
 import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
 import qualified Hasura.Logging                   as L
@@ -155,7 +156,8 @@ mkServeOptions rso = do
   enabledLogs <- maybe L.defaultEnabledLogTypes (Set.fromList) <$>
                  withEnv (rsoEnabledLogTypes rso) (fst enabledLogsEnv)
   serverLogLevel <- fromMaybe L.LevelInfo <$> withEnv (rsoLogLevel rso) (fst logLevelEnv)
-  planCacheOptions <- E.PlanCacheOptions <$> withEnv (rsoPlanCacheSize rso) (fst planCacheSizeEnv)
+  planCacheOptions <- E.PlanCacheOptions . fromMaybe 4000 <$>
+                      withEnv (rsoPlanCacheSize rso) (fst planCacheSizeEnv)
   devMode <- withEnvBool (rsoDevMode rso) $ fst devModeEnv
   adminInternalErrors <- fromMaybe True <$> -- Default to `true` to enable backwards compatibility
                                 withEnv (rsoAdminInternalErrors rso) (fst adminInternalErrorsEnv)
@@ -164,11 +166,16 @@ mkServeOptions rso = do
            | adminInternalErrors -> InternalErrorsAdminOnly
            | otherwise           -> InternalErrorsDisabled
 
+  eventsHttpPoolSize <- withEnv (rsoEventsHttpPoolSize rso) (fst eventsHttpPoolSizeEnv)
+  eventsFetchInterval <- withEnv (rsoEventsFetchInterval rso) (fst eventsFetchIntervalEnv)
+  logHeadersFromEnv <- withEnvBool (rsoLogHeadersFromEnv rso) (fst logHeadersFromEnvEnv)
+
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
                         enabledLogs serverLogLevel planCacheOptions
-                        internalErrorsConfig
+                        internalErrorsConfig eventsHttpPoolSize eventsFetchInterval
+                        logHeadersFromEnv
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -216,7 +223,6 @@ mkServeOptions rso = do
       mxRefetchIntM <- withEnv (rsoMxRefetchInt rso) $ fst mxRefetchDelayEnv
       mxBatchSizeM <- withEnv (rsoMxBatchSize rso) $ fst mxBatchSizeEnv
       return $ LQ.mkLiveQueriesOptions mxBatchSizeM mxRefetchIntM
-
 
 mkExamplesDoc :: [[String]] -> PP.Doc
 mkExamplesDoc exampleLines =
@@ -311,15 +317,25 @@ serveCmdFooter =
       , adminInternalErrorsEnv
       ]
 
-    eventEnvs =
-      [ ( "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
-        , "Max event threads"
-        )
-      , ( "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
-        , "Interval in milliseconds to sleep before trying to fetch events again after a "
-          <> "fetch returned no events from postgres."
-        )
-      ]
+    eventEnvs = [ eventsHttpPoolSizeEnv, eventsFetchIntervalEnv ]
+
+eventsHttpPoolSizeEnv :: (String, String)
+eventsHttpPoolSizeEnv = 
+  ( "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
+  , "Max event threads"
+  )
+
+eventsFetchIntervalEnv :: (String, String)
+eventsFetchIntervalEnv =
+  ( "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
+  , "Interval in milliseconds to sleep before trying to fetch events again after a fetch returned no events from postgres."
+  )
+
+logHeadersFromEnvEnv :: (String, String)
+logHeadersFromEnvEnv =
+  ( "HASURA_GRAPHQL_LOG_HEADERS_FROM_ENV"
+  , "Log headers sent instead of logging referenced environment variables."
+  )
 
 retriesNumEnv :: (String, String)
 retriesNumEnv =
@@ -607,7 +623,7 @@ parseConnParams =
                 help (snd pgTimeoutEnv)
               )
 
-    connLifetime = fmap (fmap fromRational) $ optional $
+    connLifetime = fmap (fmap (realToFrac :: Int -> NominalDiffTime)) $ optional $
       option auto
               ( long "conn-lifetime" <>
                 metavar "<SECONDS>" <>
@@ -784,6 +800,28 @@ parseGraphqlAdminInternalErrors = optional $
            help (snd adminInternalErrorsEnv)
          )
 
+parseGraphqlEventsHttpPoolSize :: Parser (Maybe Int)
+parseGraphqlEventsHttpPoolSize = optional $
+  option (eitherReader fromEnv)
+  ( long "events-http-pool-size" <>
+    metavar (fst eventsHttpPoolSizeEnv)  <>
+    help (snd eventsHttpPoolSizeEnv)
+  )
+
+parseGraphqlEventsFetchInterval :: Parser (Maybe Milliseconds)
+parseGraphqlEventsFetchInterval = optional $
+  option (eitherReader readEither)
+  ( long "events-fetch-interval" <>
+    metavar (fst eventsFetchIntervalEnv)  <>
+    help (snd eventsFetchIntervalEnv)
+  )
+
+parseLogHeadersFromEnv :: Parser Bool
+parseLogHeadersFromEnv =
+  switch ( long "log-headers-from-env" <>
+           help (snd devModeEnv)
+         )
+
 mxRefetchDelayEnv :: (String, String)
 mxRefetchDelayEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL"
@@ -804,12 +842,19 @@ enableAllowlistEnv =
   , "Only accept allowed GraphQL queries"
   )
 
+-- NOTES re. default:
+--     There's a lot of guesswork and estimation here. Based on our test suite
+--   the average in-memory payload for a cache entry is 7kb, with the largest
+--   being 70kb. 128mb per-HEC seems like a reasonable default upper bound
+--   (note there is a distinct stripe per-HEC, for now; so this would give 1GB
+--   for an 8-core machine), which gives us a range of 2,000 to 18,000 here.
+--     Analysis of telemetry is hazy here; see 
+--   https://github.com/hasura/graphql-engine/issues/5363 for some discussion.
 planCacheSizeEnv :: (String, String)
 planCacheSizeEnv =
   ( "HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE"
   , "The maximum number of query plans that can be cached, allowed values: 0-65535, " <>
-    "0 disables the cache. If this value is not set, there is no limit on the number " <>
-    "of plans that are cached"
+    "0 disables the cache. Default 4000"
   )
 
 parsePlanCacheSize :: Parser (Maybe Cache.CacheSize)
@@ -928,6 +973,9 @@ serveOptionsParser =
   <*> parsePlanCacheSize
   <*> parseGraphqlDevMode
   <*> parseGraphqlAdminInternalErrors
+  <*> parseGraphqlEventsHttpPoolSize
+  <*> parseGraphqlEventsFetchInterval
+  <*> parseLogHeadersFromEnv
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.

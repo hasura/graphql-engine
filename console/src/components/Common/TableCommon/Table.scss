@@ -35,11 +35,14 @@
   border-left: 1px solid #ddd;
 }
 
-.tableHeaderCell i {
-  font-size: 12px;
-  position: absolute;
-  top: calc(50% - 5px);
-  right: 8px;
+.tableHeaderCell {
+  text-align: left;
+  i {
+    font-size: 12px;
+    position: absolute;
+    top: calc(50% - 5px);
+    right: 8px;
+  }
 }
 
 .insertContainer {
@@ -150,9 +153,6 @@ a.expanded {
   text-overflow: ellipsis;
 }
 
-.sqlBody {
-}
-
 .tablesBody {
   padding-top: 20px;
 }
@@ -170,11 +170,6 @@ a.expanded {
   padding-bottom: 10px;
 }
 
-.tableCellCenterAligned {
-  text-align: center;
-  overflow: unset !important;
-}
-
 .tableCellCenterAlignedOverflow {
   text-align: center;
   overflow: hidden !important;
@@ -186,8 +181,13 @@ a.expanded {
 
 .tableCenterContent {
   display: flex;
+  width: 100%;
   justify-content: center;
   align-items: center;
+}
+
+.overflowUnset {
+  overflow: unset !important;
 }
 
 .bulkDeleteButton {
@@ -199,4 +199,5 @@ a.expanded {
 .headerInputCheckbox {
   height: 16px;
   margin-bottom: 2px;
+  margin-right: 3px !important;
 }

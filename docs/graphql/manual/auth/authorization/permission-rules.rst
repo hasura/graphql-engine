@@ -156,7 +156,7 @@ the author's ID*):
 Using relationships or nested objects
 *************************************
 
-You can leverage :ref:`relationships <relationships>` to define permission rules with fields
+You can leverage :ref:`table relationships <table_relationships>` to define permission rules with fields
 from a nested object.
 
 **For example**, let's say you have an object relationship called ``agent`` from the ``authors`` table to another table

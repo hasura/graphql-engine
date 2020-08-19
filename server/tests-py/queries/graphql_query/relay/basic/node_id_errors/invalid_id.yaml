@@ -1,5 +1,5 @@
 description: Query node interface with an invalid node id
-url: /v1/relay
+url: /v1beta1/relay
 status: 200
 query:
   query: |

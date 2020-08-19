@@ -12,6 +12,7 @@ import           Test.Hspec
 
 import qualified Data.Aeson                   as A
 import qualified Data.ByteString.Lazy.Char8   as BL
+import qualified Data.Environment             as Env
 import qualified Database.PG.Query            as Q
 import qualified Network.HTTP.Client          as HTTP
 import qualified Network.HTTP.Client.TLS      as HTTP
@@ -34,7 +35,7 @@ import qualified Hasura.IncrementalSpec       as IncrementalSpec
 -- import qualified Hasura.RQL.MetadataSpec      as MetadataSpec
 import qualified Hasura.Server.MigrateSpec    as MigrateSpec
 import qualified Hasura.Server.TelemetrySpec  as TelemetrySpec
-import qualified Hasura.Server.AuthSpec       as AuthSpec
+import qualified Hasura.CacheBoundedSpec      as CacheBoundedSpec
 
 data TestSuites
   = AllSuites !RawConnInfo
@@ -65,7 +66,7 @@ unitSpecs = do
   -- describe "Hasura.RQL.Metadata" MetadataSpec.spec -- Commenting until optimizing the test in CI
   describe "Data.Time" TimeSpec.spec
   describe "Hasura.Server.Telemetry" TelemetrySpec.spec
-  describe "Hasura.Server.Auth" AuthSpec.spec
+  describe "Hasura.Cache.Bounded" CacheBoundedSpec.spec
 
 buildPostgresSpecs :: (HasVersion) => RawConnInfo -> IO Spec
 buildPostgresSpecs pgConnOptions = do
@@ -76,18 +77,17 @@ buildPostgresSpecs pgConnOptions = do
 
   let setupCacheRef = do
         pgPool <- Q.initPGPool pgConnInfo Q.defaultConnParams { Q.cpConns = 1 } print
-
+        let pgContext = mkPGExecCtx Q.Serializable pgPool
         httpManager <- HTTP.newManager HTTP.tlsManagerSettings
         let runContext = RunCtx adminUserInfo httpManager (SQLGenCtx False)
-            pgContext = mkPGExecCtx Q.Serializable pgPool
 
             runAsAdmin :: Run a -> IO a
             runAsAdmin =
-                  peelRun runContext pgContext Q.ReadWrite
+                  peelRun runContext pgContext Q.ReadWrite Nothing
               >>> runExceptT
               >=> flip onLeft printErrJExit
 
-        schemaCache <- snd <$> runAsAdmin (migrateCatalog =<< liftIO getCurrentTime)
+        schemaCache <- snd <$> runAsAdmin (migrateCatalog (Env.mkEnvironment env) =<< liftIO getCurrentTime)
         cacheRef <- newMVar schemaCache
         pure $ NT (runAsAdmin . flip MigrateSpec.runCacheRefT cacheRef)
 

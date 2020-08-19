@@ -10,24 +10,17 @@ export const sqlEscapeText = (rawText: string) => {
 
 // detect DDL statements in SQL
 export const checkSchemaModification = (sql: string) => {
-  let isSchemaModification = false;
-
   const sqlStatements = sql
     .toLowerCase()
     .split(';')
-    .map(s => s.trim());
+    .map(sqlStr => sqlStr.trim());
 
-  sqlStatements.forEach(statement => {
-    if (
+  return sqlStatements.some(
+    statement =>
       statement.startsWith('create ') ||
       statement.startsWith('alter ') ||
       statement.startsWith('drop ')
-    ) {
-      isSchemaModification = true;
-    }
-  });
-
-  return isSchemaModification;
+  );
 };
 
 export const getCheckConstraintBoolExp = (check: string) => {
