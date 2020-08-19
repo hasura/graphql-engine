@@ -317,7 +317,7 @@ mkLazyRespTx env manager reqHdrs userInfo resolved = do
       RRSql (PreparedSql q args maybeRemoteJoins) -> do
         let prepArgs = map fst args
         case maybeRemoteJoins of
-          Nothing -> liftTx $ asSingleRowJsonResp q prepArgs
+          Nothing -> Tracing.trace "Postgres" . liftTx $ asSingleRowJsonResp q prepArgs
           Just remoteJoins ->
             executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs remoteJoins
     return (G.unName $ G.unAlias alias, resp)
