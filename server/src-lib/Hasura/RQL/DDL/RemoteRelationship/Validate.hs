@@ -406,20 +406,24 @@ validateType permittedVariables value expectedGType types =
                         "not an input object type"))
 
 assertType :: G.GType -> G.GType -> Validation (NonEmpty ValidationError) ()
-assertType actualType expectedType = do
-  -- The GraphQL spec says that, we can coerce a singleton value into an array
-  -- value. Which means that if the 'actualType' is a singleton type, like
+assertType actualType expectedType =
+  -- The GraphQL spec says that, a singleton type can be coerced into  an array
+  -- type. Which means that if the 'actualType' is a singleton type, like
   -- 'Int' we should be able to join this with a remote node, which expects an
   -- input argument of type '[Int]'
   -- http://spec.graphql.org/June2018/#sec-Type-System.List
-  case (isListType' actualType,isListType' expectedType) of
-    (True, True) -> assertType (unwrapTy actualType) (unwrapTy expectedType)
-    (True, False) -> Failure (pure $ ExpectedTypeButGot expectedType actualType)
-    _ ->
-      (when
-       (getBaseTy actualType /= getBaseTy expectedType)
-       (Failure (pure $ ExpectedTypeButGot expectedType actualType)))
-  pure ()
+  let (actualBaseType, actualNestingLevel) = getBaseTyWithNestedLevelsCount actualType
+      (expectedBaseType, expectedNestingLevel) = getBaseTyWithNestedLevelsCount expectedType
+  in
+  if actualBaseType == expectedBaseType
+  then if (actualNestingLevel == expectedNestingLevel || actualNestingLevel == 0)
+  -- The check of 'actualNestedCount == 0' is the case of coercing a singleton type
+  -- into an array type
+       then pure ()
+       else Failure (pure $ ExpectedTypeButGot expectedType actualType)
+       --  we cannot coerce two types with different nesting levels,
+       -- for example, we cannot coerce [Int] to [[Int]]
+  else Failure (pure $ ExpectedTypeButGot expectedType actualType)
 
 assertListType :: G.GType -> Validation (NonEmpty ValidationError) ()
 assertListType actualType =

@@ -10,6 +10,7 @@ module Hasura.GraphQL.Utils
   , unwrapTy
   , simpleGraphQLQuery
   , jsonValueToGValue
+  , getBaseTyWithNestedLevelsCount
   ) where
 
 import           Hasura.Prelude
@@ -39,6 +40,15 @@ getBaseTy = \case
   G.TypeList _ lt     -> getBaseTyL lt
   where
     getBaseTyL = getBaseTy . G.unListType
+
+getBaseTyWithNestedLevelsCount :: G.GType -> (G.NamedType, Int)
+getBaseTyWithNestedLevelsCount ty = go ty 0
+  where
+    go :: G.GType -> Int -> (G.NamedType, Int)
+    go gType ctr =
+      case gType of
+        G.TypeNamed _ n  -> (n, ctr)
+        G.TypeList  _ lt -> flip go (ctr + 1) (G.unListType lt)
 
 unwrapTy :: G.GType -> G.GType
 unwrapTy =
