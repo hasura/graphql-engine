@@ -77,13 +77,15 @@ fetchRemoteSchema env manager schemaName schemaInfo@(RemoteSchemaInfo url header
     either (remoteSchemaErr . T.pack) return $ J.eitherDecode respData
 
   -- Check that the parsed GraphQL type info is valid by running the schema generation
-  parsers <- P.runSchemaT @m @(P.ParseT Identity) $ buildRemoteParser introspectRes schemaInfo
+  (queryParsers, mutationParsers, subscriptionParsers) <-
+    P.runSchemaT @m @(P.ParseT Identity) $ buildRemoteParser introspectRes schemaInfo
 
   -- The 'rawIntrospectionResult' contains the 'Bytestring' response of
   -- the introspection result of the remote server. We store this in the
   -- 'RemoteSchemaCtx' because we can use this when the 'introspect_remote_schema'
   -- is called by simple encoding the result to JSON.
-  return $ RemoteSchemaCtx schemaName introspectRes schemaInfo respData parsers
+  return $ RemoteSchemaCtx schemaName introspectRes schemaInfo respData $
+    ParsedIntrospection queryParsers mutationParsers subscriptionParsers
   where
     remoteSchemaErr :: T.Text -> m a
     remoteSchemaErr = throw400 RemoteSchemaError
@@ -295,11 +297,8 @@ instance J.FromJSON (FromIntrospection IntrospectionResult) where
       Just subsType -> do
         subRoot <- subsType .: "name"
         return $ Just subRoot
-    let r = ( G.SchemaIntrospection (fmap fromIntrospection types)
-            , queryRoot
-            , mutationRoot
-            , subsRoot
-            )
+    let r = IntrospectionResult (G.SchemaIntrospection (fmap fromIntrospection types))
+            queryRoot mutationRoot subsRoot
     return $ FromIntrospection r
 
 execRemoteGQ'

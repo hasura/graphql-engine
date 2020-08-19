@@ -77,7 +77,7 @@ buildGQLContext =
 
         allActionInfos = Map.elems allActions
         queryRemotesMap =
-          fmap (map fDefinition . (\(x,_,_)->x) . rscParsed . fst) allRemoteSchemas
+          fmap (map fDefinition . piQuery . rscParsed . fst) allRemoteSchemas
         buildFullestDBSchema
           :: m ( Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
                , Maybe (Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
@@ -119,15 +119,14 @@ buildGQLContext =
     -- This block of code checks that there are no conflicting root field names between remotes.
     remotes ::
       [ ( RemoteSchemaName
-        , ( [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-          , Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-          , Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-          )
+        , ParsedIntrospection
         )
       ] <- (| foldlA' (\okSchemas (newSchemaName, (newSchemaContext, newMetadataObject)) -> do
                 checkedDuplicates <- (| withRecordInconsistency (do
-                     let (queryOld, mutationOld, _subscriptionOld) = unzip3 $ fmap snd okSchemas
-                     let (queryNew, mutationNew, _subscriptionNew) = rscParsed newSchemaContext
+                     let (queryOld, mutationOld) =
+                           unzip $ fmap ((\case ParsedIntrospection q m _ -> (q,m)) . snd) okSchemas
+                     let ParsedIntrospection queryNew mutationNew _subscriptionNew
+                           = rscParsed newSchemaContext
                      -- Check for conflicts between remotes
                      bindErrorA -<
                        checkFieldNamesUnique (fmap (P.getName . fDefinition) (queryNew ++ concat queryOld))
@@ -165,8 +164,8 @@ buildGQLContext =
         -- | The 'query' type of the remotes. TODO: also expose mutation
         -- remotes. NOT TODO: subscriptions, as we do not yet aim to support
         -- these.
-        queryRemotes = concatMap ((\(q,_,_)->q) . snd) remotes
-        mutationRemotes = concatMap (concat . (\(_,m,_)->m) . snd) remotes
+        queryRemotes = concatMap (piQuery . snd) remotes
+        mutationRemotes = concatMap (concat . piMutation . snd) remotes
         queryHasuraOrRelay = case queryType of
           QueryHasura -> queryWithIntrospection (Set.fromMap $ validTables $> ())
                          validFunctions queryRemotes mutationRemotes

@@ -43,7 +43,8 @@ module Hasura.RQL.Types.SchemaCache
   , isMutable
   , mutableView
 
-  , IntrospectionResult
+  , IntrospectionResult(..)
+  , ParsedIntrospection(..)
   , RemoteSchemaCtx(..)
   , RemoteSchemaMap
 
@@ -167,16 +168,20 @@ mkComputedFieldDep reason tn computedField =
 
 type WithDeps a = (a, [SchemaDependency])
 
-type IntrospectionResult = ( G.SchemaIntrospection
-                           , G.Name -- query_root
-                           , Maybe G.Name -- mutation_root
-                           , Maybe G.Name
-                           )
+data IntrospectionResult
+  = IntrospectionResult
+  { irDoc              :: G.SchemaIntrospection
+  , irQueryRoot        :: G.Name
+  , irMutationRoot     :: Maybe G.Name
+  , irSubscriptionRoot :: Maybe G.Name
+  }
 
-type ParsedIntrospection =
-  ( [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-  , Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-  , Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)])
+data ParsedIntrospection
+  = ParsedIntrospection
+  { piQuery        :: [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  , piMutation     :: Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  , piSubscription :: Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  }
 
 data RemoteSchemaCtx
   = RemoteSchemaCtx
