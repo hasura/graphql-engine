@@ -270,7 +270,7 @@ data ReusableLiveQueryPlan
   = ReusableLiveQueryPlan
   { _rlqpParameterizedPlan       :: !ParameterizedLiveQueryPlan
   , _rlqpSyntheticVariableValues :: !ValidatedSyntheticVariables
-  , _rlqpQueryVariableTypes      :: (HashMap G.Name PGColumnType)
+  , _rlqpQueryVariableTypes      :: HashMap G.Name PGColumnType
   } deriving (Show)
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ReusableLiveQueryPlan)
 
@@ -323,7 +323,7 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
           when (remoteJoins /= mempty)
             $ throw400 NotSupported "Remote relationships are not allowed in subscriptions"
         _ -> pure ()
-      traverseAction (DS.traverseAnnSimpleSelect resolveMultiplexedValue . resolveAsyncActionQuery userInfo) $ resolvedRootField
+      traverseAction (DS.traverseAnnSimpleSelect resolveMultiplexedValue . resolveAsyncActionQuery userInfo) resolvedRootField
 
   let multiplexedQuery = mkMultiplexedQuery preparedAST
       roleName = _uiRole userInfo

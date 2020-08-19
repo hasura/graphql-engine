@@ -588,8 +588,7 @@ checkFieldNamesUnique
   -> (G.Name -> m ())
   -- ^ error action
   -> m ()
-checkFieldNamesUnique fields err = do
-  foldM_ go mempty fields
+checkFieldNamesUnique fields err = foldM_ go mempty fields
   where
     go :: Set.HashSet G.Name -> G.Name -> m (Set.HashSet G.Name)
     go previous field = do

@@ -383,14 +383,16 @@ updateOperators table updatePermissions = do
         -- there needs to be at least one operator in the update, even if it is empty
         let presetColumns = Map.toList $ RQL.UpdSet . partialSQLExpToUnpreparedValue <$> upiSet updatePermissions
         when (null opExps && null presetColumns) $ parseError $
-          "at least any one of " <> (T.intercalate ", " allowedOperators) <> " is expected"
+          "at least any one of " <> T.intercalate ", " allowedOperators <> " is expected"
 
         -- no column should appear twice
         let flattenedExps = concat opExps
             erroneousExps = OMap.filter ((>1) . length) $ OMap.groupTuples flattenedExps
-        when (not $ OMap.null erroneousExps) $ parseError $ "column found in multiple operators; "
-          <> (T.intercalate ". " $ flip map (OMap.toList erroneousExps) \(column, ops) ->
-                 dquote column <> " in " <> T.intercalate ", " (toList $ RQL.updateOperatorText <$> ops))
+        unless (OMap.null erroneousExps) $ parseError $
+          "column found in multiple operators; " <>
+          T.intercalate ". " [ dquote column <> " in " <> T.intercalate ", " (toList $ RQL.updateOperatorText <$> ops)
+                             | (column, ops) <- OMap.toList erroneousExps
+                             ]
 
         pure $ presetColumns <> flattenedExps
   where

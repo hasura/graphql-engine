@@ -242,7 +242,7 @@ actionInputArguments nonObjectTypeMap arguments = do
       -> InputFieldsParser n J.Object
     inputFieldsToObject inputFields =
       let mkTuple (name, parser) = fmap (G.unName name,) <$> parser
-      in fmap (Map.fromList . catMaybes) $ sequenceA $ map mkTuple inputFields
+      in fmap (Map.fromList . catMaybes) $ traverse mkTuple inputFields
 
     argumentParser
       :: G.Name
@@ -276,7 +276,8 @@ mkArgumentInputFieldParser
   -> Parser k m J.Value
   -> InputFieldsParser m (Maybe J.Value)
 mkArgumentInputFieldParser name description gType parser =
-  if (G.isNullable gType) then P.fieldOptional name description modifiedParser
+  if G.isNullable gType
+  then P.fieldOptional name description modifiedParser
   else Just <$> P.field name description modifiedParser
   where
     modifiedParser = parserModifier gType parser

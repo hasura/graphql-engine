@@ -1343,10 +1343,10 @@ nodeField = do
             (nonAlignedPkColumns, nonAlignedColumnValues, alignedTuples) =
               partitionThese $ toList $ align remainingPkColumns remainingColumns
 
-        when (not $ null nonAlignedPkColumns) $ throwInvalidNodeId $
+        unless (null nonAlignedPkColumns) $ throwInvalidNodeId $
           "primary key columns " <> dquoteList (map pgiColumn nonAlignedPkColumns) <> " are missing"
 
-        when (not $ null nonAlignedColumnValues) $ throwInvalidNodeId $
+        unless (null nonAlignedColumnValues) $ throwInvalidNodeId $
           "unexpected column values " <> J.encodeToStrictText nonAlignedColumnValues
 
         let allTuples = (firstPkColumn, firstColumnValue):alignedTuples

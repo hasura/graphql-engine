@@ -41,10 +41,10 @@ resolveVariables definitions jsonValues selSet = do
 
   when (isVariableValidationEnabled && usedVariables /= variablesByNameSet) $
     throw400 ValidationFailed $
-    ("following variable(s) have been defined, but have not been used in the query - "
-     <> (T.concat $ L.intersperse ", "
-         $ map G.unName $ HS.toList $
-           HS.difference variablesByNameSet usedVariables))
+    "following variable(s) have been defined, but have not been used in the query - "
+    <> T.concat (L.intersperse ", " $
+                 map G.unName $ HS.toList $
+                 HS.difference variablesByNameSet usedVariables)
 
   -- There may be variables which have a default value and may not be
   -- included in the variables JSON Map. So, we should only see, if a
@@ -52,10 +52,10 @@ resolveVariables definitions jsonValues selSet = do
   -- query
   when (HS.difference jsonVariableNames usedVariables /= HS.empty) $
     throw400 ValidationFailed $
-      ("unexpected variables in variableValues: "
-       <> (T.concat $ L.intersperse ", "
-         $ map G.unName $ HS.toList $
-           HS.difference jsonVariableNames usedVariables))
+    "unexpected variables in variableValues: "
+    <> T.concat (L.intersperse ", " $
+                 map G.unName $ HS.toList $
+                 HS.difference jsonVariableNames usedVariables)
   return selSet'
   where
     buildVariable :: G.VariableDefinition -> m Variable

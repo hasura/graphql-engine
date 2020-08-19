@@ -16,10 +16,10 @@ module Hasura.GraphQL.Transport.HTTP
 import           Control.Monad.Morph                    (hoist)
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Logging                 (MonadQueryLog (..))
-import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Logging                 (MonadQueryLog (..))
 import           Hasura.GraphQL.Parser.Column           (UnpreparedValue)
+import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -207,7 +207,7 @@ runQueryDB reqId (query, queryParsed) asts _userInfo (tx, genSql) =  do
   (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ trace "pg" $
     Tracing.interpTraceT id $ executeQuery queryParsed asts (Just genSql) pgExecCtx Q.ReadOnly tx
   (respHdrs,resp) <- liftEither respE
-  let !json = encodeGQResp $ GQSuccess $ encJToLBS $ resp
+  let !json = encodeGQResp $ GQSuccess $ encJToLBS resp
       telemQueryType = Telem.Query
   return (telemTimeIO, telemQueryType, respHdrs, json)
 

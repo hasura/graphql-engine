@@ -381,10 +381,10 @@ they need to.
 
 -- | see Note [Minimal LiveQuery Poller Log]
 pollDetailMinimal :: PollDetails -> J.Value
-pollDetailMinimal (PollDetails{..}) =
+pollDetailMinimal PollDetails{..} =
   J.object [ "poller_id" J..= _pdPollerId
            , "snapshot_time" J..= _pdSnapshotTime
-           , "batches" J..= (map batchExecutionDetailMinimal _pdBatches)
+           , "batches" J..= map batchExecutionDetailMinimal _pdBatches
            , "total_time" J..= _pdTotalTime
            ]
 
@@ -395,7 +395,7 @@ type LiveQueryPostPollHook = PollDetails -> IO ()
 
 -- the default LiveQueryPostPollHook
 defaultLiveQueryPostPollHook :: L.Logger L.Hasura -> LiveQueryPostPollHook
-defaultLiveQueryPostPollHook logger pd = L.unLogger logger pd
+defaultLiveQueryPostPollHook = L.unLogger
 
 -- | Where the magic happens: the top-level action run periodically by each
 -- active 'Poller'. This needs to be async exception safe.

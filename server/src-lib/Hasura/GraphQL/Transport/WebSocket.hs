@@ -1,6 +1,6 @@
+{-# LANGUAGE CPP             #-}
 {-# LANGUAGE RankNTypes      #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE CPP             #-}
 
 module Hasura.GraphQL.Transport.WebSocket
   ( createWSServerApp
@@ -409,7 +409,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       logOpEv ODStarted (Just requestId)
       -- log the generated SQL and the graphql query
       logQueryLog logger q genSql requestId
-      (withElapsedTime $ runExceptT action) >>= \case
+      withElapsedTime (runExceptT action) >>= \case
         (_,      Left err) -> postExecErr requestId err
         (telemTimeIO_DT, Right encJson) -> do
           -- Telemetry. NOTE: don't time network IO:
@@ -505,8 +505,8 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         G.OperationTypeQuery    -> return Telem.Query
 
       -- if it's not a subscription, use HTTP to execute the query on the remote
-      (runExceptT $ flip runReaderT execCtx $
-        E.execRemoteGQ env reqId userInfo reqHdrs q rsi opDef) >>= \case
+      runExceptT (flip runReaderT execCtx $ E.execRemoteGQ env reqId userInfo reqHdrs q rsi opDef)
+        >>= \case
           Left  err           -> postExecErr reqId err
           Right (telemTimeIO_DT, !val) -> do
             -- Telemetry. NOTE: don't time network IO:
@@ -587,7 +587,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         (SMData $ DataMsg opId $ GRHasura $ GQSuccess $ BL.fromStrict bs)
         (LQ.LiveQueryMetadata dTime)
       resp -> sendMsg wsConn $ SMData $ DataMsg opId $ GRHasura $
-        (BL.fromStrict . LQ._lqrPayload) <$> resp
+        BL.fromStrict . LQ._lqrPayload <$> resp
 
     catchAndIgnore :: ExceptT () m () -> m ()
     catchAndIgnore m = void $ runExceptT m

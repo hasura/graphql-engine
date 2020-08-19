@@ -16,13 +16,13 @@ import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.Text                              as T
-import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Hasura.Tracing                         as Tracing
 import qualified Language.GraphQL.Draft.Parser          as G
+import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Language.Haskell.TH.Syntax             as TH
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 import qualified Network.Wreq                           as Wreq
-import qualified Hasura.Tracing                         as Tracing
 
 
 import qualified Hasura.GraphQL.Parser.Monad            as P
@@ -125,7 +125,7 @@ instance J.FromJSON (FromIntrospection G.Description) where
 
 instance J.FromJSON (FromIntrospection G.ScalarTypeDefinition) where
   parseJSON = J.withObject "ScalarTypeDefinition" $ \o -> do
-    kind <- o .: "kind"
+    kind <- o .:  "kind"
     name <- o .:  "name"
     desc <- o .:? "description"
     when (kind /= "SCALAR") $ kindErr kind "scalar"
@@ -135,10 +135,10 @@ instance J.FromJSON (FromIntrospection G.ScalarTypeDefinition) where
 
 instance J.FromJSON (FromIntrospection G.ObjectTypeDefinition) where
   parseJSON = J.withObject "ObjectTypeDefinition" $ \o -> do
-    kind       <- o .: "kind"
-    name       <- o .:  "name"
-    desc       <- o .:? "description"
-    fields     <- o .:? "fields"
+    kind   <- o .:  "kind"
+    name   <- o .:  "name"
+    desc   <- o .:? "description"
+    fields <- o .:? "fields"
     interfaces :: Maybe [FromIntrospection (G.InterfaceTypeDefinition [G.Name])] <- o .:? "interfaces"
     when (kind /= "OBJECT") $ kindErr kind "object"
     let implIfaces = map G._itdName $ maybe [] (fmap fromIntrospection) interfaces

@@ -74,11 +74,11 @@ mkRelayGCtxMap tableCache functionCache = do
             concatMap (Map.keys . _rootMutationFields) rootFields
 
       -- TODO: The following exception should result in inconsistency
-      when (not $ null duplicateQueryFields) $
+      unless (null duplicateQueryFields) $
         throw400 Unexpected $ "following query root fields are duplicated: "
         <> showNames duplicateQueryFields
 
-      when (not $ null duplicateMutationFields) $
+      unles (null duplicateMutationFields) $
         throw400 Unexpected $ "following mutation root fields are duplicated: "
         <> showNames duplicateMutationFields
 

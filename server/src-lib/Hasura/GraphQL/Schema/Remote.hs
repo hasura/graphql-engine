@@ -87,12 +87,12 @@ remoteField' schemaDoc (G.FieldDefinition description name argsDefinition gType 
             remoteFld <- remoteFieldFromName schemaDoc name description fieldTypeName argsDefinition
             pure . P.nullableField $ remoteFld
           G.TypeList (Nullability True) gType'' ->
-            pure . addNullableList =<< convertType gType''
+            addNullableList <$> convertType gType''
           G.TypeNamed (Nullability False) fieldTypeName -> do
             remoteFld <- remoteFieldFromName schemaDoc name description fieldTypeName argsDefinition
             pure . P.nonNullableField $ remoteFld
           G.TypeList (Nullability False) gType'' ->
-            pure . addNonNullableList =<< convertType gType''
+            addNonNullableList <$> convertType gType''
   in convertType gType
 
 -- | 'remoteSchemaObject' returns a output parser for a given 'ObjectTypeDefinition'.
@@ -108,7 +108,7 @@ remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name inter
   interfaceDefs <- traverse getInterface interfaces
   implements <- traverse (remoteSchemaInterface schemaDoc) interfaceDefs
   -- TODO: also check sub-interfaces, when these are supported in a future graphql spec
-  traverse validateImplementsFields interfaceDefs
+  traverse_ validateImplementsFields interfaceDefs
   pure $ () <$ P.selectionSetObject name description subFieldParsers implements
   where
     getInterface :: G.Name -> m (G.InterfaceTypeDefinition [G.Name])
@@ -144,7 +144,7 @@ remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name inter
                       "Interface field argument " <> squote interfaceName <> "." <> dquote (G._fldName interfaceField)
                       <> "(" <> dquote (G._ivdName ifaceArgument) <> ":) required, but Object field " <> squote name <> "." <> dquote (G._fldName f)
                       <> " does not provide it"
-                  Just a -> do
+                  Just a ->
                     unless (G._ivdType a == G._ivdType ifaceArgument) $
                       throw400 RemoteSchemaError $
                       "Interface field argument " <> squote interfaceName <> "." <> dquote (G._fldName interfaceField)
@@ -193,7 +193,7 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
   P.memoizeOn 'remoteSchemaObject defn do
   subFieldParsers <- traverse (remoteField' schemaDoc) fields
   objs :: [Parser 'Output n ()] <-
-    traverse (\objName -> getObject objName >>= remoteSchemaObject schemaDoc) $ possibleTypes
+    traverse (getObject >=> remoteSchemaObject schemaDoc) possibleTypes
   -- In the Draft GraphQL spec (> June 2018), interfaces can themselves
   -- implement superinterfaces.  In the future, we may need to support this
   -- here.
@@ -203,12 +203,12 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
   -- types in the schema document that claim to implement this interface.  We
   -- should have a check that expresses that that collection of objects is equal
   -- to 'possibelTypes'.
-  pure $ () <$ (P.selectionSetInterface name description subFieldParsers objs)
+  pure $ void $ P.selectionSetInterface name description subFieldParsers objs
   where
     getObject :: G.Name -> m G.ObjectTypeDefinition
     getObject objectName =
       onNothing (lookupObject schemaDoc objectName) $
-        case (lookupInterface schemaDoc objectName) of
+        case lookupInterface schemaDoc objectName of
           Nothing -> throw400 RemoteSchemaError $ "Could not find type " <> squote objectName
             <> ", which is defined as a member type of Union " <> squote name
           Just _  -> throw400 RemoteSchemaError $ "Union type " <> squote name <>
@@ -224,15 +224,15 @@ remoteSchemaUnion
 remoteSchemaUnion schemaDoc defn@(G.UnionTypeDefinition description name _directives objectNames) =
   P.memoizeOn 'remoteSchemaObject defn do
   objDefs <- traverse getObject objectNames
-  objs :: [Parser 'Output n ()] <- traverse (remoteSchemaObject schemaDoc) $ objDefs
+  objs :: [Parser 'Output n ()] <- traverse (remoteSchemaObject schemaDoc) objDefs
   when (null objs) $
     throw400 RemoteSchemaError $ "List of member types cannot be empty for union type " <> squote name
-  pure $ () <$ (P.selectionSetUnion name description objs)
+  pure $ void $ P.selectionSetUnion name description objs
   where
     getObject :: G.Name -> m G.ObjectTypeDefinition
     getObject objectName =
       onNothing (lookupObject schemaDoc objectName) $
-        case (lookupInterface schemaDoc objectName) of
+        case lookupInterface schemaDoc objectName of
           Nothing -> throw400 RemoteSchemaError $ "Could not find type " <> squote objectName
             <> ", which is defined as a member type of Union " <> squote name
           Just _  -> throw400 RemoteSchemaError $ "Union type " <> squote name <>
@@ -328,10 +328,10 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
                 }
         in case maybeDefaultVal of
           Nothing ->
-            case G.isNullable fieldType of
-              True -> fieldOptional name desc wrappedParser
-              False -> fmap Just $ field name desc wrappedParser
-          Just defaultVal -> fmap Just $ fieldWithDefault name desc defaultVal wrappedParser
+            if G.isNullable fieldType
+            then fieldOptional name desc wrappedParser
+            else Just <$> field name desc wrappedParser
+          Just defaultVal -> Just <$> fieldWithDefault name desc defaultVal wrappedParser
       doNullability :: forall k . 'Input <: k => G.Nullability -> Parser k n () -> Parser k n ()
       doNullability (G.Nullability True)  = void . P.nullable
       doNullability (G.Nullability False) = id
@@ -349,11 +349,11 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
                  fieldConstructor' . doNullability nullability <$> remoteFieldScalarParser name' scalarDesc
                G.TypeDefinitionEnum defn ->
                  pure $ fieldConstructor' $ doNullability nullability $ remoteFieldEnumParser defn
-               G.TypeDefinitionObject _ -> throw400 RemoteSchemaError $ "expected input type, but got output type" -- couldn't find the equivalent error in Validate/Types.hs, so using a new error message
+               G.TypeDefinitionObject _ -> throw400 RemoteSchemaError "expected input type, but got output type" -- couldn't find the equivalent error in Validate/Types.hs, so using a new error message
                G.TypeDefinitionInputObject defn ->
-                 pure . fieldConstructor' . doNullability nullability =<< remoteSchemaInputObject schemaDoc defn
-               G.TypeDefinitionUnion _ -> throw400 RemoteSchemaError $ "expected input type, but got output type"
-               G.TypeDefinitionInterface _ -> throw400 RemoteSchemaError $ "expected input type, but got output type"
+                 fieldConstructor' . doNullability nullability <$> remoteSchemaInputObject schemaDoc defn
+               G.TypeDefinitionUnion _ -> throw400 RemoteSchemaError "expected input type, but got output type"
+               G.TypeDefinitionInterface _ -> throw400 RemoteSchemaError "expected input type, but got output type"
        G.TypeList nullability subType -> buildField subType (fieldConstructor' . doNullability nullability . void . P.list)
   in buildField fieldType fieldConstructor
 
@@ -364,7 +364,7 @@ argumentsParser
   -> G.SchemaIntrospection
   -> m (InputFieldsParser n ())
 argumentsParser args schemaDoc =
-  ($> ()) <$> sequenceA <$> traverse (inputValueDefinitionParser schemaDoc) args
+  void . sequenceA <$> traverse (inputValueDefinitionParser schemaDoc) args
 
 -- | 'remoteField' accepts a 'G.TypeDefinition' and will returns a 'FieldParser' for it.
 --   Note that the 'G.TypeDefinition' should be of the GraphQL 'Output' kind, when an
@@ -395,7 +395,7 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
     G.TypeDefinitionUnion unionTypeDefn -> do
       remoteSchemaObj <- remoteSchemaUnion sdoc unionTypeDefn
       pure $ () <$ P.subselection fieldName description argsParser remoteSchemaObj
-    _ -> throw400 RemoteSchemaError $ "expected output type, but got input type"
+    _ -> throw400 RemoteSchemaError "expected output type, but got input type"
 
 remoteFieldScalarParser
   :: forall m n
@@ -419,7 +419,6 @@ remoteFieldEnumParser
   => G.EnumTypeDefinition
   -> Parser 'Both n ()
 remoteFieldEnumParser (G.EnumTypeDefinition desc name _ valueDefns) =
-  let enumValDefns = map (\(G.EnumValueDefinition enumDesc enumName _) ->
-                            ((mkDefinition (G.unEnumValue enumName) enumDesc P.EnumValueInfo),()))
-                         $ valueDefns
+  let enumValDefns = valueDefns <&> \(G.EnumValueDefinition enumDesc enumName _) ->
+        (mkDefinition (G.unEnumValue enumName) enumDesc P.EnumValueInfo,())
   in P.enum name desc $ NE.fromList enumValDefns

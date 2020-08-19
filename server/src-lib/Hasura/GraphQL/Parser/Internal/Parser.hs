@@ -365,12 +365,12 @@ nullable parser = gcastWith (inputParserInput @k) Parser
 -- | Decorate a schema field as NON_NULL
 nonNullableField :: forall m a . FieldParser m a -> FieldParser m a
 nonNullableField (FieldParser (Definition n u d (FieldInfo as t)) p) =
-  (FieldParser (Definition n u d (FieldInfo as (nonNullableType t))) p)
+  FieldParser (Definition n u d (FieldInfo as (nonNullableType t))) p
 
 -- | Decorate a schema field as NULL
 nullableField :: forall m a . FieldParser m a -> FieldParser m a
 nullableField (FieldParser (Definition n u d (FieldInfo as t)) p) =
-  (FieldParser (Definition n u d (FieldInfo as (nullableType t))) p)
+  FieldParser (Definition n u d (FieldInfo as (nullableType t))) p
 {-
 field = field
   { fDefinition = (fDefinition field)
@@ -438,7 +438,7 @@ object name description parser = Parser
     parseFields fields = do
       -- check for extraneous fields here, since the InputFieldsParser just
       -- handles parsing the fields it cares about
-      for_ (M.keys fields) \fieldName -> do
+      for_ (M.keys fields) \fieldName ->
         unless (fieldName `S.member` fieldNames) $ withPath (++[Key (unName fieldName)]) $
           parseError $ "field " <> dquote fieldName <> " not found in type: " <> squote name
       ifParser parser fields
@@ -725,7 +725,7 @@ selectionSetObject name description parsers implementsInterfaces = Parser
     parserMap = parsers
       & map (\FieldParser{ fDefinition, fParser } -> (getName fDefinition, fParser))
       & M.fromList
-    interfaces = catMaybes $ fmap (getInterfaceInfo . pType) implementsInterfaces
+    interfaces = mapMaybe (getInterfaceInfo . pType) implementsInterfaces
     parsedInterfaceNames = fmap getName interfaces
 
 selectionSetInterface
@@ -813,7 +813,7 @@ selection name description argumentsParser resultParser = FieldParser
         parseError "unexpected subselection set for non-object field"
       -- check for extraneous arguments here, since the InputFieldsParser just
       -- handles parsing the fields it cares about
-      for_ (M.keys _fArguments) \argumentName -> do
+      for_ (M.keys _fArguments) \argumentName ->
         unless (argumentName `S.member` argumentNames) $
           parseError $ name <<> " has no argument named " <>> argumentName
       withPath (++[Key "args"]) $ ifParser argumentsParser $ GraphQLValue <$> _fArguments
@@ -839,7 +839,7 @@ subselection name description argumentsParser bodyParser = FieldParser
   , fParser = \Field{ _fArguments, _fSelectionSet } -> do
       -- check for extraneous arguments here, since the InputFieldsParser just
       -- handles parsing the fields it cares about
-      for_ (M.keys _fArguments) \argumentName -> do
+      for_ (M.keys _fArguments) \argumentName ->
         unless (argumentName `S.member` argumentNames) $
           parseError $ name <<> " has no argument named " <>> argumentName
       (,) <$> withPath (++[Key "args"]) (ifParser argumentsParser $ GraphQLValue <$> _fArguments)
@@ -890,7 +890,7 @@ valueToJSON expected = peelVariable (Just expected) >=> valueToJSON'
 
 jsonToGraphQL :: (MonadError Text m) => A.Value -> m (Value Void)
 jsonToGraphQL = \case
-  A.Null        -> pure $ VNull
+  A.Null        -> pure VNull
   A.Bool val    -> pure $ VBoolean val
   A.String val  -> pure $ VString val
   A.Number val  -> case toBoundedInteger val of
@@ -914,7 +914,7 @@ peelVariableWith hasLocationDefaultValue expected = \case
   value -> pure value
 
 typeCheck :: MonadParse m => Bool -> GType -> Variable -> m ()
-typeCheck hasLocationDefaultValue locationType variable@(Variable { vInfo, vType }) =
+typeCheck hasLocationDefaultValue locationType variable@Variable { vInfo, vType } =
   unless (isVariableUsageAllowed hasLocationDefaultValue locationType variable) $ parseError
     $ "variable " <> dquote (getName vInfo) <> " is declared as "
     <> showGT vType <> ", but used where "

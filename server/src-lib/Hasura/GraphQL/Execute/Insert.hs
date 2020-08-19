@@ -37,10 +37,9 @@ traverseAnnInsert
   => (a -> f b)
   -> AnnInsert a
   -> f (AnnInsert b)
-traverseAnnInsert f (AnnInsert fieldName isSingle (annIns, mutationOutput)) = AnnInsert
-  <$> pure fieldName
-  <*> pure isSingle
-  <*> ( (,)
+traverseAnnInsert f (AnnInsert fieldName isSingle (annIns, mutationOutput)) =
+  AnnInsert fieldName isSingle
+  <$> ( (,)
         <$> traverseMulti annIns
         <*> RQL.traverseMutationOutput f mutationOutput
       )
@@ -127,7 +126,7 @@ insertMultipleObjects env multiObjIns additionalColumns rjCtx mutationOutput pla
         let singleObj = AnnIns obj table conflictClause checkCondition columnInfos defVals
         insertObject env singleObj additionalColumns rjCtx planVars stringifyNum
       let affectedRows = sum $ map fst insertRequests
-          columnValues = catMaybes $ map snd insertRequests
+          columnValues = mapMaybe snd insertRequests
       selectExpr <- RQL.mkSelCTEFromColVals table columnInfos columnValues
       let (mutOutputRJ, remoteJoins) = RQL.getRemoteJoinsMutationOutput mutationOutput
           sqlQuery = Q.fromBuilder $ toSQL $

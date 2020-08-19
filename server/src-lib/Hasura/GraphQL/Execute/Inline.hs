@@ -95,10 +95,10 @@ inlineSelectionSet fragmentDefinitions selectionSet = do
       isFragmentValidationEnabled = False
   when (isFragmentValidationEnabled && (usedFragmentNames /= definedFragmentNames)) $
     throw400 ValidationFailed $
-    ("following fragment(s) have been defined, but have not been used in the query - "
-    <> (T.concat $ L.intersperse ", "
-       $ map unName $ Set.toList $
-       Set.difference definedFragmentNames usedFragmentNames))
+    "following fragment(s) have been defined, but have not been used in the query - "
+    <> T.concat (L.intersperse ", "
+                 $ map unName $ Set.toList $
+                 Set.difference definedFragmentNames usedFragmentNames)
   traverse inlineSelection selectionSet
     & flip evalStateT InlineState{ _isFragmentCache = mempty }
     & flip runReaderT InlineEnv
@@ -106,7 +106,7 @@ inlineSelectionSet fragmentDefinitions selectionSet = do
     , _ieFragmentStack = [] }
   where
     fragmentsInSelectionSet :: SelectionSet FragmentSpread var -> [Name]
-    fragmentsInSelectionSet selectionSet' = concat $ map getFragFromSelection selectionSet'
+    fragmentsInSelectionSet selectionSet' = concatMap getFragFromSelection selectionSet'
 
     getFragFromSelection :: Selection FragmentSpread var -> [Name]
     getFragFromSelection = \case
@@ -123,7 +123,7 @@ inlineSelection (SelectionField field@Field{ _fSelectionSet }) =
     selectionSet <- traverse inlineSelection _fSelectionSet
     pure $! SelectionField field{ _fSelectionSet = selectionSet }
 inlineSelection (SelectionFragmentSpread spread) =
-  withPathK "selectionSet" $ do
+  withPathK "selectionSet" $
     SelectionInlineFragment <$> inlineFragmentSpread spread
 inlineSelection (SelectionInlineFragment fragment@InlineFragment{ _ifSelectionSet }) = do
   selectionSet <- traverse inlineSelection _ifSelectionSet
@@ -151,7 +151,7 @@ inlineFragmentSpread FragmentSpread{ _fsName, _fsDirectives } = do
      -- We didn’t hit the fragment cache, so look up the definition and convert
      -- it to an inline fragment.
      | Just FragmentDefinition{ _fdTypeCondition, _fdSelectionSet }
-         <- Map.lookup _fsName _ieFragmentDefinitions -> withPathK (unName $ _fsName) $ do
+         <- Map.lookup _fsName _ieFragmentDefinitions -> withPathK (unName _fsName) $ do
 
        selectionSet <- locally ieFragmentStack (_fsName :) $
          traverse inlineSelection (fmap absurd <$> _fdSelectionSet)
