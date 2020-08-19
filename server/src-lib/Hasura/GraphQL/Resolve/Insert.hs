@@ -370,7 +370,7 @@ insertObj
   -> SingleObjIns
   -> [PGColWithValue] -- ^ additional fields
   -> m (Int, Maybe ColumnValuesText)
-insertObj env strfyNum rjCtx role tn singleObjIns addCols = do
+insertObj env strfyNum rjCtx role tn singleObjIns addCols = Tracing.trace ("Insert " <> qualObjectToText tn) do
   -- validate insert
   validateInsert (map fst cols) (map _riRelInfo objRels) $ map fst addCols
 
@@ -437,7 +437,7 @@ insertMultipleObjects
   -> T.Text -- ^ error path
   -> m EncJSON
 insertMultipleObjects env strfyNum rjCtx role tn multiObjIns addCols mutOutput errP =
-  bool withoutRelsInsert withRelsInsert anyRelsToInsert
+    bool withoutRelsInsert withRelsInsert anyRelsToInsert
   where
     AnnIns insObjs onConflictM (insCond, updCond) tableColInfos defVals = multiObjIns
     singleObjInserts = multiToSingles multiObjIns
@@ -466,12 +466,16 @@ insertMultipleObjects env strfyNum rjCtx role tn multiObjIns addCols mutOutput e
       let insQP1 = RI.InsertQueryP1 tn tableCols sqlRows onConflictM
                      (insCheck, updCheck) mutOutput tableColInfos
           p1 = (insQP1, prepArgs)
-      RI.execInsertQuery env strfyNum (Just rjCtx) p1
+          
+      let rowCount = (T.pack . show . length . _aiInsObj) multiObjIns
+      Tracing.trace ("Insert (" <> rowCount <> ") " <> qualObjectToText tn) do
+        Tracing.attachMetadata [("count", rowCount)]  
+        RI.execInsertQuery env strfyNum (Just rjCtx) p1
 
     -- insert each object with relations
     withRelsInsert = withErrPath $ do
       insResps <- indexedForM singleObjInserts $ \objIns ->
-          insertObj env strfyNum rjCtx role tn objIns addCols
+        insertObj env strfyNum rjCtx role tn objIns addCols
 
       let affRows = sum $ map fst insResps
           columnValues = mapMaybe snd insResps
