@@ -48,7 +48,10 @@ By default, shows changes between exported metadata file and server metadata.`,
   hasura metadata diff local_metadata.yaml
 
   # Show changes between metadata from metadata.yaml and metadata_old.yaml:
-  hasura metadata diff metadata.yaml metadata_old.yaml
+	hasura metadata diff metadata.yaml metadata_old.yaml
+	
+	# Show changes among multiple metadata folders (v2 config only)
+	hasura metadata diff metadata1 metadata2
 
   # Apply admin secret for Hasura GraphQL Engine:
   hasura metadata diff --admin-secret "<admin-secret>"
@@ -66,7 +69,7 @@ By default, shows changes between exported metadata file and server metadata.`,
 }
 
 func (o *MetadataDiffOptions) runv2(args []string) error {
-	messageFormat := "Showing diff between %s and %s..."
+	messageFormat := "Showing diff between %s directory and %s..."
 	message := ""
 
 	switch len(args) {
@@ -92,7 +95,11 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 			return err
 		}
 		o.Metadata[1] = args[1]
-		message = fmt.Sprintf(messageFormat, o.Metadata[0], o.Metadata[1])
+		if args[0] == args[1] {
+			return errors.New("directories passed are the same")
+		}
+		messageEnd := fmt.Sprintf("the %s directory", o.Metadata[1])
+		message = fmt.Sprintf(messageFormat, o.Metadata[0], messageEnd)
 	}
 	o.EC.Logger.Info(message)
 	var oldYaml, newYaml []byte
@@ -249,7 +256,7 @@ func checkDir(path string) error {
 		return err
 	}
 	if !file.IsDir() {
-		return fmt.Errorf("metadata diff only works with folder but got file %s", path)
+		return fmt.Errorf("metadata diff only works with folders but got file %s", path)
 	}
 	return nil
 }
