@@ -32,7 +32,7 @@ The following are benefits of Postgres compared to other database management sys
 
 - Postgres can be maintained easily because of its stability. The total cost of ownership is therefore low.
 - Postgres is designed to be extensible, i.e. you can add custom functions using different programming languages.
-- You can define your own data types, index types etc.
+- You can define your own data types, index types, etc.
 - If you need any support, an active community is available to help. 
 
 Caveats
