@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/hasura/graphql-engine/cli/migrate"
+	"github.com/sirupsen/logrus"
 
 	"github.com/aryann/difflib"
 	"github.com/hasura/graphql-engine/cli"
@@ -139,7 +140,7 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 		return errors.Wrap(err, "cannot unmarshal local metadata")
 	}
 
-	printDiff(string(oldYaml), string(newYaml), o.Output)
+	printDiff(string(oldYaml), string(newYaml), o.Output, o.EC.Logger)
 	return nil
 }
 
@@ -198,7 +199,7 @@ func (o *MetadataDiffOptions) runv1(args []string) error {
 		return errors.Wrap(err, "cannot read file")
 	}
 
-	printDiff(string(oldYaml), string(newYaml), o.Output)
+	printDiff(string(oldYaml), string(newYaml), o.Output, o.EC.Logger)
 	return nil
 }
 
@@ -209,21 +210,35 @@ func (o *MetadataDiffOptions) Run() error {
 	return o.runv1(o.Args)
 }
 
-func printDiff(before, after string, to io.Writer) {
+func printDiff(before, after string, to io.Writer, logger *logrus.Logger) {
 	diffs := difflib.Diff(strings.Split(before, "\n"), strings.Split(after, "\n"))
 
-	for _, diff := range diffs {
-		text := diff.Payload
+	isThereADiff := false
 
+	for _, diff := range diffs {
 		switch diff.Delta {
-		case difflib.RightOnly:
-			fmt.Fprintf(to, "%s\n", ansi.Color(text, "green"))
 		case difflib.LeftOnly:
-			fmt.Fprintf(to, "%s\n", ansi.Color(text, "red"))
-		case difflib.Common:
-			fmt.Fprintf(to, "%s\n", text)
+		case difflib.RightOnly:
+			isThereADiff = true
+			break
 		}
 	}
+
+	if isThereADiff {
+		for _, diff := range diffs {
+			text := diff.Payload
+
+			switch diff.Delta {
+			case difflib.RightOnly:
+				fmt.Fprintf(to, "%s\n", ansi.Color(text, "green"))
+			case difflib.LeftOnly:
+				fmt.Fprintf(to, "%s\n", ansi.Color(text, "red"))
+			}
+		}
+		return
+	}
+
+	logger.Infoln("no diff")
 }
 
 func checkDir(path string) error {
