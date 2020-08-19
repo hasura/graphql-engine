@@ -54,8 +54,9 @@ runAddComputedField q = do
   let metadataObj = MOTableObj table $ MTOComputedField computedFieldName
       metadata = ComputedFieldMetadata computedFieldName (_afcDefinition q) (_afcComment q)
   -- addComputedFieldToCatalog q
-  buildSchemaCacheFor metadataObj $
-    metaTables.ix table.tmComputedFields %~ HM.insert computedFieldName metadata
+  buildSchemaCacheFor metadataObj
+    $ MetadataModifier
+    $ metaTables.ix table.tmComputedFields %~ HM.insert computedFieldName metadata
   pure successMsg
   where
     table = _afcTable q
@@ -283,8 +284,9 @@ runDropComputedField (DropComputedField table computedField cascade) = do
   withNewInconsistentObjsCheck do
     metadataModifiers <- mapM purgeComputedFieldDependency deps
     -- dropComputedFieldFromCatalog table computedField
-    buildSchemaCache $ metaTables.ix table %~
-      (dropComputedFieldInMetadata computedField) . foldr (.) id metadataModifiers
+    buildSchemaCache $ MetadataModifier $
+      metaTables.ix table
+      %~ (dropComputedFieldInMetadata computedField) . foldl' (.) id metadataModifiers
   pure successMsg
   where
     purgeComputedFieldDependency = \case

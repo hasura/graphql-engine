@@ -33,7 +33,7 @@ runCreateRemoteRelationship RemoteRelationship{..} = do
   let metadataObj = MOTableObj rtrTable $ MTORemoteRelationship rtrName
       metadata = RemoteRelationshipMeta rtrName $
         RemoteRelationshipDef rtrRemoteSchema rtrHasuraFields rtrRemoteField
-  buildSchemaCacheFor metadataObj $
+  buildSchemaCacheFor metadataObj $ MetadataModifier $
     metaTables.ix rtrTable.tmRemoteRelationships %~ HM.insert rtrName metadata
   pure successMsg
 
@@ -74,7 +74,7 @@ runUpdateRemoteRelationship RemoteRelationship{..} = do
   let metadataObj = MOTableObj rtrTable $ MTORemoteRelationship rtrName
       metadata = RemoteRelationshipMeta rtrName $
         RemoteRelationshipDef rtrRemoteSchema rtrHasuraFields rtrRemoteField
-  buildSchemaCacheFor metadataObj $
+  buildSchemaCacheFor metadataObj $ MetadataModifier $
     metaTables.ix rtrTable.tmRemoteRelationships %~ HM.insert rtrName metadata
   pure successMsg
 
@@ -112,7 +112,7 @@ runDeleteRemoteRelationship (DeleteRemoteRelationship table relName)= do
   void $ askRemoteRel fieldInfoMap relName
   -- liftTx $ delRemoteRelFromCatalog table relName
   let metadataObj = MOTableObj table $ MTORemoteRelationship relName
-  buildSchemaCacheFor metadataObj $
+  buildSchemaCacheFor metadataObj $ MetadataModifier $
     metaTables.ix table %~ dropRemoteRelationshipInMetadata relName
   pure successMsg
 

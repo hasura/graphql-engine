@@ -70,8 +70,9 @@ runCreateAction createAction = do
   let metadata = ActionMetadata actionName (_caComment createAction)
                  (_caDefinition createAction) []
   -- persistCreateAction createAction
-  buildSchemaCacheFor (MOAction actionName) $
-    metaActions %~ Map.insert actionName metadata
+  buildSchemaCacheFor (MOAction actionName)
+    $ MetadataModifier
+    $ metaActions %~ Map.insert actionName metadata
   pure successMsg
   where
     actionName = _caName createAction
@@ -161,15 +162,12 @@ runUpdateAction
 runUpdateAction (UpdateAction actionName actionDefinition) = do
   sc <- askSchemaCache
   let actionsMap = scActions sc
-  actionInfo <- onNothing (Map.lookup actionName actionsMap) $
+  void $ onNothing (Map.lookup actionName actionsMap) $
     throw400 NotExists $ "action with name " <> actionName <<> " not exists"
   -- updateActionInCatalog
-  let permissions = map (uncurry ActionPermissionMetadata . second _apiComment) $
-                    Map.toList $ _aiPermissions actionInfo
-      metadata    =
-        ActionMetadata actionName (_aiComment actionInfo) actionDefinition permissions
-  buildSchemaCacheFor (MOAction actionName) $
-    metaActions %~ Map.insert actionName metadata
+  buildSchemaCacheFor (MOAction actionName)
+    $ MetadataModifier
+    $ metaActions.ix actionName.amDefinition .~ actionDefinition
   pure successMsg
   -- where
   --   updateActionInCatalog :: m ()
@@ -214,9 +212,9 @@ runDropAction (DropAction actionName clearDataM)= do
     --         WHERE action_name = $1
     --       |] (Identity actionName) True
 
-dropActionInMetadata :: ActionName -> Metadata -> Metadata
+dropActionInMetadata :: ActionName -> MetadataModifier
 dropActionInMetadata name =
-  metaActions %~ Map.delete name
+  MetadataModifier $ metaActions %~ Map.delete name
 
 -- deleteActionFromCatalog
 --   :: ActionName
@@ -265,18 +263,15 @@ runCreateActionPermission createActionPermission = do
   void $ onJust (Map.lookup roleName $ _aiPermissions actionInfo) $ const $
     throw400 AlreadyExists $ "permission for role " <> roleName
     <<> " is already defined on " <>> actionName
-  let newPermissions =
-        ActionPermissionMetadata roleName (_capComment createActionPermission) :
-        map (uncurry ActionPermissionMetadata . second _apiComment)
-        (Map.toList $ _aiPermissions actionInfo)
 
   -- persistCreateActionPermission createActionPermission
-  buildSchemaCacheFor (MOActionPermission actionName roleName) $
-    metaActions.ix actionName.amPermissions .~ newPermissions
+  buildSchemaCacheFor (MOActionPermission actionName roleName)
+    $ MetadataModifier
+    $ metaActions.ix actionName.amPermissions
+      %~ ((:) $ ActionPermissionMetadata roleName comment)
   pure successMsg
   where
-    actionName = _capAction createActionPermission
-    roleName = _capRole createActionPermission
+    CreateActionPermission actionName roleName _ comment = createActionPermission
 
 persistCreateActionPermission :: (MonadTx m) => CreateActionPermission -> m ()
 persistCreateActionPermission CreateActionPermission{..}= do
@@ -309,8 +304,8 @@ runDropActionPermission dropActionPermission = do
     actionName = _dapAction dropActionPermission
     roleName = _dapRole dropActionPermission
 
-dropActionPermissionInMetadata :: ActionName -> RoleName -> Metadata -> Metadata
-dropActionPermissionInMetadata name role =
+dropActionPermissionInMetadata :: ActionName -> RoleName -> MetadataModifier
+dropActionPermissionInMetadata name role = MetadataModifier $
     metaActions.ix name.amPermissions %~ filter ((/=) role . _apmRole)
 
 -- deleteActionPermissionFromCatalog :: ActionName -> RoleName -> Q.TxE QErr ()

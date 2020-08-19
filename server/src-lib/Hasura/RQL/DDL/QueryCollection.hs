@@ -22,6 +22,7 @@ import           Hasura.RQL.Types
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.SQL.Types
 
+import           Control.Lens                     (ix)
 import           Data.List.Extended               (duplicates)
 
 import qualified Data.HashMap.Strict              as HM
@@ -49,8 +50,10 @@ runCreateCollection cc = do
     onJust collDetM $ const $ throw400 AlreadyExists $
       "query collection with name " <> collName <<> " already exists"
   withPathK "definition" $ addCollectionP2 def
-  withNewInconsistentObjsCheck $ buildSchemaCache $
-    metaQueryCollections %~ HM.insert collName cc
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ MetadataModifier
+    $ metaQueryCollections %~ HM.insert collName cc
   return successMsg
   where
     CreateCollection collName def _ = cc
@@ -65,8 +68,11 @@ runAddQueryToCollection (AddQueryToCollection collName queryName query) = do
   when queryExists $ throw400 AlreadyExists $ "query with name "
     <> queryName <<> " already exists in collection " <>> collName
   let collDef = CollectionDef $ qList <> pure listQ
-  withNewInconsistentObjsCheck $ buildSchemaCache $
-    metaQueryCollections %~ HM.insert collName (CreateCollection collName collDef comment)
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ MetadataModifier
+    $ metaQueryCollections
+      %~ HM.insert collName (CreateCollection collName collDef comment)
   return successMsg
   where
     listQ = ListedQuery queryName query
@@ -88,8 +94,10 @@ runDropCollection (DropCollection collName cascade) = do
         -- drop collection in allowlist
         pure $ metaAllowlist %~ HS.delete (CollectionReq collName)
 
-  withNewInconsistentObjsCheck $ buildSchemaCache $
-    allowlistModifier . (metaQueryCollections %~ HM.delete collName)
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ MetadataModifier
+    $ allowlistModifier . (metaQueryCollections %~ HM.delete collName)
 
   pure successMsg
 
@@ -97,15 +105,17 @@ runDropQueryFromCollection
   :: (CacheRWM m, MonadTx m)
   => DropQueryFromCollection -> m EncJSON
 runDropQueryFromCollection (DropQueryFromCollection collName queryName) = do
-  CreateCollection _ (CollectionDef qList) comment <- getCollectionDef collName
+  CreateCollection _ (CollectionDef qList) _ <- getCollectionDef collName
   let queryExists = flip any qList $ \q -> _lqName q == queryName
   when (not queryExists) $ throw400 NotFound $ "query with name "
     <> queryName <<> " not found in collection " <>> collName
-  let collDef = CollectionDef $ flip filter qList $
-                \q -> _lqName q /= queryName
+
   -- liftTx $ updateCollectionDefCatalog collName collDef
-  withNewInconsistentObjsCheck $ buildSchemaCache $
-    metaQueryCollections %~ HM.insert collName (CreateCollection collName collDef comment)
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ MetadataModifier
+    $ metaQueryCollections.ix collName.ccDefinition.cdQueries
+      %~ filter ((/=) queryName . _lqName)
   pure successMsg
 
 runAddCollectionToAllowlist
@@ -114,8 +124,10 @@ runAddCollectionToAllowlist
 runAddCollectionToAllowlist req@(CollectionReq collName) = do
   void $ withPathK "collection" $ getCollectionDef collName
   -- liftTx $ addCollectionToAllowlistCatalog collName
-  withNewInconsistentObjsCheck $ buildSchemaCache $
-    metaAllowlist %~ HS.insert req
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ MetadataModifier
+    $ metaAllowlist %~ HS.insert req
   pure successMsg
 
 runDropCollectionFromAllowlist
@@ -124,8 +136,10 @@ runDropCollectionFromAllowlist
 runDropCollectionFromAllowlist req@(CollectionReq collName) = do
   void $ withPathK "collection" $ getCollectionDef collName
   -- liftTx $ delCollectionFromAllowlistCatalog collName
-  withNewInconsistentObjsCheck $ buildSchemaCache $
-    metaAllowlist %~ HS.delete req
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ MetadataModifier
+    $ metaAllowlist %~ HS.delete req
   return successMsg
 
 getCollectionDef

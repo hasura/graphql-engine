@@ -103,7 +103,7 @@ class (CacheRM m) => CacheRWM m where
   buildSchemaCacheWithOptions
     :: BuildReason
     -> CacheInvalidations
-    -> (Metadata -> Metadata)
+    -> MetadataModifier
     -> m ()
 
 data BuildReason
@@ -137,12 +137,12 @@ instance (CacheRWM m) => CacheRWM (ReaderT r m) where
 instance (CacheRWM m) => CacheRWM (TraceT m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
 
-buildSchemaCache :: (CacheRWM m) => (Metadata -> Metadata) -> m ()
+buildSchemaCache :: (CacheRWM m) => MetadataModifier -> m ()
 buildSchemaCache = buildSchemaCacheWithOptions CatalogUpdate mempty
 
 -- | Rebuilds the schema cache. If an object with the given object id became newly inconsistent,
 -- raises an error about it specifically. Otherwise, raises a generic metadata inconsistency error.
-buildSchemaCacheFor :: (QErrM m, CacheRWM m) => MetadataObjId -> (Metadata -> Metadata) ->  m ()
+buildSchemaCacheFor :: (QErrM m, CacheRWM m) => MetadataObjId -> MetadataModifier ->  m ()
 buildSchemaCacheFor objectId metadataModifier = do
   oldSchemaCache <- askSchemaCache
   buildSchemaCache metadataModifier
@@ -160,7 +160,7 @@ buildSchemaCacheFor objectId metadataModifier = do
       { qeInternal = Just $ toJSON (nub . concatMap toList $ M.elems newInconsistentObjects) }
 
 -- | Like 'buildSchemaCache', but fails if there is any inconsistent metadata.
-buildSchemaCacheStrict :: (QErrM m, CacheRWM m) => (Metadata -> Metadata) -> m ()
+buildSchemaCacheStrict :: (QErrM m, CacheRWM m) => MetadataModifier -> m ()
 buildSchemaCacheStrict metadataModifier = do
   buildSchemaCache metadataModifier
   sc <- askSchemaCache

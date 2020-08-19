@@ -263,8 +263,9 @@ runCreateEventTriggerQuery q = do
   -- subTableP2 qt replace etc
   let triggerName = etcName etc
       metadataObj = MOTableObj qt $ MTOTrigger triggerName
-  buildSchemaCacheFor metadataObj $
-    metaTables.ix qt.tmEventTriggers %~ HM.insert triggerName etc
+  buildSchemaCacheFor metadataObj
+    $ MetadataModifier
+    $ metaTables.ix qt.tmEventTriggers %~ HM.insert triggerName etc
   return successMsg
 
 runDeleteEventTriggerQuery
@@ -272,9 +273,16 @@ runDeleteEventTriggerQuery
   => DeleteEventTriggerQuery -> m EncJSON
 runDeleteEventTriggerQuery (DeleteEventTriggerQuery name) = do
   -- liftTx $ delEventTriggerFromCatalog name
-  let table = undefined
-  withNewInconsistentObjsCheck $ buildSchemaCache $
-    metaTables.ix table %~ dropEventTriggerInMetadata name
+  tables <- scTables <$> askSchemaCache
+  let maybeTable = HM.lookup name $ HM.unions $
+                   flip map (HM.toList tables) $ \(table, tableInfo) ->
+                   HM.map (const table) $ _tiEventTriggerInfoMap tableInfo
+  table <- onNothing maybeTable $ throw400 NotExists $
+           "event trigger with name " <> name <<> " not exists"
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ MetadataModifier
+    $ metaTables.ix table %~ dropEventTriggerInMetadata name
   pure successMsg
 
 dropEventTriggerInMetadata :: TriggerName -> TableMetadata -> TableMetadata

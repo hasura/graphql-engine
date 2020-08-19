@@ -50,8 +50,9 @@ runCreateCronTrigger CreateCronTrigger {..} = do
             metadata = CronTriggerMetadata cctName cctWebhook cctCronSchedule
                        cctPayload cctRetryConf cctHeaders cctIncludeInMetadata
                        cctComment
-        buildSchemaCacheFor metadataObj $
-          metaCronTriggers %~ Map.insert cctName metadata
+        buildSchemaCacheFor metadataObj
+          $ MetadataModifier
+          $ metaCronTriggers %~ Map.insert cctName metadata
         return successMsg
 
 addCronTriggerToCatalog :: (MonadTx m) => CronTriggerMetadata ->  m ()
@@ -93,8 +94,9 @@ updateCronTrigger cronTriggerMetadata = do
   let triggerName = ctName cronTriggerMetadata
   checkExists triggerName
   -- updateCronTriggerInCatalog cronTriggerMetadata
-  buildSchemaCacheFor (MOCronTrigger triggerName) $
-    metaCronTriggers %~ Map.insert triggerName cronTriggerMetadata
+  buildSchemaCacheFor (MOCronTrigger triggerName)
+    $ MetadataModifier
+    $ metaCronTriggers %~ Map.insert triggerName cronTriggerMetadata
   return successMsg
 
 updateCronTriggerInCatalog :: (MonadTx m) => CronTriggerMetadata -> m ()
@@ -127,12 +129,14 @@ runDeleteCronTrigger :: (CacheRWM m, MonadTx m) => ScheduledTriggerName -> m Enc
 runDeleteCronTrigger (ScheduledTriggerName stName) = do
   checkExists stName
   -- deleteCronTriggerFromCatalog stName
-  withNewInconsistentObjsCheck $ buildSchemaCache $ dropCronTriggerInMetadata stName
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ dropCronTriggerInMetadata stName
   return successMsg
 
-dropCronTriggerInMetadata :: TriggerName -> Metadata -> Metadata
+dropCronTriggerInMetadata :: TriggerName -> MetadataModifier
 dropCronTriggerInMetadata name =
-  metaCronTriggers %~ Map.delete name
+  MetadataModifier $ metaCronTriggers %~ Map.delete name
 
 -- deleteCronTriggerFromCatalog :: (MonadTx m) => TriggerName -> m ()
 -- deleteCronTriggerFromCatalog triggerName = liftTx $ do

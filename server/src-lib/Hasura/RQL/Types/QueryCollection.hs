@@ -6,6 +6,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types.Common          (NonEmptyText)
 import           Hasura.SQL.Types
 
+import           Control.Lens                     (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -66,6 +67,7 @@ newtype CollectionDef
   { _cdQueries :: QueryList }
   deriving (Show, Eq, Lift, Generic, NFData, Cacheable)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CollectionDef)
+$(makeLenses ''CollectionDef)
 
 data CreateCollection
   = CreateCollection
@@ -74,6 +76,7 @@ data CreateCollection
   , _ccComment    :: !(Maybe T.Text)
   } deriving (Show, Eq, Lift, Generic)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CreateCollection)
+$(makeLenses ''CreateCollection)
 
 data DropCollection
   = DropCollection

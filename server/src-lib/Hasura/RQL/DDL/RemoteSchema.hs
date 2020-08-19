@@ -52,7 +52,7 @@ runAddRemoteSchema env q = do
   -- FIXME: Is this necessary?
   void $ addRemoteSchemaP2Setup env q
   buildSchemaCacheFor (MORemoteSchema name) $
-    metaRemoteSchemas %~ Map.insert name q
+    MetadataModifier $ metaRemoteSchemas %~ Map.insert name q
   pure successMsg
   where
     name = _arsqName q
@@ -123,7 +123,7 @@ runReloadRemoteSchema (RemoteSchemaNameQuery name) = do
 
   let invalidations = mempty { ciRemoteSchemas = S.singleton name }
   withNewInconsistentObjsCheck $
-    buildSchemaCacheWithOptions CatalogUpdate invalidations id
+    buildSchemaCacheWithOptions CatalogUpdate invalidations noMetadataModify
   pure successMsg
 
 addRemoteSchemaToCatalog
@@ -143,9 +143,9 @@ addRemoteSchemaToCatalog (AddRemoteSchemaQuery name def comment) =
 --       WHERE name = $1
 --   |] (Identity name) True
 
-dropRemoteSchemaInMetadata :: RemoteSchemaName -> Metadata -> Metadata
+dropRemoteSchemaInMetadata :: RemoteSchemaName -> MetadataModifier
 dropRemoteSchemaInMetadata name =
-  metaRemoteSchemas %~ Map.delete name
+  MetadataModifier $ metaRemoteSchemas %~ Map.delete name
 
 fetchRemoteSchemas :: Q.TxE QErr [AddRemoteSchemaQuery]
 fetchRemoteSchemas =

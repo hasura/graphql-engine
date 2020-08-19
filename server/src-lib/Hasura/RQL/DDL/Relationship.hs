@@ -46,8 +46,9 @@ runCreateRelationship relType (WithTable tableName relDef) = do
       value <- decodeValue $ toJSON $ _rdUsing relDef
       pure $ tmArrayRelationships %~ HM.insert relName (RelDef relName value comment)
 
-  buildSchemaCacheFor metadataObj $
-    metaTables.ix tableName %~ addRelationshipToMetadata
+  buildSchemaCacheFor metadataObj
+    $ MetadataModifier
+    $ metaTables.ix tableName %~ addRelationshipToMetadata
   pure successMsg
 
 insertRelationshipToCatalog
@@ -72,7 +73,8 @@ runDropRel (DropRel qt rn cascade) = do
   (relType, depObjs) <- collectDependencies
   withNewInconsistentObjsCheck do
     metadataModifiers <- traverse purgeRelDep depObjs
-    buildSchemaCache $ metaTables.ix qt %~
+    buildSchemaCache $ MetadataModifier $
+      metaTables.ix qt %~
       dropRelationshipInMetadata rn relType . foldr (.) id metadataModifiers
   pure successMsg
   where
@@ -159,8 +161,8 @@ purgeRelDep
   :: (QErrM m)
   => SchemaObjId -> m (TableMetadata -> TableMetadata)
 purgeRelDep = \case
-  SOTableObj tn (TOPerm rn pt) -> pure $ dropPermissionInMetadata rn pt
-  d                            ->
+  SOTableObj _ (TOPerm rn pt) -> pure $ dropPermissionInMetadata rn pt
+  d                           ->
     throw500 $ "unexpected dependency of relationship : "
     <> reportSchemaObj d
 

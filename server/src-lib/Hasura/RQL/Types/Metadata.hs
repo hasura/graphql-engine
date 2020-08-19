@@ -632,6 +632,9 @@ metadataToOrdJSON ( Metadata
 newtype MetadataModifier =
   MetadataModifier {unMetadataModifier :: Metadata -> Metadata}
 
+noMetadataModify :: MetadataModifier
+noMetadataModify = MetadataModifier id
+
 instance Semigroup MetadataModifier where
   (MetadataModifier u1) <> (MetadataModifier u2)  = MetadataModifier $ u2 . u1
 

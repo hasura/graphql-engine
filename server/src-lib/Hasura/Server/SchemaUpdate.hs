@@ -219,7 +219,7 @@ refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef invalidations thre
   -- Reload schema cache from catalog
   resE <- liftIO $ runExceptT $ withSCUpdate cacheRef logger do
     rebuildableCache <- fst <$> liftIO (readIORef $ _scrCache cacheRef)
-    ((), cache, _) <- buildSchemaCacheWithOptions CatalogSync invalidations id
+    ((), cache, _) <- buildSchemaCacheWithOptions CatalogSync invalidations noMetadataModify
       & runCacheRWT rebuildableCache
       & peelRun runCtx pgCtx PG.ReadWrite Nothing
     pure ((), cache)

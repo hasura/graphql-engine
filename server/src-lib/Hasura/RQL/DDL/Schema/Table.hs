@@ -107,9 +107,10 @@ trackExistingTableOrViewP2 tableName isEnum config = do
   GS.checkConflictingNode typeMap $ GS.qualObjectToName tableName
   -- saveTableToCatalog tableName isEnum config
   let metadata = mkTableMeta tableName isEnum config
-  buildSchemaCacheFor (MOTable tableName) $
-    metaTables %~ M.insert tableName metadata
-  return successMsg
+  buildSchemaCacheFor (MOTable tableName)
+    $ MetadataModifier
+    $ metaTables %~ M.insert tableName metadata
+  pure successMsg
 
 runTrackTableQ
   :: (MonadTx m, CacheRWM m, HasSystemDefined m) => TrackTable -> m EncJSON
@@ -134,8 +135,9 @@ runSetExistingTableIsEnumQ :: (MonadTx m, CacheRWM m) => SetTableIsEnum -> m Enc
 runSetExistingTableIsEnumQ (SetTableIsEnum tableName isEnum) = do
   void $ askTabInfo tableName -- assert that table is tracked
   -- updateTableIsEnumInCatalog tableName isEnum
-  buildSchemaCacheFor (MOTable tableName) $
-    metaTables.ix tableName.tmIsEnum .~ isEnum
+  buildSchemaCacheFor (MOTable tableName)
+    $ MetadataModifier
+    $ metaTables.ix tableName.tmIsEnum .~ isEnum
   return successMsg
 
 data SetTableCustomFields
@@ -159,8 +161,9 @@ runSetTableCustomFieldsQV2 (SetTableCustomFields tableName rootFields columnName
   void $ askTabInfo tableName -- assert that table is tracked
   let tableConfig = TableConfig rootFields columnNames
   -- updateTableConfig tableName (TableConfig rootFields columnNames)
-  buildSchemaCacheFor (MOTable tableName) $
-    metaTables.ix tableName.tmConfiguration .~ tableConfig
+  buildSchemaCacheFor (MOTable tableName)
+    $ MetadataModifier
+    $ metaTables.ix tableName.tmConfiguration .~ tableConfig
   return successMsg
 
 unTrackExistingTableOrViewP1
@@ -189,17 +192,17 @@ unTrackExistingTableOrViewP2 (UntrackTable qtn cascade) = withNewInconsistentObj
   -- Purge all the dependents from state
   metadataModifier <- execWriterT do
     mapM_ (purgeDependentObject >=> tell) indirectDeps
-    tell $ MetadataModifier $ dropTableInMetadata qtn
+    tell $ dropTableInMetadata qtn
   -- delete the table and its direct dependencies
-  buildSchemaCache $ unMetadataModifier metadataModifier
+  buildSchemaCache metadataModifier
   pure successMsg
   where
     isDirectDep = \case
       (SOTableObj dtn _) -> qtn == dtn
       _                  -> False
 
-dropTableInMetadata :: QualifiedTable -> Metadata -> Metadata
-dropTableInMetadata table =
+dropTableInMetadata :: QualifiedTable -> MetadataModifier
+dropTableInMetadata table = MetadataModifier $
   metaTables %~ M.delete table
 
 runUntrackTableQ

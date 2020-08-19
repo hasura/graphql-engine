@@ -34,5 +34,5 @@ runRenameRel (RenameRel qt rn newRN) = do
   tabInfo <- askTableCoreInfo qt
   ri <- askRelType (_tciFieldInfoMap tabInfo) rn ""
   withNewInconsistentObjsCheck $
-    renameRelP2 qt newRN ri >>= buildSchemaCache . unMetadataModifier
+    renameRelP2 qt newRN ri >>= buildSchemaCache
   pure successMsg

@@ -176,8 +176,8 @@ updateMetadata metadata =
 
 purgeDependentObject
   :: (MonadError QErr m) => SchemaObjId -> m MetadataModifier
-purgeDependentObject = fmap MetadataModifier . \case
-  SOTableObj tn tableObj -> pure $
+purgeDependentObject = \case
+  SOTableObj tn tableObj -> pure $ MetadataModifier $
     metaTables.ix tn %~ case tableObj of
       TOPerm rn pt        -> dropPermissionInMetadata rn pt
       TORel rn rt         -> dropRelationshipInMetadata rn rt

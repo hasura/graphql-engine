@@ -357,7 +357,7 @@ recreateSystemMetadata = do
     for_ tableRels \case
       Left relDef -> insertRelationshipToCatalog tableName ObjRel relDef
       Right relDef -> insertRelationshipToCatalog tableName ArrRel relDef
-  buildSchemaCacheStrict id
+  buildSchemaCacheStrict noMetadataModify
   where
     systemMetadata :: [(QualifiedTable, [Either ObjRelDef ArrRelDef])]
     systemMetadata =

@@ -139,9 +139,8 @@ instance (MonadIO m, MonadTx m) => CacheRWM (CacheRWT m) where
   buildSchemaCacheWithOptions buildReason invalidations metadataModifier = CacheRWT do
     (RebuildableSchemaCache _ invalidationKeys rule, oldInvalidations) <- get
     let newInvalidationKeys = invalidateKeys invalidations invalidationKeys
-    -- catalogMetadata <- liftTx fetchCatalogData
     metadata <- liftTx fetchMetadata
-    let modifiedMetadata = metadataModifier metadata
+    let modifiedMetadata = (unMetadataModifier metadataModifier) metadata
     catalogMetadata <- buildCatalogMetadata modifiedMetadata
     result <- lift $ flip runReaderT buildReason $
       Inc.build rule (catalogMetadata, newInvalidationKeys)
@@ -149,7 +148,7 @@ instance (MonadIO m, MonadTx m) => CacheRWM (CacheRWT m) where
         prunedInvalidationKeys = pruneInvalidationKeys schemaCache newInvalidationKeys
         !newCache = RebuildableSchemaCache schemaCache prunedInvalidationKeys (Inc.rebuildRule result)
         !newInvalidations = oldInvalidations <> invalidations
-    updateMetadata modifiedMetadata
+    when (metadata /= modifiedMetadata) $ updateMetadata modifiedMetadata
     put (newCache, newInvalidations)
     where
       -- Prunes invalidation keys that no longer exist in the schema to avoid leaking memory by
@@ -527,7 +526,7 @@ withMetadataCheck cascade action = do
             _             -> Nothing
 
     forM_ (droppedFuncs \\ purgedFuncs) $ \qf -> do
-      tell $ MetadataModifier $ dropFunctionInMetadata qf
+      tell $ dropFunctionInMetadata qf
 
     -- Process altered functions
     forM_ alteredFuncs $ \(qf, newTy) -> do
@@ -538,7 +537,7 @@ withMetadataCheck cascade action = do
     -- update the schema cache and hdb_catalog with the changes
     processSchemaChanges schemaDiff
 
-  buildSchemaCache $ unMetadataModifier metadataUpdater
+  buildSchemaCache metadataUpdater
   postSc <- askSchemaCache
 
   -- Recreate event triggers in hdb_views

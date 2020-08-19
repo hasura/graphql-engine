@@ -199,7 +199,7 @@ trackFunctionP2 :: (MonadTx m, CacheRWM m, HasSystemDefined m)
                 => QualifiedFunction -> FunctionConfig -> m EncJSON
 trackFunctionP2 qf config = do
   -- saveFunctionToCatalog qf config
-  buildSchemaCacheFor (MOFunction qf) $
+  buildSchemaCacheFor (MOFunction qf) $ MetadataModifier $
     metaFunctions._FMVersion2 %~ M.insert qf (TrackFunctionV2 qf config)
   return successMsg
 
@@ -255,7 +255,7 @@ runUntrackFunc (UnTrackFunction qf) = do
     -- Delete function from metadata
   return successMsg
 
-dropFunctionInMetadata :: QualifiedFunction -> Metadata -> Metadata
-dropFunctionInMetadata function =
+dropFunctionInMetadata :: QualifiedFunction -> MetadataModifier
+dropFunctionInMetadata function = MetadataModifier $
   (metaFunctions._FMVersion1 %~ HS.delete function)
   . (metaFunctions._FMVersion2 %~ M.delete function)

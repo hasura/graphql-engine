@@ -57,7 +57,7 @@ runClearMetadata
   => ClearMetadata -> m EncJSON
 runClearMetadata _ = do
   -- clearUserMetadata
-  buildSchemaCacheStrict $ const emptyMetadata
+  buildSchemaCacheStrict $ MetadataModifier $ const emptyMetadata
   pure successMsg
 
 -- applyQP1
@@ -227,7 +227,7 @@ runReplaceMetadata
   => Metadata -> m EncJSON
 runReplaceMetadata q = do
   -- FIXME:- report duplicate declarations?
-  buildSchemaCacheStrict $ const q
+  buildSchemaCacheStrict $ MetadataModifier $ const q
   pure successMsg
   -- applyQP1 q
   -- applyQP2 q
@@ -486,7 +486,7 @@ runReloadMetadata (ReloadMetadata reloadRemoteSchemas) = do
   sc <- askSchemaCache
   let remoteSchemaInvalidations =
         if reloadRemoteSchemas then HS.fromList (getAllRemoteSchemas sc) else mempty
-  flip (buildSchemaCacheWithOptions CatalogUpdate) id
+  flip (buildSchemaCacheWithOptions CatalogUpdate) noMetadataModify
     CacheInvalidations
     { ciMetadata = True
     , ciRemoteSchemas = remoteSchemaInvalidations
@@ -521,18 +521,19 @@ runDropInconsistentMetadata _ = do
   -- perfect — a completely accurate solution would require performing a topological sort — but it
   -- seems to work well enough for now.
   metadataModifier <- execWriterT $ mapM_ (tell . purgeMetadataObj) (reverse inconsSchObjs)
-  buildSchemaCacheStrict $ unMetadataModifier metadataModifier
+  buildSchemaCacheStrict metadataModifier
   return successMsg
 
 purgeMetadataObj :: MetadataObjId -> MetadataModifier
-purgeMetadataObj = MetadataModifier . \case
+purgeMetadataObj = \case
   MOTable qt                                 -> dropTableInMetadata qt
-  MOTableObj qt tableObj -> metaTables.ix qt %~ case tableObj of
-    MTORel rn rt             -> dropRelationshipInMetadata rn rt
-    MTOPerm rn pt            -> dropPermissionInMetadata rn pt
-    MTOTrigger trn           -> dropEventTriggerInMetadata trn
-    MTOComputedField ccn     -> dropComputedFieldInMetadata ccn
-    MTORemoteRelationship rn -> dropRemoteRelationshipInMetadata rn
+  MOTableObj qt tableObj -> MetadataModifier $
+    metaTables.ix qt %~ case tableObj of
+      MTORel rn rt             -> dropRelationshipInMetadata rn rt
+      MTOPerm rn pt            -> dropPermissionInMetadata rn pt
+      MTOTrigger trn           -> dropEventTriggerInMetadata trn
+      MTOComputedField ccn     -> dropComputedFieldInMetadata ccn
+      MTORemoteRelationship rn -> dropRemoteRelationshipInMetadata rn
   MOFunction qf                              -> dropFunctionInMetadata qf
   MORemoteSchema rsn                         -> dropRemoteSchemaInMetadata rsn
   MOCustomTypes                              -> clearCustomTypesInMetadata

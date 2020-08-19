@@ -15,7 +15,6 @@ import qualified Data.Text.Extended         as T
 import qualified Hasura.SQL.DML             as S
 
 import           Hasura.EncJSON
-import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
@@ -239,8 +238,9 @@ runCreatePerm (WithTable tn pd) = do
   let pt = permAccToType $ getPermAcc1 pd
       role = _pdRole pd
       metadataObject = MOTableObj tn $ MTOPerm role pt
-  buildSchemaCacheFor metadataObject $
-    metaTables.ix tn %~ addPermToMetadata pd
+  buildSchemaCacheFor metadataObject
+    $ MetadataModifier
+    $ metaTables.ix tn %~ addPermToMetadata pd
   pure successMsg
 
 dropPermP1
@@ -264,8 +264,10 @@ runDropPerm defn@(DropPerm tn rn) = do
   dropPermP1 defn
   -- dropPermP2 defn
   let permType = permAccToType $ getPermAcc2 defn
-  withNewInconsistentObjsCheck $ buildSchemaCache $
-    metaTables.ix tn %~ dropPermissionInMetadata rn permType
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ MetadataModifier
+    $ metaTables.ix tn %~ dropPermissionInMetadata rn permType
   return successMsg
 
 dropPermissionInMetadata

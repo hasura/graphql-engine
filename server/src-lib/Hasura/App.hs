@@ -57,7 +57,7 @@ import           Hasura.RQL.Types                          (CacheRWM, Code (..),
                                                             QErr (..), SQLGenCtx (..),
                                                             SchemaCache (..), UserInfoM,
                                                             buildSchemaCacheStrict, decodeValue,
-                                                            throw400, withPathK)
+                                                            noMetadataModify, throw400, withPathK)
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.API.Query                   (fetchLastUpdate, requiresAdmin,
                                                             runQueryM)
@@ -606,7 +606,7 @@ execQuery env queryBs = do
   query <- case A.decode queryBs of
     Just jVal -> decodeValue jVal
     Nothing   -> throw400 InvalidJSON "invalid json"
-  buildSchemaCacheStrict id
+  buildSchemaCacheStrict noMetadataModify
   encJToLBS <$> runQueryM env query
 
 instance Tracing.HasReporter AppM

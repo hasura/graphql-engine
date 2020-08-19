@@ -298,12 +298,12 @@ runSetCustomTypes
 runSetCustomTypes customTypes = do
   -- persistCustomTypes customTypes
   buildSchemaCacheFor MOCustomTypes $
-    metaCustomTypes .~ customTypes
+    MetadataModifier $ metaCustomTypes .~ customTypes
   return successMsg
 
-clearCustomTypesInMetadata :: Metadata -> Metadata
+clearCustomTypesInMetadata :: MetadataModifier
 clearCustomTypesInMetadata =
-  metaCustomTypes .~ emptyCustomTypes
+  MetadataModifier $ metaCustomTypes .~ emptyCustomTypes
 
 -- persistCustomTypes :: MonadTx m => CustomTypes -> m ()
 -- persistCustomTypes customTypes = liftTx do
