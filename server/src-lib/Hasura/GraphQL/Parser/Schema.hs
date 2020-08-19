@@ -440,8 +440,8 @@ instance Eq InputObjectInfo where
 
 data ObjectInfo = ObjectInfo
   { oiFields :: ~[Definition FieldInfo]
-    -- ^ The fields that this object adds on top of the fields of the interfaces
-    -- that it implements.
+    -- ^ The fields that this object has.  This consists of the fields of the
+    -- interfaces that it implements, as well as any additional fields.
   , oiImplements :: ~[Definition InterfaceInfo]
     -- ^ The interfaces that this object implements (inheriting all their
     -- fields). See Note [The interfaces story] for more details.

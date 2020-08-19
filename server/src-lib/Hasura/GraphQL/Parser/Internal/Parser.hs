@@ -687,6 +687,11 @@ selectionSetObject
   => Name
   -> Maybe Description
   -> [FieldParser m a]
+  -- ^ Fields of this object, including any fields that are required from the
+  -- interfaces that it implements.  Note that we can't derive those fields from
+  -- the list of interfaces (next argument), because the types of the fields of
+  -- the object are only required to be *subtypes* of the types of the fields of
+  -- the interfaces it implements.
   -> [Parser 'Output m b]
   -- ^ Interfaces implemented by this object;
   -- see Note [The interfaces story] in Hasura.GraphQL.Parser.Schema.
