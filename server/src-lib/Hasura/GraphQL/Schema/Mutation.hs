@@ -265,7 +265,8 @@ conflictConstraint constraints table = memoizeOn 'conflictConstraint table $ do
 -- update
 
 -- | Construct a root field, normally called update_tablename, that can be used
--- to update rows in a DB table specified by filters
+-- to update rows in a DB table specified by filters. Only returns a parser if
+-- there are columns the user is allowed to update; otherwise returns Nothing.
 updateTable
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
@@ -286,7 +287,9 @@ updateTable table fieldName description updatePerms selectPerms = runMaybeT $ do
     <&> mkUpdateObject table columns updatePerms . fmap RQL.MOutMultirowFields
 
 -- | Construct a root field, normally called update_tablename, that can be used
--- to update a single in a DB table, specified by primary key
+-- to update a single in a DB table, specified by primary key. Only returns a
+-- parser if there are columns the user is allowed to update and if the user has
+-- select permissions on all primary keys; otherwise returns Nothing.
 updateTableByPk
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
