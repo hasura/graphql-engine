@@ -225,6 +225,8 @@ func printDiff(before, after string, to io.Writer, logger *logrus.Logger) {
 	}
 
 	if isThereADiff {
+		logger.Info("displaying diff...")
+		fmt.Fprintf(to, "\n")
 		for _, diff := range diffs {
 			text := diff.Payload
 
@@ -238,7 +240,7 @@ func printDiff(before, after string, to io.Writer, logger *logrus.Logger) {
 		return
 	}
 
-	logger.Infoln("no diff")
+	logger.Info("no diff")
 }
 
 func checkDir(path string) error {
