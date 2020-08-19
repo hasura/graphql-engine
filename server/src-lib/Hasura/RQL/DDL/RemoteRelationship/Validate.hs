@@ -65,7 +65,7 @@ validateErrorToText (toList -> errs) =
       TableFieldNonexistent table fieldName ->
         "field with name " <> fieldName <<> " not found in table " <>> table
       ExpectedTypeButGot expTy actualTy ->
-        "expected type " <> getBaseTy expTy <<> " but got " <>> getBaseTy actualTy
+        "expected type " <> G.showGT expTy <<> " but got " <>> G.showGT actualTy
       InvalidType ty err ->
         "type " <> getBaseTy ty <<> err
       InvalidVariable var _ ->
