@@ -643,6 +643,54 @@ class HeaderTestGraphQL(RequestHandler):
                                          context=request.headers)
         return mkJSONResp(res)
 
+
+class Message(graphene.ObjectType):
+    id = graphene.Int()
+    msg = graphene.String()
+    def __init__(self, id, msg):
+        self.id = id
+        self.msg = msg
+
+    def resolve_id(self, info):
+        return self.id
+
+    def resolve_msg(self, info):
+        return self.msg
+
+    @staticmethod
+    def get_by_id(_id):
+        xs = list(filter(lambda u: u.id == _id, all_messages))
+        if not xs:
+            return None
+        return xs[0]
+
+all_messages = [
+    Message(1, 'You win!'),
+    Message(2, 'You lose!')
+]
+
+class MessagesQuery(graphene.ObjectType):
+    message = graphene.Field(Message, id=graphene.Int(required=True))
+    messages = graphene.List(Message)
+
+    def resolve_message(self, info, id):
+        return Message.get_by_id(id)
+
+    def resolve_messages(self, info):
+        return all_messages
+
+messages_schema = graphene.Schema(query=MessagesQuery)
+
+class MessagesGraphQL(RequestHandler):
+    def get(self, request):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+
+    def post(self, request):
+        if not request.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = messages_schema.execute(request.json['query'])
+        return mkJSONResp(res)
+
 handlers = MkHandlers({
     '/hello': HelloWorldHandler,
     '/hello-graphql': HelloGraphQL,
@@ -664,7 +712,8 @@ handlers = MkHandlers({
     '/default-value-echo-graphql' : EchoGraphQL,
     '/person-graphql': PersonGraphQL,
     '/header-graphql': HeaderTestGraphQL,
-    '/auth-graphql': SampleAuthGraphQL,
+    '/messages-graphql' : MessagesGraphQL,
+    '/auth-graphql': SampleAuthGraphQL
 })
 
 

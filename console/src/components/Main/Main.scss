@@ -10,10 +10,6 @@
   position: relative;
 }
 
-.flexRow {
-  // display: flex;
-}
-
 .phantom {
   display: block;
   padding: 14.5px 10px;
@@ -63,6 +59,15 @@
     line-height: 0;
     font-size: 20px;
     padding: 0px 10px;
+  }
+}
+
+.vulnerableVersionBannerWrapper {
+  background-color: #d9534f;
+  color: #eee;
+
+  .updateBanner a {
+    color: #eee;
   }
 }
 
@@ -493,7 +498,6 @@
         text-align: center;
         width: 20%;
         display: inline-block;
-        float: right;
 
         i {
           font-size: 14px;
@@ -553,7 +557,7 @@
       // color: $navbar-inverse-link-hover-color;
       // background: #444;
       transition: color 0.5s;
-      pointer: cursor;
+      cursor: pointer;
     }
   }
 }
@@ -692,7 +696,6 @@
 
 .logoHeading {
   display: inline-block;
-  float: left;
   padding-top: 15px;
   padding-left: 15px;
   font-size: 18px;
@@ -738,10 +741,6 @@
     float: right;
     padding-bottom: 10px;
   }
-}
-
-.exploreDisabled {
-  // opacity: 0.2;
 }
 
 .exploreSidebar {
@@ -803,10 +802,6 @@
       text-align: center;
       padding: 7px 0;
     }
-  }
-
-  .exploreTaskDisabled {
-    // opacity: 0.1;
   }
 
   .progressBtn {
@@ -899,23 +894,21 @@
   border-bottom: 1px solid #788095;
 }
 
-.supportSection {
-  cursor: pointer;
-
-  .helpSection {
-    &:hover {
-      opacity: 0.7;
-      font-weight: 600;
-    }
-  }
-}
-
-.helpSection {
+.headerRightNavbarBtn {
   display: flex;
   align-items: center;
   // background-color: #22283b;
   padding: 15px;
   position: relative;
+  color: #fff;
+  cursor: pointer;
+
+  &:hover {
+    span {
+      opacity: 0.7;
+      font-weight: 600;
+    }
+  }
 
   .selected {
     bottom: 0;
@@ -925,14 +918,6 @@
     height: 4px;
     width: 100%;
     left: 0px;
-  }
-}
-
-.settingsIcon {
-  // background: #5668a4;
-
-  a {
-    text-decoration: none;
   }
 }
 
@@ -1071,10 +1056,6 @@
   }
 }
 
-.help_dropdown_menu_heart_dismissed {
-  right: 0;
-}
-
 .dropdown_menu {
   top: 43px;
   right: 0px;
@@ -1208,6 +1189,7 @@
 .proWrapper {
   position: relative;
   padding: 12px 15px;
+  cursor: pointer;
   .proName,
   .proNameClicked {
     font-size: 15px;
@@ -1227,6 +1209,13 @@
   .proNameClicked {
     color: #fff;
   }
+  .navActive {
+    color: #f8c53c;
+    opacity: 1 !important;
+    &:hover {
+      opacity: 1 !important;
+    }
+  }
   .proPopUpWrapper {
     position: absolute;
     box-shadow: 0 3px 20px 0 rgba(0, 0, 0, 0.24);
@@ -1239,6 +1228,7 @@
     text-transform: none;
     overflow: auto;
     max-height: calc(100vh - 80px);
+    cursor: initial;
     .popUpHeader {
       font-size: 20px;
       font-weight: bold;
@@ -1247,7 +1237,7 @@
       padding: 20px 24px;
       border-bottom: 1px solid #ddd;
       span {
-        color: #1cd3c6;
+        color: #1eb4d4;
       }
       .popUpClose {
         position: absolute;
@@ -1291,11 +1281,16 @@
       }
     }
     .popUpFooter {
-      border-top: 1px solid #ddd;
+      // border-top: 1px solid #ddd;
       padding: 20px 24px;
+      padding-top: 0;
       color: #ff3264;
       font-weight: normal;
       font-size: 15px;
+      text-align: center;
+      .largeButton {
+        padding: 10px 55px;
+      }
       a {
         color: #ff3264;
         &:hover {
@@ -1314,8 +1309,7 @@
   }
 }
 
-@media(max-width: 1500px) {
-
+@media (max-width: 1500px) {
   .header_items {
     width: 52%;
   }
@@ -1339,13 +1333,14 @@
     }
   }
 
-  .helpSection {
+  .headerRightNavbarBtn {
     font-size: 12px;
   }
 
-  .proWrapper{
-    .proName, .proNameClicked {
-      font-size: 12px
+  .proWrapper {
+    .proName,
+    .proNameClicked {
+      font-size: 12px;
     }
   }
 
@@ -1354,5 +1349,4 @@
       font-size: 12px;
     }
   }
-
 }

@@ -14,6 +14,7 @@ import { makeRequest } from '../Actions';
 import { appPrefix } from '../constants';
 
 import globals from '../../../../Globals';
+import { clearIntrospectionSchemaCache } from '../graphqlUtils';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -291,6 +292,7 @@ const deleteRemoteSchema = () => {
         dispatch(push(prefixUrl)),
         dispatch(fetchRemoteSchemas()),
       ]);
+      clearIntrospectionSchemaCache();
     };
     const customOnError = error => {
       Promise.all([dispatch({ type: DELETE_REMOTE_SCHEMA_FAIL, data: error })]);
@@ -422,6 +424,7 @@ const modifyRemoteSchema = () => {
         dispatch(push(`${prefixUrl}/manage/${remoteSchemaName}/details`));
       });
       dispatch(fetchRemoteSchema(remoteSchemaName));
+      clearIntrospectionSchemaCache();
     };
     const customOnError = error => {
       Promise.all([dispatch({ type: MODIFY_REMOTE_SCHEMA_FAIL, data: error })]);

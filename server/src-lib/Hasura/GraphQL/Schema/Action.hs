@@ -3,10 +3,7 @@ module Hasura.GraphQL.Schema.Action
   ) where
 
 import qualified Data.HashMap.Strict           as Map
-import qualified Data.HashSet                  as Set
 import qualified Language.GraphQL.Draft.Syntax as G
-
-import           Data.Coerce                   (coerce)
 
 import           Hasura.GraphQL.Schema.Builder
 import           Hasura.GraphQL.Schema.Common  (mkDescriptionWith)
@@ -232,7 +229,7 @@ mkFieldMap annotatedOutputType actionInfo fieldReferences roleName =
                         (RelName $ mkNonEmptyTextUnsafe $ coerce relationshipName)
                         (_trType relationship)
                         columnMapping remoteTable True)
-                       False mempty
+                       RFKSimple mempty
                        tableFilter
                        tableLimit
                      )
@@ -339,43 +336,45 @@ mkActionsSchema =
   (\aggregate actionInfo ->
      case _adType $ _aiDefinition actionInfo of
        ActionQuery ->
-         Map.foldrWithKey (accumulateQuery (_aiPgScalars actionInfo)) aggregate $ mkQueryActionSchemaOne actionInfo
+         Map.foldrWithKey (accumulateQuery (_aiPgScalars actionInfo)) aggregate $
+           mkQueryActionSchemaOne actionInfo
        ActionMutation kind ->
-         Map.foldrWithKey (accumulateMutation (_aiPgScalars actionInfo)) aggregate $ mkMutationActionSchemaOne actionInfo kind
+         Map.foldrWithKey (accumulateMutation (_aiPgScalars actionInfo)) aggregate $
+           mkMutationActionSchemaOne actionInfo kind
   )
   mempty
   where
     -- we'll need to add uuid and timestamptz for actions
-    mkNewRoleState pgScalars =
+    initRoleState =
       ( mempty
-      , foldr addScalarToTyAgg mempty $
-        pgScalars <> Set.fromList [PGJSON, PGTimeStampTZ, PGUUID]
+      , foldr addScalarToTyAgg mempty [PGJSON, PGTimeStampTZ, PGUUID]
       )
 
+    addScalarsToTyAgg = foldr addScalarToTyAgg
+
     accumulateQuery pgScalars roleName (actionField, fields) =
-      Map.alter (Just . addToStateSync . fromMaybe (mkNewRoleState pgScalars)) roleName
+      Map.alter (Just . addToStateSync . fromMaybe initRoleState) roleName
       where
         addToStateSync (rootFields, tyAgg) =
           ( addQueryField (first QCAction actionField) rootFields
-          , addFieldsToTyAgg fields tyAgg
+          -- Add reused PG scalars to TyAgg
+          , addFieldsToTyAgg fields $ addScalarsToTyAgg tyAgg pgScalars
           )
 
     accumulateMutation pgScalars roleName (queryFieldM, actionField, fields) =
-      Map.alter (Just . addToState . fromMaybe (mkNewRoleState pgScalars)) roleName
+      Map.alter (Just . addToState . fromMaybe initRoleState) roleName
       where
-        addToState = case queryFieldM of
-          Just (fldCtx, fldDefinition, responseTypeInfo) ->
-            addToStateAsync (fldCtx, fldDefinition) responseTypeInfo
-          Nothing -> addToStateSync
-        addToStateSync (rootFields, tyAgg) =
-          ( addMutationField (first MCAction actionField) rootFields
-          , addFieldsToTyAgg fields tyAgg
-          )
-        addToStateAsync queryField responseTypeInfo (rootFields, tyAgg) =
-          ( addMutationField (first MCAction actionField) $
-            addQueryField
-            (first QCAsyncActionFetch queryField)
-            rootFields
-          , addTypeInfoToTyAgg responseTypeInfo $
-            addFieldsToTyAgg fields tyAgg
-          )
+        addToState (rootFields, tyAgg) =
+          let rootFieldsWithActionMutation =
+                addMutationField (first MCAction actionField) rootFields
+              -- Add reused PG scalars to TyAgg
+              tyAggWithFieldsAndPgScalars =
+                addFieldsToTyAgg fields $ addScalarsToTyAgg tyAgg pgScalars
+          in case queryFieldM of
+               Just (fldCtx, fldDefinition, responseTypeInfo) ->
+                 -- Add async action's query resolver and response type
+                 ( addQueryField (QCAsyncActionFetch fldCtx, fldDefinition)
+                   rootFieldsWithActionMutation
+                 , addTypeInfoToTyAgg responseTypeInfo tyAggWithFieldsAndPgScalars
+                 )
+               Nothing -> (rootFieldsWithActionMutation, tyAggWithFieldsAndPgScalars)

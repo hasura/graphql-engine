@@ -24,11 +24,11 @@ enrichment from external sources and any other complex business logic.
    :class: no-shadow
    :alt: Actions high level architecture
 
-.. admonition:: Support
+.. admonition:: Supported from
 
    Actions are supported in Hasura GraphQL engine versions ``v.1.2.0`` and above.
 
-   Actions are supported for ``Postgres versions 10 or higher``.
+   Actions are supported for **Postgres versions 10 and above**.
 
 Action description
 ------------------
@@ -163,5 +163,8 @@ Learn more
   Codegen <codegen>
   derive
   action-permissions
-  action-connect
+  reuse-types-actions
   debugging
+
+..
+  action-examples

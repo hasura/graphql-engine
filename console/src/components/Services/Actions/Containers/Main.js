@@ -59,6 +59,7 @@ Container.propTypes = {
 const mapStateToProps = state => {
   return {
     ...state.actions,
+    readOnlyMode: state.main.readOnlyMode,
   };
 };
 

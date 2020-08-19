@@ -1,0 +1,49 @@
+- description: Create a new remote relationship
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: create_remote_relationship
+    args:
+      name: messageBasic
+      table: user
+      hasura_fields:
+        - id
+      remote_schema: actions-remote-join-schema
+      remote_field:
+        message:
+          arguments:
+            id: "$id"
+
+
+- description: Run create_users action
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      mutation {
+        create_user(email: "clarke@gmail.com", name: "Clarke"){
+          id
+          user {
+            name
+            email
+            is_admin
+            messageBasic {
+              name
+              msg
+            }
+          }
+        }
+      }
+  response:
+    data:
+      create_user:
+        id: 1
+        user:
+          name: Clarke
+          email: clarke@gmail.com
+          is_admin: false
+          messageBasic:
+            name: Clarke
+            msg: Welcome to the team, Clarke

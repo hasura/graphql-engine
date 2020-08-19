@@ -313,6 +313,9 @@ annColExp rhsParser colInfoMap (ColExp fieldName colVal) = do
       return $ AVRel relInfo annRelBoolExp
     FIComputedField _ ->
       throw400 UnexpectedPayload "Computed columns can not be part of the where clause"
+    -- TODO Rakesh
+    FIRemoteRelationship{} ->
+      throw400 UnexpectedPayload "remote field unsupported"
 
 toSQLBoolExp
   :: S.Qual -> AnnBoolExpSQL -> S.BoolExp

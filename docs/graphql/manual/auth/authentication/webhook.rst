@@ -37,6 +37,11 @@ Configuring webhook mode
 
 * You can configure Hasura to send either a ``GET`` or a ``POST`` request to your auth webhook. The default configuration is ``GET`` and you can override this with ``POST`` by using the ``--auth-hook-mode`` flag or the ``HASURA_GRAPHQL_AUTH_HOOK_MODE`` environment variable (*in addition to those specified above; see* :ref:`GraphQL engine server options <server_flag_reference>`).
 
+.. note::
+
+  If you are running Hasura using Docker, ensure that the Hasura Docker container can reach the webhook.
+  See :ref:`this page <docker_networking>` for Docker networking.
+
 Spec for the webhook
 --------------------
 
@@ -86,6 +91,8 @@ POST request
    }
 
 If you configure your webhook to use ``POST``, then Hasura **will send all client headers in payload**.
+
+.. _webhook_response:
 
 Response
 ^^^^^^^^
@@ -173,7 +180,7 @@ You can deploy these samples using `glitch <https://glitch.com/>`__:
 Once deployed, you can use any of the following endpoints as your auth webhook in the GraphQL engine:
 
 - ``/simple/webhook``  (`View source <https://github.com/hasura/graphql-engine/blob/master/community/boilerplates/auth-webhooks/nodejs-express/server.js>`__)
-- ``/firebase/webhook`` (`View source <https://github.com/hasura/graphql-engine/blob/master/community/boilerplates/auth-webhooks/nodejs-express/firebase/firebaseHandler.js>`__)
+- ``/firebase/webhook`` (`View source <https://github.com/hasura/graphql-engine/blob/master/community/boilerplates/auth-webhooks/nodejs-firebase/firebase/firebaseHandler.js>`__)
 
 .. note::
 

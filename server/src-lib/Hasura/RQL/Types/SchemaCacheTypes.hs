@@ -6,12 +6,14 @@ import           Data.Aeson.TH
 import           Data.Aeson.Types
 import           Hasura.Prelude
 
-import qualified Data.Text                      as T
+import qualified Data.Text                           as T
 
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
+import           Hasura.RQL.Types.RemoteRelationship
+import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.Session
 import           Hasura.SQL.Types
 
@@ -19,6 +21,7 @@ data TableObjId
   = TOCol !PGCol
   | TORel !RelName
   | TOComputedField !ComputedFieldName
+  | TORemoteRel !RemoteRelationshipName
   | TOForeignKey !ConstraintName
   | TOPerm !RoleName !PermType
   | TOTrigger !TriggerName
@@ -29,7 +32,8 @@ data SchemaObjId
   = SOTable !QualifiedTable
   | SOTableObj !QualifiedTable !TableObjId
   | SOFunction !QualifiedFunction
-  deriving (Eq, Generic)
+  | SORemoteSchema !RemoteSchemaName
+   deriving (Eq, Generic)
 
 instance Hashable SchemaObjId
 
@@ -49,6 +53,10 @@ reportSchemaObj (SOTableObj tn (TOTrigger trn )) =
   "event-trigger " <> qualObjectToText tn <> "." <> triggerNameToTxt trn
 reportSchemaObj (SOTableObj tn (TOComputedField ccn)) =
   "computed field " <> qualObjectToText tn <> "." <> computedFieldNameToText ccn
+reportSchemaObj (SOTableObj tn (TORemoteRel rn)) =
+  "remote relationship " <> qualObjectToText tn <> "." <> remoteRelationshipNameToText rn
+reportSchemaObj (SORemoteSchema remoteSchemaName) =
+  "remote schema " <> unNonEmptyText (unRemoteSchemaName remoteSchemaName)
 
 instance Show SchemaObjId where
   show soi = T.unpack $ reportSchemaObj soi
@@ -73,6 +81,8 @@ data DependencyReason
   | DRSessionVariable
   | DRPayload
   | DRParent
+  | DRRemoteSchema
+  | DRRemoteRelationship
   deriving (Show, Eq, Generic)
 
 instance Hashable DependencyReason
@@ -92,6 +102,8 @@ reasonToTxt = \case
   DRSessionVariable -> "session_variable"
   DRPayload         -> "payload"
   DRParent          -> "parent"
+  DRRemoteSchema    -> "remote_schema"
+  DRRemoteRelationship    -> "remote_relationship"
 
 instance ToJSON DependencyReason where
   toJSON = String . reasonToTxt

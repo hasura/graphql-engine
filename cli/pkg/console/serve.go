@@ -23,9 +23,9 @@ type ServeOpts struct {
 	APIPort         string
 	Address         string
 
-	SignalChanAPIServer    chan os.Signal
+	SignalChanAPIServer     chan os.Signal
 	SignalChanConsoleServer chan os.Signal
-	WG *sync.WaitGroup
+	WG                      *sync.WaitGroup
 }
 
 // Server console and API Server

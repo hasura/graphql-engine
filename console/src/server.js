@@ -11,6 +11,7 @@ global.__DISABLE_SSR__ = true;
 
 // Express middleware
 const app = new Express();
+
 const server = new http.Server(app);
 
 /* Constants */

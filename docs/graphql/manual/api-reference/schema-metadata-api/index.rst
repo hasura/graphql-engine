@@ -256,6 +256,22 @@ The various types of queries are listed in the following table:
      - 1
      - Reload schema of an existing remote schema
 
+   * - :ref:`create_remote_relationship`
+     - :ref:`create_remote_relationship_args <create_remote_relationship_syntax>`
+     - 1
+     - Create a remote relationship with an existing remote schema
+
+   * - :ref:`update_remote_relationship`
+     - :ref:`update_remote_relationship_args <update_remote_relationship_syntax>`
+     - 1
+     - Update an existing remote relationship
+
+   * - :ref:`delete_remote_relationship`
+     - :ref:`delete_remote_relationship_args <delete_remote_relationship_syntax>`
+     - 1
+     - Delete an existing remote relationship
+
+
    * - :ref:`export_metadata`
      - :ref:`Empty Object`
      - 1
@@ -443,6 +459,7 @@ See :ref:`server_flag_reference` for info on setting the above flag/env var.
   Event Triggers <event-triggers>
   Scheduled Triggers <scheduled-triggers>
   Remote Schemas <remote-schemas>
+  Remote Relationships <remote-relationships>
   Query Collections <query-collections>
   Custom Types <custom-types>
   Actions <actions>

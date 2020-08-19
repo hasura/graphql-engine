@@ -156,4 +156,4 @@ setting.
 Privacy Policy
 --------------
 
-You can check out our privacy policy `here <https://hasura.io/legal/hasura-privacy-policy>`_.
+You can check out our privacy policy `here <https://hasura.io/legal/hasura-privacy-policy>`__.

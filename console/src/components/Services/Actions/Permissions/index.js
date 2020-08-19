@@ -5,6 +5,7 @@ const mapStateToProps = state => {
     ...state.actions.permissions,
     allRoles: state.tables.allRoles,
     allActions: state.actions.common.actions,
+    readOnlyMode: state.main.readOnlyMode,
   };
 };
 
