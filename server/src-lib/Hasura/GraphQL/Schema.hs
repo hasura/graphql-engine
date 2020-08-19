@@ -15,6 +15,7 @@ import           Control.Arrow.Extended
 import           Control.Lens.Extended
 import           Control.Monad.Unique
 import           Data.Has
+import           Data.List.Extended                    (duplicates)
 
 import qualified Hasura.GraphQL.Parser                 as P
 
@@ -129,23 +130,23 @@ buildGQLContext =
                            = rscParsed newSchemaContext
                      -- Check for conflicts between remotes
                      bindErrorA -<
-                       checkFieldNamesUnique (fmap (P.getName . fDefinition) (queryNew ++ concat queryOld))
-                       (\name -> throw400 Unexpected $ "Duplicate remote field " <> squote name)
+                       for_ (duplicates (fmap (P.getName . fDefinition) (queryNew ++ concat queryOld))) $
+                       \name -> throw400 Unexpected $ "Duplicate remote field " <> squote name
                      -- Check for conflicts between this remote and the tables
                      bindErrorA -<
-                       checkFieldNamesUnique (fmap (P.getName . fDefinition) queryNew ++ queryFieldNames)
-                       (\name -> throw400 RemoteSchemaConflicts $ "Field cannot be overwritten by remote field " <> squote name)
+                       for_ (duplicates (fmap (P.getName . fDefinition) queryNew ++ queryFieldNames)) $
+                       \name -> throw400 RemoteSchemaConflicts $ "Field cannot be overwritten by remote field " <> squote name
                      -- Ditto, but for mutations
                      case mutationNew of
                        Nothing -> returnA -< ()
                        Just ms -> do
                          bindErrorA -<
-                           checkFieldNamesUnique (fmap (P.getName . fDefinition) (ms ++ concat (catMaybes mutationOld)))
-                           (\name -> throw400 Unexpected $ "Duplicate remote field " <> squote name)
+                           for_ (duplicates (fmap (P.getName . fDefinition) (ms ++ concat (catMaybes mutationOld)))) $
+                           \name -> throw400 Unexpected $ "Duplicate remote field " <> squote name
                          -- Ditto, but for mutations
                          bindErrorA -<
-                           checkFieldNamesUnique (fmap (P.getName . fDefinition) ms ++ mutationFieldNames)
-                           (\name -> throw400 Unexpected $ "Field cannot be overwritten by remote field " <> squote name)
+                           for_ (duplicates (fmap (P.getName . fDefinition) ms ++ mutationFieldNames)) $
+                           \name -> throw400 Unexpected $ "Field cannot be overwritten by remote field " <> squote name
                      -- No need to check subscriptions as these are not supported
                      returnA -< ())
                   |) newMetadataObject
@@ -577,20 +578,3 @@ unauthenticatedSubscription
 unauthenticatedSubscription =
  P.selectionSet $$(G.litName "subscription_root") Nothing []
  <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
-
-checkFieldNamesUnique
-  :: forall m
-   . ( Monad m
-     )
-  => [G.Name]
-  -- ^ list of fields whose names are to be checked for uniqueness
-  -> (G.Name -> m ())
-  -- ^ error action
-  -> m ()
-checkFieldNamesUnique fields err = foldM_ go mempty fields
-  where
-    go :: Set.HashSet G.Name -> G.Name -> m (Set.HashSet G.Name)
-    go previous field = do
-      when (field `Set.member` previous) $
-        err field
-      return $ field `Set.insert` previous
