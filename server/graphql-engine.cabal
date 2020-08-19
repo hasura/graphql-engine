@@ -110,6 +110,8 @@ library
                      , uuid
                      , vector
                      , vector-builder
+                     , binary
+                     , base16-bytestring
 
                      -- Logging related
                      , network
@@ -423,6 +425,7 @@ executable graphql-engine
                    , text
                    , text-conversions
                    , unix
+                   , ekg-core
 
 test-suite graphql-engine-tests
   import: common-all, common-exe
