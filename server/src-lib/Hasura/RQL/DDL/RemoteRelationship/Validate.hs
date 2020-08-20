@@ -363,12 +363,12 @@ validateType permittedVariables value expectedGType types =
         Just fieldInfo ->
           bindValidation
             (columnInfoToNamedType fieldInfo)
-            (\actualNamedType -> assertType (G.toGT actualNamedType) expectedGType)
-    G.VInt {} -> assertType (G.toGT $ mkScalarTy PGInteger) expectedGType
-    G.VFloat {} -> assertType (G.toGT $ mkScalarTy PGFloat) expectedGType
-    G.VBoolean {} -> assertType (G.toGT $ mkScalarTy PGBoolean) expectedGType
+            (\actualNamedType -> isTypeCoercible (G.toGT actualNamedType) expectedGType)
+    G.VInt {} -> isTypeCoercible (G.toGT $ mkScalarTy PGInteger) expectedGType
+    G.VFloat {} -> isTypeCoercible (G.toGT $ mkScalarTy PGFloat) expectedGType
+    G.VBoolean {} -> isTypeCoercible (G.toGT $ mkScalarTy PGBoolean) expectedGType
     G.VNull -> Failure (pure NullNotAllowedHere)
-    G.VString {} -> assertType (G.toGT $ mkScalarTy PGText) expectedGType
+    G.VString {} -> isTypeCoercible (G.toGT $ mkScalarTy PGText) expectedGType
     G.VEnum _ -> Failure (pure UnsupportedEnum)
     G.VList (G.unListValue -> values) -> do
       case values of
@@ -405,8 +405,8 @@ validateType permittedVariables value expectedGType types =
                         (G.toGT $ G.NamedType name)
                         "not an input object type"))
 
-assertType :: G.GType -> G.GType -> Validation (NonEmpty ValidationError) ()
-assertType actualType expectedType =
+isTypeCoercible :: G.GType -> G.GType -> Validation (NonEmpty ValidationError) ()
+isTypeCoercible actualType expectedType =
   -- The GraphQL spec says that, a singleton type can be coerced into  an array
   -- type. Which means that if the 'actualType' is a singleton type, like
   -- 'Int' we should be able to join this with a remote node, which expects an
