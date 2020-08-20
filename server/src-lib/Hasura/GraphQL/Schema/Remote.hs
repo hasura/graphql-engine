@@ -191,7 +191,7 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
   P.memoizeOn 'remoteSchemaObject defn do
   subFieldParsers <- traverse (remoteField' schemaDoc) fields
   objs :: [Parser 'Output n ()] <-
-    traverse (getObject >=> remoteSchemaObject schemaDoc) possibleTypes
+    traverse (getObject schemaDoc name >=> remoteSchemaObject schemaDoc) possibleTypes
   -- In the Draft GraphQL spec (> June 2018), interfaces can themselves
   -- implement superinterfaces.  In the future, we may need to support this
   -- here.
@@ -202,15 +202,6 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
   -- should have a check that expresses that that collection of objects is equal
   -- to 'possibelTypes'.
   pure $ void $ P.selectionSetInterface name description subFieldParsers objs
-  where
-    getObject :: G.Name -> m G.ObjectTypeDefinition
-    getObject objectName =
-      onNothing (lookupObject schemaDoc objectName) $
-        case lookupInterface schemaDoc objectName of
-          Nothing -> throw400 RemoteSchemaError $ "Could not find type " <> squote objectName
-            <> ", which is defined as a member type of Union " <> squote name
-          Just _  -> throw400 RemoteSchemaError $ "Union type " <> squote name <>
-            " can only include object types. It cannot include " <> squote objectName
 
 -- | 'remoteSchemaUnion' returns a output parser for a given 'UnionTypeDefinition'.
 remoteSchemaUnion
@@ -221,20 +212,25 @@ remoteSchemaUnion
   -> m (Parser 'Output n ())
 remoteSchemaUnion schemaDoc defn@(G.UnionTypeDefinition description name _directives objectNames) =
   P.memoizeOn 'remoteSchemaObject defn do
-  objDefs <- traverse getObject objectNames
+  objDefs <- traverse (getObject schemaDoc name) objectNames
   objs :: [Parser 'Output n ()] <- traverse (remoteSchemaObject schemaDoc) objDefs
   when (null objs) $
     throw400 RemoteSchemaError $ "List of member types cannot be empty for union type " <> squote name
   pure $ void $ P.selectionSetUnion name description objs
-  where
-    getObject :: G.Name -> m G.ObjectTypeDefinition
-    getObject objectName =
-      onNothing (lookupObject schemaDoc objectName) $
-        case lookupInterface schemaDoc objectName of
-          Nothing -> throw400 RemoteSchemaError $ "Could not find type " <> squote objectName
-            <> ", which is defined as a member type of Union " <> squote name
-          Just _  -> throw400 RemoteSchemaError $ "Union type " <> squote name <>
-            " can only include object types. It cannot include " <> squote objectName
+
+getObject
+  :: MonadError QErr m
+  => SchemaIntrospection
+  -> G.Name
+  -> G.Name
+  -> m G.ObjectTypeDefinition
+getObject schemaDoc name objectName =
+  onNothing (lookupObject schemaDoc objectName) $
+    case lookupInterface schemaDoc objectName of
+      Nothing -> throw400 RemoteSchemaError $ "Could not find type " <> squote objectName
+        <> ", which is defined as a member type of " <> squote name
+      Just _  -> throw400 RemoteSchemaError $ "Type " <> squote name <>
+        " can only include object types. It cannot include " <> squote objectName
 
 -- | remoteSchemaInputObject returns an input parser for a given 'G.InputObjectTypeDefinition'
 remoteSchemaInputObject
