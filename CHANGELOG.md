@@ -2,10 +2,22 @@
 
 ## Next release
 
+### Breaking changes
+
+This PR contains the [PDV refactor (#4111)](https://github.com/hasura/graphql-engine/pull/4111), a significant rewrite of the internals of the server, which did include some breaking changes:
+
+- The semantics of `where` have changed, according to the discussion in [issue 704](https://github.com/hasura/graphql-engine/issues/704#issuecomment-635571407). Namely: an explicit `null` value in a `where` expression will be treated as an error rather than resulting in the expression being evaluated to `True`. Meaning that `delete_users(where: {id: {_eq: $userId}}) { name }` will yield an error if `$userId` is `null` instead of deleting all users.
+- The validation of required headers has been fixed (closing #14 and #3659):
+  - if a query selects table `bar` through table `foo` via a relationship, the required permissions headers will be the union of the required headers of table `foo` and table `bar`;
+  - if an insert does not have an `on_conflict` clause, it will not require the update permissions headers.
+
+
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: some mutations that cannot be performed will no longer be in the schema (for instance, `delete_by_pk` mutations won't be shown to users that do not have select permissions on all primary keys) (#4111)
+- server: miscellaneous description changes (#4111)
 - docs: add docs page on networking with docker (close #4346) (#4811)
 - cli: add missing global flags for seeds command (#5565)
 
