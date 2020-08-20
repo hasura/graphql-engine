@@ -215,8 +215,8 @@ export const passModifyPkey = () => {
   cy.get(getElementFromAlias('primary-key-select-1')).select('1');
   cy.get(getElementFromAlias('modify-table-pks-save')).click();
   cy.get(getElementFromAlias('pk-config-text')).within(() =>
-    cy.get('b').contains(getColName(0))
-    cy.get('b').contains('id')
+    cy.get('b').contains(getColName(0));
+    cy.get('b').contains('id');
   );
   cy.wait(5000);
 
