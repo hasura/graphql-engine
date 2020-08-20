@@ -83,14 +83,12 @@ remoteField' schemaDoc (G.FieldDefinition description name argsDefinition gType 
     convertType :: G.GType -> m (FieldParser n ())
     convertType gType' = do
         case gType' of
-          G.TypeNamed (Nullability True) fieldTypeName -> do
-            remoteFld <- remoteFieldFromName schemaDoc name description fieldTypeName argsDefinition
-            pure . P.nullableField $ remoteFld
+          G.TypeNamed (Nullability True) fieldTypeName ->
+            P.nullableField <$> remoteFieldFromName schemaDoc name description fieldTypeName argsDefinition
           G.TypeList (Nullability True) gType'' ->
             addNullableList <$> convertType gType''
           G.TypeNamed (Nullability False) fieldTypeName -> do
-            remoteFld <- remoteFieldFromName schemaDoc name description fieldTypeName argsDefinition
-            pure . P.nonNullableField $ remoteFld
+            P.nullableField <$> remoteFieldFromName schemaDoc name description fieldTypeName argsDefinition
           G.TypeList (Nullability False) gType'' ->
             addNonNullableList <$> convertType gType''
   in convertType gType
