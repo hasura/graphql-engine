@@ -9,6 +9,7 @@
 
 - docs: add docs page on networking with docker (close #4346) (#4811)
 - cli: add missing global flags for seeds command (#5565)
+- docs: add postgres reference page to docs (#4471) (close #4440)
 
 ## `v1.3.1-beta.1`
 
@@ -455,10 +456,6 @@ For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/
 The order, collapsed state of columns and rows limit is now persisted across page navigation
 
 (close #3390) (#3753)
-
-### docs improvements
-
-- add postgres reference page to docs (#4471) (close #4440)
 
 ### Bug fixes and improvements
 
