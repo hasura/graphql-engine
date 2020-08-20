@@ -28,7 +28,6 @@ import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 
 import qualified Data.HashSet                           as HS
-import qualified Data.List.NonEmpty                     as NE
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
@@ -288,9 +287,10 @@ getResolvedExecPlan env logger pgExecCtx {- planCache-} userInfo sqlGenCtx
           -- As an internal testing feature, we support subscribing to multiple
           -- root fields in a subcription. First, we check if the corresponding directive
           -- (@_multiple_top_level_fields) is set.
-          case NE.nonEmpty inlinedSelSet of
-            Nothing -> throw500 "empty selset for subscription"
-            Just (_ :| rst) ->
+          case inlinedSelSet of
+            [] -> throw500 "empty selset for subscription"
+            [_] -> pure ()
+            (_:rst) ->
               let multipleAllowed =
                     G.Directive $$(G.litName "_multiple_top_level_fields") mempty `elem` directives
               in
