@@ -37,6 +37,10 @@ resolveVariables definitions jsonValues selSet = do
     traverse (traverse (resolveVariable uniqueVariables)) selSet
   let variablesByNameSet = HS.fromList . Map.keys $ variablesByName
       jsonVariableNames = HS.fromList $ Map.keys jsonValues
+      -- At the time of writing, this check is disabled using
+      -- a local binding because, the master branch doesn't implement this
+      -- check.
+      -- TODO: Do this check using a feature flag
       isVariableValidationEnabled = False
 
   when (isVariableValidationEnabled && usedVariables /= variablesByNameSet) $

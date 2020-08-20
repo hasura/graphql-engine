@@ -92,6 +92,10 @@ inlineSelectionSet fragmentDefinitions selectionSet = do
         _       -> throw400 ParseFailed $ "multiple definitions for fragment " <>> fragmentName
   let usedFragmentNames = Set.fromList $ fragmentsInSelectionSet selectionSet
       definedFragmentNames = Set.fromList $ Map.keys uniqueFragmentDefinitions
+      -- At the time of writing, this check is disabled using
+      -- a local binding because, the master branch doesn't implement this
+      -- check.
+      -- TODO: Do this check using a feature flag
       isFragmentValidationEnabled = False
   when (isFragmentValidationEnabled && (usedFragmentNames /= definedFragmentNames)) $
     throw400 ValidationFailed $
