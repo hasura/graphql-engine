@@ -90,6 +90,7 @@ class ModifyTable extends React.Component {
       tableEnum,
       rootFieldsEdit,
       postgresVersion,
+      trackedFunctions,
     } = this.props;
 
     const dataTypeIndexMap = getAllDataTypeMap(dataTypes);
@@ -201,13 +202,13 @@ class ModifyTable extends React.Component {
             functions={allFunctions} // TODO: fix cross schema functions
             schemaList={schemaList}
             dispatch={dispatch}
+            trackedFunctions={trackedFunctions}
           />
           <hr />
         </React.Fragment>
       );
     };
 
-    // if (tableSchema.primary_key.columns > 0) {}
     return (
       <div className={`${styles.container} container-fluid`}>
         <TableHeader
@@ -356,6 +357,7 @@ const mapStateToProps = (state, ownProps) => ({
   schemaList: state.tables.schemaList,
   postgresVersion: state.main.postgresVersion,
   ...state.tables.modify,
+  trackedFunctions: state.tables.trackedFunctions,
 });
 
 const modifyTableConnector = connect => connect(mapStateToProps)(ModifyTable);

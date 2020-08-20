@@ -31,6 +31,7 @@ type ComputedFieldsEditorProps = {
   functions: PGFunction[];
   schemaList: PGSchema[];
   dispatch: Dispatch;
+  trackedFunctions: PGFunction[];
 };
 
 const ComputedFieldsEditor = ({
@@ -39,6 +40,7 @@ const ComputedFieldsEditor = ({
   functions,
   schemaList,
   dispatch,
+  trackedFunctions,
 }: ComputedFieldsEditorProps) => {
   const computedFields = table.computed_fields;
 
@@ -318,6 +320,17 @@ const ComputedFieldsEditor = ({
         setComputedFieldsState(newState);
       };
 
+      const schemaListOptions = schemaList.map(s => getSchemaName(s));
+      const trackedFunctionNames = trackedFunctions.map(
+        func => func.function_name
+      );
+      const functionNameOptions = getSchemaFunctions(
+        functions,
+        computedFieldFunctionSchema
+      )
+        .filter(fn => !trackedFunctionNames.includes(fn.function_name))
+        .map(fn => getFunctionName(fn));
+
       return (
         <div>
           <div>
@@ -337,7 +350,7 @@ const ComputedFieldsEditor = ({
             </div>
             <div className={styles.wd50percent}>
               <SearchableSelectBox
-                options={schemaList.map(s => getSchemaName(s))}
+                options={schemaListOptions}
                 onChange={handleFnSchemaChange}
                 value={computedFieldFunctionSchema}
                 bsClass="function-schema-select"
@@ -365,10 +378,7 @@ const ComputedFieldsEditor = ({
             </div>
             <div className={styles.wd50percent}>
               <SearchableSelectBox
-                options={getSchemaFunctions(
-                  functions,
-                  computedFieldFunctionSchema
-                ).map(fn => getFunctionName(fn))}
+                options={functionNameOptions}
                 onChange={handleFnNameChange}
                 value={computedFieldFunctionName}
                 bsClass="function-name-select"
