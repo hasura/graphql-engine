@@ -14,6 +14,7 @@ import           Hasura.SQL.Types
 import           Language.GraphQL.Draft.Syntax       as G
 import qualified Data.List.NonEmpty                  as NE
 import           Data.Type.Equality
+import           Data.Foldable                       (sequenceA_)
 
 import           Hasura.GraphQL.Parser               as P
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
@@ -107,7 +108,7 @@ remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name inter
   implements <- traverse (remoteSchemaInterface schemaDoc) interfaceDefs
   -- TODO: also check sub-interfaces, when these are supported in a future graphql spec
   traverse_ validateImplementsFields interfaceDefs
-  pure $ () <$ P.selectionSetObject name description subFieldParsers implements
+  pure $ void $ P.selectionSetObject name description subFieldParsers implements
   where
     getInterface :: G.Name -> m (G.InterfaceTypeDefinition [G.Name])
     getInterface interfaceName =
@@ -340,7 +341,7 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
            Just typeDef ->
              case typeDef of
                G.TypeDefinitionScalar (G.ScalarTypeDefinition scalarDesc name' _) ->
-                 fieldConstructor' . doNullability nullability <$> remoteFieldScalarParser name' scalarDesc
+                 pure $ fieldConstructor' $ doNullability nullability $ remoteFieldScalarParser name' scalarDesc
                G.TypeDefinitionEnum defn ->
                  pure $ fieldConstructor' $ doNullability nullability $ remoteFieldEnumParser defn
                G.TypeDefinitionObject _ -> throw400 RemoteSchemaError "expected input type, but got output type" -- couldn't find the equivalent error in Validate/Types.hs, so using a new error message
@@ -358,7 +359,7 @@ argumentsParser
   -> G.SchemaIntrospection
   -> m (InputFieldsParser n ())
 argumentsParser args schemaDoc =
-  void . sequenceA <$> traverse (inputValueDefinitionParser schemaDoc) args
+  sequenceA_ <$> traverse (inputValueDefinitionParser schemaDoc) args
 
 -- | 'remoteField' accepts a 'G.TypeDefinition' and will returns a 'FieldParser' for it.
 --   Note that the 'G.TypeDefinition' should be of the GraphQL 'Output' kind, when an
@@ -378,35 +379,32 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
   case typeDefn of
     G.TypeDefinitionObject objTypeDefn -> do
       remoteSchemaObj <- remoteSchemaObject sdoc objTypeDefn
-      pure $ () <$ P.subselection fieldName description argsParser remoteSchemaObj
+      pure $ void $ P.subselection fieldName description argsParser remoteSchemaObj
     G.TypeDefinitionScalar (G.ScalarTypeDefinition desc name' _) ->
-      P.selection fieldName description argsParser <$> remoteFieldScalarParser name' desc
+      pure $ P.selection fieldName description argsParser $ remoteFieldScalarParser name' desc
     G.TypeDefinitionEnum enumTypeDefn ->
       pure $ P.selection fieldName description argsParser $ remoteFieldEnumParser enumTypeDefn
     G.TypeDefinitionInterface ifaceTypeDefn -> do
       remoteSchemaObj <- remoteSchemaInterface sdoc ifaceTypeDefn
-      pure $ () <$ P.subselection fieldName description argsParser remoteSchemaObj
+      pure $ void $ P.subselection fieldName description argsParser remoteSchemaObj
     G.TypeDefinitionUnion unionTypeDefn -> do
       remoteSchemaObj <- remoteSchemaUnion sdoc unionTypeDefn
-      pure $ () <$ P.subselection fieldName description argsParser remoteSchemaObj
+      pure $ void $ P.subselection fieldName description argsParser remoteSchemaObj
     _ -> throw400 RemoteSchemaError "expected output type, but got input type"
 
 remoteFieldScalarParser
-  :: forall m n
-   . (MonadParse n, MonadError QErr m)
+  :: MonadParse n
   => G.Name
   -> Maybe G.Description
-  -> m (Parser 'Both n ())
+  -> Parser 'Both n ()
 remoteFieldScalarParser name description =
   case G.unName name of
-    "Boolean" -> pure $ P.boolean $> ()
-    "Int" -> pure $ P.int $> ()
-    "Float" -> pure $ P.float $> ()
-    "String" -> pure $ P.string $> ()
-    -- TODO IDs are allowed to be numbers, I think. But not floats. See
-    -- http://spec.graphql.org/draft/#sec-ID
-    "ID" -> pure $ P.string $> ()
-    _ -> pure $ P.unsafeRawScalar name description $> ()
+    "Boolean" -> P.boolean $> ()
+    "Int" -> P.int $> ()
+    "Float" -> P.float $> ()
+    "String" -> P.string $> ()
+    "ID" -> P.identifier $> ()
+    _ -> P.unsafeRawScalar name description $> ()
 
 remoteFieldEnumParser
   :: MonadParse n
