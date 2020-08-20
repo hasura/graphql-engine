@@ -35,6 +35,7 @@ import {
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 import NotesSection from './molecules/NotesSection';
 import styles from '../../../Common/TableCommon/Table.scss';
+import ResultTable from './ResultTable';
 /**
  * # RawSQL React FC
  * ## renders raw SQL page on route `/data/sql`
@@ -232,50 +233,6 @@ const RawSQL = ({
         />
       </div>
     );
-  };
-
-  const getResultTable = () => {
-    let resultTable = null;
-
-    if (resultType && resultType !== 'command') {
-      const getTableHeadings = () => {
-        return resultHeaders.map((columnName, i) => (
-          <th key={i}>{columnName}</th>
-        ));
-      };
-
-      const getRows = () => {
-        return result.map((row, i) => (
-          <tr key={i}>
-            {row.map((columnValue, j) => (
-              <td key={j}>{columnValue}</td>
-            ))}
-          </tr>
-        ));
-      };
-
-      resultTable = (
-        <div
-          className={`${styles.addCol} col-xs-12 ${styles.padd_left_remove}`}
-        >
-          <h4 className={styles.subheading_text}>SQL Result:</h4>
-          <div className={styles.tableContainer}>
-            <table
-              className={`table table-bordered table-striped table-hover ${styles.table} `}
-            >
-              <thead>
-                <tr>{getTableHeadings()}</tr>
-              </thead>
-              <tbody>{getRows()}</tbody>
-            </table>
-          </div>
-          <br />
-          <br />
-        </div>
-      );
-    }
-
-    return resultTable;
   };
 
   const getMetadataCascadeSection = () => {
@@ -486,7 +443,11 @@ const RawSQL = ({
 
       {getMigrationWarningModal()}
 
-      <div className={styles.add_mar_bottom}>{getResultTable()}</div>
+      <div className={styles.add_mar_bottom}>
+        {resultType && resultType !== 'command' && (
+          <ResultTable result={result} resultHeaders={resultHeaders} />
+        )}
+      </div>
     </div>
   );
 };
