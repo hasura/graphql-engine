@@ -281,7 +281,7 @@ data PreparedSql
 instance J.ToJSON PreparedSql where
   toJSON (PreparedSql q prepArgs _) =
     J.object [ "query" J..= Q.getQueryText q
-             , "prepared_arguments" J..= map (txtEncodedPGVal . snd) prepArgs
+             , "prepared_arguments" J..= map (pgScalarValueToJson . snd) prepArgs
              ]
 
 -- | Intermediate reperesentation of a computed SQL statement and prepared
