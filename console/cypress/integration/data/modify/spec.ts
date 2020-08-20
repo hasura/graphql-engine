@@ -216,6 +216,7 @@ export const passModifyPkey = () => {
   cy.get(getElementFromAlias('modify-table-pks-save')).click();
   cy.get(getElementFromAlias('pk-config-text')).within(() =>
     cy.get('b').contains(getColName(0))
+    cy.get('b').contains('id')
   );
   cy.wait(5000);
 
@@ -225,7 +226,9 @@ export const passModifyPkey = () => {
 
   cy.get(getElementFromAlias('remove-pk-column-1')).click();
   cy.get(getElementFromAlias('modify-table-pks-save')).click();
-  cy.get(getElementFromAlias('pk-config-text')).get('b').contains('id');
+  cy.get(getElementFromAlias('pk-config-text')).within(() => {
+    cy.get('b').contains('id');
+  });
   cy.get(getElementFromAlias('pk-config-text')).within(() => {
     cy.get('b').should('not.contain', getColName(0));
   });
