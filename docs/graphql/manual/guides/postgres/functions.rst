@@ -63,7 +63,7 @@ The objective of the following function is to refresh a :ref:`materialized view 
 
 .. code-block:: plpgsql
 
-  CREATE FUNCTION update_materialized_view()
+  CREATE FUNCTION refresh_materialized_view()
     RETURNS trigger AS $BODY$
     BEGIN
     REFRESH MATERIALIZED VIEW popular_active_authors;
@@ -74,6 +74,6 @@ The objective of the following function is to refresh a :ref:`materialized view 
 Postgres functions & Hasura
 ---------------------------
 
-Functions can be used to extend your Hasura GraphQL API, and they can also be exposed via the same.
+Postgres functions can be used to extend your Hasura GraphQL API, and they can also be exposed via the same.
 
 Refer to :ref:`this page <create_and_expose_sql_functions>` for more use cases and for instructions on how to create and expose Postgres functions in Hasura.

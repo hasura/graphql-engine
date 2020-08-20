@@ -20,7 +20,7 @@ Views are used to simplify complex queries since these queries are defined once 
 
 .. note::
 
-  Please refer to the Postgres documentation for more details on `views <https://www.postgresql.org/docs/current/sql-createview.html>`__ and `materialized views <https://www.postgresql.org/docs/current/rules-materializedviews.html>`__.
+  Please refer to the Postgres documentation for more details on `standard views <https://www.postgresql.org/docs/current/sql-createview.html>`__ and `materialized views <https://www.postgresql.org/docs/current/rules-materializedviews.html>`__.
 
 Standard views
 --------------

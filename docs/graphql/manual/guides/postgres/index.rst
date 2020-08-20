@@ -20,8 +20,8 @@ This page introduces Postgres including benefits and caveats, and it links to se
 About Postgres
 --------------
 
-Postgres (or PostgreSQL) is a general-purpose object-relational database management system that uses and extends the SQL language.
-Postgres is free and open source, and it's considered the most advanced open source database systems.
+`Postgres (or PostgreSQL) <https://www.postgresql.org/>`__ is a general-purpose object-relational database management system that uses and extends the SQL language.
+Postgres is free and open source and has been developed continuously over the last 30 years. Postgres strives to be reliable, robust and performant.
 
 Postgres supports advanced data types and advanced performance optimization, features that are otherwise only available in expensive commercial database systems.
 
@@ -33,7 +33,7 @@ The following are benefits of Postgres compared to other database management sys
 - Postgres can be maintained easily because of its stability. The total cost of ownership is therefore low.
 - Postgres is designed to be extensible i.e. you can add custom functions using different programming languages.
 - You can define your own data types, index types etc.
-- If you need any support, an active community is available to help. 
+- If you need any support, an `active community <https://www.postgresql.org/community/>`__ is available to help. 
 
 Caveats
 -------

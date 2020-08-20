@@ -15,19 +15,19 @@ Postgres indexes
 Introduction
 ------------
 
-`Indexes <https://www.postgresql.org/docs/current/sql-createindex.html>`__ are a way of increasing performance on a field that is queried frequently. The concept is similar to the one of an index in a book. 
+`Postgres indexes <https://www.postgresql.org/docs/current/sql-createindex.html>`__ are a way of increasing performance on a field that is queried frequently. The concept is similar to the one of an index in a book. 
 It helps accessing the data you're looking for more quickly.
 
 .. note::
 
-  Learn more about creating indexes in the `Postgres documentation <https://www.postgresql.org/docs/current/sql-createindex.html>`__.
+  Learn more about indexes in the `Postgres documentation <https://www.postgresql.org/docs/current/sql-createindex.html>`__.
 
 Example
 -------
 
 **Create an index on the field name in the table authors:**
 
-Let's say the database receives a large number of requests where an author is queried by their name, for example:
+Let's say the database receives a large number of requests of authors being queried by their name, for example:
 
 .. code-block:: sql
 
@@ -39,7 +39,7 @@ We can now create an index on the ``name`` field of the ``authors`` table:
 
   CREATE INDEX author_name_index ON authors (name);
 
-Since the database is now able to look up the result of these queries more quickly, the performance of these queries increases significantly.
+Since the database is now able to look up the result of these queries more quickly, the performance of these queries will increase significantly.
 
 Postgres indexes & Hasura
 -------------------------
