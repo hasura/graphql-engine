@@ -22,12 +22,10 @@ const getTableConfig = (headers: string[], rows: Array<string[]>) => {
 };
 
 const ResultTable: React.FC<ResultTableProps> = ({ headers, rows }) => {
-  console.log(headers, rows);
   const tableConfig = useMemo(() => getTableConfig(headers, rows), [
     headers,
     rows,
   ]);
-  console.log(tableConfig);
   return (
     <div className={`${styles.addCol} col-xs-12 ${styles.padd_left_remove}`}>
       <h4 className={styles.subheading_text}>SQL Result:</h4>
