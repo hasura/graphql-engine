@@ -374,7 +374,7 @@ const ComputedFieldsEditor = ({
                 bsClass="function-name-select"
                 styleOverrides={{
                   menu: {
-                    zIndex: 5,
+                    zIndex: 25,
                   },
                 }}
                 filterOption="prefix"
