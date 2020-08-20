@@ -117,7 +117,6 @@ The Hasura GraphQL engine makes your data instantly accessible over a real-time 
   migrations/index
   Deploying <deployment/index>
   hasura-cli/index
-  postgres/index
   API Reference <api-reference/index>
   How It Works <how-it-works/index>
   Troubleshooting <troubleshooting/index>

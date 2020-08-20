@@ -30,7 +30,7 @@ Standard views
 Examples
 ********
 
-**View with authors whose** ``rating``**s are larger than 6:**
+**View with authors whose rating is larger than 6:**
 
 .. code-block:: sql
 
