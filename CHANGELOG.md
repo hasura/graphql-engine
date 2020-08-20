@@ -31,6 +31,7 @@ If you do have such headers configured, then you must update the header configur
 - server: add logs for action handlers
 - server: add request/response sizes in event triggers (and scheduled trigger) logs (#5463)
 - server: change startup log kind `db_migrate` to `catalog_migrate` (#5531)
+- console: add pagination on rawsql results page (close #5002) (#5629)
 - console: handle nested fragments in allowed queries (close #5137) (#5252)
 - console: update sidebar icons for different action and trigger types (#5445)
 - console: make add column UX consistent with others (#5486)
