@@ -445,7 +445,7 @@ const RawSQL = ({
 
       <div className={styles.add_mar_bottom}>
         {resultType && resultType !== 'command' && (
-          <ResultTable result={result} resultHeaders={resultHeaders} />
+          <ResultTable rows={result} headers={resultHeaders} />
         )}
       </div>
     </div>
