@@ -10,11 +10,11 @@ import { getAdminSecret } from '../ApiExplorer/ApiRequest/utils';
 import styles from '../../Common/TableCommon/Table.scss';
 
 interface Metadata {
-  inconsistentObjects: object[];
+  inconsistentObjects: Record<string, unknown>[];
 }
 
 type SidebarProps = {
-  location: RouteComponentProps<{}, {}>['location'];
+  location: RouteComponentProps<unknown, unknown>['location'];
   metadata: Metadata;
 };
 

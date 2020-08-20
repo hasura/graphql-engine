@@ -351,7 +351,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   case execPlan of
     E.QueryExecutionPlan queryPlan asts ->
       case queryPlan of
-        E.ExecStepDB (tx, genSql) -> Tracing.trace "pg" $
+        E.ExecStepDB (tx, genSql) -> Tracing.trace "Query" $
           execQueryOrMut timerTot Telem.Query telemCacheHit (Just genSql) requestId $
             fmap snd $ Tracing.interpTraceT id $ executeQuery reqParsed asts (Just genSql) pgExecCtx Q.ReadOnly tx
         E.ExecStepRemote (rsi, opDef, _varValsM) ->
@@ -361,7 +361,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
     E.MutationExecutionPlan mutationPlan ->
       case mutationPlan of
-        E.ExecStepDB (tx, _) -> Tracing.trace "pg" do
+        E.ExecStepDB (tx, _) -> Tracing.trace "Mutate" do
           ctx <- Tracing.currentContext
           execQueryOrMut timerTot Telem.Mutation telemCacheHit Nothing requestId $
             Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx . withUserInfo userInfo) tx
@@ -442,11 +442,11 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       -> E.ExecOp (Tracing.TraceT (LazyTx QErr))
       -> ExceptT () m ()
     runHasuraGQ timerTot telemCacheHit reqId query queryParsed userInfo = \case
-      E.ExOpQuery opTx genSql asts -> Tracing.trace "pg" $
+      E.ExOpQuery opTx genSql asts -> Tracing.trace "Query" $
         execQueryOrMut Telem.Query genSql . fmap snd $
           Tracing.interpTraceT id $ executeQuery queryParsed asts genSql pgExecCtx Q.ReadOnly opTx
       -- Response headers discarded over websockets
-      E.ExOpMutation _ opTx -> Tracing.trace "pg" do
+      E.ExOpMutation _ opTx -> Tracing.trace "Mutate" do
         ctx <- Tracing.currentContext
         execQueryOrMut Telem.Mutation Nothing $
           Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx . withUserInfo userInfo) opTx

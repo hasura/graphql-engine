@@ -1,5 +1,8 @@
+###############################################################################
 ## Configuration for auto-merge / auto-update bot
-## See: https://kodiakhq.com/ 
+##
+## See: https://kodiakhq.com/
+###############################################################################
 
 # Kodiak's configuration file should be placed at `.kodiak.toml` (repository
 # root) or `.github/.kodiak.toml`.
@@ -30,7 +33,7 @@ require_automerge_label = true
 blocking_title_regex = "" # default: "^WIP:.*", options: "" (disables regex), a regex string (e.g. ".*DONT\s*MERGE.*")
 
 # Kodiak will not merge a PR with any of these labels.
-blocking_labels = ["s/do-not-merge", "s/wip"][] # default: []
+blocking_labels = ["s/do-not-merge", "s/wip"] # default: []
 
 # Choose merge method for Kodiak to use.
 #

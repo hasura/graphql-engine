@@ -331,7 +331,7 @@ data PreparedSql
 instance J.ToJSON PreparedSql where
   toJSON (PreparedSql q prepArgs _) =
     J.object [ "query" J..= Q.getQueryText q
-             , "prepared_arguments" J..= map (txtEncodedPGVal . snd) prepArgs
+             , "prepared_arguments" J..= map (pgScalarValueToJson . snd) prepArgs
              ]
 
 -- | Intermediate reperesentation of a computed SQL statement and prepared
@@ -368,7 +368,7 @@ mkLazyRespTx env manager reqHdrs userInfo resolved =
      RRSql (PreparedSql q args maybeRemoteJoins) -> do
         let prepArgs = map fst args
         case maybeRemoteJoins of
-          Nothing -> liftTx $ asSingleRowJsonResp q (map fst args)
+          Nothing -> Tracing.trace "Postgres" . liftTx $ asSingleRowJsonResp q prepArgs
           Just remoteJoins ->
             executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs remoteJoins
      RRActionQuery actionTx           -> actionTx
