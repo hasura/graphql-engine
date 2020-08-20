@@ -47,7 +47,7 @@ By default, shows changes between exported metadata file and server metadata.`,
   # Show changes between server metadata and that in local_metadata.yaml:
   hasura metadata diff local_metadata.yaml
 
-  # Show changes between metadata from metadata.yaml and metadata_old.yaml:
+	# Show changes between metadata from metadata.yaml and metadata_old.yaml:
 	hasura metadata diff metadata.yaml metadata_old.yaml
 	
 	# Show changes among multiple metadata folders (v2 config only)
@@ -217,6 +217,7 @@ func (o *MetadataDiffOptions) Run() error {
 	return o.runv1(o.Args)
 }
 
+// Move to using myers diffing algo
 func printDiff(before, after string, to io.Writer, logger *logrus.Logger) {
 	diffs := difflib.Diff(strings.Split(before, "\n"), strings.Split(after, "\n"))
 
@@ -259,7 +260,7 @@ func checkDir(path string) error {
 		return err
 	}
 	if !file.IsDir() {
-		return fmt.Errorf("metadata diff only works with folders but got file %s", path)
+		return fmt.Errorf("metadata diff only works with directories but got file %s", path)
 	}
 	return nil
 }
