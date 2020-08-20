@@ -220,10 +220,6 @@ export const passModifyPkey = () => {
   });
   cy.wait(5000);
 
-  // TODO
-  // test disappearance expect
-  // cy.get(getElementFromAlias('modify-table-column-1-remove')).not.to.exist;
-
   cy.get(getElementFromAlias('remove-pk-column-1')).click();
   cy.get(getElementFromAlias('modify-table-pks-save')).click();
   cy.get(getElementFromAlias('pk-config-text')).within(() => {
