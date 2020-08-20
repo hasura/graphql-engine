@@ -253,6 +253,9 @@ func printDiff(before, after string, to io.Writer, logger *logrus.Logger) {
 func checkDir(path string) error {
 	file, err := os.Stat(path)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("this directory does not exist")
+		}
 		return err
 	}
 	if !file.IsDir() {
