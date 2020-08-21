@@ -97,6 +97,7 @@ class OneGraphExplorer extends React.Component {
       return;
     }
     const headers = JSON.parse(JSON.stringify(headers_));
+    const errTitle = 'Failed to build client schema';
     dispatch(setLoading(true));
     this.setState({ schema: null });
     dispatch(
@@ -123,12 +124,20 @@ class OneGraphExplorer extends React.Component {
           });
           return;
         }
+        let clientSchema = null;
+        try {
+          clientSchema = buildClientSchema(result.data);
+        } catch (err) {
+          console.error(err);
+          dispatch(showErrorNotification(errTitle, err.message, err));
+        }
         this.setState({
-          schema: buildClientSchema(result.data),
+          schema: clientSchema,
           previousIntrospectionHeaders: headers,
         });
       })
-      .catch(() => {
+      .catch(err => {
+        dispatch(showErrorNotification(errTitle, err.message, err));
         this.setState({
           schema: null,
           previousIntrospectionHeaders: headers,
