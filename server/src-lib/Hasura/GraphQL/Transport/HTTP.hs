@@ -168,15 +168,16 @@ runHasuraGQ
 runHasuraGQ reqId (query, queryParsed) userInfo resolvedOp = do
   (E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _) <- ask
   (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ case resolvedOp of
-    E.ExOpQuery tx genSql asts -> trace "pg" $ do
+    E.ExOpQuery tx genSql asts -> trace "Query" $ do
       -- log the generated SQL and the graphql query
       logQueryLog logger query genSql reqId
       Tracing.interpTraceT id $ executeQuery queryParsed asts genSql pgExecCtx Q.ReadOnly tx
 
-    E.ExOpMutation respHeaders tx -> trace "pg" $ do
+    E.ExOpMutation respHeaders tx -> trace "Mutate" $ do
       logQueryLog logger query Nothing reqId
       ctx <- Tracing.currentContext
-      (respHeaders,) <$> Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx . withUserInfo userInfo) tx
+      (respHeaders,) <$>
+        Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx . withUserInfo userInfo) tx
 
     E.ExOpSubs _ ->
       throw400 UnexpectedPayload

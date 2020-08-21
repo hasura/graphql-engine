@@ -1,5 +1,5 @@
 .. meta::
-   :description: Guides, Tutorials and Resources around using Hasura
+   :description: Guides, Tutorials, and Resources around using Hasura and GraphQL
    :keywords: hasura, docs, guide, tutorial, resource
 
 .. _guides:
@@ -17,6 +17,7 @@ Guides / Tutorials / Resources
    :titlesonly:
 
    Data modelling guides <data-modelling/index>
+   Docker networking <docker-networking>
    Sample apps & boilerplates <sample-apps/index>
    Integration/migration tutorials <integrations/index>
    Integrating with monitoring frameworks <monitoring/index>

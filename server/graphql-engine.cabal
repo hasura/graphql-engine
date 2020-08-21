@@ -110,6 +110,8 @@ library
                      , uuid
                      , vector
                      , vector-builder
+                     , binary
+                     , base16-bytestring
 
                      -- Logging related
                      , network
@@ -244,10 +246,7 @@ library
                      , Data.Time.Clock.Units
                      , Data.URL.Template
                      , Hasura.App
-                     , Hasura.Cache
                      , Hasura.Cache.Bounded
-                     , Hasura.Cache.Types
-                     , Hasura.Cache.Unbounded
                      , Hasura.Db
                      , Hasura.EncJSON
                      , Hasura.Eventing.Common
@@ -426,6 +425,7 @@ executable graphql-engine
                    , text
                    , text-conversions
                    , unix
+                   , ekg-core
 
 test-suite graphql-engine-tests
   import: common-all, common-exe
@@ -467,6 +467,7 @@ test-suite graphql-engine-tests
     Hasura.RQL.MetadataSpec
     Hasura.Server.MigrateSpec
     Hasura.Server.TelemetrySpec
+    Hasura.CacheBoundedSpec
     Hasura.Server.AuthSpec
 
 -- Benchmarks related to caching (e.g. the plan cache).

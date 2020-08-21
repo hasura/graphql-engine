@@ -75,6 +75,8 @@ import           Hasura.Session
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll     as EL
 import qualified Hasura.GraphQL.Transport.WebSocket.Server as WS
 import qualified Hasura.Tracing                            as Tracing
+import qualified System.Metrics                            as EKG
+
 
 data ExitCode
   = InvalidEnvironmentVariableOptionsError
@@ -235,14 +237,14 @@ migrateCatalogSchema env logger pool httpManager sqlGenCtx = do
   let pgExecCtx = mkPGExecCtx Q.Serializable pool
       adminRunCtx = RunCtx adminUserInfo httpManager sqlGenCtx
   currentTime <- liftIO Clock.getCurrentTime
-  initialiseResult <- runExceptT $ peelRun adminRunCtx pgExecCtx Q.ReadWrite $
+  initialiseResult <- runExceptT $ peelRun adminRunCtx pgExecCtx Q.ReadWrite Nothing $
     (,) <$> migrateCatalog env currentTime <*> liftTx fetchLastUpdate
 
   ((migrationResult, schemaCache), lastUpdateEvent) <-
     initialiseResult `onLeft` \err -> do
       unLogger logger StartupLog
         { slLogLevel = LevelError
-        , slKind = "db_migrate"
+        , slKind = "catalog_migrate"
         , slInfo = A.toJSON err
         }
       liftIO (printErrExit DatabaseMigrationError (BLC.unpack $ A.encode err))
@@ -308,8 +310,9 @@ runHGEServer
   -> IO ()
   -- ^ shutdown function
   -> Maybe EL.LiveQueryPostPollHook
+  -> EKG.Store
   -> m ()
-runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp postPollHook = do
+runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp postPollHook ekgStore = do
   -- Comment this to enable expensive assertions from "GHC.AssertNF". These
   -- will log lines to STDOUT containing "not in normal form". In the future we
   -- could try to integrate this into our tests. For now this is a development
@@ -351,6 +354,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
              soResponseInternalErrorsConfig
              postPollHook
              _icSchemaCache
+             ekgStore
 
   -- log inconsistent schema objects
   inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)
@@ -586,7 +590,7 @@ runAsAdmin
 runAsAdmin pool sqlGenCtx httpManager m = do
   let runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
       pgCtx = mkPGExecCtx Q.Serializable pool
-  runExceptT $ peelRun runCtx pgCtx Q.ReadWrite m
+  runExceptT $ peelRun runCtx pgCtx Q.ReadWrite Nothing m
 
 execQuery
   :: ( HasVersion

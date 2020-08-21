@@ -5,7 +5,7 @@ import RawSqlButton from '../Common/Components/RawSqlButton';
 
 export interface ViewDefinitionsProps {
   dispatch: () => void;
-  sql: string | object;
+  sql: string | Record<string, unknown>;
 }
 
 const ViewDefinitions: React.FC<ViewDefinitionsProps> = ({ dispatch, sql }) => (

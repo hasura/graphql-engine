@@ -26,6 +26,7 @@ import           Control.Monad.Trans.Control
 import           Control.Monad.Morph
 import           Control.Monad.Unique
 import           Data.String                 (fromString)
+import           Network.URI                 (URI)
 
 import qualified Data.Aeson                  as J
 import qualified Data.Aeson.Lens             as JL
@@ -35,6 +36,9 @@ import qualified Network.HTTP.Client         as HTTP
 import qualified Network.HTTP.Types.Header   as HTTP
 import qualified System.Random               as Rand
 import qualified Web.HttpApiData             as HTTP
+import qualified Data.Binary                 as Bin
+import qualified Data.ByteString.Base16      as Hex
+
  
 -- | Any additional human-readable key-value pairs relevant
 -- to the execution of a block of code.
@@ -76,9 +80,9 @@ instance HasReporter m => HasReporter (ExceptT e m) where
 -- the active span within that trace, and the span's parent,
 -- unless the current span is the root.
 data TraceContext = TraceContext
-  { tcCurrentTrace  :: Word64
-  , tcCurrentSpan   :: Word64
-  , tcCurrentParent :: Maybe Word64
+  { tcCurrentTrace   :: !Word64
+  , tcCurrentSpan    :: !Word64
+  , tcCurrentParent  :: !(Maybe Word64)
   }
 
 -- | The 'TraceT' monad transformer adds the ability to keep track of
@@ -197,12 +201,29 @@ instance MonadTrace m => MonadTrace (ExceptT e m) where
   currentReporter = lift currentReporter
   attachMetadata = lift . attachMetadata
 
+-- | Encode Word64 to 16 character hex string
+word64ToHex :: Word64 -> Text
+word64ToHex randNum = bsToTxt $ Hex.encode numInBytes
+  where numInBytes = BL.toStrict (Bin.encode  randNum)
+
+-- | Decode 16 character hex string to Word64 
+-- | Hex.Decode returns two tuples: (properly decoded data, string starts at the first invalid base16 sequence)
+hexToWord64 :: Text -> Maybe Word64
+hexToWord64 randText = do
+  let (decoded, leftovers) = Hex.decode $ txtToBs randText
+      decodedWord64 = Bin.decode $ BL.fromStrict decoded
+  guard (BS.null leftovers)
+  pure decodedWord64
+        
+
 -- | Inject the trace context as a set of HTTP headers.
 injectHttpContext :: TraceContext -> [HTTP.Header]
 injectHttpContext TraceContext{..} = 
-  [ ("X-Hasura-TraceId", fromString (show tcCurrentTrace))
-  , ("X-Hasura-SpanId", fromString (show tcCurrentSpan))
-  ]
+  ("X-B3-TraceId", txtToBs $ word64ToHex tcCurrentTrace)
+  : ("X-B3-SpanId", txtToBs $ word64ToHex tcCurrentSpan)
+  : [ ("X-B3-ParentSpanId", txtToBs $ word64ToHex parentID)
+    | parentID <- maybeToList tcCurrentParent
+    ]
   
 -- | Extract the trace and parent span headers from a HTTP request
 -- and create a new 'TraceContext'. The new context will contain
@@ -212,19 +233,20 @@ extractHttpContext :: [HTTP.Header] -> IO (Maybe TraceContext)
 extractHttpContext hdrs = do
   freshSpanId <- liftIO Rand.randomIO
   pure $ TraceContext
-    <$> (HTTP.parseHeaderMaybe =<< lookup "X-Hasura-TraceId" hdrs)
+    <$> (hexToWord64 =<< HTTP.parseHeaderMaybe =<< lookup "X-B3-TraceId" hdrs)
     <*> pure freshSpanId
-    <*> pure (HTTP.parseHeaderMaybe =<< lookup "X-Hasura-SpanId" hdrs)
+    <*> pure (hexToWord64 =<< HTTP.parseHeaderMaybe =<< lookup "X-B3-SpanId" hdrs)
+
 
 -- | Inject the trace context as a JSON value, appropriate for 
 -- storing in (e.g.) an event trigger payload.
 injectEventContext :: TraceContext -> J.Value
-injectEventContext ctx =
+injectEventContext TraceContext{..} =
   J.object
-    [ "trace_id" J..= tcCurrentTrace ctx
-    , "span_id"  J..= tcCurrentSpan ctx
+    [ "trace_id" J..= tcCurrentTrace 
+    , "span_id"  J..= tcCurrentSpan 
     ]
-
+  
 -- | Extract a trace context from an event trigger payload.
 extractEventContext :: J.Value -> IO (Maybe TraceContext)
 extractEventContext e = do
@@ -237,22 +259,25 @@ extractEventContext e = do
 -- | Perform HTTP request which supports Trace headers
 tracedHttpRequest 
   :: MonadTrace m 
-  =>  HTTP.Request
+  => HTTP.Request
   -- ^ http request that needs to be made
   -> (HTTP.Request -> m a)
   -- ^ a function that takes the traced request and executes it
   -> m a
-tracedHttpRequest req f = trace (bsToTxt (HTTP.path req)) do
-  let reqBytes = case HTTP.requestBody req of
-        HTTP.RequestBodyBS bs -> Just (fromIntegral (BS.length bs))
-        HTTP.RequestBodyLBS bs -> Just (BL.length bs)
-        HTTP.RequestBodyBuilder len _ -> Just len
-        HTTP.RequestBodyStream len _ -> Just len
-        _ -> Nothing
-  for_ reqBytes \b ->
-    attachMetadata [("request_body_bytes", fromString (show b))]
-  ctx <- currentContext
-  let req' = req { HTTP.requestHeaders =
-                     injectHttpContext ctx <> HTTP.requestHeaders req
-                 }
-  f req'
+tracedHttpRequest req f = do
+  let method = bsToTxt (HTTP.method req)
+      uri = show @URI (HTTP.getUri req)
+  trace (method <> " " <> fromString uri) do
+    let reqBytes = case HTTP.requestBody req of
+          HTTP.RequestBodyBS bs -> Just (fromIntegral (BS.length bs))
+          HTTP.RequestBodyLBS bs -> Just (BL.length bs)
+          HTTP.RequestBodyBuilder len _ -> Just len
+          HTTP.RequestBodyStream len _ -> Just len
+          _ -> Nothing
+    for_ reqBytes \b ->
+      attachMetadata [("request_body_bytes", fromString (show b))]
+    ctx <- currentContext
+    let req' = req { HTTP.requestHeaders =
+                       injectHttpContext ctx <> HTTP.requestHeaders req
+                   }
+    f req'
