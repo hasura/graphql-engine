@@ -10,7 +10,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - The validation of required headers has been fixed (closing #14 and #3659):
   - if a query selects table `bar` through table `foo` via a relationship, the required permissions headers will be the union of the required headers of table `foo` and table `bar`;
   - if an insert does not have an `on_conflict` clause, it will not require the update permissions headers.
-- Treate the absence of `backend_only` configuration and `backend_only: false` equally (closing #5059)
+- Treat the absence of `backend_only` configuration and `backend_only: false` equally (closing #5059)
 
 
 ### Bug fixes and improvements
