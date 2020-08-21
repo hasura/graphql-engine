@@ -247,9 +247,9 @@ instance IsField Typename where
 getMemberSelectionSet
   :: IsField f
   => G.NamedType -> ScopedSelectionSet f -> ObjectSelectionSet
-getMemberSelectionSet namedType (ScopedSelectionSet {..})  =
+getMemberSelectionSet namedType ScopedSelectionSet{..} =
   fromMaybe (ObjectSelectionSet (fmap toField _sssBaseSelectionSet)) $
-  Map.lookup namedType $ _sssMemberSelectionSets
+  Map.lookup namedType _sssMemberSelectionSets
 
 data AnnInpVal
   = AnnInpVal

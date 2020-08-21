@@ -14,7 +14,7 @@ import qualified Data.HashMap.Strict          as HM
 import qualified Data.List.NonEmpty           as NE
 import qualified Data.Text                    as T
 
-import           Hasura.GraphQL.Resolve.Types
+import           Hasura.GraphQL.Schema.Common
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Select.Types
@@ -635,7 +635,7 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields orderByItems = 
           S.mkQIdenExp (mkBaseTableAlias sourcePrefix) $ toIden $ pgiColumn pgColInfo
 
         AOCObjectRelation relInfo relFilter rest -> withWriteObjectRelation $ do
-          let RelInfo relName _ colMapping relTable _ = relInfo
+          let RelInfo relName _ colMapping relTable _ _ = relInfo
               relSourcePrefix = mkObjectRelationTableAlias sourcePrefix relName
               fieldName = mkOrderByFieldName relName
           (relOrderByAlias, relOrdByExp) <-
@@ -650,7 +650,7 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields orderByItems = 
                )
 
         AOCArrayAggregation relInfo relFilter aggOrderBy -> withWriteArrayRelation $ do
-          let RelInfo relName _ colMapping relTable _ = relInfo
+          let RelInfo relName _ colMapping relTable _ _ = relInfo
               fieldName = mkOrderByFieldName relName
               relSourcePrefix = mkArrayRelationSourcePrefix sourcePrefix fieldAlias
                                 similarArrayFields fieldName
