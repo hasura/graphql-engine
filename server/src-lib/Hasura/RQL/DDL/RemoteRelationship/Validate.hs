@@ -415,15 +415,13 @@ isTypeCoercible actualType expectedType =
   let (actualBaseType, actualNestingLevel) = getBaseTyWithNestedLevelsCount actualType
       (expectedBaseType, expectedNestingLevel) = getBaseTyWithNestedLevelsCount expectedType
   in
-  if actualBaseType == expectedBaseType
-  then if (actualNestingLevel == expectedNestingLevel || actualNestingLevel == 0)
-  -- The check of 'actualNestedCount == 0' is the case of coercing a singleton type
-  -- into an array type
-       then pure ()
-       else Failure (pure $ ExpectedTypeButGot expectedType actualType)
-       --  we cannot coerce two types with different nesting levels,
+  if | actualBaseType /= expectedBaseType -> raiseValidationError
+       -- we cannot coerce two types with different nesting levels,
        -- for example, we cannot coerce [Int] to [[Int]]
-  else Failure (pure $ ExpectedTypeButGot expectedType actualType)
+     | (actualNestingLevel == expectedNestingLevel || actualNestingLevel == 0) -> pure ()
+     | otherwise -> raiseValidationError
+     where
+       raiseValidationError = Failure (pure $ ExpectedTypeButGot expectedType actualType)
 
 assertListType :: G.GType -> Validation (NonEmpty ValidationError) ()
 assertListType actualType =
