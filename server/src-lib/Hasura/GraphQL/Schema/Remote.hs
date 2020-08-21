@@ -209,8 +209,8 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
       onNothing (lookupObject schemaDoc objectName) $
         case lookupInterface schemaDoc objectName of
           Nothing -> throw400 RemoteSchemaError $ "Could not find type " <> squote objectName
-            <> ", which is defined as a member type of Union " <> squote name
-          Just _  -> throw400 RemoteSchemaError $ "Union type " <> squote name <>
+            <> ", which is defined as a member type of Interface " <> squote name
+          Just _  -> throw400 RemoteSchemaError $ "Interface type " <> squote name <>
             " can only include object types. It cannot include " <> squote objectName
 
 -- | 'remoteSchemaUnion' returns a output parser for a given 'UnionTypeDefinition'.
