@@ -201,6 +201,7 @@ run_server_upgrade_pytest() {
 			--avoid-error-message-checks "$@" \
 			-m 'allow_server_upgrade_test and not skip_server_upgrade_test' \
                         --deselect test_graphql_mutations.py::TestGraphqlInsertPermission::test_user_with_no_backend_privilege \
+                        --deselect test_graphql_queries.py::TestGraphQLQueryEnums::test_introspect_user_role \
 			-v $tests_to_run
 		set +x
 		cd -
