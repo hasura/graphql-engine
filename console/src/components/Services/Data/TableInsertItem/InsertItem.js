@@ -65,13 +65,13 @@ class InsertItem extends Component {
       generateTableDef(tableName, currentSchema)
     );
 
-    const isCLIMode = globals.consoleMode === CLI_CONSOLE_MODE;
-
     // check if table exists
     if (!currentTable) {
       // throw a 404 exception
       throw new NotFoundError();
     }
+
+    const isCLIMode = globals.consoleMode === CLI_CONSOLE_MODE;
 
     const columns = currentTable.columns.sort(ordinalColSort);
 
@@ -169,13 +169,17 @@ class InsertItem extends Component {
             <form id="insertForm" className="form-horizontal">
               <div className={styles.form_flex}>
                 {elements}
-                {isCLIMode ? (
-                  <MigrationCheckbox
-                    className={`form-group ${styles.migrationBoxPosStyles}`}
-                    onChange={this.toggleMigrationCheckBox}
-                    isChecked={this.state.isMigration}
-                  />
-                ) : null}
+                {isCLIMode && (
+                  <div className={`form-group ${styles.add_mar_top_small}`}>
+                    <label
+                      className={`col-sm-3 control-label ${styles.insertBoxLabel}`}
+                    />
+                    <MigrationCheckbox
+                      onChange={this.toggleMigrationCheckBox}
+                      isChecked={this.state.isMigration}
+                    />
+                  </div>
+                )}
               </div>
               <div className={styles.display_flex}>
                 <Button
