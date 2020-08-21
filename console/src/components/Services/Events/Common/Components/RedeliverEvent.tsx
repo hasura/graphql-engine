@@ -111,6 +111,7 @@ const RedeliverEvent: React.FC<Props> = ({ dispatch, eventId }) => {
             resizable
             manual
             showPagination={false}
+            freezeWhenExpanded
             SubComponent={(logRow: any) => {
               const finalIndex = logRow.index;
               const finalRow = logs[finalIndex];
