@@ -4,7 +4,7 @@
 
 ### Breaking changes
 
-This PR contains the [PDV refactor (#4111)](https://github.com/hasura/graphql-engine/pull/4111), a significant rewrite of the internals of the server, which did include some breaking changes:
+This release contains the [PDV refactor (#4111)](https://github.com/hasura/graphql-engine/pull/4111), a significant rewrite of the internals of the server, which did include some breaking changes:
 
 - The semantics of `where` have changed, according to the discussion in [issue 704](https://github.com/hasura/graphql-engine/issues/704#issuecomment-635571407). Namely: an explicit `null` value in a `where` expression will be treated as an error rather than resulting in the expression being evaluated to `True`. Meaning that `delete_users(where: {id: {_eq: $userId}}) { name }` will yield an error if `$userId` is `null` instead of deleting all users.
 - The validation of required headers has been fixed (closing #14 and #3659):
