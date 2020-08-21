@@ -312,8 +312,10 @@ export const getSetTableEnumQuery = (
 
 export const getTrackTableQuery = (tableDef: TableDefinition) => {
   return {
-    type: 'add_existing_table_or_view',
-    args: tableDef,
+    type: 'track_table',
+    args: {
+      table: tableDef
+    },
   };
 };
 
@@ -488,20 +490,20 @@ export const generateCreateEventTriggerQuery = (
         state.webhook.type === 'env' ? state.webhook.value.trim() : null,
       insert: state.operations.insert
         ? {
-            columns: '*',
-          }
+          columns: '*',
+        }
         : null,
       update: state.operations.update
         ? {
-            columns: state.operationColumns
-              .filter(c => !!c.enabled)
-              .map(c => c.name),
-          }
+          columns: state.operationColumns
+            .filter(c => !!c.enabled)
+            .map(c => c.name),
+        }
         : null,
       delete: state.operations.delete
         ? {
-            columns: '*',
-          }
+          columns: '*',
+        }
         : null,
       enable_manual: state.operations.enable_manual,
       retry_conf: state.retryConf,
