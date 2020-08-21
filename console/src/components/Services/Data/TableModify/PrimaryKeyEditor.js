@@ -55,7 +55,9 @@ const PrimaryKeyEditor = ({
   );
 
   // label next to the button when the editor is expanded
-  const pkEditorExpandedLabel = () => <div>{pkConfigText}</div>;
+  const pkEditorExpandedLabel = () => (
+    <div data-test="pk-config-text">{pkConfigText}</div>
+  );
 
   // expanded editor content
   const pkEditorExpanded = () => (
@@ -95,7 +97,9 @@ const PrimaryKeyEditor = ({
     );
   };
 
-  useEffect(setPkEditState, [columns]);
+  useEffect(() => {
+    setPkEditState();
+  }, [columns.length]);
 
   // remove
   const onRemove = () => {
