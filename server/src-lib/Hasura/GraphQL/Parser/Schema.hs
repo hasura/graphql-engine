@@ -55,6 +55,7 @@ import           Hasura.Prelude
 import qualified Data.Aeson                    as J
 import qualified Data.HashMap.Strict.Extended  as Map
 import qualified Data.HashSet                  as Set
+import           Data.Hashable                 ( Hashable (..) )
 
 import           Control.Lens.Extended
 import           Control.Monad.Unique
@@ -538,7 +539,9 @@ data Definition a = Definition
   , dInfo        :: ~a
   -- ^ Lazy to allow mutually-recursive type definitions.
   } deriving (Functor, Foldable, Traversable, Generic)
-instance Hashable a => Hashable (Definition a)
+instance Hashable a => Hashable (Definition a) where
+  hashWithSalt salt Definition{..} =
+    salt `hashWithSalt` dName `hashWithSalt` dInfo
 
 mkDefinition :: Name -> Maybe Description -> a -> Definition a
 mkDefinition name description info = Definition name Nothing description info
