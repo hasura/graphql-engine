@@ -131,27 +131,6 @@ instance L.ToEngineLog ActionHandlerLog L.Hasura where
   toEngineLog ahl = (L.LevelInfo, L.ELTActionHandler, J.toJSON ahl)
 
 
--- resolveActionMutation
---   :: ( HasVersion
---      , MonadError QErr m
---      , MonadIO m
---      , MonadReader r m
---      , Has HTTP.Manager r
---      , Has [HTTP.Header] r
---      )
---   => Env.Environment
---   => Field
---   -> ActionMutationExecutionContext
---   -> UserVars
---   -> m (RespTx, HTTP.ResponseHeaders)
--- resolveActionMutation env field executionContext sessionVariables =
---   case executionContext of
---     ActionMutationSyncWebhook executionContextSync ->
---       resolveActionMutationSync env field executionContextSync sessionVariables
---     ActionMutationAsync ->
---       (,[]) <$> resolveActionMutationAsync field sessionVariables
-
-
 data ActionExecuteResult
   = ActionExecuteResult
   { _aerTransaction :: !ActionExecuteTx
