@@ -603,9 +603,8 @@ fieldWithDefault name description defaultValue parser = InputFieldsParser
   where
     expectedType = Just $ toGraphQLType $ pType parser
     parseValue _ value = pInputParser parser value
-    {-
-    FIXME!!!!
-    FIXME!!!!
+    {- See Note [Temporarily disabling query plan caching] in
+    Hasura.GraphQL.Execute.Plan.
 
     parseValue expectedType value = case value of
       VVariable (var@Variable { vInfo, vValue }) -> do
