@@ -137,7 +137,7 @@ class OneGraphExplorer extends React.Component {
               `We are not able to render GraphiQL Explorer and Docs.
               You should still be able to try out your API from the GraphiQL Editor.`,
               null,
-              <p style={{ paddingTop: '5px' }}>
+              <p style={{ paddingTop: '10px', margin: '0' }}>
                 Please report an issue on our{' '}
                 <a
                   target="_blank"
