@@ -214,12 +214,20 @@ export const passModifyPkey = () => {
   cy.get(getElementFromAlias('modify-table-edit-pks')).click();
   cy.get(getElementFromAlias('primary-key-select-1')).select('1');
   cy.get(getElementFromAlias('modify-table-pks-save')).click();
+  cy.get(getElementFromAlias('pk-config-text')).within(() => {
+    cy.get('b').contains(getColName(0));
+    cy.get('b').contains('id');
+  });
   cy.wait(5000);
-  // TODO
-  // test disappearance expect
-  // (cy.get(getElementFromAlias('modify-table-column-1-remove'))).not.to.exist;
+
   cy.get(getElementFromAlias('remove-pk-column-1')).click();
   cy.get(getElementFromAlias('modify-table-pks-save')).click();
+  cy.get(getElementFromAlias('pk-config-text')).within(() => {
+    cy.get('b').contains('id');
+  });
+  cy.get(getElementFromAlias('pk-config-text')).within(() => {
+    cy.get('b').should('not.contain', getColName(0));
+  });
   cy.get(getElementFromAlias('modify-table-close-pks')).click();
   cy.wait(3000);
 };
