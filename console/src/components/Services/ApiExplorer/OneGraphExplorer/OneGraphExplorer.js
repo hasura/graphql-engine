@@ -17,7 +17,10 @@ import { getHeadersAsJSON } from '../utils';
 
 import '../GraphiQLWrapper/GraphiQL.css';
 import './OneGraphExplorer.css';
-import { showErrorNotification } from '../../Common/Notification';
+import {
+  showErrorNotification,
+  showWarningNotification,
+} from '../../Common/Notification';
 import requestAction from '../../../../utils/requestAction';
 
 class OneGraphExplorer extends React.Component {
@@ -97,7 +100,6 @@ class OneGraphExplorer extends React.Component {
       return;
     }
     const headers = JSON.parse(JSON.stringify(headers_));
-    const errTitle = 'Failed to build client schema';
     dispatch(setLoading(true));
     this.setState({ schema: null });
     dispatch(
@@ -129,7 +131,14 @@ class OneGraphExplorer extends React.Component {
           clientSchema = buildClientSchema(result.data);
         } catch (err) {
           console.error(err);
-          dispatch(showErrorNotification(errTitle, err.message, err));
+          dispatch(
+            showWarningNotification(
+              `Failed to parse the schema`,
+              `You may not be able to use the docs and the explorer on GraphiQL,
+              but the editor would work as usual. However, you may also
+              check the console for errors and report any issues on Github`
+            )
+          );
         }
         this.setState({
           schema: clientSchema,
@@ -137,7 +146,9 @@ class OneGraphExplorer extends React.Component {
         });
       })
       .catch(err => {
-        dispatch(showErrorNotification(errTitle, err.message, err));
+        dispatch(
+          showErrorNotification('Introspection query failed', err.message, err)
+        );
         this.setState({
           schema: null,
           previousIntrospectionHeaders: headers,
