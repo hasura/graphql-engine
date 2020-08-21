@@ -493,7 +493,7 @@ export const generateCreateEventTriggerQuery = (
         : null,
       update: state.operations.update
         ? {
-            columns: '*',
+            columns: ['*'],
           }
         : null,
       delete: state.operations.delete
