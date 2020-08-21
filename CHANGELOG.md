@@ -7,8 +7,9 @@
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
-- docs: add docs page on networking with docker (close #4346) (#4811)
+- console: add user prompt to cascade delete on Postgres dependency errors (close #5109) (#5248)
 - cli: add missing global flags for seeds command (#5565)
+- docs: add docs page on networking with docker (close #4346) (#4811)
 
 ## `v1.3.1-beta.1`
 
@@ -107,7 +108,6 @@ If you do have such headers configured, then you must update the header configur
 - console: respect read-only mode in actions pages (fix #4656) (#4764)
 - console: allow configuring session_argument for custom functions (close #4499) (#4922)
 - console: fix listen update column config selection for event trigger (close #5042) (#5043)
-- console: added user prompt to cascade delete on Postgres dependency errors (close #5109) (#5248)
 - cli: add new flags up-sql and down-sql to generate sql based migrations from the CLI (#5026)
 - docs: add instructions on fixing loss of data when using floats (close #5092)
 - docs: add page on setting up v2 migrations (close #4746) (#4898)
