@@ -134,9 +134,16 @@ class OneGraphExplorer extends React.Component {
           dispatch(
             showWarningNotification(
               `Failed to parse the schema`,
-              `You may not be able to use the docs and the explorer on GraphiQL,
-              but the editor would work as usual. However, you may also
-              check the console for errors and report any issues on Github`
+              `We are not able to render GraphiQL Explorer and Docs.
+              You should still be able to try out your API from the GraphiQL Editor.`,
+              null,
+              <p>
+                Please report an issue on our{' '}
+                <a href="https://github.com/hasura/graphql-engine/issues/new">
+                  Github
+                </a>
+                , so we can triage this and improve your experience.
+              </p>
             )
           );
         }
