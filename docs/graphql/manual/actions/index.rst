@@ -24,7 +24,7 @@ enrichment from external sources and any other complex business logic.
    :class: no-shadow
    :alt: Actions high level architecture
 
-.. admonition:: Support
+.. admonition:: Supported from
 
    Actions are supported in Hasura GraphQL engine versions ``v.1.2.0`` and above.
 

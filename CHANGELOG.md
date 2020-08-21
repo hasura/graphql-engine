@@ -7,6 +7,8 @@
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- docs: add docs page on networking with docker (close #4346) (#4811)
+- cli: add missing global flags for seeds command (#5565)
 
 ## `v1.3.1-beta.1`
 
@@ -75,7 +77,6 @@ If you do have such headers configured, then you must update the header configur
 
 
 ## `v1.3.0-beta.3`
-
 
 ### Bug fixes and improvements
 
