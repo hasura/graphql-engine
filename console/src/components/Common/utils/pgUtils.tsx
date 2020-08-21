@@ -81,11 +81,11 @@ export interface Table extends BaseTable {
   table_name: string;
   table_schema: string;
   table_type:
-    | 'TABLE'
-    | 'VIEW'
-    | 'MATERIALIZED VIEW'
-    | 'FOREIGN TABLE'
-    | 'PARTITIONED TABLE';
+  | 'TABLE'
+  | 'VIEW'
+  | 'MATERIALIZED VIEW'
+  | 'FOREIGN TABLE'
+  | 'PARTITIONED TABLE';
   is_table_tracked: boolean;
   columns: TableColumn[];
   relationships: TableRelationship[];
@@ -439,7 +439,7 @@ export const getEnumColumnMappings = (
 export const getTablePermissions = (
   table: Table,
   role: string | null = null,
-  action: string | null = null
+  action: 'insert' | 'delete' | 'update' | 'select' | null = null
 ) => {
   const tablePermissions = table.permissions;
 

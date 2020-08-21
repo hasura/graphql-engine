@@ -44,6 +44,7 @@ import {
   getTableCustomColumnNames,
   getTableDef,
   getComputedFieldName,
+  getTablePermissions,
 } from '../../../Common/utils/pgUtils';
 import {
   getSetCustomRootFieldsQuery,
@@ -873,10 +874,20 @@ const deleteTableSql = tableName => {
 
 const untrackTableSql = tableName => {
   return (dispatch, getState) => {
-    const currentSchema = getState().tables.currentSchema;
+    const { currentSchema, allSchemas } = getState().tables;
     const tableDef = generateTableDef(tableName, currentSchema);
+    const currentTableInfo = allSchemas.find(
+      table =>
+        table.table_name === tableName && table.table_schema === currentSchema
+    );
+    // const allPermissions = [];
+    // if (currentTableInfo.permissions.length) {
+    //   allPermissions = currentTableInfo.permissions.filter(
+    //     table => table.table_name === tableName && tabl
+    //   );
+    // }
     const upQueries = [getUntrackTableQuery(tableDef)];
-    const downQueries = [getTrackTableQuery(tableDef)];
+    const downQueries = [getTrackTableQuery(tableDef), getTablePermissions];
 
     // apply migrations
     const migrationName = 'untrack_table_' + currentSchema + '_' + tableName;
