@@ -13,7 +13,6 @@ import           Control.Monad.Stateless
 import           Data.Aeson                                hiding (json)
 import           Data.Int                                  (Int64)
 import           Data.IORef
-import           Data.Time.Clock                           (UTCTime)
 import           Data.Time.Clock.POSIX                     (getPOSIXTime)
 import           Network.Mime                              (defaultMimeLookup)
 import           System.FilePath                           (joinPath, takeFileName)
@@ -275,8 +274,8 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
           tracingCtx
           (fromString (B8.unpack pathInfo))
 
-    requestId <- getRequestId headers    
-    
+    requestId <- getRequestId headers
+
     mapActionT runTraceT $ do
       -- Add the request ID to the tracing metadata so that we
       -- can correlate requests and traces
@@ -546,7 +545,6 @@ data HasuraApp
   = HasuraApp
   { _hapApplication      :: !Wai.Application
   , _hapSchemaRef        :: !SchemaCacheRef
-  , _hapCacheBuildTime   :: !(Maybe UTCTime)
   , _hapShutdownWsServer :: !(IO ())
   }
 
@@ -603,10 +601,10 @@ mkWaiApp
   -> E.PlanCacheOptions
   -> ResponseInternalErrorsConfig
   -> Maybe EL.LiveQueryPostPollHook
-  -> (RebuildableSchemaCache Run, Maybe UTCTime)
+  -> RebuildableSchemaCache Run
   -> m HasuraApp
 mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpManager mode corsCfg enableConsole consoleAssetsDir
-         enableTelemetry instanceId apis lqOpts planCacheOptions responseErrorsConfig liveQueryHook (schemaCache, cacheBuiltTime) = do
+         enableTelemetry instanceId apis lqOpts planCacheOptions responseErrorsConfig liveQueryHook schemaCache = do
 
     (planCache, schemaCacheRef) <- initialiseCache
     let getSchemaCache = first lastBuiltSchemaCache <$> readIORef (_scrCache schemaCacheRef)
@@ -653,7 +651,7 @@ mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpMana
     waiApp <- liftWithStateless $ \lowerIO ->
       pure $ WSC.websocketsOr WS.defaultConnectionOptions (\ip conn -> lowerIO $ wsServerApp ip conn) spockApp
 
-    return $ HasuraApp waiApp schemaCacheRef cacheBuiltTime stopWSServer
+    return $ HasuraApp waiApp schemaCacheRef stopWSServer
   where
     getTimeMs :: IO Int64
     getTimeMs = (round . (* 1000)) `fmap` getPOSIXTime
@@ -738,7 +736,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
         mkPostHandler $ mkAPIRespHandler v1GQHandler
 
       Spock.post "v1beta1/relay" $ spockAction GH.encodeGQErr allMod200 $
-        mkPostHandler $ mkAPIRespHandler $ v1GQRelayHandler
+        mkPostHandler $ mkAPIRespHandler v1GQRelayHandler
 
     when (isDeveloperAPIEnabled serverCtx) $ do
       Spock.get "dev/ekg" $ spockAction encodeQErr id $
