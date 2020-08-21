@@ -22,6 +22,7 @@ import           Language.GraphQL.Draft.Syntax         (Description (..), Name (
                                                         mkName)
 
 import qualified Hasura.RQL.Types.Column               as RQL
+import qualified Hasura.RQL.Types.CustomTypes          as RQL
 
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Internal.Parser
@@ -143,11 +144,11 @@ column columnType (Nullability isNullable) =
       )
 
 mkScalarTypeName :: MonadError QErr m => PGScalarType -> m Name
-mkScalarTypeName PGInteger  = pure $$(litName "Int")
-mkScalarTypeName PGBoolean  = pure $$(litName "Boolean")
-mkScalarTypeName PGFloat    = pure $$(litName "Float")
-mkScalarTypeName PGText     = pure $$(litName "String")
-mkScalarTypeName PGVarchar  = pure $$(litName "String")
+mkScalarTypeName PGInteger  = pure RQL.intScalar
+mkScalarTypeName PGBoolean  = pure RQL.boolScalar
+mkScalarTypeName PGFloat    = pure RQL.floatScalar
+mkScalarTypeName PGText     = pure RQL.stringScalar
+mkScalarTypeName PGVarchar  = pure RQL.stringScalar
 mkScalarTypeName scalarType = mkName (toSQLTxt scalarType) `onNothing` throw400 ValidationFailed
   ("cannot use SQL type " <> scalarType <<> " in the GraphQL schema because its name is not a "
   <> "valid GraphQL identifier")
