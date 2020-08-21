@@ -836,7 +836,7 @@ export const getDependencyError = (err = {}) => {
     return {
       pgDependencyError: {
         ...err,
-        message: `${err?.internal?.error?.message}.
+        message: `${err?.internal?.error?.message}:\n
          ${err?.internal?.error?.description || ''}`,
       },
     };

@@ -660,6 +660,9 @@ const makeMigrationCall = (
     customOnSuccess(data, globals.consoleMode, currMigrationMode);
   };
   const retryMigration = (err = {}, errMsg = '', isPgCascade = false) => {
+    const errorDetails = getErrorMessage('', err);
+    const errorDetailsLines = errorDetails.split('\n');
+
     dispatch(
       showNotification(
         {
@@ -667,8 +670,9 @@ const makeMigrationCall = (
           level: 'error',
           message: (
             <p>
-              {getErrorMessage('', err)}
-              <br />
+              {errorDetailsLines.map((m, i) => (
+                <div key={i}>{m}</div>
+              ))}
               <br />
               Do you want to drop the dependent items as well?
             </p>
