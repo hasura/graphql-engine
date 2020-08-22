@@ -3,7 +3,6 @@ import ReloadMetadata from '../../../Settings/MetadataOptions/ReloadMetadata';
 import { Dispatch } from '../../../../../types';
 
 export interface ReloadEnumValuesButtonProps {
-  isEnum: boolean;
   dispatch: Dispatch;
   tooltipStyle?: string;
 }
