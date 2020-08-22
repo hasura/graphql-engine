@@ -163,29 +163,35 @@ const insertItem = (tableName, colValues, isMigration = false) => {
       body: JSON.stringify(reqBody),
     };
     const url = Endpoints.query;
-    const migrationSuccessCB = () => {
-      dispatch(showSuccessNotification('Inserted data!', undefined, true));
+    const migrationSuccessCB = affectedRows => () => {
+      dispatch(
+        showSuccessNotification(
+          'Inserted data!',
+          `Affected rows: ${affectedRows}`,
+          true
+        )
+      );
     };
     return dispatch(
       requestAction(url, options, I_REQUEST_SUCCESS, I_REQUEST_ERROR)
     ).then(
       data => {
+        const affectedRows = data.affected_rows;
         if (isMigration) {
-          const insertedData = data.returning[0];
           createInsertMigration(
             dispatch,
             getState,
             { name: tableName, schema: currentSchema },
-            insertedData,
+            data.returning[0],
             currentTableInfo.primary_key,
             columns,
-            migrationSuccessCB
+            migrationSuccessCB(affectedRows)
           );
         } else {
           dispatch(
             showSuccessNotification(
               'Inserted data!',
-              `Affected rows: ${data.affected_rows}`
+              `Affected rows: ${affectedRows}`
             )
           );
         }

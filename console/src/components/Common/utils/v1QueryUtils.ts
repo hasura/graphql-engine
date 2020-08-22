@@ -100,11 +100,6 @@ export const getDropPermissionQuery = (
   };
 };
 
-const cleanUpNulls = (values: string) => {
-  const re = /'null'/gi;
-  return values.replace(re, 'null');
-};
-
 export const getInsertUpQuery = (
   tableDef: TableDefinition,
   insertion: Record<string, any>
@@ -112,10 +107,13 @@ export const getInsertUpQuery = (
   const columns = Object.keys(insertion)
     .map(key => `"${key}"`)
     .join(', ');
-  const insertValues = Object.values(insertion);
 
-  const convertedValues = insertValues
+  const values = Object.values(insertion)
     .map(value => {
+      if (value === 'null' || value === null) {
+        return 'null';
+      }
+
       if (typeof value === 'string') {
         return `'${value}'`;
       }
@@ -135,8 +133,6 @@ export const getInsertUpQuery = (
       return value;
     })
     .join(', ');
-
-  const values = cleanUpNulls(convertedValues);
 
   const sql = `INSERT INTO "${tableDef.schema}"."${tableDef.name}"(${columns}) VALUES (${values});`;
 
