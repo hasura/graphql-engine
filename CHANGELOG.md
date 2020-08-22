@@ -2,8 +2,6 @@
 
 ## Next release
 
-- console: add option to flag an insertion as a migration (close #1766) (#4933)
-
 ### Breaking changes
 
 This release contains the [PDV refactor (#4111)](https://github.com/hasura/graphql-engine/pull/4111), a significant rewrite of the internals of the server, which did include some breaking changes:
@@ -20,6 +18,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - server: some mutations that cannot be performed will no longer be in the schema (for instance, `delete_by_pk` mutations won't be shown to users that do not have select permissions on all primary keys) (#4111)
 - server: miscellaneous description changes (#4111)
 - server: treat the absence of `backend_only` configuration and `backend_only: false` equally (closing #5059) (#4111)
+- console: add option to flag an insertion as a migration (close #1766) (#4933)
 - cli: add missing global flags for seeds command (#5565)
 - docs: add docs page on networking with docker (close #4346) (#4811)
 
