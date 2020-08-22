@@ -1,0 +1,49 @@
+- description: Trying to upsert with required headers set should succeed
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: sales
+    X-Hasura-User-Id: sales 1
+  response:
+    data:
+      insert_leads:
+        affected_rows: 1
+  query:
+    query: |
+      mutation {
+        insert_leads(objects:
+          [{id: 1, name: "lead 2", added_by: "sales 1"}]
+          , on_conflict: {constraint: leads_pkey, update_columns: [name]}
+          ) {
+           affected_rows
+        }
+      }
+
+- description: Trying to upsert without the required headers set should fail
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: sales
+  response:
+    errors:
+      - extensions:
+          path: "$"
+          code: not-found
+        message: 'missing session variables: "x-hasura-user-id"'
+  query:
+    query: |
+      mutation {
+        insert_leads(
+          objects: [{
+            id: 1
+            name: "lead 2"
+            added_by: "sales 1"
+          }]
+          on_conflict: {
+            constraint: leads_pkey
+            update_columns: [name]
+          }
+        ) {
+          affected_rows
+        }
+      }

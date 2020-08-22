@@ -344,7 +344,7 @@ formatMsg str = case T.splitOn "the key " txt of
   where
     txt = T.pack str
 
-runAesonParser :: (QErrM m) => (Value -> Parser a) -> Value -> m a
+runAesonParser :: (QErrM m) => (v -> Parser a) -> v -> m a
 runAesonParser p =
   liftIResult . iparse p
 
