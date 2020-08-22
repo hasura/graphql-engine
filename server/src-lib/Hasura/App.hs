@@ -1,4 +1,5 @@
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE CPP                  #-}
 
 module Hasura.App where
 
@@ -12,9 +13,12 @@ import           Control.Monad.Morph                       (hoist)
 import           Control.Monad.Stateless
 import           Control.Monad.STM                         (atomically)
 import           Control.Monad.Trans.Control               (MonadBaseControl (..))
+import           Control.Monad.Unique
 import           Data.Aeson                                ((.=))
 import           Data.Time.Clock                           (UTCTime)
+#ifndef PROFILING
 import           GHC.AssertNF
+#endif
 import           GHC.Stats
 import           Options.Applicative
 import           System.Environment                        (getEnvironment)
@@ -45,8 +49,8 @@ import           Hasura.Eventing.EventTrigger
 import           Hasura.Eventing.ScheduledTrigger
 import           Hasura.GraphQL.Execute                    (MonadGQLExecutionCheck (..),
                                                             checkQueryInAllowlist)
+import           Hasura.GraphQL.Execute.Action             (asyncActionsProcessor)
 import           Hasura.GraphQL.Logging                    (MonadQueryLog (..), QueryLog (..))
-import           Hasura.GraphQL.Resolve.Action             (asyncActionsProcessor)
 import           Hasura.GraphQL.Transport.HTTP             (MonadExecuteQuery (..))
 import           Hasura.GraphQL.Transport.HTTP.Protocol    (toParsed)
 import           Hasura.Logging
@@ -165,7 +169,7 @@ data InitCtx
   }
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger
--- TODO: better naming?
+-- TODO (from master): better naming?
 data Loggers
   = Loggers
   { _lsLoggerCtx :: !(LoggerCtx Hasura)
@@ -319,7 +323,9 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
   -- tool.
   --
   -- NOTE: be sure to compile WITHOUT code coverage, for this to work properly.
+#ifndef PROFILING
   liftIO disableAssertNF
+#endif
 
   let sqlGenCtx = SQLGenCtx soStringifyNum
       Loggers loggerCtx logger _ = _icLoggers
@@ -597,6 +603,7 @@ execQuery
      , CacheRWM m
      , MonadTx m
      , MonadIO m
+     , MonadUnique m
      , HasHttpManager m
      , HasSQLGenCtx m
      , UserInfoM m
@@ -625,7 +632,7 @@ instance HttpLog AppM where
       mkHttpAccessLogContext userInfoM reqId waiReq compressedResponse qTime cType headers
 
 instance MonadExecuteQuery AppM where
-  executeQuery _ _ _ pgCtx _txAccess tx =
+  executeQuery _ _  _ pgCtx _txAccess tx =
     ([],) <$> hoist (runQueryTx pgCtx) tx
 
 instance UserAuthentication (Tracing.TraceT AppM) where
@@ -659,7 +666,6 @@ instance MonadQueryLog AppM where
 
 instance WS.MonadWSLog AppM where
   logWSLog = unLogger
-
 
 --- helper functions ---
 
