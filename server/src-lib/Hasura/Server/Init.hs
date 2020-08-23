@@ -23,8 +23,8 @@ import           Network.Wai.Handler.Warp         (HostPreference)
 import           Options.Applicative
 
 import qualified Hasura.Cache.Bounded             as Cache
-import qualified Hasura.GraphQL.Execute           as E
 import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
+import qualified Hasura.GraphQL.Execute.Plan      as E
 import qualified Hasura.Logging                   as L
 
 import           Hasura.Db
@@ -199,7 +199,7 @@ mkServeOptions rso = do
       return (flip AuthHookG ty <$> mUrlEnv)
 
     -- Also support HASURA_GRAPHQL_AUTH_HOOK_TYPE
-    -- TODO:- drop this in next major update
+    -- TODO (from master):- drop this in next major update
     authHookTyEnv mType = fromMaybe AHTGet <$>
       withEnv mType "HASURA_GRAPHQL_AUTH_HOOK_TYPE"
 
@@ -320,7 +320,7 @@ serveCmdFooter =
     eventEnvs = [ eventsHttpPoolSizeEnv, eventsFetchIntervalEnv ]
 
 eventsHttpPoolSizeEnv :: (String, String)
-eventsHttpPoolSizeEnv = 
+eventsHttpPoolSizeEnv =
   ( "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
   , "Max event threads"
   )
@@ -379,7 +379,7 @@ pgTimeoutEnv =
 pgConnLifetimeEnv :: (String, String)
 pgConnLifetimeEnv =
   ( "HASURA_GRAPHQL_PG_CONN_LIFETIME"
-  , "Time from connection creation after which the connection should be destroyed and a new one " 
+  , "Time from connection creation after which the connection should be destroyed and a new one "
     <> "created. (default: none)"
   )
 
@@ -454,7 +454,7 @@ enableConsoleEnv =
 enableTelemetryEnv :: (String, String)
 enableTelemetryEnv =
   ( "HASURA_GRAPHQL_ENABLE_TELEMETRY"
-  -- TODO: better description
+  -- TODO (from master): better description
   , "Enable anonymous telemetry (default: true)"
   )
 
@@ -848,7 +848,7 @@ enableAllowlistEnv =
 --   being 70kb. 128mb per-HEC seems like a reasonable default upper bound
 --   (note there is a distinct stripe per-HEC, for now; so this would give 1GB
 --   for an 8-core machine), which gives us a range of 2,000 to 18,000 here.
---     Analysis of telemetry is hazy here; see 
+--     Analysis of telemetry is hazy here; see
 --   https://github.com/hasura/graphql-engine/issues/5363 for some discussion.
 planCacheSizeEnv :: (String, String)
 planCacheSizeEnv =

@@ -110,7 +110,8 @@ export const getErrorMessage = (
         notificationMessage = error.code;
       }
     } else if ('internal' in error && 'error' in error.internal) {
-      notificationMessage = `${error.code} : ${error.internal.error.message}`;
+      notificationMessage = `${error.internal.error.message}.
+      ${error.internal.error.description}`;
     } else if ('custom' in error) {
       notificationMessage = error.custom;
     } else if ('code' in error && 'error' in error && 'path' in error) {

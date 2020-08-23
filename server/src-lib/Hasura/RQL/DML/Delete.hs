@@ -9,7 +9,7 @@ module Hasura.RQL.DML.Delete
   ) where
 
 import           Data.Aeson
-import           Instances.TH.Lift        ()
+import           Instances.TH.Lift           ()
 
 import qualified Data.Sequence            as DS
 import qualified Data.Environment         as Env
@@ -17,24 +17,17 @@ import qualified Hasura.Tracing           as Tracing
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
+import           Hasura.RQL.DML.Delete.Types
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.GBoolExp
+import           Hasura.Server.Version       (HasVersion)
 import           Hasura.RQL.Types
-import           Hasura.Server.Version    (HasVersion)
-import           Hasura.SQL.Types
 
-import qualified Database.PG.Query        as Q
-import qualified Hasura.SQL.DML           as S
+import qualified Database.PG.Query           as Q
+import qualified Hasura.SQL.DML              as S
 
-data AnnDelG v
-  = AnnDel
-  { dqp1Table   :: !QualifiedTable
-  , dqp1Where   :: !(AnnBoolExp v, AnnBoolExp v)
-  , dqp1Output  :: !(MutationOutputG v)
-  , dqp1AllCols :: ![PGColumnInfo]
-  } deriving (Show, Eq)
 
 traverseAnnDel
   :: (Applicative f)
@@ -48,8 +41,6 @@ traverseAnnDel f annUpd =
   <*> pure allCols
   where
     AnnDel tn (whr, fltr) mutOutput allCols = annUpd
-
-type AnnDel = AnnDelG S.SQLExp
 
 mkDeleteCTE
   :: AnnDel -> S.CTE
