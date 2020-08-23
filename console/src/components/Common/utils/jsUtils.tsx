@@ -326,7 +326,7 @@ export const downloadObjectAsJsonFile = (fileName: string, object: any) => {
 export const downloadStringAsPlainFile = (fileName: string, object: any) => {
   const contentType = 'data:text/plain;charset=utf-8,';
 
-  const dataString = `data:${contentType},${encodeURIComponent(object)}`;
+  const dataString = `data:${contentType}${encodeURIComponent(object)}`;
 
   downloadFile(fileName, dataString);
 };
