@@ -1,6 +1,6 @@
 export const Operators = [
   { name: 'equals', value: '$eq', graphqlOp: '_eq' },
-  { name: 'not equals', value: '$ne', graphqlOp: '_neq' },
+  { name: 'not equals', value: '$neq', graphqlOp: '_neq' },
   { name: 'in', value: '$in', graphqlOp: '_in', defaultValue: '[]' },
   { name: 'not in', value: '$nin', graphqlOp: '_nin', defaultValue: '[]' },
   { name: '>', value: '$gt', graphqlOp: '_gt' },
