@@ -91,7 +91,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
   const customStyles: Record<string, any> = {};
   if (styleOverrides) {
     Object.keys(styleOverrides).forEach(comp => {
-      customStyles[comp] = (provided: object) => ({
+      customStyles[comp] = (provided: Record<string, unknown>) => ({
         ...provided,
         ...styleOverrides[comp],
       });
