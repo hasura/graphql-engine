@@ -884,6 +884,14 @@ const untrackTableSql = tableName => {
     let upQueries = [getUntrackTableQuery(tableDef)];
     let downQueries = [getTrackTableQuery(tableDef)];
 
+    // TODO: there might other fields that might be affected here (most things in the modify section)
+    // 1. computed fields are a part of certain permissions here (select) - this needs more thorough inspection, but if the
+    //    custom function exists on the DB, while running the down migration, this should be fine
+    // 2. primary keys, unique keys, foreign keys remain, if all dependent tables/functions exist
+    //    prior to running the down migration, since the table still exists on the DB
+    // 3. constraints are also similar, they exist on the DB had hence might not need checks on untrack/track op.
+    // 4. Custom GraphQL root fields - migration requests exist for these - https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/table-view.html#set-table-custom-fields
+    // 5. There might other things that I am missing here.
     if (currentTableInfo.permissions.length) {
       const [
         permissionUpQueries,
