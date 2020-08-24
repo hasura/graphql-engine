@@ -18,6 +18,7 @@ import qualified Language.Haskell.TH.Syntax       as TH
 import qualified Text.PrettyPrint.ANSI.Leijen     as PP
 
 import           Data.FileEmbed                   (embedStringFile)
+import           Data.List                        (isPrefixOf)
 import           Data.Time                        (NominalDiffTime)
 import           Network.Wai.Handler.Warp         (HostPreference)
 import           Options.Applicative
@@ -605,13 +606,14 @@ parseRawConnInfo =
 
 mkConnInfo :: RawConnInfo -> Either String (DataSource, Q.ConnInfo)
 mkConnInfo (RawConnInfo pgHost pgPort pgUser pgPassword dbURL pgDB opts mRetries msHost msPort msUser msPassword msDB) =
-  go MySQLDB msHost msPort msUser msPassword msDB dbURL <|> go PostgresDB pgHost pgPort pgUser pgPassword pgDB dbURL
+  go MySQLDB    msHost msPort msUser msPassword msDB ("mysql:",    dbURL) <|>
+  go PostgresDB pgHost pgPort pgUser pgPassword pgDB ("postgres:", dbURL)
   where
     retries = fromMaybe 1 mRetries
-    go source (Just host) (Just port) (Just user) pw (Just db) Nothing =
+    go source (Just host) (Just port) (Just user) pw (Just db) (_, Nothing) =
       Right (source, Q.ConnInfo retries $ Q.CDOptions $ Q.ConnOptions host port user pw db opts)
-    go source _ _ _ _ _ (Just db) =
-      Right (source, Q.ConnInfo retries $ Q.CDDatabaseURI $ TE.encodeUtf8 $ T.pack db)
+    go source _ _ _ _ _ (prefix, Just db)
+      | prefix `isPrefixOf` db =  Right (source, Q.ConnInfo retries $ Q.CDDatabaseURI $ TE.encodeUtf8 $ T.pack db)
     go _ _ _ _ _ _ _ =
       Left $ "Invalid options. "
                ++ "Expecting all database connection params "
