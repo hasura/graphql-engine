@@ -4,7 +4,6 @@ import { connect, ConnectedProps } from 'react-redux';
 import { Box, Flex, Heading, Text, Badge } from '../UIKit/atoms';
 import { ConsoleNotification, NotificationDate } from './ConsoleNotification';
 import styles from './Main.scss';
-import ConsoleLogo from './images/components/ConsoleLogo';
 import useOnClickOutside from '../../hooks/useOnClickOutside';
 import { ReduxState, NotificationsState, ConsoleState } from '../../types';
 import { versionGT, checkStableVersion } from '../../helpers/versionUtils';
@@ -268,29 +267,24 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
       className={`dropdown-menu ${styles.consoleNotificationPanel}`}
       ref={forwardedRef}
     >
-      {/* TODO: Use style system colors here */}
       <Flex
         alignItems="center"
         p={16}
-        bg="#f2f2f2"
         justifyContent="space-between"
+        border="4px solid #f2f2f2"
       >
         <Flex alignItems="center" justifyContent="center">
-          <ConsoleLogo
-            className={styles.consoleLogoNotifications}
-            width={18}
-            height={18}
-          />
-          <Heading as="h4" color="#000" fontSize="16px" marginLeft="8px">
-            Latest updates
+          <Heading as="h4" color="#000" fontSize="12px" marginLeft="8px">
+            Notifications (34)
           </Heading>
         </Flex>
         <Button
           title="Mark all as read"
           onClick={onClickMarkAllAsRead}
           disabled={disableMarkAllAsReadBtn}
+          className={`${styles.markAllAsReadBtn}`}
         >
-          Mark all as read
+          mark all read
         </Button>
       </Flex>
       <Box className={styles.notificationsContainer}>
@@ -676,7 +670,7 @@ const HasuraNotifications: React.FC<
         onClick={onClickShareSection}
         ref={wrapperRef}
       >
-        <i className="fa fa-bell" />
+        <i className={`fa fa-bell ${styles.bellIcon}`} />
         <ToReadBadge
           numberNotifications={numberNotifications}
           show={showBadge}
