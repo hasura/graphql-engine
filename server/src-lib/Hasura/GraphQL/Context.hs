@@ -34,6 +34,7 @@ import qualified Hasura.SQL.DML                as S
 
 import           Hasura.GraphQL.Parser
 import           Hasura.GraphQL.Schema.Insert  (AnnInsert)
+import           Hasura.Sources
 
 -- | For storing both a normal GQLContext and one for the backend variant.
 -- Currently, this is to enable the backend variant to have certain insert
@@ -59,7 +60,7 @@ type ParserFn a
   -> Either (NESeq ParseError) (a, QueryReusability)
 
 data RootField db remote action raw
-  = RFDB db
+  = RFDB DataSource db
   | RFRemote remote
   | RFAction action
   | RFRaw raw
@@ -70,7 +71,7 @@ traverseDB :: forall db db' remote action raw f
        -> RootField db remote action raw
        -> f (RootField db' remote action raw)
 traverseDB f = \case
-  RFDB x -> RFDB <$> f x
+  RFDB s x -> RFDB s <$> f x
   RFRemote x -> pure $ RFRemote x
   RFAction x -> pure $ RFAction x
   RFRaw x -> pure $ RFRaw x
@@ -81,7 +82,7 @@ traverseAction :: forall db remote action action' raw f
        -> RootField db remote action raw
        -> f (RootField db remote action' raw)
 traverseAction f = \case
-  RFDB x -> pure $ RFDB x
+  RFDB s x -> pure $ RFDB s x
   RFRemote x -> pure $ RFRemote x
   RFAction x -> RFAction <$> f x
   RFRaw x -> pure $ RFRaw x

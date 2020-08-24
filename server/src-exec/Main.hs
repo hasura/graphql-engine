@@ -22,8 +22,8 @@ import qualified Data.Environment           as Env
 import qualified Database.PG.Query          as Q
 import qualified Hasura.Tracing             as Tracing
 import qualified System.Exit                as Sys
-import qualified System.Posix.Signals       as Signals
 import qualified System.Metrics             as EKG
+import qualified System.Posix.Signals       as Signals
 
 
 main :: IO ()
@@ -41,7 +41,7 @@ runApp :: Env.Environment -> HGEOptions Hasura -> AppM ()
 runApp env (HGEOptionsG rci hgeCmd) =
   withVersion $$(getVersionFromEnvironment) $ case hgeCmd of
     HCServe serveOptions -> do
-      (initCtx, initTime) <- initialiseCtx env hgeCmd rci
+      (initCtx, _, initTime) <- initialiseCtx env hgeCmd rci
       ekgStore <- liftIO EKG.newStore
       let shutdownApp = return ()
       -- Catches the SIGTERM signal and initiates a graceful shutdown.
@@ -56,21 +56,21 @@ runApp env (HGEOptionsG rci hgeCmd) =
       runHGEServer env serveOptions initCtx Nothing initTime shutdownApp Nothing ekgStore
 
     HCExport -> do
-      (initCtx, _) <- initialiseCtx env hgeCmd rci
+      (initCtx, _, _) <- initialiseCtx env hgeCmd rci
       res <- runTx' initCtx fetchMetadata Q.ReadCommitted
       either (printErrJExit MetadataExportError) printJSON res
 
     HCClean -> do
-      (initCtx, _) <- initialiseCtx env hgeCmd rci
+      (initCtx, _, _) <- initialiseCtx env hgeCmd rci
       res <- runTx' initCtx dropCatalog Q.ReadCommitted
       either (printErrJExit MetadataCleanError) (const cleanSuccess) res
 
     HCExecute -> do
-      (InitCtx{..}, _) <- initialiseCtx env hgeCmd rci
+      (InitCtx{..}, dataSource, _) <- initialiseCtx env hgeCmd rci
       queryBs <- liftIO BL.getContents
       let sqlGenCtx = SQLGenCtx False
       res <- runAsAdmin _icPgPool sqlGenCtx _icHttpManager $ do
-        schemaCache <- buildRebuildableSchemaCache env
+        schemaCache <- buildRebuildableSchemaCache env dataSource
         execQuery env queryBs
           & Tracing.runTraceTWithReporter Tracing.noReporter "execute"
           & runHasSystemDefinedT (SystemDefined False)
@@ -79,7 +79,7 @@ runApp env (HGEOptionsG rci hgeCmd) =
       either (printErrJExit ExecuteProcessError) (liftIO . BLC.putStrLn) res
 
     HCDowngrade opts -> do
-      (InitCtx{..}, initTime) <- initialiseCtx env hgeCmd rci
+      (InitCtx{..}, _, initTime) <- initialiseCtx env hgeCmd rci
       let sqlGenCtx = SQLGenCtx False
       res <- downgradeCatalog opts initTime
              & runAsAdmin _icPgPool sqlGenCtx _icHttpManager

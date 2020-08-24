@@ -176,7 +176,7 @@ validateSubscriptionRootField
   :: MonadError QErr m
   => C.QueryRootField v -> m (C.SubscriptionRootField v)
 validateSubscriptionRootField = \case
-  C.RFDB x -> pure $ C.RFDB x
+  C.RFDB s x -> pure $ C.RFDB s x
   C.RFAction (C.AQAsync s) -> pure $ C.RFAction s
   C.RFAction (C.AQQuery _) -> throw400 NotSupported "query actions cannot be run as a subscription"
   C.RFRemote _ -> throw400 NotSupported "subscription to remote server is not supported"

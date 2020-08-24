@@ -36,6 +36,7 @@ import           Hasura.Server.Init.Config
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
 import           Hasura.Session
+import           Hasura.Sources
 import           Network.URI                      (parseURI)
 
 newtype DbUid
@@ -583,9 +584,10 @@ parseRawConnInfo =
                   help "MySQL database user name"
                 )
 
-    mySQLPassword = optional $
+    mySQLPassword =
       strOption ( long "mysql-password" <>
                   metavar "<PASSWORD>" <>
+                  value "" <>
                   help "Password of the MySQL user"
                 )
 
@@ -601,22 +603,20 @@ parseRawConnInfo =
                     help (snd retriesNumEnv)
                   )
 
-mkConnInfo :: RawConnInfo -> Either String Q.ConnInfo
-mkConnInfo (RawConnInfo mHost mPort mUser password mURL mDB opts mRetries _ _ _ _ _) =
-  Q.ConnInfo retries <$>
-  case (mHost, mPort, mUser, mDB, mURL) of
-
-    (Just host, Just port, Just user, Just db, Nothing) ->
-      return $ Q.CDOptions $ Q.ConnOptions host port user password db opts
-
-    (_, _, _, _, Just dbURL) ->
-      return $ Q.CDDatabaseURI $ TE.encodeUtf8 $ T.pack dbURL
-    _ -> throwError $ "Invalid options. "
-                    ++ "Expecting all database connection params "
-                    ++ "(host, port, user, dbname, password) or "
-                    ++ "database-url (HASURA_GRAPHQL_DATABASE_URL)"
+mkConnInfo :: RawConnInfo -> Either String (DataSource, Q.ConnInfo)
+mkConnInfo (RawConnInfo pgHost pgPort pgUser pgPassword dbURL pgDB opts mRetries msHost msPort msUser msPassword msDB) =
+  go MySQLDB msHost msPort msUser msPassword msDB dbURL <|> go PostgresDB pgHost pgPort pgUser pgPassword pgDB dbURL
   where
     retries = fromMaybe 1 mRetries
+    go source (Just host) (Just port) (Just user) pw (Just db) Nothing =
+      Right (source, Q.ConnInfo retries $ Q.CDOptions $ Q.ConnOptions host port user pw db opts)
+    go source _ _ _ _ _ (Just db) =
+      Right (source, Q.ConnInfo retries $ Q.CDDatabaseURI $ TE.encodeUtf8 $ T.pack db)
+    go _ _ _ _ _ _ _ =
+      Left $ "Invalid options. "
+               ++ "Expecting all database connection params "
+               ++ "(host, port, user, dbname, password) or "
+               ++ "database-url (HASURA_GRAPHQL_DATABASE_URL)"
 
 parseTxIsolation :: Parser (Maybe Q.TxIsolation)
 parseTxIsolation = optional $

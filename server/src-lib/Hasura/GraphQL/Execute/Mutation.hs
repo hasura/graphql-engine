@@ -114,11 +114,11 @@ convertMutationRootField
   -> MutationRootField UnpreparedValue
   -> m (Either (tx EncJSON, HTTP.ResponseHeaders) RemoteField)
 convertMutationRootField env logger userInfo manager reqHeaders stringifyNum = \case
-  RFDB (MDBInsert s)  -> noResponseHeaders =<< convertInsert env userSession rjCtx s stringifyNum
-  RFDB (MDBUpdate s)  -> noResponseHeaders =<< convertUpdate env userSession rjCtx s stringifyNum
-  RFDB (MDBDelete s)  -> noResponseHeaders =<< convertDelete env userSession rjCtx s stringifyNum
-  RFRemote remote     -> pure $ Right remote
-  RFAction (AMSync s) -> Left . (_aerTransaction &&& _aerHeaders) <$> resolveActionExecution env logger userInfo s actionExecContext
+  RFDB _ (MDBInsert s) -> noResponseHeaders =<< convertInsert env userSession rjCtx s stringifyNum
+  RFDB _ (MDBUpdate s) -> noResponseHeaders =<< convertUpdate env userSession rjCtx s stringifyNum
+  RFDB _ (MDBDelete s) -> noResponseHeaders =<< convertDelete env userSession rjCtx s stringifyNum
+  RFRemote remote      -> pure $ Right remote
+  RFAction (AMSync s)  -> Left . (_aerTransaction &&& _aerHeaders) <$> resolveActionExecution env logger userInfo s actionExecContext
   RFAction (AMAsync s) -> noResponseHeaders =<< resolveActionMutationAsync s reqHeaders userSession
   RFRaw s              -> noResponseHeaders $ pure $ encJFromJValue s
   where

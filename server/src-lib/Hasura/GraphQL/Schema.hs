@@ -34,6 +34,7 @@ import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
 import           Hasura.Session
+import           Hasura.Sources
 import           Hasura.SQL.Types
 
 -- | Whether the request is sent with `x-hasura-use-backend-only-permissions` set to `true`.
@@ -50,6 +51,7 @@ buildGQLContext
      , HasSQLGenCtx m
      )
   => ( GraphQLQueryType
+     , DataSource
      , TableCache
      , FunctionCache
      , HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
@@ -61,7 +63,7 @@ buildGQLContext
      , GQLContext
      )
 buildGQLContext =
-  proc (queryType, allTables, allFunctions, allRemoteSchemas, allActions, nonObjectCustomTypes) -> do
+  proc (queryType, dataSource, allTables, allFunctions, allRemoteSchemas, allActions, nonObjectCustomTypes) -> do
 
     -- Scroll down a few pages for the actual body...
 
@@ -86,10 +88,10 @@ buildGQLContext =
           SQLGenCtx{ stringifyNum } <- askSQLGenCtx
           let gqlContext =
                 (,)
-                <$> queryWithIntrospection (Set.fromMap $ validTables $> ())
+                <$> queryWithIntrospection dataSource (Set.fromMap $ validTables $> ())
                       validFunctions mempty mempty
                       allActionInfos nonObjectCustomTypes
-                <*> mutation (Set.fromMap $ validTables $> ()) mempty
+                <*> mutation dataSource (Set.fromMap $ validTables $> ()) mempty
                       allActionInfos nonObjectCustomTypes
           flip runReaderT (adminRoleName, validTables, Frontend, QueryContext stringifyNum queryType queryRemotesMap) $
             P.runSchemaT gqlContext
@@ -164,17 +166,17 @@ buildGQLContext =
         queryRemotes = concatMap (piQuery . snd) remotes
         mutationRemotes = concatMap (concat . piMutation . snd) remotes
         queryHasuraOrRelay = case queryType of
-          QueryHasura -> queryWithIntrospection (Set.fromMap $ validTables $> ())
+          QueryHasura -> queryWithIntrospection dataSource (Set.fromMap $ validTables $> ())
                          validFunctions queryRemotes mutationRemotes
                          allActionInfos nonObjectCustomTypes
-          QueryRelay  -> relayWithIntrospection (Set.fromMap $ validTables $> ()) validFunctions
+          QueryRelay  -> relayWithIntrospection dataSource (Set.fromMap $ validTables $> ()) validFunctions
 
         buildContextForRoleAndScenario :: RoleName -> Scenario -> m GQLContext
         buildContextForRoleAndScenario roleName scenario = do
           SQLGenCtx{ stringifyNum } <- askSQLGenCtx
           let gqlContext = GQLContext
                 <$> (finalizeParser <$> queryHasuraOrRelay)
-                <*> (fmap finalizeParser <$> mutation (Set.fromList $ Map.keys validTables) mutationRemotes
+                <*> (fmap finalizeParser <$> mutation dataSource (Set.fromList $ Map.keys validTables) mutationRemotes
                      allActionInfos nonObjectCustomTypes)
           flip runReaderT (roleName, validTables, scenario, QueryContext stringifyNum queryType queryRemotesMap) $
             P.runSchemaT gqlContext
@@ -205,13 +207,14 @@ query'
      , MonadRole r m
      , Has QueryContext r
      )
-  => HashSet QualifiedTable
+  => DataSource
+  -> HashSet QualifiedTable
   -> [FunctionInfo]
   -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
   -> [ActionInfo]
   -> NonObjectTypeMap
   -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
-query' allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
+query' dataSource allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
   tableSelectExpParsers <- for (toList allTables) \table -> do
     selectPerms <- tableSelectPermissions table
     customRootFields <- _tcCustomRootFields . _tciCustomConfig . _tiCoreInfo <$> askTableInfo table
@@ -223,9 +226,9 @@ query' allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
           pkName = displayName <> $$(G.litName "_by_pk")
           pkDesc = G.Description $ "fetch data from the table: " <> table <<> " using primary key columns"
       catMaybes <$> sequenceA
-        [ requiredFieldParser (RFDB . QDBSimple)      $ selectTable          table (fromMaybe displayName $ _tcrfSelect          customRootFields) (Just fieldsDesc) perms
-        , mapMaybeFieldParser (RFDB . QDBPrimaryKey)  $ selectTableByPk      table (fromMaybe pkName      $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms
-        , mapMaybeFieldParser (RFDB . QDBAggregation) $ selectTableAggregate table (fromMaybe aggName     $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms
+        [ requiredFieldParser (rfdb . QDBSimple)      $ selectTable          table (fromMaybe displayName $ _tcrfSelect          customRootFields) (Just fieldsDesc) perms
+        , mapMaybeFieldParser (rfdb . QDBPrimaryKey)  $ selectTableByPk      table (fromMaybe pkName      $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms
+        , mapMaybeFieldParser (rfdb . QDBAggregation) $ selectTableAggregate table (fromMaybe aggName     $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms
         ]
   functionSelectExpParsers <- for allFunctions \function -> do
     let targetTable = fiReturnType function
@@ -237,8 +240,8 @@ query' allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
           aggName = displayName <> $$(G.litName "_aggregate")
           aggDesc = G.Description $ "execute function " <> functionName <<> " and query aggregates on result of table type " <>> targetTable
       catMaybes <$> sequenceA
-        [ requiredFieldParser (RFDB . QDBSimple)      $ selectFunction          function displayName (Just functionDesc) perms
-        , mapMaybeFieldParser (RFDB . QDBAggregation) $ selectFunctionAggregate function aggName     (Just aggDesc)      perms
+        [ requiredFieldParser (rfdb . QDBSimple)      $ selectFunction          function displayName (Just functionDesc) perms
+        , mapMaybeFieldParser (rfdb . QDBAggregation) $ selectFunctionAggregate function aggName     (Just aggDesc)      perms
         ]
   actionParsers <- for allActions $ \actionInfo ->
     case _adType (_aiDefinition actionInfo) of
@@ -250,6 +253,8 @@ query' allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
   pure $ (concat . catMaybes) (tableSelectExpParsers <> functionSelectExpParsers <> toRemoteFieldParser allRemotes)
          <> catMaybes actionParsers
   where
+    rfdb = RFDB dataSource
+
     requiredFieldParser :: (a -> b) -> m (P.FieldParser n a) -> m (Maybe (P.FieldParser n b))
     requiredFieldParser f = fmap $ Just . fmap f
 
@@ -293,34 +298,36 @@ relayQuery' allTables allFunctions = do
                       <<> " which returns " <>> returnTable
       lift $ selectFunctionConnection function fieldName fieldDesc pkeyColumns selectPerms
 
-  pure $ map ((RFDB . QDBConnection) <$>) $ catMaybes $
+  pure $ map ((RFDB PostgresDB . QDBConnection) <$>) $ catMaybes $
          tableConnectionSelectParsers <> functionConnectionSelectParsers
 
 -- | Parse query-type GraphQL requests without introspection
 query
   :: forall m n r
    . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
-  => G.Name
+  => DataSource
+  -> G.Name
   -> HashSet QualifiedTable
   -> [FunctionInfo]
   -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
   -> [ActionInfo]
   -> NonObjectTypeMap
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
-query name allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
-  queryFieldsParser <- query' allTables allFunctions allRemotes allActions nonObjectCustomTypes
+query dataSource name allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
+  queryFieldsParser <- query' dataSource allTables allFunctions allRemotes allActions nonObjectCustomTypes
   pure $ P.selectionSet name Nothing queryFieldsParser
     <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
 
 subscription
   :: forall m n r
    . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
-  => HashSet QualifiedTable
+  => DataSource
+  -> HashSet QualifiedTable
   -> [FunctionInfo]
   -> [ActionInfo]
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
-subscription allTables allFunctions asyncActions =
-  query $$(G.litName "subscription_root") allTables allFunctions [] asyncActions mempty
+subscription dataSource allTables allFunctions asyncActions =
+  query dataSource $$(G.litName "subscription_root") allTables allFunctions [] asyncActions mempty
 
 queryRootFromFields
   :: forall n
@@ -402,17 +409,18 @@ queryWithIntrospection
      , Has QueryContext r
      , Has Scenario r
      )
-  => HashSet QualifiedTable
+  => DataSource
+  -> HashSet QualifiedTable
   -> [FunctionInfo]
   -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
   -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
   -> [ActionInfo]
   -> NonObjectTypeMap
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
-queryWithIntrospection allTables allFunctions queryRemotes mutationRemotes allActions nonObjectCustomTypes = do
-  basicQueryFP <- query' allTables allFunctions queryRemotes allActions nonObjectCustomTypes
-  mutationP <- mutation allTables mutationRemotes allActions nonObjectCustomTypes
-  subscriptionP <- subscription allTables allFunctions $
+queryWithIntrospection dataSource allTables allFunctions queryRemotes mutationRemotes allActions nonObjectCustomTypes = do
+  basicQueryFP <- query' dataSource allTables allFunctions queryRemotes allActions nonObjectCustomTypes
+  mutationP <- mutation dataSource allTables mutationRemotes allActions nonObjectCustomTypes
+  subscriptionP <- subscription dataSource allTables allFunctions $
                    filter (has (aiDefinition.adType._ActionMutation._ActionAsynchronous)) allActions
   queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP
 
@@ -424,13 +432,14 @@ relayWithIntrospection
      , Has QueryContext r
      , Has Scenario r
      )
-  => HashSet QualifiedTable
+  => DataSource
+  -> HashSet QualifiedTable
   -> [FunctionInfo]
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
-relayWithIntrospection allTables allFunctions = do
-  nodeFP <- fmap (RFDB . QDBPrimaryKey) <$> nodeField
+relayWithIntrospection dataSource allTables allFunctions = do
+  nodeFP <- fmap (RFDB dataSource . QDBPrimaryKey) <$> nodeField
   basicQueryFP <- relayQuery' allTables allFunctions
-  mutationP <- mutation allTables [] [] mempty
+  mutationP <- mutation dataSource allTables [] [] mempty
   let relayQueryFP = nodeFP:basicQueryFP
       subscriptionP = P.selectionSet $$(G.litName "subscription_root") Nothing relayQueryFP
                       <&> fmap (P.handleTypename (RFRaw . J.String. G.unName))
@@ -478,12 +487,13 @@ unauthenticatedQueryWithIntrospection queryRemotes mutationRemotes = do
 mutation
   :: forall m n r
    . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r, Has Scenario r)
-  => HashSet QualifiedTable
+  => DataSource
+  -> HashSet QualifiedTable
   -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
   -> [ActionInfo]
   -> NonObjectTypeMap
   -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue))))
-mutation allTables allRemotes allActions nonObjectCustomTypes = do
+mutation dataSource allTables allRemotes allActions nonObjectCustomTypes = do
   mutationParsers <- for (toList allTables) \table -> do
     tableCoreInfo <- _tiCoreInfo <$> askTableInfo table
     displayName   <- qualifiedObjectToName table
@@ -512,7 +522,7 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
         -- select permissions
         insertOne <- for selectPerms \selPerms ->
           insertOneIntoTable table (fromMaybe insertOneName $ _tcrfInsertOne customRootFields) (Just insertOneDesc) insertPerms selPerms (_permUpd permissions)
-        pure $ fmap (RFDB . MDBInsert) insert : maybe [] (pure . fmap (RFDB . MDBInsert)) insertOne
+        pure $ fmap (RFDB dataSource . MDBInsert) insert : maybe [] (pure . fmap (RFDB dataSource . MDBInsert)) insertOne
 
       updates <- fmap join $ whenMaybe (isMutable viIsUpdatable viewInfo) $ for (_permUpd permissions) \updatePerms -> do
         let updateName = $$(G.litName "update_") <> displayName
@@ -525,7 +535,7 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
         -- them, which at the very least requires select permissions
         updateByPk <- join <$> for selectPerms
           (updateTableByPk table (fromMaybe updateByPkName $ _tcrfUpdateByPk customRootFields) (Just updateByPkDesc) updatePerms)
-        pure $ fmap (RFDB . MDBUpdate) <$> catMaybes [update, updateByPk]
+        pure $ fmap (RFDB dataSource . MDBUpdate) <$> catMaybes [update, updateByPk]
 
       deletes <- fmap join $ whenMaybe (isMutable viIsDeletable viewInfo) $ for (_permDel permissions) \deletePerms -> do
         let deleteName = $$(G.litName "delete_") <> displayName
@@ -537,7 +547,7 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
         -- ditto
         deleteByPk <- join <$> for selectPerms
           (deleteFromTableByPk table (fromMaybe deleteByPkName $ _tcrfDeleteByPk customRootFields) (Just deleteByPkDesc) deletePerms)
-        pure $ fmap (RFDB . MDBDelete) delete : maybe [] (pure . fmap (RFDB . MDBDelete)) deleteByPk
+        pure $ fmap (RFDB dataSource . MDBDelete) delete : maybe [] (pure . fmap (RFDB dataSource . MDBDelete)) deleteByPk
 
       pure $ concat $ catMaybes [inserts, updates, deletes]
 

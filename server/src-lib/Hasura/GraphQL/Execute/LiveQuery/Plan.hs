@@ -58,6 +58,8 @@ import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Query
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.RQL.Types
+import           Hasura.Sources
+import           Hasura.Sources.MySQL.Query
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -70,11 +72,15 @@ newtype MultiplexedQuery = MultiplexedQuery { unMultiplexedQuery :: Q.Query }
 
 toSQLFromItem :: S.Alias -> SubscriptionRootFieldResolved -> S.FromItem
 toSQLFromItem alias = \case
-  RFDB (QDBPrimaryKey s)  -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
-  RFDB (QDBSimple s)      -> fromSelect $ DS.mkSQLSelect DS.JASMultipleRows s
-  RFDB (QDBAggregation s) -> fromSelect $ DS.mkAggregateSelect s
-  RFDB (QDBConnection s)  -> S.mkSelectWithFromItem (DS.mkConnectionSelect s) alias
-  RFAction s              -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
+  RFDB source (QDBPrimaryKey s) -> case source of
+    PostgresDB -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
+    MySQLDB    -> fromSelect $ Hasura.Sources.MySQL.Query.mkMySQLSelect DS.JASSingleObject s
+  RFDB source (QDBSimple s)     -> case source of
+    PostgresDB -> fromSelect $ DS.mkSQLSelect DS.JASMultipleRows s
+    MySQLDB    -> fromSelect $ Hasura.Sources.MySQL.Query.mkMySQLSelect DS.JASMultipleRows s
+  RFDB _ (QDBAggregation s) -> fromSelect $ DS.mkAggregateSelect s
+  RFDB _ (QDBConnection s)  -> S.mkSelectWithFromItem (DS.mkConnectionSelect s) alias
+  RFAction s                -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
   where
     fromSelect s = S.mkSelFromItem s alias
 
@@ -314,7 +320,7 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
     for unpreparedAST \unpreparedQuery -> do
       resolvedRootField <- traverseQueryRootField resolveMultiplexedValue unpreparedQuery
       case resolvedRootField of
-        RFDB qDB   -> do
+        RFDB _ qDB -> do
           let remoteJoins = case qDB of
                 QDBSimple s      -> snd $ RR.getRemoteJoins s
                 QDBPrimaryKey s  -> snd $ RR.getRemoteJoins s

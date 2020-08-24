@@ -1,5 +1,5 @@
-{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE CPP                  #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.App where
 
@@ -75,6 +75,7 @@ import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version
 import           Hasura.Session
+import           Hasura.Sources
 
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll     as EL
 import qualified Hasura.GraphQL.Transport.WebSocket.Server as WS
@@ -190,13 +191,13 @@ initialiseCtx
   => Env.Environment
   -> HGECommand Hasura
   -> RawConnInfo
-  -> m (InitCtx, UTCTime)
+  -> m (InitCtx, DataSource, UTCTime)
 initialiseCtx env hgeCmd rci = do
   initTime <- liftIO Clock.getCurrentTime
   -- global http manager
   httpManager <- liftIO $ HTTP.newManager HTTP.tlsManagerSettings
   instanceId <- liftIO generateInstanceId
-  connInfo <- liftIO procConnInfo
+  (dataSource, connInfo) <- liftIO procConnInfo
   latch <- liftIO newShutdownLatch
   (loggers, pool, sqlGenCtx) <- case hgeCmd of
     -- for the @serve@ command generate a regular PG pool
@@ -216,8 +217,8 @@ initialiseCtx env hgeCmd rci = do
       pure (l, pool, SQLGenCtx False)
 
   res <- flip onException (flushLogger (_lsLoggerCtx loggers)) $
-    migrateCatalogSchema env (_lsLogger loggers) pool httpManager sqlGenCtx
-  pure (InitCtx httpManager instanceId loggers connInfo pool latch res, initTime)
+    migrateCatalogSchema env dataSource (_lsLogger loggers) pool httpManager sqlGenCtx
+  pure (InitCtx httpManager instanceId loggers connInfo pool latch res, dataSource, initTime)
   where
     procConnInfo =
       either (printErrExit InvalidDatabaseConnectionParamsError . ("Fatal Error : " <>)) return $ mkConnInfo rci
@@ -235,14 +236,14 @@ initialiseCtx env hgeCmd rci = do
 -- | helper function to initialize or migrate the @hdb_catalog@ schema (used by pro as well)
 migrateCatalogSchema
   :: (HasVersion, MonadIO m)
-  => Env.Environment -> Logger Hasura -> Q.PGPool -> HTTP.Manager -> SQLGenCtx
+  => Env.Environment -> DataSource -> Logger Hasura -> Q.PGPool -> HTTP.Manager -> SQLGenCtx
   -> m (RebuildableSchemaCache Run, Maybe UTCTime)
-migrateCatalogSchema env logger pool httpManager sqlGenCtx = do
+migrateCatalogSchema env dataSource logger pool httpManager sqlGenCtx = do
   let pgExecCtx = mkPGExecCtx Q.Serializable pool
       adminRunCtx = RunCtx adminUserInfo httpManager sqlGenCtx
   currentTime <- liftIO Clock.getCurrentTime
   initialiseResult <- runExceptT $ peelRun adminRunCtx pgExecCtx Q.ReadWrite Nothing $
-    (,) <$> migrateCatalog env currentTime <*> liftTx fetchLastUpdate
+    (,) <$> migrateCatalog env dataSource currentTime <*> liftTx fetchLastUpdate
 
   ((migrationResult, schemaCache), lastUpdateEvent) <-
     initialiseResult `onLeft` \err -> do

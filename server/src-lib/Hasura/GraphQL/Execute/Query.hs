@@ -42,6 +42,7 @@ import           Hasura.RQL.DML.RemoteJoin
 import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.Session
+import           Hasura.Sources
 -- import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
@@ -256,8 +257,9 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
       collectPlan (seqDB, seqRemote) name (RFRemote r) =
         (seqDB, seqRemote Seq.:|> (name, r))
 
-      collectPlan (seqDB, seqRemote) name (RFDB db)      =
-        (seqDB Seq.:|> (name, RFPPostgres db), seqRemote)
+      collectPlan (seqDB, seqRemote) name (RFDB dataSource db) = case dataSource of
+        PostgresDB -> (seqDB Seq.:|> (name, RFPPostgres db), seqRemote)
+        MySQLDB    -> (seqDB Seq.:|> (name, RFPMySQL    db), seqRemote)
 
       collectPlan (seqDB, seqRemote) name (RFAction rfp) =
         (seqDB Seq.:|> (name, rfp), seqRemote)

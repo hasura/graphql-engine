@@ -116,18 +116,18 @@ data DowngradeOptions
 
 data RawConnInfo =
   RawConnInfo
-  { connHost     :: !(Maybe String)
-  , connPort     :: !(Maybe Int)
-  , connUser     :: !(Maybe String)
-  , connPassword :: !String
-  , connUrl      :: !(Maybe String)
-  , connDatabase :: !(Maybe String)
-  , connOptions  :: !(Maybe String)
-  , connRetries  :: !(Maybe Int)
+  { connHost          :: !(Maybe String)
+  , connPort          :: !(Maybe Int)
+  , connUser          :: !(Maybe String)
+  , connPassword      :: !String
+  , connUrl           :: !(Maybe String)
+  , connDatabase      :: !(Maybe String)
+  , connOptions       :: !(Maybe String)
+  , connRetries       :: !(Maybe Int)
   , connMySQLHost     :: !(Maybe String)
   , connMySQLPort     :: !(Maybe Int)
   , connMySQLUser     :: !(Maybe String)
-  , connMySQLPassword :: !(Maybe String)
+  , connMySQLPassword :: !String
   , connMySQLDatabase :: !(Maybe String)
   } deriving (Eq, Read, Show)
 
