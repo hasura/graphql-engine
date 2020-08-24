@@ -17,10 +17,10 @@ export type TableRelationship = {
 export type PermissionActionType = 'select' | 'insert' | 'delete' | 'update';
 
 type PermissionValueType = {
-  columns: string[];
+  columns?: string[];
   allow_aggregations?: boolean;
   computedFields?: any[];
-  filter: Record<string, any>;
+  filter?: Record<string, any>;
   limit?: number;
   check?: boolean;
   set?: any;
