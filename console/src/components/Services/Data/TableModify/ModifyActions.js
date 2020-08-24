@@ -44,7 +44,6 @@ import {
   getTableCustomColumnNames,
   getTableDef,
   getComputedFieldName,
-  getTablePermissions,
 } from '../../../Common/utils/pgUtils';
 import {
   getSetCustomRootFieldsQuery,
@@ -54,6 +53,7 @@ import {
   getSetTableEnumQuery,
   getUntrackTableQuery,
   getTrackTableQuery,
+  getTablePermissionsQuery,
 } from '../../../Common/utils/v1QueryUtils';
 import {
   fetchColumnCastsQuery,
@@ -880,17 +880,21 @@ const untrackTableSql = tableName => {
       table =>
         table.table_name === tableName && table.table_schema === currentSchema
     );
-    // const allPermissions = [];
-    // if (currentTableInfo.permissions.length) {
-    //   allPermissions = currentTableInfo.permissions.filter(
-    //     table => table.table_name === tableName && tabl
-    //   );
-    // }
-    const upQueries = [getUntrackTableQuery(tableDef)];
-    const downQueries = [getTrackTableQuery(tableDef), getTablePermissions];
+
+    let upQueries = [getUntrackTableQuery(tableDef)];
+    let downQueries = [getTrackTableQuery(tableDef)];
+
+    if (currentTableInfo.permissions.length) {
+      const [
+        permissionUpQueries,
+        permissionDownQueries,
+      ] = getTablePermissionsQuery(currentTableInfo.permissions);
+      upQueries = [...upQueries, ...permissionUpQueries];
+      downQueries = [...downQueries, ...permissionDownQueries];
+    }
 
     // apply migrations
-    const migrationName = 'untrack_table_' + currentSchema + '_' + tableName;
+    const migrationName = `untrack_table_${currentSchema}_${tableName}`;
 
     const requestMsg = 'Untracking table...';
     const successMsg = 'Table untracked';
