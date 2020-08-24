@@ -19,11 +19,11 @@ export type PermissionActionType = 'select' | 'insert' | 'delete' | 'update';
 type PermissionValueType = {
   columns?: string[];
   allow_aggregations?: boolean;
-  computedFields?: any[];
+  computedFields?: Record<string, any>[];
   filter?: Record<string, any>;
   limit?: number;
   check?: boolean;
-  set?: any;
+  set?: Record<string, any>;
   backend_only?: boolean;
 };
 
