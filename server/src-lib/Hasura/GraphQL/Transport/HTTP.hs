@@ -99,7 +99,11 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
     case execPlan of
       E.QueryExecutionPlan queryPlan asts ->
         case queryPlan of
-          E.ExecStepDB txGenSql -> do
+          E.ExecStepPostgres txGenSql -> do
+            (telemTimeIO, telemQueryType, respHdrs, resp) <-
+              runQueryDB reqId (reqUnparsed,reqParsed) asts userInfo txGenSql
+            return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs))
+          E.ExecStepMySQL txGenSql -> do
             (telemTimeIO, telemQueryType, respHdrs, resp) <-
               runQueryDB reqId (reqUnparsed,reqParsed) asts userInfo txGenSql
             return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs))
@@ -111,9 +115,10 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             return (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj []))
       E.MutationExecutionPlan mutationPlan ->
         case mutationPlan of
-          E.ExecStepDB (tx, responseHeaders) -> do
+          E.ExecStepPostgres (tx, responseHeaders) -> do
             (telemTimeIO, telemQueryType, resp) <- runMutationDB reqId reqUnparsed userInfo tx
             return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp responseHeaders))
+          E.ExecStepMySQL _ -> error "Dolphin: not supported for now"
           E.ExecStepRemote (rsi, opDef, _varValsM) ->
             runRemoteGQ telemCacheHit rsi opDef
           E.ExecStepRaw (name, json) -> do

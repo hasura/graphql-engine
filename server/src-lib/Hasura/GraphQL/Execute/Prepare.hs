@@ -53,8 +53,10 @@ type RemoteCall = (RemoteSchemaInfo, G.TypedOperationDefinition G.NoFragments G.
 -- | One execution step to processing a GraphQL query (e.g. one root field).
 -- Polymorphic to allow the SQL to be generated in stages.
 data ExecutionStep db remote raw
-  = ExecStepDB db
-  -- ^ A query to execute against the database
+  = ExecStepPostgres db
+  -- ^ A query to execute against a local postgres database
+  | ExecStepMySQL db
+  -- ^ A query to execute against a local mysql database
   | ExecStepRemote remote -- !RemoteSchemaInfo !(G.Selection G.NoFragments G.Name)
   -- ^ A query to execute against a remote schema
   | ExecStepRaw raw

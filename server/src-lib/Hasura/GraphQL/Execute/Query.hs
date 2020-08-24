@@ -65,12 +65,14 @@ instance J.ToJSON PGPlan where
 data RootFieldPlan
   = RFPRaw !B.ByteString
   | RFPPostgres !PGPlan
+  | RFPMySQL !PGPlan
   | RFPActionQuery !ActionExecuteTx
 
 instance J.ToJSON RootFieldPlan where
   toJSON = \case
     RFPRaw encJson     -> J.toJSON $ TBS.fromBS encJson
     RFPPostgres pgPlan -> J.toJSON pgPlan
+    RFPMySQL msPlan    -> J.toJSON msPlan
     RFPActionQuery _   -> J.String "Action Execution Tx"
 
 type FieldPlans = [(G.Name, RootFieldPlan)]
@@ -137,6 +139,9 @@ mkCurPlanTx env manager reqHdrs userInfo fldPlans = do
   resolved <- forM fldPlans $ \(alias, fldPlan) -> do
     fldResp <- case fldPlan of
       RFPRaw resp                      -> return $ RRRaw resp
+      RFPMySQL (PGPlan q _ prepMap remoteJoins) -> do
+        let args = withUserVars (_uiSession userInfo) $ IntMap.elems prepMap
+        return $ RRSql $ PreparedSql q args remoteJoins
       RFPPostgres (PGPlan q _ prepMap remoteJoins) -> do
         let args = withUserVars (_uiSession userInfo) $ IntMap.elems prepMap
         return $ RRSql $ PreparedSql q args remoteJoins
@@ -262,7 +267,7 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
 
 
   executionPlan <- case (dbPlans, remoteFields) of
-    (dbs, Seq.Empty) -> ExecStepDB <$> mkCurPlanTx env manager reqHeaders userInfo (toList dbs)
+    (dbs, Seq.Empty) -> ExecStepPostgres <$> mkCurPlanTx env manager reqHeaders userInfo (toList dbs)
     (Seq.Empty, remotes@(firstRemote Seq.:<| _)) -> do
       let (remoteOperation, _) =
             buildTypedOperation

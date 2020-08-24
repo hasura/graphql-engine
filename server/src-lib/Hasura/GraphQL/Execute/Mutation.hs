@@ -16,12 +16,12 @@ import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+import qualified Hasura.Logging                         as L
 import qualified Hasura.RQL.DML.Delete                  as RQL
 import qualified Hasura.RQL.DML.Mutation                as RQL
 import qualified Hasura.RQL.DML.Returning.Types         as RQL
 import qualified Hasura.RQL.DML.Update                  as RQL
 import qualified Hasura.Tracing                         as Tracing
-import qualified Hasura.Logging                         as L
 
 
 import           Hasura.Db
@@ -167,7 +167,7 @@ convertMutationSelectionSet env logger gqlContext sqlGenCtx userInfo manager req
     (dbPlans, []) -> do
       let allHeaders = concatMap (snd . snd) dbPlans
           combinedTx = toSingleTx $ map (G.unName *** fst) dbPlans
-      pure $ ExecStepDB (combinedTx, allHeaders)
+      pure $ ExecStepPostgres (combinedTx, allHeaders)
     ([], remotes@(firstRemote:_)) -> do
       let (remoteOperation, varValsM') =
             buildTypedOperation
