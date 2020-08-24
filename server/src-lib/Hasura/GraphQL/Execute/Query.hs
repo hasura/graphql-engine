@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveAnyClass     #-}
-{-# LANGUAGE DerivingStrategies #-}
 
 module Hasura.GraphQL.Execute.Query
   ( convertQuerySelSet
