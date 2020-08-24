@@ -4,6 +4,7 @@ import string
 import random
 import ruamel.yaml as yaml
 import json
+import graphql
 import queue
 import requests
 import time
@@ -77,7 +78,7 @@ class TestRemoteSchemaBasic:
         with open('queries/graphql_introspection/introspection.yaml') as f:
             query = yaml.safe_load(f)
         resp, _ = check_query(hge_ctx, query)
-        assert check_introspection_result(resp, ['Hello'], ['hello'])
+        assert check_introspection_result(resp, ['String'], ['hello'])
 
     @pytest.mark.allow_server_upgrade_test
     def test_introspection_as_user(self, hge_ctx):
@@ -522,17 +523,25 @@ def get_fld_by_name(ty, fldName):
 def get_arg_by_name(fld, argName):
     return _filter(lambda a: a['name'] == argName, fld['args'])
 
-def compare_args(argH, argR):
+def compare_args(arg_path, argH, argR):
     assert argR['type'] == argH['type'], yaml.dump({
         'error' : 'Types do not match for arg ' + arg_path,
         'remote_type' : argR['type'],
         'hasura_type' : argH['type']
     })
-    assert argR['defaultValue'] == argH['defaultValue'], yaml.dump({
-        'error' : 'Default values do not match for arg ' + arg_path,
-        'remote_default_value' : argR['defaultValue'],
-        'hasura_default_value' : argH['defaultValue']
-    })
+    compare_default_value(argR['defaultValue'], argH['defaultValue'])
+
+# There doesn't seem to be any Python code that can correctly compare GraphQL
+# 'Value's for equality. So we try to do it here.
+def compare_default_value(valH, valR):
+    a = graphql.parse_value(valH)
+    b = graphql.parse_value(valR)
+    if a == b:
+        return True
+    for field in a.fields:
+        assert field in b.fields
+    for field in b.fields:
+        assert field in a.fields
 
 def compare_flds(fldH, fldR):
     assert fldH['type'] == fldR['type'], yaml.dump({
@@ -546,7 +555,7 @@ def compare_flds(fldH, fldR):
         has_arg[arg_path] = False
         for argH in get_arg_by_name(fldH, argR['name']):
             has_arg[arg_path] = True
-            compare_args(argH, argR)
+            compare_args(arg_path, argH, argR)
         assert has_arg[arg_path], 'Argument ' + arg_path + ' in the remote schema root query type not found in Hasura schema'
 
 reload_metadata_q = {

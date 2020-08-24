@@ -1,0 +1,42 @@
+- description: The 'columns' argument to 'count' should be exposed, as the role has select access to the cols
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: role_with_access_to_cols
+  response:
+    data:
+      article_aggregate:
+        aggregate:
+          count: 3
+  query:
+    query: |
+      query {
+        article_aggregate {
+          aggregate {
+            count(columns:[title,content])
+          }
+        }
+      }
+
+- description: The aggregate functions that use column data should be exposed, as the role has select access to them
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: role_with_access_to_cols
+  response:
+    data:
+      article_aggregate:
+        aggregate:
+          max:
+            id: 3
+  query:
+    query: |
+      query {
+        article_aggregate {
+          aggregate {
+            max {
+              id
+            }
+          }
+        }
+      }

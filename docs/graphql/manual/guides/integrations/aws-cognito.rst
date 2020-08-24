@@ -160,7 +160,7 @@ The parameters available for this trigger are described `here <https://docs.aws.
    function (event, context, callback) {
      const userId = event.userName;
      const hasuraAdminSecret = "xxxx";
-     const url = "https://my-hasura-app.herokuapp.com/v1/graphql";
+     const url = "https://my-hasura-app.hasura.app/v1/graphql";
      const upsertUserQuery = `
        mutation($userId: String!){
          insert_users(objects: [{ id: $userId }], on_conflict: { constraint: users_pkey, update_columns: [] }) {

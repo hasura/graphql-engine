@@ -61,8 +61,8 @@ Step 2: Set up a project directory
 ----------------------------------
 
 For the endpoint referred here, let's say you've
-deployed the GraphQL engine on Heroku, then this endpoint is:
-``https://my-graphql.herokuapp.com``. In case you've deployed Hasura using Docker,
+deployed the GraphQL engine on Hasura Cloud, then this endpoint is:
+``https://my-graphql.hasura.app``. In case you've deployed Hasura using Docker,
 the URL might be ``http://xx.xx.xx.xx:8080``. In any case, the endpoint should **not** contain
 the ``v1/graphql`` API path. It should just be the hostname and any
 sub-path if it is configured that way. 
@@ -71,7 +71,7 @@ Let's set up a project directory by executing the following command:
 
 .. code-block:: bash
 
-  hasura init my-project --endpoint http://my-graphql.herokuapp.com
+  hasura init my-project --endpoint http://my-graphql.hasura.app
 
   cd my-project
 
@@ -180,7 +180,7 @@ Step 4: Use the console from the CLI
 ------------------------------------
 
 From this point onwards, instead of using the console at
-``http://my-graphql.herokuapp.com/console`` you should use the console from the CLI
+``http://my-graphql.hasura.app/console`` you should use the console from the CLI
 by running:
 
 .. code-block:: bash
@@ -251,13 +251,13 @@ Step 7: Apply the migrations and metadata on another instance of the GraphQL eng
 -----------------------------------------------------------------------------------
 
 Apply all migrations present in the ``migrations/`` directory and the metadata present
-in the ``metadata/`` directory on a new instance at ``http://another-graphql-instance.herokuapp.com``:
+in the ``metadata/`` directory on a new instance at ``http://another-graphql-instance.hasura.app``:
 
 .. code-block:: bash
 
    # in project dir
-   hasura migrate apply --endpoint http://another-graphql-instance.herokuapp.com
-   hasura metadata apply --endpoint http://another-graphql-instance.herokuapp.com
+   hasura migrate apply --endpoint http://another-graphql-instance.hasura.app
+   hasura metadata apply --endpoint http://another-graphql-instance.hasura.app
 
 In case you need an automated way of applying the migrations and metadata, take a look at the
 :ref:`cli-migrations <auto_apply_migrations>` Docker image, which can start the

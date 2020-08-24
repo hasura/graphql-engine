@@ -19,6 +19,7 @@ module Hasura.Db
   , LazyRespTx
   , defaultTxErrorHandler
   , mkTxErrorHandler
+  , lazyTxToQTx
   ) where
 
 import           Control.Lens
