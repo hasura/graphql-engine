@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
 import { createHistory } from 'history';
@@ -30,7 +30,6 @@ import {
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import { getDefaultValue, getQueryFromUrl } from './utils';
 import { ColumnsSelector } from './ColumnsSelector';
-import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import { UNSAFE_keys } from '../../../Common/utils/tsUtils';
 
 const history = createHistory();
@@ -298,15 +297,6 @@ const setUrlParams = (whereQuery: Where, orderByQuery: OrderBy) => {
   });
 };
 
-const Title = ({ title, summary }: { title: string; summary: string }) => (
-  <div className={styles.display_flex}>
-    <h2 className={`${styles.subheading_text} ${styles.padd_bottom}`}>
-      {title}
-    </h2>
-    <i className={styles.summaryLabel}>{summary}</i>
-  </div>
-);
-
 export interface FilterQueryProps {
   tableSchema: TableSchema;
   dispatch: ThunkDispatch<{}, {}, AnyAction>;
@@ -336,14 +326,10 @@ const FilterQuery: React.FC<FilterQueryProps> = ({
   currentColumns,
 }) => {
   const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
-  const [isFiltersPanelOpen, setFiltersPanelOpen] = useState(false);
-  const [isSortPanelOpen, setSortPanelOpen] = useState(false);
   const [isColumnsPanelOpen, setColumnsPanelOpen] = useState(false);
 
   useEffect(() => {
     setSelectedColumns([]);
-    setFiltersPanelOpen(false);
-    setSortPanelOpen(false);
     setColumnsPanelOpen(false);
   }, [tableSchema.table_name]);
 
@@ -374,26 +360,6 @@ const FilterQuery: React.FC<FilterQueryProps> = ({
     dispatch(runQuery(tableSchema));
   }, []);
 
-  const filtersSummary = useMemo(() => {
-    if (!whereAnd || whereAnd.length < 2) return 'no filters applied';
-    const summary = whereAnd.reduce((acc, where) => {
-      const column = Object.keys(where || {})[0];
-      if (!column) return acc;
-      return `${acc ? `${acc},` : acc} ${column}`;
-    }, '');
-    console.log({ whereAnd });
-    return summary;
-  }, [whereAnd]);
-
-  const sortsSummary = useMemo(() => {
-    if (!orderBy || orderBy.length < 2) return 'no idea for placeholder';
-    const summary = orderBy.reduce((acc, { column, type }) => {
-      if (!column) return acc;
-      return `${acc ? `${acc},` : acc} ${column}: ${type}`;
-    }, '');
-    return summary;
-  }, [orderBy]);
-
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     dispatch(setOffset(0));
@@ -409,42 +375,25 @@ const FilterQuery: React.FC<FilterQueryProps> = ({
 
   return (
     <form className={styles.add_mar_top} onSubmit={onSubmit}>
-      <div
-        className={styles.displayFlexContainer}
-        style={{ flexDirection: 'column' }}
-      >
-        <div
-          className={`${styles.queryBox} col-xs-6 ${styles.padd_left_remove}`}
-        >
-          <CollapsibleToggle
-            title={<Title title="Filters" summary={filtersSummary} />}
-            isOpen={isFiltersPanelOpen}
-            toggleHandler={() => setFiltersPanelOpen(prev => !prev)}
-          >
-            <WhereSection
-              whereAnd={whereAnd}
-              tableSchema={tableSchema}
-              dispatch={dispatch}
-            />
-          </CollapsibleToggle>
-        </div>
-        <div
-          className={`${styles.queryBox} col-xs-6 ${styles.padd_left_remove}`}
-        >
-          <CollapsibleToggle
-            title={<Title title="Sort" summary={sortsSummary} />}
-            isOpen={isSortPanelOpen}
-            toggleHandler={() => setSortPanelOpen(prev => !prev)}
-          >
-            <SortSection
-              orderBy={orderBy}
-              tableSchema={tableSchema}
-              dispatch={dispatch}
-            />
-          </CollapsibleToggle>
-        </div>
+      <div className={`${styles.queryBox} col-xs-6 ${styles.padd_left_remove}`}>
+        <div className={styles.subheading_text}>Filter</div>
+        <WhereSection
+          whereAnd={whereAnd}
+          tableSchema={tableSchema}
+          dispatch={dispatch}
+        />
       </div>
       <div className={`${styles.queryBox} col-xs-6 ${styles.padd_left_remove}`}>
+        <div className={styles.subheading_text}>Sort</div>
+        <SortSection
+          orderBy={orderBy}
+          tableSchema={tableSchema}
+          dispatch={dispatch}
+        />
+      </div>
+      <div
+        className={`${styles.queryBox} col-xs-12 ${styles.padd_left_remove}`}
+      >
         <ColumnsSelector
           allColumns={allColumns}
           selectedColumns={selectedColumns}
