@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   DELETE_PK_WARNING,
   setPrimaryKeys,
@@ -55,7 +55,9 @@ const PrimaryKeyEditor = ({
   );
 
   // label next to the button when the editor is expanded
-  const pkEditorExpandedLabel = () => <div>{pkConfigText}</div>;
+  const pkEditorExpandedLabel = () => (
+    <div data-test="pk-config-text">{pkConfigText}</div>
+  );
 
   // expanded editor content
   const pkEditorExpanded = () => (
@@ -94,6 +96,10 @@ const PrimaryKeyEditor = ({
       savePrimaryKeys(tableSchema.table_name, currentSchema, pkConstraintName)
     );
   };
+
+  useEffect(() => {
+    setPkEditState();
+  }, [columns.length]);
 
   // remove
   const onRemove = () => {

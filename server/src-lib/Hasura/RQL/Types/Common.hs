@@ -49,19 +49,21 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers        ()
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Types
+import           Hasura.RQL.DDL.Headers        ()
+
 
 
 import           Control.Lens                  (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Sequence.NonEmpty
 import           Data.URL.Template
 import           Instances.TH.Lift             ()
 import           Language.Haskell.TH.Syntax    (Lift, Q, TExp)
 
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.Text                     as T
+import qualified Data.Environment              as Env
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.Haskell.TH.Syntax    as TH
@@ -149,11 +151,12 @@ instance Q.FromCol RelType where
 
 data RelInfo
   = RelInfo
-  { riName     :: !RelName
-  , riType     :: !RelType
-  , riMapping  :: !(HashMap PGCol PGCol)
-  , riRTable   :: !QualifiedTable
-  , riIsManual :: !Bool
+  { riName       :: !RelName
+  , riType       :: !RelType
+  , riMapping    :: !(HashMap PGCol PGCol)
+  , riRTable     :: !QualifiedTable
+  , riIsManual   :: !Bool
+  , riIsNullable :: !Bool
   } deriving (Show, Eq, Generic)
 instance NFData RelInfo
 instance Cacheable RelInfo
@@ -249,7 +252,7 @@ data InpValInfo
   = InpValInfo
   { _iviDesc   :: !(Maybe G.Description)
   , _iviName   :: !G.Name
-  , _iviDefVal :: !(Maybe G.ValueConst)
+  , _iviDefVal :: !(Maybe (G.Value Void))
   , _iviType   :: !G.GType
   } deriving (Show, Eq, TH.Lift, Generic)
 instance Cacheable InpValInfo
@@ -302,8 +305,8 @@ instance FromJSON InputWebhook where
       Left e  -> fail $ "Parsing URL template failed: " ++ e
       Right v -> pure $ InputWebhook v
 
-resolveWebhook :: (QErrM m,MonadIO m) => InputWebhook -> m ResolvedWebhook
-resolveWebhook (InputWebhook urlTemplate) = do
-  eitherRenderedTemplate <- renderURLTemplate urlTemplate
+resolveWebhook :: QErrM m => Env.Environment -> InputWebhook -> m ResolvedWebhook
+resolveWebhook env (InputWebhook urlTemplate) = do
+  let eitherRenderedTemplate = renderURLTemplate env urlTemplate
   either (throw400 Unexpected . T.pack)
     (pure . ResolvedWebhook) eitherRenderedTemplate
