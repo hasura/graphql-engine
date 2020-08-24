@@ -133,7 +133,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
               of the metadata
             </div>
             <div className={styles.add_mar_top_small}>
-              The console will also not be able to display these inconsistent
+              The console might also not be able to display these inconsistent
               objects
             </div>
           </div>
