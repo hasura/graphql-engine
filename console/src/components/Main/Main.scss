@@ -1328,9 +1328,16 @@
   border: 4px solid #f2f2f2;
   border-top: none;
   background-color: white;
-  overflow-y: scroll;
   text-transform: none;
   height: 100%;
+  overflow: hidden;
+  &:hover {
+    overflow-y: scroll;
+  }
+}
+
+.notificationsContainer::-webkit-scrollbar {
+  width: 0px;
 }
 
 .numBadge {
