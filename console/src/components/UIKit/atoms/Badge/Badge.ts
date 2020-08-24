@@ -31,9 +31,7 @@ export interface StyledOwnBadgeProps
 
 const StyledBadge = styled.span<StyledOwnBadgeProps>`
   text-transform: uppercase;
-  letter-spacing: 0.7px;
-  font-family: Roboto;
-  font-weight: 500;
+  letter-spacing: 0.4px;
   ${color}
   ${border}
   ${typography}

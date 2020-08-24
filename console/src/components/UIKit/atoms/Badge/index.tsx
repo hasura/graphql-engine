@@ -6,8 +6,8 @@ export type AllowedBadges =
   | ''
   | 'version update'
   | 'community'
-  | 'update'
-  | 'event'
+  | 'beta update'
+  | 'update' // TODO: change to feature
   | 'security'
   | 'error';
 
@@ -25,38 +25,37 @@ export const Badge: React.FC<ExtendedBadgeProps> = ({
   switch (type) {
     case 'error':
       return (
-        <StyledBadge {...props} bg="#001934" color="white">
+        <StyledBadge {...props} bg="#FFE8E8" color="#F47E7E">
           error
-        </StyledBadge>
-      );
-    case 'event':
-      return (
-        <StyledBadge {...props} bg="#001934" color="white">
-          event
         </StyledBadge>
       );
     case 'community':
       return (
-        <StyledBadge {...props} bg="#F33C6C" color="white">
+        <StyledBadge {...props} bg="#D6EBFF" color="#5C94C8">
           community
+        </StyledBadge>
+      );
+    case 'beta update':
+      return (
+        <StyledBadge {...props} bg="#E2F4F3" color="#4BB5AC">
+          beta update
         </StyledBadge>
       );
     case 'update':
       return (
-        <StyledBadge {...props} bg="#55DED4" color="#001934">
-          {/* TODO: Change this/Remove this if not required */}
-          random update
+        <StyledBadge {...props} bg="#FFEBCD" color="#E49928">
+          feature
         </StyledBadge>
       );
     case 'version update':
       return (
-        <StyledBadge {...props} bg="#E52D2D" color="white">
-          version update
+        <StyledBadge {...props} bg="#E6F5EB" color="#2EB67D">
+          ver update
         </StyledBadge>
       );
     case 'security':
       return (
-        <StyledBadge {...props} bg="#001934" color="white">
+        <StyledBadge {...props} bg="#FFE8E8" color="#F47E7E">
           security
         </StyledBadge>
       );
@@ -66,9 +65,12 @@ export const Badge: React.FC<ExtendedBadgeProps> = ({
 };
 
 Badge.defaultProps = {
-  fontSize: '11px',
-  borderRadius: '2px',
-  px: '4.25px',
-  pt: '3px',
-  pb: '2px',
+  fontWeight: 'bold',
+  fontSize: '10px',
+  lineHeight: '12px',
+  borderRadius: '84px',
+  py: '8px',
+  px: '12px',
+  border: 'none',
+  letterSpacing: '',
 };
