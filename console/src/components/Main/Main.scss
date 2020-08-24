@@ -1318,7 +1318,7 @@
   width: 460px;
   padding: 0;
   left: auto;
-  height: 85vh;
+  height: calc(100vh - 120px);
   border: none;
   user-select: none;
 }
