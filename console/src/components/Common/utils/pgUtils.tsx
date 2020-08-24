@@ -14,7 +14,7 @@ export type TableRelationship = {
   rel_type: 'object' | 'array';
 };
 
-type PermissionActionType = 'select' | 'insert' | 'delete' | 'update';
+export type PermissionActionType = 'select' | 'insert' | 'delete' | 'update';
 
 type PermissionValueType = {
   columns: string[];
