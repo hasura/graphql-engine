@@ -731,11 +731,11 @@ const getSelectPermissionDownQuery = (
       role: perm.role_name,
       comment: perm?.comment ?? null,
       permission: {
-        columns: perm.permissions.select?.columns,
-        filter: perm.permissions.select?.filter,
+        columns: perm.permissions.select?.columns ?? [],
+        filter: perm.permissions.select?.filter ?? {},
         limit: perm.permissions.select?.limit ?? null,
         allow_aggregations: perm.permissions.select?.allow_aggregations ?? null,
-        computed_fields: perm.permissions.select?.computedFields ?? [],
+        computed_fields: perm.permissions.select?.computedFields ?? null,
       },
     },
   };
@@ -750,7 +750,7 @@ const getInsertPermissionDownQuery = (
       table: perm.table_name,
       role: perm.role_name,
       permission: {
-        check: perm.permissions.insert?.check,
+        check: perm.permissions.insert?.check ?? false,
         set: perm.permissions.insert?.set ?? null,
         columns: perm.permissions.insert?.columns ?? [],
         backend_only: perm.permissions.insert?.backend_only ?? null,
@@ -769,8 +769,8 @@ const getUpdatePermissionDownQuery = (
       table: perm.table_name,
       role: perm.role_name,
       permission: {
-        columns: perm.permissions.update?.columns,
-        filter: perm.permissions.update?.filter,
+        columns: perm.permissions.update?.columns ?? [],
+        filter: perm.permissions.update?.filter ?? {},
         check: perm.permissions.update?.check ?? null,
         set: perm.permissions.update?.set ?? null,
       },
@@ -788,7 +788,7 @@ const getDeletePermissionDownQuery = (
       table: perm.table_name,
       role: perm.role_name,
       permission: {
-        filter: perm.permissions.update?.filter,
+        filter: perm.permissions.update?.filter ?? {},
       },
       comment: perm?.comment ?? null,
     },
