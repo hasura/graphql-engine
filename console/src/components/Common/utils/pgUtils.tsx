@@ -14,11 +14,25 @@ export type TableRelationship = {
   rel_type: 'object' | 'array';
 };
 
+type PermissionActionType = 'select' | 'insert' | 'delete' | 'update';
+
+type PermissionValueType = {
+  columns: string[];
+  allow_aggregations?: boolean;
+  computedFields?: any[];
+  filter: Record<string, any>;
+  limit?: number;
+  check?: boolean;
+  set?: any;
+  backend_only?: boolean;
+};
+
 export type TablePermission = {
+  table_name: string;
+  table_schema: string;
   role_name: string;
-  permissions: {
-    [action: string]: any;
-  };
+  permissions: Partial<Record<PermissionActionType, PermissionValueType>>;
+  comment?: string;
 };
 
 export interface BaseTableColumn {
