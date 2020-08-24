@@ -1321,7 +1321,6 @@
   height: 85vh;
   border: none;
   user-select: none;
-  margin: 0 auto;
 }
 
 .notificationsContainer {
@@ -1379,16 +1378,35 @@
     background-color: white;
   }
   &.read {
-    background-color: #f5f5f5;
+    background-color: #f8f8f8;
   }
 }
 
-.yellowDot {
+.linkArrow {
+  font-size: 17px;
+  color: #a8a8a8;
+}
+
+.splitHalf {
+  height: 50%;
+  &.linkPosition {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+  }
+}
+
+.unreadDot {
   border-radius: 50%;
-  width: 12px;
-  height: 12px;
-  background-color: #ffc627;
-  margin-right: 22px;
+  width: 6px;
+  height: 6px;
+  background-color: #c4c4c4;
+  position: relative;
+  top: -8px;
+  left: 6px;
 }
 
 .consoleLogoNotifications {
