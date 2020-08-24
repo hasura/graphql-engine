@@ -124,6 +124,11 @@ data RawConnInfo =
   , connDatabase :: !(Maybe String)
   , connOptions  :: !(Maybe String)
   , connRetries  :: !(Maybe Int)
+  , connMySQLHost     :: !(Maybe String)
+  , connMySQLPort     :: !(Maybe Int)
+  , connMySQLUser     :: !(Maybe String)
+  , connMySQLPassword :: !(Maybe String)
+  , connMySQLDatabase :: !(Maybe String)
   } deriving (Eq, Read, Show)
 
 data HGECommandG a

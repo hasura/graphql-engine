@@ -517,7 +517,8 @@ parseRawConnInfo :: Parser RawConnInfo
 parseRawConnInfo =
   RawConnInfo <$> host <*> port <*> user <*> password
               <*> dbUrl <*> dbName <*> options
-              <*> retries
+              <*> retries <*> mySQLHost <*> mySQLPort
+              <*> mySQLUser <*> mySQLPassword <*> mySQLDBName
   where
     host = optional $
       strOption ( long "host" <>
@@ -564,6 +565,36 @@ parseRawConnInfo =
                   help "PostgreSQL options"
                 )
 
+    mySQLHost = optional $
+      strOption ( long "mysql-host" <>
+                  metavar "<HOST>" <>
+                  help "MySQL server host"
+                )
+
+    mySQLPort = optional $
+      option auto ( long "mysql-port" <>
+                  metavar "<PORT>" <>
+                  help "MySQL server port"
+                  )
+
+    mySQLUser = optional $
+      strOption ( long "mysql-user" <>
+                  metavar "<USER>" <>
+                  help "MySQL database user name"
+                )
+
+    mySQLPassword = optional $
+      strOption ( long "mysql-password" <>
+                  metavar "<PASSWORD>" <>
+                  help "Password of the MySQL user"
+                )
+
+    mySQLDBName = optional $
+      strOption ( long "mysql-dbname" <>
+                  metavar "<DBNAME>" <>
+                  help "MySQL database name to connect to"
+                )
+
     retries = optional $
       option auto ( long "retries" <>
                     metavar "NO OF RETRIES" <>
@@ -571,7 +602,7 @@ parseRawConnInfo =
                   )
 
 mkConnInfo :: RawConnInfo -> Either String Q.ConnInfo
-mkConnInfo (RawConnInfo mHost mPort mUser password mURL mDB opts mRetries) =
+mkConnInfo (RawConnInfo mHost mPort mUser password mURL mDB opts mRetries _ _ _ _ _) =
   Q.ConnInfo retries <$>
   case (mHost, mPort, mUser, mDB, mURL) of
 
