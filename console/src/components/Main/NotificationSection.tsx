@@ -17,6 +17,7 @@ import { getReadAllNotificationsState } from './utils';
 import { Nullable } from '../Common/utils/tsUtils';
 import { mapDispatchToPropsEmpty } from '../Common/utils/reactUtils';
 import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
+import { StyledText } from '../UIKit/atoms/Typography/Typography';
 
 const getDateString = (date: NotificationDate) => {
   if (!date) {
@@ -69,27 +70,46 @@ const Update: React.FC<UpdateProps> = ({
       }`}
       onClick={onClickLink}
     >
-      <Flex px="25px" justifyContent="space-between">
-        <Flex justifyContent="space-between">
-          {type ? <Badge type={type} mr="12px" /> : null}
-          <Heading as="h4" color="#1cd3c6" fontSize="16px">
+      {!linkClicked ? <div className={styles.unreadDot} /> : null}
+      <Flex width="100%">
+        <Flex px={25} py={2} width="80%" flexDirection="column">
+          <StyledText
+            color="#717780"
+            fontSize="10px"
+            fontWeight="bold"
+            lineHeight="12px"
+            margin="0"
+          >
+            {props?.start_date ? getDateString(props.start_date) : null}
+          </StyledText>
+          <Heading
+            as="h4"
+            color="#1B2738"
+            fontSize="14px"
+            fontWeight="bold"
+            lineHeight="153%"
+            marginBottom="12px"
+          >
             {subject}
           </Heading>
-        </Flex>
-        <Text color="grey" fontSize={13} fontWeight="bold">
-          {props?.start_date ? getDateString(props.start_date) : null}
-        </Text>
-      </Flex>
-      <Flex
-        pt="4px"
-        alignItems="center"
-        justifyContent="space-between"
-        width="100%"
-      >
-        <Flex px={25} py={2} width="80%">
           <Text fontSize={15} fontWeight="normal">
             {content}
             <br />
+            {props?.children ? props.children : null}
+          </Text>
+        </Flex>
+        <Flex
+          width="20%"
+          alignItems="flex-end"
+          justifyContent="flex-end"
+          marginRight="24px"
+          marginTop="10px"
+          flexDirection="column"
+        >
+          <div className={`${styles.splitHalf}`}>
+            {type ? <Badge type={type} mt="8px" /> : null}
+          </div>
+          <div className={`${styles.splitHalf} ${styles.linkPosition}`}>
             {props.external_link ? (
               <div className={styles.linkContainer}>
                 <a
@@ -99,15 +119,11 @@ const Update: React.FC<UpdateProps> = ({
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Click here &rarr;
+                  <i className={`fa fa-arrow-right ${styles.linkArrow}`} />
                 </a>
               </div>
             ) : null}
-            {props?.children ? props.children : null}
-          </Text>
-        </Flex>
-        <Flex width="20%" alignItems="center" justifyContent="flex-end">
-          {!linkClicked ? <div className={styles.yellowDot} /> : null}
+          </div>
         </Flex>
       </Flex>
     </Box>
