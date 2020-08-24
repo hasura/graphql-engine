@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Button from '../../../Common/Button/Button';
 import { reloadRemoteSchema } from '../Actions';
+import metaDataStyles from '../Settings.scss';
 
 import {
   showSuccessNotification,
@@ -17,7 +18,6 @@ class ReloadRemoteSchema extends Component {
   render() {
     const { dispatch, remoteSchemaName } = this.props;
     const { isReloading } = this.state;
-    const metaDataStyles = require('../Settings.scss');
     const reloadRemoteMetadataHandler = () => {
       this.setState({ isReloading: true });
       dispatch(
