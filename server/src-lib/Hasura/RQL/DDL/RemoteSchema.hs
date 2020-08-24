@@ -7,32 +7,29 @@ module Hasura.RQL.DDL.RemoteSchema
   , fetchRemoteSchemas
   , addRemoteSchemaP1
   , addRemoteSchemaP2Setup
+  , addRemoteSchemaP2
   , runIntrospectRemoteSchema
   , addRemoteSchemaToCatalog
   ) where
 
-import qualified Data.Aeson                        as J
-import qualified Data.HashMap.Strict               as Map
-import qualified Data.HashSet                      as S
-import qualified Data.Text                         as T
-import qualified Database.PG.Query                 as Q
-
+import           Control.Monad.Unique
 import           Hasura.EncJSON
-import           Hasura.GraphQL.NormalForm
+-- import           Hasura.GraphQL.NormalForm
 import           Hasura.GraphQL.RemoteServer
-import           Hasura.GraphQL.Schema.Merge
+-- import           Hasura.GraphQL.Schema.Merge
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Deps
+
+import qualified Data.Aeson                  as J
+import qualified Data.HashMap.Strict         as Map
+import qualified Data.HashSet                as S
+import qualified Database.PG.Query           as Q
+
 import           Hasura.RQL.Types
 import           Hasura.Server.Version             (HasVersion)
 import           Hasura.SQL.Types
 
-import qualified Data.Environment            as Env
-import qualified Hasura.GraphQL.Context            as GC
-import qualified Hasura.GraphQL.Resolve.Introspect as RI
-import qualified Hasura.GraphQL.Schema             as GS
-import qualified Hasura.GraphQL.Validate           as VQ
-import qualified Hasura.GraphQL.Validate.Types     as VT
+import qualified Data.Environment                  as Env
 
 runAddRemoteSchema
   :: ( HasVersion
@@ -40,6 +37,7 @@ runAddRemoteSchema
      , CacheRWM m
      , MonadTx m
      , MonadIO m
+     , MonadUnique m
      , HasHttpManager m
      )
   => Env.Environment
@@ -63,25 +61,16 @@ addRemoteSchemaP1 name = do
     <> name <<> " already exists"
 
 addRemoteSchemaP2Setup
-  :: (HasVersion, QErrM m, MonadIO m, HasHttpManager m)
+  :: (HasVersion, QErrM m, MonadIO m, MonadUnique m, HasHttpManager m)
   => Env.Environment
-  -> AddRemoteSchemaQuery
-  -> m RemoteSchemaCtx
+  -> AddRemoteSchemaQuery -> m RemoteSchemaCtx
 addRemoteSchemaP2Setup env (AddRemoteSchemaQuery name def _) = do
   httpMgr <- askHttpManager
-  rsi <- validateRemoteSchemaDef env name def
-  gCtx <- fetchRemoteSchema env httpMgr rsi
-  pure $ RemoteSchemaCtx name (convRemoteGCtx gCtx) rsi
-  where
-    convRemoteGCtx rmGCtx =
-      GC.emptyGCtx { GS._gTypes     = GC._rgTypes rmGCtx
-                   , GS._gQueryRoot = GC._rgQueryRoot rmGCtx
-                   , GS._gMutRoot   = GC._rgMutationRoot rmGCtx
-                   , GS._gSubRoot   = GC._rgSubscriptionRoot rmGCtx
-                   }
+  rsi <- validateRemoteSchemaDef env def
+  fetchRemoteSchema env httpMgr name rsi
 
 addRemoteSchemaP2
-  :: (HasVersion, MonadTx m, MonadIO m, HasHttpManager m) => Env.Environment -> AddRemoteSchemaQuery -> m ()
+  :: (HasVersion, MonadTx m, MonadIO m, MonadUnique m, HasHttpManager m) => Env.Environment -> AddRemoteSchemaQuery -> m ()
 addRemoteSchemaP2 env q = do
   void $ addRemoteSchemaP2Setup env q
   liftTx $ addRemoteSchemaToCatalog q
@@ -103,9 +92,6 @@ removeRemoteSchemaP1 rsn = do
   let rmSchemas = scRemoteSchemas sc
   void $ onNothing (Map.lookup rsn rmSchemas) $
     throw400 NotExists "no such remote schema"
-  case Map.lookup rsn rmSchemas of
-    Just _  -> return ()
-    Nothing -> throw400 NotExists "no such remote schema"
   let depObjs = getDependentObjs sc remoteSchemaDepId
   when (depObjs /= []) $ reportDeps depObjs
   where
@@ -149,35 +135,15 @@ fetchRemoteSchemas =
      ORDER BY name ASC
      |] () True
   where
-    fromRow (n, Q.AltJ def, comm) = AddRemoteSchemaQuery n def comm
+    fromRow (name, Q.AltJ def, comment) =
+      AddRemoteSchemaQuery name def comment
 
 runIntrospectRemoteSchema
   :: (CacheRM m, QErrM m) => RemoteSchemaNameQuery -> m EncJSON
 runIntrospectRemoteSchema (RemoteSchemaNameQuery rsName) = do
   sc <- askSchemaCache
-  rGCtx <-
-    case Map.lookup rsName (scRemoteSchemas sc) of
-      Nothing ->
-        throw400 NotExists $
-        "remote schema: " <> remoteSchemaNameToTxt rsName <> " not found"
-      Just rCtx -> mergeGCtx (rscGCtx rCtx) GC.emptyGCtx
-      -- merge with emptyGCtx to get default query fields
-  queryParts <- flip runReaderT rGCtx $ VQ.getQueryParts introspectionQuery
-  (rootSelSet, _) <- flip runReaderT rGCtx $ VT.runReusabilityT $ VQ.validateGQ queryParts
-  schemaField <-
-    case rootSelSet of
-      VQ.RQuery selSet -> getSchemaField $ toList $ unAliasedFields $
-                          unObjectSelectionSet selSet
-      _                -> throw500 "expected query for introspection"
-  (introRes, _) <- flip runReaderT rGCtx $ VT.runReusabilityT $ RI.schemaR schemaField
-  pure $ wrapInSpecKeys introRes
-  where
-    wrapInSpecKeys introObj =
-      encJFromAssocList
-        [ ( T.pack "data"
-          , encJFromAssocList [(T.pack "__schema", encJFromJValue introObj)])
-        ]
-    getSchemaField = \case
-        []  -> throw500 "found empty when looking for __schema field"
-        [f] -> pure f
-        _   -> throw500 "expected __schema field, found many fields"
+  (RemoteSchemaCtx _ _ _ introspectionByteString _) <-
+    onNothing (Map.lookup rsName (scRemoteSchemas sc)) $
+    throw400 NotExists $
+    "remote schema: " <> rsName <<> " not found"
+  pure $ encJFromLBS introspectionByteString

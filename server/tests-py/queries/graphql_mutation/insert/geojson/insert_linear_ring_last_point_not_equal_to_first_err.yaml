@@ -5,7 +5,7 @@ response:
   errors:
   - extensions:
       code: parse-failed
-      path: $.variableValues.areas[0].area.coordinates[0]
+      path: $.selectionSet.insert_area.args.objects[0].area
     message: the first and last locations have to be equal for a LinearRing
 query:
   variables:

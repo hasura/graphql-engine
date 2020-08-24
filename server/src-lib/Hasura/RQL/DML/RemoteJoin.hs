@@ -11,15 +11,14 @@ module Hasura.RQL.DML.RemoteJoin
 import           Hasura.Prelude
 
 import           Control.Lens
-import           Data.List                              (nub)
 import           Data.Validation
 
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Parser                  hiding (field)
 import           Hasura.GraphQL.RemoteServer            (execRemoteGQ')
 import           Hasura.GraphQL.Transport.HTTP.Protocol
-import           Hasura.GraphQL.Utils
 import           Hasura.RQL.DML.Internal
-import           Hasura.RQL.DML.Returning
+import           Hasura.RQL.DML.Returning.Types
 import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
@@ -39,8 +38,8 @@ import qualified Data.List.NonEmpty                     as NE
 import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.Tracing                         as Tracing
-import qualified Language.GraphQL.Draft.Printer.Text    as G
 import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Language.GraphQL.Draft.Printer         as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 
@@ -77,6 +76,8 @@ executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs rjs = do
 newtype FieldPath = FieldPath {unFieldPath :: [FieldName]}
   deriving (Show, Eq, Semigroup, Monoid, Hashable)
 
+type Alias = G.Name
+
 appendPath :: FieldName -> FieldPath -> FieldPath
 appendPath fieldName = FieldPath . (<> [fieldName]) . unFieldPath
 
@@ -94,18 +95,23 @@ getCounter = do
   modify incCounter
   pure c
 
--- | Generate the alias for remote field.
-pathToAlias :: FieldPath -> Counter -> G.Alias
-pathToAlias path counter =
-  G.Alias $ G.Name $ T.intercalate "_" (map getFieldNameTxt $ unFieldPath path)
-  <> "__" <> (T.pack . show . unCounter) counter
+parseGraphQLName :: (MonadError QErr m) => Text -> m G.Name
+parseGraphQLName txt = maybe (throw400 RemoteSchemaError $ errMsg) pure $ G.mkName txt
+  where
+    errMsg = txt <> " is not a valid GraphQL name"
 
--- | A 'RemoteJoin' represents the context of remote relationship to be extracted from 'AnnFldG's.
+-- | Generate the alias for remote field.
+pathToAlias :: (MonadError QErr m) => FieldPath -> Counter -> m Alias
+pathToAlias path counter = do
+  parseGraphQLName $ T.intercalate "_" (map getFieldNameTxt $ unFieldPath path)
+                 <> "__" <> (T.pack . show . unCounter) counter
+
+-- | A 'RemoteJoin' represents the context of remote relationship to be extracted from 'AnnFieldG's.
 data RemoteJoin
   = RemoteJoin
   { _rjName          :: !FieldName -- ^ The remote join field name.
   , _rjArgs          :: ![RemoteFieldArgument] -- ^ User-provided arguments with variables.
-  , _rjSelSet        :: !G.SelectionSet -- ^ User-provided selection set of remote field.
+  , _rjSelSet        :: !(G.SelectionSet G.NoFragments Variable)  -- ^ User-provided selection set of remote field.
   , _rjHasuraFields  :: !(HashSet FieldName) -- ^ Table fields.
   , _rjFieldCall     :: !(NonEmpty FieldCall) -- ^ Remote server fields.
   , _rjRemoteSchema  :: !RemoteSchemaInfo -- ^ The remote schema server info.
@@ -183,7 +189,6 @@ transformConnectionSelect path ConnectionSelect{..} = do
         EdgeNode annFields ->
           EdgeNode <$> transformAnnFields (appendPath fieldName edgePath) annFields
 
-
 -- | Traverse through 'MutationOutput' and collect remote join fields (if any)
 getRemoteJoinsMutationOutput :: MutationOutput -> (MutationOutput, Maybe RemoteJoins)
 getRemoteJoinsMutationOutput =
@@ -197,9 +202,9 @@ getRemoteJoinsMutationOutput =
         MOutSinglerowObject <$> transformAnnFields path annFields
       where
         transfromMutationFields fields =
-          forM fields $ \(fieldName, field) -> do
+          forM fields $ \(fieldName, field') -> do
           let fieldPath = appendPath fieldName path
-          (fieldName,) <$> case field of
+          (fieldName,) <$> case field' of
             MCount         -> pure MCount
             MExp t         -> pure $ MExp t
             MRet annFields -> MRet <$> transformAnnFields fieldPath annFields
@@ -215,9 +220,9 @@ transformAnnFields path fields = do
             phantomColumns = filter ((`notElem` pgColumnFields) . fromPGCol . pgiColumn) hasuraColumnL
         in RemoteJoin fieldName argsMap selSet hasuraColumnFields remoteFields rsi phantomColumns
 
-  transformedFields <- forM fields $ \(fieldName, field) -> do
+  transformedFields <- forM fields $ \(fieldName, field') -> do
     let fieldPath = appendPath fieldName path
-    (fieldName,) <$> case field of
+    (fieldName,) <$> case field' of
       AFNodeId qt pkeys -> pure $ AFNodeId qt pkeys
       AFColumn c -> pure $ AFColumn c
       AFObjectRelation annRel ->
@@ -286,14 +291,13 @@ compositeValueToJSON = \case
 data RemoteJoinField
   = RemoteJoinField
   { _rjfRemoteSchema :: !RemoteSchemaInfo -- ^ The remote schema server info.
-  , _rjfAlias        :: !G.Alias -- ^ Top level alias of the field
-  , _rjfField        :: !G.Field -- ^ The field AST
+  , _rjfAlias        :: !Alias -- ^ Top level alias of the field
+  , _rjfField        :: !(G.Field G.NoFragments Variable) -- ^ The field AST
   , _rjfFieldCall    :: ![G.Name] -- ^ Path to remote join value
-  , _rjfVariables    :: ![(G.VariableDefinition,A.Value)] -- ^ Variables used in the AST
   } deriving (Show, Eq)
 
 -- | Generate composite JSON ('CompositeValue') parameterised over 'RemoteJoinField'
--- from remote join map and query response JSON from Postgres.
+--   from remote join map and query response JSON from Postgres.
 traverseQueryResponseJSON
   :: (MonadError QErr m)
   => RemoteJoinMap -> AO.Value -> m (CompositeValue RemoteJoinField)
@@ -315,19 +319,24 @@ traverseQueryResponseJSON rjm =
         mkRemoteSchemaField siblingFields remoteJoin = do
           counter <- getCounter
           let RemoteJoin fieldName inputArgs selSet hasuraFields fieldCall rsi _ = remoteJoin
-              hasuraFieldVariables = map (G.Variable . G.Name . getFieldNameTxt) $ toList hasuraFields
-              siblingFieldArgs = Map.fromList $
-                                 map ((G.Variable . G.Name) *** ordJsonvalueToGValue) siblingFields
+          hasuraFieldVariables <- mapM (parseGraphQLName . getFieldNameTxt) $ toList hasuraFields
+          siblingFieldArgsVars <- mapM (\(k,val) -> do
+                                          (,) <$> parseGraphQLName k <*> ordJSONValueToGValue val)
+                                  $ siblingFields
+          let siblingFieldArgs = Map.fromList $ siblingFieldArgsVars
               hasuraFieldArgs = flip Map.filterWithKey siblingFieldArgs $ \k _ -> k `elem` hasuraFieldVariables
-              fieldAlias = pathToAlias (appendPath fieldName path) counter
-          queryField <- fieldCallsToField (map _rfaArgument inputArgs) hasuraFieldArgs selSet fieldAlias fieldCall
+          fieldAlias <- pathToAlias (appendPath fieldName path) counter
+          queryField <- fieldCallsToField (inputArgsToMap inputArgs) hasuraFieldArgs selSet fieldAlias fieldCall
           pure $ RemoteJoinField rsi
                                  fieldAlias
                                  queryField
                                  (map fcName $ toList $ NE.tail fieldCall)
-                                 (concat $ mapMaybe _rfaVariable inputArgs)
           where
-            ordJsonvalueToGValue = jsonValueToGValue . AO.fromOrdered
+            ordJSONValueToGValue :: (MonadError QErr m) => AO.Value -> m (G.Value Void)
+            ordJSONValueToGValue =
+              either (throw400 ValidationFailed) pure . jsonToGraphQL . AO.fromOrdered
+
+            inputArgsToMap = Map.fromList . map (_rfaArgument &&& _rfaValue)
 
         traverseObject obj = do
           let fields = AO.toList obj
@@ -348,6 +357,46 @@ traverseQueryResponseJSON rjm =
                            Nothing -> Just <$> traverseValue fieldPath value
           pure $ CVObject $ OMap.fromList processedFields
 
+convertFieldWithVariablesToName :: G.Field G.NoFragments Variable -> G.Field G.NoFragments G.Name
+convertFieldWithVariablesToName = fmap getName
+
+inputValueToJSON :: InputValue Void -> A.Value
+inputValueToJSON = \case
+  JSONValue    j -> j
+  GraphQLValue g -> graphQLValueToJSON g
+  where
+    graphQLValueToJSON :: G.Value Void -> A.Value
+    graphQLValueToJSON = \case
+      G.VNull                 -> A.Null
+      G.VInt i                -> A.toJSON i
+      G.VFloat f              -> A.toJSON f
+      G.VString t             -> A.toJSON t
+      G.VBoolean b            -> A.toJSON b
+      G.VEnum (G.EnumValue n) -> A.toJSON n
+      G.VList values          -> A.toJSON $ graphQLValueToJSON <$> values
+      G.VObject objects       -> A.toJSON $ graphQLValueToJSON <$> objects
+
+defaultValue :: InputValue Void -> Maybe (G.Value Void)
+defaultValue = \case
+  JSONValue    _ -> Nothing
+  GraphQLValue g -> Just g
+
+collectVariables :: G.Value Variable -> HashMap G.VariableDefinition A.Value
+collectVariables = \case
+  G.VNull          -> mempty
+  G.VInt _         -> mempty
+  G.VFloat _       -> mempty
+  G.VString _      -> mempty
+  G.VBoolean _     -> mempty
+  G.VEnum _        -> mempty
+  G.VList values   -> foldl Map.union mempty $ map collectVariables values
+  G.VObject values -> foldl Map.union mempty $ map collectVariables $ Map.elems values
+  G.VVariable var@(Variable _ gType val) ->
+    let name       = getName var
+        jsonVal    = inputValueToJSON val
+        defaultVal = defaultValue val
+    in Map.singleton (G.VariableDefinition name gType defaultVal) jsonVal
+
 -- | Fetch remote join field value from remote servers by batching respective 'RemoteJoinField's
 fetchRemoteJoinFields
   :: ( HasVersion
@@ -366,7 +415,6 @@ fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
     let batchList = toList batch
         gqlReq = fieldsToRequest G.OperationTypeQuery
                                  (map _rjfField batchList)
-                                 (concatMap _rjfVariables batchList)
         gqlReqUnparsed = (GQLQueryText . G.renderExecutableDoc . G.ExecutableDocument . unGQLExecDoc) <$> gqlReq
     -- NOTE: discard remote headers (for now):
     (_, _, respBody) <- execRemoteGQ' env manager userInfo reqHdrs gqlReqUnparsed rsi G.OperationTypeQuery
@@ -375,7 +423,6 @@ fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
       Right r -> do
         respObj <- either throw500 pure $ AO.asObject r
         let errors = AO.lookup "errors" respObj
-
         if | isNothing errors || errors == Just AO.Null ->
                case AO.lookup "data" respObj of
                  Nothing -> throw400 Unexpected "\"data\" field not found in remote response"
@@ -389,10 +436,13 @@ fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
   where
     remoteSchemaBatch = Map.groupOnNE _rjfRemoteSchema remoteJoins
 
-    fieldsToRequest :: G.OperationType -> [G.Field] -> [(G.VariableDefinition,A.Value)] -> GQLReqParsed
-    fieldsToRequest opType gfields vars =
-      case vars of
-        [] ->
+    fieldsToRequest :: G.OperationType -> [G.Field G.NoFragments Variable] -> GQLReqParsed
+    fieldsToRequest opType gFields =
+      let variableInfos = Just <$> foldl Map.union mempty $ Map.elems $ fmap collectVariables $ G._fArguments $ head gFields
+          gFields' = map (G.fmapFieldFragment G.inline . convertFieldWithVariablesToName) gFields
+      in
+      case variableInfos of
+        Nothing ->
           GQLReq
             { _grOperationName = Nothing
             , _grQuery =
@@ -400,31 +450,31 @@ fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
                  [ G.ExecutableDefinitionOperation
                      (G.OperationDefinitionTyped
                        ( emptyOperationDefinition
-                           { G._todSelectionSet = map G.SelectionField gfields
+                           { G._todSelectionSet = map G.SelectionField gFields'
                            }
                        )
                      )
                   ]
              , _grVariables = Nothing
              }
-        vars' ->
+
+        Just vars' ->
           GQLReq
             { _grOperationName = Nothing
             , _grQuery =
-                GQLExecDoc
-                  [ G.ExecutableDefinitionOperation
-                      (G.OperationDefinitionTyped
+               GQLExecDoc
+                 [ G.ExecutableDefinitionOperation
+                     (G.OperationDefinitionTyped
                        ( emptyOperationDefinition
-                            { G._todSelectionSet = map G.SelectionField gfields
-                            , G._todVariableDefinitions = nub (map fst vars')
-                            }
-                        )
-                      )
+                           { G._todSelectionSet = map G.SelectionField gFields'
+                           , G._todVariableDefinitions = map fst $ Map.toList vars'
+                           }
+                       )
+                     )
                   ]
-            , _grVariables = Just $ Map.fromList
-                                      (map (\(varDef, val) -> (G._vdVariable varDef, val)) vars')
-            }
-
+             , _grVariables = Just $ Map.fromList
+                                      (map (\(varDef, val) -> (G._vdName varDef, val)) $ Map.toList vars')
+             }
       where
         emptyOperationDefinition =
           G.TypedOperationDefinition {
@@ -433,8 +483,6 @@ fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
            , G._todVariableDefinitions = []
            , G._todDirectives = []
            , G._todSelectionSet = [] }
-
-
 
 -- | Replace 'RemoteJoinField' in composite JSON with it's json value from remote server response.
 replaceRemoteFields
@@ -446,7 +494,7 @@ replaceRemoteFields compositeJson remoteServerResponse =
   compositeValueToJSON <$> traverse replaceValue compositeJson
   where
     replaceValue rj = do
-      let alias = G.unAlias $ _rjfAlias rj
+      let alias = _rjfAlias rj
           fieldCall = _rjfFieldCall rj
       extractAtPath (alias:fieldCall) $ AO.Object remoteServerResponse
 
@@ -467,76 +515,96 @@ replaceRemoteFields compositeJson remoteServerResponse =
 -- selection set at the leaf of the tree we construct.
 fieldCallsToField
   :: forall m. MonadError QErr m
-  => [G.Argument]
-  -> Map.HashMap G.Variable G.Value
-  -> G.SelectionSet
+  => Map.HashMap G.Name (InputValue Variable)
+  -- ^ user input arguments to the remote join field
+  -> Map.HashMap G.Name (G.Value Void)
+  -- ^ Contains the values of the variables that have been defined in the remote join definition
+  -> G.SelectionSet G.NoFragments Variable
   -- ^ Inserted at leaf of nested FieldCalls
-  -> G.Alias
+  -> Alias
   -- ^ Top-level name to set for this Field
   -> NonEmpty FieldCall
-  -> m G.Field
+  -> m (G.Field G.NoFragments Variable)
 fieldCallsToField rrArguments variables finalSelSet topAlias =
   fmap (\f -> f{G._fAlias = Just topAlias}) . nest
   where
     -- almost: `foldr nest finalSelSet`
-    nest :: NonEmpty FieldCall -> m G.Field
+    nest :: NonEmpty FieldCall -> m (G.Field G.NoFragments Variable)
     nest ((FieldCall name remoteArgs) :| rest) = do
-      templatedArguments <- createArguments variables remoteArgs
+      templatedArguments <- convert <$> createArguments variables remoteArgs
+      graphQLarguments <- traverse peel rrArguments
       (args, selSet) <- case NE.nonEmpty rest of
             Just f -> do
               s <- nest f
               pure (templatedArguments, [G.SelectionField s])
             Nothing ->
-              let argsToMap = Map.fromList . map (G._aName &&& G._aValue)
-                  arguments = map (uncurry G.Argument) $ Map.toList $
-                              Map.unionWith mergeValue
-                                (argsToMap rrArguments)
-                                (argsToMap templatedArguments)
+              let arguments = Map.unionWith mergeValue
+                                graphQLarguments
+                                -- converting (G.Value Void) -> (G.Value Variable) to merge the
+                                -- 'rrArguments' with the 'variables'
+                                templatedArguments
               in pure (arguments, finalSelSet)
       pure $ G.Field Nothing name args [] selSet
+
+    convert :: Map.HashMap G.Name (G.Value Void) -> Map.HashMap G.Name (G.Value Variable)
+    convert = fmap G.literal
+
+    peel :: InputValue Variable -> m (G.Value Variable)
+    peel = \case
+      GraphQLValue v -> pure v
+      JSONValue _ ->
+        -- At this point, it is theoretically impossible that we have
+        -- unpacked a variable into a JSONValue, as there's no "outer
+        -- scope" at which this value could have been peeled.
+        -- FIXME: check that this is correct!
+        throw500 "internal error: encountered an already expanded variable when folding remote field arguments"
+        -- FIXME: better error message
 
 -- This is a kind of "deep merge".
 -- For e.g. suppose the input argument of the remote field is something like:
 -- `where: { id : 1}`
 -- And during execution, client also gives the input arg: `where: {name: "tiru"}`
 -- We need to merge the input argument to where: {id : 1, name: "tiru"}
-mergeValue :: G.Value -> G.Value -> G.Value
+mergeValue :: G.Value Variable -> G.Value Variable -> G.Value Variable
 mergeValue lVal rVal = case (lVal, rVal) of
-  (G.VList (G.ListValueG l), G.VList (G.ListValueG r)) ->
-    G.VList $ G.ListValueG $ l <> r
-  (G.VObject (G.ObjectValueG l), G.VObject (G.ObjectValueG r)) ->
-    let fieldsToMap = Map.fromList . map (G._ofName &&& G._ofValue)
-    in G.VObject $ G.ObjectValueG $ map (uncurry G.ObjectFieldG) $ Map.toList $
-       Map.unionWith mergeValue (fieldsToMap l) (fieldsToMap r)
+  (G.VList l, G.VList r) ->
+    G.VList $ l <> r
+  (G.VObject l, G.VObject r) ->
+    G.VObject $ Map.unionWith mergeValue l r
   (_, _) -> error $ "can only merge a list with another list or an " <>
                     "object with another object"
 
 -- | Create an argument map using the inputs taken from the hasura database.
 createArguments
   :: (MonadError QErr m)
-  => Map.HashMap G.Variable G.Value
+  => Map.HashMap G.Name (G.Value Void)
   -> RemoteArguments
-  -> m [G.Argument]
+  -> m (HashMap G.Name (G.Value Void))
 createArguments variables (RemoteArguments arguments) =
   either
     (throw400 Unexpected . \errors -> "Found errors: " <> T.intercalate ", " errors)
-    (pure . map (\(G.ObjectFieldG key val) -> G.Argument key val))
+    pure
     (toEither (substituteVariables variables arguments))
 
 -- | Substitute values in the argument list.
 substituteVariables
-  :: HashMap G.Variable G.Value -- ^ Values to use.
-  -> [G.ObjectFieldG G.Value] -- ^ A template.
-  -> Validation [Text] [G.ObjectFieldG G.Value]
-substituteVariables values = traverse (traverse go)
+  :: HashMap G.Name (G.Value Void) -- ^ Values of the variables to substitute.
+  -> HashMap G.Name (G.Value G.Name) -- ^ Template which contains the variables.
+  -> Validation [Text] (HashMap G.Name (G.Value Void))
+substituteVariables values = traverse go
   where
-    go v = case v of
-      G.VVariable variable ->
-        case Map.lookup variable values of
-          Nothing    -> Failure ["Value for variable " <> G.unVariable variable <<> " not provided"]
+    go = \case
+      G.VVariable variableName ->
+        case Map.lookup variableName values of
+          Nothing    -> Failure ["Value for variable " <> variableName <<> " not provided"]
           Just value -> pure value
-      G.VList (G.ListValueG listValue) ->
-        fmap (G.VList . G.ListValueG) (traverse go listValue)
-      G.VObject (G.ObjectValueG objectValue) ->
-        fmap (G.VObject . G.ObjectValueG) (traverse (traverse go) objectValue)
-      _ -> pure v
+      G.VList listValue ->
+        fmap G.VList (traverse go listValue)
+      G.VObject objectValue ->
+        fmap G.VObject (traverse go objectValue)
+      G.VInt i -> pure $ G.VInt i
+      G.VFloat d -> pure $ G.VFloat d
+      G.VString txt -> pure $ G.VString txt
+      G.VEnum e -> pure $ G.VEnum e
+      G.VBoolean b -> pure $ G.VBoolean b
+      G.VNull -> pure $ G.VNull
