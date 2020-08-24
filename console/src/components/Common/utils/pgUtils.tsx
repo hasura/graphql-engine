@@ -31,7 +31,7 @@ export type TablePermission = {
   table_name: string;
   table_schema: string;
   role_name: string;
-  permissions: Partial<Record<PermissionActionType, PermissionValueType>>;
+  permissions: Record<PermissionActionType, PermissionValueType>;
   comment?: string;
 };
 
