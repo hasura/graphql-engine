@@ -27,7 +27,6 @@ interface FlexOwnProps
 
 export const Flex = styled(Box)<FlexOwnProps>`
   display: flex;
-  align-items: center;
   ${color}
   ${space}
   ${layout}
