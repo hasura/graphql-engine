@@ -997,13 +997,6 @@ const deleteViewSql = (viewName, viewType) => {
     const property = viewType.toLowerCase();
     const sqlDropView = `DROP ${viewType} "${currentSchema}"."${viewName}"`;
     const sqlUpQueries = [getRunSqlQuery(sqlDropView)];
-    // const sqlCreateView = ''; //pending
-    // const sqlDownQueries = [
-    //   {
-    //     type: 'run_sql',
-    //     args: { 'sql': sqlCreateView }
-    //   }
-    // ];
 
     // Apply migrations
     const migrationName = 'drop_view_' + currentSchema + '_' + viewName;
