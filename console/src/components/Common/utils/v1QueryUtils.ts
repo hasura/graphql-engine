@@ -687,7 +687,7 @@ export const getConsoleOptsQuery = () =>
   );
 
 type PermissionUpQueryArgs = {
-  table: string;
+  table: string | { name: string; schema: string };
   role: string;
 };
 
@@ -709,13 +709,17 @@ type PermissionDownQuery = {
 
 const getPermissionUpQuery = (
   table_name: string,
+  schema_name: string,
   role_name: string,
   queryType: PermissionActionType
 ): PermissionUpQuery => {
   return {
     type: `drop_${queryType}_permission`,
     args: {
-      table: table_name,
+      table: {
+        name: table_name,
+        schema: schema_name,
+      },
       role: role_name,
     },
   };
@@ -727,7 +731,10 @@ const getSelectPermissionDownQuery = (
   return {
     type: 'create_select_permission',
     args: {
-      table: perm.table_name,
+      table: {
+        name: perm.table_name,
+        schema: perm.table_schema,
+      },
       role: perm.role_name,
       comment: perm?.comment ?? null,
       permission: {
@@ -747,7 +754,10 @@ const getInsertPermissionDownQuery = (
   return {
     type: 'create_insert_permission',
     args: {
-      table: perm.table_name,
+      table: {
+        name: perm.table_name,
+        schema: perm.table_schema,
+      },
       role: perm.role_name,
       permission: {
         check: perm.permissions.insert?.check ?? false,
@@ -766,7 +776,7 @@ const getUpdatePermissionDownQuery = (
   return {
     type: 'create_update_permission',
     args: {
-      table: perm.table_name,
+      table: { name: perm.table_name, schema: perm.table_schema },
       role: perm.role_name,
       permission: {
         columns: perm.permissions.update?.columns ?? [],
@@ -785,7 +795,10 @@ const getDeletePermissionDownQuery = (
   return {
     type: 'create_delete_permission',
     args: {
-      table: perm.table_name,
+      table: {
+        name: perm.table_name,
+        schema: perm.table_schema,
+      },
       role: perm.role_name,
       permission: {
         filter: perm.permissions.update?.filter ?? {},
@@ -802,25 +815,45 @@ export const getTablePermissionsQuery = (permissions: TablePermission[]) => {
   permissions.forEach(perm => {
     if (perm.permissions?.select) {
       allUpQueries.push(
-        getPermissionUpQuery(perm.table_name, perm.role_name, 'select')
+        getPermissionUpQuery(
+          perm.table_name,
+          perm.table_schema,
+          perm.role_name,
+          'select'
+        )
       );
       allDownQueries.push(getSelectPermissionDownQuery(perm));
     }
     if (perm.permissions?.insert) {
       allUpQueries.push(
-        getPermissionUpQuery(perm.table_name, perm.role_name, 'insert')
+        getPermissionUpQuery(
+          perm.table_name,
+          perm.table_schema,
+          perm.role_name,
+          'insert'
+        )
       );
       allDownQueries.push(getInsertPermissionDownQuery(perm));
     }
     if (perm.permissions?.delete) {
       allUpQueries.push(
-        getPermissionUpQuery(perm.table_name, perm.role_name, 'delete')
+        getPermissionUpQuery(
+          perm.table_name,
+          perm.table_schema,
+          perm.role_name,
+          'delete'
+        )
       );
       allDownQueries.push(getDeletePermissionDownQuery(perm));
     }
     if (perm.permissions?.update) {
       allUpQueries.push(
-        getPermissionUpQuery(perm.table_name, perm.role_name, 'update')
+        getPermissionUpQuery(
+          perm.table_name,
+          perm.table_schema,
+          perm.role_name,
+          'update'
+        )
       );
       allDownQueries.push(getUpdatePermissionDownQuery(perm));
     }
