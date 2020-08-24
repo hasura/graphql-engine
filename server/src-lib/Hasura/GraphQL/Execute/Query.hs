@@ -219,9 +219,18 @@ noProfile = ExtractProfile pure
 
 -- | Monads which support query instrumentation
 class Monad m => MonadQueryInstrumentation m where
-  -- | Add instrumentation to a query, based on the provided directives,
-  -- and also return an 'ExtractProfile' structure to extract any profiling data
-  -- from the instrumented result.
+  -- | Returns the appropriate /instrumentation/ (if any) for a SQL query, as
+  -- requested by the provided directives. Instrumentation is “SQL middleware”:
+  --
+  --   * The @'Q.Query' -> 'Q.Query'@ function is applied to the query just
+  --     prior to execution, and it can adjust the query in arbitrary ways.
+  --
+  --   * The 'ExtractProfile' function is applied to the query /result/, and it
+  --     can perform arbitrary side-effects based on its contents. (This is
+  --     currently just a hook for tracing, a la 'Tracing.MonadTrace'.)
+  --
+  -- The open-source version of graphql-engine does not currently perform any
+  -- instrumentation, so this serves only as a hook for downstream clients.
   askInstrumentQuery 
     :: [G.Directive G.Name]
     -> m (Q.Query -> Q.Query, ExtractProfile)
