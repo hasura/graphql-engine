@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 
 const MOUSEDOWN = 'mousedown';
 const TOUCHSTART = 'touchstart';
@@ -16,10 +16,10 @@ type Handler = (event: PossibleEvent) => void;
  * @param handler
  */
 export default function useOnClickOutside(
-  refs: Array<React.RefObject<HTMLElement>>,
+  refs: React.RefObject<HTMLElement>[],
   handler: Handler
 ) {
-  React.useEffect(() => {
+  useEffect(() => {
     const listener = (event: PossibleEvent) => {
       // Do nothing if clicking ref's element or descendent elements
       const refsClicked = refs.filter(
@@ -42,5 +42,3 @@ export default function useOnClickOutside(
   // ... callback/cleanup to run every render ...
   // ... function on every render that will cause this effect ...
 }
-};
-
