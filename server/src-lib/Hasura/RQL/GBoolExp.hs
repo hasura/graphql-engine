@@ -313,7 +313,7 @@ annColExp rhsParser colInfoMap (ColExp fieldName colVal) = do
       return $ AVRel relInfo annRelBoolExp
     FIComputedField _ ->
       throw400 UnexpectedPayload "Computed columns can not be part of the where clause"
-    -- TODO Rakesh
+    -- TODO Rakesh (from master)
     FIRemoteRelationship{} ->
       throw400 UnexpectedPayload "remote field unsupported"
 
@@ -335,7 +335,7 @@ convColRhs tableQual = \case
         bExps = map (mkFieldCompExp tableQual colFld) opExps
     return $ foldr (S.BEBin S.AndOp) (S.BELit True) bExps
 
-  AVRel (RelInfo _ _ colMapping relTN _) nesAnn -> do
+  AVRel (RelInfo _ _ colMapping relTN _ _) nesAnn -> do
     -- Convert the where clause on the relationship
     curVarNum <- get
     put $ curVarNum + 1
