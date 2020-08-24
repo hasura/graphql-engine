@@ -1,7 +1,8 @@
-import * as React from 'react';
+import { useEffect } from 'react';
 
 const MOUSEDOWN = 'mousedown';
 const TOUCHSTART = 'touchstart';
+
 type HandledEvents = [typeof MOUSEDOWN, typeof TOUCHSTART];
 type HandledEventsType = HandledEvents[number];
 type PossibleEvent = {
@@ -28,7 +29,6 @@ export default function useOnClickOutside(
       if (refsClicked.length) {
         return;
       }
-
       handler(event);
     };
     document.addEventListener('mousedown', listener);
@@ -42,3 +42,5 @@ export default function useOnClickOutside(
   // ... callback/cleanup to run every render ...
   // ... function on every render that will cause this effect ...
 }
+};
+
