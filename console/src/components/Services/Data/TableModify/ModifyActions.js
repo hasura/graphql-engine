@@ -897,8 +897,8 @@ const untrackTableSql = tableName => {
         permissionUpQueries,
         permissionDownQueries,
       ] = getTablePermissionsQuery(currentTableInfo.permissions);
-      upQueries = [...upQueries, ...permissionUpQueries];
-      downQueries = [...downQueries, ...permissionDownQueries];
+      upQueries = [...permissionUpQueries, ...upQueries];
+      downQueries = [...permissionDownQueries, ...downQueries];
     }
 
     // apply migrations
