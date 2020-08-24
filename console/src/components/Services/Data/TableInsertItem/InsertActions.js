@@ -33,16 +33,13 @@ const I_FETCH_ENUM_OPTIONS_ERROR = 'InsertItem/I_FETCH_ENUM_ERROR';
 const Open = () => ({ type: _OPEN });
 const Close = () => ({ type: _CLOSE });
 
-// insertItem helper
-const createInsertMigration = (
-  dispatch,
-  getState,
+const insertItemAsMigration = (
   tableInfo,
   insertedData,
   primaryKeyInfo,
   columns,
   callback
-) => {
+) => (dispatch, getState) => {
   const upQuery = getInsertUpQuery(
     { name: tableInfo.name, schema: tableInfo.schema },
     insertedData
@@ -89,6 +86,8 @@ const insertItem = (tableName, colValues, isMigration = false) => {
     const insertObject = {};
     const state = getState();
     const { currentSchema } = state.tables;
+    const tableDef = { name: tableName, schema: currentSchema };
+
     const currentTableInfo = state.tables.allSchemas.find(
       t => t.table_name === tableName && t.table_schema === currentSchema
     );
@@ -151,7 +150,7 @@ const insertItem = (tableName, colValues, isMigration = false) => {
     const reqBody = {
       type: 'insert',
       args: {
-        table: { name: tableName, schema: getState().tables.currentSchema },
+        table: tableDef,
         objects: [insertObject],
         returning,
       },
@@ -163,7 +162,7 @@ const insertItem = (tableName, colValues, isMigration = false) => {
       body: JSON.stringify(reqBody),
     };
     const url = Endpoints.query;
-    const migrationSuccessCB = affectedRows => () => {
+    const migrationSuccessCB = affectedRows => {
       dispatch(
         showSuccessNotification(
           'Inserted data!',
@@ -178,22 +177,17 @@ const insertItem = (tableName, colValues, isMigration = false) => {
       data => {
         const affectedRows = data.affected_rows;
         if (isMigration) {
-          createInsertMigration(
-            dispatch,
-            getState,
-            { name: tableName, schema: currentSchema },
-            data.returning[0],
-            currentTableInfo.primary_key,
-            columns,
-            migrationSuccessCB(affectedRows)
-          );
-        } else {
           dispatch(
-            showSuccessNotification(
-              'Inserted data!',
-              `Affected rows: ${affectedRows}`
+            insertItemAsMigration(
+              tableDef,
+              data.returning[0],
+              currentTableInfo.primary_key,
+              columns,
+              () => migrationSuccessCB(affectedRows)
             )
           );
+        } else {
+          migrationSuccessCB(affectedRows);
         }
       },
       err => {
