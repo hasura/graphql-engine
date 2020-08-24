@@ -23,8 +23,8 @@ import {
   Configuration as ConfigTooltip,
 } from '../Tooltips';
 import Explorer from './Explorer';
-import { Table } from '../../../../../Common/utils/pgUtils';
 import { ReduxState, ReduxAction } from '../../../../../../types';
+import { Table } from '../../../../../../dataSources/types';
 
 type Props = {
   table: Table;

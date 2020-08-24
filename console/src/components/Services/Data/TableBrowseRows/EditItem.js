@@ -9,7 +9,7 @@ import { ordinalColSort } from '../utils';
 import { replace } from 'react-router-redux';
 import globals from '../../../../Globals';
 import { E_ONGOING_REQ, editItem } from './EditActions';
-import { findTable, generateTableDef } from '../../../Common/utils/pgUtils';
+import { findTable, generateTableDef } from '../../../../dataSources/common';
 import { getTableBrowseRoute } from '../../../Common/utils/routesUtils';
 import { fetchEnumOptions } from './EditActions';
 import { TableRow } from '../Common/Components/TableRow';

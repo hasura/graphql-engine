@@ -3,13 +3,7 @@ import { connect, ConnectedProps } from 'react-redux';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Helmet from 'react-helmet';
 import { MapStateToProps } from '../../../../../types';
-import {
-  Schema,
-  Table,
-  findTable,
-  getSchemaName,
-  getTableName,
-} from '../../../../Common/utils/pgUtils';
+import { findTable } from '../../../../../dataSources/common';
 import { useEventTrigger } from '../state';
 import styles from '../TableCommon/EventTable.scss';
 import DropdownButton from '../../../../Common/DropdownButton/DropdownButton';
@@ -23,6 +17,7 @@ import RetryConfEditor from '../../Common/Components/RetryConfEditor';
 import * as tooltip from '../Common/Tooltips';
 import { EVENTS_SERVICE_HEADING } from '../../constants';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
+import { Table, Schema } from '../../../../../dataSources/types';
 
 interface Props extends InjectedProps {}
 
@@ -215,7 +210,7 @@ const Add: React.FC<Props> = props => {
               className={`${styles.selectTrigger} form-control`}
             >
               {schemaList.map(s => {
-                const sName = getSchemaName(s);
+                const sName = s.schema_name;
                 return (
                   <option
                     value={sName}
@@ -237,7 +232,7 @@ const Add: React.FC<Props> = props => {
               {allSchemas
                 .filter(t => t.table_schema === table.schema)
                 .map(t => {
-                  const tName = getTableName(t);
+                  const tName = t.table_name;
                   return (
                     <option key={tName} value={tName}>
                       {tName}

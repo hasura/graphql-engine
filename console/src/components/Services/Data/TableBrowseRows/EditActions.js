@@ -8,15 +8,15 @@ import {
 import dataHeaders from '../Common/Headers';
 import {
   findTable,
-  generateTableDef,
   getColumnType,
   getTableColumn,
   getEnumColumnMappings,
   arrayToPostgresArray,
-} from '../../../Common/utils/pgUtils';
+} from '../../../../dataSources/common';
 import { getEnumOptionsQuery } from '../../../Common/utils/v1QueryUtils';
 import { ARRAY } from '../utils';
 import { isStringArray } from '../../../Common/utils/jsUtils';
+import { generateTableDef } from '../../../../dataSources/common';
 
 const E_SET_EDITITEM = 'EditItem/E_SET_EDITITEM';
 const E_ONGOING_REQ = 'EditItem/E_ONGOING_REQ';

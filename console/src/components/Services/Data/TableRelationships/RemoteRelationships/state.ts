@@ -13,7 +13,7 @@ import {
   TreeArgElement,
   ArgValueKind,
 } from './utils';
-import { Table } from '../../../../Common/utils/pgUtils';
+import { Table } from '../../../../../dataSources/types';
 
 const getDefaultState = (table: Table): RemoteRelationship => ({
   name: '',

@@ -12,8 +12,7 @@ import {
   getFunctionName,
   getQualifiedTableDef,
   getSchemaFunctions,
-  getSchemaName,
-} from '../../../Common/utils/pgUtils';
+} from '../../../../dataSources/common';
 import { deleteComputedField, saveComputedField } from './ModifyActions';
 import { fetchFunctionInit } from '../DataActions';
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
@@ -285,7 +284,7 @@ const ComputedFieldsEditor = ({
             </div>
             <div className={styles.wd50percent}>
               <SearchableSelectBox
-                options={schemaList.map(s => getSchemaName(s))}
+                options={schemaList.map(s => s.schema_name)}
                 onChange={handleFnSchemaChange}
                 value={computedFieldFunctionSchema}
                 bsClass={'function-schema-select'}

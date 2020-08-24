@@ -8,7 +8,7 @@ import {
   UPDATE_TRIGGER_FUNCTION,
   vMakeTableRequests,
 } from './ViewActions';
-import { checkIfTable } from '../../../Common/utils/pgUtils';
+import { isTable } from '../../../../dataSources/common';
 import { setTable } from '../DataActions';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewRows from './ViewRows';
@@ -126,7 +126,7 @@ class ViewTable extends Component {
     const styles = require('../../../Common/Common.scss');
 
     // Is this a view
-    const isView = !checkIfTable(tableSchema);
+    const isView = !isTable(tableSchema);
 
     // Are there any expanded columns
     const viewRows = (

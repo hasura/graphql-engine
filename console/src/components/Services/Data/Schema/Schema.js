@@ -33,7 +33,7 @@ import {
   getFunctionName,
   getSchemaTables,
   getUntrackedTables,
-} from '../../../Common/utils/pgUtils';
+} from '../../../../dataSources/common';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ToolTip from '../../../Common/Tooltip/Tooltip';

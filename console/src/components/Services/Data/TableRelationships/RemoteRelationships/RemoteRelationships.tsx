@@ -3,10 +3,10 @@ import styles from '../../TableModify/ModifyTable.scss';
 import { RemoteRelationshipServer } from './utils';
 import RemoteRelationshipList from './components/RemoteRelationshipList';
 import { fetchRemoteSchemas } from '../../../RemoteSchema/Actions';
-import { Table } from '../../../../Common/utils/pgUtils';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
 import { Dispatch } from '../../../../../types';
+import { Table } from '../../../../../dataSources/types';
 
 type Props = {
   relationships: RemoteRelationshipServer[];

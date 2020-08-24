@@ -35,12 +35,11 @@ import { NotFoundError } from '../../../Error/PageNotFound';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
-  getTableCheckConstraints,
   findTable,
   generateTableDef,
   getTableCustomRootFields,
   getTableCustomColumnNames,
-} from '../../../Common/utils/pgUtils';
+} from '../../../../dataSources/common';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import ComputedFieldsEditor from './ComputedFieldsEditor';
@@ -299,7 +298,7 @@ class ModifyTable extends React.Component {
               <ToolTip message={checkConstraintsDescription} />
             </h4>
             <CheckConstraints
-              constraints={getTableCheckConstraints(table)}
+              constraints={table.check_constraints}
               checkConstraintsModify={checkConstraintsModify}
               dispatch={dispatch}
             />

@@ -16,10 +16,10 @@ import {
   getDeleteQuery,
   getRunSqlQuery,
 } from '../../../Common/utils/v1QueryUtils';
-import { generateTableDef } from '../../../Common/utils/pgUtils';
 import { COUNT_LIMIT } from '../constants';
 import { getStatementTimeoutSql } from '../RawSQL/utils';
 import { isPostgresTimeoutError } from './utils';
+import { generateTableDef } from '../../../../dataSources/common';
 
 /* ****************** View actions *************/
 const V_SET_DEFAULTS = 'ViewTable/V_SET_DEFAULTS';

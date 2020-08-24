@@ -37,14 +37,13 @@ import {
 import { getConfirmation, capitalize } from '../../../Common/utils/jsUtils';
 import {
   findTable,
-  generateTableDef,
-  getTableCheckConstraints,
   findTableCheckConstraint,
   getTableCustomRootFields,
   getTableCustomColumnNames,
   getTableDef,
   getComputedFieldName,
-} from '../../../Common/utils/pgUtils';
+  generateTableDef,
+} from '../../../../dataSources/common';
 import {
   getSetCustomRootFieldsQuery,
   getRunSqlQuery,
@@ -350,7 +349,7 @@ export const removeCheckConstraint = (constraintName, successCb, errorCb) => (
   );
 
   const constraint = findTableCheckConstraint(
-    getTableCheckConstraints(table),
+    table.check_constraints,
     constraintName
   );
 
@@ -2112,9 +2111,10 @@ export const saveCheckConstraint = (index, successCb, errorCb) => (
   } = getState().tables;
   const { checkConstraintsModify } = getState().tables.modify;
 
-  const allConstraints = getTableCheckConstraints(
-    findTable(allTables, generateTableDef(currentTable, currentSchema))
-  );
+  const allConstraints = findTable(
+    allTables,
+    generateTableDef(currentTable, currentSchema)
+  ).check_constraints;
 
   const newConstraint = checkConstraintsModify[index];
 

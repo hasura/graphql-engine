@@ -1,149 +1,19 @@
 import React from 'react';
-import { isEqual, isString } from './jsUtils';
-import { Nullable } from './tsUtils';
-import { TableDefinition, FunctionDefinition } from './v1QueryUtils';
 
-/** * Table/View utils ** */
+import { Nullable } from '../components/Common/utils/tsUtils';
+import {
+  Table,
+  TableColumn,
+  Relationship,
+  CheckConstraint,
+  ComputedField,
+} from './types';
+import { TableDefinition } from '../components/Common/utils/v1QueryUtils'; // TODO
+import { isEqual } from '../components/Common/utils/jsUtils';
+import { PGFunction } from './services/postgresql/types';
 
-export type TableRelationship = {
-  rel_name: string;
-  rel_def: {
-    manual_configuration?: any;
-    foreign_key_constraint_on?: any; // TODO
-  };
-  rel_type: 'object' | 'array';
-};
+export const QUERY_TYPES = ['insert', 'select', 'update', 'delete'] as const;
 
-export type TablePermission = {
-  role_name: string;
-  permissions: {
-    [action: string]: any;
-  };
-};
-
-export interface BaseTableColumn {
-  column_name: string;
-  data_type: string;
-}
-
-export interface TableColumn extends BaseTableColumn {
-  udt_name: string;
-  column_default: string;
-  is_generated?: string;
-  is_nullable?: string;
-  is_identity?: string;
-  identity_generation?: 'ALWAYS' | 'BY DEFAULT' | null;
-}
-
-export type ForeignKeyConstraint = {
-  ref_table: string;
-  ref_table_table_schema: string;
-  column_mapping: {
-    [lcol: string]: string;
-  };
-};
-
-export type CheckConstraint = {
-  constraint_name: string;
-  check: string;
-};
-
-export type ComputedField = {
-  computed_field_name: string;
-  definition: {
-    function: FunctionDefinition;
-  };
-};
-
-export type Schema = {
-  schema_name: string;
-};
-
-export interface BaseTable {
-  table_name: string;
-  table_schema: string;
-  columns: BaseTableColumn[];
-  is_enum: boolean;
-}
-export const makeBaseTable = (
-  name: string,
-  schema: string,
-  columns: BaseTableColumn[],
-  isEnum = false
-): BaseTable => ({
-  table_name: name,
-  table_schema: schema,
-  columns,
-  is_enum: isEnum,
-});
-
-export interface Table extends BaseTable {
-  table_name: string;
-  table_schema: string;
-  table_type:
-    | 'TABLE'
-    | 'VIEW'
-    | 'MATERIALIZED VIEW'
-    | 'FOREIGN TABLE'
-    | 'PARTITIONED TABLE';
-  is_table_tracked: boolean;
-  columns: TableColumn[];
-  relationships: TableRelationship[];
-  permissions: TablePermission[];
-  foreign_key_constraints: ForeignKeyConstraint[];
-  check_constraints: CheckConstraint[];
-  configuration?: {
-    custom_column_names: {
-      [column: string]: string;
-    };
-    custom_root_fields: {
-      select: Nullable<string>;
-      select_by_pk: Nullable<string>;
-      select_aggregate?: Nullable<string>;
-      insert?: Nullable<string>;
-      insert_one?: Nullable<string>;
-      update?: Nullable<string>;
-      update_by_pk?: Nullable<string>;
-      delete?: Nullable<string>;
-      delete_by_pk?: Nullable<string>;
-    };
-  };
-  computed_fields: ComputedField[];
-  is_enum: boolean;
-  view_info: {
-    is_trigger_insertable_into: 'YES' | 'NO';
-    is_insertable_into: 'YES' | 'NO';
-    is_updatable: 'YES' | 'NO';
-    is_trigger_updatable: 'YES' | 'NO';
-    is_trigger_deletable: 'YES' | 'NO';
-  };
-}
-
-export type PGFunction = {
-  function_name: string;
-  function_schema: string;
-  function_definition: string;
-  return_type_type: string;
-};
-
-export type PGSchema = {
-  schema_name: string;
-};
-
-export const getTableName = (table: Table) => {
-  return table.table_name;
-};
-
-export const getTableSchema = (table: Table) => {
-  return table.table_schema;
-};
-
-export const getTableType = (table: Table) => {
-  return table.table_type;
-};
-
-// TODO: figure out better pattern for overloading fns
-// tableName and tableNameWithSchema are either/or arguments
 export const generateTableDef = (
   tableName: string,
   tableSchema: Nullable<string> = 'public',
@@ -162,11 +32,11 @@ export const generateTableDef = (
 };
 
 export const getTableDef = (table: Table) => {
-  return generateTableDef(getTableName(table), getTableSchema(table));
+  return generateTableDef(table.table_name, table.table_schema);
 };
 
 export const getQualifiedTableDef = (tableDef: TableDefinition | string) => {
-  return isString(tableDef) ? generateTableDef(tableDef as string) : tableDef;
+  return typeof tableDef === 'string' ? generateTableDef(tableDef) : tableDef;
 };
 
 export const getTableNameWithSchema = (
@@ -184,7 +54,7 @@ export const getTableNameWithSchema = (
   return fullTableName;
 };
 
-export const checkIfTable = (table: Table) => {
+export const isTable = (table: Table) => {
   return (
     table.table_type === 'TABLE' ||
     table.table_type === 'PARTITIONED TABLE' ||
@@ -193,10 +63,10 @@ export const checkIfTable = (table: Table) => {
 };
 
 export const displayTableName = (table: Table) => {
-  const tableName = getTableName(table);
-  const isTable = checkIfTable(table);
+  // TODO: it shouldn't be here
+  const tableName = table.table_name;
 
-  return isTable ? <span>{tableName}</span> : <i>{tableName}</i>;
+  return isTable(table) ? <span>{tableName}</span> : <i>{tableName}</i>;
 };
 
 export const findTable = (allTables: Table[], tableDef: TableDefinition) => {
@@ -212,19 +82,17 @@ export const getUntrackedTables = (tables: Table[]) => {
 };
 
 export const getOnlyTables = (tablesOrViews: Table[]) => {
-  return tablesOrViews.filter(t => checkIfTable(t));
+  return tablesOrViews.filter(t => isTable(t));
 };
 
 export const getOnlyViews = (tablesOrViews: Table[]) => {
-  return tablesOrViews.filter(t => !checkIfTable(t));
+  return tablesOrViews.filter(t => !isTable(t));
 };
-
-export const QUERY_TYPES = ['insert', 'select', 'update', 'delete'];
 
 export const getTableSupportedQueries = (table: Table) => {
   let supportedQueryTypes;
 
-  if (checkIfTable(table)) {
+  if (isTable(table)) {
     supportedQueryTypes = QUERY_TYPES;
   } else {
     // is View
@@ -261,23 +129,13 @@ export const getTableSupportedQueries = (table: Table) => {
   return supportedQueryTypes;
 };
 
-/** * Table/View column utils ** */
-
-export const getTableColumns = (table: Nullable<Table>) => {
-  return table ? table.columns : [];
-};
-
-export const getColumnName = (column: TableColumn) => {
-  return column.column_name;
-};
-
 export const getTableColumnNames = (table: Table) => {
-  return getTableColumns(table).map(c => getColumnName(c));
+  return table.columns.map(c => c.column_name);
 };
 
 export const getTableColumn = (table: Table, columnName: string) => {
-  return getTableColumns(table).find(
-    column => getColumnName(column) === columnName
+  return (table.columns || []).find(
+    column => column.column_name === columnName
   );
 };
 
@@ -306,42 +164,24 @@ export const arrayToPostgresArray = (arr: unknown[]) => {
   return `{${arr.join(',')}}`;
 };
 
-/** * Table/View relationship utils ** */
-
-export const getTableRelationships = (table: Table) => {
-  return table.relationships;
-};
-
-export const getRelationshipName = (relationship: TableRelationship) => {
-  return relationship.rel_name;
-};
-
-export const getRelationshipDef = (relationship: TableRelationship) => {
-  return relationship.rel_def;
-};
-
-export const getRelationshipType = (relationship: TableRelationship) => {
-  return relationship.rel_type;
-};
-
 export const getTableRelationshipNames = (table: Table) => {
-  return getTableRelationships(table).map(r => getRelationshipName(r));
+  return table.relationships.map(r => r.rel_name);
 };
 
 export function getTableRelationship(table: Table, relationshipName: string) {
-  return getTableRelationships(table).find(
-    relationship => getRelationshipName(relationship) === relationshipName
+  return table.relationships.find(
+    relationship => relationship.rel_name === relationshipName
   );
 }
 
 export function getRelationshipRefTable(
   table: Table,
-  relationship: TableRelationship
+  relationship: Relationship
 ) {
   let refTable = null;
 
-  const relationshipDef = getRelationshipDef(relationship);
-  const relationshipType = getRelationshipType(relationship);
+  const relationshipDef = relationship.rel_def;
+  const relationshipType = relationship.rel_type;
 
   // if manual relationship
   if (relationshipDef.manual_configuration) {
@@ -379,18 +219,6 @@ export function getRelationshipRefTable(
 
   return refTable;
 }
-
-/**
- * @param {string} currentSchema
- * @param {string} currentTable
- * @param {Array<{[key: string]: any}>} allSchemas
- *
- * @returns {Array<{
- *   columnName: string,
- *   enumTableName: string,
- *   enumColumnName: string,
- * }>}
- */
 
 export const getEnumColumnMappings = (
   allSchemas: Table[],
@@ -434,8 +262,6 @@ export const getEnumColumnMappings = (
   return relationsMap;
 };
 
-/** * Table/View permissions utils ** */
-
 export const getTablePermissions = (
   table: Table,
   role: string | null = null,
@@ -455,26 +281,12 @@ export const getTablePermissions = (
   return tablePermissions;
 };
 
-/** * Table/View Check Constraints utils ** */
-
-export const getTableCheckConstraints = (table: Table) => {
-  return table.check_constraints;
-};
-
-export const getCheckConstraintName = (constraint: CheckConstraint) => {
-  return constraint.constraint_name;
-};
-
 export const findTableCheckConstraint = (
   checkConstraints: CheckConstraint[],
   constraintName: string
 ) => {
-  return checkConstraints.find(
-    c => getCheckConstraintName(c) === constraintName
-  );
+  return checkConstraints.find(c => c.constraint_name === constraintName);
 };
-
-/** * Function utils ** */
 
 export const getFunctionSchema = (pgFunction: PGFunction) => {
   return pgFunction.function_schema;
@@ -507,24 +319,16 @@ export const findFunction = (
   );
 };
 
-/** * Schema utils ** */
-
-export const getSchemaName = (schema: PGSchema) => {
-  return schema.schema_name;
-};
-
 export const getSchemaTables = (allTables: Table[], tableSchema: string) => {
-  return allTables.filter(t => getTableSchema(t) === tableSchema);
+  return allTables.filter(t => t.table_schema === tableSchema);
 };
 
 export const getSchemaTableNames = (
   allTables: Table[],
   tableSchema: string
 ) => {
-  return getSchemaTables(allTables, tableSchema).map(t => getTableName(t));
+  return getSchemaTables(allTables, tableSchema).map(t => t.table_name);
 };
-
-/** * Custom table fields utils ** */
 
 export const getTableCustomRootFields = (table: Table) => {
   if (table.configuration) {
@@ -540,16 +344,6 @@ export const getTableCustomColumnNames = (table: Table) => {
   return {};
 };
 
-/** * Table/View Computed Field utils ** */
-
-export const getTableComputedFields = (table: Table) => {
-  return table.computed_fields;
-};
-
-export const getComputedFieldName = (computedField: ComputedField) => {
-  return computedField.computed_field_name;
-};
-
 export const getGroupedTableComputedFields = (
   table: Table,
   allFunctions: PGFunction[]
@@ -559,7 +353,7 @@ export const getGroupedTableComputedFields = (
     table: ComputedField[];
   } = { scalar: [], table: [] };
 
-  getTableComputedFields(table).forEach(computedField => {
+  table.computed_fields.forEach(computedField => {
     const computedFieldFnDef = computedField.definition.function;
     const computedFieldFn = findFunction(
       allFunctions,
@@ -576,22 +370,3 @@ export const getGroupedTableComputedFields = (
 
   return groupedComputedFields;
 };
-
-// export const getDependentTables = (table) => {
-
-//   return [
-//     {
-//       table_schema: table.table_schema,
-//       table_name: table.table_name,
-//     },
-//     ...table.foreign_key_constraints.map(fk_obj => ({
-//       table_name: fk_obj.ref_table,
-//       table_schema: fk_obj.ref_table_table_schema
-//     })),
-//     ...table.opp_foreign_key_constraints.map(fk_obj => ({
-//       table_name: fk_obj.table_name,
-//       table_schema: fk_obj.table_schema,
-//     }))
-//   ]
-
-// };

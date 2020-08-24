@@ -44,10 +44,8 @@ import {
 import {
   findTable,
   getRelationshipRefTable,
-  getTableName,
-  getTableSchema,
   arrayToPostgresArray,
-} from '../../../Common/utils/pgUtils';
+} from '../../../../dataSources/common';
 import { updateSchemaInfo } from '../DataActions';
 import {
   persistColumnCollapseChange,
@@ -769,8 +767,8 @@ const ViewRows = ({
           return (
             <ViewRows
               key={i}
-              curTableName={getTableName(childTable)}
-              currentSchema={getTableSchema(childTable)}
+              curTableName={childTable.table_name}
+              currentSchema={childTable.table_schema}
               curQuery={cq}
               curFilter={curFilter}
               curPath={[...curPath, rel.rel_name]}

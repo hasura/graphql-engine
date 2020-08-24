@@ -1,5 +1,5 @@
-import { generateTableDef } from '../../../Common/utils/pgUtils';
 import { defaultRelFieldMapping } from '../Common/stateDefaults';
+import { generateTableDef } from '../../../../dataSources/common';
 
 const reformRelationship = relConfig => {
   return {

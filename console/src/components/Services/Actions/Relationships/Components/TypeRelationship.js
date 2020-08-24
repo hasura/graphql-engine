@@ -4,12 +4,10 @@ import { updateSchemaInfo } from '../../../Data/DataActions';
 import { isEmpty, getLastArrayElement } from '../../../../Common/utils/jsUtils';
 import ExpandableEditor from '../../../../Common/Layout/ExpandableEditor/Editor';
 import {
-  getSchemaName,
   getSchemaTables,
   getTableColumnNames,
-  getTableName,
   getTrackedTables,
-} from '../../../../Common/utils/pgUtils';
+} from '../../../../../dataSources/common';
 import {
   parseCustomTypeRelationship,
   getRelValidationError,
@@ -112,7 +110,7 @@ const RelationshipEditor = ({
   ).reduce((all, trackedTable) => {
     return {
       ...all,
-      [getTableName(trackedTable)]: getTableColumnNames(trackedTable),
+      [trackedTable.table_name]: getTableColumnNames(trackedTable),
     };
   }, {});
 
@@ -176,7 +174,7 @@ const RelationshipEditor = ({
 
   // ref schema select
   const getRefSchemaSelect = () => {
-    const orderedSchemaList = schemaList.map(s => getSchemaName(s)).sort();
+    const orderedSchemaList = schemaList.map(s => s.schema_name).sort();
     return (
       <div className={`${styles.add_mar_bottom}`}>
         <div className={`${styles.add_mar_bottom_mid}`}>

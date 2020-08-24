@@ -19,10 +19,9 @@ import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
   findTable,
   generateTableDef,
-  getColumnName,
   getTableCustomRootFields,
   getTableCustomColumnNames,
-} from '../../../Common/utils/pgUtils';
+} from '../../../../dataSources/common';
 import RootFields from './RootFields';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import { changeViewRootFields } from '../Common/TooltipMessages';
@@ -102,7 +101,7 @@ const ModifyView = props => {
     const columns = tableSchema.columns.sort(ordinalColSort);
 
     return columns.map((c, i) => {
-      const columnName = getColumnName(c);
+      const columnName = c.column_name;
 
       const setCustomColumnName = e => {
         const value = e.target.value;

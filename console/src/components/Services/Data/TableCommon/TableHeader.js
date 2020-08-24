@@ -6,12 +6,7 @@ import { capitalize, exists } from '../../../Common/utils/jsUtils';
 import EditableHeading from '../../../Common/EditableHeading/EditableHeading';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import { tabNameMap } from '../utils';
-import {
-  checkIfTable,
-  getTableName,
-  getTableSchema,
-  getTableType,
-} from '../../../Common/utils/pgUtils';
+import { isTable } from '../../../../dataSources/common';
 import {
   getSchemaBaseRoute,
   getTableBrowseRoute,
@@ -34,9 +29,9 @@ const TableHeader = ({
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
 
-  const tableName = getTableName(table);
-  const tableSchema = getTableSchema(table);
-  const isTable = checkIfTable(table);
+  const tableName = table.table_name;
+  const tableSchema = table.table_schema;
+  const isTableType = isTable(table);
 
   let countDisplay = '';
   // if (exists(count)) {
@@ -48,7 +43,9 @@ const TableHeader = ({
   const activeTab = tabNameMap[tabName];
 
   const saveTableNameChange = newName => {
-    dispatch(changeTableName(tableName, newName, isTable, getTableType(table)));
+    dispatch(
+      changeTableName(tableName, newName, isTableType, table.table_type)
+    );
   };
 
   const getBreadCrumbs = () => {
@@ -67,7 +64,7 @@ const TableHeader = ({
       },
       {
         title: tableName,
-        url: getTableBrowseRoute(tableSchema, tableName, isTable),
+        url: getTableBrowseRoute(tableSchema, tableName, isTableType),
       },
       {
         title: activeTab,
@@ -99,44 +96,44 @@ const TableHeader = ({
           loading={false}
           editable={tabName === 'modify'}
           dispatch={dispatch}
-          property={isTable ? 'table' : 'view'}
+          property={isTableType ? 'table' : 'view'}
         />
         <div className={styles.nav}>
           <ul className="nav nav-pills">
             {getTab(
               'browse',
-              getTableBrowseRoute(tableSchema, tableName, isTable),
+              getTableBrowseRoute(tableSchema, tableName, isTableType),
               `Browse Rows ${countDisplay}`,
               'table-browse-rows'
             )}
             {!readOnlyMode &&
-              isTable &&
+              isTableType &&
               getTab(
                 'insert',
-                getTableInsertRowRoute(tableSchema, tableName, isTable),
+                getTableInsertRowRoute(tableSchema, tableName, isTableType),
                 'Insert Row',
                 'table-insert-rows'
               )}
             {migrationMode &&
               getTab(
                 'modify',
-                getTableModifyRoute(tableSchema, tableName, isTable),
+                getTableModifyRoute(tableSchema, tableName, isTableType),
                 'Modify'
               )}
             {getTab(
               'relationships',
-              getTableRelationshipsRoute(tableSchema, tableName, isTable),
+              getTableRelationshipsRoute(tableSchema, tableName, isTableType),
               'Relationships'
             )}
             {getTab(
               'permissions',
-              getTablePermissionsRoute(tableSchema, tableName, isTable),
+              getTablePermissionsRoute(tableSchema, tableName, isTableType),
               'Permissions'
             )}
             {tabName === 'edit' &&
               getTab(
                 'edit',
-                getTableEditRowRoute(tableSchema, tableName, isTable),
+                getTableEditRowRoute(tableSchema, tableName, isTableType),
                 'Edit Row'
               )}
           </ul>

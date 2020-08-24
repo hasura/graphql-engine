@@ -8,10 +8,9 @@ import {
   displayTableName,
   getFunctionName,
   getSchemaTables,
-  getTableName,
-  checkIfTable,
+  isTable,
   getFunctionSchema,
-} from '../../Common/utils/pgUtils';
+} from '../../../dataSources/common';
 import { isEmpty } from '../../Common/utils/jsUtils';
 import {
   getFunctionModifyRoute,
@@ -68,7 +67,7 @@ class DataSubSidebar extends React.Component {
     ).filter(table => table.is_table_tracked);
 
     const filteredTableList = trackedTablesInSchema.filter(t =>
-      getTableName(t).includes(searchInput)
+      t.table_name.includes(searchInput)
     );
 
     const filteredFunctionsList = trackedFunctions.filter(f =>
@@ -96,7 +95,7 @@ class DataSubSidebar extends React.Component {
       if (filteredTableList && filteredTableList.length) {
         const filteredTablesObject = {};
         filteredTableList.forEach(t => {
-          filteredTablesObject[getTableName(t)] = t;
+          filteredTablesObject[t.table_name] = t;
         });
 
         const sortedTableNames = Object.keys(filteredTablesObject).sort();
@@ -118,7 +117,7 @@ class DataSubSidebar extends React.Component {
                 to={getTableBrowseRoute(
                   currentSchema,
                   tableName,
-                  checkIfTable(table)
+                  isTable(table)
                 )}
                 data-test={tableName}
               >

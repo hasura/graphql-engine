@@ -3,7 +3,6 @@ import { connect, ConnectedProps } from 'react-redux';
 import TableHeader from '../TableCommon/TableHeader';
 import styles from './ModifyEvent.scss';
 import { updateSchemaInfo } from '../../../Data/DataActions';
-import { getTableColumns, Table } from '../../../../Common/utils/pgUtils';
 import Button from '../../../../Common/Button/Button';
 import { useEventTriggerModify } from '../state';
 
@@ -21,6 +20,7 @@ import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import { modifyEventTrigger, deleteEventTrigger } from '../../ServerIO';
 
 import { NotFoundError } from '../../../../Error/PageNotFound';
+import { Table } from '../../../../../dataSources/types';
 
 interface Props extends InjectedProps {}
 
@@ -81,9 +81,9 @@ const Modify: React.FC<Props> = props => {
         />
         <OperationEditor
           currentTrigger={currentTrigger}
-          allTableColumns={getTableColumns(
-            findETTable(currentTrigger, allSchemas)
-          )}
+          allTableColumns={
+            findETTable(currentTrigger, allSchemas)?.columns || []
+          }
           operations={state.operations}
           setOperations={setState.operations}
           operationColumns={state.operationColumns}

@@ -3,11 +3,11 @@ import { getEdForm, getIngForm } from '../utils';
 import { makeMigrationCall, fetchRoleList } from '../DataActions';
 import {
   findTable,
-  generateTableDef,
   getSchemaTables,
   getTableDef,
   getTablePermissions,
-} from '../../../Common/utils/pgUtils';
+  generateTableDef,
+} from '../../../../dataSources/common';
 import {
   getCreatePermissionQuery,
   getDropPermissionQuery,

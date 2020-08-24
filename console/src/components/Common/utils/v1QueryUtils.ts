@@ -4,8 +4,8 @@ import { LocalAdhocEventState } from '../../Services/Events/AdhocEvents/Add/stat
 import { LocalEventTriggerState } from '../../Services/Events/EventTriggers/state';
 import { RemoteRelationshipPayload } from '../../Services/Data/TableRelationships/RemoteRelationships/utils';
 import { transformHeaders } from '../Headers/utils';
-import { generateTableDef } from './pgUtils';
 import { Nullable } from './tsUtils';
+import { generateTableDef } from '../../../dataSources/common';
 
 // TODO add type for the where clause
 

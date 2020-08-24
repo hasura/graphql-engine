@@ -7,15 +7,11 @@ import {
   ScheduledTrigger,
   EventKind,
 } from './types';
-import {
-  TableColumn,
-  findTable,
-  Table,
-  generateTableDef,
-} from '../../Common/utils/pgUtils';
 import { TableDefinition } from '../../Common/utils/v1QueryUtils';
 import { convertDateTimeToLocale } from '../../Common/utils/jsUtils';
 import { Nullable } from '../../Common/utils/tsUtils';
+import { TableColumn, Table } from '../../../dataSources/types';
+import { generateTableDef, findTable } from '../../../dataSources/common';
 
 export const parseServerWebhook = (
   webhook: Nullable<string>,

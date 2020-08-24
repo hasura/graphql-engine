@@ -72,14 +72,11 @@ import {
 import {
   findTable,
   generateTableDef,
-  getColumnName,
-  getComputedFieldName,
-  getTableColumns,
   getGroupedTableComputedFields,
   getColumnType,
   getTableSupportedQueries,
   QUERY_TYPES,
-} from '../../../Common/utils/pgUtils';
+} from '../../../../dataSources/common';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import {
   getFilterQueries,
@@ -1003,9 +1000,7 @@ class Permissions extends Component {
 
           if (query === 'select') {
             groupedComputedFields.scalar.forEach(scalarComputedField => {
-              const computedFieldName = getComputedFieldName(
-                scalarComputedField
-              );
+              const computedFieldName = scalarComputedField.computed_field_name;
 
               _columnList.push(
                 getFieldCheckbox('computed_fields', computedFieldName)
@@ -1048,13 +1043,13 @@ class Permissions extends Component {
           const dispatchToggleAllColumns = () => {
             const allFields = {};
 
-            allFields.columns = getTableColumns(tableSchema).map(c =>
-              getColumnName(c)
+            allFields.columns = (tableSchema.columns || []).map(
+              c => c.column_name
             );
 
             if (query === 'select') {
-              allFields.computed_fields = groupedComputedFields.scalar.map(cf =>
-                getComputedFieldName(cf)
+              allFields.computed_fields = groupedComputedFields.scalar.map(
+                cf => cf.computed_field_name
               );
             }
 
@@ -1100,7 +1095,7 @@ class Permissions extends Component {
           const colSectionTitle = 'Column ' + query + ' permissions';
 
           const tableFields = {};
-          tableFields.columns = getTableColumns(tableSchema);
+          tableFields.columns = tableSchema.columns || [];
           if (query === 'select') {
             tableFields.computed_fields = groupedComputedFields.scalar;
           }
@@ -1319,7 +1314,7 @@ class Permissions extends Component {
 
               if (columns && columns.length > 0) {
                 columns.forEach((c, i) => {
-                  const columnName = getColumnName(c);
+                  const columnName = c.column_name;
                   if (
                     columnName === preset.column ||
                     !presetColumns.includes(columnName)
@@ -1384,7 +1379,7 @@ class Permissions extends Component {
             const presetInputDisabled = !preset.column;
 
             const columnInfo = columns.find(
-              c => getColumnName(c) === preset.column
+              c => c.column_name === preset.column
             );
             const columnType = columnInfo ? getColumnType(columnInfo) : '';
 

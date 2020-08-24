@@ -1,6 +1,5 @@
 import React from 'react';
 import { OrderBy } from '../utils/v1QueryUtils';
-import { BaseTable, generateTableDef } from '../utils/pgUtils';
 import Where from './Where';
 import Sorts from './Sorts';
 import { useFilterQuery } from './state';
@@ -10,6 +9,8 @@ import ReloadEnumValuesButton from '../../Services/Data/Common/Components/Reload
 import Button from '../Button/Button';
 import { Nullable } from '../utils/tsUtils';
 import styles from './FilterQuery.scss';
+import { BaseTable } from '../../../dataSources/types';
+import { generateTableDef } from '../../../dataSources/common';
 
 type Props = {
   table: BaseTable;
@@ -80,7 +81,7 @@ const FilterQuery: React.FC<Props> = props => {
           </Button>
           <ReloadEnumValuesButton
             dispatch={dispatch}
-            isEnum={table.is_enum}
+            isEnum={!!table.is_enum}
             tooltipStyle={styles.add_mar_left_mid}
           />
           {/* <div className={styles.count + ' alert alert-info'}><i>Total <b>{tableName}</b> rows in the database for current query: {count} </i></div> */}

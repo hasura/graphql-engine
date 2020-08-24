@@ -2,10 +2,10 @@ import { MapStateToProps as ReduxMapStateToProps } from 'react-redux';
 import { Store } from 'redux';
 import { ThunkAction, ThunkDispatch } from 'redux-thunk';
 import { RouterAction } from 'react-router-redux';
-import { Table, Schema } from './components/Common/utils/pgUtils';
 import { EventsState } from './components/Services/Events/state';
 import { RAEvents } from './components/Services/Events/types';
 import { TelemetryState } from './telemetry/state';
+import { Table, Schema } from './dataSources/types';
 
 // Redux Utils
 export type ReduxState = {

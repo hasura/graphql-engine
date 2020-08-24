@@ -1,6 +1,5 @@
 import React from 'react';
 import { TableDefinition } from '../../../Common/utils/v1QueryUtils';
-import { generateTableDef, Table } from '../../../Common/utils/pgUtils';
 import {
   URLConf,
   EventTriggerOperation,
@@ -16,6 +15,8 @@ import {
   findETTable,
 } from '../utils';
 import { parseServerHeaders } from '../../../Common/Headers/utils';
+import { Table } from '../../../../dataSources/types';
+import { generateTableDef } from '../../../../dataSources/common';
 
 export type LocalEventTriggerState = {
   name: string;

@@ -1,11 +1,9 @@
 import React from 'react';
 
-import {
-  isColumnAutoIncrement,
-  TableColumn,
-} from '../../../../Common/utils/pgUtils';
+import { isColumnAutoIncrement } from '../../../../../dataSources/common';
 import styles from '../../../../Common/TableCommon/Table.scss';
 import { TypedInput } from './TypedInput';
+import { TableColumn } from '../../../../../dataSources/types';
 
 const getColumnInfo = (col: TableColumn, prevValue?: unknown) => {
   const isEditing = prevValue !== undefined;

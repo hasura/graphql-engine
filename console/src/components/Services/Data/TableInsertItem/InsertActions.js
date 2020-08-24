@@ -10,7 +10,7 @@ import dataHeaders from '../Common/Headers';
 import {
   getEnumColumnMappings,
   arrayToPostgresArray,
-} from '../../../Common/utils/pgUtils';
+} from '../../../../dataSources/common';
 import { getEnumOptionsQuery } from '../../../Common/utils/v1QueryUtils';
 import { ARRAY } from '../utils';
 import { isStringArray } from '../../../Common/utils/jsUtils';

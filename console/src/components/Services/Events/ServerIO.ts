@@ -24,7 +24,6 @@ import {
   getAdhocPendingEventsRoute,
 } from '../../Common/utils/routesUtils';
 import { transformHeaders } from '../../Common/Headers/utils';
-import { Table } from '../../Common/utils/pgUtils';
 import { getConfirmation, isValidURL } from '../../Common/utils/jsUtils';
 import { Nullable } from '../../Common/utils/tsUtils';
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
@@ -61,6 +60,7 @@ import {
 } from '../Common/Notification';
 import { EventTriggerProperty } from './EventTriggers/Modify/utils';
 import { getLogsTableDef } from './utils';
+import { Table } from '../../../dataSources/types';
 
 export const fetchTriggers = (
   kind: Nullable<TriggerKind>
