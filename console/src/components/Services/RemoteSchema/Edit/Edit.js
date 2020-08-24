@@ -121,8 +121,22 @@ class Edit extends React.Component {
       throw new NotFoundError();
     }
 
-    const { isFetching, isRequesting, editState } = this.props;
+    const {
+      isFetching,
+      isRequesting,
+      editState,
+      inconsistentObjects,
+    } = this.props;
     const { remoteSchemaName } = this.props.params;
+
+    const inconsistencyDetails = inconsistentObjects.find(
+      inconObj =>
+        inconObj.type === 'remote_schema' &&
+        inconObj?.definition?.name === remoteSchemaName
+    );
+
+    const fixInconsistencyMsg =
+      'This remote schema is in an inconsistent state. Please fix inconsistencies and reload metadata first';
 
     const generateMigrateBtns = () => {
       return 'isModify' in editState && !editState.isModify ? (
@@ -136,7 +150,8 @@ class Edit extends React.Component {
               this.modifyClick();
             }}
             data-test={'remote-schema-edit-modify-btn'}
-            disabled={isRequesting}
+            disabled={isRequesting || inconsistencyDetails}
+            title={inconsistencyDetails ? fixInconsistencyMsg : ''}
           >
             Modify
           </Button>
@@ -147,7 +162,8 @@ class Edit extends React.Component {
               e.preventDefault();
               this.handleDeleteRemoteSchema(e);
             }}
-            disabled={isRequesting}
+            disabled={isRequesting || inconsistencyDetails}
+            title={inconsistencyDetails ? fixInconsistencyMsg : ''}
             data-test={'remote-schema-edit-delete-btn'}
           >
             {isRequesting ? 'Deleting ...' : 'Delete'}
@@ -241,10 +257,6 @@ class Edit extends React.Component {
           >
             <Common {...this.props} />
             {generateMigrateBtns()}
-            <small>
-              Note: Please make sure to rectify the errors present in the schema
-              before trying to modify it's details.
-            </small>
           </form>
         )}
       </div>
@@ -257,6 +269,7 @@ const mapStateToProps = state => {
     ...state.remoteSchemas.headerData,
     allRemoteSchemas: state.remoteSchemas.listData.remoteSchemas,
     dataHeaders: { ...state.tables.dataHeaders },
+    inconsistentObjects: state.metadata.inconsistentObjects,
   };
 };
 

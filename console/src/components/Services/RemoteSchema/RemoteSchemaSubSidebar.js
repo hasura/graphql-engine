@@ -85,7 +85,10 @@ const RemoteSchemaSubSidebar = ({
                 {inconsistentCurrentSchema ? (
                   <WarningSymbol
                     customStyle={styles.padLeft4}
-                    tooltipText={inconsistentCurrentSchema.reason}
+                    tooltipText={
+                      'This remote schema is in an inconsistent state. ' +
+                      'Fields from this remote schema are currently not exposed over the GraphQL API'
+                    }
                     tooltipPlacement="right"
                   />
                 ) : null}

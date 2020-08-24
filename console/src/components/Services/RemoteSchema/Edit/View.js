@@ -13,6 +13,7 @@ import { appPrefix } from '../constants';
 import globals from '../../../../Globals';
 import styles from '../RemoteSchema.scss';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
+import WarningSymbol from '../../../Common/WarningSymbol/WarningSymbol';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -97,7 +98,13 @@ class ViewStitchedSchema extends React.Component {
 
   render() {
     const { remoteSchemaName } = this.props.params;
-    const { manualUrl, envName, headers, readOnlyMode } = this.props;
+    const {
+      manualUrl,
+      envName,
+      headers,
+      readOnlyMode,
+      inconsistentObjects,
+    } = this.props;
 
     const filterHeaders = headers.filter(h => !!h.name);
 
@@ -130,6 +137,12 @@ class ViewStitchedSchema extends React.Component {
       tabInfoCopy = rest;
     }
 
+    const inconsistencyDetails = inconsistentObjects.find(
+      inconObj =>
+        inconObj.type === 'remote_schema' &&
+        inconObj?.definition?.name === remoteSchemaName
+    );
+
     return (
       <div
         className={styles.view_stitch_schema_wrapper + ' ' + styles.addWrapper}
@@ -156,6 +169,26 @@ class ViewStitchedSchema extends React.Component {
               </tbody>
             </table>
           </div>
+          {inconsistencyDetails && (
+            <div className={styles.add_mar_bottom}>
+              <div className={styles.subheading_text}>
+                <WarningSymbol tooltipText={'Inconsistent schema'} />
+                <span className={styles.add_mar_left_mid}>
+                  This remote schema is in an inconsistent state.
+                </span>
+              </div>
+              <div>
+                <b>Reason:</b> {inconsistencyDetails.reason}
+              </div>
+              <div>
+                <i>
+                  (Please resolve the inconsistencies and reload the remote
+                  schema. Fields from this remote schema are currently not
+                  exposed over the GraphQL API)
+                </i>
+              </div>
+            </div>
+          )}
           <RSReloadSchema
             readOnlyMode={readOnlyMode}
             remoteSchemaName={remoteSchemaName}
@@ -176,6 +209,7 @@ const mapStateToProps = state => {
     allRemoteSchemas: state.remoteSchemas.listData.remoteSchemas,
     dataHeaders: { ...state.tables.dataHeaders },
     readOnlyMode: state.main.readOnlyMode,
+    inconsistentObjects: state.metadata.inconsistentObjects,
   };
 };
 
