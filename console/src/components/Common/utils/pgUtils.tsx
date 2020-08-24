@@ -453,7 +453,7 @@ export const getEnumColumnMappings = (
 export const getTablePermissions = (
   table: Table,
   role: string | null = null,
-  action: 'insert' | 'delete' | 'update' | 'select' | null = null
+  action: PermissionActionType | null = null
 ) => {
   const tablePermissions = table.permissions;
 
