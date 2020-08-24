@@ -42,9 +42,6 @@ import {
   setLocalStorageItem,
 } from '../Common/utils/localStorageUtils';
 import LoveSection from './LoveSection';
-import ToolTip from '../Common/Tooltip/Tooltip';
-import { setPreReleaseNotificationOptOutInDB } from '../../telemetry/Actions';
-import { Icon } from '../UIKit/atoms/Icon';
 import { Help, ProPopup } from './components/';
 
 class Main extends React.Component {
@@ -76,9 +73,9 @@ class Main extends React.Component {
       dispatch(loadLatestServerVersion());
     });
 
-    dispatch(fetchPostgresVersion);
+    dispatch(fetchPostgresVersion());
     dispatch(fetchConsoleNotifications());
-    dispatch(fetchServerConfig);
+    dispatch(fetchServerConfig());
   }
 
   toggleProPopup = () => {
