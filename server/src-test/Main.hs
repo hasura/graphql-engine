@@ -36,6 +36,7 @@ import qualified Hasura.IncrementalSpec       as IncrementalSpec
 import qualified Hasura.Server.MigrateSpec    as MigrateSpec
 import qualified Hasura.Server.TelemetrySpec  as TelemetrySpec
 import qualified Hasura.CacheBoundedSpec      as CacheBoundedSpec
+import qualified Hasura.Server.AuthSpec       as AuthSpec
 
 data TestSuites
   = AllSuites !RawConnInfo
@@ -66,6 +67,7 @@ unitSpecs = do
   -- describe "Hasura.RQL.Metadata" MetadataSpec.spec -- Commenting until optimizing the test in CI
   describe "Data.Time" TimeSpec.spec
   describe "Hasura.Server.Telemetry" TelemetrySpec.spec
+  describe "Hasura.Server.Auth" AuthSpec.spec
   describe "Hasura.Cache.Bounded" CacheBoundedSpec.spec
 
 buildPostgresSpecs :: (HasVersion) => RawConnInfo -> IO Spec
