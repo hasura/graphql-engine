@@ -73,9 +73,9 @@ class Main extends React.Component {
       dispatch(loadLatestServerVersion());
     });
 
-    dispatch(fetchPostgresVersion());
+    dispatch(fetchPostgresVersion);
     dispatch(fetchConsoleNotifications());
-    dispatch(fetchServerConfig());
+    dispatch(fetchServerConfig);
   }
 
   toggleProPopup = () => {
