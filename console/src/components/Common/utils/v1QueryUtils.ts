@@ -686,15 +686,32 @@ export const getConsoleOptsQuery = () =>
     null
   );
 
-type PermissionsKeys = 'type' | 'args';
-// TODO: can have better types for the values here instead of `any`
-type PermissionQuery = Record<PermissionsKeys, any>;
+type PermissionUpQueryArgs = {
+  table: string;
+  role: string;
+};
+
+interface PermissionDownQueryArgs extends PermissionUpQueryArgs {
+  comment?: string | null;
+  // TODO: perhaps better type than any here
+  permission: Record<string, any>;
+}
+
+type PermissionUpQuery = {
+  type: string;
+  args: PermissionUpQueryArgs;
+};
+
+type PermissionDownQuery = {
+  type: string;
+  args: PermissionDownQueryArgs;
+};
 
 const getPermissionUpQuery = (
   table_name: string,
   role_name: string,
   queryType: PermissionActionType
-) => {
+): PermissionUpQuery => {
   return {
     type: `drop_${queryType}_permission`,
     args: {
@@ -704,7 +721,9 @@ const getPermissionUpQuery = (
   };
 };
 
-const getSelectPermissionDownQuery = (perm: TablePermission) => {
+const getSelectPermissionDownQuery = (
+  perm: TablePermission
+): PermissionDownQuery => {
   return {
     type: 'create_select_permission',
     args: {
@@ -722,7 +741,9 @@ const getSelectPermissionDownQuery = (perm: TablePermission) => {
   };
 };
 
-const getInsertPermissionDownQuery = (perm: TablePermission) => {
+const getInsertPermissionDownQuery = (
+  perm: TablePermission
+): PermissionDownQuery => {
   return {
     type: 'create_insert_permission',
     args: {
@@ -739,7 +760,9 @@ const getInsertPermissionDownQuery = (perm: TablePermission) => {
   };
 };
 
-const getUpdatePermissionDownQuery = (perm: TablePermission) => {
+const getUpdatePermissionDownQuery = (
+  perm: TablePermission
+): PermissionDownQuery => {
   return {
     type: 'create_update_permission',
     args: {
@@ -756,7 +779,9 @@ const getUpdatePermissionDownQuery = (perm: TablePermission) => {
   };
 };
 
-const getDeletePermissionDownQuery = (perm: TablePermission) => {
+const getDeletePermissionDownQuery = (
+  perm: TablePermission
+): PermissionDownQuery => {
   return {
     type: 'create_delete_permission',
     args: {
@@ -771,8 +796,8 @@ const getDeletePermissionDownQuery = (perm: TablePermission) => {
 };
 
 export const getTablePermissionsQuery = (permissions: TablePermission[]) => {
-  const allUpQueries: PermissionQuery[] = [];
-  const allDownQueries: PermissionQuery[] = [];
+  const allUpQueries: PermissionUpQuery[] = [];
+  const allDownQueries: PermissionDownQuery[] = [];
 
   permissions.forEach(perm => {
     if (perm.permissions?.select) {
