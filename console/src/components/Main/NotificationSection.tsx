@@ -28,6 +28,7 @@ const getDateString = (date: NotificationDate) => {
 interface UpdateProps extends ConsoleNotification {
   onClickAction?: (id?: number) => void;
   is_read?: boolean;
+  onReadCB?: () => void;
 }
 
 const Update: React.FC<UpdateProps> = ({
@@ -37,6 +38,7 @@ const Update: React.FC<UpdateProps> = ({
   is_active = true,
   onClickAction,
   is_read,
+  onReadCB,
   ...props
 }) => {
   const [linkClicked, updateLinkClicked] = React.useState(is_read);
@@ -48,6 +50,9 @@ const Update: React.FC<UpdateProps> = ({
   const onClickLink = () => {
     if (!linkClicked) {
       updateLinkClicked(true);
+      if (onReadCB) {
+        onReadCB();
+      }
     }
     if (onClickAction) {
       onClickAction(props.id);
@@ -121,6 +126,8 @@ type NotificationProps = {
   onClickUpdate: (id?: number) => void;
   previouslyRead?: string | string[];
   fixedVersion: string;
+  numberNotifications: number;
+  onReadCB: () => void;
 };
 
 type PreReleaseProps = Pick<NotificationProps, 'optOutCallback'>;
@@ -260,6 +267,8 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
       onClickUpdate,
       previouslyRead,
       fixedVersion,
+      numberNotifications,
+      onReadCB,
     },
     forwardedRef
   ) => (
@@ -275,7 +284,7 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
       >
         <Flex alignItems="center" justifyContent="center">
           <Heading as="h4" color="#000" fontSize="12px" marginLeft="8px">
-            Notifications (34)
+            Notifications ({numberNotifications})
           </Heading>
         </Flex>
         <Button
@@ -304,6 +313,7 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
               id={id}
               onClickAction={onClickUpdate}
               is_read={checkIsRead(previouslyRead, id)}
+              onReadCB={onReadCB}
               {...props}
             />
           ))}
@@ -662,6 +672,10 @@ const HasuraNotifications: React.FC<
     updateViewMoreDisplay(false);
   }, [consoleNotifications.length, numDisplayed]);
 
+  const onReadCB = React.useCallback(() => {
+    updateNumberNotifications(num => num--);
+  }, []);
+
   return (
     <>
       <div
@@ -689,6 +703,8 @@ const HasuraNotifications: React.FC<
         onClickUpdate={onClickUpdate}
         previouslyRead={previouslyReadState}
         fixedVersion={fixedVersion}
+        numberNotifications={numberNotifications}
+        onReadCB={onReadCB}
       />
     </>
   );
