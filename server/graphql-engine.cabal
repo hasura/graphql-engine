@@ -421,6 +421,7 @@ library
                      , Hasura.RQL.DML.Update.Types
                      , Hasura.RQL.DML.Count
                      , Hasura.RQL.GBoolExp
+                     , Hasura.Sources.MySQL.Query
                      , Hasura.GraphQL.Explain
                      , Hasura.GraphQL.Execute.Action
                      , Hasura.GraphQL.Execute.Inline
