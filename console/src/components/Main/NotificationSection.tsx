@@ -368,8 +368,10 @@ const checkVersionUpdate = (
 
   try {
     const lastUpdateCheckClosed = window.localStorage.getItem(versionCheckKey);
-
-    if (lastUpdateCheckClosed !== latestServerVersionToCheck) {
+    if (
+      lastUpdateCheckClosed !== latestServerVersionToCheck ||
+      serverVersion !== latestServerVersionToCheck
+    ) {
       const isUpdateAvailable = versionGT(
         latestServerVersionToCheck,
         serverVersion
