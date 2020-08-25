@@ -1,9 +1,13 @@
-module Hasura.GraphQL.RemoteServer where
+module Hasura.GraphQL.RemoteServer
+  ( fetchRemoteSchema
+  , IntrospectionResult
+  , execRemoteGQ'
+  ) where
 
 import           Control.Exception                      (try)
 import           Control.Lens                           ((^.))
+import           Control.Monad.Unique
 import           Data.Aeson                             ((.:), (.:?))
-import           Data.Foldable                          (foldlM)
 import           Hasura.HTTP
 import           Hasura.Prelude
 
@@ -12,25 +16,23 @@ import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.Text                              as T
-import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Hasura.Tracing                         as Tracing
 import qualified Language.GraphQL.Draft.Parser          as G
+import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Language.Haskell.TH.Syntax             as TH
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 import qualified Network.Wreq                           as Wreq
 
-import           Hasura.GraphQL.Schema.Merge
+
+import qualified Hasura.GraphQL.Parser.Monad            as P
+import           Hasura.GraphQL.Schema.Remote
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.RQL.DDL.Headers                 (makeHeadersFromConf)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
-
-import qualified Hasura.GraphQL.Context                 as GC
-import qualified Hasura.GraphQL.Schema                  as GS
-import qualified Hasura.GraphQL.Validate.Types          as VT
-import qualified Hasura.Tracing                         as Tracing
 
 introspectionQuery :: GQLReqParsed
 introspectionQuery =
@@ -44,12 +46,14 @@ introspectionQuery =
    )
 
 fetchRemoteSchema
-  :: (HasVersion, MonadIO m, MonadError QErr m)
+  :: forall m
+   . (HasVersion, MonadIO m, MonadUnique m, MonadError QErr m)
   => Env.Environment
   -> HTTP.Manager
+  -> RemoteSchemaName
   -> RemoteSchemaInfo
-  -> m GC.RemoteGCtx
-fetchRemoteSchema env manager def@(RemoteSchemaInfo name url headerConf _ timeout) = do
+  -> m RemoteSchemaCtx
+fetchRemoteSchema env manager schemaName schemaInfo@(RemoteSchemaInfo url headerConf _ timeout) = do
   headers <- makeHeadersFromConf env headerConf
   let hdrsWithDefaults = addDefaultHeaders headers
 
@@ -68,28 +72,25 @@ fetchRemoteSchema env manager def@(RemoteSchemaInfo name url headerConf _ timeou
       statusCode = resp ^. Wreq.responseStatus . Wreq.statusCode
   when (statusCode /= 200) $ throwNon200 statusCode respData
 
-  introspectRes :: (FromIntrospection IntrospectionResult) <-
+  -- Parse the JSON into flat GraphQL type AST
+  (FromIntrospection introspectRes) :: (FromIntrospection IntrospectionResult) <-
     either (remoteSchemaErr . T.pack) return $ J.eitherDecode respData
-  let (sDoc, qRootN, mRootN, sRootN) =
-        fromIntrospection introspectRes
-  typMap <- either remoteSchemaErr return $ VT.fromSchemaDoc sDoc $
-     VT.TLRemoteType name def
-  let mQrTyp = Map.lookup qRootN typMap
-      mMrTyp = (`Map.lookup` typMap) =<< mRootN
-      mSrTyp = (`Map.lookup` typMap) =<< sRootN
-  qrTyp <- liftMaybe noQueryRoot mQrTyp
-  let mRmQR = VT.getObjTyM qrTyp
-      mRmMR = VT.getObjTyM =<< mMrTyp
-      mRmSR = VT.getObjTyM =<< mSrTyp
-  rmQR <- liftMaybe (err400 Unexpected "query root has to be an object type") mRmQR
-  return $ GC.RemoteGCtx typMap rmQR mRmMR mRmSR
 
+  -- Check that the parsed GraphQL type info is valid by running the schema generation
+  (queryParsers, mutationParsers, subscriptionParsers) <-
+    P.runSchemaT @m @(P.ParseT Identity) $ buildRemoteParser introspectRes schemaInfo
+
+  -- The 'rawIntrospectionResult' contains the 'Bytestring' response of
+  -- the introspection result of the remote server. We store this in the
+  -- 'RemoteSchemaCtx' because we can use this when the 'introspect_remote_schema'
+  -- is called by simple encoding the result to JSON.
+  return $ RemoteSchemaCtx schemaName introspectRes schemaInfo respData $
+    ParsedIntrospection queryParsers mutationParsers subscriptionParsers
   where
-    noQueryRoot = err400 Unexpected "query root not found in remote schema"
-    remoteSchemaErr :: (MonadError QErr m) => T.Text -> m a
+    remoteSchemaErr :: T.Text -> m a
     remoteSchemaErr = throw400 RemoteSchemaError
 
-    throwHttpErr :: (MonadError QErr m) => HTTP.HttpException -> m a
+    throwHttpErr :: HTTP.HttpException -> m a
     throwHttpErr = throwWithInternal httpExceptMsg . httpExceptToJSON
 
     throwNon200 st = throwWithInternal (non200Msg st) . decodeNon200Resp
@@ -108,36 +109,9 @@ fetchRemoteSchema env manager def@(RemoteSchemaInfo name url headerConf _ timeou
       Right a -> J.object ["response" J..= (a :: J.Value)]
       Left _  -> J.object ["raw_body" J..= bsToTxt (BL.toStrict bs)]
 
-mergeSchemas
-  :: (MonadError QErr m)
-  => RemoteSchemaMap
-  -> GS.GCtxMap
-  -- the merged GCtxMap and the default GCtx without roles
-  -> m (GS.GCtxMap, GS.GCtx)
-mergeSchemas rmSchemaMap gCtxMap = do
-  def <- mkDefaultRemoteGCtx remoteSchemas
-  merged <- mergeRemoteSchema gCtxMap def
-  return (merged, def)
-  where
-    remoteSchemas = map rscGCtx $ Map.elems rmSchemaMap
-
-mkDefaultRemoteGCtx
-  :: (MonadError QErr m)
-  => [GC.GCtx] -> m GS.GCtx
-mkDefaultRemoteGCtx =
-  foldlM mergeGCtx GC.emptyGCtx
-
--- merge a remote schema `gCtx` into current `gCtxMap`
-mergeRemoteSchema
-  :: (MonadError QErr m)
-  => GS.GCtxMap
-  -> GS.GCtx
-  -> m GS.GCtxMap
-mergeRemoteSchema ctxMap mergedRemoteGCtx =
-  flip Map.traverseWithKey ctxMap $ \_ schemaCtx ->
-    for schemaCtx $ \gCtx -> mergeGCtx gCtx mergedRemoteGCtx
-
--- | Parsing the introspection query result
+-- | Parsing the introspection query result.  We use this newtype wrapper to
+-- avoid orphan instances and parse JSON in the way that we need for GraphQL
+-- introspection results.
 newtype FromIntrospection a
   = FromIntrospection { fromIntrospection :: a }
   deriving (Show, Eq, Generic)
@@ -153,7 +127,7 @@ instance J.FromJSON (FromIntrospection G.Description) where
 
 instance J.FromJSON (FromIntrospection G.ScalarTypeDefinition) where
   parseJSON = J.withObject "ScalarTypeDefinition" $ \o -> do
-    kind <- o .: "kind"
+    kind <- o .:  "kind"
     name <- o .:  "name"
     desc <- o .:? "description"
     when (kind /= "SCALAR") $ kindErr kind "scalar"
@@ -163,14 +137,13 @@ instance J.FromJSON (FromIntrospection G.ScalarTypeDefinition) where
 
 instance J.FromJSON (FromIntrospection G.ObjectTypeDefinition) where
   parseJSON = J.withObject "ObjectTypeDefinition" $ \o -> do
-    kind       <- o .: "kind"
-    name       <- o .:  "name"
-    desc       <- o .:? "description"
-    fields     <- o .:? "fields"
-    interfaces <- o .:? "interfaces"
+    kind   <- o .:  "kind"
+    name   <- o .:  "name"
+    desc   <- o .:? "description"
+    fields <- o .:? "fields"
+    interfaces :: Maybe [FromIntrospection (G.InterfaceTypeDefinition [G.Name])] <- o .:? "interfaces"
     when (kind /= "OBJECT") $ kindErr kind "object"
-    let implIfaces = map (G.NamedType . G._itdName) $
-                     maybe [] (fmap fromIntrospection) interfaces
+    let implIfaces = map G._itdName $ maybe [] (fmap fromIntrospection) interfaces
         flds = maybe [] (fmap fromIntrospection) fields
         desc' = fmap fromIntrospection desc
         r = G.ObjectTypeDefinition desc' name implIfaces [] flds
@@ -196,8 +169,7 @@ instance J.FromJSON (FromIntrospection G.GType) where
       ("NON_NULL", _, Just typ) -> return $ mkNotNull (fromIntrospection typ)
       ("NON_NULL", _, Nothing)  -> pErr "NON_NULL should have `ofType`"
       ("LIST", _, Just typ)     ->
-        return $ G.TypeList (G.Nullability True)
-                 (G.ListType $ fromIntrospection typ)
+        return $ G.TypeList (G.Nullability True) (fromIntrospection typ)
       ("LIST", _, Nothing)      -> pErr "LIST should have `ofType`"
       (_, Just name, _)         -> return $ G.TypeNamed (G.Nullability True) name
       _                         -> pErr $ "kind: " <> kind <> " should have name"
@@ -207,7 +179,6 @@ instance J.FromJSON (FromIntrospection G.GType) where
       mkNotNull typ = case typ of
         G.TypeList _ ty -> G.TypeList (G.Nullability False) ty
         G.TypeNamed _ n -> G.TypeNamed (G.Nullability False) n
-
 
 instance J.FromJSON (FromIntrospection G.InputValueDefinition) where
   parseJSON = J.withObject "InputValueDefinition" $ \o -> do
@@ -220,20 +191,25 @@ instance J.FromJSON (FromIntrospection G.InputValueDefinition) where
         r = G.InputValueDefinition desc' name (fromIntrospection _type) defVal'
     return $ FromIntrospection r
 
-instance J.FromJSON (FromIntrospection G.ValueConst) where
-   parseJSON = J.withText "defaultValue" $ \t -> fmap FromIntrospection
-     $ either (fail . T.unpack) return $ G.parseValueConst t
+instance J.FromJSON (FromIntrospection (G.Value Void)) where
+   parseJSON = J.withText "Value Void" $ \t ->
+     let parseValueConst = G.runParser G.value
+     in fmap FromIntrospection $ either (fail . T.unpack) return $ parseValueConst t
 
-instance J.FromJSON (FromIntrospection G.InterfaceTypeDefinition) where
+instance J.FromJSON (FromIntrospection (G.InterfaceTypeDefinition [G.Name])) where
   parseJSON = J.withObject "InterfaceTypeDefinition" $ \o -> do
     kind  <- o .: "kind"
     name  <- o .:  "name"
     desc  <- o .:? "description"
     fields <- o .:? "fields"
+    possibleTypes :: Maybe [FromIntrospection G.ObjectTypeDefinition] <- o .:? "possibleTypes"
     let flds = maybe [] (fmap fromIntrospection) fields
         desc' = fmap fromIntrospection desc
+        possTps = map G._otdName $ maybe [] (fmap fromIntrospection) possibleTypes
     when (kind /= "INTERFACE") $ kindErr kind "interface"
-    let r = G.InterfaceTypeDefinition desc' name [] flds
+    -- TODO (non PDV) track which interfaces implement which other interfaces, after a
+    -- GraphQL spec > Jun 2018 is released.
+    let r = G.InterfaceTypeDefinition desc' name [] flds possTps
     return $ FromIntrospection r
 
 instance J.FromJSON (FromIntrospection G.UnionTypeDefinition) where
@@ -242,11 +218,10 @@ instance J.FromJSON (FromIntrospection G.UnionTypeDefinition) where
     name  <- o .:  "name"
     desc  <- o .:? "description"
     possibleTypes <- o .: "possibleTypes"
-    let memberTys = map (G.NamedType . G._otdName) $
-                    fmap fromIntrospection possibleTypes
+    let possibleTypes' = map G._otdName $ fmap fromIntrospection possibleTypes
         desc' = fmap fromIntrospection desc
     when (kind /= "UNION") $ kindErr kind "union"
-    let r = G.UnionTypeDefinition desc' name [] memberTys
+    let r = G.UnionTypeDefinition desc' name [] possibleTypes'
     return $ FromIntrospection r
 
 instance J.FromJSON (FromIntrospection G.EnumTypeDefinition) where
@@ -280,7 +255,7 @@ instance J.FromJSON (FromIntrospection G.InputObjectTypeDefinition) where
     let r = G.InputObjectTypeDefinition desc' name [] inputFields
     return $ FromIntrospection r
 
-instance J.FromJSON (FromIntrospection G.TypeDefinition) where
+instance J.FromJSON (FromIntrospection (G.TypeDefinition [G.Name])) where
   parseJSON = J.withObject "TypeDefinition" $ \o -> do
     kind :: Text <- o .: "kind"
     r <- case kind of
@@ -298,12 +273,6 @@ instance J.FromJSON (FromIntrospection G.TypeDefinition) where
         G.TypeDefinitionInputObject . fromIntrospection <$> J.parseJSON (J.Object o)
       _ -> pErr $ "unknown kind: " <> kind
     return $ FromIntrospection r
-
-type IntrospectionResult = ( G.SchemaDocument
-                           , G.NamedType
-                           , Maybe G.NamedType
-                           , Maybe G.NamedType
-                           )
 
 instance J.FromJSON (FromIntrospection IntrospectionResult) where
   parseJSON = J.withObject "SchemaDocument" $ \o -> do
@@ -328,22 +297,9 @@ instance J.FromJSON (FromIntrospection IntrospectionResult) where
       Just subsType -> do
         subRoot <- subsType .: "name"
         return $ Just subRoot
-    let r = ( G.SchemaDocument (fmap fromIntrospection types)
-            , queryRoot
-            , mutationRoot
-            , subsRoot
-            )
+    let r = IntrospectionResult (G.SchemaIntrospection (fmap fromIntrospection types))
+            queryRoot mutationRoot subsRoot
     return $ FromIntrospection r
-
-
-getNamedTyp :: G.TypeDefinition -> G.Name
-getNamedTyp ty = case ty of
-  G.TypeDefinitionScalar t      -> G._stdName t
-  G.TypeDefinitionObject t      -> G._otdName t
-  G.TypeDefinitionInterface t   -> G._itdName t
-  G.TypeDefinitionUnion t       -> G._utdName t
-  G.TypeDefinitionEnum t        -> G._etdName t
-  G.TypeDefinitionInputObject t -> G._iotdName t
 
 execRemoteGQ'
   :: ( HasVersion
@@ -385,7 +341,7 @@ execRemoteGQ' env manager userInfo reqHdrs q rsi opType =  do
     resp <- either httpThrow return res
     pure (time, mkSetCookieHeaders resp, resp ^. Wreq.responseBody)
   where
-    RemoteSchemaInfo _ url hdrConf fwdClientHdrs timeout = rsi
+    RemoteSchemaInfo url hdrConf fwdClientHdrs timeout = rsi
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
     httpThrow = \case
       HTTP.HttpExceptionRequest _req content -> throw500 $ T.pack . show $ content

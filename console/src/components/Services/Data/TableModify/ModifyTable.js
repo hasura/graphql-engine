@@ -89,6 +89,7 @@ class ModifyTable extends React.Component {
       schemaList,
       tableEnum,
       rootFieldsEdit,
+      postgresVersion,
     } = this.props;
 
     const dataTypeIndexMap = getAllDataTypeMap(dataTypes);
@@ -249,6 +250,7 @@ class ModifyTable extends React.Component {
               dataTypes={dataTypes}
               validTypeCasts={validTypeCasts}
               columnDefaultFunctions={columnDefaultFunctions}
+              postgresVersion={postgresVersion}
             />
             <hr />
             {getComputedFieldsSection()}
@@ -352,6 +354,7 @@ const mapStateToProps = (state, ownProps) => ({
   validTypeCasts: state.tables.columnTypeCasts,
   columnDataTypeFetchErr: state.tables.columnDataTypeFetchErr,
   schemaList: state.tables.schemaList,
+  postgresVersion: state.main.postgresVersion,
   ...state.tables.modify,
 });
 

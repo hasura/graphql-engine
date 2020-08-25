@@ -1,0 +1,21 @@
+description: Creating a subscription with remote-join fields should throw error
+url: /v1/graphql
+status: 200
+response:
+  errors:
+    - extensions:
+        path: $
+        code: not-supported
+      message: Remote relationships are not allowed in subscriptions
+query:
+  query: |
+    subscription {
+      profiles {
+        name
+        messageBasic {
+          id
+          name
+          msg
+        }
+      }
+    }

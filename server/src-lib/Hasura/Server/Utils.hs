@@ -229,13 +229,13 @@ instance FromJSON APIVersion where
       2 -> return VIVersion2
       i -> fail $ "expected 1 or 2, encountered " ++ show i
 
-englishList :: NonEmpty Text -> Text
-englishList = \case
+englishList :: Text -> NonEmpty Text -> Text
+englishList joiner = \case
   one :| []    -> one
-  one :| [two] -> one <> " and " <> two
+  one :| [two] -> one <> " " <> joiner <> " " <> two
   several      ->
     let final :| initials = NE.reverse several
-    in T.intercalate ", " (reverse initials) <> ", and " <> final
+    in T.intercalate ", " (reverse initials) <> ", " <> joiner <> " " <> final
 
 makeReasonMessage :: [a] -> (a -> Text) -> Text
 makeReasonMessage errors showError =
