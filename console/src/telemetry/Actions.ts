@@ -252,46 +252,20 @@ const loadConsoleOpts = () => {
             type: SET_CONSOLE_OPTS,
             data: console_state,
           });
+
           globals.telemetryNotificationShown = !!console_state?.telemetryNotificationShown;
-
-          if (!console_state?.console_notifications) {
-            dispatch({
-              type: UPDATE_CONSOLE_NOTIFICATIONS,
-              data: {
-                [userType]: {
-                  read: [],
-                  date: null,
-                  showBadge: true,
-                },
-              },
-            });
-            return Promise.resolve();
-          }
-
-          let previouslyRead = [] as string[];
-          const currentDBState = console_state.console_notifications[userType];
-          if (currentDBState) {
-            if (
-              Array.isArray(currentDBState.read) &&
-              typeof currentDBState.read !== 'string'
-            ) {
-              previouslyRead = currentDBState.read;
-            }
-          }
-
-          dispatch({
-            type: UPDATE_CONSOLE_NOTIFICATIONS,
-            data: {
-              ...console_state?.console_notifications,
-              [userType]: {
-                read: previouslyRead,
-                date: null,
-                showBadge: true,
-              },
-            },
-          });
+          return Promise.resolve();
         }
-        return Promise.resolve();
+        dispatch({
+          type: UPDATE_CONSOLE_NOTIFICATIONS,
+          data: {
+            [userType]: {
+              read: [],
+              date: null,
+              showBadge: true,
+            },
+          },
+        });
       },
       (error: Error) => {
         console.error(
