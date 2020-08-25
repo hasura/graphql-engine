@@ -136,23 +136,9 @@ const Update: React.FC<UpdateProps> = ({
   );
 };
 
-type NotificationProps = {
-  data: ConsoleNotification[];
-  showVersionUpdate: boolean;
-  latestVersion: string;
+type PreReleaseProps = {
   optOutCallback: () => void;
-  onClickMarkAllAsRead: () => void;
-  disableMarkAllAsReadBtn: boolean;
-  onClickViewMore: () => void;
-  displayViewMore: boolean;
-  onClickUpdate: (id?: number) => void;
-  previouslyRead?: string | string[];
-  fixedVersion: string;
-  numberNotifications: number;
-  onReadCB: () => void;
 };
-
-type PreReleaseProps = Pick<NotificationProps, 'optOutCallback'>;
 
 const PreReleaseNote: React.FC<PreReleaseProps> = ({ optOutCallback }) => (
   <Flex pt={4}>
@@ -170,10 +156,9 @@ const PreReleaseNote: React.FC<PreReleaseProps> = ({ optOutCallback }) => (
   </Flex>
 );
 
-type VersionUpdateNotificationProps = Pick<
-  NotificationProps,
-  'latestVersion' | 'optOutCallback'
->;
+interface VersionUpdateNotificationProps extends PreReleaseProps {
+  latestVersion: string;
+}
 
 const VersionUpdateNotification: React.FC<VersionUpdateNotificationProps> = ({
   latestVersion,
@@ -273,82 +258,6 @@ const checkIsRead = (prevRead?: string | string[], id?: number) => {
   return prevRead.includes(`${id}`);
 };
 
-const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
-  (
-    {
-      data,
-      showVersionUpdate,
-      latestVersion,
-      optOutCallback,
-      disableMarkAllAsReadBtn,
-      onClickMarkAllAsRead,
-      onClickViewMore,
-      displayViewMore,
-      onClickUpdate,
-      previouslyRead,
-      fixedVersion,
-      numberNotifications,
-      onReadCB,
-    },
-    forwardedRef
-  ) => (
-    <Box
-      className={`dropdown-menu ${styles.consoleNotificationPanel}`}
-      ref={forwardedRef}
-    >
-      <Flex
-        alignItems="center"
-        p={16}
-        justifyContent="space-between"
-        border="4px solid #f2f2f2"
-      >
-        <Flex alignItems="center" justifyContent="center">
-          <Heading as="h4" color="#000" fontSize="12px" marginLeft="8px">
-            Notifications{' '}
-            {numberNotifications > 0 ? `(${numberNotifications})` : ''}
-          </Heading>
-        </Flex>
-        <Button
-          title="Mark all as read"
-          onClick={onClickMarkAllAsRead}
-          disabled={disableMarkAllAsReadBtn}
-          className={`${styles.markAllAsReadBtn}`}
-        >
-          mark all read
-        </Button>
-      </Flex>
-      <Box className={styles.notificationsContainer}>
-        {showVersionUpdate ? (
-          <VersionUpdateNotification
-            latestVersion={latestVersion}
-            optOutCallback={optOutCallback}
-          />
-        ) : null}
-        {fixedVersion ? (
-          <VulnerableVersionNotification fixedVersion={fixedVersion} />
-        ) : null}
-        {data.length &&
-          data.map(({ id, ...props }) => (
-            <Update
-              key={id}
-              id={id}
-              onClickAction={onClickUpdate}
-              is_read={checkIsRead(previouslyRead, id)}
-              onReadCB={onReadCB}
-              {...props}
-            />
-          ))}
-        {displayViewMore ? (
-          <ViewMoreOptions
-            onClickViewMore={onClickViewMore}
-            readAll={previouslyRead === 'all'}
-          />
-        ) : null}
-      </Box>
-    </Box>
-  )
-);
-
 type ConsoleOptions = ConsoleState['console_opts'];
 
 const checkVersionUpdate = (
@@ -411,10 +320,7 @@ const ToReadBadge: React.FC<ToReadBadgeProps> = ({
     display = '20+';
   }
 
-  return (
-    // TODO: change to design system colors
-    <Flex className={`${styles.numBadge} ${showBadge}`}>{display}</Flex>
-  );
+  return <Flex className={`${styles.numBadge} ${showBadge}`}>{display}</Flex>;
 };
 
 const mapStateToProps = (state: ReduxState) => {
@@ -713,22 +619,61 @@ const HasuraNotifications: React.FC<
           show={showBadge}
         />
       </div>
-      <Notifications
+      {/* Notifications section */}
+      <Box
+        className={`dropdown-menu ${styles.consoleNotificationPanel}`}
         ref={dropDownRef}
-        data={dataShown}
-        showVersionUpdate={displayNewVersionNotification}
-        latestVersion={latestVersion}
-        optOutCallback={optOutCallback}
-        onClickMarkAllAsRead={onClickMarkAllAsRead}
-        onClickViewMore={onClickViewMore}
-        disableMarkAllAsReadBtn={showMarkAllAsRead}
-        displayViewMore={toDisplayViewMore}
-        onClickUpdate={onClickUpdate}
-        previouslyRead={previouslyReadState}
-        fixedVersion={fixedVersion}
-        numberNotifications={numberNotifications}
-        onReadCB={onReadCB}
-      />
+      >
+        <Flex
+          alignItems="center"
+          p={16}
+          justifyContent="space-between"
+          border="4px solid #f2f2f2"
+        >
+          <Flex alignItems="center" justifyContent="center">
+            <Heading as="h4" color="#000" fontSize="12px" marginLeft="8px">
+              Notifications{' '}
+              {numberNotifications > 0 ? `(${numberNotifications})` : ''}
+            </Heading>
+          </Flex>
+          <Button
+            title="Mark all as read"
+            onClick={onClickMarkAllAsRead}
+            disabled={showMarkAllAsRead}
+            className={`${styles.markAllAsReadBtn}`}
+          >
+            mark all read
+          </Button>
+        </Flex>
+        <Box className={styles.notificationsContainer}>
+          {displayNewVersionNotification ? (
+            <VersionUpdateNotification
+              latestVersion={latestVersion}
+              optOutCallback={optOutCallback}
+            />
+          ) : null}
+          {fixedVersion ? (
+            <VulnerableVersionNotification fixedVersion={fixedVersion} />
+          ) : null}
+          {dataShown.length &&
+            dataShown.map(({ id, ...props }) => (
+              <Update
+                key={id}
+                id={id}
+                onClickAction={onClickUpdate}
+                is_read={checkIsRead(previouslyReadState, id)}
+                onReadCB={onReadCB}
+                {...props}
+              />
+            ))}
+          {toDisplayViewMore ? (
+            <ViewMoreOptions
+              onClickViewMore={onClickViewMore}
+              readAll={previouslyReadState === 'all'}
+            />
+          ) : null}
+        </Box>
+      </Box>
     </>
   );
 };
