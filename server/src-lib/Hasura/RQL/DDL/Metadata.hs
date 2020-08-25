@@ -7,6 +7,7 @@ module Hasura.RQL.DDL.Metadata
   , runDumpInternalState
   , runGetInconsistentMetadata
   , runDropInconsistentMetadata
+  , fetchMetadataFromHdbTables
   , module Hasura.RQL.DDL.Metadata.Types
   ) where
 
@@ -14,14 +15,16 @@ import           Control.Lens                      hiding ((.=))
 import           Data.Aeson
 
 import qualified Data.Aeson.Ordered                as AO
+import qualified Data.HashMap.Strict               as HM
 import qualified Data.HashSet                      as HS
 import qualified Data.List                         as L
+import qualified Database.PG.Query                 as Q
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata.Types
-
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 
 import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
@@ -232,249 +235,6 @@ runReplaceMetadata q = do
   -- applyQP1 q
   -- applyQP2 q
 
--- fetchMetadata :: Q.TxE QErr Metadata
--- fetchMetadata = undefined -- do
-  -- tables <- Q.catchE defaultTxErrorHandler fetchTables
-  -- let tableMetaMap = HMIns.fromList . flip map tables $
-  --       \(schema, name, isEnum, maybeConfig) ->
-  --         let qualifiedName = QualifiedObject schema name
-  --             configuration = maybe emptyTableConfig Q.getAltJ maybeConfig
-  --         in (qualifiedName, mkTableMeta qualifiedName isEnum configuration)
-
-  -- -- Fetch all the relationships
-  -- relationships <- Q.catchE defaultTxErrorHandler fetchRelationships
-
-  -- objRelDefs <- mkRelDefs ObjRel relationships
-  -- arrRelDefs <- mkRelDefs ArrRel relationships
-
-  -- -- Fetch all the permissions
-  -- permissions <- Q.catchE defaultTxErrorHandler fetchPermissions
-
-  -- -- Parse all the permissions
-  -- insPermDefs <- mkPermDefs PTInsert permissions
-  -- selPermDefs <- mkPermDefs PTSelect permissions
-  -- updPermDefs <- mkPermDefs PTUpdate permissions
-  -- delPermDefs <- mkPermDefs PTDelete permissions
-
-  -- -- Fetch all event triggers
-  -- eventTriggers <- Q.catchE defaultTxErrorHandler fetchEventTriggers
-  -- triggerMetaDefs <- mkTriggerMetaDefs eventTriggers
-
-  -- -- Fetch all computed fields
-  -- computedFields <- fetchComputedFields
-
-  -- -- Fetch all remote relationships
-  -- remoteRelationships <- Q.catchE defaultTxErrorHandler fetchRemoteRelationships
-
-  -- let (_, postRelMap) = flip runState tableMetaMap $ do
-  --       modMetaMap tmObjectRelationships objRelDefs
-  --       modMetaMap tmArrayRelationships arrRelDefs
-  --       modMetaMap tmInsertPermissions insPermDefs
-  --       modMetaMap tmSelectPermissions selPermDefs
-  --       modMetaMap tmUpdatePermissions updPermDefs
-  --       modMetaMap tmDeletePermissions delPermDefs
-  --       modMetaMap tmEventTriggers triggerMetaDefs
-  --       modMetaMap tmComputedFields computedFields
-  --       modMetaMap tmRemoteRelationships remoteRelationships
-
-  -- -- fetch all functions
-  -- functions <- FMVersion2 <$> Q.catchE defaultTxErrorHandler fetchFunctions
-
-  -- -- fetch all remote schemas
-  -- remoteSchemas <- fetchRemoteSchemas
-
-  -- -- fetch all collections
-  -- collections <- fetchCollections
-
-  -- -- fetch allow list
-  -- allowlist <- map Collection.CollectionReq <$> fetchAllowlists
-
-  -- customTypes <- fetchCustomTypes
-
-  -- -- fetch actions
-  -- actions <- fetchActions
-
-  -- cronTriggers <- fetchCronTriggers
-
-
-  -- return $ Metadata currentMetadataVersion
-  --                          (HMIns.elems postRelMap)
-  --                          functions
-  --                          remoteSchemas
-  --                          collections
-  --                          allowlist
-  --                          customTypes
-  --                          actions
-  --                          cronTriggers
-
-  -- where
-
-  --   modMetaMap l xs = do
-  --     st <- get
-  --     put $ foldr (\(qt, dfn) b -> b & at qt._Just.l %~ (:) dfn) st xs
-
-  --   mkPermDefs pt = mapM permRowToDef . filter (\pr -> pr ^. _4 == pt)
-
-  --   permRowToDef (sn, tn, rn, _, Q.AltJ pDef, mComment) = do
-  --     perm <- decodeValue pDef
-  --     return (QualifiedObject sn tn,  Permission.PermDef rn perm mComment)
-
-  --   mkRelDefs rt = mapM relRowToDef . filter (\rr -> rr ^. _4 == rt)
-
-  --   relRowToDef (sn, tn, rn, _, Q.AltJ rDef, mComment) = do
-  --     using <- decodeValue rDef
-  --     return (QualifiedObject sn tn, RelDef rn using mComment)
-
-  --   mkTriggerMetaDefs = mapM trigRowToDef
-
-  --   trigRowToDef (sn, tn, Q.AltJ configuration) = do
-  --     conf <- decodeValue configuration
-  --     return (QualifiedObject sn tn, conf::EventTriggerConf)
-
-  --   fetchTables =
-  --     Q.listQ [Q.sql|
-  --               SELECT table_schema, table_name, is_enum, configuration::json
-  --               FROM hdb_catalog.hdb_table
-  --                WHERE is_system_defined = 'false'
-  --               ORDER BY table_schema ASC, table_name ASC
-  --                   |] () False
-
-  --   fetchRelationships =
-  --     Q.listQ [Q.sql|
-  --               SELECT table_schema, table_name, rel_name, rel_type, rel_def::json, comment
-  --                 FROM hdb_catalog.hdb_relationship
-  --                WHERE is_system_defined = 'false'
-  --               ORDER BY table_schema ASC, table_name ASC, rel_name ASC
-  --                   |] () False
-
-  --   fetchPermissions =
-  --     Q.listQ [Q.sql|
-  --               SELECT table_schema, table_name, role_name, perm_type, perm_def::json, comment
-  --                 FROM hdb_catalog.hdb_permission
-  --                WHERE is_system_defined = 'false'
-  --               ORDER BY table_schema ASC, table_name ASC, role_name ASC, perm_type ASC
-  --                   |] () False
-
-  --   fetchEventTriggers =
-  --    Q.listQ [Q.sql|
-  --             SELECT e.schema_name, e.table_name, e.configuration::json
-  --              FROM hdb_catalog.event_triggers e
-  --             ORDER BY e.schema_name ASC, e.table_name ASC, e.name ASC
-  --             |] () False
-
-  --   fetchFunctions = do
-  --     l <- Q.listQ [Q.sql|
-  --               SELECT function_schema, function_name, configuration::json
-  --               FROM hdb_catalog.hdb_function
-  --               WHERE is_system_defined = 'false'
-  --               ORDER BY function_schema ASC, function_name ASC
-  --                   |] () False
-  --     pure $ flip map l $ \(sn, fn, Q.AltJ config) ->
-  --                           TrackFunctionV2 (QualifiedObject sn fn) config
-
-  --   fetchCollections =
-  --     map fromRow <$> Q.listQE defaultTxErrorHandler [Q.sql|
-  --              SELECT collection_name, collection_defn::json, comment
-  --                FROM hdb_catalog.hdb_query_collection
-  --                WHERE is_system_defined = 'false'
-  --              ORDER BY collection_name ASC
-  --             |] () False
-  --     where
-  --       fromRow (name, Q.AltJ defn, mComment) =
-  --         Collection.CreateCollection name defn mComment
-
-  --   fetchAllowlists = map runIdentity <$>
-  --     Q.listQE defaultTxErrorHandler [Q.sql|
-  --         SELECT collection_name
-  --           FROM hdb_catalog.hdb_allowlist
-  --         ORDER BY collection_name ASC
-  --        |] () False
-
-  --   fetchComputedFields = do
-  --     r <- Q.listQE defaultTxErrorHandler [Q.sql|
-  --             SELECT table_schema, table_name, computed_field_name,
-  --                    definition::json, comment
-  --               FROM hdb_catalog.hdb_computed_field
-  --            |] () False
-  --     pure $ flip map r $ \(schema, table, name, Q.AltJ definition, comment) ->
-  --                         ( QualifiedObject schema table
-  --                         , ComputedFieldMetadata name definition comment
-  --                         )
-
-  --   fetchCronTriggers =
-  --     map uncurryCronTrigger
-  --             <$> Q.listQE defaultTxErrorHandler
-  --     [Q.sql|
-  --      SELECT ct.name, ct.webhook_conf, ct.cron_schedule, ct.payload,
-  --            ct.retry_conf, ct.header_conf, ct.include_in_metadata, ct.comment
-  --       FROM hdb_catalog.hdb_cron_triggers ct
-  --       WHERE include_in_metadata
-  --     |] () False
-  --     where
-  --       uncurryCronTrigger
-  --         (name, webhook, schedule, payload, retryConfig, headerConfig, includeMetadata, comment) =
-  --         CronTriggerMetadata
-  --         { ctName = name,
-  --           ctWebhook = Q.getAltJ webhook,
-  --           ctSchedule = schedule,
-  --           ctPayload = Q.getAltJ <$> payload,
-  --           ctRetryConf = Q.getAltJ retryConfig,
-  --           ctHeaders = Q.getAltJ headerConfig,
-  --           ctIncludeInMetadata = includeMetadata,
-  --           ctComment = comment
-  --         }
-
-  --   fetchCustomTypes :: Q.TxE QErr CustomTypes
-  --   fetchCustomTypes =
-  --     Q.getAltJ . runIdentity . Q.getRow <$>
-  --     Q.rawQE defaultTxErrorHandler [Q.sql|
-  --        select coalesce((select custom_types::json from hdb_catalog.hdb_custom_types), '{}'::json)
-  --        |] [] False
-  --   fetchActions =
-  --     Q.getAltJ . runIdentity . Q.getRow <$> Q.rawQE defaultTxErrorHandler [Q.sql|
-  --       select
-  --         coalesce(
-  --           json_agg(
-  --             json_build_object(
-  --               'name', a.action_name,
-  --               'definition', a.action_defn,
-  --               'comment', a.comment,
-  --               'permissions', ap.permissions
-  --             ) order by a.action_name asc
-  --           ),
-  --           '[]'
-  --         )
-  --       from
-  --         hdb_catalog.hdb_action as a
-  --         left outer join lateral (
-  --           select
-  --             coalesce(
-  --               json_agg(
-  --                 json_build_object(
-  --                   'role', ap.role_name,
-  --                   'comment', ap.comment
-  --                 ) order by ap.role_name asc
-  --               ),
-  --               '[]'
-  --             ) as permissions
-  --           from
-  --             hdb_catalog.hdb_action_permission ap
-  --           where
-  --             ap.action_name = a.action_name
-  --         ) ap on true;
-  --                           |] [] False
-
-  --   fetchRemoteRelationships = do
-  --     r <- Q.listQ [Q.sql|
-  --               SELECT table_schema, table_name,
-  --                      remote_relationship_name, definition::json
-  --               FROM hdb_catalog.hdb_remote_relationship
-  --            |] () False
-  --     pure $ flip map r $ \(schema, table, name, Q.AltJ definition) ->
-  --                         ( QualifiedObject schema table
-  --                         , RemoteRelationshipMeta name definition
-  --                         )
-
 runExportMetadata
   :: (QErrM m, MonadTx m)
   => ExportMetadata -> m EncJSON
@@ -540,3 +300,260 @@ purgeMetadataObj = \case
   MOAction action                            -> dropActionInMetadata action -- Nothing
   MOActionPermission action role             -> dropActionPermissionInMetadata action role
   MOCronTrigger ctName                       -> dropCronTriggerInMetadata ctName
+
+fetchMetadataFromHdbTables :: MonadTx m => m Metadata
+fetchMetadataFromHdbTables = liftTx do
+  tables <- Q.catchE defaultTxErrorHandler fetchTables
+  let tableMetaMap = HM.fromList . flip map tables $
+        \(schema, name, isEnum, maybeConfig) ->
+          let qualifiedName = QualifiedObject schema name
+              configuration = maybe emptyTableConfig Q.getAltJ maybeConfig
+          in (qualifiedName, mkTableMeta qualifiedName isEnum configuration)
+
+  -- Fetch all the relationships
+  relationships <- Q.catchE defaultTxErrorHandler fetchRelationships
+
+  objRelDefs <- mkRelDefs ObjRel relationships
+  arrRelDefs <- mkRelDefs ArrRel relationships
+
+  -- Fetch all the permissions
+  permissions <- Q.catchE defaultTxErrorHandler fetchPermissions
+
+  -- Parse all the permissions
+  insPermDefs <- mkPermDefs PTInsert permissions
+  selPermDefs <- mkPermDefs PTSelect permissions
+  updPermDefs <- mkPermDefs PTUpdate permissions
+  delPermDefs <- mkPermDefs PTDelete permissions
+
+  -- Fetch all event triggers
+  eventTriggers <- Q.catchE defaultTxErrorHandler fetchEventTriggers
+  triggerMetaDefs <- mkTriggerMetaDefs eventTriggers
+
+  -- Fetch all computed fields
+  computedFields <- fetchComputedFields
+
+  -- Fetch all remote relationships
+  remoteRelationships <- Q.catchE defaultTxErrorHandler fetchRemoteRelationships
+
+  let (_, postRelMap) = flip runState tableMetaMap $ do
+        modMetaMap tmObjectRelationships _rdName objRelDefs
+        modMetaMap tmArrayRelationships _rdName arrRelDefs
+        modMetaMap tmInsertPermissions _pdRole insPermDefs
+        modMetaMap tmSelectPermissions _pdRole selPermDefs
+        modMetaMap tmUpdatePermissions _pdRole updPermDefs
+        modMetaMap tmDeletePermissions _pdRole delPermDefs
+        modMetaMap tmEventTriggers etcName triggerMetaDefs
+        modMetaMap tmComputedFields _cfmName computedFields
+        modMetaMap tmRemoteRelationships _rrmName remoteRelationships
+
+  -- fetch all functions
+  functions <- FMVersion2 <$> Q.catchE defaultTxErrorHandler fetchFunctions
+
+  -- fetch all remote schemas
+  remoteSchemas <- mapFromL _arsqName <$> fetchRemoteSchemas
+
+  -- fetch all collections
+  collections <- mapFromL _ccName <$> fetchCollections
+
+  -- fetch allow list
+  allowlist <- (HS.fromList . map CollectionReq) <$> fetchAllowlists
+
+  customTypes <- fetchCustomTypes
+
+  -- fetch actions
+  actions <- fetchActions
+
+  cronTriggers <- fetchCronTriggers
+
+  let tableMetadatas = mapFromL _tmTable $ HM.elems postRelMap
+  pure $ Metadata currentMetadataVersion
+                  tableMetadatas
+                  functions
+                  remoteSchemas
+                  collections
+                  allowlist
+                  customTypes
+                  actions
+                  cronTriggers
+
+  where
+
+    modMetaMap l f xs = do
+      st <- get
+      put $ foldr (\(qt, dfn) b -> b & at qt._Just.l %~ HM.insert (f dfn) dfn) st xs
+
+    mkPermDefs pt = mapM permRowToDef . filter (\pr -> pr ^. _4 == pt)
+
+    permRowToDef (sn, tn, rn, _, Q.AltJ pDef, mComment) = do
+      perm <- decodeValue pDef
+      return (QualifiedObject sn tn,  PermDef rn perm mComment)
+
+    mkRelDefs rt = mapM relRowToDef . filter (\rr -> rr ^. _4 == rt)
+
+    relRowToDef (sn, tn, rn, _, Q.AltJ rDef, mComment) = do
+      using <- decodeValue rDef
+      return (QualifiedObject sn tn, RelDef rn using mComment)
+
+    mkTriggerMetaDefs = mapM trigRowToDef
+
+    trigRowToDef (sn, tn, Q.AltJ configuration) = do
+      conf <- decodeValue configuration
+      return (QualifiedObject sn tn, conf::EventTriggerConf)
+
+    fetchTables =
+      Q.listQ [Q.sql|
+                SELECT table_schema, table_name, is_enum, configuration::json
+                FROM hdb_catalog.hdb_table
+                 WHERE is_system_defined = 'false'
+                ORDER BY table_schema ASC, table_name ASC
+                    |] () False
+
+    fetchRelationships =
+      Q.listQ [Q.sql|
+                SELECT table_schema, table_name, rel_name, rel_type, rel_def::json, comment
+                  FROM hdb_catalog.hdb_relationship
+                 WHERE is_system_defined = 'false'
+                ORDER BY table_schema ASC, table_name ASC, rel_name ASC
+                    |] () False
+
+    fetchPermissions =
+      Q.listQ [Q.sql|
+                SELECT table_schema, table_name, role_name, perm_type, perm_def::json, comment
+                  FROM hdb_catalog.hdb_permission
+                 WHERE is_system_defined = 'false'
+                ORDER BY table_schema ASC, table_name ASC, role_name ASC, perm_type ASC
+                    |] () False
+
+    fetchEventTriggers =
+     Q.listQ [Q.sql|
+              SELECT e.schema_name, e.table_name, e.configuration::json
+               FROM hdb_catalog.event_triggers e
+              ORDER BY e.schema_name ASC, e.table_name ASC, e.name ASC
+              |] () False
+
+    fetchFunctions = do
+      l <- Q.listQ [Q.sql|
+                SELECT function_schema, function_name, configuration::json
+                FROM hdb_catalog.hdb_function
+                WHERE is_system_defined = 'false'
+                ORDER BY function_schema ASC, function_name ASC
+                    |] () False
+      pure $ mapFromL _tfv2Function $
+        flip map l $ \(sn, fn, Q.AltJ config) ->
+                       TrackFunctionV2 (QualifiedObject sn fn) config
+
+    fetchRemoteSchemas =
+      map fromRow <$> Q.listQE defaultTxErrorHandler
+        [Q.sql|
+         SELECT name, definition, comment
+           FROM hdb_catalog.remote_schemas
+         ORDER BY name ASC
+         |] () True
+      where
+        fromRow (name, Q.AltJ def, comment) =
+          AddRemoteSchemaQuery name def comment
+
+
+    fetchCollections =
+      map fromRow <$> Q.listQE defaultTxErrorHandler [Q.sql|
+               SELECT collection_name, collection_defn::json, comment
+                 FROM hdb_catalog.hdb_query_collection
+                 WHERE is_system_defined = 'false'
+               ORDER BY collection_name ASC
+              |] () False
+      where
+        fromRow (name, Q.AltJ defn, mComment) =
+          CreateCollection name defn mComment
+
+    fetchAllowlists = map runIdentity <$>
+      Q.listQE defaultTxErrorHandler [Q.sql|
+          SELECT collection_name
+            FROM hdb_catalog.hdb_allowlist
+          ORDER BY collection_name ASC
+         |] () False
+
+    fetchComputedFields = do
+      r <- Q.listQE defaultTxErrorHandler [Q.sql|
+              SELECT table_schema, table_name, computed_field_name,
+                     definition::json, comment
+                FROM hdb_catalog.hdb_computed_field
+             |] () False
+      pure $ flip map r $ \(schema, table, name, Q.AltJ definition, comment) ->
+                          ( QualifiedObject schema table
+                          , ComputedFieldMetadata name definition comment
+                          )
+
+    fetchCronTriggers =
+      (mapFromL ctName . map uncurryCronTrigger)
+              <$> Q.listQE defaultTxErrorHandler
+      [Q.sql|
+       SELECT ct.name, ct.webhook_conf, ct.cron_schedule, ct.payload,
+             ct.retry_conf, ct.header_conf, ct.include_in_metadata, ct.comment
+        FROM hdb_catalog.hdb_cron_triggers ct
+        WHERE include_in_metadata
+      |] () False
+      where
+        uncurryCronTrigger
+          (name, webhook, schedule, payload, retryConfig, headerConfig, includeMetadata, comment) =
+          CronTriggerMetadata
+          { ctName = name,
+            ctWebhook = Q.getAltJ webhook,
+            ctSchedule = schedule,
+            ctPayload = Q.getAltJ <$> payload,
+            ctRetryConf = Q.getAltJ retryConfig,
+            ctHeaders = Q.getAltJ headerConfig,
+            ctIncludeInMetadata = includeMetadata,
+            ctComment = comment
+          }
+
+    fetchCustomTypes :: Q.TxE QErr CustomTypes
+    fetchCustomTypes =
+      Q.getAltJ . runIdentity . Q.getRow <$>
+      Q.rawQE defaultTxErrorHandler [Q.sql|
+         select coalesce((select custom_types::json from hdb_catalog.hdb_custom_types), '{}'::json)
+         |] [] False
+
+    fetchActions =
+      Q.getAltJ . runIdentity . Q.getRow <$> Q.rawQE defaultTxErrorHandler [Q.sql|
+        select
+          coalesce(
+            json_agg(
+              json_build_object(
+                'name', a.action_name,
+                'definition', a.action_defn,
+                'comment', a.comment,
+                'permissions', ap.permissions
+              ) order by a.action_name asc
+            ),
+            '[]'
+          )
+        from
+          hdb_catalog.hdb_action as a
+          left outer join lateral (
+            select
+              coalesce(
+                json_agg(
+                  json_build_object(
+                    'role', ap.role_name,
+                    'comment', ap.comment
+                  ) order by ap.role_name asc
+                ),
+                '[]'
+              ) as permissions
+            from
+              hdb_catalog.hdb_action_permission ap
+            where
+              ap.action_name = a.action_name
+          ) ap on true;
+                            |] [] False
+
+    fetchRemoteRelationships = do
+      r <- Q.listQ [Q.sql|
+                SELECT table_schema, table_name,
+                       remote_relationship_name, definition::json
+                FROM hdb_catalog.hdb_remote_relationship
+             |] () False
+      pure $ flip map r $ \(schema, table, name, Q.AltJ definition) ->
+                          ( QualifiedObject schema table
+                          , RemoteRelationshipMeta name definition
+                          )

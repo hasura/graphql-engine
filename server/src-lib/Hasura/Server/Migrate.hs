@@ -18,7 +18,7 @@ module Hasura.Server.Migrate
   ( MigrationResult(..)
   , migrateCatalog
   , latestCatalogVersion
-  , recreateSystemMetadata
+  -- , recreateSystemMetadata
   , dropCatalog
   , downgradeCatalog
   ) where
@@ -39,6 +39,7 @@ import           Control.Lens                  (view, _2)
 import           Control.Monad.Unique
 import           Data.Time.Clock               (UTCTime)
 import           Hasura.Logging                (Hasura, LogLevel (..), ToEngineLog (..))
+import           Hasura.RQL.DDL.Metadata       (fetchMetadataFromHdbTables)
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
@@ -110,9 +111,8 @@ migrateCatalog env migrationTime = do
         when createSchema $ do
           Q.unitQ "CREATE SCHEMA hdb_catalog" () False
           -- create hdb_metadata table
-          Q.unitQ "CREATE TABLE hdb_catalog.hdb_metadata (id INTEGER PRIMARY KEY, metadata json not null)" () False
           -- This is where the generated views and triggers are stored
-          Q.unitQ "CREATE SCHEMA hdb_views" () False
+          -- Q.unitQ "CREATE SCHEMA hdb_views" () False
 
       isExtensionAvailable (SchemaName "pgcrypto") >>= \case
         -- only if we created the schema, create the extension
@@ -288,7 +288,8 @@ migrations dryRun =
         $  [| ("0.8", (MigrationPair $(migrationFromFile "08" "1") Nothing)) |]
         :  migrationsFromFile [2..3]
         ++ [| ("3", (MigrationPair from3To4 Nothing)) |]
-        :  migrationsFromFile [5..latestCatalogVersion])
+        :  migrationsFromFile [5..37]
+        ++ pure [| ("37", (MigrationPair from37To38 Nothing)) |])
   where
     runTxOrPrint :: Q.Query -> m ()
     runTxOrPrint
@@ -322,6 +323,16 @@ migrations dryRun =
                                              WHERE name = $2
                                              |] (Q.AltJ $ A.toJSON etc, name) True
 
+    from37To38 = do
+      metadata <- fetchMetadataFromHdbTables
+      -- drop hdb_catalog
+      dropCatalog
+      -- recreate catalog (subject to change after storage spec)
+      liftTx $ Q.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_catalog" () False
+      runTx $(Q.sqlFromFile "src-rsr/initialise.sql")
+      -- TODO: preserve trigger events & async action logs
+      updateMetadata metadata
+
 -- | Drops and recreates all “system-defined” metadata, aka metadata for tables and views in the
 -- @information_schema@ and @hdb_catalog@ schemas. These tables and views are tracked to expose them
 -- to the console, which allows us to reuse the same functionality we use to implement user-defined
@@ -349,112 +360,112 @@ migrations dryRun =
 -- it means our internal migrations are “blessed” compared to user-defined CLI migrations. If we
 -- improve CLI migrations further in the future, maybe we can switch back to using that approach,
 -- instead.
-recreateSystemMetadata :: (MonadTx m, CacheRWM m) => m ()
-recreateSystemMetadata = do
-  runTx $(Q.sqlFromFile "src-rsr/clear_system_metadata.sql")
-  runHasSystemDefinedT (SystemDefined True) $ for_ systemMetadata \(tableName, tableRels) -> do
-    undefined {- saveTableToCatalog-} tableName False emptyTableConfig
-    for_ tableRels \case
-      Left relDef -> insertRelationshipToCatalog tableName ObjRel relDef
-      Right relDef -> insertRelationshipToCatalog tableName ArrRel relDef
-  buildSchemaCacheStrict noMetadataModify
-  where
-    systemMetadata :: [(QualifiedTable, [Either ObjRelDef ArrRelDef])]
-    systemMetadata =
-      [ table "information_schema" "tables" []
-      , table "information_schema" "schemata" []
-      , table "information_schema" "views" []
-      , table "information_schema" "columns" []
-      , table "hdb_catalog" "hdb_table"
-        [ objectRel $$(nonEmptyText "detail") $
-          manualConfig "information_schema" "tables" tableNameMapping
-        , objectRel $$(nonEmptyText "primary_key") $
-          manualConfig "hdb_catalog" "hdb_primary_key" tableNameMapping
-        , arrayRel $$(nonEmptyText "columns") $
-          manualConfig "information_schema" "columns" tableNameMapping
-        , arrayRel $$(nonEmptyText "foreign_key_constraints") $
-          manualConfig "hdb_catalog" "hdb_foreign_key_constraint" tableNameMapping
-        , arrayRel $$(nonEmptyText "relationships") $
-          manualConfig "hdb_catalog" "hdb_relationship" tableNameMapping
-        , arrayRel $$(nonEmptyText "permissions") $
-          manualConfig "hdb_catalog" "hdb_permission_agg" tableNameMapping
-        , arrayRel $$(nonEmptyText "computed_fields") $
-          manualConfig "hdb_catalog" "hdb_computed_field" tableNameMapping
-        , arrayRel $$(nonEmptyText "check_constraints") $
-          manualConfig "hdb_catalog" "hdb_check_constraint" tableNameMapping
-        , arrayRel $$(nonEmptyText "unique_constraints") $
-          manualConfig "hdb_catalog" "hdb_unique_constraint" tableNameMapping
-        ]
-      , table "hdb_catalog" "hdb_primary_key" []
-      , table "hdb_catalog" "hdb_foreign_key_constraint" []
-      , table "hdb_catalog" "hdb_relationship" []
-      , table "hdb_catalog" "hdb_permission_agg" []
-      , table "hdb_catalog" "hdb_computed_field" []
-      , table "hdb_catalog" "hdb_check_constraint" []
-      , table "hdb_catalog" "hdb_unique_constraint" []
-      , table "hdb_catalog" "hdb_remote_relationship" []
-      , table "hdb_catalog" "event_triggers"
-        [ arrayRel $$(nonEmptyText "events") $
-          manualConfig "hdb_catalog" "event_log" [("name", "trigger_name")] ]
-      , table "hdb_catalog" "event_log"
-        [ objectRel $$(nonEmptyText "trigger") $
-          manualConfig "hdb_catalog" "event_triggers" [("trigger_name", "name")]
-        , arrayRel $$(nonEmptyText "logs") $ RUFKeyOn $
-          ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "event_invocation_logs") "event_id" ]
-      , table "hdb_catalog" "event_invocation_logs"
-        [ objectRel $$(nonEmptyText "event") $ RUFKeyOn "event_id" ]
-      , table "hdb_catalog" "hdb_function" []
-      , table "hdb_catalog" "hdb_function_agg"
-        [ objectRel $$(nonEmptyText "return_table_info") $ manualConfig "hdb_catalog" "hdb_table"
-          [ ("return_type_schema", "table_schema")
-          , ("return_type_name", "table_name") ] ]
-      , table "hdb_catalog" "remote_schemas" []
-      , table "hdb_catalog" "hdb_version" []
-      , table "hdb_catalog" "hdb_query_collection" []
-      , table "hdb_catalog" "hdb_allowlist" []
-      , table "hdb_catalog" "hdb_custom_types" []
-      , table "hdb_catalog" "hdb_action_permission" []
-      , table "hdb_catalog" "hdb_action"
-        [ arrayRel $$(nonEmptyText "permissions") $ manualConfig "hdb_catalog" "hdb_action_permission"
-          [("action_name", "action_name")]
-        ]
-      , table "hdb_catalog" "hdb_action_log" []
-      , table "hdb_catalog" "hdb_role"
-        [ arrayRel $$(nonEmptyText "action_permissions") $ manualConfig "hdb_catalog" "hdb_action_permission"
-          [("role_name", "role_name")]
-        , arrayRel $$(nonEmptyText "permissions") $ manualConfig "hdb_catalog" "hdb_permission_agg"
-          [("role_name", "role_name")]
-        ]
-      , table "hdb_catalog" "hdb_cron_triggers"
-        [ arrayRel $$(nonEmptyText "cron_events") $ RUFKeyOn $
-          ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_cron_events") "trigger_name"
-        ]
-      , table "hdb_catalog" "hdb_cron_events"
-        [ objectRel $$(nonEmptyText "cron_trigger") $ RUFKeyOn "trigger_name"
-        , arrayRel $$(nonEmptyText "cron_event_logs") $ RUFKeyOn $
-          ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_cron_event_invocation_logs") "event_id"
-        ]
-      , table "hdb_catalog" "hdb_cron_event_invocation_logs"
-        [ objectRel $$(nonEmptyText "cron_event") $ RUFKeyOn "event_id"
-        ]
-      , table "hdb_catalog" "hdb_scheduled_events"
-        [ arrayRel $$(nonEmptyText "scheduled_event_logs") $ RUFKeyOn $
-          ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_scheduled_event_invocation_logs") "event_id"
-        ]
-      , table "hdb_catalog" "hdb_scheduled_event_invocation_logs"
-        [ objectRel $$(nonEmptyText "scheduled_event")  $ RUFKeyOn "event_id"
-        ]
-      ]
+-- recreateSystemMetadata :: (MonadTx m, CacheRWM m) => m ()
+-- recreateSystemMetadata = do
+--   runTx $(Q.sqlFromFile "src-rsr/clear_system_metadata.sql")
+--   runHasSystemDefinedT (SystemDefined True) $ for_ systemMetadata \(tableName, tableRels) -> do
+--     saveTableToCatalog tableName False emptyTableConfig
+--     for_ tableRels \case
+--       Left relDef -> insertRelationshipToCatalog tableName ObjRel relDef
+--       Right relDef -> insertRelationshipToCatalog tableName ArrRel relDef
+--   buildSchemaCacheStrict noMetadataModify
+--   where
+--     systemMetadata :: [(QualifiedTable, [Either ObjRelDef ArrRelDef])]
+--     systemMetadata =
+--       [ table "information_schema" "tables" []
+--       , table "information_schema" "schemata" []
+--       , table "information_schema" "views" []
+--       , table "information_schema" "columns" []
+--       , table "hdb_catalog" "hdb_table"
+--         [ objectRel $$(nonEmptyText "detail") $
+--           manualConfig "information_schema" "tables" tableNameMapping
+--         , objectRel $$(nonEmptyText "primary_key") $
+--           manualConfig "hdb_catalog" "hdb_primary_key" tableNameMapping
+--         , arrayRel $$(nonEmptyText "columns") $
+--           manualConfig "information_schema" "columns" tableNameMapping
+--         , arrayRel $$(nonEmptyText "foreign_key_constraints") $
+--           manualConfig "hdb_catalog" "hdb_foreign_key_constraint" tableNameMapping
+--         , arrayRel $$(nonEmptyText "relationships") $
+--           manualConfig "hdb_catalog" "hdb_relationship" tableNameMapping
+--         , arrayRel $$(nonEmptyText "permissions") $
+--           manualConfig "hdb_catalog" "hdb_permission_agg" tableNameMapping
+--         , arrayRel $$(nonEmptyText "computed_fields") $
+--           manualConfig "hdb_catalog" "hdb_computed_field" tableNameMapping
+--         , arrayRel $$(nonEmptyText "check_constraints") $
+--           manualConfig "hdb_catalog" "hdb_check_constraint" tableNameMapping
+--         , arrayRel $$(nonEmptyText "unique_constraints") $
+--           manualConfig "hdb_catalog" "hdb_unique_constraint" tableNameMapping
+--         ]
+--       , table "hdb_catalog" "hdb_primary_key" []
+--       , table "hdb_catalog" "hdb_foreign_key_constraint" []
+--       , table "hdb_catalog" "hdb_relationship" []
+--       , table "hdb_catalog" "hdb_permission_agg" []
+--       , table "hdb_catalog" "hdb_computed_field" []
+--       , table "hdb_catalog" "hdb_check_constraint" []
+--       , table "hdb_catalog" "hdb_unique_constraint" []
+--       , table "hdb_catalog" "hdb_remote_relationship" []
+--       , table "hdb_catalog" "event_triggers"
+--         [ arrayRel $$(nonEmptyText "events") $
+--           manualConfig "hdb_catalog" "event_log" [("name", "trigger_name")] ]
+--       , table "hdb_catalog" "event_log"
+--         [ objectRel $$(nonEmptyText "trigger") $
+--           manualConfig "hdb_catalog" "event_triggers" [("trigger_name", "name")]
+--         , arrayRel $$(nonEmptyText "logs") $ RUFKeyOn $
+--           ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "event_invocation_logs") "event_id" ]
+--       , table "hdb_catalog" "event_invocation_logs"
+--         [ objectRel $$(nonEmptyText "event") $ RUFKeyOn "event_id" ]
+--       , table "hdb_catalog" "hdb_function" []
+--       , table "hdb_catalog" "hdb_function_agg"
+--         [ objectRel $$(nonEmptyText "return_table_info") $ manualConfig "hdb_catalog" "hdb_table"
+--           [ ("return_type_schema", "table_schema")
+--           , ("return_type_name", "table_name") ] ]
+--       , table "hdb_catalog" "remote_schemas" []
+--       , table "hdb_catalog" "hdb_version" []
+--       , table "hdb_catalog" "hdb_query_collection" []
+--       , table "hdb_catalog" "hdb_allowlist" []
+--       , table "hdb_catalog" "hdb_custom_types" []
+--       , table "hdb_catalog" "hdb_action_permission" []
+--       , table "hdb_catalog" "hdb_action"
+--         [ arrayRel $$(nonEmptyText "permissions") $ manualConfig "hdb_catalog" "hdb_action_permission"
+--           [("action_name", "action_name")]
+--         ]
+--       , table "hdb_catalog" "hdb_action_log" []
+--       , table "hdb_catalog" "hdb_role"
+--         [ arrayRel $$(nonEmptyText "action_permissions") $ manualConfig "hdb_catalog" "hdb_action_permission"
+--           [("role_name", "role_name")]
+--         , arrayRel $$(nonEmptyText "permissions") $ manualConfig "hdb_catalog" "hdb_permission_agg"
+--           [("role_name", "role_name")]
+--         ]
+--       , table "hdb_catalog" "hdb_cron_triggers"
+--         [ arrayRel $$(nonEmptyText "cron_events") $ RUFKeyOn $
+--           ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_cron_events") "trigger_name"
+--         ]
+--       , table "hdb_catalog" "hdb_cron_events"
+--         [ objectRel $$(nonEmptyText "cron_trigger") $ RUFKeyOn "trigger_name"
+--         , arrayRel $$(nonEmptyText "cron_event_logs") $ RUFKeyOn $
+--           ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_cron_event_invocation_logs") "event_id"
+--         ]
+--       , table "hdb_catalog" "hdb_cron_event_invocation_logs"
+--         [ objectRel $$(nonEmptyText "cron_event") $ RUFKeyOn "event_id"
+--         ]
+--       , table "hdb_catalog" "hdb_scheduled_events"
+--         [ arrayRel $$(nonEmptyText "scheduled_event_logs") $ RUFKeyOn $
+--           ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_scheduled_event_invocation_logs") "event_id"
+--         ]
+--       , table "hdb_catalog" "hdb_scheduled_event_invocation_logs"
+--         [ objectRel $$(nonEmptyText "scheduled_event")  $ RUFKeyOn "event_id"
+--         ]
+--       ]
 
-    tableNameMapping =
-      [ ("table_schema", "table_schema")
-      , ("table_name", "table_name") ]
+--     tableNameMapping =
+--       [ ("table_schema", "table_schema")
+--       , ("table_name", "table_name") ]
 
-    table schemaName tableName relationships = (QualifiedObject schemaName tableName, relationships)
-    objectRel name using = Left $ RelDef (RelName name) using Nothing
-    arrayRel name using = Right $ RelDef (RelName name) using Nothing
-    manualConfig schemaName tableName columns =
-      RUManual $ RelManualConfig (QualifiedObject schemaName tableName) (HM.fromList columns)
+--     table schemaName tableName relationships = (QualifiedObject schemaName tableName, relationships)
+--     objectRel name using = Left $ RelDef (RelName name) using Nothing
+--     arrayRel name using = Right $ RelDef (RelName name) using Nothing
+--     manualConfig schemaName tableName columns =
+--       RUManual $ RelManualConfig (QualifiedObject schemaName tableName) (HM.fromList columns)
 
 runTx :: (MonadTx m) => Q.Query -> m ()
 runTx = liftTx . Q.multiQE defaultTxErrorHandler

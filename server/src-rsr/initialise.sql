@@ -9,6 +9,13 @@ CREATE TABLE hdb_catalog.hdb_version (
 CREATE UNIQUE INDEX hdb_version_one_row
 ON hdb_catalog.hdb_version((version IS NOT NULL));
 
+-- subject to change after metadata storage spec
+CREATE TABLE hdb_catalog.hdb_metadata
+(
+  id INTEGER PRIMARY KEY,
+  metadata json not null
+);
+
 /* Note [Reference system columns using type name]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 While working on #3394, I (Alexis) discovered that Postgres seems to sometimes generate very bad

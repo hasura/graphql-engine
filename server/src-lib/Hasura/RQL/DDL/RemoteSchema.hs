@@ -5,7 +5,6 @@ module Hasura.RQL.DDL.RemoteSchema
   -- , removeRemoteSchemaFromCatalog
   , dropRemoteSchemaInMetadata
   , runReloadRemoteSchema
-  , fetchRemoteSchemas
   , addRemoteSchemaP1
   , addRemoteSchemaP2Setup
   -- , addRemoteSchemaP2
@@ -135,18 +134,6 @@ addRemoteSchemaToCatalog (AddRemoteSchemaQuery name def comment) =
 dropRemoteSchemaInMetadata :: RemoteSchemaName -> MetadataModifier
 dropRemoteSchemaInMetadata name =
   MetadataModifier $ metaRemoteSchemas %~ Map.delete name
-
-fetchRemoteSchemas :: Q.TxE QErr [AddRemoteSchemaQuery]
-fetchRemoteSchemas =
-  map fromRow <$> Q.listQE defaultTxErrorHandler
-    [Q.sql|
-     SELECT name, definition, comment
-       FROM hdb_catalog.remote_schemas
-     ORDER BY name ASC
-     |] () True
-  where
-    fromRow (name, Q.AltJ def, comment) =
-      AddRemoteSchemaQuery name def comment
 
 runIntrospectRemoteSchema
   :: (CacheRM m, QErrM m) => RemoteSchemaNameQuery -> m EncJSON
