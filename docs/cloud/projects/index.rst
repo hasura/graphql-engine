@@ -36,7 +36,7 @@ For each project, you can:
 
 .. note::
 
-   Please see the :ref:`API reference <api_reference>` to create and manage Hasura Cloud projects programmatically.
+   Please see the :ref:`API reference <cloud_api_reference>` to create and manage Hasura Cloud projects programmatically.
 
 Dig deeper
 ----------

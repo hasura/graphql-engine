@@ -2,7 +2,7 @@
    :description: Hasura Cloud getting started
    :keywords: hasura, docs, cloud, signup
 
-.. _getting_started:
+.. _cloud_getting_started:
 
 Getting Started with Hasura Cloud
 =================================

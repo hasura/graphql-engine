@@ -2,7 +2,7 @@
    :description: Hasura Cloud API reference
    :keywords: hasura, cloud, docs, API, API reference
 
-.. _api_reference:
+.. _cloud_api_reference:
 
 API Reference
 =============

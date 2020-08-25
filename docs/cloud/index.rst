@@ -22,7 +22,7 @@ realtime monitoring, caching, tracing, and rate-limiting. It supports both new a
 
     .. container:: toc-list-content
 
-      - :ref:`getting_started`
+      - :ref:`cloud_getting_started`
       - :ref:`projects`
 
   .. container:: toc-list-section
@@ -49,7 +49,7 @@ realtime monitoring, caching, tracing, and rate-limiting. It supports both new a
 
     .. container:: toc-list-content
 
-      - :ref:`api_reference`
+      - :ref:`cloud_api_reference`
       - :ref:`glossary`
       - :ref:`hasurapro_cli`
 

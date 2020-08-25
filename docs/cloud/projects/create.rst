@@ -63,12 +63,12 @@ Connecting to a database not exposed over the internet
 
 `Contact us <https://hasura.io/contact-us/>`__ for VPC peering and on-premise solutions.
 
-.. _postgres_permissions:
+.. _cloud_postgres_permissions:
 
 Postgres permissions
 --------------------
 
-Hasura Cloud works with Postgres versions 9.5 and above.
+Hasura Cloud works with **Postgres versions 9.5 and above**.
 But, If you’re running in a controlled environment, you might need to configure 
 Hasura Cloud to use a specific Postgres user that your DBA gives you.
 
