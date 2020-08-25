@@ -657,14 +657,14 @@ const HasuraNotifications: React.FC<
             <VulnerableVersionNotification fixedVersion={fixedVersion} />
           ) : null}
           {dataShown.length &&
-            dataShown.map(({ id, ...props }) => (
+            dataShown.map(({ id, ...otherProps }) => (
               <Update
                 key={id}
                 id={id}
                 onClickAction={onClickUpdate}
                 is_read={checkIsRead(previouslyReadState, id)}
                 onReadCB={onReadCB}
-                {...props}
+                {...otherProps}
               />
             ))}
           {toDisplayViewMore ? (
