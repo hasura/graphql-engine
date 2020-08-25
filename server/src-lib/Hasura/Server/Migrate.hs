@@ -308,6 +308,7 @@ migrations dryRun =
         DROP COLUMN webhook,
         DROP COLUMN num_retries,
         DROP COLUMN retry_interval,
+        DROP COLUMN comment,
         DROP COLUMN headers |] () False
       where
         uncurryEventTrigger (trn, Q.AltJ tDef, w, nr, rint, Q.AltJ headers) =
