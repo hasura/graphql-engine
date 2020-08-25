@@ -6,7 +6,7 @@ module Hasura.Session
   , roleNameToTxt
   , SessionVariable
   , mkSessionVariable
-  , SessionVariables(..)
+  , SessionVariables
   , SessionVariableValue
   , sessionVariableToText
   , mkSessionVariablesText

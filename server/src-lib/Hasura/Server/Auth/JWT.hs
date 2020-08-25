@@ -52,7 +52,6 @@ import qualified Control.Concurrent.Extended     as C
 import qualified Crypto.JWT                      as Jose
 import qualified Data.Aeson                      as J
 import qualified Data.Aeson.Casing               as J
-import qualified Data.Aeson.Internal             as J
 import qualified Data.Aeson.TH                   as J
 import qualified Data.Aeson.Types                as J
 import qualified Data.ByteString.Lazy            as BL
@@ -412,7 +411,7 @@ parseClaimsObject unregisteredClaims jcxClaims =
     JCNamespace namespace claimsFormat -> do
       claimsV <- maybe (claimsNotFound namespace) pure $ case namespace of
             ClaimNs k -> Map.lookup k unregisteredClaims
-            ClaimNsPath path -> parseIValueJsonValue $ executeJSONPath path (J.toJSON unregisteredClaims)
+            ClaimNsPath path -> iResultToMaybe $ executeJSONPath path (J.toJSON unregisteredClaims)
       -- get hasura claims value as an object. parse from string possibly
       claimsObject <- Map.fromList . Map.toList <$>
                       parseObjectFromString namespace claimsFormat claimsV
@@ -425,12 +424,12 @@ parseClaimsObject unregisteredClaims jcxClaims =
 
       allowedRoles <- case allowedRolesClaimsMap of
         JWTClaimsMapJSONPath allowedRolesJsonPath ->
-          parseAllowedRolesClaim $ parseIValueJsonValue $ executeJSONPath allowedRolesJsonPath claimsObjValue
+          parseAllowedRolesClaim $ iResultToMaybe $ executeJSONPath allowedRolesJsonPath claimsObjValue
         JWTClaimsMapStatic staticAllowedRoles -> pure staticAllowedRoles
 
       defaultRole <- case defaultRoleClaimsMap of
         JWTClaimsMapJSONPath defaultRoleJsonPath ->
-          parseDefaultRoleClaim $ parseIValueJsonValue $
+          parseDefaultRoleClaim $ iResultToMaybe $
           executeJSONPath defaultRoleJsonPath claimsObjValue
         JWTClaimsMapStatic staticDefaultRole -> pure staticDefaultRole
 
@@ -439,7 +438,7 @@ parseClaimsObject unregisteredClaims jcxClaims =
                             <> sessionVariableToText k <> " not found"
         case claimObj of
           JWTClaimsMapJSONPath path ->
-            maybe throwClaimErr pure $ parseIValueJsonValue $ executeJSONPath path claimsObjValue
+            maybe throwClaimErr pure $ iResultToMaybe $ executeJSONPath path claimsObjValue
           JWTClaimsMapStatic claimStaticValue -> pure $ J.String claimStaticValue
 
       otherClaims <- toClaimsTextMap otherClaimsObject
@@ -453,10 +452,6 @@ parseClaimsObject unregisteredClaims jcxClaims =
       pure obj
 
   where
-    parseIValueJsonValue = \case
-      J.IError _ _ -> Nothing
-      J.ISuccess v -> Just v
-
     parseAllowedRolesClaim = \case
       Nothing -> throw400 JWTRoleClaimMissing $ "JWT claim does not contain " <> sessionVariableToText allowedRolesClaim
       Just v -> parseJwtClaim v $ "invalid " <> sessionVariableToText allowedRolesClaim <>
