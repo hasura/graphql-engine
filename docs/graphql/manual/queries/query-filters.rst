@@ -201,6 +201,45 @@ Fetch a list of articles that were published on a certain date (``published_on``
       }
     }
 
+Example: Column
+^^^^^^^^^^^^^^^
+Fetch a list of ``price`` *(a column)* rows that equal the configured value for the category ``max_category_price`` *(a column in the same table)*:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      product(
+        where: {price: {_ceq: max_category_price}}
+      ) {
+        price
+        item
+        max_category_price
+      }
+    }
+  :response:
+    {
+      "data": {
+        "product": [
+          {
+            "price": 12,
+            "item": "fruit",
+            "max_category_price": 12
+          },
+          {
+            "price": 12,
+            "item": "toy",
+            "max_category_price": 12
+          },
+          {
+            "price": 12,
+            "item": "shoe",
+            "max_category_price": 12
+          }
+        ]
+      }
+    }
+
 Greater than or less than operators (_gt, _lt, _gte, _lte)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
