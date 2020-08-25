@@ -1,3 +1,5 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | Types and classes related to configuration when the server is initialised
 module Hasura.Server.Init.Config where
 
@@ -33,6 +35,7 @@ data RawConnParams
   -- choose a different/new one.
   , rcpAllowPrepare :: !(Maybe Bool)
   } deriving (Show, Eq)
+  deriving Generic
 
 type RawAuthHook = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
 
@@ -65,6 +68,7 @@ data RawServeOptions impl
   , rsoEventsFetchInterval :: !(Maybe Milliseconds)
   , rsoLogHeadersFromEnv   :: !Bool
   }
+  deriving Generic
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
 -- errors in the response to the client.

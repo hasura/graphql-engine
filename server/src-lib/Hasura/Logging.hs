@@ -1,4 +1,5 @@
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE DerivingStrategies #-}
 
 module Hasura.Logging
   ( LoggerSettings(..)
@@ -48,6 +49,7 @@ import qualified System.Log.FastLogger      as FL
 newtype FormattedTime
   = FormattedTime { _unFormattedTime :: Text }
   deriving (Show, Eq, J.ToJSON)
+  deriving Generic
 
 -- | Typeclass representing any type which can be parsed into a list of enabled log types, and has a @Set@
 -- of default enabled log types, and can find out if a log type is enabled

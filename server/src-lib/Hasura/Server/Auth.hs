@@ -72,6 +72,7 @@ class (Monad m) => UserAuthentication m where
 --
 newtype AdminSecretHash = AdminSecretHash (Crypto.Digest Crypto.SHA512)
   deriving (Ord, Eq)
+  deriving Generic
 
 -- We don't want to be able to leak the secret hash. This is a dummy instance
 -- to support 'Show AuthMode' which we want for testing.
