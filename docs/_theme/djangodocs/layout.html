@@ -4,9 +4,9 @@
   {% set is_landing_page = true %}
 {%- endif %}
 
-{%- if 'graphql/manual' in pagename %}
+{%- if pagename.startswith('graphql/core') %}
   {% set is_core = true %}
-{%- elif 'cloud' in pagename %}
+{%- elif pagename.startswith('graphql/cloud') %}
   {% set is_cloud = true %} 
 {%- endif %}
 
@@ -111,7 +111,7 @@
                   </a>
                 </li>
                 <li>
-                  <a href='https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html'>
+                  <a href='https://hasura.io/docs/1.0/graphql/core/getting-started/index.html'>
                     <button class="commonBtn navBtnHome">
                       Get Started
                     </button>
@@ -168,7 +168,7 @@
                     </a>
                   </li>
                   <li>
-                    <a class="menuLink" href='https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html'>
+                    <a class="menuLink" href='https://hasura.io/docs/1.0/graphql/core/getting-started/index.html'>
                       <button class='commonBtn navBtnHome'>
                         Get Started
                       </button>
@@ -193,12 +193,12 @@
                 <img src="{{ pathto('_images/layout/close-icon.svg', 1) }}" alt="Close"/>
               </div>
               <div class="tabbarContainerWrapper blueBgColor boderBottom">
-                <a href="{{ pathto('graphql/manual/index.html', 1) }}" {%- if is_core %} class="tabbarTabActive" {%- endif %}>
+                <a href="{{ pathto('graphql/core/index.html', 1) }}" {%- if is_core %} class="tabbarTabActive" {%- endif %}>
                   <span>
                     Hasura Core
                   </span>
                 </a>
-                <a href="{{ pathto('cloud/index.html', 1) }}" {%- if is_cloud %} class="tabbarTabActive" {%- endif %}>
+                <a href="{{ pathto('graphql/cloud/index.html', 1) }}" {%- if is_cloud %} class="tabbarTabActive" {%- endif %}>
                   <span>
                     Hasura Cloud
                   </span>
