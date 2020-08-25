@@ -9,7 +9,6 @@ import           Hasura.Prelude                         hiding (id, (.))
 
 import qualified Data.HashMap.Strict                    as HM
 
-import           Control.Applicative                    hiding (liftA)
 import           Control.Arrow.Extended
 import           Control.Category
 import           Data.Profunctor
