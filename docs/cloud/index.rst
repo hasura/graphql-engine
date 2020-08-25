@@ -38,6 +38,8 @@ realtime monitoring, caching, tracing, and rate-limiting. It supports both new a
       - :ref:`allow_lists`
       - :ref:`regression_tests`
       - :ref:`read_replicas`
+      - :ref:`response_caching`
+      - :ref:`tracing`
 
   .. container:: toc-list-section
 
@@ -63,6 +65,8 @@ realtime monitoring, caching, tracing, and rate-limiting. It supports both new a
   allow-lists
   regression-tests
   read-replicas
+  response-caching
+  tracing
   hasurapro-cli/index
   api-reference
   glossary

@@ -46,6 +46,7 @@ Dig deeper
    :titlesonly:
 
    Creating projects <create>
-   Managing projects <manage>
+   Managing projects <manage-projects/index>
+   Securing projects <secure>
    Deleting projects <delete>
    
