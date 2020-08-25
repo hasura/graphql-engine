@@ -188,11 +188,9 @@ const VersionUpdateNotification: React.FC<VersionUpdateNotificationProps> = ({
       start_date={Date.now()}
     >
       <a
-        href={
-          latestVersion
-            ? `https://github.com/hasura/graphql-engine/releases/tag/${latestVersion}`
-            : 'https://github.com/hasura/graphql-engine/releases'
-        }
+        href={`https://github.com/hasura/graphql-engine/releases${
+          latestVersion ? `/tag/${latestVersion}` : ''
+        }`}
         target="_blank"
         rel="noopener noreferrer"
       >
