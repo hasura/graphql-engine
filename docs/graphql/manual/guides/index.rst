@@ -24,7 +24,7 @@ Guides / Tutorials / Resources
    Auditing tables <auditing-tables>
    Telemetry <telemetry>
    Code Editor Integrations <code-editor-integrations/index>
-
+   Import/export Postgres data <pg-dump>
 
 
 .. note::
