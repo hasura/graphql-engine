@@ -109,6 +109,7 @@ library
                      , validation
                      , lifted-base
                      , pg-client
+                     , mysql-haskell
                      , validation
                      , text
                      , text-builder >= 0.6

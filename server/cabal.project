@@ -54,3 +54,8 @@ source-repository-package
   type: git
   location: https://github.com/hasura/ci-info-hs.git
   tag: 947fd56582b1e8bec9ffed98ca9ac2f6b63e36c9
+
+source-repository-package
+  type: git
+  location: https://github.com/jchia/mysql-haskell.git
+  tag: b01d9f518e3614c9ee5580e64d61400ed8ab5b39
