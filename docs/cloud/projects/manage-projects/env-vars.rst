@@ -15,8 +15,7 @@ Env vars tab
 Introduction
 ------------
 
-The ``Env vars`` tab shows `Hasura GraphQL Engine environment variables 
-<https://hasura.io/docs/1.0/graphql/manual/deployment/graphql-engine-flags/reference.html#command-flags>`__. 
+The ``Env vars`` tab allows setting :ref:`Hasura GraphQL Engine env variables <command-flags>` and adding other custom env variables as well.
 
 Adding an env var
 -----------------

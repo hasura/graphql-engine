@@ -16,25 +16,28 @@ Hasura Pro CLI
 Installing the Hasura Pro CLI
 -----------------------------
 
-Hasura Pro CLI is distributed as a plugin to the `Hasura Core CLI <https://hasura.io/docs/1.0/graphql/manual/hasura-cli/index.html>`_.
-Follow the instructions `here <https://hasura.io/docs/1.0/graphql/manual/hasura-cli/install-hasura-cli.html>`_
-to install Hasura Core CLI and then execute the following command to
-install the Hasura Pro CLI:
+Hasura Pro CLI is distributed as a plugin to the :ref:`Hasura Core CLI <hasuracli_manual>`
 
-.. code-block:: bash
+- Follow the instructions :ref:`here <install_hasura_cli>` to install Hasura Core CLI
 
-   hasura plugins install pro
+- Then execute the following command to install the Hasura Pro CLI plugin:
 
-You can verify the installation by executing the ``help`` command:
+  .. code-block:: bash
 
-.. code-block:: bash
+    hasura plugins install pro
 
-   hasura pro --help
+- You can verify the installation by executing the ``help`` command:
+
+  .. code-block:: bash
+
+     hasura pro --help
 
 Authentication with the Hasura Pro CLI
 --------------------------------------
 
-All interactions from the CLI to Hasura’s APIs are authenticated using a personal access token generated for your user account. To set up a token, execute the following command on the CLI:
+All interactions from the CLI to Hasura’s APIs are authenticated using a personal access token generated for your user account.
+
+To set up a token, execute the following command on the CLI:
 
 .. code-block:: bash
 

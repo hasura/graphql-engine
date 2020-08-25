@@ -12,12 +12,16 @@ Setting up your first event trigger
   :depth: 1
   :local:
 
+Introduction
+------------
+
 You can use Hasura to setup event triggers that call configured webhooks whenever specific database events occur.
 
 Let's create a sample event trigger with https://httpbin.org as our simple webhook.
 
 Create a table
 --------------
+
 Head to the Hasura console, navigate to ``Data -> Create table`` and create a sample table called ``profile`` with
 the following columns:
 
@@ -33,6 +37,7 @@ the following columns:
 
 Setup an event trigger
 ----------------------
+
 In the Hasura console, navigate to ``Events -> Create trigger`` and:
 
 1. Enter trigger name as ``echo``.

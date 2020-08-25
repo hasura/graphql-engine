@@ -43,7 +43,7 @@ API limits can have a *global* or *per role* configuration. If an incoming reque
 Quick-create limits
 -------------------
 
-Hasura Cloud lets you add limits with one click from the list of past operations. (With Core, allow lists must be `managed manually <https://hasura.io/docs/1.0/graphql/manual/deployment/allow-list.html#enable-allow-list>`__.)
+Hasura Cloud lets you add limits with one click from the list of past operations.
 
 .. thumbnail:: /img/cloud/security/pro-tab-apilimit-config.png
    :alt: Hasura Cloud Console create new api limit

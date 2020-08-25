@@ -69,10 +69,11 @@ Postgres permissions
 --------------------
 
 Hasura Cloud works with **Postgres versions 9.5 and above**.
-But, If you’re running in a controlled environment, you might need to configure 
+
+If you’re running in a controlled environment, you might need to configure
 Hasura Cloud to use a specific Postgres user that your DBA gives you.
 
-Apart from the requirements mentioned in `Hasura Core Postgres Requirements Docs <https://hasura.io/docs/1.0/graphql/manual/deployment/postgres-requirements.html#postgres-permissions>`_,
+Apart from the :ref:`Hasura Core Postgres permissions <postgres_permissions>`,
 Hasura Cloud needs the following extra permissions:
 
 - (required) Read and write access to ``hdb_pro_catalog`` schema.

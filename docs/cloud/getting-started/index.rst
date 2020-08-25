@@ -59,11 +59,28 @@ Click ``Create Project``.
 Next steps
 ----------
 
-Once you've created your project, you have several options to configure your project, or to get started with development.
+Once you've created your project, you can get started with building with Hasura or manage your project.
+
+.. contents::
+  :backlinks: none
+  :depth: 1
+  :local:
 
 .. thumbnail:: /img/cloud/getting-started/project-functionalities.png
-   :alt: Project actions
-   :width: 860px
+  :alt: Project actions
+  :width: 860px
+
+
+Explore the Hasura console
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Click ``Launch Console`` to open the Hasura console in your browser and :ref:`make your first GraphQL query <first_graphql_query>` or :ref:`set up your first event trigger <first_event_trigger>`.
+
+You can navigate to the ``Pro`` tab to check out the Pro features that Hasura Cloud has set up for you.
+
+.. thumbnail:: /img/cloud/metrics/pro-tab-overview.png
+   :alt: Hasura Console: Pro tab
+   :width: 1118px
 
 Manage your project
 ^^^^^^^^^^^^^^^^^^^
@@ -74,14 +91,3 @@ Add an admin secret
 ^^^^^^^^^^^^^^^^^^^
 
 :ref:`Add an admin secret <secure_project>` to make sure that your GraphQL endpoint and the Hasura console are not publicly accessible.
-
-Explore the Hasura console
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Click ``Launch Console`` to open the Hasura console in your browser and `make your first GraphQL query <https://hasura.io/docs/1.0/graphql/manual/getting-started/first-graphql-query.html>`__.
-
-You can navigate to the ``Pro`` tab to check out the Pro features that Hasura Cloud has set up for you.
-
-.. thumbnail:: /img/cloud/metrics/pro-tab-overview.png
-   :alt: Hasura Console: Pro tab
-   :width: 1118px

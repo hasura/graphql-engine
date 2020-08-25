@@ -51,9 +51,9 @@ Accessing Hasura
 ----------------
 
 After setting an admin secret, when you launch the console from the Hasura Cloud dashboard, you'll be authenticated as an admin. 
-If you want to make API calls from outside the dashboard, you need to pass the admin secret in the request header.
+If you want to make API calls from outside the console, you need to pass the admin secret as the `x-hasura-admin-secret` request header.
 
 .. note::
 
-    The admin secret should be treated like a password i.e. it should be kept secret. It shouldn't be passed from frontend clients. 
-    Read `here <https://hasura.io/docs/1.0/graphql/manual/auth/authentication/index.html>`__ how to set up authentication.
+    The admin secret should be treated like a password i.e. it should be kept secret and shouldn't be passed from frontend clients.
+    Refer :ref:`this <authentication>` to set up user authentication.

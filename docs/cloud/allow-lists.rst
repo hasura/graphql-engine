@@ -28,7 +28,7 @@ The manager view offers inspection, export, or removal of operations in the allo
 Quick-create allowed operations
 -------------------------------
 
-This Pro feature lets you add to the allow list with one click from the record of past operations. (With Core, allow lists must be `managed manually <https://hasura.io/docs/1.0/graphql/manual/deployment/allow-list.html#enable-allow-list>`_.)
+This Pro feature lets you add to the allow list with one click from the record of past operations. (With Core, allow lists must be :ref:`managed manually <allow_list>`.)
 
 .. thumbnail:: /img/cloud/security/allowlist-add-new-op.png
    :alt: Hasura Cloud Console create new allowed operation
