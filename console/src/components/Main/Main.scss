@@ -1318,9 +1318,10 @@
   width: 460px;
   padding: 0;
   left: auto;
-  height: calc(100vh - 120px);
+  height: calc(100vh - 115px);
   border: none;
   user-select: none;
+  box-shadow: none;
 }
 
 .notificationsContainer {
@@ -1407,6 +1408,10 @@
   position: relative;
   top: -8px;
   left: 6px;
+  visibility: visible;
+  &.hideDot {
+    visibility: hidden;
+  }
 }
 
 .consoleLogoNotifications {

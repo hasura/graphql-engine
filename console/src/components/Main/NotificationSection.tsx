@@ -70,7 +70,13 @@ const Update: React.FC<UpdateProps> = ({
       }`}
       onClick={onClickLink}
     >
-      {!linkClicked ? <div className={styles.unreadDot} /> : null}
+      <div
+        className={
+          !linkClicked
+            ? styles.unreadDot
+            : `${styles.unreadDot} ${styles.hideDot}`
+        }
+      />
       <Flex width="100%">
         <Flex px={25} py={2} width="80%" flexDirection="column">
           <StyledText
