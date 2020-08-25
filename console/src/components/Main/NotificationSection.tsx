@@ -304,7 +304,8 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
       >
         <Flex alignItems="center" justifyContent="center">
           <Heading as="h4" color="#000" fontSize="12px" marginLeft="8px">
-            Notifications ({numberNotifications})
+            Notifications{' '}
+            {numberNotifications > 0 ? `(${numberNotifications})` : ''}
           </Heading>
         </Flex>
         <Button
