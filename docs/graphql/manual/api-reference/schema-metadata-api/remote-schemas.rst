@@ -12,6 +12,9 @@ Schema/Metadata API Reference: Remote schemas
   :depth: 1
   :local:
 
+Introduction
+------------
+
 Add/Remove a remote GraphQL server as remote schema in Hasura GraphQL engine.
 
 .. _add_remote_schema:

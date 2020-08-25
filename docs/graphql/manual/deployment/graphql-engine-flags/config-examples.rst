@@ -12,6 +12,9 @@ GraphQL engine server config examples
   :depth: 1
   :local:
 
+Introduction
+------------
+
 The following are a few configuration use cases:
 
 .. _add-admin-secret:

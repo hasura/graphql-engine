@@ -12,6 +12,9 @@ Explain API Reference
   :depth: 1
   :local:
 
+Introduction
+------------
+
 The Explain API is used to analyse queries and subscriptions. It returns a list of Postgres plans for a query and a single Postgres plan for a subscription, based
 on the defined permissions.
 

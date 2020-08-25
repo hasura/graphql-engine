@@ -12,6 +12,9 @@ Allow-list of operations
   :depth: 1
   :local:
 
+Introduction
+------------
+
 The **Allow-list** is a list of safe operations (*GraphQL queries, mutations or subscriptions*) that is stored by
 the GraphQL engine in its metadata. When enabled, it can be used to restrict the GraphQL engine so that it
 executes **only** those operations that are present in the list *(available after version v1.0.0-beta.1)*.
@@ -42,7 +45,7 @@ You can add or remove a operation in the allow-list in two ways:
     to add multiple operations to the allow-list (each operation needs to have a name).
 
 * **Using metadata APIs:** Queries can be stored in collections and a collection can be added to or removed
-  from the allow-list. See :ref:`Collections & Allow-list APIs<api_query_collections>`
+  from the allow-list. See :ref:`Collections & Allow-list APIs <api_query_collections>`
   for API reference.
 
 .. note::

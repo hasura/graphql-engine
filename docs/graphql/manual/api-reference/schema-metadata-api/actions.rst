@@ -12,6 +12,9 @@ Schema/Metadata API Reference: Actions
   :depth: 1
   :local:
 
+Introduction
+------------
+
 **actions** are user defined mutations with custom business logic.
 
 .. _create_action:

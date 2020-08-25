@@ -12,10 +12,14 @@ Event trigger payload
   :depth: 1
   :local:
 
+Introduction
+------------
+
 The following is the payload and delivery mechanism of an event to the webhook when an event trigger is invoked.
 
 HTTP request method
 -------------------
+
 Delivered over ``HTTP POST`` with the following headers:
 
 .. code-block:: none

@@ -4,6 +4,8 @@
 
 .. title:: Hasura GraphQL Engine Documentation
 
+.. _core_docs:
+
 Hasura GraphQL Engine Documentation
 ===================================
 
@@ -68,7 +70,7 @@ The Hasura GraphQL engine makes your data instantly accessible over a real-time 
       - :ref:`Basics <migrations_basics>`
       - :ref:`Setting Up Migrations <migrations_setup>`
       - :ref:`Managing Metadata <manage_hasura_metadata>`
-      - `Deploy Using Hasura Cloud <https://hasura.io/docs/cloud/1.0/manual/index.html>`__
+      - :ref:`Deploy Using Hasura Cloud <cloud_docs>`
       - :ref:`Deploy Using Docker <deployment_docker>`
       - :ref:`Deploy Using Kubernetes <deploy_kubernetes>`
 

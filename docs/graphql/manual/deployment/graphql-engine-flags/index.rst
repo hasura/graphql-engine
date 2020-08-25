@@ -12,6 +12,9 @@ GraphQL engine server configuration
   :depth: 1
   :local:
 
+Introduction
+------------
+
 Hasura supports various flags and options for customising how you are running the GraphQL engine in your environment.
 
 Server flags

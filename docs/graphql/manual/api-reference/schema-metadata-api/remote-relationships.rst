@@ -10,6 +10,9 @@ Schema/Metadata API Reference: Remote Relationships
   :depth: 1
   :local:
 
+Introduction
+------------
+
 Remote Relationships allow you to join tables with remote schemas.
 
 .. _create_remote_relationship:

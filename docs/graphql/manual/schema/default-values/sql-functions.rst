@@ -12,6 +12,9 @@ Setting values of fields using SQL functions/stored procedures
   :depth: 1
   :local:
 
+Introduction
+------------
+
 Let's say you want to set the value of some fields as the output of some custom SQL functions or stored procedures.
 This is useful to set values of fields which depend on other fields passed in the input. E.g. set
 ``submission_time`` of an online quiz as 1 hour from the ``start_time``.

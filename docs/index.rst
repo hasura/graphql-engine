@@ -18,3 +18,9 @@ Table of Contents
   :titlesonly:
 
   Hasura GraphQL Engine <graphql/manual/index>
+
+.. toctree::
+  :maxdepth: 2
+  :titlesonly:
+
+  Hasura Cloud <cloud/index>

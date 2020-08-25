@@ -12,6 +12,9 @@ Config API Reference
   :depth: 1
   :local:
 
+Introduction
+------------
+
 The Config API is an admin only endpoint which gives info on the server
 configuration.
 

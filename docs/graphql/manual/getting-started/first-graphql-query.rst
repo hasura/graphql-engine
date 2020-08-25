@@ -12,6 +12,9 @@ Making your first GraphQL query
   :depth: 1
   :local:
 
+Introduction
+------------
+
 Let's create a sample table and query data from it using the Hasura console, a UI tool meant for doing exactly this:
 
 Create a table

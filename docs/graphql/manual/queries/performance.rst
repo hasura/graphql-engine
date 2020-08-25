@@ -36,14 +36,14 @@ Let's say we want to analyse the following query:
 
 In order to analyse the performance of a query, you can click on the ``Analyze`` button on the Hasura console:
 
-.. thumbnail:: ../../../img/graphql/manual/queries/analyze-query.png
+.. thumbnail:: /img/graphql/manual/queries/analyze-query.png
    :class: no-shadow
    :width: 75%
    :alt: Query analyze button on Hasura console
 
 The following query execution plan is generated:
 
-.. thumbnail:: ../../../img/graphql/manual/queries/query-analysis-before-index.png
+.. thumbnail:: /img/graphql/manual/queries/query-analysis-before-index.png
    :class: no-shadow
    :width: 75%
    :alt: Execution plan for Hasura GraphQL query
@@ -227,7 +227,7 @@ Let's compare the performance analysis to :ref:`the one before adding the index 
 What was a ``sequential scan`` in the example earlier is now an ``index scan``. ``Index scans`` are usually more performant than ``sequential scans``.
 We can also see that the ``cost`` of the query is now lower than the one before we added the index.
 
-.. thumbnail:: ../../../img/graphql/manual/queries/query-analysis-after-index.png
+.. thumbnail:: /img/graphql/manual/queries/query-analysis-after-index.png
    :class: no-shadow
    :width: 75%
    :alt: Execution plan for Hasura GraphQL query

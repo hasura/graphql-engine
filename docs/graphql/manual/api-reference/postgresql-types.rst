@@ -14,6 +14,9 @@ API Reference - Supported PostgreSQL Types
 
 .. _types_table:
 
+Introduction
+------------
+
 List of PostgreSQL types supported by the Hasura GraphQL engine with their equivalent Hasura types:
 
 .. csv-table::

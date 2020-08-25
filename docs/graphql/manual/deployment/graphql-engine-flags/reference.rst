@@ -12,6 +12,9 @@ GraphQL engine server flags reference
   :depth: 1
   :local:
 
+Introduction
+------------
+
 Every GraphQL engine command is structured as:
 
 .. code-block:: bash
@@ -21,7 +24,7 @@ Every GraphQL engine command is structured as:
 The flags can be passed as ENV variables as well.
 
 Server flags
-^^^^^^^^^^^^
+------------
 
 For the ``graphql-engine`` command these are the available flags and ENV variables:
 
@@ -67,7 +70,7 @@ Or you can specify the following options *(only via flags)*:
 .. _command-flags:
 
 Command flags
-^^^^^^^^^^^^^
+-------------
 
 For the ``serve`` sub-command these are the available flags and ENV variables:
 

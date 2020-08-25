@@ -12,6 +12,9 @@ Schema/Metadata API Reference: Tables/Views
   :depth: 1
   :local:
 
+Introduction
+------------
+
 Track/untrack a table/view in Hasura GraphQL engine.
 
 Only tracked tables/views are available for querying/mutating/subscribing data over the GraphQL API.
