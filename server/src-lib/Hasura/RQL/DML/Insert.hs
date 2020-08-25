@@ -1,74 +1,63 @@
-module Hasura.RQL.DML.Insert where
+module Hasura.RQL.DML.Insert
+ ( insertCheckExpr
+ , insertOrUpdateCheckExpr
+ , mkInsertCTE
+ , runInsert
+ , execInsertQuery
+ , toSQLConflict
+ ) where
+
+import           Hasura.Prelude
 
 import           Data.Aeson.Types
-import           Instances.TH.Lift        ()
+import           Instances.TH.Lift           ()
 
-import qualified Data.HashMap.Strict      as HM
-import qualified Data.HashSet             as HS
-import qualified Data.Sequence            as DS
+import qualified Data.HashMap.Strict         as HM
+import qualified Data.HashSet                as HS
+import qualified Data.Sequence               as DS
+import qualified Database.PG.Query           as Q
+
+import qualified Hasura.SQL.DML              as S
 
 import           Hasura.EncJSON
-import           Hasura.Prelude
+import           Hasura.RQL.DML.Insert.Types
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.GBoolExp
-import           Hasura.RQL.Instances     ()
 import           Hasura.RQL.Types
-import           Hasura.Server.Version    (HasVersion)
+import           Hasura.Server.Version       (HasVersion)
 import           Hasura.Session
 import           Hasura.SQL.Types
 
-import qualified Data.Environment         as Env
-import qualified Database.PG.Query        as Q
-import qualified Hasura.SQL.DML           as S
-import qualified Hasura.Tracing           as Tracing
-
-data ConflictTarget
-  = CTColumn ![PGCol]
-  | CTConstraint !ConstraintName
-  deriving (Show, Eq)
-
-data ConflictClauseP1
-  = CP1DoNothing !(Maybe ConflictTarget)
-  | CP1Update !ConflictTarget ![PGCol] !PreSetCols !S.BoolExp
-  deriving (Show, Eq)
-
-data InsertQueryP1
-  = InsertQueryP1
-  { iqp1Table     :: !QualifiedTable
-  , iqp1Cols      :: ![PGCol]
-  , iqp1Tuples    :: ![[S.SQLExp]]
-  , iqp1Conflict  :: !(Maybe ConflictClauseP1)
-  , iqp1CheckCond :: !(AnnBoolExpSQL, Maybe AnnBoolExpSQL)
-  , iqp1Output    :: !MutationOutput
-  , iqp1AllCols   :: ![PGColumnInfo]
-  } deriving (Show, Eq)
+import qualified Data.Environment            as Env
+import qualified Hasura.Tracing              as Tracing
 
 mkInsertCTE :: InsertQueryP1 -> S.CTE
-mkInsertCTE (InsertQueryP1 tn cols vals c (insCheck, updCheck) _ _) =
+mkInsertCTE (InsertQueryP1 tn cols vals conflict (insCheck, updCheck) _ _) =
     S.CTEInsert insert
   where
     tupVals = S.ValuesExp $ map S.TupleExp vals
     insert =
-      S.SQLInsert tn cols tupVals (toSQLConflict <$> c)
+      S.SQLInsert tn cols tupVals (toSQLConflict tn <$> conflict)
         . Just
         . S.RetExp
         $ [ S.selectStar
           , S.Extractor
-              (insertOrUpdateCheckExpr tn c
-                (toSQLBoolExp (S.QualTable tn) insCheck)
-                (fmap (toSQLBoolExp (S.QualTable tn)) updCheck))
+              (insertOrUpdateCheckExpr tn conflict
+                (toSQLBool insCheck)
+                (fmap toSQLBool updCheck))
               Nothing
           ]
+    toSQLBool = toSQLBoolExp $ S.QualTable tn
 
-toSQLConflict :: ConflictClauseP1 -> S.SQLConflict
-toSQLConflict conflict = case conflict of
-  CP1DoNothing Nothing          -> S.DoNothing Nothing
-  CP1DoNothing (Just ct)        -> S.DoNothing $ Just $ toSQLCT ct
-  CP1Update ct inpCols preSet filtr    -> S.Update (toSQLCT ct)
-    (S.buildUpsertSetExp inpCols preSet) $ Just $ S.WhereFrag filtr
 
+toSQLConflict :: QualifiedTable -> ConflictClauseP1 S.SQLExp -> S.SQLConflict
+toSQLConflict tableName = \case
+  CP1DoNothing ct -> S.DoNothing $ toSQLCT <$> ct
+  CP1Update ct inpCols preSet filtr -> S.Update
+    (toSQLCT ct) (S.buildUpsertSetExp inpCols preSet) $
+    Just $ S.WhereFrag $ toSQLBoolExp (S.QualTable tableName) filtr
   where
     toSQLCT ct = case ct of
       CTColumn pgCols -> S.SQLColumn pgCols
@@ -114,7 +103,7 @@ buildConflictClause
   -> TableInfo
   -> [PGCol]
   -> OnConflict
-  -> m ConflictClauseP1
+  -> m (ConflictClauseP1 S.SQLExp)
 buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) =
   case (mTCol, mTCons, act) of
     (Nothing, Nothing, CAIgnore)    -> return $ CP1DoNothing Nothing
@@ -131,21 +120,19 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
       (updFltr, preSet) <- getUpdPerm
       resolvedUpdFltr <- convAnnBoolExpPartialSQL sessVarBldr updFltr
       resolvedPreSet <- mapM (convPartialSQLExp sessVarBldr) preSet
-      return $ CP1Update (CTColumn $ getPGCols col) inpCols resolvedPreSet $
-        toSQLBool resolvedUpdFltr
+      return $ CP1Update (CTColumn $ getPGCols col) inpCols resolvedPreSet resolvedUpdFltr
     (Nothing, Just cons, CAUpdate)  -> do
       validateConstraint cons
       (updFltr, preSet) <- getUpdPerm
       resolvedUpdFltr <- convAnnBoolExpPartialSQL sessVarBldr updFltr
       resolvedPreSet <- mapM (convPartialSQLExp sessVarBldr) preSet
-      return $ CP1Update (CTConstraint cons) inpCols resolvedPreSet $
-        toSQLBool resolvedUpdFltr
+      return $ CP1Update (CTConstraint cons) inpCols resolvedPreSet resolvedUpdFltr
     (Just _, Just _, _)             -> throw400 UnexpectedPayload
       "'constraint' and 'constraint_on' cannot be set at a time"
   where
     coreInfo = _tiCoreInfo tableInfo
     fieldInfoMap = _tciFieldInfoMap coreInfo
-    toSQLBool = toSQLBoolExp (S.mkQual $ _tciName coreInfo)
+    -- toSQLBool = toSQLBoolExp (S.mkQual $ _tciName coreInfo)
 
     validateCols c = do
       let targetcols = getPGCols c
@@ -153,7 +140,8 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
         \pgCol -> askPGType fieldInfoMap pgCol ""
 
     validateConstraint c = do
-      let tableConsNames = _cName <$> tciUniqueOrPrimaryKeyConstraints coreInfo
+      let tableConsNames = maybe [] toList $
+                           fmap _cName <$> tciUniqueOrPrimaryKeyConstraints coreInfo
       withPathK "constraint" $
        unless (c `elem` tableConsNames) $
        throw400 Unexpected $ "constraint " <> getConstraintTxt c
@@ -262,9 +250,11 @@ execInsertQuery
   => Env.Environment
   -> Bool
   -> Maybe MutationRemoteJoinCtx
-  -> (InsertQueryP1, DS.Seq Q.PrepArg) -> m EncJSON
+  -> (InsertQueryP1, DS.Seq Q.PrepArg)
+  -> m EncJSON
 execInsertQuery env strfyNum remoteJoinCtx (u, p) =
-  runMutation env $ mkMutation remoteJoinCtx (iqp1Table u) (insertCTE, p)
+  runMutation env
+     $ mkMutation remoteJoinCtx (iqp1Table u) (insertCTE, p)
                 (iqp1Output u) (iqp1AllCols u) strfyNum
   where
     insertCTE = mkInsertCTE u
@@ -319,7 +309,7 @@ insertCheckExpr errorMessage condExpr =
 -- the @xmax@ system column.
 insertOrUpdateCheckExpr
   :: QualifiedTable
-  -> Maybe ConflictClauseP1
+  -> Maybe (ConflictClauseP1 S.SQLExp)
   -> S.BoolExp
   -> Maybe S.BoolExp
   -> S.SQLExp
