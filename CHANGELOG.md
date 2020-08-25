@@ -19,6 +19,40 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - server: some mutations that cannot be performed will no longer be in the schema (for instance, `delete_by_pk` mutations won't be shown to users that do not have select permissions on all primary keys) (#4111)
 - server: miscellaneous description changes (#4111)
 - server: treat the absence of `backend_only` configuration and `backend_only: false` equally (closing #5059) (#4111)
+- server: support customizing JWT claims (close #3485)
+
+Some providers don't let users add custom JWT claims. In such a case, the server will provide a JWT configuration option to specify a mapping of hasura session variables to values in existing claims via JSONPath/literal values. The JWT config now supports an extra optional field `claims_map` which is an JSON object which maps from session variables to JSON paths.
+
+Example:-
+
+Consider the following JWT claim:
+
+```
+  {
+    "sub": "1234567890",
+    "name": "John Doe",
+    "admin": true,
+    "iat": 1516239022,
+    "user": {
+      "id": "ujdh739kd",
+      "appRoles": ["user", "editor"]
+    }
+  }
+```
+
+The corresponding JWT config should be:
+
+```
+  {
+    "type":"RS512",
+    "key": "<The public Key>",
+    "claims_map": {
+      "x-hasura-allowed-roles": {"path":"$.user.appRoles"},
+      "x-hasura-default-role": {"path":"$.user.appRoles[0]","default":"user"},
+      "x-hasura-user-id": {"path":"$.user.id"}
+    }
+  }
+```
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - cli: add missing global flags for seeds command (#5565)
