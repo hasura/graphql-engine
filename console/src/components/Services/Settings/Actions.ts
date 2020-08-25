@@ -218,11 +218,6 @@ const handleInconsistentObjects = (inconsistentObjects: MetadataObject[]) => {
         inconsistentObjects,
         'functions'
       );
-      const filteredRemoteSchemas = filterInconsistentMetadataObjects(
-        remoteSchemas,
-        inconsistentObjects,
-        'remote_schemas'
-      );
       const filteredActions = filterInconsistentMetadataObjects(
         actions,
         inconsistentObjects,
@@ -231,7 +226,7 @@ const handleInconsistentObjects = (inconsistentObjects: MetadataObject[]) => {
 
       dispatch(setConsistentSchema(filteredSchema));
       dispatch(setConsistentFunctions(filteredFunctions));
-      dispatch(setConsistentRemoteSchemas(filteredRemoteSchemas));
+      dispatch(setConsistentRemoteSchemas(remoteSchemas));
       dispatch(setActions(filteredActions));
     }
   };
@@ -248,9 +243,7 @@ export const loadInconsistentObjects = (
     const { shouldReloadMetadata, shouldReloadRemoteSchemas } = reloadConfig;
 
     const loadQuery = shouldReloadMetadata
-      ? getReloadCacheAndGetInconsistentObjectsQuery(
-          shouldReloadRemoteSchemas !== false
-        )
+      ? getReloadCacheAndGetInconsistentObjectsQuery(!!shouldReloadRemoteSchemas)
       : inconsistentObjectsQuery;
 
     dispatch({ type: LOADING_METADATA });
