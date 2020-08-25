@@ -12,6 +12,9 @@ Customise auto-generated field names
   :depth: 2
   :local:
 
+Introduction
+------------
+
 It is possible to override the auto-generated table and column field names exposed over the GraphQL API.
 
 ..  note::

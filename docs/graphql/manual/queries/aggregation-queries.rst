@@ -12,8 +12,9 @@ Aggregation queries
   :depth: 2
   :local:
 
-Aggregate fields
-----------------
+**Aggregate** fields
+--------------------
+
 You can fetch aggregations on columns along with nodes using an aggregation query.
 
 The **name of the aggregate field** is of the form ``<field-name> + _aggregate``.

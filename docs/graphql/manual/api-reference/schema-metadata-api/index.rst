@@ -12,6 +12,9 @@ Schema / Metadata API Reference
   :depth: 1
   :local:
 
+Introduction
+------------
+
 The schema / metadata API provides the following features:
 
 1. Execute SQL on the underlying Postgres database, supports schema modifying actions.

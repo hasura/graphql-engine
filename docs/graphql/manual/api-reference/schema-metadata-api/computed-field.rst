@@ -12,6 +12,9 @@ Schema/Metadata API Reference: Computed Fields
   :depth: 1
   :local:
 
+Introduction
+------------
+
 **computed field** is an extra field added to a table, its value is
 computed via an SQL function which has the table row type as an input argument.
 Currenty, the Hasura GraphQL engine supports functions returning

@@ -10,6 +10,9 @@ Schema/Metadata API Reference: Scheduled Triggers
   :depth: 1
   :local:
 
+Introduction
+------------
+
 Scheduled triggers are used to invoke webhooks based on a timestamp or cron.
 
 .. _create_cron_trigger:

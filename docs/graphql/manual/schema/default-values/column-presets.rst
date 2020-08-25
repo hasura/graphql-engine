@@ -12,6 +12,9 @@ Setting default values for fields using role-based column presets
   :depth: 1
   :local:
 
+Introduction
+------------
+
 Let's say you want certain fields to have their values set automatically when not explicitly passed using session
 variables or fixed values when a new row is created with a particular :ref:`user role <roles_variables>`.
 

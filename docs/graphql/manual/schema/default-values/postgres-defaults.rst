@@ -12,6 +12,9 @@ Setting default values for fields using Postgres defaults
   :depth: 1
   :local:
 
+Introduction
+------------
+
 You can set values of certain fields automatically when not explicitly passed to a fixed value, e.g. true for a boolean
 field, or output of a simple SQL function, e.g. now() for a timestamp field, by setting column default values in the
 table definition.

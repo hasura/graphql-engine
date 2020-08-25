@@ -12,6 +12,9 @@ GraphQL API Reference
   :depth: 1
   :local:
 
+Introduction
+------------
+
 All GraphQL requests for queries, subscriptions and mutations are made to the GraphQL API.
 
 Endpoint

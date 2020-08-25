@@ -14,6 +14,9 @@ Hasura CLI
   :depth: 1
   :local:
 
+Introduction
+------------
+
 The ``Hasura CLI`` is a command line tool which is the primary mode of managing Hasura projects and migrations.
 
 Installation

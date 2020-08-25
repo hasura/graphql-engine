@@ -12,6 +12,9 @@ PG Dump API Reference
   :depth: 1
   :local:
 
+Introduction
+------------
+
 The PG Dump API is an admin-only endpoint that can be used to execute ``pg_dump`` on the
 Postgres instance that Hasura is configured with.
 

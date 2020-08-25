@@ -12,6 +12,8 @@ Version API Reference
   :depth: 1
   :local:
 
+Introduction
+------------
 
 The ``/v1/version`` is a public endpoint that responds with the current server version in JSON format.
 

@@ -12,10 +12,13 @@ OneGraph's AuthGuardian JWT Integration with Hasura GraphQL engine
   :depth: 1
   :local:
 
+Introduction
+------------
+
 In this guide, we will walk through how to set up AuthGuardian JWT to work with the Hasura GraphQL engine.
 
 About AuthGuardian 
-^^^^^^^^^^^^^^^^^^
+------------------
 
 `AuthGuardian <https://www.onegraph.com/docs/auth_guardian.html>`__
 is a free service by `OneGraph <https://www.onegraph.com/>`__ that allows you to both add sign-on with dozens of services like GitHub, Twitch, Stripe, Salesforce, and more, and also to easily visually describe authentication and authorization rules for your app, API, or service.
@@ -23,14 +26,14 @@ is a free service by `OneGraph <https://www.onegraph.com/>`__ that allows you to
 It will generate JWTs compatible with any service that supports JWTs - like Hasura! And on top of that, AuthGuardian has built-in support for generating Hasura roles to make working with Hasura's permission system as easy as possible.
 
 Step 1: Create an account
-^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------
 
 Sign into `OneGraph <https://www.onegraph.com/>`__ with either GitHub or an email/password.
 
 On the left sidebar, chose "Auth Services" and then "AuthGuardian", and we're ready to start!
 
 Step 2: Add an auth rule
-^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------
 
 AuthGuardian works with two basic concepts: ``rules`` and ``effects``. 
 
@@ -53,7 +56,7 @@ The second concept, ``rules`` determines whether the ``effects`` are allowed to 
 Let's see how to use these ``rules`` and ``effects`` in action! 
 
 Option 1: Set Hasura ``user_id``
---------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Let's say you're using GitHub as the primary login for your Hasura app, and that you want to use their GitHub ``user_id`` as a primary key:
 
 - For the section "When the user on", select ``GitHub`` -> ``login status`` -> ``is true`` ("When this user is logged into GitHub")
@@ -65,7 +68,7 @@ Let's say you're using GitHub as the primary login for your Hasura app, and that
    :alt: Set an AuthGuardian JWT with a user id
 
 Option 2: Set the default Hasura role
--------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Next, you want to assign a *default* role for all users, even those who haven't logged in with GitHub yet.
 
 Add a new rule (the ``+`` button in the top-left), and fill it out:
@@ -83,7 +86,7 @@ Add a new rule (the ``+`` button in the top-left), and fill it out:
    Note that AuthGuardian knows that Hasura requires that the ``default role`` *also* appear in the list of ``x-hasura-allowed-roles``, and added it in both places automatically.
 
 Option 3: Allow additional Hasura roles
----------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Now, you want to restrict access to some data in Hasura so that only you and your teammates can read it. We'll use Hasura's permissions to restrict data to those who have an ``admin`` role, and use AuthGuardian's rules to set that role in the JWT to people who belong to your GitHub organization:
 
 - For the section "When the user is on", select ``GitHub`` -> ``is member of organization named`` -> ``<your org name, e.g. AcmeCo>`` ("When this user is a member of AcmeCo on GitHub")
@@ -95,7 +98,7 @@ Now, you want to restrict access to some data in Hasura so that only you and you
    :alt: Set an AuthGuardian JWT with additional roles
 
 Option 4: Set a session variable
---------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Hasura can use **session variables** for all sorts of :ref:`powerful cases <dynamic_session_variables>`. AuthGuardian also supports setting these in your JWT!
 
 Let's say we want to restrict access to some super-interesting data in our Hasura backend to users who have starred a particular GitHub repository:
@@ -122,7 +125,7 @@ Nice!
 
 
 Step 3: Generate Hasura's JWT config to securely verify your new tokens
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------------------------------------------------
 Next we'll configure Hasura to verify our new JWTs - don't worry, AuthGuardian also has built-in support for that!
 
 - On the left sidebar, click on "JWT Settings" and scroll down to "Configuration generator".
@@ -144,7 +147,7 @@ The generated config has the following structure:
    :alt: AuthGuardian lets you copy/paste the required JWT configuration for either Hasura or Hasura-on-Heroku
 
 Step 4: Test the config and tokens
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------
 When configuring your permissions in Hasura, it's useful to be able to quickly generate test tokens to make sure everything works as you expect.
 
 - Copy the JWT that you created in step 2.
@@ -161,5 +164,5 @@ When configuring your permissions in Hasura, it's useful to be able to quickly g
    :alt: Test AuthGuardian JWT
 
 Next Steps
-^^^^^^^^^^
+----------
 AuthGuardian supports much more, including the ability to eject your rules as a pair of GraphQL request and JavaScript function so you can customize the auth as necessary. To read more about it, please visit the `AuthGuardian docs <https://www.onegraph.com/docs/>`__.

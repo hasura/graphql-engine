@@ -12,6 +12,9 @@ Simple object queries
   :depth: 2
   :local:
 
+Introduction
+------------
+
 You can fetch a single node or multiple nodes of the same type using a simple object query.
 
 Fetch list of objects
