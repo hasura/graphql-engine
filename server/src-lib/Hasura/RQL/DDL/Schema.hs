@@ -37,12 +37,16 @@ module Hasura.RQL.DDL.Schema
 
 import           Hasura.Prelude
 
+import qualified Data.ByteString.Lazy           as LBS
 import qualified Data.Text                      as T
 import qualified Data.Text.Encoding             as TE
+import qualified Database.MySQL.Base            as My
 import qualified Database.PG.Query              as Q
 import qualified Database.PostgreSQL.LibPQ      as PQ
 import qualified Text.Regex.TDFA                as TDFA
 
+import           Control.Concurrent.MVar
+import           Control.Exception              (catch)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -104,7 +108,7 @@ isSchemaCacheBuildRequiredRunSQL RunSQL {..} =
         { TDFA.captureGroups = False }
         "\\balter\\b|\\bdrop\\b|\\breplace\\b|\\bcreate function\\b|\\bcomment on\\b")
 
-runRunSQL :: (MonadTx m, CacheRWM m, HasSQLGenCtx m) => RunSQL -> m EncJSON
+runRunSQL :: (MonadIO m, MonadTx m, CacheRWM m, HasSQLGenCtx m) => RunSQL -> m EncJSON
 runRunSQL q@RunSQL {..}
   -- see Note [Checking metadata consistency in run_sql]
   | isSchemaCacheBuildRequiredRunSQL q
@@ -112,9 +116,16 @@ runRunSQL q@RunSQL {..}
   | otherwise
   = execRawSQL rSql
   where
-    execRawSQL :: (MonadTx m) => Text -> m EncJSON
-    execRawSQL =
-      fmap (encJFromJValue @RunSQLRes) . liftTx . Q.multiQE rawSqlErrHandler . Q.fromText
+    execRawSQL :: (MonadTx m, MonadIO m) => Text -> m EncJSON
+    execRawSQL queryString = do
+      -- TMP TMP DO NOT SUBMIT THIS IS CURSED THIS FUNCTION IS NOT A PLACE OF HONOR
+      liftIO $ do
+        connection <- readMVar mySQLConnection
+        onJust connection $ \c ->
+          flip catch (print @My.ERRException) $ void $ My.execute_ c $ My.Query $ LBS.fromStrict $ TE.encodeUtf8 $ queryString
+      -- OKAY BACK TO NORMAL MOVE ALONG CITIZEN
+
+      fmap (encJFromJValue @RunSQLRes) . liftTx . Q.multiQE rawSqlErrHandler . Q.fromText $ queryString
       where
         rawSqlErrHandler txe =
           (err400 PostgresError "query execution failed") { qeInternal = Just $ toJSON txe }
