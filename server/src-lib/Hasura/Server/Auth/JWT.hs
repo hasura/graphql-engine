@@ -87,22 +87,86 @@ defaultClaimsNamespace :: Text
 defaultClaimsNamespace = "https://hasura.io/jwt/claims"
 
 data JWTClaimsMapValueG v
-  = JWTClaimsMapJSONPath !J.JSONPath
+  = JWTClaimsMapJSONPath !J.JSONPath !(Maybe v)
+  -- ^ JSONPath to the key in the claims map, in case
+  -- the key doesn't exist in the claims map then the default
+  -- value will be used (if provided)
   | JWTClaimsMapStatic !v
   deriving (Show,Eq,Functor,Foldable,Traversable)
 
-instance (J.FromJSON v) => J.FromJSON (JWTClaimsMapValueG v) where
-  parseJSON (J.Object obj) =
-    case Map.lookup "path" obj of
-      Just path ->
-        case path of
-          J.String path' -> either fail (pure . JWTClaimsMapJSONPath) $ parseJSONPath path'
-          _              -> fail "expected a string value for a JSON path"
-      Nothing -> fail "path containing the JSON path not present"
+instance (J.FromJSON [RoleName]) => J.FromJSON (JWTClaimsMapValueG [RoleName]) where
+  parseJSON (J.Object obj) = do
+    path <-
+      case Map.lookup "path" obj of
+        Just path ->
+          case path of
+            J.String path' -> either fail pure $ parseJSONPath path'
+            _              -> fail "expected a string value for a JSON path"
+        Nothing -> fail "path containing the JSON path not present"
+    defaultVal <-
+      case Map.lookup "default" obj of
+        Just def ->
+          case def of
+            J.Array arr -> do
+              pure $ flip traverse (toList arr) $ \d ->
+                case d of
+                  J.String s ->
+                    maybe (fail $ "invalid role name: " <> T.unpack s) pure $ mkRoleName s
+                  _          -> fail "expected a string value for a allowed_role value"
+            _ -> fail "expected array of strings for allowed_roles"
+        Nothing -> pure $ Nothing
+    pure $ JWTClaimsMapJSONPath path defaultVal
+  parseJSON v = JWTClaimsMapStatic <$> J.parseJSON v
+
+instance (J.FromJSON RoleName) => J.FromJSON (JWTClaimsMapValueG RoleName) where
+  parseJSON (J.Object obj) = do
+    path <-
+      case Map.lookup "path" obj of
+        Just path ->
+          case path of
+            J.String path' -> either fail pure $ parseJSONPath path'
+            _              -> fail "expected a string value for a JSON path"
+        Nothing -> fail "path containing the JSON path not present"
+    defaultVal <-
+      case Map.lookup "default" obj of
+        Just def ->
+          case def of
+            J.String s ->
+              maybe (fail $ "invalid role name" <> T.unpack s) (pure . Just) $ mkRoleName s
+            _          -> fail "expected a string value for default_role value"
+        Nothing -> pure $ Nothing
+    pure $ JWTClaimsMapJSONPath path defaultVal
+  parseJSON v = JWTClaimsMapStatic <$> J.parseJSON v
+
+instance (J.FromJSON Text) => J.FromJSON (JWTClaimsMapValueG Text) where
+  parseJSON (J.Object obj) = do
+    path <-
+      case Map.lookup "path" obj of
+        Just path ->
+          case path of
+            J.String path' -> either fail pure $ parseJSONPath path'
+            _              -> fail "expected a string value for a JSON path"
+        Nothing -> fail "path containing the JSON path not present"
+    defaultVal <-
+      case Map.lookup "default" obj of
+        Just def ->
+          case def of
+            J.String s -> pure $ Just s
+            _          -> fail "expected a string value for claims map value"
+        Nothing -> pure $ Nothing
+    pure $ JWTClaimsMapJSONPath path defaultVal
   parseJSON v = JWTClaimsMapStatic <$> J.parseJSON v
 
 instance (J.ToJSON v) => J.ToJSON (JWTClaimsMapValueG v) where
-  toJSON (JWTClaimsMapJSONPath jsonPath) = J.String . T.pack $ encodeJSONPath jsonPath
+  toJSON (JWTClaimsMapJSONPath jsonPath Nothing) =
+    J.object $
+    [ "path"    J..= encodeJSONPath jsonPath
+    ]
+  toJSON (JWTClaimsMapJSONPath jsonPath (Just defVal)) =
+    J.object $
+    [ "path"    J..= encodeJSONPath jsonPath
+    , "default" J..= defVal
+    ]
   toJSON (JWTClaimsMapStatic v)          = J.toJSON v
 
 type JWTClaimsMapDefaultRole = JWTClaimsMapValueG RoleName
@@ -127,19 +191,19 @@ instance J.ToJSON JWTClaimsMap where
     <> map (\(var, val) -> (sessionVariableToText var,J.toJSON val)) (Map.toList customClaims)
 
 instance J.FromJSON JWTClaimsMap where
-  parseJSON v = do
-    sessionVariablesMap <- J.parseJSON v
-
+  parseJSON (J.Object obj) = do
     let withNotFoundError sessionVariable =
           let errorMsg = T.unpack $
                 sessionVariableToText sessionVariable <> " is expected but not found"
-          in maybe (fail errorMsg) pure $ Map.lookup sessionVariable sessionVariablesMap
+          in maybe (fail errorMsg) pure $ Map.lookup (sessionVariableToText sessionVariable) obj
 
-    allowedRoles <- withNotFoundError allowedRolesClaim >>= traverse J.parseJSON
-    defaultRole <- withNotFoundError defaultRoleClaim >>= traverse J.parseJSON
-    let filteredClaims = Map.delete allowedRolesClaim $ Map.delete defaultRoleClaim sessionVariablesMap
-    customClaims <- flip Map.traverseWithKey filteredClaims $ const $ traverse J.parseJSON
+    allowedRoles <- withNotFoundError allowedRolesClaim  >>= J.parseJSON
+    defaultRole <- withNotFoundError defaultRoleClaim  >>= J.parseJSON
+    let filteredClaims = Map.delete allowedRolesClaim $ Map.delete defaultRoleClaim
+                          $ Map.fromList $ map (\(k, v) -> (mkSessionVariable k, v)) $ Map.toList obj
+    customClaims <- flip Map.traverseWithKey filteredClaims $ const $ J.parseJSON
     pure $ JWTClaimsMap defaultRole allowedRoles customClaims
+  parseJSON _ = fail "expected claims map to be an object"
 
 data JWTNamespace
   = ClaimNsPath JSONPath
@@ -423,13 +487,13 @@ parseClaimsObject unregisteredClaims jcxClaims =
           claimsObjValue = J.Object unregisteredClaims
 
       allowedRoles <- case allowedRolesClaimsMap of
-        JWTClaimsMapJSONPath allowedRolesJsonPath ->
-          parseAllowedRolesClaim $ iResultToMaybe $ executeJSONPath allowedRolesJsonPath claimsObjValue
+        JWTClaimsMapJSONPath allowedRolesJsonPath defaultVal ->
+          parseAllowedRolesClaim defaultVal $ iResultToMaybe $ executeJSONPath allowedRolesJsonPath claimsObjValue
         JWTClaimsMapStatic staticAllowedRoles -> pure staticAllowedRoles
 
       defaultRole <- case defaultRoleClaimsMap of
-        JWTClaimsMapJSONPath defaultRoleJsonPath ->
-          parseDefaultRoleClaim $ iResultToMaybe $
+        JWTClaimsMapJSONPath defaultRoleJsonPath defaultVal ->
+          parseDefaultRoleClaim defaultVal $ iResultToMaybe $
           executeJSONPath defaultRoleJsonPath claimsObjValue
         JWTClaimsMapStatic staticDefaultRole -> pure staticDefaultRole
 
@@ -437,8 +501,8 @@ parseClaimsObject unregisteredClaims jcxClaims =
         let throwClaimErr = throw400 JWTInvalidClaims $ "JWT claim from claims_map, "
                             <> sessionVariableToText k <> " not found"
         case claimObj of
-          JWTClaimsMapJSONPath path ->
-            maybe throwClaimErr pure $ iResultToMaybe $ executeJSONPath path claimsObjValue
+          JWTClaimsMapJSONPath path defaultVal ->
+            maybe (onNothing (J.String <$> defaultVal) throwClaimErr) pure $ iResultToMaybe $ executeJSONPath path claimsObjValue
           JWTClaimsMapStatic claimStaticValue -> pure $ J.String claimStaticValue
 
       otherClaims <- toClaimsTextMap otherClaimsObject
@@ -452,13 +516,17 @@ parseClaimsObject unregisteredClaims jcxClaims =
       pure obj
 
   where
-    parseAllowedRolesClaim = \case
-      Nothing -> throw400 JWTRoleClaimMissing $ "JWT claim does not contain " <> sessionVariableToText allowedRolesClaim
+    parseAllowedRolesClaim defaultVal = \case
+      Nothing ->
+        onNothing defaultVal $
+        throw400 JWTRoleClaimMissing $ "JWT claim does not contain " <> sessionVariableToText allowedRolesClaim
       Just v -> parseJwtClaim v $ "invalid " <> sessionVariableToText allowedRolesClaim <>
                 "; should be a list of roles"
 
-    parseDefaultRoleClaim = \case
-      Nothing -> throw400 JWTRoleClaimMissing $ "JWT claim does not contain " <> sessionVariableToText defaultRoleClaim
+    parseDefaultRoleClaim defaultVal = \case
+      Nothing ->
+        onNothing defaultVal $
+        throw400 JWTRoleClaimMissing $ "JWT claim does not contain " <> sessionVariableToText defaultRoleClaim
       Just v -> parseJwtClaim v $ "invalid " <> sessionVariableToText defaultRoleClaim <>
                 "; should be a role"
 
