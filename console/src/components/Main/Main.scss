@@ -1421,7 +1421,7 @@
 
 .viewMoreNotifications {
   width: 100%;
-  background-color: white;
+  background-color: #f8f8f8;
   border: none;
   outline: none;
   font-size: medium;
@@ -1429,7 +1429,7 @@
   border-radius: 0;
   &:hover {
     text-decoration: underline;
-    color: rgb(233, 44, 76);
+    background-color: white;
   }
 }
 
