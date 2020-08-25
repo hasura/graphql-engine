@@ -78,13 +78,14 @@ const Update: React.FC<UpdateProps> = ({
         }
       />
       <Flex width="100%">
-        <Flex px={25} py={2} width="80%" flexDirection="column">
+        <Flex pl={32} pr={25} py={2} width="80%" flexDirection="column">
           <StyledText
             color="#717780"
             fontSize="10px"
             fontWeight="bold"
             lineHeight="12px"
             margin="0"
+            paddingBottom="4px"
           >
             {props?.start_date ? getDateString(props.start_date) : null}
           </StyledText>
