@@ -105,7 +105,6 @@ Here are a couple of examples:
 - Query all rows in the ``article`` table
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       article {
@@ -145,7 +144,6 @@ Here are a couple of examples:
 - Insert data in the ``author`` table
 
 .. graphiql::
-  :view_only:
   :query:
     mutation add_author {
       insert_author(

@@ -62,7 +62,6 @@ row object or ``null`` if the row does not exist.
 **Example:** Delete an article where ``id`` is ``1``:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation delete_an_object {
       delete_article_by_pk (
@@ -87,7 +86,6 @@ row object or ``null`` if the row does not exist.
 **Example:** Delete a non-existent article:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation delete_an_object {
       delete_article_by_pk (
@@ -120,7 +118,6 @@ Delete objects based on an their fields
 **Example:** Delete all articles rated less than 3:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation delete_low_rated_articles {
       delete_article(
@@ -144,7 +141,6 @@ Delete objects based on nested objects' fields
 **Example:** Delete all articles written by a particular author:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation delete_authors_articles {
       delete_article(
@@ -171,7 +167,6 @@ evaluates to ``true`` for all objects.
 **Example:** Delete all articles:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation delete_all_articles {
       delete_article (

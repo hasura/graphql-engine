@@ -21,7 +21,6 @@ sort them.
 of publication:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       author {

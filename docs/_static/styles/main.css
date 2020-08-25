@@ -14,7 +14,7 @@ h1, h2, h3, h4, h5, h6, dl dt, dl dd {
 
 body, p, #docs-content, #sidebar, #sidebar a,
 tt, code, kbd, pre, pre.literal-block, samp,
-dl dt, dl dd, .graphiql .graphiql-container .CodeMirror {
+dl dt, dl dd {
   font-size: 16px;
 }
 
@@ -760,87 +760,60 @@ article ol ol {
 
 /*** Sidebar END ***/
 
-/*** GraphiQL overrides ***/
+/*** GraphiQL ***/
 
 .graphiql {
+  display: flex;
   margin-bottom: 20px;
-}
-
-.graphiql .query,
-.graphiql .response,
-.graphiql .variables {
-  display: none;
-}
-
-.graphiql .graphiql-container {
-  min-height: 325px;
   border: 1px solid #eee;
-  -webkit-box-shadow: -1px 2px 20px 2px rgba(217,217,217,1);
-  -moz-box-shadow: -1px 2px 20px 2px rgba(217,217,217,1);
   box-shadow: -1px 2px 20px 2px rgba(217,217,217,1);
 }
 
-.graphiql.with-vars .graphiql-container {
-  min-height: 375px;
+.graphiql-input, .graphiql-output {
+  flex: 1;
+  width: 50%;
+  max-width: 564px;
 }
 
-.graphiql .topBarWrap {
-  height: 0;
-}
-
-.graphiql .execute-button-wrap {
-  z-index: 3;
-  top: -2px;
-  left: calc(50% - 50px);
-  margin: 0 !important;
-  height: 28px !important;
-}
-
-.graphiql .execute-button {
-  height: 28px !important;
-  width: 28px !important;
-}
-
-.graphiql .execute-button svg {
-  position: relative;
-  top: -3px;
-  left: -3px;
-}
-
-.graphiql .CodeMirror pre {
-  padding: 0 15px;
-}
-
-.graphiql .CodeMirror-lines {
-  padding: 15px 0 !important;
-}
-
-.graphiql .CodeMirror-gutter-wrapper,
-.graphiql .CodeMirror-gutters {
-  display: none;
-}
-
-.graphiql .title,
-.graphiql .docExplorerShow,
-.graphiql .toolbar {
-  display: none !important;
-}
-
-.graphiql:not(.with-vars) .variable-editor {
-  display: none !important;
-}
-
-.graphiql .variable-editor .variable-editor-title {
-  line-height: 18px;
-  font-size: 16px;
+.graphiql-title {
+  font-size: 12px;
   padding: 2px 10px;
+  background: #eee;
+  border-bottom: 1px solid #d6d6d6;
+  border-top: 1px solid #e0e0e0;
+  color: #777;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 1px;
 }
 
-.graphiql.view-only .execute-button {
-  display: none !important;
+.graphiql .highlight {
+  margin: 0;
+  background: #fff;
+  border: none;
 }
 
-/*** GraphiQL overrides END ***/
+.graphiql-section { 
+  overflow: scroll;
+  max-height: 438px;
+  padding-right: 10px;
+}
+
+.graphiql.with-vars .graphiql-query,
+.graphiql.with-vars .graphiql-vars {
+  max-height: 210px;
+}
+
+.graphiql-output {
+  border-left: 1px solid #e0e0e0;
+}
+
+.graphiql-output,
+.graphiql-output .highlight {
+  background: #f6f7f8;
+}
+
+/*** GraphiQL END ***/
 
 /*** Algolia docsearch overrides ***/
 

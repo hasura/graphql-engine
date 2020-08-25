@@ -86,7 +86,6 @@ returns ``SETOF article``. Assuming the ``article`` table is being tracked, you 
 as follows:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       search_articles(
@@ -151,7 +150,6 @@ And finally create the custom SQL function in the Hasura console:
 Assuming the ``property`` table is being tracked, you can use the custom function as follows:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       search_property(
@@ -259,7 +257,6 @@ less than ``distance_kms`` kilometers away from the user's location as a JSON fi
 function in our GraphQL API as follows:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       search_landmarks_near_user(
@@ -368,7 +365,6 @@ definition can be updated as follows:
 Search nearby landmarks with ``distance_kms`` default value which is 2 kms:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       search_landmarks_near_user(
@@ -436,7 +432,6 @@ following example.
 
 
 .. graphiql::
-  :view_only:
   :query:
      query {
        get_session_role {

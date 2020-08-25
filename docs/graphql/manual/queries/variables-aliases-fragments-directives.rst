@@ -20,7 +20,6 @@ In order to make a query re-usable, it can be made dynamic by using variables.
 **Example:** Fetch an author by their ``author_id``:
 
 .. graphiql::
-  :view_only:
   :query:
     query getArticles($author_id: Int!) {
       articles(
@@ -63,7 +62,6 @@ fetching the same type of objects with different arguments in the same query.
 **Example:** First, fetch all articles. Second, fetch the two top-rated articles. Third, fetch the worst-rated article:
 
 .. graphiql::
-  :view_only:
   :query:
     query getArticles {
       articles {
@@ -130,7 +128,6 @@ can then be used to represent the defined set.
 **Example:** Creating a fragment for a set of ``article`` fields (``id`` and ``title``) and using it in a query:
 
 .. graphiql::
-  :view_only:
   :query:
     fragment articleFields on articles {
       id
@@ -191,7 +188,6 @@ With ``@include(if: Boolean)``, it is possible to include a field in the query r
 **Example:** The query result includes the field ``publisher``, as ``$with_publisher`` is set to ``true``:
 
 .. graphiql::
-  :view_only:
   :query:
     query getArticles($with_publisher: Boolean!) {
       articles {
@@ -226,7 +222,6 @@ With ``@include(if: Boolean)``, it is possible to include a field in the query r
 **Example:** The query result doesn't include the field ``publisher``, as ``$with_publisher`` is set to ``false``:
 
 .. graphiql::
-  :view_only:
   :query:
     query getArticles($with_publisher: Boolean!) {
       articles {
@@ -263,7 +258,6 @@ With ``@skip(if: Boolean)``, it is possible to exclude (skip) a field in the que
 **Example:** The query result doesn't include the field ``publisher``, as ``$with_publisher`` is set to ``true``:
 
 .. graphiql::
-  :view_only:
   :query:
     query getArticles($with_publisher: Boolean!) {
       articles {
@@ -295,7 +289,6 @@ With ``@skip(if: Boolean)``, it is possible to exclude (skip) a field in the que
 **Example:** The query result includes the field ``publisher``, as ``$with_publisher`` is set to ``false``:
 
 .. graphiql::
-  :view_only:
   :query:
     query getArticles($with_publisher: Boolean!) {
       articles {

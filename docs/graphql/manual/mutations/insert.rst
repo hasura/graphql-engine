@@ -57,7 +57,6 @@ Insert a single object
 **Example:** Insert a new ``article`` object and return the inserted article object in the response:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation insert_single_article {
       insert_article_one(
@@ -84,7 +83,6 @@ Insert a single object
 Using variables:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation insert_single_article($object: article_insert_input! ) {
       insert_article_one(object: $object) {
@@ -124,7 +122,6 @@ Insert multiple objects of the same type in the same mutation
 **Example:** Insert 2 new ``article`` objects and return both the article objects in the response:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation insert_multiple_articles {
       insert_article(
@@ -169,7 +166,6 @@ Insert multiple objects of the same type in the same mutation
 Using variables:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation insert_multiple_articles($objects: [article_insert_input!]! ) {
       insert_article(objects: $objects) {
@@ -219,7 +215,6 @@ Insert an object and get a nested object in response
 **Example:** Insert a new ``article`` object and return the inserted article object with its author in the response:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation insert_article {
       insert_article(
@@ -274,7 +269,6 @@ Let's say an ``author`` has an ``object relationship`` called ``address`` to the
 **Example:** Insert an ``author`` along with their ``address`` and a few ``articles``.
 
 .. graphiql::
-  :view_only:
   :query:
     mutation insertData {
       insert_authors
@@ -375,7 +369,6 @@ a bridge table ``article_tags``.
 **Example:** Insert an ``article`` along with a few ``tags``.
 
 .. graphiql::
-  :view_only:
   :query:
     mutation insertArticle {
       insert_articles(objects: [
@@ -483,7 +476,6 @@ Insert an object with a JSONB field
 **Example:** Insert a new ``author`` object with a JSONB ``address`` field:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation insert_author($address: jsonb) {
       insert_author (
@@ -542,7 +534,6 @@ To insert fields of array types, you currently have to pass them as a `Postgres 
 **Example:** Insert a new ``author`` with a text array ``emails`` field:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation insert_author {
       insert_author (
@@ -581,7 +572,6 @@ To insert fields of array types, you currently have to pass them as a `Postgres 
 Using variables:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation insert_author($emails: _text) {
       insert_author (
@@ -629,7 +619,6 @@ To set a field to its ``default`` value, just omit it from the input object, irr
 **Example:** If the default value of ``id`` is set to auto-incrementing integer, there's no need to pass the ``id`` field to the input object:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation insert_article_with_def_id {
       insert_article(
@@ -672,7 +661,6 @@ just omit it from the input object.
 or pass it as ``null``:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation insert_author_with_null_age {
       insert_author(
@@ -707,7 +695,6 @@ or pass it as ``null``:
 OR
 
 .. graphiql::
-  :view_only:
   :query:
     mutation insert_author_with_null_age {
       insert_author(

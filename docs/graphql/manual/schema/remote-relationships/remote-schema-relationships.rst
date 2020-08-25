@@ -139,7 +139,6 @@ Step 3: Explore with GraphiQL
 In the GraphiQL tab, test out your remote schema relationship.
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       users {

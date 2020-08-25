@@ -45,7 +45,6 @@ responses.
 query operations in one request:
 
 .. graphiql::
-  :view_only:
   :query:
     query first {
       author(where: {id: {_eq: 1}}) {

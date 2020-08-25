@@ -4,7 +4,7 @@
   {% set is_landing_page = true %}
 {%- endif %}
 
-{% set css_files = css_files + ['_static/graphiql/graphiql.css', '_static/styles/main.css'] %}
+{% set css_files = css_files + ['_static/styles/main.css'] %}
 
 {%- if is_landing_page %}
   {% set css_files = css_files + ['_static/styles/landing.css'] %}
@@ -14,10 +14,7 @@
 {# Sphinx seems to have a jquery dependency. They have an open PR to remove it. #}
 {# https://github.com/sphinx-doc/sphinx/issues/7405 #}
 
-{# TODO: replace react & graphiql imports with a custom directive #}
-{# b/c we're not using any graphiql functionality, only styles #}
-
-{% set deferred_script_files = ['_static/react/react.min.js', '_static/react/react-dom.min.js', '_static/graphiql/graphiql.min.js', '_static/scripts/hdocs.js', '_static/scripts/newsletter.js'] %}
+{% set deferred_script_files = ['_static/scripts/hdocs.js', '_static/scripts/newsletter.js'] %}
 
 {%- macro secondnav() %}
   {%- if prev %}
@@ -343,7 +340,6 @@
 
   <script type="text/javascript">
     const HDOCS_BASE_DOMAIN = "{{ BASE_DOMAIN }}";
-    const HDOCS_GRAPHIQL_DEFAULT_ENDPOINT = "{{ GRAPHIQL_DEFAULT_ENDPOINT }}";
 
     document.addEventListener('DOMContentLoaded', function () {
       hdocs && hdocs.setup();

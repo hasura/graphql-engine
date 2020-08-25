@@ -47,7 +47,6 @@ Let's say we have the following database schema:
 Now we can use the following subscription to fetch the latest location of a vehicle to display it on a map:
 
 .. graphiql::
-  :view_only:
   :query:
     # $vehicleId = 3
     subscription getLocation($vehicleId: Int!) {
@@ -115,7 +114,6 @@ Let's say we have the following database schema:
 Now we can use the following subscription to display the latest messages in a chatroom:
 
 .. graphiql::
-  :view_only:
   :query:
     subscription getMessages {
       message(order_by: {timestamp: desc}) {
@@ -230,7 +228,6 @@ and the ``poll`` and ``option`` tables using the ``poll_id`` and ``option_id`` f
 Now we can use the following subscription to display the latest poll result:
 
 .. graphiql::
-  :view_only:
   :query:
     # $pollId = 1
     subscription getResult($pollId: Int!) {

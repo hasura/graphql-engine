@@ -1,49 +1,62 @@
 import fett
 from docutils import statemachine
 from docutils.utils.error_reporting import ErrorString
-from sphinx.util.compat import Directive
-
+from docutils.parsers.rst import Directive
 
 class GraphiQLDirective(Directive):
     has_content = False
     required_arguments = 0
     optional_arguments = 0
     final_argument_whitespace = True
-    option_spec = {"query": str, "response": str, "variables": str, "endpoint": str, "view_only": str}
+    option_spec = {"query": str, "response": str, "variables": str}
 
     GRAPHIQL_TEMPLATE = '''
 .. raw:: html
 
-   <div class="graphiql {{ if view_only }}view-only{{end}} {{ if variables }}with-vars{{end}}">
+   <div class="graphiql{{ if variables }} with-vars{{end}}">
+
+   <div class="graphiql-input">
    
 .. code-block:: graphql
+   :class: graphiql-section graphiql-query
 
    {{ query }}
 
 {{ if variables }}
-   
-with variables:
+
+.. raw:: html
+
+   <div class="graphiql-title">Variables</div>
 
 .. code-block:: json
+   :class: graphiql-section graphiql-vars
 
    {{ variables }}
    
 {{ end }}
+
+.. raw:: html
+    
+    </div>
+
+{{ if response }}
+   
+.. raw:: html
+
+   <div class="graphiql-output">
+
+.. code-block:: json
+   :class: graphiql-section graphiql-response
+
+   {{ response }}
+
+.. raw:: html
+    
+    </div>
+   
+{{ end }}
  
 .. raw:: html
-   
-   <div class="endpoint">
-   {{ endpoint }}
-   </div>
-   <div class="query">
-   {{ query }}
-   </div>
-   <div class="response">
-   {{ response }}
-   </div>
-   <div class="variables">
-   {{ variables }}
-   </div>
    
    </div>
 '''
@@ -60,7 +73,6 @@ with variables:
         self.state_machine.insert_input(rendered_lines, '')
 
         return []
-
 
 def setup(app):
     app.add_directive('graphiql', GraphiQLDirective)

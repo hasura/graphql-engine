@@ -48,7 +48,6 @@ up, we can query the aggregate data in ``author_average_rating`` as with any reg
 Fetch a list of authors along with their average article rating:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       author {

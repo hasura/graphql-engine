@@ -59,7 +59,6 @@ We can now run a nested object query that is based on this ``object relationship
 Fetch a list of articles and each article's author:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       article {
@@ -120,7 +119,6 @@ We can now run a nested object query that is based on this ``array relationship`
 Fetch a list of authors and a nested list of each author's articles:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       author {
@@ -230,7 +228,6 @@ We can now run a nested object query that is based on this ``object relationship
 Fetch a list of authors with the average rating of their articles:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       author {

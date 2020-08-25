@@ -32,7 +32,6 @@ Fetch aggregated data of an object
 **Example:** Fetch a list of articles with aggregated data of their rating:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       article_aggregate {
@@ -137,7 +136,6 @@ and articles.
 **Example:** Fetch author with id "1" and a nested list of articles with aggregated data of their rating:
 
 .. graphiql::
-  :view_only:
   :query:
     query {
       author (where: {id: {_eq: 1}}) {

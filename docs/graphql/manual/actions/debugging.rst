@@ -23,7 +23,6 @@ of the webhook calls in the ``extensions.internal`` field.
 **For example**:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation {
         create_user(email: "foo@bar.com", name: "Foo"){

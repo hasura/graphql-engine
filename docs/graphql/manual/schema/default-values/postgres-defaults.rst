@@ -57,7 +57,6 @@ Now if you do not pass the ``created_at`` field value while running an insert mu
 value will be set automatically by Postgres.
 
 .. graphiql::
-  :view_only:
   :query:
     mutation {
       insert_article(

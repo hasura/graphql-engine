@@ -73,7 +73,6 @@ The ``update_columns`` field can be used to specify which columns to update in c
 violated, update the ``content`` column of the existing article:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation upsert_article {
       insert_article (
@@ -126,7 +125,6 @@ violated, update the ``published_on`` columns specified in ``update_columns`` on
 value is lesser than the new value:
 
 .. graphiql::
-  :view_only:
   :query:
     mutation upsert_article {
       insert_article (
@@ -174,7 +172,6 @@ If ``update_columns`` is an **empty array** then on conflict the changes are ign
 ignore the request.
 
 .. graphiql::
-  :view_only:
   :query:
     mutation upsert_author {
       insert_author(
@@ -208,7 +205,6 @@ You can specify the ``on_conflict`` clause while inserting nested objects:
 **Example**: 
 
 .. graphiql::
-  :view_only:
   :query:
     mutation upsert_author_article {
       insert_author(
