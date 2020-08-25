@@ -110,6 +110,7 @@ library
                      , lifted-base
                      , pg-client
                      , mysql-haskell
+                     , io-streams
                      , validation
                      , text
                      , text-builder >= 0.6

@@ -13,7 +13,9 @@ module Hasura.GraphQL.Transport.HTTP
   , GQLQueryText(..)
   ) where
 
+import           Control.Concurrent.MVar
 import           Control.Monad.Morph                    (hoist)
+import           Data.Maybe                             (fromJust)
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
@@ -32,6 +34,7 @@ import           Hasura.Tracing                         (MonadTrace, TraceT, tra
 import qualified Data.Aeson                             as J
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
+import qualified Database.MySQL.Base                    as My
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.Query           as EQ
@@ -41,6 +44,10 @@ import qualified Hasura.Tracing                         as Tracing
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
+import qualified System.IO.Streams.List                 as IOSL
+
+-- DO NOT SUBMIT
+import qualified Debug.Trace                            as UGLY
 
 
 class Monad m => MonadExecuteQuery m where
@@ -103,10 +110,10 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             (telemTimeIO, telemQueryType, respHdrs, resp) <-
               runQueryDB reqId (reqUnparsed,reqParsed) asts userInfo txGenSql
             return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs))
-          E.ExecStepMySQL txGenSql -> do
-            (telemTimeIO, telemQueryType, respHdrs, resp) <-
-              runQueryDB reqId (reqUnparsed,reqParsed) asts userInfo txGenSql
-            return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs))
+          E.ExecStepMySQL queryString -> liftIO $ do
+            connection <- fromJust <$> readMVar mySQLConnection
+            result <- IOSL.toList . snd =<< My.query_ connection (My.Query queryString)
+            pure $ UGLY.traceShow result $ (telemCacheHit, Telem.Local, (undefined, undefined, HttpResponse undefined []))
           E.ExecStepRemote (rsi, opDef, _varValsM) ->
             runRemoteGQ telemCacheHit rsi opDef
           E.ExecStepRaw (name, json) -> do

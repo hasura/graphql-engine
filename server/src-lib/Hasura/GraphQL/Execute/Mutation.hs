@@ -114,9 +114,9 @@ convertMutationRootField
   -> MutationRootField UnpreparedValue
   -> m (Either (tx EncJSON, HTTP.ResponseHeaders) RemoteField)
 convertMutationRootField env logger userInfo manager reqHeaders stringifyNum = \case
-  RFDB _ (MDBInsert s) -> noResponseHeaders =<< convertInsert env userSession rjCtx s stringifyNum
-  RFDB _ (MDBUpdate s) -> noResponseHeaders =<< convertUpdate env userSession rjCtx s stringifyNum
-  RFDB _ (MDBDelete s) -> noResponseHeaders =<< convertDelete env userSession rjCtx s stringifyNum
+  RFPostgres (MDBInsert s) -> noResponseHeaders =<< convertInsert env userSession rjCtx s stringifyNum
+  RFPostgres (MDBUpdate s) -> noResponseHeaders =<< convertUpdate env userSession rjCtx s stringifyNum
+  RFPostgres (MDBDelete s) -> noResponseHeaders =<< convertDelete env userSession rjCtx s stringifyNum
   RFRemote remote      -> pure $ Right remote
   RFAction (AMSync s)  -> Left . (_aerTransaction &&& _aerHeaders) <$> resolveActionExecution env logger userInfo s actionExecContext
   RFAction (AMAsync s) -> noResponseHeaders =<< resolveActionMutationAsync s reqHeaders userSession
@@ -150,7 +150,7 @@ convertMutationSelectionSet
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
-  -> m (ExecutionPlan (tx EncJSON, HTTP.ResponseHeaders) RemoteCall (G.Name, J.Value))
+  -> m (ExecutionPlan (tx EncJSON, HTTP.ResponseHeaders) () RemoteCall (G.Name, J.Value))
 convertMutationSelectionSet env logger gqlContext sqlGenCtx userInfo manager reqHeaders fields varDefs varValsM = do
   mutationParser <- onNothing (gqlMutationParser gqlContext) $
     throw400 ValidationFailed "no mutations exist"

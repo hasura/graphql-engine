@@ -253,7 +253,9 @@ query' dataSource allTables allFunctions allRemotes allActions nonObjectCustomTy
   pure $ (concat . catMaybes) (tableSelectExpParsers <> functionSelectExpParsers <> toRemoteFieldParser allRemotes)
          <> catMaybes actionParsers
   where
-    rfdb = RFDB dataSource
+    rfdb = case dataSource of
+      PostgresDB -> RFPostgres
+      MySQLDB    -> RFMySQL
 
     requiredFieldParser :: (a -> b) -> m (P.FieldParser n a) -> m (Maybe (P.FieldParser n b))
     requiredFieldParser f = fmap $ Just . fmap f
@@ -298,7 +300,7 @@ relayQuery' allTables allFunctions = do
                       <<> " which returns " <>> returnTable
       lift $ selectFunctionConnection function fieldName fieldDesc pkeyColumns selectPerms
 
-  pure $ map ((RFDB PostgresDB . QDBConnection) <$>) $ catMaybes $
+  pure $ map ((RFPostgres . QDBConnection) <$>) $ catMaybes $
          tableConnectionSelectParsers <> functionConnectionSelectParsers
 
 -- | Parse query-type GraphQL requests without introspection
@@ -437,7 +439,7 @@ relayWithIntrospection
   -> [FunctionInfo]
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 relayWithIntrospection dataSource allTables allFunctions = do
-  nodeFP <- fmap (RFDB dataSource . QDBPrimaryKey) <$> nodeField
+  nodeFP <- fmap (RFPostgres . QDBPrimaryKey) <$> nodeField
   basicQueryFP <- relayQuery' allTables allFunctions
   mutationP <- mutation dataSource allTables [] [] mempty
   let relayQueryFP = nodeFP:basicQueryFP
@@ -522,7 +524,7 @@ mutation dataSource allTables allRemotes allActions nonObjectCustomTypes = do
         -- select permissions
         insertOne <- for selectPerms \selPerms ->
           insertOneIntoTable table (fromMaybe insertOneName $ _tcrfInsertOne customRootFields) (Just insertOneDesc) insertPerms selPerms (_permUpd permissions)
-        pure $ fmap (RFDB dataSource . MDBInsert) insert : maybe [] (pure . fmap (RFDB dataSource . MDBInsert)) insertOne
+        pure $ fmap (RFPostgres . MDBInsert) insert : maybe [] (pure . fmap (RFPostgres . MDBInsert)) insertOne
 
       updates <- fmap join $ whenMaybe (isMutable viIsUpdatable viewInfo) $ for (_permUpd permissions) \updatePerms -> do
         let updateName = $$(G.litName "update_") <> displayName
@@ -535,7 +537,7 @@ mutation dataSource allTables allRemotes allActions nonObjectCustomTypes = do
         -- them, which at the very least requires select permissions
         updateByPk <- join <$> for selectPerms
           (updateTableByPk table (fromMaybe updateByPkName $ _tcrfUpdateByPk customRootFields) (Just updateByPkDesc) updatePerms)
-        pure $ fmap (RFDB dataSource . MDBUpdate) <$> catMaybes [update, updateByPk]
+        pure $ fmap (RFPostgres . MDBUpdate) <$> catMaybes [update, updateByPk]
 
       deletes <- fmap join $ whenMaybe (isMutable viIsDeletable viewInfo) $ for (_permDel permissions) \deletePerms -> do
         let deleteName = $$(G.litName "delete_") <> displayName
@@ -547,7 +549,7 @@ mutation dataSource allTables allRemotes allActions nonObjectCustomTypes = do
         -- ditto
         deleteByPk <- join <$> for selectPerms
           (deleteFromTableByPk table (fromMaybe deleteByPkName $ _tcrfDeleteByPk customRootFields) (Just deleteByPkDesc) deletePerms)
-        pure $ fmap (RFDB dataSource . MDBDelete) delete : maybe [] (pure . fmap (RFDB dataSource . MDBDelete)) deleteByPk
+        pure $ fmap (RFPostgres . MDBDelete) delete : maybe [] (pure . fmap (RFPostgres . MDBDelete)) deleteByPk
 
       pure $ concat $ catMaybes [inserts, updates, deletes]
 

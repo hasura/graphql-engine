@@ -6,6 +6,7 @@ module Hasura.GraphQL.Context
   , ParserFn
   , RootField(..)
   , traverseDB
+  , traverseMySQL
   , traverseAction
   , RemoteField
   , QueryDB(..)
@@ -59,30 +60,45 @@ type ParserFn a
   =  G.SelectionSet G.NoFragments Variable
   -> Either (NESeq ParseError) (a, QueryReusability)
 
-data RootField db remote action raw
-  = RFDB DataSource db
+data RootField pgdb mydb remote action raw
+  = RFPostgres pgdb
+  | RFMySQL mydb
   | RFRemote remote
   | RFAction action
   | RFRaw raw
 
-traverseDB :: forall db db' remote action raw f
+traverseDB :: forall pgdb pgdb' mydb remote action raw f
         . Applicative f
-       => (db -> f db')
-       -> RootField db remote action raw
-       -> f (RootField db' remote action raw)
+       => (pgdb -> f pgdb')
+       -> RootField pgdb mydb remote action raw
+       -> f (RootField pgdb' mydb remote action raw)
 traverseDB f = \case
-  RFDB s x -> RFDB s <$> f x
+  RFPostgres x -> RFPostgres <$> f x
+  RFMySQL x  -> pure $ RFMySQL x
   RFRemote x -> pure $ RFRemote x
   RFAction x -> pure $ RFAction x
   RFRaw x -> pure $ RFRaw x
 
-traverseAction :: forall db remote action action' raw f
+traverseMySQL :: forall pgdb mydb mydb' remote action raw f
+        . Applicative f
+       => (mydb -> f mydb')
+       -> RootField pgdb mydb remote action raw
+       -> f (RootField pgdb mydb' remote action raw)
+traverseMySQL f = \case
+  RFMySQL x  -> RFMySQL <$> f x
+  RFPostgres x -> pure $ RFPostgres x
+  RFRemote x -> pure $ RFRemote x
+  RFAction x -> pure $ RFAction x
+  RFRaw x -> pure $ RFRaw x
+
+traverseAction :: forall pgdb mydb remote action action' raw f
         . Applicative f
        => (action -> f action')
-       -> RootField db remote action raw
-       -> f (RootField db remote action' raw)
+       -> RootField pgdb mydb remote action raw
+       -> f (RootField pgdb mydb remote action' raw)
 traverseAction f = \case
-  RFDB s x -> pure $ RFDB s x
+  RFPostgres x -> pure $ RFPostgres x
+  RFMySQL    x -> pure $ RFMySQL x
   RFRemote x -> pure $ RFRemote x
   RFAction x -> RFAction <$> f x
   RFRaw x -> pure $ RFRaw x
@@ -99,7 +115,7 @@ data ActionQuery v
 
 type RemoteField = (RQL.RemoteSchemaInfo, G.Field G.NoFragments Variable)
 
-type QueryRootField v = RootField (QueryDB v) RemoteField (ActionQuery v) J.Value
+type QueryRootField v = RootField (QueryDB v) (QueryDB v) RemoteField (ActionQuery v) J.Value
 
 data MutationDB v
   = MDBInsert (AnnInsert   v)
@@ -111,7 +127,7 @@ data ActionMutation v
   | AMAsync !RQL.AnnActionMutationAsync
 
 type MutationRootField v =
-  RootField (MutationDB v) RemoteField (ActionMutation v) J.Value
+  RootField (MutationDB v) Void RemoteField (ActionMutation v) J.Value
 
-type SubscriptionRootField v = RootField (QueryDB v) Void (RQL.AnnActionAsyncQuery v) Void
-type SubscriptionRootFieldResolved = RootField (QueryDB S.SQLExp) Void RQL.AnnSimpleSel Void
+type SubscriptionRootField v = RootField (QueryDB v) Void Void (RQL.AnnActionAsyncQuery v) Void
+type SubscriptionRootFieldResolved = RootField (QueryDB S.SQLExp) Void Void RQL.AnnSimpleSel Void

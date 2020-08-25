@@ -19,6 +19,7 @@ import qualified Data.IntMap                            as IntMap
 import qualified Data.Sequence                          as Seq
 import qualified Data.Sequence.NonEmpty                 as NESeq
 import qualified Data.TByteString                       as TBS
+import qualified Data.Text.Encoding                     as TE
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
@@ -140,9 +141,7 @@ mkCurPlanTx env manager reqHdrs userInfo fldPlans = do
   resolved <- forM fldPlans $ \(alias, fldPlan) -> do
     fldResp <- case fldPlan of
       RFPRaw resp                      -> return $ RRRaw resp
-      RFPMySQL (PGPlan q _ prepMap remoteJoins) -> do
-        let args = withUserVars (_uiSession userInfo) $ IntMap.elems prepMap
-        return $ RRSql $ PreparedSql q args remoteJoins
+      RFPMySQL _ -> error "undefined"
       RFPPostgres (PGPlan q _ prepMap remoteJoins) -> do
         let args = withUserVars (_uiSession userInfo) $ IntMap.elems prepMap
         return $ RRSql $ PreparedSql q args remoteJoins
@@ -171,11 +170,11 @@ irToRootFieldPlan vars prepped = \case
       in PGPlan (f simpleSel') vars prepped remoteJoins
 
 traverseQueryRootField
-  :: forall f a b c d h
+  :: forall f a b c d h m
    . Applicative f
   => (a -> f b)
-  -> RootField (QueryDB a) c h d
-  -> f (RootField (QueryDB b) c h d)
+  -> RootField (QueryDB a) m c h d
+  -> f (RootField (QueryDB b) m c h d)
 traverseQueryRootField f =
   traverseDB f'
   where
@@ -185,6 +184,40 @@ traverseQueryRootField f =
       QDBPrimaryKey s   -> QDBPrimaryKey  <$> DS.traverseAnnSimpleSelect f s
       QDBAggregation s  -> QDBAggregation <$> DS.traverseAnnAggregateSelect f s
       QDBConnection s   -> QDBConnection  <$> DS.traverseConnectionSelect f s
+
+-- TMP FIXME BLEUARGH
+traverseMySQLQueryRootField
+  :: forall f a b c d h pg
+   . Applicative f
+  => (a -> f b)
+  -> RootField (QueryDB pg) (QueryDB a) c h d
+  -> f (RootField (QueryDB pg) (QueryDB b) c h d)
+traverseMySQLQueryRootField f =
+  traverseMySQL f'
+  where
+    f' :: QueryDB a -> f (QueryDB b)
+    f' = \case
+      QDBSimple s       -> QDBSimple      <$> DS.traverseAnnSimpleSelect f s
+      QDBPrimaryKey s   -> QDBPrimaryKey  <$> DS.traverseAnnSimpleSelect f s
+      QDBAggregation s  -> QDBAggregation <$> DS.traverseAnnAggregateSelect f s
+      QDBConnection s   -> QDBConnection  <$> DS.traverseConnectionSelect f s
+
+traverseBothQueryRootField
+  :: forall f a b c d h
+   . Monad f
+  => (a -> f b)
+  -> RootField (QueryDB a) (QueryDB a) c h d
+  -> f (RootField (QueryDB b) (QueryDB b) c h d)
+traverseBothQueryRootField f =
+  traverseMySQL f' <=< traverseDB f'
+  where
+    f' :: QueryDB a -> f (QueryDB b)
+    f' = \case
+      QDBSimple s       -> QDBSimple      <$> DS.traverseAnnSimpleSelect f s
+      QDBPrimaryKey s   -> QDBPrimaryKey  <$> DS.traverseAnnSimpleSelect f s
+      QDBAggregation s  -> QDBAggregation <$> DS.traverseAnnAggregateSelect f s
+      QDBConnection s   -> QDBConnection  <$> DS.traverseConnectionSelect f s
+-- END OF TMP FIXME BLEUARGH
 
 parseGraphQLQuery
   :: MonadError QErr m
@@ -225,7 +258,7 @@ convertQuerySelSet
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
-  -> m ( ExecutionPlan (tx EncJSON, GeneratedSqlMap) RemoteCall (G.Name, J.Value)
+  -> m ( ExecutionPlan (tx EncJSON, GeneratedSqlMap) LBS.ByteString RemoteCall (G.Name, J.Value)
        -- , Maybe ReusableQueryPlan
        , [QueryRootField UnpreparedValue]
        )
@@ -234,43 +267,54 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
   (unpreparedQueries, _reusability) <- parseGraphQLQuery gqlContext varDefs varValsM fields
 
   -- Transform the RQL AST into a prepared SQL query
-  queryPlans <- for unpreparedQueries \unpreparedQuery -> do
+  queryPlans :: InsOrdHashMap G.Name (RootField PGPlan PGPlan RemoteField RootFieldPlan J.Value) <- for unpreparedQueries \unpreparedQuery -> do
     (preparedQuery, PlanningSt _ planVars planVals expectedVariables)
       <- flip runStateT initPlanningSt
-         $ traverseQueryRootField prepareWithPlan unpreparedQuery
+         $ traverseBothQueryRootField prepareWithPlan unpreparedQuery
            >>= traverseAction convertActionQuery
     validateSessionVariables expectedVariables $ _uiSession userInfo
     traverseDB (pure . irToRootFieldPlan planVars planVals) preparedQuery
+      >>= traverseMySQL (pure . irToRootFieldPlan planVars planVals)
       >>= traverseAction (pure . actionQueryToRootFieldPlan planVars planVals)
 
   -- This monster makes sure that consecutive database operation get executed together
-  let dbPlans :: Seq.Seq (G.Name, RootFieldPlan)
+  let pgPlans :: Seq.Seq (G.Name, RootFieldPlan)
+      myPlans :: Seq.Seq (G.Name, RootFieldPlan)
       remoteFields :: Seq.Seq (G.Name, RemoteField)
-      (dbPlans, remoteFields) = OMap.foldlWithKey' collectPlan (Seq.Empty, Seq.Empty) queryPlans
+      (pgPlans, myPlans, remoteFields) = OMap.foldlWithKey' collectPlan (Seq.Empty, Seq.Empty, Seq.Empty) queryPlans
 
       collectPlan
-        :: (Seq.Seq (G.Name, RootFieldPlan), Seq.Seq (G.Name, RemoteField))
+        :: ( Seq.Seq (G.Name, RootFieldPlan)
+           , Seq.Seq (G.Name, RootFieldPlan)
+           , Seq.Seq (G.Name, RemoteField)
+           )
         -> G.Name
-        -> RootField PGPlan RemoteField RootFieldPlan J.Value
-        -> (Seq.Seq (G.Name, RootFieldPlan), Seq.Seq (G.Name, RemoteField))
+        -> RootField PGPlan PGPlan RemoteField RootFieldPlan J.Value
+        -> ( Seq.Seq (G.Name, RootFieldPlan) -- pg
+           , Seq.Seq (G.Name, RootFieldPlan) -- mysql
+           , Seq.Seq (G.Name, RemoteField)
+           )
+      collectPlan (seqPGDB, seqMyDB, seqRemote) name (RFRemote r) =
+        (seqPGDB, seqMyDB, seqRemote Seq.:|> (name, r))
 
-      collectPlan (seqDB, seqRemote) name (RFRemote r) =
-        (seqDB, seqRemote Seq.:|> (name, r))
+      collectPlan (seqPGDB, seqMyDB, seqRemote) name (RFPostgres db) =
+        (seqPGDB Seq.:|> (name, RFPPostgres db), seqMyDB, seqRemote)
 
-      collectPlan (seqDB, seqRemote) name (RFDB dataSource db) = case dataSource of
-        PostgresDB -> (seqDB Seq.:|> (name, RFPPostgres db), seqRemote)
-        MySQLDB    -> (seqDB Seq.:|> (name, RFPMySQL    db), seqRemote)
+      collectPlan (seqPGDB, seqMyDB, seqRemote) name (RFMySQL db) =
+        (seqPGDB, seqMyDB Seq.:|> (name, RFPMySQL db), seqRemote)
 
-      collectPlan (seqDB, seqRemote) name (RFAction rfp) =
-        (seqDB Seq.:|> (name, rfp), seqRemote)
+      collectPlan (seqPGDB, seqMyDB, seqRemote) name (RFAction rfp) =
+        (seqPGDB Seq.:|> (name, rfp), seqMyDB, seqRemote)
 
-      collectPlan (seqDB, seqRemote) name (RFRaw r)      =
-        (seqDB Seq.:|> (name, RFPRaw $ LBS.toStrict $ J.encode r), seqRemote)
+      collectPlan (seqPGDB, seqMyDB, seqRemote) name (RFRaw r)      =
+        (seqPGDB Seq.:|> (name, RFPRaw $ LBS.toStrict $ J.encode r), seqMyDB, seqRemote)
 
-
-  executionPlan <- case (dbPlans, remoteFields) of
-    (dbs, Seq.Empty) -> ExecStepPostgres <$> mkCurPlanTx env manager reqHeaders userInfo (toList dbs)
-    (Seq.Empty, remotes@(firstRemote Seq.:<| _)) -> do
+  executionPlan <- case (myPlans, pgPlans, remoteFields) of
+    ((myPlan Seq.:<| Seq.Empty), Seq.Empty, Seq.Empty) -> case snd myPlan of
+      RFPMySQL plan -> pure $ ExecStepMySQL $ LBS.fromStrict $ TE.encodeUtf8 $ Q.getQueryText $ _ppQuery plan
+      _             -> error "found non mysql root plan in mysql plan list"
+    (Seq.Empty, dbs, Seq.Empty) -> ExecStepPostgres <$> mkCurPlanTx env manager reqHeaders userInfo (toList dbs)
+    (Seq.Empty, Seq.Empty, remotes@(firstRemote Seq.:<| _)) -> do
       let (remoteOperation, _) =
             buildTypedOperation
             G.OperationTypeQuery

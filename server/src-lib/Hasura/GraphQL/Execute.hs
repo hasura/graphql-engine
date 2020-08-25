@@ -24,9 +24,9 @@ module Hasura.GraphQL.Execute
 import           Hasura.Prelude
 
 import qualified Data.Aeson                             as J
+import qualified Data.ByteString.Lazy                   as LBS
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
-
 import qualified Data.HashSet                           as HS
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
@@ -165,9 +165,9 @@ getExecPlanPartial userInfo sc queryType req =
 -- The graphql query is resolved into a sequence of execution operations
 data ResolvedExecutionPlan m
   = QueryExecutionPlan
-      (EPr.ExecutionPlan (m EncJSON, EQ.GeneratedSqlMap) EPr.RemoteCall (G.Name, J.Value)) [C.QueryRootField UnpreparedValue]
+      (EPr.ExecutionPlan (m EncJSON, EQ.GeneratedSqlMap) LBS.ByteString EPr.RemoteCall (G.Name, J.Value)) [C.QueryRootField UnpreparedValue]
   -- ^ query execution; remote schemas and introspection possible
-  | MutationExecutionPlan (EPr.ExecutionPlan (m EncJSON, HTTP.ResponseHeaders) EPr.RemoteCall (G.Name, J.Value))
+  | MutationExecutionPlan (EPr.ExecutionPlan (m EncJSON, HTTP.ResponseHeaders) () EPr.RemoteCall (G.Name, J.Value))
   -- ^ mutation execution; only __typename introspection supported
   | SubscriptionExecutionPlan EL.LiveQueryPlan
   -- ^ live query execution; remote schemas and introspection not supported
@@ -176,7 +176,7 @@ validateSubscriptionRootField
   :: MonadError QErr m
   => C.QueryRootField v -> m (C.SubscriptionRootField v)
 validateSubscriptionRootField = \case
-  C.RFDB s x -> pure $ C.RFDB s x
+  C.RFPostgres x -> pure $ C.RFPostgres x
   C.RFAction (C.AQAsync s) -> pure $ C.RFAction s
   C.RFAction (C.AQQuery _) -> throw400 NotSupported "query actions cannot be run as a subscription"
   C.RFRemote _ -> throw400 NotSupported "subscription to remote server is not supported"
