@@ -3,7 +3,7 @@ import globals from '../Globals';
 import { filterEventsBlockList, sanitiseUrl } from './filters';
 import { RUN_TIME_ERROR } from '../components/Main/Actions';
 import { REDUX_LOCATION_CHANGE_ACTION_TYPE } from '../constants';
-import { GetReduxState, ReduxAction } from '../types';
+import { GetReduxState } from '../types';
 
 interface TelemetryGlobals {
   serverVersion: string;
@@ -11,6 +11,33 @@ interface TelemetryGlobals {
   cliUUID: string;
   hasuraUUID: string;
 }
+
+export type ErrorPayload = {
+  message: string;
+  stack?: string;
+};
+
+export type TelemetryAction =
+  | {
+      type: typeof REDUX_LOCATION_CHANGE_ACTION_TYPE;
+      payload: {
+        pathname: string;
+      };
+    }
+  | {
+      type: typeof RUN_TIME_ERROR;
+      data?: ErrorPayload;
+    };
+
+export type TelemetryPayload = {
+  server_version: string;
+  event_type: string;
+  url: string;
+  console_mode: string;
+  cli_uuid: string;
+  server_uuid: string;
+  data?: ErrorPayload;
+};
 
 const createClient = () => {
   if (globals.enableTelemetry) {
@@ -43,7 +70,7 @@ const isTelemetryConnectionReady = () => {
   return !!(client && client.readyState === client.OPEN);
 };
 
-const sendEvent = (payload: any) => {
+const sendEvent = (payload: TelemetryPayload) => {
   if (client && isTelemetryConnectionReady()) {
     client.send(
       JSON.stringify({ data: payload, topic: globals.telemetryTopic })
@@ -52,7 +79,7 @@ const sendEvent = (payload: any) => {
 };
 
 export const trackReduxAction = (
-  action: ReduxAction,
+  action: TelemetryAction,
   getState: GetReduxState
 ) => {
   const actionType = action.type;
@@ -61,25 +88,22 @@ export const trackReduxAction = (
     const serverVersion = getState().main.serverVersion;
     const url = sanitiseUrl(window.location.pathname);
 
-    const reqBody = {
+    const reqBody: TelemetryPayload = {
       server_version: serverVersion,
       event_type: actionType,
       url,
       console_mode: globals.consoleMode,
       cli_uuid: globals.cliUUID,
       server_uuid: getState().telemetry.hasura_uuid,
-      data: null,
     };
 
-    const isLocationType = actionType === REDUX_LOCATION_CHANGE_ACTION_TYPE;
-    if (isLocationType) {
+    if (action.type === REDUX_LOCATION_CHANGE_ACTION_TYPE) {
       // capture page views
       const payload = action.payload;
       reqBody.url = sanitiseUrl(payload.pathname);
     }
 
-    const isErrorType = actionType === RUN_TIME_ERROR;
-    if (isErrorType) {
+    if (action.type === RUN_TIME_ERROR) {
       reqBody.data = action.data;
     }
 
@@ -92,7 +116,7 @@ export const trackRuntimeError = (
   telemeteryGlobals: TelemetryGlobals,
   error: Error
 ) => {
-  const reqBody = {
+  const reqBody: TelemetryPayload = {
     server_version: telemeteryGlobals.serverVersion,
     event_type: RUN_TIME_ERROR,
     url: sanitiseUrl(window.location.pathname),

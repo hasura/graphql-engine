@@ -17,11 +17,11 @@ import { loadMigrationStatus } from './components/Main/Actions';
 
 import { dataRouterUtils } from './components/Services/Data';
 
-import { eventRouterUtils } from './components/Services/EventTrigger';
-
 import { getRemoteSchemaRouter } from './components/Services/RemoteSchema';
 
 import { getActionsRouter } from './components/Services/Actions';
+
+import { getEventsRouter } from './components/Services/Events';
 
 import generatedApiExplorer from './components/Services/ApiExplorer/ApiExplorer';
 
@@ -40,6 +40,8 @@ import { showErrorNotification } from './components/Services/Common/Notification
 import { CLI_CONSOLE_MODE } from './constants';
 import UIKit from './components/UIKit/';
 import { Heading } from './components/UIKit/atoms';
+import { SupportContainer } from './components/Services/Support/SupportContainer';
+import HelpPage from './components/Services/Support/HelpPage';
 
 const routes = store => {
   // load hasuractl migration status
@@ -71,17 +73,9 @@ const routes = store => {
 
     return;
   };
-
   const _dataRouterUtils = dataRouterUtils(connect, store, composeOnEnterHooks);
   const requireSchema = _dataRouterUtils.requireSchema;
   const dataRouter = _dataRouterUtils.makeDataRouter;
-
-  const _eventRouterUtils = eventRouterUtils(
-    connect,
-    store,
-    composeOnEnterHooks
-  );
-  const eventRouter = _eventRouterUtils.makeEventRouter;
 
   const remoteSchemaRouter = getRemoteSchemaRouter(
     connect,
@@ -90,6 +84,8 @@ const routes = store => {
   );
 
   const actionsRouter = getActionsRouter(connect, store, composeOnEnterHooks);
+
+  const eventsRouter = getEventsRouter(connect, store, composeOnEnterHooks);
 
   const uiKitRouter = globals.isProduction ? null : (
     <Route
@@ -140,17 +136,20 @@ const routes = store => {
               component={metadataStatusConnector(connect)}
             />
             <Route
-              path="allowed-queries"
+              path="allow-list"
               component={allowedQueriesConnector(connect)}
             />
             <Route path="logout" component={logoutConnector(connect)} />
             <Route path="about" component={aboutConnector(connect)} />
           </Route>
           {dataRouter}
-          {eventRouter}
           {remoteSchemaRouter}
           {actionsRouter}
+          {eventsRouter}
           {uiKitRouter}
+          <Route path="support" component={SupportContainer}>
+            <Route path="forums" component={HelpPage} />
+          </Route>
         </Route>
       </Route>
       <Route path="404" component={PageNotFound} status="404" />

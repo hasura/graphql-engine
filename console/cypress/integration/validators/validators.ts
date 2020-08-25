@@ -192,6 +192,38 @@ export const dataRequest = (reqBody: RequestBody, result: ResultType) => {
   });
 };
 
+export const createFunctionRequest = (
+  reqBody: RequestBody,
+  result: ResultType
+) => {
+  const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
+  cy.request(requestOptions).then(response => {
+    if (result === ResultType.SUCCESS) {
+      expect(
+        response.body.length > 0 && response.body[0].result_type === 'CommandOk'
+      ).to.be.true;
+    } else {
+      expect(
+        response.body.length > 0 && response.body[0].result_type === 'CommandOk'
+      ).to.be.false;
+    }
+  });
+};
+
+export const trackFunctionRequest = (
+  reqBody: RequestBody,
+  result: ResultType
+) => {
+  const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
+  cy.request(requestOptions).then(response => {
+    if (result === ResultType.SUCCESS) {
+      expect(response.body[0].message === ResultType.SUCCESS).to.be.true;
+    } else {
+      expect(response.body[0].message === ResultType.SUCCESS).to.be.false;
+    }
+  });
+};
+
 /**
  * Drop a table request
  * @param reqBody

@@ -14,7 +14,7 @@ export const RelName = ({ tableName }) => {
   return (
     <Tooltip
       id="tooltip-remote-rel-name"
-      message={`The name of the relationship. This will be added as a field under the{' '} "${tableName}" node in the GraphQL schema.`}
+      message={`The name of the relationship. This will be added as a field under the "${tableName}" node in the GraphQL schema.`}
     />
   );
 };

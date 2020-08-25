@@ -1,5 +1,9 @@
 -- | API related to server configuration
-module Hasura.Server.API.Config (runGetConfig) where
+module Hasura.Server.API.Config
+  -- required by pro
+  ( ServerConfig(..)
+  , runGetConfig
+  ) where
 
 import           Data.Aeson.Casing
 import           Data.Aeson.TH

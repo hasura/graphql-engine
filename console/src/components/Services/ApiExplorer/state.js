@@ -1,4 +1,7 @@
-import globals from '../../../Globals';
+import { getPersistedGraphiQLMode } from './ApiRequest/utils';
+import { getGraphQLEndpoint } from './utils';
+
+const persistedGraphiqlMode = getPersistedGraphiQLMode();
 
 const defaultHeader = [
   {
@@ -8,37 +11,33 @@ const defaultHeader = [
     isNewHeader: false,
     isDisabled: true,
   },
+  {
+    key: '',
+    value: '',
+    isActive: false,
+    isNewHeader: true,
+  },
 ];
-defaultHeader.push({
-  key: '',
-  value: '',
-  isActive: false,
-  isNewHeader: true,
-});
 
-const getUrl = path => {
-  return `${globals.dataApiUrl}${path}`;
-};
-
-const dataApisContent = [];
-// check project version
-dataApisContent.push({
-  id: 'DataApi-3',
-  details: {
-    title: 'GraphQL API',
-    description:
-      'GraphQL API for CRUD operations on tables & views in your database',
-    category: 'data',
+const dataApisContent = [
+  {
+    id: 'DataApi-3',
+    details: {
+      title: 'GraphQL API',
+      description:
+        'GraphQL API for CRUD operations on tables & views in your database',
+      category: 'data',
+    },
+    request: {
+      method: 'POST',
+      url: getGraphQLEndpoint(persistedGraphiqlMode),
+      headers: defaultHeader,
+      headersInitialised: false,
+      bodyType: 'graphql',
+      params: JSON.stringify({}, null, 4),
+    },
   },
-  request: {
-    method: 'POST',
-    url: getUrl('/v1/graphql'),
-    headers: defaultHeader,
-    headersInitialised: false,
-    bodyType: 'graphql',
-    params: JSON.stringify({}, null, 4),
-  },
-});
+];
 
 const dataApis = {
   title: 'Data',
@@ -64,6 +63,8 @@ const defaultState = {
   explorerData,
   authApiExpanded: 'Username-password Login',
   headerFocus: false,
+  mode: persistedGraphiqlMode,
+  loading: false,
 };
 
 export default defaultState;

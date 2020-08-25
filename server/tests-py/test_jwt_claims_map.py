@@ -70,7 +70,7 @@ class TestJWTClaimsMapBasic():
                     'code': 'access-denied',
                     'path': '$'
                 },
-                'message': 'Your current role is not in allowed roles'
+                'message': 'Your requested role is not in allowed roles'
             }]
         }
         self.conf['url'] = endpoint
@@ -110,7 +110,7 @@ class TestJWTClaimsMapBasic():
                     'code': 'jwt-invalid-claims',
                     'path': '$'
                 },
-                'message': 'invalid x-hasura-allowed-roles; should be a list of roles'
+                'message': 'invalid x-hasura-allowed-roles; should be a list of roles: parsing [] failed, expected Array, but encountered String'
             }]
         }
         self.conf['url'] = endpoint
@@ -214,7 +214,7 @@ class TestJWTClaimsMapWithStaticHasuraClaimsMapValues():
                     'code': 'access-denied',
                     'path': '$'
                 },
-                'message': 'Your current role is not in allowed roles'
+                'message': 'Your requested role is not in allowed roles'
             }]
         }
         self.conf['url'] = endpoint

@@ -21,10 +21,12 @@ import {
 } from '../../validators/validators';
 import { setPromptValue } from '../../../helpers/common';
 
+const EVENT_TRIGGER_INDEX_ROUTE = '/events/data';
+
 const testName = 'ctr'; // create trigger
 
 export const visitEventsManagePage = () => {
-  cy.visit('/events/manage');
+  cy.visit(`${EVENT_TRIGGER_INDEX_ROUTE}/manage`);
 };
 
 export const passPTCreateTable = () => {
@@ -69,11 +71,11 @@ export const passPTCreateTable = () => {
 
 export const checkCreateTriggerRoute = () => {
   //    Click on the create trigger button
-  cy.visit('/events/manage');
+  cy.visit(EVENT_TRIGGER_INDEX_ROUTE);
   cy.wait(15000);
-  cy.get(getElementFromAlias('data-create-trigger')).click();
+  cy.get(getElementFromAlias('data-sidebar-add')).click();
   //   Match the URL
-  cy.url().should('eq', `${baseUrl}/events/manage/triggers/add`);
+  cy.url().should('eq', `${baseUrl}${EVENT_TRIGGER_INDEX_ROUTE}/add`);
 };
 
 export const failCTWithoutData = () => {
@@ -82,7 +84,7 @@ export const failCTWithoutData = () => {
   //    Click on create
   cy.get(getElementFromAlias('trigger-create')).click();
   //    Check if the route didn't change
-  cy.url().should('eq', `${baseUrl}/events/manage/triggers/add`);
+  cy.url().should('eq', `${baseUrl}${EVENT_TRIGGER_INDEX_ROUTE}/add`);
   //   Validate
   validateCT(getTriggerName(0, testName), ResultType.FAILURE);
 };
@@ -108,9 +110,15 @@ export const passCT = () => {
   cy.get(getElementFromAlias('advanced-settings')).click();
 
   // retry configuration
-  cy.get(getElementFromAlias('no-of-retries')).type(getNoOfRetries());
-  cy.get(getElementFromAlias('interval-seconds')).type(getIntervalSeconds());
-  cy.get(getElementFromAlias('timeout-seconds')).type(getTimeoutSeconds());
+  cy.get(getElementFromAlias('no-of-retries'))
+    .clear()
+    .type(getNoOfRetries());
+  cy.get(getElementFromAlias('interval-seconds'))
+    .clear()
+    .type(getIntervalSeconds());
+  cy.get(getElementFromAlias('timeout-seconds'))
+    .clear()
+    .type(getTimeoutSeconds());
 
   //  Click on create
   cy.get(getElementFromAlias('trigger-create')).click();
@@ -118,7 +126,10 @@ export const passCT = () => {
   //  Check if the trigger got created and navigated to processed events page
   cy.url().should(
     'eq',
-    `${baseUrl}/events/manage/triggers/${getTriggerName(0, testName)}/processed`
+    `${baseUrl}${EVENT_TRIGGER_INDEX_ROUTE}/${getTriggerName(
+      0,
+      testName
+    )}/modify`
   );
   cy.get(getElementFromAlias(getTriggerName(0, testName)));
   //   Validate
@@ -127,7 +138,7 @@ export const passCT = () => {
 
 export const failCTDuplicateTrigger = () => {
   //  Visit create trigger page
-  cy.visit('/events/manage/triggers/add');
+  cy.visit(`${EVENT_TRIGGER_INDEX_ROUTE}/add`);
   // trigger and table name
   cy.get(getElementFromAlias('trigger-name'))
     .clear()
@@ -148,7 +159,7 @@ export const failCTDuplicateTrigger = () => {
   cy.get(getElementFromAlias('trigger-create')).click();
   cy.wait(5000);
   //  should be on the same URL
-  cy.url().should('eq', `${baseUrl}/events/manage/triggers/add`);
+  cy.url().should('eq', `${baseUrl}${EVENT_TRIGGER_INDEX_ROUTE}/add`);
 };
 
 export const insertTableRow = () => {
@@ -163,13 +174,17 @@ export const insertTableRow = () => {
   // now it should invoke the trigger to webhook
   cy.wait(10000);
   // check if processed events has a row and it is a successful response
-  cy.visit(`/events/manage/triggers/${getTriggerName(0, testName)}/processed`);
-  cy.get(getElementFromAlias('trigger-processed-events')).contains('1');
+  cy.visit(
+    `${EVENT_TRIGGER_INDEX_ROUTE}/${getTriggerName(0, testName)}/processed`
+  );
+  cy.get('.rt-tr-group').should('have.length', 1);
 };
 
 export const deleteCTTestTrigger = () => {
   //  Go to the settings section of the trigger
-  cy.visit(`/events/manage/triggers/${getTriggerName(0, testName)}/processed`);
+  cy.visit(
+    `${EVENT_TRIGGER_INDEX_ROUTE}/${getTriggerName(0, testName)}/processed`
+  );
   //  click on settings tab
   cy.get(getElementFromAlias('trigger-modify')).click();
   setPromptValue(getTriggerName(0, testName));
@@ -181,7 +196,7 @@ export const deleteCTTestTrigger = () => {
     .should('be.called');
   cy.wait(7000);
   //  Match the URL
-  cy.url().should('eq', `${baseUrl}/events/manage/triggers`);
+  cy.url().should('eq', `${baseUrl}${EVENT_TRIGGER_INDEX_ROUTE}/manage`);
   //  Validate
   validateCTrigger(getTriggerName(0, testName), ResultType.FAILURE);
 };

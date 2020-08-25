@@ -4,7 +4,7 @@ module Hasura.Session
   , adminRoleName
   , isAdmin
   , roleNameToTxt
-  , SessionVariable(..)
+  , SessionVariable
   , mkSessionVariable
   , SessionVariables(..)
   , SessionVariableValue
@@ -13,6 +13,7 @@ module Hasura.Session
   , mkSessionVariables
   , sessionVariablesToHeaders
   , getSessionVariableValue
+  , getSessionVariablesSet
   , getSessionVariables
   , UserAdminSecret(..)
   , UserRoleBuild(..)
@@ -40,6 +41,7 @@ import           Language.Haskell.TH.Syntax (Lift)
 
 import qualified Data.CaseInsensitive       as CI
 import qualified Data.HashMap.Strict        as Map
+import qualified Data.HashSet               as Set
 import qualified Data.Text                  as T
 import qualified Database.PG.Query          as Q
 import qualified Network.HTTP.Types         as HTTP
@@ -123,6 +125,9 @@ sessionVariablesToHeaders =
 
 getSessionVariables :: SessionVariables -> [Text]
 getSessionVariables = map sessionVariableToText . Map.keys . unSessionVariables
+
+getSessionVariablesSet :: SessionVariables -> Set.HashSet SessionVariable
+getSessionVariablesSet = Map.keysSet . unSessionVariables
 
 getSessionVariableValue :: SessionVariable -> SessionVariables -> Maybe SessionVariableValue
 getSessionVariableValue k = Map.lookup k . unSessionVariables

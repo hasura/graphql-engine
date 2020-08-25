@@ -5,17 +5,24 @@ own machine and how to contribute.
 
 ## Pre-requisites
 
-- [GHC](https://www.haskell.org/ghc/) 8.6.5 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
+- [GHC](https://www.haskell.org/ghc/) 8.10.1 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
   - There are various ways these can be installed, but [ghcup](https://www.haskell.org/ghcup/) is a good choice if you’re not sure.
 - [Node.js](https://nodejs.org/en/) (>= v8.9)
 - npm >= 5.7
 - [gsutil](https://cloud.google.com/storage/docs/gsutil)
 - libpq-dev
-- python >= 3.5 with pip3
+- libkrb5-dev
+- openssl and libssl-dev
+- python >= 3.5 with pip3 and virtualenv
 
-The last two prerequisites can be installed on Debian with:
+The last few prerequisites can be installed on Debian or Ubuntu with:
 
-    $ sudo apt install libpq-dev python3 python3-pip python3-venv
+    $ sudo apt install libpq-dev libkrb5-dev python3 python3-pip python3-venv openssl libssl-dev
+
+Additionally, you will need a way to run a Postgres database server. The `dev.sh` script (described below) can set up a Postgres instance for you via [Docker](https://www.docker.com), but if you want to run it yourself, you’ll need:
+
+- [PostgreSQL](https://www.postgresql.org) >= 9.5
+- [postgis](https://postgis.net)
 
 Additionally, you will need a way to run a Postgres database server. The `dev.sh` script (described below) can set up a Postgres instance for you via [Docker](https://www.docker.com), but if you want to run it yourself, you’ll need:
 
@@ -114,16 +121,13 @@ cabal new-run -- test:graphql-engine-tests \
 
 ##### Running the Python test suite
 
-1. To run the Python tests, you’ll need to install the necessary Python dependencies first. It is
-   recommended that you do this in a self-contained Python venv, which is supported by Python 3.3+
-   out of the box. To create one, run:
+1. To run the Python tests, you’ll need to install the necessary Python dependencies first. It is recommended that you do this in a self-contained Python venv, which is supported by Python 3.3+ out of the box. To create one, run:
 
    ```
    python3 -m venv .python-venv
    ```
 
-   (The second argument names a directory where the venv sandbox will be created; it can be anything
-   you like, but `.python-venv` is `.gitignore`d.)
+   (The second argument names a directory where the venv sandbox will be created; it can be anything you like, but `.python-venv` is `.gitignore`d.)
 
    With the venv created, you can enter into it in your current shell session by running:
 
@@ -139,11 +143,18 @@ cabal new-run -- test:graphql-engine-tests \
    pip3 install -r tests-py/requirements.txt
    ```
 
-3. Start an instance of `graphql-engine` for the test suite to use:
+3. Install the dependencies for the Node server used by the remote schema tests:
+
+   ```
+   (cd tests-py/remote_schemas/nodejs && npm ci)
+   ```
+
+4. Start an instance of `graphql-engine` for the test suite to use:
 
    ```
    env EVENT_WEBHOOK_HEADER=MyEnvValue \
        WEBHOOK_FROM_ENV=http://localhost:5592/ \
+       SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN=http://127.0.0.1:5594 \
      cabal new-run -- exe:graphql-engine \
        --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>' \
        serve --stringify-numeric-types
@@ -151,7 +162,7 @@ cabal new-run -- test:graphql-engine-tests \
 
    The environment variables are needed for a couple tests, and the `--stringify-numeric-types` option is used to avoid the need to do floating-point comparisons.
 
-4. With the server running, run the test suite:
+5. With the server running, run the test suite:
 
    ```
    cd tests-py

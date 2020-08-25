@@ -1,17 +1,17 @@
 import * as React from 'react';
 import { Connect } from 'react-redux';
-import { LocationShape } from 'react-router/lib/PropTypes';
+import { RouteComponentProps } from 'react-router';
 import Sidebar from './Sidebar';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 
 type Metadata = {
-  inconsistentObjects: object[];
+  inconsistentObjects: Record<string, unknown>[];
   ongoingRequest: boolean;
-  allowedQueries: object[];
+  allowedQueries: Record<string, any>[];
 };
 
 type ExternalProps = {
-  location: LocationShape;
+  location: RouteComponentProps<unknown, unknown>['location'];
   children: JSX.Element;
 };
 
@@ -55,6 +55,8 @@ const mapStateToProps = (state: DerivedState) => {
 type StateProps = ReturnType<typeof mapStateToProps>;
 
 const connector = (connect: Connect) =>
-  connect<StateProps, {}, {}, DerivedState>(mapStateToProps)(Container);
+  connect<StateProps, unknown, unknown, DerivedState>(mapStateToProps)(
+    Container
+  );
 
 export default connector;

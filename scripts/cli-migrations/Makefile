@@ -40,6 +40,7 @@ build-cli-migrations-v2:
 test-cli-migrations-v2:
 	cd v2/test
 	./test.sh
+	./test-upgrade-from-latest-release.sh
 
 .PHONY: all
 all: load-server-image build-cli-migrations-v1 build-cli-migrations-v2 test-cli-migrations-v1 test-cli-migrations-v2

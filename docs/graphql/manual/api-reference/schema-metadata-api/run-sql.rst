@@ -24,13 +24,12 @@ returned.
 
 .. admonition:: Admin-only
 
-  This is an admin-only query, i.e. the query can only be executed by a
-  request having ``X-Hasura-Role: admin``. This can be set by passing
+  This is an admin-only request, i.e. the request can only be executed with ``X-Hasura-Role: admin``. This can be set by passing
   ``X-Hasura-Admin-Secret`` or by setting the right role in webhook/JWT
   authorization mode.
 
   This is deliberate as it is hard to enforce any sort of permissions on arbitrary SQL. If
-  you find yourself in the need of using ``run_sql`` to run custom DML queries,
+  you find yourself in the need of using ``run_sql`` to run custom DML requests,
   consider creating a view. You can now define permissions on that particular view
   for various roles.
 
@@ -38,7 +37,7 @@ Use cases
 ^^^^^^^^^
 
 1. To execute DDL operations that are not supported by the console (e.g. managing indexes).
-2. Run custom DML queries from backend microservices instead of installing libraries to speak to Postgres.
+2. Run custom DML requests from backend microservices instead of installing libraries to speak to Postgres.
 
 An example:
 
@@ -112,7 +111,7 @@ We can however, cascade these changes.
        "result_type": "CommandOk"
    }
 
-With the above query, the dependent permission is also dropped.
+With the above request, the dependent permission is also dropped.
 
 Example: If we were to drop a foreign key constraint from the article table
 (let's say the column involved in the foreign key is used to define a relationship),
@@ -167,7 +166,7 @@ We can however, cascade these changes.
        "result_type": "CommandOk"
    }
 
-With the above query, the dependent permission is also dropped.
+With the above request, the dependent permission is also dropped.
 
 In general, the SQL operations that will affect Hasura metadata are:
 
@@ -214,7 +213,7 @@ Args syntax
    * - read_only
      - false
      - Boolean
-     - When set to ``true``, the query will be run in ``READ ONLY`` transaction access mode which means only ``select`` queries will be successful. This flag ensures that the GraphQL schema is not modified and is hence highly performant.
+     - When set to ``true``, the request will be run in ``READ ONLY`` transaction access mode which means only ``select`` queries will be successful. This flag ensures that the GraphQL schema is not modified and is hence highly performant.
 
 Response
 ^^^^^^^^
@@ -243,7 +242,7 @@ The response is a JSON Object with the following structure.
 Some examples
 ^^^^^^^^^^^^^
 
-A query returning results.
+An SQL query returning results.
 
 .. code-block:: http
 
@@ -282,7 +281,7 @@ A query returning results.
    }
 
 
-A query to create a table:
+An SQL query to create a table:
 
 .. code-block:: http
 

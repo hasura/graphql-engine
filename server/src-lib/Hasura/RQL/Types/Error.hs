@@ -100,6 +100,8 @@ data Code
   | InvalidCustomTypes
   -- Actions Webhook code
   | ActionWebhookCode !Text
+  -- Custom code for extending this sum-type easily
+  | CustomCode !Text
   deriving (Eq)
 
 instance Show Code where
@@ -140,6 +142,7 @@ instance Show Code where
     StartFailed           -> "start-failed"
     InvalidCustomTypes    -> "invalid-custom-types"
     ActionWebhookCode t   -> T.unpack t
+    CustomCode t          -> T.unpack t
 
 data QErr
   = QErr
@@ -347,7 +350,7 @@ formatMsg str = case T.splitOn "the key " txt of
   where
     txt = T.pack str
 
-runAesonParser :: (QErrM m) => (Value -> Parser a) -> Value -> m a
+runAesonParser :: (QErrM m) => (v -> Parser a) -> v -> m a
 runAesonParser p =
   liftIResult . iparse p
 

@@ -14,7 +14,7 @@ import { Icon } from '../../../UIKit/atoms';
 import CodeTabs from './CodeTabs';
 import DerivedFrom from './DerivedFrom';
 
-const Codegen = ({ allActions, allTypes, currentAction }) => {
+const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
   const [allFrameworks, setAllFrameworks] = React.useState([]);
   const [selectedFramework, selectFramework] = React.useState('');
   const [loading, setLoading] = React.useState(true);
@@ -33,7 +33,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
   const init = () => {
     setLoading(true);
     setError(null);
-    getAllCodegenFrameworks()
+    getAllCodegenFrameworks(dispatch)
       .then(frameworks => {
         setAllFrameworks(frameworks);
         selectFramework(frameworks[0].name);
@@ -188,6 +188,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
           currentAction={currentAction}
           shouldDerive={shouldDerive}
           parentMutation={parentMutation}
+          dispatch={dispatch}
         />
       </div>
       <hr />

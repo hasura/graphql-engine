@@ -74,8 +74,10 @@ runClearMetadata _ = do
 applyQP1
   :: (QErrM m)
   => ReplaceMetadata -> m ()
-applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections
-          allowlist _ actions cronTriggers) = do
+applyQP1 (ReplaceMetadata _ tables functionsMeta schemas
+          collections
+          allowlist  _ actions
+          cronTriggers) = do
   withPathK "tables" $ do
 
     checkMultipleDecls "tables" $ map _tmTable tables
@@ -299,11 +301,10 @@ fetchMetadata = do
 
   customTypes <- fetchCustomTypes
 
-  -- fetch actions
+  -- -- fetch actions
   actions <- fetchActions
 
   cronTriggers <- fetchCronTriggers
-
 
   return $ ReplaceMetadata currentMetadataVersion
                            (HMIns.elems postRelMap)

@@ -581,10 +581,14 @@ class Echo(graphene.ObjectType):
 class EchoQuery(graphene.ObjectType):
     echo = graphene.Field(
                 Echo,
-                int_input=graphene.Int( default_value=1234),
+                int_input=graphene.Int(default_value=1234),
                 list_input=graphene.Argument(graphene.List(graphene.String), default_value=["hi","there"]),
                 obj_input=graphene.Argument(SizeInput, default_value=SizeInput.default()),
                 enum_input=graphene.Argument(GQColorEnum, default_value=GQColorEnum.RED.name),
+                r_int_input=graphene.Int(required=True, default_value=1234),
+                r_list_input=graphene.Argument(graphene.List(graphene.String, required=True), default_value=["general","Kenobi"]),
+                r_obj_input=graphene.Argument(SizeInput, required=True, default_value=SizeInput.default()),
+                r_enum_input=graphene.Argument(GQColorEnum, required=True, default_value=GQColorEnum.RED.name),
             )
 
     def resolve_echo(self, info, int_input, list_input, obj_input, enum_input):
