@@ -232,6 +232,7 @@ export const checkPagination = () => {
 
 export const passBISort = (order: string) => {
   // Scroll to top TODO responsive is messy
+  cy.viewport(2140, 1080); // TODO: temp solution to fix failing tests
   cy.wait(7000);
   // Select column with type 'serial'
   const serialIndex = dataTypes.indexOf('serial');
@@ -446,7 +447,7 @@ export const passDeleteRow = () => {
   cy.on('window:confirm', str => {
     expect(
       str.indexOf('This will permanently delete this row from this table') !==
-        -1
+      -1
     ).to.be.true;
   });
   cy.get(getElementFromAlias('table-browse-rows')).contains('20');
