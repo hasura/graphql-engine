@@ -71,10 +71,10 @@ class Main extends React.Component {
       );
 
       dispatch(loadLatestServerVersion());
+      dispatch(fetchConsoleNotifications());
     });
 
     dispatch(fetchPostgresVersion);
-    dispatch(fetchConsoleNotifications());
     dispatch(fetchServerConfig);
   }
 
