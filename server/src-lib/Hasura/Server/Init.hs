@@ -9,7 +9,7 @@ module Hasura.Server.Init
 import qualified Data.Aeson                       as J
 import qualified Data.Aeson.Casing                as J
 import qualified Data.Aeson.TH                    as J
-import qualified Data.ByteString                  as BS
+import qualified Data.ByteString.Char8            as BS
 import qualified Data.HashSet                     as Set
 import qualified Data.String                      as DataString
 import qualified Data.Text                        as T
@@ -20,7 +20,6 @@ import qualified Language.Haskell.TH.Syntax       as TH
 import qualified Text.PrettyPrint.ANSI.Leijen     as PP
 
 import           Data.FileEmbed                   (embedStringFile)
-import           Data.List                        (isPrefixOf)
 import           Data.Time                        (NominalDiffTime)
 import           Network.Wai.Handler.Warp         (HostPreference)
 import           Options.Applicative
@@ -39,7 +38,6 @@ import           Hasura.Server.Init.Config
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
 import           Hasura.Session
-import           Hasura.Sources
 import           Network.URI                      (parseURI)
 
 newtype DbUid
@@ -629,7 +627,7 @@ mkMySQLConnInfo (RawConnInfo _ _ _ _ _ _ _ _ myHost myPort myUser myPassword myD
   db   <- BS.pack <$> myDB
   pure $ My.ConnectInfo host (stringlyCoerce port) db user (BS.pack myPassword) My.utf8_general_ci
 
-stringlyCoerce :: (Read b, Show a) -> a -> b
+stringlyCoerce :: (Read b, Show a) => a -> b
 stringlyCoerce = read . show
 
 {-

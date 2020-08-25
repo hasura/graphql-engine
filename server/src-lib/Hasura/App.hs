@@ -197,8 +197,10 @@ initialiseCtx env hgeCmd rci = do
   -- global http manager
   httpManager <- liftIO $ HTTP.newManager HTTP.tlsManagerSettings
   instanceId <- liftIO generateInstanceId
-  (dataSource, connInfo) <- liftIO procConnInfo
+  connInfo <- liftIO procConnInfo
   latch <- liftIO newShutdownLatch
+  let mySQLConnInfo = mkMySQLConnInfo rci
+      dataSource = maybe PostgresDB (const MySQLDB) mySQLConnInfo
   (loggers, pool, sqlGenCtx) <- case hgeCmd of
     -- for the @serve@ command generate a regular PG pool
     HCServe so@ServeOptions{..} -> do
