@@ -1,5 +1,5 @@
 module Hasura.Sources.MySQL.Query
-  ( mkMySQLSelect
+  ( selectQuerySQL
   )
 where
 
@@ -12,6 +12,7 @@ import           Instances.TH.Lift            ()
 import qualified Data.HashMap.Strict          as HM
 import qualified Data.List.NonEmpty           as NE
 import qualified Data.Text                    as T
+import qualified Database.PG.Query            as Q
 
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.RQL.DML.Internal
@@ -24,8 +25,11 @@ import           Hasura.SQL.Types
 import qualified Hasura.SQL.DML               as S
 
 
-
 ----
+
+selectQuerySQL :: JsonAggSelect -> AnnSimpleSel -> Q.Query
+selectQuerySQL jsonAggSelect sel =
+  Q.fromBuilder $ toSQL $ mkMySQLSelect jsonAggSelect sel
 
 mkMySQLSelect :: JsonAggSelect -> AnnSimpleSel -> S.Select
 mkMySQLSelect jsonAggSelect annSel =
@@ -100,7 +104,7 @@ asSingleRowExtr col =
   S.SEFnApp "coalesce" [jsonAgg, S.SELit "null"] Nothing
   where
     jsonAgg = S.SEOpApp (S.SQLOp "->")
-              [ S.SEFnApp "json_agg" [S.SEIden $ toIden col] Nothing
+              [ S.SEFnApp "JSON_ARRAYAGG" [S.SEIden $ toIden col] Nothing
               , S.SEUnsafe "0"
               ]
 
@@ -118,7 +122,7 @@ withJsonAggExtr permLimitSubQuery ordBy alias =
     unnestTable = Iden "unnest_table"
 
     mkSimpleJsonAgg rowExp ob =
-      let jsonAggExp = S.SEFnApp "json_agg" [rowExp] ob
+      let jsonAggExp = S.SEFnApp "JSON_ARRAYAGG" [rowExp] ob
       in S.SEFnApp "coalesce" [jsonAggExp, S.SELit "[]"] Nothing
 
     withPermLimit limit =
@@ -1101,7 +1105,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
           mkSimilarArrayFields annFields $ _saOrderBy tableArgs
 
     mkSimpleJsonAgg rowExp ob =
-      let jsonAggExp = S.SEFnApp "json_agg" [rowExp] ob
+      let jsonAggExp = S.SEFnApp "json_arrayagg" [rowExp] ob
       in S.SEFnApp "coalesce" [jsonAggExp, S.SELit "[]"] Nothing
 
     processFields

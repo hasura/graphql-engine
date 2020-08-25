@@ -28,6 +28,7 @@ import qualified Network.HTTP.Types                     as HTTP
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.Logging                         as L
 import           Hasura.Server.Version                  (HasVersion)
+import qualified Hasura.Sources.MySQL.Query
 import qualified Hasura.SQL.DML                         as S
 import qualified Hasura.Tracing                         as Tracing
 
@@ -152,12 +153,13 @@ mkCurPlanTx env manager reqHdrs userInfo fldPlans = do
 
 -- convert a query from an intermediate representation to... another
 irToRootFieldPlan
-  :: PlanVariables
+  :: (DS.JsonAggSelect -> DS.AnnSimpleSel -> Q.Query)
+  -> PlanVariables
   -> PrepArgMap
   -> QueryDB S.SQLExp -> PGPlan
-irToRootFieldPlan vars prepped = \case
-  QDBSimple s      -> mkPGPlan (DS.selectQuerySQL DS.JASMultipleRows) s
-  QDBPrimaryKey s  -> mkPGPlan (DS.selectQuerySQL DS.JASSingleObject) s
+irToRootFieldPlan sqlBuilder vars prepped = \case
+  QDBSimple s      -> mkPGPlan (sqlBuilder DS.JASMultipleRows) s
+  QDBPrimaryKey s  -> mkPGPlan (sqlBuilder DS.JASSingleObject) s
   QDBAggregation s ->
     let (annAggSel, aggRemoteJoins) = getRemoteJoinsAggregateSelect s
     in PGPlan (DS.selectAggregateQuerySQL annAggSel) vars prepped aggRemoteJoins
@@ -273,8 +275,8 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
          $ traverseBothQueryRootField prepareWithPlan unpreparedQuery
            >>= traverseAction convertActionQuery
     validateSessionVariables expectedVariables $ _uiSession userInfo
-    traverseDB (pure . irToRootFieldPlan planVars planVals) preparedQuery
-      >>= traverseMySQL (pure . irToRootFieldPlan planVars planVals)
+    traverseDB (pure . irToRootFieldPlan DS.selectQuerySQL planVars planVals) preparedQuery
+      >>= traverseMySQL (pure . irToRootFieldPlan Hasura.Sources.MySQL.Query.selectQuerySQL planVars planVals)
       >>= traverseAction (pure . actionQueryToRootFieldPlan planVars planVals)
 
   -- This monster makes sure that consecutive database operation get executed together
