@@ -12,10 +12,13 @@ Auth0 JWT Integration with Hasura GraphQL engine
   :depth: 1
   :local:
 
+Introduction
+------------
+
 In this guide, we will walk through how to set up Auth0 to work with the Hasura GraphQL engine.
 
 Create an Auth0 Application
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------
 
 - Navigate to the `Auth0 dashboard <https://manage.auth0.com>`__.
 - Click on the ``Applications`` menu option on the left and then click the ``+ Create Application`` button.
@@ -26,7 +29,7 @@ Create an Auth0 Application
    :alt: Create an Auth0 application
 
 Configure Auth0 Rules & Callback URLs
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------------
 
 In the settings of the application, add appropriate (e.g: http://localhost:3000/callback) URLs as ``Allowed Callback
 URLs`` and ``Allowed Web Origins``. Add domain specific URLs as well for production apps (e.g: https://myapp.com/callback).
@@ -75,7 +78,7 @@ For auth0-spa-js:
 .. _test-auth0:
 
 Create an Auth0 API
-^^^^^^^^^^^^^^^^^^^
+-------------------
 
 In case you are using auth0-spa-js, you also need to create an API so that the access token issued by Auth0 is following the JWT standard. Read more about this `here <https://auth0.com/docs/tokens/access-tokens#json-web-token-access-tokens>`__.
 
@@ -96,7 +99,7 @@ In case you are using auth0-spa-js, you also need to create an API so that the a
 
 
 Test auth0 login and generate sample JWTs for testing
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------------------------------
 
 You don't need to integrate your UI with auth0 for testing. You can follow the steps below:
 
@@ -139,7 +142,7 @@ You don't need to integrate your UI with auth0 for testing. You can follow the s
 
 
 Configure Hasura to use Auth0 Keys
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------
 
 Auth0 publishes their JWK under:
 
@@ -194,7 +197,7 @@ escaping new lines.
    :alt: Generated JWT config
 
 Add Access Control Rules via Hasura Console
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------------------
 
 Auth0 is configured and ready to be used in the application. You can now set up access control rules that
 will automatically get applied whenever a client makes a GraphQL request with the Auth0 token.
@@ -219,7 +222,7 @@ This can be useful for data that you would like anyone to be able to access and 
 just like any other role.
 
 Sync Users from Auth0
-^^^^^^^^^^^^^^^^^^^^^
+---------------------
 
 Now that you have created an Auth0 application and can signup/login, you will need a way to sync your users in Postgres as well.
 All you really need is the Auth0 ``user_id`` in something like a ``users`` table.

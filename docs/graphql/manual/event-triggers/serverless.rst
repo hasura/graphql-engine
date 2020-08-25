@@ -12,6 +12,9 @@ Using serverless functions
   :depth: 1
   :local:
 
+Introduction
+------------
+
 You can use serverless functions along with event triggers to design an async business workflow without
 having to manage any dedicated infrastructure.
 

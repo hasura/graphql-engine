@@ -12,6 +12,9 @@ Health check API Reference
   :depth: 1
   :local:
 
+Introduction
+------------
+
 The Health API is a public endpoint which gives info on the server health.
 
 Endpoint

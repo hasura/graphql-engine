@@ -12,6 +12,9 @@ Production checklist
   :depth: 1
   :local:
 
+Introduction
+------------
+
 This guide is a checklist for configuring and securing GraphQL engine for a
 production deployment.
 

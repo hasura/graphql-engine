@@ -12,6 +12,9 @@ Subscriptions sample use cases
   :depth: 1
   :local:
 
+Introduction
+------------
+
 The following are a few use cases for using subscriptions:
 
 .. _subscribe_field:

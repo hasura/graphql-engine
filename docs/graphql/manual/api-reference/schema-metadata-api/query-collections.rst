@@ -12,6 +12,9 @@ Schema/Metadata API Reference: Query collections
   :depth: 1
   :local:
 
+Introduction
+------------
+
 Group queries using query collections.
 
 Create/drop query collections and add/drop a query to a collection using the following query types.

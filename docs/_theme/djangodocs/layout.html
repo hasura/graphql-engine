@@ -4,6 +4,12 @@
   {% set is_landing_page = true %}
 {%- endif %}
 
+{%- if 'graphql/manual' in pagename %}
+  {% set is_core = true %}
+{%- elif 'cloud' in pagename %}
+  {% set is_cloud = true %} 
+{%- endif %}
+
 {% set css_files = css_files + ['_static/graphiql/graphiql.css', '_static/styles/main.css'] %}
 
 {%- if is_landing_page %}
@@ -187,12 +193,12 @@
                 <img src="{{ pathto('_images/layout/close-icon.svg', 1) }}" alt="Close"/>
               </div>
               <div class="tabbarContainerWrapper blueBgColor boderBottom">
-                <a href="" class="tabbarTabActive">
+                <a href="{{ pathto('graphql/manual/index.html', 1) }}" {%- if is_core %} class="tabbarTabActive" {%- endif %}>
                   <span>
                     Hasura Core
                   </span>
                 </a>
-                <a href="https://hasura.io/docs/cloud/1.0/manual/index.html">
+                <a href="{{ pathto('cloud/index.html', 1) }}" {%- if is_cloud %} class="tabbarTabActive" {%- endif %}>
                   <span>
                     Hasura Cloud
                   </span>

@@ -12,6 +12,9 @@ Schema/Metadata API Reference: Manage metadata
   :depth: 1
   :local:
 
+Introduction
+------------
+
 APIs to manage Hasura metadata which is stored in ``hdb_catalog`` schema.
 
 .. _export_metadata:

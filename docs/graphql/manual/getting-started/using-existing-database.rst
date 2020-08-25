@@ -14,7 +14,7 @@ Getting started with an existing database
 
 Follow one of these guides to set up Hasura GraphQL engine using an existing database:
 
-- `Using Hasura Cloud <https://hasura.io/docs/cloud/1.0/manual/projects/create.html>`__ **(recommended)**: Create a new Hasura Cloud project connected to an existing Postgres database
+- :ref:`Using Hasura Cloud <cloud_getting_started>` **(recommended)**: Create a new Hasura Cloud project connected to an existing Postgres database
 - :ref:`Using Docker <deployment_docker>`: Run as a docker container and connect to an existing Postgres
   database.
 - :ref:`Using Heroku <heroku_existing_db>`: Run on Heroku and connect to an existing

@@ -12,6 +12,9 @@ Schema/Metadata API Reference: Relationships
   :depth: 1
   :local:
 
+Introduction
+------------
+
 When retrieving data from tables, it is very helpful if we can also
 fetch the related data alongside the columns. This is where relationships come
 in. They can be considered as pseudo columns for a table to access the related

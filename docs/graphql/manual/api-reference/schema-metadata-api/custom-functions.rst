@@ -12,6 +12,9 @@ Schema/Metadata API Reference: Custom Functions
   :depth: 1
   :local:
 
+Introduction
+------------
+
 Track/untrack a custom SQL function in the Hasura GraphQL engine.
 
 Only tracked custom functions are available for querying/mutating/subscribing data over the GraphQL API.

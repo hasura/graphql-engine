@@ -12,6 +12,9 @@ Access control examples
   :depth: 1
   :local:
 
+Introduction
+------------
+
 This is a guide to help you set up a basic authorization architecture for your GraphQL fields. It is recommended
 that you first check out :ref:`roles_variables` and :ref:`permission_rules`
 that will be referred to throughout this guide.
