@@ -1,5 +1,5 @@
 .. meta::
-   :description: Hasura Pro error analysis
+   :description: Hasura Cloud error analysis
    :keywords: hasura, docs, cloud, reliability, errors
 
 .. _errors:

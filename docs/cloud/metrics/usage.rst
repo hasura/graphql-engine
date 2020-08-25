@@ -1,5 +1,5 @@
 .. meta::
-   :description: Hasura Pro usage analysis
+   :description: Hasura Cloud usage analysis
    :keywords: hasura, docs, cloud, reliability, usage
 
 .. _usage:

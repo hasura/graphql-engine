@@ -1,5 +1,5 @@
 .. meta::
-   :description: Hasura Pro allow lists
+   :description: Hasura Cloud allow lists
    :keywords: hasura, docs, cloud, security, allow
 
 .. _allow_lists:

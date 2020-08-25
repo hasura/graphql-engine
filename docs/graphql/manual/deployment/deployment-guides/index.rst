@@ -58,7 +58,7 @@ Choose from the full list of deployment guides:
    :titlesonly:
    :hidden:
 
-   Using Hasura Cloud <https://hasura.io/docs/1.0/getting-started/index.html>
+   Using Hasura Cloud <https://hasura.io/docs/1.0/cloud/getting-started/index.html>
    Using Docker <docker>
    Using Kubernetes <kubernetes>
    Using Heroku (one-click) <heroku>

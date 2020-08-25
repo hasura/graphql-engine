@@ -1,5 +1,5 @@
 .. meta::
-   :description: Hasura Pro operation analysis
+   :description: Hasura Cloud operation analysis
    :keywords: hasura, docs, cloud, reliability, operations
 
 .. _operations:

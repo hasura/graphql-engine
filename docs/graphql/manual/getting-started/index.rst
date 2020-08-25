@@ -47,7 +47,7 @@ Get started using an existing database
    :titlesonly:
    :hidden:
 
-   Hasura Cloud quickstart <https://hasura.io/docs/1.0/getting-started/index.html>
+   Hasura Cloud quickstart <https://hasura.io/docs/1.0/cloud/getting-started/index.html>
    Docker quickstart <docker-simple>
    Using an existing database <using-existing-database>
    first-graphql-query

@@ -1,5 +1,5 @@
 .. meta::
-   :description: Hasura Pro API limits
+   :description: Hasura Cloud API limits
    :keywords: hasura, docs, cloud, security, limits
 
 .. _api_limits:

@@ -1,5 +1,5 @@
 .. meta::
-   :description: Hasura Pro overview
+   :description: Hasura Cloud overview
    :keywords: hasura, docs, cloud, overview
 
 .. _overview:

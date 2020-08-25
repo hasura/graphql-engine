@@ -1,5 +1,5 @@
 .. meta::
-   :description: Hasura Pro websockets analysis
+   :description: Hasura Cloud websockets analysis
    :keywords: hasura, docs, cloud, reliability, websockets
 
 .. _websockets:

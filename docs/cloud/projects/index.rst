@@ -1,5 +1,5 @@
 .. meta::
-   :description: Managing teams in Hasura Pro
+   :description: Managing teams in Hasura Cloud
    :keywords: hasura, docs, cloud, teams
 
 .. _projects:

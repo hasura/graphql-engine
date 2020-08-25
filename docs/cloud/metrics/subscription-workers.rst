@@ -1,5 +1,5 @@
 .. meta::
-   :description: Hasura Pro subscription workers
+   :description: Hasura Cloud subscription workers
    :keywords: hasura, docs, cloud, reliability, subscriptions
 
 .. _subscription_workers:

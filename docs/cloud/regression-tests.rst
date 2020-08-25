@@ -1,5 +1,5 @@
 .. meta::
-   :description: Hasura Pro regression tests
+   :description: Hasura Cloud regression tests
    :keywords: hasura, docs, cloud, reliability, regression, migration
 
 .. _regression_tests:
