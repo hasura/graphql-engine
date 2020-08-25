@@ -1,5 +1,5 @@
 module Hasura.RQL.DML.Mutation
-  ( Mutation
+  ( Mutation(..)
   , mkMutation
   , MutationRemoteJoinCtx
   , runMutation
@@ -25,13 +25,14 @@ import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.RemoteJoin
 import           Hasura.RQL.DML.Returning
+import           Hasura.RQL.DML.Returning.Types
 import           Hasura.RQL.DML.Select
-import           Hasura.RQL.Instances      ()
+import           Hasura.RQL.Instances           ()
 import           Hasura.RQL.Types
-import           Hasura.Server.Version     (HasVersion)
-import           Hasura.Session
+import           Hasura.Server.Version          (HasVersion)
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
+import           Hasura.Session
 
 type MutationRemoteJoinCtx = (HTTP.Manager, [N.Header], UserInfo)
 
@@ -139,7 +140,6 @@ executeMutationOutputQuery env query prepArgs = \case
       <$> liftTx (Q.rawQE dmlTxErrorHandler query prepArgs False)
   Just (remoteJoins, (httpManager, reqHeaders, userInfo)) ->
     executeQueryWithRemoteJoins env httpManager reqHeaders userInfo query prepArgs remoteJoins
-
 
 mutateAndFetchCols
   :: QualifiedTable
