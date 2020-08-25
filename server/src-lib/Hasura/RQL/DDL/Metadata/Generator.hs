@@ -3,9 +3,9 @@ module Hasura.RQL.DDL.Metadata.Generator
   (genMetadata)
 where
 
-import           Hasura.GraphQL.Utils                          (simpleGraphQLQuery)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
+import           Hasura.GraphQL.Utils                          (simpleGraphQLQuery)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -23,6 +23,7 @@ import qualified System.Cron.Parser                            as Cr
 
 import           Data.List.Extended                            (duplicates)
 import           Data.Scientific
+import           System.Cron.Types
 import           Test.QuickCheck
 import           Test.QuickCheck.Instances.Semigroup           ()
 import           Test.QuickCheck.Instances.Time                ()
@@ -47,7 +48,7 @@ genMetadata = do
       MVVersion2 -> FMVersion2 <$> arbitrary
 
 instance Arbitrary G.Name where
-  arbitrary = G.Name . T.pack <$> listOf1 (elements ['a'..'z'])
+  arbitrary = G.unsafeMkName . T.pack <$> listOf1 (elements ['a'..'z'])
 
 instance Arbitrary MetadataVersion where
   arbitrary = genericArbitrary
@@ -197,17 +198,11 @@ instance Arbitrary CreateCollection where
 instance Arbitrary CollectionReq where
   arbitrary = genericArbitrary
 
-instance Arbitrary G.NamedType where
-  arbitrary = G.NamedType <$> arbitrary
-
 instance Arbitrary G.Description where
   arbitrary = G.Description <$> arbitrary
 
 instance Arbitrary G.Nullability where
   arbitrary = genericArbitrary
-
-instance Arbitrary G.ListType where
-  arbitrary = G.ListType <$> arbitrary
 
 instance Arbitrary G.GType where
   arbitrary = genericArbitrary
@@ -239,16 +234,16 @@ instance Arbitrary RelationshipName where
 instance Arbitrary ObjectFieldName where
   arbitrary = genericArbitrary
 
-instance Arbitrary TypeRelationshipDefinition  where
+instance (Arbitrary a, Arbitrary b) => Arbitrary (TypeRelationship a b)  where
   arbitrary = genericArbitrary
 
 instance Arbitrary ObjectTypeName where
   arbitrary = genericArbitrary
 
-instance Arbitrary ObjectFieldDefinition where
+instance (Arbitrary a) => Arbitrary (ObjectFieldDefinition a) where
   arbitrary = genericArbitrary
 
-instance Arbitrary ObjectTypeDefinition where
+instance (Arbitrary a, Arbitrary b, Arbitrary c) => Arbitrary (ObjectTypeDefinition a b c) where
   arbitrary = genericArbitrary
 
 instance Arbitrary ScalarTypeDefinition where
@@ -269,7 +264,7 @@ instance Arbitrary CustomTypes where
 instance Arbitrary ArgumentName where
   arbitrary = genericArbitrary
 
-instance Arbitrary ArgumentDefinition where
+instance (Arbitrary a) => Arbitrary (ArgumentDefinition a) where
   arbitrary = genericArbitrary
 
 instance Arbitrary ActionMutationKind where
@@ -278,7 +273,7 @@ instance Arbitrary ActionMutationKind where
 instance Arbitrary ActionType where
   arbitrary = genericArbitrary
 
-instance (Arbitrary a) => Arbitrary (ActionDefinition a) where
+instance (Arbitrary a, Arbitrary b) => Arbitrary (ActionDefinition a b) where
   arbitrary = genericArbitrary
 
 instance Arbitrary ActionName where
@@ -293,18 +288,10 @@ instance Arbitrary ActionPermissionMetadata where
 instance Arbitrary ActionMetadata where
   arbitrary = genericArbitrary
 
-deriving instance Arbitrary G.StringValue
-deriving instance Arbitrary G.Variable
-deriving instance Arbitrary G.ListValue
-deriving instance Arbitrary G.ObjectValue
-
-instance Arbitrary G.Value where
-  arbitrary = genericArbitrary
-
-instance (Arbitrary a) => Arbitrary (G.ObjectFieldG a) where
-  arbitrary = genericArbitrary
-
 deriving instance Arbitrary RemoteArguments
+
+instance Arbitrary a => Arbitrary (G.Value a) where
+  arbitrary = genericArbitrary
 
 instance Arbitrary FieldCall where
   arbitrary = genericArbitrary

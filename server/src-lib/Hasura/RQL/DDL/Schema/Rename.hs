@@ -365,13 +365,18 @@ updateColInRel fromQT rn rnCol = do
                 updateColInArrRel fromQT (riRTable relInfo) rnCol
 
 updateColInRemoteRelationship
-  :: (MonadWriter MetadataModifier m)
+  :: ( MonadError QErr m
+     , MonadWriter MetadataModifier m
+     )
   => RemoteRelationshipName -> RenameCol -> m ()
-updateColInRemoteRelationship remoteRelationshipName renameCol =
+-- <<<<<<< HEAD
+updateColInRemoteRelationship remoteRelationshipName renameCol = do
+  oldColName <- parseGraphQLName $ getPGColTxt oldCol
+  newColName <- parseGraphQLName $ getPGColTxt newCol
   tell $ MetadataModifier $
     metaTables.ix qt.tmRemoteRelationships.ix remoteRelationshipName.rrmDefinition %~
       (rrdHasuraFields %~ modifyHasuraFields) .
-      (rrdRemoteField %~ modifyFieldCalls)
+      (rrdRemoteField %~ modifyFieldCalls oldColName newColName)
   -- (RemoteRelationshipDef remoteSchemaName hasuraFlds remoteFields) <-
   --   liftTx $ RR.getRemoteRelDefFromCatalog remoteRelationshipName qt
   -- let oldColPGTxt = getPGColTxt oldCol
@@ -387,36 +392,31 @@ updateColInRemoteRelationship remoteRelationshipName renameCol =
   where
     (RenameItem qt oldCol newCol) = renameCol
     modifyHasuraFields = Set.insert (fromPGCol newCol) . Set.delete (fromPGCol oldCol)
-    modifyFieldCalls =
-      let oldColName = G.Name $ getPGColTxt oldCol
-          newColName = G.Name $ getPGColTxt newCol
-      in RemoteFields
-         . NE.map (\(FieldCall name args) ->
-                      let remoteArgs = getRemoteArguments args
-                      in FieldCall name $ RemoteArguments $
-                         map (\(G.ObjectFieldG key val) ->
-                                 G.ObjectFieldG key $ replaceVariableName oldColName newColName val
-                             ) remoteArgs
-                  )
-         . unRemoteFields
+    modifyFieldCalls oldColName newColName =
+      RemoteFields
+      . NE.map (\(FieldCall name args) ->
+                   let remoteArgs = getRemoteArguments args
+                   in FieldCall name $ RemoteArguments $
 
-    replaceVariableName :: G.Name -> G.Name -> G.Value -> G.Value
+                                      fmap (replaceVariableName oldColName newColName) remoteArgs
+                      -- map (\(G.ObjectFieldG key val) ->
+                      --         G.ObjectFieldG key $ replaceVariableName oldColName newColName val
+                      --     ) remoteArgs
+               )
+      . unRemoteFields
+
+    parseGraphQLName txt = maybe (throw400 ParseFailed errMsg) pure $ G.mkName txt
+      where
+        errMsg = txt <> " is not a valid GraphQL name"
+
+    replaceVariableName :: G.Name -> G.Name -> G.Value G.Name -> G.Value G.Name
     replaceVariableName oldColName newColName = \case
-      G.VVariable (G.Variable oldColName') ->
-        G.VVariable $
-        if oldColName == oldColName'
-        then (G.Variable newColName)
-        else (G.Variable oldColName')
-      G.VList (G.unListValue -> values) -> G.VList $ G.ListValueG $ map (replaceVariableName oldColName newColName) values
-      G.VObject (G.unObjectValue -> values) ->
-        G.VObject $ G.ObjectValueG $
-        map (\(G.ObjectFieldG key val) -> G.ObjectFieldG key $ replaceVariableName oldColName newColName val) values
-      G.VInt i -> G.VInt i
-      G.VFloat f -> G.VFloat f
-      G.VBoolean b -> G.VBoolean b
-      G.VNull -> G.VNull
-      G.VString s -> G.VString s
-      G.VEnum e -> G.VEnum e
+      G.VVariable oldColName' ->
+        G.VVariable $ bool oldColName newColName $ oldColName == oldColName'
+      G.VList values -> G.VList $ map (replaceVariableName oldColName newColName) values
+      G.VObject values ->
+        G.VObject $ fmap (replaceVariableName oldColName newColName) values
+      v -> v
 
 -- rename columns in relationship definitions
 updateColInEventTriggerDef

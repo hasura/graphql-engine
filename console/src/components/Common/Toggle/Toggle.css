@@ -11,3 +11,6 @@
   width: 18px;
   height: 18px;
 }
+.react-toggle--focus .react-toggle-thumb {
+  box-shadow: none;
+}

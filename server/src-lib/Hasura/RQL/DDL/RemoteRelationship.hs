@@ -1,4 +1,5 @@
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE RecordWildCards #-}
 module Hasura.RQL.DDL.RemoteRelationship
   ( runCreateRemoteRelationship
   , runDeleteRemoteRelationship
@@ -12,17 +13,18 @@ module Hasura.RQL.DDL.RemoteRelationship
   ) where
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.RemoteRelationship.Validate
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Column                    ()
 import           Hasura.SQL.Types
+import           Hasura.RQL.DDL.RemoteRelationship.Validate
 
 import           Control.Lens                               (ix)
 import           Instances.TH.Lift                          ()
 
 import qualified Data.HashMap.Strict                        as HM
 import qualified Database.PG.Query                          as Q
+import qualified Data.HashSet                               as HS
 
 runCreateRemoteRelationship
   :: (MonadTx m, CacheRWM m) => RemoteRelationship -> m EncJSON
@@ -42,29 +44,28 @@ resolveRemoteRelationship
   => RemoteRelationship
   -> [PGColumnInfo]
   -> RemoteSchemaMap
-  -> m (RemoteFieldInfo, TypeMap, [SchemaDependency])
-resolveRemoteRelationship remoteRelationship pgColumns remoteSchemaMap = do
-  (remoteField, typesMap) <- either (throw400 RemoteSchemaError . validateErrorToText)
-                             pure
-                             (validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns)
-
-  let schemaDependencies =
-        let table = rtrTable remoteRelationship
-            columns = _rfiHasuraFields remoteField
-            remoteSchemaName = rtrRemoteSchema remoteRelationship
-            tableDep = SchemaDependency (SOTable table) DRTable
+  -> m (RemoteFieldInfo, [SchemaDependency])
+resolveRemoteRelationship remoteRelationship
+                          pgColumns
+                          remoteSchemaMap = do
+  eitherRemoteField <- runExceptT $
+    validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns
+  remoteField <- either (throw400 RemoteSchemaError . errorToText) pure $ eitherRemoteField
+  let table = rtrTable remoteRelationship
+      schemaDependencies =
+        let tableDep = SchemaDependency (SOTable table) DRTable
             columnsDep =
               map
                 (\column ->
                    SchemaDependency
                      (SOTableObj table $ TOCol column)
                      DRRemoteRelationship ) $
-              map pgiColumn (toList columns)
+              map pgiColumn $ HS.toList $ _rfiHasuraFields remoteField
             remoteSchemaDep =
-              SchemaDependency (SORemoteSchema remoteSchemaName) DRRemoteSchema
+              SchemaDependency (SORemoteSchema $ rtrRemoteSchema remoteRelationship) DRRemoteSchema
          in (tableDep : remoteSchemaDep : columnsDep)
 
-  pure (remoteField, typesMap, schemaDependencies)
+  pure (remoteField, schemaDependencies)
 
 runUpdateRemoteRelationship :: (MonadTx m, CacheRWM m) => RemoteRelationship -> m EncJSON
 runUpdateRemoteRelationship RemoteRelationship{..} = do

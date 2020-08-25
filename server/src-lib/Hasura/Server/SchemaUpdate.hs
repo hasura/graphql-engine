@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module Hasura.Server.SchemaUpdate
   ( startSchemaSyncListenerThread
   , startSchemaSyncProcessorThread
@@ -19,7 +20,9 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.IORef
+#ifndef PROFILING
 import           GHC.AssertNF
+#endif
 
 import qualified Control.Concurrent.Extended as C
 import qualified Control.Concurrent.STM      as STM
@@ -149,7 +152,9 @@ listener pool logger schemaSyncEventRef =
           Left e -> logError logger threadType $ TEJsonParse $ T.pack e
           Right payload -> do
             logInfo logger threadType $ object ["received_event" .= payload]
+#ifndef PROFILING
             $assertNFHere payload  -- so we don't write thunks to mutable vars
+#endif
             -- Push a notify event to Queue
             STM.atomically $ STM.writeTVar schemaSyncEventRef $ Just payload
 

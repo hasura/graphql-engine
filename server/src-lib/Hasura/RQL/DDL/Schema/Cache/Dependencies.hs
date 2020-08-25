@@ -132,12 +132,12 @@ deleteMetadataObject objectId = case objectId of
   MORemoteSchema name -> boRemoteSchemas %~ M.delete name
   MOCronTrigger name  -> boCronTriggers %~ M.delete name
   MOTableObj tableName tableObjectId -> boTables.ix tableName %~ case tableObjectId of
-    MTORel           name _    -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromRel name)
-    MTOComputedField name      -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromComputedField name)
+    MTORel           name _ -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromRel name)
+    MTOComputedField name   -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromComputedField name)
     MTORemoteRelationship name -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromRemoteRelationship name)
     MTOPerm roleName permType -> withPermType permType \accessor ->
       tiRolePermInfoMap.ix roleName.permAccToLens accessor .~ Nothing
     MTOTrigger name -> tiEventTriggerInfoMap %~ M.delete name
-  MOCustomTypes                -> boCustomTypes %~ const (NonObjectTypeMap mempty, mempty)
+  MOCustomTypes                -> boCustomTypes %~ const emptyAnnotatedCustomTypes
   MOAction           name      -> boActions %~ M.delete name
   MOActionPermission name role -> boActions.ix name.aiPermissions %~ M.delete role
