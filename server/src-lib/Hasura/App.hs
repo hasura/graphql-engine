@@ -163,7 +163,7 @@ data InitCtx
   , _icInstanceId    :: !InstanceId
   , _icLoggers       :: !Loggers
   , _icConnInfo      :: !Q.ConnInfo
-  , _icPgPool        :: !Q.PGPool
+  , _icPgPool        :: !Q.PGPoolResource
   , _icShutdownLatch :: !ShutdownLatch
   , _icSchemaCache   :: !(RebuildableSchemaCache Run, Maybe UTCTime)
   }
@@ -206,7 +206,7 @@ initialiseCtx env hgeCmd rci = do
       unLogger logger $ serveOptsToLog so
       -- log postgres connection info
       unLogger logger $ connInfoToLog connInfo
-      pool <- liftIO $ Q.initPGPool connInfo soConnParams pgLogger
+      pool <- liftIO $ Q.initPGPoolResource connInfo soConnParams pgLogger
       pure (l, pool, SQLGenCtx soStringifyNum)
 
     -- for other commands generate a minimal PG pool
@@ -216,7 +216,7 @@ initialiseCtx env hgeCmd rci = do
       pure (l, pool, SQLGenCtx False)
 
   res <- flip onException (flushLogger (_lsLoggerCtx loggers)) $
-    migrateCatalogSchema env (_lsLogger loggers) pool httpManager sqlGenCtx
+    migrateCatalogSchema env (_lsLogger loggers) (Q.pgResourcePool pool) httpManager sqlGenCtx
   pure (InitCtx httpManager instanceId loggers connInfo pool latch res, initTime)
   where
     procConnInfo =
@@ -224,7 +224,7 @@ initialiseCtx env hgeCmd rci = do
 
     getMinimalPool pgLogger ci = do
       let connParams = Q.defaultConnParams { Q.cpConns = 1 }
-      liftIO $ Q.initPGPool ci connParams pgLogger
+      liftIO $ Q.initPGPoolResource ci connParams pgLogger
 
     mkLoggers enabledLogs logLevel = do
       loggerCtx <- liftIO $ mkLoggerCtx (defaultLoggerSettings True logLevel) enabledLogs
@@ -329,6 +329,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
 
   let sqlGenCtx = SQLGenCtx soStringifyNum
       Loggers loggerCtx logger _ = _icLoggers
+      Q.PGPoolResource pgPool _ = _icPgPool
 
   authModeRes <- runExceptT $ setupAuthMode soAdminSecret soAuthHook soJwtSecret soUnAuthRole
                               _icHttpManager logger
@@ -344,7 +345,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
              logger
              sqlGenCtx
              soEnableAllowlist
-             _icPgPool
+             pgPool
              pgExecCtx
              _icConnInfo
              _icHttpManager
@@ -368,7 +369,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
 
   -- start background threads for schema sync
   (schemaSyncListenerThread, schemaSyncProcessorThread) <-
-    startSchemaSyncThreads sqlGenCtx _icPgPool logger _icHttpManager
+    startSchemaSyncThreads sqlGenCtx pgPool logger _icHttpManager
                            cacheRef _icInstanceId cacheInitTime
 
   let
@@ -379,28 +380,28 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
   lockedEventsCtx <- liftIO $ atomically initLockedEventsCtx
 
   -- prepare event triggers data
-  prepareEvents _icPgPool logger
+  prepareEvents pgPool logger
   eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI
   unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
 
   eventQueueThread <- C.forkImmortal "processEventQueue" logger $
     processEventQueue logger logEnvHeaders
-    _icHttpManager _icPgPool (getSCFromRef cacheRef) eventEngineCtx lockedEventsCtx
+    _icHttpManager pgPool (getSCFromRef cacheRef) eventEngineCtx lockedEventsCtx
 
   -- start a backgroud thread to handle async actions
   asyncActionsThread <- C.forkImmortal "asyncActionsProcessor" logger $
-    asyncActionsProcessor env logger (_scrCache cacheRef) _icPgPool _icHttpManager
+    asyncActionsProcessor env logger (_scrCache cacheRef) pgPool _icHttpManager
 
   -- start a background thread to create new cron events
   cronEventsThread <- liftIO $ C.forkImmortal "runCronEventsGenerator" logger $
-    runCronEventsGenerator logger _icPgPool (getSCFromRef cacheRef)
+    runCronEventsGenerator logger pgPool (getSCFromRef cacheRef)
 
   -- prepare scheduled triggers
-  prepareScheduledEvents _icPgPool logger
+  prepareScheduledEvents pgPool logger
 
   -- start a background thread to deliver the scheduled events
   scheduledEventsThread <- C.forkImmortal "processScheduledTriggers" logger $
-    processScheduledTriggers env logger logEnvHeaders _icHttpManager _icPgPool (getSCFromRef cacheRef) lockedEventsCtx
+    processScheduledTriggers env logger logEnvHeaders _icHttpManager pgPool (getSCFromRef cacheRef) lockedEventsCtx
 
   -- start a background thread to check for updates
   updateThread <- C.forkImmortal "checkForUpdates" logger $ liftIO $
@@ -411,7 +412,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
     then do
       unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
 
-      (dbId, pgVersion) <- liftIO $ runTxIO _icPgPool (Q.ReadCommitted, Nothing) $
+      (dbId, pgVersion) <- liftIO $ runTxIO pgPool (Q.ReadCommitted, Nothing) $
         (,) <$> getDbId <*> getPgVersion
 
       telemetryThread <- C.forkImmortal "runTelemetry" logger $ liftIO $
@@ -436,7 +437,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
   let warpSettings = Warp.setPort soPort
                      . Warp.setHost soHost
                      . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
-                     . Warp.setInstallShutdownHandler (shutdownHandler _icLoggers immortalThreads stopWsServer lockedEventsCtx _icPgPool)
+                     . Warp.setInstallShutdownHandler (shutdownHandler _icLoggers immortalThreads stopWsServer lockedEventsCtx pgPool)
                      $ Warp.defaultSettings
   liftIO $ Warp.runSettings warpSettings app
 

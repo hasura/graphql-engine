@@ -33,10 +33,10 @@ import qualified Data.Parser.URLTemplate      as URLTemplate
 import qualified Data.TimeSpec                as TimeSpec
 import qualified Hasura.IncrementalSpec       as IncrementalSpec
 -- import qualified Hasura.RQL.MetadataSpec      as MetadataSpec
-import qualified Hasura.Server.MigrateSpec    as MigrateSpec
-import qualified Hasura.Server.TelemetrySpec  as TelemetrySpec
 import qualified Hasura.CacheBoundedSpec      as CacheBoundedSpec
 import qualified Hasura.Server.AuthSpec       as AuthSpec
+import qualified Hasura.Server.MigrateSpec    as MigrateSpec
+import qualified Hasura.Server.TelemetrySpec  as TelemetrySpec
 
 data TestSuites
   = AllSuites !RawConnInfo
@@ -78,7 +78,7 @@ buildPostgresSpecs pgConnOptions = do
   pgConnInfo <- flip onLeft printErrExit $ mkConnInfo rawPGConnInfo
 
   let setupCacheRef = do
-        pgPool <- Q.initPGPool pgConnInfo Q.defaultConnParams { Q.cpConns = 1 } print
+        pgPool <- Q.pgResourcePool <$> Q.initPGPoolResource pgConnInfo Q.defaultConnParams { Q.cpConns = 1 } print
         let pgContext = mkPGExecCtx Q.Serializable pgPool
         httpManager <- HTTP.newManager HTTP.tlsManagerSettings
         let runContext = RunCtx adminUserInfo httpManager (SQLGenCtx False)

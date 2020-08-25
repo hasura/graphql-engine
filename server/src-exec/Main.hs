@@ -22,8 +22,8 @@ import qualified Data.Environment           as Env
 import qualified Database.PG.Query          as Q
 import qualified Hasura.Tracing             as Tracing
 import qualified System.Exit                as Sys
-import qualified System.Posix.Signals       as Signals
 import qualified System.Metrics             as EKG
+import qualified System.Posix.Signals       as Signals
 
 
 main :: IO ()
@@ -69,7 +69,7 @@ runApp env (HGEOptionsG rci hgeCmd) =
       (InitCtx{..}, _) <- initialiseCtx env hgeCmd rci
       queryBs <- liftIO BL.getContents
       let sqlGenCtx = SQLGenCtx False
-      res <- runAsAdmin _icPgPool sqlGenCtx _icHttpManager $ do
+      res <- runAsAdmin (Q.pgResourcePool _icPgPool) sqlGenCtx _icHttpManager $ do
         schemaCache <- buildRebuildableSchemaCache env
         execQuery env queryBs
           & Tracing.runTraceTWithReporter Tracing.noReporter "execute"
@@ -82,12 +82,12 @@ runApp env (HGEOptionsG rci hgeCmd) =
       (InitCtx{..}, initTime) <- initialiseCtx env hgeCmd rci
       let sqlGenCtx = SQLGenCtx False
       res <- downgradeCatalog opts initTime
-             & runAsAdmin _icPgPool sqlGenCtx _icHttpManager
+             & runAsAdmin (Q.pgResourcePool _icPgPool) sqlGenCtx _icHttpManager
       either (printErrJExit DowngradeProcessError) (liftIO . print) res
 
     HCVersion -> liftIO $ putStrLn $ "Hasura GraphQL Engine: " ++ convertText currentVersion
   where
     runTx' initCtx tx txIso =
-      liftIO $ runExceptT $ Q.runTx (_icPgPool initCtx) (txIso, Nothing) tx
+      liftIO $ runExceptT $ Q.runTx ((Q.pgResourcePool . _icPgPool) initCtx) (txIso, Nothing) tx
 
     cleanSuccess = liftIO $ putStrLn "successfully cleaned graphql-engine related data"
