@@ -6,7 +6,7 @@ response:
   - extensions:
       path: "$.selectionSet.update_author.args.where"
       code: "validation-failed"
-    message: "null value found for non-nullable type: author_bool_exp!"
+    message: expected an object for type "author_bool_exp", but found null
 query:
   query: |
     mutation update_author {

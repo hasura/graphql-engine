@@ -25,7 +25,7 @@ import qualified Data.Text.Encoding      as TE
 import qualified Database.PG.Query       as Q
 
 -- encoded json
--- TODO: can be improved with gadts capturing bytestring, lazybytestring
+-- TODO (from master): can be improved with gadts capturing bytestring, lazybytestring
 -- and builder
 newtype EncJSON
   = EncJSON { unEncJSON :: BB.Builder }

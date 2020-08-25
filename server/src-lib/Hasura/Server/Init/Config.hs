@@ -14,8 +14,8 @@ import           Data.Time
 import           Network.Wai.Handler.Warp         (HostPreference)
 
 import qualified Hasura.Cache.Bounded             as Cache
-import qualified Hasura.GraphQL.Execute           as E
 import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
+import qualified Hasura.GraphQL.Execute.Plan      as E
 import qualified Hasura.Logging                   as L
 
 import           Hasura.Prelude
@@ -142,7 +142,7 @@ data API
   | DEVELOPER
   | CONFIG
   deriving (Show, Eq, Read, Generic)
-  
+
 $(J.deriveJSON (J.defaultOptions { J.constructorTagModifier = map toLower })
   ''API)
 
