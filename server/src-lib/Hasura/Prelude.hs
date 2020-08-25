@@ -2,6 +2,9 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Hasura.Prelude
   ( module M
+  -- BAD
+  , mySQLConnection
+  -- BAD
   , alphabet
   , alphaNumerics
   , onNothing
@@ -27,6 +30,7 @@ module Hasura.Prelude
 
 import           Control.Applicative               as M (Alternative (..), liftA2)
 import           Control.Arrow                     as M (first, second, (&&&), (***), (<<<), (>>>))
+import           Control.Concurrent.MVar
 import           Control.DeepSeq                   as M (NFData, deepseq, force)
 import           Control.Monad.Base                as M
 import           Control.Monad.Except              as M
@@ -74,16 +78,28 @@ import           Text.Read                         as M (readEither, readMaybe)
 
 import qualified Data.ByteString                   as B
 import qualified Data.ByteString.Base64.Lazy       as Base64
-import           Data.Coerce
 import qualified Data.ByteString.Lazy              as BL
+import           Data.Coerce
 import qualified Data.HashMap.Strict               as Map
 import qualified Data.Set                          as Set
 import qualified Data.Text                         as T
 import qualified Data.Text.Encoding                as TE
 import qualified Data.Text.Encoding.Error          as TE
+import qualified Database.MySQL.Connection         as My
 import qualified GHC.Clock                         as Clock
+import qualified System.IO.Unsafe                  as BAD
 import qualified Test.QuickCheck                   as QC
 import           Unsafe.Coerce
+
+
+-- TODO TODO TODO FIX THIS NOOOOOOO DANGER HERE BE LASER-DRAGONS
+
+mySQLConnection :: MVar (Maybe My.MySQLConn)
+{-# NOINLINE mySQLConnection #-}
+mySQLConnection = BAD.unsafePerformIO $ newMVar Nothing
+
+-- END OF WASTELAND
+
 
 alphabet :: String
 alphabet = ['a'..'z'] ++ ['A'..'Z']

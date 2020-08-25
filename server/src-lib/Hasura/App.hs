@@ -19,6 +19,7 @@ import           Data.Time.Clock                           (UTCTime)
 #ifndef PROFILING
 import           GHC.AssertNF
 #endif
+import           Control.Concurrent.MVar
 import           GHC.Stats
 import           Options.Applicative
 import           System.Environment                        (getEnvironment)
@@ -35,6 +36,7 @@ import qualified Data.Set                                  as Set
 import qualified Data.Text                                 as T
 import qualified Data.Time.Clock                           as Clock
 import qualified Data.Yaml                                 as Y
+import qualified Database.MySQL.Connection                 as My
 import qualified Database.PG.Query                         as Q
 import qualified Network.HTTP.Client                       as HTTP
 import qualified Network.HTTP.Client.TLS                   as HTTP
@@ -201,6 +203,10 @@ initialiseCtx env hgeCmd rci = do
   latch <- liftIO newShutdownLatch
   let mySQLConnInfo = mkMySQLConnInfo rci
       dataSource = maybe PostgresDB (const MySQLDB) mySQLConnInfo
+  onJust mySQLConnInfo \connInfo -> liftIO do
+    (greeting, connection) <- My.connectDetail connInfo
+    print greeting
+    void $ swapMVar mySQLConnection $ Just connection
   (loggers, pool, sqlGenCtx) <- case hgeCmd of
     -- for the @serve@ command generate a regular PG pool
     HCServe so@ServeOptions{..} -> do
