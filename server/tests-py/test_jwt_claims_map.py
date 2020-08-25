@@ -19,12 +19,12 @@ if not hge_jwt_conf:
 if 'claims_map' not in hge_jwt_conf:
     pytest.skip('cliams_map missing in jwt config, skipping JWT Claims Map tests', allow_module_level=True)
 
-# The assumed claims_map present in jwt config
+# The following claims_map is assumed to be set
 # {
 #     "claims_map": {
-#         "x-hasura-user-id": "$.['https://myapp.com/jwt/claims'].user.id",
-#         "x-hasura-allowed-roles": "$.['https://myapp.com/jwt/claims'].role.allowed",
-#         "x-hasura-default-role": "$.['https://myapp.com/jwt/claims'].role.default"
+#         "x-hasura-user-id": {"path":"$.['https://myapp.com/jwt/claims'].user.id"}
+#         "x-hasura-allowed-roles": {"$.['https://myapp.com/jwt/claims'].role.allowed","default":["user","editor"]}
+#         "x-hasura-default-role": {"$.['https://myapp.com/jwt/claims'].role.default","default":"user"}
 #     }
 # }
 
@@ -39,6 +39,11 @@ def clean_null_terms(d):
          clean[k] = v
    return clean
 
+# TestJWTClaimsMapBasic will be called using two different JWT configs
+# one with default values and the other without default values. The
+# default values here is referred to the default value that's being
+# used when a value is not found while looking up the JWT token using
+# the JSON Path provided
 @pytest.mark.parametrize('endpoint', ['/v1/graphql', '/v1alpha1/graphql'])
 class TestJWTClaimsMapBasic():
     def mk_claims(self, user_id=None, allowed_roles=None, default_role=None):
@@ -82,22 +87,27 @@ class TestJWTClaimsMapBasic():
 
     def test_jwt_claims_map_no_allowed_roles_in_claim(self, hge_ctx, endpoint):
         self.mk_claims('1', None, 'user')
+        default_allowed_roles = hge_ctx.hge_jwt_conf_dict['claims_map']['x-hasura-allowed-roles'].get('default')
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
         self.conf['headers']['Authorization'] = 'Bearer ' + token
-        self.conf['response'] = {
-            'errors': [{
-                'extensions': {
-                    'code': 'jwt-missing-role-claims',
-                    'path': '$'
-                },
-                'message': 'JWT claim does not contain x-hasura-allowed-roles'
-            }]
-        }
-        self.conf['url'] = endpoint
-        if endpoint == '/v1/graphql':
+        if default_allowed_roles is None:
+            self.conf['response'] = {
+                'errors': [{
+                    'extensions': {
+                        'code': 'jwt-missing-role-claims',
+                        'path': '$'
+                    },
+                    'message': 'JWT claim does not contain x-hasura-allowed-roles'
+                }]
+            }
+            self.conf['url'] = endpoint
+            if endpoint == '/v1/graphql':
+                self.conf['status'] = 200
+            if endpoint == '/v1alpha1/graphql':
+                self.conf['status'] = 400
+        else:
             self.conf['status'] = 200
-        if endpoint == '/v1alpha1/graphql':
-            self.conf['status'] = 400
+        self.conf['url'] = endpoint
         check_query(hge_ctx, self.conf, add_auth=False)
 
     def test_jwt_claims_map_invalid_allowed_roles_in_claim(self, hge_ctx, endpoint):
@@ -121,43 +131,54 @@ class TestJWTClaimsMapBasic():
         check_query(hge_ctx, self.conf, add_auth=False)
 
     def test_jwt_claims_map_no_default_role(self, hge_ctx, endpoint):
+        # default_default_role is the default default role set in the JWT config
+        # when the lookup with the JSONPath fails, this is the value that will
+        # be used for the `x-hasura-default-role` claim
+        default_default_role = hge_ctx.hge_jwt_conf_dict['claims_map']['x-hasura-default-role'].get('default')
         self.mk_claims('1', ['user'])
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
         self.conf['headers']['Authorization'] = 'Bearer ' + token
-        self.conf['response'] = {
-            'errors': [{
-                'extensions': {
-                    'code': 'jwt-missing-role-claims',
-                    'path': '$'
-                },
-                'message': 'JWT claim does not contain x-hasura-default-role'
-            }]
-        }
-        self.conf['url'] = endpoint
-        if endpoint == '/v1/graphql':
+        if default_default_role is None:
+            self.conf['response'] = {
+                'errors': [{
+                    'extensions': {
+                        'code': 'jwt-missing-role-claims',
+                        'path': '$'
+                    },
+                    'message': 'JWT claim does not contain x-hasura-default-role'
+                }]
+            }
+            if endpoint == '/v1/graphql':
+                self.conf['status'] = 200
+            if endpoint == '/v1alpha1/graphql':
+                self.conf['status'] = 400
+        else:
             self.conf['status'] = 200
-        if endpoint == '/v1alpha1/graphql':
-            self.conf['status'] = 400
+        self.conf['url'] = endpoint
         check_query(hge_ctx, self.conf, add_auth=False)
 
     def test_jwt_claims_map_claim_not_found(self, hge_ctx, endpoint):
+        default_user_id = hge_ctx.hge_jwt_conf_dict['claims_map']['x-hasura-user-id'].get('default')
         self.mk_claims(None, ['user', 'editor'], 'user')
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
         self.conf['headers']['Authorization'] = 'Bearer ' + token
-        self.conf['response'] = {
-            'errors': [{
-                'extensions': {
-                    'code': 'jwt-invalid-claims',
-                    'path': '$'
-                },
-                'message': 'JWT claim from claims_map, x-hasura-user-id not found'
-            }]
-        }
-        self.conf['url'] = endpoint
-        if endpoint == '/v1/graphql':
+        if default_user_id is None:
+            self.conf['response'] = {
+                'errors': [{
+                    'extensions': {
+                        'code': 'jwt-invalid-claims',
+                        'path': '$'
+                    },
+                    'message': 'JWT claim from claims_map, x-hasura-user-id not found'
+                }]
+            }
+            if endpoint == '/v1/graphql':
+                self.conf['status'] = 200
+            if endpoint == '/v1alpha1/graphql':
+                self.conf['status'] = 400
+        else:
             self.conf['status'] = 200
-        if endpoint == '/v1alpha1/graphql':
-            self.conf['status'] = 400
+        self.conf['url'] = endpoint
         check_query(hge_ctx, self.conf, add_auth=False)
 
     @pytest.fixture(autouse=True)
