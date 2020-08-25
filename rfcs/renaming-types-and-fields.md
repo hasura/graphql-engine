@@ -1,36 +1,9 @@
-## Rename type and field names for Postgres and Remote Schemas
+## Rename type and field names for Remote Schemas
 
-When adding a table or a remote schema (or after adding), users can be given a choice to rename
+When adding a remote schema (or after adding), users can be given a choice to rename
 types and fields so that they are graphql-conformant, avoid conflicts, or simply more usable.
 
-### For postgres:
-
-For postgres, we already have a `set_table_custom_fields` API which allows you to rename top-level fields and column names: https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/table-view.html#set-table-custom-fields
-
-This can include `custom_table_type` key which will change the name of the type of table. E.g.
-
-```
-{
-   "type": "set_table_custom_fields",
-   "version": 2,
-   "args": {
-     "table": "author",
-     "custom_root_fields": {
-        "select": "Authors",
-        "select_by_pk": "Author",
-        "select_aggregate": "AuthorAggregate",
-     },
-     "custom_column_names": {
-        "id": "authorId"
-     },
-     “custom_table_type”: “myauthor”
-   }
-}
-```
-
-### For remote schemas:
-
-There are 2 independent things that are required:
+There are 2 independent things that are required for Remote Schemas:
 
 1. Namespacing
 2. Customise type and field names (also enable prefixing)
