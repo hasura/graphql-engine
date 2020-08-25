@@ -243,7 +243,9 @@ export const loadInconsistentObjects = (
     const { shouldReloadMetadata, shouldReloadRemoteSchemas } = reloadConfig;
 
     const loadQuery = shouldReloadMetadata
-      ? getReloadCacheAndGetInconsistentObjectsQuery(!!shouldReloadRemoteSchemas)
+      ? getReloadCacheAndGetInconsistentObjectsQuery(
+          !!shouldReloadRemoteSchemas
+        )
       : inconsistentObjectsQuery;
 
     dispatch({ type: LOADING_METADATA });
