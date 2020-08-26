@@ -2,7 +2,7 @@ import { defaultViewState } from '../DataState';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import requestAction from 'utils/requestAction';
 import filterReducer from './FilterActions';
-import { findTableFromRel, getEstimateCountQuery } from '../utils';
+import { findTableFromRel } from '../utils';
 import {
   showSuccessNotification,
   showErrorNotification,
@@ -19,7 +19,7 @@ import {
 import { COUNT_LIMIT } from '../constants';
 import { getStatementTimeoutSql } from '../RawSQL/utils';
 import { isPostgresTimeoutError } from './utils';
-import { generateTableDef } from '../../../../dataSources';
+import { generateTableDef, dataSource } from '../../../../dataSources';
 
 /* ****************** View actions *************/
 const V_SET_DEFAULTS = 'ViewTable/V_SET_DEFAULTS';
@@ -85,7 +85,9 @@ const vMakeRowsRequest = () => {
           view.query.limit,
           view.query.order_by
         ),
-        getRunSqlQuery(getEstimateCountQuery(currentSchema, originalTable)),
+        getRunSqlQuery(
+          dataSource.getEstimateCountQuery(currentSchema, originalTable)
+        ),
       ],
     };
     const options = {

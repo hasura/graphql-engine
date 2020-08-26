@@ -1,11 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { commonDataTypes } from '../utils';
 import { getDataOptions, inferDefaultValues } from '../Common/utils';
 
 import TableColumnDefault from './TableColumnDefault';
 import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
+import { dataSource } from '../../../../dataSources';
 
 /* Custom style object for searchable select box */
 const customSelectBoxStyles = {
@@ -55,7 +55,7 @@ const TableColumn = props => {
     onColTypeChange(selectedOption.colIdentifier, selectedOption.value);
   };
   const { columnDataTypes, columnTypeValueMap } = getDataOptions(
-    commonDataTypes,
+    dataSource.commonDataTypes,
     restTypes,
     i
   );

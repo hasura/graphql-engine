@@ -26,7 +26,6 @@ import {
   getUniqueConstraintName,
 } from '../Common/Components/utils';
 
-import { isColTypeString, isPostgresFunction } from '../utils';
 import {
   sqlEscapeText,
   getCreateCheckConstraintSql,
@@ -43,6 +42,7 @@ import {
   getTableDef,
   getComputedFieldName,
   generateTableDef,
+  dataSource,
 } from '../../../../dataSources';
 import {
   getSetCustomRootFieldsQuery,
@@ -1197,8 +1197,12 @@ const addColSql = (
 ) => {
   let defWithQuotes = "''";
 
-  const checkIfFunctionFormat = isPostgresFunction(colDefault);
-  if (isColTypeString(colType) && colDefault !== '' && !checkIfFunctionFormat) {
+  const checkIfFunctionFormat = dataSource.isSQLFunction(colDefault);
+  if (
+    dataSource.isColTypeString(colType) &&
+    colDefault !== '' &&
+    !checkIfFunctionFormat
+  ) {
     defWithQuotes = "'" + colDefault + "'";
   } else {
     defWithQuotes = colDefault;
@@ -1561,11 +1565,13 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     }
 
     const colDefaultWithQuotes =
-      isColTypeString(colType) && !isPostgresFunction(colDefault)
+      dataSource.isColTypeString(colType) &&
+      !dataSource.isSQLFunction(colDefault)
         ? `'${colDefault}'`
         : colDefault;
     const originalColDefaultWithQuotes =
-      isColTypeString(colType) && !isPostgresFunction(originalColDefault)
+      dataSource.isColTypeString(colType) &&
+      !dataSource.isSQLFunction(originalColDefault)
         ? `'${originalColDefault}'`
         : originalColDefault;
 

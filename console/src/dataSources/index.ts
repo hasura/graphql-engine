@@ -88,6 +88,19 @@ export interface DataSourcesAPI {
     schemas: string[];
     tables: Table[];
   }) => string;
+  commonDataTypes: {
+    name: string;
+    value: string;
+    description: string;
+    hasuraDatatype?: string | null;
+  }[];
+  fetchColumnTypesQuery: string;
+  fetchColumnDefaultFunctions(schema: string): string;
+  isSQLFunction(str: string): boolean;
+  getEstimateCountQuery: (schemaName: string, tableName: string) => string;
+  isColTypeString(colType: string): boolean;
+  cascadeSqlQuery(sql: string): string;
+  dependecyErrorCode: string;
 }
 
 export let currentDriver: Driver = 'postgres';

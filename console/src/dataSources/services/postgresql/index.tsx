@@ -584,6 +584,149 @@ FROM (
 `;
 };
 
+const commonDataTypes = [
+  {
+    name: 'Integer',
+    value: 'integer',
+    description: 'signed four-byte integer',
+    hasuraDatatype: 'integer',
+  },
+  {
+    name: 'Integer (auto-increment)',
+    value: 'serial',
+    description: 'autoincrementing four-byte integer',
+    hasuraDatatype: null,
+  },
+  {
+    name: 'Text',
+    value: 'text',
+    description: 'variable-length character string',
+    hasuraDatatype: 'text',
+  },
+  {
+    name: 'Boolean',
+    value: 'boolean',
+    description: 'logical Boolean (true/false)',
+    hasuraDatatype: 'boolean',
+  },
+  {
+    name: 'Numeric',
+    value: 'numeric',
+    description: 'exact numeric of selected precision',
+    hasuraDatatype: 'numeric',
+  },
+  {
+    name: 'Timestamp',
+    value: 'timestamptz',
+    description: 'date and time, including time zone',
+    hasuraDatatype: 'timestamp with time zone',
+  },
+  {
+    name: 'Time',
+    value: 'timetz',
+    description: 'time of day (no time zone)',
+    hasuraDatatype: 'time with time zone',
+  },
+  {
+    name: 'Date',
+    value: 'date',
+    description: 'calendar date (year, month, day)',
+    hasuraDatatype: 'date',
+  },
+  {
+    name: 'UUID',
+    value: 'uuid',
+    description: 'universal unique identifier',
+    hasuraDatatype: 'uuid',
+  },
+  {
+    name: 'JSONB',
+    value: 'jsonb',
+    description: 'binary format JSON data',
+    hasuraDatatype: 'jsonb',
+  },
+  {
+    name: 'Big Integer',
+    value: 'bigint',
+    description: 'signed eight-byte integer',
+    hasuraDatatype: 'bigint',
+  },
+  {
+    name: 'Big Integer (auto-increment)',
+    value: 'bigserial',
+    description: 'autoincrementing eight-byte integer',
+    hasuraDatatype: null,
+  },
+];
+
+export const fetchColumnTypesQuery = `
+SELECT
+  string_agg(t.typname, ',') as "Type Name",
+  string_agg(pg_catalog.format_type(t.oid, NULL), ',') as "Display Name",
+  string_agg(coalesce(pg_catalog.obj_description(t.oid, 'pg_type'), ''), ':') as "Descriptions",
+  t.typcategory
+FROM pg_catalog.pg_type t
+     LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
+WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHERE c.oid = t.typrelid))
+  AND NOT EXISTS(SELECT 1 FROM pg_catalog.pg_type el WHERE el.oid = t.typelem AND el.typarray = t.oid)
+  AND pg_catalog.pg_type_is_visible(t.oid)
+  AND t.typname != 'unknown'
+  AND t.typcategory != 'P'
+GROUP BY t.typcategory;`;
+
+export const fetchColumnDefaultFunctions = (schema = 'public') => `
+SELECT string_agg(pgp.proname, ','),
+  t.typname as "Type"
+from pg_proc pgp
+JOIN pg_type t
+ON pgp.prorettype = t.oid
+JOIN pg_namespace pgn
+ON pgn.oid = pgp.pronamespace
+WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHERE c.oid = t.typrelid))
+  AND NOT EXISTS(SELECT 1 FROM pg_catalog.pg_type el WHERE el.oid = t.typelem AND el.typarray = t.oid)
+  AND pg_catalog.pg_type_is_visible(t.oid)
+  AND t.typname != 'unknown'
+  AND t.typcategory != 'P'
+  AND (array_length(pgp.proargtypes, 1) = 0)
+  AND ( pgn.nspname = '${schema}' OR pgn.nspname = 'pg_catalog' )
+  AND pgp.proretset=false
+GROUP BY t.typname
+ORDER BY t.typname ASC;
+`;
+
+export const isSQLFunction = (str: string) => new RegExp(/.*\(\)$/gm).test(str);
+
+export const getEstimateCountQuery = (
+  schemaName: string,
+  tableName: string
+) => {
+  return `
+SELECT
+  reltuples::BIGINT
+FROM
+  pg_class
+WHERE
+  oid = (quote_ident('${schemaName}') || '.' || quote_ident('${tableName}'))::regclass::oid
+  AND relname = '${tableName}';
+`;
+};
+
+const isColTypeString = (colType: string) =>
+  ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
+
+const cascadeSqlQuery = (sql: string) => {
+  if (sql[sql.length - 1] === ';') {
+    return `${sql.substr(0, sql.length - 1)} CASCADE;`;
+  }
+  // SQL might have  a " at the end
+  else if (sql[sql.length - 2] === ';') {
+    return `${sql.substr(0, sql.length - 2)} CASCADE;`;
+  }
+  return `${sql} CASCADE;`;
+};
+
+const dependecyErrorCode = '2BP01'; // pg dependent error > https://www.postgresql.org/docs/current/errcodes-appendix.html
+
 export const postgres: DataSourcesAPI = {
   isTable,
   displayTableName,
@@ -605,4 +748,12 @@ export const postgres: DataSourcesAPI = {
   getFetchTrackedTableFkQuery,
   getFetchTrackedTableReferencedFkQuery,
   getFetchTablesListQuery,
+  commonDataTypes,
+  fetchColumnTypesQuery,
+  fetchColumnDefaultFunctions,
+  isSQLFunction,
+  getEstimateCountQuery,
+  isColTypeString,
+  cascadeSqlQuery,
+  dependecyErrorCode,
 };

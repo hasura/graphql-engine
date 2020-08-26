@@ -38,8 +38,6 @@ import {
 import _push from './push';
 import { getFetchAllRolesQuery } from '../../Common/utils/v1QueryUtils';
 
-import { fetchColumnTypesQuery, fetchColumnDefaultFunctions } from './utils';
-
 import { fetchColumnCastsQuery, convertArrayToJson } from './TableModify/utils';
 
 import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
@@ -533,10 +531,10 @@ const makeMigrationCall = (
 
   const onError = err => {
     if (!isRetry) {
-      const { dependencyError, pgDependencyError } = getDependencyError(err);
+      const { dependencyError, sqlDependencyError } = getDependencyError(err);
       if (dependencyError) return retryMigration(dependencyError, errorMsg);
-      if (pgDependencyError)
-        return retryMigration(pgDependencyError, errorMsg, true);
+      if (sqlDependencyError)
+        return retryMigration(sqlDependencyError, errorMsg, true);
     }
 
     dispatch(handleMigrationErrors(errorMsg, err));
@@ -552,9 +550,13 @@ const makeMigrationCall = (
 };
 
 const getBulkColumnInfoFetchQuery = schema => {
-  const fetchColumnTypes = getRunSqlQuery(fetchColumnTypesQuery, false, true);
+  const fetchColumnTypes = getRunSqlQuery(
+    dataSource.fetchColumnTypesQuery,
+    false,
+    true
+  );
   const fetchTypeDefaultValues = getRunSqlQuery(
-    fetchColumnDefaultFunctions(schema),
+    dataSource.fetchColumnDefaultFunctions(schema),
     false,
     true
   );
