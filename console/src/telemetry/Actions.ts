@@ -254,18 +254,22 @@ const loadConsoleOpts = () => {
           });
 
           globals.telemetryNotificationShown = !!console_state?.telemetryNotificationShown;
+
+          if (!console_state?.console_notifications) {
+            dispatch({
+              type: UPDATE_CONSOLE_NOTIFICATIONS,
+              data: {
+                [userType]: {
+                  read: [],
+                  date: null,
+                  showBadge: true,
+                },
+              },
+            });
+          }
+
           return Promise.resolve();
         }
-        dispatch({
-          type: UPDATE_CONSOLE_NOTIFICATIONS,
-          data: {
-            [userType]: {
-              read: [],
-              date: null,
-              showBadge: true,
-            },
-          },
-        });
       },
       (error: Error) => {
         console.error(

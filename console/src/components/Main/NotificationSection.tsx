@@ -498,7 +498,8 @@ const HasuraNotifications: React.FC<
     const readAllState = getReadAllNotificationsState() as NotificationsState;
     dispatch(updateConsoleNotificationsState(readAllState));
     updateNumDisplayed(20);
-    // This is being done to persist the id's that were present at the time of marking it as all read
+    // FIXME: this is not really required, since the logic can be changed to filter out all those as
+    // having a timestamp prior to the saved time to be marked as read
     window.localStorage.setItem(
       'main:console_notifications',
       JSON.stringify(consoleNotifications)
