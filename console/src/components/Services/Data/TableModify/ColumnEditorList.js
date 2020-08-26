@@ -10,7 +10,7 @@ import {
   editColumn,
   isColumnUnique,
 } from '../TableModify/ModifyActions';
-import { ordinalColSort, ARRAY } from '../utils';
+import { ordinalColSort } from '../utils';
 import { defaultDataTypeToCast } from '../constants';
 
 import {

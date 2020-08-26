@@ -5,7 +5,6 @@ import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/Custo
 import { getValidAlterOptions, convertToArrayOptions } from './utils';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
-import { ARRAY } from '../utils';
 import { dataSource } from '../../../../dataSources';
 
 const ColumnEditor = ({
