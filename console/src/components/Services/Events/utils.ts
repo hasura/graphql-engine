@@ -11,7 +11,7 @@ import { TableDefinition } from '../../Common/utils/v1QueryUtils';
 import { convertDateTimeToLocale } from '../../Common/utils/jsUtils';
 import { Nullable } from '../../Common/utils/tsUtils';
 import { TableColumn, Table } from '../../../dataSources/types';
-import { generateTableDef, findTable } from '../../../dataSources/common';
+import { generateTableDef, findTable } from '../../../dataSources';
 
 export const parseServerWebhook = (
   webhook: Nullable<string>,

@@ -44,8 +44,8 @@ import {
 import {
   findTable,
   getRelationshipRefTable,
-  arrayToPostgresArray,
-} from '../../../../dataSources/common';
+  dataSource,
+} from '../../../../dataSources';
 import { updateSchemaInfo } from '../DataActions';
 import {
   persistColumnCollapseChange,
@@ -237,7 +237,7 @@ const ViewRows = ({
 
     Object.keys(pkClause).forEach(key => {
       if (Array.isArray(pkClause[key])) {
-        pkClause[key] = arrayToPostgresArray(pkClause[key]);
+        pkClause[key] = dataSource.arrayToPostgresArray(pkClause[key]);
       }
     });
 

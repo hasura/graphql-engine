@@ -3,7 +3,7 @@ import { connect, ConnectedProps } from 'react-redux';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Helmet from 'react-helmet';
 import { MapStateToProps } from '../../../../../types';
-import { findTable } from '../../../../../dataSources/common';
+import { findTable } from '../../../../../dataSources';
 import { useEventTrigger } from '../state';
 import styles from '../TableCommon/EventTable.scss';
 import DropdownButton from '../../../../Common/DropdownButton/DropdownButton';

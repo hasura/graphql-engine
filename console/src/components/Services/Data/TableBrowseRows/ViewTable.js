@@ -8,7 +8,6 @@ import {
   UPDATE_TRIGGER_FUNCTION,
   vMakeTableRequests,
 } from './ViewActions';
-import { isTable } from '../../../../dataSources/common';
 import { setTable } from '../DataActions';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewRows from './ViewRows';
@@ -16,6 +15,7 @@ import ViewRows from './ViewRows';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { exists } from '../../../Common/utils/jsUtils';
 import { getPersistedPageSize } from './localStorageUtils';
+import { dataSource } from '../../../../dataSources';
 
 class ViewTable extends Component {
   constructor(props) {
@@ -126,7 +126,7 @@ class ViewTable extends Component {
     const styles = require('../../../Common/Common.scss');
 
     // Is this a view
-    const isView = !isTable(tableSchema);
+    const isView = !dataSource.isTable(tableSchema);
 
     // Are there any expanded columns
     const viewRows = (

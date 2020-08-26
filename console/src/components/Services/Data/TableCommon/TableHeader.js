@@ -6,7 +6,7 @@ import { capitalize, exists } from '../../../Common/utils/jsUtils';
 import EditableHeading from '../../../Common/EditableHeading/EditableHeading';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import { tabNameMap } from '../utils';
-import { isTable } from '../../../../dataSources/common';
+import { isTable } from '../../../../dataSources';
 import {
   getSchemaBaseRoute,
   getTableBrowseRoute,

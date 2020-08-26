@@ -29,11 +29,10 @@ import { createNewSchema, deleteCurrentSchema } from './Actions';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 import {
-  displayTableName,
-  getFunctionName,
   getSchemaTables,
   getUntrackedTables,
-} from '../../../../dataSources/common';
+  dataSource,
+} from '../../../../dataSources';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
@@ -212,12 +211,14 @@ class Schema extends Component {
     };
 
     const _getTrackableFunctions = () => {
-      const trackedFuncNames = trackedFunctions.map(fn => getFunctionName(fn));
+      const trackedFuncNames = trackedFunctions.map(fn =>
+        dataSource.getFunctionName(fn)
+      );
 
       // Assuming schema for both function and tables are same
       // return function which are tracked
       const filterCondition = func => {
-        return !trackedFuncNames.includes(getFunctionName(func));
+        return !trackedFuncNames.includes(dataSource.getFunctionName(func));
       };
 
       return functionsList.filter(filterCondition);
@@ -396,7 +397,7 @@ class Schema extends Component {
               <div className={styles.padd_bottom} key={`untracked-${i}`}>
                 {getTrackBtn()}
                 <div className={styles.display_inline}>
-                  {displayTableName(table)}
+                  {dataSource.displayTableName(table)}
                 </div>
                 <GqlCompatibilityWarning
                   identifier={tableName}

@@ -16,7 +16,7 @@ import {
 } from '../utils';
 import { parseServerHeaders } from '../../../Common/Headers/utils';
 import { Table } from '../../../../dataSources/types';
-import { generateTableDef } from '../../../../dataSources/common';
+import { generateTableDef } from '../../../../dataSources';
 
 export type LocalEventTriggerState = {
   name: string;

@@ -43,7 +43,7 @@ import {
   getTableDef,
   getComputedFieldName,
   generateTableDef,
-} from '../../../../dataSources/common';
+} from '../../../../dataSources';
 import {
   getSetCustomRootFieldsQuery,
   getRunSqlQuery,

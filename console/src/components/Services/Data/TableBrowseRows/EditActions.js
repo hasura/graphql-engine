@@ -8,15 +8,14 @@ import {
 import dataHeaders from '../Common/Headers';
 import {
   findTable,
-  getColumnType,
   getTableColumn,
   getEnumColumnMappings,
-  arrayToPostgresArray,
-} from '../../../../dataSources/common';
+  dataSource,
+} from '../../../../dataSources';
 import { getEnumOptionsQuery } from '../../../Common/utils/v1QueryUtils';
 import { ARRAY } from '../utils';
 import { isStringArray } from '../../../Common/utils/jsUtils';
-import { generateTableDef } from '../../../../dataSources/common';
+import { generateTableDef } from '../../../../dataSources';
 
 const E_SET_EDITITEM = 'EditItem/E_SET_EDITITEM';
 const E_ONGOING_REQ = 'EditItem/E_ONGOING_REQ';
@@ -55,7 +54,7 @@ const editItem = (tableName, colValues) => {
       const colValue = colValues[colName];
 
       const column = getTableColumn(table, colName);
-      const colType = getColumnType(column);
+      const colType = dataSource.getColumnType(column);
 
       if (colValue && colValue.default === true) {
         _defaultArray.push(colName);
@@ -85,7 +84,7 @@ const editItem = (tableName, colValues) => {
         } else if (colType === ARRAY && isStringArray(colValue)) {
           try {
             const arr = JSON.parse(colValue);
-            _setObject[colName] = arrayToPostgresArray(arr);
+            _setObject[colName] = dataSource.arrayToPostgresArray(arr);
           } catch {
             errorMessage =
               colName + ' :: could not read ' + colValue + ' as a valid array';

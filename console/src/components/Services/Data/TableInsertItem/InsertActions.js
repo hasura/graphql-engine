@@ -7,10 +7,7 @@ import {
   showSuccessNotification,
 } from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
-import {
-  getEnumColumnMappings,
-  arrayToPostgresArray,
-} from '../../../../dataSources/common';
+import { getEnumColumnMappings, dataSource } from '../../../../dataSources';
 import { getEnumOptionsQuery } from '../../../Common/utils/v1QueryUtils';
 import { ARRAY } from '../utils';
 import { isStringArray } from '../../../Common/utils/jsUtils';
@@ -70,7 +67,7 @@ const insertItem = (tableName, colValues) => {
       } else if (colType === ARRAY && isStringArray(colValues[colName])) {
         try {
           const arr = JSON.parse(colValues[colName]);
-          insertObject[colName] = arrayToPostgresArray(arr);
+          insertObject[colName] = dataSource.arrayToPostgresArray(arr);
         } catch {
           errorMessage =
             colName +

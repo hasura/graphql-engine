@@ -11,13 +11,12 @@ import { getTablePermissionsRoute } from '../../../Common/utils/routesUtils';
 import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
 import {
   findTable,
-  displayTableName,
   getTableNameWithSchema,
   getTableDef,
   getSchemaTables,
   getTrackedTables,
-  isTable,
-} from '../../../../dataSources/common';
+  dataSource,
+} from '../../../../dataSources';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 import { updateSchemaInfo } from '../DataActions';
@@ -194,7 +193,7 @@ class PermissionsSummary extends Component {
             getTablePermissionsRoute(
               table.table_schema,
               table.table_name,
-              isTable(table)
+              dataSource.isTable(table)
             )
           )
         );
@@ -328,7 +327,7 @@ class PermissionsSummary extends Component {
 
             return (
               <Header
-                content={displayTableName(table)}
+                content={dataSource.displayTableName(table)}
                 selectable={selectable}
                 isSelected={isCurrTable}
                 onClick={setTable}

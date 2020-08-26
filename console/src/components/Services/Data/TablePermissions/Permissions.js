@@ -72,11 +72,9 @@ import {
 import {
   findTable,
   generateTableDef,
-  getGroupedTableComputedFields,
-  getColumnType,
-  getTableSupportedQueries,
   QUERY_TYPES,
-} from '../../../../dataSources/common';
+  dataSource,
+} from '../../../../dataSources';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import {
   getFilterQueries,
@@ -209,7 +207,7 @@ class Permissions extends Component {
     }
 
     const allFunctions = nonTrackableFunctions.concat(trackableFunctions);
-    const groupedComputedFields = getGroupedTableComputedFields(
+    const groupedComputedFields = dataSource.getGroupedTableComputedFields(
       currentTableSchema,
       allFunctions
     );
@@ -1381,7 +1379,9 @@ class Permissions extends Component {
             const columnInfo = columns.find(
               c => c.column_name === preset.column
             );
-            const columnType = columnInfo ? getColumnType(columnInfo) : '';
+            const columnType = columnInfo
+              ? dataSource.getColumnType(columnInfo)
+              : '';
 
             if (presetType === 'session') {
               _presetInput = (
@@ -1830,7 +1830,9 @@ class Permissions extends Component {
 
     /********************/
 
-    const supportedQueryTypes = getTableSupportedQueries(currentTableSchema);
+    const supportedQueryTypes = dataSource.getTableSupportedQueries(
+      currentTableSchema
+    );
 
     return (
       <div className={styles.container}>

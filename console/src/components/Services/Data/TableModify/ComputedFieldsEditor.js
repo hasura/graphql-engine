@@ -6,13 +6,7 @@ import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import RawSqlButton from '../Common/Components/RawSqlButton';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
-import {
-  findFunction,
-  getFunctionDefinition,
-  getFunctionName,
-  getQualifiedTableDef,
-  getSchemaFunctions,
-} from '../../../../dataSources/common';
+import { getQualifiedTableDef, dataSource } from '../../../../dataSources';
 import { deleteComputedField, saveComputedField } from './ModifyActions';
 import { fetchFunctionInit } from '../DataActions';
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
@@ -83,14 +77,14 @@ const ComputedFieldsEditor = ({
     let computedFieldFunction = null;
     let computedFieldFunctionDefinition = null;
     if (functions) {
-      computedFieldFunction = findFunction(
+      computedFieldFunction = dataSource.findFunction(
         functions,
         computedFieldFunctionName,
         computedFieldFunctionSchema
       );
 
       if (computedFieldFunction) {
-        computedFieldFunctionDefinition = getFunctionDefinition(
+        computedFieldFunctionDefinition = dataSource.getFunctionDefinition(
           computedFieldFunction
         );
       }
@@ -312,10 +306,9 @@ const ComputedFieldsEditor = ({
             </div>
             <div className={styles.wd50percent}>
               <SearchableSelectBox
-                options={getSchemaFunctions(
-                  functions,
-                  computedFieldFunctionSchema
-                ).map(fn => getFunctionName(fn))}
+                options={dataSource
+                  .getSchemaFunctions(functions, computedFieldFunctionSchema)
+                  .map(fn => dataSource.getFunctionName(fn))}
                 onChange={handleFnNameChange}
                 value={computedFieldFunctionName}
                 bsClass={'function-name-select'}

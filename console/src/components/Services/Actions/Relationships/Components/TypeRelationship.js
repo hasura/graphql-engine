@@ -7,7 +7,7 @@ import {
   getSchemaTables,
   getTableColumnNames,
   getTrackedTables,
-} from '../../../../../dataSources/common';
+} from '../../../../../dataSources';
 import {
   parseCustomTypeRelationship,
   getRelValidationError,

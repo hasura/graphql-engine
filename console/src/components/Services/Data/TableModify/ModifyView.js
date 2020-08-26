@@ -21,7 +21,7 @@ import {
   generateTableDef,
   getTableCustomRootFields,
   getTableCustomColumnNames,
-} from '../../../../dataSources/common';
+} from '../../../../dataSources';
 import RootFields from './RootFields';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import { changeViewRootFields } from '../Common/TooltipMessages';

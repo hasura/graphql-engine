@@ -19,7 +19,7 @@ import {
 import { COUNT_LIMIT } from '../constants';
 import { getStatementTimeoutSql } from '../RawSQL/utils';
 import { isPostgresTimeoutError } from './utils';
-import { generateTableDef } from '../../../../dataSources/common';
+import { generateTableDef } from '../../../../dataSources';
 
 /* ****************** View actions *************/
 const V_SET_DEFAULTS = 'ViewTable/V_SET_DEFAULTS';

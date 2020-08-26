@@ -5,7 +5,7 @@ import { LocalEventTriggerState } from '../../Services/Events/EventTriggers/stat
 import { RemoteRelationshipPayload } from '../../Services/Data/TableRelationships/RemoteRelationships/utils';
 import { transformHeaders } from '../Headers/utils';
 import { Nullable } from './tsUtils';
-import { generateTableDef } from '../../../dataSources/common';
+import { generateTableDef } from '../../../dataSources';
 
 // TODO add type for the where clause
 

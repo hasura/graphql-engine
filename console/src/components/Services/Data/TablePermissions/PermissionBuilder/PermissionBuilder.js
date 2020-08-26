@@ -25,7 +25,6 @@ import {
 import {
   findTable,
   getTrackedTables,
-  getColumnType,
   getTableColumn,
   getRelationshipRefTable,
   getTableColumnNames,
@@ -34,7 +33,8 @@ import {
   getQualifiedTableDef,
   getSchemaTableNames,
   generateTableDef,
-} from '../../../../../dataSources/common';
+  dataSource,
+} from '../../../../../dataSources';
 
 import {
   isJsonString,
@@ -724,7 +724,7 @@ class PermissionBuilder extends React.Component {
         if (tableSchema && columnName) {
           const column = getTableColumn(tableSchema, columnName);
           if (column) {
-            columnType = getColumnType(column);
+            columnType = dataSource.getColumnType(column);
           }
         }
 

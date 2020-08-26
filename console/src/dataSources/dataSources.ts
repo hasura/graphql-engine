@@ -1,38 +1,7 @@
 /* eslint-disable import/no-mutable-exports */
 import { useState, useEffect } from 'react';
+import { Driver, DataSourcesAPI } from '.';
 import { services } from './services';
-
-import { Table, ComputedField, TableColumn } from './types';
-import { PGFunction } from './services/postgresql/types';
-import { Operations } from './common';
-
-export type Driver = 'postgres'; // | 'mysql';
-
-export interface DataSourcesAPI {
-  isTable(table: Table): boolean;
-  displayTableName(table: Table): JSX.Element;
-  // todo: replace with function type
-  getFunctionSchema(func: PGFunction): string;
-  getFunctionName(func: PGFunction): string;
-  getFunctionDefinition(func: PGFunction): string;
-  getSchemaFunctions(func: PGFunction[], schemaName: string): PGFunction[];
-  findFunction(
-    func: PGFunction[],
-    fName: string,
-    fSchema: string
-  ): PGFunction | undefined;
-  getGroupedTableComputedFields(
-    table: Table,
-    allFunctions: PGFunction[]
-  ): {
-    scalar: ComputedField[];
-    table: ComputedField[];
-  };
-  isColumnAutoIncrement(col: TableColumn): boolean;
-  getTableSupportedQueries(table: Table): Operations[];
-  getColumnType(col: TableColumn): string;
-  arrayToPostgresArray(arr: any[]): string;
-}
 
 export let currentDriver: Driver = 'postgres';
 export let dataSource: DataSourcesAPI = services[currentDriver];
@@ -87,13 +56,11 @@ export const useDataSource = (): {
 };
 
 if ((module as any).hot) {
-  // // todo
-  // (module as any).hot.dispose((data: any) => {
-  //   data.driver = currentDriver;
-  // });
-  // (module as any).hot.accept(['./postgres'], () => {
-  //   currentDriver = (module as any).hot.data.driver;
-  // });
+  // todo
+  (module as any).hot.dispose((data: any) => {
+    data.driver = currentDriver;
+  });
+  (module as any).hot.accept(['./postgres', './mysql'], () => {
+    currentDriver = (module as any).hot.data.driver;
+  });
 }
-
-export * from './common';

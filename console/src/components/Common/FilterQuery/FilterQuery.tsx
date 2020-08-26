@@ -10,7 +10,7 @@ import Button from '../Button/Button';
 import { Nullable } from '../utils/tsUtils';
 import styles from './FilterQuery.scss';
 import { BaseTable } from '../../../dataSources/types';
-import { generateTableDef } from '../../../dataSources/common';
+import { generateTableDef } from '../../../dataSources';
 
 type Props = {
   table: BaseTable;

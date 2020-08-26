@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { isColumnAutoIncrement } from '../../../../../dataSources/common';
+import { dataSource } from '../../../../../dataSources';
 import styles from '../../../../Common/TableCommon/Table.scss';
 import { TypedInput } from './TypedInput';
 import { TableColumn } from '../../../../../dataSources/types';
@@ -12,7 +12,7 @@ const getColumnInfo = (col: TableColumn, prevValue?: unknown) => {
     ? col.column_default.trim() !== ''
     : false;
 
-  const isAutoIncrement = !!isColumnAutoIncrement(col);
+  const isAutoIncrement = dataSource.isColumnAutoIncrement(col);
   const isIdentity = col.is_identity ? col.is_identity !== 'NO' : false;
   const isGenerated = col.is_generated ? col.is_generated !== 'NEVER' : false;
   const isNullable = col.is_nullable ? col.is_nullable !== 'NO' : false;

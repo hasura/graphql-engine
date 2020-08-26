@@ -12,7 +12,7 @@ import {
   getTableModifyRoute,
   getFunctionModifyRoute,
 } from '../../../Common/utils/routesUtils';
-import { isTable } from '../../../../dataSources/common';
+import { dataSource } from '../../../../dataSources';
 
 const SET_DEFAULTS = 'AddExistingTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddExistingTable/SET_TABLENAME';
@@ -67,7 +67,7 @@ const addExistingTableSql = () => {
         const newTable = getState().tables.allSchemas.find(
           t => t.table_name === tableName && t.table_schema === currentSchema
         );
-        const isTableType = isTable(newTable);
+        const isTableType = dataSource.isTable(newTable);
         const nextRoute = isTableType
           ? getTableModifyRoute(currentSchema, tableName, isTableType)
           : getTableBrowseRoute(currentSchema, tableName, isTableType);

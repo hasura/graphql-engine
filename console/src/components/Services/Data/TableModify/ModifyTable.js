@@ -39,7 +39,7 @@ import {
   generateTableDef,
   getTableCustomRootFields,
   getTableCustomColumnNames,
-} from '../../../../dataSources/common';
+} from '../../../../dataSources';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import ComputedFieldsEditor from './ComputedFieldsEditor';

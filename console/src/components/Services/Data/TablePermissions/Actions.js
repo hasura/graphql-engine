@@ -7,7 +7,7 @@ import {
   getTableDef,
   getTablePermissions,
   generateTableDef,
-} from '../../../../dataSources/common';
+} from '../../../../dataSources';
 import {
   getCreatePermissionQuery,
   getDropPermissionQuery,

@@ -8,10 +8,10 @@ import { ordinalColSort } from '../utils';
 import { insertItem, I_RESET, fetchEnumOptions } from './InsertActions';
 import { setTable } from '../DataActions';
 import { NotFoundError } from '../../../Error/PageNotFound';
-import { findTable } from '../../../../dataSources/common';
+import { findTable } from '../../../../dataSources';
 import styles from '../../../Common/TableCommon/Table.scss';
 import { TableRow } from '../Common/Components/TableRow';
-import { generateTableDef } from '../../../../dataSources/common';
+import { generateTableDef } from '../../../../dataSources';
 
 class InsertItem extends Component {
   constructor() {
