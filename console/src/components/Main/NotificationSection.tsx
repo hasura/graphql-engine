@@ -176,6 +176,9 @@ const VersionUpdateNotification: React.FC<VersionUpdateNotificationProps> = ({
   optOutCallback,
 }) => {
   const isStableRelease = checkStableVersion(latestVersion);
+  const changeLogURL = `https://github.com/hasura/graphql-engine/releases${
+    latestVersion ? `/tag/${latestVersion}` : ''
+  }`;
   return (
     <Update
       subject="New Update Available!"
@@ -183,13 +186,7 @@ const VersionUpdateNotification: React.FC<VersionUpdateNotificationProps> = ({
       content={`Hey There! There's a new server version ${latestVersion} available.`}
       start_date={Date.now()}
     >
-      <a
-        href={`https://github.com/hasura/graphql-engine/releases${
-          latestVersion ? `/tag/${latestVersion}` : ''
-        }`}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+      <a href={changeLogURL} target="_blank" rel="noopener noreferrer">
         <span>View Changelog</span>
       </a>
       <span className={styles.middot}> &middot; </span>
@@ -261,21 +258,17 @@ const checkIsRead = (prevRead?: string | string[], id?: number) => {
   if (!prevRead || !id) {
     return false;
   }
-
   if (prevRead === 'all' || prevRead === 'default' || prevRead === 'error') {
     return true;
   }
-
   return prevRead.includes(`${id}`);
 };
-
-type ConsoleOptions = ConsoleState['console_opts'];
 
 const checkVersionUpdate = (
   latestStable: string,
   latestPreRelease: string,
   serverVersion: string,
-  console_opts: ConsoleOptions
+  console_opts: ConsoleState['console_opts']
 ): [boolean, string] => {
   const allowPreReleaseNotifications =
     !console_opts || !console_opts.disablePreReleaseUpdateNotifications;
@@ -312,7 +305,6 @@ const checkVersionUpdate = (
   } catch {
     return [false, ''];
   }
-
   return [false, ''];
 };
 
@@ -330,7 +322,6 @@ const ToReadBadge: React.FC<ToReadBadgeProps> = ({
   if (numberNotifications > 20) {
     display = '20+';
   }
-
   return (
     <Flex
       className={`${styles.numBadge} ${showBadge}`}
@@ -355,7 +346,8 @@ const mapStateToProps = (state: ReduxState) => {
 };
 
 type HasuraNotificationOwnProps = {
-  toggleDropDown: (e: React.MouseEvent<HTMLDivElement>) => void;
+  isDropDownOpen: boolean;
+  toggleDropDown: () => void;
   closeDropDown: () => void;
 };
 
@@ -370,6 +362,7 @@ const HasuraNotifications: React.FC<
   latestPreReleaseServerVersion,
   serverVersion,
   dataHeaders,
+  isDropDownOpen,
   ...props
 }) => {
   const { dispatch } = props;
@@ -534,9 +527,7 @@ const HasuraNotifications: React.FC<
 
   useOnClickOutside([dropDownRef, wrapperRef], onClickOutside);
 
-  const onClickShareSection = (
-    e: React.MouseEvent<HTMLDivElement, MouseEvent>
-  ) => {
+  const onClickShareSection = () => {
     if (showBadge) {
       if (console_opts?.console_notifications) {
         let updatedState = {};
@@ -557,12 +548,10 @@ const HasuraNotifications: React.FC<
         );
       }
     }
-
     if (!opened) {
       updateOpenState(true);
     }
-
-    toggleDropDown(e);
+    toggleDropDown();
   };
 
   React.useEffect(() => {
@@ -628,7 +617,7 @@ const HasuraNotifications: React.FC<
     <>
       <div
         className={`${styles.shareSection} ${
-          opened ? styles.opened : ''
+          isDropDownOpen ? styles.opened : ''
         } dropdown-toggle`}
         aria-expanded="false"
         onClick={onClickShareSection}
@@ -640,7 +629,6 @@ const HasuraNotifications: React.FC<
           show={showBadge}
         />
       </div>
-
       {/* Notifications section */}
       <Box
         className={`dropdown-menu ${styles.consoleNotificationPanel}`}
@@ -668,15 +656,15 @@ const HasuraNotifications: React.FC<
           </Button>
         </Flex>
         <Box className={styles.notificationsContainer}>
-          {displayNewVersionNotification ? (
+          {displayNewVersionNotification && (
             <VersionUpdateNotification
               latestVersion={latestVersion}
               optOutCallback={optOutCallback}
             />
-          ) : null}
-          {fixedVersion ? (
+          )}
+          {fixedVersion && (
             <VulnerableVersionNotification fixedVersion={fixedVersion} />
-          ) : null}
+          )}
           {dataShown.length &&
             dataShown.map(({ id, ...otherProps }) => (
               <Update
@@ -688,12 +676,12 @@ const HasuraNotifications: React.FC<
                 {...otherProps}
               />
             ))}
-          {toDisplayViewMore ? (
+          {toDisplayViewMore && (
             <ViewMoreOptions
               onClickViewMore={onClickViewMore}
               readAll={previouslyReadState === 'all'}
             />
-          ) : null}
+          )}
         </Box>
       </Box>
     </>
