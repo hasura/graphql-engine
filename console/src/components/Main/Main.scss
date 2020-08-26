@@ -924,12 +924,16 @@
 .shareSection {
   display: flex;
   align-items: center;
-  padding: 12px 15px;
+  padding: 12px 18px;
   color: white;
   cursor: pointer;
 
   &:hover {
     opacity: 0.7;
+  }
+
+  &.opened {
+    background-color: #2d3242;
   }
 }
 
@@ -1345,18 +1349,18 @@
   font-weight: bold;
   color: white;
   text-align: center;
-  display: flex;
-  align-items: center;
   font-size: 9px;
-  justify-content: center;
   height: 17px;
-  position: relative;
+  position: absolute;
   width: 17px;
-  top: 1px;
-  right: 7px;
+  top: 14px;
+  right: 57px;
   border-radius: 50%;
   user-select: none;
   visibility: visible;
+  &:hover {
+    background-color: #f47e7e;
+  }
   &.hideBadge {
     visibility: hidden;
   }
@@ -1377,6 +1381,20 @@
   }
   &.unread {
     background-color: white;
+  }
+  &.read {
+    background-color: #f8f8f8;
+  }
+}
+
+.updateStyleBox {
+  padding: 15px 0px;
+  border-bottom: 4px solid #f2f2f2;
+  &:hover {
+    cursor: pointer;
+  }
+  &.unread {
+    background-color: rgba(202, 246, 215, 0.3);
   }
   &.read {
     background-color: #f8f8f8;
@@ -1410,6 +1428,17 @@
   left: 6px;
   visibility: visible;
   &.hideDot {
+    visibility: hidden;
+  }
+}
+
+.unreadStar {
+  position: relative;
+  top: -8px;
+  left: 6px;
+  font-size: medium;
+  visibility: visible;
+  &.hideStar {
     visibility: hidden;
   }
 }
