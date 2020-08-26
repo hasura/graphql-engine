@@ -57,6 +57,7 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
     ? Endpoints.consoleNotificationsStg
     : Endpoints.consoleNotificationsProd;
   const consoleStateDB = getState().telemetry.console_opts;
+  let toShowBadge = true;
   const headers = dataHeaders(getState);
   let previousRead = null;
   let strictChecks = false;
@@ -115,6 +116,7 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
 
           if (previousRead === 'default' || previousRead === 'error') {
             newReadValue = [];
+            toShowBadge = false;
           } else if (previousRead === 'all') {
             const previousList = JSON.parse(
               localStorage.getItem('main:console_notifications')
@@ -126,6 +128,7 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
               if (!resDiff.length) {
                 // since the data hasn't changed since the last call
                 newReadValue = previousRead;
+                toShowBadge = false;
               } else {
                 newReadValue = data
                   .filter(notif => !previousList.includes(notif.id))
@@ -134,12 +137,17 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
             }
           } else {
             newReadValue = previousRead;
+            if (Array.isArray(previousRead)) {
+              if (previousRead.length) {
+                toShowBadge = false;
+              }
+            }
           }
           dispatch(
             updateConsoleNotificationsState({
               read: newReadValue,
               date: consoleStateDB.console_notifications[userType].date,
-              showBadge: true,
+              showBadge: toShowBadge,
             })
           );
         }
