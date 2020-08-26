@@ -71,7 +71,6 @@ const DataPageContainer = ({
           <div className={styles.schemaWrapper}>
             <div
               className={styles.schemaSidebarSection}
-              data-test="schema"
               style={{
                 marginBottom: '20px',
               }}
