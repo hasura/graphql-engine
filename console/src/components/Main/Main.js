@@ -345,6 +345,7 @@ class Main extends React.Component {
               </Link>
               <Help isSelected={currentActiveBlock === 'support'} />
               <NotificationSection
+                isDropDownOpen={this.state.isDropdownOpen}
                 closeDropDown={this.closeDropDown}
                 toggleDropDown={this.toggleDropDown}
               />
