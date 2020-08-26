@@ -627,9 +627,6 @@ mkMySQLConnInfo (RawConnInfo _ _ _ _ _ _ _ _ myHost myPort myUser myPassword myD
   db   <- BS.pack <$> myDB
   pure $ My.ConnectInfo host (stringlyCoerce port) db user (BS.pack myPassword) My.utf8_general_ci
 
-stringlyCoerce :: (Read b, Show a) => a -> b
-stringlyCoerce = read . show
-
 {-
 mkConnInfo :: RawConnInfo -> Either String Q.ConnInfo
 mkConnInfo (RawConnInfo pgHost pgPort pgUser pgPassword dbURL pgDB opts mRetries msHost msPort msUser msPassword msDB) =

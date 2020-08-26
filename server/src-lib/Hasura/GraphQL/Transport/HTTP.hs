@@ -31,6 +31,8 @@ import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 import           Hasura.Tracing                         (MonadTrace, TraceT, trace)
 
+import qualified Data.ByteString.Lazy as BS
+
 import qualified Data.Aeson                             as J
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
@@ -112,7 +114,9 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs))
           E.ExecStepMySQL queryString -> liftIO $ do
             connection <- fromJust <$> readMVar mySQLConnection
-            result <- IOSL.toList . snd =<< My.query_ connection (My.Query queryString)
+            let fixedQuery = BS.map (\x -> if x == 34 then 96 else x) queryString
+            UGLY.traceShowM fixedQuery
+            result <- IOSL.toList . snd =<< My.query_ connection (My.Query fixedQuery)
             pure $ UGLY.traceShow result $ (telemCacheHit, Telem.Local, (undefined, undefined, HttpResponse undefined []))
           E.ExecStepRemote (rsi, opDef, _varValsM) ->
             runRemoteGQ telemCacheHit rsi opDef

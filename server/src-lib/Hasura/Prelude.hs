@@ -4,6 +4,7 @@ module Hasura.Prelude
   ( module M
   -- BAD
   , mySQLConnection
+  , stringlyCoerce
   -- BAD
   , alphabet
   , alphaNumerics
@@ -97,6 +98,9 @@ import           Unsafe.Coerce
 mySQLConnection :: MVar (Maybe My.MySQLConn)
 {-# NOINLINE mySQLConnection #-}
 mySQLConnection = BAD.unsafePerformIO $ newMVar Nothing
+
+stringlyCoerce :: (Read b, Show a) => a -> b
+stringlyCoerce = read . show
 
 -- END OF WASTELAND
 
