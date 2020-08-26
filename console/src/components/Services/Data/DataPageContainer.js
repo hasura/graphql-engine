@@ -69,8 +69,24 @@ const DataPageContainer = ({
           to={getSchemaBaseRoute(currentSchema)}
         >
           <div className={styles.schemaWrapper}>
+            <div
+              className={styles.schemaSidebarSection}
+              data-test="schema"
+              style={{
+                marginBottom: '20px',
+              }}
+            >
+              <label style={{ width: '70px' }}>Database:</label>
+              <select
+                onChange={null /** todo */}
+                value={null /** todo */}
+                className={styles.changeSchema + ' form-control'}
+              >
+                {/** TODO: options */}
+              </select>
+            </div>
             <div className={styles.schemaSidebarSection} data-test="schema">
-              Schema:
+              <label style={{ width: '70px' }}>Schema:</label>
               <select
                 onChange={handleSchemaChange}
                 value={currentSchema}

@@ -17,7 +17,8 @@
     display: inline-block;
     width: 100%;
 
-    a {
+    a,
+    label {
       display: inline-block !important;
       font-weight: bold;
     }
