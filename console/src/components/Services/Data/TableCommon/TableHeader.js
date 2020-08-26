@@ -6,7 +6,7 @@ import { capitalize, exists } from '../../../Common/utils/jsUtils';
 import EditableHeading from '../../../Common/EditableHeading/EditableHeading';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import { tabNameMap } from '../utils';
-import { isTable } from '../../../../dataSources';
+import { dataSource } from '../../../../dataSources';
 import {
   getSchemaBaseRoute,
   getTableBrowseRoute,
@@ -31,7 +31,7 @@ const TableHeader = ({
 
   const tableName = table.table_name;
   const tableSchema = table.table_schema;
-  const isTableType = isTable(table);
+  const isTableType = dataSource.isTable(table);
 
   let countDisplay = '';
   // if (exists(count)) {
