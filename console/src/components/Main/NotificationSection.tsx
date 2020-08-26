@@ -340,7 +340,6 @@ const mapStateToProps = (state: ReduxState) => {
     latestStableServerVersion: state.main.latestStableServerVersion,
     serverVersion: state.main.serverVersion,
     console_opts: state.telemetry.console_opts,
-    hasura_uuid: state.telemetry.hasura_uuid,
     dataHeaders: state.tables.dataHeaders,
   };
 };
