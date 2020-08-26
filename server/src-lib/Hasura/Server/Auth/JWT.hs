@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module Hasura.Server.Auth.JWT
   ( processJwt
   , RawJWT
@@ -22,9 +23,12 @@ import           Control.Lens
 import           Control.Monad.Trans.Control     (MonadBaseControl)
 import           Control.Monad.Trans.Maybe
 import           Data.IORef                      (IORef, readIORef, writeIORef)
+
 import           Data.Time.Clock                 (NominalDiffTime, UTCTime, diffUTCTime,
                                                   getCurrentTime)
+#ifndef PROFILING
 import           GHC.AssertNF
+#endif
 import           Network.URI                     (URI)
 
 import           Data.Aeson.Internal             (JSONPath)
@@ -114,7 +118,7 @@ data HasuraClaims
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''HasuraClaims)
 
 
--- NOTE: these must stay lowercase; TODO consider using "Data.CaseInsensitive"
+-- NOTE: these must stay lowercase; TODO(from master) consider using "Data.CaseInsensitive"
 allowedRolesClaim :: T.Text
 allowedRolesClaim = "x-hasura-allowed-roles"
 
@@ -183,7 +187,9 @@ updateJwkRef (Logger logger) manager url jwkRef = do
   let parseErr e = JFEJwkParseError (T.pack e) $ "Error parsing JWK from url: " <> urlT
   !jwkset <- either (logAndThrow . parseErr) return $ J.eitherDecode' respBody
   liftIO $ do
+#ifndef PROFILING
     $assertNFHere jwkset  -- so we don't write thunks to mutable vars
+#endif
     writeIORef jwkRef jwkset
 
   -- first check for Cache-Control header to get max-age, if not found, look for Expires header
@@ -234,7 +240,7 @@ updateJwkRef (Logger logger) manager url jwkRef = do
 -- When no 'x-hasura-user-role' is specified in the request, the mandatory
 -- 'x-hasura-default-role' [2] from the JWT claims will be used.
 
--- [1]: https://hasura.io/docs/1.0/graphql/manual/auth/authentication/unauthenticated-access.html 
+-- [1]: https://hasura.io/docs/1.0/graphql/manual/auth/authentication/unauthenticated-access.html
 -- [2]: https://hasura.io/docs/1.0/graphql/manual/auth/authentication/jwt.html#the-spec
 processJwt
   :: ( MonadIO m
@@ -376,8 +382,8 @@ processAuthZHeader jwtCtx@JWTCtx{jcxClaimNs, jcxClaimsFormat} authzHeader = do
 -- parse x-hasura-allowed-roles, x-hasura-default-role from JWT claims
 parseHasuraClaims :: forall m. (MonadError QErr m) => J.Object -> m HasuraClaims
 parseHasuraClaims claimsMap = do
-  HasuraClaims <$> 
-    parseClaim allowedRolesClaim "should be a list of roles" <*> 
+  HasuraClaims <$>
+    parseClaim allowedRolesClaim "should be a list of roles" <*>
     parseClaim defaultRoleClaim  "should be a single role name"
 
   where
@@ -473,7 +479,7 @@ instance J.FromJSON JWTConfig where
           "RS256" -> runEither $ parseRsaKey rawKey
           "RS384" -> runEither $ parseRsaKey rawKey
           "RS512" -> runEither $ parseRsaKey rawKey
-          -- TODO: support ES256, ES384, ES512, PS256, PS384
+          -- TODO(from master): support ES256, ES384, ES512, PS256, PS384
           _       -> invalidJwk ("Key type: " <> T.unpack keyType <> " is not supported")
 
       runEither = either (invalidJwk . T.unpack) return
@@ -482,11 +488,9 @@ instance J.FromJSON JWTConfig where
 
       failJSONPathParsing err = fail $ "invalid JSON path claims_namespace_path error: " ++ err
 
-
 -- Utility:
 parseJwtClaim :: (J.FromJSON a, MonadError QErr m) => J.Value -> Text -> m a
 parseJwtClaim v errMsg =
   case J.fromJSON v of
     J.Success val -> return val
     J.Error e     -> throw400 JWTInvalidClaims $ errMsg <> ": " <> T.pack e
-

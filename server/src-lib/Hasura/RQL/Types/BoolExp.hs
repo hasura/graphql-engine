@@ -33,15 +33,14 @@ module Hasura.RQL.Types.BoolExp
        , AnnBoolExpPartialSQL
 
        , PreSetCols
+       , PreSetColsG
        , PreSetColsPartial
        ) where
 
-import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Column
-import           Hasura.RQL.Types.Common
-import           Hasura.Session
-import           Hasura.SQL.Types
+
+import qualified Data.Aeson.Types           as J
+import qualified Data.HashMap.Strict        as M
 
 import qualified Hasura.SQL.DML             as S
 
@@ -54,8 +53,13 @@ import           Data.Aeson.TH
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
-import qualified Data.Aeson.Types           as J
-import qualified Data.HashMap.Strict        as M
+import           Hasura.Incremental         (Cacheable)
+import           Hasura.RQL.Types.Column
+import           Hasura.RQL.Types.Common
+import           Hasura.Session
+import           Hasura.SQL.Types
+
+
 
 data GExists a
   = GExists
@@ -346,6 +350,7 @@ type AnnBoolExpSQL = AnnBoolExp S.SQLExp
 type AnnBoolExpFldPartialSQL = AnnBoolExpFld PartialSQLExp
 type AnnBoolExpPartialSQL = AnnBoolExp PartialSQLExp
 
+type PreSetColsG v = M.HashMap PGCol v
 type PreSetColsPartial = M.HashMap PGCol PartialSQLExp
 type PreSetCols = M.HashMap PGCol S.SQLExp
 

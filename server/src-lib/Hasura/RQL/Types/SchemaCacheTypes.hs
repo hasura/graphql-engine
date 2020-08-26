@@ -14,8 +14,8 @@ import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.RemoteSchema
-import           Hasura.Session
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 data TableObjId
   = TOCol !PGCol
@@ -33,7 +33,7 @@ data SchemaObjId
   | SOTableObj !QualifiedTable !TableObjId
   | SOFunction !QualifiedFunction
   | SORemoteSchema !RemoteSchemaName
-   deriving (Eq, Generic)
+  deriving (Eq, Generic)
 
 instance Hashable SchemaObjId
 
@@ -89,21 +89,21 @@ instance Hashable DependencyReason
 
 reasonToTxt :: DependencyReason -> Text
 reasonToTxt = \case
-  DRTable           -> "table"
-  DRColumn          -> "column"
-  DRRemoteTable     -> "remote_table"
-  DRLeftColumn      -> "left_column"
-  DRRightColumn     -> "right_column"
-  DRUsingColumn     -> "using_column"
-  DRFkey            -> "fkey"
-  DRRemoteFkey      -> "remote_fkey"
-  DRUntyped         -> "untyped"
-  DROnType          -> "on_type"
-  DRSessionVariable -> "session_variable"
-  DRPayload         -> "payload"
-  DRParent          -> "parent"
-  DRRemoteSchema    -> "remote_schema"
-  DRRemoteRelationship    -> "remote_relationship"
+  DRTable              -> "table"
+  DRColumn             -> "column"
+  DRRemoteTable        -> "remote_table"
+  DRLeftColumn         -> "left_column"
+  DRRightColumn        -> "right_column"
+  DRUsingColumn        -> "using_column"
+  DRFkey               -> "fkey"
+  DRRemoteFkey         -> "remote_fkey"
+  DRUntyped            -> "untyped"
+  DROnType             -> "on_type"
+  DRSessionVariable    -> "session_variable"
+  DRPayload            -> "payload"
+  DRParent             -> "parent"
+  DRRemoteSchema       -> "remote_schema"
+  DRRemoteRelationship -> "remote_relationship"
 
 instance ToJSON DependencyReason where
   toJSON = String . reasonToTxt

@@ -14,6 +14,12 @@ class TestGraphQLValidation:
     def test_null_variable_value(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/null_variable_value_err.yaml", transport)
 
+    def test_variable_type_mismatch(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/variable_type_mismatch.yaml", transport)
+
+    def test_json_column_value(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/json_column_value.yaml", transport)
+
     @classmethod
     def dir(cls):
         return "queries/graphql_validation"

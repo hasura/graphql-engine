@@ -112,11 +112,11 @@ class RelationshipEditor extends React.Component {
           <div className={styles.display_flex}>
             {getEditBtn()}
             <b className={styles.textNoNewLine}>{relName}</b>
+            <GqlCompatibilityWarning
+              identifier={relName}
+              className={styles.add_mar_left_small}
+            />
           </div>
-          <GqlCompatibilityWarning
-            identifier={relName}
-            className={styles.add_mar_left_small}
-          />
           <div className={tableStyles.relationshipTopPadding}>
             <p className={styles.textNoNewLine}>{getRelDef(relConfig)}</p>
           </div>
