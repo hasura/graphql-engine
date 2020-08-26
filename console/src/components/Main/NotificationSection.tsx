@@ -44,11 +44,7 @@ const Update: React.FC<UpdateProps> = ({
 }) => {
   const [linkClicked, updateLinkClicked] = React.useState(is_read);
 
-  React.useEffect(() => {
-    updateLinkClicked(is_read);
-  }, [is_read]);
-
-  const onClickLink = () => {
+  const onClickNotification = () => {
     if (!linkClicked) {
       updateLinkClicked(true);
       if (onReadCB) {
@@ -63,20 +59,34 @@ const Update: React.FC<UpdateProps> = ({
   if (!is_active) {
     return null;
   }
+
+  const isUpdateNotification =
+    type === 'beta update' || type === 'version update';
+  const updateContainerClass = isUpdateNotification
+    ? styles.updateStyleBox
+    : styles.updateBox;
   return (
     <Box
-      className={`${styles.updateBox} ${
+      className={`${updateContainerClass} ${
         !linkClicked ? styles.unread : styles.read
       }`}
-      onClick={onClickLink}
+      onClick={onClickNotification}
     >
-      <div
-        className={
-          !linkClicked
-            ? styles.unreadDot
-            : `${styles.unreadDot} ${styles.hideDot}`
-        }
-      />
+      {!isUpdateNotification ? (
+        <div
+          className={`${styles.unreadDot} ${linkClicked ? styles.hideDot : ''}`}
+        />
+      ) : (
+        <span
+          className={`${styles.unreadStar} ${
+            linkClicked ? styles.hideStar : ''
+          }`}
+          role="img"
+          aria-label="star emoji"
+        >
+          ⭐️
+        </span>
+      )}
       <Flex width="100%">
         <Flex pl={32} pr={25} py={2} width="80%" flexDirection="column">
           <StyledText
@@ -122,7 +132,7 @@ const Update: React.FC<UpdateProps> = ({
                 <a
                   href={props.external_link}
                   className={styles.notificationExternalLink}
-                  onClick={onClickLink}
+                  onClick={onClickNotification}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -169,7 +179,7 @@ const VersionUpdateNotification: React.FC<VersionUpdateNotificationProps> = ({
   return (
     <Update
       subject="New Update Available!"
-      type="version update"
+      type={isStableRelease ? 'version update' : 'beta update'}
       content={`Hey There! There's a new server version ${latestVersion} available.`}
       start_date={Date.now()}
     >
@@ -321,7 +331,15 @@ const ToReadBadge: React.FC<ToReadBadgeProps> = ({
     display = '20+';
   }
 
-  return <Flex className={`${styles.numBadge} ${showBadge}`}>{display}</Flex>;
+  return (
+    <Flex
+      className={`${styles.numBadge} ${showBadge}`}
+      justifyContent="center"
+      alignItems="center"
+    >
+      {display}
+    </Flex>
+  );
 };
 
 const mapStateToProps = (state: ReduxState) => {
@@ -357,7 +375,6 @@ const HasuraNotifications: React.FC<
   const { dispatch } = props;
   const dropDownRef = React.useRef<HTMLDivElement>(null);
   const wrapperRef = React.useRef<HTMLDivElement>(null);
-  // NOTE: Multiple useState's here maybe use useReducer for those
   const [latestVersion, setLatestVersion] = React.useState(serverVersion);
   const [
     displayNewVersionNotification,
@@ -610,7 +627,9 @@ const HasuraNotifications: React.FC<
   return (
     <>
       <div
-        className={`${styles.shareSection} dropdown-toggle`}
+        className={`${styles.shareSection} ${
+          opened ? styles.opened : ''
+        } dropdown-toggle`}
         aria-expanded="false"
         onClick={onClickShareSection}
         ref={wrapperRef}
@@ -621,6 +640,7 @@ const HasuraNotifications: React.FC<
           show={showBadge}
         />
       </div>
+
       {/* Notifications section */}
       <Box
         className={`dropdown-menu ${styles.consoleNotificationPanel}`}
