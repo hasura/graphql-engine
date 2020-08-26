@@ -37,7 +37,7 @@ export const Badge: React.FC<ExtendedBadgeProps> = ({
       );
     case 'beta update':
       return (
-        <StyledBadge {...props} bg="#E2F4F3" color="#4BB5AC">
+        <StyledBadge {...props} bg="#fff" color="#4BB5AC">
           beta update
         </StyledBadge>
       );
@@ -49,7 +49,7 @@ export const Badge: React.FC<ExtendedBadgeProps> = ({
       );
     case 'version update':
       return (
-        <StyledBadge {...props} bg="#E6F5EB" color="#2EB67D">
+        <StyledBadge {...props} bg="#fff" color="#2EB67D">
           ver update
         </StyledBadge>
       );
