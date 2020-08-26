@@ -64,7 +64,10 @@ const insertItem = (tableName, colValues) => {
             ' as a valid JSON object/array';
           error = true;
         }
-      } else if (colType === ARRAY && isStringArray(colValues[colName])) {
+      } else if (
+        colType === dataSource.ARRAY &&
+        isStringArray(colValues[colName])
+      ) {
         try {
           const arr = JSON.parse(colValues[colName]);
           insertObject[colName] = dataSource.arrayToPostgresArray(arr);

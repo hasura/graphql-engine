@@ -22,6 +22,7 @@ import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/Gql
 
 import styles from './ModifyTable.scss';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { dataSource } from '../../../../dataSources';
 
 const ColumnEditorList = ({
   tableSchema,
@@ -59,7 +60,7 @@ const ColumnEditorList = ({
    * */
   return columns.map((col, i) => {
     const colName = col.column_name;
-    const isArrayDataType = col.data_type === ARRAY;
+    const isArrayDataType = col.data_type === dataSource.ARRAY;
 
     const getDisplayName = () => {
       if (isArrayDataType) {

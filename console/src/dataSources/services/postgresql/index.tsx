@@ -80,7 +80,7 @@ export const isColumnAutoIncrement = (column: TableColumn) => {
   );
 };
 
-export const arrayToPostgresArray = (arr: unknown[]) => {
+const arrayToPostgresArray = (arr: unknown[]) => {
   return `{${arr.join(',')}}`;
 };
 
