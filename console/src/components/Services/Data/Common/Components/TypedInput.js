@@ -1,9 +1,10 @@
 import React from 'react';
 
-import { JSONB, JSONDTYPE, TEXT, BOOLEAN, getPlaceholder } from '../../utils';
+import { getPlaceholder } from '../../utils';
 import JsonInput from '../../../../Common/CustomInputTypes/JsonInput';
 import TextInput from '../../../../Common/CustomInputTypes/TextInput';
 import styles from '../../../../Common/TableCommon/Table.scss';
+import { dataSource } from '../../../../../dataSources';
 
 export const TypedInput = ({
   enumOptions,
@@ -88,8 +89,8 @@ export const TypedInput = ({
   }
 
   switch (colType) {
-    case JSONB:
-    case JSONDTYPE:
+    case dataSource.JSONB:
+    case dataSource.JSONDTYPE:
       return (
         <JsonInput
           standardProps={{
@@ -102,7 +103,7 @@ export const TypedInput = ({
         />
       );
 
-    case TEXT:
+    case dataSource.TEXT:
       return (
         <TextInput
           standardProps={standardInputProps}
@@ -110,7 +111,7 @@ export const TypedInput = ({
         />
       );
 
-    case BOOLEAN:
+    case dataSource.BOOLEAN:
       return (
         <select {...standardInputProps}>
           <option value="" disabled>

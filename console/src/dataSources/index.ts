@@ -50,6 +50,44 @@ export interface DataSourcesAPI {
   };
   additionalColumnsInfoQuery: (schemaName: string) => Record<string, any>;
   parseColumnsInfoResult: (data: any) => ColumnsInfoResult;
+  columnDataTypes: {
+    INTEGER: string;
+    SERIAL: string;
+    BIGINT: string;
+    BIGSERIAL: string;
+    UUID: string;
+    JSONDTYPE: string;
+    JSONB: string;
+    TIMESTAMP: string;
+    TIME: string;
+    NUMERIC: string;
+    DATE: string;
+    TIMETZ: string;
+    BOOLEAN: string;
+    TEXT: string;
+    ARRAY: string;
+  };
+  generateWhereClause: (
+    options: {
+      schemas: string[];
+      tables: Table[];
+    },
+    sqlTableName?: string,
+    sqlSchemaName?: string,
+    clausePrefix?: string
+  ) => string;
+  getFetchTrackedTableFkQuery: (options: {
+    schemas: string[];
+    tables: Table[];
+  }) => string;
+  getFetchTrackedTableReferencedFkQuery: (options: {
+    schemas: string[];
+    tables: Table[];
+  }) => string;
+  getFetchTablesListQuery: (options: {
+    schemas: string[];
+    tables: Table[];
+  }) => string;
 }
 
 export let currentDriver: Driver = 'postgres';

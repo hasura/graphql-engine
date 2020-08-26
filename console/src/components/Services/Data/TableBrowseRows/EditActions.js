@@ -13,7 +13,6 @@ import {
   dataSource,
 } from '../../../../dataSources';
 import { getEnumOptionsQuery } from '../../../Common/utils/v1QueryUtils';
-import { ARRAY } from '../utils';
 import { isStringArray } from '../../../Common/utils/jsUtils';
 import { generateTableDef } from '../../../../dataSources';
 
@@ -71,7 +70,10 @@ const editItem = (tableName, colValues) => {
           } else {
             _setObject[colName] = null;
           }
-        } else if (colType === 'json' || colType === 'jsonb') {
+        } else if (
+          colType === dataSource.columnDataTypes.JSONB ||
+          colType === dataSource.columnDataTypes.JSONDTYPE
+        ) {
           try {
             _setObject[colName] = JSON.parse(colValue);
           } catch (e) {
@@ -81,7 +83,10 @@ const editItem = (tableName, colValues) => {
               colValue +
               ' as a valid JSON object/array';
           }
-        } else if (colType === ARRAY && isStringArray(colValue)) {
+        } else if (
+          colType === dataSource.columnDataTypes.ARRAY &&
+          isStringArray(colValue)
+        ) {
           try {
             const arr = JSON.parse(colValue);
             _setObject[colName] = dataSource.arrayToPostgresArray(arr);
