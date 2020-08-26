@@ -44,6 +44,7 @@ import { fetchColumnCastsQuery, convertArrayToJson } from './TableModify/utils';
 
 import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
 import { isEmpty } from '../../Common/utils/jsUtils';
+import { dataSource } from '../../../dataSources';
 
 const SET_TABLE = 'Data/SET_TABLE';
 const LOAD_FUNCTIONS = 'Data/LOAD_FUNCTIONS';
@@ -76,134 +77,6 @@ export const setAllRoles = roles => ({
   roles,
 });
 
-const initQueries = {
-  schemaList: {
-    type: 'select',
-    args: {
-      table: {
-        name: 'schemata',
-        schema: 'information_schema',
-      },
-      columns: ['schema_name'],
-      order_by: [{ column: 'schema_name', type: 'asc', nulls: 'last' }],
-      where: {
-        schema_name: {
-          $nin: [
-            'information_schema',
-            'pg_catalog',
-            'hdb_catalog',
-            'hdb_views',
-          ],
-        },
-      },
-    },
-  },
-  loadTrackedFunctions: {
-    type: 'select',
-    args: {
-      table: {
-        name: 'hdb_function',
-        schema: 'hdb_catalog',
-      },
-      columns: ['function_name', 'function_schema', 'is_system_defined'],
-      order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
-      where: {
-        function_schema: '', // needs to be set later
-      },
-    },
-  },
-  loadTrackableFunctions: {
-    type: 'select',
-    args: {
-      table: {
-        name: 'hdb_function_agg',
-        schema: 'hdb_catalog',
-      },
-      columns: [
-        'function_name',
-        'function_schema',
-        'has_variadic',
-        'function_type',
-        'function_definition',
-        'return_type_schema',
-        'return_type_name',
-        'return_type_type',
-        'returns_set',
-        {
-          name: 'return_table_info',
-          columns: ['table_schema', 'table_name'],
-        },
-      ],
-      order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
-      where: {
-        function_schema: '', // needs to be set later
-        has_variadic: false,
-        returns_set: true,
-        return_type_type: 'c', // COMPOSITE type
-        return_table_info: {},
-        $or: [
-          {
-            function_type: {
-              $ilike: '%stable%',
-            },
-          },
-          {
-            function_type: {
-              $ilike: '%immutable%',
-            },
-          },
-        ],
-      },
-    },
-  },
-  loadNonTrackableFunctions: {
-    type: 'select',
-    args: {
-      table: {
-        name: 'hdb_function_agg',
-        schema: 'hdb_catalog',
-      },
-      columns: [
-        'function_name',
-        'function_schema',
-        'has_variadic',
-        'function_type',
-        'function_definition',
-        'return_type_schema',
-        'return_type_name',
-        'return_type_type',
-        'returns_set',
-        {
-          name: 'return_table_info',
-          columns: ['table_schema', 'table_name'],
-        },
-      ],
-      order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
-      where: {
-        function_schema: '', // needs to be set later
-        $not: {
-          has_variadic: false,
-          returns_set: true,
-          return_type_type: 'c', // COMPOSITE type
-          return_table_info: {},
-          $or: [
-            {
-              function_type: {
-                $ilike: '%stable%',
-              },
-            },
-            {
-              function_type: {
-                $ilike: '%immutable%',
-              },
-            },
-          ],
-        },
-      },
-    },
-  },
-};
-
 export const mergeRemoteRelationshipsWithSchema = (
   remoteRelationships,
   table
@@ -234,7 +107,7 @@ const fetchTrackedFunctions = () => {
 
     const currentSchema = getState().tables.currentSchema;
 
-    const body = initQueries.loadTrackedFunctions;
+    const body = dataSource.initQueries.loadTrackedFunctions;
     body.args.where.function_schema = currentSchema;
 
     const options = {
@@ -381,27 +254,8 @@ const loadSchema = configOptions => {
 
 const fetchAdditionalColumnsInfo = () => (dispatch, getState) => {
   const schemaName = getState().tables.currentSchema;
-  const query = {
-    type: 'select',
-    args: {
-      table: {
-        name: 'columns',
-        schema: 'information_schema',
-      },
-      columns: [
-        'column_name',
-        'table_name',
-        'is_generated',
-        'is_identity',
-        'identity_generation',
-      ],
-      where: {
-        table_schema: {
-          $eq: schemaName,
-        },
-      },
-    },
-  };
+  const query = dataSource.additionalColumnsInfoQuery(schemaName);
+
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
@@ -412,35 +266,9 @@ const fetchAdditionalColumnsInfo = () => (dispatch, getState) => {
   return dispatch(requestAction(Endpoints.query, options)).then(
     result => {
       if (result) {
-        let columnsInfo = {};
-        result
-          .filter(
-            info => info.is_generated !== 'NEVER' || info.is_identity !== 'NO'
-          )
-          .forEach(
-            ({
-              column_name,
-              table_name,
-              is_generated,
-              is_identity,
-              identity_generation,
-            }) => {
-              columnsInfo = {
-                ...columnsInfo,
-                [table_name]: {
-                  ...columnsInfo[table_name],
-                  [column_name]: {
-                    is_generated,
-                    is_identity,
-                    identity_generation,
-                  },
-                },
-              };
-            }
-          );
         dispatch({
           type: SET_ADDITIONAL_COLUMNS_INFO,
-          data: columnsInfo,
+          data: dataSource.parseColumnsInfoResult(result),
         });
       }
     },
@@ -474,7 +302,7 @@ const fetchDataInit = () => (dispatch, getState) => {
 
   const body = {
     type: 'bulk',
-    args: [initQueries.schemaList],
+    args: [dataSource.initQueries.schemaList],
   };
 
   const options = {
@@ -500,9 +328,9 @@ const fetchFunctionInit = (schema = null) => (dispatch, getState) => {
   const body = {
     type: 'bulk',
     args: [
-      initQueries.loadTrackableFunctions,
-      initQueries.loadNonTrackableFunctions,
-      initQueries.loadTrackedFunctions,
+      dataSource.initQueries.loadTrackableFunctions,
+      dataSource.initQueries.loadNonTrackableFunctions,
+      dataSource.initQueries.loadTrackedFunctions,
     ],
   };
 
@@ -561,7 +389,7 @@ const fetchSchemaList = () => (dispatch, getState) => {
     credentials: globalCookiePolicy,
     method: 'POST',
     headers: dataHeaders(getState),
-    body: JSON.stringify(initQueries.schemaList),
+    body: JSON.stringify(dataSource.initQueries.schemaList),
   };
   return dispatch(requestAction(url, options)).then(
     data => {
@@ -991,7 +819,6 @@ export {
   UPDATE_DATA_HEADERS,
   UPDATE_REMOTE_SCHEMA_MANUAL_REL,
   fetchTrackedFunctions,
-  initQueries,
   LOAD_SCHEMA,
   setConsistentSchema,
   setConsistentFunctions,

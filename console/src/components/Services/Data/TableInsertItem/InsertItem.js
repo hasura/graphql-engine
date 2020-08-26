@@ -70,9 +70,12 @@ class InsertItem extends Component {
     const refs = {};
 
     const elements = columns.map((col, i) => {
-      const { column_name: colName, is_identity, column_default } = col;
+      const {
+        column_name: colName,
+        is_identity: isIdentity,
+        column_default,
+      } = col;
       const hasDefault = column_default && column_default.trim() !== '';
-      const isIdentity = is_identity && is_identity !== 'NO';
 
       refs[colName] = {
         valueNode: null,

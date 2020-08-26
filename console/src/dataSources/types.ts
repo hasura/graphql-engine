@@ -25,9 +25,9 @@ export interface BaseTableColumn {
 export interface TableColumn extends BaseTableColumn {
   udt_name: string;
   column_default: string;
-  is_generated?: string;
+  is_generated?: boolean;
   is_nullable?: string;
-  is_identity?: string;
+  is_identity?: boolean;
   identity_generation?: 'ALWAYS' | 'BY DEFAULT' | null;
 }
 

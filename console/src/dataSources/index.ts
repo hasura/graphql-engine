@@ -8,6 +8,16 @@ import { Operations } from './common';
 
 export type Driver = 'postgres'; // | 'mysql';
 
+export type ColumnsInfoResult = {
+  [tableName: string]: {
+    [columnName: string]: {
+      is_generated: boolean;
+      is_identity: boolean;
+      identity_generation: 'ALWAYS' | 'BY DEFAULT' | string | null;
+    };
+  };
+};
+
 export interface DataSourcesAPI {
   isTable(table: Table): boolean;
   displayTableName(table: Table): JSX.Element;
@@ -32,6 +42,14 @@ export interface DataSourcesAPI {
   getTableSupportedQueries(table: Table): Operations[];
   getColumnType(col: TableColumn): string;
   arrayToPostgresArray(arr: any[]): string;
+  initQueries: {
+    schemaList: Record<string, any>;
+    loadTrackedFunctions: Record<string, any>;
+    loadTrackableFunctions: Record<string, any>;
+    loadNonTrackableFunctions: Record<string, any>;
+  };
+  additionalColumnsInfoQuery: (schemaName: string) => Record<string, any>;
+  parseColumnsInfoResult: (data: any) => ColumnsInfoResult;
 }
 
 export let currentDriver: Driver = 'postgres';

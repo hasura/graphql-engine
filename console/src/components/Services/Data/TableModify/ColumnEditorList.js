@@ -81,7 +81,7 @@ const ColumnEditorList = ({
       type: getType(),
       isArrayDataType,
       isNullable: col.is_nullable === 'YES',
-      isIdentity: col.is_identity === 'YES',
+      isIdentity: col.is_identity,
       pkConstraint: columnPKConstraints[colName],
       isUnique: isColumnUnique(tableSchema, colName),
       // uniqueConstraint: columnUniqueConstraints[colName],

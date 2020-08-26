@@ -2,7 +2,7 @@ import React from 'react';
 import { Table, TableColumn, ComputedField } from '../../types';
 import { QUERY_TYPES, Operations } from '../../common';
 import { PGFunction } from './types';
-import { DataSourcesAPI } from '../..';
+import { DataSourcesAPI, ColumnsInfoResult } from '../..';
 
 export const isTable = (table: Table) => {
   return (
@@ -142,6 +142,195 @@ export const getGroupedTableComputedFields = (
   return groupedComputedFields;
 };
 
+const initQueries = {
+  schemaList: {
+    type: 'select',
+    args: {
+      table: {
+        name: 'schemata',
+        schema: 'information_schema',
+      },
+      columns: ['schema_name'],
+      order_by: [{ column: 'schema_name', type: 'asc', nulls: 'last' }],
+      where: {
+        schema_name: {
+          $nin: [
+            'information_schema',
+            'pg_catalog',
+            'hdb_catalog',
+            'hdb_views',
+          ],
+        },
+      },
+    },
+  },
+  loadTrackedFunctions: {
+    type: 'select',
+    args: {
+      table: {
+        name: 'hdb_function',
+        schema: 'hdb_catalog',
+      },
+      columns: ['function_name', 'function_schema', 'is_system_defined'],
+      order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
+      where: {
+        function_schema: '', // needs to be set later
+      },
+    },
+  },
+  loadTrackableFunctions: {
+    type: 'select',
+    args: {
+      table: {
+        name: 'hdb_function_agg',
+        schema: 'hdb_catalog',
+      },
+      columns: [
+        'function_name',
+        'function_schema',
+        'has_variadic',
+        'function_type',
+        'function_definition',
+        'return_type_schema',
+        'return_type_name',
+        'return_type_type',
+        'returns_set',
+        {
+          name: 'return_table_info',
+          columns: ['table_schema', 'table_name'],
+        },
+      ],
+      order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
+      where: {
+        function_schema: '', // needs to be set later
+        has_variadic: false,
+        returns_set: true,
+        return_type_type: 'c', // COMPOSITE type
+        return_table_info: {},
+        $or: [
+          {
+            function_type: {
+              $ilike: '%stable%',
+            },
+          },
+          {
+            function_type: {
+              $ilike: '%immutable%',
+            },
+          },
+        ],
+      },
+    },
+  },
+  loadNonTrackableFunctions: {
+    type: 'select',
+    args: {
+      table: {
+        name: 'hdb_function_agg',
+        schema: 'hdb_catalog',
+      },
+      columns: [
+        'function_name',
+        'function_schema',
+        'has_variadic',
+        'function_type',
+        'function_definition',
+        'return_type_schema',
+        'return_type_name',
+        'return_type_type',
+        'returns_set',
+        {
+          name: 'return_table_info',
+          columns: ['table_schema', 'table_name'],
+        },
+      ],
+      order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
+      where: {
+        function_schema: '', // needs to be set later
+        $not: {
+          has_variadic: false,
+          returns_set: true,
+          return_type_type: 'c', // COMPOSITE type
+          return_table_info: {},
+          $or: [
+            {
+              function_type: {
+                $ilike: '%stable%',
+              },
+            },
+            {
+              function_type: {
+                $ilike: '%immutable%',
+              },
+            },
+          ],
+        },
+      },
+    },
+  },
+};
+
+const additionalColumnsInfoQuery = (schemaName: string) => ({
+  type: 'select',
+  args: {
+    table: {
+      name: 'columns',
+      schema: 'information_schema',
+    },
+    columns: [
+      'column_name',
+      'table_name',
+      'is_generated',
+      'is_identity',
+      'identity_generation',
+    ],
+    where: {
+      table_schema: {
+        $eq: schemaName,
+      },
+    },
+  },
+});
+
+type ColumnsInfoPayload = {
+  column_name: string;
+  table_name: string;
+  is_generated: string;
+  is_identity: string;
+  identity_generation: 'ALWAYS' | 'BY DEFAULT' | null;
+};
+
+const parseColumnsInfoResult = (data: ColumnsInfoPayload[]) => {
+  let columnsInfo: ColumnsInfoResult = {};
+  data
+    .filter(
+      (info: ColumnsInfoPayload) =>
+        info.is_generated !== 'NEVER' || info.is_identity !== 'NO'
+    )
+    .forEach(
+      ({
+        column_name,
+        table_name,
+        is_generated,
+        is_identity,
+        identity_generation,
+      }) => {
+        columnsInfo = {
+          ...columnsInfo,
+          [table_name]: {
+            ...columnsInfo[table_name],
+            [column_name]: {
+              is_generated: is_generated !== 'NEVER',
+              is_identity: is_identity !== 'NO',
+              identity_generation,
+            },
+          },
+        };
+      }
+    );
+  return columnsInfo;
+};
+
 export const postgres: DataSourcesAPI = {
   isTable,
   displayTableName,
@@ -155,4 +344,7 @@ export const postgres: DataSourcesAPI = {
   getTableSupportedQueries,
   getColumnType,
   arrayToPostgresArray,
+  initQueries,
+  additionalColumnsInfoQuery,
+  parseColumnsInfoResult,
 };

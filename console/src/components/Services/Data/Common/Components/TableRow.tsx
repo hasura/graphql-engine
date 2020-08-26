@@ -13,8 +13,8 @@ const getColumnInfo = (col: TableColumn, prevValue?: unknown) => {
     : false;
 
   const isAutoIncrement = dataSource.isColumnAutoIncrement(col);
-  const isIdentity = col.is_identity ? col.is_identity !== 'NO' : false;
-  const isGenerated = col.is_generated ? col.is_generated !== 'NEVER' : false;
+  const isIdentity = col.is_identity;
+  const isGenerated = col.is_generated;
   const isNullable = col.is_nullable ? col.is_nullable !== 'NO' : false;
   const identityGeneration = col.identity_generation;
 
