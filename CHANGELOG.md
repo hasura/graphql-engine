@@ -2,7 +2,7 @@
 
 ## Next release
 
-### Server - Support for custom JWT Claims
+### Server - Support for mapping session variables to default JWT claims
 
 Some auth providers do not let users add custom claims in JWT. In such cases, the server can take a JWT configuration option called `claims_map` to specify a mapping of Hasura session variables to values in existing claims via JSONPath or literal values.
 
