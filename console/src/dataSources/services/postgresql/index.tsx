@@ -12,6 +12,8 @@ import {
   isSQLFunction,
   getEstimateCountQuery,
   cascadeSqlQuery,
+  getCreateTableQueries,
+  getDropTableSql,
 } from './sqlUtils';
 
 export const isTable = (table: Table) => {
@@ -434,7 +436,7 @@ const commonDataTypes = [
   },
 ];
 
-const isColTypeString = (colType: string) =>
+export const isColTypeString = (colType: string) =>
   ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
 
 const dependecyErrorCode = '2BP01'; // pg dependent error > https://www.postgresql.org/docs/current/errcodes-appendix.html
@@ -467,4 +469,6 @@ export const postgres: DataSourcesAPI = {
   isColTypeString,
   cascadeSqlQuery,
   dependecyErrorCode,
+  getCreateTableQueries,
+  getDropTableSql,
 };

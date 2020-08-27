@@ -92,6 +92,21 @@ export interface DataSourcesAPI {
   isColTypeString(colType: string): boolean;
   cascadeSqlQuery(sql: string): string;
   dependecyErrorCode: string;
+  getCreateTableQueries: (
+    currentSchema: string,
+    tableName: string,
+    columns: any[],
+    primaryKeys: (number | string)[],
+    foreignKeys: any[],
+    uniqueKeys: any[],
+    checkConstraints: any[],
+    tableComment?: string | undefined
+  ) =>
+    | string[]
+    | {
+        error: string;
+      };
+  getDropTableSql(schema: string, table: string): string;
 }
 
 export let currentDriver: Driver = 'postgres';
