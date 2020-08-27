@@ -72,10 +72,6 @@ executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs rjs = do
   where
     rjMap = Map.fromList $ toList rjs
 
--- | Path to the remote join field in query response JSON from Postgres.
-newtype FieldPath = FieldPath {unFieldPath :: [FieldName]}
-  deriving (Show, Eq, Semigroup, Monoid, Hashable)
-
 type Alias = G.Name
 
 appendPath :: FieldName -> FieldPath -> FieldPath
@@ -294,6 +290,7 @@ data RemoteJoinField
   , _rjfAlias        :: !Alias -- ^ Top level alias of the field
   , _rjfField        :: !(G.Field G.NoFragments Variable) -- ^ The field AST
   , _rjfFieldCall    :: ![G.Name] -- ^ Path to remote join value
+  , _rjfPath         :: !FieldPath
   } deriving (Show, Eq)
 
 -- | Generate composite JSON ('CompositeValue') parameterised over 'RemoteJoinField'
@@ -325,12 +322,14 @@ traverseQueryResponseJSON rjm =
                                   $ siblingFields
           let siblingFieldArgs = Map.fromList $ siblingFieldArgsVars
               hasuraFieldArgs = flip Map.filterWithKey siblingFieldArgs $ \k _ -> k `elem` hasuraFieldVariables
-          fieldAlias <- pathToAlias (appendPath fieldName path) counter
+              finalPath = appendPath fieldName path
+          fieldAlias <- pathToAlias finalPath counter
           queryField <- fieldCallsToField (inputArgsToMap inputArgs) hasuraFieldArgs selSet fieldAlias fieldCall
           pure $ RemoteJoinField rsi
                                  fieldAlias
                                  queryField
                                  (map fcName $ toList $ NE.tail fieldCall)
+                                 finalPath
           where
             ordJSONValueToGValue :: (MonadError QErr m) => AO.Value -> m (G.Value Void)
             ordJSONValueToGValue =
@@ -417,7 +416,11 @@ fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
                                  (map _rjfField batchList)
         gqlReqUnparsed = (GQLQueryText . G.renderExecutableDoc . G.ExecutableDocument . unGQLExecDoc) <$> gqlReq
     -- NOTE: discard remote headers (for now):
-    (_, _, respBody) <- execRemoteGQ' env manager userInfo reqHdrs gqlReqUnparsed rsi G.OperationTypeQuery
+    (_, _, respBody) <- do
+      -- TODO(evertedsphere): move this into metadata, so that a trace further
+      -- down the callstack (i.e. while performing the http req) will print 
+      -- these field aliases.
+      execRemoteGQ' env manager userInfo reqHdrs gqlReqUnparsed rsi G.OperationTypeQuery (toList $ fmap _rjfPath batch)
     case AO.eitherDecode respBody of
       Left e -> throw500 $ "Remote server response is not valid JSON: " <> T.pack e
       Right r -> do

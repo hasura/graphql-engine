@@ -10,6 +10,7 @@ import           Control.Monad.Unique
 import           Data.Aeson                             ((.:), (.:?))
 import           Hasura.HTTP
 import           Hasura.Prelude
+import qualified Data.Text as T
 
 import qualified Data.Aeson                             as J
 import qualified Data.ByteString.Lazy                   as BL
@@ -314,8 +315,11 @@ execRemoteGQ'
   -> GQLReqUnparsed
   -> RemoteSchemaInfo
   -> G.OperationType
+  -- TODO should we leave this as a list or use a nonempty?
+  -- perhaps it _has_ to be empty for a toplevel remote schema call
+  -> [FieldPath]
   -> m (DiffTime, [N.Header], BL.ByteString)
-execRemoteGQ' env manager userInfo reqHdrs q rsi opType =  do
+execRemoteGQ' env manager userInfo reqHdrs q rsi opType fieldPaths =  do
   when (opType == G.OperationTypeSubscription) $
     throw400 NotSupported "subscription to remote server is not supported"
   confHdrs <- makeHeadersFromConf env hdrConf
@@ -337,10 +341,13 @@ execRemoteGQ' env manager userInfo reqHdrs q rsi opType =  do
            , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
            }
   Tracing.tracedHttpRequest req \req' -> do
+    Tracing.attachMetadata [("field_paths", renderedFieldPaths)]
     (time, res)  <- withElapsedTime $ liftIO $ try $ HTTP.httpLbs req' manager
     resp <- either httpThrow return res
     pure (time, mkSetCookieHeaders resp, resp ^. Wreq.responseBody)
   where
+    renderFieldPath fp = T.intercalate "." $ map getFieldNameTxt (unFieldPath fp)
+    renderedFieldPaths = T.pack . show $ map renderFieldPath fieldPaths
     RemoteSchemaInfo url hdrConf fwdClientHdrs timeout = rsi
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
     httpThrow = \case

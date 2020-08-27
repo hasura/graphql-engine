@@ -338,6 +338,6 @@ execRemoteGQ env reqId userInfo reqHdrs q rsi opDef = do
       manager = _ecxHttpManager execCtx
       opType  = G._todType opDef
   logQueryLog logger q Nothing reqId
-  (time, respHdrs, resp) <- execRemoteGQ' env manager userInfo reqHdrs q rsi opType
+  (time, respHdrs, resp) <- execRemoteGQ' env manager userInfo reqHdrs q rsi opType []
   let !httpResp = HttpResponse (encJFromLBS resp) respHdrs
   return (time, httpResp)

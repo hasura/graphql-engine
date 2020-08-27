@@ -41,6 +41,8 @@ module Hasura.RQL.Types.Common
        , InputWebhook(..)
        , ResolvedWebhook(..)
        , resolveWebhook
+
+       , FieldPath(..)
        ) where
 
 import           Hasura.EncJSON
@@ -310,3 +312,7 @@ resolveWebhook env (InputWebhook urlTemplate) = do
   let eitherRenderedTemplate = renderURLTemplate env urlTemplate
   either (throw400 Unexpected . T.pack)
     (pure . ResolvedWebhook) eitherRenderedTemplate
+
+-- | Path to a remote join field in e.g. query response JSON from Postgres.
+newtype FieldPath = FieldPath {unFieldPath :: [FieldName]}
+  deriving (Show, Eq, Semigroup, Monoid, Hashable)
