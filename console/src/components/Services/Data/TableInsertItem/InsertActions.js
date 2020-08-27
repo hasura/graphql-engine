@@ -19,6 +19,7 @@ import {
 import { ARRAY } from '../utils';
 import { isStringArray } from '../../../Common/utils/jsUtils';
 import { makeMigrationCall } from '../DataActions';
+import { removeAll } from 'react-notification-system-redux';
 
 const I_SET_CLONE = 'InsertItem/I_SET_CLONE';
 const I_RESET = 'InsertItem/I_RESET';
@@ -191,6 +192,7 @@ const insertItem = (tableName, colValues, isMigration = false) => {
         }
       },
       err => {
+        dispatch(removeAll());
         dispatch(showErrorNotification('Insert failed!', err.error, err));
       }
     );
