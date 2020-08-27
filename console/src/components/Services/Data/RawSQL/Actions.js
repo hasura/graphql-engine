@@ -43,6 +43,7 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
 
   const { isTableTrackChecked, isCascadeChecked, sql } = getState().rawSQL;
   const { migrationMode, readOnlyMode } = getState().main;
+  const isStatementTimeout = statementTimeout && !isMigration;
 
   const migrateUrl = returnMigrateUrl(migrationMode);
 
@@ -51,7 +52,7 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
   const schemaChangesUp = [];
   let schemaChangesDown = [];
 
-  if (statementTimeout && !isMigration) {
+  if (isStatementTimeout) {
     schemaChangesUp.push(
       getRunSqlQuery(
         getStatementTimeoutSql(statementTimeout),
@@ -125,7 +126,10 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
         }
         dispatch(showSuccessNotification('SQL executed!'));
         dispatch(fetchDataInit()).then(() => {
-          dispatch({ type: REQUEST_SUCCESS, data });
+          dispatch({
+            type: REQUEST_SUCCESS,
+            data: data && (isStatementTimeout ? data[1] : data[0]),
+          });
         });
         dispatch(fetchTrackedFunctions());
       },
@@ -182,11 +186,7 @@ const rawSQLReducer = (state = defaultState, action) => {
         lastSuccess: null,
       };
     case REQUEST_SUCCESS:
-      if (
-        action.data &&
-        action.data[0] &&
-        action.data[0].result_type === 'CommandOk'
-      ) {
+      if (action.data && action.data.result_type === 'CommandOk') {
         return {
           ...state,
           ongoingRequest: false,
@@ -202,8 +202,8 @@ const rawSQLReducer = (state = defaultState, action) => {
         lastError: null,
         lastSuccess: true,
         resultType: 'tuples',
-        result: action.data[0].result.slice(1),
-        resultHeaders: action.data[0].result[0],
+        result: action.data.result.slice(1),
+        resultHeaders: action.data.result[0],
       };
     case REQUEST_ERROR:
       return {

@@ -661,7 +661,10 @@ const makeMigrationCall = (
     }
     customOnSuccess(data, globals.consoleMode, currMigrationMode);
   };
-  const retryMigration = (err = {}, errMsg = '') => {
+  const retryMigration = (err = {}, errMsg = '', isPgCascade = false) => {
+    const errorDetails = getErrorMessage('', err);
+    const errorDetailsLines = errorDetails.split('\n');
+
     dispatch(
       showNotification(
         {
@@ -669,8 +672,9 @@ const makeMigrationCall = (
           level: 'error',
           message: (
             <p>
-              {getErrorMessage('', err)}
-              <br />
+              {errorDetailsLines.map((m, i) => (
+                <div key={i}>{m}</div>
+              ))}
               <br />
               Do you want to drop the dependent items as well?
             </p>
@@ -682,7 +686,7 @@ const makeMigrationCall = (
               makeMigrationCall(
                 dispatch,
                 getState,
-                cascadeUpQueries(upQueries), // cascaded new up queries
+                cascadeUpQueries(upQueries, isPgCascade), // cascaded new up queries
                 downQueries,
                 migrationName,
                 customOnSuccess,
@@ -691,6 +695,7 @@ const makeMigrationCall = (
                 successMsg,
                 errorMsg,
                 shouldSkipSchemaReload,
+                false,
                 true // prevent further retry
               ),
           },
@@ -702,8 +707,10 @@ const makeMigrationCall = (
 
   const onError = err => {
     if (!isRetry) {
-      const dependecyError = getDependencyError(err);
-      if (dependecyError) return retryMigration(dependecyError, errorMsg);
+      const { dependencyError, pgDependencyError } = getDependencyError(err);
+      if (dependencyError) return retryMigration(dependencyError, errorMsg);
+      if (pgDependencyError)
+        return retryMigration(pgDependencyError, errorMsg, true);
     }
 
     dispatch(handleMigrationErrors(errorMsg, err));
