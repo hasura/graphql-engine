@@ -12,8 +12,8 @@ Authentication
   :depth: 1
   :local:
 
-Overview
---------
+Introduction
+------------
 
 Authentication is handled outside of Hasura. Hasura delegates authentication and resolution of request
 headers into session variables to your authentication service *(existing or new)*.
@@ -25,13 +25,13 @@ for your access control use cases, like ``X-Hasura-User-Id``, to build permissio
 You can also configure Hasura to allow access to unauthenticated users by configuring a specific role
 which will be set for all unauthenticated requests.
 
-Authentication options
-----------------------
-
 Hasura supports two modes of authentication configuration:
 
 1. Webhook
-^^^^^^^^^^
+2. JWT
+
+Webhook authentication
+----------------------
 
 Your auth server exposes a webhook that is used to authenticate all incoming requests
 to the Hasura GraphQL engine server and to get metadata about the request to evaluate access control
@@ -42,8 +42,14 @@ Here's how a GraphQL request is processed in webhook mode:
 .. thumbnail:: /img/graphql/core/auth/auth-webhook-overview.png
    :alt: Authentication using webhooks
 
-2. JWT (JSON Web Token)
-^^^^^^^^^^^^^^^^^^^^^^^
+Pros / cons
+^^^^^^^^^^^
+
+Use cases
+^^^^^^^^^
+
+JWT authentication
+------------------
 
 Your auth server issues JWTs to your client app, which, when sent as part
 of the request, are verified and decoded by the GraphQL engine to get metadata about the request to
@@ -54,6 +60,12 @@ Here's how a GraphQL query is processed in JWT mode:
 .. thumbnail:: /img/graphql/core/auth/auth-jwt-overview.png
    :alt: Authentication using JWT
 
+Pros / cons
+^^^^^^^^^^^
+
+Use cases
+^^^^^^^^^
+
 **See more details at:**
 
 .. toctree::
@@ -62,3 +74,4 @@ Here's how a GraphQL query is processed in JWT mode:
   Using webhooks <webhook/index>
   Using JWT <jwt/index>
   Unauthenticated / Public access <unauthenticated-access>
+  Integration guides <guides/index>
