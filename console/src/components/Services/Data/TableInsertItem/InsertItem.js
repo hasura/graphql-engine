@@ -186,8 +186,11 @@ class InsertItem extends Component {
               : refs[colName].valueNode.value;
         }
       });
-      dispatch(insertItem(tableName, inputValues, this.state.isMigration));
-      this.nextInsert();
+      dispatch(insertItem(tableName, inputValues, this.state.isMigration)).then(
+        () => {
+          this.nextInsert();
+        }
+      );
     };
 
     return (
