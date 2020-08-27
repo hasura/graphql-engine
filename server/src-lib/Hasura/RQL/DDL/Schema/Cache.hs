@@ -59,11 +59,11 @@ import           Hasura.Server.Version                    (HasVersion)
 import           Hasura.SQL.Types
 
 buildRebuildableSchemaCache
-  :: (HasVersion, MonadIO m, MonadUnique m, MonadTx m, HasHttpManager m, HasSQLGenCtx m)
+  :: (HasVersion, MonadIO m, MonadUnique m, MonadTx m, HasHttpManager m, HasSQLGenCtx m, MonadMetadata m)
   => Env.Environment
   -> m (RebuildableSchemaCache m)
 buildRebuildableSchemaCache env = do
-  metadata <- liftTx fetchMetadata
+  metadata <- fetchMetadata
   catalogMetadata <- buildCatalogMetadata metadata
   result <- flip runReaderT CatalogSync $
     Inc.build (buildSchemaCacheRule env) (catalogMetadata, initialInvalidationKeys)
@@ -76,7 +76,7 @@ newtype CacheRWT m a
   = CacheRWT (StateT (RebuildableSchemaCache m, CacheInvalidations) m a)
   deriving
     ( Functor, Applicative, Monad, MonadIO, MonadUnique, MonadReader r, MonadError e, MonadTx
-    , UserInfoM, HasHttpManager, HasSQLGenCtx, HasSystemDefined )
+    , UserInfoM, HasHttpManager, HasSQLGenCtx, HasSystemDefined, MonadMetadata)
 
 runCacheRWT
   :: Functor m
@@ -91,11 +91,11 @@ instance (Monad m) => TableCoreInfoRM (CacheRWT m)
 instance (Monad m) => CacheRM (CacheRWT m) where
   askSchemaCache = CacheRWT $ gets (lastBuiltSchemaCache . fst)
 
-instance (MonadIO m, MonadTx m) => CacheRWM (CacheRWT m) where
+instance (MonadIO m, MonadTx m, MonadMetadata m) => CacheRWM (CacheRWT m) where
   buildSchemaCacheWithOptions buildReason invalidations metadataModifier = CacheRWT do
     (RebuildableSchemaCache _ invalidationKeys rule, oldInvalidations) <- get
     let newInvalidationKeys = invalidateKeys invalidations invalidationKeys
-    metadata <- liftTx fetchMetadata
+    metadata <- fetchMetadata
     let modifiedMetadata = (unMetadataModifier metadataModifier) metadata
     catalogMetadata <- buildCatalogMetadata modifiedMetadata
     result <- lift $ flip runReaderT buildReason $

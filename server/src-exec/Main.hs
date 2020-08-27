@@ -21,8 +21,8 @@ import qualified Data.Environment           as Env
 import qualified Database.PG.Query          as Q
 import qualified Hasura.Tracing             as Tracing
 import qualified System.Exit                as Sys
-import qualified System.Posix.Signals       as Signals
 import qualified System.Metrics             as EKG
+import qualified System.Posix.Signals       as Signals
 
 
 main :: IO ()
@@ -37,10 +37,11 @@ main = do
       Right r -> return r
 
 runApp :: Env.Environment -> HGEOptions Hasura -> AppM ()
-runApp env (HGEOptionsG rci hgeCmd) =
-  withVersion $$(getVersionFromEnvironment) $ case hgeCmd of
+runApp env hgeOptions =
+  withVersion $$(getVersionFromEnvironment) $ do
+  case hoCommand hgeOptions of
     HCServe serveOptions -> do
-      (initCtx, initTime) <- initialiseCtx env hgeCmd rci
+      (initCtx, initTime) <- initialiseCtx env hgeOptions
       ekgStore <- liftIO EKG.newStore
       let shutdownApp = return ()
       -- Catches the SIGTERM signal and initiates a graceful shutdown.
@@ -55,20 +56,22 @@ runApp env (HGEOptionsG rci hgeCmd) =
       runHGEServer env serveOptions initCtx Nothing initTime shutdownApp Nothing ekgStore
 
     HCExport -> do
-      (initCtx, _) <- initialiseCtx env hgeCmd rci
-      res <- runTx' initCtx fetchMetadata Q.ReadCommitted
+      (initCtx, _) <- initialiseCtx env hgeOptions
+      metadataFetchTx <- fetchMetadataTx
+      -- FIXME? Use metadata pg db pool
+      res <- runTx' initCtx metadataFetchTx Q.ReadCommitted
       either (printErrJExit MetadataExportError) printJSON res
 
     HCClean -> do
-      (initCtx, _) <- initialiseCtx env hgeCmd rci
+      (initCtx, _) <- initialiseCtx env hgeOptions
       res <- runTx' initCtx dropCatalog Q.ReadCommitted
       either (printErrJExit MetadataCleanError) (const cleanSuccess) res
 
     HCExecute -> do
-      (InitCtx{..}, _) <- initialiseCtx env hgeCmd rci
+      (InitCtx{..}, _) <- initialiseCtx env hgeOptions
       queryBs <- liftIO BL.getContents
       let sqlGenCtx = SQLGenCtx False
-      res <- runAsAdmin _icPgPool sqlGenCtx _icHttpManager $ do
+      res <- runAsAdmin _icPgPool sqlGenCtx _icHttpManager _icMetadataPool $ do
         schemaCache <- buildRebuildableSchemaCache env
         execQuery env queryBs
           & Tracing.runTraceTWithReporter Tracing.noReporter "execute"
@@ -78,10 +81,10 @@ runApp env (HGEOptionsG rci hgeCmd) =
       either (printErrJExit ExecuteProcessError) (liftIO . BLC.putStrLn) res
 
     HCDowngrade opts -> do
-      (InitCtx{..}, initTime) <- initialiseCtx env hgeCmd rci
+      (InitCtx{..}, initTime) <- initialiseCtx env hgeOptions
       let sqlGenCtx = SQLGenCtx False
       res <- downgradeCatalog opts initTime
-             & runAsAdmin _icPgPool sqlGenCtx _icHttpManager
+             & runAsAdmin _icPgPool sqlGenCtx _icHttpManager _icMetadataPool
       either (printErrJExit DowngradeProcessError) (liftIO . print) res
 
     HCVersion -> liftIO $ putStrLn $ "Hasura GraphQL Engine: " ++ convertText currentVersion

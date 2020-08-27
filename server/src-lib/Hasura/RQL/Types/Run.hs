@@ -18,11 +18,19 @@ import           Control.Monad.Unique
 import           Hasura.RQL.Types
 import qualified Hasura.Tracing              as Tracing
 
+data MetadataManageCtx
+  = MetadataManageCtx
+  { _mmcPool     :: !Q.PGPool
+  , _mmcFetchTx  :: !(Q.TxE QErr (Maybe Metadata))
+  , _mmcUpdateTx :: !(Metadata -> Q.TxE QErr ())
+  }
+
 data RunCtx
   = RunCtx
   { _rcUserInfo  :: !UserInfo
   , _rcHttpMgr   :: !HTTP.Manager
   , _rcSqlGenCtx :: !SQLGenCtx
+  , _rcMetadata  :: !MetadataManageCtx
   }
 
 newtype Run a
@@ -46,13 +54,34 @@ instance HasHttpManager Run where
 instance HasSQLGenCtx Run where
   askSQLGenCtx = asks _rcSqlGenCtx
 
+instance MonadMetadata Run where
+  fetchMetadata = do
+    MetadataManageCtx{..} <- asks _rcMetadata
+    fromMaybe emptyMetadata <$> runTxInMetadataStorage _mmcFetchTx
+
+  updateMetadata metadata = do
+    MetadataManageCtx{..} <- asks _rcMetadata
+    runTxInMetadataStorage $ _mmcUpdateTx metadata
+
+  runTxInMetadataStorage tx = do
+    MetadataManageCtx{..} <- asks _rcMetadata
+    either throwError pure
+      =<< (liftIO . runExceptT . Q.runTx _mmcPool (Q.Serializable, Nothing)) tx
+
 peelRun
-  :: (MonadIO m)
-  => RunCtx
+  :: (MonadIO m, MonadMetadataManage m)
+  => UserInfo
+  -> HTTP.Manager
+  -> SQLGenCtx
+  -> Q.PGPool
   -> PGExecCtx
   -> Q.TxAccess
   -> Maybe Tracing.TraceContext
   -> Run a
   -> ExceptT QErr m a
-peelRun runCtx@(RunCtx userInfo _ _) pgExecCtx txAccess ctx (Run m) =
+peelRun userInfo httpManager sqlGenCtx metadataPGPool pgExecCtx txAccess ctx (Run m) = do
+  metadataFetchTx <- lift fetchMetadataTx
+  metadataUpdateTx <- lift updateMetadataTx
+  let runCtx = RunCtx userInfo httpManager sqlGenCtx $
+               MetadataManageCtx metadataPGPool metadataFetchTx metadataUpdateTx
   runLazyTx pgExecCtx txAccess $ maybe id withTraceContext ctx $ withUserInfo userInfo $ runReaderT m runCtx

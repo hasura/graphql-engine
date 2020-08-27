@@ -1,8 +1,10 @@
+{-# LANGUAGE UndecidableInstances #-}
 module Hasura.RQL.Types.Metadata where
 
 import qualified Data.Aeson.Ordered                  as AO
 import qualified Data.HashMap.Strict.Extended        as M
 import qualified Data.HashSet                        as HS
+import qualified Database.PG.Query                   as Q
 import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Control.Lens                        hiding (set, (.=))
@@ -11,11 +13,15 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax          (Lift)
 
+import qualified Hasura.Tracing                      as Tracing
+
+import           Hasura.Db
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
+import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Permission

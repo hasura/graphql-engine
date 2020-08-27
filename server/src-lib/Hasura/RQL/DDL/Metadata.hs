@@ -225,7 +225,6 @@ runClearMetadata _ = do
 runReplaceMetadata
   :: ( MonadTx m
      , CacheRWM m
-     , HasSystemDefined m
      )
   => Metadata -> m EncJSON
 runReplaceMetadata q = do
@@ -236,10 +235,10 @@ runReplaceMetadata q = do
   -- applyQP2 q
 
 runExportMetadata
-  :: (QErrM m, MonadTx m)
+  :: (QErrM m, MonadMetadata m)
   => ExportMetadata -> m EncJSON
 runExportMetadata _ =
-  (AO.toEncJSON . metadataToOrdJSON) <$> liftTx fetchMetadata
+  (AO.toEncJSON . metadataToOrdJSON) <$> fetchMetadata
 
 runReloadMetadata :: (QErrM m, CacheRWM m) => ReloadMetadata -> m EncJSON
 runReloadMetadata (ReloadMetadata reloadRemoteSchemas) = do

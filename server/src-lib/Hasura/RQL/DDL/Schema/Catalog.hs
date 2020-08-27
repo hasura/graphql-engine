@@ -9,8 +9,6 @@ module Hasura.RQL.DDL.Schema.Catalog
   -- , deleteTableFromCatalog
   -- , getTableConfig
   , purgeDependentObject
-  , fetchMetadata
-  , updateMetadata
   ) where
 
 import           Hasura.Prelude
@@ -121,6 +119,7 @@ buildCatalogMetadata Metadata{..} = do
         transformEventTrigger etc =
           CatalogEventTrigger _tmTable (etcName etc) $ toJSON etc
 
+
     fetchCatalogTableInfo :: m (HM.HashMap QualifiedTable CatalogTableInfo)
     fetchCatalogTableInfo = do
       let tableList = HM.keys _metaTables
@@ -148,26 +147,6 @@ buildCatalogMetadata Metadata{..} = do
         SELECT coalesce(json_agg(typname), '[]')
         FROM pg_catalog.pg_type where typtype = 'b'
       |] () True
-
-fetchMetadata :: MonadTx m => m Metadata
-fetchMetadata = do
-  results <- liftTx $ Q.withQE defaultTxErrorHandler
-             [Q.sql|
-              SELECT metadata from hdb_catalog.hdb_metadata where id = 1
-             |] () True
-  case results of
-    []                             -> pure emptyMetadata
-    [(Identity (Q.AltJ metadata))] -> pure metadata
-    _                              -> throw500 "multiple rows found in hdb_metadata table"
-
-updateMetadata :: MonadTx m => Metadata -> m ()
-updateMetadata metadata =
-  liftTx $ Q.unitQE defaultTxErrorHandler
-  [Q.sql|
-   INSERT INTO hdb_catalog.hdb_metadata
-     (id, metadata) VALUES (1, $1::json)
-   ON CONFLICT (id) DO UPDATE SET metadata = $1::json
-  |] (Identity $ Q.AltJ metadata) True
 
 -- fetchCatalogData :: (MonadTx m) => m CatalogMetadata
 -- fetchCatalogData =

@@ -367,6 +367,7 @@ library
                      , Hasura.RQL.Types.Error
                      , Hasura.RQL.Types.EventTrigger
                      , Hasura.RQL.Types.Metadata
+                     , Hasura.RQL.Types.Metadata.Class
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.QueryCollection
                      , Hasura.RQL.Types.Action

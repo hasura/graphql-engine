@@ -106,10 +106,11 @@ withEnvJwtConf jVal envVar =
   maybe (considerEnv envVar) returnJust jVal
 
 mkHGEOptions :: L.EnabledLogTypes impl => RawHGEOptions impl -> WithEnv (HGEOptions impl)
-mkHGEOptions (HGEOptionsG rawConnInfo rawCmd) =
-  HGEOptionsG <$> connInfo <*> cmd
+mkHGEOptions (HGEOptionsG rawConnInfo metadataDbUrl rawCmd) =
+  HGEOptionsG <$> connInfo <*> envMetadataDbUrl <*> cmd
   where
     connInfo = mkRawConnInfo rawConnInfo
+    envMetadataDbUrl = withEnv metadataDbUrl $ fst metadataDbUrlEnv
     cmd = case rawCmd of
       HCServe rso     -> HCServe <$> mkServeOptions rso
       HCExport        -> return HCExport
@@ -260,6 +261,12 @@ databaseUrlEnv :: (String, String)
 databaseUrlEnv =
   ( "HASURA_GRAPHQL_DATABASE_URL"
   , "Postgres database URL. Example postgres://foo:bar@example.com:2345/database"
+  )
+
+metadataDbUrlEnv :: (String, String)
+metadataDbUrlEnv =
+  ( "HASURA_GRAPHQL_METADATA_DATABASE_URL"
+  , "Postgres database URL for Metadata storage. Example postgres://foo:bar@example.com:2345/database"
   )
 
 serveCmdFooter :: PP.Doc
@@ -570,6 +577,13 @@ parseRawConnInfo =
                     help (snd retriesNumEnv)
                   )
 
+parseMetadataDbUrl :: Parser (Maybe String)
+parseMetadataDbUrl = optional $
+  strOption ( long "metadata-database-url" <>
+              metavar "<METADATA-DATABASE-URL>" <>
+              help (snd metadataDbUrlEnv)
+            )
+
 mkConnInfo :: RawConnInfo -> Either String Q.ConnInfo
 mkConnInfo (RawConnInfo mHost mPort mUser password mURL mDB opts mRetries) =
   Q.ConnInfo retries <$>
@@ -579,13 +593,17 @@ mkConnInfo (RawConnInfo mHost mPort mUser password mURL mDB opts mRetries) =
       return $ Q.CDOptions $ Q.ConnOptions host port user password db opts
 
     (_, _, _, _, Just dbURL) ->
-      return $ Q.CDDatabaseURI $ TE.encodeUtf8 $ T.pack dbURL
+      return $ mkDatabaseUrlConnDetails dbURL
     _ -> throwError $ "Invalid options. "
                     ++ "Expecting all database connection params "
                     ++ "(host, port, user, dbname, password) or "
                     ++ "database-url (HASURA_GRAPHQL_DATABASE_URL)"
   where
     retries = fromMaybe 1 mRetries
+
+mkDatabaseUrlConnDetails :: String -> Q.ConnDetails
+mkDatabaseUrlConnDetails =
+  Q.CDDatabaseURI . TE.encodeUtf8 . T.pack
 
 parseTxIsolation :: Parser (Maybe Q.TxIsolation)
 parseTxIsolation = optional $

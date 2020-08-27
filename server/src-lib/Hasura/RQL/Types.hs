@@ -1,3 +1,4 @@
+{-# LANGUAGE UndecidableInstances #-}
 module Hasura.RQL.Types
   ( MonadTx(..)
 
@@ -57,6 +58,7 @@ import           Hasura.RQL.Types.Error              as R
 import           Hasura.RQL.Types.EventTrigger       as R
 import           Hasura.RQL.Types.Function           as R
 import           Hasura.RQL.Types.Metadata           as R
+import           Hasura.RQL.Types.Metadata.Class     as R
 import           Hasura.RQL.Types.Permission         as R
 import           Hasura.RQL.Types.QueryCollection    as R
 import           Hasura.RQL.Types.Relationship       as R
@@ -186,7 +188,7 @@ instance (HasSystemDefined m) => HasSystemDefined (TraceT m) where
 newtype HasSystemDefinedT m a
   = HasSystemDefinedT { unHasSystemDefinedT :: ReaderT SystemDefined m a }
   deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO, MonadUnique, MonadError e, MonadTx
-           , HasHttpManager, HasSQLGenCtx, TableCoreInfoRM, CacheRM, CacheRWM, UserInfoM )
+           , HasHttpManager, HasSQLGenCtx, TableCoreInfoRM, CacheRM, CacheRWM, UserInfoM, MonadMetadata)
 
 runHasSystemDefinedT :: SystemDefined -> HasSystemDefinedT m a -> m a
 runHasSystemDefinedT systemDefined = flip runReaderT systemDefined . unHasSystemDefinedT

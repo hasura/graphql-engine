@@ -195,28 +195,26 @@ notifySchemaUpdate instanceId invalidations = liftTx $ do
   pure ()
 
 runQuery
-  :: (HasVersion, MonadIO m, MonadError QErr m, Tracing.MonadTrace m)
+  :: (HasVersion, MonadIO m, MonadError QErr m, Tracing.MonadTrace m, MonadMetadataManage m)
   => Env.Environment -> PGExecCtx -> InstanceId
   -> UserInfo -> RebuildableSchemaCache Run -> HTTP.Manager
-  -> SQLGenCtx -> SystemDefined -> RQLQuery -> m (EncJSON, RebuildableSchemaCache Run)
-runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query = do
+  -> SQLGenCtx -> SystemDefined -> Q.PGPool -> RQLQuery -> m (EncJSON, RebuildableSchemaCache Run)
+runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined metadataPool query = do
   accessMode <- getQueryAccessMode query
   traceCtx <- Tracing.currentContext
   resE <- runQueryM env query & Tracing.interpTraceT \x -> do
     a <- x & runHasSystemDefinedT systemDefined
            & runCacheRWT sc
-           & peelRun runCtx pgExecCtx accessMode (Just traceCtx)
+           & peelRun userInfo hMgr sqlGenCtx metadataPool pgExecCtx accessMode (Just traceCtx)
            & runExceptT
-           & liftIO
     pure (either
       ((, mempty) . Left)
       (\((js, meta), rsc, ci) -> (Right (js, rsc, ci), meta)) a)
   either throwError withReload resE
   where
-    runCtx = RunCtx userInfo hMgr sqlGenCtx
     withReload (result, updatedCache, invalidations) = do
       when (queryModifiesSchemaCache query) $ do
-        e <- liftIO $ runExceptT $ runLazyTx pgExecCtx Q.ReadWrite $ liftTx $
+        e <- liftIO $ runExceptT $ Q.runTx metadataPool (Q.Serializable, Just Q.ReadWrite) $ liftTx $
           notifySchemaUpdate instanceId invalidations
         liftEither e
       return (result, updatedCache)
@@ -355,6 +353,7 @@ runQueryM
      , MonadIO m, MonadUnique m, HasHttpManager m, HasSQLGenCtx m
      , HasSystemDefined m
      , Tracing.MonadTrace m
+     , MonadMetadata m
      )
   => Env.Environment
   -> RQLQuery

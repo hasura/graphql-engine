@@ -155,8 +155,9 @@ type RawHGECommand impl = HGECommandG (RawServeOptions impl)
 
 data HGEOptionsG a
   = HGEOptionsG
-  { hoConnInfo :: !RawConnInfo
-  , hoCommand  :: !(HGECommandG a)
+  { hoConnInfo      :: !RawConnInfo
+  , hoMetadataDbUrl :: !(Maybe String)
+  , hoCommand       :: !(HGECommandG a)
   } deriving (Show, Eq)
 
 type RawHGEOptions impl = HGEOptionsG (RawServeOptions impl)

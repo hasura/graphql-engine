@@ -231,7 +231,7 @@ addPermP2 tn pd = do
   liftTx $ savePermToCatalog pt tn pd systemDefined
 
 runCreatePerm
-  :: (UserInfoM m, CacheRWM m, IsPerm a, MonadTx m, HasSystemDefined m)
+  :: (UserInfoM m, CacheRWM m, IsPerm a, MonadTx m)
   => CreatePerm a -> m EncJSON
 runCreatePerm (WithTable tn pd) = do
   -- addPermP2 tn pd

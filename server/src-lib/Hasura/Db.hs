@@ -200,11 +200,11 @@ withTraceContext
 withTraceContext ctx = \case
   LTErr e  -> LTErr e
   LTNoTx a -> LTNoTx a
-  LTTx tx  -> 
+  LTTx tx  ->
     let sql = Q.fromText $
-          "SET LOCAL \"hasura.tracecontext\" = " <> 
+          "SET LOCAL \"hasura.tracecontext\" = " <>
             toSQLTxt (S.SELit . J.encodeToStrictText . Tracing.injectEventContext $ ctx)
-        setTraceContext = 
+        setTraceContext =
           Q.unitQE defaultTxErrorHandler sql () False
      in LTTx $ setTraceContext >> tx
 

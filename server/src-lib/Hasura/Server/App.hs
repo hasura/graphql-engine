@@ -110,6 +110,7 @@ data ServerCtx
   , scEkgStore                     :: !EKG.Store
   , scResponseInternalErrorsConfig :: !ResponseInternalErrorsConfig
   , scEnvironment                  :: !Env.Environment
+  , scMetadataPool                 :: !Q.PGPool
   }
 
 data HandlerCtx
@@ -139,7 +140,7 @@ isAdminSecretSet :: AuthMode -> T.Text
 isAdminSecretSet AMNoAuth = boolToText False
 isAdminSecretSet _        = boolToText True
 
-getSCFromRef :: (MonadIO m) => SchemaCacheRef -> m SchemaCache
+getSCFromRef :: forall m. (MonadIO m) => SchemaCacheRef -> m SchemaCache
 getSCFromRef scRef = lastBuiltSchemaCache . fst <$> liftIO (readIORef $ _scrCache scRef)
 
 logInconsObjs :: L.Logger L.Hasura -> [InconsistentMetadata] -> IO ()
@@ -344,7 +345,13 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
 
 
 v1QueryHandler
-  :: (HasVersion, MonadIO m, MonadBaseControl IO m, MetadataApiAuthorization m, Tracing.MonadTrace m)
+  :: ( HasVersion
+     , MonadIO m
+     , MonadBaseControl IO m
+     , MetadataApiAuthorization m
+     , Tracing.MonadTrace m
+     , MonadMetadataManage m
+     )
   => RQLQuery
   -> Handler m (HttpResponse EncJSON)
 v1QueryHandler query = do
@@ -365,7 +372,8 @@ v1QueryHandler query = do
       pgExecCtx   <- asks (scPGExecCtx . hcServerCtx)
       instanceId  <- asks (scInstanceId . hcServerCtx)
       env         <- asks (scEnvironment . hcServerCtx)
-      runQuery env pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx (SystemDefined False) query
+      metadataPool <- asks (scMetadataPool . hcServerCtx)
+      runQuery env pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx (SystemDefined False) metadataPool query
 
 v1Alpha1GQHandler
   :: ( HasVersion
@@ -514,7 +522,7 @@ queryParsers =
       return $ f q
 
 legacyQueryHandler
-  :: (HasVersion, MonadIO m, MonadBaseControl IO m, MetadataApiAuthorization m, Tracing.MonadTrace m)
+  :: (HasVersion, MonadIO m, MonadBaseControl IO m, MetadataApiAuthorization m, Tracing.MonadTrace m, MonadMetadataManage m)
   => TableName -> T.Text -> Object
   -> Handler m (HttpResponse EncJSON)
 legacyQueryHandler tn queryType req =
@@ -533,7 +541,7 @@ configApiGetHandler serverCtx@ServerCtx{..} consoleAssetsDir =
     mkGetHandler $ do
       onlyAdmin
       let res = runGetConfig scAuthMode scEnableAllowlist
-                (EL._lqsOptions $ scLQState) consoleAssetsDir
+                (EL._lqsOptions scLQState) consoleAssetsDir
       return $ JSONResp $ HttpResponse (encJFromJValue res) []
 
 data HasuraApp
@@ -562,6 +570,7 @@ mkWaiApp
      , WS.MonadWSLog m
      , Tracing.HasReporter m
      , GH.MonadExecuteQuery m
+     , MonadMetadataManage m
      )
   => Env.Environment
   -- ^ Set of environment variables for reference in UIs
@@ -598,9 +607,11 @@ mkWaiApp
   -> Maybe EL.LiveQueryPostPollHook
   -> RebuildableSchemaCache Run
   -> EKG.Store
+  -> Q.PGPool
+  -- ^ Metadata storage connection pool - TODO: Better rep
   -> m HasuraApp
 mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpManager mode corsCfg enableConsole consoleAssetsDir
-         enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig liveQueryHook schemaCache ekgStore = do
+         enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig liveQueryHook schemaCache ekgStore metadataPool = do
 
     -- See Note [Temporarily disabling query plan caching]
     -- (planCache, schemaCacheRef) <- initialiseCache
@@ -631,6 +642,7 @@ mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpMana
                     , scEkgStore        =  ekgStore
                     , scEnvironment     =  env
                     , scResponseInternalErrorsConfig = responseErrorsConfig
+                    , scMetadataPool    = metadataPool
                     }
 
     when (isDeveloperAPIEnabled serverCtx) $ do
@@ -678,6 +690,7 @@ httpApp
      , MonadQueryLog m
      , Tracing.HasReporter m
      , GH.MonadExecuteQuery m
+     , MonadMetadataManage m
      )
   => CorsConfig
   -> ServerCtx
@@ -746,7 +759,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       Spock.get "dev/plan_cache" $ spockAction encodeQErr id $
         mkGetHandler $ do
           onlyAdmin
-          respJ <- liftIO $ E.dumpPlanCache {- $ scPlanCache serverCtx -}
+          respJ <- liftIO E.dumpPlanCache {- $ scPlanCache serverCtx -}
           return $ JSONResp $ HttpResponse (encJFromJValue respJ) []
       Spock.get "dev/subscriptions" $ spockAction encodeQErr id $
         mkGetHandler $ do

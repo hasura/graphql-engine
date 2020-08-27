@@ -17,7 +17,6 @@ module Hasura.RQL.DDL.QueryCollection
 import           Hasura.EncJSON
 import           Hasura.Prelude
 
-import           Hasura.RQL.DDL.Schema.Catalog    (fetchMetadata)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.SQL.Types
@@ -42,7 +41,7 @@ addCollectionP2 (CollectionDef queryList) =
     duplicateNames = duplicates $ map _lqName queryList
 
 runCreateCollection
-  :: (QErrM m, CacheRWM m, MonadTx m, HasSystemDefined m)
+  :: (QErrM m, CacheRWM m, MonadMetadata m)
   => CreateCollection -> m EncJSON
 runCreateCollection cc = do
   collDetM <- getCollectionDefM collName
@@ -59,7 +58,7 @@ runCreateCollection cc = do
     CreateCollection collName def _ = cc
 
 runAddQueryToCollection
-  :: (CacheRWM m, MonadTx m)
+  :: (CacheRWM m, MonadError QErr m, MonadMetadata m)
   => AddQueryToCollection -> m EncJSON
 runAddQueryToCollection (AddQueryToCollection collName queryName query) = do
   (CreateCollection _ (CollectionDef qList) comment) <- getCollectionDef collName
@@ -78,7 +77,7 @@ runAddQueryToCollection (AddQueryToCollection collName queryName query) = do
     listQ = ListedQuery queryName query
 
 runDropCollection
-  :: (MonadTx m, CacheRWM m)
+  :: (MonadError QErr m, MonadMetadata m, CacheRWM m)
   => DropCollection -> m EncJSON
 runDropCollection (DropCollection collName cascade) = do
   allowlistModifier <- withPathK "collection" $ do
@@ -86,7 +85,7 @@ runDropCollection (DropCollection collName cascade) = do
     -- check for query collection
     void $ getCollectionDef collName
 
-    allowlist <- liftTx fetchAllowlist
+    allowlist <- fetchAllowlist
     if collName `elem` allowlist && not cascade then
         throw400 DependencyError $ "query collection with name "
           <> collName <<> " is present in allowlist; cannot proceed to drop"
@@ -102,7 +101,7 @@ runDropCollection (DropCollection collName cascade) = do
   pure successMsg
 
 runDropQueryFromCollection
-  :: (CacheRWM m, MonadTx m)
+  :: (CacheRWM m, MonadError QErr m, MonadMetadata m)
   => DropQueryFromCollection -> m EncJSON
 runDropQueryFromCollection (DropQueryFromCollection collName queryName) = do
   CreateCollection _ (CollectionDef qList) _ <- getCollectionDef collName
@@ -119,7 +118,7 @@ runDropQueryFromCollection (DropQueryFromCollection collName queryName) = do
   pure successMsg
 
 runAddCollectionToAllowlist
-  :: (MonadTx m, CacheRWM m)
+  :: (MonadError QErr m, MonadMetadata m, CacheRWM m)
   => CollectionReq -> m EncJSON
 runAddCollectionToAllowlist req@(CollectionReq collName) = do
   void $ withPathK "collection" $ getCollectionDef collName
@@ -131,7 +130,7 @@ runAddCollectionToAllowlist req@(CollectionReq collName) = do
   pure successMsg
 
 runDropCollectionFromAllowlist
-  :: (UserInfoM m, MonadTx m, CacheRWM m)
+  :: (UserInfoM m, MonadError QErr m, MonadMetadata m, CacheRWM m)
   => CollectionReq -> m EncJSON
 runDropCollectionFromAllowlist req@(CollectionReq collName) = do
   void $ withPathK "collection" $ getCollectionDef collName
@@ -143,7 +142,7 @@ runDropCollectionFromAllowlist req@(CollectionReq collName) = do
   return successMsg
 
 getCollectionDef
-  :: (QErrM m, MonadTx m)
+  :: (QErrM m, MonadMetadata m)
   => CollectionName -> m CreateCollection
 getCollectionDef collName = do
   detM <- getCollectionDefM collName
@@ -151,16 +150,16 @@ getCollectionDef collName = do
     "query collection with name " <> collName <<> " does not exists"
 
 getCollectionDefM
-  :: (QErrM m, MonadTx m)
+  :: (QErrM m, MonadMetadata m)
   => CollectionName -> m (Maybe CreateCollection)
 getCollectionDefM collName =
-  HM.lookup collName <$> liftTx fetchAllCollections
+  HM.lookup collName <$> fetchAllCollections
 
-fetchAllCollections :: MonadTx m => m QueryCollections
+fetchAllCollections :: MonadMetadata m => m QueryCollections
 fetchAllCollections =
   _metaQueryCollections <$> fetchMetadata
 
-fetchAllowlist :: MonadTx m => m [CollectionName]
+fetchAllowlist :: MonadMetadata m => m [CollectionName]
 fetchAllowlist =
   (map _crCollection . toList . _metaAllowlist) <$> fetchMetadata
 
