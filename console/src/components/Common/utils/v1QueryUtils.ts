@@ -185,6 +185,19 @@ export const getInsertDownQuery = (
   return getRunSqlQuery(sql);
 };
 
+// TODO: varun - this method will be used to create the "up" & "down" migrations
+export const getEditRowQuery = (
+  tableDef: TableDefinition,
+  item: Record<string, PGReturnValueType>,
+  pkClause: Record<string, PGReturnValueType>
+) => {
+  const updatedValues = item; // use item here, convert the keys to strings with double quotes around them, and values should be acc. to convert PG value
+  const condition = pkClause; // use pkClause here, convert it similar to L179 - L182
+  const sql = `UPDATE "${tableDef.schema}"."${tableDef.name}" ${updatedValues} WHERE ${condition}`;
+
+  return getRunSqlQuery(sql);
+};
+
 type CustomTypeScalar = {
   name: string;
   description: string;

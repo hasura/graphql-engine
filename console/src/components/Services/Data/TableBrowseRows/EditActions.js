@@ -14,9 +14,13 @@ import {
   getEnumColumnMappings,
   arrayToPostgresArray,
 } from '../../../Common/utils/pgUtils';
-import { getEnumOptionsQuery } from '../../../Common/utils/v1QueryUtils';
+import {
+  getEnumOptionsQuery,
+  getEditRowQuery,
+} from '../../../Common/utils/v1QueryUtils';
 import { ARRAY } from '../utils';
 import { isStringArray } from '../../../Common/utils/jsUtils';
+import { makeMigrationCall } from '../DataActions';
 
 const E_SET_EDITITEM = 'EditItem/E_SET_EDITITEM';
 const E_ONGOING_REQ = 'EditItem/E_ONGOING_REQ';
@@ -30,8 +34,42 @@ const MODAL_OPEN = 'EditItem/MODAL_OPEN';
 const modalOpen = () => ({ type: MODAL_OPEN });
 const modalClose = () => ({ type: MODAL_CLOSE });
 
+const editRowAsMigration = (tableDef, pkClause, oldItem, newItem, callback) => (
+  dispatch,
+  getState
+) => {
+  const upQuery = getEditRowQuery(tableDef, newItem, pkClause);
+  const downQuery = getEditRowQuery(tableDef, oldItem, pkClause);
+
+  const migrationName = `update_row_in_${tableDef.schema}_${tableDef.name}`;
+  const customOnSuccess = () => {
+    if (callback) {
+      callback();
+    }
+  };
+  const customOnError = () => {};
+  const requestMessage = 'Creating migration...';
+  const successMessage = 'Migration created';
+  const errorMessage = 'Creating migration failed';
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    [upQuery],
+    [downQuery],
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMessage,
+    successMessage,
+    errorMessage,
+    true,
+    true
+  );
+};
+
 /* ****************** edit action creators ************ */
-const editItem = (tableName, colValues) => {
+const editItem = (tableName, colValues, isMigration = false) => {
   return (dispatch, getState) => {
     const state = getState();
 
@@ -76,19 +114,14 @@ const editItem = (tableName, colValues) => {
           try {
             _setObject[colName] = JSON.parse(colValue);
           } catch (e) {
-            errorMessage =
-              colName +
-              ' :: could not read ' +
-              colValue +
-              ' as a valid JSON object/array';
+            errorMessage = `${colName} :: could not read ${colValue} as a valid object/array`;
           }
         } else if (colType === ARRAY && isStringArray(colValue)) {
           try {
             const arr = JSON.parse(colValue);
             _setObject[colName] = arrayToPostgresArray(arr);
           } catch {
-            errorMessage =
-              colName + ' :: could not read ' + colValue + ' as a valid array';
+            errorMessage = `${colName} :: could not read ${colValue} as a valid array`;
           }
         } else {
           _setObject[colName] = colValue;
@@ -103,14 +136,19 @@ const editItem = (tableName, colValues) => {
         error: { message: errorMessage },
       });
     }
-
+    let returning = [];
+    if (isMigration) {
+      returning = '*';
+    }
+    const { pkClause, oldItem } = state.tables.update;
     const reqBody = {
       type: 'update',
       args: {
         table: tableDef,
         $set: _setObject,
         $default: _defaultArray,
-        where: state.tables.update.pkClause,
+        where: pkClause,
+        returning,
       },
     };
     const options = {
@@ -125,12 +163,22 @@ const editItem = (tableName, colValues) => {
       requestAction(url, options, E_REQUEST_SUCCESS, E_REQUEST_ERROR)
     ).then(
       data => {
-        dispatch(
-          showSuccessNotification(
-            'Edited!',
-            'Affected rows: ' + data.affected_rows
-          )
-        );
+        if (!isMigration) {
+          dispatch(
+            showSuccessNotification(
+              'Edited!',
+              'Affected rows: ' + data.affected_rows
+            )
+          );
+          return;
+        }
+        const newItem = data.returning[0];
+        // TODO: varun - to make the callback for the showing of success notification
+        // as it is done within InsertActions
+        const cb = () => {
+          // Insert code here
+        };
+        dispatch(editRowAsMigration(tableDef, pkClause, oldItem, newItem, cb));
       },
       err => {
         dispatch(showErrorNotification('Edit failed!', err.error, err));
