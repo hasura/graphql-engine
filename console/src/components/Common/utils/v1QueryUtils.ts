@@ -100,38 +100,49 @@ export const getDropPermissionQuery = (
   };
 };
 
+export type PGReturnValueType =
+  | 'null'
+  | null
+  | string
+  | unknown[]
+  | undefined
+  | Record<string, any>
+  | number;
+
+export const convertPGValue = (value: PGReturnValueType): string | number => {
+  if (value === 'null' || value === null) {
+    return 'null';
+  }
+
+  if (typeof value === 'string') {
+    return `'${value}'`;
+  }
+
+  if (Array.isArray(value)) {
+    return `'${arrayToPostgresArray(value)}'`;
+  }
+
+  if (typeof value === 'object') {
+    return `'${JSON.stringify(value)}'`;
+  }
+
+  if (value === undefined) {
+    return '';
+  }
+
+  return value;
+};
+
 export const getInsertUpQuery = (
   tableDef: TableDefinition,
-  insertion: Record<string, any>
+  insertion: Record<string, PGReturnValueType>
 ) => {
   const columns = Object.keys(insertion)
     .map(key => `"${key}"`)
     .join(', ');
 
   const values = Object.values(insertion)
-    .map(value => {
-      if (value === 'null' || value === null) {
-        return 'null';
-      }
-
-      if (typeof value === 'string') {
-        return `'${value}'`;
-      }
-
-      if (Array.isArray(value)) {
-        return `'${arrayToPostgresArray(value)}'`;
-      }
-
-      if (typeof value === 'object') {
-        return `'${JSON.stringify(value)}'`;
-      }
-
-      if (value === undefined) {
-        return '';
-      }
-
-      return value;
-    })
+    .map(value => convertPGValue(value))
     .join(', ');
 
   const sql = `INSERT INTO "${tableDef.schema}"."${tableDef.name}"(${columns}) VALUES (${values});`;
@@ -139,30 +150,35 @@ export const getInsertUpQuery = (
   return getRunSqlQuery(sql);
 };
 
+export const convertPGPrimaryKeyValue = (
+  value: PGReturnValueType,
+  pk: string
+): string => {
+  if (typeof value === 'string') {
+    return `"${pk}" = '${value}'`;
+  }
+
+  if (Array.isArray(value)) {
+    return `"${pk}" = '${arrayToPostgresArray(value)}'`;
+  }
+
+  if (typeof value === 'object') {
+    return `"${pk}" = '${JSON.stringify(value)}'`;
+  }
+
+  return `"${pk}" = ${value}`;
+};
+
 export const getInsertDownQuery = (
   tableDef: TableDefinition,
-  insertion: Record<string, any>,
+  insertion: Record<string, PGReturnValueType>,
   primaryKeyInfo: PrimaryKey,
   columns: BaseTableColumn[]
 ) => {
   const whereClause = createPKClause(primaryKeyInfo, insertion, columns);
-  const clauses = Object.keys(whereClause).map(pk => {
-    const currVal = whereClause[pk];
-    if (typeof currVal === 'string') {
-      return `"${pk}" = '${currVal}'`;
-    }
-
-    if (Array.isArray(currVal)) {
-      return `"${pk}" = '${arrayToPostgresArray(currVal)}'`;
-    }
-
-    if (typeof currVal === 'object') {
-      return `"${pk}" = '${JSON.stringify(currVal)}'`;
-    }
-
-    return `"${pk}" = ${currVal}`;
-  });
-
+  const clauses = Object.keys(whereClause).map(pk =>
+    convertPGPrimaryKeyValue(whereClause[pk], pk)
+  );
   const condition = clauses.join(' AND ');
   const sql = `DELETE FROM "${tableDef.schema}"."${tableDef.name}" WHERE ${condition};`;
 
