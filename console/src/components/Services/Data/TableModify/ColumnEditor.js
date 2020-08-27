@@ -32,7 +32,7 @@ const ColumnEditor = ({
     );
   };
   let columnTypePG = getColumnType();
-  if (columnProperties.display_type_name === dataSource.ARRAY) {
+  if (columnProperties.display_type_name === dataSource.columnDataTypes.ARRAY) {
     columnTypePG = columnTypePG.replace('_', '') + '[]';
   }
 

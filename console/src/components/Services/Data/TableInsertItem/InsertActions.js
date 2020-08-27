@@ -64,7 +64,7 @@ const insertItem = (tableName, colValues) => {
           error = true;
         }
       } else if (
-        colType === dataSource.ARRAY &&
+        colType === dataSource.columnDataTypes.ARRAY &&
         isStringArray(colValues[colName])
       ) {
         try {
