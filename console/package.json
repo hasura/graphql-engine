@@ -66,6 +66,7 @@
     "inflection": "1.12.0",
     "isomorphic-fetch": "2.2.1",
     "jsonwebtoken": "8.5.1",
+    "jwt-decode": "2.2.0",
     "less": "3.11.1",
     "moment": "^2.26.0",
     "piping": "0.3.2",
@@ -99,6 +100,7 @@
     "subscriptions-transport-ws": "0.9.16"
   },
   "devDependencies": {
+    "@types/jwt-decode": "2.2.1",
     "@babel/core": "7.9.6",
     "@babel/plugin-proposal-class-properties": "7.8.3",
     "@babel/plugin-proposal-nullish-coalescing-operator": "7.10.1",
