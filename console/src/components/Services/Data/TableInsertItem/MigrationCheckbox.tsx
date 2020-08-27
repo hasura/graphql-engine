@@ -5,30 +5,32 @@ import ToolTip from '../../../Common/Tooltip/Tooltip';
 type MigrationCheckboxProps = {
   isChecked: boolean;
   onChange: () => void;
-  className: string;
+  isCLIMode: boolean;
 };
 
-const MigrationCheckbox: React.FC<MigrationCheckboxProps> = ({
+const MigrationCheckbox = ({
   isChecked,
   onChange,
-  className,
-}) => (
-  <div className={className}>
-    <label className={styles.labelText}>
-      <input
-        type="checkbox"
-        checked={isChecked}
-        title="This is a migration"
-        onChange={onChange}
-        className={styles.migrationCheckbox}
-      />
-      This is a migration
-      <ToolTip
-        placement="right"
-        message="Create a migration file with the current insertion"
-      />
-    </label>
-  </div>
-);
+  isCLIMode,
+}: MigrationCheckboxProps) =>
+  isCLIMode && (
+    <div className={`form-group ${styles.add_mar_top_small}`}>
+      <label className={`col-sm-3 control-label ${styles.insertBoxLabel}`} />
+      <label className={styles.labelText}>
+        <input
+          type="checkbox"
+          checked={isChecked}
+          title="This is a migration"
+          onChange={onChange}
+          className={styles.migrationCheckbox}
+        />
+        This is a migration
+        <ToolTip
+          placement="right"
+          message="Create a migration file with the current insertion"
+        />
+      </label>
+    </div>
+  );
 
 export default MigrationCheckbox;
