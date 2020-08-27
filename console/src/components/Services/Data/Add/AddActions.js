@@ -38,9 +38,6 @@ const VALIDATION_ERROR = 'AddTable/VALIDATION_ERROR';
 const RESET_VALIDATION_ERROR = 'AddTable/RESET_VALIDATION_ERROR';
 const SET_CHECK_CONSTRAINTS = 'AddTable/SET_CHECK_CONSTRAINTS';
 const REMOVE_CHECK_CONSTRAINT = 'AddTable/REMOVE_CHECK_CONSTRAINT';
-/*
- * For any action dispatched, the ability to notify the renderer that something is happening
- * */
 
 const setCheckConstraints = constraints => ({
   type: SET_CHECK_CONSTRAINTS,
@@ -140,7 +137,6 @@ const toggleFk = i => ({ type: TOGGLE_FK, data: i });
 const clearFkToggle = () => ({ type: CLEAR_FK_TOGGLE });
 
 // General error during validation.
-// const validationError = (error) => ({type: VALIDATION_ERROR, error: error});
 const validationError = error => {
   alert(error);
   return { type: VALIDATION_ERROR, error };

@@ -127,11 +127,11 @@ export const getFetchTablesListQuery = (options: {
       COALESCE(json_agg(DISTINCT row_to_json(isc) :: jsonb || jsonb_build_object('comment', col_description(pga.attrelid, pga.attnum))) filter (WHERE isc.column_name IS NOT NULL), '[]' :: json) AS columns,
       COALESCE(json_agg(DISTINCT row_to_json(ist) :: jsonb || jsonb_build_object('comment', obj_description(pgt.oid))) filter (WHERE ist.trigger_name IS NOT NULL), '[]' :: json) AS triggers,
       row_to_json(isv) AS view_info
-  
+
     FROM pg_class as pgc
     INNER JOIN pg_namespace as pgn
       ON pgc.relnamespace = pgn.oid
-  
+
     /* columns */
     /* This is a simplified version of how information_schema.columns was
     ** implemented in postgres 9.5, but modified to support materialized
@@ -141,7 +141,6 @@ export const getFetchTablesListQuery = (options: {
       ON pga.attrelid = pgc.oid
     LEFT OUTER JOIN (
       SELECT
-        current_database() AS table_catalog,
         nc.nspname         AS table_schema,
         c.relname          AS table_name,
         a.attname          AS column_name,
@@ -157,20 +156,7 @@ export const getFetchTablesListQuery = (options: {
                WHEN nt.nspname = 'pg_catalog' THEN format_type(a.atttypid, null)
                ELSE 'USER-DEFINED' END
         END AS data_type,
-        CASE WHEN nco.nspname IS NOT NULL THEN current_database() END AS collation_catalog,
-        nco.nspname AS collation_schema,
-        co.collname AS collation_name,
-        CASE WHEN t.typtype = 'd' THEN current_database() ELSE null END AS domain_catalog,
-        CASE WHEN t.typtype = 'd' THEN nt.nspname ELSE null END AS domain_schema,
-        CASE WHEN t.typtype = 'd' THEN t.typname ELSE null END AS domain_name,
-        current_database() AS udt_catalog,
-        coalesce(nbt.nspname, nt.nspname) AS udt_schema,
-        coalesce(bt.typname, t.typname) AS udt_name,
-        a.attnum AS dtd_identifier,
-        CASE WHEN c.relkind = 'r' OR
-                       (c.relkind IN ('v', 'f', 'p') AND
-                        pg_column_is_updatable(c.oid, a.attnum, false))
-             THEN 'YES' ELSE 'NO' END AS is_updatable
+        coalesce(bt.typname, t.typname) AS udt_name
       FROM (pg_attribute a LEFT JOIN pg_attrdef ad ON attrelid = adrelid AND attnum = adnum)
         JOIN (pg_class c JOIN pg_namespace nc ON (c.relnamespace = nc.oid)) ON a.attrelid = c.oid
         JOIN (pg_type t JOIN pg_namespace nt ON (t.typnamespace = nt.oid)) ON a.atttypid = t.oid
@@ -202,14 +188,9 @@ export const getFetchTablesListQuery = (options: {
     */
     LEFT OUTER JOIN (
       SELECT
-        current_database() AS table_catalog,
         nc.nspname         AS table_schema,
         c.relname          AS table_name,
         CASE WHEN pg_has_role(c.relowner, 'USAGE') THEN pg_get_viewdef(c.oid) ELSE null END AS view_definition,
-        CASE WHEN 'check_option=cascaded' = ANY (c.reloptions) THEN 'CASCADED'
-             WHEN 'check_option=local'    = ANY (c.reloptions) THEN 'LOCAL'
-             ELSE 'NONE'
-        END AS check_option,
         CASE WHEN pg_relation_is_updatable(c.oid, false) & 20 = 20 THEN 'YES' ELSE 'NO' END AS is_updatable,
         CASE WHEN pg_relation_is_updatable(c.oid, false) &  8 =  8 THEN 'YES' ELSE 'NO' END AS is_insertable_into,
         CASE WHEN EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid = c.oid AND tgtype & 81 = 81) THEN 'YES' ELSE 'NO' END AS is_trigger_updatable,

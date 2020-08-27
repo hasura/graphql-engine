@@ -1,8 +1,7 @@
 import React from 'react';
-// import {push} fropm 'react-router-redux';
 import { Route, IndexRedirect } from 'react-router';
+
 import globals from '../../../Globals';
-// import { loadAdminSecretState } from '../../AppState';
 import { SERVER_CONSOLE_MODE } from '../../../constants';
 
 import {
@@ -24,7 +23,6 @@ import {
   permissionsSummaryConnector,
   ModifyCustomFunction,
   PermissionCustomFunction,
-  // metadataConnector,
 } from '.';
 
 import { RightContainer } from '../../Common/Layout/RightContainer';
@@ -34,11 +32,7 @@ import {
   fetchFunctionInit,
   UPDATE_CURRENT_SCHEMA,
   updateSchemaInfo,
-  // ADMIN_SECRET_ERROR,
 } from './DataActions';
-
-// import { changeRequestHeader } from '../../ApiExplorer/Actions';
-// import { validateLogin } from '../../Main/Actions';
 
 const makeDataRouter = (
   connect,
