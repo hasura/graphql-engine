@@ -67,15 +67,6 @@ export interface DataSourcesAPI {
     TEXT: string;
     ARRAY: string;
   };
-  generateWhereClause: (
-    options: {
-      schemas: string[];
-      tables: Table[];
-    },
-    sqlTableName?: string,
-    sqlSchemaName?: string,
-    clausePrefix?: string
-  ) => string;
   getFetchTrackedTableFkQuery: (options: {
     schemas: string[];
     tables: Table[];

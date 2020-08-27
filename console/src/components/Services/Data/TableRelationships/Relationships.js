@@ -10,7 +10,6 @@ import {
   formRelName,
   getExistingFieldsMap,
 } from './Actions';
-import { findAllFromRel } from '../utils';
 import { showErrorNotification } from '../../Common/Notification';
 import { setTable } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
@@ -27,6 +26,7 @@ import { NotFoundError } from '../../../Error/PageNotFound';
 import { fetchRemoteSchemas } from '../../RemoteSchema/Actions';
 import styles from '../TableModify/ModifyTable.scss';
 import tableStyles from '../../../Common/TableCommon/TableStyles.scss';
+import { findAllFromRel } from '../../../../dataSources';
 
 const addRelationshipCellView = (
   dispatch,
@@ -376,11 +376,7 @@ const Relationships = ({
                   dispatch={dispatch}
                   key={rel.objRel.rel_name}
                   readOnlyMode={readOnlyMode}
-                  relConfig={findAllFromRel(
-                    allSchemas,
-                    tableSchema,
-                    rel.objRel
-                  )}
+                  relConfig={findAllFromRel(tableSchema, rel.objRel)}
                 />
               ) : (
                 <td />
@@ -390,11 +386,7 @@ const Relationships = ({
                   key={rel.arrRel.rel_name}
                   dispatch={dispatch}
                   readOnlyMode={readOnlyMode}
-                  relConfig={findAllFromRel(
-                    allSchemas,
-                    tableSchema,
-                    rel.arrRel
-                  )}
+                  relConfig={findAllFromRel(tableSchema, rel.arrRel)}
                 />
               ) : (
                 <td />

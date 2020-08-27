@@ -1,5 +1,5 @@
 import { Nullable } from '../components/Common/utils/tsUtils';
-import { Table, Relationship, CheckConstraint } from './types';
+import { Table, Relationship, CheckConstraint, BaseTable } from './types';
 import { TableDefinition } from '../components/Common/utils/v1QueryUtils'; // TODO
 import { isEqual } from '../components/Common/utils/jsUtils';
 
@@ -220,4 +220,131 @@ export const getTableCustomColumnNames = (table: Table) => {
     return table.configuration.custom_column_names || {};
   }
   return {};
+};
+
+export const findFKConstraint = (curTable: Table, column: string[]) => {
+  const fkConstraints = curTable.foreign_key_constraints;
+  return fkConstraints.find(
+    fk =>
+      Object.keys(fk.column_mapping).length === column.length &&
+      Object.keys(fk.column_mapping).join(',') === column.join(',')
+  );
+};
+
+export const findOppFKConstraint = (curTable: Table, column: string[]) => {
+  const fkConstraints = curTable.opp_foreign_key_constraints;
+  return fkConstraints.find(
+    fk =>
+      Object.keys(fk.column_mapping).length === column.length &&
+      Object.keys(fk.column_mapping).join(',') === column.join(',')
+  );
+};
+
+export const findTableFromRel = (
+  schemas: BaseTable[],
+  curTable: Table,
+  rel: Relationship
+) => {
+  let rTable: any = null; // todo
+  let rSchema = 'public';
+
+  // for view
+  if (rel.rel_def.manual_configuration !== undefined) {
+    rTable = rel.rel_def.manual_configuration.remote_table;
+    if (rTable?.schema) {
+      rSchema = rTable.schema;
+      rTable = rTable.name;
+    }
+  }
+
+  // for table
+  if (rel.rel_def.foreign_key_constraint_on !== undefined) {
+    // for object relationship
+    if (rel.rel_type === 'object') {
+      const column = [rel.rel_def.foreign_key_constraint_on];
+      const fkc = findFKConstraint(curTable, column);
+      if (fkc) {
+        rTable = fkc.ref_table;
+        rSchema = fkc.ref_table_table_schema;
+      }
+    }
+
+    // for array relationship
+    if (rel.rel_type === 'array') {
+      rTable = rel.rel_def.foreign_key_constraint_on.table;
+      if (rTable.schema) {
+        rSchema = rTable.schema;
+        rTable = rTable.name;
+      }
+    }
+  }
+  return schemas.find(
+    x => x.table_name === rTable && x.table_schema === rSchema
+  );
+};
+
+export const findAllFromRel = (curTable: Table, rel: Relationship) => {
+  const relName = rel.rel_name;
+  const lTable = rel.table_name;
+  const lSchema = rel.table_schema;
+  const isObjRel = rel.rel_type === 'object';
+  let lcol: string[] | null = null;
+  let rcol: string[] | null = null;
+  let rTable: string | null = null;
+  let rSchema: string | null = null;
+
+  // for view
+  if (rel.rel_def.manual_configuration !== undefined) {
+    const rTableConfig = rel.rel_def.manual_configuration.remote_table;
+    if (rTableConfig.schema) {
+      rTable = rTableConfig.name;
+      rSchema = rTableConfig.schema;
+    } else {
+      rTable = rTableConfig;
+      rSchema = 'public';
+    }
+    const columnMapping = rel.rel_def.manual_configuration.column_mapping;
+    lcol = Object.keys(columnMapping);
+    rcol = lcol.map(column => columnMapping[column]);
+  }
+
+  // for table
+  const foreignKeyConstraintOn = rel.rel_def.foreign_key_constraint_on;
+  if (foreignKeyConstraintOn !== undefined) {
+    // for object relationship
+    if (rel.rel_type === 'object') {
+      lcol = [foreignKeyConstraintOn];
+      const fkc = findFKConstraint(curTable, lcol);
+      if (fkc) {
+        rTable = fkc.ref_table;
+        rSchema = fkc.ref_table_table_schema;
+        rcol = [fkc.column_mapping[(lcol as any) as string]];
+      }
+    }
+
+    // for array relationship
+    if (rel.rel_type === 'array') {
+      rcol = [foreignKeyConstraintOn.column];
+      const rTableConfig = foreignKeyConstraintOn.table;
+      if (rTableConfig.schema) {
+        rTable = rTableConfig.name;
+        rSchema = rTableConfig.schema;
+      } else {
+        rTable = rTableConfig;
+        rSchema = 'public';
+      }
+      const rfkc = findOppFKConstraint(curTable, rcol);
+      lcol = [rfkc!.column_mapping[(rcol as any) as string]];
+    }
+  }
+  return {
+    relName,
+    lTable,
+    lSchema,
+    isObjRel,
+    lcol,
+    rcol,
+    rTable,
+    rSchema,
+  };
 };

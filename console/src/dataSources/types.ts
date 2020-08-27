@@ -1,14 +1,15 @@
 import { Nullable } from '../components/Common/utils/tsUtils';
 import { FunctionDefinition } from '../components/Common/utils/v1QueryUtils';
 
-export type Relationship = {
+export interface Relationship
+  extends Pick<BaseTable, 'table_name' | 'table_schema'> {
   rel_name: string;
   rel_def: {
     manual_configuration?: any;
     foreign_key_constraint_on?: any;
   };
   rel_type: 'object' | 'array';
-};
+}
 
 export type Permission = {
   role_name: string;
@@ -76,6 +77,7 @@ export interface Table extends BaseTable {
   relationships: Relationship[];
   permissions: Permission[];
   foreign_key_constraints: ForeignKeyConstraint[];
+  opp_foreign_key_constraints: ForeignKeyConstraint[];
   check_constraints: CheckConstraint[];
   configuration?: {
     custom_column_names: {
