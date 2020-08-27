@@ -36,6 +36,7 @@ import qualified Data.ByteString.Lazy as BS
 import Data.Time.Clock
 -- Dirty result construction
 import qualified Data.Text as T
+import qualified Data.Text.Encoding            as TE
 
 import qualified Data.Aeson                             as J
 import qualified Data.Environment                       as Env
@@ -123,7 +124,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             result <- IOSL.toList . snd =<< My.query_ connection (My.Query fixedQuery)
             UGLY.traceShowM result
             -- TODO fill in proper values for telemTimeIO and telemQueryType below
-            pure $ (telemCacheHit, Telem.Local, (secondsToDiffTime 0, Telem.Query, HttpResponse (encJFromText $ T.concat $ fmap (\case My.MySQLText t -> t) $ concat result) []))
+            pure $ (telemCacheHit, Telem.Local, (secondsToDiffTime 0, Telem.Query, HttpResponse (encodeGQResp $ GQSuccess $ BS.fromStrict $ TE.encodeUtf8 $ T.concat $ fmap (\case My.MySQLText t -> t) $ concat result) []))
           E.ExecStepRemote (rsi, opDef, _varValsM) ->
             runRemoteGQ telemCacheHit rsi opDef
           E.ExecStepRaw (name, json) -> do
