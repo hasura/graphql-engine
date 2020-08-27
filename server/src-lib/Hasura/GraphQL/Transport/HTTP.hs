@@ -32,6 +32,10 @@ import           Hasura.Session
 import           Hasura.Tracing                         (MonadTrace, TraceT, trace)
 
 import qualified Data.ByteString.Lazy as BS
+-- For dirty construction of fake query execution durations
+import Data.Time.Clock
+-- Dirty result construction
+import qualified Data.Text as T
 
 import qualified Data.Aeson                             as J
 import qualified Data.Environment                       as Env
@@ -117,7 +121,9 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             let fixedQuery = BS.map (\x -> if x == 34 then 96 else x) queryString
             UGLY.traceShowM fixedQuery
             result <- IOSL.toList . snd =<< My.query_ connection (My.Query fixedQuery)
-            pure $ UGLY.traceShow result $ (telemCacheHit, Telem.Local, (undefined, undefined, HttpResponse undefined []))
+            UGLY.traceShowM result
+            -- TODO fill in proper values for telemTimeIO and telemQueryType below
+            pure $ (telemCacheHit, Telem.Local, (secondsToDiffTime 0, Telem.Query, HttpResponse (encJFromText $ T.concat $ fmap (\case My.MySQLText t -> t) $ concat result) []))
           E.ExecStepRemote (rsi, opDef, _varValsM) ->
             runRemoteGQ telemCacheHit rsi opDef
           E.ExecStepRaw (name, json) -> do

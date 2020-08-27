@@ -246,7 +246,12 @@ withRowToJSON
 withRowToJSON parAls extrs =
   (S.toAlias parAls, jsonRow)
   where
-    jsonRow = S.applyRowToJson extrs
+    arguments :: [[S.SQLExp]]
+    arguments = fmap mkPair extrs
+    mkPair :: S.Extractor -> [S.SQLExp]
+    mkPair extr@(S.Extractor _ (Just alias)) = [S.SELit $ getIdenTxt $ S.getAlias alias, S.SESelect $ S.mkSelect { S.selExtr = [extr] }]
+    mkPair (S.Extractor _ Nothing) = error "Encountered unexpected extractor when constructing JSON_OBJECT call"
+    jsonRow = S.SEFnApp "json_object" (concat arguments) Nothing
 
 -- uses json_build_object to build a json object
 withJsonBuildObj
@@ -260,7 +265,7 @@ withJsonBuildObj parAls exps =
 withForceAggregation :: S.TypeAnn -> S.SQLExp -> S.SQLExp
 withForceAggregation tyAnn e =
   -- bool_or to force aggregation
-  S.SEFnApp "coalesce" [e, S.SETyAnn (S.SEUnsafe "bool_or('true')") tyAnn] Nothing
+  S.SEFnApp "coalesce" [e, S.SETyAnn (S.SEUnsafe "bool_or(true)") tyAnn] Nothing
 
 mkAggregateOrderByExtractorAndFields
   :: AnnAggregateOrderBy -> (S.Extractor, AggregateFields)
