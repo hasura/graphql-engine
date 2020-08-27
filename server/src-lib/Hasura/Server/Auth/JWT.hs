@@ -92,81 +92,20 @@ data JWTClaimsMapValueG v
   -- the key doesn't exist in the claims map then the default
   -- value will be used (if provided)
   | JWTClaimsMapStatic !v
-  deriving (Show,Eq,Functor,Foldable,Traversable)
+  deriving (Show, Eq, Functor, Foldable, Traversable)
 
-instance (J.FromJSON [RoleName]) => J.FromJSON (JWTClaimsMapValueG [RoleName]) where
+instance (J.FromJSON v) => J.FromJSON (JWTClaimsMapValueG v) where
   parseJSON (J.Object obj) = do
-    path <-
-      case Map.lookup "path" obj of
-        Just path ->
-          case path of
-            J.String path' -> either fail pure $ parseJSONPath path'
-            _              -> fail "expected a string value for a JSON path"
-        Nothing -> fail "path containing the JSON path not present"
-    defaultVal <-
-      case Map.lookup "default" obj of
-        Just def ->
-          case def of
-            J.Array arr -> do
-              pure $ flip traverse (toList arr) $ \d ->
-                case d of
-                  J.String s ->
-                    maybe (fail $ "invalid role name: " <> T.unpack s) pure $ mkRoleName s
-                  _          -> fail "expected a string value for a allowed_role value"
-            _ -> fail "expected array of strings for allowed_roles"
-        Nothing -> pure $ Nothing
-    pure $ JWTClaimsMapJSONPath path defaultVal
-  parseJSON v = JWTClaimsMapStatic <$> J.parseJSON v
-
-instance (J.FromJSON RoleName) => J.FromJSON (JWTClaimsMapValueG RoleName) where
-  parseJSON (J.Object obj) = do
-    path <-
-      case Map.lookup "path" obj of
-        Just path ->
-          case path of
-            J.String path' -> either fail pure $ parseJSONPath path'
-            _              -> fail "expected a string value for a JSON path"
-        Nothing -> fail "path containing the JSON path not present"
-    defaultVal <-
-      case Map.lookup "default" obj of
-        Just def ->
-          case def of
-            J.String s ->
-              maybe (fail $ "invalid role name" <> T.unpack s) (pure . Just) $ mkRoleName s
-            _          -> fail "expected a string value for default_role value"
-        Nothing -> pure $ Nothing
-    pure $ JWTClaimsMapJSONPath path defaultVal
-  parseJSON v = JWTClaimsMapStatic <$> J.parseJSON v
-
-instance (J.FromJSON Text) => J.FromJSON (JWTClaimsMapValueG Text) where
-  parseJSON (J.Object obj) = do
-    path <-
-      case Map.lookup "path" obj of
-        Just path ->
-          case path of
-            J.String path' -> either fail pure $ parseJSONPath path'
-            _              -> fail "expected a string value for a JSON path"
-        Nothing -> fail "path containing the JSON path not present"
-    defaultVal <-
-      case Map.lookup "default" obj of
-        Just def ->
-          case def of
-            J.String s -> pure $ Just s
-            _          -> fail "expected a string value for claims map value"
-        Nothing -> pure $ Nothing
+    path <- obj J..: "path" >>= (either fail pure . parseJSONPath)
+    defaultVal <- obj J..:? "default" >>= traverse pure
     pure $ JWTClaimsMapJSONPath path defaultVal
   parseJSON v = JWTClaimsMapStatic <$> J.parseJSON v
 
 instance (J.ToJSON v) => J.ToJSON (JWTClaimsMapValueG v) where
-  toJSON (JWTClaimsMapJSONPath jsonPath Nothing) =
+  toJSON (JWTClaimsMapJSONPath jsonPath mDefVal) =
     J.object $
-    [ "path"    J..= encodeJSONPath jsonPath
-    ]
-  toJSON (JWTClaimsMapJSONPath jsonPath (Just defVal)) =
-    J.object $
-    [ "path"    J..= encodeJSONPath jsonPath
-    , "default" J..= defVal
-    ]
+       [ "path"    J..= encodeJSONPath jsonPath ]
+    <> [ "default" J..= defVal | Just defVal <- [mDefVal]]
   toJSON (JWTClaimsMapStatic v)          = J.toJSON v
 
 type JWTClaimsMapDefaultRole = JWTClaimsMapValueG RoleName
@@ -188,10 +127,10 @@ instance J.ToJSON JWTClaimsMap where
     Map.fromList $ [ (sessionVariableToText defaultRoleClaim, J.toJSON defaultRole)
                    , (sessionVariableToText allowedRolesClaim, J.toJSON allowedRoles)
                    ]
-    <> map (\(var, val) -> (sessionVariableToText var,J.toJSON val)) (Map.toList customClaims)
+    <> map (sessionVariableToText *** J.toJSON) (Map.toList customClaims)
 
 instance J.FromJSON JWTClaimsMap where
-  parseJSON (J.Object obj) = do
+  parseJSON = J.withObject "JWTClaimsMap" $ \obj -> do
     let withNotFoundError sessionVariable =
           let errorMsg = T.unpack $
                 sessionVariableToText sessionVariable <> " is expected but not found"
@@ -203,7 +142,6 @@ instance J.FromJSON JWTClaimsMap where
                           $ Map.fromList $ map (\(k, v) -> (mkSessionVariable k, v)) $ Map.toList obj
     customClaims <- flip Map.traverseWithKey filteredClaims $ const $ J.parseJSON
     pure $ JWTClaimsMap defaultRole allowedRoles customClaims
-  parseJSON _ = fail "expected claims map to be an object"
 
 data JWTNamespace
   = ClaimNsPath JSONPath
