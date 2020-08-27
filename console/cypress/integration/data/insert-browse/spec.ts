@@ -232,7 +232,6 @@ export const checkPagination = () => {
 
 export const passBISort = (order: string) => {
   // Scroll to top TODO responsive is messy
-  cy.viewport(2140, 1080); // TODO: temp solution to fix failing tests
   cy.wait(7000);
   // Select column with type 'serial'
   const serialIndex = dataTypes.indexOf('serial');
