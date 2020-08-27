@@ -5,6 +5,7 @@ module Hasura.GraphQL.Utils
   , mkMapWith
   , showNames
   , simpleGraphQLQuery
+  , getBaseTyWithNestedLevelsCount
   ) where
 
 import           Hasura.Prelude
@@ -16,6 +17,15 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 showName :: G.Name -> Text
 showName name = "\"" <> G.unName name <> "\""
+
+getBaseTyWithNestedLevelsCount :: G.GType -> (G.Name, Int)
+getBaseTyWithNestedLevelsCount ty = go ty 0
+  where
+    go :: G.GType -> Int -> (G.Name, Int)
+    go gType ctr =
+      case gType of
+        G.TypeNamed _ n      -> (n, ctr)
+        G.TypeList  _ gType' -> flip go (ctr + 1) gType'
 
 groupListWith
   :: (Eq k, Hashable k, Foldable t, Functor t)
