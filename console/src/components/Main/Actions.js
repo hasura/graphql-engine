@@ -89,6 +89,9 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
 
   return dispatch(requestAction(url, options))
     .then(data => {
+      const lastSeenNotifications = JSON.parse(
+        window.localStorage.getItem('main:lastSeenNotifications')
+      );
       if (!data.length) {
         // NOTE: this might be because of an error
         dispatch({ type: FETCH_CONSOLE_NOTIFICATIONS_SET_DEFAULT });
@@ -99,7 +102,20 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
             showBadge: false,
           })
         );
+        if (!lastSeenNotifications) {
+          window.localStorage.setItem(
+            'main:lastSeenNotifications',
+            JSON.stringify(0)
+          );
+        }
         return;
+      }
+
+      if (!lastSeenNotifications) {
+        window.localStorage.setItem(
+          'main:lastSeenNotifications',
+          JSON.stringify(data.length)
+        );
       }
 
       if (strictChecks) {
@@ -137,10 +153,8 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
             }
           } else {
             newReadValue = previousRead;
-            if (Array.isArray(previousRead)) {
-              if (previousRead.length) {
-                toShowBadge = false;
-              }
+            if (previousRead.length && lastSeenNotifications === data.length) {
+              toShowBadge = false;
             }
           }
           dispatch(
