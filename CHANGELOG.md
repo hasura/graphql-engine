@@ -2,26 +2,9 @@
 
 ## Next release
 
-### Breaking changes
+### Server - Support for custom JWT Claims
 
-This release contains the [PDV refactor (#4111)](https://github.com/hasura/graphql-engine/pull/4111), a significant rewrite of the internals of the server, which did include some breaking changes:
-
-- The semantics of explicit `null` values in `where` filters have changed according to the discussion in [issue 704](https://github.com/hasura/graphql-engine/issues/704#issuecomment-635571407): an explicit `null` value in a comparison input object will be treated as an error rather than resulting in the expression being evaluated to `True`. For instance: `delete_users(where: {id: {_eq: $userId}}) { name }` will yield an error if `$userId` is `null` instead of deleting all users.
-- The validation of required headers has been fixed (closing #14 and #3659):
-  - if a query selects table `bar` through table `foo` via a relationship, the required permissions headers will be the union of the required headers of table `foo` and table `bar` (we used to only check the headers of the root table);
-  - if an insert does not have an `on_conflict` clause, it will not require the update permissions headers.
-
-
-### Bug fixes and improvements
-
-(Add entries here in the order of: server, console, cli, docs, others)
-
-- server: some mutations that cannot be performed will no longer be in the schema (for instance, `delete_by_pk` mutations won't be shown to users that do not have select permissions on all primary keys) (#4111)
-- server: miscellaneous description changes (#4111)
-- server: treat the absence of `backend_only` configuration and `backend_only: false` equally (closing #5059) (#4111)
-- server: support customizing JWT claims (close #3485)
-
-Some providers don't let users add custom JWT claims. In such a case, the server will provide a JWT configuration option to specify a mapping of hasura session variables to values in existing claims via JSONPath/literal values. The JWT config now supports an extra optional field `claims_map` which is an JSON object which maps from session variables to JSON paths.
+Some auth providers do not let users add custom claims in JWT. In such cases, the server can take a JWT configuration option called `claims_map` to specify a mapping of Hasura session variables to values in existing claims via JSONPath or literal values.
 
 Example:-
 
@@ -40,7 +23,7 @@ Consider the following JWT claim:
   }
 ```
 
-The corresponding JWT config should be:
+The corresponding JWT config can be:
 
 ```
   {
@@ -53,6 +36,24 @@ The corresponding JWT config should be:
     }
   }
 ```
+
+### Breaking changes
+
+This release contains the [PDV refactor (#4111)](https://github.com/hasura/graphql-engine/pull/4111), a significant rewrite of the internals of the server, which did include some breaking changes:
+
+- The semantics of explicit `null` values in `where` filters have changed according to the discussion in [issue 704](https://github.com/hasura/graphql-engine/issues/704#issuecomment-635571407): an explicit `null` value in a comparison input object will be treated as an error rather than resulting in the expression being evaluated to `True`. For instance: `delete_users(where: {id: {_eq: $userId}}) { name }` will yield an error if `$userId` is `null` instead of deleting all users.
+- The validation of required headers has been fixed (closing #14 and #3659):
+  - if a query selects table `bar` through table `foo` via a relationship, the required permissions headers will be the union of the required headers of table `foo` and table `bar` (we used to only check the headers of the root table);
+  - if an insert does not have an `on_conflict` clause, it will not require the update permissions headers.
+
+
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+
+- server: some mutations that cannot be performed will no longer be in the schema (for instance, `delete_by_pk` mutations won't be shown to users that do not have select permissions on all primary keys) (#4111)
+- server: miscellaneous description changes (#4111)
+- server: treat the absence of `backend_only` configuration and `backend_only: false` equally (closing #5059) (#4111)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - cli: add missing global flags for seeds command (#5565)
@@ -259,7 +260,6 @@ hasura seed apply --file 1234_add_some_seed_data.sql
 - server: fix importing of allow list query from metadata (fix #4687)
 - server: flush log buffer during shutdown (#4800)
 - server: fix edge case with printing logs on startup failure (fix #4772)
-- server: support customizing JWT claims using 'claims_map' in JWT config (fix #3485)
 - console: allow entering big int values in the console (close #3667) (#4775)
 - console: add support for subscriptions analyze in API explorer (close #2541) (#2541)
 - console: avoid count queries for large tables (#4692)
