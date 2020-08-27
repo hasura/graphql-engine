@@ -86,6 +86,14 @@ defaultRoleClaim = mkSessionVariable "x-hasura-default-role"
 defaultClaimsNamespace :: Text
 defaultClaimsNamespace = "https://hasura.io/jwt/claims"
 
+
+-- | 'JWTClaimsMapValueG' is used to represent a single value of
+-- the 'JWTClaimsMap'. A 'JWTClaimsMap' can either be an JSON object
+-- or the literal value of the claim. If the value is an JSON object,
+-- then it should contain a key `path`, which is the JSON path to the
+-- claim value in the JWT token. There's also an option to specify a
+-- default value in the map via the 'default' key, which will be used
+-- when a peek at the JWT token using the JSON path fails (key does not exist).
 data JWTClaimsMapValueG v
   = JWTClaimsMapJSONPath !J.JSONPath !(Maybe v)
   -- ^ JSONPath to the key in the claims map, in case
@@ -110,10 +118,17 @@ instance (J.ToJSON v) => J.ToJSON (JWTClaimsMapValueG v) where
 
 type JWTClaimsMapDefaultRole = JWTClaimsMapValueG RoleName
 type JWTClaimsMapAllowedRoles = JWTClaimsMapValueG [RoleName]
+
+-- Used to store other session variables like `x-hasura-user-id`
 type JWTClaimsMapValue = JWTClaimsMapValueG SessionVariableValue
 
 type CustomClaimsMap = Map.HashMap SessionVariable JWTClaimsMapValue
 
+-- | JWTClaimsMap is an option to provide a custom JWT claims map.
+-- The JWTClaimsMap should be specified in the `HASURA_GRAPHQL_JWT_SECRET`
+-- in the `claims_map`. The JWTClaimsMap, if specified, requires two
+-- mandatory fields, namely, `x-hasura-allowed-roles` and the
+-- `x-hasura-default-role`, other claims may also be provided in the claims map.
 data JWTClaimsMap
   = JWTClaimsMap
   { jcmDefaultRole  :: !JWTClaimsMapDefaultRole
@@ -402,7 +417,7 @@ processAuthZHeader jwtCtx authzHeader = do
     malformedAuthzHeader =
       throw400 InvalidHeaders "Malformed Authorization header"
 
--- ^ parse the claims map from the JWT token or custom claims from the JWT config
+-- | parse the claims map from the JWT token or custom claims from the JWT config
 parseClaimsObject
   :: (MonadError QErr m)
   => J.Object -- ^ Unregistered JWT claims
