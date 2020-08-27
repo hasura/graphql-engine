@@ -1,0 +1,25 @@
+type: bulk
+args:
+- type: create_remote_relationship
+  args:
+    name: remoteUsers
+    table: profiles
+    hasura_fields:
+      - id
+    remote_schema: my-remote-schema
+    remote_field:
+      users:
+        arguments:
+          user_ids: "$id"
+
+- type: create_remote_relationship
+  args:
+    name: remoteUsersMultipleIds
+    table: profiles
+    hasura_fields:
+      - id
+    remote_schema: my-remote-schema
+    remote_field:
+      users:
+        arguments:
+          user_ids: ["$id"]
