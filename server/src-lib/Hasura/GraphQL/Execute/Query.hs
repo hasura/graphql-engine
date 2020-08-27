@@ -44,7 +44,6 @@ import           Hasura.RQL.DML.RemoteJoin
 import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.Session
-import           Hasura.Sources
 -- import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 

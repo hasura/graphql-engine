@@ -43,15 +43,17 @@ module Hasura.RQL.Types.Common
        , resolveWebhook
        ) where
 
-import           Hasura.EncJSON
-import           Hasura.Incremental            (Cacheable)
+
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Headers        ()
-import           Hasura.RQL.Types.Error
-import           Hasura.SQL.Types
-import           Hasura.RQL.DDL.Headers        ()
 
-
+import qualified Data.Environment              as Env
+import qualified Data.HashMap.Strict           as HM
+import qualified Data.Text                     as T
+import qualified Database.PG.Query             as Q
+import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Language.Haskell.TH.Syntax    as TH
+import qualified PostgreSQL.Binary.Decoding    as PD
+import qualified Test.QuickCheck               as QC
 
 import           Control.Lens                  (makeLenses)
 import           Data.Aeson
@@ -61,17 +63,17 @@ import           Data.URL.Template
 import           Instances.TH.Lift             ()
 import           Language.Haskell.TH.Syntax    (Lift, Q, TExp)
 
-import qualified Data.HashMap.Strict           as HM
-import qualified Data.Text                     as T
-import qualified Data.Environment              as Env
-import qualified Database.PG.Query             as Q
-import qualified Language.GraphQL.Draft.Syntax as G
-import qualified Language.Haskell.TH.Syntax    as TH
-import qualified PostgreSQL.Binary.Decoding    as PD
-import qualified Test.QuickCheck               as QC
+import           Hasura.EncJSON
+import           Hasura.Incremental            (Cacheable)
+import           Hasura.RQL.DDL.Headers        ()
+import           Hasura.RQL.DDL.Headers        ()
+import           Hasura.RQL.Types.Error
+import           Hasura.SQL.Text
+import           Hasura.SQL.Types
+
 
 newtype NonEmptyText = NonEmptyText { unNonEmptyText :: T.Text }
-  deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, DQuote, Generic, NFData, Cacheable)
+  deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, ToTxt, Generic, NFData, Cacheable)
 
 instance Arbitrary NonEmptyText where
   arbitrary = NonEmptyText . T.pack <$> QC.listOf1 (QC.elements alphaNumerics)
@@ -111,11 +113,11 @@ newtype RelName
   = RelName { getRelTxt :: NonEmptyText }
   deriving (Show, Eq, Hashable, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Lift, Generic, Arbitrary, NFData, Cacheable)
 
-instance IsIden RelName where
-  toIden rn = Iden $ relNameToTxt rn
+instance IsIdentifier RelName where
+  toIdentifier rn = Identifier $ relNameToTxt rn
 
-instance DQuote RelName where
-  dquoteTxt = relNameToTxt
+instance ToTxt RelName where
+  toTxt = relNameToTxt
 
 rootRelName :: RelName
 rootRelName = RelName rootText
@@ -171,11 +173,11 @@ newtype FieldName
            , Semigroup
            )
 
-instance IsIden FieldName where
-  toIden (FieldName f) = Iden f
+instance IsIdentifier FieldName where
+  toIdentifier (FieldName f) = Identifier f
 
-instance DQuote FieldName where
-  dquoteTxt (FieldName c) = c
+instance ToTxt FieldName where
+  toTxt (FieldName c) = c
 
 fromPGCol :: PGCol -> FieldName
 fromPGCol c = FieldName $ getPGColTxt c
@@ -288,7 +290,7 @@ instance FromJSON NonNegativeDiffTime where
 
 newtype ResolvedWebhook
   = ResolvedWebhook { unResolvedWebhook :: Text}
-  deriving ( Show, Eq, FromJSON, ToJSON, Hashable, DQuote, Lift)
+  deriving ( Show, Eq, FromJSON, ToJSON, Hashable, ToTxt, Lift)
 
 newtype InputWebhook
   = InputWebhook {unInputWebhook :: URLTemplate}

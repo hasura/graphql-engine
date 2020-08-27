@@ -22,6 +22,8 @@ import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Select.Internal
 import           Hasura.RQL.Types
+import           Hasura.SQL.Builder
+import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query              as Q
@@ -276,21 +278,21 @@ convSelectQuery sessVarBldr prepArgBuilder (DMLQuery qt selQ) = do
 selectP2 :: JsonAggSelect -> (AnnSimpleSel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 selectP2 jsonAggSelect (sel, p) =
   encJFromBS . runIdentity . Q.getRow
-  <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
+  <$> Q.rawQE dmlTxErrorHandler (Q.fromText selectSQL) (toList p) True
   where
-    selectSQL = toSQL $ mkSQLSelect jsonAggSelect sel
+    selectSQL = unsafeToSQLTxt $ mkSQLSelect jsonAggSelect sel
 
 selectQuerySQL :: JsonAggSelect -> AnnSimpleSel -> Q.Query
 selectQuerySQL jsonAggSelect sel =
-  Q.fromBuilder $ toSQL $ mkSQLSelect jsonAggSelect sel
+  Q.fromText $ unsafeToSQLTxt $ mkSQLSelect jsonAggSelect sel
 
 selectAggregateQuerySQL :: AnnAggregateSelect -> Q.Query
 selectAggregateQuerySQL =
-  Q.fromBuilder . toSQL . mkAggregateSelect
+  Q.fromText . unsafeToSQLTxt . mkAggregateSelect
 
 connectionSelectQuerySQL :: ConnectionSelect S.SQLExp -> Q.Query
 connectionSelectQuerySQL =
-  Q.fromBuilder . toSQL . mkConnectionSelect
+  Q.fromText . unsafeToSQLTxt . mkConnectionSelect
 
 asSingleRowJsonResp :: Q.Query -> [Q.PrepArg] -> Q.TxE QErr EncJSON
 asSingleRowJsonResp query args =

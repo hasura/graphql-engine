@@ -75,7 +75,7 @@ mkDefaultMutFlds = MOutMultirowFields . \case
   where
     mutFlds = [("affected_rows", MCount)]
 
-mkMutFldExp :: Iden -> Maybe Int -> Bool -> MutFld -> S.SQLExp
+mkMutFldExp :: Identifier -> Maybe Int -> Bool -> MutFld -> S.SQLExp
 mkMutFldExp cteAlias preCalAffRows strfyNum = \case
   MCount ->
     let countExp = S.SESelect $
@@ -132,11 +132,11 @@ mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
                , (S.Alias allColumnsAlias, allColumnsSelect)
                ] sel
   where
-    mutationResultAlias = Iden $ snakeCaseQualObject qt <> "__mutation_result_alias"
-    allColumnsAlias = Iden $ snakeCaseQualObject qt <> "__all_columns_alias"
+    mutationResultAlias = Identifier $ snakeCaseQualifiedObject qt <> "__mutation_result_alias"
+    allColumnsAlias = Identifier $ snakeCaseQualifiedObject qt <> "__all_columns_alias"
     allColumnsSelect = S.CTESelect $ S.mkSelect
                        { S.selExtr = map S.mkExtr $ map pgiColumn $ sortCols allCols
-                       , S.selFrom = Just $ S.mkIdenFromExp mutationResultAlias
+                       , S.selFrom = Just $ S.mkIdentifierFromExp mutationResultAlias
                        }
 
     sel = S.mkSelect { S.selExtr = [S.Extractor extrExp Nothing] }

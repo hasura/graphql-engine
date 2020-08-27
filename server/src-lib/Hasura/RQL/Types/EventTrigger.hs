@@ -24,24 +24,28 @@ module Hasura.RQL.Types.EventTrigger
   , defaultTimeoutSeconds
   ) where
 
-import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
-import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.Types.Common    (NonEmptyText (..))
-import           Hasura.SQL.Types
-import           Language.Haskell.TH.Syntax (Lift)
 
 import qualified Data.ByteString.Lazy       as LBS
 import qualified Data.Text                  as T
 import qualified Database.PG.Query          as Q
 import qualified Text.Regex.TDFA            as TDFA
 
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
+import           Language.Haskell.TH.Syntax (Lift)
+
+import           Hasura.Incremental         (Cacheable)
+import           Hasura.RQL.DDL.Headers
+import           Hasura.RQL.Types.Common    (NonEmptyText (..))
+import           Hasura.SQL.Text
+import           Hasura.SQL.Types
+
+
 -- | Unique name for event trigger.
 newtype TriggerName = TriggerName { unTriggerName :: NonEmptyText }
-  deriving (Show, Eq, Hashable, Lift, DQuote, FromJSON, ToJSON, ToJSONKey, Q.FromCol, Q.ToPrepArg, Generic, Arbitrary, NFData, Cacheable)
+  deriving (Show, Eq, Hashable, Lift, ToTxt, FromJSON, ToJSON, ToJSONKey, Q.FromCol, Q.ToPrepArg, Generic, Arbitrary, NFData, Cacheable)
 
 triggerNameToTxt :: TriggerName -> Text
 triggerNameToTxt = unNonEmptyText . unTriggerName

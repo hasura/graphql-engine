@@ -24,7 +24,7 @@ import           Hasura.GraphQL.Parser.Class
 import {-# SOURCE #-} Hasura.GraphQL.Parser.Internal.Parser (boolean, runParser)
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.GraphQL.Utils                  (showNames)
-import           Hasura.SQL.Types
+import           Hasura.SQL.Text
 
 -- | Collects the effective set of fields queried by a selection set by
 -- flattening fragments and merging duplicate fields.

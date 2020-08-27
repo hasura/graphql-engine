@@ -1,76 +1,57 @@
 module Hasura.SQL.Types
-  ( ToSQL(..)
-  , toSQLTxt
+  ( Identifier(..)
+  , IsIdentifier(..)
 
-  , (<+>)
-  , (<<>)
-  , (<>>)
+  , TableName(..)
+  , ConstraintName(..)
+  , FunctionName(..)
+  , PGDescription(..)
 
-  , pgFmtLit
-  , pgFmtIden
-  , isView
+  , SchemaName(..)
+  , publicSchema
+  , hdbCatalogSchema
 
+  , QualifiedObject(..)
   , QualifiedTable
   , QualifiedFunction
-
-  , PGDescription(..)
+  , qualifiedObjectToText
+  , snakeCaseQualifiedObject
+  , qualifiedObjectToName
 
   , PGCol
   , unsafePGCol
   , getPGColTxt
   , showPGCols
 
-  , isIntegerType
-  , isNumType
-  , stringTypes
-  , isStringType
-  , isJSONType
-  , isComparableType
-  , isBigNum
-  , geoTypes
-  , isGeoType
-
-  , DQuote(..)
-  , dquote
-  , squote
-  , dquoteList
-
-  , IsIden(..)
-  , Iden(..)
-
-  , ToTxt(..)
-
-  , SchemaName(..)
-  , publicSchema
-  , hdbCatalogSchema
-
-  , TableName(..)
-  , FunctionName(..)
-  , ConstraintName(..)
-
-  , QualifiedObject(..)
-  , qualObjectToText
-  , snakeCaseQualObject
-  , qualifiedObjectToName
-
   , PGScalarType(..)
-  , WithScalarType(..)
   , PGType(..)
-  , textToPGScalarType
-  , pgTypeOid
-
   , PGTypeKind(..)
+  , WithScalarType(..)
+  , geoTypes
+  , isBigNum
+  , isComparableType
+  , isGeoType
+  , isIntegerType
+  , isJSONType
+  , isNumType
+  , isStringType
+  , pgTypeOid
+  , stringTypes
+  , textToPGScalarType
+
   , QualifiedPGType(..)
   , isBaseType
   , typeToTable
   )
 where
 
-import qualified Database.PG.Query             as Q
-import qualified Database.PG.Query.PTI         as PTI
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Error
+
+import qualified Data.Text.Extended            as T
+import qualified Database.PostgreSQL.LibPQ     as PQ
+import qualified Language.GraphQL.Draft.Syntax as G
+-- import qualified PostgreSQL.Binary.Decoding    as PD
 
 import           Data.Aeson
 import           Data.Aeson.Casing
@@ -80,117 +61,54 @@ import           Data.Aeson.Types              (toJSONKeyText)
 import           Instances.TH.Lift             ()
 import           Language.Haskell.TH.Syntax    (Lift)
 
-import qualified Data.Text.Extended            as T
-import qualified Database.PostgreSQL.LibPQ     as PQ
-import qualified Language.GraphQL.Draft.Syntax as G
-import qualified PostgreSQL.Binary.Decoding    as PD
-import qualified Text.Builder                  as TB
+import qualified Database.PG.Query             as Q
+import qualified Database.PG.Query.PTI         as PTI
 
 import           Hasura.Incremental            (Cacheable)
+import           Hasura.RQL.Types.Error
+import           Hasura.SQL.Text
 
-class ToSQL a where
-  toSQL :: a -> TB.Builder
 
-instance ToSQL TB.Builder where
-  toSQL x = x
 
-toSQLTxt :: (ToSQL a) => a -> T.Text
-toSQLTxt = TB.run . toSQL
+-- identifier
 
-infixr 6 <+>
-(<+>) :: (ToSQL a) => T.Text -> [a] -> TB.Builder
-(<+>) _ [] = mempty
-(<+>) kat (x:xs) =
-  toSQL x <> mconcat [ TB.text kat <> toSQL x' | x' <- xs ]
-{-# INLINE (<+>) #-}
-
-newtype Iden
-  = Iden { getIdenTxt :: T.Text }
+newtype Identifier
+  = Identifier { getIdenTxt :: T.Text }
   deriving (Show, Eq, NFData, FromJSON, ToJSON, Hashable, Semigroup, Data, Cacheable)
 
-instance ToSQL Iden where
-  toSQL (Iden t) =
-    TB.text $ pgFmtIden t
+instance ToTxt Identifier where
+  toTxt = getIdenTxt
+  {-# INLINE toTxt #-}
 
-class IsIden a where
-  toIden :: a -> Iden
+class IsIdentifier a where
+  toIdentifier :: a -> Identifier
 
-instance IsIden Iden where
-  toIden = id
+instance IsIdentifier Identifier where
+  toIdentifier = id
+  {-# INLINE toIdentifier #-}
 
-class DQuote a where
-  dquoteTxt :: a -> T.Text
 
-instance DQuote T.Text where
-  dquoteTxt = id
-  {-# INLINE dquoteTxt #-}
 
-instance DQuote G.Name where
-  dquoteTxt = dquoteTxt . G.unName
-
-deriving instance DQuote G.EnumValue
-
-dquote :: (DQuote a) => a -> T.Text
-dquote = T.dquote . dquoteTxt
-{-# INLINE dquote #-}
-
-squote :: (DQuote a) => a -> T.Text
-squote = T.squote . dquoteTxt
-{-# INLINE squote #-}
-
-dquoteList :: (DQuote a, Foldable t) => t a -> T.Text
-dquoteList = T.intercalate ", " . map dquote . toList
-{-# INLINE dquoteList #-}
-
-infixr 6 <>>
-(<>>) :: (DQuote a) => T.Text -> a -> T.Text
-(<>>) lTxt a = lTxt <> dquote a
-{-# INLINE (<>>) #-}
-
-infixr 6 <<>
-(<<>) :: (DQuote a) => a -> T.Text -> T.Text
-(<<>) a rTxt = dquote a <> rTxt
-{-# INLINE (<<>) #-}
-
-pgFmtIden :: T.Text -> T.Text
-pgFmtIden x =
-  "\"" <> T.replace "\"" "\"\"" (trimNullChars x) <> "\""
-
-pgFmtLit :: T.Text -> T.Text
-pgFmtLit x =
- let trimmed = trimNullChars x
-     escaped = "'" <> T.replace "'" "''" trimmed <> "'"
-     slashed = T.replace "\\" "\\\\" escaped in
- if "\\" `T.isInfixOf` escaped
-   then "E" <> slashed
-   else slashed
-
-trimNullChars :: T.Text -> T.Text
-trimNullChars = T.takeWhile (/= '\x0')
-
-instance (ToSQL a) => ToSQL (Maybe a) where
-  toSQL (Just a) = toSQL a
-  toSQL Nothing  = mempty
-
-class ToTxt a where
-  toTxt :: a -> T.Text
+-- table name
 
 newtype TableName
   = TableName { getTableTxt :: T.Text }
   deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data
            , Generic, Arbitrary, NFData, Cacheable, IsString )
 
-instance IsIden TableName where
-  toIden (TableName t) = Iden t
-
-instance DQuote TableName where
-  dquoteTxt (TableName t) = t
-
-instance ToSQL TableName where
-  toSQL = toSQL . toIden
-
 instance ToTxt TableName where
   toTxt = getTableTxt
+  {-# INLINE toTxt #-}
+
+instance IsIdentifier TableName where
+  toIdentifier = Identifier . getTableTxt
+  {-# INLINE toIdentifier #-}
+
+
+
+-- table type
+
+{-
 
 data TableType
   = TTBaseTable
@@ -199,14 +117,12 @@ data TableType
   | TTLocalTemporary
   deriving (Eq)
 
-tableTyToTxt :: TableType -> T.Text
-tableTyToTxt TTBaseTable      = "BASE TABLE"
-tableTyToTxt TTView           = "VIEW"
-tableTyToTxt TTForeignTable   = "FOREIGN TABLE"
-tableTyToTxt TTLocalTemporary = "LOCAL TEMPORARY"
-
 instance Show TableType where
-  show = T.unpack . tableTyToTxt
+  show = T.unpack . tableTypeToTxt
+
+instance ToTxt TableType where
+  toTxt = tableTypeToTxt
+  {-# INLINE toTxt #-}
 
 instance Q.FromCol TableType where
   fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case
@@ -216,40 +132,63 @@ instance Q.FromCol TableType where
     "LOCAL TEMPORARY" -> Just TTLocalTemporary
     _                 -> Nothing
 
+tableTypeToTxt :: TableType -> T.Text
+tableTypeToTxt TTBaseTable      = "BASE TABLE"
+tableTypeToTxt TTView           = "VIEW"
+tableTypeToTxt TTForeignTable   = "FOREIGN TABLE"
+tableTypeToTxt TTLocalTemporary = "LOCAL TEMPORARY"
+
 isView :: TableType -> Bool
 isView TTView = True
 isView _      = False
 
+-}
+
+
+
+-- constraint name
+
 newtype ConstraintName
   = ConstraintName { getConstraintTxt :: T.Text }
-  deriving (Show, Eq, DQuote, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift, NFData, Cacheable)
+  deriving (Show, Eq, ToTxt, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift, NFData, Cacheable)
 
-instance IsIden ConstraintName where
-  toIden (ConstraintName t) = Iden t
+instance IsIdentifier ConstraintName where
+  toIdentifier = Identifier . getConstraintTxt
+  {-# INLINE toIdentifier #-}
 
-instance ToSQL ConstraintName where
-  toSQL = toSQL . toIden
+
+
+-- function name
 
 newtype FunctionName
   = FunctionName { getFunctionTxt :: T.Text }
   deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift, Data, Generic, Arbitrary, NFData, Cacheable)
 
-instance IsIden FunctionName where
-  toIden (FunctionName t) = Iden t
-
-instance DQuote FunctionName where
-  dquoteTxt (FunctionName t) = t
-
-instance ToSQL FunctionName where
-  toSQL = toSQL . toIden
+instance IsIdentifier FunctionName where
+  toIdentifier = Identifier . getFunctionTxt
+  {-# INLINE toIdentifier #-}
 
 instance ToTxt FunctionName where
   toTxt = getFunctionTxt
+  {-# INLINE toTxt #-}
+
+
+
+-- schema name
 
 newtype SchemaName
   = SchemaName { getSchemaTxt :: T.Text }
   deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data, Generic
            , Arbitrary, NFData, Cacheable, IsString )
+
+instance IsIdentifier SchemaName where
+  toIdentifier = Identifier . getSchemaTxt
+  {-# INLINE toIdentifier #-}
+
+instance ToTxt SchemaName where
+  toTxt = getSchemaTxt
+  {-# INLINE toTxt #-}
+
 
 publicSchema :: SchemaName
 publicSchema = SchemaName "public"
@@ -257,11 +196,12 @@ publicSchema = SchemaName "public"
 hdbCatalogSchema :: SchemaName
 hdbCatalogSchema = SchemaName "hdb_catalog"
 
-instance IsIden SchemaName where
-  toIden (SchemaName t) = Iden t
 
-instance ToSQL SchemaName where
-  toSQL = toSQL . toIden
+
+-- qualified object
+
+type QualifiedTable    = QualifiedObject TableName
+type QualifiedFunction = QualifiedObject FunctionName
 
 data QualifiedObject a
   = QualifiedObject
@@ -288,55 +228,57 @@ instance (ToJSON a) => ToJSON (QualifiedObject a) where
            ]
 
 instance (ToJSON a, ToTxt a) => ToJSONKey (QualifiedObject a) where
-  toJSONKey = ToJSONKeyText qualObjectToText (text . qualObjectToText)
+  toJSONKey = ToJSONKeyText qualifiedObjectToText (text . qualifiedObjectToText)
 
-instance (ToTxt a) => DQuote (QualifiedObject a) where
-  dquoteTxt = qualObjectToText
+instance (ToTxt a) => ToTxt (QualifiedObject a) where
+  toTxt = qualifiedObjectToText
+  {-# INLINE toTxt #-}
 
 instance (Hashable a) => Hashable (QualifiedObject a)
 
-instance (ToSQL a) => ToSQL (QualifiedObject a) where
-  toSQL (QualifiedObject sn o) =
-    toSQL sn <> "." <> toSQL o
 
-qualObjectToText :: ToTxt a => QualifiedObject a -> T.Text
-qualObjectToText (QualifiedObject sn o)
+qualifiedObjectToText :: ToTxt a => QualifiedObject a -> T.Text
+qualifiedObjectToText (QualifiedObject sn o)
   | sn == publicSchema = toTxt o
   | otherwise = getSchemaTxt sn <> "." <> toTxt o
 
-snakeCaseQualObject :: ToTxt a => QualifiedObject a -> T.Text
-snakeCaseQualObject (QualifiedObject sn o)
+snakeCaseQualifiedObject :: ToTxt a => QualifiedObject a -> T.Text
+snakeCaseQualifiedObject (QualifiedObject sn o)
   | sn == publicSchema = toTxt o
   | otherwise = getSchemaTxt sn <> "_" <> toTxt o
 
 qualifiedObjectToName :: (ToTxt a, MonadError QErr m) => QualifiedObject a -> m G.Name
 qualifiedObjectToName objectName = do
-  let textName = snakeCaseQualObject objectName
+  let textName = snakeCaseQualifiedObject objectName
   onNothing (G.mkName textName) $ throw400 ValidationFailed $
     "cannot include " <> objectName <<> " in the GraphQL schema because " <> textName
     <<> " is not a valid GraphQL identifier"
 
-type QualifiedTable = QualifiedObject TableName
 
-type QualifiedFunction = QualifiedObject FunctionName
+
+-- description
 
 newtype PGDescription
   = PGDescription { getPGDescription :: T.Text }
   deriving (Show, Eq, FromJSON, ToJSON, Q.FromCol, NFData, Cacheable, Hashable)
+
+
+
+-- postgres column name
 
 newtype PGCol
   = PGCol { getPGColTxt :: T.Text }
   deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey
            , FromJSONKey, Lift, Data, Generic, Arbitrary, NFData, Cacheable, IsString )
 
-instance IsIden PGCol where
-  toIden (PGCol t) = Iden t
+instance IsIdentifier PGCol where
+  toIdentifier = Identifier . getPGColTxt
+  {-# INLINE toIdentifier #-}
 
-instance ToSQL PGCol where
-  toSQL = toSQL . toIden
+instance ToTxt PGCol where
+  toTxt = getPGColTxt
+  {-# INLINE toTxt #-}
 
-instance DQuote PGCol where
-  dquoteTxt (PGCol t) = t
 
 unsafePGCol :: Text -> PGCol
 unsafePGCol = PGCol
@@ -344,6 +286,10 @@ unsafePGCol = PGCol
 showPGCols :: (Foldable t) => t PGCol -> T.Text
 showPGCols cols =
   T.intercalate ", " $ map (T.dquote . getPGColTxt) $ toList cols
+
+
+
+-- postgres scalar type
 
 data PGScalarType
   = PGSmallInt
@@ -376,8 +322,8 @@ instance NFData PGScalarType
 instance Hashable PGScalarType
 instance Cacheable PGScalarType
 
-instance ToSQL PGScalarType where
-  toSQL = \case
+instance ToTxt PGScalarType where
+  toTxt = \case
     PGSmallInt    -> "smallint"
     PGInteger     -> "integer"
     PGBigInt      -> "bigint"
@@ -402,22 +348,19 @@ instance ToSQL PGScalarType where
     PGGeography   -> "geography"
     PGRaster      -> "raster"
     PGUUID        -> "uuid"
-    PGUnknown t   -> TB.text t
+    PGUnknown t   -> t
 
 instance ToJSON PGScalarType where
-  toJSON = String . toSQLTxt
+  toJSON = String . toTxt
 
 instance ToJSONKey PGScalarType where
-  toJSONKey = toJSONKeyText toSQLTxt
+  toJSONKey = toJSONKeyText toTxt
 
-instance DQuote PGScalarType where
-  dquoteTxt = toSQLTxt
 
 textToPGScalarType :: Text -> PGScalarType
 textToPGScalarType t = fromMaybe (PGUnknown t) (lookup t pgScalarTranslations)
 
 -- Inlining this results in pretty terrible Core being generated by GHC.
-
 {-# NOINLINE pgScalarTranslations #-}
 pgScalarTranslations :: [(Text, PGScalarType)]
 pgScalarTranslations =
@@ -562,6 +505,10 @@ data WithScalarType a
   , pstValue :: !a
   } deriving (Show, Eq, Functor, Foldable, Traversable)
 
+
+
+-- postgres type
+
 -- | The type of all Postgres types (i.e. scalars and arrays). This type is parameterized so that
 -- we can have both @'PGType' 'PGScalarType'@ and @'PGType' 'Hasura.RQL.Types.PGColumnType'@, for
 -- when we care about the distinction made by 'Hasura.RQL.Types.PGColumnType'. If we ever change
@@ -578,11 +525,9 @@ instance (NFData a) => NFData (PGType a)
 instance (Cacheable a) => Cacheable (PGType a)
 $(deriveJSON defaultOptions{constructorTagModifier = drop 6} ''PGType)
 
-instance (ToSQL a) => ToSQL (PGType a) where
-  toSQL = \case
-    PGTypeScalar ty -> toSQL ty
-    -- typename array is an sql standard way of declaring types
-    PGTypeArray ty -> toSQL ty <> " array"
+
+
+-- postgres type kind
 
 data PGTypeKind
   = PGKindBase
@@ -617,6 +562,10 @@ instance ToJSON PGTypeKind where
     PGKindPseudo    -> "p"
     PGKindUnknown t -> String t
 
+
+
+-- qualified postgres type
+
 data QualifiedPGType
   = QualifiedPGType
   { _qptSchema :: !SchemaName
@@ -637,4 +586,40 @@ isBaseType (QualifiedPGType _ n ty) =
 
 typeToTable :: QualifiedPGType -> QualifiedTable
 typeToTable (QualifiedPGType sch n _) =
-  QualifiedObject sch $ TableName $ toSQLTxt n
+  QualifiedObject sch $ TableName $ toTxt n
+
+
+
+
+
+
+-- instance ToSQL Iden where
+--   toSQL (Iden t) =
+--     TB.text $ pgFmtIden t
+
+--
+-- pgFmtLit :: T.Text -> T.Text
+-- pgFmtLit x =
+--  let trimmed = trimNullChars x
+--      escaped = "'" <> T.replace "'" "''" trimmed <> "'"
+--      slashed = T.replace "\\" "\\\\" escaped in
+--  if "\\" `T.isInfixOf` escaped
+--    then "E" <> slashed
+--    else slashed
+--
+-- trimNullChars :: T.Text -> T.Text
+-- trimNullChars = T.takeWhile (/= '\x0')
+
+-- instance (ToSQL a) => ToSQL (Maybe a) where
+--   toSQL (Just a) = toSQL a
+--   toSQL Nothing  = mempty
+
+-- instance (ToSQL a) => ToSQL (QualifiedObject a) where
+--   toSQL (QualifiedObject sn o) =
+--     toSQL sn <> "." <> toSQL o
+
+-- instance (ToSQL a) => ToSQL (PGType a) where
+--   toSQL = \case
+--     PGTypeScalar ty -> toSQL ty
+--     -- typename array is an sql standard way of declaring types
+--     PGTypeArray ty -> toSQL ty <> " array"

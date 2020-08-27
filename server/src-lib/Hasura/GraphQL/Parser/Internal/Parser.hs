@@ -27,7 +27,7 @@ import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Error
 import           Hasura.Server.Utils           (englishList)
-import           Hasura.SQL.Types
+import           Hasura.SQL.Text
 import           Hasura.SQL.Value
 
 
@@ -348,7 +348,7 @@ enum name description values = Parser
     validate value = case M.lookup value valuesMap of
       Just result -> pure result
       Nothing -> parseError $ "expected one of the values "
-        <> englishList "or" (dquoteTxt . dName . fst <$> values) <> " for type "
+        <> englishList "or" (toTxt . dName . fst <$> values) <> " for type "
         <> name <<> ", but found " <>> value
 
 nullable :: forall k m a. (MonadParse m, 'Input <: k) => Parser k m a -> Parser k m (Maybe a)

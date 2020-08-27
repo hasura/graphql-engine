@@ -47,16 +47,7 @@ module Hasura.RQL.Types.Action
   ) where
 
 
-import           Control.Lens                  (makeLenses, makePrisms)
-import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.DML.Select.Types
-import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.CustomTypes
-import           Hasura.Session
-import           Hasura.SQL.Types
-import           Language.Haskell.TH.Syntax    (Lift)
 
 import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
@@ -67,10 +58,23 @@ import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.HTTP.Types            as HTTP
 
+import           Control.Lens                  (makeLenses, makePrisms)
+import           Language.Haskell.TH.Syntax    (Lift)
+
+import           Hasura.Incremental            (Cacheable)
+import           Hasura.RQL.DDL.Headers
+import           Hasura.RQL.DML.Select.Types
+import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.CustomTypes
+import           Hasura.Session
+import           Hasura.SQL.Text
+import           Hasura.SQL.Types
+
+
 newtype ActionName
   = ActionName { unActionName :: G.Name }
   deriving ( Show, Eq, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey
-           , Hashable, DQuote, Lift, Generic, NFData, Cacheable)
+           , Hashable, ToTxt, Lift, Generic, NFData, Cacheable)
 
 instance Q.FromCol ActionName where
   fromCol bs = do
@@ -95,7 +99,7 @@ $(makePrisms ''ActionMutationKind)
 newtype ArgumentName
   = ArgumentName { unArgumentName :: G.Name }
   deriving ( Show, Eq, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey
-           , Hashable, DQuote, Lift, Generic, NFData, Cacheable)
+           , Hashable, ToTxt, Lift, Generic, NFData, Cacheable)
 
 data ArgumentDefinition a
   = ArgumentDefinition

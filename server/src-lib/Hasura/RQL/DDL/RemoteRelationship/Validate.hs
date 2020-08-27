@@ -7,17 +7,22 @@ module Hasura.RQL.DDL.RemoteRelationship.Validate
   , errorToText
   ) where
 
-import           Data.Foldable
-import           Hasura.GraphQL.Schema.Remote
-import           Hasura.GraphQL.Parser.Column
 import           Hasura.Prelude                hiding (first)
-import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.HashSet                  as HS
 import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
+
+import           Data.Foldable
+
+import           Hasura.GraphQL.Parser.Column
+import           Hasura.GraphQL.Schema.Remote
+import           Hasura.RQL.Types
+import           Hasura.SQL.Builder
+import           Hasura.SQL.Text
+import           Hasura.SQL.Types
+
 
 -- | An error validating the remote relationship.
 data ValidationError
@@ -387,7 +392,7 @@ validateType permittedVariables value expectedGType schemaDocument =
     mkScalarTy scalarType = do
       eitherScalar <- runExceptT $ mkScalarTypeName scalarType
       case eitherScalar of
-        Left _ -> throwError $ InvalidGraphQLName $ toSQLTxt scalarType
+        Left _  -> throwError $ InvalidGraphQLName $ unsafeToSQLTxt scalarType
         Right s -> pure s
 
 assertType
@@ -423,6 +428,6 @@ columnInfoToNamedType pci =
     PGColumnScalar scalarType -> do
       eitherScalar <- runExceptT $ mkScalarTypeName scalarType
       case eitherScalar of
-        Left _ -> throwError $ InvalidGraphQLName $ toSQLTxt scalarType
+        Left _  -> throwError $ InvalidGraphQLName $ unsafeToSQLTxt scalarType
         Right s -> pure s
     _                         -> throwError UnsupportedEnum

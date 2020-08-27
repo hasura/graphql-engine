@@ -23,7 +23,7 @@ import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
-import           Hasura.SQL.Types                       ((<<>))
+import           Hasura.SQL.Text                        ((<<>))
 
 import qualified Hasura.SQL.DML                         as S
 
@@ -38,8 +38,8 @@ import qualified Data.List.NonEmpty                     as NE
 import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.Tracing                         as Tracing
-import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Language.GraphQL.Draft.Printer         as G
+import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 

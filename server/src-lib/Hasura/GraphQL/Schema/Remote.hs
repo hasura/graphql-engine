@@ -8,16 +8,20 @@ module Hasura.GraphQL.Schema.Remote
   ) where
 
 import           Hasura.Prelude
+
+import qualified Data.List.NonEmpty                    as NE
+
+import           Language.GraphQL.Draft.Syntax         as G
+import           Data.Type.Equality
+import           Data.Foldable                         (sequenceA_)
+
+import qualified Hasura.GraphQL.Parser.Internal.Parser as P
+
+import           Hasura.GraphQL.Parser                 as P
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
+import           Hasura.SQL.Text
 
-import           Language.GraphQL.Draft.Syntax       as G
-import qualified Data.List.NonEmpty                  as NE
-import           Data.Type.Equality
-import           Data.Foldable                       (sequenceA_)
-
-import           Hasura.GraphQL.Parser               as P
-import qualified Hasura.GraphQL.Parser.Internal.Parser as P
 
 buildRemoteParser
   :: forall m n

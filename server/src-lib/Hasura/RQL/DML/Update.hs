@@ -24,12 +24,13 @@ import           Hasura.RQL.Instances        ()
 import           Hasura.RQL.Types
 import           Hasura.Server.Version       (HasVersion)
 import           Hasura.Session
+import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
+import qualified Data.Environment            as Env
 import qualified Database.PG.Query           as Q
 import qualified Hasura.SQL.DML              as S
-import qualified Data.Environment         as Env
-import qualified Hasura.Tracing           as Tracing
+import qualified Hasura.Tracing              as Tracing
 
 
 -- NOTE: This function can be improved, because we use
@@ -88,7 +89,7 @@ expandOperator infos (column, op) = S.SetExpItem $ (column,) $ case op of
   UpdDeleteElem   e -> S.mkSQLOpExp S.jsonbDeleteOp       identifier (asInt  e)
   UpdDeleteAtPath a -> S.mkSQLOpExp S.jsonbDeleteAtPathOp identifier (asArray a)
   where
-    identifier = S.SEIden $ toIden column
+    identifier = S.SEIden $ toIdentifier column
     asInt  e   = S.SETyAnn e S.intTypeAnn
     asText e   = S.SETyAnn e S.textTypeAnn
     asJSON e   = S.SETyAnn e S.jsonbTypeAnn

@@ -19,22 +19,27 @@ module Hasura.RQL.DDL.EventTrigger
   , updateEventTriggerInCatalog
   ) where
 
-import           Data.Aeson
-
-import           Hasura.EncJSON
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.DML.Internal
-import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 
-import qualified Hasura.SQL.DML          as S
-
-import qualified Data.Text               as T
 import qualified Data.Environment        as Env
+import qualified Data.Text               as T
 import qualified Data.Text.Lazy          as TL
 import qualified Database.PG.Query       as Q
 import qualified Text.Shakespeare.Text   as ST
+
+import           Data.Aeson
+
+import qualified Hasura.SQL.DML          as S
+
+import           Hasura.EncJSON
+import           Hasura.RQL.DDL.Headers
+import           Hasura.RQL.DML.Internal
+import           Hasura.RQL.Types
+import           Hasura.SQL.Builder
+import           Hasura.SQL.Text
+import           Hasura.SQL.Types
+
+
 
 
 data OpVar = OLD | NEW deriving (Show)
@@ -74,7 +79,7 @@ mkTriggerQ trn qt allCols op (SubscribeOpSpec columns payload) = do
   liftTx $ Q.multiQE defaultTxErrorHandler $ Q.fromText . TL.toStrict $
     let payloadColumns = fromMaybe SubCStar payload
         mkQId opVar colInfo = toJSONableExp strfyNum (pgiType colInfo) False $
-          S.SEQIden $ S.QIden (opToQual opVar) $ toIden $ pgiColumn colInfo
+          S.SEQIden $ S.QIden (opToQual opVar) $ toIdentifier $ pgiColumn colInfo
         getRowExpression opVar = case payloadColumns of
           SubCStar -> applyRowToJson $ S.SEUnsafe $ opToTxt opVar
           SubCArray cols -> applyRowToJson $
@@ -100,13 +105,13 @@ mkTriggerQ trn qt allCols op (SubscribeOpSpec columns payload) = do
 
         name = triggerNameToTxt trn
         qualifiedTriggerName = pgIdenTrigger op trn
-        qualifiedTable = toSQLTxt qt
+        qualifiedTable = unsafeToSQLTxt qt
 
         operation = T.pack $ show op
-        oldRow = toSQLTxt $ renderRow OLD
-        newRow = toSQLTxt $ renderRow NEW
-        oldPayloadExpression = toSQLTxt oldDataExp
-        newPayloadExpression = toSQLTxt newDataExp
+        oldRow = unsafeToSQLTxt $ renderRow OLD
+        newRow = unsafeToSQLTxt $ renderRow NEW
+        oldPayloadExpression = unsafeToSQLTxt oldDataExp
+        newPayloadExpression = unsafeToSQLTxt newDataExp
 
     in $(ST.stextFile "src-rsr/trigger.sql.shakespeare")
   where

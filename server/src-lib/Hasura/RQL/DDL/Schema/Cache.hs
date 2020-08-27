@@ -57,6 +57,7 @@ import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.Server.Version                    (HasVersion)
 import           Hasura.Sources
+import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 buildRebuildableSchemaCache
@@ -484,7 +485,7 @@ withMetadataCheck cascade action = do
 
   return res
   where
-    reportFuncs = T.intercalate ", " . map dquoteTxt
+    reportFuncs = T.intercalate ", " . map toTxt
 
     processSchemaChanges :: (MonadTx m, CacheRM m) => SchemaDiff -> m ()
     processSchemaChanges schemaDiff = do

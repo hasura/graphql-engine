@@ -5,17 +5,19 @@ module Hasura.RQL.GBoolExp
   ) where
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 
-import qualified Hasura.SQL.DML      as S
+import qualified Data.HashMap.Strict as M
+import qualified Data.Text.Extended  as T
 
 import           Control.Lens        (filtered, has)
 import           Data.Aeson
 import           Data.Data.Lens      (template)
 
-import qualified Data.HashMap.Strict as M
-import qualified Data.Text.Extended  as T
+import qualified Hasura.SQL.DML      as S
+
+import           Hasura.RQL.Types
+import           Hasura.SQL.Text
+import           Hasura.SQL.Types
 
 type OpRhsParser m v =
   PGType PGColumnType -> Value -> m v
@@ -32,11 +34,11 @@ columnReferenceType = \case
   ColumnReferenceColumn column -> pgiType column
   ColumnReferenceCast _ targetType -> targetType
 
-instance DQuote ColumnReference where
-  dquoteTxt = \case
-    ColumnReferenceColumn column -> dquoteTxt $ pgiColumn column
+instance ToTxt ColumnReference where
+  toTxt = \case
+    ColumnReferenceColumn column -> toTxt $ pgiColumn column
     ColumnReferenceCast reference targetType ->
-      dquoteTxt reference <> "::" <> dquoteTxt targetType
+      toTxt reference <> "::" <> toTxt targetType
 
 parseOperationsExpression
   :: forall m v
@@ -339,8 +341,8 @@ convColRhs tableQual = \case
     -- Convert the where clause on the relationship
     curVarNum <- get
     put $ curVarNum + 1
-    let newIden  = Iden $ "_be_" <> T.pack (show curVarNum) <> "_"
-                   <> snakeCaseQualObject relTN
+    let newIden  = Identifier $ "_be_" <> T.pack (show curVarNum) <> "_"
+                   <> snakeCaseQualifiedObject relTN
         newIdenQ = S.QualIden newIden Nothing
     annRelBoolExp <- convBoolRhs' newIdenQ nesAnn
     let backCompExp = foldr (S.BEBin S.AndOp) (S.BELit True) $
@@ -351,7 +353,7 @@ convColRhs tableQual = \case
         innerBoolExp = S.BEBin S.AndOp backCompExp annRelBoolExp
     return $ S.mkExists (S.FISimple relTN $ Just $ S.Alias newIden) innerBoolExp
   where
-    mkQCol q = S.SEQIden . S.QIden q . toIden
+    mkQCol q = S.SEQIden . S.QIden q . toIdentifier
 
 foldExists :: GExists AnnBoolExpFldSQL -> State Word64 S.BoolExp
 foldExists (GExists qt wh) = do
@@ -379,8 +381,8 @@ mkFieldCompExp
   :: S.Qual -> FieldName -> OpExpG S.SQLExp -> S.BoolExp
 mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
   where
-    mkQCol = S.SEQIden . S.QIden qual . toIden
-    mkQField = S.SEQIden . S.QIden qual . Iden . getFieldNameTxt
+    mkQCol = S.SEQIden . S.QIden qual . toIdentifier
+    mkQField = S.SEQIden . S.QIden qual . Identifier . getFieldNameTxt
 
     mkCompExp :: S.SQLExp -> OpExpG S.SQLExp -> S.BoolExp
     mkCompExp lhs = \case

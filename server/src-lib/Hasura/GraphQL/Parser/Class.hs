@@ -16,6 +16,7 @@ import {-# SOURCE #-} Hasura.GraphQL.Parser.Internal.Parser
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Table                (TableCache, TableInfo)
 import           Hasura.Session                        (RoleName)
+import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 {- Note [Tying the knot]

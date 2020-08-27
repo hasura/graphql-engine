@@ -115,11 +115,24 @@ module Hasura.RQL.Types.SchemaCache
   , CronTriggerInfo(..)
   ) where
 
+import           Hasura.Prelude
+
+import qualified Data.ByteString.Lazy              as BL
+import qualified Data.HashMap.Strict               as M
+import qualified Data.HashSet                      as HS
+import qualified Data.Text                         as T
+import qualified Language.GraphQL.Draft.Syntax     as G
+
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
+import           System.Cron.Types
+
+import qualified Hasura.GraphQL.Parser             as P
+
 import           Hasura.Db
 import           Hasura.GraphQL.Context            (GQLContext, RoleContext)
-import qualified Hasura.GraphQL.Parser             as P
 import           Hasura.Incremental                (Dependency, MonadDepend (..), selectKeyD)
-import           Hasura.Prelude
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
@@ -132,24 +145,15 @@ import           Hasura.RQL.Types.Metadata
 --import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
-
 import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Table
 import           Hasura.Session
+import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 import           Hasura.Tracing                    (TraceT)
 
-import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
-import           System.Cron.Types
 
-import qualified Data.ByteString.Lazy              as BL
-import qualified Data.HashMap.Strict               as M
-import qualified Data.HashSet                      as HS
-import qualified Data.Text                         as T
-import qualified Language.GraphQL.Draft.Syntax     as G
 
 reportSchemaObjs :: [SchemaObjId] -> T.Text
 reportSchemaObjs = T.intercalate ", " . sort . map reportSchemaObj

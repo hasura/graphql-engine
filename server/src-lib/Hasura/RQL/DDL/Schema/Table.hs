@@ -43,8 +43,8 @@ import           Network.URI.Extended               ()
 import qualified Hasura.Incremental                 as Inc
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Schema.Common       (textToName)
 import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Schema.Common       (textToName)
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Catalog
@@ -54,6 +54,8 @@ import           Hasura.RQL.DDL.Schema.Rename
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.Server.Utils
+import           Hasura.SQL.Builder
+import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 
@@ -165,7 +167,7 @@ trackExistingTableOrViewP2 tableName isEnum config = do
   tables, and then clicking "track all" in the console.  Curiously, this high
   memory usage happens even when no substantial GraphQL schema is generated.
   -}
-  checkConflictingNode sc $ snakeCaseQualObject tableName
+  checkConflictingNode sc $ snakeCaseQualifiedObject tableName
   saveTableToCatalog tableName isEnum config
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
@@ -271,7 +273,7 @@ processTableChanges ti tableDiff = do
         procAlteredCols sc tn
 
       withNewTabName newTN = do
-        let tnGQL = snakeCaseQualObject newTN
+        let tnGQL = snakeCaseQualifiedObject newTN
         -- check for GraphQL schema conflicts on new name
         checkConflictingNode sc tnGQL
         procAlteredCols sc tn
@@ -493,6 +495,6 @@ buildTableCache = Inc.cache proc (catalogTables, reloadMetadataInvalidationKey) 
       flip Map.traverseWithKey (Map.groupOn pgiName columns) \name columnsWithName ->
         case columnsWithName of
           one:two:more -> throw400 AlreadyExists $ "the definitions of columns "
-            <> englishList "and" (dquoteTxt . pgiColumn <$> (one:|two:more))
+            <> englishList "and" (toTxt . pgiColumn <$> (one:|two:more))
             <> " are in conflict: they are mapped to the same field name, " <>> name
           _ -> pure ()

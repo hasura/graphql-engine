@@ -36,8 +36,8 @@ import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Error
 import           Hasura.Session
+import           Hasura.SQL.Builder
 import           Hasura.SQL.Error
-import           Hasura.SQL.Types
 
 import qualified Hasura.SQL.DML               as S
 import qualified Hasura.Tracing               as Tracing
@@ -143,7 +143,7 @@ setHeadersTx session = do
   Q.unitQE defaultTxErrorHandler setSess () False
   where
     setSess = Q.fromText $
-      "SET LOCAL \"hasura.user\" = " <> toSQLTxt (sessionInfoJsonExp session)
+      "SET LOCAL \"hasura.user\" = " <> unsafeToSQLTxt (sessionInfoJsonExp session)
 
 sessionInfoJsonExp :: SessionVariables -> S.SQLExp
 sessionInfoJsonExp = S.SELit . J.encodeToStrictText
@@ -200,11 +200,11 @@ withTraceContext
 withTraceContext ctx = \case
   LTErr e  -> LTErr e
   LTNoTx a -> LTNoTx a
-  LTTx tx  -> 
+  LTTx tx  ->
     let sql = Q.fromText $
-          "SET LOCAL \"hasura.tracecontext\" = " <> 
-            toSQLTxt (S.SELit . J.encodeToStrictText . Tracing.injectEventContext $ ctx)
-        setTraceContext = 
+          "SET LOCAL \"hasura.tracecontext\" = " <>
+            unsafeToSQLTxt (S.SELit . J.encodeToStrictText . Tracing.injectEventContext $ ctx)
+        setTraceContext =
           Q.unitQE defaultTxErrorHandler sql () False
      in LTTx $ setTraceContext >> tx
 

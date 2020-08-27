@@ -28,6 +28,8 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Schema.Insert
 import           Hasura.RQL.Types
 import           Hasura.Server.Version          (HasVersion)
+import           Hasura.SQL.Builder
+import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
@@ -129,7 +131,7 @@ insertMultipleObjects env multiObjIns additionalColumns rjCtx mutationOutput pla
           columnValues = mapMaybe snd insertRequests
       selectExpr <- RQL.mkSelCTEFromColVals table columnInfos columnValues
       let (mutOutputRJ, remoteJoins) = RQL.getRemoteJoinsMutationOutput mutationOutput
-          sqlQuery = Q.fromBuilder $ toSQL $
+          sqlQuery = Q.fromText $ unsafeToSQLTxt $
                      RQL.mkMutationOutputExp table columnInfos (Just affectedRows) selectExpr mutOutputRJ stringifyNum
       RQL.executeMutationOutputQuery env sqlQuery [] $ (,rjCtx) <$> remoteJoins
 

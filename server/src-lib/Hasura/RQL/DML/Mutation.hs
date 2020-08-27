@@ -11,15 +11,15 @@ where
 
 import           Hasura.Prelude
 
-import qualified Data.Environment          as Env
-import qualified Data.HashMap.Strict       as Map
-import qualified Data.Sequence             as DS
-import qualified Database.PG.Query         as Q
-import qualified Network.HTTP.Client       as HTTP
-import qualified Network.HTTP.Types        as N
+import qualified Data.Environment               as Env
+import qualified Data.HashMap.Strict            as Map
+import qualified Data.Sequence                  as DS
+import qualified Database.PG.Query              as Q
+import qualified Network.HTTP.Client            as HTTP
+import qualified Network.HTTP.Types             as N
 
-import qualified Hasura.SQL.DML            as S
-import qualified Hasura.Tracing            as Tracing
+import qualified Hasura.SQL.DML                 as S
+import qualified Hasura.Tracing                 as Tracing
 
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
@@ -30,9 +30,11 @@ import           Hasura.RQL.DML.Select
 import           Hasura.RQL.Instances           ()
 import           Hasura.RQL.Types
 import           Hasura.Server.Version          (HasVersion)
+import           Hasura.Session
+import           Hasura.SQL.Builder
+import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-import           Hasura.Session
 
 type MutationRemoteJoinCtx = (HTTP.Manager, [N.Header], UserInfo)
 
@@ -86,7 +88,7 @@ mutateAndReturn
 mutateAndReturn env (Mutation qt (cte, p) mutationOutput allCols remoteJoins strfyNum) =
   executeMutationOutputQuery env sqlQuery (toList p) remoteJoins
   where
-    sqlQuery = Q.fromBuilder $ toSQL $
+    sqlQuery = Q.fromText $ unsafeToSQLTxt $
                mkMutationOutputExp qt allCols Nothing cte mutationOutput strfyNum
 
 {- Note: [Prepared statements in Mutations]
@@ -119,7 +121,7 @@ mutateAndSel env (Mutation qt q mutationOutput allCols remoteJoins strfyNum) = d
   selCTE <- mkSelCTEFromColVals qt allCols columnVals
   let selWith = mkMutationOutputExp qt allCols Nothing selCTE mutationOutput strfyNum
   -- Perform select query and fetch returning fields
-  executeMutationOutputQuery env (Q.fromBuilder $ toSQL selWith) [] remoteJoins
+  executeMutationOutputQuery env (Q.fromText $ unsafeToSQLTxt selWith) [] remoteJoins
 
 executeMutationOutputQuery
   ::
@@ -150,15 +152,15 @@ mutateAndFetchCols
 mutateAndFetchCols qt cols (cte, p) strfyNum =
   Q.getAltJ . runIdentity . Q.getRow
     -- See Note [Prepared statements in Mutations]
-    <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sql) (toList p) False
+    <$> Q.rawQE dmlTxErrorHandler (Q.fromText sql) (toList p) False
   where
-    aliasIden = Iden $ qualObjectToText qt <> "__mutation_result"
+    aliasIden = Identifier $ qualifiedObjectToText qt <> "__mutation_result"
     tabFrom = FromIden aliasIden
     tabPerm = TablePerm annBoolExpTrue Nothing
     selFlds = flip map cols $
               \ci -> (fromPGCol $ pgiColumn ci, mkAnnColumnFieldAsText ci)
 
-    sql = toSQL selectWith
+    sql = unsafeToSQLTxt selectWith
     selectWith = S.SelectWith [(S.Alias aliasIden, cte)] select
     select = S.mkSelect {S.selExtr = [S.Extractor extrExp Nothing]}
     extrExp = S.applyJsonBuildObj
@@ -192,8 +194,8 @@ mkSelCTEFromColVals qt allCols colVals =
         , S.selFrom = Just $ S.FromExp [fromItem]
         }
   where
-    rowAlias = Iden "row"
-    extractor = S.selectStar' $ S.QualIden rowAlias $ Just $ S.TypeAnn $ toSQLTxt qt
+    rowAlias = Identifier "row"
+    extractor = S.selectStar' $ S.QualIden rowAlias $ Just $ S.TypeAnn $ unsafeToSQLTxt qt
     sortedCols = sortCols allCols
     mkTupsFromColVal colVal =
       fmap S.TupleExp $ forM sortedCols $ \ci -> do

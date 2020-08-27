@@ -30,7 +30,9 @@ import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.Types.Column               hiding (EnumValue (..), EnumValueInfo (..))
 import           Hasura.RQL.Types.Error
 import           Hasura.Session                        (SessionVariable)
+import           Hasura.SQL.Builder
 import           Hasura.SQL.DML
+import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
@@ -149,6 +151,6 @@ mkScalarTypeName PGBoolean  = pure RQL.boolScalar
 mkScalarTypeName PGFloat    = pure RQL.floatScalar
 mkScalarTypeName PGText     = pure RQL.stringScalar
 mkScalarTypeName PGVarchar  = pure RQL.stringScalar
-mkScalarTypeName scalarType = mkName (toSQLTxt scalarType) `onNothing` throw400 ValidationFailed
+mkScalarTypeName scalarType = mkName (unsafeToSQLTxt scalarType) `onNothing` throw400 ValidationFailed
   ("cannot use SQL type " <> scalarType <<> " in the GraphQL schema because its name is not a "
   <> "valid GraphQL identifier")

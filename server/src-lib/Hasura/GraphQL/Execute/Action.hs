@@ -54,6 +54,8 @@ import           Hasura.RQL.Types.Run
 import           Hasura.Server.Utils                  (mkClientHeadersForward, mkSetCookieHeaders)
 import           Hasura.Server.Version                (HasVersion)
 import           Hasura.Session
+import           Hasura.SQL.Builder
+import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value                     (PGScalarValue (..), toTxtValue)
 
@@ -174,11 +176,11 @@ resolveActionExecution env logger userInfo annAction execContext = do
           jsonAggType = mkJsonAggSelect outputType
       case maybeRemoteJoins of
         Just remoteJoins ->
-          let query = Q.fromBuilder $ toSQL $
+          let query = Q.fromText $ unsafeToSQLTxt $
                       RS.mkSQLSelect jsonAggType astResolvedWithoutRemoteJoins
           in RJ.executeQueryWithRemoteJoins env manager reqHeaders userInfo query [] remoteJoins
         Nothing ->
-          liftTx $ asSingleRowJsonResp (Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved) []
+          liftTx $ asSingleRowJsonResp (Q.fromText $ unsafeToSQLTxt $ RS.mkSQLSelect jsonAggType astResolved) []
 
 {- Note: [Async action architecture]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -241,7 +243,7 @@ resolveAsyncActionQuery userInfo annAction =
         AsyncTypename t -> RS.AFExpression t
         AsyncOutput annFields ->
           -- See Note [Resolving async action query/subscription]
-          let inputTableArgument = RS.AETableRow $ Just $ Iden "response_payload"
+          let inputTableArgument = RS.AETableRow $ Just $ Identifier "response_payload"
               jsonAggSelect = mkJsonAggSelect outputType
           in RS.AFComputedField $ RS.CFSTable jsonAggSelect $
              processOutputSelectionSet inputTableArgument outputType

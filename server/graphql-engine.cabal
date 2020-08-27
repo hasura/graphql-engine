@@ -425,7 +425,9 @@ library
                      , Hasura.RQL.DML.Count
                      , Hasura.RQL.GBoolExp
                      , Hasura.Sources
+                     , Hasura.Sources.Postgres.SQLBuilder
                      , Hasura.Sources.MySQL.Query
+                     , Hasura.Sources.MySQL.SQLBuilder
                      , Hasura.GraphQL.Explain
                      , Hasura.GraphQL.Execute.Action
                      , Hasura.GraphQL.Execute.Inline
@@ -466,10 +468,12 @@ library
                      , Hasura.Eventing.Common
                      , Data.GADT.Compare.Extended
                      , Data.Tuple.Extended
+                     , Hasura.SQL.Builder
                      , Hasura.SQL.DML
                      , Hasura.SQL.Error
                      , Hasura.SQL.GeoJSON
                      , Hasura.SQL.Rewrite
+                     , Hasura.SQL.Text
                      , Hasura.SQL.Time
                      , Hasura.SQL.Types
                      , Hasura.SQL.Value

@@ -14,6 +14,17 @@ module Hasura.RQL.DDL.ComputedField
 
 import           Hasura.Prelude
 
+import qualified Control.Monad.Validate             as MV
+import qualified Data.HashSet                       as S
+import qualified Data.Sequence                      as Seq
+import qualified Database.PG.Query                  as Q
+import qualified Language.GraphQL.Draft.Syntax      as G
+
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
+import           Language.Haskell.TH.Syntax         (Lift)
+
 import           Hasura.EncJSON
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.DDL.Deps
@@ -21,18 +32,10 @@ import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Schema.Function     (RawFunctionInfo (..), mkFunctionArgs)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                (makeReasonMessage)
+import           Hasura.SQL.Builder
+import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
-import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax         (Lift)
-
-import qualified Control.Monad.Validate             as MV
-import qualified Data.HashSet                       as S
-import qualified Data.Sequence                      as Seq
-import qualified Database.PG.Query                  as Q
-import qualified Language.GraphQL.Draft.Syntax      as G
 
 data ComputedFieldDefinition
   = ComputedFieldDefinition
@@ -99,7 +102,7 @@ showError qf = \case
   CFVEInvalidSessionArgument (ISANotJSON functionArg) ->
     showFunctionSessionArgument functionArg <> " is not of type JSON"
   CFVENotBaseReturnType scalarType ->
-    "the function " <> qf <<> " returning type " <> toSQLTxt scalarType
+    "the function " <> qf <<> " returning type " <> unsafeToSQLTxt scalarType
     <> " is not a BASE type"
   CFVEReturnTableNotFound table ->
     "the function " <> qf <<> " returning set of table " <> table

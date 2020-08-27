@@ -6,6 +6,8 @@ module Hasura.RQL.DML.Count
   , countQToTx
   ) where
 
+import           Hasura.Prelude
+
 import           Data.Aeson
 import           Instances.TH.Lift       ()
 
@@ -13,10 +15,10 @@ import qualified Data.ByteString.Builder as BB
 import qualified Data.Sequence           as DS
 
 import           Hasura.EncJSON
-import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
+import           Hasura.SQL.Builder
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query       as Q
@@ -110,10 +112,10 @@ countQToTx
   => (CountQueryP1, DS.Seq Q.PrepArg) -> m EncJSON
 countQToTx (u, p) = do
   qRes <- liftTx $ Q.rawQE dmlTxErrorHandler
-          (Q.fromBuilder countSQL) (toList p) True
+          (Q.fromText countSQL) (toList p) True
   return $ encJFromBuilder $ encodeCount qRes
   where
-    countSQL = toSQL $ mkSQLCount u
+    countSQL = unsafeToSQLTxt $ mkSQLCount u
     encodeCount (Q.SingleRow (Identity c)) =
       BB.byteString "{\"count\":" <> BB.intDec c <> BB.char7 '}'
 

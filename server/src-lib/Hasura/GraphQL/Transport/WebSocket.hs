@@ -354,7 +354,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         E.ExecStepPostgres (tx, genSql) -> Tracing.trace "Query" $
           execQueryOrMut timerTot Telem.Query telemCacheHit (Just genSql) requestId $
             fmap snd $ Tracing.interpTraceT id $ executeQuery reqParsed asts (Just genSql) pgExecCtx Q.ReadOnly tx
-        E.ExecStepMySQL bs -> error "Implement me please."
+        E.ExecStepMySQL _ -> error "Implement me please."
         E.ExecStepRemote (rsi, opDef, _varValsM) ->
           runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
         E.ExecStepRaw (name, json) ->

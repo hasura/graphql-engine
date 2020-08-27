@@ -57,8 +57,8 @@ import           Hasura.Incremental         (Cacheable)
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.Session
+import           Hasura.SQL.Builder
 import           Hasura.SQL.Types
-
 
 
 data GExists a
@@ -369,7 +369,7 @@ mkTypedSessionVar columnType =
 instance ToJSON PartialSQLExp where
   toJSON = \case
     PSESessVar colTy sessVar -> toJSON (colTy, sessVar)
-    PSESQLExp e -> toJSON $ toSQLTxt e
+    PSESQLExp e -> toJSON $ unsafeToSQLTxt e
 
 instance ToJSON AnnBoolExpPartialSQL where
   toJSON = gBoolExpToJSON f

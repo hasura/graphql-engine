@@ -15,6 +15,7 @@ import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
 import           Hasura.SQL.DML
+import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 

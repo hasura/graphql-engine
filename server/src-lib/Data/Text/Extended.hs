@@ -1,5 +1,6 @@
 module Data.Text.Extended
        ( module DT
+       , bquote
        , squote
        , dquote
        , paren
@@ -8,7 +9,11 @@ module Data.Text.Extended
 
 import           Hasura.Prelude
 
-import           Data.Text as DT
+import           Data.Text      as DT
+
+bquote :: DT.Text -> DT.Text
+bquote t = DT.singleton '`' <> t <> DT.singleton '`'
+{-# INLINE bquote #-}
 
 squote :: DT.Text -> DT.Text
 squote t = DT.singleton '\'' <> t <> DT.singleton '\''

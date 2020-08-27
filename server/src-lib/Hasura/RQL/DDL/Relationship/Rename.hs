@@ -7,6 +7,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Relationship.Types
 import           Hasura.RQL.DDL.Schema             (renameRelInCatalog)
 import           Hasura.RQL.Types
+import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 import qualified Data.HashMap.Strict               as Map

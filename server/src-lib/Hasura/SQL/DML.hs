@@ -1,25 +1,21 @@
 module Hasura.SQL.DML where
 
-import           Hasura.Incremental         (Cacheable)
-import           Hasura.Prelude
-import           Hasura.SQL.Types
 
-import           Data.String                (fromString)
-import           Language.Haskell.TH.Syntax (Lift)
+import           Hasura.Prelude
 
 import qualified Data.Aeson                 as J
 import qualified Data.HashMap.Strict        as HM
 import qualified Data.Text.Extended         as T
 import qualified Text.Builder               as TB
 
-infixr 6 <->
-(<->) :: TB.Builder -> TB.Builder -> TB.Builder
-(<->) l r = l <> TB.char ' ' <> r
-{-# INLINE (<->) #-}
+import           Data.String                (fromString)
+import           Language.Haskell.TH.Syntax (Lift)
 
-paren :: TB.Builder -> TB.Builder
-paren t = TB.char '(' <> t <> TB.char ')'
-{-# INLINE paren #-}
+import           Hasura.Incremental         (Cacheable)
+import           Hasura.SQL.Builder
+import           Hasura.SQL.Types
+
+
 
 data Select
   = Select
@@ -40,30 +36,75 @@ instance NFData Select
 instance Cacheable Select
 instance Hashable Select
 
+instance ToSQL Select where
+  toSQL b sel = case selCTEs sel of
+    [] -> "SELECT"
+      <-> toSQL b (selDistinct sel)
+      <-> commaSeparated (toSQL b <$> selExtr sel)
+      <-> toSQL b (selFrom sel)
+      <-> toSQL b (selWhere sel)
+      <-> toSQL b (selGroupBy sel)
+      <-> toSQL b (selHaving sel)
+      <-> toSQL b (selOrderBy sel)
+      <-> toSQL b (selLimit sel)
+      <-> toSQL b (selOffset sel)
+    -- reuse SelectWith if there are any CTEs, since the generated SQL is the same
+    ctes -> toSQL b $ SelectWith (map (CTESelect <$>) ctes) sel { selCTEs = [] }
+
 mkSelect :: Select
 mkSelect = Select [] Nothing [] Nothing
            Nothing Nothing Nothing
            Nothing Nothing Nothing
+
 
 newtype LimitExp
   = LimitExp SQLExp
   deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 instance ToSQL LimitExp where
-  toSQL (LimitExp se) =
-    "LIMIT" <-> toSQL se
+  toSQL b (LimitExp se) =
+    "LIMIT" <-> toSQL b se
+
 
 newtype OffsetExp
   = OffsetExp SQLExp
   deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 instance ToSQL OffsetExp where
-  toSQL (OffsetExp se) =
-    "OFFSET" <-> toSQL se
+  toSQL b (OffsetExp se) =
+    "OFFSET" <-> toSQL b se
+
+
+newtype GroupByExp
+  = GroupByExp [SQLExp]
+  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
+
+instance ToSQL GroupByExp where
+  toSQL b (GroupByExp idens) =
+    "GROUP BY" <-> commaSeparated (toSQL b <$> idens)
+
 
 newtype OrderByExp
   = OrderByExp (NonEmpty OrderByItem)
   deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
+
+instance ToSQL OrderByExp where
+  toSQL b (OrderByExp l) =
+    "ORDER BY" <-> commaSeparated (toSQL b <$> toList l)
+
+
+data DistinctExpr
+  = DistinctSimple
+  | DistinctOn ![SQLExp]
+  deriving (Show, Eq, Generic, Data)
+instance NFData DistinctExpr
+instance Cacheable DistinctExpr
+instance Hashable DistinctExpr
+
+instance ToSQL DistinctExpr where
+  toSQL _ DistinctSimple    = "DISTINCT"
+  toSQL b (DistinctOn exps) = "DISTINCT ON" <-> paren (commaSeparated $ toSQL b <$> exps)
+
 
 data OrderByItem
   = OrderByItem
@@ -76,8 +117,9 @@ instance Cacheable OrderByItem
 instance Hashable OrderByItem
 
 instance ToSQL OrderByItem where
-  toSQL (OrderByItem e ot no) =
-    toSQL e <-> toSQL ot <-> toSQL no
+  toSQL b (OrderByItem e ot no) =
+    toSQL b e <-> toSQL b ot <-> toSQL b no
+
 
 data OrderType = OTAsc | OTDesc
   deriving (Show, Eq, Lift, Generic, Data)
@@ -86,8 +128,9 @@ instance Cacheable OrderType
 instance Hashable OrderType
 
 instance ToSQL OrderType where
-  toSQL OTAsc  = "ASC"
-  toSQL OTDesc = "DESC"
+  toSQL _ OTAsc  = "ASC"
+  toSQL _ OTDesc = "DESC"
+
 
 data NullsOrder
   = NFirst
@@ -98,32 +141,21 @@ instance Cacheable NullsOrder
 instance Hashable NullsOrder
 
 instance ToSQL NullsOrder where
-  toSQL NFirst = "NULLS FIRST"
-  toSQL NLast  = "NULLS LAST"
+  toSQL _ NFirst = "NULLS FIRST"
+  toSQL _ NLast  = "NULLS LAST"
 
-instance ToSQL OrderByExp where
-  toSQL (OrderByExp l) =
-    "ORDER BY" <-> (", " <+> toList l)
-
-newtype GroupByExp
-  = GroupByExp [SQLExp]
-  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
-
-instance ToSQL GroupByExp where
-  toSQL (GroupByExp idens) =
-    "GROUP BY" <-> (", " <+> idens)
 
 newtype FromExp
   = FromExp [FromItem]
   deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 instance ToSQL FromExp where
-  toSQL (FromExp items) =
-    "FROM" <-> (", " <+> items)
+  toSQL b (FromExp items) =
+    "FROM" <-> commaSeparated (toSQL b <$> items)
 
-mkIdenFromExp :: (IsIden a) => a -> FromExp
-mkIdenFromExp a =
-  FromExp [FIIden $ toIden a]
+mkIdentifierFromExp :: (IsIdentifier a) => a -> FromExp
+mkIdentifierFromExp a =
+  FromExp [FIIden $ toIdentifier a]
 
 mkSimpleFromExp :: QualifiedTable -> FromExp
 mkSimpleFromExp qt =
@@ -133,66 +165,32 @@ mkSelFromExp :: Bool -> Select -> TableName -> FromItem
 mkSelFromExp isLateral sel tn =
   FISelect (Lateral isLateral) sel alias
   where
-    alias = Alias $ toIden tn
+    alias = Alias $ toIdentifier tn
 
 mkFuncFromItem :: QualifiedFunction -> FunctionArgs -> FromItem
 mkFuncFromItem qf args = FIFunc $ FunctionExp qf args Nothing
 
-mkRowExp :: [Extractor] -> SQLExp
-mkRowExp extrs = let
-  innerSel = mkSelect { selExtr = extrs }
-
-  innerSelName = TableName "e"
-
-  -- SELECT r FROM (SELECT col1, col2, .. ) AS r
-  outerSel = mkSelect
-             { selExtr = [Extractor (SERowIden $ toIden innerSelName) Nothing]
-             , selFrom = Just $ FromExp
-                         [mkSelFromExp False innerSel innerSelName]
-             }
-  in
-    SESelect outerSel
 
 newtype HavingExp
   = HavingExp BoolExp
   deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 instance ToSQL HavingExp where
-  toSQL (HavingExp be) =
-    "HAVING" <-> toSQL be
+  toSQL b (HavingExp be) =
+    "HAVING" <-> toSQL b be
+
 
 newtype WhereFrag
   = WhereFrag { getWFBoolExp :: BoolExp }
   deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 instance ToSQL WhereFrag where
-  toSQL (WhereFrag be) =
-    "WHERE" <-> paren (toSQL be)
+  toSQL b (WhereFrag be) =
+    "WHERE" <-> paren (toSQL b be)
 
-instance ToSQL Select where
-  toSQL sel = case selCTEs sel of
-    [] -> "SELECT"
-      <-> toSQL (selDistinct sel)
-      <-> (", " <+> selExtr sel)
-      <-> toSQL (selFrom sel)
-      <-> toSQL (selWhere sel)
-      <-> toSQL (selGroupBy sel)
-      <-> toSQL (selHaving sel)
-      <-> toSQL (selOrderBy sel)
-      <-> toSQL (selLimit sel)
-      <-> toSQL (selOffset sel)
-    -- reuse SelectWith if there are any CTEs, since the generated SQL is the same
-    ctes -> toSQL $ SelectWith (map (CTESelect <$>) ctes) sel { selCTEs = [] }
-
-
-mkSIdenExp :: (IsIden a) => a -> SQLExp
-mkSIdenExp = SEIden . toIden
-
-mkQIdenExp :: (IsIden a, IsIden b) => a -> b -> SQLExp
-mkQIdenExp q t = SEQIden $ mkQIden q t
 
 data Qual
-  = QualIden !Iden !(Maybe TypeAnn)
+  = QualIden !Identifier !(Maybe TypeAnn)
   | QualTable !QualifiedTable
   | QualVar !T.Text
   deriving (Show, Eq, Generic, Data)
@@ -200,27 +198,29 @@ instance NFData Qual
 instance Cacheable Qual
 instance Hashable Qual
 
+instance ToSQL Qual where
+  toSQL b (QualIden i tyM) = toSQL b i <> toSQL b tyM
+  toSQL b (QualTable qt)   = toSQL b qt
+  toSQL _ (QualVar v)      = TB.text v
+
 mkQual :: QualifiedTable -> Qual
 mkQual = QualTable
 
-instance ToSQL Qual where
-  toSQL (QualIden i tyM) = toSQL i <> toSQL tyM
-  toSQL (QualTable qt)   = toSQL qt
-  toSQL (QualVar v)      = TB.text v
-
-mkQIden :: (IsIden a, IsIden b) => a -> b -> QIden
-mkQIden q t = QIden (QualIden (toIden q) Nothing) (toIden t)
 
 data QIden
-  = QIden !Qual !Iden
+  = QIden !Qual !Identifier
   deriving (Show, Eq, Generic, Data)
 instance NFData QIden
 instance Cacheable QIden
 instance Hashable QIden
 
 instance ToSQL QIden where
-  toSQL (QIden qual iden) =
-    mconcat [toSQL qual, TB.char '.', toSQL iden]
+  toSQL b (QIden qual iden) =
+    mconcat [toSQL b qual, TB.char '.', toSQL b iden]
+
+mkQIden :: (IsIdentifier a, IsIdentifier b) => a -> b -> QIden
+mkQIden q t = QIden (QualIden (toIdentifier q) Nothing) (toIdentifier t)
+
 
 newtype SQLOp
   = SQLOp {sqlOpTxt :: T.Text}
@@ -244,15 +244,17 @@ jsonbDeleteOp = SQLOp "-"
 jsonbDeleteAtPathOp :: SQLOp
 jsonbDeleteAtPathOp = SQLOp "#-"
 
+
+-- FIXME: preserve type information before generating to SQL
 newtype TypeAnn
   = TypeAnn { unTypeAnn :: T.Text }
   deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 instance ToSQL TypeAnn where
-  toSQL (TypeAnn ty) = "::" <> TB.text ty
+  toSQL _ (TypeAnn ty) = "::" <> TB.text ty
 
 mkTypeAnn :: PGType PGScalarType -> TypeAnn
-mkTypeAnn = TypeAnn . toSQLTxt
+mkTypeAnn = TypeAnn . unsafeToSQLTxt
 
 intTypeAnn :: TypeAnn
 intTypeAnn = mkTypeAnn $ PGTypeScalar PGInteger
@@ -275,6 +277,7 @@ jsonbTypeAnn = mkTypeAnn $ PGTypeScalar PGJSONB
 boolTypeAnn :: TypeAnn
 boolTypeAnn = mkTypeAnn $ PGTypeScalar PGBoolean
 
+
 data CountType
   = CTStar
   | CTSimple ![PGCol]
@@ -285,19 +288,18 @@ instance Cacheable CountType
 instance Hashable CountType
 
 instance ToSQL CountType where
-  toSQL CTStar            = "*"
-  toSQL (CTSimple cols)   =
-    paren $ ", " <+> cols
-  toSQL (CTDistinct cols) =
-    "DISTINCT" <-> paren (", " <+> cols)
+  toSQL _ CTStar            = "*"
+  toSQL b (CTSimple cols)   = paren $ commaSeparated (toSQL b <$> cols)
+  toSQL b (CTDistinct cols) = "DISTINCT" <-> paren (commaSeparated $ toSQL b <$> cols)
+
 
 newtype TupleExp
   = TupleExp [SQLExp]
   deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 instance ToSQL TupleExp where
-  toSQL (TupleExp exps) =
-    paren $ ", " <+> exps
+  toSQL b (TupleExp exps) = paren $ commaSeparated $ toSQL b <$> exps
+
 
 data SQLExp
   = SEPrep !Int
@@ -307,105 +309,90 @@ data SQLExp
   | SESelect !Select
   | SEStar !(Maybe Qual)
   -- ^ all fields (@*@) or all fields from relation (@iden.*@)
-  | SEIden !Iden
+  | SEIden !Identifier
   -- iden and row identifier are distinguished for easier rewrite rules
-  | SERowIden !Iden
+  | SERowIden !Identifier
   | SEQIden !QIden
   | SEFnApp !T.Text ![SQLExp] !(Maybe OrderByExp)
   | SEOpApp !SQLOp ![SQLExp]
   | SETyAnn !SQLExp !TypeAnn
   | SECond !BoolExp !SQLExp !SQLExp
   | SEBool !BoolExp
-  | SEExcluded !Iden
+  | SEExcluded !Identifier
   | SEArray ![SQLExp]
   | SEArrayIndex !SQLExp !SQLExp
   | SETuple !TupleExp
   | SECount !CountType
-  | SENamedArg !Iden !SQLExp
+  | SENamedArg !Identifier !SQLExp
   | SEFunction !FunctionExp
   deriving (Show, Eq, Generic, Data)
 instance NFData SQLExp
 instance Cacheable SQLExp
 instance Hashable SQLExp
 
+instance J.ToJSON SQLExp where
+  toJSON = J.toJSON . unsafeToSQLTxt
+
+instance ToSQL SQLExp where
+  toSQL _ (SEPrep argNumber) =
+    TB.char '$' <> fromString (show argNumber)
+  toSQL _ SENull =
+    TB.text "NULL"
+  toSQL b (SELit tv) =
+    sqlbLiteral b tv
+  toSQL _ (SEUnsafe t) =
+    TB.text t
+  toSQL b (SESelect se) =
+    paren $ toSQL b se
+  toSQL _ (SEStar Nothing) =
+    TB.char '*'
+  toSQL b (SEStar (Just qual)) =
+    mconcat [paren (toSQL b qual), TB.char '.', TB.char '*']
+  toSQL b (SEIden iden) =
+    toSQL b iden
+  toSQL b (SERowIden iden) =
+    toSQL b iden
+  toSQL b (SEQIden qIden) =
+    toSQL b qIden
+  -- https://www.postgresql.org/docs/10/static/sql-expressions.html#SYNTAX-AGGREGATES
+  toSQL b (SEFnApp name args mObe) =
+    TB.text name <> paren (commaSeparated (toSQL b <$> args) <-> toSQL b mObe)
+  toSQL b (SEOpApp op args) =
+     paren $ TB.intercalate (TB.text $ sqlOpTxt op) $ toSQL b <$> args
+  toSQL b (SETyAnn e ty) =
+     paren (toSQL b e) <> toSQL b ty
+  toSQL b (SECond cond te fe) =
+    "CASE WHEN" <-> toSQL b cond <->
+    "THEN" <-> toSQL b te <->
+    "ELSE" <-> toSQL b fe <->
+    "END"
+  toSQL b (SEBool be) = toSQL b be
+  toSQL b (SEExcluded i) = "EXCLUDED." <> toSQL b i
+  toSQL b (SEArray exps) = "ARRAY" <> TB.char '[' <> (commaSeparated $ toSQL b <$> exps) <> TB.char ']'
+  toSQL b (SEArrayIndex arrayExp indexExp) =
+    paren (toSQL b arrayExp)
+    <> TB.char '[' <> toSQL b indexExp <> TB.char ']'
+  toSQL b (SETuple tup) = toSQL b tup
+  toSQL b (SECount ty) = "COUNT" <> paren (toSQL b ty)
+  -- https://www.postgresql.org/docs/current/sql-syntax-calling-funcs.html
+  toSQL b (SENamedArg arg val) = toSQL b arg <-> "=>" <-> toSQL b val
+  toSQL b (SEFunction funcExp) = toSQL b funcExp
+
 withTyAnn :: PGScalarType -> SQLExp -> SQLExp
 withTyAnn colTy v = SETyAnn v . mkTypeAnn $ PGTypeScalar colTy
 
-instance J.ToJSON SQLExp where
-  toJSON = J.toJSON . toSQLTxt
+mkSIdenExp :: (IsIdentifier a) => a -> SQLExp
+mkSIdenExp = SEIden . toIdentifier
 
-newtype Alias
-  = Alias { getAlias :: Iden }
-  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
-
-instance IsIden Alias where
-  toIden (Alias iden) = iden
-
-instance ToSQL Alias where
-  toSQL (Alias iden) = "AS" <-> toSQL iden
-
-toAlias :: (IsIden a) => a -> Alias
-toAlias = Alias . toIden
+mkQIdenExp :: (IsIdentifier a, IsIdentifier b) => a -> b -> SQLExp
+mkQIdenExp q t = SEQIden $ mkQIden q t
 
 countStar :: SQLExp
 countStar = SECount CTStar
 
-instance ToSQL SQLExp where
-  toSQL (SEPrep argNumber) =
-    TB.char '$' <> fromString (show argNumber)
-  toSQL SENull =
-    TB.text "NULL"
-  toSQL (SELit tv) =
-    TB.text $ pgFmtLit tv
-  toSQL (SEUnsafe t) =
-    TB.text t
-  toSQL (SESelect se) =
-    paren $ toSQL se
-  toSQL (SEStar Nothing) =
-    TB.char '*'
-  toSQL (SEStar (Just qual)) =
-    mconcat [paren (toSQL qual), TB.char '.', TB.char '*']
-  toSQL (SEIden iden) =
-    toSQL iden
-  toSQL (SERowIden iden) =
-    toSQL iden
-  toSQL (SEQIden qIden) =
-    toSQL qIden
-  -- https://www.postgresql.org/docs/10/static/sql-expressions.html#SYNTAX-AGGREGATES
-  toSQL (SEFnApp name args mObe) =
-    TB.text name <> paren ((", " <+> args)  <-> toSQL mObe)
-  toSQL (SEOpApp op args) =
-     paren (sqlOpTxt op <+> args)
-  toSQL (SETyAnn e ty) =
-     paren (toSQL e) <> toSQL ty
-  toSQL (SECond cond te fe) =
-    "CASE WHEN" <-> toSQL cond <->
-    "THEN" <-> toSQL te <->
-    "ELSE" <-> toSQL fe <->
-    "END"
-  toSQL (SEBool be) = toSQL be
-  toSQL (SEExcluded i) = "EXCLUDED."
-                         <> toSQL i
-  toSQL (SEArray exps) = "ARRAY" <> TB.char '['
-                         <> (", " <+> exps) <> TB.char ']'
-  toSQL (SEArrayIndex arrayExp indexExp) =
-    paren (toSQL arrayExp)
-    <> TB.char '[' <> toSQL indexExp <> TB.char ']'
-  toSQL (SETuple tup) = toSQL tup
-  toSQL (SECount ty) = "COUNT" <> paren (toSQL ty)
-  -- https://www.postgresql.org/docs/current/sql-syntax-calling-funcs.html
-  toSQL (SENamedArg arg val) = toSQL arg <-> "=>" <-> toSQL val
-  toSQL (SEFunction funcExp) = toSQL funcExp
-
 intToSQLExp :: Int -> SQLExp
 intToSQLExp =
   SEUnsafe . T.pack . show
-
-data Extractor = Extractor !SQLExp !(Maybe Alias)
-  deriving (Show, Eq, Generic, Data)
-instance NFData Extractor
-instance Cacheable Extractor
-instance Hashable Extractor
 
 mkSQLOpExp
   :: SQLOp
@@ -413,6 +400,55 @@ mkSQLOpExp
   -> SQLExp -- rhs
   -> SQLExp -- result
 mkSQLOpExp op lhs rhs = SEOpApp op [lhs, rhs]
+
+
+newtype Alias
+  = Alias { getAlias :: Identifier }
+  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
+
+instance IsIdentifier Alias where
+  toIdentifier = getAlias
+  {-# INLINE toIdentifier #-}
+
+instance ToSQL Alias where
+  toSQL b (Alias iden) = "AS" <-> toSQL b iden
+
+toAlias :: (IsIdentifier a) => a -> Alias
+toAlias = Alias . toIdentifier
+
+
+data Extractor = Extractor !SQLExp !(Maybe Alias)
+  deriving (Show, Eq, Generic, Data)
+instance NFData Extractor
+instance Cacheable Extractor
+instance Hashable Extractor
+
+instance ToSQL Extractor where
+  toSQL b (Extractor ce mal) =
+    toSQL b ce <-> toSQL b mal
+
+mkRowExp :: [Extractor] -> SQLExp
+mkRowExp extrs = let
+  innerSel = mkSelect { selExtr = extrs }
+  innerSelName = TableName "e"
+
+  -- SELECT r FROM (SELECT col1, col2, .. ) AS r
+  outerSel = mkSelect
+             { selExtr = [Extractor (SERowIden $ toIdentifier innerSelName) Nothing]
+             , selFrom = Just $ FromExp
+                         [mkSelFromExp False innerSel innerSelName]
+             }
+  in
+    SESelect outerSel
+
+
+buildInsVal :: PGCol -> Int -> (PGCol, SQLExp)
+buildInsVal colName argNumber =
+  (colName, SEPrep argNumber)
+
+toColTupExp :: [PGCol] -> SQLExp
+toColTupExp =
+  SETuple . TupleExp . map (SEIden . Identifier . getPGColTxt)
 
 mkColDefValMap :: [PGCol] -> HM.HashMap PGCol SQLExp
 mkColDefValMap cols =
@@ -436,33 +472,17 @@ applyRowToJson extrs =
 getExtrAlias :: Extractor -> Maybe Alias
 getExtrAlias (Extractor _ ma) = ma
 
-mkAliasedExtr :: (IsIden a, IsIden b) => a -> Maybe b -> Extractor
+mkAliasedExtr :: (IsIdentifier a, IsIdentifier b) => a -> Maybe b -> Extractor
 mkAliasedExtr t = mkAliasedExtrFromExp (mkSIdenExp t)
 
-mkAliasedExtrFromExp :: (IsIden a) => SQLExp -> Maybe a -> Extractor
+mkAliasedExtrFromExp :: (IsIdentifier a) => SQLExp -> Maybe a -> Extractor
 mkAliasedExtrFromExp sqlExp ma = Extractor sqlExp (aliasF <$> ma)
   where
-    aliasF = Alias . toIden
+    aliasF = Alias . toIdentifier
 
-mkExtr :: (IsIden a) => a -> Extractor
+mkExtr :: (IsIdentifier a) => a -> Extractor
 mkExtr t = Extractor (mkSIdenExp t) Nothing
 
-instance ToSQL Extractor where
-  toSQL (Extractor ce mal) =
-    toSQL ce <-> toSQL mal
-
-data DistinctExpr
-  = DistinctSimple
-  | DistinctOn ![SQLExp]
-  deriving (Show, Eq, Generic, Data)
-instance NFData DistinctExpr
-instance Cacheable DistinctExpr
-instance Hashable DistinctExpr
-
-instance ToSQL DistinctExpr where
-  toSQL DistinctSimple    = "DISTINCT"
-  toSQL (DistinctOn exps) =
-    "DISTINCT ON" <-> paren ("," <+> exps)
 
 data FunctionArgs
   = FunctionArgs
@@ -474,10 +494,11 @@ instance Cacheable FunctionArgs
 instance Hashable FunctionArgs
 
 instance ToSQL FunctionArgs where
-  toSQL (FunctionArgs positionalArgs namedArgsMap) =
+  toSQL b (FunctionArgs positionalArgs namedArgsMap) =
     let namedArgs = flip map (HM.toList namedArgsMap) $
-                    \(argName, argVal) -> SENamedArg (Iden argName) argVal
-    in paren $ ", " <+> (positionalArgs <> namedArgs)
+                    \(argName, argVal) -> SENamedArg (Identifier argName) argVal
+    in paren $ commaSeparated $ toSQL b <$> (positionalArgs <> namedArgs)
+
 
 data DefinitionListItem
   = DefinitionListItem
@@ -489,8 +510,9 @@ instance Cacheable DefinitionListItem
 instance Hashable DefinitionListItem
 
 instance ToSQL DefinitionListItem where
-  toSQL (DefinitionListItem column columnType) =
-    toSQL column <-> toSQL columnType
+  toSQL b (DefinitionListItem column columnType) =
+    toSQL b column <-> toSQL b columnType
+
 
 data FunctionAlias
   = FunctionAlias
@@ -501,20 +523,21 @@ instance NFData FunctionAlias
 instance Cacheable FunctionAlias
 instance Hashable FunctionAlias
 
-mkSimpleFunctionAlias :: Iden -> FunctionAlias
+instance ToSQL FunctionAlias where
+  toSQL b (FunctionAlias iden (Just definitionList)) =
+    toSQL b iden <> paren (commaSeparated $ toSQL b <$> definitionList)
+  toSQL b (FunctionAlias iden Nothing) =
+    toSQL b iden
+
+mkSimpleFunctionAlias :: Identifier -> FunctionAlias
 mkSimpleFunctionAlias identifier =
   FunctionAlias (toAlias identifier) Nothing
 
-mkFunctionAlias :: Iden -> Maybe [(PGCol, PGScalarType)] -> FunctionAlias
+mkFunctionAlias :: Identifier -> Maybe [(PGCol, PGScalarType)] -> FunctionAlias
 mkFunctionAlias identifier listM =
   FunctionAlias (toAlias identifier) $
   fmap (map (uncurry DefinitionListItem)) listM
 
-instance ToSQL FunctionAlias where
-  toSQL (FunctionAlias iden (Just definitionList)) =
-    toSQL iden <> paren ( ", " <+> definitionList)
-  toSQL (FunctionAlias iden Nothing) =
-    toSQL iden
 
 data FunctionExp
   = FunctionExp
@@ -527,12 +550,13 @@ instance Cacheable FunctionExp
 instance Hashable FunctionExp
 
 instance ToSQL FunctionExp where
-  toSQL (FunctionExp qf args alsM) =
-    toSQL qf <> toSQL args <-> toSQL alsM
+  toSQL b (FunctionExp qf args alsM) =
+    toSQL b qf <> toSQL b args <-> toSQL b alsM
+
 
 data FromItem
   = FISimple !QualifiedTable !(Maybe Alias)
-  | FIIden !Iden
+  | FIIden !Identifier
   | FIFunc !FunctionExp
   | FIUnnest ![SQLExp] !Alias ![SQLExp]
   | FISelect !Lateral !Select !Alias
@@ -544,6 +568,25 @@ instance NFData FromItem
 instance Cacheable FromItem
 instance Hashable FromItem
 
+instance ToSQL FromItem where
+  toSQL b (FISimple qt mal) =
+    toSQL b qt <-> toSQL b mal
+  toSQL b (FIIden iden) =
+    toSQL b iden
+  toSQL b (FIFunc funcExp) = toSQL b funcExp
+  -- unnest(expressions) alias(columns)
+  toSQL b (FIUnnest args als cols) =
+    "UNNEST" <> paren (commaSeparated (toSQL b <$> args)) <-> toSQL b als <> paren (commaSeparated $ toSQL b <$> cols)
+  toSQL b (FISelect mla sel al) =
+    toSQL b mla <-> paren (toSQL b sel) <-> toSQL b al
+  toSQL b (FISelectWith mla selWith al) =
+    toSQL b mla <-> paren (toSQL b selWith) <-> toSQL b al
+  toSQL b (FIValues valsExp al mCols) =
+    paren (toSQL b valsExp) <-> toSQL b al
+    <-> toSQL b (toColTupExp <$> mCols)
+  toSQL b (FIJoin je) =
+    toSQL b je
+
 mkSelFromItem :: Select -> Alias -> FromItem
 mkSelFromItem = FISelect (Lateral False)
 
@@ -553,35 +596,14 @@ mkSelectWithFromItem = FISelectWith (Lateral False)
 mkLateralFromItem :: Select -> Alias -> FromItem
 mkLateralFromItem = FISelect (Lateral True)
 
-toColTupExp :: [PGCol] -> SQLExp
-toColTupExp =
-  SETuple . TupleExp . map (SEIden . Iden . getPGColTxt)
-
-instance ToSQL FromItem where
-  toSQL (FISimple qt mal) =
-    toSQL qt <-> toSQL mal
-  toSQL (FIIden iden) =
-    toSQL iden
-  toSQL (FIFunc funcExp) = toSQL funcExp
-  -- unnest(expressions) alias(columns)
-  toSQL (FIUnnest args als cols) =
-    "UNNEST" <> paren (", " <+> args) <-> toSQL als <> paren (", " <+> cols)
-  toSQL (FISelect mla sel al) =
-    toSQL mla <-> paren (toSQL sel) <-> toSQL al
-  toSQL (FISelectWith mla selWith al) =
-    toSQL mla <-> paren (toSQL selWith) <-> toSQL al
-  toSQL (FIValues valsExp al mCols) =
-    paren (toSQL valsExp) <-> toSQL al
-    <-> toSQL (toColTupExp <$> mCols)
-  toSQL (FIJoin je) =
-    toSQL je
 
 newtype Lateral = Lateral Bool
   deriving (Show, Eq, Data, NFData, Cacheable, Hashable)
 
 instance ToSQL Lateral where
-  toSQL (Lateral True)  = "LATERAL"
-  toSQL (Lateral False) = mempty
+  toSQL _ (Lateral True)  = "LATERAL"
+  toSQL _ (Lateral False) = mempty
+
 
 data JoinExpr
   = JoinExpr
@@ -595,11 +617,12 @@ instance Cacheable JoinExpr
 instance Hashable JoinExpr
 
 instance ToSQL JoinExpr where
-  toSQL je =
-    toSQL (tjeLeft je)
-    <-> toSQL (tjeType je)
-    <-> toSQL (tjeRight je)
-    <-> toSQL (tjeJC je)
+  toSQL b je =
+    toSQL b (tjeLeft je)
+    <-> toSQL b (tjeType je)
+    <-> toSQL b (tjeRight je)
+    <-> toSQL b (tjeJC je)
+
 
 data JoinType
   = Inner
@@ -612,10 +635,11 @@ instance Cacheable JoinType
 instance Hashable JoinType
 
 instance ToSQL JoinType where
-  toSQL Inner      = "INNER JOIN"
-  toSQL LeftOuter  = "LEFT OUTER JOIN"
-  toSQL RightOuter = "RIGHT OUTER JOIN"
-  toSQL FullOuter  = "FULL OUTER JOIN"
+  toSQL _ Inner      = "INNER JOIN"
+  toSQL _ LeftOuter  = "LEFT OUTER JOIN"
+  toSQL _ RightOuter = "RIGHT OUTER JOIN"
+  toSQL _ FullOuter  = "FULL OUTER JOIN"
+
 
 data JoinCond
   = JoinOn !BoolExp
@@ -626,10 +650,11 @@ instance Cacheable JoinCond
 instance Hashable JoinCond
 
 instance ToSQL JoinCond where
-  toSQL (JoinOn be) =
-    "ON" <-> paren (toSQL be)
-  toSQL (JoinUsing cols) =
-    "USING" <-> paren (","  <+> cols)
+  toSQL b (JoinOn be) =
+    "ON" <-> paren (toSQL b be)
+  toSQL b (JoinUsing cols) =
+    "USING" <-> paren (commaSeparated $ toSQL b <$> cols)
+
 
 data BoolExp
   = BELit !Bool
@@ -648,6 +673,29 @@ data BoolExp
 instance NFData BoolExp
 instance Cacheable BoolExp
 instance Hashable BoolExp
+
+instance ToSQL BoolExp where
+  toSQL _ (BELit True)  = "TRUE"
+  toSQL _ (BELit False) = "FALSE"
+  toSQL b (BEBin bo bel ber) =
+    paren (toSQL b bel) <-> toSQL b bo <-> paren (toSQL b ber)
+  toSQL b (BENot be) =
+    "NOT" <-> paren (toSQL b be)
+  toSQL b (BECompare co vl vr) =
+    paren (toSQL b vl) <-> toSQL b co <-> paren (toSQL b vr)
+  toSQL b (BECompareAny co vl vr) =
+    paren (toSQL b vl) <-> toSQL b co <-> "ANY" <> paren (toSQL b vr)
+  toSQL b (BENull v) =
+    paren (toSQL b v) <-> "IS NULL"
+  toSQL b (BENotNull v) =
+    paren (toSQL b v) <-> "IS NOT NULL"
+  toSQL b (BEExists sel) =
+    "EXISTS " <-> paren (toSQL b sel)
+  -- special case to handle lhs IN (exp1, exp2)
+  toSQL b (BEIN vl exps) =
+    paren (toSQL b vl) <-> toSQL b SIN <-> paren (commaSeparated $ toSQL b <$> exps)
+  -- Any SQL expression which evaluates to bool value
+  toSQL b (BEExp e) = paren $ toSQL b e
 
 -- removes extraneous 'AND true's
 simplifyBoolExp :: BoolExp -> BoolExp
@@ -676,28 +724,6 @@ mkExists fromItem whereFrag =
   , selWhere = Just $ WhereFrag whereFrag
   }
 
-instance ToSQL BoolExp where
-  toSQL (BELit True)  = TB.text "TRUE"
-  toSQL (BELit False) = TB.text "FALSE"
-  toSQL (BEBin bo bel ber) =
-    paren (toSQL bel) <-> toSQL bo <-> paren (toSQL ber)
-  toSQL (BENot be) =
-    "NOT" <-> paren (toSQL be)
-  toSQL (BECompare co vl vr) =
-    paren (toSQL vl) <-> toSQL co <-> paren (toSQL vr)
-  toSQL (BECompareAny co vl vr) =
-    paren (toSQL vl) <-> toSQL co <-> "ANY" <> paren (toSQL vr)
-  toSQL (BENull v) =
-    paren (toSQL v) <-> "IS NULL"
-  toSQL (BENotNull v) =
-    paren (toSQL v) <-> "IS NOT NULL"
-  toSQL (BEExists sel) =
-    "EXISTS " <-> paren (toSQL sel)
-  -- special case to handle lhs IN (exp1, exp2)
-  toSQL (BEIN vl exps) =
-    paren (toSQL vl) <-> toSQL SIN <-> paren (", " <+> exps)
-  -- Any SQL expression which evaluates to bool value
-  toSQL (BEExp e) = paren $ toSQL e
 
 data BinOp = AndOp | OrOp
   deriving (Show, Eq, Generic, Data)
@@ -706,8 +732,9 @@ instance Cacheable BinOp
 instance Hashable BinOp
 
 instance ToSQL BinOp where
-  toSQL AndOp = "AND"
-  toSQL OrOp  = "OR"
+  toSQL _ AndOp = "AND"
+  toSQL _ OrOp  = "OR"
+
 
 data CompareOp
   = SEQ
@@ -757,11 +784,8 @@ instance Show CompareOp where
     SHasKeysAll  -> "?&"
 
 instance ToSQL CompareOp where
-  toSQL = fromString . show
+  toSQL _ = fromString . show
 
-buildInsVal :: PGCol -> Int -> (PGCol, SQLExp)
-buildInsVal colName argNumber =
-  (colName, SEPrep argNumber)
 
 data SQLDelete
   = SQLDelete
@@ -770,6 +794,14 @@ data SQLDelete
     , delWhere :: !(Maybe WhereFrag)
     , delRet   :: !(Maybe RetExp)
     } deriving (Show, Eq)
+
+instance ToSQL SQLDelete where
+  toSQL b sd = "DELETE FROM"
+             <-> toSQL b (delTable sd)
+             <-> toSQL b (delUsing sd)
+             <-> toSQL b (delWhere sd)
+             <-> toSQL b (delRet sd)
+
 
 data SQLUpdate
   = SQLUpdate
@@ -780,11 +812,29 @@ data SQLUpdate
     , upRet   :: !(Maybe RetExp)
     } deriving (Show, Eq)
 
+instance ToSQL SQLUpdate where
+  toSQL b a = "UPDATE"
+            <-> toSQL b (upTable a)
+            <-> toSQL b (upSet a)
+            <-> toSQL b (upFrom a)
+            <-> toSQL b (upWhere a)
+            <-> toSQL b (upRet a)
+
+
 newtype SetExp = SetExp [SetExpItem]
-               deriving (Show, Eq)
+  deriving (Show, Eq)
+
+instance ToSQL SetExp where
+  toSQL b (SetExp cvs) =
+    "SET" <-> (commaSeparated $ toSQL b <$> cvs)
+
 
 newtype SetExpItem = SetExpItem (PGCol, SQLExp)
-                   deriving (Show, Eq)
+  deriving (Show, Eq)
+
+instance ToSQL SetExpItem where
+  toSQL b (SetExpItem (col, val)) =
+    toSQL b col <-> "=" <-> toSQL b val
 
 buildSEI :: PGCol -> Int -> SetExpItem
 buildSEI colName argNumber =
@@ -799,18 +849,26 @@ buildUpsertSetExp cols preSet =
   where
     setExps = HM.union preSet $ HM.fromList $
       flip map cols $ \col ->
-        (col, SEExcluded $ toIden col)
+        (col, SEExcluded $ toIdentifier col)
 
 
 newtype UsingExp = UsingExp [TableName]
                   deriving (Show, Eq)
 
 instance ToSQL UsingExp where
-  toSQL (UsingExp tables)
-    = "USING" <-> "," <+> tables
+  toSQL b (UsingExp tables)
+    = "USING" <-> commaSeparated (toSQL b <$> tables)
+
 
 newtype RetExp = RetExp [Extractor]
                   deriving (Show, Eq)
+
+instance ToSQL RetExp where
+  toSQL _ (RetExp [])
+    = mempty
+  toSQL b (RetExp exps)
+    = "RETURNING" <-> (commaSeparated $ toSQL b <$> exps)
+
 
 selectStar :: Extractor
 selectStar = Extractor (SEStar Nothing) Nothing
@@ -821,35 +879,6 @@ selectStar' q = Extractor (SEStar (Just q)) Nothing
 returningStar :: RetExp
 returningStar = RetExp [selectStar]
 
-instance ToSQL RetExp where
-  toSQL (RetExp [])
-    = mempty
-  toSQL (RetExp exps)
-    = "RETURNING" <-> (", " <+> exps)
-
-instance ToSQL SQLDelete where
-  toSQL sd = "DELETE FROM"
-             <-> toSQL (delTable sd)
-             <-> toSQL (delUsing sd)
-             <-> toSQL (delWhere sd)
-             <-> toSQL (delRet sd)
-
-instance ToSQL SQLUpdate where
-  toSQL a = "UPDATE"
-            <-> toSQL (upTable a)
-            <-> toSQL (upSet a)
-            <-> toSQL (upFrom a)
-            <-> toSQL (upWhere a)
-            <-> toSQL (upRet a)
-
-instance ToSQL SetExp where
-  toSQL (SetExp cvs) =
-    "SET" <-> ("," <+> cvs)
-
-instance ToSQL SetExpItem where
-  toSQL (SetExpItem (col, val)) =
-    toSQL col <-> "=" <-> toSQL val
-
 
 data SQLConflictTarget
   = SQLColumn ![PGCol]
@@ -857,11 +886,12 @@ data SQLConflictTarget
   deriving (Show, Eq)
 
 instance ToSQL SQLConflictTarget where
-  toSQL (SQLColumn cols)      = "("
-                                <-> ("," <+> cols)
+  toSQL b (SQLColumn cols)      = "("
+                                <-> (commaSeparated $ toSQL b <$> cols)
                                 <-> ")"
 
-  toSQL (SQLConstraint cons) = "ON CONSTRAINT" <-> toSQL cons
+  toSQL b (SQLConstraint cons) = "ON CONSTRAINT" <-> toSQL b cons
+
 
 data SQLConflict
   = DoNothing !(Maybe SQLConflictTarget)
@@ -869,21 +899,23 @@ data SQLConflict
   deriving (Show, Eq)
 
 instance ToSQL SQLConflict where
-  toSQL (DoNothing Nothing)   = "ON CONFLICT DO NOTHING"
-  toSQL (DoNothing (Just ct)) = "ON CONFLICT"
-                                <-> toSQL ct
+  toSQL _ (DoNothing Nothing)   = "ON CONFLICT DO NOTHING"
+  toSQL b (DoNothing (Just ct)) = "ON CONFLICT"
+                                <-> toSQL b ct
                                 <-> "DO NOTHING"
-  toSQL (Update ct set whr)   = "ON CONFLICT"
-                                <-> toSQL ct <-> "DO UPDATE"
-                                <-> toSQL set <-> toSQL whr
+  toSQL b (Update ct set whr)   = "ON CONFLICT"
+                                <-> toSQL b ct <-> "DO UPDATE"
+                                <-> toSQL b set <-> toSQL b whr
+
 
 newtype ValuesExp
   = ValuesExp [TupleExp]
   deriving (Show, Eq, Data, NFData, Cacheable, Hashable)
 
 instance ToSQL ValuesExp where
-  toSQL (ValuesExp tuples) =
-    "VALUES" <-> (", " <+> tuples)
+  toSQL b (ValuesExp tuples) =
+    "VALUES" <-> (commaSeparated $ toSQL b <$> tuples)
+
 
 data SQLInsert = SQLInsert
     { siTable    :: !QualifiedTable
@@ -894,15 +926,16 @@ data SQLInsert = SQLInsert
     } deriving (Show, Eq)
 
 instance ToSQL SQLInsert where
-  toSQL si =
+  toSQL b si =
     "INSERT INTO"
-    <-> toSQL (siTable si)
+    <-> toSQL b (siTable si)
     <-> "("
-    <-> (", " <+> siCols si)
+    <-> (commaSeparated $ toSQL b <$> siCols si)
     <-> ")"
-    <-> toSQL (siValues si)
-    <-> maybe "" toSQL (siConflict si)
-    <-> toSQL (siRet si)
+    <-> toSQL b (siValues si)
+    <-> maybe "" (toSQL b) (siConflict si)
+    <-> toSQL b (siRet si)
+
 
 data CTE
   = CTESelect !Select
@@ -912,11 +945,12 @@ data CTE
   deriving (Show, Eq)
 
 instance ToSQL CTE where
-  toSQL = \case
-    CTESelect q -> toSQL q
-    CTEInsert q -> toSQL q
-    CTEUpdate q -> toSQL q
-    CTEDelete q -> toSQL q
+  toSQL b = \case
+    CTESelect q -> toSQL b q
+    CTEInsert q -> toSQL b q
+    CTEUpdate q -> toSQL b q
+    CTEDelete q -> toSQL b q
+
 
 data SelectWithG v
   = SelectWith
@@ -929,9 +963,9 @@ instance (Cacheable v) => Cacheable (SelectWithG v)
 instance (Hashable v) => Hashable (SelectWithG v)
 
 instance (ToSQL v) => ToSQL (SelectWithG v) where
-  toSQL (SelectWith ctes sel) =
-    "WITH " <> (", " <+> map f ctes) <-> toSQL sel
+  toSQL b (SelectWith ctes sel) =
+    "WITH " <> (commaSeparated $ map f ctes) <-> toSQL b sel
     where
-      f (Alias al, q) = toSQL al <-> "AS" <-> paren (toSQL q)
+      f (Alias al, q) = toSQL b al <-> "AS" <-> paren (toSQL b q)
 
 type SelectWith = SelectWithG CTE

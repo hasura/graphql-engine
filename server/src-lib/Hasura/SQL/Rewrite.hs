@@ -7,7 +7,7 @@ import qualified Data.HashMap.Strict as Map
 import qualified Data.Text           as T
 import           Hasura.Prelude
 import qualified Hasura.SQL.DML      as S
-import           Hasura.SQL.Types    (Iden (..))
+import           Hasura.SQL.Types    (Identifier (..))
 
 {- Note [Postgres identifier length limitations]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -31,14 +31,14 @@ type Rewrite a = State a
 data UniqSt
   = UniqSt
   { _uqVar   :: !Int
-  , _uqIdens :: !(Map.HashMap Iden Int)
+  , _uqIdens :: !(Map.HashMap Identifier Int)
   } deriving (Show, Eq)
 
 type Uniq = Rewrite UniqSt
 
-withNumPfx :: Iden -> Int -> Iden
+withNumPfx :: Identifier -> Int -> Identifier
 withNumPfx iden i =
-  Iden pfx <> iden
+  Identifier pfx <> iden
   where
     pfx = T.pack $ "_" <> show i <> "_"
 
@@ -48,8 +48,8 @@ addAlias (S.Alias iden) = do
   put $ UniqSt (var + 1) $ Map.insert iden var idens
   return $ S.Alias $ withNumPfx iden var
 
-getIden :: Iden -> Uniq Iden
-getIden iden = do
+getIdentifier :: Identifier -> Uniq Identifier
+getIdentifier iden = do
   UniqSt _ idens <- get
   let varNumM = Map.lookup iden idens
   return $ maybe iden (withNumPfx iden) varNumM
@@ -186,7 +186,7 @@ uSqlExp = restoringIdens . \case
   -- this is for row expressions
   -- todo: check if this is always okay
   S.SEIden iden                 -> return $ S.SEIden iden
-  S.SERowIden iden              -> S.SERowIden <$> getIden iden
+  S.SERowIden iden              -> S.SERowIden <$> getIdentifier iden
   S.SEQIden (S.QIden qual iden) -> do
     newQual <- uQual qual
     return $ S.SEQIden $ S.QIden newQual iden
@@ -222,6 +222,6 @@ uSqlExp = restoringIdens . \case
   S.SEFunction funcExp          -> S.SEFunction <$> uFunctionExp funcExp
   where
     uQual = \case
-      S.QualIden iden ty -> S.QualIden <$> getIden iden <*> pure ty
+      S.QualIden iden ty -> S.QualIden <$> getIdentifier iden <*> pure ty
       S.QualTable t   -> return $ S.QualTable t
       S.QualVar t     -> return $ S.QualVar t

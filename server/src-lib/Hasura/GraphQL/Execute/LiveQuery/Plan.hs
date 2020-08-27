@@ -58,8 +58,7 @@ import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Query
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.RQL.Types
-import           Hasura.Sources
-import           Hasura.Sources.MySQL.Query
+import           Hasura.SQL.Builder
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -81,11 +80,11 @@ toSQLFromItem alias = \case
     fromSelect s = S.mkSelFromItem s alias
 
 mkMultiplexedQuery :: OMap.InsOrdHashMap G.Name SubscriptionRootFieldResolved -> MultiplexedQuery
-mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkSelect
+mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromText . unsafeToSQLTxt $ S.mkSelect
   { S.selExtr =
     -- SELECT _subs.result_id, _fld_resp.root AS result
-    [ S.Extractor (mkQualIden (Iden "_subs") (Iden "result_id")) Nothing
-    , S.Extractor (mkQualIden (Iden "_fld_resp") (Iden "root")) (Just . S.Alias $ Iden "result") ]
+    [ S.Extractor (mkQualIden (Identifier "_subs") (Identifier "result_id")) Nothing
+    , S.Extractor (mkQualIden (Identifier "_fld_resp") (Identifier "root")) (Just . S.Alias $ Identifier "result") ]
   , S.selFrom = Just $ S.FromExp [S.FIJoin $
       S.JoinExpr subsInputFromItem S.LeftOuter responseLateralFromItem (S.JoinOn $ S.BELit True)]
   }
@@ -93,13 +92,13 @@ mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkS
     -- FROM unnest($1::uuid[], $2::json[]) _subs (result_id, result_vars)
     subsInputFromItem = S.FIUnnest
       [S.SEPrep 1 `S.SETyAnn` S.TypeAnn "uuid[]", S.SEPrep 2 `S.SETyAnn` S.TypeAnn "json[]"]
-      (S.Alias $ Iden "_subs")
-      [S.SEIden $ Iden "result_id", S.SEIden $ Iden "result_vars"]
+      (S.Alias $ Identifier "_subs")
+      [S.SEIden $ Identifier "result_id", S.SEIden $ Identifier "result_vars"]
 
     -- LEFT OUTER JOIN LATERAL ( ... ) _fld_resp
-    responseLateralFromItem = S.mkLateralFromItem selectRootFields (S.Alias $ Iden "_fld_resp")
+    responseLateralFromItem = S.mkLateralFromItem selectRootFields (S.Alias $ Identifier "_fld_resp")
     selectRootFields = S.mkSelect
-      { S.selExtr = [S.Extractor rootFieldsJsonAggregate (Just . S.Alias $ Iden "root")]
+      { S.selExtr = [S.Extractor rootFieldsJsonAggregate (Just . S.Alias $ Identifier "root")]
       , S.selFrom = Just . S.FromExp $
           flip map (OMap.toList rootFields) $ \(fieldAlias, resolvedAST) ->
             toSQLFromItem (S.Alias $ aliasToIden fieldAlias) resolvedAST
@@ -109,10 +108,10 @@ mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkS
     rootFieldsJsonAggregate = S.SEFnApp "json_build_object" rootFieldsJsonPairs Nothing
     rootFieldsJsonPairs = flip concatMap (OMap.keys rootFields) $ \fieldAlias ->
       [ S.SELit (G.unName fieldAlias)
-      , mkQualIden (aliasToIden fieldAlias) (Iden "root") ]
+      , mkQualIden (aliasToIden fieldAlias) (Identifier "root") ]
 
     mkQualIden prefix = S.SEQIden . S.QIden (S.QualIden prefix Nothing) -- TODO fix this Nothing of course
-    aliasToIden = Iden . G.unName
+    aliasToIden = Identifier . G.unName
 
 -- TODO fix this comment
 -- | Resolves an 'GR.UnresolvedVal' by converting 'GR.UVPG' values to SQL expressions that refer to
@@ -136,7 +135,7 @@ resolveMultiplexedValue = \case
   UVSession -> pure $ fromResVars (PGTypeScalar PGJSON) ["session"]
   where
     fromResVars pgType jPath = addTypeAnnotation pgType $ S.SEOpApp (S.SQLOp "#>>")
-      [ S.SEQIden $ S.QIden (S.QualIden (Iden "_subs") Nothing) (Iden "result_vars")
+      [ S.SEQIden $ S.QIden (S.QualIden (Identifier "_subs") Nothing) (Identifier "result_vars")
       , S.SEArray $ map S.SELit jPath
       ]
     addTypeAnnotation pgType = flip S.SETyAnn (S.mkTypeAnn pgType) . case pgType of
@@ -236,7 +235,7 @@ validateVariables
 validateVariables pgExecCtx variableValues = do
   let valSel = mkValidationSel $ toList variableValues
   Q.Discard () <- runQueryTx_ $ liftTx $
-    Q.rawQE dataExnErrHandler (Q.fromBuilder $ toSQL valSel) [] False
+    Q.rawQE dataExnErrHandler (Q.fromText $ unsafeToSQLTxt valSel) [] False
   pure . ValidatedVariables $ fmap (txtEncodedPGVal . pstValue) variableValues
   where
     mkExtrs = map (flip S.Extractor Nothing . toTxtValue)

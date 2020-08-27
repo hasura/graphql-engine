@@ -28,7 +28,9 @@ import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
 import           Hasura.Server.Version       (HasVersion)
 import           Hasura.Session
+import           Hasura.SQL.Text
 import           Hasura.SQL.Types
+
 
 import qualified Data.Environment            as Env
 import qualified Hasura.Tracing              as Tracing
@@ -317,7 +319,7 @@ insertOrUpdateCheckExpr qt (Just _conflict) insCheck (Just updCheck) =
   S.SECond
     (S.BECompare
       S.SEQ
-      (S.SEQIden (S.QIden (S.mkQual qt) (Iden "xmax")))
+      (S.SEQIden (S.QIden (S.mkQual qt) (Identifier "xmax")))
       (S.SEUnsafe "0"))
     (insertCheckExpr "insert check constraint failed" insCheck)
     (insertCheckExpr "update check constraint failed" updCheck)
