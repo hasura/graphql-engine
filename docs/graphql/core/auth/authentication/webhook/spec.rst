@@ -1,0 +1,138 @@
+.. meta::
+   :description: Spec for webhook authenticaton in Hasura
+   :keywords: hasura, docs, authentication, auth, webhook, spec
+
+.. _auth_webhook_spec:
+
+The webhook spec
+================
+
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
+Introduction
+------------
+
+This page explains the spec of webhook authentication with Hasura.
+
+Request
+-------
+
+
+GET request
+^^^^^^^^^^^
+
+.. code-block:: http
+
+   GET https://<your-custom-webhook>/ HTTP/1.1
+   <Header-Key>: <Header-Value>
+
+
+If you configure your webhook to use ``GET``, then Hasura **will forward all client headers except**:
+
+- ``Content-Length``
+- ``Content-Type``
+- ``Content-MD5``
+- ``User-Agent``
+- ``Host``
+- ``Origin``
+- ``Referer``
+- ``Accept``
+- ``Accept-Encoding``
+- ``Accept-Language``
+- ``Accept-Datetime``
+- ``Cache-Control``
+- ``Connection``
+- ``DNT``
+
+POST request
+^^^^^^^^^^^^
+
+.. code-block:: http
+
+   POST https://<your-custom-webhook>/ HTTP/1.1
+   Content-Type: application/json
+
+   {
+    "headers": {
+        "header-key1": "header-value1",
+        "header-key2": "header-value2"
+      }
+   }
+
+If you configure your webhook to use ``POST``, then Hasura **will send all client headers in payload**.
+
+.. _webhook_response:
+
+Response
+--------
+
+Success
+^^^^^^^
+
+To allow the GraphQL request to go through, your webhook must return a ``200`` status code.
+You should send the ``X-Hasura-*`` "session variables" to your permission rules in Hasura.
+
+.. code-block:: http
+
+   HTTP/1.1 200 OK
+   Content-Type: application/json
+
+   {
+       "X-Hasura-User-Id": "25",
+       "X-Hasura-Role": "user",
+       "X-Hasura-Is-Owner": "true",
+       "X-Hasura-Custom": "custom value"
+   }
+
+.. note::
+   All values should be ``String``. They will be converted to the right type automatically.
+
+
+There is no default timeout on the resulting connection. You can optionally add one; to do so, you need to return either:
+
+* a ``Cache-Control`` variable, modeled on the `Cache-Control HTTP Header <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control>`__, to specify a **relative** expiration time, in seconds.
+
+.. code-block:: http
+
+   HTTP/1.1 200 OK
+   Content-Type: application/json
+
+   {
+       "X-Hasura-User-Id": "26",
+       "X-Hasura-Role": "user",
+       "X-Hasura-Is-Owner": "false",
+       "Cache-Control": "max-age=600"
+   }
+
+* an ``Expires`` variable, modeled on the `Expires HTTP Header <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Expires>`__, to specify an **absolute** expiration time. The expected format is ``"%a, %d %b %Y %T GMT"``.
+
+.. code-block:: http
+
+   HTTP/1.1 200 OK
+   Content-Type: application/json
+
+   {
+       "X-Hasura-User-Id": "27",
+       "X-Hasura-Role": "user",
+       "X-Hasura-Is-Owner": "false",
+       "Expires": "Mon, 30 Mar 2020 13:25:18 GMT"
+   }
+
+
+
+
+Failure
+^^^^^^^
+
+If you want to deny the GraphQL request, return a ``401 Unauthorized`` exception.
+
+.. code-block:: http
+
+   HTTP/1.1 401 Unauthorized
+
+.. note::
+   Anything other than a ``200`` or ``401`` response from webhook makes the server raise a ``500 Internal Server Error``
+   exception.

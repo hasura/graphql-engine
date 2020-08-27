@@ -59,6 +59,6 @@ Here's how a GraphQL query is processed in JWT mode:
 .. toctree::
   :maxdepth: 1
 
-  Using webhooks <webhook>
-  Using JWT <jwt>
+  Using webhooks <webhook/index>
+  Using JWT <jwt/index>
   Unauthenticated / Public access <unauthenticated-access>
