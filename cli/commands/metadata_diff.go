@@ -19,6 +19,11 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const (
+	folderType string = "folder"
+	fileType   string = "file"
+)
+
 type MetadataDiffOptions struct {
 	EC     *cli.ExecutionContext
 	Output io.Writer
@@ -48,7 +53,7 @@ By default, shows changes between exported metadata file and server metadata.`,
   hasura metadata diff local_metadata.yaml
 
 	# Show changes between metadata from metadata.yaml and metadata_old.yaml:
-	hasura metadata diff metadata.yaml metadata_old.yaml
+	hasura metadata diff metadata.yaml ../old/metadata_old.yaml
 	
 	# Show changes among multiple metadata folders (v2 config only)
 	hasura metadata diff metadata1 metadata2
@@ -78,19 +83,19 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 		message = fmt.Sprintf(messageFormat, o.Metadata[0], "the server")
 	case 1:
 		// 1 arg, diff given directory and the metadata on server
-		err := checkDir(args[0])
+		err := checkDirAndFile(args[0], folderType)
 		if err != nil {
 			return err
 		}
 		o.Metadata[0] = args[0]
 		message = fmt.Sprintf(messageFormat, o.Metadata[0], "the server")
 	case 2:
-		err := checkDir(args[0])
+		err := checkDirAndFile(args[0], folderType)
 		if err != nil {
 			return err
 		}
 		o.Metadata[0] = args[0]
-		err = checkDir(args[1])
+		err = checkDirAndFile(args[1], folderType)
 		if err != nil {
 			return err
 		}
@@ -167,11 +172,23 @@ func (o *MetadataDiffOptions) runv1(args []string) error {
 		message = fmt.Sprintf(messageFormat, filename, "the server")
 	case 1:
 		// 1 arg, diff given filename and the metadata on server
+		err := checkDirAndFile(args[0], fileType)
+		if err != nil {
+			return err
+		}
 		o.Metadata[0] = args[0]
 		message = fmt.Sprintf(messageFormat, args[0], "the server")
 	case 2:
 		// 2 args, diff given filenames
+		err := checkDirAndFile(args[0], fileType)
+		if err != nil {
+			return err
+		}
 		o.Metadata[0] = args[0]
+		err = checkDirAndFile(args[1], fileType)
+		if err != nil {
+			return err
+		}
 		o.Metadata[1] = args[1]
 		message = fmt.Sprintf(messageFormat, args[0], args[1])
 	}
@@ -237,7 +254,9 @@ func printDiff(before, after string, to io.Writer, logger *logrus.Logger) {
 		fmt.Fprintf(to, "\n")
 		for _, diff := range diffs {
 			text := diff.Payload
-
+			// TODO: Probably printing just these is not enough,
+			// we may need to print 2-3 line before and after these
+			// changes to provide more context to the users
 			switch diff.Delta {
 			case difflib.RightOnly:
 				fmt.Fprintf(to, "%s\n", ansi.Color(text, "green"))
@@ -251,16 +270,26 @@ func printDiff(before, after string, to io.Writer, logger *logrus.Logger) {
 	logger.Info("no diff")
 }
 
-func checkDir(path string) error {
+// checkDirAndFile supports either "file" or "folder"
+func checkDirAndFile(path, pathType string) error {
 	file, err := os.Stat(path)
+
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("this directory does not exist")
+			return fmt.Errorf("this %s does not exist", pathType)
 		}
 		return err
 	}
-	if !file.IsDir() {
-		return fmt.Errorf("metadata diff only works with directories but got file %s", path)
+
+	if !file.IsDir() && pathType == folderType {
+		// This is meant for v2 config
+		return fmt.Errorf("metadata diff only works with metadata directories but got %s", path)
 	}
+
+	if file.IsDir() && pathType == fileType {
+		// This is meant for v1 config
+		return fmt.Errorf("metadata diff only works with metadata files but got %s", path)
+	}
+
 	return nil
 }
