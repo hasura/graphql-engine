@@ -9,7 +9,6 @@ import {
 import dataHeaders from '../Common/Headers';
 import { getEnumColumnMappings, dataSource } from '../../../../dataSources';
 import { getEnumOptionsQuery } from '../../../Common/utils/v1QueryUtils';
-import { ARRAY } from '../utils';
 import { isStringArray } from '../../../Common/utils/jsUtils';
 
 const I_SET_CLONE = 'InsertItem/I_SET_CLONE';
