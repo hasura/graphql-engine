@@ -54,6 +54,9 @@ class TestCreateRemoteRelationship:
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_multiple_fields.yaml')
         assert st_code == 200, resp
 
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_joining_singleton_with_array.yaml')
+        assert st_code == 200, resp
+
         # st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_with_interface.yaml')
         # assert st_code == 200, resp
 
@@ -156,6 +159,11 @@ class TestExecution:
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_nested_args.yaml')
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'query_with_arr_rel.yaml')
+
+    def test_basic_relationship_joining_singleton_to_array(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_joining_singleton_with_array.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'basic_relationship_joining_singleton_with_array.yaml')
 
     def test_basic_array(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_array.yaml')

@@ -2,6 +2,8 @@
 
 ## Next release
 
+- server: allow remote relationships joining `type` column with `[type]` input argument as spec allows this coercion (fixes #5133)
+
 ### Breaking change
 
 Headers from environment variables starting with `HASURA_GRAPHQL_` are not allowed
