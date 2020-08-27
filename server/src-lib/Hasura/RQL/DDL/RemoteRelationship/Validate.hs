@@ -10,6 +10,7 @@ module Hasura.RQL.DDL.RemoteRelationship.Validate
 import           Data.Foldable
 import           Hasura.GraphQL.Schema.Remote
 import           Hasura.GraphQL.Parser.Column
+import           Hasura.GraphQL.Utils          (getBaseTyWithNestedLevelsCount)
 import           Hasura.Prelude                hiding (first)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -333,20 +334,20 @@ validateType permittedVariables value expectedGType schemaDocument =
         Nothing -> throwError (InvalidVariable variable permittedVariables)
         Just fieldInfo -> do
           namedType <- columnInfoToNamedType fieldInfo
-          assertType (mkGraphQLType namedType) expectedGType
+          isTypeCoercible (mkGraphQLType namedType) expectedGType
     G.VInt {} -> do
       intScalarGType <- (mkGraphQLType <$> mkScalarTy PGInteger)
-      assertType intScalarGType expectedGType
+      isTypeCoercible intScalarGType expectedGType
     G.VFloat {} -> do
       floatScalarGType <- (mkGraphQLType <$> mkScalarTy PGFloat)
-      assertType floatScalarGType expectedGType
+      isTypeCoercible floatScalarGType expectedGType
     G.VBoolean {} -> do
       boolScalarGType <- (mkGraphQLType <$> mkScalarTy PGBoolean)
-      assertType boolScalarGType expectedGType
+      isTypeCoercible boolScalarGType expectedGType
     G.VNull -> throwError NullNotAllowedHere
     G.VString {} -> do
       stringScalarGType <- (mkGraphQLType <$> mkScalarTy PGText)
-      assertType stringScalarGType expectedGType
+      isTypeCoercible stringScalarGType expectedGType
     G.VEnum _ -> throwError UnsupportedEnum
     G.VList values -> do
       case values of
@@ -390,23 +391,27 @@ validateType permittedVariables value expectedGType schemaDocument =
         Left _ -> throwError $ InvalidGraphQLName $ toSQLTxt scalarType
         Right s -> pure s
 
-assertType
+isTypeCoercible
   :: (MonadError ValidationError m)
   => G.GType
   -> G.GType
   -> m ()
-assertType actualType expectedType = do
-  -- check if both are list types or both are named types
-  (when
-     (G.isListType actualType /= G.isListType expectedType)
-     (throwError $ ExpectedTypeButGot expectedType actualType))
-  -- if list type then check over unwrapped type, else check base types
-  if G.isListType actualType
-    then assertType (unwrapGraphQLType actualType) (unwrapGraphQLType expectedType)
-    else (when
-            (G.getBaseType actualType /= G.getBaseType expectedType)
-            (throwError $ ExpectedTypeButGot expectedType actualType))
-  pure ()
+isTypeCoercible actualType expectedType =
+  -- The GraphQL spec says that, a singleton type can be coerced into  an array
+  -- type. Which means that if the 'actualType' is a singleton type, like
+  -- 'Int' we should be able to join this with a remote node, which expects an
+  -- input argument of type '[Int]'
+  -- http://spec.graphql.org/June2018/#sec-Type-System.List
+  let (actualBaseType, actualNestingLevel) = getBaseTyWithNestedLevelsCount actualType
+      (expectedBaseType, expectedNestingLevel) = getBaseTyWithNestedLevelsCount expectedType
+  in
+  if | actualBaseType /= expectedBaseType -> raiseValidationError
+       -- we cannot coerce two types with different nesting levels,
+       -- for example, we cannot coerce [Int] to [[Int]]
+     | (actualNestingLevel == expectedNestingLevel || actualNestingLevel == 0) -> pure ()
+     | otherwise -> raiseValidationError
+     where
+       raiseValidationError = throwError $ ExpectedTypeButGot expectedType actualType
 
 assertListType :: (MonadError ValidationError m) => G.GType -> m ()
 assertListType actualType =
