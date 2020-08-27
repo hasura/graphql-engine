@@ -13,8 +13,8 @@ import           Data.Tuple                     (swap)
 import           Test.Hspec.Core.Spec
 import           Test.Hspec.Expectations.Lifted
 
+import qualified Data.Environment               as Env
 import qualified Database.PG.Query              as Q
-import qualified Data.Environment as Env
 
 import           Hasura.RQL.DDL.Metadata        (ClearMetadata (..), runClearMetadata)
 import           Hasura.RQL.DDL.Schema
@@ -23,6 +23,7 @@ import           Hasura.Server.API.PGDump
 import           Hasura.Server.Init             (DowngradeOptions (..))
 import           Hasura.Server.Migrate
 import           Hasura.Server.Version          (HasVersion)
+import           Hasura.Sources
 
 -- -- NOTE: downgrade test disabled for now (see #5273)
 
@@ -66,7 +67,7 @@ spec
   => Q.ConnInfo -> SpecWithCache m
 spec pgConnInfo = do
   let dropAndInit env time = CacheRefT $ flip modifyMVar \_ ->
-        dropCatalog *> (swap <$> migrateCatalog env time)
+        dropCatalog *> (swap <$> migrateCatalog env PostgresDB time)
 
   describe "migrateCatalog" $ do
     it "initializes the catalog" $ singleTransaction do
@@ -87,7 +88,7 @@ spec pgConnInfo = do
     it "supports upgrades after downgrade to version 12" \(NT transact) -> do
       let downgradeTo v = downgradeCatalog DowngradeOptions{ dgoDryRun = False, dgoTargetVersion = v }
           upgradeToLatest env time = CacheRefT $ flip modifyMVar \_ ->
-            swap <$> migrateCatalog env time
+            swap <$> migrateCatalog env PostgresDB time
       env <- Env.getEnvironment
       time <- getCurrentTime
       transact (dropAndInit env time) `shouldReturn` MRInitialized
