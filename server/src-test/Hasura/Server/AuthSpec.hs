@@ -406,110 +406,120 @@ parseClaimsMapTests = describe "parseClaimMapTests" $ do
       J.Object o -> o
       _          -> error "Impossible!"
 
-  it "parses claims map from the JWT token with correct namespace " $ do
-    let claimsObj = unObject $
-                    [ "x-hasura-allowed-roles" .= (["user","editor"] :: [Text])
-                    , "x-hasura-default-role"  .= ("user" :: Text)
+    defaultClaimsMap =
+      Map.fromList
+       [ (allowedRolesClaim, J.toJSON (map mkRoleNameE ["user","editor"]))
+       , (defaultRoleClaim, J.toJSON (mkRoleNameE "user"))]
+
+  describe "JWT configured with namespace" $ do
+
+    describe "JWT configured with namespace key, the key is a text value which is expected to be at the root of the JWT token" $ do
+      it "parses claims map from the JWT token with correct namespace " $ do
+        let claimsObj = unObject $
+                        [ "x-hasura-allowed-roles" .= (["user","editor"] :: [Text])
+                        , "x-hasura-default-role"  .= ("user" :: Text)
+                        ]
+        let obj = (unObject $ ["claims_map" .= claimsObj])
+        parseClaimsMap_ obj  (JCNamespace (ClaimNs "claims_map") defaultClaimsFormat)
+          `shouldReturn`
+          Right defaultClaimsMap
+
+      it "doesn't parse claims map from the JWT token with wrong namespace " $ do
+        let claimsObj = unObject $
+                        [ "x-hasura-allowed-roles" .= (["user","editor"] :: [Text])
+                        , "x-hasura-default-role"  .= ("user" :: Text)
+                        ]
+        let obj = (unObject $ ["claims_map" .= claimsObj])
+        parseClaimsMap_ obj  (JCNamespace (ClaimNs "wrong_claims_map") defaultClaimsFormat)
+          `shouldReturn`
+          Left JWTInvalidClaims
+
+    describe "JWT configured with namespace JSON path, JSON path to the claims map" $ do
+      it "parse claims map from the JWT token using claims namespace JSON Path" $ do
+        let obj = unObject $
+                        [ "x-hasura-allowed-roles" .= (["user","editor"] :: [Text])
+                        , "x-hasura-default-role"  .= ("user" :: Text)
+                        , "sub" .= ("random" :: Text)
+                        , "exp" .= (1626420800 :: Int)        -- we ignore these non session variables, in the response
+                        ]
+        parseClaimsMap_ obj  (JCNamespace (ClaimNsPath (mkJSONPathE "$")) defaultClaimsFormat)
+        -- "$" JSON path signifies the claims are to be found in the root of the JWT token
+          `shouldReturn`
+          Right defaultClaimsMap
+
+      it "throws error while attempting to parse claims map from the JWT token with a wrong namespace JSON Path" $ do
+        let claimsObj = unObject $
+                        [ "x-hasura-allowed-roles" .= (["user","editor"] :: [Text])
+                        , "x-hasura-default-role"  .= ("user" :: Text)
+                        ]
+            obj = unObject $ [ "hasura_claims" .= claimsObj ]
+        parseClaimsMap_ obj  (JCNamespace (ClaimNsPath (mkJSONPathE "$.claims")) defaultClaimsFormat)
+          `shouldReturn`
+          Left JWTInvalidClaims
+
+  describe "JWT configured with custom JWT claims" $ do
+
+    let rolesObj = unObject $
+                    [ "allowed" .= (["user","editor"] :: [Text])
+                    , "default"  .= ("user" :: Text)
                     ]
-    let obj = (unObject $ ["claims_map" .= claimsObj])
-    parseClaimsMap_ obj  (JCNamespace (ClaimNs "claims_map") defaultClaimsFormat)
-      `shouldReturn`
-      Right (Map.fromList
-       [ (allowedRolesClaim, J.toJSON (map mkRoleNameE ["user","editor"]))
-       , (defaultRoleClaim, J.toJSON (mkRoleNameE "user"))])
+        userId = unObject [ "id" .= ("1" :: Text)]
+        obj = unObject $ [ "roles" .= rolesObj
+                         , "user"  .= userId
+                         ]
+        userIdClaim = mkSessionVariable "x-hasura-user-id"
 
-  it "doesn't parse claims map from the JWT token with wrong namespace " $ do
-    let claimsObj = unObject $
-                    [ "x-hasura-allowed-roles" .= (["user","editor"] :: [Text])
-                    , "x-hasura-default-role"  .= ("user" :: Text)
-                    ]
-    let obj = (unObject $ ["claims_map" .= claimsObj])
-    parseClaimsMap_ obj  (JCNamespace (ClaimNs "wrong_claims_map") defaultClaimsFormat)
-      `shouldReturn`
-      Left JWTInvalidClaims
+    describe "custom claims with JSON paths to the claim location in the JWT token" $ do
 
-  it "parse claims map from the JWT token using claims namespace JSON Path" $ do
-    let obj = unObject $
-                    [ "x-hasura-allowed-roles" .= (["user","editor"] :: [Text])
-                    , "x-hasura-default-role"  .= ("user" :: Text)
-                    , "sub" .= ("random" :: Text)
-                    , "exp" .= (1626420800 :: Int)        -- we ignore these non session variables, in the response
-                    ]
-    parseClaimsMap_ obj  (JCNamespace (ClaimNsPath (mkJSONPathE "$")) defaultClaimsFormat)
-    -- "$" JSON path signifies the claims are to be found in the root of the JWT token
-      `shouldReturn`
-      Right (Map.fromList
-       [ (allowedRolesClaim, J.toJSON (map mkRoleNameE ["user","editor"]))
-       , (defaultRoleClaim, J.toJSON (mkRoleNameE "user"))
-       ])
+      it "parse custom claims values, with correct values" $ do
+        let customDefRoleClaim = mkCustomDefaultRoleClaim (Just "$.roles.default") Nothing
+            customAllowedRolesClaim = mkCustomAllowedRoleClaim (Just "$.roles.allowed") Nothing
+            otherClaims = Map.fromList
+                 [(userIdClaim, (mkCustomOtherClaim (Just "$.user.id") Nothing))]
+            customClaimsMap = JWTCustomClaimsMap customDefRoleClaim customAllowedRolesClaim otherClaims
 
-  it "throws error while attempting to parse claims map from the JWT token with a wrong namespace JSON Path" $ do
-    let claimsObj = unObject $
-                    [ "x-hasura-allowed-roles" .= (["user","editor"] :: [Text])
-                    , "x-hasura-default-role"  .= ("user" :: Text)
-                    ]
-        obj = unObject $ [ "hasura_claims" .= claimsObj ]
-    parseClaimsMap_ obj  (JCNamespace (ClaimNsPath (mkJSONPathE "$.claims")) defaultClaimsFormat)
-      `shouldReturn`
-      Left JWTInvalidClaims
+        parseClaimsMap_ obj  (JCMap customClaimsMap)
+          `shouldReturn`
+          Right (Map.fromList
+           [ (allowedRolesClaim, J.toJSON (map mkRoleNameE ["user","editor"]))
+           , (defaultRoleClaim, J.toJSON (mkRoleNameE "user"))
+           , (userIdClaim, J.String "1")
+           ])
 
-  let rolesObj = unObject $
-                  [ "allowed" .= (["user","editor"] :: [Text])
-                  , "default"  .= ("user" :: Text)
-                  ]
-      userId = unObject [ "id" .= ("1" :: Text)]
-      obj = unObject $ [ "roles" .= rolesObj
-                       , "user"  .= userId
-                       ]
-      userIdClaim = mkSessionVariable "x-hasura-user-id"
+      it "throws error when a specified custom claim value is missing" $ do
 
-  it "parse custom claims values, with correct values" $ do
-    let customDefRoleClaim = mkCustomDefaultRoleClaim (Just "$.roles.default") Nothing
-        customAllowedRolesClaim = mkCustomAllowedRoleClaim (Just "$.roles.allowed") Nothing
-        otherClaims = Map.fromList
-             [(userIdClaim, (mkCustomOtherClaim (Just "$.user.id") Nothing))]
-        customClaimsMap = JWTCustomClaimsMap customDefRoleClaim customAllowedRolesClaim otherClaims
+        let customDefRoleClaim = mkCustomDefaultRoleClaim (Just "$.roles.wrong_default") Nothing -- wrong path provided
+            customAllowedRolesClaim = mkCustomAllowedRoleClaim (Just "$.roles.allowed") Nothing
+            customClaimsMap = JWTCustomClaimsMap customDefRoleClaim customAllowedRolesClaim mempty
+        parseClaimsMap_ obj  (JCMap customClaimsMap)
+          `shouldReturn`
+          Left JWTRoleClaimMissing
 
-    parseClaimsMap_ obj  (JCMap customClaimsMap)
-      `shouldReturn`
-      Right (Map.fromList
-       [ (allowedRolesClaim, J.toJSON (map mkRoleNameE ["user","editor"]))
-       , (defaultRoleClaim, J.toJSON (mkRoleNameE "user"))
-       , (userIdClaim, J.String "1")
-       ])
+      it "doesn't throw an error when the specified custom claim is missing, but the default value is provided" $ do
 
-  it "throws error when a specified custom claim value is missing" $ do
+        let customDefRoleClaim = mkCustomDefaultRoleClaim (Just "$.roles.wrong_default") (Just "editor")
+            customAllowedRolesClaim = mkCustomAllowedRoleClaim (Just "$.roles.allowed") Nothing
+            customClaimsMap = JWTCustomClaimsMap customDefRoleClaim customAllowedRolesClaim mempty
+        parseClaimsMap_ obj  (JCMap customClaimsMap)
+          `shouldReturn`
+          Right (Map.fromList
+           [ (allowedRolesClaim, J.toJSON (map mkRoleNameE ["user","editor"]))
+           , (defaultRoleClaim, J.toJSON (mkRoleNameE "editor"))
+           ])
 
-    let customDefRoleClaim = mkCustomDefaultRoleClaim (Just "$.roles.wrong_default") Nothing -- wrong path provided
-        customAllowedRolesClaim = mkCustomAllowedRoleClaim (Just "$.roles.allowed") Nothing
-        customClaimsMap = JWTCustomClaimsMap customDefRoleClaim customAllowedRolesClaim mempty
-    parseClaimsMap_ obj  (JCMap customClaimsMap)
-      `shouldReturn`
-      Left JWTRoleClaimMissing
+    describe "custom claims with literal values" $ do
 
-  it "doesn't throw an error when the specified custom claim is missing, but the default value is provided" $ do
+      it "uses the literal custom claim value" $ do
 
-    let customDefRoleClaim = mkCustomDefaultRoleClaim (Just "$.roles.wrong_default") (Just "editor")
-        customAllowedRolesClaim = mkCustomAllowedRoleClaim (Just "$.roles.allowed") Nothing
-        customClaimsMap = JWTCustomClaimsMap customDefRoleClaim customAllowedRolesClaim mempty
-    parseClaimsMap_ obj  (JCMap customClaimsMap)
-      `shouldReturn`
-      Right (Map.fromList
-       [ (allowedRolesClaim, J.toJSON (map mkRoleNameE ["user","editor"]))
-       , (defaultRoleClaim, J.toJSON (mkRoleNameE "editor"))
-       ])
-
-  it "use the literal custom claim value" $ do
-
-    let customDefRoleClaim = mkCustomDefaultRoleClaim Nothing (Just "editor")
-        customAllowedRolesClaim = mkCustomAllowedRoleClaim Nothing (Just ["user", "editor"])
-        customClaimsMap = JWTCustomClaimsMap customDefRoleClaim customAllowedRolesClaim mempty
-    parseClaimsMap_ obj  (JCMap customClaimsMap)
-      `shouldReturn`
-      Right (Map.fromList
-       [ (allowedRolesClaim, J.toJSON (map mkRoleNameE ["user","editor"]))
-       , (defaultRoleClaim, J.toJSON (mkRoleNameE "editor"))
-       ])
+        let customDefRoleClaim = mkCustomDefaultRoleClaim Nothing (Just "editor")
+            customAllowedRolesClaim = mkCustomAllowedRoleClaim Nothing (Just ["user", "editor"])
+            customClaimsMap = JWTCustomClaimsMap customDefRoleClaim customAllowedRolesClaim mempty
+        parseClaimsMap_ mempty (JCMap customClaimsMap)
+          `shouldReturn`
+          Right (Map.fromList
+           [ (allowedRolesClaim, J.toJSON (map mkRoleNameE ["user","editor"]))
+           , (defaultRoleClaim, J.toJSON (mkRoleNameE "editor"))
+           ])
 
 mkCustomDefaultRoleClaim :: (Maybe Text) -> (Maybe Text) -> JWTCustomClaimsMapDefaultRole
 mkCustomDefaultRoleClaim claimPath defVal =
