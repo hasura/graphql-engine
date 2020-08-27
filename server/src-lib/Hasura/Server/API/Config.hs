@@ -19,7 +19,7 @@ data JWTInfo
   = JWTInfo
   { jwtiClaimsNamespace :: !JWTNamespace
   , jwtiClaimsFormat    :: !JWTClaimsFormat
-  , jwtiClaimsMap       :: !(Maybe JWTClaimsMap)
+  , jwtiClaimsMap       :: !(Maybe JWTCustomClaimsMap)
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 4 snakeCase) ''JWTInfo)

@@ -7,9 +7,11 @@ module Hasura.Server.Auth.JWT
   , Jose.JWKSet (..)
   , JWTClaimsFormat (..)
   , JWTClaims(..)
-  , JWTClaimsMap
   , JwkFetchError (..)
   , JWTNamespace (..)
+  , JWTCustomClaimsMapDefaultRole
+  , JWTCustomClaimsMapAllowedRoles
+  , JWTCustomClaimsMapValue
   , ClaimsMap
   , updateJwkRef
   , jwkRefreshCtrl
@@ -20,6 +22,9 @@ module Hasura.Server.Auth.JWT
   , processJwt_
   , allowedRolesClaim
   , defaultRoleClaim
+  , parseClaimsMap
+  , JWTCustomClaimsMapValueG(..)
+  , JWTCustomClaimsMap(..)
   ) where
 
 import           Control.Exception.Lifted        (try)
@@ -86,65 +91,64 @@ defaultRoleClaim = mkSessionVariable "x-hasura-default-role"
 defaultClaimsNamespace :: Text
 defaultClaimsNamespace = "https://hasura.io/jwt/claims"
 
-
--- | 'JWTClaimsMapValueG' is used to represent a single value of
--- the 'JWTClaimsMap'. A 'JWTClaimsMap' can either be an JSON object
--- or the literal value of the claim. If the value is an JSON object,
--- then it should contain a key `path`, which is the JSON path to the
--- claim value in the JWT token. There's also an option to specify a
+-- | 'JWTCustomClaimsMapValueG' is used to represent a single value of
+-- the 'JWTCustomClaimsMap'. A 'JWTCustomClaimsMapValueG' can either be
+-- an JSON object or the literal value of the claim. If the value is an
+-- JSON object, then it should contain a key `path`, which is the JSON path
+-- to the claim value in the JWT token. There's also an option to specify a
 -- default value in the map via the 'default' key, which will be used
 -- when a peek at the JWT token using the JSON path fails (key does not exist).
-data JWTClaimsMapValueG v
-  = JWTClaimsMapJSONPath !J.JSONPath !(Maybe v)
+data JWTCustomClaimsMapValueG v
+  = JWTCustomClaimsMapJSONPath !J.JSONPath !(Maybe v)
   -- ^ JSONPath to the key in the claims map, in case
   -- the key doesn't exist in the claims map then the default
   -- value will be used (if provided)
-  | JWTClaimsMapStatic !v
+  | JWTCustomClaimsMapStatic !v
   deriving (Show, Eq, Functor, Foldable, Traversable)
 
-instance (J.FromJSON v) => J.FromJSON (JWTClaimsMapValueG v) where
+instance (J.FromJSON v) => J.FromJSON (JWTCustomClaimsMapValueG v) where
   parseJSON (J.Object obj) = do
     path <- obj J..: "path" >>= (either fail pure . parseJSONPath)
     defaultVal <- obj J..:? "default" >>= traverse pure
-    pure $ JWTClaimsMapJSONPath path defaultVal
-  parseJSON v = JWTClaimsMapStatic <$> J.parseJSON v
+    pure $ JWTCustomClaimsMapJSONPath path defaultVal
+  parseJSON v = JWTCustomClaimsMapStatic <$> J.parseJSON v
 
-instance (J.ToJSON v) => J.ToJSON (JWTClaimsMapValueG v) where
-  toJSON (JWTClaimsMapJSONPath jsonPath mDefVal) =
+instance (J.ToJSON v) => J.ToJSON (JWTCustomClaimsMapValueG v) where
+  toJSON (JWTCustomClaimsMapJSONPath jsonPath mDefVal) =
     J.object $
        [ "path"    J..= encodeJSONPath jsonPath ]
     <> [ "default" J..= defVal | Just defVal <- [mDefVal]]
-  toJSON (JWTClaimsMapStatic v)          = J.toJSON v
+  toJSON (JWTCustomClaimsMapStatic v)          = J.toJSON v
 
-type JWTClaimsMapDefaultRole = JWTClaimsMapValueG RoleName
-type JWTClaimsMapAllowedRoles = JWTClaimsMapValueG [RoleName]
+type JWTCustomClaimsMapDefaultRole = JWTCustomClaimsMapValueG RoleName
+type JWTCustomClaimsMapAllowedRoles = JWTCustomClaimsMapValueG [RoleName]
 
 -- Used to store other session variables like `x-hasura-user-id`
-type JWTClaimsMapValue = JWTClaimsMapValueG SessionVariableValue
+type JWTCustomClaimsMapValue = JWTCustomClaimsMapValueG SessionVariableValue
 
-type CustomClaimsMap = Map.HashMap SessionVariable JWTClaimsMapValue
+type CustomClaimsMap = Map.HashMap SessionVariable JWTCustomClaimsMapValue
 
 -- | JWTClaimsMap is an option to provide a custom JWT claims map.
 -- The JWTClaimsMap should be specified in the `HASURA_GRAPHQL_JWT_SECRET`
 -- in the `claims_map`. The JWTClaimsMap, if specified, requires two
 -- mandatory fields, namely, `x-hasura-allowed-roles` and the
 -- `x-hasura-default-role`, other claims may also be provided in the claims map.
-data JWTClaimsMap
-  = JWTClaimsMap
-  { jcmDefaultRole  :: !JWTClaimsMapDefaultRole
-  , jcmAllowedRoles :: !JWTClaimsMapAllowedRoles
+data JWTCustomClaimsMap
+  = JWTCustomClaimsMap
+  { jcmDefaultRole  :: !JWTCustomClaimsMapDefaultRole
+  , jcmAllowedRoles :: !JWTCustomClaimsMapAllowedRoles
   , jcmCustomClaims :: !CustomClaimsMap
   } deriving (Show,Eq)
 
-instance J.ToJSON JWTClaimsMap where
-  toJSON (JWTClaimsMap defaultRole allowedRoles customClaims) =
+instance J.ToJSON JWTCustomClaimsMap where
+  toJSON (JWTCustomClaimsMap defaultRole allowedRoles customClaims) =
     J.Object $
     Map.fromList $ [ (sessionVariableToText defaultRoleClaim, J.toJSON defaultRole)
                    , (sessionVariableToText allowedRolesClaim, J.toJSON allowedRoles)
                    ]
     <> map (sessionVariableToText *** J.toJSON) (Map.toList customClaims)
 
-instance J.FromJSON JWTClaimsMap where
+instance J.FromJSON JWTCustomClaimsMap where
   parseJSON = J.withObject "JWTClaimsMap" $ \obj -> do
     let withNotFoundError sessionVariable =
           let errorMsg = T.unpack $
@@ -156,7 +160,7 @@ instance J.FromJSON JWTClaimsMap where
     let filteredClaims = Map.delete allowedRolesClaim $ Map.delete defaultRoleClaim
                           $ Map.fromList $ map (first mkSessionVariable) $ Map.toList obj
     customClaims <- flip Map.traverseWithKey filteredClaims $ const $ J.parseJSON
-    pure $ JWTClaimsMap defaultRole allowedRoles customClaims
+    pure $ JWTCustomClaimsMap defaultRole allowedRoles customClaims
 
 -- | JWTNamespace is used to locate the claims map within the JWT token.
 -- The location can be either provided via a JSON path or the name of the
@@ -172,7 +176,7 @@ instance J.ToJSON JWTNamespace where
 
 data JWTClaims
   = JCNamespace !JWTNamespace !JWTClaimsFormat
-  | JCMap !JWTClaimsMap
+  | JCMap !JWTCustomClaimsMap
   deriving (Show, Eq)
 
 -- | The JWT configuration we got from the user.
@@ -441,28 +445,28 @@ parseClaimsMap unregisteredClaims jcxClaims =
       pure claimsMap
 
     JCMap claimsConfig -> do
-      let JWTClaimsMap defaultRoleClaimsMap allowedRolesClaimsMap otherClaimsMap = claimsConfig
+      let JWTCustomClaimsMap defaultRoleClaimsMap allowedRolesClaimsMap otherClaimsMap = claimsConfig
           claimsObjValue = J.Object unregisteredClaims
 
       allowedRoles <- case allowedRolesClaimsMap of
-        JWTClaimsMapJSONPath allowedRolesJsonPath defaultVal ->
+        JWTCustomClaimsMapJSONPath allowedRolesJsonPath defaultVal ->
           parseAllowedRolesClaim defaultVal $ iResultToMaybe $ executeJSONPath allowedRolesJsonPath claimsObjValue
-        JWTClaimsMapStatic staticAllowedRoles -> pure staticAllowedRoles
+        JWTCustomClaimsMapStatic staticAllowedRoles -> pure staticAllowedRoles
 
       defaultRole <- case defaultRoleClaimsMap of
-        JWTClaimsMapJSONPath defaultRoleJsonPath defaultVal ->
+        JWTCustomClaimsMapJSONPath defaultRoleJsonPath defaultVal ->
           parseDefaultRoleClaim defaultVal $ iResultToMaybe $
           executeJSONPath defaultRoleJsonPath claimsObjValue
-        JWTClaimsMapStatic staticDefaultRole -> pure staticDefaultRole
+        JWTCustomClaimsMapStatic staticDefaultRole -> pure staticDefaultRole
 
       otherClaims <- flip Map.traverseWithKey otherClaimsMap $ \k claimObj -> do
         let throwClaimErr = throw400 JWTInvalidClaims $ "JWT claim from claims_map, "
                             <> sessionVariableToText k <> " not found"
         case claimObj of
-          JWTClaimsMapJSONPath path defaultVal ->
+          JWTCustomClaimsMapJSONPath path defaultVal ->
             maybe (onNothing (J.String <$> defaultVal) throwClaimErr) pure
               $ iResultToMaybe $ executeJSONPath path claimsObjValue
-          JWTClaimsMapStatic claimStaticValue -> pure $ J.String claimStaticValue
+          JWTCustomClaimsMapStatic claimStaticValue -> pure $ J.String claimStaticValue
 
       pure $  Map.fromList [
             (allowedRolesClaim, J.toJSON allowedRoles),
