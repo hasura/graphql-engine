@@ -243,7 +243,7 @@ getUserInfoWithExpTime_ userInfoFromAuthHook_ processJwt_ logger manager rawHead
       mkUserInfo (URBFromSessionVariablesFallback adminRoleName)
       adminSecretState sessionVariables
 
-    sessionVariables = mkSessionVariables rawHeaders
+    sessionVariables = mkSessionVariablesHeaders rawHeaders
 
     checkingSecretIfSent
       :: AdminSecretHash -> m (UserInfo, Maybe UTCTime) -> m (UserInfo, Maybe UTCTime)

@@ -10,7 +10,7 @@ module Hasura.Session
   , SessionVariableValue
   , sessionVariableToText
   , mkSessionVariablesText
-  , mkSessionVariables
+  , mkSessionVariablesHeaders
   , sessionVariablesToHeaders
   , getSessionVariableValue
   , getSessionVariablesSet
@@ -109,8 +109,8 @@ mkSessionVariablesText :: [(Text, Text)] -> SessionVariables
 mkSessionVariablesText =
   SessionVariables . Map.fromList . map (first mkSessionVariable)
 
-mkSessionVariables :: [HTTP.Header] -> SessionVariables
-mkSessionVariables =
+mkSessionVariablesHeaders :: [HTTP.Header] -> SessionVariables
+mkSessionVariablesHeaders =
   SessionVariables
   . Map.fromList
   . map (first SessionVariable)

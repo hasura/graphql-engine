@@ -10,6 +10,7 @@ import           Control.Monad.Trans.Control
 import qualified Crypto.JOSE.JWK             as Jose
 import           Data.Aeson                  ((.=))
 import qualified Data.Aeson                  as J
+import qualified Data.HashMap.Strict         as Map
 import qualified Network.HTTP.Types          as N
 
 import           Hasura.RQL.Types
@@ -56,10 +57,12 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
               _UserInfo nm =
                 mkUserInfo (URBFromSessionVariablesFallback $ mkRoleNameE nm)
                            UAdminSecretNotSent
-                           (mkSessionVariables mempty)
+                           (mkSessionVariablesHeaders mempty)
           processJwt = processJwt_ $
             -- processAuthZHeader:
-            \_jwtCtx _authzHeader -> return (claims , Nothing)
+            \_jwtCtx _authzHeader -> return (claimsObjToClaimsMap claims , Nothing)
+            where
+              claimsObjToClaimsMap = Map.fromList . map (first mkSessionVariable) . Map.toList
 
   let setupAuthMode'E a b c d =
         either (const $ error "fixme") id <$> setupAuthMode' a b c d

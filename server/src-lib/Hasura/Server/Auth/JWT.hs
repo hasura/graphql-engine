@@ -10,6 +10,7 @@ module Hasura.Server.Auth.JWT
   , JWTClaimsMap
   , JwkFetchError (..)
   , JWTNamespace (..)
+  , ClaimsMap
   , updateJwkRef
   , jwkRefreshCtrl
   , defaultClaimsFormat
@@ -53,7 +54,6 @@ import qualified Crypto.JWT                      as Jose
 import qualified Data.Aeson                      as J
 import qualified Data.Aeson.Casing               as J
 import qualified Data.Aeson.TH                   as J
-import qualified Data.Aeson.Types                as J
 import qualified Data.ByteString.Lazy            as BL
 import qualified Data.ByteString.Lazy.Char8      as BLC
 import qualified Data.CaseInsensitive            as CI
@@ -154,10 +154,13 @@ instance J.FromJSON JWTClaimsMap where
     allowedRoles <- withNotFoundError allowedRolesClaim  >>= J.parseJSON
     defaultRole <- withNotFoundError defaultRoleClaim  >>= J.parseJSON
     let filteredClaims = Map.delete allowedRolesClaim $ Map.delete defaultRoleClaim
-                          $ Map.fromList $ map (\(k, v) -> (mkSessionVariable k, v)) $ Map.toList obj
+                          $ Map.fromList $ map (first mkSessionVariable) $ Map.toList obj
     customClaims <- flip Map.traverseWithKey filteredClaims $ const $ J.parseJSON
     pure $ JWTClaimsMap defaultRole allowedRoles customClaims
 
+-- | JWTNamespace is used to locate the claims map within the JWT token.
+-- The location can be either provided via a JSON path or the name of the
+-- key in the JWT token.
 data JWTNamespace
   = ClaimNsPath JSONPath
   | ClaimNs T.Text
@@ -307,6 +310,7 @@ updateJwkRef (Logger logger) manager url jwkRef = do
       HTTP.HttpExceptionRequest _ reason -> show reason
       HTTP.InvalidUrlException _ reason -> show reason
 
+type ClaimsMap = Map.HashMap SessionVariable J.Value
 
 -- | Process the request headers to verify the JWT and extract UserInfo from it
 --
@@ -330,7 +334,7 @@ processJwt = processJwt_ processAuthZHeader
 -- Broken out for testing with mocks:
 processJwt_
   :: (MonadError QErr m)
-  => (_JWTCtx -> BLC.ByteString -> m (J.Object, Maybe UTCTime))
+  => (_JWTCtx -> BLC.ByteString -> m (ClaimsMap, Maybe UTCTime))
   -- ^ mock 'processAuthZHeader'
   -> _JWTCtx
   -> HTTP.RequestHeaders
@@ -342,12 +346,7 @@ processJwt_ processAuthZHeader_ jwtCtx headers mUnAuthRole =
     mAuthZHeader = find (\h -> fst h == CI.mk "Authorization") headers
 
     withAuthZHeader (_, authzHeader) = do
-      (hasuraClaims, expTimeM) <- processAuthZHeader_ jwtCtx $ BL.fromStrict authzHeader
-
-      -- filter only x-hasura claims and convert to lower-case
-      let claimsMap = Map.filterWithKey (\k _ -> isSessionVariable k)
-                    $ Map.fromList $ map (first T.toLower)
-                    $ Map.toList hasuraClaims
+      (claimsMap, expTimeM) <- processAuthZHeader_ jwtCtx $ BL.fromStrict authzHeader
 
       HasuraClaims allowedRoles defaultRole <- parseHasuraClaims claimsMap
       -- see if there is a x-hasura-role header, or else pick the default role.
@@ -358,10 +357,11 @@ processJwt_ processAuthZHeader_ jwtCtx headers mUnAuthRole =
       when (requestedRole `notElem` allowedRoles) $
         throw400 AccessDenied "Your requested role is not in allowed roles"
       let finalClaims =
-            Map.delete (sessionVariableToText defaultRoleClaim) . Map.delete (sessionVariableToText allowedRolesClaim) $ claimsMap
+            Map.delete defaultRoleClaim . Map.delete allowedRolesClaim $ claimsMap
 
       -- transform the map of text:aeson-value -> text:text
-      metadata <- parseJwtClaim (J.Object finalClaims) "x-hasura-* claims"
+      let finalClaimsObject = Map.fromList . map (first sessionVariableToText) . Map.toList $ finalClaims
+      metadata <- parseJwtClaim (J.Object $ finalClaimsObject) "x-hasura-* claims"
       userInfo <- mkUserInfo (URBPreDetermined requestedRole) UAdminSecretNotSent $
                   mkSessionVariablesText $ Map.toList metadata
       pure (userInfo, expTimeM)
@@ -369,7 +369,7 @@ processJwt_ processAuthZHeader_ jwtCtx headers mUnAuthRole =
     withoutAuthZHeader = do
       unAuthRole <- maybe missingAuthzHeader return mUnAuthRole
       userInfo <- mkUserInfo (URBPreDetermined unAuthRole) UAdminSecretNotSent $
-        mkSessionVariables headers
+        mkSessionVariablesHeaders headers
       pure (userInfo, Nothing)
 
       where
@@ -383,7 +383,7 @@ processAuthZHeader
      , MonadError QErr m)
   => JWTCtx
   -> BLC.ByteString
-  -> m (J.Object, Maybe UTCTime)
+  -> m (ClaimsMap, Maybe UTCTime)
 processAuthZHeader jwtCtx authzHeader = do
   -- try to parse JWT token from Authorization header
   jwt <- parseAuthzHeader
@@ -394,7 +394,7 @@ processAuthZHeader jwtCtx authzHeader = do
   let expTimeM = fmap (\(Jose.NumericDate t) -> t) $ claims ^. Jose.claimExp
       unregisteredClaims = claims ^. Jose.unregisteredClaims
 
-  claimsObject <- parseClaimsObject unregisteredClaims claimsConfig
+  claimsObject <- parseClaimsMap unregisteredClaims claimsConfig
 
   pure $ (claimsObject, expTimeM)
 
@@ -418,22 +418,27 @@ processAuthZHeader jwtCtx authzHeader = do
       throw400 InvalidHeaders "Malformed Authorization header"
 
 -- | parse the claims map from the JWT token or custom claims from the JWT config
-parseClaimsObject
+parseClaimsMap
   :: (MonadError QErr m)
   => J.Object -- ^ Unregistered JWT claims
   -> JWTClaims -- ^ Claims config
-  -> m J.Object -- ^ Hasura claims and other claims
-parseClaimsObject unregisteredClaims jcxClaims =
+  -> m ClaimsMap -- ^ Hasura claims and other claims
+parseClaimsMap unregisteredClaims jcxClaims =
   case jcxClaims of
     JCNamespace namespace claimsFormat -> do
       claimsV <- maybe (claimsNotFound namespace) pure $ case namespace of
             ClaimNs k -> Map.lookup k unregisteredClaims
             ClaimNsPath path -> iResultToMaybe $ executeJSONPath path (J.toJSON unregisteredClaims)
       -- get hasura claims value as an object. parse from string possibly
-      claimsObject <- Map.fromList . Map.toList <$>
-                      parseObjectFromString namespace claimsFormat claimsV
+      claimsObject <- parseObjectFromString namespace claimsFormat claimsV
 
-      pure claimsObject
+      -- filter only x-hasura claims
+      let claimsMap = Map.fromList
+                      $ map (first mkSessionVariable)
+                      $ filter (\(k, _) -> isSessionVariable k)
+                      $ Map.toList claimsObject
+
+      pure claimsMap
 
     JCMap claimsConfig -> do
       let JWTClaimsMap defaultRoleClaimsMap allowedRolesClaimsMap otherClaimsMap = claimsConfig
@@ -450,23 +455,19 @@ parseClaimsObject unregisteredClaims jcxClaims =
           executeJSONPath defaultRoleJsonPath claimsObjValue
         JWTClaimsMapStatic staticDefaultRole -> pure staticDefaultRole
 
-      otherClaimsObject <- flip Map.traverseWithKey otherClaimsMap $ \k claimObj -> do
+      otherClaims <- flip Map.traverseWithKey otherClaimsMap $ \k claimObj -> do
         let throwClaimErr = throw400 JWTInvalidClaims $ "JWT claim from claims_map, "
                             <> sessionVariableToText k <> " not found"
         case claimObj of
           JWTClaimsMapJSONPath path defaultVal ->
-            maybe (onNothing (J.String <$> defaultVal) throwClaimErr) pure $ iResultToMaybe $ executeJSONPath path claimsObjValue
+            maybe (onNothing (J.String <$> defaultVal) throwClaimErr) pure
+              $ iResultToMaybe $ executeJSONPath path claimsObjValue
           JWTClaimsMapStatic claimStaticValue -> pure $ J.String claimStaticValue
 
-      otherClaims <- toClaimsTextMap otherClaimsObject
-
-      let obj = Map.fromList [
-            (sessionVariableToText allowedRolesClaim, J.toJSON allowedRoles),
-            (sessionVariableToText defaultRoleClaim, J.toJSON defaultRole)
-            ]
-            <> (Map.fromList . map (\(k,v) -> (sessionVariableToText k, J.toJSON v)) . Map.toList $ otherClaims)
-
-      pure obj
+      pure $  Map.fromList [
+            (allowedRolesClaim, J.toJSON allowedRoles),
+            (defaultRoleClaim, J.toJSON defaultRole)
+            ] <> otherClaims
 
   where
     parseAllowedRolesClaim defaultVal = \case
@@ -482,10 +483,6 @@ parseClaimsObject unregisteredClaims jcxClaims =
         throw400 JWTRoleClaimMissing $ "JWT claim does not contain " <> sessionVariableToText defaultRoleClaim
       Just v -> parseJwtClaim v $ "invalid " <> sessionVariableToText defaultRoleClaim <>
                 "; should be a role"
-
-    toClaimsTextMap = Map.traverseWithKey $ \key value ->
-      either (throw400 JWTInvalidClaims . T.pack) pure $ J.parseEither
-      (J.modifyFailure ("x-hasura-* claims: " <>) . J.withText (T.unpack . sessionVariableToText $ key) pure) value
 
     claimsNotFound namespace =
       throw400 JWTInvalidClaims $ case namespace of
@@ -612,7 +609,7 @@ instance J.FromJSON JWTConfig where
       failJSONPathParsing err = fail $ "invalid JSON path claims_namespace_path error: " ++ err
 
 -- parse x-hasura-allowed-roles, x-hasura-default-role from JWT claims
-parseHasuraClaims :: forall m. (MonadError QErr m) => J.Object -> m HasuraClaims
+parseHasuraClaims :: forall m. (MonadError QErr m) => ClaimsMap -> m HasuraClaims
 parseHasuraClaims claimsMap = do
   HasuraClaims <$>
     parseClaim allowedRolesClaim "should be a list of roles" <*>
@@ -621,7 +618,7 @@ parseHasuraClaims claimsMap = do
   where
     parseClaim :: J.FromJSON a => SessionVariable -> Text -> m a
     parseClaim claim hint = do
-      claimV <- maybe missingClaim return $ Map.lookup claimText claimsMap
+      claimV <- maybe missingClaim return $ Map.lookup claim claimsMap
       parseJwtClaim claimV $ "invalid " <> claimText <> "; " <> hint
       where
         missingClaim = throw400 JWTRoleClaimMissing $ "JWT claim does not contain " <> claimText
