@@ -29,6 +29,7 @@ common common-all
   ghc-options:
     -fmax-simplifier-iterations=20 -foptimal-applicative-do
     -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
+    -fdefer-typed-holes
 
   if flag(developer)
     cpp-options: -DDeveloperAPIs
@@ -108,6 +109,8 @@ library
                      , validation
                      , lifted-base
                      , pg-client
+                     , mysql-haskell
+                     , io-streams
                      , validation
                      , text
                      , text-builder >= 0.6
@@ -421,6 +424,8 @@ library
                      , Hasura.RQL.DML.Update.Types
                      , Hasura.RQL.DML.Count
                      , Hasura.RQL.GBoolExp
+                     , Hasura.Sources
+                     , Hasura.Sources.MySQL.Query
                      , Hasura.GraphQL.Explain
                      , Hasura.GraphQL.Execute.Action
                      , Hasura.GraphQL.Execute.Inline

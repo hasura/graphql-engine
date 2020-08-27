@@ -26,9 +26,9 @@ module Hasura.Server.Migrate
 import           Hasura.Prelude
 
 import qualified Data.Aeson                    as A
+import qualified Data.Environment              as Env
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.Text                     as T
-import qualified Data.Environment              as Env
 import qualified Data.Text.IO                  as TIO
 import qualified Database.PG.Query             as Q
 import qualified Database.PG.Query.Connection  as Q
@@ -41,11 +41,12 @@ import           Data.Time.Clock               (UTCTime)
 import           Hasura.Logging                (Hasura, LogLevel (..), ToEngineLog (..))
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Schema
-import           Hasura.Server.Init            (DowngradeOptions (..))
 import           Hasura.RQL.Types
+import           Hasura.Server.Init            (DowngradeOptions (..))
 import           Hasura.Server.Logging         (StartupLog (..))
-import           Hasura.Server.Version
 import           Hasura.Server.Migrate.Version (latestCatalogVersion, latestCatalogVersionString)
+import           Hasura.Server.Version
+import           Hasura.Sources
 import           Hasura.SQL.Types
 import           System.Directory              (doesFileExist)
 
@@ -81,7 +82,7 @@ instance ToEngineLog MigrationResult Hasura where
 -- used in the `migrations` function below.
 data MigrationPair m = MigrationPair
   { mpMigrate :: m ()
-  , mpDown :: Maybe (m ())
+  , mpDown    :: Maybe (m ())
   }
 
 migrateCatalog
@@ -94,9 +95,10 @@ migrateCatalog
      , HasSQLGenCtx m
      )
   => Env.Environment
+  -> DataSource
   -> UTCTime
   -> m (MigrationResult, RebuildableSchemaCache m)
-migrateCatalog env migrationTime = do
+migrateCatalog env dataSource migrationTime = do
   doesSchemaExist (SchemaName "hdb_catalog") >>= \case
     False -> initialize True
     True  -> doesTableExist (SchemaName "hdb_catalog") (TableName "hdb_version") >>= \case
@@ -146,7 +148,7 @@ migrateCatalog env migrationTime = do
     migrateFrom :: T.Text -> m (MigrationResult, RebuildableSchemaCache m)
     migrateFrom previousVersion
       | previousVersion == latestCatalogVersionString = do
-          schemaCache <- buildRebuildableSchemaCache env
+          schemaCache <- buildRebuildableSchemaCache env dataSource
           pure (MRNothingToDo, schemaCache)
       | [] <- neededMigrations =
           throw400 NotSupported $
@@ -165,7 +167,7 @@ migrateCatalog env migrationTime = do
 
     buildCacheAndRecreateSystemMetadata :: m (RebuildableSchemaCache m)
     buildCacheAndRecreateSystemMetadata = do
-      schemaCache <- buildRebuildableSchemaCache env
+      schemaCache <- buildRebuildableSchemaCache env dataSource
       view _2 <$> runCacheRWT schemaCache recreateSystemMetadata
 
     doesSchemaExist schemaName =

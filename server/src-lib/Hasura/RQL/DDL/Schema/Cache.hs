@@ -20,10 +20,10 @@ module Hasura.RQL.DDL.Schema.Cache
 
 import           Hasura.Prelude
 
+import qualified Data.Environment                         as Env
 import qualified Data.HashMap.Strict.Extended             as M
 import qualified Data.HashSet                             as HS
 import qualified Data.Text                                as T
-import qualified Data.Environment                         as Env
 import qualified Database.PG.Query                        as Q
 
 import           Control.Arrow.Extended
@@ -56,16 +56,18 @@ import           Hasura.RQL.DDL.Utils                     (clearHdbViews)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.Server.Version                    (HasVersion)
+import           Hasura.Sources
 import           Hasura.SQL.Types
 
 buildRebuildableSchemaCache
   :: (HasVersion, MonadIO m, MonadUnique m, MonadTx m, HasHttpManager m, HasSQLGenCtx m)
   => Env.Environment
+  -> DataSource
   -> m (RebuildableSchemaCache m)
-buildRebuildableSchemaCache env = do
+buildRebuildableSchemaCache env dataSource = do
   catalogMetadata <- liftTx fetchCatalogData
   result <- flip runReaderT CatalogSync $
-    Inc.build (buildSchemaCacheRule env) (catalogMetadata, initialInvalidationKeys)
+    Inc.build (buildSchemaCacheRule env dataSource) (catalogMetadata, initialInvalidationKeys)
   pure $ RebuildableSchemaCache (Inc.result result) initialInvalidationKeys (Inc.rebuildRule result)
 
 newtype CacheRWT m a
@@ -116,8 +118,9 @@ buildSchemaCacheRule
      , MonadIO m, MonadUnique m, MonadTx m
      , MonadReader BuildReason m, HasHttpManager m, HasSQLGenCtx m )
   => Env.Environment
+  -> DataSource
   -> (CatalogMetadata, InvalidationKeys) `arr` SchemaCache
-buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
+buildSchemaCacheRule env dataSource = proc (catalogMetadata, invalidationKeys) -> do
   invalidationKeysDep <- Inc.newDependency -< invalidationKeys
 
   -- Step 1: Process metadata and collect dependency information.
@@ -132,6 +135,7 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
   -- Step 3: Build the GraphQL schema.
   (gqlContext, gqlSchemaInconsistentObjects) <- runWriterA buildGQLContext -<
     ( QueryHasura
+    , dataSource
     , (_boTables    resolvedOutputs)
     , (_boFunctions resolvedOutputs)
     , (_boRemoteSchemas resolvedOutputs)
@@ -142,6 +146,7 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
   -- Step 4: Build the relay GraphQL schema
   (relayContext, relaySchemaInconsistentObjects) <- runWriterA buildGQLContext -<
     ( QueryRelay
+    , dataSource
     , (_boTables    resolvedOutputs)
     , (_boFunctions resolvedOutputs)
     , (_boRemoteSchemas resolvedOutputs)

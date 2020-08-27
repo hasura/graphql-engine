@@ -8,10 +8,12 @@ module Hasura.Server.Init
 import qualified Data.Aeson                       as J
 import qualified Data.Aeson.Casing                as J
 import qualified Data.Aeson.TH                    as J
+import qualified Data.ByteString.Char8            as BS
 import qualified Data.HashSet                     as Set
 import qualified Data.String                      as DataString
 import qualified Data.Text                        as T
 import qualified Data.Text.Encoding               as TE
+import qualified Database.MySQL.Connection        as My
 import qualified Database.PG.Query                as Q
 import qualified Language.Haskell.TH.Syntax       as TH
 import qualified Text.PrettyPrint.ANSI.Leijen     as PP
@@ -516,7 +518,8 @@ parseRawConnInfo :: Parser RawConnInfo
 parseRawConnInfo =
   RawConnInfo <$> host <*> port <*> user <*> password
               <*> dbUrl <*> dbName <*> options
-              <*> retries
+              <*> retries <*> mySQLHost <*> mySQLPort
+              <*> mySQLUser <*> mySQLPassword <*> mySQLDBName
   where
     host = optional $
       strOption ( long "host" <>
@@ -563,6 +566,37 @@ parseRawConnInfo =
                   help "PostgreSQL options"
                 )
 
+    mySQLHost = optional $
+      strOption ( long "mysql-host" <>
+                  metavar "<HOST>" <>
+                  help "MySQL server host"
+                )
+
+    mySQLPort = optional $
+      option auto ( long "mysql-port" <>
+                  metavar "<PORT>" <>
+                  help "MySQL server port"
+                  )
+
+    mySQLUser = optional $
+      strOption ( long "mysql-user" <>
+                  metavar "<USER>" <>
+                  help "MySQL database user name"
+                )
+
+    mySQLPassword =
+      strOption ( long "mysql-password" <>
+                  metavar "<PASSWORD>" <>
+                  value "" <>
+                  help "Password of the MySQL user"
+                )
+
+    mySQLDBName = optional $
+      strOption ( long "mysql-dbname" <>
+                  metavar "<DBNAME>" <>
+                  help "MySQL database name to connect to"
+                )
+
     retries = optional $
       option auto ( long "retries" <>
                     metavar "NO OF RETRIES" <>
@@ -570,21 +604,45 @@ parseRawConnInfo =
                   )
 
 mkConnInfo :: RawConnInfo -> Either String Q.ConnInfo
-mkConnInfo (RawConnInfo mHost mPort mUser password mURL mDB opts mRetries) =
-  Q.ConnInfo retries <$>
-  case (mHost, mPort, mUser, mDB, mURL) of
-
-    (Just host, Just port, Just user, Just db, Nothing) ->
-      return $ Q.CDOptions $ Q.ConnOptions host port user password db opts
-
-    (_, _, _, _, Just dbURL) ->
-      return $ Q.CDDatabaseURI $ TE.encodeUtf8 $ T.pack dbURL
-    _ -> throwError $ "Invalid options. "
-                    ++ "Expecting all database connection params "
-                    ++ "(host, port, user, dbname, password) or "
-                    ++ "database-url (HASURA_GRAPHQL_DATABASE_URL)"
+mkConnInfo (RawConnInfo pgHost pgPort pgUser pgPassword dbURL pgDB opts mRetries _ _ _ _ _) =
+  go pgHost pgPort pgUser pgPassword pgDB dbURL
   where
     retries = fromMaybe 1 mRetries
+    go (Just host) (Just port) (Just user) pw (Just db) Nothing =
+      Right $ Q.ConnInfo retries $ Q.CDOptions $ Q.ConnOptions host port user pw db opts
+    go _ _ _ _ _ (Just db) =
+      Right $ Q.ConnInfo retries $ Q.CDDatabaseURI $ TE.encodeUtf8 $ T.pack db
+    go _ _ _ _ _ _ =
+      Left $ "Invalid options. "
+               ++ "Expecting all database connection params "
+               ++ "(host, port, user, dbname, password) or "
+               ++ "database-url (HASURA_GRAPHQL_DATABASE_URL)"
+
+mkMySQLConnInfo :: RawConnInfo -> Maybe My.ConnectInfo
+mkMySQLConnInfo (RawConnInfo _ _ _ _ _ _ _ _ myHost myPort myUser myPassword myDB) = do
+  host <- myHost
+  port <- myPort
+  user <- BS.pack <$> myUser
+  db   <- BS.pack <$> myDB
+  pure $ My.ConnectInfo host (stringlyCoerce port) db user (BS.pack myPassword) My.utf8_general_ci
+
+{-
+mkConnInfo :: RawConnInfo -> Either String Q.ConnInfo
+mkConnInfo (RawConnInfo pgHost pgPort pgUser pgPassword dbURL pgDB opts mRetries msHost msPort msUser msPassword msDB) =
+  go MySQLDB    msHost msPort msUser msPassword msDB ("mysql:",    dbURL) <|>
+  go PostgresDB pgHost pgPort pgUser pgPassword pgDB ("postgres:", dbURL)
+  where
+    retries = fromMaybe 1 mRetries
+    go source (Just host) (Just port) (Just user) pw (Just db) (_, Nothing) =
+      Right (source, Q.ConnInfo retries $ Q.CDOptions $ Q.ConnOptions host port user pw db opts)
+    go source _ _ _ _ _ (prefix, Just db)
+      | prefix `isPrefixOf` db =  Right (source, Q.ConnInfo retries $ Q.CDDatabaseURI $ TE.encodeUtf8 $ T.pack db)
+    go _ _ _ _ _ _ _ =
+      Left $ "Invalid options. "
+               ++ "Expecting all database connection params "
+               ++ "(host, port, user, dbname, password) or "
+               ++ "database-url (HASURA_GRAPHQL_DATABASE_URL)"
+-}
 
 parseTxIsolation :: Parser (Maybe Q.TxIsolation)
 parseTxIsolation = optional $

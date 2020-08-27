@@ -16,12 +16,12 @@ import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+import qualified Hasura.Logging                         as L
 import qualified Hasura.RQL.DML.Delete                  as RQL
 import qualified Hasura.RQL.DML.Mutation                as RQL
 import qualified Hasura.RQL.DML.Returning.Types         as RQL
 import qualified Hasura.RQL.DML.Update                  as RQL
 import qualified Hasura.Tracing                         as Tracing
-import qualified Hasura.Logging                         as L
 
 
 import           Hasura.Db
@@ -114,11 +114,11 @@ convertMutationRootField
   -> MutationRootField UnpreparedValue
   -> m (Either (tx EncJSON, HTTP.ResponseHeaders) RemoteField)
 convertMutationRootField env logger userInfo manager reqHeaders stringifyNum = \case
-  RFDB (MDBInsert s)  -> noResponseHeaders =<< convertInsert env userSession rjCtx s stringifyNum
-  RFDB (MDBUpdate s)  -> noResponseHeaders =<< convertUpdate env userSession rjCtx s stringifyNum
-  RFDB (MDBDelete s)  -> noResponseHeaders =<< convertDelete env userSession rjCtx s stringifyNum
-  RFRemote remote     -> pure $ Right remote
-  RFAction (AMSync s) -> Left . (_aerTransaction &&& _aerHeaders) <$> resolveActionExecution env logger userInfo s actionExecContext
+  RFPostgres (MDBInsert s) -> noResponseHeaders =<< convertInsert env userSession rjCtx s stringifyNum
+  RFPostgres (MDBUpdate s) -> noResponseHeaders =<< convertUpdate env userSession rjCtx s stringifyNum
+  RFPostgres (MDBDelete s) -> noResponseHeaders =<< convertDelete env userSession rjCtx s stringifyNum
+  RFRemote remote      -> pure $ Right remote
+  RFAction (AMSync s)  -> Left . (_aerTransaction &&& _aerHeaders) <$> resolveActionExecution env logger userInfo s actionExecContext
   RFAction (AMAsync s) -> noResponseHeaders =<< resolveActionMutationAsync s reqHeaders userSession
   RFRaw s              -> noResponseHeaders $ pure $ encJFromJValue s
   where
@@ -150,7 +150,7 @@ convertMutationSelectionSet
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
-  -> m (ExecutionPlan (tx EncJSON, HTTP.ResponseHeaders) RemoteCall (G.Name, J.Value))
+  -> m (ExecutionPlan (tx EncJSON, HTTP.ResponseHeaders) () RemoteCall (G.Name, J.Value))
 convertMutationSelectionSet env logger gqlContext sqlGenCtx userInfo manager reqHeaders fields varDefs varValsM = do
   mutationParser <- onNothing (gqlMutationParser gqlContext) $
     throw400 ValidationFailed "no mutations exist"
@@ -167,7 +167,7 @@ convertMutationSelectionSet env logger gqlContext sqlGenCtx userInfo manager req
     (dbPlans, []) -> do
       let allHeaders = concatMap (snd . snd) dbPlans
           combinedTx = toSingleTx $ map (G.unName *** fst) dbPlans
-      pure $ ExecStepDB (combinedTx, allHeaders)
+      pure $ ExecStepPostgres (combinedTx, allHeaders)
     ([], remotes@(firstRemote:_)) -> do
       let (remoteOperation, varValsM') =
             buildTypedOperation

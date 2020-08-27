@@ -13,7 +13,9 @@ module Hasura.GraphQL.Transport.HTTP
   , GQLQueryText(..)
   ) where
 
+import           Control.Concurrent.MVar
 import           Control.Monad.Morph                    (hoist)
+import           Data.Maybe                             (fromJust)
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
@@ -29,9 +31,17 @@ import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 import           Hasura.Tracing                         (MonadTrace, TraceT, trace)
 
+import qualified Data.ByteString.Lazy as BS
+-- For dirty construction of fake query execution durations
+import Data.Time.Clock
+-- Dirty result construction
+import qualified Data.Text as T
+import qualified Data.Text.Encoding            as TE
+
 import qualified Data.Aeson                             as J
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
+import qualified Database.MySQL.Base                    as My
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.Query           as EQ
@@ -41,6 +51,10 @@ import qualified Hasura.Tracing                         as Tracing
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
+import qualified System.IO.Streams.List                 as IOSL
+
+-- DO NOT SUBMIT
+import qualified Debug.Trace                            as UGLY
 
 
 class Monad m => MonadExecuteQuery m where
@@ -99,10 +113,18 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
     case execPlan of
       E.QueryExecutionPlan queryPlan asts ->
         case queryPlan of
-          E.ExecStepDB txGenSql -> do
+          E.ExecStepPostgres txGenSql -> do
             (telemTimeIO, telemQueryType, respHdrs, resp) <-
               runQueryDB reqId (reqUnparsed,reqParsed) asts userInfo txGenSql
             return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs))
+          E.ExecStepMySQL queryString -> liftIO $ do
+            connection <- fromJust <$> readMVar mySQLConnection
+            let fixedQuery = BS.map (\x -> if x == 34 then 96 else x) queryString
+            UGLY.traceShowM fixedQuery
+            result <- IOSL.toList . snd =<< My.query_ connection (My.Query fixedQuery)
+            UGLY.traceShowM result
+            -- TODO fill in proper values for telemTimeIO and telemQueryType below
+            pure $ (telemCacheHit, Telem.Local, (secondsToDiffTime 0, Telem.Query, HttpResponse (encodeGQResp $ GQSuccess $ BS.fromStrict $ TE.encodeUtf8 $ T.concat $ fmap (\case My.MySQLText t -> t) $ concat result) []))
           E.ExecStepRemote (rsi, opDef, _varValsM) ->
             runRemoteGQ telemCacheHit rsi opDef
           E.ExecStepRaw (name, json) -> do
@@ -111,9 +133,10 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             return (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj []))
       E.MutationExecutionPlan mutationPlan ->
         case mutationPlan of
-          E.ExecStepDB (tx, responseHeaders) -> do
+          E.ExecStepPostgres (tx, responseHeaders) -> do
             (telemTimeIO, telemQueryType, resp) <- runMutationDB reqId reqUnparsed userInfo tx
             return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp responseHeaders))
+          E.ExecStepMySQL _ -> error "Dolphin: not supported for now"
           E.ExecStepRemote (rsi, opDef, _varValsM) ->
             runRemoteGQ telemCacheHit rsi opDef
           E.ExecStepRaw (name, json) -> do

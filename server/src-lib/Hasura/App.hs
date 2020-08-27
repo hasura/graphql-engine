@@ -1,5 +1,5 @@
-{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE CPP                  #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.App where
 
@@ -19,6 +19,7 @@ import           Data.Time.Clock                           (UTCTime)
 #ifndef PROFILING
 import           GHC.AssertNF
 #endif
+import           Control.Concurrent.MVar
 import           GHC.Stats
 import           Options.Applicative
 import           System.Environment                        (getEnvironment)
@@ -35,6 +36,7 @@ import qualified Data.Set                                  as Set
 import qualified Data.Text                                 as T
 import qualified Data.Time.Clock                           as Clock
 import qualified Data.Yaml                                 as Y
+import qualified Database.MySQL.Connection                 as My
 import qualified Database.PG.Query                         as Q
 import qualified Network.HTTP.Client                       as HTTP
 import qualified Network.HTTP.Client.TLS                   as HTTP
@@ -75,6 +77,7 @@ import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version
 import           Hasura.Session
+import           Hasura.Sources
 
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll     as EL
 import qualified Hasura.GraphQL.Transport.WebSocket.Server as WS
@@ -190,7 +193,7 @@ initialiseCtx
   => Env.Environment
   -> HGECommand Hasura
   -> RawConnInfo
-  -> m (InitCtx, UTCTime)
+  -> m (InitCtx, DataSource, UTCTime)
 initialiseCtx env hgeCmd rci = do
   initTime <- liftIO Clock.getCurrentTime
   -- global http manager
@@ -198,6 +201,12 @@ initialiseCtx env hgeCmd rci = do
   instanceId <- liftIO generateInstanceId
   connInfo <- liftIO procConnInfo
   latch <- liftIO newShutdownLatch
+  let mySQLConnInfo = mkMySQLConnInfo rci
+      dataSource = maybe PostgresDB (const MySQLDB) mySQLConnInfo
+  onJust mySQLConnInfo \connInfo -> liftIO do
+    (greeting, connection) <- My.connectDetail connInfo
+    print greeting
+    void $ swapMVar mySQLConnection $ Just connection
   (loggers, pool, sqlGenCtx) <- case hgeCmd of
     -- for the @serve@ command generate a regular PG pool
     HCServe so@ServeOptions{..} -> do
@@ -216,8 +225,8 @@ initialiseCtx env hgeCmd rci = do
       pure (l, pool, SQLGenCtx False)
 
   res <- flip onException (flushLogger (_lsLoggerCtx loggers)) $
-    migrateCatalogSchema env (_lsLogger loggers) pool httpManager sqlGenCtx
-  pure (InitCtx httpManager instanceId loggers connInfo pool latch res, initTime)
+    migrateCatalogSchema env dataSource (_lsLogger loggers) pool httpManager sqlGenCtx
+  pure (InitCtx httpManager instanceId loggers connInfo pool latch res, dataSource, initTime)
   where
     procConnInfo =
       either (printErrExit InvalidDatabaseConnectionParamsError . ("Fatal Error : " <>)) return $ mkConnInfo rci
@@ -235,14 +244,14 @@ initialiseCtx env hgeCmd rci = do
 -- | helper function to initialize or migrate the @hdb_catalog@ schema (used by pro as well)
 migrateCatalogSchema
   :: (HasVersion, MonadIO m)
-  => Env.Environment -> Logger Hasura -> Q.PGPool -> HTTP.Manager -> SQLGenCtx
+  => Env.Environment -> DataSource -> Logger Hasura -> Q.PGPool -> HTTP.Manager -> SQLGenCtx
   -> m (RebuildableSchemaCache Run, Maybe UTCTime)
-migrateCatalogSchema env logger pool httpManager sqlGenCtx = do
+migrateCatalogSchema env dataSource logger pool httpManager sqlGenCtx = do
   let pgExecCtx = mkPGExecCtx Q.Serializable pool
       adminRunCtx = RunCtx adminUserInfo httpManager sqlGenCtx
   currentTime <- liftIO Clock.getCurrentTime
   initialiseResult <- runExceptT $ peelRun adminRunCtx pgExecCtx Q.ReadWrite Nothing $
-    (,) <$> migrateCatalog env currentTime <*> liftTx fetchLastUpdate
+    (,) <$> migrateCatalog env dataSource currentTime <*> liftTx fetchLastUpdate
 
   ((migrationResult, schemaCache), lastUpdateEvent) <-
     initialiseResult `onLeft` \err -> do
