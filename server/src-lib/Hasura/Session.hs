@@ -32,7 +32,7 @@ import           Hasura.RQL.Types.Common    (NonEmptyText, adminText, mkNonEmpty
                                              unNonEmptyText)
 import           Hasura.RQL.Types.Error
 import           Hasura.Server.Utils
-import           Hasura.SQL.Types
+import           Hasura.SQL.Text
 
 import           Data.Aeson
 import           Data.Aeson.Types           (Parser, toJSONKeyText)
@@ -51,8 +51,8 @@ newtype RoleName
   deriving ( Show, Eq, Ord, Hashable, FromJSONKey, ToJSONKey, FromJSON
            , ToJSON, Q.FromCol, Q.ToPrepArg, Lift, Generic, Arbitrary, NFData, Cacheable )
 
-instance DQuote RoleName where
-  dquoteTxt = roleNameToTxt
+instance ToTxt RoleName where
+  toTxt = roleNameToTxt
 
 roleNameToTxt :: RoleName -> Text
 roleNameToTxt = unNonEmptyText . getRoleTxt

@@ -17,6 +17,7 @@ import           Hasura.GraphQL.Parser         (InputFieldsParser, Kind (..), Pa
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Table
+import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 

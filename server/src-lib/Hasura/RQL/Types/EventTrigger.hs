@@ -24,24 +24,28 @@ module Hasura.RQL.Types.EventTrigger
   , defaultTimeoutSeconds
   ) where
 
-import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
-import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.Types.Common    (NonEmptyText(..), InputWebhook)
-import           Hasura.SQL.Types
-import           Language.Haskell.TH.Syntax (Lift)
 
 import qualified Data.ByteString.Lazy       as LBS
 import qualified Data.Text                  as T
 import qualified Database.PG.Query          as Q
 import qualified Text.Regex.TDFA            as TDFA
 
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
+import           Language.Haskell.TH.Syntax (Lift)
+
+import           Hasura.Incremental         (Cacheable)
+import           Hasura.RQL.DDL.Headers
+import           Hasura.RQL.Types.Common    (InputWebhook, NonEmptyText (..))
+import           Hasura.SQL.Text
+import           Hasura.SQL.Types
+
+
 -- This change helps us create functions for the event triggers
 -- without the function name being truncated by PG, since PG allows
--- for only 63 chars for identifiers. 
+-- for only 63 chars for identifiers.
 -- Reasoning for the 42 characters:
 -- 63 - (notify_hasura_) - (_INSERT | _UPDATE | _DELETE)
 maxTriggerNameLength :: Int
@@ -49,7 +53,7 @@ maxTriggerNameLength = 42
 
 -- | Unique name for event trigger.
 newtype TriggerName = TriggerName { unTriggerName :: NonEmptyText }
-  deriving (Show, Eq, Hashable, Lift, DQuote, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, Generic, NFData, Cacheable, Arbitrary, Q.FromCol)
+  deriving (Show, Eq, Hashable, Lift, ToTxt, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, Generic, NFData, Cacheable, Arbitrary, Q.FromCol)
 
 triggerNameToTxt :: TriggerName -> Text
 triggerNameToTxt = unNonEmptyText . unTriggerName

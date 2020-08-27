@@ -22,6 +22,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Select.Internal
 import           Hasura.RQL.Types
+import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query              as Q

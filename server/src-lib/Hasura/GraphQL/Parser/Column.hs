@@ -31,6 +31,7 @@ import           Hasura.RQL.Types.Column               hiding (EnumValue (..), E
 import           Hasura.RQL.Types.Error
 import           Hasura.Session                        (SessionVariable)
 import           Hasura.SQL.DML
+import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 

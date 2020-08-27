@@ -28,6 +28,7 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Schema.Insert
 import           Hasura.RQL.Types
 import           Hasura.Server.Version          (HasVersion)
+import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 

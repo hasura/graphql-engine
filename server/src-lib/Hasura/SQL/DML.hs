@@ -1,25 +1,19 @@
 module Hasura.SQL.DML where
 
-import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
-import           Hasura.SQL.Types
-
-import           Data.String                (fromString)
-import           Language.Haskell.TH.Syntax (Lift)
 
 import qualified Data.Aeson                 as J
 import qualified Data.HashMap.Strict        as HM
 import qualified Data.Text.Extended         as T
 import qualified Text.Builder               as TB
 
-infixr 6 <->
-(<->) :: TB.Builder -> TB.Builder -> TB.Builder
-(<->) l r = l <> TB.char ' ' <> r
-{-# INLINE (<->) #-}
+import           Data.String                (fromString)
+import           Language.Haskell.TH.Syntax (Lift)
 
-paren :: TB.Builder -> TB.Builder
-paren t = TB.char '(' <> t <> TB.char ')'
-{-# INLINE paren #-}
+import           Hasura.Incremental         (Cacheable)
+import           Hasura.SQL.Text
+import           Hasura.SQL.Types
+
 
 data Select
   = Select

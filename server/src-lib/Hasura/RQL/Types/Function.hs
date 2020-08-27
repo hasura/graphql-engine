@@ -1,9 +1,9 @@
 module Hasura.RQL.Types.Function where
 
-import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Common
-import           Hasura.SQL.Types
+
+import qualified Data.Sequence              as Seq
+import qualified Data.Text                  as T
 
 import           Control.Lens
 import           Data.Aeson
@@ -11,8 +11,11 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax (Lift)
 
-import qualified Data.Sequence              as Seq
-import qualified Data.Text                  as T
+import           Hasura.Incremental         (Cacheable)
+import           Hasura.RQL.Types.Common
+import           Hasura.SQL.Text
+import           Hasura.SQL.Types
+
 
 data FunctionType
   = FTVOLATILE
@@ -33,7 +36,7 @@ instance Show FunctionType where
 
 newtype FunctionArgName =
   FunctionArgName { getFuncArgNameTxt :: T.Text}
-  deriving (Show, Eq, NFData, ToJSON, FromJSON, Lift, DQuote, IsString, Generic, Arbitrary, Cacheable)
+  deriving (Show, Eq, NFData, ToJSON, FromJSON, Lift, ToTxt, IsString, Generic, Arbitrary, Cacheable)
 
 newtype HasDefault = HasDefault { unHasDefault :: Bool }
   deriving (Show, Eq, ToJSON, Cacheable)

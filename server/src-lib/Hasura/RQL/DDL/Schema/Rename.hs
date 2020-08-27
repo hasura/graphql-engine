@@ -19,17 +19,18 @@ import           Hasura.RQL.DDL.Relationship.Types
 import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.Types
 import           Hasura.Session
+import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 import qualified Hasura.RQL.DDL.EventTrigger        as DS
 import qualified Hasura.RQL.DDL.RemoteRelationship  as RR
 
-import qualified Data.HashMap.Strict                as M
-import qualified Database.PG.Query                  as Q
-import qualified Data.Set                           as Set
-import qualified Data.List.NonEmpty                 as NE
-import qualified Language.GraphQL.Draft.Syntax      as G
 import           Data.Aeson
+import qualified Data.HashMap.Strict                as M
+import qualified Data.List.NonEmpty                 as NE
+import qualified Data.Set                           as Set
+import qualified Database.PG.Query                  as Q
+import qualified Language.GraphQL.Draft.Syntax      as G
 
 data RenameItem a
   = RenameItem

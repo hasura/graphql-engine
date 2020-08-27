@@ -22,6 +22,7 @@ import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.Session
+import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 buildTablePermissions

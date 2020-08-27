@@ -19,6 +19,7 @@ import qualified Hasura.Incremental           as Inc
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.RQL.Types.Run
+import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 -- | 'InvalidationKeys' used to apply requested 'CacheInvalidations'.
@@ -52,10 +53,10 @@ data BuildInputs
 -- 'MonadWriter' side channel.
 data BuildOutputs
   = BuildOutputs
-  { _boTables            :: !TableCache
-  , _boActions           :: !ActionCache
-  , _boFunctions         :: !FunctionCache
-  , _boRemoteSchemas     :: !(HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject))
+  { _boTables        :: !TableCache
+  , _boActions       :: !ActionCache
+  , _boFunctions     :: !FunctionCache
+  , _boRemoteSchemas :: !(HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject))
   -- ^ We preserve the 'MetadataObject' from the original catalog metadata in the output so we can
   -- reuse it later if we need to mark the remote schema inconsistent during GraphQL schema
   -- generation (because of field conflicts).

@@ -38,6 +38,7 @@ import           Data.Aeson.TH
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.Instances          ()
 import           Hasura.RQL.Types.Error
+import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 import           Language.Haskell.TH.Syntax    (Lift)
@@ -84,10 +85,10 @@ instance Cacheable PGColumnType
 $(deriveToJSON defaultOptions{constructorTagModifier = drop 8} ''PGColumnType)
 $(makePrisms ''PGColumnType)
 
-instance DQuote PGColumnType where
-  dquoteTxt = \case
-    PGColumnScalar scalar -> dquoteTxt scalar
-    PGColumnEnumReference (EnumReference tableName _) -> dquoteTxt tableName
+instance ToTxt PGColumnType where
+  toTxt = \case
+    PGColumnScalar scalar -> toTxt scalar
+    PGColumnEnumReference (EnumReference tableName _) -> toTxt tableName
 
 isScalarColumnWhere :: (PGScalarType -> Bool) -> PGColumnType -> Bool
 isScalarColumnWhere f = \case

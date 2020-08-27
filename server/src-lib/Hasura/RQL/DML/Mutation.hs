@@ -11,15 +11,15 @@ where
 
 import           Hasura.Prelude
 
-import qualified Data.Environment          as Env
-import qualified Data.HashMap.Strict       as Map
-import qualified Data.Sequence             as DS
-import qualified Database.PG.Query         as Q
-import qualified Network.HTTP.Client       as HTTP
-import qualified Network.HTTP.Types        as N
+import qualified Data.Environment               as Env
+import qualified Data.HashMap.Strict            as Map
+import qualified Data.Sequence                  as DS
+import qualified Database.PG.Query              as Q
+import qualified Network.HTTP.Client            as HTTP
+import qualified Network.HTTP.Types             as N
 
-import qualified Hasura.SQL.DML            as S
-import qualified Hasura.Tracing            as Tracing
+import qualified Hasura.SQL.DML                 as S
+import qualified Hasura.Tracing                 as Tracing
 
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
@@ -30,9 +30,10 @@ import           Hasura.RQL.DML.Select
 import           Hasura.RQL.Instances           ()
 import           Hasura.RQL.Types
 import           Hasura.Server.Version          (HasVersion)
+import           Hasura.Session
+import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-import           Hasura.Session
 
 type MutationRemoteJoinCtx = (HTTP.Manager, [N.Header], UserInfo)
 

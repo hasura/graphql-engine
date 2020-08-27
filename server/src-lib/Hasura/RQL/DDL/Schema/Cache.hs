@@ -20,10 +20,10 @@ module Hasura.RQL.DDL.Schema.Cache
 
 import           Hasura.Prelude
 
+import qualified Data.Environment                         as Env
 import qualified Data.HashMap.Strict.Extended             as M
 import qualified Data.HashSet                             as HS
 import qualified Data.Text                                as T
-import qualified Data.Environment                         as Env
 import qualified Database.PG.Query                        as Q
 
 import           Control.Arrow.Extended
@@ -56,6 +56,7 @@ import           Hasura.RQL.DDL.Utils                     (clearHdbViews)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.Server.Version                    (HasVersion)
+import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 buildRebuildableSchemaCache
@@ -479,7 +480,7 @@ withMetadataCheck cascade action = do
 
   return res
   where
-    reportFuncs = T.intercalate ", " . map dquoteTxt
+    reportFuncs = T.intercalate ", " . map toTxt
 
     processSchemaChanges :: (MonadTx m, CacheRM m) => SchemaDiff -> m ()
     processSchemaChanges schemaDiff = do

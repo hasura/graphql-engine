@@ -38,12 +38,13 @@ module Hasura.RQL.Types
   , module R
   ) where
 
-import           Control.Monad.Unique
-
 import           Hasura.Prelude
-import           Hasura.Session
-import           Hasura.SQL.Types
-import           Hasura.Tracing                      (TraceT)
+
+import qualified Data.HashMap.Strict                 as M
+import qualified Data.Text                           as T
+import qualified Network.HTTP.Client                 as HTTP
+
+import           Control.Monad.Unique
 
 import           Hasura.Db                           as R
 import           Hasura.RQL.Types.Action             as R
@@ -58,17 +59,18 @@ import           Hasura.RQL.Types.EventTrigger       as R
 import           Hasura.RQL.Types.Function           as R
 import           Hasura.RQL.Types.Metadata           as R
 import           Hasura.RQL.Types.Permission         as R
-import           Hasura.RQL.Types.RemoteRelationship as R
 import           Hasura.RQL.Types.QueryCollection    as R
-import           Hasura.RQL.Types.ScheduledTrigger   as R
+import           Hasura.RQL.Types.RemoteRelationship as R
 import           Hasura.RQL.Types.RemoteSchema       as R
+import           Hasura.RQL.Types.ScheduledTrigger   as R
 import           Hasura.RQL.Types.SchemaCache        as R
 import           Hasura.RQL.Types.SchemaCache.Build  as R
 import           Hasura.RQL.Types.Table              as R
+import           Hasura.Session
+import           Hasura.SQL.Text
+import           Hasura.SQL.Types
+import           Hasura.Tracing                      (TraceT)
 
-import qualified Data.HashMap.Strict                 as M
-import qualified Data.Text                           as T
-import qualified Network.HTTP.Client                 as HTTP
 
 data QCtx
   = QCtx

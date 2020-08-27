@@ -28,7 +28,9 @@ import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
 import           Hasura.Server.Version       (HasVersion)
 import           Hasura.Session
+import           Hasura.SQL.Text
 import           Hasura.SQL.Types
+
 
 import qualified Data.Environment            as Env
 import qualified Hasura.Tracing              as Tracing

@@ -14,18 +14,19 @@ module Hasura.RQL.DDL.QueryCollection
   , module Hasura.RQL.Types.QueryCollection
   ) where
 
-import           Hasura.EncJSON
 import           Hasura.Prelude
-
-import           Hasura.RQL.Types
-import           Hasura.RQL.Types.QueryCollection
-import           Hasura.SQL.Types
-
-import           Data.List.Extended               (duplicates)
 
 import qualified Data.Text                        as T
 import qualified Data.Text.Extended               as T
 import qualified Database.PG.Query                as Q
+
+import           Data.List.Extended               (duplicates)
+
+import           Hasura.EncJSON
+import           Hasura.RQL.Types
+import           Hasura.RQL.Types.QueryCollection
+import           Hasura.SQL.Text
+
 
 addCollectionP2
   :: (QErrM m)
