@@ -19,7 +19,6 @@
     "build": "webpack --progress -p --colors --display-error-details --config webpack/prod.config.js",
     "server-build": "make server-build",
     "build-unused": "webpack --verbose --colors --display-error-details --config webpack/prod.config.js --json | webpack-unused -s src",
-    "postinstall": "webpack --display-error-details --config webpack/prod.config.js",
     "cypress": "cypress open",
     "test": "cypress run --spec 'cypress/integration/**/**/test.ts' --key $CYPRESS_KEY --parallel --record",
     "lint": "eslint -c .eslintrc src --ext .js,.ts,.tsx",

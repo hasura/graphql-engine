@@ -145,7 +145,7 @@ class (Monad m) => HttpLog m where
     -- ^ the response bytes
     -> BL.ByteString
     -- ^ the compressed response bytes
-    -- ^ TODO: make the above two type represented
+    -- ^ TODO (from master): make the above two type represented
     -> Maybe (DiffTime, DiffTime)
     -- ^ IO/network wait time and service time (respectively) for this request, if available.
     -> Maybe CompressionType

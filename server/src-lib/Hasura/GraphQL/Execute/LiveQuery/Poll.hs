@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -- | Multiplexed live query poller threads; see "Hasura.GraphQL.Execute.LiveQuery" for details.
 module Hasura.GraphQL.Execute.LiveQuery.Poll (
   -- * Pollers
@@ -39,7 +40,9 @@ module Hasura.GraphQL.Execute.LiveQuery.Poll (
   ) where
 
 import           Data.List.Split                          (chunksOf)
+#ifndef PROFILING
 import           GHC.AssertNF
+#endif
 import           Hasura.Prelude
 
 import qualified Control.Concurrent.Async                 as A
@@ -215,7 +218,9 @@ pushResultToCohort result !respHashM (LiveQueryMetadata dTime) cohortSnapshot = 
   (subscribersToPush, subscribersToIgnore) <-
     if isExecError result || respHashM /= prevRespHashM
     then do
+#ifndef PROFILING
       $assertNFHere respHashM  -- so we don't write thunks to mutable vars
+#endif
       STM.atomically $ STM.writeTVar respRef respHashM
       return (newSinks <> curSinks, mempty)
     else
@@ -225,6 +230,7 @@ pushResultToCohort result !respHashM (LiveQueryMetadata dTime) cohortSnapshot = 
          (subscribersToPush, subscribersToIgnore)
   where
     CohortSnapshot _ respRef curSinks newSinks = cohortSnapshot
+
     response = result <&> \payload -> LiveQueryResponse payload dTime
     pushResultToSubscribers =
       A.mapConcurrently_ $ \(Subscriber _ _ action) -> action response
@@ -375,10 +381,10 @@ they need to.
 
 -- | see Note [Minimal LiveQuery Poller Log]
 pollDetailMinimal :: PollDetails -> J.Value
-pollDetailMinimal (PollDetails{..}) =
+pollDetailMinimal PollDetails{..} =
   J.object [ "poller_id" J..= _pdPollerId
            , "snapshot_time" J..= _pdSnapshotTime
-           , "batches" J..= (map batchExecutionDetailMinimal _pdBatches)
+           , "batches" J..= map batchExecutionDetailMinimal _pdBatches
            , "total_time" J..= _pdTotalTime
            ]
 
@@ -389,7 +395,7 @@ type LiveQueryPostPollHook = PollDetails -> IO ()
 
 -- the default LiveQueryPostPollHook
 defaultLiveQueryPostPollHook :: L.Logger L.Hasura -> LiveQueryPostPollHook
-defaultLiveQueryPostPollHook logger pd = L.unLogger logger pd
+defaultLiveQueryPostPollHook = L.unLogger
 
 -- | Where the magic happens: the top-level action run periodically by each
 -- active 'Poller'. This needs to be async exception safe.
