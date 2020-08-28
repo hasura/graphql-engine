@@ -17,7 +17,11 @@ import {
   updateConsoleNotificationsState,
 } from '../../telemetry/Actions';
 import Button from '../Common/Button';
-import { getReadAllNotificationsState, getConsoleScope } from './utils';
+import {
+  getReadAllNotificationsState,
+  getConsoleScope,
+  getUserType,
+} from './utils';
 import { Nullable } from '../Common/utils/tsUtils';
 import { mapDispatchToPropsEmpty } from '../Common/utils/reactUtils';
 import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
@@ -407,7 +411,8 @@ const HasuraNotifications: React.FC<
   let userType = 'admin';
 
   if (dataHeaders?.[HASURA_COLLABORATOR_TOKEN]) {
-    userType = dataHeaders[HASURA_COLLABORATOR_TOKEN];
+    const collabToken = dataHeaders[HASURA_COLLABORATOR_TOKEN];
+    userType = getUserType(collabToken);
   }
 
   React.useEffect(() => {

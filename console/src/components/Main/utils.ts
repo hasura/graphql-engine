@@ -76,7 +76,7 @@ const getConsoleScope = (
 };
 
 // added these, so that it can be repurposed if needed
-type JWTKeys = "sub" | "iat" | "aud" | "exp" | "iss";
+type JWTKeys = 'sub' | 'iat' | 'aud' | 'exp' | 'iss';
 type JWTType = Record<JWTKeys, string>;
 type DecodedJWT = Partial<JWTType>;
 

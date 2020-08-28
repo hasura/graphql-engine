@@ -22,6 +22,7 @@ import {
 } from '../types';
 import { isUpdateIDsEqual } from './utils';
 import { HASURA_COLLABORATOR_TOKEN } from '../constants';
+import { getUserType } from '../components/Main/utils';
 
 const SET_CONSOLE_OPTS = 'Telemetry/SET_CONSOLE_OPTS';
 const SET_NOTIFICATION_SHOWN = 'Telemetry/SET_NOTIFICATION_SHOWN';
@@ -159,7 +160,8 @@ const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
     const headers = dataHeaders(getState);
     let userType = 'admin';
     if (headers?.[HASURA_COLLABORATOR_TOKEN]) {
-      userType = headers[HASURA_COLLABORATOR_TOKEN];
+      const collabToken = headers[HASURA_COLLABORATOR_TOKEN];
+      userType = getUserType(collabToken);
     }
     let composedUpdatedState: ConsoleState['console_opts'] = {
       ...restState,
