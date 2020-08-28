@@ -51,10 +51,17 @@ const Update: React.FC<UpdateProps> = ({
   onReadCB,
   ...props
 }) => {
-  const [linkClicked, updateLinkClicked] = React.useState(is_read);
+  const [currentReadState, updateReadState] = React.useState(is_read);
+
+  React.useEffect(() => {
+    if (is_read) {
+      updateReadState(is_read);
+    }
+  }, [is_read]);
+
   const onClickNotification = () => {
-    if (!linkClicked) {
-      updateLinkClicked(true);
+    if (!currentReadState) {
+      updateReadState(true);
       if (onReadCB) {
         onReadCB();
       }
@@ -68,10 +75,7 @@ const Update: React.FC<UpdateProps> = ({
     return null;
   }
 
-  if (
-    !props.scope ||
-    (props.scope !== props.consoleScope && props.consoleScope !== 'OSS')
-  ) {
+  if (props.scope !== props.consoleScope && props.consoleScope !== 'OSS') {
     return null;
   }
 
@@ -83,18 +87,20 @@ const Update: React.FC<UpdateProps> = ({
   return (
     <Box
       className={`${updateContainerClass} ${
-        !linkClicked ? styles.unread : styles.read
+        !currentReadState ? styles.unread : styles.read
       }`}
       onClick={onClickNotification}
     >
       {!isUpdateNotification ? (
         <div
-          className={`${styles.unreadDot} ${linkClicked ? styles.hideDot : ''}`}
+          className={`${styles.unreadDot} ${
+            currentReadState ? styles.hideDot : ''
+          }`}
         />
       ) : (
         <span
           className={`${styles.unreadStar} ${
-            linkClicked ? styles.hideStar : ''
+            currentReadState ? styles.hideStar : ''
           }`}
           role="img"
           aria-label="star emoji"
