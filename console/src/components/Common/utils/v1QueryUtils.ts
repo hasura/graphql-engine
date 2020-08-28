@@ -7,6 +7,7 @@ import { transformHeaders } from '../Headers/utils';
 import { generateTableDef } from './pgUtils';
 import { Nullable } from './tsUtils';
 import { ConsoleState } from '../../../types';
+import { NotificationScope } from '../../Main/ConsoleNotification';
 
 // TODO add type for the where clause
 
@@ -695,7 +696,15 @@ export const getUpdateConsoleStateQuery = (
   };
 };
 
-export const getConsoleNotificationQuery = (time: Date | string | number) => {
+export const getConsoleNotificationQuery = (
+  time: Date | string | number,
+  userType?: Nullable<NotificationScope>
+) => {
+  let addedScope = {};
+  if (userType && userType !== 'OSS') {
+    addedScope = { scope: { $eq: userType } };
+  }
+
   return {
     args: {
       table: 'console_notification',
@@ -714,6 +723,12 @@ export const getConsoleNotificationQuery = (time: Date | string | number) => {
                   $eq: null,
                 },
               },
+              {
+                scope: {
+                  $eq: 'OSS',
+                },
+              },
+              addedScope,
             ],
           },
           {

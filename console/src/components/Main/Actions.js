@@ -10,7 +10,7 @@ import { updateConsoleNotificationsState } from '../../telemetry/Actions';
 import { getConsoleNotificationQuery } from '../Common/utils/v1QueryUtils';
 import dataHeaders from '../Services/Data/Common/Headers';
 import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
-import { getUserType } from './utils';
+import { getUserType, getConsoleScope } from './utils';
 
 const SET_MIGRATION_STATUS_SUCCESS = 'Main/SET_MIGRATION_STATUS_SUCCESS';
 const SET_MIGRATION_STATUS_ERROR = 'Main/SET_MIGRATION_STATUS_ERROR';
@@ -62,9 +62,10 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
   const headers = dataHeaders(getState);
   let previousRead = null;
   let strictChecks = false;
-
+  const { serverVersion } = getState().main;
+  const consoleId = window.__env.consoleId;
+  const consoleScope = getConsoleScope(serverVersion, consoleId);
   let userType = 'admin';
-
   if (headers.hasOwnProperty(HASURA_COLLABORATOR_TOKEN)) {
     const collabToken = headers[HASURA_COLLABORATOR_TOKEN];
     userType = getUserType(collabToken);
@@ -80,7 +81,7 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
   }
 
   const now = new Date().toISOString();
-  const query = getConsoleNotificationQuery(now);
+  const query = getConsoleNotificationQuery(now, consoleScope);
   const options = {
     body: JSON.stringify(query),
     method: 'POST',
