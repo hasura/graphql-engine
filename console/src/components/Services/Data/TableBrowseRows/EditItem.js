@@ -13,6 +13,8 @@ import { findTable, generateTableDef } from '../../../Common/utils/pgUtils';
 import { getTableBrowseRoute } from '../../../Common/utils/routesUtils';
 import { fetchEnumOptions } from './EditActions';
 import { TableRow } from '../Common/Components/TableRow';
+import MigrationCheckbox from '../TableInsertItem/MigrationCheckbox';
+// import { CLI_CONSOLE_MODE } from '../../../../constants';
 
 class EditItem extends Component {
   constructor() {
@@ -23,6 +25,10 @@ class EditItem extends Component {
   componentDidMount() {
     this.props.dispatch(fetchEnumOptions());
   }
+
+  toggleMigrationCheckBox = () => {
+    this.setState(prev => ({ isMigration: !prev.isMigration }));
+  };
 
   render() {
     const {
@@ -60,7 +66,8 @@ class EditItem extends Component {
       schemas,
       generateTableDef(tableName, currentSchema)
     );
-
+    
+    // const isCLIMode = globals.consoleMode === CLI_CONSOLE_MODE;
     const columns = currentTable.columns.sort(ordinalColSort);
 
     const refs = {};
@@ -151,6 +158,15 @@ class EditItem extends Component {
           <div className="col-xs-9">
             <form id="updateForm" className="form-horizontal">
               {elements}
+                <div className={`form-group ${styles.add_mar_top_small}`}>
+                  <label
+                    className={`col-sm-3 control-label ${styles.insertBoxLabel}`}
+                  />
+                  <MigrationCheckbox
+                    onChange={this.toggleMigrationCheckBox}
+                    isChecked={this.state.isMigration}
+                  />
+                </div>
               <Button
                 type="submit"
                 color="yellow"

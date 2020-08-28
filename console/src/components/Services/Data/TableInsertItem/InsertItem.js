@@ -13,7 +13,7 @@ import styles from '../../../Common/TableCommon/Table.scss';
 import { TableRow } from '../Common/Components/TableRow';
 import MigrationCheckbox from './MigrationCheckbox';
 import globals from '../../../../Globals';
-import { CLI_CONSOLE_MODE } from '../../../../constants';
+// import { CLI_CONSOLE_MODE } from '../../../../constants';
 
 class InsertItem extends Component {
   constructor() {
@@ -71,7 +71,7 @@ class InsertItem extends Component {
       throw new NotFoundError();
     }
 
-    const isCLIMode = globals.consoleMode === CLI_CONSOLE_MODE;
+    // const isCLIMode = globals.consoleMode === CLI_CONSOLE_MODE;
 
     const columns = currentTable.columns.sort(ordinalColSort);
 
@@ -169,7 +169,6 @@ class InsertItem extends Component {
             <form id="insertForm" className="form-horizontal">
               <div className={styles.form_flex}>
                 {elements}
-                {isCLIMode && (
                   <div className={`form-group ${styles.add_mar_top_small}`}>
                     <label
                       className={`col-sm-3 control-label ${styles.insertBoxLabel}`}
@@ -179,7 +178,6 @@ class InsertItem extends Component {
                       isChecked={this.state.isMigration}
                     />
                   </div>
-                )}
               </div>
               <div className={styles.display_flex}>
                 <Button
