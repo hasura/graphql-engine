@@ -19,6 +19,7 @@ import {
 import { ARRAY } from '../utils';
 import { isStringArray } from '../../../Common/utils/jsUtils';
 import { makeMigrationCall } from '../DataActions';
+import { removeAll } from 'react-notification-system-redux';
 
 const I_SET_CLONE = 'InsertItem/I_SET_CLONE';
 const I_RESET = 'InsertItem/I_RESET';
@@ -113,11 +114,7 @@ const insertItem = (tableName, colValues, isMigration = false) => {
           const val = JSON.parse(colValues[colName]);
           insertObject[colName] = val;
         } catch (e) {
-          errorMessage =
-            colName +
-            ' :: could not read ' +
-            colValues[colName] +
-            ' as a valid JSON object/array';
+          errorMessage = `${colName} :: could not read ${colValues[colName]} as a valid object/array`;
           error = true;
         }
       } else if (colType === ARRAY && isStringArray(colValues[colName])) {
@@ -125,11 +122,7 @@ const insertItem = (tableName, colValues, isMigration = false) => {
           const arr = JSON.parse(colValues[colName]);
           insertObject[colName] = arrayToPostgresArray(arr);
         } catch {
-          errorMessage =
-            colName +
-            ' :: could not read ' +
-            colValues[colName] +
-            ' as a valid array';
+          errorMessage = `${colName} :: could not read ${colValues[colName]} as a valid array`;
         }
       } else {
         insertObject[colName] = colValues[colName];
@@ -145,7 +138,7 @@ const insertItem = (tableName, colValues, isMigration = false) => {
     }
     let returning = [];
     if (isMigration) {
-      returning = columns.map(col => col.column_name);
+      returning = '*';
     }
     const reqBody = {
       type: 'insert',
@@ -191,6 +184,7 @@ const insertItem = (tableName, colValues, isMigration = false) => {
         }
       },
       err => {
+        dispatch(removeAll());
         dispatch(showErrorNotification('Insert failed!', err.error, err));
       }
     );

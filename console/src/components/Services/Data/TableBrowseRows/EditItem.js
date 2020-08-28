@@ -1,12 +1,11 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { replace } from 'react-router-redux';
+
 import TableHeader from '../TableCommon/TableHeader';
 import Button from '../../../Common/Button/Button';
 import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton';
 import { ordinalColSort } from '../utils';
-
-// import RichTextEditor from 'react-rte';
-import { replace } from 'react-router-redux';
 import globals from '../../../../Globals';
 import { E_ONGOING_REQ, editItem } from './EditActions';
 import { findTable, generateTableDef } from '../../../Common/utils/pgUtils';
@@ -14,12 +13,18 @@ import { getTableBrowseRoute } from '../../../Common/utils/routesUtils';
 import { fetchEnumOptions } from './EditActions';
 import { TableRow } from '../Common/Components/TableRow';
 import MigrationCheckbox from '../TableInsertItem/MigrationCheckbox';
-// import { CLI_CONSOLE_MODE } from '../../../../constants';
+import { CLI_CONSOLE_MODE } from '../../../../constants';
 
 class EditItem extends Component {
   constructor() {
     super();
-    this.state = { insertedRows: 0, editorColumnMap: {}, currentColumn: null };
+    this.state = {
+      insertedRows: 0,
+      editorColumnMap: {},
+      currentColumn: null,
+      isMigration: false,
+    };
+    this.isCLIMode = globals.consoleMode === CLI_CONSOLE_MODE;
   }
 
   componentDidMount() {
@@ -27,7 +32,7 @@ class EditItem extends Component {
   }
 
   toggleMigrationCheckBox = () => {
-    this.setState(prev => ({ isMigration: !prev.isMigration }));
+    this.setState(prevState => ({ isMigration: !prevState.isMigration }));
   };
 
   render() {
@@ -67,7 +72,6 @@ class EditItem extends Component {
       generateTableDef(tableName, currentSchema)
     );
     
-    // const isCLIMode = globals.consoleMode === CLI_CONSOLE_MODE;
     const columns = currentTable.columns.sort(ordinalColSort);
 
     const refs = {};
@@ -140,7 +144,7 @@ class EditItem extends Component {
 
       dispatch({ type: E_ONGOING_REQ });
 
-      dispatch(editItem(tableName, inputValues));
+      dispatch(editItem(tableName, inputValues, this.state.isMigration));
     };
 
     return (
@@ -158,15 +162,11 @@ class EditItem extends Component {
           <div className="col-xs-9">
             <form id="updateForm" className="form-horizontal">
               {elements}
-                <div className={`form-group ${styles.add_mar_top_small}`}>
-                  <label
-                    className={`col-sm-3 control-label ${styles.insertBoxLabel}`}
-                  />
-                  <MigrationCheckbox
-                    onChange={this.toggleMigrationCheckBox}
-                    isChecked={this.state.isMigration}
-                  />
-                </div>
+              <MigrationCheckbox
+                onChange={this.toggleMigrationCheckBox}
+                isCLIMode={this.isCLIMode}
+                isChecked={this.state.isMigration}
+              />
               <Button
                 type="submit"
                 color="yellow"

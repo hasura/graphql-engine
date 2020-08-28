@@ -1,7 +1,11 @@
 import React from 'react';
 import { isEqual, isString } from './jsUtils';
 import { Nullable } from './tsUtils';
-import { TableDefinition, FunctionDefinition } from './v1QueryUtils';
+import {
+  TableDefinition,
+  FunctionDefinition,
+  PGReturnValueType,
+} from './v1QueryUtils';
 
 /** * Table/View utils ** */
 
@@ -587,10 +591,10 @@ export const getGroupedTableComputedFields = (
 
 export const createPKClause = (
   primaryKeyInfo: PrimaryKey,
-  insertion: Record<string, any>,
+  insertion: Record<string, PGReturnValueType>,
   columns: BaseTableColumn[]
-): Record<string, any> => {
-  const newPKClause: Record<string, any> = {};
+): Record<string, PGReturnValueType> => {
+  const newPKClause: Record<string, PGReturnValueType> = {};
   const hasPrimaryKeys = primaryKeyInfo?.columns;
   if (hasPrimaryKeys) {
     primaryKeyInfo.columns.forEach(key => {
@@ -603,8 +607,9 @@ export const createPKClause = (
   }
 
   Object.keys(newPKClause).forEach(key => {
-    if (Array.isArray(newPKClause[key])) {
-      newPKClause[key] = arrayToPostgresArray(newPKClause[key]);
+    const currentValue = newPKClause[key];
+    if (Array.isArray(currentValue)) {
+      newPKClause[key] = arrayToPostgresArray(currentValue);
     }
   });
 

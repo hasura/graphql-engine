@@ -640,6 +640,10 @@ article ol ol {
   margin: 15px;
 }
 
+.sphinxsidebarwrapper > ul:not(.current) {
+  display: none;
+}
+
 #sidebar {
   background-color: #001934;
   width: 24% !important;

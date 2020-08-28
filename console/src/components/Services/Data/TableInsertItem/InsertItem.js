@@ -13,12 +13,13 @@ import styles from '../../../Common/TableCommon/Table.scss';
 import { TableRow } from '../Common/Components/TableRow';
 import MigrationCheckbox from './MigrationCheckbox';
 import globals from '../../../../Globals';
-// import { CLI_CONSOLE_MODE } from '../../../../constants';
+import { CLI_CONSOLE_MODE } from '../../../../constants';
 
 class InsertItem extends Component {
   constructor() {
     super();
     this.state = { insertedRows: 0, isMigration: false };
+    this.isCLIMode = globals.consoleMode === CLI_CONSOLE_MODE;
   }
 
   componentDidMount() {
@@ -70,8 +71,6 @@ class InsertItem extends Component {
       // throw a 404 exception
       throw new NotFoundError();
     }
-
-    // const isCLIMode = globals.consoleMode === CLI_CONSOLE_MODE;
 
     const columns = currentTable.columns.sort(ordinalColSort);
 
@@ -153,6 +152,46 @@ class InsertItem extends Component {
       );
     }
 
+    const onClickClear = () => {
+      const form = document.getElementById('insertForm');
+      const inputs = form.getElementsByTagName('input');
+      Array.from(inputs).forEach(input => {
+        switch (input.type) {
+          case 'text':
+            input.value = '';
+            break;
+          case 'radio':
+          case 'checkbox':
+            break;
+          default:
+        }
+      });
+    };
+
+    const onClickSave = e => {
+      e.preventDefault();
+      const inputValues = {};
+      Object.keys(refs).map(colName => {
+        if (refs[colName].nullNode.checked) {
+          // null
+          inputValues[colName] = null;
+        } else if (refs[colName].defaultNode.checked) {
+          // default
+          return;
+        } else {
+          inputValues[colName] =
+            refs[colName].valueNode.props !== undefined
+              ? refs[colName].valueNode.props.value
+              : refs[colName].valueNode.value;
+        }
+      });
+      dispatch(insertItem(tableName, inputValues, this.state.isMigration)).then(
+        () => {
+          this.nextInsert();
+        }
+      );
+    };
+
     return (
       <div className={styles.container + ' container-fluid'}>
         <TableHeader
@@ -169,44 +208,18 @@ class InsertItem extends Component {
             <form id="insertForm" className="form-horizontal">
               <div className={styles.form_flex}>
                 {elements}
-                  <div className={`form-group ${styles.add_mar_top_small}`}>
-                    <label
-                      className={`col-sm-3 control-label ${styles.insertBoxLabel}`}
-                    />
-                    <MigrationCheckbox
-                      onChange={this.toggleMigrationCheckBox}
-                      isChecked={this.state.isMigration}
-                    />
-                  </div>
+                <MigrationCheckbox
+                  onChange={this.toggleMigrationCheckBox}
+                  isChecked={this.state.isMigration}
+                  isCLIMode={this.isCLIMode}
+                />
               </div>
               <div className={styles.display_flex}>
                 <Button
                   type="submit"
                   color="yellow"
                   size="sm"
-                  onClick={e => {
-                    e.preventDefault();
-                    const inputValues = {};
-                    Object.keys(refs).map(colName => {
-                      if (refs[colName].nullNode.checked) {
-                        // null
-                        inputValues[colName] = null;
-                      } else if (refs[colName].defaultNode.checked) {
-                        // default
-                        return;
-                      } else {
-                        inputValues[colName] =
-                          refs[colName].valueNode.props !== undefined
-                            ? refs[colName].valueNode.props.value
-                            : refs[colName].valueNode.value;
-                      }
-                    });
-                    dispatch(
-                      insertItem(tableName, inputValues, this.state.isMigration)
-                    ).then(() => {
-                      this.nextInsert();
-                    });
-                  }}
+                  onClick={onClickSave}
                   data-test="insert-save-button"
                 >
                   {buttonText}
@@ -214,22 +227,7 @@ class InsertItem extends Component {
                 <Button
                   color="white"
                   size="sm"
-                  onClick={e => {
-                    e.preventDefault();
-                    const form = document.getElementById('insertForm');
-                    const inputs = form.getElementsByTagName('input');
-                    for (let i = 0; i < inputs.length; i++) {
-                      switch (inputs[i].type) {
-                        case 'text':
-                          inputs[i].value = '';
-                          break;
-                        case 'radio':
-                        case 'checkbox':
-                          break;
-                        default:
-                      }
-                    }
-                  }}
+                  onClick={onClickClear}
                   data-test="clear-button"
                 >
                   Clear
