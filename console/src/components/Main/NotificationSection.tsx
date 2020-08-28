@@ -2,7 +2,11 @@ import React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 
 import { Box, Flex, Heading, Text, Badge } from '../UIKit/atoms';
-import { ConsoleNotification, NotificationDate } from './ConsoleNotification';
+import {
+  ConsoleNotification,
+  NotificationDate,
+  NotificationScope,
+} from './ConsoleNotification';
 import styles from './Main.scss';
 import useOnClickOutside from '../../hooks/useOnClickOutside';
 import { ReduxState, NotificationsState, ConsoleState } from '../../types';
@@ -13,7 +17,7 @@ import {
   updateConsoleNotificationsState,
 } from '../../telemetry/Actions';
 import Button from '../Common/Button';
-import { getReadAllNotificationsState } from './utils';
+import { getReadAllNotificationsState, getConsoleScope } from './utils';
 import { Nullable } from '../Common/utils/tsUtils';
 import { mapDispatchToPropsEmpty } from '../Common/utils/reactUtils';
 import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
@@ -30,6 +34,7 @@ interface UpdateProps extends ConsoleNotification {
   onClickAction?: (id?: number) => void;
   is_read?: boolean;
   onReadCB?: () => void;
+  consoleScope: NotificationScope;
 }
 
 const Update: React.FC<UpdateProps> = ({
@@ -43,7 +48,6 @@ const Update: React.FC<UpdateProps> = ({
   ...props
 }) => {
   const [linkClicked, updateLinkClicked] = React.useState(is_read);
-
   const onClickNotification = () => {
     if (!linkClicked) {
       updateLinkClicked(true);
@@ -57,6 +61,13 @@ const Update: React.FC<UpdateProps> = ({
   };
 
   if (!is_active) {
+    return null;
+  }
+
+  if (
+    !props.scope ||
+    (props.scope !== props.consoleScope && props.consoleScope !== 'OSS')
+  ) {
     return null;
   }
 
@@ -185,6 +196,7 @@ const VersionUpdateNotification: React.FC<VersionUpdateNotificationProps> = ({
       type={isStableRelease ? 'version update' : 'beta update'}
       content={`Hey There! There's a new server version ${latestVersion} available.`}
       start_date={Date.now()}
+      consoleScope="OSS"
     >
       <a href={changeLogURL} target="_blank" rel="noopener noreferrer">
         <span>View Changelog</span>
@@ -215,6 +227,7 @@ const VulnerableVersionNotification: React.FC<VulnerableVersionProps> = ({
     subject="Security Vulnerability Located!"
     content={`This current server version has a security vulnerability. Please upgrade to ${fixedVersion} immediately.`}
     start_date={Date.now()}
+    consoleScope="OSS"
   >
     <a
       href={`https://github.com/hasura/graphql-engine/releases/tag/${fixedVersion}`}
@@ -365,6 +378,9 @@ const HasuraNotifications: React.FC<
   ...props
 }) => {
   const { dispatch } = props;
+  // eslint-disable-next-line no-underscore-dangle
+  const consoleId = window.__env.consoleId;
+  const consoleScope = getConsoleScope(serverVersion, consoleId);
   const dropDownRef = React.useRef<HTMLDivElement>(null);
   const wrapperRef = React.useRef<HTMLDivElement>(null);
   const [latestVersion, setLatestVersion] = React.useState(serverVersion);
@@ -672,6 +688,7 @@ const HasuraNotifications: React.FC<
                 onClickAction={onClickUpdate}
                 is_read={checkIsRead(previouslyReadState, id)}
                 onReadCB={onReadCB}
+                consoleScope={consoleScope}
                 {...otherProps}
               />
             ))}

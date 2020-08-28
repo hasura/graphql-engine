@@ -2,6 +2,8 @@ import { AllowedBadges } from '../UIKit/atoms/Badge';
 
 export type NotificationDate = string | number | Date | null;
 
+export type NotificationScope = 'OSS' | 'CLOUD' | 'PRO';
+
 export type ConsoleNotification = {
   id?: number;
   subject: string;
@@ -13,6 +15,7 @@ export type ConsoleNotification = {
   start_date?: NotificationDate;
   priority?: number;
   expiry_date?: NotificationDate;
+  scope?: NotificationScope;
 };
 
 // FIXME? : we may have to remove this
