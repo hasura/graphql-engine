@@ -14,6 +14,9 @@ import {
   cascadeSqlQuery,
   getCreateTableQueries,
   getDropTableSql,
+  getStatementTimeoutSql,
+  getCreateSchemaSql,
+  getDropSchemaSql,
 } from './sqlUtils';
 
 export const isTable = (table: Table) => {
@@ -441,6 +444,29 @@ export const isColTypeString = (colType: string) =>
 
 const dependecyErrorCode = '2BP01'; // pg dependent error > https://www.postgresql.org/docs/current/errcodes-appendix.html
 
+const createSQLRegex = /create\s*(?:|or\s*replace)\s*(view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/; // eslint-disable-line
+
+const isTimeoutError = (error: {
+  code: string;
+  internal?: { error?: { message?: string } };
+  message?: { error?: string; internal?: { error?: { message?: string } } };
+}) => {
+  if (error.internal && error.internal.error) {
+    return !!error.internal?.error?.message?.includes('statement timeout');
+  }
+
+  if (error.message && error.message.error === 'postgres query error') {
+    if (error.message.internal) {
+      return !!error.message.internal.error?.message?.includes(
+        'statement timeout'
+      );
+    }
+    return error.message.error.includes('statement timeout');
+  }
+
+  return false;
+};
+
 export const postgres: DataSourcesAPI = {
   isTable,
   displayTableName,
@@ -471,4 +497,9 @@ export const postgres: DataSourcesAPI = {
   dependecyErrorCode,
   getCreateTableQueries,
   getDropTableSql,
+  createSQLRegex,
+  getStatementTimeoutSql,
+  getDropSchemaSql,
+  getCreateSchemaSql,
+  isTimeoutError,
 };

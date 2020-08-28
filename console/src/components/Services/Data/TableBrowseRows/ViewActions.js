@@ -16,8 +16,6 @@ import {
   getRunSqlQuery,
 } from '../../../Common/utils/v1QueryUtils';
 import { COUNT_LIMIT } from '../constants';
-import { getStatementTimeoutSql } from '../RawSQL/utils';
-import { isPostgresTimeoutError } from './utils';
 import {
   generateTableDef,
   dataSource,
@@ -146,7 +144,7 @@ const vMakeCountRequest = () => {
       view.query.order_by
     );
 
-    const timeoutQuery = getRunSqlQuery(getStatementTimeoutSql(2));
+    const timeoutQuery = getRunSqlQuery(dataSource.getStatementTimeoutSql(2));
 
     const requestBody = {
       type: 'bulk',
@@ -179,7 +177,7 @@ const vMakeCountRequest = () => {
           type: V_COUNT_REQUEST_ERROR,
         });
 
-        if (!isPostgresTimeoutError(error)) {
+        if (!dataSource.isTimeoutError(error)) {
           dispatch(
             showErrorNotification('Count query failed!', error.error, error)
           );

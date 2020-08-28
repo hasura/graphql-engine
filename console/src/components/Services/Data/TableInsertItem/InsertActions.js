@@ -43,7 +43,7 @@ const insertItem = (tableName, colValues) => {
       if (Reals.indexOf(colType) > 0) {
         insertObject[colName] =
           parseFloat(colValues[colName], 10) || colValues[colName];
-      } else if (colType === 'boolean') {
+      } else if (colType === dataSource.columnDataTypes.BOOLEAN) {
         if (colValues[colName] === 'true') {
           insertObject[colName] = true;
         } else if (colValues[colName] === 'false') {
@@ -51,7 +51,10 @@ const insertItem = (tableName, colValues) => {
         } else {
           insertObject[colName] = null;
         }
-      } else if (colType === 'json' || colType === 'jsonb') {
+      } else if (
+        colType === dataSource.columnDataTypes.JSONDTYPE ||
+        colType === dataSource.columnDataTypes.JSONB
+      ) {
         try {
           const val = JSON.parse(colValues[colName]);
           insertObject[colName] = val;

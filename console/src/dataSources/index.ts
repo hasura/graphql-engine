@@ -107,6 +107,11 @@ export interface DataSourcesAPI {
         error: string;
       };
   getDropTableSql(schema: string, table: string): string;
+  createSQLRegex: RegExp;
+  getStatementTimeoutSql: (statementTimeoutInSecs: number) => string;
+  getDropSchemaSql(schema: string): string;
+  getCreateSchemaSql(schema: string): string;
+  isTimeoutError: (error: Record<string, any>) => boolean;
 }
 
 export let currentDriver: Driver = 'postgres';

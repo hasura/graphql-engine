@@ -13,11 +13,12 @@ import {
   loadMigrationStatus,
   UPDATE_MIGRATION_STATUS_ERROR,
 } from '../../../Main/Actions';
-import { getStatementTimeoutSql, parseCreateSQL } from './utils';
+import { parseCreateSQL } from './utils';
 import dataHeaders from '../Common/Headers';
 import returnMigrateUrl from '../Common/getMigrateUrl';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import requestAction from '../../../../utils/requestAction';
+import { dataSource } from '../../../../dataSources';
 
 const MAKING_REQUEST = 'RawSQL/MAKING_REQUEST';
 const SET_SQL = 'RawSQL/SET_SQL';
@@ -53,7 +54,7 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
   if (isStatementTimeout) {
     schemaChangesUp.push(
       getRunSqlQuery(
-        getStatementTimeoutSql(statementTimeout),
+        dataSource.getStatementTimeoutSql(statementTimeout),
         false,
         readOnlyMode
       )

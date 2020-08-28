@@ -457,3 +457,13 @@ export const getCreateTableQueries = (
 export const getDropTableSql = (schema: string, table: string) => {
   return `DROP TABLE "${schema}"."${table}"`;
 };
+
+export const getStatementTimeoutSql = (statementTimeoutInSecs: number) => {
+  return `SET LOCAL statement_timeout = ${statementTimeoutInSecs * 1000};`;
+};
+
+export const getDropSchemaSql = (schemaName: string) =>
+  `drop schema "${schemaName}" cascade;`;
+
+export const getCreateSchemaSql = (schemaName: string) =>
+  `create schema "${schemaName}";`;
