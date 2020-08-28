@@ -58,7 +58,7 @@ const getReadAllNotificationsState = () => {
 
 const getConsoleScope = (
   serverVersion: string,
-  consoleID: Nullable<string>,
+  consoleID: Nullable<string>
 ): NotificationScope => {
   if (!consoleID) {
     return 'OSS';
