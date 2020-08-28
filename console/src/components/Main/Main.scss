@@ -927,11 +927,10 @@
   padding: 12px 18px;
   color: white;
   cursor: pointer;
-
+  position: relative;
   &:hover {
     opacity: 0.7;
   }
-
   &.opened {
     background-color: #2d3242;
   }
@@ -1354,7 +1353,7 @@
   position: absolute;
   width: 17px;
   top: 16px;
-  right: 61px;
+  right: 8px;
   border-radius: 50%;
   user-select: none;
   visibility: visible;
