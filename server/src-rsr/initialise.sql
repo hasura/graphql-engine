@@ -559,7 +559,7 @@ CREATE INDEX ON hdb_catalog.event_invocation_logs (event_id);
 --         'foreign_columns', foreign_key.ref_columns
 --       )) AS info
 --       FROM hdb_catalog.hdb_foreign_key_constraint foreign_key
---       WHERE foreign_key.table_schema = schema.nspname
+--       WHERE foreign_key.
 --         AND foreign_key.table_name = "table".relname
 --     ) foreign_key_constraints ON true
 

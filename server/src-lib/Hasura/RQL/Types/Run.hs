@@ -18,23 +18,17 @@ import           Control.Monad.Unique
 import           Hasura.RQL.Types
 import qualified Hasura.Tracing              as Tracing
 
-data MetadataManageCtx
-  = MetadataManageCtx
-  { _mmcPool     :: !Q.PGPool
-  , _mmcFetchTx  :: !(Q.TxE QErr (Maybe Metadata))
-  , _mmcUpdateTx :: !(Metadata -> Q.TxE QErr ())
-  }
-
 data RunCtx
   = RunCtx
-  { _rcUserInfo  :: !UserInfo
-  , _rcHttpMgr   :: !HTTP.Manager
-  , _rcSqlGenCtx :: !SQLGenCtx
-  , _rcMetadata  :: !MetadataManageCtx
+  { _rcUserInfo     :: !UserInfo
+  , _rcHttpMgr      :: !HTTP.Manager
+  , _rcSqlGenCtx    :: !SQLGenCtx
+  , _rcMetadataPool :: !Q.PGPool
   }
 
+-- TODO: Efficient way to handle multple postgres transactions (user db and metadata storage)
 newtype Run a
-  = Run { unRun :: ReaderT RunCtx (LazyTx QErr) a }
+  = Run { unRun :: ReaderT RunCtx (StateT Metadata (LazyTx QErr)) a }
   deriving ( Functor, Applicative, Monad
            , MonadError QErr
            , MonadReader RunCtx
@@ -43,6 +37,7 @@ newtype Run a
            , MonadBase IO
            , MonadBaseControl IO
            , MonadUnique
+           , MonadState Metadata
            )
 
 instance UserInfoM Run where
@@ -55,18 +50,14 @@ instance HasSQLGenCtx Run where
   askSQLGenCtx = asks _rcSqlGenCtx
 
 instance MonadMetadata Run where
-  fetchMetadata = do
-    MetadataManageCtx{..} <- asks _rcMetadata
-    fromMaybe emptyMetadata <$> runTxInMetadataStorage _mmcFetchTx
+  fetchMetadata = get
 
-  updateMetadata metadata = do
-    MetadataManageCtx{..} <- asks _rcMetadata
-    runTxInMetadataStorage $ _mmcUpdateTx metadata
+  updateMetadata = put
 
   runTxInMetadataStorage tx = do
-    MetadataManageCtx{..} <- asks _rcMetadata
+    metadataPool <- asks _rcMetadataPool
     either throwError pure
-      =<< (liftIO . runExceptT . Q.runTx _mmcPool (Q.Serializable, Nothing)) tx
+      =<< (liftIO . runExceptT . Q.runTx metadataPool (Q.Serializable, Nothing)) tx
 
 peelRun
   :: (MonadIO m, MonadMetadataManage m)
@@ -82,6 +73,13 @@ peelRun
 peelRun userInfo httpManager sqlGenCtx metadataPGPool pgExecCtx txAccess ctx (Run m) = do
   metadataFetchTx <- lift fetchMetadataTx
   metadataUpdateTx <- lift updateMetadataTx
-  let runCtx = RunCtx userInfo httpManager sqlGenCtx $
-               MetadataManageCtx metadataPGPool metadataFetchTx metadataUpdateTx
-  runLazyTx pgExecCtx txAccess $ maybe id withTraceContext ctx $ withUserInfo userInfo $ runReaderT m runCtx
+  let runCtx = RunCtx userInfo httpManager sqlGenCtx metadataPGPool
+  metadata <- fromMaybe emptyMetadata <$> runMetadataStorageTx metadataFetchTx
+  (r, updatedMetadata) <- runLazyTx pgExecCtx txAccess $
+    maybe id withTraceContext ctx $ withUserInfo userInfo $ runStateT (runReaderT m runCtx) metadata
+  either throwError pure =<<
+    (liftIO . runExceptT . Q.runTx' metadataPGPool) (metadataUpdateTx updatedMetadata)
+  pure r
+  where
+    runMetadataStorageTx tx =
+      either throwError pure =<< (liftIO . runExceptT . Q.runTx' metadataPGPool) tx

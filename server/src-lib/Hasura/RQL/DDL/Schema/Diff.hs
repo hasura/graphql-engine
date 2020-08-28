@@ -1,6 +1,5 @@
 module Hasura.RQL.DDL.Schema.Diff
   ( TableMeta(..)
-  , fetchTableMeta
   , ComputedFieldMeta(..)
 
   , getDifference
@@ -15,26 +14,28 @@ module Hasura.RQL.DDL.Schema.Diff
   , getSchemaChangeDeps
 
   , FunctionMeta(..)
-  , fetchFunctionMeta
   , FunctionDiff(..)
   , getFuncDiff
   , getOverloadedFuncs
+
+  , fetchMeta
   ) where
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types         hiding (tmComputedFields, tmTable)
+import           Hasura.RQL.DDL.Schema.Catalog  (fetchFunctionMetadataFromDb,
+                                                 fetchTableMetadataFromDb)
+import           Hasura.RQL.DDL.Schema.Function
+import           Hasura.RQL.Types               hiding (tmComputedFields, tmTable)
 import           Hasura.RQL.Types.Catalog
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query        as Q
-
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.List.Extended       (duplicates)
+import           Data.List.Extended             (duplicates)
 
-import qualified Data.HashMap.Strict      as M
-import qualified Data.HashSet             as HS
-import qualified Data.List.NonEmpty       as NE
+import qualified Data.HashMap.Strict            as M
+import qualified Data.HashSet                   as HS
+import qualified Data.List.NonEmpty             as NE
 
 data FunctionMeta
   = FunctionMeta
@@ -58,10 +59,46 @@ data TableMeta
   , tmComputedFields :: ![ComputedFieldMeta]
   } deriving (Show, Eq)
 
-fetchTableMeta :: Q.Tx [TableMeta]
-fetchTableMeta = Q.listQ $(Q.sqlFromFile "src-rsr/table_meta.sql") () False <&>
-  map \(schema, name, Q.AltJ info, Q.AltJ computedFields) ->
-    TableMeta (QualifiedObject schema name) info computedFields
+fetchMeta
+  :: (MonadTx m)
+  => TableCache -> FunctionCache -> m ([TableMeta], [FunctionMeta])
+fetchMeta tables functions = do
+  tableMetaInfos <- fetchTableMetadataFromDb
+  functionMetaInfos <- fetchFunctionMetadataFromDb allFunctions
+
+  let mkFunctionMeta function rawInfo =
+        FunctionMeta (rfiOid rawInfo) function (rfiFunctionType rawInfo)
+
+      mkComputedFieldMeta computedField =
+        let function          = _cffName $ _cfiFunction computedField
+            maybeFunctionMeta = M.lookup function functionMetaInfos >>=
+              (fmap (mkFunctionMeta function) . listToMaybe)
+        in ComputedFieldMeta (_cfiName computedField) <$> maybeFunctionMeta
+
+      tableMetas = flip map (M.toList tableMetaInfos) $ \(table, tableMetaInfo) ->
+                   TableMeta table tableMetaInfo $ fromMaybe [] $
+                     M.lookup table tables <&> \tableInfo ->
+                     let tableCoreInfo  = _tiCoreInfo tableInfo
+                         computedFields = getComputedFieldInfos $ _tciFieldInfoMap tableCoreInfo
+                     in  mapMaybe mkComputedFieldMeta computedFields
+
+      functionMetas = flip concatMap (M.keys functions) \function ->
+                      maybe [] (map (mkFunctionMeta function)) $ M.lookup function functionMetaInfos
+
+  pure (tableMetas, functionMetas)
+  where
+    -- Along with computed field functions
+    allFunctions = M.keys functions
+      <> concatMap (map (_cffName . _cfiFunction)
+                    . getComputedFieldInfos
+                    . _tciFieldInfoMap
+                    . _tiCoreInfo
+                   ) (M.elems tables)
+
+-- fetchTableMeta :: Q.Tx [TableMeta]
+-- fetchTableMeta = Q.listQ $(Q.sqlFromFile "src-rsr/table_meta.sql") () False <&>
+--   map \(schema, name, Q.AltJ info, Q.AltJ computedFields) ->
+--     TableMeta (QualifiedObject schema name) info computedFields
 
 getOverlap :: (Eq k, Hashable k) => (v -> k) -> [v] -> [v] -> [(v, v)]
 getOverlap getKey left right =
@@ -199,20 +236,20 @@ getSchemaChangeDeps schemaDiff = do
     isDirectDep (SOTableObj tn _) = tn `HS.member` HS.fromList droppedTables
     isDirectDep _                 = False
 
-fetchFunctionMeta :: Q.Tx [FunctionMeta]
-fetchFunctionMeta =
-  map (Q.getAltJ . runIdentity) <$> Q.listQ [Q.sql|
-    SELECT
-      json_build_object(
-        'oid', f.function_oid,
-        'function', json_build_object('name', f.function_name, 'schema', f.function_schema),
-        'type', f.function_type
-      ) AS function_meta
-    FROM
-      hdb_catalog.hdb_function_agg f
-    WHERE
-      f.function_schema <> 'hdb_catalog'
-    |] () False
+-- fetchFunctionMeta :: Q.Tx [FunctionMeta]
+-- fetchFunctionMeta =
+--   map (Q.getAltJ . runIdentity) <$> Q.listQ [Q.sql|
+--     SELECT
+--       json_build_object(
+--         'oid', f.function_oid,
+--         'function', json_build_object('name', f.function_name, 'schema', f.function_schema),
+--         'type', f.function_type
+--       ) AS function_meta
+--     FROM
+--       hdb_catalog.hdb_function_agg f
+--     WHERE
+--       f.function_schema <> 'hdb_catalog'
+--     |] () False
 
 data FunctionDiff
   = FunctionDiff
@@ -229,7 +266,7 @@ getFuncDiff oldMeta newMeta =
     mkAltered (oldfm, newfm) =
       let isTypeAltered = fmType oldfm /= fmType newfm
           alteredFunc = (fmFunction oldfm, fmType newfm)
-      in bool Nothing (Just alteredFunc) $ isTypeAltered
+      in bool Nothing (Just alteredFunc) isTypeAltered
 
 getOverloadedFuncs
   :: [QualifiedFunction] -> [FunctionMeta] -> [QualifiedFunction]

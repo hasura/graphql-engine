@@ -28,7 +28,8 @@ import qualified Database.PG.Query             as Q
 
 data RawFunctionInfo
   = RawFunctionInfo
-  { rfiHasVariadic      :: !Bool
+  { rfiOid              :: !OID
+  , rfiHasVariadic      :: !Bool
   , rfiFunctionType     :: !FunctionType
   , rfiReturnTypeSchema :: !SchemaName
   , rfiReturnTypeName   :: !PGScalarType
@@ -94,7 +95,7 @@ mkFunctionInfo qf systemDefined config rawFuncInfo =
     =<< MV.runValidateT validateFunction
   where
     functionArgs = mkFunctionArgs defArgsNo inpArgTyps inpArgNames
-    RawFunctionInfo hasVariadic funTy retSn retN retTyTyp retSet
+    RawFunctionInfo _ hasVariadic funTy retSn retN retTyTyp retSet
                 inpArgTyps inpArgNames defArgsNo returnsTab descM
                 = rawFuncInfo
     returnType = QualifiedPGType retSn retN retTyTyp

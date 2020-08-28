@@ -2,6 +2,8 @@
 -- "Hasura.RQL.DDL.Schema" for more details.
 module Hasura.RQL.DDL.Schema.Catalog
   ( buildCatalogMetadata
+  , fetchTableMetadataFromDb
+  , fetchFunctionMetadataFromDb
   -- , fetchCatalogData
   -- , saveTableToCatalog
   -- , updateTableIsEnumInCatalog
@@ -37,8 +39,10 @@ buildCatalogMetadata
   :: forall m. (MonadTx m)
   => Metadata -> m CatalogMetadata
 buildCatalogMetadata Metadata{..} = do
-  catalogTables <- fetchCatalogTableInfo
-  catalogFunctions <- fetchCatalogFunctionInfo
+  catalogTables <- fetchTableMetadataFromDb
+  let functions = map fst allFunctions <> concatMap
+        (map (_cfdFunction . _cfmDefinition) . HM.elems . _tmComputedFields) (HM.elems _metaTables)
+  catalogFunctions <- fetchFunctionMetadataFromDb functions
   pgScalars <- fetchPgScalars
 
   let _cmFunctions = flip map allFunctions $ \(function, config) ->
@@ -47,15 +51,15 @@ buildCatalogMetadata Metadata{..} = do
       (_cmTables, relations, computedFields, remoteRelations, permissions, eventTriggers) =
         unzip6 $ flip map (HM.elems _metaTables) $ \table ->
         transformTable table catalogFunctions $ HM.lookup (_tmTable table) catalogTables
-      _cmRelations = concat relations
-      _cmComputedFields = concat computedFields
-      _cmRemoteRelationships = concat remoteRelations
-      _cmPermissions = concat permissions
-      _cmEventTriggers = concat eventTriggers
-      _cmActions = HM.elems _metaActions
-      _cmCronTriggers = map transformCronTrigger $ HM.elems _metaCronTriggers
-      _cmRemoteSchemas = HM.elems _metaRemoteSchemas
-      _cmCustomTypes = CatalogCustomTypes _metaCustomTypes pgScalars
+      _cmRelations            = concat relations
+      _cmComputedFields       = concat computedFields
+      _cmRemoteRelationships  = concat remoteRelations
+      _cmPermissions          = concat permissions
+      _cmEventTriggers        = concat eventTriggers
+      _cmActions              = HM.elems _metaActions
+      _cmCronTriggers         = map transformCronTrigger $ HM.elems _metaCronTriggers
+      _cmRemoteSchemas        = HM.elems _metaRemoteSchemas
+      _cmCustomTypes          = CatalogCustomTypes _metaCustomTypes pgScalars
       _cmAllowlistCollections = map _ccDefinition $
         filter (flip HS.member _metaAllowlist . CollectionReq . _ccName)
         (HM.elems _metaQueryCollections)
@@ -120,25 +124,6 @@ buildCatalogMetadata Metadata{..} = do
           CatalogEventTrigger _tmTable (etcName etc) $ toJSON etc
 
 
-    fetchCatalogTableInfo :: m (HM.HashMap QualifiedTable CatalogTableInfo)
-    fetchCatalogTableInfo = do
-      let tableList = HM.keys _metaTables
-      results <- liftTx $ Q.withQE defaultTxErrorHandler
-                 $(Q.sqlFromFile "src-rsr/pg_table_metadata.sql")
-                 (Identity $ Q.AltJ $ toJSON tableList) True
-      pure $ HM.fromList $ flip map results $
-        \(schema, table, Q.AltJ info) -> (QualifiedObject schema table, info)
-
-    fetchCatalogFunctionInfo :: m (HM.HashMap QualifiedFunction [RawFunctionInfo])
-    fetchCatalogFunctionInfo = do
-      let functionList = map fst allFunctions <> concatMap
-            (map (_cfdFunction . _cfmDefinition) . HM.elems . _tmComputedFields) (HM.elems _metaTables)
-      results <- liftTx $ Q.withQE defaultTxErrorHandler
-                 $(Q.sqlFromFile "src-rsr/pg_function_metadata.sql")
-                 (Identity $ Q.AltJ $ toJSON functionList) True
-      pure $ HM.fromList $ flip map results $
-        \(schema, table, Q.AltJ infos) -> (QualifiedObject schema table, infos)
-
     fetchPgScalars :: m (HS.HashSet PGScalarType)
     fetchPgScalars =
       liftTx $ Q.getAltJ . runIdentity . Q.getRow
@@ -147,6 +132,27 @@ buildCatalogMetadata Metadata{..} = do
         SELECT coalesce(json_agg(typname), '[]')
         FROM pg_catalog.pg_type where typtype = 'b'
       |] () True
+
+-- | Fetch all user tables with metadata
+fetchTableMetadataFromDb
+  :: (MonadTx m) => m (HM.HashMap QualifiedTable CatalogTableInfo)
+fetchTableMetadataFromDb = do
+  results <- liftTx $ Q.withQE defaultTxErrorHandler
+             $(Q.sqlFromFile "src-rsr/pg_table_metadata.sql")
+             () True
+  pure $ HM.fromList $ flip map results $
+    \(schema, table, Q.AltJ info) -> (QualifiedObject schema table, info)
+
+-- | Fetch Postgres metadata for the given functions
+fetchFunctionMetadataFromDb
+  :: (MonadTx m)
+  => [QualifiedFunction] -> m (HM.HashMap QualifiedFunction [RawFunctionInfo])
+fetchFunctionMetadataFromDb functionList = do
+  results <- liftTx $ Q.withQE defaultTxErrorHandler
+             $(Q.sqlFromFile "src-rsr/pg_function_metadata.sql")
+             (Identity $ Q.AltJ $ toJSON functionList) True
+  pure $ HM.fromList $ flip map results $
+    \(schema, table, Q.AltJ infos) -> (QualifiedObject schema table, infos)
 
 -- fetchCatalogData :: (MonadTx m) => m CatalogMetadata
 -- fetchCatalogData =

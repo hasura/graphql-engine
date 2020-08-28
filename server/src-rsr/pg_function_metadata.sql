@@ -3,7 +3,7 @@ SELECT
   "hdb_function".name,
   coalesce("function_info".info, '[]'::json) AS info
 FROM
-  -- metadata functions
+  -- only required functions given as json array
   json_to_recordset($1) AS "hdb_function"(schema text, name text)
 LEFT JOIN (
   SELECT
@@ -12,6 +12,7 @@ LEFT JOIN (
     -- This field corresponds to the 'RawFunctionInfo' Haskell type
     json_agg(
       json_build_object(
+        'oid', "pg_function".function_oid,
         'description', "pg_function".description,
         'has_variadic', "pg_function".has_variadic,
         'function_type', "pg_function".function_type,

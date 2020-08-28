@@ -416,26 +416,26 @@ withMetadataCheck :: (MonadTx m, CacheRWM m, HasSQLGenCtx m) => Bool -> m a -> m
 withMetadataCheck cascade action = do
   -- Drop hdb_views so no interference is caused to the sql query
   liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
+  sc <- askSchemaCache
+  let existingTables = scTables sc
+      existingFunctions = scFunctions sc
+      existingInconsistentObjs = scInconsistentObjs sc
 
   -- Get the metadata before the sql query, everything, need to filter this
-  oldMetaU <- liftTx $ Q.catchE defaultTxErrorHandler fetchTableMeta
-  oldFuncMetaU <- liftTx $ Q.catchE defaultTxErrorHandler fetchFunctionMeta
+  (oldTableMeta, oldFunctionMeta) <- fetchMeta existingTables existingFunctions
+  -- oldMetaU <- liftTx $ Q.catchE defaultTxErrorHandler fetchTableMeta
+  -- oldFuncMetaU <- liftTx $ Q.catchE defaultTxErrorHandler fetchFunctionMeta
 
   -- Run the action
   res <- action
 
   -- Get the metadata after the sql query
-  newMeta <- liftTx $ Q.catchE defaultTxErrorHandler fetchTableMeta
-  newFuncMeta <- liftTx $ Q.catchE defaultTxErrorHandler fetchFunctionMeta
-  sc <- askSchemaCache
-  let existingInconsistentObjs = scInconsistentObjs sc
-      existingTables = M.keys $ scTables sc
-      oldMeta = flip filter oldMetaU $ \tm -> tmTable tm `elem` existingTables
-      schemaDiff = getSchemaDiff oldMeta newMeta
-      existingFuncs = M.keys $ scFunctions sc
-      oldFuncMeta = flip filter oldFuncMetaU $ \fm -> fmFunction fm `elem` existingFuncs
-      FunctionDiff droppedFuncs alteredFuncs = getFuncDiff oldFuncMeta newFuncMeta
-      overloadedFuncs = getOverloadedFuncs existingFuncs newFuncMeta
+  (newTableMeta, newFunctionMeta) <- fetchMeta existingTables existingFunctions
+
+  let existingTablesOldMeta = filter (flip M.member existingTables . tmTable) oldTableMeta
+      schemaDiff = getSchemaDiff existingTablesOldMeta newTableMeta
+      FunctionDiff droppedFuncs alteredFuncs = getFuncDiff oldFunctionMeta newFunctionMeta
+      overloadedFuncs = getOverloadedFuncs (M.keys existingFunctions) newFunctionMeta
 
   -- Do not allow overloading functions
   unless (null overloadedFuncs) $
