@@ -201,6 +201,7 @@ data SetTableCustomFields
   { _stcfTable             :: !QualifiedTable
   , _stcfCustomRootFields  :: !TableCustomRootFields
   , _stcfCustomColumnNames :: !CustomColumnNames
+  , _stcfIdentifier        :: !(Maybe G.Name)
   } deriving (Show, Eq, Lift)
 $(deriveToJSON (aesonDrop 5 snakeCase) ''SetTableCustomFields)
 
@@ -210,12 +211,13 @@ instance FromJSON SetTableCustomFields where
     <$> o .: "table"
     <*> o .:? "custom_root_fields" .!= emptyCustomRootFields
     <*> o .:? "custom_column_names" .!= Map.empty
+    <*> o .:? "identifier"
 
 runSetTableCustomFieldsQV2
   :: (MonadTx m, CacheRWM m) => SetTableCustomFields -> m EncJSON
-runSetTableCustomFieldsQV2 (SetTableCustomFields tableName rootFields columnNames) = do
+runSetTableCustomFieldsQV2 (SetTableCustomFields tableName rootFields columnNames identifier) = do
   void $ askTabInfo tableName -- assert that table is tracked
-  updateTableConfig tableName (TableConfig rootFields columnNames)
+  updateTableConfig tableName (TableConfig rootFields columnNames identifier)
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
 
@@ -287,10 +289,10 @@ processTableChanges ti tableDiff = do
     TableDiff mNewName droppedCols _ alteredCols _ computedFieldDiff _ _ = tableDiff
 
     possiblyDropCustomColumnNames tn = do
-      let TableConfig customFields customColumnNames = _tciCustomConfig ti
+      let TableConfig customFields customColumnNames identifier = _tciCustomConfig ti
           modifiedCustomColumnNames = foldl' (flip Map.delete) customColumnNames droppedCols
       when (modifiedCustomColumnNames /= customColumnNames) $
-        liftTx $ updateTableConfig tn $ TableConfig customFields modifiedCustomColumnNames
+        liftTx $ updateTableConfig tn $ TableConfig customFields modifiedCustomColumnNames identifier
 
     procAlteredCols sc tn = for_ alteredCols $
       \( PGRawColumnInfo oldName _ oldType _ _

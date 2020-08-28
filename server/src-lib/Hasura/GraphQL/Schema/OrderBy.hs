@@ -36,7 +36,8 @@ orderByExp
   -> SelPermInfo
   -> m (Parser 'Input n [RQL.AnnOrderByItemG UnpreparedValue])
 orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
-  name <- qualifiedObjectToName table <&> (<> $$(G.litName "_order_by"))
+  tableName <- getTableName table
+  let name = tableName <> $$(G.litName "_order_by")
   let description = G.Description $
         "Ordering options when selecting data from " <> table <<> "."
   tableFields  <- tableSelectFields table selectPermissions
@@ -89,7 +90,7 @@ orderByAggregation table selectPermissions = do
   -- there is heavy duplication between this and Select.tableAggregationFields
   -- it might be worth putting some of it in common, just to avoid issues when
   -- we change one but not the other?
-  tableName  <- qualifiedObjectToName table
+  tableName  <- getTableName table
   allColumns <- tableSelectColumns table selectPermissions
   let numColumns  = onlyNumCols allColumns
       compColumns = onlyComparableCols allColumns

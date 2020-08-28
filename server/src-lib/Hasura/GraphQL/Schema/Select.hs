@@ -206,7 +206,7 @@ selectTableAggregate
 selectTableAggregate table fieldName description selectPermissions = runMaybeT do
   guard $ spiAllowAgg selectPermissions
   stringifyNum    <- asks $ qcStringifyNum . getter
-  tableName       <- lift $ qualifiedObjectToName table
+  tableName       <- lift $ getTableName table
   tableArgsParser <- lift $ tableArgs table selectPermissions
   aggregateParser <- lift $ tableAggregationFields table selectPermissions
   nodesParser     <- lift $ tableSelectionList table selectPermissions
@@ -299,7 +299,7 @@ tableSelectionSet
   -> m (Parser 'Output n AnnotatedFields)
 tableSelectionSet table selectPermissions = memoizeOn 'tableSelectionSet table do
   tableInfo <- _tiCoreInfo <$> askTableInfo table
-  tableName <- qualifiedObjectToName table
+  tableName <- getTableName table
   let tableFields = Map.elems  $ _tciFieldInfoMap tableInfo
       tablePkeyColumns = _pkColumns <$> _tciPrimaryKey tableInfo
       description  = Just $ mkDescriptionWith (_tciDescription tableInfo) $
@@ -377,8 +377,8 @@ tableConnectionSelectionSet
   -> SelPermInfo
   -> m (Parser 'Output n (RQL.ConnectionFields UnpreparedValue))
 tableConnectionSelectionSet table selectPermissions = do
-  tableName   <- qualifiedObjectToName table
   edgesParser <- tableEdgesSelectionSet
+  tableName <- getTableName table
   let connectionTypeName = tableName <> $$(G.litName "Connection")
       pageInfo = P.subselection_ $$(G.litName "pageInfo") Nothing
                  pageInfoSelectionSet <&> RQL.ConnectionPageInfo
@@ -406,10 +406,11 @@ tableConnectionSelectionSet table selectPermissions = do
       in P.nonNullableParser $ P.selectionSet $$(G.litName "PageInfo") Nothing allFields
          <&> parsedSelectionsToFields RQL.PageInfoTypename
 
+
     tableEdgesSelectionSet
       :: m (Parser 'Output n (RQL.EdgeFields UnpreparedValue))
     tableEdgesSelectionSet = do
-      tableName           <- qualifiedObjectToName table
+      tableName           <- getTableName table
       edgeNodeParser      <- P.nonNullableParser <$> tableSelectionSet table selectPermissions
       let edgesType = tableName <> $$(G.litName "Edge")
           cursor    = P.selection_ $$(G.litName "cursor") Nothing
@@ -454,10 +455,11 @@ selectFunctionAggregate function fieldName description selectPermissions = runMa
   let table = fiReturnType function
   stringifyNum <- asks $ qcStringifyNum . getter
   guard $ spiAllowAgg selectPermissions
+  tableName <- getTableName table
   tableArgsParser    <- lift $ tableArgs table selectPermissions
   functionArgsParser <- lift $ customSQLFunctionArgs function
   aggregateParser    <- lift $ tableAggregationFields table selectPermissions
-  selectionName      <- lift $ qualifiedObjectToName table <&> (<> $$(G.litName "_aggregate"))
+  selectionName      <- lift $ pure tableName <&> (<> $$(G.litName "_aggregate"))
   nodesParser        <- lift $ tableSelectionList table selectPermissions
   let argsParser = liftA2 (,) functionArgsParser tableArgsParser
       aggregationParser = fmap (parsedSelectionsToFields RQL.TAFExp) $
@@ -788,7 +790,7 @@ tableAggregationFields
   -> SelPermInfo
   -> m (Parser 'Output n RQL.AggregateFields)
 tableAggregationFields table selectPermissions = do
-  tableName  <- qualifiedObjectToName table
+  tableName  <- getTableName table
   allColumns <- tableSelectColumns table selectPermissions
   let numericColumns   = onlyNumCols allColumns
       comparableColumns  = onlyComparableCols allColumns

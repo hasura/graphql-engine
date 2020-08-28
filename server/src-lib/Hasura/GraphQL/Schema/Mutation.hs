@@ -113,7 +113,7 @@ tableFieldsInput
   -> InsPermInfo    -- ^ insert permissions of the table
   -> m (Parser 'Input n (AnnInsObj UnpreparedValue))
 tableFieldsInput table insertPerms = memoizeOn 'tableFieldsInput table do
-  tableName    <- qualifiedObjectToName table
+  tableName    <- getTableName table
   allFields    <- _tciFieldInfoMap . _tiCoreInfo <$> askTableInfo table
   objectFields <- catMaybes <$> for (Map.elems allFields) \case
     FIComputedField _ -> pure Nothing
@@ -158,7 +158,7 @@ objectRelationshipInput
   -> m (Parser 'Input n (SingleObjIns UnpreparedValue))
 objectRelationshipInput table insertPerms selectPerms updatePerms =
   memoizeOn 'objectRelationshipInput table do
-  tableName      <- qualifiedObjectToName table
+  tableName      <- getTableName table
   columns        <- tableColumns table
   objectParser   <- tableFieldsInput table insertPerms
   conflictParser <- fmap join $ sequenceA $ conflictObject table selectPerms <$> updatePerms
@@ -181,7 +181,7 @@ arrayRelationshipInput
   -> m (Parser 'Input n (MultiObjIns UnpreparedValue))
 arrayRelationshipInput table insertPerms selectPerms updatePerms =
   memoizeOn 'arrayRelationshipInput table do
-  tableName      <- qualifiedObjectToName table
+  tableName      <- getTableName table
   columns        <- tableColumns table
   objectParser   <- tableFieldsInput table insertPerms
   conflictParser <- fmap join $ sequenceA $ conflictObject table selectPerms <$> updatePerms
@@ -223,7 +223,7 @@ conflictObject
   -> UpdPermInfo
   -> m (Maybe (Parser 'Input n (RQL.ConflictClauseP1 UnpreparedValue)))
 conflictObject table selectPerms updatePerms = runMaybeT $ do
-  tableName        <- lift $ qualifiedObjectToName table
+  tableName       <- getTableName table
   columnsEnum      <- MaybeT $ tableUpdateColumnsEnum table updatePerms
   constraints      <- MaybeT $ tciUniqueOrPrimaryKeyConstraints . _tiCoreInfo <$> askTableInfo table
   constraintParser <- lift $ conflictConstraint constraints table
@@ -250,7 +250,7 @@ conflictConstraint
   -> QualifiedTable
   -> m (Parser 'Both n ConstraintName)
 conflictConstraint constraints table = memoizeOn 'conflictConstraint table $ do
-  tableName <- qualifiedObjectToName table
+  tableName <- getTableName table
   constraintEnumValues <- for constraints \constraint -> do
     name <- textToName $ getConstraintTxt $ _cName constraint
     pure ( P.mkDefinition name (Just "unique or primary key constraint") P.EnumValueInfo
@@ -299,7 +299,7 @@ updateTableByPk
   -> SelPermInfo          -- ^ select permissions of the table
   -> m (Maybe (FieldParser n (RQL.AnnUpdG UnpreparedValue)))
 updateTableByPk table fieldName description updatePerms selectPerms = runMaybeT $ do
-  tableName <- qualifiedObjectToName table
+  tableName <- getTableName table
   columns   <- lift   $ tableSelectColumns table selectPerms
   pkArgs    <- MaybeT $ primaryKeysArguments table selectPerms
   opArgs    <- MaybeT $ updateOperators table updatePerms
@@ -343,7 +343,7 @@ updateOperators
   -> UpdPermInfo    -- ^ update permissions of the table
   -> m (Maybe (InputFieldsParser n [(PGCol, RQL.UpdOpExpG UnpreparedValue)]))
 updateOperators table updatePermissions = do
-  tableName <- qualifiedObjectToName table
+  tableName <- getTableName table
   columns   <- tableUpdateColumns table updatePermissions
   let numericCols = onlyNumCols   columns
       jsonCols    = onlyJSONBCols columns
@@ -495,7 +495,7 @@ mutationSelectionSet
   -> m (Parser 'Output n (RQL.MutFldsG UnpreparedValue))
 mutationSelectionSet table selectPerms =
   memoizeOn 'mutationSelectionSet table do
-  tableName <- qualifiedObjectToName table
+  tableName <- getTableName table
   returning <- runMaybeT do
     permissions <- MaybeT $ pure selectPerms
     tableSet    <- lift $ tableSelectionList table permissions
