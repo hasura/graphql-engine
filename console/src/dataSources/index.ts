@@ -111,7 +111,7 @@ export interface DataSourcesAPI {
   getStatementTimeoutSql: (statementTimeoutInSecs: number) => string;
   getDropSchemaSql(schema: string): string;
   getCreateSchemaSql(schema: string): string;
-  isTimeoutError: (error: Record<string, any>) => boolean;
+  isTimeoutError: (error: any) => boolean;
 }
 
 export let currentDriver: Driver = 'postgres';
