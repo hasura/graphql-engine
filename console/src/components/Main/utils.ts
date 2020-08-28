@@ -1,4 +1,4 @@
-import JWTDecode from 'jwt-decode';
+import jwt_decode from 'jwt-decode';
 import { NotificationScope } from './ConsoleNotification';
 import { Nullable } from '../Common/utils/tsUtils';
 
@@ -75,6 +75,11 @@ const getConsoleScope = (
   return 'OSS';
 };
 
+// added these, so that it can be repurposed if needed
+type JWTKeys = "sub" | "iat" | "aud" | "exp" | "iss";
+type JWTType = Record<JWTKeys, string>;
+type DecodedJWT = Partial<JWTType>;
+
 // This function is specifically to help identify the multiple users on cloud.
 // This is a temporary solution atm. but improvements will be added soon
 const getUserType = (token: string) => {
@@ -84,7 +89,7 @@ const getUserType = (token: string) => {
   }
   const jwtToken = token.split(IDToken)[1];
   try {
-    const decodedToken: { sub?: string } = JWTDecode(jwtToken);
+    const decodedToken: DecodedJWT = jwt_decode(jwtToken);
     if (!decodedToken.sub) {
       return 'admin';
     }
