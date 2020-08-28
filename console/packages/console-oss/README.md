@@ -1,5 +1,6 @@
 Package history
 
+0.0.6-1.3.1.1 - commits from stable on 28th August
 0.0.6-1.3.0.3 - few hot fixes on master and a bug on run sql tab
 0.0.6-1.3.0.2 - Merge changes from stable branch of oss (hot fixes) and release
 0.0.6-1.3.0.1 - Merge changes from master branch of oss (rj fix) and release
