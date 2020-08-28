@@ -1,3 +1,7 @@
+import JWTDecode from 'jwt-decode';
+import { NotificationScope } from './ConsoleNotification';
+import { Nullable } from '../Common/utils/tsUtils';
+
 const proClickState = 'console:pro';
 const loveConsentState = 'console:loveIcon';
 const defaultProClickState = {
@@ -52,10 +56,50 @@ const getReadAllNotificationsState = () => {
   };
 };
 
+const getConsoleScope = (
+  serverVersion: string,
+  consoleID: Nullable<string>,
+): NotificationScope => {
+  if (!consoleID) {
+    return 'OSS';
+  }
+
+  if (serverVersion.includes('cloud')) {
+    return 'CLOUD';
+  }
+
+  if (serverVersion.includes('pro')) {
+    return 'PRO';
+  }
+
+  return 'OSS';
+};
+
+// This function is specifically to help identify the multiple users on cloud.
+// This is a temporary solution atm. but improvements will be added soon
+const getUserType = (token: string) => {
+  const IDToken = 'IDToken ';
+  if (!token.includes(IDToken)) {
+    return 'admin';
+  }
+  const jwtToken = token.split(IDToken)[1];
+  try {
+    const decodedToken: { sub?: string } = JWTDecode(jwtToken);
+    if (!decodedToken.sub) {
+      return 'admin';
+    }
+    return decodedToken.sub;
+  } catch {
+    return 'admin';
+  }
+};
+
 export {
   getProClickState,
   setProClickState,
   setLoveConsentState,
   getLoveConsentState,
   getReadAllNotificationsState,
+  getConsoleScope,
+  getUserType,
 };
