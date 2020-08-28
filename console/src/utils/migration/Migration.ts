@@ -4,7 +4,7 @@ import { RunSqlType } from '../../types';
 // TODO use well typed interface after generating
 export interface RunSQLQueryType {
   type: string;
-  args: RunSQLQueryType[];
+  args: unknown;
 }
 
 export default class Migration {
