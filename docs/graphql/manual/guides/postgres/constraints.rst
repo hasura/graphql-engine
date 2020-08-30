@@ -30,7 +30,7 @@ There are different types of constraints that can be used with Postgres.
 Primary key constraints
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-A ``PRIMARY KEY`` is used to identify each specific row of a table.
+A ``PRIMARY KEY`` is used to identify each row of a table uniquely.
 
 **Identify the author's id as the primary key of the authors table:**
 
