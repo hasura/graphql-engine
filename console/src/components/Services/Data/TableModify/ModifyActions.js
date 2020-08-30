@@ -611,9 +611,11 @@ const saveForeignKeys = (index, tableSchema, columns) => {
       migrationDown.push(getRunSqlQuery(migrationDownAlterFKeySql));
     } else {
       // when foreign key is created
-      const migrationDownDeleteFKeySql = `
-          alter table "${schemaName}"."${tableName}" drop constraint "${generatedConstraintName}"
-      `;
+      const migrationDownDeleteFKeySql = dataSource.getDropConstraintSql(
+        tableName,
+        schemaName,
+        generatedConstraintName
+      );
 
       migrationDown.push(getRunSqlQuery(migrationDownDeleteFKeySql));
     }
@@ -683,16 +685,14 @@ const removeForeignKey = (index, tableSchema) => {
       {
         schemaName,
         tableName,
-        columns: Object.keys(oldConstraint.column_mapping)
-          .map(lc => `"${lc}"`)
-          .join(', '),
+        columns: Object.keys(oldConstraint.column_mapping).map(lc => `"${lc}"`),
       },
       {
         schemaName: oldConstraint.ref_table_table_schema,
         tableName: oldConstraint.ref_table,
-        columns: Object.values(oldConstraint.column_mapping)
-          .map(rc => `"${rc}"`)
-          .join(', '),
+        columns: Object.values(oldConstraint.column_mapping).map(
+          rc => `"${rc}"`
+        ),
       },
       oldConstraint.constraint_name,
       pgConfTypes[oldConstraint.on_update],
