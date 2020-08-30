@@ -15,7 +15,7 @@ Postgres constraints
 Introduction
 ------------
 
-`Postgres constraints <https://www.postgresql.org/docs/current/ddl-constraints.html>`__ are used to define rules for fields in a database table. They ensure that
+`Postgres constraints <https://www.postgresql.org/docs/current/ddl-constraints.html>`__ are used to define rules for columns in a database table. They ensure that
 no invalid data is entered into the database.
 
 .. note::
@@ -38,7 +38,7 @@ A ``PRIMARY KEY`` is used to identify each row of a table uniquely.
   :emphasize-lines: 2
 
   CREATE TABLE authors(
-    id INT PRIMARY KEY     NOT NULL,
+    id INT PRIMARY KEY,
     name           TEXT    NOT NULL
   );
 
@@ -48,13 +48,19 @@ Foreign key constraints
 A foreign key constraint specifies that the values in a column must match the values appearing in a row of another table. 
 Foreign key constraints are used to create relationships between tables.
 
-**Define the author_id in the articles table as a foreign key to the id field in the authors table:**
+**Define the author_id in the articles table as a foreign key to the id column in the authors table:**
 
 .. code-block:: sql
-  :emphasize-lines: 5
+  :emphasize-lines: 11
+
+  CREATE TABLE authors(
+    id SERIAL PRIMARY KEY,
+    name           TEXT    NOT NULL,
+    indicator      TEXT    UNIQUE
+  );
 
   CREATE TABLE articles(
-    id SERIAL PRIMARY KEY  NOT NULL,
+    id SERIAL PRIMARY KEY,
     title          TEXT    NOT NULL,
     author_id INTEGER,
     FOREIGN KEY (author_id) REFERENCES authors (id)
@@ -65,20 +71,20 @@ Not-null constraints
 
 A not-null constraint allows you to specify that a column's value cannot be ``null``.
 
-**Validate that an author's id and name cannot be null:**
+**Validate that an author's name cannot be null:**
 
 .. code-block:: sql
   :emphasize-lines: 2-3
 
   CREATE TABLE authors(
-    id SERIAL PRIMARY KEY  NOT NULL,
+    id SERIAL PRIMARY KEY,
     name           TEXT    NOT NULL
   );
 
 Unique constraints
 ^^^^^^^^^^^^^^^^^^
 
-Unique constraints prevent database entries with a duplicate value of the respective field.
+Unique constraints prevent database entries with a duplicate value of the respective column.
 
 **Validate that an author's indicator is unique:**
 
@@ -86,7 +92,7 @@ Unique constraints prevent database entries with a duplicate value of the respec
   :emphasize-lines: 4
 
   CREATE TABLE authors(
-    id SERIAL PRIMARY KEY  NOT NULL,
+    id SERIAL PRIMARY KEY,
     name           TEXT    NOT NULL,
     indicator      TEXT    UNIQUE
   );
@@ -94,8 +100,8 @@ Unique constraints prevent database entries with a duplicate value of the respec
 Check constraints
 ^^^^^^^^^^^^^^^^^
 
-Check constraints allow you to specify a ``Boolean`` expression for a specific field. 
-This Boolean expression must be satisfied (equal to ``true``) by the field value for the object to be inserted.
+Check constraints allow you to specify a ``Boolean`` expression for a specific column. 
+This Boolean expression must be satisfied (equal to ``true``) by the column value for the object to be inserted.
 
 **Validate that an author's rating is between 1 and 10:**
 
@@ -103,7 +109,7 @@ This Boolean expression must be satisfied (equal to ``true``) by the field value
   :emphasize-lines: 4
 
   CREATE TABLE authors(
-    id SERIAL PRIMARY KEY  NOT NULL,
+    id SERIAL PRIMARY KEY,
     name           TEXT    NOT NULL,
     rating         INT     NOT NULL CHECK(rating > 0 AND rating <= 10)
   );

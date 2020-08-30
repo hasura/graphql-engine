@@ -99,9 +99,6 @@ Since the result of a query is stored in a materialized view like in a cache, yo
 
 Materialized views can be refreshed periodically using :ref:`Postgres triggers <postgres_triggers>`.
 
-.. note::
-
-  Materialized views are not updatable. Should the query change, the view needs to be `dropped <https://www.postgresql.org/docs/current/sql-dropmaterializedview.html>`__ and `re-created <https://www.postgresql.org/docs/current/rules-materializedviews.html>`__.
 
 Postgres views & Hasura
 -----------------------

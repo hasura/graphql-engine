@@ -35,15 +35,6 @@ The following are benefits of Postgres compared to other database management sys
 - You can define your own data types, index types etc.
 - If you need any support, an `active community <https://www.postgresql.org/community/>`__ is available to help. 
 
-Caveats
--------
-
-Not all open source applications support Postgres as MySQL is generally a bit more widely spread. Also, when it comes to performance, MySQL has a slight edge.
-
-.. note::
-
-  MySQL support for Hasura is in the works.
-
 Postgres features
 -----------------
 

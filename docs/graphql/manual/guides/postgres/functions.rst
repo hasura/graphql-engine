@@ -74,6 +74,6 @@ The objective of the following function is to refresh a :ref:`materialized view 
 Postgres functions & Hasura
 ---------------------------
 
-Postgres functions can be exposed in Hasura's GraphQL Schema. They are typically used for performing custom business logic in the database.
+Postgres functions can be exposed in Hasura's GraphQL schema. They are typically used for performing custom business logic in the database.
 
 Refer to :ref:`this page <create_and_expose_sql_functions>` for more use cases and for instructions on how to create and expose Postgres functions in Hasura.
