@@ -172,4 +172,5 @@ Integrating webhook authentication
 
   JWT spec <spec>
   Configure JWT mode <configure>
-  Troubleshooting <troubleshooting>
+  Advanced use cases <advanced>
+  Integration guides <guides/index>

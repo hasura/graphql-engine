@@ -272,15 +272,6 @@ Examples:
    Certain providers require you to verify the ``iss`` claim on the JWT. To do
    that you can set this field to the appropriate value.
 
-Configuring custom claims
--------------------------
-
-TODO
-
-JWT expiry
-----------
-
-TODO
 
 Running with JWT
 ----------------
@@ -314,7 +305,11 @@ Using env vars
 JWTs & local development
 ------------------------
 
-TODO
+TODO: 
+
+- How to use JWTs in local development
+
+- How to test
 
 Examples
 --------

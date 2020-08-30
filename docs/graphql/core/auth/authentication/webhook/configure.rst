@@ -29,12 +29,3 @@ Configuring webhook mode
   If you are running Hasura using Docker, ensure that the Hasura Docker container can reach the webhook.
   See :ref:`this page <docker_networking>` for Docker networking.
 
-Caching
--------
-
-TODO
-
-Certificates
-------------
-
-TODO

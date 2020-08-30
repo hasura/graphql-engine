@@ -62,4 +62,5 @@ Integrating webhook authentication
 
   Webhook spec <spec>
   Configure webhook mode <configure>
-  Troubleshooting <troubleshooting>
+  Advanced use cases <advanced>
+  Integration guides <guides/index>

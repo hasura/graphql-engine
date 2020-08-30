@@ -74,4 +74,3 @@ Use cases
   Using webhooks <webhook/index>
   Using JWT <jwt/index>
   Unauthenticated / Public access <unauthenticated-access>
-  Integration guides <guides/index>

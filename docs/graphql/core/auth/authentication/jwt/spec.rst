@@ -78,3 +78,9 @@ request.
 
 How Hasura stores JWTs
 ----------------------
+
+TODO:
+
+- Explain how Hasura stores JWTs
+
+- Explain how these can be modified
