@@ -104,7 +104,14 @@ const EventsTable: React.FC<Props> = props => {
     expander: true,
     Header: '',
     accessor: 'expander',
-    Expander: ({ isExpanded, row }: { isExpanded: boolean; row: any }) => {
+    Expander: ({
+      isExpanded,
+      viewIndex,
+    }: {
+      isExpanded: boolean;
+      viewIndex: number;
+    }) => {
+      const row = rows[viewIndex];
       return (
         <>
           {columns.includes('actions') && (

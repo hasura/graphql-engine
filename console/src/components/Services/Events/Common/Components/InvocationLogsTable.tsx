@@ -17,7 +17,7 @@ import Modal from '../../../../Common/Modal/Modal';
 import RedeliverEvent from './RedeliverEvent';
 import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 import { Nullable } from '../../../../Common/utils/tsUtils';
-import { getInvocationLogStatus, getExpanderIcon } from './utils';
+import { getInvocationLogStatus, getExpanderButton } from './utils';
 
 interface Props extends FilterTableProps {
   dispatch: Dispatch;
@@ -100,13 +100,49 @@ const InvocationLogsTable: React.FC<Props> = props => {
     }
   };
 
-  const gridHeadings: GridHeadingProps[] = [getExpanderIcon];
+  const expanderActions = {
+    expander: true,
+    Header: '',
+    accessor: 'expander',
+    Expander: ({
+      isExpanded,
+      viewIndex,
+    }: {
+      isExpanded: boolean;
+      viewIndex: number;
+    }) => {
+      const row = rows[viewIndex];
+      return (
+        <>
+          {columns.includes('redeliver') && (
+            <div
+              onClick={(e: React.MouseEvent) => {
+                if (isRedelivering) {
+                  return;
+                }
+                redeliverHandler(row.event_id);
+                e.stopPropagation();
+              }}
+              className={`${styles.cursorPointer} ${styles.add_mar_right_small}`}
+            >
+              <ReloadIcon className="" />
+            </div>
+          )}
+          {getExpanderButton(isExpanded)}
+        </>
+      );
+    },
+  };
+
+  const gridHeadings: GridHeadingProps[] = [expanderActions];
 
   sortedColumns.forEach(column => {
-    gridHeadings.push({
-      Header: column,
-      accessor: column,
-    });
+    if (column !== 'redeliver') {
+      gridHeadings.push({
+        Header: column,
+        accessor: column,
+      });
+    }
   });
 
   const rowsFormatted = rows.map(r => {
@@ -127,21 +163,6 @@ const InvocationLogsTable: React.FC<Props> = props => {
         </div>
       ),
     };
-    if (columns.includes('redeliver')) {
-      formattedRow.redeliver = (
-        <div
-          onClick={() => {
-            if (isRedelivering) {
-              return;
-            }
-            redeliverHandler(r.event_id);
-          }}
-          className={styles.cursorPointer}
-        >
-          <ReloadIcon className="" />
-        </div>
-      );
-    }
     return formattedRow;
   });
 
