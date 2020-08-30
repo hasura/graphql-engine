@@ -62,6 +62,7 @@ const ColumnEditorList = ({
     const colName = col.column_name;
     const isArrayDataType = col.data_type === dataSource.columnDataTypes.ARRAY;
 
+    // todo -- getColumnProperties utility
     const getDisplayName = () => {
       if (isArrayDataType) {
         return col.udt_name.replace('_', '') + '[]';
@@ -85,7 +86,6 @@ const ColumnEditorList = ({
       isIdentity: col.is_identity,
       pkConstraint: columnPKConstraints[colName],
       isUnique: isColumnUnique(tableSchema, colName),
-      // uniqueConstraint: columnUniqueConstraints[colName],
       default: col.column_default || '',
       comment: col.comment || '',
       customFieldName: customColumnNames[colName] || '',

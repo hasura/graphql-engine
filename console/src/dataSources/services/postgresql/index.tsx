@@ -17,6 +17,14 @@ import {
   getStatementTimeoutSql,
   getCreateSchemaSql,
   getDropSchemaSql,
+  getAlterForeignKeySql,
+  getCreateFKeySql,
+  getDropConstraintSql,
+  getRenameTableSql,
+  getDropTriggerSql,
+  getCreateTriggerSql,
+  getViewDefinitionSql,
+  getDropSql,
 } from './sqlUtils';
 
 export const isTable = (table: Table) => {
@@ -467,6 +475,13 @@ const isTimeoutError = (error: {
   return false;
 };
 
+// const modifyArrayType = (colType: string, displayName: string) => {
+//   if (displayName === columnDataTypes.ARRAY) {
+//     return `${colType.replace('_', '')}[]`;
+//   }
+//   return colType;
+// };
+
 export const postgres: DataSourcesAPI = {
   isTable,
   displayTableName,
@@ -502,4 +517,12 @@ export const postgres: DataSourcesAPI = {
   getDropSchemaSql,
   getCreateSchemaSql,
   isTimeoutError,
+  getAlterForeignKeySql,
+  getCreateFKeySql,
+  getDropConstraintSql,
+  getRenameTableSql,
+  getDropTriggerSql,
+  getCreateTriggerSql,
+  getDropSql,
+  getViewDefinitionSql,
 };

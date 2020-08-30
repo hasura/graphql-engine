@@ -252,6 +252,11 @@ const loadSchema = configOptions => {
 
 const fetchAdditionalColumnsInfo = () => (dispatch, getState) => {
   const schemaName = getState().tables.currentSchema;
+
+  if (!dataSource.additionalColumnsInfoQuery) {
+    // unavailable for a data source
+    return;
+  }
   const query = dataSource.additionalColumnsInfoQuery(schemaName);
 
   const options = {

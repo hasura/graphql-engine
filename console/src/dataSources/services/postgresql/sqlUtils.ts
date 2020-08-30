@@ -467,3 +467,119 @@ export const getDropSchemaSql = (schemaName: string) =>
 
 export const getCreateSchemaSql = (schemaName: string) =>
   `create schema "${schemaName}";`;
+
+export const getAlterForeignKeySql = (
+  from: {
+    tableName: string;
+    schemaName: string;
+    columns: string[];
+  },
+  to: {
+    tableName: string;
+    schemaName: string;
+    columns: string[];
+  },
+  dropConstraint: string,
+  newConstraint: string,
+  onUpdate: string,
+  onDelete: string
+) => `
+  alter table "${from.schemaName}"."${
+  from.tableName
+}" drop constraint "${dropConstraint}",
+  add constraint "${newConstraint}"
+  foreign key (${from.columns.join(', ')})
+  references "${to.schemaName}"."${to.tableName}"
+  (${to.columns.join(', ')}) on update ${onUpdate} on delete ${onDelete};
+`;
+
+export const getCreateFKeySql = (
+  from: {
+    tableName: string;
+    schemaName: string;
+    columns: string[];
+  },
+  to: {
+    tableName: string;
+    schemaName: string;
+    columns: string[];
+  },
+  newConstraint: string,
+  onUpdate: string,
+  onDelete: string
+) => `
+  alter table "${from.schemaName}"."${from.tableName}"
+  add constraint "${newConstraint}"
+  foreign key (${from.columns.join(', ')})
+  references "${to.schemaName}"."${to.schemaName}"
+  (${to.columns.join(', ')}) on update ${onUpdate} on delete ${onDelete};
+`;
+
+export const getDropConstraintSql = (
+  tableName: string,
+  schemaName: string,
+  constraintName: string
+) => `
+  alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}";
+`;
+
+export const getRenameTableSql = (
+  property = 'table',
+  schemaName: string,
+  oldName: string,
+  newName: string
+) => `
+ alter ${property} "${schemaName}"."${oldName}" rename to "${newName}";
+`;
+
+export const getDropTriggerSql = (
+  tableName: string,
+  tableSchema: string,
+  triggerName: string
+) => `
+  DROP TRIGGER "${triggerName}" ON "${tableSchema}"."${tableName}";
+`;
+
+export const getCreateTriggerSql = (
+  tableName: string,
+  tableSchema: string,
+  triggerName: string,
+  trigger: {
+    action_timing: string;
+    event_manipulation: string;
+    action_orientation: string;
+    action_statement: string;
+    comment: string;
+  }
+) => {
+  let sql = `CREATE TRIGGER "${triggerName}"
+${trigger.action_timing} ${trigger.event_manipulation} ON "${tableSchema}"."${tableName}"
+FOR EACH ${trigger.action_orientation} ${trigger.action_statement};`;
+
+  if (trigger.comment) {
+    sql += `COMMENT ON TRIGGER "${triggerName}" ON "${tableSchema}"."${tableName}"
+IS ${sqlEscapeText(trigger.comment)};`;
+  }
+  return sql;
+};
+
+export const getDropSql = (
+  tableName: string,
+  schemaName: string,
+  property = 'table'
+) => `DROP ${property} "${schemaName}"."${tableName}"`;
+
+export const getViewDefinitionSql = (viewName: string) => `
+  SELECT
+    CASE WHEN pg_has_role(c.relowner, 'USAGE') THEN pg_get_viewdef(c.oid)
+    ELSE null
+    END AS view_definition,
+    CASE WHEN c.relkind = 'v' THEN 'VIEW' ELSE 'MATERIALIZED VIEW' END AS view_type
+  FROM pg_class c
+  WHERE c.relname = '${viewName}'
+    AND c.relkind in ('v', 'm')
+    AND (pg_has_role(c.relowner, 'USAGE')
+    OR has_table_privilege(c.oid, 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER')
+    OR has_any_column_privilege(c.oid, 'SELECT, INSERT, UPDATE, REFERENCES')
+  )
+`;

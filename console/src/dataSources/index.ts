@@ -112,6 +112,71 @@ export interface DataSourcesAPI {
   getDropSchemaSql(schema: string): string;
   getCreateSchemaSql(schema: string): string;
   isTimeoutError: (error: any) => boolean;
+  getAlterForeignKeySql: (
+    from: {
+      tableName: string;
+      schemaName: string;
+      columns: string[];
+    },
+    to: {
+      tableName: string;
+      schemaName: string;
+      columns: string[];
+    },
+    dropConstraint: string,
+    newConstraint: string,
+    onUpdate: string,
+    onDelete: string
+  ) => string;
+  getCreateFKeySql: (
+    from: {
+      tableName: string;
+      schemaName: string;
+      columns: string[];
+    },
+    to: {
+      tableName: string;
+      schemaName: string;
+      columns: string[];
+    },
+    newConstraint: string,
+    onUpdate: string,
+    onDelete: string
+  ) => string;
+  getDropConstraintSql: (
+    tableName: string,
+    schemaName: string,
+    constraintName: string
+  ) => string;
+  getRenameTableSql: (
+    property: string | undefined,
+    schemaName: string,
+    oldName: string,
+    newName: string
+  ) => string;
+  getDropTriggerSql: (
+    tableName: string,
+    tableSchema: string,
+    triggerName: string
+  ) => string;
+  getCreateTriggerSql: (
+    tableName: string,
+    tableSchema: string,
+    triggerName: string,
+    trigger: {
+      action_timing: string;
+      event_manipulation: string;
+      action_orientation: string;
+      action_statement: string;
+      comment: string;
+    }
+  ) => string;
+  getDropSql: (
+    tableName: string,
+    schemaName: string,
+    property?: string | undefined
+  ) => string;
+  getViewDefinitionSql: (viewName: string) => string;
 }
 
 export let currentDriver: Driver = 'postgres';

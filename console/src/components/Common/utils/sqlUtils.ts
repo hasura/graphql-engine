@@ -42,14 +42,6 @@ export const getCreateCheckConstraintSql = (
   return `alter table "${schemaName}"."${tableName}" add constraint "${constraintName}" check (${check})`;
 };
 
-export const getDropConstraintSql = (
-  tableName: string,
-  schemaName: string,
-  constraintName: string
-) => {
-  return `alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}"`;
-};
-
 export const getCreatePkSql = ({
   schemaName,
   tableName,

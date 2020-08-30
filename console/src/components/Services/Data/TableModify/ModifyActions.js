@@ -29,7 +29,6 @@ import {
 import {
   sqlEscapeText,
   getCreateCheckConstraintSql,
-  getDropConstraintSql,
   getDropPkSql,
   getCreatePkSql,
 } from '../../../Common/utils/sqlUtils';
@@ -354,7 +353,7 @@ export const removeCheckConstraint = (constraintName, successCb, errorCb) => (
   );
 
   const upQuery = getRunSqlQuery(
-    getDropConstraintSql(tableName, currentSchema, constraintName)
+    dataSource.getDropConstraintSql(tableName, currentSchema, constraintName)
   );
   const downQuery = getRunSqlQuery(
     getCreateCheckConstraintSql(
@@ -552,25 +551,35 @@ const saveForeignKeys = (index, tableSchema, columns) => {
     );
 
     if (constraintName) {
-      // foreign key already exists, alter the foreign key
-      const migrationUpAlterFKeySql = `
-             alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}",
-             add constraint "${generatedConstraintName}"
-             foreign key (${lcols.join(', ')})
-             references "${refSchemaName}"."${refTableName}"
-             (${rcols.join(', ')}) on update ${onUpdate} on delete ${onDelete};
-      `;
+      const migrationUpAlterFKeySql = dataSource.getAlterForeignKeySql(
+        { schemaName, tableName, columns: lcols },
+        {
+          tableName: refTableName,
+          schemaName: refSchemaName,
+          columns: rcols,
+        },
+        constraintName,
+        generateFKConstraintName,
+        onUpdate,
+        onDelete
+      );
       migrationUp.push(getRunSqlQuery(migrationUpAlterFKeySql));
     } else {
-      // foreign key not found, create a new one
-      const migrationUpCreateFKeySql = `
-           alter table "${schemaName}"."${tableName}"
-           add constraint "${generatedConstraintName}"
-           foreign key (${lcols.join(', ')})
-           references "${refSchemaName}"."${refTableName}"
-           (${rcols.join(', ')}) on update ${onUpdate} on delete ${onDelete};
-      `;
-
+      const migrationUpCreateFKeySql = dataSource.getCreateFKeySql(
+        {
+          schemaName,
+          tableName,
+          columns: lcols,
+        },
+        {
+          tableName: refTableName,
+          schemaName: refSchemaName,
+          columns: rcols,
+        },
+        generateFKConstraintName,
+        onUpdate,
+        onDelete
+      );
       migrationUp.push(getRunSqlQuery(migrationUpCreateFKeySql));
     }
 
@@ -579,22 +588,26 @@ const saveForeignKeys = (index, tableSchema, columns) => {
     if (constraintName) {
       // when foreign key is altered
       const oldConstraint = tableSchema.foreign_key_constraints[index];
-      const migrationDownAlterFKeySql = `
-          alter table "${schemaName}"."${tableName}" drop constraint "${generatedConstraintName}",
-          add constraint "${constraintName}"
-          foreign key (${Object.keys(oldConstraint.column_mapping)
+      const migrationDownAlterFKeySql = dataSource.getAlterForeignKeySql(
+        {
+          schemaName,
+          tableName,
+          columns: Object.keys(oldConstraint.column_mapping)
             .map(lc => `"${lc}"`)
-            .join(', ')})
-          references "${oldConstraint.ref_table_table_schema}"."${
-        oldConstraint.ref_table
-      }"
-          (${Object.values(oldConstraint.column_mapping)
+            .join(', '),
+        },
+        {
+          schemaName: oldConstraint.ref_table_table_schema,
+          tableName: oldConstraint.ref_table,
+          columns: Object.values(oldConstraint.column_mapping)
             .map(rc => `"${rc}"`)
-            .join(', ')})
-          on update ${pgConfTypes[oldConstraint.on_update]}
-          on delete ${pgConfTypes[oldConstraint.on_delete]};
-        `;
-
+            .join(', '),
+        },
+        generatedConstraintName,
+        constraintName,
+        pgConfTypes[oldConstraint.on_update], // todo
+        pgConfTypes[oldConstraint.on_delete] // todo
+      );
       migrationDown.push(getRunSqlQuery(migrationDownAlterFKeySql));
     } else {
       // when foreign key is created
@@ -661,18 +674,31 @@ const removeForeignKey = (index, tableSchema) => {
     const tableName = tableSchema.table_name;
     const schemaName = tableSchema.table_schema;
     const oldConstraint = tableSchema.foreign_key_constraints[index];
-    const upSql = `alter table "${schemaName}"."${tableName}" drop constraint "${oldConstraint.constraint_name}";`;
-    const downSql = `alter table "${schemaName}"."${tableName}" add foreign key (${Object.keys(
-      oldConstraint.column_mapping
-    )
-      .map(lc => `"${lc}"`)
-      .join(', ')}) references "${oldConstraint.ref_table_table_schema}"."${
-      oldConstraint.ref_table
-    }"(${Object.values(oldConstraint.column_mapping)
-      .map(rc => `"${rc}"`)
-      .join(', ')}) on update ${
-      pgConfTypes[oldConstraint.on_update]
-    } on delete ${pgConfTypes[oldConstraint.on_delete]};`;
+    const upSql = dataSource.getDropConstraintSql(
+      tableName,
+      schemaName,
+      oldConstraint.constraint_name
+    );
+    const downSql = dataSource.getCreateFKeySql(
+      {
+        schemaName,
+        tableName,
+        columns: Object.keys(oldConstraint.column_mapping)
+          .map(lc => `"${lc}"`)
+          .join(', '),
+      },
+      {
+        schemaName: oldConstraint.ref_table_table_schema,
+        tableName: oldConstraint.ref_table,
+        columns: Object.values(oldConstraint.column_mapping)
+          .map(rc => `"${rc}"`)
+          .join(', '),
+      },
+      oldConstraint.constraint_name,
+      pgConfTypes[oldConstraint.on_update],
+      pgConfTypes[oldConstraint.on_delete]
+    );
+
     const migrationUp = [getRunSqlQuery(upSql)];
     const migrationDown = [getRunSqlQuery(downSql)];
     const migrationName = `delete_fk_${schemaName}_${tableName}_${oldConstraint.constraint_name}`;
@@ -744,8 +770,18 @@ const changeTableName = (oldName, newName, isTable, tableType) => {
       'MATERIALIZED VIEW': 'materialized_view',
     }[tableType];
     const currentSchema = getState().tables.currentSchema;
-    const upSql = `alter ${property} "${currentSchema}"."${oldName}" rename to "${newName}";`;
-    const downSql = `alter ${property} "${currentSchema}"."${newName}" rename to "${oldName}";`;
+    const upSql = dataSource.getRenameTableSql(
+      property,
+      currentSchema,
+      oldName,
+      newName
+    );
+    const downSql = dataSource.getRenameTableSql(
+      property,
+      currentSchema,
+      newName,
+      oldName
+    );
     const migrateUp = [getRunSqlQuery(upSql)];
     const migrateDown = [getRunSqlQuery(downSql)];
     // apply migrations
@@ -788,20 +824,19 @@ const deleteTrigger = (trigger, table) => {
     const tableName = table.table_name;
     const tableSchema = table.table_schema;
 
-    const upMigrationSql = `DROP TRIGGER "${triggerName}" ON "${tableSchema}"."${tableName}";`;
-
+    const upMigrationSql = dataSource.getDropTriggerSql(
+      tableName,
+      tableSchema,
+      triggerName
+    );
     const migrationUp = [getRunSqlQuery(upMigrationSql)];
 
-    let downMigrationSql = '';
-
-    downMigrationSql += `CREATE TRIGGER "${triggerName}"
-${trigger.action_timing} ${trigger.event_manipulation} ON "${tableSchema}"."${tableName}"
-FOR EACH ${trigger.action_orientation} ${trigger.action_statement};`;
-
-    if (trigger.comment) {
-      downMigrationSql += `COMMENT ON TRIGGER "${triggerName}" ON "${tableSchema}"."${tableName}"
-IS ${sqlEscapeText(trigger.comment)};`;
-    }
+    const downMigrationSql = dataSource.getCreateTriggerSql(
+      tableName,
+      tableSchema,
+      triggerName,
+      trigger
+    );
     const migrationDown = [getRunSqlQuery(downMigrationSql)];
 
     const migrationName = `delete_trigger_${triggerSchema}_${triggerName}`;
@@ -834,8 +869,7 @@ const deleteTableSql = tableName => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
     // handle no primary key
-    const sqlDropTable =
-      'DROP TABLE ' + '"' + currentSchema + '"' + '.' + '"' + tableName + '"';
+    const sqlDropTable = dataSource.getDropSql(tableName, currentSchema);
     const sqlUpQueries = [getRunSqlQuery(sqlDropTable)];
     // apply migrations
     const migrationName = 'drop_table_' + currentSchema + '_' + tableName;
@@ -910,19 +944,7 @@ const untrackTableSql = tableName => {
 const fetchViewDefinition = (viewName, isRedirect) => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
-    const sqlQuery = `
-SELECT
-  CASE WHEN pg_has_role(c.relowner, 'USAGE') THEN pg_get_viewdef(c.oid)
-  ELSE null
-  END AS view_definition,
-  CASE WHEN c.relkind = 'v' THEN 'VIEW' ELSE 'MATERIALIZED VIEW' END AS view_type
-FROM pg_class c
-WHERE c.relname = '${viewName}'
-  AND c.relkind in ('v', 'm')
-  AND (pg_has_role(c.relowner, 'USAGE')
-    OR has_table_privilege(c.oid, 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER')
-    OR has_any_column_privilege(c.oid, 'SELECT, INSERT, UPDATE, REFERENCES')
-  )`;
+    const sqlQuery = dataSource.getViewDefinitionSql(viewName);
     const reqBody = getRunSqlQuery(sqlQuery, false, true);
 
     const url = Endpoints.query;
@@ -951,6 +973,7 @@ WHERE c.relname = '${viewName}'
         const fullName = '"' + currentSchema + '"."' + viewName + '"';
         let runSqlDef = '';
 
+        // todo, but can stay for now
         if (viewType == 'VIEW') {
           runSqlDef =
             'CREATE OR REPLACE VIEW ' + fullName + ' AS \n' + finalDef;
@@ -979,15 +1002,12 @@ const deleteViewSql = (viewName, viewType) => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
     const property = viewType.toLowerCase();
-    const sqlDropView = `DROP ${viewType} "${currentSchema}"."${viewName}"`;
+    const sqlDropView = dataSource.getDropSql(
+      viewName,
+      currentSchema,
+      viewType
+    );
     const sqlUpQueries = [getRunSqlQuery(sqlDropView)];
-    // const sqlCreateView = ''; //pending
-    // const sqlDownQueries = [
-    //   {
-    //     type: 'run_sql',
-    //     args: { 'sql': sqlCreateView }
-    //   }
-    // ];
 
     // Apply migrations
     const migrationName = 'drop_view_' + currentSchema + '_' + viewName;
@@ -2134,7 +2154,7 @@ export const saveCheckConstraint = (index, successCb, errorCb) => (
   if (!isNew) {
     upQueries.push(
       getRunSqlQuery(
-        getDropConstraintSql(
+        dataSource.getDropConstraintSql(
           existingConstraint.table_name,
           existingConstraint.table_schema,
           existingConstraint.constraint_name
@@ -2155,7 +2175,11 @@ export const saveCheckConstraint = (index, successCb, errorCb) => (
 
   downQueries.push(
     getRunSqlQuery(
-      getDropConstraintSql(currentTable, currentSchema, newConstraint.name)
+      dataSource.getDropConstraintSql(
+        currentTable,
+        currentSchema,
+        newConstraint.name
+      )
     )
   );
 
