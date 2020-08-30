@@ -7,7 +7,6 @@ import 'react-table/react-table.css';
 import { FilterTableProps, GridHeadingProps } from './types';
 import { Dispatch } from '../../../../../types';
 // import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
-import Button from '../../../../Common/Button/Button';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import { ordinalColSort } from '../../../Data/utils';
 import styles from '../../Events.scss';
