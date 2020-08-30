@@ -101,11 +101,12 @@ const EventsTable: React.FC<Props> = props => {
   sortedColumns.forEach(column => {
     if (column === 'actions') {
       gridHeadings.push({ Header: '', accessor: column, width: 50 });
+    } else {
+      gridHeadings.push({
+        Header: column,
+        accessor: column,
+      });
     }
-    gridHeadings.push({
-      Header: column,
-      accessor: column,
-    });
   });
 
   const invocationColumns = ['status', 'id', 'created_at'];
