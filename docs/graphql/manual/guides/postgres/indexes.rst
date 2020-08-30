@@ -16,7 +16,7 @@ Introduction
 ------------
 
 `Postgres indexes <https://www.postgresql.org/docs/current/sql-createindex.html>`__ are a way of increasing performance on a field that is queried frequently. The concept is similar to the one of an index in a book. 
-It helps accessing the data you're looking for more quickly.
+It helps accessing the data you're looking for more quickly by maintaining additional metadata.
 
 .. note::
 
