@@ -14,13 +14,13 @@ import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 import {
   getEventStatusIcon,
   getEventDeliveryIcon,
-  getExpanderIcon,
+  getExpanderButton,
 } from './utils';
 import Button from '../../../../Common/Button';
 
 type CancelButtonProps = {
   id: string;
-  onClickHandler: () => void;
+  onClickHandler: (e: React.MouseEvent) => void;
 };
 
 const CancelEventButton: React.FC<CancelButtonProps> = ({
@@ -29,10 +29,14 @@ const CancelEventButton: React.FC<CancelButtonProps> = ({
 }) => (
   <Button
     key={id}
+    className={styles.add_mar_right_small}
     onClick={onClickHandler}
     color="white"
     size="xs"
     title="Cancel Event"
+    onMouseDown={(e: React.MouseEvent) => {
+      e.preventDefault();
+    }}
   >
     <i className="fa fa-close" />
   </Button>
@@ -96,12 +100,32 @@ const EventsTable: React.FC<Props> = props => {
     }
   };
 
-  const gridHeadings: GridHeadingProps[] = [getExpanderIcon];
+  const expanderActions = {
+    expander: true,
+    Header: '',
+    accessor: 'expander',
+    Expander: ({ isExpanded, row }: { isExpanded: boolean; row: any }) => {
+      return (
+        <>
+          {columns.includes('actions') && (
+            <CancelEventButton
+              id={row.id}
+              onClickHandler={(event: React.MouseEvent) => {
+                onCancelHandler(row.id, row.scheduled_time);
+                event.stopPropagation();
+              }}
+            />
+          )}
+          {getExpanderButton(isExpanded)}
+        </>
+      );
+    },
+  };
+
+  const gridHeadings: GridHeadingProps[] = [expanderActions];
 
   sortedColumns.forEach(column => {
-    if (column === 'actions') {
-      gridHeadings.push({ Header: '', accessor: column, width: 50 });
-    } else {
+    if (column !== 'actions') {
       gridHeadings.push({
         Header: column,
         accessor: column,
@@ -111,7 +135,7 @@ const EventsTable: React.FC<Props> = props => {
 
   const invocationColumns = ['status', 'id', 'created_at'];
 
-  const invocationGridHeadings: GridHeadingProps[] = [getExpanderIcon];
+  const invocationGridHeadings: GridHeadingProps[] = [expanderActions];
 
   invocationColumns.forEach(column => {
     invocationGridHeadings.push({
@@ -135,12 +159,6 @@ const EventsTable: React.FC<Props> = props => {
     }, {});
     return {
       ...formattedRow,
-      actions: columns.includes('actions') ? (
-        <CancelEventButton
-          id={row.id}
-          onClickHandler={() => onCancelHandler(row.id, row.scheduled_time)}
-        />
-      ) : undefined,
       delivered: getEventDeliveryIcon(row.delivered),
       status: getEventStatusIcon(row.status),
       scheduled_time: row.scheduled_time ? (

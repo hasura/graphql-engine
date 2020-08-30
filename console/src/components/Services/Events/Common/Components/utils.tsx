@@ -32,27 +32,29 @@ export const getInvocationLogStatus = (status: number) => {
   return status < 300 ? <CheckIcon /> : <CrossIcon />;
 };
 
+export const getExpanderButton = (isExpanded: boolean) => (
+  <Button
+    color="white"
+    size="xs"
+    title={isExpanded ? 'Collapse row' : 'Expand row'}
+    // This is needed to remove focus on button when clicked (to avoid button style change)
+    onMouseDown={(e: React.MouseEvent) => {
+      e.preventDefault();
+    }}
+  >
+    {isExpanded ? (
+      <i className="fa fa-compress" />
+    ) : (
+      <i className="fa fa-expand" />
+    )}
+  </Button>
+);
+
 export const getExpanderIcon = {
   expander: true,
   Header: '',
   accessor: 'expander',
   Expander: ({ isExpanded }: { isExpanded: boolean }) => {
-    return (
-      <Button
-        color="white"
-        size="xs"
-        title={isExpanded ? 'Collapse row' : 'Expand row'}
-        // This is needed to remove focus on button when clicked (to avoid button style change)
-        onMouseDown={e => {
-          e.preventDefault();
-        }}
-      >
-        {isExpanded ? (
-          <i className="fa fa-compress" />
-        ) : (
-          <i className="fa fa-expand" />
-        )}
-      </Button>
-    );
+    return getExpanderButton(isExpanded);
   },
 };
