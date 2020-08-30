@@ -511,7 +511,7 @@ export const getCreateFKeySql = (
   alter table "${from.schemaName}"."${from.tableName}"
   add constraint "${newConstraint}"
   foreign key (${from.columns.join(', ')})
-  references "${to.schemaName}"."${to.schemaName}"
+  references "${to.schemaName}"."${to.tableName}"
   (${to.columns.join(', ')}) on update ${onUpdate} on delete ${onDelete};
 `;
 
