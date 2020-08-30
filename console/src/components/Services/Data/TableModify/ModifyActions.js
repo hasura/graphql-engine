@@ -559,7 +559,7 @@ const saveForeignKeys = (index, tableSchema, columns) => {
           columns: rcols,
         },
         constraintName,
-        generateFKConstraintName,
+        generatedConstraintName,
         onUpdate,
         onDelete
       );
@@ -576,7 +576,7 @@ const saveForeignKeys = (index, tableSchema, columns) => {
           schemaName: refSchemaName,
           columns: rcols,
         },
-        generateFKConstraintName,
+        generatedConstraintName,
         onUpdate,
         onDelete
       );
@@ -592,16 +592,16 @@ const saveForeignKeys = (index, tableSchema, columns) => {
         {
           schemaName,
           tableName,
-          columns: Object.keys(oldConstraint.column_mapping)
-            .map(lc => `"${lc}"`)
-            .join(', '),
+          columns: Object.keys(oldConstraint.column_mapping).map(
+            lc => `"${lc}"`
+          ),
         },
         {
           schemaName: oldConstraint.ref_table_table_schema,
           tableName: oldConstraint.ref_table,
-          columns: Object.values(oldConstraint.column_mapping)
-            .map(rc => `"${rc}"`)
-            .join(', '),
+          columns: Object.values(oldConstraint.column_mapping).map(
+            rc => `"${rc}"`
+          ),
         },
         generatedConstraintName,
         constraintName,
