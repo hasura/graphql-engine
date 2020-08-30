@@ -4,7 +4,7 @@ import ReactTable, {
   ComponentPropsGetter0,
 } from 'react-table';
 import 'react-table/react-table.css';
-import { FilterTableProps } from './types';
+import { FilterTableProps, GridHeadingProps } from './types';
 import { Dispatch } from '../../../../../types';
 // import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 import Button from '../../../../Common/Button/Button';
@@ -18,7 +18,7 @@ import Modal from '../../../../Common/Modal/Modal';
 import RedeliverEvent from './RedeliverEvent';
 import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 import { Nullable } from '../../../../Common/utils/tsUtils';
-import { getInvocationLogStatus } from './utils';
+import { getInvocationLogStatus, getExpanderIcon } from './utils';
 
 interface Props extends FilterTableProps {
   dispatch: Dispatch;
@@ -101,32 +101,7 @@ const InvocationLogsTable: React.FC<Props> = props => {
     }
   };
 
-  const gridHeadings: any = [
-    {
-      expander: true,
-      Header: '',
-      accessor: 'expander',
-      Expander: ({ isExpanded }: { isExpanded: boolean }) => {
-        return (
-          <Button
-            color="white"
-            size="xs"
-            title={isExpanded ? 'Collapse row' : 'Expand row'}
-            // This is needed to remove focus on button when clicked (to avoid button style change)
-            onMouseDown={e => {
-              e.preventDefault();
-            }}
-          >
-            {isExpanded ? (
-              <i className="fa fa-expand" />
-            ) : (
-              <i className="fa fa-compress" />
-            )}
-          </Button>
-        );
-      },
-    },
-  ];
+  const gridHeadings: GridHeadingProps[] = [getExpanderIcon];
 
   sortedColumns.forEach(column => {
     gridHeadings.push({

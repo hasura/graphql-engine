@@ -3,6 +3,7 @@ import CheckIcon from '../../../../Common/Icons/Check';
 import CrossIcon from '../../../../Common/Icons/Cross';
 import ClockIcon from '../../../../Common/Icons/Clock';
 import Skull from '../../../../Common/Icons/Invalid';
+import Button from '../../../../Common/Button';
 
 export const getEventStatusIcon = (status: string) => {
   switch (status) {
@@ -29,4 +30,29 @@ export const getEventDeliveryIcon = (delivered: boolean) => {
 
 export const getInvocationLogStatus = (status: number) => {
   return status < 300 ? <CheckIcon /> : <CrossIcon />;
+};
+
+export const getExpanderIcon = {
+  expander: true,
+  Header: '',
+  accessor: 'expander',
+  Expander: ({ isExpanded }: { isExpanded: boolean }) => {
+    return (
+      <Button
+        color="white"
+        size="xs"
+        title={isExpanded ? 'Collapse row' : 'Expand row'}
+        // This is needed to remove focus on button when clicked (to avoid button style change)
+        onMouseDown={e => {
+          e.preventDefault();
+        }}
+      >
+        {isExpanded ? (
+          <i className="fa fa-compress" />
+        ) : (
+          <i className="fa fa-expand" />
+        )}
+      </Button>
+    );
+  },
 };

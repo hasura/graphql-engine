@@ -4,14 +4,18 @@ import ReactTable, {
   ComponentPropsGetter0,
 } from 'react-table';
 import 'react-table/react-table.css';
-import { FilterTableProps } from './types';
+import { FilterTableProps, GridHeadingProps } from './types';
 import { ordinalColSort } from '../../../Data/utils';
 import styles from '../../Events.scss';
 import EventsSubTable from './EventsSubTable';
 import { sanitiseRow } from '../../utils';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
-import { getEventStatusIcon, getEventDeliveryIcon } from './utils';
+import {
+  getEventStatusIcon,
+  getEventDeliveryIcon,
+  getExpanderIcon,
+} from './utils';
 import Button from '../../../../Common/Button';
 
 type CancelButtonProps = {
@@ -53,31 +57,6 @@ const EventsTable: React.FC<Props> = props => {
     onCancelEvent,
   } = props;
 
-  const expanderIcon = {
-    expander: true,
-    Header: '',
-    accessor: 'expander',
-    Expander: ({ isExpanded }: { isExpanded: boolean }) => {
-      return (
-        <Button
-          color="white"
-          size="xs"
-          title={isExpanded ? 'Collapse row' : 'Expand row'}
-          // This is needed to remove focus on button when clicked (to avoid button style change)
-          onMouseDown={e => {
-            e.preventDefault();
-          }}
-        >
-          {isExpanded ? (
-            <i className="fa fa-expand" />
-          ) : (
-            <i className="fa fa-compress" />
-          )}
-        </Button>
-      );
-    },
-  };
-
   if (rows.length === 0) {
     return <div className={styles.add_mar_top}>No data available</div>;
   }
@@ -117,7 +96,7 @@ const EventsTable: React.FC<Props> = props => {
     }
   };
 
-  const gridHeadings: any = [expanderIcon];
+  const gridHeadings: GridHeadingProps[] = [getExpanderIcon];
 
   sortedColumns.forEach(column => {
     if (column === 'actions') {
@@ -131,7 +110,7 @@ const EventsTable: React.FC<Props> = props => {
 
   const invocationColumns = ['status', 'id', 'created_at'];
 
-  const invocationGridHeadings: any = [expanderIcon];
+  const invocationGridHeadings: GridHeadingProps[] = [getExpanderIcon];
 
   invocationColumns.forEach(column => {
     invocationGridHeadings.push({
