@@ -19,5 +19,11 @@ export type GridHeadingProps = {
   accessor: string;
   width?: number;
   expander?: boolean;
-  Expander?: ({ isExpanded: boolean }: any) => React.ReactNode;
+  Expander?: ({
+    isExpanded: boolean,
+    viewIndex: number,
+  }: {
+    isExpanded: boolean;
+    viewIndex: number;
+  }) => React.ReactNode;
 };

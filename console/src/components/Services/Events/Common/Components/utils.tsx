@@ -49,12 +49,3 @@ export const getExpanderButton = (isExpanded: boolean) => (
     )}
   </Button>
 );
-
-export const getExpanderIcon = {
-  expander: true,
-  Header: '',
-  accessor: 'expander',
-  Expander: ({ isExpanded }: { isExpanded: boolean }) => {
-    return getExpanderButton(isExpanded);
-  },
-};

@@ -100,6 +100,12 @@ const EventsTable: React.FC<Props> = props => {
     }
   };
 
+  const onCancelHandler = (id: string, scheduledAt: string) => {
+    if (onCancelEvent) {
+      onCancelEvent(id, scheduledAt, runQuery);
+    }
+  };
+
   const expanderActions = {
     expander: true,
     Header: '',
@@ -150,12 +156,6 @@ const EventsTable: React.FC<Props> = props => {
       accessor: column,
     });
   });
-
-  const onCancelHandler = (id: string, scheduledAt: string) => {
-    if (onCancelEvent) {
-      onCancelEvent(id, scheduledAt, runQuery);
-    }
-  };
 
   const rowsFormatted = rows.map(row => {
     const formattedRow = Object.keys(row).reduce((fr, col) => {
