@@ -67,6 +67,41 @@ According to the spec, the server must provide:
 .. note::
   Check out this `example repo <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/react-relay>`__ to see how to set up pagination with Hasura and Relay.
 
+Node Interface
+--------------
+
+The ``Node`` interface in Relay schema has exactly one field which returns a non-null ``ID`` value.
+Each table object type in Relay schema should implement ``Node`` interface to provide `global object identification <https://relay.dev/graphql/objectidentification.htm>`__.
+
+To identify each row in a table, the ``id`` field value is encoded with table information (schema and name)
+and primary key column values. The GraphQL Engine uses base64 encoded JSON string and the JSON schema looks as following
+
+``[<version-integer>, "<table-schema>", "<table-name>", "column-1", "column-2", ... "column-n"]``
+
+- ``version-integer``: The JSON schema version, current version is ``1``.
+    This is to enable any backward compatibility if the JSON representation has to change.
+- ``table-schema``: The table's schema.
+- ``table-name``: The table's name
+- ``column-1``.. ``column-n``: The primary key column values. The order is Postgres dependant.
+
+The same base64 encoded JSON string is accepted for root ``node`` field resolver's ``id`` input.
+
+**Example:-**
+
+For ``author`` table in ``public`` schema whose primary key column is ``author_id``, of type ``uuid``.
+
+.. code-block:: json
+
+   [1, "public", "author", "296d30b1-474d-4011-a907-2701992b04c1"]
+
+And base64 encoded value is
+
+.. code-block:: none
+
+   WzEsICJwdWJsaWMiLCAiYXV0aG9yIiwgIjI5NmQzMGIxLTQ3NGQtNDAxMS1hOTA3LTI3MDE5OTJiMDRjMSJdCg==
+
+
+
 Limitations
 -----------
 
