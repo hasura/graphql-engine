@@ -2,6 +2,41 @@
 
 ## Next release
 
+### Server - Support for mapping session variables to default JWT claims
+
+Some auth providers do not let users add custom claims in JWT. In such cases, the server can take a JWT configuration option called `claims_map` to specify a mapping of Hasura session variables to values in existing claims via JSONPath or literal values.
+
+Example:-
+
+Consider the following JWT claim:
+
+```
+  {
+    "sub": "1234567890",
+    "name": "John Doe",
+    "admin": true,
+    "iat": 1516239022,
+    "user": {
+      "id": "ujdh739kd",
+      "appRoles": ["user", "editor"]
+    }
+  }
+```
+
+The corresponding JWT config can be:
+
+```
+  {
+    "type":"RS512",
+    "key": "<The public Key>",
+    "claims_map": {
+      "x-hasura-allowed-roles": {"path":"$.user.appRoles"},
+      "x-hasura-default-role": {"path":"$.user.appRoles[0]","default":"user"},
+      "x-hasura-user-id": {"path":"$.user.id"}
+    }
+  }
+```
+
 - server: allow remote relationships joining `type` column with `[type]` input argument as spec allows this coercion (fixes #5133)
 
 ### Breaking change
