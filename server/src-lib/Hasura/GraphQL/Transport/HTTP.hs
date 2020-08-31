@@ -119,9 +119,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs))
           E.ExecStepMySQL queryString -> liftIO $ do
             connection <- fromJust <$> readMVar mySQLConnection
-            let fixedQuery = BS.map (\x -> if x == 34 then 96 else x) queryString
-            UGLY.traceShowM fixedQuery
-            result <- IOSL.toList . snd =<< My.query_ connection (My.Query fixedQuery)
+            UGLY.traceShowM queryString
+            result <- IOSL.toList . snd =<< My.query_ connection (My.Query queryString)
             UGLY.traceShowM result
             -- TODO fill in proper values for telemTimeIO and telemQueryType below
             pure $ (telemCacheHit, Telem.Local, (secondsToDiffTime 0, Telem.Query, HttpResponse (encodeGQResp $ GQSuccess $ BS.fromStrict $ TE.encodeUtf8 $ T.concat $ fmap (\case My.MySQLText t -> t) $ concat result) []))

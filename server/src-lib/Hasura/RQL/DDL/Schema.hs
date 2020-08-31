@@ -123,10 +123,10 @@ runRunSQL q@RunSQL {..}
       -- TMP TMP DO NOT SUBMIT THIS IS CURSED THIS FUNCTION IS NOT A PLACE OF HONOR
       liftIO $ do
         connection <- readMVar mySQLConnection
-        let fixedQuery = LBS.map (\x -> if x == 34 then 96 else x) $ LBS.fromStrict $ TE.encodeUtf8 queryString
-        UGLY.traceShowM fixedQuery
+        let encodedQuery = LBS.fromStrict $ TE.encodeUtf8 queryString
+        UGLY.traceShowM encodedQuery
         onJust connection $ \c ->
-          flip catch (print @My.ERRException) $ void $ My.execute_ c $ My.Query $ fixedQuery
+          flip catch (print @My.ERRException) $ void $ My.execute_ c $ My.Query $ encodedQuery
       -- OKAY BACK TO NORMAL MOVE ALONG CITIZEN
 
       fmap (encJFromJValue @RunSQLRes) . liftTx . Q.multiQE rawSqlErrHandler . Q.fromText $ queryString
