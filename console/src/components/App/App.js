@@ -47,7 +47,7 @@ const App = ({
     console.log('fetch metadata');
     // no sure yet, if this is the best place
     // make it being triggered on each metadata update
-    dispatch(exportMetadata);
+    dispatch(exportMetadata());
   }, []);
 
   let connectionFailMsg = null;

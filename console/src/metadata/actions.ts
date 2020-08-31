@@ -255,7 +255,7 @@ const handleInconsistentObjects = (
     const actions = getState().actions.common.actions;
 
     dispatch({
-      type: 'Metadata/LOAD_INCONSISTENT_OBJECTS_REQUEST',
+      type: 'Metadata/DROP_INCONSISTENT_METADATA_SUCCESS',
       data: inconsistentObjects,
     });
 
