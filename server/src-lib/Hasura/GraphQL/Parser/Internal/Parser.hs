@@ -13,6 +13,7 @@ import qualified Data.HashMap.Strict.Extended  as M
 import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.HashSet                  as S
 import qualified Data.Text                     as T
+import qualified Data.List.Extended                     as LE
 
 import           Control.Lens.Extended         hiding (enum, index)
 import           Data.Int                      (Int32, Int64)
@@ -678,6 +679,18 @@ selectionSet
   -> [FieldParser m a]
   -> Parser 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a))
 selectionSet name desc fields = selectionSetObject name desc fields []
+
+safeSelectionSet
+  :: (MonadError QErr n, MonadParse m)
+  => Name
+  -> Maybe Description
+  -> [FieldParser m a]
+  -> n (Parser 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a)))
+safeSelectionSet name desc fields
+  | S.null duplicates = pure $ selectionSetObject name desc fields []
+  | otherwise         = throw500 $ "found duplicate fields in selection set: " <> T.intercalate ", " (unName <$> toList duplicates)
+  where
+    duplicates = LE.duplicates $ getName . fDefinition <$> fields
 
 -- Should this rather take a non-empty `FieldParser` list?
 -- See also Note [Selectability of tables].

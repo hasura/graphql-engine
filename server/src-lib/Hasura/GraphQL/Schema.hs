@@ -153,10 +153,9 @@ buildGQLContext =
 
     let unauthenticatedContext :: m GQLContext
         unauthenticatedContext = do
-          let gqlContext = GQLContext . finalizeParser <$>
-                unauthenticatedQueryWithIntrospection queryRemotes mutationRemotes
-          halfContext <- P.runSchemaT gqlContext
-          return $ halfContext $ finalizeParser <$> unauthenticatedMutation mutationRemotes
+          ucQueries   <- P.runSchemaT $ finalizeParser <$> unauthenticatedQueryWithIntrospection queryRemotes mutationRemotes
+          ucMutations <- P.runSchemaT $ fmap finalizeParser <$> unauthenticatedMutation mutationRemotes
+          pure $ GQLContext ucQueries ucMutations
 
         -- | The 'query' type of the remotes. TODO: also expose mutation
         -- remotes. NOT TODO: subscriptions, as we do not yet aim to support
@@ -309,8 +308,8 @@ query
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 query name allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
   queryFieldsParser <- query' allTables allFunctions allRemotes allActions nonObjectCustomTypes
-  pure $ P.selectionSet name Nothing queryFieldsParser
-    <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
+  P.safeSelectionSet name Nothing queryFieldsParser
+    <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
 
 subscription
   :: forall m n r
@@ -323,20 +322,20 @@ subscription allTables allFunctions asyncActions =
   query $$(G.litName "subscription_root") allTables allFunctions [] asyncActions mempty
 
 queryRootFromFields
-  :: forall n
-   . MonadParse n
+  :: forall n m
+   . (MonadError QErr m, MonadParse n)
   => [P.FieldParser n (QueryRootField UnpreparedValue)]
-  -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 queryRootFromFields fps =
-      P.selectionSet $$(G.litName "query_root") Nothing fps
-  <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
+  P.safeSelectionSet $$(G.litName "query_root") Nothing fps
+    <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
 
 emptyIntrospection
   :: forall m n
    . (MonadSchema n m, MonadError QErr m)
   => m [P.FieldParser n (QueryRootField UnpreparedValue)]
 emptyIntrospection = do
-  let emptyQueryP = queryRootFromFields @n []
+  emptyQueryP <- queryRootFromFields @n []
   introspectionTypes <- collectTypes (P.parserType emptyQueryP)
   let introspectionSchema = Schema
         { sDescription = Nothing
@@ -366,15 +365,14 @@ queryWithIntrospectionHelper
   -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
-  let
-    basicQueryP = queryRootFromFields basicQueryFP
+  basicQueryP <- queryRootFromFields basicQueryFP
   emptyIntro <- emptyIntrospection
   allBasicTypes <- collectTypes $
     [ P.parserType basicQueryP
     , P.parserType subscriptionP
     ]
     ++ maybeToList (P.parserType <$> mutationP)
-  allIntrospectionTypes <- collectTypes (P.parserType (queryRootFromFields emptyIntro))
+  allIntrospectionTypes <- collectTypes . P.parserType =<< queryRootFromFields emptyIntro
   let allTypes = Map.unions
         [ allBasicTypes
         , Map.filterWithKey (\name _info -> name /= $$(G.litName "query_root")) allIntrospectionTypes
@@ -389,8 +387,8 @@ queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
         }
   let partialQueryFields =
         basicQueryFP ++ (fmap RFRaw <$> [schema partialSchema, typeIntrospection partialSchema])
-  pure $ P.selectionSet $$(G.litName "query_root") Nothing partialQueryFields
-    <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
+  P.safeSelectionSet $$(G.litName "query_root") Nothing partialQueryFields
+    <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
 
 -- | Prepare the parser for query-type GraphQL requests, but with introspection
 --   for queries, mutations and subscriptions built in.
@@ -428,20 +426,20 @@ relayWithIntrospection
   -> [FunctionInfo]
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 relayWithIntrospection allTables allFunctions = do
-  nodeFP <- fmap (RFDB . QDBPrimaryKey) <$> nodeField
-  basicQueryFP <- relayQuery' allTables allFunctions
-  mutationP <- mutation allTables [] [] mempty
+  nodeFP        <- fmap (RFDB . QDBPrimaryKey) <$> nodeField
+  basicQueryFP  <- relayQuery' allTables allFunctions
+  mutationP     <- mutation allTables [] [] mempty
+  emptyIntro    <- emptyIntrospection
   let relayQueryFP = nodeFP:basicQueryFP
-      subscriptionP = P.selectionSet $$(G.litName "subscription_root") Nothing relayQueryFP
-                      <&> fmap (P.handleTypename (RFRaw . J.String. G.unName))
-      basicQueryP = queryRootFromFields relayQueryFP
-  emptyIntro <- emptyIntrospection
+  basicQueryP   <- queryRootFromFields relayQueryFP
+  subscriptionP <- P.safeSelectionSet $$(G.litName "subscription_root") Nothing relayQueryFP
+                   <&> fmap (fmap (P.handleTypename (RFRaw . J.String. G.unName)))
   allBasicTypes <- collectTypes $
     [ P.parserType basicQueryP
     , P.parserType subscriptionP
     ]
     ++ maybeToList (P.parserType <$> mutationP)
-  allIntrospectionTypes <- collectTypes (P.parserType (queryRootFromFields emptyIntro))
+  allIntrospectionTypes <- collectTypes . P.parserType =<< queryRootFromFields emptyIntro
   let allTypes = Map.unions
         [ allBasicTypes
         , Map.filterWithKey (\name _info -> name /= $$(G.litName "query_root")) allIntrospectionTypes
@@ -456,8 +454,8 @@ relayWithIntrospection allTables allFunctions = do
         }
   let partialQueryFields =
         nodeFP : basicQueryFP ++ (fmap RFRaw <$> [schema partialSchema, typeIntrospection partialSchema])
-  pure $ P.selectionSet $$(G.litName "query_root") Nothing partialQueryFields
-    <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
+  P.safeSelectionSet $$(G.litName "query_root") Nothing partialQueryFields
+    <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
 
 -- | Prepare the parser for query-type GraphQL requests, but with introspection
 -- for queries, mutations and subscriptions built in.
@@ -471,8 +469,8 @@ unauthenticatedQueryWithIntrospection
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 unauthenticatedQueryWithIntrospection queryRemotes mutationRemotes = do
   let basicQueryFP = fmap (fmap RFRemote) queryRemotes
-      mutationP = unauthenticatedMutation mutationRemotes
-      subscriptionP = unauthenticatedSubscription @n
+  mutationP     <- unauthenticatedMutation mutationRemotes
+  subscriptionP <- unauthenticatedSubscription @n
   queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP
 
 mutation
@@ -550,27 +548,26 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
       ActionQuery -> pure Nothing
 
   let mutationFieldsParser = concat (catMaybes mutationParsers) <> catMaybes actionParsers <> fmap (fmap RFRemote) allRemotes
-  pure if null mutationFieldsParser
-       then Nothing
-       else Just $ P.selectionSet $$(G.litName "mutation_root") (Just $ G.Description "mutation root") mutationFieldsParser
-            <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
+  if null mutationFieldsParser
+  then pure Nothing
+  else fmap Just $ P.safeSelectionSet $$(G.litName "mutation_root") (Just $ G.Description "mutation root") mutationFieldsParser
+            <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
 
 unauthenticatedMutation
-  :: forall n
-   . MonadParse n
+  :: forall n m
+   . (MonadError QErr m, MonadParse n)
   => [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-  -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
+  -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue))))
 unauthenticatedMutation allRemotes =
   let mutationFieldsParser = fmap (fmap RFRemote) allRemotes
   in if null mutationFieldsParser
-     then Nothing
-     else Just $ P.selectionSet $$(G.litName "mutation_root") Nothing mutationFieldsParser
-          <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
+     then pure Nothing
+     else fmap Just $ P.safeSelectionSet $$(G.litName "mutation_root") Nothing mutationFieldsParser
+          <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
 
 unauthenticatedSubscription
-  :: forall n
-   . MonadParse n
-  => Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
+  :: forall n m. (MonadParse n, MonadError QErr m)
+  => m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 unauthenticatedSubscription =
- P.selectionSet $$(G.litName "subscription_root") Nothing []
- <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
+ P.safeSelectionSet $$(G.litName "subscription_root") Nothing []
+  <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))

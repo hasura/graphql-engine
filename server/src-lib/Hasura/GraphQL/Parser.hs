@@ -21,6 +21,7 @@ module Hasura.GraphQL.Parser
   , list
   , object
   , selectionSet
+  , safeSelectionSet
   , selectionSetObject
 
   , InputFieldsParser
