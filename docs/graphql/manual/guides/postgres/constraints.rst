@@ -56,7 +56,7 @@ Foreign key constraints are used to create relationships between tables.
   CREATE TABLE authors(
     id SERIAL PRIMARY KEY,
     name           TEXT    NOT NULL,
-    indicator      TEXT    UNIQUE
+    email          TEXT    UNIQUE
   );
 
   CREATE TABLE articles(
@@ -86,7 +86,7 @@ Unique constraints
 
 Unique constraints prevent database entries with a duplicate value of the respective column.
 
-**Validate that an author's indicator is unique:**
+**Validate that an author's email is unique:**
 
 .. code-block:: sql
   :emphasize-lines: 4
@@ -94,13 +94,13 @@ Unique constraints prevent database entries with a duplicate value of the respec
   CREATE TABLE authors(
     id SERIAL PRIMARY KEY,
     name           TEXT    NOT NULL,
-    indicator      TEXT    UNIQUE
+    email          TEXT    UNIQUE
   );
 
 Check constraints
 ^^^^^^^^^^^^^^^^^
 
-Check constraints allow you to specify a ``Boolean`` expression for a specific column. 
+Check constraints allow you to specify a ``Boolean`` expression for one or several columns. 
 This Boolean expression must be satisfied (equal to ``true``) by the column value for the object to be inserted.
 
 **Validate that an author's rating is between 1 and 10:**
