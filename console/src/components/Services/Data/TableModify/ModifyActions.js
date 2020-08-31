@@ -1059,33 +1059,29 @@ const deleteColumnSql = (column, tableSchema) => {
     const unique_constraints = tableSchema.unique_constraints.filter(uc =>
       uc.columns.includes(name)
     );
-    const alterStatement =
-      'ALTER TABLE ' + '"' + currentSchema + '"' + '.' + '"' + tableName + '" ';
 
     const schemaChangesUp = [
       getRunSqlQuery(
-        alterStatement + 'DROP COLUMN ' + '"' + name + '" CASCADE'
+        dataSource.getDropColumnSql(tableName, currentSchema, name)
       ),
     ];
-    const schemaChangesDown = [];
 
+    const schemaChangesDown = [];
     schemaChangesDown.push(
       getRunSqlQuery(
-        alterStatement + 'ADD COLUMN ' + '"' + name + '"' + ' ' + col_type
+        dataSource.getAddColumnSql(tableName, currentSchema, name, col_type)
       )
     );
 
     if (is_nullable) {
       schemaChangesDown.push(
         getRunSqlQuery(
-          alterStatement + 'ALTER COLUMN ' + '"' + name + '" ' + 'DROP NOT NULL'
+          dataSource.getDropNullSql(tableName, currentSchema, name)
         )
       );
     } else {
       schemaChangesDown.push(
-        getRunSqlQuery(
-          alterStatement + 'ALTER COLUMN ' + '"' + name + '" ' + 'SET NOT NULL'
-        )
+        getRunSqlQuery(dataSource.getSetNullSql(tableName, currentSchema, name))
       );
     }
 
@@ -1101,16 +1097,17 @@ const deleteColumnSql = (column, tableSchema) => {
         const onDelete = pgConfTypes[fkc.on_delete];
         schemaChangesDown.push(
           getRunSqlQuery(
-            alterStatement +
-              'ADD CONSTRAINT ' +
-              `${fkc.constraint_name} ` +
-              'FOREIGN KEY ' +
-              `(${lcol.join(', ')}) ` +
-              'REFERENCES ' +
-              `"${fkc.ref_table_table_schema}"."${fkc.ref_table}" ` +
-              `(${rcol.join(', ')}) ` +
-              `ON DELETE ${onDelete} ` +
-              `ON UPDATE ${onUpdate}`
+            dataSource.getCreateFKeySql(
+              { tableName, schemaName: currentSchema, columns: lcol },
+              {
+                tableName: fkc.ref_table,
+                schemaName: fkc.ref_table_table_schema,
+                columns: rcol,
+              },
+              fkc.constraint_name,
+              onUpdate,
+              onDelete
+            )
           )
         );
       });
@@ -1121,48 +1118,39 @@ const deleteColumnSql = (column, tableSchema) => {
         // add unique constraint to down migration
         schemaChangesDown.push(
           getRunSqlQuery(
-            alterStatement +
-              'ADD CONSTRAINT ' +
-              `${uc.constraint_name} ` +
-              'UNIQUE ' +
-              `(${uc.columns.join(', ')})`
+            dataSource.getAddUniqueConstraintSql(
+              tableName,
+              currentSchema,
+              uc.constraint_name,
+              uc.columns
+            )
           )
         );
       });
     }
 
     if (column.column_default !== null) {
-      // add column default to down migration
       schemaChangesDown.push(
         getRunSqlQuery(
-          alterStatement +
-            'ALTER COLUMN ' +
-            `"${name}" ` +
-            'SET DEFAULT ' +
+          dataSource.getSetColumnDefaultSql(
+            tableName,
+            currentSchema,
+            name,
             column.column_default
+          )
         )
       );
     }
 
-    // COMMENT ON COLUMN my_table.my_column IS 'Employee ID number';
     if (comment) {
       schemaChangesDown.push(
         getRunSqlQuery(
-          'COMMENT ON COLUMN ' +
-            '"' +
-            currentSchema +
-            '"' +
-            '.' +
-            '"' +
-            tableName +
-            '"' +
-            '.' +
-            '"' +
-            name +
-            '"' +
-            ' ' +
-            'IS ' +
-            sqlEscapeText(comment)
+          dataSource.getSetColumnCommentSql(
+            tableName,
+            currentSchema,
+            name,
+            comment
+          )
         )
       );
     }
@@ -1215,101 +1203,37 @@ const addColSql = (
   colDependentSQLGenerator,
   callback
 ) => {
-  let defWithQuotes = "''";
-
-  const checkIfFunctionFormat = dataSource.isSQLFunction(colDefault);
-  if (
-    dataSource.isColTypeString(colType) &&
-    colDefault !== '' &&
-    !checkIfFunctionFormat
-  ) {
-    defWithQuotes = "'" + colDefault + "'";
-  } else {
-    defWithQuotes = colDefault;
-  }
-
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
-    let runSqlQueryUp =
-      'ALTER TABLE ' +
-      '"' +
-      currentSchema +
-      '"' +
-      '.' +
-      '"' +
-      tableName +
-      '"' +
-      ' ADD COLUMN ' +
-      '"' +
-      colName +
-      '"' +
-      ' ' +
-      colType;
-
-    // check if nullable
-    if (colNull) {
-      // nullable
-      runSqlQueryUp += ' NULL';
-    } else {
-      // not nullable
-      runSqlQueryUp += ' NOT NULL';
-    }
-
-    // check if unique
-    if (colUnique) {
-      runSqlQueryUp += ' UNIQUE';
-    }
-
-    // check if default value
-    if (colDefault !== '') {
-      runSqlQueryUp += ' DEFAULT ' + defWithQuotes;
-    }
-
-    runSqlQueryUp += ';';
-
-    const colDependentSQL = colDependentSQLGenerator
-      ? colDependentSQLGenerator(currentSchema, tableName, colName)
-      : null;
-
-    if (colDependentSQL) {
-      runSqlQueryUp += '\n';
-      runSqlQueryUp += colDependentSQL.upSql;
-    }
+    const sqlUp = dataSource.getAddColumnSql(
+      tableName,
+      currentSchema,
+      colName,
+      colType,
+      {
+        nullable: colNull,
+        unique: colUnique,
+        default: colDefault,
+        sqlGenerator: colDependentSQLGenerator,
+      }
+    );
 
     const schemaChangesUp = [];
-
-    if (colType === 'uuid' && colDefault !== '') {
-      schemaChangesUp.push(
-        getRunSqlQuery('CREATE EXTENSION IF NOT EXISTS pgcrypto;')
-      );
+    if (Array.isArray(sqlUp)) {
+      sqlUp.forEach(sql => schemaChangesUp.push(getRunSqlQuery(sql)));
+    } else {
+      schemaChangesUp.push(getRunSqlQuery(sqlUp));
     }
 
-    schemaChangesUp.push(getRunSqlQuery(runSqlQueryUp));
-
-    let runSqlQueryDown = '';
-
-    if (colDependentSQL) {
-      runSqlQueryDown += colDependentSQL.downSql;
-      runSqlQueryDown += '\n';
-    }
-
-    runSqlQueryDown +=
-      'ALTER TABLE ' +
-      '"' +
-      currentSchema +
-      '"' +
-      '.' +
-      '"' +
-      tableName +
-      '"' +
-      ' DROP COLUMN ' +
-      '"' +
-      colName +
-      '";';
+    const runSqlQueryDown = dataSource.getDropColumnSql(
+      tableName,
+      currentSchema,
+      colName,
+      colDependentSQLGenerator
+    );
 
     const schemaChangesDown = [getRunSqlQuery(runSqlQueryDown)];
 
-    // Apply migrations
     const migrationName =
       'alter_table_' +
       currentSchema +

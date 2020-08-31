@@ -4,8 +4,9 @@ import Button from '../../../../Common/Button/Button';
 import { Dispatch } from '../../../../../types';
 import { Column } from '../../../../../utils/postgresColumnTypes';
 
+// todo
 type ColumnAction = 'add' | 'modify';
-interface FrequentlyUsedColumn {
+export interface FrequentlyUsedColumn {
   name: string;
   validFor: ColumnAction[];
   type: Column | string;

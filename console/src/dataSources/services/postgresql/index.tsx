@@ -25,6 +25,13 @@ import {
   getCreateTriggerSql,
   getViewDefinitionSql,
   getDropSql,
+  getDropColumnSql,
+  getAddColumnSql,
+  getAddUniqueConstraintSql,
+  getDropNullSql,
+  getSetColumnCommentSql,
+  getSetColumnDefaultSql,
+  getSetNullSql,
 } from './sqlUtils';
 
 export const isTable = (table: Table) => {
@@ -525,4 +532,11 @@ export const postgres: DataSourcesAPI = {
   getCreateTriggerSql,
   getDropSql,
   getViewDefinitionSql,
+  getDropColumnSql,
+  getAddColumnSql,
+  getAddUniqueConstraintSql,
+  getDropNullSql,
+  getSetColumnCommentSql,
+  getSetColumnDefaultSql,
+  getSetNullSql,
 };

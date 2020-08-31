@@ -5,6 +5,7 @@ import { services } from './services';
 import { Table, ComputedField, TableColumn } from './types';
 import { PGFunction } from './services/postgresql/types';
 import { Operations } from './common';
+import { FrequentlyUsedColumn } from '../components/Services/Data/Common/Components/FrequentlyUsedColumnSelector';
 
 export type Driver = 'postgres'; // | 'mysql';
 
@@ -177,6 +178,55 @@ export interface DataSourcesAPI {
     property?: string | undefined
   ) => string;
   getViewDefinitionSql: (viewName: string) => string;
+  getDropColumnSql: (
+    tableName: string,
+    schemaName: string,
+    columnName: string,
+    options?: {
+      // todo
+      sqlGenerator?: FrequentlyUsedColumn['dependentSQLGenerator'];
+    }
+  ) => string;
+  getAddColumnSql: (
+    tableName: string,
+    schemaName: string,
+    columnName: string,
+    columnType: string,
+    options?: {
+      nullable: boolean;
+      unique: boolean;
+      default: string;
+      sqlGenerator?: FrequentlyUsedColumn['dependentSQLGenerator'];
+    }
+  ) => string | string[];
+  getDropNullSql: (
+    tableName: string,
+    schemaName: string,
+    columnName: string
+  ) => string;
+  getSetNullSql: (
+    tableName: string,
+    schemaName: string,
+    columnName: string
+  ) => string;
+  getAddUniqueConstraintSql: (
+    tableName: string,
+    schemaName: string,
+    constraintName: string,
+    columns: string[]
+  ) => string;
+  getSetColumnDefaultSql: (
+    tableName: string,
+    schemaName: string,
+    columnName: string,
+    defaultValue: any
+  ) => string;
+  getSetColumnCommentSql: (
+    tableName: string,
+    schemaName: string,
+    columnName: string,
+    comment: string
+  ) => string;
 }
 
 export let currentDriver: Driver = 'postgres';

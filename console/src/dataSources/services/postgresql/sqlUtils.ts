@@ -1,6 +1,16 @@
 import { Table } from '../../types';
 import { isColTypeString } from '.';
-import { sqlEscapeText } from '../../../components/Common/utils/sqlUtils';
+import { FrequentlyUsedColumn } from '../../../components/Services/Data/Common/Components/FrequentlyUsedColumnSelector';
+
+const sqlEscapeText = (rawText: string) => {
+  let text = rawText;
+
+  if (text) {
+    text = text.replace(/'/g, "\\'");
+  }
+
+  return `E'${text}'`;
+};
 
 const generateWhereClause = (
   options: { schemas: string[]; tables: Table[] },
@@ -582,4 +592,132 @@ export const getViewDefinitionSql = (viewName: string) => `
     OR has_table_privilege(c.oid, 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER')
     OR has_any_column_privilege(c.oid, 'SELECT, INSERT, UPDATE, REFERENCES')
   )
+`;
+
+export const getDropColumnSql = (
+  tableName: string,
+  schemaName: string,
+  columnName: string,
+  options?: {
+    // todo
+    sqlGenerator?: FrequentlyUsedColumn['dependentSQLGenerator'];
+  }
+) => {
+  let sql = `
+  alter table "${schemaName}"."${tableName}" drop column "${columnName}" cascade
+`;
+  if (!options) {
+    return sql;
+  }
+
+  if (options.sqlGenerator) {
+    sql = `${
+      options.sqlGenerator(schemaName, tableName, columnName).downSql
+    } \n`;
+  }
+
+  sql += `alter table "${schemaName}"."${tableName}" drop column "${columnName}"`;
+
+  return sql;
+};
+
+export const getAddColumnSql = (
+  tableName: string,
+  schemaName: string,
+  columnName: string,
+  columnType: string,
+  options?: {
+    nullable: boolean;
+    unique: boolean;
+    default: string;
+    // todo
+    sqlGenerator?: FrequentlyUsedColumn['dependentSQLGenerator'];
+  }
+) => {
+  let sql = `
+  alter table "${schemaName}"."${tableName}" add column "${columnName}" ${columnType}
+`;
+  if (!options) {
+    return sql;
+  }
+
+  if (options.nullable) {
+    sql += ' null';
+  } else {
+    sql += ' not null';
+  }
+  if (options.unique) {
+    sql += ' unique';
+  }
+  if (options.default) {
+    let defWithQuotes = '';
+
+    if (isColTypeString(columnType) && !isSQLFunction(options.default)) {
+      defWithQuotes = `'${options.default}'`;
+    } else {
+      defWithQuotes = options.default;
+    }
+
+    sql += ` default ${defWithQuotes}`;
+  }
+
+  sql += ';';
+
+  if (options.sqlGenerator) {
+    sql += '\n';
+    sql += options.sqlGenerator(schemaName, tableName, columnName).upSql;
+  }
+
+  if (columnType === 'uuid' && options.default !== '') {
+    return ['CREATE EXTENSION IF NOT EXISTS pgcrypto;', sql];
+  }
+
+  return sql;
+};
+
+export const getDropNullSql = (
+  tableName: string,
+  schemaName: string,
+  columnName: string
+) => `
+  alter table "${schemaName}"."${tableName}" alter column "${columnName}" drop not null"
+`;
+
+export const getSetNullSql = (
+  tableName: string,
+  schemaName: string,
+  columnName: string
+) => `
+  alter table "${schemaName}"."${tableName}" alter column "${columnName}" set not null"
+`;
+
+export const getAddUniqueConstraintSql = (
+  tableName: string,
+  schemaName: string,
+  constraintName: string,
+  columns: string[]
+) => `
+  alter table "${schemaName}"."${tableName}" add constraint "${constraintName}" unique (${columns.join(
+  ', '
+)})"
+`;
+
+export const getSetColumnDefaultSql = (
+  tableName: string,
+  schemaName: string,
+  columnName: string,
+  defaultValue: any
+) => `
+  alter table "${schemaName}"."${tableName}" alter column "${columnName}" set default ${defaultValue}
+`;
+
+export const getSetColumnCommentSql = (
+  tableName: string,
+  schemaName: string,
+  columnName: string,
+  comment: string
+) => `
+  comment on column "${schemaName}"."${tableName}"."${columnName}" is ${sqlEscapeText(
+  comment
+)}
 `;
