@@ -52,6 +52,14 @@ const SERVER_CONFIG_FETCH_FAIL = 'Main/SERVER_CONFIG_FETCH_FAIL';
 
 // action definitions
 
+const filterScope = (data, consoleScope) => {
+  return data.filter(notif => {
+    if (!(notif.scope !== 'OSS' && notif.scope !== consoleScope)) {
+      return notif;
+    }
+  });
+};
+
 // to fetch and filter notifications
 const fetchConsoleNotifications = () => (dispatch, getState) => {
   const url = !globals.isProduction
@@ -114,13 +122,6 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
         return;
       }
 
-      if (!lastSeenNotifications) {
-        window.localStorage.setItem(
-          'main:lastSeenNotifications',
-          JSON.stringify(data.length)
-        );
-      }
-
       if (strictChecks) {
         if (!previousRead) {
           dispatch(
@@ -170,9 +171,18 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
         }
       }
 
+      const filteredData = filterScope(data, consoleScope);
+
+      if (!lastSeenNotifications || lastSeenNotifications !== filteredData.length) {
+        window.localStorage.setItem(
+          'main:lastSeenNotifications',
+          JSON.stringify(data.length)
+        );
+      }
+
       dispatch({
         type: FETCH_CONSOLE_NOTIFICATIONS_SUCCESS,
-        data,
+        data: filteredData,
       });
     })
     .catch(err => {
