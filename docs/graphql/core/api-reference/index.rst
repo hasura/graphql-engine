@@ -128,6 +128,7 @@ You can refer to the following to know about all PostgreSQL types supported by t
   :hidden:
 
   GraphQL API <graphql-api/index>
+  Relay GraphQL API <relay-graphql>
   Schema / Metadata APIs <schema-metadata-api/index>
   Version API <version>
   Health check API <health>
