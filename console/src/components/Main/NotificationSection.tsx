@@ -699,7 +699,7 @@ const HasuraNotifications: React.FC<
         <i className={`fa fa-bell ${styles.bellIcon}`} />
         <ToReadBadge
           numberNotifications={numberNotifications}
-          show={showBadge}
+          show={showBadge || !!fixedVersion}
         />
       </div>
       <Box
