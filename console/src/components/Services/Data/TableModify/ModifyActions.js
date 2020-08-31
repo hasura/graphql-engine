@@ -27,7 +27,6 @@ import {
 } from '../Common/Components/utils';
 
 import {
-  sqlEscapeText,
   getCreateCheckConstraintSql,
   getDropPkSql,
   getCreatePkSql,
@@ -1682,6 +1681,7 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
 const fetchColumnCasts = () => {
   return (dispatch, getState) => {
     const url = Endpoints.getSchema;
+    // todo -- it should be normalized for different data sources
     const reqQuery = getRunSqlQuery(fetchColumnCastsQuery);
     const options = {
       credentials: globalCookiePolicy,
@@ -1722,19 +1722,23 @@ const removeUniqueKey = (index, tableName, existingConstraints, callback) => {
     // Up migration: Drop the constraint
     const sqlUp = [
       getRunSqlQuery(
-        `alter table "${currentSchema}"."${tableName}" drop constraint "${existingConstraint.constraint_name}";`
+        dataSource.getDropConstraintSql(
+          tableName,
+          currentSchema,
+          existingConstraint.constraint_name
+        )
       ),
     ];
 
     // Down Migration: Create the constraint that is being dropped
     const sqlDown = [
       getRunSqlQuery(
-        `alter table "${currentSchema}"."${tableName}" add constraint "${getUniqueConstraintName(
+        dataSource.getAddUniqueConstraintSql(
           tableName,
-          existingConstraint.columns
-        )}" unique (${existingConstraint.columns
-          .map(c => `"${c}"`)
-          .join(', ')});`
+          currentSchema,
+          getUniqueConstraintName(tableName, existingConstraint.columns),
+          existingConstraint.columns.map(c => `"${c}"`)
+        )
       ),
     ];
 
@@ -1751,7 +1755,6 @@ const removeUniqueKey = (index, tableName, existingConstraints, callback) => {
     const errorMsg = 'Deleting constraint failed';
 
     const customOnSuccess = () => {
-      // success callback
       if (callback) {
         callback();
       }
@@ -1825,7 +1828,6 @@ export const toggleTableAsEnum = (isEnum, successCallback, failureCallback) => (
   const errorMsg = `${action} table as enum failed`;
 
   const customOnSuccess = () => {
-    // success callback
     if (successCallback) {
       successCallback();
     }
@@ -1952,14 +1954,12 @@ export const saveCheckConstraint = (index, successCb, errorCb) => (
   const errorMsg = 'Saving check constraint failed';
 
   const customOnSuccess = () => {
-    // success callback
     if (successCb) {
       successCb();
     }
   };
 
   const customOnError = () => {
-    // error callback
     if (errorCb) {
       errorCb();
     }
@@ -1995,38 +1995,41 @@ const saveUniqueKey = (
     const columns = uniqueKey.map(c => allColumns[c].name);
     const existingConstraint = existingConstraints[index];
 
-    // Down migration
     const downMigration = [];
     // drop the newly created constraint
     downMigration.push(
       getRunSqlQuery(
-        `alter table "${currentSchema}"."${tableName}" drop constraint "${getUniqueConstraintName(
+        dataSource.getDropConstraintSql(
           tableName,
-          columns
-        )}";`
+          currentSchema,
+          getUniqueConstraintName(tableName, columns)
+        )
       )
     );
     // if any constraint is being dropped, create it back
     if (index < numUniqueKeys - 1) {
       downMigration.push(
         getRunSqlQuery(
-          `alter table "${currentSchema}"."${tableName}" add constraint "${getUniqueConstraintName(
+          dataSource.getAddUniqueConstraintSql(
             tableName,
-            existingConstraint.columns
-          )}" unique (${existingConstraint.columns
-            .map(c => `"${c}"`)
-            .join(', ')});`
+            currentSchema,
+            getUniqueConstraintName(tableName, existingConstraint.columns),
+            existingConstraint.columns.map(c => `"${c}"`)
+          )
         )
       );
     }
 
-    // up migration
     const upMigration = [];
     // drop the old constraint if there is any
     if (index < numUniqueKeys - 1) {
       upMigration.push(
         getRunSqlQuery(
-          `alter table "${currentSchema}"."${tableName}" drop constraint "${existingConstraint.constraint_name}";`
+          dataSource.getDropConstraintSql(
+            tableName,
+            currentSchema,
+            existingConstraint.constraint_name
+          )
         )
       );
     }
@@ -2034,10 +2037,12 @@ const saveUniqueKey = (
     // create the new constraint
     upMigration.push(
       getRunSqlQuery(
-        `alter table "${currentSchema}"."${tableName}" add constraint "${getUniqueConstraintName(
+        dataSource.getAddUniqueConstraintSql(
           tableName,
-          columns
-        )}" unique (${columns.map(c => `"${c}"`).join(', ')});`
+          currentSchema,
+          getUniqueConstraintName(tableName, columns),
+          columns.map(c => `"${c}"`)
+        )
       )
     );
 
@@ -2110,7 +2115,6 @@ export const setViewCustomColumnNames = (
   const errorMsg = 'Saving column metadata failed';
 
   const customOnSuccess = () => {
-    // success callback
     if (successCb) {
       successCb();
     }
