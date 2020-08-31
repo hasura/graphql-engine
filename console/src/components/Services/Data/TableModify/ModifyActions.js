@@ -453,7 +453,11 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
     if (numSelectedPkColumns) {
       migrationDown.push(
         getRunSqlQuery(
-          dataSource.getDropPkSql(tableName, schemaName, `${tableName}_pkey`)
+          dataSource.getDropConstraintSql(
+            tableName,
+            schemaName,
+            `${tableName}_pkey`
+          )
         )
       );
     }

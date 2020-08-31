@@ -835,5 +835,5 @@ export const getCreatePkSql = ({
 }) => {
   return `alter table "${schemaName}"."${tableName}"
     add constraint "${constraintName}"
-    primary key ( ${selectedPkColumns.map(pkc => `"${pkc}"`).join(', ')} );`;
+    primary key (${selectedPkColumns.map(pkc => `"${pkc}"`).join(', ')});`;
 };
