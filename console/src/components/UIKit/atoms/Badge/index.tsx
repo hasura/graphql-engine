@@ -7,7 +7,8 @@ export type AllowedBadges =
   | 'version update'
   | 'community'
   | 'beta update'
-  | 'update' // TODO: change to feature
+  | 'update'
+  | 'feature'
   | 'security'
   | 'error';
 
@@ -44,9 +45,15 @@ export const Badge: React.FC<ExtendedBadgeProps> = ({
     case 'update':
       return (
         <StyledBadge {...props} bg="#FFEBCD" color="#E49928">
-          feature
+          update
         </StyledBadge>
       );
+      case 'feature':
+        return (
+          <StyledBadge {...props} bg="#FFEBCD" color="#E49928">
+            feature
+          </StyledBadge>
+        );
     case 'version update':
       return (
         <StyledBadge {...props} bg="#fff" color="#2EB67D">
