@@ -1321,7 +1321,8 @@
   width: 460px;
   padding: 0;
   left: auto;
-  height: calc(100vh - 115px);
+  height: auto;
+  max-height: calc(100vh - 115px);
   border: none;
   user-select: none;
   box-shadow: none;
