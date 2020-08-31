@@ -680,7 +680,7 @@ export const getDropNullSql = (
   schemaName: string,
   columnName: string
 ) => `
-  alter table "${schemaName}"."${tableName}" alter column "${columnName}" drop not null"
+  alter table "${schemaName}"."${tableName}" alter column "${columnName}" drop not null
 `;
 
 export const getSetNullSql = (
@@ -688,7 +688,7 @@ export const getSetNullSql = (
   schemaName: string,
   columnName: string
 ) => `
-  alter table "${schemaName}"."${tableName}" alter column "${columnName}" set not null"
+  alter table "${schemaName}"."${tableName}" alter column "${columnName}" set not null
 `;
 
 export const getAddUniqueConstraintSql = (
@@ -834,6 +834,6 @@ export const getCreatePkSql = ({
   constraintName: string;
 }) => {
   return `alter table "${schemaName}"."${tableName}"
-    add constraint "${constraintName}" 
+    add constraint "${constraintName}"
     primary key ( ${selectedPkColumns.map(pkc => `"${pkc}"`).join(', ')} );`;
 };
