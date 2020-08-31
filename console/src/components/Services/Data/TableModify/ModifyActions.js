@@ -52,7 +52,6 @@ import {
   getTrackTableQuery,
 } from '../../../Common/utils/v1QueryUtils';
 import {
-  fetchColumnCastsQuery,
   convertArrayToJson,
   sanitiseRootFields,
   sanitiseColumnNames,
@@ -1682,7 +1681,7 @@ const fetchColumnCasts = () => {
   return (dispatch, getState) => {
     const url = Endpoints.getSchema;
     // todo -- it should be normalized for different data sources
-    const reqQuery = getRunSqlQuery(fetchColumnCastsQuery);
+    const reqQuery = getRunSqlQuery(dataSource.fetchColumnCastsQuery);
     const options = {
       credentials: globalCookiePolicy,
       method: 'POST',
@@ -1693,6 +1692,7 @@ const fetchColumnCasts = () => {
       data => {
         return dispatch({
           type: FETCH_COLUMN_TYPE_CASTS,
+          // todo: dataSource.convertTypeCasts or something like that
           data: convertArrayToJson(data.result.slice(1)),
         });
       },

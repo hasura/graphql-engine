@@ -38,7 +38,7 @@ import {
 import _push from './push';
 import { getFetchAllRolesQuery } from '../../Common/utils/v1QueryUtils';
 
-import { fetchColumnCastsQuery, convertArrayToJson } from './TableModify/utils';
+import { convertArrayToJson } from './TableModify/utils';
 
 import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
 import { isEmpty } from '../../Common/utils/jsUtils';
@@ -566,7 +566,7 @@ const getBulkColumnInfoFetchQuery = schema => {
     true
   );
   const fetchValidTypeCasts = getRunSqlQuery(
-    fetchColumnCastsQuery,
+    dataSource.fetchColumnCastsQuery,
     false,
     true
   );

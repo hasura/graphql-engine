@@ -246,6 +246,7 @@ export interface DataSourcesAPI {
     newName: string,
     oldName: string
   ) => string;
+  fetchColumnCastsQuery: string;
 }
 
 export let currentDriver: Driver = 'postgres';
