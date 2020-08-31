@@ -204,13 +204,7 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
       eventsNext <- LA.withAsync popEventsBatch $ \eventsNextA -> do
         -- process approximately in order, minding HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE:
         forM_ events $ \event -> do
-          tracingCtx <- liftIO (Tracing.extractEventContext (eEvent event))
-          let runTraceT = maybe
-                Tracing.runTraceT
-                Tracing.runTraceTInContext
-                tracingCtx
           t <- processEvent event
-            & runTraceT "process event"
             & withEventEngineCtx eeCtx
             & flip runReaderT (logger, httpMgr)
             & LA.async
@@ -247,11 +241,18 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
          , MonadReader r io
          , Has HTTP.Manager r
          , Has (L.Logger L.Hasura) r
-         , Tracing.MonadTrace io
+         , Tracing.HasReporter io
          )
       => Event -> io ()
     processEvent e = do
       cache <- liftIO getSchemaCache
+      
+      tracingCtx <- liftIO (Tracing.extractEventContext (eEvent e))
+      let runTraceT = maybe
+            Tracing.runTraceT
+            Tracing.runTraceTInContext
+            tracingCtx
+      
       let meti = getEventTriggerInfoFromEvent cache e
       case meti of
         Nothing -> do
@@ -264,7 +265,7 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
             -- For such an event, we unlock the event and retry after a minute
             setRetry e (addUTCTime 60 currentTime)
           >>= flip onLeft logQErr
-        Just eti -> do
+        Just eti -> runTraceT ("Event trigger: " <> unNonEmptyText (unTriggerName (etiName eti))) do
           let webhook = T.unpack $ wciCachedValue $ etiWebhookInfo eti
               retryConf = etiRetryConf eti
               timeoutSeconds = fromMaybe defaultTimeoutSeconds (rcTimeoutSec retryConf)
