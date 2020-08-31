@@ -144,7 +144,7 @@ class OneGraphExplorer extends React.Component {
                   href="https://github.com/hasura/graphql-engine/issues/new"
                   rel="noopener noreferrer"
                 >
-                  Github
+                  GitHub
                 </a>
                 , so we can triage this and improve your experience.
               </p>
