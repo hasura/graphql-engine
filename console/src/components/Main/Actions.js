@@ -54,7 +54,7 @@ const SERVER_CONFIG_FETCH_FAIL = 'Main/SERVER_CONFIG_FETCH_FAIL';
 
 const filterScope = (data, consoleScope) => {
   return data.filter(notif => {
-    if (!(notif.scope !== 'OSS' && notif.scope !== consoleScope)) {
+    if (notif.scope === 'OSS' || notif.scope === consoleScope) {
       return notif;
     }
   });
@@ -122,6 +122,18 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
         return;
       }
 
+      const filteredData = filterScope(data, consoleScope);
+
+      if (
+        !lastSeenNotifications ||
+        lastSeenNotifications !== filteredData.length
+      ) {
+        window.localStorage.setItem(
+          'main:lastSeenNotifications',
+          JSON.stringify(filteredData.length)
+        );
+      }
+
       if (strictChecks) {
         if (!previousRead) {
           dispatch(
@@ -142,7 +154,7 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
               localStorage.getItem('main:console_notifications')
             );
             if (previousList.length) {
-              const resDiff = data.filter(
+              const resDiff = filteredData.filter(
                 (notif, notifIdx) => previousList[notifIdx].id !== notif.id
               );
               if (!resDiff.length) {
@@ -150,14 +162,17 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
                 newReadValue = previousRead;
                 toShowBadge = false;
               } else {
-                newReadValue = data
+                newReadValue = filteredData
                   .filter(notif => !previousList.includes(notif.id))
                   .map(notif => `${notif.id}`);
               }
             }
           } else {
             newReadValue = previousRead;
-            if (previousRead.length && lastSeenNotifications === data.length) {
+            if (
+              previousRead.length &&
+              lastSeenNotifications === filteredData.length
+            ) {
               toShowBadge = false;
             }
           }
@@ -169,18 +184,6 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
             })
           );
         }
-      }
-
-      const filteredData = filterScope(data, consoleScope);
-
-      if (
-        !lastSeenNotifications ||
-        lastSeenNotifications !== filteredData.length
-      ) {
-        window.localStorage.setItem(
-          'main:lastSeenNotifications',
-          JSON.stringify(data.length)
-        );
       }
 
       dispatch({
