@@ -738,6 +738,11 @@ export const getConsoleNotificationQuery = (
       },
       order_by: [
         {
+          type: 'asc',
+          nulls: 'last',
+          column: ['priority'],
+        },
+        {
           type: 'desc',
           column: ['created_at'],
         },
