@@ -26,6 +26,7 @@ import { Nullable } from '../Common/utils/tsUtils';
 import { mapDispatchToPropsEmpty } from '../Common/utils/reactUtils';
 import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
 import { StyledText } from '../UIKit/atoms/Typography/Typography';
+import { LS_VERSION_UPDATE_CHECK_LAST_CLOSED } from '../Common/utils/localStorageUtils';
 
 const getDateString = (date: NotificationDate) => {
   if (!date) {
@@ -39,6 +40,8 @@ interface UpdateProps extends ConsoleNotification {
   is_read?: boolean;
   onReadCB?: () => void;
   consoleScope: NotificationScope;
+  latestVersion?: string;
+  stable?: boolean;
 }
 
 const Update: React.FC<UpdateProps> = ({
@@ -49,6 +52,7 @@ const Update: React.FC<UpdateProps> = ({
   onClickAction,
   is_read,
   onReadCB,
+  latestVersion,
   ...props
 }) => {
   const [currentReadState, updateReadState] = React.useState(is_read);
@@ -84,13 +88,17 @@ const Update: React.FC<UpdateProps> = ({
   const updateContainerClass = isUpdateNotification
     ? styles.updateStyleBox
     : styles.updateBox;
+
   return (
     <Box
       className={`${updateContainerClass} ${
         !currentReadState ? styles.unread : styles.read
       }`}
       onClick={() => {
-        dispatch(setPreReleaseNotificationOptOutInDB());
+        window.localStorage.setItem(
+          LS_VERSION_UPDATE_CHECK_LAST_CLOSED,
+          latestVersion || ''
+        );
         onClickNotification();
       }}
     >
@@ -203,6 +211,7 @@ const VersionUpdateNotification: React.FC<VersionUpdateNotificationProps> = ({
   const changeLogURL = `https://github.com/hasura/graphql-engine/releases${
     latestVersion ? `/tag/${latestVersion}` : ''
   }`;
+
   return (
     <Update
       subject="New Update Available!"
@@ -211,6 +220,8 @@ const VersionUpdateNotification: React.FC<VersionUpdateNotificationProps> = ({
       start_date={Date.now()}
       consoleScope="OSS"
       scope="OSS"
+      latestVersion={latestVersion}
+      stable={isStableRelease}
     >
       <a href={changeLogURL} target="_blank" rel="noopener noreferrer">
         <span>View Changelog</span>
@@ -309,15 +320,11 @@ const checkVersionUpdate = (
     latestServerVersionToCheck = latestPreRelease;
   }
 
-  // TODO: update with LS utils methods once PR is merged
-  const versionCheckKey = 'versionUpdateCheck: lastClosed';
-
   try {
-    const lastUpdateCheckClosed = window.localStorage.getItem(versionCheckKey);
-    if (
-      lastUpdateCheckClosed !== latestServerVersionToCheck ||
-      serverVersion !== latestServerVersionToCheck
-    ) {
+    const lastUpdateCheckClosed = window.localStorage.getItem(
+      LS_VERSION_UPDATE_CHECK_LAST_CLOSED
+    );
+    if (lastUpdateCheckClosed !== latestServerVersionToCheck) {
       const isUpdateAvailable = versionGT(
         latestServerVersionToCheck,
         serverVersion
@@ -397,13 +404,15 @@ const HasuraNotifications: React.FC<
   const consoleId = window.__env.consoleId;
   const dataLength = consoleNotifications?.length;
   const consoleScope = getConsoleScope(serverVersion, consoleId);
+
   const dropDownRef = React.useRef<HTMLDivElement>(null);
   const wrapperRef = React.useRef<HTMLDivElement>(null);
+
   const [latestVersion, setLatestVersion] = React.useState(serverVersion);
-  const [
-    displayNewVersionNotification,
-    setDisplayNewVersionNotification,
-  ] = React.useState(false);
+  const [displayNewVersionUpdate, setDisplayNewVersionUpdate] = React.useState(
+    false
+  );
+
   const [opened, updateOpenState] = React.useState(false);
   const [numberNotifications, updateNumberNotifications] = React.useState(0);
   const [numDisplayed, updateNumDisplayed] = React.useState(20);
@@ -458,22 +467,18 @@ const HasuraNotifications: React.FC<
 
     setLatestVersion(latestReleasedVersion);
 
-    if (
-      versionUpdateCheck &&
-      !console_opts?.disablePreReleaseUpdateNotifications
-    ) {
-      setDisplayNewVersionNotification(true);
+    if (versionUpdateCheck) {
+      setDisplayNewVersionUpdate(true);
       updateNumberNotifications(num => num++);
       return;
     }
 
-    setDisplayNewVersionNotification(false);
+    setDisplayNewVersionUpdate(false);
   }, [
     latestPreReleaseServerVersion,
     latestStableServerVersion,
     console_opts,
     serverVersion,
-    console_opts?.disablePreReleaseUpdateNotifications,
   ]);
 
   React.useEffect(() => {
@@ -495,7 +500,7 @@ const HasuraNotifications: React.FC<
       previouslyReadState === 'default' ||
       previouslyReadState === 'error'
     ) {
-      if (displayNewVersionNotification) {
+      if (displayNewVersionUpdate) {
         updateNumberNotifications(1);
       } else {
         updateNumberNotifications(0);
@@ -504,7 +509,7 @@ const HasuraNotifications: React.FC<
     }
 
     let readNumber = dataLength;
-    if (displayNewVersionNotification) {
+    if (displayNewVersionUpdate) {
       readNumber++;
     }
     if (Array.isArray(previouslyReadState)) {
@@ -512,12 +517,7 @@ const HasuraNotifications: React.FC<
     }
 
     updateNumberNotifications(readNumber);
-  }, [
-    dataLength,
-    displayNewVersionNotification,
-    userType,
-    previouslyReadState,
-  ]);
+  }, [dataLength, displayNewVersionUpdate, userType, previouslyReadState]);
 
   const optOutCallback = () => {
     closeDropDown();
@@ -547,7 +547,7 @@ const HasuraNotifications: React.FC<
       JSON.stringify(consoleNotifications)
     );
     // to clear the beta-version update if you mark all as read
-    if (!checkStableVersion(latestVersion) && displayNewVersionNotification) {
+    if (!checkStableVersion(latestVersion) && displayNewVersionUpdate) {
       optOutCallback();
     }
   };
@@ -618,13 +618,13 @@ const HasuraNotifications: React.FC<
   };
 
   React.useEffect(() => {
-    if (displayNewVersionNotification && previouslyReadState === 'all') {
+    if (displayNewVersionUpdate && previouslyReadState === 'all') {
       toShowMarkAllAsRead(true);
       return;
     }
 
     toShowMarkAllAsRead(!numberNotifications);
-  }, [numberNotifications, displayNewVersionNotification, previouslyReadState]);
+  }, [numberNotifications, displayNewVersionUpdate, previouslyReadState]);
 
   React.useEffect(() => {
     updateDataShown(consoleNotifications.slice(0, numDisplayed + 1));
@@ -658,7 +658,6 @@ const HasuraNotifications: React.FC<
           show={showBadge}
         />
       </div>
-      {/* Notifications section */}
       <Box
         className={`dropdown-menu ${styles.consoleNotificationPanel}`}
         ref={dropDownRef}
@@ -685,7 +684,7 @@ const HasuraNotifications: React.FC<
           </Button>
         </Flex>
         <Box className={styles.notificationsContainer}>
-          {displayNewVersionNotification && (
+          {displayNewVersionUpdate && (
             <VersionUpdateNotification
               latestVersion={latestVersion}
               optOutCallback={optOutCallback}

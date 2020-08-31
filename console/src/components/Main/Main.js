@@ -37,10 +37,6 @@ import {
   setLoveConsentState,
 } from './utils';
 import { getSchemaBaseRoute } from '../Common/utils/routesUtils';
-import {
-  LS_VERSION_UPDATE_CHECK_LAST_CLOSED,
-  setLocalStorageItem,
-} from '../Common/utils/localStorageUtils';
 import LoveSection from './LoveSection';
 import { Help, ProPopup } from './components/';
 
@@ -106,15 +102,6 @@ class Main extends React.Component {
     this.updateLocalStorageState();
     this.toggleProPopup();
   };
-
-  closeUpdateBanner() {
-    const { updateNotificationVersion } = this.state;
-    setLocalStorageItem(
-      LS_VERSION_UPDATE_CHECK_LAST_CLOSED,
-      updateNotificationVersion
-    );
-    this.setState({ updateNotificationVersion: null });
-  }
 
   closeDropDown = () => {
     this.setState({
