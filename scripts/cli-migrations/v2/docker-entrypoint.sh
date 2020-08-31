@@ -76,7 +76,7 @@ fi
 if [ -d "$HASURA_GRAPHQL_MIGRATIONS_DIR" ]; then
     log "migrations-apply" "applying migrations from $HASURA_GRAPHQL_MIGRATIONS_DIR"
     mkdir -p "$TEMP_PROJECT_DIR"
-    cp -a "$HASURA_GRAPHQL_MIGRATIONS_DIR/." "$TEMP_PROJECT_DIR/migrations/"
+    cp -dR "$HASURA_GRAPHQL_MIGRATIONS_DIR/." "$TEMP_PROJECT_DIR/migrations/"
     cd "$TEMP_PROJECT_DIR"
     echo "version: 2" > config.yaml
     echo "endpoint: http://localhost:$HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT" >> config.yaml
@@ -90,7 +90,7 @@ if [ -d "$HASURA_GRAPHQL_METADATA_DIR" ]; then
     rm -rf "TEMP_PROJECT_DIR"
     log "migrations-apply" "applying metadata from $HASURA_GRAPHQL_METADATA_DIR"
     mkdir -p "$TEMP_PROJECT_DIR"
-    cp -a "$HASURA_GRAPHQL_METADATA_DIR/." "$TEMP_PROJECT_DIR/metadata/"
+    cp -dR "$HASURA_GRAPHQL_METADATA_DIR/." "$TEMP_PROJECT_DIR/metadata/"
     cd "$TEMP_PROJECT_DIR"
     echo "version: 2" > config.yaml
     echo "endpoint: http://localhost:$HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT" >> config.yaml

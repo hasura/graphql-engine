@@ -7,7 +7,9 @@ FROM hasura/graphql-engine:v1.3.1
 # install libstdc++6 from .deb file
 COPY --from=packager /tmp/libstdc++6* .
 RUN busybox dpkg-deb -x libstdc++6*.deb / \
-    && rm libstdc++6*.deb
+    && rm libstdc++6*.deb \
+    && addgroup -g 1000 hasura \
+    && adduser -u 1000 -s /bin/sh -S -G hasura hasura
 
 # set an env var to let the cli know that
 # update notification is disabled
@@ -17,7 +19,11 @@ COPY docker-entrypoint.sh /bin/
 COPY cli-hasura-linux-amd64 /bin/hasura-cli
 COPY manifest.yaml /tmp/manifest.yaml
 RUN chmod +x /bin/hasura-cli \
-    && hasura-cli plugins install cli-ext --manifest-file /tmp/manifest.yaml \
+    && chown 1000:1000 /tmp/manifest.yaml
+
+USER 1000
+
+RUN hasura-cli plugins install cli-ext --manifest-file /tmp/manifest.yaml \
     && rm /tmp/manifest.yaml
 
 # set an env var to let the cli know that

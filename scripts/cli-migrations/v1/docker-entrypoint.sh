@@ -70,7 +70,7 @@ fi
 if [ -d "$HASURA_GRAPHQL_MIGRATIONS_DIR" ]; then
     log "migrations-apply" "applying migrations from $HASURA_GRAPHQL_MIGRATIONS_DIR"
     mkdir -p "$TEMP_MIGRATIONS_DIR"
-    cp -a "$HASURA_GRAPHQL_MIGRATIONS_DIR/." "$TEMP_MIGRATIONS_DIR/migrations/"
+    cp -dR "$HASURA_GRAPHQL_MIGRATIONS_DIR/." "$TEMP_MIGRATIONS_DIR/migrations/"
     cd "$TEMP_MIGRATIONS_DIR"
     echo "endpoint: http://localhost:$HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT" > config.yaml
     hasura-cli migrate apply

@@ -7,7 +7,11 @@ ENV HASURA_GRAPHQL_SHOW_UPDATE_NOTIFICATION=false
 
 COPY docker-entrypoint.sh /bin/
 COPY cli-hasura-linux-amd64 /bin/hasura-cli
-RUN chmod +x /bin/hasura-cli
+RUN chmod +x /bin/hasura-cli\
+    && addgroup -g 1000 hasura \
+    && adduser -u 1000 -s /bin/sh -S -G hasura hasura
+
+USER 1000
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 
