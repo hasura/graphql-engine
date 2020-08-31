@@ -13,7 +13,7 @@ import qualified Data.HashMap.Strict.Extended  as M
 import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.HashSet                  as S
 import qualified Data.Text                     as T
-import qualified Data.List.Extended                     as LE
+import qualified Data.List.Extended            as LE
 
 import           Control.Lens.Extended         hiding (enum, index)
 import           Data.Int                      (Int32, Int64)
