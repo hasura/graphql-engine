@@ -219,13 +219,32 @@ export interface DataSourcesAPI {
     tableName: string,
     schemaName: string,
     columnName: string,
-    defaultValue: any
+    defaultValue: any,
+    columnType: string
   ) => string;
-  getSetColumnCommentSql: (
+  getSetCommentSql: (
+    on: 'table' | 'column' | string, // todo
     tableName: string,
     schemaName: string,
     columnName: string,
     comment: string
+  ) => string;
+  getAlterColumnTypeSql: (
+    tableName: string,
+    schemaName: string,
+    columnName: string,
+    columnType: string
+  ) => string;
+  getDropColumnDefaultSql: (
+    tableName: string,
+    schemaName: string,
+    columnName: string
+  ) => string;
+  getRenameColumnQuery: (
+    tableName: string,
+    schemaName: string,
+    newName: string,
+    oldName: string
   ) => string;
 }
 

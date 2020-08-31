@@ -29,9 +29,12 @@ import {
   getAddColumnSql,
   getAddUniqueConstraintSql,
   getDropNullSql,
-  getSetColumnCommentSql,
+  getSetCommentSql,
   getSetColumnDefaultSql,
   getSetNullSql,
+  getAlterColumnTypeSql,
+  getDropColumnDefaultSql,
+  getRenameColumnQuery,
 } from './sqlUtils';
 
 export const isTable = (table: Table) => {
@@ -536,7 +539,10 @@ export const postgres: DataSourcesAPI = {
   getAddColumnSql,
   getAddUniqueConstraintSql,
   getDropNullSql,
-  getSetColumnCommentSql,
+  getSetCommentSql,
   getSetColumnDefaultSql,
   getSetNullSql,
+  getAlterColumnTypeSql,
+  getDropColumnDefaultSql,
+  getRenameColumnQuery,
 };

@@ -1136,7 +1136,8 @@ const deleteColumnSql = (column, tableSchema) => {
             tableName,
             currentSchema,
             name,
-            column.column_default
+            column.column_default,
+            col_type
           )
         )
       );
@@ -1145,7 +1146,8 @@ const deleteColumnSql = (column, tableSchema) => {
     if (comment) {
       schemaChangesDown.push(
         getRunSqlQuery(
-          dataSource.getSetColumnCommentSql(
+          dataSource.getSetCommentSql(
+            'column',
             tableName,
             currentSchema,
             name,
@@ -1278,25 +1280,12 @@ const updateCommentInput = value => ({
 const deleteConstraintSql = (tableName, cName) => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
-    const dropContraintQuery =
-      'ALTER TABLE ' +
-      '"' +
-      currentSchema +
-      '"' +
-      '.' +
-      '"' +
-      tableName +
-      '"' +
-      ' DROP CONSTRAINT ' +
-      '"' +
-      cName +
-      '"';
-    const schemaChangesUp = [getRunSqlQuery(dropContraintQuery)];
+    const schemaChangesUp = [
+      getRunSqlQuery(
+        dataSource.getDropConstraintSql(tableName, currentSchema, cName)
+      ),
+    ];
 
-    // pending
-    const schemaChangesDown = [];
-
-    // Apply migrations
     const migrationName =
       'alter_table_' + currentSchema + '_' + tableName + '_drop_foreign_key';
 
@@ -1311,7 +1300,7 @@ const deleteConstraintSql = (tableName, cName) => {
       dispatch,
       getState,
       schemaChangesUp,
-      schemaChangesDown,
+      [],
       migrationName,
       customOnSuccess,
       customOnError,
@@ -1324,32 +1313,26 @@ const deleteConstraintSql = (tableName, cName) => {
 
 const saveTableCommentSql = tableType => {
   return (dispatch, getState) => {
-    let updatedComment = getState().tables.modify.tableCommentEdit.editedValue;
-    if (!updatedComment) {
-      updatedComment = '';
-    }
+    const updatedComment = getState().tables.modify.tableCommentEdit
+      .editedValue;
+
     const currentSchema = getState().tables.currentSchema;
     const tableName = getState().tables.currentTable;
 
-    const commentQueryBase =
-      'COMMENT ON ' +
-      tableType +
-      ' ' +
-      '"' +
-      currentSchema +
-      '"' +
-      '.' +
-      '"' +
-      tableName +
-      '"' +
-      ' IS ';
-    const commentUpQuery =
-      updatedComment === ''
-        ? commentQueryBase + 'NULL'
-        : commentQueryBase + sqlEscapeText(updatedComment);
+    const commentQueryUp = dataSource.getSetCommentSql(
+      tableType,
+      tableName,
+      currentSchema,
+      updatedComment || null
+    );
 
-    const commentDownQuery = commentQueryBase + 'NULL';
-    const schemaChangesUp = [getRunSqlQuery(commentUpQuery)];
+    const commentDownQuery = dataSource.getSetCommentSql(
+      tableType,
+      tableName,
+      currentSchema,
+      'NULL'
+    );
+    const schemaChangesUp = [getRunSqlQuery(commentQueryUp)];
     const schemaChangesDown = [getRunSqlQuery(commentDownQuery)];
 
     // Apply migrations
@@ -1411,7 +1394,6 @@ const isColumnUnique = (tableSchema, colName) => {
 };
 
 const saveColumnChangesSql = (colName, column, onSuccess) => {
-  // eslint-disable-line no-unused-vars
   return (dispatch, getState) => {
     const columnEdit = getState().tables.modify.columnEdit[colName];
 
@@ -1435,42 +1417,22 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     const originalColNullable = column.is_nullable; // "YES" or "NO"
     const originalColUnique = isColumnUnique(table, colName);
 
-    /* column type up/down migration */
-    const columnChangesUpQuery =
-      'ALTER TABLE ' +
-      '"' +
-      currentSchema +
-      '"' +
-      '.' +
-      '"' +
-      tableName +
-      '"' +
-      ' ALTER COLUMN ' +
-      '"' +
-      colName +
-      '"' +
-      ' TYPE ' +
-      colType +
-      ';';
-    const columnChangesDownQuery =
-      'ALTER TABLE ' +
-      '"' +
-      currentSchema +
-      '"' +
-      '.' +
-      '"' +
-      tableName +
-      '"' +
-      ' ALTER COLUMN ' +
-      '"' +
-      colName +
-      '"' +
-      ' TYPE ' +
-      column.data_type +
-      ';';
+    const columnChangesUpQuery = dataSource.getAlterColumnTypeSql(
+      tableName,
+      currentSchema,
+      colName,
+      colType
+    );
+    const columnChangesDownQuery = dataSource.getAlterColumnTypeSql(
+      tableName,
+      currentSchema,
+      colName,
+      column.data_type
+    );
+
     const schemaChangesUp =
       originalColType !== colType ? [getRunSqlQuery(columnChangesUpQuery)] : [];
-    const schemaChangesDown =
+    let schemaChangesDown =
       originalColType !== colType
         ? [getRunSqlQuery(columnChangesDownQuery)]
         : [];
@@ -1508,89 +1470,37 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
       );
     }
 
-    const colDefaultWithQuotes =
-      dataSource.isColTypeString(colType) &&
-      !dataSource.isSQLFunction(colDefault)
-        ? `'${colDefault}'`
-        : colDefault;
-    const originalColDefaultWithQuotes =
-      dataSource.isColTypeString(colType) &&
-      !dataSource.isSQLFunction(originalColDefault)
-        ? `'${originalColDefault}'`
-        : originalColDefault;
-
     /* column default up/down migration */
     let columnDefaultUpQuery;
-    let columnDefaultDownQuery;
     if (colDefault !== '') {
-      // ALTER TABLE ONLY <table> ALTER COLUMN <column> SET DEFAULT <default>;
-      columnDefaultUpQuery =
-        'ALTER TABLE ONLY ' +
-        '"' +
-        currentSchema +
-        '"' +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        ' ALTER COLUMN ' +
-        '"' +
-        colName +
-        '"' +
-        ' SET DEFAULT ' +
-        colDefaultWithQuotes +
-        ';';
+      columnDefaultUpQuery = dataSource.getSetColumnDefaultSql(
+        tableName,
+        currentSchema,
+        colName,
+        colDefault
+      );
     } else {
-      // ALTER TABLE <table> ALTER COLUMN <column> DROP DEFAULT;
-      columnDefaultUpQuery =
-        'ALTER TABLE ' +
-        '"' +
-        currentSchema +
-        '"' +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        ' ALTER COLUMN ' +
-        '"' +
-        colName +
-        '"' +
-        ' DROP DEFAULT;';
+      columnDefaultUpQuery = dataSource.getDropColumnDefaultSql(
+        tableName,
+        currentSchema,
+        colName
+      );
     }
 
+    let columnDefaultDownQuery;
     if (originalColDefault !== '') {
-      columnDefaultDownQuery =
-        'ALTER TABLE ONLY ' +
-        '"' +
-        currentSchema +
-        '"' +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        ' ALTER COLUMN ' +
-        '"' +
-        colName +
-        '"' +
-        ' SET DEFAULT ' +
-        originalColDefaultWithQuotes +
-        ';';
+      columnDefaultDownQuery = dataSource.getSetColumnDefaultSql(
+        tableName,
+        currentSchema,
+        colName,
+        originalColDefault
+      );
     } else {
-      // there was no default value originally. so drop default.
-      columnDefaultDownQuery =
-        'ALTER TABLE ONLY ' +
-        '"' +
-        currentSchema +
-        '"' +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        ' ALTER COLUMN ' +
-        '"' +
-        colName +
-        '"' +
-        ' DROP DEFAULT;';
+      columnDefaultDownQuery = dataSource.getDropColumnDefaultSql(
+        tableName,
+        currentSchema,
+        colName
+      );
     }
 
     // check if default is unchanged and then do a drop. if not skip
@@ -1601,70 +1511,32 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
 
     /* column nullable up/down migration */
     if (nullable) {
-      // ALTER TABLE <table> ALTER COLUMN <column> DROP NOT NULL;
-      const nullableUpQuery =
-        'ALTER TABLE ' +
-        '"' +
-        currentSchema +
-        '"' +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        ' ALTER COLUMN ' +
-        '"' +
-        colName +
-        '"' +
-        ' DROP NOT NULL;';
-      const nullableDownQuery =
-        'ALTER TABLE ' +
-        '"' +
-        currentSchema +
-        '"' +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        ' ALTER COLUMN ' +
-        '"' +
-        colName +
-        '"' +
-        ' SET NOT NULL;';
+      const nullableUpQuery = dataSource.getDropNullSql(
+        tableName,
+        currentSchema,
+        colName
+      );
+      const nullableDownQuery = dataSource.getSetNullSql(
+        tableName,
+        currentSchema,
+        colName
+      );
       // check with original null
       if (originalColNullable !== 'YES') {
         schemaChangesUp.push(getRunSqlQuery(nullableUpQuery));
         schemaChangesDown.push(getRunSqlQuery(nullableDownQuery));
       }
     } else {
-      // ALTER TABLE <table> ALTER COLUMN <column> SET NOT NULL;
-      const nullableUpQuery =
-        'ALTER TABLE ' +
-        '"' +
-        currentSchema +
-        '"' +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        ' ALTER COLUMN ' +
-        '"' +
-        colName +
-        '"' +
-        ' SET NOT NULL;';
-      const nullableDownQuery =
-        'ALTER TABLE ' +
-        '"' +
-        currentSchema +
-        '"' +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        ' ALTER COLUMN ' +
-        '"' +
-        colName +
-        '"' +
-        ' DROP NOT NULL;';
+      const nullableUpQuery = dataSource.getSetNullSql(
+        tableName,
+        currentSchema,
+        colName
+      );
+      const nullableDownQuery = dataSource.getDropNullSql(
+        tableName,
+        currentSchema,
+        colName
+      );
       // check with original null
       if (originalColNullable !== 'NO') {
         schemaChangesUp.push(getRunSqlQuery(nullableUpQuery));
@@ -1674,80 +1546,34 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
 
     /* column unique up/down migration */
     if (unique) {
-      const uniqueUpQuery =
-        'ALTER TABLE ' +
-        '"' +
-        currentSchema +
-        '"' +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        ' ADD CONSTRAINT ' +
-        '"' +
-        tableName +
-        '_' +
-        colName +
-        '_key"' +
-        ' UNIQUE ' +
-        '("' +
-        colName +
-        '")';
-      const uniqueDownQuery =
-        'ALTER TABLE ' +
-        '"' +
-        currentSchema +
-        '"' +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        ' DROP CONSTRAINT ' +
-        '"' +
-        tableName +
-        '_' +
-        colName +
-        '_key"';
+      const uniqueUpQuery = dataSource.getAddUniqueConstraintSql(
+        tableName,
+        currentSchema,
+        tableName + '_' + colName + '_key',
+        [colName]
+      );
+      const uniqueDownQuery = dataSource.getDropConstraintSql(
+        tableName,
+        currentSchema,
+        tableName + '_' + colName + '_key'
+      );
       // check with original unique
       if (!originalColUnique) {
         schemaChangesUp.push(getRunSqlQuery(uniqueUpQuery));
         schemaChangesDown.push(getRunSqlQuery(uniqueDownQuery));
       }
     } else {
-      const uniqueDownQuery =
-        'ALTER TABLE ' +
-        '"' +
-        currentSchema +
-        '"' +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        ' ADD CONSTRAINT ' +
-        '"' +
-        tableName +
-        '_' +
-        colName +
-        '_key"' +
-        ' UNIQUE ' +
-        '("' +
-        colName +
-        '")';
-      const uniqueUpQuery =
-        'ALTER TABLE ' +
-        '"' +
-        currentSchema +
-        '"' +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        ' DROP CONSTRAINT ' +
-        '"' +
-        tableName +
-        '_' +
-        colName +
-        '_key"';
+      const uniqueDownQuery = dataSource.getAddUniqueConstraintSql(
+        tableName,
+        currentSchema,
+        tableName + '_' + colName + '_key',
+        [colName]
+      );
+      const uniqueUpQuery = dataSource.getDropConstraintSql(
+        tableName,
+        currentSchema,
+        tableName + '_' + colName + '_key'
+      );
       // check with original unique
       if (originalColUnique) {
         schemaChangesUp.push(getRunSqlQuery(uniqueUpQuery));
@@ -1756,40 +1582,23 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     }
 
     /* column comment up/down migration */
-    const columnCommentUpQuery =
-      'COMMENT ON COLUMN ' +
-      '"' +
-      currentSchema +
-      '"' +
-      '.' +
-      '"' +
-      tableName +
-      '"' +
-      '.' +
-      '"' +
-      colName +
-      '"' +
-      ' IS ' +
-      sqlEscapeText(comment);
-
-    const columnCommentDownQuery =
-      'COMMENT ON COLUMN ' +
-      '"' +
-      currentSchema +
-      '"' +
-      '.' +
-      '"' +
-      tableName +
-      '"' +
-      '.' +
-      '"' +
-      colName +
-      '"' +
-      ' IS ' +
-      sqlEscapeText(originalColComment);
-
-    // check if comment is unchanged and then do an update. if not skip
     if (originalColComment !== comment) {
+      const columnCommentUpQuery = dataSource.getSetCommentSql(
+        'column',
+        tableName,
+        currentSchema,
+        colName,
+        comment
+      );
+
+      const columnCommentDownQuery = dataSource.getSetCommentSql(
+        'column',
+        tableName,
+        currentSchema,
+        colName,
+        originalColComment
+      );
+
       schemaChangesUp.push(getRunSqlQuery(columnCommentUpQuery));
       schemaChangesDown.push(getRunSqlQuery(columnCommentDownQuery));
     }
@@ -1807,14 +1616,25 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
       }
       schemaChangesUp.push(
         getRunSqlQuery(
-          `alter table "${currentSchema}"."${tableName}" rename column "${colName}" to "${newName}";`
+          dataSource.getRenameColumnQuery(
+            tableName,
+            currentSchema,
+            newName,
+            colName
+          )
         )
       );
-      schemaChangesDown.push(
+      schemaChangesDown = [
         getRunSqlQuery(
-          `alter table "${currentSchema}"."${tableName}" rename column "${newName}" to "${colName}";`
-        )
-      );
+          dataSource.getRenameColumnQuery(
+            tableName,
+            currentSchema,
+            colName,
+            newName
+          )
+        ),
+        ...schemaChangesDown,
+      ];
     }
 
     // Apply migrations

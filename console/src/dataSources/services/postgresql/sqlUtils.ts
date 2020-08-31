@@ -706,18 +706,56 @@ export const getSetColumnDefaultSql = (
   tableName: string,
   schemaName: string,
   columnName: string,
-  defaultValue: any
-) => `
-  alter table "${schemaName}"."${tableName}" alter column "${columnName}" set default ${defaultValue}
-`;
+  defaultValue: any,
+  columnType: string
+) => {
+  let defWithQuotes = '';
 
-export const getSetColumnCommentSql = (
+  if (isColTypeString(columnType) && !isSQLFunction(defaultValue)) {
+    defWithQuotes = `'${defaultValue}'`;
+  } else {
+    defWithQuotes = defaultValue;
+  }
+  const sql = `
+  alter table "${schemaName}"."${tableName}" alter column "${columnName}" set default ${defWithQuotes}
+`;
+  return sql;
+};
+
+export const getSetCommentSql = (
+  on: 'column' | 'table' | string,
   tableName: string,
   schemaName: string,
   columnName: string,
-  comment: string
+  comment: string | null
 ) => `
-  comment on column "${schemaName}"."${tableName}"."${columnName}" is ${sqlEscapeText(
-  comment
-)}
+  comment on ${on} "${schemaName}"."${tableName}"."${columnName}" is ${
+  comment ? sqlEscapeText(comment) : 'NULL'
+}
+`;
+
+export const getAlterColumnTypeSql = (
+  tableName: string,
+  schemaName: string,
+  columnName: string,
+  columnType: string
+) => `
+  alter table "${schemaName}"."${tableName}" alter column "${columnName}" ${columnType}
+`;
+
+export const getDropColumnDefaultSql = (
+  tableName: string,
+  schemaName: string,
+  columnName: string
+) => `
+  alter table "${schemaName}"."${tableName}" alter column "${columnName}" drop default
+`;
+
+export const getRenameColumnQuery = (
+  tableName: string,
+  schemaName: string,
+  newName: string,
+  oldName: string
+) => `
+  alter table "${schemaName}"."${tableName}" rename column "${oldName}" to "${newName}"
 `;
