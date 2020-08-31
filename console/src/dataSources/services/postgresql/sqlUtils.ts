@@ -699,7 +699,7 @@ export const getAddUniqueConstraintSql = (
 ) => `
   alter table "${schemaName}"."${tableName}" add constraint "${constraintName}" unique (${columns.join(
   ', '
-)})"
+)})
 `;
 
 export const getSetColumnDefaultSql = (
