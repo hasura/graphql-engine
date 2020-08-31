@@ -628,10 +628,7 @@ const HasuraNotifications: React.FC<
   }, [consoleNotifications, numDisplayed]);
 
   React.useEffect(() => {
-    if (
-      dataLength > 20 &&
-      numDisplayed !== dataLength
-    ) {
+    if (dataLength > 20 && numDisplayed !== dataLength) {
       updateViewMoreDisplay(true);
       return;
     }

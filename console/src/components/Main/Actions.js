@@ -173,7 +173,10 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
 
       const filteredData = filterScope(data, consoleScope);
 
-      if (!lastSeenNotifications || lastSeenNotifications !== filteredData.length) {
+      if (
+        !lastSeenNotifications ||
+        lastSeenNotifications !== filteredData.length
+      ) {
         window.localStorage.setItem(
           'main:lastSeenNotifications',
           JSON.stringify(data.length)

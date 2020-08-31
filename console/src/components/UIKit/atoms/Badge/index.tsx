@@ -48,12 +48,12 @@ export const Badge: React.FC<ExtendedBadgeProps> = ({
           update
         </StyledBadge>
       );
-      case 'feature':
-        return (
-          <StyledBadge {...props} bg="#FFEBCD" color="#E49928">
-            feature
-          </StyledBadge>
-        );
+    case 'feature':
+      return (
+        <StyledBadge {...props} bg="#FFEBCD" color="#E49928">
+          feature
+        </StyledBadge>
+      );
     case 'version update':
       return (
         <StyledBadge {...props} bg="#fff" color="#2EB67D">
