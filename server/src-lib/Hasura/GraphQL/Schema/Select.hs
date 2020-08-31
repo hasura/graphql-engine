@@ -744,10 +744,6 @@ tableConnectionArgs pkeyColumns table selectPermissions = do
         throwInvalidCursor = parseError "the \"after\" or \"before\" cursor is invalid"
         liftQErr = either (parseError . qeError) pure . runExcept
 
-        iResultToMaybe = \case
-          J.ISuccess v -> Just v
-          J.IError{}   -> Nothing
-
         getPathFromOrderBy = \case
           RQL.AOCColumn pgColInfo ->
             let pathElement = J.Key $ getPGColTxt $ pgiColumn pgColInfo
