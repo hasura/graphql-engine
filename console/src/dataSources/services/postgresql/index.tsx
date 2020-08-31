@@ -36,6 +36,9 @@ import {
   getDropColumnDefaultSql,
   getRenameColumnQuery,
   fetchColumnCastsQuery,
+  checkSchemaModification,
+  getCreateCheckConstraintSql,
+  getCreatePkSql,
 } from './sqlUtils';
 
 export const isTable = (table: Table) => {
@@ -547,4 +550,7 @@ export const postgres: DataSourcesAPI = {
   getDropColumnDefaultSql,
   getRenameColumnQuery,
   fetchColumnCastsQuery,
+  checkSchemaModification,
+  getCreateCheckConstraintSql,
+  getCreatePkSql,
 };

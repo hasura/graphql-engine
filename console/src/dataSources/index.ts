@@ -247,6 +247,24 @@ export interface DataSourcesAPI {
     oldName: string
   ) => string;
   fetchColumnCastsQuery: string;
+  checkSchemaModification: (sql: string) => boolean;
+  getCreateCheckConstraintSql: (
+    tableName: string,
+    schemaName: string,
+    constraintName: string,
+    check: string
+  ) => string;
+  getCreatePkSql: ({
+    schemaName,
+    tableName,
+    selectedPkColumns,
+    constraintName,
+  }: {
+    schemaName: string;
+    tableName: string;
+    selectedPkColumns: string[];
+    constraintName: string;
+  }) => string;
 }
 
 export let currentDriver: Driver = 'postgres';

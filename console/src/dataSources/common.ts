@@ -348,3 +348,18 @@ export const findAllFromRel = (curTable: Table, rel: Relationship) => {
     rSchema,
   };
 };
+
+export const terminateSql = (sql: string) => {
+  const sqlSanitised = sql.trim();
+  return sqlSanitised[sqlSanitised.length - 1] !== ';'
+    ? `${sqlSanitised};`
+    : sqlSanitised;
+};
+
+export const getCheckConstraintBoolExp = (check: string) => {
+  if (check) {
+    return check.substring(7, check.length - 1);
+  }
+
+  return check;
+};

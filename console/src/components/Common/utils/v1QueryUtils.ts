@@ -1,11 +1,10 @@
-import { terminateSql } from './sqlUtils';
 import { LocalScheduledTriggerState } from '../../Services/Events/CronTriggers/state';
 import { LocalAdhocEventState } from '../../Services/Events/AdhocEvents/Add/state';
 import { LocalEventTriggerState } from '../../Services/Events/EventTriggers/state';
 import { RemoteRelationshipPayload } from '../../Services/Data/TableRelationships/RemoteRelationships/utils';
 import { transformHeaders } from '../Headers/utils';
 import { Nullable } from './tsUtils';
-import { generateTableDef } from '../../../dataSources';
+import { generateTableDef, terminateSql } from '../../../dataSources';
 
 // TODO add type for the where clause
 

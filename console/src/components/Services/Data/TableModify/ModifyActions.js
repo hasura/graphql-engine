@@ -26,11 +26,6 @@ import {
   getUniqueConstraintName,
 } from '../Common/Components/utils';
 
-import {
-  getCreateCheckConstraintSql,
-  getDropPkSql,
-  getCreatePkSql,
-} from '../../../Common/utils/sqlUtils';
 import { getConfirmation, capitalize } from '../../../Common/utils/jsUtils';
 import {
   findTable,
@@ -354,7 +349,7 @@ export const removeCheckConstraint = (constraintName, successCb, errorCb) => (
     dataSource.getDropConstraintSql(tableName, currentSchema, constraintName)
   );
   const downQuery = getRunSqlQuery(
-    getCreateCheckConstraintSql(
+    dataSource.getCreateCheckConstraintSql(
       tableName,
       currentSchema,
       constraintName,
@@ -434,14 +429,16 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
     // skip dropping existing constraint if there is none
     if (constraintName) {
       migrationUp.push(
-        getRunSqlQuery(getDropPkSql({ schemaName, tableName, constraintName }))
+        getRunSqlQuery(
+          dataSource.getDropConstraintSql(tableName, schemaName, constraintName)
+        )
       );
     }
     // skip creating a new config if no columns were selected
     if (numSelectedPkColumns) {
       migrationUp.push(
         getRunSqlQuery(
-          getCreatePkSql({
+          dataSource.getCreatePkSql({
             schemaName,
             tableName,
             selectedPkColumns,
@@ -456,11 +453,7 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
     if (numSelectedPkColumns) {
       migrationDown.push(
         getRunSqlQuery(
-          getDropPkSql({
-            schemaName,
-            tableName,
-            constraintName: `${tableName}_pkey`,
-          })
+          dataSource.getDropPkSql(tableName, schemaName, `${tableName}_pkey`)
         )
       );
     }
@@ -469,7 +462,7 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
     if (constraintName) {
       migrationDown.push(
         getRunSqlQuery(
-          getCreatePkSql({
+          dataSource.getCreatePkSql({
             schemaName,
             tableName,
             selectedPkColumns: tableSchema.primary_key.columns,
@@ -1910,7 +1903,7 @@ export const saveCheckConstraint = (index, successCb, errorCb) => (
   }
   upQueries.push(
     getRunSqlQuery(
-      getCreateCheckConstraintSql(
+      dataSource.getCreateCheckConstraintSql(
         currentTable,
         currentSchema,
         newConstraint.name,
@@ -1932,7 +1925,7 @@ export const saveCheckConstraint = (index, successCb, errorCb) => (
   if (!isNew) {
     downQueries.push(
       getRunSqlQuery(
-        getCreateCheckConstraintSql(
+        dataSource.getCreateCheckConstraintSql(
           currentTable,
           currentSchema,
           existingConstraint.constraint_name,

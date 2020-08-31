@@ -798,3 +798,42 @@ WHERE ( (true  AND pg_catalog.pg_type_is_visible(ts.oid)
 GROUP BY ts.typname, castsource
 ORDER BY 1, 2;
 `;
+
+export const checkSchemaModification = (sql: string) => {
+  const sqlStatements = sql
+    .toLowerCase()
+    .split(';')
+    .map(sqlStr => sqlStr.trim());
+
+  return sqlStatements.some(
+    statement =>
+      statement.startsWith('create ') ||
+      statement.startsWith('alter ') ||
+      statement.startsWith('drop ')
+  );
+};
+
+export const getCreateCheckConstraintSql = (
+  tableName: string,
+  schemaName: string,
+  constraintName: string,
+  check: string
+) => {
+  return `alter table "${schemaName}"."${tableName}" add constraint "${constraintName}" check (${check})`;
+};
+
+export const getCreatePkSql = ({
+  schemaName,
+  tableName,
+  selectedPkColumns,
+  constraintName,
+}: {
+  schemaName: string;
+  tableName: string;
+  selectedPkColumns: string[];
+  constraintName: string;
+}) => {
+  return `alter table "${schemaName}"."${tableName}"
+    add constraint "${constraintName}" 
+    primary key ( ${selectedPkColumns.map(pkc => `"${pkc}"`).join(', ')} );`;
+};
