@@ -62,7 +62,7 @@ unitSpecs :: Spec
 unitSpecs = do
   describe "Data.Parser.CacheControl" CacheControlParser.spec
   describe "Data.Parser.URLTemplate" URLTemplate.spec
-  describe "Data.Parser.JsonPath" JsonPath.spec
+  describe "Data.Parser.JSONPath" JsonPath.spec
   describe "Hasura.Incremental" IncrementalSpec.spec
   -- describe "Hasura.RQL.Metadata" MetadataSpec.spec -- Commenting until optimizing the test in CI
   describe "Data.Time" TimeSpec.spec
