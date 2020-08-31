@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/hasura/graphql-engine/cli/migrate"
@@ -52,11 +53,11 @@ By default, shows changes between exported metadata file and server metadata.`,
   # Show changes between server metadata and that in local_metadata.yaml:
   hasura metadata diff local_metadata.yaml
 
-	# Show changes between metadata from metadata.yaml and metadata_old.yaml:
-	hasura metadata diff metadata.yaml ../old/metadata_old.yaml
+  # Show changes between metadata from metadata.yaml and metadata_old.yaml:
+  hasura metadata diff metadata.yaml ../old/metadata_old.yaml
 	
-	# Show changes among multiple metadata folders (v2 config only)
-	hasura metadata diff metadata1 metadata2
+  # Show changes among multiple metadata folders (v2 config only):
+  hasura metadata diff metadata1 metadata2
 
   # Apply admin secret for Hasura GraphQL Engine:
   hasura metadata diff --admin-secret "<admin-secret>"
@@ -172,25 +173,41 @@ func (o *MetadataDiffOptions) runv1(args []string) error {
 		message = fmt.Sprintf(messageFormat, filename, "the server")
 	case 1:
 		// 1 arg, diff given filename and the metadata on server
-		err := checkDirAndFile(args[0], fileType)
-		if err != nil {
-			return err
+		// we are modifying this since we got
+		modifiedFilePath := includeMetadataFileInPath(args[0])
+		if modifiedFilePath == "" {
+			err := checkDirAndFile(args[0], fileType)
+			if err != nil {
+				return err
+			}
+			o.Metadata[0] = args[0]
+		} else {
+			o.Metadata[0] = modifiedFilePath
 		}
-		o.Metadata[0] = args[0]
-		message = fmt.Sprintf(messageFormat, args[0], "the server")
+		message = fmt.Sprintf(messageFormat, o.Metadata[0], "the server")
 	case 2:
 		// 2 args, diff given filenames
-		err := checkDirAndFile(args[0], fileType)
-		if err != nil {
-			return err
+		modifiedFilePath := includeMetadataFileInPath(args[0])
+		if modifiedFilePath == "" {
+			err := checkDirAndFile(args[0], fileType)
+			if err != nil {
+				return err
+			}
+			o.Metadata[0] = args[0]
+		} else {
+			o.Metadata[0] = modifiedFilePath
 		}
-		o.Metadata[0] = args[0]
-		err = checkDirAndFile(args[1], fileType)
-		if err != nil {
-			return err
+		modifiedFilePath = includeMetadataFileInPath(args[1])
+		if modifiedFilePath == "" {
+			err := checkDirAndFile(args[1], fileType)
+			if err != nil {
+				return err
+			}
+			o.Metadata[1] = args[1]
+		} else {
+			o.Metadata[1] = modifiedFilePath
 		}
-		o.Metadata[1] = args[1]
-		message = fmt.Sprintf(messageFormat, args[0], args[1])
+		message = fmt.Sprintf(messageFormat, o.Metadata[0], o.Metadata[1])
 	}
 
 	o.EC.Logger.Info(message)
@@ -287,9 +304,30 @@ func checkDirAndFile(path, pathType string) error {
 	}
 
 	if file.IsDir() && pathType == fileType {
-		// This is meant for v1 config
+		// This is meant for v1 config and no metadata.yml file wasn't found in the given dir.
 		return fmt.Errorf("metadata diff only works with metadata files but got %s", path)
 	}
 
 	return nil
+}
+
+func includeMetadataFileInPath(path string) string {
+	folder, err := os.Stat(path)
+	if err != nil {
+		return ""
+	}
+	if !folder.IsDir() {
+		return ""
+	}
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		return ""
+	}
+	for _, file := range files {
+		currentFile := file.Name()
+		if currentFile == "metadata.yaml" || currentFile == "metadata.yml" {
+			return filepath.Join(path, currentFile)
+		}
+	}
+	return ""
 }
