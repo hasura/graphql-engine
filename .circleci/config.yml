@@ -1,9 +1,7 @@
 # anchor refs to be used elsewhere
 refs:
   constants:
-  # TODO upload to hasura docker hub:
-  # - &server_builder_image hasura/graphql-engine-server-builder:2020-01-14
-  - &server_builder_image jberryman/graphql-engine-server-builder-8.10:2020-04-29
+  - &server_builder_image hasura/graphql-engine-server-builder:2020-08-26
   skip_job_on_ciignore: &skip_job_on_ciignore
     run:
       name: checking if job should be terminated or not
@@ -22,7 +20,7 @@ refs:
         if [ -z "$CIRCLE_PR_NUMBER" ]; then
           echo "Not a PR build, continuing test" && exit 0
         fi
-        echo "Compare refs: ${CIRCLE_COMPARE_URL##http*/}" 
+        echo "Compare refs: ${CIRCLE_COMPARE_URL##http*/}"
         if git diff --quiet "${CIRCLE_COMPARE_URL##http*/}" -- server; then
           echo "No server changes present, skipping test"
           circleci-agent step halt
@@ -165,10 +163,10 @@ jobs:
     - checkout
     - restore_cache:
         keys:
-        - cabal-store-v2-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
-        - cabal-store-v2-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-
-        - cabal-store-v2-{{ checksum "server/cabal.project" }}-
-        - cabal-store-v2-
+        - cabal-store-v3-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
+        - cabal-store-v3-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-
+        - cabal-store-v3-{{ checksum "server/cabal.project" }}-
+        - cabal-store-v3-
     - run:
         name: Install latest postgresql client tools
         command: |
@@ -187,7 +185,7 @@ jobs:
             make enable_coverage=true ci-build
           fi
     - save_cache:
-        key: cabal-store-v2-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
+        key: cabal-store-v3-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
         paths:
         - ~/.cabal/packages
         - ~/.cabal/store
@@ -416,7 +414,7 @@ jobs:
         root: /build
         paths:
           - _cli_output
-  
+
   test_and_build_cli_migrations:
     docker:
     - image: hasura/graphql-engine-cli-migrations-builder:20200415
