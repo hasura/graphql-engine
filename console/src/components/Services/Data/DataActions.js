@@ -20,7 +20,6 @@ import {
 import dataHeaders from './Common/Headers';
 import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
-import { loadInconsistentObjects } from '../Settings/Actions';
 import { filterInconsistentMetadataObjects } from '../Settings/utils';
 import globals from '../../../Globals';
 
@@ -43,6 +42,7 @@ import { convertArrayToJson } from './TableModify/utils';
 import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
 import { isEmpty } from '../../Common/utils/jsUtils';
 import { dataSource } from '../../../dataSources';
+import { loadInconsistentObjects } from '../../../metadata/actions';
 
 const SET_TABLE = 'Data/SET_TABLE';
 const LOAD_FUNCTIONS = 'Data/LOAD_FUNCTIONS';

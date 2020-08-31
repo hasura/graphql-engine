@@ -2,12 +2,12 @@ import React from 'react';
 import AceEditor from 'react-ace';
 import styles from './AllowedQueries.scss';
 
-import { addAllowedQueries } from '../Actions';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 
 import { readFile, parseQueryString } from './utils';
 import { showErrorNotification } from '../../Common/Notification';
+import { addAllowedQueries } from '../../../../metadata/actions';
 
 class AddAllowedQuery extends React.Component {
   constructor(props) {

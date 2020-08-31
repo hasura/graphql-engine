@@ -10,9 +10,9 @@ import mainReducer from './components/Main/Actions';
 import apiExplorerReducer from 'components/Services/ApiExplorer/Actions';
 import progressBarReducer from 'components/App/Actions';
 import telemetryReducer from './telemetry/Actions';
-import { metadataReducer } from './components/Services/Settings/Actions';
 
 import { reducer as notifications } from 'react-notification-system-redux';
+import { metadataReducer } from './metadata/reducer';
 
 const reducer = combineReducers({
   ...dataReducer,

@@ -1,13 +1,13 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Button from '../../../Common/Button/Button';
-import { reloadRemoteSchema } from '../Actions';
 import metaDataStyles from '../Settings.scss';
 
 import {
   showSuccessNotification,
   showErrorNotification,
 } from '../../Common/Notification';
+import { reloadRemoteSchema } from '../../../../metadata/actions';
 
 class ReloadRemoteSchema extends Component {
   constructor() {

@@ -5,8 +5,7 @@ import AddAllowedQuery from './AddAllowedQuery';
 import AllowedQueriesList from './AllowedQueriesList';
 
 import styles from './AllowedQueries.scss';
-
-import { loadAllowedQueries } from '../Actions';
+import { loadAllowedQueries } from '../../../../metadata/actions';
 
 class AllowedQueries extends React.Component {
   constructor(props) {

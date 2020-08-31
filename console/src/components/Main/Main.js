@@ -24,11 +24,6 @@ import {
 } from './Actions';
 
 import {
-  loadInconsistentObjects,
-  redirectToMetadataStatus,
-} from '../Services/Settings/Actions';
-
-import {
   getLoveConsentState,
   setLoveConsentState,
   getProClickState,
@@ -36,7 +31,10 @@ import {
 } from './utils';
 
 import { checkStableVersion, versionGT } from '../../helpers/versionUtils';
-import { getSchemaBaseRoute } from '../Common/utils/routesUtils';
+import {
+  getSchemaBaseRoute,
+  redirectToMetadataStatus,
+} from '../Common/utils/routesUtils';
 import {
   getLocalStorageItem,
   LS_VERSION_UPDATE_CHECK_LAST_CLOSED,
@@ -46,6 +44,7 @@ import ToolTip from '../Common/Tooltip/Tooltip';
 import { setPreReleaseNotificationOptOutInDB } from '../../telemetry/Actions';
 import { Icon } from '../UIKit/atoms/Icon';
 import { Help, ProPopup } from './components/';
+import { loadInconsistentObjects } from '../../metadata/actions';
 
 class Main extends React.Component {
   constructor(props) {

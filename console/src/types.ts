@@ -1,27 +1,12 @@
 import { MapStateToProps as ReduxMapStateToProps } from 'react-redux';
-import { Store } from 'redux';
+import { Store, AnyAction } from 'redux';
 import { ThunkAction, ThunkDispatch } from 'redux-thunk';
 import { RouterAction } from 'react-router-redux';
-import { EventsState } from './components/Services/Events/state';
 import { RAEvents } from './components/Services/Events/types';
-import { TelemetryState } from './telemetry/state';
-import { Table, Schema } from './dataSources/types';
+import reducer from './reducer';
 
 // Redux Utils
-export type ReduxState = {
-  tables: {
-    schemaList: Schema[];
-    allSchemas: Table[];
-    dataHeaders: Record<string, string>;
-  };
-  events: EventsState;
-  main: {
-    readOnlyMode: boolean;
-    serverVersion: string;
-    latestStableServerVersion: string;
-  };
-  telemetry: TelemetryState;
-};
+export type ReduxState = ReturnType<typeof reducer>;
 
 export type ReduxAction = RAEvents | RouterAction;
 export type MapStateToProps<
@@ -29,12 +14,10 @@ export type MapStateToProps<
   OwnProps = unknown
 > = ReduxMapStateToProps<StateProps, OwnProps, ReduxState>;
 export type GetReduxState = () => ReduxState;
-export type Thunk<ReturnType = void> = ThunkAction<
-  ReturnType,
-  ReduxState,
-  unknown,
-  ReduxAction
->;
+export type Thunk<
+  ReturnType = void,
+  A extends AnyAction = ReduxAction
+> = ThunkAction<ReturnType, ReduxState, unknown, A>;
 export type Dispatch = ThunkDispatch<ReduxState, unknown, ReduxAction>;
 export type ConnectInjectedProps = {
   dispatch: Dispatch;
