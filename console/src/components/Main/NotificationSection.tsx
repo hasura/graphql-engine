@@ -75,7 +75,7 @@ const Update: React.FC<UpdateProps> = ({
     return null;
   }
 
-  if (props.scope !== props.consoleScope && props.consoleScope !== 'OSS') {
+  if (props.scope !== 'OSS' && props.scope !== props.consoleScope) {
     return null;
   }
 
@@ -207,6 +207,7 @@ const VersionUpdateNotification: React.FC<VersionUpdateNotificationProps> = ({
       content={`Hey There! There's a new server version ${latestVersion} available.`}
       start_date={Date.now()}
       consoleScope="OSS"
+      scope="OSS"
     >
       <a href={changeLogURL} target="_blank" rel="noopener noreferrer">
         <span>View Changelog</span>
@@ -238,6 +239,7 @@ const VulnerableVersionNotification: React.FC<VulnerableVersionProps> = ({
     content={`This current server version has a security vulnerability. Please upgrade to ${fixedVersion} immediately.`}
     start_date={Date.now()}
     consoleScope="OSS"
+    scope="OSS"
   >
     <a
       href={`https://github.com/hasura/graphql-engine/releases/tag/${fixedVersion}`}
@@ -390,6 +392,7 @@ const HasuraNotifications: React.FC<
   const { dispatch } = props;
   // eslint-disable-next-line no-underscore-dangle
   const consoleId = window.__env.consoleId;
+  const dataLength = consoleNotifications?.length;
   const consoleScope = getConsoleScope(serverVersion, consoleId);
   const dropDownRef = React.useRef<HTMLDivElement>(null);
   const wrapperRef = React.useRef<HTMLDivElement>(null);
@@ -497,7 +500,7 @@ const HasuraNotifications: React.FC<
       return;
     }
 
-    let readNumber = consoleNotifications.length;
+    let readNumber = dataLength;
     if (displayNewVersionNotification) {
       readNumber++;
     }
@@ -507,7 +510,7 @@ const HasuraNotifications: React.FC<
 
     updateNumberNotifications(readNumber);
   }, [
-    consoleNotifications.length,
+    dataLength,
     displayNewVersionNotification,
     userType,
     previouslyReadState,
@@ -626,14 +629,14 @@ const HasuraNotifications: React.FC<
 
   React.useEffect(() => {
     if (
-      consoleNotifications.length > 20 &&
-      numDisplayed !== consoleNotifications.length
+      dataLength > 20 &&
+      numDisplayed !== dataLength
     ) {
       updateViewMoreDisplay(true);
       return;
     }
     updateViewMoreDisplay(false);
-  }, [consoleNotifications.length, numDisplayed]);
+  }, [dataLength, numDisplayed]);
 
   const onReadCB = React.useCallback(() => {
     updateNumberNotifications(num => num--);
