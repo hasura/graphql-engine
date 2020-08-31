@@ -2,18 +2,13 @@ module Hasura.RQL.DML.Returning where
 
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
+import           Hasura.RQL.DML.Returning.Types
 import           Hasura.RQL.DML.Select
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Data.Text               as T
-import qualified Hasura.SQL.DML          as S
-
-data MutFldG v
-  = MCount
-  | MExp !T.Text
-  | MRet !(AnnFieldsG v)
-  deriving (Show, Eq)
+import qualified Data.Text                      as T
+import qualified Hasura.SQL.DML                 as S
 
 traverseMutFld
   :: (Applicative f)
@@ -25,15 +20,6 @@ traverseMutFld f = \case
   MExp t    -> pure $ MExp t
   MRet flds -> MRet <$> traverse (traverse (traverseAnnField f)) flds
 
-type MutFld = MutFldG S.SQLExp
-
-type MutFldsG v = Fields (MutFldG v)
-
-data MutationOutputG v
-  = MOutMultirowFields !(MutFldsG v)
-  | MOutSinglerowObject !(AnnFieldsG v)
-  deriving (Show, Eq)
-
 traverseMutationOutput
   :: (Applicative f)
   => (a -> f b)
@@ -44,8 +30,6 @@ traverseMutationOutput f = \case
   MOutSinglerowObject annFields ->
     MOutSinglerowObject <$> traverseAnnFields f annFields
 
-type MutationOutput = MutationOutputG S.SQLExp
-
 traverseMutFlds
   :: (Applicative f)
   => (a -> f b)
@@ -53,8 +37,6 @@ traverseMutFlds
   -> f (MutFldsG b)
 traverseMutFlds f =
   traverse (traverse (traverseMutFld f))
-
-type MutFlds = MutFldsG S.SQLExp
 
 hasNestedFld :: MutationOutputG a -> Bool
 hasNestedFld = \case
@@ -109,6 +91,7 @@ mkMutFldExp cteAlias preCalAffRows strfyNum = \case
     in S.SESelect $ mkSQLSelect JASMultipleRows $
        AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum
 
+
 {- Note [Mutation output expression]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 An example output expression for INSERT mutation:
@@ -151,7 +134,6 @@ mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
   where
     mutationResultAlias = Iden $ snakeCaseQualObject qt <> "__mutation_result_alias"
     allColumnsAlias = Iden $ snakeCaseQualObject qt <> "__all_columns_alias"
-
     allColumnsSelect = S.CTESelect $ S.mkSelect
                        { S.selExtr = map S.mkExtr $ map pgiColumn $ sortCols allCols
                        , S.selFrom = Just $ S.mkIdenFromExp mutationResultAlias

@@ -5,7 +5,7 @@ response:
   errors:
   - extensions:
       code: parse-failed
-      path: $.variableValues.landmarks[0].location
+      path: $.selectionSet.insert_landmark.args.objects[0].location
     message: 'unexpected geometry type: Random'
 query:
   variables:
