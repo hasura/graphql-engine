@@ -153,27 +153,32 @@ instance FromJSON TableCustomRootFields where
 
 data TableCustomTypeNames
   = TableCustomTypeNames
-  { _tctnSelect           :: !(Maybe G.Name)
-  , _tctnSelectByPk       :: !(Maybe G.Name)
-  , _tctnSelectAggregate  :: !(Maybe G.Name)
-  , _tctnConnection       :: !(Maybe G.Name)
-  , _tctnInsert           :: !(Maybe G.Name)
-  , _tctnInsertOne        :: !(Maybe G.Name)
-  , _tctnUpdate           :: !(Maybe G.Name)
-  , _tctnUpdateByPk       :: !(Maybe G.Name)
-  , _tctnDelete           :: !(Maybe G.Name)
-  , _tctnDeleteByPk       :: !(Maybe G.Name)
-  , _tctnSelectColumn     :: !(Maybe G.Name)
-  , _tctnUpdateColumn     :: !(Maybe G.Name)
-  , _tctnAggregateFields  :: !(Maybe G.Name)
-  , _tctnConstraint       :: !(Maybe G.Name)
-  , _tctnIncInput         :: !(Maybe G.Name)
-  , _tctnInsertInput      :: !(Maybe G.Name)
-  , _tctnMutationResponse :: !(Maybe G.Name)
-  , _tctnOnConflict       :: !(Maybe G.Name)
-  , _tctnOrderBy          :: !(Maybe G.Name)
-  , _tctnPkColumnsInput   :: !(Maybe G.Name)
-  , _tctnSetInput         :: !(Maybe G.Name)
+  { _tctnSelect                :: !(Maybe G.Name)
+  , _tctnSelectColumn          :: !(Maybe G.Name)
+  , _tctnSelectAggregate       :: !(Maybe G.Name)
+  , _tctnAggregateFields       :: !(Maybe G.Name)
+  , _tctnAverageFields         :: !(Maybe G.Name)
+  , _tctnMaxFields             :: !(Maybe G.Name)
+  , _tctnMinFields             :: !(Maybe G.Name)
+  , _tctnStddevFields          :: !(Maybe G.Name)
+  , _tctnStddevSampFields      :: !(Maybe G.Name)
+  , _tctnStddevPopFields       :: !(Maybe G.Name)
+  , _tctnSumFields             :: !(Maybe G.Name)
+  , _tctnVarianceSampFields    :: !(Maybe G.Name)
+  , _tctnVariancePopFields     :: !(Maybe G.Name)
+  , _tctnVarianceFields        :: !(Maybe G.Name)
+  , _tctnBooleanExpression     :: !(Maybe G.Name)
+  , _tctnConstraint            :: !(Maybe G.Name)
+  , _tctnIncInput              :: !(Maybe G.Name)
+  , _tctnInsertInput           :: !(Maybe G.Name)
+  , _tctnMutationResponse      :: !(Maybe G.Name)
+  , _tctnUpdateColumn          :: !(Maybe G.Name)
+  , _tctnOnConflict            :: !(Maybe G.Name)
+  , _tctnOrderBy               :: !(Maybe G.Name)
+  , _tctnPkColumnsInput        :: !(Maybe G.Name)
+  , _tctnSetInput              :: !(Maybe G.Name)
+  , _tctnConnection            :: !(Maybe G.Name)
+  , _tctnEdge                  :: !(Maybe G.Name)
   } deriving (Show, Eq, Lift, Generic)
 instance NFData TableCustomTypeNames
 instance Cacheable TableCustomTypeNames
@@ -182,48 +187,58 @@ $(deriveToJSON (aesonDrop 5 snakeCase){omitNothingFields=True} ''TableCustomType
 instance FromJSON TableCustomTypeNames where
   parseJSON = withObject "TableCustomTypeNames" $ \obj -> do
     select <- obj .:? "select"
-    selectByPk <- obj .:? "select_by_pk"
-    selectAggregate <- obj .:? "select_aggregate"
-    connection <- obj .:? "connection"
-    insert <- obj .:? "insert"
-    insertOne <- obj .:? "insert_one"
-    update <- obj .:? "update"
-    updateByPk <- obj .:? "update_by_pk"
-    delete <- obj .:? "delete"
-    deleteByPk <- obj .:? "delete_by_pk"
     selectColumn <- obj .:? "select_column"
-    updateColumn <- obj .:? "update_column"
+    selectAggregate <- obj .:? "select_aggregate"
     aggregateFields <- obj .:? "aggregate_fields"
+    averageFields <- obj .:? "average_fields"
+    maxFields <- obj .:? "max_fields"
+    minFields <- obj .:? "min_fields"
+    stddevFields <- obj .:? "stddev_fields"
+    stddevSampFields <- obj .:? "stddev_samp_fields"
+    stddevPopFields <- obj .:? "stddev_pop_fields"
+    sumFields <- obj .:? "sum_fields"
+    varianceSampFields <- obj .:? "variance_samp_fields"
+    variancePopFields <- obj .:? "variance_pop_fields"
+    varianceFields <- obj .:? "variance_fields"
+    boolExpression <- obj .:? "boolean_expression"
     constraint <- obj .:? "constraint"
     incInput <- obj .:? "inc_input"
     insertInput <- obj .:? "insert_input"
     mutationResponse <- obj .:? "mutation_response"
+    updateColumn <- obj .:? "update_column"
     onConflict <- obj .:? "on_conflict"
     orderBy <- obj .:? "order_by"
     pkColumnsInput <- obj .:? "pk_columns_input"
     setInput <- obj .:? "set_input"
+    connection <- obj .:? "connection"
+    edge <- obj .:? "edge"
 
     let duplicateTypeNames = duplicates $
-                              catMaybes [ select, selectByPk, selectAggregate
-                                        , connection
-                                        , insert, insertOne
-                                        , update, updateByPk
-                                        , delete, deleteByPk
-                                        , selectColumn, updateColumn
-                                        , aggregateFields, constraint, incInput
-                                        , insertInput, mutationResponse
+                              catMaybes [ select, selectColumn, selectAggregate
+                                        , aggregateFields, averageFields
+                                        , maxFields, minFields
+                                        , stddevFields, stddevSampFields, stddevPopFields
+                                        , sumFields
+                                        , varianceSampFields, variancePopFields, varianceFields
+                                        , boolExpression, constraint
+                                        , incInput, insertInput
+                                        , mutationResponse, updateColumn
                                         , onConflict, orderBy
                                         , pkColumnsInput, setInput
+                                        , connection, edge
                                         ]
     for_ (nonEmpty duplicateTypeNames) \duplicatedTypeNames -> fail $ T.unpack $
       "the following custom type names are duplicated: "
       <> englishList "and" (dquoteTxt <$> duplicatedTypeNames)
 
-    pure $ TableCustomTypeNames  select selectByPk selectAggregate connection
-                                 insert insertOne update updateByPk delete deleteByPk
-                                 selectColumn updateColumn aggregateFields constraint
-                                 incInput insertInput mutationResponse onConflict
-                                 orderBy pkColumnsInput setInput
+    pure $ TableCustomTypeNames  select selectColumn selectAggregate
+                                 aggregateFields averageFields
+                                 maxFields minFields
+                                 stddevFields stddevSampFields stddevPopFields
+                                 sumFields varianceSampFields variancePopFields varianceFields
+                                 boolExpression constraint incInput insertInput
+                                 mutationResponse updateColumn onConflict orderBy
+                                 pkColumnsInput setInput connection edge
 
 emptyCustomRootFields :: TableCustomRootFields
 emptyCustomRootFields =
@@ -240,29 +255,33 @@ emptyCustomRootFields =
   }
 
 emptyCustomTypeNames :: TableCustomTypeNames
-emptyCustomTypeNames =
-  TableCustomTypeNames
-  { _tctnSelect           = Nothing
-  , _tctnSelectByPk       = Nothing
-  , _tctnSelectAggregate  = Nothing
-  , _tctnConnection       = Nothing
-  , _tctnInsert           = Nothing
-  , _tctnInsertOne        = Nothing
-  , _tctnUpdate           = Nothing
-  , _tctnUpdateByPk       = Nothing
-  , _tctnDelete           = Nothing
-  , _tctnDeleteByPk       = Nothing
-  , _tctnSelectColumn     = Nothing
-  , _tctnUpdateColumn     = Nothing
-  , _tctnAggregateFields  = Nothing
-  , _tctnConstraint       = Nothing
-  , _tctnIncInput         = Nothing
-  , _tctnInsertInput      = Nothing
-  , _tctnMutationResponse = Nothing
-  , _tctnOnConflict       = Nothing
-  , _tctnOrderBy          = Nothing
-  , _tctnPkColumnsInput   = Nothing
-  , _tctnSetInput         = Nothing
+emptyCustomTypeNames = TableCustomTypeNames
+  { _tctnSelect                = Nothing
+  , _tctnSelectColumn          = Nothing
+  , _tctnSelectAggregate       = Nothing
+  , _tctnAggregateFields       = Nothing
+  , _tctnAverageFields         = Nothing
+  , _tctnMaxFields             = Nothing
+  , _tctnMinFields             = Nothing
+  , _tctnStddevFields          = Nothing
+  , _tctnStddevSampFields      = Nothing
+  , _tctnStddevPopFields       = Nothing
+  , _tctnSumFields             = Nothing
+  , _tctnVarianceSampFields    = Nothing
+  , _tctnVariancePopFields     = Nothing
+  , _tctnVarianceFields        = Nothing
+  , _tctnBooleanExpression     = Nothing
+  , _tctnConstraint            = Nothing
+  , _tctnIncInput              = Nothing
+  , _tctnInsertInput           = Nothing
+  , _tctnMutationResponse      = Nothing
+  , _tctnUpdateColumn          = Nothing
+  , _tctnOnConflict            = Nothing
+  , _tctnOrderBy               = Nothing
+  , _tctnPkColumnsInput        = Nothing
+  , _tctnSetInput              = Nothing
+  , _tctnConnection            = Nothing
+  , _tctnEdge                  = Nothing
   }
 
 data FieldInfo

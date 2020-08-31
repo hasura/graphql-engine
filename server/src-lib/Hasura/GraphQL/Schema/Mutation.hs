@@ -251,12 +251,14 @@ conflictConstraint
   -> m (Parser 'Both n ConstraintName)
 conflictConstraint constraints table = memoizeOn 'conflictConstraint table $ do
   tableName <- getTableName table
+  customTypeNames <- getTableCustomTypeNames table
   constraintEnumValues <- for constraints \constraint -> do
     name <- textToName $ getConstraintTxt $ _cName constraint
     pure ( P.mkDefinition name (Just "unique or primary key constraint") P.EnumValueInfo
          , _cName constraint
          )
-  let enumName  = tableName <> $$(G.litName "_constraint")
+  let enumName  = fromMaybe (tableName <> $$(G.litName "_constraint"))
+                    $ _tctnConstraint customTypeNames
       enumDesc  = G.Description $ "unique or primary key constraints on table " <>> table
   pure $ P.enum enumName (Just enumDesc) constraintEnumValues
 

@@ -1,0 +1,57 @@
+authors -> select
+authors_alias_aggregate -> select_aggregate
+authors_alias_aggregate_fields -> aggregate_fields
+authors_alias_avg_fields -> average_fields
+authors_alias_select_column -> select_column
+authors_alias_max_fields -> select_max_fields
+authors_alias_min_fields -> select_min_fields
+authors_alias_stddev_fields -> select_stddev_fields
+authors_alias_stddev_samp_fields -> select_stddev_samp_fields
+authors_alias_sum_fields -> sum_fields
+authors_alias_var_pop_fields -> var_pop_fields
+authors_alias_var_samp_fields -> var_samp_fields
+authors_alias_variance_fields -> variance_fields
+authors_alias_bool_exp -> boolean_expression
+authors_alias_constraint -> constraint
+authors_alias_inc_input -> inc_input
+authors_alias_insert_input -> insert_input
+authors_alias_mutation_response -> mutation_response
+authors_alias_update_column -> update_column
+authors_alias_stddev_pop_fields -> stddev_pop_fields
+authors_alias_on_conflict -> on_conflict
+authors_alias_order_by -> order_by
+authors_alias_pk_columns_input -> pk_columns_input
+authors_alias_set_input -> set_input
+authors_aliasConnection
+authors_aliasEdge
+
+_tctnSelect                 - done
+_tctnSelectColumn           - done
+_tctnSelectAggregate        - done
+_tctnAggregateFields        - done
+_tctnAverageFields
+_tctnMaxFields
+_tctnMinFields
+_tctnStddevFields
+_tctnStddevSampFields
+_tctnStddevPopFields
+_tctnSumFields
+_tctnVarianceSampFields
+_tctnVariancePopFields
+_tctnVarianceFields
+_tctnBooleanExpression       - done
+_tctnConstraint              - done
+_tctnIncInput
+_tctnInsertInput
+_tctnMutationResponse
+_tctnUpdateColumn
+_tctnOnConflict
+_tctnOrderBy
+_tctnPkColumnsInput
+_tctnSetInput
+_tctnConnection
+_tctnEdge
+
+-- not added yet
+authors_alias_obj_rel_insert_input
+authors_alias_arr_rel_insert_input

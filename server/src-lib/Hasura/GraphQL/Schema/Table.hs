@@ -41,8 +41,11 @@ tableSelectColumnsEnum
   -> m (Maybe (Parser 'Both n PGCol))
 tableSelectColumnsEnum table selectPermissions = do
   tableName <- getTableName table
+  customTypeNames <- getTableCustomTypeNames table
   columns   <- tableSelectColumns table selectPermissions
-  let enumName    = tableName <> $$(G.litName "_select_column")
+  let enumName    =
+        fromMaybe (tableName <> $$(G.litName "_select_column"))
+          $ _tctnSelectColumn customTypeNames
       description = Just $ G.Description $
         "select columns of table " <>> table
   pure $ P.enum enumName description <$> nonEmpty

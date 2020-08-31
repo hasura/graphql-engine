@@ -73,11 +73,17 @@ instance Arbitrary TableCustomTypeNames where
     where
       uniqueTypeNames = do
         --TODO: must be a better way to do this!
-        (a, b, c, d, e, f, g, h, i) <- arbitrary
-        (j, k, l, m, n, o, p, q, r) <- arbitrary
-        (s, t, u) <- arbitrary
-        if null $ duplicates [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u] then
-          pure $ TableCustomTypeNames a b c d e f g h i j k l m n o p q r s t u
+        (tn1, tn2, tn3, tn4, tn5, tn6, tn7, tn8, tn9) <- arbitrary
+        (tn10, tn11, tn12, tn13, tn14, tn15, tn16, tn17, tn18) <- arbitrary
+        (tn19, tn20, tn21, tn22, tn23, tn24, tn25, tn26) <- arbitrary
+        if null $ duplicates [tn1, tn2, tn3, tn4, tn5, tn6, tn7, tn8, tn9
+                             ,tn10, tn11, tn12, tn13, tn14, tn15, tn16, tn17, tn18
+                             ,tn19, tn20, tn21, tn22, tn23, tn24, tn25, tn26] then
+          pure $ TableCustomTypeNames tn1 tn2 tn3 tn4 tn5
+                                      tn6 tn7 tn8 tn9 tn10
+                                      tn11 tn12 tn13 tn14 tn15
+                                      tn16 tn17 tn18 tn19 tn20
+                                      tn21 tn22 tn23 tn24 tn25 tn26
         else uniqueTypeNames
 
 instance Arbitrary TableConfig where
