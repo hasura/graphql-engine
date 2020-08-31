@@ -501,9 +501,9 @@ const HasuraNotifications: React.FC<
       previouslyReadState === 'error'
     ) {
       if (displayNewVersionUpdate) {
-        updateNumberNotifications(1);
+        updateNumberNotifications(fixedVersion ? 2 : 1);
       } else {
-        updateNumberNotifications(0);
+        updateNumberNotifications(fixedVersion ? 1 : 0);
       }
       return;
     }
@@ -512,12 +512,21 @@ const HasuraNotifications: React.FC<
     if (displayNewVersionUpdate) {
       readNumber++;
     }
+    if (fixedVersion) {
+      readNumber++;
+    }
     if (Array.isArray(previouslyReadState)) {
       readNumber -= previouslyReadState.length;
     }
 
     updateNumberNotifications(readNumber);
-  }, [dataLength, displayNewVersionUpdate, userType, previouslyReadState]);
+  }, [
+    dataLength,
+    displayNewVersionUpdate,
+    userType,
+    previouslyReadState,
+    fixedVersion,
+  ]);
 
   const optOutCallback = () => {
     closeDropDown();
