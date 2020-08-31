@@ -22,25 +22,30 @@ module Hasura.Db
   , lazyTxToQTx
   ) where
 
+import           Hasura.Prelude
+
+import qualified Data.Aeson.Extended                as J
+import qualified Database.PG.Query                  as Q
+import qualified Database.PG.Query.Connection       as Q
+
 import           Control.Lens
-import           Control.Monad.Trans.Control  (MonadBaseControl (..))
+import           Control.Monad.Trans.Control        (MonadBaseControl (..))
 import           Control.Monad.Unique
 import           Control.Monad.Validate
-import           Data.Either                  (isRight)
+import           Data.Either                        (isRight)
 
-import qualified Data.Aeson.Extended          as J
-import qualified Database.PG.Query            as Q
-import qualified Database.PG.Query.Connection as Q
+import qualified Hasura.Sources.Postgres.SQLBuilder as S
+import qualified Hasura.SQL.DML                     as S
+import qualified Hasura.Tracing                     as Tracing
 
 import           Hasura.EncJSON
-import           Hasura.Prelude
 import           Hasura.RQL.Types.Error
 import           Hasura.Session
 import           Hasura.SQL.Builder
 import           Hasura.SQL.Error
 
-import qualified Hasura.SQL.DML               as S
-import qualified Hasura.Tracing               as Tracing
+
+
 
 data PGExecCtx
   = PGExecCtx
@@ -142,8 +147,8 @@ setHeadersTx :: SessionVariables -> Q.TxE QErr ()
 setHeadersTx session = do
   Q.unitQE defaultTxErrorHandler setSess () False
   where
-    setSess = Q.fromText $
-      "SET LOCAL \"hasura.user\" = " <> unsafeToSQLTxt (sessionInfoJsonExp session)
+    setSess = Q.fromBuilder $
+      "SET LOCAL \"hasura.user\" = " <> toSQL S.postgresBuilder (sessionInfoJsonExp session)
 
 sessionInfoJsonExp :: SessionVariables -> S.SQLExp
 sessionInfoJsonExp = S.SELit . J.encodeToStrictText
@@ -201,9 +206,9 @@ withTraceContext ctx = \case
   LTErr e  -> LTErr e
   LTNoTx a -> LTNoTx a
   LTTx tx  ->
-    let sql = Q.fromText $
+    let sql = Q.fromBuilder $
           "SET LOCAL \"hasura.tracecontext\" = " <>
-            unsafeToSQLTxt (S.SELit . J.encodeToStrictText . Tracing.injectEventContext $ ctx)
+            toSQL S.postgresBuilder (S.SELit . J.encodeToStrictText . Tracing.injectEventContext $ ctx)
         setTraceContext =
           Q.unitQE defaultTxErrorHandler sql () False
      in LTTx $ setTraceContext >> tx
