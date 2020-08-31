@@ -39,8 +39,8 @@ export const advancedOperationDescription = (
 );
 
 export const postgresDescription = (
-  <Tooltip id="tooltip-postgres-description">
-    Select the postgres schema and table
+  <Tooltip id="tooltip-database-description">
+    Select the database schema and table
   </Tooltip>
 );
 
