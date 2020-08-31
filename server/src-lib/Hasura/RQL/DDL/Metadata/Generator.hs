@@ -14,7 +14,6 @@ import qualified Language.Haskell.TH.Syntax                    as TH
 import qualified Network.URI                                   as N
 import qualified System.Cron.Parser                            as Cr
 
-
 import           Data.List.Extended                            (duplicates)
 import           Data.Scientific
 import           System.Cron.Types
@@ -68,6 +67,18 @@ instance Arbitrary TableCustomRootFields where
         if null $ duplicates [a, b, c, d, e, f, g, h, i] then
           pure $ TableCustomRootFields a b c d e f g h i
         else uniqueRootFields
+
+instance Arbitrary TableCustomTypeNames where
+  arbitrary = uniqueTypeNames
+    where
+      uniqueTypeNames = do
+        --TODO: must be a better way to do this!
+        (a, b, c, d, e, f, g, h, i) <- arbitrary
+        (j, k, l, m, n, o, p, q, r) <- arbitrary
+        (s, t, u) <- arbitrary
+        if null $ duplicates [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u] then
+          pure $ TableCustomTypeNames a b c d e f g h i j k l m n o p q r s t u
+        else uniqueTypeNames
 
 instance Arbitrary TableConfig where
   arbitrary = genericArbitrary

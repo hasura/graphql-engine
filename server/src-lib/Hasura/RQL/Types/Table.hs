@@ -76,6 +76,8 @@ module Hasura.RQL.Types.Table
        , EventTriggerInfoMap
        , TableCustomRootFields(..)
        , emptyCustomRootFields
+       , TableCustomTypeNames(..)
+       , emptyCustomTypeNames
 
        ) where
 
@@ -147,6 +149,82 @@ instance FromJSON TableCustomRootFields where
 
     pure $ TableCustomRootFields select selectByPk selectAggregate
                                  insert insertOne update updateByPk delete deleteByPk
+
+
+data TableCustomTypeNames
+  = TableCustomTypeNames
+  { _tctnSelect           :: !(Maybe G.Name)
+  , _tctnSelectByPk       :: !(Maybe G.Name)
+  , _tctnSelectAggregate  :: !(Maybe G.Name)
+  , _tctnConnection       :: !(Maybe G.Name)
+  , _tctnInsert           :: !(Maybe G.Name)
+  , _tctnInsertOne        :: !(Maybe G.Name)
+  , _tctnUpdate           :: !(Maybe G.Name)
+  , _tctnUpdateByPk       :: !(Maybe G.Name)
+  , _tctnDelete           :: !(Maybe G.Name)
+  , _tctnDeleteByPk       :: !(Maybe G.Name)
+  , _tctnSelectColumn     :: !(Maybe G.Name)
+  , _tctnUpdateColumn     :: !(Maybe G.Name)
+  , _tctnAggregateFields  :: !(Maybe G.Name)
+  , _tctnConstraint       :: !(Maybe G.Name)
+  , _tctnIncInput         :: !(Maybe G.Name)
+  , _tctnInsertInput      :: !(Maybe G.Name)
+  , _tctnMutationResponse :: !(Maybe G.Name)
+  , _tctnOnConflict       :: !(Maybe G.Name)
+  , _tctnOrderBy          :: !(Maybe G.Name)
+  , _tctnPkColumnsInput   :: !(Maybe G.Name)
+  , _tctnSetInput         :: !(Maybe G.Name)
+  } deriving (Show, Eq, Lift, Generic)
+instance NFData TableCustomTypeNames
+instance Cacheable TableCustomTypeNames
+$(deriveToJSON (aesonDrop 5 snakeCase){omitNothingFields=True} ''TableCustomTypeNames)
+
+instance FromJSON TableCustomTypeNames where
+  parseJSON = withObject "TableCustomTypeNames" $ \obj -> do
+    select <- obj .:? "select"
+    selectByPk <- obj .:? "select_by_pk"
+    selectAggregate <- obj .:? "select_aggregate"
+    connection <- obj .:? "connection"
+    insert <- obj .:? "insert"
+    insertOne <- obj .:? "insert_one"
+    update <- obj .:? "update"
+    updateByPk <- obj .:? "update_by_pk"
+    delete <- obj .:? "delete"
+    deleteByPk <- obj .:? "delete_by_pk"
+    selectColumn <- obj .:? "select_column"
+    updateColumn <- obj .:? "update_column"
+    aggregateFields <- obj .:? "aggregate_fields"
+    constraint <- obj .:? "constraint"
+    incInput <- obj .:? "inc_input"
+    insertInput <- obj .:? "insert_input"
+    mutationResponse <- obj .:? "mutation_response"
+    onConflict <- obj .:? "on_conflict"
+    orderBy <- obj .:? "order_by"
+    pkColumnsInput <- obj .:? "pk_columns_input"
+    setInput <- obj .:? "set_input"
+
+    let duplicateTypeNames = duplicates $
+                              catMaybes [ select, selectByPk, selectAggregate
+                                        , connection
+                                        , insert, insertOne
+                                        , update, updateByPk
+                                        , delete, deleteByPk
+                                        , selectColumn, updateColumn
+                                        , aggregateFields, constraint, incInput
+                                        , insertInput, mutationResponse
+                                        , onConflict, orderBy
+                                        , pkColumnsInput, setInput
+                                        ]
+    for_ (nonEmpty duplicateTypeNames) \duplicatedTypeNames -> fail $ T.unpack $
+      "the following custom type names are duplicated: "
+      <> englishList "and" (dquoteTxt <$> duplicatedTypeNames)
+
+    pure $ TableCustomTypeNames  select selectByPk selectAggregate connection
+                                 insert insertOne update updateByPk delete deleteByPk
+                                 selectColumn updateColumn aggregateFields constraint
+                                 incInput insertInput mutationResponse onConflict
+                                 orderBy pkColumnsInput setInput
+
 emptyCustomRootFields :: TableCustomRootFields
 emptyCustomRootFields =
   TableCustomRootFields
@@ -159,6 +237,32 @@ emptyCustomRootFields =
   , _tcrfUpdateByPk      = Nothing
   , _tcrfDelete          = Nothing
   , _tcrfDeleteByPk      = Nothing
+  }
+
+emptyCustomTypeNames :: TableCustomTypeNames
+emptyCustomTypeNames =
+  TableCustomTypeNames
+  { _tctnSelect           = Nothing
+  , _tctnSelectByPk       = Nothing
+  , _tctnSelectAggregate  = Nothing
+  , _tctnConnection       = Nothing
+  , _tctnInsert           = Nothing
+  , _tctnInsertOne        = Nothing
+  , _tctnUpdate           = Nothing
+  , _tctnUpdateByPk       = Nothing
+  , _tctnDelete           = Nothing
+  , _tctnDeleteByPk       = Nothing
+  , _tctnSelectColumn     = Nothing
+  , _tctnUpdateColumn     = Nothing
+  , _tctnAggregateFields  = Nothing
+  , _tctnConstraint       = Nothing
+  , _tctnIncInput         = Nothing
+  , _tctnInsertInput      = Nothing
+  , _tctnMutationResponse = Nothing
+  , _tctnOnConflict       = Nothing
+  , _tctnOrderBy          = Nothing
+  , _tctnPkColumnsInput   = Nothing
+  , _tctnSetInput         = Nothing
   }
 
 data FieldInfo
@@ -379,6 +483,7 @@ data TableConfig
   { _tcCustomRootFields  :: !TableCustomRootFields
   , _tcCustomColumnNames :: !CustomColumnNames
   , _tcIdentifier        :: !(Maybe G.Name)
+  , _tcCustomTypeNames   :: !TableCustomTypeNames
   } deriving (Show, Eq, Lift, Generic)
 instance NFData TableConfig
 instance Cacheable TableConfig
@@ -386,7 +491,7 @@ $(deriveToJSON (aesonDrop 3 snakeCase) ''TableConfig)
 
 emptyTableConfig :: TableConfig
 emptyTableConfig =
-  TableConfig emptyCustomRootFields M.empty Nothing
+  TableConfig emptyCustomRootFields M.empty Nothing emptyCustomTypeNames
 
 instance FromJSON TableConfig where
   parseJSON = withObject "TableConfig" $ \obj ->
@@ -394,6 +499,7 @@ instance FromJSON TableConfig where
     <$> obj .:? "custom_root_fields" .!= emptyCustomRootFields
     <*> obj .:? "custom_column_names" .!= M.empty
     <*> obj .:? "identifier"
+    <*> obj .:? "custom_type_names" .!= emptyCustomTypeNames
 
 -- | The @field@ and @primaryKeyColumn@ type parameters vary as the schema cache is built and more
 -- information is accumulated. See 'TableRawInfo' and 'TableCoreInfo'.
