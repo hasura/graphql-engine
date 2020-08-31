@@ -101,10 +101,9 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
   return dispatch(requestAction(url, options))
     .then(data => {
       const lastSeenNotifications = JSON.parse(
-        window.localStorage.getItem('main:lastSeenNotifications')
+        window.localStorage.getItem('notifications:lastSeen')
       );
       if (!data.length) {
-        // NOTE: this might be because of an error
         dispatch({ type: FETCH_CONSOLE_NOTIFICATIONS_SET_DEFAULT });
         dispatch(
           updateConsoleNotificationsState({
@@ -115,7 +114,7 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
         );
         if (!lastSeenNotifications) {
           window.localStorage.setItem(
-            'main:lastSeenNotifications',
+            'notifications:lastSeen',
             JSON.stringify(0)
           );
         }
@@ -129,7 +128,7 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
         lastSeenNotifications !== filteredData.length
       ) {
         window.localStorage.setItem(
-          'main:lastSeenNotifications',
+          'notifications:lastSeen',
           JSON.stringify(filteredData.length)
         );
       }
@@ -151,7 +150,7 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
             toShowBadge = false;
           } else if (previousRead === 'all') {
             const previousList = JSON.parse(
-              localStorage.getItem('main:console_notifications')
+              localStorage.getItem('notifications:data')
             );
             if (previousList.length) {
               const resDiff = filteredData.filter(

@@ -89,7 +89,10 @@ const Update: React.FC<UpdateProps> = ({
       className={`${updateContainerClass} ${
         !currentReadState ? styles.unread : styles.read
       }`}
-      onClick={onClickNotification}
+      onClick={() => {
+        dispatch(setPreReleaseNotificationOptOutInDB());
+        onClickNotification();
+      }}
     >
       {!isUpdateNotification ? (
         <div
@@ -540,7 +543,7 @@ const HasuraNotifications: React.FC<
     // FIXME: this is not really required, since the logic can be changed to filter out all those as
     // having a timestamp prior to the saved time to be marked as read
     window.localStorage.setItem(
-      'main:console_notifications',
+      'notifications:data',
       JSON.stringify(consoleNotifications)
     );
     // to clear the beta-version update if you mark all as read
@@ -560,7 +563,7 @@ const HasuraNotifications: React.FC<
     if (showBadge) {
       if (console_opts?.console_notifications) {
         let updatedState = {};
-        if (console_opts.console_notifications[userType].date) {
+        if (console_opts.console_notifications[userType]?.date) {
           updatedState = {
             ...console_opts.console_notifications[userType],
             showBadge: false,
