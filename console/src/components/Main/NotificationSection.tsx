@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ComponentProps } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 
 import { Box, Flex, Heading, Text, Badge } from '../UIKit/atoms';
@@ -36,23 +36,20 @@ const getDateString = (date: NotificationDate) => {
 };
 
 interface UpdateProps extends ConsoleNotification {
-  onClickAction?: (id?: number) => void;
+  onClick?: (id?: number) => void;
   is_read?: boolean;
-  onReadCB?: () => void;
   consoleScope: NotificationScope;
   latestVersion?: string;
   stable?: boolean;
 }
 
-const Update: React.FC<UpdateProps> = ({
+const Notification: React.FC<UpdateProps> = ({
   subject,
   content,
   type,
   is_active = true,
-  onClickAction,
+  onClick,
   is_read,
-  onReadCB,
-  latestVersion,
   ...props
 }) => {
   const [currentReadState, updateReadState] = React.useState(is_read);
@@ -66,12 +63,9 @@ const Update: React.FC<UpdateProps> = ({
   const onClickNotification = () => {
     if (!currentReadState) {
       updateReadState(true);
-      if (onReadCB) {
-        onReadCB();
-      }
     }
-    if (onClickAction) {
-      onClickAction(props.id);
+    if (onClick) {
+      onClick(props.id);
     }
   };
 
@@ -94,13 +88,7 @@ const Update: React.FC<UpdateProps> = ({
       className={`${updateContainerClass} ${
         !currentReadState ? styles.unread : styles.read
       }`}
-      onClick={() => {
-        window.localStorage.setItem(
-          LS_VERSION_UPDATE_CHECK_LAST_CLOSED,
-          latestVersion || ''
-        );
-        onClickNotification();
-      }}
+      onClick={onClickNotification}
     >
       {!isUpdateNotification ? (
         <div
@@ -201,19 +189,29 @@ const PreReleaseNote: React.FC<PreReleaseProps> = ({ optOutCallback }) => (
 
 interface VersionUpdateNotificationProps extends PreReleaseProps {
   latestVersion: string;
+  onClick: () => void;
 }
 
 const VersionUpdateNotification: React.FC<VersionUpdateNotificationProps> = ({
   latestVersion,
   optOutCallback,
+  onClick,
 }) => {
   const isStableRelease = checkStableVersion(latestVersion);
   const changeLogURL = `https://github.com/hasura/graphql-engine/releases${
     latestVersion ? `/tag/${latestVersion}` : ''
   }`;
 
+  const handleClick = () => {
+    window.localStorage.setItem(
+      LS_VERSION_UPDATE_CHECK_LAST_CLOSED,
+      latestVersion || ''
+    );
+    onClick();
+  };
+
   return (
-    <Update
+    <Notification
       subject="New Update Available!"
       type={isStableRelease ? 'version update' : 'beta update'}
       content={`Hey There! There's a new server version ${latestVersion} available.`}
@@ -222,6 +220,7 @@ const VersionUpdateNotification: React.FC<VersionUpdateNotificationProps> = ({
       scope="OSS"
       latestVersion={latestVersion}
       stable={isStableRelease}
+      onClick={handleClick}
     >
       <a href={changeLogURL} target="_blank" rel="noopener noreferrer">
         <span>View Changelog</span>
@@ -236,7 +235,7 @@ const VersionUpdateNotification: React.FC<VersionUpdateNotificationProps> = ({
         <span>Update Now</span>
       </a>
       {!isStableRelease && <PreReleaseNote optOutCallback={optOutCallback} />}
-    </Update>
+    </Notification>
   );
 };
 
@@ -247,7 +246,7 @@ type VulnerableVersionProps = {
 const VulnerableVersionNotification: React.FC<VulnerableVersionProps> = ({
   fixedVersion,
 }) => (
-  <Update
+  <Notification
     type="security"
     subject="Security Vulnerability Located!"
     content={`This current server version has a security vulnerability. Please upgrade to ${fixedVersion} immediately.`}
@@ -271,7 +270,7 @@ const VulnerableVersionNotification: React.FC<VulnerableVersionProps> = ({
     >
       <span>Update Now</span>
     </a>
-  </Update>
+  </Notification>
 );
 
 type ViewMoreProps = {
@@ -309,6 +308,10 @@ const checkVersionUpdate = (
   serverVersion: string,
   console_opts: ConsoleState['console_opts']
 ): [boolean, string] => {
+  if (!console_opts || !latestStable || !latestPreRelease || !serverVersion) {
+    return [false, ''];
+  }
+
   const allowPreReleaseNotifications =
     !console_opts || !console_opts.disablePreReleaseUpdateNotifications;
 
@@ -368,6 +371,59 @@ const ToReadBadge: React.FC<ToReadBadgeProps> = ({
   );
 };
 
+type NotificationsListItemProps =
+  | {
+      kind: 'version-update';
+      props: {
+        latestVersion: string;
+        optOutCallback: () => void;
+        onClick: () => void;
+      };
+    }
+  | {
+      kind: 'security';
+      props: {
+        fixedVersion: string;
+      };
+    }
+  | {
+      kind: 'default';
+      props: ComponentProps<typeof Notification>;
+    };
+
+const NotificationsListItem = (props: NotificationsListItemProps) => {
+  switch (props.kind) {
+    case 'version-update':
+      return <VersionUpdateNotification {...props.props} />;
+    case 'security':
+      return <VulnerableVersionNotification {...props.props} />;
+    default:
+      return <Notification {...props.props} />;
+  }
+};
+
+const DEFAULT_SHOWN_COUNT = 20;
+function useNotificationsPagination(totalNotificationsCount: number) {
+  const [shownCount, setShownCount] = React.useState(DEFAULT_SHOWN_COUNT);
+
+  const showMore = () => {
+    if (shownCount < totalNotificationsCount) {
+      const diff = totalNotificationsCount - shownCount;
+      if (diff > DEFAULT_SHOWN_COUNT) {
+        setShownCount(num => num + DEFAULT_SHOWN_COUNT);
+        return;
+      }
+      setShownCount(num => num + diff);
+    }
+  };
+
+  const reset = () => {
+    setShownCount(DEFAULT_SHOWN_COUNT);
+  };
+
+  return { showMore, reset, shownCount };
+}
+
 const mapStateToProps = (state: ReduxState) => {
   return {
     consoleNotifications: state.main.consoleNotifications,
@@ -397,17 +453,17 @@ const HasuraNotifications: React.FC<
   serverVersion,
   dataHeaders,
   isDropDownOpen,
-  ...props
+  dispatch,
 }) => {
-  const { dispatch } = props;
   // eslint-disable-next-line no-underscore-dangle
   const consoleId = window.__env.consoleId;
-  const dataLength = consoleNotifications?.length;
+  const consoleNotificationsLength = consoleNotifications?.length || 0;
   const consoleScope = getConsoleScope(serverVersion, consoleId);
 
   const dropDownRef = React.useRef<HTMLDivElement>(null);
   const wrapperRef = React.useRef<HTMLDivElement>(null);
 
+  const pagination = useNotificationsPagination(consoleNotifications.length);
   const [latestVersion, setLatestVersion] = React.useState(serverVersion);
   const [displayNewVersionUpdate, setDisplayNewVersionUpdate] = React.useState(
     false
@@ -415,19 +471,6 @@ const HasuraNotifications: React.FC<
 
   const [opened, updateOpenState] = React.useState(false);
   const [numberNotifications, updateNumberNotifications] = React.useState(0);
-  const [numDisplayed, updateNumDisplayed] = React.useState(20);
-  const [showMarkAllAsRead, toShowMarkAllAsRead] = React.useState(false);
-  const [dataShown, updateDataShown] = React.useState<ConsoleNotification[]>(
-    []
-  );
-  const [toDisplayViewMore, updateViewMoreDisplay] = React.useState(true);
-  const [previouslyReadState, updatePreviouslyReadState] = React.useState<
-    NotificationsState['read']
-  >([]);
-  const [showBadge, updateShowBadgeState] = React.useState<
-    NotificationsState['showBadge']
-  >(true);
-  const [fixedVersion, updateFixedVersion] = React.useState('');
 
   let userType = 'admin';
 
@@ -436,28 +479,20 @@ const HasuraNotifications: React.FC<
     userType = getUserType(collabToken);
   }
 
-  React.useEffect(() => {
-    if (console_opts?.console_notifications?.[userType]) {
-      updatePreviouslyReadState(
-        console_opts.console_notifications[userType].read
-      );
-      updateShowBadgeState(
-        console_opts.console_notifications[userType].showBadge
-      );
-    }
-  }, [console_opts?.console_notifications, userType]);
+  const previouslyReadState = React.useMemo(
+    () =>
+      console_opts?.console_notifications &&
+      console_opts?.console_notifications[userType].read,
+    [console_opts?.console_notifications, userType]
+  );
+  const showBadge = React.useMemo(
+    () =>
+      console_opts?.console_notifications &&
+      console_opts?.console_notifications[userType]?.showBadge,
+    [console_opts?.console_notifications, userType]
+  );
 
-  // for running the version update code on mounting
   React.useEffect(() => {
-    if (
-      !console_opts ||
-      !latestStableServerVersion ||
-      !latestPreReleaseServerVersion ||
-      !serverVersion
-    ) {
-      return;
-    }
-
     const [versionUpdateCheck, latestReleasedVersion] = checkVersionUpdate(
       latestStableServerVersion,
       latestPreReleaseServerVersion,
@@ -465,11 +500,10 @@ const HasuraNotifications: React.FC<
       console_opts
     );
 
-    setLatestVersion(latestReleasedVersion);
+    setLatestVersion(latestReleasedVersion || serverVersion);
 
     if (versionUpdateCheck) {
       setDisplayNewVersionUpdate(true);
-      updateNumberNotifications(num => num++);
       return;
     }
 
@@ -481,34 +515,27 @@ const HasuraNotifications: React.FC<
     serverVersion,
   ]);
 
-  React.useEffect(() => {
+  const fixedVersion = React.useMemo(() => {
     const vulnerableVersionsMapping: Record<string, string> = {
       'v1.2.0-beta.5': 'v1.2.1',
       'v1.2.0': 'v1.2.1',
     };
 
-    if (Object.keys(vulnerableVersionsMapping).includes(serverVersion)) {
-      const fixVersion = vulnerableVersionsMapping[serverVersion];
-      updateFixedVersion(fixVersion);
-    }
+    return vulnerableVersionsMapping[serverVersion] || '';
   }, [serverVersion]);
 
   React.useEffect(() => {
     // once mark all as read is clicked
+    let readNumber = consoleNotificationsLength;
+
     if (
       previouslyReadState === 'all' ||
       previouslyReadState === 'default' ||
       previouslyReadState === 'error'
     ) {
-      if (displayNewVersionUpdate) {
-        updateNumberNotifications(fixedVersion ? 2 : 1);
-      } else {
-        updateNumberNotifications(fixedVersion ? 1 : 0);
-      }
-      return;
+      readNumber = 0;
     }
 
-    let readNumber = dataLength;
     if (displayNewVersionUpdate) {
       readNumber++;
     }
@@ -521,7 +548,7 @@ const HasuraNotifications: React.FC<
 
     updateNumberNotifications(readNumber);
   }, [
-    dataLength,
+    consoleNotificationsLength,
     displayNewVersionUpdate,
     userType,
     previouslyReadState,
@@ -533,22 +560,10 @@ const HasuraNotifications: React.FC<
     dispatch(setPreReleaseNotificationOptOutInDB());
   };
 
-  const onClickViewMore = () => {
-    const totalNotifs = consoleNotifications.length;
-    if (numDisplayed < totalNotifs) {
-      const diff = totalNotifs - numDisplayed;
-      if (diff > 20) {
-        updateNumDisplayed(num => num + 20);
-        return;
-      }
-      updateNumDisplayed(num => num + diff);
-    }
-  };
-
   const onClickMarkAllAsRead = () => {
     const readAllState = getReadAllNotificationsState() as NotificationsState;
     dispatch(updateConsoleNotificationsState(readAllState));
-    updateNumDisplayed(20);
+    pagination.reset();
     // FIXME: this is not really required, since the logic can be changed to filter out all those as
     // having a timestamp prior to the saved time to be marked as read
     window.localStorage.setItem(
@@ -597,11 +612,13 @@ const HasuraNotifications: React.FC<
 
   React.useEffect(() => {
     if (!opened) {
-      updateNumDisplayed(20);
+      pagination.reset();
     }
-  }, [opened]);
+  }, [opened, pagination]);
 
   const onClickUpdate = (id?: number) => {
+    updateNumberNotifications(prev => prev - 1);
+
     if (!id) {
       return;
     }
@@ -626,30 +643,48 @@ const HasuraNotifications: React.FC<
     }
   };
 
-  React.useEffect(() => {
-    if (displayNewVersionUpdate && previouslyReadState === 'all') {
-      toShowMarkAllAsRead(true);
-      return;
-    }
+  const dataShown = React.useMemo<Array<NotificationsListItemProps>>(() => {
+    return [
+      fixedVersion && {
+        kind: 'security',
+        props: { fixedVersion },
+      },
+      displayNewVersionUpdate && {
+        kind: 'version-update',
+        props: {
+          latestVersion,
+          optOutCallback,
+          onClick: onClickUpdate,
+        },
+      },
+      ...consoleNotifications.slice(0, pagination.shownCount + 1).map(
+        (payload): NotificationsListItemProps => ({
+          kind: 'default',
+          props: {
+            id: payload.id,
+            onClick: onClickUpdate,
+            is_read: checkIsRead(previouslyReadState, payload.id),
+            consoleScope,
+            ...payload,
+          },
+        })
+      ),
+    ].filter((x): x is NotificationsListItemProps => Boolean(x));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    consoleNotifications,
+    consoleScope,
+    displayNewVersionUpdate,
+    fixedVersion,
+    latestVersion,
+    optOutCallback,
+    pagination.shownCount,
+    previouslyReadState,
+  ]);
 
-    toShowMarkAllAsRead(!numberNotifications);
-  }, [numberNotifications, displayNewVersionUpdate, previouslyReadState]);
-
-  React.useEffect(() => {
-    updateDataShown(consoleNotifications.slice(0, numDisplayed + 1));
-  }, [consoleNotifications, numDisplayed]);
-
-  React.useEffect(() => {
-    if (dataLength > 20 && numDisplayed !== dataLength) {
-      updateViewMoreDisplay(true);
-      return;
-    }
-    updateViewMoreDisplay(false);
-  }, [dataLength, numDisplayed]);
-
-  const onReadCB = React.useCallback(() => {
-    updateNumberNotifications(num => num--);
-  }, []);
+  const shouldDisplayViewMore =
+    consoleNotificationsLength > 20 &&
+    pagination.shownCount !== consoleNotificationsLength;
 
   return (
     <>
@@ -686,37 +721,18 @@ const HasuraNotifications: React.FC<
           <Button
             title="Mark all as read"
             onClick={onClickMarkAllAsRead}
-            disabled={showMarkAllAsRead}
-            className={`${styles.markAllAsReadBtn}`}
+            disabled={!numberNotifications}
+            className={styles.markAllAsReadBtn}
           >
-            mark all read
+            mark all as read
           </Button>
         </Flex>
         <Box className={styles.notificationsContainer}>
-          {displayNewVersionUpdate && (
-            <VersionUpdateNotification
-              latestVersion={latestVersion}
-              optOutCallback={optOutCallback}
-            />
-          )}
-          {fixedVersion && (
-            <VulnerableVersionNotification fixedVersion={fixedVersion} />
-          )}
           {dataShown.length &&
-            dataShown.map(({ id, ...otherProps }) => (
-              <Update
-                key={id}
-                id={id}
-                onClickAction={onClickUpdate}
-                is_read={checkIsRead(previouslyReadState, id)}
-                onReadCB={onReadCB}
-                consoleScope={consoleScope}
-                {...otherProps}
-              />
-            ))}
-          {toDisplayViewMore && (
+            dataShown.map(payload => <NotificationsListItem {...payload} />)}
+          {shouldDisplayViewMore && (
             <ViewMoreOptions
-              onClickViewMore={onClickViewMore}
+              onClickViewMore={pagination.showMore}
               readAll={previouslyReadState === 'all'}
             />
           )}

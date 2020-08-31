@@ -84,6 +84,7 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
     consoleStateDB.console_notifications &&
     consoleStateDB.console_notifications[userType].date
   ) {
+    toShowBadge = consoleStateDB.console_notifications[userType].showBadge;
     strictChecks = true;
     previousRead = consoleStateDB.console_notifications[userType].read;
   }
@@ -134,7 +135,7 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
       }
 
       if (strictChecks) {
-        if (!previousRead) {
+        if (!previousRead && !consoleStateDB.console_notifications) {
           dispatch(
             updateConsoleNotificationsState({
               read: [],
