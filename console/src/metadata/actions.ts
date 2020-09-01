@@ -28,10 +28,7 @@ import {
   setConsistentSchema,
   setConsistentFunctions,
 } from '../components/Services/Data/DataActions';
-import {
-  filterInconsistentMetadataObjects,
-  MetadataObject,
-} from '../components/Services/Settings/utils';
+import { filterInconsistentMetadataObjects } from '../components/Services/Settings/utils';
 import { setConsistentRemoteSchemas } from '../components/Services/RemoteSchema/Actions';
 import { clearIntrospectionSchemaCache } from '../components/Services/RemoteSchema/graphqlUtils';
 import { actionsSelector } from '../components/Services/Actions/selectors';
@@ -255,7 +252,6 @@ const handleInconsistentObjects = (
     const allSchemas = getState().tables.allSchemas;
     const functions = getState().tables.trackedFunctions;
     const remoteSchemas = getState().remoteSchemas.listData.remoteSchemas;
-    const actions = actionsSelector(getState());
 
     dispatch({
       type: 'Metadata/DROP_INCONSISTENT_METADATA_SUCCESS',
@@ -273,6 +269,8 @@ const handleInconsistentObjects = (
         inconsistentObjects,
         'functions'
       );
+
+      // const actions = actionsSelector(getState());
       // const filteredActions = filterInconsistentMetadataObjects(
       //   (actions as any) as MetadataObject[],
       //   inconsistentObjects,
