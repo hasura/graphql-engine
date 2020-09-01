@@ -37,8 +37,10 @@ orderByExp
   -> m (Parser 'Input n [RQL.AnnOrderByItemG UnpreparedValue])
 orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
   tableName <- getTableName table
-  let name = tableName <> $$(G.litName "_order_by")
-  let description = G.Description $
+  customTypeName <- _tctnOrderBy <$> getTableCustomTypeNames table
+  let name = fromMaybe (tableName <> $$(G.litName "_order_by")) $
+               customTypeName
+      description = G.Description $
         "Ordering options when selecting data from " <> table <<> "."
   tableFields  <- tableSelectFields table selectPermissions
   fieldParsers <- sequenceA . catMaybes <$> traverse mkField tableFields

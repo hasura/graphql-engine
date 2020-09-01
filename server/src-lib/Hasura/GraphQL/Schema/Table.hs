@@ -74,7 +74,10 @@ tableUpdateColumnsEnum
 tableUpdateColumnsEnum table updatePermissions = do
   tableName <- getTableName table
   columns   <- tableUpdateColumns table updatePermissions
-  let enumName    = tableName <> $$(G.litName "_update_column")
+  customTypeName <- _tctnUpdateColumn <$> getTableCustomTypeNames table
+  let enumName    =
+        fromMaybe (tableName <> $$(G.litName "_update_column"))
+          $ customTypeName
       description = Just $ G.Description $
         "update columns of table " <>> table
   pure $ P.enum enumName description <$> nonEmpty

@@ -383,7 +383,9 @@ tableConnectionSelectionSet
 tableConnectionSelectionSet table selectPermissions = do
   edgesParser <- tableEdgesSelectionSet
   tableName <- getTableName table
-  let connectionTypeName = tableName <> $$(G.litName "Connection")
+  customTypeName <- _tctnConnection <$> getTableCustomTypeNames table
+  let connectionTypeName =
+        fromMaybe (tableName <> $$(G.litName "Connection")) customTypeName
       pageInfo = P.subselection_ $$(G.litName "pageInfo") Nothing
                  pageInfoSelectionSet <&> RQL.ConnectionPageInfo
       edges = P.subselection_ $$(G.litName "edges") Nothing
@@ -415,8 +417,9 @@ tableConnectionSelectionSet table selectPermissions = do
       :: m (Parser 'Output n (RQL.EdgeFields UnpreparedValue))
     tableEdgesSelectionSet = do
       tableName           <- getTableName table
+      customTypeName      <- _tctnEdge <$> getTableCustomTypeNames table
       edgeNodeParser      <- P.nonNullableParser <$> tableSelectionSet table selectPermissions
-      let edgesType = tableName <> $$(G.litName "Edge")
+      let edgesType = fromMaybe (tableName <> $$(G.litName "Edge")) $ customTypeName
           cursor    = P.selection_ $$(G.litName "cursor") Nothing
                       P.string $> RQL.EdgeCursor
           edgeNode  = P.subselection_ $$(G.litName "node") Nothing
