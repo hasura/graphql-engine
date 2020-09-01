@@ -27,8 +27,24 @@ Examples
 **Trigger a Postgres function before an article is inserted or updated:**
 
 Let's say we want to check if an author is active before a corresponding article can be inserted or updated. 
-We do so by calling :ref:`this Postgres function<pg_function_example_one>` to be executed whenever a new article is about to be inserted or updated.
-We can create a trigger as follows:
+We can do so with the following Postgres function:
+
+.. code-block:: plpgsql
+
+  CREATE FUNCTION check_author_active()
+      RETURNS trigger AS $BODY$
+      DECLARE active_author BOOLEAN;
+      BEGIN
+      SELECT author.is_active INTO active_author FROM "authors" author WHERE author.id = NEW."author_id";
+      IF active_author != TRUE THEN
+          RAISE EXCEPTION 'Author must be active';
+      END IF;
+      RETURN NEW;
+      END;
+      $BODY$ LANGUAGE plpgsql;
+
+Now we want to have this function executed whenever a new article is about to be inserted or updated.
+We can create a Postgres trigger as follows:
 
 .. code-block:: plpgsql
 
@@ -43,7 +59,20 @@ If someone now tries to insert an article for an author that is not active, the 
 **Refresh a materialized view when an author gets inserted:**
 
 Let's say we want to refresh a materialized view whenever a new author is inserted. 
-To do so, we can add a trigger that calls :ref:`this function<pg_function_example_two>` whenever a new author is inserted:
+
+The following Postgres function refreshes a materialized view:
+
+.. code-block:: plpgsql
+
+  CREATE FUNCTION refresh_materialized_view()
+    RETURNS trigger AS $BODY$
+    BEGIN
+    REFRESH MATERIALIZED VIEW popular_active_authors;
+    RETURN NULL;
+    END;
+    $BODY$ LANGUAGE plpgsql;
+
+Now, to make sure this function gets called whenever a new author is inserted, we can create the following Postgres trigger:
 
 .. code-block:: plpgsql
 

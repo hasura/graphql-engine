@@ -25,52 +25,31 @@ Postgres functions are similar to views but are used when we have arguments.
 Examples
 --------
 
-.. _pg_function_example_one:
+**Searching articles**
 
-**Check that an author of a specific article is active:**
-
-The objective of this function is to check if an author is active for a specific article. 
-If the author is not active, an exception is raised. If the author is active, the article will be returned.
+We can create the following function that we can call later to search articles based on the input text argument ``search``.
 
 .. code-block:: plpgsql
 
-  CREATE FUNCTION check_author_active()
-      RETURNS trigger AS $BODY$
-      DECLARE active_author BOOLEAN;
-      BEGIN
-      SELECT author.is_active INTO active_author FROM "authors" author WHERE author.id = NEW."author_id";
-      IF active_author != TRUE THEN
-          RAISE EXCEPTION 'Author must be active';
-      END IF;
-      RETURN NEW;
-      END;
-      $BODY$ LANGUAGE plpgsql;
+  CREATE FUNCTION search_articles(search text)
+  RETURNS SETOF article AS $$
+      SELECT *
+      FROM article
+      WHERE
+        title ilike ('%' || search || '%')
+        OR content ilike ('%' || search || '%')
+  $$ LANGUAGE sql STABLE;
 
 Let's break this function apart:
 
-- Function name: ``check_author_active``
-- Parameters: This function doesn't have parameters (see ``()``)
-- Return type: ``trigger``
-- Variable declaration: A variable called ``active_author`` is declared
-- Function body: Block between ``BEGIN`` and ``END`` checking if the author for whom the article is to be inserted is active
-- Response: The response (``$BODY$``) is returned in the ``slpgsql`` language
+- Function name: ``search_articles``
+- Parameters: there is one parameter where ``search`` is the name and ``text`` is the type
+- Return type: ``SETOF article``
+- Function body: Block from ``SELECT`` until the end of the ``WHERE`` clause
+- Language: The response is returned in the ``sql`` language
 
-.. _pg_function_example_two:
-
-**Refresh a materialized view:**
-
-The objective of the following function is to refresh a :ref:`materialized view <pg_materialized_view_example>`.
-
-.. code-block:: plpgsql
-
-  CREATE FUNCTION refresh_materialized_view()
-    RETURNS trigger AS $BODY$
-    BEGIN
-    REFRESH MATERIALIZED VIEW popular_active_authors;
-    RETURN NULL;
-    END;
-    $BODY$ LANGUAGE plpgsql;
-
+**Title**
+ 
 Postgres functions & Hasura
 ---------------------------
 
