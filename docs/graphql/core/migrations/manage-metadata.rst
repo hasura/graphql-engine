@@ -26,6 +26,8 @@ controlled. The metadata file can be later imported to another Hasura instance t
 configuration. You can also manually edit the metadata file to add more objects to
 it and then use it to update the instance.
 
+.. _export_hasura_metadata:
+
 Exporting Hasura metadata
 -------------------------
 
@@ -69,6 +71,7 @@ Exporting Hasura metadata
   management in version control and CI/CD and can be applied via the CLI or the
   :ref:`cli-migrations <auto_apply_migrations>` image only.
 
+.. _import_hasura_metadata:
 
 Applying/Importing Hasura metadata
 ----------------------------------

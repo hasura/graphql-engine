@@ -28,6 +28,8 @@ Prerequisites
 - `Docker <https://docs.docker.com/install/>`_
 - `Docker Compose <https://docs.docker.com/compose/install/>`_
 
+.. _get_docker_compose_file:
+
 Step 1: Get the docker-compose file
 ----------------------------------- 
 
