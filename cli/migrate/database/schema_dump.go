@@ -1,5 +1,5 @@
 package database
 
 type SchemaDriver interface {
-	ExportSchemaDump(schemaName []string, excludeSchema bool) ([]byte, error)
+	ExportSchemaDump(schemaName, excludeSchema []string, full bool) ([]byte, error)
 }

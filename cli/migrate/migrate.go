@@ -365,8 +365,8 @@ func (m *Migrate) ApplyMetadata() error {
 	return m.databaseDrv.ApplyMetadata()
 }
 
-func (m *Migrate) ExportSchemaDump(schemaName []string, excludeSchema bool) ([]byte, error) {
-	return m.databaseDrv.ExportSchemaDump(schemaName, excludeSchema)
+func (m *Migrate) ExportSchemaDump(schemaName, excludeSchema []string, full bool) ([]byte, error) {
+	return m.databaseDrv.ExportSchemaDump(schemaName, excludeSchema, full)
 }
 
 func (m *Migrate) RemoveVersions(versions []uint64) error {
