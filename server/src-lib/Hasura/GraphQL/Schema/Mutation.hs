@@ -163,9 +163,10 @@ objectRelationshipInput table insertPerms selectPerms updatePerms =
   tableName      <- getTableName table
   columns        <- tableColumns table
   objectParser   <- tableFieldsInput table insertPerms
+  customTypeName <- _tctnObjectRelationshipInsertInput <$> getTableCustomTypeNames table
   conflictParser <- fmap join $ sequenceA $ conflictObject table selectPerms <$> updatePerms
   let objectName   = $$(G.litName "data")
-      inputName    = tableName <> $$(G.litName "_obj_rel_insert_input")
+      inputName    = fromMaybe (tableName <> $$(G.litName "_obj_rel_insert_input")) customTypeName
       inputDesc    = G.Description $ "input type for inserting object relation for remote table " <>> table
       inputParser = do
         conflictClause <- mkConflictClause conflictParser
@@ -187,8 +188,9 @@ arrayRelationshipInput table insertPerms selectPerms updatePerms =
   columns        <- tableColumns table
   objectParser   <- tableFieldsInput table insertPerms
   conflictParser <- fmap join $ sequenceA $ conflictObject table selectPerms <$> updatePerms
+  customTypeName <- _tctnArrayRelationshipInsertInput <$> getTableCustomTypeNames table
   let objectsName  = $$(G.litName "data")
-      inputName    = tableName <> $$(G.litName "_arr_rel_insert_input")
+      inputName    = fromMaybe (tableName <> $$(G.litName "_arr_rel_insert_input")) customTypeName
       inputDesc    = G.Description $ "input type for inserting array relation for remote table " <>> table
       inputParser = do
         conflictClause <- mkConflictClause conflictParser

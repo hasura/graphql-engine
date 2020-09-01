@@ -75,15 +75,19 @@ instance Arbitrary TableCustomTypeNames where
         --TODO: must be a better way to do this!
         (tn1, tn2, tn3, tn4, tn5, tn6, tn7, tn8, tn9) <- arbitrary
         (tn10, tn11, tn12, tn13, tn14, tn15, tn16, tn17, tn18) <- arbitrary
-        (tn19, tn20, tn21, tn22, tn23, tn24, tn25, tn26) <- arbitrary
+        (tn19, tn20, tn21, tn22, tn23, tn24, tn25, tn26, tn27) <- arbitrary
+        (tn28, tn29, tn30, tn31, tn32, tn33, tn34) <- arbitrary
         if null $ duplicates [tn1, tn2, tn3, tn4, tn5, tn6, tn7, tn8, tn9
                              ,tn10, tn11, tn12, tn13, tn14, tn15, tn16, tn17, tn18
-                             ,tn19, tn20, tn21, tn22, tn23, tn24, tn25, tn26] then
+                             ,tn19, tn20, tn21, tn22, tn23, tn24, tn25, tn26
+                             ,tn27, tn28, tn29, tn30, tn31, tn32, tn33, tn34] then
           pure $ TableCustomTypeNames tn1 tn2 tn3 tn4 tn5
                                       tn6 tn7 tn8 tn9 tn10
                                       tn11 tn12 tn13 tn14 tn15
                                       tn16 tn17 tn18 tn19 tn20
                                       tn21 tn22 tn23 tn24 tn25 tn26
+                                      tn27 tn28 tn29 tn30 tn31 tn32 tn33
+                                      tn34
         else uniqueTypeNames
 
 instance Arbitrary TableConfig where

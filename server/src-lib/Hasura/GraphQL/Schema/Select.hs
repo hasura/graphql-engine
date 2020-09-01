@@ -799,12 +799,12 @@ tableAggregationFields
 tableAggregationFields table selectPermissions = do
   tableName  <- getTableName table
   allColumns <- tableSelectColumns table selectPermissions
-  customTypeNames <- getTableCustomTypeNames table
+  customTypeName <- _tctnAggregateFields <$> getTableCustomTypeNames table
   let numericColumns   = onlyNumCols allColumns
       comparableColumns  = onlyComparableCols allColumns
       selectName   =
         fromMaybe (tableName <> $$(G.litName "_aggregate_fields"))
-          $ _tctnAggregateFields customTypeNames
+          $ customTypeName
       description  = G.Description $ "aggregate fields of " <>> table
   count     <- countField
   numericAndComparable <- fmap concat $ sequenceA $ catMaybes
