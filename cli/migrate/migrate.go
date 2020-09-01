@@ -1858,9 +1858,6 @@ func (m *Migrate) ExportDataDump(tableNames []string) ([]byte, error) {
 			modifiedTableNames[idx] = fmt.Sprintf(`"%s"`, val)
 		}
 	}
-
-	fmt.Printf("modifiedTableNames: %+v", modifiedTableNames)
-
 	return m.databaseDrv.ExportDataDump(modifiedTableNames)
 }
 
