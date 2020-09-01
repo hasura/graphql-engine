@@ -73,6 +73,8 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.BoolVar(&opts.metaDataServer, "metadata-from-server", false, "take metadata from the server and write it as an up migration file")
 	f.StringVar(&opts.upSQL, "up-sql", "", "sql string/query that is to be used to create an up migration")
 	f.StringVar(&opts.downSQL, "down-sql", "", "sql string/query that is to be used to create a down migration")
+	f.StringVar(&opts.excludeSchema, "exclude-schema", "public", "take pg_dump with the --exclude-schema flag")
+	f.BoolVar(&opts.full, "full", false, "take pg_dump with ")
 
 	migrateCreateCmd.MarkFlagFilename("sql-from-file")
 	migrateCreateCmd.MarkFlagFilename("metadata-from-file")
@@ -95,6 +97,8 @@ type migrateCreateOptions struct {
 	schemaNames    []string
 	upSQL          string
 	downSQL        string
+	excludeSchema  string
+	full           bool
 }
 
 func (o *migrateCreateOptions) run() (version int64, err error) {
@@ -106,6 +110,10 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 		if o.EC.Config.Version == cli.V1 {
 			o.metaDataServer = true
 		}
+	}
+
+	if o.excludeSchema && !o.fromServer {
+		return 0, errors.New("exclude-schema flag has to be used along with from-server")
 	}
 
 	if o.flags.Changed("metadata-from-file") && o.EC.Config.Version != cli.V1 {
@@ -148,7 +156,7 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 		}
 	}
 	if o.sqlServer {
-		data, err := migrateDrv.ExportSchemaDump(o.schemaNames)
+		data, err := migrateDrv.ExportSchemaDump(o.schemaNames, o.excludeSchema)
 		if err != nil {
 			return 0, errors.Wrap(err, "cannot fetch schema dump")
 		}

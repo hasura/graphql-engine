@@ -135,7 +135,7 @@ func (m *mockDriver) GetIntroSpectionSchema() (interface{}, error) {
 	return nil, nil
 }
 
-func (m *mockDriver) ExportSchemaDump(schemaName []string) ([]byte, error) {
+func (m *mockDriver) ExportSchemaDump(schemaName []string, excludeSchema bool) ([]byte, error) {
 	return nil, nil
 }
 

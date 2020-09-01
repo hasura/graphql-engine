@@ -4,10 +4,15 @@ import (
 	"net/http"
 )
 
-func (h *HasuraDB) ExportSchemaDump(schemaNames []string) ([]byte, error) {
+// ExportSchemaDump calls pg_dump to help initialize the first set of migrations
+func (h *HasuraDB) ExportSchemaDump(schemaNames []string, excludeSchema bool) ([]byte, error) {
 	opts := []string{"-O", "-x", "--schema-only"}
+	schemaOption := "--schema"
+	if excludeSchema {
+		schemaOption = "--exclude-schema"
+	}
 	for _, s := range schemaNames {
-		opts = append(opts, "--schema", s)
+		opts = append(opts, schemaOption, s)
 	}
 	query := SchemaDump{
 		Opts:        opts,

@@ -365,8 +365,8 @@ func (m *Migrate) ApplyMetadata() error {
 	return m.databaseDrv.ApplyMetadata()
 }
 
-func (m *Migrate) ExportSchemaDump(schemName []string) ([]byte, error) {
-	return m.databaseDrv.ExportSchemaDump(schemName)
+func (m *Migrate) ExportSchemaDump(schemaName []string, excludeSchema bool) ([]byte, error) {
+	return m.databaseDrv.ExportSchemaDump(schemaName, excludeSchema)
 }
 
 func (m *Migrate) RemoveVersions(versions []uint64) error {
@@ -1850,7 +1850,7 @@ func (m *Migrate) ExportDataDump(tableNames []string) ([]byte, error) {
 	// to support tables starting with capital letters
 	modifiedTableNames := make([]string, len(tableNames))
 	for idx, val := range tableNames {
-		modifiedTableNames[idx] = fmt.Sprintf(`"%s"`, val) 
+		modifiedTableNames[idx] = fmt.Sprintf(`"%s"`, val)
 	}
 	return m.databaseDrv.ExportDataDump(modifiedTableNames)
 }
