@@ -61,7 +61,7 @@ import           Hasura.RQL.Types                          (CacheRWM, Code (..),
                                                             QErr (..), SQLGenCtx (..),
                                                             SchemaCache (..), UserInfoM,
                                                             buildSchemaCacheStrict, decodeValue,
-                                                            noMetadataModify, throw400, withPathK)
+                                                            noMetadataModify, throw400, withPathK, Metadata)
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.API.Query                   (requiresAdmin, runQueryM)
 import           Hasura.Server.App
@@ -164,7 +164,6 @@ data InitCtx
   , _icConnInfo      :: !Q.ConnInfo
   , _icPgPool        :: !Q.PGPool
   , _icShutdownLatch :: !ShutdownLatch
-  , _icSchemaCache   :: !(RebuildableSchemaCache Run)
   , _icMetadataPool  :: !Q.PGPool
   }
 
@@ -216,9 +215,16 @@ initialiseCtx env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
       metadataPool <- maybe (pure pool) (getMetadataPool pgLogger) metadataDbUrl
       pure (l, pool, SQLGenCtx False, metadataPool)
 
-  res <- flip onException (flushLogger (_lsLoggerCtx loggers)) $
-    migrateCatalogSchema env (_lsLogger loggers) pool httpManager sqlGenCtx metadataPool
+  metadata <- flip onException (flushLogger (_lsLoggerCtx loggers)) $
+    migrateCatalogSchema (_lsLogger loggers) metadataPool
+
+  let pgExecCtx = mkPGExecCtx Q.Serializable pool
+
+  res <- runExceptT $ peelRun adminUserInfo httpManager sqlGenCtx metadataPool
+         pgExecCtx Q.ReadWrite Nothing $ buildRebuildableSchemaCache env
+
   pure (InitCtx httpManager instanceId loggers connInfo pool latch res metadataPool, initTime)
+
   where
     procConnInfo =
       either (printErrExit InvalidDatabaseConnectionParamsError . ("Fatal Error : " <>)) return $ mkConnInfo rci
@@ -240,25 +246,24 @@ initialiseCtx env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
 -- | helper function to initialize or migrate the @hdb_catalog@ schema (used by pro as well)
 migrateCatalogSchema
   :: (HasVersion, MonadIO m, MonadMetadataManage m)
-  => Env.Environment -> Logger Hasura -> Q.PGPool -> HTTP.Manager -> SQLGenCtx -> Q.PGPool
-  -> m (RebuildableSchemaCache Run)
-migrateCatalogSchema env logger pool httpManager sqlGenCtx metadataPool = do
-  let pgExecCtx = mkPGExecCtx Q.Serializable pool
+  => Logger Hasura -> Q.PGPool -> m Metadata
+migrateCatalogSchema logger metadataPool = do
       -- adminRunCtx = RunCtx adminUserInfo httpManager sqlGenCtx
   currentTime <- liftIO Clock.getCurrentTime
-  initialiseResult <- runExceptT $ peelRun adminUserInfo httpManager sqlGenCtx metadataPool pgExecCtx Q.ReadWrite Nothing $
-                      migrateCatalog env currentTime
+  initialiseResult <- liftIO $ runExceptT $
+    Q.runTx metadataPool (Q.Serializable, Just Q.ReadWrite) $ migrateCatalog currentTime
 
-  (migrationResult, schemaCache) <-
-    initialiseResult `onLeft` \err -> do
+  (migrationResult, metadata) <- case initialiseResult of
+    Left err -> do
       unLogger logger StartupLog
         { slLogLevel = LevelError
         , slKind = "catalog_migrate"
         , slInfo = A.toJSON err
         }
       liftIO (printErrExit DatabaseMigrationError (BLC.unpack $ A.encode err))
+    Right a -> pure a
   unLogger logger migrationResult
-  return schemaCache
+  pure metadata
 
 -- | Run a transaction and if an error is encountered, log the error and abort the program
 runTxIO :: Q.PGPool -> Q.TxMode -> Q.TxE QErr a -> IO a
@@ -369,7 +374,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
              soPlanCacheOptions
              soResponseInternalErrorsConfig
              postPollHook
-             _icSchemaCache
+             schemaCache
              ekgStore
              _icMetadataPool
 

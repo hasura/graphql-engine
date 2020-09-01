@@ -173,6 +173,17 @@ instance (HasSQLGenCtx m) => HasSQLGenCtx (TableCoreCacheRT m) where
 instance (HasSQLGenCtx m) => HasSQLGenCtx (TraceT m) where
   askSQLGenCtx = lift askSQLGenCtx
 
+newtype HasSQLGenCtxT m a
+  = HasSQLGenCtxT { unHasSQLGenCtxT :: ReaderT SQLGenCtx m a }
+  deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO, MonadUnique, MonadError e, MonadTx
+           , HasHttpManager, HasSystemDefined, TableCoreInfoRM, CacheRM, CacheRWM, UserInfoM, MonadMetadata)
+
+runHasSQLGenCtxT :: SQLGenCtx -> HasSQLGenCtxT m a -> m a
+runHasSQLGenCtxT sqlGenCtx = flip runReaderT sqlGenCtx . unHasSQLGenCtxT
+
+instance (Monad m) => HasSQLGenCtx (HasSQLGenCtxT m) where
+  askSQLGenCtx = HasSQLGenCtxT ask
+
 class (Monad m) => HasSystemDefined m where
   askSystemDefined :: m SystemDefined
 

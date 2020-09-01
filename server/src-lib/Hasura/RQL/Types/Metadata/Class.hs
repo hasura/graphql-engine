@@ -47,7 +47,7 @@ instance MonadMetadataManage m => MonadMetadataManage (Tracing.TraceT m) where
   fetchMetadataTx = lift fetchMetadataTx
   updateMetadataTx = lift updateMetadataTx
 
-class (MonadError QErr m, MonadIO m) => MonadMetadata m where
+class (Monad m) => MonadMetadata m where
   -- | Fetch @'Metadata' from storage. If no metadata stored, return @'emptyMetadata'.
   fetchMetadata :: m Metadata
 
@@ -55,19 +55,19 @@ class (MonadError QErr m, MonadIO m) => MonadMetadata m where
   updateMetadata :: Metadata -> m ()
 
   -- | Run any database transaction in metadata db storage
-  runTxInMetadataStorage :: Q.TxE QErr a -> m a
+  -- runTxInMetadataStorage :: Q.TxE QErr a -> m a
 
 instance MonadMetadata m => MonadMetadata (ReaderT r m) where
   fetchMetadata = lift fetchMetadata
   updateMetadata = lift . updateMetadata
-  runTxInMetadataStorage = lift . runTxInMetadataStorage
+  -- runTxInMetadataStorage = lift . runTxInMetadataStorage
 
 instance MonadMetadata m => MonadMetadata (StateT s m) where
   fetchMetadata = lift fetchMetadata
   updateMetadata = lift . updateMetadata
-  runTxInMetadataStorage = lift . runTxInMetadataStorage
+  -- runTxInMetadataStorage = lift . runTxInMetadataStorage
 
 instance MonadMetadata m => MonadMetadata (Tracing.TraceT m) where
   fetchMetadata = lift fetchMetadata
   updateMetadata = lift . updateMetadata
-  runTxInMetadataStorage = lift . runTxInMetadataStorage
+  -- runTxInMetadataStorage = lift . runTxInMetadataStorage

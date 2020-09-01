@@ -87,18 +87,12 @@ data MigrationPair m = MigrationPair
 
 migrateCatalog
   :: forall m
-   . ( HasVersion
-     , MonadIO m
+   . ( MonadIO m
      , MonadTx m
-     , MonadUnique m
-     , HasHttpManager m
-     , HasSQLGenCtx m
-     , MonadMetadata m
      )
-  => Env.Environment
-  -> UTCTime
-  -> m (MigrationResult, RebuildableSchemaCache m)
-migrateCatalog env migrationTime = do
+  => UTCTime
+  -> m (MigrationResult, Metadata)
+migrateCatalog migrationTime = do
   doesSchemaExist (SchemaName "hdb_catalog") >>= \case
     False -> initialize True
     True  -> doesTableExist (SchemaName "hdb_catalog") (TableName "hdb_version") >>= \case
@@ -106,9 +100,9 @@ migrateCatalog env migrationTime = do
       True  -> migrateFrom =<< getCatalogVersion
   where
     -- initializes the catalog, creating the schema if necessary
-    initialize :: Bool -> m (MigrationResult, RebuildableSchemaCache m)
+    initialize :: Bool -> m (MigrationResult, Metadata)
     initialize createSchema =  do
-      runTxInMetadataStorage $ Q.catchE defaultTxErrorHandler $
+      liftTx $ Q.catchE defaultTxErrorHandler $
         when createSchema $ do
           Q.unitQ "CREATE SCHEMA hdb_catalog" () False
           -- This is where the generated views and triggers are stored
@@ -116,16 +110,16 @@ migrateCatalog env migrationTime = do
 
       isExtensionAvailable (SchemaName "pgcrypto") >>= \case
         -- only if we created the schema, create the extension
-        True -> when createSchema $ runTxInMetadataStorage $ Q.unitQE needsPGCryptoError
+        True -> when createSchema $ liftTx $ Q.unitQE needsPGCryptoError
           "CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA public" () False
         False -> throw500 $
           "pgcrypto extension is required, but could not find the extension in the "
           <> "PostgreSQL server. Please make sure this extension is available."
 
       runTx $(Q.sqlFromFile "src-rsr/initialise.sql")
-      schemaCache <- buildCacheAndRecreateSystemMetadata
+
       updateCatalogVersion
-      pure (MRInitialized, schemaCache)
+      pure (MRInitialized, emptyMetadata)
       where
         needsPGCryptoError e@(Q.PGTxErr _ _ _ err) =
           case err of
@@ -145,55 +139,50 @@ migrateCatalog env migrationTime = do
               <> " https://hasura.io/docs/1.0/graphql/manual/deployment/postgres-permissions.html"
 
     -- migrates an existing catalog to the latest version from an existing verion
-    migrateFrom :: T.Text -> m (MigrationResult, RebuildableSchemaCache m)
-    migrateFrom previousVersion
-      | previousVersion == latestCatalogVersionString = do
-          schemaCache <- buildRebuildableSchemaCache env
-          pure (MRNothingToDo, schemaCache)
-      | [] <- neededMigrations =
-          throw400 NotSupported $
+    migrateFrom :: T.Text -> m (MigrationResult, Metadata)
+    migrateFrom previousVersion = do
+      migrationResult <-
+       if | previousVersion == latestCatalogVersionString -> do
+            pure MRNothingToDo
+          | [] <- neededMigrations ->
+            throw400 NotSupported $
             "Cannot use database previously used with a newer version of graphql-engine (expected"
               <> " a catalog version <=" <> latestCatalogVersionString <> ", but the current version"
               <> " is " <> previousVersion <> ")."
-      | otherwise = do
-          traverse_ (mpMigrate . snd) neededMigrations
-          schemaCache <- buildCacheAndRecreateSystemMetadata
-          updateCatalogVersion
-          pure (MRMigrated previousVersion, schemaCache)
+          | otherwise -> do
+             traverse_ (mpMigrate . snd) neededMigrations
+             updateCatalogVersion
+             pure $ MRMigrated previousVersion
+      metadata <- liftTx getMetadataTx
+      pure (migrationResult, metadata)
       where
         neededMigrations = dropWhile ((/= previousVersion) . fst) (migrations False)
 
     updateCatalogVersion = setCatalogVersion latestCatalogVersionString migrationTime
 
-    buildCacheAndRecreateSystemMetadata :: m (RebuildableSchemaCache m)
-    buildCacheAndRecreateSystemMetadata = do
-      -- schemaCache <- buildRebuildableSchemaCache env
-      buildRebuildableSchemaCache env
-      -- view _2 <$> runCacheRWT schemaCache recreateSystemMetadata
-
     doesSchemaExist schemaName =
-      runTxInMetadataStorage $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
+      liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
         SELECT EXISTS
         ( SELECT 1 FROM information_schema.schemata
           WHERE schema_name = $1
         ) |] (Identity schemaName) False
 
     doesTableExist schemaName tableName =
-      runTxInMetadataStorage $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
+      liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
         SELECT EXISTS
         ( SELECT 1 FROM pg_tables
           WHERE schemaname = $1 AND tablename = $2
         ) |] (schemaName, tableName) False
 
     isExtensionAvailable schemaName =
-      runTxInMetadataStorage $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
+      liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
         SELECT EXISTS
         ( SELECT 1 FROM pg_catalog.pg_available_extensions
           WHERE name = $1
         ) |] (Identity schemaName) False
 
 downgradeCatalog
-  :: forall m. (MonadIO m, MonadTx m, MonadMetadata m)
+  :: forall m. (MonadIO m, MonadTx m)
   => DowngradeOptions -> UTCTime -> m MigrationResult
 downgradeCatalog opts time = do
     downgradeFrom =<< getCatalogVersion
@@ -251,18 +240,18 @@ downgradeCatalog opts time = do
 
 -- | The old 0.8 catalog version is non-integral, so we store it in the database as a
 -- string.
-getCatalogVersion :: MonadMetadata m => m Text
-getCatalogVersion = runTxInMetadataStorage $ runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
+getCatalogVersion :: MonadTx m => m Text
+getCatalogVersion = liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
   [Q.sql| SELECT version FROM hdb_catalog.hdb_version |] () False
 
-setCatalogVersion :: MonadMetadata m => Text -> UTCTime -> m ()
-setCatalogVersion ver time = runTxInMetadataStorage $ Q.unitQE defaultTxErrorHandler [Q.sql|
+setCatalogVersion :: MonadTx m => Text -> UTCTime -> m ()
+setCatalogVersion ver time = liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
     INSERT INTO hdb_catalog.hdb_version (version, upgraded_on) VALUES ($1, $2)
     ON CONFLICT ((version IS NOT NULL))
     DO UPDATE SET version = $1, upgraded_on = $2
   |] (ver, time) False
 
-migrations :: forall m. (MonadIO m, MonadTx m, MonadMetadata m) => Bool -> [(T.Text, MigrationPair m)]
+migrations :: forall m. (MonadIO m, MonadTx m) => Bool -> [(T.Text, MigrationPair m)]
 migrations dryRun =
     -- We need to build the list of migrations at compile-time so that we can compile the SQL
     -- directly into the executable using `Q.sqlFromFile`. The GHC stage restriction makes
@@ -329,10 +318,28 @@ migrations dryRun =
       metadata <- fetchMetadataFromHdbTables
       -- drop hdb_catalog
       dropCatalog
-      runTxInMetadataStorage $ Q.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_catalog" () False
+      liftTx $ Q.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_catalog" () False
       runTx $(Q.sqlFromFile "src-rsr/initialise.sql")
       -- TODO: preserve trigger events & async action logs
-      updateMetadata metadata
+      liftTx $ setMetadataTx metadata
+
+
+setMetadataTx :: Metadata -> Q.TxE QErr ()
+setMetadataTx metadata =
+  liftTx $ Q.unitQE defaultTxErrorHandler
+    [Q.sql|
+     INSERT INTO hdb_catalog.hdb_metadata
+       (id, metadata) VALUES (1, $1::json)
+     ON CONFLICT (id) DO UPDATE SET metadata = $1::json
+    |] (Identity $ Q.AltJ metadata) True
+
+getMetadataTx :: Q.TxE QErr Metadata
+getMetadataTx =
+  Q.getAltJ . runIdentity . Q.getRow <$>
+  Q.withQE defaultTxErrorHandler
+  [Q.sql|
+     SELECT metadata from hdb_catalog.hdb_metadata where id = 1
+  |] () True
 
 -- | Drops and recreates all “system-defined” metadata, aka metadata for tables and views in the
 -- @information_schema@ and @hdb_catalog@ schemas. These tables and views are tracked to expose them
@@ -468,5 +475,5 @@ migrations dryRun =
 --     manualConfig schemaName tableName columns =
 --       RUManual $ RelManualConfig (QualifiedObject schemaName tableName) (HM.fromList columns)
 
-runTx :: (MonadMetadata m) => Q.Query -> m ()
-runTx = runTxInMetadataStorage . Q.multiQE defaultTxErrorHandler
+runTx :: (MonadTx m) => Q.Query -> m ()
+runTx = liftTx . Q.multiQE defaultTxErrorHandler

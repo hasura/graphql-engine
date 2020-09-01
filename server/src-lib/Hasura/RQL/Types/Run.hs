@@ -54,10 +54,10 @@ instance MonadMetadata Run where
 
   updateMetadata = put
 
-  runTxInMetadataStorage tx = do
-    metadataPool <- asks _rcMetadataPool
-    either throwError pure
-      =<< (liftIO . runExceptT . Q.runTx metadataPool (Q.Serializable, Nothing)) tx
+  -- runTxInMetadataStorage tx = do
+  --   metadataPool <- asks _rcMetadataPool
+  --   either throwError pure
+  --     =<< (liftIO . runExceptT . Q.runTx metadataPool (Q.Serializable, Nothing)) tx
 
 peelRun
   :: (MonadIO m, MonadMetadataManage m)
