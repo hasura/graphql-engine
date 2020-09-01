@@ -355,39 +355,47 @@ updateOperators
 updateOperators table updatePermissions = do
   tableName <- getTableName table
   columns   <- tableUpdateColumns table updatePermissions
-  let numericCols = onlyNumCols   columns
-      jsonCols    = onlyJSONBCols columns
+  customTypeNames <- getTableCustomTypeNames table
+  let numericCols        = onlyNumCols   columns
+      jsonCols           = onlyJSONBCols columns
+      setOpName          = $$(G.litName "_set")
+      incOpName          = $$(G.litName "_inc")
+      prependOpName      = $$(G.litName "_prepend")
+      appendOpName       = $$(G.litName "_append")
+      deleteKeyOpName    = $$(G.litName "_delete_key")
+      deleteElemOpName   = $$(G.litName "_delete_elem")
+      deleteAtPathOpName = $$(G.litName "_delete_at_path")
   parsers <- catMaybes <$> sequenceA
-    [ updateOperator tableName $$(G.litName "_set")
-        columnParser RQL.UpdSet columns
+    [ updateOperator (fromMaybe (mkObjTypeName tableName setOpName) $ _tctnSetInput customTypeNames)
+        setOpName columnParser RQL.UpdSet columns
         "sets the columns of the filtered rows to the given values"
         (G.Description $ "input type for updating data in table " <>> table)
 
-    , updateOperator tableName $$(G.litName "_inc")
-        columnParser RQL.UpdInc numericCols
+    , updateOperator (fromMaybe (mkObjTypeName tableName incOpName) $ _tctnIncInput customTypeNames)
+        incOpName columnParser RQL.UpdInc numericCols
         "increments the numeric columns with given value of the filtered values"
         (G.Description $"input type for incrementing numeric columns in table " <>> table)
 
     , let desc = "prepend existing jsonb value of filtered columns with new jsonb value"
-      in updateOperator tableName $$(G.litName "_prepend")
-         columnParser RQL.UpdPrepend jsonCols desc desc
+      in updateOperator (fromMaybe (mkObjTypeName tableName prependOpName) $ _tctnJsonPrependInput customTypeNames)
+         prependOpName columnParser RQL.UpdPrepend jsonCols desc desc
 
     , let desc = "append existing jsonb value of filtered columns with new jsonb value"
-      in updateOperator tableName $$(G.litName "_append")
-         columnParser RQL.UpdAppend jsonCols desc desc
+      in updateOperator (fromMaybe (mkObjTypeName tableName appendOpName) $ _tctnJsonAppendInput customTypeNames)
+           appendOpName columnParser RQL.UpdAppend jsonCols desc desc
 
     , let desc = "delete key/value pair or string element. key/value pairs are matched based on their key value"
-      in updateOperator tableName $$(G.litName "_delete_key")
-         nullableTextParser RQL.UpdDeleteKey jsonCols desc desc
+      in updateOperator (fromMaybe (mkObjTypeName tableName deleteKeyOpName) $ _tctnJsonDeleteKeyInput customTypeNames)
+           deleteKeyOpName nullableTextParser RQL.UpdDeleteKey jsonCols desc desc
 
     , let desc = "delete the array element with specified index (negative integers count from the end). "
                  <> "throws an error if top level container is not an array"
-      in updateOperator tableName $$(G.litName "_delete_elem")
-         nonNullableIntParser RQL.UpdDeleteElem jsonCols desc desc
+      in updateOperator (fromMaybe (mkObjTypeName tableName deleteElemOpName) $ _tctnJsonDeleteElemInput customTypeNames)
+          deleteElemOpName nonNullableIntParser RQL.UpdDeleteElem jsonCols desc desc
 
     , let desc = "delete the field or element with specified path (for JSON arrays, negative integers count from the end)"
-      in updateOperator tableName $$(G.litName "_delete_at_path")
-         (fmap P.list . nonNullableTextParser) RQL.UpdDeleteAtPath jsonCols desc desc
+      in updateOperator (fromMaybe (mkObjTypeName tableName deleteAtPathOpName) $ _tctnJsonDeleteAtPathInput customTypeNames)
+           deleteAtPathOpName (fmap P.list . nonNullableTextParser) RQL.UpdDeleteAtPath jsonCols desc desc
     ]
   whenMaybe (not $ null parsers) do
     let allowedOperators = fst <$> parsers
@@ -414,6 +422,8 @@ updateOperators table updatePermissions = do
     nullableTextParser    _ = fmap P.mkParameter <$> P.column (PGColumnScalar PGText)    (G.Nullability True)
     nonNullableIntParser  _ = fmap P.mkParameter <$> P.column (PGColumnScalar PGInteger) (G.Nullability False)
 
+    mkObjTypeName tableName opName = tableName <> opName <> $$(G.litName "_input")
+
     updateOperator
       :: G.Name
       -> G.Name
@@ -423,7 +433,7 @@ updateOperators table updatePermissions = do
       -> G.Description
       -> G.Description
       -> m (Maybe (Text, InputFieldsParser n (Maybe [(PGCol, RQL.UpdOpExpG UnpreparedValue)])))
-    updateOperator tableName opName mkParser updOpExp columns opDesc objDesc =
+    updateOperator objName opName mkParser updOpExp columns opDesc objDesc =
       whenMaybe (not $ null columns) do
         fields <- for columns \columnInfo -> do
           let fieldName = pgiName columnInfo
@@ -431,13 +441,10 @@ updateOperators table updatePermissions = do
           fieldParser <- mkParser columnInfo
           pure $ P.fieldOptional fieldName fieldDesc fieldParser
             `mapField` \value -> (pgiColumn columnInfo, updOpExp value)
-        let objName = tableName <> opName <> $$(G.litName "_input")
         pure $ (G.unName opName,)
              $ P.fieldOptional opName (Just opDesc)
              $ P.object objName (Just objDesc)
              $ catMaybes <$> sequenceA fields
-
-
 
 -- delete
 

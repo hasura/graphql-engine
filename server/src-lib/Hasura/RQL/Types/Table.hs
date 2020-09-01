@@ -189,7 +189,7 @@ data TableCustomTypeNames
   , _tctnJsonAppendInput               :: !(Maybe G.Name)
   , _tctnJsonDeleteKeyInput            :: !(Maybe G.Name)
   , _tctnJsonDeleteElemInput           :: !(Maybe G.Name)
-  , _tctnJsonDeleteAtPath              :: !(Maybe G.Name)
+  , _tctnJsonDeleteAtPathInput         :: !(Maybe G.Name)
   } deriving (Show, Eq, Lift, Generic)
 $(deriveToJSON (aesonDrop 5 snakeCase){omitNothingFields=True} ''TableCustomTypeNames)
 instance NFData TableCustomTypeNames
@@ -197,44 +197,44 @@ instance Cacheable TableCustomTypeNames
 
 instance FromJSON TableCustomTypeNames where
   parseJSON = withObject "TableCustomTypeNames" $ \obj -> do
-    select              <- obj .:? "select"
-    selectColumn        <- obj .:? "select_column"
-    selectAggregate     <- obj .:? "select_aggregate"
-    mutationResponse    <- obj .:? "mutation_response"
-    updateColumn        <- obj .:? "update_column"
-    constraint          <- obj .:? "constraint"
-    onConflict          <- obj .:? "on_conflict"
-    orderBy             <- obj .:? "order_by"
-    pkColumnsInput      <- obj .:? "pk_columns_input"
-    boolExpression      <- obj .:? "boolean_expression"
+    select                 <- obj .:? "select"
+    selectColumn           <- obj .:? "select_column"
+    selectAggregate        <- obj .:? "select_aggregate"
+    mutationResponse       <- obj .:? "mutation_response"
+    updateColumn           <- obj .:? "update_column"
+    constraint             <- obj .:? "constraint"
+    onConflict             <- obj .:? "on_conflict"
+    orderBy                <- obj .:? "order_by"
+    pkColumnsInput         <- obj .:? "pk_columns_input"
+    boolExpression         <- obj .:? "boolean_expression"
 
-    aggregateFields     <- obj .:? "aggregate_fields"
-    averageFields       <- obj .:? "average_fields"
-    maxFields           <- obj .:? "max_fields"
-    minFields           <- obj .:? "min_fields"
-    stddevFields        <- obj .:? "stddev_fields"
-    stddevSampFields    <- obj .:? "stddev_samp_fields"
-    stddevPopFields     <- obj .:? "stddev_pop_fields"
-    sumFields           <- obj .:? "sum_fields"
-    varianceSampFields  <- obj .:? "variance_samp_fields"
-    variancePopFields   <- obj .:? "variance_pop_fields"
-    varianceFields      <- obj .:? "variance_fields"
-    aggregateOrderBy    <- obj .:? "aggregate_order_by"
+    aggregateFields        <- obj .:? "aggregate_fields"
+    averageFields          <- obj .:? "average_fields"
+    maxFields              <- obj .:? "max_fields"
+    minFields              <- obj .:? "min_fields"
+    stddevFields           <- obj .:? "stddev_fields"
+    stddevSampFields       <- obj .:? "stddev_samp_fields"
+    stddevPopFields        <- obj .:? "stddev_pop_fields"
+    sumFields              <- obj .:? "sum_fields"
+    varianceSampFields     <- obj .:? "variance_samp_fields"
+    variancePopFields      <- obj .:? "variance_pop_fields"
+    varianceFields         <- obj .:? "variance_fields"
+    aggregateOrderBy       <- obj .:? "aggregate_order_by"
 
-    connection          <- obj .:? "connection"
-    edge                <- obj .:? "edge"
+    connection             <- obj .:? "connection"
+    edge                   <- obj .:? "edge"
 
-    insertInput         <- obj .:? "insert_input"
-    objRelnInsertInput  <- obj .:? "object_relationship_insert_input"
-    arrRelnInsertInput  <- obj .:? "array_relationship_insert_input"
+    insertInput            <- obj .:? "insert_input"
+    objRelnInsertInput     <- obj .:? "object_relationship_insert_input"
+    arrRelnInsertInput     <- obj .:? "array_relationship_insert_input"
 
-    incInput            <- obj .:? "inc_input"
-    setInput            <- obj .:? "set_input"
-    jsonPrependInput    <- obj .:? "json_prepend_input"
-    jsonAppendInput     <- obj .:? "json_append_input"
-    jsonDeleteKeyInput  <- obj .:? "json_delete_key_input"
-    jsonDeleteElemInput <- obj .:? "json_delete_elem_input"
-    jsonDeleteAtPath    <- obj .:? "json_delete_at_path"
+    incInput               <- obj .:? "inc_input"
+    setInput               <- obj .:? "set_input"
+    jsonPrependInput       <- obj .:? "json_prepend_input"
+    jsonAppendInput        <- obj .:? "json_append_input"
+    jsonDeleteKeyInput     <- obj .:? "json_delete_key_input"
+    jsonDeleteElemInput    <- obj .:? "json_delete_elem_input"
+    jsonDeleteAtPathInput  <- obj .:? "json_delete_at_path_input"
 
     let duplicateTypeNames = duplicates $
                               catMaybes [ select, selectColumn, selectAggregate
@@ -252,7 +252,7 @@ instance FromJSON TableCustomTypeNames where
                                         , arrRelnInsertInput, incInput, setInput
                                         , jsonPrependInput, jsonAppendInput
                                         , jsonDeleteKeyInput, jsonDeleteElemInput
-                                        , jsonDeleteAtPath
+                                        , jsonDeleteAtPathInput
                                         ]
     for_ (nonEmpty duplicateTypeNames) \duplicatedTypeNames -> fail $ T.unpack $
       "the following custom type names are duplicated: "
@@ -271,7 +271,7 @@ instance FromJSON TableCustomTypeNames where
                                 connection edge
                                 insertInput objRelnInsertInput arrRelnInsertInput
                                 incInput setInput jsonPrependInput jsonAppendInput
-                                jsonDeleteKeyInput jsonDeleteElemInput jsonDeleteAtPath
+                                jsonDeleteKeyInput jsonDeleteElemInput jsonDeleteAtPathInput
 
 emptyCustomRootFields :: TableCustomRootFields
 emptyCustomRootFields =
@@ -326,7 +326,7 @@ emptyCustomTypeNames = TableCustomTypeNames
   , _tctnJsonAppendInput               = Nothing
   , _tctnJsonDeleteKeyInput            = Nothing
   , _tctnJsonDeleteElemInput           = Nothing
-  , _tctnJsonDeleteAtPath              = Nothing
+  , _tctnJsonDeleteAtPathInput         = Nothing
   }
 
 data FieldInfo
