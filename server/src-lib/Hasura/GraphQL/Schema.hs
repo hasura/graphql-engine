@@ -152,9 +152,9 @@ buildGQLContext =
               ) |) [] (Map.toList allRemoteSchemas)
 
     let unauthenticatedContext :: m GQLContext
-        unauthenticatedContext = do
-          ucQueries   <- P.runSchemaT $ finalizeParser <$> unauthenticatedQueryWithIntrospection queryRemotes mutationRemotes
-          ucMutations <- P.runSchemaT $ fmap finalizeParser <$> unauthenticatedMutation mutationRemotes
+        unauthenticatedContext = P.runSchemaT do
+          ucQueries   <- finalizeParser <$> unauthenticatedQueryWithIntrospection queryRemotes mutationRemotes
+          ucMutations <- fmap finalizeParser <$> unauthenticatedMutation mutationRemotes
           pure $ GQLContext ucQueries ucMutations
 
         -- | The 'query' type of the remotes. TODO: also expose mutation
