@@ -149,7 +149,8 @@ class DataSubSidebar extends React.Component {
             <li className={isActive ? styles.activeLink : ''} key={'fn ' + i}>
               <Link
                 to={getFunctionModifyRoute(
-                  dataSource.getFunctionSchema(func, funcName)
+                  dataSource.getFunctionSchema(func),
+                  funcName
                 )}
                 data-test={funcName}
               >
