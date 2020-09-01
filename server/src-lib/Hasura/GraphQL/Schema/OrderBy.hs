@@ -94,6 +94,7 @@ orderByAggregation table selectPermissions = do
   -- we change one but not the other?
   tableName  <- getTableName table
   allColumns <- tableSelectColumns table selectPermissions
+  customTypeName <- _tctnAggregateOrderBy <$> getTableCustomTypeNames table
   let numColumns  = onlyNumCols allColumns
       compColumns = onlyComparableCols allColumns
       numFields   = catMaybes <$> traverse mkField numColumns
@@ -111,7 +112,7 @@ orderByAggregation table selectPermissions = do
           for comparisonAggOperators \operator ->
             parseOperator operator tableName compFields
         ]
-  let objectName  = tableName <> $$(G.litName "_aggregate_order_by")
+  let objectName  = fromMaybe (tableName <> $$(G.litName "_aggregate_order_by")) customTypeName
       description = G.Description $ "order by aggregate values of table " <>> table
   pure $ P.object objectName (Just description) aggFields
   where
