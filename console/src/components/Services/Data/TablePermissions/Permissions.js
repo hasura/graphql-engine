@@ -85,6 +85,7 @@ import {
   getQuerySingleRowMutation,
 } from './utils';
 import PermButtonSection from './PermButtonsSection';
+import { findActionPermission } from '../../Actions/utils';
 
 class Permissions extends Component {
   constructor() {
@@ -555,8 +556,9 @@ class Permissions extends Component {
 
       const query = permissionsState.query;
 
-      const rolePermissions = tableSchema.permissions.find(
-        p => p.role_name === permissionsState.role
+      const rolePermissions = findActionPermission(
+        tableSchema.permissions,
+        permissionsState.role
       );
 
       const currQueryPermissions = rolePermissions

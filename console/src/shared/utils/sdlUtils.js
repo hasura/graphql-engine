@@ -352,10 +352,10 @@ export const getSdlComplete = (allActions, allTypes) => {
   let sdl = '';
   allActions.forEach(a => {
     sdl += `extend ${getActionDefinitionSdl(
-      a.action_name,
-      a.action_defn.type,
-      a.action_defn.arguments,
-      a.action_defn.output_type,
+      a.name,
+      a.definition.type,
+      a.definition.arguments,
+      a.definition.output_type,
       a.comment
     )}`;
   });

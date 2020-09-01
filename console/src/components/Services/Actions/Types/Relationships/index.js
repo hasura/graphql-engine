@@ -1,8 +1,9 @@
 import Relationships from './Main';
+import { customTypesSelector } from '../../selectors';
 
 const mapStateToProps = state => {
   return {
-    allTypes: state.types.types,
+    allTypes: customTypesSelector(state),
     ...state.action.types,
   };
 };

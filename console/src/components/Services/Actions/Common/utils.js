@@ -258,9 +258,7 @@ export const getOverlappingTypeConfirmation = (
   allTypes,
   overlappingTypenames
 ) => {
-  const otherActions = allActions.filter(
-    a => a.action_name !== currentActionName
-  );
+  const otherActions = allActions.filter(a => a.name !== currentActionName);
 
   const typeCollisionMap = {};
 

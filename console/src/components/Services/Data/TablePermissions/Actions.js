@@ -13,6 +13,7 @@ import {
   getDropPermissionQuery,
 } from '../../../Common/utils/v1QueryUtils';
 import { capitalize } from '../../../Common/utils/jsUtils';
+import { findActionPermission } from '../../Actions/utils';
 
 export const PERM_OPEN_EDIT = 'ModifyTable/PERM_OPEN_EDIT';
 export const PERM_SET_FILTER_TYPE = 'ModifyTable/PERM_SET_FILTER_TYPE';
@@ -135,9 +136,7 @@ const getBasePermissionsState = (tableSchema, role, query, isNewRole) => {
   _permissions.role = role;
   _permissions.query = query;
 
-  const rolePermissions = tableSchema.permissions.find(
-    p => p.role_name === role
-  );
+  const rolePermissions = findActionPermission(tableSchema.permissions, role);
 
   if (rolePermissions) {
     Object.keys(rolePermissions.permissions).forEach(q => {
@@ -257,10 +256,10 @@ const permRemoveRole = (tableSchema, roleName) => {
     const table = tableSchema.table_name;
     const role = roleName;
 
-    const currRolePermissions = tableSchema.permissions.find(
-      p => p.role_name === role
+    const currRolePermissions = findActionPermission(
+      tableSchema.permissions,
+      role
     );
-
     const permissionsUpQueries = [];
     const permissionsDownQueries = [];
 
@@ -334,7 +333,7 @@ const permRemoveMultipleRoles = tableSchema => {
 
     roles.map(role => {
       const currentRolePermission = currentPermissions.filter(el => {
-        return el.role_name === role;
+        return el.role === role;
       });
       Object.keys(currentRolePermission[0].permissions).forEach(type => {
         const deleteQuery = {
@@ -425,7 +424,7 @@ const applySamePermissionsBulk = (tableSchema, arePermissionsModified) => {
       );
 
       const currentPermPermission = currTableSchema.permissions.find(
-        el => el.role_name === applyTo.role
+        el => el.role === applyTo.role
       );
 
       if (
@@ -730,7 +729,7 @@ const permChangePermissions = changeType => {
       t => t.table_name === table && t.table_schema === currentSchema
     );
     const currRolePermissions = tableSchema.permissions.find(
-      p => p.role_name === role
+      p => p.role === role
     );
 
     const permissionsUpQueries = [];

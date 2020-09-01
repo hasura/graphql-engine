@@ -1,12 +1,13 @@
 import Relationships from './Main';
+import { actionsSelector, customTypesSelector } from '../selectors';
 
 const mapStateToProps = state => {
   return {
     ...state.actions.relationships,
-    allActions: state.actions.common.actions,
+    allActions: actionsSelector(state),
     allTables: state.tables.allSchemas,
     schemaList: state.tables.schemaList,
-    allTypes: state.types.types,
+    allTypes: customTypesSelector(state),
     readOnlyMode: state.main.readOnlyMode,
   };
 };

@@ -28,10 +28,13 @@ import {
   setConsistentSchema,
   setConsistentFunctions,
 } from '../components/Services/Data/DataActions';
-import { filterInconsistentMetadataObjects } from '../components/Services/Settings/utils';
+import {
+  filterInconsistentMetadataObjects,
+  MetadataObject,
+} from '../components/Services/Settings/utils';
 import { setConsistentRemoteSchemas } from '../components/Services/RemoteSchema/Actions';
-import { setActions } from '../components/Services/Actions/reducer';
 import { clearIntrospectionSchemaCache } from '../components/Services/RemoteSchema/graphqlUtils';
+import { actionsSelector } from '../components/Services/Actions/selectors';
 
 export interface ExportMetadataSuccess {
   type: 'Metadata/EXPORT_METADATA_SUCCESS';
@@ -108,9 +111,9 @@ export type MetadataActions =
   | DeleteAllowedQuery;
 
 export const exportMetadata = (
-  successCb: (data: HasuraMetadataV2) => void,
-  errorCb: (err: string) => void
-): Thunk<void, MetadataActions> => (dispatch, getState) => {
+  successCb?: (data: HasuraMetadataV2) => void,
+  errorCb?: (err: string) => void
+): Thunk<Promise<void>, MetadataActions> => (dispatch, getState) => {
   const { dataHeaders } = getState().tables;
 
   const query = exportMetadataQuery;
@@ -123,16 +126,16 @@ export const exportMetadata = (
     body: JSON.stringify(query),
   };
 
-  dispatch(requestAction(Endpoints.query, options))
+  return dispatch(requestAction(Endpoints.query, options))
     .then(data => {
-      successCb(data);
       dispatch({
         type: 'Metadata/EXPORT_METADATA_SUCCESS',
         data,
       });
+      if (successCb) successCb(data);
     })
     .catch(err => {
-      errorCb(err);
+      if (errorCb) errorCb(err);
     });
 };
 
@@ -252,7 +255,7 @@ const handleInconsistentObjects = (
     const allSchemas = getState().tables.allSchemas;
     const functions = getState().tables.trackedFunctions;
     const remoteSchemas = getState().remoteSchemas.listData.remoteSchemas;
-    const actions = getState().actions.common.actions;
+    const actions = actionsSelector(getState());
 
     dispatch({
       type: 'Metadata/DROP_INCONSISTENT_METADATA_SUCCESS',
@@ -270,17 +273,17 @@ const handleInconsistentObjects = (
         inconsistentObjects,
         'functions'
       );
-      const filteredActions = filterInconsistentMetadataObjects(
-        actions,
-        inconsistentObjects,
-        'actions'
-      );
+      // const filteredActions = filterInconsistentMetadataObjects(
+      //   (actions as any) as MetadataObject[],
+      //   inconsistentObjects,
+      //   'actions'
+      // );
 
       // todo
       dispatch(setConsistentSchema(filteredSchema) as any);
       dispatch(setConsistentFunctions(filteredFunctions) as any);
       dispatch(setConsistentRemoteSchemas(remoteSchemas) as any);
-      dispatch(setActions(filteredActions) as any);
+      // dispatch(setActions(filteredActions) as any);
     }
   };
 };

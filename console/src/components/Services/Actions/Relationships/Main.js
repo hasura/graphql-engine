@@ -18,7 +18,7 @@ const Relationships = ({
 
   const action = findAction(allActions, actionName);
 
-  const actionOutputTypeName = unwrapType(action.action_defn.output_type)
+  const actionOutputTypeName = unwrapType(action.definition.output_type)
     .typename;
 
   const actionOutputType = allTypes.find(t => t.name === actionOutputTypeName);

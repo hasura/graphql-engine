@@ -1,10 +1,11 @@
 import Codegen from './Main';
+import { actionsSelector, customTypesSelector } from '../selectors';
 
 const mapStateToProps = state => {
   return {
     ...state.actions.relationships,
-    allActions: state.actions.common.actions,
-    allTypes: state.types.types,
+    allActions: actionsSelector(state),
+    allTypes: customTypesSelector(state),
   };
 };
 
