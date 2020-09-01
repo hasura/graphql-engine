@@ -158,27 +158,26 @@ const editItem = (tableName, colValues, isMigration = false) => {
       body: JSON.stringify(reqBody),
     };
     const url = Endpoints.query;
+    // call back
+    const cb = newItem => {
+      dispatch(
+        showSuccessNotification(
+          'Edited!',
+          `Affected Rows: ${affectedRows}`,
+          true
+        )
+      );
+    };
 
     return dispatch(
       requestAction(url, options, E_REQUEST_SUCCESS, E_REQUEST_ERROR)
     ).then(
       data => {
+        const affectedRows = data.affected_rows;
         if (!isMigration) {
-          dispatch(
-            showSuccessNotification(
-              'Edited!',
-              'Affected rows: ' + data.affected_rows
-            )
-          );
-          return;
+            cb(affectedRows)
         }
-        const newItem = data.returning[0];
-        // TODO: varun - to make the callback for the showing of success notification
-        // as it is done within InsertActions
-        const cb = () => {
-          // Insert code here
-        };
-        dispatch(editRowAsMigration(tableDef, pkClause, oldItem, newItem, cb));
+        dispatch(editRowAsMigration(tableDef, pkClause, oldItem, nedata.returning[0], () => cb(affectedRows)));
       },
       err => {
         dispatch(showErrorNotification('Edit failed!', err.error, err));
