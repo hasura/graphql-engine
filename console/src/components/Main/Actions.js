@@ -60,6 +60,12 @@ const filterScope = (data, consoleScope) => {
   });
 };
 
+const makeUppercaseScopes = data => {
+  return data.map(notif => {
+    return { ...notif, scope: notif.scope.toUpperCase() };
+  });
+};
+
 // to fetch and filter notifications
 const fetchConsoleNotifications = () => (dispatch, getState) => {
   const url = !globals.isProduction
@@ -122,7 +128,8 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
         return;
       }
 
-      const filteredData = filterScope(data, consoleScope);
+      const uppercaseScopedData = makeUppercaseScopes(data);
+      const filteredData = filterScope(uppercaseScopedData, consoleScope);
 
       if (
         !lastSeenNotifications ||
