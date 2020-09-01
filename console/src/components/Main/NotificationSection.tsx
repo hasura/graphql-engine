@@ -6,6 +6,7 @@ import {
   ConsoleNotification,
   NotificationDate,
   NotificationScope,
+  ConsoleScope,
 } from './ConsoleNotification';
 import styles from './Main.scss';
 import useOnClickOutside from '../../hooks/useOnClickOutside';
@@ -35,12 +36,35 @@ const getDateString = (date: NotificationDate) => {
   return new Date(date).toLocaleString().split(', ')[0];
 };
 
+// toShowNotification is used to help render the valid notifications on the screen
+const toShowNotification = (
+  consoleScope: ConsoleScope,
+  notificationScope?: NotificationScope,
+  isSpecial?: boolean
+) => {
+  if (isSpecial) {
+    return true;
+  }
+
+  if (notificationScope) {
+    if (
+      notificationScope.includes(consoleScope) ||
+      notificationScope.indexOf(consoleScope) > -1
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
 interface UpdateProps extends ConsoleNotification {
   onClick?: (id?: number) => void;
   is_read?: boolean;
-  consoleScope: NotificationScope;
+  consoleScope: ConsoleScope;
   latestVersion?: string;
   stable?: boolean;
+  isSpecial?: boolean;
 }
 
 const Notification: React.FC<UpdateProps> = ({
@@ -50,6 +74,7 @@ const Notification: React.FC<UpdateProps> = ({
   is_active = true,
   onClick,
   is_read,
+  isSpecial,
   ...props
 }) => {
   const [currentReadState, updateReadState] = React.useState(is_read);
@@ -73,7 +98,7 @@ const Notification: React.FC<UpdateProps> = ({
     return null;
   }
 
-  if (props.scope !== 'OSS' && props.scope !== props.consoleScope) {
+  if (!toShowNotification(props.consoleScope, props.scope, isSpecial)) {
     return null;
   }
 
@@ -217,10 +242,10 @@ const VersionUpdateNotification: React.FC<VersionUpdateNotificationProps> = ({
       content={`Hey There! There's a new server version ${latestVersion} available.`}
       start_date={Date.now()}
       consoleScope="OSS"
-      scope="OSS"
       latestVersion={latestVersion}
       stable={isStableRelease}
       onClick={handleClick}
+      isSpecial
     >
       <a href={changeLogURL} target="_blank" rel="noopener noreferrer">
         <span>View Changelog</span>
@@ -252,7 +277,7 @@ const VulnerableVersionNotification: React.FC<VulnerableVersionProps> = ({
     content={`This current server version has a security vulnerability. Please upgrade to ${fixedVersion} immediately.`}
     start_date={Date.now()}
     consoleScope="OSS"
-    scope="OSS"
+    isSpecial
   >
     <a
       href={`https://github.com/hasura/graphql-engine/releases/tag/${fixedVersion}`}
@@ -327,7 +352,10 @@ const checkVersionUpdate = (
     const lastUpdateCheckClosed = window.localStorage.getItem(
       LS_VERSION_UPDATE_CHECK_LAST_CLOSED
     );
-    if (lastUpdateCheckClosed !== latestServerVersionToCheck) {
+    if (
+      lastUpdateCheckClosed !== latestServerVersionToCheck ||
+      serverVersion !== latestServerVersionToCheck
+    ) {
       const isUpdateAvailable = versionGT(
         latestServerVersionToCheck,
         serverVersion
