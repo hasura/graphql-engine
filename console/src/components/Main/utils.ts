@@ -1,5 +1,5 @@
 import jwt_decode from 'jwt-decode';
-import { NotificationScope } from './ConsoleNotification';
+import { ConsoleScope } from './ConsoleNotification';
 import { Nullable } from '../Common/utils/tsUtils';
 
 const proClickState = 'console:pro';
@@ -59,7 +59,7 @@ const getReadAllNotificationsState = () => {
 const getConsoleScope = (
   serverVersion: string,
   consoleID: Nullable<string>
-): NotificationScope => {
+): ConsoleScope => {
   if (!consoleID) {
     return 'OSS';
   }

@@ -2,7 +2,20 @@ import { AllowedBadges } from '../UIKit/atoms/Badge';
 
 export type NotificationDate = string | number | Date | null;
 
-export type NotificationScope = 'OSS' | 'CLOUD' | 'PRO';
+export type ConsoleScope = 'OSS' | 'CLOUD' | 'PRO';
+export type NotificationScope =
+  | 'OSS'
+  | 'CLOUD'
+  | 'PRO'
+  | 'OSS/CLOUD'
+  | 'OSS/PRO'
+  | 'CLOUD/PRO'
+  | 'CLOUD/OSS'
+  | 'PRO/OSS'
+  | 'PRO/CLOUD'
+  | 'PRO/CLOUD/OSS'
+  | 'CLOUD/OSS/PRO'
+  | 'OSS/CLOUD/PRO';
 
 export type ConsoleNotification = {
   id?: number;
