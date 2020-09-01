@@ -31,7 +31,6 @@ import {
 import { filterInconsistentMetadataObjects } from '../components/Services/Settings/utils';
 import { setConsistentRemoteSchemas } from '../components/Services/RemoteSchema/Actions';
 import { clearIntrospectionSchemaCache } from '../components/Services/RemoteSchema/graphqlUtils';
-import { actionsSelector } from '../components/Services/Actions/selectors';
 
 export interface ExportMetadataSuccess {
   type: 'Metadata/EXPORT_METADATA_SUCCESS';
