@@ -62,7 +62,7 @@ import           Hasura.RQL.Instances           ()
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils            (quoteRegex)
 
-import qualified Debug.Trace                            as UGLY
+import qualified Debug.Trace                    as UGLY
 
 data RunSQL
   = RunSQL
@@ -121,12 +121,12 @@ runRunSQL q@RunSQL {..}
     execRawSQL :: (MonadTx m, MonadIO m) => Text -> m EncJSON
     execRawSQL queryString = do
       -- TMP TMP DO NOT SUBMIT THIS IS CURSED THIS FUNCTION IS NOT A PLACE OF HONOR
-      liftIO $ do
-        connection <- readMVar mySQLConnection
-        let encodedQuery = LBS.fromStrict $ TE.encodeUtf8 queryString
-        UGLY.traceShowM encodedQuery
-        onJust connection $ \c ->
-          flip catch (print @My.ERRException) $ void $ My.execute_ c $ My.Query $ encodedQuery
+      -- liftIO $ do
+      --   connection <- readMVar mySQLConnection
+      --   let encodedQuery = LBS.fromStrict $ TE.encodeUtf8 queryString
+      --   UGLY.traceShowM encodedQuery
+      --   onJust connection $ \c ->
+      --     flip catch (print @My.ERRException) $ void $ My.execute_ c $ My.Query $ encodedQuery
       -- OKAY BACK TO NORMAL MOVE ALONG CITIZEN
 
       fmap (encJFromJValue @RunSQLRes) . liftTx . Q.multiQE rawSqlErrHandler . Q.fromText $ queryString
