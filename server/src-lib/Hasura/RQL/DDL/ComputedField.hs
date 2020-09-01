@@ -32,7 +32,7 @@ import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Schema.Function     (RawFunctionInfo (..), mkFunctionArgs)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                (makeReasonMessage)
-import           Hasura.SQL.Builder
+import           Hasura.SQL.DML
 import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 

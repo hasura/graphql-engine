@@ -20,7 +20,6 @@ import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
 import           Hasura.Sources.MySQL.SQLBuilder
-import           Hasura.SQL.Builder
 import           Hasura.SQL.Rewrite
 import           Hasura.SQL.Text
 import           Hasura.SQL.Types
@@ -32,7 +31,7 @@ import qualified Hasura.SQL.DML                  as S
 
 selectQuerySQL :: JsonAggSelect -> AnnSimpleSel -> Q.Query
 selectQuerySQL jsonAggSelect sel =
-  Q.fromBuilder $ toSQL mySQLBuilder $ mkMySQLSelect jsonAggSelect sel
+  Q.fromBuilder $ S.toSQL mySQLBuilder $ mkMySQLSelect jsonAggSelect sel
 
 mkMySQLSelect :: JsonAggSelect -> AnnSimpleSel -> S.Select
 mkMySQLSelect jsonAggSelect annSel =

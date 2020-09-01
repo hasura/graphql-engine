@@ -21,7 +21,7 @@ import           Control.Monad.Validate
 
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
-import           Hasura.SQL.Builder
+import           Hasura.SQL.DML
 import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 

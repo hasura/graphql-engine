@@ -32,7 +32,6 @@ import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.Server.Utils           (makeReasonMessage)
-import           Hasura.SQL.Builder
 import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
@@ -104,7 +103,7 @@ fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
           let nullExtr = S.Extractor S.SENull Nothing
               commentExtr = maybe nullExtr (S.mkExtr . prciName) maybeCommentColumn
               -- FIXME: postgres-specific sql generation
-              query = Q.fromText $ unsafeToSQLTxt S.mkSelect
+              query = Q.fromText $ S.unsafeToSQLTxt S.mkSelect
                 { S.selFrom = Just $ S.mkSimpleFromExp tableName
                 , S.selExtr = [S.mkExtr (prciName primaryKeyColumn), commentExtr] }
           rawEnumValues <- liftTx $ Q.withQE defaultTxErrorHandler query () True

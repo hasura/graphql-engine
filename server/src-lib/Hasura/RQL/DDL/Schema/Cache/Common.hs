@@ -19,7 +19,6 @@ import qualified Hasura.Incremental           as Inc
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.RQL.Types.Run
-import           Hasura.SQL.Builder
 import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 

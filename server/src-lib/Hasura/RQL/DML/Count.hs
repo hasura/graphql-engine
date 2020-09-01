@@ -18,7 +18,6 @@ import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
-import           Hasura.SQL.Builder
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query       as Q
@@ -115,7 +114,7 @@ countQToTx (u, p) = do
           (Q.fromText countSQL) (toList p) True
   return $ encJFromBuilder $ encodeCount qRes
   where
-    countSQL = unsafeToSQLTxt $ mkSQLCount u
+    countSQL = S.unsafeToSQLTxt $ mkSQLCount u
     encodeCount (Q.SingleRow (Identity c)) =
       BB.byteString "{\"count\":" <> BB.intDec c <> BB.char7 '}'
 

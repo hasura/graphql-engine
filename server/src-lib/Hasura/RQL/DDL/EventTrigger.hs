@@ -35,7 +35,7 @@ import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
-import           Hasura.SQL.Builder
+import           Hasura.SQL.DML
 import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 

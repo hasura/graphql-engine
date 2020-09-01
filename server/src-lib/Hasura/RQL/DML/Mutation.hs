@@ -31,7 +31,7 @@ import           Hasura.RQL.Instances           ()
 import           Hasura.RQL.Types
 import           Hasura.Server.Version          (HasVersion)
 import           Hasura.Session
-import           Hasura.SQL.Builder
+import           Hasura.SQL.DML
 import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value

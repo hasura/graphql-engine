@@ -30,7 +30,6 @@ import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.Types.Column               hiding (EnumValue (..), EnumValueInfo (..))
 import           Hasura.RQL.Types.Error
 import           Hasura.Session                        (SessionVariable)
-import           Hasura.SQL.Builder
 import           Hasura.SQL.DML
 import           Hasura.SQL.Text
 import           Hasura.SQL.Types

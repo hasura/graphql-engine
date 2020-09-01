@@ -37,15 +37,12 @@ module Hasura.RQL.DDL.Schema
 
 import           Hasura.Prelude
 
-import qualified Data.ByteString.Lazy           as LBS
 import qualified Data.Text                      as T
 import qualified Data.Text.Encoding             as TE
-import qualified Database.MySQL.Base            as My
 import qualified Database.PG.Query              as Q
 import qualified Database.PostgreSQL.LibPQ      as PQ
 import qualified Text.Regex.TDFA                as TDFA
 
-import           Control.Concurrent.MVar
 import           Control.Exception              (catch)
 import           Data.Aeson
 import           Data.Aeson.Casing

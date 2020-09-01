@@ -41,7 +41,6 @@ import qualified Hasura.Tracing                     as Tracing
 import           Hasura.EncJSON
 import           Hasura.RQL.Types.Error
 import           Hasura.Session
-import           Hasura.SQL.Builder
 import           Hasura.SQL.Error
 
 
@@ -148,7 +147,7 @@ setHeadersTx session = do
   Q.unitQE defaultTxErrorHandler setSess () False
   where
     setSess = Q.fromBuilder $
-      "SET LOCAL \"hasura.user\" = " <> toSQL S.postgresBuilder (sessionInfoJsonExp session)
+      "SET LOCAL \"hasura.user\" = " <> S.toSQL S.postgresBuilder (sessionInfoJsonExp session)
 
 sessionInfoJsonExp :: SessionVariables -> S.SQLExp
 sessionInfoJsonExp = S.SELit . J.encodeToStrictText
@@ -208,7 +207,7 @@ withTraceContext ctx = \case
   LTTx tx  ->
     let sql = Q.fromBuilder $
           "SET LOCAL \"hasura.tracecontext\" = " <>
-            toSQL S.postgresBuilder (S.SELit . J.encodeToStrictText . Tracing.injectEventContext $ ctx)
+            S.toSQL S.postgresBuilder (S.SELit . J.encodeToStrictText . Tracing.injectEventContext $ ctx)
         setTraceContext =
           Q.unitQE defaultTxErrorHandler sql () False
      in LTTx $ setTraceContext >> tx

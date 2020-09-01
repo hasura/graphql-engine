@@ -54,7 +54,7 @@ import           Hasura.RQL.Types.Run
 import           Hasura.Server.Utils                  (mkClientHeadersForward, mkSetCookieHeaders)
 import           Hasura.Server.Version                (HasVersion)
 import           Hasura.Session
-import           Hasura.SQL.Builder
+import           Hasura.SQL.DML
 import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value                     (PGScalarValue (..), toTxtValue)

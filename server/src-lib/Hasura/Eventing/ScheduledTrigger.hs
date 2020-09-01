@@ -89,9 +89,7 @@ import           Hasura.RQL.DDL.EventTrigger (getHeaderInfosFromConf)
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.Server.Version       (HasVersion)
-import           Hasura.SQL.Builder
 import           Hasura.SQL.DML
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 import           System.Cron
 
@@ -111,7 +109,6 @@ import qualified Hasura.Tracing              as Tracing
 import qualified Network.HTTP.Client         as HTTP
 import qualified PostgreSQL.Binary.Decoding  as PD
 import qualified PostgreSQL.Binary.Encoding  as PE
-import qualified Text.Builder                as TB (run)
 
 
 newtype ScheduledTriggerInternalErr

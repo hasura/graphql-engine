@@ -19,7 +19,7 @@ import           Data.Foldable
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Schema.Remote
 import           Hasura.RQL.Types
-import           Hasura.SQL.Builder
+import           Hasura.SQL.DML
 import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 

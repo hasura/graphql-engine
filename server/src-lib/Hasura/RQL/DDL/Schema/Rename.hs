@@ -19,7 +19,7 @@ import           Hasura.RQL.DDL.Relationship.Types
 import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.Types
 import           Hasura.Session
-import           Hasura.SQL.Builder
+import           Hasura.SQL.DML                     (toSQL, unsafeToSQLTxt)
 import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 

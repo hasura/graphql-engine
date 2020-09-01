@@ -468,7 +468,6 @@ library
                      , Hasura.Eventing.Common
                      , Data.GADT.Compare.Extended
                      , Data.Tuple.Extended
-                     , Hasura.SQL.Builder
                      , Hasura.SQL.DML
                      , Hasura.SQL.Error
                      , Hasura.SQL.GeoJSON

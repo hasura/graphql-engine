@@ -106,46 +106,6 @@ instance IsIdentifier TableName where
 
 
 
--- table type
-
-{-
-
-data TableType
-  = TTBaseTable
-  | TTView
-  | TTForeignTable
-  | TTLocalTemporary
-  deriving (Eq)
-
-instance Show TableType where
-  show = T.unpack . tableTypeToTxt
-
-instance ToTxt TableType where
-  toTxt = tableTypeToTxt
-  {-# INLINE toTxt #-}
-
-instance Q.FromCol TableType where
-  fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case
-    "BASE TABLE"      -> Just TTBaseTable
-    "VIEW"            -> Just TTView
-    "FOREIGN TABLE"   -> Just TTForeignTable
-    "LOCAL TEMPORARY" -> Just TTLocalTemporary
-    _                 -> Nothing
-
-tableTypeToTxt :: TableType -> T.Text
-tableTypeToTxt TTBaseTable      = "BASE TABLE"
-tableTypeToTxt TTView           = "VIEW"
-tableTypeToTxt TTForeignTable   = "FOREIGN TABLE"
-tableTypeToTxt TTLocalTemporary = "LOCAL TEMPORARY"
-
-isView :: TableType -> Bool
-isView TTView = True
-isView _      = False
-
--}
-
-
-
 -- constraint name
 
 newtype ConstraintName

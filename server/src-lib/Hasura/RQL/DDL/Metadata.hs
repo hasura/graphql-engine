@@ -33,8 +33,6 @@ import           Hasura.RQL.DDL.ScheduledTrigger    (addCronTriggerToCatalog,
                                                      deleteCronTriggerFromCatalog)
 import           Hasura.RQL.DDL.Schema.Catalog      (saveTableToCatalog)
 import           Hasura.RQL.Types
-import           Hasura.SQL.Builder
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q

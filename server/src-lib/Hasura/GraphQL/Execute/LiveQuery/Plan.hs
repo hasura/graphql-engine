@@ -58,7 +58,7 @@ import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Query
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.RQL.Types
-import           Hasura.SQL.Builder
+import           Hasura.SQL.DML
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value

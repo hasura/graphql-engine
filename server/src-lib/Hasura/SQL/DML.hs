@@ -12,10 +12,85 @@ import           Data.String                (fromString)
 import           Language.Haskell.TH.Syntax (Lift)
 
 import           Hasura.Incremental         (Cacheable)
-import           Hasura.SQL.Builder
+import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 
+
+-- Builder
+
+data SQLBuilder = SQLBuilder
+  { sqlbLiteral    :: Text -> TB.Builder
+  , sqlbOrderBy    :: OrderByItem -> TB.Builder
+  , sqlbIdentifier :: Identifier -> TB.Builder
+  }
+
+class ToSQL a where
+  toSQL :: SQLBuilder -> a -> TB.Builder
+
+instance ToSQL a => ToSQL (Maybe a) where
+  toSQL b = maybe mempty (toSQL b)
+
+toSQLTxt :: ToSQL a => SQLBuilder -> a -> T.Text
+toSQLTxt b a = TB.run $ toSQL b a
+
+-- this uses a hardcoded equivalent of the postgres SQL builder
+-- it is temporary and should not be used
+unsafeToSQLTxt :: ToSQL a => a -> T.Text
+unsafeToSQLTxt = toSQLTxt builder
+  where
+    builder = SQLBuilder pgLiteral pgOrderBy pgIdentifier
+    pgOrderBy (OrderByItem e ot no) = toSQL builder e <-> toSQL builder ot <-> toSQL builder no
+    pgLiteral    = TB.text . pgFmtLit
+    pgIdentifier = TB.text . pgFmtIden . toTxt
+
+infixr 6 <->
+(<->) :: TB.Builder -> TB.Builder -> TB.Builder
+(<->) l r = l <> TB.char ' ' <> r
+{-# INLINE (<->) #-}
+
+paren :: TB.Builder -> TB.Builder
+paren t = TB.char '(' <> t <> TB.char ')'
+{-# INLINE paren #-}
+
+commaSeparated :: [TB.Builder] -> TB.Builder
+commaSeparated = TB.intercalate ", "
+
+-- types instances
+
+instance ToSQL Identifier where
+  toSQL = sqlbIdentifier
+
+instance ToSQL TableName where
+  toSQL b = toSQL b . toIdentifier
+
+instance ToSQL FunctionName where
+  toSQL b = toSQL b . toIdentifier
+
+instance ToSQL SchemaName where
+  toSQL b = toSQL b . toIdentifier
+
+instance ToSQL ConstraintName where
+  toSQL b = toSQL b . toIdentifier
+
+instance ToSQL PGScalarType where
+  toSQL _ = TB.text . toTxt
+
+instance ToSQL PGCol where
+  toSQL b = toSQL b . toIdentifier
+
+instance ToSQL a => ToSQL (QualifiedObject a) where
+  toSQL b (QualifiedObject sn o) = toSQL b sn <> "." <> toSQL b o
+
+instance ToSQL a => ToSQL (PGType a) where
+  toSQL b = \case
+    PGTypeScalar ty -> toSQL b ty
+    -- typename array is an sql standard way of declaring types
+    PGTypeArray ty -> toSQL b ty <> " array"
+
+
+
+-- DML
 
 data Select
   = Select
