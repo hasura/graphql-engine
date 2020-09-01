@@ -700,9 +700,11 @@ export const getConsoleNotificationQuery = (
   time: Date | string | number,
   userType?: Nullable<NotificationScope>
 ) => {
-  let addedScope = {};
-  if (userType && userType !== 'OSS') {
-    addedScope = { scope: { $eq: userType } };
+  let addedScope = {
+    scope: { $like: userType }
+  };
+  if (!userType || userType !== 'OSS') {
+    addedScope = { scope: { $like: 'OSS' } };
   }
 
   return {
@@ -723,11 +725,6 @@ export const getConsoleNotificationQuery = (
                   $eq: null,
                 },
               },
-              {
-                scope: {
-                  $eq: 'OSS',
-                },
-              },
               addedScope,
             ],
           },
@@ -744,7 +741,7 @@ export const getConsoleNotificationQuery = (
         },
         {
           type: 'desc',
-          column: ['created_at'],
+          column: ['start_date'],
         },
       ],
     },
