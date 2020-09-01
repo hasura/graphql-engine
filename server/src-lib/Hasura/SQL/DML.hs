@@ -547,6 +547,9 @@ instance Hashable FromItem
 mkSelFromItem :: Select -> Alias -> FromItem
 mkSelFromItem = FISelect (Lateral False)
 
+mkSelectWithFromItem :: SelectWithG Select -> Alias -> FromItem
+mkSelectWithFromItem = FISelectWith (Lateral False)
+
 mkLateralFromItem :: Select -> Alias -> FromItem
 mkLateralFromItem = FISelect (Lateral True)
 

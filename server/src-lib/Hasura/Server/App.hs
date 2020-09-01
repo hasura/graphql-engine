@@ -1,5 +1,4 @@
-{-# LANGUAGE CPP       #-}
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE CPP #-}
 
 module Hasura.Server.App where
 
@@ -8,6 +7,7 @@ import           Control.Exception                         (IOException, try)
 import           Control.Monad.Morph                       (hoist)
 import           Control.Monad.Trans.Control               (MonadBaseControl)
 import           Data.String                               (fromString)
+import           Hasura.Prelude                            hiding (get, put)
 
 import           Control.Monad.Stateless
 import           Data.Aeson                                hiding (json)
@@ -41,9 +41,7 @@ import qualified Web.Spock.Core                            as Spock
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging                    (MonadQueryLog (..))
-import           Hasura.GraphQL.Resolve.Action
 import           Hasura.HTTP
-import           Hasura.Prelude                            hiding (get, put)
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
@@ -63,6 +61,7 @@ import           Hasura.SQL.Types
 import qualified Hasura.GraphQL.Execute                    as E
 import qualified Hasura.GraphQL.Execute.LiveQuery          as EL
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll     as EL
+import qualified Hasura.GraphQL.Execute.Plan               as E
 import qualified Hasura.GraphQL.Explain                    as GE
 import qualified Hasura.GraphQL.Transport.HTTP             as GH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
@@ -72,7 +71,6 @@ import qualified Hasura.Logging                            as L
 import qualified Hasura.Server.API.PGDump                  as PGD
 import qualified Hasura.Tracing                            as Tracing
 import qualified Network.Wai.Handler.WebSockets.Custom     as WSC
-
 
 data SchemaCacheRef
   = SchemaCacheRef
@@ -107,7 +105,7 @@ data ServerCtx
   , scSQLGenCtx                    :: !SQLGenCtx
   , scEnabledAPIs                  :: !(S.HashSet API)
   , scInstanceId                   :: !InstanceId
-  , scPlanCache                    :: !E.PlanCache
+  -- , scPlanCache                    :: !E.PlanCache -- See Note [Temporarily disabling query plan caching]
   , scLQState                      :: !EL.LiveQueriesState
   , scEnableAllowlist              :: !Bool
   , scEkgStore                     :: !EKG.Store
@@ -152,7 +150,7 @@ logInconsObjs logger objs =
 withSCUpdate
   :: (MonadIO m, MonadBaseControl IO m)
   => SchemaCacheRef -> L.Logger L.Hasura -> m (a, RebuildableSchemaCache Run) -> m a
-withSCUpdate scr logger action = do
+withSCUpdate scr logger action =
   withMVarMasked lk $ \() -> do
     (!res, !newSC) <- action
     liftIO $ do
@@ -275,8 +273,8 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
           tracingCtx
           (fromString (B8.unpack pathInfo))
 
-    requestId <- getRequestId headers    
-    
+    requestId <- getRequestId headers
+
     mapActionT runTraceT $ do
       -- Add the request ID to the tracing metadata so that we
       -- can correlate requests and traces
@@ -390,13 +388,13 @@ v1Alpha1GQHandler queryType query = do
   (sc, scVer)          <- liftIO $ readIORef $ _scrCache scRef
   pgExecCtx            <- asks (scPGExecCtx . hcServerCtx)
   sqlGenCtx            <- asks (scSQLGenCtx . hcServerCtx)
-  planCache            <- asks (scPlanCache . hcServerCtx)
+  -- planCache            <- asks (scPlanCache . hcServerCtx)
   enableAL             <- asks (scEnableAllowlist . hcServerCtx)
   logger               <- asks (scLogger . hcServerCtx)
   responseErrorsConfig <- asks (scResponseInternalErrorsConfig . hcServerCtx)
   env                  <- asks (scEnvironment . hcServerCtx)
 
-  let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx planCache
+  let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx {- planCache -}
                 (lastBuiltSchemaCache sc) scVer manager enableAL
 
   flip runReaderT execCtx $
@@ -427,10 +425,7 @@ v1GQRelayHandler
 v1GQRelayHandler = v1Alpha1GQHandler E.QueryRelay
 
 gqlExplainHandler
-  :: forall m .
-  ( HasVersion
-  , MonadIO m
-  )
+  :: forall m. (MonadIO m)
   => GE.GQLExplain
   -> Handler (Tracing.TraceT m) (HttpResponse EncJSON)
 gqlExplainHandler query = do
@@ -438,17 +433,17 @@ gqlExplainHandler query = do
   scRef     <- asks (scCacheRef . hcServerCtx)
   sc        <- getSCFromRef scRef
   pgExecCtx <- asks (scPGExecCtx . hcServerCtx)
-  sqlGenCtx <- asks (scSQLGenCtx . hcServerCtx)
-  env       <- asks (scEnvironment . hcServerCtx)
-  logger    <- asks (scLogger . hcServerCtx)
+--  sqlGenCtx <- asks (scSQLGenCtx . hcServerCtx)
+--  env       <- asks (scEnvironment . hcServerCtx)
+--  logger    <- asks (scLogger . hcServerCtx)
+
 
   -- let runTx :: ReaderT HandlerCtx (Tracing.TraceT (Tracing.NoReporter (LazyTx QErr))) a
   --           -> ExceptT QErr (ReaderT HandlerCtx (Tracing.TraceT m)) a
-  let runTx rttx = ExceptT . ReaderT $ \ctx -> do
-        runExceptT (Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadOnly) (runReaderT rttx ctx))
+  -- let runTx rttx = ExceptT . ReaderT $ \ctx -> do
+  --       runExceptT (Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadOnly) (runReaderT rttx ctx))
 
-  res <- GE.explainGQLQuery env logger pgExecCtx runTx sc sqlGenCtx
-         (restrictActionExecuter "query actions cannot be explained") query
+  res <- GE.explainGQLQuery pgExecCtx sc query
   return $ HttpResponse res []
 
 v1Alpha1PGDumpHandler :: (MonadIO m) => PGD.PGDumpReqBody -> Handler m APIResp
@@ -556,11 +551,11 @@ mkWaiApp
   :: forall m.
      ( HasVersion
      , MonadIO m
+--     , MonadUnique m
      , MonadStateless IO m
      , LA.Forall (LA.Pure m)
      , ConsoleRenderer m
      , HttpLog m
-     -- , UserAuthentication m
      , UserAuthentication (Tracing.TraceT m)
      , MetadataApiAuthorization m
      , E.MonadGQLExecutionCheck m
@@ -607,9 +602,11 @@ mkWaiApp
   -> EKG.Store
   -> m HasuraApp
 mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpManager mode corsCfg enableConsole consoleAssetsDir
-         enableTelemetry instanceId apis lqOpts planCacheOptions responseErrorsConfig liveQueryHook (schemaCache, cacheBuiltTime) ekgStore = do
+         enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig liveQueryHook (schemaCache, cacheBuiltTime) ekgStore  = do
 
-    (planCache, schemaCacheRef) <- initialiseCache
+    -- See Note [Temporarily disabling query plan caching]
+    -- (planCache, schemaCacheRef) <- initialiseCache
+    schemaCacheRef <- initialiseCache
     let getSchemaCache = first lastBuiltSchemaCache <$> readIORef (_scrCache schemaCacheRef)
 
     let corsPolicy = mkDefaultCorsPolicy corsCfg
@@ -618,7 +615,7 @@ mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpMana
 
     lqState <- liftIO $ EL.initLiveQueriesState lqOpts pgExecCtx postPollHook
     wsServerEnv <- WS.createWSServerEnv logger pgExecCtx lqState getSchemaCache httpManager
-                                        corsPolicy sqlGenCtx enableAL planCache
+                                        corsPolicy sqlGenCtx enableAL {- planCache -}
 
     let serverCtx = ServerCtx
                     { scPGExecCtx       =  pgExecCtx
@@ -630,7 +627,7 @@ mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpMana
                     , scSQLGenCtx       =  sqlGenCtx
                     , scEnabledAPIs     =  apis
                     , scInstanceId      =  instanceId
-                    , scPlanCache       =  planCache
+                    -- , scPlanCache       =  planCache
                     , scLQState         =  lqState
                     , scEnableAllowlist =  enableAL
                     , scEkgStore        =  ekgStore
@@ -657,18 +654,21 @@ mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpMana
     getTimeMs :: IO Int64
     getTimeMs = (round . (* 1000)) `fmap` getPOSIXTime
 
-    initialiseCache :: m (E.PlanCache, SchemaCacheRef)
+    -- initialiseCache :: m (E.PlanCache, SchemaCacheRef)
+    initialiseCache :: m SchemaCacheRef
     initialiseCache = do
       cacheLock <- liftIO $ newMVar ()
       cacheCell <- liftIO $ newIORef (schemaCache, initSchemaCacheVer)
-      planCache <- liftIO $ E.initPlanCache planCacheOptions
-      let cacheRef = SchemaCacheRef cacheLock cacheCell (E.clearPlanCache planCache)
-      pure (planCache, cacheRef)
+      -- planCache <- liftIO $ E.initPlanCache planCacheOptions
+      let cacheRef = SchemaCacheRef cacheLock cacheCell (E.clearPlanCache {- planCache -})
+      -- pure (planCache, cacheRef)
+      pure cacheRef
 
 
 httpApp
   :: ( HasVersion
      , MonadIO m
+--     , MonadUnique m
      , MonadBaseControl IO m
      , ConsoleRenderer m
      , HttpLog m
@@ -748,7 +748,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       Spock.get "dev/plan_cache" $ spockAction encodeQErr id $
         mkGetHandler $ do
           onlyAdmin
-          respJ <- liftIO $ E.dumpPlanCache $ scPlanCache serverCtx
+          respJ <- liftIO $ E.dumpPlanCache {- $ scPlanCache serverCtx -}
           return $ JSONResp $ HttpResponse (encJFromJValue respJ) []
       Spock.get "dev/subscriptions" $ spockAction encodeQErr id $
         mkGetHandler $ do
@@ -775,7 +775,6 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       => (Bool -> QErr -> Value)
       -> (QErr -> QErr) -> APIHandler (Tracing.TraceT m) a -> Spock.ActionT m ()
     spockAction = mkSpockAction serverCtx
-
 
     -- all graphql errors should be of type 200
     allMod200 qe     = qe { qeStatus = HTTP.status200 }

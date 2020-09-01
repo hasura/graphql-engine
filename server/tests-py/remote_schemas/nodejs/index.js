@@ -53,6 +53,7 @@ const typeDefs = gql`
     hello: String
     messages(where: MessageWhereInpObj, includes: IncludeInpObj): [Message]
     user(user_id: Int!): User
+    users(user_ids: [Int]!): [User]
     message(id: Int!) : Message
     communications(id: Int): [Communication]
   }
@@ -174,6 +175,13 @@ const resolvers = {
         },
         user: (_, { user_id }) => {
             return { "user_id": user_id };
+        },
+        users: (parent, args, context, info) => {
+            var results = []
+            for (userId of args.user_ids) {
+                results.push({"user_id":userId})
+            }
+            return results;
         },
         communications: (_, { id }) => {
             var result = allMessages;
