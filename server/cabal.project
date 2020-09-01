@@ -43,7 +43,7 @@ package graphql-engine
 source-repository-package
   type: git
   location: https://github.com/hasura/pg-client-hs.git
-  tag: 5b112acaaae15664e2bc0817b1a17f44f04df69b
+  tag: d7596101d189f610b5995f7f69758d9a0d929a2a
 
 source-repository-package
   type: git
@@ -54,3 +54,8 @@ source-repository-package
   type: git
   location: https://github.com/hasura/ci-info-hs.git
   tag: 947fd56582b1e8bec9ffed98ca9ac2f6b63e36c9
+
+source-repository-package
+  type: git
+  location: https://github.com/hasura/pool.git
+  tag: 0fdfaed4e109ca6a6bf00ed6d79c329626e3bdd4
