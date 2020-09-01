@@ -4,7 +4,7 @@ import {
   getReloadRemoteSchemaCacheQuery,
 } from '../components/Common/utils/v1QueryUtils';
 
-const allowedQueriesCollection = 'allowed-queries';
+export const allowedQueriesCollection = 'allowed-queries';
 
 export const deleteAllowedQueryQuery = (queryName: string) => ({
   type: 'drop_query_from_collection',
@@ -73,18 +73,6 @@ export const createAllowListQuery = (
     type: 'bulk',
     args: [createAllowListCollectionQuery(), addCollectionToAllowListQuery()],
   };
-};
-
-export const loadAllowedQueriesQuery = {
-  type: 'select',
-  args: {
-    table: {
-      name: 'hdb_query_collection',
-      schema: 'hdb_catalog',
-    },
-    columns: ['collection_defn'],
-    where: { collection_name: allowedQueriesCollection },
-  },
 };
 
 export const reloadRemoteSchemaCacheAndGetInconsistentObjectsQuery = (

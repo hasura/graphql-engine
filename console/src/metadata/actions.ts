@@ -18,7 +18,6 @@ import {
   deleteAllowedQueryQuery,
   createAllowListQuery,
   addAllowedQueriesQuery,
-  loadAllowedQueriesQuery,
   getReloadCacheAndGetInconsistentObjectsQuery,
   reloadRemoteSchemaCacheAndGetInconsistentObjectsQuery,
   updateAllowedQueryQuery,
@@ -587,36 +586,6 @@ export const addAllowedQueries = (
             error
           )
         );
-      }
-    );
-  };
-};
-
-export const loadAllowedQueries = (): Thunk<void, MetadataActions> => {
-  return (dispatch, getState) => {
-    const headers = getState().tables.dataHeaders;
-
-    return dispatch(
-      requestAction(Endpoints.query, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(loadAllowedQueriesQuery),
-      })
-    ).then(
-      data => {
-        let queries;
-
-        const collection = data[0];
-        if (collection) {
-          queries = collection.collection_defn.queries;
-        } else {
-          queries = [];
-        }
-        dispatch({ type: 'Metadata/LOAD_ALLOWED_QUERIES', data: queries });
-      },
-      error => {
-        console.error(error);
-        dispatch(showErrorNotification('Fetching allow list failed', null));
       }
     );
   };

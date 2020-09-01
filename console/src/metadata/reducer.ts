@@ -1,5 +1,6 @@
 import { MetadataActions } from './actions';
-import { HasuraMetadataV2 } from './types';
+import { HasuraMetadataV2, QueryCollection } from './types';
+import { allowedQueriesCollection } from './utils';
 
 // todo -- separate allowed queries
 
@@ -9,7 +10,7 @@ type MetadataState = {
   loading: boolean;
   inconsistentObjects: any[];
   ongoingRequest: boolean; // deprecate
-  allowedQueries: any[];
+  allowedQueries: QueryCollection[];
 };
 
 const defaultState: MetadataState = {
@@ -30,6 +31,10 @@ export const metadataReducer = (
       return {
         ...state,
         metadataObject: action.data,
+        allowedQueries:
+          action.data?.query_collections?.find(
+            query => query.name === allowedQueriesCollection
+          )?.definition.queries || [],
         loading: false,
         error: null,
       };
