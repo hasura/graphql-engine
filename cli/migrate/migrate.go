@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"sync"
 	"text/tabwriter"
 	"time"
@@ -1850,8 +1851,16 @@ func (m *Migrate) ExportDataDump(tableNames []string) ([]byte, error) {
 	// to support tables starting with capital letters
 	modifiedTableNames := make([]string, len(tableNames))
 	for idx, val := range tableNames {
-		modifiedTableNames[idx] = fmt.Sprintf(`"%s"`, val) 
+		split := strings.Split(val, ".")
+		if len(split) == 2 {
+			modifiedTableNames[idx] = fmt.Sprintf(`%s."%s"`, split[0], split[1])
+		} else {
+			modifiedTableNames[idx] = fmt.Sprintf(`"%s"`, val)
+		}
 	}
+
+	fmt.Printf("modifiedTableNames: %+v", modifiedTableNames)
+
 	return m.databaseDrv.ExportDataDump(modifiedTableNames)
 }
 
