@@ -15,6 +15,7 @@ import Hasura.RQL.Types.Table
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Column
 import Hasura.SQL.Types
+import Hasura.Sources
 
 import Debug.Trace
 
@@ -97,6 +98,7 @@ fetchTables = do
                 Nothing -- ViewInfo
                 Nothing -- EnumValues
                 emptyTableConfig
+                MySQLDB
       let ti = TableInfo tci mempty mempty
       return $ Just (tableIden , ti)
       else return Nothing

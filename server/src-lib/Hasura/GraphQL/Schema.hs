@@ -53,8 +53,7 @@ buildGQLContext
      )
   => ( GraphQLQueryType
      , DataSource
-     , TableCache -- postgres tables
-     , TableCache -- mysql tables
+     , TableCache
      , FunctionCache
      , HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
      , ActionCache
@@ -65,7 +64,7 @@ buildGQLContext
      , GQLContext
      )
 buildGQLContext =
-  proc (queryType, dataSource, allTables, mySQLTables, allFunctions, allRemoteSchemas, allActions, nonObjectCustomTypes) -> do
+  proc (queryType, dataSource, allTables, allFunctions, allRemoteSchemas, allActions, nonObjectCustomTypes) -> do
 
     -- Scroll down a few pages for the actual body...
 
@@ -216,10 +215,11 @@ query'
   -> [ActionInfo]
   -> NonObjectTypeMap
   -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
-query' dataSource allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
+query' _dataSource allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
   tableSelectExpParsers <- for (toList allTables) \table -> do
     selectPerms <- tableSelectPermissions table
     customRootFields <- _tcCustomRootFields . _tciCustomConfig . _tiCoreInfo <$> askTableInfo table
+    dataSource <- _tciDataSource . _tiCoreInfo <$> askTableInfo table
     for selectPerms \perms -> do
       displayName <- qualifiedObjectToName table
       let fieldsDesc = G.Description $ "fetch data from the table: " <>> table
@@ -228,9 +228,9 @@ query' dataSource allTables allFunctions allRemotes allActions nonObjectCustomTy
           pkName = displayName <> $$(G.litName "_by_pk")
           pkDesc = G.Description $ "fetch data from the table: " <> table <<> " using primary key columns"
       catMaybes <$> sequenceA
-        [ requiredFieldParser (rfdb . QDBSimple)      $ selectTable          table (fromMaybe displayName $ _tcrfSelect          customRootFields) (Just fieldsDesc) perms
-        , mapMaybeFieldParser (rfdb . QDBPrimaryKey)  $ selectTableByPk      table (fromMaybe pkName      $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms
-        , mapMaybeFieldParser (rfdb . QDBAggregation) $ selectTableAggregate table (fromMaybe aggName     $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms
+        [ requiredFieldParser (rfdb dataSource . QDBSimple)      $ selectTable          table (fromMaybe displayName $ _tcrfSelect          customRootFields) (Just fieldsDesc) perms
+        , mapMaybeFieldParser (rfdb dataSource . QDBPrimaryKey)  $ selectTableByPk      table (fromMaybe pkName      $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms
+        , mapMaybeFieldParser (rfdb dataSource . QDBAggregation) $ selectTableAggregate table (fromMaybe aggName     $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms
         ]
   functionSelectExpParsers <- for allFunctions \function -> do
     let targetTable = fiReturnType function
@@ -241,9 +241,10 @@ query' dataSource allTables allFunctions allRemotes allActions nonObjectCustomTy
       let functionDesc = G.Description $ "execute function " <> functionName <<> " which returns " <>> targetTable
           aggName = displayName <> $$(G.litName "_aggregate")
           aggDesc = G.Description $ "execute function " <> functionName <<> " and query aggregates on result of table type " <>> targetTable
+      -- TODO support MySQL functions
       catMaybes <$> sequenceA
-        [ requiredFieldParser (rfdb . QDBSimple)      $ selectFunction          function displayName (Just functionDesc) perms
-        , mapMaybeFieldParser (rfdb . QDBAggregation) $ selectFunctionAggregate function aggName     (Just aggDesc)      perms
+        [ requiredFieldParser (rfdb PostgresDB . QDBSimple)      $ selectFunction          function displayName (Just functionDesc) perms
+        , mapMaybeFieldParser (rfdb PostgresDB . QDBAggregation) $ selectFunctionAggregate function aggName     (Just aggDesc)      perms
         ]
   actionParsers <- for allActions $ \actionInfo ->
     case _adType (_aiDefinition actionInfo) of
@@ -255,7 +256,7 @@ query' dataSource allTables allFunctions allRemotes allActions nonObjectCustomTy
   pure $ (concat . catMaybes) (tableSelectExpParsers <> functionSelectExpParsers <> toRemoteFieldParser allRemotes)
          <> catMaybes actionParsers
   where
-    rfdb = case dataSource of
+    rfdb dataSource = case dataSource of
       PostgresDB -> RFPostgres
       MySQLDB    -> RFMySQL
 

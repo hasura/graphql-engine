@@ -139,8 +139,7 @@ buildSchemaCacheRule env dataSource = proc (catalogMetadata, invalidationKeys) -
   (gqlContext, gqlSchemaInconsistentObjects) <- runWriterA buildGQLContext -<
     ( QueryHasura
     , dataSource
-    , (_boTables    resolvedOutputs)
-    , (_boMySQLTables    resolvedOutputs)
+    , (_boTables    resolvedOutputs) <> (_boMySQLTables    resolvedOutputs)
     , (_boFunctions resolvedOutputs)
     , (_boRemoteSchemas resolvedOutputs)
     , (_boActions resolvedOutputs)
@@ -152,7 +151,6 @@ buildSchemaCacheRule env dataSource = proc (catalogMetadata, invalidationKeys) -
     ( QueryRelay
     , dataSource
     , (_boTables    resolvedOutputs)
-    , mempty
     , (_boFunctions resolvedOutputs)
     , (_boRemoteSchemas resolvedOutputs)
     , (_boActions resolvedOutputs)

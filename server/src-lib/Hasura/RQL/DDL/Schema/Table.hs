@@ -57,6 +57,8 @@ import           Hasura.Server.Utils
 import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
+import Hasura.Sources
+
 
 data TrackTable
   = TrackTable
@@ -416,6 +418,7 @@ buildTableCache = Inc.cache proc (catalogTables, reloadMetadataInvalidationKey) 
         , _tciEnumValues = enumValues
         , _tciCustomConfig = config
         , _tciDescription = _ctiDescription catalogInfo
+        , _tciDataSource = PostgresDB
         }
 
     -- Step 2: Process the raw table cache to replace Postgres column types with logical column

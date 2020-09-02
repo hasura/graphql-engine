@@ -108,6 +108,7 @@ import           Hasura.Server.Utils                 (duplicates, englishList)
 import           Hasura.Session
 import           Hasura.SQL.Text
 import           Hasura.SQL.Types
+import           Hasura.Sources
 
 
 data TableCustomRootFields
@@ -411,6 +412,7 @@ data TableCoreInfoG field primaryKeyColumn
   , _tciViewInfo          :: !(Maybe ViewInfo)
   , _tciEnumValues        :: !(Maybe EnumValues)
   , _tciCustomConfig      :: !TableConfig
+  , _tciDataSource        :: !DataSource
   } deriving (Show, Eq, Generic)
 instance (Cacheable a, Cacheable b) => Cacheable (TableCoreInfoG a b)
 $(deriveToJSON (aesonDrop 4 snakeCase) ''TableCoreInfoG)
