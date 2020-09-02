@@ -81,7 +81,7 @@
       }
     },
     "TableEntry": {
-      "description": "Representation of a table in metadata, \"tables.yaml\" and \"metadata.json\"",
+      "description": "Representation of a table in metadata, 'tables.yaml' and 'metadata.json'",
       "title": "TableEntry",
       "type": "object",
       "properties": {
@@ -249,9 +249,9 @@
       },
       "required": ["name", "schema"]
     },
-    "Function": {
+    "CustomFunction": {
       "description": "A custom SQL function to add to the GraphQL schema with configuration.\nhttps://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-functions.html#args-syntax",
-      "title": "Function",
+      "title": "CustomFunction",
       "type": "object",
       "properties": {
         "function": {
@@ -796,7 +796,7 @@
       "required": ["function"]
     },
     "EventTrigger": {
-      "description": "NOTE: The metadata type doesn't QUITE match the \"create\" arguments here\nhttps://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#create-event-trigger",
+      "description": "NOTE: The metadata type doesn't QUITE match the 'create' arguments here\nhttps://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#create-event-trigger",
       "title": "EventTrigger",
       "type": "object",
       "properties": {
@@ -1134,7 +1134,7 @@
       }
     },
     "RemoteRelationship": {
-      "description": "NOTE: Metadata shape is slightly different than \"create\" arguments here\nhttps://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-relationships.html#args-syntax",
+      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-relationships.html#args-syntax",
       "title": "RemoteRelationship",
       "type": "object",
       "properties": {
@@ -1513,7 +1513,7 @@
       "required": ["value"]
     },
     "Action": {
-      "description": "NOTE: Metadata type is slightly different than \"create\" type\nhttps://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/actions.html#args-syntax",
+      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/actions.html#args-syntax",
       "title": "Action",
       "type": "object",
       "properties": {
@@ -1615,6 +1615,7 @@
       "required": ["name", "type"]
     },
     "HasuraMetadataV2": {
+      "description": "Type used in exported 'metadata.json' and replace metadata endpoint\nhttps://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/manage-metadata.html#replace-metadata",
       "title": "HasuraMetadataV2",
       "type": "object",
       "properties": {
@@ -1643,7 +1644,7 @@
         "functions": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/Function"
+            "$ref": "#/definitions/CustomFunction"
           },
           "title": "functions"
         },

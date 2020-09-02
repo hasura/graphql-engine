@@ -61,8 +61,8 @@
 //    qualifiedFunction, err := UnmarshalQualifiedFunction(bytes)
 //    bytes, err = qualifiedFunction.Marshal()
 //
-//    function, err := UnmarshalFunction(bytes)
-//    bytes, err = function.Marshal()
+//    customFunction, err := UnmarshalCustomFunction(bytes)
+//    bytes, err = customFunction.Marshal()
 //
 //    functionConfiguration, err := UnmarshalFunctionConfiguration(bytes)
 //    bytes, err = functionConfiguration.Marshal()
@@ -446,13 +446,13 @@ func (r *QualifiedFunction) Marshal() ([]byte, error) {
 	return json.Marshal(r)
 }
 
-func UnmarshalFunction(data []byte) (Function, error) {
-	var r Function
+func UnmarshalCustomFunction(data []byte) (CustomFunction, error) {
+	var r CustomFunction
 	err := json.Unmarshal(data, &r)
 	return r, err
 }
 
-func (r *Function) Marshal() ([]byte, error) {
+func (r *CustomFunction) Marshal() ([]byte, error) {
 	return json.Marshal(r)
 }
 
@@ -988,15 +988,15 @@ type ObjectField struct {
 //
 // https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/manage-metadata.html#replace-metadata
 type HasuraMetadataV2 struct {
-	Actions          []Action               `json:"actions,omitempty"`          
-	Allowlist        []AllowList            `json:"allowlist,omitempty"`        
-	CronTriggers     []CronTrigger          `json:"cron_triggers,omitempty"`    
-	CustomTypes      *CustomTypes           `json:"custom_types,omitempty"`     
-	Functions        []Function             `json:"functions,omitempty"`        
-	QueryCollections []QueryCollectionEntry `json:"query_collections,omitempty"`
-	RemoteSchemas    []RemoteSchema         `json:"remote_schemas,omitempty"`   
-	Tables           []TableEntry           `json:"tables"`                     
-	Version          float64                `json:"version"`                    
+	Actions          []Action               `json:"actions"`               
+	Allowlist        []AllowList            `json:"allowlist"`             
+	CronTriggers     []CronTrigger          `json:"cron_triggers"`         
+	CustomTypes      *CustomTypes           `json:"custom_types,omitempty"`
+	Functions        []CustomFunction       `json:"functions"`             
+	QueryCollections []QueryCollectionEntry `json:"query_collections"`     
+	RemoteSchemas    []RemoteSchema         `json:"remote_schemas"`        
+	Tables           []TableEntry           `json:"tables"`                
+	Version          float64                `json:"version"`               
 }
 
 //
@@ -1005,7 +1005,7 @@ type Action struct {
 	Comment     *string          `json:"comment,omitempty"`    // Comment
 	Definition  ActionDefinition `json:"definition"`           // Definition of the action
 	Name        string           `json:"name"`                 // Name of the action
-	Permissions []Permission     `json:"permissions,omitempty"`// Permissions of the action
+	Permissions *Permissions     `json:"permissions,omitempty"`// Permissions of the action
 }
 
 // Definition of the action
@@ -1013,10 +1013,10 @@ type Action struct {
 //
 // https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/actions.html#actiondefinition
 type ActionDefinition struct {
-	Arguments            []InputArgument       `json:"arguments,omitempty"`             
+	Arguments            []InputArgument       `json:"arguments"`                       
 	ForwardClientHeaders *bool                 `json:"forward_client_headers,omitempty"`
 	Handler              string                `json:"handler"`                         // A String value which supports templating environment variables enclosed in {{ and }}.; Template example: https://{{ACTION_API_DOMAIN}}/create-user
-	Headers              []Header              `json:"headers,omitempty"`               
+	Headers              []Header              `json:"headers"`                         
 	Kind                 *string               `json:"kind,omitempty"`                  
 	OutputType           *string               `json:"output_type,omitempty"`           
 	Type                 *ActionDefinitionType `json:"type,omitempty"`                  
@@ -1040,7 +1040,8 @@ type Header struct {
 	ValueFromEnv *string `json:"value_from_env,omitempty"`// Name of the environment variable which holds the value of the header
 }
 
-type Permission struct {
+// Permissions of the action
+type Permissions struct {
 	Role string `json:"role"`
 }
 
@@ -1075,10 +1076,10 @@ type RetryConfST struct {
 }
 
 type CustomTypes struct {
-	Enums        []EnumType        `json:"enums,omitempty"`        
-	InputObjects []InputObjectType `json:"input_objects,omitempty"`
-	Objects      []ObjectType      `json:"objects,omitempty"`      
-	Scalars      []ScalarType      `json:"scalars,omitempty"`      
+	Enums        []EnumType        `json:"enums"`        
+	InputObjects []InputObjectType `json:"input_objects"`
+	Objects      []ObjectType      `json:"objects"`      
+	Scalars      []ScalarType      `json:"scalars"`      
 }
 
 //
@@ -1116,10 +1117,10 @@ type InputObjectField struct {
 //
 // https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#objecttype
 type ObjectType struct {
-	Description   *string                        `json:"description,omitempty"`  // Description of the Input object type
-	Fields        []InputObjectField             `json:"fields"`                 // Fields of the Input object type
-	Name          string                         `json:"name"`                   // Name of the Input object type
-	Relationships []CustomTypeObjectRelationship `json:"relationships,omitempty"`// Relationships of the Object type to tables
+	Description   *string                        `json:"description,omitempty"`// Description of the Input object type
+	Fields        []InputObjectField             `json:"fields"`               // Fields of the Input object type
+	Name          string                         `json:"name"`                 // Name of the Input object type
+	Relationships []CustomTypeObjectRelationship `json:"relationships"`        // Relationships of the Object type to tables
 }
 
 //
@@ -1146,7 +1147,7 @@ type ScalarType struct {
 // A custom SQL function to add to the GraphQL schema with configuration.
 //
 // https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-functions.html#args-syntax
-type Function struct {
+type CustomFunction struct {
 	Configuration *FunctionConfiguration `json:"configuration,omitempty"`// Configuration for the SQL function
 	Function      *FunctionName          `json:"function"`               // Name of the SQL function
 }
@@ -1199,7 +1200,7 @@ type RemoteSchema struct {
 // https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#remoteschemadef
 type RemoteSchemaDef struct {
 	ForwardClientHeaders *bool    `json:"forward_client_headers,omitempty"`
-	Headers              []Header `json:"headers,omitempty"`               
+	Headers              []Header `json:"headers"`                         
 	TimeoutSeconds       *float64 `json:"timeout_seconds,omitempty"`       
 	URL                  *string  `json:"url,omitempty"`                   
 	URLFromEnv           *string  `json:"url_from_env,omitempty"`          
@@ -1207,18 +1208,18 @@ type RemoteSchemaDef struct {
 
 // Representation of a table in metadata, 'tables.yaml' and 'metadata.json'
 type TableEntry struct {
-	ArrayRelationships  []ArrayRelationship     `json:"array_relationships,omitempty"` 
-	ComputedFields      []ComputedField         `json:"computed_fields,omitempty"`     
-	Configuration       *TableConfig            `json:"configuration,omitempty"`       // Configuration for the table/view; ; https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/table-view.html#table-config
-	DeletePermissions   []DeletePermissionEntry `json:"delete_permissions,omitempty"`  
-	EventTriggers       []EventTrigger          `json:"event_triggers,omitempty"`      
-	InsertPermissions   []InsertPermissionEntry `json:"insert_permissions,omitempty"`  
-	IsEnum              *bool                   `json:"is_enum,omitempty"`             
-	ObjectRelationships []ObjectRelationship    `json:"object_relationships,omitempty"`
-	RemoteRelationships []RemoteRelationship    `json:"remote_relationships,omitempty"`
-	SelectPermissions   []SelectPermissionEntry `json:"select_permissions,omitempty"`  
-	Table               QualifiedTable          `json:"table"`                         
-	UpdatePermissions   []UpdatePermissionEntry `json:"update_permissions,omitempty"`  
+	ArrayRelationships  []ArrayRelationship     `json:"array_relationships"`    
+	ComputedFields      []ComputedField         `json:"computed_fields"`        
+	Configuration       *TableConfig            `json:"configuration,omitempty"`// Configuration for the table/view; ; https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/table-view.html#table-config
+	DeletePermissions   []DeletePermissionEntry `json:"delete_permissions"`     
+	EventTriggers       []EventTrigger          `json:"event_triggers"`         
+	InsertPermissions   []InsertPermissionEntry `json:"insert_permissions"`     
+	IsEnum              *bool                   `json:"is_enum,omitempty"`      
+	ObjectRelationships []ObjectRelationship    `json:"object_relationships"`   
+	RemoteRelationships []RemoteRelationship    `json:"remote_relationships"`   
+	SelectPermissions   []SelectPermissionEntry `json:"select_permissions"`     
+	Table               QualifiedTable          `json:"table"`                  
+	UpdatePermissions   []UpdatePermissionEntry `json:"update_permissions"`     
 }
 
 //
@@ -1323,7 +1324,7 @@ type DeletePermission struct {
 // https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#create-event-trigger
 type EventTrigger struct {
 	Definition     EventTriggerDefinition `json:"definition"`                // The SQL function
-	Headers        []Header               `json:"headers,omitempty"`         // The SQL function
+	Headers        []Header               `json:"headers"`                   // The SQL function
 	Name           string                 `json:"name"`                      // Name of the event trigger
 	RetryConf      RetryConf              `json:"retry_conf"`                // The SQL function
 	Webhook        *string                `json:"webhook,omitempty"`         // The SQL function
@@ -1436,7 +1437,7 @@ type SelectPermissionEntry struct {
 type SelectPermission struct {
 	AllowAggregations *bool                `json:"allow_aggregations,omitempty"`// Toggle allowing aggregate queries
 	Columns           *EventTriggerColumns `json:"columns"`                     // Only these columns are selectable (or all when '*' is specified)
-	ComputedFields    []string             `json:"computed_fields,omitempty"`   // Only these computed fields are selectable
+	ComputedFields    []string             `json:"computed_fields"`             // Only these computed fields are selectable
 	Filter            map[string]*Filter   `json:"filter,omitempty"`            // Only the rows where this precondition holds true are selectable
 	Limit             *int64               `json:"limit,omitempty"`             // The maximum number of rows that can be returned
 }

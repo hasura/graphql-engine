@@ -106,7 +106,7 @@ export interface QualifiedFunction {
  * A custom SQL function to add to the GraphQL schema with configuration.
  * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-functions.html#args-syntax
  */
-export interface Function {
+export interface CustomFunction {
   /** Name of the SQL function */
   function: FunctionName
   /** Configuration for the SQL function */
@@ -250,7 +250,7 @@ export interface InsertPermission {
   /** Preset values for columns that can be sourced from session variables or static values */
   set?: ColumnPresetsExpression
   /** Can insert into only these columns (or all when '*' is specified) */
-  columns: PGColumn[] | '*'
+  columns: PGColumn[] | "*"
   /**
    * When set to true the mutation is accessible only if x-hasura-use-backend-only-permissions session variable exists
    * and is set to true and request is made with x-hasura-admin-secret set if any auth is configured
@@ -275,7 +275,7 @@ export interface SelectPermissionEntry {
  */
 export interface SelectPermission {
   /** Only these columns are selectable (or all when '*' is specified) */
-  columns: PGColumn[] | '*'
+  columns: PGColumn[] | "*"
   /** Only these computed fields are selectable */
   computed_fields?: ComputedFieldName[]
   /**
@@ -310,7 +310,7 @@ export interface UpdatePermission {
   /** Preset values for columns that can be sourced from session variables or static values */
   set?: ColumnPresetsExpression
   /** Only these columns are selectable (or all when '*' is specified) */
-  columns: PGColumn[] | '*'
+  columns: PGColumn[] | "*"
   /** Only the rows where this precondition holds true are updatable */
   filter?: { [key: string]: object | string | number }
 }
@@ -403,7 +403,7 @@ export interface EventTriggerDefinition {
 /**
  * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns
  */
-export type EventTriggerColumns = '*' | PGColumn[]
+export type EventTriggerColumns = "*" | PGColumn[]
 
 /**
  * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec
@@ -718,7 +718,7 @@ export interface CustomTypeObjectRelationship {
   /** Name of the relationship, shouldn’t conflict with existing field names */
   name: RelationshipName
   /** Type of the relationship */
-  type: 'object' | 'array'
+  type: "object" | "array"
   /** The table to which relationship is defined */
   remote_table: TableName
   /** Mapping of fields of object type to columns of remote table  */
@@ -783,7 +783,7 @@ export interface Action {
   /** Comment */
   comment?: string
   /** Permissions of the action */
-  permissions?: Array<{ role: string }>
+  permissions?: { role: string }
 }
 
 /**
@@ -796,7 +796,7 @@ export interface ActionDefinition {
   headers?: Array<HeaderFromEnv | HeaderFromValue>
   forward_client_headers?: boolean
   handler: WebhookURL
-  type?: 'mutation' | 'query'
+  type?: "mutation" | "query"
 }
 
 /**
@@ -820,7 +820,7 @@ export interface HasuraMetadataV2 {
   tables: TableEntry[]
   actions?: Action[]
   custom_types?: CustomTypes
-  functions?: Function[]
+  functions?: CustomFunction[]
   remote_schemas?: RemoteSchema[]
   query_collections?: QueryCollectionEntry[]
   allowlist?: AllowList[]

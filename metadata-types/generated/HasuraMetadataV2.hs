@@ -22,7 +22,7 @@ module QuickType
     , CustomColumnNames (..)
     , FunctionName (..)
     , QualifiedFunction (..)
-    , Function (..)
+    , CustomFunction (..)
     , FunctionConfiguration (..)
     , ObjectRelationship (..)
     , ObjRelUsing (..)
@@ -74,7 +74,7 @@ module QuickType
     , InputArgument (..)
     , HasuraMetadataV2 (..)
     , Header (..)
-    , Permission (..)
+    , Permissions (..)
     , Definition (..)
     , RemoteFieldValue (..)
     , ActionDefinitionType (..)
@@ -178,7 +178,7 @@ data HasuraMetadataV2 = HasuraMetadataV2
     , allowlistHasuraMetadataV2 :: Maybe (Vector AllowList)
     , cronTriggersHasuraMetadataV2 :: Maybe (Vector CronTrigger)
     , customTypesHasuraMetadataV2 :: Maybe CustomTypes
-    , functionsHasuraMetadataV2 :: Maybe (Vector Function)
+    , functionsHasuraMetadataV2 :: Maybe (Vector CustomFunction)
     , queryCollectionsHasuraMetadataV2 :: Maybe (Vector QueryCollectionEntry)
     , remoteSchemasHasuraMetadataV2 :: Maybe (Vector RemoteSchema)
     , tablesHasuraMetadataV2 :: Vector TableEntry
@@ -204,7 +204,7 @@ data Action = Action
     { commentAction :: Maybe Text
     , definitionAction :: ActionDefinition
     , nameAction :: Text
-    , permissionsAction :: Maybe (Vector Permission)
+    , permissionsAction :: Maybe Permissions
     } deriving (Show)
 
 {-| Definition of the action
@@ -260,8 +260,9 @@ data Header = Header
     , valueFromEnvHeader :: Maybe Text
     } deriving (Show)
 
-data Permission = Permission
-    { rolePermission :: Text
+{-| Permissions of the action -}
+data Permissions = Permissions
+    { rolePermissions :: Text
     } deriving (Show)
 
 {-|
@@ -506,9 +507,9 @@ Configuration for the SQL function
 function:
 Name of the SQL function
 -}
-data Function = Function
-    { configurationFunction :: Maybe FunctionConfiguration
-    , functionFunction :: FunctionName
+data CustomFunction = CustomFunction
+    { configurationCustomFunction :: Maybe FunctionConfiguration
+    , functionCustomFunction :: FunctionName
     } deriving (Show)
 
 {-| Configuration for the SQL function
@@ -1208,7 +1209,7 @@ decodeTopLevel = decode
 decodeTopLevel :: ByteString -> Maybe QualifiedFunction
 decodeTopLevel = decode
 
-decodeTopLevel :: ByteString -> Maybe Function
+decodeTopLevel :: ByteString -> Maybe CustomFunction
 decodeTopLevel = decode
 
 decodeTopLevel :: ByteString -> Maybe FunctionConfiguration
@@ -1499,14 +1500,14 @@ instance FromJSON Header where
         <*> v .:? "value"
         <*> v .:? "value_from_env"
 
-instance ToJSON Permission where
-    toJSON (Permission rolePermission) =
+instance ToJSON Permissions where
+    toJSON (Permissions rolePermissions) =
         object
-        [ "role" .= rolePermission
+        [ "role" .= rolePermissions
         ]
 
-instance FromJSON Permission where
-    parseJSON (Object v) = Permission
+instance FromJSON Permissions where
+    parseJSON (Object v) = Permissions
         <$> v .: "role"
 
 instance ToJSON AllowList where
@@ -1705,15 +1706,15 @@ instance FromJSON ScalarType where
         <$> v .:? "description"
         <*> v .: "name"
 
-instance ToJSON Function where
-    toJSON (Function configurationFunction functionFunction) =
+instance ToJSON CustomFunction where
+    toJSON (CustomFunction configurationCustomFunction functionCustomFunction) =
         object
-        [ "configuration" .= configurationFunction
-        , "function" .= functionFunction
+        [ "configuration" .= configurationCustomFunction
+        , "function" .= functionCustomFunction
         ]
 
-instance FromJSON Function where
-    parseJSON (Object v) = Function
+instance FromJSON CustomFunction where
+    parseJSON (Object v) = CustomFunction
         <$> v .:? "configuration"
         <*> v .: "function"
 

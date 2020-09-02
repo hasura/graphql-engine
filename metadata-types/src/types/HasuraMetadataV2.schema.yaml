@@ -1,4 +1,4 @@
-$schema: 'http://json-schema.org/draft-07/schema#'
+$schema: "http://json-schema.org/draft-07/schema#"
 definitions:
   PGColumn:
     type: string
@@ -31,7 +31,7 @@ definitions:
     type: string
   TableName:
     anyOf:
-      - $ref: '#/definitions/QualifiedTable'
+      - $ref: "#/definitions/QualifiedTable"
       - type: string
   QualifiedTable:
     title: QualifiedTable
@@ -56,19 +56,19 @@ definitions:
     properties:
       custom_root_fields:
         description: Customise the root fields
-        $ref: '#/definitions/CustomRootFields'
+        $ref: "#/definitions/CustomRootFields"
         title: custom_root_fields
       custom_column_names:
         description: Customise the column names
-        $ref: '#/definitions/CustomColumnNames'
+        $ref: "#/definitions/CustomColumnNames"
         title: custom_column_names
   TableEntry:
-    description: 'Representation of a table in metadata, "tables.yaml" and "metadata.json"'
+    description: "Representation of a table in metadata, 'tables.yaml' and 'metadata.json'"
     title: TableEntry
     type: object
     properties:
       table:
-        $ref: '#/definitions/QualifiedTable'
+        $ref: "#/definitions/QualifiedTable"
         title: table
       is_enum:
         type: boolean
@@ -78,52 +78,52 @@ definitions:
           Configuration for the table/view
 
           https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/table-view.html#table-config
-        $ref: '#/definitions/TableConfig'
+        $ref: "#/definitions/TableConfig"
         title: configuration
       event_triggers:
         type: array
         items:
-          $ref: '#/definitions/EventTrigger'
+          $ref: "#/definitions/EventTrigger"
         title: event_triggers
       computed_fields:
         type: array
         items:
-          $ref: '#/definitions/ComputedField'
+          $ref: "#/definitions/ComputedField"
         title: computed_fields
       object_relationships:
         type: array
         items:
-          $ref: '#/definitions/ObjectRelationship'
+          $ref: "#/definitions/ObjectRelationship"
         title: object_relationships
       array_relationships:
         type: array
         items:
-          $ref: '#/definitions/ArrayRelationship'
+          $ref: "#/definitions/ArrayRelationship"
         title: array_relationships
       remote_relationships:
         type: array
         items:
-          $ref: '#/definitions/RemoteRelationship'
+          $ref: "#/definitions/RemoteRelationship"
         title: remote_relationships
       insert_permissions:
         type: array
         items:
-          $ref: '#/definitions/InsertPermissionEntry'
+          $ref: "#/definitions/InsertPermissionEntry"
         title: insert_permissions
       select_permissions:
         type: array
         items:
-          $ref: '#/definitions/SelectPermissionEntry'
+          $ref: "#/definitions/SelectPermissionEntry"
         title: select_permissions
       update_permissions:
         type: array
         items:
-          $ref: '#/definitions/UpdatePermissionEntry'
+          $ref: "#/definitions/UpdatePermissionEntry"
         title: update_permissions
       delete_permissions:
         type: array
         items:
-          $ref: '#/definitions/DeletePermissionEntry'
+          $ref: "#/definitions/DeletePermissionEntry"
         title: delete_permissions
     required:
       - table
@@ -179,7 +179,7 @@ definitions:
       type: string
   FunctionName:
     anyOf:
-      - $ref: '#/definitions/QualifiedFunction'
+      - $ref: "#/definitions/QualifiedFunction"
       - type: string
   QualifiedFunction:
     title: QualifiedFunction
@@ -194,23 +194,23 @@ definitions:
     required:
       - name
       - schema
-  Function:
+  CustomFunction:
     description: >-
       A custom SQL function to add to the GraphQL schema with configuration.
 
       https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-functions.html#args-syntax
-    title: Function
+    title: CustomFunction
     type: object
     properties:
       function:
         description: Name of the SQL function
         anyOf:
-          - $ref: '#/definitions/QualifiedFunction'
+          - $ref: "#/definitions/QualifiedFunction"
           - type: string
         title: function
       configuration:
         description: Configuration for the SQL function
-        $ref: '#/definitions/FunctionConfiguration'
+        $ref: "#/definitions/FunctionConfiguration"
         title: configuration
     required:
       - function
@@ -247,7 +247,7 @@ definitions:
         type: string
         title: name
       using:
-        $ref: '#/definitions/ObjRelUsing'
+        $ref: "#/definitions/ObjRelUsing"
         description: Use one of the available ways to define an object relationship
         title: using
       comment:
@@ -271,7 +271,7 @@ definitions:
         title: foreign_key_constraint_on
       manual_configuration:
         description: Manual mapping of table and columns
-        $ref: '#/definitions/ObjRelUsingManualMapping'
+        $ref: "#/definitions/ObjRelUsingManualMapping"
         title: manual_configuration
   ObjRelUsingManualMapping:
     description: >-
@@ -284,7 +284,7 @@ definitions:
       remote_table:
         description: The table to which the relationship has to be established
         anyOf:
-          - $ref: '#/definitions/QualifiedTable'
+          - $ref: "#/definitions/QualifiedTable"
           - type: string
         title: remote_table
       column_mapping:
@@ -307,7 +307,7 @@ definitions:
         type: string
         title: name
       using:
-        $ref: '#/definitions/ArrRelUsing'
+        $ref: "#/definitions/ArrRelUsing"
         description: Use one of the available ways to define an array relationship
         title: using
       comment:
@@ -327,11 +327,11 @@ definitions:
     properties:
       foreign_key_constraint_on:
         description: The column with foreign key constraint
-        $ref: '#/definitions/ArrRelUsingFKeyOn'
+        $ref: "#/definitions/ArrRelUsingFKeyOn"
         title: foreign_key_constraint_on
       manual_configuration:
         description: Manual mapping of table and columns
-        $ref: '#/definitions/ArrRelUsingManualMapping'
+        $ref: "#/definitions/ArrRelUsingManualMapping"
         title: manual_configuration
   ArrRelUsingFKeyOn:
     description: >-
@@ -346,7 +346,7 @@ definitions:
         title: column
       table:
         anyOf:
-          - $ref: '#/definitions/QualifiedTable'
+          - $ref: "#/definitions/QualifiedTable"
           - type: string
         title: table
     required:
@@ -363,7 +363,7 @@ definitions:
       remote_table:
         description: The table to which the relationship has to be established
         anyOf:
-          - $ref: '#/definitions/QualifiedTable'
+          - $ref: "#/definitions/QualifiedTable"
           - type: string
         title: remote_table
       column_mapping:
@@ -396,7 +396,7 @@ definitions:
         type: string
         title: role
       permission:
-        $ref: '#/definitions/InsertPermission'
+        $ref: "#/definitions/InsertPermission"
         description: The permission definition
         title: permission
       comment:
@@ -428,7 +428,7 @@ definitions:
         description: >-
           Preset values for columns that can be sourced from session variables
           or static values
-        $ref: '#/definitions/ColumnPresetsExpression'
+        $ref: "#/definitions/ColumnPresetsExpression"
         title: set
       columns:
         description: Can insert into only these columns (or all when '*' is specified)
@@ -437,7 +437,7 @@ definitions:
             items:
               type: string
           - enum:
-              - '*'
+              - "*"
             type: string
         title: columns
       backend_only:
@@ -462,7 +462,7 @@ definitions:
         type: string
         title: role
       permission:
-        $ref: '#/definitions/SelectPermission'
+        $ref: "#/definitions/SelectPermission"
         description: The permission definition
         title: permission
       comment:
@@ -485,7 +485,7 @@ definitions:
             items:
               type: string
           - enum:
-              - '*'
+              - "*"
             type: string
         title: columns
       computed_fields:
@@ -527,7 +527,7 @@ definitions:
         type: string
         title: role
       permission:
-        $ref: '#/definitions/UpdatePermission'
+        $ref: "#/definitions/UpdatePermission"
         description: The permission definition
         title: permission
       comment:
@@ -559,7 +559,7 @@ definitions:
         description: >-
           Preset values for columns that can be sourced from session variables
           or static values
-        $ref: '#/definitions/ColumnPresetsExpression'
+        $ref: "#/definitions/ColumnPresetsExpression"
         title: set
       columns:
         description: Only these columns are selectable (or all when '*' is specified)
@@ -568,7 +568,7 @@ definitions:
             items:
               type: string
           - enum:
-              - '*'
+              - "*"
             type: string
         title: columns
       filter:
@@ -596,7 +596,7 @@ definitions:
         type: string
         title: role
       permission:
-        $ref: '#/definitions/DeletePermission'
+        $ref: "#/definitions/DeletePermission"
         description: The permission definition
         title: permission
       comment:
@@ -635,7 +635,7 @@ definitions:
         type: string
         title: name
       definition:
-        $ref: '#/definitions/ComputedFieldDefinition'
+        $ref: "#/definitions/ComputedFieldDefinition"
         description: The computed field definition
         title: definition
       comment:
@@ -654,7 +654,7 @@ definitions:
       function:
         description: The SQL function
         anyOf:
-          - $ref: '#/definitions/QualifiedFunction'
+          - $ref: "#/definitions/QualifiedFunction"
           - type: string
         title: function
       table_argument:
@@ -674,7 +674,7 @@ definitions:
       - function
   EventTrigger:
     description: >-
-      NOTE: The metadata type doesn't QUITE match the "create" arguments here
+      NOTE: The metadata type doesn't QUITE match the 'create' arguments here
 
       https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#create-event-trigger
     title: EventTrigger
@@ -685,11 +685,11 @@ definitions:
         type: string
         title: name
       definition:
-        $ref: '#/definitions/EventTriggerDefinition'
+        $ref: "#/definitions/EventTriggerDefinition"
         description: The SQL function
         title: definition
       retry_conf:
-        $ref: '#/definitions/RetryConf'
+        $ref: "#/definitions/RetryConf"
         description: The SQL function
         title: retry_conf
       webhook:
@@ -704,8 +704,8 @@ definitions:
         type: array
         items:
           anyOf:
-            - $ref: '#/definitions/HeaderFromValue'
-            - $ref: '#/definitions/HeaderFromEnv'
+            - $ref: "#/definitions/HeaderFromValue"
+            - $ref: "#/definitions/HeaderFromEnv"
         title: headers
     required:
       - definition
@@ -721,17 +721,17 @@ definitions:
       insert:
         description: >-
           https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec
-        $ref: '#/definitions/OperationSpec'
+        $ref: "#/definitions/OperationSpec"
         title: insert
       delete:
         description: >-
           https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec
-        $ref: '#/definitions/OperationSpec'
+        $ref: "#/definitions/OperationSpec"
         title: delete
       update:
         description: >-
           https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec
-        $ref: '#/definitions/OperationSpec'
+        $ref: "#/definitions/OperationSpec"
         title: update
     required:
       - enable_manual
@@ -741,7 +741,7 @@ definitions:
         items:
           type: string
       - enum:
-          - '*'
+          - "*"
         type: string
   OperationSpec:
     description: >-
@@ -757,7 +757,7 @@ definitions:
             items:
               type: string
           - enum:
-              - '*'
+              - "*"
             type: string
         title: columns
       payload:
@@ -768,7 +768,7 @@ definitions:
             items:
               type: string
           - enum:
-              - '*'
+              - "*"
             type: string
         title: payload
     required:
@@ -860,12 +860,12 @@ definitions:
         type: array
         items:
           anyOf:
-            - $ref: '#/definitions/HeaderFromValue'
-            - $ref: '#/definitions/HeaderFromEnv'
+            - $ref: "#/definitions/HeaderFromValue"
+            - $ref: "#/definitions/HeaderFromEnv"
         title: headers
       retry_conf:
         description: Retry configuration if scheduled invocation delivery fails
-        $ref: '#/definitions/RetryConfST'
+        $ref: "#/definitions/RetryConfST"
         title: retry_conf
       include_in_metadata:
         description: >-
@@ -928,7 +928,7 @@ definitions:
         type: string
         title: name
       definition:
-        $ref: '#/definitions/RemoteSchemaDef'
+        $ref: "#/definitions/RemoteSchemaDef"
         description: Name of the remote schema
         title: definition
       comment:
@@ -954,8 +954,8 @@ definitions:
         type: array
         items:
           anyOf:
-            - $ref: '#/definitions/HeaderFromValue'
-            - $ref: '#/definitions/HeaderFromEnv'
+            - $ref: "#/definitions/HeaderFromValue"
+            - $ref: "#/definitions/HeaderFromEnv"
         title: headers
       forward_client_headers:
         type: boolean
@@ -965,8 +965,6 @@ definitions:
         title: timeout_seconds
   RemoteRelationship:
     description: >-
-      NOTE: Metadata shape is slightly different than "create" arguments here
-
       https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-relationships.html#args-syntax
     title: RemoteRelationship
     type: object
@@ -976,7 +974,7 @@ definitions:
         type: string
         title: name
       definition:
-        $ref: '#/definitions/RemoteRelationshipDef'
+        $ref: "#/definitions/RemoteRelationshipDef"
         description: Definition object
         title: definition
     required:
@@ -1001,7 +999,7 @@ definitions:
         type: string
         title: remote_schema
       remote_field:
-        $ref: '#/definitions/RemoteField'
+        $ref: "#/definitions/RemoteField"
         description: >-
           The schema tree ending at the field in remote schema which needs to be
           joined with.
@@ -1025,7 +1023,7 @@ definitions:
       type: object
       properties:
         arguments:
-          $ref: '#/definitions/InputArguments'
+          $ref: "#/definitions/InputArguments"
           title: arguments
         field:
           description: >-
@@ -1036,7 +1034,7 @@ definitions:
             remote schema.
 
             https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-relationships.html#remotefield
-          $ref: '#/definitions/RemoteField'
+          $ref: "#/definitions/RemoteField"
           title: field
       required:
         - arguments
@@ -1066,7 +1064,7 @@ definitions:
           queries:
             type: array
             items:
-              $ref: '#/definitions/QueryCollection'
+              $ref: "#/definitions/QueryCollection"
             title: queries
         required:
           - queries
@@ -1112,22 +1110,22 @@ definitions:
       input_objects:
         type: array
         items:
-          $ref: '#/definitions/InputObjectType'
+          $ref: "#/definitions/InputObjectType"
         title: input_objects
       objects:
         type: array
         items:
-          $ref: '#/definitions/ObjectType'
+          $ref: "#/definitions/ObjectType"
         title: objects
       scalars:
         type: array
         items:
-          $ref: '#/definitions/ScalarType'
+          $ref: "#/definitions/ScalarType"
         title: scalars
       enums:
         type: array
         items:
-          $ref: '#/definitions/EnumType'
+          $ref: "#/definitions/EnumType"
         title: enums
   InputObjectType:
     description: >-
@@ -1147,7 +1145,7 @@ definitions:
         description: Fields of the Input object type
         type: array
         items:
-          $ref: '#/definitions/InputObjectField'
+          $ref: "#/definitions/InputObjectField"
         title: fields
     required:
       - fields
@@ -1191,13 +1189,13 @@ definitions:
         description: Fields of the Input object type
         type: array
         items:
-          $ref: '#/definitions/InputObjectField'
+          $ref: "#/definitions/InputObjectField"
         title: fields
       relationships:
         description: Relationships of the Object type to tables
         type: array
         items:
-          $ref: '#/definitions/CustomTypeObjectRelationship'
+          $ref: "#/definitions/CustomTypeObjectRelationship"
         title: relationships
     required:
       - fields
@@ -1230,7 +1228,7 @@ definitions:
     type: object
     properties:
       name:
-        description: 'Name of the relationship, shouldn’t conflict with existing field names'
+        description: "Name of the relationship, shouldn’t conflict with existing field names"
         type: string
         title: name
       type:
@@ -1243,7 +1241,7 @@ definitions:
       remote_table:
         description: The table to which relationship is defined
         anyOf:
-          - $ref: '#/definitions/QualifiedTable'
+          - $ref: "#/definitions/QualifiedTable"
           - type: string
         title: remote_table
       field_mapping:
@@ -1291,7 +1289,7 @@ definitions:
         description: Values of the Enum type
         type: array
         items:
-          $ref: '#/definitions/EnumValue'
+          $ref: "#/definitions/EnumValue"
         title: values
     required:
       - name
@@ -1311,15 +1309,13 @@ definitions:
         type: string
         title: description
       is_deprecated:
-        description: 'If set to true, the enum value is marked as deprecated'
+        description: "If set to true, the enum value is marked as deprecated"
         type: boolean
         title: is_deprecated
     required:
       - value
   Action:
     description: >-
-      NOTE: Metadata type is slightly different than "create" type
-
       https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/actions.html#args-syntax
     title: Action
     type: object
@@ -1329,7 +1325,7 @@ definitions:
         type: string
         title: name
       definition:
-        $ref: '#/definitions/ActionDefinition'
+        $ref: "#/definitions/ActionDefinition"
         description: Definition of the action
         title: definition
       comment:
@@ -1358,7 +1354,7 @@ definitions:
       arguments:
         type: array
         items:
-          $ref: '#/definitions/InputArgument'
+          $ref: "#/definitions/InputArgument"
         title: arguments
       output_type:
         type: string
@@ -1370,8 +1366,8 @@ definitions:
         type: array
         items:
           anyOf:
-            - $ref: '#/definitions/HeaderFromValue'
-            - $ref: '#/definitions/HeaderFromEnv'
+            - $ref: "#/definitions/HeaderFromValue"
+            - $ref: "#/definitions/HeaderFromEnv"
         title: headers
       forward_client_headers:
         type: boolean
@@ -1408,6 +1404,10 @@ definitions:
       - name
       - type
   HasuraMetadataV2:
+    description: >-
+      Type used in exported 'metadata.json' and replace metadata endpoint
+
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/manage-metadata.html#replace-metadata
     title: HasuraMetadataV2
     type: object
     properties:
@@ -1417,40 +1417,40 @@ definitions:
       tables:
         type: array
         items:
-          $ref: '#/definitions/TableEntry'
+          $ref: "#/definitions/TableEntry"
         title: tables
       actions:
         type: array
         items:
-          $ref: '#/definitions/Action'
+          $ref: "#/definitions/Action"
         title: actions
       custom_types:
-        $ref: '#/definitions/CustomTypes'
+        $ref: "#/definitions/CustomTypes"
         title: custom_types
       functions:
         type: array
         items:
-          $ref: '#/definitions/Function'
+          $ref: "#/definitions/CustomFunction"
         title: functions
       remote_schemas:
         type: array
         items:
-          $ref: '#/definitions/RemoteSchema'
+          $ref: "#/definitions/RemoteSchema"
         title: remote_schemas
       query_collections:
         type: array
         items:
-          $ref: '#/definitions/QueryCollectionEntry'
+          $ref: "#/definitions/QueryCollectionEntry"
         title: query_collections
       allowlist:
         type: array
         items:
-          $ref: '#/definitions/AllowList'
+          $ref: "#/definitions/AllowList"
         title: allowlist
       cron_triggers:
         type: array
         items:
-          $ref: '#/definitions/CronTrigger'
+          $ref: "#/definitions/CronTrigger"
         title: cron_triggers
     required:
       - tables

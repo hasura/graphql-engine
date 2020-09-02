@@ -24,7 +24,7 @@
 #     result = custom_column_names_from_dict(json.loads(json_string))
 #     result = function_name_from_dict(json.loads(json_string))
 #     result = qualified_function_from_dict(json.loads(json_string))
-#     result = function_from_dict(json.loads(json_string))
+#     result = custom_function_from_dict(json.loads(json_string))
 #     result = function_configuration_from_dict(json.loads(json_string))
 #     result = object_relationship_from_dict(json.loads(json_string))
 #     result = obj_rel_using_from_dict(json.loads(json_string))
@@ -321,14 +321,15 @@ class ActionDefinition:
 
 
 @dataclass
-class Permission:
+class Permissions:
+    """Permissions of the action"""
     role: str
 
     @staticmethod
-    def from_dict(obj: Any) -> 'Permission':
+    def from_dict(obj: Any) -> 'Permissions':
         assert isinstance(obj, dict)
         role = from_str(obj.get("role"))
-        return Permission(role)
+        return Permissions(role)
 
     def to_dict(self) -> dict:
         result: dict = {}
@@ -348,7 +349,7 @@ class Action:
     """Comment"""
     comment: Optional[str] = None
     """Permissions of the action"""
-    permissions: Optional[List[Permission]] = None
+    permissions: Optional[Permissions] = None
 
     @staticmethod
     def from_dict(obj: Any) -> 'Action':
@@ -356,7 +357,7 @@ class Action:
         definition = ActionDefinition.from_dict(obj.get("definition"))
         name = from_str(obj.get("name"))
         comment = from_union([from_str, from_none], obj.get("comment"))
-        permissions = from_union([lambda x: from_list(Permission.from_dict, x), from_none], obj.get("permissions"))
+        permissions = from_union([Permissions.from_dict, from_none], obj.get("permissions"))
         return Action(definition, name, comment, permissions)
 
     def to_dict(self) -> dict:
@@ -364,7 +365,7 @@ class Action:
         result["definition"] = to_class(ActionDefinition, self.definition)
         result["name"] = from_str(self.name)
         result["comment"] = from_union([from_str, from_none], self.comment)
-        result["permissions"] = from_union([lambda x: from_list(lambda x: to_class(Permission, x), x), from_none], self.permissions)
+        result["permissions"] = from_union([lambda x: to_class(Permissions, x), from_none], self.permissions)
         return result
 
 
@@ -781,7 +782,7 @@ class QualifiedFunction:
 
 
 @dataclass
-class Function:
+class CustomFunction:
     """A custom SQL function to add to the GraphQL schema with configuration.
     
     https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-functions.html#args-syntax
@@ -792,11 +793,11 @@ class Function:
     configuration: Optional[FunctionConfiguration] = None
 
     @staticmethod
-    def from_dict(obj: Any) -> 'Function':
+    def from_dict(obj: Any) -> 'CustomFunction':
         assert isinstance(obj, dict)
         function = from_union([QualifiedFunction.from_dict, from_str], obj.get("function"))
         configuration = from_union([FunctionConfiguration.from_dict, from_none], obj.get("configuration"))
-        return Function(function, configuration)
+        return CustomFunction(function, configuration)
 
     def to_dict(self) -> dict:
         result: dict = {}
@@ -1794,7 +1795,7 @@ class HasuraMetadataV2:
     allowlist: Optional[List[AllowList]] = None
     cron_triggers: Optional[List[CronTrigger]] = None
     custom_types: Optional[CustomTypes] = None
-    functions: Optional[List[Function]] = None
+    functions: Optional[List[CustomFunction]] = None
     query_collections: Optional[List[QueryCollectionEntry]] = None
     remote_schemas: Optional[List[RemoteSchema]] = None
 
@@ -1807,7 +1808,7 @@ class HasuraMetadataV2:
         allowlist = from_union([lambda x: from_list(AllowList.from_dict, x), from_none], obj.get("allowlist"))
         cron_triggers = from_union([lambda x: from_list(CronTrigger.from_dict, x), from_none], obj.get("cron_triggers"))
         custom_types = from_union([CustomTypes.from_dict, from_none], obj.get("custom_types"))
-        functions = from_union([lambda x: from_list(Function.from_dict, x), from_none], obj.get("functions"))
+        functions = from_union([lambda x: from_list(CustomFunction.from_dict, x), from_none], obj.get("functions"))
         query_collections = from_union([lambda x: from_list(QueryCollectionEntry.from_dict, x), from_none], obj.get("query_collections"))
         remote_schemas = from_union([lambda x: from_list(RemoteSchema.from_dict, x), from_none], obj.get("remote_schemas"))
         return HasuraMetadataV2(tables, version, actions, allowlist, cron_triggers, custom_types, functions, query_collections, remote_schemas)
@@ -1820,7 +1821,7 @@ class HasuraMetadataV2:
         result["allowlist"] = from_union([lambda x: from_list(lambda x: to_class(AllowList, x), x), from_none], self.allowlist)
         result["cron_triggers"] = from_union([lambda x: from_list(lambda x: to_class(CronTrigger, x), x), from_none], self.cron_triggers)
         result["custom_types"] = from_union([lambda x: to_class(CustomTypes, x), from_none], self.custom_types)
-        result["functions"] = from_union([lambda x: from_list(lambda x: to_class(Function, x), x), from_none], self.functions)
+        result["functions"] = from_union([lambda x: from_list(lambda x: to_class(CustomFunction, x), x), from_none], self.functions)
         result["query_collections"] = from_union([lambda x: from_list(lambda x: to_class(QueryCollectionEntry, x), x), from_none], self.query_collections)
         result["remote_schemas"] = from_union([lambda x: from_list(lambda x: to_class(RemoteSchema, x), x), from_none], self.remote_schemas)
         return result
@@ -1986,12 +1987,12 @@ def qualified_function_to_dict(x: QualifiedFunction) -> Any:
     return to_class(QualifiedFunction, x)
 
 
-def function_from_dict(s: Any) -> Function:
-    return Function.from_dict(s)
+def custom_function_from_dict(s: Any) -> CustomFunction:
+    return CustomFunction.from_dict(s)
 
 
-def function_to_dict(x: Function) -> Any:
-    return to_class(Function, x)
+def custom_function_to_dict(x: CustomFunction) -> Any:
+    return to_class(CustomFunction, x)
 
 
 def function_configuration_from_dict(s: Any) -> FunctionConfiguration:
