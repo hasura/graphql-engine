@@ -5,7 +5,7 @@
 .. _relay_graphql_api_query:
 
 Relay API Reference - Query / Subscription
-====================================
+==========================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -41,7 +41,7 @@ Relay API Reference - Query / Subscription
    * - argument
      - false
      - Argument_
-     - One or more of filter criteria, instructions for sort order or pagination
+     - One or more filter criteria, instructions for sorting order or pagination
 
 **Example: Relay Query**
 
@@ -49,13 +49,13 @@ Relay API Reference - Query / Subscription
 
      query {
        author_connection(first: 2){
-         pageInfo{
+         pageInfo {
            hasNextPage
            endCursor
          }
-         edges{
+         edges {
            cursor
-           node{
+           node {
              id
              name
              username
@@ -70,13 +70,13 @@ Relay API Reference - Query / Subscription
 
      subscription {
        author_connection(first: 2){
-         pageInfo{
+         pageInfo {
            hasNextPage
            endCursor
          }
-         edges{
+         edges {
            cursor
-           node{
+           node {
              id
              name
              username
@@ -87,7 +87,7 @@ Relay API Reference - Query / Subscription
 
 .. note::
 
-    For more examples and details of usage, please see :ref:`this <relay_queries>`.
+    For details of usage, please see :ref:`this page <relay_schema>`.
 
 Syntax definitions
 ------------------
@@ -133,15 +133,16 @@ Connection Object
    * - edges
      - [Edge_!]!
 
-For more details on relay connection object type, refer to the `Relay docs <https://relay.dev/graphql/connections.htm#sec-Connection-Types>`__.
+.. note::
+
+  For more details on the Relay ``connection`` object type, refer to the `Relay docs <https://relay.dev/graphql/connections.htm#sec-Connection-Types>`__.
 
 .. _PageInfo:
 
 PageInfo
 ^^^^^^^^
 
-Information useful for pagination. For more details on relay PageInfo object type,
-refer to the `Relay docs <https://relay.dev/graphql/connections.htm#sec-undefined.PageInfo>`__.
+Information useful for pagination. 
 
 .. code-block:: graphql
 
@@ -152,14 +153,17 @@ refer to the `Relay docs <https://relay.dev/graphql/connections.htm#sec-undefine
      endCursor: String!
    }
 
+.. note::
+
+  For more details on the Relay ``PageInfo`` object type, refer to the `Relay docs <https://relay.dev/graphql/connections.htm#sec-undefined.PageInfo>`__.
 
 .. _Edge:
 
 Edge
 ^^^^
 
-Edge is an object type consists of :ref:`cursor <Cursor>` and ``node`` fields.
-The ``node`` field is a table object type which implements the relay ``Node`` interface.
+Edge is an object type that consists of a :ref:`cursor <Cursor>` and ``node`` fields.
+``node`` is a table object type which implements the Relay ``Node`` interface.
 
 .. code-block:: graphql
 
@@ -173,8 +177,11 @@ The ``node`` field is a table object type which implements the relay ``Node`` in
 Cursor
 ^^^^^^
 
-The cursor field returns a unique non-null String value which is useful in :ref:`pagination <PaginationExp>`.
-For more details on relay cursor, refer to the `Relay docs <https://relay.dev/graphql/connections.htm#sec-Cursor>`__.
+The cursor field returns a unique non-null String value which is useful for :ref:`pagination <PaginationExp>`.
+
+.. note::
+
+  For more details on the Relay ``cursor``, refer to the `Relay docs <https://relay.dev/graphql/connections.htm#sec-Cursor>`__.
 
 Argument
 ^^^^^^^^
@@ -202,15 +209,15 @@ PaginationExp
         first: 2
         after: "eyJpZCIgOiAzfQ=="
       ){
-        pageInfo{
+        pageInfo {
           startCursor
           endCursor
           hasPreviousPage
           hasNextPage
         }
-        edges{
+        edges {
           cursor
-          node{
+          node {
             title
             content
             author_id
@@ -234,13 +241,13 @@ PaginationExp
         last: 2
         before: "eyJpZCIgOiA0fQ=="
       ){
-        pageInfo{
+        pageInfo {
           startCursor
           endCursor
           hasPreviousPage
           hasNextPage
         }
-        edges{
+        edges {
           cursor
           node{
             title
