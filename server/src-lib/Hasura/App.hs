@@ -193,7 +193,7 @@ initialiseCtx
   => Env.Environment
   -> HGECommand Hasura
   -> RawConnInfo
-  -> m (InitCtx, DataSource, UTCTime)
+  -> m (InitCtx, UTCTime)
 initialiseCtx env hgeCmd rci = do
   initTime <- liftIO Clock.getCurrentTime
   -- global http manager
@@ -202,7 +202,6 @@ initialiseCtx env hgeCmd rci = do
   connInfo <- liftIO procConnInfo
   latch <- liftIO newShutdownLatch
   let mySQLConnInfo = mkMySQLConnInfo rci
-      dataSource = maybe PostgresDB (const MySQLDB) mySQLConnInfo
   onJust mySQLConnInfo \connInfo -> liftIO do
     (greeting, connection) <- My.connectDetail connInfo
     print greeting
@@ -225,8 +224,8 @@ initialiseCtx env hgeCmd rci = do
       pure (l, pool, SQLGenCtx False)
 
   res <- flip onException (flushLogger (_lsLoggerCtx loggers)) $
-    migrateCatalogSchema env dataSource (_lsLogger loggers) pool httpManager sqlGenCtx
-  pure (InitCtx httpManager instanceId loggers connInfo pool latch res, dataSource, initTime)
+    migrateCatalogSchema env (_lsLogger loggers) pool httpManager sqlGenCtx
+  pure (InitCtx httpManager instanceId loggers connInfo pool latch res, initTime)
   where
     procConnInfo =
       either (printErrExit InvalidDatabaseConnectionParamsError . ("Fatal Error : " <>)) return $ mkConnInfo rci
@@ -244,14 +243,14 @@ initialiseCtx env hgeCmd rci = do
 -- | helper function to initialize or migrate the @hdb_catalog@ schema (used by pro as well)
 migrateCatalogSchema
   :: (HasVersion, MonadIO m)
-  => Env.Environment -> DataSource -> Logger Hasura -> Q.PGPool -> HTTP.Manager -> SQLGenCtx
+  => Env.Environment -> Logger Hasura -> Q.PGPool -> HTTP.Manager -> SQLGenCtx
   -> m (RebuildableSchemaCache Run, Maybe UTCTime)
-migrateCatalogSchema env dataSource logger pool httpManager sqlGenCtx = do
+migrateCatalogSchema env logger pool httpManager sqlGenCtx = do
   let pgExecCtx = mkPGExecCtx Q.Serializable pool
       adminRunCtx = RunCtx adminUserInfo httpManager sqlGenCtx
   currentTime <- liftIO Clock.getCurrentTime
   initialiseResult <- runExceptT $ peelRun adminRunCtx pgExecCtx Q.ReadWrite Nothing $
-    (,) <$> migrateCatalog env dataSource currentTime <*> liftTx fetchLastUpdate
+    (,) <$> migrateCatalog env currentTime <*> liftTx fetchLastUpdate
 
   ((migrationResult, schemaCache), lastUpdateEvent) <-
     initialiseResult `onLeft` \err -> do

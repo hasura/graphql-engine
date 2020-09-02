@@ -95,10 +95,9 @@ migrateCatalog
      , HasSQLGenCtx m
      )
   => Env.Environment
-  -> DataSource
   -> UTCTime
   -> m (MigrationResult, RebuildableSchemaCache m)
-migrateCatalog env dataSource migrationTime = do
+migrateCatalog env migrationTime = do
   doesSchemaExist (SchemaName "hdb_catalog") >>= \case
     False -> initialize True
     True  -> doesTableExist (SchemaName "hdb_catalog") (TableName "hdb_version") >>= \case
@@ -148,7 +147,7 @@ migrateCatalog env dataSource migrationTime = do
     migrateFrom :: T.Text -> m (MigrationResult, RebuildableSchemaCache m)
     migrateFrom previousVersion
       | previousVersion == latestCatalogVersionString = do
-          schemaCache <- buildRebuildableSchemaCache env dataSource
+          schemaCache <- buildRebuildableSchemaCache env
           pure (MRNothingToDo, schemaCache)
       | [] <- neededMigrations =
           throw400 NotSupported $
@@ -167,7 +166,7 @@ migrateCatalog env dataSource migrationTime = do
 
     buildCacheAndRecreateSystemMetadata :: m (RebuildableSchemaCache m)
     buildCacheAndRecreateSystemMetadata = do
-      schemaCache <- buildRebuildableSchemaCache env dataSource
+      schemaCache <- buildRebuildableSchemaCache env
       view _2 <$> runCacheRWT schemaCache recreateSystemMetadata
 
     doesSchemaExist schemaName =

@@ -41,7 +41,7 @@ runApp :: Env.Environment -> HGEOptions Hasura -> AppM ()
 runApp env (HGEOptionsG rci hgeCmd) =
   withVersion $$(getVersionFromEnvironment) $ case hgeCmd of
     HCServe serveOptions -> do
-      (initCtx, _, initTime) <- initialiseCtx env hgeCmd rci
+      (initCtx, initTime) <- initialiseCtx env hgeCmd rci
       ekgStore <- liftIO EKG.newStore
       let shutdownApp = return ()
       -- Catches the SIGTERM signal and initiates a graceful shutdown.
@@ -56,21 +56,21 @@ runApp env (HGEOptionsG rci hgeCmd) =
       runHGEServer env serveOptions initCtx Nothing initTime shutdownApp Nothing ekgStore
 
     HCExport -> do
-      (initCtx, _, _) <- initialiseCtx env hgeCmd rci
+      (initCtx, _) <- initialiseCtx env hgeCmd rci
       res <- runTx' initCtx fetchMetadata Q.ReadCommitted
       either (printErrJExit MetadataExportError) printJSON res
 
     HCClean -> do
-      (initCtx, _, _) <- initialiseCtx env hgeCmd rci
+      (initCtx, _) <- initialiseCtx env hgeCmd rci
       res <- runTx' initCtx dropCatalog Q.ReadCommitted
       either (printErrJExit MetadataCleanError) (const cleanSuccess) res
 
     HCExecute -> do
-      (InitCtx{..}, dataSource, _) <- initialiseCtx env hgeCmd rci
+      (InitCtx{..}, _) <- initialiseCtx env hgeCmd rci
       queryBs <- liftIO BL.getContents
       let sqlGenCtx = SQLGenCtx False
       res <- runAsAdmin _icPgPool sqlGenCtx _icHttpManager $ do
-        schemaCache <- buildRebuildableSchemaCache env dataSource
+        schemaCache <- buildRebuildableSchemaCache env
         execQuery env queryBs
           & Tracing.runTraceTWithReporter Tracing.noReporter "execute"
           & runHasSystemDefinedT (SystemDefined False)
@@ -79,7 +79,7 @@ runApp env (HGEOptionsG rci hgeCmd) =
       either (printErrJExit ExecuteProcessError) (liftIO . BLC.putStrLn) res
 
     HCDowngrade opts -> do
-      (InitCtx{..}, _, initTime) <- initialiseCtx env hgeCmd rci
+      (InitCtx{..}, initTime) <- initialiseCtx env hgeCmd rci
       let sqlGenCtx = SQLGenCtx False
       res <- downgradeCatalog opts initTime
              & runAsAdmin _icPgPool sqlGenCtx _icHttpManager

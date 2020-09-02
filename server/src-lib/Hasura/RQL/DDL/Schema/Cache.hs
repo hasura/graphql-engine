@@ -65,12 +65,11 @@ import qualified Hasura.Sources.MySQL.Metadata as My
 buildRebuildableSchemaCache
   :: (HasVersion, MonadIO m, MonadUnique m, MonadTx m, HasHttpManager m, HasSQLGenCtx m)
   => Env.Environment
-  -> DataSource
   -> m (RebuildableSchemaCache m)
-buildRebuildableSchemaCache env dataSource = do
+buildRebuildableSchemaCache env = do
   catalogMetadata <- liftTx fetchCatalogData
   result <- flip runReaderT CatalogSync $
-    Inc.build (buildSchemaCacheRule env dataSource) (catalogMetadata, initialInvalidationKeys)
+    Inc.build (buildSchemaCacheRule env) (catalogMetadata, initialInvalidationKeys)
   pure $ RebuildableSchemaCache (Inc.result result) initialInvalidationKeys (Inc.rebuildRule result)
 
 newtype CacheRWT m a
@@ -121,9 +120,8 @@ buildSchemaCacheRule
      , MonadIO m, MonadUnique m, MonadTx m
      , MonadReader BuildReason m, HasHttpManager m, HasSQLGenCtx m )
   => Env.Environment
-  -> DataSource
   -> (CatalogMetadata, InvalidationKeys) `arr` SchemaCache
-buildSchemaCacheRule env dataSource = proc (catalogMetadata, invalidationKeys) -> do
+buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
   invalidationKeysDep <- Inc.newDependency -< invalidationKeys
 
   -- Step 1: Process metadata and collect dependency information.
@@ -138,7 +136,6 @@ buildSchemaCacheRule env dataSource = proc (catalogMetadata, invalidationKeys) -
   -- Step 3: Build the GraphQL schema.
   (gqlContext, gqlSchemaInconsistentObjects) <- runWriterA buildGQLContext -<
     ( QueryHasura
-    , dataSource
     , (_boTables    resolvedOutputs) <> (_boMySQLTables    resolvedOutputs)
     , (_boFunctions resolvedOutputs)
     , (_boRemoteSchemas resolvedOutputs)
@@ -149,7 +146,6 @@ buildSchemaCacheRule env dataSource = proc (catalogMetadata, invalidationKeys) -
   -- Step 4: Build the relay GraphQL schema
   (relayContext, relaySchemaInconsistentObjects) <- runWriterA buildGQLContext -<
     ( QueryRelay
-    , dataSource
     , (_boTables    resolvedOutputs)
     , (_boFunctions resolvedOutputs)
     , (_boRemoteSchemas resolvedOutputs)

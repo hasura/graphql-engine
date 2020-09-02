@@ -52,7 +52,6 @@ buildGQLContext
      , HasSQLGenCtx m
      )
   => ( GraphQLQueryType
-     , DataSource
      , TableCache
      , FunctionCache
      , HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
@@ -64,7 +63,7 @@ buildGQLContext
      , GQLContext
      )
 buildGQLContext =
-  proc (queryType, dataSource, allTables, allFunctions, allRemoteSchemas, allActions, nonObjectCustomTypes) -> do
+  proc (queryType, allTables, allFunctions, allRemoteSchemas, allActions, nonObjectCustomTypes) -> do
 
     -- Scroll down a few pages for the actual body...
 
@@ -89,10 +88,10 @@ buildGQLContext =
           SQLGenCtx{ stringifyNum } <- askSQLGenCtx
           let gqlContext =
                 (,)
-                <$> queryWithIntrospection dataSource (Set.fromMap $ validTables $> ())
+                <$> queryWithIntrospection (Set.fromMap $ validTables $> ())
                       validFunctions mempty mempty
                       allActionInfos nonObjectCustomTypes
-                <*> mutation dataSource (Set.fromMap $ validTables $> ()) mempty
+                <*> mutation (Set.fromMap $ validTables $> ()) mempty
                       allActionInfos nonObjectCustomTypes
           flip runReaderT (adminRoleName, validTables, Frontend, QueryContext stringifyNum queryType queryRemotesMap) $
             P.runSchemaT gqlContext
@@ -167,17 +166,17 @@ buildGQLContext =
         queryRemotes = concatMap (piQuery . snd) remotes
         mutationRemotes = concatMap (concat . piMutation . snd) remotes
         queryHasuraOrRelay = case queryType of
-          QueryHasura -> queryWithIntrospection dataSource (Set.fromMap $ validTables $> ())
+          QueryHasura -> queryWithIntrospection (Set.fromMap $ validTables $> ())
                          validFunctions queryRemotes mutationRemotes
                          allActionInfos nonObjectCustomTypes
-          QueryRelay  -> relayWithIntrospection dataSource (Set.fromMap $ validTables $> ()) validFunctions
+          QueryRelay  -> relayWithIntrospection (Set.fromMap $ validTables $> ()) validFunctions
 
         buildContextForRoleAndScenario :: RoleName -> Scenario -> m GQLContext
         buildContextForRoleAndScenario roleName scenario = do
           SQLGenCtx{ stringifyNum } <- askSQLGenCtx
           let gqlContext = GQLContext
                 <$> (finalizeParser <$> queryHasuraOrRelay)
-                <*> (fmap finalizeParser <$> mutation dataSource (Set.fromList $ Map.keys validTables) mutationRemotes
+                <*> (fmap finalizeParser <$> mutation (Set.fromList $ Map.keys validTables) mutationRemotes
                      allActionInfos nonObjectCustomTypes)
           flip runReaderT (roleName, validTables, scenario, QueryContext stringifyNum queryType queryRemotesMap) $
             P.runSchemaT gqlContext
@@ -208,14 +207,13 @@ query'
      , MonadRole r m
      , Has QueryContext r
      )
-  => DataSource
-  -> HashSet QualifiedTable
+  => HashSet QualifiedTable
   -> [FunctionInfo]
   -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
   -> [ActionInfo]
   -> NonObjectTypeMap
   -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
-query' _dataSource allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
+query' allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
   tableSelectExpParsers <- for (toList allTables) \table -> do
     selectPerms <- tableSelectPermissions table
     customRootFields <- _tcCustomRootFields . _tciCustomConfig . _tiCoreInfo <$> askTableInfo table
@@ -310,29 +308,27 @@ relayQuery' allTables allFunctions = do
 query
   :: forall m n r
    . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
-  => DataSource
-  -> G.Name
+  => G.Name
   -> HashSet QualifiedTable
   -> [FunctionInfo]
   -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
   -> [ActionInfo]
   -> NonObjectTypeMap
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
-query dataSource name allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
-  queryFieldsParser <- query' dataSource allTables allFunctions allRemotes allActions nonObjectCustomTypes
+query name allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
+  queryFieldsParser <- query' allTables allFunctions allRemotes allActions nonObjectCustomTypes
   pure $ P.selectionSet name Nothing queryFieldsParser
     <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
 
 subscription
   :: forall m n r
    . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
-  => DataSource
-  -> HashSet QualifiedTable
+  => HashSet QualifiedTable
   -> [FunctionInfo]
   -> [ActionInfo]
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
-subscription dataSource allTables allFunctions asyncActions =
-  query dataSource $$(G.litName "subscription_root") allTables allFunctions [] asyncActions mempty
+subscription allTables allFunctions asyncActions =
+  query $$(G.litName "subscription_root") allTables allFunctions [] asyncActions mempty
 
 queryRootFromFields
   :: forall n
@@ -414,18 +410,17 @@ queryWithIntrospection
      , Has QueryContext r
      , Has Scenario r
      )
-  => DataSource
-  -> HashSet QualifiedTable
+  => HashSet QualifiedTable
   -> [FunctionInfo]
   -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
   -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
   -> [ActionInfo]
   -> NonObjectTypeMap
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
-queryWithIntrospection dataSource allTables allFunctions queryRemotes mutationRemotes allActions nonObjectCustomTypes = do
-  basicQueryFP <- query' dataSource allTables allFunctions queryRemotes allActions nonObjectCustomTypes
-  mutationP <- mutation dataSource allTables mutationRemotes allActions nonObjectCustomTypes
-  subscriptionP <- subscription dataSource allTables allFunctions $
+queryWithIntrospection allTables allFunctions queryRemotes mutationRemotes allActions nonObjectCustomTypes = do
+  basicQueryFP <- query' allTables allFunctions queryRemotes allActions nonObjectCustomTypes
+  mutationP <- mutation allTables mutationRemotes allActions nonObjectCustomTypes
+  subscriptionP <- subscription allTables allFunctions $
                    filter (has (aiDefinition.adType._ActionMutation._ActionAsynchronous)) allActions
   queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP
 
@@ -437,14 +432,13 @@ relayWithIntrospection
      , Has QueryContext r
      , Has Scenario r
      )
-  => DataSource
-  -> HashSet QualifiedTable
+  => HashSet QualifiedTable
   -> [FunctionInfo]
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
-relayWithIntrospection dataSource allTables allFunctions = do
+relayWithIntrospection allTables allFunctions = do
   nodeFP <- fmap (RFPostgres . QDBPrimaryKey) <$> nodeField
   basicQueryFP <- relayQuery' allTables allFunctions
-  mutationP <- mutation dataSource allTables [] [] mempty
+  mutationP <- mutation allTables [] [] mempty
   let relayQueryFP = nodeFP:basicQueryFP
       subscriptionP = P.selectionSet $$(G.litName "subscription_root") Nothing relayQueryFP
                       <&> fmap (P.handleTypename (RFRaw . J.String. G.unName))
@@ -492,13 +486,12 @@ unauthenticatedQueryWithIntrospection queryRemotes mutationRemotes = do
 mutation
   :: forall m n r
    . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r, Has Scenario r)
-  => DataSource
-  -> HashSet QualifiedTable
+  => HashSet QualifiedTable
   -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
   -> [ActionInfo]
   -> NonObjectTypeMap
   -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue))))
-mutation dataSource allTables allRemotes allActions nonObjectCustomTypes = do
+mutation allTables allRemotes allActions nonObjectCustomTypes = do
   mutationParsers <- for (toList allTables) \table -> do
     tableCoreInfo <- _tiCoreInfo <$> askTableInfo table
     displayName   <- qualifiedObjectToName table
