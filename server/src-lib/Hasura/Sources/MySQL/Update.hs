@@ -1,37 +1,32 @@
-module Hasura.RQL.DML.Update
-  ( AnnUpdG(..)
-  , AnnUpd
-  , traverseAnnUpd
-  , execUpdateQuery
-  , updateOperatorText
-  , runUpdate
+module Hasura.Sources.MySQL.Update
+  ( execUpdateQuery
   ) where
 
 import           Data.Aeson.Types
-import           Instances.TH.Lift           ()
+import           Instances.TH.Lift             ()
 
-import qualified Data.HashMap.Strict         as M
-import qualified Data.Sequence               as DS
+import qualified Data.HashMap.Strict           as M
+import qualified Data.Sequence                 as DS
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
-import           Hasura.RQL.DML.Insert       (insertCheckExpr)
+import           Hasura.RQL.DML.Insert         (insertCheckExpr)
 import           Hasura.RQL.DML.Internal
-import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.DML.Update.Types
 import           Hasura.RQL.GBoolExp
-import           Hasura.RQL.Instances        ()
+import           Hasura.RQL.Instances          ()
 import           Hasura.RQL.Types
-import           Hasura.Server.Version       (HasVersion)
+import           Hasura.Server.Version         (HasVersion)
 import           Hasura.Session
+import           Hasura.Sources.MySQL.Mutation
 import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
-import qualified Data.Environment            as Env
-import qualified Database.PG.Query           as Q
-import qualified Hasura.SQL.DML              as S
-import qualified Hasura.Tracing              as Tracing
+import qualified Data.Environment              as Env
+import qualified Database.PG.Query             as Q
+import qualified Hasura.SQL.DML                as S
+import qualified Hasura.Tracing                as Tracing
 
 
 -- NOTE: This function can be improved, because we use

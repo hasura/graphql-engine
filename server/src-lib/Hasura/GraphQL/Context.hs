@@ -126,7 +126,7 @@ data ActionMutation v
   | AMAsync !RQL.AnnActionMutationAsync
 
 type MutationRootField v =
-  RootField (MutationDB v) Void RemoteField (ActionMutation v) J.Value
+  RootField (MutationDB v) (MutationDB v) RemoteField (ActionMutation v) J.Value
 
 type SubscriptionRootField v = RootField (QueryDB v) Void Void (RQL.AnnActionAsyncQuery v) Void
 type SubscriptionRootFieldResolved = RootField (QueryDB S.SQLExp) Void Void RQL.AnnSimpleSel Void

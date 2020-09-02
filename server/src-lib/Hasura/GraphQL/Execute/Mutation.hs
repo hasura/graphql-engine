@@ -21,8 +21,9 @@ import qualified Hasura.RQL.DML.Delete                  as RQL
 import qualified Hasura.RQL.DML.Mutation                as RQL
 import qualified Hasura.RQL.DML.Returning.Types         as RQL
 import qualified Hasura.RQL.DML.Update                  as RQL
+import qualified Hasura.Sources.MySQL.Delete            as My
+import qualified Hasura.Sources.MySQL.Update            as My
 import qualified Hasura.Tracing                         as Tracing
-
 
 import           Hasura.Db
 import           Hasura.EncJSON
@@ -43,16 +44,14 @@ convertDelete
      , MonadTx tx
      , Tracing.MonadTrace tx
      , MonadIO tx)
-  => Env.Environment
+  => ((RQL.AnnDel, Seq.Seq Q.PrepArg) -> tx EncJSON)
   -> SessionVariables
-  -> RQL.MutationRemoteJoinCtx
   -> RQL.AnnDelG UnpreparedValue
-  -> Bool
   -> m (tx EncJSON)
-convertDelete env usrVars rjCtx deleteOperation stringifyNum = do
+convertDelete execFunction usrVars deleteOperation = do
   let (preparedDelete, expectedVariables) = flip runState Set.empty $ RQL.traverseAnnDel prepareWithoutPlan deleteOperation
   validateSessionVariables expectedVariables usrVars
-  pure $ RQL.execDeleteQuery env stringifyNum (Just rjCtx) (preparedDelete, Seq.empty)
+  pure $ execFunction (preparedDelete, Seq.empty)
 
 convertUpdate
   :: ( HasVersion
@@ -61,19 +60,17 @@ convertUpdate
      , Tracing.MonadTrace tx
      , MonadIO tx
      )
-  => Env.Environment
+  => ((RQL.AnnUpd, Seq.Seq Q.PrepArg) -> tx EncJSON)
   -> SessionVariables
-  -> RQL.MutationRemoteJoinCtx
   -> RQL.AnnUpdG UnpreparedValue
-  -> Bool
   -> m (tx EncJSON)
-convertUpdate env usrVars rjCtx updateOperation stringifyNum = do
+convertUpdate execFunction usrVars updateOperation = do
   let (preparedUpdate, expectedVariables) = flip runState Set.empty $ RQL.traverseAnnUpd prepareWithoutPlan updateOperation
   if null $ RQL.uqp1OpExps updateOperation
   then pure $ pure $ RQL.buildEmptyMutResp $ RQL.uqp1Output preparedUpdate
   else do
     validateSessionVariables expectedVariables usrVars
-    pure $ RQL.execUpdateQuery env stringifyNum (Just rjCtx) (preparedUpdate, Seq.empty)
+    pure $ execFunction (preparedUpdate, Seq.empty)
 
 convertInsert
   :: ( HasVersion
@@ -115,8 +112,10 @@ convertMutationRootField
   -> m (Either (tx EncJSON, HTTP.ResponseHeaders) RemoteField)
 convertMutationRootField env logger userInfo manager reqHeaders stringifyNum = \case
   RFPostgres (MDBInsert s) -> noResponseHeaders =<< convertInsert env userSession rjCtx s stringifyNum
-  RFPostgres (MDBUpdate s) -> noResponseHeaders =<< convertUpdate env userSession rjCtx s stringifyNum
-  RFPostgres (MDBDelete s) -> noResponseHeaders =<< convertDelete env userSession rjCtx s stringifyNum
+  RFPostgres (MDBUpdate s) -> noResponseHeaders =<< convertUpdate (RQL.execUpdateQuery env stringifyNum $ Just rjCtx) userSession s
+  RFMySQL    (MDBUpdate s) -> noResponseHeaders =<< convertUpdate (My.execUpdateQuery  env stringifyNum $ Just rjCtx) userSession s
+  RFPostgres (MDBDelete s) -> noResponseHeaders =<< convertDelete (RQL.execDeleteQuery env stringifyNum $ Just rjCtx) userSession s
+  RFMySQL    (MDBDelete s) -> noResponseHeaders =<< convertDelete (My.execDeleteQuery  env stringifyNum $ Just rjCtx) userSession s
   RFRemote remote      -> pure $ Right remote
   RFAction (AMSync s)  -> Left . (_aerTransaction &&& _aerHeaders) <$> resolveActionExecution env logger userInfo s actionExecContext
   RFAction (AMAsync s) -> noResponseHeaders =<< resolveActionMutationAsync s reqHeaders userSession

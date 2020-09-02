@@ -426,8 +426,11 @@ library
                      , Hasura.RQL.GBoolExp
                      , Hasura.Sources
                      , Hasura.Sources.Postgres.SQLBuilder
+                     , Hasura.Sources.MySQL.Delete
                      , Hasura.Sources.MySQL.Metadata
+                     , Hasura.Sources.MySQL.Mutation
                      , Hasura.Sources.MySQL.Query
+                     , Hasura.Sources.MySQL.Update
                      , Hasura.Sources.MySQL.SQLBuilder
                      , Hasura.GraphQL.Explain
                      , Hasura.GraphQL.Execute.Action

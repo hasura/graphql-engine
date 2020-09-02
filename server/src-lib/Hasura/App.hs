@@ -77,7 +77,6 @@ import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version
 import           Hasura.Session
-import           Hasura.Sources
 
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll     as EL
 import qualified Hasura.GraphQL.Transport.WebSocket.Server as WS

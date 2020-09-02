@@ -46,7 +46,6 @@ import           Hasura.Server.Init            (DowngradeOptions (..))
 import           Hasura.Server.Logging         (StartupLog (..))
 import           Hasura.Server.Migrate.Version (latestCatalogVersion, latestCatalogVersionString)
 import           Hasura.Server.Version
-import           Hasura.Sources
 import           Hasura.SQL.Types
 import           System.Directory              (doesFileExist)
 

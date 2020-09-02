@@ -1,25 +1,21 @@
-module Hasura.RQL.DML.Mutation
-  ( Mutation(..)
-  , mkMutation
-  , MutationRemoteJoinCtx
+module Hasura.Sources.MySQL.Mutation
+  ( mkMutation
   , runMutation
-  , executeMutationOutputQuery
-  , mutateAndFetchCols
-  , mkSelCTEFromColVals
+  , MutationRemoteJoinCtx
   )
 where
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                   as Env
-import qualified Data.HashMap.Strict                as Map
-import qualified Data.Sequence                      as DS
-import qualified Database.PG.Query                  as Q
-import qualified Network.HTTP.Client                as HTTP
-import qualified Network.HTTP.Types                 as N
+import qualified Data.Environment                as Env
+import qualified Data.HashMap.Strict             as Map
+import qualified Data.Sequence                   as DS
+import qualified Database.PG.Query               as Q
+import qualified Network.HTTP.Client             as HTTP
+import qualified Network.HTTP.Types              as N
 
-import qualified Hasura.SQL.DML                     as S
-import qualified Hasura.Tracing                     as Tracing
+import qualified Hasura.SQL.DML                  as S
+import qualified Hasura.Tracing                  as Tracing
 
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
@@ -27,11 +23,11 @@ import           Hasura.RQL.DML.RemoteJoin
 import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.DML.Returning.Types
 import           Hasura.RQL.DML.Select
-import           Hasura.RQL.Instances               ()
+import           Hasura.RQL.Instances            ()
 import           Hasura.RQL.Types
-import           Hasura.Server.Version              (HasVersion)
+import           Hasura.Server.Version           (HasVersion)
 import           Hasura.Session
-import           Hasura.Sources.Postgres.SQLBuilder
+import           Hasura.Sources.MySQL.SQLBuilder
 import           Hasura.SQL.DML
 import           Hasura.SQL.Text
 import           Hasura.SQL.Types
@@ -89,7 +85,7 @@ mutateAndReturn
 mutateAndReturn env (Mutation qt (cte, p) mutationOutput allCols remoteJoins strfyNum) =
   executeMutationOutputQuery env sqlQuery (toList p) remoteJoins
   where
-    sqlQuery = Q.fromBuilder $ toSQL postgresBuilder $
+    sqlQuery = Q.fromBuilder $ toSQL mySQLBuilder $
                mkMutationOutputExp qt allCols Nothing cte mutationOutput strfyNum
 
 {- Note: [Prepared statements in Mutations]
@@ -122,7 +118,7 @@ mutateAndSel env (Mutation qt q mutationOutput allCols remoteJoins strfyNum) = d
   selCTE <- mkSelCTEFromColVals qt allCols columnVals
   let selWith = mkMutationOutputExp qt allCols Nothing selCTE mutationOutput strfyNum
   -- Perform select query and fetch returning fields
-  executeMutationOutputQuery env (Q.fromBuilder $ toSQL postgresBuilder selWith) [] remoteJoins
+  executeMutationOutputQuery env (Q.fromBuilder $ toSQL mySQLBuilder selWith) [] remoteJoins
 
 executeMutationOutputQuery
   ::
@@ -161,7 +157,7 @@ mutateAndFetchCols qt cols (cte, p) strfyNum =
     selFlds = flip map cols $
               \ci -> (fromPGCol $ pgiColumn ci, mkAnnColumnFieldAsText ci)
 
-    sql = toSQL postgresBuilder selectWith
+    sql = toSQL mySQLBuilder selectWith
     selectWith = S.SelectWith [(S.Alias aliasIden, cte)] select
     select = S.mkSelect {S.selExtr = [S.Extractor extrExp Nothing]}
     extrExp = S.applyJsonBuildObj
@@ -196,7 +192,7 @@ mkSelCTEFromColVals qt allCols colVals =
         }
   where
     rowAlias = Identifier "row"
-    extractor = S.selectStar' $ S.QualIden rowAlias $ Just $ S.TypeAnn $ toSQLTxt postgresBuilder qt
+    extractor = S.selectStar' $ S.QualIden rowAlias $ Just $ S.TypeAnn $ toSQLTxt mySQLBuilder qt
     sortedCols = sortCols allCols
     mkTupsFromColVal colVal =
       fmap S.TupleExp $ forM sortedCols $ \ci -> do
