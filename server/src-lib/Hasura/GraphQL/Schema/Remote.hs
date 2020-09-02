@@ -19,7 +19,6 @@ import qualified Hasura.GraphQL.Parser.Internal.Parser as P
 
 import           Hasura.GraphQL.Parser                 as P
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 import           Hasura.SQL.Text
 
 
