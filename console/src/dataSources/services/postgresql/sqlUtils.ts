@@ -837,3 +837,56 @@ export const getCreatePkSql = ({
     add constraint "${constraintName}"
     primary key (${selectedPkColumns.map(pkc => `"${pkc}"`).join(', ')});`;
 };
+
+export const getFunctionDefinitionSql = (
+  functionName: string,
+  schemaName: string
+) => `
+SELECT
+	Row_to_json(functions) AS result from (
+SELECT p.proname::text AS function_name,
+pn.nspname::text AS function_schema,
+pd.description,
+    CASE
+        WHEN p.provariadic = 0::oid THEN false
+        ELSE true
+    END AS has_variadic,
+    CASE
+        WHEN p.provolatile::text = 'i'::character(1)::text THEN 'IMMUTABLE'::text
+        WHEN p.provolatile::text = 's'::character(1)::text THEN 'STABLE'::text
+        WHEN p.provolatile::text = 'v'::character(1)::text THEN 'VOLATILE'::text
+        ELSE NULL::text
+    END AS function_type,
+pg_get_functiondef(p.oid) AS function_definition,
+rtn.nspname::text AS return_type_schema,
+rt.typname::text AS return_type_name,
+rt.typtype::text AS return_type_type,
+p.proretset AS returns_set,
+( SELECT COALESCE(json_agg(json_build_object('schema', q.schema, 'name', q.name, 'type', q.type)), '[]'::json) AS "coalesce"
+       FROM ( SELECT pt.typname AS name,
+                pns.nspname AS schema,
+                pt.typtype AS type,
+                pat.ordinality
+               FROM unnest(COALESCE(p.proallargtypes, p.proargtypes::oid[])) WITH ORDINALITY pat(oid, ordinality)
+                 LEFT JOIN pg_type pt ON pt.oid = pat.oid
+                 LEFT JOIN pg_namespace pns ON pt.typnamespace = pns.oid
+              ORDER BY pat.ordinality) q) AS input_arg_types,
+to_json(COALESCE(p.proargnames, ARRAY[]::text[])) AS input_arg_names,
+p.pronargdefaults AS default_args,
+p.oid::integer AS function_oid
+FROM pg_proc p
+ JOIN pg_namespace pn ON pn.oid = p.pronamespace
+JOIN pg_type rt ON rt.oid = p.prorettype
+JOIN pg_namespace rtn ON rtn.oid = rt.typnamespace
+LEFT JOIN pg_description pd ON p.oid = pd.objoid
+WHERE
+p.proname::text = '${functionName}'
+AND pn.nspname::text = '${schemaName}'
+AND pn.nspname::text !~~ 'pg_%'::text
+AND(pn.nspname::text <> ALL (ARRAY ['information_schema'::text]))
+AND NOT(EXISTS (
+  SELECT
+    1 FROM pg_aggregate
+  WHERE
+    pg_aggregate.aggfnoid::oid = p.oid)) LIMIT 1) as functions;
+`;

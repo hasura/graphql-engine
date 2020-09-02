@@ -39,6 +39,7 @@ import {
   checkSchemaModification,
   getCreateCheckConstraintSql,
   getCreatePkSql,
+  getFunctionDefinitionSql,
 } from './sqlUtils';
 
 export const isTable = (table: Table) => {
@@ -553,4 +554,5 @@ export const postgres: DataSourcesAPI = {
   checkSchemaModification,
   getCreateCheckConstraintSql,
   getCreatePkSql,
+  getFunctionDefinitionSql,
 };

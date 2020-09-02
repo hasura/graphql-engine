@@ -155,4 +155,7 @@ export const mysql: DataSourcesAPI = {
   getCreatePkSql: () => {
     throw new Error('not implemented');
   },
+  getFunctionDefinitionSql: () => {
+    throw new Error('not implemented');
+  },
 };

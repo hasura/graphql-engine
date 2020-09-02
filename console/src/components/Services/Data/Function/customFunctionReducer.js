@@ -21,6 +21,7 @@ import { fetchTrackedFunctions } from '../DataActions';
 import _push from '../push';
 import { getSchemaBaseRoute } from '../../../Common/utils/routesUtils';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
+import { dataSource } from '../../../../dataSources';
 
 /* Constants */
 
@@ -116,52 +117,26 @@ const makeRequest = (
 const fetchCustomFunction = (functionName, schema) => {
   return (dispatch, getState) => {
     const url = Endpoints.getSchema;
-    const fetchCustomFunctionQuery = {
-      type: 'select',
-      args: {
-        table: {
-          name: 'hdb_function',
-          schema: 'hdb_catalog',
-        },
-        columns: ['*'],
-        where: {
-          function_schema: schema,
-          function_name: functionName,
-        },
-      },
-    };
     const fetchCustomFunctionDefinition = {
-      type: 'select',
+      type: 'run_sql',
       args: {
-        table: {
-          name: 'hdb_function_agg',
-          schema: 'hdb_catalog',
-        },
-        columns: ['*'],
-        where: {
-          function_schema: schema,
-          function_name: functionName,
-        },
+        sql: dataSource.getFunctionDefinitionSql(functionName, schema),
       },
     };
 
-    const bulkQuery = {
-      type: 'bulk',
-      args: [fetchCustomFunctionQuery, fetchCustomFunctionDefinition],
-    };
     const options = {
       credentials: globalCookiePolicy,
       method: 'POST',
       headers: dataHeaders(getState),
-      body: JSON.stringify(bulkQuery),
+      body: JSON.stringify(fetchCustomFunctionDefinition),
     };
     dispatch({ type: FETCHING_INDIV_CUSTOM_FUNCTION });
     return dispatch(requestAction(url, options)).then(
-      data => {
-        if (data[0].length > 0 && data[1].length > 0) {
+      ({ result }) => {
+        if (result.length > 1) {
           dispatch({
             type: CUSTOM_FUNCTION_FETCH_SUCCESS,
-            data: [[...data[0]], [...data[1]]],
+            data: JSON.parse(result[1]),
           });
           return Promise.resolve();
         }

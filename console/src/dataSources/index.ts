@@ -265,6 +265,10 @@ export interface DataSourcesAPI {
     selectedPkColumns: string[];
     constraintName: string;
   }) => string;
+  getFunctionDefinitionSql: (
+    functionName: string,
+    schemaName: string
+  ) => string;
 }
 
 export let currentDriver: Driver = 'postgres';
