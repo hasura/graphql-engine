@@ -43,7 +43,8 @@ const insertItemAsMigration = (
 ) => (dispatch, getState) => {
   const upQuery = getInsertUpQuery(
     { name: tableInfo.name, schema: tableInfo.schema },
-    insertedData
+    insertedData,
+    columns
   );
   const downQuery = getInsertDownQuery(
     { name: tableInfo.name, schema: tableInfo.schema },

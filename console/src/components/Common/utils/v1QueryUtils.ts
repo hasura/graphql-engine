@@ -109,7 +109,10 @@ export type PGReturnValueType =
   | Record<string, any>
   | number;
 
-export const convertPGValue = (value: PGReturnValueType): string | number => {
+export const convertPGValue = (
+  value: PGReturnValueType,
+  columnInfo: BaseTableColumn
+): string | number => {
   if (value === 'null' || value === null) {
     return 'null';
   }
@@ -118,7 +121,11 @@ export const convertPGValue = (value: PGReturnValueType): string | number => {
     return `'${value}'`;
   }
 
-  if (Array.isArray(value)) {
+  if (
+    Array.isArray(value) &&
+    columnInfo.data_type !== 'json' &&
+    columnInfo.data_type !== 'jsonb'
+  ) {
     return `'${arrayToPostgresArray(value)}'`;
   }
 
@@ -135,17 +142,18 @@ export const convertPGValue = (value: PGReturnValueType): string | number => {
 
 export const getInsertUpQuery = (
   tableDef: TableDefinition,
-  insertion: Record<string, PGReturnValueType>
+  insertion: Record<string, PGReturnValueType>,
+  columns: BaseTableColumn[]
 ) => {
-  const columns = Object.keys(insertion)
+  const columnValues = Object.keys(insertion)
     .map(key => `"${key}"`)
     .join(', ');
 
   const values = Object.values(insertion)
-    .map(value => convertPGValue(value))
+    .map((value, valIndex) => convertPGValue(value, columns[valIndex]))
     .join(', ');
 
-  const sql = `INSERT INTO "${tableDef.schema}"."${tableDef.name}"(${columns}) VALUES (${values});`;
+  const sql = `INSERT INTO "${tableDef.schema}"."${tableDef.name}"(${columnValues}) VALUES (${values});`;
 
   return getRunSqlQuery(sql);
 };
