@@ -60,6 +60,8 @@ import           Hasura.Sources
 import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
+import qualified Hasura.Sources.MySQL.Metadata as My
+
 buildRebuildableSchemaCache
   :: (HasVersion, MonadIO m, MonadUnique m, MonadTx m, HasHttpManager m, HasSQLGenCtx m)
   => Env.Environment
@@ -138,6 +140,7 @@ buildSchemaCacheRule env dataSource = proc (catalogMetadata, invalidationKeys) -
     ( QueryHasura
     , dataSource
     , (_boTables    resolvedOutputs)
+    , (_boMySQLTables    resolvedOutputs)
     , (_boFunctions resolvedOutputs)
     , (_boRemoteSchemas resolvedOutputs)
     , (_boActions resolvedOutputs)
@@ -149,6 +152,7 @@ buildSchemaCacheRule env dataSource = proc (catalogMetadata, invalidationKeys) -
     ( QueryRelay
     , dataSource
     , (_boTables    resolvedOutputs)
+    , mempty
     , (_boFunctions resolvedOutputs)
     , (_boRemoteSchemas resolvedOutputs)
     , (_boActions resolvedOutputs)
@@ -273,8 +277,11 @@ buildSchemaCacheRule env dataSource = proc (catalogMetadata, invalidationKeys) -
 
       cronTriggersMap <- buildCronTriggers -< ((),cronTriggers)
 
+      mySQLTableCache <- bindA -< liftIO My.fetchTables
+
       returnA -< BuildOutputs
         { _boTables = tableCache
+        , _boMySQLTables = mySQLTableCache
         , _boActions = actionCache
         , _boFunctions = functionCache
         , _boRemoteSchemas = remoteSchemaMap

@@ -54,6 +54,7 @@ data BuildInputs
 data BuildOutputs
   = BuildOutputs
   { _boTables        :: !TableCache
+  , _boMySQLTables   :: !TableCache
   , _boActions       :: !ActionCache
   , _boFunctions     :: !FunctionCache
   , _boRemoteSchemas :: !(HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject))

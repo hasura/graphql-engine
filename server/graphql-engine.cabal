@@ -426,6 +426,7 @@ library
                      , Hasura.RQL.GBoolExp
                      , Hasura.Sources
                      , Hasura.Sources.Postgres.SQLBuilder
+                     , Hasura.Sources.MySQL.Metadata
                      , Hasura.Sources.MySQL.Query
                      , Hasura.Sources.MySQL.SQLBuilder
                      , Hasura.GraphQL.Explain

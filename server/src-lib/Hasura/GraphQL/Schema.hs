@@ -53,7 +53,8 @@ buildGQLContext
      )
   => ( GraphQLQueryType
      , DataSource
-     , TableCache
+     , TableCache -- postgres tables
+     , TableCache -- mysql tables
      , FunctionCache
      , HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
      , ActionCache
@@ -64,7 +65,7 @@ buildGQLContext
      , GQLContext
      )
 buildGQLContext =
-  proc (queryType, dataSource, allTables, allFunctions, allRemoteSchemas, allActions, nonObjectCustomTypes) -> do
+  proc (queryType, dataSource, allTables, mySQLTables, allFunctions, allRemoteSchemas, allActions, nonObjectCustomTypes) -> do
 
     -- Scroll down a few pages for the actual body...
 
