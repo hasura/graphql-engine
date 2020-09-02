@@ -2,7 +2,6 @@ import React from 'react';
 
 import { Route, IndexRedirect } from 'react-router';
 import { RightContainer } from '../../Common/Layout/RightContainer';
-import globals from '../../../Globals';
 import {
   remoteSchemaPageConnector,
   landingConnector,
