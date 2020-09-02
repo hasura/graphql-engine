@@ -11,6 +11,7 @@ import {
   getSchemaAddTableRoute,
   getTableBrowseRoute,
 } from '../../Common/utils/routesUtils';
+import { getConsistentFunctions } from './Function/selector';
 
 class DataSubSidebar extends React.Component {
   constructor() {
@@ -65,7 +66,7 @@ class DataSubSidebar extends React.Component {
     );
 
     const filteredFunctionsList = trackedFunctions.filter(f =>
-      dataSource.getFunctionName(f).includes(searchInput)
+      f.name.includes(searchInput)
     );
 
     const getSearchInput = () => {
@@ -134,7 +135,7 @@ class DataSubSidebar extends React.Component {
       if (filteredFunctionsList && filteredFunctionsList.length > 0) {
         const filteredFunctionsObject = {};
         filteredFunctionsList.forEach(f => {
-          filteredFunctionsObject[dataSource.getFunctionName(f)] = f;
+          filteredFunctionsObject[f.name] = f;
         });
 
         const sortedFunctionNames = Object.keys(filteredFunctionsObject).sort();
@@ -200,7 +201,7 @@ class DataSubSidebar extends React.Component {
 const mapStateToProps = state => {
   return {
     migrationMode: state.main.migrationMode,
-    trackedFunctions: state.tables.trackedFunctions,
+    trackedFunctions: getConsistentFunctions(state),
     currentFunction: state.functions.functionName,
     allSchemas: state.tables.allSchemas,
     currentTable: state.tables.currentTable,

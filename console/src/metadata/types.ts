@@ -821,7 +821,10 @@ export interface HasuraMetadataV2 {
   tables: TableEntry[];
   actions?: Action[];
   custom_types?: CustomTypes;
-  functions?: ((...args: any[]) => any)[];
+  functions?: Array<{
+    function: { schema: string; name: string };
+    configuration: Record<string, any>;
+  }>;
   remote_schemas?: RemoteSchema[];
   query_collections?: QueryCollectionEntry[];
   allowlist?: AllowList[];

@@ -170,7 +170,6 @@ const defaultState = {
   allRoles: [],
   postgresFunctions: [],
   nonTrackablePostgresFunctions: [],
-  trackedFunctions: [],
   listingSchemas: [],
   untrackedRelations: [],
   schemaList: ['public'],

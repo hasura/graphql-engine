@@ -25,7 +25,6 @@ import {
 import {
   makeMigrationCall,
   setConsistentSchema,
-  setConsistentFunctions,
 } from '../components/Services/Data/DataActions';
 import { filterInconsistentMetadataObjects } from '../components/Services/Settings/utils';
 import { setConsistentRemoteSchemas } from '../components/Services/RemoteSchema/Actions';
@@ -248,7 +247,6 @@ const handleInconsistentObjects = (
 ): Thunk<void, MetadataActions> => {
   return (dispatch, getState) => {
     const allSchemas = getState().tables.allSchemas;
-    const functions = getState().tables.trackedFunctions;
     const remoteSchemas = getState().remoteSchemas.listData.remoteSchemas;
 
     dispatch({
@@ -262,11 +260,6 @@ const handleInconsistentObjects = (
         inconsistentObjects,
         'tables'
       );
-      const filteredFunctions = filterInconsistentMetadataObjects(
-        functions,
-        inconsistentObjects,
-        'functions'
-      );
 
       // const actions = actionsSelector(getState());
       // const filteredActions = filterInconsistentMetadataObjects(
@@ -277,7 +270,6 @@ const handleInconsistentObjects = (
 
       // todo
       dispatch(setConsistentSchema(filteredSchema) as any);
-      dispatch(setConsistentFunctions(filteredFunctions) as any);
       dispatch(setConsistentRemoteSchemas(remoteSchemas) as any);
       // dispatch(setActions(filteredActions) as any);
     }

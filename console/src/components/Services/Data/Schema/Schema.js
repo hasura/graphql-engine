@@ -41,6 +41,7 @@ import ToolTip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import RawSqlButton from '../Common/Components/RawSqlButton';
 import styles from '../../../Common/Common.scss';
+import { getConsistentFunctions } from '../Function/selector';
 
 const SchemaPermissionsButton = ({ schema }) => (
   <Link to={getSchemaPermissionsRoute(schema)}>
@@ -221,14 +222,12 @@ class Schema extends Component {
     };
 
     const _getTrackableFunctions = () => {
-      const trackedFuncNames = trackedFunctions.map(fn =>
-        dataSource.getFunctionName(fn)
-      );
+      const trackedFuncNames = trackedFunctions.map(fn => fn.name);
 
       // Assuming schema for both function and tables are same
       // return function which are tracked
       const filterCondition = func => {
-        return !trackedFuncNames.includes(dataSource.getFunctionName(func));
+        return !trackedFuncNames.includes(func.name);
       };
 
       return functionsList.filter(filterCondition);
@@ -747,9 +746,9 @@ const mapStateToProps = state => ({
   readOnlyMode: state.main.readOnlyMode,
   untrackedRelations: state.tables.untrackedRelations,
   currentSchema: state.tables.currentSchema,
-  functionsList: [...state.tables.postgresFunctions],
-  nonTrackableFunctions: [...state.tables.nonTrackablePostgresFunctions],
-  trackedFunctions: [...state.tables.trackedFunctions],
+  functionsList: state.tables.postgresFunctions,
+  nonTrackableFunctions: state.tables.nonTrackablePostgresFunctions,
+  trackedFunctions: getConsistentFunctions(state),
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
 });
 

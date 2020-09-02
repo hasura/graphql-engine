@@ -10,9 +10,6 @@ export const mysql: DataSourcesAPI = {
   getFunctionSchema: () => {
     throw new Error('not implemented');
   },
-  getFunctionName: () => {
-    throw new Error('not implemented');
-  },
   getFunctionDefinition: () => {
     throw new Error('not implemented');
   },

@@ -1,10 +1,6 @@
 import defaultState from './AddExistingTableViewState';
 import _push from '../push';
-import {
-  updateSchemaInfo,
-  fetchTrackedFunctions,
-  makeMigrationCall,
-} from '../DataActions';
+import { updateSchemaInfo, makeMigrationCall } from '../DataActions';
 import { showSuccessNotification } from '../../Common/Notification';
 import {
   getSchemaBaseRoute,
@@ -13,6 +9,7 @@ import {
   getFunctionModifyRoute,
 } from '../../../Common/utils/routesUtils';
 import { dataSource } from '../../../../dataSources';
+import { exportMetadata } from '../../../../metadata/actions';
 
 const SET_DEFAULTS = 'AddExistingTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddExistingTable/SET_TABLENAME';
@@ -130,7 +127,7 @@ const addExistingFunction = name => {
     const customOnSuccess = () => {
       dispatch({ type: REQUEST_SUCCESS });
       // Update the left side bar
-      dispatch(fetchTrackedFunctions(currentSchema));
+      dispatch(exportMetadata());
       dispatch(_push(getFunctionModifyRoute(currentSchema, name)));
       return;
     };

@@ -1,10 +1,6 @@
 import defaultState from './State';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
-import {
-  handleMigrationErrors,
-  fetchTrackedFunctions,
-  fetchDataInit,
-} from '../DataActions';
+import { handleMigrationErrors, fetchDataInit } from '../DataActions';
 import {
   showErrorNotification,
   showSuccessNotification,
@@ -19,6 +15,7 @@ import returnMigrateUrl from '../Common/getMigrateUrl';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import requestAction from '../../../../utils/requestAction';
 import { dataSource } from '../../../../dataSources';
+import { exportMetadata } from '../../../../metadata/actions';
 
 const MAKING_REQUEST = 'RawSQL/MAKING_REQUEST';
 const SET_SQL = 'RawSQL/SET_SQL';
@@ -118,7 +115,7 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
             data: data && (isStatementTimeout ? data[1] : data[0]),
           });
         });
-        dispatch(fetchTrackedFunctions());
+        dispatch(exportMetadata());
       },
       err => {
         const title = 'SQL Execution Failed';

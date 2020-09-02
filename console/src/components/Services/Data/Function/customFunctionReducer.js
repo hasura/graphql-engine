@@ -16,12 +16,11 @@ import { handleMigrationErrors } from '../../../../utils/migration';
 
 import { showSuccessNotification } from '../../Common/Notification';
 
-import { fetchTrackedFunctions } from '../DataActions';
-
 import _push from '../push';
 import { getSchemaBaseRoute } from '../../../Common/utils/routesUtils';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import { dataSource } from '../../../../dataSources';
+import { exportMetadata } from '../../../../metadata/actions';
 
 /* Constants */
 
@@ -258,7 +257,7 @@ const unTrackCustomFunction = () => {
     const customOnSuccess = () => {
       dispatch(_push(getSchemaBaseRoute(currentSchema)));
       dispatch({ type: RESET });
-      dispatch(fetchTrackedFunctions());
+      dispatch(exportMetadata());
     };
     const customOnError = error => {
       Promise.all([
@@ -350,7 +349,7 @@ const updateSessVar = session_argument => {
     const errorMsg = 'Updating Session argument variable failed';
 
     const customOnSuccess = () => {
-      dispatch(fetchCustomFunction());
+      dispatch(exportMetadata());
     };
     const customOnError = error => {
       dispatch({ type: SESSVAR_CUSTOM_FUNCTION_ADD_FAIL, data: error });
@@ -391,14 +390,13 @@ const customFunctionReducer = (state = functionData, action) => {
     case CUSTOM_FUNCTION_FETCH_SUCCESS:
       return {
         ...state,
-        functionName: action?.data[0][0]?.function_name,
-        functionSchema: action?.data[0][0]?.function_schema || null,
-        configuration: action?.data[0][0]?.configuration || {},
-        functionDefinition: action?.data[1][0]?.function_definition || null,
-        setOffTable: action?.data[1][0]?.return_type_name || null,
-        setOffTableSchema: action?.data[1][0]?.return_type_schema || null,
-        inputArgNames: action?.data[1][0]?.input_arg_names || null,
-        inputArgTypes: action?.data[1][0]?.input_arg_types || null,
+        functionName: action?.data?.function_name,
+        functionSchema: action?.data?.function_schema || null,
+        functionDefinition: action?.data?.function_definition || null,
+        setOffTable: action?.data?.return_type_name || null,
+        setOffTableSchema: action?.data?.return_type_schema || null,
+        inputArgNames: action?.data?.input_arg_names || null,
+        inputArgTypes: action?.data?.input_arg_types || null,
         isFetching: false,
         isUpdating: false,
         isFetchError: null,

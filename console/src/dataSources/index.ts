@@ -24,7 +24,6 @@ export interface DataSourcesAPI {
   displayTableName(table: Table): JSX.Element;
   // todo: replace with function type
   getFunctionSchema(func: PGFunction): string;
-  getFunctionName(func: PGFunction): string;
   getFunctionDefinition(func: PGFunction): string;
   getSchemaFunctions(func: PGFunction[], schemaName: string): PGFunction[];
   findFunction(
