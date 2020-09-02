@@ -500,6 +500,9 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
       let customRootFields = _tcCustomRootFields $ _tciCustomConfig tableCoreInfo
           viewInfo         = _tciViewInfo tableCoreInfo
           selectPerms      = _permSel permissions
+          rfdb             = case _tciDataSource tableCoreInfo of
+            PostgresDB -> RFPostgres
+            MySQLDB    -> RFMySQL
 
       -- If we're in a frontend scenario, we should not include backend_only inserts
       scenario <- asks getter
@@ -520,7 +523,7 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
         -- select permissions
         insertOne <- for selectPerms \selPerms ->
           insertOneIntoTable table (fromMaybe insertOneName $ _tcrfInsertOne customRootFields) (Just insertOneDesc) insertPerms selPerms (_permUpd permissions)
-        pure $ fmap (RFPostgres . MDBInsert) insert : maybe [] (pure . fmap (RFPostgres . MDBInsert)) insertOne
+        pure $ fmap (rfdb . MDBInsert) insert : maybe [] (pure . fmap (rfdb . MDBInsert)) insertOne
 
       updates <- fmap join $ whenMaybe (isMutable viIsUpdatable viewInfo) $ for (_permUpd permissions) \updatePerms -> do
         let updateName = $$(G.litName "update_") <> displayName
@@ -533,7 +536,7 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
         -- them, which at the very least requires select permissions
         updateByPk <- join <$> for selectPerms
           (updateTableByPk table (fromMaybe updateByPkName $ _tcrfUpdateByPk customRootFields) (Just updateByPkDesc) updatePerms)
-        pure $ fmap (RFPostgres . MDBUpdate) <$> catMaybes [update, updateByPk]
+        pure $ fmap (rfdb . MDBUpdate) <$> catMaybes [update, updateByPk]
 
       deletes <- fmap join $ whenMaybe (isMutable viIsDeletable viewInfo) $ for (_permDel permissions) \deletePerms -> do
         let deleteName = $$(G.litName "delete_") <> displayName
@@ -545,7 +548,7 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
         -- ditto
         deleteByPk <- join <$> for selectPerms
           (deleteFromTableByPk table (fromMaybe deleteByPkName $ _tcrfDeleteByPk customRootFields) (Just deleteByPkDesc) deletePerms)
-        pure $ fmap (RFPostgres . MDBDelete) delete : maybe [] (pure . fmap (RFPostgres . MDBDelete)) deleteByPk
+        pure $ fmap (rfdb . MDBDelete) delete : maybe [] (pure . fmap (rfdb . MDBDelete)) deleteByPk
 
       pure $ concat $ catMaybes [inserts, updates, deletes]
 
