@@ -1,5 +1,5 @@
 import { listState } from './state';
-import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
+import { globalCookiePolicy } from '../../../Endpoints';
 import requestAction from '../../../utils/requestAction';
 import dataHeaders from '../Data/Common/Headers';
 import globals from '../../../Globals';
@@ -11,85 +11,13 @@ import { showSuccessNotification } from '../Common/Notification';
 
 /* Action constants */
 
-const FETCH_REMOTE_SCHEMAS = '@remoteSchema/FETCH_REMOTE_SCHEMAS';
-const REMOTE_SCHEMAS_FETCH_SUCCESS =
-  '@remoteSchema/REMOTE_SCHEMAS_FETCH_SUCCESS';
 const FILTER_REMOTE_SCHEMAS = '@remoteSchema/FILTER_REMOTE_SCHEMAS';
-const REMOTE_SCHEMAS_FETCH_FAIL = '@remoteSchema/REMOTE_SCHEMAS_FETCH_FAIL';
 const RESET = '@remoteSchema/RESET';
-const SET_CONSISTENT_REMOTE_SCHEMAS =
-  '@remoteSchema/SET_CONSISTENT_REMOTE_SCHEMAS';
 
 const VIEW_REMOTE_SCHEMA = '@remoteSchema/VIEW_REMOTE_SCHEMA';
 
-/* */
-
-const fetchRemoteSchemas = () => {
-  return (dispatch, getState) => {
-    const url = Endpoints.getSchema;
-    const options = {
-      credentials: globalCookiePolicy,
-      method: 'POST',
-      headers: dataHeaders(getState),
-      body: JSON.stringify({
-        type: 'select',
-        args: {
-          table: {
-            name: 'remote_schemas',
-            schema: 'hdb_catalog',
-          },
-          columns: ['*'],
-          order_by: [{ column: 'name', type: 'asc', nulls: 'last' }],
-        },
-      }),
-    };
-    dispatch({ type: FETCH_REMOTE_SCHEMAS });
-    return dispatch(requestAction(url, options)).then(
-      data => {
-        dispatch({
-          type: REMOTE_SCHEMAS_FETCH_SUCCESS,
-          data,
-        });
-        return Promise.resolve();
-      },
-      error => {
-        console.error('Failed to load remote schemas' + JSON.stringify(error));
-        dispatch({ type: REMOTE_SCHEMAS_FETCH_FAIL, data: error });
-        return Promise.reject();
-      }
-    );
-  };
-};
-
-const setConsistentRemoteSchemas = data => ({
-  type: SET_CONSISTENT_REMOTE_SCHEMAS,
-  data,
-});
-
 const listReducer = (state = listState, action) => {
   switch (action.type) {
-    case FETCH_REMOTE_SCHEMAS:
-      return {
-        ...state,
-        isRequesting: true,
-        isError: false,
-      };
-
-    case REMOTE_SCHEMAS_FETCH_SUCCESS:
-      return {
-        ...state,
-        remoteSchemas: action.data,
-        isRequesting: false,
-        isError: false,
-      };
-
-    case REMOTE_SCHEMAS_FETCH_FAIL:
-      return {
-        ...state,
-        remoteSchemas: [],
-        isRequesting: false,
-        isError: action.data,
-      };
     case FILTER_REMOTE_SCHEMAS:
       return {
         ...state,
@@ -103,11 +31,6 @@ const listReducer = (state = listState, action) => {
       return {
         ...state,
         viewRemoteSchema: action.data,
-      };
-    case SET_CONSISTENT_REMOTE_SCHEMAS:
-      return {
-        ...state,
-        remoteSchemas: action.data,
       };
     default:
       return {
@@ -184,11 +107,5 @@ const makeRequest = (
 };
 /* */
 
-export {
-  fetchRemoteSchemas,
-  FILTER_REMOTE_SCHEMAS,
-  VIEW_REMOTE_SCHEMA,
-  makeRequest,
-  setConsistentRemoteSchemas,
-};
+export { VIEW_REMOTE_SCHEMA, makeRequest, FILTER_REMOTE_SCHEMAS };
 export default listReducer;

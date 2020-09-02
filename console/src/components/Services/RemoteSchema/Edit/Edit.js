@@ -23,6 +23,7 @@ import { NotFoundError } from '../../../Error/PageNotFound';
 import globals from '../../../../Globals';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import styles from '../RemoteSchema.scss';
+import { getRemoteSchemasSelector } from '../../../../metadata/selector';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -267,8 +268,8 @@ const mapStateToProps = state => {
   return {
     ...state.remoteSchemas.addData,
     ...state.remoteSchemas.headerData,
-    allRemoteSchemas: state.remoteSchemas.listData.remoteSchemas,
-    dataHeaders: { ...state.tables.dataHeaders },
+    allRemoteSchemas: getRemoteSchemasSelector(state),
+    dataHeaders: state.tables.dataHeaders,
     inconsistentObjects: state.metadata.inconsistentObjects,
   };
 };

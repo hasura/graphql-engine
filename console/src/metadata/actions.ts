@@ -27,7 +27,6 @@ import {
   setConsistentSchema,
 } from '../components/Services/Data/DataActions';
 import { filterInconsistentMetadataObjects } from '../components/Services/Settings/utils';
-import { setConsistentRemoteSchemas } from '../components/Services/RemoteSchema/Actions';
 import { clearIntrospectionSchemaCache } from '../components/Services/RemoteSchema/graphqlUtils';
 
 export interface ExportMetadataSuccess {
@@ -247,7 +246,6 @@ const handleInconsistentObjects = (
 ): Thunk<void, MetadataActions> => {
   return (dispatch, getState) => {
     const allSchemas = getState().tables.allSchemas;
-    const remoteSchemas = getState().remoteSchemas.listData.remoteSchemas;
 
     dispatch({
       type: 'Metadata/DROP_INCONSISTENT_METADATA_SUCCESS',
@@ -270,7 +268,7 @@ const handleInconsistentObjects = (
 
       // todo
       dispatch(setConsistentSchema(filteredSchema) as any);
-      dispatch(setConsistentRemoteSchemas(remoteSchemas) as any);
+      // dispatch(setConsistentRemoteSchemas(remoteSchemas) as any);
       // dispatch(setActions(filteredActions) as any);
     }
   };

@@ -23,10 +23,10 @@ import RemoteRelationships from './RemoteRelationships/RemoteRelationships';
 import suggestedRelationshipsRaw from './autoRelations';
 import RelationshipEditor from './RelationshipEditor';
 import { NotFoundError } from '../../../Error/PageNotFound';
-import { fetchRemoteSchemas } from '../../RemoteSchema/Actions';
 import styles from '../TableModify/ModifyTable.scss';
 import tableStyles from '../../../Common/TableCommon/TableStyles.scss';
 import { findAllFromRel } from '../../../../dataSources';
+import { getRemoteSchemasSelector } from '../../../../metadata/selector';
 
 const addRelationshipCellView = (
   dispatch,
@@ -314,7 +314,6 @@ const Relationships = ({
   useEffect(() => {
     dispatch(resetRelationshipForm());
     dispatch(setTable(tableName));
-    dispatch(fetchRemoteSchemas());
   }, []);
 
   const tableSchema = allSchemas.find(
@@ -512,7 +511,7 @@ const mapStateToProps = (state, ownProps) => ({
   readOnlyMode: state.main.readOnlyMode,
   serverVersion: state.main.serverVersion,
   schemaList: state.tables.schemaList,
-  remoteSchemas: state.remoteSchemas.listData.remoteSchemas.map(r => r.name),
+  remoteSchemas: getRemoteSchemasSelector(state).map(schema => schema.name),
   adminHeaders: state.tables.dataHeaders,
   ...state.tables.modify,
 });

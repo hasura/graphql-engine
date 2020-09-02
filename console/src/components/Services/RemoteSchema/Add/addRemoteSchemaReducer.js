@@ -6,7 +6,6 @@ import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import requestAction from '../../../../utils/requestAction';
 import dataHeaders from '../../Data/Common/Headers';
 import { push } from 'react-router-redux';
-import { fetchRemoteSchemas } from '../Actions';
 
 import { generateHeaderSyms } from '../../../Common/Layout/ReusableHeader/HeaderReducer';
 import { makeRequest } from '../Actions';
@@ -15,6 +14,7 @@ import { appPrefix } from '../constants';
 
 import globals from '../../../../Globals';
 import { clearIntrospectionSchemaCache } from '../graphqlUtils';
+import { exportMetadata } from '../../../../metadata/actions';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -208,7 +208,7 @@ const addRemoteSchema = () => {
     const customOnSuccess = data => {
       Promise.all([
         dispatch({ type: RESET }),
-        dispatch(fetchRemoteSchemas()).then(() => {
+        dispatch(exportMetadata()).then(() => {
           dispatch(push(`${prefixUrl}/manage/${resolveObj.name}/details`));
         }),
         dispatch({ type: getHeaderEvents.RESET_HEADER, data: data }),
@@ -290,7 +290,7 @@ const deleteRemoteSchema = () => {
       Promise.all([
         dispatch({ type: RESET }),
         dispatch(push(prefixUrl)),
-        dispatch(fetchRemoteSchemas()),
+        dispatch(exportMetadata()),
       ]);
       clearIntrospectionSchemaCache();
     };
@@ -420,9 +420,11 @@ const modifyRemoteSchema = () => {
       // dispatch({ type: REQUEST_SUCCESS });
       dispatch({ type: RESET, data: data });
       dispatch(push(`${prefixUrl}/manage/schemas`)); // to avoid 404
-      dispatch(fetchRemoteSchemas()).then(() => {
-        dispatch(push(`${prefixUrl}/manage/${remoteSchemaName}/details`));
-      });
+      dispatch(
+        exportMetadata(
+          dispatch(push(`${prefixUrl}/manage/${remoteSchemaName}/details`))
+        )
+      );
       dispatch(fetchRemoteSchema(remoteSchemaName));
       clearIntrospectionSchemaCache();
     };
