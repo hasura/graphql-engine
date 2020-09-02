@@ -283,18 +283,18 @@ const fetchDataInit = () => (dispatch, getState) => {
 
 const fetchFunctionInit = (schema = null) => (dispatch, getState) => {
   const url = Endpoints.getSchema;
+  const fnSchema = schema || getState().tables.currentSchema;
   const body = {
     type: 'bulk',
     args: [
-      dataSource.initQueries.loadTrackableFunctions,
-      dataSource.initQueries.loadNonTrackableFunctions,
+      getRunSqlQuery(
+        dataSource.getFunctionDefinitionSql(fnSchema, null, 'trackable')
+      ),
+      getRunSqlQuery(
+        dataSource.getFunctionDefinitionSql(fnSchema, null, 'non-trackable')
+      ),
     ],
   };
-
-  // set schema in queries
-  const fnSchema = schema || getState().tables.currentSchema;
-  body.args[0].args.where.function_schema = fnSchema;
-  body.args[1].args.where.function_schema = fnSchema;
 
   const options = {
     credentials: globalCookiePolicy,
@@ -305,8 +305,16 @@ const fetchFunctionInit = (schema = null) => (dispatch, getState) => {
 
   return dispatch(requestAction(url, options)).then(
     data => {
-      dispatch({ type: LOAD_FUNCTIONS, data: data[0] });
-      dispatch({ type: LOAD_NON_TRACKABLE_FUNCTIONS, data: data[1] });
+      let trackable = [];
+      let nonTrackable = [];
+      try {
+        trackable = JSON.parse(data[0].result[1]);
+        nonTrackable = JSON.parse(data[1].result[1]);
+      } catch (err) {
+        console.error('Failed to fetch schema ' + JSON.stringify(err));
+      }
+      dispatch({ type: LOAD_FUNCTIONS, data: trackable });
+      dispatch({ type: LOAD_NON_TRACKABLE_FUNCTIONS, data: nonTrackable });
     },
     error => {
       console.error('Failed to fetch schema ' + JSON.stringify(error));

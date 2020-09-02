@@ -44,9 +44,6 @@ export interface DataSourcesAPI {
   arrayToPostgresArray(arr: any[]): string;
   initQueries: {
     schemaList: Record<string, any>;
-    loadTrackedFunctions: Record<string, any>;
-    loadTrackableFunctions: Record<string, any>;
-    loadNonTrackableFunctions: Record<string, any>;
   };
   additionalColumnsInfoQuery: (schemaName: string) => Record<string, any>;
   parseColumnsInfoResult: (data: any) => ColumnsInfoResult;
@@ -265,8 +262,9 @@ export interface DataSourcesAPI {
     constraintName: string;
   }) => string;
   getFunctionDefinitionSql: (
-    functionName: string,
-    schemaName: string
+    schemaName: string,
+    functionName?: string | null | undefined,
+    type?: 'trackable' | 'non-trackable' | undefined
   ) => string;
 }
 

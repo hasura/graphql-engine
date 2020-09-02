@@ -119,7 +119,7 @@ const fetchCustomFunction = (functionName, schema) => {
     const fetchCustomFunctionDefinition = {
       type: 'run_sql',
       args: {
-        sql: dataSource.getFunctionDefinitionSql(functionName, schema),
+        sql: dataSource.getFunctionDefinitionSql(schema, functionName),
       },
     };
 
@@ -132,10 +132,17 @@ const fetchCustomFunction = (functionName, schema) => {
     dispatch({ type: FETCHING_INDIV_CUSTOM_FUNCTION });
     return dispatch(requestAction(url, options)).then(
       ({ result }) => {
+        console.log({ result });
         if (result.length > 1) {
+          let funDefinition = {};
+          try {
+            funDefinition = JSON.parse(result[1])[0];
+          } catch (err) {
+            return dispatch({ type: CUSTOM_FUNCTION_FETCH_FAIL, data: err });
+          }
           dispatch({
             type: CUSTOM_FUNCTION_FETCH_SUCCESS,
-            data: JSON.parse(result[1]),
+            data: funDefinition,
           });
           return Promise.resolve();
         }

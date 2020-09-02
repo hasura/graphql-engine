@@ -838,12 +838,41 @@ export const getCreatePkSql = ({
     primary key (${selectedPkColumns.map(pkc => `"${pkc}"`).join(', ')});`;
 };
 
+export const getFunctionsWhereQuery = () => {};
+
+const trackableFunctionsWhere = `
+AND has_variadic = FALSE
+AND returns_set = TRUE
+AND return_type_type = 'c'
+AND(function_type ILIKE '%STABLE%'
+  OR function_type ILIKE '%IMMUTABLE%')
+`;
+
+const nonTrackableFunctionsWhere = `
+AND NOT (
+  has_variadic = false
+  AND returns_set = TRUE
+  AND return_type_type = 'c'
+  AND (
+    function_type ilike '%stable%'
+    OR function_type ilike '%immutable%'
+  )
+)
+`;
+
+const functionWhereStatement = {
+  trackable: trackableFunctionsWhere,
+  'non-trackable': nonTrackableFunctionsWhere,
+};
+
 export const getFunctionDefinitionSql = (
-  functionName: string,
-  schemaName: string
+  schemaName: string,
+  functionName?: string | null,
+  type?: keyof typeof functionWhereStatement
 ) => `
 SELECT
-	Row_to_json(functions) AS result from (
+  Json_agg(Row_to_json(functions)) AS result from (
+SELECT * FROM (
 SELECT p.proname::text AS function_name,
 pn.nspname::text AS function_schema,
 pd.description,
@@ -880,13 +909,17 @@ JOIN pg_type rt ON rt.oid = p.prorettype
 JOIN pg_namespace rtn ON rtn.oid = rt.typnamespace
 LEFT JOIN pg_description pd ON p.oid = pd.objoid
 WHERE
-p.proname::text = '${functionName}'
-AND pn.nspname::text = '${schemaName}'
-AND pn.nspname::text !~~ 'pg_%'::text
+pn.nspname::text !~~ 'pg_%'::text
 AND(pn.nspname::text <> ALL (ARRAY ['information_schema'::text]))
 AND NOT(EXISTS (
   SELECT
     1 FROM pg_aggregate
   WHERE
-    pg_aggregate.aggfnoid::oid = p.oid)) LIMIT 1) as functions;
+    pg_aggregate.aggfnoid::oid = p.oid))) as info
+WHERE function_schema='${schemaName}'
+${functionName ? `AND function_name='${functionName}'` : ''}
+${type ? functionWhereStatement[type] : ''}
+ORDER BY function_name ASC
+${functionName ? 'LIMIT 1' : ''}
+) as functions;
 `;
