@@ -200,10 +200,10 @@ trackFunctionP1
   :: (CacheRM m, QErrM m) => QualifiedFunction -> m ()
 trackFunctionP1 qf = do
   rawSchemaCache <- askSchemaCache
-  when (M.member qf $ scFunctions rawSchemaCache) $
+  when (M.member qf $ _pcFunctions $ scPostgres rawSchemaCache) $
     throw400 AlreadyTracked $ "function already tracked : " <>> qf
   let qt = fmap (TableName . getFunctionTxt) qf
-  when (M.member qt $ scTables rawSchemaCache) $
+  when (M.member qt $ _pcTables $ scPostgres rawSchemaCache) $
     throw400 NotSupported $ "table with name " <> qf <<> " already exists"
 
 trackFunctionP2 :: (MonadTx m, CacheRWM m, HasSystemDefined m)

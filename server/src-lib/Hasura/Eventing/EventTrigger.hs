@@ -395,7 +395,7 @@ logQErr err = do
 
 getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Maybe EventTriggerInfo
 getEventTriggerInfoFromEvent sc e = let table = eTable e
-                                        tableInfo = M.lookup table $ scTables sc
+                                        tableInfo = M.lookup table $ _pcTables $ scPostgres sc
                                     in M.lookup ( tmName $ eTrigger e) =<< (_tiEventTriggerInfoMap <$> tableInfo)
 
 ---- DATABASE QUERIES ---------------------

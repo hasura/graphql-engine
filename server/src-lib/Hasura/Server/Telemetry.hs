@@ -165,13 +165,13 @@ computeMetrics sc _mtServiceTimings _mtPgVersion =
       _mtEventTriggers = Map.size $ Map.filter (not . Map.null)
                     $ Map.map _tiEventTriggerInfoMap userTables
       _mtRemoteSchemas   = Map.size $ scRemoteSchemas sc
-      _mtFunctions = Map.size $ Map.filter (not . isSystemDefined . fiSystemDefined) $ scFunctions sc
+      _mtFunctions = Map.size $ Map.filter (not . isSystemDefined . fiSystemDefined) $ _pcFunctions $ scPostgres sc
       _mtActions = computeActionsMetrics $ scActions sc
 
   in Metrics{..}
 
   where
-    userTables = Map.filter (not . isSystemDefined . _tciSystemDefined . _tiCoreInfo) $ scTables sc
+    userTables = Map.filter (not . isSystemDefined . _tciSystemDefined . _tiCoreInfo) $ _pcTables $ scPostgres sc
     countUserTables predicate = length . filter predicate $ Map.elems userTables
 
     calcPerms :: (RolePermInfo -> Maybe a) -> [RolePermInfo] -> Int

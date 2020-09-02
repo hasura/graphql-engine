@@ -101,20 +101,20 @@ askTabInfo
   => QualifiedTable -> m TableInfo
 askTabInfo tabName = do
   rawSchemaCache <- askSchemaCache
-  liftMaybe (err400 NotExists errMsg) $ M.lookup tabName $ scTables rawSchemaCache
+  liftMaybe (err400 NotExists errMsg) $ M.lookup tabName $ _pcTables $ scPostgres rawSchemaCache
   where
     errMsg = "table " <> tabName <<> " does not exist"
 
 isTableTracked :: SchemaCache -> QualifiedTable -> Bool
 isTableTracked sc qt =
-  isJust $ M.lookup qt $ scTables sc
+  isJust $ M.lookup qt $ _pcTables $ scPostgres sc
 
 askTabInfoFromTrigger
   :: (QErrM m, CacheRM m)
   => TriggerName -> m TableInfo
 askTabInfoFromTrigger trn = do
   sc <- askSchemaCache
-  let tabInfos = M.elems $ scTables sc
+  let tabInfos = M.elems $ _pcTables $ scPostgres sc
   liftMaybe (err400 NotExists errMsg) $ find (isJust.M.lookup trn._tiEventTriggerInfoMap) tabInfos
   where
     errMsg = "event trigger " <> triggerNameToTxt trn <<> " does not exist"

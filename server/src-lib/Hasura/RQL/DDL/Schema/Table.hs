@@ -96,10 +96,10 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''UntrackTable)
 trackExistingTableOrViewP1 :: (QErrM m, CacheRWM m) => QualifiedTable -> m ()
 trackExistingTableOrViewP1 qt = do
   rawSchemaCache <- askSchemaCache
-  when (Map.member qt $ scTables rawSchemaCache) $
+  when (Map.member qt $ _pcTables $ scPostgres rawSchemaCache) $
     throw400 AlreadyTracked $ "view/table already tracked : " <>> qt
   let qf = fmap (FunctionName . getTableTxt) qt
-  when (Map.member qf $ scFunctions rawSchemaCache) $
+  when (Map.member qf $ _pcFunctions $ scPostgres rawSchemaCache) $
     throw400 NotSupported $ "function with name " <> qt <<> " already exists"
 
 -- | Check whether a given name would conflict with the current schema by doing
@@ -223,7 +223,7 @@ unTrackExistingTableOrViewP1
   :: (CacheRM m, QErrM m) => UntrackTable -> m ()
 unTrackExistingTableOrViewP1 (UntrackTable vn _) = do
   rawSchemaCache <- askSchemaCache
-  case Map.lookup vn (scTables rawSchemaCache) of
+  case Map.lookup vn (_pcTables $ scPostgres rawSchemaCache) of
     Just ti ->
       -- Check if table/view is system defined
       when (isSystemDefined $ _tciSystemDefined $ _tiCoreInfo ti) $ throw400 NotSupported $

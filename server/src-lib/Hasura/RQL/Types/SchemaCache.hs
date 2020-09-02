@@ -54,7 +54,7 @@ module Hasura.RQL.Types.SchemaCache
   , TableCoreInfoRM(..)
   , TableCoreCacheRT(..)
   , CacheRM(..)
-  , CacheRT(..)
+  -- , CacheRT(..)
 
   , FieldInfoMap
   , FieldInfo(..)
@@ -113,6 +113,10 @@ module Hasura.RQL.Types.SchemaCache
   , getFuncsOfTable
   , askFunctionInfo
   , CronTriggerInfo(..)
+
+  , PGSchemaCache(..)
+  , SourceName(..)
+  , PGSourcesCache
   ) where
 
 import           Hasura.Db
@@ -226,11 +230,27 @@ incSchemaCacheVer (SchemaCacheVer prev) =
 type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions
 type ActionCache = M.HashMap ActionName ActionInfo -- info of all actions
 
+data PGSchemaCache
+  = PGSchemaCache
+  { _pcTables    :: !TableCache
+  , _pcFunctions :: !FunctionCache
+  }
+$(deriveToJSON (aesonDrop 3 snakeCase) ''PGSchemaCache)
+
+newtype SourceName
+  = SourceName { unSourceName :: Text }
+
+defaultSource :: SourceName
+defaultSource = SourceName "default"
+
+type PGSourcesCache = M.HashMap SourceName PGSchemaCache
+
 data SchemaCache
   = SchemaCache
-  { scTables                      :: !TableCache
+  { scPostgres                    :: !PGSchemaCache
+  -- { scTables                      :: !TableCache
   , scActions                     :: !ActionCache
-  , scFunctions                   :: !FunctionCache
+  -- , scFunctions                   :: !FunctionCache
   , scRemoteSchemas               :: !RemoteSchemaMap
   , scAllowlist                   :: !(HS.HashSet GQLQuery)
   , scGQLContext                  :: !(HashMap RoleName (RoleContext GQLContext))
@@ -261,7 +281,7 @@ getAllRemoteSchemas sc =
 class (Monad m) => TableCoreInfoRM m where
   lookupTableCoreInfo :: QualifiedTable -> m (Maybe TableCoreInfo)
   default lookupTableCoreInfo :: (CacheRM m) => QualifiedTable -> m (Maybe TableCoreInfo)
-  lookupTableCoreInfo tableName = fmap _tiCoreInfo . M.lookup tableName . scTables <$> askSchemaCache
+  lookupTableCoreInfo tableName = fmap _tiCoreInfo . M.lookup tableName . _pcTables . scPostgres <$> askSchemaCache
 
 instance (TableCoreInfoRM m) => TableCoreInfoRM (ReaderT r m) where
   lookupTableCoreInfo = lift . lookupTableCoreInfo
@@ -296,19 +316,19 @@ instance (Monoid w, CacheRM m) => CacheRM (WriterT w m) where
 instance (CacheRM m) => CacheRM (TraceT m) where
   askSchemaCache = lift askSchemaCache
 
-newtype CacheRT m a = CacheRT { runCacheRT :: SchemaCache -> m a }
-  deriving (Functor, Applicative, Monad, MonadError e, MonadWriter w) via (ReaderT SchemaCache m)
-  deriving (MonadTrans) via (ReaderT SchemaCache)
-instance (Monad m) => TableCoreInfoRM (CacheRT m)
-instance (Monad m) => CacheRM (CacheRT m) where
-  askSchemaCache = CacheRT pure
+-- newtype CacheRT m a = CacheRT { runCacheRT :: SchemaCache -> m a }
+--   deriving (Functor, Applicative, Monad, MonadError e, MonadWriter w) via (ReaderT SchemaCache m)
+--   deriving (MonadTrans) via (ReaderT SchemaCache)
+-- instance (Monad m) => TableCoreInfoRM (CacheRT m)
+-- instance (Monad m) => CacheRM (CacheRT m) where
+--   askSchemaCache = CacheRT pure
 
 askFunctionInfo
   :: (CacheRM m, QErrM m)
   => QualifiedFunction ->  m FunctionInfo
 askFunctionInfo qf = do
   sc <- askSchemaCache
-  maybe throwNoFn return $ M.lookup qf $ scFunctions sc
+  maybe throwNoFn return $ M.lookup qf $ _pcFunctions $ scPostgres sc
   where
     throwNoFn = throw400 NotExists $
       "function not found in cache " <>> qf

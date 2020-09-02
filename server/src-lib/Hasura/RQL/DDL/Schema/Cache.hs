@@ -150,9 +150,8 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
     )
 
   returnA -< SchemaCache
-    { scTables = _boTables resolvedOutputs
+    { scPostgres = PGSchemaCache (_boTables resolvedOutputs) (_boFunctions resolvedOutputs)
     , scActions = _boActions resolvedOutputs
-    , scFunctions = _boFunctions resolvedOutputs
     -- TODO this is not the right value: we should track what part of the schema
     -- we can stitch without consistencies, I think.
     , scRemoteSchemas = fmap fst (_boRemoteSchemas resolvedOutputs) -- remoteSchemaMap
@@ -269,8 +268,8 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
 
       returnA -< BuildOutputs
         { _boTables = tableCache
-        , _boActions = actionCache
         , _boFunctions = functionCache
+        , _boActions = actionCache
         , _boRemoteSchemas = remoteSchemaMap
         , _boAllowlist = allowList
         , _boCustomTypes = annotatedCustomTypes
@@ -424,10 +423,10 @@ withMetadataCheck cascade action = do
   newFuncMeta <- liftTx $ Q.catchE defaultTxErrorHandler fetchFunctionMeta
   sc <- askSchemaCache
   let existingInconsistentObjs = scInconsistentObjs sc
-      existingTables = M.keys $ scTables sc
+      existingTables = M.keys $ _pcTables $ scPostgres sc
       oldMeta = flip filter oldMetaU $ \tm -> tmTable tm `elem` existingTables
       schemaDiff = getSchemaDiff oldMeta newMeta
-      existingFuncs = M.keys $ scFunctions sc
+      existingFuncs = M.keys $ _pcFunctions $ scPostgres sc
       oldFuncMeta = flip filter oldFuncMetaU $ \fm -> fmFunction fm `elem` existingFuncs
       FunctionDiff droppedFuncs alteredFuncs = getFuncDiff oldFuncMeta newFuncMeta
       overloadedFuncs = getOverloadedFuncs existingFuncs newFuncMeta
@@ -467,7 +466,7 @@ withMetadataCheck cascade action = do
   postSc <- askSchemaCache
 
   -- Recreate event triggers in hdb_views
-  forM_ (M.elems $ scTables postSc) $ \(TableInfo coreInfo _ eventTriggers) -> do
+  forM_ (M.elems $ _pcTables $ scPostgres postSc) $ \(TableInfo coreInfo _ eventTriggers) -> do
           let table = _tciName coreInfo
               columns = getCols $ _tciFieldInfoMap coreInfo
           forM_ (M.toList eventTriggers) $ \(triggerName, eti) -> do
@@ -488,7 +487,7 @@ withMetadataCheck cascade action = do
 
       sc <- askSchemaCache
       for_ alteredTables $ \(oldQtn, tableDiff) -> do
-        ti <- case M.lookup oldQtn $ scTables sc of
+        ti <- case M.lookup oldQtn $ _pcTables $ scPostgres sc of
           Just ti -> return ti
           Nothing -> throw500 $ "old table metadata not found in cache : " <>> oldQtn
         processTableChanges (_tiCoreInfo ti) tableDiff
