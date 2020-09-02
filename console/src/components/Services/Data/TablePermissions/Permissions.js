@@ -44,12 +44,7 @@ import TableHeader from '../TableCommon/TableHeader';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import Toggle from '../../../Common/Toggle/Toggle';
 import EnhancedInput from '../../../Common/InputChecker/InputChecker';
-import {
-  fetchFunctionInit,
-  setTable,
-  updateSchemaInfo,
-  fetchRoleList,
-} from '../DataActions';
+import { fetchFunctionInit, setTable, updateSchemaInfo } from '../DataActions';
 import { getIngForm, getEdForm } from '../utils';
 import {
   getPermissionFilterString,
@@ -85,6 +80,7 @@ import {
   getQuerySingleRowMutation,
 } from './utils';
 import PermButtonSection from './PermButtonsSection';
+import { rolesSelector } from '../../../../metadata/selector';
 
 class Permissions extends Component {
   constructor() {
@@ -113,7 +109,6 @@ class Permissions extends Component {
 
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
-    dispatch(fetchRoleList());
     dispatch(fetchFunctionInit());
   }
 
@@ -1879,7 +1874,7 @@ const mapStateToProps = (state, ownProps) => ({
   tableName: ownProps.params.table,
   tableType: ownProps.route.tableType,
   allSchemas: state.tables.allSchemas,
-  allRoles: state.tables.allRoles,
+  allRoles: rolesSelector(state),
   schemaList: state.tables.schemaList,
   migrationMode: state.main.migrationMode,
   nonTrackableFunctions: state.tables.nonTrackablePostgresFunctions || [],

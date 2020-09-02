@@ -210,18 +210,6 @@ export const getSetCustomRootFieldsQuery = (
   };
 };
 
-export const getFetchAllRolesQuery = () => ({
-  type: 'select',
-  args: {
-    table: {
-      schema: 'hdb_catalog',
-      name: 'hdb_role',
-    },
-    columns: ['role_name'],
-    order_by: [{ column: 'role_name', type: 'asc' }],
-  },
-});
-
 // TODO Refactor and accept role, filter and action name
 export const getCreateActionPermissionQuery = (
   def: { role: string; filter: any },

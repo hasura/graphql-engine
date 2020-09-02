@@ -80,6 +80,7 @@ class PermissionsSummary extends Component {
 
     const allActions = ['select', 'insert', 'update', 'delete'];
 
+    // todo ?
     let allRoles = getAllRoles(allSchemas);
 
     // add newly added roles

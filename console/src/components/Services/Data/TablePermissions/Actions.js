@@ -1,6 +1,6 @@
 import { defaultPermissionsState, defaultQueryPermissions } from '../DataState';
 import { getEdForm, getIngForm } from '../utils';
-import { makeMigrationCall, fetchRoleList } from '../DataActions';
+import { makeMigrationCall } from '../DataActions';
 import {
   findTable,
   getSchemaTables,
@@ -13,6 +13,7 @@ import {
   getDropPermissionQuery,
 } from '../../../Common/utils/v1QueryUtils';
 import { capitalize } from '../../../Common/utils/jsUtils';
+import { exportMetadata } from '../../../../metadata/actions';
 
 export const PERM_OPEN_EDIT = 'ModifyTable/PERM_OPEN_EDIT';
 export const PERM_SET_FILTER_TYPE = 'ModifyTable/PERM_SET_FILTER_TYPE';
@@ -295,12 +296,9 @@ const permRemoveRole = (tableSchema, roleName) => {
 
     const customOnSuccess = () => {
       dispatch(_permRemoveAccess());
-      // reset new role name
       dispatch(permSetRoleName(''));
-      // close edit box
       dispatch(permCloseEdit());
-      // fetch all roles
-      dispatch(fetchRoleList());
+      dispatch(exportMetadata());
     };
     const customOnError = () => {};
 
@@ -364,14 +362,10 @@ const permRemoveMultipleRoles = tableSchema => {
     const errorMsg = 'Removing permissions failed';
 
     const customOnSuccess = () => {
-      // reset new role name
       dispatch(permSetRoleName(''));
-      // close edit box
       dispatch(permCloseEdit());
-      // reset checkbox selections
       dispatch({ type: PERM_RESET_BULK_SELECT });
-      // fetch all roles
-      dispatch(fetchRoleList());
+      dispatch(exportMetadata());
     };
     const customOnError = () => {};
 
@@ -495,14 +489,10 @@ const applySamePermissionsBulk = (tableSchema, arePermissionsModified) => {
     const errorMsg = 'Permission changes failed';
 
     const customOnSuccess = () => {
-      // reset new role name
       dispatch(permSetRoleName(''));
-      // close edit box
       dispatch(permCloseEdit());
-      // reset checkbox selections
       dispatch({ type: PERM_RESET_APPLY_SAME });
-      // fetch all roles
-      dispatch(fetchRoleList());
+      dispatch(exportMetadata());
     };
     const customOnError = () => {};
 
@@ -622,8 +612,7 @@ const copyRolePermissions = (
 
     const customOnSuccess = () => {
       onSuccess();
-      // fetch all roles
-      dispatch(fetchRoleList());
+      dispatch(exportMetadata());
     };
     const customOnError = () => {};
 
@@ -690,7 +679,7 @@ const deleteRoleGlobally = roleName => {
 
     const customOnSuccess = () => {
       // fetch all roles
-      dispatch(fetchRoleList());
+      dispatch(exportMetadata());
     };
     const customOnError = () => {};
 
@@ -803,12 +792,9 @@ const permChangePermissions = changeType => {
       } else if (permChangeTypes.delete) {
         dispatch(_permRemoveAccess());
       }
-      // reset new role name
       dispatch(permSetRoleName(''));
-      // close edit box
       dispatch(permCloseEdit());
-      // fetch all roles
-      dispatch(fetchRoleList());
+      dispatch(exportMetadata());
     };
     const customOnError = () => {};
 

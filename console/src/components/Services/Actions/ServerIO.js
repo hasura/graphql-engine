@@ -1,5 +1,5 @@
 import globals from '../../../Globals';
-import { makeMigrationCall, fetchRoleList } from '../Data/DataActions';
+import { makeMigrationCall } from '../Data/DataActions';
 import {
   generateSetCustomTypesQuery,
   generateCreateActionQuery,
@@ -520,7 +520,6 @@ export const saveActionPermission = (successCb, errorCb) => (
 
   const customOnSuccess = () => {
     dispatch(exportMetadata());
-    dispatch(fetchRoleList());
     dispatch(setPermRequestSuccess());
     if (successCb) {
       successCb();
@@ -575,7 +574,6 @@ export const removeActionPermission = (successCb, errorCb) => (
 
   const customOnSuccess = () => {
     dispatch(exportMetadata());
-    dispatch(fetchRoleList());
     dispatch(setPermRequestSuccess());
     if (successCb) {
       successCb();
