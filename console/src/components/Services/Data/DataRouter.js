@@ -23,6 +23,7 @@ import {
   permissionsSummaryConnector,
   ModifyCustomFunction,
   PermissionCustomFunction,
+  manageConnector,
 } from '.';
 
 import { RightContainer } from '../../Common/Layout/RightContainer';
@@ -120,9 +121,7 @@ const makeDataRouter = (
         component={addExistingTableViewConnector(connect)}
       />
       <Route path="sql" component={rawSQLConnector(connect)} />
-      {/*
-      <Route path="metadata" component={metadataConnector(connect)} />
-      */}
+      <Route path="manage" component={manageConnector(connect)} />
       <Route
         path="migrations"
         onEnter={composeOnEnterHooks([consoleModeRedirects])}
@@ -170,7 +169,6 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
         cb();
       },
       () => {
-        // alert('Could not load schema.');
         replaceState('/');
         cb();
       }

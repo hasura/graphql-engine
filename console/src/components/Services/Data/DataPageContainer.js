@@ -11,6 +11,7 @@ import { updateCurrentSchema } from './DataActions';
 import { NotFoundError } from '../../Error/PageNotFound';
 import { CLI_CONSOLE_MODE } from '../../../constants';
 import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
+import styles from '../../Common/TableCommon/Table.scss';
 
 const DataPageContainer = ({
   currentSchema,
@@ -19,8 +20,6 @@ const DataPageContainer = ({
   location,
   dispatch,
 }) => {
-  const styles = require('../../Common/TableCommon/Table.scss');
-
   if (!schemaList.map(s => s.schema_name).includes(currentSchema)) {
     dispatch(updateCurrentSchema('public', false));
 

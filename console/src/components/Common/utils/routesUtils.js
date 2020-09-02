@@ -1,5 +1,3 @@
-// import globals from '../../../Globals';
-
 import { push } from 'react-router-redux';
 import globals from '../../../Globals';
 
@@ -17,6 +15,8 @@ export const getSchemaAddTableRoute = schemaName => {
 export const getSchemaPermissionsRoute = schemaName => {
   return `${getSchemaBaseRoute(schemaName)}/permissions`;
 };
+
+export const manageDatabasesRoute = '/data/manage';
 
 const getTableBaseRoute = (schemaName, tableName, isTable) => {
   return `${getSchemaBaseRoute(schemaName)}/${
