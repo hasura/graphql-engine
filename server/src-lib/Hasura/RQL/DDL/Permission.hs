@@ -88,9 +88,9 @@ TRUE            TRUE (OR NOT-SET)         TRUE                                  
 -- Insert permission
 data InsPerm
   = InsPerm
-  { ipCheck       :: !BoolExp
-  , ipSet         :: !(Maybe (ColumnValues Value))
-  , ipColumns     :: !(Maybe PermColSpec)
+  { ipCheck   :: !BoolExp
+  , ipSet     :: !(Maybe (ColumnValues Value))
+  , ipColumns :: !(Maybe PermColSpec)
   , ipBackendOnly :: !(Maybe Bool) -- see Note [Backend only permissions]
   } deriving (Show, Eq, Lift, Generic)
 instance Cacheable InsPerm

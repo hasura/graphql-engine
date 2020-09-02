@@ -1,20 +1,34 @@
-module Hasura.RQL.Types.QueryCollection where
+module Hasura.RQL.Types.QueryCollection
+  ( CollectionName
+  , CollectionDef(..)
+  , CreateCollection(..)
+  , AddQueryToCollection(..)
+  , DropQueryFromCollection(..)
+  , DropCollection(..)
+  , CollectionReq(..)
+  , GQLQuery(..)
+  , GQLQueryWithText(..)
+  , QueryName(..)
+  , ListedQuery(..)
+  , getGQLQuery
+  , queryWithoutTypeNames
+  , stripTypenames
+  ) where
 
-import           Hasura.GraphQL.Validate.Types    (stripTypenames)
-import           Hasura.Incremental               (Cacheable)
+import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Common          (NonEmptyText)
+import           Hasura.RQL.Instances          ()
+import           Hasura.RQL.Types.Common       (NonEmptyText)
 import           Hasura.SQL.Types
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.GraphQL.Draft.Instances ()
-import           Language.Haskell.TH.Syntax       (Lift)
+import           Language.Haskell.TH.Syntax    (Lift)
 
-import qualified Data.Text                        as T
-import qualified Database.PG.Query                as Q
-import qualified Language.GraphQL.Draft.Syntax    as G
+import qualified Data.Text                     as T
+import qualified Database.PG.Query             as Q
+import qualified Language.GraphQL.Draft.Syntax as G
 
 newtype CollectionName
   = CollectionName {unCollectionName :: NonEmptyText}
@@ -28,7 +42,7 @@ newtype QueryName
   deriving (Show, Eq, Ord, NFData, Hashable, Lift, ToJSON, ToJSONKey, FromJSON, DQuote, Generic, Arbitrary, Cacheable)
 
 newtype GQLQuery
-  = GQLQuery {unGQLQuery :: G.ExecutableDocument}
+  = GQLQuery { unGQLQuery :: G.ExecutableDocument G.Name }
   deriving (Show, Eq, NFData, Hashable, Lift, ToJSON, FromJSON, Cacheable)
 
 newtype GQLQueryWithText
@@ -49,6 +63,39 @@ queryWithoutTypeNames :: GQLQuery -> GQLQuery
 queryWithoutTypeNames =
   GQLQuery . G.ExecutableDocument . stripTypenames
   . G.getExecutableDefinitions . unGQLQuery
+
+-- WIP NOTE
+-- this was lifted from Validate. Should this be here?
+stripTypenames :: forall var. [G.ExecutableDefinition var] -> [G.ExecutableDefinition var]
+stripTypenames = map filterExecDef
+  where
+    filterExecDef :: G.ExecutableDefinition var -> G.ExecutableDefinition var
+    filterExecDef = \case
+      G.ExecutableDefinitionOperation opDef  ->
+        G.ExecutableDefinitionOperation $ filterOpDef opDef
+      G.ExecutableDefinitionFragment fragDef ->
+        let newSelset = filterSelSet $ G._fdSelectionSet fragDef
+        in G.ExecutableDefinitionFragment fragDef{G._fdSelectionSet = newSelset}
+
+    filterOpDef  = \case
+      G.OperationDefinitionTyped typeOpDef ->
+        let newSelset = filterSelSet $ G._todSelectionSet typeOpDef
+        in G.OperationDefinitionTyped typeOpDef{G._todSelectionSet = newSelset}
+      G.OperationDefinitionUnTyped selset ->
+        G.OperationDefinitionUnTyped $ filterSelSet selset
+
+    filterSelSet :: [G.Selection frag var'] -> [G.Selection frag var']
+    filterSelSet = mapMaybe filterSel
+    filterSel :: G.Selection frag var' -> Maybe (G.Selection frag var')
+    filterSel s = case s of
+      G.SelectionField f ->
+        if G._fName f == $$(G.litName "__typename")
+        then Nothing
+        else
+          let newSelset = filterSelSet $ G._fSelectionSet f
+          in Just $ G.SelectionField  f{G._fSelectionSet = newSelset}
+      _                  -> Just s
+
 
 data ListedQuery
   = ListedQuery

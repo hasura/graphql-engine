@@ -7,7 +7,7 @@ module Hasura.RQL.DDL.EventTrigger
   , runRedeliverEvent
   , runInvokeEventTrigger
 
-  -- TODO: review
+  -- TODO(from master): review
   , delEventTriggerFromCatalog
   , subTableP2
   , subTableP2Setup
