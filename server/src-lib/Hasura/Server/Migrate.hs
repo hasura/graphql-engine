@@ -21,7 +21,6 @@ module Hasura.Server.Migrate
   -- , recreateSystemMetadata
   , dropCatalog
   , downgradeCatalog
-  , getMetadataTx
   ) where
 
 import           Hasura.Prelude
@@ -187,7 +186,7 @@ migrateCatalog migrationTime = do
              traverse_ (mpMigrate . snd) neededMigrations
              updateCatalogVersion
              pure $ MRMigrated previousVersion
-      metadata <- liftTx getMetadataTx
+      metadata <- liftTx getMetadata
       pure (migrationResult, metadata)
       where
         neededMigrations = dropWhile ((/= previousVersion) . fst) (migrations False)
@@ -362,14 +361,6 @@ migrations dryRun =
            |] () False
         setMetadata metadata
 
-
-getMetadataTx :: Q.TxE QErr Metadata
-getMetadataTx =
-  Q.getAltJ . runIdentity . Q.getRow <$>
-  Q.withQE defaultTxErrorHandler
-  [Q.sql|
-     SELECT metadata from hdb_catalog.hdb_metadata where id = 1
-  |] () True
 
 -- | Drops and recreates all “system-defined” metadata, aka metadata for tables and views in the
 -- @information_schema@ and @hdb_catalog@ schemas. These tables and views are tracked to expose them

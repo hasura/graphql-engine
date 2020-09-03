@@ -55,7 +55,8 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Auth                          (AuthMode, UserAuthentication,
                                                               resolveUserInfo)
 import           Hasura.Server.Cors
-import           Hasura.Server.Utils                         (RequestId, getRequestId)
+import           Hasura.Server.Types                         (RequestId)
+import           Hasura.Server.Utils                         (getRequestId)
 import           Hasura.Server.Version                       (HasVersion)
 import           Hasura.Session
 

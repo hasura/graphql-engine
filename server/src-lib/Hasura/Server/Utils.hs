@@ -6,7 +6,7 @@ import           Control.Lens               ((^..))
 import           Data.Aeson
 import           Data.Aeson.Internal
 import           Data.Char
-import           Language.Haskell.TH.Syntax (Lift, Q, TExp)
+import           Language.Haskell.TH.Syntax (Q, TExp)
 import           System.Environment
 import           System.Exit
 import           System.Process
@@ -29,10 +29,7 @@ import qualified Text.Regex.TDFA.ReadRegex  as TDFA
 import qualified Text.Regex.TDFA.TDFA       as TDFA
 
 import           Hasura.RQL.Instances       ()
-
-newtype RequestId
-  = RequestId { unRequestId :: Text }
-  deriving (Show, Eq, ToJSON, FromJSON)
+import           Hasura.Server.Types
 
 jsonHeader :: HTTP.Header
 jsonHeader = ("Content-Type", "application/json; charset=utf-8")
@@ -69,6 +66,14 @@ getRequestHeader hdrName hdrs = snd <$> mHeader
   where
     mHeader = find (\h -> fst h == hdrName) hdrs
 
+getRequestId :: (MonadIO m) => [HTTP.Header] -> m RequestId
+getRequestId headers =
+  -- generate a request id for every request if the client has not sent it
+  case getRequestHeader requestIdHeader headers  of
+    Nothing    -> RequestId <$> liftIO generateFingerprint
+    Just reqId -> return $ RequestId $ bsToTxt reqId
+
+
 parseStringAsBool :: String -> Either String Bool
 parseStringAsBool t
   | map toLower t `elem` truthVals = Right True
@@ -81,13 +86,6 @@ parseStringAsBool t
     errMsg = " Not a valid boolean text. " ++ "True values are "
              ++ show truthVals ++ " and  False values are " ++ show falseVals
              ++ ". All values are case insensitive"
-
-getRequestId :: (MonadIO m) => [HTTP.Header] -> m RequestId
-getRequestId headers =
-  -- generate a request id for every request if the client has not sent it
-  case getRequestHeader requestIdHeader headers  of
-    Nothing    -> RequestId <$> liftIO generateFingerprint
-    Just reqId -> return $ RequestId $ bsToTxt reqId
 
 -- Get an env var during compile time
 getValFromEnvOrScript :: String -> String -> Q (TExp String)
@@ -210,24 +208,6 @@ applyFirst :: (Char -> Char) -> String -> String
 applyFirst _ []     = []
 applyFirst f [x]    = [f x]
 applyFirst f (x:xs) = f x: xs
-
--- | The version integer
-data APIVersion
-  = VIVersion1
-  | VIVersion2
-  deriving (Show, Eq, Lift)
-
-instance ToJSON APIVersion where
-  toJSON VIVersion1 = toJSON @Int 1
-  toJSON VIVersion2 = toJSON @Int 2
-
-instance FromJSON APIVersion where
-  parseJSON v = do
-    verInt :: Int <- parseJSON v
-    case verInt of
-      1 -> return VIVersion1
-      2 -> return VIVersion2
-      i -> fail $ "expected 1 or 2, encountered " ++ show i
 
 englishList :: Text -> NonEmpty Text -> Text
 englishList joiner = \case

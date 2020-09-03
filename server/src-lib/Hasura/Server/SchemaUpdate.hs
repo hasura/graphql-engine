@@ -8,15 +8,16 @@ where
 import           Hasura.Db
 import           Hasura.Logging
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Schema       (MetadataRequestCtx (..), runCacheRWT)
+import           Hasura.RQL.DDL.Schema          (runCacheRWT)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.App           (SchemaCacheRef (..), withSCUpdate)
-import           Hasura.Server.Init          (InstanceId (..))
+import           Hasura.Server.App              (SchemaCacheRef (..), updateStateRefs)
 import           Hasura.Server.Logging
+import           Hasura.Server.Types            (InstanceId (..))
 import           Hasura.Session
 
-import           Control.Monad.Trans.Control (MonadBaseControl (..))
+import           Control.Concurrent.MVar.Lifted (withMVarMasked)
+import           Control.Monad.Trans.Control    (MonadBaseControl (..))
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -25,14 +26,13 @@ import           Data.IORef
 import           GHC.AssertNF
 #endif
 
-import qualified Control.Concurrent.Extended as C
-import qualified Control.Concurrent.STM      as STM
-import qualified Control.Immortal            as Immortal
-import qualified Data.Text                   as T
-import qualified Data.Time                   as UTC
-import qualified Database.PG.Query           as PG
-import qualified Database.PostgreSQL.LibPQ   as PQ
-import qualified Network.HTTP.Client         as HTTP
+import qualified Control.Concurrent.Extended    as C
+import qualified Control.Concurrent.STM         as STM
+import qualified Control.Immortal               as Immortal
+import qualified Data.Text                      as T
+import qualified Database.PG.Query              as PG
+import qualified Database.PostgreSQL.LibPQ      as PQ
+import qualified Network.HTTP.Client            as HTTP
 
 pgChannel :: PG.PGChannel
 pgChannel = "hasura_schema_update"
@@ -64,16 +64,8 @@ instance ToEngineLog SchemaSyncThreadLog Hasura where
   toEngineLog threadLog =
     (suelLogLevel threadLog, ELTInternal ILTSchemaSyncThread, toJSON threadLog)
 
-data EventPayload
-  = EventPayload
-  { _epInstanceId    :: !InstanceId
-  , _epOccurredAt    :: !UTC.UTCTime
-  , _epInvalidations :: !CacheInvalidations
-  }
-$(deriveJSON (aesonDrop 3 snakeCase) ''EventPayload)
-
 data ThreadError
-  = TEJsonParse !T.Text
+  = TEPayloadParse !T.Text
   | TEQueryError !QErr
 $(deriveToJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 2
@@ -81,7 +73,7 @@ $(deriveToJSON
                  }
  ''ThreadError)
 
-type SchemaSyncEventRef = STM.TVar (Maybe EventPayload)
+type SchemaSyncEventRef = STM.TVar (Maybe Value)
 
 logThreadStarted
   :: (MonadIO m)
@@ -152,7 +144,7 @@ listener pool logger schemaSyncEventRef =
       PG.PNEOnStart        -> pure ()
       PG.PNEPQNotify notif ->
         case eitherDecodeStrict $ PQ.notifyExtra notif of
-          Left e -> logError logger threadType $ TEJsonParse $ T.pack e
+          Left e -> logError logger threadType $ TEPayloadParse $ T.pack e
           Right payload -> do
             logInfo logger threadType $ object ["received_event" .= payload]
 #ifndef PROFILING
@@ -187,9 +179,13 @@ processor sqlGenCtx pool logger httpMgr schemaSyncEventRef
   forever $ do
     event <- liftIO $ STM.atomically getLatestEvent
     logInfo logger threadType $ object ["processed_event" .= event]
-    when (shouldReload event) $
-      refreshSchemaCache sqlGenCtx pool logger httpMgr cacheRef (_epInvalidations event)
-        threadType metadataPool "schema cache reloaded"
+    eitherResult <- processSchemaSyncEventPayload instanceId event
+    case eitherResult of
+      Left e -> logError logger threadType $ TEPayloadParse e
+      Right (SchemaSyncEventProcessResult shouldReload invalidations) ->
+        when shouldReload $
+          refreshSchemaCache sqlGenCtx pool logger httpMgr cacheRef invalidations
+            threadType metadataPool "schema cache reloaded"
   where
     -- checks if there is an event
     -- and replaces it with Nothing
@@ -201,9 +197,6 @@ processor sqlGenCtx pool logger httpMgr schemaSyncEventRef
           return event
         Nothing -> STM.retry
     threadType = TTProcessor
-
-      -- If event is from another server instance
-    shouldReload payload = _epInstanceId payload /= instanceId
 
 refreshSchemaCache
   :: ( MonadMetadataManage m
@@ -221,19 +214,26 @@ refreshSchemaCache
   -> T.Text -> m ()
 refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef invalidations threadType metadataPool msg = do
   -- Reload schema cache from catalog
-  resE <- runExceptT $ withSCUpdate cacheRef metadataPool logger do
+  resE <- runExceptT $ withRefUpdate $ do
     rebuildableCache <- fst <$> liftIO (readIORef $ _scrCache cacheRef)
-    metadata         <- liftIO $ readIORef $ _scrMetadata cacheRef
-    (((), cache, _), modmeta) <- buildSchemaCacheWithOptions CatalogSync invalidations noMetadataModify
+    metadata         <- fetchMetadataTx
+                        >>= (\tx -> liftIO $ runExceptT $ PG.runTx' metadataPool tx)
+                        >>= liftEither
+    (((), cache, _), _) <- buildSchemaCacheWithOptions CatalogSync invalidations noMetadataModify
       & runCacheRWT rebuildableCache
       & peelRun runCtx pgCtx PG.ReadWrite Nothing metadata
-    pure ((), MetadataRequestCtx cache modmeta)
+    pure (cache, metadata)
   case resE of
     Left e   -> logError logger threadType $ TEQueryError e
     Right () -> logInfo logger threadType $ object ["message" .= msg]
  where
   runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
   pgCtx = mkPGExecCtx PG.Serializable pool
+
+  withRefUpdate action =
+    withMVarMasked (_scrLock cacheRef) $ \() -> do
+      (newSchemaCache, newMetadata) <- action
+      updateStateRefs logger newSchemaCache newMetadata cacheRef
 
 logInfo :: MonadIO m => Logger Hasura -> ThreadType -> Value -> m ()
 logInfo logger threadType val = unLogger logger $

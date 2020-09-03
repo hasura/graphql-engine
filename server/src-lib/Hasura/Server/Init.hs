@@ -33,15 +33,10 @@ import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Server.Init.Config
 import           Hasura.Server.Logging
+import           Hasura.Server.Types
 import           Hasura.Server.Utils
 import           Hasura.Session
 import           Network.URI                      (parseURI)
-
-newtype DbUid
-  = DbUid { getDbUid :: Text }
-  deriving (Show, Eq, J.ToJSON, J.FromJSON)
-
-newtype PGVersion = PGVersion { unPGVersion :: Int } deriving (Show, Eq, J.ToJSON)
 
 getDbId :: Q.TxE QErr Text
 getDbId =
@@ -53,10 +48,6 @@ getDbId =
 
 getPgVersion :: Q.TxE QErr PGVersion
 getPgVersion = PGVersion <$> Q.serverVersion
-
-newtype InstanceId
-  = InstanceId { getInstanceId :: Text }
-  deriving (Show, Eq, J.ToJSON, J.FromJSON, Q.FromCol, Q.ToPrepArg)
 
 generateInstanceId :: IO InstanceId
 generateInstanceId = InstanceId <$> generateFingerprint

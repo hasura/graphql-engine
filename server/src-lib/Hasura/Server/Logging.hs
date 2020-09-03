@@ -30,7 +30,7 @@ import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Compression
-import           Hasura.Server.Utils
+import           Hasura.Server.Types
 import           Hasura.Session
 import           Hasura.Tracing            (TraceT)
 

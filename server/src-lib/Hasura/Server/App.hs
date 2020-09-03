@@ -52,6 +52,7 @@ import           Hasura.Server.Cors
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
 import           Hasura.Server.Middleware                  (corsMiddleware)
+import           Hasura.Server.Types
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
 import           Hasura.Session
@@ -156,27 +157,44 @@ withSCUpdate
      )
   => SchemaCacheRef
   -> Q.PGPool
+  -> InstanceId
   -> L.Logger L.Hasura
-  -> m (a, MetadataRequestCtx Run) -> m a
-withSCUpdate scr metadataPool logger action =
-  withMVarMasked lk $ \() -> do
-    (!res, !(MetadataRequestCtx newSC newMetadata)) <- action
-    updateMetadataTx >>= \tx ->
-       liftEither =<< liftIO (runExceptT $ Q.runTx' metadataPool $ tx newMetadata)
-    -- update metadata in storage
-    liftIO $ do
-      -- update schemacache in IO reference
-      modifyIORef' cacheRef $ \(_, prevVer) ->
-        let !newVer = incSchemaCacheVer prevVer
-          in (newSC, newVer)
-      -- update metadata in IO reference
-      writeIORef metadataRef newMetadata
-      -- log any inconsistent objects
-      logInconsObjs logger $ scInconsistentObjs $ lastBuiltSchemaCache newSC
-      onChange
-    return res
+  -> m (a, MetadataStateResult Run) -> m a
+withSCUpdate scr metadataPool instanceId logger action =
+  withMVarMasked (_scrLock scr) $ \() -> do
+    (!res, !(MetadataStateResult newSC cacheInvalidations newMetadata)) <- action
+    txUpdateMetadata   <- updateMetadataTx
+    txNotifySchemaSync <- notifySchemaSyncTx
+    liftEither =<< (liftIO . runExceptT . Q.runTx' metadataPool) do
+      -- update metadata in storage
+      txUpdateMetadata newMetadata
+      -- notify schema sync
+      txNotifySchemaSync instanceId cacheInvalidations
+
+    -- update IO references
+    updateStateRefs logger newSC newMetadata scr
+    pure res
+
+updateStateRefs
+  :: (MonadIO m, MonadBaseControl IO m)
+  => L.Logger L.Hasura
+  -> RebuildableSchemaCache Run
+  -> Metadata
+  -> SchemaCacheRef
+  -> m ()
+updateStateRefs logger schemaCache metadata schemaCacheRef =
+  liftIO $ do
+    -- update schemacache in IO reference
+    modifyIORef' cacheRef $ \(_, prevVer) ->
+      let !newVer = incSchemaCacheVer prevVer
+        in (schemaCache, newVer)
+    -- update metadata in IO reference
+    writeIORef metadataRef metadata
+    -- log any inconsistent objects
+    logInconsObjs logger $ scInconsistentObjs $ lastBuiltSchemaCache schemaCache
+    onChange
   where
-    SchemaCacheRef lk cacheRef metadataRef onChange = scr
+    SchemaCacheRef _ cacheRef metadataRef onChange = schemaCacheRef
 
 mkGetHandler :: Handler m APIResp -> APIHandler m ()
 mkGetHandler = AHGet
@@ -373,7 +391,9 @@ v1QueryHandler query = do
   scRef  <- asks (scCacheRef . hcServerCtx)
   logger <- asks (scLogger . hcServerCtx)
   metadataPool <- asks (scMetadataPool . hcServerCtx)
-  res    <- bool (fst <$> dbAction) (withSCUpdate scRef metadataPool logger dbAction) $ queryModifiesSchemaCache query
+  instanceId  <- asks (scInstanceId . hcServerCtx)
+  res    <- bool (fst <$> dbAction) (withSCUpdate scRef metadataPool instanceId logger dbAction) $
+            queryModifiesSchemaCache query
   return $ HttpResponse res []
   where
     -- Hit postgres
@@ -382,13 +402,11 @@ v1QueryHandler query = do
       scRef       <- asks (scCacheRef . hcServerCtx)
       schemaCache <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
       metadata    <- liftIO $ readIORef $ _scrMetadata scRef
-      let reqCtx = MetadataRequestCtx schemaCache metadata
       httpMgr     <- asks (scManager . hcServerCtx)
       sqlGenCtx   <- asks (scSQLGenCtx . hcServerCtx)
       pgExecCtx   <- asks (scPGExecCtx . hcServerCtx)
-      instanceId  <- asks (scInstanceId . hcServerCtx)
       env         <- asks (scEnvironment . hcServerCtx)
-      runQuery env pgExecCtx instanceId userInfo reqCtx httpMgr sqlGenCtx (SystemDefined False) query
+      runQuery env pgExecCtx userInfo schemaCache metadata httpMgr sqlGenCtx (SystemDefined False) query
 
 v1Alpha1GQHandler
   :: ( HasVersion

@@ -11,7 +11,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.Server.Init
-import           Hasura.Server.Migrate      (downgradeCatalog, dropCatalog, getMetadataTx)
+import           Hasura.Server.Migrate      (downgradeCatalog, dropCatalog)
 import           Hasura.Server.Version
 
 import qualified Data.ByteString.Char8      as BC
@@ -57,7 +57,7 @@ runApp env hgeOptions =
 
     HCExport -> do
       (initCtx, _) <- initialiseCtx env hgeOptions
-      res <- runTx' initCtx getMetadataTx Q.ReadCommitted
+      res <- runTx' initCtx getMetadata Q.ReadCommitted
       either (printErrJExit MetadataExportError) printJSON res
 
     HCClean -> do

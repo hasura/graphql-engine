@@ -73,11 +73,11 @@ data RebuildableSchemaCache m
   }
 $(makeLenses ''RebuildableSchemaCache)
 
--- FIXME: Does not belong here?
-data MetadataRequestCtx m
-  = MetadataRequestCtx
-  { _mrcSchemaCache :: !(RebuildableSchemaCache m)
-  , _mrcMetadata    :: !Metadata
+data MetadataStateResult m
+  = MetadataStateResult
+  { _msrSchemaCache        :: !(RebuildableSchemaCache m)
+  , _msrCacheInvalidations :: !CacheInvalidations
+  , _msrMetadata           :: !Metadata
   }
 
 type CacheBuildM = ReaderT BuildReason Run

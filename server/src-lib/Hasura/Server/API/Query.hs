@@ -37,7 +37,7 @@ import           Hasura.RQL.DML.Select
 import           Hasura.RQL.DML.Update
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Init                 (InstanceId (..))
+import           Hasura.Server.Types
 import           Hasura.Server.Utils
 import           Hasura.Server.Version              (HasVersion)
 import           Hasura.Session
@@ -182,24 +182,24 @@ $(deriveJSON
 --   ORDER BY occurred_at DESC LIMIT 1
 --   |] () True
 
-notifySchemaUpdate :: InstanceId -> CacheInvalidations -> Q.TxE QErr ()
-notifySchemaUpdate instanceId invalidations = liftTx $ do
-  Q.Discard () <- Q.withQE defaultTxErrorHandler [Q.sql|
-      SELECT pg_notify('hasura_schema_update', json_build_object(
-        'instance_id', $1,
-        'occurred_at', NOW(),
-        'invalidations', $2
-        )::text
-      )
-    |] (instanceId, Q.AltJ invalidations) True
-  pure ()
+-- notifySchemaUpdate :: InstanceId -> CacheInvalidations -> Q.TxE QErr ()
+-- notifySchemaUpdate instanceId invalidations = liftTx $ do
+--   Q.Discard () <- Q.withQE defaultTxErrorHandler [Q.sql|
+--       SELECT pg_notify('hasura_schema_update', json_build_object(
+--         'instance_id', $1,
+--         'occurred_at', NOW(),
+--         'invalidations', $2
+--         )::text
+--       )
+--     |] (instanceId, Q.AltJ invalidations) True
+--   pure ()
 
 runQuery
   :: (HasVersion, MonadIO m, MonadError QErr m, Tracing.MonadTrace m)
-  => Env.Environment -> PGExecCtx -> InstanceId
-  -> UserInfo -> MetadataRequestCtx Run -> HTTP.Manager
-  -> SQLGenCtx -> SystemDefined -> RQLQuery -> m (EncJSON, MetadataRequestCtx Run)
-runQuery env pgExecCtx instanceId userInfo reqCtx hMgr sqlGenCtx systemDefined query = do
+  => Env.Environment -> PGExecCtx -> UserInfo
+  -> RebuildableSchemaCache Run -> Metadata -> HTTP.Manager
+  -> SQLGenCtx -> SystemDefined -> RQLQuery -> m (EncJSON, MetadataStateResult Run)
+runQuery env pgExecCtx userInfo sc metadata hMgr sqlGenCtx systemDefined query = do
   accessMode <- getQueryAccessMode query
   traceCtx <- Tracing.currentContext
   resultE <- runQueryM env query & Tracing.interpTraceT \x -> do
@@ -209,10 +209,9 @@ runQuery env pgExecCtx instanceId userInfo reqCtx hMgr sqlGenCtx systemDefined q
            & runExceptT
     pure (either
       ((, mempty) . Left)
-      (\(((js, tracemeta), rsc, ci), meta) -> (Right (js, MetadataRequestCtx rsc meta, ci), tracemeta)) a)
-  either throwError (\(a, b, _) -> pure (a, b)) resultE
+      (\(((js, tracemeta), rsc, ci), meta) -> (Right (js, MetadataStateResult rsc ci meta), tracemeta)) a)
+  liftEither resultE
   where
-    MetadataRequestCtx sc metadata = reqCtx
     runCtx = RunCtx userInfo hMgr sqlGenCtx
     -- withReload (result, updatedCache, invalidations) = do
     --   when (queryModifiesSchemaCache query) $ do

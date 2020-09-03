@@ -73,6 +73,7 @@ import           Hasura.Server.Logging
 import           Hasura.Server.Migrate                     (migrateCatalog)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
+import           Hasura.Server.Types
 import           Hasura.Server.Version
 import           Hasura.Session
 
@@ -189,7 +190,7 @@ newtype AppM a = AppM { unAppM :: IO a }
 -- this exists as a separate function because the context (logger, http manager, pg pool) can be
 -- used by other functions as well
 initialiseCtx
-  :: (HasVersion, MonadIO m, MonadCatch m, MonadMetadataManage m)
+  :: (HasVersion, MonadIO m, MonadCatch m)
   => Env.Environment
   -> HGEOptions Hasura
   -> m (InitCtx, UTCTime)
@@ -258,7 +259,7 @@ initialiseCtx env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
 
 -- | helper function to initialize or migrate the @hdb_catalog@ schema (used by pro as well)
 migrateCatalogSchema
-  :: (HasVersion, MonadIO m, MonadMetadataManage m)
+  :: (MonadIO m)
   => Logger Hasura -> Q.PGPool -> m Metadata
 migrateCatalogSchema logger metadataPool = do
       -- adminRunCtx = RunCtx adminUserInfo httpManager sqlGenCtx
@@ -364,7 +365,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
 
   -- start backgroud thread for schema sync event listening
   (schemaSyncListenerThread, schemaSyncEventRef) <-
-    startSchemaSyncListenerThread _icPgPool logger _icInstanceId
+    startSchemaSyncListenerThread _icMetadataPool logger _icInstanceId
 
   HasuraApp app cacheRef stopWsServer <- flip onException (flushLogger loggerCtx) $
     mkWaiApp env
@@ -617,7 +618,7 @@ ourIdleGC (Logger logger) idleInterval minGCInterval maxNoGCInterval =
              go gcs major_gcs timerSinceLastMajorGC
 
 runAsAdmin
-  :: (MonadIO m, MonadMetadataManage m)
+  :: (MonadIO m)
   => Q.PGPool
   -> SQLGenCtx
   -> HTTP.Manager

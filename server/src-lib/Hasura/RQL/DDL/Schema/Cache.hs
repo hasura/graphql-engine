@@ -10,7 +10,7 @@ both define pieces of the implementation of building the schema cache and define
 trigger schema cache rebuilds. -}
 module Hasura.RQL.DDL.Schema.Cache
   ( RebuildableSchemaCache
-  , MetadataRequestCtx(..)
+  , MetadataStateResult(..)
   , lastBuiltSchemaCache
   , buildRebuildableSchemaCache
   , CacheRWT

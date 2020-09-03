@@ -41,7 +41,7 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Utils                   (showName)
 import           Hasura.HTTP
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils                    (RequestId)
+import           Hasura.Server.Types                    (RequestId)
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 
