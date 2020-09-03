@@ -14,6 +14,7 @@ module Hasura.GraphQL.Transport.HTTP
   ) where
 
 import           Control.Concurrent.MVar
+import           Control.Exception                      (catch)
 import           Control.Monad.Morph                    (hoist)
 import           Data.Maybe                             (fromJust)
 
@@ -31,12 +32,12 @@ import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 import           Hasura.Tracing                         (MonadTrace, TraceT, trace)
 
-import qualified Data.ByteString.Lazy as BS
+import qualified Data.ByteString.Lazy                   as BS
 -- For dirty construction of fake query execution durations
-import Data.Time.Clock
+import           Data.Time.Clock
 -- Dirty result construction
-import qualified Data.Text as T
-import qualified Data.Text.Encoding            as TE
+import qualified Data.Text                              as T
+import qualified Data.Text.Encoding                     as TE
 
 import qualified Data.Aeson                             as J
 import qualified Data.Environment                       as Env
@@ -119,13 +120,16 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs))
           E.ExecStepMySQL queries -> liftIO $ do
             connection <- fromJust <$> readMVar mySQLConnection
-            assocResults <- for queries \(name, queryString) -> do
-              UGLY.traceShowM queryString
-              result <- IOSL.toList . snd =<< My.query_ connection (My.Query queryString)
-              UGLY.traceShowM result
-              return (name, encJFromText $ T.concat $ fmap (\case My.MySQLText t -> t) $ concat result)
+            let handleError (My.ERRException e) = GQExecError [J.Object $ Map.singleton "message" $ J.String $ TE.decodeUtf8 $ My.errMsg e]
+            gqResult <- flip catch (pure . handleError) $ do
+              assocResults <- for queries \(name, queryString) -> do
+                UGLY.traceShowM queryString
+                result <- IOSL.toList . snd =<< My.query_ connection (My.Query queryString)
+                UGLY.traceShowM result
+                return (name, encJFromText $ T.concat $ fmap (\case My.MySQLText t -> t) $ concat result)
+              pure $ GQSuccess $ encJToLBS $ encJFromAssocList assocResults
             -- TODO fill in proper values for telemTimeIO and telemQueryType below
-            pure $ (telemCacheHit, Telem.Local, (secondsToDiffTime 0, Telem.Query, HttpResponse (encodeGQResp $ GQSuccess $ encJToLBS $ encJFromAssocList assocResults) []))
+            pure (telemCacheHit, Telem.Local, (secondsToDiffTime 0, Telem.Query, HttpResponse (encodeGQResp gqResult) []))
           E.ExecStepRemote (rsi, opDef, _varValsM) ->
             runRemoteGQ telemCacheHit rsi opDef
           E.ExecStepRaw (name, json) -> do
