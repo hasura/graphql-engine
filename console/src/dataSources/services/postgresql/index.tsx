@@ -188,12 +188,7 @@ const initQueries = {
       order_by: [{ column: 'schema_name', type: 'asc', nulls: 'last' }],
       where: {
         schema_name: {
-          $nin: [
-            'information_schema',
-            'pg_catalog',
-            'hdb_catalog',
-            'hdb_views',
-          ],
+          $nin: ['information_schema', 'pg_catalog'],
         },
       },
     },

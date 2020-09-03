@@ -395,12 +395,10 @@ const modifyRemoteSchema = () => {
       // dispatch({ type: REQUEST_SUCCESS });
       dispatch({ type: RESET, data: data });
       dispatch(push(`${prefixUrl}/manage/schemas`)); // to avoid 404
-      dispatch(
-        exportMetadata(
-          dispatch(push(`${prefixUrl}/manage/${remoteSchemaName}/details`))
-        )
-      );
-      dispatch(fetchRemoteSchema(remoteSchemaName));
+      dispatch(exportMetadata()).then(() => {
+        dispatch(push(`${prefixUrl}/manage/${remoteSchemaName}/details`));
+        dispatch(fetchRemoteSchema(remoteSchemaName));
+      });
       clearIntrospectionSchemaCache();
     };
     const customOnError = error => {
@@ -492,7 +490,6 @@ const addRemoteSchemaReducer = (state = addState, action) => {
         forwardClientHeaders: action.data.definition.forward_client_headers,
         editState: {
           ...state,
-          id: action.data.id,
           isModify: false,
           originalName: action.data.name,
           originalHeaders: action.data.definition.headers || [],

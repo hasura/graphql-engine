@@ -11,11 +11,6 @@ import {
 } from '.';
 import { FILTER_REMOTE_SCHEMAS } from './Actions';
 
-// Objective is to render list of custom remoteSchemas on the
-// left nav bar.
-// Custom remoteSchemas list is fetched from hdb_catalog/custom_remoteSchema
-// Whenever any operation happens like add remoteSchema/delete remoteSchema, this state should update automatically.
-
 import { appPrefix } from './constants';
 import { getRemoteSchemasSelector } from '../../../metadata/selector';
 
