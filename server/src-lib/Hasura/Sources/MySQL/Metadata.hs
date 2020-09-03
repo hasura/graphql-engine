@@ -139,4 +139,4 @@ fetchTables = do
 
 
 
-  return $ traceShowId $ Map.fromList $ catMaybes tableCache'
+  return $ Map.fromList $ catMaybes tableCache'
