@@ -29,48 +29,133 @@ Before starting with this guide, you should have the following ready:
 Step 1: Set up auth webhook
 ---------------------------
 
-Inside your main file (you can call it ``app.js`` or ``server.js``), add the following code:
+Inside your main file (you can call it ``app.ts`` or ``server.ts``), add the following code:
 
 .. code-block:: javascript
 
-  // init project
-  const express = require('express');
-  const app = express();
-  const requestClient = require('request');
-  const port = process.env.PORT || 3000;
+  import 'cross-fetch/polyfill';
+  import * as express from 'express';
+  import * as bcrypt from 'bcryptjs';
+  import * as crypt from 'crypto';
 
-  // fetch user info in a mock function
-  function fetchUserInfo (token, cb) {
-    const role = token['x-hasura-role']
-    const user_id = token['x-hasura-user-id']
+  const app = express()
+  const port = parseInt(process.env.PORT, 10) || 3000
 
-    cb({role: role, user_id: user_id});
+  // middleware
+  app.use(express.json());
+  app.use(express.urlencoded());
+
+  /**
+  * Creates a random token for authenticating a user.
+  * Stored in "user.auth_token" in DB table and used to look current user up.
+  */
+  const createToken = () => crypt.randomBytes(16).toString("hex");
+
+  /**
+  * Fetches a user from database via Hasura
+  * @param whereClause The boolean expression object to filter users by
+  */
+  async function findUserOne(whereClause) {
+    const request = await fetch(
+      "'http://localhost:8080/v1/graphql'",
+      {
+        method: "POST",
+        headers: {
+          "X-Hasura-Admin-Secret": "process.env.HASURA_GRAPHQL_ADMIN_SECRET",
+        },
+        body: JSON.stringify({
+          query: `
+          query FindUser($where: user_bool_exp!) {
+            user(where: $where) {
+              id
+              email
+              password
+              auth_token
+              role
+            }
+          }
+        `,
+          variables: { where: whereClause },
+        }),
+      }
+    );
+    const firstResult = await request.json()
+    return firstResult.data.user[0]
   }
-  app.get('/', (req, res) => {
-    res.send('Webhooks are running');
-  });
 
-  app.get('/webhook', (request, response) => {
-
-    // Extract token from request
-    const token = request.get('Authorization')
-
-    // Fetch user_id that is associated with this token
-    fetchUserInfo(token, (result) => {
-
-      // Return appropriate response to Hasura
-      const hasuraVariables = {
-        'X-Hasura-Role': result.role, 
-        'X-Hasura-User-Id': result.user_id    
-      };
-      response.json(hasuraVariables);
+  /**
+  * Creates a user in database via Hasura, returns user record
+  * @param user The user object to insert
+  */
+  async function createUser(user) {
+    const request = await fetch("http://localhost:8080/v1/graphql", {
+      method: "POST",
+      headers: {
+        "X-Hasura-Admin-Secret": "process.env.HASURA_GRAPHQL_ADMIN_SECRET",
+      },
+      body: JSON.stringify({
+        query: `
+          mutation InsertUser($user: user_insert_input!) {
+            insert_user_one(object: $user) {
+              id
+              auth_token
+            }
+          }
+        `,
+        variables: { user },
+      }),
     });
-  });
+    return request.json()
+  }
 
-  // listen for requests 
-  const listener = app.listen(port, function () {
+  /**
+  * Create a new user record and generate Auth Token in DB
+  */
+  app.post('/signup', async (req, res) => {
+    const user = req.body.user
+    // Securely hash password and generate random auth token
+    user.password = await bcrypt.hash(user.password, 10)
+    user.auth_token = await createToken()
+    const insertUserResponse = await createUser(user)
+    return res.json(insertUserResponse)
+  })
+
+  /**
+  * Sign user in by looking up email and comparing password, return user record with auth token from DB
+  */
+  app.post('/login', async (req, res) => {
+    const user = req.body.user
+    const userRecord = await findUserOne({ email: { _eq: user.email } })
+    const validPassword = await bcrypt.compare(user.password, userRecord.password)
+    if (!validPassword) return res.status(400).json({ error: 'Invalid credentials' })
+    return res.json(userRecord)
+  })
+
+  /**
+  * Authentication webhook for Hasura
+  * Looks a user up in DB using "Bearer <auth token>" value from "Authorization" header
+  */
+  app.get('/webhook', async (req, res) => {
+    // Extract token from request
+    const authHeader = req.get('Authorization')
+    const [scheme, token] = authHeader.split(' ')
+
+    if (scheme != 'Bearer')
+      return res.status(400).json({ error: `Invalid Auth scheme, expected type "Bearer"` })
+
+    const user = await findUserOne({ auth_token: { _eq: token } })
+    const hasuraSessionVariables = {
+      "X-Hasura-Role": user.role,
+      "X-Hasura-User-Id": `${user.id}`,
+    };
+    return res.json(hasuraSessionVariables)
+  })
+
+  // Start server on PORT, bind to 0.0.0.0 host for Docker support in addition to localhost
+  app.listen(port, '0.0.0.0', () => {
     console.log('Your app is listening on port ' + port);
-  });
+  })
+
 
 Step 2: Deploy the webhook
 --------------------------
