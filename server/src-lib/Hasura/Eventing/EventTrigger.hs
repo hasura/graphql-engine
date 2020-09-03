@@ -397,11 +397,11 @@ getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Either Text EventTrigger
 getEventTriggerInfoFromEvent sc e = do
   let table = eTable e
       mTableInfo = M.lookup table $ scTables sc
-  tableInfo <- onNothing mTableInfo $ Left ("table '" <> qualObjectToText table <> "' not found")
+  tableInfo <- onNothing mTableInfo $ Left ("table '" <> table <<> "' not found")
   let triggerName = tmName $ eTrigger e
       mEventTriggerInfo = M.lookup triggerName (_tiEventTriggerInfoMap tableInfo)
   onNothing mEventTriggerInfo $ Left ("event trigger '" <> triggerNameToTxt triggerName
-    <> "' on table '" <> qualObjectToText table <> "' not found")
+    <> "' on table '" <> table <<> "' not found")
 
 
 ---- DATABASE QUERIES ---------------------
