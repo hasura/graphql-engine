@@ -82,7 +82,6 @@ class Main extends React.Component {
     });
 
     dispatch(fetchPostgresVersion);
-
     dispatch(fetchServerConfig);
   }
 
