@@ -52,10 +52,10 @@ data BuildInputs
 -- 'MonadWriter' side channel.
 data BuildOutputs
   = BuildOutputs
-  { _boTables            :: !TableCache
-  , _boActions           :: !ActionCache
-  , _boFunctions         :: !FunctionCache
-  , _boRemoteSchemas     :: !(HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject))
+  { _boTables        :: !TableCache
+  , _boActions       :: !ActionCache
+  , _boFunctions     :: !FunctionCache
+  , _boRemoteSchemas :: !(HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject))
   -- ^ We preserve the 'MetadataObject' from the original catalog metadata in the output so we can
   -- reuse it later if we need to mark the remote schema inconsistent during GraphQL schema
   -- generation (because of field conflicts).
@@ -72,6 +72,13 @@ data RebuildableSchemaCache m
   , _rscRebuild :: !(Inc.Rule (ReaderT BuildReason m) (CatalogMetadata, InvalidationKeys) SchemaCache)
   }
 $(makeLenses ''RebuildableSchemaCache)
+
+-- FIXME: Does not belong here?
+data MetadataRequestCtx m
+  = MetadataRequestCtx
+  { _mrcSchemaCache :: !(RebuildableSchemaCache m)
+  , _mrcMetadata    :: !Metadata
+  }
 
 type CacheBuildM = ReaderT BuildReason Run
 type CacheBuildA = WriterA (Seq CollectedInfo) (Inc.Rule CacheBuildM)

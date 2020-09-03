@@ -11,7 +11,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.Server.Init
-import           Hasura.Server.Migrate      (downgradeCatalog, dropCatalog)
+import           Hasura.Server.Migrate      (downgradeCatalog, dropCatalog, getMetadataTx)
 import           Hasura.Server.Version
 
 import qualified Data.ByteString.Char8      as BC
@@ -57,9 +57,7 @@ runApp env hgeOptions =
 
     HCExport -> do
       (initCtx, _) <- initialiseCtx env hgeOptions
-      metadataFetchTx <- fetchMetadataTx
-      -- FIXME? Use metadata pg db pool
-      res <- runTx' initCtx metadataFetchTx Q.ReadCommitted
+      res <- runTx' initCtx getMetadataTx Q.ReadCommitted
       either (printErrJExit MetadataExportError) printJSON res
 
     HCClean -> do
@@ -71,7 +69,7 @@ runApp env hgeOptions =
       (InitCtx{..}, _) <- initialiseCtx env hgeOptions
       queryBs <- liftIO BL.getContents
       let sqlGenCtx = SQLGenCtx False
-      res <- runAsAdmin _icPgPool sqlGenCtx _icHttpManager _icMetadataPool $ do
+      res <- runAsAdmin _icPgPool sqlGenCtx _icHttpManager _icMetadata $ do
         schemaCache <- buildRebuildableSchemaCache env
         execQuery env queryBs
           & Tracing.runTraceTWithReporter Tracing.noReporter "execute"
@@ -84,12 +82,12 @@ runApp env hgeOptions =
       (InitCtx{..}, initTime) <- initialiseCtx env hgeOptions
       let sqlGenCtx = SQLGenCtx False
       res <- downgradeCatalog opts initTime
-             & runAsAdmin _icPgPool sqlGenCtx _icHttpManager _icMetadataPool
+             & runAsAdmin _icPgPool sqlGenCtx _icHttpManager _icMetadata
       either (printErrJExit DowngradeProcessError) (liftIO . print) res
 
     HCVersion -> liftIO $ putStrLn $ "Hasura GraphQL Engine: " ++ convertText currentVersion
   where
     runTx' initCtx tx txIso =
-      liftIO $ runExceptT $ Q.runTx (_icPgPool initCtx) (txIso, Nothing) tx
+      liftIO $ runExceptT $ Q.runTx (_icMetadataPool initCtx) (txIso, Nothing) tx
 
     cleanSuccess = liftIO $ putStrLn "successfully cleaned graphql-engine related data"

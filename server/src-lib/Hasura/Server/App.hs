@@ -89,6 +89,7 @@ data SchemaCacheRef
   -- it is an okay trade-off to pay for a higher throughput (I remember doing a
   -- bunch of benchmarks to test this hypothesis).
   , _scrCache    :: IORef (RebuildableSchemaCache Run, SchemaCacheVer)
+  , _scrMetadata :: IORef Metadata
   , _scrOnChange :: IO ()
   -- ^ an action to run when schemacache changes
   }
@@ -148,22 +149,34 @@ logInconsObjs logger objs =
   unless (null objs) $ L.unLogger logger $ mkInconsMetadataLog objs
 
 withSCUpdate
-  :: (MonadIO m, MonadBaseControl IO m)
-  => SchemaCacheRef -> L.Logger L.Hasura -> m (a, RebuildableSchemaCache Run) -> m a
-withSCUpdate scr logger action =
+  :: ( MonadIO m
+     , MonadBaseControl IO m
+     , MonadError QErr m
+     , MonadMetadataManage m
+     )
+  => SchemaCacheRef
+  -> Q.PGPool
+  -> L.Logger L.Hasura
+  -> m (a, MetadataRequestCtx Run) -> m a
+withSCUpdate scr metadataPool logger action =
   withMVarMasked lk $ \() -> do
-    (!res, !newSC) <- action
+    (!res, !(MetadataRequestCtx newSC newMetadata)) <- action
+    updateMetadataTx >>= \tx ->
+       liftEither =<< liftIO (runExceptT $ Q.runTx' metadataPool $ tx newMetadata)
+    -- update metadata in storage
     liftIO $ do
       -- update schemacache in IO reference
       modifyIORef' cacheRef $ \(_, prevVer) ->
         let !newVer = incSchemaCacheVer prevVer
           in (newSC, newVer)
+      -- update metadata in IO reference
+      writeIORef metadataRef newMetadata
       -- log any inconsistent objects
       logInconsObjs logger $ scInconsistentObjs $ lastBuiltSchemaCache newSC
       onChange
     return res
   where
-    SchemaCacheRef lk cacheRef onChange = scr
+    SchemaCacheRef lk cacheRef metadataRef onChange = scr
 
 mkGetHandler :: Handler m APIResp -> APIHandler m ()
 mkGetHandler = AHGet
@@ -359,7 +372,8 @@ v1QueryHandler query = do
   authorizeMetadataApi query userInfo
   scRef  <- asks (scCacheRef . hcServerCtx)
   logger <- asks (scLogger . hcServerCtx)
-  res    <- bool (fst <$> dbAction) (withSCUpdate scRef logger dbAction) $ queryModifiesSchemaCache query
+  metadataPool <- asks (scMetadataPool . hcServerCtx)
+  res    <- bool (fst <$> dbAction) (withSCUpdate scRef metadataPool logger dbAction) $ queryModifiesSchemaCache query
   return $ HttpResponse res []
   where
     -- Hit postgres
@@ -367,13 +381,14 @@ v1QueryHandler query = do
       userInfo    <- asks hcUser
       scRef       <- asks (scCacheRef . hcServerCtx)
       schemaCache <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
+      metadata    <- liftIO $ readIORef $ _scrMetadata scRef
+      let reqCtx = MetadataRequestCtx schemaCache metadata
       httpMgr     <- asks (scManager . hcServerCtx)
       sqlGenCtx   <- asks (scSQLGenCtx . hcServerCtx)
       pgExecCtx   <- asks (scPGExecCtx . hcServerCtx)
       instanceId  <- asks (scInstanceId . hcServerCtx)
       env         <- asks (scEnvironment . hcServerCtx)
-      metadataPool <- asks (scMetadataPool . hcServerCtx)
-      runQuery env pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx (SystemDefined False) metadataPool query
+      runQuery env pgExecCtx instanceId userInfo reqCtx httpMgr sqlGenCtx (SystemDefined False) query
 
 v1Alpha1GQHandler
   :: ( HasVersion
@@ -609,9 +624,11 @@ mkWaiApp
   -> EKG.Store
   -> Q.PGPool
   -- ^ Metadata storage connection pool - TODO: Better rep
+  -> Metadata
+  -- ^ Metadata
   -> m HasuraApp
 mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpManager mode corsCfg enableConsole consoleAssetsDir
-         enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig liveQueryHook schemaCache ekgStore metadataPool = do
+         enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig liveQueryHook schemaCache ekgStore metadataPool metadata = do
 
     -- See Note [Temporarily disabling query plan caching]
     -- (planCache, schemaCacheRef) <- initialiseCache
@@ -669,8 +686,9 @@ mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpMana
     initialiseCache = do
       cacheLock <- liftIO $ newMVar ()
       cacheCell <- liftIO $ newIORef (schemaCache, initSchemaCacheVer)
+      metadataRef <- liftIO $ newIORef metadata
       -- planCache <- liftIO $ E.initPlanCache planCacheOptions
-      let cacheRef = SchemaCacheRef cacheLock cacheCell (E.clearPlanCache {- planCache -})
+      let cacheRef = SchemaCacheRef cacheLock cacheCell metadataRef (E.clearPlanCache {- planCache -})
       -- pure (planCache, cacheRef)
       pure cacheRef
 

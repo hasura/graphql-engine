@@ -360,7 +360,7 @@ fetchMetadataFromHdbTables = liftTx do
   customTypes <- fetchCustomTypes
 
   -- fetch actions
-  actions <- fetchActions
+  actions <- mapFromL _amName <$> fetchActions
 
   cronTriggers <- fetchCronTriggers
 

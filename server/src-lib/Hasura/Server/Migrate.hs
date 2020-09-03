@@ -21,6 +21,7 @@ module Hasura.Server.Migrate
   -- , recreateSystemMetadata
   , dropCatalog
   , downgradeCatalog
+  , getMetadataTx
   ) where
 
 import           Hasura.Prelude
@@ -55,6 +56,39 @@ dropCatalog = liftTx $ Q.catchE defaultTxErrorHandler $ do
   -- This is where the generated views and triggers are stored
   Q.unitQ "DROP SCHEMA IF EXISTS hdb_views CASCADE" () False
   Q.unitQ "DROP SCHEMA IF EXISTS hdb_catalog CASCADE" () False
+
+dropHdbCatalogTables :: MonadTx m => m ()
+dropHdbCatalogTables = liftTx $
+  runTx
+  [Q.sql|
+     DROP VIEW hdb_catalog.hdb_role;
+     DROP TABLE hdb_catalog.hdb_custom_types;
+     DROP TABLE hdb_catalog.hdb_action_permission;
+     DROP TABLE hdb_catalog.hdb_action;
+     DROP VIEW hdb_catalog.hdb_computed_field_function;
+     DROP TABLE hdb_catalog.hdb_computed_field;
+     DROP TABLE hdb_catalog.hdb_allowlist;
+     DROP TABLE hdb_catalog.hdb_query_collection;
+     DROP VIEW hdb_catalog.hdb_function_info_agg;
+     DROP VIEW hdb_catalog.hdb_table_info_agg;
+     DROP TRIGGER hdb_schema_update_event_notifier ON hdb_catalog.hdb_schema_update_event;
+     DROP FUNCTION hdb_catalog.hdb_schema_update_event_notifier();
+     DROP TABLE hdb_catalog.hdb_schema_update_event;
+     DROP TABLE hdb_catalog.remote_schemas;
+     DROP VIEW hdb_catalog.hdb_function_agg;
+     DROP TABLE hdb_catalog.hdb_function;
+     DROP TABLE hdb_catalog.event_triggers;
+     DROP FUNCTION hdb_catalog.inject_table_defaults(text, text, text, text);
+     DROP VIEW hdb_catalog.hdb_primary_key;
+     DROP VIEW hdb_catalog.hdb_unique_constraint;
+     DROP VIEW hdb_catalog.hdb_check_constraint;
+     DROP VIEW hdb_catalog.hdb_foreign_key_constraint;
+     DROP VIEW hdb_catalog.hdb_permission_agg;
+     DROP TABLE hdb_catalog.hdb_permission;
+     DROP TABLE hdb_catalog.hdb_remote_relationship;
+     DROP TABLE hdb_catalog.hdb_relationship;
+     DROP TABLE hdb_catalog.hdb_table;
+   |]
 
 data MigrationResult
   = MRNothingToDo
@@ -316,22 +350,18 @@ migrations dryRun =
 
     from37To38 = do
       metadata <- fetchMetadataFromHdbTables
-      -- drop hdb_catalog
-      dropCatalog
-      liftTx $ Q.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_catalog" () False
-      runTx $(Q.sqlFromFile "src-rsr/initialise.sql")
-      -- TODO: preserve trigger events & async action logs
-      liftTx $ setMetadataTx metadata
+      dropHdbCatalogTables
+      liftTx $ do
+        Q.unitQE defaultTxErrorHandler
+          [Q.sql|
+             CREATE TABLE hdb_catalog.hdb_metadata
+             (
+               id INTEGER PRIMARY KEY,
+               metadata json not null
+             );
+           |] () False
+        setMetadata metadata
 
-
-setMetadataTx :: Metadata -> Q.TxE QErr ()
-setMetadataTx metadata =
-  liftTx $ Q.unitQE defaultTxErrorHandler
-    [Q.sql|
-     INSERT INTO hdb_catalog.hdb_metadata
-       (id, metadata) VALUES (1, $1::json)
-     ON CONFLICT (id) DO UPDATE SET metadata = $1::json
-    |] (Identity $ Q.AltJ metadata) True
 
 getMetadataTx :: Q.TxE QErr Metadata
 getMetadataTx =

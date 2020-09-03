@@ -195,29 +195,31 @@ notifySchemaUpdate instanceId invalidations = liftTx $ do
   pure ()
 
 runQuery
-  :: (HasVersion, MonadIO m, MonadError QErr m, Tracing.MonadTrace m, MonadMetadataManage m)
+  :: (HasVersion, MonadIO m, MonadError QErr m, Tracing.MonadTrace m)
   => Env.Environment -> PGExecCtx -> InstanceId
-  -> UserInfo -> RebuildableSchemaCache Run -> HTTP.Manager
-  -> SQLGenCtx -> SystemDefined -> Q.PGPool -> RQLQuery -> m (EncJSON, RebuildableSchemaCache Run)
-runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined metadataPool query = do
+  -> UserInfo -> MetadataRequestCtx Run -> HTTP.Manager
+  -> SQLGenCtx -> SystemDefined -> RQLQuery -> m (EncJSON, MetadataRequestCtx Run)
+runQuery env pgExecCtx instanceId userInfo reqCtx hMgr sqlGenCtx systemDefined query = do
   accessMode <- getQueryAccessMode query
   traceCtx <- Tracing.currentContext
-  resE <- runQueryM env query & Tracing.interpTraceT \x -> do
+  resultE <- runQueryM env query & Tracing.interpTraceT \x -> do
     a <- x & runHasSystemDefinedT systemDefined
            & runCacheRWT sc
-           & peelRun userInfo hMgr sqlGenCtx metadataPool pgExecCtx accessMode (Just traceCtx)
+           & peelRun runCtx pgExecCtx accessMode (Just traceCtx) metadata
            & runExceptT
     pure (either
       ((, mempty) . Left)
-      (\((js, meta), rsc, ci) -> (Right (js, rsc, ci), meta)) a)
-  either throwError withReload resE
+      (\(((js, tracemeta), rsc, ci), meta) -> (Right (js, MetadataRequestCtx rsc meta, ci), tracemeta)) a)
+  either throwError (\(a, b, _) -> pure (a, b)) resultE
   where
-    withReload (result, updatedCache, invalidations) = do
-      when (queryModifiesSchemaCache query) $ do
-        e <- liftIO $ runExceptT $ Q.runTx metadataPool (Q.Serializable, Just Q.ReadWrite) $ liftTx $
-          notifySchemaUpdate instanceId invalidations
-        liftEither e
-      return (result, updatedCache)
+    MetadataRequestCtx sc metadata = reqCtx
+    runCtx = RunCtx userInfo hMgr sqlGenCtx
+    -- withReload (result, updatedCache, invalidations) = do
+    --   when (queryModifiesSchemaCache query) $ do
+    --     e <- liftIO $ runExceptT $ Q.runTx metadataPool (Q.Serializable, Just Q.ReadWrite) $ liftTx $
+    --       notifySchemaUpdate instanceId invalidations
+    --     liftEither e
+    --   return (result, updatedCache)
 
 -- | A predicate that determines whether the given query might modify/rebuild the schema cache. If
 -- so, it needs to acquire the global lock on the schema cache so that other queries do not modify

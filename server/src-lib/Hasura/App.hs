@@ -57,11 +57,12 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.Types                          (CacheRWM, Code (..), HasHttpManager,
                                                             HasSQLGenCtx, HasSystemDefined,
-                                                            MonadMetadata, MonadMetadataManage,
-                                                            QErr (..), SQLGenCtx (..),
-                                                            SchemaCache (..), UserInfoM,
-                                                            buildSchemaCacheStrict, decodeValue,
-                                                            noMetadataModify, throw400, withPathK, Metadata)
+                                                            Metadata, MonadMetadata,
+                                                            MonadMetadataManage, QErr (..),
+                                                            SQLGenCtx (..), SchemaCache (..),
+                                                            UserInfoM, buildSchemaCacheStrict,
+                                                            decodeValue, noMetadataModify, throw400,
+                                                            withPathK)
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.API.Query                   (requiresAdmin, runQueryM)
 import           Hasura.Server.App
@@ -84,6 +85,7 @@ import qualified System.Metrics                            as EKG
 data ExitCode
   = InvalidEnvironmentVariableOptionsError
   | InvalidDatabaseConnectionParamsError
+  | CacheBuildError
   | MetadataCatalogFetchingError
   | AuthConfigurationError
   | EventSubSystemError
@@ -164,6 +166,8 @@ data InitCtx
   , _icConnInfo      :: !Q.ConnInfo
   , _icPgPool        :: !Q.PGPool
   , _icShutdownLatch :: !ShutdownLatch
+  , _icSchemaCache   :: !(RebuildableSchemaCache Run)
+  , _icMetadata      :: !Metadata
   , _icMetadataPool  :: !Q.PGPool
   }
 
@@ -215,15 +219,24 @@ initialiseCtx env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
       metadataPool <- maybe (pure pool) (getMetadataPool pgLogger) metadataDbUrl
       pure (l, pool, SQLGenCtx False, metadataPool)
 
+  let logger = _lsLogger loggers
   metadata <- flip onException (flushLogger (_lsLoggerCtx loggers)) $
-    migrateCatalogSchema (_lsLogger loggers) metadataPool
+              migrateCatalogSchema logger metadataPool
 
   let pgExecCtx = mkPGExecCtx Q.Serializable pool
 
-  res <- runExceptT $ peelRun adminUserInfo httpManager sqlGenCtx metadataPool
-         pgExecCtx Q.ReadWrite Nothing $ buildRebuildableSchemaCache env
+  schemaCacheE <- runExceptT $ peelRun (RunCtx adminUserInfo httpManager sqlGenCtx)
+                  pgExecCtx Q.ReadWrite Nothing metadata $ buildRebuildableSchemaCache env
 
-  pure (InitCtx httpManager instanceId loggers connInfo pool latch res metadataPool, initTime)
+  schemaCache <- fmap fst $ onLeft schemaCacheE $ \err -> do
+    unLogger logger StartupLog
+        { slLogLevel = LevelError
+        , slKind = "cache_build"
+        , slInfo = A.toJSON err
+        }
+    liftIO $ printErrExit CacheBuildError $ BLC.unpack $ A.encode err
+
+  pure (InitCtx httpManager instanceId loggers connInfo pool latch schemaCache metadata metadataPool, initTime)
 
   where
     procConnInfo =
@@ -374,9 +387,10 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
              soPlanCacheOptions
              soResponseInternalErrorsConfig
              postPollHook
-             schemaCache
+             _icSchemaCache
              ekgStore
              _icMetadataPool
+             _icMetadata
 
   -- log inconsistent schema objects
   inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)
@@ -607,12 +621,13 @@ runAsAdmin
   => Q.PGPool
   -> SQLGenCtx
   -> HTTP.Manager
-  -> Q.PGPool
+  -> Metadata
   -> Run a
   -> m (Either QErr a)
-runAsAdmin pool sqlGenCtx httpManager metadataPool m = do
+runAsAdmin pool sqlGenCtx httpManager metadata m = do
   let pgCtx = mkPGExecCtx Q.Serializable pool
-  runExceptT $ peelRun adminUserInfo httpManager sqlGenCtx metadataPool pgCtx Q.ReadWrite Nothing m
+  fmap (fmap fst) $ runExceptT $
+    peelRun (RunCtx adminUserInfo httpManager sqlGenCtx) pgCtx Q.ReadWrite Nothing metadata m
 
 execQuery
   :: ( HasVersion

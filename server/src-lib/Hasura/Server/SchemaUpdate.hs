@@ -8,7 +8,7 @@ where
 import           Hasura.Db
 import           Hasura.Logging
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Schema       (runCacheRWT)
+import           Hasura.RQL.DDL.Schema       (MetadataRequestCtx (..), runCacheRWT)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.App           (SchemaCacheRef (..), withSCUpdate)
@@ -206,7 +206,10 @@ processor sqlGenCtx pool logger httpMgr schemaSyncEventRef
     shouldReload payload = _epInstanceId payload /= instanceId
 
 refreshSchemaCache
-  :: (MonadMetadataManage m, MonadIO m, MonadBaseControl IO m)
+  :: ( MonadMetadataManage m
+     , MonadIO m
+     , MonadBaseControl IO m
+     )
   => SQLGenCtx
   -> PG.PGPool
   -> Logger Hasura
@@ -218,17 +221,18 @@ refreshSchemaCache
   -> T.Text -> m ()
 refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef invalidations threadType metadataPool msg = do
   -- Reload schema cache from catalog
-  resE <- runExceptT $ withSCUpdate cacheRef logger do
+  resE <- runExceptT $ withSCUpdate cacheRef metadataPool logger do
     rebuildableCache <- fst <$> liftIO (readIORef $ _scrCache cacheRef)
-    ((), cache, _) <- buildSchemaCacheWithOptions CatalogSync invalidations noMetadataModify
+    metadata         <- liftIO $ readIORef $ _scrMetadata cacheRef
+    (((), cache, _), modmeta) <- buildSchemaCacheWithOptions CatalogSync invalidations noMetadataModify
       & runCacheRWT rebuildableCache
-      & peelRun adminUserInfo httpManager sqlGenCtx metadataPool pgCtx PG.ReadWrite Nothing
-    pure ((), cache)
+      & peelRun runCtx pgCtx PG.ReadWrite Nothing metadata
+    pure ((), MetadataRequestCtx cache modmeta)
   case resE of
     Left e   -> logError logger threadType $ TEQueryError e
     Right () -> logInfo logger threadType $ object ["message" .= msg]
  where
-  -- runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
+  runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
   pgCtx = mkPGExecCtx PG.Serializable pool
 
 logInfo :: MonadIO m => Logger Hasura -> ThreadType -> Value -> m ()

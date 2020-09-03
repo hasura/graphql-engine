@@ -20,10 +20,9 @@ import qualified Hasura.Tracing              as Tracing
 
 data RunCtx
   = RunCtx
-  { _rcUserInfo     :: !UserInfo
-  , _rcHttpMgr      :: !HTTP.Manager
-  , _rcSqlGenCtx    :: !SQLGenCtx
-  , _rcMetadataPool :: !Q.PGPool
+  { _rcUserInfo  :: !UserInfo
+  , _rcHttpMgr   :: !HTTP.Manager
+  , _rcSqlGenCtx :: !SQLGenCtx
   }
 
 -- TODO: Efficient way to handle multple postgres transactions (user db and metadata storage)
@@ -54,32 +53,17 @@ instance MonadMetadata Run where
 
   updateMetadata = put
 
-  -- runTxInMetadataStorage tx = do
-  --   metadataPool <- asks _rcMetadataPool
-  --   either throwError pure
-  --     =<< (liftIO . runExceptT . Q.runTx metadataPool (Q.Serializable, Nothing)) tx
-
 peelRun
-  :: (MonadIO m, MonadMetadataManage m)
-  => UserInfo
-  -> HTTP.Manager
-  -> SQLGenCtx
-  -> Q.PGPool
+  :: (MonadIO m)
+  => RunCtx
   -> PGExecCtx
   -> Q.TxAccess
   -> Maybe Tracing.TraceContext
+  -> Metadata
   -> Run a
-  -> ExceptT QErr m a
-peelRun userInfo httpManager sqlGenCtx metadataPGPool pgExecCtx txAccess ctx (Run m) = do
-  metadataFetchTx <- lift fetchMetadataTx
-  metadataUpdateTx <- lift updateMetadataTx
-  let runCtx = RunCtx userInfo httpManager sqlGenCtx metadataPGPool
-  metadata <- fromMaybe emptyMetadata <$> runMetadataStorageTx metadataFetchTx
-  (r, updatedMetadata) <- runLazyTx pgExecCtx txAccess $
-    maybe id withTraceContext ctx $ withUserInfo userInfo $ runStateT (runReaderT m runCtx) metadata
-  either throwError pure =<<
-    (liftIO . runExceptT . Q.runTx' metadataPGPool) (metadataUpdateTx updatedMetadata)
-  pure r
-  where
-    runMetadataStorageTx tx =
-      either throwError pure =<< (liftIO . runExceptT . Q.runTx' metadataPGPool) tx
+  -> ExceptT QErr m (a, Metadata)
+peelRun runCtx pgExecCtx txAccess ctx metadata (Run m) =
+  runLazyTx pgExecCtx txAccess
+  $ maybe id withTraceContext ctx
+  $ withUserInfo (_rcUserInfo runCtx)
+  $ runStateT (runReaderT m runCtx) metadata
