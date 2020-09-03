@@ -584,7 +584,9 @@ tableArgs table selectPermissions = do
           _       -> orderByParser
         limit    <- fmap join $ P.fieldOptional limitName   limitDesc   $ P.nullable positiveInt
         offset   <- fmap join $ P.fieldOptional offsetName  offsetDesc  $ P.nullable fakeBigInt
-        distinct <- distinctParser
+        distinct <- case dataSource of
+          MySQLDB -> pure Nothing
+          _       -> distinctParser
         pure $ RQL.SelectArgs
           { RQL._saWhere    = whereF
           , RQL._saOrderBy  = orderBy
