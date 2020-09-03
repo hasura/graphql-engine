@@ -1,4 +1,4 @@
-import { Thunk } from '../types';
+import { Thunk, ReduxState } from '../types';
 import {
   exportMetadataQuery,
   generateReplaceMetadataQuery,
@@ -106,7 +106,10 @@ export type MetadataActions =
 export const exportMetadata = (
   successCb?: (data: HasuraMetadataV2) => void,
   errorCb?: (err: string) => void
-): Thunk<Promise<void>, MetadataActions> => (dispatch, getState) => {
+): Thunk<Promise<ReduxState | void>, MetadataActions> => (
+  dispatch,
+  getState
+) => {
   const { dataHeaders } = getState().tables;
 
   const query = exportMetadataQuery;
@@ -126,6 +129,7 @@ export const exportMetadata = (
         data,
       });
       if (successCb) successCb(data);
+      return getState();
     })
     .catch(err => {
       if (errorCb) errorCb(err);

@@ -185,58 +185,22 @@ export const fetchTableListQuery = options => {
   );
 };
 
-const generateWhereObject = options => {
-  const where = {};
-  if (options.schemas) {
-    options.schemas.forEach(s => {
-      if (!where.$and) where.$and = [];
-
-      where.$and.push({
-        table_schema: s,
-      });
-    });
-  }
-  if (options.tables) {
-    options.tables.forEach(t => {
-      if (!where.$and) where.$and = [];
-      where.$and.push({
-        table_schema: t.table_schema,
-        table_name: t.table_name,
-      });
-    });
-  }
-  return where;
-};
-
-export const fetchTrackedTableRemoteRelationshipQuery = options => {
-  const query = {
-    type: 'select',
-    args: {
-      table: {
-        schema: 'hdb_catalog',
-        name: 'hdb_remote_relationship',
-      },
-      columns: ['*.*', 'remote_relationship_name'],
-      where: generateWhereObject(options),
-      order_by: [{ column: 'remote_relationship_name', type: 'asc' }],
-    },
-  };
-  return query;
-};
-
 // TODO -- each service should export this function and results should be "merged" to Table object
 export const mergeLoadSchemaData = (
   infoSchemaTableData,
   hdbTableData,
   fkData,
   refFkData,
-  remoteRelData
+  metadataTables
 ) => {
   const _mergedTableData = [];
 
   infoSchemaTableData.forEach(infoSchemaTableInfo => {
     const _tableSchema = infoSchemaTableInfo.table_schema;
     const _tableName = infoSchemaTableInfo.table_name;
+    const metadataTable = metadataTables?.find(
+      t => t.table.schema === _tableSchema && t.table.name === _tableName
+    );
 
     const trackedTableInfo = hdbTableData.find(
       t => t.table_schema === _tableSchema && t.table_name === _tableName
@@ -282,9 +246,13 @@ export const mergeLoadSchemaData = (
           fk.ref_table === _tableName
       );
 
-      _remoteRelationships = remoteRelData.filter(
-        rel =>
-          rel.table_schema === _tableSchema && rel.table_name === _tableName
+      _remoteRelationships = (metadataTable.remote_relationships || []).map(
+        ({ definition, name }) => ({
+          remote_relationship_name: name,
+          table_name: _tableName,
+          table_schema: _tableSchema,
+          definition,
+        })
       );
     }
 

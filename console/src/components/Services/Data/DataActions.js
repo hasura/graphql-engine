@@ -28,7 +28,6 @@ import {
   fetchTrackedTableFkQuery,
   fetchTableListQuery,
   fetchTrackedTableListQuery,
-  fetchTrackedTableRemoteRelationshipQuery,
   mergeLoadSchemaData,
   cascadeUpQueries,
   getDependencyError,
@@ -41,7 +40,8 @@ import { convertArrayToJson } from './TableModify/utils';
 import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
 import { isEmpty } from '../../Common/utils/jsUtils';
 import { dataSource } from '../../../dataSources';
-import { loadInconsistentObjects } from '../../../metadata/actions';
+import { exportMetadata } from '../../../metadata/actions';
+import { getTablesInfoSelector } from '../../../metadata/selector';
 
 const SET_TABLE = 'Data/SET_TABLE';
 const LOAD_FUNCTIONS = 'Data/LOAD_FUNCTIONS';
@@ -102,6 +102,7 @@ const setUntrackedRelations = () => (dispatch, getState) => {
   });
 };
 
+// todo: it's called 4 times on start
 const loadSchema = configOptions => {
   return (dispatch, getState) => {
     const url = Endpoints.getSchema;
@@ -147,7 +148,6 @@ const loadSchema = configOptions => {
         fetchTrackedTableListQuery(configOptions), // v1/query
         fetchTrackedTableFkQuery(configOptions),
         fetchTrackedTableReferencedFkQuery(configOptions),
-        fetchTrackedTableRemoteRelationshipQuery(configOptions),
       ],
     };
 
@@ -158,48 +158,48 @@ const loadSchema = configOptions => {
       body: JSON.stringify(body),
     };
 
-    return dispatch(requestAction(url, options)).then(
-      data => {
-        const tableList = JSON.parse(data[0].result[1]);
-        const fkList = JSON.parse(data[2].result[1]);
-        const refFkList = JSON.parse(data[3].result[1]);
-        const remoteRelationships = data[4];
+    return dispatch(exportMetadata()).then(state => {
+      const metadataTables = getTablesInfoSelector(state)(configOptions);
+      return dispatch(requestAction(url, options)).then(
+        data => {
+          const tableList = JSON.parse(data[0].result[1]);
+          const fkList = JSON.parse(data[2].result[1]);
+          const refFkList = JSON.parse(data[3].result[1]);
 
-        const mergedData = mergeLoadSchemaData(
-          tableList,
-          data[1],
-          fkList,
-          refFkList,
-          remoteRelationships
-        );
+          const mergedData = mergeLoadSchemaData(
+            tableList,
+            data[1],
+            fkList,
+            refFkList,
+            metadataTables
+          );
 
-        const { inconsistentObjects } = getState().metadata;
+          // todo
+          const { inconsistentObjects } = state.metadata;
+          const maybeInconsistentSchemas = allSchemas.concat(mergedData);
 
-        const maybeInconsistentSchemas = allSchemas.concat(mergedData);
+          let consistentSchemas;
+          if (inconsistentObjects.length > 0) {
+            consistentSchemas = filterInconsistentMetadataObjects(
+              maybeInconsistentSchemas,
+              inconsistentObjects,
+              'tables'
+            );
+          }
 
-        let consistentSchemas;
-        if (inconsistentObjects.length > 0) {
-          consistentSchemas = filterInconsistentMetadataObjects(
-            maybeInconsistentSchemas,
-            inconsistentObjects,
-            'tables'
+          dispatch({
+            type: LOAD_SCHEMA,
+            allSchemas: consistentSchemas || maybeInconsistentSchemas,
+          });
+        },
+        error => {
+          console.error('loadSchema error: ' + JSON.stringify(error));
+          dispatch(
+            showErrorNotification('DB schema loading failed', null, error)
           );
         }
-
-        dispatch({
-          type: LOAD_SCHEMA,
-          allSchemas: consistentSchemas || maybeInconsistentSchemas,
-        });
-
-        dispatch(loadInconsistentObjects({ shouldReloadMetadata: false }));
-      },
-      error => {
-        console.error('loadSchema error: ' + JSON.stringify(error));
-        dispatch(
-          showErrorNotification('DB schema loading failed', null, error)
-        );
-      }
-    );
+      );
+    });
   };
 };
 

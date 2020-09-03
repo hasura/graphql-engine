@@ -65,3 +65,29 @@ export const remoteSchemasNamesSelector = createSelector(
   getRemoteSchemas,
   schemas => schemas?.map(schema => schema.name)
 );
+
+type Options = {
+  schemas?: string[];
+  tables?: {
+    table_schema: string;
+    table_name: string;
+  }[];
+};
+export const getTablesInfoSelector = createSelector(
+  getTables,
+  tables => (options: Options) => {
+    if (options.schemas) {
+      return tables?.filter(t => options?.schemas?.includes(t.table.schema));
+    }
+    if (options.tables) {
+      return tables?.filter(t =>
+        options.tables?.find(
+          optTable =>
+            optTable.table_name === t.table.name &&
+            optTable.table_schema === t.table.schema
+        )
+      );
+    }
+    return tables;
+  }
+);
