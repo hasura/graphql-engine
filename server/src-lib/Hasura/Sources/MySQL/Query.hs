@@ -84,7 +84,7 @@ selectFromToQual = \case
 aggregateFieldToExp :: AggregateFields -> S.SQLExp
 aggregateFieldToExp aggFlds = jsonRow
   where
-    jsonRow = S.applyJsonBuildObj (concatMap aggToFlds aggFlds)
+    jsonRow = applyJsonBuildObj (concatMap aggToFlds aggFlds)
     withAls fldName sqlExp = [S.SELit fldName, sqlExp]
     aggToFlds (FieldName t, fld) = withAls t $ case fld of
       AFCount cty -> S.SECount cty
@@ -92,7 +92,7 @@ aggregateFieldToExp aggFlds = jsonRow
       AFExp e     -> S.SELit e
 
     aggOpToObj (AggregateOp opText flds) =
-      S.applyJsonBuildObj $ concatMap (colFldsToExtr opText) flds
+      applyJsonBuildObj $ concatMap (colFldsToExtr opText) flds
 
     colFldsToExtr opText (FieldName t, PCFCol col) =
       [ S.SELit t
@@ -261,7 +261,11 @@ withJsonBuildObj
 withJsonBuildObj parAls exps =
   (S.toAlias parAls, jsonRow)
   where
-    jsonRow = S.applyJsonBuildObj exps
+    jsonRow = applyJsonBuildObj exps
+
+applyJsonBuildObj :: [S.SQLExp] -> S.SQLExp
+applyJsonBuildObj args =
+  S.SEFnApp "json_object" args Nothing
 
 -- | Forces aggregation
 withForceAggregation :: S.TypeAnn -> S.SQLExp -> S.SQLExp
@@ -502,7 +506,7 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
 
   let topLevelExtractor =
         flip S.Extractor (Just $ S.Alias $ toIdentifier fieldAlias) $
-        S.applyJsonBuildObj $ flip concatMap (map (second snd) processedFields) $
+        applyJsonBuildObj $ flip concatMap (map (second snd) processedFields) $
         \(FieldName fieldText, fieldExp) -> [S.SELit fieldText, fieldExp]
       nodeExtractors = HM.fromList $
         concatMap (fst . snd) processedFields <> orderByAndDistinctExtrs
@@ -710,7 +714,7 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields orderByItems = 
 
     mkCursorExp :: [OrderByItemExp] -> S.SQLExp
     mkCursorExp orderByItemExps =
-      S.applyJsonBuildObj $ flip concatMap orderByItemExps $
+      applyJsonBuildObj $ flip concatMap orderByItemExps $
       \orderByItemExp ->
         let OrderByItemG _ (annObCol, (_, valExp)) _ = orderByItemExp
         in annObColToJSONField valExp annObCol
@@ -719,16 +723,16 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields orderByItems = 
           AOCColumn pgCol -> [S.SELit $ getPGColTxt $ pgiColumn pgCol, valExp]
           AOCObjectRelation relInfo _ obCol ->
             [ S.SELit $ relNameToTxt $ riName relInfo
-            , S.applyJsonBuildObj $ annObColToJSONField valExp obCol
+            , applyJsonBuildObj $ annObColToJSONField valExp obCol
             ]
           AOCArrayAggregation relInfo _ aggOrderBy ->
             [ S.SELit $ relNameToTxt (riName relInfo) <> "_aggregate"
-            , S.applyJsonBuildObj $
+            , applyJsonBuildObj $
               case aggOrderBy of
                 AAOCount -> [S.SELit "count", valExp]
                 AAOOp opText colInfo ->
                   [ S.SELit opText
-                  , S.applyJsonBuildObj [S.SELit $ getPGColTxt $ pgiColumn colInfo, valExp]
+                  , applyJsonBuildObj [S.SELit $ getPGColTxt $ pgiColumn colInfo, valExp]
                   ]
             ]
 
@@ -1062,7 +1066,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
     permLimitSubQuery = PLSQNotRequired
 
     primaryKeyColumnsObjectExp =
-      S.applyJsonBuildObj $ flip concatMap (toList primaryKeyColumns) $
+      applyJsonBuildObj $ flip concatMap (toList primaryKeyColumns) $
       \pgColumnInfo ->
         [ S.SELit $ getPGColTxt $ pgiColumn pgColumnInfo
         , toJSONableExp False (pgiType pgColumnInfo) False $
@@ -1122,14 +1126,14 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
          )
       => Maybe S.OrderByExp -> m S.SQLExp
     processFields orderByExp =
-      fmap (S.applyJsonBuildObj . concat) $
+      fmap (applyJsonBuildObj . concat) $
       forM fields $
         \(FieldName fieldText, field) -> (S.SELit fieldText:) . pure <$>
         case field of
           ConnectionTypename t              -> pure $ withForceAggregation S.textTypeAnn $ S.SELit t
           ConnectionPageInfo pageInfoFields -> pure $ processPageInfoFields pageInfoFields
           ConnectionEdges edges ->
-            fmap (flip mkSimpleJsonAgg orderByExp . S.applyJsonBuildObj . concat) $ forM edges $
+            fmap (flip mkSimpleJsonAgg orderByExp . applyJsonBuildObj . concat) $ forM edges $
             \(FieldName edgeText, edge) -> (S.SELit edgeText:) . pure <$>
             case edge of
               EdgeTypename t -> pure $ S.SELit t
@@ -1143,7 +1147,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
                 pure $ S.SEIden edgeFieldIden
 
     processPageInfoFields infoFields =
-      S.applyJsonBuildObj $ flip concatMap infoFields $
+      applyJsonBuildObj $ flip concatMap infoFields $
       \(FieldName fieldText, field) -> (:) (S.SELit fieldText) $ pure case field of
         PageInfoTypename t      -> withForceAggregation S.textTypeAnn $ S.SELit t
         PageInfoHasNextPage     -> withForceAggregation S.boolTypeAnn $
