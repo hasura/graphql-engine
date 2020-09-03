@@ -194,8 +194,8 @@ generateRelationshipsFor tableSchema tableName relType foreigns =
           riType = relType
           riMapping =
             case relType of
-              ObjRel -> Map.singleton (unsafePGCol fromTable) (unsafePGCol toTable)
-              ArrRel -> Map.singleton (unsafePGCol toTable) (unsafePGCol fromTable)
+              ObjRel -> Map.singleton (unsafePGCol fromColumn) (unsafePGCol toColumn)
+              ArrRel -> Map.singleton (unsafePGCol toColumn) (unsafePGCol fromColumn)
           riRTable =
             case relType of
               ObjRel -> QualifiedObject (SchemaName toSchema) (TableName toTable)
