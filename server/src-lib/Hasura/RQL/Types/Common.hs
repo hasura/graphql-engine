@@ -66,7 +66,6 @@ import qualified Data.HashMap.Strict           as HM
 import qualified Data.Text                     as T
 import qualified Data.Environment              as Env
 import qualified Database.PG.Query             as Q
-import qualified Data.List.NonEmpty            as NE
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.Haskell.TH.Syntax    as TH
 import qualified PostgreSQL.Binary.Decoding    as PD
