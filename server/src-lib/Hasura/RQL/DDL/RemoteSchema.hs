@@ -30,7 +30,6 @@ import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.Types
 import           Hasura.Server.Version       (HasVersion)
 import           Hasura.SQL.Text
-import           Hasura.SQL.Types
 
 
 runAddRemoteSchema
