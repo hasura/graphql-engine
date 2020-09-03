@@ -2,6 +2,7 @@ module Hasura.Sources.MySQL.SQLBuilder (mySQLBuilder) where
 
 import           Hasura.Prelude
 
+import qualified Data.Char        as C
 import qualified Data.Text        as T
 import qualified Text.Builder     as TB
 
@@ -16,7 +17,7 @@ mySQLBuilder = SQLBuilder
   myIdentifier
 
 myLiteral :: T.Text -> TB.Builder
-myLiteral = TB.text . pgFmtLit
+myLiteral l = TB.text $ if T.all C.isDigit l then l else pgFmtLit l
 
 myIdentifier :: Identifier -> TB.Builder
 myIdentifier = TB.text . myFmtIden . toTxt
