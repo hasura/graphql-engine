@@ -260,7 +260,7 @@ convertQuerySelSet
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
-  -> m ( ExecutionPlan (tx EncJSON, GeneratedSqlMap) LBS.ByteString RemoteCall (G.Name, J.Value)
+  -> m ( ExecutionPlan (tx EncJSON, GeneratedSqlMap) [(Text, LBS.ByteString)] RemoteCall (G.Name, J.Value)
        -- , Maybe ReusableQueryPlan
        , [QueryRootField UnpreparedValue]
        )
@@ -313,9 +313,11 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
         (seqPGDB Seq.:|> (name, RFPRaw $ LBS.toStrict $ J.encode r), seqMyDB, seqRemote)
 
   executionPlan <- case (myPlans, pgPlans, remoteFields) of
-    ((myPlan Seq.:<| Seq.Empty), Seq.Empty, Seq.Empty) -> case snd myPlan of
-      RFPMySQL plan -> pure $ ExecStepMySQL $ LBS.fromStrict $ TE.encodeUtf8 $ Q.getQueryText $ _ppQuery plan
-      _             -> error "found non mysql root plan in mysql plan list"
+    (myPlans, Seq.Empty, Seq.Empty) ->
+      ExecStepMySQL <$> for (toList myPlans) \(name, myPlan) ->
+      case myPlan of
+        RFPMySQL plan -> pure $ (G.unName name,) $ LBS.fromStrict $ TE.encodeUtf8 $ Q.getQueryText $ _ppQuery plan
+        _             -> error "found non mysql root plan in mysql plan list"
     (Seq.Empty, dbs, Seq.Empty) -> ExecStepPostgres <$> mkCurPlanTx env manager reqHeaders userInfo (toList dbs)
     (Seq.Empty, Seq.Empty, remotes@(firstRemote Seq.:<| _)) -> do
       let (remoteOperation, _) =

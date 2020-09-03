@@ -117,13 +117,15 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             (telemTimeIO, telemQueryType, respHdrs, resp) <-
               runQueryDB reqId (reqUnparsed,reqParsed) asts userInfo txGenSql
             return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs))
-          E.ExecStepMySQL queryString -> liftIO $ do
+          E.ExecStepMySQL queries -> liftIO $ do
             connection <- fromJust <$> readMVar mySQLConnection
-            UGLY.traceShowM queryString
-            result <- IOSL.toList . snd =<< My.query_ connection (My.Query queryString)
-            UGLY.traceShowM result
+            assocResults <- for queries \(name, queryString) -> do
+              UGLY.traceShowM queryString
+              result <- IOSL.toList . snd =<< My.query_ connection (My.Query queryString)
+              UGLY.traceShowM result
+              return (name, encJFromText $ T.concat $ fmap (\case My.MySQLText t -> t) $ concat result)
             -- TODO fill in proper values for telemTimeIO and telemQueryType below
-            pure $ (telemCacheHit, Telem.Local, (secondsToDiffTime 0, Telem.Query, HttpResponse (encodeGQResp $ GQSuccess $ BS.fromStrict $ TE.encodeUtf8 $ T.concat $ fmap (\case My.MySQLText t -> t) $ concat result) []))
+            pure $ (telemCacheHit, Telem.Local, (secondsToDiffTime 0, Telem.Query, HttpResponse (encodeGQResp $ GQSuccess $ encJToLBS $ encJFromAssocList assocResults) []))
           E.ExecStepRemote (rsi, opDef, _varValsM) ->
             runRemoteGQ telemCacheHit rsi opDef
           E.ExecStepRaw (name, json) -> do
