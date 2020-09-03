@@ -1,0 +1,18 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "user address" (
+        id serial primary key,
+        name text unique,
+        config jsonb
+      );
+
+- type: track_table
+  version: 2
+  args:
+    table: user address
+    configuration:
+      identifier: user_address
