@@ -38,7 +38,7 @@ instance ToTxt ColumnReference where
   toTxt = \case
     ColumnReferenceColumn column -> toTxt $ pgiColumn column
     ColumnReferenceCast reference targetType ->
-      toTxt reference <> "::" <> toTxt targetType
+      toTxt reference -- "::" <> toTxt targetType
 
 parseOperationsExpression
   :: forall m v

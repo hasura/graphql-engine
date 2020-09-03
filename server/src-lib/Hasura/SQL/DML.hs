@@ -326,7 +326,7 @@ newtype TypeAnn
   deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 instance ToSQL TypeAnn where
-  toSQL _ (TypeAnn ty) = "::" <> TB.text ty
+  toSQL _ (TypeAnn ty) = mempty -- "::" <> TB.text ty
 
 mkTypeAnn :: PGType PGScalarType -> TypeAnn
 mkTypeAnn = TypeAnn . unsafeToSQLTxt
