@@ -38,7 +38,6 @@ import           Hasura.RQL.DML.Update
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.Types
-import           Hasura.Server.Utils
 import           Hasura.Server.Version              (HasVersion)
 import           Hasura.Session
 
@@ -323,7 +322,7 @@ getQueryAccessMode q = (fromMaybe Q.ReadOnly) <$> getQueryAccessMode' q
       case q' of
         RQSelect _ -> pure Nothing
         RQCount _ -> pure Nothing
-        RQRunSql RunSQL {rTxAccessMode} -> pure $ Just rTxAccessMode
+        RQRunSql RunSQL {_rTxAccessMode} -> pure $ Just _rTxAccessMode
         RQBulk qs -> foldM reconcileAccessModeWith Nothing (zip [0 :: Integer ..] qs)
         _ -> pure $ Just Q.ReadWrite
       where

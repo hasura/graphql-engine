@@ -45,6 +45,7 @@ import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.API.Config                  (runGetConfig)
+import           Hasura.Server.API.Metadata
 import           Hasura.Server.API.Query
 import           Hasura.Server.Auth                        (AuthMode (..), UserAuthentication (..))
 import           Hasura.Server.Compression
@@ -69,6 +70,7 @@ import qualified Hasura.GraphQL.Transport.WebSocket        as WS
 import qualified Hasura.GraphQL.Transport.WebSocket.Server as WS
 import qualified Hasura.Logging                            as L
 import qualified Hasura.Server.API.PGDump                  as PGD
+import qualified Hasura.Server.API.QueryV2                 as V2Query
 import qualified Hasura.Tracing                            as Tracing
 import qualified Network.Wai.Handler.WebSockets.Custom     as WSC
 
@@ -374,7 +376,6 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
         mapM_ setHeader allRespHeaders
         Spock.lazyBytes compressedResp
 
-
 v1QueryHandler
   :: ( HasVersion
      , MonadIO m
@@ -407,6 +408,47 @@ v1QueryHandler query = do
       pgExecCtx   <- asks (scPGExecCtx . hcServerCtx)
       env         <- asks (scEnvironment . hcServerCtx)
       runQuery env pgExecCtx userInfo schemaCache metadata httpMgr sqlGenCtx (SystemDefined False) query
+
+v1MetadataHandler
+  :: ( HasVersion
+     , MonadIO m
+     , MonadBaseControl IO m
+     , MonadMetadataManage m
+     )
+  => RQLMetadata -> Handler m (HttpResponse EncJSON)
+v1MetadataHandler request = do
+  userInfo     <- asks hcUser
+  scRef        <- asks (scCacheRef . hcServerCtx)
+  schemaCache  <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
+  metadata     <- liftIO $ readIORef $ _scrMetadata scRef
+  httpMgr      <- asks (scManager . hcServerCtx)
+  sqlGenCtx    <- asks (scSQLGenCtx . hcServerCtx)
+  pgExecCtx    <- asks (scPGExecCtx . hcServerCtx)
+  env          <- asks (scEnvironment . hcServerCtx)
+  instanceId   <- asks (scInstanceId . hcServerCtx)
+  metadataPool <- asks (scMetadataPool . hcServerCtx)
+  logger <- asks (scLogger . hcServerCtx)
+  r <- withSCUpdate scRef metadataPool instanceId logger $
+       runMetadataRequest env userInfo httpMgr sqlGenCtx pgExecCtx schemaCache metadata request
+  pure $ HttpResponse r []
+
+v2QueryHandler
+  :: ( HasVersion
+     , MonadIO m
+     , Tracing.MonadTrace m
+     )
+  => V2Query.RQLQuery -> Handler m (HttpResponse EncJSON)
+v2QueryHandler request = do
+  userInfo     <- asks hcUser
+  scRef        <- asks (scCacheRef . hcServerCtx)
+  schemaCache  <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
+  metadata     <- liftIO $ readIORef $ _scrMetadata scRef
+  httpMgr      <- asks (scManager . hcServerCtx)
+  sqlGenCtx    <- asks (scSQLGenCtx . hcServerCtx)
+  pgExecCtx    <- asks (scPGExecCtx . hcServerCtx)
+  env          <- asks (scEnvironment . hcServerCtx)
+  r <- V2Query.runQuery env userInfo httpMgr sqlGenCtx pgExecCtx schemaCache metadata request
+  pure $ HttpResponse r []
 
 v1Alpha1GQHandler
   :: ( HasVersion
@@ -765,6 +807,12 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
 
       Spock.post "v1/query" $ spockAction encodeQErr id $
         mkPostHandler $ mkAPIRespHandler v1QueryHandler
+
+      Spock.post "v1/metadata" $ spockAction encodeQErr id $
+        mkPostHandler $ mkAPIRespHandler v1MetadataHandler
+
+      Spock.post "v2/query" $ spockAction encodeQErr id $
+        mkPostHandler $ mkAPIRespHandler v2QueryHandler
 
       Spock.post ("api/1/table" <//> Spock.var <//> Spock.var) $ \tableName queryType ->
         mkSpockAction serverCtx encodeQErr id $ mkPostHandler $

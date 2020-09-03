@@ -31,6 +31,7 @@ module Hasura.RQL.DDL.Schema
  , module Hasura.RQL.DDL.Schema.Table
 
  , RunSQL(..)
+ , rTxAccessMode
  , runRunSQL
  , isSchemaCacheBuildRequiredRunSQL
  ) where
@@ -43,6 +44,7 @@ import qualified Database.PG.Query              as Q
 import qualified Database.PostgreSQL.LibPQ      as PQ
 import qualified Text.Regex.TDFA                as TDFA
 
+import           Control.Lens                   (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -60,29 +62,30 @@ import           Hasura.Server.Utils            (quoteRegex)
 
 data RunSQL
   = RunSQL
-  { rSql                      :: Text
-  , rCascade                  :: !Bool
-  , rCheckMetadataConsistency :: !(Maybe Bool)
-  , rTxAccessMode             :: !Q.TxAccess
+  { _rSql                      :: Text
+  , _rCascade                  :: !Bool
+  , _rCheckMetadataConsistency :: !(Maybe Bool)
+  , _rTxAccessMode             :: !Q.TxAccess
   } deriving (Show, Eq, Lift)
+$(makeLenses ''RunSQL)
 
 instance FromJSON RunSQL where
   parseJSON = withObject "RunSQL" $ \o -> do
-    rSql <- o .: "sql"
-    rCascade <- o .:? "cascade" .!= False
-    rCheckMetadataConsistency <- o .:? "check_metadata_consistency"
+    _rSql <- o .: "sql"
+    _rCascade <- o .:? "cascade" .!= False
+    _rCheckMetadataConsistency <- o .:? "check_metadata_consistency"
     isReadOnly <- o .:? "read_only" .!= False
-    let rTxAccessMode = if isReadOnly then Q.ReadOnly else Q.ReadWrite
+    let _rTxAccessMode = if isReadOnly then Q.ReadOnly else Q.ReadWrite
     pure RunSQL{..}
 
 instance ToJSON RunSQL where
   toJSON RunSQL {..} =
     object
-      [ "sql" .= rSql
-      , "cascade" .= rCascade
-      , "check_metadata_consistency" .= rCheckMetadataConsistency
+      [ "sql" .= _rSql
+      , "cascade" .= _rCascade
+      , "check_metadata_consistency" .= _rCheckMetadataConsistency
       , "read_only" .=
-        case rTxAccessMode of
+        case _rTxAccessMode of
           Q.ReadOnly  -> True
           Q.ReadWrite -> False
       ]
@@ -90,9 +93,9 @@ instance ToJSON RunSQL where
 -- | see Note [Checking metadata consistency in run_sql]
 isSchemaCacheBuildRequiredRunSQL :: RunSQL -> Bool
 isSchemaCacheBuildRequiredRunSQL RunSQL {..} =
-  case rTxAccessMode of
+  case _rTxAccessMode of
     Q.ReadOnly  -> False
-    Q.ReadWrite -> fromMaybe (containsDDLKeyword rSql) rCheckMetadataConsistency
+    Q.ReadWrite -> fromMaybe (containsDDLKeyword _rSql) _rCheckMetadataConsistency
   where
     containsDDLKeyword :: Text -> Bool
     containsDDLKeyword = TDFA.match $$(quoteRegex
@@ -108,9 +111,9 @@ runRunSQL :: (MonadTx m, CacheRWM m, HasSQLGenCtx m) => RunSQL -> m EncJSON
 runRunSQL q@RunSQL {..}
   -- see Note [Checking metadata consistency in run_sql]
   | isSchemaCacheBuildRequiredRunSQL q
-  = withMetadataCheck rCascade $ execRawSQL rSql
+  = withMetadataCheck _rCascade $ execRawSQL _rSql
   | otherwise
-  = execRawSQL rSql
+  = execRawSQL _rSql
   where
     execRawSQL :: (MonadTx m) => Text -> m EncJSON
     execRawSQL =

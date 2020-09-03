@@ -81,10 +81,7 @@ runDropCollection
   => DropCollection -> m EncJSON
 runDropCollection (DropCollection collName cascade) = do
   allowlistModifier <- withPathK "collection" $ do
-    -- FIXME? Optimise below code, maybe one query?
-    -- check for query collection
     void $ getCollectionDef collName
-
     allowlist <- fetchAllowlist
     if collName `elem` allowlist && not cascade then
         throw400 DependencyError $ "query collection with name "
