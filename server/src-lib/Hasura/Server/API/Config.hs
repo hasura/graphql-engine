@@ -17,8 +17,9 @@ import qualified Hasura.GraphQL.Execute.LiveQuery.Options as LQ
 
 data JWTInfo
   = JWTInfo
-  { jwtiClaimsNamespace :: !JWTConfigClaims
+  { jwtiClaimsNamespace :: !JWTNamespace
   , jwtiClaimsFormat    :: !JWTClaimsFormat
+  , jwtiClaimsMap       :: !(Maybe JWTCustomClaimsMap)
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 4 snakeCase) ''JWTInfo)
@@ -65,8 +66,9 @@ isJWTSet = \case
 
 getJWTInfo :: AuthMode -> Maybe JWTInfo
 getJWTInfo (AMAdminSecretAndJWT _ jwtCtx _) =
-  Just $ JWTInfo claimsNs format
-  where
-    claimsNs = jcxClaimNs jwtCtx
-    format = jcxClaimsFormat jwtCtx
+  Just $ case jcxClaims jwtCtx of
+    JCNamespace namespace claimsFormat ->
+      JWTInfo namespace claimsFormat Nothing
+    JCMap claimsMap ->
+      JWTInfo (ClaimNs defaultClaimsNamespace) defaultClaimsFormat $ Just claimsMap
 getJWTInfo _ = Nothing
