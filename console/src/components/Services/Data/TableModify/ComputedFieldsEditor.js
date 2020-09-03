@@ -308,7 +308,7 @@ const ComputedFieldsEditor = ({
               <SearchableSelectBox
                 options={dataSource
                   .getSchemaFunctions(functions, computedFieldFunctionSchema)
-                  .map(fn => fn.name)}
+                  .map(fn => fn.function_name)}
                 onChange={handleFnNameChange}
                 value={computedFieldFunctionName}
                 bsClass={'function-name-select'}

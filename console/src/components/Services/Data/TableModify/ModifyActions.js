@@ -33,7 +33,6 @@ import {
   getTableCustomRootFields,
   getTableCustomColumnNames,
   getTableDef,
-  getComputedFieldName,
   generateTableDef,
   dataSource,
 } from '../../../../dataSources';
@@ -55,6 +54,7 @@ import {
   getSchemaBaseRoute,
   getTableModifyRoute,
 } from '../../../Common/utils/routesUtils';
+import { exportMetadata } from '../../../../metadata/actions';
 
 const DELETE_PK_WARNING =
   'Without a primary key there is no way to uniquely identify a row of a table';
@@ -172,13 +172,13 @@ export const saveComputedField = (
 
   const tableDef = getTableDef(table);
 
-  const computedFieldName = getComputedFieldName(computedField);
+  const computedFieldName = computedField.computed_field_name;
 
   if (originalComputedField) {
     migrationUp.push(
       getDropComputedFieldQuery(
         tableDef,
-        getComputedFieldName(originalComputedField)
+        originalComputedField.computed_field_name
       )
     );
   }
@@ -198,7 +198,7 @@ export const saveComputedField = (
     migrationDown.push(
       getAddComputedFieldQuery(
         tableDef,
-        getComputedFieldName(originalComputedField),
+        originalComputedField.computed_field_name,
         originalComputedField.definition,
         originalComputedField.comment
       )
@@ -236,7 +236,7 @@ export const deleteComputedField = (computedField, table) => (
   const migrationDown = [];
 
   const tableDef = getTableDef(table);
-  const computedFieldName = getComputedFieldName(computedField);
+  const computedFieldName = computedField.computed_field_name;
 
   migrationUp.push(getDropComputedFieldQuery(tableDef, computedFieldName));
 
@@ -914,6 +914,7 @@ const untrackTableSql = tableName => {
     const errorMsg = 'Untrack table failed';
 
     const customOnSuccess = () => {
+      dispatch(exportMetadata());
       dispatch(_push('/data/'));
     };
     const customOnError = err => {

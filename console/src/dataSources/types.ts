@@ -12,6 +12,8 @@ export interface Relationship
 }
 
 export type Permission = {
+  table_name: string;
+  table_schema: string;
   role_name: string;
   permissions: {
     [action: string]: any;
@@ -25,11 +27,17 @@ export interface BaseTableColumn {
 
 export interface TableColumn extends BaseTableColumn {
   udt_name: string;
-  column_default: string;
   is_generated?: boolean;
   is_nullable?: string;
   is_identity?: boolean;
   identity_generation?: 'ALWAYS' | 'BY DEFAULT' | null;
+  comment?: string | null;
+  data_type: string; // 'integer';
+  table_name: string;
+  column_name: string;
+  table_schema: string;
+  column_default: string | null;
+  ordinal_position: number;
 }
 
 export type ForeignKeyConstraint = {
@@ -110,5 +118,8 @@ export interface Table extends BaseTable {
     is_updatable: 'YES' | 'NO';
     is_trigger_updatable: 'YES' | 'NO';
     is_trigger_deletable: 'YES' | 'NO';
+    table_schema: string;
+    table_name: string;
+    view_definition: string;
   };
 }

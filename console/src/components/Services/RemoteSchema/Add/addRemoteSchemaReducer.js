@@ -392,7 +392,6 @@ const modifyRemoteSchema = () => {
     const errorMsg = 'Modify remote schema failed';
 
     const customOnSuccess = data => {
-      // dispatch({ type: REQUEST_SUCCESS });
       dispatch({ type: RESET, data: data });
       dispatch(push(`${prefixUrl}/manage/schemas`)); // to avoid 404
       dispatch(exportMetadata()).then(() => {

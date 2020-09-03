@@ -40,6 +40,9 @@ import {
   getCreateCheckConstraintSql,
   getCreatePkSql,
   getFunctionDefinitionSql,
+  primaryKeysInfoSql,
+  checkConstraintsSql,
+  uniqueKeysSql,
 } from './sqlUtils';
 
 export const isTable = (table: Table) => {
@@ -429,4 +432,7 @@ export const postgres: DataSourcesAPI = {
   getCreateCheckConstraintSql,
   getCreatePkSql,
   getFunctionDefinitionSql,
+  primaryKeysInfoSql,
+  checkConstraintsSql,
+  uniqueKeysSql,
 };
