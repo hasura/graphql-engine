@@ -100,7 +100,11 @@ And ``base64`` encoded value is
 
    WzEsICJwdWJsaWMiLCAiYXV0aG9yIiwgIjI5NmQzMGIxLTQ3NGQtNDAxMS1hOTA3LTI3MDE5OTJiMDRjMSJdCg==
 
+Exporting the Relay schema
+--------------------------
 
+You can export the Relay schema in the same way as you can :ref:`export the GraphQL schema <export_graphql_schema>`. 
+But instead of the GraphQL endpoint, you can specify the Relay endpoint, which will end in ``/v1beta1/relay``.
 
 Limitations
 -----------
