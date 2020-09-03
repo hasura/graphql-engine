@@ -382,7 +382,7 @@ data TableConfig
   } deriving (Show, Eq, Lift, Generic)
 instance NFData TableConfig
 instance Cacheable TableConfig
-$(deriveToJSON (aesonDrop 3 snakeCase) ''TableConfig)
+$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''TableConfig)
 
 emptyTableConfig :: TableConfig
 emptyTableConfig =

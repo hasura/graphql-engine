@@ -191,6 +191,23 @@ args:
 - type: add_collection_to_allowlist
   args:
     collection: collection_1
+
 - type: add_collection_to_allowlist
   args:
     collection: collection_2
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "user address" (
+        id serial primary key,
+        name text,
+        address text
+      );
+
+- type: track_table
+  version: 2
+  args:
+    table: user address
+    configuration:
+      identifier: user_address
