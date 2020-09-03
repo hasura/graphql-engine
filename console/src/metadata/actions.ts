@@ -263,17 +263,8 @@ const handleInconsistentObjects = (
         'tables'
       );
 
-      // const actions = actionsSelector(getState());
-      // const filteredActions = filterInconsistentMetadataObjects(
-      //   (actions as any) as MetadataObject[],
-      //   inconsistentObjects,
-      //   'actions'
-      // );
-
       // todo
       dispatch(setConsistentSchema(filteredSchema) as any);
-      // dispatch(setConsistentRemoteSchemas(remoteSchemas) as any);
-      // dispatch(setActions(filteredActions) as any);
     }
   };
 };

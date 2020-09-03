@@ -1,7 +1,8 @@
 import { createSelector } from 'reselect';
 import { ReduxState } from '../types';
-import { TableEntry } from './types';
+import { TableEntry, HasuraMetadataV2 } from './types';
 import { filterInconsistentMetadataObjects } from '../components/Services/Settings/utils';
+import { parseCustomTypes } from '../shared/utils/hasuraCustomTypeUtils';
 
 const getInconsistentObjects = (state: ReduxState) => {
   return state.metadata.inconsistentObjects;
@@ -89,5 +90,80 @@ export const getTablesInfoSelector = createSelector(
       );
     }
     return tables;
+  }
+);
+
+const getFunctions = (state: ReduxState) => {
+  return (
+    state.metadata.metadataObject?.functions?.map(f => ({
+      ...f.function,
+      function_name: f.function.name,
+      function_schema: f.function.schema,
+      configuration: f.configuration,
+    })) || []
+  );
+};
+
+export const getFunctionSelector = createSelector(
+  getFunctions,
+  functions => (name: string, schema: string) => {
+    return functions?.find(
+      f => f.function_name === name && f.function_schema === schema
+    );
+  }
+);
+
+export const getConsistentFunctions = createSelector(
+  [getFunctions, getInconsistentObjects],
+  (funcs, objects) => {
+    return filterInconsistentMetadataObjects(funcs, objects, 'functions');
+  }
+);
+
+const getCurrentFunctionInfo = (state: ReduxState) => ({
+  name: state.functions.functionName,
+  schema: state.functions.functionSchema,
+});
+
+export const getFunctionConfiguration = createSelector(
+  getFunctions,
+  getCurrentFunctionInfo,
+  (funcs, { name, schema }) => {
+    const func = funcs.find(
+      f => f.function_name === name && f.function_schema === schema
+    );
+    return func?.configuration;
+  }
+);
+
+const metadataSelector = (state: ReduxState): HasuraMetadataV2 | null => {
+  return state.metadata.metadataObject;
+};
+
+export const actionsSelector = createSelector(
+  [metadataSelector, getInconsistentObjects],
+  (metadata, objects) => {
+    if (!metadata) return [];
+
+    const actions =
+      metadata.actions?.map(action => ({
+        ...action,
+        definition: {
+          ...action.definition,
+          headers: action.definition.headers || [],
+        },
+        permissions: action.permissions || [],
+      })) || [];
+
+    return filterInconsistentMetadataObjects(actions, objects, 'actions');
+  }
+);
+
+export const customTypesSelector = createSelector(
+  metadataSelector,
+  metadata => {
+    if (!metadata) return [];
+
+    return parseCustomTypes(metadata.custom_types);
   }
 );

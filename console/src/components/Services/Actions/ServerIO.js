@@ -53,7 +53,10 @@ import {
 import { findAction, getActionPermissions } from './utils';
 import { getActionPermissionQueries } from './Permissions/utils';
 import { exportMetadata } from '../../../metadata/actions';
-import { actionsSelector, customTypesSelector } from './selectors';
+import {
+  customTypesSelector,
+  actionsSelector,
+} from '../../../metadata/selector';
 
 export const createAction = () => (dispatch, getState) => {
   const { add: rawState } = getState().actions;

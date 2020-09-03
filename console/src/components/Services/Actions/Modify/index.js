@@ -1,5 +1,8 @@
 import Modify from './Main';
-import { actionsSelector, customTypesSelector } from '../selectors';
+import {
+  actionsSelector,
+  customTypesSelector,
+} from '../../../../metadata/selector';
 
 const mapStateToProps = state => {
   return {

@@ -1,6 +1,5 @@
 import Permissions from './Main';
-import { actionsSelector } from '../selectors';
-import { rolesSelector } from '../../../../metadata/selector';
+import { rolesSelector, actionsSelector } from '../../../../metadata/selector';
 
 const mapStateToProps = state => {
   return {

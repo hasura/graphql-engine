@@ -11,7 +11,7 @@ import {
   getSchemaAddTableRoute,
   getTableBrowseRoute,
 } from '../../Common/utils/routesUtils';
-import { getConsistentFunctions } from './Function/selector';
+import { getConsistentFunctions } from '../../../metadata/selector';
 
 class DataSubSidebar extends React.Component {
   constructor() {

@@ -1,5 +1,5 @@
 import Relationships from './Main';
-import { customTypesSelector } from '../../selectors';
+import { customTypesSelector } from '../../../../../metadata/selector';
 
 const mapStateToProps = state => {
   return {

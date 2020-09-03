@@ -7,7 +7,7 @@ import PageContainer from '../../../Common/Layout/PageContainer/PageContainer';
 import LeftSidebar from '../Sidebar/LeftSidebar';
 import styles from '../../../Common/TableCommon/Table.scss';
 import { appPrefix } from '../constants';
-import { actionsSelector } from '../selectors';
+import { actionsSelector } from '../../../../metadata/selector';
 
 class Container extends React.Component {
   render() {

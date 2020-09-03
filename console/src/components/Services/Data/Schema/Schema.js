@@ -41,7 +41,7 @@ import ToolTip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import RawSqlButton from '../Common/Components/RawSqlButton';
 import styles from '../../../Common/Common.scss';
-import { getConsistentFunctions } from '../Function/selector';
+import { getConsistentFunctions } from '../../../../metadata/selector';
 
 const SchemaPermissionsButton = ({ schema }) => (
   <Link to={getSchemaPermissionsRoute(schema)}>

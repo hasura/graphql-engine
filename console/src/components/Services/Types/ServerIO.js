@@ -5,8 +5,8 @@ import {
 } from '../../../shared/utils/hasuraCustomTypeUtils';
 import { generateSetCustomTypesQuery } from '../../Common/utils/v1QueryUtils';
 import { getConfirmation } from '../../Common/utils/jsUtils';
-import { customTypesSelector } from '../Actions/selectors';
 import { exportMetadata } from '../../../metadata/actions';
+import { customTypesSelector } from '../../../metadata/selector';
 
 export const setCustomGraphQLTypes = (types, successCb, errorCb) => (
   dispatch,
