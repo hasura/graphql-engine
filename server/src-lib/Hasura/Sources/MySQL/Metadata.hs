@@ -43,7 +43,7 @@ fetchTables = do
       ( My.Query
         "SELECT TABLE_SCHEMA, TABLE_NAME, TABLE_TYPE \
         \FROM INFORMATION_SCHEMA.TABLES \
-        \WHERE TABLE_TYPE='BASE TABLE'"
+        \WHERE TABLE_TYPE='BASE TABLE' AND TABLE_SCHEMA NOT IN ('mysql', 'sys', 'performance_schema')"
       )
     )
   {-
