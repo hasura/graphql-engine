@@ -2,9 +2,6 @@
 import { addState } from '../state';
 /* */
 
-import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
-import requestAction from '../../../../utils/requestAction';
-import dataHeaders from '../../Data/Common/Headers';
 import { push } from 'react-router-redux';
 
 import { generateHeaderSyms } from '../../../Common/Layout/ReusableHeader/HeaderReducer';
@@ -15,6 +12,7 @@ import { appPrefix } from '../constants';
 import globals from '../../../../Globals';
 import { clearIntrospectionSchemaCache } from '../graphqlUtils';
 import { exportMetadata } from '../../../../metadata/actions';
+import { getRemoteSchemaSelector } from '../../../../metadata/selector';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -85,58 +83,35 @@ const getReqHeader = headers => {
   return requestHeaders;
 };
 
+// todo: pre metadata separation there was an API call
+// the purpose of leaving a thunk was to reuse the previous logic and store model
 const fetchRemoteSchema = remoteSchema => {
   return (dispatch, getState) => {
-    const url = Endpoints.getSchema;
-    const options = {
-      credentials: globalCookiePolicy,
-      method: 'POST',
-      headers: dataHeaders(getState),
-      body: JSON.stringify({
-        type: 'select',
-        args: {
-          table: {
-            name: 'remote_schemas',
-            schema: 'hdb_catalog',
-          },
-          columns: ['*'],
-          where: {
-            name: remoteSchema,
-          },
-        },
-      }),
-    };
-    dispatch({ type: FETCHING_INDIV_REMOTE_SCHEMA });
-    return dispatch(requestAction(url, options)).then(
-      data => {
-        if (data.length > 0) {
-          dispatch({ type: REMOTE_SCHEMA_FETCH_SUCCESS, data: data });
-          const headerObj = [];
-          data[0].definition.headers.forEach(d => {
-            headerObj.push({
-              name: d.name,
-              value: d.value ? d.value : d.value_from_env,
-              type: d.value ? 'static' : 'env',
-            });
-          });
-          headerObj.push({
-            name: '',
-            type: 'static',
-            value: '',
-          });
-          dispatch({
-            type: getHeaderEvents.UPDATE_HEADERS,
-            data: [...headerObj],
-          });
-          return Promise.resolve();
-        }
-        return dispatch(push(`${prefixUrl}`));
-      },
-      error => {
-        console.error('Failed to fetch remoteSchema' + JSON.stringify(error));
-        return dispatch({ type: REMOTE_SCHEMA_FETCH_FAIL, data: error });
-      }
-    );
+    const schema = getRemoteSchemaSelector(getState())(remoteSchema);
+    console.log({ schema, state: getState() });
+
+    if (schema) {
+      dispatch({ type: REMOTE_SCHEMA_FETCH_SUCCESS, data: schema });
+      const headerObj = [];
+      (schema.definition.headers || []).forEach(d => {
+        headerObj.push({
+          name: d.name,
+          value: d.value ? d.value : d.value_from_env,
+          type: d.value ? 'static' : 'env',
+        });
+      });
+      headerObj.push({
+        name: '',
+        type: 'static',
+        value: '',
+      });
+      dispatch({
+        type: getHeaderEvents.UPDATE_HEADERS,
+        data: headerObj,
+      });
+    } else {
+      dispatch(push(`${prefixUrl}`));
+    }
   };
 };
 
@@ -507,24 +482,24 @@ const addRemoteSchemaReducer = (state = addState, action) => {
     case REMOTE_SCHEMA_FETCH_SUCCESS:
       return {
         ...state,
-        name: action.data[0].name,
-        manualUrl: action.data[0].definition.url || null,
-        envName: action.data[0].definition.url_from_env || null,
-        headers: action.data[0].definition.headers || [],
-        timeoutConf: action.data[0].definition.timeout_seconds
-          ? action.data[0].definition.timeout_seconds.toString()
+        name: action.data.name,
+        manualUrl: action.data.definition.url || null,
+        envName: action.data.definition.url_from_env || null,
+        headers: action.data.definition.headers || [],
+        timeoutConf: action.data.definition.timeout_seconds
+          ? action.data.definition.timeout_seconds.toString()
           : '60',
-        forwardClientHeaders: action.data[0].definition.forward_client_headers,
+        forwardClientHeaders: action.data.definition.forward_client_headers,
         editState: {
           ...state,
-          id: action.data[0].id,
+          id: action.data.id,
           isModify: false,
-          originalName: action.data[0].name,
-          originalHeaders: action.data[0].definition.headers || [],
-          originalUrl: action.data[0].definition.url || null,
-          originalEnvUrl: action.data[0].definition.url_from_env || null,
+          originalName: action.data.name,
+          originalHeaders: action.data.definition.headers || [],
+          originalUrl: action.data.definition.url || null,
+          originalEnvUrl: action.data.definition.url_from_env || null,
           originalForwardClientHeaders:
-            action.data[0].definition.forward_client_headers || false,
+            action.data.definition.forward_client_headers || false,
         },
         isFetching: false,
         isFetchError: null,

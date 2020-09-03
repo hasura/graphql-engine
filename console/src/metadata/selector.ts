@@ -167,3 +167,10 @@ export const customTypesSelector = createSelector(
     return parseCustomTypes(metadata.custom_types);
   }
 );
+
+export const getRemoteSchemaSelector = createSelector(
+  getRemoteSchemas,
+  schemas => (name: string) => {
+    return schemas.find(schema => schema.name === name);
+  }
+);
