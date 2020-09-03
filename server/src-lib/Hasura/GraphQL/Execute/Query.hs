@@ -15,6 +15,7 @@ import qualified Data.ByteString.Lazy                   as LBS
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
+import qualified Data.HashSet                           as Set
 import qualified Data.IntMap                            as IntMap
 import qualified Data.Sequence                          as Seq
 import qualified Data.Sequence.NonEmpty                 as NESeq
@@ -271,10 +272,11 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
   queryPlans :: InsOrdHashMap G.Name (RootField PGPlan PGPlan RemoteField RootFieldPlan J.Value) <- for unpreparedQueries \unpreparedQuery -> do
     (preparedQuery, PlanningSt _ planVars planVals expectedVariables)
       <- flip runStateT initPlanningSt
-         $ traverseBothQueryRootField prepareWithPlan unpreparedQuery
+         $ traverseQueryRootField prepareWithPlan unpreparedQuery
            >>= traverseAction convertActionQuery
+    preparedQuery' <- fmap fst $ flip runStateT Set.empty $ traverseMySQLQueryRootField prepareWithoutPlan preparedQuery
     validateSessionVariables expectedVariables $ _uiSession userInfo
-    traverseDB (pure . irToRootFieldPlan DS.selectQuerySQL planVars planVals) preparedQuery
+    traverseDB (pure . irToRootFieldPlan DS.selectQuerySQL planVars planVals) preparedQuery'
       >>= traverseMySQL (pure . irToRootFieldPlan Hasura.Sources.MySQL.Query.selectQuerySQL planVars planVals)
       >>= traverseAction (pure . actionQueryToRootFieldPlan planVars planVals)
 
