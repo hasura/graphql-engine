@@ -254,17 +254,17 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
       cache <- liftIO getSchemaCache
       let meti = getEventTriggerInfoFromEvent cache e
       case meti of
-        Nothing -> do
+        Left err -> do
           --  This rare error can happen in the following known cases:
           --  i) schema cache is not up-to-date (due to some bug, say during schema syncing across multiple instances)
           --  ii) the event trigger is dropped when this event was just fetched
-          logQErr $ err500 Unexpected "table or event-trigger not found in schema cache"
+          logQErr $ err500 Unexpected err
           liftIO . runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
             currentTime <- liftIO getCurrentTime
             -- For such an event, we unlock the event and retry after a minute
             setRetry e (addUTCTime 60 currentTime)
           >>= flip onLeft logQErr
-        Just eti -> do
+        Right eti -> do
           let webhook = T.unpack $ wciCachedValue $ etiWebhookInfo eti
               retryConf = etiRetryConf eti
               timeoutSeconds = fromMaybe defaultTimeoutSeconds (rcTimeoutSec retryConf)
@@ -393,10 +393,16 @@ logQErr err = do
   logger :: L.Logger L.Hasura <- asks getter
   L.unLogger logger $ EventInternalErr err
 
-getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Maybe EventTriggerInfo
-getEventTriggerInfoFromEvent sc e = let table = eTable e
-                                        tableInfo = M.lookup table $ scTables sc
-                                    in M.lookup ( tmName $ eTrigger e) =<< (_tiEventTriggerInfoMap <$> tableInfo)
+getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Either Text EventTriggerInfo
+getEventTriggerInfoFromEvent sc e = do
+  let table = eTable e
+      mTableInfo = M.lookup table $ scTables sc
+  tableInfo <- onNothing mTableInfo $ Left ("table '" <> qualObjectToText table <> "' not found")
+  let triggerName = tmName $ eTrigger e
+      mEventTriggerInfo = M.lookup triggerName (_tiEventTriggerInfoMap tableInfo)
+  onNothing mEventTriggerInfo $ Left ("event trigger '" <> triggerNameToTxt triggerName
+    <> "' on table '" <> qualObjectToText table <> "' not found")
+
 
 ---- DATABASE QUERIES ---------------------
 --
