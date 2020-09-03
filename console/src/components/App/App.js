@@ -65,6 +65,11 @@ const App = ({
     );
   }
 
+  if (!metadata.metadataObject) {
+    // todo: should be loading state or error message in case of metadata fetch fail
+    return null;
+  }
+
   return (
     <GlobalContext.Provider value={globals}>
       <ThemeProvider theme={theme}>
