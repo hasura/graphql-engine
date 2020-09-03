@@ -563,6 +563,17 @@ class TestGraphQLQueryCustomSchema:
     def dir(cls):
         return 'queries/graphql_query/custom_schema'
 
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@usefixtures('per_class_tests_db_state')
+class TestGraphQLQueryCustomTableIdentifier:
+
+    def test_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + 'author.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/custom_schema/custom_table_identifier/'
+
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryEnums:
