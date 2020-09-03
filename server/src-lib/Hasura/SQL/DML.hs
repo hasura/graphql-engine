@@ -21,7 +21,6 @@ import           Hasura.SQL.Types
 
 data SQLBuilder = SQLBuilder
   { sqlbLiteral    :: Text -> TB.Builder
-  , sqlbOrderBy    :: OrderByItem -> TB.Builder
   , sqlbIdentifier :: Identifier -> TB.Builder
   }
 
@@ -39,8 +38,7 @@ toSQLTxt b a = TB.run $ toSQL b a
 unsafeToSQLTxt :: ToSQL a => a -> T.Text
 unsafeToSQLTxt = toSQLTxt builder
   where
-    builder = SQLBuilder pgLiteral pgOrderBy pgIdentifier
-    pgOrderBy (OrderByItem e ot no) = toSQL builder e <-> toSQL builder ot <-> toSQL builder no
+    builder = SQLBuilder pgLiteral pgIdentifier
     pgLiteral    = TB.text . pgFmtLit
     pgIdentifier = TB.text . pgFmtIden . toTxt
 

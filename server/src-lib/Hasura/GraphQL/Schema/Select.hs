@@ -55,6 +55,7 @@ import           Hasura.GraphQL.Schema.Remote
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                   (executeJSONPath)
+import           Hasura.Sources
 import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -572,12 +573,15 @@ tableArgs
   -> SelPermInfo
   -> m (InputFieldsParser n SelectArgs)
 tableArgs table selectPermissions = do
+  dataSource    <- _tciDataSource . _tiCoreInfo <$> askTableInfo table
   whereParser   <- tableWhere table selectPermissions
   orderByParser <- tableOrderBy table selectPermissions
   distinctParser <- tableDistinctOn table selectPermissions
   let selectArgs = do
         whereF   <- whereParser
-        orderBy  <- orderByParser
+        orderBy  <- case dataSource of
+          MySQLDB -> pure Nothing
+          _       -> orderByParser
         limit    <- fmap join $ P.fieldOptional limitName   limitDesc   $ P.nullable positiveInt
         offset   <- fmap join $ P.fieldOptional offsetName  offsetDesc  $ P.nullable fakeBigInt
         distinct <- distinctParser

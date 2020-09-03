@@ -13,11 +13,7 @@ import           Hasura.SQL.Types
 postgresBuilder :: SQLBuilder
 postgresBuilder = SQLBuilder
   pgLiteral
-  pgOrderBy
   pgIdentifier
-
-pgOrderBy :: OrderByItem -> TB.Builder
-pgOrderBy (OrderByItem e ot no) = toSQL postgresBuilder e <-> toSQL postgresBuilder ot <-> toSQL postgresBuilder no
 
 pgLiteral :: T.Text -> TB.Builder
 pgLiteral = TB.text . pgFmtLit
