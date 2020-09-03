@@ -85,7 +85,14 @@ fetchTables = do
             , referencedTableSchema -- TODO maybe text
             , refenencedTableName -- TODO maybe text
             , referencedColumnName -- TODO maybe text
-            ] -> (tableSchema, tableName, columnName, constraintName, referencedTableSchema, refenencedTableName, referencedColumnName)) <$>
+            ] -> (ForeignRow
+                  tableSchema
+                  tableName
+                  (asMySQLText columnName)
+                  (asMySQLText constraintName)
+                  (asMySQLText referencedTableSchema)
+                  (asMySQLText refenencedTableName)
+                  (asMySQLText referencedColumnName))) <$>
     ( IO.toList =<< snd <$> My.query_ conn
       ( My.Query
         "SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, CONSTRAINT_NAME, REFERENCED_TABLE_SCHEMA, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME \
@@ -108,14 +115,12 @@ fetchTables = do
           then Just <$> do
           return (FieldName (G.unName (pgiName pgci)), FIColumn pgci)
           else return Nothing
-      let primaryKeyCols = flip mapMaybe foreigns
-            \case (tableSchema', tableName', columnName, constraintName, referencedTableSchema, refenencedTableName, referencedColumnName) ->
-                    if tableSchema == tableSchema' && tableName == tableName' && constraintName == My.MySQLText "PRIMARY"
-                    then
-                      case columnName of
-                        My.MySQLText t -> Just t
-                        _ -> Nothing
-                    else Nothing
+      let primaryKeyCols = flip mapMaybe foreigns \forRow ->
+            if    tableSchema == frTableSchema forRow
+               && tableName == frTableName forRow
+               && frConstraintName forRow == Just "PRIMARY"
+            then frColumnName forRow
+            else Nothing
           primKey = case fmap (\case (_,_,pgci,_) -> pgci) $ mapMaybe (\col -> find (\(ts', tn', pgci, _) -> tableSchema == ts' && tableName == tn' && G.unName (pgiName pgci) == col) columns) primaryKeyCols of
             [] -> Nothing
             -- TODO we're inserting some fake data here - MySQL has no OID, I think?
@@ -125,10 +130,12 @@ fetchTables = do
                 tableIden
                 Nothing
                 (SystemDefined False)
-                fieldInfoMap
-                primKey -- PrimaryKey
+                (  fieldInfoMap
+                <> (FIRelationship <$> generateRelationshipsFor tableSchema tableName ObjRel foreigns)
+                <> (FIRelationship <$> generateRelationshipsFor tableSchema tableName ArrRel foreigns))
+                primKey
                 mempty -- _uniqueConstraints
-                mempty -- _foreignKeys
+                mempty -- _foreignKey
                 Nothing -- ViewInfo
                 Nothing -- EnumValues
                 emptyTableConfig
@@ -137,6 +144,63 @@ fetchTables = do
       return $ Just (tableIden , ti)
       else return Nothing
 
-
-
   return $ Map.fromList $ catMaybes tableCache'
+
+data ForeignRow = ForeignRow
+  { frTableSchema :: Text
+  , frTableName :: Text
+  , frColumnName :: Maybe Text
+  , frConstraintName :: Maybe Text
+  , frRefTableSchema :: Maybe Text
+  , frRefTableName :: Maybe Text
+  , frRefColumnName :: Maybe Text
+  }
+
+
+asMySQLText :: My.MySQLValue -> Maybe Text
+asMySQLText (My.MySQLText t) = Just t
+asMySQLText _ = Nothing
+
+{-
+  = RelInfo
+  { riName       :: !RelName
+  , riType       :: !RelType
+  , riMapping    :: !(HashMap PGCol PGCol)
+  , riRTable     :: !QualifiedTable
+  , riIsManual   :: !Bool
+  , riIsNullable :: !Bool
+-}
+generateRelationshipsFor :: Text -> Text -> RelType -> [ForeignRow] -> FieldInfoMap RelInfo
+generateRelationshipsFor tableSchema tableName relType foreigns =
+  let
+    sideFilter =
+      \case ForeignRow{..} ->
+              case relType of
+                ObjRel -> frTableSchema == tableSchema && frTableName == tableName
+                ArrRel -> frRefTableSchema == Just tableSchema && frRefTableName == Just tableName
+    relevant = filter sideFilter foreigns
+    convert :: ForeignRow -> Maybe RelInfo
+    convert ForeignRow{..} = do
+      let fromSchema = frTableSchema
+          fromTable  = frTableName
+      fromColumn <- frColumnName
+      toSchema <- frRefTableSchema
+      toTable  <- frRefTableName
+      toColumn <- frRefColumnName
+      let riName = RelName . mkNonEmptyTextUnsafe $
+            case relType of
+              ObjRel -> toTable <> "_object"
+              ArrRel -> fromTable <> "_array"
+          riType = relType
+          riMapping =
+            case relType of
+              ObjRel -> Map.singleton (unsafePGCol fromTable) (unsafePGCol toTable)
+              ArrRel -> Map.singleton (unsafePGCol toTable) (unsafePGCol fromTable)
+          riRTable =
+            case relType of
+              ObjRel -> QualifiedObject (SchemaName toSchema) (TableName toTable)
+              ArrRel -> QualifiedObject (SchemaName fromSchema) (TableName fromTable)
+          riIsManual = False
+          riIsNullable = True -- TODO figure out right value?
+      return RelInfo{..}
+  in Map.fromList $ mapMaybe (convert >=> \x -> Just (fromRel $ riName x , x)) relevant
