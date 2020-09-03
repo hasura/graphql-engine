@@ -24,6 +24,7 @@ module Hasura.RQL.Types.Common
        , EquatableGType(..)
        , InpValInfo(..)
        , CustomColumnNames
+       , UniqueConstraint(..)
 
        , NonEmptyText
        , mkNonEmptyTextUnsafe
@@ -65,6 +66,7 @@ import qualified Data.HashMap.Strict           as HM
 import qualified Data.Text                     as T
 import qualified Data.Environment              as Env
 import qualified Database.PG.Query             as Q
+import qualified Data.List.NonEmpty            as NE
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.Haskell.TH.Syntax    as TH
 import qualified PostgreSQL.Binary.Decoding    as PD
@@ -247,6 +249,16 @@ instance NFData ForeignKey
 instance Hashable ForeignKey
 instance Cacheable ForeignKey
 $(deriveJSON (aesonDrop 3 snakeCase) ''ForeignKey)
+
+data UniqueConstraint
+  = UniqueConstraint
+  { _ucConstraint :: !Constraint
+  , _ucColumns    :: ![PGCol]
+  } deriving (Show, Eq, Generic)
+instance NFData UniqueConstraint
+instance Hashable UniqueConstraint
+instance Cacheable UniqueConstraint
+$(deriveJSON (aesonDrop 3 snakeCase) ''UniqueConstraint)
 
 data InpValInfo
   = InpValInfo

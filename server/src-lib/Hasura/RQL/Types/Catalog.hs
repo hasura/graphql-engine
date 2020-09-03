@@ -69,7 +69,7 @@ data CatalogTableInfo
   { _ctiOid               :: !OID
   , _ctiColumns           :: ![PGRawColumnInfo]
   , _ctiPrimaryKey        :: !(Maybe (PrimaryKey PGCol))
-  , _ctiUniqueConstraints :: !(HashSet Constraint)
+  , _ctiUniqueConstraints :: !(HashSet UniqueConstraint)
   -- ^ Does /not/ include the primary key!
   , _ctiForeignKeys       :: !(HashSet CatalogForeignKey)
   , _ctiViewInfo          :: !(Maybe ViewInfo)
