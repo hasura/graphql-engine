@@ -36,7 +36,7 @@ selectQuerySQL jsonAggSelect sel =
 
 selectAggregateQuerySQL :: AnnAggregateSelect -> Q.Query
 selectAggregateQuerySQL =
-  Q.fromText . S.unsafeToSQLTxt . mkAggregateSelect
+  Q.fromBuilder . S.toSQL mySQLBuilder . mkAggregateSelect
 
 mkAggregateSelect :: AnnAggregateSelect -> S.Select
 mkAggregateSelect annAggSel =

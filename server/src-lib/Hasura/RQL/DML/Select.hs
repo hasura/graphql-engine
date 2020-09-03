@@ -11,22 +11,23 @@ module Hasura.RQL.DML.Select
 where
 
 import           Data.Aeson.Types
-import           Instances.TH.Lift              ()
+import           Instances.TH.Lift                  ()
 
-import qualified Data.HashSet                   as HS
-import qualified Data.List.NonEmpty             as NE
-import qualified Data.Sequence                  as DS
+import qualified Data.HashSet                       as HS
+import qualified Data.List.NonEmpty                 as NE
+import qualified Data.Sequence                      as DS
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Select.Internal
 import           Hasura.RQL.Types
+import           Hasura.Sources.Postgres.SQLBuilder
 import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query              as Q
-import qualified Hasura.SQL.DML                 as S
+import qualified Database.PG.Query                  as Q
+import qualified Hasura.SQL.DML                     as S
 
 convSelCol :: (UserInfoM m, QErrM m, CacheRM m)
            => FieldInfoMap FieldInfo
@@ -277,21 +278,21 @@ convSelectQuery sessVarBldr prepArgBuilder (DMLQuery qt selQ) = do
 selectP2 :: JsonAggSelect -> (AnnSimpleSel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 selectP2 jsonAggSelect (sel, p) =
   encJFromBS . runIdentity . Q.getRow
-  <$> Q.rawQE dmlTxErrorHandler (Q.fromText selectSQL) (toList p) True
+  <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
   where
-    selectSQL = S.unsafeToSQLTxt $ mkSQLSelect jsonAggSelect sel
+    selectSQL = S.toSQL postgresBuilder $ mkSQLSelect jsonAggSelect sel
 
 selectQuerySQL :: JsonAggSelect -> AnnSimpleSel -> Q.Query
 selectQuerySQL jsonAggSelect sel =
-  Q.fromText $ S.unsafeToSQLTxt $ mkSQLSelect jsonAggSelect sel
+  Q.fromBuilder $ S.toSQL postgresBuilder $ mkSQLSelect jsonAggSelect sel
 
 selectAggregateQuerySQL :: AnnAggregateSelect -> Q.Query
 selectAggregateQuerySQL =
-  Q.fromText . S.unsafeToSQLTxt . mkAggregateSelect
+  Q.fromBuilder . S.toSQL postgresBuilder . mkAggregateSelect
 
 connectionSelectQuerySQL :: ConnectionSelect S.SQLExp -> Q.Query
 connectionSelectQuerySQL =
-  Q.fromText . S.unsafeToSQLTxt . mkConnectionSelect
+  Q.fromBuilder . S.toSQL postgresBuilder . mkConnectionSelect
 
 asSingleRowJsonResp :: Q.Query -> [Q.PrepArg] -> Q.TxE QErr EncJSON
 asSingleRowJsonResp query args =
