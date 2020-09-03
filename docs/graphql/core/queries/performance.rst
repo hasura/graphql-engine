@@ -178,7 +178,7 @@ To make variables non-nullable, add a ``!`` at the end of the type, like here:
       }
    }
 
-If the ``!`` is not added and the variable is nullable, the generated query will be different depending if an ``id`` is passed or if the variables is ``null``
+If the ``!`` is not added and the variable is nullable, the generated query will be different depending on whether an ``id`` is passed or whether the variable is ``null``
 (for the latter, there is no ``where`` statement present). Therefore, it's not possible for Hasura to create a reusable plan for a query in this case.
 
 .. note::
