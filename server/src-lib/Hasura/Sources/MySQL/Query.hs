@@ -1,5 +1,6 @@
 module Hasura.Sources.MySQL.Query
   ( selectQuerySQL
+  , selectAggregateQuerySQL
   )
 where
 
@@ -32,6 +33,25 @@ import qualified Hasura.SQL.DML                  as S
 selectQuerySQL :: JsonAggSelect -> AnnSimpleSel -> Q.Query
 selectQuerySQL jsonAggSelect sel =
   Q.fromBuilder $ S.toSQL mySQLBuilder $ mkMySQLSelect jsonAggSelect sel
+
+selectAggregateQuerySQL :: AnnAggregateSelect -> Q.Query
+selectAggregateQuerySQL =
+  Q.fromText . S.unsafeToSQLTxt . mkAggregateSelect
+
+mkAggregateSelect :: AnnAggregateSelect -> S.Select
+mkAggregateSelect annAggSel =
+  let ((selectSource, nodeExtractors, topExtractor), joinTree) =
+        runWriter $ flip runReaderT strfyNum $
+        processAnnAggregateSelect sourcePrefixes rootFieldName annAggSel
+      selectNode = SelectNode nodeExtractors joinTree
+      arrayNode = ArraySelectNode [topExtractor] selectNode
+  in prefixNumToAliases $
+     generateSQLSelectFromArrayNode selectSource arrayNode $ S.BELit True
+  where
+    strfyNum = _asnStrfyNum annAggSel
+    rootFieldName = FieldName "root"
+    rootIden = toIdentifier rootFieldName
+    sourcePrefixes = SourcePrefixes rootIden rootIden
 
 mkMySQLSelect :: JsonAggSelect -> AnnSimpleSel -> S.Select
 mkMySQLSelect jsonAggSelect annSel =

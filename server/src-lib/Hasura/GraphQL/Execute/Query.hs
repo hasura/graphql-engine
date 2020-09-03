@@ -29,7 +29,7 @@ import qualified Network.HTTP.Types                     as HTTP
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.Logging                         as L
 import           Hasura.Server.Version                  (HasVersion)
-import qualified Hasura.Sources.MySQL.Query
+import qualified Hasura.Sources.MySQL.Query             as My
 import qualified Hasura.SQL.DML                         as S
 import qualified Hasura.Tracing                         as Tracing
 
@@ -153,19 +153,34 @@ mkCurPlanTx env manager reqHdrs userInfo fldPlans = do
 
 -- convert a query from an intermediate representation to... another
 irToRootFieldPlan
-  :: (DS.JsonAggSelect -> DS.AnnSimpleSel -> Q.Query)
-  -> PlanVariables
+  :: PlanVariables
   -> PrepArgMap
   -> QueryDB S.SQLExp -> PGPlan
-irToRootFieldPlan sqlBuilder vars prepped = \case
-  QDBSimple s      -> mkPGPlan (sqlBuilder DS.JASMultipleRows) s
-  QDBPrimaryKey s  -> mkPGPlan (sqlBuilder DS.JASSingleObject) s
+irToRootFieldPlan vars prepped = \case
+  QDBSimple s      -> mkPGPlan (DS.selectQuerySQL DS.JASMultipleRows) s
+  QDBPrimaryKey s  -> mkPGPlan (DS.selectQuerySQL DS.JASSingleObject) s
   QDBAggregation s ->
     let (annAggSel, aggRemoteJoins) = getRemoteJoinsAggregateSelect s
     in PGPlan (DS.selectAggregateQuerySQL annAggSel) vars prepped aggRemoteJoins
   QDBConnection s ->
     let (connSel, connRemoteJoins) = getRemoteJoinsConnectionSelect s
     in PGPlan (DS.connectionSelectQuerySQL connSel) vars prepped connRemoteJoins
+  where
+    mkPGPlan f simpleSel =
+      let (simpleSel',remoteJoins) = getRemoteJoins simpleSel
+      in PGPlan (f simpleSel') vars prepped remoteJoins
+
+mySQLIrToRootFieldPlan
+  :: PlanVariables
+  -> PrepArgMap
+  -> QueryDB S.SQLExp -> PGPlan
+mySQLIrToRootFieldPlan vars prepped = \case
+  QDBSimple s      -> mkPGPlan (My.selectQuerySQL DS.JASMultipleRows) s
+  QDBPrimaryKey s  -> mkPGPlan (My.selectQuerySQL DS.JASSingleObject) s
+  QDBAggregation s ->
+    let (annAggSel, aggRemoteJoins) = getRemoteJoinsAggregateSelect s
+    in PGPlan (My.selectAggregateQuerySQL annAggSel) vars prepped aggRemoteJoins
+  QDBConnection s -> error "Dolphin: not supported"
   where
     mkPGPlan f simpleSel =
       let (simpleSel',remoteJoins) = getRemoteJoins simpleSel
@@ -276,8 +291,8 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
            >>= traverseAction convertActionQuery
     preparedQuery' <- fmap fst $ flip runStateT Set.empty $ traverseMySQLQueryRootField prepareWithoutPlan preparedQuery
     validateSessionVariables expectedVariables $ _uiSession userInfo
-    traverseDB (pure . irToRootFieldPlan DS.selectQuerySQL planVars planVals) preparedQuery'
-      >>= traverseMySQL (pure . irToRootFieldPlan Hasura.Sources.MySQL.Query.selectQuerySQL planVars planVals)
+    traverseDB (pure . irToRootFieldPlan planVars planVals) preparedQuery'
+      >>= traverseMySQL (pure . mySQLIrToRootFieldPlan planVars planVals)
       >>= traverseAction (pure . actionQueryToRootFieldPlan planVars planVals)
 
   -- This monster makes sure that consecutive database operation get executed together
