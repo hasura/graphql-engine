@@ -109,7 +109,7 @@ library
                      , validation
                      , lifted-base
                      , pg-client
-                     , mysql-haskell
+                     , mysql-simple
                      , io-streams
                      , validation
                      , text

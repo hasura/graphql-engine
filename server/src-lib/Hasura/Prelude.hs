@@ -86,7 +86,7 @@ import qualified Data.Set                          as Set
 import qualified Data.Text                         as T
 import qualified Data.Text.Encoding                as TE
 import qualified Data.Text.Encoding.Error          as TE
-import qualified Database.MySQL.Connection         as My
+import qualified Database.MySQL.Simple             as My
 import qualified GHC.Clock                         as Clock
 import qualified System.IO.Unsafe                  as BAD
 import qualified Test.QuickCheck                   as QC
@@ -95,7 +95,7 @@ import           Unsafe.Coerce
 
 -- TODO TODO TODO FIX THIS NOOOOOOO DANGER HERE BE LASER-DRAGONS
 
-mySQLConnection :: MVar (Maybe My.MySQLConn)
+mySQLConnection :: MVar (Maybe My.Connection)
 {-# NOINLINE mySQLConnection #-}
 mySQLConnection = BAD.unsafePerformIO $ newMVar Nothing
 

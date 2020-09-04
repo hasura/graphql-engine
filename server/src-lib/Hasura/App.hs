@@ -36,7 +36,7 @@ import qualified Data.Set                                  as Set
 import qualified Data.Text                                 as T
 import qualified Data.Time.Clock                           as Clock
 import qualified Data.Yaml                                 as Y
-import qualified Database.MySQL.Connection                 as My
+import qualified Database.MySQL.Simple                     as My
 import qualified Database.PG.Query                         as Q
 import qualified Network.HTTP.Client                       as HTTP
 import qualified Network.HTTP.Client.TLS                   as HTTP
@@ -202,8 +202,8 @@ initialiseCtx env hgeCmd rci = do
   latch <- liftIO newShutdownLatch
   let mySQLConnInfo = mkMySQLConnInfo rci
   onJust mySQLConnInfo \connInfo -> liftIO do
-    (greeting, connection) <- My.connectDetail connInfo
-    print greeting
+    connection <- My.connect connInfo
+    putStrLn "Connected to MySQL!"
     void $ swapMVar mySQLConnection $ Just connection
   (loggers, pool, sqlGenCtx) <- case hgeCmd of
     -- for the @serve@ command generate a regular PG pool

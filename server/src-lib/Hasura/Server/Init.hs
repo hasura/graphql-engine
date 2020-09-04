@@ -14,7 +14,7 @@ import qualified Data.HashSet                     as Set
 import qualified Data.String                      as DataString
 import qualified Data.Text                        as T
 import qualified Data.Text.Encoding               as TE
-import qualified Database.MySQL.Connection        as My
+import qualified Database.MySQL.Simple            as My
 import qualified Database.PG.Query                as Q
 import qualified Language.Haskell.TH.Syntax       as TH
 import qualified Text.PrettyPrint.ANSI.Leijen     as PP
@@ -625,7 +625,12 @@ mkMySQLConnInfo (RawConnInfo _ _ _ _ _ _ _ _ myHost myPort myUser myPassword myD
   port <- myPort
   user <- BS.pack <$> myUser
   db   <- BS.pack <$> myDB
-  pure $ My.ConnectInfo host (stringlyCoerce port) db user (BS.pack myPassword) My.utf8_general_ci
+  pure $ My.defaultConnectInfo { My.connectHost = host
+                               , My.connectPort = stringlyCoerce port
+                               , My.connectUser = stringlyCoerce user
+                               , My.connectPassword = myPassword
+                               , My.connectDatabase = stringlyCoerce db
+                               }
 
 {-
 mkConnInfo :: RawConnInfo -> Either String Q.ConnInfo

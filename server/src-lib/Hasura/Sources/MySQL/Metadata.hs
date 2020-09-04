@@ -6,7 +6,7 @@ import Hasura.Prelude
 import Data.Sequence.NonEmpty
 import Data.Sequence (fromList)
 
-import qualified Database.MySQL.Base as My
+import qualified Database.MySQL.Simple as My
 import Control.Concurrent.MVar
 import qualified System.IO.Streams.List as IO (toList)
 import Data.Maybe (fromJust)
@@ -38,9 +38,9 @@ fetchTables = do
   , _tciEnumValues        :: !(Maybe EnumValues)
   , _tciCustomConfig      :: !TableConfig
   -}
-  tables <- fmap (\case [My.MySQLText schema, My.MySQLText name, My.MySQLText typ] -> (schema, name, typ)) <$>
-    ( IO.toList =<< snd <$> My.query_ conn
-      ( My.Query
+  tables :: [(Text, Text, Text)] <-
+    ( My.query_ conn
+      (
         "SELECT TABLE_SCHEMA, TABLE_NAME, TABLE_TYPE \
         \FROM INFORMATION_SCHEMA.TABLES \
         \WHERE TABLE_TYPE='BASE TABLE' AND TABLE_SCHEMA NOT IN ('mysql', 'sys', 'performance_schema')"
@@ -57,44 +57,44 @@ fetchTables = do
   , pgiDescription :: !(Maybe G.Description)
   -}
   columns <- fmap (
-    \case [   My.MySQLText tableSchema
-            , My.MySQLText tableName
-            , My.MySQLText columnName
-            , My.MySQLInt32U ordinalPosition
-            , My.MySQLText isNullable
-            , My.MySQLText dataType
-            , My.MySQLText columnKey
-            ] -> (tableSchema, tableName, PGColumnInfo
+    \case (   tableSchema :: Text
+            , tableName :: Text
+            , columnName :: Text
+            , ordinalPosition
+            , (isNullable :: Text)
+            , dataType :: Text -- TODO White lie: actually this field is Nullable. But I think we're not interested in those cases?
+            , columnKey :: Text
+            ) -> (tableSchema, tableName, PGColumnInfo
                 (unsafePGCol columnName)
                 (G.unsafeMkName columnName)
-                (fromIntegral ordinalPosition)
+                ordinalPosition
                 (PGColumnScalar (textToPGScalarType dataType))
                 (isNullable == "YES")
                 Nothing, columnKey)) <$>
-    ( IO.toList =<< snd <$> My.query_ conn
-      ( My.Query
+    ( My.query_ conn
+      (
         "SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, ORDINAL_POSITION, IS_NULLABLE, DATA_TYPE, COLUMN_KEY \
         \FROM INFORMATION_SCHEMA.COLUMNS"
       )
     )
   foreigns <- fmap (
-    \case [   My.MySQLText tableSchema
-            , My.MySQLText tableName
-            , columnName -- TODO maybe text
-            , constraintName -- TODO maybe text
-            , referencedTableSchema -- TODO maybe text
-            , refenencedTableName -- TODO maybe text
-            , referencedColumnName -- TODO maybe text
-            ] -> (ForeignRow
+    \case (   tableSchema
+            , tableName
+            , columnName
+            , constraintName
+            , referencedTableSchema
+            , refenencedTableName
+            , referencedColumnName
+            ) -> (ForeignRow
                   tableSchema
                   tableName
-                  (asMySQLText columnName)
-                  (asMySQLText constraintName)
-                  (asMySQLText referencedTableSchema)
-                  (asMySQLText refenencedTableName)
-                  (asMySQLText referencedColumnName))) <$>
-    ( IO.toList =<< snd <$> My.query_ conn
-      ( My.Query
+                  columnName
+                  constraintName
+                  referencedTableSchema
+                  refenencedTableName
+                  referencedColumnName)) <$>
+    ( My.query_ conn
+      (
         "SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, CONSTRAINT_NAME, REFERENCED_TABLE_SCHEMA, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME \
         \FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE"
       )
@@ -155,11 +155,6 @@ data ForeignRow = ForeignRow
   , frRefTableName :: Maybe Text
   , frRefColumnName :: Maybe Text
   }
-
-
-asMySQLText :: My.MySQLValue -> Maybe Text
-asMySQLText (My.MySQLText t) = Just t
-asMySQLText _ = Nothing
 
 {-
   = RelInfo

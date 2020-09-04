@@ -42,7 +42,8 @@ import qualified Data.Text.Encoding                     as TE
 import qualified Data.Aeson                             as J
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
-import qualified Database.MySQL.Base                    as My
+import qualified Database.MySQL.Simple                  as My
+import qualified Database.MySQL.Simple.Types            as My
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.Query           as EQ
@@ -120,13 +121,16 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs))
           E.ExecStepMySQL queries -> liftIO $ do
             connection <- fromJust <$> readMVar mySQLConnection
-            let handleError (My.ERRException e) = GQExecError [J.Object $ Map.singleton "message" $ J.String $ TE.decodeUtf8 $ My.errMsg e]
-            gqResult <- flip catch (pure . handleError) $ do
+            let
+              handleFormat e = GQExecError [J.Object $ Map.singleton "message" $ J.String $ stringlyCoerce $ My.fmtMessage e]
+              handleQuery e = GQExecError [J.Object $ Map.singleton "message" $ J.String $ stringlyCoerce $ My.qeMessage e]
+              handleResult e = GQExecError [J.Object $ Map.singleton "message" $ J.String $ stringlyCoerce $ My.errMessage e]
+            gqResult <- (flip catch (pure . handleFormat) . flip catch (pure . handleQuery) . flip catch (pure . handleResult)) $ do
               assocResults <- for queries \(name, queryString) -> do
                 UGLY.traceShowM queryString
-                result <- IOSL.toList . snd =<< My.query_ connection (My.Query queryString)
+                [My.Only result] <- My.query_ connection (My.Query (BS.toStrict queryString))
                 UGLY.traceShowM result
-                return (name, encJFromText $ T.concat $ fmap (\case My.MySQLText t -> t) $ concat result)
+                return (name, encJFromText result)
               pure $ GQSuccess $ encJToLBS $ encJFromAssocList assocResults
             -- TODO fill in proper values for telemTimeIO and telemQueryType below
             pure (telemCacheHit, Telem.Local, (secondsToDiffTime 0, Telem.Query, HttpResponse (encodeGQResp gqResult) []))
