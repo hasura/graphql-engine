@@ -692,7 +692,7 @@ class Schema extends Component {
           className={styles.add_mar_top}
           key={'non-trackable-custom-functions'}
         >
-          <CollapsibleToggle title={heading} isOpen>
+          <CollapsibleToggle title={heading}>
             <div className={`${styles.padd_left_remove} col-xs-12`}>
               {getNonTrackableFuncList()}
             </div>
