@@ -58,36 +58,36 @@ class TestGraphqlIntrospectionWithCustomTableIdentifier:
             if t['name'] == 'query_root':
                 hasQueryRoot = True
                 for field in t['fields']:
-                    if field['name'] == 'users_address':
+                    if field['name'] == 'user_address':
                         hasMultiSelect = True
                         assert 'args' in field
                         for args in field['args']:
                             if args['name'] == 'distinct_on':
-                                assert "users_address_select_column" == getTypeNameFromType(args['type'])
+                                assert "user_address_select_column" == getTypeNameFromType(args['type'])
                             elif args['name'] == 'order_by':
-                                assert "users_address_order_by" == getTypeNameFromType(args['type'])
+                                assert "user_address_order_by" == getTypeNameFromType(args['type'])
                             elif args['name'] == 'where':
-                                assert 'users_address_bool_exp' == getTypeNameFromType(args['type'])
-                    elif field['name'] == 'users_address_aggregate':
+                                assert 'user_address_bool_exp' == getTypeNameFromType(args['type'])
+                    elif field['name'] == 'user_address_aggregate':
                         hasAggregate = True
-                        assert "users_address_aggregate" == getTypeNameFromType(field['type'])
-                    elif field['name'] == 'users_address_by_pk':
-                        assert "users_address" == getTypeNameFromType(field['type'])
+                        assert "user_address_aggregate" == getTypeNameFromType(field['type'])
+                    elif field['name'] == 'user_address_by_pk':
+                        assert "user_address" == getTypeNameFromType(field['type'])
                         hasSelectByPk = True
             elif t['name'] == 'mutation_root':
                 for field in t['fields']:
-                    if field['name'] == 'insert_users_address':
+                    if field['name'] == 'insert_user_address':
                         hasMultiInsert = True
-                        assert "users_address_mutation_response" == getTypeNameFromType(field['type'])
+                        assert "user_address_mutation_response" == getTypeNameFromType(field['type'])
                         for args in field['args']:
                             if args['name'] == 'object':
-                                assert "users_address_insert_input" == getTypeNameFromType(args['type'])
-                    elif field['name'] == 'update_users_address_by_pk':
+                                assert "user_address_insert_input" == getTypeNameFromType(args['type'])
+                    elif field['name'] == 'update_user_address_by_pk':
                         hasUpdateByPk = True
-                        assert "users_address" == getTypeNameFromType(field['type'])
+                        assert "user_address" == getTypeNameFromType(field['type'])
                         for args in field['args']:
                             if args['name'] == 'object':
-                                assert "users_address" == getTypeNameFromType(args['type'])
+                                assert "user_address" == getTypeNameFromType(args['type'])
         assert hasQueryRoot
         assert hasMultiSelect
         assert hasAggregate
