@@ -17,6 +17,9 @@ module Hasura.RQL.DDL.Schema.Table
   , SetTableCustomFields(..)
   , runSetTableCustomFieldsQV2
 
+  , SetTableConfiguration(..)
+  , runSetTableConfiguration
+
   , buildTableCache
   , delTableAndDirectDeps
   , processTableChanges
@@ -196,6 +199,13 @@ runSetExistingTableIsEnumQ (SetTableIsEnum tableName isEnum) = do
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
 
+data SetTableConfiguration
+  = SetTableConfiguration
+  { _stcTable         :: !QualifiedTable
+  , _stcConfiguration :: !TableConfig
+  } deriving (Show, Eq, Lift)
+$(deriveJSON (aesonDrop 4 snakeCase) ''SetTableConfiguration)
+
 data SetTableCustomFields
   = SetTableCustomFields
   { _stcfTable             :: !QualifiedTable
@@ -219,6 +229,14 @@ runSetTableCustomFieldsQV2 (SetTableCustomFields tableName rootFields columnName
   void $ askTabInfo tableName -- assert that table is tracked
   updateTableConfig tableName (TableConfig rootFields columnNames identifier)
   buildSchemaCacheFor (MOTable tableName)
+  return successMsg
+
+runSetTableConfiguration
+  :: (MonadTx m, CacheRWM m) => SetTableConfiguration -> m EncJSON
+runSetTableConfiguration (SetTableConfiguration table config) = do
+  void $ askTabInfo table
+  updateTableConfig table config
+  buildSchemaCacheFor (MOTable table)
   return successMsg
 
 unTrackExistingTableOrViewP1
