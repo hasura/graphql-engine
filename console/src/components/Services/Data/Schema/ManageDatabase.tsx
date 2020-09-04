@@ -6,6 +6,7 @@ import Button from '../../../Common/Button/Button';
 import styles from '../../../Common/Common.scss';
 import { ReduxState } from '../../../../types';
 import { Schema } from '../../../../dataSources/types';
+import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 
 type DatabaseDetails = {
   name: string;
@@ -54,6 +55,17 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
   </div>
 );
 
+const crumbs = [
+  {
+    title: 'Data',
+    url: '/data',
+  },
+  {
+    title: 'Manage',
+    url: '#',
+  },
+];
+
 const ManageDatabase: React.FC<ManageDatabaseProps> = ({ schemaList }) => {
   const currentSchemaOptions = schemaList.map(schema => (
     <option>{schema.schema_name}</option>
@@ -66,6 +78,7 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({ schemaList }) => {
     >
       <div className={styles.padd_left}>
         <Helmet title="Manage - Data | Hasura" />
+        <BreadCrumb breadCrumbs={crumbs} />
         <div className={styles.display_flex}>
           <h2 className={`${styles.headerText} ${styles.display_inline}`}>
             Manage Databases

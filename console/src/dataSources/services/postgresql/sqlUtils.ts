@@ -543,9 +543,9 @@ export const getRenameTableSql = (
 `;
 
 export const getDropTriggerSql = (
-  tableName: string,
   tableSchema: string,
-  triggerName: string
+  triggerName: string,
+  tableName?: string // This arg has to be passed strictly
 ) => `
   DROP TRIGGER "${triggerName}" ON "${tableSchema}"."${tableName}";
 `;
@@ -559,7 +559,7 @@ export const getCreateTriggerSql = (
     event_manipulation: string;
     action_orientation: string;
     action_statement: string;
-    comment: string;
+    comment?: string;
   }
 ) => {
   let sql = `CREATE TRIGGER "${triggerName}"
@@ -629,7 +629,7 @@ export const getAddColumnSql = (
   options?: {
     nullable: boolean;
     unique: boolean;
-    default: string;
+    default: any;
     // todo
     sqlGenerator?: FrequentlyUsedColumn['dependentSQLGenerator'];
   }
@@ -675,7 +675,7 @@ export const getAddColumnSql = (
   return sql;
 };
 
-export const getDropNullSql = (
+export const getDropNotNullSql = (
   tableName: string,
   schemaName: string,
   columnName: string
@@ -683,7 +683,7 @@ export const getDropNullSql = (
   alter table "${schemaName}"."${tableName}" alter column "${columnName}" drop not null
 `;
 
-export const getSetNullSql = (
+export const getSetNotNullSql = (
   tableName: string,
   schemaName: string,
   columnName: string
@@ -831,7 +831,7 @@ export const getCreatePkSql = ({
   schemaName: string;
   tableName: string;
   selectedPkColumns: string[];
-  constraintName: string;
+  constraintName?: string; // compulsory for PG
 }) => {
   return `alter table "${schemaName}"."${tableName}"
     add constraint "${constraintName}"

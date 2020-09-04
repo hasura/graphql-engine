@@ -315,7 +315,7 @@ export const getDependencyError = (err = {}) => {
     };
   if (
     err.code === ERROR_CODES.postgresError.code &&
-    err?.internal?.error?.status_code === dataSource.dependecyErrorCode
+    err?.internal?.error?.status_code === dataSource.dependencyErrorCode
   )
     return {
       sqlDependencyError: {

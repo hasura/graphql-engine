@@ -71,7 +71,14 @@ export interface Table extends BaseTable {
     | 'VIEW'
     | 'MATERIALIZED VIEW'
     | 'FOREIGN TABLE'
-    | 'PARTITIONED TABLE';
+    | 'PARTITIONED TABLE'
+    | 'BASE TABLE';
+  primary_key: {
+    table_name: string;
+    table_schema: string;
+    constraint_name: string;
+    columns: string[];
+  } | null;
   is_table_tracked: boolean;
   columns: TableColumn[];
   relationships: Relationship[];

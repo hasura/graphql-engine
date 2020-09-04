@@ -28,10 +28,10 @@ import {
   getDropColumnSql,
   getAddColumnSql,
   getAddUniqueConstraintSql,
-  getDropNullSql,
+  getDropNotNullSql,
   getSetCommentSql,
   getSetColumnDefaultSql,
-  getSetNullSql,
+  getSetNotNullSql,
   getAlterColumnTypeSql,
   getDropColumnDefaultSql,
   getRenameColumnQuery,
@@ -352,7 +352,7 @@ const commonDataTypes = [
 export const isColTypeString = (colType: string) =>
   ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
 
-const dependecyErrorCode = '2BP01'; // pg dependent error > https://www.postgresql.org/docs/current/errcodes-appendix.html
+const dependencyErrorCode = '2BP01'; // pg dependent error > https://www.postgresql.org/docs/current/errcodes-appendix.html
 
 const createSQLRegex = /create\s*(?:|or\s*replace)\s*(view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/; // eslint-disable-line
 
@@ -410,7 +410,7 @@ export const postgres: DataSourcesAPI = {
   getEstimateCountQuery,
   isColTypeString,
   cascadeSqlQuery,
-  dependecyErrorCode,
+  dependencyErrorCode,
   getCreateTableQueries,
   getDropTableSql,
   createSQLRegex,
@@ -429,10 +429,10 @@ export const postgres: DataSourcesAPI = {
   getDropColumnSql,
   getAddColumnSql,
   getAddUniqueConstraintSql,
-  getDropNullSql,
+  getDropNotNullSql,
   getSetCommentSql,
   getSetColumnDefaultSql,
-  getSetNullSql,
+  getSetNotNullSql,
   getAlterColumnTypeSql,
   getDropColumnDefaultSql,
   getRenameColumnQuery,

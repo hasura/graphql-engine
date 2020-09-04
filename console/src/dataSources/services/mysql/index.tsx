@@ -1,13 +1,49 @@
+import React from 'react';
 import { DataSourcesAPI } from '../..';
+import { Table } from '../../types';
+import {
+  getAlterForeignKeySql,
+  getCreateFKeySql,
+  getDropConstraintSql,
+  getRenameTableSql,
+  getDropTriggerSql,
+  getDropColumnSql,
+  getAddColumnSql,
+  getAddUniqueConstraintSql,
+  getDropNotNullSql,
+  getSetCommentSql,
+  getSetColumnDefaultSql,
+  getSetNotNullSql,
+  getAlterColumnTypeSql,
+  getDropColumnDefaultSql,
+  getRenameColumnQuery,
+  checkSchemaModification,
+  getCreateCheckConstraintSql,
+  getCreatePkSql,
+  getCreateTriggerSql,
+  getDropSql,
+} from './sqlUtils';
 
+export const isTable = (table: Table) => {
+  return table.table_name === 'BASE TABLE';
+};
+
+export const displayTableName = (table: Table) => {
+  return isTable(table) ? (
+    <span>{table.table_name}</span>
+  ) : (
+    <i>{table.table_name}</i>
+  );
+};
+
+// Change this to the format to what is present on the postgres side
 export const mysql: DataSourcesAPI = {
-  isTable: () => {
-    throw new Error('not implemented');
-  },
-  displayTableName: () => {
-    throw new Error('not implemented');
-  },
+  isTable,
+  displayTableName,
   getFunctionSchema: () => {
+    throw new Error('not implemented');
+  },
+  getFunctionDefinitionSql: () => {
     throw new Error('not implemented');
   },
   getFunctionDefinition: () => {
@@ -68,14 +104,14 @@ export const mysql: DataSourcesAPI = {
   cascadeSqlQuery: () => {
     throw new Error('not implemented');
   },
-  dependecyErrorCode: '',
+  dependencyErrorCode: '',
   getCreateTableQueries: () => {
     throw new Error('not implemented');
   },
   getDropTableSql: () => {
     throw new Error('not implemented');
   },
-  createSQLRegex: /?/,
+  createSQLRegex: new RegExp(''), // TODO
   getStatementTimeoutSql: () => {
     throw new Error('not implemented');
   },
@@ -88,71 +124,31 @@ export const mysql: DataSourcesAPI = {
   isTimeoutError: () => {
     throw new Error('not implemented');
   },
-  getAlterForeignKeySql: () => {
-    throw new Error('not implemented');
-  },
-  getCreateFKeySql: () => {
-    throw new Error('not implemented');
-  },
-  getDropConstraintSql: () => {
-    throw new Error('not implemented');
-  },
-  getRenameTableSql: () => {
-    throw new Error('not implemented');
-  },
-  getDropTriggerSql: () => {
-    throw new Error('not implemented');
-  },
-  getCreateTriggerSql: () => {
-    throw new Error('not implemented');
-  },
-  getDropSql: () => {
-    throw new Error('not implemented');
-  },
   getViewDefinitionSql: () => {
     throw new Error('not implemented');
   },
-  getDropColumnSql: () => {
-    throw new Error('not implemented');
-  },
-  getAddColumnSql: () => {
-    throw new Error('not implemented');
-  },
-  getAddUniqueConstraintSql: () => {
-    throw new Error('not implemented');
-  },
-  getDropNullSql: () => {
-    throw new Error('not implemented');
-  },
-  getSetCommentSql: () => {
-    throw new Error('not implemented');
-  },
-  getSetColumnDefaultSql: () => {
-    throw new Error('not implemented');
-  },
-  getSetNullSql: () => {
-    throw new Error('not implemented');
-  },
-  getAlterColumnTypeSql: () => {
-    throw new Error('not implemented');
-  },
-  getDropColumnDefaultSql: () => {
-    throw new Error('not implemented');
-  },
-  getRenameColumnQuery: () => {
-    throw new Error('not implemented');
-  },
   fetchColumnCastsQuery: '',
-  checkSchemaModification: () => {
-    throw new Error('not implemented');
-  },
-  getCreateCheckConstraintSql: () => {
-    throw new Error('not implemented');
-  },
-  getCreatePkSql: () => {
-    throw new Error('not implemented');
-  },
-  getFunctionDefinitionSql: () => {
-    throw new Error('not implemented');
-  },
+  getAlterForeignKeySql,
+  getCreateFKeySql,
+  getDropConstraintSql,
+  getRenameTableSql,
+  getDropTriggerSql,
+  getCreateTriggerSql,
+  getDropSql,
+  getDropColumnSql,
+  getAddColumnSql,
+  getAddUniqueConstraintSql,
+  getDropNotNullSql,
+  getSetCommentSql,
+  getSetColumnDefaultSql,
+  getSetNotNullSql,
+  getAlterColumnTypeSql,
+  getDropColumnDefaultSql,
+  getRenameColumnQuery,
+  checkSchemaModification,
+  getCreateCheckConstraintSql,
+  getCreatePkSql,
+  // primaryKeysInfoSql: '',
+  // uniqueKeysSql: '',
+  // checkConstraintsSql: '',
 };

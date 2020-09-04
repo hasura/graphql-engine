@@ -88,7 +88,7 @@ export interface DataSourcesAPI {
   getEstimateCountQuery: (schemaName: string, tableName: string) => string;
   isColTypeString(colType: string): boolean;
   cascadeSqlQuery(sql: string): string;
-  dependecyErrorCode: string;
+  dependencyErrorCode: string;
   getCreateTableQueries: (
     currentSchema: string,
     tableName: string,
@@ -152,9 +152,9 @@ export interface DataSourcesAPI {
     newName: string
   ) => string;
   getDropTriggerSql: (
-    tableName: string,
     tableSchema: string,
-    triggerName: string
+    triggerName: string,
+    tableName?: string
   ) => string;
   getCreateTriggerSql: (
     tableName: string,
@@ -165,7 +165,7 @@ export interface DataSourcesAPI {
       event_manipulation: string;
       action_orientation: string;
       action_statement: string;
-      comment: string;
+      comment?: string;
     }
   ) => string;
   getDropSql: (
@@ -191,16 +191,16 @@ export interface DataSourcesAPI {
     options?: {
       nullable: boolean;
       unique: boolean;
-      default: string;
+      default: any;
       sqlGenerator?: FrequentlyUsedColumn['dependentSQLGenerator'];
     }
   ) => string | string[];
-  getDropNullSql: (
+  getDropNotNullSql: (
     tableName: string,
     schemaName: string,
     columnName: string
   ) => string;
-  getSetNullSql: (
+  getSetNotNullSql: (
     tableName: string,
     schemaName: string,
     columnName: string
@@ -223,7 +223,8 @@ export interface DataSourcesAPI {
     tableName: string,
     schemaName: string,
     columnName: string,
-    comment: string
+    comment: string,
+    columnType?: string
   ) => string;
   getAlterColumnTypeSql: (
     tableName: string,
@@ -240,7 +241,8 @@ export interface DataSourcesAPI {
     tableName: string,
     schemaName: string,
     newName: string,
-    oldName: string
+    oldName: string,
+    columnType?: string
   ) => string;
   fetchColumnCastsQuery: string;
   checkSchemaModification: (sql: string) => boolean;
@@ -259,7 +261,7 @@ export interface DataSourcesAPI {
     schemaName: string;
     tableName: string;
     selectedPkColumns: string[];
-    constraintName: string;
+    constraintName?: string;
   }) => string;
   getFunctionDefinitionSql: (
     schemaName: string,
