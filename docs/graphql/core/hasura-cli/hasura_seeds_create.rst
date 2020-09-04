@@ -1,5 +1,5 @@
 .. meta::
-   :description: Use hasura seeds create to to create a new seed file
+   :description: Use hasura seeds create to create a new seed file
    :keywords: hasura, docs, CLI, hasura seeds create
 
 .. _hasura_seeds_create:
