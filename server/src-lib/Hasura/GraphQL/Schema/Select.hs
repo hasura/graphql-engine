@@ -206,11 +206,11 @@ selectTableAggregate
 selectTableAggregate table fieldName description selectPermissions = runMaybeT do
   guard $ spiAllowAgg selectPermissions
   stringifyNum    <- asks $ qcStringifyNum . getter
-  tableName       <- lift $ getTableName table
+  displayName       <- lift $ getTableDisplayName table
   tableArgsParser <- lift $ tableArgs table selectPermissions
   aggregateParser <- lift $ tableAggregationFields table selectPermissions
   nodesParser     <- lift $ tableSelectionList table selectPermissions
-  let selectionName = tableName <> $$(G.litName "_aggregate")
+  let selectionName = displayName <> $$(G.litName "_aggregate")
       aggregationParser = P.nonNullableParser $
         parsedSelectionsToFields RQL.TAFExp <$>
         P.selectionSet selectionName (Just $ G.Description $ "aggregated selection of " <>> table)
@@ -299,7 +299,7 @@ tableSelectionSet
   -> m (Parser 'Output n AnnotatedFields)
 tableSelectionSet table selectPermissions = memoizeOn 'tableSelectionSet table do
   tableInfo <- _tiCoreInfo <$> askTableInfo table
-  tableName <- getTableName table
+  displayName <- getTableDisplayName table
   let tableFields = Map.elems  $ _tciFieldInfoMap tableInfo
       tablePkeyColumns = _pkColumns <$> _tciPrimaryKey tableInfo
       description  = Just $ mkDescriptionWith (_tciDescription tableInfo) $
@@ -323,10 +323,10 @@ tableSelectionSet table selectPermissions = memoizeOn 'tableSelectionSet table d
             P.selection_ $$(G.litName "id") Nothing P.identifier $> RQL.AFNodeId table pkeyColumns
           allFieldParsers = fieldParsers <> [nodeIdFieldParser]
       nodeInterface <- node
-      pure $ P.selectionSetObject tableName description allFieldParsers [nodeInterface]
+      pure $ P.selectionSetObject displayName description allFieldParsers [nodeInterface]
             <&> parsedSelectionsToFields RQL.AFExpression
     _                                 ->
-      pure $ P.selectionSetObject tableName description fieldParsers []
+      pure $ P.selectionSetObject displayName description fieldParsers []
             <&> parsedSelectionsToFields RQL.AFExpression
 
 -- | List of table fields object.
@@ -378,8 +378,8 @@ tableConnectionSelectionSet
   -> m (Parser 'Output n (RQL.ConnectionFields UnpreparedValue))
 tableConnectionSelectionSet table selectPermissions = do
   edgesParser <- tableEdgesSelectionSet
-  tableName <- getTableName table
-  let connectionTypeName = tableName <> $$(G.litName "Connection")
+  displayName <- getTableDisplayName table
+  let connectionTypeName = displayName <> $$(G.litName "Connection")
       pageInfo = P.subselection_ $$(G.litName "pageInfo") Nothing
                  pageInfoSelectionSet <&> RQL.ConnectionPageInfo
       edges = P.subselection_ $$(G.litName "edges") Nothing
@@ -410,9 +410,9 @@ tableConnectionSelectionSet table selectPermissions = do
     tableEdgesSelectionSet
       :: m (Parser 'Output n (RQL.EdgeFields UnpreparedValue))
     tableEdgesSelectionSet = do
-      tableName           <- getTableName table
+      displayName           <- getTableDisplayName table
       edgeNodeParser      <- P.nonNullableParser <$> tableSelectionSet table selectPermissions
-      let edgesType = tableName <> $$(G.litName "Edge")
+      let edgesType = displayName <> $$(G.litName "Edge")
           cursor    = P.selection_ $$(G.litName "cursor") Nothing
                       P.string $> RQL.EdgeCursor
           edgeNode  = P.subselection_ $$(G.litName "node") Nothing
@@ -455,11 +455,11 @@ selectFunctionAggregate function fieldName description selectPermissions = runMa
   let table = fiReturnType function
   stringifyNum <- asks $ qcStringifyNum . getter
   guard $ spiAllowAgg selectPermissions
-  tableName <- getTableName table
+  displayName <- getTableDisplayName table
   tableArgsParser    <- lift $ tableArgs table selectPermissions
   functionArgsParser <- lift $ customSQLFunctionArgs function
   aggregateParser    <- lift $ tableAggregationFields table selectPermissions
-  selectionName      <- lift $ pure tableName <&> (<> $$(G.litName "_aggregate"))
+  selectionName      <- lift $ pure displayName <&> (<> $$(G.litName "_aggregate"))
   nodesParser        <- lift $ tableSelectionList table selectPermissions
   let argsParser = liftA2 (,) functionArgsParser tableArgsParser
       aggregationParser = fmap (parsedSelectionsToFields RQL.TAFExp) $
@@ -790,11 +790,11 @@ tableAggregationFields
   -> SelPermInfo
   -> m (Parser 'Output n RQL.AggregateFields)
 tableAggregationFields table selectPermissions = do
-  tableName  <- getTableName table
+  displayName  <- getTableDisplayName table
   allColumns <- tableSelectColumns table selectPermissions
   let numericColumns   = onlyNumCols allColumns
       comparableColumns  = onlyComparableCols allColumns
-      selectName   = tableName <> $$(G.litName "_aggregate_fields")
+      selectName   = displayName <> $$(G.litName "_aggregate_fields")
       description  = G.Description $ "aggregate fields of " <>> table
   count     <- countField
   numericAndComparable <- fmap concat $ sequenceA $ catMaybes
@@ -802,12 +802,12 @@ tableAggregationFields table selectPermissions = do
       if null numericColumns then Nothing else Just $
         for numericAggOperators $ \operator -> do
           numFields <- mkNumericAggFields operator numericColumns
-          pure $ parseAggOperator operator tableName numFields
+          pure $ parseAggOperator operator displayName numFields
     , -- operators on comparable columns
       if null comparableColumns then Nothing else Just $ do
         comparableFields <- traverse mkColumnAggField comparableColumns
         pure $ comparisonAggOperators & map \operator ->
-               parseAggOperator operator tableName comparableFields
+               parseAggOperator operator displayName comparableFields
     ]
   let aggregateFields = count : numericAndComparable
   pure $ P.selectionSet selectName (Just description) aggregateFields
@@ -846,9 +846,9 @@ tableAggregationFields table selectPermissions = do
       -> G.Name
       -> [FieldParser n RQL.PGColFld]
       -> FieldParser n RQL.AggregateField
-    parseAggOperator operator tableName columns =
+    parseAggOperator operator displayName columns =
       let opText  = G.unName operator
-          setName = tableName <> $$(G.litName "_") <> operator <> $$(G.litName "_fields")
+          setName = displayName <> $$(G.litName "_") <> operator <> $$(G.litName "_fields")
           setDesc = Just $ G.Description $ "aggregate " <> opText <> " on columns"
           subselectionParser = P.selectionSet setName setDesc columns
             <&> parsedSelectionsToFields RQL.PCFExp

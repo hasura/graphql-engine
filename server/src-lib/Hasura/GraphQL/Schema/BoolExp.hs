@@ -34,8 +34,8 @@ boolExp
   -> Maybe SelPermInfo
   -> m (Parser 'Input n (AnnBoolExp UnpreparedValue))
 boolExp table selectPermissions = memoizeOn 'boolExp table $ do
-  tableName <- getTableName table
-  let name = tableName <> $$(G.litName "_bool_exp")
+  displayName <- getTableDisplayName table
+  let name = displayName <> $$(G.litName "_bool_exp")
   let description = G.Description $
         "Boolean expression to filter rows from the table " <> table <<>
         ". All fields are combined with a logical 'AND'."

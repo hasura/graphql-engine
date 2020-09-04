@@ -40,9 +40,9 @@ tableSelectColumnsEnum
   -> SelPermInfo
   -> m (Maybe (Parser 'Both n PGCol))
 tableSelectColumnsEnum table selectPermissions = do
-  tableName <- getTableName table
-  columns   <- tableSelectColumns table selectPermissions
-  let enumName    = tableName <> $$(G.litName "_select_column")
+  displayName <- getTableDisplayName table
+  columns     <- tableSelectColumns table selectPermissions
+  let enumName    = displayName <> $$(G.litName "_select_column")
       description = Just $ G.Description $
         "select columns of table " <>> table
   pure $ P.enum enumName description <$> nonEmpty
@@ -69,9 +69,9 @@ tableUpdateColumnsEnum
   -> UpdPermInfo
   -> m (Maybe (Parser 'Both n PGCol))
 tableUpdateColumnsEnum table updatePermissions = do
-  tableName <- getTableName table
-  columns   <- tableUpdateColumns table updatePermissions
-  let enumName    = tableName <> $$(G.litName "_update_column")
+  displayName <- getTableDisplayName table
+  columns     <- tableUpdateColumns table updatePermissions
+  let enumName    = displayName <> $$(G.litName "_update_column")
       description = Just $ G.Description $
         "update columns of table " <>> table
   pure $ P.enum enumName description <$> nonEmpty
