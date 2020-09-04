@@ -30,7 +30,7 @@ data RQLQuery
   | RQSelect !SelectQuery
   | RQUpdate !UpdateQuery
   | RQDelete !DeleteQuery
-  | RQCount !CountQuery
+  | RQCount  !CountQuery
 
   | RQRunSql !RunSQL
 

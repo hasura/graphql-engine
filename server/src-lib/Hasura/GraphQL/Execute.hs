@@ -28,6 +28,7 @@ import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 
 import qualified Data.HashSet                           as HS
+import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
@@ -41,6 +42,7 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Utils                   (showName)
 import           Hasura.HTTP
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Action.Class
 import           Hasura.Server.Types                    (RequestId)
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
@@ -73,6 +75,7 @@ data ExecutionCtx
   , _ecxSchemaCacheVer  :: !SchemaCacheVer
   , _ecxHttpManager     :: !HTTP.Manager
   , _ecxEnableAllowList :: !Bool
+  , _ecxMetadataPool    :: !Q.PGPool
   }
 
 -- | Typeclass representing safety checks (if any) that need to be performed
@@ -209,11 +212,13 @@ getResolvedExecPlan
      , MonadError QErr m
      , MonadIO m
      , Tracing.MonadTrace m
+     , MonadAsyncActions m
      , MonadIO tx
      , MonadTx tx
      , Tracing.MonadTrace tx
      )
   => Env.Environment
+  -> Q.PGPool
   -> L.Logger L.Hasura
   -> PGExecCtx
   -- -> EP.PlanCache
@@ -226,7 +231,7 @@ getResolvedExecPlan
   -> [HTTP.Header]
   -> (GQLReqUnparsed, GQLReqParsed)
   -> m (Telem.CacheHit, ResolvedExecutionPlan tx)
-getResolvedExecPlan env logger pgExecCtx {- planCache-} userInfo sqlGenCtx
+getResolvedExecPlan env metadataPool logger pgExecCtx {- planCache-} userInfo sqlGenCtx
   sc scVer queryType httpManager reqHeaders (reqUnparsed, reqParsed) = -- do
 
   -- See Note [Temporarily disabling query plan caching]
@@ -265,14 +270,14 @@ getResolvedExecPlan env logger pgExecCtx {- planCache-} userInfo sqlGenCtx
           -- (unpreparedQueries, _) <-
           --   E.parseGraphQLQuery gCtx varDefs
           (execPlan,asts) {-, plan-} <-
-            EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders inlinedSelSet varDefs (_grVariables reqUnparsed)
+            EQ.convertQuerySelSet env metadataPool logger gCtx userInfo httpManager reqHeaders inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- See Note [Temporarily disabling query plan caching]
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
           return $ QueryExecutionPlan execPlan asts
         G.TypedOperationDefinition G.OperationTypeMutation _ varDefs _ selSet -> do
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
-          queryTx <- EM.convertMutationSelectionSet env logger gCtx sqlGenCtx userInfo httpManager reqHeaders
+          queryTx <- EM.convertMutationSelectionSet env metadataPool logger gCtx sqlGenCtx userInfo httpManager reqHeaders
                      inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- See Note [Temporarily disabling query plan caching]
           -- traverse_ (addPlanToCache . EP.RPQuery) plan

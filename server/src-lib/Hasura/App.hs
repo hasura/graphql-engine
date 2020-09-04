@@ -55,14 +55,8 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol    (toParsed)
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Cache
-import           Hasura.RQL.Types                          (CacheRWM, Code (..), HasHttpManager,
-                                                            HasSQLGenCtx, HasSystemDefined,
-                                                            Metadata, MonadMetadata,
-                                                            MonadMetadataManage, QErr (..),
-                                                            SQLGenCtx (..), SchemaCache (..),
-                                                            UserInfoM, buildSchemaCacheStrict,
-                                                            decodeValue, noMetadataModify, throw400,
-                                                            withPathK)
+import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Action.Class
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.API.Query                   (requiresAdmin, runQueryM)
 import           Hasura.Server.App
@@ -327,6 +321,7 @@ runHGEServer
      , MonadExecuteQuery m
      , Tracing.HasReporter m
      , MonadMetadataManage m
+     , MonadAsyncActions m
      )
   => Env.Environment
   -> ServeOptions impl
@@ -410,28 +405,28 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
   lockedEventsCtx <- liftIO $ atomically initLockedEventsCtx
 
   -- prepare event triggers data
-  prepareEvents _icPgPool logger
-  eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI
-  unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
+  -- prepareEvents _icPgPool logger
+  -- eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI
+  -- unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
 
-  eventQueueThread <- C.forkImmortal "processEventQueue" logger $
-    processEventQueue logger logEnvHeaders
-    _icHttpManager _icPgPool (getSCFromRef cacheRef) eventEngineCtx lockedEventsCtx
+  -- eventQueueThread <- C.forkImmortal "processEventQueue" logger $
+  --   processEventQueue logger logEnvHeaders
+  --   _icHttpManager _icPgPool (getSCFromRef cacheRef) eventEngineCtx lockedEventsCtx
 
   -- start a backgroud thread to handle async actions
   asyncActionsThread <- C.forkImmortal "asyncActionsProcessor" logger $
-    asyncActionsProcessor env logger (_scrCache cacheRef) _icPgPool _icHttpManager
+    asyncActionsProcessor env logger (_scrCache cacheRef) _icMetadataPool _icHttpManager
 
   -- start a background thread to create new cron events
-  cronEventsThread <- liftIO $ C.forkImmortal "runCronEventsGenerator" logger $
-    runCronEventsGenerator logger _icPgPool (getSCFromRef cacheRef)
+  -- cronEventsThread <- liftIO $ C.forkImmortal "runCronEventsGenerator" logger $
+  --   runCronEventsGenerator logger _icPgPool (getSCFromRef cacheRef)
 
   -- prepare scheduled triggers
-  prepareScheduledEvents _icPgPool logger
+  -- prepareScheduledEvents _icPgPool logger
 
   -- start a background thread to deliver the scheduled events
-  scheduledEventsThread <- C.forkImmortal "processScheduledTriggers" logger $
-    processScheduledTriggers env logger logEnvHeaders _icHttpManager _icPgPool (getSCFromRef cacheRef) lockedEventsCtx
+  -- scheduledEventsThread <- C.forkImmortal "processScheduledTriggers" logger $
+  --   processScheduledTriggers env logger logEnvHeaders _icHttpManager _icPgPool (getSCFromRef cacheRef) lockedEventsCtx
 
   -- start a background thread to check for updates
   updateThread <- C.forkImmortal "checkForUpdates" logger $ liftIO $
@@ -442,7 +437,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
     then do
       unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
 
-      (dbId, pgVersion) <- liftIO $ runTxIO _icPgPool (Q.ReadCommitted, Nothing) $
+      (dbId, pgVersion) <- liftIO $ runTxIO _icMetadataPool (Q.ReadCommitted, Nothing) $
         (,) <$> getDbId <*> getPgVersion
 
       telemetryThread <- C.forkImmortal "runTelemetry" logger $ liftIO $
@@ -455,9 +450,9 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
                         , schemaSyncProcessorThread
                         , updateThread
                         , asyncActionsThread
-                        , eventQueueThread
-                        , scheduledEventsThread
-                        , cronEventsThread
+                        -- , eventQueueThread
+                        -- , scheduledEventsThread
+                        -- , cronEventsThread
                         ] <> maybe [] pure telemetryThread
 
   finishTime <- liftIO Clock.getCurrentTime
@@ -701,6 +696,7 @@ instance WS.MonadWSLog AppM where
   logWSLog = unLogger
 
 instance MonadMetadataManage AppM
+instance MonadAsyncActions AppM
 
 --- helper functions ---
 

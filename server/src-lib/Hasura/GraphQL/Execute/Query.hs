@@ -41,8 +41,9 @@ import           Hasura.Prelude
 import           Hasura.RQL.DML.RemoteJoin
 import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Action.Class
 import           Hasura.Session
--- import           Hasura.SQL.Types
+import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
 import qualified Hasura.RQL.DML.Select                  as DS
@@ -75,16 +76,18 @@ instance J.ToJSON RootFieldPlan where
 
 type FieldPlans = [(G.Name, RootFieldPlan)]
 
-data ActionQueryPlan
-  = AQPAsyncQuery !DS.AnnSimpleSel -- ^ Cacheable plan
-  | AQPQuery !ActionExecuteTx -- ^ Non cacheable transaction
+-- data ActionQueryPlan
+--   = AQPAsyncQuery !DS.AnnSimpleSel -- ^ Cacheable plan
+--   | AQPQuery !ActionExecuteTx -- ^ Non cacheable transaction
+
+newtype ActionQueryPlan = ActionQueryPlan ActionExecuteTx
 
 actionQueryToRootFieldPlan
-  :: PlanVariables -> PrepArgMap -> ActionQueryPlan -> RootFieldPlan
-actionQueryToRootFieldPlan vars prepped = \case
-  AQPAsyncQuery s -> RFPPostgres $
-    PGPlan (DS.selectQuerySQL DS.JASSingleObject s) vars prepped Nothing
-  AQPQuery tx     -> RFPActionQuery tx
+  :: ActionQueryPlan -> RootFieldPlan
+actionQueryToRootFieldPlan (ActionQueryPlan tx) = RFPActionQuery tx
+  -- AQPAsyncQuery s -> RFPPostgres $
+  --   PGPlan (DS.selectQuerySQL DS.JASSingleObject s) vars prepped Nothing
+  -- AQPQuery tx     -> RFPActionQuery tx
 
 -- See Note [Temporarily disabling query plan caching]
 -- data ReusableVariableTypes
@@ -206,11 +209,13 @@ convertQuerySelSet
      , HasVersion
      , MonadIO m
      , Tracing.MonadTrace m
+     , MonadAsyncActions m
      , MonadIO tx
      , MonadTx tx
      , Tracing.MonadTrace tx
      )
   => Env.Environment
+  -> Q.PGPool
   -> L.Logger L.Hasura
   -> GQLContext
   -> UserInfo
@@ -223,7 +228,7 @@ convertQuerySelSet
        -- , Maybe ReusableQueryPlan
        , [QueryRootField UnpreparedValue]
        )
-convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varDefs varValsM = do
+convertQuerySelSet env metadataPool logger gqlContext userInfo manager reqHeaders fields varDefs varValsM = do
   -- Parse the GraphQL query into the RQL AST
   (unpreparedQueries, _reusability) <- parseGraphQLQuery gqlContext varDefs varValsM fields
 
@@ -232,10 +237,10 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
     (preparedQuery, PlanningSt _ planVars planVals expectedVariables)
       <- flip runStateT initPlanningSt
          $ traverseQueryRootField prepareWithPlan unpreparedQuery
-           >>= traverseAction convertActionQuery
+           >>= traverseAction (lift . convertActionQuery)
     validateSessionVariables expectedVariables $ _uiSession userInfo
     traverseDB (pure . irToRootFieldPlan planVars planVals) preparedQuery
-      >>= traverseAction (pure . actionQueryToRootFieldPlan planVars planVals)
+      >>= traverseAction (pure . actionQueryToRootFieldPlan)
 
   -- This monster makes sure that consecutive database operation get executed together
   let dbPlans :: Seq.Seq (G.Name, RootFieldPlan)
@@ -282,13 +287,19 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
     usrVars = _uiSession userInfo
 
     convertActionQuery
-      :: ActionQuery UnpreparedValue -> StateT PlanningSt m ActionQueryPlan
+      :: ActionQuery UnpreparedValue -> m ActionQueryPlan
     convertActionQuery = \case
-      AQQuery s -> lift $ do
+      AQQuery s -> do
         result <- resolveActionExecution env logger userInfo s $ ActionExecContext manager reqHeaders usrVars
-        pure $ AQPQuery $ _aerTransaction result
-      AQAsync s -> AQPAsyncQuery <$>
-        DS.traverseAnnSimpleSelect prepareWithPlan (resolveAsyncActionQuery userInfo s)
+        pure $ ActionQueryPlan $ _aerTransaction result
+      AQAsync s -> do
+        resolveAsyncActionQuery <- getAsyncActionQueryResolver
+        (resolved, _) <- flip runStateT mempty $
+          DS.traverseAnnSimpleSelect prepareWithoutPlan (resolveAsyncActionQuery userInfo s)
+        let tx = asSingleRowJsonResp (Q.fromBuilder $ toSQL $ DS.mkSQLSelect DS.JASSingleObject resolved) []
+        -- async action queries should be run in metadata storage
+        r <-  liftEither =<< (liftIO $ runExceptT $ Q.runTx' metadataPool tx)
+        pure $ ActionQueryPlan $ pure r
 
 -- See Note [Temporarily disabling query plan caching]
 -- use the existing plan and new variables to create a pg query

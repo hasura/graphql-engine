@@ -202,7 +202,7 @@ runMetadataRequestM env = \case
   RMGetInconsistentMetadata q -> runGetInconsistentMetadata q
   RMDropInconsistentMetadata q -> runDropInconsistentMetadata q
 
-  RMAddRemoteSchema q -> runAddRemoteSchema undefined q
+  RMAddRemoteSchema q -> runAddRemoteSchema env q
   RMRemoveRemoteSchema q -> runRemoveRemoteSchema q
   RMReloadRemoteSchema q -> runReloadRemoteSchema q
   RMIntrospectRemoteSchema q -> runIntrospectRemoteSchema q

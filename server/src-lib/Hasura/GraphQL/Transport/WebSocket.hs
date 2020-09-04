@@ -52,6 +52,7 @@ import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Action.Class
 import           Hasura.Server.Auth                          (AuthMode, UserAuthentication,
                                                               resolveUserInfo)
 import           Hasura.Server.Cors
@@ -223,6 +224,7 @@ data WSServerEnv
   -- , _wseQueryCache      :: !E.PlanCache -- See Note [Temporarily disabling query plan caching]
   , _wseServer          :: !WSServer
   , _wseEnableAllowlist :: !Bool
+  , _wseMetadataPoool   :: !Q.PGPool
   }
 
 onConn :: (MonadIO m)
@@ -317,6 +319,7 @@ onStart
   , MonadQueryLog m
   , Tracing.MonadTrace m
   , MonadExecuteQuery m
+  , MonadAsyncActions m
   )
   => Env.Environment -> WSServerEnv -> WSConn -> StartMsg -> m ()
 onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
@@ -343,11 +346,11 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
   reqParsedE <- lift $ E.checkGQLExecution userInfo (reqHdrs, ipAddress) enableAL sc q
   reqParsed <- either (withComplete . preExecErr requestId) return reqParsedE
-  execPlanE <- runExceptT $ E.getResolvedExecPlan env logger pgExecCtx
+  execPlanE <- runExceptT $ E.getResolvedExecPlan env metadataPool logger pgExecCtx
                {- planCache -} userInfo sqlGenCtx sc scVer queryType httpMgr reqHdrs (q, reqParsed)
 
   (telemCacheHit, execPlan) <- either (withComplete . preExecErr requestId) return execPlanE
-  let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx {- planCache -} sc scVer httpMgr enableAL
+  let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx {- planCache -} sc scVer httpMgr enableAL metadataPool
 
   case execPlan of
     E.QueryExecutionPlan queryPlan asts ->
@@ -527,7 +530,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       "Failed parsing GraphQL response from remote: " <> err
 
     WSServerEnv logger pgExecCtx lqMap getSchemaCache httpMgr _ sqlGenCtx {- planCache -}
-      _ enableAL = serverEnv
+      _ enableAL metadataPool = serverEnv
 
     WSConnData userInfoR opMap errRespTy queryType = WS.getData wsConn
 
@@ -601,6 +604,7 @@ onMessage
      , MonadQueryLog m
      , Tracing.HasReporter m
      , MonadExecuteQuery m
+     , MonadAsyncActions m
      )
   => Env.Environment
   -> AuthMode
@@ -770,14 +774,15 @@ createWSServerEnv
   -> CorsPolicy
   -> SQLGenCtx
   -> Bool
+  -> Q.PGPool
   -- -> E.PlanCache
   -> m WSServerEnv
 createWSServerEnv logger isPgCtx lqState getSchemaCache httpManager
-  corsPolicy sqlGenCtx enableAL {- planCache -} = do
+  corsPolicy sqlGenCtx enableAL metadataPool {- planCache -} = do
   wsServer <- liftIO $ STM.atomically $ WS.createWSServer logger
   return $
     WSServerEnv logger isPgCtx lqState getSchemaCache httpManager corsPolicy
-    sqlGenCtx {- planCache -} wsServer enableAL
+    sqlGenCtx {- planCache -} wsServer enableAL metadataPool
 
 createWSServerApp
   :: ( HasVersion
@@ -790,6 +795,7 @@ createWSServerApp
      , MonadQueryLog m
      , Tracing.HasReporter m
      , MonadExecuteQuery m
+     , MonadAsyncActions m
      )
   => Env.Environment
   -> AuthMode

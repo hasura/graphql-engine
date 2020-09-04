@@ -48,6 +48,9 @@ module Hasura.RQL.Types.Action
   , ActionExecContext(..)
   , AsyncActionQueryFieldG(..)
   , AnnActionAsyncQuery(..)
+
+  , ActionId(..)
+  , ActionLogItem(..)
   ) where
 
 
@@ -66,6 +69,7 @@ import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
 import qualified Data.Aeson.TH                 as J
 import qualified Data.HashMap.Strict           as Map
+import qualified Data.UUID                     as UUID
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.HTTP.Client           as HTTP
@@ -302,3 +306,15 @@ data ActionExecContext
   , _aecHeaders          :: !HTTP.RequestHeaders
   , _aecSessionVariables :: !SessionVariables
   }
+
+newtype ActionId = ActionId {unActionId :: UUID.UUID}
+  deriving (Show, Eq, Q.ToPrepArg, Q.FromCol)
+
+data ActionLogItem
+  = ActionLogItem
+  { _aliId               :: !ActionId
+  , _aliActionName       :: !ActionName
+  , _aliRequestHeaders   :: ![HTTP.Header]
+  , _aliSessionVariables :: !SessionVariables
+  , _aliInputPayload     :: !J.Value
+  } deriving (Show, Eq)

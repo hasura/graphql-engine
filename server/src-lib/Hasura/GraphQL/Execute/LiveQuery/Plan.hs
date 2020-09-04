@@ -58,6 +58,7 @@ import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Query
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Action.Class
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -282,6 +283,7 @@ $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ReusableLiveQueryPlan)
 buildLiveQueryPlan
   :: ( MonadError QErr m
      , MonadIO m
+     , MonadAsyncActions m
      )
   => PGExecCtx
   -> UserInfo
@@ -310,6 +312,7 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
       $  traverseSubscriptionRootField prepareWithPlan unpreparedQuery
     pure $! irToRootFieldPlan planVars planVals preparedQuery
 -}
+  resolveAsyncActionQuery <- getAsyncActionQueryResolver
   (preparedAST, (queryVariableValues, querySyntheticVariableValues)) <- flip runStateT (mempty, Seq.empty) $
     for unpreparedAST \unpreparedQuery -> do
       resolvedRootField <- traverseQueryRootField resolveMultiplexedValue unpreparedQuery

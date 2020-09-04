@@ -43,6 +43,7 @@ import           Hasura.GraphQL.Logging                    (MonadQueryLog (..))
 import           Hasura.HTTP
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Action.Class
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.API.Config                  (runGetConfig)
 import           Hasura.Server.API.Metadata
@@ -457,6 +458,7 @@ v1Alpha1GQHandler
      , MonadQueryLog m
      , Tracing.MonadTrace m
      , GH.MonadExecuteQuery m
+     , MonadAsyncActions m
      )
   => E.GraphQLQueryType -> GH.GQLBatchedReqs GH.GQLQueryText
   -> Handler m (HttpResponse EncJSON)
@@ -475,9 +477,10 @@ v1Alpha1GQHandler queryType query = do
   logger               <- asks (scLogger . hcServerCtx)
   responseErrorsConfig <- asks (scResponseInternalErrorsConfig . hcServerCtx)
   env                  <- asks (scEnvironment . hcServerCtx)
+  metadataPool         <- asks (scMetadataPool . hcServerCtx)
 
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx {- planCache -}
-                (lastBuiltSchemaCache sc) scVer manager enableAL
+                (lastBuiltSchemaCache sc) scVer manager enableAL metadataPool
 
   flip runReaderT execCtx $
     GH.runGQBatched env logger requestId responseErrorsConfig userInfo ipAddress reqHeaders queryType query
@@ -489,6 +492,7 @@ v1GQHandler
      , MonadQueryLog m
      , Tracing.MonadTrace m
      , GH.MonadExecuteQuery m
+     , MonadAsyncActions m
      )
   => GH.GQLBatchedReqs GH.GQLQueryText
   -> Handler m (HttpResponse EncJSON)
@@ -501,13 +505,16 @@ v1GQRelayHandler
      , MonadQueryLog m
      , Tracing.MonadTrace m
      , GH.MonadExecuteQuery m
+     , MonadAsyncActions m
      )
   => GH.GQLBatchedReqs GH.GQLQueryText
   -> Handler m (HttpResponse EncJSON)
 v1GQRelayHandler = v1Alpha1GQHandler E.QueryRelay
 
 gqlExplainHandler
-  :: forall m. (MonadIO m)
+  :: forall m. ( MonadIO m
+               , MonadAsyncActions m
+               )
   => GE.GQLExplain
   -> Handler (Tracing.TraceT m) (HttpResponse EncJSON)
 gqlExplainHandler query = do
@@ -646,6 +653,7 @@ mkWaiApp
      , Tracing.HasReporter m
      , GH.MonadExecuteQuery m
      , MonadMetadataManage m
+     , MonadAsyncActions m
      )
   => Env.Environment
   -- ^ Set of environment variables for reference in UIs
@@ -701,7 +709,7 @@ mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpMana
 
     lqState <- liftIO $ EL.initLiveQueriesState lqOpts pgExecCtx postPollHook
     wsServerEnv <- WS.createWSServerEnv logger pgExecCtx lqState getSchemaCache httpManager
-                                        corsPolicy sqlGenCtx enableAL {- planCache -}
+                                        corsPolicy sqlGenCtx enableAL metadataPool {- planCache -}
 
     let serverCtx = ServerCtx
                     { scPGExecCtx       =  pgExecCtx
@@ -769,6 +777,7 @@ httpApp
      , Tracing.HasReporter m
      , GH.MonadExecuteQuery m
      , MonadMetadataManage m
+     , MonadAsyncActions m
      )
   => CorsConfig
   -> ServerCtx

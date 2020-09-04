@@ -17,6 +17,7 @@ import           Hasura.GraphQL.Parser
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Action.Class
 import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -105,6 +106,7 @@ explainGQLQuery
   :: forall m
   . ( MonadError QErr m
     , MonadIO m
+    , MonadAsyncActions m
     )
   => PGExecCtx
   -> SchemaCache

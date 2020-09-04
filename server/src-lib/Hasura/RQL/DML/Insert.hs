@@ -272,6 +272,7 @@ execInsertQuery env strfyNum remoteJoinCtx (u, p) =
 -- >     THEN NULL
 -- >     ELSE hdb_catalog.check_violation('insert check constraint failed')
 -- >   END
+-- FIXME? Avoid dependancy on hdb_catalog schema
 insertCheckExpr :: Text -> S.BoolExp -> S.SQLExp
 insertCheckExpr errorMessage condExpr =
   S.SECond condExpr S.SENull

@@ -374,6 +374,7 @@ library
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.QueryCollection
                      , Hasura.RQL.Types.Action
+                     , Hasura.RQL.Types.Action.Class
                      , Hasura.RQL.Types.Relationship
                      , Hasura.RQL.Types.RemoteSchema
                      , Hasura.RQL.Types.RemoteRelationship

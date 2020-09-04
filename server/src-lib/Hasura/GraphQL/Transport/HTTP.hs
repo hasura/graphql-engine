@@ -23,6 +23,7 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Action.Class
 import           Hasura.Server.Init.Config
 import           Hasura.Server.Types                    (RequestId)
 import           Hasura.Server.Version                  (HasVersion)
@@ -73,6 +74,7 @@ runGQ
      , MonadQueryLog m
      , MonadTrace m
      , MonadExecuteQuery m
+     , MonadAsyncActions m
      )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -87,13 +89,13 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   -- The response and misc telemetry data:
   let telemTransport = Telem.HTTP
   (telemTimeTot_DT, (telemCacheHit, telemLocality, (telemTimeIO_DT, telemQueryType, !resp))) <- withElapsedTime $ do
-    E.ExecutionCtx _ sqlGenCtx pgExecCtx {- planCache -} sc scVer httpManager enableAL <- ask
+    E.ExecutionCtx _ sqlGenCtx pgExecCtx {- planCache -} sc scVer httpManager enableAL metadataPool <- ask
 
     -- run system authorization on the GraphQL API
     reqParsed <- E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed
                  >>= flip onLeft throwError
 
-    (telemCacheHit, execPlan) <- E.getResolvedExecPlan env logger pgExecCtx {- planCache -}
+    (telemCacheHit, execPlan) <- E.getResolvedExecPlan env metadataPool logger pgExecCtx {- planCache -}
                                  userInfo sqlGenCtx sc scVer queryType
                                  httpManager reqHeaders (reqUnparsed, reqParsed)
     case execPlan of
@@ -153,6 +155,7 @@ runGQBatched
      , MonadQueryLog m
      , MonadTrace m
      , MonadExecuteQuery m
+     , MonadAsyncActions m
      )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -202,7 +205,7 @@ runQueryDB
   -- spent in the PG query; for telemetry.
 runQueryDB reqId (query, queryParsed) asts _userInfo (tx, genSql) =  do
   -- log the generated SQL and the graphql query
-  E.ExecutionCtx logger _ pgExecCtx _ _ _ _ <- ask
+  E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _ <- ask
   logQueryLog logger query (Just genSql) reqId
   (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ trace "Query" $
     Tracing.interpTraceT id $ executeQuery queryParsed asts (Just genSql) pgExecCtx Q.ReadOnly tx
@@ -226,7 +229,7 @@ runMutationDB
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
 runMutationDB reqId query userInfo tx =  do
-  E.ExecutionCtx logger _ pgExecCtx _ _ _ _ <- ask
+  E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _ <- ask
   -- log the graphql query
   logQueryLog logger query Nothing reqId
   ctx <- Tracing.currentContext
