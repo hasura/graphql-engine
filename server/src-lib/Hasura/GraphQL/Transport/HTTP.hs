@@ -44,6 +44,7 @@ import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Database.MySQL.Simple                  as My
 import qualified Database.MySQL.Simple.Types            as My
+import qualified Database.MySQL.Base                    as MyBase
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.Query           as EQ
@@ -125,7 +126,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
               handleFormat e = GQExecError [J.Object $ Map.singleton "message" $ J.String $ stringlyCoerce $ My.fmtMessage e]
               handleQuery e = GQExecError [J.Object $ Map.singleton "message" $ J.String $ stringlyCoerce $ My.qeMessage e]
               handleResult e = GQExecError [J.Object $ Map.singleton "message" $ J.String $ stringlyCoerce $ My.errMessage e]
-            gqResult <- (flip catch (pure . handleFormat) . flip catch (pure . handleQuery) . flip catch (pure . handleResult)) $ do
+              handleConnection e = GQExecError [J.Object $ Map.singleton "message" $ J.String $ stringlyCoerce $ MyBase.errMessage e]
+            gqResult <- (flip catch (pure . handleFormat) . flip catch (pure . handleQuery) . flip catch (pure . handleResult) . flip catch (pure . handleConnection)) $ do
               assocResults <- for queries \(name, queryString) -> do
                 UGLY.traceShowM queryString
                 [My.Only result] <- My.query_ connection (My.Query (BS.toStrict queryString))

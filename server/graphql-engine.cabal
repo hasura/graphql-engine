@@ -110,6 +110,7 @@ library
                      , lifted-base
                      , pg-client
                      , mysql-simple
+                     , mysql
                      , io-streams
                      , validation
                      , text
