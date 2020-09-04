@@ -9,6 +9,8 @@ args:
         name text unique,
         config jsonb
       );
+      ALTER INDEX "user address_pkey" RENAME TO user_address_pkey;
+      ALTER INDEX "user address_name_key" RENAME TO user_address_name_key;
 
 - type: track_table
   version: 2

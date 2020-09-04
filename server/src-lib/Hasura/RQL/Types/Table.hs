@@ -404,7 +404,7 @@ data TableCoreInfoG field primaryKeyColumn
   , _tciSystemDefined     :: !SystemDefined
   , _tciFieldInfoMap      :: !(FieldInfoMap field)
   , _tciPrimaryKey        :: !(Maybe (PrimaryKey primaryKeyColumn))
-  , _tciUniqueConstraints :: !(HashSet UniqueConstraint)
+  , _tciUniqueConstraints :: !(HashSet Constraint)
   -- ^ Does /not/ include the primary key; use 'tciUniqueOrPrimaryKeyConstraints' if you need both.
   , _tciForeignKeys       :: !(HashSet ForeignKey)
   , _tciViewInfo          :: !(Maybe ViewInfo)
@@ -424,7 +424,7 @@ type TableCoreInfo = TableCoreInfoG FieldInfo PGColumnInfo
 tciUniqueOrPrimaryKeyConstraints :: TableCoreInfoG a b -> Maybe (NonEmpty Constraint)
 tciUniqueOrPrimaryKeyConstraints info = NE.nonEmpty $
   maybeToList (_pkConstraint <$> _tciPrimaryKey info)
-  <> (map _ucConstraint $ toList (_tciUniqueConstraints info))
+  <> (toList (_tciUniqueConstraints info))
 
 data TableInfo
   = TableInfo

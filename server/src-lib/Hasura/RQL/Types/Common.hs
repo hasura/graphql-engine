@@ -24,7 +24,6 @@ module Hasura.RQL.Types.Common
        , EquatableGType(..)
        , InpValInfo(..)
        , CustomColumnNames
-       , UniqueConstraint(..)
 
        , NonEmptyText
        , mkNonEmptyTextUnsafe
@@ -248,16 +247,6 @@ instance NFData ForeignKey
 instance Hashable ForeignKey
 instance Cacheable ForeignKey
 $(deriveJSON (aesonDrop 3 snakeCase) ''ForeignKey)
-
-data UniqueConstraint
-  = UniqueConstraint
-  { _ucConstraint :: !Constraint
-  , _ucColumns    :: ![PGCol]
-  } deriving (Show, Eq, Generic)
-instance NFData UniqueConstraint
-instance Hashable UniqueConstraint
-instance Cacheable UniqueConstraint
-$(deriveJSON (aesonDrop 3 snakeCase) ''UniqueConstraint)
 
 data InpValInfo
   = InpValInfo

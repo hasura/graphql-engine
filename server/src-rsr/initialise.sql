@@ -528,31 +528,14 @@ CREATE VIEW hdb_catalog.hdb_table_info_agg AS
 
   -- unique constraints
   LEFT JOIN LATERAL
-    ( SELECT jsonb_agg(jsonb_build_object(
-          'constraint', jsonb_build_object(
-             'name', class.relname,
-             'oid', class.oid :: integer
-           ),
-        'columns', coalesce(columns.info,'[]'))
-      ) AS info
+    ( SELECT jsonb_agg(jsonb_build_object('name', class.relname, 'oid', class.oid :: integer)) AS info
       FROM pg_catalog.pg_index index
       JOIN pg_catalog.pg_class class
         ON class.oid = index.indexrelid
-      LEFT JOIN LATERAL
-          -- the column names are ordered because we generate constraint names based
-          -- on the names of columns (when a table is configured with an
-          -- identifier). By sorting, we can guarantee the order of the names
-          -- for a given constraint so that the same constraint name is derived every
-          -- time
-        ( SELECT jsonb_agg("column".attname order by "column".attname asc) AS info
-          FROM pg_catalog.pg_attribute "column"
-          WHERE "column".attrelid = "table".oid
-          AND "column".attnum = ANY (index.indkey)
-        ) AS columns ON true
       WHERE index.indrelid = "table".oid
         AND index.indisunique
-      AND NOT index.indisprimary
-      ) unique_constraints ON true
+        AND NOT index.indisprimary
+    ) unique_constraints ON true
 
   -- foreign keys
   LEFT JOIN LATERAL

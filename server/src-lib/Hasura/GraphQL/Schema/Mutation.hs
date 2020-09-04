@@ -17,9 +17,7 @@ import qualified Data.HashMap.Strict                 as Map
 import qualified Data.HashMap.Strict.InsOrd.Extended as OMap
 import qualified Data.HashSet                        as Set
 import qualified Data.Text                           as T
-import qualified Data.List                           as L
 import qualified Language.GraphQL.Draft.Syntax       as G
-import qualified Data.List.NonEmpty                  as NE
 
 import qualified Hasura.GraphQL.Parser               as P
 import qualified Hasura.RQL.DML.Delete.Types         as RQL
@@ -227,10 +225,8 @@ conflictObject
 conflictObject table selectPerms updatePerms = runMaybeT $ do
   displayName      <- getTableDisplayName table
   columnsEnum      <- MaybeT $ tableUpdateColumnsEnum table updatePerms
-  tableCoreInfo    <- _tiCoreInfo <$> askTableInfo table
-  let uniqueConstraints = toList $ _tciUniqueConstraints tableCoreInfo
-      primaryKeyConstraints = _pkConstraint <$> _tciPrimaryKey tableCoreInfo
-  constraintParser <- MaybeT $ conflictConstraint uniqueConstraints primaryKeyConstraints table
+  constraints      <- MaybeT $ tciUniqueOrPrimaryKeyConstraints . _tiCoreInfo <$> askTableInfo table
+  constraintParser <- lift $ conflictConstraint constraints table
   whereExpParser   <- lift $ boolExp table selectPerms
   let objectName = displayName <> $$(G.litName "_on_conflict")
       objectDesc = G.Description $ "on conflict condition type for table " <>> table
@@ -248,46 +244,21 @@ conflictObject table selectPerms updatePerms = runMaybeT $ do
   pure $ P.object objectName (Just objectDesc) fieldsParser
   where preSetColumns = partialSQLExpToUnpreparedValue <$> upiSet updatePerms
 
-
--- | conflictConstraint returns a parser based on the primary keys
---   and/or unique keys. If a table has an 'identifier' set, then
---   the constraint name exposed will be modified to be GraphQL compliant.
---   For example: If a table called "Users Address" is tracked with an
---   identifier "users_address", then the primary key constraint
---   display name will be generated as "users_address_pkey" and with unique key
---   constraints the name will be generated in the format of
---   "users_address_<col 1>_<col 2>...<col n>_name".
 conflictConstraint
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
-  => [UniqueConstraint]
-  -> (Maybe Constraint)
+  => NonEmpty Constraint
   -> QualifiedTable
-  -> m (Maybe (Parser 'Both n ConstraintName))
-conflictConstraint uniqueConstraints primaryKeyConstraint table = do
+  -> m (Parser 'Both n ConstraintName)
+conflictConstraint constraints table = memoizeOn 'conflictConstraint table $ do
   displayName <- getTableDisplayName table
-  maybeIdentifier <- _tcIdentifier . _tciCustomConfig . _tiCoreInfo <$> askTableInfo table
-  pkConstraintEnumValue <- for primaryKeyConstraint \constraint -> do
-    name <- case maybeIdentifier of
-      Nothing -> textToName $ getConstraintTxt $ _cName constraint
-      Just identifier -> textToName $ G.unName identifier <> "_pkey"
+  constraintEnumValues <- for constraints \constraint -> do
+    name <- textToName $ getConstraintTxt $ _cName constraint
     pure ( P.mkDefinition name (Just "unique or primary key constraint") P.EnumValueInfo
          , _cName constraint
          )
-  uniqueConstraintEnumValues <- for uniqueConstraints \constraint -> do
-    name <-
-      case maybeIdentifier of
-        Nothing -> textToName $ getConstraintTxt $ _cName $ _ucConstraint constraint
-        Just identifier ->
-          let columnsText    = map getPGColTxt $ _ucColumns $ constraint
-          in textToName $ (G.unName identifier) <> "_" <> (T.concat $ L.intersperse "_" columnsText) <> "_key"
-    pure ( P.mkDefinition name (Just "unique or primary key constraint") P.EnumValueInfo
-         , _cName $ _ucConstraint constraint
-         )
   let enumName  = displayName <> $$(G.litName "_constraint")
       enumDesc  = G.Description $ "unique or primary key constraints on table " <>> table
-  pure $ P.enum enumName (Just enumDesc)
-             <$> (NE.nonEmpty $ uniqueConstraintEnumValues <> (maybeToList pkConstraintEnumValue))
-
+  pure $ P.enum enumName (Just enumDesc) constraintEnumValues
 
 
 -- update
