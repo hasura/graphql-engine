@@ -176,7 +176,7 @@ that are generated will be according to the ``identifier``. For example, in this
 the nodes generated will be:
 
 - ``users_address``
-- ``users_address_by_one``
+- ``users_address_one``
 - ``users_address_aggregate``
 - ``insert_users_address``
 - ``insert_users_address_one``
@@ -185,6 +185,11 @@ the nodes generated will be:
 - ``delete_users_address``
 - ``delete_users_address_by_pk``
 
+.. note::
+  graphql-engine expects the constraint names(if any) of a table to be GraphQL compliant_ to be
+   able to track it.
+
+.. _compliant: https://spec.graphql.org/June2018/#sec-Names
 
 .. _track_table_args_syntax_v2:
 
