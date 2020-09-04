@@ -22,9 +22,12 @@ import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
+import qualified Data.ByteString.Builder                as BB
 import qualified Data.ByteString.Lazy                   as BS
 import qualified Database.MySQL.Base                    as MyBase
 import qualified Database.MySQL.Simple                  as My
+import qualified Database.MySQL.Simple.Result           as My
+import qualified Database.MySQL.Simple.QueryResults     as My
 import qualified Database.MySQL.Simple.Types            as My
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.Inline          as E
@@ -84,34 +87,41 @@ resolveUnpreparedValue userInfo = \case
       PGTypeScalar colTy -> withConstructorFn colTy sessionVariableValue
       PGTypeArray _      -> sessionVariableValue
 
-type MySQLExplainRow =
-  ( Maybe Int
-  , Maybe Text
-  , Maybe Text
-  , Maybe Text
-  , Maybe Text
-  , Maybe Text
-  , Maybe Text
-  , Maybe Text
-  , Maybe Text
-  , Maybe Int
-  , Maybe Double
-  , Maybe Text
-  )
--- type MySQLExplainRow =
---   ( Int
---   , Text
---   , Text
---   , Text
---   , Text
---   , Text
---   , Text
---   , Text
---   , Text
---   , Int
---   , Double
---   , Text
---   )
+data MySQLExplainRow = MySQLExplainRow
+  { myExId :: Maybe Int
+  , myExSelectType :: Maybe Text
+  , myExTable :: Maybe Text
+  , myExPartitions :: Maybe Text
+  , myExType :: Maybe Text
+  , myExPossibleKeys :: Maybe Text
+  , myExKey :: Maybe Text
+  , myExKeyLen :: Maybe Text
+  , myExRef :: Maybe Text
+  , myExRows :: Maybe Int
+  , myExFiltered :: Maybe Double
+  , myExExtra :: Maybe Text
+  }
+
+$(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''MySQLExplainRow)
+
+instance My.QueryResults MySQLExplainRow where
+  convertResults
+    [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12]
+    [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12]
+    = MySQLExplainRow
+    (My.convert f1 a1)
+    (My.convert f2 a2)
+    (My.convert f3 a3)
+    (My.convert f4 a4)
+    (My.convert f5 a5)
+    (My.convert f6 a6)
+    (My.convert f7 a7)
+    (My.convert f8 a8)
+    (My.convert f9 a9)
+    (My.convert f10 a10)
+    (My.convert f11 a11)
+    (My.convert f12 a12)
+  convertResults fs vs  = My.convertError fs vs 12
 
 -- NOTE: This function has a 'MonadTrace' constraint in master, but we don't need it
 -- here. We should evaluate if we need it here.
@@ -148,7 +158,7 @@ explainQueryField userInfo fieldName rootField = do
             QDBSimple s      -> first (My.selectQuerySQL DS.JASMultipleRows) $ RR.getRemoteJoins s
             QDBPrimaryKey s  -> first (My.selectQuerySQL DS.JASSingleObject) $ RR.getRemoteJoins s
             QDBAggregation s -> first My.selectAggregateQuerySQL $ RR.getRemoteJoinsAggregateSelect s
-            QDBConnection s  -> error "Dolphin: not supported"
+            QDBConnection _  -> error "Dolphin: not supported"
           textSQL = Q.getQueryText querySQL
           -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
           -- query, maybe resulting in privilege escalation:
@@ -161,7 +171,7 @@ explainQueryField userInfo fieldName rootField = do
         connection <- fromJust <$> readMVar mySQLConnection
         result :: [MySQLExplainRow] <- My.query_ connection (My.Query (TE.encodeUtf8 withExplain))
         -- TODO: the following text formatting is perhaps not very helpful.
-        return $ fmap (\(a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12)->T.intercalate "," $ catMaybes [fmap (T.pack . show) a1,a2,a3,a4,a5,a6,a7,a8,a9,fmap (T.pack . show) a10,fmap (T.pack . show) a11,a12]) result
+        return $ fmap (TE.decodeUtf8 . BS.toStrict . BB.toLazyByteString . J.fromEncoding . J.toEncoding) result
       pure $ FieldPlan fieldName (Just textSQL) $ Just planLines
   where
     handleWith :: Exception e => (e -> String) -> Handler [T.Text]
