@@ -1,0 +1,14 @@
+description: set table identifier which conflicts with other nodes
+status: 500
+url: /v1/query
+response:
+  # error message will be improved after merging https://github.com/hasura/graphql-engine/pull/5694
+  error: found conflicting definitions for "article_bool_exp" when collecting types from the schema
+  code: unexpected
+  path: $.args
+query:
+  type: set_table_configuration
+  args:
+    table: author
+    configuration:
+      identifier: article # article table has already been tracked
