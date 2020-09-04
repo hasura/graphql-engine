@@ -149,6 +149,43 @@ Add a table/view ``author``:
       }
    }
 
+An ``identifier`` can be used to track an table with the identifier. This can
+be useful when a table name is not GraphQL compliant, like ``"Users Address"``
+An ``identifier`` like ``users_address`` will complement the ``"Users Address"``
+table, so that it can be added to the GraphQL schema.
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+      "type": "track_table",
+      "version": 2,
+      "args": {
+        "table": "Author Details",
+        "configuration": {
+           "identifier": "author_details"
+        }
+      }
+   }
+
+The GraphQL nodes and typenames
+that are generated will be according to the ``identifier``. For example, in this case,
+the nodes generated will be:
+
+- ``users_address``
+- ``users_address_by_one``
+- ``users_address_aggregate``
+- ``insert_users_address``
+- ``insert_users_address_one``
+- ``update_users_address``
+- ``update_users_address_by_pk``
+- ``delete_users_address``
+- ``delete_users_address_by_pk``
+
+
 .. _track_table_args_syntax_v2:
 
 Args syntax
@@ -182,6 +219,11 @@ Table Config
      - Required
      - Schema
      - Description
+   * - identifier
+     - false
+     - ``String``
+     - Customise the ``<table-name>`` with the identifier. The GraphQL nodes for the table
+       will be generated according to the identifier.
    * - custom_root_fields
      - false
      - :ref:`Custom Root Fields <custom_root_fields>`
@@ -242,12 +284,18 @@ Custom Root Fields
 
 .. _set_table_custom_fields:
 
-set_table_custom_fields
------------------------
+set_table_custom_fields (deprecated)
+-----------------------------------
+
+``set_table_custom_fields`` has been deprecated now, use the
+:ref:`set_table_configuration <set_table_configuration>` API to set the custom
+table fields.
 
 ``set_table_custom_fields`` in version ``2`` sets the custom root fields and
 custom column names of already tracked table. This will **replace** the already
 present custom fields configuration.
+
+
 
 Set custom fields for table/view ``author``:
 
@@ -304,6 +352,67 @@ Args syntax
      - :ref:`CustomColumnNames`
      - Customise the column fields
 
+.. _set_table_configuration:
+
+set_table_configuration
+-----------------------
+
+``set_table_configuration`` sets the configuration of a table, through which
+an identifier, custom root fields or custom column names of an already tracked
+table can be set. This will **replace** the already present configuration.
+
+Set configuration for table/view ``author``:
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+      "type": "set_table_configuration",
+      "args": {
+        "table": "author_details",
+        "configuration": {
+          "identifier": "author",
+          "custom_root_fields": {
+             "select": "Authors",
+             "select_by_pk": "Author",
+             "select_aggregate": "AuthorAggregate",
+             "insert": "AddAuthors",
+             "insert_one":"AddAuthor",
+             "update": "UpdateAuthors",
+             "update_by_pk": "UpdateAuthor",
+             "delete": "DeleteAuthors",
+             "delete_by_pk": "DeleteAuthor"
+          },
+          "custom_column_names": {
+             "id": "authorId"
+          }
+        }
+      }
+   }
+
+.. _set_table_configuration_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - table
+     - true
+     - :ref:`TableName <TableName>`
+     - Name of the table
+   * - configuration
+     - false
+     - :ref:`TableConfig <table_config>`
+     - Configuration for the table/view
 
 .. _untrack_table:
 
