@@ -58,6 +58,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - cli: add missing global flags for seeds command (#5565)
 - docs: add docs page on networking with docker (close #4346) (#4811)
+- docs: add docs for mysql support
 
 ## `v1.3.1`, `v1.3.1-beta.1`
 
