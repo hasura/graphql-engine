@@ -99,7 +99,7 @@ insertMultipleObjects
   -> Bool
   -> m EncJSON
 insertMultipleObjects env multiObjIns additionalColumns rjCtx mutationOutput planVars stringifyNum =
-  bool withoutRelsInsert withRelsInsert anyRelsToInsert
+    bool withoutRelsInsert withRelsInsert anyRelsToInsert
   where
     AnnIns insObjs table conflictClause checkCondition columnInfos defVals = multiObjIns
     allInsObjRels = concatMap _aioObjRels insObjs
@@ -119,7 +119,10 @@ insertMultipleObjects env multiObjIns additionalColumns rjCtx mutationOutput pla
             checkCondition
             mutationOutput
             columnInfos
-      RQL.execInsertQuery env stringifyNum (Just rjCtx) (insertQuery, planVars)
+          rowCount = T.pack . show . length $ _aiInsObj multiObjIns
+      Tracing.trace ("Insert (" <> rowCount <> ") " <> qualObjectToText table) do
+        Tracing.attachMetadata [("count", rowCount)]  
+        RQL.execInsertQuery env stringifyNum (Just rjCtx) (insertQuery, planVars)
 
     withRelsInsert = do
       insertRequests <- indexedForM insObjs \obj -> do
@@ -142,7 +145,7 @@ insertObject
   -> Seq.Seq Q.PrepArg
   -> Bool
   -> m (Int, Maybe (ColumnValues TxtEncodedPGVal))
-insertObject env singleObjIns additionalColumns rjCtx planVars stringifyNum = do
+insertObject env singleObjIns additionalColumns rjCtx planVars stringifyNum = Tracing.trace ("Insert " <> qualObjectToText table) do
   validateInsert (map fst columns) (map _riRelInfo objectRels) (map fst additionalColumns)
 
   -- insert all object relations and fetch this insert dependent column values
