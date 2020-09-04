@@ -291,7 +291,8 @@ processTableChanges ti tableDiff = do
         procAlteredCols sc tn
 
       withNewTabName newTN = do
-        let tnGQL = snakeCaseQualObject newTN
+        let mIdentifierText = G.unName <$> (_tcIdentifier . _tciCustomConfig $ ti)
+            tnGQL = fromMaybe (snakeCaseQualObject newTN) mIdentifierText
         -- check for GraphQL schema conflicts on new name
         checkConflictingNode sc tnGQL
         procAlteredCols sc tn

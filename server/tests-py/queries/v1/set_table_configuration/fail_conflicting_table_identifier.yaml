@@ -2,8 +2,7 @@ description: set table identifier which conflicts with other nodes
 status: 500
 url: /v1/query
 response:
-  # error message will be improved after merging https://github.com/hasura/graphql-engine/pull/5694
-  error: found conflicting definitions for "article_bool_exp" when collecting types from the schema
+  error: "found duplicate fields in selection set: insert_article, insert_article_one, update_article, delete_article, update_article_by_pk, delete_article_by_pk"
   code: unexpected
   path: $.args
 query:
