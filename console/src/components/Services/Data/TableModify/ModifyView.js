@@ -16,16 +16,16 @@ import Button from '../../../Common/Button/Button';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';
-import {
-  findTable,
-  generateTableDef,
-  getTableCustomRootFields,
-  getTableCustomColumnNames,
-} from '../../../../dataSources';
 import RootFields from './RootFields';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import { changeViewRootFields } from '../Common/TooltipMessages';
 import styles from './ModifyTable.scss';
+import {
+  getTableCustomColumnNames,
+  findTable,
+  generateTableDef,
+  getTableCustomRootFields,
+} from '../../../../dataSources';
 import ViewDefinitions from './ViewDefinitions';
 
 const ModifyView = props => {
@@ -63,8 +63,8 @@ const ModifyView = props => {
   };
 
   React.useEffect(() => {
-    initCustomColumnNames();
-  }, [existingCustomColumnNames]);
+    setCustomColumnNames(tableSchema.configuration.custom_column_names);
+  }, [tableSchema.configuration]);
 
   if (!tableSchema) {
     // throw a 404 exception
