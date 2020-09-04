@@ -221,4 +221,5 @@ export const mysql: DataSourcesAPI = {
   primaryKeysInfoSql: '',
   uniqueKeysSql: '',
   checkConstraintsSql: '',
+  frequentlyUsedColumns: [],
 };

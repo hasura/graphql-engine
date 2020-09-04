@@ -43,6 +43,7 @@ import {
   primaryKeysInfoSql,
   checkConstraintsSql,
   uniqueKeysSql,
+  frequentlyUsedColumns,
 } from './sqlUtils';
 
 export const isTable = (table: Table) => {
@@ -435,4 +436,5 @@ export const postgres: DataSourcesAPI = {
   primaryKeysInfoSql,
   checkConstraintsSql,
   uniqueKeysSql,
+  frequentlyUsedColumns,
 };

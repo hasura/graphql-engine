@@ -1,5 +1,6 @@
 import { Nullable } from '../components/Common/utils/tsUtils';
 import { FunctionDefinition } from '../components/Common/utils/v1QueryUtils';
+import { Column } from '../utils/postgresColumnTypes';
 
 export interface Relationship
   extends Pick<BaseTable, 'table_name' | 'table_schema'> {
@@ -122,4 +123,22 @@ export interface Table extends BaseTable {
     table_name: string;
     view_definition: string;
   };
+}
+
+export type ColumnAction = 'add' | 'modify';
+
+export interface FrequentlyUsedColumn {
+  name: string;
+  validFor: ColumnAction[];
+  type: Column | string;
+  typeText: string;
+  primary?: boolean;
+  default?: string;
+  defaultText?: string;
+  dependentSQLGenerator?: (
+    schemaName: string,
+    tableName: string,
+    columnName: string
+  ) => { upSql: string; downSql: string };
+  minPGVersion?: number;
 }

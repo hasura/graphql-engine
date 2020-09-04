@@ -2,10 +2,14 @@
 import { useState, useEffect } from 'react';
 import { services } from './services';
 
-import { Table, ComputedField, TableColumn } from './types';
+import {
+  Table,
+  ComputedField,
+  TableColumn,
+  FrequentlyUsedColumn,
+} from './types';
 import { PGFunction } from './services/postgresql/types';
 import { Operations } from './common';
-import { FrequentlyUsedColumn } from '../components/Services/Data/Common/Components/FrequentlyUsedColumnSelector';
 
 export type Driver = 'postgres'; // | 'mysql';
 
@@ -272,6 +276,7 @@ export interface DataSourcesAPI {
   primaryKeysInfoSql: string;
   uniqueKeysSql: string;
   checkConstraintsSql: string;
+  frequentlyUsedColumns: FrequentlyUsedColumn[];
 }
 
 export let currentDriver: Driver = 'postgres';
