@@ -253,8 +253,7 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
             Tracing.runTraceTInContext
             tracingCtx
       
-      let meti = getEventTriggerInfoFromEvent cache e
-      case meti of
+      case getEventTriggerInfoFromEvent cache e of
         Nothing -> do
           --  This rare error can happen in the following known cases:
           --  i) schema cache is not up-to-date (due to some bug, say during schema syncing across multiple instances)
