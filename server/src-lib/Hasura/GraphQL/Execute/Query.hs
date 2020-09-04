@@ -5,6 +5,7 @@ module Hasura.GraphQL.Execute.Query
   , GeneratedSqlMap
   , PreparedSql(..)
   , traverseQueryRootField -- for live query planning
+  , traverseBothQueryRootField
   , irToRootFieldPlan
   , parseGraphQLQuery
   ) where

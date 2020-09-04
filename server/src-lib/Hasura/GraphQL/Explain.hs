@@ -30,6 +30,20 @@ import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.RQL.DML.RemoteJoin              as RR
 import qualified Hasura.RQL.DML.Select                  as DS
 import qualified Hasura.SQL.DML                         as S
+import qualified Hasura.Sources.MySQL.Query             as My
+import qualified Database.MySQL.Simple                  as My
+import qualified Data.ByteString.Lazy               as BS
+import qualified Database.MySQL.Base                    as MyBase
+import qualified Database.MySQL.Simple.Types            as My
+
+import qualified Data.Text.Encoding      as TE
+
+import           Control.Concurrent.MVar
+import           Control.Exception
+
+import qualified Data.Text as T
+import Debug.Trace
+import Data.Maybe
 
 data GQLExplain
   = GQLExplain
@@ -70,16 +84,45 @@ resolveUnpreparedValue userInfo = \case
       PGTypeScalar colTy -> withConstructorFn colTy sessionVariableValue
       PGTypeArray _      -> sessionVariableValue
 
+type MySQLExplainRow =
+  ( Maybe Int
+  , Maybe Text
+  , Maybe Text
+  , Maybe Text
+  , Maybe Text
+  , Maybe Text
+  , Maybe Text
+  , Maybe Text
+  , Maybe Text
+  , Maybe Int
+  , Maybe Double
+  , Maybe Text
+  )
+-- type MySQLExplainRow =
+--   ( Int
+--   , Text
+--   , Text
+--   , Text
+--   , Text
+--   , Text
+--   , Text
+--   , Text
+--   , Text
+--   , Int
+--   , Double
+--   , Text
+--   )
+
 -- NOTE: This function has a 'MonadTrace' constraint in master, but we don't need it
 -- here. We should evaluate if we need it here.
 explainQueryField
-  :: (MonadError QErr m, MonadTx m)
+  :: (MonadError QErr m, MonadTx m, MonadIO m)
   => UserInfo
   -> G.Name
   -> QueryRootField UnpreparedValue
   -> m FieldPlan
 explainQueryField userInfo fieldName rootField = do
-  resolvedRootField <- E.traverseQueryRootField (resolveUnpreparedValue userInfo) rootField
+  resolvedRootField <- E.traverseBothQueryRootField (resolveUnpreparedValue userInfo) rootField
   case resolvedRootField of
     RFRemote _ -> throw400 InvalidParams "only hasura queries can be explained"
     RFAction _ -> throw400 InvalidParams "query actions cannot be explained"
@@ -98,7 +141,37 @@ explainQueryField userInfo fieldName rootField = do
       when (remoteJoins /= mempty) $ throw400 NotSupported "Remote relationships are not allowed in explain query"
       planLines <- liftTx $ map runIdentity <$>
                    Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
+      liftIO $ print planLines
       pure $ FieldPlan fieldName (Just textSQL) $ Just planLines
+    RFMySQL qDB -> do
+      let (querySQL, remoteJoins) = case qDB of
+            QDBSimple s      -> first (My.selectQuerySQL DS.JASMultipleRows) $ RR.getRemoteJoins s
+            QDBPrimaryKey s  -> first (My.selectQuerySQL DS.JASSingleObject) $ RR.getRemoteJoins s
+            QDBAggregation s -> first My.selectAggregateQuerySQL $ RR.getRemoteJoinsAggregateSelect s
+            QDBConnection s  -> error "Dolphin: not supported"
+          textSQL = Q.getQueryText querySQL
+          -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
+          -- query, maybe resulting in privilege escalation:
+          withExplain = "EXPLAIN " <> textSQL
+      traceShowM textSQL
+      -- Reject if query contains any remote joins
+      when (remoteJoins /= mempty) $ throw400 NotSupported "Remote relationships are not allowed in explain query"
+
+      planLines <- liftIO do
+        connection <- fromJust <$> readMVar mySQLConnection
+        result :: [MySQLExplainRow] <- handleAllMySQL' $ My.query_ connection (My.Query (TE.encodeUtf8 withExplain))
+        -- TODO: the following text formatting is perhaps not very helpful.
+        return $ fmap (\(a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12)->T.intercalate "," $ catMaybes [fmap (T.pack . show) a1,a2,a3,a4,a5,a6,a7,a8,a9,fmap (T.pack . show) a10,fmap (T.pack . show) a11,a12]) result
+      pure $ FieldPlan fieldName (Just textSQL) $ Just planLines
+  where
+    -- handleWith :: Exception e => (e -> String) -> Handler _ -- (GQResult a)
+    -- handleWith f = Handler $ _ -- pure . GQExecError . pure . Object . Map.singleton "message" . J.String . T.pack . f
+    -- handleAllMySQL = flip catches [ handleWith My.fmtMessage
+    --                               , handleWith My.qeMessage
+    --                               , handleWith My.errMessage
+    --                               , handleWith MyBase.errMessage
+    --                               ]
+    handleAllMySQL' = id
 
 -- NOTE: This function has a 'MonadTrace' constraint in master, but we don't need it
 -- here. We should evaluate if we need it here.
