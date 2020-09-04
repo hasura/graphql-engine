@@ -164,7 +164,7 @@ export const customTypesSelector = createSelector(
   metadata => {
     if (!metadata) return [];
 
-    return parseCustomTypes(metadata.custom_types);
+    return parseCustomTypes(metadata.custom_types || []);
   }
 );
 
@@ -174,3 +174,6 @@ export const getRemoteSchemaSelector = createSelector(
     return schemas.find(schema => schema.name === name);
   }
 );
+
+export const getAllowedQueries = (state: ReduxState) =>
+  state.metadata.allowedQueries || [];
