@@ -56,11 +56,10 @@ import           Hasura.RQL.DDL.Utils                     (clearHdbViews)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.Server.Version                    (HasVersion)
-import           Hasura.Sources
 import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
-import qualified Hasura.Sources.MySQL.Metadata as My
+import qualified Hasura.Sources.MySQL.Metadata            as My
 
 buildRebuildableSchemaCache
   :: (HasVersion, MonadIO m, MonadUnique m, MonadTx m, HasHttpManager m, HasSQLGenCtx m)

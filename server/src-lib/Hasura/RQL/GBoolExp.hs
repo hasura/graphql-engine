@@ -37,7 +37,7 @@ columnReferenceType = \case
 instance ToTxt ColumnReference where
   toTxt = \case
     ColumnReferenceColumn column -> toTxt $ pgiColumn column
-    ColumnReferenceCast reference targetType ->
+    ColumnReferenceCast reference _targetType ->
       toTxt reference -- "::" <> toTxt targetType
 
 parseOperationsExpression

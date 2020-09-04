@@ -180,7 +180,7 @@ mySQLIrToRootFieldPlan vars prepped = \case
   QDBAggregation s ->
     let (annAggSel, aggRemoteJoins) = getRemoteJoinsAggregateSelect s
     in PGPlan (My.selectAggregateQuerySQL annAggSel) vars prepped aggRemoteJoins
-  QDBConnection s -> error "Dolphin: not supported"
+  QDBConnection _ -> error "Dolphin: not supported"
   where
     mkPGPlan f simpleSel =
       let (simpleSel',remoteJoins) = getRemoteJoins simpleSel
