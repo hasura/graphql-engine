@@ -292,7 +292,7 @@ export const cascadeSqlQuery = (sql: string) => {
   return `${sql} CASCADE;`;
 };
 
-type Col = {
+export type Col = {
   name: string;
   type: string;
   nullable: boolean;

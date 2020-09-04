@@ -51,18 +51,19 @@ export interface DataSourcesAPI {
     INTEGER: string;
     SERIAL: string;
     BIGINT: string;
-    BIGSERIAL: string;
-    UUID: string;
     JSONDTYPE: string;
-    JSONB: string;
     TIMESTAMP: string;
-    TIME: string;
     NUMERIC: string;
     DATE: string;
-    TIMETZ: string;
     BOOLEAN: string;
     TEXT: string;
-    ARRAY: string;
+    ARRAY?: string;
+    BIGSERIAL?: string;
+    DATETIME?: string;
+    JSONB?: string;
+    UUID?: string;
+    TIME?: string;
+    TIMETZ?: string;
   };
   getFetchTrackedTableFkQuery: (options: {
     schemas: string[];
@@ -80,7 +81,6 @@ export interface DataSourcesAPI {
     name: string;
     value: string;
     description: string;
-    hasuraDatatype?: string | null;
   }[];
   fetchColumnTypesQuery: string;
   fetchColumnDefaultFunctions(schema: string): string;
@@ -198,7 +198,8 @@ export interface DataSourcesAPI {
   getDropNotNullSql: (
     tableName: string,
     schemaName: string,
-    columnName: string
+    columnName: string,
+    columnType?: string
   ) => string;
   getSetNotNullSql: (
     tableName: string,

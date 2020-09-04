@@ -22,6 +22,11 @@ import {
   getCreatePkSql,
   getCreateTriggerSql,
   getDropSql,
+  getDropSchemaSql,
+  getCreateSchemaSql,
+  getDropTableSql,
+  isColTypeString,
+  getCreateTableQueries,
 } from './sqlUtils';
 
 export const isTable = (table: Table) => {
@@ -36,10 +41,82 @@ export const displayTableName = (table: Table) => {
   );
 };
 
+const columnDataTypes = {
+  INTEGER: 'integer',
+  SERIAL: 'serial',
+  BIGINT: 'bigint',
+  JSONDTYPE: 'json',
+  TIMESTAMP: 'timestamp stored as UTC',
+  DATETIME: 'time with time zone',
+  NUMERIC: 'numeric',
+  DATE: 'date',
+  BOOLEAN: 'boolean',
+  TEXT: 'text',
+  TIME: 'time',
+};
+
+const commonDataTypes = [
+  {
+    name: 'Integer',
+    value: 'integer',
+    description: 'signed four-byte integer',
+  },
+  {
+    name: 'Integer (auto-increment)',
+    value: 'serial',
+    description: 'autoincrementing unsigned bigint',
+  },
+  {
+    name: 'Text',
+    value: 'text',
+    description: 'variable-length character string',
+  },
+  {
+    name: 'Boolean',
+    value: 'boolean',
+    description: 'logical Boolean (true/false)',
+  },
+  {
+    name: 'Numeric',
+    value: 'numeric',
+    description: 'exact numeric of selected precision (decimal(10,0)',
+  },
+  {
+    name: 'Timestamp',
+    value: 'timestamp',
+    description: 'date and time, UTC time zone',
+  },
+  {
+    name: 'Time',
+    value: 'time',
+    description: 'time of day (no time zone)',
+  },
+  {
+    name: 'Date',
+    value: 'date',
+    description: 'calendar date (year, month, day)',
+  },
+  {
+    name: 'Datetime',
+    value: 'datetime',
+    description: 'time with time zone',
+  },
+  {
+    name: 'Big Integer',
+    value: 'bigint',
+    description: 'signed eight-byte integer',
+  },
+  {
+    name: 'JSON',
+    value: 'json',
+    description: 'json format',
+  },
+];
+
+const createSQLRegex = /create\s*((?:|or\s*replace)\s*view|\s*(table|function))\s*(?:\s*if*\s*not\s*exists\s*)?(((\`?\w+\`?)\.(\`?\w+\`?))|(\`?\w+\`?))/; // eslint-disable-line
+
 // Change this to the format to what is present on the postgres side
 export const mysql: DataSourcesAPI = {
-  isTable,
-  displayTableName,
   getFunctionSchema: () => {
     throw new Error('not implemented');
   },
@@ -68,16 +145,15 @@ export const mysql: DataSourcesAPI = {
     throw new Error('not implemented');
   },
   arrayToPostgresArray: () => {
+    // NOTE: not necessary for MySQL
     throw new Error('not implemented');
   },
-  initQueries: {} as DataSourcesAPI['initQueries'],
   additionalColumnsInfoQuery: () => {
     throw new Error('not implemented');
   },
   parseColumnsInfoResult: () => {
     throw new Error('not implemented');
   },
-  columnDataTypes: ({} as any) as DataSourcesAPI['columnDataTypes'],
   getFetchTrackedTableFkQuery: () => {
     throw new Error('not implemented');
   },
@@ -87,8 +163,6 @@ export const mysql: DataSourcesAPI = {
   getFetchTablesListQuery: () => {
     throw new Error('not implemented');
   },
-  commonDataTypes: [],
-  fetchColumnTypesQuery: '',
   fetchColumnDefaultFunctions: () => {
     throw new Error('not implemented');
   },
@@ -98,27 +172,7 @@ export const mysql: DataSourcesAPI = {
   getEstimateCountQuery: () => {
     throw new Error('not implemented');
   },
-  isColTypeString: () => {
-    throw new Error('not implemented');
-  },
-  cascadeSqlQuery: () => {
-    throw new Error('not implemented');
-  },
-  dependencyErrorCode: '',
-  getCreateTableQueries: () => {
-    throw new Error('not implemented');
-  },
-  getDropTableSql: () => {
-    throw new Error('not implemented');
-  },
-  createSQLRegex: new RegExp(''), // TODO
   getStatementTimeoutSql: () => {
-    throw new Error('not implemented');
-  },
-  getDropSchemaSql: () => {
-    throw new Error('not implemented');
-  },
-  getCreateSchemaSql: () => {
     throw new Error('not implemented');
   },
   isTimeoutError: () => {
@@ -127,7 +181,23 @@ export const mysql: DataSourcesAPI = {
   getViewDefinitionSql: () => {
     throw new Error('not implemented');
   },
+  cascadeSqlQuery: () => {
+    throw new Error('not implemented');
+  },
+  initQueries: {} as DataSourcesAPI['initQueries'],
+  dependencyErrorCode: '',
+  fetchColumnTypesQuery: '',
   fetchColumnCastsQuery: '',
+  columnDataTypes,
+  commonDataTypes,
+  createSQLRegex,
+  isTable,
+  displayTableName,
+  getCreateTableQueries,
+  isColTypeString,
+  getDropTableSql,
+  getCreateSchemaSql,
+  getDropSchemaSql,
   getAlterForeignKeySql,
   getCreateFKeySql,
   getDropConstraintSql,
