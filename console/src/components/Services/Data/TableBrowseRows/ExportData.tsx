@@ -2,14 +2,18 @@ import React from 'react';
 import { DropdownButton, MenuItem } from 'react-bootstrap';
 
 export interface ExportDataProps {
-  onExport: (type: string) => Promise<object>;
+  onExport: (type: string) => Promise<Record<string, unknown>>;
 }
 const ExportData: React.FC<ExportDataProps> = ({ onExport }) => {
-  const exportCSV = (e: React.MouseEvent<{}, MouseEvent>) => {
+  const exportCSV = (
+    e: React.MouseEvent<Record<string, unknown>, MouseEvent>
+  ) => {
     e.preventDefault();
     onExport('CSV');
   };
-  const exportJSON = (e: React.MouseEvent<{}, MouseEvent>) => {
+  const exportJSON = (
+    e: React.MouseEvent<Record<string, unknown>, MouseEvent>
+  ) => {
     e.preventDefault();
     onExport('JSON');
   };

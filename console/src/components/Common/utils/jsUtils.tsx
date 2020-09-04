@@ -91,7 +91,7 @@ export const isEqual = (value1: any, value2: any) => {
   if (typeof value1 === typeof value2) {
     if (isArray(value1)) {
       equal = JSON.stringify(value1) === JSON.stringify(value2);
-    } else if (isObject(value2)) {
+    } else if (is(value2)) {
       const value1Keys = Object.keys(value1);
       const value2Keys = Object.keys(value2);
 
@@ -325,7 +325,7 @@ export const downloadObjectAsJsonFile = (fileName: string, object: any) => {
 };
 export const downloadObjectAsCsvFile = (
   fileName: string,
-  rows: object[] = []
+  rows: Record<string, unknown>[] = []
 ) => {
   const titleRowString = Object.keys(rows[0]).join(',');
   const rowsString = rows
