@@ -903,7 +903,9 @@ generateSQLSelect
   -> S.Select
 generateSQLSelect joinCondition selectSource selectNode =
   S.mkSelect
-  { S.selExtr = [S.Extractor e $ Just a | (a, e) <- HM.toList extractors]
+  { S.selExtr = if HM.null extractors
+                then [S.Extractor (S.SELit "1") Nothing]
+                else [S.Extractor e $ Just a | (a, e) <- HM.toList extractors]
   , S.selFrom = Just $ S.FromExp [joinedFrom]
   , S.selOrderBy = maybeOrderby
   , S.selLimit = S.LimitExp . S.intToSQLExp <$> maybeLimit
