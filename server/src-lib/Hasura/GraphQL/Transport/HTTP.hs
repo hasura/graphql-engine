@@ -14,7 +14,7 @@ module Hasura.GraphQL.Transport.HTTP
   ) where
 
 import           Control.Concurrent.MVar
-import           Control.Exception                      (catch)
+import           Control.Exception
 import           Control.Monad.Morph                    (hoist)
 import           Data.Maybe                             (fromJust)
 
@@ -37,14 +37,13 @@ import qualified Data.ByteString.Lazy                   as BS
 import           Data.Time.Clock
 -- Dirty result construction
 import qualified Data.Text                              as T
-import qualified Data.Text.Encoding                     as TE
 
 import qualified Data.Aeson                             as J
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
+import qualified Database.MySQL.Base                    as MyBase
 import qualified Database.MySQL.Simple                  as My
 import qualified Database.MySQL.Simple.Types            as My
-import qualified Database.MySQL.Base                    as MyBase
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.Query           as EQ
@@ -54,7 +53,6 @@ import qualified Hasura.Tracing                         as Tracing
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
-import qualified System.IO.Streams.List                 as IOSL
 
 -- DO NOT SUBMIT
 import qualified Debug.Trace                            as UGLY
@@ -122,12 +120,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs))
           E.ExecStepMySQL queries -> liftIO $ do
             connection <- fromJust <$> readMVar mySQLConnection
-            let
-              handleFormat e = GQExecError [J.Object $ Map.singleton "message" $ J.String $ stringlyCoerce $ My.fmtMessage e]
-              handleQuery e = GQExecError [J.Object $ Map.singleton "message" $ J.String $ stringlyCoerce $ My.qeMessage e]
-              handleResult e = GQExecError [J.Object $ Map.singleton "message" $ J.String $ stringlyCoerce $ My.errMessage e]
-              handleConnection e = GQExecError [J.Object $ Map.singleton "message" $ J.String $ stringlyCoerce $ MyBase.errMessage e]
-            gqResult <- (flip catch (pure . handleFormat) . flip catch (pure . handleQuery) . flip catch (pure . handleResult) . flip catch (pure . handleConnection)) $ do
+            gqResult   <- handleAllMySQL do
               assocResults <- for queries \(name, queryString) -> do
                 UGLY.traceShowM queryString
                 [My.Only result] <- My.query_ connection (My.Query (BS.toStrict queryString))
@@ -171,6 +164,13 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
   return resp
   where
+    handleWith :: Exception e => (e -> String) -> Handler (GQResult a)
+    handleWith f = Handler $ pure . GQExecError . pure . J.Object . Map.singleton "message" . J.String . T.pack . f
+    handleAllMySQL = flip catches [ handleWith My.fmtMessage
+                                  , handleWith My.qeMessage
+                                  , handleWith My.errMessage
+                                  , handleWith MyBase.errMessage
+                                  ]
     runRemoteGQ telemCacheHit rsi opDef = do
       let telemQueryType | G._todType opDef == G.OperationTypeMutation = Telem.Mutation
                          | otherwise = Telem.Query
