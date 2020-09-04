@@ -12,6 +12,8 @@ Run Hasura GraphQL engine using Docker
   :depth: 1
   :local:
 
+TODO: adapt workflow for multiple data sources
+
 Introduction
 ------------
 

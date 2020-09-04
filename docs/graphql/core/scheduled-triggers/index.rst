@@ -26,6 +26,10 @@ Scheduled triggers are used to execute custom business logic at specific points 
 
   Scheduled triggers are supported from versions ``v.1.3.0`` and above.
 
+.. note::
+
+  TODO: note about MySQL support
+
 Types
 -----
 

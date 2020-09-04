@@ -12,6 +12,8 @@ Quickstart with Docker
   :depth: 1
   :local:
 
+TODO: adapt guide for multiple data sources
+
 Introduction
 ------------
 

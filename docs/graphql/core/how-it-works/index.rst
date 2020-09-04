@@ -12,6 +12,8 @@ How Hasura GraphQL engine works
   :depth: 1
   :local:
 
+TODO: adapt for multiple data sources
+
 Introduction
 ------------
 

@@ -30,6 +30,10 @@ enrichment from external sources and any other complex business logic.
 
    Actions are supported for **Postgres versions 10 and above**.
 
+.. note::
+
+  TODO: note about MySQL support
+
 Action description
 ------------------
 

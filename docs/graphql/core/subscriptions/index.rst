@@ -21,6 +21,10 @@ changes upstream.
 Subscriptions are supported for all kinds of queries. All the concepts of
 :ref:`queries <queries>` hold true for subscriptions as well.
 
+.. note::
+
+  TODO: note about MySQL support
+
 Execution
 ---------
 

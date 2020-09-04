@@ -26,6 +26,10 @@ a dev -> staging -> production environment promotion scenario.
 
   For ``config v1``, see :ref:`migrations_v1`.
 
+.. note::
+
+  TODO: note about MySQL migrations workflow
+
 How is Hasura state managed?
 ----------------------------
 

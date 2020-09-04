@@ -31,6 +31,10 @@ This is what Hasura running with "Remote schemas" looks like:
    :width: 900px
    :alt: Architecture of Hasura with remote schemas
 
+.. note::
+
+  TODO: note about MySQL support
+
 Use cases
 ---------
 

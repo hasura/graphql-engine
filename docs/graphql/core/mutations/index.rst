@@ -23,27 +23,10 @@ Data of all tables in the database tracked by the GraphQL engine can be modified
 If you have a tracked table in your database, its insert/update/delete mutation fields are added as nested
 fields under the  ``mutation_root`` root level type.
 
-Types of mutation requests
---------------------------
-
-The following types of mutation requests are possible:
+**See:**
 
 .. toctree::
   :maxdepth: 1
 
-  Insert <insert>
-  Upsert <upsert>
-  Update <update>
-  Delete <delete>
-  multiple-mutations
-
-
-
-
-
-
-
-
-
-
-
+  Postgres <postgres/index>
+  MySQL <mysql/index>

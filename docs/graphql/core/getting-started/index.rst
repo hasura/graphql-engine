@@ -42,6 +42,15 @@ Get started using an existing database
 
   Hasura GraphQL engine supports **Postgres 9.5 and above**
 
+Get started using a MySQL database
+----------------------------------
+
+TODO: Rikin
+
+.. admonition:: Supported MySQL versions
+
+  TODO: Rikin
+
 .. toctree::
    :maxdepth: 2
    :titlesonly:
@@ -52,4 +61,5 @@ Get started using an existing database
    Using an existing database <using-existing-database>
    first-graphql-query
    first-event-trigger
+   mysql
 

@@ -35,6 +35,10 @@ Events can be of the following types:
   Event webhook notifications will be delivered at least once, and may arrive out of order with 
   respect to the underlying event.
 
+.. note::
+
+  TODO: note about MySQL support
+
 Learn more
 ----------
 
