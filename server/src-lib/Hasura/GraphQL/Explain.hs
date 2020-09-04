@@ -22,6 +22,10 @@ import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
+import qualified Data.ByteString.Lazy                   as BS
+import qualified Database.MySQL.Base                    as MyBase
+import qualified Database.MySQL.Simple                  as My
+import qualified Database.MySQL.Simple.Types            as My
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.Inline          as E
 import qualified Hasura.GraphQL.Execute.LiveQuery       as E
@@ -29,21 +33,17 @@ import qualified Hasura.GraphQL.Execute.Query           as E
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.RQL.DML.RemoteJoin              as RR
 import qualified Hasura.RQL.DML.Select                  as DS
-import qualified Hasura.SQL.DML                         as S
 import qualified Hasura.Sources.MySQL.Query             as My
-import qualified Database.MySQL.Simple                  as My
-import qualified Data.ByteString.Lazy               as BS
-import qualified Database.MySQL.Base                    as MyBase
-import qualified Database.MySQL.Simple.Types            as My
+import qualified Hasura.SQL.DML                         as S
 
-import qualified Data.Text.Encoding      as TE
+import qualified Data.Text.Encoding                     as TE
 
 import           Control.Concurrent.MVar
 import           Control.Exception
 
-import qualified Data.Text as T
-import Debug.Trace
-import Data.Maybe
+import           Data.Maybe
+import qualified Data.Text                              as T
+import           Debug.Trace
 
 data GQLExplain
   = GQLExplain
@@ -157,21 +157,20 @@ explainQueryField userInfo fieldName rootField = do
       -- Reject if query contains any remote joins
       when (remoteJoins /= mempty) $ throw400 NotSupported "Remote relationships are not allowed in explain query"
 
-      planLines <- liftIO do
+      planLines <- liftIO $ handleAllMySQL $ do
         connection <- fromJust <$> readMVar mySQLConnection
-        result :: [MySQLExplainRow] <- handleAllMySQL' $ My.query_ connection (My.Query (TE.encodeUtf8 withExplain))
+        result :: [MySQLExplainRow] <- My.query_ connection (My.Query (TE.encodeUtf8 withExplain))
         -- TODO: the following text formatting is perhaps not very helpful.
         return $ fmap (\(a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12)->T.intercalate "," $ catMaybes [fmap (T.pack . show) a1,a2,a3,a4,a5,a6,a7,a8,a9,fmap (T.pack . show) a10,fmap (T.pack . show) a11,a12]) result
       pure $ FieldPlan fieldName (Just textSQL) $ Just planLines
   where
-    -- handleWith :: Exception e => (e -> String) -> Handler _ -- (GQResult a)
-    -- handleWith f = Handler $ _ -- pure . GQExecError . pure . Object . Map.singleton "message" . J.String . T.pack . f
-    -- handleAllMySQL = flip catches [ handleWith My.fmtMessage
-    --                               , handleWith My.qeMessage
-    --                               , handleWith My.errMessage
-    --                               , handleWith MyBase.errMessage
-    --                               ]
-    handleAllMySQL' = id
+    handleWith :: Exception e => (e -> String) -> Handler [T.Text]
+    handleWith f = Handler $ T.pack . f >>> \message -> pure ["Failed to run explain query:", message]
+    handleAllMySQL = flip catches [ handleWith My.fmtMessage
+                                  , handleWith My.qeMessage
+                                  , handleWith My.errMessage
+                                  , handleWith MyBase.errMessage
+                                  ]
 
 -- NOTE: This function has a 'MonadTrace' constraint in master, but we don't need it
 -- here. We should evaluate if we need it here.
