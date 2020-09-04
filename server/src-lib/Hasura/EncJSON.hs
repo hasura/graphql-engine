@@ -23,6 +23,8 @@ import qualified Data.ByteString.Builder as BB
 import qualified Data.ByteString.Lazy    as BL
 import qualified Data.Text.Encoding      as TE
 import qualified Database.PG.Query       as Q
+import qualified Database.MySQL.Simple.Result as My
+import qualified Database.MySQL.Base.Types as My
 
 -- encoded json
 -- TODO (from master): can be improved with gadts capturing bytestring, lazybytestring
@@ -40,6 +42,10 @@ instance Eq EncJSON where
 
 instance Q.FromCol EncJSON where
   fromCol = fmap encJFromBS . Q.fromCol
+
+instance My.Result EncJSON where
+  convert f x = encJFromBS bs
+    where bs = My.convert (f { My.fieldType = My.String }) x
 
 encJToLBS :: EncJSON -> BL.ByteString
 encJToLBS = BB.toLazyByteString . unEncJSON

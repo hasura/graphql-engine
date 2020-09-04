@@ -132,7 +132,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                 UGLY.traceShowM queryString
                 [My.Only result] <- My.query_ connection (My.Query (BS.toStrict queryString))
                 UGLY.traceShowM result
-                return (name, encJFromText result)
+                return (name, result)
               pure $ GQSuccess $ encJToLBS $ encJFromAssocList assocResults
             -- TODO fill in proper values for telemTimeIO and telemQueryType below
             pure (telemCacheHit, Telem.Local, (secondsToDiffTime 0, Telem.Query, HttpResponse (encodeGQResp gqResult) []))

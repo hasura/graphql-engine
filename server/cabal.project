@@ -57,5 +57,5 @@ source-repository-package
 
 source-repository-package
   type: git
-  location: https://github.com/jchia/mysql-haskell.git
-  tag: b01d9f518e3614c9ee5580e64d61400ed8ab5b39
+  location: https://github.com/abooij/mysql.git
+  tag: 47c7cc778fc5eec042b83642defc44abf86ac7fb
