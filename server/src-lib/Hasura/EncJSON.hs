@@ -44,6 +44,27 @@ instance Q.FromCol EncJSON where
   fromCol = fmap encJFromBS . Q.fromCol
 
 instance My.Result EncJSON where
+  -- TODO this is dirty.
+
+  -- We implement the decoding of incoming mysql data (I think these are
+  -- initially received as bytestrings) into the various haskell types. That's
+  -- what the Result type class is for.
+
+  -- What you're supposed to do is use another instance, such as the one for
+  -- ByteString, and do an appropriate interpretation of that result into the
+  -- desired type.  But that's not possible, because the decoder for ByteString
+  -- has some kind of built-in subtype checking mechanism that doesn't know
+  -- about JSON.  So this dirty fix overwrites the type of an incoming column as
+  -- String column types, parses them as bytestring, and then save them as
+  -- EncJSON.
+
+  -- Doing it the clean way would involve modifying mysql-simple (add Json to
+  -- `okText`).
+
+  -- Note that, at the moment of writing (4 September 2020), mysql also had to
+  -- be modified to recognize the Json column type.  Although there was code to
+  -- do this, the CPP code didn't seem to work correctly, so that this code was
+  -- never included.
   convert f x = encJFromBS bs
     where bs = My.convert (f { My.fieldType = My.String }) x
 
