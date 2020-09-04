@@ -14,8 +14,8 @@ window.hdocs = (function () {
 
       docsearch({
         appId: 'WCBB1VVLRC',
-        apiKey: '298d448cd9d7ed93fbab395658da19e8',
-        indexName: 'graphql-docs-prod',
+        apiKey: HDOCS_ALGOLIA_API_KEY,
+        indexName: HDOCS_ALGOLIA_INDEX,
         inputSelector: '#search_element',
         transformData: hdocs.transformSearchData,
         debug: false
