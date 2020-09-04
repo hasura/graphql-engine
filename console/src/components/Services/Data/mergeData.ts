@@ -133,7 +133,6 @@ export const mergeLoadSchemaData = (
       const rolePermMap: Record<string, any> = {};
 
       permKeys.forEach(key => {
-        console.log({ metadataTable });
         if (metadataTable) {
           metadataTable[key]?.forEach((perm: any) => {
             rolePermMap[perm.role] = {
