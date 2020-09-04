@@ -28,7 +28,9 @@ it and then use it to update the instance.
 
 .. note::
 
-   Hasura's metadata workflow is not dependent on the migrations setup. You can use the metadata workflow without using Hasura migrations.
+   Hasura's metadata workflow is not dependent on the migrations setup. 
+   If you are comfortable or familiar using other database migration tooling, 
+   you can do so and still use Hasura's metadata workflow.
 
 Exporting Hasura metadata
 -------------------------
