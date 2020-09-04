@@ -130,6 +130,9 @@ asSingleRowExtr col =
               , S.SEUnsafe "0"
               ]
 
+emptyJSONArray :: S.SQLExp
+emptyJSONArray = S.SEFnApp "json_array" [] Nothing
+
 withJsonAggExtr
   :: PermissionLimitSubQuery -> Maybe S.OrderByExp -> S.Alias -> S.SQLExp
 withJsonAggExtr permLimitSubQuery ordBy alias =
@@ -145,7 +148,7 @@ withJsonAggExtr permLimitSubQuery ordBy alias =
 
     mkSimpleJsonAgg rowExp ob =
       let jsonAggExp = S.SEFnApp "JSON_ARRAYAGG" [rowExp] ob
-      in S.SEFnApp "coalesce" [jsonAggExp, S.SELit "[]"] Nothing
+      in S.SEFnApp "coalesce" [jsonAggExp, emptyJSONArray] Nothing
 
     withPermLimit limit =
       let subSelect = mkSubSelect limit
@@ -1137,7 +1140,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
 
     mkSimpleJsonAgg rowExp ob =
       let jsonAggExp = S.SEFnApp "json_arrayagg" [rowExp] ob
-      in S.SEFnApp "coalesce" [jsonAggExp, S.SELit "[]"] Nothing
+      in S.SEFnApp "coalesce" [jsonAggExp, emptyJSONArray] Nothing
 
     processFields
       :: ( MonadReader Bool m
