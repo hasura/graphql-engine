@@ -26,7 +26,7 @@ import dataReducer from './DataReducer';
 import functionWrapperConnector from './Function/FunctionWrapper';
 import ModifyCustomFunction from './Function/Modify/ModifyCustomFunction';
 import PermissionCustomFunction from './Function/Permission/Permission';
-import manageConnector from './Schema/ManageDatabase';
+import ConnectedDatabaseManagePage from './Schema/ManageDatabase';
 
 export {
   dataPageConnector,
@@ -50,5 +50,5 @@ export {
   functionWrapperConnector,
   ModifyCustomFunction,
   PermissionCustomFunction,
-  manageConnector,
+  ConnectedDatabaseManagePage,
 };

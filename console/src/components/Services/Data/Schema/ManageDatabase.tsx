@@ -1,50 +1,60 @@
 import React from 'react';
 import Helmet from 'react-helmet';
-import { Connect } from 'react-redux';
-
+import { connect, ConnectedProps } from 'react-redux';
 import Button from '../../../Common/Button/Button';
 import styles from '../../../Common/Common.scss';
 import { ReduxState } from '../../../../types';
-import { Schema } from '../../../../dataSources/types';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
+import CreateDatabase from './CreateDatabase';
+import { Driver } from '../../../../dataSources';
 
 type DatabaseDetails = {
   name: string;
-  type: 'postgres' | 'mysql';
+  type: Driver;
   url: string;
 };
 
-type ManageDatabaseProps = {
-  schemaList: Schema[]; // this is just a dummy prop
-};
-
 type DatabaseListItemProps = {
-  btnAction: () => void;
-  btnTitle: string;
+  handleRemove: () => void;
+  handleReload: () => void;
   dbDetails: DatabaseDetails;
 };
-
 const dummyData: DatabaseListItemProps[] = [
   {
-    btnAction: () => {},
-    btnTitle: 'Manage',
-    dbDetails: { name: 'myDb', type: 'postgres', url: 'something' },
+    handleRemove: () => {},
+    handleReload: () => {},
+    dbDetails: {
+      name: 'Warehouse DB',
+      type: 'postgres',
+      url: 'postgres://postgres:@105.245.144.63:5432/postgres',
+    },
   },
   {
-    btnAction: () => {},
-    btnTitle: 'Remove',
-    dbDetails: { name: 'dbdbdbdb', type: 'mysql', url: 'someLink' },
+    handleRemove: () => {},
+    handleReload: () => {},
+    dbDetails: {
+      name: 'Users DB',
+      type: 'mysql' as any,
+      url: 'mysql://root:password@195.38.139.16:3306/users_database',
+    },
   },
 ];
-
 const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
-  btnAction,
-  btnTitle = 'Remove',
+  handleReload,
+  handleRemove,
   dbDetails,
 }) => (
   <div className={styles.db_list_item}>
-    <Button size="xs" color="white" onClick={btnAction}>
-      {btnTitle}
+    <Button size="xs" color="white" onClick={handleReload}>
+      Reload
+    </Button>
+    <Button
+      className={styles.db_list_content}
+      size="xs"
+      color="white"
+      onClick={handleRemove}
+    >
+      Remove
     </Button>
     <div className={styles.db_list_content}>
       <b>
@@ -54,7 +64,6 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
     </div>
   </div>
 );
-
 const crumbs = [
   {
     title: 'Data',
@@ -65,13 +74,8 @@ const crumbs = [
     url: '#',
   },
 ];
-
-const ManageDatabase: React.FC<ManageDatabaseProps> = ({ schemaList }) => {
-  const currentSchemaOptions = schemaList.map(schema => (
-    <option>{schema.schema_name}</option>
-  ));
+const ManageDatabase: React.FC<ManageDatabaseProps> = () => {
   const dataList = dummyData.map(data => <DatabaseListItem {...data} />);
-
   return (
     <div
       className={`container-fluid ${styles.padd_left_remove} ${styles.padd_top} ${styles.manage_dbs_page}`}
@@ -83,9 +87,9 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({ schemaList }) => {
           <h2 className={`${styles.headerText} ${styles.display_inline}`}>
             Manage Databases
           </h2>
-          <Button color="yellow" size="md" className={styles.add_mar_left}>
+          {/* <Button color="yellow" size="md" className={styles.add_mar_left}>
             Add Database
-          </Button>
+          </Button> */}
         </div>
         <div className={styles.manage_db_content}>
           <hr />
@@ -95,29 +99,7 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({ schemaList }) => {
           <div className={styles.data_list_container}>{dataList}</div>
           <hr />
         </div>
-        <div className={`${styles.manage_db_content}`}>
-          <h3
-            className={`${styles.heading_text} ${styles.remove_pad_bottom} ${styles.add_mar_bottom}`}
-          >
-            Schemas
-          </h3>
-          Current Schemas:
-          <select className={styles.add_mar_left}>
-            {currentSchemaOptions}
-          </select>
-          <br />
-          <div
-            className={`${styles.add_mar_top} ${styles.display_inline} ${styles.display_flex}`}
-          >
-            <Button color="white" size="xs">
-              Create
-            </Button>
-            <Button color="white" size="xs" className={styles.add_mar_left}>
-              Delete
-            </Button>
-          </div>
-        </div>
-        <hr />
+        <CreateDatabase onSubmit={() => {}} />
       </div>
     </div>
   );
@@ -128,8 +110,9 @@ const mapStateToProps = (state: ReduxState) => {
     schemaList: state.tables.schemaList,
   };
 };
+const manageConnector = connect(mapStateToProps);
 
-const manageConnector = (connect: Connect) =>
-  connect(mapStateToProps)(ManageDatabase);
+type ManageDatabaseProps = ConnectedProps<typeof manageConnector>;
 
-export default manageConnector;
+const ConnectedDatabaseManagePage = manageConnector(ManageDatabase);
+export default ConnectedDatabaseManagePage;

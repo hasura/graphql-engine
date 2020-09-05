@@ -294,7 +294,7 @@ class Schema extends Component {
               className={`${styles.add_mar_left_mid} ${styles.width_auto} form-control`}
               value={currentSchema}
             >
-              <option>myDB (postgres)</option>
+              <option>Warehouse DB (postgres)</option>
               {/* {getSchemaOptions()} */}
               {/* TODO: should be the available database options  */}
             </select>

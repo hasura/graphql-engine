@@ -23,7 +23,7 @@ import {
   permissionsSummaryConnector,
   ModifyCustomFunction,
   PermissionCustomFunction,
-  manageConnector,
+  ConnectedDatabaseManagePage,
 } from '.';
 
 import { RightContainer } from '../../Common/Layout/RightContainer';
@@ -121,7 +121,7 @@ const makeDataRouter = (
         component={addExistingTableViewConnector(connect)}
       />
       <Route path="sql" component={rawSQLConnector(connect)} />
-      <Route path="manage" component={manageConnector(connect)} />
+      <Route path="manage" component={ConnectedDatabaseManagePage} />
       <Route
         path="migrations"
         onEnter={composeOnEnterHooks([consoleModeRedirects])}
