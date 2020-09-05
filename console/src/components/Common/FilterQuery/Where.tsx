@@ -3,7 +3,6 @@ import { ValueFilter, Operator } from './types';
 import { allOperators } from './utils';
 
 import { BaseTable } from '../utils/pgUtils';
-import { isNotDefined } from '../utils/jsUtils';
 import styles from './FilterQuery.scss';
 
 type Props = {
