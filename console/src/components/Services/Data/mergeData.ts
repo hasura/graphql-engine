@@ -81,10 +81,12 @@ export const mergeLoadSchemaData = (
       isEnum = metadataTable?.is_enum || false;
       configuration = metadataTable?.configuration || {};
 
-      fkConstraints = fkData.filter(
-        (fk: any) =>
-          fk.table_schema === tableSchema && fk.table_name === tableName
-      );
+      fkConstraints = fkData
+        .filter(
+          (fk: any) =>
+            fk.table_schema === tableSchema && fk.table_name === tableName
+        )
+        .map((fk: any) => ({ ...fk, is_ref_table_tracked: true }));
 
       refFkConstraints = refFkData.filter(
         (fk: any) =>
