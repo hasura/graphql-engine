@@ -79,7 +79,7 @@ export const getTableName = t => {
 };
 
 export const fetchTrackedTableFkQuery = options => {
-  const runSql = dataSource.getFetchTrackedTableFkQuery(options);
+  const runSql = dataSource.getFKRelations(options);
 
   return getRunSqlQuery(
     runSql,

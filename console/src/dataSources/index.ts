@@ -70,10 +70,6 @@ export interface DataSourcesAPI {
     TIME?: string;
     TIMETZ?: string;
   };
-  getFetchTrackedTableFkQuery: (options: {
-    schemas: string[];
-    tables: Table[];
-  }) => string;
   getFetchTrackedTableReferencedFkQuery: (options: {
     schemas: string[];
     tables: Table[];
@@ -284,6 +280,7 @@ export interface DataSourcesAPI {
     schemas: string[];
     tables: Table[];
   }) => string;
+  getFKRelations: (options: { schemas: string[]; tables: Table[] }) => string;
 }
 
 export let currentDriver: Driver = 'postgres';

@@ -4,7 +4,6 @@ import { QUERY_TYPES, Operations } from '../../common';
 import { PGFunction } from './types';
 import { DataSourcesAPI, ColumnsInfoResult } from '../..';
 import {
-  getFetchTrackedTableFkQuery,
   getFetchTrackedTableReferencedFkQuery,
   getFetchTablesListQuery,
   fetchColumnTypesQuery,
@@ -44,6 +43,7 @@ import {
   checkConstraintsSql,
   uniqueKeysSql,
   frequentlyUsedColumns,
+  getFKRelations,
 } from './sqlUtils';
 
 export const isTable = (table: Table) => {
@@ -392,7 +392,6 @@ export const postgres: DataSourcesAPI = {
   additionalColumnsInfoQuery,
   parseColumnsInfoResult,
   columnDataTypes,
-  getFetchTrackedTableFkQuery,
   getFetchTrackedTableReferencedFkQuery,
   getFetchTablesListQuery,
   commonDataTypes,
@@ -437,4 +436,5 @@ export const postgres: DataSourcesAPI = {
   checkConstraintsSql,
   uniqueKeysSql,
   frequentlyUsedColumns,
+  getFKRelations,
 };

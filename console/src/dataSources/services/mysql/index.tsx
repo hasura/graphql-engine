@@ -154,9 +154,6 @@ export const mysql: DataSourcesAPI = {
   parseColumnsInfoResult: () => {
     throw new Error('not implemented');
   },
-  getFetchTrackedTableFkQuery: () => {
-    throw new Error('not implemented');
-  },
   getFetchTrackedTableReferencedFkQuery: () => {
     throw new Error('not implemented');
   },
@@ -222,4 +219,5 @@ export const mysql: DataSourcesAPI = {
   primaryKeysInfoSql: () => '',
   uniqueKeysSql: () => '',
   checkConstraintsSql: () => '',
+  getFKRelations: () => '',
 };
