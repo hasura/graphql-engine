@@ -4,6 +4,10 @@ import { TableEntry, HasuraMetadataV2 } from './types';
 import { filterInconsistentMetadataObjects } from '../components/Services/Settings/utils';
 import { parseCustomTypes } from '../shared/utils/hasuraCustomTypeUtils';
 
+const getCurrentSchema = (state: ReduxState) => {
+  return state.tables.currentSchema;
+};
+
 const getInconsistentObjects = (state: ReduxState) => {
   return state.metadata.inconsistentObjects;
 };
@@ -114,9 +118,13 @@ export const getFunctionSelector = createSelector(
 );
 
 export const getConsistentFunctions = createSelector(
-  [getFunctions, getInconsistentObjects],
-  (funcs, objects) => {
-    return filterInconsistentMetadataObjects(funcs, objects, 'functions');
+  [getFunctions, getInconsistentObjects, getCurrentSchema],
+  (funcs, objects, schema) => {
+    return filterInconsistentMetadataObjects(
+      funcs.filter(f => f.function_schema === schema),
+      objects,
+      'functions'
+    );
   }
 );
 
