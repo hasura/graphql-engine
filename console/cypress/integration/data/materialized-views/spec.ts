@@ -304,7 +304,7 @@ export const passVFilterQueryEq = () => {
   // Select operator as `eq`
   cy.get('select')
     .find('option')
-    .contains('-- op --')
+    .contains('[_eq] equals')
     .parent()
     .last()
     .select('$eq');
