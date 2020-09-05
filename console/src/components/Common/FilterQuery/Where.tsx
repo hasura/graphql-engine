@@ -84,7 +84,7 @@ const Where: React.FC<Props> = props => {
                   <option
                     key={o.operator}
                     value={o.operator}
-                    selected={i === 0 ? 'selected' : null}
+                    selected={i === 0}
                   >
                     {`[${o.alias}] ${o.name}`}
                   </option>

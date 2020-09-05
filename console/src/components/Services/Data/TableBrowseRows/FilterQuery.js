@@ -75,7 +75,7 @@ const renderOps = (opName, onChange, key) => (
     data-test={`filter-op-${key}`}
   >
     {Operators.map((o, i) => (
-      <option key={i} value={o.value} selected={i === 0 ? 'selected' : null}>
+      <option key={i} value={o.value} selected={i === 0}>
         {`[${o.graphqlOp}] ${o.name}`}
       </option>
     ))}
