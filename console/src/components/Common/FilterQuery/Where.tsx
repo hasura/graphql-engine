@@ -81,7 +81,11 @@ const Where: React.FC<Props> = props => {
                 data-test={`filter-op-${i}`}
               >
                 {allOperators.map(o => (
-                  <option key={o.operator} value={o.operator} selected={i === 0 ? 'selected' : null}>
+                  <option
+                    key={o.operator}
+                    value={o.operator}
+                    selected={i === 0 ? 'selected' : null}
+                  >
                     {`[${o.alias}] ${o.name}`}
                   </option>
                 ))}
