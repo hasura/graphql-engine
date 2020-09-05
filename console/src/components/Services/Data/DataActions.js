@@ -147,9 +147,9 @@ const loadSchema = configOptions => {
         fetchTrackedTableFkQuery(configOptions),
         fetchTrackedTableReferencedFkQuery(configOptions),
         // todo: queries below could be done only when user visits `Data` page
-        getRunSqlQuery(dataSource.primaryKeysInfoSql),
-        getRunSqlQuery(dataSource.uniqueKeysSql),
-        getRunSqlQuery(dataSource.checkConstraintsSql),
+        // getRunSqlQuery(dataSource.primaryKeysInfoSql),
+        // getRunSqlQuery(dataSource.uniqueKeysSql),
+        // getRunSqlQuery(dataSource.checkConstraintsSql),
       ],
     };
 
