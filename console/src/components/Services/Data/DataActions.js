@@ -167,18 +167,18 @@ const loadSchema = configOptions => {
           const tableList = JSON.parse(data[0].result[1]);
           const fkList = JSON.parse(data[1].result[1]);
           const refFkList = JSON.parse(data[2].result[1]);
-          const primaryKeys = JSON.parse(data[3].result[1]);
-          const uniqueKeys = JSON.parse(data[4].result[1]);
-          const checkConstraints = JSON.parse(data[5].result[1]);
+          // const primaryKeys = JSON.parse(data[3].result[1]);
+          // const uniqueKeys = JSON.parse(data[4].result[1]);
+          // const checkConstraints = JSON.parse(data[5].result[1]);
 
           const mergedData = mergeLoadSchemaData(
             tableList,
             fkList,
             refFkList,
-            metadataTables,
-            primaryKeys,
-            uniqueKeys,
-            checkConstraints
+            metadataTables
+            // primaryKeys,
+            // uniqueKeys,
+            // checkConstraints
           );
 
           // todo
