@@ -56,6 +56,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - server: allow remote relationships joining `type` column with `[type]` input argument as spec allows this coercion (fixes #5133)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
+- console: select first operator by default when filtering row data (close #5729) (#5730)
 - cli: add missing global flags for seeds command (#5565)
 - docs: add docs page on networking with docker (close #4346) (#4811)
 
