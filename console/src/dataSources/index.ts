@@ -70,10 +70,6 @@ export interface DataSourcesAPI {
     TIME?: string;
     TIMETZ?: string;
   };
-  getFetchTrackedTableReferencedFkQuery: (options: {
-    schemas: string[];
-    tables: Table[];
-  }) => string;
   getFetchTablesListQuery: (options: {
     schemas: string[];
     tables: Table[];

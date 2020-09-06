@@ -154,9 +154,6 @@ export const mysql: DataSourcesAPI = {
   parseColumnsInfoResult: () => {
     throw new Error('not implemented');
   },
-  getFetchTrackedTableReferencedFkQuery: () => {
-    throw new Error('not implemented');
-  },
   getFetchTablesListQuery: () => {
     throw new Error('not implemented');
   },

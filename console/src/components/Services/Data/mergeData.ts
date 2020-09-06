@@ -30,13 +30,19 @@ const keyToPermission = {
 export const mergeLoadSchemaData = (
   infoSchemaTableData: PostgresTable[], // todo
   fkData: any,
-  refFkData: any,
   metadataTables: TableEntry[],
   primaryKeys: Table['primary_key'][],
   uniqueKeys: any, // todo
   checkConstraints: Table['check_constraints']
 ): Table[] => {
   const _mergedTableData: Table[] = [];
+
+  const trackedFkData = fkData.map((fk: any) => ({
+    ...fk,
+    is_ref_table_tracked: !!metadataTables.some(
+      t => t.table.name === fk.table_name && t.table.schema === fk.table_schema
+    ),
+  }));
 
   infoSchemaTableData.forEach(infoSchemaTableInfo => {
     const tableSchema = infoSchemaTableInfo.table_schema;
@@ -81,14 +87,12 @@ export const mergeLoadSchemaData = (
       isEnum = metadataTable?.is_enum || false;
       configuration = metadataTable?.configuration || {};
 
-      fkConstraints = fkData
-        .filter(
-          (fk: any) =>
-            fk.table_schema === tableSchema && fk.table_name === tableName
-        )
-        .map((fk: any) => ({ ...fk, is_ref_table_tracked: true }));
+      fkConstraints = trackedFkData.filter(
+        (fk: any) =>
+          fk.table_schema === tableSchema && fk.table_name === tableName
+      );
 
-      refFkConstraints = refFkData.filter(
+      refFkConstraints = trackedFkData.filter(
         (fk: any) =>
           fk.ref_table_table_schema === tableSchema &&
           fk.ref_table === tableName

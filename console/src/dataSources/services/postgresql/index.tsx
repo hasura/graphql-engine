@@ -4,7 +4,6 @@ import { QUERY_TYPES, Operations } from '../../common';
 import { PGFunction } from './types';
 import { DataSourcesAPI, ColumnsInfoResult } from '../..';
 import {
-  getFetchTrackedTableReferencedFkQuery,
   getFetchTablesListQuery,
   fetchColumnTypesQuery,
   fetchColumnDefaultFunctions,
@@ -392,7 +391,6 @@ export const postgres: DataSourcesAPI = {
   additionalColumnsInfoQuery,
   parseColumnsInfoResult,
   columnDataTypes,
-  getFetchTrackedTableReferencedFkQuery,
   getFetchTablesListQuery,
   commonDataTypes,
   fetchColumnTypesQuery,
