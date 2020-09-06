@@ -320,7 +320,8 @@ instance IsPerm DelPerm where
 
 data SetPermComment
   = SetPermComment
-  { apTable      :: !QualifiedTable
+  { apSource     :: !SourceName
+  , apTable      :: !QualifiedTable
   , apRole       :: !RoleName
   , apPermission :: !PermType
   , apComment    :: !(Maybe T.Text)
@@ -329,8 +330,8 @@ data SetPermComment
 $(deriveJSON (aesonDrop 2 snakeCase) ''SetPermComment)
 
 setPermCommentP1 :: (UserInfoM m, QErrM m, CacheRM m) => SetPermComment -> m ()
-setPermCommentP1 (SetPermComment qt rn pt _) = do
-  tabInfo <- askTabInfo qt
+setPermCommentP1 (SetPermComment sourceName qt rn pt _) = do
+  tabInfo <- askTabInfo sourceName qt
   action tabInfo
   where
     action tabInfo = case pt of
@@ -354,7 +355,7 @@ runSetPermComment defn =  do
 setPermCommentTx
   :: SetPermComment
   -> Q.TxE QErr ()
-setPermCommentTx (SetPermComment (QualifiedObject sn tn) rn pt comment) =
+setPermCommentTx (SetPermComment sourceName (QualifiedObject sn tn) rn pt comment) =
   Q.unitQE defaultTxErrorHandler [Q.sql|
            UPDATE hdb_catalog.hdb_permission
            SET comment = $1
@@ -364,8 +365,8 @@ setPermCommentTx (SetPermComment (QualifiedObject sn tn) rn pt comment) =
              AND perm_type = $5
                 |] (comment, sn, tn, rn, permTypeToCode pt) True
 
-purgePerm :: MonadTx m => QualifiedTable -> RoleName -> PermType -> m ()
-purgePerm qt rn pt =
+purgePerm :: MonadTx m => SourceName -> QualifiedTable -> RoleName -> PermType -> m ()
+purgePerm sourceName qt rn pt =
     case pt of
       PTInsert -> dropPermP2 @InsPerm dp
       PTSelect -> dropPermP2 @SelPerm dp
@@ -373,7 +374,7 @@ purgePerm qt rn pt =
       PTDelete -> dropPermP2 @DelPerm dp
   where
     dp :: DropPerm a
-    dp = DropPerm qt rn
+    dp = DropPerm sourceName qt rn
 
 fetchPermDef
   :: QualifiedTable

@@ -33,7 +33,7 @@ import qualified Database.PG.Query                          as Q
 runCreateRelationship
   :: (MonadTx m, CacheRWM m, HasSystemDefined m, ToJSON a)
   => RelType -> WithTable (RelDef a) -> m EncJSON
-runCreateRelationship relType (WithTable tableName relDef) = do
+runCreateRelationship relType (WithTable source tableName relDef) = do
   insertRelationshipToCatalog tableName relType relDef
   buildSchemaCacheFor $ MOTableObj tableName (MTORel (rdName relDef) relType)
   pure successMsg
@@ -56,10 +56,10 @@ insertRelationshipToCatalog (QualifiedObject schema table) relType (RelDef name 
       VALUES ($1, $2, $3, $4, $5 :: jsonb, $6, $7) |]
 
 runDropRel :: (MonadTx m, CacheRWM m) => DropRel -> m EncJSON
-runDropRel (DropRel qt rn cascade) = do
+runDropRel (DropRel source qt rn cascade) = do
   depObjs <- collectDependencies
   withNewInconsistentObjsCheck do
-    traverse_ purgeRelDep depObjs
+    traverse_ (purgeRelDep source) depObjs
     liftTx $ delRelFromCatalog qt rn
     buildSchemaCache
   pure successMsg
@@ -140,9 +140,10 @@ arrRelP2Setup foreignKeys qt (RelDef rn ru _) = case ru of
         mapping = HM.fromList $ map swap $ HM.toList colMap
     pure (RelInfo rn ArrRel mapping refqt False False, deps)
 
-purgeRelDep :: (MonadTx m) => SchemaObjId -> m ()
-purgeRelDep (SOTableObj tn (TOPerm rn pt)) = purgePerm tn rn pt
-purgeRelDep d = throw500 $ "unexpected dependency of relationship : "
+purgeRelDep :: (MonadTx m) => SourceName -> SchemaObjId -> m ()
+purgeRelDep source = \case
+  (SOTableObj tn (TOPerm rn pt)) -> purgePerm source tn rn pt
+  d -> throw500 $ "unexpected dependency of relationship : "
                 <> reportSchemaObj d
 
 validateRelP1
@@ -166,11 +167,11 @@ runSetRelComment defn = do
   void $ validateRelP1 qt rn
   setRelCommentP2 defn
   where
-    SetRelComment qt rn _ = defn
+    SetRelComment source qt rn _ = defn
 
 setRelComment :: SetRelComment
               -> Q.TxE QErr ()
-setRelComment (SetRelComment (QualifiedObject sn tn) rn comment) =
+setRelComment (SetRelComment source (QualifiedObject sn tn) rn comment) =
   Q.unitQE defaultTxErrorHandler [Q.sql|
            UPDATE hdb_catalog.hdb_relationship
            SET comment = $1

@@ -59,7 +59,8 @@ import           Hasura.SQL.Types
 
 data TrackTable
   = TrackTable
-  { tName   :: !QualifiedTable
+  { tSource :: !SourceName
+  , tName   :: !QualifiedTable
   , tIsEnum :: !Bool
   } deriving (Show, Eq, Lift)
 
@@ -67,39 +68,45 @@ instance FromJSON TrackTable where
   parseJSON v = withOptions <|> withoutOptions
     where
       withOptions = flip (withObject "TrackTable") v $ \o -> TrackTable
-        <$> o .: "table"
+        <$> o .:? "source" .!= defaultSource
+        <*> o .: "table"
         <*> o .:? "is_enum" .!= False
-      withoutOptions = TrackTable <$> parseJSON v <*> pure False
+      withoutOptions = TrackTable <$> pure defaultSource <*> parseJSON v <*> pure False
 
 instance ToJSON TrackTable where
-  toJSON (TrackTable name isEnum)
-    | isEnum = object [ "table" .= name, "is_enum" .= isEnum ]
-    | otherwise = toJSON name
+  toJSON (TrackTable source name isEnum)
+    = object [ "source" .= source, "table" .= name, "is_enum" .= isEnum ]
 
 data SetTableIsEnum
   = SetTableIsEnum
-  { stieTable  :: !QualifiedTable
+  { stieSource :: !SourceName
+  , stieTable  :: !QualifiedTable
   , stieIsEnum :: !Bool
   } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 4 snakeCase) ''SetTableIsEnum)
 
 data UntrackTable =
   UntrackTable
-  { utTable   :: !QualifiedTable
+  { utSource  :: !SourceName
+  , utTable   :: !QualifiedTable
   , utCascade :: !(Maybe Bool)
   } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''UntrackTable)
 
+isTableTracked :: SchemaCache -> SourceName -> QualifiedTable -> Bool
+isTableTracked sc source tableName =
+  isJust $ getPGTableInfo source tableName $ scPostgres sc
+
 -- | Track table/view, Phase 1:
 -- Validate table tracking operation. Fails if table is already being tracked,
 -- or if a function with the same name is being tracked.
-trackExistingTableOrViewP1 :: (QErrM m, CacheRWM m) => QualifiedTable -> m ()
-trackExistingTableOrViewP1 qt = do
+trackExistingTableOrViewP1 :: (QErrM m, CacheRWM m) => SourceName -> QualifiedTable -> m ()
+trackExistingTableOrViewP1 source qt = do
   rawSchemaCache <- askSchemaCache
-  when (Map.member qt $ _pcTables $ scPostgres rawSchemaCache) $
+  when (isTableTracked rawSchemaCache source qt) $
     throw400 AlreadyTracked $ "view/table already tracked : " <>> qt
   let qf = fmap (FunctionName . getTableTxt) qt
-  when (Map.member qf $ _pcFunctions $ scPostgres rawSchemaCache) $
+  when (isJust $ getPGFunctionInfo source qf $ scPostgres rawSchemaCache) $
     throw400 NotSupported $ "function with name " <> qt <<> " already exists"
 
 -- | Check whether a given name would conflict with the current schema by doing
@@ -154,8 +161,8 @@ checkConflictingNode sc tnGQL = do
 
 trackExistingTableOrViewP2
   :: (MonadTx m, CacheRWM m, HasSystemDefined m)
-  => QualifiedTable -> Bool -> TableConfig -> m EncJSON
-trackExistingTableOrViewP2 tableName isEnum config = do
+  => SourceName -> QualifiedTable -> Bool -> TableConfig -> m EncJSON
+trackExistingTableOrViewP2 source tableName isEnum config = do
   sc <- askSchemaCache
   {-
   The next line does more than what it says on the tin.  Removing the following
@@ -172,9 +179,9 @@ trackExistingTableOrViewP2 tableName isEnum config = do
 
 runTrackTableQ
   :: (MonadTx m, CacheRWM m, HasSystemDefined m) => TrackTable -> m EncJSON
-runTrackTableQ (TrackTable qt isEnum) = do
-  trackExistingTableOrViewP1 qt
-  trackExistingTableOrViewP2 qt isEnum emptyTableConfig
+runTrackTableQ (TrackTable source qt isEnum) = do
+  trackExistingTableOrViewP1 source qt
+  trackExistingTableOrViewP2 source qt isEnum emptyTableConfig
 
 data TrackTableV2
   = TrackTableV2
@@ -185,20 +192,21 @@ $(deriveJSON (aesonDrop 4 snakeCase) ''TrackTableV2)
 
 runTrackTableV2Q
   :: (MonadTx m, CacheRWM m, HasSystemDefined m) => TrackTableV2 -> m EncJSON
-runTrackTableV2Q (TrackTableV2 (TrackTable qt isEnum) config) = do
-  trackExistingTableOrViewP1 qt
-  trackExistingTableOrViewP2 qt isEnum config
+runTrackTableV2Q (TrackTableV2 (TrackTable source qt isEnum) config) = do
+  trackExistingTableOrViewP1 source qt
+  trackExistingTableOrViewP2 source qt isEnum config
 
 runSetExistingTableIsEnumQ :: (MonadTx m, CacheRWM m) => SetTableIsEnum -> m EncJSON
-runSetExistingTableIsEnumQ (SetTableIsEnum tableName isEnum) = do
-  void $ askTabInfo tableName -- assert that table is tracked
+runSetExistingTableIsEnumQ (SetTableIsEnum source tableName isEnum) = do
+  void $ askTabInfo source tableName -- assert that table is tracked
   updateTableIsEnumInCatalog tableName isEnum
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
 
 data SetTableCustomFields
   = SetTableCustomFields
-  { _stcfTable             :: !QualifiedTable
+  { _stcfSource            :: !SourceName
+  , _stcfTable             :: !QualifiedTable
   , _stcfCustomRootFields  :: !TableCustomRootFields
   , _stcfCustomColumnNames :: !CustomColumnNames
   } deriving (Show, Eq, Lift)
@@ -207,23 +215,24 @@ $(deriveToJSON (aesonDrop 5 snakeCase) ''SetTableCustomFields)
 instance FromJSON SetTableCustomFields where
   parseJSON = withObject "SetTableCustomFields" $ \o ->
     SetTableCustomFields
-    <$> o .: "table"
+    <$> o .:? "source" .!= defaultSource
+    <*> o .: "table"
     <*> o .:? "custom_root_fields" .!= emptyCustomRootFields
     <*> o .:? "custom_column_names" .!= Map.empty
 
 runSetTableCustomFieldsQV2
   :: (MonadTx m, CacheRWM m) => SetTableCustomFields -> m EncJSON
-runSetTableCustomFieldsQV2 (SetTableCustomFields tableName rootFields columnNames) = do
-  void $ askTabInfo tableName -- assert that table is tracked
+runSetTableCustomFieldsQV2 (SetTableCustomFields source tableName rootFields columnNames) = do
+  void $ askTabInfo source tableName -- assert that table is tracked
   updateTableConfig tableName (TableConfig rootFields columnNames)
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
 
 unTrackExistingTableOrViewP1
   :: (CacheRM m, QErrM m) => UntrackTable -> m ()
-unTrackExistingTableOrViewP1 (UntrackTable vn _) = do
+unTrackExistingTableOrViewP1 (UntrackTable source vn _) = do
   rawSchemaCache <- askSchemaCache
-  case Map.lookup vn (_pcTables $ scPostgres rawSchemaCache) of
+  case getPGTableInfo source vn $ scPostgres rawSchemaCache of
     Just ti ->
       -- Check if table/view is system defined
       when (isSystemDefined $ _tciSystemDefined $ _tiCoreInfo ti) $ throw400 NotSupported $
@@ -234,7 +243,7 @@ unTrackExistingTableOrViewP1 (UntrackTable vn _) = do
 unTrackExistingTableOrViewP2
   :: (CacheRWM m, MonadTx m)
   => UntrackTable -> m EncJSON
-unTrackExistingTableOrViewP2 (UntrackTable qtn cascade) = withNewInconsistentObjsCheck do
+unTrackExistingTableOrViewP2 (UntrackTable source qtn cascade) = withNewInconsistentObjsCheck do
   sc <- askSchemaCache
 
   -- Get relational, query template and function dependants
@@ -243,7 +252,7 @@ unTrackExistingTableOrViewP2 (UntrackTable qtn cascade) = withNewInconsistentObj
   -- Report bach with an error if cascade is not set
   when (indirectDeps /= [] && not (or cascade)) $ reportDepsExt indirectDeps []
   -- Purge all the dependents from state
-  mapM_ purgeDependentObject indirectDeps
+  mapM_ (purgeDependentObject source) indirectDeps
   -- delete the table and its direct dependencies
   delTableAndDirectDeps qtn
   buildSchemaCache
@@ -261,8 +270,8 @@ runUntrackTableQ q = do
   unTrackExistingTableOrViewP1 q
   unTrackExistingTableOrViewP2 q
 
-processTableChanges :: (MonadTx m, CacheRM m) => TableCoreInfo -> TableDiff -> m ()
-processTableChanges ti tableDiff = do
+processTableChanges :: (MonadTx m, CacheRM m) => SourceName -> TableCoreInfo -> TableDiff -> m ()
+processTableChanges source ti tableDiff = do
   -- If table rename occurs then don't replace constraints and
   -- process dropped/added columns, because schema reload happens eventually
   sc <- askSchemaCache
@@ -295,7 +304,7 @@ processTableChanges ti tableDiff = do
     procAlteredCols sc tn = for_ alteredCols $
       \( PGRawColumnInfo oldName _ oldType _ _
        , PGRawColumnInfo newName _ newType _ _ ) -> do
-        if | oldName /= newName -> renameColInCatalog oldName newName tn (_tciFieldInfoMap ti)
+        if | oldName /= newName -> renameColInCatalog oldName newName source tn (_tciFieldInfoMap ti)
 
            | oldType /= newType -> do
               let colId = SOTableObj tn $ TOCol oldName

@@ -32,13 +32,14 @@ fetchCatalogData =
   liftTx $ Q.getAltJ . runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
   $(Q.sqlFromFile "src-rsr/catalog_metadata.sql") () True
 
-purgeDependentObject :: (MonadTx m) => SchemaObjId -> m ()
-purgeDependentObject = \case
+-- TODO: will modify the metadata
+purgeDependentObject :: (MonadTx m) => SourceName -> SchemaObjId -> m ()
+purgeDependentObject source = \case
   SOTableObj tn (TOPerm rn pt) -> liftTx $ dropPermFromCatalog tn rn pt
   SOTableObj qt (TORel rn) -> liftTx $ delRelFromCatalog qt rn
   SOFunction qf -> liftTx $ delFunctionFromCatalog qf
   SOTableObj _ (TOTrigger trn) -> liftTx $ delEventTriggerFromCatalog trn
-  SOTableObj qt (TOComputedField ccn) -> dropComputedFieldFromCatalog qt ccn
+  SOTableObj qt (TOComputedField ccn) -> dropComputedFieldFromCatalog source qt ccn
   SOTableObj qt (TORemoteRel remoteRelName) -> liftTx $ delRemoteRelFromCatalog qt remoteRelName
   schemaObjId -> throw500 $ "unexpected dependent object: " <> reportSchemaObj schemaObjId
 

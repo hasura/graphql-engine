@@ -58,8 +58,8 @@ validateDeleteQWith
   -> DeleteQuery
   -> m AnnDel
 validateDeleteQWith sessVarBldr prepValBldr
-  (DeleteQuery tableName rqlBE mRetCols) = do
-  tableInfo <- askTabInfo tableName
+  (DeleteQuery source tableName rqlBE mRetCols) = do
+  tableInfo <- askTabInfo source tableName
   let coreInfo = _tiCoreInfo tableInfo
 
   -- If table is view then check if it deletable
@@ -85,7 +85,7 @@ validateDeleteQWith sessVarBldr prepValBldr
 
   -- convert the where clause
   annSQLBoolExp <- withPathK "where" $
-    convBoolExp fieldInfoMap selPerm rqlBE sessVarBldr prepValBldr
+    convBoolExp source fieldInfoMap selPerm rqlBE sessVarBldr prepValBldr
 
   resolvedDelFltr <- convAnnBoolExpPartialSQL sessVarBldr $
                      dpiFilter delPerm

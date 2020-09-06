@@ -17,7 +17,6 @@ module Hasura.RQL.Types
   , HasQCtx(..)
   , mkAdminQCtx
   , askTabInfo
-  , isTableTracked
   , getTableInfo
   , askTableCoreInfo
   , askFieldInfoMap
@@ -98,32 +97,30 @@ instance (UserInfoM m) => UserInfoM (TraceT m) where
 
 askTabInfo
   :: (QErrM m, CacheRM m)
-  => QualifiedTable -> m TableInfo
-askTabInfo tabName = do
+  => SourceName -> QualifiedTable -> m TableInfo
+askTabInfo sourceName tabName = do
   rawSchemaCache <- askSchemaCache
-  liftMaybe (err400 NotExists errMsg) $ M.lookup tabName $ _pcTables $ scPostgres rawSchemaCache
+  liftMaybe (err400 NotExists errMsg) $ do
+    sourceCache <- M.lookup sourceName $ scPostgres rawSchemaCache
+    M.lookup tabName $ _pcTables sourceCache
   where
     errMsg = "table " <> tabName <<> " does not exist"
 
-isTableTracked :: SchemaCache -> QualifiedTable -> Bool
-isTableTracked sc qt =
-  isJust $ M.lookup qt $ _pcTables $ scPostgres sc
-
 askTabInfoFromTrigger
   :: (QErrM m, CacheRM m)
-  => TriggerName -> m TableInfo
-askTabInfoFromTrigger trn = do
+  => SourceName -> TriggerName -> m TableInfo
+askTabInfoFromTrigger sourceName trn = do
   sc <- askSchemaCache
-  let tabInfos = M.elems $ _pcTables $ scPostgres sc
+  let tabInfos = M.elems $ maybe mempty _pcTables $ M.lookup sourceName $ scPostgres sc
   liftMaybe (err400 NotExists errMsg) $ find (isJust.M.lookup trn._tiEventTriggerInfoMap) tabInfos
   where
     errMsg = "event trigger " <> triggerNameToTxt trn <<> " does not exist"
 
 askEventTriggerInfo
   :: (QErrM m, CacheRM m)
-  => TriggerName -> m EventTriggerInfo
-askEventTriggerInfo trn = do
-  ti <- askTabInfoFromTrigger trn
+  => SourceName -> TriggerName -> m EventTriggerInfo
+askEventTriggerInfo sourceName trn = do
+  ti <- askTabInfoFromTrigger sourceName trn
   let etim = _tiEventTriggerInfoMap ti
   liftMaybe (err400 NotExists errMsg) $ M.lookup trn etim
   where
@@ -185,7 +182,10 @@ instance (HasSystemDefined m) => HasSystemDefined (TraceT m) where
 newtype HasSystemDefinedT m a
   = HasSystemDefinedT { unHasSystemDefinedT :: ReaderT SystemDefined m a }
   deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO, MonadUnique, MonadError e, MonadTx
-           , HasHttpManager, HasSQLGenCtx, TableCoreInfoRM, CacheRM, CacheRWM, UserInfoM )
+           , HasHttpManager, HasSQLGenCtx, SourceLocalM, TableCoreInfoRM, CacheRM, CacheRWM, UserInfoM )
+
+-- instance (SourceLocalM m) => TableCoreInfoRM (HasSystemDefinedT m) where
+--   lookupTableCoreInfo = lift . lookupTableCoreInfo
 
 runHasSystemDefinedT :: SystemDefined -> HasSystemDefinedT m a -> m a
 runHasSystemDefinedT systemDefined = flip runReaderT systemDefined . unHasSystemDefinedT

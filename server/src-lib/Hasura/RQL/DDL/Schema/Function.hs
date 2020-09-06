@@ -197,18 +197,18 @@ emptyFunctionConfig = FunctionConfig Nothing
 -- Validate function tracking operation. Fails if function is already being
 -- tracked, or if a table with the same name is being tracked.
 trackFunctionP1
-  :: (CacheRM m, QErrM m) => QualifiedFunction -> m ()
-trackFunctionP1 qf = do
+  :: (CacheRM m, QErrM m) => SourceName -> QualifiedFunction -> m ()
+trackFunctionP1 sourceName qf = do
   rawSchemaCache <- askSchemaCache
-  when (M.member qf $ _pcFunctions $ scPostgres rawSchemaCache) $
+  when (isJust $ getPGFunctionInfo sourceName qf $ scPostgres rawSchemaCache) $
     throw400 AlreadyTracked $ "function already tracked : " <>> qf
   let qt = fmap (TableName . getFunctionTxt) qf
-  when (M.member qt $ _pcTables $ scPostgres rawSchemaCache) $
+  when (isJust $ getPGTableInfo sourceName qt $ scPostgres rawSchemaCache) $
     throw400 NotSupported $ "table with name " <> qf <<> " already exists"
 
 trackFunctionP2 :: (MonadTx m, CacheRWM m, HasSystemDefined m)
-                => QualifiedFunction -> FunctionConfig -> m EncJSON
-trackFunctionP2 qf config = do
+                => SourceName -> QualifiedFunction -> FunctionConfig -> m EncJSON
+trackFunctionP2 sourceName qf config = do
   saveFunctionToCatalog qf config
   buildSchemaCacheFor $ MOFunction qf
   return successMsg
@@ -238,12 +238,14 @@ runTrackFunc
   :: (MonadTx m, CacheRWM m, HasSystemDefined m)
   => TrackFunction -> m EncJSON
 runTrackFunc (TrackFunction qf)= do
-  trackFunctionP1 qf
-  trackFunctionP2 qf emptyFunctionConfig
+  -- v1 track_function lacks a means to take extra arguments
+  trackFunctionP1 defaultSource qf
+  trackFunctionP2 defaultSource qf emptyFunctionConfig
 
 data TrackFunctionV2
   = TrackFunctionV2
-  { _tfv2Function      :: !QualifiedFunction
+  { _tfv2Source        :: !SourceName
+  , _tfv2Function      :: !QualifiedFunction
   , _tfv2Configuration :: !FunctionConfig
   } deriving (Show, Eq, Lift, Generic)
 $(deriveToJSON (aesonDrop 5 snakeCase) ''TrackFunctionV2)
@@ -251,7 +253,8 @@ $(deriveToJSON (aesonDrop 5 snakeCase) ''TrackFunctionV2)
 instance FromJSON TrackFunctionV2 where
   parseJSON = withObject "Object" $ \o ->
     TrackFunctionV2
-    <$> o .: "function"
+    <$> o .:? "source" .!= defaultSource
+    <*> o .: "function"
     <*> o .:? "configuration" .!= emptyFunctionConfig
 
 runTrackFunctionV2
@@ -259,9 +262,9 @@ runTrackFunctionV2
      , MonadTx m
      )
   => TrackFunctionV2 -> m EncJSON
-runTrackFunctionV2 (TrackFunctionV2 qf config) = do
-  trackFunctionP1 qf
-  trackFunctionP2 qf config
+runTrackFunctionV2 (TrackFunctionV2 sourceName qf config) = do
+  trackFunctionP1 sourceName qf
+  trackFunctionP2 sourceName qf config
 
 newtype UnTrackFunction
   = UnTrackFunction
@@ -272,7 +275,8 @@ runUntrackFunc
   :: (QErrM m, CacheRWM m, MonadTx m)
   => UnTrackFunction -> m EncJSON
 runUntrackFunc (UnTrackFunction qf) = do
-  void $ askFunctionInfo qf
+  -- TODO: Support untracking functions from a different source
+  void $ askFunctionInfo defaultSource qf
   liftTx $ delFunctionFromCatalog qf
   withNewInconsistentObjsCheck buildSchemaCache
   return successMsg

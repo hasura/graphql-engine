@@ -41,6 +41,8 @@ module Hasura.RQL.Types.Common
        , InputWebhook(..)
        , ResolvedWebhook(..)
        , resolveWebhook
+       , SourceName(..)
+       , defaultSource
        ) where
 
 import           Hasura.EncJSON
@@ -186,21 +188,33 @@ fromRel = FieldName . relNameToTxt
 class ToAesonPairs a where
   toAesonPairs :: (KeyValue v) => a -> [v]
 
+newtype SourceName
+  = SourceName { unSourceName :: Text }
+  deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, ToJSONKey
+           , FromJSONKey, Lift, Data, Generic, Arbitrary, NFData, Cacheable, IsString )
+
+defaultSource :: SourceName
+defaultSource = SourceName "default"
+
 data WithTable a
   = WithTable
-  { wtName :: !QualifiedTable
-  , wtInfo :: !a
+  { wtSource :: !SourceName
+  , wtName   :: !QualifiedTable
+  , wtInfo   :: !a
   } deriving (Show, Eq, Lift)
 
 instance (FromJSON a) => FromJSON (WithTable a) where
   parseJSON v@(Object o) =
-    WithTable <$> o .: "table" <*> parseJSON v
+    WithTable
+    <$> o .:? "source" .!= defaultSource
+    <*> o .: "table"
+    <*> parseJSON v
   parseJSON _ =
     fail "expecting an Object with key 'table'"
 
 instance (ToAesonPairs a) => ToJSON (WithTable a) where
-  toJSON (WithTable tn rel) =
-    object $ ("table" .= tn):toAesonPairs rel
+  toJSON (WithTable sourceName tn rel) =
+    object $ ("source" .= sourceName):("table" .= tn):toAesonPairs rel
 
 type ColumnValues a = HM.HashMap PGCol a
 
@@ -310,3 +324,4 @@ resolveWebhook env (InputWebhook urlTemplate) = do
   let eitherRenderedTemplate = renderURLTemplate env urlTemplate
   either (throw400 Unexpected . T.pack)
     (pure . ResolvedWebhook) eitherRenderedTemplate
+

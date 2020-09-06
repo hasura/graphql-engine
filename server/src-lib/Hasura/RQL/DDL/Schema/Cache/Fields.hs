@@ -30,16 +30,17 @@ import           Hasura.SQL.Types
 addNonColumnFields
   :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
      , ArrowKleisli m arr, MonadError QErr m )
-  => ( HashMap QualifiedTable TableRawInfo
+  => SourceName
+  -> ( HashMap QualifiedTable TableRawInfo
      , FieldInfoMap PGColumnInfo
      , RemoteSchemaMap
      , [CatalogRelation]
      , [CatalogComputedField]
      , [RemoteRelationship]
      ) `arr` FieldInfoMap FieldInfo
-addNonColumnFields = proc (rawTableInfo, columns, remoteSchemaMap, relationships, computedFields, remoteRelationships) -> do
+addNonColumnFields source = proc (rawTableInfo, columns, remoteSchemaMap, relationships, computedFields, remoteRelationships) -> do
   relationshipInfos
-    <- buildInfoMapPreservingMetadata _crRelName mkRelationshipMetadataObject buildRelationship
+    <- buildInfoMapPreservingMetadata _crRelName (mkRelationshipMetadataObject source) (buildRelationship source)
     -< (_tciForeignKeys <$> rawTableInfo, relationships)
   computedFieldInfos
     <- buildInfoMapPreservingMetadata
@@ -105,18 +106,19 @@ addNonColumnFields = proc (rawTableInfo, columns, remoteSchemaMap, relationships
         recordInconsistency -< (fieldMetadata, "field definition conflicts with postgres column")
         returnA -< FIColumn columnInfo
 
-mkRelationshipMetadataObject :: CatalogRelation -> MetadataObject
-mkRelationshipMetadataObject (CatalogRelation qt rn rt rDef cmnt) =
+mkRelationshipMetadataObject :: SourceName -> CatalogRelation -> MetadataObject
+mkRelationshipMetadataObject source (CatalogRelation qt rn rt rDef cmnt) =
   let objectId = MOTableObj qt $ MTORel rn rt
-      definition = toJSON $ WithTable qt $ RelDef rn rDef cmnt
+      definition = toJSON $ WithTable source qt $ RelDef rn rDef cmnt
   in MetadataObject objectId definition
 
 buildRelationship
   :: (ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr)
-  => (HashMap QualifiedTable (HashSet ForeignKey), CatalogRelation) `arr` Maybe RelInfo
-buildRelationship = proc (foreignKeys, relationship) -> do
+  => SourceName
+  -> (HashMap QualifiedTable (HashSet ForeignKey), CatalogRelation) `arr` Maybe RelInfo
+buildRelationship source = proc (foreignKeys, relationship) -> do
   let CatalogRelation tableName rn rt rDef _ = relationship
-      metadataObject = mkRelationshipMetadataObject relationship
+      metadataObject = mkRelationshipMetadataObject source relationship
       schemaObject = SOTableObj tableName $ TORel rn
       addRelationshipContext e = "in relationship " <> rn <<> ": " <> e
   (| withRecordInconsistency (
@@ -136,7 +138,7 @@ buildRelationship = proc (foreignKeys, relationship) -> do
 
 mkComputedFieldMetadataObject :: CatalogComputedField -> MetadataObject
 mkComputedFieldMetadataObject (CatalogComputedField column _) =
-  let AddComputedField qt name _ _ = column
+  let AddComputedField source qt name _ _ = column
       objectId = MOTableObj qt $ MTOComputedField name
   in MetadataObject objectId (toJSON column)
 
@@ -146,7 +148,7 @@ buildComputedField
   => (HashSet QualifiedTable, CatalogComputedField) `arr` Maybe ComputedFieldInfo
 buildComputedField = proc (trackedTableNames, computedField) -> do
   let CatalogComputedField column funcDefs = computedField
-      AddComputedField qt name def comment = column
+      AddComputedField source qt name def comment = column
       addComputedFieldContext e = "in computed field " <> name <<> ": " <> e
   (| withRecordInconsistency (
      (| modifyErrA (do

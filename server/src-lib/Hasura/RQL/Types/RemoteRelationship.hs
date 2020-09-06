@@ -243,7 +243,10 @@ data RemoteRelationship =
     { rtrName         :: !RemoteRelationshipName
     -- ^ Field name to which we'll map the remote in hasura; this becomes part
     -- of the hasura schema.
+    , rtrSource       :: !SourceName
     , rtrTable        :: !QualifiedTable
+    -- ^ (SourceName, QualifiedTable) determines the table on which the relationship
+    -- is defined
     , rtrHasuraFields :: !(Set FieldName) -- TODO (from master)? change to PGCol
     -- ^ The hasura fields from 'rtrTable' that will be in scope when resolving
     -- the remote objects in 'rtrRemoteField'.

@@ -86,6 +86,7 @@ runCacheRWT cache (CacheRWT m) =
 instance MonadTrans CacheRWT where
   lift = CacheRWT . lift
 
+instance (Monad m) => SourceLocalM (CacheRWT m)
 instance (Monad m) => TableCoreInfoRM (CacheRWT m)
 instance (Monad m) => CacheRM (CacheRWT m) where
   askSchemaCache = CacheRWT $ gets (lastBuiltSchemaCache . fst)
@@ -122,7 +123,7 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
 
   -- Step 1: Process metadata and collect dependency information.
   (outputs, collectedInfo) <-
-    runWriterA buildAndCollectInfo -< (catalogMetadata, invalidationKeysDep)
+    runWriterA (buildAndCollectInfo defaultSource) -< (catalogMetadata, invalidationKeysDep)
   let (inconsistentObjects, unresolvedDependencies) = partitionCollectedInfo collectedInfo
 
   -- Step 2: Resolve dependency information and drop dangling dependents.
@@ -150,7 +151,7 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
     )
 
   returnA -< SchemaCache
-    { scPostgres = PGSchemaCache (_boTables resolvedOutputs) (_boFunctions resolvedOutputs)
+    { scPostgres = M.singleton defaultSource $ PGSourceSchemaCache (_boTables resolvedOutputs) (_boFunctions resolvedOutputs)
     , scActions = _boActions resolvedOutputs
     -- TODO this is not the right value: we should track what part of the schema
     -- we can stitch without consistencies, I think.
@@ -176,8 +177,8 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
          , ArrowWriter (Seq CollectedInfo) arr, MonadIO m, MonadUnique m, MonadTx m, MonadReader BuildReason m
          , HasHttpManager m, HasSQLGenCtx m )
-      => (CatalogMetadata, Inc.Dependency InvalidationKeys) `arr` BuildOutputs
-    buildAndCollectInfo = proc (catalogMetadata, invalidationKeys) -> do
+      => SourceName -> (CatalogMetadata, Inc.Dependency InvalidationKeys) `arr` BuildOutputs
+    buildAndCollectInfo source = proc (catalogMetadata, invalidationKeys) -> do
       let CatalogMetadata tables relationships permissions
             eventTriggers remoteSchemas functions allowlistDefs
             computedFields catalogCustomTypes actions remoteRelationships
@@ -195,24 +196,24 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
           computedFieldsByTable = M.groupOn (_afcTable . _cccComputedField) computedFields
           remoteRelationshipsByTable = M.groupOn rtrTable remoteRelationships
       tableCoreInfos <- (tableRawInfos >- returnA)
-        >-> (\info -> (info, relationshipsByTable) >- alignExtraTableInfo mkRelationshipMetadataObject)
+        >-> (\info -> (info, relationshipsByTable) >- alignExtraTableInfo (mkRelationshipMetadataObject source))
         >-> (\info -> (info, computedFieldsByTable) >- alignExtraTableInfo mkComputedFieldMetadataObject)
         >-> (\info -> (info, remoteRelationshipsByTable) >- alignExtraTableInfo mkRemoteRelationshipMetadataObject)
         >-> (| Inc.keyed (\_ (((tableRawInfo, tableRelationships), tableComputedFields), tableRemoteRelationships) -> do
                  let columns = _tciFieldInfoMap tableRawInfo
-                 allFields <- addNonColumnFields -<
+                 allFields <- addNonColumnFields source -<
                    (tableRawInfos, columns, M.map fst remoteSchemaMap, tableRelationships, tableComputedFields, tableRemoteRelationships)
                  returnA -< (tableRawInfo { _tciFieldInfoMap = allFields })) |)
 
       -- permissions and event triggers
       tableCoreInfosDep <- Inc.newDependency -< tableCoreInfos
       tableCache <- (tableCoreInfos >- returnA)
-        >-> (\info -> (info, M.groupOn _cpTable permissions) >- alignExtraTableInfo mkPermissionMetadataObject)
+        >-> (\info -> (info, M.groupOn _cpTable permissions) >- alignExtraTableInfo (mkPermissionMetadataObject source))
         >-> (\info -> (info, M.groupOn _cetTable eventTriggers) >- alignExtraTableInfo mkEventTriggerMetadataObject)
         >-> (| Inc.keyed (\_ ((tableCoreInfo, tablePermissions), tableEventTriggers) -> do
                  let tableName = _tciName tableCoreInfo
                      tableFields = _tciFieldInfoMap tableCoreInfo
-                 permissionInfos <- buildTablePermissions -<
+                 permissionInfos <- buildTablePermissions source -<
                    (tableCoreInfosDep, tableName, tableFields, HS.fromList tablePermissions)
                  eventTriggerInfos <- buildTableEventTriggers -< (tableCoreInfo, tableEventTriggers)
                  returnA -< TableInfo
@@ -406,8 +407,9 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
 -- | @'withMetadataCheck' cascade action@ runs @action@ and checks if the schema changed as a
 -- result. If it did, it checks to ensure the changes do not violate any integrity constraints, and
 -- if not, incorporates them into the schema cache.
-withMetadataCheck :: (MonadTx m, CacheRWM m, HasSQLGenCtx m) => Bool -> m a -> m a
-withMetadataCheck cascade action = do
+withMetadataCheck
+  :: (MonadTx m, CacheRWM m, HasSQLGenCtx m) => SourceName -> Bool -> m a -> m a
+withMetadataCheck source cascade action = do
   -- Drop hdb_views so no interference is caused to the sql query
   liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
 
@@ -423,10 +425,11 @@ withMetadataCheck cascade action = do
   newFuncMeta <- liftTx $ Q.catchE defaultTxErrorHandler fetchFunctionMeta
   sc <- askSchemaCache
   let existingInconsistentObjs = scInconsistentObjs sc
-      existingTables = M.keys $ _pcTables $ scPostgres sc
-      oldMeta = flip filter oldMetaU $ \tm -> tmTable tm `elem` existingTables
+      sourceTables = maybe mempty _pcTables $ M.lookup source $ scPostgres sc
+      sourceTableNames = M.keys sourceTables
+      oldMeta = flip filter oldMetaU $ \tm -> tmTable tm `elem` sourceTableNames
       schemaDiff = getSchemaDiff oldMeta newMeta
-      existingFuncs = M.keys $ _pcFunctions $ scPostgres sc
+      existingFuncs = M.keys $ maybe mempty _pcFunctions $ M.lookup source $ scPostgres sc
       oldFuncMeta = flip filter oldFuncMetaU $ \fm -> fmFunction fm `elem` existingFuncs
       FunctionDiff droppedFuncs alteredFuncs = getFuncDiff oldFuncMeta newFuncMeta
       overloadedFuncs = getOverloadedFuncs existingFuncs newFuncMeta
@@ -442,7 +445,7 @@ withMetadataCheck cascade action = do
   when (indirectDeps /= [] && not cascade) $ reportDepsExt indirectDeps []
 
   -- Purge all the indirect dependents from state
-  mapM_ purgeDependentObject indirectDeps
+  mapM_ (purgeDependentObject source) indirectDeps
 
   -- Purge all dropped functions
   let purgedFuncs = flip mapMaybe indirectDeps $ \dep ->
@@ -460,13 +463,13 @@ withMetadataCheck cascade action = do
       "type of function " <> qf <<> " is altered to \"VOLATILE\" which is not supported now"
 
   -- update the schema cache and hdb_catalog with the changes
-  processSchemaChanges schemaDiff
+  processSchemaChanges sourceTables schemaDiff
 
   buildSchemaCache
   postSc <- askSchemaCache
 
   -- Recreate event triggers in hdb_views
-  forM_ (M.elems $ _pcTables $ scPostgres postSc) $ \(TableInfo coreInfo _ eventTriggers) -> do
+  forM_ (M.elems sourceTables) $ \(TableInfo coreInfo _ eventTriggers) -> do
           let table = _tciName coreInfo
               columns = getCols $ _tciFieldInfoMap coreInfo
           forM_ (M.toList eventTriggers) $ \(triggerName, eti) -> do
@@ -480,17 +483,16 @@ withMetadataCheck cascade action = do
   where
     reportFuncs = T.intercalate ", " . map dquoteTxt
 
-    processSchemaChanges :: (MonadTx m, CacheRM m) => SchemaDiff -> m ()
-    processSchemaChanges schemaDiff = do
+    processSchemaChanges :: (MonadTx m, CacheRM m) => TableCache -> SchemaDiff -> m ()
+    processSchemaChanges sourceTables schemaDiff = do
       -- Purge the dropped tables
       mapM_ delTableAndDirectDeps droppedTables
 
-      sc <- askSchemaCache
       for_ alteredTables $ \(oldQtn, tableDiff) -> do
-        ti <- case M.lookup oldQtn $ _pcTables $ scPostgres sc of
+        ti <- case M.lookup oldQtn sourceTables of
           Just ti -> return ti
           Nothing -> throw500 $ "old table metadata not found in cache : " <>> oldQtn
-        processTableChanges (_tiCoreInfo ti) tableDiff
+        processTableChanges source (_tiCoreInfo ti) tableDiff
       where
         SchemaDiff droppedTables alteredTables = schemaDiff
 

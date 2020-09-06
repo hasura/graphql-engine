@@ -23,7 +23,7 @@ newtype DMLP1T m a
   = DMLP1T { unDMLP1T :: StateT (DS.Seq Q.PrepArg) m a }
   deriving ( Functor, Applicative, Monad, MonadTrans
            , MonadState (DS.Seq Q.PrepArg), MonadError e
-           , TableCoreInfoRM, CacheRM, UserInfoM, HasSQLGenCtx
+           , SourceLocalM, TableCoreInfoRM, CacheRM, UserInfoM, HasSQLGenCtx
            )
 
 runDMLP1T :: DMLP1T m a -> m (a, DS.Seq Q.PrepArg)
@@ -149,8 +149,9 @@ fetchRelTabInfo
   => QualifiedTable
   -> m TableInfo
 fetchRelTabInfo refTabName =
-  -- Internal error
-  modifyErrAndSet500 ("foreign " <> ) $ askTabInfo refTabName
+  -- TODO: plumb in actual source
+  modifyErrAndSet500 ("foreign " <> ) $
+    askTabInfo defaultSource refTabName
 
 type SessVarBldr m = PGType PGScalarType -> SessionVariable -> m S.SQLExp
 
@@ -239,13 +240,14 @@ checkSelPerm spi sessVarBldr =
 
 convBoolExp
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => FieldInfoMap FieldInfo
+  => SourceName
+  -> FieldInfoMap FieldInfo
   -> SelPermInfo
   -> BoolExp
   -> SessVarBldr m
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> m AnnBoolExpSQL
-convBoolExp cim spi be sessVarBldr prepValBldr = do
+convBoolExp sourceName cim spi be sessVarBldr prepValBldr = do
   abe <- annBoolExp rhsParser cim $ unBoolExp be
   checkSelPerm spi sessVarBldr abe
   where

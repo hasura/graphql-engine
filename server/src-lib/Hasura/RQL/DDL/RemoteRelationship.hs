@@ -26,7 +26,7 @@ import qualified Data.HashSet                               as HS
 runCreateRemoteRelationship
   :: (MonadTx m, CacheRWM m) => RemoteRelationship -> m EncJSON
 runCreateRemoteRelationship remoteRelationship = do
-  void $ askTabInfo $ rtrTable remoteRelationship
+  void $ askTabInfo (rtrSource remoteRelationship) $ rtrTable remoteRelationship
   liftTx $ persistRemoteRelationship remoteRelationship
   buildSchemaCacheFor $ MOTableObj table $ MTORemoteRelationship $ rtrName remoteRelationship
   pure successMsg

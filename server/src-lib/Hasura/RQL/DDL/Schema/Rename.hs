@@ -91,8 +91,8 @@ renameTableInCatalog newQT oldQT = do
 
 renameColInCatalog
   :: (MonadTx m, CacheRM m)
-  => PGCol -> PGCol -> QualifiedTable -> FieldInfoMap FieldInfo -> m ()
-renameColInCatalog oCol nCol qt fieldInfo = do
+  => PGCol -> PGCol -> SourceName -> QualifiedTable -> FieldInfoMap FieldInfo -> m ()
+renameColInCatalog oCol nCol sourceName qt fieldInfo = do
   sc <- askSchemaCache
   -- Check if any relation exists with new column name
   assertFldNotExists
@@ -108,7 +108,7 @@ renameColInCatalog oCol nCol qt fieldInfo = do
     SOTableObj _ (TOTrigger triggerName) ->
       updateColInEventTriggerDef triggerName $ RenameItem qt oCol nCol
     SOTableObj _ (TORemoteRel remoteRelName) ->
-      updateColInRemoteRelationship remoteRelName $ RenameItem qt oCol nCol
+      updateColInRemoteRelationship sourceName remoteRelName $ RenameItem qt oCol nCol
     d -> otherDeps errMsg d
   -- Update custom column names
   possiblyUpdateCustomColumnNames qt oCol nCol
@@ -360,8 +360,8 @@ updateColInRel fromQT rn rnCol = do
 
 updateColInRemoteRelationship
   :: (MonadTx m)
-  => RemoteRelationshipName -> RenameCol -> m ()
-updateColInRemoteRelationship remoteRelationshipName renameCol = do
+  => SourceName -> RemoteRelationshipName -> RenameCol -> m ()
+updateColInRemoteRelationship source remoteRelationshipName renameCol = do
   let (RenameItem qt oldCol newCol) = renameCol
   (RemoteRelationshipDef remoteSchemaName hasuraFlds remoteFields) <-
     liftTx $ RR.getRemoteRelDefFromCatalog remoteRelationshipName qt
@@ -378,7 +378,7 @@ updateColInRemoteRelationship remoteRelationshipName renameCol = do
                                      in FieldCall name $ RemoteArguments $
                                          fmap (replaceVariableName oldColName newColName) remoteArgs
                                   ) $ fieldCalls
-  liftTx $ RR.updateRemoteRelInCatalog (RemoteRelationship remoteRelationshipName qt modifiedHasuraFlds remoteSchemaName (RemoteFields modifiedFieldCalls))
+  liftTx $ RR.updateRemoteRelInCatalog (RemoteRelationship remoteRelationshipName source qt modifiedHasuraFlds remoteSchemaName (RemoteFields modifiedFieldCalls))
   where
     parseGraphQLName txt = maybe (throw400 ParseFailed $ errMsg) pure $ G.mkName txt
       where

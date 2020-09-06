@@ -46,7 +46,8 @@ $(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields = True} ''ComputedFieldDe
 
 data AddComputedField
   = AddComputedField
-  { _afcTable      :: !QualifiedTable
+  { _afcSource     :: !SourceName
+  , _afcTable      :: !QualifiedTable
   , _afcName       :: !ComputedFieldName
   , _afcDefinition :: !ComputedFieldDefinition
   , _afcComment    :: !(Maybe Text)
@@ -57,7 +58,7 @@ $(deriveJSON (aesonDrop 4 snakeCase) ''AddComputedField)
 
 runAddComputedField :: (MonadTx m, CacheRWM m) => AddComputedField -> m EncJSON
 runAddComputedField q = do
-  withPathK "table" $ askTabInfo (_afcTable q)
+  withPathK "table" $ askTabInfo (_afcSource q) (_afcTable q)
   addComputedFieldToCatalog q
   buildSchemaCacheFor $ MOTableObj (_afcTable q) (MTOComputedField $ _afcName q)
   pure successMsg
@@ -251,11 +252,12 @@ addComputedFieldToCatalog q =
     |] (schemaName, tableName, computedField, Q.AltJ definition, comment) True
   where
     QualifiedObject schemaName tableName = table
-    AddComputedField table computedField definition comment = q
+    AddComputedField sourceName table computedField definition comment = q
 
 data DropComputedField
   = DropComputedField
-  { _dccTable   :: !QualifiedTable
+  { _dccSource  :: !SourceName
+  , _dccTable   :: !QualifiedTable
   , _dccName    :: !ComputedFieldName
   , _dccCascade :: !Bool
   } deriving (Show, Eq, Lift)
@@ -264,14 +266,15 @@ $(deriveToJSON (aesonDrop 4 snakeCase) ''DropComputedField)
 instance FromJSON DropComputedField where
   parseJSON = withObject "Object" $ \o ->
     DropComputedField
-      <$> o .: "table"
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "table"
       <*> o .: "name"
       <*> o .:? "cascade" .!= False
 
 runDropComputedField
   :: (MonadTx m, CacheRWM m)
   => DropComputedField -> m EncJSON
-runDropComputedField (DropComputedField table computedField cascade) = do
+runDropComputedField (DropComputedField sourceName table computedField cascade) = do
   -- Validation
   fields <- withPathK "table" $ _tciFieldInfoMap <$> askTableCoreInfo table
   void $ withPathK "name" $ askComputedFieldInfo fields computedField
@@ -283,7 +286,7 @@ runDropComputedField (DropComputedField table computedField cascade) = do
 
   withNewInconsistentObjsCheck do
     mapM_ purgeComputedFieldDependency deps
-    dropComputedFieldFromCatalog table computedField
+    dropComputedFieldFromCatalog sourceName table computedField
     buildSchemaCache
   pure successMsg
   where
@@ -295,8 +298,8 @@ runDropComputedField (DropComputedField table computedField cascade) = do
 
 dropComputedFieldFromCatalog
   :: MonadTx m
-  => QualifiedTable -> ComputedFieldName -> m ()
-dropComputedFieldFromCatalog (QualifiedObject schema table) computedField =
+  => SourceName -> QualifiedTable -> ComputedFieldName -> m ()
+dropComputedFieldFromCatalog sourceName (QualifiedObject schema table) computedField =
   liftTx $ Q.withQE defaultTxErrorHandler
     [Q.sql|
      DELETE FROM hdb_catalog.hdb_computed_field

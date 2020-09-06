@@ -95,27 +95,33 @@ type CreateObjRel = WithTable ObjRelDef
 
 data DropRel
   = DropRel
-  { drTable        :: !QualifiedTable
+  { drSource       :: !SourceName
+  , drTable        :: !QualifiedTable
   , drRelationship :: !RelName
   , drCascade      :: !(Maybe Bool)
   } deriving (Show, Eq, Lift)
 
+-- TODO: multiple sources
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DropRel)
 
 data SetRelComment
   = SetRelComment
-  { arTable        :: !QualifiedTable
+  { arSource       :: !SourceName
+  , arTable        :: !QualifiedTable
   , arRelationship :: !RelName
   , arComment      :: !(Maybe T.Text)
   } deriving (Show, Eq, Lift)
 
+-- TODO: multiple sources
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SetRelComment)
 
 data RenameRel
   = RenameRel
-  { rrTable   :: !QualifiedTable
+  { rrSource  :: !SourceName
+  , rrTable   :: !QualifiedTable
   , rrName    :: !RelName
   , rrNewName :: !RelName
   } deriving (Show, Eq, Lift)
 
+-- TODO: multiple sources
 $(deriveJSON (aesonDrop 2 snakeCase) ''RenameRel)

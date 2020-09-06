@@ -27,20 +27,21 @@ import           Hasura.SQL.Types
 buildTablePermissions
   :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
      , ArrowWriter (Seq CollectedInfo) arr, MonadTx m )
-  => ( Inc.Dependency TableCoreCache
+  => SourceName
+  -> ( Inc.Dependency TableCoreCache
      , QualifiedTable
      , FieldInfoMap FieldInfo
      , HashSet CatalogPermission
      ) `arr` RolePermInfoMap
-buildTablePermissions = Inc.cache proc (tableCache, tableName, tableFields, tablePermissions) ->
+buildTablePermissions source = Inc.cache proc (tableCache, tableName, tableFields, tablePermissions) ->
   (| Inc.keyed (\_ rolePermissions -> do
        let (insertPerms, selectPerms, updatePerms, deletePerms) =
              partitionPermissions rolePermissions
 
-       insertPermInfo <- buildPermission -< (tableCache, tableName, tableFields, insertPerms)
-       selectPermInfo <- buildPermission -< (tableCache, tableName, tableFields, selectPerms)
-       updatePermInfo <- buildPermission -< (tableCache, tableName, tableFields, updatePerms)
-       deletePermInfo <- buildPermission -< (tableCache, tableName, tableFields, deletePerms)
+       insertPermInfo <- buildPermission -< (tableCache, source, tableName, tableFields, insertPerms)
+       selectPermInfo <- buildPermission -< (tableCache, source, tableName, tableFields, selectPerms)
+       updatePermInfo <- buildPermission -< (tableCache, source, tableName, tableFields, updatePerms)
+       deletePermInfo <- buildPermission -< (tableCache, source, tableName, tableFields, deletePerms)
 
        returnA -< RolePermInfo
          { _permIns = insertPermInfo
@@ -57,19 +58,19 @@ buildTablePermissions = Inc.cache proc (tableCache, tableName, tableFields, tabl
         PTUpdate -> (insertPerms, selectPerms, perm:updatePerms, deletePerms)
         PTDelete -> (insertPerms, selectPerms, updatePerms, perm:deletePerms)
 
-mkPermissionMetadataObject :: CatalogPermission -> MetadataObject
-mkPermissionMetadataObject (CatalogPermission qt rn pt pDef cmnt) =
+mkPermissionMetadataObject :: SourceName -> CatalogPermission -> MetadataObject
+mkPermissionMetadataObject source (CatalogPermission qt rn pt pDef cmnt) =
   let objectId = MOTableObj qt $ MTOPerm rn pt
-      definition = toJSON $ WithTable qt $ PermDef rn pDef cmnt
+      definition = toJSON $ WithTable source qt $ PermDef rn pDef cmnt
   in MetadataObject objectId definition
 
 withPermission
   :: (ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr)
   => WriterA (Seq SchemaDependency) (ErrorA QErr arr) (a, s) b
-  -> arr (a, (CatalogPermission, s)) (Maybe b)
-withPermission f = proc (e, (permission, s)) -> do
+  -> arr (a, ((SourceName, CatalogPermission), s)) (Maybe b)
+withPermission f = proc (e, ((source, permission), s)) -> do
   let CatalogPermission tableName roleName permType _ _ = permission
-      metadataObject = mkPermissionMetadataObject permission
+      metadataObject = mkPermissionMetadataObject source permission
       schemaObject = SOTableObj tableName $ TOPerm roleName permType
       addPermContext err = "in permission for role " <> roleName <<> ": " <> err
   (| withRecordInconsistency (
@@ -85,12 +86,13 @@ buildPermission
      , MonadTx m, IsPerm a, FromJSON a
      )
   => ( Inc.Dependency TableCoreCache
+     , SourceName
      , QualifiedTable
      , FieldInfoMap FieldInfo
      , [CatalogPermission]
      ) `arr` Maybe (PermInfo a)
-buildPermission = Inc.cache proc (tableCache, tableName, tableFields, permissions) -> do
-      (permissions >- noDuplicates mkPermissionMetadataObject)
+buildPermission = Inc.cache proc (tableCache, source, tableName, tableFields, permissions) -> do
+      (permissions >- noDuplicates (mkPermissionMetadataObject defaultSource))
   >-> (| traverseA (\permission@(CatalogPermission _ roleName _ pDef _) ->
          (| withPermission (do
               bindErrorA -< when (roleName == adminRoleName) $
@@ -101,5 +103,5 @@ buildPermission = Inc.cache proc (tableCache, tableName, tableFields, permission
                 runTableCoreCacheRT (buildPermInfo tableName tableFields permDef) tableCache
               tellA -< Seq.fromList dependencies
               returnA -< info)
-         |) permission) |)
+         |) (source, permission)) |)
   >-> (\info -> join info >- returnA)

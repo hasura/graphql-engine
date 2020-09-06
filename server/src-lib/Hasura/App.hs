@@ -60,7 +60,7 @@ import           Hasura.RQL.Types                          (CacheRWM, Code (..),
                                                             HasSQLGenCtx, HasSystemDefined,
                                                             QErr (..), SQLGenCtx (..),
                                                             SchemaCache (..), UserInfoM,
-                                                            buildSchemaCacheStrict, decodeValue,
+                                                            buildSchemaCacheStrict, decodeValue, defaultSource,
                                                             throw400, withPathK)
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.API.Query                   (fetchLastUpdate, requiresAdmin,
@@ -385,7 +385,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
 
   eventQueueThread <- C.forkImmortal "processEventQueue" logger $
     processEventQueue logger logEnvHeaders
-    _icHttpManager _icPgPool (getSCFromRef cacheRef) eventEngineCtx lockedEventsCtx
+    _icHttpManager _icPgPool (getSCFromRef cacheRef) defaultSource eventEngineCtx lockedEventsCtx
 
   -- start a backgroud thread to handle async actions
   asyncActionsThread <- C.forkImmortal "asyncActionsProcessor" logger $
