@@ -170,18 +170,32 @@ WHERE
   },
   getStatementTimeoutSql: (seconds: number) =>
     `SET SESSION MAX_EXECUTION_TIME=${seconds * 1000};`,
-  isTimeoutError: () => {
-    throw new Error('not implemented');
-  },
-  getViewDefinitionSql: () => {
-    throw new Error('not implemented');
-  },
+  isTimeoutError: () => false, // todo
+  getViewDefinitionSql: viewName => `
+  SELECT  VIEW_DEFINITION
+    FROM    INFORMATION_SCHEMA.VIEWS
+    WHERE   TABLE_NAME = "${viewName}";
+  `,
   cascadeSqlQuery: () => {
     throw new Error('not implemented');
   },
-  schemaList: {},
+  schemaList: {
+    type: 'select',
+    args: {
+      table: {
+        name: 'schemata',
+        schema: 'information_schema',
+      },
+      columns: ['schema_name'],
+      order_by: [{ column: 'schema_name', type: 'asc', nulls: 'last' }],
+      where: {
+        schema_name: {
+          $nin: ['information_schema', 'mysql', 'sys', 'performance_schema'],
+        },
+      },
+    },
+  },
   dependencyErrorCode: '',
-
   columnDataTypes,
   commonDataTypes,
   createSQLRegex,

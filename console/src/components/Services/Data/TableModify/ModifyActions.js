@@ -964,7 +964,7 @@ const fetchViewDefinition = (viewName, isRedirect) => {
           dispatch(_push('/data/sql'));
         }
 
-        const viewType = data.result[1][1];
+        const viewType = data.result[1].length > 1 ? data.result[1][1] : 'VIEW';
         const fullName = '"' + currentSchema + '"."' + viewName + '"';
         let runSqlDef = '';
 
