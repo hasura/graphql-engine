@@ -179,20 +179,18 @@ export const getGroupedTableComputedFields = (
   return groupedComputedFields;
 };
 
-const initQueries = {
-  schemaList: {
-    type: 'select',
-    args: {
-      table: {
-        name: 'schemata',
-        schema: 'information_schema',
-      },
-      columns: ['schema_name'],
-      order_by: [{ column: 'schema_name', type: 'asc', nulls: 'last' }],
-      where: {
-        schema_name: {
-          $nin: ['information_schema', 'pg_catalog'],
-        },
+const schemaList = {
+  type: 'select',
+  args: {
+    table: {
+      name: 'schemata',
+      schema: 'information_schema',
+    },
+    columns: ['schema_name'],
+    order_by: [{ column: 'schema_name', type: 'asc', nulls: 'last' }],
+    where: {
+      schema_name: {
+        $nin: ['information_schema', 'pg_catalog'],
       },
     },
   },
@@ -387,7 +385,7 @@ export const postgres: DataSourcesAPI = {
   getTableSupportedQueries,
   getColumnType,
   arrayToPostgresArray,
-  initQueries,
+  schemaList,
   additionalColumnsInfoQuery,
   parseColumnsInfoResult,
   columnDataTypes,

@@ -178,7 +178,7 @@ export const mysql: DataSourcesAPI = {
   cascadeSqlQuery: () => {
     throw new Error('not implemented');
   },
-  initQueries: {} as DataSourcesAPI['initQueries'],
+  schemaList: {},
   dependencyErrorCode: '',
   fetchColumnTypesQuery: '',
   fetchColumnCastsQuery: '',

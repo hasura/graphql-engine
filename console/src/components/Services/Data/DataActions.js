@@ -266,21 +266,16 @@ const setConsistentSchema = data => ({
 const fetchDataInit = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
 
-  const body = {
-    type: 'bulk',
-    args: [dataSource.initQueries.schemaList],
-  };
-
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
     headers: dataHeaders(getState),
-    body: JSON.stringify(body),
+    body: JSON.stringify(dataSource.schemaList),
   };
 
   return dispatch(requestAction(url, options)).then(
     data => {
-      dispatch({ type: FETCH_SCHEMA_LIST, schemaList: data[0] });
+      dispatch({ type: FETCH_SCHEMA_LIST, schemaList: data });
       dispatch(updateSchemaInfo());
     },
     error => {
@@ -350,7 +345,7 @@ const fetchSchemaList = () => (dispatch, getState) => {
     credentials: globalCookiePolicy,
     method: 'POST',
     headers: dataHeaders(getState),
-    body: JSON.stringify(dataSource.initQueries.schemaList),
+    body: JSON.stringify(dataSource.schemaList),
   };
   return dispatch(requestAction(url, options)).then(
     data => {
