@@ -1,14 +1,6 @@
 import globals from '../../../Globals';
 import { makeMigrationCall } from '../Data/DataActions';
 import {
-  generateSetCustomTypesQuery,
-  generateCreateActionQuery,
-  generateDropActionQuery,
-  getCreateActionPermissionQuery,
-  getDropActionPermissionQuery,
-  getUpdateActionQuery,
-} from '../../Common/utils/v1QueryUtils';
-import {
   injectTypeRelationship,
   removeTypeRelationship,
   validateRelTypename,
@@ -57,6 +49,14 @@ import {
   customTypesSelector,
   actionsSelector,
 } from '../../../metadata/selector';
+import {
+  generateSetCustomTypesQuery,
+  generateCreateActionQuery,
+  generateDropActionQuery,
+  getCreateActionPermissionQuery,
+  getUpdateActionQuery,
+  getDropActionPermissionQuery,
+} from '../../../metadata/queryUtils';
 
 export const createAction = () => (dispatch, getState) => {
   const { add: rawState } = getState().actions;

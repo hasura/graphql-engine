@@ -1,8 +1,8 @@
 import { Action as ReduxAction } from 'redux';
 import { RouteComponentProps } from 'react-router';
-import { Header as ServerHeader } from '../../Common/utils/v1QueryUtils';
 import { Nullable } from '../../Common/utils/tsUtils';
 import { Dispatch } from '../../../types';
+import { ServerHeader } from '../../../metadata/types';
 
 export const LOADING_TRIGGERS = 'Events/LOADING_TRIGGERS';
 export const LOADED_TRIGGERS = 'Events/LOADED_TRIGGERS';

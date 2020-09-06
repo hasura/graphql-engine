@@ -2,8 +2,8 @@ import gqlPattern, { gqlSchemaErrorNotif } from '../Common/GraphQLValidation';
 import { showErrorNotification } from '../../Common/Notification';
 import { makeMigrationCall, fetchSchemaList } from '../DataActions';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
-import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import { dataSource } from '../../../../dataSources';
+import { getRunSqlQuery } from '../../../../metadata/queryUtils';
 
 export const createNewSchema = (schemaName, successCb, errorCb) => {
   return (dispatch, getState) => {

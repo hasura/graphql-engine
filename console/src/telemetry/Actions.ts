@@ -3,10 +3,7 @@ import { ThunkDispatch } from 'redux-thunk';
 import Endpoints, { globalCookiePolicy } from '../Endpoints';
 import requestAction from '../utils/requestAction';
 import dataHeaders from '../components/Services/Data/Common/Headers';
-import {
-  getRunSqlQuery,
-  getConsoleOptsQuery,
-} from '../components/Common/utils/v1QueryUtils';
+import { getConsoleOptsQuery } from '../components/Common/utils/v1QueryUtils';
 import {
   showErrorNotification,
   showSuccessNotification,
@@ -14,6 +11,7 @@ import {
 import globals from '../Globals';
 import defaultTelemetryState, { TelemetryState } from './state';
 import { GetReduxState, ReduxState } from '../types';
+import { getRunSqlQuery } from '../metadata/queryUtils';
 
 const SET_CONSOLE_OPTS = 'Telemetry/SET_CONSOLE_OPTS';
 const SET_NOTIFICATION_SHOWN = 'Telemetry/SET_NOTIFICATION_SHOWN';

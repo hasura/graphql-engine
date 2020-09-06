@@ -18,9 +18,9 @@ import { showSuccessNotification } from '../../Common/Notification';
 
 import _push from '../push';
 import { getSchemaBaseRoute } from '../../../Common/utils/routesUtils';
-import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import { dataSource } from '../../../../dataSources';
 import { exportMetadata } from '../../../../metadata/actions';
+import { getRunSqlQuery } from '../../../../metadata/queryUtils';
 
 /* Constants */
 

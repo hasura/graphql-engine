@@ -2,7 +2,6 @@ import React from 'react';
 import sanitize from 'sanitize-filename';
 
 import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
-import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import requestAction from '../../../utils/requestAction';
 import defaultState from './DataState';
@@ -22,7 +21,6 @@ import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
 import { filterInconsistentMetadataObjects } from '../Settings/utils';
 import globals from '../../../Globals';
-
 import {
   fetchTrackedTableFkQuery,
   fetchTableListQuery,
@@ -30,11 +28,8 @@ import {
   getDependencyError,
 } from './utils';
 import { mergeLoadSchemaData } from './mergeData';
-
 import _push from './push';
-
 import { convertArrayToJson } from './TableModify/utils';
-
 import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
 import { isEmpty } from '../../Common/utils/jsUtils';
 import { dataSource } from '../../../dataSources';
@@ -44,6 +39,7 @@ import {
   checkFeatureSupport,
   READ_ONLY_RUN_SQL_QUERIES,
 } from '../../../helpers/versionUtils';
+import { getRunSqlQuery } from '../../../metadata/queryUtils';
 
 const SET_TABLE = 'Data/SET_TABLE';
 const LOAD_FUNCTIONS = 'Data/LOAD_FUNCTIONS';

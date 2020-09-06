@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import endpoints from '../../../Endpoints';
-import { getRemoteSchemaIntrospectionQuery } from '../../Common/utils/v1QueryUtils';
 import { buildClientSchema, isWrappingType, isObjectType } from 'graphql';
 import requestAction from '../../../utils/requestAction';
+import { getRemoteSchemaIntrospectionQuery } from '../../../metadata/queryUtils';
 
 // local cache where introspection schema is cached
 let introspectionSchemaCache = {};

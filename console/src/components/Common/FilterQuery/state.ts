@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  TableDefinition,
-  getSelectQuery,
-  OrderBy,
-  makeOrderBy,
-} from '../utils/v1QueryUtils';
+import { getSelectQuery, OrderBy, makeOrderBy } from '../utils/v1QueryUtils';
 import requestAction from '../../../utils/requestAction';
 import { Dispatch } from '../../../types';
 import endpoints from '../../../Endpoints';
@@ -20,6 +15,7 @@ import {
 import { Nullable } from '../utils/tsUtils';
 import { isNotDefined } from '../utils/jsUtils';
 import { parseFilter } from './utils';
+import { QualifiedTable } from '../../../metadata/types';
 
 const defaultFilter = makeValueFilter('', null, '');
 const defaultSort = makeOrderBy('', 'asc');
@@ -27,7 +23,7 @@ const defaultSort = makeOrderBy('', 'asc');
 const defaultState = makeFilterState([defaultFilter], [defaultSort], 10, 0);
 
 export const useFilterQuery = (
-  table: TableDefinition,
+  table: QualifiedTable,
   dispatch: Dispatch,
   presets: {
     filters: Filter[];

@@ -3,10 +3,10 @@ import {
   reformCustomTypes,
   hydrateTypeRelationships,
 } from '../../../shared/utils/hasuraCustomTypeUtils';
-import { generateSetCustomTypesQuery } from '../../Common/utils/v1QueryUtils';
 import { getConfirmation } from '../../Common/utils/jsUtils';
 import { exportMetadata } from '../../../metadata/actions';
 import { customTypesSelector } from '../../../metadata/selector';
+import { generateSetCustomTypesQuery } from '../../../metadata/queryUtils';
 
 export const setCustomGraphQLTypes = (types, successCb, errorCb) => (
   dispatch,

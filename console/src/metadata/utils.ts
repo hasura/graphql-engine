@@ -1,8 +1,8 @@
 import {
-  getReloadMetadataQuery,
   inconsistentObjectsQuery,
+  getReloadMetadataQuery,
   getReloadRemoteSchemaCacheQuery,
-} from '../components/Common/utils/v1QueryUtils';
+} from './queryUtils';
 
 export const allowedQueriesCollection = 'allowed-queries';
 

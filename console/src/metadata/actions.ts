@@ -1,11 +1,4 @@
 import { Thunk, ReduxState } from '../types';
-import {
-  exportMetadataQuery,
-  generateReplaceMetadataQuery,
-  resetMetadataQuery,
-  inconsistentObjectsQuery,
-  dropInconsistentObjectsQuery,
-} from '../components/Common/utils/v1QueryUtils';
 import requestAction from '../utils/requestAction';
 import Endpoints, { globalCookiePolicy } from '../Endpoints';
 import { HasuraMetadataV2 } from './types';
@@ -28,6 +21,13 @@ import {
 } from '../components/Services/Data/DataActions';
 import { filterInconsistentMetadataObjects } from '../components/Services/Settings/utils';
 import { clearIntrospectionSchemaCache } from '../components/Services/RemoteSchema/graphqlUtils';
+import {
+  inconsistentObjectsQuery,
+  dropInconsistentObjectsQuery,
+  exportMetadataQuery,
+  generateReplaceMetadataQuery,
+  resetMetadataQuery,
+} from './queryUtils';
 
 export interface ExportMetadataSuccess {
   type: 'Metadata/EXPORT_METADATA_SUCCESS';

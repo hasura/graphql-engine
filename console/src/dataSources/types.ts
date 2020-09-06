@@ -1,6 +1,6 @@
 import { Nullable } from '../components/Common/utils/tsUtils';
-import { FunctionDefinition } from '../components/Common/utils/v1QueryUtils';
 import { Column } from '../utils/postgresColumnTypes';
+import { FunctionDefinition } from '../metadata/types';
 
 export interface Relationship
   extends Pick<BaseTable, 'table_name' | 'table_schema'> {

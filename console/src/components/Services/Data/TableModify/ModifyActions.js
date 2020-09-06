@@ -37,15 +37,6 @@ import {
   dataSource,
 } from '../../../../dataSources';
 import {
-  getSetCustomRootFieldsQuery,
-  getRunSqlQuery,
-  getDropComputedFieldQuery,
-  getAddComputedFieldQuery,
-  getSetTableEnumQuery,
-  getUntrackTableQuery,
-  getTrackTableQuery,
-} from '../../../Common/utils/v1QueryUtils';
-import {
   convertArrayToJson,
   sanitiseRootFields,
   sanitiseColumnNames,
@@ -55,6 +46,15 @@ import {
   getTableModifyRoute,
 } from '../../../Common/utils/routesUtils';
 import { exportMetadata } from '../../../../metadata/actions';
+import {
+  getRunSqlQuery,
+  getSetTableEnumQuery,
+  getTrackTableQuery,
+  getUntrackTableQuery,
+  getAddComputedFieldQuery,
+  getDropComputedFieldQuery,
+  getSetCustomRootFieldsQuery,
+} from '../../../../metadata/queryUtils';
 
 const DELETE_PK_WARNING =
   'Without a primary key there is no way to uniquely identify a row of a table';

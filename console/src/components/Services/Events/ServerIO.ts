@@ -2,14 +2,6 @@ import { push, replace } from 'react-router-redux';
 import {
   fetchEventTriggersQuery,
   fetchScheduledTriggersQuery,
-  getBulkQuery,
-  generateCreateScheduledTriggerQuery,
-  getDropScheduledTriggerQuery,
-  generateUpdateScheduledTriggerQuery,
-  generateCreateEventTriggerQuery,
-  getDropEventTriggerQuery,
-  getCreateScheduledEventQuery,
-  getRedeliverDataEventQuery,
   getSelectQuery,
   makeOrderBy,
 } from '../../Common/utils/v1QueryUtils';
@@ -61,6 +53,16 @@ import {
 import { EventTriggerProperty } from './EventTriggers/Modify/utils';
 import { getLogsTableDef } from './utils';
 import { Table } from '../../../dataSources/types';
+import {
+  generateCreateEventTriggerQuery,
+  getDropEventTriggerQuery,
+  generateCreateScheduledTriggerQuery,
+  generateUpdateScheduledTriggerQuery,
+  getDropScheduledTriggerQuery,
+  getCreateScheduledEventQuery,
+  getRedeliverDataEventQuery,
+  getBulkQuery,
+} from '../../../metadata/queryUtils';
 
 export const fetchTriggers = (
   kind: Nullable<TriggerKind>

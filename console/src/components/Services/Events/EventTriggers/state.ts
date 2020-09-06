@@ -1,5 +1,4 @@
 import React from 'react';
-import { TableDefinition } from '../../../Common/utils/v1QueryUtils';
 import {
   URLConf,
   EventTriggerOperation,
@@ -17,10 +16,11 @@ import {
 import { parseServerHeaders } from '../../../Common/Headers/utils';
 import { Table } from '../../../../dataSources/types';
 import { generateTableDef } from '../../../../dataSources';
+import { QualifiedTable } from '../../../../metadata/types';
 
 export type LocalEventTriggerState = {
   name: string;
-  table: TableDefinition;
+  table: QualifiedTable;
   operations: Record<EventTriggerOperation, boolean>;
   operationColumns: ETOperationColumn[];
   webhook: URLConf;

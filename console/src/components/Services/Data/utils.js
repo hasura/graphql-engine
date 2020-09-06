@@ -2,10 +2,10 @@ import {
   READ_ONLY_RUN_SQL_QUERIES,
   checkFeatureSupport,
 } from '../../../helpers/versionUtils';
-import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 import { isJsonString } from '../../Common/utils/jsUtils';
 import { ERROR_CODES } from './constants';
 import { dataSource } from '../../../dataSources';
+import { getRunSqlQuery } from '../../../metadata/queryUtils';
 
 export const getPlaceholder = type => {
   switch (type) {

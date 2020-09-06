@@ -114,6 +114,11 @@ export interface Function {
   configuration?: FunctionConfiguration;
 }
 
+export interface FunctionDefinition {
+  name: string;
+  schema: string;
+}
+
 /**
  * Configuration for a CustomFunction
  * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-functions.html#function-configuration
@@ -391,7 +396,7 @@ export interface EventTrigger {
   webhook?: string;
   webhook_from_env?: string;
   /** The SQL function */
-  headers?: Array<HeaderFromValue | HeaderFromEnv>;
+  headers?: ServerHeader[];
 }
 
 export interface EventTriggerDefinition {
@@ -416,22 +421,15 @@ export interface OperationSpec {
 
 /**
  * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#headerfromvalue
+ * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#headerfromenv
  */
-export interface HeaderFromValue {
+export interface ServerHeader {
   /** Name of the header */
   name: string;
   /** Value of the header */
-  value: string;
-}
-
-/**
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#headerfromenv
- */
-export interface HeaderFromEnv {
-  /** Name of the header */
-  name: string;
-  /** Name of the environment variable which holds the value of the header */
-  value_from_env: string;
+  value?: string;
+  /** value obtained from env file */
+  value_from_env?: string;
 }
 
 /**
@@ -479,7 +477,7 @@ export interface CronTrigger {
   /** Any JSON payload which will be sent when the webhook is invoked. */
   payload?: Record<string, any>;
   /** List of headers to be sent with the webhook */
-  headers: Array<HeaderFromEnv | HeaderFromValue>;
+  headers: ServerHeader[];
   /**	Retry configuration if scheduled invocation delivery fails */
   retry_conf?: RetryConfST;
   /**	Flag to indicate whether a trigger should be included in the metadata. When a cron trigger is included in the metadata, the user will be able to export it when the metadata of the graphql-engine is exported. */
@@ -544,7 +542,7 @@ export interface RemoteSchema {
 export interface RemoteSchemaDef {
   url?: string;
   url_from_env?: string;
-  headers?: Array<HeaderFromEnv | HeaderFromValue>;
+  headers?: ServerHeader[];
   forward_client_headers?: boolean;
   timeout_seconds?: number;
 }
@@ -793,8 +791,8 @@ export interface Action {
 export interface ActionDefinition {
   arguments?: InputArgument[];
   output_type?: string;
-  kind?: string;
-  headers?: Array<HeaderFromEnv | HeaderFromValue>;
+  kind?: 'synchronous' | 'asynchronous';
+  headers?: ServerHeader[];
   forward_client_headers?: boolean;
   handler: WebhookURL;
   type?: 'mutation' | 'query';

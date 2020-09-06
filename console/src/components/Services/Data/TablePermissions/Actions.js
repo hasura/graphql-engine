@@ -8,12 +8,12 @@ import {
   getTablePermissions,
   generateTableDef,
 } from '../../../../dataSources';
+import { capitalize } from '../../../Common/utils/jsUtils';
+import { exportMetadata } from '../../../../metadata/actions';
 import {
   getCreatePermissionQuery,
   getDropPermissionQuery,
-} from '../../../Common/utils/v1QueryUtils';
-import { capitalize } from '../../../Common/utils/jsUtils';
-import { exportMetadata } from '../../../../metadata/actions';
+} from '../../../../metadata/queryUtils';
 
 export const PERM_OPEN_EDIT = 'ModifyTable/PERM_OPEN_EDIT';
 export const PERM_SET_FILTER_TYPE = 'ModifyTable/PERM_SET_FILTER_TYPE';

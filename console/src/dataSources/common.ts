@@ -1,7 +1,7 @@
 import { Nullable } from '../components/Common/utils/tsUtils';
 import { Table, Relationship, CheckConstraint, BaseTable } from './types';
-import { TableDefinition } from '../components/Common/utils/v1QueryUtils'; // TODO
 import { isEqual } from '../components/Common/utils/jsUtils';
+import { QualifiedTable } from '../metadata/types';
 
 export type Operations = 'insert' | 'select' | 'update' | 'delete';
 export const QUERY_TYPES: Operations[] = [
@@ -32,12 +32,12 @@ export const getTableDef = (table: Table) => {
   return generateTableDef(table.table_name, table.table_schema);
 };
 
-export const getQualifiedTableDef = (tableDef: TableDefinition | string) => {
+export const getQualifiedTableDef = (tableDef: QualifiedTable | string) => {
   return typeof tableDef === 'string' ? generateTableDef(tableDef) : tableDef;
 };
 
 export const getTableNameWithSchema = (
-  tableDef: TableDefinition,
+  tableDef: QualifiedTable,
   wrapDoubleQuotes = false
 ) => {
   let fullTableName;
@@ -51,7 +51,7 @@ export const getTableNameWithSchema = (
   return fullTableName;
 };
 
-export const findTable = (allTables: Table[], tableDef: TableDefinition) => {
+export const findTable = (allTables: Table[], tableDef: QualifiedTable) => {
   return allTables.find(t => isEqual(getTableDef(t), tableDef));
 };
 
