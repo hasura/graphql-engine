@@ -32,6 +32,7 @@ export const getForeignKeyConfig = (foreignKey, orderedColumns) => {
   return `${lCol} → ${refTableName} . ${rCol}`;
 };
 
+// TO DO
 export const pgConfTypes = {
   a: 'no action',
   r: 'restrict',

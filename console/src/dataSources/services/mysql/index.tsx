@@ -27,6 +27,10 @@ import {
   getDropTableSql,
   isColTypeString,
   getCreateTableQueries,
+  getFetchTablesListQuery,
+  getFKRelations,
+  primaryKeysInfoSql,
+  uniqueKeysSql,
 } from './sqlUtils';
 
 export const isTable = (table: Table) => {
@@ -154,9 +158,7 @@ export const mysql: DataSourcesAPI = {
   parseColumnsInfoResult: () => {
     throw new Error('not implemented');
   },
-  getFetchTablesListQuery: () => {
-    throw new Error('not implemented');
-  },
+  getFetchTablesListQuery,
   fetchColumnDefaultFunctions: () => {
     throw new Error('not implemented');
   },
@@ -213,8 +215,8 @@ export const mysql: DataSourcesAPI = {
   getCreateCheckConstraintSql,
   getCreatePkSql,
   frequentlyUsedColumns: [],
-  primaryKeysInfoSql: () => '',
-  uniqueKeysSql: () => '',
-  checkConstraintsSql: () => '',
-  getFKRelations: () => '',
+  primaryKeysInfoSql,
+  uniqueKeysSql,
+  checkConstraintsSql: undefined, // todo
+  getFKRelations,
 };

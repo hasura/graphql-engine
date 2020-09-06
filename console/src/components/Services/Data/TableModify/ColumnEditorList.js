@@ -56,7 +56,7 @@ const ColumnEditorList = ({
   const columns = tableSchema.columns.sort(ordinalColSort);
 
   /*
-   * col.udt_name contains internal representation of the data type
+   * col.data_type_name contains internal representation of the data type
    * */
   return columns.map((col, i) => {
     const colName = col.column_name;
@@ -65,15 +65,17 @@ const ColumnEditorList = ({
     // todo -- getColumnProperties utility
     const getDisplayName = () => {
       if (isArrayDataType) {
-        return col.udt_name.replace('_', '') + '[]';
+        return col.data_type_name.replace('_', '') + '[]';
       }
       if (col.data_type === 'USER-DEFINED') {
-        return col.udt_name;
+        return col.data_type_name;
       }
       return col.data_type;
     };
     const getType = () =>
-      isArrayDataType ? col.udt_name.replace('_', '') + '[]' : col.udt_name;
+      isArrayDataType
+        ? col.data_type_name.replace('_', '') + '[]'
+        : col.data_type_name;
 
     const columnProperties = {
       name: colName,
@@ -230,8 +232,11 @@ const ColumnEditorList = ({
     const colEditorExpanded = () => {
       return (
         <ColumnEditor
-          alterTypeOptions={getValidTypeCasts(col.udt_name, isArrayDataType)}
-          defaultOptions={getValidDefaultTypes(col.udt_name)}
+          alterTypeOptions={getValidTypeCasts(
+            col.data_type_name,
+            isArrayDataType
+          )}
+          defaultOptions={getValidDefaultTypes(col.data_type_name)}
           column={col}
           onSubmit={onSubmit}
           tableName={tableName}

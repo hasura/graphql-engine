@@ -28,7 +28,7 @@ export interface PostgresViewInfo {
 
 export interface PostgresColumnInfo {
   comment: string | null;
-  udt_name: string; // 'int4';
+  data_type_name: string; // 'int4';
   data_type: string; // 'integer';
   table_name: string;
   column_name: string;

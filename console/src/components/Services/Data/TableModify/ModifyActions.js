@@ -1039,7 +1039,7 @@ const deleteColumnSql = (column, tableSchema) => {
     const currentSchema = column.table_schema;
     const comment = column.comment;
     const is_nullable = column.is_nullable;
-    const col_type = column.udt_name;
+    const col_type = column.data_type_name;
     const foreign_key_constraints = tableSchema.foreign_key_constraints.filter(
       fkc => {
         const columnKeys = Object.keys(fkc.column_mapping);
@@ -1410,7 +1410,7 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     const table = findTable(getState().tables.allSchemas, tableDef);
 
     // check if column type has changed before making it part of the migration
-    const originalColType = column.udt_name; // "value"
+    const originalColType = column.data_type_name; // "value"
     const originalColDefault = column.column_default || ''; // null or "value"
     const originalColComment = column.comment || ''; // null or "value"
     const originalColNullable = column.is_nullable; // "YES" or "NO"

@@ -270,7 +270,7 @@ export interface DataSourcesAPI {
     tables: Table[];
   }) => string;
   uniqueKeysSql: (options: { schemas: string[]; tables: Table[] }) => string;
-  checkConstraintsSql: (options: {
+  checkConstraintsSql?: (options: {
     schemas: string[];
     tables: Table[];
   }) => string;

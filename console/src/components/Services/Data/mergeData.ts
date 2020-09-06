@@ -29,7 +29,10 @@ const keyToPermission = {
 
 export const mergeLoadSchemaData = (
   infoSchemaTableData: PostgresTable[], // todo
-  fkData: any,
+  fkData: Omit<
+    Table['foreign_key_constraints'][0],
+    'is_table_tracked' | 'is_ref_table_tracked'
+  >[],
   metadataTables: TableEntry[],
   primaryKeys: Table['primary_key'][],
   uniqueKeys: any, // todo
@@ -37,7 +40,7 @@ export const mergeLoadSchemaData = (
 ): Table[] => {
   const _mergedTableData: Table[] = [];
 
-  const trackedFkData = fkData.map((fk: any) => ({
+  const trackedFkData = fkData.map(fk => ({
     ...fk,
     is_table_tracked: !!metadataTables.some(
       t => t.table.name === fk.table_name && t.table.schema === fk.table_schema
@@ -80,8 +83,8 @@ export const mergeLoadSchemaData = (
       ) || [];
 
     const permissions: Table['permissions'] = [];
-    let fkConstraints = [];
-    let refFkConstraints = [];
+    let fkConstraints: Table['foreign_key_constraints'] = [];
+    let refFkConstraints: Table['foreign_key_constraints'] = [];
     let remoteRelationships: any = []; // todo, update type Table
     let isEnum = false;
     let configuration = {};

@@ -104,7 +104,7 @@ export const getColumnType = (column: TableColumn) => {
   let columnType = column.data_type;
 
   if (columnType === 'USER-DEFINED') {
-    columnType = column.udt_name;
+    columnType = column.data_type_name;
   }
 
   return columnType;

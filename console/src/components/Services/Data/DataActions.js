@@ -155,13 +155,17 @@ const loadSchema = configOptions => {
           false,
           checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
         ),
+      ],
+    };
+    if (dataSource.checkConstraintsSql) {
+      body.args.push(
         getRunSqlQuery(
           dataSource.checkConstraintsSql(configOptions),
           false,
           checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
-        ),
-      ],
-    };
+        )
+      );
+    }
 
     const options = {
       credentials: globalCookiePolicy,
@@ -178,7 +182,9 @@ const loadSchema = configOptions => {
           const fkList = JSON.parse(data[1].result[1]);
           const primaryKeys = JSON.parse(data[2].result[1]);
           const uniqueKeys = JSON.parse(data[3].result[1]);
-          const checkConstraints = JSON.parse(data[4].result[1]);
+          const checkConstraints = dataSource.checkConstraintsSql
+            ? JSON.parse(data[4].result[1])
+            : [];
 
           const mergedData = mergeLoadSchemaData(
             tableList,

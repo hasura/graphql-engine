@@ -106,7 +106,7 @@ export const getFetchTablesListQuery = (options: {
                WHEN nt.nspname = 'pg_catalog' THEN format_type(a.atttypid, null)
                ELSE 'USER-DEFINED' END
         END AS data_type,
-        coalesce(bt.typname, t.typname) AS udt_name
+        coalesce(bt.typname, t.typname) AS data_type_name
       FROM (pg_attribute a LEFT JOIN pg_attrdef ad ON attrelid = adrelid AND attnum = adnum)
         JOIN (pg_class c JOIN pg_namespace nc ON (c.relnamespace = nc.oid)) ON a.attrelid = c.oid
         JOIN (pg_type t JOIN pg_namespace nt ON (t.typnamespace = nt.oid)) ON a.atttypid = t.oid
@@ -1094,22 +1094,18 @@ FROM (
 		q.table_schema::text AS table_schema,
 		q.table_name::text AS table_name,
 		q.constraint_name::text AS constraint_name,
-		min(q.constraint_oid)::integer AS constraint_oid,
 		min(q.ref_table_table_schema::text) AS ref_table_table_schema,
 		min(q.ref_table::text) AS ref_table,
 		json_object_agg(ac.attname, afc.attname) AS column_mapping,
 		min(q.confupdtype::text) AS on_update,
 		min(q.confdeltype::text) AS
-		on_delete,
-		json_agg(ac.attname) AS columns,
-		json_agg(afc.attname) AS ref_columns
+		on_delete
 	FROM (
 		SELECT
 			ctn.nspname AS table_schema,
 			ct.relname AS table_name,
 			r.conrelid AS table_id,
 			r.conname AS constraint_name,
-			r.oid AS constraint_oid,
 			cftn.nspname AS ref_table_table_schema,
 			cft.relname AS ref_table,
 			r.confrelid AS ref_table_id,

@@ -27,7 +27,7 @@ export interface BaseTableColumn {
 }
 
 export interface TableColumn extends BaseTableColumn {
-  udt_name: string;
+  data_type_name: string;
   is_generated?: boolean;
   is_nullable?: string;
   is_identity?: boolean;
@@ -42,11 +42,18 @@ export interface TableColumn extends BaseTableColumn {
 }
 
 export type ForeignKeyConstraint = {
-  ref_table: string;
-  ref_table_table_schema: string;
   column_mapping: {
     [lcol: string]: string;
   };
+  table_schema: string;
+  table_name: string;
+  constraint_name: string;
+  ref_table_table_schema: string;
+  ref_table: string;
+  on_update: string;
+  on_delete: string;
+  is_table_tracked: boolean;
+  is_ref_table_tracked: boolean;
 };
 
 export type CheckConstraint = {
