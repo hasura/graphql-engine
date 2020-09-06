@@ -431,12 +431,7 @@ const addRelNewFromStateMigrate = () => (dispatch, getState) => {
   const customOnSuccess = () => {
     dispatch(
       updateSchemaInfo({
-        tables: [
-          {
-            table_schema: state.lSchema,
-            table_name: state.lTable,
-          },
-        ],
+        schemas: [state.lSchema, state.rSchema],
       })
     ).then(() => {
       dispatch(resetRelationshipForm());

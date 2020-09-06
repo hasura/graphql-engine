@@ -39,8 +39,13 @@ export const mergeLoadSchemaData = (
 
   const trackedFkData = fkData.map((fk: any) => ({
     ...fk,
-    is_ref_table_tracked: !!metadataTables.some(
+    is_table_tracked: !!metadataTables.some(
       t => t.table.name === fk.table_name && t.table.schema === fk.table_schema
+    ),
+    is_ref_table_tracked: !!metadataTables.some(
+      t =>
+        t.table.name === fk.ref_table &&
+        t.table.schema === fk.ref_table_table_schema
     ),
   }));
 
@@ -95,7 +100,8 @@ export const mergeLoadSchemaData = (
       refFkConstraints = trackedFkData.filter(
         (fk: any) =>
           fk.ref_table_table_schema === tableSchema &&
-          fk.ref_table === tableName
+          fk.ref_table === tableName &&
+          fk.is_ref_table_tracked
       );
 
       remoteRelationships = (metadataTable?.remote_relationships || []).map(

@@ -88,16 +88,6 @@ export const fetchTrackedTableFkQuery = options => {
   );
 };
 
-export const fetchTrackedTableReferencedFkQuery = options => {
-  const runSql = dataSource.getFetchTrackedTableReferencedFkQuery(options);
-
-  return getRunSqlQuery(
-    runSql,
-    false,
-    checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
-  );
-};
-
 export const fetchTableListQuery = options => {
   const runSql = dataSource.getFetchTablesListQuery(options);
 
