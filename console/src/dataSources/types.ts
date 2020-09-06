@@ -27,18 +27,25 @@ export interface BaseTableColumn {
 }
 
 export interface TableColumn extends BaseTableColumn {
-  data_type_name: string;
   is_generated?: boolean;
   is_nullable?: string;
   is_identity?: boolean;
   identity_generation?: 'ALWAYS' | 'BY DEFAULT' | null;
   comment?: string | null;
   data_type: string; // 'integer';
+  data_type_name: string; // data_type = data_type_name for mysql
   table_name: string;
   column_name: string;
   table_schema: string;
   column_default: string | null;
   ordinal_position: number;
+  /**
+   * auto_increment for columns that have the AUTO_INCREMENT attribute.
+   * on update CURRENT_TIMESTAMP for TIMESTAMP or DATETIME columns that have the ON UPDATE CURRENT_TIMESTAMP attribute.
+   * STORED GENERATED or VIRTUAL GENERATED for generated columns.
+   * DEFAULT_GENERATED for columns that have an expression default value.
+   */
+  extra?: 'auto_increment' | string | null; // mysql
 }
 
 export type ForeignKeyConstraint = {

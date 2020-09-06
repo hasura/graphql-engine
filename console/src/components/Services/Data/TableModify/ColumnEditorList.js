@@ -67,10 +67,7 @@ const ColumnEditorList = ({
       if (isArrayDataType) {
         return col.data_type_name.replace('_', '') + '[]';
       }
-      if (col.data_type === 'USER-DEFINED') {
-        return col.data_type_name;
-      }
-      return col.data_type;
+      return dataSource.getColumnType(col);
     };
     const getType = () =>
       isArrayDataType

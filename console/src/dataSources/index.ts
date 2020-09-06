@@ -48,7 +48,7 @@ export interface DataSourcesAPI {
   getColumnType(col: TableColumn): string;
   arrayToPostgresArray(arr: any[]): string;
   schemaList: Record<string, any>;
-  additionalColumnsInfoQuery: (schemaName: string) => Record<string, any>;
+  additionalColumnsInfoQuery?: (schemaName: string) => Record<string, any>;
   parseColumnsInfoResult: (data: any) => ColumnsInfoResult;
   columnDataTypes: {
     INTEGER: string;
@@ -275,6 +275,7 @@ export interface DataSourcesAPI {
     tables: Table[];
   }) => string;
   getFKRelations: (options: { schemas: string[]; tables: Table[] }) => string;
+  getReferenceOption: (opt: string) => string;
 }
 
 export let currentDriver: Driver = 'postgres';

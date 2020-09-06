@@ -21,7 +21,6 @@ import gqlPattern, {
   gqlColumnErrorNotif,
 } from '../Common/GraphQLValidation';
 import {
-  pgConfTypes,
   generateFKConstraintName,
   getUniqueConstraintName,
 } from '../Common/Components/utils';
@@ -600,8 +599,8 @@ const saveForeignKeys = (index, tableSchema, columns) => {
         },
         generatedConstraintName,
         constraintName,
-        pgConfTypes[oldConstraint.on_update], // todo
-        pgConfTypes[oldConstraint.on_delete] // todo
+        dataSource.getReferenceOption(oldConstraint.on_update), // todo
+        dataSource.getReferenceOption(oldConstraint.on_delete) // todo
       );
       migrationDown.push(getRunSqlQuery(migrationDownAlterFKeySql));
     } else {
@@ -690,8 +689,8 @@ const removeForeignKey = (index, tableSchema) => {
         ),
       },
       oldConstraint.constraint_name,
-      pgConfTypes[oldConstraint.on_update],
-      pgConfTypes[oldConstraint.on_delete]
+      dataSource.getReferenceOption(oldConstraint.on_update),
+      dataSource.getReferenceOption(oldConstraint.on_delete)
     );
 
     const migrationUp = [getRunSqlQuery(upSql)];
@@ -1091,8 +1090,8 @@ const deleteColumnSql = (column, tableSchema) => {
         // add foreign key constraint to down migration
         const lcol = Object.keys(fkc.column_mapping);
         const rcol = Object.values(fkc.column_mapping);
-        const onUpdate = pgConfTypes[fkc.on_update];
-        const onDelete = pgConfTypes[fkc.on_delete];
+        const onUpdate = dataSource.getReferenceOption(fkc.on_update);
+        const onDelete = dataSource.getReferenceOption(fkc.on_delete);
         schemaChangesDown.push(
           getRunSqlQuery(
             dataSource.getCreateFKeySql(

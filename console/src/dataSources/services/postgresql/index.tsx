@@ -373,6 +373,23 @@ const isTimeoutError = (error: {
 //   return colType;
 // };
 
+const getReferenceOption = (opt: string) => {
+  switch (opt) {
+    case 'a':
+      return 'no action';
+    case 'r':
+      return 'restrict';
+    case 'c':
+      return 'cascade';
+    case 'n':
+      return 'set null';
+    case 'd':
+      return 'set default';
+    default:
+      return '';
+  }
+};
+
 export const postgres: DataSourcesAPI = {
   isTable,
   displayTableName,
@@ -433,4 +450,5 @@ export const postgres: DataSourcesAPI = {
   uniqueKeysSql,
   frequentlyUsedColumns,
   getFKRelations,
+  getReferenceOption,
 };

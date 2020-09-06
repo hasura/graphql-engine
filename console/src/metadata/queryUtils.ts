@@ -18,14 +18,17 @@ export const getRunSqlQuery = (
   sql: string,
   shouldCascade?: boolean,
   readOnly?: boolean
-) => ({
-  type: 'run_sql',
-  args: {
-    sql: terminateSql(sql),
-    cascade: !!shouldCascade,
-    read_only: !!readOnly,
-  },
-});
+) => {
+  if (!sql) return {};
+  return {
+    type: 'run_sql',
+    args: {
+      sql: terminateSql(sql),
+      cascade: !!shouldCascade,
+      read_only: !!readOnly,
+    },
+  };
+};
 
 export const getCreatePermissionQuery = (
   action: string,

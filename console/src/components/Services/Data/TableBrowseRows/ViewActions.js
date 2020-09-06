@@ -100,6 +100,10 @@ const vMakeRowsRequest = () => {
     return dispatch(requestAction(url, options)).then(
       data => {
         const currentTable = getState().tables.currentTable;
+        const estimatedCount =
+          data.length > 1 && data[0].result > 1 && data.result[1].length
+            ? data[1].result[1][0]
+            : null;
 
         // in case table has changed before count load
         if (currentTable === originalTable) {
@@ -107,7 +111,10 @@ const vMakeRowsRequest = () => {
             dispatch({
               type: V_REQUEST_SUCCESS,
               data: data[0],
-              estimatedCount: parseInt(data[1].result[1][0], 10),
+              estimatedCount:
+                estimatedCount !== null
+                  ? parseInt(data[1]?.result[1][0], 10)
+                  : null,
             }),
             dispatch({ type: V_REQUEST_PROGRESS, data: false }),
           ]);

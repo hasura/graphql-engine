@@ -1,5 +1,4 @@
 import { AlterFKTableInfo, MySQLTrigger, CreatePKArgs } from './types';
-import { isSQLFunction, Col } from '../postgresql/sqlUtils';
 
 export const getMySQLNameString = (schemaName: string, itemName: string) =>
   `\`${schemaName}\`.\`${itemName}\``;
@@ -138,8 +137,8 @@ export const getAddColumnSql = (
   }
   if (options.default) {
     let defaultVal = options.default;
-    if (isColTypeString(columnType) && !isSQLFunction(options.default)) {
-      // todo : check for mysql
+    if (isColTypeString(columnType)) {
+      // todo: check for mysql
       defaultVal = `'${options.default}'`;
     }
     sql += defaultVal;
@@ -213,7 +212,7 @@ export const getSetColumnDefaultSql = (
   columnType: string
 ) => {
   let defVal = defaultValue;
-  if (isColTypeString(columnType) && !isSQLFunction(defaultValue)) {
+  if (isColTypeString(columnType)) {
     defVal = `'${defaultValue}'`;
   }
   return `
@@ -312,7 +311,7 @@ export const getCreatePkSql = ({
 export const getCreateTableQueries = (
   currentSchema: string,
   tableName: string,
-  columns: Col[],
+  columns: any[],
   primaryKeys: (number | string)[],
   foreignKeys: any[],
   uniqueKeys: any[],
@@ -339,10 +338,7 @@ export const getCreateTableQueries = (
       currentCols[i].default !== undefined &&
       currentCols[i].default?.value !== ''
     ) {
-      if (
-        isColTypeString(currentCols[i].type) &&
-        !isSQLFunction(currentCols[i]?.default?.value)
-      ) {
+      if (isColTypeString(currentCols[i].type)) {
         // if a column type is text and if it has a non-func default value, add a single quote
         tableDefSql += ` DEFAULT '${currentCols[i]?.default?.value}'`;
       } else {
@@ -482,7 +478,7 @@ FROM (
 			SELECT
 				table_name,
 				table_schema,
-				JSON_ARRAYAGG(json_object('col_name', COLUMN_NAME, 'table_name', TABLE_NAME, 'table_schema', TABLE_SCHEMA, 'ordinal_position', ordinal_position, 'column_default', column_default, 'is_nullable', is_nullable, 'data_type', data_type, 'data_type_name', column_type, 'column_comment', column_comment, 'COLUMN_KEY', COLUMN_KEY, 'extra', extra)) AS columns
+				JSON_ARRAYAGG(json_object('col_name', COLUMN_NAME, 'table_name', TABLE_NAME, 'table_schema', TABLE_SCHEMA, 'ordinal_position', ordinal_position, 'column_default', column_default, 'is_nullable', is_nullable, 'data_type', column_type, 'data_type_name', column_type, 'column_comment', column_comment, 'COLUMN_KEY', COLUMN_KEY, 'extra', extra)) AS columns
 			FROM
 				COLUMNS
 			GROUP BY

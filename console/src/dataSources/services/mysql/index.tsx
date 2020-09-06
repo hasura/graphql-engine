@@ -1,6 +1,6 @@
 import React from 'react';
 import { DataSourcesAPI } from '../..';
-import { Table } from '../../types';
+import { Table, TableColumn } from '../../types';
 import {
   getAlterForeignKeySql,
   getCreateFKeySql,
@@ -32,6 +32,7 @@ import {
   primaryKeysInfoSql,
   uniqueKeysSql,
 } from './sqlUtils';
+import { getTableSupportedQueries } from '../postgresql';
 
 export const isTable = (table: Table) => {
   return table.table_name === 'BASE TABLE';
@@ -122,55 +123,53 @@ const createSQLRegex = /create\s*((?:|or\s*replace)\s*view|\s*(table|function))\
 // Change this to the format to what is present on the postgres side
 export const mysql: DataSourcesAPI = {
   getFunctionSchema: () => {
-    throw new Error('not implemented');
+    return '';
   },
   getFunctionDefinitionSql: () => {
-    throw new Error('not implemented');
+    return '';
   },
   getFunctionDefinition: () => {
-    throw new Error('not implemented');
+    return '';
   },
   getSchemaFunctions: () => {
-    throw new Error('not implemented');
+    return [];
   },
   findFunction: () => {
-    throw new Error('not implemented');
+    return undefined;
   },
   getGroupedTableComputedFields: () => {
-    throw new Error('not implemented');
+    return { scalar: [], table: [] };
   },
-  isColumnAutoIncrement: () => {
-    throw new Error('not implemented');
+  isColumnAutoIncrement: (column: TableColumn) => {
+    return column.extra === 'auto-increment';
   },
-  getTableSupportedQueries: () => {
-    throw new Error('not implemented');
+  getTableSupportedQueries, // todo
+  getColumnType: (col: TableColumn) => {
+    return col.data_type;
   },
-  getColumnType: () => {
-    throw new Error('not implemented');
+  arrayToPostgresArray: (...args: any) => {
+    return args;
   },
-  arrayToPostgresArray: () => {
-    // NOTE: not necessary for MySQL
-    throw new Error('not implemented');
-  },
-  additionalColumnsInfoQuery: () => {
-    throw new Error('not implemented');
-  },
-  parseColumnsInfoResult: () => {
-    throw new Error('not implemented');
-  },
+  additionalColumnsInfoQuery: undefined,
+  parseColumnsInfoResult: (args: any) => args,
   getFetchTablesListQuery,
-  fetchColumnDefaultFunctions: () => {
-    throw new Error('not implemented');
+  fetchColumnTypesQuery: 'select "[]"',
+  fetchColumnCastsQuery: 'select "[]"',
+  fetchColumnDefaultFunctions: () => 'select "[]"',
+  isSQLFunction: () => false, // todo
+  getEstimateCountQuery: (schema: string, table: string) => {
+    return `
+SELECT
+	TABLE_ROWS
+FROM
+	INFORMATION_SCHEMA.TABLES
+WHERE
+  information_schema.\`TABLES\`.\`TABLE_NAME\` = "${table}" AND
+  information_schema.\`TABLES\`.\`TABLE_SCHEMA\` = ${schema};
+`;
   },
-  isSQLFunction: () => {
-    throw new Error('not implemented');
-  },
-  getEstimateCountQuery: () => {
-    throw new Error('not implemented');
-  },
-  getStatementTimeoutSql: () => {
-    throw new Error('not implemented');
-  },
+  getStatementTimeoutSql: (seconds: number) =>
+    `SET SESSION MAX_EXECUTION_TIME=${seconds * 1000};`,
   isTimeoutError: () => {
     throw new Error('not implemented');
   },
@@ -182,8 +181,7 @@ export const mysql: DataSourcesAPI = {
   },
   schemaList: {},
   dependencyErrorCode: '',
-  fetchColumnTypesQuery: '',
-  fetchColumnCastsQuery: '',
+
   columnDataTypes,
   commonDataTypes,
   createSQLRegex,
@@ -219,4 +217,5 @@ export const mysql: DataSourcesAPI = {
   uniqueKeysSql,
   checkConstraintsSql: undefined, // todo
   getFKRelations,
+  getReferenceOption: (option: string) => option,
 };
