@@ -34,12 +34,16 @@ const MODAL_OPEN = 'EditItem/MODAL_OPEN';
 const modalOpen = () => ({ type: MODAL_OPEN });
 const modalClose = () => ({ type: MODAL_CLOSE });
 
-const editRowAsMigration = (tableDef, pkClause, oldItem, newItem, callback) => (
-  dispatch,
-  getState
-) => {
-  const upQuery = getEditRowQuery(tableDef, newItem, pkClause);
-  const downQuery = getEditRowQuery(tableDef, oldItem, pkClause);
+const editRowAsMigration = (
+  tableDef,
+  pkClause,
+  oldItem,
+  newItem,
+  callback,
+  columns
+) => (dispatch, getState) => {
+  const upQuery = getEditRowQuery(tableDef, newItem, columns, pkClause);
+  const downQuery = getEditRowQuery(tableDef, oldItem, columns, pkClause);
 
   const migrationName = `update_row_in_${tableDef.schema}_${tableDef.name}`;
   const customOnSuccess = () => {
@@ -80,6 +84,10 @@ const editItem = (tableName, colValues, isMigration = false) => {
 
     const table = findTable(allSchemas, tableDef);
 
+    const currentTable = state.tables.allSchemas.find(tab => {
+      return tab.table_name === tableName && tab.table_schema === currentSchema;
+    });
+   
     const _setObject = {};
     const _defaultArray = [];
 
@@ -138,7 +146,7 @@ const editItem = (tableName, colValues, isMigration = false) => {
     }
     let returning = [];
     if (isMigration) {
-      returning = '*';
+      returning = columns.map(col => col.column_name);
     }
     const { pkClause, oldItem } = state.tables.update;
     const reqBody = {
@@ -159,7 +167,7 @@ const editItem = (tableName, colValues, isMigration = false) => {
     };
     const url = Endpoints.query;
     // call back
-    const cb = newItem => {
+    const cb = affectedRows => {
       dispatch(
         showSuccessNotification(
           'Edited!',
@@ -175,9 +183,19 @@ const editItem = (tableName, colValues, isMigration = false) => {
       data => {
         const affectedRows = data.affected_rows;
         if (!isMigration) {
-            cb(affectedRows)
+          cb(affectedRows);
+        } else {
+          dispatch(
+            editRowAsMigration(
+              tableDef,
+              pkClause,
+              oldItem,
+              data.returning[0],
+              () => cb(affectedRows),
+              columns
+            )
+          );
         }
-        dispatch(editRowAsMigration(tableDef, pkClause, oldItem, nedata.returning[0], () => cb(affectedRows)));
       },
       err => {
         dispatch(showErrorNotification('Edit failed!', err.error, err));

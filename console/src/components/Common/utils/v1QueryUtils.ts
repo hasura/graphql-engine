@@ -109,7 +109,10 @@ export type PGReturnValueType =
   | Record<string, any>
   | number;
 
-export const convertPGValue = (value: PGReturnValueType): string | number => {
+export const convertPGValue = (
+  value: PGReturnValueType,
+  columnInfo: BaseTableColumn
+): string | number => {
   if (value === 'null' || value === null) {
     return 'null';
   }
@@ -118,7 +121,11 @@ export const convertPGValue = (value: PGReturnValueType): string | number => {
     return `'${value}'`;
   }
 
-  if (Array.isArray(value)) {
+  if (
+    Array.isArray(value) &&
+    columnInfo.data_type !== 'json' &&
+    columnInfo.data_type !== 'jsonb'
+  ) {
     return `'${arrayToPostgresArray(value)}'`;
   }
 
@@ -135,17 +142,18 @@ export const convertPGValue = (value: PGReturnValueType): string | number => {
 
 export const getInsertUpQuery = (
   tableDef: TableDefinition,
-  insertion: Record<string, PGReturnValueType>
+  insertion: Record<string, PGReturnValueType>,
+  columns: BaseTableColumn[]
 ) => {
-  const columns = Object.keys(insertion)
+  const columnValues = Object.keys(insertion)
     .map(key => `"${key}"`)
     .join(', ');
 
   const values = Object.values(insertion)
-    .map(value => convertPGValue(value))
+    .map((value, valIndex) => convertPGValue(value, columns[valIndex]))
     .join(', ');
 
-  const sql = `INSERT INTO "${tableDef.schema}"."${tableDef.name}"(${columns}) VALUES (${values});`;
+  const sql = `INSERT INTO "${tableDef.schema}"."${tableDef.name}"(${columnValues}) VALUES (${values});`;
 
   return getRunSqlQuery(sql);
 };
@@ -188,18 +196,23 @@ export const getInsertDownQuery = (
 export const getEditRowQuery = (
   tableDef: TableDefinition,
   item: Record<string, PGReturnValueType>,
+  columns: BaseTableColumn[],
   pkClause: Record<string, PGReturnValueType>
 ) => {
-  const columns = Object.keys(item)
-    .map(key => `"${key}"`)
+  const columnValues = Object.keys(item).map(key => `"${key}"`);
 
-  const values = Object.values(item)
-    .map(value => convertPGValue(value))
+  const values = Object.values(item).map((value, valIndex) => {
+    const colVal =
+      columns.find(col => col.column_name === Object.keys(item)[valIndex]) ??
+      columns[valIndex];
+    return convertPGValue(value, colVal);
+  });
 
-  const updatedValues = columns.map((colName, index) => {
-    return `${colName} = ${values[index]}`
-  })
-  .join(', ')
+  const updatedValues = columnValues
+    .map((value, valIndex) => {
+      return `${value} = ${values[valIndex]}`;
+    })
+    .join(', ');
 
   const clauses = Object.keys(pkClause).map(pk =>
     convertPGPrimaryKeyValue(pkClause[pk], pk)
