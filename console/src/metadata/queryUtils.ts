@@ -15,14 +15,14 @@ import { RemoteRelationshipPayload } from '../components/Services/Data/TableRela
 import { Driver } from '../dataSources';
 
 export type MetadataQueryType =
-  | 'createSelectPermissions'
-  | 'createUpdatePermissions'
-  | 'createDeletePermissions'
-  | 'createInsertPermissions'
-  | 'dropSelectPermissions'
-  | 'dropUpdatePermissions'
-  | 'dropDeletePermissions'
-  | 'dropInsertPermissions'
+  | 'create_select_permission'
+  | 'create_update_permission'
+  | 'create_delete_permission'
+  | 'create_insert_permission'
+  | 'drop_select_permission'
+  | 'drop_update_permission'
+  | 'drop_delete_permission'
+  | 'drop_insert_permission'
   | 'set_custom_types'
   | 'create_action'
   | 'set_table_custom_fields'
@@ -79,16 +79,16 @@ export const getCreatePermissionQuery = (
   let queryType: MetadataQueryType;
   switch (action) {
     case 'delete':
-      queryType = 'createDeletePermissions';
+      queryType = 'create_delete_permission';
       break;
     case 'insert':
-      queryType = 'createInsertPermissions';
+      queryType = 'create_insert_permission';
       break;
     case 'select':
-      queryType = 'createSelectPermissions';
+      queryType = 'create_select_permission';
       break;
     case 'update':
-      queryType = 'createUpdatePermissions';
+      queryType = 'create_update_permission';
       break;
     default:
       throw new Error('Invalid action type');
@@ -111,16 +111,16 @@ export const getDropPermissionQuery = (
   let queryType: MetadataQueryType;
   switch (action) {
     case 'delete':
-      queryType = 'dropDeletePermissions';
+      queryType = 'drop_delete_permission';
       break;
     case 'insert':
-      queryType = 'dropInsertPermissions';
+      queryType = 'drop_insert_permission';
       break;
     case 'select':
-      queryType = 'dropSelectPermissions';
+      queryType = 'drop_select_permission';
       break;
     case 'update':
-      queryType = 'dropUpdatePermissions';
+      queryType = 'drop_update_permission';
       break;
     default:
       throw new Error('Invalid action type');

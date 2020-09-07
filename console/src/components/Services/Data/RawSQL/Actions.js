@@ -44,7 +44,7 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
 
   const migrateUrl = returnMigrateUrl(migrationMode);
 
-  let url = Endpoints.rawSQL;
+  let url = Endpoints.query;
 
   const schemaChangesUp = [];
 

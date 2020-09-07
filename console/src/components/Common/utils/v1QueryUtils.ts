@@ -58,11 +58,13 @@ export const makeOrderBy = (
 export const getDeleteQuery = (
   pkClause: WhereClause,
   tableName: string,
-  schemaName: string
+  schemaName: string,
+  source: string
 ) => {
   return {
     type: 'delete',
     args: {
+      source,
       table: {
         name: tableName,
         schema: schemaName,
@@ -75,8 +77,12 @@ export const getDeleteQuery = (
 export const getBulkDeleteQuery = (
   pkClauses: WhereClause[],
   tableName: string,
-  schemaName: string
-) => pkClauses.map(pkClause => getDeleteQuery(pkClause, tableName, schemaName));
+  schemaName: string,
+  source: string
+) =>
+  pkClauses.map(pkClause =>
+    getDeleteQuery(pkClause, tableName, schemaName, source)
+  );
 
 export const getEnumOptionsQuery = (
   request: { enumTableName: string; enumColumnName: string },
@@ -127,7 +133,8 @@ export const getSelectQuery = (
   where: Nullable<WhereClause>,
   offset: Nullable<number>,
   limit: Nullable<number>,
-  order_by: Nullable<OrderBy[]>
+  order_by: Nullable<OrderBy[]>,
+  currentDataSource?: string
 ) => {
   return {
     type,
@@ -138,6 +145,7 @@ export const getSelectQuery = (
       offset,
       limit,
       order_by,
+      source: currentDataSource,
     },
   };
 };

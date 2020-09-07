@@ -31,7 +31,7 @@ const insertItem = (tableName, colValues) => {
     dispatch({ type: I_ONGOING_REQ });
     const insertObject = {};
     const state = getState();
-    const { currentSchema } = state.tables;
+    const { currentSchema, currentDataSource } = state.tables;
     const columns = state.tables.allSchemas.find(
       t => t.table_name === tableName && t.table_schema === currentSchema
     ).columns;
@@ -98,6 +98,7 @@ const insertItem = (tableName, colValues) => {
         table: { name: tableName, schema: getState().tables.currentSchema },
         objects: [insertObject],
         returning: [],
+        source: currentDataSource,
       },
     };
     const options = {

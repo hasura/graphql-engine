@@ -68,6 +68,7 @@ const vMakeRowsRequest = () => {
     const {
       currentTable: originalTable,
       currentSchema,
+      currentDataSource,
       view,
     } = getState().tables;
 
@@ -84,7 +85,8 @@ const vMakeRowsRequest = () => {
           view.query.where,
           view.query.offset,
           view.query.limit,
-          view.query.order_by
+          view.query.order_by,
+          currentDataSource
         ),
         getRunSqlQuery(
           dataSource.getEstimateCountQuery(currentSchema, originalTable)
@@ -257,9 +259,11 @@ const deleteItem = (pkClause, tableName, tableSchema) => {
       return;
     }
 
+    const source = getState().tables.currentDataSource;
+
     const url = Endpoints.query;
 
-    const reqBody = getDeleteQuery(pkClause, tableName, tableSchema);
+    const reqBody = getDeleteQuery(pkClause, tableName, tableSchema, source);
 
     const options = {
       method: 'POST',
@@ -292,9 +296,11 @@ const deleteItems = (pkClauses, tableName, tableSchema) => {
       return;
     }
 
+    const source = getState().tables.currentDataSource;
+
     const reqBody = {
       type: 'bulk',
-      args: getBulkDeleteQuery(pkClauses, tableName, tableSchema),
+      args: getBulkDeleteQuery(pkClauses, tableName, tableSchema, source),
     };
     const options = {
       method: 'POST',

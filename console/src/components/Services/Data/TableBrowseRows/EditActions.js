@@ -34,7 +34,7 @@ const editItem = (tableName, colValues) => {
     const state = getState();
 
     /* Type all the values correctly */
-    const { currentSchema, allSchemas } = state.tables;
+    const { currentSchema, allSchemas, currentDataSource } = state.tables;
 
     const tableDef = generateTableDef(tableName, currentSchema);
 
@@ -115,6 +115,7 @@ const editItem = (tableName, colValues) => {
         $set: _setObject,
         $default: _defaultArray,
         where: state.tables.update.pkClause,
+        source: currentDataSource,
       },
     };
     const options = {

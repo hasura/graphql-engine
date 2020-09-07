@@ -14,7 +14,6 @@ import {
   getDropRemoteRelQuery,
   getRenameRelationshipQuery,
   getCreateObjectRelationshipQuery,
-  getDropPermissionQuery,
   getCreateArrayRelationshipQuery,
   getDropRelationshipQuery,
 } from '../../../../metadata/queryUtils';
@@ -310,7 +309,7 @@ const generateRelationshipsQuery = (relMeta, currentDataSource) => {
       };
     }
 
-    _downQuery = getDropPermissionQuery(
+    _downQuery = getDropRelationshipQuery(
       { name: relMeta.lTable, schema: relMeta.lSchema },
       relMeta.relName,
       currentDataSource
