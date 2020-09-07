@@ -16,6 +16,7 @@ Guides / Tutorials / Resources
    :maxdepth: 2
    :titlesonly:
 
+   MySQL preview <mysql-preview>
    Data modelling guides <data-modelling/index>
    Docker networking <docker-networking>
    Sample apps & boilerplates <sample-apps/index>
