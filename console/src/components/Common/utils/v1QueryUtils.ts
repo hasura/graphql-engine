@@ -80,10 +80,12 @@ export const getBulkDeleteQuery = (
 
 export const getEnumOptionsQuery = (
   request: { enumTableName: string; enumColumnName: string },
-  currentSchema: string
+  currentSchema: string,
+  currentSource: string
 ) => ({
   type: 'select',
   args: {
+    source: currentSource,
     table: {
       name: request.enumTableName,
       schema: currentSchema,

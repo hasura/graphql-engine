@@ -542,5 +542,3 @@ export const getCreateArrayRelationshipQuery = (
     using: {},
     source,
   });
-
-//generateRelationshipsQuery

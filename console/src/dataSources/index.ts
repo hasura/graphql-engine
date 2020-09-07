@@ -48,7 +48,10 @@ export interface DataSourcesAPI {
   getColumnType(col: TableColumn): string;
   arrayToPostgresArray(arr: any[]): string;
   schemaList: Record<string, any>;
-  additionalColumnsInfoQuery?: (schemaName: string) => Record<string, any>;
+  additionalColumnsInfoQuery?: (
+    schemaName: string,
+    currentSource: string
+  ) => Record<string, any>;
   parseColumnsInfoResult: (data: any) => ColumnsInfoResult;
   columnDataTypes: {
     INTEGER: string;

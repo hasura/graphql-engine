@@ -227,12 +227,16 @@ const loadSchema = configOptions => {
 
 const fetchAdditionalColumnsInfo = () => (dispatch, getState) => {
   const schemaName = getState().tables.currentSchema;
+  const currentSource = getState().tables.currentSource;
 
   if (!dataSource.additionalColumnsInfoQuery) {
     // unavailable for a data source
     return;
   }
-  const query = dataSource.additionalColumnsInfoQuery(schemaName);
+  const query = dataSource.additionalColumnsInfoQuery(
+    schemaName,
+    currentSource
+  );
 
   const options = {
     credentials: globalCookiePolicy,
@@ -348,11 +352,14 @@ const updateCurrentSchema = (schemaName, redirect = true) => dispatch => {
 /* ************ action creators *********************** */
 const fetchSchemaList = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
+  const currentSource = getState().tables.currentDataSource;
+  const query = dataSource.schemaList;
+  query.args.source = currentSource;
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
     headers: dataHeaders(getState),
-    body: JSON.stringify(dataSource.schemaList),
+    body: JSON.stringify(query),
   };
   return dispatch(requestAction(url, options)).then(
     data => {

@@ -196,9 +196,13 @@ const schemaList = {
   },
 };
 
-const additionalColumnsInfoQuery = (schemaName: string) => ({
+const additionalColumnsInfoQuery = (
+  schemaName: string,
+  currentSource: string
+) => ({
   type: 'select',
   args: {
+    source: currentSource,
     table: {
       name: 'columns',
       schema: 'information_schema',

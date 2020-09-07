@@ -146,7 +146,7 @@ const editItem = (tableName, colValues) => {
 const fetchEnumOptions = () => {
   return (dispatch, getState) => {
     const {
-      tables: { allSchemas, currentTable, currentSchema },
+      tables: { allSchemas, currentTable, currentSchema, currentDataSource },
     } = getState();
 
     const requests = getEnumColumnMappings(
@@ -165,7 +165,11 @@ const fetchEnumOptions = () => {
     const url = Endpoints.query;
 
     requests.forEach(request => {
-      const req = getEnumOptionsQuery(request, currentSchema);
+      const req = getEnumOptionsQuery(
+        request,
+        currentSchema,
+        currentDataSource
+      );
 
       return dispatch(
         requestAction(url, {
