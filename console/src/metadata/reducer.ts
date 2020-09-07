@@ -1,11 +1,11 @@
 import { MetadataActions } from './actions';
-import { HasuraMetadataV2, QueryCollection } from './types';
+import { HasuraMetadataV2, QueryCollection, HasuraMetadataV3 } from './types';
 import { allowedQueriesCollection } from './utils';
 
 // todo -- separate allowed queries
 
 type MetadataState = {
-  metadataObject: null | HasuraMetadataV2;
+  metadataObject: null | HasuraMetadataV2 | HasuraMetadataV3;
   error: null | string | boolean;
   loading: boolean;
   inconsistentObjects: any[];

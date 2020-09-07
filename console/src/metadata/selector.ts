@@ -1,8 +1,36 @@
 import { createSelector } from 'reselect';
 import { ReduxState } from '../types';
-import { TableEntry, HasuraMetadataV2 } from './types';
+import {
+  TableEntry,
+  HasuraMetadataV2,
+  HasuraMetadataV3,
+  DataSource,
+} from './types';
 import { filterInconsistentMetadataObjects } from '../components/Services/Settings/utils';
 import { parseCustomTypes } from '../shared/utils/hasuraCustomTypeUtils';
+import { currentDriver } from '../dataSources';
+
+const isMetadataV3 = (
+  x: HasuraMetadataV2 | HasuraMetadataV3 | null
+): x is HasuraMetadataV3 => {
+  return x?.version === '3';
+};
+
+export const getDataSourceMatadata = (state: ReduxState) => {
+  if (isMetadataV3(state.metadata.metadataObject)) {
+    const currentDataSource = state.tables.currentDataSource;
+    if (!currentDataSource) return null;
+    if (currentDriver === 'mysql') {
+      return state.metadata.metadataObject.mysql_sources.find(
+        source => source.name === currentDataSource
+      );
+    }
+    return state.metadata.metadataObject.mysql_sources.find(
+      source => source.name === currentDataSource
+    );
+  }
+  return state.metadata.metadataObject;
+};
 
 const getCurrentSchema = (state: ReduxState) => {
   return state.tables.currentSchema;
@@ -12,13 +40,15 @@ const getInconsistentObjects = (state: ReduxState) => {
   return state.metadata.inconsistentObjects;
 };
 
-const getTables = (state: ReduxState) => {
-  return state.metadata.metadataObject?.tables;
-};
+const getTables = createSelector(getDataSourceMatadata, source => {
+  console.log({ source });
+  return source?.tables || [];
+});
 
-const getActions = (state: ReduxState) => {
-  return state.metadata.metadataObject?.actions;
-};
+const getActions = createSelector(
+  getDataSourceMatadata,
+  source => source?.actions || []
+);
 
 const getMetadata = (state: ReduxState) => {
   return state.metadata.metadataObject;
@@ -55,9 +85,10 @@ export const rolesSelector = createSelector(
   }
 );
 
-const getRemoteSchemas = (state: ReduxState) => {
-  return state.metadata.metadataObject?.remote_schemas || [];
-};
+const getRemoteSchemas = createSelector(
+  getDataSourceMatadata,
+  source => source?.remote_schemas || []
+);
 
 export const getRemoteSchemasSelector = createSelector(
   [getRemoteSchemas, getInconsistentObjects],
@@ -101,16 +132,16 @@ export const getTablesInfoSelector = createSelector(
   }
 );
 
-const getFunctions = (state: ReduxState) => {
-  return (
-    state.metadata.metadataObject?.functions?.map(f => ({
+const getFunctions = createSelector(
+  getDataSourceMatadata,
+  source =>
+    source?.functions?.map(f => ({
       ...f.function,
       function_name: f.function.name,
       function_schema: f.function.schema,
       configuration: f.configuration,
     })) || []
-  );
-};
+);
 
 export const getFunctionSelector = createSelector(
   getFunctions,
@@ -148,17 +179,11 @@ export const getFunctionConfiguration = createSelector(
   }
 );
 
-const metadataSelector = (state: ReduxState): HasuraMetadataV2 | null => {
-  return state.metadata.metadataObject;
-};
-
 export const actionsSelector = createSelector(
-  [metadataSelector, getInconsistentObjects],
-  (metadata, objects) => {
-    if (!metadata) return [];
-
+  [getDataSourceMatadata, getInconsistentObjects],
+  (source, objects) => {
     const actions =
-      metadata.actions?.map(action => ({
+      source?.actions?.map(action => ({
         ...action,
         definition: {
           ...action.definition,
@@ -172,11 +197,11 @@ export const actionsSelector = createSelector(
 );
 
 export const customTypesSelector = createSelector(
-  metadataSelector,
-  metadata => {
-    if (!metadata) return [];
+  getDataSourceMatadata,
+  source => {
+    if (!source) return [];
 
-    return parseCustomTypes(metadata.custom_types || []);
+    return parseCustomTypes(source.custom_types || []);
   }
 );
 
@@ -192,6 +217,35 @@ export const getAllowedQueries = (state: ReduxState) =>
 
 export const getDataSources = createSelector(getMetadata, metadata => {
   console.log({ metadata });
+  if (isMetadataV3(metadata)) {
+    const sources: DataSource[] = [];
+    metadata.mysql_sources.forEach(source => {
+      sources.push({
+        name: source.name,
+        url:
+          'from_value' in source.url
+            ? source.url.from_value
+            : source.url.from_env,
+        fromEnv: !!('from_env' in source.url && source.url.from_env),
+        connection_pool_settings: source.connection_pool_settings,
+        driver: 'mysql',
+      });
+    });
+    metadata.postgres_sources.forEach(source => {
+      sources.push({
+        name: source.name,
+        url:
+          'from_value' in source.url
+            ? source.url.from_value
+            : source.url.from_env,
+        fromEnv: !!('from_env' in source.url && source.url.from_env),
+        connection_pool_settings: source.connection_pool_settings,
+        driver: 'postgres',
+      });
+    });
+    return sources;
+  }
+
   return [
     { name: 'Warehouse DB', driver: 'postgres' },
     { name: 'Users DB', driver: 'mysql' },
