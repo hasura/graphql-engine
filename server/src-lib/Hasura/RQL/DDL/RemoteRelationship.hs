@@ -18,7 +18,6 @@ import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Column                    ()
 import           Hasura.SQL.Types
 
-import           Control.Lens                               (ix)
 import           Instances.TH.Lift                          ()
 
 import qualified Data.HashMap.Strict                        as HM
@@ -34,8 +33,10 @@ runCreateRemoteRelationship RemoteRelationship{..} = do
   let metadataObj = MOTableObj rtrTable $ MTORemoteRelationship rtrName
       metadata = RemoteRelationshipMeta rtrName $
         RemoteRelationshipDef rtrRemoteSchema rtrHasuraFields rtrRemoteField
-  buildSchemaCacheFor metadataObj $ MetadataModifier $
-    metaTables.ix rtrTable.tmRemoteRelationships %~ HM.insert rtrName metadata
+  buildSchemaCacheFor metadataObj
+    $ MetadataModifier
+    $ tableMetadataSetter rtrSource rtrTable.tmRemoteRelationships
+      %~ HM.insert rtrName metadata
   pure successMsg
 
 resolveRemoteRelationship
@@ -74,8 +75,10 @@ runUpdateRemoteRelationship RemoteRelationship{..} = do
   let metadataObj = MOTableObj rtrTable $ MTORemoteRelationship rtrName
       metadata = RemoteRelationshipMeta rtrName $
         RemoteRelationshipDef rtrRemoteSchema rtrHasuraFields rtrRemoteField
-  buildSchemaCacheFor metadataObj $ MetadataModifier $
-    metaTables.ix rtrTable.tmRemoteRelationships %~ HM.insert rtrName metadata
+  buildSchemaCacheFor metadataObj
+    $ MetadataModifier
+    $ tableMetadataSetter rtrSource rtrTable.tmRemoteRelationships
+      %~ HM.insert rtrName metadata
   pure successMsg
 
 mkRemoteRelationshipDef :: RemoteRelationship -> RemoteRelationshipDef
@@ -105,15 +108,16 @@ updateRemoteRelInCatalog remoteRelationship =
     QualifiedObject schemaName tableName = rtrTable remoteRelationship
     definition = mkRemoteRelationshipDef remoteRelationship
 
-runDeleteRemoteRelationship ::
-     (MonadTx m, CacheRWM m) => DeleteRemoteRelationship -> m EncJSON
-runDeleteRemoteRelationship (DeleteRemoteRelationship table relName)= do
+runDeleteRemoteRelationship
+  :: (MonadTx m, CacheRWM m) => DeleteRemoteRelationship -> m EncJSON
+runDeleteRemoteRelationship (DeleteRemoteRelationship source table relName)= do
   fieldInfoMap <- askFieldInfoMap table
   void $ askRemoteRel fieldInfoMap relName
   -- liftTx $ delRemoteRelFromCatalog table relName
   let metadataObj = MOTableObj table $ MTORemoteRelationship relName
-  buildSchemaCacheFor metadataObj $ MetadataModifier $
-    metaTables.ix table %~ dropRemoteRelationshipInMetadata relName
+  buildSchemaCacheFor metadataObj
+    $ MetadataModifier
+    $ tableMetadataSetter source table %~ dropRemoteRelationshipInMetadata relName
   pure successMsg
 
 dropRemoteRelationshipInMetadata

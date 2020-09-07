@@ -48,7 +48,7 @@ runCreateRelationship relType (WithTable source tableName relDef) = do
 
   buildSchemaCacheFor metadataObj
     $ MetadataModifier
-    $ metaTables.ix tableName %~ addRelationshipToMetadata
+    $ tableMetadataSetter source tableName %~ addRelationshipToMetadata
   pure successMsg
 
 insertRelationshipToCatalog
@@ -74,7 +74,7 @@ runDropRel (DropRel source qt rn cascade) = do
   withNewInconsistentObjsCheck do
     metadataModifiers <- traverse (purgeRelDep source) depObjs
     buildSchemaCache $ MetadataModifier $
-      metaTables.ix qt %~
+      tableMetadataSetter source qt %~
       dropRelationshipInMetadata rn relType . foldr (.) id metadataModifiers
   pure successMsg
   where

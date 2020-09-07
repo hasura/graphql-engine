@@ -261,12 +261,13 @@ runCreateEventTriggerQuery
 runCreateEventTriggerQuery q = do
   (qt, replace, etc) <- subTableP1 q
   -- subTableP2 qt replace etc
-  let triggerName = etcName etc
+  let source = cetqSource q
+      triggerName = etcName etc
       metadataObj = MOTableObj qt $ MTOTrigger triggerName
   buildSchemaCacheFor metadataObj
     $ MetadataModifier
-    $ metaTables.ix qt.tmEventTriggers %~ HM.insert triggerName etc
-  return successMsg
+    $ tableMetadataSetter source qt.tmEventTriggers %~ HM.insert triggerName etc
+  pure successMsg
 
 runDeleteEventTriggerQuery
   :: (MonadTx m, CacheRWM m)
@@ -282,7 +283,7 @@ runDeleteEventTriggerQuery (DeleteEventTriggerQuery source name) = do
   withNewInconsistentObjsCheck
     $ buildSchemaCache
     $ MetadataModifier
-    $ metaTables.ix table %~ dropEventTriggerInMetadata name
+    $ tableMetadataSetter source table %~ dropEventTriggerInMetadata name
   pure successMsg
 
 dropEventTriggerInMetadata :: TriggerName -> TableMetadata -> TableMetadata

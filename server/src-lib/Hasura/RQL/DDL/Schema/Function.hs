@@ -197,13 +197,16 @@ trackFunctionP1 sourceName qf = do
   when (isJust $ getPGTableInfo sourceName qt $ scPostgres rawSchemaCache) $
     throw400 NotSupported $ "table with name " <> qf <<> " already exists"
 
-trackFunctionP2 :: (MonadTx m, CacheRWM m, HasSystemDefined m)
-                => SourceName -> QualifiedFunction -> FunctionConfig -> m EncJSON
+trackFunctionP2
+  :: (MonadTx m, CacheRWM m, HasSystemDefined m)
+  => SourceName -> QualifiedFunction -> FunctionConfig -> m EncJSON
 trackFunctionP2 sourceName qf config = do
   -- saveFunctionToCatalog qf config
-  buildSchemaCacheFor (MOFunction qf) $ MetadataModifier $
-    metaFunctions._FMVersion2 %~ M.insert qf (TrackFunctionV2 sourceName qf config)
-  return successMsg
+  buildSchemaCacheFor (MOFunction qf)
+    $ MetadataModifier
+    $ metaSources.ix sourceName.smFunctions
+      %~ M.insert qf (FunctionMetadata qf config)
+  pure successMsg
 
 handleMultipleFunctions :: (QErrM m) => QualifiedFunction -> [a] -> m a
 handleMultipleFunctions qf = \case
@@ -256,10 +259,11 @@ runUntrackFunc (UnTrackFunction qf) = do
   void $ askFunctionInfo defaultSource qf
   -- liftTx $ delFunctionFromCatalog qf
   -- Delete function from metadata
-  withNewInconsistentObjsCheck $ buildSchemaCache $ dropFunctionInMetadata qf
-  return successMsg
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ dropFunctionInMetadata defaultSource qf
+  pure successMsg
 
-dropFunctionInMetadata :: QualifiedFunction -> MetadataModifier
-dropFunctionInMetadata function = MetadataModifier $
-  (metaFunctions._FMVersion1 %~ HS.delete function)
-  . (metaFunctions._FMVersion2 %~ M.delete function)
+dropFunctionInMetadata :: SourceName -> QualifiedFunction -> MetadataModifier
+dropFunctionInMetadata source function = MetadataModifier $
+  metaSources.ix source.smFunctions %~ M.delete function

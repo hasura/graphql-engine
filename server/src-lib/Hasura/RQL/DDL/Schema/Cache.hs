@@ -474,7 +474,7 @@ withMetadataCheck source cascade action = do
             _             -> Nothing
 
     forM_ (droppedFuncs \\ purgedFuncs) $ \qf -> do
-      tell $ dropFunctionInMetadata qf
+      tell $ dropFunctionInMetadata source qf
 
     -- Process altered functions
     forM_ alteredFuncs $ \(qf, newTy) -> do
@@ -512,7 +512,7 @@ withMetadataCheck source cascade action = do
     processSchemaChanges sourceTables schemaDiff = do
       -- Purge the dropped tables
       forM_ droppedTables $
-        \tn -> tell $ MetadataModifier $ metaTables %~ M.delete tn
+        \tn -> tell $ MetadataModifier $ metaSources.ix source.smTables %~ M.delete tn
 
       for_ alteredTables $ \(oldQtn, tableDiff) -> do
         ti <- case M.lookup oldQtn sourceTables of

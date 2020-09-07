@@ -279,21 +279,22 @@ runDropInconsistentMetadata _ = do
   -- list of inconsistent objects, so reverse the list to start with dependents first. This is not
   -- perfect — a completely accurate solution would require performing a topological sort — but it
   -- seems to work well enough for now.
-  metadataModifier <- execWriterT $ mapM_ (tell . purgeMetadataObj) (reverse inconsSchObjs)
+  -- TODO: Consider multiple sources
+  metadataModifier <- execWriterT $ mapM_ (tell . purgeMetadataObj defaultSource) (reverse inconsSchObjs)
   buildSchemaCacheStrict metadataModifier
   return successMsg
 
-purgeMetadataObj :: MetadataObjId -> MetadataModifier
-purgeMetadataObj = \case
-  MOTable qt                                 -> dropTableInMetadata qt
+purgeMetadataObj :: SourceName -> MetadataObjId -> MetadataModifier
+purgeMetadataObj source = \case
+  MOTable qt                                 -> dropTableInMetadata source qt
   MOTableObj qt tableObj -> MetadataModifier $
-    metaTables.ix qt %~ case tableObj of
+    tableMetadataSetter source qt %~ case tableObj of
       MTORel rn rt             -> dropRelationshipInMetadata rn rt
       MTOPerm rn pt            -> dropPermissionInMetadata rn pt
       MTOTrigger trn           -> dropEventTriggerInMetadata trn
       MTOComputedField ccn     -> dropComputedFieldInMetadata ccn
       MTORemoteRelationship rn -> dropRemoteRelationshipInMetadata rn
-  MOFunction qf                              -> dropFunctionInMetadata qf
+  MOFunction qf                              -> dropFunctionInMetadata source qf
   MORemoteSchema rsn                         -> dropRemoteSchemaInMetadata rsn
   MOCustomTypes                              -> clearCustomTypesInMetadata
   MOAction action                            -> dropActionInMetadata action -- Nothing
@@ -346,7 +347,7 @@ fetchMetadataFromHdbTables = liftTx do
         modMetaMap tmRemoteRelationships _rrmName remoteRelationships
 
   -- fetch all functions
-  functions <- FMVersion2 <$> Q.catchE defaultTxErrorHandler fetchFunctions
+  functions <- Q.catchE defaultTxErrorHandler fetchFunctions
 
   -- fetch all remote schemas
   remoteSchemas <- mapFromL _arsqName <$> fetchRemoteSchemas
@@ -365,9 +366,9 @@ fetchMetadataFromHdbTables = liftTx do
   cronTriggers <- fetchCronTriggers
 
   let tableMetadatas = mapFromL _tmTable $ HM.elems postRelMap
+      sources = HM.singleton defaultSource $ SourceMetadata defaultSource tableMetadatas functions
   pure $ Metadata currentMetadataVersion
-                  tableMetadatas
-                  functions
+                  sources
                   remoteSchemas
                   collections
                   allowlist
@@ -437,10 +438,9 @@ fetchMetadataFromHdbTables = liftTx do
                 WHERE is_system_defined = 'false'
                 ORDER BY function_schema ASC, function_name ASC
                     |] () False
-      pure $ mapFromL _tfv2Function $
+      pure $ mapFromL _fmFunction $
         flip map l $ \(sn, fn, Q.AltJ config) ->
-                       -- TODO: Use multiple sources
-                       TrackFunctionV2 defaultSource (QualifiedObject sn fn) config
+                       FunctionMetadata (QualifiedObject sn fn) config
 
     fetchRemoteSchemas =
       map fromRow <$> Q.listQE defaultTxErrorHandler

@@ -3,9 +3,9 @@ module Hasura.RQL.DDL.Metadata.Generator
   (genMetadata)
 where
 
+import           Hasura.GraphQL.Utils                          (simpleGraphQLQuery)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
-import           Hasura.GraphQL.Utils                          (simpleGraphQLQuery)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -23,34 +23,32 @@ import qualified System.Cron.Parser                            as Cr
 
 import           Data.List.Extended                            (duplicates)
 import           Data.Scientific
-import           System.Cron.Types
-import           Test.QuickCheck
+import           Test.QuickCheck                               hiding (function)
 import           Test.QuickCheck.Instances.Semigroup           ()
 import           Test.QuickCheck.Instances.Time                ()
 import           Test.QuickCheck.Instances.UnorderedContainers ()
 
 genMetadata :: Gen Metadata
-genMetadata = do
-  version <- arbitrary
-  Metadata version
+genMetadata =
+  Metadata currentMetadataVersion
     <$> arbitrary
-    <*> genFunctionsMetadata version
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary
-  where
-    genFunctionsMetadata :: MetadataVersion -> Gen FunctionsMetadata
-    genFunctionsMetadata = \case
-      MVVersion1 -> FMVersion1 <$> arbitrary
-      MVVersion2 -> FMVersion2 <$> arbitrary
 
 instance Arbitrary G.Name where
   arbitrary = G.unsafeMkName . T.pack <$> listOf1 (elements ['a'..'z'])
 
 instance Arbitrary MetadataVersion where
+  arbitrary = genericArbitrary
+
+instance Arbitrary FunctionMetadata where
+  arbitrary = genericArbitrary
+
+instance Arbitrary SourceMetadata where
   arbitrary = genericArbitrary
 
 instance Arbitrary TableCustomRootFields where
@@ -320,7 +318,7 @@ instance Arbitrary CronSchedule where
   arbitrary = elements sampleCronSchedules
 
 sampleCronSchedules :: [CronSchedule]
-sampleCronSchedules = rights $ map Cr.parseCronSchedule $
+sampleCronSchedules = rights $ map Cr.parseCronSchedule
   [ "* * * * *"
   -- every minute
   , "5 * * * *"

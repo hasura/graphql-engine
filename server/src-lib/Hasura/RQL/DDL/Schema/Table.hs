@@ -51,7 +51,7 @@ import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Enum
 import           Hasura.RQL.DDL.Schema.Rename
-import           Hasura.RQL.Types
+import           Hasura.RQL.Types                   hiding (fmFunction)
 import           Hasura.RQL.Types.Catalog
 import           Hasura.Server.Utils
 import           Hasura.SQL.Types
@@ -177,7 +177,7 @@ trackExistingTableOrViewP2 source tableName isEnum config = do
   let metadata = mkTableMeta tableName isEnum config
   buildSchemaCacheFor (MOTable tableName)
     $ MetadataModifier
-    $ metaTables %~ Map.insert tableName metadata
+    $ metaSources.ix source.smTables %~ Map.insert tableName metadata
   pure successMsg
 
 runTrackTableQ
@@ -205,7 +205,7 @@ runSetExistingTableIsEnumQ (SetTableIsEnum source tableName isEnum) = do
   -- updateTableIsEnumInCatalog tableName isEnum
   buildSchemaCacheFor (MOTable tableName)
     $ MetadataModifier
-    $ metaTables.ix tableName.tmIsEnum .~ isEnum
+    $ tableMetadataSetter source tableName.tmIsEnum .~ isEnum
   return successMsg
 
 data SetTableCustomFields
@@ -233,7 +233,7 @@ runSetTableCustomFieldsQV2 (SetTableCustomFields source tableName rootFields col
   -- updateTableConfig tableName (TableConfig rootFields columnNames)
   buildSchemaCacheFor (MOTable tableName)
     $ MetadataModifier
-    $ metaTables.ix tableName.tmConfiguration .~ tableConfig
+    $ tableMetadataSetter source tableName.tmConfiguration .~ tableConfig
   return successMsg
 
 unTrackExistingTableOrViewP1
@@ -262,7 +262,7 @@ unTrackExistingTableOrViewP2 (UntrackTable source qtn cascade) = withNewInconsis
   -- Purge all the dependents from state
   metadataModifier <- execWriterT do
     mapM_ (purgeDependentObject source >=> tell) indirectDeps
-    tell $ dropTableInMetadata qtn
+    tell $ dropTableInMetadata source qtn
   -- delete the table and its direct dependencies
   buildSchemaCache metadataModifier
   pure successMsg
@@ -271,9 +271,9 @@ unTrackExistingTableOrViewP2 (UntrackTable source qtn cascade) = withNewInconsis
       (SOTableObj dtn _) -> qtn == dtn
       _                  -> False
 
-dropTableInMetadata :: QualifiedTable -> MetadataModifier
-dropTableInMetadata table = MetadataModifier $
-  metaTables %~ Map.delete table
+dropTableInMetadata :: SourceName -> QualifiedTable -> MetadataModifier
+dropTableInMetadata source table =
+  MetadataModifier $ metaSources.ix source.smTables %~ Map.delete table
 
 runUntrackTableQ
   :: (CacheRWM m, MonadTx m)
@@ -317,7 +317,7 @@ processTableChanges source ti tableDiff = do
           modifiedCustomColumnNames = foldl' (flip Map.delete) customColumnNames droppedCols
       when (modifiedCustomColumnNames /= customColumnNames) $
         tell $ MetadataModifier $
-          metaTables.ix tn.tmConfiguration .~ (TableConfig customFields modifiedCustomColumnNames)
+          tableMetadataSetter source tn.tmConfiguration .~ (TableConfig customFields modifiedCustomColumnNames)
 
     procAlteredCols sc tn = for_ alteredCols $
       \( PGRawColumnInfo oldName _ oldType _ _

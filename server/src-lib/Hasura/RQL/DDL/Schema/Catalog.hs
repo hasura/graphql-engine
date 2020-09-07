@@ -40,7 +40,7 @@ buildCatalogMetadata
 buildCatalogMetadata Metadata{..} = do
   catalogTables <- fetchTableMetadataFromDb
   let functions = map fst allFunctions <> concatMap
-        (map (_cfdFunction . _cfmDefinition) . HM.elems . _tmComputedFields) (HM.elems _metaTables)
+        (map (_cfdFunction . _cfmDefinition) . HM.elems . _tmComputedFields) (HM.elems tables)
   catalogFunctions <- fetchFunctionMetadataFromDb functions
   pgScalars <- fetchPgScalars
 
@@ -48,7 +48,7 @@ buildCatalogMetadata Metadata{..} = do
         CatalogFunction function notSystemDefined config $ fromMaybe [] $
         HM.lookup function catalogFunctions
       (_cmTables, relations, computedFields, remoteRelations, permissions, eventTriggers) =
-        unzip6 $ flip map (HM.elems _metaTables) $ \table ->
+        unzip6 $ flip map (HM.elems tables) $ \table ->
         transformTable table catalogFunctions $ HM.lookup (_tmTable table) catalogTables
       _cmRelations            = concat relations
       _cmComputedFields       = concat computedFields
@@ -65,9 +65,12 @@ buildCatalogMetadata Metadata{..} = do
   pure CatalogMetadata{..}
   where
     notSystemDefined = SystemDefined False
-    allFunctions = case _metaFunctions of
-      FMVersion1 v1Functions -> map (, emptyFunctionConfig) $ toList v1Functions
-      FMVersion2 v2Functions -> map ( _tfv2Function &&& _tfv2Configuration) $ HM.elems v2Functions
+    allFunctions = map (_fmFunction &&& _fmConfiguration) $ HM.elems $
+                   -- TODO: Consider multiple sources
+                   maybe mempty _smFunctions $ HM.lookup defaultSource _metaSources
+    tables =
+      -- TODO: Consider multiple sources
+      maybe mempty _smTables $ HM.lookup defaultSource _metaSources
 
     transformCronTrigger :: CronTriggerMetadata -> CatalogCronTrigger
     transformCronTrigger CronTriggerMetadata{..} =
@@ -162,14 +165,14 @@ purgeDependentObject
   :: (MonadError QErr m) => SourceName -> SchemaObjId -> m MetadataModifier
 purgeDependentObject source = \case
   SOTableObj tn tableObj -> pure $ MetadataModifier $
-    metaTables.ix tn %~ case tableObj of
+    tableMetadataSetter source tn %~ case tableObj of
       TOPerm rn pt        -> dropPermissionInMetadata rn pt
       TORel rn rt         -> dropRelationshipInMetadata rn rt
       TOTrigger trn       -> dropEventTriggerInMetadata trn
       TOComputedField ccn -> dropComputedFieldInMetadata ccn
       TORemoteRel rrn     -> dropRemoteRelationshipInMetadata rrn
       _                   -> id
-  SOFunction qf         -> pure $ dropFunctionInMetadata qf
+  SOFunction qf         -> pure $ dropFunctionInMetadata source qf
   schemaObjId           ->
       throw500 $ "unexpected dependent object: " <> reportSchemaObj schemaObjId
 

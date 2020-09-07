@@ -4,7 +4,6 @@ module Hasura.RQL.Types.Metadata where
 import qualified Data.Aeson.Ordered                  as AO
 import qualified Data.HashMap.Strict.Extended        as M
 import qualified Data.HashSet                        as HS
-import qualified Database.PG.Query                   as Q
 import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Control.Lens                        hiding (set, (.=))
@@ -13,15 +12,12 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax          (Lift)
 
-import qualified Hasura.Tracing                      as Tracing
 
-import           Hasura.Db
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Permission
@@ -147,11 +143,14 @@ instance ToJSON InconsistentMetadata where
 data MetadataVersion
   = MVVersion1
   | MVVersion2
+  | MVVersion3
   deriving (Show, Eq, Lift, Generic)
 
 instance ToJSON MetadataVersion where
-  toJSON MVVersion1 = toJSON @Int 1
-  toJSON MVVersion2 = toJSON @Int 2
+  toJSON = \case
+    MVVersion1 -> toJSON @Int 1
+    MVVersion2 -> toJSON @Int 2
+    MVVersion3 -> toJSON @Int 3
 
 instance FromJSON MetadataVersion where
   parseJSON v = do
@@ -159,10 +158,11 @@ instance FromJSON MetadataVersion where
     case version of
       1 -> pure MVVersion1
       2 -> pure MVVersion2
-      i -> fail $ "expected 1 or 2, encountered " ++ show i
+      3 -> pure MVVersion3
+      i -> fail $ "expected 1, 2 or 3, encountered " ++ show i
 
 currentMetadataVersion :: MetadataVersion
-currentMetadataVersion = MVVersion2
+currentMetadataVersion = MVVersion3
 
 data ComputedFieldMetadata
   = ComputedFieldMetadata
@@ -251,31 +251,43 @@ instance FromJSON TableMetadata where
                     , cfKey, rrKey
                     ]
 
+data FunctionMetadata
+  = FunctionMetadata
+  { _fmFunction      :: !QualifiedFunction
+  , _fmConfiguration :: !FunctionConfig
+  } deriving (Show, Eq, Lift, Generic)
+$(makeLenses ''FunctionMetadata)
+$(deriveFromJSON (aesonDrop 3 snakeCase) ''FunctionMetadata)
+
 type Tables = M.HashMap QualifiedTable TableMetadata
-type Functions = M.HashMap QualifiedFunction TrackFunctionV2
+type Functions = M.HashMap QualifiedFunction FunctionMetadata
 type RemoteSchemas = M.HashMap RemoteSchemaName AddRemoteSchemaQuery
 type QueryCollections = M.HashMap CollectionName CreateCollection
 type Allowlist = HS.HashSet CollectionReq
 type Actions = M.HashMap ActionName ActionMetadata
 type CronTriggers = M.HashMap TriggerName CronTriggerMetadata
 
-data FunctionsMetadata
-  = FMVersion1 !(HS.HashSet QualifiedFunction)
-  | FMVersion2 !Functions
-  deriving (Show, Eq, Lift, Generic)
-$(makePrisms ''FunctionsMetadata)
+data SourceMetadata
+  = SourceMetadata
+  { _smName      :: !SourceName
+  , _smTables    :: !Tables
+  , _smFunctions :: !Functions
+  } deriving (Show, Eq, Lift, Generic)
+$(makeLenses ''SourceMetadata)
+instance FromJSON SourceMetadata where
+  parseJSON = withObject "Object" $ \o ->
+    SourceMetadata <$> o .: "name"
+    <*> (mapFromL _tmTable <$> o .: "tables")
+    <*> (mapFromL _fmFunction <$> o .:? "functions" .!= [])
 
-instance ToJSON FunctionsMetadata where
-  toJSON (FMVersion1 qualifiedFunctions) = toJSON qualifiedFunctions
-  toJSON (FMVersion2 functionsV2)        = toJSON functionsV2
+type Sources = M.HashMap SourceName SourceMetadata
 
 -- | A complete GraphQL Engine metadata representation to be stored,
 -- exported/replaced via metadata queries.
 data Metadata
   = Metadata
   { _metaVersion          :: !MetadataVersion
-  , _metaTables           :: !Tables
-  , _metaFunctions        :: !FunctionsMetadata
+  , _metaSources          :: !Sources
   , _metaRemoteSchemas    :: !RemoteSchemas
   , _metaQueryCollections :: !QueryCollections
   , _metaAllowlist        :: !Allowlist
@@ -288,28 +300,40 @@ $(makeLenses ''Metadata)
 instance FromJSON Metadata where
   parseJSON = withObject "Object" $ \o -> do
     version <- o .:? "version" .!= MVVersion1
-    Metadata version
-      <$> (mapFromL _tmTable <$> o .: "tables")
-      <*> (o .:? "functions" >>= parseFunctions version)
-      <*> (mapFromL _arsqName <$> o .:? "remote_schemas" .!= [])
+    sources <- parseSources o version
+    Metadata version sources
+      <$> (mapFromL _arsqName <$> o .:? "remote_schemas" .!= [])
       <*> (mapFromL _ccName <$> o .:? "query_collections" .!= [])
       <*> o .:? "allowlist" .!= HS.empty
       <*> o .:? "custom_types" .!= emptyCustomTypes
       <*> (mapFromL _amName <$> o .:? "actions" .!= [])
       <*> (mapFromL ctName <$> o .:? "cron_triggers" .!= [])
     where
-      parseFunctions version maybeValue =
-        case version of
-          MVVersion1 -> FMVersion1 <$> maybe (pure mempty) parseJSON maybeValue
-          MVVersion2 -> FMVersion2 <$> (mapFromL _tfv2Function <$> maybe (pure []) parseJSON maybeValue)
+      parseSources o = \case
+        MVVersion1 -> do
+          tables       <- mapFromL _tmTable <$> o .: "tables"
+          functionList <- o .:? "functions" .!= []
+          let functions = M.fromList $ flip map functionList $
+                \function -> (function, FunctionMetadata function emptyFunctionConfig)
+          pure $ M.singleton defaultSource $ SourceMetadata defaultSource tables functions
+        MVVersion2 -> do
+          tables    <- mapFromL _tmTable <$> o .: "tables"
+          functions <- mapFromL _fmFunction <$> o .:? "functions" .!= []
+          pure $ M.singleton defaultSource $ SourceMetadata defaultSource tables functions
+        MVVersion3 ->
+          mapFromL _smName <$> o .: "sources"
 
 emptyMetadata :: Metadata
 emptyMetadata =
-  Metadata MVVersion2 mempty (FMVersion2 mempty)
-  mempty mempty mempty emptyCustomTypes mempty mempty
+  Metadata MVVersion3 mempty mempty mempty mempty emptyCustomTypes mempty mempty
 
 instance ToJSON Metadata where
   toJSON = AO.fromOrdered . metadataToOrdJSON
+
+tableMetadataSetter
+  :: SourceName -> QualifiedTable -> ASetter' Metadata TableMetadata
+tableMetadataSetter source table =
+  metaSources.ix source.smTables.ix table
 
 -- | Encode 'Metadata' to JSON with deterministic ordering. Ordering of object keys and array
 -- elements should  remain consistent across versions of graphql-engine if possible!
@@ -318,28 +342,25 @@ instance ToJSON Metadata where
 -- parsable via its 'FromJSON' instance.
 metadataToOrdJSON :: Metadata -> AO.Value
 metadataToOrdJSON ( Metadata
-                               version
-                               tables
-                               functions
-                               remoteSchemas
-                               queryCollections
-                               allowlist
-                               customTypes
-                               actions
-                               cronTriggers
-                             ) = AO.object $ [versionPair, tablesPair] <>
-                                 catMaybes [ functionsPair
-                                           , remoteSchemasPair
-                                           , queryCollectionsPair
-                                           , allowlistPair
-                                           , actionsPair
-                                           , customTypesPair
-                                           , cronTriggersPair
-                                           ]
+                    version
+                    sources
+                    remoteSchemas
+                    queryCollections
+                    allowlist
+                    customTypes
+                    actions
+                    cronTriggers
+                  ) = AO.object $ [versionPair, sourcesPair] <>
+                      catMaybes [ remoteSchemasPair
+                                , queryCollectionsPair
+                                , allowlistPair
+                                , actionsPair
+                                , customTypesPair
+                                , cronTriggersPair
+                                ]
   where
     versionPair = ("version", AO.toOrdered version)
-    tablesPair = ("tables", AO.array $ map tableMetaToOrdJSON $ M.elems tables)
-    functionsPair = ("functions",) <$> functionsMetadataToOrdJSON functions
+    sourcesPair = ("sources", AO.array $ map sourceMetaToOrdJSON $ M.elems sources)
 
     remoteSchemasPair = listToMaybeOrdPair "remote_schemas" remoteSchemaQToOrdJSON $ M.elems remoteSchemas
 
@@ -351,6 +372,12 @@ metadataToOrdJSON ( Metadata
     actionsPair = listToMaybeOrdPair "actions" actionMetadataToOrdJSON $ M.elems actions
 
     cronTriggersPair = listToMaybeOrdPair "cron_triggers" crontriggerQToOrdJSON $ M.elems cronTriggers
+
+    sourceMetaToOrdJSON :: SourceMetadata -> AO.Value
+    sourceMetaToOrdJSON SourceMetadata{..} =
+      let tablesPair = ("tables", AO.array $ map tableMetaToOrdJSON $ M.elems _smTables)
+          functionsPair = listToMaybeOrdPair "functions" functionMetadataToOrdJSON $ M.elems _smFunctions
+      in AO.object $ [tablesPair] <> maybeToList functionsPair
 
     tableMetaToOrdJSON :: TableMetadata -> AO.Value
     tableMetaToOrdJSON ( TableMetadata
@@ -470,18 +497,11 @@ metadataToOrdJSON ( Metadata
                                      , headers >>= listToMaybeOrdPair "headers" AO.toOrdered
                                      ]
 
-    functionsMetadataToOrdJSON :: FunctionsMetadata -> Maybe AO.Value
-    functionsMetadataToOrdJSON fm =
-      let withList _ []   = Nothing
-          withList f list = Just $ f list
-          -- TODO: multiple sources
-          functionV2ToOrdJSON (TrackFunctionV2 source function config) =
-            AO.object $ [("function", AO.toOrdered function)]
-                        <> if config == emptyFunctionConfig then []
-                           else pure ("configuration", AO.toOrdered config)
-      in case fm of
-        FMVersion1 functionsV1 -> withList AO.toOrdered $ toList functionsV1
-        FMVersion2 functionsV2 -> withList (AO.array . map functionV2ToOrdJSON) $ M.elems functionsV2
+    functionMetadataToOrdJSON :: FunctionMetadata -> AO.Value
+    functionMetadataToOrdJSON FunctionMetadata{..} =
+      AO.object $ [("function", AO.toOrdered _fmFunction)]
+      <> if _fmConfiguration == emptyFunctionConfig then []
+         else pure ("configuration", AO.toOrdered _fmConfiguration)
 
     remoteSchemaQToOrdJSON :: AddRemoteSchemaQuery -> AO.Value
     remoteSchemaQToOrdJSON (AddRemoteSchemaQuery name definition comment) =

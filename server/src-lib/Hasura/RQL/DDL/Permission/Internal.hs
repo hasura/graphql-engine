@@ -248,7 +248,7 @@ runCreatePerm (WithTable sourceName tn pd) = do
       metadataObject = MOTableObj tn $ MTOPerm role pt
   buildSchemaCacheFor metadataObject
     $ MetadataModifier
-    $ metaTables.ix tn %~ addPermToMetadata pd
+    $ tableMetadataSetter sourceName tn %~ addPermToMetadata pd
   pure successMsg
 
 dropPermP1
@@ -275,7 +275,7 @@ runDropPerm defn@(DropPerm source tn rn) = do
   withNewInconsistentObjsCheck
     $ buildSchemaCache
     $ MetadataModifier
-    $ metaTables.ix tn %~ dropPermissionInMetadata rn permType
+    $ tableMetadataSetter source tn %~ dropPermissionInMetadata rn permType
   return successMsg
 
 dropPermissionInMetadata

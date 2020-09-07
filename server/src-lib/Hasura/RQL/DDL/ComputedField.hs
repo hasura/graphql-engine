@@ -6,7 +6,7 @@ module Hasura.RQL.DDL.ComputedField
   , ComputedFieldDefinition(..)
   , runAddComputedField
   , addComputedFieldP2Setup
-  , addComputedFieldToCatalog
+  -- , addComputedFieldToCatalog
   , DropComputedField
   -- , dropComputedFieldFromCatalog
   , dropComputedFieldInMetadata
@@ -24,7 +24,6 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Utils                (makeReasonMessage)
 import           Hasura.SQL.Types
 
-import           Control.Lens                       (ix)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -51,15 +50,17 @@ $(deriveJSON (aesonDrop 4 snakeCase) ''AddComputedField)
 
 runAddComputedField :: (MonadTx m, CacheRWM m) => AddComputedField -> m EncJSON
 runAddComputedField q = do
-  withPathK "table" $ askTabInfo (_afcSource q) (_afcTable q)
+  withPathK "table" $ askTabInfo source table
   let metadataObj = MOTableObj table $ MTOComputedField computedFieldName
       metadata = ComputedFieldMetadata computedFieldName (_afcDefinition q) (_afcComment q)
   -- addComputedFieldToCatalog q
   buildSchemaCacheFor metadataObj
     $ MetadataModifier
-    $ metaTables.ix table.tmComputedFields %~ HM.insert computedFieldName metadata
+    $ tableMetadataSetter source table.tmComputedFields
+      %~ HM.insert computedFieldName metadata
   pure successMsg
   where
+    source = _afcSource q
     table = _afcTable q
     computedFieldName = _afcName q
 
@@ -240,19 +241,19 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
       in alsoWithoutSession
 
 
-addComputedFieldToCatalog
-  :: MonadTx m
-  => AddComputedField -> m ()
-addComputedFieldToCatalog q =
-  liftTx $ Q.withQE defaultTxErrorHandler
-    [Q.sql|
-     INSERT INTO hdb_catalog.hdb_computed_field
-       (table_schema, table_name, computed_field_name, definition, comment)
-     VALUES ($1, $2, $3, $4, $5)
-    |] (schemaName, tableName, computedField, Q.AltJ definition, comment) True
-  where
-    QualifiedObject schemaName tableName = table
-    AddComputedField sourceName table computedField definition comment = q
+-- addComputedFieldToCatalog
+--   :: MonadTx m
+--   => AddComputedField -> m ()
+-- addComputedFieldToCatalog q =
+--   liftTx $ Q.withQE defaultTxErrorHandler
+--     [Q.sql|
+--      INSERT INTO hdb_catalog.hdb_computed_field
+--        (table_schema, table_name, computed_field_name, definition, comment)
+--      VALUES ($1, $2, $3, $4, $5)
+--     |] (schemaName, tableName, computedField, Q.AltJ definition, comment) True
+--   where
+--     QualifiedObject schemaName tableName = table
+--     AddComputedField sourceName table computedField definition comment = q
 
 data DropComputedField
   = DropComputedField
@@ -288,7 +289,7 @@ runDropComputedField (DropComputedField sourceName table computedField cascade) 
     metadataModifiers <- mapM purgeComputedFieldDependency deps
     -- dropComputedFieldFromCatalog table computedField
     buildSchemaCache $ MetadataModifier $
-      metaTables.ix table
+      tableMetadataSetter sourceName table
       %~ (dropComputedFieldInMetadata computedField) . foldl' (.) id metadataModifiers
   pure successMsg
   where

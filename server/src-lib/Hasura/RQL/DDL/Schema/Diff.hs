@@ -25,7 +25,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Catalog  (fetchFunctionMetadataFromDb,
                                                  fetchTableMetadataFromDb)
 import           Hasura.RQL.DDL.Schema.Function
-import           Hasura.RQL.Types               hiding (tmComputedFields, tmTable)
+import           Hasura.RQL.Types               hiding (fmFunction, tmComputedFields, tmTable)
 import           Hasura.RQL.Types.Catalog
 import           Hasura.SQL.Types
 
