@@ -16,3 +16,36 @@ Hasura GraphQL Engine is a blazing-fast GraphQL Server that we now have mysql su
 
 Check out the full repo for more details [here](https://github.com/hasura/graphql-engine).
 
+Get started with Mysql & Hasura.
+
+1. Get the docker-compose file for the mysql prototype examples.
+
+```shell
+# in a new directory run
+wget https://raw.githubusercontent.com/hasura/graphql-engine/LOCATIONOFDOCKERCOMPOSEFILE/docker-compose.yaml
+# or run
+curl https://raw.githubusercontent.com/hasura/graphql-engine/LOCATIONOFDOCKERCOMPOSEFILE/docker-compose.yaml -o docker-compose.yml
+```
+
+Now run docker-compose to bring up the containers.
+
+```shell
+$ docker-compose up -d
+```
+
+Verify the containers are running.
+
+```shell
+$ docker ps
+```
+
+Now open a browser and navigate to `http://localhost:808/console` to try out your newly deployed Hasura with mysql support.
+
+# Questions, Comments, Help, Documentation, and Support
+
+* [Questions, join us on Discord](https://discordapp.com/invite/hasura)
+* [Docs](https://hasura.io/docs)
+* []()
+* [Issues](https://github.com/hasura/graphql-engine/issues)
+
+[GET NOTIFIED LINK / BUTTON HERE](??)
