@@ -16,7 +16,7 @@ Introduction
 ------------
 
 Hasura has different pricing plans that you can choose from based on your requirements. 
-It is possible to switch between these pricing plans.
+It is possible to switch between these pricing plans at any time.
 
 Pricing models
 --------------
@@ -88,14 +88,14 @@ In order to upgrade, click on the link ``Free tier ->``:
 
 .. thumbnail:: /img/graphql/cloud/pricing/pricing-overview.png
    :alt: Downgrade to free plan
-   :width: 539px
+   :width: 1200px
    :class: inline-block
 
 Now click on the ``Usage tab``. To upgrade to the pay-as-you-go plan, click on the ``Upgrade`` button:
 
 .. thumbnail:: /img/graphql/cloud/pricing/upgrade-to-paid-plan.png
    :alt: Downgrade to free plan
-   :width: 539px
+   :width: 1200px
    :class: inline-block
 
 After entering your credit card information and confirmation, your project is running on the pay-as-you-go plan.
@@ -117,7 +117,7 @@ Click on the ``Usage`` tab and then click on the link ``Switch to the free tier`
 
 .. thumbnail:: /img/graphql/cloud/pricing/downgrade-to-free-plan.png
    :alt: Downgrade to free plan
-   :width: 539px
+   :width: 1200px
    :class: inline-block
 
 After confirming, your project is running on the free tier.
