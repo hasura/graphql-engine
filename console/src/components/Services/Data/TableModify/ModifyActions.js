@@ -168,6 +168,7 @@ export const saveComputedField = (
 ) => (dispatch, getState) => {
   const migrationUp = [];
   const migrationDown = [];
+  const { currentDataSource } = getState().tables;
 
   const tableDef = getTableDef(table);
 
@@ -177,7 +178,8 @@ export const saveComputedField = (
     migrationUp.push(
       getDropComputedFieldQuery(
         tableDef,
-        originalComputedField.computed_field_name
+        originalComputedField.computed_field_name,
+        currentDataSource
       )
     );
   }
@@ -187,11 +189,14 @@ export const saveComputedField = (
       tableDef,
       computedFieldName,
       computedField.definition,
-      computedField.comment
+      computedField.comment,
+      currentDataSource
     )
   );
 
-  migrationDown.push(getDropComputedFieldQuery(tableDef, computedFieldName));
+  migrationDown.push(
+    getDropComputedFieldQuery(tableDef, computedFieldName, currentDataSource)
+  );
 
   if (originalComputedField) {
     migrationDown.push(
@@ -199,7 +204,8 @@ export const saveComputedField = (
         tableDef,
         originalComputedField.computed_field_name,
         originalComputedField.definition,
-        originalComputedField.comment
+        originalComputedField.comment,
+        currentDataSource
       )
     );
   }
@@ -231,20 +237,24 @@ export const deleteComputedField = (computedField, table) => (
   dispatch,
   getState
 ) => {
+  const { currentDataSource } = getState().tables;
   const migrationUp = [];
   const migrationDown = [];
 
   const tableDef = getTableDef(table);
   const computedFieldName = computedField.computed_field_name;
 
-  migrationUp.push(getDropComputedFieldQuery(tableDef, computedFieldName));
+  migrationUp.push(
+    getDropComputedFieldQuery(tableDef, computedFieldName, currentDataSource)
+  );
 
   migrationDown.push(
     getAddComputedFieldQuery(
       tableDef,
       computedFieldName,
       computedFieldName.definition,
-      computedField.comment
+      computedField.comment,
+      currentDataSource
     )
   );
 
@@ -901,9 +911,10 @@ const deleteTableSql = tableName => {
 const untrackTableSql = tableName => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
+    const currentDataSource = getState().tables.currentDataSource;
     const tableDef = generateTableDef(tableName, currentSchema);
-    const upQueries = [getUntrackTableQuery(tableDef)];
-    const downQueries = [getTrackTableQuery(tableDef)];
+    const upQueries = [getUntrackTableQuery(tableDef, currentDataSource)];
+    const downQueries = [getTrackTableQuery(tableDef, currentDataSource)];
 
     // apply migrations
     const migrationName = 'untrack_table_' + currentSchema + '_' + tableName;
@@ -1804,17 +1815,22 @@ export const toggleTableAsEnum = (isEnum, successCallback, failureCallback) => (
 
   dispatch({ type: TOGGLE_ENUM });
 
-  const { currentTable, currentSchema } = getState().tables;
+  const { currentTable, currentSchema, currentDataSource } = getState().tables;
   const { allSchemas } = getState().tables;
 
   const upQuery = [
     getSetTableEnumQuery(
       generateTableDef(currentTable, currentSchema),
-      !isEnum
+      !isEnum,
+      currentDataSource
     ),
   ];
   const downQuery = [
-    getSetTableEnumQuery(generateTableDef(currentTable, currentSchema), isEnum),
+    getSetTableEnumQuery(
+      generateTableDef(currentTable, currentSchema),
+      isEnum,
+      currentDataSource
+    ),
   ];
 
   const migrationName =

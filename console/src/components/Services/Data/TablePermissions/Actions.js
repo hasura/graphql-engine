@@ -528,6 +528,7 @@ const copyRolePermissions = (
 
     const allSchemas = getState().tables.allSchemas;
     const currentSchema = getState().tables.currentSchema;
+    const dataSource = getState().tables.currentDataSource;
 
     let tables;
     if (tableNameWithSchema === 'all') {
@@ -561,13 +562,15 @@ const copyRolePermissions = (
             const deleteQuery = getDropPermissionQuery(
               _action,
               tableDef,
-              toRole
+              toRole,
+              dataSource
             );
             const createQuery = getCreatePermissionQuery(
               _action,
               tableDef,
               toRole,
-              currPermissions
+              currPermissions,
+              dataSource
             );
 
             permissionsUpQueries.push(deleteQuery);
@@ -580,12 +583,14 @@ const copyRolePermissions = (
               _action,
               tableDef,
               toRole,
-              toBeAppliedPermissions
+              toBeAppliedPermissions,
+              dataSource
             );
             const deleteQuery = getDropPermissionQuery(
               _action,
               tableDef,
-              toRole
+              toRole,
+              dataSource
             );
 
             permissionsUpQueries.push(createQuery);
@@ -638,6 +643,7 @@ const deleteRoleGlobally = roleName => {
 
     const allSchemas = getState().tables.allSchemas;
     const currentSchema = getState().tables.currentSchema;
+    const dataSource = getState().tables.currentDataSource;
 
     const tables = getSchemaTables(allSchemas, currentSchema);
 
@@ -654,14 +660,16 @@ const deleteRoleGlobally = roleName => {
           const deleteQuery = getDropPermissionQuery(
             _action,
             tableDef,
-            roleName
+            roleName,
+            dataSource
           );
           // since the actions must be revertible
           const createQuery = getCreatePermissionQuery(
             _action,
             tableDef,
             roleName,
-            currPermissions
+            currPermissions,
+            dataSource
           );
 
           permissionsUpQueries.push(deleteQuery);

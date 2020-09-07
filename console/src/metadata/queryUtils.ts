@@ -39,11 +39,20 @@ export type MetadataQueryType =
 
 export type MetadataQueries = Record<Driver, Record<MetadataQueryType, string>>;
 
+type MetadataQueryArgs = {
+  source: string;
+  [key: string]: any;
+};
+
 export const getMetadataQuery = (
   type: MetadataQueryType,
-  args: Record<string, any>,
+  args: MetadataQueryArgs,
   options?: { version: number }
-) => {
+): {
+  type: string;
+  args: MetadataQueryArgs;
+  version?: number;
+} => {
   // const prefix = currentDriver === 'postgres' ? 'pg_' : 'mysq_';
   const prefix = '';
   return {
@@ -57,7 +66,8 @@ export const getCreatePermissionQuery = (
   action: 'update' | 'insert' | 'delete' | 'select',
   tableDef: QualifiedTable,
   role: string,
-  permission: any
+  permission: any,
+  source: string
 ) => {
   let queryType: MetadataQueryType;
   switch (action) {
@@ -81,13 +91,15 @@ export const getCreatePermissionQuery = (
     table: tableDef,
     role,
     permission,
+    source,
   });
 };
 
 export const getDropPermissionQuery = (
   action: string,
   tableDef: QualifiedTable,
-  role: string
+  role: string,
+  source: string
 ) => {
   let queryType: MetadataQueryType;
   switch (action) {
@@ -109,6 +121,7 @@ export const getDropPermissionQuery = (
   return getMetadataQuery(queryType, {
     table: tableDef,
     role,
+    source,
   });
 };
 
@@ -182,11 +195,14 @@ export const getUpdateActionQuery = (
   actionName: string,
   actionComment: string
 ) => {
-  return getMetadataQuery('update_action', {
-    name: actionName,
-    definition: def,
-    comment: actionComment,
-  });
+  return {
+    type: 'update_action',
+    args: {
+      name: actionName,
+      definition: def,
+      comment: actionComment,
+    },
+  };
 };
 
 export const getDropActionPermissionQuery = (
@@ -204,43 +220,58 @@ export const getDropActionPermissionQuery = (
 
 export const getSetTableEnumQuery = (
   tableDef: QualifiedTable,
-  isEnum: boolean
+  isEnum: boolean,
+  source: string
 ) => {
   return getMetadataQuery('set_table_is_enum', {
     table: tableDef,
     is_enum: isEnum,
+    source,
   });
 };
 
-export const getTrackTableQuery = (tableDef: QualifiedTable) => {
-  return getMetadataQuery('add_existing_table_or_view', tableDef);
+export const getTrackTableQuery = (
+  tableDef: QualifiedTable,
+  source: string
+) => {
+  return getMetadataQuery('add_existing_table_or_view', {
+    ...tableDef,
+    source,
+  });
 };
 
-export const getUntrackTableQuery = (tableDef: QualifiedTable) => {
-  return getMetadataQuery('untrack_table', tableDef);
+export const getUntrackTableQuery = (
+  tableDef: QualifiedTable,
+  source: string
+) => {
+  return getMetadataQuery('untrack_table', { ...tableDef, source });
 };
 
 export const getAddComputedFieldQuery = (
   tableDef: QualifiedTable,
   computedFieldName: string,
   definition: any,
-  comment: string
+  comment: string,
+  source: string
 ) => {
   return getMetadataQuery('add_computed_field', {
     table: tableDef,
     name: computedFieldName,
     definition,
     comment,
+    source,
   });
 };
 
 export const getDropComputedFieldQuery = (
   tableDef: QualifiedTable,
-  computedFieldName: string
+  computedFieldName: string,
+  source: string
 ) => {
   return getMetadataQuery('drop_computed_field', {
     table: tableDef,
     name: computedFieldName,
+    source,
   });
 };
 
