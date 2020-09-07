@@ -12,7 +12,7 @@ import { PGFunction } from './services/postgresql/types';
 import { Operations } from './common';
 
 export const drivers = ['postgres', 'mysql'];
-export type Driver = 'postgres'; // | 'mysql';
+export type Driver = 'postgres' | 'mysql';
 
 export type ColumnsInfoResult = {
   [tableName: string]: {

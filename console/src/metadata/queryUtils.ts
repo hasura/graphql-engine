@@ -12,21 +12,76 @@ import { LocalEventTriggerState } from '../components/Services/Events/EventTrigg
 import { LocalScheduledTriggerState } from '../components/Services/Events/CronTriggers/state';
 import { LocalAdhocEventState } from '../components/Services/Events/AdhocEvents/Add/state';
 import { RemoteRelationshipPayload } from '../components/Services/Data/TableRelationships/RemoteRelationships/utils';
+import { Driver } from '../dataSources';
+
+export type MetadataQueryType =
+  | 'createSelectPermissions'
+  | 'createUpdatePermissions'
+  | 'createDeletePermissions'
+  | 'createInsertPermissions'
+  | 'dropSelectPermissions'
+  | 'dropUpdatePermissions'
+  | 'dropDeletePermissions'
+  | 'dropInsertPermissions'
+  | 'set_custom_types'
+  | 'create_action'
+  | 'set_table_custom_fields'
+  | 'drop_action'
+  | 'create_action_permission'
+  | 'update_action'
+  | 'drop_action_permission'
+  | 'set_table_is_enum'
+  | 'add_existing_table_or_view'
+  | 'untrack_table'
+  | 'add_computed_field'
+  | 'drop_computed_field'
+  | 'add_source';
+
+export type MetadataQueries = Record<Driver, Record<MetadataQueryType, string>>;
+
+export const getMetadataQuery = (
+  type: MetadataQueryType,
+  args: Record<string, any>,
+  options?: { version: number }
+) => {
+  // const prefix = currentDriver === 'postgres' ? 'pg_' : 'mysq_';
+  const prefix = '';
+  return {
+    type: `${prefix}${type}`,
+    args,
+    ...options,
+  };
+};
 
 export const getCreatePermissionQuery = (
-  action: string,
+  action: 'update' | 'insert' | 'delete' | 'select',
   tableDef: QualifiedTable,
   role: string,
   permission: any
 ) => {
-  return {
-    type: `create_${action}_permission`,
-    args: {
-      table: tableDef,
-      role,
-      permission,
-    },
-  };
+  let queryType: MetadataQueryType;
+  switch (action) {
+    case 'delete':
+      queryType = 'createDeletePermissions';
+      break;
+    case 'insert':
+      queryType = 'createInsertPermissions';
+      break;
+    case 'select':
+      queryType = 'createSelectPermissions';
+      break;
+    case 'update':
+      queryType = 'createUpdatePermissions';
+      break;
+    default:
+      throw new Error('Invalid action type');
+  }
+
+  return getMetadataQuery(queryType, {
+    table: tableDef,
+    role,
+    permission,
+  });
 };
 
 export const getDropPermissionQuery = (
@@ -34,13 +89,27 @@ export const getDropPermissionQuery = (
   tableDef: QualifiedTable,
   role: string
 ) => {
-  return {
-    type: `drop_${action}_permission`,
-    args: {
-      table: tableDef,
-      role,
-    },
-  };
+  let queryType: MetadataQueryType;
+  switch (action) {
+    case 'delete':
+      queryType = 'dropDeletePermissions';
+      break;
+    case 'insert':
+      queryType = 'dropInsertPermissions';
+      break;
+    case 'select':
+      queryType = 'dropSelectPermissions';
+      break;
+    case 'update':
+      queryType = 'dropUpdatePermissions';
+      break;
+    default:
+      throw new Error('Invalid action type');
+  }
+  return getMetadataQuery(queryType, {
+    table: tableDef,
+    role,
+  });
 };
 
 export const generateSetCustomTypesQuery = (customTypes: CustomTypes) => {
@@ -90,7 +159,6 @@ export const generateDropActionQuery = (name: string) => {
   };
 };
 
-// TODO Refactor and accept role, filter and action name
 export const getCreateActionPermissionQuery = (
   def: { role: string; filter: Record<string, any> },
   actionName: string
@@ -114,14 +182,11 @@ export const getUpdateActionQuery = (
   actionName: string,
   actionComment: string
 ) => {
-  return {
-    type: 'update_action',
-    args: {
-      name: actionName,
-      definition: def,
-      comment: actionComment,
-    },
-  };
+  return getMetadataQuery('update_action', {
+    name: actionName,
+    definition: def,
+    comment: actionComment,
+  });
 };
 
 export const getDropActionPermissionQuery = (
@@ -141,61 +206,42 @@ export const getSetTableEnumQuery = (
   tableDef: QualifiedTable,
   isEnum: boolean
 ) => {
-  return {
-    type: 'set_table_is_enum',
-    args: {
-      table: tableDef,
-      is_enum: isEnum,
-    },
-  };
+  return getMetadataQuery('set_table_is_enum', {
+    table: tableDef,
+    is_enum: isEnum,
+  });
 };
 
 export const getTrackTableQuery = (tableDef: QualifiedTable) => {
-  return {
-    type: 'add_existing_table_or_view',
-    args: tableDef,
-  };
+  return getMetadataQuery('add_existing_table_or_view', tableDef);
 };
 
 export const getUntrackTableQuery = (tableDef: QualifiedTable) => {
-  return {
-    type: 'untrack_table',
-    args: {
-      table: tableDef,
-    },
-  };
+  return getMetadataQuery('untrack_table', tableDef);
 };
 
 export const getAddComputedFieldQuery = (
   tableDef: QualifiedTable,
   computedFieldName: string,
-  definition: any, // TODO
+  definition: any,
   comment: string
 ) => {
-  return {
-    type: 'add_computed_field',
-    args: {
-      table: tableDef,
-      name: computedFieldName,
-      definition: {
-        ...definition,
-      },
-      comment,
-    },
-  };
+  return getMetadataQuery('add_computed_field', {
+    table: tableDef,
+    name: computedFieldName,
+    definition,
+    comment,
+  });
 };
 
 export const getDropComputedFieldQuery = (
   tableDef: QualifiedTable,
   computedFieldName: string
 ) => {
-  return {
-    type: 'drop_computed_field',
-    args: {
-      table: tableDef,
-      name: computedFieldName,
-    },
-  };
+  return getMetadataQuery('drop_computed_field', {
+    table: tableDef,
+    name: computedFieldName,
+  });
 };
 
 export const inconsistentObjectsQuery = {
@@ -369,10 +415,44 @@ export const getRemoteSchemaIntrospectionQuery = (
   },
 });
 
-// TODO?: maybe some better types for args
 export const getBulkQuery = (args: any[]) => {
   return {
     type: 'bulk',
     args,
+  };
+};
+
+export const addSource = (
+  driver: Driver,
+  name: string,
+  dbUrl: {
+    from_env?: string;
+    from_value?: string;
+  },
+  connection_pool_settings: {
+    max_connections: number;
+    connection_idle_timeout: number; // in seconds
+  }
+) => {
+  const typePrefix = driver === 'postgres' ? 'pg_' : 'mysql_';
+
+  return {
+    type: `${typePrefix}add_source`,
+    args: {
+      name,
+      url: dbUrl,
+      connection_pool_settings,
+    },
+  };
+};
+
+export const removeSource = (driver: Driver, name: string) => {
+  const typePrefix = driver === 'postgres' ? 'pg_' : 'mysql_';
+
+  return {
+    type: `${typePrefix}remove_source`,
+    args: {
+      name,
+    },
   };
 };
