@@ -291,7 +291,16 @@ class TestCronTrigger(object):
         st, resp = hge_ctx.v1q(query)
         assert st == 200, resp
         db_created_at = resp['result'][1][0]
-        event = scheduled_triggers_evts_webhook.get_event(75)
+        # The maximum timeout is set to 120s because, the cron timestamps
+        # that are generated will start from the next minute, suppose
+        # the cron schedule is "* * * * *" and the time the cron trigger
+        # is created is 10:00:00, then the next event will be scheduled
+        # at 10:01:00, but the events processor will not process it
+        # exactly at the zeroeth second of 10:01. The only guarantee
+        # is that, the event processor will process the event before
+        # 10:02:00. So, in the worst case, it will take 2 minutes
+        # to process the first scheduled event.
+        event = scheduled_triggers_evts_webhook.get_event(120)
         validate_event_webhook(event['path'],'/test')
         validate_event_headers(event['headers'],{"header-key":"header-value"})
         assert event['body']['payload'] == {"foo":"baz"}
