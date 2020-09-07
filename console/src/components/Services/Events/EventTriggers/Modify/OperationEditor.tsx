@@ -51,13 +51,12 @@ const OperationEditor = (props: OperationEditorProps) => {
     setOperationColumns(existingOpColumns);
   };
 
-  const [select, setSelect] = React.useState(false);
   const editorToggle = () => {
-    setSelect(!select);
+    const allSelected = operationColumns.every;
     const newCols = operationColumns.map(oc => {
       return {
         ...oc,
-        enabled: select,
+        enabled: !allSelected,
       };
     });
     setOperationColumns(newCols);
@@ -85,7 +84,7 @@ const OperationEditor = (props: OperationEditorProps) => {
           Listen columns for update:&nbsp;
           {ops.update && !readOnly ? (
             <Button
-              className={`${styles.toggle}`}
+              className={styles.toggle}
               color="white"
               size="xs"
               onClick={editorToggle}
