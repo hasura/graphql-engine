@@ -28,6 +28,8 @@ import {
   generateReplaceMetadataQuery,
   resetMetadataQuery,
 } from './queryUtils';
+import { Driver } from '../dataSources';
+import { addSource, removeSource, reloadSource } from './sourcesUtils';
 
 export interface ExportMetadataSuccess {
   type: 'Metadata/EXPORT_METADATA_SUCCESS';
@@ -87,6 +89,52 @@ export interface DeleteAllowList {
   type: 'Metadata/DELETE_ALLOW_LIST';
 }
 
+export interface AddDataSourceRequest {
+  type: 'Metadata/ADD_DATA_SOURCE_REQUEST';
+  data: {
+    driver: Driver;
+    payload: {
+      name: string;
+      dbUrl: {
+        from_env?: string;
+        from_value?: string;
+      };
+      connection_pool_settings: {
+        max_connections: number;
+        connection_idle_timeout: number; // in seconds
+      };
+    };
+  };
+}
+export interface AddDataSourceError {
+  type: 'Metadata/ADD_DATA_SOURCE_ERROR';
+  data: string;
+}
+
+export interface RemoveDataSourceRequest {
+  type: 'Metadata/REMOVE_DATA_SOURCE_REQUEST';
+  data: {
+    driver: Driver;
+    name: string;
+  };
+}
+export interface RemoveDataSourceError {
+  type: 'Metadata/REMOVE_DATA_SOURCE_ERROR';
+  data: string;
+}
+
+export interface ReloadDataSourceRequest {
+  type: 'Metadata/RELOAD_DATA_SOURCE_REQUEST';
+  data: {
+    driver: Driver;
+    name: string;
+  };
+}
+export interface ReloadDataSourceError {
+  type: 'Metadata/RELOAD_DATA_SOURCE_ERROR';
+  data: string;
+}
+
 export type MetadataActions =
   | ExportMetadataSuccess
   | ExportMetadataError
@@ -101,7 +149,13 @@ export type MetadataActions =
   | AddAllowedQueries
   | UpdateAllowedQuery
   | DeleteAllowList
-  | DeleteAllowedQuery;
+  | DeleteAllowedQuery
+  | AddDataSourceRequest
+  | AddDataSourceError
+  | RemoveDataSourceRequest
+  | RemoveDataSourceError
+  | ReloadDataSourceRequest
+  | ReloadDataSourceError;
 
 export const exportMetadata = (
   successCb?: (data: HasuraMetadataV2) => void,
@@ -116,9 +170,7 @@ export const exportMetadata = (
 
   const options = {
     method: 'POST',
-    headers: {
-      ...dataHeaders,
-    },
+    headers: dataHeaders,
     body: JSON.stringify(query),
   };
 
@@ -133,6 +185,84 @@ export const exportMetadata = (
     })
     .catch(err => {
       if (errorCb) errorCb(err);
+    });
+};
+
+export const addDataSource = (
+  data: AddDataSourceRequest['data']
+): Thunk<void, MetadataActions> => (dispatch, getState) => {
+  const { dataHeaders } = getState().tables;
+
+  const query = addSource(data.driver, data.payload);
+
+  const options = {
+    method: 'POST',
+    headers: dataHeaders,
+    body: JSON.stringify(query),
+  };
+
+  return dispatch(requestAction(Endpoints.query, options))
+    .then(res => {
+      console.log({ res });
+      dispatch(showSuccessNotification('Data source added successfully!'));
+      dispatch(exportMetadata());
+      return getState();
+    })
+    .catch(err => {
+      console.error(err);
+      dispatch(showErrorNotification('Add data source failed', null, err));
+    });
+};
+
+export const removeDataSource = (
+  data: RemoveDataSourceRequest['data']
+): Thunk<void, MetadataActions> => (dispatch, getState) => {
+  const { dataHeaders } = getState().tables;
+
+  const query = removeSource(data.driver, data.name);
+
+  const options = {
+    method: 'POST',
+    headers: dataHeaders,
+    body: JSON.stringify(query),
+  };
+
+  return dispatch(requestAction(Endpoints.query, options))
+    .then(res => {
+      console.log({ res });
+      dispatch(showSuccessNotification('Data source removed successfully!'));
+      dispatch(exportMetadata());
+      return getState();
+    })
+    .catch(err => {
+      console.error(err);
+      dispatch(showErrorNotification('Remove data source failed', null, err));
+    });
+};
+
+export const reloadDataSource = (
+  data: ReloadDataSourceRequest['data']
+): Thunk<void, MetadataActions> => (dispatch, getState) => {
+  const { dataHeaders } = getState().tables;
+
+  const query = reloadSource(data.driver, data.name);
+
+  const options = {
+    method: 'POST',
+    headers: dataHeaders,
+    body: JSON.stringify(query),
+  };
+
+  return dispatch(requestAction(Endpoints.query, options))
+    .then(res => {
+      console.log({ res });
+      dispatch(showSuccessNotification('Data source reloaded successfully!'));
+      dispatch(exportMetadata());
+      return getState();
+    })
+    .catch(err => {
+      console.error(err);
+      dispatch(showErrorNotification('Reload data source failed', null, err));
     });
 };
 
