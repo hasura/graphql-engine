@@ -830,7 +830,7 @@ export interface InputArgument {
  * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/manage-metadata.html#replace-metadata
  */
 export interface HasuraMetadataV2 {
-  version: number;
+  version: '2';
   tables: TableEntry[];
   actions?: Action[];
   custom_types?: CustomTypes;
@@ -842,4 +842,34 @@ export interface HasuraMetadataV2 {
   query_collections?: QueryCollectionEntry[];
   allowlist?: AllowList[];
   cron_triggers?: CronTrigger[];
+}
+
+export interface MetadataDataSource {
+  name: string;
+  url:
+    | {
+        from_env: string;
+      }
+    | { from_value: string };
+  connection_pool_settings: {
+    max_connections?: number;
+    connection_idle_timeout?: number;
+  };
+  tables: TableEntry[];
+  actions?: Action[];
+  custom_types?: CustomTypes;
+  functions?: Array<{
+    function: { schema: string; name: string };
+    configuration: Record<string, any>;
+  }>;
+  remote_schemas?: RemoteSchema[];
+  query_collections?: QueryCollectionEntry[];
+  allowlist?: AllowList[];
+  cron_triggers?: CronTrigger[];
+}
+
+export interface HasuraMetadataV3 {
+  version: '3';
+  postgres_sources: MetadataDataSource[];
+  mysql_sources: MetadataDataSource[];
 }
