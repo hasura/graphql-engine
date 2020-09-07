@@ -1,3 +1,18 @@
+import { Driver } from '../dataSources';
+
+export type DataSource = {
+  name: string;
+  url: string;
+  fromEnv: boolean;
+  driver: Driver;
+  connection_pool_settings?: {
+    max_connections?: number;
+    connection_idle_timeout?: number;
+  };
+};
+
+// GENERATED
+
 export type PGColumn = string;
 export type ComputedFieldName = string;
 export type RoleName = string;

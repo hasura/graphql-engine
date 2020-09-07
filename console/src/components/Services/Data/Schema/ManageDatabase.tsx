@@ -1,69 +1,86 @@
-import React from 'react';
+import { ThunkDispatch } from 'redux-thunk';
+import React, { useState } from 'react';
 import Helmet from 'react-helmet';
+
 import { connect, ConnectedProps } from 'react-redux';
 import Button from '../../../Common/Button/Button';
 import styles from '../../../Common/Common.scss';
 import { ReduxState } from '../../../../types';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import CreateDatabase from './CreateDatabase';
+import { DataSource } from '../../../../metadata/types';
 import { Driver } from '../../../../dataSources';
+import {
+  removeDataSource,
+  reloadDataSource,
+  addDataSource,
+} from '../../../../metadata/actions';
 
-type DatabaseDetails = {
-  name: string;
-  type: Driver;
-  url: string;
-};
-
-type DatabaseListItemProps = {
-  handleRemove: () => void;
-  handleReload: () => void;
-  dbDetails: DatabaseDetails;
-};
-const dummyData: DatabaseListItemProps[] = [
+const dummyData: DataSource[] = [
   {
-    handleRemove: () => {},
-    handleReload: () => {},
-    dbDetails: {
-      name: 'Warehouse DB',
-      type: 'postgres',
-      url: 'postgres://postgres:@105.245.144.63:5432/postgres',
-    },
+    name: 'Warehouse DB',
+    driver: 'postgres',
+    url: 'postgres://postgres:@105.245.144.63:5432/postgres',
+    fromEnv: false,
   },
   {
-    handleRemove: () => {},
-    handleReload: () => {},
-    dbDetails: {
-      name: 'Users DB',
-      type: 'mysql' as any,
-      url: 'mysql://root:password@195.38.139.16:3306/users_database',
-    },
+    name: 'Users DB',
+    driver: 'mysql',
+    url: 'mysql://root:password@195.38.139.16:3306/users_database',
+    fromEnv: false,
   },
 ];
+
+type DatabaseListItemProps = {
+  dataSource: DataSource;
+  onReload: (name: string, driver: Driver, cb: () => void) => void;
+  onRemove: (name: string, driver: Driver, cb: () => void) => void;
+};
 const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
-  handleReload,
-  handleRemove,
-  dbDetails,
-}) => (
-  <div className={styles.db_list_item}>
-    <Button size="xs" color="white" onClick={handleReload}>
-      Reload
-    </Button>
-    <Button
-      className={styles.db_list_content}
-      size="xs"
-      color="white"
-      onClick={handleRemove}
-    >
-      Remove
-    </Button>
-    <div className={styles.db_list_content}>
-      <b>
-        {dbDetails.name} ({dbDetails.type})
-      </b>{' '}
-      - {dbDetails.url}
+  onReload,
+  onRemove,
+  dataSource,
+}) => {
+  const [reloading, setReloading] = useState(false);
+  const [removing, setRemoving] = useState(false);
+
+  return (
+    <div className={styles.db_list_item}>
+      <Button
+        size="xs"
+        color="white"
+        onClick={() => {
+          setReloading(true);
+          onReload(dataSource.name, dataSource.driver, () =>
+            setReloading(false)
+          );
+        }}
+      >
+        {reloading ? 'Reloading...' : 'Reload'}
+      </Button>
+      <Button
+        className={styles.db_list_content}
+        size="xs"
+        color="white"
+        onClick={() => {
+          setRemoving(true);
+          onRemove(dataSource.name, dataSource.driver, () =>
+            setRemoving(false)
+          );
+        }}
+      >
+        {removing ? 'Removing...' : 'Remove'}
+      </Button>
+      <div className={styles.db_list_content}>
+        <b>
+          {dataSource.name} ({dataSource.driver})
+        </b>{' '}
+        - {dataSource.url}
+      </div>
     </div>
-  </div>
-);
+  );
+};
+
 const crumbs = [
   {
     title: 'Data',
@@ -74,8 +91,54 @@ const crumbs = [
     url: '#',
   },
 ];
-const ManageDatabase: React.FC<ManageDatabaseProps> = () => {
-  const dataList = dummyData.map(data => <DatabaseListItem {...data} />);
+
+const ManageDatabase: React.FC<ManageDatabaseInjectedProps> = ({
+  dispatch,
+}) => {
+  const onRemove = (name: string, driver: Driver, cb: () => void) => {
+    (dispatch(removeDataSource({ driver, name })) as any).then(cb); // todo
+  };
+
+  const onReload = (name: string, driver: Driver, cb: () => void) => {
+    (dispatch(reloadDataSource({ driver, name })) as any).then(cb); // todo
+  };
+
+  const onCreateDataSource = (
+    data: DataSource,
+    successCallback: () => void
+  ) => {
+    dispatch(
+      addDataSource(
+        {
+          driver: data.driver,
+          payload: {
+            name: data.name,
+            connection_pool_settings: {
+              ...(data.connection_pool_settings?.connection_idle_timeout && {
+                connection_idle_timeout:
+                  data.connection_pool_settings.connection_idle_timeout,
+              }),
+              ...(data.connection_pool_settings?.max_connections && {
+                max_connections: data.connection_pool_settings.max_connections,
+              }),
+            },
+            dbUrl: {
+              [data.fromEnv ? 'from_env' : 'from_value']: data.url,
+            },
+          },
+        },
+        successCallback
+      )
+    );
+  };
+
+  const dataList = dummyData.map(data => (
+    <DatabaseListItem
+      dataSource={data}
+      onReload={onReload}
+      onRemove={onRemove}
+    />
+  ));
   return (
     <div
       className={`container-fluid ${styles.padd_left_remove} ${styles.padd_top} ${styles.manage_dbs_page}`}
@@ -99,7 +162,7 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = () => {
           <div className={styles.data_list_container}>{dataList}</div>
           <hr />
         </div>
-        <CreateDatabase onSubmit={() => {}} />
+        <CreateDatabase onSubmit={onCreateDataSource} />
       </div>
     </div>
   );
@@ -110,9 +173,14 @@ const mapStateToProps = (state: ReduxState) => {
     schemaList: state.tables.schemaList,
   };
 };
-const manageConnector = connect(mapStateToProps);
+const manageConnector = connect(
+  mapStateToProps,
+  (dispatch: ThunkDispatch<ReduxState, unknown, any>) => ({
+    dispatch,
+  })
+);
 
-type ManageDatabaseProps = ConnectedProps<typeof manageConnector>;
+type ManageDatabaseInjectedProps = ConnectedProps<typeof manageConnector>;
 
 const ConnectedDatabaseManagePage = manageConnector(ManageDatabase);
 export default ConnectedDatabaseManagePage;

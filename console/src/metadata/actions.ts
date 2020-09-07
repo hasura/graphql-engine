@@ -100,8 +100,8 @@ export interface AddDataSourceRequest {
         from_value?: string;
       };
       connection_pool_settings: {
-        max_connections: number;
-        connection_idle_timeout: number; // in seconds
+        max_connections?: number;
+        connection_idle_timeout?: number; // in seconds
       };
     };
   };
@@ -189,8 +189,12 @@ export const exportMetadata = (
 };
 
 export const addDataSource = (
-  data: AddDataSourceRequest['data']
-): Thunk<void, MetadataActions> => (dispatch, getState) => {
+  data: AddDataSourceRequest['data'],
+  successCb: () => void
+): Thunk<Promise<void | ReduxState>, MetadataActions> => (
+  dispatch,
+  getState
+) => {
   const { dataHeaders } = getState().tables;
 
   const query = addSource(data.driver, data.payload);
@@ -202,8 +206,8 @@ export const addDataSource = (
   };
 
   return dispatch(requestAction(Endpoints.query, options))
-    .then(res => {
-      console.log({ res });
+    .then(() => {
+      successCb();
       dispatch(showSuccessNotification('Data source added successfully!'));
       dispatch(exportMetadata());
       return getState();
@@ -216,7 +220,10 @@ export const addDataSource = (
 
 export const removeDataSource = (
   data: RemoveDataSourceRequest['data']
-): Thunk<void, MetadataActions> => (dispatch, getState) => {
+): Thunk<Promise<void | ReduxState>, MetadataActions> => (
+  dispatch,
+  getState
+) => {
   const { dataHeaders } = getState().tables;
 
   const query = removeSource(data.driver, data.name);
@@ -242,7 +249,10 @@ export const removeDataSource = (
 
 export const reloadDataSource = (
   data: ReloadDataSourceRequest['data']
-): Thunk<void, MetadataActions> => (dispatch, getState) => {
+): Thunk<Promise<void | ReduxState>, MetadataActions> => (
+  dispatch,
+  getState
+) => {
   const { dataHeaders } = getState().tables;
 
   const query = reloadSource(data.driver, data.name);

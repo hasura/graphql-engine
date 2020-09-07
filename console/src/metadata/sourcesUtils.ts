@@ -8,9 +8,9 @@ export const addSource = (
       from_env?: string;
       from_value?: string;
     };
-    connection_pool_settings: {
-      max_connections: number;
-      connection_idle_timeout: number; // in seconds
+    connection_pool_settings?: {
+      max_connections?: number;
+      connection_idle_timeout?: number; // in seconds
     };
   }
 ) => {

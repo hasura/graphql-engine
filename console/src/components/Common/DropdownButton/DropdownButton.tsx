@@ -19,7 +19,7 @@ type DropDownButtonProps = {
   id?: string;
   testId?: string;
   disabled?: boolean;
-  bsClass: string;
+  bsClass?: string;
   inputPlaceHolder: string;
 };
 
