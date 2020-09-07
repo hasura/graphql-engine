@@ -242,7 +242,7 @@ export const getTrackTableQuery = (
   source: string
 ) => {
   return getMetadataQuery('add_existing_table_or_view', {
-    ...tableDef,
+    table: tableDef,
     source,
   });
 };
@@ -251,7 +251,7 @@ export const getUntrackTableQuery = (
   tableDef: QualifiedTable,
   source: string
 ) => {
-  return getMetadataQuery('untrack_table', { ...tableDef, source });
+  return getMetadataQuery('untrack_table', { table: tableDef, source });
 };
 
 export const getAddComputedFieldQuery = (
