@@ -65,11 +65,10 @@ module Hasura.Eventing.ScheduledTrigger
   , CronEventSeed(..)
   , generateScheduleTimes
   , insertCronEvents
-  , StandAloneScheduledEvent(..)
   , initLockedEventsCtx
   , LockedEventsCtx(..)
   , unlockCronEvents
-  , unlockStandaloneScheduledEvents
+  , unlockOneOffScheduledEvents
   , unlockAllLockedScheduledEvents
   ) where
 
@@ -184,7 +183,7 @@ data ScheduledEventFull
   { sefId            :: !ScheduledEventId
   , sefName          :: !(Maybe TriggerName)
   -- ^ sefName is the name of the cron trigger.
-  -- A standalone scheduled event is not associated with a name, so in that
+  -- A one-off scheduled event is not associated with a name, so in that
   -- case, 'sefName' will be @Nothing@
   , sefScheduledTime :: !UTCTime
   , sefTries         :: !Int
@@ -195,25 +194,24 @@ data ScheduledEventFull
   , sefComment       :: !(Maybe Text)
   , sefCreatedAt     :: !UTCTime
   } deriving (Show, Eq)
-
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = True} ''ScheduledEventFull)
 
-data StandAloneScheduledEvent
-  = StandAloneScheduledEvent
-  { saseId            :: !StandAloneScheduledEventId
-  , saseScheduledTime :: !UTCTime
-  , saseTries         :: !Int
-  , saseWebhook       :: !InputWebhook
-  , sasePayload       :: !(Maybe J.Value)
-  , saseRetryConf     :: !STRetryConf
-  , saseHeaderConf    :: ![HeaderConf]
-  , saseComment       :: !(Maybe Text)
-  , saseCreatedAt     :: !UTCTime
+data OneOffScheduledEvent
+  = OneOffScheduledEvent
+  { ooseId            :: !OneOffScheduledEventId
+  , ooseScheduledTime :: !UTCTime
+  , ooseTries         :: !Int
+  , ooseWebhook       :: !InputWebhook
+  , oosePayload       :: !(Maybe J.Value)
+  , ooseRetryConf     :: !STRetryConf
+  , ooseHeaderConf    :: ![HeaderConf]
+  , ooseComment       :: !(Maybe Text)
+  , ooseCreatedAt     :: !UTCTime
   } deriving (Show, Eq)
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = True} ''StandAloneScheduledEvent)
+$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = True} ''OneOffScheduledEvent)
 
 -- | The 'ScheduledEventType' data type is needed to differentiate
---   between a 'CronScheduledEvent' and 'StandAloneEvent' scheduled
+--   between a 'CronScheduledEvent' and 'OneOffScheduledEvent' scheduled
 --   event because they both have different configurations
 --   and they live in different tables.
 data ScheduledEventType =
@@ -224,8 +222,8 @@ data ScheduledEventType =
   -- uses the above mentioned configurations defined in the template.
   -- The configuration defined with the cron trigger is cached
   -- and hence it's not fetched along the cron scheduled events.
-  | StandAloneEvent
-  -- ^ A standalone scheduled event doesn't have any template defined
+  | OneOffEvent
+  -- ^ A One-off scheduled event doesn't have any template defined
   -- so all the configuration is fetched along the scheduled events.
     deriving (Eq, Show)
 
@@ -357,10 +355,11 @@ processCronEvents logger logEnv httpMgr pgpool getSC lockedCronEvents = do
       Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) getPartialCronEvents
   case cronScheduledEvents of
     Right partialEvents -> do
-      -- save the locked standalone events that have been fetched from the
+      -- save the locked cron events that have been fetched from the
       -- database, the events stored here will be unlocked in case a
       -- graceful shutdown is initiated in midst of processing these events
       saveLockedEvents (map cepId partialEvents) lockedCronEvents
+      -- The `createdAt` of a cron event is the `created_at` of the cron trigger
       for_ partialEvents $ \(CronEventPartial id' name st tries createdAt)-> do
         case Map.lookup name cronTriggersInfo of
           Nothing ->  logInternalError $
@@ -387,36 +386,35 @@ processCronEvents logger logEnv httpMgr pgpool getSC lockedCronEvents = do
   where
     logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
 
-processStandAloneEvents
+processOneOffEvents
   :: (HasVersion, MonadIO m, Tracing.HasReporter m)
   => Env.Environment
   -> L.Logger L.Hasura
   -> LogEnvHeaders
   -> HTTP.Manager
   -> Q.PGPool
-  -> TVar (Set.Set StandAloneScheduledEventId)
+  -> TVar (Set.Set OneOffScheduledEventId)
   -> m ()
-processStandAloneEvents env logger logEnv httpMgr pgpool lockedStandAloneEvents = do
-  standAloneScheduledEvents <-
+processOneOffEvents env logger logEnv httpMgr pgpool lockedOneOffEvents = do
+  oneOffScheduledEvents <-
     liftIO . runExceptT $
       Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) getOneOffScheduledEvents
-  case standAloneScheduledEvents of
-    Right standAloneScheduledEvents' -> do
-      -- save the locked standalone events that have been fetched from the
+  case oneOffScheduledEvents of
+    Right oneOffScheduledEvents' -> do
+      -- save the locked one-off events that have been fetched from the
       -- database, the events stored here will be unlocked in case a
       -- graceful shutdown is initiated in midst of processing these events
-      saveLockedEvents (map saseId standAloneScheduledEvents') lockedStandAloneEvents
-      for_ standAloneScheduledEvents' $
-             \(StandAloneScheduledEvent id'
-                                        scheduledTime
-                                        tries
-                                        webhookConf
-                                        payload
-                                        retryConf
-                                        headerConf
-                                        comment
-                                        createdAt
-              )
+      saveLockedEvents (map ooseId oneOffScheduledEvents') lockedOneOffEvents
+      for_ oneOffScheduledEvents' $
+             \(OneOffScheduledEvent id'
+                                    scheduledTime
+                                    tries
+                                    webhookConf
+                                    payload
+                                    retryConf
+                                    headerConf
+                                    comment
+                                    createdAt)
         -> do
         webhookInfo <- liftIO . runExceptT $ resolveWebhook env webhookConf
         headerInfo <- liftIO . runExceptT $ getHeaderInfosFromConf env headerConf
@@ -438,16 +436,16 @@ processStandAloneEvents env logger logEnv httpMgr pgpool lockedStandAloneEvents 
                                                         comment
                                                         createdAt
                 finally <- Tracing.runTraceT "scheduled event" . runExceptT $
-                  runReaderT (processScheduledEvent logEnv pgpool scheduledEvent StandAloneEvent) $
+                  runReaderT (processScheduledEvent logEnv pgpool scheduledEvent OneOffEvent) $
                                  (logger, httpMgr)
-                removeEventFromLockedEvents id' lockedStandAloneEvents
+                removeEventFromLockedEvents id' lockedOneOffEvents
                 either logInternalError pure finally
 
               Left headerInfoErr -> logInternalError headerInfoErr
 
           Left webhookInfoErr -> logInternalError webhookInfoErr
 
-    Left standAloneScheduledEventsErr -> logInternalError standAloneScheduledEventsErr
+    Left oneOffScheduledEventsErr -> logInternalError oneOffScheduledEventsErr
   where
     logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
 
@@ -464,7 +462,7 @@ processScheduledTriggers
 processScheduledTriggers env logger logEnv httpMgr pgpool getSC LockedEventsCtx {..} =
   forever $ do
     processCronEvents logger logEnv httpMgr pgpool getSC leCronEvents
-    processStandAloneEvents env logger logEnv httpMgr pgpool leStandAloneEvents
+    processOneOffEvents env logger logEnv httpMgr pgpool leOneOffEvents
     liftIO $ sleep (minutes 1)
 
 processScheduledEvent ::
@@ -620,7 +618,7 @@ setRetry se time type' =
         STATUS = 'scheduled'
         WHERE id = $2
         |] (time, sefId se) True
-    StandAloneEvent ->
+    OneOffEvent ->
       Q.unitQE defaultTxErrorHandler [Q.sql|
         UPDATE hdb_catalog.hdb_scheduled_events
         SET next_retry_at = $1,
@@ -665,7 +663,7 @@ insertInvocation invo type' = do
           SET tries = tries + 1
           WHERE id = $1
           |] (Identity $ iEventId invo) True
-    StandAloneEvent -> do
+    OneOffEvent -> do
       Q.unitQE defaultTxErrorHandler
         [Q.sql|
          INSERT INTO hdb_catalog.hdb_scheduled_event_invocation_logs
@@ -691,7 +689,7 @@ setScheduledEventStatus scheduledEventId status type' =
         SET status = $2
         WHERE id = $1
        |] (scheduledEventId, status) True
-    StandAloneEvent -> do
+    OneOffEvent -> do
       Q.unitQE defaultTxErrorHandler
        [Q.sql|
         UPDATE hdb_catalog.hdb_scheduled_events
@@ -721,7 +719,7 @@ getPartialCronEvents = do
       |] () True
   where uncurryEvent (i, n, st, tries, createdAt) = CronEventPartial i n st tries createdAt
 
-getOneOffScheduledEvents :: Q.TxE QErr [StandAloneScheduledEvent]
+getOneOffScheduledEvents :: Q.TxE QErr [OneOffScheduledEvent]
 getOneOffScheduledEvents = do
   map uncurryOneOffEvent <$> Q.listQE defaultTxErrorHandler [Q.sql|
       UPDATE hdb_catalog.hdb_scheduled_events
@@ -749,15 +747,15 @@ getOneOffScheduledEvents = do
                        , comment
                        , createdAt
                        ) =
-      StandAloneScheduledEvent eventId
-                               scheduledTime
-                               tries
-                               (Q.getAltJ webhookConf)
-                               (Q.getAltJ payload)
-                               (Q.getAltJ retryConf)
-                               (Q.getAltJ headerConf)
-                               comment
-                               createdAt
+      OneOffScheduledEvent eventId
+                           scheduledTime
+                           tries
+                           (Q.getAltJ webhookConf)
+                           (Q.getAltJ payload)
+                           (Q.getAltJ retryConf)
+                           (Q.getAltJ headerConf)
+                           comment
+                           createdAt
 
 
 liftExceptTIO :: (MonadError e m, MonadIO m) => ExceptT e IO a -> m a
@@ -785,8 +783,8 @@ unlockCronEvents scheduledEventIds =
      SELECT count(*) FROM "cte"
    |] (Identity $ ScheduledEventIdArray scheduledEventIds) True
 
-unlockStandaloneScheduledEvents :: [ScheduledEventId] -> Q.TxE QErr Int
-unlockStandaloneScheduledEvents scheduledEventIds =
+unlockOneOffScheduledEvents :: [ScheduledEventId] -> Q.TxE QErr Int
+unlockOneOffScheduledEvents scheduledEventIds =
    (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
    [Q.sql|
      WITH "cte" AS

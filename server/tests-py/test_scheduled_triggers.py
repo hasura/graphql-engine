@@ -9,7 +9,7 @@ import json
 import time
 
 # The create and delete tests should ideally go in setup and teardown YAML files,
-# We can't use that here because, the payload is dynamic i.e. in case of adhoc Scheduled Triggers
+# We can't use that here because, the payload is dynamic i.e. in case of one-off scheduled events
 # the value is the current timestamp and in case of cron  Triggers, the cron schedule is
 # derived based on the current timestamp
 
