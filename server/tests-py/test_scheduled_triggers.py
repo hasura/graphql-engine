@@ -291,7 +291,7 @@ class TestCronTrigger(object):
         st, resp = hge_ctx.v1q(query)
         assert st == 200, resp
         db_created_at = resp['result'][1][0]
-        event = scheduled_triggers_evts_webhook.get_event(60)
+        event = scheduled_triggers_evts_webhook.get_event(65)
         validate_event_webhook(event['path'],'/test')
         validate_event_headers(event['headers'],{"header-key":"header-value"})
         assert event['body']['payload'] == {"foo":"baz"}
