@@ -5,7 +5,7 @@ import {
 import { isJsonString } from '../../Common/utils/jsUtils';
 import { ERROR_CODES } from './constants';
 import { dataSource } from '../../../dataSources';
-import { getRunSqlQuery } from '../../../metadata/queryUtils';
+import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 
 export const getPlaceholder = type => {
   switch (type) {

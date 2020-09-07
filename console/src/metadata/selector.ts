@@ -20,6 +20,10 @@ const getActions = (state: ReduxState) => {
   return state.metadata.metadataObject?.actions;
 };
 
+const getMetadata = (state: ReduxState) => {
+  return state.metadata.metadataObject;
+};
+
 type PermKeys = Pick<
   TableEntry,
   | 'update_permissions'
@@ -185,3 +189,10 @@ export const getRemoteSchemaSelector = createSelector(
 
 export const getAllowedQueries = (state: ReduxState) =>
   state.metadata.allowedQueries || [];
+
+export const getDataSources = createSelector(getMetadata, metadata => {
+  return [
+    { name: 'Warehouse DB', driver: 'postgres' },
+    { name: 'Users DB', driver: 'mysql' },
+  ]; // todo
+});

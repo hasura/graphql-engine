@@ -14,22 +14,6 @@ import { LocalScheduledTriggerState } from '../components/Services/Events/CronTr
 import { LocalAdhocEventState } from '../components/Services/Events/AdhocEvents/Add/state';
 import { RemoteRelationshipPayload } from '../components/Services/Data/TableRelationships/RemoteRelationships/utils';
 
-export const getRunSqlQuery = (
-  sql: string,
-  shouldCascade?: boolean,
-  readOnly?: boolean
-) => {
-  if (!sql) return {};
-  return {
-    type: 'run_sql',
-    args: {
-      sql: terminateSql(sql),
-      cascade: !!shouldCascade,
-      read_only: !!readOnly,
-    },
-  };
-};
-
 export const getCreatePermissionQuery = (
   action: string,
   tableDef: QualifiedTable,

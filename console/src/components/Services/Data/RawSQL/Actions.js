@@ -15,7 +15,7 @@ import returnMigrateUrl from '../Common/getMigrateUrl';
 import requestAction from '../../../../utils/requestAction';
 import { dataSource } from '../../../../dataSources';
 import { exportMetadata } from '../../../../metadata/actions';
-import { getRunSqlQuery } from '../../../../metadata/queryUtils';
+import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 
 const MAKING_REQUEST = 'RawSQL/MAKING_REQUEST';
 const SET_SQL = 'RawSQL/SET_SQL';

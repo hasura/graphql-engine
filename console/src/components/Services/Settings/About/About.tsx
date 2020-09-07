@@ -11,7 +11,7 @@ import requestAction from '../../../../utils/requestAction';
 import { showErrorNotification } from '../../Common/Notification';
 import { versionGT } from '../../../../helpers/versionUtils';
 import { ReduxState, ConnectInjectedProps } from '../../../../types';
-import { getRunSqlQuery } from '../../../../metadata/queryUtils';
+import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 
 type AboutState = {
   consoleAssetVersion?: string;

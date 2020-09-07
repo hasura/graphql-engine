@@ -3,7 +3,7 @@ import { showErrorNotification } from '../../Common/Notification';
 import { makeMigrationCall, fetchSchemaList } from '../DataActions';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import { dataSource } from '../../../../dataSources';
-import { getRunSqlQuery } from '../../../../metadata/queryUtils';
+import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 
 export const createNewSchema = (schemaName, successCb, errorCb) => {
   return (dispatch, getState) => {

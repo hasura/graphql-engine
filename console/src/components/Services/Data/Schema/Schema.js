@@ -15,6 +15,7 @@ import {
   updateSchemaInfo,
   fetchFunctionInit,
   updateCurrentSchema,
+  fetchSchemaList,
 } from '../DataActions';
 import {
   autoAddRelName,
@@ -34,6 +35,7 @@ import {
   getSchemaTables,
   getUntrackedTables,
   dataSource,
+  setDriver,
 } from '../../../../dataSources';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
@@ -41,7 +43,10 @@ import ToolTip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import RawSqlButton from '../Common/Components/RawSqlButton';
 import styles from '../../../Common/Common.scss';
-import { getConsistentFunctions } from '../../../../metadata/selector';
+import {
+  getConsistentFunctions,
+  getDataSources,
+} from '../../../../metadata/selector';
 
 const SchemaPermissionsButton = ({ schema }) => (
   <Link to={getSchemaPermissionsRoute(schema)}>
@@ -58,98 +63,6 @@ const ManageDatabasesButton = () => (
     </Button>
   </Link>
 );
-
-// const OpenCreateSection = React.forwardRef(
-//   ({ ref, value, handleInputChange, handleCreate, handleCancelCreate }) => (
-//     <div className={styles.display_inline + ' ' + styles.add_mar_left}>
-//       <div className={styles.display_inline}>
-//         <input
-//           type="text"
-//           value={value}
-//           onChange={handleInputChange}
-//           placeholder="schema_name"
-//           className={`form-control input-sm ${styles.display_inline}`}
-//           ref={ref}
-//         />
-//       </div>
-//       <Button
-//         color="white"
-//         size="xs"
-//         onClick={handleCreate}
-//         className={styles.add_mar_left_mid}
-//       >
-//         Create
-//       </Button>
-//       <Button
-//         color="white"
-//         size="xs"
-//         onClick={handleCancelCreate}
-//         className={styles.add_mar_left_mid}
-//       >
-//         Cancel
-//       </Button>
-//     </div>
-//   )
-// );
-
-// const ClosedCreateSection = ({ onClick }) => (
-//   <Button color="white" size="xs" onClick={onClick} title="Create new schema">
-//     Create
-//   </Button>
-// );
-
-// const CreateSchemaSection = React.forwardRef(
-//   (
-//     {
-//       migrationMode,
-//       createSchemaOpen,
-//       schemaNameEdit,
-//       handleCancelCreateNewSchema,
-//       handleCreateNewClick,
-//       handleSchemaNameChange,
-//       handleCreateClick,
-//     },
-//     ref
-//   ) =>
-//     migrationMode && (
-//       <div className={`${styles.display_flex}`}>
-//         {createSchemaOpen ? (
-//           <OpenCreateSection
-//             ref={ref}
-//             value={schemaNameEdit}
-//             handleInputChange={handleSchemaNameChange}
-//             handleCreate={handleCreateClick}
-//             handleCancelCreate={handleCancelCreateNewSchema}
-//           />
-//         ) : (
-//           <ClosedCreateSection onClick={handleCreateNewClick} />
-//         )}
-//       </div>
-//     )
-// );
-
-// const DeleteSchemaButton = ({ dispatch, migrationMode }) => {
-//   const successCb = () => {
-//     dispatch(updateCurrentSchema('public'));
-//   };
-
-//   const handleDelete = () => {
-//     dispatch(deleteCurrentSchema(successCb));
-//   };
-
-//   return (
-//     migrationMode && (
-//       <Button
-//         color="white"
-//         size="xs"
-//         onClick={handleDelete}
-//         title="Delete current schema"
-//       >
-//         Delete
-//       </Button>
-//     )
-//   );
-// };
 
 class Schema extends Component {
   constructor(props) {
@@ -203,6 +116,13 @@ class Schema extends Component {
     this.props.dispatch(createNewSchema(schemaName, successCb));
   };
 
+  onDataSourceChange = newDataSource => {
+    console.log({ newDataSource });
+    setDriver(/** todo */);
+    // set current data source name
+    this.props.dispatch(fetchSchemaList());
+  };
+
   render() {
     const {
       schema,
@@ -215,6 +135,8 @@ class Schema extends Component {
       functionsList,
       nonTrackableFunctions,
       trackedFunctions,
+      dataSources,
+      currentDataSource,
     } = this.props;
 
     const handleSchemaChange = e => {
@@ -290,13 +212,15 @@ class Schema extends Component {
           <div className={styles.display_inline}>Database</div>
           <div className={styles.display_inline}>
             <select
-              onChange={handleSchemaChange}
+              onChange={this.onDataSourceChange}
               className={`${styles.add_mar_left_mid} ${styles.width_auto} form-control`}
-              value={currentSchema}
+              value={currentDataSource}
             >
-              <option>Warehouse DB (postgres)</option>
-              {/* {getSchemaOptions()} */}
-              {/* TODO: should be the available database options  */}
+              {dataSources.map(s => (
+                <option key={s.name} value={s.name}>
+                  {s.name} ({s.driver})
+                </option>
+              ))}
             </select>
           </div>
           <div className={`${styles.display_inline} ${styles.add_mar_left}`}>
@@ -750,6 +674,9 @@ const mapStateToProps = state => ({
   nonTrackableFunctions: state.tables.nonTrackablePostgresFunctions,
   trackedFunctions: getConsistentFunctions(state),
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
+  metadata: state.metadata.metadataObject,
+  dataSources: getDataSources(state),
+  currentDataSource: 'myDb (postgres)', // todo
 });
 
 const schemaConnector = connect => connect(mapStateToProps)(Schema);

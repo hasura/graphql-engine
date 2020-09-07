@@ -13,6 +13,7 @@ import {
   getSelectQuery,
   getFetchManualTriggersQuery,
   getDeleteQuery,
+  getRunSqlQuery,
 } from '../../../Common/utils/v1QueryUtils';
 import { COUNT_LIMIT } from '../constants';
 import {
@@ -20,7 +21,6 @@ import {
   dataSource,
   findTableFromRel,
 } from '../../../../dataSources';
-import { getRunSqlQuery } from '../../../../metadata/queryUtils';
 
 /* ****************** View actions *************/
 const V_SET_DEFAULTS = 'ViewTable/V_SET_DEFAULTS';

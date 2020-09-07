@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router';
 import globals from '../../../Globals';
 
@@ -7,11 +7,13 @@ import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 import DataSubSidebar from './DataSubSidebar';
 import GqlCompatibilityWarning from '../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 
-import { updateCurrentSchema } from './DataActions';
+import { updateCurrentSchema, fetchSchemaList } from './DataActions';
 import { NotFoundError } from '../../Error/PageNotFound';
 import { CLI_CONSOLE_MODE } from '../../../constants';
 import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
 import styles from '../../Common/TableCommon/Table.scss';
+import { useDataSource } from '../../../dataSources';
+import { getDataSources } from '../../../metadata/selector';
 
 const DataPageContainer = ({
   currentSchema,
@@ -19,7 +21,25 @@ const DataPageContainer = ({
   children,
   location,
   dispatch,
+  metadata,
+  dataSources,
 }) => {
+  const { driver, setDriver } = useDataSource();
+  const [loadingSchemas, setLoadingSchemas] = useState(false);
+
+  const onDatabaseChange = newDb => {
+    console.log({
+      newDb: newDb.target.value /** Users DB */,
+      metadata,
+      setDriver,
+    });
+    setDriver(/**whatever[newDb] */);
+    setLoadingSchemas(true);
+    dispatch(fetchSchemaList()).then(() => {
+      setLoadingSchemas(false);
+    });
+  };
+
   if (!schemaList.map(s => s.schema_name).includes(currentSchema)) {
     dispatch(updateCurrentSchema('public', false));
 
@@ -76,11 +96,15 @@ const DataPageContainer = ({
             >
               <label style={{ width: '70px' }}>Database:</label>
               <select
-                onChange={null /** todo */}
+                onChange={onDatabaseChange}
                 value={null /** todo */}
                 className={styles.changeSchema + ' form-control'}
               >
-                {/** TODO: options */}
+                {dataSources.map(s => (
+                  <option key={s.name} value={s.name}>
+                    {s.name} ({s.driver})
+                  </option>
+                ))}
               </select>
             </div>
             <div className={styles.schemaSidebarSection} data-test="schema">
@@ -132,6 +156,9 @@ const mapStateToProps = state => {
   return {
     schemaList: state.tables.schemaList,
     currentSchema: state.tables.currentSchema,
+    metadata: state.metadata.metadataObject,
+    dataSources: getDataSources(state),
+    currentDataSource: 'myDb (postgres)', // todo
   };
 };
 

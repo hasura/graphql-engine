@@ -46,7 +46,6 @@ import {
 } from '../../../Common/utils/routesUtils';
 import { exportMetadata } from '../../../../metadata/actions';
 import {
-  getRunSqlQuery,
   getSetTableEnumQuery,
   getTrackTableQuery,
   getUntrackTableQuery,
@@ -54,6 +53,7 @@ import {
   getDropComputedFieldQuery,
   getSetCustomRootFieldsQuery,
 } from '../../../../metadata/queryUtils';
+import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 
 const DELETE_PK_WARNING =
   'Without a primary key there is no way to uniquely identify a row of a table';

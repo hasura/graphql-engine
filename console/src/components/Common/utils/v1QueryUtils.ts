@@ -1,9 +1,25 @@
 import { Nullable } from './tsUtils';
-import { generateTableDef } from '../../../dataSources';
+import { generateTableDef, terminateSql } from '../../../dataSources';
 import { QualifiedTable } from '../../../metadata/types';
 
 export type OrderByType = 'asc' | 'desc';
 export type OrderByNulls = 'first' | 'last';
+
+export const getRunSqlQuery = (
+  sql: string,
+  shouldCascade?: boolean,
+  readOnly?: boolean
+) => {
+  if (!sql) return {};
+  return {
+    type: 'run_sql',
+    args: {
+      sql: terminateSql(sql),
+      cascade: !!shouldCascade,
+      read_only: !!readOnly,
+    },
+  };
+};
 
 export type OrderBy = {
   column: string;
