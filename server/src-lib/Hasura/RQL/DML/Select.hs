@@ -157,14 +157,15 @@ convOrderByElem sessVarBldr (flds, spi) = \case
 
 convSelectQ
   :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
-  => QualifiedTable
+  => SourceName
+  -> QualifiedTable
   -> FieldInfoMap FieldInfo  -- Table information of current table
   -> SelPermInfo   -- Additional select permission info
   -> SelectQExt     -- Given Select Query
   -> SessVarBldr m
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> m AnnSimpleSel
-convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
+convSelectQ source table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
 
   annFlds <- withPathK "columns" $
     indexedForM (sqColumns selQ) $ \case
@@ -172,7 +173,7 @@ convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
       colInfo <- convExtSimple fieldInfoMap selPermInfo pgCol
       return (fromPGCol pgCol, mkAnnColumnField colInfo Nothing)
     (ECRel relName mAlias relSelQ) -> do
-      annRel <- convExtRel fieldInfoMap relName mAlias
+      annRel <- convExtRel source fieldInfoMap relName mAlias
                 relSelQ sessVarBldr prepValBldr
       return ( fromRel $ fromMaybe relName mAlias
              , either AFObjectRelation AFArrayRelation annRel
@@ -181,7 +182,7 @@ convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
   -- Convert where clause
   wClause <- forM (sqWhere selQ) $ \be ->
     withPathK "where" $
-    convBoolExp fieldInfoMap selPermInfo be sessVarBldr prepValBldr
+    convBoolExp source fieldInfoMap selPermInfo be sessVarBldr prepValBldr
 
   annOrdByML <- forM (sqOrderBy selQ) $ \(OrderByExp obItems) ->
     withPathK "order_by" $ indexedForM obItems $ mapM $
@@ -223,20 +224,21 @@ convExtSimple fieldInfoMap selPermInfo pgCol = do
 
 convExtRel
   :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
-  => FieldInfoMap FieldInfo
+  => SourceName
+  -> FieldInfoMap FieldInfo
   -> RelName
   -> Maybe RelName
   -> SelectQExt
   -> SessVarBldr m
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> m (Either ObjectRelationSelect ArraySelect)
-convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
+convExtRel source fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
   -- Point to the name key
   relInfo <- withPathK "name" $
     askRelType fieldInfoMap relName pgWhenRelErr
   let (RelInfo _ relTy colMapping relTab _ _) = relInfo
   (relCIM, relSPI) <- fetchRelDet relName relTab
-  annSel <- convSelectQ relTab relCIM relSPI selQ sessVarBldr prepValBldr
+  annSel <- convSelectQ source relTab relCIM relSPI selQ sessVarBldr prepValBldr
   case relTy of
     ObjRel -> do
       when misused $ throw400 UnexpectedPayload objRelMisuseMsg
@@ -265,13 +267,13 @@ convSelectQuery
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> SelectQuery
   -> m AnnSimpleSel
-convSelectQuery sessVarBldr prepArgBuilder (DMLQuery qt selQ) = do
-  tabInfo     <- withPathK "table" $ askTabInfo qt
+convSelectQuery sessVarBldr prepArgBuilder (DMLQuery source qt selQ) = do
+  tabInfo     <- withPathK "table" $ askTabInfo source qt
   selPermInfo <- askSelPermInfo tabInfo
   let fieldInfo = _tciFieldInfoMap $ _tiCoreInfo tabInfo
   extSelQ <- resolveStar fieldInfo selPermInfo selQ
   validateHeaders $ spiRequiredHeaders selPermInfo
-  convSelectQ qt fieldInfo selPermInfo extSelQ sessVarBldr prepArgBuilder
+  convSelectQ source qt fieldInfo selPermInfo extSelQ sessVarBldr prepArgBuilder
 
 selectP2 :: JsonAggSelect -> (AnnSimpleSel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 selectP2 jsonAggSelect (sel, p) =

@@ -54,7 +54,7 @@ module Hasura.RQL.Types.SchemaCache
   , TableCoreInfoRM(..)
   , TableCoreCacheRT(..)
   , CacheRM(..)
-  , CacheRT(..)
+  -- , CacheRT(..)
 
   , FieldInfoMap
   , FieldInfo(..)
@@ -113,12 +113,21 @@ module Hasura.RQL.Types.SchemaCache
   , getFuncsOfTable
   , askFunctionInfo
   , CronTriggerInfo(..)
+
+  , PGSourceSchemaCache(..)
+  , SourceName(..)
+  , defaultSource
+  , SourceLocalM(..)
+  , SourceT(..)
+  , PGSourcesCache
+  , getPGTableInfo
+  , getPGFunctionInfo
   ) where
 
 import           Hasura.Db
 import           Hasura.GraphQL.Context            (GQLContext, RoleContext)
 import qualified Hasura.GraphQL.Parser             as P
-import           Hasura.Incremental                (Dependency, MonadDepend (..), selectKeyD)
+import           Hasura.Incremental                (Cacheable, Dependency, MonadDepend (..), selectKeyD)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.BoolExp
@@ -143,6 +152,7 @@ import           Hasura.Tracing                    (TraceT)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Language.Haskell.TH.Syntax (Lift)
 import           System.Cron.Types
 
 import qualified Data.ByteString.Lazy              as BL
@@ -226,11 +236,29 @@ incSchemaCacheVer (SchemaCacheVer prev) =
 type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions
 type ActionCache = M.HashMap ActionName ActionInfo -- info of all actions
 
+data PGSourceSchemaCache
+  = PGSourceSchemaCache
+  { _pcTables    :: !TableCache
+  , _pcFunctions :: !FunctionCache
+  }
+$(deriveToJSON (aesonDrop 3 snakeCase) ''PGSourceSchemaCache)
+
+getPGFunctionInfo :: SourceName -> QualifiedFunction -> PGSourcesCache -> Maybe FunctionInfo
+getPGFunctionInfo sourceName qualifiedFunction m =
+  M.lookup sourceName m >>= M.lookup qualifiedFunction . _pcFunctions
+
+getPGTableInfo :: SourceName -> QualifiedTable -> PGSourcesCache -> Maybe TableInfo
+getPGTableInfo sourceName qualifiedTable m =
+  M.lookup sourceName m >>= M.lookup qualifiedTable . _pcTables
+
+type PGSourcesCache = M.HashMap SourceName PGSourceSchemaCache
+
 data SchemaCache
   = SchemaCache
-  { scTables                      :: !TableCache
+  { scPostgres                    :: !PGSourcesCache
+  -- { scTables                      :: !TableCache
   , scActions                     :: !ActionCache
-  , scFunctions                   :: !FunctionCache
+  -- , scFunctions                   :: !FunctionCache
   , scRemoteSchemas               :: !RemoteSchemaMap
   , scAllowlist                   :: !(HS.HashSet GQLQuery)
   , scGQLContext                  :: !(HashMap RoleName (RoleContext GQLContext))
@@ -256,21 +284,60 @@ getAllRemoteSchemas sc =
         getInconsistentRemoteSchemas $ scInconsistentObjs sc
   in consistentRemoteSchemas <> inconsistentRemoteSchemas
 
+-- | Most of our queries operate over a single source. This typeclass
+-- facilitates that.
+-- class (Monad m) => TableInfoRM m where
+--   lookupTableInfo :: QualifiedTable -> m (Maybe TableInfo)
+
+class (Monad m) => SourceLocalM m where
+  askCurrentSource :: m SourceName
+
+instance (SourceLocalM m) => SourceLocalM (ReaderT r m) where
+  askCurrentSource = lift askCurrentSource
+instance (SourceLocalM m) => SourceLocalM (StateT s m) where
+  askCurrentSource = lift askCurrentSource
+instance (Monoid w, SourceLocalM m) => SourceLocalM (WriterT w m) where
+  askCurrentSource = lift askCurrentSource
+instance (SourceLocalM m) => SourceLocalM (TraceT m) where
+  askCurrentSource = lift askCurrentSource
+
+newtype SourceT m a
+  = SourceT { runSourceT :: SourceName -> m a }
+  deriving (Functor, Applicative, Monad, MonadIO, MonadError e, MonadState s, MonadWriter w, MonadTx)
+    via (ReaderT SourceName m)
+  deriving (MonadTrans) via (ReaderT SourceName)
+
 -- | A more limited version of 'CacheRM' that is used when building the schema cache, since the
 -- entire schema cache has not been built yet.
-class (Monad m) => TableCoreInfoRM m where
+class (SourceLocalM m) => TableCoreInfoRM m where
+  -- lookupTableCoreInfo :: SourceName -> QualifiedTable -> m (Maybe TableCoreInfo)
+  -- default lookupTableCoreInfo :: (CacheRM m) => SourceName -> QualifiedTable -> m (Maybe TableCoreInfo)
+  -- lookupTableCoreInfo sourceName tableName = do
+  --   schemaCache <- askSchemaCache
+    -- pure $ fmap _tiCoreInfo $ getPGTableInfo sourceName tableName $ scPostgres schemaCache
   lookupTableCoreInfo :: QualifiedTable -> m (Maybe TableCoreInfo)
-  default lookupTableCoreInfo :: (CacheRM m) => QualifiedTable -> m (Maybe TableCoreInfo)
-  lookupTableCoreInfo tableName = fmap _tiCoreInfo . M.lookup tableName . scTables <$> askSchemaCache
+  -- default lookupTableCoreInfo :: (CacheRM m) => QualifiedTable -> m (Maybe TableCoreInfo)
+  -- lookupTableCoreInfo tableName = do
+  --   schemaCache <- askSchemaCache
+  --   sourceName <- askCurrentSource
+  --   pure $ fmap _tiCoreInfo $ getPGTableInfo sourceName tableName $ scPostgres schemaCache
 
+-- instance (TableCoreInfoRM m) => TableCoreInfoRM (ReaderT r m) where
+--   lookupTableCoreInfo sourceName tableName = lift $ lookupTableCoreInfo sourceName tableName
+-- instance (TableCoreInfoRM m) => TableCoreInfoRM (StateT s m) where
+--   lookupTableCoreInfo sourceName tableName = lift $ lookupTableCoreInfo sourceName tableName
+-- instance (Monoid w, TableCoreInfoRM m) => TableCoreInfoRM (WriterT w m) where
+--   lookupTableCoreInfo sourceName tableName = lift $ lookupTableCoreInfo sourceName tableName
+-- instance (TableCoreInfoRM m) => TableCoreInfoRM (TraceT m) where
+  -- lookupTableCoreInfo sourceName tableName = lift $ lookupTableCoreInfo sourceName tableName
 instance (TableCoreInfoRM m) => TableCoreInfoRM (ReaderT r m) where
-  lookupTableCoreInfo = lift . lookupTableCoreInfo
+  lookupTableCoreInfo tableName = lift $ lookupTableCoreInfo tableName
 instance (TableCoreInfoRM m) => TableCoreInfoRM (StateT s m) where
-  lookupTableCoreInfo = lift . lookupTableCoreInfo
+  lookupTableCoreInfo tableName = lift $ lookupTableCoreInfo tableName
 instance (Monoid w, TableCoreInfoRM m) => TableCoreInfoRM (WriterT w m) where
-  lookupTableCoreInfo = lift . lookupTableCoreInfo
+  lookupTableCoreInfo tableName = lift $ lookupTableCoreInfo tableName
 instance (TableCoreInfoRM m) => TableCoreInfoRM (TraceT m) where
-  lookupTableCoreInfo = lift . lookupTableCoreInfo
+  lookupTableCoreInfo tableName = lift $ lookupTableCoreInfo tableName
 
 newtype TableCoreCacheRT m a
   = TableCoreCacheRT { runTableCoreCacheRT :: Dependency TableCoreCache -> m a }
@@ -281,8 +348,13 @@ newtype TableCoreCacheRT m a
 instance (MonadReader r m) => MonadReader r (TableCoreCacheRT m) where
   ask = lift ask
   local f m = TableCoreCacheRT (local f . runTableCoreCacheRT m)
+
+-- TODO:
+instance (Monad m) => SourceLocalM (TableCoreCacheRT m) where
+
 instance (MonadDepend m) => TableCoreInfoRM (TableCoreCacheRT m) where
-  lookupTableCoreInfo tableName = TableCoreCacheRT (dependOnM . selectKeyD tableName)
+  lookupTableCoreInfo tableName =
+    TableCoreCacheRT (dependOnM . selectKeyD tableName)
 
 class (TableCoreInfoRM m) => CacheRM m where
   askSchemaCache :: m SchemaCache
@@ -296,22 +368,21 @@ instance (Monoid w, CacheRM m) => CacheRM (WriterT w m) where
 instance (CacheRM m) => CacheRM (TraceT m) where
   askSchemaCache = lift askSchemaCache
 
-newtype CacheRT m a = CacheRT { runCacheRT :: SchemaCache -> m a }
-  deriving (Functor, Applicative, Monad, MonadError e, MonadWriter w) via (ReaderT SchemaCache m)
-  deriving (MonadTrans) via (ReaderT SchemaCache)
-instance (Monad m) => TableCoreInfoRM (CacheRT m)
-instance (Monad m) => CacheRM (CacheRT m) where
-  askSchemaCache = CacheRT pure
+-- newtype CacheRT m a = CacheRT { runCacheRT :: SchemaCache -> m a }
+--   deriving (Functor, Applicative, Monad, MonadError e, MonadWriter w) via (ReaderT SchemaCache m)
+--   deriving (MonadTrans) via (ReaderT SchemaCache)
+-- instance (Monad m) => TableCoreInfoRM (CacheRT m)
+-- instance (Monad m) => CacheRM (CacheRT m) where
+--   askSchemaCache = CacheRT pure
 
 askFunctionInfo
   :: (CacheRM m, QErrM m)
-  => QualifiedFunction ->  m FunctionInfo
-askFunctionInfo qf = do
+  => SourceName -> QualifiedFunction ->  m FunctionInfo
+askFunctionInfo sourceName qf = do
   sc <- askSchemaCache
-  maybe throwNoFn return $ M.lookup qf $ scFunctions sc
+  maybe throwNoFn return $ getPGFunctionInfo sourceName qf $ scPostgres sc
   where
-    throwNoFn = throw400 NotExists $
-      "function not found in cache " <>> qf
+    throwNoFn = throw400 NotExists $ "function not found in cache " <>> qf
 
 getDependentObjs :: SchemaCache -> SchemaObjId -> [SchemaObjId]
 getDependentObjs = getDependentObjsWith (const True)

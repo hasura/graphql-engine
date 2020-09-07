@@ -31,7 +31,7 @@ import qualified Database.PG.Query         as Q
 runCreateRelationship
   :: (MonadTx m, CacheRWM m, HasSystemDefined m, ToJSON a)
   => RelType -> WithTable (RelDef a) -> m EncJSON
-runCreateRelationship relType (WithTable tableName relDef) = do
+runCreateRelationship relType (WithTable source tableName relDef) = do
   -- FIXME: Add relationship validation
   -- insertRelationshipToCatalog tableName relType relDef
   let relName = _rdName relDef
@@ -69,10 +69,10 @@ insertRelationshipToCatalog (QualifiedObject schema table) relType (RelDef name 
       VALUES ($1, $2, $3, $4, $5 :: jsonb, $6, $7) |]
 
 runDropRel :: (MonadTx m, CacheRWM m) => DropRel -> m EncJSON
-runDropRel (DropRel qt rn cascade) = do
+runDropRel (DropRel source qt rn cascade) = do
   (relType, depObjs) <- collectDependencies
   withNewInconsistentObjsCheck do
-    metadataModifiers <- traverse purgeRelDep depObjs
+    metadataModifiers <- traverse (purgeRelDep source) depObjs
     buildSchemaCache $ MetadataModifier $
       metaTables.ix qt %~
       dropRelationshipInMetadata rn relType . foldr (.) id metadataModifiers
@@ -162,8 +162,8 @@ arrRelP2Setup foreignKeys qt (RelDef rn ru _) = case ru of
 
 purgeRelDep
   :: (QErrM m)
-  => SchemaObjId -> m (TableMetadata -> TableMetadata)
-purgeRelDep = \case
+  => SourceName -> SchemaObjId -> m (TableMetadata -> TableMetadata)
+purgeRelDep source = \case
   SOTableObj _ (TOPerm rn pt) -> pure $ dropPermissionInMetadata rn pt
   d                           ->
     throw500 $ "unexpected dependency of relationship : "
@@ -190,11 +190,11 @@ runSetRelComment defn = do
   void $ validateRelP1 qt rn
   setRelCommentP2 defn
   where
-    SetRelComment qt rn _ = defn
+    SetRelComment source qt rn _ = defn
 
 setRelComment :: SetRelComment
               -> Q.TxE QErr ()
-setRelComment (SetRelComment (QualifiedObject sn tn) rn comment) =
+setRelComment (SetRelComment source (QualifiedObject sn tn) rn comment) =
   Q.unitQE defaultTxErrorHandler [Q.sql|
            UPDATE hdb_catalog.hdb_relationship
            SET comment = $1

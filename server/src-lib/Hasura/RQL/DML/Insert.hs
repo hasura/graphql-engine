@@ -164,12 +164,12 @@ convInsertQuery
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> InsertQuery
   -> m InsertQueryP1
-convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRetCols) = do
+convInsertQuery objsParser sessVarBldr prepFn (InsertQuery source tableName val oC mRetCols) = do
 
   insObjs <- objsParser val
 
   -- Get the current table information
-  tableInfo <- askTabInfo tableName
+  tableInfo <- askTabInfo source tableName
   let coreInfo = _tiCoreInfo tableInfo
 
   -- If table is view then check if it is insertable

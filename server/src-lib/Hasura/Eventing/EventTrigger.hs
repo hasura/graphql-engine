@@ -93,12 +93,13 @@ instance L.ToEngineLog EventInternalErr L.Hasura where
 -- https://docs.hasura.io/1.0/graphql/manual/event-triggers/payload.html
 data Event
   = Event
-  { eId        :: EventId
-  , eTable     :: QualifiedTable
-  , eTrigger   :: TriggerMetadata
-  , eEvent     :: Value
-  , eTries     :: Int
-  , eCreatedAt :: Time.UTCTime
+  { eId        :: !EventId
+  , eSource    :: !SourceName
+  , eTable     :: !QualifiedTable
+  , eTrigger   :: !TriggerMetadata
+  , eEvent     :: !Value
+  , eTries     :: !Int
+  , eCreatedAt :: !Time.UTCTime
   } deriving (Show, Eq)
 
 $(deriveFromJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''Event)
@@ -173,17 +174,18 @@ processEventQueue
   -> HTTP.Manager
   -> Q.PGPool
   -> IO SchemaCache
+  -> SourceName
   -> EventEngineCtx
   -> LockedEventsCtx
   -> m void
-processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx{..} LockedEventsCtx{leEvents} = do
+processEventQueue logger logenv httpMgr pool getSchemaCache sourceName eeCtx@EventEngineCtx{..} LockedEventsCtx{leEvents} = do
   events0 <- popEventsBatch
   go events0 0 False
   where
     fetchBatchSize = 100
     popEventsBatch = do
       let run = liftIO . runExceptT . Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite)
-      run (fetchEvents fetchBatchSize) >>= \case
+      run (fetchEvents sourceName fetchBatchSize) >>= \case
           Left err -> do
             liftIO $ L.unLogger logger $ EventInternalErr err
             return []
@@ -394,9 +396,9 @@ logQErr err = do
   L.unLogger logger $ EventInternalErr err
 
 getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Maybe EventTriggerInfo
-getEventTriggerInfoFromEvent sc e = let table = eTable e
-                                        tableInfo = M.lookup table $ scTables sc
-                                    in M.lookup ( tmName $ eTrigger e) =<< (_tiEventTriggerInfoMap <$> tableInfo)
+getEventTriggerInfoFromEvent sc e =
+  let tableInfo = getPGTableInfo (eSource e) (eTable e) $ scPostgres sc
+  in M.lookup ( tmName $ eTrigger e) =<< (_tiEventTriggerInfoMap <$> tableInfo)
 
 ---- DATABASE QUERIES ---------------------
 --
@@ -407,8 +409,8 @@ getEventTriggerInfoFromEvent sc e = let table = eTable e
 -- limit. Process events approximately in created_at order, but we make no
 -- ordering guarentees; events can and will race. Nevertheless we want to
 -- ensure newer change events don't starve older ones.
-fetchEvents :: Int -> Q.TxE QErr [Event]
-fetchEvents limitI =
+fetchEvents :: SourceName -> Int -> Q.TxE QErr [Event]
+fetchEvents sourceName limitI =
   map uncurryEvent <$> Q.listQE defaultTxErrorHandler [Q.sql|
       UPDATE hdb_catalog.event_log
       SET locked = 't'
@@ -425,6 +427,7 @@ fetchEvents limitI =
   where uncurryEvent (id', sn, tn, trn, Q.AltJ payload, tries, created) =
           Event
           { eId        = id'
+          , eSource    = sourceName
           , eTable     = QualifiedObject sn tn
           , eTrigger   = TriggerMetadata trn
           , eEvent     = payload

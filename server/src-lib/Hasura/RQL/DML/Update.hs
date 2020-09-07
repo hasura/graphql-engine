@@ -167,7 +167,8 @@ validateUpdateQueryWith
   -> m AnnUpd
 validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   let tableName = uqTable uq
-  tableInfo <- withPathK "table" $ askTabInfo tableName
+      source = uqSource uq
+  tableInfo <- withPathK "table" $ askTabInfo source tableName
   let coreInfo = _tiCoreInfo tableInfo
 
   -- If it is view then check if it is updatable
@@ -220,7 +221,7 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
 
   -- convert the where clause
   annSQLBoolExp <- withPathK "where" $
-    convBoolExp fieldInfoMap selPerm (uqWhere uq) sessVarBldr prepValBldr
+    convBoolExp source fieldInfoMap selPerm (uqWhere uq) sessVarBldr prepValBldr
 
   resolvedUpdFltr <- convAnnBoolExpPartialSQL sessVarBldr $
                      upiFilter updPerm

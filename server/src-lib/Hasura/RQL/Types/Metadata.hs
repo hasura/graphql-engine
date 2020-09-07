@@ -474,7 +474,8 @@ metadataToOrdJSON ( Metadata
     functionsMetadataToOrdJSON fm =
       let withList _ []   = Nothing
           withList f list = Just $ f list
-          functionV2ToOrdJSON (TrackFunctionV2 function config) =
+          -- TODO: multiple sources
+          functionV2ToOrdJSON (TrackFunctionV2 source function config) =
             AO.object $ [("function", AO.toOrdered function)]
                         <> if config == emptyFunctionConfig then []
                            else pure ("configuration", AO.toOrdered config)

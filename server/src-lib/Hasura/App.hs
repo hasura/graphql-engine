@@ -411,7 +411,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
 
   -- eventQueueThread <- C.forkImmortal "processEventQueue" logger $
   --   processEventQueue logger logEnvHeaders
-  --   _icHttpManager _icPgPool (getSCFromRef cacheRef) eventEngineCtx lockedEventsCtx
+  --   _icHttpManager _icPgPool (getSCFromRef cacheRef) defaultSource eventEngineCtx lockedEventsCtx
 
   -- start a backgroud thread to handle async actions
   asyncActionsThread <- C.forkImmortal "asyncActionsProcessor" logger $

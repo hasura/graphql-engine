@@ -90,7 +90,8 @@ emptyFunctionConfig = FunctionConfig Nothing
 
 data TrackFunctionV2
   = TrackFunctionV2
-  { _tfv2Function      :: !QualifiedFunction
+  { _tfv2Source        :: !SourceName
+  , _tfv2Function      :: !QualifiedFunction
   , _tfv2Configuration :: !FunctionConfig
   } deriving (Show, Eq, Lift, Generic)
 $(deriveToJSON (aesonDrop 5 snakeCase) ''TrackFunctionV2)
@@ -98,5 +99,6 @@ $(deriveToJSON (aesonDrop 5 snakeCase) ''TrackFunctionV2)
 instance FromJSON TrackFunctionV2 where
   parseJSON = withObject "Object" $ \o ->
     TrackFunctionV2
-    <$> o .: "function"
+    <$> o .:? "source" .!= defaultSource
+    <*> o .: "function"
     <*> o .:? "configuration" .!= emptyFunctionConfig

@@ -1,4 +1,3 @@
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE RecordWildCards #-}
 module Hasura.RQL.DDL.RemoteRelationship
   ( runCreateRemoteRelationship
@@ -14,23 +13,23 @@ module Hasura.RQL.DDL.RemoteRelationship
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.RemoteRelationship.Validate
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Column                    ()
 import           Hasura.SQL.Types
-import           Hasura.RQL.DDL.RemoteRelationship.Validate
 
 import           Control.Lens                               (ix)
 import           Instances.TH.Lift                          ()
 
 import qualified Data.HashMap.Strict                        as HM
-import qualified Database.PG.Query                          as Q
 import qualified Data.HashSet                               as HS
+import qualified Database.PG.Query                          as Q
 
 runCreateRemoteRelationship
   :: (MonadTx m, CacheRWM m) => RemoteRelationship -> m EncJSON
 runCreateRemoteRelationship RemoteRelationship{..} = do
   -- Few checks
-  void $ askTabInfo rtrTable
+  void $ askTabInfo rtrSource rtrTable
   -- liftTx $ persistRemoteRelationship remoteRelationship
   let metadataObj = MOTableObj rtrTable $ MTORemoteRelationship rtrName
       metadata = RemoteRelationshipMeta rtrName $

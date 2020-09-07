@@ -62,7 +62,8 @@ import           Hasura.Server.Utils            (quoteRegex)
 
 data RunSQL
   = RunSQL
-  { _rSql                      :: Text
+  { _rSource                   :: !SourceName
+  , _rSql                      :: !Text
   , _rCascade                  :: !Bool
   , _rCheckMetadataConsistency :: !(Maybe Bool)
   , _rTxAccessMode             :: !Q.TxAccess
@@ -71,6 +72,7 @@ $(makeLenses ''RunSQL)
 
 instance FromJSON RunSQL where
   parseJSON = withObject "RunSQL" $ \o -> do
+    _rSource <- o .:? "source" .!= defaultSource
     _rSql <- o .: "sql"
     _rCascade <- o .:? "cascade" .!= False
     _rCheckMetadataConsistency <- o .:? "check_metadata_consistency"
@@ -111,7 +113,7 @@ runRunSQL :: (MonadTx m, CacheRWM m, HasSQLGenCtx m) => RunSQL -> m EncJSON
 runRunSQL q@RunSQL {..}
   -- see Note [Checking metadata consistency in run_sql]
   | isSchemaCacheBuildRequiredRunSQL q
-  = withMetadataCheck _rCascade $ execRawSQL _rSql
+  = withMetadataCheck _rSource _rCascade $ execRawSQL _rSql
   | otherwise
   = execRawSQL _rSql
   where

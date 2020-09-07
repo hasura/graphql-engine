@@ -34,7 +34,6 @@ import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.SQL.Types
 
-
 buildCatalogMetadata
   :: forall m. (MonadTx m)
   => Metadata -> m CatalogMetadata
@@ -106,14 +105,14 @@ buildCatalogMetadata Metadata{..} = do
 
         transformComputedField :: ComputedFieldMetadata -> CatalogComputedField
         transformComputedField ComputedFieldMetadata{..} =
-          let computedField = AddComputedField _tmTable _cfmName _cfmDefinition _cfmComment
+          let computedField = AddComputedField defaultSource _tmTable _cfmName _cfmDefinition _cfmComment
           in CatalogComputedField computedField $
              fromMaybe [] $ HM.lookup (_cfdFunction _cfmDefinition) catalogFunction
 
         transformRemoteRelation :: RemoteRelationshipMeta -> RemoteRelationship
         transformRemoteRelation RemoteRelationshipMeta{..} =
           let RemoteRelationshipDef{..} = _rrmDefinition
-          in RemoteRelationship _rrmName _tmTable _rrdHasuraFields _rrdRemoteSchema _rrdRemoteField
+          in RemoteRelationship _rrmName defaultSource _tmTable _rrdHasuraFields _rrdRemoteSchema _rrdRemoteField
 
         transformPermission :: ToJSON a => PermType -> PermDef a -> CatalogPermission
         transformPermission permType PermDef{..} =
@@ -160,8 +159,8 @@ fetchFunctionMetadataFromDb functionList = do
 --   $(Q.sqlFromFile "src-rsr/catalog_metadata.sql") () True
 
 purgeDependentObject
-  :: (MonadError QErr m) => SchemaObjId -> m MetadataModifier
-purgeDependentObject = \case
+  :: (MonadError QErr m) => SourceName -> SchemaObjId -> m MetadataModifier
+purgeDependentObject source = \case
   SOTableObj tn tableObj -> pure $ MetadataModifier $
     metaTables.ix tn %~ case tableObj of
       TOPerm rn pt        -> dropPermissionInMetadata rn pt
@@ -200,8 +199,6 @@ purgeDependentObject = \case
 --               SET configuration = $1
 --             WHERE table_schema = $2 AND table_name = $3
 --                 |] (configVal, sn, tn) False
---   where
---     configVal = Q.AltJ $ toJSON config
 
 -- deleteTableFromCatalog :: (MonadTx m) => QualifiedTable -> m ()
 -- deleteTableFromCatalog (QualifiedObject sn tn) = liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|

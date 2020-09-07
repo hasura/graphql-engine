@@ -30,7 +30,7 @@ import           Data.Aeson.TH
 import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.Types.Common    (NonEmptyText (..))
+import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax (Lift)
 
@@ -128,7 +128,8 @@ $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''WebhookConfInfo
 
 data CreateEventTriggerQuery
   = CreateEventTriggerQuery
-  { cetqName           :: !TriggerName
+  { cetqSource         :: !SourceName
+  , cetqName           :: !TriggerName
   , cetqTable          :: !QualifiedTable
   , cetqInsert         :: !(Maybe SubscribeOpSpec)
   , cetqUpdate         :: !(Maybe SubscribeOpSpec)
@@ -143,6 +144,7 @@ data CreateEventTriggerQuery
 
 instance FromJSON CreateEventTriggerQuery where
   parseJSON (Object o) = do
+    sourceName     <- o .:? "source" .!= defaultSource
     name           <- o .: "name"
     table          <- o .: "table"
     insert         <- o .:? "insert"
@@ -169,7 +171,8 @@ instance FromJSON CreateEventTriggerQuery where
       (Just _, Just _)  -> fail "only one of webhook or webhook_from_env should be given"
       _                 ->   fail "must provide webhook or webhook_from_env"
     mapM_ checkEmptyCols [insert, update, delete]
-    return $ CreateEventTriggerQuery name table insert update delete (Just enableManual) retryConf webhook webhookFromEnv headers replace
+    return $ CreateEventTriggerQuery sourceName name table insert update delete
+      (Just enableManual) retryConf webhook webhookFromEnv headers replace
     where
       checkEmptyCols spec
         = case spec of
@@ -194,10 +197,17 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerOpsDef)
 
 data DeleteEventTriggerQuery
   = DeleteEventTriggerQuery
-  { detqName :: !TriggerName
+  { detqSource :: !SourceName
+  , detqName   :: !TriggerName
   } deriving (Show, Eq, Lift)
 
-$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''DeleteEventTriggerQuery)
+instance FromJSON DeleteEventTriggerQuery where
+  parseJSON = withObject "Object" $ \o ->
+    DeleteEventTriggerQuery
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "name"
+
+$(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''DeleteEventTriggerQuery)
 
 data EventTriggerConf
   = EventTriggerConf

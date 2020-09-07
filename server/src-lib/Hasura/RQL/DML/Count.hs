@@ -66,8 +66,8 @@ validateCountQWith
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> CountQuery
   -> m CountQueryP1
-validateCountQWith sessVarBldr prepValBldr (CountQuery qt mDistCols mWhere) = do
-  tableInfo <- askTabInfo qt
+validateCountQWith sessVarBldr prepValBldr (CountQuery sourceName qt mDistCols mWhere) = do
+  tableInfo <- askTabInfo sourceName qt
 
   -- Check if select is allowed
   selPerm <- modifyErr (<> selNecessaryMsg) $
@@ -83,7 +83,7 @@ validateCountQWith sessVarBldr prepValBldr (CountQuery qt mDistCols mWhere) = do
   -- convert the where clause
   annSQLBoolExp <- forM mWhere $ \be ->
     withPathK "where" $
-    convBoolExp colInfoMap selPerm be sessVarBldr prepValBldr
+    convBoolExp sourceName colInfoMap selPerm be sessVarBldr prepValBldr
 
   resolvedSelFltr <- convAnnBoolExpPartialSQL sessVarBldr $
                      spiFilter selPerm

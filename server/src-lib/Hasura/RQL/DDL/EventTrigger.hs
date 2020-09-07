@@ -189,11 +189,11 @@ markForDelivery eid =
           |] (Identity eid) True
 
 subTableP1 :: (UserInfoM m, QErrM m, CacheRM m) => CreateEventTriggerQuery -> m (QualifiedTable, Bool, EventTriggerConf)
-subTableP1 (CreateEventTriggerQuery name qt insert update delete enableManual retryConf webhook webhookFromEnv mheaders replace) = do
+subTableP1 (CreateEventTriggerQuery sourceName name qt insert update delete enableManual retryConf webhook webhookFromEnv mheaders replace) = do
   ti <- askTableCoreInfo qt
   -- can only replace for same table
   when replace $ do
-    ti' <- _tiCoreInfo <$> askTabInfoFromTrigger name
+    ti' <- _tiCoreInfo <$> askTabInfoFromTrigger sourceName name
     when (_tciName ti' /= _tciName ti) $ throw400 NotSupported "cannot replace table or schema for trigger"
 
   assertCols ti insert
@@ -271,9 +271,9 @@ runCreateEventTriggerQuery q = do
 runDeleteEventTriggerQuery
   :: (MonadTx m, CacheRWM m)
   => DeleteEventTriggerQuery -> m EncJSON
-runDeleteEventTriggerQuery (DeleteEventTriggerQuery name) = do
+runDeleteEventTriggerQuery (DeleteEventTriggerQuery source name) = do
   -- liftTx $ delEventTriggerFromCatalog name
-  tables <- scTables <$> askSchemaCache
+  tables <- (maybe mempty _pcTables . HM.lookup source . scPostgres) <$> askSchemaCache
   let maybeTable = HM.lookup name $ HM.unions $
                    flip map (HM.toList tables) $ \(table, tableInfo) ->
                    HM.map (const table) $ _tiEventTriggerInfoMap tableInfo
@@ -322,9 +322,9 @@ runInvokeEventTrigger
   :: (QErrM m, CacheRM m, MonadTx m)
   => InvokeEventTriggerQuery -> m EncJSON
 runInvokeEventTrigger (InvokeEventTriggerQuery name payload) = do
-  trigInfo <- askEventTriggerInfo name
+  trigInfo <- askEventTriggerInfo defaultSource name
   assertManual $ etiOpsDef trigInfo
-  ti  <- askTabInfoFromTrigger name
+  ti  <- askTabInfoFromTrigger defaultSource name
   eid <- liftTx $ insertManualEvent (_tciName $ _tiCoreInfo ti) name payload
   return $ encJFromJValue $ object ["event_id" .= eid]
   where

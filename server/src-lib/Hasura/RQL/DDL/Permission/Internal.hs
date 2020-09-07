@@ -193,11 +193,19 @@ injectDefaults qv qt =
 
 data DropPerm a
   = DropPerm
-  { dipTable :: !QualifiedTable
-  , dipRole  :: !RoleName
+  { dipSource :: !SourceName
+  , dipTable  :: !QualifiedTable
+  , dipRole   :: !RoleName
   } deriving (Show, Eq, Lift)
 
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''DropPerm)
+$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''DropPerm)
+
+instance FromJSON (DropPerm a) where
+  parseJSON = withObject "DropPerm" $ \o ->
+    DropPerm
+    <$> o .:? "source" .!= defaultSource
+    <*> o .: "table"
+    <*> o .: "role"
 
 type family PermInfo a = r | r -> a
 
@@ -233,7 +241,7 @@ addPermP2 tn pd = do
 runCreatePerm
   :: (UserInfoM m, CacheRWM m, IsPerm a, MonadTx m)
   => CreatePerm a -> m EncJSON
-runCreatePerm (WithTable tn pd) = do
+runCreatePerm (WithTable sourceName tn pd) = do
   -- addPermP2 tn pd
   let pt = permAccToType $ getPermAcc1 pd
       role = _pdRole pd
@@ -246,12 +254,12 @@ runCreatePerm (WithTable tn pd) = do
 dropPermP1
   :: (QErrM m, CacheRM m, IsPerm a)
   => DropPerm a -> m (PermInfo a)
-dropPermP1 dp@(DropPerm tn rn) = do
-  tabInfo <- askTabInfo tn
+dropPermP1 dp@(DropPerm sourceName tn rn) = do
+  tabInfo <- askTabInfo sourceName tn
   askPermInfo tabInfo rn $ getPermAcc2 dp
 
 -- dropPermP2 :: forall a m. (MonadTx m, IsPerm a) => DropPerm a -> m ()
--- dropPermP2 dp@(DropPerm tn rn) =
+-- dropPermP2 dp@(DropPerm sourceName tn rn) =
 --   liftTx $ dropPermFromCatalog tn rn pt
 --   where
 --     pa = getPermAcc2 dp
@@ -260,7 +268,7 @@ dropPermP1 dp@(DropPerm tn rn) = do
 runDropPerm
   :: (IsPerm a, UserInfoM m, CacheRWM m, MonadTx m)
   => DropPerm a -> m EncJSON
-runDropPerm defn@(DropPerm tn rn) = do
+runDropPerm defn@(DropPerm source tn rn) = do
   dropPermP1 defn
   -- dropPermP2 defn
   let permType = permAccToType $ getPermAcc2 defn

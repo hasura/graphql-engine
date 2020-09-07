@@ -439,7 +439,8 @@ fetchMetadataFromHdbTables = liftTx do
                     |] () False
       pure $ mapFromL _tfv2Function $
         flip map l $ \(sn, fn, Q.AltJ config) ->
-                       TrackFunctionV2 (QualifiedObject sn fn) config
+                       -- TODO: Use multiple sources
+                       TrackFunctionV2 defaultSource (QualifiedObject sn fn) config
 
     fetchRemoteSchemas =
       map fromRow <$> Q.listQE defaultTxErrorHandler
