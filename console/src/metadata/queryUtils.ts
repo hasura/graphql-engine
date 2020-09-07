@@ -1,6 +1,5 @@
 // Note: This file MUST contain all/only metadata requests
 
-import { terminateSql } from '../dataSources';
 import {
   CustomRootFields,
   ActionDefinition,

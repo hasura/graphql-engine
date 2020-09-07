@@ -5,6 +5,7 @@ import requestActionPlain from '../../utils/requestActionPlain';
 import Endpoints, { globalCookiePolicy } from '../../Endpoints';
 import { getFeaturesCompatibility } from '../../helpers/versionUtils';
 import { getRunSqlQuery } from '../Common/utils/v1QueryUtils';
+import { currentDriver } from '../../dataSources';
 
 const SET_MIGRATION_STATUS_SUCCESS = 'Main/SET_MIGRATION_STATUS_SUCCESS';
 const SET_MIGRATION_STATUS_ERROR = 'Main/SET_MIGRATION_STATUS_ERROR';
@@ -56,6 +57,8 @@ const setReadOnlyMode = data => ({
 });
 
 export const fetchPostgresVersion = (dispatch, getState) => {
+  if (currentDriver !== 'postgres') return;
+
   const req = getRunSqlQuery('SELECT version()');
   const options = {
     method: 'POST',
