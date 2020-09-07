@@ -4,7 +4,7 @@
 
 ### Breaking change
 
-Headers from environment variables starting with `HASURA_GRAPHQL_` are not allowed  
+Headers from environment variables starting with `HASURA_GRAPHQL_` are not allowed
 in event triggers, actions & remote schemas.
 
 If you do have such headers configured, then you must update the header configuration before upgrading.
@@ -21,6 +21,7 @@ If you do have such headers configured, then you must update the header configur
 - server: add logs for action handlers
 - server: add request/response sizes in event triggers (and scheduled trigger) logs (#5463)
 - server: change startup log kind `db_migrate` to `catalog_migrate` (#5531)
+- server: fixes select permission in computed fields regression (fixes #5696)
 - console: handle nested fragments in allowed queries (close #5137) (#5252)
 - console: update sidebar icons for different action and trigger types (#5445)
 - console: make add column UX consistent with others (#5486)

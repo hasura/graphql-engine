@@ -546,7 +546,9 @@ getSelPerm tableCache fields roleName selPermInfo = do
           inputArgSeq = mkComputedFieldFunctionArgSeq $ _cffInputArgs function
       fmap (SFComputedField . ComputedField name function inputArgSeq) <$>
         case returnTy of
-          CFRScalar scalarTy  -> pure $ Just $ CFTScalar scalarTy
+          CFRScalar scalarTy  ->
+            pure $ bool Nothing (Just $ CFTScalar scalarTy) $
+              name `Set.member` spiScalarComputedFields selPermInfo
           CFRSetofTable retTable -> do
             retTableInfo <- getTabInfo tableCache retTable
             let retTableSelPermM = getSelPermission retTableInfo roleName
