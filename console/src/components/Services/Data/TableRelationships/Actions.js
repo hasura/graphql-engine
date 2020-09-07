@@ -282,7 +282,7 @@ const generateRelationshipsQuery = (relMeta, currentDataSource) => {
         name: relMeta.lTable,
         schema: relMeta.lSchema,
       },
-      name,
+      relMeta.relName,
       currentDataSource
     );
     const columnMaps = relMeta.lcol.map((column, index) => ({
