@@ -91,7 +91,8 @@ export const mergeRemoteRelationshipsWithSchema = (
 const setUntrackedRelations = () => (dispatch, getState) => {
   const untrackedRelations = getAllUnTrackedRelations(
     getState().tables.allSchemas,
-    getState().tables.currentSchema
+    getState().tables.currentSchema,
+    getState().tables.currentDataSource
   ).bulkRelTrack;
 
   dispatch({

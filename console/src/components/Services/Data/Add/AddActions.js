@@ -11,6 +11,7 @@ import { setTable } from '../DataActions.js';
 import { getTableModifyRoute } from '../../../Common/utils/routesUtils';
 import { dataSource } from '../../../../dataSources';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
+import { addExistingTableOrView } from '../../../../metadata/queryUtils';
 
 const SET_DEFAULTS = 'AddTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddTable/SET_TABLENAME';
@@ -157,6 +158,7 @@ const createTableSql = () => {
       columns,
       tableComment,
       primaryKeys,
+      currentDataSource,
     } = state;
 
     // validations
@@ -187,13 +189,9 @@ const createTableSql = () => {
     // up migration
     const upQueryArgs = createTableQueries.map(sql => getRunSqlQuery(sql));
 
-    upQueryArgs.push({
-      type: 'add_existing_table_or_view',
-      args: {
-        name: tableName,
-        schema: currentSchema,
-      },
-    });
+    upQueryArgs.push(
+      addExistingTableOrView(tableName, currentSchema, currentDataSource)
+    );
 
     const upQuery = {
       type: 'bulk',

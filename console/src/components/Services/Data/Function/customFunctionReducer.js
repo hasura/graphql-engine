@@ -21,6 +21,11 @@ import { getSchemaBaseRoute } from '../../../Common/utils/routesUtils';
 import { dataSource } from '../../../../dataSources';
 import { exportMetadata } from '../../../../metadata/actions';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
+import {
+  getUntrackFunctionQuery,
+  getTrackFunctionQuery,
+  getTrackFunctionV2Query,
+} from '../../../../metadata/queryUtils';
 
 /* Constants */
 
@@ -116,12 +121,9 @@ const makeRequest = (
 const fetchCustomFunction = (functionName, schema) => {
   return (dispatch, getState) => {
     const url = Endpoints.getSchema;
-    const fetchCustomFunctionDefinition = {
-      type: 'run_sql',
-      args: {
-        sql: dataSource.getFunctionDefinitionSql(schema, functionName),
-      },
-    };
+    const fetchCustomFunctionDefinition = getRunSqlQuery(
+      dataSource.getFunctionDefinitionSql(schema, functionName)
+    );
 
     const options = {
       credentials: globalCookiePolicy,
@@ -222,28 +224,20 @@ const deleteFunctionSql = () => {
 const unTrackCustomFunction = () => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
+    const currentDataSource = getState().tables.currentDataSource;
     const functionName = getState().functions.functionName;
-    // const url = Endpoints.getSchema;
-    /*
-    const customFunctionObj = {
-      function_name: functionName,
-    };
-    */
+
     const migrationName = 'remove_custom_function_' + functionName;
-    const payload = {
-      type: 'untrack_function',
-      args: {
-        name: functionName,
-        schema: currentSchema,
-      },
-    };
-    const downPayload = {
-      type: 'track_function',
-      args: {
-        name: functionName,
-        schema: currentSchema,
-      },
-    };
+    const payload = getUntrackFunctionQuery(
+      functionName,
+      currentSchema,
+      currentDataSource
+    );
+    const downPayload = getTrackFunctionQuery(
+      functionName,
+      currentSchema,
+      currentDataSource
+    );
 
     const upQueryArgs = [];
     upQueryArgs.push(payload);
@@ -290,57 +284,44 @@ const unTrackCustomFunction = () => {
 const updateSessVar = session_argument => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
+    const currentDataSource = getState().tables.currentDataSource;
     const functionName = getState().functions.functionName;
     const oldConfiguration = getState().functions.configuration;
 
     const migrationName = 'update_session_arg_custom_function_' + functionName;
 
     //untrack function first
-    const untrackPayloadUp = {
-      type: 'untrack_function',
-      args: {
-        name: functionName,
-        schema: currentSchema,
+    const untrackPayloadUp = getUntrackFunctionQuery(
+      functionName,
+      currentSchema,
+      currentDataSource
+    );
+    const retrackPayloadDown = getTrackFunctionV2Query(
+      functionName,
+      currentSchema,
+      {
+        ...(oldConfiguration && oldConfiguration),
       },
-    };
-    const retrackPayloadDown = {
-      type: 'track_function',
-      version: 2,
-      args: {
-        function: {
-          name: functionName,
-          schema: currentSchema,
-        },
-        configuration: {
-          ...(oldConfiguration && oldConfiguration),
-        },
-      },
-    };
+      currentDataSource
+    );
 
     // retrack with sess arg config
-    const retrackPayloadUp = {
-      type: 'track_function',
-      version: 2,
-      args: {
-        function: {
-          name: functionName,
-          schema: currentSchema,
-        },
-        configuration: {
-          ...(session_argument && {
-            session_argument,
-          }),
-        },
+    const retrackPayloadUp = getTrackFunctionV2Query(
+      functionName,
+      currentSchema,
+      {
+        ...(session_argument && {
+          session_argument,
+        }),
       },
-    };
+      currentDataSource
+    );
 
-    const untrackPayloadDown = {
-      type: 'untrack_function',
-      args: {
-        name: functionName,
-        schema: currentSchema,
-      },
-    };
+    const untrackPayloadDown = getUntrackFunctionQuery(
+      functionName,
+      currentSchema,
+      currentDataSource
+    );
 
     const upQuery = {
       type: 'bulk',

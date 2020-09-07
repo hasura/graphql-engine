@@ -35,7 +35,14 @@ export type MetadataQueryType =
   | 'untrack_table'
   | 'add_computed_field'
   | 'drop_computed_field'
-  | 'add_source';
+  | 'add_source'
+  | 'add_existing_table_or_view'
+  | 'track_function'
+  | 'untrack_function'
+  | 'rename_relationship'
+  | 'create_object_relationship'
+  | 'drop_relationship'
+  | 'create_array_relationship';
 
 export type MetadataQueries = Record<Driver, Record<MetadataQueryType, string>>;
 
@@ -452,3 +459,88 @@ export const getBulkQuery = (args: any[]) => {
     args,
   };
 };
+
+export const addExistingTableOrView = (
+  tableName: string,
+  schemaName: string,
+  source: string
+) =>
+  getMetadataQuery('add_existing_table_or_view', {
+    name: tableName,
+    schema: schemaName,
+    source,
+  });
+
+export const getTrackFunctionQuery = (
+  name: string,
+  schema: string,
+  source: string
+) => getMetadataQuery('track_function', { name, schema, source });
+
+export const getTrackFunctionV2Query = (
+  name: string,
+  schema: string,
+  configuration: Record<string, string>,
+  source: string
+) =>
+  getMetadataQuery('track_function', {
+    function: { name, schema },
+    source,
+    configuration,
+  });
+
+export const getUntrackFunctionQuery = (
+  name: string,
+  schema: string,
+  source: string
+) => getMetadataQuery('untrack_function', { name, schema, source });
+
+export const getRenameRelationshipQuery = (
+  table: QualifiedTable,
+  name: string,
+  newName: string,
+  source: string
+) =>
+  getMetadataQuery('rename_relationship', {
+    table,
+    name,
+    new_name: newName,
+    source,
+  });
+
+export const getCreateObjectRelationshipQuery = (
+  table: QualifiedTable,
+  name: string,
+  source: string
+) =>
+  getMetadataQuery('create_object_relationship', {
+    name,
+    table,
+    using: {},
+    source,
+  });
+
+export const getDropRelationshipQuery = (
+  table: QualifiedTable,
+  name: string,
+  source: string
+) =>
+  getMetadataQuery('drop_relationship', {
+    table,
+    relationship: name,
+    source,
+  });
+
+export const getCreateArrayRelationshipQuery = (
+  table: QualifiedTable,
+  name: string,
+  source: string
+) =>
+  getMetadataQuery('create_array_relationship', {
+    name,
+    table,
+    using: {},
+    source,
+  });
+
+//generateRelationshipsQuery
