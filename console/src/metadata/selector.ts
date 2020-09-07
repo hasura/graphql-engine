@@ -191,6 +191,7 @@ export const getAllowedQueries = (state: ReduxState) =>
   state.metadata.allowedQueries || [];
 
 export const getDataSources = createSelector(getMetadata, metadata => {
+  console.log({ metadata });
   return [
     { name: 'Warehouse DB', driver: 'postgres' },
     { name: 'Users DB', driver: 'mysql' },

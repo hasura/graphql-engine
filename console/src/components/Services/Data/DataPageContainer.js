@@ -32,6 +32,8 @@ const DataPageContainer = ({
       newDb: newDb.target.value /** Users DB */,
       metadata,
       setDriver,
+      driver,
+      loadingSchemas,
     });
     setDriver(/**whatever[newDb] */);
     setLoadingSchemas(true);
