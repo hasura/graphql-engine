@@ -59,7 +59,8 @@ const setConsoleOptsInDB = (
       getRunSqlQuery(
         `update hdb_catalog.hdb_version set console_state = '${JSON.stringify(
           consoleState
-        )}' where hasura_uuid='${hasura_uuid}';`
+        )}' where hasura_uuid='${hasura_uuid}';`,
+        ''
       )
     ),
   };

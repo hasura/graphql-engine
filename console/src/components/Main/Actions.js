@@ -59,7 +59,10 @@ const setReadOnlyMode = data => ({
 export const fetchPostgresVersion = (dispatch, getState) => {
   if (currentDriver !== 'postgres') return;
 
-  const req = getRunSqlQuery('SELECT version()');
+  const req = getRunSqlQuery(
+    'SELECT version()',
+    getState().tables.currentDataSource
+  );
   const options = {
     method: 'POST',
     credentials: globalCookiePolicy,

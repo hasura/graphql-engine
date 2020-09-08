@@ -107,6 +107,7 @@ const loadSchema = configOptions => {
     const url = Endpoints.query;
 
     let allSchemas = getState().tables.allSchemas;
+    const source = getState().tables.currentDataSource;
 
     if (
       !configOptions ||
@@ -143,16 +144,18 @@ const loadSchema = configOptions => {
     const body = {
       type: 'bulk',
       args: [
-        fetchTableListQuery(configOptions),
-        fetchTrackedTableFkQuery(configOptions),
+        fetchTableListQuery(configOptions, source),
+        fetchTrackedTableFkQuery(configOptions, source),
         // todo: queries below could be done only when user visits `Data` page
         getRunSqlQuery(
           dataSource.primaryKeysInfoSql(configOptions),
+          source,
           false,
           checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
         ),
         getRunSqlQuery(
           dataSource.uniqueKeysSql(configOptions),
+          source,
           false,
           checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
         ),
@@ -162,6 +165,7 @@ const loadSchema = configOptions => {
       body.args.push(
         getRunSqlQuery(
           dataSource.checkConstraintsSql(configOptions),
+          source,
           false,
           checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
         )
@@ -301,14 +305,17 @@ const fetchDataInit = () => (dispatch, getState) => {
 const fetchFunctionInit = (schema = null) => (dispatch, getState) => {
   const url = Endpoints.query;
   const fnSchema = schema || getState().tables.currentSchema;
+  const source = getState().tables.currentDataSource;
   const body = {
     type: 'bulk',
     args: [
       getRunSqlQuery(
-        dataSource.getFunctionDefinitionSql(fnSchema, null, 'trackable')
+        dataSource.getFunctionDefinitionSql(fnSchema, null, 'trackable'),
+        source
       ),
       getRunSqlQuery(
-        dataSource.getFunctionDefinitionSql(fnSchema, null, 'non-trackable')
+        dataSource.getFunctionDefinitionSql(fnSchema, null, 'non-trackable'),
+        source
       ),
     ],
   };
@@ -526,19 +533,22 @@ const makeMigrationCall = (
   );
 };
 
-const getBulkColumnInfoFetchQuery = schema => {
+const getBulkColumnInfoFetchQuery = (schema, source) => {
   const fetchColumnTypes = getRunSqlQuery(
     dataSource.fetchColumnTypesQuery,
+    source,
     false,
     true
   );
   const fetchTypeDefaultValues = getRunSqlQuery(
     dataSource.fetchColumnDefaultFunctions(schema),
+    source,
     false,
     true
   );
   const fetchValidTypeCasts = getRunSqlQuery(
     dataSource.fetchColumnCastsQuery,
+    source,
     false,
     true
   );
@@ -553,8 +563,11 @@ const fetchColumnTypeInfo = () => {
   return (dispatch, getState) => {
     const url = Endpoints.query;
     const currState = getState();
-    const { currentSchema } = currState.tables;
-    const reqQuery = getBulkColumnInfoFetchQuery(currentSchema);
+    const { currentSchema, currentDataSource } = currState.tables;
+    const reqQuery = getBulkColumnInfoFetchQuery(
+      currentSchema,
+      currentDataSource
+    );
     const options = {
       credentials: globalCookiePolicy,
       method: 'POST',

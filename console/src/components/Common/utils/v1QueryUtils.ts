@@ -7,6 +7,7 @@ export type OrderByNulls = 'first' | 'last';
 
 export const getRunSqlQuery = (
   sql: string,
+  source: string,
   shouldCascade?: boolean,
   readOnly?: boolean
 ) => {
@@ -14,6 +15,7 @@ export const getRunSqlQuery = (
   return {
     type: 'run_sql',
     args: {
+      source,
       sql: terminateSql(sql),
       cascade: !!shouldCascade,
       read_only: !!readOnly,

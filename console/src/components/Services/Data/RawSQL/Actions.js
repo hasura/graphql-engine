@@ -45,20 +45,23 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
   const migrateUrl = returnMigrateUrl(migrationMode);
 
   let url = Endpoints.query;
-
+  const source = getState().tables.currentDataSource;
   const schemaChangesUp = [];
 
   if (isStatementTimeout) {
     schemaChangesUp.push(
       getRunSqlQuery(
         dataSource.getStatementTimeoutSql(statementTimeout),
+        source,
         false,
         readOnlyMode
       )
     );
   }
 
-  schemaChangesUp.push(getRunSqlQuery(sql, isCascadeChecked, readOnlyMode));
+  schemaChangesUp.push(
+    getRunSqlQuery(sql, source, isCascadeChecked, readOnlyMode)
+  );
 
   if (isTableTrackChecked) {
     const objects = parseCreateSQL(sql);

@@ -118,11 +118,12 @@ const makeRequest = (
 };
 
 /* Action creators */
-const fetchCustomFunction = (functionName, schema) => {
+const fetchCustomFunction = (functionName, schema, source) => {
   return (dispatch, getState) => {
     const url = Endpoints.query;
     const fetchCustomFunctionDefinition = getRunSqlQuery(
-      dataSource.getFunctionDefinitionSql(schema, functionName)
+      dataSource.getFunctionDefinitionSql(schema, functionName),
+      source
     );
 
     const options = {
@@ -160,6 +161,7 @@ const fetchCustomFunction = (functionName, schema) => {
 const deleteFunctionSql = () => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
+    const source = getState().tables.currentDataSource;
     const {
       functionName,
       functionDefinition,
@@ -184,11 +186,11 @@ const deleteFunctionSql = () => {
     const sqlDropFunction =
       'DROP FUNCTION ' + functionNameWithSchema + functionArgString;
 
-    const sqlUpQueries = [getRunSqlQuery(sqlDropFunction)];
+    const sqlUpQueries = [getRunSqlQuery(sqlDropFunction), source];
 
     const sqlDownQueries = [];
     if (functionDefinition && functionDefinition.length > 0) {
-      sqlDownQueries.push(getRunSqlQuery(functionDefinition));
+      sqlDownQueries.push(getRunSqlQuery(functionDefinition), source);
     }
 
     // Apply migrations

@@ -187,7 +187,9 @@ const createTableSql = () => {
     const migrationName = 'create_table_' + currentSchema + '_' + tableName;
 
     // up migration
-    const upQueryArgs = createTableQueries.map(sql => getRunSqlQuery(sql));
+    const upQueryArgs = createTableQueries.map(sql =>
+      getRunSqlQuery(sql, currentDataSource)
+    );
 
     upQueryArgs.push(
       addExistingTableOrView(tableName, currentSchema, currentDataSource)
@@ -203,7 +205,7 @@ const createTableSql = () => {
 
     const downQuery = {
       type: 'bulk',
-      args: [getRunSqlQuery(sqlDropTable)],
+      args: [getRunSqlQuery(sqlDropTable, currentDataSource)],
     };
 
     // make request

@@ -89,7 +89,8 @@ const vMakeRowsRequest = () => {
           currentDataSource
         ),
         getRunSqlQuery(
-          dataSource.getEstimateCountQuery(currentSchema, originalTable)
+          dataSource.getEstimateCountQuery(currentSchema, originalTable),
+          currentDataSource
         ),
       ],
     };
@@ -140,6 +141,7 @@ const vMakeCountRequest = () => {
       currentTable: originalTable,
       currentSchema,
       view,
+      currentDataSource,
     } = getState().tables;
     const url = Endpoints.query;
 
@@ -153,7 +155,10 @@ const vMakeCountRequest = () => {
       view.query.order_by
     );
 
-    const timeoutQuery = getRunSqlQuery(dataSource.getStatementTimeoutSql(2));
+    const timeoutQuery = getRunSqlQuery(
+      dataSource.getStatementTimeoutSql(2),
+      currentDataSource
+    );
 
     const requestBody = {
       type: 'bulk',

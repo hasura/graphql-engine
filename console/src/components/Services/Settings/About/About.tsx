@@ -34,7 +34,9 @@ class About extends Component<ConnectInjectedProps & StateProps> {
         method: 'POST',
         credentials: globalCookiePolicy,
         headers: dataHeaders,
-        body: JSON.stringify(getRunSqlQuery('SELECT version();', false, true)),
+        body: JSON.stringify(
+          getRunSqlQuery('SELECT version();', '', false, true)
+        ), // todo: datasource
       };
 
       dispatch(requestAction(url, options)).then(

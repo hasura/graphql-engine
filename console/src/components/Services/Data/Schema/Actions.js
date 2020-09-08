@@ -7,6 +7,7 @@ import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 
 export const createNewSchema = (schemaName, successCb, errorCb) => {
   return (dispatch, getState) => {
+    const source = getState().tables.currentDataSource;
     if (!gqlPattern.test(schemaName)) {
       return dispatch(
         showErrorNotification(
@@ -18,11 +19,11 @@ export const createNewSchema = (schemaName, successCb, errorCb) => {
     }
 
     const migrationUp = [
-      getRunSqlQuery(dataSource.getCreateSchemaSql(schemaName)),
+      getRunSqlQuery(dataSource.getCreateSchemaSql(schemaName), source),
     ];
 
     const migrationDown = [
-      getRunSqlQuery(dataSource.getDropSchemaSql(schemaName)),
+      getRunSqlQuery(dataSource.getDropSchemaSql(schemaName), source),
     ];
 
     const migrationName = `create_schema_${schemaName}`;
@@ -60,7 +61,7 @@ export const createNewSchema = (schemaName, successCb, errorCb) => {
 
 export const deleteCurrentSchema = (successCb, errorCb) => {
   return (dispatch, getState) => {
-    const { currentSchema } = getState().tables;
+    const { currentSchema, currentDataSource } = getState().tables;
 
     if (currentSchema === 'public') {
       return dispatch(
@@ -75,7 +76,10 @@ export const deleteCurrentSchema = (successCb, errorCb) => {
     }
 
     const migrationUp = [
-      getRunSqlQuery(dataSource.getDropSchemaSql(currentSchema)),
+      getRunSqlQuery(
+        dataSource.getDropSchemaSql(currentSchema),
+        currentDataSource
+      ),
     ];
     const migrationName = `drop_schema_${currentSchema}`;
     const requestMsg = 'Dropping schema';

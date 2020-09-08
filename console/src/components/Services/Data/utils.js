@@ -78,21 +78,23 @@ export const getTableName = t => {
   return '';
 };
 
-export const fetchTrackedTableFkQuery = options => {
+export const fetchTrackedTableFkQuery = (options, source) => {
   const runSql = dataSource.getFKRelations(options);
 
   return getRunSqlQuery(
     runSql,
+    source,
     false,
     checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
   );
 };
 
-export const fetchTableListQuery = options => {
+export const fetchTableListQuery = (options, source) => {
   const runSql = dataSource.getFetchTablesListQuery(options);
 
   return getRunSqlQuery(
     runSql,
+    source,
     false,
     checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
   );

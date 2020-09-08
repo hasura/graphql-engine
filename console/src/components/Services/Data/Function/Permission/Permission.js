@@ -44,7 +44,7 @@ class Permission extends React.Component {
 
     Promise.all([
       this.props
-        .dispatch(fetchCustomFunction(functionName, schema))
+        .dispatch(fetchCustomFunction(functionName, schema, ''))
         .then(() => {
           this.setState({ funcFetchCompleted: true });
         }),
