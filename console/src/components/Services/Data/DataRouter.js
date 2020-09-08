@@ -37,7 +37,6 @@ import {
 import { showInfoNotification } from '../Common/Notification';
 import { getInitDataSource } from '../../../metadata/selector';
 import { setDriver } from '../../../dataSources';
-import { RightContainer } from '../../Common/Layout/RightContainer';
 
 const makeDataRouter = (
   connect,
