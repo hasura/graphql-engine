@@ -173,7 +173,12 @@ jobs:
         name: Install latest postgresql client tools
         command: |
           apt-get -y update
-          apt-get -y install postgresql-client-12 libmysqlclient21 libmysqlclient-dev
+          apt-get -y install postgresql-client-12
+          curl https://dev.mysql.com/get/mysql-apt-config_0.8.15-1_all.deb
+          export DEBIAN_FRONTEND=noninteractive
+          dpkg -i mysql-apt-config_0.8.15-1_all.deb
+          apt-get -y update
+          apt-get -y install mysql-server
     - run:
         name: Build the binary
         working_directory: ./server
