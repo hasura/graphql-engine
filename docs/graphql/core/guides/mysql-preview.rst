@@ -35,12 +35,10 @@ Get the Hasura + MySQL docker compose file:
 
 .. code-block:: bash
 
-   # <TODO: update file paths>
-
    # in a new directory run
-   wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/docker-compose/docker-compose.yaml
+   wget https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/docker-compose-mysql-preview/docker-compose.yaml
    # or run
-   curl https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/docker-compose/docker-compose.yaml -o docker-compose.yml
+   curl https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/docker-compose-mysql-preview/docker-compose.yaml -o docker-compose.yml
 
 Step 2: Run Hasura GraphQL engine & MySQL
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -56,20 +54,21 @@ Check if the containers are running:
 
 .. code-block:: bash
 
-  <TODO: update output>
-
   $ docker ps
 
   CONTAINER ID IMAGE                 ... CREATED STATUS PORTS          ...
   097f58433a2b hasura/graphql-engine ... 1m ago  Up 1m  8080->8080/tcp ...
-  b0b1aac0508d postgres              ... 1m ago  Up 1m  5432/tcp       ...
-  c9b1jj5c0508 mysql                 ... 1m ago  Up 1m  5432/tcp       ...
+  b0b1aac0508d postgres:12           ... 1m ago  Up 1m  5432/tcp       ...
+  0a067f202fee mysql:8               ... 1m ago  Up 1m  3306/tcp       ...
 
-Step 3: Open the Hasura console
+Step 3: Try out the GraphQL API
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Head to ``http://localhost:8080/console`` to open the Hasura console and try out
-Hasura on MySQL
+The Hasura console currently does not support MySQL (support coming very soon)
+and hence we will need to manage the database externally as of now.
+
+The console available at ``http://localhost:8080/console`` can be used to try
+out the generated API though.
 
 
 Keep up to date

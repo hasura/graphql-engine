@@ -1,0 +1,51 @@
+version: '3.6'
+services:
+  postgres:
+    image: postgres:12
+    restart: always
+    volumes:
+    - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: postgrespassword
+  mysql:
+    image: mysql:8
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    volumes:
+    - mysql_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: mysqlpassword
+      MYSQL_DATABASE: hasura
+  graphql-engine:
+    image: hasura/graphql-engine:pull5655-633f084f
+    ports:
+    - "8080:8080"
+    depends_on:
+    - "postgres"
+    command:
+    - graphql-engine
+    - --mysql-host 
+    - mysql 
+    - --mysql-user 
+    - root 
+    - --mysql-port 
+    - '3306' 
+    - --mysql-dbname 
+    - hasura
+    - --mysql-password 
+    - 'mysqlpassword'
+    - serve 
+    restart: always
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
+      ## enable the console served by server
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true" # set to "false" to disable console
+      ## enable debugging mode. It is recommended to disable this in production
+      HASURA_GRAPHQL_DEV_MODE: "true"
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
+      ## uncomment next line to set an admin secret
+      # HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
+volumes:
+  db_data:
+  mysql_data:
+
