@@ -49,71 +49,73 @@ const makeDataRouter = (
   return (
     <Route path="data" component={dataPageConnector(connect)}>
       <IndexRedirect to="schema" />
-      <Route path="schema" component={schemaConnector(connect)}>
-        <Route path="manage" component={ConnectedDatabaseManagePage} />
-        <Route path=":schema" component={schemaConnector(connect)} />
-        <Route path=":schema/tables" component={schemaConnector(connect)} />
-        <Route path=":schema/views" component={schemaConnector(connect)} />
-        <Route
-          path=":schema/functions/:functionName"
-          component={functionWrapperConnector(connect)}
-        >
-          <IndexRedirect to="modify" />
-          <Route path="modify" component={ModifyCustomFunction} />
-          <Route path="permissions" component={PermissionCustomFunction} />
-        </Route>
-        <Route
-          path=":schema/tables/:table"
-          component={viewTableConnector(connect)}
-        >
-          <IndexRedirect to="browse" />
-          <Route path="browse" component={viewTableConnector(connect)} />
-        </Route>
-        <Route
-          path=":schema/tables/:table/edit"
-          component={editItemConnector(connect)}
-        />
-        <Route
-          path=":schema/tables/:table/insert"
-          component={insertItemConnector(connect)}
-        />
-        <Route
-          path=":schema/tables/:table/modify"
-          onEnter={migrationRedirects}
-          component={modifyTableConnector(connect)}
-        />
-        <Route
-          path=":schema/tables/:table/relationships"
-          component={relationshipsConnector(connect)}
-        />
-        <Route
-          path=":schema/tables/:table/permissions"
-          component={permissionsConnector(connect)}
-          tableType={'table'}
-        />
-        <Route
-          path=":schema/views/:table/browse"
-          component={viewTableConnector(connect)}
-        />
-        <Route
-          path=":schema/views/:table/modify"
-          onEnter={migrationRedirects}
-          component={modifyViewConnector(connect)}
-        />
-        <Route
-          path=":schema/views/:table/relationships"
-          component={relationshipsViewConnector(connect)}
-        />
-        <Route
-          path=":schema/views/:table/permissions"
-          component={permissionsConnector(connect)}
-          tableType={'view'}
-        />
-        <Route
-          path=":schema/permissions"
-          component={permissionsSummaryConnector(connect)}
-        />
+      <Route path="schema" component={schemaConnector(connect)} />
+      <Route path="manage" component={ConnectedDatabaseManagePage} />
+      <Route path="schema/:schema" component={schemaConnector(connect)} />
+      <Route
+        path="schema/:schema/tables"
+        component={schemaConnector(connect)}
+      />
+      <Route path="schema/:schema/views" component={schemaConnector(connect)} />
+      <Route
+        path="schema/:schema/functions/:functionName"
+        component={functionWrapperConnector(connect)}
+      >
+        <IndexRedirect to="modify" />
+        <Route path="modify" component={ModifyCustomFunction} />
+        <Route path="permissions" component={PermissionCustomFunction} />
       </Route>
+      <Route
+        path="schema/:schema/tables/:table"
+        component={viewTableConnector(connect)}
+      >
+        <IndexRedirect to="browse" />
+        <Route path="browse" component={viewTableConnector(connect)} />
+      </Route>
+      <Route
+        path="schema/:schema/tables/:table/edit"
+        component={editItemConnector(connect)}
+      />
+      <Route
+        path="schema/:schema/tables/:table/insert"
+        component={insertItemConnector(connect)}
+      />
+      <Route
+        path="schema/:schema/tables/:table/modify"
+        onEnter={migrationRedirects}
+        component={modifyTableConnector(connect)}
+      />
+      <Route
+        path="schema/:schema/tables/:table/relationships"
+        component={relationshipsConnector(connect)}
+      />
+      <Route
+        path="schema/:schema/tables/:table/permissions"
+        component={permissionsConnector(connect)}
+        tableType={'table'}
+      />
+      <Route
+        path="schema/:schema/views/:table/browse"
+        component={viewTableConnector(connect)}
+      />
+      <Route
+        path=":schema/views/:table/modify"
+        onEnter={migrationRedirects}
+        component={modifyViewConnector(connect)}
+      />
+      <Route
+        path="schema/:schema/views/:table/relationships"
+        component={relationshipsViewConnector(connect)}
+      />
+      <Route
+        path="schema/:schema/views/:table/permissions"
+        component={permissionsConnector(connect)}
+        tableType={'view'}
+      />
+      <Route
+        path="schema/:schema/permissions"
+        component={permissionsSummaryConnector(connect)}
+      />
       <Route
         path="schema/:schema/table/add"
         onEnter={composeOnEnterHooks([migrationRedirects])}
