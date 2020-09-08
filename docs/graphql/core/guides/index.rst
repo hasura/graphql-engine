@@ -16,7 +16,6 @@ Guides / Tutorials / Resources
    :maxdepth: 2
    :titlesonly:
 
-   MySQL preview <mysql-preview>
    Data modelling guides <data-modelling/index>
    Docker networking <docker-networking>
    Sample apps & boilerplates <sample-apps/index>
@@ -25,6 +24,7 @@ Guides / Tutorials / Resources
    Auditing tables <auditing-tables>
    Telemetry <telemetry>
    Code Editor Integrations <code-editor-integrations/index>
+   MySQL preview <mysql-preview>
 
 
 
