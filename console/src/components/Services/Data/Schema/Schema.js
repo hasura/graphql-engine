@@ -792,7 +792,6 @@ class Schema extends Component {
             <hr />
             {getCurrentSchemaSection()}
             <hr />
-            <SchemaPermissionsButton schema={currentSchema} />
             {getUntrackedTablesSection()}
             {getUntrackedRelationsSection()}
             {getUntrackedFunctionsSection()}
