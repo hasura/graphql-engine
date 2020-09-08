@@ -26,7 +26,6 @@ import           Hasura.Server.Init           (RawConnInfo, mkConnInfo, mkRawCon
 import           Hasura.Server.Migrate
 import           Hasura.Server.Version
 import           Hasura.Session               (adminUserInfo)
-import           Hasura.Sources
 
 import qualified Data.Parser.CacheControlSpec as CacheControlParser
 import qualified Data.Parser.JSONPathSpec     as JsonPath
@@ -90,7 +89,7 @@ buildPostgresSpecs pgConnOptions = do
               >>> runExceptT
               >=> flip onLeft printErrJExit
 
-        schemaCache <- snd <$> runAsAdmin (migrateCatalog (Env.mkEnvironment env) PostgresDB =<< liftIO getCurrentTime)
+        schemaCache <- snd <$> runAsAdmin (migrateCatalog (Env.mkEnvironment env) =<< liftIO getCurrentTime)
         cacheRef <- newMVar schemaCache
         pure $ NT (runAsAdmin . flip MigrateSpec.runCacheRefT cacheRef)
 

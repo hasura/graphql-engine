@@ -23,7 +23,6 @@ import           Hasura.Server.API.PGDump
 import           Hasura.Server.Init             (DowngradeOptions (..))
 import           Hasura.Server.Migrate
 import           Hasura.Server.Version          (HasVersion)
-import           Hasura.Sources
 
 -- -- NOTE: downgrade test disabled for now (see #5273)
 
@@ -67,7 +66,7 @@ spec
   => Q.ConnInfo -> SpecWithCache m
 spec pgConnInfo = do
   let dropAndInit env time = CacheRefT $ flip modifyMVar \_ ->
-        dropCatalog *> (swap <$> migrateCatalog env PostgresDB time)
+        dropCatalog *> (swap <$> migrateCatalog env time)
 
   describe "migrateCatalog" $ do
     it "initializes the catalog" $ singleTransaction do
@@ -88,7 +87,7 @@ spec pgConnInfo = do
     it "supports upgrades after downgrade to version 12" \(NT transact) -> do
       let downgradeTo v = downgradeCatalog DowngradeOptions{ dgoDryRun = False, dgoTargetVersion = v }
           upgradeToLatest env time = CacheRefT $ flip modifyMVar \_ ->
-            swap <$> migrateCatalog env PostgresDB time
+            swap <$> migrateCatalog env time
       env <- Env.getEnvironment
       time <- getCurrentTime
       transact (dropAndInit env time) `shouldReturn` MRInitialized
