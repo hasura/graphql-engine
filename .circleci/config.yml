@@ -173,7 +173,7 @@ jobs:
         name: Install latest postgresql client tools
         command: |
           apt-get -y update
-          apt-get -y install postgresql-client-12 mysql-server-8.0
+          apt-get -y install postgresql-client-12 mysql-server
     - run:
         name: Build the binary
         working_directory: ./server
