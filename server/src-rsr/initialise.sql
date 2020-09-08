@@ -747,8 +747,7 @@ CREATE TABLE hdb_catalog.hdb_cron_triggers
   retry_conf JSON,
   header_conf JSON,
   include_in_metadata BOOLEAN NOT NULL DEFAULT FALSE,
-  comment TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  comment TEXT
 );
 
 CREATE TABLE hdb_catalog.hdb_cron_events

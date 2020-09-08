@@ -1,6 +1,3 @@
-ALTER TABLE hdb_catalog.hdb_cron_triggers
-DROP COLUMN created_at;
-
 ALTER TABLE hdb_catalog.hdb_cron_events
 ALTER COLUMN created_at TYPE TIMESTAMP;
 
