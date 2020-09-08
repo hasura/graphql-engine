@@ -7,7 +7,11 @@ import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 import DataSubSidebar from './DataSubSidebar';
 import GqlCompatibilityWarning from '../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 
-import { updateCurrentSchema, fetchSchemaList } from './DataActions';
+import {
+  updateCurrentSchema,
+  fetchSchemaList,
+  UPDATE_CURRENT_DATA_SOURCE,
+} from './DataActions';
 import { CLI_CONSOLE_MODE } from '../../../constants';
 import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
 import styles from '../../Common/TableCommon/Table.scss';
@@ -20,34 +24,36 @@ const DataPageContainer = ({
   children,
   location,
   dispatch,
-  metadata,
   dataSources,
+  currentDataSource,
 }) => {
-  const { driver, setDriver } = useDataSource();
+  const { setDriver } = useDataSource();
   const [loadingSchemas, setLoadingSchemas] = useState(false);
 
-  const onDatabaseChange = newDb => {
-    console.log({
-      newDb: newDb.target.value /** Users DB */,
-      metadata,
-      setDriver,
-      driver,
-      loadingSchemas,
+  const onDatabaseChange = e => {
+    const value = e.target.value;
+    let newName;
+    let newDriver;
+    try {
+      [newName, newDriver] = JSON.parse(value);
+    } catch (err) {
+      return;
+    }
+    setDriver(newDriver);
+    dispatch({
+      type: UPDATE_CURRENT_DATA_SOURCE,
+      source: newName,
     });
-    setDriver(driver === 'postgres' ? 'mysql' : 'postgres');
     setLoadingSchemas(true);
-    dispatch(fetchSchemaList()).then(() => {
+    dispatch(fetchSchemaList()).then(data => {
+      if (data.length) {
+        dispatch(updateCurrentSchema(data[0].schema_name, true, data));
+      } else {
+        dispatch(updateCurrentSchema('', true, []));
+      }
       setLoadingSchemas(false);
     });
   };
-
-  // this is a valid state now
-  // if (!schemaList.map(s => s.schema_name).includes(currentSchema)) {
-  //   dispatch(updateCurrentSchema('public', false, schemaList));
-
-  //   // throw a 404 exception
-  //   throw new NotFoundError();
-  // }
 
   const currentLocation = location.pathname;
 
@@ -99,11 +105,14 @@ const DataPageContainer = ({
               <label style={{ width: '70px' }}>Database:</label>
               <select
                 onChange={onDatabaseChange}
-                value={null /** todo */}
                 className={styles.changeSchema + ' form-control'}
               >
                 {dataSources.map(s => (
-                  <option key={s.name} value={s.name}>
+                  <option
+                    key={s.name}
+                    value={JSON.stringify([s.name, s.driver])}
+                    selected={s.name === currentDataSource}
+                  >
                     {s.name} ({s.driver})
                   </option>
                 ))}
@@ -116,7 +125,7 @@ const DataPageContainer = ({
                 value={currentSchema}
                 className={styles.changeSchema + ' form-control'}
               >
-                {getSchemaOptions()}
+                {!loadingSchemas && getSchemaOptions()}
               </select>
               {currentSchema && (
                 <GqlCompatibilityWarning
@@ -162,7 +171,7 @@ const mapStateToProps = state => {
     currentSchema: state.tables.currentSchema,
     metadata: state.metadata.metadataObject,
     dataSources: getDataSources(state),
-    currentDataSource: 'myDb (postgres)', // todo
+    currentDataSource: state.tables.currentDataSource,
   };
 };
 
