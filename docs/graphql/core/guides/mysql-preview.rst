@@ -28,6 +28,7 @@ Prerequisites
 
 - `Docker <https://docs.docker.com/install/>`_
 - `Docker Compose <https://docs.docker.com/compose/install/>`_
+- An existing MySQL database
 
 Step 1: Get the docker-compose file
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -45,7 +46,7 @@ Step 2: Update MySQL config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You need to now update the ``docker-compose.yaml`` file with credentials for your
-MySQL database
+MySQL database *(replace the values surrounded by <>)*
 
 .. code-block:: yaml
 
