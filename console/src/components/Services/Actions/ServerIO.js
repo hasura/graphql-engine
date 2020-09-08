@@ -418,13 +418,15 @@ export const addActionRel = (relConfig, successCb, existingRelConfig) => (
     relConfig
   );
 
-  const customTypesQueryUp = generateSetCustomTypesQuery(
-    reformCustomTypes(typesWithRels)
-  );
+  const customTypesQueryUp = generateSetCustomTypesQuery({
+    ...reformCustomTypes(typesWithRels),
+    source: relConfig.refDb,
+  });
 
-  const customTypesQueryDown = generateSetCustomTypesQuery(
-    reformCustomTypes(existingTypes)
-  );
+  const customTypesQueryDown = generateSetCustomTypesQuery({
+    ...reformCustomTypes(existingTypes),
+    source: relConfig.refDb,
+  });
 
   const upQueries = [customTypesQueryUp];
   const downQueries = [customTypesQueryDown];
@@ -447,7 +449,7 @@ export const addActionRel = (relConfig, successCb, existingRelConfig) => (
   );
 };
 
-export const removeActionRel = (relName, typename, successCb) => (
+export const removeActionRel = (relName, source, typename, successCb) => (
   dispatch,
   getState
 ) => {
@@ -466,13 +468,15 @@ export const removeActionRel = (relName, typename, successCb) => (
     relName
   );
 
-  const customTypesQueryUp = generateSetCustomTypesQuery(
-    reformCustomTypes(typesWithoutRel)
-  );
+  const customTypesQueryUp = generateSetCustomTypesQuery({
+    ...reformCustomTypes(typesWithoutRel),
+    source,
+  });
 
-  const customTypesQueryDown = generateSetCustomTypesQuery(
-    reformCustomTypes(existingTypes)
-  );
+  const customTypesQueryDown = generateSetCustomTypesQuery({
+    ...reformCustomTypes(existingTypes),
+    source,
+  });
 
   const upQueries = [customTypesQueryUp];
   const downQueries = [customTypesQueryDown];

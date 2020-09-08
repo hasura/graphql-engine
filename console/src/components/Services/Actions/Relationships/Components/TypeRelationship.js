@@ -72,7 +72,6 @@ const RelationshipEditor = ({
     const value = e.target.value;
     let dbName;
     let dbDriver;
-    console.log({ value });
     try {
       [dbName, dbDriver] = JSON.parse(value);
     } catch (err) {
@@ -203,7 +202,7 @@ const RelationshipEditor = ({
           disabled={!name}
         >
           {type === '' && (
-            <option value={''} disabled>
+            <option value={''} disabled selected={!refDb}>
               {'-- data source --'}
             </option>
           )}
@@ -489,7 +488,14 @@ const RelEditor = props => {
   let removeFunc;
   if (!isNew) {
     removeFunc = toggle => {
-      dispatch(removeActionRel(relConfig.name, objectType.name, toggle));
+      dispatch(
+        removeActionRel(
+          relConfig.name,
+          relConfig.refDb,
+          objectType.name,
+          toggle
+        )
+      );
     };
   }
 
