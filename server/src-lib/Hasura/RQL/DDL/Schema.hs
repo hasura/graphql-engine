@@ -43,7 +43,6 @@ import qualified Database.PG.Query              as Q
 import qualified Database.PostgreSQL.LibPQ      as PQ
 import qualified Text.Regex.TDFA                as TDFA
 
-import           Control.Exception              (catch)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -58,8 +57,6 @@ import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.Instances           ()
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils            (quoteRegex)
-
-import qualified Debug.Trace                    as UGLY
 
 data RunSQL
   = RunSQL
@@ -107,7 +104,7 @@ isSchemaCacheBuildRequiredRunSQL RunSQL {..} =
         { TDFA.captureGroups = False }
         "\\balter\\b|\\bdrop\\b|\\breplace\\b|\\bcreate function\\b|\\bcomment on\\b")
 
-runRunSQL :: (MonadIO m, MonadTx m, CacheRWM m, HasSQLGenCtx m) => RunSQL -> m EncJSON
+runRunSQL :: (MonadTx m, CacheRWM m, HasSQLGenCtx m) => RunSQL -> m EncJSON
 runRunSQL q@RunSQL {..}
   -- see Note [Checking metadata consistency in run_sql]
   | isSchemaCacheBuildRequiredRunSQL q
@@ -115,17 +112,8 @@ runRunSQL q@RunSQL {..}
   | otherwise
   = execRawSQL rSql
   where
-    execRawSQL :: (MonadTx m, MonadIO m) => Text -> m EncJSON
+    execRawSQL :: (MonadTx m) => Text -> m EncJSON
     execRawSQL queryString = do
-      -- TMP TMP DO NOT SUBMIT THIS IS CURSED THIS FUNCTION IS NOT A PLACE OF HONOR
-      -- liftIO $ do
-      --   connection <- readMVar mySQLConnection
-      --   let encodedQuery = LBS.fromStrict $ TE.encodeUtf8 queryString
-      --   UGLY.traceShowM encodedQuery
-      --   onJust connection $ \c ->
-      --     flip catch (print @My.ERRException) $ void $ My.execute_ c $ My.Query $ encodedQuery
-      -- OKAY BACK TO NORMAL MOVE ALONG CITIZEN
-
       fmap (encJFromJValue @RunSQLRes) . liftTx . Q.multiQE rawSqlErrHandler . Q.fromText $ queryString
       where
         rawSqlErrHandler txe =

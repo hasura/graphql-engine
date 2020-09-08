@@ -201,8 +201,8 @@ initialiseCtx env hgeCmd rci = do
   connInfo <- liftIO procConnInfo
   latch <- liftIO newShutdownLatch
   let mySQLConnInfo = mkMySQLConnInfo rci
-  onJust mySQLConnInfo \connInfo -> liftIO do
-    connection <- My.connect connInfo
+  onJust mySQLConnInfo \myConnInfo -> liftIO do
+    connection <- My.connect myConnInfo
     putStrLn "Connected to MySQL!"
     void $ swapMVar mySQLConnection $ Just connection
   (loggers, pool, sqlGenCtx) <- case hgeCmd of

@@ -329,9 +329,9 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
         (seqPGDB Seq.:|> (name, RFPRaw $ LBS.toStrict $ J.encode r), seqMyDB, seqRemote)
 
   executionPlan <- case (myPlans, pgPlans, remoteFields) of
-    (myPlans, Seq.Empty, Seq.Empty) ->
-      ExecStepMySQL <$> for (toList myPlans) \(name, myPlan) ->
-      case myPlan of
+    (mydbs, Seq.Empty, Seq.Empty) ->
+      ExecStepMySQL <$> for (toList mydbs) \(name, mydb) ->
+      case mydb of
         RFPMySQL plan -> pure $ (G.unName name,) $ LBS.fromStrict $ TE.encodeUtf8 $ Q.getQueryText $ _ppQuery plan
         _             -> error "found non mysql root plan in mysql plan list"
     (Seq.Empty, dbs, Seq.Empty) -> ExecStepPostgres <$> mkCurPlanTx env manager reqHeaders userInfo (toList dbs)

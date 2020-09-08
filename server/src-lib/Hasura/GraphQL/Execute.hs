@@ -177,6 +177,7 @@ validateSubscriptionRootField
   => C.QueryRootField v -> m (C.SubscriptionRootField v)
 validateSubscriptionRootField = \case
   C.RFPostgres x -> pure $ C.RFPostgres x
+  C.RFMySQL _ -> throw400 NotSupported "Subscriptions over MySQL not supported"
   C.RFAction (C.AQAsync s) -> pure $ C.RFAction s
   C.RFAction (C.AQQuery _) -> throw400 NotSupported "query actions cannot be run as a subscription"
   C.RFRemote _ -> throw400 NotSupported "subscription to remote server is not supported"

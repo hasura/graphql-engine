@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-unused-top-binds #-}
 module Hasura.GraphQL.Explain
   ( explainGQLQuery
   , GQLExplain

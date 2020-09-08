@@ -39,11 +39,13 @@ import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 
 convertDelete
-  :: ( HasVersion
-     , MonadError QErr m
-     , MonadTx tx
-     , Tracing.MonadTrace tx
-     , MonadIO tx)
+  :: (--  HasVersion
+     -- ,
+       MonadError QErr m
+     -- , MonadTx tx
+     -- , Tracing.MonadTrace tx
+     -- , MonadIO tx
+     )
   => ((RQL.AnnDel, Seq.Seq Q.PrepArg) -> tx EncJSON)
   -> SessionVariables
   -> RQL.AnnDelG UnpreparedValue
@@ -54,11 +56,12 @@ convertDelete execFunction usrVars deleteOperation = do
   pure $ execFunction (preparedDelete, Seq.empty)
 
 convertUpdate
-  :: ( HasVersion
-     , MonadError QErr m
-     , MonadTx tx
-     , Tracing.MonadTrace tx
-     , MonadIO tx
+  :: ( -- HasVersion
+     -- ,
+       MonadError QErr m
+     , Monad{-Tx-} tx
+     -- , Tracing.MonadTrace tx
+     -- , MonadIO tx
      )
   => ((RQL.AnnUpd, Seq.Seq Q.PrepArg) -> tx EncJSON)
   -> SessionVariables
@@ -112,6 +115,7 @@ convertMutationRootField
   -> m (Either (tx EncJSON, HTTP.ResponseHeaders) RemoteField)
 convertMutationRootField env logger userInfo manager reqHeaders stringifyNum = \case
   RFPostgres (MDBInsert s) -> noResponseHeaders =<< convertInsert env userSession rjCtx s stringifyNum
+  RFMySQL    (MDBInsert _) -> throw500 "Inserts unsupported for MySQL"
   RFPostgres (MDBUpdate s) -> noResponseHeaders =<< convertUpdate (RQL.execUpdateQuery env stringifyNum $ Just rjCtx) userSession s
   RFMySQL    (MDBUpdate s) -> noResponseHeaders =<< convertUpdate (My.execUpdateQuery  env stringifyNum $ Just rjCtx) userSession s
   RFPostgres (MDBDelete s) -> noResponseHeaders =<< convertDelete (RQL.execDeleteQuery env stringifyNum $ Just rjCtx) userSession s

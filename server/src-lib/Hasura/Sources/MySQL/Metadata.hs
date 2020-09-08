@@ -8,7 +8,6 @@ import Data.Sequence (fromList)
 
 import qualified Database.MySQL.Simple as My
 import Control.Concurrent.MVar
-import qualified System.IO.Streams.List as IO (toList)
 import Data.Maybe (fromJust)
 import qualified Data.HashMap.Strict as Map
 import qualified Language.GraphQL.Draft.Syntax as G
@@ -19,7 +18,6 @@ import Hasura.RQL.Types.Column
 import Hasura.SQL.Types
 import Hasura.Sources
 
-import Debug.Trace
 
 fetchTables :: IO TableCache
 fetchTables = do
@@ -109,7 +107,7 @@ fetchTables = do
         let (   tableSchema'
               , tableName'
               , pgci
-              , columnKey
+              , _columnKey
               ) = column
         if tableSchema == tableSchema' && tableName == tableName'
           then Just <$> do
