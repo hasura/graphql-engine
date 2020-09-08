@@ -24,6 +24,7 @@ Guides / Tutorials / Resources
    Auditing tables <auditing-tables>
    Telemetry <telemetry>
    Code Editor Integrations <code-editor-integrations/index>
+   MySQL preview <mysql-preview>
 
 
 
