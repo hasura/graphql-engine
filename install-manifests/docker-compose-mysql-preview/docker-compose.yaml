@@ -7,15 +7,6 @@ services:
     - db_data:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: postgrespassword
-  mysql:
-    image: mysql:8
-    command: --default-authentication-plugin=mysql_native_password
-    restart: always
-    volumes:
-    - mysql_data:/var/lib/mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: mysqlpassword
-      MYSQL_DATABASE: hasura
   graphql-engine:
     image: hasura/graphql-engine:pull5655-633f084f
     ports:
@@ -25,15 +16,15 @@ services:
     command:
     - graphql-engine
     - --mysql-host 
-    - mysql 
+    - <mysql-host>
     - --mysql-user 
-    - root 
+    - <mysql-user>
     - --mysql-port 
-    - '3306' 
+    - <mysql-port>
     - --mysql-dbname 
-    - hasura
+    - <mysql-dbname>
     - --mysql-password 
-    - 'mysqlpassword'
+    - <mysql-password>
     - serve 
     restart: always
     environment:
@@ -47,5 +38,4 @@ services:
       # HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
 volumes:
   db_data:
-  mysql_data:
 
