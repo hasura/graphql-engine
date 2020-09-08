@@ -155,7 +155,7 @@ jobs:
 
   build_server:
     docker:
-    - image: *server_builder_image
+    - image: *server_builder_i
     resource_class: large
     working_directory: ~/graphql-engine
     steps:
@@ -173,7 +173,7 @@ jobs:
         name: Install latest postgresql client tools
         command: |
           apt-get -y update
-          apt-get -y install postgresql-client-12 mysql-server
+          apt-get -y install postgresql-client-12 libmysqlclient21 libmysqlclient-dev
     - run:
         name: Build the binary
         working_directory: ./server
