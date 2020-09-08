@@ -278,19 +278,6 @@ class TestCronTrigger(object):
         }
         st,resp = hge_ctx.v1q(q)
         assert st == 200, resp
-        query = {
-            "type":"run_sql",
-            "args":{
-                "sql":'''
-                select timezone('utc',created_at) as created_at
-                from hdb_catalog.hdb_cron_triggers
-                where name = 'test_cron_trigger'
-                '''
-            }
-        }
-        st, resp = hge_ctx.v1q(query)
-        assert st == 200, resp
-        db_created_at = resp['result'][1][0]
         # The maximum timeout is set to 120s because, the cron timestamps
         # that are generated will start from the next minute, suppose
         # the cron schedule is "* * * * *" and the time the cron trigger
@@ -304,7 +291,6 @@ class TestCronTrigger(object):
         validate_event_webhook(event['path'],'/test')
         validate_event_headers(event['headers'],{"header-key":"header-value"})
         assert event['body']['payload'] == {"foo":"baz"}
-        assert event['body']['created_at'] == db_created_at.replace(" ","T") + "Z"
         assert event['body']['name'] == 'test_cron_trigger'
 
     def test_delete_cron_scheduled_trigger(self,hge_ctx):

@@ -175,7 +175,6 @@ data CronEventPartial
   , cepName          :: !TriggerName
   , cepScheduledTime :: !UTCTime
   , cepTries         :: !Int
-  , cepCreatedAt     :: !UTCTime
   } deriving (Show, Eq)
 
 data ScheduledEventFull
@@ -192,7 +191,13 @@ data ScheduledEventFull
   , sefRetryConf     :: !STRetryConf
   , sefHeaders       :: ![EventHeaderInfo]
   , sefComment       :: !(Maybe Text)
-  , sefCreatedAt     :: !UTCTime
+  , sefCreatedAt     :: !(Maybe UTCTime)
+  -- ^ sefCreatedAt is the time at which the event was created,
+  -- In case of one-off scheduled events, it's the time at which
+  -- the user created the event and in case of cron triggers, the
+  -- graphql-engine generator, generates the cron events, the
+  -- `created_at` is just an implementation detail, so we
+  -- don't send it
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = True} ''ScheduledEventFull)
 
@@ -234,7 +239,7 @@ data ScheduledEventWebhookPayload
   , sewpScheduledTime :: !UTCTime
   , sewpPayload       :: !J.Value
   , sewpComment       :: !(Maybe Text)
-  , sewpCreatedAt     :: !UTCTime
+  , sewpCreatedAt     :: !(Maybe UTCTime)
   } deriving (Show, Eq)
 
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = True} ''ScheduledEventWebhookPayload)
@@ -360,7 +365,7 @@ processCronEvents logger logEnv httpMgr pgpool getSC lockedCronEvents = do
       -- graceful shutdown is initiated in midst of processing these events
       saveLockedEvents (map cepId partialEvents) lockedCronEvents
       -- The `createdAt` of a cron event is the `created_at` of the cron trigger
-      for_ partialEvents $ \(CronEventPartial id' name st tries createdAt)-> do
+      for_ partialEvents $ \(CronEventPartial id' name st tries)-> do
         case Map.lookup name cronTriggersInfo of
           Nothing ->  logInternalError $
             err500 Unexpected "could not find cron trigger in cache"
@@ -377,7 +382,7 @@ processCronEvents logger logEnv httpMgr pgpool getSC lockedCronEvents = do
                                        ctiRetryConf
                                        ctiHeaders
                                        ctiComment
-                                       createdAt
+                                       Nothing
             finally <- Tracing.runTraceT "scheduled event" . runExceptT $
               runReaderT (processScheduledEvent logEnv pgpool scheduledEvent CronScheduledEvent) (logger, httpMgr)
             removeEventFromLockedEvents id' lockedCronEvents
@@ -434,7 +439,7 @@ processOneOffEvents env logger logEnv httpMgr pgpool lockedOneOffEvents = do
                                                         retryConf
                                                         headerInfo'
                                                         comment
-                                                        createdAt
+                                                        (Just createdAt)
                 finally <- Tracing.runTraceT "scheduled event" . runExceptT $
                   runReaderT (processScheduledEvent logEnv pgpool scheduledEvent OneOffEvent) $
                                  (logger, httpMgr)
@@ -700,24 +705,21 @@ setScheduledEventStatus scheduledEventId status type' =
 getPartialCronEvents :: Q.TxE QErr [CronEventPartial]
 getPartialCronEvents = do
   map uncurryEvent <$> Q.listQE defaultTxErrorHandler [Q.sql|
-      UPDATE hdb_catalog.hdb_cron_events ce
+      UPDATE hdb_catalog.hdb_cron_events
       SET status = 'locked'
-      FROM (
-         SELECT t.id, ct.created_at
-         FROM hdb_catalog.hdb_cron_events t
-         JOIN hdb_catalog.hdb_cron_triggers ct on ct.name = t.trigger_name
-         WHERE ( t.status = 'scheduled'
-                 and (
-                  (t.next_retry_at is NULL and t.scheduled_time <= now()) or
-                  (t.next_retry_at is not NULL and t.next_retry_at <= now())
-                 )
-               )
-         FOR UPDATE SKIP LOCKED
-      ) cron_events
-      WHERE ce.id = cron_events.id
-      RETURNING ce.id, trigger_name, scheduled_time, tries, cron_events.created_at
+      WHERE id IN ( SELECT t.id
+                    FROM hdb_catalog.hdb_cron_events t
+                    WHERE ( t.status = 'scheduled'
+                            and (
+                             (t.next_retry_at is NULL and t.scheduled_time <= now()) or
+                             (t.next_retry_at is not NULL and t.next_retry_at <= now())
+                            )
+                          )
+                    FOR UPDATE SKIP LOCKED
+                    )
+      RETURNING id, trigger_name, scheduled_time, tries
       |] () True
-  where uncurryEvent (i, n, st, tries, createdAt) = CronEventPartial i n st tries createdAt
+  where uncurryEvent (i, n, st, tries) = CronEventPartial i n st tries
 
 getOneOffScheduledEvents :: Q.TxE QErr [OneOffScheduledEvent]
 getOneOffScheduledEvents = do
