@@ -213,9 +213,9 @@ runGQBatched env logger reqId responseErrorsConfig userInfo ipAddress reqHdrs qu
             . encJFromList
             . map (either (encJFromJValue . encodeGQErr includeInternal) _hrBody)
 
-      removeHeaders <$> traverse (try . runGQ env logger reqId userInfo ipAddress reqHdrs queryType) reqs
+      removeHeaders <$> traverse (try' . runGQ env logger reqId userInfo ipAddress reqHdrs queryType) reqs
   where
-    try = flip catchError (pure . Left) . fmap Right
+    try' = flip catchError (pure . Left) . fmap Right
 
 
 runQueryDB
