@@ -289,7 +289,7 @@ export const deleteBITestTable = () => {
   cy.window().its('prompt').should('be.called');
   cy.wait(7000);
   // Match the URL
-  cy.url().should('eq', `${baseUrl}/data/schema/public`);
+  cy.url().should('eq', `${baseUrl}/data/schema`);
   validateCT(getTableName(2, testName), ResultType.FAILURE);
 
   cy.get(getElementFromAlias(getTableName(1, testName))).click();
@@ -303,7 +303,7 @@ export const deleteBITestTable = () => {
   cy.window().its('prompt').should('be.called');
   cy.wait(7000);
   // Match the URL
-  cy.url().should('eq', `${baseUrl}/data/schema/public`);
+  cy.url().should('eq', `${baseUrl}/data/schema`);
   validateCT(getTableName(1, testName), ResultType.FAILURE);
 
   cy.get(getElementFromAlias(getTableName(0, testName))).click();
@@ -318,7 +318,7 @@ export const deleteBITestTable = () => {
   cy.wait(7000);
 
   // Match the URL
-  cy.url().should('eq', `${baseUrl}/data/schema/public`);
+  cy.url().should('eq', `${baseUrl}/data/schema`);
   validateCT(getTableName(0, testName), ResultType.FAILURE);
 };
 
