@@ -81,8 +81,8 @@ mkTriggerQ trn qt allCols op (SubscribeOpSpec columns payload) = do
         mkQId opVar colInfo = toJSONableExp strfyNum (pgiType colInfo) False $
           S.SEQIden $ S.QIden (opToQual opVar) $ toIdentifier $ pgiColumn colInfo
         getRowExpression opVar = case payloadColumns of
-          SubCStar -> applyRowToJson $ S.SEUnsafe $ opToTxt opVar
-          SubCArray cols -> applyRowToJson $
+          SubCStar -> applyRowToJson' $ S.SEUnsafe $ opToTxt opVar
+          SubCArray cols -> applyRowToJson' $
             S.mkRowExp $ map (toExtr . mkQId opVar) $
             getColInfos cols allCols
 
@@ -115,7 +115,7 @@ mkTriggerQ trn qt allCols op (SubscribeOpSpec columns payload) = do
 
     in $(ST.stextFile "src-rsr/trigger.sql.shakespeare")
   where
-    applyRowToJson e = S.SEFnApp "row_to_json" [e] Nothing
+    applyRowToJson' e = S.SEFnApp "row_to_json" [e] Nothing
     applyRow e = S.SEFnApp "row" [e] Nothing
     toExtr = flip S.Extractor Nothing
     opToQual = S.QualVar . opToTxt
