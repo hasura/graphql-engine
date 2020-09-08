@@ -46,6 +46,11 @@ DB schema.
 DB migration files can be generated incrementally and can by applied in parts to
 reach particular checkpoints. They can be used to roll-back the DB schema as well.
 
+.. note::
+
+  You can manage database migrations using external tools like knex, TypeORM, Django/Rails migrations, etc.
+  as well.
+
 Hasura metadata files
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -55,10 +60,13 @@ in the snapshot.
 
 Hasura metadata can be exported and imported as a whole.
 
+.. note::
+
+
 Setting up migrations
 ---------------------
 
-See :ref:`migrations_basics`.
+See :ref:`migrations_setup`.
 
 
 Advanced use cases
@@ -80,7 +88,6 @@ Reference documentation
   :maxdepth: 1
   :hidden:
 
-  Basics <basics>
   Setting up migrations <migrations-setup>
   Managing metadata <manage-metadata>
   Advanced use cases <advanced/index>

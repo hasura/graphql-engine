@@ -19,7 +19,7 @@ We are in the process of launching support for MySQL, and we have a preview avai
 
 .. admonition:: Supported MySQL versions
 
-  Hasura GraphQL engine currently supports **MySQL 8.0**. Support for earlier
+  Hasura GraphQL engine currently supports **MySQL 8.0.14 and above**. Support for earlier
   versions will be added soon.
 
 Try it out
@@ -70,6 +70,9 @@ MySQL database *(replace the values surrounded by <>)*
     - <mysql-password>
     ...
 
+Our :ref:`docker networking guide <docker_networking>` might be useful to set
+the appropriate value for ``mysql-host``. *(See Hasura to API)*
+
 Step 3: Run Hasura GraphQL engine
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -93,13 +96,15 @@ Check if the containers are running:
 Step 4: Try out the GraphQL API
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The GraphiQL on the console available at ``http://localhost:8080/console`` can be
+The GraphiQL on the Hasura console available at ``http://localhost:8080/console`` can be
 used to try out the generated GraphQL API.
 
 **The Hasura console currently does not support managing the MySQL database schema**.
 i.e. The ``Data`` section of the console will not display the MySQL tables, etc. Hence the database
 schema needs to be managed externally as of now. *(support for this is coming very soon)*
 
+See the `source PR <https://github.com/hasura/graphql-engine/pull/5655>`__ for more information
+on current limitations and upcoming features.
 
 Keep up to date
 ---------------
