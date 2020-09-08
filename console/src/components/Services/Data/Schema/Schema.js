@@ -16,6 +16,7 @@ import {
   fetchFunctionInit,
   updateCurrentSchema,
   fetchSchemaList,
+  UPDATE_CURRENT_DATA_SOURCE,
 } from '../DataActions';
 import {
   autoAddRelName,
@@ -36,7 +37,6 @@ import {
   getUntrackedTables,
   dataSource,
   setDriver,
-  currentDriver,
 } from '../../../../dataSources';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
@@ -167,6 +167,7 @@ class Schema extends Component {
       isExporting: false,
       createSchemaOpen: false,
       schemaNameEdit: '',
+      loadingSchemas: false,
     };
 
     this.props.dispatch(fetchFunctionInit());
@@ -211,11 +212,31 @@ class Schema extends Component {
     this.props.dispatch(createNewSchema(schemaName, successCb));
   };
 
-  onDataSourceChange = newDataSource => {
-    console.log({ newDataSource });
-    setDriver(currentDriver === 'postgres' ? 'mysql' : 'postgres');
-    // set current data source name
-    this.props.dispatch(fetchSchemaList());
+  onDataSourceChange = e => {
+    const value = e.target.value;
+    let newName;
+    let newDriver;
+    try {
+      [newName, newDriver] = JSON.parse(value);
+    } catch (err) {
+      return;
+    }
+    setDriver(newDriver);
+    this.props.dispatch({
+      type: UPDATE_CURRENT_DATA_SOURCE,
+      source: newName,
+    });
+    this.setState({ loadingSchemas: true });
+    this.props.dispatch(fetchSchemaList()).then(data => {
+      if (data.length) {
+        this.props.dispatch(
+          updateCurrentSchema(data[0].schema_name, true, data)
+        );
+      } else {
+        this.props.dispatch(updateCurrentSchema('', true, []));
+      }
+      this.setState({ loadingSchemas: false });
+    });
   };
 
   render() {
@@ -297,9 +318,12 @@ class Schema extends Component {
 
     const getCurrentSchemaSection = () => {
       const getSchemaOptions = () => {
-        return schemaList.map(s => (
-          <option key={s.schema_name}>{s.schema_name}</option>
-        ));
+        return (
+          !this.state.loadingSchemas &&
+          schemaList.map(s => (
+            <option key={s.schema_name}>{s.schema_name}</option>
+          ))
+        );
       };
 
       return (
@@ -312,11 +336,14 @@ class Schema extends Component {
               <select
                 onChange={this.onDataSourceChange}
                 className={`${styles.add_mar_left_mid} ${styles.width_auto} form-control`}
-                value={currentDataSource}
                 style={{ width: '200px' }}
               >
                 {dataSources.map(s => (
-                  <option key={s.name} value={s.name}>
+                  <option
+                    key={s.name}
+                    value={JSON.stringify([s.name, s.driver])}
+                    selected={s.name === currentDataSource}
+                  >
                     {s.name} ({s.driver})
                   </option>
                 ))}
