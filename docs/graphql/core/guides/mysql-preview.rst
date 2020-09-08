@@ -54,9 +54,9 @@ a MySQL DB.
 
 Check if the containers are running:
 
-<TODO: update output>
-
 .. code-block:: bash
+
+  <TODO: update output>
 
   $ docker ps
 
