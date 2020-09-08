@@ -22,7 +22,7 @@ refs:
         if [ -z "$CIRCLE_PR_NUMBER" ]; then
           echo "Not a PR build, continuing test" && exit 0
         fi
-        echo "Compare refs: ${CIRCLE_COMPARE_URL##http*/}" 
+        echo "Compare refs: ${CIRCLE_COMPARE_URL##http*/}"
         if git diff --quiet "${CIRCLE_COMPARE_URL##http*/}" -- server; then
           echo "No server changes present, skipping test"
           circleci-agent step halt
@@ -173,7 +173,7 @@ jobs:
         name: Install latest postgresql client tools
         command: |
           apt-get -y update
-          apt-get -y install postgresql-client-12
+          apt-get -y install postgresql-client-12 mysql-server-8.0
     - run:
         name: Build the binary
         working_directory: ./server
@@ -416,7 +416,7 @@ jobs:
         root: /build
         paths:
           - _cli_output
-  
+
   test_and_build_cli_migrations:
     docker:
     - image: hasura/graphql-engine-cli-migrations-builder:20200415
