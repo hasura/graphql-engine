@@ -19,6 +19,7 @@ import qualified Hasura.GraphQL.Execute.Plan      as E
 import qualified Hasura.Logging                   as L
 
 import           Hasura.Prelude
+import           Hasura.RQL.Types.Common          (convertFromDiffTime)
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Session
@@ -213,13 +214,6 @@ readLogLevel s = case T.toLower $ T.strip $ T.pack s of
 readJson :: (J.FromJSON a) => String -> Either String a
 readJson = J.eitherDecodeStrict . txtToBs . T.pack
 
-readPositiveNumbers :: String -> String
-readPositiveNumbers x = case (read x :: Int) < 0 of
-  -- not sure if this is how I should be showing the error
-  -- could let the string pass through as well and it would be caught by readEither
-  True -> error "flag value should only be a positive number"
-  False -> x
-
 class FromEnv a where
   fromEnv :: String -> Either String a
 
@@ -264,10 +258,10 @@ instance FromEnv [API] where
   fromEnv = readAPIs
 
 instance FromEnv LQ.BatchSize where
-  fromEnv = fmap LQ.BatchSize . readEither . readPositiveNumbers
+  fromEnv = fmap LQ.BatchSize . readEither
 
 instance FromEnv LQ.RefetchInterval where
-  fromEnv = fmap (LQ.RefetchInterval . milliseconds . fromInteger) . readEither . readPositiveNumbers
+  fromEnv = fmap (LQ.RefetchInterval . convertFromDiffTime . milliseconds . fromInteger) . readEither
 
 instance FromEnv Milliseconds where
   fromEnv = fmap fromInteger . readEither
