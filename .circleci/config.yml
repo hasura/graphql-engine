@@ -178,7 +178,7 @@ jobs:
           export DEBIAN_FRONTEND=noninteractive
           dpkg -i mysql-apt-config_0.8.15-1_all.deb
           apt-get -y update
-          apt-get -y install mysql-server
+          apt-get -y install libmysqlclient21 libmysqlclient-dev
     - run:
         name: Build the binary
         working_directory: ./server
