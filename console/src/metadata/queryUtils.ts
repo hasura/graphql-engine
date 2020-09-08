@@ -483,11 +483,15 @@ export const getTrackFunctionV2Query = (
   configuration: Record<string, string>,
   source: string
 ) =>
-  getMetadataQuery('track_function', {
-    function: { name, schema },
-    source,
-    configuration,
-  });
+  getMetadataQuery(
+    'track_function',
+    {
+      function: { name, schema },
+      source,
+      configuration,
+    },
+    { version: 2 }
+  );
 
 export const getUntrackFunctionQuery = (
   name: string,

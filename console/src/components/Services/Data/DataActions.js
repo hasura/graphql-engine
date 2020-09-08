@@ -104,7 +104,7 @@ const setUntrackedRelations = () => (dispatch, getState) => {
 // todo: it's called 4 times on start
 const loadSchema = configOptions => {
   return (dispatch, getState) => {
-    const url = Endpoints.getSchema;
+    const url = Endpoints.query;
 
     let allSchemas = getState().tables.allSchemas;
 
@@ -275,13 +275,16 @@ const setConsistentSchema = data => ({
 });
 
 const fetchDataInit = () => (dispatch, getState) => {
-  const url = Endpoints.getSchema;
+  const url = Endpoints.query;
+
+  const query = dataSource.schemaList;
+  query.args.source = getState().tables.currentDataSource;
 
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
     headers: dataHeaders(getState),
-    body: JSON.stringify(dataSource.schemaList),
+    body: JSON.stringify(query),
   };
 
   return dispatch(requestAction(url, options)).then(
@@ -296,7 +299,7 @@ const fetchDataInit = () => (dispatch, getState) => {
 };
 
 const fetchFunctionInit = (schema = null) => (dispatch, getState) => {
-  const url = Endpoints.getSchema;
+  const url = Endpoints.query;
   const fnSchema = schema || getState().tables.currentSchema;
   const body = {
     type: 'bulk',
@@ -351,7 +354,7 @@ const updateCurrentSchema = (schemaName, redirect = true) => dispatch => {
 
 /* ************ action creators *********************** */
 const fetchSchemaList = () => (dispatch, getState) => {
-  const url = Endpoints.getSchema;
+  const url = Endpoints.query;
   const currentSource = getState().tables.currentDataSource;
   const query = dataSource.schemaList;
   query.args.source = currentSource;
@@ -548,7 +551,7 @@ const getBulkColumnInfoFetchQuery = schema => {
 
 const fetchColumnTypeInfo = () => {
   return (dispatch, getState) => {
-    const url = Endpoints.getSchema;
+    const url = Endpoints.query;
     const currState = getState();
     const { currentSchema } = currState.tables;
     const reqQuery = getBulkColumnInfoFetchQuery(currentSchema);

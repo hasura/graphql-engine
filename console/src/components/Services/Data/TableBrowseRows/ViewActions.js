@@ -213,7 +213,7 @@ const vMakeTableRequests = () => (dispatch, getState) => {
 
 const fetchManualTriggers = tableName => {
   return (dispatch, getState) => {
-    const url = Endpoints.getSchema;
+    const url = Endpoints.query;
     const { currentSchema } = getState().tables;
     const body = getFetchManualTriggersQuery(
       generateTableDef(tableName, currentSchema)

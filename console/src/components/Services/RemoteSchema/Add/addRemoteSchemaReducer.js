@@ -118,7 +118,6 @@ const fetchRemoteSchema = remoteSchema => {
 const addRemoteSchema = () => {
   return (dispatch, getState) => {
     const currState = getState().remoteSchemas.addData;
-    // const url = Endpoints.getSchema;
 
     let timeoutSeconds = parseInt(currState.timeoutConf, 10);
     if (isNaN(timeoutSeconds)) timeoutSeconds = 60;
@@ -214,7 +213,6 @@ const addRemoteSchema = () => {
 const deleteRemoteSchema = () => {
   return (dispatch, getState) => {
     const currState = getState().remoteSchemas.addData;
-    // const url = Endpoints.getSchema;
     const resolveObj = {
       name: currState.editState.originalName,
     };

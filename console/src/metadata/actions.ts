@@ -174,7 +174,7 @@ export const exportMetadata = (
     body: JSON.stringify(query),
   };
 
-  return dispatch(requestAction(Endpoints.query, options))
+  return dispatch(requestAction(Endpoints.metadata, options))
     .then(data => {
       dispatch({
         type: 'Metadata/EXPORT_METADATA_SUCCESS',
@@ -205,7 +205,7 @@ export const addDataSource = (
     body: JSON.stringify(query),
   };
 
-  return dispatch(requestAction(Endpoints.query, options))
+  return dispatch(requestAction(Endpoints.metadata, options))
     .then(() => {
       successCb();
       dispatch(showSuccessNotification('Data source added successfully!'));
@@ -234,7 +234,7 @@ export const removeDataSource = (
     body: JSON.stringify(query),
   };
 
-  return dispatch(requestAction(Endpoints.query, options))
+  return dispatch(requestAction(Endpoints.metadata, options))
     .then(res => {
       console.log({ res });
       dispatch(showSuccessNotification('Data source removed successfully!'));
@@ -263,7 +263,7 @@ export const reloadDataSource = (
     body: JSON.stringify(query),
   };
 
-  return dispatch(requestAction(Endpoints.query, options))
+  return dispatch(requestAction(Endpoints.metadata, options))
     .then(res => {
       console.log({ res });
       dispatch(showSuccessNotification('Data source reloaded successfully!'));
@@ -339,7 +339,9 @@ export const resetMetadata = (
     body: JSON.stringify(resetMetadataQuery),
   };
 
-  return dispatch(requestAction(Endpoints.query, options as RequestInit)).then(
+  return dispatch(
+    requestAction(Endpoints.metadata, options as RequestInit)
+  ).then(
     () => {
       if (successCb) {
         successCb();
@@ -430,7 +432,7 @@ export const loadInconsistentObjects = (
 
     dispatch({ type: 'Metadata/LOAD_INCONSISTENT_OBJECTS_REQUEST' });
     return dispatch(
-      requestAction(Endpoints.query, {
+      requestAction(Endpoints.metadata, {
         method: 'POST',
         headers,
         body: JSON.stringify(loadQuery),
@@ -478,7 +480,7 @@ export const reloadRemoteSchema = (
 
     dispatch({ type: 'Metadata/LOAD_INCONSISTENT_OBJECTS_REQUEST' });
     return dispatch(
-      requestAction(Endpoints.query, {
+      requestAction(Endpoints.metadata, {
         method: 'POST',
         headers,
         body: JSON.stringify(reloadQuery),
@@ -536,7 +538,7 @@ export const dropInconsistentObjects = (
     const headers = getState().tables.dataHeaders;
     dispatch({ type: 'Metadata/DROP_INCONSISTENT_METADATA_REQUEST' });
     return dispatch(
-      requestAction(Endpoints.query, {
+      requestAction(Endpoints.metadata, {
         method: 'POST',
         headers,
         body: JSON.stringify(dropInconsistentObjectsQuery),
@@ -580,7 +582,7 @@ export const updateAllowedQuery = (
     const headers = getState().tables.dataHeaders;
 
     return dispatch(
-      requestAction(Endpoints.query, {
+      requestAction(Endpoints.metadata, {
         method: 'POST',
         headers,
         body: JSON.stringify(updateAllowedQueryQuery(queryName, newQuery)),
@@ -615,7 +617,7 @@ export const deleteAllowedQuery = (
       : deleteAllowedQueryQuery(queryName);
 
     return dispatch(
-      requestAction(Endpoints.query, {
+      requestAction(Endpoints.metadata, {
         method: 'POST',
         headers,
         body: JSON.stringify(deleteQuery),
@@ -644,7 +646,7 @@ export const deleteAllowList = (): Thunk<void, MetadataActions> => {
     const headers = getState().tables.dataHeaders;
 
     return dispatch(
-      requestAction(Endpoints.query, {
+      requestAction(Endpoints.metadata, {
         method: 'POST',
         headers,
         body: JSON.stringify(deleteAllowListQuery()),
@@ -687,7 +689,7 @@ export const addAllowedQueries = (
       : addAllowedQueriesQuery(queries);
 
     return dispatch(
-      requestAction(Endpoints.query, {
+      requestAction(Endpoints.metadata, {
         method: 'POST',
         headers,
         body: JSON.stringify(addQuery),

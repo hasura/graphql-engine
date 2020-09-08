@@ -120,7 +120,7 @@ const makeRequest = (
 /* Action creators */
 const fetchCustomFunction = (functionName, schema) => {
   return (dispatch, getState) => {
-    const url = Endpoints.getSchema;
+    const url = Endpoints.query;
     const fetchCustomFunctionDefinition = getRunSqlQuery(
       dataSource.getFunctionDefinitionSql(schema, functionName)
     );

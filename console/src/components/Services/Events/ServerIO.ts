@@ -79,7 +79,7 @@ export const fetchTriggers = (
   }
 
   return dispatch(
-    requestAction(Endpoints.getSchema, {
+    requestAction(Endpoints.query, {
       method: 'POST',
       credentials: globalCookiePolicy,
       headers: dataHeaders(getState),
@@ -566,7 +566,7 @@ export const redeliverDataEvent = (
   successCb?: CallableFunction,
   errorCb?: CallableFunction
 ): Thunk => (dispatch, getState) => {
-  const url = Endpoints.getSchema;
+  const url = Endpoints.query;
   const options = {
     method: 'POST',
     headers: dataHeaders(getState),

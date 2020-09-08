@@ -40,7 +40,7 @@ export const useIntrospectionSchemaRemote = (
     setError(null);
     dispatch(
       requestAction(
-        endpoints.query,
+        endpoints.metadata,
         {
           method: 'POST',
           headers: {

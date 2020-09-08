@@ -32,7 +32,7 @@ const setConsoleOptsInDB = (
   dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>,
   getState: GetReduxState
 ) => {
-  const url = Endpoints.getSchema;
+  const url = Endpoints.query;
 
   const { hasura_uuid, console_opts } = getState().telemetry;
 
@@ -135,7 +135,7 @@ const loadConsoleOpts = () => {
     dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>,
     getState: GetReduxState
   ) => {
-    const url = Endpoints.getSchema;
+    const url = Endpoints.query;
     const options: RequestInit = {
       credentials: globalCookiePolicy,
       method: 'POST',

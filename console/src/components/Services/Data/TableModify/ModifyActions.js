@@ -1694,7 +1694,7 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
 
 const fetchColumnCasts = () => {
   return (dispatch, getState) => {
-    const url = Endpoints.getSchema;
+    const url = Endpoints.query;
     // todo -- it should be normalized for different data sources
     const reqQuery = getRunSqlQuery(dataSource.fetchColumnCastsQuery);
     const options = {
