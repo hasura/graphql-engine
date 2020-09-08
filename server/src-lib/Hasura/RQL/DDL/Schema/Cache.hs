@@ -138,8 +138,9 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
   -- Step 3: Build the GraphQL schema.
   (gqlContext, gqlSchemaInconsistentObjects) <- runWriterA buildGQLContext -<
     ( QueryHasura
-    , (_boTables    resolvedOutputs)
-    , (_boFunctions resolvedOutputs)
+    , M.singleton defaultSource $
+        PGSourceSchemaCache (_boTables    resolvedOutputs)
+        (_boFunctions resolvedOutputs)
     , (_boRemoteSchemas resolvedOutputs)
     , (_boActions resolvedOutputs)
     , (_actNonObjects $ _boCustomTypes resolvedOutputs)
@@ -148,8 +149,9 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
   -- Step 4: Build the relay GraphQL schema
   (relayContext, relaySchemaInconsistentObjects) <- runWriterA buildGQLContext -<
     ( QueryRelay
-    , (_boTables    resolvedOutputs)
-    , (_boFunctions resolvedOutputs)
+    , M.singleton defaultSource $
+        PGSourceSchemaCache (_boTables    resolvedOutputs)
+        (_boFunctions resolvedOutputs)
     , (_boRemoteSchemas resolvedOutputs)
     , (_boActions resolvedOutputs)
     , (_actNonObjects $ _boCustomTypes resolvedOutputs)
