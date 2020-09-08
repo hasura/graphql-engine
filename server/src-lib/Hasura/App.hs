@@ -541,9 +541,9 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
 --      see memory stay high after finishing). In the theoretical worst case
 --      there is such low haskell heap pressure that we never run finalizers to
 --      free the foreign data from e.g. libpq.
---    - `-Iw` is not yet implemented in 8.10.1: https://gitlab.haskell.org/ghc/ghc/-/issues/18433
---    - even if it was these two knobs would still not give us a guarentee that
---      a major GC would always run at some minumum frequency (e.g. for finalizers)
+--    - as of GHC 8.10.2 we have access to `-Iw`, but those two knobs still
+--      don’t give us a guarantee that a major GC will always run at some
+--      minumum frequency (e.g. for finalizers)
 --
 -- ...so we hack together our own using GHC.Stats, which should have
 -- insignificant runtime overhead.

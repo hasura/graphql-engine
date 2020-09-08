@@ -5,10 +5,8 @@ reject-unconstrained-dependencies: all
 package graphql-engine
   ghc-options:
     -j3 -Werror
-    -- Limit heap size to 8GB, which is the amount of available memory on a
-    -- CircleCI `large` instance. (GHC interprets G as GB, i.e. 1,000^3 bytes,
-    -- but instances seem to have 8GiB, i.e. 1,024^3 bytes, so that leaves us
-    -- a little breathing room.)
-    +RTS -M8G -RTS
+    -- Limit heap size to a little less than 8GB, which is the amount of
+    -- available memory on a CircleCI `large` instance.
+    +RTS -M7500m -RTS
   tests: true
   benchmarks: true
