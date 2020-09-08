@@ -42,6 +42,11 @@ Get started using an existing database
 
   Hasura GraphQL engine supports **Postgres 9.5 and above**
 
+
+.. admonition:: MySQL support
+
+  We are in the process of launching support for MySQL, head to :ref:`this guide <mysql_preview>` to try it out in preview.
+
 .. toctree::
    :maxdepth: 2
    :titlesonly:
