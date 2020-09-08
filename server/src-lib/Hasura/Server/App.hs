@@ -11,10 +11,8 @@ import           Hasura.Prelude                            hiding (get, put)
 
 import           Control.Monad.Stateless
 import           Data.Aeson                                hiding (json)
-import           Data.Int                                  (Int64)
 import           Data.IORef
 import           Data.Time.Clock                           (UTCTime)
-import           Data.Time.Clock.POSIX                     (getPOSIXTime)
 import           Network.Mime                              (defaultMimeLookup)
 import           System.FilePath                           (joinPath, takeFileName)
 import           Web.Spock.Core                            ((<//>))
@@ -635,9 +633,6 @@ mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpMana
                     , scResponseInternalErrorsConfig = responseErrorsConfig
                     }
 
-    when (isDeveloperAPIEnabled serverCtx) $ do
-      liftIO $ EKG.registerCounter "ekg.server_timestamp_ms" getTimeMs ekgStore
-
     spockApp <- liftWithStateless $ \lowerIO ->
       Spock.spockAsApp $ Spock.spockT lowerIO $
         httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry
@@ -650,9 +645,6 @@ mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpMana
 
     return $ HasuraApp waiApp schemaCacheRef cacheBuiltTime stopWSServer
   where
-    getTimeMs :: IO Int64
-    getTimeMs = (round . (* 1000)) `fmap` getPOSIXTime
-
     -- initialiseCache :: m (E.PlanCache, SchemaCacheRef)
     initialiseCache :: m SchemaCacheRef
     initialiseCache = do
