@@ -27,6 +27,7 @@ import {
   getTableCustomRootFields,
 } from '../../../../dataSources';
 import ViewDefinitions from './ViewDefinitions';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
 
 const ModifyView = props => {
   const {
@@ -234,38 +235,40 @@ const ModifyView = props => {
   );
 
   return (
-    <div className={styles.container + ' container-fluid'}>
-      <TableHeader
-        dispatch={dispatch}
-        table={tableSchema}
-        tabName="modify"
-        migrationMode={migrationMode}
-        readOnlyMode={readOnlyMode}
-      />
-      <br />
-      <div className={'container-fluid ' + styles.padd_left_remove}>
-        <div className={'col-xs-8 ' + styles.padd_left_remove}>
-          <TableCommentEditor
-            tableComment={tableComment}
-            tableCommentEdit={tableCommentEdit}
-            tableType={tableType}
-            dispatch={dispatch}
-          />
-          <h4 className={styles.subheading_text}>Columns</h4>
-          {getViewColumnsSection()}
-          <br />
-          <ViewDefinitions dispatch={dispatch} sql={viewDefSql} />
+    <RightContainer>
+      <div className={styles.container + ' container-fluid'}>
+        <TableHeader
+          dispatch={dispatch}
+          table={tableSchema}
+          tabName="modify"
+          migrationMode={migrationMode}
+          readOnlyMode={readOnlyMode}
+        />
+        <br />
+        <div className={'container-fluid ' + styles.padd_left_remove}>
+          <div className={'col-xs-8 ' + styles.padd_left_remove}>
+            <TableCommentEditor
+              tableComment={tableComment}
+              tableCommentEdit={tableCommentEdit}
+              tableType={tableType}
+              dispatch={dispatch}
+            />
+            <h4 className={styles.subheading_text}>Columns</h4>
+            {getViewColumnsSection()}
+            <br />
+            <ViewDefinitions dispatch={dispatch} sql={viewDefSql} />
 
-          <hr />
-          {getViewRootFieldsSection()}
-          {untrackBtn}
-          {deleteBtn}
-          <br />
-          <br />
+            <hr />
+            {getViewRootFieldsSection()}
+            {untrackBtn}
+            {deleteBtn}
+            <br />
+            <br />
+          </div>
+          <div className={styles.fixed + ' col-xs-3 hidden'}>{alert}</div>
         </div>
-        <div className={styles.fixed + ' col-xs-3 hidden'}>{alert}</div>
       </div>
-    </div>
+    </RightContainer>
   );
 };
 

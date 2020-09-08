@@ -11,6 +11,7 @@ import ToolTip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import { findAllFromRel } from '../../../../dataSources';
 import { getRemoteSchemasSelector } from '../../../../metadata/selector';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
 
 class RelationshipsView extends Component {
   componentDidMount() {
@@ -142,40 +143,42 @@ class RelationshipsView extends Component {
     };
 
     return (
-      <div className={`${styles.container} container-fluid`}>
-        <TableHeader
-          dispatch={dispatch}
-          table={tableSchema}
-          tabName="relationships"
-          migrationMode={migrationMode}
-          readOnlyMode={readOnlyMode}
-        />
-        <br />
-        <div className={`${styles.padd_left_remove} container-fluid`}>
-          <div
-            className={`${styles.padd_left_remove} ${styles.add_mar_bottom} col-xs-10 col-md-10`}
-          >
-            <h4 className={styles.subheading_text}>
-              Table Relationships
-              <ToolTip message={'Relationships to tables / views'} />
-              &nbsp;
-              <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/table-relationships/index.html" />
-            </h4>
-            {addedRelationshipsView}
-            <div className={styles.activeEdit}>
-              <AddManualRelationship
-                tableSchema={tableSchema}
-                allSchemas={allSchemas}
-                schemaList={schemaList}
-                relAdd={manualRelAdd}
-                dispatch={dispatch}
-              />
+      <RightContainer>
+        <div className={`${styles.container} container-fluid`}>
+          <TableHeader
+            dispatch={dispatch}
+            table={tableSchema}
+            tabName="relationships"
+            migrationMode={migrationMode}
+            readOnlyMode={readOnlyMode}
+          />
+          <br />
+          <div className={`${styles.padd_left_remove} container-fluid`}>
+            <div
+              className={`${styles.padd_left_remove} ${styles.add_mar_bottom} col-xs-10 col-md-10`}
+            >
+              <h4 className={styles.subheading_text}>
+                Table Relationships
+                <ToolTip message={'Relationships to tables / views'} />
+                &nbsp;
+                <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/table-relationships/index.html" />
+              </h4>
+              {addedRelationshipsView}
+              <div className={styles.activeEdit}>
+                <AddManualRelationship
+                  tableSchema={tableSchema}
+                  allSchemas={allSchemas}
+                  schemaList={schemaList}
+                  relAdd={manualRelAdd}
+                  dispatch={dispatch}
+                />
+              </div>
             </div>
+            {remoteRelationshipsSection()}
           </div>
-          {remoteRelationshipsSection()}
+          <div className={`${styles.fixed} hidden`}>{alert}</div>
         </div>
-        <div className={`${styles.fixed} hidden`}>{alert}</div>
-      </div>
+      </RightContainer>
     );
   }
 }

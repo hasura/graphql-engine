@@ -37,6 +37,7 @@ import {
 import { showInfoNotification } from '../Common/Notification';
 import { getInitDataSource } from '../../../metadata/selector';
 import { setDriver } from '../../../dataSources';
+import { RightContainer } from '../../Common/Layout/RightContainer';
 
 const makeDataRouter = (
   connect,
@@ -99,7 +100,7 @@ const makeDataRouter = (
         component={viewTableConnector(connect)}
       />
       <Route
-        path=":schema/views/:table/modify"
+        path="schema/:schema/views/:table/modify"
         onEnter={migrationRedirects}
         component={modifyViewConnector(connect)}
       />

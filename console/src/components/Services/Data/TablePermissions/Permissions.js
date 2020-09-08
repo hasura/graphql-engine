@@ -81,6 +81,7 @@ import {
 } from './utils';
 import PermButtonSection from './PermButtonsSection';
 import { rolesSelector } from '../../../../metadata/selector';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
 
 class Permissions extends Component {
   constructor() {
@@ -1830,25 +1831,36 @@ class Permissions extends Component {
     );
 
     return (
-      <div className={styles.container}>
-        {getHeader(currentTableSchema)}
-        <br />
-        <div className={styles.padd_left_remove}>
-          <div className={`${styles.padd_remove} col-xs-12`}>
-            <h4 className={styles.subheading_text}>Permissions</h4>
-            {getPermissionsTable(
-              currentTableSchema,
-              supportedQueryTypes,
-              allRoles
+      <RightContainer>
+        <div className={styles.container}>
+          {getHeader(currentTableSchema)}
+          <br />
+          <div className={styles.padd_left_remove}>
+            <div className={`${styles.padd_remove} col-xs-12`}>
+              <h4 className={styles.subheading_text}>Permissions</h4>
+              {getPermissionsTable(
+                currentTableSchema,
+                supportedQueryTypes,
+                allRoles
+              )}
+              {getBulkSection(currentTableSchema)}
+              {getEditSection(
+                currentTableSchema,
+                supportedQueryTypes,
+                allRoles
+              )}
+            </div>
+          </div>
+          <div className={`${styles.fixed} hidden`}>
+            {getAlertHtml(
+              ongoingRequest,
+              lastError,
+              lastSuccess,
+              lastFormError
             )}
-            {getBulkSection(currentTableSchema)}
-            {getEditSection(currentTableSchema, supportedQueryTypes, allRoles)}
           </div>
         </div>
-        <div className={`${styles.fixed} hidden`}>
-          {getAlertHtml(ongoingRequest, lastError, lastSuccess, lastFormError)}
-        </div>
-      </div>
+      </RightContainer>
     );
   }
 }

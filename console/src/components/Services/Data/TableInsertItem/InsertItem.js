@@ -12,6 +12,7 @@ import { findTable } from '../../../../dataSources';
 import styles from '../../../Common/TableCommon/Table.scss';
 import { TableRow } from '../Common/Components/TableRow';
 import { generateTableDef } from '../../../../dataSources';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
 
 class InsertItem extends Component {
   constructor() {
@@ -149,86 +150,88 @@ class InsertItem extends Component {
     }
 
     return (
-      <div className={styles.container + ' container-fluid'}>
-        <TableHeader
-          count={count}
-          dispatch={dispatch}
-          table={currentTable}
-          tabName="insert"
-          migrationMode={migrationMode}
-          readOnlyMode={readOnlyMode}
-        />
-        <br />
-        <div className={styles.insertContainer + ' container-fluid'}>
-          <div className="col-xs-9">
-            <form id="insertForm" className="form-horizontal">
-              {elements}
-              <Button
-                type="submit"
-                color="yellow"
-                size="sm"
-                onClick={e => {
-                  e.preventDefault();
-                  const inputValues = {};
-                  Object.keys(refs).map(colName => {
-                    if (refs[colName].nullNode.checked) {
-                      // null
-                      inputValues[colName] = null;
-                    } else if (refs[colName].defaultNode.checked) {
-                      // default
-                      return;
-                    } else {
-                      inputValues[colName] =
-                        refs[colName].valueNode.props !== undefined
-                          ? refs[colName].valueNode.props.value
-                          : refs[colName].valueNode.value;
+      <RightContainer>
+        <div className={styles.container + ' container-fluid'}>
+          <TableHeader
+            count={count}
+            dispatch={dispatch}
+            table={currentTable}
+            tabName="insert"
+            migrationMode={migrationMode}
+            readOnlyMode={readOnlyMode}
+          />
+          <br />
+          <div className={styles.insertContainer + ' container-fluid'}>
+            <div className="col-xs-9">
+              <form id="insertForm" className="form-horizontal">
+                {elements}
+                <Button
+                  type="submit"
+                  color="yellow"
+                  size="sm"
+                  onClick={e => {
+                    e.preventDefault();
+                    const inputValues = {};
+                    Object.keys(refs).map(colName => {
+                      if (refs[colName].nullNode.checked) {
+                        // null
+                        inputValues[colName] = null;
+                      } else if (refs[colName].defaultNode.checked) {
+                        // default
+                        return;
+                      } else {
+                        inputValues[colName] =
+                          refs[colName].valueNode.props !== undefined
+                            ? refs[colName].valueNode.props.value
+                            : refs[colName].valueNode.value;
+                      }
+                    });
+                    dispatch(insertItem(tableName, inputValues)).then(() => {
+                      this.nextInsert();
+                    });
+                  }}
+                  data-test="insert-save-button"
+                >
+                  {buttonText}
+                </Button>
+                <Button
+                  color="white"
+                  size="sm"
+                  onClick={e => {
+                    e.preventDefault();
+                    const form = document.getElementById('insertForm');
+                    const inputs = form.getElementsByTagName('input');
+                    for (let i = 0; i < inputs.length; i++) {
+                      switch (inputs[i].type) {
+                        // case 'hidden':
+                        case 'text':
+                          inputs[i].value = '';
+                          break;
+                        case 'radio':
+                        case 'checkbox':
+                          // inputs[i].checked = false;
+                          break;
+                        default:
+                        // pass
+                      }
                     }
-                  });
-                  dispatch(insertItem(tableName, inputValues)).then(() => {
-                    this.nextInsert();
-                  });
-                }}
-                data-test="insert-save-button"
-              >
-                {buttonText}
-              </Button>
-              <Button
-                color="white"
-                size="sm"
-                onClick={e => {
-                  e.preventDefault();
-                  const form = document.getElementById('insertForm');
-                  const inputs = form.getElementsByTagName('input');
-                  for (let i = 0; i < inputs.length; i++) {
-                    switch (inputs[i].type) {
-                      // case 'hidden':
-                      case 'text':
-                        inputs[i].value = '';
-                        break;
-                      case 'radio':
-                      case 'checkbox':
-                        // inputs[i].checked = false;
-                        break;
-                      default:
-                      // pass
-                    }
-                  }
-                }}
-                data-test="clear-button"
-              >
-                Clear
-              </Button>
-              <ReloadEnumValuesButton
-                dispatch={dispatch}
-                isEnum={currentTable.is_enum}
-              />
-            </form>
+                  }}
+                  data-test="clear-button"
+                >
+                  Clear
+                </Button>
+                <ReloadEnumValuesButton
+                  dispatch={dispatch}
+                  isEnum={currentTable.is_enum}
+                />
+              </form>
+            </div>
+            <div className="col-xs-3">{alert}</div>
           </div>
-          <div className="col-xs-3">{alert}</div>
+          <br />
+          <br />
         </div>
-        <br />
-        <br />
-      </div>
+      </RightContainer>
     );
   }
 }

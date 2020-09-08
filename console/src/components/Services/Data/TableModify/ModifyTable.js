@@ -50,6 +50,7 @@ import {
   uniqueKeyDescription,
   checkConstraintsDescription,
 } from '../Common/TooltipMessages';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
 
 class ModifyTable extends React.Component {
   componentDidMount() {
@@ -208,110 +209,112 @@ class ModifyTable extends React.Component {
 
     // if (tableSchema.primary_key.columns > 0) {}
     return (
-      <div className={`${styles.container} container-fluid`}>
-        <TableHeader
-          dispatch={dispatch}
-          table={table}
-          tabName="modify"
-          migrationMode={migrationMode}
-          readOnlyMode={readOnlyMode}
-        />
-        <br />
-        <div className={`container-fluid ${styles.padd_left_remove}`}>
-          <div
-            className={
-              `col-xs-10 ${styles.padd_left_remove}` +
-              ' ' +
-              styles.modifyMinWidth
-            }
-          >
-            <TableCommentEditor
-              tableComment={tableComment}
-              tableCommentEdit={tableCommentEdit}
-              tableType="TABLE"
-              dispatch={dispatch}
-            />
-            <EnumTableModifyWarning isEnum={table.is_enum} />
-            <h4 className={styles.subheading_text}>Columns</h4>
-            <ColumnEditorList
-              validTypeCasts={validTypeCasts}
-              dataTypeIndexMap={dataTypeIndexMap}
-              tableSchema={table}
-              columnEdit={columnEdit}
-              dispatch={dispatch}
-              currentSchema={currentSchema}
-              columnDefaultFunctions={columnDefaultFunctions}
-              customColumnNames={getTableCustomColumnNames(table)}
-            />
-            <ColumnCreator
-              dispatch={dispatch}
-              tableName={tableName}
-              dataTypes={dataTypes}
-              validTypeCasts={validTypeCasts}
-              columnDefaultFunctions={columnDefaultFunctions}
-              postgresVersion={postgresVersion}
-            />
-            <hr />
-            {getComputedFieldsSection()}
-            <h4 className={styles.subheading_text}>
-              Primary Key &nbsp; &nbsp;
-              <ToolTip message={primaryKeyDescription} />
-            </h4>
-            <PrimaryKeyEditor
-              tableSchema={table}
-              pkModify={pkModify}
-              dispatch={dispatch}
-              currentSchema={currentSchema}
-            />
-            <hr />
-            <h4 className={styles.subheading_text}>
-              Foreign Keys &nbsp; &nbsp;
-              <ToolTip message={foreignKeyDescription} />
-            </h4>
-            <ForeignKeyEditor
-              tableSchema={table}
-              currentSchema={currentSchema}
-              allSchemas={allTables}
-              schemaList={schemaList}
-              dispatch={dispatch}
-              fkModify={fkModify}
-            />
-            <hr />
-            <h4 className={styles.subheading_text}>
-              Unique Keys &nbsp; &nbsp;
-              <ToolTip message={uniqueKeyDescription} />
-            </h4>
-            <UniqueKeyEditor
-              tableSchema={table}
-              currentSchema={currentSchema}
-              allSchemas={allTables}
-              dispatch={dispatch}
-              uniqueKeys={uniqueKeyModify}
-              setUniqueKeys={setUniqueKeys}
-            />
-            <hr />
-            <h4 className={styles.subheading_text}>Triggers</h4>
-            <TriggerEditorList tableSchema={table} dispatch={dispatch} />
-            <hr />
-            <h4 className={styles.subheading_text}>
-              Check Constraints &nbsp; &nbsp;
-              <ToolTip message={checkConstraintsDescription} />
-            </h4>
-            <CheckConstraints
-              constraints={table.check_constraints}
-              checkConstraintsModify={checkConstraintsModify}
-              dispatch={dispatch}
-            />
-            <hr />
-            {getTableRootFieldsSection()}
-            {getEnumsSection()}
-            {untrackBtn}
-            {deleteBtn}
-            <br />
-            <br />
+      <RightContainer>
+        <div className={`${styles.container} container-fluid`}>
+          <TableHeader
+            dispatch={dispatch}
+            table={table}
+            tabName="modify"
+            migrationMode={migrationMode}
+            readOnlyMode={readOnlyMode}
+          />
+          <br />
+          <div className={`container-fluid ${styles.padd_left_remove}`}>
+            <div
+              className={
+                `col-xs-10 ${styles.padd_left_remove}` +
+                ' ' +
+                styles.modifyMinWidth
+              }
+            >
+              <TableCommentEditor
+                tableComment={tableComment}
+                tableCommentEdit={tableCommentEdit}
+                tableType="TABLE"
+                dispatch={dispatch}
+              />
+              <EnumTableModifyWarning isEnum={table.is_enum} />
+              <h4 className={styles.subheading_text}>Columns</h4>
+              <ColumnEditorList
+                validTypeCasts={validTypeCasts}
+                dataTypeIndexMap={dataTypeIndexMap}
+                tableSchema={table}
+                columnEdit={columnEdit}
+                dispatch={dispatch}
+                currentSchema={currentSchema}
+                columnDefaultFunctions={columnDefaultFunctions}
+                customColumnNames={getTableCustomColumnNames(table)}
+              />
+              <ColumnCreator
+                dispatch={dispatch}
+                tableName={tableName}
+                dataTypes={dataTypes}
+                validTypeCasts={validTypeCasts}
+                columnDefaultFunctions={columnDefaultFunctions}
+                postgresVersion={postgresVersion}
+              />
+              <hr />
+              {getComputedFieldsSection()}
+              <h4 className={styles.subheading_text}>
+                Primary Key &nbsp; &nbsp;
+                <ToolTip message={primaryKeyDescription} />
+              </h4>
+              <PrimaryKeyEditor
+                tableSchema={table}
+                pkModify={pkModify}
+                dispatch={dispatch}
+                currentSchema={currentSchema}
+              />
+              <hr />
+              <h4 className={styles.subheading_text}>
+                Foreign Keys &nbsp; &nbsp;
+                <ToolTip message={foreignKeyDescription} />
+              </h4>
+              <ForeignKeyEditor
+                tableSchema={table}
+                currentSchema={currentSchema}
+                allSchemas={allTables}
+                schemaList={schemaList}
+                dispatch={dispatch}
+                fkModify={fkModify}
+              />
+              <hr />
+              <h4 className={styles.subheading_text}>
+                Unique Keys &nbsp; &nbsp;
+                <ToolTip message={uniqueKeyDescription} />
+              </h4>
+              <UniqueKeyEditor
+                tableSchema={table}
+                currentSchema={currentSchema}
+                allSchemas={allTables}
+                dispatch={dispatch}
+                uniqueKeys={uniqueKeyModify}
+                setUniqueKeys={setUniqueKeys}
+              />
+              <hr />
+              <h4 className={styles.subheading_text}>Triggers</h4>
+              <TriggerEditorList tableSchema={table} dispatch={dispatch} />
+              <hr />
+              <h4 className={styles.subheading_text}>
+                Check Constraints &nbsp; &nbsp;
+                <ToolTip message={checkConstraintsDescription} />
+              </h4>
+              <CheckConstraints
+                constraints={table.check_constraints}
+                checkConstraintsModify={checkConstraintsModify}
+                dispatch={dispatch}
+              />
+              <hr />
+              {getTableRootFieldsSection()}
+              {getEnumsSection()}
+              {untrackBtn}
+              {deleteBtn}
+              <br />
+              <br />
+            </div>
           </div>
         </div>
-      </div>
+      </RightContainer>
     );
   }
 }

@@ -16,6 +16,7 @@ import { NotFoundError } from '../../../Error/PageNotFound';
 import { exists } from '../../../Common/utils/jsUtils';
 import { getPersistedPageSize } from './localStorageUtils';
 import { dataSource } from '../../../../dataSources';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
 
 class ViewTable extends Component {
   constructor(props) {
@@ -185,11 +186,13 @@ class ViewTable extends Component {
     }
 
     return (
-      <div>
-        {header}
-        {comment}
-        <div>{viewRows}</div>
-      </div>
+      <RightContainer>
+        <div>
+          {header}
+          {comment}
+          <div>{viewRows}</div>
+        </div>
+      </RightContainer>
     );
   }
 }

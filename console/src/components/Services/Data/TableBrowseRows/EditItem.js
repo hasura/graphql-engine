@@ -13,6 +13,7 @@ import { findTable, generateTableDef } from '../../../../dataSources';
 import { getTableBrowseRoute } from '../../../Common/utils/routesUtils';
 import { fetchEnumOptions } from './EditActions';
 import { TableRow } from '../Common/Components/TableRow';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
 
 class EditItem extends Component {
   constructor() {
@@ -137,40 +138,42 @@ class EditItem extends Component {
     };
 
     return (
-      <div className={styles.container + ' container-fluid'}>
-        <TableHeader
-          count={count}
-          dispatch={dispatch}
-          table={currentTable}
-          tabName="edit"
-          migrationMode={migrationMode}
-          readOnlyMode={readOnlyMode}
-        />
-        <br />
-        <div className={styles.insertContainer + ' container-fluid'}>
-          <div className="col-xs-9">
-            <form id="updateForm" className="form-horizontal">
-              {elements}
-              <Button
-                type="submit"
-                color="yellow"
-                size="sm"
-                onClick={handleSaveClick}
-                data-test="edit-save-button"
-              >
-                {buttonText}
-              </Button>
-              <ReloadEnumValuesButton
-                dispatch={dispatch}
-                isEnum={currentTable.is_enum}
-              />
-            </form>
+      <RightContainer>
+        <div className={styles.container + ' container-fluid'}>
+          <TableHeader
+            count={count}
+            dispatch={dispatch}
+            table={currentTable}
+            tabName="edit"
+            migrationMode={migrationMode}
+            readOnlyMode={readOnlyMode}
+          />
+          <br />
+          <div className={styles.insertContainer + ' container-fluid'}>
+            <div className="col-xs-9">
+              <form id="updateForm" className="form-horizontal">
+                {elements}
+                <Button
+                  type="submit"
+                  color="yellow"
+                  size="sm"
+                  onClick={handleSaveClick}
+                  data-test="edit-save-button"
+                >
+                  {buttonText}
+                </Button>
+                <ReloadEnumValuesButton
+                  dispatch={dispatch}
+                  isEnum={currentTable.is_enum}
+                />
+              </form>
+            </div>
+            <div className="col-xs-3">{alert}</div>
           </div>
-          <div className="col-xs-3">{alert}</div>
+          <br />
+          <br />
         </div>
-        <br />
-        <br />
-      </div>
+      </RightContainer>
     );
   }
 }

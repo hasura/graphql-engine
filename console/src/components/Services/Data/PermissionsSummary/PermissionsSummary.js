@@ -36,6 +36,7 @@ import {
 
 import Header from './Header';
 import RolesHeader from './RolesHeader';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
 
 class PermissionsSummary extends Component {
   initState = {
@@ -983,20 +984,22 @@ class PermissionsSummary extends Component {
     };
 
     return (
-      <div
-        className={`${styles.clear_fix} ${styles.padd_left} ${styles.fit_content}`}
-      >
-        <Helmet title="Permissions Summary | Hasura" />
-        <div className={styles.add_mar_bottom}>
-          <h2 className={styles.heading_text}>
-            Permissions summary - {currentSchema}
-          </h2>
+      <RightContainer>
+        <div
+          className={`${styles.clear_fix} ${styles.padd_left} ${styles.fit_content}`}
+        >
+          <Helmet title="Permissions Summary | Hasura" />
+          <div className={styles.add_mar_bottom}>
+            <h2 className={styles.heading_text}>
+              Permissions summary - {currentSchema}
+            </h2>
+          </div>
+
+          {getTable()}
+
+          {getCopyModal()}
         </div>
-
-        {getTable()}
-
-        {getCopyModal()}
-      </div>
+      </RightContainer>
     );
   }
 }
