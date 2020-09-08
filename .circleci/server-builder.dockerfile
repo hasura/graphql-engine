@@ -14,7 +14,13 @@ RUN apt-get -y update \
     && echo "deb http://apt.postgresql.org/pub/repos/apt/ stretch-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
     && curl -s https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
     && apt-get -y update \
-    && apt-get install -y g++ gcc libc6-dev libpq-dev libffi-dev libgmp-dev make xz-utils zlib1g-dev git gnupg upx netcat python3 python3-pip postgresql-client-${postgres_ver} postgresql-client-common \
+    && apt-get install -y \
+       wget lsb-release g++ gcc libc6-dev libpq-dev libffi-dev libgmp-dev make xz-utils zlib1g-dev git gnupg upx netcat python3 python3-pip postgresql-client-${postgres_ver} postgresql-client-common \
+    && wget 'https://dev.mysql.com/get/mysql-apt-config_0.8.15-1_all.deb'  \
+    && export DEBIAN_FRONTEND=noninteractive \
+    && dpkg -i mysql-apt-config_0.8.15-1_all.deb \
+    && apt-get -y update \
+    && apt-get -y install libmysqlclient21 libmysqlclient-dev \
     && curl -sL https://deb.nodesource.com/setup_${node_ver} | bash - \
     && apt-get install -y nodejs \
     && curl -Lo /tmp/docker-${docker_ver}.tgz https://download.docker.com/linux/static/stable/x86_64/docker-${docker_ver}.tgz \
