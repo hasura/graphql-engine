@@ -27,6 +27,7 @@ module Hasura.RQL.Types.Table
        , tciEnumValues
        , tciCustomConfig
        , tciUniqueOrPrimaryKeyConstraints
+       , tciDataSource
 
        -- , TableConstraint(..)
        -- , ConstraintType(..)
