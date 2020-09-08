@@ -186,11 +186,11 @@ const deleteFunctionSql = () => {
     const sqlDropFunction =
       'DROP FUNCTION ' + functionNameWithSchema + functionArgString;
 
-    const sqlUpQueries = [getRunSqlQuery(sqlDropFunction), source];
+    const sqlUpQueries = [getRunSqlQuery(sqlDropFunction, source)];
 
     const sqlDownQueries = [];
     if (functionDefinition && functionDefinition.length > 0) {
-      sqlDownQueries.push(getRunSqlQuery(functionDefinition), source);
+      sqlDownQueries.push(getRunSqlQuery(functionDefinition, source));
     }
 
     // Apply migrations
