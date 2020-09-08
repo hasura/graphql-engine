@@ -50,8 +50,7 @@ buildGQLContext
      , HasSQLGenCtx m
      )
   => ( GraphQLQueryType
-     , TableCache
-     , FunctionCache
+     , PGSourcesCache
      , HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
      , ActionCache
      , NonObjectTypeMap
@@ -61,12 +60,12 @@ buildGQLContext
      , GQLContext
      )
 buildGQLContext =
-  proc (queryType, allTables, allFunctions, allRemoteSchemas, allActions, nonObjectCustomTypes) -> do
+  proc (queryType, pgSourcesCache, allRemoteSchemas, allActions, nonObjectCustomTypes) -> do
 
     SQLGenCtx{ stringifyNum } <- bindA -< askSQLGenCtx
 
     let allRoles = Set.insert adminRoleName $
-             (allTables ^.. folded.tiRolePermInfoMap.to Map.keys.folded)
+             (pgSourcesCache ^.. folded.to _pcTables.folded.tiRolePermInfoMap.to Map.keys.folded)
           <> (allActionInfos ^.. folded.aiPermissions.to Map.keys.folded)
         allActionInfos = Map.elems allActions
         queryRemotesMap =
@@ -111,10 +110,10 @@ buildGQLContext =
       ( Set.toMap allRoles & Map.traverseWithKey \roleName () ->
           case queryType of
             QueryHasura ->
-              buildRoleContext queryContext allTables allFunctions allActionInfos
+              buildRoleContext queryContext pgSourcesCache allActionInfos
               nonObjectCustomTypes queryRemotes mutationRemotes roleName
             QueryRelay ->
-              buildRelayRoleContext queryContext allTables allFunctions allActionInfos
+              buildRelayRoleContext queryContext pgSourcesCache allActionInfos
               nonObjectCustomTypes queryRemotes mutationRemotes roleName
       )
     unauthenticated <- bindA -< unauthenticatedContext queryRemotes mutationRemotes
@@ -129,27 +128,34 @@ runMonadSchema
 runMonadSchema roleName queryContext tableCache m =
   flip runReaderT (roleName, tableCache, queryContext) $ P.runSchemaT m
 
--- TODO: Integrate relay schema
 buildRoleContext
   :: (MonadError QErr m, MonadIO m, MonadUnique m)
-  => QueryContext -> TableCache -> FunctionCache -> [ActionInfo] -> NonObjectTypeMap
+  => QueryContext -> PGSourcesCache -> [ActionInfo] -> NonObjectTypeMap
   -> [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
   -> [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
   -> RoleName
   -> m (RoleContext GQLContext)
-buildRoleContext queryContext allTables allFunctions allActionInfos
-  nonObjectCustomTypes queryRemotes mutationRemotes roleName =
+buildRoleContext queryContext pgSources allActionInfos
+  nonObjectCustomTypes queryRemotes mutationRemotes roleName = do
 
-  runMonadSchema roleName queryContext validTables $ do
+  fieldsList <- forM pgSources $ \(PGSourceSchemaCache tableCache functionCache) ->
+    runMonadSchema roleName queryContext tableCache $
+      buildPGFields tableCache functionCache
+
+  let (queryPGFields, mutationFrontendFields, mutationBackendFields) =
+        foldr (<>) mempty fieldsList
+
+  -- TODO: the tables list is being passed as empty which will affect actions
+  -- ideally we should be passing pgsources here and fix `askTableInfo`
+  runMonadSchema roleName queryContext mempty $ do
+
     mutationParserFrontend <-
-      buildPGMutationFields Frontend validTableNames >>=
-      buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes
-
+      buildMutationParser mutationRemotes allActionInfos
+      nonObjectCustomTypes mutationFrontendFields
     mutationParserBackend <-
-      buildPGMutationFields Backend validTableNames >>=
-      buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes
+      buildMutationParser mutationRemotes allActionInfos
+      nonObjectCustomTypes mutationBackendFields
 
-    queryPGFields <- buildPostgresQueryFields validTableNames validFunctions
     subscriptionParser <- buildSubscriptionParser queryPGFields allActionInfos
 
     queryParserFrontend <- buildQueryParser queryPGFields queryRemotes
@@ -163,35 +169,60 @@ buildRoleContext queryContext allTables allFunctions allActionInfos
                          (finalizeParser <$> mutationParserBackend)
     pure $ RoleContext frontendContext $ Just backendContext
 
-    where
-
-      tableFilter    = not . isSystemDefined . _tciSystemDefined
-      functionFilter = not . isSystemDefined . fiSystemDefined
-
-      validTables = Map.filter (tableFilter . _tiCoreInfo) allTables
-      validTableNames = Map.keysSet validTables
-      validFunctions = Map.elems $ Map.filter functionFilter allFunctions
+buildPGFields
+  :: forall m n r
+   . ( MonadSchema n m
+     , MonadTableInfo r m
+     , MonadRole r m
+     , Has QueryContext r
+     )
+  => TableCache
+  -> FunctionCache
+  -> m ( [P.FieldParser n (QueryRootField UnpreparedValue)]
+       , [P.FieldParser n (MutationRootField UnpreparedValue)]
+       , [P.FieldParser n (MutationRootField UnpreparedValue)]
+       )
+  -- ^ (query fields, frontend mutation fields, backend mutation fields)
+buildPGFields tableCache functionCache = do
+  (,,)
+  <$> buildPostgresQueryFields validTableNames validFunctions
+  <*> buildPGMutationFields Frontend validTableNames
+  <*> buildPGMutationFields Backend validTableNames
+  where
+    tableFilter    = not . isSystemDefined . _tciSystemDefined
+    functionFilter = not . isSystemDefined . fiSystemDefined
+    validTables = Map.filter (tableFilter . _tiCoreInfo) tableCache
+    validTableNames = Map.keysSet validTables
+    validFunctions = Map.elems $ Map.filter functionFilter functionCache
 
 buildRelayRoleContext
   :: (MonadError QErr m, MonadIO m, MonadUnique m)
-  => QueryContext -> TableCache -> FunctionCache -> [ActionInfo] -> NonObjectTypeMap
+  => QueryContext -> PGSourcesCache -> [ActionInfo] -> NonObjectTypeMap
   -> [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
   -> [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
   -> RoleName
   -> m (RoleContext GQLContext)
-buildRelayRoleContext queryContext allTables allFunctions allActionInfos
-  nonObjectCustomTypes queryRemotes mutationRemotes roleName =
+buildRelayRoleContext queryContext pgSources allActionInfos
+  nonObjectCustomTypes queryRemotes mutationRemotes roleName = do
 
-  runMonadSchema roleName queryContext validTables $ do
+  fieldsList <- forM pgSources $
+    \(PGSourceSchemaCache tableCache functionCache) ->
+      runMonadSchema roleName queryContext tableCache $
+      buildRelayPGFields tableCache functionCache
+
+  let (queryPGFields, mutationFrontendFields, mutationBackendFields) =
+        foldr (<>) mempty fieldsList
+
+  -- TODO: the tables list is being passed as empty which will affect actions
+  runMonadSchema roleName queryContext mempty $ do
     mutationParserFrontend <-
-      buildPGMutationFields Frontend validTableNames >>=
-      buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes
+      buildMutationParser mutationRemotes allActionInfos
+      nonObjectCustomTypes mutationFrontendFields
 
     mutationParserBackend <-
-      buildPGMutationFields Backend validTableNames >>=
-      buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes
+      buildMutationParser mutationRemotes allActionInfos
+      nonObjectCustomTypes mutationBackendFields
 
-    queryPGFields <- buildRelayPostgresQueryFields validTableNames validFunctions
     let subscriptionParser = P.selectionSet subscriptionRoot Nothing queryPGFields
                              <&> fmap (P.handleTypename (RFRaw . J.String. G.unName))
     queryParserFrontend <- queryWithIntrospectionHelper queryPGFields
@@ -205,14 +236,32 @@ buildRelayRoleContext queryContext allTables allFunctions allActionInfos
                          (finalizeParser <$> mutationParserBackend)
     pure $ RoleContext frontendContext $ Just backendContext
 
-    where
 
-      tableFilter    = not . isSystemDefined . _tciSystemDefined
-      functionFilter = not . isSystemDefined . fiSystemDefined
-
-      validTables = Map.filter (tableFilter . _tiCoreInfo) allTables
-      validTableNames = Map.keysSet validTables
-      validFunctions = Map.elems $ Map.filter functionFilter allFunctions
+buildRelayPGFields
+  :: forall m n r
+   . ( MonadSchema n m
+     , MonadTableInfo r m
+     , MonadRole r m
+     , Has QueryContext r
+     )
+  => TableCache
+  -> FunctionCache
+  -> m ( [P.FieldParser n (QueryRootField UnpreparedValue)]
+       , [P.FieldParser n (MutationRootField UnpreparedValue)]
+       , [P.FieldParser n (MutationRootField UnpreparedValue)]
+       )
+  -- ^ (query fields, frontend mutation fields, backend mutation fields)
+buildRelayPGFields tableCache functionCache = do
+  (,,)
+  <$> buildRelayPostgresQueryFields validTableNames validFunctions
+  <*> buildPGMutationFields Frontend validTableNames
+  <*> buildPGMutationFields Backend validTableNames
+  where
+    tableFilter    = not . isSystemDefined . _tciSystemDefined
+    functionFilter = not . isSystemDefined . fiSystemDefined
+    validTables = Map.filter (tableFilter . _tiCoreInfo) tableCache
+    validTableNames = Map.keysSet validTables
+    validFunctions = Map.elems $ Map.filter functionFilter functionCache
 
 unauthenticatedContext
   :: forall m
