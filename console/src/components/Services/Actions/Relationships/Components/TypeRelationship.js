@@ -47,7 +47,7 @@ const RelationshipEditor = ({
     }
   }, [relConfig]);
 
-  const { name, type, refSchema, refTable, fieldMapping } = relConfig;
+  const { name, type, refDb, refSchema, refTable, fieldMapping } = relConfig;
 
   // relname on change
   const setRelName = e => {
@@ -64,6 +64,14 @@ const RelationshipEditor = ({
     setRelConfig(rc => ({
       ...rc,
       type: relType,
+    }));
+  };
+
+  const setDBType = e => {
+    const relType = e.target.value;
+    setRelConfig(rc => ({
+      ...rc,
+      refDb: relType,
     }));
   };
 
@@ -115,7 +123,7 @@ const RelationshipEditor = ({
   }, {});
 
   // rel name input
-  const getRelNameInput = () => {
+  const RelNameInput = () => {
     /*
       There is no neat solution to renaming a relationship.
       This is because name is the only unique identifier of a relationship.
@@ -144,7 +152,7 @@ const RelationshipEditor = ({
   };
 
   // rel type select
-  const getRelTypeSelect = () => {
+  const RelTypeSelect = () => {
     return (
       <div className={`${styles.add_mar_bottom}`}>
         <div className={`${styles.add_mar_bottom_mid}`}>
@@ -172,8 +180,37 @@ const RelationshipEditor = ({
     );
   };
 
+  const RefDbSelect = () => {
+    return (
+      <div className={`${styles.add_mar_bottom}`}>
+        <div className={`${styles.add_mar_bottom_mid}`}>
+          <b>Data Source:</b>
+        </div>
+        <select
+          value={refDb}
+          className={`${styles.select} form-control ${styles.add_pad_left}`}
+          data-test={'manual-relationship-db-choice'}
+          onChange={setDBType}
+        >
+          {type === '' && (
+            <option value={''} disabled>
+              {'-- data source --'}
+            </option>
+          )}
+          {/* TODO: this will have to change to the data sources that are available */}
+          <option key="postgres" value="postgres">
+            Warehouse DB (postgres)
+          </option>
+          <option key="mysql" value="mysql">
+            mySQL
+          </option>
+        </select>
+      </div>
+    );
+  };
+
   // ref schema select
-  const getRefSchemaSelect = () => {
+  const RefSchemaSelect = () => {
     const orderedSchemaList = schemaList.map(s => s.schema_name).sort();
     return (
       <div className={`${styles.add_mar_bottom}`}>
@@ -209,7 +246,7 @@ const RelationshipEditor = ({
   };
 
   // ref table select
-  const getRefTableSelect = () => {
+  const RefTableSelect = () => {
     return (
       <div className={`${styles.add_mar_bottom}`}>
         <div className={`${styles.add_mar_bottom_mid}`}>
@@ -240,7 +277,7 @@ const RelationshipEditor = ({
   };
 
   // field mapping array builder
-  const getRelFieldMappings = () => {
+  const RelFieldMappings = () => {
     return (
       <div className={`${styles.add_mar_bottom}`}>
         <div className={`row ${styles.add_mar_bottom_mid}`}>
@@ -362,11 +399,12 @@ const RelationshipEditor = ({
 
   return (
     <div className="form-group">
-      {getRelTypeSelect()}
-      {getRelNameInput()}
-      {getRefSchemaSelect()}
-      {getRefTableSelect()}
-      {getRelFieldMappings()}
+      <RelTypeSelect />
+      <RelNameInput />
+      <RefDbSelect />
+      <RefSchemaSelect />
+      <RefTableSelect />
+      <RelFieldMappings />
     </div>
   );
 };
