@@ -42,7 +42,12 @@ runApp env (HGEOptionsG rci hgeCmd) =
   withVersion $$(getVersionFromEnvironment) $ case hgeCmd of
     HCServe serveOptions -> do
       (initCtx, initTime) <- initialiseCtx env hgeCmd rci
-      ekgStore <- liftIO EKG.newStore
+      
+      ekgStore <- liftIO do
+        s <- EKG.newStore
+        EKG.registerGcMetrics s
+        pure s
+        
       let shutdownApp = return ()
       -- Catches the SIGTERM signal and initiates a graceful shutdown.
       -- Graceful shutdown for regular HTTP requests is already implemented in

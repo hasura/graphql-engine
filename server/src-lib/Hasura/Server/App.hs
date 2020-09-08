@@ -636,7 +636,6 @@ mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpMana
                     }
 
     when (isDeveloperAPIEnabled serverCtx) $ do
-      liftIO $ EKG.registerGcMetrics ekgStore
       liftIO $ EKG.registerCounter "ekg.server_timestamp_ms" getTimeMs ekgStore
 
     spockApp <- liftWithStateless $ \lowerIO ->
