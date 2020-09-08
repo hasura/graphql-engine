@@ -243,9 +243,11 @@ export const getActionTypes = (currentAction, allTypes) => {
     }
   };
 
-  actionArgs.forEach(a => {
-    getDependentTypes(a.type);
-  });
+  if (actionArgs.length) {
+    actionArgs.forEach(a => {
+      getDependentTypes(a.type);
+    });
+  }
 
   getDependentTypes(actionOutputType);
 

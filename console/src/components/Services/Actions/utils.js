@@ -23,7 +23,7 @@ export const getActionOutputFields = (action, types) => {
 };
 
 export const getActionArguments = action => {
-  return action.definition.arguments;
+  return action.definition.arguments || [];
 };
 
 export const getActionType = action => {
