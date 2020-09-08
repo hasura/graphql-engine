@@ -173,7 +173,7 @@ jobs:
         name: Install latest postgresql client tools
         command: |
           apt-get -y update
-          apt-get -y install postgresql-client-12
+          apt-get -y install postgresql-client-12 lsb-release
           wget https://dev.mysql.com/get/mysql-apt-config_0.8.15-1_all.deb
           export DEBIAN_FRONTEND=noninteractive
           dpkg -i mysql-apt-config_0.8.15-1_all.deb
