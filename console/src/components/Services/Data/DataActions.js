@@ -40,6 +40,7 @@ import {
   READ_ONLY_RUN_SQL_QUERIES,
 } from '../../../helpers/versionUtils';
 import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
+import { metadataQueryTypes } from '../../../metadata/queryUtils';
 
 const SET_TABLE = 'Data/SET_TABLE';
 const LOAD_FUNCTIONS = 'Data/LOAD_FUNCTIONS';
@@ -48,6 +49,7 @@ const LOAD_SCHEMA = 'Data/LOAD_SCHEMA';
 const LOAD_UNTRACKED_RELATIONS = 'Data/LOAD_UNTRACKED_RELATIONS';
 const FETCH_SCHEMA_LIST = 'Data/FETCH_SCHEMA_LIST';
 const UPDATE_CURRENT_SCHEMA = 'Data/UPDATE_CURRENT_SCHEMA';
+const UPDATE_CURRENT_DATA_SOURCE = 'Data/UPDATE_CURRENT_DATA_SOURCE';
 const ADMIN_SECRET_ERROR = 'Data/ADMIN_SECRET_ERROR';
 const UPDATE_REMOTE_SCHEMA_MANUAL_REL = 'Data/UPDATE_SCHEMA_MANUAL_REL';
 const SET_CONSISTENT_SCHEMA = 'Data/SET_CONSISTENT_SCHEMA';
@@ -346,7 +348,18 @@ const fetchFunctionInit = (schema = null) => (dispatch, getState) => {
   );
 };
 
-const updateCurrentSchema = (schemaName, redirect = true) => dispatch => {
+const updateCurrentSchema = (
+  schemaName,
+  redirect = true,
+  schemaList = []
+) => dispatch => {
+  if (
+    schemaList.length &&
+    !schemaList.find(s => s.schema_name === schemaName)
+  ) {
+    schemaName = schemaList[0].schema_name;
+  }
+
   if (redirect) {
     dispatch(_push(getSchemaBaseRoute(schemaName)));
   }
@@ -441,7 +454,18 @@ const makeMigrationCall = (
 
   const currMigrationMode = getState().main.migrationMode;
 
-  const migrateUrl = returnMigrateUrl(currMigrationMode);
+  let migrateUrl = returnMigrateUrl(currMigrationMode);
+  // todo: this is a temprorary, pre-release solution
+  if (migrateUrl === Endpoints.query) {
+    if (
+      upQueries.some(query => {
+        const type = query.type.replace('pg_', '').replace('mysql_', '');
+        metadataQueryTypes.includes(type);
+      })
+    ) {
+      migrateUrl = Endpoints.metadata;
+    }
+  }
 
   let finalReqBody;
   if (globals.consoleMode === SERVER_CONSOLE_MODE) {
@@ -685,6 +709,8 @@ const dataReducer = (state = defaultState, action) => {
       return { ...state, allSchemas: action.data, listingSchemas: action.data };
     case UPDATE_CURRENT_SCHEMA:
       return { ...state, currentSchema: action.currentSchema };
+    case UPDATE_CURRENT_DATA_SOURCE:
+      return { ...state, currentDataSource: action.source };
     case ADMIN_SECRET_ERROR:
       return { ...state, adminSecretError: action.data };
     case UPDATE_DATA_HEADERS:
@@ -756,6 +782,7 @@ export {
   makeMigrationCall,
   LOAD_UNTRACKED_RELATIONS,
   UPDATE_CURRENT_SCHEMA,
+  UPDATE_CURRENT_DATA_SOURCE,
   fetchSchemaList,
   fetchDataInit,
   fetchFunctionInit,

@@ -32,6 +32,29 @@ export const getDataSourceMatadata = (state: ReduxState) => {
   return state.metadata.metadataObject;
 };
 
+export const getInitDataSource = (state: ReduxState) => {
+  if (isMetadataV3(state.metadata.metadataObject)) {
+    if (
+      state.metadata.metadataObject.postgres_sources &&
+      state.metadata.metadataObject.postgres_sources.length
+    ) {
+      return {
+        source: state.metadata.metadataObject.postgres_sources[0].name,
+        driver: 'postgres',
+      };
+    } else if (
+      state.metadata.metadataObject.mysql_sources &&
+      state.metadata.metadataObject.mysql_sources.length
+    ) {
+      return {
+        source: state.metadata.metadataObject.mysql_sources[0].name,
+        driver: 'mysql',
+      };
+    }
+  }
+  return { source: '', driver: 'postgres' };
+};
+
 const getCurrentSchema = (state: ReduxState) => {
   return state.tables.currentSchema;
 };
@@ -41,7 +64,6 @@ const getInconsistentObjects = (state: ReduxState) => {
 };
 
 const getTables = createSelector(getDataSourceMatadata, source => {
-  console.log({ source });
   return source?.tables || [];
 });
 

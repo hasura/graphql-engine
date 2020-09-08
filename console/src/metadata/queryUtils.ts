@@ -14,6 +14,64 @@ import { LocalAdhocEventState } from '../components/Services/Events/AdhocEvents/
 import { RemoteRelationshipPayload } from '../components/Services/Data/TableRelationships/RemoteRelationships/utils';
 import { Driver } from '../dataSources';
 
+export const metadataQueryTypes = [
+  'add_existing_table_or_view',
+  'track_table',
+  'untrack_table',
+  'set_table_is_enum',
+  'track_function',
+  'untrack_function',
+  'create_object_relationship',
+  'create_array_relationship',
+  'drop_relationship',
+  'set_relationship_comment',
+  'rename_relationship',
+  'add_computed_field',
+  'drop_computed_field',
+  'create_remote_relationship',
+  'update_remote_relationship',
+  'delete_remote_relationship',
+  'create_insert_permission',
+  'create_select_permission',
+  'create_update_permission',
+  'create_delete_permission',
+  'drop_insert_permission',
+  'drop_select_permission',
+  'drop_update_permission',
+  'drop_delete_permission',
+  'set_permission_comment',
+  'get_inconsistent_metadata',
+  'drop_inconsistent_metadata',
+  'add_remote_schema',
+  'remove_remote_schema',
+  'reload_remote_schema',
+  'introspect_remote_schema',
+  'create_event_trigger',
+  'delete_event_trigger',
+  'redeliver_event',
+  'invoke_event_trigger',
+  'create_cron_trigger',
+  'delete_cron_trigger',
+  'create_scheduled_event',
+  'create_query_collection',
+  'drop_query_collection',
+  'add_query_to_collection',
+  'drop_query_from_collection',
+  'add_collection_to_allowlist',
+  'drop_collection_from_allowlist',
+  'replace_metadata',
+  'export_metadata',
+  'clear_metadata',
+  'reload_metadata',
+  'create_action',
+  'drop_action',
+  'update_action',
+  'create_action_permission',
+  'drop_action_permission',
+  'dump_internal_state',
+  'set_custom_types',
+];
+
 export type MetadataQueryType =
   | 'create_select_permission'
   | 'create_update_permission'
@@ -42,6 +100,8 @@ export type MetadataQueryType =
   | 'rename_relationship'
   | 'create_object_relationship'
   | 'drop_relationship'
+  | 'create_array_relationship'
+  | 'create_object_relationship'
   | 'create_array_relationship';
 
 export type MetadataQueries = Record<Driver, Record<MetadataQueryType, string>>;

@@ -8,7 +8,6 @@ import DataSubSidebar from './DataSubSidebar';
 import GqlCompatibilityWarning from '../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 
 import { updateCurrentSchema, fetchSchemaList } from './DataActions';
-import { NotFoundError } from '../../Error/PageNotFound';
 import { CLI_CONSOLE_MODE } from '../../../constants';
 import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
 import styles from '../../Common/TableCommon/Table.scss';
@@ -35,19 +34,20 @@ const DataPageContainer = ({
       driver,
       loadingSchemas,
     });
-    setDriver(/**whatever[newDb] */);
+    setDriver(driver === 'postgres' ? 'mysql' : 'postgres');
     setLoadingSchemas(true);
     dispatch(fetchSchemaList()).then(() => {
       setLoadingSchemas(false);
     });
   };
 
-  if (!schemaList.map(s => s.schema_name).includes(currentSchema)) {
-    dispatch(updateCurrentSchema('public', false));
+  // this is a valid state now
+  // if (!schemaList.map(s => s.schema_name).includes(currentSchema)) {
+  //   dispatch(updateCurrentSchema('public', false, schemaList));
 
-    // throw a 404 exception
-    throw new NotFoundError();
-  }
+  //   // throw a 404 exception
+  //   throw new NotFoundError();
+  // }
 
   const currentLocation = location.pathname;
 
@@ -118,10 +118,12 @@ const DataPageContainer = ({
               >
                 {getSchemaOptions()}
               </select>
-              <GqlCompatibilityWarning
-                identifier={currentSchema}
-                className={styles.add_mar_left_mid}
-              />
+              {currentSchema && (
+                <GqlCompatibilityWarning
+                  identifier={currentSchema}
+                  className={styles.add_mar_left_mid}
+                />
+              )}
             </div>
           </div>
         </Link>

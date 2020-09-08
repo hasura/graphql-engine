@@ -26,14 +26,17 @@ import {
   ConnectedDatabaseManagePage,
 } from '.';
 
-import { RightContainer } from '../../Common/Layout/RightContainer';
-
 import {
   fetchDataInit,
   fetchFunctionInit,
   UPDATE_CURRENT_SCHEMA,
   updateSchemaInfo,
+  fetchSchemaList,
+  UPDATE_CURRENT_DATA_SOURCE,
 } from './DataActions';
+import { showInfoNotification } from '../Common/Notification';
+import { getInitDataSource } from '../../../metadata/selector';
+import { setDriver } from '../../../dataSources';
 
 const makeDataRouter = (
   connect,
@@ -45,9 +48,9 @@ const makeDataRouter = (
 ) => {
   return (
     <Route path="data" component={dataPageConnector(connect)}>
-      <IndexRedirect to="schema/public" />
-      <Route path="schema" component={RightContainer}>
-        <IndexRedirect to="public" />
+      <IndexRedirect to="schema" />
+      <Route path="schema" component={schemaConnector(connect)}>
+        <Route path="manage" component={ConnectedDatabaseManagePage} />
         <Route path=":schema" component={schemaConnector(connect)} />
         <Route path=":schema/tables" component={schemaConnector(connect)} />
         <Route path=":schema/views" component={schemaConnector(connect)} />
@@ -133,53 +136,69 @@ const makeDataRouter = (
 
 const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
   const requireSchema = (nextState, replaceState, cb) => {
-    // check if admin secret is available in localstorage. if so use that.
-    // if localstorage admin secret didn't work, redirect to login (meaning value has changed)
-    // if admin secret is not available in localstorage, check if cli is giving it via window.__env
-    // if admin secret is not available in localstorage and cli, make a api call to data without admin secret.
-    // if the api fails, then redirect to login - this is a fresh user/browser flow
-    const {
-      tables: { allSchemas },
-    } = store.getState();
+    store.dispatch(fetchSchemaList()).then(() => {
+      // todo: probably need to add export metadata as well
+      const {
+        tables: { schemaList, allSchemas, currentSchema: prevSchema },
+        metadata,
+      } = store.getState();
 
-    if (allSchemas.length) {
-      cb();
-      return;
-    }
+      const { source, driver } = getInitDataSource(store.getState());
+      setDriver(driver);
 
-    let currentSchema = nextState.params.schema;
-    if (
-      currentSchema === null ||
-      currentSchema === undefined ||
-      currentSchema === ''
-    ) {
-      currentSchema = 'public';
-    }
+      console.log({ source, metadata });
 
-    Promise.all([
-      store.dispatch({
-        type: UPDATE_CURRENT_SCHEMA,
-        currentSchema: currentSchema,
-      }),
-      store.dispatch(fetchDataInit()),
-      store.dispatch(updateSchemaInfo()),
-      store.dispatch(fetchFunctionInit()),
-    ]).then(
-      () => {
-        cb();
-      },
-      () => {
+      let currentSchema = nextState.params.schema;
+      if (currentSchema && prevSchema === currentSchema && allSchemas.length) {
+        return cb();
+      }
+
+      if (!currentSchema) {
+        if (schemaList.find(s => s.schema_name === 'public')) {
+          currentSchema = 'public';
+        } else if (schemaList.length) {
+          // select new currentSchema from schemaList
+          currentSchema = schemaList[0].schema_name;
+          if (
+            /^data|data\/schema|data\/[^\w+]/.test(nextState.location.pathname)
+          ) {
+            store.dispatch(
+              showInfoNotification(
+                `No public schema, showing ${currentSchema} schema instead`
+              )
+            );
+            // redirect to current schema instead of public
+            replaceState(`/data/schema/${currentSchema}`);
+          }
+        } else {
+          currentSchema = '';
+        }
+      }
+
+      Promise.all([
+        store.dispatch({
+          type: UPDATE_CURRENT_SCHEMA,
+          currentSchema: currentSchema,
+        }),
+        store.dispatch({
+          type: UPDATE_CURRENT_DATA_SOURCE,
+          source,
+        }),
+        store.dispatch(fetchDataInit()),
+        store.dispatch(updateSchemaInfo()),
+        store.dispatch(fetchFunctionInit()),
+      ]).then(cb, () => {
+        // alert('Could not load schema.');
         replaceState('/');
         cb();
-      }
-    );
+      });
+    });
   };
 
   const migrationRedirects = (nextState, replaceState, cb) => {
     const state = store.getState();
     if (!state.main.migrationMode) {
       replaceState('/data/schema');
-      cb();
     }
     cb();
   };
@@ -187,7 +206,6 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
   const consoleModeRedirects = (nextState, replaceState, cb) => {
     if (globals.consoleMode === SERVER_CONSOLE_MODE) {
       replaceState('/data/schema');
-      cb();
     }
     cb();
   };
