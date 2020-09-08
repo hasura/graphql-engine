@@ -35,6 +35,8 @@ Get the Hasura + MySQL docker compose file:
 
 .. code-block:: bash
 
+   # <TODO: update file paths>
+
    # in a new directory run
    wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/docker-compose/docker-compose.yaml
    # or run
@@ -51,6 +53,8 @@ This will run Hasura, a Postgres DB (required for Hasura's functioning) and
 a MySQL DB.
 
 Check if the containers are running:
+
+<TODO: update output>
 
 .. code-block:: bash
 
