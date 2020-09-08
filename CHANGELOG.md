@@ -54,7 +54,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - server: miscellaneous description changes (#4111)
 - server: treat the absence of `backend_only` configuration and `backend_only: false` equally (closing #5059) (#4111)
 - server: allow remote relationships joining `type` column with `[type]` input argument as spec allows this coercion (fixes #5133)
-- server: fix some `created_at` issues related to scheduled triggers, the value of the `created_at` in the case of an one-off scheduled event will be the creation time of the one-off event and in case of cron triggers, the `created_at` will be the creation time of the cron trigger.
+- server: change `created_at` column type from `timestamp` to `timestamptz` (fix #5722)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - cli: add missing global flags for seeds command (#5565)
