@@ -41,6 +41,10 @@ module Hasura.RQL.Types.Common
        , InputWebhook(..)
        , ResolvedWebhook(..)
        , resolveWebhook
+       , NonNegativeInt(..)
+       , toInt
+       , convertToDiffTime
+       , convertFromDiffTime
        ) where
 
 import           Hasura.EncJSON
@@ -49,7 +53,6 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers        ()
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Types
-import           Hasura.RQL.DDL.Headers        ()
 
 
 
@@ -61,9 +64,10 @@ import           Data.URL.Template
 import           Instances.TH.Lift             ()
 import           Language.Haskell.TH.Syntax    (Lift, Q, TExp)
 
-import qualified Data.HashMap.Strict           as HM
-import qualified Data.Text                     as T
 import qualified Data.Environment              as Env
+import qualified Data.HashMap.Strict           as HM
+import           Data.Scientific               (toBoundedInteger)
+import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.Haskell.TH.Syntax    as TH
@@ -277,14 +281,32 @@ isSystemDefined = unSystemDefined
 successMsg :: EncJSON
 successMsg = "{\"message\":\"success\"}"
 
+newtype NonNegativeInt = NonNegativeInt { unNonNegativeInt :: Int }
+  deriving (Show, Eq, ToJSON, Generic, NFData, Cacheable, Num, Read)
+
+instance FromJSON NonNegativeInt where
+  parseJSON = withScientific "NonNegativeInt" $ \t -> do
+    case (t > 0) of
+      True  -> return $ NonNegativeInt . fromMaybe 0 . toBoundedInteger $ t
+      False -> fail "negative value not allowed"
+
+toInt :: NonNegativeInt -> Int
+toInt x = unNonNegativeInt x
+
 newtype NonNegativeDiffTime = NonNegativeDiffTime { unNonNegativeDiffTime :: DiffTime }
-  deriving (Show, Eq,ToJSON,Generic, NFData, Cacheable)
+  deriving (Show, Eq,ToJSON,Generic, NFData, Cacheable, Num)
 
 instance FromJSON NonNegativeDiffTime where
   parseJSON = withScientific "NonNegativeDiffTime" $ \t -> do
     case (t > 0) of
       True  -> return $ NonNegativeDiffTime . realToFrac $ t
       False -> fail "negative value not allowed"
+
+convertToDiffTime :: NonNegativeDiffTime -> DiffTime
+convertToDiffTime x = unNonNegativeDiffTime x
+
+convertFromDiffTime :: DiffTime -> NonNegativeDiffTime
+convertFromDiffTime x = NonNegativeDiffTime x
 
 newtype ResolvedWebhook
   = ResolvedWebhook { unResolvedWebhook :: Text}
