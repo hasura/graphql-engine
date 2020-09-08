@@ -41,6 +41,7 @@ import {
 } from '../../../helpers/versionUtils';
 import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 import { metadataQueryTypes } from '../../../metadata/queryUtils';
+import { services } from '../../../dataSources/services';
 
 const SET_TABLE = 'Data/SET_TABLE';
 const LOAD_FUNCTIONS = 'Data/LOAD_FUNCTIONS';
@@ -387,6 +388,30 @@ const fetchSchemaList = () => (dispatch, getState) => {
   return dispatch(requestAction(url, options)).then(
     data => {
       dispatch({ type: FETCH_SCHEMA_LIST, schemaList: data });
+      return data;
+    },
+    error => {
+      console.error('Failed to fetch schema ' + JSON.stringify(error));
+      return error;
+    }
+  );
+};
+
+export const getSchemaList = (sourceType, sourceName) => (
+  dispatch,
+  getState
+) => {
+  const url = Endpoints.query;
+  const query = services[sourceType].schemaList;
+  query.args.source = sourceName;
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify(query),
+  };
+  return dispatch(requestAction(url, options)).then(
+    data => {
       return data;
     },
     error => {

@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from '../../Actions.scss';
-import { updateSchemaInfo } from '../../../Data/DataActions';
+import { updateSchemaInfo, getSchemaList } from '../../../Data/DataActions';
 import { isEmpty, getLastArrayElement } from '../../../../Common/utils/jsUtils';
 import ExpandableEditor from '../../../../Common/Layout/ExpandableEditor/Editor';
 import {
@@ -28,6 +28,7 @@ const RelationshipEditor = ({
   dispatch,
   existingRelConfig,
   stateCallback,
+  dataSources,
 }) => {
   const [relConfig, setRelConfig] = React.useState(
     existingRelConfig || defaultRelConfig
@@ -68,11 +69,19 @@ const RelationshipEditor = ({
   };
 
   const setDBType = e => {
-    const relType = e.target.value;
+    const value = e.target.value;
+    let dbName;
+    let dbDriver;
+    try {
+      [dbName, dbDriver] = JSON.parse(value);
+    } catch (err) {
+      return;
+    }
     setRelConfig(rc => ({
       ...rc,
-      refDb: relType,
+      refDb: dbName,
     }));
+    dispatch(getSchemaList(dbDriver, value));
   };
 
   // ref schema on change
@@ -191,19 +200,18 @@ const RelationshipEditor = ({
           className={`${styles.select} form-control ${styles.add_pad_left}`}
           data-test={'manual-relationship-db-choice'}
           onChange={setDBType}
+          disabled={!name}
         >
           {type === '' && (
             <option value={''} disabled>
               {'-- data source --'}
             </option>
           )}
-          {/* TODO: this will have to change to the data sources that are available */}
-          <option key="postgres" value="postgres">
-            Warehouse DB (postgres)
-          </option>
-          <option key="mysql" value="mysql">
-            mySQL
-          </option>
+          {dataSources.map(s => (
+            <option key={s.name} value={JSON.stringify([s.name, s.driver])}>
+              {s.name} ({s.driver})
+            </option>
+          ))}
         </select>
       </div>
     );
@@ -410,7 +418,14 @@ const RelationshipEditor = ({
 };
 
 const RelEditor = props => {
-  const { dispatch, relConfig, objectType, isNew, readOnlyMode } = props;
+  const {
+    dispatch,
+    relConfig,
+    objectType,
+    isNew,
+    readOnlyMode,
+    dataSources,
+  } = props;
 
   const [relConfigState, setRelConfigState] = React.useState(null);
 
@@ -439,6 +454,7 @@ const RelEditor = props => {
         {...props}
         existingRelConfig={existingRelConfig}
         stateCallback={setRelConfigState}
+        dataSources={dataSources}
       />
     );
   };

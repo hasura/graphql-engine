@@ -825,7 +825,7 @@ const mapStateToProps = state => ({
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
   metadata: state.metadata.metadataObject,
   dataSources: getDataSources(state),
-  currentDataSource: 'myDb (postgres)', // todo
+  currentDataSource: state.tables.currentDataSource,
 });
 
 const schemaConnector = connect => connect(mapStateToProps)(Schema);
