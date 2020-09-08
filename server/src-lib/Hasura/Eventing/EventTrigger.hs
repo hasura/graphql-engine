@@ -248,7 +248,8 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
       cache <- liftIO getSchemaCache
       
       tracingCtx <- liftIO (Tracing.extractEventContext (eEvent e))
-      let runTraceT = maybe
+      let spanName eti = "Event trigger: " <> unNonEmptyText (unTriggerName (etiName eti))
+          runTraceT = maybe
             Tracing.runTraceT
             Tracing.runTraceTInContext
             tracingCtx
@@ -264,7 +265,7 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
             -- For such an event, we unlock the event and retry after a minute
             setRetry e (addUTCTime 60 currentTime)
           >>= flip onLeft logQErr
-        Right eti -> do
+        Right eti -> runTraceT (spanName eti) do
           let webhook = T.unpack $ wciCachedValue $ etiWebhookInfo eti
               retryConf = etiRetryConf eti
               timeoutSeconds = fromMaybe defaultTimeoutSeconds (rcTimeoutSec retryConf)
