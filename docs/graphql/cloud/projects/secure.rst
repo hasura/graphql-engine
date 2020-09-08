@@ -41,10 +41,10 @@ On the ``Env vars`` tab, click the button to add a new env var.
 Step 3: Add an admin secret
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the ``Key`` dropdown, choose ``ADMIN_SECRET`` and add the secret in the ``Value`` field. Then click the ``Add`` button.
+In the ``Key`` dropdown, choose ``ADMIN_SECRET`` and add a secret of your choice in the ``Value`` field. Then click the ``Add`` button.
 
 .. thumbnail:: /img/graphql/cloud/projects/secure-add-envvar.png
-   :alt: Navigate to env vars
+   :alt: Set admin secret
    :width: 865px
 
 Accessing Hasura
