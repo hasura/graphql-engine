@@ -213,11 +213,11 @@ readLogLevel s = case T.toLower $ T.strip $ T.pack s of
 readJson :: (J.FromJSON a) => String -> Either String a
 readJson = J.eitherDecodeStrict . txtToBs . T.pack
 
-readNoNegetiveNumbers :: String -> String
-readNoNegetiveNumbers x = case (read x :: Int) < 0 of
+readPositiveNumbers :: String -> String
+readPositiveNumbers x = case (read x :: Int) < 0 of
   -- not sure if this is how I should be showing the error
   -- could let the string pass through as well and it would be caught by readEither
-  True -> error "batchSize should be a positive number"
+  True -> error "flag value should only be a positive number"
   False -> x
 
 class FromEnv a where
@@ -264,10 +264,10 @@ instance FromEnv [API] where
   fromEnv = readAPIs
 
 instance FromEnv LQ.BatchSize where
-  fromEnv = fmap LQ.BatchSize . readEither . readNoNegetiveNumbers
+  fromEnv = fmap LQ.BatchSize . readEither . readPositiveNumbers
 
 instance FromEnv LQ.RefetchInterval where
-  fromEnv = fmap (LQ.RefetchInterval . milliseconds . fromInteger) . readEither
+  fromEnv = fmap (LQ.RefetchInterval . milliseconds . fromInteger) . readEither . readPositiveNumbers
 
 instance FromEnv Milliseconds where
   fromEnv = fmap fromInteger . readEither
