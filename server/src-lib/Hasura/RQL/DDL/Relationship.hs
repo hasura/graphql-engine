@@ -36,7 +36,8 @@ runCreateRelationship relType (WithTable source tableName relDef) = do
   -- insertRelationshipToCatalog tableName relType relDef
   let relName = _rdName relDef
       comment = _rdComment relDef
-      metadataObj = MOTableObj tableName $ MTORel relName relType
+      metadataObj = MOSourceObjId source $ SMOTableObj tableName $
+                    MTORel relName relType
 
   addRelationshipToMetadata <- case relType of
     ObjRel -> do
@@ -72,7 +73,7 @@ runDropRel :: (MonadTx m, CacheRWM m) => DropRel -> m EncJSON
 runDropRel (DropRel source qt rn cascade) = do
   (relType, depObjs) <- collectDependencies
   withNewInconsistentObjsCheck do
-    metadataModifiers <- traverse (purgeRelDep source) depObjs
+    metadataModifiers <- traverse purgeRelDep depObjs
     buildSchemaCache $ MetadataModifier $
       tableMetadataSetter source qt %~
       dropRelationshipInMetadata rn relType . foldr (.) id metadataModifiers
@@ -82,7 +83,7 @@ runDropRel (DropRel source qt rn cascade) = do
       tabInfo <- askTableCoreInfo source qt
       relType <- riType <$> askRelType (_tciFieldInfoMap tabInfo) rn ""
       sc      <- askSchemaCache
-      let depObjs = getDependentObjs sc (SOTableObj qt $ TORel rn relType)
+      let depObjs = getDependentObjs sc (SOSourceObj source $ SOITableObj qt $ TORel rn relType)
       when (depObjs /= [] && not (or cascade)) $ reportDeps depObjs
       pure (relType, depObjs)
 
@@ -107,26 +108,29 @@ dropRelationshipInMetadata rn = \case
 
 objRelP2Setup
   :: (QErrM m)
-  => QualifiedTable
+  => SourceName
+  -> QualifiedTable
   -> HashSet ForeignKey
   -> RelDef ObjRelUsing
   -> m (RelInfo, [SchemaDependency])
-objRelP2Setup qt foreignKeys (RelDef rn ru _) = case ru of
+objRelP2Setup source qt foreignKeys (RelDef rn ru _) = case ru of
   RUManual rm -> do
     let refqt = rmTable rm
         (lCols, rCols) = unzip $ HM.toList $ rmColumns rm
-        mkDependency tableName reason col = SchemaDependency (SOTableObj tableName $ TOCol col) reason
+        mkDependency tableName reason col =
+          SchemaDependency (SOSourceObj source $ SOITableObj tableName $ TOCol col) reason
         dependencies = map (mkDependency qt DRLeftColumn) lCols
                     <> map (mkDependency refqt DRRightColumn) rCols
     pure (RelInfo rn ObjRel (rmColumns rm) refqt True True, dependencies)
   RUFKeyOn columnName -> do
     ForeignKey constraint foreignTable colMap <- getRequiredFkey columnName (HS.toList foreignKeys)
-    let dependencies =
-          [ SchemaDependency (SOTableObj qt $ TOForeignKey (_cName constraint)) DRFkey
-          , SchemaDependency (SOTableObj qt $ TOCol columnName) DRUsingColumn
+    let withSource = SOSourceObj source
+        dependencies =
+          [ SchemaDependency (withSource $ SOITableObj qt $ TOForeignKey (_cName constraint)) DRFkey
+          , SchemaDependency (withSource $ SOITableObj qt $ TOCol columnName) DRUsingColumn
           -- this needs to be added explicitly to handle the remote table being untracked. In this case,
           -- neither the using_col nor the constraint name will help.
-          , SchemaDependency (SOTable foreignTable) DRRemoteTable
+          , SchemaDependency (withSource $ SOITable foreignTable) DRRemoteTable
           ]
     -- TODO(PDV?): this is too optimistic. Some object relationships are nullable, but
     -- we are marking some as non-nullable here.  This should really be done by
@@ -135,36 +139,39 @@ objRelP2Setup qt foreignKeys (RelDef rn ru _) = case ru of
 
 arrRelP2Setup
   :: (QErrM m)
-  => HashMap QualifiedTable (HashSet ForeignKey)
+  => SourceName
+  -> HashMap QualifiedTable (HashSet ForeignKey)
   -> QualifiedTable
   -> ArrRelDef
   -> m (RelInfo, [SchemaDependency])
-arrRelP2Setup foreignKeys qt (RelDef rn ru _) = case ru of
+arrRelP2Setup source foreignKeys qt (RelDef rn ru _) = case ru of
   RUManual rm -> do
     let refqt = rmTable rm
         (lCols, rCols) = unzip $ HM.toList $ rmColumns rm
-        deps  = map (\c -> SchemaDependency (SOTableObj qt $ TOCol c) DRLeftColumn) lCols
-                <> map (\c -> SchemaDependency (SOTableObj refqt $ TOCol c) DRRightColumn) rCols
+        deps  = map (\c -> SchemaDependency (withSource $ SOITableObj qt $ TOCol c) DRLeftColumn) lCols
+                <> map (\c -> SchemaDependency (withSource $ SOITableObj refqt $ TOCol c) DRRightColumn) rCols
     pure (RelInfo rn ArrRel (rmColumns rm) refqt True True, deps)
   RUFKeyOn (ArrRelUsingFKeyOn refqt refCol) -> do
     foreignTableForeignKeys <- getTableInfo refqt foreignKeys
     let keysThatReferenceUs = filter ((== qt) . _fkForeignTable) (HS.toList foreignTableForeignKeys)
     ForeignKey constraint _ colMap <- getRequiredFkey refCol keysThatReferenceUs
-    let deps = [ SchemaDependency (SOTableObj refqt $ TOForeignKey (_cName constraint)) DRRemoteFkey
-               , SchemaDependency (SOTableObj refqt $ TOCol refCol) DRUsingColumn
+    let deps = [ SchemaDependency (withSource $ SOITableObj refqt $ TOForeignKey (_cName constraint)) DRRemoteFkey
+               , SchemaDependency (withSource $ SOITableObj refqt $ TOCol refCol) DRUsingColumn
                -- we don't need to necessarily track the remote table like we did in
                -- case of obj relationships as the remote table is indirectly
                -- tracked by tracking the constraint name and 'using_col'
-               , SchemaDependency (SOTable refqt) DRRemoteTable
+               , SchemaDependency (withSource $ SOITable refqt) DRRemoteTable
                ]
         mapping = HM.fromList $ map swap $ HM.toList colMap
     pure (RelInfo rn ArrRel mapping refqt False False, deps)
+  where
+    withSource = SOSourceObj source
 
 purgeRelDep
   :: (QErrM m)
-  => SourceName -> SchemaObjId -> m (TableMetadata -> TableMetadata)
-purgeRelDep source = \case
-  SOTableObj _ (TOPerm rn pt) -> pure $ dropPermissionInMetadata rn pt
+  => SchemaObjId -> m (TableMetadata -> TableMetadata)
+purgeRelDep = \case
+  SOSourceObj _ (SOITableObj _ (TOPerm rn pt)) -> pure $ dropPermissionInMetadata rn pt
   d                           ->
     throw500 $ "unexpected dependency of relationship : "
     <> reportSchemaObj d

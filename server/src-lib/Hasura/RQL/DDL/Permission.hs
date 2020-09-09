@@ -90,17 +90,18 @@ type CreateInsPerm = CreatePerm InsPerm
 
 procSetObj
   :: (QErrM m)
-  => QualifiedTable
+  => SourceName
+  -> QualifiedTable
   -> FieldInfoMap FieldInfo
   -> Maybe (ColumnValues Value)
   -> m (PreSetColsPartial, [Text], [SchemaDependency])
-procSetObj tn fieldInfoMap mObj = do
+procSetObj source tn fieldInfoMap mObj = do
   (setColTups, deps) <- withPathK "set" $
     fmap unzip $ forM (HM.toList setObj) $ \(pgCol, val) -> do
       ty <- askPGType fieldInfoMap pgCol $
         "column " <> pgCol <<> " not found in table " <>> tn
       sqlExp <- valueParser (PGTypeScalar ty) val
-      let dep = mkColDep (getDepReason sqlExp) tn pgCol
+      let dep = mkColDep (getDepReason sqlExp) source tn pgCol
       return ((pgCol, sqlExp), dep)
   return (HM.fromList setColTups, depHeaders, deps)
   where
@@ -112,20 +113,21 @@ procSetObj tn fieldInfoMap mObj = do
 
 buildInsPermInfo
   :: (QErrM m, TableCoreInfoRM m)
-  => QualifiedTable
+  => SourceName
+  -> QualifiedTable
   -> FieldInfoMap FieldInfo
   -> PermDef InsPerm
   -> m (WithDeps InsPermInfo)
-buildInsPermInfo tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCols mBackendOnly) _) =
+buildInsPermInfo source tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCols mBackendOnly) _) =
   withPathK "permission" $ do
-    (be, beDeps) <- withPathK "check" $ procBoolExp tn fieldInfoMap checkCond
-    (setColsSQL, setHdrs, setColDeps) <- procSetObj tn fieldInfoMap set
+    (be, beDeps) <- withPathK "check" $ procBoolExp source tn fieldInfoMap checkCond
+    (setColsSQL, setHdrs, setColDeps) <- procSetObj source tn fieldInfoMap set
     void $ withPathK "columns" $ indexedForM insCols $ \col ->
            askPGType fieldInfoMap col ""
     let fltrHeaders = getDependentHeaders checkCond
         reqHdrs = fltrHeaders `union` setHdrs
-        insColDeps = map (mkColDep DRUntyped tn) insCols
-        deps = mkParentDep tn : beDeps ++ setColDeps ++ insColDeps
+        insColDeps = map (mkColDep DRUntyped source tn) insCols
+        deps = mkParentDep source tn : beDeps ++ setColDeps ++ insColDeps
         insColsWithoutPresets = insCols \\ HM.keys setColsSQL
     return (InsPermInfo (HS.fromList insColsWithoutPresets) be setColsSQL backendOnly reqHdrs, deps)
   where
@@ -146,15 +148,16 @@ instance IsPerm InsPerm where
 
 buildSelPermInfo
   :: (QErrM m, TableCoreInfoRM m)
-  => QualifiedTable
+  => SourceName
+  -> QualifiedTable
   -> FieldInfoMap FieldInfo
   -> SelPerm
   -> m (WithDeps SelPermInfo)
-buildSelPermInfo tn fieldInfoMap sp = withPathK "permission" $ do
+buildSelPermInfo source tn fieldInfoMap sp = withPathK "permission" $ do
   let pgCols     = convColSpec fieldInfoMap $ spColumns sp
 
   (be, beDeps) <- withPathK "filter" $
-    procBoolExp tn fieldInfoMap  $ spFilter sp
+    procBoolExp source tn fieldInfoMap  $ spFilter sp
 
   -- check if the columns exist
   void $ withPathK "columns" $ indexedForM pgCols $ \pgCol ->
@@ -171,8 +174,8 @@ buildSelPermInfo tn fieldInfoMap sp = withPathK "permission" $ do
           <<> " are auto-derived from the permissions on its returning table "
           <> returnTable <<> " and cannot be specified manually"
 
-  let deps = mkParentDep tn : beDeps ++ map (mkColDep DRUntyped tn) pgCols
-             ++ map (mkComputedFieldDep DRUntyped tn) scalarComputedFields
+  let deps = mkParentDep source tn : beDeps ++ map (mkColDep DRUntyped source tn) pgCols
+             ++ map (mkComputedFieldDep DRUntyped source tn) scalarComputedFields
       depHeaders = getDependentHeaders $ spFilter sp
       mLimit = spLimit sp
 
@@ -195,8 +198,8 @@ instance IsPerm SelPerm where
 
   permAccessor = PASelect
 
-  buildPermInfo tn fieldInfoMap (PermDef _ a _) =
-    buildSelPermInfo tn fieldInfoMap a
+  buildPermInfo source tn fieldInfoMap (PermDef _ a _) =
+    buildSelPermInfo source tn fieldInfoMap a
 
   addPermToMetadata permDef =
     tmSelectPermissions %~ HM.insert (_pdRole permDef) permDef
@@ -205,24 +208,25 @@ type CreateUpdPerm = CreatePerm UpdPerm
 
 buildUpdPermInfo
   :: (QErrM m, TableCoreInfoRM m)
-  => QualifiedTable
+  => SourceName
+  -> QualifiedTable
   -> FieldInfoMap FieldInfo
   -> UpdPerm
   -> m (WithDeps UpdPermInfo)
-buildUpdPermInfo tn fieldInfoMap (UpdPerm colSpec set fltr check) = do
+buildUpdPermInfo source tn fieldInfoMap (UpdPerm colSpec set fltr check) = do
   (be, beDeps) <- withPathK "filter" $
-    procBoolExp tn fieldInfoMap fltr
+    procBoolExp source tn fieldInfoMap fltr
 
-  checkExpr <- traverse (withPathK "check" . procBoolExp tn fieldInfoMap) check
+  checkExpr <- traverse (withPathK "check" . procBoolExp source tn fieldInfoMap) check
 
-  (setColsSQL, setHeaders, setColDeps) <- procSetObj tn fieldInfoMap set
+  (setColsSQL, setHeaders, setColDeps) <- procSetObj source tn fieldInfoMap set
 
   -- check if the columns exist
   void $ withPathK "columns" $ indexedForM updCols $ \updCol ->
        askPGType fieldInfoMap updCol relInUpdErr
 
-  let updColDeps = map (mkColDep DRUntyped tn) updCols
-      deps = mkParentDep tn : beDeps ++ maybe [] snd checkExpr ++ updColDeps ++ setColDeps
+  let updColDeps = map (mkColDep DRUntyped source tn) updCols
+      deps = mkParentDep source tn : beDeps ++ maybe [] snd checkExpr ++ updColDeps ++ setColDeps
       depHeaders = getDependentHeaders fltr
       reqHeaders = depHeaders `union` setHeaders
       updColsWithoutPreSets = updCols \\ HM.keys setColsSQL
@@ -239,8 +243,8 @@ instance IsPerm UpdPerm where
 
   permAccessor = PAUpdate
 
-  buildPermInfo tn fieldInfoMap (PermDef _ a _) =
-    buildUpdPermInfo tn fieldInfoMap a
+  buildPermInfo source tn fieldInfoMap (PermDef _ a _) =
+    buildUpdPermInfo source tn fieldInfoMap a
 
   addPermToMetadata permDef =
     tmUpdatePermissions %~ HM.insert (_pdRole permDef) permDef
@@ -249,14 +253,15 @@ type CreateDelPerm = CreatePerm DelPerm
 
 buildDelPermInfo
   :: (QErrM m, TableCoreInfoRM m)
-  => QualifiedTable
+  => SourceName
+  -> QualifiedTable
   -> FieldInfoMap FieldInfo
   -> DelPerm
   -> m (WithDeps DelPermInfo)
-buildDelPermInfo tn fieldInfoMap (DelPerm fltr) = do
+buildDelPermInfo source tn fieldInfoMap (DelPerm fltr) = do
   (be, beDeps) <- withPathK "filter" $
-    procBoolExp tn fieldInfoMap  fltr
-  let deps = mkParentDep tn : beDeps
+    procBoolExp source tn fieldInfoMap  fltr
+  let deps = mkParentDep source tn : beDeps
       depHeaders = getDependentHeaders fltr
   return (DelPermInfo tn be depHeaders, deps)
 
@@ -266,8 +271,8 @@ instance IsPerm DelPerm where
 
   permAccessor = PADelete
 
-  buildPermInfo tn fieldInfoMap (PermDef _ a _) =
-    buildDelPermInfo tn fieldInfoMap a
+  buildPermInfo source tn fieldInfoMap (PermDef _ a _) =
+    buildDelPermInfo source tn fieldInfoMap a
 
   addPermToMetadata permDef =
     tmDeletePermissions %~ HM.insert (_pdRole permDef) permDef

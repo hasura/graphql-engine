@@ -187,21 +187,23 @@ getTableDiff oldtm newtm =
 
 getTableChangeDeps
   :: (QErrM m, CacheRM m)
-  => QualifiedTable -> TableDiff -> m [SchemaObjId]
-getTableChangeDeps tn tableDiff = do
+  => SourceName -> QualifiedTable -> TableDiff -> m [SchemaObjId]
+getTableChangeDeps source tn tableDiff = do
   sc <- askSchemaCache
   -- for all the dropped columns
   droppedColDeps <- fmap concat $ forM droppedCols $ \droppedCol -> do
-    let objId = SOTableObj tn $ TOCol droppedCol
+    let objId = SOSourceObj source $ SOITableObj tn $ TOCol droppedCol
     return $ getDependentObjs sc objId
   -- for all dropped constraints
   droppedConsDeps <- fmap concat $ forM droppedFKeyConstraints $ \droppedCons -> do
-    let objId = SOTableObj tn $ TOForeignKey droppedCons
+    let objId = SOSourceObj source $ SOITableObj tn $ TOForeignKey droppedCons
     return $ getDependentObjs sc objId
   return $ droppedConsDeps <> droppedColDeps <> droppedComputedFieldDeps
   where
     TableDiff _ droppedCols _ _ droppedFKeyConstraints computedFieldDiff _ _ = tableDiff
-    droppedComputedFieldDeps = map (SOTableObj tn . TOComputedField) $ _cfdDropped computedFieldDiff
+    droppedComputedFieldDeps =
+      map (SOSourceObj source . SOITableObj tn . TOComputedField) $
+      _cfdDropped computedFieldDiff
 
 data SchemaDiff
   = SchemaDiff
@@ -220,21 +222,22 @@ getSchemaDiff oldMeta newMeta =
 
 getSchemaChangeDeps
   :: (QErrM m, CacheRM m)
-  => SchemaDiff -> m [SchemaObjId]
-getSchemaChangeDeps schemaDiff = do
+  => SourceName -> SchemaDiff -> m [SchemaObjId]
+getSchemaChangeDeps source schemaDiff = do
   -- Get schema cache
   sc <- askSchemaCache
-  let tableIds = map SOTable droppedTables
+  let tableIds = map (SOSourceObj source . SOITable) droppedTables
   -- Get the dependent of the dropped tables
   let tableDropDeps = concatMap (getDependentObjs sc) tableIds
-  tableModDeps <- concat <$> traverse (uncurry getTableChangeDeps) alteredTables
+  tableModDeps <- concat <$> traverse (uncurry (getTableChangeDeps source)) alteredTables
   return $ filter (not . isDirectDep) $
     HS.toList $ HS.fromList $ tableDropDeps <> tableModDeps
   where
     SchemaDiff droppedTables alteredTables = schemaDiff
 
-    isDirectDep (SOTableObj tn _) = tn `HS.member` HS.fromList droppedTables
-    isDirectDep _                 = False
+    isDirectDep (SOSourceObj s (SOITableObj tn _)) =
+      s == source && tn `HS.member` HS.fromList droppedTables
+    isDirectDep _                  = False
 
 -- fetchFunctionMeta :: Q.Tx [FunctionMeta]
 -- fetchFunctionMeta =

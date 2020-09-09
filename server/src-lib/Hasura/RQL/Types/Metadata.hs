@@ -39,11 +39,17 @@ data TableMetadataObjId
   deriving (Show, Eq, Generic)
 instance Hashable TableMetadataObjId
 
+data SourceMetadataObjId
+  = SMOTable !QualifiedTable
+  | SMOFunction !QualifiedFunction
+  | SMOTableObj !QualifiedTable !TableMetadataObjId
+  deriving (Show, Eq, Generic)
+instance Hashable SourceMetadataObjId
+
 data MetadataObjId
-  = MOTable !QualifiedTable
-  | MOFunction !QualifiedFunction
+  = MOSource !SourceName
+  | MOSourceObjId !SourceName !SourceMetadataObjId
   | MORemoteSchema !RemoteSchemaName
-  | MOTableObj !QualifiedTable !TableMetadataObjId
   | MOCustomTypes
   | MOAction !ActionName
   | MOActionPermission !ActionName !RoleName
@@ -54,34 +60,38 @@ instance Hashable MetadataObjId
 
 moiTypeName :: MetadataObjId -> Text
 moiTypeName = \case
-  MOTable _ -> "table"
-  MOFunction _ -> "function"
+  MOSource _ -> "source"
+  MOSourceObjId _ sourceObjId -> case sourceObjId of
+    SMOTable _  -> "table"
+    SMOFunction _ -> "function"
+    SMOTableObj _ tableObjectId -> case tableObjectId of
+      MTORel _ relType        -> relTypeToTxt relType <> "_relation"
+      MTOPerm _ permType      -> permTypeToCode permType <> "_permission"
+      MTOTrigger _            -> "event_trigger"
+      MTOComputedField _      -> "computed_field"
+      MTORemoteRelationship _ -> "remote_relationship"
   MORemoteSchema _ -> "remote_schema"
   MOCronTrigger _ -> "cron_trigger"
-  MOTableObj _ tableObjectId -> case tableObjectId of
-    MTORel _ relType        -> relTypeToTxt relType <> "_relation"
-    MTOPerm _ permType      -> permTypeToCode permType <> "_permission"
-    MTOTrigger _            -> "event_trigger"
-    MTOComputedField _      -> "computed_field"
-    MTORemoteRelationship _ -> "remote_relationship"
   MOCustomTypes -> "custom_types"
   MOAction _ -> "action"
   MOActionPermission _ _ -> "action_permission"
 
 moiName :: MetadataObjId -> Text
 moiName objectId = moiTypeName objectId <> " " <> case objectId of
-  MOTable name -> dquoteTxt name
-  MOFunction name -> dquoteTxt name
+  MOSource name -> dquoteTxt name
+  MOSourceObjId source sourceObjId -> case sourceObjId of
+    SMOTable name -> dquoteTxt name <> " in source " <> dquoteTxt source
+    SMOFunction name -> dquoteTxt name <> " in source " <> dquoteTxt source
+    SMOTableObj tableName tableObjectId ->
+      let tableObjectName = case tableObjectId of
+            MTORel name _              -> dquoteTxt name
+            MTOComputedField name      -> dquoteTxt name
+            MTORemoteRelationship name -> dquoteTxt name
+            MTOPerm name _             -> dquoteTxt name
+            MTOTrigger name            -> dquoteTxt name
+      in tableObjectName <> " in " <> moiName (MOSourceObjId source $ SMOTable tableName)
   MORemoteSchema name -> dquoteTxt name
   MOCronTrigger name -> dquoteTxt name
-  MOTableObj tableName tableObjectId ->
-    let tableObjectName = case tableObjectId of
-          MTORel name _              -> dquoteTxt name
-          MTOComputedField name      -> dquoteTxt name
-          MTORemoteRelationship name -> dquoteTxt name
-          MTOPerm name _             -> dquoteTxt name
-          MTOTrigger name            -> dquoteTxt name
-    in tableObjectName <> " in " <> moiName (MOTable tableName)
   MOCustomTypes -> "custom_types"
   MOAction name -> dquoteTxt name
   MOActionPermission name roleName -> dquoteTxt roleName <> " permission in " <> dquoteTxt name

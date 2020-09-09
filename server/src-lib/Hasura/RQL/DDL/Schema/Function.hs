@@ -21,7 +21,6 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import qualified Control.Monad.Validate        as MV
 import qualified Data.HashMap.Strict           as M
-import qualified Data.HashSet                  as HS
 import qualified Data.Sequence                 as Seq
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
@@ -85,12 +84,13 @@ data FunctionIntegrityError
 
 mkFunctionInfo
   :: (QErrM m)
-  => QualifiedFunction
+  => SourceName
+  -> QualifiedFunction
   -> SystemDefined
   -> FunctionConfig
   -> RawFunctionInfo
   -> m (FunctionInfo, SchemaDependency)
-mkFunctionInfo qf systemDefined config rawFuncInfo =
+mkFunctionInfo source qf systemDefined config rawFuncInfo =
   either (throw400 NotSupported . showErrors) pure
     =<< MV.runValidateT validateFunction
   where
@@ -119,7 +119,7 @@ mkFunctionInfo qf systemDefined config rawFuncInfo =
       let retTable = typeToTable returnType
 
       pure ( FunctionInfo qf systemDefined funTy inputArguments retTable descM
-           , SchemaDependency (SOTable retTable) DRTable
+           , SchemaDependency (SOSourceObj source $ SOITable retTable) DRTable
            )
 
     validateFunctionArgNames = do
@@ -202,7 +202,7 @@ trackFunctionP2
   => SourceName -> QualifiedFunction -> FunctionConfig -> m EncJSON
 trackFunctionP2 sourceName qf config = do
   -- saveFunctionToCatalog qf config
-  buildSchemaCacheFor (MOFunction qf)
+  buildSchemaCacheFor (MOSourceObjId sourceName $ SMOFunction qf)
     $ MetadataModifier
     $ metaSources.ix sourceName.smFunctions
       %~ M.insert qf (FunctionMetadata qf config)

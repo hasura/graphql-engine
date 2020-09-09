@@ -95,6 +95,7 @@ module Hasura.RQL.Types.SchemaCache
   , EventTriggerInfoMap
 
   , TableObjId(..)
+  , SourceObjId(..)
   , SchemaObjId(..)
   , reportSchemaObj
   , reportSchemaObjs
@@ -129,7 +130,8 @@ module Hasura.RQL.Types.SchemaCache
 import           Hasura.Db
 import           Hasura.GraphQL.Context            (GQLContext, RoleContext)
 import qualified Hasura.GraphQL.Parser             as P
-import           Hasura.Incremental                (Cacheable, Dependency, MonadDepend (..), selectKeyD)
+import           Hasura.Incremental                (Cacheable, Dependency, MonadDepend (..),
+                                                    selectKeyD)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.BoolExp
@@ -154,7 +156,7 @@ import           Hasura.Tracing                    (TraceT)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax (Lift)
+import           Language.Haskell.TH.Syntax        (Lift)
 import           System.Cron.Types
 
 import qualified Data.ByteString.Lazy              as BL
@@ -166,17 +168,17 @@ import qualified Language.GraphQL.Draft.Syntax     as G
 reportSchemaObjs :: [SchemaObjId] -> T.Text
 reportSchemaObjs = T.intercalate ", " . sort . map reportSchemaObj
 
-mkParentDep :: QualifiedTable -> SchemaDependency
-mkParentDep tn = SchemaDependency (SOTable tn) DRTable
+mkParentDep :: SourceName -> QualifiedTable -> SchemaDependency
+mkParentDep s tn = SchemaDependency (SOSourceObj s $ SOITable tn) DRTable
 
-mkColDep :: DependencyReason -> QualifiedTable -> PGCol -> SchemaDependency
-mkColDep reason tn col =
-  flip SchemaDependency reason . SOTableObj tn $ TOCol col
+mkColDep :: DependencyReason -> SourceName -> QualifiedTable -> PGCol -> SchemaDependency
+mkColDep reason source tn col =
+  flip SchemaDependency reason . SOSourceObj source . SOITableObj tn $ TOCol col
 
 mkComputedFieldDep
-  :: DependencyReason -> QualifiedTable -> ComputedFieldName -> SchemaDependency
-mkComputedFieldDep reason tn computedField =
-  flip SchemaDependency reason . SOTableObj tn $ TOComputedField computedField
+  :: DependencyReason -> SourceName -> QualifiedTable -> ComputedFieldName -> SchemaDependency
+mkComputedFieldDep reason s tn computedField =
+  flip SchemaDependency reason . SOSourceObj s . SOITableObj tn $ TOComputedField computedField
 
 type WithDeps a = (a, [SchemaDependency])
 
@@ -428,7 +430,7 @@ getDependentObjsWith f sc objId =
     isDependency deps = not $ HS.null $ flip HS.filter deps $
       \(SchemaDependency depId reason) -> objId `induces` depId && f reason
     -- induces a b : is b dependent on a
-    induces (SOTable tn1) (SOTable tn2)      = tn1 == tn2
-    induces (SOTable tn1) (SOTableObj tn2 _) = tn1 == tn2
-    induces objId1 objId2                    = objId1 == objId2
+    induces (SOSourceObj s1 (SOITable tn1)) (SOSourceObj s2 (SOITable tn2))      = s1 == s2 && tn1 == tn2
+    induces (SOSourceObj s1 (SOITable tn1)) (SOSourceObj s2 (SOITableObj tn2 _)) = s1 == s2 && tn1 == tn2
+    induces objId1 objId2                                                        = objId1 == objId2
     -- allDeps = toList $ fromMaybe HS.empty $ M.lookup objId $ scDepMap sc

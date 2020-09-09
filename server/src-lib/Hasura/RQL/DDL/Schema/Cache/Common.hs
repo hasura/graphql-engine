@@ -40,21 +40,68 @@ invalidateKeys CacheInvalidations{..} InvalidationKeys{..} = InvalidationKeys
   where
     invalidateRemoteSchema = M.alter $ Just . maybe Inc.initialInvalidationKey Inc.invalidate
 
-data BuildInputs
-  = BuildInputs
-  { _biReason          :: !BuildReason
-  , _biCatalogMetadata :: !CatalogMetadata
-  , _biInvalidationMap :: !InvalidationKeys
-  } deriving (Eq)
+data TableBuildInput
+  = TableBuildInput
+  { _tbiName          :: !QualifiedTable
+  , _tbiIsEnum        :: !Bool
+  , _tbiConfiguration :: !TableConfig
+  } deriving (Show, Eq, Generic)
+instance NFData TableBuildInput
+instance Inc.Cacheable TableBuildInput
+
+data NonColumnTableInputs
+  = NonColumnTableInputs
+  { _nctiTable               :: !QualifiedTable
+  , _nctiObjectRelationships :: ![ObjRelDef]
+  , _nctiArrayRelationships  :: ![ArrRelDef]
+  , _nctiComputedFields      :: ![ComputedFieldMetadata]
+  , _nctiRemoteRelationships :: ![RemoteRelationshipMeta]
+  } deriving (Show, Eq, Generic)
+-- instance NFData NonColumnTableInputs
+-- instance Inc.Cacheable NonColumnTableInputs
+
+data TablePermissionInputs
+  = TablePermissionInputs
+  { _tpiTable  :: !QualifiedTable
+  , _tpiInsert :: ![InsPermDef]
+  , _tpiSelect :: ![SelPermDef]
+  , _tpiUpdate :: ![UpdPermDef]
+  , _tpiDelete :: ![DelPermDef]
+  } deriving (Show, Eq, Generic)
+instance Inc.Cacheable TablePermissionInputs
+
+mkTableInputs :: TableMetadata -> (TableBuildInput, NonColumnTableInputs, TablePermissionInputs)
+mkTableInputs TableMetadata{..} =
+  (buildInput, nonColumns, permissions)
+  where
+    buildInput = TableBuildInput _tmTable _tmIsEnum _tmConfiguration
+    nonColumns = NonColumnTableInputs _tmTable
+                 (M.elems _tmObjectRelationships)
+                 (M.elems _tmArrayRelationships)
+                 (M.elems _tmComputedFields)
+                 (M.elems _tmRemoteRelationships)
+    permissions = TablePermissionInputs _tmTable
+                  (M.elems _tmInsertPermissions)
+                  (M.elems _tmSelectPermissions)
+                  (M.elems _tmUpdatePermissions)
+                  (M.elems _tmDeletePermissions)
+
+data SourceOutput
+  = SourceOutput
+  { _soTables    :: !TableCache
+  , _soFunctions :: !FunctionCache
+  } deriving (Show, Eq)
+$(makeLenses ''SourceOutput)
+
+type SourceOutputs = HashMap SourceName SourceOutput
 
 -- | The direct output of 'buildSchemaCacheRule'. Contains most of the things necessary to build a
 -- schema cache, but dependencies and inconsistent metadata objects are collected via a separate
 -- 'MonadWriter' side channel.
 data BuildOutputs
   = BuildOutputs
-  { _boTables        :: !TableCache
+  { _boSources       :: !SourceOutputs
   , _boActions       :: !ActionCache
-  , _boFunctions     :: !FunctionCache
   , _boRemoteSchemas :: !(HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject))
   -- ^ We preserve the 'MetadataObject' from the original catalog metadata in the output so we can
   -- reuse it later if we need to mark the remote schema inconsistent during GraphQL schema
@@ -69,7 +116,7 @@ data RebuildableSchemaCache m
   = RebuildableSchemaCache
   { lastBuiltSchemaCache :: !SchemaCache
   , _rscInvalidationMap :: !InvalidationKeys
-  , _rscRebuild :: !(Inc.Rule (ReaderT BuildReason m) (CatalogMetadata, InvalidationKeys) SchemaCache)
+  , _rscRebuild :: !(Inc.Rule (ReaderT BuildReason m) (Metadata, InvalidationKeys) SchemaCache)
   }
 $(makeLenses ''RebuildableSchemaCache)
 

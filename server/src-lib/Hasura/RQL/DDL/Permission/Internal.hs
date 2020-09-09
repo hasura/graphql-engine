@@ -125,13 +125,14 @@ data CreatePermP1Res a
 
 procBoolExp
   :: (QErrM m, TableCoreInfoRM m)
-  => QualifiedTable
+  => SourceName
+  -> QualifiedTable
   -> FieldInfoMap FieldInfo
   -> BoolExp
   -> m (AnnBoolExpPartialSQL, [SchemaDependency])
-procBoolExp tn fieldInfoMap be = do
+procBoolExp source tn fieldInfoMap be = do
   abe <- annBoolExp valueParser fieldInfoMap $ unBoolExp be
-  let deps = getBoolExpDeps tn abe
+  let deps = getBoolExpDeps source tn abe
   return (abe, deps)
 
 isReqUserId :: T.Text -> Bool
@@ -216,7 +217,8 @@ class (ToJSON a) => IsPerm a where
 
   buildPermInfo
     :: (QErrM m, TableCoreInfoRM m)
-    => QualifiedTable
+    => SourceName
+    -> QualifiedTable
     -> FieldInfoMap FieldInfo
     -> PermDef a
     -> m (WithDeps (PermInfo a))
@@ -245,7 +247,8 @@ runCreatePerm (WithTable sourceName tn pd) = do
   -- addPermP2 tn pd
   let pt = permAccToType $ getPermAcc1 pd
       role = _pdRole pd
-      metadataObject = MOTableObj tn $ MTOPerm role pt
+      metadataObject = MOSourceObjId sourceName $ SMOTableObj tn $
+                       MTOPerm role pt
   buildSchemaCacheFor metadataObject
     $ MetadataModifier
     $ tableMetadataSetter sourceName tn %~ addPermToMetadata pd

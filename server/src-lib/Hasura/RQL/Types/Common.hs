@@ -49,9 +49,9 @@ import           Hasura.EncJSON
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers        ()
+import           Hasura.RQL.DDL.Headers        ()
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Types
-import           Hasura.RQL.DDL.Headers        ()
 
 
 
@@ -63,9 +63,9 @@ import           Data.URL.Template
 import           Instances.TH.Lift             ()
 import           Language.Haskell.TH.Syntax    (Lift, Q, TExp)
 
+import qualified Data.Environment              as Env
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.Text                     as T
-import qualified Data.Environment              as Env
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.Haskell.TH.Syntax    as TH
@@ -190,8 +190,8 @@ class ToAesonPairs a where
 
 newtype SourceName
   = SourceName { unSourceName :: Text }
-  deriving ( Show, Eq, Ord, DQuote, FromJSON, ToJSON, Hashable, ToJSONKey
-           , FromJSONKey, Lift, Data, Generic, Arbitrary, NFData, Cacheable, IsString )
+  deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, ToJSONKey
+           , FromJSONKey, Lift, Data, Generic, Arbitrary, NFData, Cacheable, IsString, DQuote)
 
 defaultSource :: SourceName
 defaultSource = SourceName "default"
@@ -324,4 +324,3 @@ resolveWebhook env (InputWebhook urlTemplate) = do
   let eitherRenderedTemplate = renderURLTemplate env urlTemplate
   either (throw400 Unexpected . T.pack)
     (pure . ResolvedWebhook) eitherRenderedTemplate
-

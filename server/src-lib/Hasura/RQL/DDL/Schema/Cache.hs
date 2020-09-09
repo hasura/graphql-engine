@@ -65,9 +65,9 @@ buildRebuildableSchemaCache
   -> m (RebuildableSchemaCache m)
 buildRebuildableSchemaCache env = do
   metadata <- fetchMetadata
-  catalogMetadata <- buildCatalogMetadata metadata
+  -- catalogMetadata <- buildCatalogMetadata metadata
   result <- flip runReaderT CatalogSync $
-    Inc.build (buildSchemaCacheRule env) (catalogMetadata, initialInvalidationKeys)
+    Inc.build (buildSchemaCacheRule env) (metadata, initialInvalidationKeys)
   pure $ RebuildableSchemaCache (Inc.result result) initialInvalidationKeys (Inc.rebuildRule result)
 
 newtype CacheRWT m a
@@ -98,9 +98,9 @@ instance (MonadIO m, MonadTx m, MonadMetadata m) => CacheRWM (CacheRWT m) where
     let newInvalidationKeys = invalidateKeys invalidations invalidationKeys
     metadata <- fetchMetadata
     let modifiedMetadata = (unMetadataModifier metadataModifier) metadata
-    catalogMetadata <- buildCatalogMetadata modifiedMetadata
+    -- catalogMetadata <- buildCatalogMetadata modifiedMetadata
     result <- lift $ flip runReaderT buildReason $
-      Inc.build rule (catalogMetadata, newInvalidationKeys)
+      Inc.build rule (modifiedMetadata, newInvalidationKeys)
     let schemaCache = Inc.result result
         prunedInvalidationKeys = pruneInvalidationKeys schemaCache newInvalidationKeys
         !newCache = RebuildableSchemaCache schemaCache prunedInvalidationKeys (Inc.rebuildRule result)
@@ -121,25 +121,26 @@ buildSchemaCacheRule
      , MonadIO m, MonadUnique m, MonadTx m
      , MonadReader BuildReason m, HasHttpManager m, HasSQLGenCtx m )
   => Env.Environment
-  -> (CatalogMetadata, InvalidationKeys) `arr` SchemaCache
-buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
+  -> (Metadata, InvalidationKeys) `arr` SchemaCache
+buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
   invalidationKeysDep <- Inc.newDependency -< invalidationKeys
 
   -- Step 1: Process metadata and collect dependency information.
   (outputs, collectedInfo) <-
-    runWriterA (buildAndCollectInfo defaultSource) -< (catalogMetadata, invalidationKeysDep)
+    runWriterA buildAndCollectInfo -< (metadata, invalidationKeysDep)
   let (inconsistentObjects, unresolvedDependencies) = partitionCollectedInfo collectedInfo
 
   -- Step 2: Resolve dependency information and drop dangling dependents.
   (resolvedOutputs, dependencyInconsistentObjects, resolvedDependencies) <-
     resolveDependencies -< (outputs, unresolvedDependencies)
 
+  let postgresCache = M.map (\(SourceOutput tables functions) -> PGSourceSchemaCache tables functions)
+                      $ _boSources resolvedOutputs
+
   -- Step 3: Build the GraphQL schema.
   (gqlContext, gqlSchemaInconsistentObjects) <- runWriterA buildGQLContext -<
     ( QueryHasura
-    , M.singleton defaultSource $
-        PGSourceSchemaCache (_boTables    resolvedOutputs)
-        (_boFunctions resolvedOutputs)
+    , postgresCache
     , (_boRemoteSchemas resolvedOutputs)
     , (_boActions resolvedOutputs)
     , (_actNonObjects $ _boCustomTypes resolvedOutputs)
@@ -148,16 +149,14 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
   -- Step 4: Build the relay GraphQL schema
   (relayContext, relaySchemaInconsistentObjects) <- runWriterA buildGQLContext -<
     ( QueryRelay
-    , M.singleton defaultSource $
-        PGSourceSchemaCache (_boTables    resolvedOutputs)
-        (_boFunctions resolvedOutputs)
+    , postgresCache
     , (_boRemoteSchemas resolvedOutputs)
     , (_boActions resolvedOutputs)
     , (_actNonObjects $ _boCustomTypes resolvedOutputs)
     )
 
   returnA -< SchemaCache
-    { scPostgres = M.singleton defaultSource $ PGSourceSchemaCache (_boTables resolvedOutputs) (_boFunctions resolvedOutputs)
+    { scPostgres = postgresCache
     , scActions = _boActions resolvedOutputs
     -- TODO this is not the right value: we should track what part of the schema
     -- we can stitch without consistencies, I think.
@@ -179,103 +178,172 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
         <> toList relaySchemaInconsistentObjects
     }
   where
-    buildAndCollectInfo
+    buildSource
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
          , ArrowWriter (Seq CollectedInfo) arr, MonadIO m, MonadUnique m, MonadTx m, MonadReader BuildReason m
          , HasHttpManager m, HasSQLGenCtx m )
-      => SourceName -> (CatalogMetadata, Inc.Dependency InvalidationKeys) `arr` BuildOutputs
-    buildAndCollectInfo source = proc (catalogMetadata, invalidationKeys) -> do
-      let CatalogMetadata tables relationships permissions
-            eventTriggers remoteSchemas functions allowlistDefs
-            computedFields catalogCustomTypes actions remoteRelationships
-            cronTriggers = catalogMetadata
-
+      => ( SourceMetadata
+         , RemoteSchemaMap
+         , Inc.Dependency InvalidationKeys
+         ) `arr` SourceOutput
+    buildSource = proc (sourceMetadata, remoteSchemaMap, invalidationKeys) -> do
+      let SourceMetadata source tables functions = sourceMetadata
+          (tableInputs, nonColumnInputs, permissions) = unzip3 $ map mkTableInputs $ M.elems tables
+          eventTriggers = map (_tmTable &&& (M.elems . _tmEventTriggers)) (M.elems tables)
+          -- HashMap k a -> HashMap k b -> HashMap k (a, b)
+          alignTableMap lMap rMap =
+            let alignFn = \case
+                  This a -> Nothing
+                  That b -> Nothing
+                  These a b -> Just (a, b)
+            in M.catMaybes $ alignWith alignFn lMap rMap
       -- tables
-      tableRawInfos <- buildTableCache -< (tables, Inc.selectD #_ikMetadata invalidationKeys)
-
-      -- remote schemas
-      let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
-      remoteSchemaMap <- buildRemoteSchemas -< (remoteSchemaInvalidationKeys, remoteSchemas)
+      tableRawInfos <- buildTableCache -< (source, tableInputs, Inc.selectD #_ikMetadata invalidationKeys)
 
       -- relationships and computed fields
-      let relationshipsByTable = M.groupOn _crTable relationships
-          computedFieldsByTable = M.groupOn (_afcTable . _cccComputedField) computedFields
-          remoteRelationshipsByTable = M.groupOn rtrTable remoteRelationships
-      tableCoreInfos <- (tableRawInfos >- returnA)
-        >-> (\info -> (info, relationshipsByTable) >- alignExtraTableInfo (mkRelationshipMetadataObject source))
-        >-> (\info -> (info, computedFieldsByTable) >- alignExtraTableInfo mkComputedFieldMetadataObject)
-        >-> (\info -> (info, remoteRelationshipsByTable) >- alignExtraTableInfo mkRemoteRelationshipMetadataObject)
-        >-> (| Inc.keyed (\_ (((tableRawInfo, tableRelationships), tableComputedFields), tableRemoteRelationships) -> do
-                 let columns = _tciFieldInfoMap tableRawInfo
-                 allFields <- addNonColumnFields source -<
-                   (tableRawInfos, columns, M.map fst remoteSchemaMap, tableRelationships, tableComputedFields, tableRemoteRelationships)
-                 returnA -< (tableRawInfo { _tciFieldInfoMap = allFields })) |)
+      let nonColumnsByTable = mapFromL _nctiTable nonColumnInputs
+      tableCoreInfos <-
+        (| Inc.keyed (\_ (tableRawInfo, nonColumnInput) -> do
+             let columns = _tciFieldInfoMap tableRawInfo
+             allFields <- addNonColumnFields -< (source, tableRawInfos, columns, remoteSchemaMap, nonColumnInput)
+             returnA -< (tableRawInfo {_tciFieldInfoMap = allFields}))
+         |) (tableRawInfos `alignTableMap` nonColumnsByTable)
 
-      -- permissions and event triggers
       tableCoreInfosDep <- Inc.newDependency -< tableCoreInfos
-      tableCache <- (tableCoreInfos >- returnA)
-        >-> (\info -> (info, M.groupOn _cpTable permissions) >- alignExtraTableInfo (mkPermissionMetadataObject source))
-        >-> (\info -> (info, M.groupOn _cetTable eventTriggers) >- alignExtraTableInfo mkEventTriggerMetadataObject)
-        >-> (| Inc.keyed (\_ ((tableCoreInfo, tablePermissions), tableEventTriggers) -> do
-                 let tableName = _tciName tableCoreInfo
-                     tableFields = _tciFieldInfoMap tableCoreInfo
-                 permissionInfos <- buildTablePermissions source -<
-                   (tableCoreInfosDep, tableName, tableFields, HS.fromList tablePermissions)
-                 eventTriggerInfos <- buildTableEventTriggers -< (tableCoreInfo, tableEventTriggers)
-                 returnA -< TableInfo
-                   { _tiCoreInfo = tableCoreInfo
-                   , _tiRolePermInfoMap = permissionInfos
-                   , _tiEventTriggerInfoMap = eventTriggerInfos
-                   }) |)
+      -- permissions and event triggers
+      tableCache <-
+        (| Inc.keyed (\_ ((tableCoreInfo, permissionInputs), (_, eventTriggerConfs)) -> do
+             let tableFields = _tciFieldInfoMap tableCoreInfo
+             permissionInfos <- buildTablePermissions -< (source, tableCoreInfosDep, tableFields, permissionInputs)
+             eventTriggerInfos <- buildTableEventTriggers -< (source, tableCoreInfo, eventTriggerConfs)
+             returnA -< TableInfo tableCoreInfo permissionInfos eventTriggerInfos
+            )
+         |) (tableCoreInfos `alignTableMap` mapFromL _tpiTable permissions `alignTableMap` mapFromL fst eventTriggers)
 
       -- sql functions
-      functionCache <- (mapFromL _cfFunction functions >- returnA)
-        >-> (| Inc.keyed (\_ (CatalogFunction qf systemDefined config funcDefs) -> do
-                 let definition = toJSON $ TrackFunction qf
-                     metadataObject = MetadataObject (MOFunction qf) definition
-                     schemaObject = SOFunction qf
+      functionCache <- (mapFromL _fmFunction (M.elems functions) >- returnA)
+        >-> (| Inc.keyed (\_ (FunctionMetadata qf config) -> do
+                 let funcDefs = undefined
+                     systemDefined = SystemDefined False
+                     definition = toJSON $ TrackFunction qf
+                     metadataObject = MetadataObject (MOSourceObjId source $ SMOFunction qf) definition
+                     schemaObject = SOSourceObj source $ SOIFunction qf
                      addFunctionContext e = "in function " <> qf <<> ": " <> e
                  (| withRecordInconsistency (
                     (| modifyErrA (do
                          rawfi <- bindErrorA -< handleMultipleFunctions qf funcDefs
-                         (fi, dep) <- bindErrorA -< mkFunctionInfo qf systemDefined config rawfi
+                         (fi, dep) <- bindErrorA -< mkFunctionInfo source qf systemDefined config rawfi
                          recordDependencies -< (metadataObject, schemaObject, [dep])
                          returnA -< fi)
                     |) addFunctionContext)
                   |) metadataObject) |)
         >-> (\infos -> M.catMaybes infos >- returnA)
 
+      returnA -< SourceOutput tableCache functionCache
+
+    buildAndCollectInfo
+      :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
+         , ArrowWriter (Seq CollectedInfo) arr, MonadIO m, MonadUnique m, MonadTx m, MonadReader BuildReason m
+         , HasHttpManager m, HasSQLGenCtx m )
+      => (Metadata, Inc.Dependency InvalidationKeys) `arr` BuildOutputs
+    buildAndCollectInfo = proc (metadata, invalidationKeys) -> do
+      let Metadata _ sources remoteSchemas collections allowlists
+            customTypes actions cronTriggers = metadata
+
+      -- tables
+      -- tableRawInfos <- buildTableCache -< (tables, Inc.selectD #_ikMetadata invalidationKeys)
+
+      -- remote schemas
+      let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
+      remoteSchemaMap <- buildRemoteSchemas -< (remoteSchemaInvalidationKeys, (M.elems remoteSchemas))
+
+      sourcesOutput <-
+        (| Inc.keyed (\_ sourceMetadata ->
+             buildSource -< (sourceMetadata, M.map fst remoteSchemaMap, invalidationKeys))
+         |) sources
+
+      -- relationships and computed fields
+      -- let relationshipsByTable = M.groupOn _crTable relationships
+      --     computedFieldsByTable = M.groupOn (_afcTable . _cccComputedField) computedFields
+      --     remoteRelationshipsByTable = M.groupOn rtrTable remoteRelationships
+      -- tableCoreInfos <- (tableRawInfos >- returnA)
+      --   >-> (\info -> (info, relationshipsByTable) >- alignExtraTableInfo (mkRelationshipMetadataObject source))
+      --   >-> (\info -> (info, computedFieldsByTable) >- alignExtraTableInfo mkComputedFieldMetadataObject)
+      --   >-> (\info -> (info, remoteRelationshipsByTable) >- alignExtraTableInfo mkRemoteRelationshipMetadataObject)
+      --   >-> (| Inc.keyed (\_ (((tableRawInfo, tableRelationships), tableComputedFields), tableRemoteRelationships) -> do
+      --            let columns = _tciFieldInfoMap tableRawInfo
+      --            allFields <- addNonColumnFields source -<
+      --              (tableRawInfos, columns, M.map fst remoteSchemaMap, tableRelationships, tableComputedFields, tableRemoteRelationships)
+      --            returnA -< (tableRawInfo { _tciFieldInfoMap = allFields })) |)
+
+      -- permissions and event triggers
+      -- tableCoreInfosDep <- Inc.newDependency -< tableCoreInfos
+      -- tableCache <- (tableCoreInfos >- returnA)
+      --   >-> (\info -> (info, M.groupOn _cpTable permissions) >- alignExtraTableInfo (mkPermissionMetadataObject source))
+      --   >-> (\info -> (info, M.groupOn _cetTable eventTriggers) >- alignExtraTableInfo mkEventTriggerMetadataObject)
+      --   >-> (| Inc.keyed (\_ ((tableCoreInfo, tablePermissions), tableEventTriggers) -> do
+      --            let tableName = _tciName tableCoreInfo
+      --                tableFields = _tciFieldInfoMap tableCoreInfo
+      --            permissionInfos <- buildTablePermissions source -<
+      --              (tableCoreInfosDep, tableName, tableFields, HS.fromList tablePermissions)
+      --            eventTriggerInfos <- buildTableEventTriggers -< (tableCoreInfo, tableEventTriggers)
+      --            returnA -< TableInfo
+      --              { _tiCoreInfo = tableCoreInfo
+      --              , _tiRolePermInfoMap = permissionInfos
+      --              , _tiEventTriggerInfoMap = eventTriggerInfos
+      --              }) |)
+
+      -- sql functions
+      -- functionCache <- (mapFromL _cfFunction functions >- returnA)
+      --   >-> (| Inc.keyed (\_ (CatalogFunction qf systemDefined config funcDefs) -> do
+      --            let definition = toJSON $ TrackFunction qf
+      --                metadataObject = MetadataObject (MOFunction qf) definition
+      --                schemaObject = SOFunction qf
+      --                addFunctionContext e = "in function " <> qf <<> ": " <> e
+      --            (| withRecordInconsistency (
+      --               (| modifyErrA (do
+      --                    rawfi <- bindErrorA -< handleMultipleFunctions qf funcDefs
+      --                    (fi, dep) <- bindErrorA -< mkFunctionInfo qf systemDefined config rawfi
+      --                    recordDependencies -< (metadataObject, schemaObject, [dep])
+      --                    returnA -< fi)
+      --               |) addFunctionContext)
+      --             |) metadataObject) |)
+      --   >-> (\infos -> M.catMaybes infos >- returnA)
+
       -- allow list
-      let allowList = allowlistDefs
-            & concatMap _cdQueries
+      let allowList = allowlists
+            & HS.toList
+            & map _crCollection
+            & map (\cn -> maybe [] (_cdQueries . _ccDefinition) $ M.lookup cn collections)
+            & concat
             & map (queryWithoutTypeNames . getGQLQuery . _lqQuery)
             & HS.fromList
 
       -- custom types
-      let CatalogCustomTypes customTypes pgScalars = catalogCustomTypes
+      let pgScalars = undefined -- TODO: Come from metadata storage?
       maybeResolvedCustomTypes <-
         (| withRecordInconsistency
-             (bindErrorA -< resolveCustomTypes tableCache customTypes pgScalars)
+             (bindErrorA -< resolveCustomTypes (undefined::TableCache) customTypes pgScalars)
          |) (MetadataObject MOCustomTypes $ toJSON customTypes)
 
       -- -- actions
+      let actionList = M.elems actions
       (actionCache, annotatedCustomTypes) <- case maybeResolvedCustomTypes of
         Just resolvedCustomTypes -> do
-          actionCache' <- buildActions -< ((resolvedCustomTypes, pgScalars), actions)
+          actionCache' <- buildActions -< ((resolvedCustomTypes, pgScalars), actionList)
           returnA -< (actionCache', resolvedCustomTypes)
 
         -- If the custom types themselves are inconsistent, we can’t really do
         -- anything with actions, so just mark them all inconsistent.
         Nothing -> do
-          recordInconsistencies -< ( map mkActionMetadataObject actions
+          recordInconsistencies -< ( map mkActionMetadataObject actionList
                                    , "custom types are inconsistent" )
           returnA -< (M.empty, emptyAnnotatedCustomTypes)
 
-      cronTriggersMap <- buildCronTriggers -< ((),cronTriggers)
+      cronTriggersMap <- buildCronTriggers -< ((), M.elems cronTriggers)
 
       returnA -< BuildOutputs
-        { _boTables = tableCache
-        , _boFunctions = functionCache
+        { _boSources = sourcesOutput
         , _boActions = actionCache
         , _boRemoteSchemas = remoteSchemaMap
         , _boAllowlist = allowList
@@ -283,14 +351,15 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
         , _boCronTriggers = cronTriggersMap
         }
 
-    mkEventTriggerMetadataObject (CatalogEventTrigger qt trn configuration) =
-      let objectId = MOTableObj qt $ MTOTrigger trn
-          definition = object ["table" .= qt, "configuration" .= configuration]
+    mkEventTriggerMetadataObject (source, table, eventTriggerConf) =
+      let objectId = MOSourceObjId source $ SMOTableObj table $
+                     MTOTrigger $ etcName eventTriggerConf
+          definition = object ["table" .= table, "configuration" .= eventTriggerConf]
       in MetadataObject objectId definition
 
     mkCronTriggerMetadataObject catalogCronTrigger =
       let definition = toJSON catalogCronTrigger
-      in MetadataObject (MOCronTrigger (_cctName catalogCronTrigger))
+      in MetadataObject (MOCronTrigger (ctName catalogCronTrigger))
                         definition
 
     mkActionMetadataObject (ActionMetadata name comment defn _) =
@@ -328,23 +397,24 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
     buildTableEventTriggers
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
          , Inc.ArrowCache m arr, MonadTx m, MonadReader BuildReason m, HasSQLGenCtx m )
-      => (TableCoreInfo, [CatalogEventTrigger]) `arr` EventTriggerInfoMap
-    buildTableEventTriggers = buildInfoMap _cetName mkEventTriggerMetadataObject buildEventTrigger
+      => (SourceName, TableCoreInfo, [EventTriggerConf]) `arr` EventTriggerInfoMap
+    buildTableEventTriggers = proc (source, tableInfo, eventTriggerConfs) ->
+      buildInfoMap (etcName . (^. _3)) mkEventTriggerMetadataObject buildEventTrigger
+        -< (tableInfo, map (source, _tciName tableInfo,) eventTriggerConfs)
       where
-        buildEventTrigger = proc (tableInfo, eventTrigger) -> do
-          let CatalogEventTrigger qt trn configuration = eventTrigger
-              metadataObject = mkEventTriggerMetadataObject eventTrigger
-              schemaObjectId = SOTableObj qt $ TOTrigger trn
-              addTriggerContext e = "in event trigger " <> trn <<> ": " <> e
+        buildEventTrigger = proc (tableInfo, (source, table, eventTriggerConf)) -> do
+          let triggerName = etcName eventTriggerConf
+              metadataObject = mkEventTriggerMetadataObject (source, table, eventTriggerConf)
+              schemaObjectId = SOSourceObj source $ SOITableObj table $ TOTrigger triggerName
+              addTriggerContext e = "in event trigger " <> triggerName <<> ": " <> e
           (| withRecordInconsistency (
              (| modifyErrA (do
-                  etc <- bindErrorA -< decodeValue configuration
-                  (info, dependencies) <- bindErrorA -< subTableP2Setup env qt etc
+                  (info, dependencies) <- bindErrorA -< subTableP2Setup env source table eventTriggerConf
                   let tableColumns = M.mapMaybe (^? _FIColumn) (_tciFieldInfoMap tableInfo)
-                  recreateViewIfNeeded -< (qt, tableColumns, trn, etcDefinition etc)
+                  recreateViewIfNeeded -< (table, tableColumns, triggerName, etcDefinition eventTriggerConf)
                   recordDependencies -< (metadataObject, schemaObjectId, dependencies)
                   returnA -< info)
-             |) (addTableContext qt . addTriggerContext))
+             |) (addTableContext table . addTriggerContext))
            |) metadataObject
 
         recreateViewIfNeeded = Inc.cache $
@@ -360,12 +430,12 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
          , ArrowWriter (Seq CollectedInfo) arr
          , Inc.ArrowCache m arr
          , MonadTx m)
-      => ((),[CatalogCronTrigger])
+      => ((),[CronTriggerMetadata])
          `arr` HashMap TriggerName CronTriggerInfo
-    buildCronTriggers = buildInfoMap _cctName mkCronTriggerMetadataObject buildCronTrigger
+    buildCronTriggers = buildInfoMap ctName mkCronTriggerMetadataObject buildCronTrigger
       where
         buildCronTrigger = proc (_,cronTrigger) -> do
-          let triggerName = triggerNameToTxt $ _cctName cronTrigger
+          let triggerName = triggerNameToTxt $ ctName cronTrigger
               addCronTriggerContext e = "in cron trigger " <> triggerName <> ": " <> e
           (| withRecordInconsistency (
             (| modifyErrA (bindErrorA -< resolveCronTrigger env cronTrigger)
@@ -459,20 +529,20 @@ withMetadataCheck source cascade action = do
     throw400 NotSupported $ "the following tracked function(s) cannot be overloaded: "
     <> reportFuncs overloadedFuncs
 
-  indirectDeps <- getSchemaChangeDeps schemaDiff
+  indirectDeps <- getSchemaChangeDeps source schemaDiff
 
   -- Report back with an error if cascade is not set
   when (indirectDeps /= [] && not cascade) $ reportDepsExt indirectDeps []
 
   metadataUpdater <- execWriterT $ do
     -- Purge all the indirect dependents from state
-    mapM_ (purgeDependentObject source >=> tell) indirectDeps
+    mapM_ (purgeDependentObject >=> tell) indirectDeps
 
     -- Purge all dropped functions
     let purgedFuncs = flip mapMaybe indirectDeps $ \dep ->
           case dep of
-            SOFunction qf -> Just qf
-            _             -> Nothing
+            SOSourceObj _ (SOIFunction qf) -> Just qf
+            _                              -> Nothing
 
     forM_ (droppedFuncs \\ purgedFuncs) $ \qf -> do
       tell $ dropFunctionInMetadata source qf
