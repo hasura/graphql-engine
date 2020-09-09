@@ -178,7 +178,7 @@ cd $PYTEST_ROOT
 
 RUN_WEBHOOK_TESTS=true
 
-for port in 8080 8081 9876 5592
+for port in 8080 8081 9876 5592 5000 5594
 do
 	fail_if_port_busy $port
 done
