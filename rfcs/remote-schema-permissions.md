@@ -5,7 +5,7 @@ Currently, all remote schemas are fully exposed to all roles. We want to enable 
 There are 2 things we want to focus on (there are possibly more):
 
 1. Role-based schema masking
-2. Role-based input field presets
+2. Role-based argument presets
 
 ## Role-based schema masking
 
@@ -14,7 +14,7 @@ A PoC of this feature was implemented in https://github.com/hasura/graphql-engin
 Schema masking is the ability to hide parts of the schema from the user. By default, we want to enforce "deny all" semantics by not exposing any type for a new role. 
 This role can then be allowed access to parts of the schema by specifying the types and fields it should have access to.
 
-The API for role-based schema proposed in #2690 looked like the following (**NOTE:** This is for illustration, not the final API):
+The API for role-based schema proposed in #2690 looked like the following (**NOTE:** This is for illustration, not the final API as it doesn't incorporate argument presets):
 
 ```
 type: add_remote_schema_permissions
@@ -118,11 +118,14 @@ In short, any list reference can be replaced by `*` to mean "all valid values" f
 1. For an object type, like "User", `fields` can be `*`
 2. Even the root level definition can take `*` like `allowed_scalars: *`
 
-## Role-based input field presets
 
-Each field in GraphQL can take arguments as well (aka input fields). Input fields can only be of type (including List of these): Scalar, Enum, or Input Object. This set is also called Input Types.
+## Role-based argument presets
 
-Role-based input field presets can basically inject values from session variables or static values during execution. The presetted input field should also get removed from the exposed role-based schema.
+The above API only illustrates schema masking. We need to incorporate argument presets as well to provide "filtered" results. The API described in this section is the final proposed API.
+
+Each field in GraphQL can take arguments as well. Arguments must belong to input types i.e Scalar, Enum, or Input Object (or list of these).
+
+Role-based argument presets can basically inject values from session variables or static values during execution. The presetted argument should also get removed from the exposed role-based schema.
 
 The proposed API:
 
@@ -133,19 +136,22 @@ args:
   role: user
   definition:
     allowed_objects:
-    - type: Query
+    - name: Query
       fields: 
-        - name: hello
-        - name: user
-          input_field_presets:
-            - name: "id"
-              value: 
-                from_session_variable: "x-hasura-user-id"
-    - type: User
-      fields: [a,b,c]
+      - name: hello
+      - name: user
+        argument_presets:
+        - name: "id"
+          value:
+            from_session_variable: "x-hasura-user-id"
+    - name: User
+      fields:
+      - name: a
+      - name: b
+      - name: c
 ```
 
-Input field presets can also go arbitrarily deep if the input field type is Input Object (this is very similar to how we define the mapping in remote relationships) and there can be multiple presets per field:
+Argument presets can also go arbitrarily deep if the input type is Input Object (this is very similar to how we define the mapping in remote relationships):
 
 ```
 type: add_remote_schema_permissions
@@ -154,23 +160,53 @@ args:
   role: user
   definition:
     allowed_objects:
-    - type: Query
-      fields: 
+    - name: Query
+      fields:
         - name: hello
         - name: user
-          input_field_presets:
-            - name: "where"
-              field:
-                - name: "id"
-                  field:
-                    - name: "_eq"
-                      value: 
-                        from_session_variable: "x-hasura-user-id"
-            - name: "limit"
-              value:
-                static: 1
-    - type: User
-      fields: [a,b,c]
+          argument_presets:
+          - name: "where"
+            input_field:
+            - name: "id"
+              input_field:
+              - name: "_eq"
+                value:
+                  from_session_variable: "x-hasura-user-id"
+          - name: "limit"
+            value:
+              static: 1
+    - name: User
+      fields:
+      - name: a
+      - name: b
+      - name: c
+```
+
+There can be more than one argument preset per field:
+
+```
+type: add_remote_schema_permissions
+args:
+  remote_schema: comm
+  role: user
+  definition:
+    allowed_objects:
+    - name: Query
+      fields: 
+      - name: hello
+      - name: user
+        argument_presets:
+        - name: "id"
+          value:
+            from_session_variable: "x-hasura-user-id"
+        - name: "limit"
+          value:
+            static: 1
+    - name: User
+      fields:
+      - name: a
+      - name: b
+      - name: c
 ```
 
 In the above example, if the client (as role "user") makes the query:
@@ -178,8 +214,8 @@ In the above example, if the client (as role "user") makes the query:
 ```
 query {
   user {
-    name
-    email
+    a
+    b
   }
 }
 ```
@@ -188,9 +224,9 @@ then the query that is constructed for the remote schema is
 
 ```
 query {
-  user(where: { id: { _eq: "x-hasura-user-id" } }, limit: 1) {
-    name
-    email
+  user(id: "<x-hasura-user-id>", limit: 1) {
+    a
+    b
   }
 }
 ```
