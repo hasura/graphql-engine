@@ -59,6 +59,16 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - cli: add missing global flags for seeds command (#5565)
 - docs: add docs page on networking with docker (close #4346) (#4811)
 
+
+## `v1.3.2`
+
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+
+- server: fixes column masking in select permission for computed fields regression (fix #5696)
+
+
 ## `v1.3.1`, `v1.3.1-beta.1`
 
 ### Breaking change
