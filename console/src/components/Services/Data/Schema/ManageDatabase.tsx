@@ -17,8 +17,8 @@ import {
 } from '../../../../metadata/actions';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { getDataSources } from '../../../../metadata/selector';
-import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 type DatabaseListItemProps = {
   dataSource: DataSource;
@@ -163,8 +163,8 @@ const ManageDatabase: React.FC<ManageDatabaseInjectedProps> = ({
 
   return (
     <RightContainer>
+      <Helmet title="Manage - Data | Hasura" />
       <div className={`container-fluid ${styles.manage_dbs_page}`}>
-        <Helmet title="Manage - Data | Hasura" />
         <BreadCrumb breadCrumbs={crumbs} />
         <div className={styles.display_flex}>
           <h2
