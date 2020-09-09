@@ -27,7 +27,6 @@ cabal.project.local*
 TAGS
 .stack-work*
 *.log
-*.nix
 
 # ws related
 ws/
