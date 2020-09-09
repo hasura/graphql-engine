@@ -175,6 +175,9 @@ data CronEventPartial
   , cepName          :: !TriggerName
   , cepScheduledTime :: !UTCTime
   , cepTries         :: !Int
+  , cepCreatedAt     :: !UTCTime
+  -- ^ cepCreatedAt is the time at which the cron event generator
+  -- created the cron event
   } deriving (Show, Eq)
 
 data ScheduledEventFull
@@ -191,13 +194,7 @@ data ScheduledEventFull
   , sefRetryConf     :: !STRetryConf
   , sefHeaders       :: ![EventHeaderInfo]
   , sefComment       :: !(Maybe Text)
-  , sefCreatedAt     :: !(Maybe UTCTime)
-  -- ^ sefCreatedAt is the time at which the event was created,
-  -- In case of one-off scheduled events, it's the time at which
-  -- the user created the event and in case of cron triggers, the
-  -- graphql-engine generator, generates the cron events, the
-  -- `created_at` is just an implementation detail, so we
-  -- don't send it
+  , sefCreatedAt     :: !UTCTime
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = True} ''ScheduledEventFull)
 
@@ -220,14 +217,14 @@ $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = True} ''OneO
 --   event because they both have different configurations
 --   and they live in different tables.
 data ScheduledEventType =
-    CronScheduledEvent
+    Cron
   -- ^ A Cron scheduled event has a template defined which will
   -- contain the webhook, header configuration, retry
   -- configuration and a payload. Every cron event created
   -- uses the above mentioned configurations defined in the template.
   -- The configuration defined with the cron trigger is cached
   -- and hence it's not fetched along the cron scheduled events.
-  | OneOffEvent
+  | OneOff
   -- ^ A One-off scheduled event doesn't have any template defined
   -- so all the configuration is fetched along the scheduled events.
     deriving (Eq, Show)
@@ -240,6 +237,12 @@ data ScheduledEventWebhookPayload
   , sewpPayload       :: !J.Value
   , sewpComment       :: !(Maybe Text)
   , sewpCreatedAt     :: !(Maybe UTCTime)
+  -- ^ sewpCreatedAt is the time at which the event was created,
+  -- In case of one-off scheduled events, it's the time at which
+  -- the user created the event and in case of cron triggers, the
+  -- graphql-engine generator, generates the cron events, the
+  -- `created_at` is just an implementation detail, so we
+  -- don't send it
   } deriving (Show, Eq)
 
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = True} ''ScheduledEventWebhookPayload)
@@ -365,7 +368,7 @@ processCronEvents logger logEnv httpMgr pgpool getSC lockedCronEvents = do
       -- graceful shutdown is initiated in midst of processing these events
       saveLockedEvents (map cepId partialEvents) lockedCronEvents
       -- The `createdAt` of a cron event is the `created_at` of the cron trigger
-      for_ partialEvents $ \(CronEventPartial id' name st tries)-> do
+      for_ partialEvents $ \(CronEventPartial id' name st tries createdAt)-> do
         case Map.lookup name cronTriggersInfo of
           Nothing ->  logInternalError $
             err500 Unexpected "could not find cron trigger in cache"
@@ -382,16 +385,16 @@ processCronEvents logger logEnv httpMgr pgpool getSC lockedCronEvents = do
                                        ctiRetryConf
                                        ctiHeaders
                                        ctiComment
-                                       Nothing
+                                       createdAt
             finally <- Tracing.runTraceT "scheduled event" . runExceptT $
-              runReaderT (processScheduledEvent logEnv pgpool scheduledEvent CronScheduledEvent) (logger, httpMgr)
+              runReaderT (processScheduledEvent logEnv pgpool scheduledEvent Cron) (logger, httpMgr)
             removeEventFromLockedEvents id' lockedCronEvents
             either logInternalError pure finally
     Left err -> logInternalError err
   where
     logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
 
-processOneOffEvents
+processOneOffScheduledEvents
   :: (HasVersion, MonadIO m, Tracing.HasReporter m)
   => Env.Environment
   -> L.Logger L.Hasura
@@ -400,7 +403,7 @@ processOneOffEvents
   -> Q.PGPool
   -> TVar (Set.Set OneOffScheduledEventId)
   -> m ()
-processOneOffEvents env logger logEnv httpMgr pgpool lockedOneOffEvents = do
+processOneOffScheduledEvents env logger logEnv httpMgr pgpool lockedOneOffScheduledEvents = do
   oneOffScheduledEvents <-
     liftIO . runExceptT $
       Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) getOneOffScheduledEvents
@@ -409,7 +412,7 @@ processOneOffEvents env logger logEnv httpMgr pgpool lockedOneOffEvents = do
       -- save the locked one-off events that have been fetched from the
       -- database, the events stored here will be unlocked in case a
       -- graceful shutdown is initiated in midst of processing these events
-      saveLockedEvents (map ooseId oneOffScheduledEvents') lockedOneOffEvents
+      saveLockedEvents (map ooseId oneOffScheduledEvents') lockedOneOffScheduledEvents
       for_ oneOffScheduledEvents' $
              \(OneOffScheduledEvent id'
                                     scheduledTime
@@ -439,11 +442,11 @@ processOneOffEvents env logger logEnv httpMgr pgpool lockedOneOffEvents = do
                                                         retryConf
                                                         headerInfo'
                                                         comment
-                                                        (Just createdAt)
+                                                        createdAt
                 finally <- Tracing.runTraceT "scheduled event" . runExceptT $
-                  runReaderT (processScheduledEvent logEnv pgpool scheduledEvent OneOffEvent) $
+                  runReaderT (processScheduledEvent logEnv pgpool scheduledEvent OneOff) $
                                  (logger, httpMgr)
-                removeEventFromLockedEvents id' lockedOneOffEvents
+                removeEventFromLockedEvents id' lockedOneOffScheduledEvents
                 either logInternalError pure finally
 
               Left headerInfoErr -> logInternalError headerInfoErr
@@ -467,7 +470,7 @@ processScheduledTriggers
 processScheduledTriggers env logger logEnv httpMgr pgpool getSC LockedEventsCtx {..} =
   forever $ do
     processCronEvents logger logEnv httpMgr pgpool getSC leCronEvents
-    processOneOffEvents env logger logEnv httpMgr pgpool leOneOffEvents
+    processOneOffScheduledEvents env logger logEnv httpMgr pgpool leOneOffEvents
     liftIO $ sleep (minutes 1)
 
 processScheduledEvent ::
@@ -496,8 +499,11 @@ processScheduledEvent
           httpTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
           headers = addDefaultHeaders $ map encodeHeader sefHeaders
           extraLogCtx = ExtraLogContext (Just currentTime) sefId
+          -- include `created_at` in the payload, only in one-off events
+          createdAt = bool Nothing (Just sefCreatedAt) $ type' == OneOff
           webhookReqPayload =
-            ScheduledEventWebhookPayload sefId sefName sefScheduledTime sefPayload sefComment sefCreatedAt
+            ScheduledEventWebhookPayload
+              sefId sefName sefScheduledTime sefPayload sefComment createdAt
           webhookReqBodyJson = J.toJSON webhookReqPayload
           webhookReqBody = J.encode webhookReqBodyJson
           requestDetails = RequestDetails $ BL.length webhookReqBody
@@ -616,14 +622,14 @@ processDead pgpool se type' =
 setRetry :: ScheduledEventFull -> UTCTime -> ScheduledEventType ->  Q.TxE QErr ()
 setRetry se time type' =
   case type' of
-    CronScheduledEvent ->
+    Cron ->
       Q.unitQE defaultTxErrorHandler [Q.sql|
         UPDATE hdb_catalog.hdb_cron_events
         SET next_retry_at = $1,
         STATUS = 'scheduled'
         WHERE id = $2
         |] (time, sefId se) True
-    OneOffEvent ->
+    OneOff ->
       Q.unitQE defaultTxErrorHandler [Q.sql|
         UPDATE hdb_catalog.hdb_scheduled_events
         SET next_retry_at = $1,
@@ -653,7 +659,7 @@ mkInvocation ScheduledEventFull {sefId} status reqHeaders respBody respHeaders r
 insertInvocation :: (Invocation 'ScheduledType) -> ScheduledEventType ->  Q.TxE QErr ()
 insertInvocation invo type' = do
   case type' of
-    CronScheduledEvent -> do
+    Cron -> do
       Q.unitQE defaultTxErrorHandler
         [Q.sql|
          INSERT INTO hdb_catalog.hdb_cron_event_invocation_logs
@@ -668,7 +674,7 @@ insertInvocation invo type' = do
           SET tries = tries + 1
           WHERE id = $1
           |] (Identity $ iEventId invo) True
-    OneOffEvent -> do
+    OneOff -> do
       Q.unitQE defaultTxErrorHandler
         [Q.sql|
          INSERT INTO hdb_catalog.hdb_scheduled_event_invocation_logs
@@ -687,14 +693,14 @@ insertInvocation invo type' = do
 setScheduledEventStatus :: Text -> ScheduledEventStatus -> ScheduledEventType -> Q.TxE QErr ()
 setScheduledEventStatus scheduledEventId status type' =
   case type' of
-    CronScheduledEvent -> do
+    Cron -> do
       Q.unitQE defaultTxErrorHandler
        [Q.sql|
         UPDATE hdb_catalog.hdb_cron_events
         SET status = $2
         WHERE id = $1
        |] (scheduledEventId, status) True
-    OneOffEvent -> do
+    OneOff -> do
       Q.unitQE defaultTxErrorHandler
        [Q.sql|
         UPDATE hdb_catalog.hdb_scheduled_events
@@ -717,13 +723,13 @@ getPartialCronEvents = do
                           )
                     FOR UPDATE SKIP LOCKED
                     )
-      RETURNING id, trigger_name, scheduled_time, tries
+      RETURNING id, trigger_name, scheduled_time, tries, created_at
       |] () True
-  where uncurryEvent (i, n, st, tries) = CronEventPartial i n st tries
+  where uncurryEvent (i, n, st, tries, createdAt) = CronEventPartial i n st tries createdAt
 
 getOneOffScheduledEvents :: Q.TxE QErr [OneOffScheduledEvent]
 getOneOffScheduledEvents = do
-  map uncurryOneOffEvent <$> Q.listQE defaultTxErrorHandler [Q.sql|
+  map uncurryOneOffScheduledEvent <$> Q.listQE defaultTxErrorHandler [Q.sql|
       UPDATE hdb_catalog.hdb_scheduled_events
       SET status = 'locked'
       WHERE id IN ( SELECT t.id
@@ -739,16 +745,15 @@ getOneOffScheduledEvents = do
       RETURNING id, webhook_conf, scheduled_time, retry_conf, payload, header_conf, tries, comment, created_at
       |] () False
   where
-    uncurryOneOffEvent ( eventId
-                       , webhookConf
-                       , scheduledTime
-                       , retryConf
-                       , payload
-                       , headerConf
-                       , tries
-                       , comment
-                       , createdAt
-                       ) =
+    uncurryOneOffScheduledEvent ( eventId
+                                , webhookConf
+                                , scheduledTime
+                                , retryConf
+                                , payload
+                                , headerConf
+                                , tries
+                                , comment
+                                , createdAt) =
       OneOffScheduledEvent eventId
                            scheduledTime
                            tries
