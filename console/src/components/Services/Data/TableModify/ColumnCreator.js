@@ -126,6 +126,7 @@ const ColumnCreator = ({
   dataTypes: restTypes = [],
   validTypeCasts,
   columnDefaultFunctions,
+  postgresVersion,
 }) => {
   const {
     colName,
@@ -256,6 +257,7 @@ const ColumnCreator = ({
       <FrequentlyUsedColumnSelector
         onSelect={frequentlyUsedColumn.onSelect}
         action={'modify'}
+        postgresVersion={postgresVersion}
       />
     );
   };

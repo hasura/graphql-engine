@@ -2,9 +2,78 @@
 
 ## Next release
 
+### Server - Support for mapping session variables to default JWT claims
+
+Some auth providers do not let users add custom claims in JWT. In such cases, the server can take a JWT configuration option called `claims_map` to specify a mapping of Hasura session variables to values in existing claims via JSONPath or literal values.
+
+Example:-
+
+Consider the following JWT claim:
+
+```
+  {
+    "sub": "1234567890",
+    "name": "John Doe",
+    "admin": true,
+    "iat": 1516239022,
+    "user": {
+      "id": "ujdh739kd",
+      "appRoles": ["user", "editor"]
+    }
+  }
+```
+
+The corresponding JWT config can be:
+
+```
+  {
+    "type":"RS512",
+    "key": "<The public Key>",
+    "claims_map": {
+      "x-hasura-allowed-roles": {"path":"$.user.appRoles"},
+      "x-hasura-default-role": {"path":"$.user.appRoles[0]","default":"user"},
+      "x-hasura-user-id": {"path":"$.user.id"}
+    }
+  }
+```
+
+### Breaking changes
+
+This release contains the [PDV refactor (#4111)](https://github.com/hasura/graphql-engine/pull/4111), a significant rewrite of the internals of the server, which did include some breaking changes:
+
+- The semantics of explicit `null` values in `where` filters have changed according to the discussion in [issue 704](https://github.com/hasura/graphql-engine/issues/704#issuecomment-635571407): an explicit `null` value in a comparison input object will be treated as an error rather than resulting in the expression being evaluated to `True`. For instance: `delete_users(where: {id: {_eq: $userId}}) { name }` will yield an error if `$userId` is `null` instead of deleting all users.
+- The validation of required headers has been fixed (closing #14 and #3659):
+  - if a query selects table `bar` through table `foo` via a relationship, the required permissions headers will be the union of the required headers of table `foo` and table `bar` (we used to only check the headers of the root table);
+  - if an insert does not have an `on_conflict` clause, it will not require the update permissions headers.
+
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+
+- server: some mutations that cannot be performed will no longer be in the schema (for instance, `delete_by_pk` mutations won't be shown to users that do not have select permissions on all primary keys) (#4111)
+- server: miscellaneous description changes (#4111)
+- server: treat the absence of `backend_only` configuration and `backend_only: false` equally (closing #5059) (#4111)
+- server: allow remote relationships joining `type` column with `[type]` input argument as spec allows this coercion (fixes #5133)
+- console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
+- console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
+- cli: add missing global flags for seeds command (#5565)
+- docs: add docs page on networking with docker (close #4346) (#4811)
+
+
+## `v1.3.2`
+
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+
+- server: fixes column masking in select permission for computed fields regression (fix #5696)
+
+
+## `v1.3.1`, `v1.3.1-beta.1`
+
 ### Breaking change
 
-Headers from environment variables starting with `HASURA_GRAPHQL_` are not allowed  
+Headers from environment variables starting with `HASURA_GRAPHQL_` are not allowed
 in event triggers, actions & remote schemas.
 
 If you do have such headers configured, then you must update the header configuration before upgrading.
@@ -24,6 +93,7 @@ If you do have such headers configured, then you must update the header configur
 - console: handle nested fragments in allowed queries (close #5137) (#5252)
 - console: update sidebar icons for different action and trigger types (#5445)
 - console: make add column UX consistent with others (#5486)
+- console: add "identity" to frequently used columns (close #4279) (#5360)
 - cli: improve error messages thrown when metadata apply fails (#5513)
 - cli: fix issue with creating seed migrations while using tables with capital letters (closes #5532) (#5549)
 - build: introduce additional log kinds for cli-migrations image (#5529)
@@ -65,7 +135,6 @@ If you do have such headers configured, then you must update the header configur
 
 
 ## `v1.3.0-beta.3`
-
 
 ### Bug fixes and improvements
 

@@ -3,9 +3,9 @@
 module Hasura.RQL.Types.Error
        ( Code(..)
        , QErr(..)
+       , encodeJSONPath
        , encodeQErr
        , encodeGQLErr
-       , encodeJSONPath
        , noInternalQErrEnc
        , err400
        , err404
@@ -19,6 +19,8 @@ module Hasura.RQL.Types.Error
        , throw500
        , throw500WithDetail
        , throw401
+
+       , iResultToMaybe
 
          -- Aeson helpers
        , runAesonParser
@@ -335,6 +337,10 @@ liftIResult (IError path msg) =
 liftIResult (ISuccess a) =
   return a
 
+iResultToMaybe :: IResult a -> Maybe a
+iResultToMaybe (IError _ _) = Nothing
+iResultToMaybe (ISuccess a) = Just a
+
 formatMsg :: String -> String
 formatMsg str = case T.splitOn "the key " txt of
   [_, txt2] -> case T.splitOn " was not present" txt2 of
@@ -344,7 +350,7 @@ formatMsg str = case T.splitOn "the key " txt of
   where
     txt = T.pack str
 
-runAesonParser :: (QErrM m) => (Value -> Parser a) -> Value -> m a
+runAesonParser :: (QErrM m) => (v -> Parser a) -> v -> m a
 runAesonParser p =
   liftIResult . iparse p
 
