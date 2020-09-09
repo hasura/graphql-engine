@@ -98,7 +98,6 @@ export type MetadataQueryType =
   | 'track_function'
   | 'untrack_function'
   | 'rename_relationship'
-  | 'create_object_relationship'
   | 'drop_relationship'
   | 'create_array_relationship'
   | 'create_object_relationship'
@@ -606,3 +605,29 @@ export const getCreateArrayRelationshipQuery = (
     using: {},
     source,
   });
+
+export const getAddRelationshipQuery = (
+  isObjRel: boolean,
+  table: QualifiedTable,
+  name: string,
+  remoteTable: QualifiedTable,
+  columnMapping: Record<string, string>,
+  source: string
+) => {
+  const args = {
+    source,
+    name,
+    table,
+    using: {
+      manual_configuration: {
+        remote_table: remoteTable,
+        column_mapping: columnMapping,
+      },
+    },
+  };
+  if (isObjRel) {
+    return getMetadataQuery('create_object_relationship', args);
+  }
+
+  return getMetadataQuery('create_array_relationship', args);
+};

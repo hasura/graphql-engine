@@ -16,6 +16,7 @@ import {
   getCreateObjectRelationshipQuery,
   getCreateArrayRelationshipQuery,
   getDropRelationshipQuery,
+  getAddRelationshipQuery,
 } from '../../../../metadata/queryUtils';
 
 export const SET_MANUAL_REL_ADD = 'ModifyTable/SET_MANUAL_REL_ADD';
@@ -478,30 +479,21 @@ const addRelViewMigrate = (tableSchema, toggleEditor) => (
     }
     columnMapping[colMap.column] = colMap.refColumn;
   });
+  const tableInfo = { name: currentTableName, schema: currentTableSchema };
+  const remoteTableInfo = { name: rTable, schema: rSchema };
 
   const relChangesUp = [
-    {
-      type: isObjRel
-        ? 'create_object_relationship'
-        : 'create_array_relationship',
-      args: {
-        name: relName,
-        table: { name: currentTableName, schema: currentTableSchema },
-        using: {
-          manual_configuration: {
-            remote_table: { name: rTable, schema: rSchema },
-            column_mapping: columnMapping,
-          },
-        },
-      },
-    },
-  ];
-  const relChangesDown = [
-    getDropRelationshipQuery(
-      { name: currentTableName, schema: currentTableSchema },
+    getAddRelationshipQuery(
+      isObjRel,
+      tableInfo,
       relName,
+      remoteTableInfo,
+      columnMapping,
       currentDataSource
     ),
+  ];
+  const relChangesDown = [
+    getDropRelationshipQuery(tableInfo, relName, currentDataSource),
   ];
 
   // Apply migrations
