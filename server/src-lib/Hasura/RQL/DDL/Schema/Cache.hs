@@ -39,7 +39,6 @@ import           Hasura.Db
 import           Hasura.GraphQL.Execute.Types
 import           Hasura.GraphQL.Schema                    (buildGQLContext)
 import           Hasura.RQL.DDL.Action
-import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.CustomTypes
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.EventTrigger
@@ -55,7 +54,6 @@ import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DDL.Utils                     (clearHdbViews)
 import           Hasura.RQL.Types                         hiding (tmTable)
-import           Hasura.RQL.Types.Catalog
 import           Hasura.Server.Version                    (HasVersion)
 import           Hasura.SQL.Types
 
@@ -65,7 +63,6 @@ buildRebuildableSchemaCache
   -> m (RebuildableSchemaCache m)
 buildRebuildableSchemaCache env = do
   metadata <- fetchMetadata
-  -- catalogMetadata <- buildCatalogMetadata metadata
   result <- flip runReaderT CatalogSync $
     Inc.build (buildSchemaCacheRule env) (metadata, initialInvalidationKeys)
   pure $ RebuildableSchemaCache (Inc.result result) initialInvalidationKeys (Inc.rebuildRule result)
@@ -119,7 +116,8 @@ buildSchemaCacheRule
   -- what we want!
   :: ( HasVersion, ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
      , MonadIO m, MonadUnique m, MonadTx m
-     , MonadReader BuildReason m, HasHttpManager m, HasSQLGenCtx m )
+     , MonadReader BuildReason m, HasHttpManager m, HasSQLGenCtx m
+     )
   => Env.Environment
   -> (Metadata, InvalidationKeys) `arr` SchemaCache
 buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
@@ -180,8 +178,8 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
   where
     buildSource
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
-         , ArrowWriter (Seq CollectedInfo) arr, MonadIO m, MonadUnique m, MonadTx m, MonadReader BuildReason m
-         , HasHttpManager m, HasSQLGenCtx m )
+         , ArrowWriter (Seq CollectedInfo) arr, MonadTx m, MonadReader BuildReason m
+         , HasSQLGenCtx m )
       => ( SourceMetadata
          , RemoteSchemaMap
          , Inc.Dependency InvalidationKeys
@@ -193,10 +191,11 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
           -- HashMap k a -> HashMap k b -> HashMap k (a, b)
           alignTableMap lMap rMap =
             let alignFn = \case
-                  This a -> Nothing
-                  That b -> Nothing
+                  This _    -> Nothing
+                  That _    -> Nothing
                   These a b -> Just (a, b)
             in M.catMaybes $ alignWith alignFn lMap rMap
+
       -- tables
       tableRawInfos <- buildTableCache -< (source, tableInputs, Inc.selectD #_ikMetadata invalidationKeys)
 
@@ -223,14 +222,14 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       -- sql functions
       functionCache <- (mapFromL _fmFunction (M.elems functions) >- returnA)
         >-> (| Inc.keyed (\_ (FunctionMetadata qf config) -> do
-                 let funcDefs = undefined
-                     systemDefined = SystemDefined False
+                 let systemDefined = SystemDefined False
                      definition = toJSON $ TrackFunction qf
                      metadataObject = MetadataObject (MOSourceObjId source $ SMOFunction qf) definition
                      schemaObject = SOSourceObj source $ SOIFunction qf
                      addFunctionContext e = "in function " <> qf <<> ": " <> e
                  (| withRecordInconsistency (
                     (| modifyErrA (do
+                         funcDefs <- bindErrorA -< (fromMaybe [] . M.lookup qf) <$> fetchFunctionMetadataFromDb [qf]
                          rawfi <- bindErrorA -< handleMultipleFunctions qf funcDefs
                          (fi, dep) <- bindErrorA -< mkFunctionInfo source qf systemDefined config rawfi
                          recordDependencies -< (metadataObject, schemaObject, [dep])
@@ -250,65 +249,15 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       let Metadata _ sources remoteSchemas collections allowlists
             customTypes actions cronTriggers = metadata
 
-      -- tables
-      -- tableRawInfos <- buildTableCache -< (tables, Inc.selectD #_ikMetadata invalidationKeys)
-
       -- remote schemas
       let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
       remoteSchemaMap <- buildRemoteSchemas -< (remoteSchemaInvalidationKeys, (M.elems remoteSchemas))
 
+      -- sources
       sourcesOutput <-
         (| Inc.keyed (\_ sourceMetadata ->
              buildSource -< (sourceMetadata, M.map fst remoteSchemaMap, invalidationKeys))
          |) sources
-
-      -- relationships and computed fields
-      -- let relationshipsByTable = M.groupOn _crTable relationships
-      --     computedFieldsByTable = M.groupOn (_afcTable . _cccComputedField) computedFields
-      --     remoteRelationshipsByTable = M.groupOn rtrTable remoteRelationships
-      -- tableCoreInfos <- (tableRawInfos >- returnA)
-      --   >-> (\info -> (info, relationshipsByTable) >- alignExtraTableInfo (mkRelationshipMetadataObject source))
-      --   >-> (\info -> (info, computedFieldsByTable) >- alignExtraTableInfo mkComputedFieldMetadataObject)
-      --   >-> (\info -> (info, remoteRelationshipsByTable) >- alignExtraTableInfo mkRemoteRelationshipMetadataObject)
-      --   >-> (| Inc.keyed (\_ (((tableRawInfo, tableRelationships), tableComputedFields), tableRemoteRelationships) -> do
-      --            let columns = _tciFieldInfoMap tableRawInfo
-      --            allFields <- addNonColumnFields source -<
-      --              (tableRawInfos, columns, M.map fst remoteSchemaMap, tableRelationships, tableComputedFields, tableRemoteRelationships)
-      --            returnA -< (tableRawInfo { _tciFieldInfoMap = allFields })) |)
-
-      -- permissions and event triggers
-      -- tableCoreInfosDep <- Inc.newDependency -< tableCoreInfos
-      -- tableCache <- (tableCoreInfos >- returnA)
-      --   >-> (\info -> (info, M.groupOn _cpTable permissions) >- alignExtraTableInfo (mkPermissionMetadataObject source))
-      --   >-> (\info -> (info, M.groupOn _cetTable eventTriggers) >- alignExtraTableInfo mkEventTriggerMetadataObject)
-      --   >-> (| Inc.keyed (\_ ((tableCoreInfo, tablePermissions), tableEventTriggers) -> do
-      --            let tableName = _tciName tableCoreInfo
-      --                tableFields = _tciFieldInfoMap tableCoreInfo
-      --            permissionInfos <- buildTablePermissions source -<
-      --              (tableCoreInfosDep, tableName, tableFields, HS.fromList tablePermissions)
-      --            eventTriggerInfos <- buildTableEventTriggers -< (tableCoreInfo, tableEventTriggers)
-      --            returnA -< TableInfo
-      --              { _tiCoreInfo = tableCoreInfo
-      --              , _tiRolePermInfoMap = permissionInfos
-      --              , _tiEventTriggerInfoMap = eventTriggerInfos
-      --              }) |)
-
-      -- sql functions
-      -- functionCache <- (mapFromL _cfFunction functions >- returnA)
-      --   >-> (| Inc.keyed (\_ (CatalogFunction qf systemDefined config funcDefs) -> do
-      --            let definition = toJSON $ TrackFunction qf
-      --                metadataObject = MetadataObject (MOFunction qf) definition
-      --                schemaObject = SOFunction qf
-      --                addFunctionContext e = "in function " <> qf <<> ": " <> e
-      --            (| withRecordInconsistency (
-      --               (| modifyErrA (do
-      --                    rawfi <- bindErrorA -< handleMultipleFunctions qf funcDefs
-      --                    (fi, dep) <- bindErrorA -< mkFunctionInfo qf systemDefined config rawfi
-      --                    recordDependencies -< (metadataObject, schemaObject, [dep])
-      --                    returnA -< fi)
-      --               |) addFunctionContext)
-      --             |) metadataObject) |)
-      --   >-> (\infos -> M.catMaybes infos >- returnA)
 
       -- allow list
       let allowList = allowlists

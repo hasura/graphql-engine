@@ -19,7 +19,6 @@ import qualified Data.HashMap.Strict                as HM
 import qualified Data.HashSet                       as HS
 import qualified Database.PG.Query                  as Q
 
-import           Control.Lens                       (ix)
 import           Data.Aeson
 import           Data.List                          (unzip6)
 

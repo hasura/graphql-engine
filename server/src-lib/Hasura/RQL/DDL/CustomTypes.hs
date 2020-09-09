@@ -8,14 +8,13 @@ module Hasura.RQL.DDL.CustomTypes
   , lookupPGScalar
   ) where
 
-import           Control.Lens                      ((.~))
+import           Control.Lens                  ((.~))
 import           Control.Monad.Validate
 
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
 import qualified Data.List.Extended            as L
 import qualified Data.Text                     as T
-import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.EncJSON
