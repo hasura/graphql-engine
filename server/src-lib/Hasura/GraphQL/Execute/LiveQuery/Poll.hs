@@ -70,7 +70,7 @@ import           Hasura.Db
 import           Hasura.GraphQL.Execute.LiveQuery.Options
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Transport.HTTP.Protocol
-import           Hasura.RQL.Types.Common                  (toInt)
+import           Hasura.RQL.Types.Common                  (getNonNegativeInt)
 import           Hasura.RQL.Types.Error
 import           Hasura.Session
 
@@ -418,7 +418,7 @@ pollQuery pollerId lqOpts pgExecCtx pgQuery cohortMap postPollHook = do
       cohorts <- STM.atomically $ TMap.toList cohortMap
       cohortSnapshots <- mapM (STM.atomically . getCohortSnapshot) cohorts
       -- cohorts are broken down into batches specified by the batch size
-      pure $ chunksOf (toInt (unBatchSize batchSize)) cohortSnapshots
+      pure $ chunksOf (getNonNegativeInt (unBatchSize batchSize)) cohortSnapshots
 
     -- concurrently process each batch
     batchesDetails <- A.forConcurrently cohortBatches $ \cohorts -> do

@@ -42,9 +42,6 @@ module Hasura.RQL.Types.Common
        , ResolvedWebhook(..)
        , resolveWebhook
        , NonNegativeInt(..)
-       , toInt
-       , convertToDiffTime
-       , convertFromDiffTime
        ) where
 
 import           Hasura.EncJSON
@@ -281,12 +278,12 @@ isSystemDefined = unSystemDefined
 successMsg :: EncJSON
 successMsg = "{\"message\":\"success\"}"
 
-newtype NonNegativeInt = NonNegativeInt { unNonNegativeInt :: Int }
+newtype NonNegativeInt = NonNegativeInt { getNonNegativeInt :: Int }
   deriving (Show, Eq, ToJSON, Generic, NFData, Cacheable, Num, Read)
 
 maybeInt :: MonadFail m => Maybe Int -> m Int
 maybeInt x = case x of
-  Just v -> return v
+  Just v  -> return v
   Nothing -> fail "integer passed is out of bounds"
 
 instance FromJSON NonNegativeInt where
@@ -295,23 +292,14 @@ instance FromJSON NonNegativeInt where
       True  -> NonNegativeInt <$> maybeInt (toBoundedInteger t)
       False -> fail "negative value not allowed"
 
-toInt :: NonNegativeInt -> Int
-toInt x = unNonNegativeInt x
-
 newtype NonNegativeDiffTime = NonNegativeDiffTime { unNonNegativeDiffTime :: DiffTime }
   deriving (Show, Eq,ToJSON,Generic, NFData, Cacheable, Num)
 
 instance FromJSON NonNegativeDiffTime where
   parseJSON = withScientific "NonNegativeDiffTime" $ \t -> do
-    case (t > 0) of
+    case (t >= 0) of
       True  -> return $ NonNegativeDiffTime . realToFrac $ t
       False -> fail "negative value not allowed"
-
-convertToDiffTime :: NonNegativeDiffTime -> DiffTime
-convertToDiffTime x = unNonNegativeDiffTime x
-
-convertFromDiffTime :: DiffTime -> NonNegativeDiffTime
-convertFromDiffTime x = NonNegativeDiffTime x
 
 newtype ResolvedWebhook
   = ResolvedWebhook { unResolvedWebhook :: Text}

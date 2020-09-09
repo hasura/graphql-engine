@@ -19,7 +19,7 @@ import qualified Hasura.GraphQL.Execute.Plan      as E
 import qualified Hasura.Logging                   as L
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Common          (convertFromDiffTime)
+import           Hasura.RQL.Types.Common          (NonNegativeDiffTime (..))
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Session
@@ -261,7 +261,7 @@ instance FromEnv LQ.BatchSize where
   fromEnv = fmap LQ.BatchSize . readEither
 
 instance FromEnv LQ.RefetchInterval where
-  fromEnv = fmap (LQ.RefetchInterval . convertFromDiffTime . milliseconds . fromInteger) . readEither
+  fromEnv = fmap (LQ.RefetchInterval . NonNegativeDiffTime . milliseconds . fromInteger) . readEither
 
 instance FromEnv Milliseconds where
   fromEnv = fmap fromInteger . readEither
