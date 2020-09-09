@@ -69,7 +69,7 @@ resolveRemoteRelationship remoteRelationship
 
 runUpdateRemoteRelationship :: (MonadTx m, CacheRWM m) => RemoteRelationship -> m EncJSON
 runUpdateRemoteRelationship RemoteRelationship{..} = do
-  fieldInfoMap <- askFieldInfoMap rtrTable
+  fieldInfoMap <- askFieldInfoMap rtrSource rtrTable
   void $ askRemoteRel fieldInfoMap rtrName
   -- liftTx $ updateRemoteRelInCatalog remoteRelationship
   let metadataObj = MOTableObj rtrTable $ MTORemoteRelationship rtrName
@@ -111,7 +111,7 @@ updateRemoteRelInCatalog remoteRelationship =
 runDeleteRemoteRelationship
   :: (MonadTx m, CacheRWM m) => DeleteRemoteRelationship -> m EncJSON
 runDeleteRemoteRelationship (DeleteRemoteRelationship source table relName)= do
-  fieldInfoMap <- askFieldInfoMap table
+  fieldInfoMap <- askFieldInfoMap source table
   void $ askRemoteRel fieldInfoMap relName
   -- liftTx $ delRemoteRelFromCatalog table relName
   let metadataObj = MOTableObj table $ MTORemoteRelationship relName

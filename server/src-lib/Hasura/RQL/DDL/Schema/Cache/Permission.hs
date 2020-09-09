@@ -100,7 +100,7 @@ buildPermission = Inc.cache proc (tableCache, source, tableName, tableFields, pe
               perm <- bindErrorA -< decodeValue pDef
               let permDef = PermDef roleName perm Nothing
               (info, dependencies) <- liftEitherA <<< Inc.bindDepend -< runExceptT $
-                runTableCoreCacheRT (buildPermInfo tableName tableFields permDef) tableCache
+                runTableCoreCacheRT (buildPermInfo tableName tableFields permDef) (source, tableCache)
               tellA -< Seq.fromList dependencies
               returnA -< info)
          |) (source, permission)) |)

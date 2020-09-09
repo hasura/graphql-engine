@@ -284,7 +284,7 @@ annBoolExp rhsParser fim boolExp =
     BoolNot e    -> BoolNot <$> annBoolExp rhsParser fim e
     BoolExists (GExists refqt whereExp) ->
       withPathK "_exists" $ do
-        refFields <- withPathK "_table" $ askFieldInfoMap refqt
+        refFields <- withPathK "_table" $ askFieldInfoMapSource refqt
         annWhereExp <- withPathK "_where" $
                        annBoolExp rhsParser refFields whereExp
         return $ BoolExists $ GExists refqt annWhereExp
@@ -307,7 +307,7 @@ annColExp rhsParser colInfoMap (ColExp fieldName colVal) = do
       AVCol pgi <$> parseOperationsExpression rhsParser colInfoMap pgi colVal
     FIRelationship relInfo -> do
       relBoolExp      <- decodeValue colVal
-      relFieldInfoMap <- askFieldInfoMap $ riRTable relInfo
+      relFieldInfoMap <- askFieldInfoMapSource $ riRTable relInfo
       annRelBoolExp   <- annBoolExp rhsParser relFieldInfoMap $
                          unBoolExp relBoolExp
       return $ AVRel relInfo annRelBoolExp

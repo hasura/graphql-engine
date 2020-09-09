@@ -190,7 +190,7 @@ markForDelivery eid =
 
 subTableP1 :: (UserInfoM m, QErrM m, CacheRM m) => CreateEventTriggerQuery -> m (QualifiedTable, Bool, EventTriggerConf)
 subTableP1 (CreateEventTriggerQuery sourceName name qt insert update delete enableManual retryConf webhook webhookFromEnv mheaders replace) = do
-  ti <- askTableCoreInfo qt
+  ti <- askTableCoreInfo sourceName qt
   -- can only replace for same table
   when replace $ do
     ti' <- _tiCoreInfo <$> askTabInfoFromTrigger sourceName name

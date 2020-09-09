@@ -17,10 +17,14 @@ module Hasura.RQL.Types
   , QCtx(..)
   , HasQCtx(..)
   , mkAdminQCtx
+  , askTableCache
   , askTabInfo
+  , askTabInfoSource
   , getTableInfo
   , askTableCoreInfo
+  , askTableCoreInfoSource
   , askFieldInfoMap
+  , askFieldInfoMapSource
   , askPGType
   , assertPGCol
   , askRelType
@@ -88,16 +92,6 @@ instance HasQCtx QCtx where
 mkAdminQCtx :: SQLGenCtx -> SchemaCache ->  QCtx
 mkAdminQCtx soc sc = QCtx adminUserInfo sc soc
 
-class (Monad m) => UserInfoM m where
-  askUserInfo :: m UserInfo
-
-instance (UserInfoM m) => UserInfoM (ReaderT r m) where
-  askUserInfo = lift askUserInfo
-instance (UserInfoM m) => UserInfoM (StateT s m) where
-  askUserInfo = lift askUserInfo
-instance (UserInfoM m) => UserInfoM (TraceT m) where
-  askUserInfo = lift askUserInfo
-
 askTabInfo
   :: (QErrM m, CacheRM m)
   => SourceName -> QualifiedTable -> m TableInfo
@@ -107,7 +101,14 @@ askTabInfo sourceName tabName = do
     sourceCache <- M.lookup sourceName $ scPostgres rawSchemaCache
     M.lookup tabName $ _pcTables sourceCache
   where
-    errMsg = "table " <> tabName <<> " does not exist"
+    errMsg = "table " <> tabName <<> " does not exist " <> "in source: "
+              <> unSourceName sourceName
+
+askTabInfoSource
+  :: (QErrM m, TableInfoRM m)
+  => QualifiedTable -> m TableInfo
+askTabInfoSource tableName = do
+  lookupTableInfo tableName >>= (`onNothing` throwTableDoesNotExist tableName)
 
 askTabInfoFromTrigger
   :: (QErrM m, CacheRM m)
@@ -169,17 +170,19 @@ instance (HasSQLGenCtx m) => HasSQLGenCtx (TableCoreCacheRT m) where
   askSQLGenCtx = lift askSQLGenCtx
 instance (HasSQLGenCtx m) => HasSQLGenCtx (TraceT m) where
   askSQLGenCtx = lift askSQLGenCtx
+instance (HasSQLGenCtx m) => HasSQLGenCtx (TableCacheRT m) where
+  askSQLGenCtx = lift askSQLGenCtx
 
-newtype HasSQLGenCtxT m a
-  = HasSQLGenCtxT { unHasSQLGenCtxT :: ReaderT SQLGenCtx m a }
-  deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO, MonadUnique, MonadError e, MonadTx
-           , HasHttpManager, HasSystemDefined, SourceLocalM, TableCoreInfoRM, CacheRM, CacheRWM, UserInfoM, MonadMetadata)
+-- newtype HasSQLGenCtxT m a
+--   = HasSQLGenCtxT { unHasSQLGenCtxT :: ReaderT SQLGenCtx m a }
+--   deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO, MonadUnique, MonadError e, MonadTx
+--            , HasHttpManager, HasSystemDefined, SourceM, CacheRM, CacheRWM, UserInfoM, MonadMetadata)
 
-runHasSQLGenCtxT :: SQLGenCtx -> HasSQLGenCtxT m a -> m a
-runHasSQLGenCtxT sqlGenCtx = flip runReaderT sqlGenCtx . unHasSQLGenCtxT
+-- runHasSQLGenCtxT :: SQLGenCtx -> HasSQLGenCtxT m a -> m a
+-- runHasSQLGenCtxT sqlGenCtx = flip runReaderT sqlGenCtx . unHasSQLGenCtxT
 
-instance (Monad m) => HasSQLGenCtx (HasSQLGenCtxT m) where
-  askSQLGenCtx = HasSQLGenCtxT ask
+-- instance (Monad m) => HasSQLGenCtx (HasSQLGenCtxT m) where
+--   askSQLGenCtx = HasSQLGenCtxT ask
 
 class (Monad m) => HasSystemDefined m where
   askSystemDefined :: m SystemDefined
@@ -196,9 +199,9 @@ instance (HasSystemDefined m) => HasSystemDefined (TraceT m) where
 newtype HasSystemDefinedT m a
   = HasSystemDefinedT { unHasSystemDefinedT :: ReaderT SystemDefined m a }
   deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO, MonadUnique, MonadError e, MonadTx
-           , HasHttpManager, HasSQLGenCtx, SourceLocalM, TableCoreInfoRM, CacheRM, CacheRWM, UserInfoM, MonadMetadata)
+           , HasHttpManager, HasSQLGenCtx, SourceM, TableCoreInfoRM, TableInfoRM, CacheRM, CacheRWM, UserInfoM, MonadMetadata)
 
--- instance (SourceLocalM m) => TableCoreInfoRM (HasSystemDefinedT m) where
+-- instance (SourceM m) => TableCoreInfoRM (HasSystemDefinedT m) where
 --   lookupTableCoreInfo = lift . lookupTableCoreInfo
 
 runHasSystemDefinedT :: SystemDefined -> HasSystemDefinedT m a -> m a
@@ -217,12 +220,34 @@ getTableInfo :: (QErrM m) => QualifiedTable -> HashMap QualifiedTable a -> m a
 getTableInfo tableName infoMap =
   M.lookup tableName infoMap `onNothing` throwTableDoesNotExist tableName
 
-askTableCoreInfo :: (QErrM m, TableCoreInfoRM m) => QualifiedTable -> m TableCoreInfo
-askTableCoreInfo tableName =
+askTableCoreInfoSource
+  :: (QErrM m, TableCoreInfoRM m) => QualifiedTable -> m TableCoreInfo
+askTableCoreInfoSource tableName =
   lookupTableCoreInfo tableName >>= (`onNothing` throwTableDoesNotExist tableName)
 
-askFieldInfoMap :: (QErrM m, TableCoreInfoRM m) => QualifiedTable -> m (FieldInfoMap FieldInfo)
-askFieldInfoMap = fmap _tciFieldInfoMap . askTableCoreInfo
+askTableCache
+  :: (QErrM m, CacheRM m) => SourceName -> m TableCache
+askTableCache sourceName = do
+  schemaCache <- askSchemaCache
+  case M.lookup sourceName (scPostgres schemaCache) of
+    Just tableCache -> pure $ _pcTables tableCache
+    Nothing -> throw400 NotExists $ "source " <> sourceName <<> " does not exist"
+
+askTableCoreInfo
+  :: (QErrM m, CacheRM m) => SourceName -> QualifiedTable -> m TableCoreInfo
+askTableCoreInfo sourceName tableName =
+  _tiCoreInfo <$> askTabInfo sourceName tableName
+
+askFieldInfoMap
+  :: (QErrM m, CacheRM m) => SourceName -> QualifiedTable -> m (FieldInfoMap FieldInfo)
+askFieldInfoMap sourceName tableName =
+  _tciFieldInfoMap . _tiCoreInfo <$> askTabInfo sourceName tableName
+
+askFieldInfoMapSource
+  :: (QErrM m, TableCoreInfoRM m)
+  => QualifiedTable -> m (FieldInfoMap FieldInfo)
+askFieldInfoMapSource tableName =
+  _tciFieldInfoMap <$> askTableCoreInfoSource tableName
 
 askPGType
   :: (MonadError QErr m)

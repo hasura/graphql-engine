@@ -23,7 +23,7 @@ newtype DMLP1T m a
   = DMLP1T { unDMLP1T :: StateT (DS.Seq Q.PrepArg) m a }
   deriving ( Functor, Applicative, Monad, MonadTrans
            , MonadState (DS.Seq Q.PrepArg), MonadError e
-           , SourceLocalM, TableCoreInfoRM, CacheRM, UserInfoM, HasSQLGenCtx
+           , SourceM, TableCoreInfoRM, TableInfoRM, UserInfoM, HasSQLGenCtx
            )
 
 runDMLP1T :: DMLP1T m a -> m (a, DS.Seq Q.PrepArg)
@@ -145,18 +145,18 @@ binRHSBuilder colType val = do
   return $ toPrepParam (DS.length preparedArgs + 1) (pstType scalarValue)
 
 fetchRelTabInfo
-  :: (QErrM m, CacheRM m)
+  :: (QErrM m, TableInfoRM m)
   => QualifiedTable
   -> m TableInfo
 fetchRelTabInfo refTabName =
   -- TODO: plumb in actual source
   modifyErrAndSet500 ("foreign " <> ) $
-    askTabInfo defaultSource refTabName
+    askTabInfoSource refTabName
 
 type SessVarBldr m = PGType PGScalarType -> SessionVariable -> m S.SQLExp
 
 fetchRelDet
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, TableInfoRM m)
   => RelName -> QualifiedTable
   -> m (FieldInfoMap FieldInfo, SelPermInfo)
 fetchRelDet relName refTabName = do
@@ -178,7 +178,7 @@ fetchRelDet relName refTabName = do
       ]
 
 checkOnColExp
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, TableInfoRM m)
   => SelPermInfo
   -> SessVarBldr m
   -> AnnBoolExpFldSQL
@@ -230,7 +230,7 @@ currentSession :: S.SQLExp
 currentSession = S.SEUnsafe "current_setting('hasura.user')::json"
 
 checkSelPerm
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, TableInfoRM m)
   => SelPermInfo
   -> SessVarBldr m
   -> AnnBoolExpSQL
@@ -239,15 +239,14 @@ checkSelPerm spi sessVarBldr =
   traverse (checkOnColExp spi sessVarBldr)
 
 convBoolExp
-  :: (UserInfoM m, QErrM m, CacheRM m)
-  => SourceName
-  -> FieldInfoMap FieldInfo
+  :: (UserInfoM m, QErrM m, TableInfoRM m)
+  => FieldInfoMap FieldInfo
   -> SelPermInfo
   -> BoolExp
   -> SessVarBldr m
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> m AnnBoolExpSQL
-convBoolExp sourceName cim spi be sessVarBldr prepValBldr = do
+convBoolExp cim spi be sessVarBldr prepValBldr = do
   abe <- annBoolExp rhsParser cim $ unBoolExp be
   checkSelPerm spi sessVarBldr abe
   where

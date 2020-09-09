@@ -1,6 +1,5 @@
 module Hasura.RQL.DML.Count
   ( CountQueryP1(..)
-  , validateCountQWith
   , validateCountQ
   , runCount
   , countQToTx
@@ -61,14 +60,13 @@ mkSQLCount (CountQueryP1 tn (permFltr, mWc) mDistCols) =
 -- SELECT count(*) FROM (SELECT DISTINCT c1, .. cn FROM .. WHERE ..) r;
 -- SELECT count(*) FROM (SELECT * FROM .. WHERE ..) r;
 validateCountQWith
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, TableInfoRM m)
   => SessVarBldr m
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> CountQuery
   -> m CountQueryP1
-validateCountQWith sessVarBldr prepValBldr (CountQuery sourceName qt mDistCols mWhere) = do
-  tableInfo <- askTabInfo sourceName qt
-
+validateCountQWith sessVarBldr prepValBldr (CountQuery qt mDistCols mWhere) = do
+  tableInfo <- askTabInfoSource qt
   -- Check if select is allowed
   selPerm <- modifyErr (<> selNecessaryMsg) $
              askSelPermInfo tableInfo
@@ -83,7 +81,7 @@ validateCountQWith sessVarBldr prepValBldr (CountQuery sourceName qt mDistCols m
   -- convert the where clause
   annSQLBoolExp <- forM mWhere $ \be ->
     withPathK "where" $
-    convBoolExp sourceName colInfoMap selPerm be sessVarBldr prepValBldr
+    convBoolExp colInfoMap selPerm be sessVarBldr prepValBldr
 
   resolvedSelFltr <- convAnnBoolExpPartialSQL sessVarBldr $
                      spiFilter selPerm
@@ -101,9 +99,11 @@ validateCountQWith sessVarBldr prepValBldr (CountQuery sourceName qt mDistCols m
 
 validateCountQ
   :: (QErrM m, UserInfoM m, CacheRM m)
-  => CountQuery -> m (CountQueryP1, DS.Seq Q.PrepArg)
-validateCountQ =
-  runDMLP1T . validateCountQWith sessVarFromCurrentSetting binRHSBuilder
+  => SourceName -> CountQuery -> m (CountQueryP1, DS.Seq Q.PrepArg)
+validateCountQ source query = do
+  tableCache <- askTableCache source
+  flip runTableCacheRT (source, tableCache) $ runDMLP1T $
+    validateCountQWith sessVarFromCurrentSetting binRHSBuilder query
 
 countQToTx
   :: (QErrM m, MonadTx m)
@@ -119,6 +119,6 @@ countQToTx (u, p) = do
 
 runCount
   :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m)
-  => CountQuery -> m EncJSON
-runCount q =
-  validateCountQ q >>= countQToTx
+  => SourceName -> CountQuery -> m EncJSON
+runCount source q =
+  validateCountQ source q >>= countQToTx

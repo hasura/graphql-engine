@@ -14,7 +14,7 @@ renameRelP2
   :: (QErrM m, CacheRM m)
   => SourceName -> QualifiedTable -> RelName -> RelInfo -> m MetadataModifier
 renameRelP2 source qt newRN relInfo = withNewInconsistentObjsCheck $ do
-  tabInfo <- askTableCoreInfo qt
+  tabInfo <- askTableCoreInfo source qt
   -- check for conflicts in fieldInfoMap
   case Map.lookup (fromRel newRN) $ _tciFieldInfoMap tabInfo of
     Nothing -> return ()
@@ -31,7 +31,7 @@ runRenameRel
   :: (MonadTx m, CacheRWM m)
   => RenameRel -> m EncJSON
 runRenameRel (RenameRel source qt rn newRN) = do
-  tabInfo <- askTableCoreInfo qt
+  tabInfo <- askTableCoreInfo source qt
   ri <- askRelType (_tciFieldInfoMap tabInfo) rn ""
   withNewInconsistentObjsCheck $
     renameRelP2 source qt newRN ri >>= buildSchemaCache

@@ -394,11 +394,11 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQGetInconsistentMetadata q  -> runGetInconsistentMetadata q
       RQDropInconsistentMetadata q -> runDropInconsistentMetadata q
 
-      RQInsert q                   -> runInsert env q
-      RQSelect q                   -> runSelect q
-      RQUpdate q                   -> runUpdate env q
-      RQDelete q                   -> runDelete env q
-      RQCount  q                   -> runCount q
+      RQInsert q                   -> runInsert env defaultSource q
+      RQSelect q                   -> runSelect defaultSource q
+      RQUpdate q                   -> runUpdate env defaultSource q
+      RQDelete q                   -> runDelete env defaultSource q
+      RQCount  q                   -> runCount defaultSource q
 
       RQAddRemoteSchema    q       -> runAddRemoteSchema env q
       RQRemoveRemoteSchema q       -> runRemoveRemoteSchema q

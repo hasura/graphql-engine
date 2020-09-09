@@ -162,7 +162,7 @@ updateRelDefs
      )
   => SourceName -> QualifiedTable -> RelName ->  RenameTable -> m ()
 updateRelDefs source qt rn renameTable = do
-  fim <- askFieldInfoMap qt
+  fim <- askFieldInfoMap source qt
   ri <- askRelType fim rn ""
   tell $ MetadataModifier $ tableMetadataSetter source qt %~ case riType ri of
     ObjRel -> tmObjectRelationships.ix rn %~ updateObjRelDef renameTable

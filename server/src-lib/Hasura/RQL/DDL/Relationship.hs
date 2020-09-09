@@ -79,7 +79,7 @@ runDropRel (DropRel source qt rn cascade) = do
   pure successMsg
   where
     collectDependencies = do
-      tabInfo <- askTableCoreInfo qt
+      tabInfo <- askTableCoreInfo source qt
       relType <- riType <$> askRelType (_tciFieldInfoMap tabInfo) rn ""
       sc      <- askSchemaCache
       let depObjs = getDependentObjs sc (SOTableObj qt $ TORel rn relType)
@@ -169,13 +169,6 @@ purgeRelDep source = \case
     throw500 $ "unexpected dependency of relationship : "
     <> reportSchemaObj d
 
-validateRelP1
-  :: (UserInfoM m, QErrM m, TableCoreInfoRM m)
-  => QualifiedTable -> RelName -> m RelInfo
-validateRelP1 qt rn = do
-  tabInfo <- askTableCoreInfo qt
-  askRelType (_tciFieldInfoMap tabInfo) rn ""
-
 setRelCommentP2
   :: (QErrM m, MonadTx m)
   => SetRelComment -> m EncJSON
@@ -184,10 +177,11 @@ setRelCommentP2 arc = do
   return successMsg
 
 runSetRelComment
-  :: (QErrM m, CacheRM m, MonadTx m, UserInfoM m)
+  :: (QErrM m, CacheRM m, MonadTx m)
   => SetRelComment -> m EncJSON
 runSetRelComment defn = do
-  void $ validateRelP1 qt rn
+  tabInfo <- askTableCoreInfo source qt
+  void $ askRelType (_tciFieldInfoMap tabInfo) rn ""
   setRelCommentP2 defn
   where
     SetRelComment source qt rn _ = defn

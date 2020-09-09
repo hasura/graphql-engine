@@ -158,18 +158,18 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
 
 
 convInsertQuery
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, TableInfoRM m)
   => (Value -> m [InsObj])
   -> SessVarBldr m
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> InsertQuery
   -> m InsertQueryP1
-convInsertQuery objsParser sessVarBldr prepFn (InsertQuery source tableName val oC mRetCols) = do
+convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRetCols) = do
 
   insObjs <- objsParser val
 
   -- Get the current table information
-  tableInfo <- askTabInfo source tableName
+  tableInfo <- askTabInfoSource tableName
   let coreInfo = _tiCoreInfo tableInfo
 
   -- If table is view then check if it is insertable
@@ -233,13 +233,13 @@ decodeInsObjs v = do
 
 convInsQ
   :: (QErrM m, UserInfoM m, CacheRM m)
-  => InsertQuery
+  => SourceName -> InsertQuery
   -> m (InsertQueryP1, DS.Seq Q.PrepArg)
-convInsQ =
-  runDMLP1T .
-  convInsertQuery (withPathK "objects" . decodeInsObjs)
-  sessVarFromCurrentSetting
-  binRHSBuilder
+convInsQ source query = do
+  tableCache <- askTableCache source
+  flip runTableCacheRT (source, tableCache) $ runDMLP1T $
+    convInsertQuery (withPathK "objects" . decodeInsObjs)
+    sessVarFromCurrentSetting binRHSBuilder query
 
 execInsertQuery
   :: ( HasVersion
@@ -338,8 +338,8 @@ runInsert
      , CacheRM m, MonadTx m, HasSQLGenCtx m, MonadIO m
      , Tracing.MonadTrace m
      )
-  => Env.Environment -> InsertQuery -> m EncJSON
-runInsert env q = do
-  res <- convInsQ q
+  => Env.Environment -> SourceName -> InsertQuery -> m EncJSON
+runInsert env source q = do
+  res <- convInsQ source q
   strfyNum <- stringifyNum <$> askSQLGenCtx
   execInsertQuery env strfyNum Nothing res

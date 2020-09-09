@@ -190,7 +190,7 @@ class ToAesonPairs a where
 
 newtype SourceName
   = SourceName { unSourceName :: Text }
-  deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, ToJSONKey
+  deriving ( Show, Eq, Ord, DQuote, FromJSON, ToJSON, Hashable, ToJSONKey
            , FromJSONKey, Lift, Data, Generic, Arbitrary, NFData, Cacheable, IsString )
 
 defaultSource :: SourceName

@@ -33,7 +33,6 @@ import qualified Control.Monad.Validate             as MV
 import qualified Data.HashMap.Strict                as HM
 import qualified Data.HashSet                       as S
 import qualified Data.Sequence                      as Seq
-import qualified Database.PG.Query                  as Q
 import qualified Language.GraphQL.Draft.Syntax      as G
 
 data AddComputedField
@@ -53,7 +52,6 @@ runAddComputedField q = do
   withPathK "table" $ askTabInfo source table
   let metadataObj = MOTableObj table $ MTOComputedField computedFieldName
       metadata = ComputedFieldMetadata computedFieldName (_afcDefinition q) (_afcComment q)
-  -- addComputedFieldToCatalog q
   buildSchemaCacheFor metadataObj
     $ MetadataModifier
     $ tableMetadataSetter source table.tmComputedFields
@@ -240,21 +238,6 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
               filter ((/=) (Just name) . faName) withoutTable
       in alsoWithoutSession
 
-
--- addComputedFieldToCatalog
---   :: MonadTx m
---   => AddComputedField -> m ()
--- addComputedFieldToCatalog q =
---   liftTx $ Q.withQE defaultTxErrorHandler
---     [Q.sql|
---      INSERT INTO hdb_catalog.hdb_computed_field
---        (table_schema, table_name, computed_field_name, definition, comment)
---      VALUES ($1, $2, $3, $4, $5)
---     |] (schemaName, tableName, computedField, Q.AltJ definition, comment) True
---   where
---     QualifiedObject schemaName tableName = table
---     AddComputedField sourceName table computedField definition comment = q
-
 data DropComputedField
   = DropComputedField
   { _dccSource  :: !SourceName
@@ -273,11 +256,11 @@ instance FromJSON DropComputedField where
       <*> o .:? "cascade" .!= False
 
 runDropComputedField
-  :: (MonadTx m, CacheRWM m)
+  :: (QErrM m, CacheRWM m)
   => DropComputedField -> m EncJSON
-runDropComputedField (DropComputedField sourceName table computedField cascade) = do
+runDropComputedField (DropComputedField source table computedField cascade) = do
   -- Validation
-  fields <- withPathK "table" $ _tciFieldInfoMap <$> askTableCoreInfo table
+  fields <- withPathK "table" $ _tciFieldInfoMap <$> askTableCoreInfo source table
   void $ withPathK "name" $ askComputedFieldInfo fields computedField
 
   -- Dependencies check
@@ -287,9 +270,8 @@ runDropComputedField (DropComputedField sourceName table computedField cascade) 
 
   withNewInconsistentObjsCheck do
     metadataModifiers <- mapM purgeComputedFieldDependency deps
-    -- dropComputedFieldFromCatalog table computedField
     buildSchemaCache $ MetadataModifier $
-      tableMetadataSetter sourceName table
+      tableMetadataSetter source table
       %~ (dropComputedFieldInMetadata computedField) . foldl' (.) id metadataModifiers
   pure successMsg
   where
@@ -303,15 +285,3 @@ dropComputedFieldInMetadata
   :: ComputedFieldName -> TableMetadata -> TableMetadata
 dropComputedFieldInMetadata name =
   tmComputedFields %~ HM.delete name
-
--- dropComputedFieldFromCatalog
---   :: MonadTx m
---   => SourceName -> QualifiedTable -> ComputedFieldName -> m ()
--- dropComputedFieldFromCatalog sourceName (QualifiedObject schema table) computedField =
---   liftTx $ Q.withQE defaultTxErrorHandler
---     [Q.sql|
---      DELETE FROM hdb_catalog.hdb_computed_field
---       WHERE table_schema = $1
---         AND table_name = $2
---         AND computed_field_name = $3
---     |] (schema, table, computedField) True

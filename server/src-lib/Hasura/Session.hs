@@ -24,9 +24,11 @@ module Hasura.Session
   , mkUserInfo
   , adminUserInfo
   , BackendOnlyFieldAccess(..)
+  , UserInfoM(..)
   ) where
 
 import           Hasura.Incremental         (Cacheable)
+import           Hasura.Tracing             (TraceT)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Common    (NonEmptyText, adminText, mkNonEmptyText,
                                              unNonEmptyText)
@@ -216,3 +218,14 @@ maybeRoleFromSessionVariables sessionVariables =
 
 adminUserInfo :: UserInfo
 adminUserInfo = UserInfo adminRoleName mempty BOFADisallowed
+
+class (Monad m) => UserInfoM m where
+  askUserInfo :: m UserInfo
+
+instance (UserInfoM m) => UserInfoM (ReaderT r m) where
+  askUserInfo = lift askUserInfo
+instance (UserInfoM m) => UserInfoM (StateT s m) where
+  askUserInfo = lift askUserInfo
+instance (UserInfoM m) => UserInfoM (TraceT m) where
+  askUserInfo = lift askUserInfo
+

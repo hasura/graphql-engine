@@ -87,15 +87,12 @@ instance FromJSON BoolExp where
       f (k, v) = ColExp (FieldName k) <$> parseJSON v
 
 data DMLQuery a
-  = DMLQuery !SourceName !QualifiedTable a
+  = DMLQuery !QualifiedTable a
   deriving (Show, Eq, Lift)
 
 instance (FromJSON a) => FromJSON (DMLQuery a) where
   parseJSON v@(Object o) =
-    DMLQuery
-    <$> o .:? "source" .!= defaultSource
-    <*> o .: "table"
-    <*> parseJSON v
+    DMLQuery <$> o .: "table" <*> parseJSON v
   parseJSON _          =
     fail "Expected an object for query"
 
@@ -299,12 +296,12 @@ type SelectQuery = DMLQuery SelectQ
 type SelectQueryT = DMLQuery SelectQT
 
 instance ToJSON SelectQuery where
-  toJSON (DMLQuery source qt selQ) =
-    object $ "source" .= source : "table" .= qt : selectGToPairs selQ
+  toJSON (DMLQuery qt selQ) =
+    object $ "table" .= qt : selectGToPairs selQ
 
 instance ToJSON SelectQueryT where
-  toJSON (DMLQuery source qt selQ) =
-    object $ "source" .= source : "table" .= qt : selectGToPairs selQ
+  toJSON (DMLQuery qt selQ) =
+    object $ "table" .= qt : selectGToPairs selQ
 
 type InsObj = ColumnValues Value
 
@@ -345,8 +342,7 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''OnConflict)
 
 data InsertQuery
   = InsertQuery
-  { iqSource     :: !SourceName
-  , iqTable      :: !QualifiedTable
+  { iqTable      :: !QualifiedTable
   , iqObjects    :: !Value
   , iqOnConflict :: !(Maybe OnConflict)
   , iqReturning  :: !(Maybe [PGCol])
@@ -366,8 +362,7 @@ type UpdVals = ColumnValues Value
 
 data UpdateQuery
   = UpdateQuery
-  { uqSource    :: !SourceName
-  , uqTable     :: !QualifiedTable
+  { uqTable     :: !QualifiedTable
   , uqWhere     :: !BoolExp
   , uqSet       :: !UpdVals
   , uqInc       :: !UpdVals
@@ -379,8 +374,7 @@ data UpdateQuery
 instance FromJSON UpdateQuery where
   parseJSON (Object o) =
     UpdateQuery
-    <$> o .:? "source" .!= defaultSource
-    <*> o .:  "table"
+    <$> o .:  "table"
     <*> o .:  "where"
     <*> ((o .: "$set" <|> o .:? "values") .!= M.empty)
     <*> (o .:? "$inc" .!= M.empty)
@@ -391,9 +385,8 @@ instance FromJSON UpdateQuery where
     fail "Expecting an object for update query"
 
 instance ToJSON UpdateQuery where
-  toJSON (UpdateQuery source tn wc setE incE mulE defE ret) =
-    object [ "source" .= source
-           , "table" .= tn
+  toJSON (UpdateQuery tn wc setE incE mulE defE ret) =
+    object [ "table" .= tn
            , "where" .= wc
            , "$set" .= setE
            , "$inc" .= incE
@@ -404,43 +397,21 @@ instance ToJSON UpdateQuery where
 
 data DeleteQuery
   = DeleteQuery
-  { doSource    :: !SourceName
-  , doTable     :: !QualifiedTable
+  { doTable     :: !QualifiedTable
   , doWhere     :: !BoolExp  -- where clause
   , doReturning :: !(Maybe [PGCol]) -- columns returning
   } deriving (Show, Eq, Lift)
 
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DeleteQuery)
-
-instance FromJSON DeleteQuery where
-  parseJSON (Object o) =
-    DeleteQuery
-    <$> o .:? "source" .!= defaultSource
-    <*> o .:  "table"
-    <*> o .:  "where"
-    <*> o .:? "returning"
-  parseJSON _ =
-    fail "Expecting an object for delete query"
+$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DeleteQuery)
 
 data CountQuery
   = CountQuery
-  { cqSource   :: !SourceName
-  , cqTable    :: !QualifiedTable
+  { cqTable    :: !QualifiedTable
   , cqDistinct :: !(Maybe [PGCol])
   , cqWhere    :: !(Maybe BoolExp)
   } deriving (Show, Eq, Lift)
 
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''CountQuery)
-
-instance FromJSON CountQuery where
-  parseJSON (Object o) =
-    CountQuery
-    <$> o .:? "source" .!= defaultSource
-    <*> o .:  "table"
-    <*> o .:? "distinct"
-    <*> o .:? "returning"
-  parseJSON _ =
-    fail "Expecting an object for count query"
+$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''CountQuery)
 
 data QueryT
   = QTInsert !InsertQuery

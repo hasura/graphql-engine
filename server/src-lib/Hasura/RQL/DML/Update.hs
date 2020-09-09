@@ -160,15 +160,14 @@ convOp fieldInfoMap preSetCols updPerm objs conv =
         <> " for role " <> roleName <<> "; its value is predefined in permission"
 
 validateUpdateQueryWith
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, TableInfoRM m)
   => SessVarBldr m
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> UpdateQuery
   -> m AnnUpd
 validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   let tableName = uqTable uq
-      source = uqSource uq
-  tableInfo <- withPathK "table" $ askTabInfo source tableName
+  tableInfo <- withPathK "table" $ askTabInfoSource tableName
   let coreInfo = _tiCoreInfo tableInfo
 
   -- If it is view then check if it is updatable
@@ -221,7 +220,7 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
 
   -- convert the where clause
   annSQLBoolExp <- withPathK "where" $
-    convBoolExp source fieldInfoMap selPerm (uqWhere uq) sessVarBldr prepValBldr
+    convBoolExp fieldInfoMap selPerm (uqWhere uq) sessVarBldr prepValBldr
 
   resolvedUpdFltr <- convAnnBoolExpPartialSQL sessVarBldr $
                      upiFilter updPerm
@@ -245,9 +244,11 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
 
 validateUpdateQuery
   :: (QErrM m, UserInfoM m, CacheRM m)
-  => UpdateQuery -> m (AnnUpd, DS.Seq Q.PrepArg)
-validateUpdateQuery =
-  runDMLP1T . validateUpdateQueryWith sessVarFromCurrentSetting binRHSBuilder
+  => SourceName -> UpdateQuery -> m (AnnUpd, DS.Seq Q.PrepArg)
+validateUpdateQuery source query = do
+  tableCache <- askTableCache source
+  flip runTableCacheRT (source, tableCache) $ runDMLP1T $
+    validateUpdateQueryWith sessVarFromCurrentSetting binRHSBuilder query
 
 execUpdateQuery
   ::
@@ -272,7 +273,7 @@ runUpdate
      , MonadTx m, HasSQLGenCtx m, MonadIO m
      , Tracing.MonadTrace m
      )
-  => Env.Environment -> UpdateQuery -> m EncJSON
-runUpdate env q = do
+  => Env.Environment -> SourceName -> UpdateQuery -> m EncJSON
+runUpdate env source q = do
   strfyNum <- stringifyNum <$> askSQLGenCtx
-  validateUpdateQuery q >>= execUpdateQuery env strfyNum Nothing
+  validateUpdateQuery source q >>= execUpdateQuery env strfyNum Nothing

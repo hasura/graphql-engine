@@ -51,6 +51,8 @@ module Hasura.RQL.Types.SchemaCache
   , DepMap
   , WithDeps
 
+  , TableInfoRM(..)
+  , TableCacheRT(..)
   , TableCoreInfoRM(..)
   , TableCoreCacheRT(..)
   , CacheRM(..)
@@ -117,7 +119,7 @@ module Hasura.RQL.Types.SchemaCache
   , PGSourceSchemaCache(..)
   , SourceName(..)
   , defaultSource
-  , SourceLocalM(..)
+  , SourceM(..)
   , SourceT(..)
   , PGSourcesCache
   , getPGTableInfo
@@ -284,32 +286,30 @@ getAllRemoteSchemas sc =
         getInconsistentRemoteSchemas $ scInconsistentObjs sc
   in consistentRemoteSchemas <> inconsistentRemoteSchemas
 
--- | Most of our queries operate over a single source. This typeclass
--- facilitates that.
--- class (Monad m) => TableInfoRM m where
---   lookupTableInfo :: QualifiedTable -> m (Maybe TableInfo)
-
-class (Monad m) => SourceLocalM m where
+class (Monad m) => SourceM m where
   askCurrentSource :: m SourceName
 
-instance (SourceLocalM m) => SourceLocalM (ReaderT r m) where
+instance (SourceM m) => SourceM (ReaderT r m) where
   askCurrentSource = lift askCurrentSource
-instance (SourceLocalM m) => SourceLocalM (StateT s m) where
+instance (SourceM m) => SourceM (StateT s m) where
   askCurrentSource = lift askCurrentSource
-instance (Monoid w, SourceLocalM m) => SourceLocalM (WriterT w m) where
+instance (Monoid w, SourceM m) => SourceM (WriterT w m) where
   askCurrentSource = lift askCurrentSource
-instance (SourceLocalM m) => SourceLocalM (TraceT m) where
+instance (SourceM m) => SourceM (TraceT m) where
   askCurrentSource = lift askCurrentSource
 
 newtype SourceT m a
   = SourceT { runSourceT :: SourceName -> m a }
-  deriving (Functor, Applicative, Monad, MonadIO, MonadError e, MonadState s, MonadWriter w, MonadTx)
+  deriving (Functor, Applicative, Monad, MonadIO, MonadError e, MonadState s, MonadWriter w, UserInfoM, MonadTx, TableCoreInfoRM, TableInfoRM, CacheRM)
     via (ReaderT SourceName m)
   deriving (MonadTrans) via (ReaderT SourceName)
 
+instance (Monad m) => SourceM (SourceT m) where
+  askCurrentSource = SourceT pure
+
 -- | A more limited version of 'CacheRM' that is used when building the schema cache, since the
 -- entire schema cache has not been built yet.
-class (SourceLocalM m) => TableCoreInfoRM m where
+class (SourceM m) => TableCoreInfoRM m where
   -- lookupTableCoreInfo :: SourceName -> QualifiedTable -> m (Maybe TableCoreInfo)
   -- default lookupTableCoreInfo :: (CacheRM m) => SourceName -> QualifiedTable -> m (Maybe TableCoreInfo)
   -- lookupTableCoreInfo sourceName tableName = do
@@ -340,24 +340,56 @@ instance (TableCoreInfoRM m) => TableCoreInfoRM (TraceT m) where
   lookupTableCoreInfo tableName = lift $ lookupTableCoreInfo tableName
 
 newtype TableCoreCacheRT m a
-  = TableCoreCacheRT { runTableCoreCacheRT :: Dependency TableCoreCache -> m a }
+  = TableCoreCacheRT { runTableCoreCacheRT :: (SourceName, Dependency TableCoreCache) -> m a }
   deriving (Functor, Applicative, Monad, MonadIO, MonadError e, MonadState s, MonadWriter w, MonadTx)
-    via (ReaderT (Dependency TableCoreCache) m)
-  deriving (MonadTrans) via (ReaderT (Dependency TableCoreCache))
+    via (ReaderT (SourceName, Dependency TableCoreCache) m)
+  deriving (MonadTrans) via (ReaderT (SourceName, Dependency TableCoreCache))
 
 instance (MonadReader r m) => MonadReader r (TableCoreCacheRT m) where
   ask = lift ask
   local f m = TableCoreCacheRT (local f . runTableCoreCacheRT m)
 
--- TODO:
-instance (Monad m) => SourceLocalM (TableCoreCacheRT m) where
+instance (Monad m) => SourceM (TableCoreCacheRT m) where
+  askCurrentSource =
+    TableCoreCacheRT (pure . fst)
 
 instance (MonadDepend m) => TableCoreInfoRM (TableCoreCacheRT m) where
   lookupTableCoreInfo tableName =
-    TableCoreCacheRT (dependOnM . selectKeyD tableName)
+    TableCoreCacheRT (dependOnM . selectKeyD tableName . snd)
 
-class (TableCoreInfoRM m) => CacheRM m where
+-- | Most of our queries operate over a single source. This typeclass
+-- facilitates that.
+class (TableCoreInfoRM m) => TableInfoRM m where
+  lookupTableInfo :: QualifiedTable -> m (Maybe TableInfo)
+
+instance (TableInfoRM m) => TableInfoRM (ReaderT r m) where
+  lookupTableInfo tableName = lift $ lookupTableInfo tableName
+instance (TableInfoRM m) => TableInfoRM (StateT s m) where
+  lookupTableInfo tableName = lift $ lookupTableInfo tableName
+instance (Monoid w, TableInfoRM m) => TableInfoRM (WriterT w m) where
+  lookupTableInfo tableName = lift $ lookupTableInfo tableName
+instance (TableInfoRM m) => TableInfoRM (TraceT m) where
+  lookupTableInfo tableName = lift $ lookupTableInfo tableName
+
+newtype TableCacheRT m a
+  = TableCacheRT { runTableCacheRT :: (SourceName, TableCache) -> m a }
+  deriving (Functor, Applicative, Monad, MonadIO, MonadError e, MonadState s, MonadWriter w, MonadTx, UserInfoM)
+    via (ReaderT (SourceName, TableCache) m)
+  deriving (MonadTrans) via (ReaderT (SourceName, TableCache))
+class (Monad m) => CacheRM m where
   askSchemaCache :: m SchemaCache
+
+instance (Monad m) => SourceM (TableCacheRT m) where
+  askCurrentSource =
+    TableCacheRT (pure . fst)
+
+instance (Monad m) => TableCoreInfoRM (TableCacheRT m) where
+  lookupTableCoreInfo tableName =
+    TableCacheRT (pure . fmap _tiCoreInfo . M.lookup tableName . snd)
+
+instance (Monad m) => TableInfoRM (TableCacheRT m) where
+  lookupTableInfo tableName =
+    TableCacheRT (pure . M.lookup tableName . snd)
 
 instance (CacheRM m) => CacheRM (ReaderT r m) where
   askSchemaCache = lift askSchemaCache

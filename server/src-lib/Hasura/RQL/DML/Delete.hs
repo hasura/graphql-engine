@@ -52,14 +52,14 @@ mkDeleteCTE (AnnDel tn (fltr, wc) _ _) =
                 toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps fltr wc
 
 validateDeleteQWith
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, TableInfoRM m)
   => SessVarBldr m
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> DeleteQuery
   -> m AnnDel
 validateDeleteQWith sessVarBldr prepValBldr
-  (DeleteQuery source tableName rqlBE mRetCols) = do
-  tableInfo <- askTabInfo source tableName
+  (DeleteQuery tableName rqlBE mRetCols) = do
+  tableInfo <- askTabInfoSource tableName
   let coreInfo = _tiCoreInfo tableInfo
 
   -- If table is view then check if it deletable
@@ -85,7 +85,7 @@ validateDeleteQWith sessVarBldr prepValBldr
 
   -- convert the where clause
   annSQLBoolExp <- withPathK "where" $
-    convBoolExp source fieldInfoMap selPerm rqlBE sessVarBldr prepValBldr
+    convBoolExp fieldInfoMap selPerm rqlBE sessVarBldr prepValBldr
 
   resolvedDelFltr <- convAnnBoolExpPartialSQL sessVarBldr $
                      dpiFilter delPerm
@@ -102,27 +102,26 @@ validateDeleteQWith sessVarBldr prepValBldr
 
 validateDeleteQ
   :: (QErrM m, UserInfoM m, CacheRM m)
-  => DeleteQuery -> m (AnnDel, DS.Seq Q.PrepArg)
-validateDeleteQ =
-  runDMLP1T . validateDeleteQWith sessVarFromCurrentSetting binRHSBuilder
+  => SourceName -> DeleteQuery -> m (AnnDel, DS.Seq Q.PrepArg)
+validateDeleteQ source query = do
+  tableCache <- askTableCache source
+  flip runTableCacheRT (source, tableCache) $ runDMLP1T $
+    validateDeleteQWith sessVarFromCurrentSetting binRHSBuilder query
 
 execDeleteQuery
-  ::
-  ( HasVersion
-  , MonadTx m
-  , MonadIO m
-  , Tracing.MonadTrace m
-  )
+  :: ( HasVersion
+     , MonadTx m
+     , MonadIO m
+     , Tracing.MonadTrace m
+     )
   => Env.Environment
   -> Bool
   -> Maybe MutationRemoteJoinCtx
   -> (AnnDel, DS.Seq Q.PrepArg)
   -> m EncJSON
 execDeleteQuery env strfyNum remoteJoinCtx (u, p) =
-  runMutation env $ mkMutation remoteJoinCtx (dqp1Table u) (deleteCTE, p)
+  runMutation env $ mkMutation remoteJoinCtx (dqp1Table u) (mkDeleteCTE u, p)
                 (dqp1Output u) (dqp1AllCols u) strfyNum
-  where
-    deleteCTE = mkDeleteCTE u
 
 runDelete
   :: ( HasVersion, QErrM m, UserInfoM m, CacheRM m
@@ -130,8 +129,9 @@ runDelete
      , Tracing.MonadTrace m
      )
   => Env.Environment
+  -> SourceName
   -> DeleteQuery
   -> m EncJSON
-runDelete env q = do
+runDelete env source q = do
   strfyNum <- stringifyNum <$> askSQLGenCtx
-  validateDeleteQ q >>= execDeleteQuery env strfyNum Nothing
+  validateDeleteQ source q >>= execDeleteQuery env strfyNum Nothing
