@@ -523,6 +523,7 @@ test-suite graphql-engine-tests
     Data.Parser.URLTemplate
     Data.Parser.JSONPathSpec
     Data.TimeSpec
+    Data.NonNegativeIntSpec
     Hasura.IncrementalSpec
     Hasura.RQL.MetadataSpec
     Hasura.Server.MigrateSpec
