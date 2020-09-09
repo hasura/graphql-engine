@@ -55,12 +55,13 @@ const setReadOnlyMode = data => ({
   data,
 });
 
-export const fetchPostgresVersion = dispatch => {
+export const fetchPostgresVersion = (dispatch, getState) => {
   const req = getRunSqlQuery('SELECT version()');
   const options = {
     method: 'POST',
     credentials: globalCookiePolicy,
     body: JSON.stringify(req),
+    headers: getState().tables.dataHeaders,
   };
 
   return dispatch(requestAction(Endpoints.query, options)).then(
