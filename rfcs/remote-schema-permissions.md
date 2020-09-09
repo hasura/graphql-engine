@@ -233,4 +233,12 @@ query {
 
 ## Few questions to tackle:
 
-1. This will be a breaking change as all remote schemas will be hidden for all role except `admin`. This was tackled in #2690 by introducing a feature flag for enabling remote schema permissions explicitly.
+1. This will be a breaking change as all remote schemas will be hidden for all role except `admin`.
+This was tackled in #2690 by introducing a feature flag for enabling remote schema permissions explicitly.
+2. UX of this feature in the console.
+3. The API proposed above is complete in defining the permission for a role and a remote schema. Should we have smaller additive permission API e.g. 
+one which takes permissions for a single type (of any type) and adds them together to yield the final schema?
+4. How will it work with remote joins?
+5. How will it work with multiple roles?
+6. Implementation: how do we generate input types for each field when there are presets (currently input types are shared across fields)?
+Possible solution: Suffix type name, field name and role name to the role-based type
