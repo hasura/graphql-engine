@@ -11,8 +11,8 @@ There are 2 things we want to focus on (there are possibly more):
 
 A PoC of this feature was implemented in https://github.com/hasura/graphql-engine/pull/2690
 
-Schema masking is the ability to hide parts of the schema from the user. By default, we want to enforce "deny all" semantics by not exposing anything for a new role. 
-This role can then be allowed access to parts of the schema by specifying the type and the list of fields it should have access to.
+Schema masking is the ability to hide parts of the schema from the user. By default, we want to enforce "deny all" semantics by not exposing any type for a new role. 
+This role can then be allowed access to parts of the schema by specifying the types and fields it should have access to.
 
 The API for role-based schema proposed in #2690 looked like the following (**NOTE:** This is for illustration, not the final API):
 
@@ -23,9 +23,9 @@ args:
   role: user
   definition:
     allowed_objects:
-    - type: Query
+    - name: Query
       fields: [hello, user]
-    - type: User
+    - name: User
       fields: [a,b,c]
 ```
 
@@ -33,8 +33,90 @@ You may notice that we will need to start with the root types `Query`, `Mutation
 
 Another way of looking at role-based schema masking is essentially that we are creating role-based types. 
 
-We will modify the above API slightly to incorporate input field presets below. This is the actual proposed API for remote schema permissions.
+### Behaviour for each type
 
+Schema masking can be done for any GraphQL type. We will describe the effect of schema masking on each type below:
+
+**Object**
+
+```
+allowed_objects:
+- name: Query
+  fields: [hello, user]
+- name: User
+  fields: [a,b,c]
+```
+
+Object types can specify the subset of fields in the type that are allowed in the schema.
+
+**Scalars**
+
+```
+allowed_scalars:
+- name: String
+- name: Int
+```
+
+Only `String` and `Int` scalars are allowed in the schema.
+
+**Interfaces**
+
+```
+allowed_interfaces:
+- name: Shape
+  fields: [height, width]
+```
+
+Interface type can also specify a subset of fields (similar to object types)
+
+**Unions**
+
+```
+allowed_unions:
+- name: SearchResult
+  objects: [Person]
+```
+
+Union types can specify the subset of list of object types.
+
+
+**Enums**
+
+```
+allowed_enums:
+- name: Direction
+  values: [North, South]
+```
+
+Enum types can specify a subset of values for the enum.
+
+**Input Objects**
+
+```
+allowed_input_objects:
+- name: Point2D
+  fields: [x]
+```
+
+Input objects can specify a subset of input fields.
+
+#### Wildcard syntax
+
+Since specifying each and every type might be tedious (especially for types that may not really require masking like scalars), we can give provide a wildcard syntax:
+
+```
+allowed_objects:
+- name: Query
+  fields: [hello, user]
+- name: User
+  fields: "*"
+allowed_scalars: "*"
+```
+
+In short, any list reference can be replaced by `*` to mean "all valid values" for that list. For example,
+
+1. For an object type, like "User", `fields` can be `*`
+2. Even the root level definition can take `*` like `allowed_scalars: *`
 
 ## Role-based input field presets
 
@@ -115,5 +197,4 @@ query {
 
 ## Few questions to tackle:
 
-1. The above example only shows "allowed_objects". We should only consider how to tackle the other GraphQL types: Scalars, Interfaces, Unions, Enums and Input Objects
-2. This will be a breaking change as all remote schemas will be hidden for all role except `admin`. This was tackled in #2690 by introducing a feature flag for enabling remote schema permissions explicitly.
+1. This will be a breaking change as all remote schemas will be hidden for all role except `admin`. This was tackled in #2690 by introducing a feature flag for enabling remote schema permissions explicitly.
