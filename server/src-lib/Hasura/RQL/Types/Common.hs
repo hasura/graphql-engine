@@ -284,10 +284,15 @@ successMsg = "{\"message\":\"success\"}"
 newtype NonNegativeInt = NonNegativeInt { unNonNegativeInt :: Int }
   deriving (Show, Eq, ToJSON, Generic, NFData, Cacheable, Num, Read)
 
+maybeInt :: MonadFail m => Maybe Int -> m Int
+maybeInt x = case x of
+  Just v -> return v
+  Nothing -> fail "integer passed is out of bounds"
+
 instance FromJSON NonNegativeInt where
   parseJSON = withScientific "NonNegativeInt" $ \t -> do
-    case (t > 0) of
-      True  -> return $ NonNegativeInt . fromMaybe 0 . toBoundedInteger $ t
+    case (t >= 0) of
+      True  -> NonNegativeInt <$> maybeInt (toBoundedInteger t)
       False -> fail "negative value not allowed"
 
 toInt :: NonNegativeInt -> Int
