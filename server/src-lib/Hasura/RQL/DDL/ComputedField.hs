@@ -33,7 +33,6 @@ import qualified Control.Monad.Validate             as MV
 import qualified Data.HashMap.Strict                as HM
 import qualified Data.HashSet                       as S
 import qualified Data.Sequence                      as Seq
-import qualified Database.PG.Query                  as Q
 import qualified Language.GraphQL.Draft.Syntax      as G
 
 data AddComputedField
@@ -51,7 +50,8 @@ $(deriveJSON (aesonDrop 4 snakeCase) ''AddComputedField)
 runAddComputedField :: (MonadTx m, CacheRWM m) => AddComputedField -> m EncJSON
 runAddComputedField q = do
   withPathK "table" $ askTabInfo source table
-  let metadataObj = MOTableObj table $ MTOComputedField computedFieldName
+  let metadataObj = MOSourceObjId source $ SMOTableObj table $
+                    MTOComputedField computedFieldName
       metadata = ComputedFieldMetadata computedFieldName (_afcDefinition q) (_afcComment q)
   -- addComputedFieldToCatalog q
   buildSchemaCacheFor metadataObj
@@ -282,7 +282,8 @@ runDropComputedField (DropComputedField sourceName table computedField cascade) 
 
   -- Dependencies check
   sc <- askSchemaCache
-  let deps = getDependentObjs sc $ SOTableObj table $ TOComputedField computedField
+  let deps = getDependentObjs sc $ SOSourceObj sourceName $
+             SOITableObj table $ TOComputedField computedField
   when (not cascade && not (null deps)) $ reportDeps deps
 
   withNewInconsistentObjsCheck do
@@ -294,7 +295,7 @@ runDropComputedField (DropComputedField sourceName table computedField cascade) 
   pure successMsg
   where
     purgeComputedFieldDependency = \case
-      SOTableObj qt (TOPerm roleName permType) | qt == table ->
+      SOSourceObj _ (SOITableObj qt (TOPerm roleName permType)) | qt == table ->
         pure $ dropPermissionInMetadata roleName permType
       d -> throw500 $ "unexpected dependency for computed field "
            <> computedField <<> "; " <> reportSchemaObj d

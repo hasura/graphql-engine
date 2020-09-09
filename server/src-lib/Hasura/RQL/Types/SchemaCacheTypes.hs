@@ -14,8 +14,8 @@ import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.RemoteSchema
-import           Hasura.SQL.Types
 import           Hasura.Session
+import           Hasura.SQL.Types
 
 data TableObjId
   = TOCol !PGCol
@@ -28,35 +28,41 @@ data TableObjId
   deriving (Show, Eq, Generic)
 instance Hashable TableObjId
 
+data SourceObjId
+  = SOITable !QualifiedTable
+  | SOITableObj !QualifiedTable !TableObjId
+  | SOIFunction !QualifiedFunction
+  deriving (Show, Eq, Generic)
+instance Hashable SourceObjId
+
 data SchemaObjId
-  = SOTable !QualifiedTable
-  | SOTableObj !QualifiedTable !TableObjId
-  | SOFunction !QualifiedFunction
+  = SOSourceObj !SourceName !SourceObjId
   | SORemoteSchema !RemoteSchemaName
   deriving (Eq, Generic)
 
 instance Hashable SchemaObjId
 
 reportSchemaObj :: SchemaObjId -> T.Text
-reportSchemaObj (SOTable tn) = "table " <> qualObjectToText tn
-reportSchemaObj (SOFunction fn) = "function " <> qualObjectToText fn
-reportSchemaObj (SOTableObj tn (TOCol cn)) =
-  "column " <> qualObjectToText tn <> "." <> getPGColTxt cn
-reportSchemaObj (SOTableObj tn (TORel cn _)) =
-  "relationship " <> qualObjectToText tn <> "." <> relNameToTxt cn
-reportSchemaObj (SOTableObj tn (TOForeignKey cn)) =
-  "constraint " <> qualObjectToText tn <> "." <> getConstraintTxt cn
-reportSchemaObj (SOTableObj tn (TOPerm rn pt)) =
-  "permission " <> qualObjectToText tn <> "." <> roleNameToTxt rn
-  <> "." <> permTypeToCode pt
-reportSchemaObj (SOTableObj tn (TOTrigger trn )) =
-  "event-trigger " <> qualObjectToText tn <> "." <> triggerNameToTxt trn
-reportSchemaObj (SOTableObj tn (TOComputedField ccn)) =
-  "computed field " <> qualObjectToText tn <> "." <> computedFieldNameToText ccn
-reportSchemaObj (SOTableObj tn (TORemoteRel rn)) =
-  "remote relationship " <> qualObjectToText tn <> "." <> remoteRelationshipNameToText rn
-reportSchemaObj (SORemoteSchema remoteSchemaName) =
-  "remote schema " <> unNonEmptyText (unRemoteSchemaName remoteSchemaName)
+reportSchemaObj = \case
+  SOSourceObj _ sourceObjId -> case sourceObjId of
+    SOITable tn -> "table " <> qualObjectToText tn
+    SOIFunction fn -> "function " <> qualObjectToText fn
+    SOITableObj tn (TOCol cn) ->
+      "column " <> qualObjectToText tn <> "." <> getPGColTxt cn
+    SOITableObj tn (TORel cn _) ->
+      "relationship " <> qualObjectToText tn <> "." <> relNameToTxt cn
+    SOITableObj tn (TOForeignKey cn) ->
+      "constraint " <> qualObjectToText tn <> "." <> getConstraintTxt cn
+    SOITableObj tn (TOPerm rn pt) ->
+      "permission " <> qualObjectToText tn <> "." <> roleNameToTxt rn <> "." <> permTypeToCode pt
+    SOITableObj tn (TOTrigger trn ) ->
+      "event-trigger " <> qualObjectToText tn <> "." <> triggerNameToTxt trn
+    SOITableObj tn (TOComputedField ccn) ->
+      "computed field " <> qualObjectToText tn <> "." <> computedFieldNameToText ccn
+    SOITableObj tn (TORemoteRel rn) ->
+      "remote relationship " <> qualObjectToText tn <> "." <> remoteRelationshipNameToText rn
+  SORemoteSchema remoteSchemaName ->
+    "remote schema " <> unNonEmptyText (unRemoteSchemaName remoteSchemaName)
 
 instance Show SchemaObjId where
   show soi = T.unpack $ reportSchemaObj soi

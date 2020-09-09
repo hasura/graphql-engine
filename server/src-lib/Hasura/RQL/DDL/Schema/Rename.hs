@@ -57,18 +57,18 @@ renameTableInMetadata
   => SourceName -> QualifiedTable -> QualifiedTable -> m ()
 renameTableInMetadata source newQT oldQT = do
   sc <- askSchemaCache
-  let allDeps = getDependentObjs sc $ SOTable oldQT
+  let allDeps = getDependentObjs sc $ SOSourceObj source $ SOITable oldQT
 
   -- update all dependant schema objects
   forM_ allDeps $ \case
-    SOTableObj refQT (TORel rn _) ->
+    SOSourceObj _ (SOITableObj refQT (TORel rn _)) ->
       updateRelDefs source refQT rn (oldQT, newQT)
-    SOTableObj refQT (TOPerm rn pt)   ->
+    SOSourceObj _ (SOITableObj refQT (TOPerm rn pt))   ->
       updatePermFlds source refQT rn pt $ RTable (oldQT, newQT)
     -- A trigger's definition is not dependent on the table directly
-    SOTableObj _ (TOTrigger _)   -> pure ()
+    SOSourceObj _ (SOITableObj _ (TOTrigger _))   -> pure ()
     -- A remote relationship's definition is not dependent on the table directly
-    SOTableObj _ (TORemoteRel _) -> pure ()
+    SOSourceObj _ (SOITableObj _ (TORemoteRel _)) -> pure ()
 
     d -> otherDeps errMsg d
   -- Update table name in metadata
@@ -95,17 +95,17 @@ renameColumnInMetadata oCol nCol sourceName qt fieldInfo = do
   -- Check if any relation exists with new column name
   assertFldNotExists
   -- Fetch dependent objects
-  let depObjs = getDependentObjs sc $ SOTableObj qt $ TOCol oCol
+  let depObjs = getDependentObjs sc $ SOSourceObj sourceName $ SOITableObj qt $ TOCol oCol
       renameFld = RFCol $ RenameItem qt oCol nCol
   -- Update dependent objects
   forM_ depObjs $ \case
-    SOTableObj refQT (TOPerm role pt) ->
+    SOSourceObj _ (SOITableObj refQT (TOPerm role pt)) ->
       updatePermFlds sourceName refQT role pt $ RField renameFld
-    SOTableObj refQT (TORel rn _) ->
+    SOSourceObj _ (SOITableObj refQT (TORel rn _)) ->
       updateColInRel sourceName refQT rn $ RenameItem qt oCol nCol
-    SOTableObj refQT (TOTrigger triggerName) ->
+    SOSourceObj _ (SOITableObj refQT (TOTrigger triggerName)) ->
       updateColInEventTriggerDef sourceName refQT triggerName $ RenameItem qt oCol nCol
-    SOTableObj _ (TORemoteRel remoteRelName) ->
+    SOSourceObj _ (SOITableObj _ (TORemoteRel remoteRelName)) ->
       updateColInRemoteRelationship sourceName remoteRelName $ RenameItem qt oCol nCol
     d -> otherDeps errMsg d
   -- Update custom column names
@@ -128,11 +128,11 @@ renameRelationshipInMetadata
   => SourceName -> QualifiedTable -> RelName -> RelType -> RelName -> m ()
 renameRelationshipInMetadata source qt oldRN relType newRN = do
   sc <- askSchemaCache
-  let depObjs = getDependentObjs sc $ SOTableObj qt $ TORel oldRN relType
+  let depObjs = getDependentObjs sc $ SOSourceObj source $ SOITableObj qt $ TORel oldRN relType
       renameFld = RFRel $ RenameItem qt oldRN newRN
 
   forM_ depObjs $ \case
-    SOTableObj refQT (TOPerm role pt) ->
+    SOSourceObj _ (SOITableObj refQT (TOPerm role pt)) ->
       updatePermFlds source refQT role pt $ RField renameFld
     d -> otherDeps errMsg d
   tell $ MetadataModifier $ tableMetadataSetter source qt %~ case relType of

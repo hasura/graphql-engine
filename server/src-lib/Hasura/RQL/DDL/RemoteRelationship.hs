@@ -30,7 +30,8 @@ runCreateRemoteRelationship RemoteRelationship{..} = do
   -- Few checks
   void $ askTabInfo rtrSource rtrTable
   -- liftTx $ persistRemoteRelationship remoteRelationship
-  let metadataObj = MOTableObj rtrTable $ MTORemoteRelationship rtrName
+  let metadataObj = MOSourceObjId rtrSource $ SMOTableObj rtrTable $
+                    MTORemoteRelationship rtrName
       metadata = RemoteRelationshipMeta rtrName $
         RemoteRelationshipDef rtrRemoteSchema rtrHasuraFields rtrRemoteField
   buildSchemaCacheFor metadataObj
@@ -52,13 +53,14 @@ resolveRemoteRelationship remoteRelationship
     validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns
   remoteField <- either (throw400 RemoteSchemaError . errorToText) pure $ eitherRemoteField
   let table = rtrTable remoteRelationship
+      source = rtrSource remoteRelationship
       schemaDependencies =
-        let tableDep = SchemaDependency (SOTable table) DRTable
+        let tableDep = SchemaDependency (SOSourceObj source $ SOITable table) DRTable
             columnsDep =
               map
                 (\column ->
                    SchemaDependency
-                     (SOTableObj table $ TOCol column)
+                     (SOSourceObj source $ SOITableObj table $ TOCol column)
                      DRRemoteRelationship ) $
               map pgiColumn $ HS.toList $ _rfiHasuraFields remoteField
             remoteSchemaDep =
@@ -72,7 +74,8 @@ runUpdateRemoteRelationship RemoteRelationship{..} = do
   fieldInfoMap <- askFieldInfoMap rtrTable
   void $ askRemoteRel fieldInfoMap rtrName
   -- liftTx $ updateRemoteRelInCatalog remoteRelationship
-  let metadataObj = MOTableObj rtrTable $ MTORemoteRelationship rtrName
+  let metadataObj = MOSourceObjId rtrSource $ SMOTableObj rtrTable $
+                    MTORemoteRelationship rtrName
       metadata = RemoteRelationshipMeta rtrName $
         RemoteRelationshipDef rtrRemoteSchema rtrHasuraFields rtrRemoteField
   buildSchemaCacheFor metadataObj
@@ -114,7 +117,8 @@ runDeleteRemoteRelationship (DeleteRemoteRelationship source table relName)= do
   fieldInfoMap <- askFieldInfoMap table
   void $ askRemoteRel fieldInfoMap relName
   -- liftTx $ delRemoteRelFromCatalog table relName
-  let metadataObj = MOTableObj table $ MTORemoteRelationship relName
+  let metadataObj = MOSourceObjId source $ SMOTableObj table $
+                    MTORemoteRelationship relName
   buildSchemaCacheFor metadataObj
     $ MetadataModifier
     $ tableMetadataSetter source table %~ dropRemoteRelationshipInMetadata relName

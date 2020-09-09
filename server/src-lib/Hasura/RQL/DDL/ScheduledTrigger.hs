@@ -71,23 +71,19 @@ addCronTriggerToCatalog CronTriggerMetadata {..} = liftTx $ do
 resolveCronTrigger
   :: (QErrM m)
   => Env.Environment
-  -> CatalogCronTrigger
+  -> CronTriggerMetadata
   -> m CronTriggerInfo
-resolveCronTrigger env CatalogCronTrigger {..} = do
-  webhookInfo <- resolveWebhook env _cctWebhookConf
-  headerInfo <- getHeaderInfosFromConf env headers
+resolveCronTrigger env CronTriggerMetadata{..} = do
+  webhookInfo <- resolveWebhook env ctWebhook
+  headerInfo <- getHeaderInfosFromConf env ctHeaders
   pure $
-    CronTriggerInfo _cctName
-                    _cctCronSchedule
-                    _cctPayload
-                    retryConf
+    CronTriggerInfo ctName
+                    ctSchedule
+                    ctPayload
+                    ctRetryConf
                     webhookInfo
                     headerInfo
-                    _cctComment
-  where
-    retryConf = fromMaybe defaultSTRetryConf _cctRetryConf
-
-    headers = fromMaybe [] _cctHeaderConf
+                    ctComment
 
 updateCronTrigger :: (CacheRWM m, MonadTx m) => CronTriggerMetadata -> m EncJSON
 updateCronTrigger cronTriggerMetadata = do

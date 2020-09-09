@@ -457,30 +457,30 @@ hasStaticExp :: OpExpG PartialSQLExp -> Bool
 hasStaticExp = has (template . filtered isStaticValue)
 
 getColExpDeps
-  :: QualifiedTable -> AnnBoolExpFldPartialSQL -> [SchemaDependency]
-getColExpDeps tn = \case
+  :: SourceName -> QualifiedTable -> AnnBoolExpFldPartialSQL -> [SchemaDependency]
+getColExpDeps source tn = \case
   AVCol colInfo opExps ->
     let cn = pgiColumn colInfo
         colDepReason = bool DRSessionVariable DROnType $ any hasStaticExp opExps
-        colDep = mkColDep colDepReason tn cn
+        colDep = mkColDep colDepReason source tn cn
         depColsInOpExp = mapMaybe opExpDepCol opExps
-        colDepsInOpExp = map (mkColDep DROnType tn) depColsInOpExp
+        colDepsInOpExp = map (mkColDep DROnType source tn) depColsInOpExp
     in colDep:colDepsInOpExp
   AVRel relInfo relBoolExp ->
     let rn = riName relInfo
         relTN = riRTable relInfo
         relType = riType relInfo
-        pd = SchemaDependency (SOTableObj tn (TORel rn relType)) DROnType
-    in pd : getBoolExpDeps relTN relBoolExp
+        pd = SchemaDependency (SOSourceObj source $ SOITableObj tn (TORel rn relType)) DROnType
+    in pd : getBoolExpDeps source relTN relBoolExp
 
-getBoolExpDeps :: QualifiedTable -> AnnBoolExpPartialSQL -> [SchemaDependency]
-getBoolExpDeps tn = \case
+getBoolExpDeps :: SourceName -> QualifiedTable -> AnnBoolExpPartialSQL -> [SchemaDependency]
+getBoolExpDeps source tn = \case
   BoolAnd exps -> procExps exps
   BoolOr exps  -> procExps exps
-  BoolNot e    -> getBoolExpDeps tn e
+  BoolNot e    -> getBoolExpDeps source tn e
   BoolExists (GExists refqt whereExp) ->
-    let tableDep = SchemaDependency (SOTable refqt) DRRemoteTable
-    in tableDep:getBoolExpDeps refqt whereExp
-  BoolFld fld  -> getColExpDeps tn fld
+    let tableDep = SchemaDependency (SOSourceObj source $ SOITable refqt) DRRemoteTable
+    in tableDep:getBoolExpDeps source refqt whereExp
+  BoolFld fld  -> getColExpDeps source tn fld
   where
-    procExps = concatMap (getBoolExpDeps tn)
+    procExps = concatMap (getBoolExpDeps source tn)

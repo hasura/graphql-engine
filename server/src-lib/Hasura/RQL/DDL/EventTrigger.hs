@@ -213,10 +213,11 @@ subTableP1 (CreateEventTriggerQuery sourceName name qt insert update delete enab
 subTableP2Setup
   :: QErrM m
   => Env.Environment
+  -> SourceName
   -> QualifiedTable
   -> EventTriggerConf
   -> m (EventTriggerInfo, [SchemaDependency])
-subTableP2Setup env qt (EventTriggerConf name def webhook webhookFromEnv rconf mheaders) = do
+subTableP2Setup env source qt (EventTriggerConf name def webhook webhookFromEnv rconf mheaders) = do
   webhookConf <- case (webhook, webhookFromEnv) of
     (Just w, Nothing)    -> return $ WCValue w
     (Nothing, Just wEnv) -> return $ WCEnv wEnv
@@ -225,11 +226,11 @@ subTableP2Setup env qt (EventTriggerConf name def webhook webhookFromEnv rconf m
   webhookInfo <- getWebhookInfoFromConf env webhookConf
   headerInfos <- getHeaderInfosFromConf env headerConfs
   let eTrigInfo = EventTriggerInfo name def rconf webhookInfo headerInfos
-      tabDep = SchemaDependency (SOTable qt) DRParent
-  pure (eTrigInfo, tabDep:getTrigDefDeps qt def)
+      tabDep = SchemaDependency (SOSourceObj source $ SOITable qt) DRParent
+  pure (eTrigInfo, tabDep:getTrigDefDeps source qt def)
 
-getTrigDefDeps :: QualifiedTable -> TriggerOpsDef -> [SchemaDependency]
-getTrigDefDeps qt (TriggerOpsDef mIns mUpd mDel _) =
+getTrigDefDeps :: SourceName -> QualifiedTable -> TriggerOpsDef -> [SchemaDependency]
+getTrigDefDeps source qt (TriggerOpsDef mIns mUpd mDel _) =
   mconcat $ catMaybes [ subsOpSpecDeps <$> mIns
                       , subsOpSpecDeps <$> mUpd
                       , subsOpSpecDeps <$> mDel
@@ -239,10 +240,10 @@ getTrigDefDeps qt (TriggerOpsDef mIns mUpd mDel _) =
     subsOpSpecDeps os =
       let cols = getColsFromSub $ sosColumns os
           colDeps = flip map cols $ \col ->
-            SchemaDependency (SOTableObj qt (TOCol col)) DRColumn
+            SchemaDependency (SOSourceObj source $ SOITableObj qt (TOCol col)) DRColumn
           payload = maybe [] getColsFromSub (sosPayload os)
           payloadDeps = flip map payload $ \col ->
-            SchemaDependency (SOTableObj qt (TOCol col)) DRPayload
+            SchemaDependency (SOSourceObj source $ SOITableObj qt (TOCol col)) DRPayload
         in colDeps <> payloadDeps
     getColsFromSub sc = case sc of
       SubCStar         -> []
@@ -263,7 +264,7 @@ runCreateEventTriggerQuery q = do
   -- subTableP2 qt replace etc
   let source = cetqSource q
       triggerName = etcName etc
-      metadataObj = MOTableObj qt $ MTOTrigger triggerName
+      metadataObj = MOSourceObjId source $ SMOTableObj qt $ MTOTrigger triggerName
   buildSchemaCacheFor metadataObj
     $ MetadataModifier
     $ tableMetadataSetter source qt.tmEventTriggers %~ HM.insert triggerName etc

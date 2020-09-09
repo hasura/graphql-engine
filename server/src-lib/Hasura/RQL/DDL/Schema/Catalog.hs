@@ -162,9 +162,9 @@ fetchFunctionMetadataFromDb functionList = do
 --   $(Q.sqlFromFile "src-rsr/catalog_metadata.sql") () True
 
 purgeDependentObject
-  :: (MonadError QErr m) => SourceName -> SchemaObjId -> m MetadataModifier
-purgeDependentObject source = \case
-  SOTableObj tn tableObj -> pure $ MetadataModifier $
+  :: (MonadError QErr m) => SchemaObjId -> m MetadataModifier
+purgeDependentObject = \case
+  SOSourceObj source (SOITableObj tn tableObj) -> pure $ MetadataModifier $
     tableMetadataSetter source tn %~ case tableObj of
       TOPerm rn pt        -> dropPermissionInMetadata rn pt
       TORel rn rt         -> dropRelationshipInMetadata rn rt
@@ -172,7 +172,7 @@ purgeDependentObject source = \case
       TOComputedField ccn -> dropComputedFieldInMetadata ccn
       TORemoteRel rrn     -> dropRemoteRelationshipInMetadata rrn
       _                   -> id
-  SOFunction qf         -> pure $ dropFunctionInMetadata source qf
+  SOSourceObj source (SOIFunction qf) -> pure $ dropFunctionInMetadata source qf
   schemaObjId           ->
       throw500 $ "unexpected dependent object: " <> reportSchemaObj schemaObjId
 

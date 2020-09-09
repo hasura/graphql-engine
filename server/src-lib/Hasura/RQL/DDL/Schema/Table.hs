@@ -175,7 +175,7 @@ trackExistingTableOrViewP2 source tableName isEnum config = do
   checkConflictingNode sc $ snakeCaseQualObject tableName
   -- saveTableToCatalog tableName isEnum config
   let metadata = mkTableMeta tableName isEnum config
-  buildSchemaCacheFor (MOTable tableName)
+  buildSchemaCacheFor (MOSourceObjId source $ SMOTable tableName)
     $ MetadataModifier
     $ metaSources.ix source.smTables %~ Map.insert tableName metadata
   pure successMsg
@@ -203,7 +203,7 @@ runSetExistingTableIsEnumQ :: (MonadTx m, CacheRWM m) => SetTableIsEnum -> m Enc
 runSetExistingTableIsEnumQ (SetTableIsEnum source tableName isEnum) = do
   void $ askTabInfo source tableName -- assert that table is tracked
   -- updateTableIsEnumInCatalog tableName isEnum
-  buildSchemaCacheFor (MOTable tableName)
+  buildSchemaCacheFor (MOSourceObjId source $ SMOTable tableName)
     $ MetadataModifier
     $ tableMetadataSetter source tableName.tmIsEnum .~ isEnum
   return successMsg
@@ -231,7 +231,7 @@ runSetTableCustomFieldsQV2 (SetTableCustomFields source tableName rootFields col
   void $ askTabInfo source tableName -- assert that table is tracked
   let tableConfig = TableConfig rootFields columnNames
   -- updateTableConfig tableName (TableConfig rootFields columnNames)
-  buildSchemaCacheFor (MOTable tableName)
+  buildSchemaCacheFor (MOSourceObjId source $ SMOTable tableName)
     $ MetadataModifier
     $ tableMetadataSetter source tableName.tmConfiguration .~ tableConfig
   return successMsg
@@ -255,20 +255,21 @@ unTrackExistingTableOrViewP2 (UntrackTable source qtn cascade) = withNewInconsis
   sc <- askSchemaCache
 
   -- Get relational, query template and function dependants
-  let allDeps = getDependentObjs sc (SOTable qtn)
+  let allDeps = getDependentObjs sc (SOSourceObj source $ SOITable qtn)
       indirectDeps = filter (not . isDirectDep) allDeps
   -- Report bach with an error if cascade is not set
   when (indirectDeps /= [] && not (or cascade)) $ reportDepsExt indirectDeps []
   -- Purge all the dependents from state
   metadataModifier <- execWriterT do
-    mapM_ (purgeDependentObject source >=> tell) indirectDeps
+    mapM_ (purgeDependentObject >=> tell) indirectDeps
     tell $ dropTableInMetadata source qtn
   -- delete the table and its direct dependencies
   buildSchemaCache metadataModifier
   pure successMsg
   where
     isDirectDep = \case
-      (SOTableObj dtn _) -> qtn == dtn
+      SOSourceObj s (SOITableObj dtn _) ->
+        s == source && qtn == dtn
       _                  -> False
 
 dropTableInMetadata :: SourceName -> QualifiedTable -> MetadataModifier
@@ -326,7 +327,7 @@ processTableChanges source ti tableDiff = do
              renameColumnInMetadata oldName newName source tn (_tciFieldInfoMap ti)
 
            | oldType /= newType -> do
-              let colId = SOTableObj tn $ TOCol oldName
+              let colId = SOSourceObj source $ SOITableObj tn $ TOCol oldName
                   typeDepObjs = getDependentObjsWith (== DROnType) sc colId
 
               unless (null typeDepObjs) $ throw400 DependencyError $
@@ -382,26 +383,33 @@ buildTableCache
   :: forall arr m
    . ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
      , Inc.ArrowCache m arr, MonadTx m )
-  => ( [CatalogTable]
+  => ( SourceName
+     , [TableBuildInput]
      , Inc.Dependency Inc.InvalidationKey
      ) `arr` Map.HashMap QualifiedTable TableRawInfo
-buildTableCache = Inc.cache proc (catalogTables, reloadMetadataInvalidationKey) -> do
+buildTableCache = Inc.cache proc (source, tableBuildInputs, reloadMetadataInvalidationKey) -> do
   rawTableInfos <-
     (| Inc.keyed (| withTable (\tables
          -> (tables, reloadMetadataInvalidationKey)
          >- first noDuplicateTables >>> buildRawTableInfo) |)
-    |) (Map.groupOnNE _ctName catalogTables)
-  let rawTableCache = Map.catMaybes rawTableInfos
+    |) (withSourceInKey source $ Map.groupOnNE _tbiName tableBuildInputs)
+  let rawTableCache = removeSourceInKey $ Map.catMaybes rawTableInfos
       enumTables = flip Map.mapMaybe rawTableCache \rawTableInfo ->
         (,) <$> _tciPrimaryKey rawTableInfo <*> _tciEnumValues rawTableInfo
   tableInfos <-
     (| Inc.keyed (| withTable (\table -> processTableInfo -< (enumTables, table)) |)
-    |) rawTableCache
-  returnA -< Map.catMaybes tableInfos
+    |) (withSourceInKey source rawTableCache)
+  returnA -< removeSourceInKey (Map.catMaybes tableInfos)
   where
-    withTable :: ErrorA QErr arr (e, s) a -> arr (e, (QualifiedTable, s)) (Maybe a)
+    withSourceInKey :: (Eq k, Hashable k) => SourceName -> HashMap k v -> HashMap (SourceName, k) v
+    withSourceInKey source = Map.fromList . map (first (source,)) . Map.toList
+
+    removeSourceInKey :: (Eq k, Hashable k) => HashMap (SourceName, k) v -> HashMap k v
+    removeSourceInKey = Map.fromList . map (first snd) . Map.toList
+
+    withTable :: ErrorA QErr arr (e, s) a -> arr (e, ((SourceName, QualifiedTable), s)) (Maybe a)
     withTable f = withRecordInconsistency f <<<
-      second (first $ arr \name -> MetadataObject (MOTable name) (toJSON name))
+      second (first $ arr \(source, name) -> MetadataObject (MOSourceObjId source $ SMOTable name) (toJSON name))
 
     noDuplicateTables = proc tables -> case tables of
       table :| [] -> returnA -< table
@@ -410,11 +418,12 @@ buildTableCache = Inc.cache proc (catalogTables, reloadMetadataInvalidationKey) 
     -- Step 1: Build the raw table cache from metadata information.
     buildRawTableInfo
       :: ErrorA QErr arr
-       ( CatalogTable
+       ( TableBuildInput
        , Inc.Dependency Inc.InvalidationKey
        ) (TableCoreInfoG PGRawColumnInfo PGCol)
-    buildRawTableInfo = Inc.cache proc (catalogTable, reloadMetadataInvalidationKey) -> do
-      let CatalogTable name systemDefined isEnum config maybeInfo = catalogTable
+    buildRawTableInfo = Inc.cache proc (tableBuildInput, reloadMetadataInvalidationKey) -> do
+      let TableBuildInput name isEnum config = tableBuildInput
+          maybeInfo = undefined :: Maybe CatalogTableInfo
       catalogInfo <-
         (| onNothingA (throwA -<
              err400 NotExists $ "no such table/view exists in postgres: " <>> name)
@@ -434,7 +443,7 @@ buildTableCache = Inc.cache proc (catalogTables, reloadMetadataInvalidationKey) 
 
       returnA -< TableCoreInfo
         { _tciName = name
-        , _tciSystemDefined = systemDefined
+        , _tciSystemDefined = SystemDefined False
         , _tciFieldInfoMap = columnMap
         , _tciPrimaryKey = primaryKey
         , _tciUniqueConstraints = _ctiUniqueConstraints catalogInfo

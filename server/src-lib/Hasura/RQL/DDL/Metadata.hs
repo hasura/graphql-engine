@@ -280,21 +280,23 @@ runDropInconsistentMetadata _ = do
   -- perfect — a completely accurate solution would require performing a topological sort — but it
   -- seems to work well enough for now.
   -- TODO: Consider multiple sources
-  metadataModifier <- execWriterT $ mapM_ (tell . purgeMetadataObj defaultSource) (reverse inconsSchObjs)
+  metadataModifier <- execWriterT $ mapM_ (tell . purgeMetadataObj) (reverse inconsSchObjs)
   buildSchemaCacheStrict metadataModifier
   return successMsg
 
-purgeMetadataObj :: SourceName -> MetadataObjId -> MetadataModifier
-purgeMetadataObj source = \case
-  MOTable qt                                 -> dropTableInMetadata source qt
-  MOTableObj qt tableObj -> MetadataModifier $
-    tableMetadataSetter source qt %~ case tableObj of
-      MTORel rn rt             -> dropRelationshipInMetadata rn rt
-      MTOPerm rn pt            -> dropPermissionInMetadata rn pt
-      MTOTrigger trn           -> dropEventTriggerInMetadata trn
-      MTOComputedField ccn     -> dropComputedFieldInMetadata ccn
-      MTORemoteRelationship rn -> dropRemoteRelationshipInMetadata rn
-  MOFunction qf                              -> dropFunctionInMetadata source qf
+purgeMetadataObj :: MetadataObjId -> MetadataModifier
+purgeMetadataObj = \case
+  MOSource source -> MetadataModifier $ metaSources %~ HM.delete source
+  MOSourceObjId source sourceObjId -> case sourceObjId of
+    SMOTable qt                                 -> dropTableInMetadata source qt
+    SMOTableObj qt tableObj -> MetadataModifier $
+      tableMetadataSetter source qt %~ case tableObj of
+        MTORel rn rt             -> dropRelationshipInMetadata rn rt
+        MTOPerm rn pt            -> dropPermissionInMetadata rn pt
+        MTOTrigger trn           -> dropEventTriggerInMetadata trn
+        MTOComputedField ccn     -> dropComputedFieldInMetadata ccn
+        MTORemoteRelationship rn -> dropRemoteRelationshipInMetadata rn
+    SMOFunction qf                              -> dropFunctionInMetadata source qf
   MORemoteSchema rsn                         -> dropRemoteSchemaInMetadata rsn
   MOCustomTypes                              -> clearCustomTypesInMetadata
   MOAction action                            -> dropActionInMetadata action -- Nothing
