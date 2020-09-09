@@ -52,12 +52,12 @@ Object types can specify the subset of fields in the type that are allowed in th
 **Scalars**
 
 ```
-allowed_scalars:
-- name: String
-- name: Int
+allowed_custom_scalars:
+- name: UUID
+- name: Geography
 ```
 
-Only `String` and `Int` scalars are allowed in the schema.
+Only `UUID` and `Geography` custom scalars are allowed in the schema. Note that built-in scalars like `Int`, `String`, etc cannot be masked. 
 
 **Interfaces**
 
@@ -95,7 +95,7 @@ Enum types can specify a subset of values for the enum.
 ```
 allowed_input_objects:
 - name: Point2D
-  fields: [x]
+  input_fields: [x]
 ```
 
 Input objects can specify a subset of input fields.
@@ -110,13 +110,13 @@ allowed_objects:
   fields: [hello, user]
 - name: User
   fields: "*"
-allowed_scalars: "*"
+allowed_custom_scalars: "*"
 ```
 
 In short, any list reference can be replaced by `*` to mean "all valid values" for that list. For example,
 
 1. For an object type, like "User", `fields` can be `*`
-2. Even the root level definition can take `*` like `allowed_scalars: *`
+2. Even the root level definition can take `*` like `allowed_custom_scalars: *`
 
 
 ## Role-based argument presets
