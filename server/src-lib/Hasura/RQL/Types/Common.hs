@@ -305,6 +305,13 @@ instance FromJSON InputWebhook where
       Left e  -> fail $ "Parsing URL template failed: " ++ e
       Right v -> pure $ InputWebhook v
 
+instance Q.FromCol InputWebhook where
+  fromCol bs = do
+    urlTemplate <- parseURLTemplate <$> Q.fromCol bs
+    case urlTemplate of
+      Left e -> Left $ "Parsing URL template failed: " <> T.pack e
+      Right v -> Right $ InputWebhook v
+
 resolveWebhook :: QErrM m => Env.Environment -> InputWebhook -> m ResolvedWebhook
 resolveWebhook env (InputWebhook urlTemplate) = do
   let eitherRenderedTemplate = renderURLTemplate env urlTemplate
