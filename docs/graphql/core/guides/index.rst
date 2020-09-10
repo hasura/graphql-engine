@@ -26,8 +26,6 @@ Guides / Tutorials / Resources
    Code Editor Integrations <code-editor-integrations/index>
    MySQL preview <mysql-preview>
 
-
-
 .. note::
 
   If you are new to GraphQL you can check out some front-end and back-end tutorials for building applications using
