@@ -379,7 +379,6 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
   lockedEventsCtx <- liftIO $ atomically initLockedEventsCtx
 
   -- prepare event triggers data
-  prepareEvents _icPgPool logger
   eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI
   unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
 
@@ -441,8 +440,10 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
   liftIO $ Warp.runSettings warpSettings app
 
   where
-    -- | prepareEvents is a function to unlock all the events that are
-    -- locked and unprocessed, which is called while hasura is started.
+    -- | prepareScheduledEvents is a function to unlock all the scheduled trigger
+    -- events that are locked and unprocessed, which is called while hasura is 
+    -- started.
+    --
     -- Locked and unprocessed events can occur in 2 ways
     -- 1.
     -- Hasura's shutdown was not graceful in which all the fetched
@@ -452,12 +453,6 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
     -- There is another hasura instance which is processing events and
     -- it will lock events to process them.
     -- So, unlocking all the locked events might re-deliver an event(due to #2).
-    prepareEvents pool (Logger logger) = do
-      liftIO $ logger $ mkGenericStrLog LevelInfo "event_triggers" "preparing data"
-      res <- liftIO $ runTx pool (Q.ReadCommitted, Nothing) unlockAllEvents
-      either (printErrJExit EventSubSystemError) return res
-
-    -- | prepareScheduledEvents is like prepareEvents, but for scheduled triggers
     prepareScheduledEvents pool (Logger logger) = do
       liftIO $ logger $ mkGenericStrLog LevelInfo "scheduled_triggers" "preparing data"
       res <- liftIO $ runTx pool (Q.ReadCommitted, Nothing) unlockAllLockedScheduledEvents
