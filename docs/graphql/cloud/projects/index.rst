@@ -49,4 +49,5 @@ Dig deeper
    Managing projects <manage-projects/index>
    Securing projects <secure>
    Deleting projects <delete>
+   Switching pricing plans <pricing>
    

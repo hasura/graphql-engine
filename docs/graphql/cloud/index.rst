@@ -72,4 +72,3 @@ realtime monitoring, caching, tracing, and rate-limiting. It supports both new a
   hasurapro-cli/index
   api-reference
   glossary
-  pricing
