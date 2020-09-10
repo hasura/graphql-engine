@@ -24,16 +24,17 @@ Step 2: Connect new/existing database
 -------------------------------------
 
 - To use an existing database, choose ``I have an existing Postgres database``.
-- To create a new database, choose ``Try a free database with Heroku``.
+- To try out with a new database, choose ``Try a free database with Heroku``.
 
 .. thumbnail:: /img/graphql/cloud/getting-started/connect-db.png
    :alt: Connect new or existing database
    :width: 591px
 
-Step 2a: Enter database URL (for existing database)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 2.1: Enter database URL (for existing database)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you chose ``I have an existing Postgres database`` in :ref:`Step 2 <cloud_connect_db>`, enter a database URL.
+If you chose ``I have an existing Postgres database`` in :ref:`Step 2 <cloud_connect_db>`, enter
+your database connection URL.
 
 .. thumbnail:: /img/graphql/cloud/getting-started/connect-existing-db.png
    :alt: Enter URL for existing database
