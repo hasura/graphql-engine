@@ -26,4 +26,4 @@ Guides
   Custom JWT integration with NodeJS <custom-jwt-nodejs>
   Auth0 JWT integration <auth0-jwt>
   OneGraph's AuthGuardian JWT integration <auth-guardian-jwt>
-  AWS Cognito JWT integration <auth-guardian-jwt>
+  AWS Cognito JWT integration <aws-cognito>
