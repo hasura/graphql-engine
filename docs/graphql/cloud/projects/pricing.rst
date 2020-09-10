@@ -4,8 +4,8 @@
 
 .. _pricing:
 
-Pricing
-=======
+Switching pricing plans
+=======================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -18,62 +18,15 @@ Introduction
 Hasura has different pricing plans that you can choose from based on your requirements. 
 It is possible to switch between these pricing plans at any time.
 
-Pricing models
---------------
+Pricing plans
+-------------
 
 There are three different pricing plans that you can chose from: free tier, pay-as-you-go and enterprise.
-These plans are briefly explained in this section.
 
-.. note::
+For details and a full list of features for each of these plans, check out `our website <https://hasura.io/pricing/>`__.
 
-    For more details and a full list of features for each of these plans, check out `our website <https://hasura.io/pricing/>`__.
-
-Free tier
-^^^^^^^^^
-
-**Costs:** Free.
-
-Hasura projects on the free tier are fully managed and come with Hasura's core features:
-
-- Instant CRUD and realtime
-- Role based authorization
-- Eventing system (actions & triggers)
-- Remote joins
-- Remote schemas
-
-Furthermore, the projects' reliability is ensured by the following:
-
-- Analytics
-- Tracing
-- Regression testing
-
-Pay-as-you-go
-^^^^^^^^^^^^^
-
-**Costs:** First 20GiB of the month: $99, every GiB further: $2.
-
-The pay-as-you-go plan includes everything on the free tier, plus additional features. These include:
-
-- Auto scaling
-- High availability
-- Caching
-- API access to metrics
-- Email support
-
-Enterprise
-^^^^^^^^^^
-
-**Costs:** Custom pricing.
-
-It is a custom plan tailored to your requirements.
-
-The enterprise plan includes everything that is available for the free tier and the pay-as-you-go plans.
-In addition, the data pass-through is unlimited, and it includes alerting (e.g. Pagerduty) as well as APM (e.g. Datadog, Prometheus).
-
-Also, with the enterprise plan, you will have a dedicated account manager, as well as training.
-
-Switch between pricing plans
-----------------------------
+Switching pricing plans
+-----------------------
 
 It is possible to switch between the pricing plans at any time.
 
