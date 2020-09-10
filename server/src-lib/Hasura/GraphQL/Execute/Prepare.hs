@@ -4,6 +4,7 @@ module Hasura.GraphQL.Execute.Prepare
   , PlanningSt(..)
   , RemoteCall
   , ExecutionPlan(..)
+  , ExecutionJoin(..)
   , ExecutionStep(..)
   , initPlanningSt
   , runPlan
@@ -45,8 +46,21 @@ type PlanVariables = Map.HashMap G.Name Int
 type PrepArgMap = IntMap.IntMap (Q.PrepArg, PGScalarValue)
 
 -- | Full execution plan to process one GraphQL query.
-data ExecutionPlan db remote raw =
-  ExecutionPlan (ExecutionStep db remote raw) [(EncJSON -> ExecutionPlan db remote raw, EncJSON -> EncJSON -> EncJSON)]
+data ExecutionPlan db remote raw a =
+  ExecutionPlan (ExecutionStep db remote raw) [ExecutionJoin db remote raw a]
+
+data ExecutionJoin db remote raw a = ExecutionJoin
+  { -- given a list of objects, how do we generate the query for their relationship
+    generate  :: a -> ExecutionPlan db remote raw a
+  , -- how do we recombine the relationship items with the original objects
+    -- recombine :: relationship -> original -> result
+    recombine :: a -> a -> a
+  }
+
+-- NOTE:
+-- this is neither a functor nor a contravariant functor, given how `a` is used.
+-- this partially defeats the purpose of making it generic over a?
+
 
 type RemoteCall = (RemoteSchemaInfo, G.TypedOperationDefinition G.NoFragments G.Name, Maybe GH.VariableValues)
 
