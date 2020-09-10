@@ -56,38 +56,33 @@ Click ``Create Project``.
    :group: create
    :class: inline-block
 
-Next steps
-----------
+Step 4: Try Hasura out
+----------------------
 
-Once you've created your project, you can get started with building with Hasura or manage your project.
-
-.. contents::
-  :backlinks: none
-  :depth: 1
-  :local:
+Click ``Launch Console`` to open the Hasura console in your browser and
+:ref:`make your first GraphQL query <first_graphql_query>` or :ref:`set up your first event trigger <first_event_trigger>`.
 
 .. thumbnail:: /img/graphql/cloud/getting-started/project-functionalities.png
   :alt: Project actions
   :width: 860px
 
-
-Explore the Hasura console
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Click ``Launch Console`` to open the Hasura console in your browser and :ref:`make your first GraphQL query <first_graphql_query>` or :ref:`set up your first event trigger <first_event_trigger>`.
-
-You can navigate to the ``Pro`` tab to check out the Pro features that Hasura Cloud has set up for you.
+You can navigate to the ``Pro`` tab in the console to check out the Pro features that Hasura Cloud has set up for you.
 
 .. thumbnail:: /img/graphql/cloud/metrics/pro-tab-overview.png
-   :alt: Hasura Console: Pro tab
-   :width: 1118px
+  :alt: Hasura Console: Pro tab
+  :width: 1000px
 
-Manage your project
-^^^^^^^^^^^^^^^^^^^
+Next steps
+----------
 
-Click the gear icon to :ref:`manage your project <manage_project>` (e.g. add collaborators, env vars or custom domains).
+You can check out our `30-Minute Hasura Basics Course <https://hasura.io/learn/graphql/hasura/introduction/>`__
+and other `GraphQL & Hasura Courses <https://hasura.io/learn/>`__ for a more detailed introduction to Hasura.
 
-Add an admin secret
-^^^^^^^^^^^^^^^^^^^
+You can also click the gear icon to :ref:`manage your Hasura Cloud project <manage_project>` (e.g. add
+collaborators, env vars or custom domains) and :ref:`add an admin secret <secure_project>` to make sure that your
+GraphQL endpoint and the Hasura console are not publicly accessible.
 
-:ref:`Add an admin secret <secure_project>` to make sure that your GraphQL endpoint and the Hasura console are not publicly accessible.
+.. thumbnail:: /img/graphql/cloud/getting-started/project-functionalities.png
+  :alt: Project actions
+  :width: 860px
+
