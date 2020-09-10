@@ -371,6 +371,7 @@ elif [ "$MODE" = "test" ]; then
   # We'll get an hpc error if these exist; they will be deleted below too:
   rm -f graphql-engine-tests.tix graphql-engine.tix graphql-engine-combined.tix
 
+  # Various tests take some configuration from the environment; set these up here:
   export EVENT_WEBHOOK_HEADER="MyEnvValue"
   export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
   export SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN="http://127.0.0.1:5594"
