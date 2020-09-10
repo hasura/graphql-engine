@@ -38,12 +38,16 @@ module Hasura.RQL.Types.Common
 
        , successMsg
        , NonNegativeDiffTime
+       , unNonNegativeDiffTime
+       , unsafeNonNegativeDiffTime
        , mkNonNegativeDiffTime
        , InputWebhook(..)
        , ResolvedWebhook(..)
        , resolveWebhook
        , NonNegativeInt
+       , getNonNegativeInt
        , mkNonNegativeInt
+       , unsafeNonNegativeInt
        ) where
 
 import           Hasura.EncJSON
@@ -285,8 +289,11 @@ newtype NonNegativeInt = NonNegativeInt { getNonNegativeInt :: Int }
 
 mkNonNegativeInt :: Int -> Maybe NonNegativeInt
 mkNonNegativeInt x = case x >= 0 of
-  True  -> Just (NonNegativeInt x)
+  True  -> Just $ NonNegativeInt x
   False -> Nothing
+
+unsafeNonNegativeInt :: Int -> NonNegativeInt
+unsafeNonNegativeInt = NonNegativeInt
 
 instance FromJSON NonNegativeInt where
   parseJSON = withScientific "NonNegativeInt" $ \t -> do
@@ -301,9 +308,12 @@ instance FromJSON NonNegativeInt where
 newtype NonNegativeDiffTime = NonNegativeDiffTime { unNonNegativeDiffTime :: DiffTime }
   deriving (Show, Eq,ToJSON,Generic, NFData, Cacheable, Num)
 
+unsafeNonNegativeDiffTime :: DiffTime -> NonNegativeDiffTime
+unsafeNonNegativeDiffTime = NonNegativeDiffTime
+
 mkNonNegativeDiffTime :: DiffTime -> Maybe NonNegativeDiffTime
 mkNonNegativeDiffTime x = case x >= 0 of
-  True  -> Just (NonNegativeDiffTime x)
+  True  -> Just $ NonNegativeDiffTime x
   False -> Nothing
 
 instance FromJSON NonNegativeDiffTime where
