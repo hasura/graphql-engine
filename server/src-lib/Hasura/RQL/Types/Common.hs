@@ -286,7 +286,7 @@ successMsg :: EncJSON
 successMsg = "{\"message\":\"success\"}"
 
 newtype NonNegativeInt = NonNegativeInt { getNonNegativeInt :: Int }
-  deriving (Show, Eq, ToJSON, Generic, NFData, Cacheable, Num, Read)
+  deriving (Show, Eq, ToJSON, Generic, NFData, Cacheable, Num)
 
 mkNonNegativeInt :: Int -> Maybe NonNegativeInt
 mkNonNegativeInt x = case x >= 0 of

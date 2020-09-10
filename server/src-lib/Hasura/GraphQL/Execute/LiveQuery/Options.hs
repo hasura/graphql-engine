@@ -34,7 +34,7 @@ instance J.FromJSON LiveQueriesOptions where
                        <*> o J..: "refetch_delay"
 
 newtype BatchSize = BatchSize { unBatchSize :: NonNegativeInt }
-  deriving (Show, Eq, J.ToJSON, J.FromJSON, Read)
+  deriving (Show, Eq, J.ToJSON, J.FromJSON)
 
 -- TODO this is treated as milliseconds in fromEnv and as seconds in ToJSON.
 --      ideally this would have e.g. ... unRefetchInterval :: Milliseconds
