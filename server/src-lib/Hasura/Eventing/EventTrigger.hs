@@ -254,17 +254,17 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
       cache <- liftIO getSchemaCache
       let meti = getEventTriggerInfoFromEvent cache e
       case meti of
-        Nothing -> do
+        Left err -> do
           --  This rare error can happen in the following known cases:
           --  i) schema cache is not up-to-date (due to some bug, say during schema syncing across multiple instances)
           --  ii) the event trigger is dropped when this event was just fetched
-          logQErr $ err500 Unexpected "table or event-trigger not found in schema cache"
+          logQErr $ err500 Unexpected err
           liftIO . runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
             currentTime <- liftIO getCurrentTime
             -- For such an event, we unlock the event and retry after a minute
             setRetry e (addUTCTime 60 currentTime)
           >>= flip onLeft logQErr
-        Just eti -> do
+        Right eti -> do
           let webhook = T.unpack $ wciCachedValue $ etiWebhookInfo eti
               retryConf = etiRetryConf eti
               timeoutSeconds = fromMaybe defaultTimeoutSeconds (rcTimeoutSec retryConf)
@@ -393,10 +393,16 @@ logQErr err = do
   logger :: L.Logger L.Hasura <- asks getter
   L.unLogger logger $ EventInternalErr err
 
-getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Maybe EventTriggerInfo
-getEventTriggerInfoFromEvent sc e = let table = eTable e
-                                        tableInfo = M.lookup table $ scTables sc
-                                    in M.lookup ( tmName $ eTrigger e) =<< (_tiEventTriggerInfoMap <$> tableInfo)
+getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Either Text EventTriggerInfo
+getEventTriggerInfoFromEvent sc e = do
+  let table = eTable e
+      mTableInfo = M.lookup table $ scTables sc
+  tableInfo <- onNothing mTableInfo $ Left ("table '" <> table <<> "' not found")
+  let triggerName = tmName $ eTrigger e
+      mEventTriggerInfo = M.lookup triggerName (_tiEventTriggerInfoMap tableInfo)
+  onNothing mEventTriggerInfo $ Left ("event trigger '" <> triggerNameToTxt triggerName
+    <> "' on table '" <> table <<> "' not found")
+
 
 ---- DATABASE QUERIES ---------------------
 --
@@ -411,10 +417,11 @@ fetchEvents :: Int -> Q.TxE QErr [Event]
 fetchEvents limitI =
   map uncurryEvent <$> Q.listQE defaultTxErrorHandler [Q.sql|
       UPDATE hdb_catalog.event_log
-      SET locked = 't'
+      SET locked = NOW()
       WHERE id IN ( SELECT l.id
                     FROM hdb_catalog.event_log l
-                    WHERE l.delivered = 'f' and l.error = 'f' and l.locked = 'f'
+                    WHERE l.delivered = 'f' and l.error = 'f' 
+                          and (l.locked IS NULL or l.locked < (NOW() - interval '30 minute'))
                           and (l.next_retry_at is NULL or l.next_retry_at <= now())
                           and l.archived = 'f'
                     ORDER BY created_at
@@ -451,14 +458,14 @@ insertInvocation invo = do
 setSuccess :: Event -> Q.TxE QErr ()
 setSuccess e = Q.unitQE defaultTxErrorHandler [Q.sql|
                         UPDATE hdb_catalog.event_log
-                        SET delivered = 't', next_retry_at = NULL, locked = 'f'
+                        SET delivered = 't', next_retry_at = NULL, locked = NULL
                         WHERE id = $1
                         |] (Identity $ eId e) True
 
 setError :: Event -> Q.TxE QErr ()
 setError e = Q.unitQE defaultTxErrorHandler [Q.sql|
                         UPDATE hdb_catalog.event_log
-                        SET error = 't', next_retry_at = NULL, locked = 'f'
+                        SET error = 't', next_retry_at = NULL, locked = NULL
                         WHERE id = $1
                         |] (Identity $ eId e) True
 
@@ -466,7 +473,7 @@ setRetry :: Event -> UTCTime -> Q.TxE QErr ()
 setRetry e time =
   Q.unitQE defaultTxErrorHandler [Q.sql|
           UPDATE hdb_catalog.event_log
-          SET next_retry_at = $1, locked = 'f'
+          SET next_retry_at = $1, locked = NULL
           WHERE id = $2
           |] (time, eId e) True
 
@@ -474,8 +481,8 @@ unlockAllEvents :: Q.TxE QErr ()
 unlockAllEvents =
   Q.unitQE defaultTxErrorHandler [Q.sql|
           UPDATE hdb_catalog.event_log
-          SET locked = 'f'
-          WHERE locked = 't'
+          SET locked = NULL
+          WHERE locked IS NOT NULL
           |] () True
 
 toInt64 :: (Integral a) => a -> Int64
@@ -498,12 +505,12 @@ unlockEvents eventIds =
    [Q.sql|
      WITH "cte" AS
      (UPDATE hdb_catalog.event_log
-     SET locked = 'f'
+     SET locked = NULL
      WHERE id = ANY($1::text[])
      -- only unlock those events that have been locked, it's possible
      -- that an event has been processed but not yet been removed from
      -- the saved locked events, which will lead to a double send
-     AND locked = 't'
+     AND locked IS NOT NULL
      RETURNING *)
      SELECT count(*) FROM "cte"
    |] (Identity $ EventIdArray eventIds) True
