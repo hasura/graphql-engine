@@ -19,6 +19,9 @@ module Hasura.GraphQL.Execute
 
   , MonadGQLExecutionCheck(..)
   , checkQueryInAllowlist
+
+  -- TODO: clean me
+  , execAllSteps
   ) where
 
 import           Hasura.Prelude
@@ -341,3 +344,22 @@ execRemoteGQ env reqId userInfo reqHdrs q rsi opDef = do
   (time, respHdrs, resp) <- execRemoteGQ' env manager userInfo reqHdrs q rsi opType
   let !httpResp = HttpResponse (encJFromLBS resp) respHdrs
   return (time, httpResp)
+
+execAllSteps
+  :: Monad m
+  => (db     -> m EncJSON)
+  -> (remote -> m EncJSON)
+  -> (raw    -> m EncJSON)
+  -> EPr.ExecutionPlan db remote raw
+  -> m EncJSON
+execAllSteps db remote raw = \case
+  EPr.LeafPlan step -> executeStep step
+  EPr.NodePlan step generate combine -> do
+    as <- executeStep step
+    bs <- execAllSteps db remote raw $ generate as
+    pure $ combine as bs
+  where
+    executeStep = \case
+      EPr.ExecStepDB     dbStep     -> db dbStep
+      EPr.ExecStepRemote remoteStep -> remote remoteStep
+      EPr.ExecStepRaw    rawStep    -> raw rawStep

@@ -87,7 +87,8 @@ runGQ
 runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   -- The response and misc telemetry data:
   let telemTransport = Telem.HTTP
-  (telemTimeTot_DT, (telemCacheHit, telemLocality, (telemTimeIO_DT, telemQueryType, !resp))) <- withElapsedTime $ do
+--  (telemTimeTot_DT, (telemCacheHit, telemLocality, (telemTimeIO_DT, telemQueryType, !resp))) <- withElapsedTime $ do
+  (!resp) <- do
     E.ExecutionCtx _ sqlGenCtx pgExecCtx {- planCache -} sc scVer httpManager enableAL <- ask
 
     -- run system authorization on the GraphQL API
@@ -98,29 +99,35 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                                  userInfo sqlGenCtx sc scVer queryType
                                  httpManager reqHeaders (reqUnparsed, reqParsed)
     case execPlan of
-      E.QueryExecutionPlan (EP.LeafPlan queryPlan) asts ->
-        case queryPlan of
-          E.ExecStepDB txGenSql -> do
-            (telemTimeIO, telemQueryType, respHdrs, resp) <-
-              runQueryDB reqId (reqUnparsed,reqParsed) asts userInfo txGenSql
-            return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs))
-          E.ExecStepRemote (rsi, opDef, _varValsM) ->
-            runRemoteGQ telemCacheHit rsi opDef
-          E.ExecStepRaw (name, json) -> do
-            (telemTimeIO, obj) <- withElapsedTime $
-              return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
-            return (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj []))
+      E.QueryExecutionPlan queryPlan asts -> do
+        let execDB txGenSql = do
+              (telemTimeIO, telemQueryType, respHdrs, resp) <-
+                runQueryDB reqId (reqUnparsed,reqParsed) asts userInfo txGenSql
+              -- return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs))
+              pure resp
+            execRemote (rsi, opDef, _varValsM) = do
+              (_, _, (_, _, resp)) <- runRemoteGQ telemCacheHit rsi opDef
+              pure $ _hrBody resp
+            execRaw (name, json) = do
+              (telemTimeIO, obj) <- withElapsedTime $
+                pure $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
+              -- pure (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj []))
+              pure obj
+        E.execAllSteps execDB execRemote execRaw queryPlan
       E.MutationExecutionPlan (EP.LeafPlan mutationPlan) ->
         case mutationPlan of
           E.ExecStepDB (tx, responseHeaders) -> do
             (telemTimeIO, telemQueryType, resp) <- runMutationDB reqId reqUnparsed userInfo tx
-            return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp responseHeaders))
-          E.ExecStepRemote (rsi, opDef, _varValsM) ->
-            runRemoteGQ telemCacheHit rsi opDef
+            -- return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp responseHeaders))
+            pure resp
+          E.ExecStepRemote (rsi, opDef, _varValsM) -> do
+            (_, _, (_, _, resp)) <- runRemoteGQ telemCacheHit rsi opDef
+            pure $ _hrBody resp
           E.ExecStepRaw (name, json) -> do
             (telemTimeIO, obj) <- withElapsedTime $
               return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
-            return (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj []))
+            -- return (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj []))
+            pure obj
       E.SubscriptionExecutionPlan _sub ->
         throw400 UnexpectedPayload "subscriptions are not supported over HTTP, use websockets instead"
 {-
@@ -133,10 +140,11 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         (telemTimeIO, resp) <- E.execRemoteGQ reqId userInfo reqHeaders reqUnparsed rsi $ G._todType opDef
         return (telemCacheHit, Telem.Remote, (telemTimeIO, telemQueryType, resp))
 -}
-  let telemTimeIO = convertDuration telemTimeIO_DT
-      telemTimeTot = convertDuration telemTimeTot_DT
-  Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
-  return resp
+  -- let telemTimeIO = convertDuration telemTimeIO_DT
+  --     telemTimeTot = convertDuration telemTimeTot_DT
+  -- Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
+  -- return resp
+  pure $ HttpResponse resp []
   where
     runRemoteGQ telemCacheHit rsi opDef = do
       let telemQueryType | G._todType opDef == G.OperationTypeMutation = Telem.Mutation
