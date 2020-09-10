@@ -56,6 +56,7 @@ import           Hasura.RQL.DDL.Headers        ()
 import           Control.Lens                  (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.Casing
+import           Data.Bifunctor                (bimap)
 import           Data.Aeson.TH
 import           Data.URL.Template
 import           Instances.TH.Lift             ()
@@ -308,9 +309,7 @@ instance FromJSON InputWebhook where
 instance Q.FromCol InputWebhook where
   fromCol bs = do
     urlTemplate <- parseURLTemplate <$> Q.fromCol bs
-    case urlTemplate of
-      Left e -> Left $ "Parsing URL template failed: " <> T.pack e
-      Right v -> Right $ InputWebhook v
+    bimap (\e -> "Parsing URL template failed: " <> T.pack e) InputWebhook urlTemplate
 
 resolveWebhook :: QErrM m => Env.Environment -> InputWebhook -> m ResolvedWebhook
 resolveWebhook env (InputWebhook urlTemplate) = do
