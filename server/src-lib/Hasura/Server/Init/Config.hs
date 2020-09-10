@@ -19,7 +19,7 @@ import qualified Hasura.GraphQL.Execute.Plan      as E
 import qualified Hasura.Logging                   as L
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Common          (NonNegativeDiffTime (..))
+import           Hasura.RQL.Types.Common          (mkNonNegativeDiffTime)
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Session
@@ -261,7 +261,18 @@ instance FromEnv LQ.BatchSize where
   fromEnv = fmap LQ.BatchSize . readEither
 
 instance FromEnv LQ.RefetchInterval where
-  fromEnv = fmap (LQ.RefetchInterval . NonNegativeDiffTime . milliseconds . fromInteger) . readEither
+  fromEnv x = do
+    let readValue = fmap (milliseconds . fromInteger) . readEither $ x
+     in
+      case readValue of
+        Left str  -> Left str
+        Right val -> case maybeNonNegativeDiffTime $ mkNonNegativeDiffTime val of
+          Left ans -> Left ans
+          Right t  -> Right (LQ.RefetchInterval t)
+      where
+        maybeNonNegativeDiffTime dt = case dt of
+          Just t -> Right t
+          Nothing -> Left "negative numbers are not allowed"
 
 instance FromEnv Milliseconds where
   fromEnv = fmap fromInteger . readEither
