@@ -332,7 +332,9 @@ getWebhookInfoFromConf
   -> WebhookConf
   -> m WebhookConfInfo
 getWebhookInfoFromConf env wc = case wc of
-  WCValue w -> return $ WebhookConfInfo wc w
+  WCValue w -> do
+    resolvedWebhook <- resolveWebhook env w
+    return $ WebhookConfInfo wc $ unResolvedWebhook resolvedWebhook
   WCEnv we -> do
     envVal <- getEnv env we
     return $ WebhookConfInfo wc envVal
