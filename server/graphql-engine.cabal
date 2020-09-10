@@ -483,6 +483,7 @@ executable graphql-engine
                    , pg-client
                    , text
                    , text-conversions
+                   , time
                    , unix
                    , ekg-core
 
