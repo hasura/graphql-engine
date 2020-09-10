@@ -410,7 +410,7 @@ callWebhook
   -> Bool
   -> ResolvedWebhook
   -> ActionWebhookPayload
-  -> Maybe Int
+  -> Timeout
   -> m (ActionWebhookResponse, HTTP.ResponseHeaders)
 callWebhook env manager outputType outputFields reqHeaders confHeaders
             forwardClientHeaders resolvedWebhook actionWebhookPayload timeoutSeconds = do
@@ -424,8 +424,7 @@ callWebhook env manager outputType outputFields reqHeaders confHeaders
       requestBody = J.encode postPayload
       requestBodySize = BL.length requestBody
       url = unResolvedWebhook resolvedWebhook
-      responseTimeoutSec = fromMaybe defaultTimeoutSeconds $ timeoutSeconds
-      responseTimeout = HTTP.responseTimeoutMicro $ responseTimeoutSec * 1000000
+      responseTimeout = HTTP.responseTimeoutMicro $ (unTimeout timeoutSeconds) * 1000000
   httpResponse <- do
     initReq <- liftIO $ HTTP.parseRequest (T.unpack url)
     let req = initReq { HTTP.method          = "POST"

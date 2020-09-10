@@ -32,6 +32,7 @@ module Hasura.RQL.Types.Action
   , aiDefinition
   , aiPermissions
   , aiComment
+  , defaultActionTimeoutSecs
   , ActionPermissionInfo(..)
 
   , ActionPermissionMap
@@ -123,9 +124,9 @@ data ActionDefinition a b
   , _adType                 :: !ActionType
   , _adHeaders              :: ![HeaderConf]
   , _adForwardClientHeaders :: !Bool
-  , _adTimeout              :: !(Maybe Int)
+  , _adTimeout              :: !Timeout
   -- ^ If the timeout is not provided by the user, then
-  -- the default timeout of Network.HTTP.Client (30 seconds) will be used
+  -- the default timeout of 30 seconds will be used
   , _adHandler              :: !b
   } deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Generic)
 instance (NFData a, NFData b) => NFData (ActionDefinition a b)
@@ -139,11 +140,7 @@ instance (J.FromJSON a, J.FromJSON b) => J.FromJSON (ActionDefinition a b) where
     _adHeaders <- o J..:? "headers" J..!= []
     _adForwardClientHeaders <- o J..:? "forward_client_headers" J..!= False
     _adHandler <- o J..:  "handler"
-    timeout <- o J..:? "timeout"
-    _adTimeout <- case timeout of
-      Nothing -> pure Nothing
-      Just t  ->
-        bool (fail "timeout cannot be a negative value") (pure $ Just t) $ t > 0
+    _adTimeout <- o J..:? "timeout" J..!= defaultActionTimeoutSecs
     actionType <- o J..:? "type" J..!= "mutation"
     _adType <- case actionType of
       "mutation" -> ActionMutation <$> o J..:? "kind" J..!= ActionSynchronous
@@ -163,7 +160,8 @@ instance (J.ToJSON a, J.ToJSON b) => J.ToJSON (ActionDefinition a b) where
     , "headers"                J..= headers
     , "forward_client_headers" J..= forwardClientHeaders
     , "handler"                J..= handler
-    ] <> typeAndKind <> (maybe mempty (\t -> ["timeout" J..= t]) timeout)
+    , "timeout"                J..= timeout
+    ] <> typeAndKind
 
 type ResolvedActionDefinition =
   ActionDefinition (ArgumentDefinition (G.GType, NonObjectCustomType)) ResolvedWebhook
@@ -271,7 +269,7 @@ data AnnActionExecution v
   , _aaeHeaders              :: ![HeaderConf]
   , _aaeForwardClientHeaders :: !Bool
   , _aaeStrfyNum             :: !Bool
-  , _aaeTimeOut              :: !(Maybe Int)
+  , _aaeTimeOut              :: !Timeout
   } deriving (Show, Eq)
 
 data AnnActionMutationAsync

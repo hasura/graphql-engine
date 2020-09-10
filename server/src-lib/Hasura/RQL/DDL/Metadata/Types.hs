@@ -552,7 +552,7 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
           <> catMaybes [ listToMaybeOrdPair "headers" AO.toOrdered headers
                        , listToMaybeOrdPair "arguments" argDefinitionToOrdJSON args]
           <> typeAndKind
-          <> catMaybes [ maybeAnyToMaybeOrdPair "timeout" AO.toOrdered timeout]
+          <> (bool [("timeout",AO.toOrdered timeout)] mempty $ timeout == defaultActionTimeoutSecs)
 
         permToOrdJSON :: ActionPermissionMetadata -> AO.Value
         permToOrdJSON (ActionPermissionMetadata role permComment) =
