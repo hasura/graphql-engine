@@ -8,7 +8,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Options
 import           Hasura.Prelude
 
 import qualified Data.Aeson              as J
-import           Hasura.RQL.Types.Common (NonNegativeDiffTime (..), NonNegativeInt (..))
+import           Hasura.RQL.Types.Common (NonNegativeDiffTime, NonNegativeInt)
 
 data LiveQueriesOptions
   = LiveQueriesOptions
