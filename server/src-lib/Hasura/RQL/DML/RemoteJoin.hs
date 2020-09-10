@@ -6,6 +6,8 @@ module Hasura.RQL.DML.RemoteJoin
   , getRemoteJoinsMutationOutput
   , getRemoteJoinsConnectionSelect
   , RemoteJoins
+  , FieldPath(..)
+  , RemoteJoin(..)
   ) where
 
 import           Hasura.Prelude
