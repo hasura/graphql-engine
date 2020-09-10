@@ -43,8 +43,8 @@ import           Network.URI.Extended               ()
 import qualified Hasura.Incremental                 as Inc
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Schema.Common       (textToName)
 import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Schema.Common       (textToName)
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Catalog
@@ -134,7 +134,7 @@ checkConflictingNode sc tnGQL = do
     Left _ -> pure ()
     Right (results, _reusability) -> do
       case OMap.lookup $$(G.litName "__schema") results of
-        Just (RFRaw (Object schema)) -> do
+        Just (RootTree (RFRaw (Object schema)) _) -> do
           let names = do
                 Object queryType <- Map.lookup "queryType" schema
                 Array fields <- Map.lookup "fields" queryType
