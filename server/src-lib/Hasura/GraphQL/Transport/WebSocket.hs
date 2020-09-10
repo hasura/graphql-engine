@@ -62,6 +62,7 @@ import           Hasura.Session
 import qualified Hasura.GraphQL.Execute                      as E
 import qualified Hasura.GraphQL.Execute.LiveQuery            as LQ
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll       as LQ
+import qualified Hasura.GraphQL.Execute.Prepare              as EP
 import qualified Hasura.GraphQL.Execute.Query                as EQ
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
 import qualified Hasura.Logging                              as L
@@ -349,7 +350,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx {- planCache -} sc scVer httpMgr enableAL
 
   case execPlan of
-    E.QueryExecutionPlan queryPlan asts ->
+    E.QueryExecutionPlan (EP.LeafPlan queryPlan) asts ->
       case queryPlan of
         E.ExecStepDB (tx, genSql) -> Tracing.trace "Query" $
           execQueryOrMut timerTot Telem.Query telemCacheHit (Just genSql) requestId $
@@ -359,7 +360,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         E.ExecStepRaw (name, json) ->
           execQueryOrMut timerTot Telem.Query telemCacheHit Nothing requestId $
           return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
-    E.MutationExecutionPlan mutationPlan ->
+    E.MutationExecutionPlan (EP.LeafPlan mutationPlan) ->
       case mutationPlan of
         E.ExecStepDB (tx, _) -> Tracing.trace "Mutate" do
           ctx <- Tracing.currentContext

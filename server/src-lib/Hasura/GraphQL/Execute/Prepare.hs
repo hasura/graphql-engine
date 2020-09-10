@@ -3,7 +3,7 @@ module Hasura.GraphQL.Execute.Prepare
   , PrepArgMap
   , PlanningSt(..)
   , RemoteCall
-  , ExecutionPlan
+  , ExecutionPlan(..)
   , ExecutionStep(..)
   , initPlanningSt
   , runPlan
@@ -28,6 +28,7 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.SQL.DML                         as S
 
+import           Hasura.EncJSON
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.DML.Internal                (currentSession)
@@ -43,10 +44,10 @@ type PlanVariables = Map.HashMap G.Name Int
 -- prepared argument and not the binary encoding in PG format
 type PrepArgMap = IntMap.IntMap (Q.PrepArg, PGScalarValue)
 
--- | Full execution plan to process one GraphQL query.  Once we work on
--- heterogeneous execution this will contain a mixture of things to run on the
--- database and things to run on remote schemas.
-type ExecutionPlan db remote raw = ExecutionStep db remote raw
+-- | Full execution plan to process one GraphQL query.
+data ExecutionPlan db remote raw
+  = LeafPlan (ExecutionStep db remote raw)
+  | NodePlan (ExecutionStep db remote raw) (EncJSON -> ExecutionPlan db remote raw) (EncJSON -> EncJSON -> EncJSON)
 
 type RemoteCall = (RemoteSchemaInfo, G.TypedOperationDefinition G.NoFragments G.Name, Maybe GH.VariableValues)
 

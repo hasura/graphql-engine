@@ -34,6 +34,7 @@ import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Execute                 as E
+import qualified Hasura.GraphQL.Execute.Prepare         as EP
 import qualified Hasura.GraphQL.Execute.Query           as EQ
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
@@ -97,7 +98,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                                  userInfo sqlGenCtx sc scVer queryType
                                  httpManager reqHeaders (reqUnparsed, reqParsed)
     case execPlan of
-      E.QueryExecutionPlan queryPlan asts ->
+      E.QueryExecutionPlan (EP.LeafPlan queryPlan) asts ->
         case queryPlan of
           E.ExecStepDB txGenSql -> do
             (telemTimeIO, telemQueryType, respHdrs, resp) <-
@@ -109,7 +110,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             (telemTimeIO, obj) <- withElapsedTime $
               return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
             return (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj []))
-      E.MutationExecutionPlan mutationPlan ->
+      E.MutationExecutionPlan (EP.LeafPlan mutationPlan) ->
         case mutationPlan of
           E.ExecStepDB (tx, responseHeaders) -> do
             (telemTimeIO, telemQueryType, resp) <- runMutationDB reqId reqUnparsed userInfo tx
