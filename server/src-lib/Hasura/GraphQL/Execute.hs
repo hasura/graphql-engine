@@ -352,14 +352,13 @@ execAllSteps
   -> (raw    -> m EncJSON)
   -> EPr.ExecutionPlan db remote raw
   -> m EncJSON
-execAllSteps db remote raw = \case
-  EPr.LeafPlan step -> executeStep step
-  EPr.NodePlan step generate combine -> do
-    as <- executeStep step
-    bs <- execAllSteps db remote raw $ generate as
-    pure $ combine as bs
-  where
-    executeStep = \case
-      EPr.ExecStepDB     dbStep     -> db dbStep
-      EPr.ExecStepRemote remoteStep -> remote remoteStep
-      EPr.ExecStepRaw    rawStep    -> raw rawStep
+execAllSteps db remote raw (EPr.ExecutionPlan step joinContinuations) = do
+  objects <- case step of
+    EPr.ExecStepDB     dbStep     -> db dbStep
+    EPr.ExecStepRaw    rawStep    -> raw rawStep
+    EPr.ExecStepRemote remoteStep -> remote remoteStep
+  joins <- for joinContinuations \(generate, recombine) -> do
+    others <- execAllSteps db remote raw $ generate objects
+    -- this assumes recombine :: b -> a -> a
+    pure $ recombine others
+  pure $ foldl' (&) objects joins

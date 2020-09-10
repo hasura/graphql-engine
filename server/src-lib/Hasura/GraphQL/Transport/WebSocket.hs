@@ -350,7 +350,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx {- planCache -} sc scVer httpMgr enableAL
 
   case execPlan of
-    E.QueryExecutionPlan (EP.LeafPlan queryPlan) asts ->
+    E.QueryExecutionPlan (EP.ExecutionPlan queryPlan _) asts ->
       case queryPlan of
         E.ExecStepDB (tx, genSql) -> Tracing.trace "Query" $
           execQueryOrMut timerTot Telem.Query telemCacheHit (Just genSql) requestId $
@@ -360,7 +360,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         E.ExecStepRaw (name, json) ->
           execQueryOrMut timerTot Telem.Query telemCacheHit Nothing requestId $
           return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
-    E.MutationExecutionPlan (EP.LeafPlan mutationPlan) ->
+    E.MutationExecutionPlan (EP.ExecutionPlan mutationPlan _) ->
       case mutationPlan of
         E.ExecStepDB (tx, _) -> Tracing.trace "Mutate" do
           ctx <- Tracing.currentContext

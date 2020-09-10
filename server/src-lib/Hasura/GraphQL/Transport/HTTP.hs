@@ -114,7 +114,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
               -- pure (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj []))
               pure obj
         E.execAllSteps execDB execRemote execRaw queryPlan
-      E.MutationExecutionPlan (EP.LeafPlan mutationPlan) ->
+      E.MutationExecutionPlan (EP.ExecutionPlan mutationPlan _) ->
         case mutationPlan of
           E.ExecStepDB (tx, responseHeaders) -> do
             (telemTimeIO, telemQueryType, resp) <- runMutationDB reqId reqUnparsed userInfo tx

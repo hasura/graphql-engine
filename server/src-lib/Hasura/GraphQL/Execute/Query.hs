@@ -277,7 +277,7 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
 
   let asts :: [QueryRootField UnpreparedValue]
       asts = OMap.elems unpreparedQueries
-  pure (LeafPlan executionPlan, asts)  -- See Note [Temporarily disabling query plan caching]
+  pure (ExecutionPlan executionPlan [], asts)  -- See Note [Temporarily disabling query plan caching]
   where
     usrVars = _uiSession userInfo
 

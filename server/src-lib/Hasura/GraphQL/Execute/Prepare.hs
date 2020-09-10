@@ -45,9 +45,8 @@ type PlanVariables = Map.HashMap G.Name Int
 type PrepArgMap = IntMap.IntMap (Q.PrepArg, PGScalarValue)
 
 -- | Full execution plan to process one GraphQL query.
-data ExecutionPlan db remote raw
-  = LeafPlan (ExecutionStep db remote raw)
-  | NodePlan (ExecutionStep db remote raw) (EncJSON -> ExecutionPlan db remote raw) (EncJSON -> EncJSON -> EncJSON)
+data ExecutionPlan db remote raw =
+  ExecutionPlan (ExecutionStep db remote raw) [(EncJSON -> ExecutionPlan db remote raw, EncJSON -> EncJSON -> EncJSON)]
 
 type RemoteCall = (RemoteSchemaInfo, G.TypedOperationDefinition G.NoFragments G.Name, Maybe GH.VariableValues)
 
