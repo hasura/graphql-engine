@@ -103,6 +103,7 @@ If you do have such headers configured, then you must update the header configur
 - cli: improve error messages thrown when metadata apply fails (#5513)
 - cli: fix issue with creating seed migrations while using tables with capital letters (closes #5532) (#5549)
 - build: introduce additional log kinds for cli-migrations image (#5529)
+- cli: support absolute paths in --envfile (#5689)
 
 ## `v1.3.0`
 
