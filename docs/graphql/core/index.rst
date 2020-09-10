@@ -67,7 +67,7 @@ The Hasura GraphQL engine makes your data instantly accessible over a real-time 
 
     .. container:: toc-list-content
 
-      - :ref:`Basics <migrations_basics>`
+      - :ref:`Migrations basics <migrations>`
       - :ref:`Setting Up Migrations <migrations_setup>`
       - :ref:`Managing Metadata <manage_hasura_metadata>`
       - :ref:`Deploy Using Hasura Cloud <cloud_docs>`

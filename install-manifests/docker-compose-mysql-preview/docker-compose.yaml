@@ -8,11 +8,24 @@ services:
     environment:
       POSTGRES_PASSWORD: postgrespassword
   graphql-engine:
-    image: hasura/graphql-engine:v1.3.2
+    image: hasura/graphql-engine:pull5655-633f084f
     ports:
     - "8080:8080"
     depends_on:
     - "postgres"
+    command:
+    - graphql-engine
+    - --mysql-host 
+    - <mysql-host>
+    - --mysql-user 
+    - <mysql-user>
+    - --mysql-port 
+    - <mysql-port>
+    - --mysql-dbname 
+    - <mysql-dbname>
+    - --mysql-password 
+    - <mysql-password>
+    - serve 
     restart: always
     environment:
       HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
