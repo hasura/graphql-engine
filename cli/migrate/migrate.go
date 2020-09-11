@@ -1852,8 +1852,13 @@ func (m *Migrate) ExportDataDump(tableNames []string) ([]byte, error) {
 	modifiedTableNames := make([]string, len(tableNames))
 	for idx, val := range tableNames {
 		split := strings.Split(val, ".")
+
+		if len(split) != 1 && len(split) != 2 {
+			return nil, fmt.Errorf(`invalid schema/table provided "%s"`, val)
+		}
+
 		if len(split) == 2 {
-			modifiedTableNames[idx] = fmt.Sprintf(`%s."%s"`, split[0], split[1])
+			modifiedTableNames[idx] = fmt.Sprintf(`"%s"."%s"`, split[0], split[1])
 		} else {
 			modifiedTableNames[idx] = fmt.Sprintf(`"%s"`, val)
 		}
