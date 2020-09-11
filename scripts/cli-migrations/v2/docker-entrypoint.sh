@@ -11,6 +11,7 @@ log() {
 
 DEFAULT_MIGRATIONS_DIR="/hasura-migrations"
 DEFAULT_METADATA_DIR="/hasura-metadata"
+DEFAULT_SEEDS_DIR="/hasura-seeds"
 TEMP_PROJECT_DIR="/tmp/hasura-project"
 
 # install cli-ext plugin
@@ -27,7 +28,7 @@ elif [ -z ${HASURA_GRAPHQL_MIGRATIONS_DATABASE_URL+x} ]; then
 fi
 log "migrations-startup" "database url for migrations is set by HASURA_GRAPHQL_DATABASE_URL"
 
-# Use 9691 port for running temporary instance. 
+# Use 9691 port for running temporary instance.
 # In case 9691 is occupied (according to docker networking), then this will fail.
 # override with another port in that case
 # TODO: Find a proper random port
@@ -77,6 +78,12 @@ if [ -z ${HASURA_GRAPHQL_METADATA_DIR+x} ]; then
     HASURA_GRAPHQL_METADATA_DIR="$DEFAULT_METADATA_DIR"
 fi
 
+# check if seeds directory is set, default otherwise
+if [ -z ${HASURA_GRAPHQL_SEEDS_DIR+x} ]; then
+    log "seeds-startup" "env var HASURA_GRAPHQL_SEEDS_DIR is not set, defaulting to $DEFAULT_SEEDS_DIR"
+    HASURA_GRAPHQL_SEEDS_DIR="$DEFAULT_SEEDS_DIR"
+fi
+
 # apply migrations if the directory exist
 if [ -d "$HASURA_GRAPHQL_MIGRATIONS_DIR" ]; then
     log "migrations-apply" "applying migrations from $HASURA_GRAPHQL_MIGRATIONS_DIR"
@@ -103,6 +110,19 @@ if [ -d "$HASURA_GRAPHQL_METADATA_DIR" ]; then
     hasura-cli metadata apply 
 else
     log "migrations-apply" "directory $HASURA_GRAPHQL_METADATA_DIR does not exist, skipping metadata"
+fi
+
+# apply seeds if the directory exist
+if [ -d "$HASURA_GRAPHQL_SEEDS_DIR" ]; then
+    log "migrations-apply" "applying seeds from $HASURA_GRAPHQL_SEEDS_DIR"
+    mkdir -p "$TEMP_PROJECT_DIR"
+    cp -a "$HASURA_GRAPHQL_SEEDS_DIR/." "$TEMP_PROJECT_DIR/seeds/"
+    cd "$TEMP_PROJECT_DIR"
+    echo "version: 2" > config.yaml
+    echo "endpoint: http://localhost:$HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT" >> config.yaml
+    hasura-cli seeds apply
+else
+    log "migrations-apply" "directory $HASURA_GRAPHQL_SEEDS_DIR does not exist, skipping seeds"
 fi
 
 # kill graphql engine that we started earlier
