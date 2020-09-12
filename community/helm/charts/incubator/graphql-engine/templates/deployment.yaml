@@ -45,6 +45,14 @@ spec:
               value: {{ include "hasura.databasePort" . | quote }}
             - name: HASURA_GRAPHQL_DATABASE_USER
               value: {{ include "hasura.databaseUser" . | quote }}
+            - name: HASURA_GRAPHQL_DATABASE_NAME
+              value: {{ include "hasura.databaseName" . | quote }}
+            - name: HASURA_GRAPHQL_ENABLE_CONSOLE
+              value: {{ .Values.hasura.console.enabled | quote }}
+            - name: HASURA_GRAPHQL_SERVER_PORT
+              value: {{ .Values.hasura.server.port | quote }}
+            - name: HASURA_GRAPHQL_SERVER_HOST
+              value: {{ .Values.hasura.server.host | quote }}
             - name: HASURA_GRAPHQL_DATABASE_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -54,19 +62,12 @@ spec:
 {{- else }}
                   name: {{ $fullName }}
                   key: postgresql-password
-{{- end }}
-            - name: HASURA_GRAPHQL_DATABASE_NAME
-              value: {{ include "hasura.databaseName" . | quote }}
-            - name: HASURA_GRAPHQL_ENABLE_CONSOLE
-              value: {{ .Values.hasura.console.enabled | quote }}
-            - name: HASURA_GRAPHQL_SERVER_PORT
-              value: {{ .Values.hasura.server.port | quote }}
-            - name: HASURA_GRAPHQL_SERVER_HOST
-              value: {{ .Values.hasura.server.host | quote }}
+{{- end -}}
+
 {{- if .Values.hasura.role.unauthorized.default }}
             - name: HASURA_GRAPHQL_UNAUTHORIZED_ROLE
               value: {{ .Values.hasura.role.unauthorized.default | quote }}
-{{- end }}
+{{- end -}}
 
 {{- with .Values.hasura.secret -}}
   {{- if .jwt }}
@@ -98,12 +99,16 @@ spec:
               protocol: TCP
           livenessProbe:
             httpGet:
-              path: /
-              port: {{ .Values.hasura.server.port }}
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /
-              port: {{ .Values.hasura.server.port }}
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
 {{- with .Values.nodeSelector }}
