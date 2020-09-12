@@ -31,7 +31,7 @@ hasura:
 image:
   pullPolicy: IfNotPresent
   repository: hasura/graphql-engine
-  tag: 1.3.2
+  tag: v1.3.2
 imagePullSecrets: []
 ingress:
   annotations: {}
