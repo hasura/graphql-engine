@@ -40,6 +40,7 @@ import qualified Network.HTTP.Types                   as N
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+
 import           Hasura.Server.Auth.JWT               hiding (processJwt_)
 import           Hasura.Server.Auth.WebHook
 import           Hasura.Server.Utils
@@ -157,8 +158,7 @@ setupAuthMode mAdminSecretHash mWebHook mJwtSecret mUnAuthRole httpManager logge
       jwkRef <- case jcKeyOrUrl of
         Left jwk  -> liftIO $ newIORef (JWKSet [jwk])
         Right url -> getJwkFromUrl url
-      let claimsFmt = fromMaybe JCFJson jcClaimsFormat
-      return $ JWTCtx jwkRef jcClaimNs jcAudience claimsFmt jcIssuer
+      return $ JWTCtx jwkRef jcAudience jcIssuer jcClaims
       where
         -- if we can't find any expiry time for the JWK (either in @Expires@ header or @Cache-Control@
         -- header), do not start a background thread for refreshing the JWK
@@ -243,7 +243,7 @@ getUserInfoWithExpTime_ userInfoFromAuthHook_ processJwt_ logger manager rawHead
       mkUserInfo (URBFromSessionVariablesFallback adminRoleName)
       adminSecretState sessionVariables
 
-    sessionVariables = mkSessionVariables rawHeaders
+    sessionVariables = mkSessionVariablesHeaders rawHeaders
 
     checkingSecretIfSent
       :: AdminSecretHash -> m (UserInfo, Maybe UTCTime) -> m (UserInfo, Maybe UTCTime)

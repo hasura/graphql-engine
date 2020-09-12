@@ -49,13 +49,15 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers        ()
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Types
+import           Hasura.RQL.DDL.Headers        ()
+
 
 
 import           Control.Lens                  (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.Casing
+import           Data.Bifunctor                (bimap)
 import           Data.Aeson.TH
-import           Data.Sequence.NonEmpty
 import           Data.URL.Template
 import           Instances.TH.Lift             ()
 import           Language.Haskell.TH.Syntax    (Lift, Q, TExp)
@@ -150,11 +152,12 @@ instance Q.FromCol RelType where
 
 data RelInfo
   = RelInfo
-  { riName     :: !RelName
-  , riType     :: !RelType
-  , riMapping  :: !(HashMap PGCol PGCol)
-  , riRTable   :: !QualifiedTable
-  , riIsManual :: !Bool
+  { riName       :: !RelName
+  , riType       :: !RelType
+  , riMapping    :: !(HashMap PGCol PGCol)
+  , riRTable     :: !QualifiedTable
+  , riIsManual   :: !Bool
+  , riIsNullable :: !Bool
   } deriving (Show, Eq, Generic)
 instance NFData RelInfo
 instance Cacheable RelInfo
@@ -250,7 +253,7 @@ data InpValInfo
   = InpValInfo
   { _iviDesc   :: !(Maybe G.Description)
   , _iviName   :: !G.Name
-  , _iviDefVal :: !(Maybe G.ValueConst)
+  , _iviDefVal :: !(Maybe (G.Value Void))
   , _iviType   :: !G.GType
   } deriving (Show, Eq, TH.Lift, Generic)
 instance Cacheable InpValInfo
@@ -302,6 +305,11 @@ instance FromJSON InputWebhook where
     case parseURLTemplate t of
       Left e  -> fail $ "Parsing URL template failed: " ++ e
       Right v -> pure $ InputWebhook v
+
+instance Q.FromCol InputWebhook where
+  fromCol bs = do
+    urlTemplate <- parseURLTemplate <$> Q.fromCol bs
+    bimap (\e -> "Parsing URL template failed: " <> T.pack e) InputWebhook urlTemplate
 
 resolveWebhook :: QErrM m => Env.Environment -> InputWebhook -> m ResolvedWebhook
 resolveWebhook env (InputWebhook urlTemplate) = do

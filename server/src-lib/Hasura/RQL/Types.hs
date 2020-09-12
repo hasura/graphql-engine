@@ -4,7 +4,7 @@ module Hasura.RQL.Types
   , UserInfoM(..)
 
   , HasHttpManager (..)
-  , HasGCtxMap (..)
+  -- , HasGCtxMap (..)
 
   , SQLGenCtx(..)
   , HasSQLGenCtx(..)
@@ -38,6 +38,8 @@ module Hasura.RQL.Types
   , module R
   ) where
 
+import           Control.Monad.Unique
+
 import           Hasura.Prelude
 import           Hasura.Session
 import           Hasura.SQL.Types
@@ -64,8 +66,6 @@ import           Hasura.RQL.Types.SchemaCache        as R
 import           Hasura.RQL.Types.SchemaCache.Build  as R
 import           Hasura.RQL.Types.Table              as R
 
-import qualified Hasura.GraphQL.Context              as GC
-
 import qualified Data.HashMap.Strict                 as M
 import qualified Data.Text                           as T
 import qualified Network.HTTP.Client                 as HTTP
@@ -75,7 +75,7 @@ data QCtx
   { qcUserInfo    :: !UserInfo
   , qcSchemaCache :: !SchemaCache
   , qcSQLCtx      :: !SQLGenCtx
-  } deriving (Show, Eq)
+  }
 
 class HasQCtx a where
   getQCtx :: a -> QCtx
@@ -143,13 +143,13 @@ instance (Monoid w, HasHttpManager m) => HasHttpManager (WriterT w m) where
 instance (HasHttpManager m) => HasHttpManager (TraceT m) where
   askHttpManager = lift askHttpManager
 
-class (Monad m) => HasGCtxMap m where
-  askGCtxMap :: m GC.GCtxMap
+-- class (Monad m) => HasGCtxMap m where
+--   askGCtxMap :: m GC.GCtxMap
 
-instance (HasGCtxMap m) => HasGCtxMap (ReaderT r m) where
-  askGCtxMap = lift askGCtxMap
-instance (Monoid w, HasGCtxMap m) => HasGCtxMap (WriterT w m) where
-  askGCtxMap = lift askGCtxMap
+-- instance (HasGCtxMap m) => HasGCtxMap (ReaderT r m) where
+--   askGCtxMap = lift askGCtxMap
+-- instance (Monoid w, HasGCtxMap m) => HasGCtxMap (WriterT w m) where
+--   askGCtxMap = lift askGCtxMap
 
 newtype SQLGenCtx
   = SQLGenCtx
@@ -184,7 +184,7 @@ instance (HasSystemDefined m) => HasSystemDefined (TraceT m) where
 
 newtype HasSystemDefinedT m a
   = HasSystemDefinedT { unHasSystemDefinedT :: ReaderT SystemDefined m a }
-  deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO, MonadError e, MonadTx
+  deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO, MonadUnique, MonadError e, MonadTx
            , HasHttpManager, HasSQLGenCtx, TableCoreInfoRM, CacheRM, CacheRWM, UserInfoM )
 
 runHasSystemDefinedT :: SystemDefined -> HasSystemDefinedT m a -> m a
