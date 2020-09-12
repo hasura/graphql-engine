@@ -1,4 +1,4 @@
-1. Get the application URL by running these commands:
+1. Get the Hasura GraphQL Engine endpoint by running these commands:
 {{- if .Values.ingress.enabled }}
 {{- range $host := .Values.ingress.hosts }}
   {{- range .paths }}
