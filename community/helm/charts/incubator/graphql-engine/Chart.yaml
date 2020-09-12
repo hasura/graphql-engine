@@ -17,5 +17,5 @@ maintainers:
     name: Steve Fan
 name: graphql-engine
 type: application
-version: 0.0.6
+version: 0.0.7
 apiVersion: v2
