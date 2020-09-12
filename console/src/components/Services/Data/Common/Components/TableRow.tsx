@@ -28,13 +28,8 @@ const getColumnInfo = (
 
   let columnValueType;
   switch (true) {
-    case clone &&
-      clone[col.column_name] &&
-      !isDisabled &&
-      !['uuid', 'timestamptz'].includes(col.udt_name):
-      columnValueType = 'value';
-      break;
-    case !isEditing && (isIdentity || hasDefault || isGenerated):
+    case !isEditing && !clone && (isIdentity || hasDefault || isGenerated):
+    case clone && isDisabled:
     case identityGeneration === 'ALWAYS':
       columnValueType = 'default';
       break;
@@ -66,9 +61,9 @@ export interface TableRowProps {
     refName: 'valueNode' | 'nullNode' | 'defaultNode' | 'insertRadioNode',
     node: HTMLInputElement | null
   ) => void;
-  enumOptions: object;
+  enumOptions: Record<string, any>;
   index: number;
-  clone?: object;
+  clone?: Record<string, any>;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>, val: unknown) => void;
   onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
   prevValue?: unknown;
