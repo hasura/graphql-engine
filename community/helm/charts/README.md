@@ -42,13 +42,11 @@ Please refer to the [Quick Start guide](https://github.com/helm/helm/blob/master
 Useful Helm Client Commands:
 
 - View available charts: `helm search repo`
-- Install a chart: `helm install my-release bitnami/<package-name>`
-- Upgrade your application: `helm upgrade`
+- Install a chart (or upgrade it): `helm upgrade --install my-release <repo-name>/<package-name>`
 
 # Roadmap
 
-- [ ] Find ways to publish the code as a Helm repository
+- [x] Find ways to publish the code as a Helm repository
 - [ ] Work on the JSON schema
-- [ ] Find ways to publish the code as a Helm repository
 - [ ] Figure how to generate the Markdown props/values
 - [ ] Write (basic) unit tests
