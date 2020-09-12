@@ -7,3 +7,5 @@ ingress:
     - host: dev.hasura.your-domain
       paths:
         - /
+postgresql:
+  postgresqlPassword: hasura

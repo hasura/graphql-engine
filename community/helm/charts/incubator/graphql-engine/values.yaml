@@ -3,6 +3,8 @@ fullnameOverride: ''
 global:
   postgresql:
     postgresqlPassword: hasura
+postgresql:
+  postgresqlPassword: hasura
 hasura:
   console:
     enabled: true
