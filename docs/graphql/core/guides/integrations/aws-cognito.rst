@@ -156,28 +156,57 @@ The parameters available for this trigger are described `here <https://docs.aws.
 . Here is a sample lambda function:
 
 .. code-block:: javascript
-
-   function (event, context, callback) {
+   
+   var https = require("https");
+   exports.handler = async (event, context, callback) => {
      const userId = event.userName;
-     const hasuraAdminSecret = "xxxx";
-     const url = "https://my-hasura-app.hasura.app/v1/graphql";
+     const email = event.request.userAttributes.email;
+
+     var options = {
+       "method": "POST",
+       "hostname": "my-hasura-app.hasura.app",
+       "path": "/v1/graphql",
+       "headers": {
+         "x-hasura-admin-secret": "xxxx",
+         "Content-Type": "application/x-www-form-urlencoded",
+       }
+     };
+
      const upsertUserQuery = `
-       mutation($userId: String!){
-         insert_users(objects: [{ id: $userId }], on_conflict: { constraint: users_pkey, update_columns: [] }) {
+       mutation($cognitoId: String!, $email: String!){
+         insert_users(objects: [{ cognitoId: $cognitoId, email: $email }], on_conflict: { constraint: users_cognitoId_key, update_columns: [] }) {
            affected_rows
          }
        }`
-     const graphqlReq = { "query": upsertUserQuery, "variables": { "userId": userId } }
+     const graphqlReq = { "query": upsertUserQuery, "variables": { "cognitoId": userId, "email": email } }
+     function get(options) {
+       return new Promise(((resolve, reject) => {
+         const request = https.request(options, (response) => {
+           response.setEncoding('utf8');
+           let returnData = '';
 
-     request.post({
-         headers: {'content-type' : 'application/json', 'x-hasura-admin-secret': hasuraAdminSecret},
-         url:   url,
-         body:  JSON.stringify(graphqlReq)
-     }, function(error, response, body){
-          console.log(body);
-          callback(null, user, context);
-     });
-   }
+           if (response.statusCode < 200 || response.statusCode >= 300) {
+             return reject(new Error(response.statusCode + ": " + response.req.getHeader('host') + " " + response.req.path));
+           }
+
+           response.on('data', (chunk) => {
+             returnData += chunk;
+           });
+
+           response.on('end', () => {
+             resolve(JSON.parse(returnData));
+           });
+
+           response.on('error', (error) => {
+             reject(error);
+           });
+         });
+         request.write(JSON.stringify(graphqlReq))
+         request.end();
+       }));
+     }
+     await get(options)
+     context.succeed(event)
 
 That’s it! This lambda function will be triggered on every successful sign up/log in and sync your Cognito user into your Postgres database.
 
