@@ -22,3 +22,8 @@ args:
   args:
     sql: |
       drop table person
+
+- type: run_sql
+  args:
+    sql: |
+      drop table numerics

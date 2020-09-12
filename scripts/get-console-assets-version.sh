@@ -19,6 +19,9 @@ if [[ "$LATEST_TAG" =~ $SEMVER_REGEX ]]; then
     if [[ "$release" =~ $CHANNEL_REGEX ]]; then
         channel="${BASH_REMATCH[0]}"
     fi
+    if [[ ! -z "$EXPECTED_CHANNEL" ]] && [[ "${EXPECTED_CHANNEL}" != "${channel}" ]]; then
+        exit
+    fi
     VERSION="channel/$channel/v$major$minor"
 fi
 

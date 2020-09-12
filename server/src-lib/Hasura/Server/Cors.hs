@@ -17,6 +17,7 @@ import           Hasura.Prelude
 import           Hasura.Server.Utils  (fmapL)
 
 import           Control.Applicative  (optional)
+import           Data.Aeson           ((.:))
 
 import qualified Data.Aeson           as J
 import qualified Data.Aeson.Casing    as J
@@ -25,7 +26,6 @@ import qualified Data.Attoparsec.Text as AT
 import qualified Data.HashSet         as Set
 import qualified Data.Text            as T
 
-
 data DomainParts =
   DomainParts
   { wdScheme :: !Text
@@ -33,7 +33,7 @@ data DomainParts =
   , wdPort   :: !(Maybe Int)
   } deriving (Show, Eq, Generic, Hashable)
 
-$(J.deriveToJSON (J.aesonDrop 2 J.snakeCase) ''DomainParts)
+$(J.deriveJSON (J.aesonDrop 2 J.snakeCase) ''DomainParts)
 
 data Domains
   = Domains
@@ -41,7 +41,7 @@ data Domains
   , dmWildcards :: !(Set.HashSet DomainParts)
   } deriving (Show, Eq)
 
-$(J.deriveToJSON (J.aesonDrop 2 J.snakeCase) ''Domains)
+$(J.deriveJSON (J.aesonDrop 2 J.snakeCase) ''Domains)
 
 data CorsConfig
   = CCAllowAll
@@ -61,6 +61,16 @@ instance J.ToJSON CorsConfig where
                  , "ws_read_cookie" J..= mWsRC
                  , "allowed_origins" J..= origs
                  ]
+
+instance J.FromJSON CorsConfig where
+  parseJSON = J.withObject "cors config" \o -> do
+    let parseAllowAll "*" = pure CCAllowAll
+        parseAllowAll _ = fail "unexpected string"
+    o .: "disabled" >>= \case
+      True -> CCDisabled <$> o .: "ws_read_cookie"
+      False -> o .: "allowed_origins" >>= \v ->
+        J.withText "origins" parseAllowAll v
+        <|> CCAllowedOrigins <$> J.parseJSON v
 
 isCorsDisabled :: CorsConfig -> Bool
 isCorsDisabled = \case

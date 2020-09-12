@@ -4,7 +4,6 @@ module Hasura.Server.CheckUpdates
 
 import           Control.Exception     (try)
 import           Control.Lens
-import           Control.Monad         (forever)
 import           Data.Text.Conversions (toText)
 
 import qualified CI

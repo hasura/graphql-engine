@@ -1,41 +1,49 @@
-const LS_DERIVED_MUTATIONS = 'actions:derivedMutations';
+const LS_DERIVED_MUTATIONS = 'actions:derivedActions';
 
-export const persistAllDerivedMutations = allMutations => {
+export const persistAllDerivedActions = allActions => {
   let stringified;
   try {
-    stringified = JSON.stringify(allMutations);
+    stringified = JSON.stringify(allActions);
   } catch (e) {
     stringified = '{}';
   }
   window.localStorage.setItem(LS_DERIVED_MUTATIONS, stringified);
 };
 
-export const getAllPersistedDerivedMutations = () => {
-  let allMutations = window.localStorage.getItem(LS_DERIVED_MUTATIONS);
-  if (allMutations) {
+export const getAllPersistedDerivedActions = () => {
+  let allActions = window.localStorage.getItem(LS_DERIVED_MUTATIONS);
+  if (allActions) {
     try {
-      allMutations = JSON.parse(allMutations);
+      allActions = JSON.parse(allActions);
     } catch (_) {
-      allMutations = {};
+      allActions = {};
     }
   } else {
-    allMutations = {};
+    allActions = {};
   }
-  return allMutations;
+  return allActions;
 };
 
-export const getPersistedDerivedMutation = actionName => {
-  return getAllPersistedDerivedMutations()[actionName];
+export const getPersistedDerivedAction = actionName => {
+  return getAllPersistedDerivedActions()[actionName];
 };
 
-export const persistDerivedMutation = (actionName, parentMutation) => {
-  const allMutations = getAllPersistedDerivedMutations();
-  allMutations[actionName] = parentMutation;
-  persistAllDerivedMutations(allMutations);
+export const persistDerivedAction = (actionName, parentOperation) => {
+  const allActions = getAllPersistedDerivedActions();
+  allActions[actionName] = parentOperation;
+  persistAllDerivedActions(allActions);
 };
 
-export const removePersistedDerivedMutation = actionName => {
-  const allMutations = getAllPersistedDerivedMutations();
-  delete allMutations[actionName];
-  persistAllDerivedMutations(allMutations);
+export const removePersistedDerivedAction = actionName => {
+  const allActions = getAllPersistedDerivedActions();
+  delete allActions[actionName];
+  persistAllDerivedActions(allActions);
+};
+
+export const updatePersistedDerivation = (oldActionName, newActionName) => {
+  const parentOperation = getPersistedDerivedAction(oldActionName);
+  if (parentOperation) {
+    persistDerivedAction(newActionName, parentOperation);
+    removePersistedDerivedAction(oldActionName);
+  }
 };

@@ -4,7 +4,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/sirupsen/logrus"
 	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 )
 
@@ -26,7 +28,9 @@ type GitUtil struct {
 	Path string
 
 	// Optional
-	ReferenceName plumbing.ReferenceName
+	ReferenceName        plumbing.ReferenceName
+	DisableCloneOrUpdate bool
+	Logger               *logrus.Logger
 }
 
 func NewGitUtil(uri string, path string, refName string) *GitUtil {
@@ -42,6 +46,10 @@ func NewGitUtil(uri string, path string, refName string) *GitUtil {
 }
 
 func (g *GitUtil) EnsureCloned() error {
+	if g.DisableCloneOrUpdate {
+		g.Logger.Debugf("skipping clone/update for %s", g.URI)
+		return nil
+	}
 	if ok, err := g.IsGitCloned(); err != nil {
 		return err
 	} else if !ok {
@@ -66,6 +74,10 @@ func (g *GitUtil) IsGitCloned() (bool, error) {
 
 // EnsureUpdated will ensure the destination path exists and is up to date.
 func (g *GitUtil) EnsureUpdated() error {
+	if g.DisableCloneOrUpdate {
+		g.Logger.Debugf("skipping clone/update for %s", g.URI)
+		return nil
+	}
 	if err := g.EnsureCloned(); err != nil {
 		return err
 	}
@@ -77,7 +89,9 @@ func (g *GitUtil) updateAndCleanUntracked() error {
 	if err != nil {
 		return err
 	}
-	err = repo.Fetch(&git.FetchOptions{})
+	err = repo.Fetch(&git.FetchOptions{
+		RefSpecs: []config.RefSpec{"refs/*:refs/*"},
+	})
 	if err != nil && err != git.NoErrAlreadyUpToDate {
 		return err
 	}
@@ -85,13 +99,20 @@ func (g *GitUtil) updateAndCleanUntracked() error {
 	if err != nil {
 		return err
 	}
-	err = wt.Pull(&git.PullOptions{})
+	err = wt.Checkout(&git.CheckoutOptions{
+		Branch: g.ReferenceName,
+	})
+	if err != nil {
+		return err
+	}
+	err = wt.Pull(&git.PullOptions{
+		ReferenceName: g.ReferenceName,
+	})
 	if err != nil && err != git.NoErrAlreadyUpToDate {
 		return err
 	}
 	err = wt.Reset(&git.ResetOptions{
-		Commit: plumbing.ZeroHash,
-		Mode:   git.HardReset,
+		Mode: git.HardReset,
 	})
 	if err != nil {
 		return err

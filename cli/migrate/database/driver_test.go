@@ -1,6 +1,7 @@
 package database
 
 import (
+	"crypto/tls"
 	"io"
 	"testing"
 
@@ -13,7 +14,7 @@ type mockDriver struct {
 	url string
 }
 
-func (m *mockDriver) Open(url string, isCmd bool, logger *logrus.Logger) (Driver, error) {
+func (m *mockDriver) Open(url string, isCmd bool, tlsConfig *tls.Config, logger *logrus.Logger) (Driver, error) {
 	return &mockDriver{
 		url: url,
 	}, nil
@@ -99,6 +100,9 @@ func (m *mockDriver) SetMetadataPlugins(plugins types.MetadataPlugins) {
 	return
 }
 
+func (m *mockDriver) EnableCheckMetadataConsistency(enabled bool) {
+}
+
 func (m *mockDriver) GetInconsistentMetadata() (bool, []InconsistentMetadataInterface, error) {
 	return false, []InconsistentMetadataInterface{}, nil
 }
@@ -143,6 +147,13 @@ func (m *mockDriver) UpdateSetting(name string, value string) error {
 	return nil
 }
 
+func (m *mockDriver) ApplySeed(interface{}) error {
+	return nil
+}
+func (m *mockDriver) ExportDataDump([]string) ([]byte, error) {
+	return nil, nil
+}
+
 func TestRegisterTwice(t *testing.T) {
 	Register("mock", &mockDriver{})
 
@@ -183,7 +194,7 @@ func TestOpen(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.url, func(t *testing.T) {
-			d, err := Open(c.url, false, nil)
+			d, err := Open(c.url, false, nil, nil)
 
 			if err == nil {
 				if c.err {

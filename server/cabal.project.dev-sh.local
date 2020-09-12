@@ -9,6 +9,11 @@
 
 package *
   documentation: true
+  -- build with DWARF support. This may not be very useful yet, but we want
+  -- to be able to experiment with it, and turning it from off to on requires
+  -- a massive rebuild. To start, see:
+  --   https://www.haskell.org/ghc/blog/20200403-dwarf-1.html
+  debug-info: 2
 
 package graphql-engine
   -- NOTE: this seems to work so long as there is no 'ghc-options: -O2' in the cabal file,

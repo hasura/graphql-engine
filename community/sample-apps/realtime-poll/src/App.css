@@ -26,12 +26,12 @@
   color: white;
   text-align: left;
 }
-.App-footer{
-    height: 50px;
-    text-align: center;
-    width: 100%;
-    margin-bottom: 30px;
-    margin-top: 30px;
+.App-footer {
+  height: 50px;
+  text-align: center;
+  width: 100%;
+  margin-bottom: 30px;
+  margin-top: 30px;
 }
 
 .App-title {
@@ -44,36 +44,31 @@
 .App-intro {
   font-size: large;
 }
-.pollWrapper
-{
+
+.cardGraphQL {
+  padding-top: 50px;
+}
+
+.pollWrapper {
   padding-top: 10px;
 }
-.pollForm
-{
 
-}
-pre
-{
+pre {
   font-size: 10px;
   text-align: left;
   margin: 25px 0;
 }
-.voteBtn
-{
 
-}
-.radio
-{
+.radio {
   margin-bottom: 15px;
 }
-.textLeft
-{
+
+.textLeft {
   text-align: left;
 }
-.wd100
-{
+
+.wd100 {
   width: 100%;
-  float: left;
 }
 @keyframes App-logo-spin {
   from { transform: rotate(0deg); }
@@ -86,7 +81,10 @@ pre
 }
 
 .online-users {
-    padding-top: 20px;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  margin-top: 30px;
 }
 .online-users .alert {
     margin-bottom: 0px;
@@ -98,7 +96,7 @@ pre
     justify-content: center;
     max-width: 900px;
     width: 100%;
-    min-height: 400px;
+    min-height: 350px;
 }
 
 @media(max-width: 767px) {

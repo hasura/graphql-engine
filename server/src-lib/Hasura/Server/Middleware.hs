@@ -1,6 +1,5 @@
 module Hasura.Server.Middleware where
 
-import           Data.Maybe           (fromMaybe)
 import           Network.Wai
 
 import           Control.Applicative

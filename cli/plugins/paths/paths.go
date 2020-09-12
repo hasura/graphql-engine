@@ -23,6 +23,7 @@ import (
 
 const (
 	ManifestExtension string = ".yaml"
+	ManifestFile      string = "manifest.yaml"
 )
 
 // Paths contains all important environment paths

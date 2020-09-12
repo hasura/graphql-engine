@@ -1,0 +1,25 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "user"(
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE
+      );
+      INSERT INTO "user" (name)
+      VALUES ('admin'), ('user'), ('anonymous')
+      ;
+- type: track_table
+  args:
+    name: user
+    schema: public
+# define permission for anonymous role
+- type: create_select_permission
+  args:
+    table: user
+    role: anonymous
+    permission:
+      columns: '*'
+      filter:
+        name: anonymous

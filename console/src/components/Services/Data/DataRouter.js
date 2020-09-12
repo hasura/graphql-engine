@@ -27,7 +27,7 @@ import {
   // metadataConnector,
 } from '.';
 
-import { rightContainerConnector } from '../../Common/Layout';
+import { RightContainer } from '../../Common/Layout/RightContainer';
 
 import {
   fetchDataInit,
@@ -51,7 +51,7 @@ const makeDataRouter = (
   return (
     <Route path="data" component={dataPageConnector(connect)}>
       <IndexRedirect to="schema/public" />
-      <Route path="schema" component={rightContainerConnector(connect)}>
+      <Route path="schema" component={RightContainer}>
         <IndexRedirect to="public" />
         <Route path=":schema" component={schemaConnector(connect)} />
         <Route path=":schema/tables" component={schemaConnector(connect)} />
@@ -65,9 +65,12 @@ const makeDataRouter = (
           <Route path="permissions" component={PermissionCustomFunction} />
         </Route>
         <Route
-          path=":schema/tables/:table/browse"
+          path=":schema/tables/:table"
           component={viewTableConnector(connect)}
-        />
+        >
+          <IndexRedirect to="browse" />
+          <Route path="browse" component={viewTableConnector(connect)} />
+        </Route>
         <Route
           path=":schema/tables/:table/edit"
           component={editItemConnector(connect)}

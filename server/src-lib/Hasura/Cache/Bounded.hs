@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 {-| An in-memory, Bounded by LRU strategy, capability-local cache implementation.
 By making the cache capability-local, data may be recomputed up to once per
 capability (which usually means up to once per OS thread), but write contention
@@ -5,15 +6,20 @@ from multiple threads is unlikely.
 -}
 module Hasura.Cache.Bounded
   ( BoundedCache
-  , CacheSize
-  , mkCacheSize
+  , CacheSize(..)
+  , parseCacheSize
 
   , initialise
-  , clear
-  , insert
+  , initialiseStripes
   , insertAllStripes
   , lookup
+  , insert
+  , clear
   , getEntries
+
+  -- * Exposed for testing
+  , checkInvariants
+  , getEntriesRecency
   ) where
 
 import           Hasura.Prelude     hiding (lookup)
@@ -27,16 +33,23 @@ import qualified Data.IORef         as IORef
 import qualified Data.Vector        as V
 import           GHC.Natural        (Natural)
 
+-- MISC TODO: 
+--  - benchmark and consider unsafeLookupIncreasePriority and unsafeInsertIncreasePriorityView
+--  - our own concurrent cache, that doesn't need redundant stripes
+--    - this would save significant memory
+--    - we could choose something more sophisticated than LRU if warranted
+--    - we could probably keep things simple by evicting on hash collisions
+
 newtype CacheSize
   = CacheSize { unCacheSize :: Word16 }
-  deriving (Show, Read, Eq, Ord, Bounded, Num, Enum, J.ToJSON, J.FromJSON)
+  deriving (Show, Read, Eq, Ord, Bounded, Num, Real, Integral, Enum, J.ToJSON, J.FromJSON)
 
-mkCacheSize :: String -> Either String CacheSize
-mkCacheSize v =
+parseCacheSize :: String -> Either String CacheSize
+parseCacheSize v =
   -- NOTE: naively using readMaybe Word16 will silently wrap
   case readMaybe v :: Maybe Natural of
-    Just n | n <= max16 && n > 0 -> return (CacheSize $ fromIntegral n)
-    _ -> fail "cache size must be given as a number between 1 and 65535"
+    Just n | n <= max16 && n >= 0 -> return (CacheSize $ fromIntegral n)
+    _ -> throwError "cache size must be given as a number between 0 and 65535"
   where
     max16 = fromIntegral (maxBound :: Word16) :: Natural
 
@@ -50,10 +63,11 @@ data LruCache k v = LruCache
   { _lcCapacity :: !CacheSize
   -- ^ The maximum number of elements in the cache
   , _lcSize     :: !CacheSize
-  -- ^ The current number of elements in the cache
+  -- ^ The current number of elements in the cache. We maintain this ourselves
+  -- since 'HashPSQ.size' is O(n).
   , _lcTick     :: !Tick
   -- ^ The priority is drawn from this tick, it is incremented
-  -- after every access
+  -- after insert or successful lookup
   , _lcQueue    :: !(HashPSQ.HashPSQ k Tick v)
   -- ^ Underlying priority queue
   } deriving (Show, Eq, Functor, Foldable, Traversable)
@@ -68,27 +82,22 @@ emptyCache capacity =
   , _lcQueue    = HashPSQ.empty
   }
 
--- | Restore 'LruCache' invariants
-trim :: (Hashable k, Ord k) => LruCache k v -> LruCache k v
-trim c
-  | _lcTick c == maxBound     = emptyCache (_lcCapacity c)
-  | _lcSize c > _lcCapacity c =
-      c  { _lcSize  = _lcSize c - 1
-         , _lcQueue = HashPSQ.deleteMin (_lcQueue c)
-         }
-  | otherwise                 = c
-
 -- | Insert an element into the 'LruCache'.
 insertPure :: (Hashable k, Ord k) => k -> v -> LruCache k v -> LruCache k v
 insertPure key val c =
-  trim $!
+  -- NOTE: we assume any rollover of 64-bit counters here to be impossible:
   let (mbOldVal,queue) = HashPSQ.insertView key (_lcTick c) val (_lcQueue c)
-  in c  { _lcSize  = if isNothing mbOldVal
-                     then _lcSize c + 1
-                     else _lcSize c
-        , _lcTick  = _lcTick c + 1
-        , _lcQueue = queue
-        }
+      cTicked = c{ _lcTick = _lcTick c + 1 }
+   in case mbOldVal of
+        Nothing 
+          -- at capacity; remove LRU to maintain _lcSize:
+          | _lcSize c == _lcCapacity c -> 
+               cTicked{ _lcQueue = HashPSQ.deleteMin queue }
+          -- under capacity; just record new size after insert:
+          | otherwise ->
+               cTicked{ _lcQueue = queue, _lcSize  = _lcSize c + 1 }
+        _valueAlreadyInserted -> -- nothing inserted; _lcSize stays the same
+               cTicked{ _lcQueue = queue }
 
 -- | Lookup an element in an 'LruCache' and mark it as the least
 -- recently accessed.
@@ -97,7 +106,7 @@ lookupPure k c =
   case HashPSQ.alter lookupAndBump k (_lcQueue c) of
     (Nothing, _) -> Nothing
     (Just x, q)  ->
-      let !c' = trim $ c {_lcTick = _lcTick c + 1, _lcQueue = q}
+      let !c' = c {_lcTick = _lcTick c + 1, _lcQueue = q}
       in Just (x, c')
   where
     lookupAndBump Nothing       = (Nothing, Nothing)
@@ -140,22 +149,41 @@ insertLocal (LocalCacheRef ref) k v =
 -- accessed in parallel.
 newtype BoundedCache k v = BoundedCache (V.Vector (LocalCacheRef k v))
 
-getEntries
-  :: (Hashable k, Ord k)
-  => BoundedCache k v -> IO [[(k, v)]]
-getEntries (BoundedCache localCaches) =
-  mapM getLocalEntries $ V.toList localCaches
 
--- | Creates a new BoundedCache of the specified size,
--- with one stripe per capability
-initialise :: CacheSize -> IO (BoundedCache k v)
-initialise capacity = do
-  capabilities <- getNumCapabilities
-  BoundedCache <$> V.replicateM capabilities (initLocalCache capacity)
+
+lookup :: (Hashable k, Ord k) => k -> BoundedCache k v -> IO (Maybe v)
+lookup k striped = do
+  localHandle <- getLocal striped
+  lookupLocal localHandle k
+
+insert :: (Hashable k, Ord k) => k -> v -> BoundedCache k v -> IO ()
+insert k v striped = do
+  localHandle <- getLocal striped
+  insertLocal localHandle k v
 
 clear :: BoundedCache k v -> IO ()
 clear (BoundedCache caches) =
   V.mapM_ clearLocal caches
+
+getEntries :: (Hashable k, Ord k)=> BoundedCache k v -> IO [[(k, v)]]
+getEntries (BoundedCache localCaches) =
+  mapM getLocalEntries $ V.toList localCaches
+
+-- | Creates a new BoundedCache of the specified size, with one stripe per capability.
+initialise :: CacheSize -> IO (BoundedCache k v)
+initialise sz = do 
+  caps <- getNumCapabilities
+  initialiseStripes caps sz
+
+-- | Creates a new BoundedCache of the specified size, for each stripe
+initialiseStripes
+  :: Int 
+  -- ^ Stripes; to minimize contention this should probably match the number of capabilities.
+  -> CacheSize 
+  -> IO (BoundedCache k v)
+initialiseStripes stripes capacity = do
+  BoundedCache <$> V.replicateM stripes (initLocalCache capacity)
+
 
 {-# INLINE getLocal #-}
 getLocal :: BoundedCache k v -> IO (LocalCacheRef k v)
@@ -169,13 +197,6 @@ getLocal (BoundedCache handles) = do
 
   return $ handles V.! j
 
--- | Insert into our thread's local cache stripe.
-insert
-  :: (Hashable k, Ord k) => k -> v -> BoundedCache k v -> IO ()
-insert k v striped = do
-  localHandle <- getLocal striped
-  insertLocal localHandle k v
-
 -- | Insert into all stripes (non-atomically).
 insertAllStripes
   :: (Hashable k, Ord k) =>  k -> v -> BoundedCache k v ->IO ()
@@ -183,7 +204,23 @@ insertAllStripes k v (BoundedCache handles) = do
   forM_ handles $ \localHandle->
     insertLocal localHandle k v
 
-lookup :: (Hashable k, Ord k) => k -> BoundedCache k v -> IO (Maybe v)
-lookup k striped = do
-  localHandle <- getLocal striped
-  lookupLocal localHandle k
+-- | Check internal invariants, throwing an error if things are off:
+checkInvariants :: (Hashable k, Ord k)=> BoundedCache k v -> IO ()
+checkInvariants (BoundedCache handles) =
+  forM_ handles $ \(LocalCacheRef ref) -> do
+    LruCache{..} <- IORef.readIORef ref
+    -- check internal invariants (in case we use unsafe* functions that rely on
+    -- us maintaining HashPSQ invariants):
+    unless (HashPSQ.valid _lcQueue) $
+      error "invalid HashPSQ!"
+    unless (HashPSQ.size _lcQueue == fromIntegral _lcSize) $
+      error "Size incorrect!"
+    unless (fromIntegral _lcSize <= _lcTick)$
+      error "Somehow tick wasn't incremented properly!"
+    when (_lcSize > _lcCapacity) $
+      error "Size > capacity!"
+
+getEntriesRecency :: (Hashable k, Ord k) => BoundedCache k v -> IO [[(k, Tick, v)]] 
+getEntriesRecency (BoundedCache localCaches) = 
+  forM (V.toList localCaches) $ \(LocalCacheRef ref) -> 
+    HashPSQ.toList . _lcQueue <$> IORef.readIORef ref

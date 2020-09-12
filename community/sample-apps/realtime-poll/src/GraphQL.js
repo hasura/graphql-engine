@@ -1,9 +1,9 @@
 import React from 'react';
-import { Panel } from 'react-bootstrap';
+import { Card } from 'react-bootstrap';
 
 const QUERY_GET_POLL = `
 query {
-  poll {
+  poll (limit: 10) {
     id
     question
     options (order_by: {id:desc}){
@@ -71,38 +71,36 @@ mutation newUser($uuid: uuid) {
 
 const GraphQL = () => (
   <div className="container">
-    <div className="col-md-12">
-    <Panel>
-      <Panel.Heading>
-        <Panel.Title componentClass="h3">GraphQL Queries/Mutations/Subscriptions in this page</Panel.Title>
-      </Panel.Heading>
-      <Panel.Body>
-        <div className="row">
-          <div className="col-md-4">
-            Get the Poll question and options:
+    <div className="col-md-12 cardGraphQL">
+      <Card>
+        <Card.Header>GraphQL Queries/Mutations/Subscriptions in this page</Card.Header>
+        <Card.Body>
+          <div className="row">
+            <div className="col-md-4">
+              Get the Poll question and options:
             <pre>{QUERY_GET_POLL}</pre>
 
             Create a new user:
             <pre>{MUTATION_NEW_USER}</pre>
-          </div>
-          <div className="col-md-4">
-            Cast a vote:
+            </div>
+            <div className="col-md-4">
+              Cast a vote:
             <pre>{MUTATION_VOTE}</pre>
 
             Mark user online:
             <pre>{MUTATION_MARK_USER_ONLINE}</pre>
-          </div>
-          <div className="col-md-4">
-            Show live results:
+            </div>
+            <div className="col-md-4">
+              Show live results:
             <pre>{SUBSCRIPTION_RESULT}</pre>
 
             Get real-time number of users:
             <pre>{SUBSCRIPTION_ONLINE_USERS}</pre>
+            </div>
           </div>
-        </div>
-      </Panel.Body>
-    </Panel>
-  </div>
+        </Card.Body>
+      </Card>
+    </div>
   </div>
 )
 

@@ -8,8 +8,9 @@ import {
   setColumnEdit,
   resetColumnEdit,
   editColumn,
+  isColumnUnique,
 } from '../TableModify/ModifyActions';
-import { ordinalColSort } from '../utils';
+import { ordinalColSort, ARRAY } from '../utils';
 import { defaultDataTypeToCast } from '../constants';
 
 import {
@@ -58,26 +59,36 @@ const ColumnEditorList = ({
    * */
   return columns.map((col, i) => {
     const colName = col.column_name;
+    const isArrayDataType = col.data_type === ARRAY;
+
+    const getDisplayName = () => {
+      if (isArrayDataType) {
+        return col.udt_name.replace('_', '') + '[]';
+      }
+      if (col.data_type === 'USER-DEFINED') {
+        return col.udt_name;
+      }
+      return col.data_type;
+    };
+    const getType = () =>
+      isArrayDataType ? col.udt_name.replace('_', '') + '[]' : col.udt_name;
 
     const columnProperties = {
       name: colName,
       tableName: col.table_name,
       schemaName: col.table_schema,
-      display_type_name:
-        col.data_type !== 'USER-DEFINED' ? col.data_type : col.udt_name,
-      type: col.udt_name,
+      display_type_name: getDisplayName(),
+      type: getType(),
+      isArrayDataType,
       isNullable: col.is_nullable === 'YES',
       isIdentity: col.is_identity === 'YES',
       pkConstraint: columnPKConstraints[colName],
-      isUnique:
-        (columnPKConstraints[colName] && pkLength === 1) ||
-        columnUniqueConstraints[colName]
-          ? true
-          : false,
+      isUnique: isColumnUnique(tableSchema, colName),
       // uniqueConstraint: columnUniqueConstraints[colName],
       default: col.column_default || '',
       comment: col.comment || '',
       customFieldName: customColumnNames[colName] || '',
+      isOnlyPrimaryKey: columnPKConstraints[colName] && pkLength === 1,
     };
 
     const onSubmit = toggleEditor => {
@@ -95,7 +106,6 @@ const ColumnEditorList = ({
         dispatch(deleteColumnSql(col, tableSchema));
       }
     };
-
     const gqlCompatibilityWarning = () => {
       return (
         <GqlCompatibilityWarning
@@ -109,14 +119,13 @@ const ColumnEditorList = ({
       const propertiesDisplay = [];
 
       const propertiesList = [];
-
       propertiesList.push(columnProperties.display_type_name);
 
       if (columnProperties.pkConstraint) {
         propertiesList.push('primary key');
       }
 
-      if (columnProperties.isUnique) {
+      if (columnProperties.isUnique || columnProperties.isOnlyPrimaryKey) {
         propertiesList.push('unique');
       }
 
@@ -174,6 +183,9 @@ const ColumnEditorList = ({
      * */
 
     const getValidTypeCasts = udtName => {
+      if (isArrayDataType) {
+        udtName = udtName.replace('_', '');
+      }
       const lowerUdtName = udtName.toLowerCase();
       if (lowerUdtName in validTypeCasts) {
         return validTypeCasts[lowerUdtName];
@@ -217,7 +229,7 @@ const ColumnEditorList = ({
     const colEditorExpanded = () => {
       return (
         <ColumnEditor
-          alterTypeOptions={getValidTypeCasts(col.udt_name)}
+          alterTypeOptions={getValidTypeCasts(col.udt_name, isArrayDataType)}
           defaultOptions={getValidDefaultTypes(col.udt_name)}
           column={col}
           onSubmit={onSubmit}

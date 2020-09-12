@@ -29,6 +29,7 @@ type Common struct {
 func (c *Common) SetExportDefault() {
 	for index := range c.Actions {
 		c.Actions[index].Definition.Arguments = nil
+		c.Actions[index].Definition.Type = ""
 		c.Actions[index].Definition.OutputType = ""
 	}
 
@@ -55,8 +56,18 @@ type Action struct {
 	Permissions []yaml.MapSlice `json:"-" yaml:"permissions,omitempty"`
 }
 
+type ActionType string
+
+const (
+	// For query type
+	ActionTypeQuery ActionType = "query"
+	// For mutation type
+	ActionTypeMutation = "mutation"
+)
+
 type ActionDef struct {
 	Kind                 string          `json:"kind" yaml:"kind"`
+	Type                 ActionType      `json:"type" yaml:"type,omitempty"`
 	Handler              string          `json:"handler" yaml:"handler"`
 	Arguments            []yaml.MapSlice `json:"arguments" yaml:"arguments,omitempty"`
 	OutputType           string          `json:"output_type" yaml:"output_type,omitempty"`

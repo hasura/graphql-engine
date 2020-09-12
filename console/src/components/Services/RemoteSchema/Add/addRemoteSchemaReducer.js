@@ -14,6 +14,7 @@ import { makeRequest } from '../Actions';
 import { appPrefix } from '../constants';
 
 import globals from '../../../../Globals';
+import { clearIntrospectionSchemaCache } from '../graphqlUtils';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -291,6 +292,7 @@ const deleteRemoteSchema = () => {
         dispatch(push(prefixUrl)),
         dispatch(fetchRemoteSchemas()),
       ]);
+      clearIntrospectionSchemaCache();
     };
     const customOnError = error => {
       Promise.all([dispatch({ type: DELETE_REMOTE_SCHEMA_FAIL, data: error })]);
@@ -316,7 +318,6 @@ const modifyRemoteSchema = () => {
   return (dispatch, getState) => {
     const currState = getState().remoteSchemas.addData;
     const remoteSchemaName = currState.name.trim().replace(/ +/g, '');
-    // const url = Endpoints.getSchema;
     const upQueryArgs = [];
     const downQueryArgs = [];
     const migrationName = 'update_remote_schema_' + remoteSchemaName;
@@ -343,9 +344,10 @@ const modifyRemoteSchema = () => {
       },
     };
 
-    resolveObj.definition.headers = [
-      ...getReqHeader(getState().remoteSchemas.headerData.headers),
-    ];
+    resolveObj.definition.headers = getReqHeader(
+      getState().remoteSchemas.headerData.headers
+    );
+
     if (resolveObj.definition.url) {
       delete resolveObj.definition.url_from_env;
     } else {
@@ -422,6 +424,7 @@ const modifyRemoteSchema = () => {
         dispatch(push(`${prefixUrl}/manage/${remoteSchemaName}/details`));
       });
       dispatch(fetchRemoteSchema(remoteSchemaName));
+      clearIntrospectionSchemaCache();
     };
     const customOnError = error => {
       Promise.all([dispatch({ type: MODIFY_REMOTE_SCHEMA_FAIL, data: error })]);

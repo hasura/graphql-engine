@@ -3,6 +3,7 @@
 module Hasura.RQL.Types.Error
        ( Code(..)
        , QErr(..)
+       , encodeJSONPath
        , encodeQErr
        , encodeGQLErr
        , noInternalQErrEnc
@@ -18,6 +19,8 @@ module Hasura.RQL.Types.Error
        , throw500
        , throw500WithDetail
        , throw401
+
+       , iResultToMaybe
 
          -- Aeson helpers
        , runAesonParser
@@ -44,15 +47,15 @@ module Hasura.RQL.Types.Error
        , indexedTraverseA_
        ) where
 
+import           Hasura.Prelude
+
 import           Control.Arrow.Extended
 import           Data.Aeson
 import           Data.Aeson.Internal
 import           Data.Aeson.Types
-import qualified Database.PG.Query      as Q
-import           Hasura.Prelude
-import           Text.Show              (Show (..))
 
 import qualified Data.Text              as T
+import qualified Database.PG.Query      as Q
 import qualified Network.HTTP.Types     as N
 
 data Code
@@ -97,6 +100,8 @@ data Code
   | InvalidCustomTypes
   -- Actions Webhook code
   | ActionWebhookCode !Text
+  -- Custom code for extending this sum-type easily
+  | CustomCode !Text
   deriving (Eq)
 
 instance Show Code where
@@ -137,6 +142,7 @@ instance Show Code where
     StartFailed           -> "start-failed"
     InvalidCustomTypes    -> "invalid-custom-types"
     ActionWebhookCode t   -> T.unpack t
+    CustomCode t          -> T.unpack t
 
 data QErr
   = QErr
@@ -194,11 +200,17 @@ encodeJSONPath = format "$"
   where
     format pfx []                = pfx
     format pfx (Index idx:parts) = format (pfx ++ "[" ++ show idx ++ "]") parts
-    format pfx (Key key:parts)   = format (pfx ++ "." ++ formatKey key) parts
+    format pfx (Key key:parts)   = format (pfx ++ formatKey key) parts
 
     formatKey key
-      | T.any (=='.') key = "['" ++ T.unpack key ++ "']"
-      | otherwise         = T.unpack key
+      | specialChars sKey = "['" ++ sKey ++ "']"
+      | otherwise         = "." ++ sKey
+      where
+        sKey = T.unpack key
+        specialChars []     = True
+        -- first char must not be number
+        specialChars (c:xs) = notElem c (alphabet ++ "_") ||
+          any (flip notElem (alphaNumerics ++ "_-")) xs
 
 instance Q.FromPGConnErr QErr where
   fromPGConnErr c =
@@ -325,6 +337,10 @@ liftIResult (IError path msg) =
 liftIResult (ISuccess a) =
   return a
 
+iResultToMaybe :: IResult a -> Maybe a
+iResultToMaybe (IError _ _) = Nothing
+iResultToMaybe (ISuccess a) = Just a
+
 formatMsg :: String -> String
 formatMsg str = case T.splitOn "the key " txt of
   [_, txt2] -> case T.splitOn " was not present" txt2 of
@@ -334,7 +350,7 @@ formatMsg str = case T.splitOn "the key " txt of
   where
     txt = T.pack str
 
-runAesonParser :: (QErrM m) => (Value -> Parser a) -> Value -> m a
+runAesonParser :: (QErrM m) => (v -> Parser a) -> v -> m a
 runAesonParser p =
   liftIResult . iparse p
 

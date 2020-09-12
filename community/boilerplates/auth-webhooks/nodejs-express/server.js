@@ -22,7 +22,7 @@ app.get('/', (req, res) => {
   res.send('Webhooks are running');
 });
 
-app.get('/simple/webhook', (request, response) => {
+app.get('/webhook', (request, response) => {
   // Extract token from request
   var token = request.get('Authorization');
 
@@ -37,10 +37,6 @@ app.get('/simple/webhook', (request, response) => {
     response.json(hasuraVariables);
   });
 });
-
-// Firebase handler
-var firebaseRouter = require('./firebase/firebaseHandler');
-app.use('/firebase', firebaseRouter);
 
 // listen for requests :)
 var listener = app.listen(port, function () {

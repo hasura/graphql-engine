@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/hasura/graphql-engine/cli/migrate"
+
 	"github.com/aryann/difflib"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/metadata"
@@ -93,7 +95,7 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 	}
 	o.EC.Logger.Info(message)
 	var oldYaml, newYaml []byte
-	migrateDrv, err := newMigrate(o.EC, true)
+	migrateDrv, err := migrate.NewMigrate(o.EC, true)
 	if err != nil {
 		return err
 	}
@@ -103,7 +105,7 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 			return err
 		}
 		defer os.RemoveAll(tmpDir)
-		setMetadataPluginsWithDir(o.EC, migrateDrv, tmpDir)
+		migrate.SetMetadataPluginsWithDir(o.EC, migrateDrv, tmpDir)
 		files, err := migrateDrv.ExportMetadata()
 		if err != nil {
 			return err
@@ -113,7 +115,7 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 			return err
 		}
 	} else {
-		setMetadataPluginsWithDir(o.EC, migrateDrv, o.Metadata[1])
+		migrate.SetMetadataPluginsWithDir(o.EC, migrateDrv, o.Metadata[1])
 	}
 
 	// build server metadata
@@ -127,7 +129,7 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 	}
 
 	// build local metadata
-	setMetadataPluginsWithDir(o.EC, migrateDrv, o.Metadata[0])
+	migrate.SetMetadataPluginsWithDir(o.EC, migrateDrv, o.Metadata[0])
 	localMeta, err := migrateDrv.BuildMetadata()
 	if err != nil {
 		return err
@@ -168,7 +170,7 @@ func (o *MetadataDiffOptions) runv1(args []string) error {
 
 	o.EC.Logger.Info(message)
 	var oldYaml, newYaml []byte
-	migrateDrv, err := newMigrate(o.EC, true)
+	migrateDrv, err := migrate.NewMigrate(o.EC, true)
 	if err != nil {
 		return err
 	}

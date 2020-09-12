@@ -18,6 +18,7 @@ module Hasura.RQL.Types.EventTrigger
   , EventHeaderInfo(..)
   , WebhookConf(..)
   , WebhookConfInfo(..)
+  , HeaderConf(..)
 
   , defaultRetryConf
   , defaultTimeoutSeconds
@@ -29,7 +30,7 @@ import           Data.Aeson.TH
 import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.Types.Common    (NonEmptyText (..))
+import           Hasura.RQL.Types.Common    (NonEmptyText (..), InputWebhook)
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax (Lift)
 
@@ -103,13 +104,22 @@ data EventHeaderInfo
 instance NFData EventHeaderInfo
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventHeaderInfo)
 
-data WebhookConf = WCValue T.Text | WCEnv T.Text
+data WebhookConf = WCValue InputWebhook | WCEnv T.Text
   deriving (Show, Eq, Generic, Lift)
 instance NFData WebhookConf
+instance Cacheable WebhookConf
 
 instance ToJSON WebhookConf where
-  toJSON (WCValue w)  = String w
-  toJSON (WCEnv wEnv) = String wEnv
+  toJSON (WCValue w)  = toJSON w
+  toJSON (WCEnv wEnv) = object ["from_env" .= wEnv ]
+
+instance FromJSON WebhookConf where
+  parseJSON (Object o) = WCEnv <$> o .: "from_env"
+  parseJSON t@(String _) =
+    case (fromJSON t) of
+      Error s   -> fail s
+      Success a -> pure $ WCValue a
+  parseJSON _          = fail "one of string or object must be provided for webhook"
 
 data WebhookConfInfo
   = WebhookConfInfo
@@ -128,7 +138,7 @@ data CreateEventTriggerQuery
   , cetqDelete         :: !(Maybe SubscribeOpSpec)
   , cetqEnableManual   :: !(Maybe Bool)
   , cetqRetryConf      :: !(Maybe RetryConf)
-  , cetqWebhook        :: !(Maybe T.Text)
+  , cetqWebhook        :: !(Maybe InputWebhook)
   , cetqWebhookFromEnv :: !(Maybe T.Text)
   , cetqHeaders        :: !(Maybe [HeaderConf])
   , cetqReplace        :: !Bool
@@ -196,7 +206,7 @@ data EventTriggerConf
   = EventTriggerConf
   { etcName           :: !TriggerName
   , etcDefinition     :: !TriggerOpsDef
-  , etcWebhook        :: !(Maybe T.Text)
+  , etcWebhook        :: !(Maybe InputWebhook)
   , etcWebhookFromEnv :: !(Maybe T.Text)
   , etcRetryConf      :: !RetryConf
   , etcHeaders        :: !(Maybe [HeaderConf])

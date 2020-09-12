@@ -1,0 +1,16 @@
+type: bulk
+args:
+
+#Test table
+- type: run_sql
+  args:
+    sql: |
+      create table "nullPrefixTestTable"(
+          id serial primary key,
+          "nullName" text
+      );
+- type: track_table
+  args:
+    schema: public
+    name: "nullPrefixTestTable"
+

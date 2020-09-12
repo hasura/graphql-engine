@@ -1,23 +1,27 @@
+{-# LANGUAGE CPP #-}
 module Hasura.Server.SchemaUpdate
   (startSchemaSyncThreads)
 where
 
+import           Hasura.Db
 import           Hasura.Prelude
-
+import           Hasura.Session
 import           Hasura.Logging
-import           Hasura.RQL.DDL.Schema     (runCacheRWT)
+import           Hasura.RQL.DDL.Schema       (runCacheRWT)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.App         (SchemaCacheRef (..), withSCUpdate)
-import           Hasura.Server.Init        (InstanceId (..))
+import           Hasura.Server.API.Query
+import           Hasura.Server.App           (SchemaCacheRef (..), withSCUpdate)
+import           Hasura.Server.Init          (InstanceId (..))
 import           Hasura.Server.Logging
-import           Hasura.Server.Query
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.IORef
+#ifndef PROFILING
 import           GHC.AssertNF
+#endif
 
 import qualified Control.Concurrent.Extended as C
 import qualified Control.Concurrent.STM      as STM
@@ -93,7 +97,7 @@ startSchemaSyncThreads sqlGenCtx pool logger httpMgr cacheRef instanceId cacheIn
   updateEventRef <- liftIO $ STM.newTVarIO Nothing
 
   -- Start listener thread
-  lTId <- liftIO $ C.forkImmortal "SchemeUpdate.listener" logger $ 
+  lTId <- liftIO $ C.forkImmortal "SchemeUpdate.listener" logger $
     listener sqlGenCtx pool logger httpMgr updateEventRef cacheRef instanceId cacheInitTime
   logThreadStarted TTListener lTId
 
@@ -160,12 +164,14 @@ listener sqlGenCtx pool logger httpMgr updateEventRef
           Left e -> logError logger threadType $ TEJsonParse $ T.pack e
           Right payload -> do
             logInfo logger threadType $ object ["received_event" .= payload]
+#ifndef PROFILING
             $assertNFHere payload  -- so we don't write thunks to mutable vars
+#endif
             -- Push a notify event to Queue
             STM.atomically $ STM.writeTVar updateEventRef $ Just payload
 
     onError = logError logger threadType . TEQueryError
-    -- NOTE: we handle expected error conditions here, while unexpected exceptions will result in 
+    -- NOTE: we handle expected error conditions here, while unexpected exceptions will result in
     -- a restart and log from 'forkImmortal'
     logWarn = unLogger logger $
       SchemaSyncThreadLog LevelWarn TTListener $ String
@@ -220,14 +226,14 @@ refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef invalidations thre
     rebuildableCache <- fst <$> liftIO (readIORef $ _scrCache cacheRef)
     ((), cache, _) <- buildSchemaCacheWithOptions CatalogSync invalidations
       & runCacheRWT rebuildableCache
-      & peelRun runCtx pgCtx PG.ReadWrite
+      & peelRun runCtx pgCtx PG.ReadWrite Nothing
     pure ((), cache)
   case resE of
     Left e   -> logError logger threadType $ TEQueryError e
     Right () -> logInfo logger threadType $ object ["message" .= msg]
  where
   runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
-  pgCtx = PGExecCtx pool PG.Serializable
+  pgCtx = mkPGExecCtx PG.Serializable pool
 
 logInfo :: Logger Hasura -> ThreadType -> Value -> IO ()
 logInfo logger threadType val = unLogger logger $

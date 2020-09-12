@@ -774,7 +774,7 @@ class PermissionBuilder extends React.Component {
 
       const _tableExp = [
         { key: 'schema', value: schemaSelect },
-        { key: 'table', value: tableSelect },
+        { key: 'name', value: tableSelect },
       ];
 
       return <QueryBuilderJson element={_tableExp} />;
@@ -992,7 +992,7 @@ class PermissionBuilder extends React.Component {
     return (
       <div className="container-fluid">
         <div className="row">
-          <div className={styles.qb_container}>
+          <div className={styles.qb_container} data-test="qb_container">
             <div className={styles.remove_margin_bottom + ' well'}>
               {showPermissionBuilder()}
             </div>

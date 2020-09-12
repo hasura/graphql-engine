@@ -1,0 +1,46 @@
+description: Query the article connection with only pageInfo
+url: /v1beta1/relay
+status: 200
+query:
+  query: |
+    query {
+      article_connection(
+        order_by: {title: asc}
+        last: 2
+      ){
+        pageInfo{
+          startCursor
+          endCursor
+          hasPreviousPage
+          hasNextPage
+        }
+        startCursor: pageInfo{
+          startCursor
+        }
+        endCursor: pageInfo{
+          endCursor
+        }
+        hasPreviousPage: pageInfo{
+          hasPreviousPage
+        }
+        hasNextPage: pageInfo{
+          hasNextPage
+        }
+      }
+    }
+response:
+  data:
+    article_connection:
+      pageInfo:
+        startCursor: eyJ0aXRsZSIgOiAiQXJ0aWNsZSA1IiwgImlkIiA6IDV9
+        endCursor: eyJ0aXRsZSIgOiAiQXJ0aWNsZSA2IiwgImlkIiA6IDZ9
+        hasPreviousPage: true
+        hasNextPage: false
+      startCursor:
+        startCursor: eyJ0aXRsZSIgOiAiQXJ0aWNsZSA1IiwgImlkIiA6IDV9
+      endCursor:
+        endCursor: eyJ0aXRsZSIgOiAiQXJ0aWNsZSA2IiwgImlkIiA6IDZ9
+      hasPreviousPage:
+        hasPreviousPage: true
+      hasNextPage:
+        hasNextPage: false

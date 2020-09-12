@@ -27,6 +27,19 @@ export const setTypeDefinition = (sdl, error = null, timer, ast) => ({
   definition: { sdl, error, timer, ast },
 });
 
+const SET_DERIVED_ACTION_PARENT_OPERATION =
+  'Actions/Add/SET_DERIVED_ACTION_PARENT_OPERATION';
+export const setDerivedActionParentOperation = operationString => ({
+  type: SET_DERIVED_ACTION_PARENT_OPERATION,
+  data: operationString,
+});
+
+const RESET_DERIVED_ACTION_PARENT_OPERATION =
+  'Actions/Add/RESET_DERIVED_ACTION_PARENT_OPERATION';
+export const resetDerivedActionParentOperation = () => ({
+  type: RESET_DERIVED_ACTION_PARENT_OPERATION,
+});
+
 const SET_FETCHING = 'Actions/Add/SET_FETCHING';
 export const setFetching = () => ({ type: SET_FETCHING });
 const UNSET_FETCHING = 'Actions/Add/UNSET_FETCHING';
@@ -102,6 +115,20 @@ const reducer = (state = defaultState, action) => {
       return {
         ...state,
         forwardClientHeaders: !state.forwardClientHeaders,
+      };
+    case SET_DERIVED_ACTION_PARENT_OPERATION:
+      return {
+        ...state,
+        derive: {
+          operation: action.data,
+        },
+      };
+    case RESET_DERIVED_ACTION_PARENT_OPERATION:
+      return {
+        ...state,
+        derive: {
+          operation: '',
+        },
       };
     default:
       return state;

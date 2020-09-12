@@ -5,6 +5,7 @@ const mapStateToProps = state => {
     ...state.actions.modify,
     allActions: state.actions.common.actions,
     allTypes: state.types.types,
+    readOnlyMode: state.main.readOnlyMode,
   };
 };
 
