@@ -48,8 +48,8 @@ reach particular checkpoints. They can be used to roll-back the DB schema as wel
 
 .. note::
 
-  You can manage database migrations using external tools like knex, TypeORM, Django/Rails migrations, etc.
-  as well.
+  You can choose to manage database migrations using external tools like knex, TypeORM,
+  Django/Rails migrations, etc. as well.
 
 Hasura metadata files
 ^^^^^^^^^^^^^^^^^^^^^
@@ -59,9 +59,6 @@ snapshots can be applied as a whole to configure Hasura to a state represented
 in the snapshot.
 
 Hasura metadata can be exported and imported as a whole.
-
-.. note::
-
 
 Setting up migrations
 ---------------------
