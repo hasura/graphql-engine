@@ -177,6 +177,9 @@ Now that we have Hasura running, let's expose it on an IP using a LoadBalancer.
         --port 80 --target-port 8080 \
         --type LoadBalancer
 
+Open the Hasura console
+***********************
+
 Wait for the external IP to be allocated, check the status using the
 command below. It usually takes a couple of minutes.
 
