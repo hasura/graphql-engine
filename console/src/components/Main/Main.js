@@ -7,7 +7,6 @@ import Tooltip from 'react-bootstrap/lib/Tooltip';
 import * as tooltips from './Tooltips';
 import globals from '../../Globals';
 import { getPathRoot } from '../Common/utils/urlUtils';
-
 import Spinner from '../Common/Spinner/Spinner';
 import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
 import logo from './images/white-logo.svg';
@@ -21,6 +20,7 @@ import {
   loadLatestServerVersion,
   featureCompatibilityInit,
   emitProClickedEvent,
+  fetchPostgresVersion,
 } from './Actions';
 
 import {
@@ -45,7 +45,7 @@ import {
 import ToolTip from '../Common/Tooltip/Tooltip';
 import { setPreReleaseNotificationOptOutInDB } from '../../telemetry/Actions';
 import { Icon } from '../UIKit/atoms/Icon';
-import { ProPopup } from './components/ProPopup';
+import { Help, ProPopup } from './components/';
 
 class Main extends React.Component {
   constructor(props) {
@@ -82,7 +82,9 @@ class Main extends React.Component {
       });
     });
 
-    dispatch(fetchServerConfig());
+    dispatch(fetchPostgresVersion);
+
+    dispatch(fetchServerConfig);
   }
 
   toggleProPopup = () => {
@@ -655,14 +657,7 @@ class Main extends React.Component {
                   {getSettingsSelectedMarker()}
                 </div>
               </Link>
-              <a
-                id="help"
-                href="https://hasura.io/help"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <div className={styles.headerRightNavbarBtn}>HELP</div>
-              </a>
+              <Help isSelected={currentActiveBlock === 'support'} />
               {getLoveSection()}
             </div>
           </div>

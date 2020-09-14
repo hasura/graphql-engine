@@ -25,10 +25,10 @@ export const TypedInput = ({
 
   const placeHolder = hasDefault ? colDefault : getPlaceholder(colType);
   const getDefaultValue = () => {
+    if (clone && colName in clone) return clone[colName];
     if (prevValue !== undefined) {
       return prevValue === null ? '' : prevValue;
     }
-    if (clone && colName in clone) return clone[colName];
     return '';
   };
 

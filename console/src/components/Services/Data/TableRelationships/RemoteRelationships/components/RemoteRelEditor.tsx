@@ -1,4 +1,5 @@
 import React from 'react';
+import { ThunkAction } from 'redux-thunk';
 import {
   RemoteRelationship,
   TreeArgElement,
@@ -23,6 +24,7 @@ import {
 } from '../Tooltips';
 import Explorer from './Explorer';
 import { Table } from '../../../../../Common/utils/pgUtils';
+import { ReduxState, ReduxAction } from '../../../../../../types';
 
 type Props = {
   table: Table;
@@ -30,6 +32,7 @@ type Props = {
   isLast: boolean;
   state: RemoteRelationship;
   dispatch: React.Dispatch<RemoteRelAction>;
+  reduxDispatch: ThunkAction<void, ReduxState, unknown, ReduxAction>;
 };
 
 const RemoteRelEditor: React.FC<Props> = ({
@@ -38,6 +41,7 @@ const RemoteRelEditor: React.FC<Props> = ({
   remoteSchemas,
   state,
   dispatch,
+  reduxDispatch,
 }) => {
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.persist();
@@ -149,6 +153,7 @@ const RemoteRelEditor: React.FC<Props> = ({
             handleArgValueChange={handleArgValueChange}
             remoteSchemaName={state.remoteSchema}
             columns={tableColumns}
+            reduxDispatch={reduxDispatch}
           />
         </div>
       </div>

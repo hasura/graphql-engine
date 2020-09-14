@@ -1,4 +1,4 @@
-export const UNSAFE_keys = <T extends object>(source: T) =>
+export const UNSAFE_keys = <T extends Record<string, unknown>>(source: T) =>
   Object.keys(source) as Array<keyof T>;
 
 export type Json =

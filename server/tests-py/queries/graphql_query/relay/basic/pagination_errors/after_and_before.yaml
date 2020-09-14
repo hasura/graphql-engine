@@ -16,6 +16,6 @@ query:
 response:
   errors:
   - extensions:
-      path: "$.selectionSet.author_connection"
+      path: $.selectionSet.author_connection.args
       code: validation-failed
     message: '"after" and "before" are not allowed at once'

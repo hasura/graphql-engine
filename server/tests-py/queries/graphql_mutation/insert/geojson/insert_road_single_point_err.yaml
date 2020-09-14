@@ -4,7 +4,7 @@ status: 200
 response:
   errors:
   - extensions:
-      path: $.variableValues.roads[0].path.coordinates
+      path: $.selectionSet.insert_road.args.objects[0].path
       code: parse-failed
     message: A LineString needs at least 2 Positions
 query:
@@ -17,7 +17,7 @@ query:
         type: LineString
   query: |
     mutation insertRoad($roads: [road_insert_input!]!) {
-      insert_straight_road(objects: $roads) {
+      insert_road(objects: $roads) {
         returning{
           id
           name
