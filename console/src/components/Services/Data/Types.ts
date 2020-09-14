@@ -123,19 +123,19 @@ export type ConsoleOpts = {
 export type ErrorType = {
   code: string | number;
   message: string;
-  error: string,
+  error: string;
   internal: {
     error: {
       status_code: string;
       description: string;
       message: string;
-    }
-  }
+    };
+  };
 };
 
 export type QueryType = {
   type: string;
   args: {
-    sql: string
+    sql: string;
   }; // todo change this after down schema PR merge
 };

@@ -8,7 +8,11 @@ import { ordinalColSort, getForeignKey } from '../utils';
 import { insertItem, I_RESET, fetchEnumOptions } from './InsertActions';
 import { setTable, filterFkOptions } from '../DataActions';
 import { NotFoundError } from '../../../Error/PageNotFound';
-import { findTable, generateTableDef, isColumnAutoIncrement } from '../../../Common/utils/pgUtils';
+import {
+  findTable,
+  generateTableDef,
+  isColumnAutoIncrement,
+} from '../../../Common/utils/pgUtils';
 import styles from '../../../Common/TableCommon/Table.scss';
 import { getExistingFKConstraints } from '../Common/Components/utils';
 import { TypedInput } from '../Common/Components/TypedInput';
@@ -98,7 +102,7 @@ class InsertItem extends Component {
     const refs = {};
 
     const elements = columns.map((col, i) => {
-      const { column_name: colName} = col;
+      const { column_name: colName } = col;
       const hasDefault = col.column_default && col.column_default.trim() !== '';
       const isNullable = col.is_nullable && col.is_nullable !== 'NO';
       const isIdentity = col.is_identity && col.is_identity !== 'NO';

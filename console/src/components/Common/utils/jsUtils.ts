@@ -339,7 +339,10 @@ export const downloadFile = (fileName: string, dataString: string) => {
   downloadLinkElem.remove();
 };
 
-export const downloadObjectAsJsonFile = (fileName: string, object: Record<string,unknown>) => {
+export const downloadObjectAsJsonFile = (
+  fileName: string,
+  object: Record<string, unknown>
+) => {
   const contentType = 'application/json;charset=utf-8;';
 
   const jsonSuffix = '.json';
