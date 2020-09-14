@@ -163,8 +163,11 @@ If there are any errors, check the logs of the GraphQL engine:
 
    kubectl logs deployment/hasura -c graphql-engine
 
-Expose GraphQL engine (HTTP)
-----------------------------
+Expose GraphQL engine
+---------------------
+
+HTTP
+^^^^
 
 Now that we have Hasura running, let's expose it on an IP using a LoadBalancer.
 
@@ -184,8 +187,8 @@ command below. It usually takes a couple of minutes.
 Once the IP is allocated, visit the IP in a browser and it should open the
 console.
 
-Expose GraphQL engine (HTTPS)
------------------------------
+HTTPS
+^^^^^
 
 Let's expose Hasura with `Ingress 
 <https://cloud.google.com/kubernetes-engine/docs/concepts/ingress/>`_. Create service:
