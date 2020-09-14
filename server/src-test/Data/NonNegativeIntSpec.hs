@@ -1,7 +1,7 @@
 module Data.NonNegativeIntSpec (spec) where
 -- | basic tests on NonNegativeIntType
 
-import           Data.Aeson              (decode, fromJSON)              
+import           Data.Aeson              (decode)              
 import           Hasura.RQL.Types.Common (NonNegativeInt, mkNonNegativeInt)
 import           Prelude
 import           Test.Hspec              (Spec, describe, it, shouldBe, shouldNotBe)
