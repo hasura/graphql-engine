@@ -43,7 +43,8 @@ export const showNotification = (
         {
           position: options.position || 'tr',
           autoDismiss: ['error', 'warning'].includes(level) ? 0 : 5,
-          dismissible: 'button',
+          // bug in @types/react-notification-system-redux types
+          dismissible: 'button' as any, 
           ...options,
         },
         level
