@@ -87,7 +87,7 @@ const editItem = (tableName, colValues, isMigration = false) => {
     const currentTable = state.tables.allSchemas.find(tab => {
       return tab.table_name === tableName && tab.table_schema === currentSchema;
     });
-   
+
     const _setObject = {};
     const _defaultArray = [];
 

@@ -71,7 +71,7 @@ class EditItem extends Component {
       schemas,
       generateTableDef(tableName, currentSchema)
     );
-    
+
     const columns = currentTable.columns.sort(ordinalColSort);
 
     const refs = {};
