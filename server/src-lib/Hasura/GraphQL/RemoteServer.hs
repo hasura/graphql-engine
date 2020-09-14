@@ -10,7 +10,6 @@ import           Control.Monad.Unique
 import           Data.Aeson                             ((.:), (.:?))
 import           Hasura.HTTP
 import           Hasura.Prelude
-import qualified Data.Text as T
 
 import qualified Data.Aeson                             as J
 import qualified Data.ByteString.Lazy                   as BL
@@ -347,8 +346,8 @@ execRemoteGQ' env manager userInfo reqHdrs q rsi opType fieldPaths =  do
     renderFieldPath fp = T.intercalate "." $ map getFieldNameTxt (unFieldPath fp)
     renderedFieldPaths = case fieldPaths of
       TopLevelRemoteCall -> "toplevel"
-      RemoteJoinCall fieldPaths ->
-        T.intercalate ", " $ map renderFieldPath (toList fieldPaths)
+      RemoteJoinCall fps ->
+        T.intercalate ", " $ map renderFieldPath (toList fps)
     RemoteSchemaInfo url hdrConf fwdClientHdrs timeout = rsi
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
     httpThrow = \case
