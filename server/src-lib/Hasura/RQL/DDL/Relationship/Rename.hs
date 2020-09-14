@@ -28,7 +28,7 @@ renameRelP2 source qt newRN relInfo = withNewInconsistentObjsCheck $ do
     oldRN = riName relInfo
 
 runRenameRel
-  :: (MonadTx m, CacheRWM m)
+  :: (MonadError QErr m, CacheRWM m)
   => RenameRel -> m EncJSON
 runRenameRel (RenameRel source qt rn newRN) = do
   tabInfo <- askTableCoreInfo source qt

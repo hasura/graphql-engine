@@ -1,7 +1,7 @@
 module Hasura.RQL.DDL.ScheduledTrigger
   ( runCreateCronTrigger
   , runDeleteCronTrigger
-  , addCronTriggerToCatalog
+  -- , addCronTriggerToCatalog
   -- , deleteCronTriggerFromCatalog
   , dropCronTriggerInMetadata
   , resolveCronTrigger
@@ -24,7 +24,8 @@ import qualified Database.PG.Query                as Q
 -- | runCreateCronTrigger will update a existing cron trigger when the 'replace'
 --   value is set to @true@ and when replace is @false@ a new cron trigger will
 --   be created
-runCreateCronTrigger :: (CacheRWM m, MonadTx m) => CreateCronTrigger ->  m EncJSON
+runCreateCronTrigger
+  :: (CacheRWM m, MonadError QErr m) => CreateCronTrigger ->  m EncJSON
 runCreateCronTrigger CreateCronTrigger {..} = do
   let q = (CronTriggerMetadata cctName
                                cctWebhook
@@ -45,7 +46,7 @@ runCreateCronTrigger CreateCronTrigger {..} = do
                     <> (triggerNameToTxt $ ctName q)
                     <> " already exists"
 
-        addCronTriggerToCatalog q
+        -- addCronTriggerToCatalog q
         let metadataObj = MOCronTrigger cctName
             metadata = CronTriggerMetadata cctName cctWebhook cctCronSchedule
                        cctPayload cctRetryConf cctHeaders cctIncludeInMetadata
@@ -55,18 +56,18 @@ runCreateCronTrigger CreateCronTrigger {..} = do
           $ metaCronTriggers %~ Map.insert cctName metadata
         return successMsg
 
-addCronTriggerToCatalog :: (MonadTx m) => CronTriggerMetadata ->  m ()
-addCronTriggerToCatalog CronTriggerMetadata {..} = liftTx $ do
-  Q.unitQE defaultTxErrorHandler
-    [Q.sql|
-      INSERT into hdb_catalog.hdb_cron_triggers
-        (name, webhook_conf, cron_schedule, payload, retry_conf, header_conf, include_in_metadata, comment)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    |] (ctName, Q.AltJ ctWebhook, ctSchedule, Q.AltJ <$> ctPayload, Q.AltJ ctRetryConf
-       ,Q.AltJ ctHeaders, ctIncludeInMetadata, ctComment) False
-  currentTime <- liftIO C.getCurrentTime
-  let scheduleTimes = generateScheduleTimes currentTime 100 ctSchedule -- generate next 100 events
-  insertCronEvents $ map (CronEventSeed ctName) scheduleTimes
+-- addCronTriggerToCatalog :: (MonadTx m) => CronTriggerMetadata ->  m ()
+-- addCronTriggerToCatalog CronTriggerMetadata {..} = liftTx $ do
+--   Q.unitQE defaultTxErrorHandler
+--     [Q.sql|
+--       INSERT into hdb_catalog.hdb_cron_triggers
+--         (name, webhook_conf, cron_schedule, payload, retry_conf, header_conf, include_in_metadata, comment)
+--       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+--     |] (ctName, Q.AltJ ctWebhook, ctSchedule, Q.AltJ <$> ctPayload, Q.AltJ ctRetryConf
+--        ,Q.AltJ ctHeaders, ctIncludeInMetadata, ctComment) False
+--   currentTime <- liftIO C.getCurrentTime
+--   let scheduleTimes = generateScheduleTimes currentTime 100 ctSchedule -- generate next 100 events
+--   insertCronEvents $ map (CronEventSeed ctName) scheduleTimes
 
 resolveCronTrigger
   :: (QErrM m)
@@ -85,7 +86,8 @@ resolveCronTrigger env CronTriggerMetadata{..} = do
                     headerInfo
                     ctComment
 
-updateCronTrigger :: (CacheRWM m, MonadTx m) => CronTriggerMetadata -> m EncJSON
+updateCronTrigger
+  :: (CacheRWM m, MonadError QErr m) => CronTriggerMetadata -> m EncJSON
 updateCronTrigger cronTriggerMetadata = do
   let triggerName = ctName cronTriggerMetadata
   checkExists triggerName
@@ -121,7 +123,8 @@ updateCronTriggerInCatalog CronTriggerMetadata {..} = liftTx $ do
   let scheduleTimes = generateScheduleTimes currentTime 100 ctSchedule
   insertCronEvents $ map (CronEventSeed ctName) scheduleTimes
 
-runDeleteCronTrigger :: (CacheRWM m, MonadTx m) => ScheduledTriggerName -> m EncJSON
+runDeleteCronTrigger
+  :: (CacheRWM m, MonadError QErr m) => ScheduledTriggerName -> m EncJSON
 runDeleteCronTrigger (ScheduledTriggerName stName) = do
   checkExists stName
   -- deleteCronTriggerFromCatalog stName
@@ -142,22 +145,25 @@ dropCronTriggerInMetadata name =
 --     WHERE name = $1
 --    |] (Identity triggerName) False
 
-runCreateScheduledEvent :: (MonadTx m) => CreateScheduledEvent -> m EncJSON
+runCreateScheduledEvent
+  :: (MonadError QErr m) => CreateScheduledEvent -> m EncJSON
 runCreateScheduledEvent CreateScheduledEvent {..} = do
-  liftTx $ Q.unitQE defaultTxErrorHandler
-     [Q.sql|
-      INSERT INTO hdb_catalog.hdb_scheduled_events
-      (webhook_conf,scheduled_time,payload,retry_conf,header_conf,comment)
-      VALUES
-      ($1, $2, $3, $4, $5, $6)
-     |] ( Q.AltJ cseWebhook
-        , cseScheduleAt
-        , Q.AltJ csePayload
-        , Q.AltJ cseRetryConf
-        , Q.AltJ cseHeaders
-        , cseComment)
-        False
-  pure successMsg
+  -- FIXME:
+  throw400 NotSupported $ "creating scheduled events are temporarily disabled"
+  -- liftTx $ Q.unitQE defaultTxErrorHandler
+  --    [Q.sql|
+  --     INSERT INTO hdb_catalog.hdb_scheduled_events
+  --     (webhook_conf,scheduled_time,payload,retry_conf,header_conf,comment)
+  --     VALUES
+  --     ($1, $2, $3, $4, $5, $6)
+  --    |] ( Q.AltJ cseWebhook
+  --       , cseScheduleAt
+  --       , Q.AltJ csePayload
+  --       , Q.AltJ cseRetryConf
+  --       , Q.AltJ cseHeaders
+  --       , cseComment)
+  --       False
+  -- pure successMsg
 
 checkExists :: (CacheRM m, MonadError QErr m) => TriggerName -> m ()
 checkExists name = do

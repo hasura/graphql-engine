@@ -17,7 +17,6 @@ import           Control.Lens
 import qualified Hasura.Incremental           as Inc
 
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Catalog
 import           Hasura.RQL.Types.Run
 import           Hasura.SQL.Types
 
@@ -90,7 +89,8 @@ data SourceOutput
   = SourceOutput
   { _soTables    :: !TableCache
   , _soFunctions :: !FunctionCache
-  } deriving (Show, Eq)
+  , _soConfig    :: !PGSourceConfig
+  } deriving (Eq)
 $(makeLenses ''SourceOutput)
 
 type SourceOutputs = HashMap SourceName SourceOutput
@@ -127,7 +127,7 @@ data MetadataStateResult m
   , _msrMetadata           :: !Metadata
   }
 
-type CacheBuildM = ReaderT BuildReason Run
+type CacheBuildM = ReaderT BuildReason MetadataRun
 type CacheBuildA = WriterA (Seq CollectedInfo) (Inc.Rule CacheBuildM)
 
 bindErrorA

@@ -76,6 +76,8 @@ getInputArgs :: FunctionInfo -> Seq.Seq FunctionArg
 getInputArgs =
   Seq.fromList . mapMaybe (^? _IAUserProvided) . toList . fiInputArgs
 
+type FunctionCache = HashMap QualifiedFunction FunctionInfo -- info of all functions
+
 -- Metadata requests related types
 data FunctionConfig
   = FunctionConfig
@@ -102,3 +104,25 @@ instance FromJSON TrackFunctionV2 where
     <$> o .:? "source" .!= defaultSource
     <*> o .: "function"
     <*> o .:? "configuration" .!= emptyFunctionConfig
+
+-- | Raw SQL function metadata from postgres
+data RawFunctionInfo
+  = RawFunctionInfo
+  { rfiOid              :: !OID
+  , rfiHasVariadic      :: !Bool
+  , rfiFunctionType     :: !FunctionType
+  , rfiReturnTypeSchema :: !SchemaName
+  , rfiReturnTypeName   :: !PGScalarType
+  , rfiReturnTypeType   :: !PGTypeKind
+  , rfiReturnsSet       :: !Bool
+  , rfiInputArgTypes    :: ![QualifiedPGType]
+  , rfiInputArgNames    :: ![FunctionArgName]
+  , rfiDefaultArgs      :: !Int
+  , rfiReturnsTable     :: !Bool
+  , rfiDescription      :: !(Maybe PGDescription)
+  } deriving (Show, Eq, Generic)
+instance NFData RawFunctionInfo
+instance Cacheable RawFunctionInfo
+$(deriveJSON (aesonDrop 3 snakeCase) ''RawFunctionInfo)
+
+type PostgresFunctionsMetadata = HashMap QualifiedFunction [RawFunctionInfo]

@@ -18,6 +18,7 @@ module Hasura.GraphQL.Context
   , SubscriptionRootFieldResolved
   ) where
 
+import           Hasura.Db
 import           Hasura.Prelude
 
 import qualified Data.Aeson                    as J
@@ -59,7 +60,7 @@ type ParserFn a
   -> Either (NESeq ParseError) (a, QueryReusability)
 
 data RootField db remote action raw
-  = RFDB db
+  = RFDB !PGExecCtx db
   | RFRemote remote
   | RFAction action
   | RFRaw raw
@@ -70,7 +71,7 @@ traverseDB :: forall db db' remote action raw f
        -> RootField db remote action raw
        -> f (RootField db' remote action raw)
 traverseDB f = \case
-  RFDB x -> RFDB <$> f x
+  RFDB e x -> RFDB e <$> f x
   RFRemote x -> pure $ RFRemote x
   RFAction x -> pure $ RFAction x
   RFRaw x -> pure $ RFRaw x
@@ -81,7 +82,7 @@ traverseAction :: forall db remote action action' raw f
        -> RootField db remote action raw
        -> f (RootField db remote action' raw)
 traverseAction f = \case
-  RFDB x -> pure $ RFDB x
+  RFDB e x -> pure $ RFDB e x
   RFRemote x -> pure $ RFRemote x
   RFAction x -> RFAction <$> f x
   RFRaw x -> pure $ RFRaw x

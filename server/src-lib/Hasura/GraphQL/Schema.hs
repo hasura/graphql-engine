@@ -123,10 +123,10 @@ runMonadSchema
   :: (Monad m)
   => RoleName
   -> QueryContext
-  -> Map.HashMap QualifiedTable TableInfo
-  -> P.SchemaT (P.ParseT Identity) (ReaderT (RoleName, Map.HashMap QualifiedTable TableInfo, QueryContext) m) a -> m a
-runMonadSchema roleName queryContext tableCache m =
-  flip runReaderT (roleName, tableCache, queryContext) $ P.runSchemaT m
+  -> SourceTables
+  -> P.SchemaT (P.ParseT Identity) (ReaderT (RoleName, SourceTables, QueryContext) m) a -> m a
+runMonadSchema roleName queryContext sourceTables m =
+  flip runReaderT (roleName, sourceTables, queryContext) $ P.runSchemaT m
 
 buildRoleContext
   :: (MonadError QErr m, MonadIO m, MonadUnique m)
@@ -137,17 +137,16 @@ buildRoleContext
   -> m (RoleContext GQLContext)
 buildRoleContext queryContext pgSources allActionInfos
   nonObjectCustomTypes queryRemotes mutationRemotes roleName = do
+  let sourceTables = Map.map _pcTables pgSources
 
-  fieldsList <- forM pgSources $ \(PGSourceSchemaCache tableCache functionCache) ->
-    runMonadSchema roleName queryContext tableCache $
-      buildPGFields tableCache functionCache
+  fieldsList <- forM pgSources $ \(PGSourceSchemaCache tableCache functionCache sourceConfig) ->
+    runMonadSchema roleName queryContext sourceTables $
+      buildPGFields sourceConfig tableCache functionCache
 
   let (queryPGFields, mutationFrontendFields, mutationBackendFields) =
         foldr (<>) mempty fieldsList
 
-  -- TODO: the tables list is being passed as empty which will affect actions
-  -- ideally we should be passing pgsources here and fix `askTableInfo`
-  runMonadSchema roleName queryContext mempty $ do
+  runMonadSchema roleName queryContext sourceTables $ do
 
     mutationParserFrontend <-
       buildMutationParser mutationRemotes allActionInfos
@@ -176,18 +175,19 @@ buildPGFields
      , MonadRole r m
      , Has QueryContext r
      )
-  => TableCache
+  => PGSourceConfig
+  -> TableCache
   -> FunctionCache
   -> m ( [P.FieldParser n (QueryRootField UnpreparedValue)]
        , [P.FieldParser n (MutationRootField UnpreparedValue)]
        , [P.FieldParser n (MutationRootField UnpreparedValue)]
        )
   -- ^ (query fields, frontend mutation fields, backend mutation fields)
-buildPGFields tableCache functionCache = do
+buildPGFields sourceConfig tableCache functionCache = do
   (,,)
-  <$> buildPostgresQueryFields validTableNames validFunctions
-  <*> buildPGMutationFields Frontend validTableNames
-  <*> buildPGMutationFields Backend validTableNames
+  <$> buildPostgresQueryFields sourceConfig validTableNames validFunctions
+  <*> buildPGMutationFields Frontend sourceConfig validTableNames
+  <*> buildPGMutationFields Backend sourceConfig validTableNames
   where
     tableFilter    = not . isSystemDefined . _tciSystemDefined
     functionFilter = not . isSystemDefined . fiSystemDefined
@@ -204,17 +204,17 @@ buildRelayRoleContext
   -> m (RoleContext GQLContext)
 buildRelayRoleContext queryContext pgSources allActionInfos
   nonObjectCustomTypes queryRemotes mutationRemotes roleName = do
+  let sourceTables = Map.map _pcTables pgSources
 
   fieldsList <- forM pgSources $
-    \(PGSourceSchemaCache tableCache functionCache) ->
-      runMonadSchema roleName queryContext tableCache $
-      buildRelayPGFields tableCache functionCache
+    \(PGSourceSchemaCache tableCache functionCache sourceConfig) ->
+      runMonadSchema roleName queryContext sourceTables $
+      buildRelayPGFields sourceConfig tableCache functionCache
 
   let (queryPGFields, mutationFrontendFields, mutationBackendFields) =
         foldr (<>) mempty fieldsList
 
-  -- TODO: the tables list is being passed as empty which will affect actions
-  runMonadSchema roleName queryContext mempty $ do
+  runMonadSchema roleName queryContext sourceTables $ do
     mutationParserFrontend <-
       buildMutationParser mutationRemotes allActionInfos
       nonObjectCustomTypes mutationFrontendFields
@@ -244,18 +244,19 @@ buildRelayPGFields
      , MonadRole r m
      , Has QueryContext r
      )
-  => TableCache
+  => PGSourceConfig
+  -> TableCache
   -> FunctionCache
   -> m ( [P.FieldParser n (QueryRootField UnpreparedValue)]
        , [P.FieldParser n (MutationRootField UnpreparedValue)]
        , [P.FieldParser n (MutationRootField UnpreparedValue)]
        )
   -- ^ (query fields, frontend mutation fields, backend mutation fields)
-buildRelayPGFields tableCache functionCache = do
+buildRelayPGFields sourceConfig tableCache functionCache = do
   (,,)
-  <$> buildRelayPostgresQueryFields validTableNames validFunctions
-  <*> buildPGMutationFields Frontend validTableNames
-  <*> buildPGMutationFields Backend validTableNames
+  <$> buildRelayPostgresQueryFields sourceConfig validTableNames validFunctions
+  <*> buildPGMutationFields Frontend sourceConfig validTableNames
+  <*> buildPGMutationFields Backend sourceConfig validTableNames
   where
     tableFilter    = not . isSystemDefined . _tciSystemDefined
     functionFilter = not . isSystemDefined . fiSystemDefined
@@ -342,10 +343,11 @@ buildPostgresQueryFields
      , MonadRole r m
      , Has QueryContext r
      )
-  => HashSet QualifiedTable
+  => PGSourceConfig
+  -> HashSet QualifiedTable
   -> [FunctionInfo]
   -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
-buildPostgresQueryFields allTables allFunctions = do
+buildPostgresQueryFields sourceConfig allTables allFunctions = do
   tableSelectExpParsers <- for (toList allTables) \table -> do
     selectPerms <- tableSelectPermissions table
     customRootFields <- _tcCustomRootFields . _tciCustomConfig . _tiCoreInfo <$> askTableInfo table
@@ -357,9 +359,9 @@ buildPostgresQueryFields allTables allFunctions = do
           pkName = displayName <> $$(G.litName "_by_pk")
           pkDesc = G.Description $ "fetch data from the table: " <> table <<> " using primary key columns"
       catMaybes <$> sequenceA
-        [ requiredFieldParser (RFDB . QDBSimple)      $ selectTable          table (fromMaybe displayName $ _tcrfSelect          customRootFields) (Just fieldsDesc) perms
-        , mapMaybeFieldParser (RFDB . QDBPrimaryKey)  $ selectTableByPk      table (fromMaybe pkName      $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms
-        , mapMaybeFieldParser (RFDB . QDBAggregation) $ selectTableAggregate table (fromMaybe aggName     $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms
+        [ requiredFieldParser (asDbRootField . QDBSimple)      $ selectTable          table (fromMaybe displayName $ _tcrfSelect          customRootFields) (Just fieldsDesc) perms
+        , mapMaybeFieldParser (asDbRootField . QDBPrimaryKey)  $ selectTableByPk      table (fromMaybe pkName      $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms
+        , mapMaybeFieldParser (asDbRootField . QDBAggregation) $ selectTableAggregate table (fromMaybe aggName     $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms
         ]
   functionSelectExpParsers <- for allFunctions \function -> do
     let targetTable = fiReturnType function
@@ -371,11 +373,14 @@ buildPostgresQueryFields allTables allFunctions = do
           aggName = displayName <> $$(G.litName "_aggregate")
           aggDesc = G.Description $ "execute function " <> functionName <<> " and query aggregates on result of table type " <>> targetTable
       catMaybes <$> sequenceA
-        [ requiredFieldParser (RFDB . QDBSimple)      $ selectFunction          function displayName (Just functionDesc) perms
-        , mapMaybeFieldParser (RFDB . QDBAggregation) $ selectFunctionAggregate function aggName     (Just aggDesc)      perms
+        [ requiredFieldParser (asDbRootField . QDBSimple)      $ selectFunction          function displayName (Just functionDesc) perms
+        , mapMaybeFieldParser (asDbRootField . QDBAggregation) $ selectFunctionAggregate function aggName     (Just aggDesc)      perms
         ]
   pure $ (concat . catMaybes) (tableSelectExpParsers <> functionSelectExpParsers)
   where
+    pgExecCtx = _pscExecCtx sourceConfig
+    asDbRootField = RFDB pgExecCtx
+
     requiredFieldParser :: (a -> b) -> m (P.FieldParser n a) -> m (Maybe (P.FieldParser n b))
     requiredFieldParser f = fmap $ Just . fmap f
 
@@ -428,10 +433,11 @@ buildRelayPostgresQueryFields
      , MonadRole r m
      , Has QueryContext r
      )
-  => HashSet QualifiedTable
+  => PGSourceConfig
+  -> HashSet QualifiedTable
   -> [FunctionInfo]
   -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
-buildRelayPostgresQueryFields allTables allFunctions = do
+buildRelayPostgresQueryFields sourceConfig allTables allFunctions = do
   tableConnectionFields <- for (toList allTables) $ \table -> runMaybeT do
     pkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns)
                    <$> askTableInfo table
@@ -453,9 +459,13 @@ buildRelayPostgresQueryFields allTables allFunctions = do
                     <<> " which returns " <>> returnTable
     lift $ selectFunctionConnection function fieldName fieldDesc pkeyColumns selectPerms
 
-  nodeField_ <- fmap (RFDB . QDBPrimaryKey) <$> nodeField
-  pure $ (:) nodeField_ $ map (fmap (RFDB . QDBConnection)) $ catMaybes $
+  nodeField_ <- fmap (asDbRootField . QDBPrimaryKey) <$> nodeField
+  pure $ (:) nodeField_ $ map (fmap (asDbRootField . QDBConnection)) $ catMaybes $
          tableConnectionFields <> functionConnectionFields
+  where
+    asDbRootField =
+      let pgExecCtx = _pscExecCtx sourceConfig
+      in RFDB pgExecCtx
 
 queryRootFromFields
   :: forall n
@@ -583,9 +593,9 @@ buildSubscriptionParser pgQueryFields allActions = do
 buildPGMutationFields
   :: forall m n r
    . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
-  => Scenario -> HashSet QualifiedTable
+  => Scenario -> PGSourceConfig -> HashSet QualifiedTable
   -> m [P.FieldParser n (MutationRootField UnpreparedValue)]
-buildPGMutationFields scenario allTables = do
+buildPGMutationFields scenario sourceConfig allTables = do
   concat . catMaybes <$> for (toList allTables) \table -> do
     tableCoreInfo <- _tiCoreInfo <$> askTableInfo table
     displayName   <- qualifiedObjectToName table
@@ -613,7 +623,7 @@ buildPGMutationFields scenario allTables = do
         -- select permissions
         insertOne <- for _permSel \selPerms ->
           insertOneIntoTable table (fromMaybe insertOneName $ _tcrfInsertOne customRootFields) (Just insertOneDesc) insertPerms selPerms _permUpd
-        pure $ fmap (RFDB . MDBInsert) <$> insert : maybeToList insertOne
+        pure $ fmap (asDbRootField . MDBInsert) <$> insert : maybeToList insertOne
 
       updates <- fmap join $ whenMaybe (isMutable viIsUpdatable viewInfo) $ for _permUpd \updatePerms -> do
         let updateName = $$(G.litName "update_") <> displayName
@@ -626,7 +636,7 @@ buildPGMutationFields scenario allTables = do
         -- them, which at the very least requires select permissions
         updateByPk <- join <$> for _permSel
           (updateTableByPk table (fromMaybe updateByPkName $ _tcrfUpdateByPk customRootFields) (Just updateByPkDesc) updatePerms)
-        pure $ fmap (RFDB . MDBUpdate) <$> catMaybes [update, updateByPk]
+        pure $ fmap (asDbRootField . MDBUpdate) <$> catMaybes [update, updateByPk]
 
       -- when the table/view is mutable and there exists a delete permission
       deletes <- fmap join $ whenMaybe (isMutable viIsDeletable viewInfo) $
@@ -638,7 +648,7 @@ buildPGMutationFields scenario allTables = do
           deleteByPk <- fmap join $ for _permSel $
             buildDeleteByPkField table displayName (_tcrfDeleteByPk customRootFields) deletePermission
 
-          pure $ fmap (RFDB . MDBDelete) <$> delete : maybeToList deleteByPk
+          pure $ fmap (asDbRootField . MDBDelete) <$> delete : maybeToList deleteByPk
 
       pure $ concat $ catMaybes [inserts, updates, deletes]
 
@@ -654,8 +664,12 @@ buildPGMutationFields scenario allTables = do
           fieldDescription = G.Description $ "delete single row from the table: " <>> table
       deleteFromTableByPk table (fromMaybe fieldName customName) (Just fieldDescription) deletePermission
 
+    asDbRootField =
+      let pgExecCtx = _pscExecCtx sourceConfig
+      in RFDB pgExecCtx
+
 subscriptionRoot :: G.Name
-subscriptionRoot = $$(G.litName "mutation_root")
+subscriptionRoot = $$(G.litName "subscription_root")
 
 mutationRoot :: G.Name
 mutationRoot = $$(G.litName "mutation_root")
@@ -686,4 +700,3 @@ buildMutationParser allRemotes allActions nonObjectCustomTypes pgMutationFields 
        then Nothing
        else Just $ P.selectionSet mutationRoot (Just $ G.Description "mutation root") mutationFieldsParser
             <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
-

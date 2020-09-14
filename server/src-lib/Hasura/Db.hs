@@ -20,6 +20,11 @@ module Hasura.Db
   , defaultTxErrorHandler
   , mkTxErrorHandler
   , lazyTxToQTx
+
+  , doesSchemaExist
+  , doesTableExist
+  , isExtensionAvailable
+  , createPgcryptoExtension
   ) where
 
 import           Control.Lens
@@ -53,6 +58,9 @@ data PGExecCtx
   , _pecCheckHealth  :: (IO Bool)
   -- ^ Checks the health of this execution context
   }
+
+instance Show PGExecCtx where
+  show _ = "PGExecCtx"
 
 -- | Creates a Postgres execution context for a single Postgres master pool
 mkPGExecCtx :: Q.TxIsolation -> Q.PGPool -> PGExecCtx
@@ -255,3 +263,49 @@ instance MonadBaseControl IO (LazyTx e) where
 
 instance MonadUnique (LazyTx e) where
   newUnique = liftIO newUnique
+
+doesSchemaExist :: MonadTx m => SchemaName -> m Bool
+doesSchemaExist schemaName =
+  liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
+    SELECT EXISTS
+    ( SELECT 1 FROM information_schema.schemata
+      WHERE schema_name = $1
+    ) |] (Identity schemaName) False
+
+doesTableExist :: MonadTx m => SchemaName -> TableName -> m Bool
+doesTableExist schemaName tableName =
+  liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
+    SELECT EXISTS
+    ( SELECT 1 FROM pg_tables
+      WHERE schemaname = $1 AND tablename = $2
+    ) |] (schemaName, tableName) False
+
+isExtensionAvailable :: MonadTx m => Text -> m Bool
+isExtensionAvailable extensionName =
+  liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
+    SELECT EXISTS
+    ( SELECT 1 FROM pg_catalog.pg_available_extensions
+      WHERE name = $1
+    ) |] (Identity extensionName) False
+
+createPgcryptoExtension :: MonadTx m => m ()
+createPgcryptoExtension =
+  liftTx $ Q.unitQE needsPGCryptoError
+  "CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA public" () False
+  where
+    needsPGCryptoError e@(Q.PGTxErr _ _ _ err) =
+      case err of
+        Q.PGIUnexpected _ -> requiredError
+        Q.PGIStatement pgErr -> case Q.edStatusCode pgErr of
+          Just "42501" -> err500 PostgresError permissionsMessage
+          _            -> requiredError
+      where
+        requiredError =
+          (err500 PostgresError requiredMessage) { qeInternal = Just $ J.toJSON e }
+        requiredMessage =
+          "pgcrypto extension is required, but it could not be created;"
+          <> " encountered unknown postgres error"
+        permissionsMessage =
+          "pgcrypto extension is required, but the current user doesn’t have permission to"
+          <> " create it. Please grant superuser permission, or setup the initial schema via"
+          <> " https://hasura.io/docs/1.0/graphql/manual/deployment/postgres-permissions.html"

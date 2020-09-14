@@ -35,7 +35,6 @@ runAddRemoteSchema
   :: ( HasVersion
      , QErrM m
      , CacheRWM m
-     , MonadTx m
      , MonadIO m
      , MonadUnique m
      , HasHttpManager m
@@ -79,7 +78,7 @@ addRemoteSchemaP2Setup env (AddRemoteSchemaQuery name def _) = do
 --   liftTx $ addRemoteSchemaToCatalog q
 
 runRemoveRemoteSchema
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
+  :: (QErrM m, UserInfoM m, CacheRWM m)
   => RemoteSchemaNameQuery -> m EncJSON
 runRemoveRemoteSchema (RemoteSchemaNameQuery rsn) = do
   removeRemoteSchemaP1 rsn

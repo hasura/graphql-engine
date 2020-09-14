@@ -25,7 +25,7 @@ import qualified Data.HashSet                               as HS
 import qualified Database.PG.Query                          as Q
 
 runCreateRemoteRelationship
-  :: (MonadTx m, CacheRWM m) => RemoteRelationship -> m EncJSON
+  :: (MonadError QErr m, CacheRWM m) => RemoteRelationship -> m EncJSON
 runCreateRemoteRelationship RemoteRelationship{..} = do
   -- Few checks
   void $ askTabInfo rtrSource rtrTable
@@ -69,7 +69,7 @@ resolveRemoteRelationship remoteRelationship
 
   pure (remoteField, schemaDependencies)
 
-runUpdateRemoteRelationship :: (MonadTx m, CacheRWM m) => RemoteRelationship -> m EncJSON
+runUpdateRemoteRelationship :: (MonadError QErr m, CacheRWM m) => RemoteRelationship -> m EncJSON
 runUpdateRemoteRelationship RemoteRelationship{..} = do
   fieldInfoMap <- askFieldInfoMap rtrSource rtrTable
   void $ askRemoteRel fieldInfoMap rtrName
@@ -112,7 +112,7 @@ updateRemoteRelInCatalog remoteRelationship =
     definition = mkRemoteRelationshipDef remoteRelationship
 
 runDeleteRemoteRelationship
-  :: (MonadTx m, CacheRWM m) => DeleteRemoteRelationship -> m EncJSON
+  :: (MonadError QErr m, CacheRWM m) => DeleteRemoteRelationship -> m EncJSON
 runDeleteRemoteRelationship (DeleteRemoteRelationship source table relName)= do
   fieldInfoMap <- askFieldInfoMap source table
   void $ askRemoteRel fieldInfoMap relName

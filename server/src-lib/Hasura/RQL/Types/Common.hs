@@ -43,6 +43,10 @@ module Hasura.RQL.Types.Common
        , resolveWebhook
        , SourceName(..)
        , defaultSource
+
+       , UrlConf(..)
+       , resolveUrlConf
+       , getEnv
        ) where
 
 import           Hasura.EncJSON
@@ -324,3 +328,32 @@ resolveWebhook env (InputWebhook urlTemplate) = do
   let eitherRenderedTemplate = renderURLTemplate env urlTemplate
   either (throw400 Unexpected . T.pack)
     (pure . ResolvedWebhook) eitherRenderedTemplate
+
+data UrlConf
+  = UrlValue !T.Text
+  | UrlFromEnv !T.Text
+  deriving (Show, Eq, Generic, Lift)
+instance NFData UrlConf
+instance Cacheable UrlConf
+
+instance ToJSON UrlConf where
+  toJSON (UrlValue w)      = String w
+  toJSON (UrlFromEnv wEnv) = object ["from_env" .= wEnv ]
+
+instance FromJSON UrlConf where
+  parseJSON (Object o) = UrlFromEnv <$> o .: "from_env"
+  parseJSON (String t) = pure $ UrlValue t
+  parseJSON _          = fail "one of string or object must be provided for url/webhook"
+
+resolveUrlConf
+  :: MonadError QErr m => Env.Environment -> UrlConf -> m Text
+resolveUrlConf env = \case
+  UrlValue v -> pure v
+  UrlFromEnv envVar -> getEnv env envVar
+
+getEnv :: QErrM m => Env.Environment -> T.Text -> m T.Text
+getEnv env k = do
+  let mEnv = Env.lookupEnv env (T.unpack k)
+  case mEnv of
+    Nothing     -> throw400 NotFound $ "environment variable '" <> k <> "' not set"
+    Just envVal -> return (T.pack envVal)

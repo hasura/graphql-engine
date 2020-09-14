@@ -49,19 +49,19 @@ class Monad m => MonadExecuteQuery m where
     :: GQLReqParsed
     -> [QueryRootField UnpreparedValue]
     -> Maybe EQ.GeneratedSqlMap
-    -> PGExecCtx
-    -> Q.TxAccess
-    -> TraceT (LazyTx QErr) EncJSON
+    -- -> PGExecCtx
+    -- -> Q.TxAccess
+    -> TraceT (ExceptT QErr IO) EncJSON
     -> TraceT (ExceptT QErr m) (HTTP.ResponseHeaders, EncJSON)
 
 instance MonadExecuteQuery m => MonadExecuteQuery (ReaderT r m) where
-  executeQuery a b c d e f = hoist (hoist lift) $ executeQuery a b c d e f
+  executeQuery a b c d = hoist (hoist lift) $ executeQuery a b c d
 
 instance MonadExecuteQuery m => MonadExecuteQuery (ExceptT r m) where
-  executeQuery a b c d e f = hoist (hoist lift) $ executeQuery a b c d e f
+  executeQuery a b c d = hoist (hoist lift) $ executeQuery a b c d
 
 instance MonadExecuteQuery m => MonadExecuteQuery (TraceT m) where
-  executeQuery a b c d e f = hoist (hoist lift) $ executeQuery a b c d e f
+  executeQuery a b c d = hoist (hoist lift) $ executeQuery a b c d
 
 
 -- | Run (execute) a single GraphQL query
@@ -89,13 +89,13 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   -- The response and misc telemetry data:
   let telemTransport = Telem.HTTP
   (telemTimeTot_DT, (telemCacheHit, telemLocality, (telemTimeIO_DT, telemQueryType, !resp))) <- withElapsedTime $ do
-    E.ExecutionCtx _ sqlGenCtx pgExecCtx {- planCache -} sc scVer httpManager enableAL metadataPool <- ask
+    E.ExecutionCtx _ sqlGenCtx {- planCache -} sc scVer httpManager enableAL metadataPool <- ask
 
     -- run system authorization on the GraphQL API
     reqParsed <- E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed
                  >>= flip onLeft throwError
 
-    (telemCacheHit, execPlan) <- E.getResolvedExecPlan env metadataPool logger pgExecCtx {- planCache -}
+    (telemCacheHit, execPlan) <- E.getResolvedExecPlan env metadataPool logger {- planCache -}
                                  userInfo sqlGenCtx sc scVer queryType
                                  httpManager reqHeaders (reqUnparsed, reqParsed)
     case execPlan of
@@ -199,16 +199,16 @@ runQueryDB
   -> (GQLReqUnparsed, GQLReqParsed)
   -> [QueryRootField UnpreparedValue]
   -> UserInfo
-  -> (Tracing.TraceT (LazyTx QErr) EncJSON, EQ.GeneratedSqlMap)
+  -> (Tracing.TraceT (ExceptT QErr IO) EncJSON, EQ.GeneratedSqlMap)
   -> m (DiffTime, Telem.QueryType, HTTP.ResponseHeaders, EncJSON)
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
 runQueryDB reqId (query, queryParsed) asts _userInfo (tx, genSql) =  do
   -- log the generated SQL and the graphql query
-  E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _ <- ask
+  E.ExecutionCtx logger _ _ _ _ _ _ <- ask
   logQueryLog logger query (Just genSql) reqId
   (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ trace "Query" $
-    Tracing.interpTraceT id $ executeQuery queryParsed asts (Just genSql) pgExecCtx Q.ReadOnly tx
+    Tracing.interpTraceT id $ executeQuery queryParsed asts (Just genSql) tx
   (respHdrs,resp) <- liftEither respE
   let !json = encodeGQResp $ GQSuccess $ encJToLBS resp
       telemQueryType = Telem.Query
@@ -224,17 +224,17 @@ runMutationDB
   => RequestId
   -> GQLReqUnparsed
   -> UserInfo
-  -> Tracing.TraceT (LazyTx QErr) EncJSON
+  -> Tracing.TraceT (ExceptT QErr IO) EncJSON
   -> m (DiffTime, Telem.QueryType, EncJSON)
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
 runMutationDB reqId query userInfo tx =  do
-  E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _ <- ask
+  E.ExecutionCtx logger _ _ _ _ _ _ <- ask
   -- log the graphql query
   logQueryLog logger query Nothing reqId
   ctx <- Tracing.currentContext
   (telemTimeIO, respE) <- withElapsedTime $  runExceptT $ trace "Mutation" $
-    Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx .  withUserInfo userInfo)  tx
+    Tracing.interpTraceT (liftEitherM . liftIO . runExceptT)  tx
   resp <- liftEither respE
   let !json = encodeGQResp $ GQSuccess $ encJToLBS resp
       telemQueryType = Telem.Mutation

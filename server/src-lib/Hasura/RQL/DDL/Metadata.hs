@@ -56,7 +56,7 @@ import           Hasura.RQL.DDL.Schema
 --   Q.unitQ "DELETE FROM hdb_catalog.hdb_cron_triggers WHERE include_in_metadata" () False
 
 runClearMetadata
-  :: (MonadTx m, CacheRWM m)
+  :: (MonadError QErr m, CacheRWM m)
   => ClearMetadata -> m EncJSON
 runClearMetadata _ = do
   -- clearUserMetadata
@@ -223,7 +223,7 @@ runClearMetadata _ = do
   --   processPerms tableName perms = indexedForM_ perms $ Permission.addPermP2 tableName
 
 runReplaceMetadata
-  :: ( MonadTx m
+  :: ( MonadError QErr m
      , CacheRWM m
      )
   => Metadata -> m EncJSON
@@ -270,7 +270,7 @@ runGetInconsistentMetadata _ = do
                 ]
 
 runDropInconsistentMetadata
-  :: (QErrM m, CacheRWM m, MonadTx m)
+  :: (QErrM m, CacheRWM m)
   => DropInconsistentMetadata -> m EncJSON
 runDropInconsistentMetadata _ = do
   sc <- askSchemaCache
@@ -368,7 +368,7 @@ fetchMetadataFromHdbTables = liftTx do
   cronTriggers <- fetchCronTriggers
 
   let tableMetadatas = mapFromL _tmTable $ HM.elems postRelMap
-      sources = HM.singleton defaultSource $ SourceMetadata defaultSource tableMetadatas functions
+      sources = HM.singleton defaultSource $ SourceMetadata defaultSource tableMetadatas functions SCDefault
   pure $ Metadata currentMetadataVersion
                   sources
                   remoteSchemas

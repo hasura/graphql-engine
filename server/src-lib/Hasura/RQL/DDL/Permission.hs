@@ -34,7 +34,7 @@ module Hasura.RQL.DDL.Permission
     , SetPermComment(..)
     , runSetPermComment
 
-    , fetchPermDef
+    -- , fetchPermDef
     ) where
 
 import           Hasura.EncJSON
@@ -48,6 +48,7 @@ import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
 
+import           Control.Lens                       (ix, (.~))
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -299,30 +300,42 @@ setPermCommentP1 (SetPermComment sourceName qt rn pt _) = do
       PTUpdate -> assertPermDefined rn PAUpdate tabInfo
       PTDelete -> assertPermDefined rn PADelete tabInfo
 
-setPermCommentP2 :: (QErrM m, MonadTx m) => SetPermComment -> m EncJSON
-setPermCommentP2 apc = do
-  liftTx $ setPermCommentTx apc
-  return successMsg
+-- setPermCommentP2 :: (QErrM m, MonadTx m) => SetPermComment -> m EncJSON
+-- setPermCommentP2 apc = do
+--   liftTx $ setPermCommentTx apc
+--   return successMsg
 
 runSetPermComment
-  :: (QErrM m, CacheRM m, MonadTx m, UserInfoM m)
+  :: (QErrM m, CacheRWM m, UserInfoM m)
   => SetPermComment -> m EncJSON
 runSetPermComment defn =  do
   setPermCommentP1 defn
-  setPermCommentP2 defn
+  -- setPermCommentP2 defn
+  let metadataObj = MOSourceObjId source $ SMOTableObj table $
+                    MTOPerm role permType
+  buildSchemaCacheFor metadataObj
+    $ MetadataModifier
+    $ tableMetadataSetter source table %~ case permType of
+        PTInsert -> tmInsertPermissions.ix role.pdComment .~ comment
+        PTSelect -> tmSelectPermissions.ix role.pdComment .~ comment
+        PTUpdate -> tmUpdatePermissions.ix role.pdComment .~ comment
+        PTDelete -> tmDeletePermissions.ix role.pdComment .~ comment
+  pure successMsg
+  where
+    SetPermComment source table role permType comment = defn
 
-setPermCommentTx
-  :: SetPermComment
-  -> Q.TxE QErr ()
-setPermCommentTx (SetPermComment sourceName (QualifiedObject sn tn) rn pt comment) =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-           UPDATE hdb_catalog.hdb_permission
-           SET comment = $1
-           WHERE table_schema =  $2
-             AND table_name = $3
-             AND role_name = $4
-             AND perm_type = $5
-                |] (comment, sn, tn, rn, permTypeToCode pt) True
+-- setPermCommentTx
+--   :: SetPermComment
+--   -> Q.TxE QErr ()
+-- setPermCommentTx (SetPermComment sourceName (QualifiedObject sn tn) rn pt comment) =
+--   Q.unitQE defaultTxErrorHandler [Q.sql|
+--            UPDATE hdb_catalog.hdb_permission
+--            SET comment = $1
+--            WHERE table_schema =  $2
+--              AND table_name = $3
+--              AND role_name = $4
+--              AND perm_type = $5
+--                 |] (comment, sn, tn, rn, permTypeToCode pt) True
 
 -- purgePerm :: MonadTx m => SourceName -> QualifiedTable -> RoleName -> PermType -> m ()
 -- purgePerm sourceName qt rn pt =
@@ -335,18 +348,18 @@ setPermCommentTx (SetPermComment sourceName (QualifiedObject sn tn) rn pt commen
 --     dp :: DropPerm a
 --     dp = DropPerm sourceName qt rn
 
-fetchPermDef
-  :: QualifiedTable
-  -> RoleName
-  -> PermType
-  -> Q.TxE QErr (Value, Maybe T.Text)
-fetchPermDef (QualifiedObject sn tn) rn pt =
- (first Q.getAltJ .  Q.getRow) <$> Q.withQE defaultTxErrorHandler
-      [Q.sql|
-            SELECT perm_def::json, comment
-              FROM hdb_catalog.hdb_permission
-             WHERE table_schema = $1
-               AND table_name = $2
-               AND role_name = $3
-               AND perm_type = $4
-            |] (sn, tn, rn, permTypeToCode pt) True
+-- fetchPermDef
+--   :: QualifiedTable
+--   -> RoleName
+--   -> PermType
+--   -> Q.TxE QErr (Value, Maybe T.Text)
+-- fetchPermDef (QualifiedObject sn tn) rn pt =
+--  (first Q.getAltJ .  Q.getRow) <$> Q.withQE defaultTxErrorHandler
+--       [Q.sql|
+--             SELECT perm_def::json, comment
+--               FROM hdb_catalog.hdb_permission
+--              WHERE table_schema = $1
+--                AND table_name = $2
+--                AND role_name = $3
+--                AND perm_type = $4
+--             |] (sn, tn, rn, permTypeToCode pt) True

@@ -16,6 +16,7 @@ import           Hasura.RQL.DDL.RemoteRelationship
 import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.ScheduledTrigger
 import           Hasura.RQL.DDL.Schema
+import           Hasura.RQL.DDL.Schema.Source
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.Version              (HasVersion)
@@ -31,7 +32,9 @@ import qualified Database.PG.Query                  as Q
 import qualified Network.HTTP.Client                as HTTP
 
 data RQLMetadata
-  = RMPgTrackTable !TrackTable
+  = RMPgAddSource !AddPgSource
+
+  | RMPgTrackTable !TrackTable
   | RMPgUntrackTable !UntrackTable
   | RMPgSetTableIsEnum !SetTableIsEnum
 
@@ -133,50 +136,52 @@ runMetadataRequest
   -> UserInfo
   -> HTTP.Manager
   -> SQLGenCtx
-  -> PGExecCtx
-  -> RebuildableSchemaCache Run
+  -> PGSourceConfig
+  -> RebuildableSchemaCache MetadataRun
   -> Metadata
   -> RQLMetadata
-  -> m (EncJSON, MetadataStateResult Run)
-runMetadataRequest env userInfo httpManager sqlGenCtx pgExecCtx schemaCache metadata request = do
-  eitherResult <-
+  -> m (EncJSON, MetadataStateResult MetadataRun)
+runMetadataRequest env userInfo httpManager sqlGenCtx defPGSource schemaCache metadata request = do
+  ((r, modSchemaCache, cacheInvalidations), modMetadata) <-
     runMetadataRequestM env request
     & runHasSystemDefinedT (SystemDefined False)
     & runCacheRWT schemaCache
-    & peelRun (RunCtx userInfo httpManager sqlGenCtx) pgExecCtx Q.ReadOnly Nothing metadata
+    & peelRun (RunCtx userInfo httpManager sqlGenCtx defPGSource) metadata
     & runExceptT
-  ((r, modSchemaCache, cacheInvalidations), modMetadata) <- liftEither eitherResult
+    & liftEitherM
   pure (r, MetadataStateResult modSchemaCache cacheInvalidations modMetadata)
 
 runMetadataRequestM
   :: ( HasVersion
      , MonadIO m
-     , MonadTx m
      , CacheRWM m
      , HasSystemDefined m
      , UserInfoM m
      , MonadUnique m
      , MonadMetadata m
      , HasHttpManager m
+     , MonadError QErr m
      )
   => Env.Environment
   -> RQLMetadata
   -> m EncJSON
 runMetadataRequestM env = \case
-  RMPgTrackTable q -> runTrackTableQ q
-  RMPgUntrackTable q -> runUntrackTableQ q
+  RMPgAddSource q -> runAddPgSource q
+
+  RMPgTrackTable q     -> runTrackTableQ q
+  RMPgUntrackTable q   -> runUntrackTableQ q
   RMPgSetTableIsEnum q -> runSetExistingTableIsEnumQ q
 
   RMPgTrackFunction q -> runTrackFunc q
   RMPgUntrackFunction q -> runUntrackFunc q
 
   RMPgCreateObjectRelationship q -> runCreateRelationship ObjRel q
-  RMPgCreateArrayRelationship q -> runCreateRelationship ArrRel q
-  RMPgDropRelationship q -> runDropRel q
-  RMPgSetRelationshipComment q -> runSetRelComment q
-  RMPgRenameRelationship q -> runRenameRel q
+  RMPgCreateArrayRelationship q  -> runCreateRelationship ArrRel q
+  RMPgDropRelationship q         -> runDropRel q
+  RMPgSetRelationshipComment q   -> runSetRelComment q
+  RMPgRenameRelationship q       -> runRenameRel q
 
-  RMPgAddComputedField q -> runAddComputedField q
+  RMPgAddComputedField q  -> runAddComputedField q
   RMPgDropComputedField q -> runDropComputedField q
 
   RMPgCreateRemoteRelationship q -> runCreateRemoteRelationship q

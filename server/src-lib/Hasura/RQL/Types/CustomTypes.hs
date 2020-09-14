@@ -50,7 +50,7 @@ import qualified Text.Builder                   as T
 import           Hasura.Incremental             (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Column
-import           Hasura.RQL.Types.Common        (RelType)
+import           Hasura.RQL.Types.Common        (RelType, SourceName, defaultSource)
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Types
 
@@ -146,11 +146,20 @@ data ObjectTypeDefinition a b c
   { _otdName          :: !ObjectTypeName
   , _otdDescription   :: !(Maybe G.Description)
   , _otdFields        :: !(NonEmpty (ObjectFieldDefinition a))
+  , _otdSource        :: !SourceName
   , _otdRelationships :: !(Maybe (NonEmpty (TypeRelationship b c)))
   } deriving (Show, Eq, Lift, Generic)
 instance (NFData a, NFData b, NFData c) => NFData (ObjectTypeDefinition a b c)
 instance (Cacheable a, Cacheable b, Cacheable c) => Cacheable (ObjectTypeDefinition a b c)
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ObjectTypeDefinition)
+instance (J.FromJSON a, J.FromJSON b, J.FromJSON c) => J.FromJSON (ObjectTypeDefinition a b c) where
+  parseJSON = J.withObject "Object" $ \o ->
+    ObjectTypeDefinition
+      <$> o J..: "name"
+      <*> o J..: "description"
+      <*> o J..: "fields"
+      <*> o J..:? "source" J..!= defaultSource
+      <*> o J..: "relationships"
+$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ObjectTypeDefinition)
 
 data ScalarTypeDefinition
   = ScalarTypeDefinition

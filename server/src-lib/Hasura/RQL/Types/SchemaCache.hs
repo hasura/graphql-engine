@@ -117,6 +117,7 @@ module Hasura.RQL.Types.SchemaCache
   , askFunctionInfo
   , CronTriggerInfo(..)
 
+  , PGSourceConfig(..)
   , PGSourceSchemaCache(..)
   , SourceName(..)
   , defaultSource
@@ -142,6 +143,7 @@ import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Metadata
+import           Hasura.RQL.Types.Source
 --import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
@@ -237,15 +239,7 @@ incSchemaCacheVer :: SchemaCacheVer -> SchemaCacheVer
 incSchemaCacheVer (SchemaCacheVer prev) =
   SchemaCacheVer $ prev + 1
 
-type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions
 type ActionCache = M.HashMap ActionName ActionInfo -- info of all actions
-
-data PGSourceSchemaCache
-  = PGSourceSchemaCache
-  { _pcTables    :: !TableCache
-  , _pcFunctions :: !FunctionCache
-  }
-$(deriveToJSON (aesonDrop 3 snakeCase) ''PGSourceSchemaCache)
 
 getPGFunctionInfo :: SourceName -> QualifiedFunction -> PGSourcesCache -> Maybe FunctionInfo
 getPGFunctionInfo sourceName qualifiedFunction m =

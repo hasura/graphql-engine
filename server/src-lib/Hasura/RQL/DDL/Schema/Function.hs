@@ -25,25 +25,6 @@ import qualified Data.Sequence                 as Seq
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 
-data RawFunctionInfo
-  = RawFunctionInfo
-  { rfiOid              :: !OID
-  , rfiHasVariadic      :: !Bool
-  , rfiFunctionType     :: !FunctionType
-  , rfiReturnTypeSchema :: !SchemaName
-  , rfiReturnTypeName   :: !PGScalarType
-  , rfiReturnTypeType   :: !PGTypeKind
-  , rfiReturnsSet       :: !Bool
-  , rfiInputArgTypes    :: ![QualifiedPGType]
-  , rfiInputArgNames    :: ![FunctionArgName]
-  , rfiDefaultArgs      :: !Int
-  , rfiReturnsTable     :: !Bool
-  , rfiDescription      :: !(Maybe PGDescription)
-  } deriving (Show, Eq, Generic)
-instance NFData RawFunctionInfo
-instance Cacheable RawFunctionInfo
-$(deriveJSON (aesonDrop 3 snakeCase) ''RawFunctionInfo)
-
 mkFunctionArgs :: Int -> [QualifiedPGType] -> [FunctionArgName] -> [FunctionArg]
 mkFunctionArgs defArgsNo tys argNames =
   bool withNames withNoNames $ null argNames
@@ -160,16 +141,16 @@ mkFunctionInfo source qf systemDefined config rawFuncInfo =
         let argsText = T.intercalate "," $ map getFuncArgNameTxt args
         in "the function arguments " <> argsText <> " are not in compliance with GraphQL spec"
 
-saveFunctionToCatalog
-  :: (MonadTx m, HasSystemDefined m)
-  => QualifiedFunction -> FunctionConfig -> m ()
-saveFunctionToCatalog (QualifiedObject sn fn) config = do
-  systemDefined <- askSystemDefined
-  liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
-         INSERT INTO "hdb_catalog"."hdb_function"
-           (function_schema, function_name, configuration, is_system_defined)
-         VALUES ($1, $2, $3, $4)
-                 |] (sn, fn, Q.AltJ config, systemDefined) False
+-- saveFunctionToCatalog
+--   :: (MonadError QErr m, HasSystemDefined m)
+--   => QualifiedFunction -> FunctionConfig -> m ()
+-- saveFunctionToCatalog (QualifiedObject sn fn) config = do
+--   systemDefined <- askSystemDefined
+--   liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
+--          INSERT INTO "hdb_catalog"."hdb_function"
+--            (function_schema, function_name, configuration, is_system_defined)
+--          VALUES ($1, $2, $3, $4)
+--                  |] (sn, fn, Q.AltJ config, systemDefined) False
 
 -- delFunctionFromCatalog :: QualifiedFunction -> Q.TxE QErr ()
 -- delFunctionFromCatalog (QualifiedObject sn fn) =
@@ -198,7 +179,7 @@ trackFunctionP1 sourceName qf = do
     throw400 NotSupported $ "table with name " <> qf <<> " already exists"
 
 trackFunctionP2
-  :: (MonadTx m, CacheRWM m, HasSystemDefined m)
+  :: (MonadError QErr m, CacheRWM m)
   => SourceName -> QualifiedFunction -> FunctionConfig -> m EncJSON
 trackFunctionP2 sourceName qf config = do
   -- saveFunctionToCatalog qf config
@@ -217,20 +198,20 @@ handleMultipleFunctions qf = \case
     throw400 NotSupported $
     "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
 
-fetchRawFunctioInfo :: MonadTx m => QualifiedFunction -> m RawFunctionInfo
-fetchRawFunctioInfo qf@(QualifiedObject sn fn) =
-  handleMultipleFunctions qf =<< map (Q.getAltJ . runIdentity) <$> fetchFromDatabase
-  where
-    fetchFromDatabase = liftTx $
-      Q.listQE defaultTxErrorHandler [Q.sql|
-           SELECT function_info
-             FROM hdb_catalog.hdb_function_info_agg
-            WHERE function_schema = $1
-              AND function_name = $2
-          |] (sn, fn) True
+-- fetchRawFunctioInfo :: MonadError QErr m => QualifiedFunction -> m RawFunctionInfo
+-- fetchRawFunctioInfo qf@(QualifiedObject sn fn) =
+--   handleMultipleFunctions qf =<< map (Q.getAltJ . runIdentity) <$> fetchFromDatabase
+--   where
+--     fetchFromDatabase = liftTx $
+--       Q.listQE defaultTxErrorHandler [Q.sql|
+--            SELECT function_info
+--              FROM hdb_catalog.hdb_function_info_agg
+--             WHERE function_schema = $1
+--               AND function_name = $2
+--           |] (sn, fn) True
 
 runTrackFunc
-  :: (MonadTx m, CacheRWM m, HasSystemDefined m)
+  :: (MonadError QErr m, CacheRWM m)
   => TrackFunction -> m EncJSON
 runTrackFunc (TrackFunction qf)= do
   -- v1 track_function lacks a means to take extra arguments
@@ -238,9 +219,7 @@ runTrackFunc (TrackFunction qf)= do
   trackFunctionP2 defaultSource qf emptyFunctionConfig
 
 runTrackFunctionV2
-  :: ( QErrM m, CacheRWM m, HasSystemDefined m
-     , MonadTx m
-     )
+  :: ( MonadError QErr m, CacheRWM m)
   => TrackFunctionV2 -> m EncJSON
 runTrackFunctionV2 (TrackFunctionV2 sourceName qf config) = do
   trackFunctionP1 sourceName qf
@@ -252,7 +231,7 @@ newtype UnTrackFunction
   deriving (Show, Eq, FromJSON, ToJSON, Lift)
 
 runUntrackFunc
-  :: (QErrM m, CacheRWM m, MonadTx m)
+  :: (CacheRWM m, MonadError QErr m)
   => UnTrackFunction -> m EncJSON
 runUntrackFunc (UnTrackFunction qf) = do
   -- TODO: Support untracking functions from a different source

@@ -52,7 +52,6 @@ import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Enum
 import           Hasura.RQL.DDL.Schema.Rename
 import           Hasura.RQL.Types                   hiding (fmFunction)
-import           Hasura.RQL.Types.Catalog
 import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 
@@ -160,7 +159,7 @@ checkConflictingNode sc tnGQL = do
         _ -> pure ()
 
 trackExistingTableOrViewP2
-  :: (MonadTx m, CacheRWM m, HasSystemDefined m)
+  :: (MonadError QErr m, CacheRWM m)
   => SourceName -> QualifiedTable -> Bool -> TableConfig -> m EncJSON
 trackExistingTableOrViewP2 source tableName isEnum config = do
   sc <- askSchemaCache
@@ -181,7 +180,7 @@ trackExistingTableOrViewP2 source tableName isEnum config = do
   pure successMsg
 
 runTrackTableQ
-  :: (MonadTx m, CacheRWM m, HasSystemDefined m) => TrackTable -> m EncJSON
+  :: (MonadError QErr m, CacheRWM m) => TrackTable -> m EncJSON
 runTrackTableQ (TrackTable source qt isEnum) = do
   trackExistingTableOrViewP1 source qt
   trackExistingTableOrViewP2 source qt isEnum emptyTableConfig
@@ -194,12 +193,12 @@ data TrackTableV2
 $(deriveJSON (aesonDrop 4 snakeCase) ''TrackTableV2)
 
 runTrackTableV2Q
-  :: (MonadTx m, CacheRWM m, HasSystemDefined m) => TrackTableV2 -> m EncJSON
+  :: (MonadError QErr m, CacheRWM m) => TrackTableV2 -> m EncJSON
 runTrackTableV2Q (TrackTableV2 (TrackTable source qt isEnum) config) = do
   trackExistingTableOrViewP1 source qt
   trackExistingTableOrViewP2 source qt isEnum config
 
-runSetExistingTableIsEnumQ :: (MonadTx m, CacheRWM m) => SetTableIsEnum -> m EncJSON
+runSetExistingTableIsEnumQ :: (MonadError QErr m, CacheRWM m) => SetTableIsEnum -> m EncJSON
 runSetExistingTableIsEnumQ (SetTableIsEnum source tableName isEnum) = do
   void $ askTabInfo source tableName -- assert that table is tracked
   -- updateTableIsEnumInCatalog tableName isEnum
@@ -226,7 +225,7 @@ instance FromJSON SetTableCustomFields where
     <*> o .:? "custom_column_names" .!= Map.empty
 
 runSetTableCustomFieldsQV2
-  :: (MonadTx m, CacheRWM m) => SetTableCustomFields -> m EncJSON
+  :: (MonadError QErr m, CacheRWM m) => SetTableCustomFields -> m EncJSON
 runSetTableCustomFieldsQV2 (SetTableCustomFields source tableName rootFields columnNames) = do
   void $ askTabInfo source tableName -- assert that table is tracked
   let tableConfig = TableConfig rootFields columnNames
@@ -249,7 +248,7 @@ unTrackExistingTableOrViewP1 (UntrackTable source vn _) = do
       "view/table already untracked : " <>> vn
 
 unTrackExistingTableOrViewP2
-  :: (CacheRWM m, MonadTx m)
+  :: (CacheRWM m, MonadError QErr m)
   => UntrackTable -> m EncJSON
 unTrackExistingTableOrViewP2 (UntrackTable source qtn cascade) = withNewInconsistentObjsCheck do
   sc <- askSchemaCache
@@ -277,7 +276,7 @@ dropTableInMetadata source table =
   MetadataModifier $ metaSources.ix source.smTables %~ Map.delete table
 
 runUntrackTableQ
-  :: (CacheRWM m, MonadTx m)
+  :: (CacheRWM m, MonadError QErr m)
   => UntrackTable -> m EncJSON
 runUntrackTableQ q = do
   unTrackExistingTableOrViewP1 q
@@ -351,7 +350,7 @@ processTableChanges source ti tableDiff = do
              <<> " of table " <> table <<> " is being altered to \"VOLATILE\""
            | otherwise -> pure ()
 
--- delTableAndDirectDeps :: (MonadTx m) => QualifiedTable -> m ()
+-- delTableAndDirectDeps :: (MonadError QErr m) => QualifiedTable -> m ()
 -- delTableAndDirectDeps qtn@(QualifiedObject sn tn) = do
 --   liftTx $ Q.catchE defaultTxErrorHandler $ do
 --     Q.unitQ [Q.sql|
@@ -382,15 +381,18 @@ processTableChanges source ti tableDiff = do
 buildTableCache
   :: forall arr m
    . ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
-     , Inc.ArrowCache m arr, MonadTx m )
+     , Inc.ArrowCache m arr, MonadIO m
+     )
   => ( SourceName
+     , PGSourceConfig
+     , PostgresTablesMetadata
      , [TableBuildInput]
      , Inc.Dependency Inc.InvalidationKey
      ) `arr` Map.HashMap QualifiedTable TableRawInfo
-buildTableCache = Inc.cache proc (source, tableBuildInputs, reloadMetadataInvalidationKey) -> do
+buildTableCache = Inc.cache proc (source, pgSourceConfig, pgTables, tableBuildInputs, reloadMetadataInvalidationKey) -> do
   rawTableInfos <-
     (| Inc.keyed (| withTable (\tables
-         -> (tables, reloadMetadataInvalidationKey)
+         -> (tables, (pgSourceConfig, pgTables, reloadMetadataInvalidationKey))
          >- first noDuplicateTables >>> buildRawTableInfo) |)
     |) (withSourceInKey source $ Map.groupOnNE _tbiName tableBuildInputs)
   let rawTableCache = removeSourceInKey $ Map.catMaybes rawTableInfos
@@ -419,26 +421,27 @@ buildTableCache = Inc.cache proc (source, tableBuildInputs, reloadMetadataInvali
     buildRawTableInfo
       :: ErrorA QErr arr
        ( TableBuildInput
-       , Inc.Dependency Inc.InvalidationKey
+       , (PGSourceConfig, PostgresTablesMetadata, Inc.Dependency Inc.InvalidationKey)
        ) (TableCoreInfoG PGRawColumnInfo PGCol)
-    buildRawTableInfo = Inc.cache proc (tableBuildInput, reloadMetadataInvalidationKey) -> do
+    buildRawTableInfo = Inc.cache proc (tableBuildInput, (pgSourceConfig, pgTables, reloadMetadataInvalidationKey)) -> do
       let TableBuildInput name isEnum config = tableBuildInput
-          maybeInfo = undefined :: Maybe CatalogTableInfo
-      catalogInfo <-
+          maybeInfo = Map.lookup name pgTables
+      metadataTable <-
         (| onNothingA (throwA -<
              err400 NotExists $ "no such table/view exists in postgres: " <>> name)
         |) maybeInfo
 
-      let columns = _ctiColumns catalogInfo
+      let columns = _tmiColumns metadataTable
           columnMap = mapFromL (fromPGCol . prciName) columns
-          primaryKey = _ctiPrimaryKey catalogInfo
+          primaryKey = _tmiPrimaryKey metadataTable
       rawPrimaryKey <- liftEitherA -< traverse (resolvePrimaryKeyColumns columnMap) primaryKey
       enumValues <- if isEnum
         then do
           -- We want to make sure we reload enum values whenever someone explicitly calls
           -- `reload_metadata`.
           Inc.dependOn -< reloadMetadataInvalidationKey
-          bindErrorA -< Just <$> fetchAndValidateEnumValues name rawPrimaryKey columns
+          eitherEnums <- bindA -< fetchAndValidateEnumValues pgSourceConfig name rawPrimaryKey columns
+          liftEitherA -< Just <$> eitherEnums
         else returnA -< Nothing
 
       returnA -< TableCoreInfo
@@ -446,12 +449,12 @@ buildTableCache = Inc.cache proc (source, tableBuildInputs, reloadMetadataInvali
         , _tciSystemDefined = SystemDefined False
         , _tciFieldInfoMap = columnMap
         , _tciPrimaryKey = primaryKey
-        , _tciUniqueConstraints = _ctiUniqueConstraints catalogInfo
-        , _tciForeignKeys = S.map unCatalogForeignKey $ _ctiForeignKeys catalogInfo
-        , _tciViewInfo = _ctiViewInfo catalogInfo
+        , _tciUniqueConstraints = _tmiUniqueConstraints metadataTable
+        , _tciForeignKeys = S.map unForeignKeyMetadata $ _tmiForeignKeys metadataTable
+        , _tciViewInfo = _tmiViewInfo metadataTable
         , _tciEnumValues = enumValues
         , _tciCustomConfig = config
-        , _tciDescription = _ctiDescription catalogInfo
+        , _tciDescription = _tmiDescription metadataTable
         }
 
     -- Step 2: Process the raw table cache to replace Postgres column types with logical column

@@ -56,7 +56,7 @@ import           Hasura.SQL.Types
 import           Hasura.SQL.Value                     (PGScalarValue (..), toTxtValue)
 
 type ActionExecuteTx =
-  forall tx. (MonadIO tx, MonadTx tx, Tracing.MonadTrace tx) => tx EncJSON
+  forall tx. (MonadIO tx, MonadError QErr tx, Tracing.MonadTrace tx) => tx EncJSON
 
 newtype ActionContext
   = ActionContext {_acName :: ActionName}
@@ -145,10 +145,11 @@ resolveActionExecution
   => Env.Environment
   -> L.Logger L.Hasura
   -> UserInfo
+  -> Q.PGPool
   -> AnnActionExecution UnpreparedValue
   -> ActionExecContext
   -> m ActionExecuteResult
-resolveActionExecution env logger userInfo annAction execContext = do
+resolveActionExecution env logger userInfo metadataPool annAction execContext = do
   let actionContext = ActionContext actionName
       handlerPayload = ActionWebhookPayload actionContext sessionVariables inputPayload
   (webhookRes, respHeaders) <- flip runReaderT logger $ callWebhook env manager outputType outputFields reqHeaders confHeaders
@@ -170,13 +171,15 @@ resolveActionExecution env logger userInfo annAction execContext = do
     executeAction astResolved = do
       let (astResolvedWithoutRemoteJoins,maybeRemoteJoins) = RJ.getRemoteJoins astResolved
           jsonAggType = mkJsonAggSelect outputType
-      case maybeRemoteJoins of
-        Just remoteJoins ->
-          let query = Q.fromBuilder $ toSQL $
+      liftEitherM $ runExceptT $ Tracing.interpTraceT
+            (runLazyTx (mkPGExecCtx Q.Serializable metadataPool) Q.ReadOnly) $
+            case maybeRemoteJoins of
+              Just remoteJoins ->
+                let query = Q.fromBuilder $ toSQL $
                       RS.mkSQLSelect jsonAggType astResolvedWithoutRemoteJoins
-          in RJ.executeQueryWithRemoteJoins env manager reqHeaders userInfo query [] remoteJoins
-        Nothing ->
-          liftTx $ asSingleRowJsonResp (Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved) []
+                in RJ.executeQueryWithRemoteJoins env manager reqHeaders userInfo query [] remoteJoins
+              Nothing ->
+                liftTx $ asSingleRowJsonResp (Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved) []
 
 {- Note: [Async action architecture]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -193,10 +196,9 @@ table provides the action response. See Note [Resolving async action query/subsc
 
 -- | Resolve asynchronous action mutation which returns only the action uuid
 resolveActionMutationAsync
-  :: ( MonadError QErr m
-     , MonadIO m
-     , MonadTx tx
-     , MonadAsyncActions m
+  :: ( MonadAsyncActions m
+     , MonadIO tx
+     , MonadError QErr tx
      )
   => AnnActionMutationAsync
   -> Q.PGPool
@@ -206,8 +208,9 @@ resolveActionMutationAsync
 resolveActionMutationAsync annAction metadataPool reqHeaders sessionVariables = do
   insertActionTx <- getInsertActionTx
   let tx = insertActionTx actionName sessionVariables reqHeaders inputArgs
-  actionId <- liftEither =<< (liftIO . runExceptT) (Q.runTx' metadataPool tx)
-  pure $ pure $ encJFromJValue $ UUID.toText $ unActionId actionId
+  pure $ do
+    actionId <- liftEither =<< (liftIO . runExceptT) (Q.runTx' metadataPool tx)
+    pure $ encJFromJValue $ UUID.toText $ unActionId actionId
   where
     AnnActionMutationAsync actionName inputArgs = annAction
 
@@ -236,7 +239,7 @@ asyncActionsProcessor
      )
   => Env.Environment
   -> L.Logger L.Hasura
-  -> IORef (RebuildableSchemaCache Run, SchemaCacheVer)
+  -> IORef (RebuildableSchemaCache MetadataRun, SchemaCacheVer)
   -> Q.PGPool
   -> HTTP.Manager
   -> m void

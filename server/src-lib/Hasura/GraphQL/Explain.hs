@@ -73,7 +73,7 @@ resolveUnpreparedValue userInfo = \case
 -- NOTE: This function has a 'MonadTrace' constraint in master, but we don't need it
 -- here. We should evaluate if we need it here.
 explainQueryField
-  :: (MonadError QErr m, MonadTx m)
+  :: (MonadError QErr m, MonadIO m)
   => UserInfo
   -> G.Name
   -> QueryRootField UnpreparedValue
@@ -84,7 +84,7 @@ explainQueryField userInfo fieldName rootField = do
     RFRemote _ -> throw400 InvalidParams "only hasura queries can be explained"
     RFAction _ -> throw400 InvalidParams "query actions cannot be explained"
     RFRaw _    -> pure $ FieldPlan fieldName Nothing Nothing
-    RFDB qDB   -> do
+    RFDB pgExec qDB   -> do
       let (querySQL, remoteJoins) = case qDB of
             QDBSimple s      -> first (DS.selectQuerySQL DS.JASMultipleRows) $ RR.getRemoteJoins s
             QDBPrimaryKey s  -> first (DS.selectQuerySQL DS.JASSingleObject) $ RR.getRemoteJoins s
@@ -96,7 +96,8 @@ explainQueryField userInfo fieldName rootField = do
           withExplain = "EXPLAIN (FORMAT TEXT) " <> textSQL
       -- Reject if query contains any remote joins
       when (remoteJoins /= mempty) $ throw400 NotSupported "Remote relationships are not allowed in explain query"
-      planLines <- liftTx $ map runIdentity <$>
+      planLines <- liftEitherM $ runExceptT $ runLazyTx pgExec Q.ReadOnly $
+                   liftTx $ map runIdentity <$>
                    Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
       pure $ FieldPlan fieldName (Just textSQL) $ Just planLines
 
@@ -108,11 +109,11 @@ explainGQLQuery
     , MonadIO m
     , MonadAsyncActions m
     )
-  => PGExecCtx
+  => Q.PGPool
   -> SchemaCache
   -> GQLExplain
   -> m EncJSON
-explainGQLQuery pgExecCtx sc (GQLExplain query userVarsRaw maybeIsRelay) = do
+explainGQLQuery metadataPool sc (GQLExplain query userVarsRaw maybeIsRelay) = do
   -- NOTE!: we will be executing what follows as though admin role. See e.g. notes in explainField:
   userInfo <- mkUserInfo (URBFromSessionVariablesFallback adminRoleName) UAdminSecretSent sessionVariables
   -- we don't need to check in allow list as we consider it an admin endpoint
@@ -126,8 +127,7 @@ explainGQLQuery pgExecCtx sc (GQLExplain query userVarsRaw maybeIsRelay) = do
       inlinedSelSet <- E.inlineSelectionSet fragments selSet
       (unpreparedQueries, _) <-
         E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) inlinedSelSet
-      runInTx $ encJFromJValue
-        <$> for (OMap.toList unpreparedQueries) (uncurry (explainQueryField userInfo))
+      encJFromJValue <$> for (OMap.toList unpreparedQueries) (uncurry (explainQueryField userInfo))
 
     G.TypedOperationDefinition G.OperationTypeMutation _ _ _ _ ->
       throw400 InvalidParams "only queries can be explained"
@@ -137,11 +137,16 @@ explainGQLQuery pgExecCtx sc (GQLExplain query userVarsRaw maybeIsRelay) = do
       inlinedSelSet <- E.inlineSelectionSet fragments selSet
       (unpreparedQueries, _) <- E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) inlinedSelSet
       validSubscriptionQueries <- for unpreparedQueries E.validateSubscriptionRootField
+      pgExecCtx <- case OMap.elems validSubscriptionQueries of
+        [] -> throw400 NotSupported "empty fields in subscription"
+        (v:_) -> pure $ case v of
+          RFDB e _ -> e
+          _        -> mkPGExecCtx Q.Serializable metadataPool
       (plan, _) <- E.buildLiveQueryPlan pgExecCtx userInfo validSubscriptionQueries
-      runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
+      encJFromJValue <$> E.explainLiveQueryPlan plan
   where
     queryType = bool E.QueryHasura E.QueryRelay $ fromMaybe False maybeIsRelay
     sessionVariables = mkSessionVariablesText $ maybe [] Map.toList userVarsRaw
 
-    runInTx :: LazyTx QErr EncJSON -> m EncJSON
-    runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx Q.ReadOnly
+    -- runInTx :: LazyTx QErr EncJSON -> m EncJSON
+    -- runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx Q.ReadOnly

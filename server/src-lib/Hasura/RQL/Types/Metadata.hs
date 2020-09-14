@@ -26,6 +26,7 @@ import           Hasura.RQL.Types.Relationship
 import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.ScheduledTrigger
+import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
 import           Hasura.Session
 import           Hasura.SQL.Types
@@ -277,11 +278,24 @@ type Allowlist = HS.HashSet CollectionReq
 type Actions = M.HashMap ActionName ActionMetadata
 type CronTriggers = M.HashMap TriggerName CronTriggerMetadata
 
+data SourceCustomConfiguration
+  = SourceCustomConfiguration
+  { _sccUrl                    :: !UrlConf
+  , _sccConnectionPoolSettings :: !SourceConnSettings
+  } deriving (Show, Eq, Lift, Generic)
+$(deriveJSON (aesonDrop 4 snakeCase) ''SourceCustomConfiguration)
+
+data SourceConfiguration
+  = SCDefault -- ^ the default configuraion, from --database-url option
+  | SCCustom !SourceCustomConfiguration -- ^ the custom configuration
+  deriving (Show, Eq, Lift, Generic)
+
 data SourceMetadata
   = SourceMetadata
-  { _smName      :: !SourceName
-  , _smTables    :: !Tables
-  , _smFunctions :: !Functions
+  { _smName          :: !SourceName
+  , _smTables        :: !Tables
+  , _smFunctions     :: !Functions
+  , _smConfiguration :: !SourceConfiguration
   } deriving (Show, Eq, Lift, Generic)
 $(makeLenses ''SourceMetadata)
 instance FromJSON SourceMetadata where
@@ -289,6 +303,13 @@ instance FromJSON SourceMetadata where
     SourceMetadata <$> o .: "name"
     <*> (mapFromL _tmTable <$> o .: "tables")
     <*> (mapFromL _fmFunction <$> o .:? "functions" .!= [])
+    <*> (maybe SCDefault SCCustom <$> o .:? "configuration")
+
+mkSourceMetadata
+  :: SourceName -> UrlConf -> SourceConnSettings -> SourceMetadata
+mkSourceMetadata name urlConf connSettings =
+  SourceMetadata name mempty mempty $ SCCustom $
+  SourceCustomConfiguration urlConf connSettings
 
 type Sources = M.HashMap SourceName SourceMetadata
 
@@ -325,17 +346,19 @@ instance FromJSON Metadata where
           functionList <- o .:? "functions" .!= []
           let functions = M.fromList $ flip map functionList $
                 \function -> (function, FunctionMetadata function emptyFunctionConfig)
-          pure $ M.singleton defaultSource $ SourceMetadata defaultSource tables functions
+          pure $ M.singleton defaultSource $ SourceMetadata defaultSource tables functions SCDefault
         MVVersion2 -> do
           tables    <- mapFromL _tmTable <$> o .: "tables"
           functions <- mapFromL _fmFunction <$> o .:? "functions" .!= []
-          pure $ M.singleton defaultSource $ SourceMetadata defaultSource tables functions
+          pure $ M.singleton defaultSource $ SourceMetadata defaultSource tables functions SCDefault
         MVVersion3 ->
           mapFromL _smName <$> o .: "sources"
 
 emptyMetadata :: Metadata
 emptyMetadata =
-  Metadata MVVersion3 mempty mempty mempty mempty emptyCustomTypes mempty mempty
+  Metadata currentMetadataVersion emptySources mempty mempty mempty emptyCustomTypes mempty mempty
+  where
+    emptySources = M.singleton defaultSource $ SourceMetadata defaultSource mempty mempty SCDefault
 
 instance ToJSON Metadata where
   toJSON = AO.fromOrdered . metadataToOrdJSON
@@ -385,9 +408,13 @@ metadataToOrdJSON ( Metadata
 
     sourceMetaToOrdJSON :: SourceMetadata -> AO.Value
     sourceMetaToOrdJSON SourceMetadata{..} =
-      let tablesPair = ("tables", AO.array $ map tableMetaToOrdJSON $ M.elems _smTables)
+      let sourceNamePair = ("name", AO.toOrdered _smName)
+          tablesPair = ("tables", AO.array $ map tableMetaToOrdJSON $ M.elems _smTables)
           functionsPair = listToMaybeOrdPair "functions" functionMetadataToOrdJSON $ M.elems _smFunctions
-      in AO.object $ [tablesPair] <> maybeToList functionsPair
+          configurationPair = case _smConfiguration of
+            SCDefault     -> []
+            SCCustom conf -> [("configuration", AO.toOrdered conf)]
+      in AO.object $ [sourceNamePair, tablesPair] <> maybeToList functionsPair <> configurationPair
 
     tableMetaToOrdJSON :: TableMetadata -> AO.Value
     tableMetaToOrdJSON ( TableMetadata
@@ -581,9 +608,10 @@ metadataToOrdJSON ( Metadata
               <> catMaybes [maybeDescriptionToMaybeOrdPair fieldDescM]
 
         objectTypeToOrdJSON :: ObjectType -> AO.Value
-        objectTypeToOrdJSON (ObjectTypeDefinition tyName descM fields rels) =
+        objectTypeToOrdJSON (ObjectTypeDefinition tyName descM fields source rels) =
           AO.object $ [ ("name", AO.toOrdered tyName)
                       , ("fields", AO.array $ map fieldDefinitionToOrdJSON $ toList fields)
+                      , ("source", AO.toOrdered source)
                       ]
           <> catMaybes [ maybeDescriptionToMaybeOrdPair descM
                        , maybeAnyToMaybeOrdPair "relationships" AO.toOrdered rels

@@ -15,7 +15,6 @@ import           Data.Aeson
 
 import qualified Hasura.Incremental                 as Inc
 
-import           Hasura.Db
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Schema.Cache.Common
@@ -25,7 +24,7 @@ import           Hasura.SQL.Types
 
 buildTablePermissions
   :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
-     , ArrowWriter (Seq CollectedInfo) arr, MonadTx m )
+     , MonadError QErr m, ArrowWriter (Seq CollectedInfo) arr)
   => ( SourceName
      , Inc.Dependency TableCoreCache
      , FieldInfoMap FieldInfo
@@ -85,7 +84,7 @@ withPermission f = proc (e, ((source, table, permission), s)) -> do
 buildPermission
   :: ( ArrowChoice arr, Inc.ArrowCache m arr
      , ArrowWriter (Seq CollectedInfo) arr
-     , MonadTx m, IsPerm a
+     , MonadError QErr m, IsPerm a
      , Inc.Cacheable a
      )
   => ( Inc.Dependency TableCoreCache

@@ -1,11 +1,6 @@
 {-# LANGUAGE Arrows #-}
 
-module Hasura.RQL.DDL.Schema.Cache.Fields
-  ( addNonColumnFields
-  , mkRelationshipMetadataObject
-  , mkComputedFieldMetadataObject
-  , mkRemoteRelationshipMetadataObject
-  ) where
+module Hasura.RQL.DDL.Schema.Cache.Fields (addNonColumnFields) where
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict.Extended       as M
@@ -14,7 +9,7 @@ import qualified Data.Sequence                      as Seq
 import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Control.Arrow.Extended
-import           Control.Lens                       ((^.), _3)
+import           Control.Lens                       ((^.), _3, _4)
 import           Data.Aeson
 
 import qualified Hasura.Incremental                 as Inc
@@ -34,12 +29,14 @@ addNonColumnFields
      , HashMap QualifiedTable TableRawInfo
      , FieldInfoMap PGColumnInfo
      , RemoteSchemaMap
+     , PostgresFunctionsMetadata
      , NonColumnTableInputs
      ) `arr` FieldInfoMap FieldInfo
 addNonColumnFields = proc ( source
                           , rawTableInfo
                           , columns
                           , remoteSchemaMap
+                          , pgFunctions
                           , NonColumnTableInputs{..}
                           ) -> do
   objectRelationshipInfos
@@ -60,10 +57,10 @@ addNonColumnFields = proc ( source
 
   computedFieldInfos
     <- buildInfoMapPreservingMetadata
-         (_cfmName . (^. _3))
-         mkComputedFieldMetadataObject
+         (_cfmName . (^. _4))
+         (\(s, _, t, c) -> mkComputedFieldMetadataObject (s, t, c))
          buildComputedField
-    -< (HS.fromList $ M.keys rawTableInfo, map (source, _nctiTable,) _nctiComputedFields)
+    -< (HS.fromList $ M.keys rawTableInfo, map (source, pgFunctions, _nctiTable,) _nctiComputedFields)
 
   rawRemoteRelationshipInfos
     <- buildInfoMapPreservingMetadata
@@ -201,11 +198,12 @@ buildComputedField
   :: ( ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr
      , ArrowKleisli m arr, MonadError QErr m )
   => ( HashSet QualifiedTable
-     , (SourceName, QualifiedTable, ComputedFieldMetadata)
+     , (SourceName, PostgresFunctionsMetadata, QualifiedTable, ComputedFieldMetadata)
      ) `arr` Maybe ComputedFieldInfo
-buildComputedField = proc (trackedTableNames, (source, table, cf@ComputedFieldMetadata{..})) -> do
+buildComputedField = proc (trackedTableNames, (source, pgFunctions, table, cf@ComputedFieldMetadata{..})) -> do
   let addComputedFieldContext e = "in computed field " <> _cfmName <<> ": " <> e
-      funcDefs = undefined :: [RawFunctionInfo] -- TODO: Make a postgres query after modifyErrA
+      function = _cfdFunction _cfmDefinition
+      funcDefs = fromMaybe [] $ M.lookup function pgFunctions
   (| withRecordInconsistency (
      (| modifyErrA (do
           rawfi <- bindErrorA -< handleMultipleFunctions (_cfdFunction _cfmDefinition) funcDefs

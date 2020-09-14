@@ -26,6 +26,7 @@ import           Hasura.Prelude
 import qualified Data.Aeson                             as J
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashMap.Strict.InsOrd             as OMap
 
 import qualified Data.HashSet                           as HS
 import qualified Database.PG.Query                      as Q
@@ -52,7 +53,6 @@ import qualified Hasura.GraphQL.Execute.Inline          as EI
 
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Mutation        as EM
--- import qualified Hasura.GraphQL.Execute.Plan            as EP
 import qualified Hasura.GraphQL.Execute.Prepare         as EPr
 import qualified Hasura.GraphQL.Execute.Query           as EQ
 import qualified Hasura.GraphQL.Execute.Types           as ET
@@ -69,7 +69,7 @@ data ExecutionCtx
   = ExecutionCtx
   { _ecxLogger          :: !(L.Logger L.Hasura)
   , _ecxSqlGenCtx       :: !SQLGenCtx
-  , _ecxPgExecCtx       :: !PGExecCtx
+  -- , _ecxPgExecCtx       :: !PGExecCtx
   -- , _ecxPlanCache       :: !EP.PlanCache
   , _ecxSchemaCache     :: !SchemaCache
   , _ecxSchemaCacheVer  :: !SchemaCacheVer
@@ -179,7 +179,7 @@ validateSubscriptionRootField
   :: MonadError QErr m
   => C.QueryRootField v -> m (C.SubscriptionRootField v)
 validateSubscriptionRootField = \case
-  C.RFDB x -> pure $ C.RFDB x
+  C.RFDB e x -> pure $ C.RFDB e x
   C.RFAction (C.AQAsync s) -> pure $ C.RFAction s
   C.RFAction (C.AQQuery _) -> throw400 NotSupported "query actions cannot be run as a subscription"
   C.RFRemote _ -> throw400 NotSupported "subscription to remote server is not supported"
@@ -214,13 +214,12 @@ getResolvedExecPlan
      , Tracing.MonadTrace m
      , MonadAsyncActions m
      , MonadIO tx
-     , MonadTx tx
+     , MonadError QErr tx
      , Tracing.MonadTrace tx
      )
   => Env.Environment
   -> Q.PGPool
   -> L.Logger L.Hasura
-  -> PGExecCtx
   -- -> EP.PlanCache
   -> UserInfo
   -> SQLGenCtx
@@ -231,7 +230,7 @@ getResolvedExecPlan
   -> [HTTP.Header]
   -> (GQLReqUnparsed, GQLReqParsed)
   -> m (Telem.CacheHit, ResolvedExecutionPlan tx)
-getResolvedExecPlan env metadataPool logger pgExecCtx {- planCache-} userInfo sqlGenCtx
+getResolvedExecPlan env metadataPool logger {- planCache-} userInfo sqlGenCtx
   sc scVer queryType httpManager reqHeaders (reqUnparsed, reqParsed) = -- do
 
   -- See Note [Temporarily disabling query plan caching]
@@ -288,20 +287,25 @@ getResolvedExecPlan env metadataPool logger pgExecCtx {- planCache-} userInfo sq
           -- Parse as query to check correctness
           (unpreparedAST, _reusability) <-
             EQ.parseGraphQLQuery gCtx varDefs (_grVariables reqUnparsed) inlinedSelSet
+          validSubscriptionAST <- for unpreparedAST validateSubscriptionRootField
+          let getPGExecCtx = \case
+                C.RFDB e _ -> e
+                _          -> mkPGExecCtx Q.Serializable metadataPool
           -- A subscription should have exactly one root field
           -- As an internal testing feature, we support subscribing to multiple
           -- root fields in a subcription. First, we check if the corresponding directive
           -- (@_multiple_top_level_fields) is set.
-          case inlinedSelSet of
+          pgExecCtx <- case (OMap.elems validSubscriptionAST) of
             [] -> throw500 "empty selset for subscription"
-            [_] -> pure ()
-            (_:rst) ->
+            [v] -> pure $ getPGExecCtx v
+            (v:rst) -> do
               let multipleAllowed =
                     G.Directive $$(G.litName "_multiple_top_level_fields") mempty `elem` directives
-              in
               unless (multipleAllowed || null rst) $
                 throw400 ValidationFailed "subscriptions must select one top level field"
-          validSubscriptionAST <- for unpreparedAST validateSubscriptionRootField
+              -- FIXME? Multiple sources?
+              pure $ getPGExecCtx v
+
           (lqOp, _plan) <- EL.buildLiveQueryPlan pgExecCtx userInfo validSubscriptionAST
           -- getSubsOpM pgExecCtx userInfo inlinedSelSet
           return $ SubscriptionExecutionPlan lqOp

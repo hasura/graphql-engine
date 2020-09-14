@@ -298,40 +298,40 @@ improve query performance. */
 --   REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE
 -- );
 
-CREATE TABLE hdb_catalog.event_log
-(
-  id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
-  schema_name TEXT NOT NULL,
-  table_name TEXT NOT NULL,
-  trigger_name TEXT NOT NULL,
-  payload JSONB NOT NULL,
-  delivered BOOLEAN NOT NULL DEFAULT FALSE,
-  error BOOLEAN NOT NULL DEFAULT FALSE,
-  tries INTEGER NOT NULL DEFAULT 0,
-  created_at TIMESTAMP DEFAULT NOW(),
-  locked BOOLEAN NOT NULL DEFAULT FALSE,
-  next_retry_at TIMESTAMP,
-  archived BOOLEAN NOT NULL DEFAULT FALSE
-);
+-- CREATE TABLE hdb_catalog.event_log
+-- (
+--   id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
+--   schema_name TEXT NOT NULL,
+--   table_name TEXT NOT NULL,
+--   trigger_name TEXT NOT NULL,
+--   payload JSONB NOT NULL,
+--   delivered BOOLEAN NOT NULL DEFAULT FALSE,
+--   error BOOLEAN NOT NULL DEFAULT FALSE,
+--   tries INTEGER NOT NULL DEFAULT 0,
+--   created_at TIMESTAMP DEFAULT NOW(),
+--   locked BOOLEAN NOT NULL DEFAULT FALSE,
+--   next_retry_at TIMESTAMP,
+--   archived BOOLEAN NOT NULL DEFAULT FALSE
+-- );
 
-CREATE INDEX ON hdb_catalog.event_log (trigger_name);
-CREATE INDEX ON hdb_catalog.event_log (locked);
-CREATE INDEX ON hdb_catalog.event_log (delivered);
-CREATE INDEX ON hdb_catalog.event_log (created_at);
+-- CREATE INDEX ON hdb_catalog.event_log (trigger_name);
+-- CREATE INDEX ON hdb_catalog.event_log (locked);
+-- CREATE INDEX ON hdb_catalog.event_log (delivered);
+-- CREATE INDEX ON hdb_catalog.event_log (created_at);
 
-CREATE TABLE hdb_catalog.event_invocation_logs
-(
-  id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
-  event_id TEXT,
-  status INTEGER,
-  request JSON,
-  response JSON,
-  created_at TIMESTAMP DEFAULT NOW(),
+-- CREATE TABLE hdb_catalog.event_invocation_logs
+-- (
+--   id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
+--   event_id TEXT,
+--   status INTEGER,
+--   request JSON,
+--   response JSON,
+--   created_at TIMESTAMP DEFAULT NOW(),
 
-  FOREIGN KEY (event_id) REFERENCES hdb_catalog.event_log (id)
-);
+--   FOREIGN KEY (event_id) REFERENCES hdb_catalog.event_log (id)
+-- );
 
-CREATE INDEX ON hdb_catalog.event_invocation_logs (event_id);
+-- CREATE INDEX ON hdb_catalog.event_invocation_logs (event_id);
 
 -- CREATE TABLE hdb_catalog.hdb_function
 -- (

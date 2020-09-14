@@ -43,7 +43,6 @@ import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Action.Class
 import           Hasura.Session
-import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
 import qualified Hasura.RQL.DML.Select                  as DS
@@ -65,29 +64,27 @@ instance J.ToJSON PGPlan where
 
 data RootFieldPlan
   = RFPRaw !B.ByteString
-  | RFPPostgres !PGPlan
+  | RFPPostgres !PGExecCtx !PGPlan
   | RFPActionQuery !ActionExecuteTx
 
 instance J.ToJSON RootFieldPlan where
   toJSON = \case
-    RFPRaw encJson     -> J.toJSON $ TBS.fromBS encJson
-    RFPPostgres pgPlan -> J.toJSON pgPlan
+    RFPRaw encJson       -> J.toJSON $ TBS.fromBS encJson
+    RFPPostgres _ pgPlan -> J.toJSON pgPlan
     RFPActionQuery _   -> J.String "Action Execution Tx"
 
 type FieldPlans = [(G.Name, RootFieldPlan)]
 
--- data ActionQueryPlan
---   = AQPAsyncQuery !DS.AnnSimpleSel -- ^ Cacheable plan
---   | AQPQuery !ActionExecuteTx -- ^ Non cacheable transaction
-
-newtype ActionQueryPlan = ActionQueryPlan ActionExecuteTx
+data ActionQueryPlan
+  = AQPAsyncQuery !DS.AnnSimpleSel -- ^ Cacheable plan
+  | AQPQuery !ActionExecuteTx -- ^ Non cacheable transaction
 
 actionQueryToRootFieldPlan
-  :: ActionQueryPlan -> RootFieldPlan
-actionQueryToRootFieldPlan (ActionQueryPlan tx) = RFPActionQuery tx
-  -- AQPAsyncQuery s -> RFPPostgres $
-  --   PGPlan (DS.selectQuerySQL DS.JASSingleObject s) vars prepped Nothing
-  -- AQPQuery tx     -> RFPActionQuery tx
+  :: PlanVariables -> PrepArgMap -> Q.PGPool -> ActionQueryPlan -> RootFieldPlan
+actionQueryToRootFieldPlan vars prepped metadataPool = \case
+  AQPAsyncQuery s -> RFPPostgres (mkPGExecCtx Q.Serializable metadataPool) $
+    PGPlan (DS.selectQuerySQL DS.JASSingleObject s) vars prepped Nothing
+  AQPQuery tx -> RFPActionQuery tx
 
 -- See Note [Temporarily disabling query plan caching]
 -- data ReusableVariableTypes
@@ -126,7 +123,7 @@ mkCurPlanTx
      , MonadError QErr m
      , Tracing.MonadTrace m
      , MonadIO tx
-     , MonadTx tx
+     , MonadError QErr tx
      , Tracing.MonadTrace tx
      )
   => Env.Environment
@@ -140,9 +137,9 @@ mkCurPlanTx env manager reqHdrs userInfo fldPlans = do
   resolved <- forM fldPlans $ \(alias, fldPlan) -> do
     fldResp <- case fldPlan of
       RFPRaw resp                      -> return $ RRRaw resp
-      RFPPostgres (PGPlan q _ prepMap remoteJoins) -> do
+      RFPPostgres execCtx (PGPlan q _ prepMap remoteJoins) -> do
         let args = withUserVars (_uiSession userInfo) $ IntMap.elems prepMap
-        return $ RRSql $ PreparedSql q args remoteJoins
+        return $ RRSql execCtx $ PreparedSql q args remoteJoins
       RFPActionQuery tx -> pure $ RRActionQuery tx
     return (alias, fldResp)
 
@@ -211,7 +208,7 @@ convertQuerySelSet
      , Tracing.MonadTrace m
      , MonadAsyncActions m
      , MonadIO tx
-     , MonadTx tx
+     , MonadError QErr tx
      , Tracing.MonadTrace tx
      )
   => Env.Environment
@@ -240,7 +237,7 @@ convertQuerySelSet env metadataPool logger gqlContext userInfo manager reqHeader
            >>= traverseAction (lift . convertActionQuery)
     validateSessionVariables expectedVariables $ _uiSession userInfo
     traverseDB (pure . irToRootFieldPlan planVars planVals) preparedQuery
-      >>= traverseAction (pure . actionQueryToRootFieldPlan)
+      >>= traverseAction (pure . actionQueryToRootFieldPlan planVars planVals metadataPool)
 
   -- This monster makes sure that consecutive database operation get executed together
   let dbPlans :: Seq.Seq (G.Name, RootFieldPlan)
@@ -256,8 +253,8 @@ convertQuerySelSet env metadataPool logger gqlContext userInfo manager reqHeader
       collectPlan (seqDB, seqRemote) name (RFRemote r) =
         (seqDB, seqRemote Seq.:|> (name, r))
 
-      collectPlan (seqDB, seqRemote) name (RFDB db)      =
-        (seqDB Seq.:|> (name, RFPPostgres db), seqRemote)
+      collectPlan (seqDB, seqRemote) name (RFDB pgExec db) =
+        (seqDB Seq.:|> (name, RFPPostgres pgExec db), seqRemote)
 
       collectPlan (seqDB, seqRemote) name (RFAction rfp) =
         (seqDB Seq.:|> (name, rfp), seqRemote)
@@ -290,16 +287,16 @@ convertQuerySelSet env metadataPool logger gqlContext userInfo manager reqHeader
       :: ActionQuery UnpreparedValue -> m ActionQueryPlan
     convertActionQuery = \case
       AQQuery s -> do
-        result <- resolveActionExecution env logger userInfo s $ ActionExecContext manager reqHeaders usrVars
-        pure $ ActionQueryPlan $ _aerTransaction result
+        result <- resolveActionExecution env logger userInfo metadataPool s $ ActionExecContext manager reqHeaders usrVars
+        pure $ AQPQuery $ _aerTransaction result
       AQAsync s -> do
         resolveAsyncActionQuery <- getAsyncActionQueryResolver
         (resolved, _) <- flip runStateT mempty $
           DS.traverseAnnSimpleSelect prepareWithoutPlan (resolveAsyncActionQuery userInfo s)
-        let tx = asSingleRowJsonResp (Q.fromBuilder $ toSQL $ DS.mkSQLSelect DS.JASSingleObject resolved) []
-        -- async action queries should be run in metadata storage
-        r <-  liftEither =<< (liftIO $ runExceptT $ Q.runTx' metadataPool tx)
-        pure $ ActionQueryPlan $ pure r
+        -- let tx = asSingleRowJsonResp (Q.fromBuilder $ toSQL $ DS.mkSQLSelect DS.JASSingleObject resolved) []
+        -- -- async action queries should be run in metadata storage
+        -- r <-  liftEither =<< (liftIO $ runExceptT $ Q.runTx' metadataPool tx)
+        pure $ AQPAsyncQuery resolved
 
 -- See Note [Temporarily disabling query plan caching]
 -- use the existing plan and new variables to create a pg query
@@ -351,7 +348,7 @@ instance J.ToJSON PreparedSql where
 -- SQL can be logged etc.
 data ResolvedQuery
   = RRRaw !B.ByteString
-  | RRSql !PreparedSql
+  | RRSql !PGExecCtx !PreparedSql
   | RRActionQuery !ActionExecuteTx
 
 -- | The computed SQL with alias which can be logged. Nothing here represents no
@@ -363,7 +360,7 @@ mkLazyRespTx
   :: ( HasVersion
      , Tracing.MonadTrace m
      , MonadIO tx
-     , MonadTx tx
+     , MonadError QErr tx
      , Tracing.MonadTrace tx
      )
   => Env.Environment
@@ -376,12 +373,13 @@ mkLazyRespTx env manager reqHdrs userInfo resolved =
   pure $ fmap encJFromAssocList $ forM resolved $ \(alias, node) -> do
     resp <- case node of
      RRRaw bs                   -> return $ encJFromBS bs
-     RRSql (PreparedSql q args maybeRemoteJoins) -> do
-        let prepArgs = map fst args
-        case maybeRemoteJoins of
-          Nothing -> Tracing.trace "Postgres" . liftTx $ asSingleRowJsonResp q prepArgs
-          Just remoteJoins ->
-            executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs remoteJoins
+     RRSql pgExec (PreparedSql q args maybeRemoteJoins) -> do
+       let prepArgs = map fst args
+       liftEitherM $ runExceptT $ Tracing.interpTraceT (runQueryTx pgExec) $
+         case maybeRemoteJoins of
+           Nothing -> Tracing.trace "Postgres" . liftTx $ asSingleRowJsonResp q prepArgs
+           Just remoteJoins ->
+             executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs remoteJoins
      RRActionQuery actionTx           -> actionTx
     return (G.unName alias, resp)
 
@@ -390,6 +388,6 @@ mkGeneratedSqlMap resolved =
   flip map resolved $ \(alias, node) ->
     let res = case node of
                 RRRaw _         -> Nothing
-                RRSql ps        -> Just ps
+                RRSql _ ps      -> Just ps
                 RRActionQuery _ -> Nothing
     in (alias, res)

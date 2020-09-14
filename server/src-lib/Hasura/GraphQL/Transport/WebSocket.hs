@@ -214,7 +214,6 @@ mkWsErrorLog uv ci ev =
 data WSServerEnv
   = WSServerEnv
   { _wseLogger          :: !(L.Logger L.Hasura)
-  , _wseRunTx           :: !PGExecCtx
   , _wseLiveQMap        :: !LQ.LiveQueriesState
   , _wseGCtxMap         :: !(IO (SchemaCache, SchemaCacheVer))
   -- ^ an action that always returns the latest version of the schema cache. See 'SchemaCacheRef'.
@@ -346,18 +345,18 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
   reqParsedE <- lift $ E.checkGQLExecution userInfo (reqHdrs, ipAddress) enableAL sc q
   reqParsed <- either (withComplete . preExecErr requestId) return reqParsedE
-  execPlanE <- runExceptT $ E.getResolvedExecPlan env metadataPool logger pgExecCtx
+  execPlanE <- runExceptT $ E.getResolvedExecPlan env metadataPool logger
                {- planCache -} userInfo sqlGenCtx sc scVer queryType httpMgr reqHdrs (q, reqParsed)
 
   (telemCacheHit, execPlan) <- either (withComplete . preExecErr requestId) return execPlanE
-  let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx {- planCache -} sc scVer httpMgr enableAL metadataPool
+  let execCtx = E.ExecutionCtx logger sqlGenCtx {- planCache -} sc scVer httpMgr enableAL metadataPool
 
   case execPlan of
     E.QueryExecutionPlan queryPlan asts ->
       case queryPlan of
         E.ExecStepDB (tx, genSql) -> Tracing.trace "Query" $
           execQueryOrMut timerTot Telem.Query telemCacheHit (Just genSql) requestId $
-            fmap snd $ Tracing.interpTraceT id $ executeQuery reqParsed asts (Just genSql) pgExecCtx Q.ReadOnly tx
+            fmap snd $ Tracing.interpTraceT id $ executeQuery reqParsed asts (Just genSql) tx
         E.ExecStepRemote (rsi, opDef, _varValsM) ->
           runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
         E.ExecStepRaw (name, json) ->
@@ -366,9 +365,9 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     E.MutationExecutionPlan mutationPlan ->
       case mutationPlan of
         E.ExecStepDB (tx, _) -> Tracing.trace "Mutate" do
-          ctx <- Tracing.currentContext
+          -- ctx <- Tracing.currentContext
           execQueryOrMut timerTot Telem.Mutation telemCacheHit Nothing requestId $
-            Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx . withUserInfo userInfo) tx
+            Tracing.interpTraceT (liftEitherM . liftIO . runExceptT) tx
         E.ExecStepRemote (rsi, opDef, _varValsM) ->
           runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
         E.ExecStepRaw (name, json) ->
@@ -529,7 +528,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     invalidGqlErr err = err500 Unexpected $
       "Failed parsing GraphQL response from remote: " <> err
 
-    WSServerEnv logger pgExecCtx lqMap getSchemaCache httpMgr _ sqlGenCtx {- planCache -}
+    WSServerEnv logger lqMap getSchemaCache httpMgr _ sqlGenCtx {- planCache -}
       _ enableAL metadataPool = serverEnv
 
     WSConnData userInfoR opMap errRespTy queryType = WS.getData wsConn
@@ -767,7 +766,6 @@ onClose logger lqMap wsConn = do
 createWSServerEnv
   :: (MonadIO m)
   => L.Logger L.Hasura
-  -> PGExecCtx
   -> LQ.LiveQueriesState
   -> IO (SchemaCache, SchemaCacheVer)
   -> H.Manager
@@ -777,11 +775,11 @@ createWSServerEnv
   -> Q.PGPool
   -- -> E.PlanCache
   -> m WSServerEnv
-createWSServerEnv logger isPgCtx lqState getSchemaCache httpManager
+createWSServerEnv logger lqState getSchemaCache httpManager
   corsPolicy sqlGenCtx enableAL metadataPool {- planCache -} = do
   wsServer <- liftIO $ STM.atomically $ WS.createWSServer logger
   return $
-    WSServerEnv logger isPgCtx lqState getSchemaCache httpManager corsPolicy
+    WSServerEnv logger lqState getSchemaCache httpManager corsPolicy
     sqlGenCtx {- planCache -} wsServer enableAL metadataPool
 
 createWSServerApp

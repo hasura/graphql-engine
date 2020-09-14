@@ -31,6 +31,7 @@ import           Hasura.Db
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.Source
 import           Hasura.Server.Utils           (makeReasonMessage)
 import           Hasura.SQL.Types
 
@@ -57,7 +58,8 @@ resolveEnumReferences enumTables =
       pure (localColumn, EnumReference (_fkForeignTable foreignKey) enumValues)
 
 data EnumTableIntegrityError
-  = EnumTableMissingPrimaryKey
+  = EnumTablePostgresError !Text
+  | EnumTableMissingPrimaryKey
   | EnumTableMultiColumnPrimaryKey ![PGCol]
   | EnumTableNonTextualPrimaryKey !PGRawColumnInfo
   | EnumTableNoEnumValues
@@ -67,15 +69,16 @@ data EnumTableIntegrityError
   deriving (Show, Eq)
 
 fetchAndValidateEnumValues
-  :: (MonadTx m)
-  => QualifiedTable
+  :: (MonadIO m)
+  => PGSourceConfig
+  -> QualifiedTable
   -> Maybe (PrimaryKey PGRawColumnInfo)
   -> [PGRawColumnInfo]
-  -> m EnumValues
-fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
+  -> m (Either QErr EnumValues)
+fetchAndValidateEnumValues pgSourceConfig tableName maybePrimaryKey columnInfos = runExceptT $
   either (throw400 ConstraintViolation . showErrors) pure =<< runValidateT fetchAndValidate
   where
-    fetchAndValidate :: (MonadTx m, MonadValidate [EnumTableIntegrityError] m) => m EnumValues
+    fetchAndValidate :: (MonadIO m, MonadValidate [EnumTableIntegrityError] m) => m EnumValues
     fetchAndValidate = do
       primaryKeyColumn <- tolerate validatePrimaryKey
       maybeCommentColumn <- validateColumns primaryKeyColumn
@@ -104,7 +107,8 @@ fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
               query = Q.fromBuilder $ toSQL S.mkSelect
                 { S.selFrom = Just $ S.mkSimpleFromExp tableName
                 , S.selExtr = [S.mkExtr (prciName primaryKeyColumn), commentExtr] }
-          rawEnumValues <- liftTx $ Q.withQE defaultTxErrorHandler query () True
+          eitherRawEnumValues <- runPgSourceReadTx pgSourceConfig $ Q.withQE defaultTxErrorHandler query () True
+          rawEnumValues <- either (refute . pure . EnumTablePostgresError . qeError) pure eitherRawEnumValues
           when (null rawEnumValues) $ dispute [EnumTableNoEnumValues]
           let enumValues = flip map rawEnumValues $
                 \(enumValueText, comment) ->
@@ -130,6 +134,7 @@ fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
 
         showOne :: EnumTableIntegrityError -> T.Text
         showOne = \case
+          EnumTablePostgresError err -> "postgres error: " <> err
           EnumTableMissingPrimaryKey -> "the table must have a primary key"
           EnumTableMultiColumnPrimaryKey cols ->
             "the table’s primary key must not span multiple columns ("

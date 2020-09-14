@@ -94,14 +94,14 @@ startSchemaSyncListenerThread
   -> Logger Hasura
   -> InstanceId
   -> m (Immortal.Thread, SchemaSyncEventRef)
-startSchemaSyncListenerThread pool logger instanceId = do
+startSchemaSyncListenerThread defPgSource logger instanceId = do
   -- only the latest event is recorded here
   -- we don't want to store and process all the events, only the latest event
   schemaSyncEventRef <- liftIO $ STM.newTVarIO Nothing
 
   -- Start listener thread
   listenerThread <- liftIO $ C.forkImmortal "SchemeUpdate.listener" logger $
-                    listener pool logger schemaSyncEventRef
+                    listener defPgSource logger schemaSyncEventRef
   logThreadStarted logger instanceId TTListener listenerThread
   pure (listenerThread, schemaSyncEventRef)
 
@@ -109,7 +109,7 @@ startSchemaSyncListenerThread pool logger instanceId = do
 startSchemaSyncProcessorThread
   :: (C.ForkableMonadIO m, MonadMetadataManage m)
   => SQLGenCtx
-  -> PG.PGPool
+  -> PGSourceConfig
   -> Logger Hasura
   -> HTTP.Manager
   -> SchemaSyncEventRef
@@ -117,11 +117,11 @@ startSchemaSyncProcessorThread
   -> InstanceId
   -> PG.PGPool
   -> m Immortal.Thread
-startSchemaSyncProcessorThread sqlGenCtx pool logger httpMgr
+startSchemaSyncProcessorThread sqlGenCtx defPgSource logger httpMgr
   schemaSyncEventRef cacheRef instanceId metadataPool = do
   -- Start processor thread
   processorThread <- C.forkImmortal "SchemeUpdate.processor" logger $
-                     processor sqlGenCtx pool logger httpMgr schemaSyncEventRef cacheRef instanceId metadataPool
+                     processor sqlGenCtx defPgSource logger httpMgr schemaSyncEventRef cacheRef instanceId metadataPool
   logThreadStarted logger instanceId TTProcessor processorThread
   pure processorThread
 
@@ -129,11 +129,11 @@ startSchemaSyncProcessorThread sqlGenCtx pool logger httpMgr
 listener
   :: (C.ForkableMonadIO m)
   => PG.PGPool -> Logger Hasura -> SchemaSyncEventRef -> m void
-listener pool logger schemaSyncEventRef =
+listener defPgSource logger schemaSyncEventRef =
   -- Never exits
   forever $ do
     listenResE <-
-      liftIO $ runExceptT $ PG.listen pool pgChannel notifyHandler
+      liftIO $ runExceptT $ PG.listen defPgSource pgChannel notifyHandler
     either onError return listenResE
     logWarn
     liftIO $ C.sleep $ seconds 1
@@ -165,7 +165,7 @@ listener pool logger schemaSyncEventRef =
 processor
   :: forall m void. (C.ForkableMonadIO m, MonadMetadataManage m)
   => SQLGenCtx
-  -> PG.PGPool
+  -> PGSourceConfig
   -> Logger Hasura
   -> HTTP.Manager
   -> SchemaSyncEventRef
@@ -173,7 +173,7 @@ processor
   -> InstanceId
   -> PG.PGPool
   -> m void
-processor sqlGenCtx pool logger httpMgr schemaSyncEventRef
+processor sqlGenCtx defPgSource logger httpMgr schemaSyncEventRef
   cacheRef instanceId metadataPool =
   -- Never exits
   forever $ do
@@ -184,7 +184,7 @@ processor sqlGenCtx pool logger httpMgr schemaSyncEventRef
       Left e -> logError logger threadType $ TEPayloadParse e
       Right (SchemaSyncEventProcessResult shouldReload invalidations) ->
         when shouldReload $
-          refreshSchemaCache sqlGenCtx pool logger httpMgr cacheRef invalidations
+          refreshSchemaCache sqlGenCtx defPgSource logger httpMgr cacheRef invalidations
             threadType metadataPool "schema cache reloaded"
   where
     -- checks if there is an event
@@ -204,7 +204,7 @@ refreshSchemaCache
      , MonadBaseControl IO m
      )
   => SQLGenCtx
-  -> PG.PGPool
+  -> PGSourceConfig
   -> Logger Hasura
   -> HTTP.Manager
   -> SchemaCacheRef
@@ -212,7 +212,7 @@ refreshSchemaCache
   -> ThreadType
   -> PG.PGPool
   -> T.Text -> m ()
-refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef invalidations threadType metadataPool msg = do
+refreshSchemaCache sqlGenCtx defPgSource logger httpManager cacheRef invalidations threadType metadataPool msg = do
   -- Reload schema cache from catalog
   resE <- runExceptT $ withRefUpdate $ do
     rebuildableCache <- fst <$> liftIO (readIORef $ _scrCache cacheRef)
@@ -221,14 +221,13 @@ refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef invalidations thre
                         >>= liftEither
     (((), cache, _), _) <- buildSchemaCacheWithOptions CatalogSync invalidations noMetadataModify
       & runCacheRWT rebuildableCache
-      & peelRun runCtx pgCtx PG.ReadWrite Nothing metadata
+      & peelRun runCtx metadata
     pure (cache, metadata)
   case resE of
     Left e   -> logError logger threadType $ TEQueryError e
     Right () -> logInfo logger threadType $ object ["message" .= msg]
  where
-  runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
-  pgCtx = mkPGExecCtx PG.Serializable pool
+  runCtx = RunCtx adminUserInfo httpManager sqlGenCtx defPgSource
 
   withRefUpdate action =
     withMVarMasked (_scrLock cacheRef) $ \() -> do

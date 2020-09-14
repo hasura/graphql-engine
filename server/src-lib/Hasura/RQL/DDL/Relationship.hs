@@ -1,6 +1,6 @@
 module Hasura.RQL.DDL.Relationship
   ( runCreateRelationship
-  , insertRelationshipToCatalog
+  -- , insertRelationshipToCatalog
   , objRelP2Setup
   , arrRelP2Setup
 
@@ -19,7 +19,7 @@ import           Hasura.RQL.DDL.Permission (dropPermissionInMetadata)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import           Control.Lens              (ix)
+import           Control.Lens              (ix, (.~))
 import           Data.Aeson.Types
 import           Data.Tuple                (swap)
 import           Instances.TH.Lift         ()
@@ -29,7 +29,7 @@ import qualified Data.HashSet              as HS
 import qualified Database.PG.Query         as Q
 
 runCreateRelationship
-  :: (MonadTx m, CacheRWM m, HasSystemDefined m, ToJSON a)
+  :: (MonadError QErr m, CacheRWM m, HasSystemDefined m, ToJSON a)
   => RelType -> WithTable (RelDef a) -> m EncJSON
 runCreateRelationship relType (WithTable source tableName relDef) = do
   -- FIXME: Add relationship validation
@@ -52,24 +52,24 @@ runCreateRelationship relType (WithTable source tableName relDef) = do
     $ tableMetadataSetter source tableName %~ addRelationshipToMetadata
   pure successMsg
 
-insertRelationshipToCatalog
-  :: (MonadTx m, HasSystemDefined m, ToJSON a)
-  => QualifiedTable
-  -> RelType
-  -> RelDef a
-  -> m ()
-insertRelationshipToCatalog (QualifiedObject schema table) relType (RelDef name using comment) = do
-  systemDefined <- askSystemDefined
-  let args = (schema, table, name, relTypeToTxt relType, Q.AltJ using, comment, systemDefined)
-  liftTx $ Q.unitQE defaultTxErrorHandler query args True
-  where
-    query = [Q.sql|
-      INSERT INTO
-        hdb_catalog.hdb_relationship
-        (table_schema, table_name, rel_name, rel_type, rel_def, comment, is_system_defined)
-      VALUES ($1, $2, $3, $4, $5 :: jsonb, $6, $7) |]
+-- insertRelationshipToCatalog
+--   :: (MonadError QErr m, HasSystemDefined m, ToJSON a)
+--   => QualifiedTable
+--   -> RelType
+--   -> RelDef a
+--   -> m ()
+-- insertRelationshipToCatalog (QualifiedObject schema table) relType (RelDef name using comment) = do
+--   systemDefined <- askSystemDefined
+--   let args = (schema, table, name, relTypeToTxt relType, Q.AltJ using, comment, systemDefined)
+--   liftTx $ Q.unitQE defaultTxErrorHandler query args True
+--   where
+--     query = [Q.sql|
+--       INSERT INTO
+--         hdb_catalog.hdb_relationship
+--         (table_schema, table_name, rel_name, rel_type, rel_def, comment, is_system_defined)
+--       VALUES ($1, $2, $3, $4, $5 :: jsonb, $6, $7) |]
 
-runDropRel :: (MonadTx m, CacheRWM m) => DropRel -> m EncJSON
+runDropRel :: (MonadError QErr m, CacheRWM m) => DropRel -> m EncJSON
 runDropRel (DropRel source qt rn cascade) = do
   (relType, depObjs) <- collectDependencies
   withNewInconsistentObjsCheck do
@@ -176,33 +176,40 @@ purgeRelDep = \case
     throw500 $ "unexpected dependency of relationship : "
     <> reportSchemaObj d
 
-setRelCommentP2
-  :: (QErrM m, MonadTx m)
-  => SetRelComment -> m EncJSON
-setRelCommentP2 arc = do
-  liftTx $ setRelComment arc
-  return successMsg
+-- setRelCommentP2
+--   :: (QErrM m, MonadError QErr m)
+--   => SetRelComment -> m EncJSON
+-- setRelCommentP2 arc = do
+--   liftTx $ setRelComment arc
+--   return successMsg
 
 runSetRelComment
-  :: (QErrM m, CacheRM m, MonadTx m)
+  :: (CacheRWM m, MonadError QErr m)
   => SetRelComment -> m EncJSON
 runSetRelComment defn = do
   tabInfo <- askTableCoreInfo source qt
-  void $ askRelType (_tciFieldInfoMap tabInfo) rn ""
-  setRelCommentP2 defn
+  relType <- riType <$> askRelType (_tciFieldInfoMap tabInfo) rn ""
+  let metadataObj = MOSourceObjId source $ SMOTableObj qt $ MTORel rn relType
+  buildSchemaCacheFor metadataObj
+    $ MetadataModifier
+    $ tableMetadataSetter source qt %~ case relType of
+      ObjRel -> tmObjectRelationships.ix rn.rdComment .~ comment
+      ArrRel -> tmArrayRelationships.ix rn.rdComment .~ comment
+  -- setRelCommentP2 defn
+  pure successMsg
   where
-    SetRelComment source qt rn _ = defn
+    SetRelComment source qt rn comment = defn
 
-setRelComment :: SetRelComment
-              -> Q.TxE QErr ()
-setRelComment (SetRelComment source (QualifiedObject sn tn) rn comment) =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-           UPDATE hdb_catalog.hdb_relationship
-           SET comment = $1
-           WHERE table_schema =  $2
-             AND table_name = $3
-             AND rel_name = $4
-                |] (comment, sn, tn, rn) True
+-- setRelComment :: SetRelComment
+--               -> Q.TxE QErr ()
+-- setRelComment (SetRelComment source (QualifiedObject sn tn) rn comment) =
+--   Q.unitQE defaultTxErrorHandler [Q.sql|
+--            UPDATE hdb_catalog.hdb_relationship
+--            SET comment = $1
+--            WHERE table_schema =  $2
+--              AND table_name = $3
+--              AND rel_name = $4
+--                 |] (comment, sn, tn, rn) True
 
 getRequiredFkey
   :: (QErrM m)

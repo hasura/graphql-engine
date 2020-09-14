@@ -19,7 +19,7 @@ import           Hasura.EncJSON
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Permission.Internal
-import           Hasura.RQL.DDL.Schema.Function     (RawFunctionInfo (..), mkFunctionArgs)
+import           Hasura.RQL.DDL.Schema.Function     (mkFunctionArgs)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                (makeReasonMessage)
 import           Hasura.SQL.Types
@@ -47,7 +47,7 @@ instance NFData AddComputedField
 instance Cacheable AddComputedField
 $(deriveJSON (aesonDrop 4 snakeCase) ''AddComputedField)
 
-runAddComputedField :: (MonadTx m, CacheRWM m) => AddComputedField -> m EncJSON
+runAddComputedField :: (MonadError QErr m, CacheRWM m) => AddComputedField -> m EncJSON
 runAddComputedField q = do
   withPathK "table" $ askTabInfo source table
   let metadataObj = MOSourceObjId source $ SMOTableObj table $

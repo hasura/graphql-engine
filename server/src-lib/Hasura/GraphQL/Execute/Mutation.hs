@@ -81,7 +81,8 @@ convertInsert
      , MonadError QErr m
      , MonadTx tx
      , Tracing.MonadTrace tx
-     , MonadIO tx)
+     , MonadIO tx
+     )
   => Env.Environment
   -> SessionVariables
   -> RQL.MutationRemoteJoinCtx
@@ -105,7 +106,7 @@ convertMutationRootField
     , MonadAsyncActions m
     , Tracing.MonadTrace tx
     , MonadIO tx
-    , MonadTx tx
+    , MonadError QErr tx
     )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -117,21 +118,35 @@ convertMutationRootField
   -> MutationRootField UnpreparedValue
   -> m (Either (tx EncJSON, HTTP.ResponseHeaders) RemoteField)
 convertMutationRootField env logger userInfo manager reqHeaders metadataPool stringifyNum = \case
-  RFDB (MDBInsert s)  -> noResponseHeaders =<< convertInsert env userSession rjCtx s stringifyNum
-  RFDB (MDBUpdate s)  -> noResponseHeaders =<< convertUpdate env userSession rjCtx s stringifyNum
-  RFDB (MDBDelete s)  -> noResponseHeaders =<< convertDelete env userSession rjCtx s stringifyNum
+  RFDB pgExec (MDBInsert s)  -> noResponseHeaders pgExec =<< convertInsert env userSession rjCtx s stringifyNum
+  RFDB pgExec (MDBUpdate s)  -> noResponseHeaders pgExec =<< convertUpdate env userSession rjCtx s stringifyNum
+  RFDB pgExec (MDBDelete s)  -> noResponseHeaders pgExec =<< convertDelete env userSession rjCtx s stringifyNum
   RFRemote remote     -> pure $ Right remote
-  RFAction (AMSync s) -> Left . (_aerTransaction &&& _aerHeaders) <$> resolveActionExecution env logger userInfo s actionExecContext
-  RFAction (AMAsync s) -> noResponseHeaders =<< resolveActionMutationAsync s metadataPool reqHeaders userSession
-  RFRaw s              -> noResponseHeaders $ pure $ encJFromJValue s
+  RFAction (AMSync s) -> Left . (_aerTransaction &&& _aerHeaders) <$>
+                         resolveActionExecution env logger userInfo metadataPool s actionExecContext
+  RFAction (AMAsync s) -> (Left . (, [])) <$> resolveActionMutationAsync s metadataPool reqHeaders userSession
+  RFRaw s              -> pure $ Left (pure $ encJFromJValue s, [])
   where
-    noResponseHeaders :: tx EncJSON -> m (Either (tx EncJSON, HTTP.ResponseHeaders) RemoteField)
-    noResponseHeaders rTx = pure $ Left (rTx, [])
+    noResponseHeaders pgExecCtx rTx = pure $ Left (runMutationTx userInfo pgExecCtx rTx, [])
 
     userSession = _uiSession userInfo
     actionExecContext = ActionExecContext manager reqHeaders $ _uiSession userInfo
 
     rjCtx = (manager, reqHeaders, userInfo)
+
+runMutationTx
+  :: ( MonadError QErr m
+     , MonadIO m
+     , Tracing.MonadTrace m
+     )
+  => UserInfo -> PGExecCtx -> Tracing.TraceT (LazyTx QErr) a -> m a
+runMutationTx userInfo pgExec lazyTx = do
+  ctx <- Tracing.currentContext
+  liftEither =<< runExceptT
+   ( Tracing.interpTraceT
+     (runLazyTx pgExec Q.ReadWrite . withTraceContext ctx . withUserInfo userInfo)
+     lazyTx
+   )
 
 convertMutationSelectionSet
   :: forall m tx
@@ -140,9 +155,9 @@ convertMutationSelectionSet
      , MonadIO m
      , MonadError QErr m
      , MonadAsyncActions m
-     , MonadTx tx
-     , Tracing.MonadTrace tx
      , MonadIO tx
+     , MonadError QErr tx
+     , Tracing.MonadTrace tx
      )
   => Env.Environment
   -> Q.PGPool

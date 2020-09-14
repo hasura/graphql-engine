@@ -48,6 +48,15 @@ instance Arbitrary MetadataVersion where
 instance Arbitrary FunctionMetadata where
   arbitrary = genericArbitrary
 
+instance Arbitrary SourceConnSettings where
+  arbitrary = genericArbitrary
+
+instance Arbitrary SourceCustomConfiguration where
+  arbitrary = genericArbitrary
+
+instance Arbitrary SourceConfiguration where
+  arbitrary = genericArbitrary
+
 instance Arbitrary SourceMetadata where
   arbitrary = genericArbitrary
 
@@ -305,7 +314,7 @@ instance Arbitrary RemoteRelationshipMeta where
 instance Arbitrary CronTriggerMetadata where
   arbitrary = genericArbitrary
 
-instance Arbitrary WebhookConf where
+instance Arbitrary UrlConf where
   arbitrary = genericArbitrary
 
 instance Arbitrary STRetryConf where

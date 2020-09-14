@@ -23,6 +23,7 @@ module Hasura.Server.Migrate
   , downgradeCatalog
   ) where
 
+import           Hasura.Db
 import           Hasura.Prelude
 
 import qualified Data.Aeson                    as A
@@ -141,10 +142,9 @@ migrateCatalog migrationTime = do
           -- This is where the generated views and triggers are stored
           Q.unitQ "CREATE SCHEMA hdb_views" () False
 
-      isExtensionAvailable (SchemaName "pgcrypto") >>= \case
+      isExtensionAvailable "pgcrypto" >>= \case
         -- only if we created the schema, create the extension
-        True -> when createSchema $ liftTx $ Q.unitQE needsPGCryptoError
-          "CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA public" () False
+        True -> when createSchema $ createPgcryptoExtension
         False -> throw500 $
           "pgcrypto extension is required, but could not find the extension in the "
           <> "PostgreSQL server. Please make sure this extension is available."
@@ -154,23 +154,6 @@ migrateCatalog migrationTime = do
       updateCatalogVersion
       pure (MRInitialized, emptyMetadata)
       where
-        needsPGCryptoError e@(Q.PGTxErr _ _ _ err) =
-          case err of
-            Q.PGIUnexpected _ -> requiredError
-            Q.PGIStatement pgErr -> case Q.edStatusCode pgErr of
-              Just "42501" -> err500 PostgresError permissionsMessage
-              _            -> requiredError
-          where
-            requiredError =
-              (err500 PostgresError requiredMessage) { qeInternal = Just $ A.toJSON e }
-            requiredMessage =
-              "pgcrypto extension is required, but it could not be created;"
-              <> " encountered unknown postgres error"
-            permissionsMessage =
-              "pgcrypto extension is required, but the current user doesn’t have permission to"
-              <> " create it. Please grant superuser permission, or setup the initial schema via"
-              <> " https://hasura.io/docs/1.0/graphql/manual/deployment/postgres-permissions.html"
-
     -- migrates an existing catalog to the latest version from an existing verion
     migrateFrom :: T.Text -> m (MigrationResult, Metadata)
     migrateFrom previousVersion = do
@@ -192,27 +175,6 @@ migrateCatalog migrationTime = do
         neededMigrations = dropWhile ((/= previousVersion) . fst) (migrations False)
 
     updateCatalogVersion = setCatalogVersion latestCatalogVersionString migrationTime
-
-    doesSchemaExist schemaName =
-      liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
-        SELECT EXISTS
-        ( SELECT 1 FROM information_schema.schemata
-          WHERE schema_name = $1
-        ) |] (Identity schemaName) False
-
-    doesTableExist schemaName tableName =
-      liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
-        SELECT EXISTS
-        ( SELECT 1 FROM pg_tables
-          WHERE schemaname = $1 AND tablename = $2
-        ) |] (schemaName, tableName) False
-
-    isExtensionAvailable schemaName =
-      liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
-        SELECT EXISTS
-        ( SELECT 1 FROM pg_catalog.pg_available_extensions
-          WHERE name = $1
-        ) |] (Identity schemaName) False
 
 downgradeCatalog
   :: forall m. (MonadIO m, MonadTx m)

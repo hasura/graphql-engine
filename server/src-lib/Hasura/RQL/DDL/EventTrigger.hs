@@ -219,8 +219,8 @@ subTableP2Setup
   -> m (EventTriggerInfo, [SchemaDependency])
 subTableP2Setup env source qt (EventTriggerConf name def webhook webhookFromEnv rconf mheaders) = do
   webhookConf <- case (webhook, webhookFromEnv) of
-    (Just w, Nothing)    -> return $ WCValue w
-    (Nothing, Just wEnv) -> return $ WCEnv wEnv
+    (Just w, Nothing)    -> return $ UrlValue w
+    (Nothing, Just wEnv) -> return $ UrlFromEnv wEnv
     _                    -> throw500 "expected webhook or webhook_from_env"
   let headerConfs = fromMaybe [] mheaders
   webhookInfo <- getWebhookInfoFromConf env webhookConf
@@ -257,7 +257,7 @@ subTableP2 qt replace etc = liftTx if replace
   else addEventTriggerToCatalog qt etc
 
 runCreateEventTriggerQuery
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
+  :: (QErrM m, UserInfoM m, CacheRWM m)
   => CreateEventTriggerQuery -> m EncJSON
 runCreateEventTriggerQuery q = do
   (qt, replace, etc) <- subTableP1 q
@@ -271,7 +271,7 @@ runCreateEventTriggerQuery q = do
   pure successMsg
 
 runDeleteEventTriggerQuery
-  :: (MonadTx m, CacheRWM m)
+  :: (MonadError QErr m, CacheRWM m)
   => DeleteEventTriggerQuery -> m EncJSON
 runDeleteEventTriggerQuery (DeleteEventTriggerQuery source name) = do
   -- liftTx $ delEventTriggerFromCatalog name
@@ -300,9 +300,12 @@ deliverEvent (RedeliverEventQuery eventId) = do
   return successMsg
 
 runRedeliverEvent
-  :: (MonadTx m)
+  :: (MonadError QErr m)
   => RedeliverEventQuery -> m EncJSON
-runRedeliverEvent = deliverEvent
+runRedeliverEvent _ =
+  -- FIXME:
+  --deliverEvent
+  throw400 NotSupported $ "Redelivering events is temporarily disabled"
 
 insertManualEvent
   :: QualifiedTable
@@ -321,14 +324,17 @@ insertManualEvent qt trn rowData = do
     getEid (x:_) = return x
 
 runInvokeEventTrigger
-  :: (QErrM m, CacheRM m, MonadTx m)
+  :: (QErrM m, CacheRM m)
   => InvokeEventTriggerQuery -> m EncJSON
 runInvokeEventTrigger (InvokeEventTriggerQuery name payload) = do
   trigInfo <- askEventTriggerInfo defaultSource name
   assertManual $ etiOpsDef trigInfo
   ti  <- askTabInfoFromTrigger defaultSource name
-  eid <- liftTx $ insertManualEvent (_tciName $ _tiCoreInfo ti) name payload
-  return $ encJFromJValue $ object ["event_id" .= eid]
+  -- FIXME:
+  throw400 NotSupported $ "Invoking triggers is temporarily disabled"
+
+  -- eid <- liftTx $ insertManualEvent (_tciName $ _tiCoreInfo ti) name payload
+  -- return $ encJFromJValue $ object ["event_id" .= eid]
   where
     assertManual (TriggerOpsDef _ _ _ man) = case man of
       Just True -> return ()
@@ -351,20 +357,10 @@ getHeaderInfosFromConf env = mapM getHeader
 getWebhookInfoFromConf
   :: QErrM m
   => Env.Environment
-  -> WebhookConf
+  -> UrlConf
   -> m WebhookConfInfo
-getWebhookInfoFromConf env wc = case wc of
-  WCValue w -> return $ WebhookConfInfo wc w
-  WCEnv we -> do
-    envVal <- getEnv env we
-    return $ WebhookConfInfo wc envVal
-
-getEnv :: QErrM m => Env.Environment -> T.Text -> m T.Text
-getEnv env k = do
-  let mEnv = Env.lookupEnv env (T.unpack k)
-  case mEnv of
-    Nothing     -> throw400 NotFound $ "environment variable '" <> k <> "' not set"
-    Just envVal -> return (T.pack envVal)
+getWebhookInfoFromConf env wc =
+  WebhookConfInfo wc <$> resolveUrlConf env wc
 
 getEventTriggerDef
   :: TriggerName

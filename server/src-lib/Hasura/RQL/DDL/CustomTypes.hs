@@ -51,12 +51,12 @@ GraphQL types. To support this, we have to take a few extra steps:
 -- scalars).
 validateCustomTypeDefinitions
   :: (MonadValidate [CustomTypeValidationError] m)
-  => TableCache
+  => SourceTables
   -> CustomTypes
   -> HashSet PGScalarType
   -- ^ all Postgres base types. See Note [Postgres scalars in custom types]
   -> m AnnotatedCustomTypes
-validateCustomTypeDefinitions tableCache customTypes allPGScalars = do
+validateCustomTypeDefinitions sourceTables customTypes allPGScalars = do
   unless (null duplicateTypes) $ dispute $ pure $ DuplicateTypeNames duplicateTypes
   traverse_ validateEnum enumDefinitions
   reusedPGScalars <- execWriterT $ traverse_ validateInputObject inputObjectDefinitions
@@ -144,6 +144,7 @@ validateCustomTypeDefinitions tableCache customTypes allPGScalars = do
             (map (unRelationshipName . _trName) . toList) maybeRelationships
           duplicateFieldNames = L.duplicates $ fieldNames <> relNames
           fields = _otdFields objectDefinition
+          source = _otdSource objectDefinition
 
       -- check for duplicate field names
       unless (null duplicateFieldNames) $
@@ -179,12 +180,12 @@ validateCustomTypeDefinitions tableCache customTypes allPGScalars = do
           pure (unGraphQLType fieldType, annotatedObjectFieldType)
 
       let scalarOrEnumFieldMap = Map.fromList $
-            map (_ofdName &&& (fst . _ofdType)) $ toList $ scalarOrEnumFields
+            map (_ofdName &&& (fst . _ofdType)) $ toList scalarOrEnumFields
 
       annotatedRelationships <- forM maybeRelationships $ \relationships ->
         forM relationships $ \TypeRelationship{..} -> do
         --check that the table exists
-        remoteTableInfo <- onNothing (Map.lookup _trRemoteTable tableCache) $
+        remoteTableInfo <- onNothing (Map.lookup source sourceTables >>= Map.lookup _trRemoteTable) $
           refute $ pure $ ObjectRelationshipTableDoesNotExist
           objectTypeName _trName _trRemoteTable
 
@@ -210,7 +211,7 @@ validateCustomTypeDefinitions tableCache customTypes allPGScalars = do
         pure $ TypeRelationship _trName _trType remoteTableInfo annotatedFieldMapping
 
       pure $ ObjectTypeDefinition objectTypeName (_otdDescription objectDefinition)
-             scalarOrEnumFields annotatedRelationships
+             scalarOrEnumFields source annotatedRelationships
 
 -- see Note [Postgres scalars in custom types]
 lookupPGScalar :: Set.HashSet PGScalarType -> G.Name -> Maybe PGScalarType
@@ -307,7 +308,6 @@ showCustomTypeValidationError = \case
 runSetCustomTypes
   :: ( MonadError QErr m
      , CacheRWM m
-     , MonadTx m
      )
   => CustomTypes -> m EncJSON
 runSetCustomTypes customTypes = do
@@ -337,13 +337,13 @@ clearCustomTypesInMetadata =
 
 resolveCustomTypes
   :: (MonadError QErr m)
-  => TableCache
+  => SourceTables
   -> CustomTypes
   -> HashSet PGScalarType
   -> m AnnotatedCustomTypes
-resolveCustomTypes tableCache customTypes allPGScalars =
+resolveCustomTypes sourceTables customTypes allPGScalars =
   either (throw400 ConstraintViolation . showErrors) pure
-    =<< runValidateT (validateCustomTypeDefinitions tableCache customTypes allPGScalars)
+    =<< runValidateT (validateCustomTypeDefinitions sourceTables customTypes allPGScalars)
   where
     showErrors :: [CustomTypeValidationError] -> T.Text
     showErrors allErrors =

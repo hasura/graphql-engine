@@ -92,7 +92,7 @@ data SchemaCacheRef
   -- the IORef) where we serve a request with a stale schemacache but I guess
   -- it is an okay trade-off to pay for a higher throughput (I remember doing a
   -- bunch of benchmarks to test this hypothesis).
-  , _scrCache    :: IORef (RebuildableSchemaCache Run, SchemaCacheVer)
+  , _scrCache    :: IORef (RebuildableSchemaCache MetadataRun, SchemaCacheVer)
   , _scrMetadata :: IORef Metadata
   , _scrOnChange :: IO ()
   -- ^ an action to run when schemacache changes
@@ -100,8 +100,7 @@ data SchemaCacheRef
 
 data ServerCtx
   = ServerCtx
-  { scPGExecCtx                    :: !PGExecCtx
-  , scConnInfo                     :: !Q.ConnInfo
+  { scDefaultPgSource              :: !PGSourceConfig
   , scLogger                       :: !(L.Logger L.Hasura)
   , scCacheRef                     :: !SchemaCacheRef
   , scAuthMode                     :: !AuthMode
@@ -162,7 +161,7 @@ withSCUpdate
   -> Q.PGPool
   -> InstanceId
   -> L.Logger L.Hasura
-  -> m (a, MetadataStateResult Run) -> m a
+  -> m (a, MetadataStateResult MetadataRun) -> m a
 withSCUpdate scr metadataPool instanceId logger action =
   withMVarMasked (_scrLock scr) $ \() -> do
     (!res, !(MetadataStateResult newSC cacheInvalidations newMetadata)) <- action
@@ -181,7 +180,7 @@ withSCUpdate scr metadataPool instanceId logger action =
 updateStateRefs
   :: (MonadIO m, MonadBaseControl IO m)
   => L.Logger L.Hasura
-  -> RebuildableSchemaCache Run
+  -> RebuildableSchemaCache MetadataRun
   -> Metadata
   -> SchemaCacheRef
   -> m ()
@@ -377,38 +376,38 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
         mapM_ setHeader allRespHeaders
         Spock.lazyBytes compressedResp
 
-v1QueryHandler
-  :: ( HasVersion
-     , MonadIO m
-     , MonadBaseControl IO m
-     , MetadataApiAuthorization m
-     , Tracing.MonadTrace m
-     , MonadMetadataManage m
-     )
-  => RQLQuery
-  -> Handler m (HttpResponse EncJSON)
-v1QueryHandler query = do
-  userInfo <- asks hcUser
-  authorizeMetadataApi query userInfo
-  scRef  <- asks (scCacheRef . hcServerCtx)
-  logger <- asks (scLogger . hcServerCtx)
-  metadataPool <- asks (scMetadataPool . hcServerCtx)
-  instanceId  <- asks (scInstanceId . hcServerCtx)
-  res    <- bool (fst <$> dbAction) (withSCUpdate scRef metadataPool instanceId logger dbAction) $
-            queryModifiesSchemaCache query
-  return $ HttpResponse res []
-  where
-    -- Hit postgres
-    dbAction = do
-      userInfo    <- asks hcUser
-      scRef       <- asks (scCacheRef . hcServerCtx)
-      schemaCache <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
-      metadata    <- liftIO $ readIORef $ _scrMetadata scRef
-      httpMgr     <- asks (scManager . hcServerCtx)
-      sqlGenCtx   <- asks (scSQLGenCtx . hcServerCtx)
-      pgExecCtx   <- asks (scPGExecCtx . hcServerCtx)
-      env         <- asks (scEnvironment . hcServerCtx)
-      runQuery env pgExecCtx userInfo schemaCache metadata httpMgr sqlGenCtx (SystemDefined False) query
+-- v1QueryHandler
+--   :: ( HasVersion
+--      , MonadIO m
+--      , MonadBaseControl IO m
+--      , MetadataApiAuthorization m
+--      , Tracing.MonadTrace m
+--      , MonadMetadataManage m
+--      )
+--   => RQLQuery
+--   -> Handler m (HttpResponse EncJSON)
+-- v1QueryHandler query = do
+--   userInfo <- asks hcUser
+--   authorizeMetadataApi query userInfo
+--   scRef  <- asks (scCacheRef . hcServerCtx)
+--   logger <- asks (scLogger . hcServerCtx)
+--   metadataPool <- asks (scMetadataPool . hcServerCtx)
+--   instanceId  <- asks (scInstanceId . hcServerCtx)
+--   res    <- bool (fst <$> dbAction) (withSCUpdate scRef metadataPool instanceId logger dbAction) $
+--             queryModifiesSchemaCache query
+--   return $ HttpResponse res []
+--   where
+--     -- Hit postgres
+--     dbAction = do
+--       userInfo    <- asks hcUser
+--       scRef       <- asks (scCacheRef . hcServerCtx)
+--       schemaCache <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
+--       metadata    <- liftIO $ readIORef $ _scrMetadata scRef
+--       httpMgr     <- asks (scManager . hcServerCtx)
+--       sqlGenCtx   <- asks (scSQLGenCtx . hcServerCtx)
+--       pgExecCtx   <- asks (scDefaultPgSource . hcServerCtx)
+--       env         <- asks (scEnvironment . hcServerCtx)
+--       runQuery env pgExecCtx userInfo schemaCache metadata httpMgr sqlGenCtx (SystemDefined False) query
 
 v1MetadataHandler
   :: ( HasVersion
@@ -424,13 +423,13 @@ v1MetadataHandler request = do
   metadata     <- liftIO $ readIORef $ _scrMetadata scRef
   httpMgr      <- asks (scManager . hcServerCtx)
   sqlGenCtx    <- asks (scSQLGenCtx . hcServerCtx)
-  pgExecCtx    <- asks (scPGExecCtx . hcServerCtx)
+  defPgSource    <- asks (scDefaultPgSource . hcServerCtx)
   env          <- asks (scEnvironment . hcServerCtx)
   instanceId   <- asks (scInstanceId . hcServerCtx)
   metadataPool <- asks (scMetadataPool . hcServerCtx)
   logger <- asks (scLogger . hcServerCtx)
   r <- withSCUpdate scRef metadataPool instanceId logger $
-       runMetadataRequest env userInfo httpMgr sqlGenCtx pgExecCtx schemaCache metadata request
+       runMetadataRequest env userInfo httpMgr sqlGenCtx defPgSource schemaCache metadata request
   pure $ HttpResponse r []
 
 v2QueryHandler
@@ -438,7 +437,7 @@ v2QueryHandler
      , MonadIO m
      , Tracing.MonadTrace m
      )
-  => V2Query.RQLQuery -> Handler m (HttpResponse EncJSON)
+  => V2Query.QueryWithSource -> Handler m (HttpResponse EncJSON)
 v2QueryHandler request = do
   userInfo     <- asks hcUser
   scRef        <- asks (scCacheRef . hcServerCtx)
@@ -446,7 +445,7 @@ v2QueryHandler request = do
   metadata     <- liftIO $ readIORef $ _scrMetadata scRef
   httpMgr      <- asks (scManager . hcServerCtx)
   sqlGenCtx    <- asks (scSQLGenCtx . hcServerCtx)
-  pgExecCtx    <- asks (scPGExecCtx . hcServerCtx)
+  pgExecCtx    <- asks (scDefaultPgSource . hcServerCtx)
   env          <- asks (scEnvironment . hcServerCtx)
   r <- V2Query.runQuery env userInfo httpMgr sqlGenCtx pgExecCtx schemaCache metadata request
   pure $ HttpResponse r []
@@ -470,7 +469,6 @@ v1Alpha1GQHandler queryType query = do
   manager              <- asks (scManager . hcServerCtx)
   scRef                <- asks (scCacheRef . hcServerCtx)
   (sc, scVer)          <- liftIO $ readIORef $ _scrCache scRef
-  pgExecCtx            <- asks (scPGExecCtx . hcServerCtx)
   sqlGenCtx            <- asks (scSQLGenCtx . hcServerCtx)
   -- planCache            <- asks (scPlanCache . hcServerCtx)
   enableAL             <- asks (scEnableAllowlist . hcServerCtx)
@@ -479,7 +477,7 @@ v1Alpha1GQHandler queryType query = do
   env                  <- asks (scEnvironment . hcServerCtx)
   metadataPool         <- asks (scMetadataPool . hcServerCtx)
 
-  let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx {- planCache -}
+  let execCtx = E.ExecutionCtx logger sqlGenCtx -- pgExecCtx {- planCache -}
                 (lastBuiltSchemaCache sc) scVer manager enableAL metadataPool
 
   flip runReaderT execCtx $
@@ -521,7 +519,7 @@ gqlExplainHandler query = do
   onlyAdmin
   scRef     <- asks (scCacheRef . hcServerCtx)
   sc        <- getSCFromRef scRef
-  pgExecCtx <- asks (scPGExecCtx . hcServerCtx)
+  metadataPool <- asks (scMetadataPool . hcServerCtx)
 --  sqlGenCtx <- asks (scSQLGenCtx . hcServerCtx)
 --  env       <- asks (scEnvironment . hcServerCtx)
 --  logger    <- asks (scLogger . hcServerCtx)
@@ -532,13 +530,19 @@ gqlExplainHandler query = do
   -- let runTx rttx = ExceptT . ReaderT $ \ctx -> do
   --       runExceptT (Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadOnly) (runReaderT rttx ctx))
 
-  res <- GE.explainGQLQuery pgExecCtx sc query
+  res <- GE.explainGQLQuery metadataPool sc query
   return $ HttpResponse res []
 
 v1Alpha1PGDumpHandler :: (MonadIO m) => PGD.PGDumpReqBody -> Handler m APIResp
 v1Alpha1PGDumpHandler b = do
   onlyAdmin
-  ci     <- asks (scConnInfo . hcServerCtx)
+  scRef     <- asks (scCacheRef . hcServerCtx)
+  sc        <- getSCFromRef scRef
+  let sources = scPostgres sc
+      sourceName = PGD.prbSource b
+  ci <- fmap (_pscConnInfo . _pcConfiguration) $
+        onNothing (M.lookup sourceName sources) $
+        throw400 NotFound $ "source " <> sourceName <<> " not found"
   output <- PGD.execPGDump b ci
   return $ RawResp $ HttpResponse output [sqlHeader]
 
@@ -603,16 +607,16 @@ queryParsers =
       q <- decodeValue val
       return $ f q
 
-legacyQueryHandler
-  :: (HasVersion, MonadIO m, MonadBaseControl IO m, MetadataApiAuthorization m, Tracing.MonadTrace m, MonadMetadataManage m)
-  => TableName -> T.Text -> Object
-  -> Handler m (HttpResponse EncJSON)
-legacyQueryHandler tn queryType req =
-  case M.lookup queryType queryParsers of
-    Just queryParser -> getLegacyQueryParser queryParser qt req >>= v1QueryHandler . RQV1
-    Nothing          -> throw404 "No such resource exists"
-  where
-    qt = QualifiedObject publicSchema tn
+-- legacyQueryHandler
+--   :: (HasVersion, MonadIO m, MonadBaseControl IO m, MetadataApiAuthorization m, Tracing.MonadTrace m, MonadMetadataManage m)
+--   => TableName -> T.Text -> Object
+--   -> Handler m (HttpResponse EncJSON)
+-- legacyQueryHandler tn queryType req =
+--   case M.lookup queryType queryParsers of
+--     Just queryParser -> getLegacyQueryParser queryParser qt req >>= v1QueryHandler . RQV1
+--     Nothing          -> throw404 "No such resource exists"
+--   where
+--     qt = QualifiedObject publicSchema tn
 
 -- | Default implementation of the 'MonadConfigApiHandler'
 configApiGetHandler
@@ -657,17 +661,13 @@ mkWaiApp
      )
   => Env.Environment
   -- ^ Set of environment variables for reference in UIs
-  -> Q.TxIsolation
-  -- ^ postgres transaction isolation to be used in the entire app
   -> L.Logger L.Hasura
   -- ^ a 'L.Hasura' specific logger
   -> SQLGenCtx
   -> Bool
   -- ^ is AllowList enabled - TODO: change this boolean to sumtype
-  -> Q.PGPool
-  -> Maybe PGExecCtx
-  -> Q.ConnInfo
-  -- ^ postgres connection parameters
+  -> PGSourceConfig
+  -- ^ default postgres source
   -> HTTP.Manager
   -- ^ HTTP manager so that we can re-use sessions
   -> AuthMode
@@ -688,14 +688,14 @@ mkWaiApp
   -> E.PlanCacheOptions
   -> ResponseInternalErrorsConfig
   -> Maybe EL.LiveQueryPostPollHook
-  -> RebuildableSchemaCache Run
+  -> RebuildableSchemaCache MetadataRun
   -> EKG.Store
   -> Q.PGPool
   -- ^ Metadata storage connection pool - TODO: Better rep
   -> Metadata
   -- ^ Metadata
   -> m HasuraApp
-mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpManager mode corsCfg enableConsole consoleAssetsDir
+mkWaiApp env logger sqlGenCtx enableAL defPgSource httpManager mode corsCfg enableConsole consoleAssetsDir
          enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig liveQueryHook schemaCache ekgStore metadataPool metadata = do
 
     -- See Note [Temporarily disabling query plan caching]
@@ -704,16 +704,14 @@ mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpMana
     let getSchemaCache = first lastBuiltSchemaCache <$> readIORef (_scrCache schemaCacheRef)
 
     let corsPolicy = mkDefaultCorsPolicy corsCfg
-        pgExecCtx = fromMaybe (mkPGExecCtx isoLevel pool) pgExecCtxCustom
         postPollHook = fromMaybe (EL.defaultLiveQueryPostPollHook logger) liveQueryHook
 
-    lqState <- liftIO $ EL.initLiveQueriesState lqOpts pgExecCtx postPollHook
-    wsServerEnv <- WS.createWSServerEnv logger pgExecCtx lqState getSchemaCache httpManager
+    lqState <- liftIO $ EL.initLiveQueriesState lqOpts postPollHook
+    wsServerEnv <- WS.createWSServerEnv logger lqState getSchemaCache httpManager
                                         corsPolicy sqlGenCtx enableAL metadataPool {- planCache -}
 
     let serverCtx = ServerCtx
-                    { scPGExecCtx       =  pgExecCtx
-                    , scConnInfo        =  ci
+                    { scDefaultPgSource = defPgSource
                     , scLogger          =  logger
                     , scCacheRef        =  schemaCacheRef
                     , scAuthMode        =  mode
@@ -797,7 +795,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
     -- Health check endpoint
     Spock.get "healthz" $ do
       sc <- getSCFromRef $ scCacheRef serverCtx
-      dbOk <- liftIO $ _pecCheckHealth $ scPGExecCtx serverCtx
+      dbOk <- liftIO $ _pecCheckHealth $ _pscExecCtx $ scDefaultPgSource serverCtx
       if dbOk
         then Spock.setStatus HTTP.status200 >> (Spock.text $ if null (scInconsistentObjs sc)
                                                  then "OK"
@@ -814,8 +812,8 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
 
       Spock.post "v1alpha1/graphql/explain" gqlExplainAction
 
-      Spock.post "v1/query" $ spockAction encodeQErr id $
-        mkPostHandler $ mkAPIRespHandler v1QueryHandler
+      -- Spock.post "v1/query" $ spockAction encodeQErr id $
+      --   mkPostHandler $ mkAPIRespHandler v1QueryHandler
 
       Spock.post "v1/metadata" $ spockAction encodeQErr id $
         mkPostHandler $ mkAPIRespHandler v1MetadataHandler
@@ -823,9 +821,9 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       Spock.post "v2/query" $ spockAction encodeQErr id $
         mkPostHandler $ mkAPIRespHandler v2QueryHandler
 
-      Spock.post ("api/1/table" <//> Spock.var <//> Spock.var) $ \tableName queryType ->
-        mkSpockAction serverCtx encodeQErr id $ mkPostHandler $
-          mkAPIRespHandler $ legacyQueryHandler (TableName tableName) queryType
+      -- Spock.post ("api/1/table" <//> Spock.var <//> Spock.var) $ \tableName queryType ->
+      --   mkSpockAction serverCtx encodeQErr id $ mkPostHandler $
+      --     mkAPIRespHandler $ legacyQueryHandler (TableName tableName) queryType
 
     when enablePGDump $
       Spock.post "v1alpha1/pg_dump" $ spockAction encodeQErr id $

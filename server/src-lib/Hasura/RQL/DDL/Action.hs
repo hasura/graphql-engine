@@ -2,7 +2,7 @@
 module Hasura.RQL.DDL.Action
   ( CreateAction
   , runCreateAction
-  , persistCreateAction
+  -- , persistCreateAction
   , resolveAction
 
   , UpdateAction
@@ -17,7 +17,7 @@ module Hasura.RQL.DDL.Action
 
   , CreateActionPermission
   , runCreateActionPermission
-  , persistCreateActionPermission
+  -- , persistCreateActionPermission
 
   , DropActionPermission
   , runDropActionPermission
@@ -56,7 +56,7 @@ getActionInfo actionName = do
       "action with name " <> actionName <<> " does not exist"
 
 runCreateAction
-  :: (QErrM m , CacheRWM m, MonadTx m)
+  :: (QErrM m , CacheRWM m)
   => CreateAction -> m EncJSON
 runCreateAction createAction = do
   -- check if action with same name exists already
@@ -74,13 +74,13 @@ runCreateAction createAction = do
   where
     actionName = _caName createAction
 
-persistCreateAction :: (MonadTx m) =>  CreateAction -> m ()
-persistCreateAction (CreateAction actionName actionDefinition comment) = do
-  liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
-    INSERT into hdb_catalog.hdb_action
-      (action_name, action_defn, comment)
-      VALUES ($1, $2, $3)
-  |] (actionName, Q.AltJ actionDefinition, comment) True
+-- persistCreateAction :: (MonadTx m) =>  CreateAction -> m ()
+-- persistCreateAction (CreateAction actionName actionDefinition comment) = do
+--   liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
+--     INSERT into hdb_catalog.hdb_action
+--       (action_name, action_defn, comment)
+--       VALUES ($1, $2, $3)
+--   |] (actionName, Q.AltJ actionDefinition, comment) True
 
 {-| Note [Postgres scalars in action input arguments]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -137,7 +137,7 @@ resolveAction env AnnotatedCustomTypes{..} ActionDefinition{..} allPGScalars = d
        )
 
 runUpdateAction
-  :: forall m. ( QErrM m , CacheRWM m, MonadTx m)
+  :: forall m. ( QErrM m , CacheRWM m)
   => UpdateAction -> m EncJSON
 runUpdateAction (UpdateAction actionName actionDefinition) = do
   sc <- askSchemaCache
@@ -176,7 +176,7 @@ data DropAction
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''DropAction)
 
 runDropAction
-  :: (QErrM m, CacheRWM m, MonadTx m)
+  :: (QErrM m, CacheRWM m)
   => DropAction -> m EncJSON
 runDropAction (DropAction actionName clearDataM)= do
   void $ getActionInfo actionName
@@ -236,7 +236,7 @@ newtype ActionMetadataField
   deriving (Show, Eq, J.FromJSON, J.ToJSON)
 
 runCreateActionPermission
-  :: (QErrM m , CacheRWM m, MonadTx m)
+  :: (QErrM m , CacheRWM m)
   => CreateActionPermission -> m EncJSON
 runCreateActionPermission createActionPermission = do
   actionInfo <- getActionInfo actionName
@@ -253,13 +253,13 @@ runCreateActionPermission createActionPermission = do
   where
     CreateActionPermission actionName roleName _ comment = createActionPermission
 
-persistCreateActionPermission :: (MonadTx m) => CreateActionPermission -> m ()
-persistCreateActionPermission CreateActionPermission{..}= do
-  liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
-    INSERT into hdb_catalog.hdb_action_permission
-      (action_name, role_name, comment)
-      VALUES ($1, $2, $3)
-  |] (_capAction, _capRole, _capComment) True
+-- persistCreateActionPermission :: (MonadTx m) => CreateActionPermission -> m ()
+-- persistCreateActionPermission CreateActionPermission{..}= do
+--   liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
+--     INSERT into hdb_catalog.hdb_action_permission
+--       (action_name, role_name, comment)
+--       VALUES ($1, $2, $3)
+--   |] (_capAction, _capRole, _capComment) True
 
 data DropActionPermission
   = DropActionPermission
@@ -269,7 +269,7 @@ data DropActionPermission
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''DropActionPermission)
 
 runDropActionPermission
-  :: (QErrM m, CacheRWM m, MonadTx m)
+  :: (QErrM m, CacheRWM m)
   => DropActionPermission -> m EncJSON
 runDropActionPermission dropActionPermission = do
   actionInfo <- getActionInfo actionName

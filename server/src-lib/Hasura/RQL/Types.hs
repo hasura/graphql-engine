@@ -9,10 +9,14 @@ module Hasura.RQL.Types
 
   , SQLGenCtx(..)
   , HasSQLGenCtx(..)
+  , HasSQLGenCtxT(..)
+  , runHasSQLGenCtxT
 
   , HasSystemDefined(..)
   , HasSystemDefinedT
   , runHasSystemDefinedT
+
+  , HasDefaultSource(..)
 
   , QCtx(..)
   , HasQCtx(..)
@@ -70,6 +74,7 @@ import           Hasura.RQL.Types.RemoteSchema       as R
 import           Hasura.RQL.Types.ScheduledTrigger   as R
 import           Hasura.RQL.Types.SchemaCache        as R
 import           Hasura.RQL.Types.SchemaCache.Build  as R
+import           Hasura.RQL.Types.Source             as R
 import           Hasura.RQL.Types.Table              as R
 
 import qualified Data.HashMap.Strict                 as M
@@ -173,16 +178,16 @@ instance (HasSQLGenCtx m) => HasSQLGenCtx (TraceT m) where
 instance (HasSQLGenCtx m) => HasSQLGenCtx (TableCacheRT m) where
   askSQLGenCtx = lift askSQLGenCtx
 
--- newtype HasSQLGenCtxT m a
---   = HasSQLGenCtxT { unHasSQLGenCtxT :: ReaderT SQLGenCtx m a }
---   deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO, MonadUnique, MonadError e, MonadTx
---            , HasHttpManager, HasSystemDefined, SourceM, CacheRM, CacheRWM, UserInfoM, MonadMetadata)
+newtype HasSQLGenCtxT m a
+  = HasSQLGenCtxT { unHasSQLGenCtxT :: ReaderT SQLGenCtx m a }
+  deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO, MonadUnique, MonadError e, MonadTx
+           , HasHttpManager, HasSystemDefined, SourceM, CacheRM, CacheRWM, UserInfoM, MonadMetadata)
 
--- runHasSQLGenCtxT :: SQLGenCtx -> HasSQLGenCtxT m a -> m a
--- runHasSQLGenCtxT sqlGenCtx = flip runReaderT sqlGenCtx . unHasSQLGenCtxT
+runHasSQLGenCtxT :: SQLGenCtx -> HasSQLGenCtxT m a -> m a
+runHasSQLGenCtxT sqlGenCtx = flip runReaderT sqlGenCtx . unHasSQLGenCtxT
 
--- instance (Monad m) => HasSQLGenCtx (HasSQLGenCtxT m) where
---   askSQLGenCtx = HasSQLGenCtxT ask
+instance (Monad m) => HasSQLGenCtx (HasSQLGenCtxT m) where
+  askSQLGenCtx = HasSQLGenCtxT ask
 
 class (Monad m) => HasSystemDefined m where
   askSystemDefined :: m SystemDefined
@@ -210,6 +215,18 @@ runHasSystemDefinedT systemDefined = flip runReaderT systemDefined . unHasSystem
 instance (Monad m) => HasSystemDefined (HasSystemDefinedT m) where
   askSystemDefined = HasSystemDefinedT ask
 
+class (Monad m) => HasDefaultSource m where
+  askDefaultSource :: m PGSourceConfig
+
+instance (HasDefaultSource m) => HasDefaultSource (ReaderT r m) where
+  askDefaultSource = lift askDefaultSource
+instance (HasDefaultSource m) => HasDefaultSource (ExceptT e m) where
+  askDefaultSource = lift askDefaultSource
+instance (HasDefaultSource m) => HasDefaultSource (StateT s m) where
+  askDefaultSource = lift askDefaultSource
+instance (HasDefaultSource m) => HasDefaultSource (TraceT m) where
+  askDefaultSource = lift askDefaultSource
+
 liftMaybe :: (QErrM m) => QErr -> Maybe a -> m a
 liftMaybe e = maybe (throwError e) return
 
@@ -231,7 +248,7 @@ askTableCache sourceName = do
   schemaCache <- askSchemaCache
   case M.lookup sourceName (scPostgres schemaCache) of
     Just tableCache -> pure $ _pcTables tableCache
-    Nothing -> throw400 NotExists $ "source " <> sourceName <<> " does not exist"
+    Nothing         -> throw400 NotExists $ "source " <> sourceName <<> " does not exist"
 
 askTableCoreInfo
   :: (QErrM m, CacheRM m) => SourceName -> QualifiedTable -> m TableCoreInfo

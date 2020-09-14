@@ -241,7 +241,7 @@ addPermP2 tn pd = do
   liftTx $ savePermToCatalog pt tn pd systemDefined
 
 runCreatePerm
-  :: (UserInfoM m, CacheRWM m, IsPerm a, MonadTx m)
+  :: (UserInfoM m, CacheRWM m, IsPerm a, MonadError QErr m)
   => CreatePerm a -> m EncJSON
 runCreatePerm (WithTable sourceName tn pd) = do
   -- addPermP2 tn pd
@@ -269,7 +269,7 @@ dropPermP1 dp@(DropPerm sourceName tn rn) = do
 --     pt = permAccToType pa
 
 runDropPerm
-  :: (IsPerm a, UserInfoM m, CacheRWM m, MonadTx m)
+  :: (IsPerm a, UserInfoM m, CacheRWM m, MonadError QErr m)
   => DropPerm a -> m EncJSON
 runDropPerm defn@(DropPerm source tn rn) = do
   dropPermP1 defn

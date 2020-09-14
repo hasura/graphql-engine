@@ -193,25 +193,25 @@ $(deriveJSON
 --     |] (instanceId, Q.AltJ invalidations) True
 --   pure ()
 
-runQuery
-  :: (HasVersion, MonadIO m, MonadError QErr m, Tracing.MonadTrace m)
-  => Env.Environment -> PGExecCtx -> UserInfo
-  -> RebuildableSchemaCache Run -> Metadata -> HTTP.Manager
-  -> SQLGenCtx -> SystemDefined -> RQLQuery -> m (EncJSON, MetadataStateResult Run)
-runQuery env pgExecCtx userInfo sc metadata hMgr sqlGenCtx systemDefined query = do
-  accessMode <- getQueryAccessMode query
-  traceCtx <- Tracing.currentContext
-  resultE <- runQueryM env query & Tracing.interpTraceT \x -> do
-    a <- x & runHasSystemDefinedT systemDefined
-           & runCacheRWT sc
-           & peelRun runCtx pgExecCtx accessMode (Just traceCtx) metadata
-           & runExceptT
-    pure (either
-      ((, mempty) . Left)
-      (\(((js, tracemeta), rsc, ci), meta) -> (Right (js, MetadataStateResult rsc ci meta), tracemeta)) a)
-  liftEither resultE
-  where
-    runCtx = RunCtx userInfo hMgr sqlGenCtx
+-- runQuery
+--   :: (HasVersion, MonadIO m, MonadError QErr m, Tracing.MonadTrace m)
+--   => Env.Environment -> PGExecCtx -> UserInfo
+--   -> RebuildableSchemaCache Run -> Metadata -> HTTP.Manager
+--   -> SQLGenCtx -> SystemDefined -> RQLQuery -> m (EncJSON, MetadataStateResult MetadataRun)
+-- runQuery env pgExecCtx userInfo sc metadata hMgr sqlGenCtx systemDefined query = do
+--   accessMode <- getQueryAccessMode query
+--   traceCtx <- Tracing.currentContext
+--   resultE <- runQueryM env query & Tracing.interpTraceT \x -> do
+--     a <- x & runHasSystemDefinedT systemDefined
+--            & runCacheRWT sc
+--            & peelRun runCtx pgExecCtx accessMode (Just traceCtx) metadata
+--            & runExceptT
+--     pure (either
+--       ((, mempty) . Left)
+--       (\(((js, tracemeta), rsc, ci), meta) -> (Right (js, MetadataStateResult rsc ci meta), tracemeta)) a)
+--   liftEither resultE
+--   where
+--     runCtx = RunCtx userInfo hMgr sqlGenCtx
     -- withReload (result, updatedCache, invalidations) = do
     --   when (queryModifiesSchemaCache query) $ do
     --     e <- liftIO $ runExceptT $ Q.runTx metadataPool (Q.Serializable, Just Q.ReadWrite) $ liftTx $

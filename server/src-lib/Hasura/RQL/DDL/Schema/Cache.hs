@@ -51,6 +51,7 @@ import           Hasura.RQL.DDL.Schema.Cache.Permission
 import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Function
+import           Hasura.RQL.DDL.Schema.Source             (resolveSource)
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DDL.Utils                     (clearHdbViews)
 import           Hasura.RQL.Types                         hiding (tmTable)
@@ -58,7 +59,10 @@ import           Hasura.Server.Version                    (HasVersion)
 import           Hasura.SQL.Types
 
 buildRebuildableSchemaCache
-  :: (HasVersion, MonadIO m, MonadUnique m, MonadTx m, HasHttpManager m, HasSQLGenCtx m, MonadMetadata m)
+  :: ( HasVersion, MonadIO m, MonadUnique m, MonadError QErr m
+     , HasHttpManager m, HasSQLGenCtx m, MonadMetadata m
+     , HasDefaultSource m
+     )
   => Env.Environment
   -> m (RebuildableSchemaCache m)
 buildRebuildableSchemaCache env = do
@@ -89,7 +93,7 @@ instance MonadTrans CacheRWT where
 instance (Monad m) => CacheRM (CacheRWT m) where
   askSchemaCache = CacheRWT $ gets (lastBuiltSchemaCache . fst)
 
-instance (MonadIO m, MonadTx m, MonadMetadata m) => CacheRWM (CacheRWT m) where
+instance (MonadIO m, MonadMetadata m) => CacheRWM (CacheRWT m) where
   buildSchemaCacheWithOptions buildReason invalidations metadataModifier = CacheRWT do
     (RebuildableSchemaCache _ invalidationKeys rule, oldInvalidations) <- get
     let newInvalidationKeys = invalidateKeys invalidations invalidationKeys
@@ -115,8 +119,9 @@ buildSchemaCacheRule
   -- Note: by supplying BuildReason via MonadReader, it does not participate in caching, which is
   -- what we want!
   :: ( HasVersion, ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
-     , MonadIO m, MonadUnique m, MonadTx m
+     , MonadIO m, MonadUnique m, MonadError QErr m
      , MonadReader BuildReason m, HasHttpManager m, HasSQLGenCtx m
+     , HasDefaultSource m
      )
   => Env.Environment
   -> (Metadata, InvalidationKeys) `arr` SchemaCache
@@ -132,7 +137,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
   (resolvedOutputs, dependencyInconsistentObjects, resolvedDependencies) <-
     resolveDependencies -< (outputs, unresolvedDependencies)
 
-  let postgresCache = M.map (\(SourceOutput tables functions) -> PGSourceSchemaCache tables functions)
+  let postgresCache = M.map (\(SourceOutput tables functions config) -> PGSourceSchemaCache tables functions config)
                       $ _boSources resolvedOutputs
 
   -- Step 3: Build the GraphQL schema.
@@ -178,14 +183,17 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
   where
     buildSource
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
-         , ArrowWriter (Seq CollectedInfo) arr, MonadTx m, MonadReader BuildReason m
-         , HasSQLGenCtx m )
+         , ArrowWriter (Seq CollectedInfo) arr, MonadReader BuildReason m
+         , HasSQLGenCtx m, MonadIO m, MonadError QErr m)
       => ( SourceMetadata
+         , PGSourceConfig
+         , PostgresTablesMetadata
+         , PostgresFunctionsMetadata
          , RemoteSchemaMap
          , Inc.Dependency InvalidationKeys
          ) `arr` SourceOutput
-    buildSource = proc (sourceMetadata, remoteSchemaMap, invalidationKeys) -> do
-      let SourceMetadata source tables functions = sourceMetadata
+    buildSource = proc (sourceMetadata, sourceConfig, pgTables, pgFunctions, remoteSchemaMap, invalidationKeys) -> do
+      let SourceMetadata source tables functions _ = sourceMetadata
           (tableInputs, nonColumnInputs, permissions) = unzip3 $ map mkTableInputs $ M.elems tables
           eventTriggers = map (_tmTable &&& (M.elems . _tmEventTriggers)) (M.elems tables)
           -- HashMap k a -> HashMap k b -> HashMap k (a, b)
@@ -197,14 +205,14 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
             in M.catMaybes $ alignWith alignFn lMap rMap
 
       -- tables
-      tableRawInfos <- buildTableCache -< (source, tableInputs, Inc.selectD #_ikMetadata invalidationKeys)
+      tableRawInfos <- buildTableCache -< (source, sourceConfig, pgTables, tableInputs, Inc.selectD #_ikMetadata invalidationKeys)
 
       -- relationships and computed fields
       let nonColumnsByTable = mapFromL _nctiTable nonColumnInputs
       tableCoreInfos <-
         (| Inc.keyed (\_ (tableRawInfo, nonColumnInput) -> do
              let columns = _tciFieldInfoMap tableRawInfo
-             allFields <- addNonColumnFields -< (source, tableRawInfos, columns, remoteSchemaMap, nonColumnInput)
+             allFields <- addNonColumnFields -< (source, tableRawInfos, columns, remoteSchemaMap, pgFunctions, nonColumnInput)
              returnA -< (tableRawInfo {_tciFieldInfoMap = allFields}))
          |) (tableRawInfos `alignTableMap` nonColumnsByTable)
 
@@ -214,7 +222,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
         (| Inc.keyed (\_ ((tableCoreInfo, permissionInputs), (_, eventTriggerConfs)) -> do
              let tableFields = _tciFieldInfoMap tableCoreInfo
              permissionInfos <- buildTablePermissions -< (source, tableCoreInfosDep, tableFields, permissionInputs)
-             eventTriggerInfos <- buildTableEventTriggers -< (source, tableCoreInfo, eventTriggerConfs)
+             eventTriggerInfos <- buildTableEventTriggers -< (source, sourceConfig, tableCoreInfo, eventTriggerConfs)
              returnA -< TableInfo tableCoreInfo permissionInfos eventTriggerInfos
             )
          |) (tableCoreInfos `alignTableMap` mapFromL _tpiTable permissions `alignTableMap` mapFromL fst eventTriggers)
@@ -229,7 +237,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
                      addFunctionContext e = "in function " <> qf <<> ": " <> e
                  (| withRecordInconsistency (
                     (| modifyErrA (do
-                         funcDefs <- bindErrorA -< (fromMaybe [] . M.lookup qf) <$> fetchFunctionMetadataFromDb [qf]
+                         let funcDefs = fromMaybe [] $ M.lookup qf pgFunctions
                          rawfi <- bindErrorA -< handleMultipleFunctions qf funcDefs
                          (fi, dep) <- bindErrorA -< mkFunctionInfo source qf systemDefined config rawfi
                          recordDependencies -< (metadataObject, schemaObject, [dep])
@@ -238,12 +246,12 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
                   |) metadataObject) |)
         >-> (\infos -> M.catMaybes infos >- returnA)
 
-      returnA -< SourceOutput tableCache functionCache
+      returnA -< SourceOutput tableCache functionCache sourceConfig
 
     buildAndCollectInfo
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
-         , ArrowWriter (Seq CollectedInfo) arr, MonadIO m, MonadUnique m, MonadTx m, MonadReader BuildReason m
-         , HasHttpManager m, HasSQLGenCtx m )
+         , ArrowWriter (Seq CollectedInfo) arr, MonadIO m, MonadError QErr m, MonadUnique m, MonadReader BuildReason m
+         , HasHttpManager m, HasSQLGenCtx m, HasDefaultSource m )
       => (Metadata, Inc.Dependency InvalidationKeys) `arr` BuildOutputs
     buildAndCollectInfo = proc (metadata, invalidationKeys) -> do
       let Metadata _ sources remoteSchemas collections allowlists
@@ -255,9 +263,20 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 
       -- sources
       sourcesOutput <-
-        (| Inc.keyed (\_ sourceMetadata ->
-             buildSource -< (sourceMetadata, M.map fst remoteSchemaMap, invalidationKeys))
+        (| Inc.keyed (\source sourceMetadata -> do
+             let metadataObj = MetadataObject (MOSource source) $ toJSON source
+             maybeResolvedSource <-
+               (| withRecordInconsistency (liftEitherA <<< bindA -< resolveSource env sourceMetadata)
+                |) metadataObj
+             case maybeResolvedSource of
+               Nothing -> returnA -< Nothing
+               Just (ResolvedSource pgSourceConfig tablesMeta functionsMeta pgScalars) -> do
+                 so <- buildSource -< ( sourceMetadata, pgSourceConfig, tablesMeta
+                                      , functionsMeta, M.map fst remoteSchemaMap, invalidationKeys
+                                      )
+                 returnA -< Just (so, pgScalars))
          |) sources
+        >-> (\infos -> M.catMaybes infos >- returnA)
 
       -- allow list
       let allowList = allowlists
@@ -269,10 +288,11 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
             & HS.fromList
 
       -- custom types
-      let pgScalars = undefined -- TODO: Come from metadata storage?
+      let pgScalars = mconcat $ map snd $ M.elems sourcesOutput
+          sourceTables = M.map (_soTables . fst) sourcesOutput
       maybeResolvedCustomTypes <-
         (| withRecordInconsistency
-             (bindErrorA -< resolveCustomTypes (undefined::TableCache) customTypes pgScalars)
+             (bindErrorA -< resolveCustomTypes sourceTables customTypes pgScalars)
          |) (MetadataObject MOCustomTypes $ toJSON customTypes)
 
       -- -- actions
@@ -292,7 +312,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       cronTriggersMap <- buildCronTriggers -< ((), M.elems cronTriggers)
 
       returnA -< BuildOutputs
-        { _boSources = sourcesOutput
+        { _boSources = M.map fst sourcesOutput
         , _boActions = actionCache
         , _boRemoteSchemas = remoteSchemaMap
         , _boAllowlist = allowList
@@ -300,7 +320,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
         , _boCronTriggers = cronTriggersMap
         }
 
-    mkEventTriggerMetadataObject (source, table, eventTriggerConf) =
+    mkEventTriggerMetadataObject (source, _, table, eventTriggerConf) =
       let objectId = MOSourceObjId source $ SMOTableObj table $
                      MTOTrigger $ etcName eventTriggerConf
           definition = object ["table" .= table, "configuration" .= eventTriggerConf]
@@ -321,64 +341,67 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     -- metadata objects for any entries in the second map that don’t appear in the first map. This
     -- is used to “line up” the metadata for relationships, computed fields, permissions, etc. with
     -- the tracked table info.
-    alignExtraTableInfo
-      :: forall a b arr
-       . (ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr)
-      => (b -> MetadataObject)
-      -> ( M.HashMap QualifiedTable a
-         , M.HashMap QualifiedTable [b]
-         ) `arr` M.HashMap QualifiedTable (a, [b])
-    alignExtraTableInfo mkMetadataObject = proc (baseInfo, extraInfo) -> do
-      combinedInfo <-
-        (| Inc.keyed (\tableName infos -> combine -< (tableName, infos))
-        |) (align baseInfo extraInfo)
-      returnA -< M.catMaybes combinedInfo
-      where
-        combine :: (QualifiedTable, These a [b]) `arr` Maybe (a, [b])
-        combine = proc (tableName, infos) -> case infos of
-          This  base        -> returnA -< Just (base, [])
-          These base extras -> returnA -< Just (base, extras)
-          That       extras -> do
-            let errorMessage = "table " <> tableName <<> " does not exist"
-            recordInconsistencies -< (map mkMetadataObject extras, errorMessage)
-            returnA -< Nothing
+    -- alignExtraTableInfo
+    --   :: forall a b arr
+    --    . (ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr)
+    --   => (b -> MetadataObject)
+    --   -> ( M.HashMap QualifiedTable a
+    --      , M.HashMap QualifiedTable [b]
+    --      ) `arr` M.HashMap QualifiedTable (a, [b])
+    -- alignExtraTableInfo mkMetadataObject = proc (baseInfo, extraInfo) -> do
+    --   combinedInfo <-
+    --     (| Inc.keyed (\tableName infos -> combine -< (tableName, infos))
+    --     |) (align baseInfo extraInfo)
+    --   returnA -< M.catMaybes combinedInfo
+    --   where
+    --     combine :: (QualifiedTable, These a [b]) `arr` Maybe (a, [b])
+    --     combine = proc (tableName, infos) -> case infos of
+    --       This  base        -> returnA -< Just (base, [])
+    --       These base extras -> returnA -< Just (base, extras)
+    --       That       extras -> do
+    --         let errorMessage = "table " <> tableName <<> " does not exist"
+    --         recordInconsistencies -< (map mkMetadataObject extras, errorMessage)
+    --         returnA -< Nothing
 
     buildTableEventTriggers
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
-         , Inc.ArrowCache m arr, MonadTx m, MonadReader BuildReason m, HasSQLGenCtx m )
-      => (SourceName, TableCoreInfo, [EventTriggerConf]) `arr` EventTriggerInfoMap
-    buildTableEventTriggers = proc (source, tableInfo, eventTriggerConfs) ->
-      buildInfoMap (etcName . (^. _3)) mkEventTriggerMetadataObject buildEventTrigger
-        -< (tableInfo, map (source, _tciName tableInfo,) eventTriggerConfs)
+         , Inc.ArrowCache m arr, MonadError QErr m, MonadIO m, MonadReader BuildReason m, HasSQLGenCtx m )
+      => (SourceName, PGSourceConfig, TableCoreInfo, [EventTriggerConf]) `arr` EventTriggerInfoMap
+    buildTableEventTriggers = proc (source, pgSourceConfig, tableInfo, eventTriggerConfs) ->
+      buildInfoMap (etcName . (^. _4)) mkEventTriggerMetadataObject buildEventTrigger
+        -< (tableInfo, map (source, pgSourceConfig, _tciName tableInfo,) eventTriggerConfs)
       where
-        buildEventTrigger = proc (tableInfo, (source, table, eventTriggerConf)) -> do
+        buildEventTrigger = proc (tableInfo, (source, sourceConfig, table, eventTriggerConf)) -> do
           let triggerName = etcName eventTriggerConf
-              metadataObject = mkEventTriggerMetadataObject (source, table, eventTriggerConf)
+              metadataObject = mkEventTriggerMetadataObject (source, sourceConfig, table, eventTriggerConf)
               schemaObjectId = SOSourceObj source $ SOITableObj table $ TOTrigger triggerName
               addTriggerContext e = "in event trigger " <> triggerName <<> ": " <> e
           (| withRecordInconsistency (
              (| modifyErrA (do
                   (info, dependencies) <- bindErrorA -< subTableP2Setup env source table eventTriggerConf
                   let tableColumns = M.mapMaybe (^? _FIColumn) (_tciFieldInfoMap tableInfo)
-                  recreateViewIfNeeded -< (table, tableColumns, triggerName, etcDefinition eventTriggerConf)
+                  recreateViewIfNeeded -< (table, tableColumns, triggerName, etcDefinition eventTriggerConf, sourceConfig)
                   recordDependencies -< (metadataObject, schemaObjectId, dependencies)
                   returnA -< info)
              |) (addTableContext table . addTriggerContext))
            |) metadataObject
 
         recreateViewIfNeeded = Inc.cache $
-          arrM \(tableName, tableColumns, triggerName, triggerDefinition) -> do
+          arrM \(tableName, tableColumns, triggerName, triggerDefinition, sourceConfig) -> do
             buildReason <- ask
+            sqlGenCtx <- askSQLGenCtx
             when (buildReason == CatalogUpdate) $ do
-              liftTx $ delTriggerQ triggerName -- executes DROP IF EXISTS.. sql
-              mkAllTriggersQ triggerName tableName (M.elems tableColumns) triggerDefinition
+              eitherResult <- runPgSourceWriteTx sourceConfig $ do
+                delTriggerQ triggerName -- executes DROP IF EXISTS.. sql
+                runHasSQLGenCtxT sqlGenCtx $
+                  mkAllTriggersQ triggerName tableName (M.elems tableColumns) triggerDefinition
+              liftEither eitherResult
 
     buildCronTriggers
       :: ( ArrowChoice arr
          , Inc.ArrowDistribute arr
          , ArrowWriter (Seq CollectedInfo) arr
-         , Inc.ArrowCache m arr
-         , MonadTx m)
+         , Inc.ArrowCache m arr)
       => ((),[CronTriggerMetadata])
          `arr` HashMap TriggerName CronTriggerInfo
     buildCronTriggers = buildInfoMap ctName mkCronTriggerMetadataObject buildCronTrigger
@@ -387,7 +410,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
           let triggerName = triggerNameToTxt $ ctName cronTrigger
               addCronTriggerContext e = "in cron trigger " <> triggerName <> ": " <> e
           (| withRecordInconsistency (
-            (| modifyErrA (bindErrorA -< resolveCronTrigger env cronTrigger)
+            (| modifyErrA (liftEitherA <<< bindA -< runExceptT $ resolveCronTrigger env cronTrigger)
              |) addCronTriggerContext)
            |) (mkCronTriggerMetadataObject cronTrigger)
 

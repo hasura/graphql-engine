@@ -54,7 +54,6 @@ import qualified Hasura.SQL.DML                as S
 
 import           Hasura.Db
 import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Query
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.RQL.Types
@@ -71,10 +70,10 @@ newtype MultiplexedQuery = MultiplexedQuery { unMultiplexedQuery :: Q.Query }
 
 toSQLFromItem :: S.Alias -> SubscriptionRootFieldResolved -> S.FromItem
 toSQLFromItem alias = \case
-  RFDB (QDBPrimaryKey s)  -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
-  RFDB (QDBSimple s)      -> fromSelect $ DS.mkSQLSelect DS.JASMultipleRows s
-  RFDB (QDBAggregation s) -> fromSelect $ DS.mkAggregateSelect s
-  RFDB (QDBConnection s)  -> S.mkSelectWithFromItem (DS.mkConnectionSelect s) alias
+  RFDB _ (QDBPrimaryKey s)  -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
+  RFDB _ (QDBSimple s)      -> fromSelect $ DS.mkSQLSelect DS.JASMultipleRows s
+  RFDB _ (QDBAggregation s) -> fromSelect $ DS.mkAggregateSelect s
+  RFDB _ (QDBConnection s)  -> S.mkSelectWithFromItem (DS.mkConnectionSelect s) alias
   RFAction s              -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
   where
     fromSelect s = S.mkSelFromItem s alias
@@ -258,6 +257,7 @@ data LiveQueryPlan
   = LiveQueryPlan
   { _lqpParameterizedPlan :: !ParameterizedLiveQueryPlan
   , _lqpVariables         :: !CohortVariables
+  , _lqpPGExecCtx         :: !PGExecCtx
   } deriving Show
 
 data ParameterizedLiveQueryPlan
@@ -317,7 +317,7 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
     for unpreparedAST \unpreparedQuery -> do
       resolvedRootField <- traverseQueryRootField resolveMultiplexedValue unpreparedQuery
       case resolvedRootField of
-        RFDB qDB   -> do
+        RFDB _ qDB   -> do
           let remoteJoins = case qDB of
                 QDBSimple s      -> snd $ RR.getRemoteJoins s
                 QDBPrimaryKey s  -> snd $ RR.getRemoteJoins s
@@ -341,7 +341,7 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
   let -- TODO validatedQueryVars validatedSyntheticVars
       cohortVariables = CohortVariables (_uiSession userInfo) validatedQueryVars validatedSyntheticVars
 
-      plan = LiveQueryPlan parameterizedPlan cohortVariables
+      plan = LiveQueryPlan parameterizedPlan cohortVariables pgExecCtx
       -- See Note [Temporarily disabling query plan caching]
       -- varTypes = finalReusability ^? GV._Reusable
       reusablePlan = ReusableLiveQueryPlan parameterizedPlan validatedSyntheticVars mempty {- <$> _varTypes -}
@@ -384,13 +384,15 @@ data LiveQueryPlanExplanation
   } deriving (Show)
 $(J.deriveToJSON (J.aesonDrop 5 J.snakeCase) ''LiveQueryPlanExplanation)
 
-explainLiveQueryPlan :: (MonadTx m, MonadIO m) => LiveQueryPlan -> m LiveQueryPlanExplanation
+explainLiveQueryPlan :: (MonadError QErr m, MonadIO m) => LiveQueryPlan -> m LiveQueryPlanExplanation
 explainLiveQueryPlan plan = do
   let parameterizedPlan = _lqpParameterizedPlan plan
+      pgExecCtx = _lqpPGExecCtx plan
       queryText = Q.getQueryText . unMultiplexedQuery $ _plqpQuery parameterizedPlan
       -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
       -- query, maybe resulting in privilege escalation:
       explainQuery = Q.fromText $ "EXPLAIN (FORMAT TEXT) " <> queryText
   cohortId <- newCohortId
-  explanationLines <- map runIdentity <$> executeQuery explainQuery [(cohortId, _lqpVariables plan)]
+  explanationLines <- liftEitherM $ runExceptT $ runLazyTx pgExecCtx Q.ReadOnly $
+                      map runIdentity <$> executeQuery explainQuery [(cohortId, _lqpVariables plan)]
   pure $ LiveQueryPlanExplanation queryText explanationLines

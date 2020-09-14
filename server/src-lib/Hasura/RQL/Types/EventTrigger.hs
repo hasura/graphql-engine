@@ -16,7 +16,6 @@ module Hasura.RQL.Types.EventTrigger
   -- , HeaderValue(..)
   -- , HeaderName
   , EventHeaderInfo(..)
-  , WebhookConf(..)
   , WebhookConfInfo(..)
   , HeaderConf(..)
 
@@ -104,23 +103,9 @@ data EventHeaderInfo
 instance NFData EventHeaderInfo
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventHeaderInfo)
 
-data WebhookConf = WCValue T.Text | WCEnv T.Text
-  deriving (Show, Eq, Generic, Lift)
-instance NFData WebhookConf
-instance Cacheable WebhookConf
-
-instance ToJSON WebhookConf where
-  toJSON (WCValue w)  = String w
-  toJSON (WCEnv wEnv) = object ["from_env" .= wEnv ]
-
-instance FromJSON WebhookConf where
-  parseJSON (Object o) = WCEnv <$> o .: "from_env"
-  parseJSON (String t) = pure $ WCValue t
-  parseJSON _          = fail "one of string or object must be provided for webhook"
-
 data WebhookConfInfo
   = WebhookConfInfo
-  { wciWebhookConf :: !WebhookConf
+  { wciWebhookConf :: !UrlConf
   , wciCachedValue :: !T.Text
   } deriving (Show, Eq, Generic, Lift)
 instance NFData WebhookConfInfo
