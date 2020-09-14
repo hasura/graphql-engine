@@ -7,6 +7,7 @@ module Hasura.Prelude
   , onNothing
   , onJust
   , onLeft
+  , whenMaybe
   , choice
   , afold
   , bsToTxt
@@ -24,7 +25,7 @@ module Hasura.Prelude
   , module Data.Time.Clock.Units
   ) where
 
-import           Control.Applicative               as M (Alternative (..))
+import           Control.Applicative               as M (Alternative (..), liftA2)
 import           Control.Arrow                     as M (first, second, (&&&), (***), (<<<), (>>>))
 import           Control.DeepSeq                   as M (NFData, deepseq, force)
 import           Control.Monad.Base                as M
@@ -32,34 +33,39 @@ import           Control.Monad.Except              as M
 import           Control.Monad.Identity            as M
 import           Control.Monad.Reader              as M
 import           Control.Monad.State.Strict        as M
+import           Control.Monad.Trans.Maybe         as M (MaybeT (..))
 import           Control.Monad.Writer.Strict       as M (MonadWriter (..), WriterT (..),
                                                          execWriterT, runWriterT)
 import           Data.Align                        as M (Semialign (align, alignWith))
 import           Data.Bool                         as M (bool)
 import           Data.Data                         as M (Data (..))
 import           Data.Either                       as M (lefts, partitionEithers, rights)
-import           Data.Foldable                     as M (asum, foldrM, for_, toList, traverse_)
+import           Data.Foldable                     as M (asum, fold, foldrM, for_, toList,
+                                                         traverse_)
 import           Data.Function                     as M (on, (&))
 import           Data.Functor                      as M (($>), (<&>))
 import           Data.Hashable                     as M (Hashable)
 import           Data.HashMap.Strict               as M (HashMap)
+import           Data.HashMap.Strict.InsOrd        as M (InsOrdHashMap)
 import           Data.HashSet                      as M (HashSet)
 import           Data.List                         as M (find, findIndex, foldl', group,
                                                          intercalate, intersect, lookup, sort,
                                                          sortBy, sortOn, union, unionBy, (\\))
-import           Data.List.NonEmpty                as M (NonEmpty (..))
+import           Data.List.NonEmpty                as M (NonEmpty (..), nonEmpty)
 import           Data.Maybe                        as M (catMaybes, fromMaybe, isJust, isNothing,
                                                          listToMaybe, mapMaybe, maybeToList)
 import           Data.Monoid                       as M (getAlt)
 import           Data.Ord                          as M (comparing)
 import           Data.Semigroup                    as M (Semigroup (..))
 import           Data.Sequence                     as M (Seq)
+import           Data.Sequence.NonEmpty            as M (NESeq)
 import           Data.String                       as M (IsString)
 import           Data.Text                         as M (Text)
 import           Data.These                        as M (These (..), fromThese, mergeThese,
                                                          mergeTheseWith, partitionThese, these)
 import           Data.Time.Clock.Units
 import           Data.Traversable                  as M (for)
+import           Data.Void                         as M (Void, absurd)
 import           Data.Word                         as M (Word64)
 import           GHC.Generics                      as M (Generic)
 import           Prelude                           as M hiding (fail, init, lookup)
@@ -67,10 +73,9 @@ import           Test.QuickCheck.Arbitrary.Generic as M
 import           Text.Read                         as M (readEither, readMaybe)
 
 import qualified Data.ByteString                   as B
-import qualified Data.ByteString.Lazy              as BL
-
 import qualified Data.ByteString.Base64.Lazy       as Base64
 import           Data.Coerce
+import qualified Data.ByteString.Lazy              as BL
 import qualified Data.HashMap.Strict               as Map
 import qualified Data.Set                          as Set
 import qualified Data.Text                         as T
@@ -98,6 +103,10 @@ onJust m action = maybe (return ()) action m
 onLeft :: (Monad m) => Either e a -> (e -> m a) -> m a
 onLeft e f = either f return e
 
+whenMaybe :: Applicative m => Bool -> m a -> m (Maybe a)
+whenMaybe True  = fmap Just
+whenMaybe False = const $ pure Nothing
+
 choice :: (Alternative f) => [f a] -> f a
 choice = asum
 
@@ -113,7 +122,6 @@ txtToBs = TE.encodeUtf8
 base64Decode :: Text -> BL.ByteString
 base64Decode =
   Base64.decodeLenient . BL.fromStrict . txtToBs
-
 
 -- Like 'span', but monadic and with a function that produces 'Maybe' instead of 'Bool'
 spanMaybeM
@@ -142,7 +150,7 @@ findWithIndex p l = do
   i <- findIndex p l
   pure (v, i)
 
--- TODO: Move to Data.HashMap.Strict.Extended; rename to fromListWith?
+-- TODO (from master): Move to Data.HashMap.Strict.Extended; rename to fromListWith?
 mapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> Map.HashMap k a
 mapFromL f = Map.fromList . map (\v -> (f v, v))
 

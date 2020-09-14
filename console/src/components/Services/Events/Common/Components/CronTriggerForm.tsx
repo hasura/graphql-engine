@@ -66,7 +66,7 @@ const Form: React.FC<Props> = props => {
       </FormSection>
       <FormSection
         id="trigger-schedule"
-        tooltip="Schedule for your cron"
+        tooltip="Schedule for your cron (events are created based on the UTC timezone)"
         heading="Cron Schedule"
       >
         <div className={`${styles.add_mar_bottom_mid} ${styles.display_flex}`}>

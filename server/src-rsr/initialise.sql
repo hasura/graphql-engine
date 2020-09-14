@@ -302,7 +302,8 @@ CREATE TABLE hdb_catalog.event_log
   error BOOLEAN NOT NULL DEFAULT FALSE,
   tries INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT NOW(),
-  locked BOOLEAN NOT NULL DEFAULT FALSE,
+  /* when locked IS NULL the event is unlocked and can be processed */
+  locked TIMESTAMPTZ,
   next_retry_at TIMESTAMP,
   archived BOOLEAN NOT NULL DEFAULT FALSE
 );
@@ -604,22 +605,30 @@ CREATE OR REPLACE FUNCTION
     payload json;
     session_variables json;
     server_version_num int;
+    trace_context json;
   BEGIN
     id := gen_random_uuid();
     server_version_num := current_setting('server_version_num');
     IF server_version_num >= 90600 THEN
       session_variables := current_setting('hasura.user', 't');
+      trace_context := current_setting('hasura.tracecontext', 't');
     ELSE
       BEGIN
         session_variables := current_setting('hasura.user');
       EXCEPTION WHEN OTHERS THEN
                   session_variables := NULL;
       END;
+      BEGIN
+        trace_context := current_setting('hasura.tracecontext');
+      EXCEPTION WHEN OTHERS THEN
+        trace_context := NULL;
+      END;
     END IF;
     payload := json_build_object(
       'op', op,
       'data', row_data,
-      'session_variables', session_variables
+      'session_variables', session_variables,
+      'trace_context', trace_context
     );
     INSERT INTO hdb_catalog.event_log
                 (id, schema_name, table_name, trigger_name, payload)
