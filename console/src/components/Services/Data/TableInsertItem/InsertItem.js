@@ -3,19 +3,20 @@ import React, { Component } from 'react';
 import TableHeader from '../TableCommon/TableHeader';
 import Button from '../../../Common/Button/Button';
 import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton';
-import { ordinalColSort } from '../utils';
+import { ordinalColSort, getForeignKey } from '../utils';
 
 import { insertItem, I_RESET, fetchEnumOptions } from './InsertActions';
-import { setTable } from '../DataActions';
+import { setTable, filterFkOptions } from '../DataActions';
 import { NotFoundError } from '../../../Error/PageNotFound';
-import { findTable, generateTableDef } from '../../../Common/utils/pgUtils';
+import { findTable, generateTableDef, isColumnAutoIncrement } from '../../../Common/utils/pgUtils';
 import styles from '../../../Common/TableCommon/Table.scss';
-import { TableRow } from '../Common/Components/TableRow';
+import { getExistingFKConstraints } from '../Common/Components/utils';
+import { TypedInput } from '../Common/Components/TypedInput';
 
 class InsertItem extends Component {
   constructor() {
     super();
-    this.state = { insertedRows: 0 };
+    this.state = { insertedRows: 0, selectedFkOptions: {} };
   }
 
   componentDidMount() {
@@ -36,7 +37,9 @@ class InsertItem extends Component {
       insertedRows: prev.insertedRows + 1,
     }));
   }
-
+  handleSearchValueChange = (config, value) => {
+    this.props.dispatch(filterFkOptions(config, value));
+  };
   render() {
     const {
       tableName,
@@ -51,6 +54,7 @@ class InsertItem extends Component {
       count,
       dispatch,
       enumOptions,
+      fkOptions,
     } = this.props;
 
     const currentTable = findTable(
@@ -66,12 +70,39 @@ class InsertItem extends Component {
 
     const columns = currentTable.columns.sort(ordinalColSort);
 
+    // columns in the right order with their indices
+    const orderedColumns = columns.map((c, i) => ({
+      name: c.column_name,
+      index: i,
+    }));
+    // restructure the existing foreign keys and add it to fkModify (for easy processing)
+    const existingForeignKeys = getExistingFKConstraints(
+      currentTable,
+      orderedColumns
+    );
+
+    // Generate a list of reference schemas and their columns
+    const refTables = {};
+    existingForeignKeys.map(fk => {
+      schemas.forEach(ts => {
+        if (ts.table_schema === fk.refSchemaName) {
+          refTables[ts.table_name] = ts.columns.map(c => ({
+            name: c.column_name,
+            type: c.data_type,
+          }));
+        }
+      });
+    });
+    // const columns = currentTable.columns.sort(ordinalColSort);
+
     const refs = {};
 
     const elements = columns.map((col, i) => {
-      const { column_name: colName, is_identity, column_default } = col;
-      const hasDefault = column_default && column_default.trim() !== '';
-      const isIdentity = is_identity && is_identity !== 'NO';
+      const { column_name: colName} = col;
+      const hasDefault = col.column_default && col.column_default.trim() !== '';
+      const isNullable = col.is_nullable && col.is_nullable !== 'NO';
+      const isIdentity = col.is_identity && col.is_identity !== 'NO';
+      const isAutoIncrement = isColumnAutoIncrement(col);
 
       refs[colName] = {
         valueNode: null,
@@ -107,17 +138,88 @@ class InsertItem extends Component {
         }
       };
 
+      const handleFkOptionChange = ({ value, label }) => {
+        onChange(undefined, value.toString());
+        this.setState(prev => ({
+          ...prev,
+          selectedFkOptions: {
+            ...prev.selectedFkOptions,
+            [colName]: { value, label },
+          },
+        }));
+      };
+
       return (
-        <TableRow
-          key={i}
-          column={col}
-          setRef={(key, node) => (refs[colName][key] = node)}
-          enumOptions={enumOptions}
-          index={i}
-          clone={clone}
-          onChange={onChange}
-          onFocus={onFocus}
-        />
+        <div key={i} className={`form-group ${styles.displayFlexContainer}`}>
+          <label
+            className={'col-sm-2 control-label ' + styles.insertBoxLabel}
+            title={colName}
+          >
+            {colName}
+          </label>
+          <span
+            className={`${styles.radioLabel} ${styles.typedInputWrapper} radio-inline`}
+          >
+            <input
+              disabled={isAutoIncrement}
+              type="radio"
+              ref={node => {
+                refs[colName].insertRadioNode = node;
+              }}
+              name={colName + '-value'}
+              value="option1"
+              defaultChecked={!hasDefault & !isNullable}
+            />
+            <TypedInput
+              inputRef={node => {
+                refs[colName].valueNode = node;
+              }}
+              enumOptions={enumOptions}
+              col={col}
+              clone={clone}
+              onChange={onChange}
+              onFocus={onFocus}
+              index={i}
+              fkOptions={fkOptions}
+              getFkOptions={this.handleSearchValueChange}
+              selectedOption={this.state.selectedFkOptions[colName]}
+              onFkValueChange={handleFkOptionChange}
+              refTables={refTables}
+              foreignKey={getForeignKey(col, schemas)}
+            >
+              <>
+                <label className={styles.radioLabel + ' radio-inline'}>
+                  <input
+                    type="radio"
+                    ref={node => {
+                      refs[colName].nullNode = node;
+                    }}
+                    disabled={!isNullable}
+                    defaultChecked={isNullable}
+                    name={colName + '-value'}
+                    value="NULL"
+                    data-test={`nullable-radio-${i}`}
+                  />
+                  <span className={styles.radioSpan}>NULL</span>
+                </label>
+                <label className={styles.radioLabel + ' radio-inline'}>
+                  <input
+                    type="radio"
+                    ref={node => {
+                      refs[colName].defaultNode = node;
+                    }}
+                    name={colName + '-value'}
+                    value="option3"
+                    disabled={!hasDefault && !isIdentity}
+                    defaultChecked={hasDefault || isIdentity}
+                    data-test={`typed-input-default-${i}`}
+                  />
+                  <span className={styles.radioSpan}>Default</span>
+                </label>
+              </>
+            </TypedInput>
+          </span>
+        </div>
       );
     });
 
@@ -173,6 +275,10 @@ class InsertItem extends Component {
                     } else if (refs[colName].defaultNode.checked) {
                       // default
                       return;
+                    } else if (this.state.selectedFkOptions[colName]) {
+                      inputValues[colName] = this.state.selectedFkOptions[
+                        colName
+                      ].value;
                     } else {
                       inputValues[colName] =
                         refs[colName].valueNode.props !== undefined
@@ -253,6 +359,7 @@ const mapStateToProps = (state, ownProps) => {
     migrationMode: state.main.migrationMode,
     readOnlyMode: state.main.readOnlyMode,
     currentSchema: state.tables.currentSchema,
+    fkOptions: state.tables.fkOptions,
   };
 };
 

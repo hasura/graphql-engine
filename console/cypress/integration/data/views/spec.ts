@@ -89,65 +89,35 @@ export const passViewRoute = () => {
 type Data = (string | number)[];
 export const passVAddDataarticle = (data: Data, index: number) => {
   // Click the Insert Again button.
+  cy.get('label').contains('id').next().find(`input[type=text]`).clear();
   cy.get('label')
     .contains('id')
     .next()
-    .find('input')
-    .last()
-    .type('{selectall}{del}');
-  cy.get('label')
-    .contains('id')
-    .next()
-    .find('input')
-    .last()
+    .find(`input[type=text]`)
     .type(`${data[0]}`);
+  cy.get('label').contains('title').next().find(`input[type=text]`).clear();
   cy.get('label')
     .contains('title')
     .next()
-    .find('input')
-    .last()
-    .type('{selectall}{del}');
-  cy.get('label')
-    .contains('title')
-    .next()
-    .find('input')
-    .last()
+    .find(`input[type=text]`)
     .type(`${data[1]}`);
+  cy.get('label').contains('Content').next().find(`input[type=text]`).clear();
   cy.get('label')
     .contains('Content')
     .next()
-    .find('input')
-    .last()
-    .type('{selectall}{del}');
-  cy.get('label')
-    .contains('Content')
-    .next()
-    .find('input')
-    .last()
+    .find(`input[type=text]`)
     .type(`${data[2]}`);
+  cy.get('label').contains('author_id').next().find(`input[type=text]`).clear();
   cy.get('label')
     .contains('author_id')
     .next()
-    .find('input')
-    .last()
-    .type('{selectall}{del}');
-  cy.get('label')
-    .contains('author_id')
-    .next()
-    .find('input')
-    .last()
+    .find(`input[type=text]`)
     .type(`${data[3]}`);
+  cy.get('label').contains('rating').next().find(`input[type=text]`).clear();
   cy.get('label')
     .contains('rating')
     .next()
-    .find('input')
-    .last()
-    .type('{selectall}{del}');
-  cy.get('label')
-    .contains('rating')
-    .next()
-    .find('input')
-    .last()
+    .find(`input[type=text]`)
     .type(`${data[4]}`);
   if (index) {
     cy.get(getElementFromAlias('insert-save-button')).click();
@@ -159,29 +129,17 @@ export const passVAddDataarticle = (data: Data, index: number) => {
 };
 
 export const passVAddDataauthor = (data: Data, index: number) => {
+  cy.get('label').contains('id').next().find(`input[type=text]`).clear();
   cy.get('label')
     .contains('id')
     .next()
-    .find('input')
-    .last()
-    .type('{selectall}{del}');
-  cy.get('label')
-    .contains('id')
-    .next()
-    .find('input')
-    .last()
+    .find(`input[type=text]`)
     .type(`${data[0]}`);
+  cy.get('label').contains('name').next().find(`input[type=text]`).clear();
   cy.get('label')
     .contains('name')
     .next()
-    .find('input')
-    .last()
-    .type('{selectall}{del}');
-  cy.get('label')
-    .contains('name')
-    .next()
-    .find('input')
-    .last()
+    .find(`input[type=text]`)
     .type(`${data[1]}`);
   if (index) {
     cy.get(getElementFromAlias('insert-save-button')).click();
@@ -192,53 +150,33 @@ export const passVAddDataauthor = (data: Data, index: number) => {
 };
 
 export const passVAddDatacomment = (data: Data, index: number) => {
+  cy.get('label').contains('id').next().find(`input[type=text]`).clear();
   cy.get('label')
     .contains('id')
     .next()
-    .find('input')
-    .last()
-    .type('{selectall}{del}');
-  cy.get('label')
-    .contains('id')
-    .next()
-    .find('input')
-    .last()
+    .find(`input[type=text]`)
     .type(`${data[0]}`);
+  cy.get('label').contains('user_id').next().find(`input[type=text]`).clear();
   cy.get('label')
     .contains('user_id')
     .next()
-    .find('input')
-    .last()
-    .type('{selectall}{del}');
-  cy.get('label')
-    .contains('user_id')
-    .next()
-    .find('input')
-    .last()
+    .find(`input[type=text]`)
     .type(`${data[1]}`);
   cy.get('label')
     .contains('article_id')
     .next()
-    .find('input')
-    .last()
-    .type('{selectall}{del}');
+    .find(`input[type=text]`)
+    .clear();
   cy.get('label')
     .contains('article_id')
     .next()
-    .find('input')
-    .last()
+    .find(`input[type=text]`)
     .type(`${data[2]}`);
+  cy.get('label').contains('comment').next().find(`input[type=text]`).clear();
   cy.get('label')
     .contains('comment')
     .next()
-    .find('input')
-    .last()
-    .type('{selectall}{del}');
-  cy.get('label')
-    .contains('comment')
-    .next()
-    .find('input')
-    .last()
+    .find(`input[type=text]`)
     .type(`${data[3]}`);
   if (index) {
     cy.get(getElementFromAlias('insert-save-button')).click();
@@ -251,9 +189,7 @@ export const passVAddDatacomment = (data: Data, index: number) => {
 const checkQuerySuccess = () => {
   // Expect only 4 rows i.e. expect fifth element to not exist
   cy.get('[role=gridcell]').contains(userId);
-  cy.get('[role=row]')
-    .eq(2)
-    .should('not.exist');
+  cy.get('[role=row]').eq(2).should('not.exist');
 };
 
 export const passVAddData = () => {
@@ -300,9 +236,7 @@ export const passVFilterQueryEq = () => {
     .last()
     .select('$eq');
   // Type value as `filter-text`
-  cy.get("input[placeholder='-- value --']")
-    .last()
-    .type(`${userId}`);
+  cy.get("input[placeholder='-- value --']").last().type(`${userId}`);
   // Run query
   cy.get(getElementFromAlias('run-query')).click();
   cy.wait(5000);
@@ -316,12 +250,7 @@ const checkOrder = (order: string) => {
   if (order === 'asc') {
     curElement.each(($el, index) => {
       if (index === 1) {
-        cy.wrap($el)
-          .find('[role=gridcell]')
-          .first()
-          .next()
-          .next()
-          .contains(2);
+        cy.wrap($el).find('[role=gridcell]').first().next().next().contains(2);
       }
       if (index === 2) {
         cy.wrap($el)
@@ -335,12 +264,7 @@ const checkOrder = (order: string) => {
   } else {
     curElement.each(($el, index) => {
       if (index === 2) {
-        cy.wrap($el)
-          .find('[role=gridcell]')
-          .first()
-          .next()
-          .next()
-          .contains(2);
+        cy.wrap($el).find('[role=gridcell]').first().next().next().contains(2);
       }
       if (index === 1) {
         cy.wrap($el)
@@ -372,10 +296,7 @@ export const passVAscendingSort = () => {
 
 export const passModifyView = () => {
   cy.get(getElementFromAlias('table-modify')).click();
-  cy.get('button')
-    .contains('Modify')
-    .last()
-    .click();
+  cy.get('button').contains('Modify').last().click();
   cy.url().should('eq', `${baseUrl}/data/sql`);
 };
 
@@ -424,9 +345,7 @@ export const passVDeleteView = () => {
   cy.get(getElementFromAlias('table-modify')).click();
   setPromptValue('author_average_rating_vt');
   cy.get(getElementFromAlias('delete-view')).click();
-  cy.window()
-    .its('prompt')
-    .should('be.called');
+  cy.window().its('prompt').should('be.called');
   cy.wait(7000);
   validateView('author_average_rating_vt', ResultType.FAILURE);
 };
@@ -436,9 +355,7 @@ export const deleteTable = (name: string) => {
   cy.get(getElementFromAlias('table-modify')).click();
   setPromptValue(name);
   cy.get(getElementFromAlias('delete-table')).click();
-  cy.window()
-    .its('prompt')
-    .should('be.called');
+  cy.window().its('prompt').should('be.called');
   cy.wait(7000);
   validateCT(name, ResultType.FAILURE);
   cy.wait(7000);

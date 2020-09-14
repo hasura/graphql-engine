@@ -6,6 +6,7 @@ import { RemoteRelationshipPayload } from '../../Services/Data/TableRelationship
 import { transformHeaders } from '../Headers/utils';
 import { generateTableDef } from './pgUtils';
 import { Nullable } from './tsUtils';
+import { Mappings, FkOptions } from '../../Services/Data/Types';
 
 // TODO add type for the where clause
 
@@ -488,20 +489,20 @@ export const generateCreateEventTriggerQuery = (
         state.webhook.type === 'env' ? state.webhook.value.trim() : null,
       insert: state.operations.insert
         ? {
-            columns: '*',
-          }
+          columns: '*',
+        }
         : null,
       update: state.operations.update
         ? {
-            columns: state.operationColumns
-              .filter(c => !!c.enabled)
-              .map(c => c.name),
-          }
+          columns: state.operationColumns
+            .filter(c => !!c.enabled)
+            .map(c => c.name),
+        }
         : null,
       delete: state.operations.delete
         ? {
-            columns: '*',
-          }
+          columns: '*',
+        }
         : null,
       enable_manual: state.operations.enable_manual,
       retry_conf: state.retryConf,
@@ -613,6 +614,85 @@ export const getFetchInvocationLogsQuery = (
 };
 
 export type SelectQueryGenerator = typeof getFetchInvocationLogsQuery;
+
+export const getFilterByDisplayNameQuery = (
+  searchValue: string,
+  currentSchema: string,
+  fkOpts: FkOptions
+) => ({
+  type: 'select',
+  args: {
+    table: {
+      name: fkOpts.refTable,
+      schema: currentSchema,
+    },
+    columns: [fkOpts.to, fkOpts.displayName],
+    ...(searchValue !== ''
+      ? {
+        where: {
+          [fkOpts.displayName]: { $ilike: `%${searchValue}%` },
+        },
+      }
+      : {}),
+    limit: 20,
+  },
+});
+
+export const getLoadConsoleOptsQuery = () => ({
+  type: 'select',
+  args: {
+    table: {
+      name: 'hdb_version',
+      schema: 'hdb_catalog',
+    },
+    columns: ['hasura_uuid', 'console_state'],
+  },
+});
+
+export const getForeignKeyOptionsQuery = (
+  m: Mappings,
+  currentSchema: string
+) => ({
+  type: 'select',
+  args: {
+    table: {
+      name: m.refTableName,
+      schema: currentSchema,
+    },
+    columns: [m.displayColumnName, m.refColumnName],
+    limit: 20,
+  },
+});
+
+export const generateSelectQuery = (
+  type: string,
+  tableDef:
+    | { tableName: string; schemaName: string }
+    | { name: string; schema: string },
+  {
+    where,
+    limit,
+    offset,
+    order_by,
+    columns,
+  }: {
+    where?: Record<string, unknown>;
+    limit?: number;
+    offset?: number;
+    order_by?: 'asc' | 'desc';
+    columns: string[];
+  }
+) => ({
+  type,
+  args: {
+    columns,
+    where,
+    limit,
+    offset,
+    order_by,
+    table: tableDef,
+  },
+});
 
 export const getFetchManualTriggersQuery = (tableDef: TableDefinition) =>
   getSelectQuery(

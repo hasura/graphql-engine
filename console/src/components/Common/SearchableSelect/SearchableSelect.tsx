@@ -69,7 +69,8 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
 
   const onMenuClose = () => {
     if (selectedItem.current) onChange(selectedItem.current);
-    else if (createNewOption) onChange(createNewOption(searchValue || ''));
+    else if (searchValue && createNewOption)
+      onChange(createNewOption(searchValue || ''));
 
     setIsFocused(false);
     setSearchValue(null);
@@ -77,15 +78,6 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
   };
   const onSelect = (v: ValueType<OptionTypeBase> | string) => {
     selectedItem.current = v;
-  };
-  const onFocus = () => {
-    setIsFocused(true);
-    let ipValue;
-    if (!inputValue) {
-      if (typeof value === 'string') ipValue = value;
-      else ipValue = value?.label || '';
-      setSearchValue(String(ipValue));
-    }
   };
 
   const customStyles: Record<string, any> = {};
@@ -112,7 +104,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
 
   // handle simple options
   if (isArray(options) && !isObject((options as unknown[])[0])) {
-    options = options.map((op: string) => {
+    options = options.map(op => {
       return { value: op, label: op };
     });
   }
@@ -137,10 +129,10 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
       options={options as Option[]}
       onChange={onSelect}
       value={value as Option}
-      onFocus={onFocus}
+      onFocus={() => setIsFocused(true)}
       onBlur={onMenuClose}
       inputValue={inputValue}
-      onInputChange={(s: string) => setSearchValue(s)}
+      onInputChange={s => setSearchValue(s)}
       styles={customStyles}
       filterOption={searchValue ? customFilter : null}
       className="search-select"

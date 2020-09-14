@@ -426,9 +426,42 @@ export const checkViewRelationship = () => {
   cy.wait(2000);
   // Insert a row
   cy.get(getElementFromAlias('table-insert-rows')).click();
-  cy.get(getElementFromAlias('typed-input-1')).type('1');
+  cy.get('.search-select')
+    .click({ force: true })
+    .find('input')
+    .type('15', { force: true });
+  cy.get(getElementFromAlias('typed-input-1')).type('1', { force: true });
   cy.get(getElementFromAlias('insert-save-button')).click();
+  // Insert a row with displayname
+  cy.get(getElementFromAlias('table-insert-rows')).click();
+  cy.get(getElementFromAlias('displayname-select'))
+    .select('Apic_test_column_5', { force: true })
+    .invoke('val')
+    .should('eq', 'Apic_test_column_5');
+  cy.get('.search-select')
+    .click({ force: true })
+    .find('input')
+    .clear({ force: true })
+    .type('test', { force: true })
+    .wait(2000)
+    .get(getElementFromAlias('data_test_column_type_value_23'))
+    .click();
+  cy.wait(2000);
+  // hack to select item instead of clicking it
+  cy.get('.search-select')
+    .click({ force: true })
+    .find('input')
+    .type('{enter}', { force: true });
+  cy.get(getElementFromAlias('typed-input-1')).type('1', { force: true });
+  cy.get(getElementFromAlias('insert-save-button')).click();
+
   cy.wait(1000);
+  // clear display name preference from localstorage
+  cy.get(getElementFromAlias('displayname-select'))
+    .select('', { force: true })
+    .invoke('val')
+    .should('eq', null);
+
   cy.get(getElementFromAlias('table-browse-rows')).click();
   cy.wait(1000);
   cy.get('.rt-table').within(() => {

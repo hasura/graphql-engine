@@ -2,7 +2,10 @@ import React from 'react';
 import sanitize from 'sanitize-filename';
 
 import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
-import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
+import {
+  getRunSqlQuery,
+  getFilterByDisplayNameQuery,
+} from '../../Common/utils/v1QueryUtils';
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import requestAction from '../../../utils/requestAction';
 import defaultState from './DataState';
@@ -68,6 +71,8 @@ const MAKE_REQUEST = 'ModifyTable/MAKE_REQUEST';
 const REQUEST_SUCCESS = 'ModifyTable/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'ModifyTable/REQUEST_ERROR';
 
+const SET_FK_MAPPINGS = 'Data/SET_FK_MAPPINGS';
+const UPDATE_COL_FK_MAPPINGS = 'Data/UPDATE_COL_FK_MAPPINGS';
 const SET_ADDITIONAL_COLUMNS_INFO = 'Data/SET_ADDITIONAL_COLUMNS_INFO';
 
 export const SET_ALL_ROLES = 'Data/SET_ALL_ROLES';
@@ -85,7 +90,13 @@ const initQueries = {
         schema: 'information_schema',
       },
       columns: ['schema_name'],
-      order_by: [{ column: 'schema_name', type: 'asc', nulls: 'last' }],
+      order_by: [
+        {
+          column: 'schema_name',
+          type: 'asc',
+          nulls: 'last',
+        },
+      ],
       where: {
         schema_name: {
           $nin: [
@@ -106,7 +117,13 @@ const initQueries = {
         schema: 'hdb_catalog',
       },
       columns: ['function_name', 'function_schema', 'is_system_defined'],
-      order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
+      order_by: [
+        {
+          column: 'function_name',
+          type: 'asc',
+          nulls: 'last',
+        },
+      ],
       where: {
         function_schema: '', // needs to be set later
       },
@@ -134,7 +151,13 @@ const initQueries = {
           columns: ['table_schema', 'table_name'],
         },
       ],
-      order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
+      order_by: [
+        {
+          column: 'function_name',
+          type: 'asc',
+          nulls: 'last',
+        },
+      ],
       where: {
         function_schema: '', // needs to be set later
         has_variadic: false,
@@ -178,7 +201,13 @@ const initQueries = {
           columns: ['table_schema', 'table_name'],
         },
       ],
-      order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
+      order_by: [
+        {
+          column: 'function_name',
+          type: 'asc',
+          nulls: 'last',
+        },
+      ],
       where: {
         function_schema: '', // needs to be set later
         $not: {
@@ -202,6 +231,51 @@ const initQueries = {
       },
     },
   },
+};
+
+const filterFkOptions = (fkColOptions, searchValue) => {
+  return (dispatch, getState) => {
+    const {
+      tables: { currentSchema },
+    } = getState();
+
+    const req = getFilterByDisplayNameQuery(
+      searchValue,
+      currentSchema,
+      fkColOptions
+    );
+
+    const url = Endpoints.getSchema;
+    const options = {
+      credentials: globalCookiePolicy,
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify(req),
+    };
+
+    return dispatch(requestAction(url, options)).then(
+      data => {
+        if (data.length !== 0) {
+          dispatch({
+            type: UPDATE_COL_FK_MAPPINGS,
+            data: {
+              from: fkColOptions.from,
+              to: fkColOptions.to,
+              displayName: fkColOptions.displayName,
+              refTable: fkColOptions.refTable,
+              data,
+            },
+          });
+        }
+      },
+      error => {
+        console.error(
+          'Failed to get foreign key options for column: ' +
+            JSON.stringify(error)
+        );
+      }
+    );
+  };
 };
 
 export const mergeRemoteRelationshipsWithSchema = (
@@ -257,7 +331,10 @@ const fetchTrackedFunctions = () => {
           );
         }
 
-        dispatch({ type: LOAD_TRACKED_FUNCTIONS, data: consistentFunctions });
+        dispatch({
+          type: LOAD_TRACKED_FUNCTIONS,
+          data: consistentFunctions,
+        });
       },
       error => {
         console.error('Failed to load schema ' + JSON.stringify(error));
@@ -486,7 +563,10 @@ const fetchDataInit = () => (dispatch, getState) => {
 
   return dispatch(requestAction(url, options)).then(
     data => {
-      dispatch({ type: FETCH_SCHEMA_LIST, schemaList: data[0] });
+      dispatch({
+        type: FETCH_SCHEMA_LIST,
+        schemaList: data[0],
+      });
       dispatch(updateSchemaInfo());
     },
     error => {
@@ -522,7 +602,10 @@ const fetchFunctionInit = (schema = null) => (dispatch, getState) => {
   return dispatch(requestAction(url, options)).then(
     data => {
       dispatch({ type: LOAD_FUNCTIONS, data: data[0] });
-      dispatch({ type: LOAD_NON_TRACKABLE_FUNCTIONS, data: data[1] });
+      dispatch({
+        type: LOAD_NON_TRACKABLE_FUNCTIONS,
+        data: data[1],
+      });
 
       let consistentFunctions = data[2];
       const { inconsistentObjects } = getState().metadata;
@@ -533,7 +616,10 @@ const fetchFunctionInit = (schema = null) => (dispatch, getState) => {
           'functions'
         );
       }
-      dispatch({ type: LOAD_TRACKED_FUNCTIONS, data: consistentFunctions });
+      dispatch({
+        type: LOAD_TRACKED_FUNCTIONS,
+        data: consistentFunctions,
+      });
     },
     error => {
       console.error('Failed to fetch schema ' + JSON.stringify(error));
@@ -547,7 +633,10 @@ const updateCurrentSchema = (schemaName, redirect = true) => dispatch => {
   }
 
   Promise.all([
-    dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: schemaName }),
+    dispatch({
+      type: UPDATE_CURRENT_SCHEMA,
+      currentSchema: schemaName,
+    }),
     dispatch(setUntrackedRelations()),
     dispatch(fetchFunctionInit()),
     dispatch(updateSchemaInfo()),
@@ -565,7 +654,10 @@ const fetchSchemaList = () => (dispatch, getState) => {
   };
   return dispatch(requestAction(url, options)).then(
     data => {
-      dispatch({ type: FETCH_SCHEMA_LIST, schemaList: data });
+      dispatch({
+        type: FETCH_SCHEMA_LIST,
+        schemaList: data,
+      });
     },
     error => {
       console.error('Failed to fetch schema ' + JSON.stringify(error));
@@ -573,7 +665,10 @@ const fetchSchemaList = () => (dispatch, getState) => {
   );
 };
 
-const setTable = tableName => ({ type: SET_TABLE, tableName });
+const setTable = tableName => ({
+  type: SET_TABLE,
+  tableName,
+});
 
 /* **********Shared functions between table actions********* */
 
@@ -816,6 +911,27 @@ export const fetchRoleList = () => (dispatch, getState) => {
     }
   );
 };
+const upsertFkOptions = ({
+  fkOptions = [],
+  data,
+  from,
+  to,
+  displayName,
+  refTable,
+}) => {
+  const index = fkOptions.findIndex(
+    opt => opt.from === from && opt.to === to && opt.refTable === refTable
+  );
+  // add options
+  if (index === -1) {
+    return [...fkOptions, { from, to, displayName, refTable, data }];
+  }
+
+  // replace existing options
+  const res = [...fkOptions];
+  res[index] = { ...res[index], displayName, data };
+  return res;
+};
 
 /* ******************************************************* */
 const dataReducer = (state = defaultState, action) => {
@@ -899,14 +1015,21 @@ const dataReducer = (state = defaultState, action) => {
     case FETCH_SCHEMA_LIST:
       return { ...state, schemaList: action.schemaList };
     case SET_CONSISTENT_SCHEMA:
-      return { ...state, allSchemas: action.data, listingSchemas: action.data };
+      return {
+        ...state,
+        allSchemas: action.data,
+        listingSchemas: action.data,
+      };
     case SET_CONSISTENT_FUNCTIONS:
       return {
         ...state,
         trackedFunctions: action.data,
       };
     case UPDATE_CURRENT_SCHEMA:
-      return { ...state, currentSchema: action.currentSchema };
+      return {
+        ...state,
+        currentSchema: action.currentSchema,
+      };
     case ADMIN_SECRET_ERROR:
       return { ...state, adminSecretError: action.data };
     case UPDATE_DATA_HEADERS:
@@ -943,14 +1066,36 @@ const dataReducer = (state = defaultState, action) => {
       return {
         ...state,
         columnDataTypes: [...defaultState.columnDataTypes],
-        columnDefaultFunctions: { ...defaultState.columnDefaultFunctions },
-        columnTypeCasts: { ...defaultState.columnTypeCasts },
+        columnDefaultFunctions: {
+          ...defaultState.columnDefaultFunctions,
+        },
+        columnTypeCasts: {
+          ...defaultState.columnTypeCasts,
+        },
         columnDataTypeInfoErr: defaultState.columnDataTypeInfoErr,
       };
     case SET_ALL_ROLES:
       return {
         ...state,
         allRoles: action.roles,
+      };
+    case SET_FK_MAPPINGS:
+      return {
+        ...state,
+        fkOptions: action.data,
+      };
+    case UPDATE_COL_FK_MAPPINGS:
+      const { to, from, displayName, refTable, data } = action.data;
+      return {
+        ...state,
+        fkOptions: upsertFkOptions({
+          fkOptions: state.fkOptions,
+          data,
+          from,
+          to,
+          displayName,
+          refTable,
+        }),
       };
     case SET_ADDITIONAL_COLUMNS_INFO:
       if (isEmpty(action.data)) return state;
@@ -998,6 +1143,7 @@ export {
   fetchColumnTypeInfo,
   RESET_COLUMN_TYPE_INFO,
   setUntrackedRelations,
+  filterFkOptions,
   SET_ADDITIONAL_COLUMNS_INFO,
   fetchAdditionalColumnsInfo,
 };

@@ -8,7 +8,6 @@ import { FilterTableProps } from './types';
 import { Dispatch } from '../../../../../types';
 // import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
-import { ordinalColSort } from '../../../Data/utils';
 import styles from '../../Events.scss';
 import InvocationLogDetails from './InvocationLogDetails';
 import { redeliverDataEvent } from '../../ServerIO';
@@ -65,8 +64,6 @@ const InvocationLogsTable: React.FC<Props> = props => {
     return <div className={styles.add_mar_top}>No data available</div>;
   }
 
-  const sortedColumns = columns.sort(ordinalColSort);
-
   let shouldSortColumn = true;
 
   const sortByColumn = (col: string) => {
@@ -100,7 +97,7 @@ const InvocationLogsTable: React.FC<Props> = props => {
     }
   };
 
-  const gridHeadings = sortedColumns.map(column => {
+  const gridHeadings = columns.map(column => {
     return {
       Header: column,
       accessor: column,

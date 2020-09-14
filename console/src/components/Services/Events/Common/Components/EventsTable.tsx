@@ -5,7 +5,6 @@ import ReactTable, {
 } from 'react-table';
 import 'react-table/react-table.css';
 import { FilterTableProps } from './types';
-import { ordinalColSort } from '../../../Data/utils';
 import styles from '../../Events.scss';
 import EventsSubTable from './EventsSubTable';
 import { sanitiseRow } from '../../utils';
@@ -57,8 +56,6 @@ const EventsTable: React.FC<Props> = props => {
     return <div className={styles.add_mar_top}>No data available</div>;
   }
 
-  const sortedColumns = columns.sort(ordinalColSort);
-
   let shouldSortColumn = true;
 
   const sortByColumn = (col: string) => {
@@ -92,7 +89,7 @@ const EventsTable: React.FC<Props> = props => {
     }
   };
 
-  const gridHeadings = sortedColumns.map(column => {
+  const gridHeadings = columns.map(column => {
     if (column === 'actions') {
       return { Header: '', accessor: column, width: 50 };
     }

@@ -201,3 +201,19 @@ a.expanded {
   margin-bottom: 2px;
   margin-right: 3px !important;
 }
+
+.typedInputWrapper {
+  padding-top: 0 !important;
+
+  input[type='radio'] {
+    margin-top: 10px;
+  }
+}
+
+.displayNameSelect {
+  position: relative;
+  display: inline-block;
+  padding: 0px 0px 0px 5px;
+  margin: 0px 0 0px 5px;
+  top: 3px;
+}

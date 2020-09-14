@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import TableHeader from '../TableCommon/TableHeader';
 import Button from '../../../Common/Button/Button';
 import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton';
-import { ordinalColSort } from '../utils';
+import { ordinalColSort, getForeignKey } from '../utils';
 
 // import RichTextEditor from 'react-rte';
 import { replace } from 'react-router-redux';
@@ -12,18 +12,29 @@ import { E_ONGOING_REQ, editItem } from './EditActions';
 import { findTable, generateTableDef } from '../../../Common/utils/pgUtils';
 import { getTableBrowseRoute } from '../../../Common/utils/routesUtils';
 import { fetchEnumOptions } from './EditActions';
-import { TableRow } from '../Common/Components/TableRow';
+import { filterFkOptions } from '../DataActions';
+import styles from '../../../Common/TableCommon/Table.scss';
+
+import { getExistingFKConstraints } from '../Common/Components/utils';
+import { TypedInput } from '../Common/Components/TypedInput';
 
 class EditItem extends Component {
   constructor() {
     super();
-    this.state = { insertedRows: 0, editorColumnMap: {}, currentColumn: null };
+    this.state = {
+      insertedRows: 0,
+      editorColumnMap: {},
+      currentColumn: null,
+      selectedFkOptions: {},
+    };
   }
 
   componentDidMount() {
     this.props.dispatch(fetchEnumOptions());
   }
-
+  handleSearchValueChange = (config, value) => {
+    this.props.dispatch(filterFkOptions(config, value));
+  };
   render() {
     const {
       tableName,
@@ -38,6 +49,7 @@ class EditItem extends Component {
       count,
       dispatch,
       enumOptions,
+      fkOptions,
     } = this.props;
 
     // check if item exists
@@ -54,19 +66,42 @@ class EditItem extends Component {
       return null;
     }
 
-    const styles = require('../../../Common/TableCommon/Table.scss');
-
     const currentTable = findTable(
       schemas,
       generateTableDef(tableName, currentSchema)
     );
 
     const columns = currentTable.columns.sort(ordinalColSort);
+    // columns in the right order with their indices
+    const orderedColumns = columns.map((c, i) => ({
+      name: c.column_name,
+      index: i,
+    }));
+    // restructure the existing foreign keys and add it to fkModify (for easy processing)
+    const existingForeignKeys = getExistingFKConstraints(
+      currentTable,
+      orderedColumns
+    );
 
+    // Generate a list of reference schemas and their columns
+    const refTables = {};
+    existingForeignKeys.map(fk => {
+      schemas.forEach(ts => {
+        if (ts.table_schema === fk.refSchemaName) {
+          refTables[ts.table_name] = ts.columns.map(c => ({
+            name: c.column_name,
+            type: c.data_type,
+          }));
+        }
+      });
+    });
     const refs = {};
 
     const elements = columns.map((col, i) => {
       const { column_name: colName } = col;
+      const hasDefault = col.column_default && col.column_default.trim() !== '';
+      const isNullable = col.is_nullable && col.is_nullable !== 'NO';
+      const isIdentity = col.is_identity && col.is_identity !== 'NO';
 
       const prevValue = oldItem[colName];
 
@@ -77,15 +112,82 @@ class EditItem extends Component {
         defaultNode: null,
       };
 
+      const handleFkOptionChange = ({ value, label }) => {
+        this.setState(prev => ({
+          ...prev,
+          selectedFkOptions: {
+            ...prev.selectedFkOptions,
+            [colName]: { value, label },
+          },
+        }));
+      };
+
       return (
-        <TableRow
-          key={i}
-          column={col}
-          setRef={(key, node) => (refs[colName][key] = node)}
-          enumOptions={enumOptions}
-          index={i}
-          prevValue={prevValue}
-        />
+        <div key={i} className={`form-group ${styles.displayFlexContainer}`}>
+          <label
+            className={'col-sm-3 control-label ' + styles.insertBoxLabel}
+            title={colName}
+          >
+            {colName}
+          </label>
+          <span
+            className={`${styles.radioLabel} ${styles.typedInputWrapper} radio-inline`}
+          >
+            <input
+              type="radio"
+              ref={node => {
+                refs[colName].valueNode = node;
+              }}
+              name={colName + '-value'}
+              value="option1"
+            />
+            <TypedInput
+              inputRef={node => {
+                refs[colName].valueInput = node;
+              }}
+              prevValue={prevValue}
+              enumOptions={enumOptions}
+              col={col}
+              index={i}
+              hasDefault={hasDefault}
+              fkOptions={fkOptions}
+              getFkOptions={this.handleSearchValueChange}
+              selectedOption={this.state.selectedFkOptions[colName]}
+              onFkValueChange={handleFkOptionChange}
+              refTables={refTables}
+              foreignKey={getForeignKey(col, schemas)}
+            >
+              <>
+                <label className={styles.radioLabel + ' radio-inline'}>
+                  <input
+                    type="radio"
+                    ref={node => {
+                      refs[colName].nullNode = node;
+                    }}
+                    disabled={!isNullable}
+                    name={colName + '-value'}
+                    value="NULL"
+                    defaultChecked={prevValue === null}
+                  />
+                  <span className={styles.radioSpan}>NULL</span>
+                </label>
+                <label className={styles.radioLabel + ' radio-inline'}>
+                  <input
+                    type="radio"
+                    ref={node => {
+                      refs[colName].defaultNode = node;
+                    }}
+                    name={colName + '-value'}
+                    value="option3"
+                    disabled={!hasDefault && !isIdentity}
+                    defaultChecked={isIdentity}
+                  />
+                  <span className={styles.radioSpan}>Default</span>
+                </label>
+              </>
+            </TypedInput>
+          </span>
+        </div>
       );
     });
 
@@ -123,7 +225,10 @@ class EditItem extends Component {
         } else if (refs[colName].defaultNode.checked) {
           // default
           inputValues[colName] = { default: true };
-        } else if (refs[colName].insertRadioNode.checked) {
+        } else if (this.state.selectedFkOptions[colName]) {
+          console.log({ state: this.state });
+          inputValues[colName] = this.state.selectedFkOptions[colName].value;
+        } else if (refs[colName].valueNode.checked) {
           inputValues[colName] =
             refs[colName].valueNode.props !== undefined
               ? refs[colName].valueNode.props.value
@@ -198,6 +303,7 @@ const mapStateToProps = (state, ownProps) => {
     migrationMode: state.main.migrationMode,
     readOnlyMode: state.main.readOnlyMode,
     currentSchema: state.tables.currentSchema,
+    fkOptions: state.tables.fkOptions,
   };
 };
 

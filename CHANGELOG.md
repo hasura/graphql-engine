@@ -286,6 +286,7 @@ hasura seed apply --file 1234_add_some_seed_data.sql
 - console: fix visiting view modify page overwriting raw sql content (fix #4798) (#4810)
 - console: add help button and move about page to settings (#4848)
 - console: add new sidebar icon that separates enums from tables (fix #4984) (#4992)
+- console: add support for displayname select while inserting row with a relationship (fix #2296) (#4089)
 - cli: list all available commands in root command help (fix #4623) (#4628)
 - cli: fix bug with squashing event triggers (close #4883)
 - cli: add support for skipping execution while generating migrations through the migrate REST API
