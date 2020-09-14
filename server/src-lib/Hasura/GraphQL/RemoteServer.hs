@@ -315,8 +315,6 @@ execRemoteGQ'
   -> GQLReqUnparsed
   -> RemoteSchemaInfo
   -> G.OperationType
-  -- TODO should we leave this as a list or use a nonempty?
-  -- perhaps it _has_ to be empty for a toplevel remote schema call
   -> RemoteCallReason
   -> m (DiffTime, [N.Header], BL.ByteString)
 execRemoteGQ' env manager userInfo reqHdrs q rsi opType fieldPaths =  do
