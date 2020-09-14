@@ -20,7 +20,7 @@ export interface Notification {
   level?: 'error' | 'warning' | 'info' | 'success';
   position?: 'tr' | 'tl' | 'tc' | 'br' | 'bl' | 'bc';
   autoDismiss?: number;
-  dismissible?: boolean;
+  dismissible?: 'both' | 'button' | 'click' | 'hide' | 'none' | boolean;
   children?: React.ReactNode;
   uid?: number | string;
   action?: {
@@ -43,7 +43,7 @@ export const showNotification = (
         {
           position: options.position || 'tr',
           autoDismiss: ['error', 'warning'].includes(level) ? 0 : 5,
-          dismissible: ['error', 'warning'].includes(level),
+          dismissible: 'button',
           ...options,
         },
         level
