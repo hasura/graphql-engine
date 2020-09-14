@@ -258,22 +258,18 @@ instance FromEnv [API] where
   fromEnv = readAPIs
 
 instance FromEnv LQ.BatchSize where
-  fromEnv = fmap (maybeNonNegativeInt . mkNonNegativeInt) . readEither
+  fromEnv = fmap (getBatchSize . mkNonNegativeInt) . readEither
     where
-      maybeNonNegativeInt i = case i of
+      getBatchSize i = case i of
         Just t  -> LQ.BatchSize t
-        Nothing -> undefined   -- this should probably not be the case
+        Nothing -> error "batch size should be a positive integer"
 
 instance FromEnv LQ.RefetchInterval where
-  fromEnv x = do
-    let readValue = fmap (milliseconds . fromInteger) . readEither $ x
-    let diffTimeValue = mkNonNegativeDiffTime <$> readValue
-     in    
-      case diffTimeValue of
-        Left str  -> Left str
-        Right val -> case val of
-          Nothing -> Left "negative values are not allowed"
-          Just t -> Right (LQ.RefetchInterval t)
+  fromEnv = fmap (maybeRefetchInterval . mkNonNegativeDiffTime . milliseconds . fromInteger) . readEither
+    where
+      maybeRefetchInterval x = case x of
+        Just t  -> LQ.RefetchInterval t
+        Nothing -> error "refetch interval should be a positive integer"
 
 instance FromEnv Milliseconds where
   fromEnv = fmap fromInteger . readEither

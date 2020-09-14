@@ -1,7 +1,7 @@
 module Data.NonNegativeIntSpec (spec) where
 -- | basic tests on NonNegativeIntType
 
-import           Data.Aeson              (decode)              
+import           Data.Aeson              (decode, fromJSON)              
 import           Hasura.RQL.Types.Common (NonNegativeInt, mkNonNegativeInt)
 import           Prelude
 import           Test.Hspec              (Spec, describe, it, shouldBe, shouldNotBe)
@@ -23,8 +23,8 @@ nonNegIntSpec =
             (evalMaybeNonNegativeInt $ mkNonNegativeInt (-23)) `shouldBe` False
 
         it "JSON accepts only non negative integers" $ do
-            -- instead of toJSON, I should be adding fromJSON tests here
-            -- toJSON (23 :: NonNegativeInt) `shouldBe` Number 23 
-            -- toJSON (-23 :: NonNegativeInt) `shouldNotBe` Number (-23) 
+            -- use fromJSON tests here
+            -- fromJSON "{\"NonNegativeInt\": 23}" `shouldBe` (unsafeNonNegativeInt 23)
+            -- fromJSON (-23 :: NonNegativeInt) `shouldNotBe` Number (-23) 
             decode "23" `shouldBe` Just (23 :: NonNegativeInt)
             decode "-23" `shouldNotBe` Just (-23 :: NonNegativeInt)
