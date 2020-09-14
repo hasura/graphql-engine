@@ -6,9 +6,11 @@ module Hasura.RQL.Types.Common
        , relTypeToTxt
        , RelInfo(..)
 
+       , FieldPath(..)
        , FieldName(..)
        , fromPGCol
        , fromRel
+       , RemoteCallReason(..)
 
        , ToAesonPairs(..)
        , WithTable(..)
@@ -41,8 +43,6 @@ module Hasura.RQL.Types.Common
        , InputWebhook(..)
        , ResolvedWebhook(..)
        , resolveWebhook
-
-       , FieldPath(..)
        ) where
 
 import           Hasura.EncJSON
@@ -165,6 +165,10 @@ instance Cacheable RelInfo
 instance Hashable RelInfo
 $(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)
 
+-- | A path to a substructure in a JSON document via a series of fields.
+newtype FieldPath = FieldPath {unFieldPath :: [FieldName]}
+  deriving (Show, Eq, Semigroup, Monoid, Hashable)
+
 newtype FieldName
   = FieldName { getFieldNameTxt :: T.Text }
   deriving ( Show, Eq, Ord, Hashable, FromJSON, ToJSON
@@ -178,6 +182,12 @@ instance IsIden FieldName where
 
 instance DQuote FieldName where
   dquoteTxt (FieldName c) = c
+
+data RemoteCallReason
+  = TopLevelRemoteCall
+  -- ^ pass the whole query to the remote schema as an optimization
+  | RemoteJoinCall (NonEmpty FieldPath)
+  -- ^ fetching a non-empty set of fields in the course of executing a remote join
 
 fromPGCol :: PGCol -> FieldName
 fromPGCol c = FieldName $ getPGColTxt c
@@ -312,7 +322,3 @@ resolveWebhook env (InputWebhook urlTemplate) = do
   let eitherRenderedTemplate = renderURLTemplate env urlTemplate
   either (throw400 Unexpected . T.pack)
     (pure . ResolvedWebhook) eitherRenderedTemplate
-
--- | Path to a remote join field in e.g. query response JSON from Postgres.
-newtype FieldPath = FieldPath {unFieldPath :: [FieldName]}
-  deriving (Show, Eq, Semigroup, Monoid, Hashable)

@@ -6,6 +6,7 @@ module Hasura.RQL.DML.RemoteJoin
   , getRemoteJoinsMutationOutput
   , getRemoteJoinsConnectionSelect
   , RemoteJoins
+  , RemoteCallReason(..)
   ) where
 
 import           Hasura.Prelude
@@ -420,7 +421,8 @@ fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
       -- TODO(evertedsphere): move this into metadata, so that a trace further
       -- down the callstack (i.e. while performing the http req) will print 
       -- these field aliases.
-      execRemoteGQ' env manager userInfo reqHdrs gqlReqUnparsed rsi G.OperationTypeQuery (toList $ fmap _rjfPath batch)
+      execRemoteGQ' env manager userInfo reqHdrs gqlReqUnparsed rsi G.OperationTypeQuery 
+        (RemoteJoinCall (fmap _rjfPath batch))
     case AO.eitherDecode respBody of
       Left e -> throw500 $ "Remote server response is not valid JSON: " <> T.pack e
       Right r -> do

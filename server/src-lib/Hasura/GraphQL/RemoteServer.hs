@@ -317,7 +317,7 @@ execRemoteGQ'
   -> G.OperationType
   -- TODO should we leave this as a list or use a nonempty?
   -- perhaps it _has_ to be empty for a toplevel remote schema call
-  -> [FieldPath]
+  -> RemoteCallReason
   -> m (DiffTime, [N.Header], BL.ByteString)
 execRemoteGQ' env manager userInfo reqHdrs q rsi opType fieldPaths =  do
   when (opType == G.OperationTypeSubscription) $
@@ -347,7 +347,10 @@ execRemoteGQ' env manager userInfo reqHdrs q rsi opType fieldPaths =  do
     pure (time, mkSetCookieHeaders resp, resp ^. Wreq.responseBody)
   where
     renderFieldPath fp = T.intercalate "." $ map getFieldNameTxt (unFieldPath fp)
-    renderedFieldPaths = T.pack . show $ map renderFieldPath fieldPaths
+    renderedFieldPaths = case fieldPaths of
+      TopLevelRemoteCall -> "toplevel"
+      RemoteJoinCall fieldPaths ->
+        T.intercalate ", " $ map renderFieldPath (toList fieldPaths)
     RemoteSchemaInfo url hdrConf fwdClientHdrs timeout = rsi
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
     httpThrow = \case
