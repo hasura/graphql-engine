@@ -272,6 +272,8 @@ const analyzeFetcher = (headers, mode) => {
 
 const changeRequestHeader = (index, key, newValue, isDisabled) => {
   return (dispatch, getState) => {
+    websocketSubscriptionClient = null;
+
     const currentState = getState().apiexplorer;
 
     const updatedHeader = {

@@ -204,7 +204,7 @@ runQueryDB reqId (query, queryParsed) asts _userInfo (tx, genSql) =  do
   -- log the generated SQL and the graphql query
   E.ExecutionCtx logger _ pgExecCtx _ _ _ _ <- ask
   logQueryLog logger query (Just genSql) reqId
-  (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ trace "pg" $
+  (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ trace "Query" $
     Tracing.interpTraceT id $ executeQuery queryParsed asts (Just genSql) pgExecCtx Q.ReadOnly tx
   (respHdrs,resp) <- liftEither respE
   let !json = encodeGQResp $ GQSuccess $ encJToLBS resp
@@ -230,7 +230,7 @@ runMutationDB reqId query userInfo tx =  do
   -- log the graphql query
   logQueryLog logger query Nothing reqId
   ctx <- Tracing.currentContext
-  (telemTimeIO, respE) <- withElapsedTime $  runExceptT $ trace "pg" $
+  (telemTimeIO, respE) <- withElapsedTime $  runExceptT $ trace "Mutation" $
     Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx .  withUserInfo userInfo)  tx
   resp <- liftEither respE
   let !json = encodeGQResp $ GQSuccess $ encJToLBS resp
