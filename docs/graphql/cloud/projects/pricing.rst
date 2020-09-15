@@ -16,67 +16,65 @@ Introduction
 ------------
 
 Hasura has different pricing plans that you can choose from based on your requirements. 
-It is possible to switch between these pricing plans at any time.
+This page explains how to switch between these plans.
 
 Pricing plans
 -------------
 
-There are three different pricing plans that you can chose from: free tier, pay-as-you-go and enterprise.
+There are three different pricing plans that you can chose from: 
 
-For details and a full list of features for each of these plans, check out `our website <https://hasura.io/pricing/>`__.
+- Free tier
+- Pay-as-you-go 
+- Enterprise
+
+.. note::
+
+   For details and a full list of features for each of these plans, check out `our website <https://hasura.io/pricing/>`__.
+
+Free tier limit
+^^^^^^^^^^^^^^^
+
+Once the free tier limit is exhausted, the project becomes inactive.
 
 Switching pricing plans
 -----------------------
 
-It is possible to switch between the pricing plans at any time.
-
-Upgrade
-^^^^^^^
-
-Upgrade to pay-as-you-go
-************************
+Switch from free tier to pay-as-you-go
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 When clicking on the ``Billing`` tab, you can see all your projects and what plan they are currently on.
 In order to upgrade, click on the link ``Free tier ->``:
 
-.. thumbnail:: /img/graphql/cloud/pricing/pricing-overview.png
-   :alt: Downgrade to free plan
+.. thumbnail:: /img/graphql/cloud/projects/pricing-overview.png
+   :alt: Billing overview
    :width: 1200px
    :class: inline-block
 
 Now click on the ``Usage tab``. To upgrade to the pay-as-you-go plan, click on the ``Upgrade`` button:
 
-.. thumbnail:: /img/graphql/cloud/pricing/upgrade-to-paid-plan.png
-   :alt: Downgrade to free plan
+.. thumbnail:: /img/graphql/cloud/projects/upgrade-to-paid-plan.png
+   :alt: Upgrade to the pay-as-you-go plan
    :width: 1200px
    :class: inline-block
 
-After entering your credit card information and confirmation, your project is running on the pay-as-you-go plan.
+Your project is now running on the pay-as-you-go plan.
 
-Upgrade to enterprise
-*********************
+Switch from pay-as-you-go to free tier
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In order to upgrade to the enterprise plan, please `contact our sales team <https://hasura.io/contact-us/?type=hasuraenterprise>`__.
-
-Downgrade
-^^^^^^^^^
-
-Downgrade from pay-as-you-go
-****************************
-
-Go to ``Projects`` and click on the project you'd like to downgrade. 
+Go to ``Projects`` and click on the project you'd like to change. 
 
 Click on the ``Usage`` tab and then click on the link ``Switch to the free tier`` on the bottom right:
 
-.. thumbnail:: /img/graphql/cloud/pricing/downgrade-to-free-plan.png
-   :alt: Downgrade to free plan
+.. thumbnail:: /img/graphql/cloud/projects/switch-to-free-plan.png
+   :alt: Switch from pay-as-you-go to free tier
    :width: 1200px
    :class: inline-block
 
-After confirming, your project is running on the free tier.
+You'll be charged as per the pay-as-you-go plan until the end of the day. From the next day onwards, the project will be on the free tier. 
+If the free tier limit is exhausted, the project might become inactive.
 
-Downgrade from enterprise
-*************************
+Switch to and from enterprise
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In order to downgrade from the enterprise plan, please contact your dedicated account manager.
-
+In order to upgrade to the enterprise plan or to switch back to another plan, please `contact our sales team <https://hasura.io/contact-us/?type=hasuraenterprise>`__.
