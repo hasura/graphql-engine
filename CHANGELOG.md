@@ -56,10 +56,21 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - server: miscellaneous description changes (#4111)
 - server: treat the absence of `backend_only` configuration and `backend_only: false` equally (closing #5059) (#4111)
 - server: allow remote relationships joining `type` column with `[type]` input argument as spec allows this coercion (fixes #5133)
+- server: add action-like URL templating for event triggers and remote schemas (fixes #2483)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - cli: add missing global flags for seeds command (#5565)
 - docs: add docs page on networking with docker (close #4346) (#4811)
+
+
+## `v1.3.2`
+
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+
+- server: fixes column masking in select permission for computed fields regression (fix #5696)
+
 
 ## `v1.3.1`, `v1.3.1-beta.1`
 
