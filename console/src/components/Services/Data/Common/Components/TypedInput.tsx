@@ -1,4 +1,4 @@
-import React, { ComponentProps } from 'react';
+import React, { ComponentProps, DetailedHTMLProps } from 'react';
 
 import { JSONB, JSONDTYPE, TEXT, BOOLEAN, getPlaceholder } from '../../utils';
 import JsonInput from '../../../../Common/CustomInputTypes/JsonInput';
@@ -25,18 +25,22 @@ type Props = {
   enumOptions: Record<string, string[]>;
   col: TableColumn;
   index: number;
-  clone: Record<string, any>;
+  clone?: Record<string, unknown>;
   inputRef: React.Ref<any>;
-  onChange: () => void;
-  onFocus: () => void;
+  onChange: (
+    e: React.ChangeEvent<HTMLInputElement>,
+    val: string
+  ) => void;
+  onFocus: (e: React.FocusEvent<HTMLInputElement>) => void;
   prevValue: string;
-  hasDefault: boolean;
-  foreignKey: any;
-  fkOptions: Array<FkColOption>;
-  getFkOptions: (opts: FkColOption, value: string) => Promise<void>;
-  refTables: ReftablesType; // TODO clean before commit
-  onFkValueChange: ComponentProps<typeof SearchableSelect>['onChange'];
-  selectedOption: Option;
+  hasDefault?: boolean;
+  foreignKey?: any;
+  fkOptions?: Array<FkColOption>;
+  getFkOptions?: (opts: FkColOption, value: string) => Promise<void>;
+  refTables?: ReftablesType; // TODO clean before commit
+  onFkValueChange?: ComponentProps<typeof SearchableSelect>['onChange'];
+  selectedOption?: Option;
+  disabled?: boolean;
 };
 const wrapperClassName = `${styles.radioLabel} ${styles.typedInputWrapper} radio-inline`;
 
@@ -85,7 +89,7 @@ export const TypedInput: React.FC<Props> = ({
     (e.target as HTMLInputElement).focus();
   };
 
-  const standardInputProps = {
+  const standardInputProps: DetailedHTMLProps<any, any> = {
     onChange,
     onFocus,
     onClick,
@@ -120,8 +124,7 @@ export const TypedInput: React.FC<Props> = ({
       </>
     );
   }
-
-  if (foreignKey) {
+  if (foreignKey && getFkOptions && refTables && onFkValueChange) {
     delete standardInputProps.ref;
     return (
       <ForeignKeyValueSelect

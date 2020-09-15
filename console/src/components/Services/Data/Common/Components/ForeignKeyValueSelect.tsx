@@ -50,10 +50,10 @@ export type FkColOption = {
 
 type Props = {
   prevValue: string;
-  fkOptions: Array<FkColOption>;
+  fkOptions?: Array<FkColOption>;
   getFkOptions: (opts: FkColOption, value: string) => Promise<void>;
   onFkValueChange: ComponentProps<typeof SearchableSelect>['onChange'];
-  selectedOption: Option;
+  selectedOption?: Option;
   standardInputProps: ComponentProps<'select'>;
   placeholder: string;
   columnName: string;

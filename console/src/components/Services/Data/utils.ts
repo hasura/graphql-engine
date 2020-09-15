@@ -907,7 +907,7 @@ WHERE
 export const isColTypeString = (colType: string) =>
   ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
 
-const cascadePGSqlQuery = sql => {
+const cascadePGSqlQuery = (sql: string) => {
   if (sql[sql.length - 1] === ';')
     return sql.substr(0, sql.length - 1) + ' CASCADE;';
   // SQL might have  a " at the end
@@ -917,7 +917,7 @@ const cascadePGSqlQuery = sql => {
 };
 
 export const cascadeUpQueries = (upQueries: QueryType[], isPgCascade = false) =>
-  upQueries.map((i = {}) => {
+  upQueries.map((i = {} as QueryType) => {
     if (i.type === 'run_sql' || i.type === 'untrack_table') {
       return {
         ...i,
