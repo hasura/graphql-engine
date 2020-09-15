@@ -386,7 +386,7 @@ processCronEvents logger logEnv httpMgr pgpool getSC lockedCronEvents = do
                                        ctiHeaders
                                        ctiComment
                                        createdAt
-            finally <- Tracing.runTraceT "scheduled event" . runExceptT $
+            finally <- runExceptT $
               runReaderT (processScheduledEvent logEnv pgpool scheduledEvent Cron) (logger, httpMgr)
             removeEventFromLockedEvents id' lockedCronEvents
             either logInternalError pure finally
@@ -443,9 +443,9 @@ processOneOffScheduledEvents env logger logEnv httpMgr pgpool lockedOneOffSchedu
                                                         headerInfo'
                                                         comment
                                                         createdAt
-                finally <- Tracing.runTraceT "scheduled event" . runExceptT $
+                finally <- runExceptT $
                   runReaderT (processScheduledEvent logEnv pgpool scheduledEvent OneOff) $
-                                 (logger, httpMgr)
+                    (logger, httpMgr)
                 removeEventFromLockedEvents id' lockedOneOffScheduledEvents
                 either logInternalError pure finally
 
@@ -480,15 +480,14 @@ processScheduledEvent ::
   , HasVersion
   , MonadIO m
   , MonadError QErr m
-  , Tracing.MonadTrace m
+  , Tracing.HasReporter m
   )
   => LogEnvHeaders
   -> Q.PGPool
   -> ScheduledEventFull
   -> ScheduledEventType
   -> m ()
-processScheduledEvent
-  logEnv pgpool se@ScheduledEventFull {..} type' = do
+processScheduledEvent logEnv pgpool se@ScheduledEventFull {..} type' = Tracing.runTraceT traceNote do
   currentTime <- liftIO getCurrentTime
   if convertDuration (diffUTCTime currentTime sefScheduledTime)
     > unNonNegativeDiffTime (strcToleranceSeconds sefRetryConf)
@@ -514,6 +513,8 @@ processScheduledEvent
         (processError pgpool se decodedHeaders type' webhookReqBodyJson)
         (processSuccess pgpool se decodedHeaders type' webhookReqBodyJson)
         res
+  where
+    traceNote = "Scheduled trigger" <> foldMap ((": " <>) . unNonEmptyText . unTriggerName) sefName
 
 processError
   :: (MonadIO m, MonadError QErr m)
