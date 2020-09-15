@@ -3,7 +3,8 @@ import ExportMetadata from './ExportMetadata';
 import ImportMetadata from './ImportMetadata';
 import styles from '../Settings.scss';
 
-type MetadataImportExportSectionProps = ComponentProps<typeof ExportMetadata>;
+type MetadataImportExportSectionProps = ComponentProps<typeof ExportMetadata> &
+  ComponentProps<typeof ImportMetadata>;
 
 export const MetadataImportExportSection: React.FC<MetadataImportExportSectionProps> = props => {
   return (

@@ -3,7 +3,8 @@ import ReloadMetadata from './ReloadMetadata';
 import ResetMetadata from './ResetMetadata';
 import styles from '../Settings.scss';
 
-type MetadataUpdateSectionProps = ComponentProps<typeof ReloadMetadata>;
+type MetadataUpdateSectionProps = ComponentProps<typeof ReloadMetadata> &
+  ComponentProps<typeof ResetMetadata>;
 
 export const MetadataUpdateSection: React.FC<MetadataUpdateSectionProps> = props => {
   return (
