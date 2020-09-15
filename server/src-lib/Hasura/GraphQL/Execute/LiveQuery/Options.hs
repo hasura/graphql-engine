@@ -3,12 +3,14 @@ module Hasura.GraphQL.Execute.LiveQuery.Options
   , BatchSize(..)
   , RefetchInterval(..)
   , mkLiveQueriesOptions
+  , mkBatchSize
+  , mkRefetchInterval
   ) where
 
 import           Hasura.Prelude
 
 import qualified Data.Aeson              as J
-import           Hasura.RQL.Types.Common (NonNegativeDiffTime, NonNegativeInt)
+import           Hasura.RQL.Types.Common (NonNegativeDiffTime, NonNegativeInt, mkNonNegativeInt, mkNonNegativeDiffTime)
 
 data LiveQueriesOptions
   = LiveQueriesOptions
@@ -36,7 +38,17 @@ instance J.FromJSON LiveQueriesOptions where
 newtype BatchSize = BatchSize { unBatchSize :: NonNegativeInt }
   deriving (Show, Eq, J.ToJSON, J.FromJSON)
 
+mkBatchSize :: Int -> Maybe BatchSize
+mkBatchSize x = do
+  t <- mkNonNegativeInt x
+  return $ BatchSize t 
+
 -- TODO this is treated as milliseconds in fromEnv and as seconds in ToJSON.
 --      ideally this would have e.g. ... unRefetchInterval :: Milliseconds
 newtype RefetchInterval = RefetchInterval { unRefetchInterval :: NonNegativeDiffTime }
   deriving (Show, Eq, J.ToJSON, J.FromJSON)
+
+mkRefetchInterval :: DiffTime -> Maybe RefetchInterval
+mkRefetchInterval x = do
+  t <- mkNonNegativeDiffTime x
+  return $ RefetchInterval t
