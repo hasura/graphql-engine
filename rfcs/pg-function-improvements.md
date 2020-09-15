@@ -20,12 +20,13 @@ past the `stable`/`immutable` requirement.
 
 ### Proposal
 
-1. Every function is allowed to be exposed through GraphQL API. If a function
-   is marked as `immutable`/`stable`, it is exposed under `query_root`
+1. A function is allowed to be tracked if any of the following holds true:
+   - Returns a scalar
+   - Returns a table type or setof table type that has already been tracked.
+
+1. If a function is marked as `immutable`/`stable`, it is exposed under `query_root`
    otherwise under `mutation_root`.
 
-2. A function `f` is only exposed for a role `r` in the GraphQL API if a
-   permission is defined on `f` for the role `r`.
 
 ### Permissions
 
@@ -33,12 +34,9 @@ past the `stable`/`immutable` requirement.
 
 Either a static value or something that can be filled from a session variable.
 
-#### Permissions on the return types
-
-1. If the return type is a scalar, no further configuration is allowed.
-1. If the return type is a table type or setof <table> type that is already
-   tracked, we can maybe allow overriding the filter? Note that the allowed columns
-   cannot be changed without changing the name of the type.
+If a function returns a static type, the function is exposed without further
+checks.  If the function returns a table or set of table type then there have to be
+select permissions defined on the table for the role.
 
 ### Backwards compatibility
 
