@@ -19,7 +19,6 @@ import qualified Hasura.GraphQL.Execute.Plan      as E
 import qualified Hasura.Logging                   as L
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Common          (mkNonNegativeDiffTime, mkNonNegativeInt)
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Session
@@ -258,18 +257,18 @@ instance FromEnv [API] where
   fromEnv = readAPIs
 
 instance FromEnv LQ.BatchSize where
-  fromEnv = fmap (getBatchSize . mkNonNegativeInt) . readEither
+  fromEnv = fmap (maybeBatchSize . LQ.mkBatchSize) . readEither
     where
-      getBatchSize i = case i of
-        Just t  -> LQ.BatchSize t
-        Nothing -> error "batch size should be a positive integer"
+      maybeBatchSize x = case x of
+        Just v  -> v
+        Nothing -> error "batch size should be a non negative integer"
 
 instance FromEnv LQ.RefetchInterval where
-  fromEnv = fmap (maybeRefetchInterval . mkNonNegativeDiffTime . milliseconds . fromInteger) . readEither
+  fromEnv = fmap (maybeRefetchInterval . LQ.mkRefetchInterval . milliseconds . fromInteger) . readEither
     where
       maybeRefetchInterval x = case x of
-        Just t  -> LQ.RefetchInterval t
-        Nothing -> error "refetch interval should be a positive integer"
+        Just v  -> v
+        Nothing -> error "refetch interval should be a non negative integer"
 
 instance FromEnv Milliseconds where
   fromEnv = fmap fromInteger . readEither
