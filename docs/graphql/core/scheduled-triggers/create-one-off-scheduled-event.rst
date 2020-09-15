@@ -131,3 +131,11 @@ Once you've created your scheduled trigger, you can see ``Pending events``, ``Pr
 .. thumbnail:: /img/graphql/core/event-triggers/pending-one-off.png
    :alt: Schedule and logs for scheduled events
    :width: 1200px
+
+
+One minute precision
+--------------------
+
+This means that for any scheduled event set at a particular time, it actually delivers at the 0th second of the minute required on delivery.
+
+For example: if you set an event trigger schedued at 1:23:35, it will get delivered at 1:24:00
