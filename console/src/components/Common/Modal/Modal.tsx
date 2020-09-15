@@ -69,7 +69,7 @@ const Modal: React.FC<ModalProps> = ({
   const bootstrapModalProps = {
     show,
     dialogClassName: customClass,
-    onHide() { },
+    onHide() {},
   };
 
   if (onClose) {

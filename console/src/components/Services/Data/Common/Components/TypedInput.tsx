@@ -27,10 +27,7 @@ type Props = {
   index: number;
   clone?: Record<string, unknown>;
   inputRef: React.Ref<any>;
-  onChange: (
-    e: React.ChangeEvent<HTMLInputElement>,
-    val: string
-  ) => void;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>, val: string) => void;
   onFocus: (e: React.FocusEvent<HTMLInputElement>) => void;
   prevValue: string;
   hasDefault?: boolean;
