@@ -178,7 +178,7 @@ cd $PYTEST_ROOT
 
 RUN_WEBHOOK_TESTS=true
 
-for port in 8080 8081 9876 5592
+for port in 8080 8081 9876 5592 5000 5594
 do
 	fail_if_port_busy $port
 done
@@ -205,6 +205,7 @@ fi
 export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
 export SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN="http://127.0.0.1:5594"
 export HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES=true
+export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://127.0.0.1:5000"
 
 HGE_PIDS=""
 WH_PID=""
