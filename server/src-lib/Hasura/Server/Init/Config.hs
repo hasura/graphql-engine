@@ -257,18 +257,14 @@ instance FromEnv [API] where
   fromEnv = readAPIs
 
 instance FromEnv LQ.BatchSize where
-  fromEnv = fmap (maybeBatchSize . LQ.mkBatchSize) . readEither
-    where
-      maybeBatchSize x = case x of
-        Just v  -> v
-        Nothing -> error "batch size should be a non negative integer"
+  fromEnv s = do
+    val <- readEither s
+    maybe (Left "batch size should be a non negative integer") Right $ LQ.mkBatchSize val
 
 instance FromEnv LQ.RefetchInterval where
-  fromEnv = fmap (maybeRefetchInterval . LQ.mkRefetchInterval . milliseconds . fromInteger) . readEither
-    where
-      maybeRefetchInterval x = case x of
-        Just v  -> v
-        Nothing -> error "refetch interval should be a non negative integer"
+  fromEnv x = do
+    val <- fmap (milliseconds . fromInteger) . readEither $ x
+    maybe (Left "refetch interval should be a non negative integer") Right $ LQ.mkRefetchInterval val
 
 instance FromEnv Milliseconds where
   fromEnv = fmap fromInteger . readEither
