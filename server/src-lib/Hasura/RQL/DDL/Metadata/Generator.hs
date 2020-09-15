@@ -3,22 +3,7 @@ module Hasura.RQL.DDL.Metadata.Generator
   (genReplaceMetadata)
 where
 
-import           Hasura.GraphQL.Utils                          (simpleGraphQLQuery)
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.DDL.Metadata.Types
-import           Hasura.RQL.Types
-import           Hasura.Server.Utils
-import           Hasura.SQL.Types
-
-import qualified Hasura.RQL.DDL.ComputedField                  as ComputedField
-import qualified Hasura.RQL.DDL.Permission                     as Permission
-import qualified Hasura.RQL.DDL.Permission.Internal            as Permission
-import qualified Hasura.RQL.DDL.QueryCollection                as Collection
-import qualified Hasura.RQL.DDL.Relationship                   as Relationship
-import qualified Hasura.RQL.DDL.Schema                         as Schema
-
-import           System.Cron.Types
 
 import qualified Data.Aeson                                    as J
 import qualified Data.Text                                     as T
@@ -29,10 +14,27 @@ import qualified Language.Haskell.TH.Syntax                    as TH
 import qualified Network.URI                                   as N
 import qualified System.Cron.Parser                            as Cr
 
+
+import           Data.List.Extended                            (duplicates)
+import           Data.Scientific
+import           System.Cron.Types
 import           Test.QuickCheck
 import           Test.QuickCheck.Instances.Semigroup           ()
 import           Test.QuickCheck.Instances.Time                ()
 import           Test.QuickCheck.Instances.UnorderedContainers ()
+
+import qualified Hasura.RQL.DDL.ComputedField                  as ComputedField
+import qualified Hasura.RQL.DDL.Permission                     as Permission
+import qualified Hasura.RQL.DDL.Permission.Internal            as Permission
+import qualified Hasura.RQL.DDL.QueryCollection                as Collection
+import qualified Hasura.RQL.DDL.Relationship                   as Relationship
+import qualified Hasura.RQL.DDL.Schema                         as Schema
+
+import           Hasura.GraphQL.Utils                          (simpleGraphQLQuery)
+import           Hasura.RQL.DDL.Headers
+import           Hasura.RQL.DDL.Metadata.Types
+import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 
 genReplaceMetadata :: Gen ReplaceMetadata
 genReplaceMetadata = do
@@ -53,7 +55,7 @@ genReplaceMetadata = do
       MVVersion2 -> FMVersion2 <$> arbitrary
 
 instance Arbitrary G.Name where
-  arbitrary = G.Name . T.pack <$> listOf1 (elements ['a'..'z'])
+  arbitrary = G.unsafeMkName . T.pack <$> listOf1 (elements ['a'..'z'])
 
 instance Arbitrary MetadataVersion where
   arbitrary = genericArbitrary
@@ -91,6 +93,9 @@ instance Arbitrary ComputedField.ComputedFieldDefinition where
 instance Arbitrary ComputedFieldMeta where
   arbitrary = genericArbitrary
 
+instance Arbitrary Scientific where
+  arbitrary = ((fromRational . toRational) :: Int -> Scientific) <$> arbitrary
+
 instance Arbitrary J.Value where
   arbitrary = sized sizedArbitraryValue
     where
@@ -100,7 +105,7 @@ instance Arbitrary J.Value where
         where
           n' = n `div` 2
           boolean = J.Bool <$> arbitrary
-          number = (J.Number . fromRational . toRational :: Int -> J.Value) <$> arbitrary
+          number = J.Number <$> arbitrary
           string = J.String <$> arbitrary
           array = J.Array . V.fromList <$> arbitrary
           object' = J.Object <$> arbitrary
@@ -200,17 +205,11 @@ instance Arbitrary Collection.CreateCollection where
 instance Arbitrary Collection.CollectionReq where
   arbitrary = genericArbitrary
 
-instance Arbitrary G.NamedType where
-  arbitrary = G.NamedType <$> arbitrary
-
 instance Arbitrary G.Description where
   arbitrary = G.Description <$> arbitrary
 
 instance Arbitrary G.Nullability where
   arbitrary = genericArbitrary
-
-instance Arbitrary G.ListType where
-  arbitrary = G.ListType <$> arbitrary
 
 instance Arbitrary G.GType where
   arbitrary = genericArbitrary
@@ -242,16 +241,16 @@ instance Arbitrary RelationshipName where
 instance Arbitrary ObjectFieldName where
   arbitrary = genericArbitrary
 
-instance Arbitrary TypeRelationshipDefinition  where
+instance (Arbitrary a, Arbitrary b) => Arbitrary (TypeRelationship a b)  where
   arbitrary = genericArbitrary
 
 instance Arbitrary ObjectTypeName where
   arbitrary = genericArbitrary
 
-instance Arbitrary ObjectFieldDefinition where
+instance (Arbitrary a) => Arbitrary (ObjectFieldDefinition a) where
   arbitrary = genericArbitrary
 
-instance Arbitrary ObjectTypeDefinition where
+instance (Arbitrary a, Arbitrary b, Arbitrary c) => Arbitrary (ObjectTypeDefinition a b c) where
   arbitrary = genericArbitrary
 
 instance Arbitrary ScalarTypeDefinition where
@@ -272,7 +271,7 @@ instance Arbitrary CustomTypes where
 instance Arbitrary ArgumentName where
   arbitrary = genericArbitrary
 
-instance Arbitrary ArgumentDefinition where
+instance (Arbitrary a) => Arbitrary (ArgumentDefinition a) where
   arbitrary = genericArbitrary
 
 instance Arbitrary ActionMutationKind where
@@ -281,7 +280,7 @@ instance Arbitrary ActionMutationKind where
 instance Arbitrary ActionType where
   arbitrary = genericArbitrary
 
-instance (Arbitrary a) => Arbitrary (ActionDefinition a) where
+instance (Arbitrary a, Arbitrary b) => Arbitrary (ActionDefinition a b) where
   arbitrary = genericArbitrary
 
 instance Arbitrary ActionName where
@@ -294,6 +293,22 @@ instance Arbitrary ActionPermissionMetadata where
   arbitrary = genericArbitrary
 
 instance Arbitrary ActionMetadata where
+  arbitrary = genericArbitrary
+
+deriving instance Arbitrary RemoteArguments
+
+instance Arbitrary a => Arbitrary (G.Value a) where
+  arbitrary = genericArbitrary
+
+instance Arbitrary FieldCall where
+  arbitrary = genericArbitrary
+
+deriving instance Arbitrary RemoteFields
+
+instance Arbitrary RemoteRelationshipDef where
+  arbitrary = genericArbitrary
+
+instance Arbitrary RemoteRelationshipMeta where
   arbitrary = genericArbitrary
 
 instance Arbitrary CronTriggerMetadata where

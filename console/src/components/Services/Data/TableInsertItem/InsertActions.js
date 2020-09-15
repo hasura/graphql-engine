@@ -1,14 +1,19 @@
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import requestAction from 'utils/requestAction';
-import { Integers, Reals } from '../constants';
+import { Reals } from '../constants';
 
 import {
   showErrorNotification,
   showSuccessNotification,
 } from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
-import { getEnumColumnMappings } from '../../../Common/utils/pgUtils';
+import {
+  getEnumColumnMappings,
+  arrayToPostgresArray,
+} from '../../../Common/utils/pgUtils';
 import { getEnumOptionsQuery } from '../../../Common/utils/v1QueryUtils';
+import { ARRAY } from '../utils';
+import { isStringArray } from '../../../Common/utils/jsUtils';
 
 const I_SET_CLONE = 'InsertItem/I_SET_CLONE';
 const I_RESET = 'InsertItem/I_RESET';
@@ -39,10 +44,7 @@ const insertItem = (tableName, colValues) => {
     Object.keys(colValues).map(colName => {
       const colSchema = columns.find(x => x.column_name === colName);
       const colType = colSchema.data_type;
-      if (Integers.indexOf(colType) > 0) {
-        insertObject[colName] =
-          parseInt(colValues[colName], 10) || colValues[colName];
-      } else if (Reals.indexOf(colType) > 0) {
+      if (Reals.indexOf(colType) > 0) {
         insertObject[colName] =
           parseFloat(colValues[colName], 10) || colValues[colName];
       } else if (colType === 'boolean') {
@@ -64,6 +66,17 @@ const insertItem = (tableName, colValues) => {
             colValues[colName] +
             ' as a valid JSON object/array';
           error = true;
+        }
+      } else if (colType === ARRAY && isStringArray(colValues[colName])) {
+        try {
+          const arr = JSON.parse(colValues[colName]);
+          insertObject[colName] = arrayToPostgresArray(arr);
+        } catch {
+          errorMessage =
+            colName +
+            ' :: could not read ' +
+            colValues[colName] +
+            ' as a valid array';
         }
       } else {
         insertObject[colName] = colValues[colName];

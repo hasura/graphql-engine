@@ -7,14 +7,14 @@ module Hasura.RQL.DDL.Schema.Cache.Common where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict.Extended     as M
-import qualified Data.HashSet                     as HS
-import qualified Data.Sequence                    as Seq
+import qualified Data.HashMap.Strict.Extended as M
+import qualified Data.HashSet                 as HS
+import qualified Data.Sequence                as Seq
 
 import           Control.Arrow.Extended
 import           Control.Lens
 
-import qualified Hasura.Incremental               as Inc
+import qualified Hasura.Incremental           as Inc
 
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
@@ -59,10 +59,10 @@ data BuildOutputs
   -- ^ We preserve the 'MetadataObject' from the original catalog metadata in the output so we can
   -- reuse it later if we need to mark the remote schema inconsistent during GraphQL schema
   -- generation (because of field conflicts).
-  , _boAllowlist         :: !(HS.HashSet GQLQuery)
-  , _boCustomTypes       :: !(NonObjectTypeMap, AnnotatedObjects)
-  , _boCronTriggers      :: !(M.HashMap TriggerName CronTriggerInfo)
-  } deriving (Show, Eq)
+  , _boAllowlist     :: !(HS.HashSet GQLQuery)
+  , _boCustomTypes   :: !AnnotatedCustomTypes
+  , _boCronTriggers  :: !(M.HashMap TriggerName CronTriggerInfo)
+  }
 $(makeLenses ''BuildOutputs)
 
 data RebuildableSchemaCache m

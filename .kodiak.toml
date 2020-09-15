@@ -1,0 +1,128 @@
+###############################################################################
+## Configuration for auto-merge / auto-update bot
+##
+## See: https://kodiakhq.com/
+###############################################################################
+
+# Kodiak's configuration file should be placed at `.kodiak.toml` (repository
+# root) or `.github/.kodiak.toml`.
+# docs: https://kodiakhq.com/docs/config-reference
+
+# version is the only required setting in a kodiak config.
+# `1` is the only valid setting for this field.
+version = 1
+
+[merge]
+# Label to enable Kodiak to merge a PR.
+
+# By default, Kodiak will only act on PRs that have this label. You can disable
+# this requirement via `merge.require_automerge_label`.
+automerge_label = "auto-update-auto-merge"
+
+# Require that the automerge label (`merge.automerge_label`) be set for Kodiak
+# to merge a PR.
+#
+# When disabled, Kodiak will immediately attempt to merge any PR that passes all
+# GitHub branch protection requirements.
+require_automerge_label = true
+
+# If a PR's title matches this regex, Kodiak will not merge the PR. This is
+# useful to prevent merging work-in-progress PRs.
+#
+# Setting `merge.blocking_title_regex = ""` disables this option.
+blocking_title_regex = "" # default: "^WIP:.*", options: "" (disables regex), a regex string (e.g. ".*DONT\s*MERGE.*")
+
+# Kodiak will not merge a PR with any of these labels.
+blocking_labels = ["s/do-not-merge", "s/wip"] # default: []
+
+# Choose merge method for Kodiak to use.
+#
+# Kodiak will report a configuration error if the selected merge method is
+# disabled for a repository.
+#
+# If you're using the "Require signed commits" GitHub Branch Protection setting
+# to require commit signatures, "merge" or "squash" are the only compatible options. "rebase" will cause Kodiak to raise a configuration error.
+method = "merge" # default: "merge", options: "merge", "squash", "rebase"
+
+# Once a PR is merged, delete the branch. This option behaves like the GitHub
+# repository setting "Automatically delete head branches", which automatically
+# deletes head branches after pull requests are merged.
+delete_branch_on_merge = true # default: false
+
+# If there is a merge conflict, make a comment on the PR and remove the
+# automerge label. This option only applies when `merge.require_automerge_label`
+# is enabled.
+notify_on_conflict = true # default: true
+
+# Don't wait for in-progress status checks on a PR to finish before updating the
+# branch.
+optimistic_updates = true # default: true
+
+# Don't wait for specified status checks when merging a PR. If a configured
+# status check is incomplete when a PR is being merged, Kodiak will skip the PR.
+# Use this option for status checks that run indefinitely, like deploy jobs or
+# the WIP GitHub App.
+dont_wait_on_status_checks = [] # default: [], options: list of check names (e.g. ["ci/circleci: lint_api"])
+
+# If a PR is passing all checks and is able to be merged, merge it without
+# placing it in the merge queue. This option adds some unfairness where PRs
+# waiting in the queue the longest are not served first.
+prioritize_ready_to_merge = true # default: false
+
+# Never merge a PR. This option can be used with `update.always` to
+# automatically update a PR without merging.
+do_not_merge = false # default: false
+
+[merge.message]
+# By default (`"github_default"`), GitHub uses the title of a PR's first commit
+# for the merge commit title. `"pull_request_title"` uses the PR title for the
+# merge commit.
+title = "github_default" # default: "github_default", options: "github_default", "pull_request_title"
+
+# By default (`"github_default"`), GitHub combines the titles of a PR's commits
+# to create the body text of a merge commit. `"pull_request_body"` uses the
+# content of the PR to generate the body content while `"empty"` sets an empty
+# body.
+body = "github_default" # default: "github_default", options: "github_default", "pull_request_body", "empty"
+
+# Append the Pull Request URL to the merge message. Makes navigating to the PR
+# from the commit easier.
+include_pull_request_url = true # default: false
+
+# Add the PR number to the merge commit title. This setting replicates GitHub's
+# behavior of automatically adding the PR number to the title of merges created
+# through the UI. This option only applies when `merge.message.title` does not
+# equal `"github_default"`.
+include_pr_number = true # default: true
+
+# Control the text used in the merge commit. The GitHub default is markdown, but
+# `"plain_text"` or `"html"` can be used to render the pull request body as text
+# or HTML. This option only applies when `merge.message.body = "pull_request_body"`.
+body_type = "markdown" # default: "markdown", options: "plain_text", "markdown", "html"
+
+
+# Strip HTML comments (`<!-- some HTML comment -->`) from merge commit body.
+# This setting is useful for stripping HTML comments created by PR templates.
+# This option only applies when `merge.message.body_type = "markdown"`.
+strip_html_comments = false # default: false
+
+[update]
+
+# Update a PR whenever out of date with the base branch. The PR will be updated
+# regardless of merge requirements (e.g. failing status checks, missing reviews,
+# blacklist labels).
+#
+# Kodiak will only update PRs with the `merge.automerge_label` label or if
+# `update.require_automerge_label = false`.
+#
+# When enabled, _Kodiak will not be able to efficiently update PRs._ If you have
+# multiple PRs against a target like `master`, any time a commit is added to
+# `master` _all_ of those PRs against `master` will update. For `N` PRs against
+# a target you will see at least `N(N-1)/2` updates. If this configuration
+# option was disabled you would only see at least `N-1` updates.
+always = false # default: false
+
+# When enabled, Kodiak will only update PRs that have an automerge label
+# (configured via `merge.automerge_label`). When disable, Kodiak will update any
+# PR. This option only applies when `update.always = true`.
+require_automerge_label = true # default: true

@@ -5,6 +5,7 @@ layer. In contrast with, logging at the HTTP server layer.
 
 module Hasura.GraphQL.Logging
   ( QueryLog(..)
+  , MonadQueryLog(..)
   ) where
 
 import qualified Data.Aeson                             as J
@@ -13,6 +14,7 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 import           Hasura.GraphQL.Transport.HTTP.Protocol (GQLReqUnparsed)
 import           Hasura.Prelude
 import           Hasura.Server.Utils                    (RequestId)
+import           Hasura.Tracing                         (TraceT)
 
 import qualified Hasura.GraphQL.Execute.Query           as EQ
 import qualified Hasura.Logging                         as L
@@ -41,7 +43,26 @@ instance L.ToEngineLog QueryLog L.Hasura where
 -- | key-value map to be printed as JSON
 encodeSql :: EQ.GeneratedSqlMap -> J.Value
 encodeSql sql =
-  jValFromAssocList $ map (\(a, q) -> (alName a, fmap J.toJSON q)) sql
+  jValFromAssocList $ map (\(a, q) -> (G.unName a, fmap J.toJSON q)) sql
   where
-    alName = G.unName . G.unAlias
     jValFromAssocList xs = J.object $ map (uncurry (J..=)) xs
+
+class Monad m => MonadQueryLog m where
+  logQueryLog
+    :: L.Logger L.Hasura
+    -- ^ logger
+    -> GQLReqUnparsed
+    -- ^ GraphQL request
+    -> (Maybe EQ.GeneratedSqlMap)
+    -- ^ Generated SQL if any
+    -> RequestId
+    -> m ()
+
+instance MonadQueryLog m => MonadQueryLog (ExceptT e m) where
+  logQueryLog l req sqlMap reqId = lift $ logQueryLog l req sqlMap reqId
+
+instance MonadQueryLog m => MonadQueryLog (ReaderT r m) where
+  logQueryLog l req sqlMap reqId = lift $ logQueryLog l req sqlMap reqId
+
+instance MonadQueryLog m => MonadQueryLog (TraceT m) where
+  logQueryLog l req sqlMap reqId = lift $ logQueryLog l req sqlMap reqId

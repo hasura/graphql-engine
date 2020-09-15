@@ -17,12 +17,8 @@ module Hasura.RQL.Types.SchemaCache
   , TableCache
   , ActionCache
 
-  , OutputFieldTypeInfo(..)
-  , AnnotatedObjectType(..)
-  , AnnotatedObjects
   , TypeRelationship(..)
   , trName, trType, trRemoteTable, trFieldMapping
-  , NonObjectTypeMap(..)
   , TableCoreInfoG(..)
   , TableRawInfo
   , TableCoreInfo
@@ -47,6 +43,8 @@ module Hasura.RQL.Types.SchemaCache
   , isMutable
   , mutableView
 
+  , IntrospectionResult(..)
+  , ParsedIntrospection(..)
   , RemoteSchemaCtx(..)
   , RemoteSchemaMap
 
@@ -114,13 +112,12 @@ module Hasura.RQL.Types.SchemaCache
   , FunctionCache
   , getFuncsOfTable
   , askFunctionInfo
-
   , CronTriggerInfo(..)
   ) where
 
-import qualified Hasura.GraphQL.Context            as GC
-
 import           Hasura.Db
+import           Hasura.GraphQL.Context            (GQLContext, RoleContext)
+import qualified Hasura.GraphQL.Parser             as P
 import           Hasura.Incremental                (Dependency, MonadDepend (..), selectKeyD)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Action
@@ -129,25 +126,30 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Metadata
+--import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
-import           Hasura.RQL.Types.EventTrigger
+
 import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Table
+import           Hasura.Session
 import           Hasura.SQL.Types
-
+import           Hasura.Tracing                    (TraceT)
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           System.Cron.Types
 
+import qualified Data.ByteString.Lazy              as BL
 import qualified Data.HashMap.Strict               as M
 import qualified Data.HashSet                      as HS
 import qualified Data.Text                         as T
+import qualified Language.GraphQL.Draft.Syntax     as G
 
 reportSchemaObjs :: [SchemaObjId] -> T.Text
 reportSchemaObjs = T.intercalate ", " . sort . map reportSchemaObj
@@ -166,12 +168,29 @@ mkComputedFieldDep reason tn computedField =
 
 type WithDeps a = (a, [SchemaDependency])
 
+data IntrospectionResult
+  = IntrospectionResult
+  { irDoc              :: G.SchemaIntrospection
+  , irQueryRoot        :: G.Name
+  , irMutationRoot     :: Maybe G.Name
+  , irSubscriptionRoot :: Maybe G.Name
+  }
+
+data ParsedIntrospection
+  = ParsedIntrospection
+  { piQuery        :: [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  , piMutation     :: Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  , piSubscription :: Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  }
+
 data RemoteSchemaCtx
   = RemoteSchemaCtx
-  { rscName :: !RemoteSchemaName
-  , rscGCtx :: !GC.RemoteGCtx
-  , rscInfo :: !RemoteSchemaInfo
-  } deriving (Show, Eq)
+  { rscName                   :: !RemoteSchemaName
+  , rscIntro                  :: !IntrospectionResult
+  , rscInfo                   :: !RemoteSchemaInfo
+  , rscRawIntrospectionResult :: !BL.ByteString
+  , rscParsed                 :: ParsedIntrospection
+  }
 
 instance ToJSON RemoteSchemaCtx where
   toJSON = toJSON . rscInfo
@@ -209,18 +228,20 @@ type ActionCache = M.HashMap ActionName ActionInfo -- info of all actions
 
 data SchemaCache
   = SchemaCache
-  { scTables            :: !TableCache
-  , scActions           :: !ActionCache
-  , scFunctions         :: !FunctionCache
-  , scRemoteSchemas     :: !RemoteSchemaMap
-  , scAllowlist         :: !(HS.HashSet GQLQuery)
-  , scCustomTypes       :: !(NonObjectTypeMap, AnnotatedObjects)
-  , scGCtxMap           :: !GC.GCtxMap
-  , scDefaultRemoteGCtx :: !GC.GCtx
-  , scDepMap            :: !DepMap
-  , scInconsistentObjs  :: ![InconsistentMetadata]
-  , scCronTriggers      :: !(M.HashMap TriggerName CronTriggerInfo)
-  } deriving (Show, Eq)
+  { scTables                      :: !TableCache
+  , scActions                     :: !ActionCache
+  , scFunctions                   :: !FunctionCache
+  , scRemoteSchemas               :: !RemoteSchemaMap
+  , scAllowlist                   :: !(HS.HashSet GQLQuery)
+  , scGQLContext                  :: !(HashMap RoleName (RoleContext GQLContext))
+  , scUnauthenticatedGQLContext   :: !GQLContext
+  , scRelayContext                :: !(HashMap RoleName (RoleContext GQLContext))
+  , scUnauthenticatedRelayContext :: !GQLContext
+  -- , scCustomTypes       :: !(NonObjectTypeMap, AnnotatedObjects)
+  , scDepMap                      :: !DepMap
+  , scInconsistentObjs            :: ![InconsistentMetadata]
+  , scCronTriggers                :: !(M.HashMap TriggerName CronTriggerInfo)
+  }
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
 
 getFuncsOfTable :: QualifiedTable -> FunctionCache -> [FunctionInfo]
@@ -248,6 +269,8 @@ instance (TableCoreInfoRM m) => TableCoreInfoRM (StateT s m) where
   lookupTableCoreInfo = lift . lookupTableCoreInfo
 instance (Monoid w, TableCoreInfoRM m) => TableCoreInfoRM (WriterT w m) where
   lookupTableCoreInfo = lift . lookupTableCoreInfo
+instance (TableCoreInfoRM m) => TableCoreInfoRM (TraceT m) where
+  lookupTableCoreInfo = lift . lookupTableCoreInfo
 
 newtype TableCoreCacheRT m a
   = TableCoreCacheRT { runTableCoreCacheRT :: Dependency TableCoreCache -> m a }
@@ -269,6 +292,8 @@ instance (CacheRM m) => CacheRM (ReaderT r m) where
 instance (CacheRM m) => CacheRM (StateT s m) where
   askSchemaCache = lift askSchemaCache
 instance (Monoid w, CacheRM m) => CacheRM (WriterT w m) where
+  askSchemaCache = lift askSchemaCache
+instance (CacheRM m) => CacheRM (TraceT m) where
   askSchemaCache = lift askSchemaCache
 
 newtype CacheRT m a = CacheRT { runCacheRT :: SchemaCache -> m a }

@@ -33,15 +33,14 @@ module Hasura.RQL.Types.BoolExp
        , AnnBoolExpPartialSQL
 
        , PreSetCols
+       , PreSetColsG
        , PreSetColsPartial
        ) where
 
-import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Column
-import           Hasura.RQL.Types.Common
-import           Hasura.Session
-import           Hasura.SQL.Types
+
+import qualified Data.Aeson.Types           as J
+import qualified Data.HashMap.Strict        as M
 
 import qualified Hasura.SQL.DML             as S
 
@@ -54,8 +53,13 @@ import           Data.Aeson.TH
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
-import qualified Data.Aeson.Types           as J
-import qualified Data.HashMap.Strict        as M
+import           Hasura.Incremental         (Cacheable)
+import           Hasura.RQL.Types.Column
+import           Hasura.RQL.Types.Common
+import           Hasura.Session
+import           Hasura.SQL.Types
+
+
 
 data GExists a
   = GExists
@@ -65,6 +69,7 @@ data GExists a
 instance (NFData a) => NFData (GExists a)
 instance (Data a) => Plated (GExists a)
 instance (Cacheable a) => Cacheable (GExists a)
+instance (Hashable a) => Hashable (GExists a)
 
 gExistsToJSON :: (a -> (Text, Value)) -> GExists a -> Value
 gExistsToJSON f (GExists qt wh) =
@@ -91,6 +96,7 @@ data GBoolExp a
 instance (NFData a) => NFData (GBoolExp a)
 instance (Data a) => Plated (GBoolExp a)
 instance (Cacheable a) => Cacheable (GBoolExp a)
+instance (Hashable a) => Hashable (GBoolExp a)
 
 gBoolExpTrue :: GBoolExp a
 gBoolExpTrue = BoolAnd []
@@ -142,6 +148,7 @@ data DWithinGeomOp a =
   } deriving (Show, Eq, Functor, Foldable, Traversable, Generic, Data)
 instance (NFData a) => NFData (DWithinGeomOp a)
 instance (Cacheable a) => Cacheable (DWithinGeomOp a)
+instance (Hashable a) => Hashable (DWithinGeomOp a)
 $(deriveJSON (aesonDrop 6 snakeCase) ''DWithinGeomOp)
 
 data DWithinGeogOp a =
@@ -152,6 +159,7 @@ data DWithinGeogOp a =
   } deriving (Show, Eq, Functor, Foldable, Traversable, Generic, Data)
 instance (NFData a) => NFData (DWithinGeogOp a)
 instance (Cacheable a) => Cacheable (DWithinGeogOp a)
+instance (Hashable a) => Hashable (DWithinGeogOp a)
 $(deriveJSON (aesonDrop 6 snakeCase) ''DWithinGeogOp)
 
 data STIntersectsNbandGeommin a =
@@ -161,6 +169,7 @@ data STIntersectsNbandGeommin a =
   } deriving (Show, Eq, Functor, Foldable, Traversable, Generic, Data)
 instance (NFData a) => NFData (STIntersectsNbandGeommin a)
 instance (Cacheable a) => Cacheable (STIntersectsNbandGeommin a)
+instance (Hashable a) => Hashable (STIntersectsNbandGeommin a)
 $(deriveJSON (aesonDrop 4 snakeCase) ''STIntersectsNbandGeommin)
 
 data STIntersectsGeomminNband a =
@@ -170,6 +179,7 @@ data STIntersectsGeomminNband a =
   } deriving (Show, Eq, Functor, Foldable, Traversable, Generic, Data)
 instance (NFData a) => NFData (STIntersectsGeomminNband a)
 instance (Cacheable a) => Cacheable (STIntersectsGeomminNband a)
+instance (Hashable a) => Hashable (STIntersectsGeomminNband a)
 $(deriveJSON (aesonDrop 4 snakeCase) ''STIntersectsGeomminNband)
 
 type CastExp a = M.HashMap PGScalarType [OpExpG a]
@@ -229,6 +239,7 @@ data OpExpG a
   deriving (Eq, Show, Functor, Foldable, Traversable, Generic, Data)
 instance (NFData a) => NFData (OpExpG a)
 instance (Cacheable a) => Cacheable (OpExpG a)
+instance (Hashable a) => Hashable (OpExpG a)
 
 opExpDepCol :: OpExpG a -> Maybe PGCol
 opExpDepCol = \case
@@ -302,6 +313,7 @@ data AnnBoolExpFld a
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
 instance (NFData a) => NFData (AnnBoolExpFld a)
 instance (Cacheable a) => Cacheable (AnnBoolExpFld a)
+instance (Hashable a) => Hashable (AnnBoolExpFld a)
 
 type AnnBoolExp a
   = GBoolExp (AnnBoolExpFld a)
@@ -338,6 +350,7 @@ type AnnBoolExpSQL = AnnBoolExp S.SQLExp
 type AnnBoolExpFldPartialSQL = AnnBoolExpFld PartialSQLExp
 type AnnBoolExpPartialSQL = AnnBoolExp PartialSQLExp
 
+type PreSetColsG v = M.HashMap PGCol v
 type PreSetColsPartial = M.HashMap PGCol PartialSQLExp
 type PreSetCols = M.HashMap PGCol S.SQLExp
 

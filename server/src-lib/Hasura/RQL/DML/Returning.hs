@@ -2,18 +2,13 @@ module Hasura.RQL.DML.Returning where
 
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
+import           Hasura.RQL.DML.Returning.Types
 import           Hasura.RQL.DML.Select
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Data.Text               as T
-import qualified Hasura.SQL.DML          as S
-
-data MutFldG v
-  = MCount
-  | MExp !T.Text
-  | MRet !(AnnFldsG v)
-  deriving (Show, Eq)
+import qualified Data.Text                      as T
+import qualified Hasura.SQL.DML                 as S
 
 traverseMutFld
   :: (Applicative f)
@@ -23,16 +18,7 @@ traverseMutFld
 traverseMutFld f = \case
   MCount    -> pure MCount
   MExp t    -> pure $ MExp t
-  MRet flds -> MRet <$> traverse (traverse (traverseAnnFld f)) flds
-
-type MutFld = MutFldG S.SQLExp
-
-type MutFldsG v = Fields (MutFldG v)
-
-data MutationOutputG v
-  = MOutMultirowFields !(MutFldsG v)
-  | MOutSinglerowObject !(AnnFldsG v)
-  deriving (Show, Eq)
+  MRet flds -> MRet <$> traverse (traverse (traverseAnnField f)) flds
 
 traverseMutationOutput
   :: (Applicative f)
@@ -42,9 +28,7 @@ traverseMutationOutput f = \case
   MOutMultirowFields mutationFields ->
     MOutMultirowFields <$> traverse (traverse (traverseMutFld f)) mutationFields
   MOutSinglerowObject annFields ->
-    MOutSinglerowObject <$> traverseAnnFlds f annFields
-
-type MutationOutput = MutationOutputG S.SQLExp
+    MOutSinglerowObject <$> traverseAnnFields f annFields
 
 traverseMutFlds
   :: (Applicative f)
@@ -54,20 +38,18 @@ traverseMutFlds
 traverseMutFlds f =
   traverse (traverse (traverseMutFld f))
 
-type MutFlds = MutFldsG S.SQLExp
-
 hasNestedFld :: MutationOutputG a -> Bool
 hasNestedFld = \case
   MOutMultirowFields flds -> any isNestedMutFld flds
-  MOutSinglerowObject annFlds -> any isNestedAnnFld annFlds
+  MOutSinglerowObject annFlds -> any isNestedAnnField annFlds
   where
     isNestedMutFld (_, mutFld) = case mutFld of
-      MRet annFlds -> any isNestedAnnFld annFlds
+      MRet annFlds -> any isNestedAnnField annFlds
       _            -> False
-    isNestedAnnFld (_, annFld) = case annFld of
-      FObj _ -> True
-      FArr _ -> True
-      _      -> False
+    isNestedAnnField (_, annFld) = case annFld of
+      AFObjectRelation _ -> True
+      AFArrayRelation _  -> True
+      _                  -> False
 
 pgColsFromMutFld :: MutFld -> [(PGCol, PGColumnType)]
 pgColsFromMutFld = \case
@@ -75,16 +57,16 @@ pgColsFromMutFld = \case
   MExp _ -> []
   MRet selFlds ->
     flip mapMaybe selFlds $ \(_, annFld) -> case annFld of
-    FCol (AnnColField (PGColumnInfo col _ _ colTy _ _) _ _) -> Just (col, colTy)
-    _                                                       -> Nothing
+    AFColumn (AnnColumnField (PGColumnInfo col _ _ colTy _ _) _ _) -> Just (col, colTy)
+    _                                                              -> Nothing
 
 pgColsFromMutFlds :: MutFlds -> [(PGCol, PGColumnType)]
 pgColsFromMutFlds = concatMap (pgColsFromMutFld . snd)
 
-pgColsToSelFlds :: [PGColumnInfo] -> [(FieldName, AnnFld)]
+pgColsToSelFlds :: [PGColumnInfo] -> [(FieldName, AnnField)]
 pgColsToSelFlds cols =
   flip map cols $
-  \pgColInfo -> (fromPGCol $ pgiColumn pgColInfo, mkAnnColField pgColInfo Nothing)
+  \pgColInfo -> (fromPGCol $ pgiColumn pgColInfo, mkAnnColumnField pgColInfo Nothing)
 
 mkDefaultMutFlds :: Maybe [PGColumnInfo] -> MutationOutput
 mkDefaultMutFlds = MOutMultirowFields . \case
@@ -107,7 +89,8 @@ mkMutFldExp cteAlias preCalAffRows strfyNum = \case
     let tabFrom = FromIden cteAlias
         tabPerm = TablePerm annBoolExpTrue Nothing
     in S.SESelect $ mkSQLSelect JASMultipleRows $
-       AnnSelG selFlds tabFrom tabPerm noTableArgs strfyNum
+       AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum
+
 
 {- Note [Mutation output expression]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -151,7 +134,6 @@ mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
   where
     mutationResultAlias = Iden $ snakeCaseQualObject qt <> "__mutation_result_alias"
     allColumnsAlias = Iden $ snakeCaseQualObject qt <> "__all_columns_alias"
-
     allColumnsSelect = S.CTESelect $ S.mkSelect
                        { S.selExtr = map S.mkExtr $ map pgiColumn $ sortCols allCols
                        , S.selFrom = Just $ S.mkIdenFromExp mutationResultAlias
@@ -171,7 +153,7 @@ mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
                 let tabFrom = FromIden allColumnsAlias
                     tabPerm = TablePerm annBoolExpTrue Nothing
                 in S.SESelect $ mkSQLSelect JASSingleObject $
-                   AnnSelG annFlds tabFrom tabPerm noTableArgs strfyNum
+                   AnnSelectG annFlds tabFrom tabPerm noSelectArgs strfyNum
 
 
 checkRetCols

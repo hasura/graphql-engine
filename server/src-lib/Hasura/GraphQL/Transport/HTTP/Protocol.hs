@@ -4,7 +4,7 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   , GQLReqUnparsed
   , GQLReqParsed
   , toParsed
-  , GQLQueryText
+  , GQLQueryText(..)
   , GQLExecDoc(..)
   , OperationName(..)
   , VariableValues
@@ -19,49 +19,46 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   ) where
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
-import           Language.GraphQL.Draft.Instances ()
+import           Language.Haskell.TH.Syntax       (Lift)
 
-import qualified Data.Aeson                       as J
-import qualified Data.Aeson.Casing                as J
-import qualified Data.Aeson.TH                    as J
-import qualified Data.ByteString.Lazy             as BL
-import qualified Data.HashMap.Strict              as Map
-import qualified Language.GraphQL.Draft.Parser    as G
-import qualified Language.GraphQL.Draft.Syntax    as G
+import qualified Data.Aeson                    as J
+import qualified Data.Aeson.Casing             as J
+import qualified Data.Aeson.TH                 as J
+import qualified Data.ByteString.Lazy          as BL
+import qualified Data.HashMap.Strict           as Map
+import qualified Language.GraphQL.Draft.Parser as G
+import qualified Language.GraphQL.Draft.Syntax as G
 
 newtype GQLExecDoc
-  = GQLExecDoc { unGQLExecDoc :: [G.ExecutableDefinition] }
-  deriving (Ord, Show, Eq, Hashable)
+  = GQLExecDoc { unGQLExecDoc :: [G.ExecutableDefinition G.Name] }
+  deriving (Ord, Show, Eq, Hashable,Lift)
 
 instance J.FromJSON GQLExecDoc where
-  parseJSON v = (GQLExecDoc . G.getExecutableDefinitions) <$> J.parseJSON v
+  parseJSON v = GQLExecDoc . G.getExecutableDefinitions <$> J.parseJSON v
 
 instance J.ToJSON GQLExecDoc where
   toJSON = J.toJSON . G.ExecutableDocument . unGQLExecDoc
 
 newtype OperationName
   = OperationName { _unOperationName :: G.Name }
-  deriving (Ord, Show, Eq, Hashable, J.ToJSON)
+  deriving (Ord, Show, Eq, Hashable, J.ToJSON, Lift)
 
 instance J.FromJSON OperationName where
-  parseJSON v = OperationName . G.Name <$> J.parseJSON v
+  parseJSON v = OperationName <$> J.parseJSON v
 
-type VariableValues = Map.HashMap G.Variable J.Value
+type VariableValues = Map.HashMap G.Name J.Value
 
 data GQLReq a
   = GQLReq
   { _grOperationName :: !(Maybe OperationName)
   , _grQuery         :: !a
   , _grVariables     :: !(Maybe VariableValues)
-  } deriving (Show, Eq, Generic)
+  } deriving (Show, Eq, Generic, Functor, Lift)
 
-$(J.deriveJSON (J.aesonDrop 3 J.camelCase){J.omitNothingFields=True}
-  ''GQLReq
- )
+$(J.deriveJSON (J.aesonDrop 3 J.camelCase){J.omitNothingFields=True} ''GQLReq)
 
 instance (Hashable a) => Hashable (GQLReq a)
 
@@ -86,14 +83,14 @@ instance J.FromJSON a => J.FromJSON (GQLBatchedReqs a) where
 newtype GQLQueryText
   = GQLQueryText
   { _unGQLQueryText :: Text
-  } deriving (Show, Eq, Ord, J.FromJSON, J.ToJSON, Hashable)
+  } deriving (Show, Eq, Ord, J.FromJSON, J.ToJSON, Hashable, Lift, IsString)
 
 type GQLReqUnparsed = GQLReq GQLQueryText
 type GQLReqParsed = GQLReq GQLExecDoc
 
 toParsed :: (MonadError QErr m ) => GQLReqUnparsed -> m GQLReqParsed
 toParsed req = case G.parseExecutableDoc gqlText of
-  Left _  -> withPathK "query" $ throwVE "not a valid graphql query"
+  Left _  -> withPathK "query" $ throw400 ValidationFailed "not a valid graphql query"
   Right a -> return $ req { _grQuery = GQLExecDoc $ G.getExecutableDefinitions a }
   where
     gqlText = _unGQLQueryText $ _grQuery req

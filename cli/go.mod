@@ -25,11 +25,12 @@ require (
 	github.com/jinzhu/gorm v1.9.11 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
 	github.com/manifoldco/promptui v0.6.0
-	github.com/markbates/pkger v0.15.0
+	github.com/markbates/pkger v0.15.1
 	github.com/mattn/go-colorable v0.1.4
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b
 	github.com/microcosm-cc/bluemonday v1.0.2 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/mitchellh/mapstructure v1.1.2
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
 	github.com/parnurzeal/gorequest v0.2.16
 	github.com/pkg/errors v0.8.1

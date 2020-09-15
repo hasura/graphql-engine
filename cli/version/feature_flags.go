@@ -10,11 +10,13 @@ import (
 type ServerFeatureFlags struct {
 	HasAccessKey bool
 
-	HasAction bool
+	HasAction       bool
+	HasCronTriggers bool
 }
 
 const adminSecretVersion = "v1.0.0-alpha38"
 const actionVersion = "v1.2.0-beta.1"
+const cronTriggersVersion = "v1.3.0-beta.1"
 
 // GetServerFeatureFlags returns the feature flags for server.
 func (v *Version) GetServerFeatureFlags() error {
@@ -38,6 +40,14 @@ func (v *Version) GetServerFeatureFlags() error {
 		}
 		// check the current version with the constraint
 		flags.HasAction = actionConstraint.Check(v.ServerSemver)
+
+		// cronTriggers Constraint
+		cronTriggersConstraint, err := semver.NewConstraint(">= " + cronTriggersVersion)
+		if err != nil {
+			return errors.Wrap(err, "building cron triggers constraint failed")
+		}
+		// check the current version with the constraint
+		flags.HasCronTriggers = cronTriggersConstraint.Check(v.ServerSemver)
 	}
 	v.ServerFeatureFlags = flags
 	return nil

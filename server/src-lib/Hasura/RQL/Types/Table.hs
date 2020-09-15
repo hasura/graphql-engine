@@ -39,7 +39,9 @@ module Hasura.RQL.Types.Table
        , _FIColumn
        , _FIRelationship
        , _FIComputedField
+       , _FIRemoteRelationship
        , fieldInfoName
+       , fieldInfoGraphQLName
        , fieldInfoGraphQLNames
        , getFieldInfoM
        , getPGColumnInfoM
@@ -77,8 +79,9 @@ module Hasura.RQL.Types.Table
 
        ) where
 
-import           Hasura.GraphQL.Utils           (showNames)
-import           Hasura.Incremental             (Cacheable)
+-- import qualified Hasura.GraphQL.Context            as GC
+
+import           Hasura.Incremental                  (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
@@ -87,7 +90,8 @@ import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
-import           Hasura.Server.Utils            (duplicates)
+import           Hasura.RQL.Types.RemoteRelationship
+import           Hasura.Server.Utils                 (duplicates, englishList)
 import           Hasura.Session
 import           Hasura.SQL.Types
 
@@ -95,12 +99,13 @@ import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax     (Lift)
+import           Language.Haskell.TH.Syntax          (Lift)
 
-import qualified Data.HashMap.Strict            as M
-import qualified Data.HashSet                   as HS
-import qualified Data.Text                      as T
-import qualified Language.GraphQL.Draft.Syntax  as G
+import qualified Data.HashMap.Strict                 as M
+import qualified Data.HashSet                        as HS
+import qualified Data.List.NonEmpty                  as NE
+import qualified Data.Text                           as T
+import qualified Language.GraphQL.Draft.Syntax       as G
 
 data TableCustomRootFields
   = TableCustomRootFields
@@ -136,9 +141,9 @@ instance FromJSON TableCustomRootFields where
                                         , update, updateByPk
                                         , delete, deleteByPk
                                         ]
-    when (not $ null duplicateRootFields) $ fail $ T.unpack $
+    for_ (nonEmpty duplicateRootFields) \duplicatedFields -> fail $ T.unpack $
       "the following custom root field names are duplicated: "
-      <> showNames duplicateRootFields
+      <> englishList "and" (dquoteTxt <$> duplicatedFields)
 
     pure $ TableCustomRootFields select selectByPk selectAggregate
                                  insert insertOne update updateByPk delete deleteByPk
@@ -160,6 +165,7 @@ data FieldInfo
   = FIColumn !PGColumnInfo
   | FIRelationship !RelInfo
   | FIComputedField !ComputedFieldInfo
+  | FIRemoteRelationship !RemoteFieldInfo
   deriving (Show, Eq, Generic)
 instance Cacheable FieldInfo
 $(deriveToJSON
@@ -176,19 +182,28 @@ fieldInfoName = \case
   FIColumn info -> fromPGCol $ pgiColumn info
   FIRelationship info -> fromRel $ riName info
   FIComputedField info -> fromComputedField $ _cfiName info
+  FIRemoteRelationship info -> fromRemoteRelationship $ _rfiName info
+
+fieldInfoGraphQLName :: FieldInfo -> Maybe G.Name
+fieldInfoGraphQLName = \case
+  FIColumn info -> Just $ pgiName info
+  FIRelationship info -> G.mkName $ relNameToTxt $ riName info
+  FIComputedField info -> G.mkName $ computedFieldNameToText $ _cfiName info
+  FIRemoteRelationship info -> G.mkName $ remoteRelationshipNameToText $ _rfiName info
 
 -- | Returns all the field names created for the given field. Columns, object relationships, and
 -- computed fields only ever produce a single field, but array relationships also contain an
 -- @_aggregate@ field.
 fieldInfoGraphQLNames :: FieldInfo -> [G.Name]
-fieldInfoGraphQLNames = \case
-  FIColumn info -> [pgiName info]
-  FIRelationship info ->
-    let name = G.Name . relNameToTxt $ riName info
-    in case riType info of
+fieldInfoGraphQLNames info = case info of
+  FIColumn _ -> maybeToList $ fieldInfoGraphQLName info
+  FIRelationship relationshipInfo -> fold do
+    name <- fieldInfoGraphQLName info
+    pure $ case riType relationshipInfo of
       ObjRel -> [name]
-      ArrRel -> [name, name <> "_aggregate"]
-  FIComputedField info -> [G.Name . computedFieldNameToText $ _cfiName info]
+      ArrRel -> [name, name <> $$(G.litName "_aggregate")]
+  FIComputedField _ -> maybeToList $ fieldInfoGraphQLName info
+  FIRemoteRelationship _ -> maybeToList $ fieldInfoGraphQLName info
 
 getCols :: FieldInfoMap FieldInfo -> [PGColumnInfo]
 getCols = mapMaybe (^? _FIColumn) . M.elems
@@ -223,7 +238,6 @@ data SelPermInfo
   = SelPermInfo
   { spiCols                 :: !(HS.HashSet PGCol)
   , spiScalarComputedFields :: !(HS.HashSet ComputedFieldName)
-  , spiTable                :: !QualifiedTable
   , spiFilter               :: !AnnBoolExpPartialSQL
   , spiLimit                :: !(Maybe Int)
   , spiAllowAgg             :: !Bool
@@ -405,8 +419,8 @@ type TableRawInfo = TableCoreInfoG PGColumnInfo PGColumnInfo
 -- | Fully-processed table info that includes non-column fields.
 type TableCoreInfo = TableCoreInfoG FieldInfo PGColumnInfo
 
-tciUniqueOrPrimaryKeyConstraints :: TableCoreInfoG a b -> [Constraint]
-tciUniqueOrPrimaryKeyConstraints info =
+tciUniqueOrPrimaryKeyConstraints :: TableCoreInfoG a b -> Maybe (NonEmpty Constraint)
+tciUniqueOrPrimaryKeyConstraints info = NE.nonEmpty $
   maybeToList (_pkConstraint <$> _tciPrimaryKey info) <> toList (_tciUniqueConstraints info)
 
 data TableInfo
