@@ -6,7 +6,7 @@ on:
       - "**.png"
 jobs:
   build:
-    if: github.event.pull_request.head.repo.full_name == graphql-engine
+    if: github.event.pull_request.head.repo.full_name == hasura/graphql-engine
     name: calibreapp/image-actions
     runs-on: ubuntu-latest
     steps:
