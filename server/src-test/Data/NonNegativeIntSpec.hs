@@ -23,8 +23,5 @@ nonNegIntSpec =
             (evalMaybeNonNegativeInt $ mkNonNegativeInt (-23)) `shouldBe` False
 
         it "JSON accepts only non negative integers" $ do
-            -- use fromJSON tests here
-            -- fromJSON "{\"NonNegativeInt\": 23}" `shouldBe` (unsafeNonNegativeInt 23)
-            -- fromJSON (-23 :: NonNegativeInt) `shouldNotBe` Number (-23) 
             decode "23" `shouldBe` Just (23 :: NonNegativeInt)
             decode "-23" `shouldNotBe` Just (-23 :: NonNegativeInt)
