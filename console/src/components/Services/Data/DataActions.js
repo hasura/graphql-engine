@@ -622,8 +622,12 @@ const makeMigrationCall = (
     args: downQueries,
   };
 
+  const epochLength = 14;
+  const maxLength = 255 - epochLength;
+  const trimmedMigrationName = migrationName.substring(0, maxLength);
+
   const migrationBody = {
-    name: sanitize(migrationName),
+    name: sanitize(trimmedMigrationName),
     up: upQuery.args,
     down: downQuery.args,
     skip_execution: skipExecution,

@@ -39,7 +39,9 @@ const useColumnEditor = (dispatch, tableName) => {
 
   const onSubmit = () => {
     // auto-trim column name
-    const trimmedColName = colName.trim();
+    const maxLength = 63;
+    let trimmedColName = colName.trim();
+    trimmedColName = trimmedColName.substring(0, maxLength);
 
     // validate before sending
     if (!gqlPattern.test(trimmedColName)) {
