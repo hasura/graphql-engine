@@ -13,7 +13,6 @@ import           GHC.Stack                             (HasCallStack)
 import           Type.Reflection                       (Typeable)
 
 import {-# SOURCE #-} Hasura.GraphQL.Parser.Internal.Parser
-import           Hasura.RQL.Types.Common               (SourceName)
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Source               (SourceTables)
 import           Hasura.RQL.Types.Table                (TableInfo)

@@ -28,7 +28,6 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
 import qualified Data.Environment                   as Env
-import qualified Database.PG.Query                  as Q
 import qualified Network.HTTP.Client                as HTTP
 
 data RQLMetadata

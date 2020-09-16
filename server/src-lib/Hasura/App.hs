@@ -58,8 +58,7 @@ import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Action.Class
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.API.Query                   (requiresAdmin)
-import           Hasura.Server.API.QueryV2                 (QueryWithSource (..), runQueryM)
+import           Hasura.Server.API.Query
 import           Hasura.Server.App
 import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates                (checkForUpdates)
@@ -313,7 +312,7 @@ runHGEServer
      , UserAuthentication (Tracing.TraceT m)
      , HttpLog m
      , ConsoleRenderer m
-     , MetadataApiAuthorization m
+     , MonadApiAuthorization m
      , MonadGQLExecutionCheck m
      , MonadConfigApiHandler m
      , MonadQueryLog m
@@ -349,6 +348,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime shutd
 
   let sqlGenCtx = SQLGenCtx soStringifyNum
       Loggers loggerCtx logger _ = _icLoggers
+      defaultPgSource = fromMaybe _icDefaultSourceConfig maybeCustomPgSource
 
   authModeRes <- runExceptT $ setupAuthMode soAdminSecret soAuthHook soJwtSecret soUnAuthRole
                               _icHttpManager logger
@@ -367,7 +367,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime shutd
              logger
              sqlGenCtx
              soEnableAllowlist
-             _icDefaultSourceConfig
+             defaultPgSource
              _icHttpManager
              authMode
              soCorsConfig
@@ -392,7 +392,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime shutd
   -- start background thread for schema sync event processing
   schemaSyncProcessorThread <-
     startSchemaSyncProcessorThread sqlGenCtx
-    _icDefaultSourceConfig logger _icHttpManager schemaSyncEventRef cacheRef _icInstanceId _icMetadataPool
+    defaultPgSource logger _icHttpManager schemaSyncEventRef cacheRef _icInstanceId _icMetadataPool
 
   let
     maxEvThrds    = fromMaybe defaultMaxEventThreads soEventsHttpPoolSize
@@ -682,13 +682,24 @@ instance UserAuthentication (Tracing.TraceT AppM) where
   resolveUserInfo logger manager headers authMode =
     runExceptT $ getUserInfoWithExpTime logger manager headers authMode
 
-instance MetadataApiAuthorization AppM where
-  authorizeMetadataApi query userInfo = do
+accessDeniedErrMsg :: Text
+accessDeniedErrMsg =
+  "restricted access : admin only"
+
+instance MonadApiAuthorization AppM where
+  authorizeMetadataApi _ userInfo = do
     let currRole = _uiRole userInfo
-    when (requiresAdmin query && currRole /= adminRoleName) $
-      withPathK "args" $ throw400 AccessDenied errMsg
-    where
-      errMsg = "restricted access : admin only"
+    when (currRole /= adminRoleName) $
+      withPathK "args" $ throw400 AccessDenied accessDeniedErrMsg
+
+  authorizeQueryApi query userInfo = do
+    let currRole = _uiRole userInfo
+        queryNeedsAdmin = \case
+          RQRunSql _ -> True
+          RQBulk   l -> any queryNeedsAdmin l
+          _          -> False
+    when (queryNeedsAdmin query && currRole /= adminRoleName) $
+      withPathK "args" $ throw400 AccessDenied accessDeniedErrMsg
 
 instance ConsoleRenderer AppM where
   renderConsole path authMode enableTelemetry consoleAssetsDir =
