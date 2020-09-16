@@ -166,10 +166,8 @@ args:
         - name: user
           argument_presets:
           - name: "where"
-            input_field:
-            - name: "id"
-              input_field:
-              - name: "_eq"
+            - input_field: "id"
+              - input_field: "_eq"
                 value:
                   from_session_variable: "x-hasura-user-id"
           - name: "limit"
