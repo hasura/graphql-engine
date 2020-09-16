@@ -138,4 +138,4 @@ One minute precision
 
 This means that for any scheduled event set at a particular time, it actually delivers on the 0th second of the next minute.
 
-For example: If you schedule an event to arrive at this particular time ``09:24:10``, because of the one minute precison, it will arive at anytime between ``09:24:10`` and ``09:25:10`` max.
+For example: If you schedule an event to arrive at this particular time ``09:24:10``, because of the one minute precison, it will arrive at anytime between ``09:24:10`` and ``09:25:10`` max.
