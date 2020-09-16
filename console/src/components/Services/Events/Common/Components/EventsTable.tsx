@@ -8,14 +8,11 @@ import { FilterTableProps, GridHeadingProps } from './types';
 import { ordinalColSort } from '../../../Data/utils';
 import styles from '../../Events.scss';
 import EventsSubTable from './EventsSubTable';
+import ExpanderButton from './ExpanderButton';
 import { sanitiseRow } from '../../utils';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
-import {
-  getEventStatusIcon,
-  getEventDeliveryIcon,
-  getExpanderButton,
-} from './utils';
+import { getEventStatusIcon, getEventDeliveryIcon } from './utils';
 import Button from '../../../../Common/Button';
 
 type CancelButtonProps = {
@@ -34,7 +31,7 @@ const CancelEventButton: React.FC<CancelButtonProps> = ({
     color="white"
     size="xs"
     title="Cancel Event"
-    onMouseDown={(e: React.MouseEvent) => {
+    onMouseDown={e => {
       e.preventDefault();
     }}
   >
@@ -123,13 +120,13 @@ const EventsTable: React.FC<Props> = props => {
           {columns.includes('actions') && (
             <CancelEventButton
               id={row.id}
-              onClickHandler={(event: React.MouseEvent) => {
+              onClickHandler={event => {
                 onCancelHandler(row.id, row.scheduled_time);
                 event.stopPropagation();
               }}
             />
           )}
-          {getExpanderButton(isExpanded)}
+          <ExpanderButton isExpanded={isExpanded} />
         </>
       );
     },

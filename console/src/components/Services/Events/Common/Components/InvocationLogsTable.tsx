@@ -6,18 +6,18 @@ import ReactTable, {
 import 'react-table/react-table.css';
 import { FilterTableProps, GridHeadingProps } from './types';
 import { Dispatch } from '../../../../../types';
-// import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import { ordinalColSort } from '../../../Data/utils';
 import styles from '../../Events.scss';
 import InvocationLogDetails from './InvocationLogDetails';
+import ExpanderButton from './ExpanderButton';
 import { redeliverDataEvent } from '../../ServerIO';
 import ReloadIcon from '../../../../Common/Icons/Reload';
 import Modal from '../../../../Common/Modal/Modal';
 import RedeliverEvent from './RedeliverEvent';
 import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 import { Nullable } from '../../../../Common/utils/tsUtils';
-import { getInvocationLogStatus, getExpanderButton } from './utils';
+import { getInvocationLogStatus } from './utils';
 
 interface Props extends FilterTableProps {
   dispatch: Dispatch;
@@ -128,7 +128,7 @@ const InvocationLogsTable: React.FC<Props> = props => {
               <ReloadIcon className="" />
             </div>
           )}
-          {getExpanderButton(isExpanded)}
+          <ExpanderButton isExpanded={isExpanded} />
         </>
       );
     },
