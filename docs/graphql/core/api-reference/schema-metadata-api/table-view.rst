@@ -363,8 +363,11 @@ set_table_configuration
 -----------------------
 
 ``set_table_configuration`` sets the configuration of a table through which
-an identifier, custom root fields or custom column names of an already tracked
+an identifier, custom root fields and custom column names of an already tracked
 table can be set. This will **replace** the already present configuration.
+
+:ref:`set_table_custom_fields <set_table_custom_fields>` has been deprecated in
+favour of this API.
 
 Set configuration for table/view ``author``:
 
