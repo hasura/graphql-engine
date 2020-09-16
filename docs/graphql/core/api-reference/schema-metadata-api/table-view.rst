@@ -362,7 +362,7 @@ Args syntax
 set_table_configuration
 -----------------------
 
-``set_table_configuration`` sets the configuration of a table, through which
+``set_table_configuration`` sets the configuration of a table through which
 an identifier, custom root fields or custom column names of an already tracked
 table can be set. This will **replace** the already present configuration.
 
