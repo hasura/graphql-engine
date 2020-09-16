@@ -150,7 +150,7 @@ Add a table/view ``author``:
    }
 
 An ``identifier`` can be used to track a table with the identifier. This can
-be useful when a table name is not GraphQL compliant, like ``"Users Address"``
+be useful when a table name is not GraphQL compliant, like ``Users Address``.
 An ``identifier`` like ``users_address`` will complement the ``"Users Address"``
 table, so that it can be added to the GraphQL schema.
 
