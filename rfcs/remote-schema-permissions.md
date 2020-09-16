@@ -170,9 +170,6 @@ args:
               - input_field: "_eq"
                 value:
                   from_session_variable: "x-hasura-user-id"
-          - name: "limit"
-            value:
-              static: 1
     - name: User
       fields:
       - name: a
