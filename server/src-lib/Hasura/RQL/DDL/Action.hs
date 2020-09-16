@@ -125,7 +125,7 @@ resolveAction env AnnotatedCustomTypes{..} ActionDefinition{..} allPGScalars = d
     <> " is not an object type defined in custom types"
   resolvedWebhook <- resolveWebhook env _adHandler
   pure ( ActionDefinition resolvedArguments _adOutputType _adType
-         _adHeaders _adForwardClientHeaders resolvedWebhook
+         _adHeaders _adForwardClientHeaders _adTimeout resolvedWebhook
        , outputObject
        )
 
