@@ -13,7 +13,7 @@ import qualified Data.Environment           as Env
 
 import           Hasura.Incremental         (Cacheable)
 import           Hasura.RQL.DDL.Headers     (HeaderConf (..))
-import           Hasura.RQL.Types.Common    (NonEmptyText (..))
+import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Types
 
@@ -42,7 +42,7 @@ $(J.deriveJSON (J.aesonDrop 2 J.snakeCase) ''RemoteSchemaInfo)
 
 data RemoteSchemaDef
   = RemoteSchemaDef
-  { _rsdUrl                  :: !(Maybe N.URI)
+  { _rsdUrl                  :: !(Maybe InputWebhook)
   , _rsdUrlFromEnv           :: !(Maybe UrlFromEnv)
   , _rsdHeaders              :: !(Maybe [HeaderConf])
   , _rsdForwardClientHeaders :: !Bool
@@ -94,8 +94,11 @@ validateRemoteSchemaDef
   -> m RemoteSchemaInfo
 validateRemoteSchemaDef env (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout) =
   case (mUrl, mUrlEnv) of
-    (Just url, Nothing)    ->
-      return $ RemoteSchemaInfo url hdrs fwdHdrs timeout
+    (Just url, Nothing)    -> do
+      resolvedWebhookTxt <- unResolvedWebhook <$> resolveWebhook env url
+      case N.parseURI $ T.unpack resolvedWebhookTxt of
+        Nothing  -> throw400 InvalidParams $ "not a valid URI: " <> resolvedWebhookTxt
+        Just uri -> return $ RemoteSchemaInfo uri hdrs fwdHdrs timeout
     (Nothing, Just urlEnv) -> do
       url <- getUrlFromEnv env urlEnv
       return $ RemoteSchemaInfo url hdrs fwdHdrs timeout
