@@ -7,7 +7,7 @@ import { transformHeaders } from '../Headers/utils';
 import { generateTableDef } from './pgUtils';
 import { Nullable } from './tsUtils';
 import { ConsoleState } from '../../../types';
-import { NotificationScope } from '../../Main/ConsoleNotification';
+import { ConsoleScope } from '../../Main/ConsoleNotification';
 
 // TODO add type for the where clause
 
@@ -698,12 +698,12 @@ export const getUpdateConsoleStateQuery = (
 
 export const getConsoleNotificationQuery = (
   time: Date | string | number,
-  userType?: Nullable<NotificationScope>
+  userType?: Nullable<ConsoleScope>
 ) => {
   let addedScope = {
     scope: { $like: userType },
   };
-  if (!userType || userType !== 'OSS') {
+  if (!userType) {
     addedScope = { scope: { $like: 'OSS' } };
   }
 
