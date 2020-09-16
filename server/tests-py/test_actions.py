@@ -518,7 +518,7 @@ class TestActionTimeout:
             'status': 200,
         }
         # the action takes 2 seconds to complete
-        time.sleep(3)
+        time.sleep(4)
         response, _ = check_query(hge_ctx, conf)
         assert 'errors' in response['data']['create_user']
         assert 'ResponseTimeout' == response['data']['create_user']['errors']['internal']['error']['message']
