@@ -39,9 +39,7 @@ newtype BatchSize = BatchSize { unBatchSize :: NonNegativeInt }
   deriving (Show, Eq, J.ToJSON, J.FromJSON)
 
 mkBatchSize :: Int -> Maybe BatchSize
-mkBatchSize x = do
-  t <- mkNonNegativeInt x
-  return $ BatchSize t 
+mkBatchSize x = BatchSize <$> mkNonNegativeInt x
 
 -- TODO this is treated as milliseconds in fromEnv and as seconds in ToJSON.
 --      ideally this would have e.g. ... unRefetchInterval :: Milliseconds
@@ -49,6 +47,4 @@ newtype RefetchInterval = RefetchInterval { unRefetchInterval :: NonNegativeDiff
   deriving (Show, Eq, J.ToJSON, J.FromJSON)
 
 mkRefetchInterval :: DiffTime -> Maybe RefetchInterval
-mkRefetchInterval x = do
-  t <- mkNonNegativeDiffTime x
-  return $ RefetchInterval t
+mkRefetchInterval x = RefetchInterval <$> mkNonNegativeDiffTime x
