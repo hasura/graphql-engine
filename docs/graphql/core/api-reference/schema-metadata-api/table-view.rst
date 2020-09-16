@@ -290,7 +290,7 @@ Custom Root Fields
 .. _set_table_custom_fields:
 
 set_table_custom_fields (deprecated)
------------------------------------
+------------------------------------
 
 ``set_table_custom_fields`` has been deprecated. Use the
 :ref:`set_table_configuration <set_table_configuration>` API to set the custom
