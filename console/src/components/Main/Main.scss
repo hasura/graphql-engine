@@ -1321,8 +1321,6 @@
   width: 460px;
   padding: 0;
   left: auto;
-  height: auto;
-  max-height: calc(100vh - 115px);
   border: none;
   user-select: none;
   box-shadow: none;
@@ -1333,9 +1331,10 @@
   border-top: none;
   background-color: white;
   text-transform: none;
-  height: 100%;
   overflow: hidden;
+  height: auto;
   &:hover {
+    max-height: calc(100vh - 120px);
     overflow-y: scroll;
   }
 }
