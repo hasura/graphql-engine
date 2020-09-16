@@ -359,8 +359,7 @@ Let us now create an ``object relationship`` called ``avg_rating`` from the ``au
 
   .. tab:: Console
 
-    Step 1: Open the manual relationship section
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    **Step 1: Open the manual relationship section**
 
     - Open the console and navigate to the ``Data -> author -> Relationships`` tab.
     - Click on the ``Configure`` button:
@@ -368,8 +367,7 @@ Let us now create an ``object relationship`` called ``avg_rating`` from the ``au
     .. thumbnail:: /img/graphql/core/schema/manual-relationship-btn.png
       :alt: Open the manual relationship section
 
-    Step 2: Define the relationship
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    **Step 2: Define the relationship**
 
     The above step will open up a section as shown below:
 
@@ -382,8 +380,7 @@ Let us now create an ``object relationship`` called ``avg_rating`` from the ``au
     - **Relationship Name** can be: ``avg_rating``
     - **Reference** will be: ``id -> author_avg_rating . id`` *(similar to defining a foreign-key)*
 
-    Step 3: Create the relationship
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    **Step 3: Create the relationship**
 
     Now click on the ``Save`` button to create the relationship.
 
