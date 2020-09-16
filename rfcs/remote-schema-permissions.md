@@ -125,7 +125,7 @@ The above API only illustrates schema masking. We need to incorporate argument p
 
 Each field in GraphQL can take arguments as well. Arguments must belong to input types i.e Scalar, Enum, or Input Object (or list of these).
 
-Role-based argument presets can basically inject values from session variables or static values during execution. The presetted argument should also get removed from the exposed role-based schema.
+Role-based argument presets can basically inject values from session variables or static values during execution. The presetted argument should also get removed from the exposed role-based schema (for an input object, only the input field from the preset path should get removed but this has few complications which are discussed in the last section).
 
 The proposed API:
 
@@ -235,5 +235,9 @@ This was tackled in #2690 by introducing a feature flag for enabling remote sche
 one which takes permissions for a single type (of any type) and adds them together to yield the final schema?
 4. How will it work with remote joins?
 5. How will it work with multiple roles?
-6. Implementation: how do we generate input types for each field when there are presets (currently input types are shared across fields)?
-Possible solution: Suffix type name, field name and role name to the role-based type
+6. Implementation: how do we generate new input objects (per field) when there are presets on input objects (since input objects can be shared across fields)? Possible solutions:
+  - Remove the whole argument (Reduces filter capabilities on the field)
+  - Keep the original type, override any user given values with the permission preset during execution (May confuse the user during dev)
+  - Create unique types by stripping the preset paths e.g. suffix type name, field name and role name to the original type (This can potentially ruin the schema)
+
+I think 2. seems the best and we can throw a permission error if a preset argument is supplied by the user during runtime validation.
