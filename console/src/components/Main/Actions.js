@@ -139,7 +139,7 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
         );
       }
 
-      if (!previousRead) {
+      if (previousRead) {
         if (!consoleStateDB.console_notifications) {
           dispatch(
             updateConsoleNotificationsState({
