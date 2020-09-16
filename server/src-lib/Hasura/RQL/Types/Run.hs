@@ -3,9 +3,9 @@
 module Hasura.RQL.Types.Run
   ( MetadataRun(..)
   , RunCtx(..)
-  , peelRun
-  -- , QueryRun(..)
-  -- , liftQueryToMetadataRun
+  , peelMetadataRun
+  , QueryRun(..)
+  , peelQueryRun
   ) where
 
 import           Hasura.Prelude
@@ -60,58 +60,57 @@ instance MonadMetadata MetadataRun where
 
   updateMetadata = put
 
-instance MonadTx MetadataRun where
-  liftTx _ = throw500 "Pg queries not supported now, fixme"
-
-peelRun
+peelMetadataRun
   :: (MonadIO m)
   => RunCtx
   -> Metadata
   -> MetadataRun a
   -> ExceptT QErr m (a, Metadata)
-peelRun runCtx metadata (MetadataRun m) =
+peelMetadataRun runCtx metadata (MetadataRun m) =
   hoist liftIO $ runStateT (runReaderT m runCtx) metadata
 
--- newtype QueryRun a
---   = QueryRun {unQueryRun :: ReaderStateT (LazyTx QErr) a}
---   deriving ( Functor, Applicative, Monad
---            , MonadError QErr
---            , MonadReader RunCtx
---            , MonadIO
---            , MonadTx
---            , MonadBase IO
---            , MonadBaseControl IO
---            , MonadUnique
---            , MonadState Metadata
---            )
+newtype QueryRun a
+  = QueryRun {unQueryRun :: ReaderStateT (LazyTx QErr) a}
+  deriving ( Functor, Applicative, Monad
+           , MonadError QErr
+           , MonadReader RunCtx
+           , MonadIO
+           , MonadTx
+           , MonadBase IO
+           , MonadBaseControl IO
+           , MonadUnique
+           , MonadState Metadata
+           )
 
--- instance UserInfoM QueryRun where
---   askUserInfo = asks _rcUserInfo
+instance UserInfoM QueryRun where
+  askUserInfo = asks _rcUserInfo
 
--- instance HasHttpManager QueryRun where
---   askHttpManager = asks _rcHttpMgr
+instance HasHttpManager QueryRun where
+  askHttpManager = asks _rcHttpMgr
 
--- instance HasSQLGenCtx QueryRun where
---   askSQLGenCtx = asks _rcSqlGenCtx
+instance HasSQLGenCtx QueryRun where
+  askSQLGenCtx = asks _rcSqlGenCtx
 
--- instance HasDefaultSource QueryRun where
---   askDefaultSource = asks _rcDefaultPgSource
+instance HasDefaultSource QueryRun where
+  askDefaultSource = asks _rcDefaultPgSource
 
--- instance MonadMetadata QueryRun where
---   fetchMetadata = get
+instance MonadMetadata QueryRun where
+  fetchMetadata = get
 
---   updateMetadata = put
+  updateMetadata = put
 
--- liftQueryToMetadataRun
---   :: Tracing.TraceContext
---   -> PGSourceConfig
---   -> Q.TxAccess
---   -> QueryRun a -> MetadataRun a
--- liftQueryToMetadataRun ctx pgSourceConfig accessMode queryRun = do
---   userInfo <- askUserInfo
---   MetadataRun $
---     hoist ( hoist
---             (runLazyTx pgExecCtx accessMode . withTraceContext ctx . withUserInfo userInfo)
---           ) $ unQueryRun queryRun
---   where
---     pgExecCtx = _pscExecCtx pgSourceConfig
+peelQueryRun
+  :: (MonadIO m)
+  => PGSourceConfig
+  -> Q.TxAccess
+  -> Maybe Tracing.TraceContext
+  -> RunCtx
+  -> Metadata
+  -> QueryRun a -> ExceptT QErr m (a, Metadata)
+peelQueryRun pgSourceConfig accessMode maybeTraceCtx runCtx metadata (QueryRun m) =
+  runStateT (runReaderT m runCtx) metadata
+  & runLazyTx (_pscExecCtx pgSourceConfig) accessMode
+    . withUserInfo userInfo
+    . maybe id withTraceContext maybeTraceCtx
+  where
+    userInfo = _rcUserInfo runCtx

@@ -48,7 +48,6 @@ import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DML.Select                (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Action.Class
-import           Hasura.RQL.Types.Run
 import           Hasura.Server.Utils                  (mkClientHeadersForward, mkSetCookieHeaders)
 import           Hasura.Server.Version                (HasVersion)
 import           Hasura.Session
@@ -239,7 +238,7 @@ asyncActionsProcessor
      )
   => Env.Environment
   -> L.Logger L.Hasura
-  -> IORef (RebuildableSchemaCache MetadataRun, SchemaCacheVer)
+  -> IORef (RebuildableSchemaCache, SchemaCacheVer)
   -> Q.PGPool
   -> HTTP.Manager
   -> m void

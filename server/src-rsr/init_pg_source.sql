@@ -40,3 +40,10 @@ CREATE TABLE hdb_catalog.event_invocation_logs
 );
 
 CREATE INDEX ON hdb_catalog.event_invocation_logs (event_id);
+
+CREATE OR REPLACE FUNCTION hdb_catalog.check_violation(msg text) RETURNS bool AS
+$$
+BEGIN
+  RAISE check_violation USING message=msg;
+END;
+$$ LANGUAGE plpgsql;

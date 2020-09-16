@@ -50,7 +50,10 @@ initSource = do
   if | not hdbCatalogExist -> liftTx do
          Q.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_catalog" () False
          pgcryptoAvailable <- isExtensionAvailable "pgcrypto"
-         when (not pgcryptoAvailable) createPgcryptoExtension
+         if pgcryptoAvailable then createPgcryptoExtension
+           else throw400 Unexpected $
+             "pgcrypto extension is required, but could not find the extension in the "
+             <> "PostgreSQL server. Please make sure this extension is available."
          initPgSourceCatalog
      | not sourceVersionTableExist && eventLogTableExist -> do
          liftTx createVersionTable

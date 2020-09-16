@@ -204,7 +204,7 @@ $(deriveJSON
 --   resultE <- runQueryM env query & Tracing.interpTraceT \x -> do
 --     a <- x & runHasSystemDefinedT systemDefined
 --            & runCacheRWT sc
---            & peelRun runCtx pgExecCtx accessMode (Just traceCtx) metadata
+--            & peelMetadataRun runCtx pgExecCtx accessMode (Just traceCtx) metadata
 --            & runExceptT
 --     pure (either
 --       ((, mempty) . Left)

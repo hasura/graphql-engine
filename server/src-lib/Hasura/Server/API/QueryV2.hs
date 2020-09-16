@@ -18,7 +18,6 @@ import           Hasura.SQL.Types
 import qualified Hasura.Tracing        as Tracing
 
 import           Control.Lens          (makePrisms, (^?))
-import           Control.Monad.Morph   (hoist)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -74,7 +73,7 @@ runQuery
   -> HTTP.Manager
   -> SQLGenCtx
   -> PGSourceConfig
-  -> RebuildableSchemaCache MetadataRun
+  -> RebuildableSchemaCache
   -> Metadata
   -> QueryWithSource
   -> m EncJSON
@@ -86,8 +85,8 @@ runQuery env userInfo httpManager sqlGenCtx defSourceConfig schemaCache metadata
                   throw400 NotExists $ "source " <> source <<> " does not exist"
   runQueryM env source rqlQuery & Tracing.interpTraceT \x -> do
     a <- x & runCacheRWT schemaCache
-           -- & liftQueryToMetadataRun traceCtx sourceConfig accessMode
-           & peelRun (RunCtx userInfo httpManager sqlGenCtx defSourceConfig) metadata
+           & peelQueryRun sourceConfig accessMode (Just traceCtx)
+             (RunCtx userInfo httpManager sqlGenCtx defSourceConfig) metadata
            & runExceptT
     liftEither a <&> \(((r, tracemeta), _, _), _) -> (r, tracemeta)
   where

@@ -5,7 +5,6 @@ module Hasura.Server.SchemaUpdate
   )
 where
 
-import           Hasura.Db
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema          (runCacheRWT)
@@ -221,7 +220,7 @@ refreshSchemaCache sqlGenCtx defPgSource logger httpManager cacheRef invalidatio
                         >>= liftEither
     (((), cache, _), _) <- buildSchemaCacheWithOptions CatalogSync invalidations noMetadataModify
       & runCacheRWT rebuildableCache
-      & peelRun runCtx metadata
+      & peelMetadataRun runCtx metadata
     pure (cache, metadata)
   case resE of
     Left e   -> logError logger threadType $ TEQueryError e

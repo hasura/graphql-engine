@@ -92,7 +92,7 @@ data SchemaCacheRef
   -- the IORef) where we serve a request with a stale schemacache but I guess
   -- it is an okay trade-off to pay for a higher throughput (I remember doing a
   -- bunch of benchmarks to test this hypothesis).
-  , _scrCache    :: IORef (RebuildableSchemaCache MetadataRun, SchemaCacheVer)
+  , _scrCache    :: IORef (RebuildableSchemaCache, SchemaCacheVer)
   , _scrMetadata :: IORef Metadata
   , _scrOnChange :: IO ()
   -- ^ an action to run when schemacache changes
@@ -161,7 +161,7 @@ withSCUpdate
   -> Q.PGPool
   -> InstanceId
   -> L.Logger L.Hasura
-  -> m (a, MetadataStateResult MetadataRun) -> m a
+  -> m (a, MetadataStateResult) -> m a
 withSCUpdate scr metadataPool instanceId logger action =
   withMVarMasked (_scrLock scr) $ \() -> do
     (!res, !(MetadataStateResult newSC cacheInvalidations newMetadata)) <- action
@@ -180,7 +180,7 @@ withSCUpdate scr metadataPool instanceId logger action =
 updateStateRefs
   :: (MonadIO m, MonadBaseControl IO m)
   => L.Logger L.Hasura
-  -> RebuildableSchemaCache MetadataRun
+  -> RebuildableSchemaCache
   -> Metadata
   -> SchemaCacheRef
   -> m ()
@@ -423,11 +423,11 @@ v1MetadataHandler request = do
   metadata     <- liftIO $ readIORef $ _scrMetadata scRef
   httpMgr      <- asks (scManager . hcServerCtx)
   sqlGenCtx    <- asks (scSQLGenCtx . hcServerCtx)
-  defPgSource    <- asks (scDefaultPgSource . hcServerCtx)
+  defPgSource  <- asks (scDefaultPgSource . hcServerCtx)
   env          <- asks (scEnvironment . hcServerCtx)
   instanceId   <- asks (scInstanceId . hcServerCtx)
   metadataPool <- asks (scMetadataPool . hcServerCtx)
-  logger <- asks (scLogger . hcServerCtx)
+  logger       <- asks (scLogger . hcServerCtx)
   r <- withSCUpdate scRef metadataPool instanceId logger $
        runMetadataRequest env userInfo httpMgr sqlGenCtx defPgSource schemaCache metadata request
   pure $ HttpResponse r []
@@ -688,7 +688,7 @@ mkWaiApp
   -> E.PlanCacheOptions
   -> ResponseInternalErrorsConfig
   -> Maybe EL.LiveQueryPostPollHook
-  -> RebuildableSchemaCache MetadataRun
+  -> RebuildableSchemaCache
   -> EKG.Store
   -> Q.PGPool
   -- ^ Metadata storage connection pool - TODO: Better rep

@@ -10,14 +10,15 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict.Extended as M
 import qualified Data.HashSet                 as HS
 import qualified Data.Sequence                as Seq
+import qualified Network.HTTP.Client          as HTTP
 
 import           Control.Arrow.Extended
 import           Control.Lens
+import           Control.Monad.Unique
 
 import qualified Hasura.Incremental           as Inc
 
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Run
 import           Hasura.SQL.Types
 
 -- | 'InvalidationKeys' used to apply requested 'CacheInvalidations'.
@@ -112,22 +113,63 @@ data BuildOutputs
   }
 $(makeLenses ''BuildOutputs)
 
-data RebuildableSchemaCache m
+data CacheBuildCtx
+  = CacheBuildCtx
+  { _cbcManager         :: !HTTP.Manager
+  , _cbcSqlGenCtx       :: !SQLGenCtx
+  , _cbcDefaultPgConfig :: !PGSourceConfig
+  }
+
+-- | The monad in which @'RebuildableSchemaCache' is being run
+newtype CacheBuild a
+  = CacheBuild {unCacheBuild :: ReaderT CacheBuildCtx (ExceptT QErr IO) a}
+  deriving ( Functor, Applicative, Monad
+           , MonadError QErr
+           , MonadReader CacheBuildCtx
+           , MonadIO
+           , MonadUnique
+           )
+
+instance HasHttpManager CacheBuild where
+  askHttpManager = asks _cbcManager
+
+instance HasSQLGenCtx CacheBuild where
+  askSQLGenCtx = asks _cbcSqlGenCtx
+
+instance HasDefaultSource CacheBuild where
+  askDefaultSource = asks _cbcDefaultPgConfig
+
+runCacheBuild
+  :: ( MonadIO m
+     , MonadError QErr m
+     , HasHttpManager m
+     , HasSQLGenCtx m
+     , HasDefaultSource m
+     )
+  => CacheBuild a -> m a
+runCacheBuild (CacheBuild m) = do
+  httpManager <- askHttpManager
+  sqlGenCtx   <- askSQLGenCtx
+  defPgSource <- askDefaultSource
+  let ctx = CacheBuildCtx httpManager sqlGenCtx defPgSource
+  liftEitherM $ liftIO $ runExceptT (runReaderT m ctx)
+
+data RebuildableSchemaCache
   = RebuildableSchemaCache
   { lastBuiltSchemaCache :: !SchemaCache
   , _rscInvalidationMap :: !InvalidationKeys
-  , _rscRebuild :: !(Inc.Rule (ReaderT BuildReason m) (Metadata, InvalidationKeys) SchemaCache)
+  , _rscRebuild :: !(Inc.Rule (ReaderT BuildReason CacheBuild) (Metadata, InvalidationKeys) SchemaCache)
   }
 $(makeLenses ''RebuildableSchemaCache)
 
-data MetadataStateResult m
+data MetadataStateResult
   = MetadataStateResult
-  { _msrSchemaCache        :: !(RebuildableSchemaCache m)
+  { _msrSchemaCache        :: !RebuildableSchemaCache
   , _msrCacheInvalidations :: !CacheInvalidations
   , _msrMetadata           :: !Metadata
   }
 
-type CacheBuildM = ReaderT BuildReason MetadataRun
+type CacheBuildM = ReaderT BuildReason CacheBuild
 type CacheBuildA = WriterA (Seq CollectedInfo) (Inc.Rule CacheBuildM)
 
 bindErrorA

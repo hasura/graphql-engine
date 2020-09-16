@@ -12,7 +12,6 @@ import           Control.Monad.Morph                       (hoist)
 import           Control.Monad.Stateless
 import           Control.Monad.STM                         (atomically)
 import           Control.Monad.Trans.Control               (MonadBaseControl (..))
-import           Control.Monad.Unique
 import           Data.Aeson                                ((.=))
 import           Data.Time.Clock                           (UTCTime)
 #ifndef PROFILING
@@ -59,7 +58,8 @@ import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Action.Class
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.API.Query                   (requiresAdmin, runQueryM)
+import           Hasura.Server.API.Query                   (requiresAdmin)
+import           Hasura.Server.API.QueryV2                 (QueryWithSource (..), runQueryM)
 import           Hasura.Server.App
 import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates                (checkForUpdates)
@@ -161,7 +161,7 @@ data InitCtx
   , _icLoggers             :: !Loggers
   , _icDefaultSourceConfig :: !PGSourceConfig
   , _icShutdownLatch       :: !ShutdownLatch
-  , _icSchemaCache         :: !(RebuildableSchemaCache MetadataRun)
+  , _icSchemaCache         :: !RebuildableSchemaCache
   , _icMetadata            :: !Metadata
   , _icMetadataPool        :: !Q.PGPool
   }
@@ -220,7 +220,7 @@ initialiseCtx env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
 
   let defSourceConfig = PGSourceConfig (mkPGExecCtx Q.Serializable pool) connInfo
 
-  schemaCacheE <- runExceptT $ peelRun (RunCtx adminUserInfo httpManager sqlGenCtx defSourceConfig)
+  schemaCacheE <- runExceptT $ peelMetadataRun (RunCtx adminUserInfo httpManager sqlGenCtx defSourceConfig)
                   metadata $ buildRebuildableSchemaCache env
 
   schemaCache <- fmap fst $ onLeft schemaCacheE $ \err -> do
@@ -398,7 +398,8 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime shutd
     maxEvThrds    = fromMaybe defaultMaxEventThreads soEventsHttpPoolSize
     fetchI        = milliseconds $ fromMaybe (Milliseconds defaultFetchInterval) soEventsFetchInterval
     logEnvHeaders = soLogHeadersFromEnv
-    allPgSources =  map _pcConfiguration $ HM.elems $ scPostgres $ lastBuiltSchemaCache _icSchemaCache
+    allPgSources  = map _pcConfiguration $ HM.elems $ scPostgres $
+                    lastBuiltSchemaCache _icSchemaCache
 
   lockedEventsCtx <- liftIO $ atomically initLockedEventsCtx
 
@@ -627,30 +628,40 @@ runAsAdmin
   -> m (Either QErr a)
 runAsAdmin defPgSource sqlGenCtx httpManager metadata m =
   fmap (fmap fst) $ runExceptT $
-    peelRun (RunCtx adminUserInfo httpManager sqlGenCtx defPgSource) metadata m
+    peelMetadataRun (RunCtx adminUserInfo httpManager sqlGenCtx defPgSource) metadata m
 
 execQuery
   :: ( HasVersion
-     , CacheRWM m
-     , MonadTx m
      , MonadIO m
-     , MonadUnique m
-     , HasHttpManager m
-     , HasSQLGenCtx m
-     , UserInfoM m
-     , HasSystemDefined m
-     , Tracing.MonadTrace m
-     , MonadMetadata m
      )
   => Env.Environment
+  -> HTTP.Manager
+  -> PGSourceConfig
+  -> Metadata
   -> BLC.ByteString
-  -> m BLC.ByteString
-execQuery env queryBs = do
-  query <- case A.decode queryBs of
+  -> m (Either QErr BLC.ByteString)
+execQuery env httpManager defPgSource metadata queryBs = runExceptT do
+  QueryWithSource source query <- case A.decode queryBs of
     Just jVal -> decodeValue jVal
     Nothing   -> throw400 InvalidJSON "invalid json"
-  buildSchemaCacheStrict noMetadataModify
-  encJToLBS <$> runQueryM env query
+  let runCtx = RunCtx adminUserInfo httpManager (SQLGenCtx False) defPgSource
+      actionM = do
+        buildSchemaCacheStrict noMetadataModify
+        encJToLBS <$> runQueryM env source query
+
+  schemaCache <- buildRebuildableSchemaCache env
+                 & peelMetadataRun runCtx metadata
+                 & fmap fst
+
+  let postgresSources = scPostgres $ lastBuiltSchemaCache schemaCache
+  sourceConfig <- fmap _pcConfiguration $ onNothing (HM.lookup source postgresSources) $
+                  throw400 NotExists $ "source " <> unSourceName source <> " does not exist"
+
+  actionM & Tracing.runTraceTWithReporter Tracing.noReporter "execute"
+          & runCacheRWT schemaCache
+          & fmap (\(res, _, _) -> res)
+          & peelQueryRun sourceConfig Q.ReadWrite Nothing runCtx metadata
+          & fmap fst
 
 instance Tracing.HasReporter AppM
 

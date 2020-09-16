@@ -14,7 +14,6 @@ import           Hasura.Eventing.ScheduledTrigger
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.EventTrigger      (getHeaderInfosFromConf)
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Catalog         (CatalogCronTrigger (..))
 
 import qualified Data.Environment                 as Env
 import qualified Data.HashMap.Strict              as Map

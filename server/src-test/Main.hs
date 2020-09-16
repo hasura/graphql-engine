@@ -33,10 +33,10 @@ import qualified Data.Parser.URLTemplate      as URLTemplate
 import qualified Data.TimeSpec                as TimeSpec
 import qualified Hasura.IncrementalSpec       as IncrementalSpec
 -- import qualified Hasura.RQL.MetadataSpec      as MetadataSpec
-import qualified Hasura.Server.MigrateSpec    as MigrateSpec
-import qualified Hasura.Server.TelemetrySpec  as TelemetrySpec
 import qualified Hasura.CacheBoundedSpec      as CacheBoundedSpec
 import qualified Hasura.Server.AuthSpec       as AuthSpec
+import qualified Hasura.Server.MigrateSpec    as MigrateSpec
+import qualified Hasura.Server.TelemetrySpec  as TelemetrySpec
 
 data TestSuites
   = AllSuites !RawConnInfo
@@ -85,7 +85,7 @@ buildPostgresSpecs pgConnOptions = do
 
             runAsAdmin :: Run a -> IO a
             runAsAdmin =
-                  peelRun runContext pgContext Q.ReadWrite Nothing
+                  peelMetadataRun runContext pgContext Q.ReadWrite Nothing
               >>> runExceptT
               >=> flip onLeft printErrJExit
 

@@ -137,16 +137,16 @@ runMetadataRequest
   -> HTTP.Manager
   -> SQLGenCtx
   -> PGSourceConfig
-  -> RebuildableSchemaCache MetadataRun
+  -> RebuildableSchemaCache
   -> Metadata
   -> RQLMetadata
-  -> m (EncJSON, MetadataStateResult MetadataRun)
+  -> m (EncJSON, MetadataStateResult)
 runMetadataRequest env userInfo httpManager sqlGenCtx defPGSource schemaCache metadata request = do
   ((r, modSchemaCache, cacheInvalidations), modMetadata) <-
     runMetadataRequestM env request
     & runHasSystemDefinedT (SystemDefined False)
     & runCacheRWT schemaCache
-    & peelRun (RunCtx userInfo httpManager sqlGenCtx defPGSource) metadata
+    & peelMetadataRun (RunCtx userInfo httpManager sqlGenCtx defPGSource) metadata
     & runExceptT
     & liftEitherM
   pure (r, MetadataStateResult modSchemaCache cacheInvalidations modMetadata)
