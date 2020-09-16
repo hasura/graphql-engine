@@ -41,6 +41,7 @@ module Hasura.RQL.Types.Table
        , _FIComputedField
        , _FIRemoteRelationship
        , fieldInfoName
+       , fieldInfoGraphQLName
        , fieldInfoGraphQLNames
        , getFieldInfoM
        , getPGColumnInfoM
@@ -48,7 +49,6 @@ module Hasura.RQL.Types.Table
        , sortCols
        , getRels
        , getComputedFieldInfos
-       , getRemoteRels
 
        , isPGColInfo
        , RelInfo(..)
@@ -79,7 +79,8 @@ module Hasura.RQL.Types.Table
 
        ) where
 
-import           Hasura.GraphQL.Utils                (showNames)
+-- import qualified Hasura.GraphQL.Context            as GC
+
 import           Hasura.Incremental                  (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp
@@ -90,6 +91,7 @@ import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteRelationship
+import           Hasura.Server.Utils                 (duplicates, englishList)
 import           Hasura.Session
 import           Hasura.SQL.Types
 
@@ -97,11 +99,11 @@ import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.List.Extended                  (duplicates)
 import           Language.Haskell.TH.Syntax          (Lift)
 
 import qualified Data.HashMap.Strict                 as M
 import qualified Data.HashSet                        as HS
+import qualified Data.List.NonEmpty                  as NE
 import qualified Data.Text                           as T
 import qualified Language.GraphQL.Draft.Syntax       as G
 
@@ -139,9 +141,9 @@ instance FromJSON TableCustomRootFields where
                                         , update, updateByPk
                                         , delete, deleteByPk
                                         ]
-    when (not $ null duplicateRootFields) $ fail $ T.unpack $
+    for_ (nonEmpty duplicateRootFields) \duplicatedFields -> fail $ T.unpack $
       "the following custom root field names are duplicated: "
-      <> showNames duplicateRootFields
+      <> englishList "and" (dquoteTxt <$> duplicatedFields)
 
     pure $ TableCustomRootFields select selectByPk selectAggregate
                                  insert insertOne update updateByPk delete deleteByPk
@@ -182,19 +184,26 @@ fieldInfoName = \case
   FIComputedField info -> fromComputedField $ _cfiName info
   FIRemoteRelationship info -> fromRemoteRelationship $ _rfiName info
 
+fieldInfoGraphQLName :: FieldInfo -> Maybe G.Name
+fieldInfoGraphQLName = \case
+  FIColumn info -> Just $ pgiName info
+  FIRelationship info -> G.mkName $ relNameToTxt $ riName info
+  FIComputedField info -> G.mkName $ computedFieldNameToText $ _cfiName info
+  FIRemoteRelationship info -> G.mkName $ remoteRelationshipNameToText $ _rfiName info
+
 -- | Returns all the field names created for the given field. Columns, object relationships, and
 -- computed fields only ever produce a single field, but array relationships also contain an
 -- @_aggregate@ field.
 fieldInfoGraphQLNames :: FieldInfo -> [G.Name]
-fieldInfoGraphQLNames = \case
-  FIColumn info -> [pgiName info]
-  FIRelationship info ->
-    let name = G.Name . relNameToTxt $ riName info
-    in case riType info of
+fieldInfoGraphQLNames info = case info of
+  FIColumn _ -> maybeToList $ fieldInfoGraphQLName info
+  FIRelationship relationshipInfo -> fold do
+    name <- fieldInfoGraphQLName info
+    pure $ case riType relationshipInfo of
       ObjRel -> [name]
-      ArrRel -> [name, name <> "_aggregate"]
-  FIComputedField info -> [G.Name . computedFieldNameToText $ _cfiName info]
-  FIRemoteRelationship info -> pure $ G.Name $ remoteRelationshipNameToText $ _rfiName info
+      ArrRel -> [name, name <> $$(G.litName "_aggregate")]
+  FIComputedField _ -> maybeToList $ fieldInfoGraphQLName info
+  FIRemoteRelationship _ -> maybeToList $ fieldInfoGraphQLName info
 
 getCols :: FieldInfoMap FieldInfo -> [PGColumnInfo]
 getCols = mapMaybe (^? _FIColumn) . M.elems
@@ -208,9 +217,6 @@ getRels = mapMaybe (^? _FIRelationship) . M.elems
 
 getComputedFieldInfos :: FieldInfoMap FieldInfo -> [ComputedFieldInfo]
 getComputedFieldInfos = mapMaybe (^? _FIComputedField) . M.elems
-
-getRemoteRels :: FieldInfoMap FieldInfo -> [RemoteFieldInfo]
-getRemoteRels = mapMaybe (^? _FIRemoteRelationship) . M.elems
 
 isPGColInfo :: FieldInfo -> Bool
 isPGColInfo (FIColumn _) = True
@@ -413,8 +419,8 @@ type TableRawInfo = TableCoreInfoG PGColumnInfo PGColumnInfo
 -- | Fully-processed table info that includes non-column fields.
 type TableCoreInfo = TableCoreInfoG FieldInfo PGColumnInfo
 
-tciUniqueOrPrimaryKeyConstraints :: TableCoreInfoG a b -> [Constraint]
-tciUniqueOrPrimaryKeyConstraints info =
+tciUniqueOrPrimaryKeyConstraints :: TableCoreInfoG a b -> Maybe (NonEmpty Constraint)
+tciUniqueOrPrimaryKeyConstraints info = NE.nonEmpty $
   maybeToList (_pkConstraint <$> _tciPrimaryKey info) <> toList (_tciUniqueConstraints info)
 
 data TableInfo

@@ -3,7 +3,9 @@
 module Main where
 
 import           Control.Exception
+import           Data.Int                   (Int64)
 import           Data.Text.Conversions      (convertText)
+import           Data.Time.Clock.POSIX      (getPOSIXTime)
 
 import           Hasura.App
 import           Hasura.Logging             (Hasura)
@@ -23,6 +25,8 @@ import qualified Database.PG.Query          as Q
 import qualified Hasura.Tracing             as Tracing
 import qualified System.Exit                as Sys
 import qualified System.Posix.Signals       as Signals
+import qualified System.Metrics             as EKG
+
 
 main :: IO ()
 main = do
@@ -40,6 +44,17 @@ runApp env (HGEOptionsG rci hgeCmd) =
   withVersion $$(getVersionFromEnvironment) $ case hgeCmd of
     HCServe serveOptions -> do
       (initCtx, initTime) <- initialiseCtx env hgeCmd rci
+      
+      ekgStore <- liftIO do
+        s <- EKG.newStore
+        EKG.registerGcMetrics s
+        
+        let getTimeMs :: IO Int64
+            getTimeMs = (round . (* 1000)) `fmap` getPOSIXTime
+
+        EKG.registerCounter "ekg.server_timestamp_ms" getTimeMs s
+        pure s
+        
       let shutdownApp = return ()
       -- Catches the SIGTERM signal and initiates a graceful shutdown.
       -- Graceful shutdown for regular HTTP requests is already implemented in
@@ -50,7 +65,7 @@ runApp env (HGEOptionsG rci hgeCmd) =
         Signals.sigTERM
         (Signals.CatchOnce (shutdownGracefully initCtx))
         Nothing
-      runHGEServer env serveOptions initCtx Nothing initTime shutdownApp Nothing
+      runHGEServer env serveOptions initCtx Nothing initTime shutdownApp Nothing ekgStore
 
     HCExport -> do
       (initCtx, _) <- initialiseCtx env hgeCmd rci
