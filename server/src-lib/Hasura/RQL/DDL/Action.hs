@@ -134,6 +134,7 @@ resolveAction env customTypes allPGScalars actionDefinition = do
          | otherwise -> pure ()
 
   -- Check if the response type is an object
+-- <<<<<<< HEAD
   outputObject <- getObjectTypeInfo responseBaseType
   resolvedDef <- traverse (resolveWebhook env) actionDefinition
   pure (resolvedDef, outputObject, reusedPGScalars)
@@ -148,6 +149,18 @@ resolveAction env customTypes allPGScalars actionDefinition = do
         throw400 NotExists $ "the type: "
         <> showNamedTy typeName <>
         " is not an object type defined in custom types"
+-- =======
+--   let outputType = unGraphQLType _adOutputType
+--       outputBaseType = G.getBaseType outputType
+--   outputObject <- onNothing (Map.lookup outputBaseType _actObjects) $
+--     throw400 NotExists $ "the type: " <> showName outputBaseType
+--     <> " is not an object type defined in custom types"
+--   resolvedWebhook <- resolveWebhook env _adHandler
+--   pure ( ActionDefinition resolvedArguments _adOutputType _adType
+--          _adHeaders _adForwardClientHeaders _adTimeout resolvedWebhook
+--        , outputObject
+--        )
+-- >>>>>>> 9d047d172... server: add custom timeouts to actions (#5762)
 
 runUpdateAction
   :: forall m. ( QErrM m , CacheRWM m, MonadTx m)
