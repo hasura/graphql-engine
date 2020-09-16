@@ -163,11 +163,11 @@ convertMutationSelectionSet env logger gqlContext sqlGenCtx userInfo manager req
   -- Transform the RQL AST into a prepared SQL query
   txs <- for unpreparedQueries $ convertMutationRootField env logger userInfo manager reqHeaders (stringifyNum sqlGenCtx)
   let txList = OMap.toList txs
-  case (mapMaybe takeTx txList, mapMaybe takeRemote txList) of
+  Map.fromList <$> case (mapMaybe takeTx txList, mapMaybe takeRemote txList) of
     (dbPlans, []) -> do
-      let allHeaders = concatMap (snd . snd) dbPlans
-          combinedTx = toSingleTx $ map (G.unName *** fst) dbPlans
-      pure $ ExecStepDB (combinedTx, allHeaders)
+      pure $ fmap (G.unName *** ExecStepDB) dbPlans
+-- TODO re-support remotes under heterogeneous execution
+{-
     ([], remotes@(firstRemote:_)) -> do
       let (remoteOperation, varValsM') =
             buildTypedOperation
@@ -178,6 +178,7 @@ convertMutationSelectionSet env logger gqlContext sqlGenCtx userInfo manager req
       if all (\remote' -> fst (snd firstRemote) == fst (snd remote')) remotes
         then return $ ExecStepRemote (fst (snd firstRemote), remoteOperation, varValsM')
         else throw400 NotSupported "Mixed remote schemas are not supported"
+-}
     _ -> throw400 NotSupported "Heterogeneous execution of database and remote schemas not supported"
   -- Build and return an executable action from the generated SQL
   where
@@ -188,17 +189,6 @@ convertMutationSelectionSet env logger gqlContext sqlGenCtx userInfo manager req
       ParseError{ pePath, peMessage, peCode } ->
         throwError (err400 peCode peMessage){ qePath = pePath }
 
-    -- | A list of aliased transactions for eg
-    --
-    -- > [("f1", Tx r1), ("f2", Tx r2)]
-    --
-    -- are converted into a single transaction as follows
-    --
-    -- > Tx {"f1": r1, "f2": r2}
-    toSingleTx :: [(Text, tx EncJSON)] -> tx EncJSON
-    toSingleTx aliasedTxs =
-      fmap encJFromAssocList $
-      forM aliasedTxs $ \(al, tx) -> (,) al <$> tx
     takeTx
       :: (G.Name, Either (tx EncJSON, HTTP.ResponseHeaders) RemoteField)
       -> Maybe (G.Name, (tx EncJSON, HTTP.ResponseHeaders))

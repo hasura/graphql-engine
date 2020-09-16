@@ -13,6 +13,7 @@ module Hasura.EncJSON
   , encJFromLBS
   , encJFromList
   , encJFromAssocList
+  , encJFromHashMap
   ) where
 
 import           Hasura.Prelude
@@ -23,6 +24,7 @@ import qualified Data.ByteString.Builder as BB
 import qualified Data.ByteString.Lazy    as BL
 import qualified Data.Text.Encoding      as TE
 import qualified Database.PG.Query       as Q
+import qualified Data.HashMap.Strict     as Map
 
 -- encoded json
 -- TODO (from master): can be improved with gadts capturing bytestring, lazybytestring
@@ -93,3 +95,6 @@ encJFromAssocList = \case
     -- builds "key":value from (key,value)
     builder' (t, v) =
       encJFromChar '"' <> encJFromText t <> encJFromText "\":" <> v
+
+encJFromHashMap :: HashMap Text EncJSON -> EncJSON
+encJFromHashMap = encJFromAssocList . Map.toList

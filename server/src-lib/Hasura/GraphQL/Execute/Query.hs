@@ -73,8 +73,6 @@ instance J.ToJSON RootFieldPlan where
     RFPPostgres pgPlan -> J.toJSON pgPlan
     RFPActionQuery _   -> J.String "Action Execution Tx"
 
-type FieldPlans = [(G.Name, RootFieldPlan)]
-
 data ActionQueryPlan
   = AQPAsyncQuery !DS.AnnSimpleSel -- ^ Cacheable plan
   | AQPQuery !ActionExecuteTx -- ^ Non cacheable transaction
@@ -129,22 +127,19 @@ mkCurPlanTx
   -> HTTP.Manager
   -> [HTTP.Header]
   -> UserInfo
-  -> FieldPlans
-  -> m (tx [(Text, EncJSON)], GeneratedSqlMap)
-mkCurPlanTx env manager reqHdrs userInfo fldPlans = do
+  -> RootFieldPlan
+  -> m (tx EncJSON, Maybe PreparedSql)
+mkCurPlanTx env manager reqHdrs userInfo fldPlan = do
   -- generate the SQL and prepared vars or the bytestring
-  resolved <- forM fldPlans $ \(alias, fldPlan) -> do
-    fldResp <- case fldPlan of
-      RFPRaw resp                      -> return $ RRRaw resp
-      RFPPostgres (PGPlan q _ prepMap remoteJoins) -> do
-        let args = withUserVars (_uiSession userInfo) $ IntMap.elems prepMap
-        return $ RRSql $ PreparedSql q args remoteJoins
-      RFPActionQuery tx -> pure $ RRActionQuery tx
-    return (alias, fldResp)
-
-  pure $ ( for resolved (mkLazyRespTx env manager reqHdrs userInfo)
-         , mkGeneratedSqlMap resolved
-         )
+  fldResp <- case fldPlan of
+    RFPRaw resp -> return $ RRRaw resp
+    RFPPostgres (PGPlan q _ prepMap remoteJoins) -> do
+      let args = withUserVars (_uiSession userInfo) $ IntMap.elems prepMap
+      return $ RRSql $ PreparedSql q args remoteJoins
+    RFPActionQuery tx -> pure $ RRActionQuery tx
+  pure ( mkLazyRespTx env manager reqHdrs userInfo fldResp
+       , mkPreparedSql fldResp
+       )
 
 -- convert a query from an intermediate representation to... another
 irToRootFieldPlan
@@ -220,7 +215,7 @@ convertQuerySelSet
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
-  -> m ( ExecutionPlan (tx EncJSON, GeneratedSqlMap) RemoteCall (G.Name, J.Value)
+  -> m ( ExecutionPlan (tx EncJSON, Maybe PreparedSql) RemoteCall (G.Name, J.Value)
        -- , Maybe ReusableQueryPlan
        , [QueryRootField UnpreparedValue]
        )
@@ -262,10 +257,13 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
         (seqDB Seq.:|> (name, RFPRaw $ LBS.toStrict $ J.encode r), seqRemote)
 
 
-  executionPlan <- case (dbPlans, remoteFields) of
-    (dbs, Seq.Empty) -> ExecStepDB <$> do
-      (jsons, resolved) <- mkCurPlanTx env manager reqHeaders userInfo (toList dbs)
-      return $ (encJFromAssocList <$> jsons, resolved)
+  executionPlan <- Map.fromList <$> case (dbPlans, remoteFields) of
+    (dbs, Seq.Empty) -> do
+      results :: Seq.Seq (Text, (tx EncJSON, Maybe PreparedSql)) <-
+        for dbs $ \(alias, rootFieldPlan) -> (G.unName alias,) <$> mkCurPlanTx env manager reqHeaders userInfo rootFieldPlan
+      pure $ fmap ExecStepDB <$> toList results
+-- TODO re-support remotes under heterogeneous execution
+{-
     (Seq.Empty, remotes@(firstRemote Seq.:<| _)) -> do
       let (remoteOperation, _) =
             buildTypedOperation
@@ -276,11 +274,12 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
       if all (\remote' -> fst (snd firstRemote) == fst (snd remote')) remotes
         then return $ ExecStepRemote (fst (snd firstRemote), remoteOperation, varValsM)
         else throw400 NotSupported "Mixed remote schemas are not supported"
+-}
     _ -> throw400 NotSupported "Heterogeneous execution of database and remote schemas not supported"
 
   let asts :: [QueryRootField UnpreparedValue]
       asts = OMap.elems unpreparedQueries
-  pure (executionPlan,asts)  -- See Note [Temporarily disabling query plan caching]
+  pure (executionPlan, asts)  -- See Note [Temporarily disabling query plan caching]
   where
     usrVars = _uiSession userInfo
 
@@ -349,7 +348,7 @@ data ResolvedQuery
 -- | The computed SQL with alias which can be logged. Nothing here represents no
 -- SQL for cases like introspection responses. Tuple of alias to a (maybe)
 -- prepared statement
-type GeneratedSqlMap = [(G.Name, Maybe PreparedSql)]
+type GeneratedSqlMap = HashMap G.Name (Maybe PreparedSql)
 
 mkLazyRespTx
   :: ( HasVersion
@@ -361,9 +360,9 @@ mkLazyRespTx
   -> HTTP.Manager
   -> [HTTP.Header]
   -> UserInfo
-  -> (G.Name, ResolvedQuery)
-  -> tx (Text, EncJSON)
-mkLazyRespTx env manager reqHdrs userInfo (alias, node) = do
+  -> ResolvedQuery
+  -> tx EncJSON
+mkLazyRespTx env manager reqHdrs userInfo node = do
   resp <- case node of
     RRRaw bs                   -> return $ encJFromBS bs
     RRSql (PreparedSql q args maybeRemoteJoins) -> do
@@ -373,13 +372,10 @@ mkLazyRespTx env manager reqHdrs userInfo (alias, node) = do
         Just remoteJoins ->
           executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs remoteJoins
     RRActionQuery actionTx           -> actionTx
-  return (G.unName alias, resp)
+  return resp
 
-mkGeneratedSqlMap :: [(G.Name, ResolvedQuery)] -> GeneratedSqlMap
-mkGeneratedSqlMap resolved =
-  flip map resolved $ \(alias, node) ->
-    let res = case node of
-                RRRaw _         -> Nothing
-                RRSql ps        -> Just ps
-                RRActionQuery _ -> Nothing
-    in (alias, res)
+mkPreparedSql :: ResolvedQuery -> Maybe PreparedSql
+mkPreparedSql = \case
+  RRRaw _         -> Nothing
+  RRSql ps        -> Just ps
+  RRActionQuery _ -> Nothing

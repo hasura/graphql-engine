@@ -10,6 +10,7 @@ module Hasura.GraphQL.Logging
 
 import qualified Data.Aeson                             as J
 import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Data.HashMap.Strict                    as Map
 
 import           Hasura.GraphQL.Transport.HTTP.Protocol (GQLReqUnparsed)
 import           Hasura.Prelude
@@ -43,9 +44,7 @@ instance L.ToEngineLog QueryLog L.Hasura where
 -- | key-value map to be printed as JSON
 encodeSql :: EQ.GeneratedSqlMap -> J.Value
 encodeSql sql =
-  jValFromAssocList $ map (\(a, q) -> (G.unName a, fmap J.toJSON q)) sql
-  where
-    jValFromAssocList xs = J.object $ map (uncurry (J..=)) xs
+  J.object $ uncurry (J..=) . (\(a, q) -> (G.unName a, fmap J.toJSON q)) <$> Map.toList sql
 
 class Monad m => MonadQueryLog m where
   logQueryLog
