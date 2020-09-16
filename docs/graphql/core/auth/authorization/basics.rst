@@ -18,7 +18,7 @@ Introduction
 
 To understand the basics of access control in Hasura, let's take a look at this analogy to a SQL query: 
 
-.. thumbnail:: /img/graphql/manual/auth/permissions-rule-analogy.png
+.. thumbnail:: /img/graphql/core/auth/permissions-rule-analogy.png
   :width: 70%
   :alt: Understanding access control in Hasura
 
@@ -85,7 +85,7 @@ query is accepted with **admin** permissions.
 
   .. tab:: GraphiQL
 
-    .. thumbnail:: /img/graphql/manual/auth/fetch-authors.png
+    .. thumbnail:: /img/graphql/core/auth/fetch-authors.png
       :alt: Run a query without access control
 
   .. tab:: API
@@ -114,7 +114,7 @@ Now let's define an access control rule for the ``author`` table for a role ``us
     **Permissions** section of the table (``Data`` --> <table> --> ``Permissions`` tab) and define permissions
     as shown below:
 
-    .. thumbnail:: /img/graphql/manual/auth/permission-basics-simple-example.png
+    .. thumbnail:: /img/graphql/core/auth/permission-basics-simple-example.png
       :alt: Define access control rules
 
   .. tab:: CLI
@@ -185,7 +185,7 @@ the ``Request Headers`` section of ``GraphiQL`` as highlighted below:
 
   .. tab:: GraphiQL
 
-    .. thumbnail:: /img/graphql/manual/auth/permission-basics-query-with-access-control.png
+    .. thumbnail:: /img/graphql/core/auth/permission-basics-query-with-access-control.png
       :alt: Run a query with access control
 
   .. tab:: API

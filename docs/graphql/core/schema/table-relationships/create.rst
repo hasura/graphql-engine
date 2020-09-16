@@ -45,7 +45,7 @@ Let's add a foreign-key constraint to the ``author_id`` column in the ``article`
     the Foreign Keys section and configure the ``author_id`` column as a foreign-key for the ``id`` column in
     the ``author`` table:
 
-    .. thumbnail:: /img/graphql/manual/schema/add-foreign-key.png
+    .. thumbnail:: /img/graphql/core/schema/add-foreign-key.png
       :alt: Add foreign-key constraint
 
   .. tab:: CLI
@@ -102,7 +102,7 @@ Each article has one author. This is an ``object relationship``.
 
     Add an ``object relationship`` named ``author`` for the ``article`` table as shown here:
 
-    .. thumbnail:: /img/graphql/manual/schema/add-1-1-relationship.png
+    .. thumbnail:: /img/graphql/core/schema/add-1-1-relationship.png
       :alt: Create an object relationship
 
   .. tab:: CLI
@@ -213,7 +213,7 @@ You can add an ``array relationship`` in the same fashion as an ``object relatio
 
     On the console, add an ``array relationship`` named ``articles`` for the ``author`` table as shown here:
 
-    .. thumbnail:: /img/graphql/manual/schema/add-1-many-relationship.png
+    .. thumbnail:: /img/graphql/core/schema/add-1-many-relationship.png
       :alt: Create an array relationship
 
     We can now run a nested object query that is based on this ``array relationship``.
@@ -365,7 +365,7 @@ Let us now create an ``object relationship`` called ``avg_rating`` from the ``au
     - Open the console and navigate to the ``Data -> author -> Relationships`` tab.
     - Click on the ``Configure`` button:
 
-    .. thumbnail:: /img/graphql/manual/schema/manual-relationship-btn.png
+    .. thumbnail:: /img/graphql/core/schema/manual-relationship-btn.png
       :alt: Open the manual relationship section
 
     Step 2: Define the relationship
@@ -373,7 +373,7 @@ Let us now create an ``object relationship`` called ``avg_rating`` from the ``au
 
     The above step will open up a section as shown below:
 
-    .. thumbnail:: /img/graphql/manual/schema/manual-relationship-create.png
+    .. thumbnail:: /img/graphql/core/schema/manual-relationship-create.png
       :alt: Define the relationship
 
     In this case:

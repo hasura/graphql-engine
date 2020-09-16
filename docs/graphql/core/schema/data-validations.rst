@@ -56,7 +56,7 @@ Let's say we have a table:
     Now, we can head to the ``Modify`` tab in the table page and add a check
     constraint in the ``Check Constraints`` section:
 
-    .. thumbnail:: /img/graphql/manual/schema/validation-add-check-constraint.png
+    .. thumbnail:: /img/graphql/core/schema/validation-add-check-constraint.png
       :alt: Add check constraint
 
   .. tab:: CLI
@@ -267,7 +267,7 @@ Now, we can create a role ``user`` and add the following rule:
 
   .. tab:: Console
 
-    .. thumbnail:: /img/graphql/manual/schema/validation-not-empty.png
+    .. thumbnail:: /img/graphql/core/schema/validation-not-empty.png
       :alt: validation using permission: title cannot be empty
 
   .. tab:: CLI
@@ -368,7 +368,7 @@ Now, we can create a role ``user`` and add the following rule:
 
   .. tab:: Console
 
-    .. thumbnail:: /img/graphql/manual/schema/validation-author-isactive.png
+    .. thumbnail:: /img/graphql/core/schema/validation-author-isactive.png
       :alt: validation using permissions: author should be active
 
   .. tab:: CLI
@@ -475,7 +475,7 @@ or not.
 
 The validation process looks as follows:
 
-.. thumbnail:: /img/graphql/manual/schema/diagram-actions-data-validation.png
+.. thumbnail:: /img/graphql/core/schema/diagram-actions-data-validation.png
    :alt: validation using actions: article not deny-listed
    :width: 60%
 
@@ -490,7 +490,7 @@ returns an object of type ``AuthorOutput``:
 
   .. tab:: Console
 
-    .. thumbnail:: /img/graphql/manual/schema/validation-actions-def.png
+    .. thumbnail:: /img/graphql/core/schema/validation-actions-def.png
       :alt: Create action
 
   .. tab:: CLI

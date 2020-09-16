@@ -49,7 +49,7 @@ Let's say we want to create two simple tables for an article/author schema:
 
     For example, here is the schema for the ``article`` table in this interface:
 
-    .. thumbnail:: /img/graphql/manual/schema/create-table-graphql.png
+    .. thumbnail:: /img/graphql/core/schema/create-table-graphql.png
       :alt: Schema for an article table
 
   .. tab:: CLI

@@ -32,7 +32,7 @@ the following columns:
     name TEXT
   )
 
-.. thumbnail:: /img/graphql/manual/getting-started/create-profile-table.png
+.. thumbnail:: /img/graphql/core/getting-started/create-profile-table.png
    :alt: Create a table
 
 Set up an event trigger
@@ -45,7 +45,7 @@ In the Hasura console, navigate to ``Events -> Create trigger`` and:
 3. Select operations: ``insert``, ``update`` and ``delete``.
 4. Enter webhook URL as: ``https://httpbin.org/post``.
 
-.. thumbnail:: /img/graphql/manual/getting-started/create-event-trigger.png
+.. thumbnail:: /img/graphql/core/getting-started/create-event-trigger.png
    :alt: Set up an event trigger
 
 This sets up our webhook ``https://httpbin.org/post`` to receive database changes on an insert, update and delete on the
@@ -59,7 +59,7 @@ Watch the trigger in action
 2. Now navigate to the ``Events`` tab and click on the ``echo`` trigger in the left sidebar.
 3. Expand the details of an event to see the response from the webhook.
 
-.. thumbnail:: /img/graphql/manual/getting-started/trigger-events.png
+.. thumbnail:: /img/graphql/core/getting-started/trigger-events.png
    :alt: Trigger in action
 
 Next steps

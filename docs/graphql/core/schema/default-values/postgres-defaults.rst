@@ -38,7 +38,7 @@ Edit the ``created_at`` field and set its default value as the SQL function ``no
 
     Open the console and head to ``Data -> article -> Modify``. Click the ``Edit`` button next to the ``created_at`` field and add ``now()`` as a default value.
 
-    .. thumbnail:: /img/graphql/manual/schema/add-default-value.png
+    .. thumbnail:: /img/graphql/core/schema/add-default-value.png
       :alt: Modify the table in the console
 
   .. tab:: CLI

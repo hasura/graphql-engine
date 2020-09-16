@@ -32,7 +32,7 @@ Expose columns with a different name in the GraphQL API
 
      Head to the ``Data -> [table-name] -> Modify``. On the relevant field, click ``Edit`` and change the GraphQL field name to a name of your choice.
 
-     .. thumbnail:: /img/graphql/manual/schema/custom-field-name-column.png
+     .. thumbnail:: /img/graphql/core/schema/custom-field-name-column.png
         :alt: Customise GraphQL field name
 
   .. tab:: CLI
@@ -109,7 +109,7 @@ Expose table root fields with a different name in the GraphQL API
 
      Head to the ``Data -> [table-name] -> Modify``. Click the ``Edit`` button in the ``Custom GraphQL Root Fields`` section and define names over which you'd like to expose the table root fields.
 
-     .. thumbnail:: /img/graphql/manual/schema/custom-field-name-root-fields.png
+     .. thumbnail:: /img/graphql/core/schema/custom-field-name-root-fields.png
         :alt: Customise GraphQL root field
 
   .. tab:: CLI

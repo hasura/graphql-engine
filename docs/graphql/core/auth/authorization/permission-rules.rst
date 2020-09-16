@@ -25,7 +25,7 @@ level granularity:
 
       You can add permission rules in the ``Permissions`` tab of a table:
 
-      .. thumbnail:: /img/graphql/manual/auth/permission-rule-granularity.png
+      .. thumbnail:: /img/graphql/core/auth/permission-rule-granularity.png
          :alt: Access control rules in Hasura
 
    .. tab:: CLI
@@ -123,11 +123,11 @@ See the :ref:`API reference <MetadataOperator>` for a list of all supported colu
 types:
 
 
-.. thumbnail:: /img/graphql/manual/auth/operators-for-integer-types.png
+.. thumbnail:: /img/graphql/core/auth/operators-for-integer-types.png
    :width: 40%
    :alt: Column operators for integer types
 
-.. thumbnail:: /img/graphql/manual/auth/operators-for-text-types.png
+.. thumbnail:: /img/graphql/core/auth/operators-for-text-types.png
    :width: 40%
    :alt: Column operators for text types
 
@@ -144,7 +144,7 @@ the value in the ``id`` column is greater than 10:
 
       You can define permissions using boolean expressions on the Hasura console as follows:
 
-      .. thumbnail:: /img/graphql/manual/auth/simple-boolean-expression.png
+      .. thumbnail:: /img/graphql/core/auth/simple-boolean-expression.png
          :alt: Using boolean expressions to build rules
 
    .. tab:: CLI
@@ -198,7 +198,7 @@ the value in the ``id`` column is greater than 10:
 
 You can construct more complex boolean expressions using the ``_and``, ``_or`` and ``not`` operators:
 
-.. thumbnail:: /img/graphql/manual/auth/boolean-operators.png
+.. thumbnail:: /img/graphql/core/auth/boolean-operators.png
    :alt: Using more complex boolean expressions to build rules
 
 **For example**, using the ``_and`` operator, you can construct a rule to restrict access for ``select`` to rows where
@@ -212,7 +212,7 @@ or "A":
 
       You can define permissions using the ``_and`` operator on the Hasura console as follows:
 
-      .. thumbnail:: /img/graphql/manual/auth/composite-boolean-expression.png
+      .. thumbnail:: /img/graphql/core/auth/composite-boolean-expression.png
          :alt: Example of a rule with the _and operator
 
    .. tab:: CLI
@@ -294,7 +294,7 @@ the author's ID*):
 
       You can define session variables in permissions on the Hasura console:
 
-      .. thumbnail:: /img/graphql/manual/auth/session-variables-in-permissions-simple-example.png
+      .. thumbnail:: /img/graphql/core/auth/session-variables-in-permissions-simple-example.png
          :alt: Using session variables to build rules
 
    .. tab:: CLI
@@ -368,7 +368,7 @@ that uses the aforementioned object relationship:
 
       You can use a nested object to build rules on the Hasura console:
 
-      .. thumbnail:: /img/graphql/manual/auth/nested-object-permission-simple-example.png
+      .. thumbnail:: /img/graphql/core/auth/nested-object-permission-simple-example.png
          :alt: Using a nested object to build rules
 
    .. tab:: CLI
@@ -456,7 +456,7 @@ session variable.
 
       You can set permissions using unrelated tables on the Hasura console as follows:
 
-      .. thumbnail:: /img/graphql/manual/auth/exists-permission-example.png
+      .. thumbnail:: /img/graphql/core/auth/exists-permission-example.png
          :alt: Use an unrelated table to build rules
 
    .. tab:: CLI
@@ -547,7 +547,7 @@ permissions.
 
       Column-level permissions are simple selections on the Hasura console:
 
-      .. thumbnail:: /img/graphql/manual/auth/column-level-permissions.png
+      .. thumbnail:: /img/graphql/core/auth/column-level-permissions.png
          :alt: Column level permissions
 
    .. tab:: CLI
@@ -627,7 +627,7 @@ using this configuration:
 
       You can set a row fetch limit on the Hasura console as follows:
 
-      .. thumbnail:: /img/graphql/manual/auth/limit-rows-for-select.png
+      .. thumbnail:: /img/graphql/core/auth/limit-rows-for-select.png
          :alt: Row fetch limit
 
    .. tab:: CLI
@@ -704,7 +704,7 @@ can be enabled for a given role using this configuration.
 
       You can enable aggregation queries permissions on the Hasura console as follows:
 
-      .. thumbnail:: /img/graphql/manual/auth/aggregation-query-permissions.png
+      .. thumbnail:: /img/graphql/core/auth/aggregation-query-permissions.png
          :alt: Aggregation queries permissions
 
    .. tab:: CLI
