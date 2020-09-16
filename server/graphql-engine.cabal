@@ -483,6 +483,7 @@ executable graphql-engine
                    , pg-client
                    , text
                    , text-conversions
+                   , time
                    , unix
                    , ekg-core
 
@@ -509,6 +510,7 @@ test-suite graphql-engine-tests
     , pg-client
     , process
     , QuickCheck
+    , text
     , safe
     , split
     , time
