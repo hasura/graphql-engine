@@ -292,7 +292,7 @@ Custom Root Fields
 set_table_custom_fields (deprecated)
 -----------------------------------
 
-``set_table_custom_fields`` has been deprecated now, use the
+``set_table_custom_fields`` has been deprecated. Use the
 :ref:`set_table_configuration <set_table_configuration>` API to set the custom
 table fields.
 
