@@ -121,7 +121,6 @@ actionQueryToRootFieldPlan vars prepped = \case
 mkCurPlanTx
   :: ( HasVersion
      , MonadError QErr m
-     , Tracing.MonadTrace m
      , MonadIO tx
      , MonadTx tx
      , Tracing.MonadTrace tx
@@ -131,7 +130,7 @@ mkCurPlanTx
   -> [HTTP.Header]
   -> UserInfo
   -> FieldPlans
-  -> m (tx EncJSON, GeneratedSqlMap)
+  -> m (tx [(Text, EncJSON)], GeneratedSqlMap)
 mkCurPlanTx env manager reqHdrs userInfo fldPlans = do
   -- generate the SQL and prepared vars or the bytestring
   resolved <- forM fldPlans $ \(alias, fldPlan) -> do
@@ -143,7 +142,9 @@ mkCurPlanTx env manager reqHdrs userInfo fldPlans = do
       RFPActionQuery tx -> pure $ RRActionQuery tx
     return (alias, fldResp)
 
-  (,) <$> mkLazyRespTx env manager reqHdrs userInfo resolved <*> pure (mkGeneratedSqlMap resolved)
+  pure $ ( for resolved (mkLazyRespTx env manager reqHdrs userInfo)
+         , mkGeneratedSqlMap resolved
+         )
 
 -- convert a query from an intermediate representation to... another
 irToRootFieldPlan
@@ -262,7 +263,9 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
 
 
   executionPlan <- case (dbPlans, remoteFields) of
-    (dbs, Seq.Empty) -> ExecStepDB <$> mkCurPlanTx env manager reqHeaders userInfo (toList dbs)
+    (dbs, Seq.Empty) -> ExecStepDB <$> do
+      (jsons, resolved) <- mkCurPlanTx env manager reqHeaders userInfo (toList dbs)
+      return $ (encJFromAssocList <$> jsons, resolved)
     (Seq.Empty, remotes@(firstRemote Seq.:<| _)) -> do
       let (remoteOperation, _) =
             buildTypedOperation
@@ -350,7 +353,6 @@ type GeneratedSqlMap = [(G.Name, Maybe PreparedSql)]
 
 mkLazyRespTx
   :: ( HasVersion
-     , Tracing.MonadTrace m
      , MonadIO tx
      , MonadTx tx
      , Tracing.MonadTrace tx
@@ -359,20 +361,19 @@ mkLazyRespTx
   -> HTTP.Manager
   -> [HTTP.Header]
   -> UserInfo
-  -> [(G.Name, ResolvedQuery)]
-  -> m (tx EncJSON)
-mkLazyRespTx env manager reqHdrs userInfo resolved =
-  pure $ fmap encJFromAssocList $ forM resolved $ \(alias, node) -> do
-    resp <- case node of
-     RRRaw bs                   -> return $ encJFromBS bs
-     RRSql (PreparedSql q args maybeRemoteJoins) -> do
-        let prepArgs = map fst args
-        case maybeRemoteJoins of
-          Nothing -> Tracing.trace "Postgres" . liftTx $ asSingleRowJsonResp q prepArgs
-          Just remoteJoins ->
-            executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs remoteJoins
-     RRActionQuery actionTx           -> actionTx
-    return (G.unName alias, resp)
+  -> (G.Name, ResolvedQuery)
+  -> tx (Text, EncJSON)
+mkLazyRespTx env manager reqHdrs userInfo (alias, node) = do
+  resp <- case node of
+    RRRaw bs                   -> return $ encJFromBS bs
+    RRSql (PreparedSql q args maybeRemoteJoins) -> do
+      let prepArgs = map fst args
+      case maybeRemoteJoins of
+        Nothing -> Tracing.trace "Postgres" . liftTx $ asSingleRowJsonResp q prepArgs
+        Just remoteJoins ->
+          executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs remoteJoins
+    RRActionQuery actionTx           -> actionTx
+  return (G.unName alias, resp)
 
 mkGeneratedSqlMap :: [(G.Name, ResolvedQuery)] -> GeneratedSqlMap
 mkGeneratedSqlMap resolved =
