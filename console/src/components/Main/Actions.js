@@ -54,7 +54,7 @@ const SERVER_CONFIG_FETCH_FAIL = 'Main/SERVER_CONFIG_FETCH_FAIL';
 
 const filterScope = (data, consoleScope) => {
   return data.filter(notif => {
-    if (notif.scope === 'OSS' || notif.scope === consoleScope) {
+    if (notif.scope.indexOf(consoleScope) !== -1) {
       return notif;
     }
   });
@@ -75,7 +75,6 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
   let toShowBadge = true;
   const headers = dataHeaders(getState);
   let previousRead = null;
-  let strictChecks = false;
   const { serverVersion } = getState().main;
   const consoleId = window.__env.consoleId;
   const consoleScope = getConsoleScope(serverVersion, consoleId);
@@ -91,7 +90,6 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
     consoleStateDB.console_notifications[userType].date
   ) {
     toShowBadge = consoleStateDB.console_notifications[userType].showBadge;
-    strictChecks = true;
     previousRead = consoleStateDB.console_notifications[userType].read;
   }
 
@@ -141,8 +139,8 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
         );
       }
 
-      if (strictChecks) {
-        if (!previousRead && !consoleStateDB.console_notifications) {
+      if (!previousRead) {
+        if (!consoleStateDB.console_notifications) {
           dispatch(
             updateConsoleNotificationsState({
               read: [],

@@ -1333,8 +1333,8 @@
   text-transform: none;
   overflow: hidden;
   height: auto;
+  max-height: calc(100vh - 120px);
   &:hover {
-    max-height: calc(100vh - 120px);
     overflow-y: scroll;
   }
 }
