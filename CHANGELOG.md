@@ -39,6 +39,7 @@ The corresponding JWT config can be:
 
 - server: allow remote relationships joining `type` column with `[type]` input argument as spec allows this coercion (fixes #5133)
 - server: add action-like URL templating for event triggers and remote schemas (fixes #2483)
+- server: change `created_at` column type from `timestamp` to `timestamptz` for scheduled triggers tables (fix #5722)
 
 ### Breaking change
 
