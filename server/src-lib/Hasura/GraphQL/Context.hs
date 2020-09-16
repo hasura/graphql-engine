@@ -114,3 +114,6 @@ type MutationRootField v =
 
 type SubscriptionRootField v = RootField (QueryDB v) Void (RQL.AnnActionAsyncQuery v) Void
 type SubscriptionRootFieldResolved = RootField (QueryDB S.SQLExp) Void RQL.AnnSimpleSel Void
+
+data QueryRootTree v = QueryRootTree (QueryRootField v) [QueryRootJoin v]
+data QueryRootJoin v = QueryRootJoin (QueryRootTree  v) G.Name G.Name
