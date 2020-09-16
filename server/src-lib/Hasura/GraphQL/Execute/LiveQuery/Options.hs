@@ -1,7 +1,9 @@
 module Hasura.GraphQL.Execute.LiveQuery.Options
   ( LiveQueriesOptions(..)
-  , BatchSize(..)
-  , RefetchInterval(..)
+  , BatchSize
+  , unBatchSize
+  , RefetchInterval
+  , unRefetchInterval
   , mkLiveQueriesOptions
   , mkBatchSize
   , mkRefetchInterval
