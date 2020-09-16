@@ -57,6 +57,7 @@ const ForeignKeyWrapper = ({
         dispatch={dispatch}
         setForeignKeys={setForeignKeys}
         schemaList={orderedSchemaList}
+        currentSchema={currentSchema}
       />
     );
     // TODO handle ongoing request
