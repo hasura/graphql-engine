@@ -136,6 +136,6 @@ Once you've created your scheduled trigger, you can see ``Pending events``, ``Pr
 One minute precision
 --------------------
 
-This means that for any scheduled event set at a particular time, it actually delivers at the 0th second of the minute required on delivery.
+This means that for any scheduled event set at a particular time, it actually delivers on the 0th second of the next minute.
 
-For example: if you set an event trigger schedued at 1:23:35, it will get delivered at 1:24:00
+For example: If you schedule an event to arrive at this particular time ``09:24:10``, because of the one minute precison, it will arive at anytime between ``09:24:10`` and ``09:25:10`` max.
