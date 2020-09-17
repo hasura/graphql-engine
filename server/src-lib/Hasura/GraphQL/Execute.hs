@@ -209,6 +209,7 @@ getResolvedExecPlan
      , MonadError QErr m
      , MonadIO m
      , Tracing.MonadTrace m
+     , EQ.MonadQueryInstrumentation m
      , MonadIO tx
      , MonadTx tx
      , Tracing.MonadTrace tx
@@ -259,13 +260,13 @@ getResolvedExecPlan env logger pgExecCtx {- planCache-} userInfo sqlGenCtx
             mapMaybe takeFragment $ unGQLExecDoc $ _grQuery reqParsed
       (gCtx, queryParts) <- getExecPlanPartial userInfo sc queryType reqParsed
       case queryParts of
-        G.TypedOperationDefinition G.OperationTypeQuery _ varDefs _ selSet -> do
+        G.TypedOperationDefinition G.OperationTypeQuery _ varDefs dirs selSet -> do
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
           -- (unpreparedQueries, _) <-
           --   E.parseGraphQLQuery gCtx varDefs
           (execPlan,asts) {-, plan-} <-
-            EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders inlinedSelSet varDefs (_grVariables reqUnparsed)
+            EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders dirs inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- See Note [Temporarily disabling query plan caching]
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
           return $ QueryExecutionPlan execPlan asts

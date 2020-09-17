@@ -42,7 +42,7 @@ blocking_labels = ["s/do-not-merge", "s/wip"] # default: []
 #
 # If you're using the "Require signed commits" GitHub Branch Protection setting
 # to require commit signatures, "merge" or "squash" are the only compatible options. "rebase" will cause Kodiak to raise a configuration error.
-method = "merge" # default: "merge", options: "merge", "squash", "rebase"
+method = "squash" # default: "merge", options: "merge", "squash", "rebase"
 
 # Once a PR is merged, delete the branch. This option behaves like the GitHub
 # repository setting "Automatically delete head branches", which automatically
@@ -77,13 +77,13 @@ do_not_merge = false # default: false
 # By default (`"github_default"`), GitHub uses the title of a PR's first commit
 # for the merge commit title. `"pull_request_title"` uses the PR title for the
 # merge commit.
-title = "github_default" # default: "github_default", options: "github_default", "pull_request_title"
+title = "pull_request_title" # default: "github_default", options: "github_default", "pull_request_title"
 
 # By default (`"github_default"`), GitHub combines the titles of a PR's commits
 # to create the body text of a merge commit. `"pull_request_body"` uses the
 # content of the PR to generate the body content while `"empty"` sets an empty
 # body.
-body = "github_default" # default: "github_default", options: "github_default", "pull_request_body", "empty"
+body = "empty" # default: "github_default", options: "github_default", "pull_request_body", "empty"
 
 # Append the Pull Request URL to the merge message. Makes navigating to the PR
 # from the commit easier.
