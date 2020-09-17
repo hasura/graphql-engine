@@ -73,7 +73,6 @@ import           Language.Haskell.TH.Syntax    (Lift, Q, TExp)
 
 import qualified Data.Environment              as Env
 import qualified Data.HashMap.Strict           as HM
-import           Data.Scientific               (toBoundedInteger)
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
