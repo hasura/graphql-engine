@@ -103,7 +103,7 @@ sections of the page. Adding statements such as "As we have described in the abo
 the needed context.
 
 ### Style guide
-Please follow our [guide on how to write docs pages](https://github.com/hasura/graphql-engine/wiki/How-to-write-docs-pages:-style-guide) in order to keep the structure and style of our docs consistent.
+Please follow our [guide on how to write docs pages](https://github.com/hasura/graphql-engine/wiki/How-to-write-docs-pages) in order to keep the structure and style of our docs consistent.
 
 ### Pre-commit checks
 - Just before committing your changes, delete your local `_build` folder completely and then build docs again. Scan 
