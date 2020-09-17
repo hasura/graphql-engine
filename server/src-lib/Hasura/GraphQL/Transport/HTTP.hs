@@ -113,32 +113,22 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         let (bodies, headers) = (fmap fst results, fmap snd results)
         -- TODO: encodeGQResp $ GQSuccess $
         return $ HttpResponse (encJFromHashMap bodies) (fold headers)
--- TODO rewrite mutations
-{-
-      E.MutationExecutionPlan mutationPlan ->
-        case mutationPlan of
+      E.MutationExecutionPlan mutationPlans -> do
+        results <- for mutationPlans $ \case
           E.ExecStepDB (tx, responseHeaders) -> do
             (telemTimeIO, telemQueryType, resp) <- runMutationDB reqId reqUnparsed userInfo tx
-            return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp responseHeaders))
-          E.ExecStepRemote (rsi, opDef, _varValsM) ->
-            runRemoteGQ telemCacheHit rsi opDef
+            return (resp, responseHeaders)
+          E.ExecStepRemote (rsi, opDef, _varValsM) -> do
+            (telemCacheHit, _, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs)) <- runRemoteGQ telemCacheHit rsi opDef
+            return (resp, respHdrs)
           E.ExecStepRaw (name, json) -> do
             (telemTimeIO, obj) <- withElapsedTime $
               return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
-            return (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj []))
--}
+            return (obj, [])
+        let (bodies, headers) = (fmap fst results, fmap snd results)
+        return $ HttpResponse (encJFromHashMap bodies) (fold headers)
       E.SubscriptionExecutionPlan _sub ->
         throw400 UnexpectedPayload "subscriptions are not supported over HTTP, use websockets instead"
-{-
-      E.GExPHasura resolvedOp -> do
-        (telemTimeIO, telemQueryType, respHdrs, resp) <- runHasuraGQ reqId (reqUnparsed, reqParsed) userInfo resolvedOp
-        return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs))
-      E.GExPRemote rsi opDef  -> do
-        let telemQueryType | G._todType opDef == G.OperationTypeMutation = Telem.Mutation
-                           | otherwise = Telem.Query
-        (telemTimeIO, resp) <- E.execRemoteGQ reqId userInfo reqHeaders reqUnparsed rsi $ G._todType opDef
-        return (telemCacheHit, Telem.Remote, (telemTimeIO, telemQueryType, resp))
--}
   return resp
   where
     runRemoteGQ telemCacheHit rsi opDef = do
