@@ -223,6 +223,11 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
      - ``HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS``
      - Include the ``internal`` key in the errors extensions of the response for GraphQL requests with the admin role (if required).
 
+   * - ``--one-off-events-fetch-interval``
+     - ``HASURA_GRAPHQL_ONE_OFF_EVENTS_FETCH_INTERVAL``
+     - Interval in seconds to sleep before fetching scheduled events from the database, a lower value should be
+       used for higher precision scheduled events delivery. (default: 1 second)
+
 .. note::
 
   When the equivalent flags for environment variables are used, the flags will take precedence.
