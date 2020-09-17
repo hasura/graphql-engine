@@ -15,7 +15,7 @@ Moving between environments
 Introduction
 ------------
 
-This guide will show how to approach various stages of development with Hasura.
+This guide talks about the process on how to approach various stages of development with Hasura.
 
 Local development
 -----------------
@@ -111,7 +111,7 @@ so that you can roll back corresponding changes later, if required.
 Developing and testing business logic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Hasura lets you write business logic in a flexible way. 
+Hasura allows you to write business logic in a flexible way.
 If you are comfortable writing your own GraphQL server from scratch, you can add them as a :ref:`remote schema <remote_schemas>`. 
 If you are interested in (re)using REST API endpoints, you can map GraphQL types with :ref:`actions <actions>`.
 

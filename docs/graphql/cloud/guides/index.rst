@@ -2,7 +2,7 @@
    :description: Hasura Cloud guides
    :keywords: hasura, docs, cloud, guides
 
-.. _guides:
+.. _cloud_guides:
 
 Guides
 ======
