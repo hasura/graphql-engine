@@ -16,6 +16,7 @@ import qualified Hasura.GraphQL.Parser.Internal.Parser as P
 import qualified Hasura.RQL.DML.Internal               as RQL
 import qualified Hasura.RQL.DML.Select.Types           as RQL
 
+import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser                 (FieldParser, InputFieldsParser, Kind (..),
                                                         Parser, UnpreparedValue (..))
 import           Hasura.GraphQL.Parser.Class
@@ -201,7 +202,7 @@ actionOutputFields outputObject = do
       roleName <- lift askRoleName
       tablePerms <- MaybeT $ pure $ RQL.getPermInfoMaybe roleName PASelect tableInfo
       tableParser <- lift $ selectTable tableName fieldName Nothing tablePerms
-      pure $ tableParser <&> \selectExp ->
+      pure $ tableParser <&> \(RootTree (RFDB (QDBSimple selectExp)) _) ->
         let tableRelName = RelName $ mkNonEmptyTextUnsafe $ G.unName fieldName
             columnMapping = Map.fromList $
               [ (unsafePGCol $ G.unName $ unObjectFieldName k, pgiColumn v)

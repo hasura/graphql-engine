@@ -79,8 +79,8 @@ buildGQLContext =
         queryRemotesMap =
           fmap (map fDefinition . piQuery . rscParsed . fst) allRemoteSchemas
         buildFullestDBSchema
-          :: m ( Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
-               , Maybe (Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
+          :: m ( Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (QueryRootTree UnpreparedValue))
+               , Maybe (Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (MutationRootTree UnpreparedValue)))
                )
         buildFullestDBSchema = do
           SQLGenCtx{ stringifyNum } <- askSQLGenCtx
@@ -209,7 +209,7 @@ query'
   -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
   -> [ActionInfo]
   -> NonObjectTypeMap
-  -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
+  -> m [P.FieldParser n (QueryRootTree UnpreparedValue)]
 query' allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
   tableSelectExpParsers <- for (toList allTables) \table -> do
     selectPerms <- tableSelectPermissions table
@@ -222,9 +222,9 @@ query' allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
           pkName = displayName <> $$(G.litName "_by_pk")
           pkDesc = G.Description $ "fetch data from the table: " <> table <<> " using primary key columns"
       catMaybes <$> sequenceA
-        [ requiredFieldParser (RFDB . QDBSimple)      $ selectTable          table (fromMaybe displayName $ _tcrfSelect          customRootFields) (Just fieldsDesc) perms
-        , mapMaybeFieldParser (RFDB . QDBPrimaryKey)  $ selectTableByPk      table (fromMaybe pkName      $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms
-        , mapMaybeFieldParser (RFDB . QDBAggregation) $ selectTableAggregate table (fromMaybe aggName     $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms
+        [ fmap Just $ selectTable          table (fromMaybe displayName $ _tcrfSelect          customRootFields) (Just fieldsDesc) perms
+        ,             selectTableByPk      table (fromMaybe pkName      $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms
+        ,             selectTableAggregate table (fromMaybe aggName     $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms
         ]
   functionSelectExpParsers <- for allFunctions \function -> do
     let targetTable = fiReturnType function
@@ -236,16 +236,16 @@ query' allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
           aggName = displayName <> $$(G.litName "_aggregate")
           aggDesc = G.Description $ "execute function " <> functionName <<> " and query aggregates on result of table type " <>> targetTable
       catMaybes <$> sequenceA
-        [ requiredFieldParser (RFDB . QDBSimple)      $ selectFunction          function displayName (Just functionDesc) perms
-        , mapMaybeFieldParser (RFDB . QDBAggregation) $ selectFunctionAggregate function aggName     (Just aggDesc)      perms
+        [ requiredFieldParser (mkTree . RFDB . QDBSimple)      $ selectFunction          function displayName (Just functionDesc) perms
+        , mapMaybeFieldParser (mkTree . RFDB . QDBAggregation) $ selectFunctionAggregate function aggName     (Just aggDesc)      perms
         ]
   actionParsers <- for allActions $ \actionInfo ->
     case _adType (_aiDefinition actionInfo) of
       ActionMutation ActionSynchronous -> pure Nothing
       ActionMutation ActionAsynchronous ->
-        fmap (fmap (RFAction . AQAsync)) <$> actionAsyncQuery actionInfo
+        fmap (fmap (mkTree . RFAction . AQAsync)) <$> actionAsyncQuery actionInfo
       ActionQuery ->
-        fmap (fmap (RFAction . AQQuery)) <$> actionExecute nonObjectCustomTypes actionInfo
+        fmap (fmap (mkTree . RFAction . AQQuery)) <$> actionExecute nonObjectCustomTypes actionInfo
   pure $ (concat . catMaybes) (tableSelectExpParsers <> functionSelectExpParsers <> toRemoteFieldParser allRemotes)
          <> catMaybes actionParsers
   where
@@ -255,7 +255,9 @@ query' allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
     mapMaybeFieldParser :: (a -> b) -> m (Maybe (P.FieldParser n a)) -> m (Maybe (P.FieldParser n b))
     mapMaybeFieldParser f = fmap $ fmap $ fmap f
 
-    toRemoteFieldParser p = [Just $ fmap (fmap RFRemote) p]
+    toRemoteFieldParser p = [Just $ fmap (fmap $ mkTree . RFRemote) p]
+
+    mkTree rf = RootTree rf []
 
 -- | Similar to @query'@ but for Relay.
 relayQuery'
@@ -267,7 +269,7 @@ relayQuery'
      )
   => HashSet QualifiedTable
   -> [FunctionInfo]
-  -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
+  -> m [P.FieldParser n (QueryRootTree UnpreparedValue)]
 relayQuery' allTables allFunctions = do
   tableConnectionSelectParsers <-
     for (toList allTables) $ \table -> runMaybeT do
@@ -292,7 +294,7 @@ relayQuery' allTables allFunctions = do
                       <<> " which returns " <>> returnTable
       lift $ selectFunctionConnection function fieldName fieldDesc pkeyColumns selectPerms
 
-  pure $ map ((RFDB . QDBConnection) <$>) $ catMaybes $
+  pure $ map (fmap \rf -> RootTree (RFDB $ QDBConnection rf) []) $ catMaybes $
          tableConnectionSelectParsers <> functionConnectionSelectParsers
 
 -- | Parse query-type GraphQL requests without introspection
@@ -305,11 +307,11 @@ query
   -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
   -> [ActionInfo]
   -> NonObjectTypeMap
-  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootTree UnpreparedValue)))
 query name allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
   queryFieldsParser <- query' allTables allFunctions allRemotes allActions nonObjectCustomTypes
   P.safeSelectionSet name Nothing queryFieldsParser
-    <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
+    <&> fmap (fmap $ P.handleTypename (\tn -> RootTree (RFRaw $ J.String $ G.unName tn) []))
 
 subscription
   :: forall m n r
@@ -317,23 +319,23 @@ subscription
   => HashSet QualifiedTable
   -> [FunctionInfo]
   -> [ActionInfo]
-  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootTree UnpreparedValue)))
 subscription allTables allFunctions asyncActions =
   query $$(G.litName "subscription_root") allTables allFunctions [] asyncActions mempty
 
 queryRootFromFields
   :: forall n m
    . (MonadError QErr m, MonadParse n)
-  => [P.FieldParser n (QueryRootField UnpreparedValue)]
-  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
+  => [P.FieldParser n (QueryRootTree UnpreparedValue)]
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootTree UnpreparedValue)))
 queryRootFromFields fps =
   P.safeSelectionSet $$(G.litName "query_root") Nothing fps
-    <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
+    <&> fmap (fmap $ P.handleTypename $ \tn -> RootTree (RFRaw $ J.String $ G.unName tn) [])
 
 emptyIntrospection
   :: forall m n
    . (MonadSchema n m, MonadError QErr m)
-  => m [P.FieldParser n (QueryRootField UnpreparedValue)]
+  => m [P.FieldParser n (QueryRootTree UnpreparedValue)]
 emptyIntrospection = do
   emptyQueryP <- queryRootFromFields @n []
   introspectionTypes <- collectTypes (P.parserType emptyQueryP)
@@ -345,7 +347,8 @@ emptyIntrospection = do
         , sSubscriptionType = Nothing
         , sDirectives = mempty
         }
-  return $ fmap (fmap RFRaw) [schema introspectionSchema, typeIntrospection introspectionSchema]
+  pure $ [schema introspectionSchema, typeIntrospection introspectionSchema] <&> fmap \text ->
+    RootTree (RFRaw text) []
 
 collectTypes
   :: forall m a
@@ -360,10 +363,10 @@ collectTypes x = case P.collectTypeDefinitions x of
 
 queryWithIntrospectionHelper
   :: (MonadSchema n m, MonadError QErr m)
-  => [P.FieldParser n (QueryRootField UnpreparedValue)]
-  -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
-  -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
-  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
+  => [P.FieldParser n (QueryRootTree UnpreparedValue)]
+  -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootTree UnpreparedValue)))
+  -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootTree UnpreparedValue))
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootTree UnpreparedValue)))
 queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
   basicQueryP <- queryRootFromFields basicQueryFP
   emptyIntro <- emptyIntrospection
@@ -386,9 +389,9 @@ queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
         , sDirectives = defaultDirectives
         }
   let partialQueryFields =
-        basicQueryFP ++ (fmap RFRaw <$> [schema partialSchema, typeIntrospection partialSchema])
+        basicQueryFP ++ ([schema partialSchema, typeIntrospection partialSchema] <&> fmap \text -> RootTree (RFRaw text) [])
   P.safeSelectionSet $$(G.litName "query_root") Nothing partialQueryFields
-    <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
+    <&> fmap (fmap $ P.handleTypename \text -> RootTree (RFRaw $ J.String $ G.unName text) [])
 
 -- | Prepare the parser for query-type GraphQL requests, but with introspection
 --   for queries, mutations and subscriptions built in.
@@ -406,7 +409,7 @@ queryWithIntrospection
   -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
   -> [ActionInfo]
   -> NonObjectTypeMap
-  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootTree UnpreparedValue)))
 queryWithIntrospection allTables allFunctions queryRemotes mutationRemotes allActions nonObjectCustomTypes = do
   basicQueryFP <- query' allTables allFunctions queryRemotes allActions nonObjectCustomTypes
   mutationP <- mutation allTables mutationRemotes allActions nonObjectCustomTypes
@@ -424,16 +427,16 @@ relayWithIntrospection
      )
   => HashSet QualifiedTable
   -> [FunctionInfo]
-  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootTree UnpreparedValue)))
 relayWithIntrospection allTables allFunctions = do
-  nodeFP        <- fmap (RFDB . QDBPrimaryKey) <$> nodeField
+  nodeFP        <- nodeField <&> fmap \pk -> RootTree (RFDB $ QDBPrimaryKey pk) []
   basicQueryFP  <- relayQuery' allTables allFunctions
   mutationP     <- mutation allTables [] [] mempty
   emptyIntro    <- emptyIntrospection
   let relayQueryFP = nodeFP:basicQueryFP
   basicQueryP   <- queryRootFromFields relayQueryFP
   subscriptionP <- P.safeSelectionSet $$(G.litName "subscription_root") Nothing relayQueryFP
-                   <&> fmap (fmap (P.handleTypename (RFRaw . J.String. G.unName)))
+                   <&> fmap (fmap $ P.handleTypename $ \text -> RootTree (RFRaw $ J.String $ G.unName text) [])
   allBasicTypes <- collectTypes $
     [ P.parserType basicQueryP
     , P.parserType subscriptionP
@@ -453,9 +456,9 @@ relayWithIntrospection allTables allFunctions = do
         , sDirectives = defaultDirectives
         }
   let partialQueryFields =
-        nodeFP : basicQueryFP ++ (fmap RFRaw <$> [schema partialSchema, typeIntrospection partialSchema])
+        nodeFP : basicQueryFP ++ ([schema partialSchema, typeIntrospection partialSchema] <&> fmap \text -> RootTree (RFRaw text) [])
   P.safeSelectionSet $$(G.litName "query_root") Nothing partialQueryFields
-    <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
+    <&> fmap (fmap $ P.handleTypename $ \text -> RootTree (RFRaw $ J.String $ G.unName text) [])
 
 -- | Prepare the parser for query-type GraphQL requests, but with introspection
 -- for queries, mutations and subscriptions built in.
@@ -466,9 +469,9 @@ unauthenticatedQueryWithIntrospection
      )
   => [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
   -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootTree UnpreparedValue)))
 unauthenticatedQueryWithIntrospection queryRemotes mutationRemotes = do
-  let basicQueryFP = fmap (fmap RFRemote) queryRemotes
+  let basicQueryFP = fmap (fmap \r -> RootTree (RFRemote r) []) queryRemotes
   mutationP     <- unauthenticatedMutation mutationRemotes
   subscriptionP <- unauthenticatedSubscription @n
   queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP
@@ -480,7 +483,7 @@ mutation
   -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
   -> [ActionInfo]
   -> NonObjectTypeMap
-  -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue))))
+  -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootTree UnpreparedValue))))
 mutation allTables allRemotes allActions nonObjectCustomTypes = do
   mutationParsers <- for (toList allTables) \table -> do
     tableCoreInfo <- _tiCoreInfo <$> askTableInfo table
@@ -490,6 +493,7 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
       let customRootFields = _tcCustomRootFields $ _tciCustomConfig tableCoreInfo
           viewInfo         = _tciViewInfo tableCoreInfo
           selectPerms      = _permSel permissions
+          mkTree rf        = RootTree rf []
 
       -- If we're in a frontend scenario, we should not include backend_only inserts
       scenario <- asks getter
@@ -551,23 +555,23 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
   if null mutationFieldsParser
   then pure Nothing
   else fmap Just $ P.safeSelectionSet $$(G.litName "mutation_root") (Just $ G.Description "mutation root") mutationFieldsParser
-            <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
+            <&> fmap (fmap \rf -> RootTree (P.handleTypename (RFRaw . J.String . G.unName) rf) [])
 
 unauthenticatedMutation
   :: forall n m
    . (MonadError QErr m, MonadParse n)
   => [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-  -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue))))
+  -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootTree UnpreparedValue))))
 unauthenticatedMutation allRemotes =
   let mutationFieldsParser = fmap (fmap RFRemote) allRemotes
   in if null mutationFieldsParser
      then pure Nothing
      else fmap Just $ P.safeSelectionSet $$(G.litName "mutation_root") Nothing mutationFieldsParser
-          <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
+          <&> fmap (fmap \rf -> RootTree (P.handleTypename (RFRaw . J.String . G.unName) rf) [])
 
 unauthenticatedSubscription
   :: forall n m. (MonadParse n, MonadError QErr m)
-  => m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
+  => m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootTree UnpreparedValue)))
 unauthenticatedSubscription =
- P.safeSelectionSet $$(G.litName "subscription_root") Nothing []
-  <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
+  P.safeSelectionSet $$(G.litName "subscription_root") Nothing []
+  <&> fmap (fmap $ P.handleTypename \text -> RootTree (RFRaw $ J.String $ G.unName text) [])
