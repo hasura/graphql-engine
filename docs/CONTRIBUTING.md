@@ -102,32 +102,8 @@ etc.) and expect that the user will be able to follow the section without being 
 sections of the page. Adding statements such as "As we have described in the above section ..." might help to set up 
 the needed context.
 
-### GraphQL request examples
-While adding GraphQL request examples:
-- Use a tab width of 2 for nesting the requests and responses for optimal use 
-of the space and maintaining consistency.
-- Nest query arguments for logical readability. Unfortunately GraphiQL prettify does not do a good job of doing this 
-by default.
-- Ensure that the order of fields in the responses is the same as in the requests for better readability.
-
-### Images
-- Before adding images to docs, first compress them via some tool to ensure users don't have to unnecessarily 
-download more data than needed. You can use www.tinypng.com for this. Sometimes you can compress images by over 75% 
-without losing any visible quality.
-- Use the `thumbnail` directive for images to allow click-to-zoom.
-
-### Syntax
-- Ensure heading underlines are the same length as the headings. Short underlines will throw warnings during builds.
-- Use bold in headings in place of string literals for aesthetics (i.e. ** in place of ``)
-- While adding code blocks ensure the right language type is set. Sometimes adding placeholders breaks the language's
-syntax in which case you'll have to set the language type to `none` to avoid warnings during builds.
-- Use `:ref:` instead of `:doc:` to link to pages to avoid having to set the relative path and chances of broken links
-while moving pages
-
-### Reference links
-
-- For external links, add a double `_` in the end to avoid `Duplicate explicit target name` warnings  , e.g. \``Google <https://www.google.com/>__`\`
-- If you link to an external resource, make sure to link to the most current version of the same, e.g. `https://www.postgresql.org/docs/current/intro-whatis.html` rather than `https://www.postgresql.org/docs/9.6/intro-whatis.html`
+### Style guide
+Please follow our [guide on how to write docs pages](https://github.com/hasura/graphql-engine/wiki/How-to-write-docs-pages:-style-guide) in order to keep the structure and style of our docs consistent.
 
 ### Pre-commit checks
 - Just before committing your changes, delete your local `_build` folder completely and then build docs again. Scan 
