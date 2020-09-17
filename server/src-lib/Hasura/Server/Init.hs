@@ -165,17 +165,17 @@ mkServeOptions rso = do
         if | devMode             -> InternalErrorsAllRequests
            | adminInternalErrors -> InternalErrorsAdminOnly
            | otherwise           -> InternalErrorsDisabled
-
   eventsHttpPoolSize <- withEnv (rsoEventsHttpPoolSize rso) (fst eventsHttpPoolSizeEnv)
   eventsFetchInterval <- withEnv (rsoEventsFetchInterval rso) (fst eventsFetchIntervalEnv)
   logHeadersFromEnv <- withEnvBool (rsoLogHeadersFromEnv rso) (fst logHeadersFromEnvEnv)
-
+  oneOffFetchInterval <- fromMaybe (Seconds 1) <$>
+                         withEnv (rsoOneOffEventsFetchInterval rso) (fst oneOffEventsFetchIntervalEnv)
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
                         enabledLogs serverLogLevel planCacheOptions
                         internalErrorsConfig eventsHttpPoolSize eventsFetchInterval
-                        logHeadersFromEnv
+                        logHeadersFromEnv oneOffFetchInterval
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -314,7 +314,7 @@ serveCmdFooter =
       , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, corsDisableEnv, enableConsoleEnv
       , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
       , enableAllowlistEnv, enabledLogsEnv, logLevelEnv, devModeEnv
-      , adminInternalErrorsEnv
+      , adminInternalErrorsEnv, oneOffEventsFetchIntervalEnv
       ]
 
     eventEnvs = [ eventsHttpPoolSizeEnv, eventsFetchIntervalEnv ]
@@ -329,6 +329,12 @@ eventsFetchIntervalEnv :: (String, String)
 eventsFetchIntervalEnv =
   ( "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
   , "Interval in milliseconds to sleep before trying to fetch events again after a fetch returned no events from postgres."
+  )
+
+oneOffEventsFetchIntervalEnv :: (String, String)
+oneOffEventsFetchIntervalEnv =
+  ( "HASURA_GRAPHQL_ONE_OFF_EVENTS_FETCH_INTERVAL"
+  , "Interval in seconds to sleep before trying to fetch one-off events again from the database. (default: 1)"
   )
 
 logHeadersFromEnvEnv :: (String, String)
@@ -822,6 +828,14 @@ parseLogHeadersFromEnv =
            help (snd devModeEnv)
          )
 
+parseOneOffEventsFetchInterval :: Parser (Maybe Seconds)
+parseOneOffEventsFetchInterval = optional $
+  option (eitherReader readEither)
+  ( long "one-off-events-fetch-interval" <>
+    metavar (fst oneOffEventsFetchIntervalEnv)  <>
+    help (snd oneOffEventsFetchIntervalEnv)
+  )
+
 mxRefetchDelayEnv :: (String, String)
 mxRefetchDelayEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL"
@@ -931,6 +945,7 @@ serveOptsToLog so =
       , "enabled_log_types" J..= soEnabledLogTypes so
       , "log_level" J..= soLogLevel so
       , "plan_cache_options" J..= soPlanCacheOptions so
+      , "one_off_fetch_interval" J..= soOneOffEventsFetchInterval so
       ]
 
 mkGenericStrLog :: L.LogLevel -> T.Text -> String -> StartupLog
@@ -976,6 +991,7 @@ serveOptionsParser =
   <*> parseGraphqlEventsHttpPoolSize
   <*> parseGraphqlEventsFetchInterval
   <*> parseLogHeadersFromEnv
+  <*> parseOneOffEventsFetchInterval
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.

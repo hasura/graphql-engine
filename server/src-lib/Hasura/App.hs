@@ -397,9 +397,13 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
   -- prepare scheduled triggers
   prepareScheduledEvents _icPgPool logger
 
-  -- start a background thread to deliver the scheduled events
-  scheduledEventsThread <- C.forkImmortal "processScheduledTriggers" logger $
-    processScheduledTriggers env logger logEnvHeaders _icHttpManager _icPgPool (getSCFromRef cacheRef) lockedEventsCtx
+  -- start a background thread to deliver the cron scheduled events
+  cronEventsDeliveryThread <- C.forkImmortal "processCronEvents" logger $
+    processCronEvents logger logEnvHeaders _icHttpManager _icPgPool (getSCFromRef cacheRef) $ leCronEvents lockedEventsCtx
+
+  -- start a background thread to deliver the one-off scheduled events
+  oneOffEventsDeliveryThread <- C.forkImmortal "processOneOffScheduledEvents" logger $
+    processOneOffScheduledEvents env logger logEnvHeaders _icHttpManager _icPgPool soOneOffEventsFetchInterval $ leOneOffEvents lockedEventsCtx
 
   -- start a background thread to check for updates
   updateThread <- C.forkImmortal "checkForUpdates" logger $ liftIO $
@@ -424,7 +428,8 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
                         , updateThread
                         , asyncActionsThread
                         , eventQueueThread
-                        , scheduledEventsThread
+                        , cronEventsDeliveryThread
+                        , oneOffEventsDeliveryThread
                         , cronEventsThread
                         ] <> maybe [] pure telemetryThread
 
@@ -441,7 +446,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
 
   where
     -- | prepareScheduledEvents is a function to unlock all the scheduled trigger
-    -- events that are locked and unprocessed, which is called while hasura is 
+    -- events that are locked and unprocessed, which is called while hasura is
     -- started.
     --
     -- Locked and unprocessed events can occur in 2 ways
