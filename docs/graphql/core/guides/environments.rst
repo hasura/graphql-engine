@@ -15,7 +15,11 @@ Moving between environments
 Introduction
 ------------
 
+<<<<<<< HEAD
 This guide talks about the process on how to approach various stages of development with Hasura.
+=======
+This guide will show how to approach various stages of development with Hasura.
+>>>>>>> 9c1242f88b43d2a1ee7e7b2cae8e8fa6c8369ad8
 
 Local development
 -----------------
