@@ -277,7 +277,7 @@ class Main extends React.Component {
                 tooltipPlacement={'left'}
                 customStyle={styles.secureSectionSymbol}
               />
-              &nbsp;Secure your endpoint
+              <span className={styles.secureSectionText}>&nbsp;Secure your endpoint</span>
             </a>
           </div>
         );

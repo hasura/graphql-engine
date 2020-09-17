@@ -150,7 +150,8 @@
 }
 
 .clusterInfoWrapper {
-  width: 35%;
+  width: auto;
+  margin-left: auto;
   display: flex;
   justify-content: flex-end;
   position: relative;
@@ -428,7 +429,6 @@
   align-items: center;
   position: fixed;
   width: 100%;
-  min-width: $minContainerWidth;
   z-index: 100;
 
   hr {
@@ -1308,7 +1308,7 @@
 
 @media (max-width: 1500px) {
   .header_items {
-    width: 52%;
+    width: auto;
   }
   .iconCenter {
     i {
@@ -1345,5 +1345,33 @@
     a {
       font-size: 12px;
     }
+  }
+}
+
+@media (max-width: 1250px) {
+  .secureSectionText {
+    display: none;
+  }
+
+  .shareSection {
+    display: none;
+  }
+}
+
+@media (max-width: 1000px) {
+  .sidebar {
+    .sidebarItems {
+      li {
+        p {
+          display: none;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .sidebar {
+    min-width: 600px;
   }
 }
