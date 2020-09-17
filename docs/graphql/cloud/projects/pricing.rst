@@ -31,16 +31,13 @@ There are three different pricing plans that you can chose from:
 
    For details and a full list of features for each of these plans, check out `our website <https://hasura.io/pricing/>`__.
 
-Free tier limit
-^^^^^^^^^^^^^^^
-
-Once the free tier limit is exhausted, the project becomes inactive.
-
 Switching pricing plans
 -----------------------
 
 Switch from free tier to pay-as-you-go
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Once the free tier limit is exhausted, the project becomes inactive. In order to keep it active, you can switch to the pay-as-you-go plan.
 
 When clicking on the ``Billing`` tab, you can see all your projects and what plan they are currently on.
 In order to upgrade, click on the link ``Free tier ->``:
