@@ -8,5 +8,5 @@ package graphql-engine
     -- Limit heap size to a little less than 8GB, which is the amount of
     -- available memory on a CircleCI `large` instance.
     +RTS -M7500m -RTS
-  tests: false
+  tests: true
   benchmarks: true

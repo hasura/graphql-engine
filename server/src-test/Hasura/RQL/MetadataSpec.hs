@@ -10,7 +10,7 @@ import           Test.QuickCheck
 
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Metadata.Generator (genMetadata)
-import           Hasura.RQL.DDL.Metadata.Types     (Metadata, metadataToOrdJSON)
+import           Hasura.RQL.Types.Metadata         (Metadata, metadataToOrdJSON)
 
 spec :: Spec
 spec = describe "metadataToOrdJSON" $ do

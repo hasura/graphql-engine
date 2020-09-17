@@ -219,8 +219,9 @@ initialiseCtx env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
 
   let defSourceConfig = PGSourceConfig (mkPGExecCtx Q.Serializable pool) connInfo
 
-  schemaCacheE <- runExceptT $ peelMetadataRun (RunCtx adminUserInfo httpManager sqlGenCtx defSourceConfig)
-                  metadata $ buildRebuildableSchemaCache env
+  schemaCacheE <- runExceptT
+    $ peelMetadataRun (RunCtx adminUserInfo httpManager sqlGenCtx defSourceConfig) metadata
+    $ buildRebuildableSchemaCache env
 
   schemaCache <- fmap fst $ onLeft schemaCacheE $ \err -> do
     unLogger logger StartupLog

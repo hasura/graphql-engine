@@ -52,11 +52,11 @@ data TestSuite
 main :: IO ()
 main = withVersion $$(getVersionFromEnvironment) $ parseArgs >>= \case
   AllSuites pgConnOptions -> do
-    postgresSpecs <- buildPostgresSpecs pgConnOptions
-    runHspec [] (unitSpecs *> postgresSpecs)
+    -- postgresSpecs <- buildPostgresSpecs pgConnOptions
+    runHspec [] unitSpecs -- (unitSpecs *> postgresSpecs)
   SingleSuite hspecArgs suite -> runHspec hspecArgs =<< case suite of
     UnitSuite                   -> pure unitSpecs
-    PostgresSuite pgConnOptions -> buildPostgresSpecs pgConnOptions
+    PostgresSuite pgConnOptions -> error "Postgres tests are disabled temporarily" -- buildPostgresSpecs pgConnOptions
 
 unitSpecs :: Spec
 unitSpecs = do
@@ -70,31 +70,31 @@ unitSpecs = do
   describe "Hasura.Server.Auth" AuthSpec.spec
   describe "Hasura.Cache.Bounded" CacheBoundedSpec.spec
 
-buildPostgresSpecs :: (HasVersion) => RawConnInfo -> IO Spec
-buildPostgresSpecs pgConnOptions = do
-  env <- getEnvironment
+-- buildPostgresSpecs :: (HasVersion) => RawConnInfo -> IO Spec
+-- buildPostgresSpecs pgConnOptions = do
+--   env <- getEnvironment
 
-  rawPGConnInfo <- flip onLeft printErrExit $ runWithEnv env (mkRawConnInfo pgConnOptions)
-  pgConnInfo <- flip onLeft printErrExit $ mkConnInfo rawPGConnInfo
+--   rawPGConnInfo <- flip onLeft printErrExit $ runWithEnv env (mkRawConnInfo pgConnOptions)
+--   pgConnInfo <- flip onLeft printErrExit $ mkConnInfo rawPGConnInfo
 
-  let setupCacheRef = do
-        pgPool <- Q.initPGPool pgConnInfo Q.defaultConnParams { Q.cpConns = 1 } print
-        let pgContext = mkPGExecCtx Q.Serializable pgPool
-        httpManager <- HTTP.newManager HTTP.tlsManagerSettings
-        let runContext = RunCtx adminUserInfo httpManager (SQLGenCtx False)
+--   let setupCacheRef = do
+--         pgPool <- Q.initPGPool pgConnInfo Q.defaultConnParams { Q.cpConns = 1 } print
+--         let pgContext = mkPGExecCtx Q.Serializable pgPool
+--         httpManager <- HTTP.newManager HTTP.tlsManagerSettings
+--         let runContext = RunCtx adminUserInfo httpManager (SQLGenCtx False)
 
-            runAsAdmin :: Run a -> IO a
-            runAsAdmin =
-                  peelMetadataRun runContext pgContext Q.ReadWrite Nothing
-              >>> runExceptT
-              >=> flip onLeft printErrJExit
+--             runAsAdmin :: Run a -> IO a
+--             runAsAdmin =
+--                   peelMetadataRun runContext pgContext Q.ReadWrite Nothing
+--               >>> runExceptT
+--               >=> flip onLeft printErrJExit
 
-        schemaCache <- snd <$> runAsAdmin (migrateCatalog (Env.mkEnvironment env) =<< liftIO getCurrentTime)
-        cacheRef <- newMVar schemaCache
-        pure $ NT (runAsAdmin . flip MigrateSpec.runCacheRefT cacheRef)
+--         schemaCache <- snd <$> runAsAdmin (migrateCatalog (Env.mkEnvironment env) =<< liftIO getCurrentTime)
+--         cacheRef <- newMVar schemaCache
+--         pure $ NT (runAsAdmin . flip MigrateSpec.runCacheRefT cacheRef)
 
-  pure $ beforeAll setupCacheRef $
-    describe "Hasura.Server.Migrate" $ MigrateSpec.spec pgConnInfo
+--   pure $ beforeAll setupCacheRef $
+--     describe "Hasura.Server.Migrate" $ MigrateSpec.spec pgConnInfo
 
 parseArgs :: IO TestSuites
 parseArgs = execParser $ info (helper <*> (parseNoCommand <|> parseSubCommand)) $
