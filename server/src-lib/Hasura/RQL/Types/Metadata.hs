@@ -280,13 +280,13 @@ type CronTriggers = M.HashMap TriggerName CronTriggerMetadata
 
 data SourceCustomConfiguration
   = SourceCustomConfiguration
-  { _sccUrl                    :: !UrlConf
+  { _sccDatabaseUrl            :: !UrlConf
   , _sccConnectionPoolSettings :: !SourceConnSettings
   } deriving (Show, Eq, Lift, Generic)
 $(deriveJSON (aesonDrop 4 snakeCase) ''SourceCustomConfiguration)
 
 data SourceConfiguration
-  = SCDefault -- ^ the default configuraion, from --database-url option
+  = SCDefault -- ^ the default configuraion, to be resolved from --database-url option
   | SCCustom !SourceCustomConfiguration -- ^ the custom configuration
   deriving (Show, Eq, Lift, Generic)
 
@@ -299,11 +299,13 @@ data SourceMetadata
   } deriving (Show, Eq, Lift, Generic)
 $(makeLenses ''SourceMetadata)
 instance FromJSON SourceMetadata where
-  parseJSON = withObject "Object" $ \o ->
-    SourceMetadata <$> o .: "name"
-    <*> (mapFromL _tmTable <$> o .: "tables")
-    <*> (mapFromL _fmFunction <$> o .:? "functions" .!= [])
-    <*> (maybe SCDefault SCCustom <$> o .:? "configuration")
+  parseJSON = withObject "Object" $ \o -> do
+    _smName          <- o .: "name"
+    _smTables        <- mapFromL _tmTable <$> o .: "tables"
+    _smFunctions     <- mapFromL _fmFunction <$> o .:? "functions" .!= []
+    _smConfiguration <- if _smName == defaultSource then pure SCDefault
+                        else SCCustom <$> o .: "configuration"
+    pure SourceMetadata{..}
 
 mkSourceMetadata
   :: SourceName -> UrlConf -> SourceConnSettings -> SourceMetadata
@@ -697,11 +699,11 @@ metadataToOrdJSON ( Metadata
 newtype MetadataModifier =
   MetadataModifier {unMetadataModifier :: Metadata -> Metadata}
 
-noMetadataModify :: MetadataModifier
-noMetadataModify = MetadataModifier id
-
 instance Semigroup MetadataModifier where
   (MetadataModifier u1) <> (MetadataModifier u2)  = MetadataModifier $ u2 . u1
 
 instance Monoid MetadataModifier where
   mempty = MetadataModifier id
+
+noMetadataModify :: MetadataModifier
+noMetadataModify = mempty

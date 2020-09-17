@@ -1,31 +1,30 @@
 {-| This module (along with the various @Hasura.RQL.DDL.Schema.*@ modules) provides operations to
-load and modify the Hasura catalog and schema cache.
+load and modify the Hasura metadata and schema cache.
 
-* The /catalog/ refers to the set of PostgreSQL tables and views that store all schema information
-    known by Hasura. This includes any tracked Postgres tables, views, and functions, all remote
+* The /metadata/ refers to the @'Metadata' type that store all schema information known by Hasura.
+    This includes any tracked Postgres sources and their tables, views, and functions, all remote
     schemas, and any additionaly Hasura-specific information such as permissions and relationships.
 
-    Primitive functions for loading and modifying the catalog are defined in
-    "Hasura.RQL.DDL.Schema.Catalog", but most uses are wrapped by other functions to synchronize
-    catalog information with the information in the schema cache.
+    Primitive types, functions and type class abstraction for loading and modifying the metadata
+    from the metadata storage are defined in "Hasura.RQL.Types.Metadata", but most uses are wrapped
+    by other functions to synchronize metadata information with the information in the schema cache.
 
 * The /schema cache/ is a process-global value of type 'SchemaCache' that stores an in-memory
-    representation of the data stored in the catalog. The in-memory representation is not identical
-    to the data in the catalog, since it has some post-processing applied to it in order to make it
+    representation of the data stored in the metadata. The in-memory representation is not identical
+    to the data in the metadata, since it has some post-processing applied to it in order to make it
     easier to consume for other parts of the system, such as GraphQL schema generation. For example,
     although column information is represented by 'PGRawColumnInfo', the schema cache contains
     “processed” 'PGColumnInfo' values, instead.
 
-    Ultimately, the catalog is the source of truth for all information contained in the schema
-    cache, but to avoid rebuilding the entire schema cache on every change to the catalog, various
-    functions incrementally update the cache when they modify the catalog.
+    Ultimately, the metadata is the source of truth for all information contained in the schema
+    cache, but to avoid rebuilding the entire schema cache on every change to the metadata, various
+    functions incrementally update the cache when they modify the metadata.
 -}
 
 {-# LANGUAGE RecordWildCards #-}
 
 module Hasura.RQL.DDL.Schema
  ( module Hasura.RQL.DDL.Schema.Cache
- , module Hasura.RQL.DDL.Schema.Catalog
  , module Hasura.RQL.DDL.Schema.Function
  , module Hasura.RQL.DDL.Schema.Rename
  , module Hasura.RQL.DDL.Schema.Table
@@ -52,7 +51,6 @@ import           Language.Haskell.TH.Syntax     (Lift)
 
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Schema.Cache
-import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Rename
 import           Hasura.RQL.DDL.Schema.Table

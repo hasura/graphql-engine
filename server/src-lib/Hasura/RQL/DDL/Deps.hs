@@ -6,7 +6,7 @@ module Hasura.RQL.DDL.Deps
 
 import           Hasura.Prelude
 
-import qualified Data.Text         as T
+import qualified Data.Text        as T
 
 import           Hasura.RQL.Types
 
@@ -22,4 +22,3 @@ reportDepsExt deps unknownDeps =
     "cannot drop due to the following dependent objects : " <> depObjsTxt
   where
     depObjsTxt = T.intercalate ", " (reportSchemaObjs deps:unknownDeps)
-

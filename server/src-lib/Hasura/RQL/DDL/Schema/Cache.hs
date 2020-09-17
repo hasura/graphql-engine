@@ -49,7 +49,6 @@ import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Cache.Dependencies
 import           Hasura.RQL.DDL.Schema.Cache.Fields
 import           Hasura.RQL.DDL.Schema.Cache.Permission
-import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Source             (resolveSource)

@@ -78,7 +78,7 @@ instance FromJSON SourceConnSettings where
 data AddPgSource
   = AddPgSource
   { _apsName                  :: !SourceName
-  , _apsUrl                   :: !UrlConf
+  , _apsDatabaseUrl           :: !UrlConf
   , _apsConnectionPoolSetting :: !SourceConnSettings
   } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 4 snakeCase) ''AddPgSource)

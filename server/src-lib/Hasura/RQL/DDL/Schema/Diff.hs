@@ -22,20 +22,18 @@ module Hasura.RQL.DDL.Schema.Diff
   ) where
 
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Schema.Catalog  (fetchFunctionMetadataFromDb,
-                                                 fetchTableMetadataFromDb)
-import           Hasura.RQL.DDL.Schema.Function
-import           Hasura.RQL.Types               hiding (fmFunction, tmComputedFields, tmTable)
-import           Hasura.RQL.Types.Catalog
+import           Hasura.RQL.DDL.Schema.Source (fetchFunctionMetadataFromPgSource,
+                                               fetchTableMetadataFromPgSource)
+import           Hasura.RQL.Types             hiding (fmFunction, tmComputedFields, tmTable)
 import           Hasura.SQL.Types
 
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.List.Extended             (duplicates)
+import           Data.List.Extended           (duplicates)
 
-import qualified Data.HashMap.Strict            as M
-import qualified Data.HashSet                   as HS
-import qualified Data.List.NonEmpty             as NE
+import qualified Data.HashMap.Strict          as M
+import qualified Data.HashSet                 as HS
+import qualified Data.List.NonEmpty           as NE
 
 data FunctionMeta
   = FunctionMeta
@@ -55,7 +53,7 @@ $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''ComputedFieldMeta
 data TableMeta
   = TableMeta
   { tmTable          :: !QualifiedTable
-  , tmInfo           :: !CatalogTableInfo
+  , tmInfo           :: !TableMetadataInfo
   , tmComputedFields :: ![ComputedFieldMeta]
   } deriving (Show, Eq)
 
@@ -63,8 +61,8 @@ fetchMeta
   :: (MonadTx m)
   => TableCache -> FunctionCache -> m ([TableMeta], [FunctionMeta])
 fetchMeta tables functions = do
-  tableMetaInfos <- fetchTableMetadataFromDb
-  functionMetaInfos <- fetchFunctionMetadataFromDb allFunctions
+  tableMetaInfos <- fetchTableMetadataFromPgSource
+  functionMetaInfos <- fetchFunctionMetadataFromPgSource allFunctions
 
   let mkFunctionMeta function rawInfo =
         FunctionMeta (rfiOid rawInfo) function (rfiFunctionType rawInfo)
@@ -140,14 +138,14 @@ getTableDiff oldtm newtm =
   droppedFKeyConstraints computedFieldDiff uniqueOrPrimaryCons mNewDesc
   where
     mNewName = bool (Just $ tmTable newtm) Nothing $ tmTable oldtm == tmTable newtm
-    oldCols = _ctiColumns $ tmInfo oldtm
-    newCols = _ctiColumns $ tmInfo newtm
+    oldCols = _tmiColumns $ tmInfo oldtm
+    newCols = _tmiColumns $ tmInfo newtm
 
     uniqueOrPrimaryCons = map _cName $
-      maybeToList (_pkConstraint <$> _ctiPrimaryKey (tmInfo newtm))
-        <> toList (_ctiUniqueConstraints $ tmInfo newtm)
+      maybeToList (_pkConstraint <$> _tmiPrimaryKey (tmInfo newtm))
+        <> toList (_tmiUniqueConstraints $ tmInfo newtm)
 
-    mNewDesc = _ctiDescription $ tmInfo newtm
+    mNewDesc = _tmiDescription $ tmInfo newtm
 
     droppedCols = map prciName $ getDifference prciPosition oldCols newCols
     addedCols = getDifference prciPosition newCols oldCols
@@ -158,7 +156,7 @@ getTableDiff oldtm newtm =
     -- and (ref-table, column mapping) are changed
     droppedFKeyConstraints = map (_cName . _fkConstraint) $ HS.toList $
       droppedFKeysWithOid `HS.intersection` droppedFKeysWithUniq
-    tmForeignKeys = fmap unCatalogForeignKey . toList . _ctiForeignKeys . tmInfo
+    tmForeignKeys = fmap unForeignKeyMetadata . toList . _tmiForeignKeys . tmInfo
     droppedFKeysWithOid = HS.fromList $
       (getDifference (_cOid . _fkConstraint) `on` tmForeignKeys) oldtm newtm
     droppedFKeysWithUniq = HS.fromList $
@@ -215,9 +213,9 @@ getSchemaDiff :: [TableMeta] -> [TableMeta] -> SchemaDiff
 getSchemaDiff oldMeta newMeta =
   SchemaDiff droppedTables survivingTables
   where
-    droppedTables = map tmTable $ getDifference (_ctiOid . tmInfo) oldMeta newMeta
+    droppedTables = map tmTable $ getDifference (_tmiOid . tmInfo) oldMeta newMeta
     survivingTables =
-      flip map (getOverlap (_ctiOid . tmInfo) oldMeta newMeta) $ \(oldtm, newtm) ->
+      flip map (getOverlap (_tmiOid . tmInfo) oldMeta newMeta) $ \(oldtm, newtm) ->
       (tmTable oldtm, getTableDiff oldtm newtm)
 
 getSchemaChangeDeps
