@@ -86,7 +86,7 @@ runGQ
 runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   -- The response and misc telemetry data:
   let telemTransport = Telem.HTTP
-  (telemTimeTot_DT, (telemCacheHit, telemLocality, (telemTimeIO_DT, telemQueryType, !resp))) <- withElapsedTime $ do
+  resp <- {- withElapsedTime $ -} do
     E.ExecutionCtx _ sqlGenCtx pgExecCtx {- planCache -} sc scVer httpManager enableAL <- ask
 
     -- run system authorization on the GraphQL API
@@ -97,18 +97,24 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                                  userInfo sqlGenCtx sc scVer queryType
                                  httpManager reqHeaders (reqUnparsed, reqParsed)
     case execPlan of
-      E.QueryExecutionPlan queryPlan asts ->
-        case queryPlan of
+      E.QueryExecutionPlan queryPlans asts -> do
+        results <- for queryPlans $ \case
           E.ExecStepDB txGenSql -> do
-            (telemTimeIO, telemQueryType, respHdrs, resp) <-
+            (telemTimeIO_DT, telemQueryType, respHdrs, resp) <-
               runQueryDB reqId (reqUnparsed,reqParsed) asts userInfo txGenSql
-            return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs))
-          E.ExecStepRemote (rsi, opDef, _varValsM) ->
-            runRemoteGQ telemCacheHit rsi opDef
+            return (resp, respHdrs)
+          E.ExecStepRemote (rsi, opDef, _varValsM) -> do
+            (telemCacheHit, _, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs)) <- runRemoteGQ telemCacheHit rsi opDef
+            return (resp, respHdrs)
           E.ExecStepRaw (name, json) -> do
             (telemTimeIO, obj) <- withElapsedTime $
               return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
-            return (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj []))
+            return (obj, []) -- (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj []))
+        let (bodies, headers) = (fmap fst results, fmap snd results)
+        -- TODO: encodeGQResp $ GQSuccess $
+        return $ HttpResponse (encJFromHashMap bodies) (fold headers)
+-- TODO rewrite mutations
+{-
       E.MutationExecutionPlan mutationPlan ->
         case mutationPlan of
           E.ExecStepDB (tx, responseHeaders) -> do
@@ -120,6 +126,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             (telemTimeIO, obj) <- withElapsedTime $
               return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
             return (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj []))
+-}
       E.SubscriptionExecutionPlan _sub ->
         throw400 UnexpectedPayload "subscriptions are not supported over HTTP, use websockets instead"
 {-
@@ -132,9 +139,6 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         (telemTimeIO, resp) <- E.execRemoteGQ reqId userInfo reqHeaders reqUnparsed rsi $ G._todType opDef
         return (telemCacheHit, Telem.Remote, (telemTimeIO, telemQueryType, resp))
 -}
-  let telemTimeIO = convertDuration telemTimeIO_DT
-      telemTimeTot = convertDuration telemTimeTot_DT
-  Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
   return resp
   where
     runRemoteGQ telemCacheHit rsi opDef = do
@@ -196,16 +200,16 @@ runQueryDB
   -> (GQLReqUnparsed, GQLReqParsed)
   -> [QueryRootField UnpreparedValue]
   -> UserInfo
-  -> (Tracing.TraceT (LazyTx QErr) EncJSON, EQ.GeneratedSqlMap)
+  -> (Tracing.TraceT (LazyTx QErr) EncJSON, Maybe EQ.PreparedSql)
   -> m (DiffTime, Telem.QueryType, HTTP.ResponseHeaders, EncJSON)
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
 runQueryDB reqId (query, queryParsed) asts _userInfo (tx, genSql) =  do
   -- log the generated SQL and the graphql query
   E.ExecutionCtx logger _ pgExecCtx _ _ _ _ <- ask
-  logQueryLog logger query (Just genSql) reqId
+  logQueryLog logger query Nothing reqId -- TODO genSql
   (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ trace "Query" $
-    Tracing.interpTraceT id $ executeQuery queryParsed asts (Just genSql) pgExecCtx Q.ReadOnly tx
+    Tracing.interpTraceT id $ executeQuery queryParsed asts Nothing pgExecCtx Q.ReadOnly tx -- TODO genSql
   (respHdrs,resp) <- liftEither respE
   let !json = encodeGQResp $ GQSuccess $ encJToLBS resp
       telemQueryType = Telem.Query
