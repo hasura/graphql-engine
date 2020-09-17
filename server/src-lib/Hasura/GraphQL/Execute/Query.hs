@@ -233,48 +233,23 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
     traverseDB (pure . irToRootFieldPlan planVars planVals) preparedQuery
       >>= traverseAction (pure . actionQueryToRootFieldPlan planVars planVals)
 
-  -- This monster makes sure that consecutive database operation get executed together
-  let dbPlans :: Seq.Seq (G.Name, RootFieldPlan)
-      remoteFields :: Seq.Seq (G.Name, RemoteField)
-      (dbPlans, remoteFields) = OMap.foldlWithKey' collectPlan (Seq.Empty, Seq.Empty) queryPlans
-
-      collectPlan
-        :: (Seq.Seq (G.Name, RootFieldPlan), Seq.Seq (G.Name, RemoteField))
-        -> G.Name
-        -> RootField PGPlan RemoteField RootFieldPlan J.Value
-        -> (Seq.Seq (G.Name, RootFieldPlan), Seq.Seq (G.Name, RemoteField))
-
-      collectPlan (seqDB, seqRemote) name (RFRemote r) =
-        (seqDB, seqRemote Seq.:|> (name, r))
-
-      collectPlan (seqDB, seqRemote) name (RFDB db)      =
-        (seqDB Seq.:|> (name, RFPPostgres db), seqRemote)
-
-      collectPlan (seqDB, seqRemote) name (RFAction rfp) =
-        (seqDB Seq.:|> (name, rfp), seqRemote)
-
-      collectPlan (seqDB, seqRemote) name (RFRaw r)      =
-        (seqDB Seq.:|> (name, RFPRaw $ LBS.toStrict $ J.encode r), seqRemote)
-
-
-  executionPlan <- Map.fromList <$> case (dbPlans, remoteFields) of
-    (dbs, Seq.Empty) -> do
-      results :: Seq.Seq (Text, (tx EncJSON, Maybe PreparedSql)) <-
-        for dbs $ \(alias, rootFieldPlan) -> (G.unName alias,) <$> mkCurPlanTx env manager reqHeaders userInfo rootFieldPlan
-      pure $ fmap ExecStepDB <$> toList results
-    (Seq.Empty, remotes) -> pure $ toList $ remotes <&> \(alias, (remoteSchemaInfo, remoteField)) ->
+  -- Transform the query plans into an execution plan
+  executionPlan <- for (OMap.toList queryPlans) \(alias, remoteField) -> case remoteField of
+    RFRemote (remoteSchemaInfo, remoteField) ->
       let (remoteOperation, varValues) =
             buildTypedOperation
             G.OperationTypeQuery
             varDefs
             [G.SelectionField remoteField]
             varValsM
-      in (G.unName alias, ExecStepRemote (remoteSchemaInfo, remoteOperation, varValues))
-    _ -> throw400 NotSupported "Heterogeneous execution of database and remote schemas not supported"
+      in pure (G.unName alias, ExecStepRemote (remoteSchemaInfo, remoteOperation, varValues))
+    RFDB db      -> (G.unName alias,) . ExecStepDB <$> mkCurPlanTx env manager reqHeaders userInfo (RFPPostgres db)
+    RFAction rfp -> (G.unName alias,) . ExecStepDB <$> mkCurPlanTx env manager reqHeaders userInfo rfp
+    RFRaw r      -> (G.unName alias,) . ExecStepDB <$> mkCurPlanTx env manager reqHeaders userInfo (RFPRaw $ LBS.toStrict $ J.encode r)
 
   let asts :: [QueryRootField UnpreparedValue]
       asts = OMap.elems unpreparedQueries
-  pure (executionPlan, asts)  -- See Note [Temporarily disabling query plan caching]
+  pure (Map.fromList executionPlan, asts)  -- See Note [Temporarily disabling query plan caching]
   where
     usrVars = _uiSession userInfo
 
