@@ -107,12 +107,12 @@ class (CacheRM m) => CacheRWM m where
     -> m ()
 
 data BuildReason
-  -- | The build was triggered by an update this instance made to the catalog (in the
-  -- currently-active transaction), so information in Postgres that needs to be kept in sync with
-  -- the catalog (i.e. anything in the @hdb_views@ schema) should be updated.
+  -- | The build was triggered by an update this instance made to the metadata,
+  -- so information in Postgres that needs to be kept in sync with
+  -- the metadata (i.e. table event triggers) should be updated.
   = CatalogUpdate
   -- | The build was triggered by a notification that some other currently-running Hasura instance
-  -- updated the catalog. Since that instance already updated @hdb_views@, this build should be
+  -- updated the metadata. Since that instance already updated event triggers, this build should be
   -- read-only.
   | CatalogSync
   deriving (Show, Eq)

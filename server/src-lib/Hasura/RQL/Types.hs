@@ -21,6 +21,7 @@ module Hasura.RQL.Types
   , QCtx(..)
   , HasQCtx(..)
   , mkAdminQCtx
+  , askSourceCache
   , askTableCache
   , askTabInfo
   , askTabInfoSource
@@ -96,6 +97,14 @@ instance HasQCtx QCtx where
 
 mkAdminQCtx :: SQLGenCtx -> SchemaCache ->  QCtx
 mkAdminQCtx soc sc = QCtx adminUserInfo sc soc
+
+askSourceCache
+  :: (CacheRM m, MonadError QErr m)
+  => SourceName -> m PGSourceSchemaCache
+askSourceCache source = do
+  pgSources <- scPostgres <$> askSchemaCache
+  onNothing (M.lookup source pgSources) $
+    throw400 NotExists $ "source with name " <> source <<> " not exists"
 
 askTabInfo
   :: (QErrM m, CacheRM m)

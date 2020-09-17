@@ -19,7 +19,7 @@ module Hasura.Server.Migrate
   , migrateCatalog
   , latestCatalogVersion
   -- , recreateSystemMetadata
-  , dropCatalog
+  , dropHdbCatalogSchema
   , downgradeCatalog
   ) where
 
@@ -51,10 +51,9 @@ import           Hasura.Server.Version
 import           Hasura.SQL.Types
 import           System.Directory              (doesFileExist)
 
-dropCatalog :: (MonadTx m) => m ()
-dropCatalog = liftTx $ Q.catchE defaultTxErrorHandler $ do
+dropHdbCatalogSchema :: (MonadTx m) => m ()
+dropHdbCatalogSchema = liftTx $ Q.catchE defaultTxErrorHandler $ do
   -- This is where the generated views and triggers are stored
-  Q.unitQ "DROP SCHEMA IF EXISTS hdb_views CASCADE" () False
   Q.unitQ "DROP SCHEMA IF EXISTS hdb_catalog CASCADE" () False
 
 dropHdbCatalogTables :: MonadTx m => m ()
@@ -139,8 +138,6 @@ migrateCatalog migrationTime = do
       liftTx $ Q.catchE defaultTxErrorHandler $
         when createSchema $ do
           Q.unitQ "CREATE SCHEMA hdb_catalog" () False
-          -- This is where the generated views and triggers are stored
-          Q.unitQ "CREATE SCHEMA hdb_views" () False
 
       isExtensionAvailable "pgcrypto" >>= \case
         -- only if we created the schema, create the extension

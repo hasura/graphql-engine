@@ -67,7 +67,7 @@ singleTransaction = id
 --   => Q.ConnInfo -> SpecWithCache m
 -- spec pgConnInfo = do
 --   let dropAndInit env time = CacheRefT $ flip modifyMVar \_ ->
---         dropCatalog *> (swap <$> migrateCatalog env time)
+--         dropHdbCatalogSchema *> (swap <$> migrateCatalog env time)
 
 --   describe "migrateCatalog" $ do
 --     it "initializes the catalog" $ singleTransaction do

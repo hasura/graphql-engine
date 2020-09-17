@@ -10,7 +10,7 @@ import           Hasura.Logging             (Hasura)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Init
-import           Hasura.Server.Migrate      (downgradeCatalog, dropCatalog)
+import           Hasura.Server.Migrate      (downgradeCatalog, dropHdbCatalogSchema)
 import           Hasura.Server.Version
 
 import qualified Data.ByteString.Char8      as BC
@@ -60,7 +60,7 @@ runApp env hgeOptions =
 
     HCClean -> do
       (InitCtx{..}, _) <- initialiseCtx env hgeOptions
-      res <- runTx' _icMetadataPool Q.ReadCommitted dropCatalog
+      res <- runTx' _icMetadataPool Q.ReadCommitted dropHdbCatalogSchema
       either (printErrJExit MetadataCleanError) (const cleanSuccess) res
 
     HCExecute -> do

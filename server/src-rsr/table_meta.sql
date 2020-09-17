@@ -36,4 +36,3 @@ WHERE
   t.table_schema NOT LIKE 'pg_%'
   AND t.table_schema <> 'information_schema'
   AND t.table_schema <> 'hdb_catalog'
-  AND t.table_schema <> 'hdb_views'

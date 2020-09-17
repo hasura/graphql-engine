@@ -100,7 +100,7 @@ LEFT JOIN (
         LEFT JOIN pg_description pd ON p.oid = pd.objoid
       WHERE
         pn.nspname :: text NOT LIKE 'pg_%'
-        AND pn.nspname :: text NOT IN ('information_schema', 'hdb_catalog', 'hdb_views')
+        AND pn.nspname :: text NOT IN ('information_schema', 'hdb_catalog')
         AND (NOT EXISTS (
                 SELECT
                   1

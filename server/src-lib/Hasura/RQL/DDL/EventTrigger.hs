@@ -10,17 +10,17 @@ module Hasura.RQL.DDL.EventTrigger
   -- TODO(from master): review
   -- , delEventTriggerFromCatalog
   , dropEventTriggerInMetadata
-  , subTableP2
+  -- , subTableP2
   , subTableP2Setup
   , mkAllTriggersQ
   , delTriggerQ
   , getEventTriggerDef
   , getWebhookInfoFromConf
   , getHeaderInfosFromConf
-  , updateEventTriggerInCatalog
+  -- , updateEventTriggerInCatalog
   ) where
 
-import           Control.Lens            (ix)
+import           Control.Lens            (ix, (.~))
 import           Data.Aeson
 
 import           Hasura.EncJSON
@@ -42,15 +42,10 @@ import qualified Text.Shakespeare.Text   as ST
 
 data OpVar = OLD | NEW deriving (Show)
 
-pgIdenTrigger:: Ops -> TriggerName -> T.Text
+pgIdenTrigger :: Ops -> TriggerName -> T.Text
 pgIdenTrigger op trn = pgFmtIden . qualifyTriggerName op $ triggerNameToTxt trn
   where
     qualifyTriggerName op' trn' = "notify_hasura_" <> trn' <> "_" <> T.pack (show op')
-
-getDropFuncSql :: Ops -> TriggerName -> T.Text
-getDropFuncSql op trn = "DROP FUNCTION IF EXISTS"
-                        <> " hdb_views." <> pgIdenTrigger op trn <> "()"
-                        <> " CASCADE"
 
 mkAllTriggersQ
   :: (MonadTx m, HasSQLGenCtx m)
@@ -120,24 +115,32 @@ mkTriggerQ trn qt allCols op (SubscribeOpSpec columns payload) = do
     opToTxt = T.pack . show
 
 delTriggerQ :: TriggerName -> Q.TxE QErr ()
-delTriggerQ trn = mapM_ (\op -> Q.unitQE
-                          defaultTxErrorHandler
-                          (Q.fromText $ getDropFuncSql op trn) () False) [INSERT, UPDATE, DELETE]
-
-addEventTriggerToCatalog
-  :: QualifiedTable
-  -> EventTriggerConf
-  -> Q.TxE QErr ()
-addEventTriggerToCatalog qt etc = do
-  Q.unitQE defaultTxErrorHandler
-         [Q.sql|
-           INSERT into hdb_catalog.event_triggers
-                       (name, type, schema_name, table_name, configuration)
-           VALUES ($1, 'table', $2, $3, $4)
-         |] (name, sn, tn, Q.AltJ $ toJSON etc) False
+delTriggerQ trn =
+  mapM_ (\op -> Q.unitQE
+                defaultTxErrorHandler
+          (Q.fromText $ getDropFuncSql op) () False) [INSERT, UPDATE, DELETE]
   where
-    QualifiedObject sn tn = qt
-    (EventTriggerConf name _ _ _ _ _) = etc
+    getDropFuncSql :: Ops -> T.Text
+    getDropFuncSql op =
+      "DROP FUNCTION IF EXISTS"
+      <> " hdb_catalog." <> pgIdenTrigger op trn <> "()"
+      <> " CASCADE"
+
+
+-- addEventTriggerToCatalog
+--   :: QualifiedTable
+--   -> EventTriggerConf
+--   -> Q.TxE QErr ()
+-- addEventTriggerToCatalog qt etc = do
+--   Q.unitQE defaultTxErrorHandler
+--          [Q.sql|
+--            INSERT into hdb_catalog.event_triggers
+--                        (name, type, schema_name, table_name, configuration)
+--            VALUES ($1, 'table', $2, $3, $4)
+--          |] (name, sn, tn, Q.AltJ $ toJSON etc) False
+--   where
+--     QualifiedObject sn tn = qt
+--     (EventTriggerConf name _ _ _ _ _) = etc
 
 -- delEventTriggerFromCatalog :: TriggerName -> Q.TxE QErr ()
 -- delEventTriggerFromCatalog trn = do
@@ -249,12 +252,12 @@ getTrigDefDeps source qt (TriggerOpsDef mIns mUpd mDel _) =
       SubCStar         -> []
       SubCArray pgcols -> pgcols
 
-subTableP2
-  :: (MonadTx m)
-  => QualifiedTable -> Bool -> EventTriggerConf -> m ()
-subTableP2 qt replace etc = liftTx if replace
-  then updateEventTriggerInCatalog etc
-  else addEventTriggerToCatalog qt etc
+-- subTableP2
+--   :: (MonadTx m)
+--   => QualifiedTable -> Bool -> EventTriggerConf -> m ()
+-- subTableP2 qt replace etc = liftTx if replace
+--   then updateEventTriggerInCatalog etc
+--   else addEventTriggerToCatalog qt etc
 
 runCreateEventTriggerQuery
   :: (QErrM m, UserInfoM m, CacheRWM m)
@@ -267,24 +270,31 @@ runCreateEventTriggerQuery q = do
       metadataObj = MOSourceObjId source $ SMOTableObj qt $ MTOTrigger triggerName
   buildSchemaCacheFor metadataObj
     $ MetadataModifier
-    $ tableMetadataSetter source qt.tmEventTriggers %~ HM.insert triggerName etc
+    $ tableMetadataSetter source qt.tmEventTriggers %~
+      if replace then ix triggerName .~ etc
+      else HM.insert triggerName etc
   pure successMsg
 
 runDeleteEventTriggerQuery
-  :: (MonadError QErr m, CacheRWM m)
+  :: (MonadError QErr m, CacheRWM m, MonadIO m)
   => DeleteEventTriggerQuery -> m EncJSON
 runDeleteEventTriggerQuery (DeleteEventTriggerQuery source name) = do
   -- liftTx $ delEventTriggerFromCatalog name
-  tables <- (maybe mempty _pcTables . HM.lookup source . scPostgres) <$> askSchemaCache
+  PGSourceSchemaCache tables _ sourceConfig <- askSourceCache source
   let maybeTable = HM.lookup name $ HM.unions $
                    flip map (HM.toList tables) $ \(table, tableInfo) ->
                    HM.map (const table) $ _tiEventTriggerInfoMap tableInfo
   table <- onNothing maybeTable $ throw400 NotExists $
            "event trigger with name " <> name <<> " not exists"
+
   withNewInconsistentObjsCheck
     $ buildSchemaCache
     $ MetadataModifier
     $ tableMetadataSetter source table %~ dropEventTriggerInMetadata name
+
+  liftEitherM $ runPgSourceWriteTx sourceConfig $ do
+    delTriggerQ name
+    archiveEvents name
   pure successMsg
 
 dropEventTriggerInMetadata :: TriggerName -> TableMetadata -> TableMetadata
@@ -373,12 +383,12 @@ getEventTriggerDef triggerName = do
            |] (Identity triggerName) False
   return (QualifiedObject sn tn, etc)
 
-updateEventTriggerInCatalog :: EventTriggerConf -> Q.TxE QErr ()
-updateEventTriggerInCatalog trigConf =
-  Q.unitQE defaultTxErrorHandler
-    [Q.sql|
-      UPDATE hdb_catalog.event_triggers
-      SET
-      configuration = $1
-      WHERE name = $2
-    |] (Q.AltJ $ toJSON trigConf, etcName trigConf) True
+-- updateEventTriggerInCatalog :: EventTriggerConf -> Q.TxE QErr ()
+-- updateEventTriggerInCatalog trigConf =
+--   Q.unitQE defaultTxErrorHandler
+--     [Q.sql|
+--       UPDATE hdb_catalog.event_triggers
+--       SET
+--       configuration = $1
+--       WHERE name = $2
+--     |] (Q.AltJ $ toJSON trigConf, etcName trigConf) True

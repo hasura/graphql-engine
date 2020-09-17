@@ -26,7 +26,6 @@ import qualified Data.Environment                         as Env
 import qualified Data.HashMap.Strict.Extended             as M
 import qualified Data.HashSet                             as HS
 import qualified Data.Text                                as T
-import qualified Database.PG.Query                        as Q
 
 import           Control.Arrow.Extended
 import           Control.Lens                             hiding ((.=))
@@ -53,7 +52,6 @@ import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Source             (resolveSource)
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.DDL.Utils                     (clearHdbViews)
 import           Hasura.RQL.Types                         hiding (tmTable)
 import           Hasura.Server.Version                    (HasVersion)
 import           Hasura.SQL.Types
@@ -290,10 +288,10 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 
       -- custom types
       let pgScalars = mconcat $ map snd $ M.elems sourcesOutput
-          sourceTables = M.map (_soTables . fst) sourcesOutput
+          existingTables = M.map (_soTables . fst) sourcesOutput
       maybeResolvedCustomTypes <-
         (| withRecordInconsistency
-             (bindErrorA -< resolveCustomTypes sourceTables customTypes pgScalars)
+             (bindErrorA -< resolveCustomTypes existingTables customTypes pgScalars)
          |) (MetadataObject MOCustomTypes $ toJSON customTypes)
 
       -- -- actions
@@ -460,42 +458,27 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 withMetadataCheck
   :: (MonadTx m, CacheRWM m, HasSQLGenCtx m) => SourceName -> Bool -> m a -> m a
 withMetadataCheck source cascade action = do
-  -- Drop hdb_views so no interference is caused to the sql query
-  liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
+  PGSourceSchemaCache existingTables existingFunctions _ <- askSourceCache source
+  -- Drop event triggers so no interference is caused to the sql query
+  forM_ (M.elems existingTables) $ \tableInfo -> do
+    let eventTriggers = _tiEventTriggerInfoMap tableInfo
+    forM_ (M.keys eventTriggers) (liftTx . delTriggerQ)
+
   sc <- askSchemaCache
-  let sourceTables = maybe mempty _pcTables $ M.lookup source $ scPostgres sc
-      existingFunctions = maybe mempty _pcFunctions $ M.lookup source $ scPostgres sc
-      existingInconsistentObjs = scInconsistentObjs sc
+  let existingInconsistentObjs = scInconsistentObjs sc
 
   -- Get the metadata before the sql query, everything, need to filter this
-  (oldTableMeta, oldFunctionMeta) <- fetchMeta sourceTables existingFunctions
-  -- oldMetaU <- liftTx $ Q.catchE defaultTxErrorHandler fetchTableMeta
-  -- oldFuncMetaU <- liftTx $ Q.catchE defaultTxErrorHandler fetchFunctionMeta
-
+  (oldTableMeta, oldFunctionMeta) <- fetchMeta existingTables existingFunctions
   -- Run the action
   res <- action
 
   -- Get the metadata after the sql query
-  (newTableMeta, newFunctionMeta) <- fetchMeta sourceTables existingFunctions
+  (newTableMeta, newFunctionMeta) <- fetchMeta existingTables existingFunctions
 
-  let existingTablesOldMeta = filter (flip M.member sourceTables . tmTable) oldTableMeta
+  let existingTablesOldMeta = filter (flip M.member existingTables . tmTable) oldTableMeta
       schemaDiff = getSchemaDiff existingTablesOldMeta newTableMeta
       FunctionDiff droppedFuncs alteredFuncs = getFuncDiff oldFunctionMeta newFunctionMeta
       overloadedFuncs = getOverloadedFuncs (M.keys existingFunctions) newFunctionMeta
-
-  -- Old Code TODO: Clean up
-  -- newMeta <- liftTx $ Q.catchE defaultTxErrorHandler fetchTableMeta
-  -- newFuncMeta <- liftTx $ Q.catchE defaultTxErrorHandler fetchFunctionMeta
-  -- sc <- askSchemaCache
-  -- let existingInconsistentObjs = scInconsistentObjs sc
-  --     sourceTables = maybe mempty _pcTables $ M.lookup source $ scPostgres sc
-  --     sourceTableNames = M.keys sourceTables
-  --     oldMeta = flip filter oldMetaU $ \tm -> tmTable tm `elem` sourceTableNames
-  --     schemaDiff = getSchemaDiff oldMeta newMeta
-  --     existingFuncs = M.keys $ maybe mempty _pcFunctions $ M.lookup source $ scPostgres sc
-  --     oldFuncMeta = flip filter oldFuncMetaU $ \fm -> fmFunction fm `elem` existingFuncs
-  --     FunctionDiff droppedFuncs alteredFuncs = getFuncDiff oldFuncMeta newFuncMeta
-  --     overloadedFuncs = getOverloadedFuncs existingFuncs newFuncMeta
 
   -- Do not allow overloading functions
   unless (null overloadedFuncs) $
@@ -526,14 +509,16 @@ withMetadataCheck source cascade action = do
         throw400 NotSupported $
         "type of function " <> qf <<> " is altered to \"VOLATILE\" which is not supported now"
 
-    -- update the schema cache and hdb_catalog with the changes
-    processSchemaChanges sourceTables schemaDiff
+    -- update the schema cache and metadata with the changes
+    processSchemaChanges existingTables schemaDiff
 
   buildSchemaCache metadataUpdater
   postSc <- askSchemaCache
 
-  -- Recreate event triggers in hdb_views
-  forM_ (M.elems sourceTables) $ \(TableInfo coreInfo _ eventTriggers) -> do
+  let postTables = maybe mempty _pcTables $ M.lookup source $ scPostgres postSc
+
+  -- Recreate event triggers in hdb_catalog
+  forM_ (M.elems postTables) $ \(TableInfo coreInfo _ eventTriggers) -> do
           let table = _tciName coreInfo
               columns = getCols $ _tciFieldInfoMap coreInfo
           forM_ (M.toList eventTriggers) $ \(triggerName, eti) -> do
@@ -553,13 +538,13 @@ withMetadataCheck source cascade action = do
          , MonadWriter MetadataModifier m
          )
       => TableCache -> SchemaDiff -> m ()
-    processSchemaChanges sourceTables schemaDiff = do
+    processSchemaChanges existingTables schemaDiff = do
       -- Purge the dropped tables
       forM_ droppedTables $
         \tn -> tell $ MetadataModifier $ metaSources.ix source.smTables %~ M.delete tn
 
       for_ alteredTables $ \(oldQtn, tableDiff) -> do
-        ti <- case M.lookup oldQtn sourceTables of
+        ti <- case M.lookup oldQtn existingTables of
           Just ti -> return ti
           Nothing -> throw500 $ "old table metadata not found in cache : " <>> oldQtn
         processTableChanges source (_tiCoreInfo ti) tableDiff
