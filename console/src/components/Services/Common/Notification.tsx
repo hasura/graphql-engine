@@ -225,7 +225,7 @@ const showSuccessNotification = (
           message,
         },
         'success',
-        noDismiss ?? false
+        noDismiss
       )
     );
   };

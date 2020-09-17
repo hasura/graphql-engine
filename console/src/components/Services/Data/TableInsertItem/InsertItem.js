@@ -19,7 +19,6 @@ class InsertItem extends Component {
   constructor() {
     super();
     this.state = { insertedRows: 0, isMigration: false };
-    this.isCLIMode = globals.consoleMode === CLI_CONSOLE_MODE;
   }
 
   componentDidMount() {
@@ -71,6 +70,8 @@ class InsertItem extends Component {
       // throw a 404 exception
       throw new NotFoundError();
     }
+
+    const isCLIMode = globals.consoleMode === CLI_CONSOLE_MODE;
 
     const columns = currentTable.columns.sort(ordinalColSort);
 
@@ -211,7 +212,7 @@ class InsertItem extends Component {
                 <MigrationCheckbox
                   onChange={this.toggleMigrationCheckBox}
                   isChecked={this.state.isMigration}
-                  isCLIMode={this.isCLIMode}
+                  isCLIMode={isCLIMode}
                 />
               </div>
               <div className={styles.display_flex}>

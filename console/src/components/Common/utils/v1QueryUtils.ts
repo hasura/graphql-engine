@@ -193,35 +193,6 @@ export const getInsertDownQuery = (
   return getRunSqlQuery(sql);
 };
 
-export const getEditRowQuery = (
-  tableDef: TableDefinition,
-  item: Record<string, PGReturnValueType>,
-  columns: BaseTableColumn[],
-  pkClause: Record<string, PGReturnValueType>
-) => {
-  const columnValues = Object.keys(item).map(key => `"${key}"`);
-
-  const values = Object.values(item).map((value, valIndex) => {
-    const colVal =
-      columns.find(col => col.column_name === Object.keys(item)[valIndex]) ??
-      columns[valIndex];
-    return convertPGValue(value, colVal);
-  });
-
-  const updatedValues = columnValues
-    .map((value, valIndex) => {
-      return `${value} = ${values[valIndex]}`;
-    })
-    .join(', ');
-
-  const clauses = Object.keys(pkClause).map(pk =>
-    convertPGPrimaryKeyValue(pkClause[pk], pk)
-  );
-  const condition = clauses.join(' AND ');
-  const sql = `UPDATE "${tableDef.schema}"."${tableDef.name}" SET ${updatedValues} WHERE ${condition}`;
-  return getRunSqlQuery(sql);
-};
-
 type CustomTypeScalar = {
   name: string;
   description: string;
