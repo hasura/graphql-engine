@@ -133,7 +133,5 @@ Once you've created your scheduled trigger, you can see ``Pending events``, ``Pr
    :width: 1200px
 
 .. note::
-   One minute Precision:
-   
-   This means that for any scheduled event set at a particular time, it will be delivered within one minute of when it's scheduled.
+   A scheduled event will be delivered within one minute of when it's scheduled.
    For example: If you schedule an event to be delivered at ``09:24:10``, because of the one minute precison, it will deliver at anytime between ``09:24:10`` and ``09:25:10`` max.
