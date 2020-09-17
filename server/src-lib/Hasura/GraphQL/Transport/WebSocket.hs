@@ -319,7 +319,8 @@ onStart
   )
   => Env.Environment -> WSServerEnv -> WSConn -> StartMsg -> m ()
 onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
-  timerTot <- startTimer
+  -- TODO reimplement telemetry
+  -- timerTot <- startTimer
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
 
   -- NOTE: it should be safe to rely on this check later on in this function, since we expect that
@@ -342,15 +343,16 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
   reqParsedE <- lift $ E.checkGQLExecution userInfo (reqHdrs, ipAddress) enableAL sc q
   reqParsed <- either (withComplete . preExecErr requestId) return reqParsedE
-  execPlanE <- runExceptT $ E.getResolvedExecPlan env logger pgExecCtx
+  execPlanE <- runExceptT $ E.getResolvedExecPlan @_ @(Tracing.TraceT (LazyTx QErr)) env logger pgExecCtx
                {- planCache -} userInfo sqlGenCtx sc scVer queryType httpMgr reqHdrs (q, reqParsed)
 
   (telemCacheHit, execPlan) <- either (withComplete . preExecErr requestId) return execPlanE
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx {- planCache -} sc scVer httpMgr enableAL
 
   case execPlan of
-    E.QueryExecutionPlan queryPlan asts ->
+    E.QueryExecutionPlan queryPlan asts -> do
       case queryPlan of
+{-
         E.ExecStepDB (tx, genSql) -> Tracing.trace "Query" $
           execQueryOrMut timerTot Telem.Query telemCacheHit (Just genSql) requestId $
             fmap snd $ Tracing.interpTraceT id $ executeQuery reqParsed asts (Just genSql) pgExecCtx Q.ReadOnly tx
@@ -359,6 +361,9 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         E.ExecStepRaw (name, json) ->
           execQueryOrMut timerTot Telem.Query telemCacheHit Nothing requestId $
           return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
+-}
+-- TODO rebuild mutations and subscriptions
+{-
     E.MutationExecutionPlan mutationPlan ->
       case mutationPlan of
         E.ExecStepDB (tx, _) -> Tracing.trace "Mutate" do
@@ -388,7 +393,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         -- NOTE: see crucial `lookup` check above, ensuring this doesn't clobber:
         STMMap.insert (lqId, opName) opId opMap
       logOpEv ODStarted (Just requestId)
-
+-}
   -- case execPlan of
   --   E.GExPHasura resolvedOp ->
   --     runHasuraGQ timerTot telemCacheHit requestId q userInfo resolvedOp
