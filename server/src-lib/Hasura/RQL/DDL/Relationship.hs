@@ -26,10 +26,9 @@ import           Instances.TH.Lift         ()
 
 import qualified Data.HashMap.Strict       as HM
 import qualified Data.HashSet              as HS
-import qualified Database.PG.Query         as Q
 
 runCreateRelationship
-  :: (MonadError QErr m, CacheRWM m, HasSystemDefined m, ToJSON a)
+  :: (MonadError QErr m, CacheRWM m, ToJSON a)
   => RelType -> WithTable (RelDef a) -> m EncJSON
 runCreateRelationship relType (WithTable source tableName relDef) = do
   -- FIXME: Add relationship validation

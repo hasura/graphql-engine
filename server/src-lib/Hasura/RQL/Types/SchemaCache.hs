@@ -130,9 +130,7 @@ module Hasura.RQL.Types.SchemaCache
 
 import           Hasura.Db
 import           Hasura.GraphQL.Context            (GQLContext, RoleContext)
-import qualified Hasura.GraphQL.Parser             as P
-import           Hasura.Incremental                (Cacheable, Dependency, MonadDepend (..),
-                                                    selectKeyD)
+import           Hasura.Incremental                (Dependency, MonadDepend (..), selectKeyD)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.BoolExp
@@ -143,22 +141,21 @@ import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Metadata
-import           Hasura.RQL.Types.Source
---import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
-
 import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types.SchemaCacheTypes
+import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
 import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.Tracing                    (TraceT)
 
+import qualified Hasura.GraphQL.Parser             as P
+
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax        (Lift)
 import           System.Cron.Types
 
 import qualified Data.ByteString.Lazy              as BL

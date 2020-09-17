@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Hasura.RQL.DDL.Permission
     ( CreatePerm
     , runCreatePerm
@@ -38,15 +39,12 @@ module Hasura.RQL.DDL.Permission
     ) where
 
 import           Hasura.EncJSON
-import           Hasura.Incremental                 (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DML.Internal            hiding (askPermInfo)
 import           Hasura.RQL.Types
 import           Hasura.Session
 import           Hasura.SQL.Types
-
-import qualified Database.PG.Query                  as Q
 
 import           Control.Lens                       (ix, (.~))
 import           Data.Aeson

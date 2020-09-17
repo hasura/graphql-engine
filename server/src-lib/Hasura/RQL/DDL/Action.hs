@@ -38,7 +38,6 @@ import qualified Data.Aeson.Casing             as J
 import qualified Data.Aeson.TH                 as J
 import qualified Data.Environment              as Env
 import qualified Data.HashMap.Strict           as Map
-import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Control.Lens                  (ix, (.~))
@@ -162,11 +161,11 @@ newtype ClearActionData
   = ClearActionData { unClearActionData :: Bool }
   deriving (Show, Eq, Lift, J.FromJSON, J.ToJSON)
 
-shouldClearActionData :: ClearActionData -> Bool
-shouldClearActionData = unClearActionData
+-- shouldClearActionData :: ClearActionData -> Bool
+-- shouldClearActionData = unClearActionData
 
-defaultClearActionData :: ClearActionData
-defaultClearActionData = ClearActionData True
+-- defaultClearActionData :: ClearActionData
+-- defaultClearActionData = ClearActionData True
 
 data DropAction
   = DropAction
@@ -178,7 +177,8 @@ $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''DropAction)
 runDropAction
   :: (QErrM m, CacheRWM m)
   => DropAction -> m EncJSON
-runDropAction (DropAction actionName clearDataM)= do
+runDropAction (DropAction actionName _)= do
+  -- TODO: Clear async action data
   void $ getActionInfo actionName
   -- liftTx $ do
   --   deleteActionPermissionsFromCatalog
@@ -212,12 +212,12 @@ dropActionInMetadata name =
 --     -- the data needs to be retained
 --     clearData = fromMaybe defaultClearActionData clearDataM
 
-clearActionDataFromCatalog :: ActionName -> Q.TxE QErr ()
-clearActionDataFromCatalog actionName =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-      DELETE FROM hdb_catalog.hdb_action_log
-        WHERE action_name = $1
-      |] (Identity actionName) True
+-- clearActionDataFromCatalog :: ActionName -> Q.TxE QErr ()
+-- clearActionDataFromCatalog actionName =
+--   Q.unitQE defaultTxErrorHandler [Q.sql|
+--       DELETE FROM hdb_catalog.hdb_action_log
+--         WHERE action_name = $1
+--       |] (Identity actionName) True
 
 -- fetchActions :: Q.TxE QErr [CreateAction]
 -- fetchActions =
