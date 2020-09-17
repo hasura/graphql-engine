@@ -66,14 +66,14 @@ const ForeignKeySelector = ({
           <b>Reference Schema:</b>
         </div>
         <select
-          value={
-            refSchemaName !== currentSchema ? currentSchema : refSchemaName
-          }
+          // value={refSchemaName || ''}
+          defaultValue={currentSchema}
           className={`${styles.select} form-control ${styles.add_pad_left}`}
           data-test={`foreign-key-ref-schema-${index}`}
           onChange={dispatchSetRefSchema}
-          defaultValue={currentSchema}
         >
+          {console.log(currentSchema)};
+          {console.log('var________________________________')};
           {getRefSchemaOptions()}
         </select>
       </div>

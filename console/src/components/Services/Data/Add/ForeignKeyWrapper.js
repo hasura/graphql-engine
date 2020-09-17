@@ -3,6 +3,7 @@ import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import ForeignKeySelector from '../Common/Components/ForeignKeySelector';
 import { getForeignKeyConfig } from '../Common/Components/utils';
 import { setForeignKeys, toggleFk, clearFkToggle } from './AddActions';
+import { updateSchemaInfo } from '../DataActions';
 
 const ForeignKeyWrapper = ({
   foreignKeys,
@@ -106,6 +107,7 @@ const ForeignKeyWrapper = ({
 
     const expandCallback = () => {
       dispatch(toggleFk(i));
+      dispatch(updateSchemaInfo(currentSchema));
     };
 
     const collapseCallback = fkConfig ? saveCallback : removeFk;
