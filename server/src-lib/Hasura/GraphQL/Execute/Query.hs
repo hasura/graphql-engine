@@ -262,19 +262,14 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
       results :: Seq.Seq (Text, (tx EncJSON, Maybe PreparedSql)) <-
         for dbs $ \(alias, rootFieldPlan) -> (G.unName alias,) <$> mkCurPlanTx env manager reqHeaders userInfo rootFieldPlan
       pure $ fmap ExecStepDB <$> toList results
--- TODO re-support remotes under heterogeneous execution
-{-
-    (Seq.Empty, remotes@(firstRemote Seq.:<| _)) -> do
-      let (remoteOperation, _) =
+    (Seq.Empty, remotes) -> pure $ toList $ remotes <&> \(alias, (remoteSchemaInfo, remoteField)) ->
+      let (remoteOperation, varValues) =
             buildTypedOperation
             G.OperationTypeQuery
             varDefs
-            (map (G.SelectionField . snd . snd) $ toList remotes)
+            [G.SelectionField remoteField]
             varValsM
-      if all (\remote' -> fst (snd firstRemote) == fst (snd remote')) remotes
-        then return $ ExecStepRemote (fst (snd firstRemote), remoteOperation, varValsM)
-        else throw400 NotSupported "Mixed remote schemas are not supported"
--}
+      in (G.unName alias, ExecStepRemote (remoteSchemaInfo, remoteOperation, varValues))
     _ -> throw400 NotSupported "Heterogeneous execution of database and remote schemas not supported"
 
   let asts :: [QueryRootField UnpreparedValue]
