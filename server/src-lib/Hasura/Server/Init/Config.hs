@@ -272,7 +272,11 @@ instance FromEnv Milliseconds where
   fromEnv = fmap fromInteger . readEither
 
 instance FromEnv Seconds where
-  fromEnv = fmap fromInteger . readEither
+  fromEnv s = do
+    val <- readEither s
+    case val >= 0 of
+      False  -> Left "expecting a positive value for seconds"
+      True   -> Right $ fromInteger val
 
 instance FromEnv JWTConfig where
   fromEnv = readJson
