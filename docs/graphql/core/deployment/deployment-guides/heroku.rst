@@ -106,7 +106,7 @@ Remember to change ``HEROKU_GIT_REMOTE`` to your git remote below. In our case:
 
   $ git init && git add .
   $ git commit -m "first commit"
-  $ git remote add heroku HEROKU_GIT_REMOTE
+  $ git remote add heroku <HEROKU_GIT_REMOTE>
   $ git push heroku master
 
 Visit ``https://graphql-on-postgres.herokuapp.com`` (replace ``graphql-on-postgres`` with your app name) and
