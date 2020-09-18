@@ -194,6 +194,12 @@ const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
             },
           },
         };
+        // update the localStorage var with all the notifications
+        // since all the notifications were clicked on read state
+        window.localStorage.setItem(
+          'notifications:data',
+          JSON.stringify(currentNotifications)
+        );
       }
     }
     const updatedReadNotifications = getUpdateConsoleStateQuery(

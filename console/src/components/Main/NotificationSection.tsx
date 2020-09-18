@@ -81,8 +81,10 @@ const Notification: React.FC<UpdateProps> = ({
 
   React.useEffect(() => {
     if (is_read) {
-      updateReadState(is_read);
+      updateReadState(true);
+      return;
     }
+    updateReadState(false);
   }, [is_read]);
 
   const onClickNotification = () => {
@@ -324,7 +326,7 @@ const checkIsRead = (prevRead?: string | string[], id?: number) => {
   if (prevRead === 'all' || prevRead === 'default' || prevRead === 'error') {
     return true;
   }
-  return prevRead.includes(`${id}`);
+  return prevRead.indexOf(`${id}`) !== -1;
 };
 
 const checkVersionUpdate = (
@@ -564,12 +566,6 @@ const HasuraNotifications: React.FC<
       readNumber = 0;
     }
 
-    if (displayNewVersionUpdate) {
-      readNumber++;
-    }
-    if (fixedVersion) {
-      readNumber++;
-    }
     if (Array.isArray(previouslyReadState)) {
       readNumber -= previouslyReadState.length;
     }
@@ -583,17 +579,42 @@ const HasuraNotifications: React.FC<
     fixedVersion,
   ]);
 
+  const onClickUpdate = (id?: number) => {
+    updateNumberNotifications(prev => prev - 1);
+
+    if (!id) {
+      return;
+    }
+
+    if (
+      previouslyReadState === 'all' ||
+      previouslyReadState === 'default' ||
+      previouslyReadState === 'error' ||
+      !previouslyReadState
+    ) {
+      return;
+    }
+
+    if (!previouslyReadState.includes(`${id}`)) {
+      dispatch(
+        updateConsoleNotificationsState({
+          read: [...previouslyReadState, `${id}`],
+          date: new Date().toISOString(),
+          showBadge: false,
+        })
+      );
+    }
+  };
+
   const optOutCallback = () => {
     closeDropDown();
     dispatch(setPreReleaseNotificationOptOutInDB());
   };
 
   const onClickMarkAllAsRead = () => {
-    const readAllState = getReadAllNotificationsState() as NotificationsState;
+    const readAllState = getReadAllNotificationsState();
     dispatch(updateConsoleNotificationsState(readAllState));
     pagination.reset();
-    // FIXME: this is not really required, since the logic can be changed to filter out all those as
-    // having a timestamp prior to the saved time to be marked as read
     window.localStorage.setItem(
       'notifications:data',
       JSON.stringify(consoleNotifications)
@@ -644,33 +665,6 @@ const HasuraNotifications: React.FC<
     }
   }, [opened, pagination]);
 
-  const onClickUpdate = (id?: number) => {
-    updateNumberNotifications(prev => prev - 1);
-
-    if (!id) {
-      return;
-    }
-
-    if (
-      previouslyReadState === 'all' ||
-      previouslyReadState === 'default' ||
-      previouslyReadState === 'error' ||
-      !previouslyReadState
-    ) {
-      return;
-    }
-
-    if (!previouslyReadState.includes(`${id}`)) {
-      dispatch(
-        updateConsoleNotificationsState({
-          read: [...previouslyReadState, `${id}`],
-          date: new Date().toISOString(),
-          showBadge: false,
-        })
-      );
-    }
-  };
-
   const dataShown = React.useMemo<Array<NotificationsListItemProps>>(() => {
     return [
       fixedVersion && {
@@ -685,7 +679,7 @@ const HasuraNotifications: React.FC<
           onClick: onClickUpdate,
         },
       },
-      ...consoleNotifications.slice(0, pagination.shownCount + 1).map(
+      ...consoleNotifications.slice(0, pagination.shownCount).map(
         (payload): NotificationsListItemProps => ({
           kind: 'default',
           props: {

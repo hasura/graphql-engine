@@ -1,6 +1,7 @@
 import jwt_decode from 'jwt-decode';
 import { ConsoleScope } from './ConsoleNotification';
 import { Nullable } from '../Common/utils/tsUtils';
+import { NotificationsState } from '../../types';
 
 const proClickState = 'console:pro';
 const loveConsentState = 'console:loveIcon';
@@ -48,7 +49,7 @@ const getLoveConsentState = () => {
   return defaultState;
 };
 
-const getReadAllNotificationsState = () => {
+const getReadAllNotificationsState = (): NotificationsState => {
   return {
     read: 'all',
     date: new Date().toISOString(),
