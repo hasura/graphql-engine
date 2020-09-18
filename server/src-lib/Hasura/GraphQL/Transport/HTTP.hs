@@ -29,10 +29,11 @@ import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 import           Hasura.Tracing                         (MonadTrace, TraceT, trace)
 
-import qualified Data.Aeson                             as J
+import qualified Data.Aeson.Ordered                     as J
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
+import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.Query           as EQ
@@ -99,14 +100,15 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                                  httpManager reqHeaders (reqUnparsed, reqParsed)
     case execPlan of
       E.QueryExecutionPlan queryPlans asts -> do
-        results <- for queryPlans $ \case
+        results <- flip OMap.traverseWithKey queryPlans $ \fieldName step -> case step of
           E.ExecStepDB txGenSql -> do
             (telemTimeIO_DT, telemQueryType, respHdrs, resp) <-
               runQueryDB reqId (reqUnparsed,reqParsed) asts userInfo txGenSql
             return (resp, respHdrs)
           E.ExecStepRemote (rsi, opDef, _varValsM) -> do
-            (telemCacheHit, _, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs)) <- runRemoteGQ telemCacheHit rsi opDef
-            return (resp, respHdrs)
+            (telemCacheHit, _, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs)) <- runRemoteGQ telemCacheHit fieldName rsi opDef
+            value <- extractData fieldName $ encJToLBS resp
+            pure (J.toEncJSON value, respHdrs)
           E.ExecStepRaw json -> do
             (telemTimeIO, obj) <- withElapsedTime $
               return $ encJFromJValue json
@@ -115,13 +117,14 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         -- TODO: encodeGQResp $ GQSuccess $
         return $ HttpResponse (encodeGQResp $ GQSuccess $ encJToLBS $ encJFromInsOrdHashMap bodies) (fold headers)
       E.MutationExecutionPlan mutationPlans -> do
-        results <- for mutationPlans $ \case
+        results <- flip OMap.traverseWithKey mutationPlans $ \fieldName step -> case step of
           E.ExecStepDB (tx, responseHeaders) -> do
             (telemTimeIO, telemQueryType, resp) <- runMutationDB reqId reqUnparsed userInfo tx
             return (resp, responseHeaders)
           E.ExecStepRemote (rsi, opDef, _varValsM) -> do
-            (telemCacheHit, _, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs)) <- runRemoteGQ telemCacheHit rsi opDef
-            return (resp, respHdrs)
+            (telemCacheHit, _, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs)) <- runRemoteGQ telemCacheHit fieldName rsi opDef
+            value <- extractData fieldName $ encJToLBS resp
+            pure (J.toEncJSON value, respHdrs)
           E.ExecStepRaw json -> do
             (telemTimeIO, obj) <- withElapsedTime $
               return $ encJFromJValue json
@@ -133,11 +136,21 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         throw400 UnexpectedPayload "subscriptions are not supported over HTTP, use websockets instead"
   return resp
   where
-    runRemoteGQ telemCacheHit rsi opDef = do
+    runRemoteGQ telemCacheHit fieldName rsi opDef = do
       let telemQueryType | G._todType opDef == G.OperationTypeMutation = Telem.Mutation
                          | otherwise = Telem.Query
       (telemTimeIO, resp) <- E.execRemoteGQ env reqId userInfo reqHeaders reqUnparsed rsi opDef
-      return (telemCacheHit, Telem.Remote, (telemTimeIO, telemQueryType, resp))
+      pure (telemCacheHit, Telem.Remote, (telemTimeIO, telemQueryType, resp))
+
+    extractData fieldName = runAesonParser $ \bs ->
+      let lookup key object = maybe (Left $ "expecting key " ++ T.unpack key) Right $ J.lookup key object
+      in either fail pure $
+         J.eitherDecode bs >>=
+         J.asObject        >>=
+         lookup "data"     >>=
+         J.asObject        >>=
+         lookup fieldName
+
 
 -- | Run (execute) a batched GraphQL query (see 'GQLBatchedReqs')
 runGQBatched
