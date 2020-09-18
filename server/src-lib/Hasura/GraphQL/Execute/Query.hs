@@ -231,7 +231,7 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
       >>= traverseAction (pure . actionQueryToRootFieldPlan planVars planVals)
 
   -- Transform the query plans into an execution plan
-  executionPlan <- for (OMap.toList queryPlans) \(alias, remoteField) -> case remoteField of
+  executionPlan <- flip traverse queryPlans \case
     RFRemote (remoteSchemaInfo, remoteField) ->
       let (remoteOperation, varValues) =
             buildTypedOperation
@@ -239,14 +239,14 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
             varDefs
             [G.SelectionField remoteField]
             varValsM
-      in pure (G.unName alias, ExecStepRemote (remoteSchemaInfo, remoteOperation, varValues))
-    RFDB db      -> (G.unName alias,) . ExecStepDB <$> mkCurPlanTx env manager reqHeaders userInfo (RFPPostgres db)
-    RFAction rfp -> (G.unName alias,) . ExecStepDB <$> mkCurPlanTx env manager reqHeaders userInfo rfp
-    RFRaw r      -> pure (G.unName alias, ExecStepRaw r)
+      in pure $ ExecStepRemote (remoteSchemaInfo, remoteOperation, varValues)
+    RFDB db      -> ExecStepDB <$> mkCurPlanTx env manager reqHeaders userInfo (RFPPostgres db)
+    RFAction rfp -> ExecStepDB <$> mkCurPlanTx env manager reqHeaders userInfo rfp
+    RFRaw r      -> pure $ ExecStepRaw r
 
   let asts :: [QueryRootField UnpreparedValue]
       asts = OMap.elems unpreparedQueries
-  pure (OMap.fromList executionPlan, asts)  -- See Note [Temporarily disabling query plan caching]
+  pure (OMap.mapKeys G.unName executionPlan, asts)  -- See Note [Temporarily disabling query plan caching]
   where
     usrVars = _uiSession userInfo
 
