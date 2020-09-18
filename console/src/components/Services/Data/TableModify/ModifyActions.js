@@ -1201,6 +1201,9 @@ const addColSql = (
   const checkIfFunctionFormat = isPostgresFunction(colDefault);
   if (isColTypeString(colType) && colDefault !== '' && !checkIfFunctionFormat) {
     defWithQuotes = "'" + colDefault + "'";
+  }
+  if (colType === 'json' || colType === 'jsonb') {
+    defWithQuotes = "'" + colDefault + "'";
   } else {
     defWithQuotes = colDefault;
   }
