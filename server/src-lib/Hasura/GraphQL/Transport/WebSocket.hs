@@ -25,6 +25,7 @@ import qualified Data.ByteString.Lazy                        as BL
 import qualified Data.CaseInsensitive                        as CI
 import qualified Data.Environment                            as Env
 import qualified Data.HashMap.Strict                         as Map
+import qualified Data.HashMap.Strict.InsOrd                  as IOMap
 import qualified Data.Text                                   as T
 import qualified Data.Text.Encoding                          as TE
 import qualified Data.Time.Clock                             as TC
@@ -350,26 +351,26 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
   case execPlan of
     E.QueryExecutionPlan queryPlan asts -> do
-      _ <- for_ queryPlan $ \case
+      void $ flip IOMap.traverseWithKey queryPlan $ \fieldName step -> case step of
         E.ExecStepDB (tx, genSql) -> Tracing.trace "Query" $ do
-          execQueryOrMut timerTot Telem.Query telemCacheHit Nothing requestId $ -- TODO genSql
+          execQueryOrMut timerTot Telem.Query telemCacheHit Nothing fieldName requestId $ -- TODO genSql
             fmap snd $ Tracing.interpTraceT id $ executeQuery reqParsed asts Nothing pgExecCtx Q.ReadOnly tx -- TODO genSql
         E.ExecStepRemote (rsi, opDef, _varValsM) -> do
           runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
         E.ExecStepRaw json -> do
-          execQueryOrMut timerTot Telem.Query telemCacheHit Nothing requestId $
+          execQueryOrMut timerTot Telem.Query telemCacheHit Nothing fieldName requestId $
             return $ encJFromJValue json
       sendCompleted (Just requestId)
     E.MutationExecutionPlan mutationPlan -> do
-      _ <- for_ mutationPlan $ \case
+      void $ flip IOMap.traverseWithKey mutationPlan $ \fieldName step -> case step of
         E.ExecStepDB (tx, _) -> Tracing.trace "Mutate" do
           ctx <- Tracing.currentContext
-          execQueryOrMut timerTot Telem.Mutation telemCacheHit Nothing requestId $
+          execQueryOrMut timerTot Telem.Mutation telemCacheHit Nothing fieldName requestId $
             Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx . withUserInfo userInfo) tx
         E.ExecStepRemote (rsi, opDef, _varValsM) ->
           runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
         E.ExecStepRaw json ->
-          execQueryOrMut timerTot Telem.Query telemCacheHit Nothing requestId $
+          execQueryOrMut timerTot Telem.Query telemCacheHit Nothing fieldName requestId $
           return $ encJFromJValue json
       sendCompleted (Just requestId)
     E.SubscriptionExecutionPlan lqOp -> do
@@ -397,10 +398,11 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       -> Telem.QueryType
       -> Telem.CacheHit
       -> Maybe EQ.GeneratedSqlMap
+      -> Text
       -> RequestId
       -> ExceptT QErr (ExceptT () m) EncJSON
       -> ExceptT () m ()
-    execQueryOrMut timerTot telemQueryType telemCacheHit genSql requestId action = do
+    execQueryOrMut timerTot telemQueryType telemCacheHit genSql fieldName requestId action = do
       let telemLocality = Telem.Local
       logOpEv ODStarted (Just requestId)
       -- log the generated SQL and the graphql query
@@ -410,7 +412,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         (telemTimeIO_DT, Right encJson) -> do
           -- Telemetry. NOTE: don't time network IO:
           telemTimeTot <- Seconds <$> timerTot
-          sendSuccResp encJson $ LQ.LiveQueryMetadata telemTimeIO_DT
+          sendSuccResp (encJFromAssocList [(fieldName, encJson)]) $ LQ.LiveQueryMetadata telemTimeIO_DT
           let telemTimeIO = convertDuration telemTimeIO_DT
           Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
