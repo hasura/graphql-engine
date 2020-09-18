@@ -129,9 +129,10 @@ You can create relationships for custom output types by:
 
   .. tab:: API
 
-    Action relationships can be added while defining custom types for an action via the :ref:`set_custom_types metadata API <set_custom_types>`:
+    Action relationships can be added while defining custom types via the :ref:`set_custom_types metadata API <set_custom_types>`:
 
     .. code-block:: http
+      :emphasize-lines: 20-29
 
       POST /v1/query HTTP/1.1
       Content-Type: application/json
@@ -164,35 +165,5 @@ You can create relationships for custom output types by:
               ]
             }
           ]
-        }
-      }
-
-    Once the custom types with relationships are defined, we can create an action via the :ref:`create_action metadata API <create_action>`:
-
-    .. code-block:: http
-
-      POST /v1/query HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "type": "create_action",
-        "args": {
-          "name": "updateAuthor",
-          "definition": {
-            "kind": "synchronous",
-            "arguments": [
-              {
-                "name": "username",
-                "type": "String!"
-              },
-              {
-                "name": "email",
-                "type": "String!"
-              }
-            ],
-            "output_type": "UpdateAuthorOutput",
-            "handler": "https://action.my_app.com/create-user"
-          }
         }
       }
