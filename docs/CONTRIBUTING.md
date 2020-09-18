@@ -84,24 +84,6 @@ For small changes (such as fixes, adding examples, UI changes etc.), the `no-cha
 
 ## Some guidelines while adding docs
 
-### Header section
-- Page titles should be self sufficient. Users might not have the context of the hierarchy of the page in the 
-docs tree. A user can land on a page via search as well. e.g. Say you are adding a new deployment guide for AWS under 
-`Guides -> Deployment -> AWS`. The title of this page should not be just `AWS` but instead `AWS deployment guide for 
-Hasura GraphQL engine`. It's ok to alias it to just `AWS` in the sidebar as there the user has the context of the 
-page hierarchy.
-- Ensure every new added page has a ``Table of contents`` section with the appropriate depth.
-
-### Content
-- Add appropriate cross-links in content to assist users. i.e. if you refer to some functionality that is documented in 
-some other docs page, add a link to that page. e.g. if you have a statement like "create a relationship between tables
-X and Y ...", make "create a relationship" a link to the `Create relationships` page.
-- Try to make each section within a page self-sufficient. i.e. avoid structuring all pages as step-by-step guides
-unless it really is the intent. This ensures that we can refer to sections externally (from other docs pages, console, 
-etc.) and expect that the user will be able to follow the section without being lost on context that was set in earlier 
-sections of the page. Adding statements such as "As we have described in the above section ..." might help to set up 
-the needed context.
-
 ### Style guide
 Please follow our [guide on how to write docs pages](https://github.com/hasura/graphql-engine/wiki/How-to-write-docs-pages) in order to keep the structure and style of our docs consistent.
 
