@@ -316,6 +316,7 @@ onStart
   , MonadQueryLog m
   , Tracing.MonadTrace m
   , MonadExecuteQuery m
+  , EQ.MonadQueryInstrumentation m
   )
   => Env.Environment -> WSServerEnv -> WSConn -> StartMsg -> m ()
 onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
@@ -353,7 +354,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       case queryPlan of
         E.ExecStepDB (tx, genSql) -> Tracing.trace "Query" $
           execQueryOrMut timerTot Telem.Query telemCacheHit (Just genSql) requestId $
-            fmap snd $ Tracing.interpTraceT id $ executeQuery reqParsed asts (Just genSql) pgExecCtx Q.ReadOnly tx
+            fmap snd $ Tracing.interpTraceT id $ executeQuery reqParsed asts (Just genSql) pgExecCtx tx
         E.ExecStepRemote (rsi, opDef, _varValsM) ->
           runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
         E.ExecStepRaw (name, json) ->
@@ -444,7 +445,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     runHasuraGQ timerTot telemCacheHit reqId query queryParsed userInfo = \case
       E.ExOpQuery opTx genSql asts -> Tracing.trace "Query" $
         execQueryOrMut Telem.Query genSql . fmap snd $
-          Tracing.interpTraceT id $ executeQuery queryParsed asts genSql pgExecCtx Q.ReadOnly opTx
+          Tracing.interpTraceT id $ executeQuery queryParsed asts genSql pgExecCtx opTx
       -- Response headers discarded over websockets
       E.ExOpMutation _ opTx -> Tracing.trace "Mutate" do
         ctx <- Tracing.currentContext
@@ -600,6 +601,7 @@ onMessage
      , MonadQueryLog m
      , Tracing.HasReporter m
      , MonadExecuteQuery m
+     , EQ.MonadQueryInstrumentation m
      )
   => Env.Environment
   -> AuthMode
@@ -789,6 +791,7 @@ createWSServerApp
      , MonadQueryLog m
      , Tracing.HasReporter m
      , MonadExecuteQuery m
+     , EQ.MonadQueryInstrumentation m
      )
   => Env.Environment
   -> AuthMode
