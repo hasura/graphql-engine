@@ -58,6 +58,14 @@
     args:
       sql: |
         ALTER view authors_view RENAME TO author_view;
+
+- description: Rename tables back to the original name for the teardown process
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
         ALTER TABLE articles RENAME TO article;
 
 
