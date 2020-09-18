@@ -700,11 +700,13 @@ export const getConsoleNotificationQuery = (
   time: Date | string | number,
   userType?: Nullable<ConsoleScope>
 ) => {
-  let addedScope = {
-    scope: { $like: userType },
+  let consoleUserScope = {
+    $ilike: `%${userType}%`,
   };
   if (!userType) {
-    addedScope = { scope: { $like: 'OSS' } };
+    consoleUserScope = {
+      $ilike: '%OSS%',
+    };
   }
 
   return {
@@ -712,36 +714,30 @@ export const getConsoleNotificationQuery = (
       table: 'console_notification',
       columns: ['*'],
       where: {
-        $and: [
+        $or: [
           {
-            $or: [
-              {
-                expiry_date: {
-                  $gt: time,
-                },
-              },
-              {
-                expiry_date: {
-                  $eq: null,
-                },
-              },
-              addedScope,
-            ],
+            expiry_date: {
+              $gte: time,
+            },
           },
           {
-            start_date: { $lte: time },
+            expiry_date: {
+              $eq: null,
+            },
           },
         ],
+        scope: consoleUserScope,
+        start_date: { $lte: time },
       },
       order_by: [
         {
           type: 'asc',
           nulls: 'last',
-          column: ['priority'],
+          column: 'priority',
         },
         {
           type: 'desc',
-          column: ['start_date'],
+          column: 'start_date',
         },
       ],
     },
