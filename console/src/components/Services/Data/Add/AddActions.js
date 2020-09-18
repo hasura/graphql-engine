@@ -198,6 +198,9 @@ const createTableSql = () => {
         ) {
           // if a column type is text and if it has a non-func default value, add a single quote by default
           tableDefSql += " DEFAULT '" + currentCols[i].default.value + "'";
+        }
+        if (currentCols[i].type === 'json' || currentCols[i].type === 'jsonb') {
+          tableDefSql += " DEFAULT '" + currentCols[i].default.value + "'";
         } else {
           tableDefSql += ' DEFAULT ' + currentCols[i].default.value;
         }
