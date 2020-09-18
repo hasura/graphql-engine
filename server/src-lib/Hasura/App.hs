@@ -304,6 +304,7 @@ runHGEServer
      , MonadExecuteQuery m
      , Tracing.HasReporter m
      , MonadQueryInstrumentation m
+     , MonadGQLApiHandler m
      )
   => Env.Environment
   -> ServeOptions impl
@@ -659,6 +660,9 @@ instance MonadGQLExecutionCheck AppM where
 
 instance MonadConfigApiHandler AppM where
   runConfigApiHandler = configApiGetHandler
+
+instance MonadGQLApiHandler AppM where
+  runGQLApiHandler  = gqlPostApiHandler 
 
 instance MonadQueryLog AppM where
   logQueryLog logger query genSqlM reqId =
