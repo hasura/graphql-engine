@@ -63,13 +63,11 @@ instance J.ToJSON PGPlan where
              ]
 
 data RootFieldPlan
-  = RFPRaw !B.ByteString
-  | RFPPostgres !PGPlan
+  = RFPPostgres !PGPlan
   | RFPActionQuery !ActionExecuteTx
 
 instance J.ToJSON RootFieldPlan where
   toJSON = \case
-    RFPRaw encJson     -> J.toJSON $ TBS.fromBS encJson
     RFPPostgres pgPlan -> J.toJSON pgPlan
     RFPActionQuery _   -> J.String "Action Execution Tx"
 
@@ -132,7 +130,6 @@ mkCurPlanTx
 mkCurPlanTx env manager reqHdrs userInfo fldPlan = do
   -- generate the SQL and prepared vars or the bytestring
   fldResp <- case fldPlan of
-    RFPRaw resp -> return $ RRRaw resp
     RFPPostgres (PGPlan q _ prepMap remoteJoins) -> do
       let args = withUserVars (_uiSession userInfo) $ IntMap.elems prepMap
       return $ RRSql $ PreparedSql q args remoteJoins
@@ -215,7 +212,7 @@ convertQuerySelSet
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
-  -> m ( ExecutionPlan (tx EncJSON, Maybe PreparedSql) RemoteCall (G.Name, J.Value)
+  -> m ( ExecutionPlan (tx EncJSON, Maybe PreparedSql) RemoteCall J.Value
        -- , Maybe ReusableQueryPlan
        , [QueryRootField UnpreparedValue]
        )
@@ -245,7 +242,7 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
       in pure (G.unName alias, ExecStepRemote (remoteSchemaInfo, remoteOperation, varValues))
     RFDB db      -> (G.unName alias,) . ExecStepDB <$> mkCurPlanTx env manager reqHeaders userInfo (RFPPostgres db)
     RFAction rfp -> (G.unName alias,) . ExecStepDB <$> mkCurPlanTx env manager reqHeaders userInfo rfp
-    RFRaw r      -> (G.unName alias,) . ExecStepDB <$> mkCurPlanTx env manager reqHeaders userInfo (RFPRaw $ LBS.toStrict $ J.encode r)
+    RFRaw r      -> pure (G.unName alias, ExecStepRaw r)
 
   let asts :: [QueryRootField UnpreparedValue]
       asts = OMap.elems unpreparedQueries

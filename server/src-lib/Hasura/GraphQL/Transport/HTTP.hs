@@ -107,9 +107,9 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
           E.ExecStepRemote (rsi, opDef, _varValsM) -> do
             (telemCacheHit, _, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs)) <- runRemoteGQ telemCacheHit rsi opDef
             return (resp, respHdrs)
-          E.ExecStepRaw (name, json) -> do
+          E.ExecStepRaw json -> do
             (telemTimeIO, obj) <- withElapsedTime $
-              return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
+              return $ encJFromJValue json
             return (obj, []) -- (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj []))
         let (bodies, headers) = (fmap fst results, fmap snd results)
         -- TODO: encodeGQResp $ GQSuccess $
@@ -122,9 +122,9 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
           E.ExecStepRemote (rsi, opDef, _varValsM) -> do
             (telemCacheHit, _, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs)) <- runRemoteGQ telemCacheHit rsi opDef
             return (resp, respHdrs)
-          E.ExecStepRaw (name, json) -> do
+          E.ExecStepRaw json -> do
             (telemTimeIO, obj) <- withElapsedTime $
-              return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
+              return $ encJFromJValue json
             return (obj, [])
         let (bodies, headers) = (fmap fst results, fmap snd results)
         return $ HttpResponse (encodeGQResp $ GQSuccess $ encJToLBS $ encJFromHashMap $ OMap.toHashMap bodies) (fold headers)

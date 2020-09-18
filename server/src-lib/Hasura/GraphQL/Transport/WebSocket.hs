@@ -356,9 +356,9 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             fmap snd $ Tracing.interpTraceT id $ executeQuery reqParsed asts Nothing pgExecCtx Q.ReadOnly tx -- TODO genSql
         E.ExecStepRemote (rsi, opDef, _varValsM) -> do
           runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
-        E.ExecStepRaw (name, json) -> do
+        E.ExecStepRaw json -> do
           execQueryOrMut timerTot Telem.Query telemCacheHit Nothing requestId $
-            return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
+            return $ encJFromJValue json
       sendCompleted (Just requestId)
     E.MutationExecutionPlan mutationPlan -> do
       _ <- for_ mutationPlan $ \case
@@ -368,9 +368,9 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx . withUserInfo userInfo) tx
         E.ExecStepRemote (rsi, opDef, _varValsM) ->
           runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
-        E.ExecStepRaw (name, json) ->
+        E.ExecStepRaw json ->
           execQueryOrMut timerTot Telem.Query telemCacheHit Nothing requestId $
-          return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
+          return $ encJFromJValue json
       sendCompleted (Just requestId)
     E.SubscriptionExecutionPlan lqOp -> do
       -- log the graphql query
