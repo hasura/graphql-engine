@@ -113,7 +113,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             return (obj, []) -- (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj []))
         let (bodies, headers) = (fmap fst results, fmap snd results)
         -- TODO: encodeGQResp $ GQSuccess $
-        return $ HttpResponse (encodeGQResp $ GQSuccess $ encJToLBS $ encJFromHashMap $ OMap.toHashMap bodies) (fold headers)
+        return $ HttpResponse (encodeGQResp $ GQSuccess $ encJToLBS $ encJFromInsOrdHashMap bodies) (fold headers)
       E.MutationExecutionPlan mutationPlans -> do
         results <- for mutationPlans $ \case
           E.ExecStepDB (tx, responseHeaders) -> do
@@ -127,7 +127,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
               return $ encJFromJValue json
             return (obj, [])
         let (bodies, headers) = (fmap fst results, fmap snd results)
-        return $ HttpResponse (encodeGQResp $ GQSuccess $ encJToLBS $ encJFromHashMap $ OMap.toHashMap bodies) (fold headers)
+        return $ HttpResponse (encodeGQResp $ GQSuccess $ encJToLBS $ encJFromInsOrdHashMap bodies) (fold headers)
+
       E.SubscriptionExecutionPlan _sub ->
         throw400 UnexpectedPayload "subscriptions are not supported over HTTP, use websockets instead"
   return resp
