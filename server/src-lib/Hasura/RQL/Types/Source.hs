@@ -82,3 +82,14 @@ data AddPgSource
   , _apsConnectionPoolSetting :: !SourceConnSettings
   } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 4 snakeCase) ''AddPgSource)
+
+data DropPgSource
+  = DropPgSource
+  { _dpsName    :: !SourceName
+  , _dpsCascade :: !Bool
+  } deriving (Show, Eq, Lift)
+$(deriveToJSON (aesonDrop 4 snakeCase) ''DropPgSource)
+
+instance FromJSON DropPgSource where
+  parseJSON = withObject "Object" $ \o ->
+    DropPgSource <$> o .: "name" <*> o .:? "cascade" .!= False

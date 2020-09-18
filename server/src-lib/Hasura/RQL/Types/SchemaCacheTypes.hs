@@ -36,7 +36,8 @@ data SourceObjId
 instance Hashable SourceObjId
 
 data SchemaObjId
-  = SOSourceObj !SourceName !SourceObjId
+  = SOSource !SourceName
+  | SOSourceObj !SourceName !SourceObjId
   | SORemoteSchema !RemoteSchemaName
   deriving (Eq, Generic)
 
@@ -44,25 +45,29 @@ instance Hashable SchemaObjId
 
 reportSchemaObj :: SchemaObjId -> T.Text
 reportSchemaObj = \case
-  SOSourceObj _ sourceObjId -> case sourceObjId of
-    SOITable tn -> "table " <> qualObjectToText tn
-    SOIFunction fn -> "function " <> qualObjectToText fn
-    SOITableObj tn (TOCol cn) ->
-      "column " <> qualObjectToText tn <> "." <> getPGColTxt cn
-    SOITableObj tn (TORel cn _) ->
-      "relationship " <> qualObjectToText tn <> "." <> relNameToTxt cn
-    SOITableObj tn (TOForeignKey cn) ->
-      "constraint " <> qualObjectToText tn <> "." <> getConstraintTxt cn
-    SOITableObj tn (TOPerm rn pt) ->
-      "permission " <> qualObjectToText tn <> "." <> roleNameToTxt rn <> "." <> permTypeToCode pt
-    SOITableObj tn (TOTrigger trn ) ->
-      "event-trigger " <> qualObjectToText tn <> "." <> triggerNameToTxt trn
-    SOITableObj tn (TOComputedField ccn) ->
-      "computed field " <> qualObjectToText tn <> "." <> computedFieldNameToText ccn
-    SOITableObj tn (TORemoteRel rn) ->
-      "remote relationship " <> qualObjectToText tn <> "." <> remoteRelationshipNameToText rn
+  SOSource source -> "source " <> unSourceName source
+  SOSourceObj source sourceObjId -> inSource source $
+    case sourceObjId of
+      SOITable tn -> "table " <> qualObjectToText tn
+      SOIFunction fn -> "function " <> qualObjectToText fn
+      SOITableObj tn (TOCol cn) ->
+        "column " <> qualObjectToText tn <> "." <> getPGColTxt cn
+      SOITableObj tn (TORel cn _) ->
+        "relationship " <> qualObjectToText tn <> "." <> relNameToTxt cn
+      SOITableObj tn (TOForeignKey cn) ->
+        "constraint " <> qualObjectToText tn <> "." <> getConstraintTxt cn
+      SOITableObj tn (TOPerm rn pt) ->
+        "permission " <> qualObjectToText tn <> "." <> roleNameToTxt rn <> "." <> permTypeToCode pt
+      SOITableObj tn (TOTrigger trn ) ->
+        "event-trigger " <> qualObjectToText tn <> "." <> triggerNameToTxt trn
+      SOITableObj tn (TOComputedField ccn) ->
+        "computed field " <> qualObjectToText tn <> "." <> computedFieldNameToText ccn
+      SOITableObj tn (TORemoteRel rn) ->
+        "remote relationship " <> qualObjectToText tn <> "." <> remoteRelationshipNameToText rn
   SORemoteSchema remoteSchemaName ->
     "remote schema " <> unNonEmptyText (unRemoteSchemaName remoteSchemaName)
+  where
+    inSource s t = t <> " in source " <>> s
 
 instance Show SchemaObjId where
   show soi = T.unpack $ reportSchemaObj soi

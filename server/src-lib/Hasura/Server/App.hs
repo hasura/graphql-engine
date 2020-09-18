@@ -704,7 +704,8 @@ mkWaiApp
   -- ^ Metadata
   -> m HasuraApp
 mkWaiApp env logger sqlGenCtx enableAL defPgSource httpManager mode corsCfg enableConsole consoleAssetsDir
-         enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig liveQueryHook schemaCache ekgStore metadataPool metadata = do
+         enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig
+         liveQueryHook schemaCache ekgStore metadataPool metadata = do
 
     -- See Note [Temporarily disabling query plan caching]
     -- (planCache, schemaCacheRef) <- initialiseCache

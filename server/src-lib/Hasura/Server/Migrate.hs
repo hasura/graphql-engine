@@ -51,11 +51,6 @@ import           Hasura.Server.Version
 import           Hasura.SQL.Types
 import           System.Directory              (doesFileExist)
 
-dropHdbCatalogSchema :: (MonadTx m) => m ()
-dropHdbCatalogSchema = liftTx $ Q.catchE defaultTxErrorHandler $ do
-  -- This is where the generated views and triggers are stored
-  Q.unitQ "DROP SCHEMA IF EXISTS hdb_catalog CASCADE" () False
-
 dropHdbCatalogTables :: MonadTx m => m ()
 dropHdbCatalogTables = liftTx $
   runTx

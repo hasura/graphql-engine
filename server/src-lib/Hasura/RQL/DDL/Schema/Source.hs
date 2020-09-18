@@ -1,15 +1,18 @@
 module Hasura.RQL.DDL.Schema.Source where
 
+import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.Deps
+import           Hasura.RQL.DDL.Schema.Common
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import           Data.Aeson
 
-import qualified Data.Environment    as Env
-import qualified Data.HashMap.Strict as HM
-import qualified Database.PG.Query   as Q
+import qualified Data.Environment             as Env
+import qualified Data.HashMap.Strict          as HM
+import qualified Database.PG.Query            as Q
 
 resolveSource
   :: (MonadIO m, HasDefaultSource m)
@@ -137,3 +140,28 @@ runAddPgSource (AddPgSource name url connSettings) = do
     $ MetadataModifier
     $ metaSources %~ HM.insert name (mkSourceMetadata name url connSettings)
   pure successMsg
+
+runDropPgSource
+  :: (MonadError QErr m, CacheRWM m, MonadIO m)
+  => DropPgSource -> m EncJSON
+runDropPgSource (DropPgSource name cascade) = do
+  PGSourceSchemaCache _ _ sourceConfig <- askSourceCache name
+  sc <- askSchemaCache
+  let indirectDeps = filter (not . isDirectDep) $
+                     getDependentObjs sc (SOSource name)
+
+  when (not cascade && indirectDeps /= []) $ reportDepsExt indirectDeps []
+
+  metadataModifier <- execWriterT $ do
+    mapM_ (purgeDependentObject >=> tell) indirectDeps
+    tell $ MetadataModifier $ metaSources %~ HM.delete name
+
+  buildSchemaCacheFor (MOSource name) metadataModifier
+  -- Clean traces of Hasura in source database
+  liftEitherM $ runPgSourceWriteTx sourceConfig dropHdbCatalogSchema
+  pure successMsg
+  where
+    isDirectDep = \case
+      SOSource s      -> s == name
+      SOSourceObj s _ -> s == name
+      _               -> False

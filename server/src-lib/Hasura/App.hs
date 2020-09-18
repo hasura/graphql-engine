@@ -387,8 +387,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime shutd
              _icMetadata
 
   -- log inconsistent schema objects
-  inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)
-  liftIO $ logInconsObjs logger inconsObjs
+  liftIO $ logInconsObjs logger $ scInconsistentObjs $ lastBuiltSchemaCache _icSchemaCache
 
   -- start background thread for schema sync event processing
   schemaSyncProcessorThread <-

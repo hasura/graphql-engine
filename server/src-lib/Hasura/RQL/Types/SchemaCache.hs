@@ -421,6 +421,8 @@ getDependentObjsWith f sc objId =
     isDependency deps = not $ HS.null $ flip HS.filter deps $
       \(SchemaDependency depId reason) -> objId `induces` depId && f reason
     -- induces a b : is b dependent on a
+    induces (SOSource s1)                   (SOSource s2)                        = s1 == s2
+    induces (SOSource s1)                   (SOSourceObj s2 _)                   = s1 == s2
     induces (SOSourceObj s1 (SOITable tn1)) (SOSourceObj s2 (SOITable tn2))      = s1 == s2 && tn1 == tn2
     induces (SOSourceObj s1 (SOITable tn1)) (SOSourceObj s2 (SOITableObj tn2 _)) = s1 == s2 && tn1 == tn2
     induces objId1 objId2                                                        = objId1 == objId2
