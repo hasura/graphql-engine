@@ -127,7 +127,7 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
       }
 
       const uppercaseScopedData = makeUppercaseScopes(data);
-      const filteredData = filterScope(uppercaseScopedData, consoleScope);
+      let filteredData = filterScope(uppercaseScopedData, consoleScope);
 
       if (
         !lastSeenNotifications ||
@@ -160,16 +160,17 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
             );
             if (previousList.length) {
               const resDiff = filteredData.filter(
-                (notif, notifIdx) => previousList[notifIdx].id !== notif.id
+                newNotif =>
+                  !previousList.find(oldNotif => oldNotif.id === newNotif.id)
               );
               if (!resDiff.length) {
                 // since the data hasn't changed since the last call
                 newReadValue = previousRead;
                 toShowBadge = false;
               } else {
-                newReadValue = filteredData
-                  .filter(notif => !previousList.includes(notif.id))
-                  .map(notif => `${notif.id}`);
+                newReadValue = [...previousList.map(notif => `${notif.id}`)];
+                toShowBadge = true;
+                filteredData = [...resDiff, ...previousList];
               }
             }
           } else {
