@@ -221,7 +221,7 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
   (unpreparedQueries, _reusability) <- parseGraphQLQuery gqlContext varDefs varValsM fields
 
   -- Transform the RQL AST into a prepared SQL query
-  queryPlans <- for unpreparedQueries \unpreparedQuery -> do
+  queryPlan <- for unpreparedQueries \unpreparedQuery -> do
     (preparedQuery, PlanningSt _ planVars planVals expectedVariables)
       <- flip runStateT initPlanningSt
          $ traverseQueryRootField prepareWithPlan unpreparedQuery
@@ -231,7 +231,7 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
       >>= traverseAction (pure . actionQueryToRootFieldPlan planVars planVals)
 
   -- Transform the query plans into an execution plan
-  executionPlan <- flip traverse queryPlans \case
+  executionPlan <- flip traverse queryPlan \case
     RFRemote (remoteSchemaInfo, remoteField) ->
       let (remoteOperation, varValues) =
             buildTypedOperation

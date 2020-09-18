@@ -95,9 +95,30 @@ convertInsert env usrVars rjCtx insertOperation stringifyNum = do
 planVariablesSequence :: SessionVariables -> PlanningSt -> Seq.Seq Q.PrepArg
 planVariablesSequence usrVars = Seq.fromList . map fst . withUserVars usrVars . IntMap.elems . _psPrepped
 
-convertMutationRootField
-  :: forall m tx
-  . ( HasVersion
+convertMutationDB
+  :: ( HasVersion
+     , MonadIO m
+     , MonadError QErr m
+     , Tracing.MonadTrace tx
+     , MonadIO tx
+     , MonadTx tx
+     )
+  => Env.Environment
+  -> SessionVariables
+  -> RQL.MutationRemoteJoinCtx
+  -> Bool
+  -> MutationDB UnpreparedValue
+  -> m (tx EncJSON, HTTP.ResponseHeaders)
+convertMutationDB env userSession rjCtx stringifyNum = \case
+  MDBInsert s -> noResponseHeaders <$> convertInsert env userSession rjCtx s stringifyNum
+  MDBUpdate s -> noResponseHeaders <$> convertUpdate env userSession rjCtx s stringifyNum
+  MDBDelete s -> noResponseHeaders <$> convertDelete env userSession rjCtx s stringifyNum
+  where
+    noResponseHeaders :: tx EncJSON -> (tx EncJSON, HTTP.ResponseHeaders)
+    noResponseHeaders rTx = (rTx, [])
+
+convertMutationAction
+  ::( HasVersion
     , MonadIO m
     , MonadError QErr m
     , Tracing.MonadTrace m
@@ -110,25 +131,17 @@ convertMutationRootField
   -> UserInfo
   -> HTTP.Manager
   -> HTTP.RequestHeaders
-  -> Bool
-  -> MutationRootField UnpreparedValue
-  -> m (Either (tx EncJSON, HTTP.ResponseHeaders) RemoteField)
-convertMutationRootField env logger userInfo manager reqHeaders stringifyNum = \case
-  RFDB (MDBInsert s)  -> noResponseHeaders =<< convertInsert env userSession rjCtx s stringifyNum
-  RFDB (MDBUpdate s)  -> noResponseHeaders =<< convertUpdate env userSession rjCtx s stringifyNum
-  RFDB (MDBDelete s)  -> noResponseHeaders =<< convertDelete env userSession rjCtx s stringifyNum
-  RFRemote remote     -> pure $ Right remote
-  RFAction (AMSync s) -> Left . (_aerTransaction &&& _aerHeaders) <$> resolveActionExecution env logger userInfo s actionExecContext
-  RFAction (AMAsync s) -> noResponseHeaders =<< resolveActionMutationAsync s reqHeaders userSession
-  RFRaw s              -> noResponseHeaders $ pure $ encJFromJValue s
+  -> ActionMutation UnpreparedValue
+  -> m (tx EncJSON, HTTP.ResponseHeaders)
+convertMutationAction env logger userInfo manager reqHeaders = \case
+  AMSync s  -> (_aerTransaction &&& _aerHeaders) <$>
+    resolveActionExecution env logger userInfo s actionExecContext
+  AMAsync s -> noResponseHeaders <$> resolveActionMutationAsync s reqHeaders userSession
   where
-    noResponseHeaders :: tx EncJSON -> m (Either (tx EncJSON, HTTP.ResponseHeaders) RemoteField)
-    noResponseHeaders rTx = pure $ Left (rTx, [])
-
     userSession = _uiSession userInfo
     actionExecContext = ActionExecContext manager reqHeaders $ _uiSession userInfo
-
-    rjCtx = (manager, reqHeaders, userInfo)
+    noResponseHeaders :: tx EncJSON -> (tx EncJSON, HTTP.ResponseHeaders)
+    noResponseHeaders rTx = (rTx, [])
 
 convertMutationSelectionSet
   :: forall m tx
@@ -161,26 +174,22 @@ convertMutationSelectionSet env logger gqlContext sqlGenCtx userInfo manager req
     >>= (mutationParser >>> (`onLeft` reportParseErrors))
 
   -- Transform the RQL AST into a prepared SQL query
-  txs <- for unpreparedQueries $ convertMutationRootField env logger userInfo manager reqHeaders (stringifyNum sqlGenCtx)
-  let txList = OMap.toList txs
-  OMap.fromList <$> case (mapMaybe takeTx txList, mapMaybe takeRemote txList) of
-    (dbPlans, []) -> do
-      pure $ fmap (G.unName *** ExecStepDB) dbPlans
--- TODO re-support remotes under heterogeneous execution
-{-
-    ([], remotes@(firstRemote:_)) -> do
-      let (remoteOperation, varValsM') =
+  let userSession = _uiSession userInfo
+      rjCtx = (manager, reqHeaders, userInfo)
+  txs <- for unpreparedQueries $ \case
+    RFDB db             -> ExecStepDB <$> convertMutationDB env userSession rjCtx (stringifyNum sqlGenCtx) db
+    RFRemote (remoteSchemaInfo, remoteField) ->
+      let (remoteOperation, varValues) =
             buildTypedOperation
             G.OperationTypeMutation
             varDefs
-            (map (G.SelectionField . snd . snd) remotes)
+            [G.SelectionField remoteField]
             varValsM
-      if all (\remote' -> fst (snd firstRemote) == fst (snd remote')) remotes
-        then return $ ExecStepRemote (fst (snd firstRemote), remoteOperation, varValsM')
-        else throw400 NotSupported "Mixed remote schemas are not supported"
--}
-    _ -> throw400 NotSupported "Heterogeneous execution of database and remote schemas not supported"
-  -- Build and return an executable action from the generated SQL
+      in pure $ ExecStepRemote (remoteSchemaInfo, remoteOperation, varValues)
+    RFAction action     -> ExecStepDB <$> convertMutationAction env logger userInfo manager reqHeaders action
+    RFRaw s             -> ExecStepRaw <$> pure s
+
+  return $ OMap.mapKeys G.unName txs
   where
     reportParseErrors errs = case NE.head errs of
       -- TODO: Our error reporting machinery doesn’t currently support reporting
@@ -188,14 +197,3 @@ convertMutationSelectionSet env logger gqlContext sqlGenCtx userInfo manager req
       -- here. It would be nice to report all of them!
       ParseError{ pePath, peMessage, peCode } ->
         throwError (err400 peCode peMessage){ qePath = pePath }
-
-    takeTx
-      :: (G.Name, Either (tx EncJSON, HTTP.ResponseHeaders) RemoteField)
-      -> Maybe (G.Name, (tx EncJSON, HTTP.ResponseHeaders))
-    takeTx (name, Left tx) = Just (name, tx)
-    takeTx _               = Nothing
-    takeRemote
-      :: (G.Name, Either (tx EncJSON, HTTP.ResponseHeaders) RemoteField)
-      -> Maybe (G.Name, RemoteField)
-    takeRemote (name, Right remote) = Just (name, remote)
-    takeRemote _                    = Nothing
