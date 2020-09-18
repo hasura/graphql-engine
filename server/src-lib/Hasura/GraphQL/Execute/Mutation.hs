@@ -163,7 +163,7 @@ convertMutationSelectionSet env logger gqlContext sqlGenCtx userInfo manager req
   -- Transform the RQL AST into a prepared SQL query
   txs <- for unpreparedQueries $ convertMutationRootField env logger userInfo manager reqHeaders (stringifyNum sqlGenCtx)
   let txList = OMap.toList txs
-  Map.fromList <$> case (mapMaybe takeTx txList, mapMaybe takeRemote txList) of
+  OMap.fromList <$> case (mapMaybe takeTx txList, mapMaybe takeRemote txList) of
     (dbPlans, []) -> do
       pure $ fmap (G.unName *** ExecStepDB) dbPlans
 -- TODO re-support remotes under heterogeneous execution

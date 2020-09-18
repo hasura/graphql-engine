@@ -32,6 +32,7 @@ import           Hasura.Tracing                         (MonadTrace, TraceT, tra
 import qualified Data.Aeson                             as J
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.Query           as EQ
@@ -112,7 +113,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             return (obj, []) -- (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj []))
         let (bodies, headers) = (fmap fst results, fmap snd results)
         -- TODO: encodeGQResp $ GQSuccess $
-        return $ HttpResponse (encJFromHashMap bodies) (fold headers)
+        return $ HttpResponse (encodeGQResp $ GQSuccess $ encJToLBS $ encJFromHashMap $ OMap.toHashMap bodies) (fold headers)
       E.MutationExecutionPlan mutationPlans -> do
         results <- for mutationPlans $ \case
           E.ExecStepDB (tx, responseHeaders) -> do
@@ -126,7 +127,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
               return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
             return (obj, [])
         let (bodies, headers) = (fmap fst results, fmap snd results)
-        return $ HttpResponse (encJFromHashMap bodies) (fold headers)
+        return $ HttpResponse (encodeGQResp $ GQSuccess $ encJToLBS $ encJFromHashMap $ OMap.toHashMap bodies) (fold headers)
       E.SubscriptionExecutionPlan _sub ->
         throw400 UnexpectedPayload "subscriptions are not supported over HTTP, use websockets instead"
   return resp
@@ -200,10 +201,9 @@ runQueryDB reqId (query, queryParsed) asts _userInfo (tx, genSql) =  do
   logQueryLog logger query Nothing reqId -- TODO genSql
   (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ trace "Query" $
     Tracing.interpTraceT id $ executeQuery queryParsed asts Nothing pgExecCtx Q.ReadOnly tx -- TODO genSql
-  (respHdrs,resp) <- liftEither respE
-  let !json = encodeGQResp $ GQSuccess $ encJToLBS resp
-      telemQueryType = Telem.Query
-  return (telemTimeIO, telemQueryType, respHdrs, json)
+  (respHdrs,!resp) <- liftEither respE
+  let telemQueryType = Telem.Query
+  return (telemTimeIO, telemQueryType, respHdrs, resp)
 
 runMutationDB
   :: ( MonadIO m
@@ -226,10 +226,9 @@ runMutationDB reqId query userInfo tx =  do
   ctx <- Tracing.currentContext
   (telemTimeIO, respE) <- withElapsedTime $  runExceptT $ trace "Mutation" $
     Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx .  withUserInfo userInfo)  tx
-  resp <- liftEither respE
-  let !json = encodeGQResp $ GQSuccess $ encJToLBS resp
-      telemQueryType = Telem.Mutation
-  return (telemTimeIO, telemQueryType, json)
+  !resp <- liftEither respE
+  let telemQueryType = Telem.Mutation
+  return (telemTimeIO, telemQueryType, resp)
 
 {-
 runHasuraGQ
