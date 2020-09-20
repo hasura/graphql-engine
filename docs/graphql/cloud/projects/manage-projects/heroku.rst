@@ -1,5 +1,5 @@
 .. meta::
-   :description: Managing teams on Hasura Cloud
+   :description: Automatically sync database URL of a Heroku Postgres into a Hasura Cloud project
    :keywords: hasura, docs, project, team, heroku, database url, sync
 
 .. _heroku_database_url_sync:
@@ -15,14 +15,13 @@ Heroku database URL sync
 Introduction
 ------------
 
-Hasura cloud can keep your project's database URL i.e. the HASURA_GRAPHQL_DATABASE_URL env var in sync with Postgres from a Heroku app. This is especially helpful in cases when the database credentials of Heroku Postgres are rotated.
+Hasura cloud can keep your project's database URL i.e. the ``HASURA_GRAPHQL_DATABASE_URL`` env var in sync with Postgres from a Heroku app. This is especially helpful in cases when the database credentials of Heroku Postgres are rotated.
 
 If you create a project with a Heroku trial database using the cloud dashboard, your project has the Heroku database URL sync enabled by default, which means, Hasura Cloud keeps the database URL of your project in sync with the related Heroku Postgres.
 
-.. admonition::
+.. admonition:: Note
 
    Note: Heroku Database URL sync was not automatically enabled for projects created before the the launch of this feature (Sep 19, 2020). If you wish to enable it, please do it manually.
-
 
 Enable Heroku database URL Sync
 --------------------------------
@@ -53,7 +52,7 @@ Opt out
 
 If your project has Heroku database URL sync enabled, you can opt out as follows:
 
-1. Go to the `Env vars` tab of your project and click on the ``HASURA_GRAPHQL_DATABASE_URL`` env var.
+1. Go to the ``Env vars`` tab of your project and click on the ``HASURA_GRAPHQL_DATABASE_URL`` env var.
 
 2. Click on ``Opt out of the sync`` button next to Heroku note.
 
@@ -75,5 +74,5 @@ Whenever postgres credentials of a Heroku app are rotated:
 
 1. The ``DATABASE_URL`` config variable of the Heroku app gets updated with the new credentials.
 2. The config variable change triggers a new release, which notifies Hasura Cloud's webhook.
-3. When Hasura Cloud is notified about the new release, it fetches the newest database URL from Heroku and updates the `HASURA_GRAPHQL_DATABASE_URL` env var of your project with it.
-4. This way, your project is always configured with the correct database URL
+3. When Hasura Cloud is notified about the new release, it fetches the newest database URL from Heroku and updates the ``HASURA_GRAPHQL_DATABASE_URL`` env var of your project with it.
+4. This way, your project is always configured with the correct database URL.
