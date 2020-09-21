@@ -7,6 +7,9 @@ module Hasura.RQL.DML.RemoteJoin
   , getRemoteJoinsConnectionSelect
   , RemoteJoins
   , RemoteCallReason(..)
+  -- * These are required in pro:
+  , FieldPath(..)
+  , RemoteJoin(..)
   ) where
 
 import           Hasura.Prelude
