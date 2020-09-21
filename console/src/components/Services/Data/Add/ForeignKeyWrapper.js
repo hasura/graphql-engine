@@ -58,7 +58,6 @@ const ForeignKeyWrapper = ({
         dispatch={dispatch}
         setForeignKeys={setForeignKeys}
         schemaList={orderedSchemaList}
-        currentSchema={currentSchema}
       />
     );
     // TODO handle ongoing request
@@ -107,6 +106,9 @@ const ForeignKeyWrapper = ({
 
     const expandCallback = () => {
       dispatch(toggleFk(i));
+      const newFks = JSON.parse(JSON.stringify(foreignKeys));
+      newFks[i].refSchemaName = event.target.value;
+      dispatch(setForeignKeys(newFks));
       dispatch(updateSchemaInfo(currentSchema));
     };
 

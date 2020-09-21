@@ -22,7 +22,6 @@ const ForeignKeySelector = ({
   service,
   schemaList,
   refTables,
-  currentSchema,
 }) => {
   const { refTableName, colMappings, refSchemaName } = foreignKey;
   const numOfFks = foreignKeys.length;
@@ -66,14 +65,11 @@ const ForeignKeySelector = ({
           <b>Reference Schema:</b>
         </div>
         <select
-          // value={refSchemaName || ''}
-          defaultValue={currentSchema}
+          value={refSchemaName || ''}
           className={`${styles.select} form-control ${styles.add_pad_left}`}
           data-test={`foreign-key-ref-schema-${index}`}
           onChange={dispatchSetRefSchema}
         >
-          {console.log(currentSchema)};
-          {console.log('var________________________________')};
           {getRefSchemaOptions()}
         </select>
       </div>

@@ -21,7 +21,6 @@ const ForeignKeyEditor = ({
   dispatch,
   fkModify,
   schemaList,
-  currentSchema,
 }) => {
   const columns = tableSchema.columns.sort(ordinalColSort);
 
@@ -105,7 +104,6 @@ const ForeignKeyEditor = ({
         orderedColumns={orderedColumns}
         dispatch={dispatch}
         setForeignKeys={setForeignKeys}
-        currentSchema={currentSchema}
       />
     );
 
