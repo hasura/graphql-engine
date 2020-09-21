@@ -66,8 +66,7 @@ toQueryTests = do
     (property
        (\bool ->
           shouldBe
-            (ToQuery.fromExpression
-               (Tsql.ValueExpression (Odbc.BoolValue bool)))
+            (ToQuery.fromExpression (Tsql.ValueExpression (Odbc.BoolValue bool)))
             (Odbc.toSql bool)))
   it
     "Sanity check"
@@ -75,7 +74,8 @@ toQueryTests = do
        (Odbc.renderQuery
           (fromSelect
              Select
-               { selectExpression = ValueExpression (Odbc.BoolValue True)
+               { selectTop = Top 1
+               , selectExpression = ValueExpression (Odbc.BoolValue True)
                , selectFrom =
                    FromQualifiedTable
                      Aliased
@@ -84,13 +84,14 @@ toQueryTests = do
                              { qualifiedThing =
                                  TableName {tableNameText = "table"}
                              , qualifiedSchemaName =
-                                 Just (SchemaName {schemaNameParts = ["schema"]})
+                                 Just
+                                   (SchemaName {schemaNameParts = ["schema"]})
                              }
                        , aliasedColumnAlias =
                            Just (ColumnAlias {columnAliasText = "alias"})
                        }
                }))
-       "SELECT 1\nFROM[schema].[table] AS [alias]")
+       "SELECT\nTOP 1\n1\nFROM\n[schema].[table] AS [alias]")
 
 --------------------------------------------------------------------------------
 -- Tests that require a database connection

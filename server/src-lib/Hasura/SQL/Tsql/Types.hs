@@ -7,9 +7,15 @@ import qualified Database.ODBC.SQLServer as Odbc
 import           Prelude
 
 data Select = Select
-  { selectExpression :: Expression
+  { selectTop :: Top
+  , selectExpression :: Expression
   , selectFrom :: From
   } deriving (Eq, Show)
+
+data Top
+  = NoTop
+  | Top Int
+  deriving (Eq, Show)
 
 data Expression =
   ValueExpression Odbc.Value

@@ -24,9 +24,13 @@ fromSelect Select {..} =
   mconcat
     (intersperse
        "\n"
-       [ "SELECT " <> fromExpression selectExpression
-       , "FROM" <> fromFrom selectFrom
-       ])
+       ["SELECT", fromTop selectTop, fromExpression selectExpression, "FROM", fromFrom selectFrom])
+
+fromTop :: Top -> Query
+fromTop =
+  \case
+    NoTop -> ""
+    Top i -> "TOP " <> toSql i
 
 fromFrom :: From -> Query
 fromFrom =
