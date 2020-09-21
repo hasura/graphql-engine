@@ -33,7 +33,7 @@ Event triggers can be created using the Hasura console, CLI or metadata APIs.
       You can add an event triggers in the ``tables.yaml`` file inside the ``metadata`` directory:
 
       .. code-block:: yaml
-         :emphasize-lines: 4-14
+         :emphasize-lines: 4-12
 
          - table:
             schema: public
@@ -170,43 +170,43 @@ If a column is not selected here, then an update to that column will not trigger
       .. code-block:: http
          :emphasize-lines: 17-19
 
-           POST /v1/query HTTP/1.1
-           Content-Type: application/json
-           X-Hasura-Role: admin
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
 
-           {
-              "type": "create_event_trigger",
-              "args": {
-                 "name": "author_trigger",
-                 "table": {
-                    "name": "author",
-                    "schema": "public"
-                 },
-                 "webhook": "https://httpbin.org/post",
-                 "insert": {
-                    "columns": "*"
-                 },
-                 "update": {
-                    "columns": ["name", "addr"]
-                 },
-                 "retry_conf": {
-                    "num_retries": 0,
-                    "interval_sec": 10,
-                    "timeout_sec": 60
-                 },
-                 "headers":[
-                    {
-                       "name": "X-Hasura-From-Val",
-                       "value": "static-value"
-                    },
-                    {
-                       "name": "X-Hasura-From-Env",
-                       "value_from_env": "EVENT_WEBHOOK_HEADER"
-                    }
-                 ],
-                 "replace": false
-              }
-           }
+         {
+            "type": "create_event_trigger",
+            "args": {
+               "name": "author_trigger",
+               "table": {
+                  "name": "author",
+                  "schema": "public"
+               },
+               "webhook": "https://httpbin.org/post",
+               "insert": {
+                  "columns": "*"
+               },
+               "update": {
+                  "columns": ["name", "addr"]
+               },
+               "retry_conf": {
+                  "num_retries": 0,
+                  "interval_sec": 10,
+                  "timeout_sec": 60
+               },
+               "headers": [
+                  {
+                     "name": "X-Hasura-From-Val",
+                     "value": "static-value"
+                  },
+                  {
+                     "name": "X-Hasura-From-Env",
+                     "value_from_env": "EVENT_WEBHOOK_HEADER"
+                  }
+               ],
+               "replace": false
+            }
+         }
 
 Retry Logic
 ^^^^^^^^^^^
@@ -269,43 +269,43 @@ Retry configuration is available in the "Advanced settings" when you create a tr
       .. code-block:: http
          :emphasize-lines: 20-24
 
-           POST /v1/query HTTP/1.1
-           Content-Type: application/json
-           X-Hasura-Role: admin
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
 
-           {
-              "type": "create_event_trigger",
-              "args": {
-                 "name": "author_trigger",
-                 "table": {
-                    "name": "author",
-                    "schema": "public"
-                 },
-                 "webhook": "https://httpbin.org/post",
-                 "insert": {
-                    "columns": "*"
-                 },
-                 "update": {
-                    "columns": ["name"]
-                 },
-                 "retry_conf": {
-                    "num_retries": 0,
-                    "interval_sec": 10,
-                    "timeout_sec": 60
-                 },
-                 "headers":[
-                    {
-                       "name": "X-Hasura-From-Val",
-                       "value": "static-value"
-                    },
-                    {
-                       "name": "X-Hasura-From-Env",
-                       "value_from_env": "EVENT_WEBHOOK_HEADER"
-                    }
-                 ],
-                 "replace": false
-              }
-           }
+         {
+            "type": "create_event_trigger",
+            "args": {
+               "name": "author_trigger",
+               "table": {
+                  "name": "author",
+                  "schema": "public"
+               },
+               "webhook": "https://httpbin.org/post",
+               "insert": {
+                  "columns": "*"
+               },
+               "update": {
+                  "columns": ["name"]
+               },
+               "retry_conf": {
+                  "num_retries": 0,
+                  "interval_sec": 10,
+                  "timeout_sec": 60
+               },
+               "headers": [
+                  {
+                     "name": "X-Hasura-From-Val",
+                     "value": "static-value"
+                  },
+                  {
+                     "name": "X-Hasura-From-Env",
+                     "value_from_env": "EVENT_WEBHOOK_HEADER"
+                  }
+               ],
+               "replace": false
+            }
+         }
 
 
 Headers
@@ -373,40 +373,40 @@ Each header has 3 parameters:
       .. code-block:: http
          :emphasize-lines: 25-34
 
-           POST /v1/query HTTP/1.1
-           Content-Type: application/json
-           X-Hasura-Role: admin
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
 
-           {
-              "type": "create_event_trigger",
-              "args": {
-                 "name": "author_trigger",
-                 "table": {
-                    "name": "author",
-                    "schema": "public"
-                 },
-                 "webhook": "https://httpbin.org/post",
-                 "insert": {
-                    "columns": "*"
-                 },
-                 "update": {
-                    "columns": ["name"]
-                 },
-                 "retry_conf": {
-                    "num_retries": 0,
-                    "interval_sec": 10,
-                    "timeout_sec": 60
-                 },
-                 "headers":[
-                    {
-                       "name": "X-Hasura-From-Val",
-                       "value": "static-value"
-                    },
-                    {
-                       "name": "X-Hasura-From-Env",
-                       "value_from_env": "EVENT_WEBHOOK_HEADER"
-                    }
-                 ],
-                 "replace": false
-              }
-           }
+         {
+            "type": "create_event_trigger",
+            "args": {
+               "name": "author_trigger",
+               "table": {
+                  "name": "author",
+                  "schema": "public"
+               },
+               "webhook": "https://httpbin.org/post",
+               "insert": {
+                  "columns": "*"
+               },
+               "update": {
+                  "columns": ["name"]
+               },
+               "retry_conf": {
+                  "num_retries": 0,
+                  "interval_sec": 10,
+                  "timeout_sec": 60
+               },
+               "headers": [
+                  {
+                     "name": "X-Hasura-From-Val",
+                     "value": "static-value"
+                  },
+                  {
+                     "name": "X-Hasura-From-Env",
+                     "value_from_env": "EVENT_WEBHOOK_HEADER"
+                  }
+               ],
+               "replace": false
+            }
+         }

@@ -44,13 +44,7 @@ Creating & exposing views
 
     1. :ref:`Create a migration manually <manual_migrations>` and add your `create view SQL statement <https://www.postgresql.org/docs/current/static/sql-createview.html>`__ to the ``up.sql`` file. Also, add an SQL statement to the ``down.sql`` file that reverts the previous statement.
 
-    2. Apply the migration by running:
-
-    .. code-block:: bash
-
-      hasura migrate apply
-
-    3. To track the view and expose it over the GraphQL API, edit the ``tables.yaml`` file in the ``metadata`` directory as follows:
+    2. To track the view and expose it over the GraphQL API, edit the ``tables.yaml`` file in the ``metadata`` directory as follows:
 
     .. code-block:: yaml
        :emphasize-lines: 7-9
@@ -64,6 +58,13 @@ Creating & exposing views
         - table:
             schema: public
             name: <name of view>
+
+    3. Apply the migration and metadata by running:
+
+       .. code-block:: bash
+
+          hasura migrate apply
+          hasura metadata apply
 
   .. tab:: API
 

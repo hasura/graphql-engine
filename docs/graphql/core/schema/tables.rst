@@ -100,7 +100,7 @@ In order to expose a table over the GraphQL API, it needs to be **tracked**.
 
   .. tab:: Console
 
-    When a table is added via the Hasura console, it gets tracked by default.
+    When a table is created via the Hasura console, it gets tracked by default.
 
     You can track any existing tables in your database from the ``Data -> Schema`` page:
 
@@ -145,14 +145,11 @@ In order to expose a table over the GraphQL API, it needs to be **tracked**.
         }
       }
 
-GraphQL schema types & resolvers
---------------------------------
+Generated GraphQL schema types
+------------------------------
 
 As soon as a table is created and tracked, the corresponding GraphQL schema types
-and query/mutation fields with resolvers will be automatically generated.
-
-Schema types
-^^^^^^^^^^^^
+and query/mutation fields will be automatically generated.
 
 The following object type is generated for the ``article``
 table we just created and tracked:
@@ -173,9 +170,6 @@ Let's analyze the above type:
 - ``Article`` is the name of the type
 - ``id``, ``title``, ``content``, ``rating`` and ``author_id`` are fields of the ``Article`` type
 - ``Int`` and ``String`` are types that fields can have
-
-Resolvers
-^^^^^^^^^
 
 The following query/mutation fields are generated for the ``article``
 table we just created and tracked:
@@ -208,7 +202,7 @@ table we just created and tracked:
     where: article_bool_exp!
   ): article_mutation_response
 
-The auto-generated resolvers for these fields will allow you to query and mutate data
+These auto-generated fields will allow you to query and mutate data
 in our table.
 
 See the :ref:`query <graphql_api_query>` and :ref:`mutation <graphql_api_mutation>`
