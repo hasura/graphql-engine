@@ -6,6 +6,7 @@ import           Data.Functor.Identity
 import qualified Data.List.NonEmpty as NE
 import           Data.Proxy
 import           Data.String
+import           Data.Validation
 import qualified Database.ODBC.SQLServer as Odbc
 import qualified Hasura.RQL.DML.Select.Types as Ir
 import qualified Hasura.RQL.Types.BoolExp as Ir
@@ -16,7 +17,7 @@ import qualified Hasura.SQL.Types as Sql
 import           Prelude
 import           System.Environment
 import           Test.Hspec
-import           Test.QuickCheck
+import           Test.QuickCheck (property)
 
 --------------------------------------------------------------------------------
 -- Main entry point
@@ -47,41 +48,94 @@ pureTests = do
   describe "IR to Tsql" fromIrTests
   describe "Tsql to Query" toQueryTests
 
+-- Notes:
+-- In asnFields below, we have: Ir.AnnFieldG Hasura.SQL.DML.SQLExp
+-- So it seems that the SQLExp from SQL is mixed freely with RQL before we hit
+-- mkSQLSelect :: JsonAggSelect -> AnnSimpleSel -> S.Select
+-- which is odd.
+--
+-- More notes:
+--
+-- The column field requires PG column info.
+--
+-- data AnnFieldG v
+--   = AFColumn !AnnColumnField
+--   | AFObjectRelation !(ObjectRelationSelectG v)
+--   | AFArrayRelation !(ArraySelectG v)
+--   | AFComputedField !(ComputedFieldSelect v)
+--   | AFRemote !RemoteSelect
+--   | AFNodeId !QualifiedTable !PrimaryKeyColumns
+--   | AFExpression !T.Text
+--   deriving (Show, Eq)
+--
+-- mkAnnColumnField :: PGColumnInfo -> Maybe ColumnOp -> AnnFieldG v
+--
+-- mkAnnColumnFieldAsText :: PGColumnInfo -> AnnFieldG v
+--
 fromIrTests :: Spec
 fromIrTests = do
   it
-    "Select"
-    (shouldBe
-       (runIdentity
-          (FromIr.runFromIr
-             (FromIr.fromSelect
-                Ir.AnnSelectG
-                  { _asnFields = []
-                  , _asnFrom =
-                      Ir.FromTable
-                        Sql.QualifiedObject
-                          { qSchema = Sql.SchemaName "dbo"
-                          , qName = Sql.TableName "albums"
+    "Select: sanity property test"
+    (property
+       (\limit fieldText fieldAlias schemaName tableName ->
+          shouldBe
+            (FromIr.runFromIr
+               (FromIr.fromSelect
+                  Ir.AnnSelectG
+                    { _asnFields =
+                        [ ( fromString fieldAlias
+                          , Ir.AFExpression (fromString fieldText))
+                        ]
+                    , _asnFrom =
+                        Ir.FromTable
+                          Sql.QualifiedObject
+                            { qSchema = Sql.SchemaName schemaName
+                            , qName = Sql.TableName tableName
+                            }
+                    , _asnPerm =
+                        Ir.TablePerm
+                          {_tpFilter = Ir.BoolOr [], _tpLimit = Just limit}
+                    , _asnArgs =
+                        Ir.SelectArgs
+                          { _saWhere = Nothing
+                          , _saOrderBy = Nothing
+                          , _saLimit = Nothing
+                          , _saOffset = Nothing
+                          , _saDistinct = Nothing
                           }
-                  , _asnPerm =
-                      Ir.TablePerm
-                        {_tpFilter = Ir.BoolOr [], _tpLimit = Just 10}
-                  , _asnArgs =
-                      Ir.SelectArgs
-                        { _saWhere = Nothing
-                        , _saOrderBy = Nothing
-                        , _saLimit = Nothing
-                        , _saOffset = Nothing
-                        , _saDistinct = Nothing
-                        }
-                  , _asnStrfyNum = False
-                  })))
-       Proxy)
+                    , _asnStrfyNum = False
+                    }))
+            (Success
+               Select
+                 { selectTop = Top limit
+                 , selectProjections =
+                     NE.fromList
+                       [ ExpressionProjection
+                           Aliased
+                             { aliasedThing =
+                                 Tsql.ValueExpression
+                                   (Odbc.TextValue (fromString fieldText))
+                             , aliasedAlias =
+                                 Just
+                                   (Alias {aliasText = fromString fieldAlias})
+                             }
+                       ]
+                 , selectFrom =
+                     FromQualifiedTable
+                       Aliased
+                         { aliasedThing =
+                             Qualified
+                               { qualifiedThing =
+                                   TableName {tableNameText = tableName}
+                               , qualifiedSchemaName =
+                                   Just (SchemaName {schemaNameParts = [schemaName]})
+                               }
+                         , aliasedAlias = Nothing
+                         }
+                 })))
   it
     "Expression"
-    (shouldBe
-       (runIdentity (FromIr.runFromIr (FromIr.fromExpression Proxy)))
-       Proxy)
+    (shouldBe (FromIr.runFromIr (FromIr.fromExpression Proxy)) (Success Proxy))
 
 --------------------------------------------------------------------------------
 -- Tests for converting from the Tsql AST to a Query

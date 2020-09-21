@@ -3,6 +3,7 @@
 module Hasura.SQL.Tsql.Types where
 
 import           Data.List.NonEmpty (NonEmpty(..))
+import qualified Data.List.NonEmpty as NE
 import           Data.Text (Text)
 import qualified Database.ODBC.SQLServer as Odbc
 import           Prelude

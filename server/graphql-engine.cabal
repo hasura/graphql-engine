@@ -564,6 +564,7 @@ test-suite tsql-tests
     , graphql-engine
     , hspec
     , odbc
+    , validation
     , QuickCheck
   hs-source-dirs: src-test
   main-is: MainTsql.hs
