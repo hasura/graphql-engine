@@ -14,3 +14,6 @@ newtype Translate a = Translate { runTranslate :: Identity a}
 
 fromSelect :: Proxy (Ir.AnnSelectG (Ir.AnnFieldsG Ir.SQLExp) Ir.SQLExp) -> Translate Tsql.Select
 fromSelect _ = pure Tsql.Select
+
+fromExpression :: Proxy Ir.SQLExp -> Translate Tsql.Expression
+fromExpression _ = pure Tsql.Expression

@@ -16,6 +16,9 @@ spec :: SpecWith ()
 spec =
   describe
     "Compile check"
-    (it
-       "Sanity"
-       (shouldBe (runIdentity (runTranslate (fromSelect Proxy))) Tsql.Select))
+    (do it
+          "Select"
+          (shouldBe (runIdentity (runTranslate (fromSelect Proxy))) Tsql.Select)
+        it
+          "Expression"
+          (shouldBe (runIdentity (runTranslate (fromExpression Proxy))) Tsql.Expression))
