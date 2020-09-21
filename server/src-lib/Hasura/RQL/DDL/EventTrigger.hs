@@ -42,7 +42,7 @@ data OpVar = OLD | NEW deriving (Show)
 pgIdenTrigger:: Ops -> TriggerName -> T.Text
 pgIdenTrigger op trn = pgFmtIden . qualifyTriggerName op $ triggerNameToTxt trn
   where
-    qualifyTriggerName op' trn' = "notify_hasura_" <> trn' <> "_" <> T.pack (show op')
+    qualifyTriggerName op' trn' = "hasura_" <> trn' <> "_" <> T.pack (show op')
 
 getDropFuncSql :: Ops -> TriggerName -> T.Text
 getDropFuncSql op trn = "DROP FUNCTION IF EXISTS"

@@ -248,7 +248,7 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
       cache <- liftIO getSchemaCache
       
       tracingCtx <- liftIO (Tracing.extractEventContext (eEvent e))
-      let spanName eti = "Event trigger: " <> unNonEmptyText (unTriggerName (etiName eti))
+      let spanName eti = "Event trigger: " <> getRestrictedText (unTriggerName (etiName eti))
           runTraceT = maybe
             Tracing.runTraceT
             Tracing.runTraceTInContext

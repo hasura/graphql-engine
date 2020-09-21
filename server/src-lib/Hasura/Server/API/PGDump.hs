@@ -87,7 +87,7 @@ execPGDump b ci = do
 
     notifyTriggerRegex =
       let regexStr :: String =
-            "^CREATE TRIGGER \"?notify_hasura_.+\"? AFTER [[:alnum:]]+ "
+            "^CREATE TRIGGER \"?hasura_.+\"? AFTER [[:alnum:]]+ "
               <> "ON .+ FOR EACH ROW EXECUTE (FUNCTION|PROCEDURE) "
-              <> "\"?hdb_views\"?\\.\"?notify_hasura_.+\"?\\(\\);$"
+              <> "\"?hdb_views\"?\\.\"?hasura_.+\"?\\(\\);$"
       in TDFA.makeRegex regexStr :: TDFA.Regex
