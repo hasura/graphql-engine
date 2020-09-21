@@ -14,17 +14,22 @@ import           Database.ODBC.SQLServer
 import           Hasura.SQL.Tsql.Types
 import           Prelude
 
-expressionToQuery :: Expression -> Query
-expressionToQuery =
+fromExpression :: Expression -> Query
+fromExpression =
   \case
     ValueExpression value -> toSql value
 
-selectToQuery :: Select -> Query
-selectToQuery Select {..} =
-  mconcat ["SELECT " <> fromToQuery selectFrom]
+fromSelect :: Select -> Query
+fromSelect Select {..} =
+  mconcat
+    (intersperse
+       "\n"
+       [ "SELECT " <> fromExpression selectExpression
+       , "FROM" <> fromFrom selectFrom
+       ])
 
-fromToQuery :: From -> Query
-fromToQuery =
+fromFrom :: From -> Query
+fromFrom =
   \case
     FromQualifiedTable aliasedQualifiedTableName ->
       fromAliased

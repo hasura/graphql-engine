@@ -66,14 +66,14 @@ toQueryTests = do
     (property
        (\bool ->
           shouldBe
-            (ToQuery.expressionToQuery
+            (ToQuery.fromExpression
                (Tsql.ValueExpression (Odbc.BoolValue bool)))
             (Odbc.toSql bool)))
   it
     "Sanity check"
     (shouldBe
        (Odbc.renderQuery
-          (selectToQuery
+          (fromSelect
              Select
                { selectExpression = ValueExpression (Odbc.BoolValue True)
                , selectFrom =
@@ -90,7 +90,7 @@ toQueryTests = do
                            Just (ColumnAlias {columnAliasText = "alias"})
                        }
                }))
-       "SELECT [schema].[table] AS [alias]")
+       "SELECT 1\nFROM[schema].[table] AS [alias]")
 
 --------------------------------------------------------------------------------
 -- Tests that require a database connection
