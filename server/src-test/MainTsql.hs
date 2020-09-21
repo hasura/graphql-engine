@@ -84,13 +84,13 @@ toQueryTests = do
                              { qualifiedThing =
                                  TableName {tableNameText = "table"}
                              , qualifiedSchemaName =
-                                 Just (SchemaName {schemaNameParts = ["dbo"]})
+                                 Just (SchemaName {schemaNameParts = ["schema"]})
                              }
                        , aliasedColumnAlias =
                            Just (ColumnAlias {columnAliasText = "alias"})
                        }
                }))
-       "SELECT [dbo].[table] AS [alias]")
+       "SELECT [schema].[table] AS [alias]")
 
 --------------------------------------------------------------------------------
 -- Tests that require a database connection
