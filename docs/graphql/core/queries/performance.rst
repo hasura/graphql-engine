@@ -206,6 +206,12 @@ Let's say we know that ``authors`` table is frequently queried by ``name``:
 We've seen in the :ref:`above example <analysing_query_performance>` that by default Postgres conducts a sequential scan i.e. going through all the rows.
 Whenever there is a sequential scan, it can be optimized by adding an index.
 
+The following statement sets an index on ``name`` in the ``authors`` table.
+
+.. code-block:: plpgsql
+
+  CREATE INDEX ON authors (name);
+
 .. rst-class:: api_tabs
 .. tabs::
 
@@ -240,12 +246,6 @@ Whenever there is a sequential scan, it can be optimized by adding an index.
             "sql": "<create index statement>"
          }
       }
-
-The following statement sets an index on ``name`` in the ``authors`` table.
-
-.. code-block:: plpgsql
-
-  CREATE INDEX ON authors (name);
 
 Let's compare the performance analysis to :ref:`the one before adding the index <analysing_query_performance>`.
 What was a ``sequential scan`` in the example earlier is now an ``index scan``. ``Index scans`` are usually more performant than ``sequential scans``.
