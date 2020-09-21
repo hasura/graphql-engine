@@ -31,7 +31,6 @@ import           Hasura.Tracing                         (MonadTrace, TraceT, tra
 
 import qualified Data.Aeson.Ordered                     as J
 import qualified Data.Environment                       as Env
-import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
@@ -86,9 +85,7 @@ runGQ
   -> GQLReqUnparsed
   -> m (HttpResponse EncJSON)
 runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
-  -- The response and misc telemetry data:
-  let telemTransport = Telem.HTTP
-  resp <- {- withElapsedTime $ -} do
+  (telemTimeTot_DT, (telemQueryType, telemTimeIO_DT, telemLocality, resp)) <- withElapsedTime $ do
     E.ExecutionCtx _ sqlGenCtx pgExecCtx {- planCache -} sc scVer httpManager enableAL <- ask
 
     -- run system authorization on the GraphQL API
@@ -102,54 +99,68 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
       E.QueryExecutionPlan queryPlans asts -> do
         results <- flip OMap.traverseWithKey queryPlans $ \fieldName step -> case step of
           E.ExecStepDB txGenSql -> do
-            (telemTimeIO_DT, telemQueryType, respHdrs, resp) <-
+            (telemTimeIO_DT, _telemQueryType, respHdrs, resp) <-
               runQueryDB reqId (reqUnparsed,reqParsed) asts userInfo txGenSql
-            return (resp, respHdrs)
+            return (telemTimeIO_DT, Telem.Local, resp, respHdrs)
           E.ExecStepRemote (rsi, opDef, _varValsM) -> do
-            (telemCacheHit, _, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs)) <- runRemoteGQ telemCacheHit fieldName rsi opDef
+            (_telemCacheHit, _, (telemTimeIO_DT, _telemQueryType, HttpResponse resp respHdrs)) <- runRemoteGQ telemCacheHit rsi opDef
             value <- extractData fieldName $ encJToLBS resp
-            pure (J.toEncJSON value, respHdrs)
+            pure (telemTimeIO_DT, Telem.Remote, J.toEncJSON value, respHdrs)
           E.ExecStepRaw json -> do
-            (telemTimeIO, obj) <- withElapsedTime $
-              return $ encJFromJValue json
-            return (obj, []) -- (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj []))
-        let (bodies, headers) = (fmap fst results, fmap snd results)
-        -- TODO: encodeGQResp $ GQSuccess $
-        return $ HttpResponse (encodeGQResp $ GQSuccess $ encJToLBS $ encJFromInsOrdHashMap bodies) (fold headers)
+            let obj = encJFromJValue json
+                telemTimeIO_DT = 0
+            return (telemTimeIO_DT, Telem.Local, obj, [])
+        let (durationsIO, localities, bodies, headers) =
+              (fmap fst4 results, fmap snd4 results, fmap thd4 results, fmap fth4 results)
+        return $ (Telem.Query, sum durationsIO, fold localities, ) $ HttpResponse (encodeGQResp $ GQSuccess $ encJToLBS $ encJFromInsOrdHashMap bodies) (fold headers)
+
       E.MutationExecutionPlan mutationPlans -> do
         results <- flip OMap.traverseWithKey mutationPlans $ \fieldName step -> case step of
           E.ExecStepDB (tx, responseHeaders) -> do
-            (telemTimeIO, telemQueryType, resp) <- runMutationDB reqId reqUnparsed userInfo tx
-            return (resp, responseHeaders)
+            (telemTimeIO_DT, _telemQueryType, resp) <- runMutationDB reqId reqUnparsed userInfo tx
+            return (telemTimeIO_DT, Telem.Local, resp, responseHeaders)
           E.ExecStepRemote (rsi, opDef, _varValsM) -> do
-            (telemCacheHit, _, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs)) <- runRemoteGQ telemCacheHit fieldName rsi opDef
+            (_telemCacheHit, _, (telemTimeIO_DT, _telemQueryType, HttpResponse resp respHdrs)) <- runRemoteGQ telemCacheHit rsi opDef
             value <- extractData fieldName $ encJToLBS resp
-            pure (J.toEncJSON value, respHdrs)
+            pure (telemTimeIO_DT, Telem.Remote, J.toEncJSON value, respHdrs)
           E.ExecStepRaw json -> do
-            (telemTimeIO, obj) <- withElapsedTime $
-              return $ encJFromJValue json
-            return (obj, [])
-        let (bodies, headers) = (fmap fst results, fmap snd results)
-        return $ HttpResponse (encodeGQResp $ GQSuccess $ encJToLBS $ encJFromInsOrdHashMap bodies) (fold headers)
+            let obj = encJFromJValue json
+                telemTimeIO_DT = 0
+            return (telemTimeIO_DT, Telem.Local, obj, [])
+        let (durationsIO, localities, bodies, headers) =
+              (fmap fst4 results, fmap snd4 results, fmap thd4 results, fmap fth4 results)
+        return $ (Telem.Mutation, sum durationsIO, fold localities, ) $ HttpResponse (encodeGQResp $ GQSuccess $ encJToLBS $ encJFromInsOrdHashMap bodies) (fold headers)
 
       E.SubscriptionExecutionPlan _sub ->
         throw400 UnexpectedPayload "subscriptions are not supported over HTTP, use websockets instead"
+  -- The response and misc telemetry data:
+  let telemTimeIO = convertDuration telemTimeIO_DT
+      telemTimeTot = convertDuration telemTimeTot_DT
+      telemTransport = Telem.HTTP
+      telemCacheHit = Telem.Miss -- TODO fix if we're reimplementing query caching
+  -- Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
   return resp
   where
-    runRemoteGQ telemCacheHit fieldName rsi opDef = do
+    runRemoteGQ telemCacheHit rsi opDef = do
       let telemQueryType | G._todType opDef == G.OperationTypeMutation = Telem.Mutation
                          | otherwise = Telem.Query
       (telemTimeIO, resp) <- E.execRemoteGQ env reqId userInfo reqHeaders reqUnparsed rsi opDef
       pure (telemCacheHit, Telem.Remote, (telemTimeIO, telemQueryType, resp))
 
     extractData fieldName = runAesonParser $ \bs ->
-      let lookup key object = maybe (Left $ "expecting key " ++ T.unpack key) Right $ J.lookup key object
+      let lookup' key object = maybe (Left $ "expecting key " ++ T.unpack key) Right $ J.lookup key object
       in either fail pure $
          J.eitherDecode bs >>=
          J.asObject        >>=
-         lookup "data"     >>=
+         lookup' "data"     >>=
          J.asObject        >>=
-         lookup fieldName
+         lookup' fieldName
+
+    -- TODO introduce new data type
+    fst4 (a,_,_,_) = a
+    snd4 (_,b,_,_) = b
+    thd4 (_,_,c,_) = c
+    fth4 (_,_,_,d) = d
 
 
 -- | Run (execute) a batched GraphQL query (see 'GQLBatchedReqs')
