@@ -22,6 +22,9 @@ module Hasura.RQL.Types.EventTrigger
 
   , defaultRetryConf
   , defaultTimeoutSeconds
+  , RestrictedText (..)
+  , mkRestrictedText
+  , parseRestrictedText
   ) where
 
 import           Data.Aeson
@@ -30,7 +33,7 @@ import           Data.Aeson.TH
 import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.Types.Common    (NonEmptyText (..), InputWebhook)
+import           Hasura.RQL.Types.Common    (InputWebhook)
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax (Lift)
 
@@ -38,13 +41,54 @@ import qualified Data.ByteString.Lazy       as LBS
 import qualified Data.Text                  as T
 import qualified Database.PG.Query          as Q
 import qualified Text.Regex.TDFA            as TDFA
+import qualified Test.QuickCheck            as QC
+
+newtype RestrictedText = RestrictedText { getRestrictedText :: T.Text }
+  deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, DQuote, Generic, NFData, Cacheable)
+
+-- PG allows for identifiers to be of length upto 63
+-- So subtracting the length required for hasura_ and _(INSERT | UPDATE | DELETE) 
+-- We are left with 49 chars alone for the actual name provided by the user
+maxTriggerNameLength :: Int
+maxTriggerNameLength = 1000
+
+minTriggerNameLength :: Int
+minTriggerNameLength = 1
+
+mkRestrictedText :: T.Text -> Maybe RestrictedText
+mkRestrictedText "" = Nothing
+mkRestrictedText t  = do
+  let tLen = T.length t
+    in
+      case tLen > maxTriggerNameLength || tLen < minTriggerNameLength of
+        True  -> Nothing
+        False -> Just $ RestrictedText t
+  
+
+instance Arbitrary RestrictedText where
+  arbitrary = RestrictedText . T.pack <$> QC.listOf1 (QC.elements $ take maxTriggerNameLength alphaNumerics)
+
+failMessage :: String
+failMessage = "event trigger names are restricted between " ++ (show minTriggerNameLength) ++ " - " ++ (show maxTriggerNameLength) ++ " characters"
+
+parseRestrictedText :: MonadFail m => Text -> m RestrictedText
+parseRestrictedText text = case mkRestrictedText text of
+  Nothing     -> fail failMessage
+  Just neText -> return neText
+
+instance FromJSON RestrictedText where
+  parseJSON = withText "String" parseRestrictedText
+
+instance Q.FromCol RestrictedText where
+  fromCol bs = mkRestrictedText <$> Q.fromCol bs
+    >>= maybe (Left $ T.pack failMessage) Right
 
 -- | Unique name for event trigger.
-newtype TriggerName = TriggerName { unTriggerName :: NonEmptyText }
-  deriving (Show, Eq, Hashable, Lift, DQuote, FromJSON, ToJSON, ToJSONKey, Q.FromCol, Q.ToPrepArg, Generic, Arbitrary, NFData, Cacheable)
+newtype TriggerName = TriggerName { unTriggerName :: RestrictedText }
+  deriving (Show, Eq, Hashable, Lift, DQuote, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, Generic, NFData, Cacheable, Arbitrary, Q.FromCol)
 
 triggerNameToTxt :: TriggerName -> Text
-triggerNameToTxt = unNonEmptyText . unTriggerName
+triggerNameToTxt = getRestrictedText . unTriggerName
 
 type EventId = T.Text
 
