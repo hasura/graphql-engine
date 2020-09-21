@@ -33,4 +33,5 @@ See the below pages for detailed guides on managing projects:
    General tab <general>
    Team tab <team>
    Env vars tab <env-vars>
+   Heroku Database URL Sync <heroku>
    Domains tab <domains>
