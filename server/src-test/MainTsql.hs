@@ -7,8 +7,8 @@ import           Data.Proxy
 import           Data.String
 import qualified Database.ODBC.SQLServer as Odbc
 import qualified Hasura.SQL.Tsql.FromIr as FromIr
-import qualified Hasura.SQL.Tsql.ToQuery as ToQuery
-import qualified Hasura.SQL.Tsql.Types as Tsql
+import Hasura.SQL.Tsql.ToQuery as ToQuery
+import Hasura.SQL.Tsql.Types as Tsql
 import           Prelude
 import           System.Environment
 import           Test.Hspec
@@ -60,7 +60,7 @@ fromIrTests = do
 -- Tests for converting from the Tsql AST to a Query
 
 toQueryTests :: Spec
-toQueryTests =
+toQueryTests = do
   it
     "Boolean"
     (property
@@ -69,6 +69,28 @@ toQueryTests =
             (ToQuery.expressionToQuery
                (Tsql.ValueExpression (Odbc.BoolValue bool)))
             (Odbc.toSql bool)))
+  it
+    "Sanity check"
+    (shouldBe
+       (Odbc.renderQuery
+          (selectToQuery
+             Select
+               { selectExpression = ValueExpression (Odbc.BoolValue True)
+               , selectFrom =
+                   FromQualifiedTable
+                     Aliased
+                       { aliasedThing =
+                           Qualified
+                             { qualifiedThing =
+                                 TableName {tableNameText = "table"}
+                             , qualifiedSchemaName =
+                                 Just (SchemaName {schemaNameParts = ["dbo"]})
+                             }
+                       , aliasedColumnAlias =
+                           Just (ColumnAlias {columnAliasText = "alias"})
+                       }
+               }))
+       "SELECT [dbo].[table] AS [alias]")
 
 --------------------------------------------------------------------------------
 -- Tests that require a database connection
