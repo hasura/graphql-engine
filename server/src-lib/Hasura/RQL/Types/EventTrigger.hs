@@ -33,7 +33,7 @@ import           Data.Aeson.TH
 import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.Types.Common    (InputWebhook)
+import           Hasura.RQL.Types.Common    (InputWebhook, NonEmptyText(..))
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax (Lift)
 
@@ -50,7 +50,7 @@ newtype RestrictedText = RestrictedText { getRestrictedText :: T.Text }
 -- So subtracting the length required for hasura_ and _(INSERT | UPDATE | DELETE) 
 -- We are left with 49 chars alone for the actual name provided by the user
 maxTriggerNameLength :: Int
-maxTriggerNameLength = 1000
+maxTriggerNameLength = 49
 
 minTriggerNameLength :: Int
 minTriggerNameLength = 1
@@ -63,7 +63,6 @@ mkRestrictedText t  = do
       case tLen > maxTriggerNameLength || tLen < minTriggerNameLength of
         True  -> Nothing
         False -> Just $ RestrictedText t
-  
 
 instance Arbitrary RestrictedText where
   arbitrary = RestrictedText . T.pack <$> QC.listOf1 (QC.elements $ take maxTriggerNameLength alphaNumerics)
@@ -84,11 +83,11 @@ instance Q.FromCol RestrictedText where
     >>= maybe (Left $ T.pack failMessage) Right
 
 -- | Unique name for event trigger.
-newtype TriggerName = TriggerName { unTriggerName :: RestrictedText }
+newtype TriggerName = TriggerName { unTriggerName :: NonEmptyText }
   deriving (Show, Eq, Hashable, Lift, DQuote, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, Generic, NFData, Cacheable, Arbitrary, Q.FromCol)
 
 triggerNameToTxt :: TriggerName -> Text
-triggerNameToTxt = getRestrictedText . unTriggerName
+triggerNameToTxt = unNonEmptyText . unTriggerName
 
 type EventId = T.Text
 
@@ -206,6 +205,8 @@ instance FromJSON CreateEventTriggerQuery where
         isMatch = TDFA.match compiledRegex . T.unpack $ triggerNameToTxt name
     if isMatch then return ()
       else fail "only alphanumeric and underscore and hyphens allowed for name"
+    if (T.length $ triggerNameToTxt name) <= maxTriggerNameLength then return ()
+      else fail "trigger name has to be at most 49 characters"
     if any isJust [insert, update, delete] || enableManual then
       return ()
       else
