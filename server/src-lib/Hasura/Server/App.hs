@@ -232,7 +232,16 @@ class Monad m => MonadConfigApiHandler m where
 -- | The graphql API (/v1/graphql) handler
 class Monad m => MonadGQLApiHandler m where
   runGQLApiHandler
-    :: HasVersion
+      ::  ( HasVersion
+      , MonadIO m
+      , UserAuthentication (Tracing.TraceT m)
+      , HttpLog m
+      , Tracing.HasReporter m
+      , E.MonadGQLExecutionCheck m
+      , MonadQueryLog m
+      , GH.MonadExecuteQuery m
+      , EQ.MonadQueryInstrumentation m
+      )
     => ServerCtx
     -> Spock.SpockCtxT () m ()
 
