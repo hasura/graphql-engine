@@ -558,7 +558,7 @@ gqlPostApiHandler
       )
   => ServerCtx -> Spock.SpockCtxT () m ()
 gqlPostApiHandler serverCtx = 
-  Spock.post "v1/graphql" $ mkSpockAction serverCtx encodeQErr allMod200 $
+  Spock.post "v1/graphql" $ mkSpockAction serverCtx GH.encodeGQErr allMod200 $
     mkPostHandler $ mkAPIRespHandler v1GQHandler
   where allMod200 qe     = qe { qeStatus = HTTP.status200 }
   
