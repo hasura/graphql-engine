@@ -119,6 +119,6 @@ sanity = do
     (\connection ->
        shouldReturn (Odbc.query connection "select 1") [Identity (1 :: Int)])
   it
-    "SELECT TOP 1 1"
+    "SELECT TOP 1 3"
     (\connection ->
-       shouldReturn (Odbc.query connection "SELECT TOP 1 1") [Identity (1 :: Int)])
+       shouldReturn (Odbc.query connection "SELECT TOP 1 3") [Identity (3 :: Int)])
