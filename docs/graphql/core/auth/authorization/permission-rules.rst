@@ -18,23 +18,8 @@ Introduction
 Access control rules in Hasura are defined at a role, table and action (*insert, update, select, delete*)
 level granularity:
 
-.. rst-class:: api_tabs
-.. tabs::
-
-   .. tab:: Console
-
-      You can add permission rules in the ``Permissions`` tab of a table:
-
-      .. thumbnail:: /img/graphql/core/auth/permission-rule-granularity.png
-         :alt: Access control rules in Hasura
-
-   .. tab:: CLI
-
-      You can add permissions in the ``tables.yaml`` file inside the ``metadata`` directory.
-
-   .. tab:: API      
-
-      You can add permissions by using the :ref:`permissions metadata API <api_permission>`.
+.. thumbnail:: /img/graphql/core/auth/permission-rule-granularity.png
+   :alt: Access control rules in Hasura
 
 Requests to Hasura should contain the reserved session variable ``X-Hasura-Role`` to indicate the requesting
 user's role, and the table and action information is inferred from the request itself. This information is used

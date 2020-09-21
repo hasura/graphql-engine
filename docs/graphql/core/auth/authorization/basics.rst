@@ -80,25 +80,8 @@ Head to the ``GraphiQL`` tab in your console and try out the below query:
 You'll see that this results in a response that contains all the authors because by default the GraphQL
 query is accepted with **admin** permissions.
 
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: GraphiQL
-
-    .. thumbnail:: /img/graphql/core/auth/fetch-authors.png
-      :alt: Run a query without access control
-
-  .. tab:: API
-
-    .. code-block:: http
-
-      POST /v1/graphql HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "query": "{ author { id name }}"
-      }
+.. thumbnail:: /img/graphql/core/auth/fetch-authors.png
+  :alt: Run a query without access control
 
 Define access control rules
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -180,26 +163,8 @@ Let's run the same query as above but now with the ``X-Hasura-Role`` and ``X-Has
 variables also included to indicate role and user information. These session variables are passed in
 the ``Request Headers`` section of ``GraphiQL`` as highlighted below:
 
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: GraphiQL
-
-    .. thumbnail:: /img/graphql/core/auth/permission-basics-query-with-access-control.png
-      :alt: Run a query with access control
-
-  .. tab:: API
-
-    .. code-block:: http
-
-      POST /v1/graphql HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: user
-      X-Hasura-User-Id: 4
-
-      {
-        "query": "{ author { id name }}"
-      }
+.. thumbnail:: /img/graphql/core/auth/permission-basics-query-with-access-control.png
+  :alt: Run a query with access control
 
 As you can see, the results are now filtered based on the access control rule for the role ``user``
 (*since that is the role indicated by the* ``X-Hasura-Role`` *session variable*) and the results are
