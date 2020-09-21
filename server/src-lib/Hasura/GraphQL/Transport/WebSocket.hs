@@ -368,21 +368,18 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       sendCompleted (Just requestId)
     E.MutationExecutionPlan mutationPlan -> do
       -- TODO maybe stop executing after the first error?
-      (telemTimeIO_DT, results) <- withElapsedTime $ for mutationPlan $ \case
-        E.ExecStepDB (tx, _) -> runExceptT $ Tracing.trace "Mutate" do
+      (telemTimeIO_DT, results) <- withElapsedTime $ runExceptT $ for mutationPlan $ \case
+        E.ExecStepDB (tx, _) -> Tracing.trace "Mutate" do
           ctx <- Tracing.currentContext
           execQueryOrMut timerTot Telem.Mutation telemCacheHit Nothing requestId $
             Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx . withUserInfo userInfo) tx
-        E.ExecStepRemote (rsi, opDef, _varValsM) -> runExceptT $ do
+        E.ExecStepRemote (rsi, opDef, _varValsM) -> do
           runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
-        E.ExecStepRaw json -> runExceptT $ do
+        E.ExecStepRaw json -> do
           return $ encJFromJValue json
-      let successes = IOMap.mapMaybe rightToMaybe results
-          failures  = IOMap.mapMaybe leftToMaybe results
-      if null failures
-        then sendSuccResp (encJFromInsOrdHashMap successes) $ LQ.LiveQueryMetadata telemTimeIO_DT
-        -- TODO cleaner error reporting without partial functions
-        else postExecErr requestId $ snd $ head $ IOMap.toList failures
+      case results of
+        Left err -> postExecErr requestId err
+        Right successes -> sendSuccResp (encJFromInsOrdHashMap successes) $ LQ.LiveQueryMetadata telemTimeIO_DT
       sendCompleted (Just requestId)
     E.SubscriptionExecutionPlan lqOp -> do
       -- log the graphql query
