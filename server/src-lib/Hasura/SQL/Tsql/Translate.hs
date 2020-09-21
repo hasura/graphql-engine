@@ -2,10 +2,15 @@
 
 module Hasura.SQL.Tsql.Translate where
 
+import           Data.Functor.Identity
 import           Data.Proxy
 import qualified Hasura.RQL.DML.Select.Types as Ir
 import qualified Hasura.SQL.DML as Ir
 import           Hasura.SQL.Tsql.Types as Tsql
+import           Prelude
 
-fromSelect :: Proxy (Ir.AnnSelectG (Ir.AnnFieldsG Ir.SQLExp) Ir.SQLExp) -> Tsql.Select
-fromSelect _ = Tsql.Select
+newtype Translate a = Translate { runTranslate :: Identity a}
+  deriving (Functor, Applicative)
+
+fromSelect :: Proxy (Ir.AnnSelectG (Ir.AnnFieldsG Ir.SQLExp) Ir.SQLExp) -> Translate Tsql.Select
+fromSelect _ = pure Tsql.Select
