@@ -4,8 +4,8 @@
 
 .. _schema_tables:
 
-GraphQL tables
-==============
+Tables
+======
 
 .. contents:: Table of contents
   :backlinks: none
@@ -92,15 +92,20 @@ Let's say we want to create two simple tables for an article/author schema:
 Track tables
 ------------
 
-Tables can be in the underlying Postgres database without being exposed over the GraphQL API. In order to expose a table over the GraphQL API, it needs to be **tracked**. 
-Let's track our newly created ``article`` table:
+Tables can be in the underlying Postgres database without being exposed over the GraphQL API.
+In order to expose a table over the GraphQL API, it needs to be **tracked**.
 
 .. rst-class:: api_tabs
 .. tabs::
 
   .. tab:: Console
 
-    When a table is added via the Hasura console, it's tracked by default.
+    When a table is added via the Hasura console, it gets tracked by default.
+
+    You can track any existing tables in your database from the ``Data -> Schema`` page:
+
+    .. thumbnail:: /img/graphql/core/schema/schema-track-tables.png
+       :alt: Track table
 
   .. tab:: CLI
 
@@ -143,12 +148,14 @@ Let's track our newly created ``article`` table:
 GraphQL schema types & resolvers
 --------------------------------
 
-As soon as a table is created and tracked, the corresponding GraphQL schema types and query/mutation resolvers will be automatically generated.
-
-The following object type and query/mutation fields are generated for the ``article`` table we just created and tracked:
+As soon as a table is created and tracked, the corresponding GraphQL schema types
+and query/mutation fields with resolvers will be automatically generated.
 
 Schema types
 ^^^^^^^^^^^^
+
+The following object type is generated for the ``article``
+table we just created and tracked:
 
 .. code-block:: graphql
 
@@ -169,6 +176,9 @@ Let's analyze the above type:
 
 Resolvers
 ^^^^^^^^^
+
+The following query/mutation fields are generated for the ``article``
+table we just created and tracked:
 
 .. code-block:: graphql
 
@@ -198,90 +208,90 @@ Resolvers
     where: article_bool_exp!
   ): article_mutation_response
 
-These auto-generated resolvers will allow you to query the GraphQL schema, as well as mutating the GraphQL schema.
+The auto-generated resolvers for these fields will allow you to query and mutate data
+in our table.
 
 See the :ref:`query <graphql_api_query>` and :ref:`mutation <graphql_api_mutation>`
 API references for the full specifications.
 
-Query a GraphQL table
----------------------
+Try out basic GraphQL requests
+------------------------------
 
-*You may want to add some sample data into the tables first.*
+At this point, you should be able to try out basic GraphQL queries/mutations on
+the newly created tables from the GraphiQL tab in the console. *(You may want to add some
+sample data into the tables first)*
 
-Query all rows in the ``article`` table:
+- Query all rows in the ``article`` table:
 
-.. graphiql::
-  :view_only:
-  :query:
-    query {
-      article {
-        id
-        title
-        author_id
-      }
-    }
-  :response:
-    {
-      "data": {
-        "article": [
-          {
-            "id": 1,
-            "title": "sit amet",
-            "author_id": 4
-          },
-          {
-            "id": 2,
-            "title": "a nibh",
-            "author_id": 2
-          },
-          {
-            "id": 3,
-            "title": "amet justo morbi",
-            "author_id": 4
-          },
-          {
-            "id": 4,
-            "title": "vestibulum ac est",
-            "author_id": 5
-          }
-        ]
-      }
-    }
-
-Insert into a GraphQL table
----------------------------
-
-Insert data in the ``author`` table:
-
-.. graphiql::
-  :view_only:
-  :query:
-    mutation add_author {
-      insert_author(
-        objects: [
-          { name: "Jane" }
-        ]
-      ) {
-          affected_rows
-          returning {
-            id
-            name
-          }
+  .. graphiql::
+    :view_only:
+    :query:
+      query {
+        article {
+          id
+          title
+          author_id
         }
-    }
-  :response:
-    {
-      "data": {
-        "insert_author": {
-          "affected_rows": 1,
-          "returning": [
+      }
+    :response:
+      {
+        "data": {
+          "article": [
             {
-              "id": 11,
-              "name": "Jane"
+              "id": 1,
+              "title": "sit amet",
+              "author_id": 4
+            },
+            {
+              "id": 2,
+              "title": "a nibh",
+              "author_id": 2
+            },
+            {
+              "id": 3,
+              "title": "amet justo morbi",
+              "author_id": 4
+            },
+            {
+              "id": 4,
+              "title": "vestibulum ac est",
+              "author_id": 5
             }
           ]
         }
       }
-    }
-    
-Note that the author's ``id`` does not need to passed as an input as it is of type ``serial`` (auto incrementing integer).
+
+- Insert data in the ``author`` table:
+
+  .. graphiql::
+    :view_only:
+    :query:
+      mutation add_author {
+        insert_author(
+          objects: [
+            { name: "Jane" }
+          ]
+        ) {
+            affected_rows
+            returning {
+              id
+              name
+            }
+          }
+      }
+    :response:
+      {
+        "data": {
+          "insert_author": {
+            "affected_rows": 1,
+            "returning": [
+              {
+                "id": 11,
+                "name": "Jane"
+              }
+            ]
+          }
+        }
+      }
+
+  Note that the author's ``id`` does not need to passed as an input as it is of type ``serial`` (auto incrementing integer).
