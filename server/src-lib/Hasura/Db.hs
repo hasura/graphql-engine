@@ -50,7 +50,9 @@ import qualified Hasura.Tracing               as Tracing
 
 data PGExecCtx
   = PGExecCtx
-  { _pecRunReadOnly  :: (forall a. Q.TxE QErr a -> ExceptT QErr IO a)
+  { _pecPool         :: Q.PGPool
+  -- ^ The Postgres pool
+  , _pecRunReadOnly  :: (forall a. Q.TxE QErr a -> ExceptT QErr IO a)
   -- ^ Run a Q.ReadOnly transaction
   , _pecRunReadNoTx  :: (forall a. Q.TxE QErr a -> ExceptT QErr IO a)
   -- ^ Run a read only statement without an explicit transaction block
@@ -67,7 +69,8 @@ instance Show PGExecCtx where
 mkPGExecCtx :: Q.TxIsolation -> Q.PGPool -> PGExecCtx
 mkPGExecCtx isoLevel pool =
   PGExecCtx
-  { _pecRunReadOnly = (Q.runTx pool (isoLevel, Just Q.ReadOnly))
+  { _pecPool = pool
+  , _pecRunReadOnly = (Q.runTx pool (isoLevel, Just Q.ReadOnly))
   , _pecRunReadNoTx = (Q.runTx' pool)
   , _pecRunReadWrite = (Q.runTx pool (isoLevel, Just Q.ReadWrite))
   , _pecCheckHealth = checkDbConnection

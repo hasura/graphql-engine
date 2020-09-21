@@ -151,6 +151,8 @@ initEventEngineCtx maxT _eeCtxFetchInterval = do
   _eeCtxEventThreadsCapacity <- newTVar maxT
   return $ EventEngineCtx{..}
 
+type EventWithSource = (Event, PGSourceConfig)
+
 -- | Service events from our in-DB queue.
 --
 -- There are a few competing concerns and constraints here; we want to...
@@ -172,30 +174,30 @@ processEventQueue
   => L.Logger L.Hasura
   -> LogEnvHeaders
   -> HTTP.Manager
-  -> Q.PGPool
   -> IO SchemaCache
-  -> SourceName
   -> EventEngineCtx
   -> LockedEventsCtx
   -> m void
-processEventQueue logger logenv httpMgr pool getSchemaCache sourceName eeCtx@EventEngineCtx{..} LockedEventsCtx{leEvents} = do
+processEventQueue logger logenv httpMgr getSchemaCache eeCtx@EventEngineCtx{..} LockedEventsCtx{leEvents} = do
   events0 <- popEventsBatch
   go events0 0 False
   where
     fetchBatchSize = 100
     popEventsBatch = do
-      let run = liftIO . runExceptT . Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite)
-      run (fetchEvents sourceName fetchBatchSize) >>= \case
-          Left err -> do
-            liftIO $ L.unLogger logger $ EventInternalErr err
-            return []
-          Right events -> do
-            saveLockedEvents (map eId events) leEvents
-            return events
+      pgSources <- scPostgres <$> liftIO getSchemaCache
+      fmap concat $ forM (M.toList pgSources) $ \(sourceName, sourceCache) -> do
+        let sourceConfig = _pcConfiguration sourceCache
+        runPgSourceRepeatableReadTx sourceConfig (fetchEvents sourceName fetchBatchSize) >>= \case
+            Left err -> do
+              liftIO $ L.unLogger logger $ EventInternalErr err
+              return []
+            Right events -> do
+              saveLockedEvents (map eId events) leEvents
+              return $ map (, sourceConfig) events
 
     -- work on this batch of events while prefetching the next. Recurse after we've forked workers
     -- for each in the batch, minding the requested pool size.
-    go :: [Event] -> Int -> Bool -> m void
+    go :: [EventWithSource] -> Int -> Bool -> m void
     go events !fullFetchCount !alreadyWarned = do
       -- process events ASAP until we've caught up; only then can we sleep
       when (null events) . liftIO $ sleep _eeCtxFetchInterval
@@ -205,13 +207,13 @@ processEventQueue logger logenv httpMgr pool getSchemaCache sourceName eeCtx@Eve
       -- worth the effort for something more fine-tuned
       eventsNext <- LA.withAsync popEventsBatch $ \eventsNextA -> do
         -- process approximately in order, minding HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE:
-        forM_ events $ \event -> do
+        forM_ events $ \(event, sourceConfig) -> do
           tracingCtx <- liftIO (Tracing.extractEventContext (eEvent event))
           let runTraceT = maybe
                 Tracing.runTraceT
                 Tracing.runTraceTInContext
                 tracingCtx
-          t <- processEvent event
+          t <- processEvent event sourceConfig
             & runTraceT "process event"
             & withEventEngineCtx eeCtx
             & flip runReaderT (logger, httpMgr)
@@ -251,8 +253,8 @@ processEventQueue logger logenv httpMgr pool getSchemaCache sourceName eeCtx@Eve
          , Has (L.Logger L.Hasura) r
          , Tracing.MonadTrace io
          )
-      => Event -> io ()
-    processEvent e = do
+      => Event -> PGSourceConfig -> io ()
+    processEvent e sourceConfig = do
       cache <- liftIO getSchemaCache
       let meti = getEventTriggerInfoFromEvent cache e
       case meti of
@@ -261,7 +263,7 @@ processEventQueue logger logenv httpMgr pool getSchemaCache sourceName eeCtx@Eve
           --  i) schema cache is not up-to-date (due to some bug, say during schema syncing across multiple instances)
           --  ii) the event trigger is dropped when this event was just fetched
           logQErr $ err500 Unexpected "table or event-trigger not found in schema cache"
-          liftIO . runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
+          runPgSourceRepeatableReadTx sourceConfig $ do
             currentTime <- liftIO getCurrentTime
             -- For such an event, we unlock the event and retry after a minute
             setRetry e (addUTCTime 60 currentTime)
@@ -282,8 +284,8 @@ processEventQueue logger logenv httpMgr pool getSchemaCache sourceName eeCtx@Eve
           logHTTPForET res extraLogCtx requestDetails
           let decodedHeaders = map (decodeHeader logenv headerInfos) headers
           either
-            (processError pool e retryConf decodedHeaders ep)
-            (processSuccess pool e decodedHeaders ep) res
+            (processError sourceConfig e retryConf decodedHeaders ep)
+            (processSuccess sourceConfig e decodedHeaders ep) res
             >>= flip onLeft logQErr
 
 withEventEngineCtx ::
@@ -318,22 +320,22 @@ createEventPayload retryConf e = EventPayload
 
 processSuccess
   :: ( MonadIO m )
-  => Q.PGPool -> Event -> [HeaderConf] -> EventPayload -> HTTPResp a
+  => PGSourceConfig -> Event -> [HeaderConf] -> EventPayload -> HTTPResp a
   -> m (Either QErr ())
-processSuccess pool e decodedHeaders ep resp = do
+processSuccess sourceConfig e decodedHeaders ep resp = do
   let respBody = hrsBody resp
       respHeaders = hrsHeaders resp
       respStatus = hrsStatus resp
       invocation = mkInvocation ep respStatus decodedHeaders respBody respHeaders
-  liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
+  runPgSourceRepeatableReadTx sourceConfig $ do
     insertInvocation invocation
     setSuccess e
 
 processError
-  :: ( MonadIO m )
-  => Q.PGPool -> Event -> RetryConf -> [HeaderConf] -> EventPayload -> HTTPErr a
+  :: (MonadIO m)
+  => PGSourceConfig -> Event -> RetryConf -> [HeaderConf] -> EventPayload -> HTTPErr a
   -> m (Either QErr ())
-processError pool e retryConf decodedHeaders ep err = do
+processError sourceConfig e retryConf decodedHeaders ep err = do
   let invocation = case err of
         HClient excp -> do
           let errMsg = TBS.fromLBS $ encode $ show excp
@@ -349,7 +351,7 @@ processError pool e retryConf decodedHeaders ep err = do
         HOther detail -> do
           let errMsg = (TBS.fromLBS $ encode detail)
           mkInvocation ep 500 decodedHeaders errMsg []
-  liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
+  runPgSourceRepeatableReadTx sourceConfig $ do
     insertInvocation invocation
     retryOrSetError e retryConf err
 
