@@ -468,6 +468,8 @@ library
                      , Hasura.SQL.Time
                      , Hasura.SQL.Types
                      , Hasura.SQL.Value
+                     , Hasura.SQL.Tsql.Translate
+                     , Hasura.SQL.Tsql.Types
                      , Hasura.Tracing
                      , Network.URI.Extended
                      , Network.Wai.Extended
@@ -551,3 +553,14 @@ benchmark cache
                    , async
                    , text
                    , bytestring
+
+test-suite tsql-tests
+  import: common-all, common-exe
+  type: exitcode-stdio-1.0
+  build-depends:
+    , base
+    , graphql-engine
+    , hspec
+    , odbc
+  hs-source-dirs: src-test
+  main-is: MainTsql.hs
