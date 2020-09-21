@@ -764,7 +764,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       Spock.post "v1alpha1/graphql" $ spockAction GH.encodeGQErr id $
         mkPostHandler $ mkAPIRespHandler $ v1Alpha1GQHandler E.QueryHasura
 
-      -- See MonadGQLApiHandler
+      -- See 'MonadGQLApiHandler'
       runGQLApiHandler serverCtx 
 
       Spock.post "v1beta1/relay" $ spockAction GH.encodeGQErr allMod200 $
