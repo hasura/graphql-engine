@@ -37,10 +37,19 @@ module Hasura.RQL.Types.Common
        , isSystemDefined
 
        , successMsg
-       , NonNegativeDiffTime(..)
+       , NonNegativeDiffTime
+       , unNonNegativeDiffTime
+       , unsafeNonNegativeDiffTime
+       , mkNonNegativeDiffTime
        , InputWebhook(..)
        , ResolvedWebhook(..)
        , resolveWebhook
+       , NonNegativeInt
+       , getNonNegativeInt
+       , mkNonNegativeInt
+       , unsafeNonNegativeInt
+       , Timeout(..)
+       , defaultActionTimeoutSecs
        ) where
 
 import           Hasura.EncJSON
@@ -49,7 +58,6 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers        ()
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Types
-import           Hasura.RQL.DDL.Headers        ()
 
 
 
@@ -58,13 +66,14 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Bifunctor                (bimap)
 import           Data.Aeson.TH
+import           Data.Scientific               (toBoundedInteger)
 import           Data.URL.Template
 import           Instances.TH.Lift             ()
 import           Language.Haskell.TH.Syntax    (Lift, Q, TExp)
 
+import qualified Data.Environment              as Env
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.Text                     as T
-import qualified Data.Environment              as Env
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.Haskell.TH.Syntax    as TH
@@ -278,12 +287,41 @@ isSystemDefined = unSystemDefined
 successMsg :: EncJSON
 successMsg = "{\"message\":\"success\"}"
 
+newtype NonNegativeInt = NonNegativeInt { getNonNegativeInt :: Int }
+  deriving (Show, Eq, ToJSON, Generic, NFData, Cacheable, Num)
+
+mkNonNegativeInt :: Int -> Maybe NonNegativeInt
+mkNonNegativeInt x = case x >= 0 of
+  True  -> Just $ NonNegativeInt x
+  False -> Nothing
+
+unsafeNonNegativeInt :: Int -> NonNegativeInt
+unsafeNonNegativeInt = NonNegativeInt
+
+instance FromJSON NonNegativeInt where
+  parseJSON = withScientific "NonNegativeInt" $ \t -> do
+    case (t >= 0) of
+      True  -> NonNegativeInt <$> maybeInt (toBoundedInteger t)
+      False -> fail "negative value not allowed"
+    where
+      maybeInt x = case x of
+        Just v  -> return v
+        Nothing -> fail "integer passed is out of bounds"
+
 newtype NonNegativeDiffTime = NonNegativeDiffTime { unNonNegativeDiffTime :: DiffTime }
-  deriving (Show, Eq,ToJSON,Generic, NFData, Cacheable)
+  deriving (Show, Eq,ToJSON,Generic, NFData, Cacheable, Num)
+
+unsafeNonNegativeDiffTime :: DiffTime -> NonNegativeDiffTime
+unsafeNonNegativeDiffTime = NonNegativeDiffTime
+
+mkNonNegativeDiffTime :: DiffTime -> Maybe NonNegativeDiffTime
+mkNonNegativeDiffTime x = case x >= 0 of
+  True  -> Just $ NonNegativeDiffTime x
+  False -> Nothing
 
 instance FromJSON NonNegativeDiffTime where
   parseJSON = withScientific "NonNegativeDiffTime" $ \t -> do
-    case (t > 0) of
+    case (t >= 0) of
       True  -> return $ NonNegativeDiffTime . realToFrac $ t
       False -> fail "negative value not allowed"
 
@@ -316,3 +354,19 @@ resolveWebhook env (InputWebhook urlTemplate) = do
   let eitherRenderedTemplate = renderURLTemplate env urlTemplate
   either (throw400 Unexpected . T.pack)
     (pure . ResolvedWebhook) eitherRenderedTemplate
+
+newtype Timeout = Timeout { unTimeout :: Int }
+  deriving (Show, Eq, ToJSON, Generic, NFData, Cacheable, Lift)
+
+instance FromJSON Timeout where
+  parseJSON = withScientific "Timeout" $ \t -> do
+    timeout <- onNothing (toBoundedInteger t) $ fail (show t <> " is out of bounds")
+    case (timeout >= 0) of
+      True  -> return $ Timeout timeout
+      False -> fail "timeout value cannot be negative"
+
+instance Arbitrary Timeout where
+  arbitrary = Timeout <$> QC.choose (0, 10000000)
+
+defaultActionTimeoutSecs :: Timeout
+defaultActionTimeoutSecs = Timeout 30
