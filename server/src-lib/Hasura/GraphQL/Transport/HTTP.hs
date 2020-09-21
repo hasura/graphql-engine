@@ -134,8 +134,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
       E.SubscriptionExecutionPlan _sub ->
         throw400 UnexpectedPayload "subscriptions are not supported over HTTP, use websockets instead"
   -- The response and misc telemetry data:
-  let telemTimeIO = convertDuration telemTimeIO_DT
-      telemTimeTot = convertDuration telemTimeTot_DT
+  let telemTimeIO :: Seconds = convertDuration telemTimeIO_DT
+      telemTimeTot :: Seconds = convertDuration telemTimeTot_DT
       telemTransport = Telem.HTTP
       telemCacheHit = Telem.Miss -- TODO fix if we're reimplementing query caching
   -- Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
