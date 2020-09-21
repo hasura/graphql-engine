@@ -66,6 +66,14 @@ type SourceTables = HashMap SourceName TableCache
 
 -- Metadata API related types
 
+defaultConnSettings :: SourceConnSettings
+defaultConnSettings =
+  SourceConnSettings
+  { _scsMaxConnections = 50
+  , _scsIdleTimeout    = 180
+  , _scsRetries        = 1
+  }
+
 data SourceConnSettings
   = SourceConnSettings
   { _scsMaxConnections :: !Int
@@ -73,20 +81,28 @@ data SourceConnSettings
   , _scsRetries        :: !Int
   } deriving (Show, Eq, Lift, Generic)
 $(deriveToJSON (aesonDrop 4 snakeCase) ''SourceConnSettings)
+
 instance FromJSON SourceConnSettings where
   parseJSON = withObject "Object" $ \o ->
     SourceConnSettings
-      <$> o .:? "max_connections" .!= 50
-      <*> o .:? "idle_timeout" .!= 180
-      <*> o .:? "retries" .!= 1
+      <$> o .:? "max_connections" .!= _scsMaxConnections defaultConnSettings
+      <*> o .:? "idle_timeout"    .!= _scsIdleTimeout    defaultConnSettings
+      <*> o .:? "retries"         .!= _scsRetries        defaultConnSettings
 
 data AddPgSource
   = AddPgSource
-  { _apsName                  :: !SourceName
-  , _apsDatabaseUrl           :: !UrlConf
-  , _apsConnectionPoolSetting :: !SourceConnSettings
+  { _apsName                   :: !SourceName
+  , _apsDatabaseUrl            :: !UrlConf
+  , _apsConnectionPoolSettings :: !SourceConnSettings
   } deriving (Show, Eq, Lift)
-$(deriveJSON (aesonDrop 4 snakeCase) ''AddPgSource)
+$(deriveToJSON (aesonDrop 4 snakeCase) ''AddPgSource)
+
+instance FromJSON AddPgSource where
+  parseJSON = withObject "Object" $ \o ->
+    AddPgSource
+      <$> o .: "name"
+      <*> o .: "database_url"
+      <*> o .:? "connection_pool_settings" .!= defaultConnSettings
 
 data DropPgSource
   = DropPgSource
