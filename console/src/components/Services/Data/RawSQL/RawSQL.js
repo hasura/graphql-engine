@@ -16,7 +16,7 @@ import {
 } from '../../../Common/utils/localStorageUtils';
 
 import StatementTimeout from './StatementTimeout';
-import { parseCreateSQL } from './utils';
+import { parseCreateSQL, removeCommentsSQL } from './utils';
 import { checkSchemaModification } from '../../../Common/utils/sqlUtils';
 
 import {
@@ -161,16 +161,17 @@ const RawSQL = ({
     const handleSQLChange = val => {
       onChangeSQLText(val);
       dispatch({ type: SET_SQL, data: val });
+      const cleanSql = removeCommentsSQL(val);
 
       // set migration checkbox true
-      if (checkSchemaModification(val)) {
+      if (checkSchemaModification(cleanSql)) {
         dispatch({ type: SET_MIGRATION_CHECKED, data: true });
       } else {
         dispatch({ type: SET_MIGRATION_CHECKED, data: false });
       }
 
       // set track this checkbox true
-      const objects = parseCreateSQL(val);
+      const objects = parseCreateSQL(cleanSql);
       if (objects.length) {
         let allObjectsTrackable = true;
 

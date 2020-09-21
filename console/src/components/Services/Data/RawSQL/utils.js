@@ -1,4 +1,5 @@
 const createSQLRegex = /create\s*(?:|or\s*replace)\s*(view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/; // eslint-disable-line
+const commentsRegex = /(--[^\r\n]*)|(\/\*[\w\W]*?(?=\*\/)\*\/)/; // eslint-disable-line
 
 const getSQLValue = value => {
   const quotedStringRegex = /^".*"$/;
@@ -10,6 +11,17 @@ const getSQLValue = value => {
 
   return sqlValue.replace(/['"]+/g, '');
 };
+
+export const removeCommentsSQL = sql => {
+  const regExp = commentsRegex;
+  const comments = sql.match(new RegExp(regExp, 'gmi'));
+  
+  comments.forEach(commentString => {
+    sql = sql.replace(commentString, '');
+  });
+  
+  return sql;
+}
 
 export const parseCreateSQL = sql => {
   const _objects = [];
