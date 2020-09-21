@@ -3,12 +3,13 @@
 module Main where
 
 import           Data.Functor.Identity
+import qualified Data.List.NonEmpty as NE
 import           Data.Proxy
 import           Data.String
 import qualified Database.ODBC.SQLServer as Odbc
 import qualified Hasura.SQL.Tsql.FromIr as FromIr
-import Hasura.SQL.Tsql.ToQuery as ToQuery
-import Hasura.SQL.Tsql.Types as Tsql
+import           Hasura.SQL.Tsql.ToQuery as ToQuery
+import           Hasura.SQL.Tsql.Types as Tsql
 import           Prelude
 import           System.Environment
 import           Test.Hspec
@@ -66,7 +67,7 @@ toQueryTests = do
     (property
        (\bool ->
           shouldBe
-            (ToQuery.fromExpression (Tsql.ValueExpression (Odbc.BoolValue bool)))
+            (ToQuery.fromExpression (ValueExpression (Odbc.BoolValue bool)))
             (Odbc.toSql bool)))
   it
     "Sanity check"
@@ -75,7 +76,16 @@ toQueryTests = do
           (fromSelect
              Select
                { selectTop = Top 1
-               , selectExpression = ValueExpression (Odbc.BoolValue True)
+               , selectProjections =
+                   NE.fromList
+                     [ ExpressionProjection
+                         Aliased
+                           { aliasedThing =
+                               Tsql.ValueExpression (Odbc.BoolValue True)
+                           , aliasedAlias =
+                               Just (Alias {aliasText = "column_alias"})
+                           }
+                     ]
                , selectFrom =
                    FromQualifiedTable
                      Aliased
@@ -87,11 +97,14 @@ toQueryTests = do
                                  Just
                                    (SchemaName {schemaNameParts = ["schema"]})
                              }
-                       , aliasedColumnAlias =
-                           Just (ColumnAlias {columnAliasText = "alias"})
+                       , aliasedAlias = Just (Alias {aliasText = "alias"})
                        }
                }))
-       "SELECT\nTOP 1\n1\nFROM\n[schema].[table] AS [alias]")
+       "SELECT\n\
+       \TOP 1\n\
+       \1 AS [column_alias]\n\
+       \FROM\n\
+       \[schema].[table] AS [alias]")
 
 --------------------------------------------------------------------------------
 -- Tests that require a database connection
@@ -100,8 +113,12 @@ connectedTests :: SpecWith Odbc.Connection
 connectedTests = sanity
 
 sanity :: SpecWith Odbc.Connection
-sanity =
+sanity = do
   it
     "Query sanity check"
     (\connection ->
        shouldReturn (Odbc.query connection "select 1") [Identity (1 :: Int)])
+  it
+    "SELECT TOP 1 1"
+    (\connection ->
+       shouldReturn (Odbc.query connection "SELECT TOP 1 1") [Identity (1 :: Int)])

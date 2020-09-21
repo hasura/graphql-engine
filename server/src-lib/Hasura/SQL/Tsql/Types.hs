@@ -2,15 +2,20 @@
 
 module Hasura.SQL.Tsql.Types where
 
+import           Data.List.NonEmpty (NonEmpty(..))
 import           Data.Text (Text)
 import qualified Database.ODBC.SQLServer as Odbc
 import           Prelude
 
 data Select = Select
   { selectTop :: Top
-  , selectExpression :: Expression
+  , selectProjections :: NonEmpty Projection
   , selectFrom :: From
   } deriving (Eq, Show)
+
+data Projection =
+  ExpressionProjection (Aliased Expression)
+  deriving (Eq, Show)
 
 data Top
   = NoTop
@@ -32,15 +37,15 @@ data Qualified a = Qualified
 
 data Aliased a = Aliased
   { aliasedThing :: a
-  , aliasedColumnAlias :: Maybe ColumnAlias
+  , aliasedAlias :: Maybe Alias
   } deriving (Eq, Show, Functor)
 
 newtype SchemaName = SchemaName
   { schemaNameParts :: [Text]
   } deriving (Eq, Show)
 
-newtype ColumnAlias = ColumnAlias
-  { columnAliasText :: Text
+newtype Alias = Alias
+  { aliasText :: Text
   } deriving (Eq, Show)
 
 newtype TableName = TableName

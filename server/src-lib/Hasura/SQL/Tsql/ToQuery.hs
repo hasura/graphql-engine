@@ -5,6 +5,7 @@
 
 module Hasura.SQL.Tsql.ToQuery where
 
+import           Data.Foldable
 import           Data.List (intersperse)
 import           Data.Monoid
 import           Data.String
@@ -24,7 +25,18 @@ fromSelect Select {..} =
   mconcat
     (intersperse
        "\n"
-       ["SELECT", fromTop selectTop, fromExpression selectExpression, "FROM", fromFrom selectFrom])
+       [ "SELECT"
+       , fromTop selectTop
+       , mconcat (intersperse ", " (map fromProjection (toList selectProjections)))
+       , "FROM"
+       , fromFrom selectFrom
+       ])
+
+fromProjection :: Projection -> Query
+fromProjection =
+  \case
+    ExpressionProjection aliasedExpression ->
+      fromAliased (fmap fromExpression aliasedExpression)
 
 fromTop :: Top -> Query
 fromTop =
@@ -45,7 +57,7 @@ fromTableName TableName {tableNameText} = fromNameText tableNameText
 fromAliased :: Aliased Query -> Query
 fromAliased Aliased {..} =
   aliasedThing <>
-  maybe mempty ((" AS " <>) . fromColumnAlias) aliasedColumnAlias
+  maybe mempty ((" AS " <>) . fromAlias) aliasedAlias
 
 fromQualified :: Qualified Query -> Query
 fromQualified Qualified {..} =
@@ -54,9 +66,9 @@ fromQualified Qualified {..} =
 fromSchemaName :: SchemaName -> Query
 fromSchemaName SchemaName {schemaNameParts} =
   mconcat (intersperse "." (map fromNameText schemaNameParts))
-fromColumnAlias :: ColumnAlias -> Query
 
-fromColumnAlias (ColumnAlias text) = fromNameText text
+fromAlias :: Alias -> Query
+fromAlias (Alias text) = fromNameText text
 
 fromNameText :: Text -> Query
 fromNameText t = "[" <> fromString (T.unpack t) <> "]"
