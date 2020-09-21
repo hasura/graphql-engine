@@ -229,9 +229,7 @@ class Monad m => MonadConfigApiHandler m where
     -- ^ console assets directory
     -> Spock.SpockCtxT () m ()
 
--- instance (MonadIO m, UserAuthentication m, HttpLog m, Tracing.HasReporter m) => MonadConfigApiHandler (Tracing.TraceT m) where
---   runConfigApiHandler = configApiGetHandler
-
+-- | The graphql API (/v1/graphql) handler
 class Monad m => MonadGQLApiHandler m where
   runGQLApiHandler
     :: HasVersion
@@ -545,6 +543,8 @@ configApiGetHandler serverCtx@ServerCtx{..} consoleAssetsDir =
                 (EL._lqsOptions $ scLQState) consoleAssetsDir
       return $ JSONResp $ HttpResponse (encJFromJValue res) []
 
+-- | Default implementation of the 'MonadGQLApiHandler'
+-- | Handles the POST request to `v1/graphql`
 gqlPostApiHandler 
   ::  ( HasVersion
       , MonadIO m
@@ -755,6 +755,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       Spock.post "v1alpha1/graphql" $ spockAction GH.encodeGQErr id $
         mkPostHandler $ mkAPIRespHandler $ v1Alpha1GQHandler E.QueryHasura
 
+      -- See MonadGQLApiHandler
       runGQLApiHandler serverCtx 
 
       Spock.post "v1beta1/relay" $ spockAction GH.encodeGQErr allMod200 $
