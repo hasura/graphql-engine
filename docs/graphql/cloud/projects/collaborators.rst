@@ -1,11 +1,11 @@
 .. meta::
-   :description: Managing teams on Hasura Cloud
-   :keywords: hasura, docs, project, team
+   :description: Managing collaborators on Hasura Cloud
+   :keywords: hasura, docs, project, team, collaborators
 
-.. _manage_project_team:
+.. _manage_project_collaborators:
 
-Team tab
-========
+Project Collaborators
+=====================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -22,14 +22,14 @@ Add a collaborator
 
 Click ``New Collaborator`` to invite a new team member.
 
-.. thumbnail:: /img/graphql/cloud/projects/team-view.png
-   :alt: Team tab
+.. thumbnail:: /img/graphql/cloud/projects/collaborators-view.png
+   :alt: Collaborators tab
    :width: 1146px
 
-Team roles
-^^^^^^^^^^
+Collaborator roles
+^^^^^^^^^^^^^^^^^^
 
-Team members can have different levels of access in the Hasura console.
+Collaborators can have different levels of access in the Hasura console.
 
 - **Admin** has complete access to all project tools and configurations.
 - **User** has limited privileges:
