@@ -6,11 +6,16 @@ import           Data.Functor.Identity
 import           Data.Proxy
 import           Data.String
 import qualified Database.ODBC.SQLServer as Odbc
-import qualified Hasura.SQL.Tsql.Translate as Translate
+import qualified Hasura.SQL.Tsql.FromIr as FromIr
+import qualified Hasura.SQL.Tsql.ToQuery as ToQuery
 import qualified Hasura.SQL.Tsql.Types as Tsql
 import           Prelude
 import           System.Environment
 import           Test.Hspec
+import           Test.QuickCheck
+
+--------------------------------------------------------------------------------
+-- Main entry point
 
 main :: IO ()
 main = hspec spec
@@ -20,25 +25,53 @@ connect = do
   connectionString <- getEnv "CONNSTR"
   Odbc.connect (fromString connectionString)
 
+--------------------------------------------------------------------------------
+-- Main tests declaration
+
 spec :: SpecWith ()
 spec = do
-  describe "Compile check" pureTests
+  describe "Pure tests" pureTests
   describe
     "Connected tests"
     (beforeAll connect (afterAll Odbc.close connectedTests))
 
+--------------------------------------------------------------------------------
+-- Tests that are pure and do not require any I/O
+
 pureTests :: Spec
 pureTests = do
+  describe "IR to Tsql" fromIrTests
+  describe "Tsql to Query" toQueryTests
+
+fromIrTests :: Spec
+fromIrTests = do
   it
     "Select"
     (shouldBe
-       (runIdentity (Translate.runTranslate (Translate.fromSelect Proxy)))
-       Tsql.Select)
+       (runIdentity (FromIr.runFromIr (FromIr.fromSelect Proxy)))
+       Proxy)
   it
     "Expression"
     (shouldBe
-       (runIdentity (Translate.runTranslate (Translate.fromExpression Proxy)))
-       Tsql.Expression)
+       (runIdentity (FromIr.runFromIr (FromIr.fromExpression Proxy)))
+       Proxy)
+
+--------------------------------------------------------------------------------
+-- Tests for converting from the Tsql AST to a Query
+
+toQueryTests :: Spec
+toQueryTests =
+  it
+    "Boolean"
+    (property
+       (\bool ->
+          shouldBe
+            (ToQuery.expressionToQuery
+               (Tsql.ValueExpression (Odbc.BoolValue bool)))
+            (Odbc.toSql bool)))
+
+--------------------------------------------------------------------------------
+-- Tests that require a database connection
 
 connectedTests :: SpecWith Odbc.Connection
 connectedTests = sanity

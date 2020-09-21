@@ -108,6 +108,7 @@ library
                      , validation
                      , lifted-base
                      , pg-client
+                     , odbc
                      , validation
                      , text
                      , text-builder >= 0.6
@@ -468,7 +469,8 @@ library
                      , Hasura.SQL.Time
                      , Hasura.SQL.Types
                      , Hasura.SQL.Value
-                     , Hasura.SQL.Tsql.Translate
+                     , Hasura.SQL.Tsql.FromIr
+                     , Hasura.SQL.Tsql.ToQuery
                      , Hasura.SQL.Tsql.Types
                      , Hasura.Tracing
                      , Network.URI.Extended
@@ -562,5 +564,6 @@ test-suite tsql-tests
     , graphql-engine
     , hspec
     , odbc
+    , QuickCheck
   hs-source-dirs: src-test
   main-is: MainTsql.hs
