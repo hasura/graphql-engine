@@ -9,7 +9,7 @@ Heroku database URL sync
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 2
+  :depth: 1
   :local:
 
 Introduction
@@ -25,9 +25,9 @@ New Heroku database
 
 If you create a project with a Heroku trial database using the cloud dashboard, your project has the Heroku database URL sync enabled by default, which means, Hasura Cloud keeps the database URL of your project in sync with the related Heroku Postgres.
 
-.. note::
+.. admonition:: Supported since
 
-   Heroku Database URL sync was not automatically enabled for projects created before the the launch of this feature (Sep 19, 2020). If you wish to enable it, please do so manually via the steps in the following section.
+   Heroku Database URL sync was not automatically enabled for projects created before the the launch of this feature **(Sep 19, 2020)**. If you wish to enable it, please do so manually via the steps in the following section.
 
 Existing Heroku database
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -38,9 +38,9 @@ If you want to enable database URL sync between your Hasura cloud project and an
 
 2. Click on the ``Sync Database URL`` button.
 
-  .. thumbnail:: /img/graphql/cloud/projects/heroku-db-sync-disabled.png
-     :alt: Add collaborator
-     :width: 865px
+   .. thumbnail:: /img/graphql/cloud/projects/heroku-db-sync-disabled.png
+      :alt: Add collaborator
+      :width: 865px
 
 3. If you are not logged into Heroku, you can do so by clicking on the Heroku button.
 
