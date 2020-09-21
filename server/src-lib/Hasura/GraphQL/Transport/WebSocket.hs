@@ -363,6 +363,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           failures  = IOMap.mapMaybe leftToMaybe results
       if null failures
         then sendSuccResp (encJFromInsOrdHashMap successes) $ LQ.LiveQueryMetadata telemTimeIO_DT
+        -- TODO cleaner error reporting without partial functions
         else postExecErr requestId $ snd $ head $ IOMap.toList failures
       sendCompleted (Just requestId)
     E.MutationExecutionPlan mutationPlan -> do
@@ -380,6 +381,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           failures  = IOMap.mapMaybe leftToMaybe results
       if null failures
         then sendSuccResp (encJFromInsOrdHashMap successes) $ LQ.LiveQueryMetadata telemTimeIO_DT
+        -- TODO cleaner error reporting without partial functions
         else postExecErr requestId $ snd $ head $ IOMap.toList failures
       sendCompleted (Just requestId)
     E.SubscriptionExecutionPlan lqOp -> do
