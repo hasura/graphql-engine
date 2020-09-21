@@ -9,7 +9,7 @@ There are 2 aspects to this:
 
 ## Role-based schemas
 
-A user should have the ability to define what parts of the schema they want to expose to the user. This help in removing fields and changing types that they perhaps don't want to expose to a particular role. The fields in the schema should be a subset of the upstream schema, otherwise upstream will not know how to execute them.
+A user should have the ability to define what parts of the schema they want to expose to the user. This helps in removing fields and changing types that they perhaps don't want to expose to a particular role. The fields in the schema should be a subset of the upstream schema, otherwise upstream will not know how to execute them.
 
 ```
 type: add_remote_schema_permissions
@@ -58,7 +58,7 @@ When an operation is executed against this schema, we will also need to type che
 
 ## Argument presets
 
-The role-based schema only helps in changing the type definitions that are exposed. We also want to incorporate argument presets for fields to provide "filtered" results.
+The role-based schema only helps in changing the type definitions that are exposed. We also want to incorporate argument presets for fields to embed constraints in operations.
 
 Each field in GraphQL can take arguments that belong to input types i.e Scalar, Enum, or Input Object (and lists of these).
 
@@ -100,3 +100,7 @@ Again, we will need to type check the preset values here. One problem to tackle 
 ## Points to be noted:
 
 1. This will be a breaking change as we want to give default "deny" all fields for remote schemas. We need to introduce a flag (as was done in #2690) to enable remote schema permissions explicitly.
+
+## Future work
+
+1. Since we are doing response validation, we will be able to add additional directives which can operate on the response data (in future). For example, i) a `nullif(bool_cond)` directive on fields which replaces the value of the field with `null` if the `bool_cond` evalues to `true`. ii) a `filter(bool_cond)` on object types, which only sends values for which `bool_cond` evalues to `true` for that object type in the response.
