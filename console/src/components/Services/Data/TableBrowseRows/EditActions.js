@@ -110,12 +110,12 @@ const editItem = (tableName, colValues) => {
 
     const reqBody = {
       type: 'update',
+      source: currentDataSource,
       args: {
         table: tableDef,
         $set: _setObject,
         $default: _defaultArray,
         where: state.tables.update.pkClause,
-        source: currentDataSource,
       },
     };
     const options = {

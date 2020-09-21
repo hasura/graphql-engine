@@ -173,7 +173,7 @@ const defaultState = {
   untrackedRelations: [],
   schemaList: ['public'],
   currentSchema: 'public',
-  currentDataSource: '',
+  currentDataSource: 'default',
   adminSecretError: false,
   dataHeaders: {
     'content-type': 'application/json',

@@ -94,11 +94,11 @@ const insertItem = (tableName, colValues) => {
     }
     const reqBody = {
       type: 'insert',
+      source: currentDataSource,
       args: {
         table: { name: tableName, schema: getState().tables.currentSchema },
         objects: [insertObject],
         returning: [],
-        source: currentDataSource,
       },
     };
     const options = {

@@ -14,8 +14,8 @@ export const getRunSqlQuery = (
   if (!sql) return {};
   return {
     type: 'run_sql',
+    source,
     args: {
-      source,
       sql: terminateSql(sql),
       cascade: !!shouldCascade,
       read_only: !!readOnly,
@@ -65,8 +65,8 @@ export const getDeleteQuery = (
 ) => {
   return {
     type: 'delete',
+    source,
     args: {
-      source,
       table: {
         name: tableName,
         schema: schemaName,
@@ -92,8 +92,8 @@ export const getEnumOptionsQuery = (
   currentSource: string
 ) => ({
   type: 'select',
+  source: currentSource,
   args: {
-    source: currentSource,
     table: {
       name: request.enumTableName,
       schema: currentSchema,
@@ -140,6 +140,7 @@ export const getSelectQuery = (
 ) => {
   return {
     type,
+    source: currentDataSource || 'default',
     args: {
       table,
       columns,
@@ -147,7 +148,6 @@ export const getSelectQuery = (
       offset,
       limit,
       order_by,
-      source: currentDataSource,
     },
   };
 };

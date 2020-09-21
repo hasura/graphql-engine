@@ -13,20 +13,17 @@ import { currentDriver } from '../dataSources';
 const isMetadataV3 = (
   x: HasuraMetadataV2 | HasuraMetadataV3 | null
 ): x is HasuraMetadataV3 => {
-  return x?.version === '3';
+  return x?.version === 3;
 };
 
 export const getDataSourceMatadata = (state: ReduxState) => {
   if (isMetadataV3(state.metadata.metadataObject)) {
     const currentDataSource = state.tables.currentDataSource;
     if (!currentDataSource) return null;
-    if (currentDriver === 'mysql') {
-      return state.metadata.metadataObject.mysql_sources.find(
-        source => source.name === currentDataSource
-      );
-    }
-    return state.metadata.metadataObject.mysql_sources.find(
-      source => source.name === currentDataSource
+    return state.metadata.metadataObject.sources.find(
+      source =>
+        source.name === currentDataSource &&
+        (source.kind || 'postgres') === currentDriver
     );
   }
   return state.metadata.metadataObject;
@@ -35,20 +32,12 @@ export const getDataSourceMatadata = (state: ReduxState) => {
 export const getInitDataSource = (state: ReduxState) => {
   if (isMetadataV3(state.metadata.metadataObject)) {
     if (
-      state.metadata.metadataObject.postgres_sources &&
-      state.metadata.metadataObject.postgres_sources.length
+      state.metadata.metadataObject.sources &&
+      state.metadata.metadataObject.sources.length
     ) {
       return {
-        source: state.metadata.metadataObject.postgres_sources[0].name,
-        driver: 'postgres',
-      };
-    } else if (
-      state.metadata.metadataObject.mysql_sources &&
-      state.metadata.metadataObject.mysql_sources.length
-    ) {
-      return {
-        source: state.metadata.metadataObject.mysql_sources[0].name,
-        driver: 'mysql',
+        source: state.metadata.metadataObject.sources[0].name,
+        driver: state.metadata.metadataObject.sources[0].kind || 'postgres',
       };
     }
   }
@@ -64,6 +53,7 @@ const getInconsistentObjects = (state: ReduxState) => {
 };
 
 const getTables = createSelector(getDataSourceMatadata, source => {
+  console.log({ source });
   return source?.tables || [];
 });
 
@@ -238,38 +228,21 @@ export const getAllowedQueries = (state: ReduxState) =>
   state.metadata.allowedQueries || [];
 
 export const getDataSources = createSelector(getMetadata, metadata => {
-  console.log({ metadata });
   if (isMetadataV3(metadata)) {
+    console.log({ metadata });
     const sources: DataSource[] = [];
-    metadata.mysql_sources.forEach(source => {
+    metadata.sources.forEach(source => {
       sources.push({
         name: source.name,
-        url:
-          'from_value' in source.url
-            ? source.url.from_value
-            : source.url.from_env,
-        fromEnv: !!('from_env' in source.url && source.url.from_env),
-        connection_pool_settings: source.connection_pool_settings,
-        driver: 'mysql',
-      });
-    });
-    metadata.postgres_sources.forEach(source => {
-      sources.push({
-        name: source.name,
-        url:
-          'from_value' in source.url
-            ? source.url.from_value
-            : source.url.from_env,
-        fromEnv: !!('from_env' in source.url && source.url.from_env),
-        connection_pool_settings: source.connection_pool_settings,
-        driver: 'postgres',
+        url: source.configuration?.database_url || '???',
+        fromEnv: false, // todo
+        connection_pool_setting:
+          source.configuration?.connection_pool_setting || {},
+        driver: source.kind || 'postgres',
       });
     });
     return sources;
   }
 
-  return [
-    { name: 'Warehouse DB', driver: 'postgres' },
-    { name: 'Users DB', driver: 'mysql' },
-  ]; // todo
+  return [];
 });

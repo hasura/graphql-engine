@@ -40,7 +40,10 @@ import {
   READ_ONLY_RUN_SQL_QUERIES,
 } from '../../../helpers/versionUtils';
 import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
-import { metadataQueryTypes } from '../../../metadata/queryUtils';
+import {
+  metadataQueryTypes,
+  getSetTableEnumQuery,
+} from '../../../metadata/queryUtils';
 import { services } from '../../../dataSources/services';
 
 const SET_TABLE = 'Data/SET_TABLE';
@@ -146,6 +149,7 @@ const loadSchema = configOptions => {
 
     const body = {
       type: 'bulk',
+      source,
       args: [
         fetchTableListQuery(configOptions, source),
         fetchTrackedTableFkQuery(configOptions, source),
@@ -285,7 +289,7 @@ const fetchDataInit = () => (dispatch, getState) => {
   const url = Endpoints.query;
 
   const query = dataSource.schemaList;
-  query.args.source = getState().tables.currentDataSource;
+  query.source = getState().tables.currentDataSource;
 
   const options = {
     credentials: globalCookiePolicy,
@@ -296,7 +300,12 @@ const fetchDataInit = () => (dispatch, getState) => {
 
   return dispatch(requestAction(url, options)).then(
     data => {
-      dispatch({ type: FETCH_SCHEMA_LIST, schemaList: data });
+      dispatch({
+        type: FETCH_SCHEMA_LIST,
+        schemaList: data.result
+          .map(schema => ({ schema_name: schema[0] }))
+          .slice(1),
+      });
       dispatch(updateSchemaInfo());
     },
     error => {
@@ -311,6 +320,7 @@ const fetchFunctionInit = (schema = null) => (dispatch, getState) => {
   const source = getState().tables.currentDataSource;
   const body = {
     type: 'bulk',
+    source,
     args: [
       getRunSqlQuery(
         dataSource.getFunctionDefinitionSql(fnSchema, null, 'trackable'),
@@ -378,7 +388,8 @@ const fetchSchemaList = () => (dispatch, getState) => {
   const url = Endpoints.query;
   const currentSource = getState().tables.currentDataSource;
   const query = dataSource.schemaList;
-  query.args.source = currentSource;
+  query.source = currentSource;
+
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
@@ -387,7 +398,12 @@ const fetchSchemaList = () => (dispatch, getState) => {
   };
   return dispatch(requestAction(url, options)).then(
     data => {
-      dispatch({ type: FETCH_SCHEMA_LIST, schemaList: data });
+      dispatch({
+        type: FETCH_SCHEMA_LIST,
+        schemaList: data.result
+          .map(schema => ({ schema_name: schema[0] }))
+          .slice(1),
+      });
       return data;
     },
     error => {
@@ -403,7 +419,7 @@ export const getSchemaList = (sourceType, sourceName) => (
 ) => {
   const url = Endpoints.query;
   const query = services[sourceType].schemaList;
-  query.args.source = sourceName;
+  query.source = sourceName;
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
@@ -460,13 +476,16 @@ const makeMigrationCall = (
   skipExecution = false,
   isRetry
 ) => {
+  const source = getState().tables.currentDataSource;
   const upQuery = {
     type: 'bulk',
+    source,
     args: upQueries,
   };
 
   const downQuery = {
     type: 'bulk',
+    source,
     args: downQueries,
   };
 
@@ -480,16 +499,19 @@ const makeMigrationCall = (
   const currMigrationMode = getState().main.migrationMode;
 
   let migrateUrl = returnMigrateUrl(currMigrationMode);
-  // todo: this is a temprorary, pre-release solution
+  // todo: this is a temprorary, super ugly, pre-release solution
   if (migrateUrl === Endpoints.query) {
-    if (
-      upQueries.some(query => {
-        const type = query.type.replace('pg_', '').replace('mysql_', '');
-        metadataQueryTypes.includes(type);
-      })
-    ) {
-      migrateUrl = Endpoints.metadata;
-    }
+    upQueries.forEach(query => {
+      let type = '';
+      if (query.type === 'bulk') {
+        type = query.args[0].type.replace('pg_', '').replace('mysql_', '');
+      } else {
+        type = query.type.replace('pg_', '').replace('mysql_', '');
+      }
+      if (metadataQueryTypes.includes(type)) {
+        migrateUrl = Endpoints.metadata;
+      }
+    });
   }
 
   let finalReqBody;
@@ -604,6 +626,7 @@ const getBulkColumnInfoFetchQuery = (schema, source) => {
 
   return {
     type: 'bulk',
+    source,
     args: [fetchColumnTypes, fetchTypeDefaultValues, fetchValidTypeCasts],
   };
 };

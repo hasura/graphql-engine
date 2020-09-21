@@ -53,7 +53,7 @@ const CreateDatabase = ({ onSubmit }: CreateDatabaseProps) => {
         name: databaseName,
         driver: databaseType,
         fromEnv: urlType === 'from-env',
-        connection_pool_settings: retryConf,
+        connection_pool_setting: retryConf,
         url: databaseUrl,
       },
       () => {

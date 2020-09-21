@@ -37,6 +37,7 @@ import {
 import { showInfoNotification } from '../Common/Notification';
 import { getInitDataSource } from '../../../metadata/selector';
 import { setDriver } from '../../../dataSources';
+import { exportMetadata } from '../../../metadata/actions';
 
 const makeDataRouter = (
   connect,
@@ -138,63 +139,68 @@ const makeDataRouter = (
 
 const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
   const requireSchema = (nextState, replaceState, cb) => {
-    store.dispatch(fetchSchemaList()).then(() => {
-      // todo: probably need to add export metadata as well
-      const {
-        tables: { schemaList, allSchemas, currentSchema: prevSchema },
-        metadata,
-      } = store.getState();
+    store
+      .dispatch(exportMetadata())
+      .then(() => store.dispatch(fetchSchemaList()))
+      .then(() => {
+        const {
+          tables: { schemaList, allSchemas, currentSchema: prevSchema },
+        } = store.getState();
 
-      const { source, driver } = getInitDataSource(store.getState());
-      setDriver(driver);
+        const { source, driver } = getInitDataSource(store.getState());
+        setDriver(driver);
 
-      console.log({ source, metadata });
-
-      let currentSchema = nextState.params.schema;
-      if (currentSchema && prevSchema === currentSchema && allSchemas.length) {
-        return cb();
-      }
-
-      if (!currentSchema) {
-        if (schemaList.find(s => s.schema_name === 'public')) {
-          currentSchema = 'public';
-        } else if (schemaList.length) {
-          // select new currentSchema from schemaList
-          currentSchema = schemaList[0].schema_name;
-          if (
-            /^data|data\/schema|data\/[^\w+]/.test(nextState.location.pathname)
-          ) {
-            store.dispatch(
-              showInfoNotification(
-                `No public schema, showing ${currentSchema} schema instead`
-              )
-            );
-            // redirect to current schema instead of public
-            replaceState(`/data/schema/${currentSchema}`);
-          }
-        } else {
-          currentSchema = '';
+        let currentSchema = nextState.params.schema;
+        if (
+          currentSchema &&
+          prevSchema === currentSchema &&
+          allSchemas.length
+        ) {
+          return cb();
         }
-      }
 
-      Promise.all([
-        store.dispatch({
-          type: UPDATE_CURRENT_SCHEMA,
-          currentSchema: currentSchema,
-        }),
-        store.dispatch({
-          type: UPDATE_CURRENT_DATA_SOURCE,
-          source,
-        }),
-        store.dispatch(fetchDataInit()),
-        store.dispatch(updateSchemaInfo()),
-        store.dispatch(fetchFunctionInit()),
-      ]).then(cb, () => {
-        // alert('Could not load schema.');
-        replaceState('/');
-        cb();
+        if (!currentSchema) {
+          if (schemaList.find(s => s.schema_name === 'public')) {
+            currentSchema = 'public';
+          } else if (schemaList.length) {
+            // select new currentSchema from schemaList
+            currentSchema = schemaList[0].schema_name;
+            if (
+              /^data|data\/schema|data\/[^\w+]/.test(
+                nextState.location.pathname
+              )
+            ) {
+              store.dispatch(
+                showInfoNotification(
+                  `No public schema, showing ${currentSchema} schema instead`
+                )
+              );
+              // redirect to current schema instead of public
+              replaceState(`/data/schema/${currentSchema}`);
+            }
+          } else {
+            currentSchema = '';
+          }
+        }
+
+        Promise.all([
+          store.dispatch({
+            type: UPDATE_CURRENT_SCHEMA,
+            currentSchema: currentSchema,
+          }),
+          store.dispatch({
+            type: UPDATE_CURRENT_DATA_SOURCE,
+            source,
+          }),
+          store.dispatch(fetchDataInit()),
+          store.dispatch(updateSchemaInfo()),
+          store.dispatch(fetchFunctionInit()),
+        ]).then(cb, () => {
+          // alert('Could not load schema.');
+          replaceState('/');
+          cb();
+        });
       });
-    });
   };
 
   const migrationRedirects = (nextState, replaceState, cb) => {

@@ -59,6 +59,8 @@ export const mergeLoadSchemaData = (
       t => t.table.schema === tableSchema && t.table.name === tableName
     );
 
+    console.log({ metadataTables, metadataTable });
+
     const columns = infoSchemaTableInfo.columns;
     const comment = infoSchemaTableInfo.comment;
     const tableType = infoSchemaTableInfo.table_type;

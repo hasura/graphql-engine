@@ -4,11 +4,8 @@ export const addSource = (
   driver: Driver,
   payload: {
     name: string;
-    dbUrl: {
-      from_env?: string;
-      from_value?: string;
-    };
-    connection_pool_settings?: {
+    dbUrl: string;
+    connection_pool_setting?: {
       max_connections?: number;
       connection_idle_timeout?: number; // in seconds
     };
@@ -20,8 +17,8 @@ export const addSource = (
     type: `${typePrefix}add_source`,
     args: {
       name: payload.name,
-      url: payload.dbUrl,
-      connection_pool_settings: payload.connection_pool_settings,
+      database_url: payload.dbUrl,
+      connection_pool_setting: payload.connection_pool_setting,
     },
   };
 };

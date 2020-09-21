@@ -77,6 +77,7 @@ const vMakeRowsRequest = () => {
 
     const requestBody = {
       type: 'bulk',
+      source: currentDataSource,
       args: [
         getSelectQuery(
           'select',
@@ -162,6 +163,7 @@ const vMakeCountRequest = () => {
 
     const requestBody = {
       type: 'bulk',
+      source: currentDataSource,
       args: [timeoutQuery, selectQuery],
     };
 
@@ -305,6 +307,7 @@ const deleteItems = (pkClauses, tableName, tableSchema) => {
 
     const reqBody = {
       type: 'bulk',
+      source,
       args: getBulkDeleteQuery(pkClauses, tableName, tableSchema, source),
     };
     const options = {

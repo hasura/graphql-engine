@@ -27,7 +27,7 @@ const CONNECTION_FAILED = 'App/CONNECTION_FAILED';
 export const requireAsyncGlobals = ({ dispatch }) => {
   return (nextState, finalState, callback) => {
     Promise.all([
-      dispatch(loadConsoleOpts()),
+      // dispatch(loadConsoleOpts()), todo
       dispatch(fetchServerConfig),
     ]).finally(callback);
   };

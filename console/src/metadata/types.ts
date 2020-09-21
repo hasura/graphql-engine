@@ -5,7 +5,7 @@ export type DataSource = {
   url: string;
   fromEnv: boolean;
   driver: Driver;
-  connection_pool_settings?: {
+  connection_pool_setting?: {
     max_connections?: number;
     connection_idle_timeout?: number;
   };
@@ -846,14 +846,13 @@ export interface HasuraMetadataV2 {
 
 export interface MetadataDataSource {
   name: string;
-  url:
-    | {
-        from_env: string;
-      }
-    | { from_value: string };
-  connection_pool_settings: {
-    max_connections?: number;
-    connection_idle_timeout?: number;
+  kind?: 'postgres' | 'mysql';
+  configuration?: {
+    database_url: string;
+    connection_pool_setting?: {
+      max_connections?: number;
+      connection_idle_timeout?: number;
+    };
   };
   tables: TableEntry[];
   actions?: Action[];
@@ -869,7 +868,6 @@ export interface MetadataDataSource {
 }
 
 export interface HasuraMetadataV3 {
-  version: '3';
-  postgres_sources: MetadataDataSource[];
-  mysql_sources: MetadataDataSource[];
+  version: 3;
+  sources: MetadataDataSource[];
 }

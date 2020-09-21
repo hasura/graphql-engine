@@ -180,47 +180,49 @@ export const getGroupedTableComputedFields = (
 };
 
 const schemaList = {
-  type: 'select',
+  type: 'run_sql',
   args: {
-    table: {
-      name: 'schemata',
-      schema: 'information_schema',
-    },
-    columns: ['schema_name'],
-    order_by: [{ column: 'schema_name', type: 'asc', nulls: 'last' }],
-    where: {
-      schema_name: {
-        $nin: ['information_schema', 'pg_catalog'],
-      },
-    },
+    // todo: use getRunSql, leave only string, fix not in
+    sql: `
+  select schema_name from information_schema.schemata where schema_name not in (
+    'information_schema',
+    'pg_catalog',
+    'hdb_catalog',
+    'hdb_views',
+    'pg_temp_1',
+    'pg_toast',
+    'pg_toast_temp_1'
+  ) order by schema_name asc;
+    `,
   },
 };
 
-const additionalColumnsInfoQuery = (
-  schemaName: string,
-  currentSource: string
-) => ({
-  type: 'select',
-  args: {
-    source: currentSource,
-    table: {
-      name: 'columns',
-      schema: 'information_schema',
-    },
-    columns: [
-      'column_name',
-      'table_name',
-      'is_generated',
-      'is_identity',
-      'identity_generation',
-    ],
-    where: {
-      table_schema: {
-        $eq: schemaName,
-      },
-    },
-  },
-});
+const additionalColumnsInfoQuery = undefined;
+// (
+//   schemaName: string,
+//   currentSource: string
+// ) => ({
+//   type: 'select',
+//   source: currentSource,
+//   args: {
+//     table: {
+//       name: 'columns',
+//       schema: 'information_schema',
+//     },
+//     columns: [
+//       'column_name',
+//       'table_name',
+//       'is_generated',
+//       'is_identity',
+//       'identity_generation',
+//     ],
+//     where: {
+//       table_schema: {
+//         $eq: schemaName,
+//       },
+//     },
+//   },
+// });
 
 type ColumnsInfoPayload = {
   column_name: string;

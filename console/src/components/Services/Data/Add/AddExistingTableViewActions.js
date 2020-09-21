@@ -15,6 +15,7 @@ import {
   getUntrackTableQuery,
   getTrackFunctionQuery,
   getUntrackFunctionQuery,
+  getTrackTableQuery,
 } from '../../../../metadata/queryUtils';
 
 const SET_DEFAULTS = 'AddExistingTable/SET_DEFAULTS';
@@ -35,32 +36,24 @@ const addExistingTableSql = () => {
     const currentDataSource = getState().tables.currentDataSource;
     const tableName = state.tableName.trim();
 
-    const requestBodyUp = addExistingTableOrView(
-      tableName,
-      currentSchema,
+    const requestBodyUp = getTrackTableQuery(
+      {
+        name: tableName,
+        schema: currentSchema,
+      },
       currentDataSource
     );
 
     const requestBodyDown = getUntrackTableQuery(
       {
-        table: {
-          name: tableName,
-          schema: currentSchema,
-        },
+        name: tableName,
+        schema: currentSchema,
       },
       currentDataSource
     );
 
     const migrationName =
       'add_existing_table_or_view_' + currentSchema + '_' + tableName;
-    const upQuery = {
-      type: 'bulk',
-      args: [requestBodyUp],
-    };
-    const downQuery = {
-      type: 'bulk',
-      args: [requestBodyDown],
-    };
 
     const requestMsg = 'Adding existing table/view...';
     const successMsg = 'Existing table/view added';
@@ -86,8 +79,8 @@ const addExistingTableSql = () => {
     makeMigrationCall(
       dispatch,
       getState,
-      upQuery.args,
-      downQuery.args,
+      [requestBodyUp],
+      [requestBodyDown],
       migrationName,
       customOnSuccess,
       customOnError,
