@@ -12,8 +12,9 @@ import           Prelude
 newtype FromIr a = FromIr { runFromIr :: Identity a}
   deriving (Functor, Applicative)
 
-fromSelect :: Proxy (Ir.AnnSelectG (Ir.AnnFieldsG Ir.SQLExp) Ir.SQLExp) -> FromIr (Proxy Tsql.Select)
-fromSelect _ = pure Proxy
+fromSelect :: Ir.AnnSelectG (Ir.AnnFieldsG Ir.SQLExp) Ir.SQLExp -> FromIr (Proxy Tsql.Select)
+fromSelect Ir.AnnSelectG {_asnFields, _asnFrom, _asnPerm, _asnArgs, _asnStrfyNum} =
+  pure Proxy
 
 fromExpression :: Proxy Ir.SQLExp -> FromIr (Proxy Tsql.Expression)
 fromExpression _ = pure Proxy

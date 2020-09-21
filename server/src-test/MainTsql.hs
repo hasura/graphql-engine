@@ -7,9 +7,12 @@ import qualified Data.List.NonEmpty as NE
 import           Data.Proxy
 import           Data.String
 import qualified Database.ODBC.SQLServer as Odbc
-import qualified Hasura.SQL.Tsql.FromIr as FromIr
+import qualified Hasura.RQL.DML.Select.Types as Ir
+import qualified Hasura.RQL.Types.BoolExp as Ir
+import           Hasura.SQL.Tsql.FromIr as FromIr
 import           Hasura.SQL.Tsql.ToQuery as ToQuery
 import           Hasura.SQL.Tsql.Types as Tsql
+import qualified Hasura.SQL.Types as Sql
 import           Prelude
 import           System.Environment
 import           Test.Hspec
@@ -49,7 +52,30 @@ fromIrTests = do
   it
     "Select"
     (shouldBe
-       (runIdentity (FromIr.runFromIr (FromIr.fromSelect Proxy)))
+       (runIdentity
+          (FromIr.runFromIr
+             (FromIr.fromSelect
+                Ir.AnnSelectG
+                  { _asnFields = []
+                  , _asnFrom =
+                      Ir.FromTable
+                        Sql.QualifiedObject
+                          { qSchema = Sql.SchemaName "dbo"
+                          , qName = Sql.TableName "albums"
+                          }
+                  , _asnPerm =
+                      Ir.TablePerm
+                        {_tpFilter = Ir.BoolOr [], _tpLimit = Just 10}
+                  , _asnArgs =
+                      Ir.SelectArgs
+                        { _saWhere = Nothing
+                        , _saOrderBy = Nothing
+                        , _saLimit = Nothing
+                        , _saOffset = Nothing
+                        , _saDistinct = Nothing
+                        }
+                  , _asnStrfyNum = False
+                  })))
        Proxy)
   it
     "Expression"
@@ -73,7 +99,7 @@ toQueryTests = do
     "Sanity check"
     (shouldBe
        (Odbc.renderQuery
-          (fromSelect
+          (ToQuery.fromSelect
              Select
                { selectTop = Top 1
                , selectProjections =
