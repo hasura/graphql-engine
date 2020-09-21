@@ -25,7 +25,7 @@ Create a table
 Head to the Hasura console, navigate to ``Data -> Create table`` and create a sample table called ``profile`` with
 the following columns:
 
-Let's say we have the following schema:
+Let's say we have the following table:
 
 .. code-block:: sql
 
