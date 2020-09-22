@@ -2,11 +2,10 @@
 
 module Main where
 
+import           Control.Monad.Validate
 import           Data.Functor.Identity
 import qualified Data.List.NonEmpty as NE
-import           Data.Proxy
 import           Data.String
-import           Data.Validation
 import qualified Database.ODBC.SQLServer as Odbc
 import qualified Hasura.RQL.DML.Select.Types as Ir
 import qualified Hasura.RQL.Types.BoolExp as Ir
@@ -79,35 +78,40 @@ fromIrTests = do
     (property
        (\limit fieldText fieldAlias schemaName tableName ->
           shouldBe
-            (FromIr.runFromIr
-               (FromIr.fromSelectFields
-                  Ir.AnnSelectG
-                    { _asnFields =
-                        [ ( fromString fieldAlias
-                          , Ir.AFExpression (fromString fieldText))
-                        ]
-                    , _asnFrom =
-                        Ir.FromTable
-                          Sql.QualifiedObject
-                            { qSchema = Sql.SchemaName schemaName
-                            , qName = Sql.TableName tableName
-                            }
-                    , _asnPerm =
-                        Ir.TablePerm
-                          {_tpFilter = Ir.BoolOr [], _tpLimit = Just limit}
-                    , _asnArgs =
-                        Ir.SelectArgs
-                          { _saWhere = Nothing
-                          , _saOrderBy = Nothing
-                          , _saLimit = Nothing
-                          , _saOffset = Nothing
-                          , _saDistinct = Nothing
-                          }
-                    , _asnStrfyNum = False
-                    }))
-            (Success
+            (runValidate
+               (FromIr.runFromIr
+                  (FromIr.fromSelectFields
+                     Ir.AnnSelectG
+                       { _asnFields =
+                           [ ( fromString fieldAlias
+                             , Ir.AFExpression (fromString fieldText))
+                           ]
+                       , _asnFrom =
+                           Ir.FromTable
+                             Sql.QualifiedObject
+                               { qSchema = Sql.SchemaName schemaName
+                               , qName = Sql.TableName tableName
+                               }
+                       , _asnPerm =
+                           Ir.TablePerm
+                             {_tpFilter = Ir.BoolOr [], _tpLimit = Just limit}
+                       , _asnArgs =
+                           Ir.SelectArgs
+                             { _saWhere = Nothing
+                             , _saOrderBy = Nothing
+                             , _saLimit = Nothing
+                             , _saOffset = Nothing
+                             , _saDistinct = Nothing
+                             }
+                       , _asnStrfyNum = False
+                       })))
+            (Right
                Select
-                 { selectTop = Commented {commentedComment = Just DueToPermission, commentedThing=Top limit}
+                 { selectTop =
+                     Commented
+                       { commentedComment = Just DueToPermission
+                       , commentedThing = Top limit
+                       }
                  , selectProjections =
                      NE.fromList
                        [ ExpressionProjection
@@ -128,14 +132,13 @@ fromIrTests = do
                                { qualifiedThing =
                                    TableName {tableNameText = tableName}
                                , qualifiedSchemaName =
-                                   Just (SchemaName {schemaNameParts = [schemaName]})
+                                   Just
+                                     (SchemaName
+                                        {schemaNameParts = [schemaName]})
                                }
                          , aliasedAlias = Nothing
                          }
                  })))
-  it
-    "Expression"
-    (shouldBe (FromIr.runFromIr (FromIr.fromExpression Proxy)) (Success Proxy))
 
 --------------------------------------------------------------------------------
 -- Tests for converting from the Tsql AST to a Query
