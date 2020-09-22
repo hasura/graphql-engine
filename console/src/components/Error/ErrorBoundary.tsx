@@ -11,9 +11,9 @@ import RuntimeError from './RuntimeError';
 import { registerRunTimeError } from '../Main/Actions';
 
 export interface Metadata {
-  inconsistentObjects: object[];
+  inconsistentObjects: Record<string, unknown>[];
   ongoingRequest: boolean;
-  allowedQueries: object[];
+  allowedQueries: Record<string, unknown>[];
 }
 
 export interface ErrorBoundaryProps {

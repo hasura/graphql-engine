@@ -774,7 +774,7 @@ class PermissionBuilder extends React.Component {
 
       const _tableExp = [
         { key: 'schema', value: schemaSelect },
-        { key: 'table', value: tableSelect },
+        { key: 'name', value: tableSelect },
       ];
 
       return <QueryBuilderJson element={_tableExp} />;

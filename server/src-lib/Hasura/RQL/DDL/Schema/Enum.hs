@@ -53,7 +53,7 @@ resolveEnumReferences enumTables =
     resolveEnumReference foreignKey = do
       [(localColumn, foreignColumn)] <- pure $ M.toList (_fkColumnMapping foreignKey)
       (primaryKey, enumValues) <- M.lookup (_fkForeignTable foreignKey) enumTables
-      guard (_pkColumns primaryKey == NESeq.NESeq (foreignColumn, Seq.Empty))
+      guard (_pkColumns primaryKey == foreignColumn NESeq.:<|| Seq.Empty)
       pure (localColumn, EnumReference (_fkForeignTable foreignKey) enumValues)
 
 data EnumTableIntegrityError
@@ -79,14 +79,12 @@ fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
     fetchAndValidate = do
       primaryKeyColumn <- tolerate validatePrimaryKey
       maybeCommentColumn <- validateColumns primaryKeyColumn
-      enumValues <- maybe (refute mempty) (fetchEnumValues maybeCommentColumn) primaryKeyColumn
-      validateEnumValues enumValues
-      pure enumValues
+      maybe (refute mempty) (fetchEnumValues maybeCommentColumn) primaryKeyColumn
       where
         validatePrimaryKey = case maybePrimaryKey of
           Nothing -> refute [EnumTableMissingPrimaryKey]
           Just primaryKey -> case _pkColumns primaryKey of
-            NESeq.NESeq (column, Seq.Empty) -> case prciType column of
+            column NESeq.:<|| Seq.Empty -> case prciType column of
               PGText -> pure column
               _      -> refute [EnumTableNonTextualPrimaryKey column]
             columns -> refute [EnumTableMultiColumnPrimaryKey $ map prciName (toList columns)]
@@ -106,22 +104,23 @@ fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
               query = Q.fromBuilder $ toSQL S.mkSelect
                 { S.selFrom = Just $ S.mkSimpleFromExp tableName
                 , S.selExtr = [S.mkExtr (prciName primaryKeyColumn), commentExtr] }
-          fmap mkEnumValues . liftTx $ Q.withQE defaultTxErrorHandler query () True
-
-        mkEnumValues rows = M.fromList . flip map rows $ \(key, comment) ->
-          (EnumValue key, EnumValueInfo comment)
-
-        validateEnumValues enumValues = do
-          let enumValueNames = map (G.Name . getEnumValue) (M.keys enumValues)
-          when (null enumValueNames) $
-            refute [EnumTableNoEnumValues]
-          let badNames = map G.unName $ filter (not . isValidEnumName) enumValueNames
-          for_ (NE.nonEmpty badNames) $ \someBadNames ->
-            refute [EnumTableInvalidEnumValueNames someBadNames]
+          rawEnumValues <- liftTx $ Q.withQE defaultTxErrorHandler query () True
+          when (null rawEnumValues) $ dispute [EnumTableNoEnumValues]
+          let enumValues = flip map rawEnumValues $
+                \(enumValueText, comment) ->
+                  case mkValidEnumValueName enumValueText of
+                    Nothing        -> Left enumValueText
+                    Just enumValue -> Right (EnumValue enumValue, EnumValueInfo comment)
+              badNames = lefts enumValues
+              validEnums = rights enumValues
+          case NE.nonEmpty badNames of
+            Just someBadNames -> refute [EnumTableInvalidEnumValueNames someBadNames]
+            Nothing           -> pure $ M.fromList validEnums
 
         -- https://graphql.github.io/graphql-spec/June2018/#EnumValue
-        isValidEnumName name =
-          G.isValidName name && name `notElem` ["true", "false", "null"]
+        mkValidEnumValueName name =
+          if name `elem` ["true", "false", "null"] then Nothing
+          else G.mkName name
 
     showErrors :: [EnumTableIntegrityError] -> T.Text
     showErrors allErrors =

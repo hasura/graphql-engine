@@ -110,7 +110,8 @@ export const getErrorMessage = (
         notificationMessage = error.code;
       }
     } else if ('internal' in error && 'error' in error.internal) {
-      notificationMessage = `${error.code} : ${error.internal.error.message}`;
+      notificationMessage = `${error.internal.error.message}.
+      ${error.internal.error.description}`;
     } else if ('custom' in error) {
       notificationMessage = error.custom;
     } else if ('code' in error && 'error' in error && 'path' in error) {
@@ -241,11 +242,15 @@ const showInfoNotification = (title: string): Thunk => {
 const showWarningNotification = (
   title: string,
   message: string,
-  dataObj: Json
+  dataObj?: Json,
+  child?: JSX.Element
 ): Thunk => {
   const children: JSX.Element[] = [];
   if (dataObj) {
     children.push(getNotificationDetails(dataObj, null));
+  }
+  if (child) {
+    children.push(child);
   }
 
   return dispatch => {
