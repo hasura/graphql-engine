@@ -9,10 +9,12 @@ import           Data.String
 import qualified Database.ODBC.SQLServer as Odbc
 import qualified Hasura.RQL.DML.Select.Types as Ir
 import qualified Hasura.RQL.Types.BoolExp as Ir
+import qualified Hasura.RQL.Types.Column as Ir
 import           Hasura.SQL.Tsql.FromIr as FromIr
 import           Hasura.SQL.Tsql.ToQuery as ToQuery
 import           Hasura.SQL.Tsql.Types as Tsql
 import qualified Hasura.SQL.Types as Sql
+import qualified Language.GraphQL.Draft.Syntax as G
 import           Prelude
 import           System.Environment
 import           Test.Hspec
@@ -94,7 +96,21 @@ fromIrTests = do
                                }
                        , _asnPerm =
                            Ir.TablePerm
-                             {_tpFilter = Ir.BoolAnd [], _tpLimit = Just limit}
+                             { _tpFilter =
+                                 Ir.BoolFld
+                                   (Ir.AVCol
+                                      (Ir.PGColumnInfo
+                                         { pgiColumn = Sql.unsafePGCol "somecol"
+                                         , pgiName = G.unsafeMkName "somecol"
+                                         , pgiPosition = 0
+                                         , pgiType =
+                                             Ir.PGColumnScalar Sql.PGSmallInt
+                                         , pgiIsNullable = False
+                                         , pgiDescription = Nothing
+                                         })
+                                      [Ir.ANISNULL])
+                             , _tpLimit = Just limit
+                             }
                        , _asnArgs =
                            Ir.SelectArgs
                              { _saWhere = Nothing
@@ -138,7 +154,10 @@ fromIrTests = do
                                }
                          , aliasedAlias = Nothing
                          }
-                 , selectWhere = ExpressionWhere (AndExpression [])
+                 , selectWhere =
+                     ExpressionWhere
+                       (AndExpression
+                          [IsNullExpression (ColumnExpression "somecol")])
                  })))
 
 --------------------------------------------------------------------------------

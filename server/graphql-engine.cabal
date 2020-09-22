@@ -566,5 +566,6 @@ test-suite tsql-tests
     , odbc
     , monad-validate
     , QuickCheck
+    , graphql-parser
   hs-source-dirs: src-test
   main-is: MainTsql.hs
