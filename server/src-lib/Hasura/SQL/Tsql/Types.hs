@@ -30,10 +30,12 @@ data Top
 
 data Expression
   = ValueExpression Odbc.Value
-  | AndExpression (NonEmpty Expression)
-  | OrExpression (NonEmpty Expression)
+  | AndExpression [Expression]
+  | OrExpression [Expression]
   | NotExpression Expression
   | SelectExpression Select
+  | IsNullExpression Expression
+  | ColumnExpression Text
   deriving (Eq, Show)
 
 data From =

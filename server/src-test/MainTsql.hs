@@ -138,7 +138,7 @@ fromIrTests = do
                                }
                          , aliasedAlias = Nothing
                          }
-                 , selectWhere = NoWhere
+                 , selectWhere = ExpressionWhere (AndExpression [])
                  })))
 
 --------------------------------------------------------------------------------
