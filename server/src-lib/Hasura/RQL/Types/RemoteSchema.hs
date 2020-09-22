@@ -3,19 +3,21 @@ module Hasura.RQL.Types.RemoteSchema where
 import           Hasura.Prelude
 import           Language.Haskell.TH.Syntax (Lift)
 
-import qualified Data.Aeson                 as J
-import qualified Data.Aeson.Casing          as J
-import qualified Data.Aeson.TH              as J
-import qualified Data.Text                  as T
-import qualified Database.PG.Query          as Q
-import qualified Network.URI.Extended       as N
-import qualified Data.Environment           as Env
+import qualified Data.Aeson                    as J
+import qualified Data.Aeson.Casing             as J
+import qualified Data.Aeson.TH                 as J
+import qualified Data.Text                     as T
+import qualified Database.PG.Query             as Q
+import qualified Network.URI.Extended          as N
+import qualified Data.Environment              as Env
+import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.Incremental         (Cacheable)
 import           Hasura.RQL.DDL.Headers     (HeaderConf (..))
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 type UrlFromEnv = Text
 
@@ -110,3 +112,38 @@ validateRemoteSchemaDef env (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout)
     hdrs = fromMaybe [] hdrC
 
     timeout = fromMaybe 60 mTimeout
+
+data RemoteSchemaPermissionDefinition
+  = RemoteSchemaPermissionDefinition
+  { _rspdSchema    :: !G.SchemaDocument
+    -- FIXME: not sure, if this is a hack (to store the "raw" schema) in a Text field
+    -- rather than generating the `schema` again from `_rspdSchema`. Event if it were
+    -- to be done, the result will be exactly the same!
+  , _rspdRawSchema :: !Text
+  }  deriving (Show, Eq, Lift, Generic)
+instance NFData RemoteSchemaPermissionDefinition
+instance Cacheable RemoteSchemaPermissionDefinition
+
+instance J.FromJSON RemoteSchemaPermissionDefinition where
+  parseJSON = J.withObject "RemoteSchemaPermissionDefinition" $ \obj -> do
+    schema <- obj J..: "schema"
+    flip (J.withText "schema") schema $ \t ->
+      let schemaDoc = J.fromJSON $ J.String t
+      in
+      case schemaDoc of
+        J.Error err -> fail err
+        J.Success a -> return $ RemoteSchemaPermissionDefinition a t
+
+instance J.ToJSON RemoteSchemaPermissionDefinition where
+  toJSON (RemoteSchemaPermissionDefinition _ rawSchema) = J.String rawSchema
+
+data AddRemoteSchemaPermissions
+  = AddRemoteSchemaPermissions
+  { _arspRemoteSchema :: !RemoteSchemaName
+  , _arspRole         :: !RoleName
+  , _arspDefinition   :: !RemoteSchemaPermissionDefinition
+  , _arspComment      :: !(Maybe Text)
+  } deriving (Show, Eq, Lift, Generic)
+instance NFData AddRemoteSchemaPermissions
+instance Cacheable AddRemoteSchemaPermissions
+$(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''AddRemoteSchemaPermissions)

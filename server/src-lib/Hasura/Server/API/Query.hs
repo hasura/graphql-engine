@@ -93,6 +93,7 @@ data RQLQueryV1
   | RQRemoveRemoteSchema !RemoteSchemaNameQuery
   | RQReloadRemoteSchema !RemoteSchemaNameQuery
   | RQIntrospectRemoteSchema !RemoteSchemaNameQuery
+  | RQAddRemoteSchemaPermissions !AddRemoteSchemaPermissions
 
   | RQCreateEventTrigger !CreateEventTriggerQuery
   | RQDeleteEventTrigger !DeleteEventTriggerQuery
@@ -271,6 +272,7 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQRemoveRemoteSchema _          -> True
   RQReloadRemoteSchema _          -> True
   RQIntrospectRemoteSchema _      -> False
+  RQAddRemoteSchemaPermissions _  -> True
 
   RQCreateEventTrigger _          -> True
   RQDeleteEventTrigger _          -> True
@@ -398,10 +400,11 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQDelete q                   -> runDelete env q
       RQCount  q                   -> runCount q
 
-      RQAddRemoteSchema    q       -> runAddRemoteSchema env q
-      RQRemoveRemoteSchema q       -> runRemoveRemoteSchema q
-      RQReloadRemoteSchema q       -> runReloadRemoteSchema q
-      RQIntrospectRemoteSchema q   -> runIntrospectRemoteSchema q
+      RQAddRemoteSchema    q          -> runAddRemoteSchema env q
+      RQRemoveRemoteSchema q          -> runRemoveRemoteSchema q
+      RQReloadRemoteSchema q          -> runReloadRemoteSchema q
+      RQIntrospectRemoteSchema q      -> runIntrospectRemoteSchema q
+      RQAddRemoteSchemaPermissions q  -> runAddRemoteSchemaPermissions q
 
       RQCreateRemoteRelationship q -> runCreateRemoteRelationship q
       RQUpdateRemoteRelationship q -> runUpdateRemoteRelationship q
@@ -497,6 +500,7 @@ requiresAdmin = \case
     RQRemoveRemoteSchema _          -> True
     RQReloadRemoteSchema _          -> True
     RQIntrospectRemoteSchema _      -> True
+    RQAddRemoteSchemaPermissions _  -> True
 
     RQCreateEventTrigger _          -> True
     RQDeleteEventTrigger _          -> True

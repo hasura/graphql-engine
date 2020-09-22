@@ -243,6 +243,9 @@ deriving instance Cacheable G.Description
 deriving instance Cacheable G.EnumValue
 deriving instance Cacheable a => Cacheable (G.ExecutableDocument a)
 
+instance Cacheable G.RootOperationTypeDefinition
+instance Cacheable G.SchemaDefinition
+instance Cacheable G.TypeSystemDefinition
 instance Cacheable G.SchemaDocument
 instance Cacheable G.SchemaIntrospection
 

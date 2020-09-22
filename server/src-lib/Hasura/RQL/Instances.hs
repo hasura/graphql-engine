@@ -27,6 +27,10 @@ instance NFData G.FragmentDefinition
 instance NFData G.GType
 instance NFData G.OperationType
 instance NFData G.VariableDefinition
+instance NFData G.SchemaDefinition
+instance NFData G.RootOperationTypeDefinition
+instance NFData G.TypeSystemDefinition
+instance NFData G.SchemaDocument
 instance NFData UT.Variable
 instance NFData UT.TemplateItem
 instance NFData UT.URLTemplate
@@ -42,6 +46,16 @@ instance (NFData (a b), NFData b) => NFData (G.InlineFragment a b)
 instance (NFData (a b), NFData b) => NFData (G.OperationDefinition a b)
 instance (NFData (a b), NFData b) => NFData (G.Selection a b)
 instance (NFData (a b), NFData b) => NFData (G.TypedOperationDefinition a b)
+instance NFData G.InputValueDefinition
+instance NFData G.InputObjectTypeDefinition
+instance NFData G.ObjectTypeDefinition
+instance NFData G.UnionTypeDefinition
+instance NFData G.EnumTypeDefinition
+instance NFData G.EnumValueDefinition
+instance NFData G.FieldDefinition
+instance NFData G.ScalarTypeDefinition
+instance NFData a => NFData (G.InterfaceTypeDefinition a)
+instance (NFData a) => NFData (G.TypeDefinition a)
 instance NFData a => NFData (G.Value a)
 
 deriving instance NFData G.Description

@@ -10,6 +10,8 @@ module Hasura.RQL.DDL.RemoteSchema
   , addRemoteSchemaP2
   , runIntrospectRemoteSchema
   , addRemoteSchemaToCatalog
+  , addRemoteSchemaPermissionsToCatalog
+  , runAddRemoteSchemaPermissions
   ) where
 
 import           Control.Monad.Unique
@@ -50,6 +52,21 @@ runAddRemoteSchema env q = do
   pure successMsg
   where
     name = _arsqName q
+
+runAddRemoteSchemaPermissions
+  :: ( HasVersion
+     , QErrM m
+     , CacheRWM m
+     , MonadTx m
+     , MonadIO m
+     , MonadUnique m
+     , HasHttpManager m
+     )
+  => AddRemoteSchemaPermissions
+  -> m EncJSON
+runAddRemoteSchemaPermissions q = do
+  liftTx $ addRemoteSchemaPermissionsToCatalog q
+  pure successMsg
 
 addRemoteSchemaP1
   :: (QErrM m, CacheRM m)
@@ -118,6 +135,16 @@ addRemoteSchemaToCatalog (AddRemoteSchemaQuery name def comment) =
       (name, definition, comment)
       VALUES ($1, $2, $3)
   |] (name, Q.AltJ $ J.toJSON def, comment) True
+
+addRemoteSchemaPermissionsToCatalog
+  :: AddRemoteSchemaPermissions
+  -> Q.TxE QErr ()
+addRemoteSchemaPermissionsToCatalog (AddRemoteSchemaPermissions name role def comment) =
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+    INSERT into hdb_catalog.hdb_remote_schema_permission
+      (remote_schema_name, role_name, definition, comment)
+      VALUES ($1, $2, $3, $4)
+  |] (name, role, Q.AltJ $ J.toJSON def, comment) True
 
 removeRemoteSchemaFromCatalog :: RemoteSchemaName -> Q.TxE QErr ()
 removeRemoteSchemaFromCatalog name =
