@@ -69,7 +69,9 @@ Let's take a look at an example where the ``SETOF`` table is already part of the
 
 Let's say we have the following schema:
 
-author (id uuid, name text, city text, email text, phone integer, address text)
+.. code-block:: plpgsql
+
+  article (id uuid, title text, content text)
 
 Let's say we've created and tracked a custom function, ``search_articles``, with the following definition:
 
