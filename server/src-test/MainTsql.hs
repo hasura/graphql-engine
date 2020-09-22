@@ -94,7 +94,7 @@ fromIrTests = do
                                }
                        , _asnPerm =
                            Ir.TablePerm
-                             {_tpFilter = Ir.BoolOr [], _tpLimit = Just limit}
+                             {_tpFilter = Ir.BoolAnd [], _tpLimit = Just limit}
                        , _asnArgs =
                            Ir.SelectArgs
                              { _saWhere = Nothing

@@ -9,14 +9,16 @@ module Hasura.SQL.Tsql.FromIr
   , FromIr
   ) where
 
-import           Data.List.NonEmpty (NonEmpty(..))
-import qualified Data.List.NonEmpty as NE
+import           Control.Monad
 import           Control.Monad.Validate
+import           Data.List.NonEmpty (NonEmpty(..))
 import qualified Database.ODBC.SQLServer as Odbc
+import qualified Data.List.NonEmpty as NE
 import qualified Hasura.RQL.DML.Select.Types as Ir
-import qualified Hasura.SQL.DML as Ir
-import           Hasura.SQL.Tsql.Types as Tsql
+import qualified Hasura.RQL.Types.BoolExp as Ir
 import qualified Hasura.RQL.Types.Common as Ir
+import qualified Hasura.SQL.DML as Sql
+import           Hasura.SQL.Tsql.Types as Tsql
 import qualified Hasura.SQL.Types as Sql
 import           Prelude
 
@@ -24,8 +26,10 @@ import           Prelude
 -- Types
 
 data Error
-  = FromTypeUnsupported (Ir.SelectFromG Ir.SQLExp)
-  | FieldTypeUnsupported (Ir.AnnFieldG Ir.SQLExp)
+  = FromTypeUnsupported (Ir.SelectFromG Sql.SQLExp)
+  | FieldTypeUnsupported (Ir.AnnFieldG Sql.SQLExp)
+  | AmbiguousAnd
+  | AmbiguousOr
   deriving (Show, Eq)
 
 newtype FromIr a = FromIr { runFromIr :: Validate (NonEmpty Error) a}
@@ -34,13 +38,14 @@ newtype FromIr a = FromIr { runFromIr :: Validate (NonEmpty Error) a}
 --------------------------------------------------------------------------------
 -- Conversion functions
 
-fromSelectFields :: Ir.AnnSelectG (Ir.AnnFieldsG Ir.SQLExp) Ir.SQLExp -> FromIr Tsql.Select
+fromSelectFields :: Ir.AnnSelectG (Ir.AnnFieldsG Sql.SQLExp) Sql.SQLExp -> FromIr Tsql.Select
 fromSelectFields annSelectG = do
   fields <- traverse fromProjection _asnFields
   selectFrom <-
     case _asnFrom of
       Ir.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
       _ -> FromIr (refute (pure (FromTypeUnsupported _asnFrom)))
+  filterExpression <- fromAnnBoolExp permFilter
   pure
     Select
       { selectTop =
@@ -53,12 +58,52 @@ fromSelectFields annSelectG = do
                 }
       , selectProjections = NE.fromList fields
       , selectFrom
-      , selectWhere = NoWhere
+      , selectWhere = ExpressionWhere filterExpression
       }
   where
     Ir.AnnSelectG {_asnFields, _asnFrom, _asnPerm, _asnArgs, _asnStrfyNum} =
       annSelectG
     Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = _asnPerm
+
+fromAnnBoolExp :: Ir.GBoolExp (Ir.AnnBoolExpFld Sql.SQLExp) -> FromIr Expression
+fromAnnBoolExp = traverse fromAnnBoolExpFld >=> fromGBoolExp
+
+fromAnnBoolExpFld :: Ir.AnnBoolExpFld Sql.SQLExp -> FromIr Expression
+fromAnnBoolExpFld =
+  \case
+    Ir.AVCol pgColumnInfo opExpGs -> undefined
+    Ir.AVRel relInfo annBoolExp -> undefined
+
+fromGBoolExp :: Ir.GBoolExp Expression -> FromIr Expression
+fromGBoolExp =
+  \case
+    Ir.BoolAnd expressions ->
+      case NE.nonEmpty expressions of
+        Nothing -> FromIr (refute (pure AmbiguousAnd))
+        Just expressionsNE -> fmap AndExpression (traverse fromGBoolExp expressionsNE)
+    Ir.BoolOr expressions ->
+      case NE.nonEmpty expressions of
+        Nothing -> FromIr (refute (pure AmbiguousOr))
+        Just expressionsNE -> fmap OrExpression (traverse fromGBoolExp expressionsNE)
+    Ir.BoolNot expression -> fmap NotExpression (fromGBoolExp expression)
+    Ir.BoolExists gExists -> fmap SelectExpression (fromGExists gExists)
+    Ir.BoolFld expression -> pure expression
+
+fromGExists :: Ir.GExists Expression -> FromIr Select
+fromGExists Ir.GExists {_geTable, _geWhere} = do
+  selectFrom <- fromQualifiedTable _geTable
+  whereExpression <- fromGBoolExp _geWhere
+  pure
+    Select
+      { selectProjections =
+          NE.fromList
+            [ ExpressionProjection
+                (unaliased trueExpression)
+            ]
+      , selectFrom
+      , selectWhere = ExpressionWhere whereExpression
+      , selectTop = uncommented NoTop
+      }
 
 fromQualifiedTable :: Sql.QualifiedObject Sql.TableName -> FromIr From
 fromQualifiedTable qualifiedObject =
@@ -76,7 +121,7 @@ fromQualifiedTable qualifiedObject =
                         , qName = Sql.TableName qname
                         } = qualifiedObject
 
-fromProjection :: (Ir.FieldName, Ir.AnnFieldG Ir.SQLExp) -> FromIr Projection
+fromProjection :: (Ir.FieldName, Ir.AnnFieldG Sql.SQLExp) -> FromIr Projection
 fromProjection (Ir.FieldName name, field) =
   case field of
     _ -> do
@@ -100,3 +145,9 @@ uncommented a = Commented {commentedComment = Nothing, commentedThing = a}
 
 unaliased :: a -> Aliased a
 unaliased a = Aliased {aliasedAlias = Nothing, aliasedThing = a}
+
+--------------------------------------------------------------------------------
+-- Misc combinators
+
+trueExpression :: Expression
+trueExpression = ValueExpression (Odbc.BoolValue True)

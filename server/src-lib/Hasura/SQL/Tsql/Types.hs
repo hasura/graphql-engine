@@ -28,8 +28,12 @@ data Top
   | Top Int
   deriving (Eq, Show)
 
-data Expression =
-  ValueExpression Odbc.Value
+data Expression
+  = ValueExpression Odbc.Value
+  | AndExpression (NonEmpty Expression)
+  | OrExpression (NonEmpty Expression)
+  | NotExpression Expression
+  | SelectExpression Select
   deriving (Eq, Show)
 
 data From =
