@@ -4,8 +4,8 @@
 
 .. _manage_project_env_vars:
 
-Env vars tab
-============
+Project Env vars
+================
 
 .. contents:: Table of contents
   :backlinks: none
