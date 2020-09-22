@@ -22,6 +22,8 @@ It is typically recommended to use ``order_by`` along with ``distinct_on`` to en
 Note that the ``distinct_on`` column needs to be the first column in the ``order_by`` expression.
 See :ref:`sort queries <sort_query_results>` for more info on using ``order_by``.
 
+Let's say we have the following schema:
+
 .. code-block:: graphql
 
    employee (
