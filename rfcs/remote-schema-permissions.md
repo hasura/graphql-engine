@@ -80,7 +80,7 @@ type query_root {
 }
 ```
 
-For input objects presets, we can allow user to customize the argument:
+For input objects presets, we can allow user to customize the argument type by providing new input object types (the new input object should also be a subset of the original input object). This way some input fields can be preset and remaining can be exposed in the schema :
 
 ```
 input UserBoolExpForRole {
