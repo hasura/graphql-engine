@@ -15,12 +15,12 @@ Project Collaborators
 Introduction
 ------------
 
-The ``Team`` tab shows the current people with access to the project. 
+You can invite collaborators to your project and grant them partial or complete access to your Hasura console.
 
-Add a collaborator
-------------------
+Invite a collaborator
+---------------------
 
-Click ``New Collaborator`` to invite a new team member.
+Click ``Invite a Collaborator`` to invite a new collaborator by their email.
 
 .. thumbnail:: /img/graphql/cloud/projects/collaborators-view.png
    :alt: Collaborators tab
@@ -31,16 +31,22 @@ Collaborator roles
 
 Collaborators can have different levels of access in the Hasura console.
 
-- **Admin** has complete access to all project tools and configurations.
+- **Admin** has complete access to the console i.e they can change the schema and the GraphQL Engine metadata.
 - **User** has limited privileges:
 
-  - The ``Execute GraphQL`` permission allows running queries, mutations, and subscriptions.
-  - The ``View Metrics`` permission allows inspecting operation data and the performance dashboard.
+  - The ``Execute GraphQL`` permission allows running queries, mutations, and subscriptions from the ``GraphiQL`` tab of the console.
+  - The ``View Metrics`` permission allows inspecting operation data and metrics from the ``PRO`` tab of the console.
 
 .. thumbnail:: /img/graphql/cloud/projects/add-collaborator.png
    :alt: Add collaborator
    :width: 437px
 
-.. note::
 
-  Invitations can be accepted or declined via the ``Invitations`` tab of your Hasura Cloud settings.
+Invitations
+-----------
+
+You can see the projects that you have been invited to collaborate on, on the project listing page.
+
+.. thumbnail:: /img/graphql/cloud/projects/project-collaboration-invitation.png
+   :alt: Projects invited to collaborate
+   :width: 1146px
