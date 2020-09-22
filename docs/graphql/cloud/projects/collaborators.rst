@@ -31,10 +31,10 @@ Collaborator roles
 
 Collaborators can have different levels of access in the Hasura console.
 
-- **Admin** has complete access to the console i.e they can change the schema and the GraphQL Engine metadata.
+- **Admin** has complete access to the console i.e they can change the schema and the GraphQL engine metadata.
 - **User** has limited privileges:
 
-  - The ``Execute GraphQL`` permission allows running queries, mutations, and subscriptions from the ``GraphiQL`` tab of the console.
+  - The ``Execute GraphQL`` permission allows running queries, mutations and subscriptions from the ``GraphiQL`` tab of the console.
   - The ``View Metrics`` permission allows inspecting operation data and metrics from the ``PRO`` tab of the console.
 
 .. thumbnail:: /img/graphql/cloud/projects/add-collaborator.png
@@ -42,16 +42,16 @@ Collaborators can have different levels of access in the Hasura console.
    :width: 437px
 
 Remove a collaborator
--------------------
+---------------------
 
-To remove a collaborator, click on the collaborator and click on the remove button next on top right:
+To remove a collaborator, click on the collaborator and then click on the remove icon on the top right:
 
 
 .. thumbnail:: /img/graphql/cloud/projects/remove-collaborator.png
    :alt: Remove collaborator
    :width: 437px
 
-If you have invited a collaborator, you can click on the ``Invited`` button on the invitation revoke or resent the invitation.
+If you have invited a collaborator, you can click on the ``Invited`` button to resend or revoke the invitation.
 
 .. thumbnail:: /img/graphql/cloud/projects/revoke-collaboration-invitation.png
    :alt: Revoke collaboration invitation
