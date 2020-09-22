@@ -80,7 +80,7 @@ fromIrTests = do
        (\limit fieldText fieldAlias schemaName tableName ->
           shouldBe
             (FromIr.runFromIr
-               (FromIr.fromSelect
+               (FromIr.fromSelectFields
                   Ir.AnnSelectG
                     { _asnFields =
                         [ ( fromString fieldAlias

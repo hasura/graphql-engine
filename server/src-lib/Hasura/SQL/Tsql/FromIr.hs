@@ -24,13 +24,15 @@ data Error
 newtype FromIr a = FromIr { runFromIr :: Validation (NonEmpty Error) a}
   deriving (Functor, Applicative)
 
-fromSelect :: Ir.AnnSelectG (Ir.AnnFieldsG Ir.SQLExp) Ir.SQLExp -> FromIr Tsql.Select
-fromSelect Ir.AnnSelectG { _asnFields
-                         , _asnFrom
-                         , _asnPerm = Ir.TablePerm {_tpLimit = mlimit}
-                         , _asnArgs
-                         , _asnStrfyNum
-                         } = do
+fromSelectFields :: Ir.AnnSelectG (Ir.AnnFieldsG Ir.SQLExp) Ir.SQLExp -> FromIr Tsql.Select
+fromSelectFields Ir.AnnSelectG { _asnFields
+                               , _asnFrom
+                               , _asnPerm = Ir.TablePerm { _tpLimit = mPermLimit
+                                                         , _tpFilter = permFilter
+                                                         }
+                               , _asnArgs
+                               , _asnStrfyNum
+                               } = do
   case _asnFrom of
     Ir.FromTable Sql.QualifiedObject { qSchema = Sql.SchemaName schemaName -- TODO: Consider many x.y.z.
                                      , qName = Sql.TableName qname
@@ -55,7 +57,7 @@ fromSelect Ir.AnnSelectG { _asnFields
       pure
         Select
           { selectTop =
-              case mlimit of
+              case mPermLimit of
                 Nothing -> NoTop
                 Just limit -> Top limit
           , selectProjections = NE.fromList fields
