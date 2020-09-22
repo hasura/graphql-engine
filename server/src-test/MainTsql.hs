@@ -107,7 +107,7 @@ fromIrTests = do
                     }))
             (Success
                Select
-                 { selectTop = Top limit
+                 { selectTop = Commented {commentedComment = Just DueToPermission, commentedThing=Top limit}
                  , selectProjections =
                      NE.fromList
                        [ ExpressionProjection
@@ -155,7 +155,11 @@ toQueryTests = do
        (Odbc.renderQuery
           (ToQuery.fromSelect
              Select
-               { selectTop = Top 1
+               { selectTop =
+                   Commented
+                     { commentedComment = pure DueToPermission
+                     , commentedThing = Top 1
+                     }
                , selectProjections =
                    NE.fromList
                      [ ExpressionProjection
@@ -181,7 +185,7 @@ toQueryTests = do
                        }
                }))
        "SELECT\n\
-       \TOP 1\n\
+       \TOP 1 /* Due to permission */ \n\
        \1 AS [column_alias]\n\
        \FROM\n\
        \[schema].[table] AS [alias]")

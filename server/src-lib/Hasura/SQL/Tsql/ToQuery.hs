@@ -26,7 +26,7 @@ fromSelect Select {..} =
     (intersperse
        "\n"
        [ "SELECT"
-       , fromTop selectTop
+       , fromCommented (fmap fromTop selectTop)
        , mconcat (intersperse ", " (map fromProjection (toList selectProjections)))
        , "FROM"
        , fromFrom selectFrom
@@ -72,3 +72,16 @@ fromAlias (Alias text) = fromNameText text
 
 fromNameText :: Text -> Query
 fromNameText t = "[" <> fromString (T.unpack t) <> "]"
+
+fromCommented :: Commented Query -> Query
+fromCommented Commented {..} =
+  commentedThing <>
+  maybe
+    mempty
+    (\comment -> " /* " <> fromComment comment <> " */ ")
+    commentedComment
+
+fromComment :: Comment -> Query
+fromComment =
+  \case
+    DueToPermission -> "Due to permission"

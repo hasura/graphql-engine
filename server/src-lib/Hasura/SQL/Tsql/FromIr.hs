@@ -58,22 +58,32 @@ fromSelectFields Ir.AnnSelectG { _asnFields
         Select
           { selectTop =
               case mPermLimit of
-                Nothing -> NoTop
-                Just limit -> Top limit
+                Nothing -> uncommented NoTop
+                Just limit ->
+                  Commented
+                    { commentedComment = pure DueToPermission
+                    , commentedThing = Top limit
+                    }
           , selectProjections = NE.fromList fields
           , selectFrom =
               FromQualifiedTable
-                Aliased
-                  { aliasedThing =
-                      Qualified
-                        { qualifiedThing = TableName {tableNameText = qname}
-                        , qualifiedSchemaName =
-                            Just (SchemaName {schemaNameParts = [schemaName]})
-                        }
-                  , aliasedAlias = Nothing
-                  }
+                (unaliased
+                   (Qualified
+                      { qualifiedThing = TableName {tableNameText = qname}
+                      , qualifiedSchemaName =
+                          Just (SchemaName {schemaNameParts = [schemaName]})
+                      }))
           }
     _ -> FromIr (Failure (pure (FromTypeUnsupported _asnFrom)))
 
 fromExpression :: Proxy Ir.SQLExp -> FromIr (Proxy Tsql.Expression)
 fromExpression _ = pure Proxy
+
+--------------------------------------------------------------------------------
+-- Comments
+
+uncommented :: a -> Commented a
+uncommented a = Commented {commentedComment = Nothing, commentedThing = a}
+
+unaliased :: a -> Aliased a
+unaliased a = Aliased {aliasedAlias = Nothing, aliasedThing = a}

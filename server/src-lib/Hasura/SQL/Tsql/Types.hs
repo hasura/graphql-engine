@@ -3,13 +3,12 @@
 module Hasura.SQL.Tsql.Types where
 
 import           Data.List.NonEmpty (NonEmpty(..))
-import qualified Data.List.NonEmpty as NE
 import           Data.Text (Text)
 import qualified Database.ODBC.SQLServer as Odbc
 import           Prelude
 
 data Select = Select
-  { selectTop :: Top
+  { selectTop :: Commented Top
   , selectProjections :: NonEmpty Projection
   , selectFrom :: From
   } deriving (Eq, Show)
@@ -52,3 +51,11 @@ newtype Alias = Alias
 newtype TableName = TableName
   { tableNameText :: Text
   } deriving (Eq, Show)
+
+data Commented a = Commented
+  { commentedComment :: Maybe Comment
+  , commentedThing :: a
+  } deriving (Eq, Show, Functor)
+
+data Comment = DueToPermission
+  deriving (Eq, Show)
