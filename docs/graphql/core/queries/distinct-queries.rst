@@ -24,6 +24,10 @@ See :ref:`sort queries <sort_query_results>` for more info on using ``order_by``
 
 Let's say we have the following schema:
 
+.. code-block:: plpgsql
+  
+  employee (id integer, name text, department text, salary integer)
+
 .. code-block:: graphql
 
    employee (
