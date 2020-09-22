@@ -89,27 +89,25 @@ const CreateDatabase = ({ onSubmit }: CreateDatabaseProps) => {
           className={`${styles.add_mar_right_mid} ${styles.wd100Percent} input-sm form-control`}
           value={databaseName}
           onChange={e => setDatabaseName(e.target.value)}
-          style={{ height: '34px', width: '200px' }}
+          style={{ height: '34px' }}
         />
-        <div style={{ width: '1125px' }}>
-          <DropdownButton
-            dropdownOptions={[
-              { display_text: 'Value', value: 'static' },
-              { display_text: 'From env var', value: 'from-env' },
-            ]}
-            title={urlType === 'from-env' ? 'From env var' : 'Value'}
-            dataKey={urlType === 'from-env' ? 'env' : 'static'}
-            onButtonChange={(e: React.BaseSyntheticEvent) =>
-              setUrlType(e.target.getAttribute('value'))
-            }
-            onInputChange={e => setDatabaseUrl(e.target.value)}
-            required
-            inputVal={databaseUrl}
-            inputPlaceHolder={
-              urlType === 'from-env' ? 'HEADER_FROM_ENV' : 'value'
-            }
-          />
-        </div>
+        <DropdownButton
+          dropdownOptions={[
+            { display_text: 'Value', value: 'static' },
+            { display_text: 'From env var', value: 'from-env' },
+          ]}
+          title={urlType === 'from-env' ? 'From env var' : 'Value'}
+          dataKey={urlType === 'from-env' ? 'env' : 'static'}
+          onButtonChange={(e: React.BaseSyntheticEvent) =>
+            setUrlType(e.target.getAttribute('value'))
+          }
+          onInputChange={e => setDatabaseUrl(e.target.value)}
+          required
+          inputVal={databaseUrl}
+          inputPlaceHolder="Database URL"
+          testId="database-url"
+          inputStyle={{ width: '220px' }}
+        />
       </form>
       <div style={{ marginTop: '20px' }}>
         <CollapsibleToggle

@@ -19,7 +19,6 @@ import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { getDataSources } from '../../../../metadata/selector';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 
-
 type DatabaseListItemProps = {
   dataSource: DataSource;
   onReload: (name: string, driver: Driver, cb: () => void) => void;
@@ -139,31 +138,27 @@ const ManageDatabase: React.FC<ManageDatabaseInjectedProps> = ({
       <div
         className={`container-fluid ${styles.padd_left_remove} ${styles.manage_dbs_page}`}
       >
-        <div className={styles.padd_left}>
-          <Helmet title="Manage - Data | Hasura" />
-          <BreadCrumb breadCrumbs={crumbs} />
-          <div className={styles.display_flex}>
-            <h2
-              className={`${styles.headerText} ${styles.display_inline} ${styles.padd_top}`}
-            >
-              Manage Databases
-            </h2>
-            {/* <Button color="yellow" size="md" className={styles.add_mar_left}>
+        <Helmet title="Manage - Data | Hasura" />
+        <BreadCrumb breadCrumbs={crumbs} />
+        <div className={styles.display_flex}>
+          <h2
+            className={`${styles.headerText} ${styles.display_inline} ${styles.padd_top}`}
+          >
+            Manage Databases
+          </h2>
+          {/* <Button color="yellow" size="md" className={styles.add_mar_left}>
             Add Database
           </Button> */}
-          </div>
-          <div className={styles.manage_db_content}>
-            <hr />
-            <h3
-              className={`${styles.heading_text} ${styles.remove_pad_bottom}`}
-            >
-              Databases
-            </h3>
-            <div className={styles.data_list_container}>{dataList}</div>
-            <hr />
-          </div>
-          <CreateDatabase onSubmit={onCreateDataSource} />
         </div>
+        <div className={styles.manage_db_content}>
+          <hr />
+          <h3 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
+            Databases
+          </h3>
+          <div className={styles.data_list_container}>{dataList}</div>
+          <hr />
+        </div>
+        <CreateDatabase onSubmit={onCreateDataSource} />
       </div>
     </RightContainer>
   );

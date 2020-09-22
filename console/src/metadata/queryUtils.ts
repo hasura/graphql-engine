@@ -616,8 +616,8 @@ export const getAddRelationshipQuery = (
     },
   };
   if (isObjRel) {
-    return getMetadataQuery('create_object_relationship', args);
+    return getMetadataQuery('create_object_relationship', source, args);
   }
 
-  return getMetadataQuery('create_array_relationship', args);
+  return getMetadataQuery('create_array_relationship', source, args);
 };

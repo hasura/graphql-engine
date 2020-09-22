@@ -1,5 +1,5 @@
 import defaultState from './State';
-import { loadConsoleOpts } from '../../telemetry/Actions';
+// import { loadConsoleOpts } from '../../telemetry/Actions';
 import { fetchServerConfig } from '../Main/Actions';
 
 const LOAD_REQUEST = 'App/ONGOING_REQUEST';

@@ -42,7 +42,7 @@ import {
 import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 import {
   metadataQueryTypes,
-  getSetTableEnumQuery,
+  // getSetTableEnumQuery,
 } from '../../../metadata/queryUtils';
 import { services } from '../../../dataSources/services';
 

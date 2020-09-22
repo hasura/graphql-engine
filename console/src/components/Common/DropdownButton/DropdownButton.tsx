@@ -21,6 +21,7 @@ type DropDownButtonProps = {
   disabled?: boolean;
   bsClass?: string;
   inputPlaceHolder: string;
+  inputStyle?: Record<string, string>;
 };
 
 const DDButton: React.FC<DropDownButtonProps> = props => {
@@ -63,6 +64,7 @@ const DDButton: React.FC<DropDownButtonProps> = props => {
         ))}
       </DropdownButton>
       <input
+        style={props.inputStyle}
         type="text"
         data-key={dataKey}
         data-index-id={dataIndex}
