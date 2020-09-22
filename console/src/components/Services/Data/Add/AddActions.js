@@ -193,13 +193,12 @@ const createTableSql = () => {
         currentCols[i].default.value !== ''
       ) {
         if (
-          isColTypeString(currentCols[i].type) &&
-          !isPostgresFunction(currentCols[i].default.value)
+          (isColTypeString(currentCols[i].type) &&
+            !isPostgresFunction(currentCols[i].default.value)) ||
+          currentCols[i].type === 'json' ||
+          currentCols[i].type === 'jsonb'
         ) {
           // if a column type is text and if it has a non-func default value, add a single quote by default
-          tableDefSql += " DEFAULT '" + currentCols[i].default.value + "'";
-        }
-        if (currentCols[i].type === 'json' || currentCols[i].type === 'jsonb') {
           tableDefSql += " DEFAULT '" + currentCols[i].default.value + "'";
         } else {
           tableDefSql += ' DEFAULT ' + currentCols[i].default.value;

@@ -1199,10 +1199,11 @@ const addColSql = (
   let defWithQuotes = "''";
 
   const checkIfFunctionFormat = isPostgresFunction(colDefault);
-  if (isColTypeString(colType) && colDefault !== '' && !checkIfFunctionFormat) {
-    defWithQuotes = "'" + colDefault + "'";
-  }
-  if (colType === 'json' || colType === 'jsonb') {
+  if (
+    (isColTypeString(colType) && colDefault !== '' && !checkIfFunctionFormat) ||
+    colType === 'json' ||
+    colType === 'jsonb'
+  ) {
     defWithQuotes = "'" + colDefault + "'";
   } else {
     defWithQuotes = colDefault;
@@ -1565,11 +1566,15 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     }
 
     const colDefaultWithQuotes =
-      isColTypeString(colType) && !isPostgresFunction(colDefault)
+      (isColTypeString(colType) && !isPostgresFunction(colDefault)) ||
+      colType === 'json' ||
+      colType === 'jsonb'
         ? `'${colDefault}'`
         : colDefault;
     const originalColDefaultWithQuotes =
-      isColTypeString(colType) && !isPostgresFunction(originalColDefault)
+      (isColTypeString(colType) && !isPostgresFunction(originalColDefault)) ||
+      colType === 'json' ||
+      colType === 'jsonb'
         ? `'${originalColDefault}'`
         : originalColDefault;
 
