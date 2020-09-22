@@ -514,7 +514,7 @@ processScheduledEvent logEnv pgpool se@ScheduledEventFull {..} type' = Tracing.r
         (processSuccess pgpool se decodedHeaders type' webhookReqBodyJson)
         res
   where
-    traceNote = "Scheduled trigger" <> foldMap ((": " <>) . unNonEmptyText . unTriggerName) sefName
+    traceNote = "Scheduled trigger" <> foldMap ((": " <>) . triggerNameToTxt) sefName
 
 processError
   :: (MonadIO m, MonadError QErr m)
