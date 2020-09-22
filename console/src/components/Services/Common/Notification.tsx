@@ -244,11 +244,15 @@ const showInfoNotification = (title: string): Thunk => {
 const showWarningNotification = (
   title: string,
   message: string,
-  dataObj: Json
+  dataObj?: Json,
+  child?: JSX.Element
 ): Thunk => {
   const children: JSX.Element[] = [];
   if (dataObj) {
     children.push(getNotificationDetails(dataObj, null));
+  }
+  if (child) {
+    children.push(child);
   }
 
   return dispatch => {
