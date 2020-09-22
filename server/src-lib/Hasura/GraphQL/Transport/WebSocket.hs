@@ -25,7 +25,6 @@ import qualified Data.ByteString.Lazy                        as BL
 import qualified Data.CaseInsensitive                        as CI
 import qualified Data.Environment                            as Env
 import qualified Data.HashMap.Strict                         as Map
-import qualified Data.HashMap.Strict.InsOrd                  as IOMap
 import qualified Data.Text                                   as T
 import qualified Data.Text.Encoding                          as TE
 import qualified Data.Time.Clock                             as TC
@@ -47,7 +46,7 @@ import           GHC.AssertNF
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging                      (MonadQueryLog (..))
-import           Hasura.GraphQL.Transport.HTTP               (MonadExecuteQuery (..))
+import           Hasura.GraphQL.Transport.HTTP               (MonadExecuteQuery (..), ResultsFragment (..))
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import           Hasura.HTTP
@@ -63,7 +62,6 @@ import           Hasura.Session
 import qualified Hasura.GraphQL.Execute                      as E
 import qualified Hasura.GraphQL.Execute.LiveQuery            as LQ
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll       as LQ
-import qualified Hasura.GraphQL.Execute.Query                as EQ
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
 import qualified Hasura.Logging                              as L
 import qualified Hasura.Server.Telemetry.Counters            as Telem
@@ -351,37 +349,62 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
   case execPlan of
     E.QueryExecutionPlan queryPlan asts -> do
-      (telemTimeIO_DT, results) <- withElapsedTime $ for queryPlan $ \case
-        E.ExecStepDB (tx, genSql) -> runExceptT $ Tracing.trace "Query" $ do
-          execQueryOrMut timerTot Telem.Query telemCacheHit Nothing requestId $ -- TODO genSql
-            fmap snd $ Tracing.interpTraceT id $ executeQuery reqParsed asts Nothing pgExecCtx Q.ReadOnly tx -- TODO genSql
-        E.ExecStepRemote (rsi, opDef, _varValsM) -> runExceptT $ do
-          runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
-        E.ExecStepRaw json -> runExceptT $ do
-          return $ encJFromJValue json
-      let successes = IOMap.mapMaybe rightToMaybe results
-          failures  = IOMap.mapMaybe leftToMaybe results
-      if null failures
-        then sendSuccResp (encJFromInsOrdHashMap successes) $ LQ.LiveQueryMetadata telemTimeIO_DT
-        -- TODO cleaner error reporting without partial functions
-        else postExecErr requestId $ snd $ head $ IOMap.toList failures
+      conclusion <- runExceptT $ for queryPlan $ \case
+        E.ExecStepDB (tx, genSql) -> Tracing.trace "Query" $ do
+          (telemTimeIO_DT, (respHdrs, resp)) <- Tracing.interpTraceT id $ withElapsedTime $
+            executeQuery reqParsed asts genSql pgExecCtx Q.ReadOnly tx
+          return $ ResultsFragment telemTimeIO_DT Telem.Local resp respHdrs
+        E.ExecStepRemote (rsi, opDef, _varValsM) -> do
+          (telemTimeIO_DT, HttpResponse resp respHdrs) <-
+            runRemoteGQ execCtx requestId userInfo reqHdrs opDef rsi
+          return $ ResultsFragment telemTimeIO_DT Telem.Remote resp respHdrs
+        E.ExecStepRaw json -> do
+          let obj = encJFromJValue json
+              telemTimeIO_DT = 0
+          return $ ResultsFragment telemTimeIO_DT Telem.Local obj []
+      case conclusion of
+        Left err -> postExecErr requestId err
+        Right results -> do
+          let (durationsIO, localities, bodies, _headers) =
+                (fmap rfTimeIO results, fmap rfLocality results, fmap rfResponse results, fmap rfHeaders results)
+          sendSuccResp (encJFromInsOrdHashMap bodies) $ LQ.LiveQueryMetadata $ sum durationsIO
+          let telemQueryType = Telem.Query
+              telemLocality  = fold localities
+              telemTimeIO = convertDuration $ sum durationsIO
+          telemTimeTot <- Seconds <$> timerTot
+          when False $ Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
       sendCompleted (Just requestId)
     E.MutationExecutionPlan mutationPlan -> do
-      -- TODO maybe stop executing after the first error?
-      (telemTimeIO_DT, results) <- withElapsedTime $ runExceptT $ for mutationPlan $ \case
+      conclusion <- runExceptT $ for mutationPlan $ \case
         E.ExecStepDB (tx, _) -> Tracing.trace "Mutate" do
           ctx <- Tracing.currentContext
-          execQueryOrMut timerTot Telem.Mutation telemCacheHit Nothing requestId $
-            Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx . withUserInfo userInfo) tx
+          (telemTimeIO_DT, resp) <- Tracing.interpTraceT
+            (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx . withUserInfo userInfo)
+            $ withElapsedTime tx
+          return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
         E.ExecStepRemote (rsi, opDef, _varValsM) -> do
-          runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
+          (telemTimeIO_DT, HttpResponse resp respHdrs) <-
+            runRemoteGQ execCtx requestId userInfo reqHdrs opDef rsi
+          return $ ResultsFragment telemTimeIO_DT Telem.Remote resp respHdrs
         E.ExecStepRaw json -> do
-          return $ encJFromJValue json
-      case results of
+          let obj = encJFromJValue json
+              telemTimeIO_DT = 0
+          return $ ResultsFragment telemTimeIO_DT Telem.Local obj []
+      case conclusion of
         Left err -> postExecErr requestId err
-        Right successes -> sendSuccResp (encJFromInsOrdHashMap successes) $ LQ.LiveQueryMetadata telemTimeIO_DT
+        Right results -> do
+          let (durationsIO, localities, bodies, _headers) =
+                (fmap rfTimeIO results, fmap rfLocality results, fmap rfResponse results, fmap rfHeaders results)
+          sendSuccResp (encJFromInsOrdHashMap bodies) $ LQ.LiveQueryMetadata $ sum durationsIO
+          let telemQueryType = Telem.Mutation
+              telemLocality  = fold localities
+              telemTimeIO = convertDuration $ sum durationsIO
+          telemTimeTot <- Seconds <$> timerTot
+          when False $ Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
       sendCompleted (Just requestId)
+      -- when False $ Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
     E.SubscriptionExecutionPlan lqOp -> do
+      timerTot -- stop the timer; unused
       -- log the graphql query
       logQueryLog logger q Nothing requestId
       let subscriberMetadata = LQ.mkSubscriberMetadata $ J.object
@@ -401,46 +424,19 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       logOpEv ODStarted (Just requestId)
   where
     telemTransport = Telem.WebSocket
-    execQueryOrMut
-      :: ExceptT () m DiffTime
-      -> Telem.QueryType
-      -> Telem.CacheHit
-      -> Maybe EQ.GeneratedSqlMap
-      -> RequestId
-      -> ExceptT QErr (ExceptT () m) EncJSON
-      -> ExceptT QErr (ExceptT () m) EncJSON
-    execQueryOrMut timerTot telemQueryType telemCacheHit genSql requestId action = do
-      let telemLocality = Telem.Local
-      lift $ logOpEv ODStarted (Just requestId)
-      -- log the generated SQL and the graphql query
-      logQueryLog logger q genSql requestId
-      (telemTimeIO_DT, encJson) <- withElapsedTime action
-      -- Telemetry. NOTE: don't time network IO:
-      telemTimeTot <- lift $ Seconds <$> timerTot
-      let telemTimeIO = convertDuration telemTimeIO_DT
-      Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
-      return encJson
 
-    runRemoteGQ :: ExceptT () m DiffTime
-                -> Telem.CacheHit -> E.ExecutionCtx -> RequestId -> UserInfo -> [H.Header]
+    runRemoteGQ :: E.ExecutionCtx -> RequestId -> UserInfo -> [H.Header]
                 -> G.TypedOperationDefinition G.NoFragments G.Name -> RemoteSchemaInfo
-                -> ExceptT QErr (ExceptT () m) EncJSON
-    runRemoteGQ timerTot telemCacheHit execCtx reqId userInfo reqHdrs opDef rsi = do
-      let telemLocality = Telem.Remote
-      telemQueryType <- case G._todType opDef of
+                -> ExceptT QErr (ExceptT () m) (DiffTime, HttpResponse EncJSON)
+    runRemoteGQ execCtx reqId userInfo reqHdrs opDef rsi = do
+      case G._todType opDef of
         G.OperationTypeSubscription ->
           lift $ withComplete $ preExecErr reqId $
           err400 NotSupported "subscription to remote server is not supported"
-        G.OperationTypeMutation -> return Telem.Mutation
-        G.OperationTypeQuery    -> return Telem.Query
-
+        G.OperationTypeMutation -> return ()
+        G.OperationTypeQuery    -> return ()
       -- if it's not a subscription, use HTTP to execute the query on the remote
-      (telemTimeIO_DT, !val) <- flip runReaderT execCtx $ E.execRemoteGQ env reqId userInfo reqHdrs q rsi opDef
-      -- Telemetry. NOTE: don't time network IO:
-      telemTimeTot <- lift $ Seconds <$> timerTot
-      let telemTimeIO = convertDuration telemTimeIO_DT
-      Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
-      return $ _hrBody val
+      flip runReaderT execCtx $ E.execRemoteGQ env reqId userInfo reqHdrs q rsi opDef
 
     sendRemoteResp reqId resp meta =
       case J.eitherDecodeStrict (encJToBS resp) of
@@ -517,11 +513,6 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     catchAndIgnore :: ExceptT () m () -> m ()
     catchAndIgnore m = void $ runExceptT m
-
-    leftToMaybe (Left x) = Just x
-    leftToMaybe _ = Nothing
-    rightToMaybe (Right y) = Just y
-    rightToMaybe _ = Nothing
 
 
 onMessage

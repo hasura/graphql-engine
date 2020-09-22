@@ -11,14 +11,11 @@ module Hasura.GraphQL.Execute.Query
 
 import qualified Data.Aeson                             as J
 import qualified Data.ByteString                        as B
-import qualified Data.ByteString.Lazy                   as LBS
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.IntMap                            as IntMap
-import qualified Data.Sequence                          as Seq
 import qualified Data.Sequence.NonEmpty                 as NESeq
-import qualified Data.TByteString                       as TBS
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP

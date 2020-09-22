@@ -11,6 +11,7 @@ module Hasura.GraphQL.Transport.HTTP
   , GQLExecDoc(..)
   , OperationName(..)
   , GQLQueryText(..)
+  , ResultsFragment(..)
   ) where
 
 import           Control.Monad.Morph                    (hoist)
@@ -48,7 +49,7 @@ class Monad m => MonadExecuteQuery m where
   executeQuery
     :: GQLReqParsed
     -> [QueryRootField UnpreparedValue]
-    -> Maybe EQ.GeneratedSqlMap
+    -> Maybe EQ.PreparedSql
     -> PGExecCtx
     -> Q.TxAccess
     -> TraceT (LazyTx QErr) EncJSON
@@ -63,6 +64,12 @@ instance MonadExecuteQuery m => MonadExecuteQuery (ExceptT r m) where
 instance MonadExecuteQuery m => MonadExecuteQuery (TraceT m) where
   executeQuery a b c d e f = hoist (hoist lift) $ executeQuery a b c d e f
 
+data ResultsFragment = ResultsFragment
+  { rfTimeIO :: DiffTime
+  , rfLocality :: Telem.Locality
+  , rfResponse :: EncJSON
+  , rfHeaders :: HTTP.ResponseHeaders
+  }
 
 -- | Run (execute) a single GraphQL query
 runGQ
@@ -101,44 +108,45 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
           E.ExecStepDB txGenSql -> do
             (telemTimeIO_DT, _telemQueryType, respHdrs, resp) <-
               runQueryDB reqId (reqUnparsed,reqParsed) asts userInfo txGenSql
-            return (telemTimeIO_DT, Telem.Local, resp, respHdrs)
+            return $ ResultsFragment telemTimeIO_DT Telem.Local resp respHdrs
           E.ExecStepRemote (rsi, opDef, _varValsM) -> do
             (_telemCacheHit, _, (telemTimeIO_DT, _telemQueryType, HttpResponse resp respHdrs)) <- runRemoteGQ telemCacheHit rsi opDef
             value <- extractData fieldName $ encJToLBS resp
-            pure (telemTimeIO_DT, Telem.Remote, J.toEncJSON value, respHdrs)
+            pure $ ResultsFragment telemTimeIO_DT Telem.Remote (J.toEncJSON value) respHdrs
           E.ExecStepRaw json -> do
             let obj = encJFromJValue json
                 telemTimeIO_DT = 0
-            return (telemTimeIO_DT, Telem.Local, obj, [])
+            return $ ResultsFragment telemTimeIO_DT Telem.Local obj []
         let (durationsIO, localities, bodies, headers) =
-              (fmap fst4 results, fmap snd4 results, fmap thd4 results, fmap fth4 results)
+              (fmap rfTimeIO results, fmap rfLocality results, fmap rfResponse results, fmap rfHeaders results)
         return $ (Telem.Query, sum durationsIO, fold localities, ) $ HttpResponse (encodeGQResp $ GQSuccess $ encJToLBS $ encJFromInsOrdHashMap bodies) (fold headers)
 
       E.MutationExecutionPlan mutationPlans -> do
         results <- flip OMap.traverseWithKey mutationPlans $ \fieldName step -> case step of
           E.ExecStepDB (tx, responseHeaders) -> do
             (telemTimeIO_DT, _telemQueryType, resp) <- runMutationDB reqId reqUnparsed userInfo tx
-            return (telemTimeIO_DT, Telem.Local, resp, responseHeaders)
+            return $ ResultsFragment telemTimeIO_DT Telem.Local resp responseHeaders
           E.ExecStepRemote (rsi, opDef, _varValsM) -> do
             (_telemCacheHit, _, (telemTimeIO_DT, _telemQueryType, HttpResponse resp respHdrs)) <- runRemoteGQ telemCacheHit rsi opDef
             value <- extractData fieldName $ encJToLBS resp
-            pure (telemTimeIO_DT, Telem.Remote, J.toEncJSON value, respHdrs)
+            pure $ ResultsFragment telemTimeIO_DT Telem.Remote (J.toEncJSON value) respHdrs
           E.ExecStepRaw json -> do
             let obj = encJFromJValue json
                 telemTimeIO_DT = 0
-            return (telemTimeIO_DT, Telem.Local, obj, [])
+            return $ ResultsFragment telemTimeIO_DT Telem.Local obj []
         let (durationsIO, localities, bodies, headers) =
-              (fmap fst4 results, fmap snd4 results, fmap thd4 results, fmap fth4 results)
+              (fmap rfTimeIO results, fmap rfLocality results, fmap rfResponse results, fmap rfHeaders results)
         return $ (Telem.Mutation, sum durationsIO, fold localities, ) $ HttpResponse (encodeGQResp $ GQSuccess $ encJToLBS $ encJFromInsOrdHashMap bodies) (fold headers)
 
       E.SubscriptionExecutionPlan _sub ->
         throw400 UnexpectedPayload "subscriptions are not supported over HTTP, use websockets instead"
   -- The response and misc telemetry data:
-  let telemTimeIO :: Seconds = convertDuration telemTimeIO_DT
-      telemTimeTot :: Seconds = convertDuration telemTimeTot_DT
+  let telemTimeIO = convertDuration telemTimeIO_DT
+      telemTimeTot = convertDuration telemTimeTot_DT
       telemTransport = Telem.HTTP
       telemCacheHit = Telem.Miss -- TODO fix if we're reimplementing query caching
-  -- Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
+  -- Disabled for now until we make up our mind on the naming of localities
+  when False $ Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
   return resp
   where
     runRemoteGQ telemCacheHit rsi opDef = do
@@ -155,12 +163,6 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
          lookup' "data"     >>=
          J.asObject        >>=
          lookup' fieldName
-
-    -- TODO introduce new data type
-    fst4 (a,_,_,_) = a
-    snd4 (_,b,_,_) = b
-    thd4 (_,_,c,_) = c
-    fth4 (_,_,_,d) = d
 
 
 -- | Run (execute) a batched GraphQL query (see 'GQLBatchedReqs')
