@@ -78,7 +78,7 @@ fromIrTests = do
   it
     "Select: sanity property test"
     (property
-       (\limit fieldText fieldAlias schemaName tableName ->
+       (\limit fieldText fieldAlias schemaName tableName colName ->
           shouldBe
             (runValidate
                (FromIr.runFromIr
@@ -100,8 +100,8 @@ fromIrTests = do
                                  Ir.BoolFld
                                    (Ir.AVCol
                                       (Ir.PGColumnInfo
-                                         { pgiColumn = Sql.unsafePGCol "somecol"
-                                         , pgiName = G.unsafeMkName "somecol"
+                                         { pgiColumn = Sql.unsafePGCol colName
+                                         , pgiName = G.unsafeMkName colName
                                          , pgiPosition = 0
                                          , pgiType =
                                              Ir.PGColumnScalar Sql.PGSmallInt
@@ -157,7 +157,7 @@ fromIrTests = do
                  , selectWhere =
                      ExpressionWhere
                        (AndExpression
-                          [IsNullExpression (ColumnExpression "somecol")])
+                          [IsNullExpression (ColumnExpression colName)])
                  })))
 
 --------------------------------------------------------------------------------
