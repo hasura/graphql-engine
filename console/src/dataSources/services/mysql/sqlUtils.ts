@@ -1,4 +1,5 @@
 import { AlterFKTableInfo, MySQLTrigger, CreatePKArgs } from './types';
+import { getRunSqlQuery } from '../../../components/Common/utils/v1QueryUtils';
 
 export const getMySQLNameString = (schemaName: string, itemName: string) =>
   `\`${schemaName}\`.\`${itemName}\``;
@@ -553,5 +554,14 @@ ORDER BY
 
 export const primaryKeysInfoSql = (options: { schemas: string[] }) =>
   getKeysSql('PRIMARY KEY', options);
+
 export const uniqueKeysSql = (options: { schemas: string[] }) =>
   getKeysSql('UNIQUE', options);
+
+const schemaListSQL = `SELECT schema_name FROM information_schema.schemata WHERE
+schema_name NOT IN (SELECT schema_name FROM information_schema.schemata
+WHERE schema_name = 'information_schema' OR schema_name = 'mysql' OR schema_name = 'sys'
+OR schema_name = 'performance_schema') ORDER BY schema_name ASC;`;
+
+export const schemaList = (source: string) =>
+  getRunSqlQuery(schemaListSQL, source);

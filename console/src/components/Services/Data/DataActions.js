@@ -289,8 +289,8 @@ const setConsistentSchema = data => ({
 const fetchDataInit = () => (dispatch, getState) => {
   const url = Endpoints.query;
 
-  const query = dataSource.schemaList;
-  query.source = getState().tables.currentDataSource;
+  const source = getState().tables.currentDataSource;
+  const query = dataSource.schemaList(source);
 
   if (!getState().tables.currentDataSource) return;
 
@@ -393,8 +393,7 @@ const updateCurrentSchema = (
 const fetchSchemaList = () => (dispatch, getState) => {
   const url = Endpoints.query;
   const currentSource = getState().tables.currentDataSource;
-  const query = dataSource.schemaList;
-  query.source = currentSource;
+  const query = dataSource.schemaList(currentSource);
 
   const options = {
     credentials: globalCookiePolicy,

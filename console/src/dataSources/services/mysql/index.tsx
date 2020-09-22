@@ -31,6 +31,7 @@ import {
   getFKRelations,
   primaryKeysInfoSql,
   uniqueKeysSql,
+  schemaList,
 } from './sqlUtils';
 import { getTableSupportedQueries } from '../postgresql';
 
@@ -179,22 +180,7 @@ WHERE
   cascadeSqlQuery: () => {
     throw new Error('not implemented');
   },
-  schemaList: {
-    type: 'select',
-    args: {
-      table: {
-        name: 'schemata',
-        schema: 'information_schema',
-      },
-      columns: ['schema_name'],
-      order_by: [{ column: 'schema_name', type: 'asc', nulls: 'last' }],
-      where: {
-        schema_name: {
-          $nin: ['information_schema', 'mysql', 'sys', 'performance_schema'],
-        },
-      },
-    },
-  },
+  schemaList,
   dependencyErrorCode: '',
   columnDataTypes,
   commonDataTypes,

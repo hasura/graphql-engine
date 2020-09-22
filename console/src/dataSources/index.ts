@@ -47,7 +47,7 @@ export interface DataSourcesAPI {
   getTableSupportedQueries(table: Table): Operations[];
   getColumnType(col: TableColumn): string;
   arrayToPostgresArray(arr: any[]): string;
-  schemaList: Record<string, any>;
+  schemaList: (source: string) => Record<string, any>;
   additionalColumnsInfoQuery?: (
     schemaName: string,
     currentSource: string

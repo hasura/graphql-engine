@@ -44,6 +44,7 @@ import {
   frequentlyUsedColumns,
   getFKRelations,
 } from './sqlUtils';
+import { getRunSqlQuery } from '../../../components/Common/utils/v1QueryUtils';
 
 export const isTable = (table: Table) => {
   return (
@@ -179,23 +180,13 @@ export const getGroupedTableComputedFields = (
   return groupedComputedFields;
 };
 
-const schemaList = {
-  type: 'run_sql',
-  args: {
-    // todo: use getRunSql, leave only string, fix not in
-    sql: `
-  select schema_name from information_schema.schemata where schema_name not in (
-    'information_schema',
-    'pg_catalog',
-    'hdb_catalog',
-    'hdb_views',
-    'pg_temp_1',
-    'pg_toast',
-    'pg_toast_temp_1'
-  ) order by schema_name asc;
-    `,
-  },
-};
+const schemaListSQL = `SELECT schema_name FROM information_schema.schemata WHERE
+schema_name NOT IN (SELECT schema_name FROM information_schema.schemata
+WHERE schema_name = 'information_schema' OR schema_name = 'pg_catalog' OR schema_name = 'hdb_catalog'
+OR schema_name = 'hdb_views' OR schema_name = 'pg_temp_1' OR schema_name = 'pg_toast_temp_1' OR
+schema_name = 'pg_toast') ORDER BY schema_name ASC;`;
+
+const schemaList = (source: string) => getRunSqlQuery(schemaListSQL, source);
 
 const additionalColumnsInfoQuery = undefined;
 // (
