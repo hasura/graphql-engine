@@ -8,9 +8,9 @@ import qualified Database.ODBC.SQLServer as Odbc
 import           Prelude
 
 data Select = Select
-  { selectTop :: Commented Top
-  , selectProjections :: NonEmpty Projection
-  , selectFrom :: From
+  { selectTop :: !(Commented Top)
+  , selectProjections :: !(NonEmpty Projection)
+  , selectFrom :: !From
   } deriving (Eq, Show)
 
 data Projection =
@@ -31,13 +31,13 @@ data From =
   deriving (Eq, Show)
 
 data Qualified a = Qualified
-  { qualifiedThing :: a
-  , qualifiedSchemaName :: Maybe SchemaName
+  { qualifiedThing :: !a
+  , qualifiedSchemaName :: !(Maybe SchemaName)
   } deriving (Eq, Show, Functor)
 
 data Aliased a = Aliased
-  { aliasedThing :: a
-  , aliasedAlias :: Maybe Alias
+  { aliasedThing :: !a
+  , aliasedAlias :: !(Maybe Alias)
   } deriving (Eq, Show, Functor)
 
 newtype SchemaName = SchemaName
@@ -53,8 +53,8 @@ newtype TableName = TableName
   } deriving (Eq, Show)
 
 data Commented a = Commented
-  { commentedComment :: Maybe Comment
-  , commentedThing :: a
+  { commentedComment :: !(Maybe Comment)
+  , commentedThing :: !a
   } deriving (Eq, Show, Functor)
 
 data Comment = DueToPermission
