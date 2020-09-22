@@ -26,7 +26,7 @@ import {
   getUniqueConstraintName,
 } from '../Common/Components/utils';
 
-import { isColTypeString, isPostgresFunction } from '../utils';
+import { wrapQuotes } from '../utils';
 import {
   sqlEscapeText,
   getCreateCheckConstraintSql,
@@ -1198,16 +1198,7 @@ const addColSql = (
 ) => {
   let defWithQuotes = "''";
 
-  const checkIfFunctionFormat = isPostgresFunction(colDefault);
-  if (
-    (isColTypeString(colType) && colDefault !== '' && !checkIfFunctionFormat) ||
-    colType === 'json' ||
-    colType === 'jsonb'
-  ) {
-    defWithQuotes = "'" + colDefault + "'";
-  } else {
-    defWithQuotes = colDefault;
-  }
+  defWithQuotes = wrapQuotes(colType, colDefault);
 
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
@@ -1565,19 +1556,8 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
       );
     }
 
-    const colDefaultWithQuotes =
-      (isColTypeString(colType) && !isPostgresFunction(colDefault)) ||
-      colType === 'json' ||
-      colType === 'jsonb'
-        ? `'${colDefault}'`
-        : colDefault;
-    const originalColDefaultWithQuotes =
-      (isColTypeString(colType) && !isPostgresFunction(originalColDefault)) ||
-      colType === 'json' ||
-      colType === 'jsonb'
-        ? `'${originalColDefault}'`
-        : originalColDefault;
-
+    const colDefaultWithQuotes = wrapQuotes(colType, colDefault);
+    const originalColDefaultWithQuotes = wrapQuotes(colType, colDefault);
     /* column default up/down migration */
     let columnDefaultUpQuery;
     let columnDefaultDownQuery;

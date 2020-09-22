@@ -791,6 +791,18 @@ WHERE
 export const isColTypeString = colType =>
   ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
 
+export const wrapQuotes = (colType, colDefault) => {
+  const checkIfFunctionFormat = isPostgresFunction(colDefault);
+  if (
+    (isColTypeString(colType) && !checkIfFunctionFormat) ||
+    colType === 'json' ||
+    colType === 'jsonb'
+  ) {
+    return "'" + colDefault + "'";
+  }
+  return colDefault;
+};
+
 export const cascadeUpQueries = (upQueries = []) =>
   upQueries.map((i = {}) => {
     if (i.type === 'run_sql' || i.type === 'untrack_table') {
