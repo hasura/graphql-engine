@@ -78,8 +78,6 @@ Hasura Cloud needs the following extra permissions:
 
 - (required) Read and write access to ``hdb_pro_catalog`` schema.
 
-Let's consider the following schema:
-
 .. code-block:: sql
 
    -- execute these statements after executing the ones mentioned in Hasura Core docs

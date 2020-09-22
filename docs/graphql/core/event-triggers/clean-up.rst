@@ -27,16 +27,12 @@ Event Triggers have 2 tables managed by Hasura:
 Option 1: Clear only HTTP logs
 ------------------------------
 
-Let's consider the following schema:
-
 .. code-block:: SQL
 
    DELETE FROM hdb_catalog.event_invocation_logs;
 
 Option 2: Clear only processed events
 -------------------------------------
-
-Let's consider the following schema:
 
 .. code-block:: SQL
 
@@ -48,8 +44,6 @@ Option 3: Clear all processed events and HTTP logs
 
 This is the combination of Option 1 and Option 2.
 
-Let's consider the following schema:
-
 .. code-block:: SQL
 
    DELETE FROM hdb_catalog.event_invocation_logs;
@@ -59,8 +53,6 @@ Let's consider the following schema:
 
 Option 4: Clear all event data for a particular event trigger only
 ------------------------------------------------------------------
-
-Let's consider the following schema:
 
 .. code-block:: SQL
 

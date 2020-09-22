@@ -35,9 +35,7 @@ Step 3: Write an insert statement
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The next step is to write an insert statement that populates the database with
-seed data.
-
-Let's consider the following schema:
+seed data like the following:
 
 .. code-block:: SQL
 
