@@ -30,6 +30,7 @@ fromSelect Select {..} =
        , mconcat (intersperse ", " (map fromProjection (toList selectProjections)))
        , "FROM"
        , fromFrom selectFrom
+       , fromWhere selectWhere
        ])
 
 fromProjection :: Projection -> Query
@@ -43,6 +44,12 @@ fromTop =
   \case
     NoTop -> ""
     Top i -> "TOP " <> toSql i
+
+fromWhere :: Where -> Query
+fromWhere =
+  \case
+    NoWhere -> ""
+    ExpressionWhere i -> "WHERE " <> fromExpression i
 
 fromFrom :: From -> Query
 fromFrom =

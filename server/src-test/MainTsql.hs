@@ -138,6 +138,7 @@ fromIrTests = do
                                }
                          , aliasedAlias = Nothing
                          }
+                 , selectWhere = NoWhere
                  })))
 
 --------------------------------------------------------------------------------
@@ -186,12 +187,13 @@ toQueryTests = do
                              }
                        , aliasedAlias = Just (Alias {aliasText = "alias"})
                        }
+               , selectWhere = NoWhere
                }))
        "SELECT\n\
        \TOP 1 /* Due to permission */ \n\
        \1 AS [column_alias]\n\
        \FROM\n\
-       \[schema].[table] AS [alias]")
+       \[schema].[table] AS [alias]\n")
 
 --------------------------------------------------------------------------------
 -- Tests that require a database connection

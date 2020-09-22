@@ -11,10 +11,16 @@ data Select = Select
   { selectTop :: !(Commented Top)
   , selectProjections :: !(NonEmpty Projection)
   , selectFrom :: !From
+  , selectWhere :: !Where
   } deriving (Eq, Show)
 
 data Projection =
   ExpressionProjection (Aliased Expression)
+  deriving (Eq, Show)
+
+data Where
+  = NoWhere
+  | ExpressionWhere Expression
   deriving (Eq, Show)
 
 data Top

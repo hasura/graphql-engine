@@ -53,6 +53,7 @@ fromSelectFields annSelectG = do
                 }
       , selectProjections = NE.fromList fields
       , selectFrom
+      , selectWhere = NoWhere
       }
   where
     Ir.AnnSelectG {_asnFields, _asnFrom, _asnPerm, _asnArgs, _asnStrfyNum} =
