@@ -1855,7 +1855,7 @@ func (m *Migrate) ExportDataDump(tableNames []string) ([]byte, error) {
 		split := strings.Split(val, ".")
 		splitLen := len(split)
 		
-		if splitLen != 1 || splitLen != 2 {
+		if splitLen != 1 && splitLen != 2 {
 			return nil, fmt.Errorf(`invalid schema/table provided "%s"`, val)
 		}
 
