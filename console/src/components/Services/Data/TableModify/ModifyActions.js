@@ -1557,7 +1557,10 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     }
 
     const colDefaultWithQuotes = wrapQuotes(colType, colDefault);
-    const originalColDefaultWithQuotes = wrapQuotes(colType, colDefault);
+    const originalColDefaultWithQuotes = wrapQuotes(
+      colType,
+      originalColDefault
+    );
     /* column default up/down migration */
     let columnDefaultUpQuery;
     let columnDefaultDownQuery;

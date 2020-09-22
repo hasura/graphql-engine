@@ -798,7 +798,7 @@ export const wrapQuotes = (colType, colDefault) => {
     colType === 'json' ||
     colType === 'jsonb'
   ) {
-    return "'" + colDefault + "'";
+    return `'${colDefault}'`;
   }
   return colDefault;
 };
