@@ -135,9 +135,7 @@ const ManageDatabase: React.FC<ManageDatabaseInjectedProps> = ({
   ));
   return (
     <RightContainer>
-      <div
-        className={`container-fluid ${styles.padd_left_remove} ${styles.manage_dbs_page}`}
-      >
+      <div className={`container-fluid ${styles.manage_dbs_page}`}>
         <Helmet title="Manage - Data | Hasura" />
         <BreadCrumb breadCrumbs={crumbs} />
         <div className={styles.display_flex}>

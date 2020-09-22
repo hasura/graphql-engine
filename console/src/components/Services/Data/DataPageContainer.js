@@ -9,8 +9,8 @@ import GqlCompatibilityWarning from '../../Common/GqlCompatibilityWarning/GqlCom
 
 import {
   updateCurrentSchema,
-  fetchSchemaList,
   UPDATE_CURRENT_DATA_SOURCE,
+  fetchDataInit,
 } from './DataActions';
 import { CLI_CONSOLE_MODE } from '../../../constants';
 import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
@@ -45,12 +45,7 @@ const DataPageContainer = ({
       source: newName,
     });
     setLoadingSchemas(true);
-    dispatch(fetchSchemaList()).then(data => {
-      if (data.length) {
-        dispatch(updateCurrentSchema(data[0].schema_name, true, data));
-      } else {
-        dispatch(updateCurrentSchema('', true, []));
-      }
+    dispatch(fetchDataInit()).then(() => {
       setLoadingSchemas(false);
     });
   };

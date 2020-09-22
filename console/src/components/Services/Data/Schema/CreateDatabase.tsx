@@ -80,7 +80,7 @@ const CreateDatabase = ({ onSubmit }: CreateDatabaseProps) => {
             bsClass="modify_select"
             styleOverrides={customSelectBoxStyles}
             filterOption="prefix"
-            placeholder="database_type"
+            placeholder="database type"
           />
         </span>
         <input
@@ -104,9 +104,9 @@ const CreateDatabase = ({ onSubmit }: CreateDatabaseProps) => {
           onInputChange={e => setDatabaseUrl(e.target.value)}
           required
           inputVal={databaseUrl}
-          inputPlaceHolder="Database URL"
+          inputPlaceHolder="database url"
           testId="database-url"
-          inputStyle={{ width: '220px' }}
+          inputStyle={{ width: '220px', fontSize: '12px' }}
         />
       </form>
       <div style={{ marginTop: '20px' }}>

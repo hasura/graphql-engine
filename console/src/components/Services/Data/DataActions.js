@@ -307,9 +307,11 @@ const fetchDataInit = () => (dispatch, getState) => {
           .slice(1),
       });
       dispatch(updateSchemaInfo());
+      return data;
     },
     error => {
       console.error('Failed to fetch schema ' + JSON.stringify(error));
+      return error;
     }
   );
 };
