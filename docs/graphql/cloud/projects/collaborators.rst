@@ -15,7 +15,7 @@ Project Collaborators
 Introduction
 ------------
 
-You can invite collaborators to your project and grant them partial or complete access to your Hasura console.
+You can invite collaborators to your project and grant them partial or complete access to your Hasura console. The `Collaborators` tab shows the current people who have access to the project and the people who have been invited to the project.
 
 Invite a collaborator
 ---------------------
@@ -40,6 +40,22 @@ Collaborators can have different levels of access in the Hasura console.
 .. thumbnail:: /img/graphql/cloud/projects/add-collaborator.png
    :alt: Add collaborator
    :width: 437px
+
+Remove a collaborator
+-------------------
+
+To remove a collaborator, click on the collaborator and click on the remove button next on top right:
+
+
+.. thumbnail:: /img/graphql/cloud/projects/remove-collaborator.png
+   :alt: Remove collaborator
+   :width: 437px
+
+If you have invited a collaborator, you can click on the ``Invited`` button on the invitation revoke or resent the invitation.
+
+.. thumbnail:: /img/graphql/cloud/projects/revoke-collaboration-invitation.png
+   :alt: Revoke collaboration invitation
+   :width: 1146px
 
 
 Invitations
