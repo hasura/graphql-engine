@@ -75,6 +75,16 @@ fromAnnBoolExpFld =
       expressions <- traverse (fromOpExpG expression) opExpGs
       pure (AndExpression expressions)
 
+-- TODO: Question: how do we associate/confirm that this column name
+-- associates to an entity listed in the From list.
+--
+-- Example:
+--
+-- select x from a, b where f > 1;
+--
+-- We should have an explicit mapping from included entities to field
+-- names of that entity.
+--
 fromPGColumnInfo :: Ir.PGColumnInfo -> FromIr Expression
 fromPGColumnInfo Ir.PGColumnInfo{pgiColumn = pgCol} =
   pure (ColumnExpression (Sql.getPGColTxt pgCol))
