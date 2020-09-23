@@ -4,12 +4,15 @@ module Main where
 
 import           Control.Monad.Validate
 import           Data.Functor.Identity
+import qualified Data.HashMap.Strict as HM
+import           Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.List.NonEmpty as NE
 import           Data.String
 import qualified Database.ODBC.SQLServer as Odbc
 import qualified Hasura.RQL.DML.Select.Types as Ir
 import qualified Hasura.RQL.Types.BoolExp as Ir
 import qualified Hasura.RQL.Types.Column as Ir
+import qualified Hasura.RQL.Types.Common as Ir
 import           Hasura.SQL.Tsql.FromIr as FromIr
 import           Hasura.SQL.Tsql.ToQuery as ToQuery
 import           Hasura.SQL.Tsql.Types as Tsql
@@ -75,90 +78,212 @@ pureTests = do
 --
 fromIrTests :: Spec
 fromIrTests = do
+  tracks_id
+  tracks_album_title
+
+tracks_id :: SpecWith ()
+tracks_id =
   it
-    "Select: sanity property test"
-    (property
-       (\limit fieldText fieldAlias schemaName tableName colName ->
-          shouldBe
-            (runValidate
-               (FromIr.runFromIr
-                  (FromIr.fromSelectFields
-                     Ir.AnnSelectG
-                       { _asnFields =
-                           [ ( fromString fieldAlias
-                             , Ir.AFExpression (fromString fieldText))
-                           ]
-                       , _asnFrom =
-                           Ir.FromTable
-                             Sql.QualifiedObject
-                               { qSchema = Sql.SchemaName schemaName
-                               , qName = Sql.TableName tableName
-                               }
-                       , _asnPerm =
-                           Ir.TablePerm
-                             { _tpFilter =
-                                 Ir.BoolFld
-                                   (Ir.AVCol
-                                      (Ir.PGColumnInfo
-                                         { pgiColumn = Sql.unsafePGCol colName
-                                         , pgiName = G.unsafeMkName colName
-                                         , pgiPosition = 0
-                                         , pgiType =
-                                             Ir.PGColumnScalar Sql.PGSmallInt
-                                         , pgiIsNullable = False
-                                         , pgiDescription = Nothing
-                                         })
-                                      [Ir.ANISNULL])
-                             , _tpLimit = Just limit
-                             }
-                       , _asnArgs =
-                           Ir.SelectArgs
-                             { _saWhere = Nothing
-                             , _saOrderBy = Nothing
-                             , _saLimit = Nothing
-                             , _saOffset = Nothing
-                             , _saDistinct = Nothing
-                             }
-                       , _asnStrfyNum = False
-                       })))
-            (Right
-               Select
-                 { selectTop =
-                     Commented
-                       { commentedComment = Just DueToPermission
-                       , commentedThing = Top limit
-                       }
-                 , selectProjections =
-                     NE.fromList
-                       [ ExpressionProjection
-                           Aliased
-                             { aliasedThing =
-                                 Tsql.ValueExpression
-                                   (Odbc.TextValue (fromString fieldText))
-                             , aliasedAlias =
-                                 Just
-                                   (Alias {aliasText = fromString fieldAlias})
-                             }
-                       ]
-                 , selectFrom =
-                     FromQualifiedTable
-                       Aliased
-                         { aliasedThing =
-                             Qualified
-                               { qualifiedThing =
-                                   TableName {tableNameText = tableName}
-                               , qualifiedSchemaName =
-                                   Just
-                                     (SchemaName
-                                        {schemaNameParts = [schemaName]})
-                               }
-                         , aliasedAlias = Nothing
-                         }
-                 , selectWhere =
-                     ExpressionWhere
-                       (AndExpression
-                          [IsNullExpression (ColumnExpression colName)])
-                 })))
+    "tracks { id }"
+    (shouldBe
+       (runValidate
+          (FromIr.runFromIr
+             (FromIr.fromSelectFields
+                Ir.AnnSelectG
+                  { _asnFields =
+                      [ ( "id"
+                        , Ir.AFColumn
+                            (Ir.AnnColumnField
+                               { _acfInfo =
+                                   Ir.PGColumnInfo
+                                     { pgiColumn = "id"
+                                     , pgiName = G.unsafeMkName "id"
+                                     , pgiPosition = 1
+                                     , pgiType = Ir.PGColumnScalar Sql.PGInteger
+                                     , pgiIsNullable = False
+                                     , pgiDescription = Nothing
+                                     }
+                               , _acfAsText = False
+                               , _acfOp = Nothing
+                               }))
+                      ]
+                  , _asnFrom =
+                      Ir.FromTable
+                        (Sql.QualifiedObject
+                           {qSchema = "public", qName = "tracks"})
+                  , _asnPerm =
+                      Ir.TablePerm
+                        {_tpFilter = Ir.BoolAnd [], _tpLimit = Nothing}
+                  , Ir._asnArgs =
+                      Ir.SelectArgs
+                        { _saWhere = Nothing
+                        , _saOrderBy = Nothing
+                        , _saLimit = Nothing
+                        , _saOffset = Nothing
+                        , _saDistinct = Nothing
+                        }
+                  , _asnStrfyNum = False
+                  })))
+       (Right
+          (Select
+             { selectTop =
+                 Commented {commentedComment = Nothing, commentedThing = NoTop}
+             , selectProjections =
+                 FieldNameProjection
+                   (Aliased
+                      { aliasedThing = FieldName {fieldNameText = "id"}
+                      , aliasedAlias = Just (Alias {aliasText = "id"})
+                      }) :|
+                 []
+             , selectFrom =
+                 FromQualifiedTable
+                   (Aliased
+                      { aliasedThing =
+                          Qualified
+                            { qualifiedThing =
+                                TableName {tableNameText = "tracks"}
+                            , qualifiedSchemaName =
+                                Just (SchemaName {schemaNameParts = ["public"]})
+                            }
+                      , aliasedAlias = Nothing
+                      })
+             , selectJoins = []
+             , selectWhere = ExpressionWhere (AndExpression [])
+             })))
+
+tracks_album_title :: SpecWith ()
+tracks_album_title =
+  it
+    "tracks { album { title } }"
+    (shouldBe
+       (runValidate
+          (FromIr.runFromIr
+             (FromIr.fromSelectFields
+                Ir.AnnSelectG
+                  { _asnFields =
+                      [ ( "album"
+                        , Ir.AFObjectRelation
+                            (Ir.AnnRelationSelectG
+                               { aarRelationshipName =
+                                   Ir.RelName (Ir.mkNonEmptyTextUnsafe "album")
+                               , aarColumnMapping =
+                                   HM.fromList [("album_id", "id")]
+                               , aarAnnSelect =
+                                   Ir.AnnObjectSelectG
+                                     { _aosFields =
+                                         [ ( "title"
+                                           , Ir.AFColumn
+                                               (Ir.AnnColumnField
+                                                  { _acfInfo =
+                                                      Ir.PGColumnInfo
+                                                        { pgiColumn = "title"
+                                                        , pgiName =
+                                                            G.unsafeMkName
+                                                              "title"
+                                                        , pgiPosition = 2
+                                                        , pgiType =
+                                                            Ir.PGColumnScalar
+                                                              Sql.PGVarchar
+                                                        , pgiIsNullable = False
+                                                        , pgiDescription =
+                                                            Nothing
+                                                        }
+                                                  , _acfAsText = False
+                                                  , _acfOp = Nothing
+                                                  }))
+                                         ]
+                                     , _aosTableFrom =
+                                         Sql.QualifiedObject
+                                           { qSchema = "public"
+                                           , qName = "albums"
+                                           }
+                                     , _aosTableFilter = Ir.BoolAnd []
+                                     }
+                               }))
+                      ]
+                  , _asnFrom =
+                      Ir.FromTable
+                        (Sql.QualifiedObject
+                           {qSchema = "public", qName = "tracks"})
+                  , _asnPerm =
+                      Ir.TablePerm
+                        {_tpFilter = Ir.BoolAnd [], _tpLimit = Nothing}
+                  , _asnArgs =
+                      Ir.SelectArgs
+                        { _saWhere = Nothing
+                        , _saOrderBy = Nothing
+                        , _saLimit = Nothing
+                        , _saOffset = Nothing
+                        , _saDistinct = Nothing
+                        }
+                  , _asnStrfyNum = False
+                  })))
+       (Right
+          (Select
+             { selectTop =
+                 Commented {commentedComment = Nothing, commentedThing = NoTop}
+             , selectProjections =
+                 FieldNameProjection
+                   (Aliased
+                      { aliasedThing = FieldName {fieldNameText = "album"}
+                      , aliasedAlias = Just (Alias {aliasText = "album"})
+                      }) :|
+                 []
+             , selectFrom =
+                 FromQualifiedTable
+                   (Aliased
+                      { aliasedThing =
+                          Qualified
+                            { qualifiedThing =
+                                TableName {tableNameText = "tracks"}
+                            , qualifiedSchemaName =
+                                Just (SchemaName {schemaNameParts = ["public"]})
+                            }
+                      , aliasedAlias = Nothing
+                      })
+             , selectJoins =
+                 [ Join
+                     { joinSelect =
+                         Select
+                           { selectTop =
+                               Commented
+                                 { commentedComment = Nothing
+                                 , commentedThing = NoTop
+                                 }
+                           , selectProjections =
+                               FieldNameProjection
+                                 (Aliased
+                                    { aliasedThing =
+                                        FieldName {fieldNameText = "title"}
+                                    , aliasedAlias =
+                                        Just (Alias {aliasText = "title"})
+                                    }) :|
+                               []
+                           , selectFrom =
+                               FromQualifiedTable
+                                 (Aliased
+                                    { aliasedThing =
+                                        Qualified
+                                          { qualifiedThing =
+                                              TableName
+                                                {tableNameText = "albums"}
+                                          , qualifiedSchemaName =
+                                              Just
+                                                (SchemaName
+                                                   { schemaNameParts =
+                                                       ["public"]
+                                                   })
+                                          }
+                                    , aliasedAlias = Nothing
+                                    })
+                           , selectJoins = []
+                           , selectWhere = ExpressionWhere (AndExpression [])
+                           }
+                     , joinFieldName = FieldName {fieldNameText = "album"}
+                     }
+                 ]
+             , selectWhere = ExpressionWhere (AndExpression [])
+             })))
 
 --------------------------------------------------------------------------------
 -- Tests for converting from the Tsql AST to a Query
@@ -178,7 +303,8 @@ toQueryTests = do
        (Odbc.renderQuery
           (ToQuery.fromSelect
              Select
-               { selectTop =
+               { selectJoins = []
+               , selectTop =
                    Commented
                      { commentedComment = pure DueToPermission
                      , commentedThing = Top 1

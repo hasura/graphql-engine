@@ -567,5 +567,6 @@ test-suite tsql-tests
     , monad-validate
     , QuickCheck
     , graphql-parser
+    , unordered-containers
   hs-source-dirs: src-test
   main-is: MainTsql.hs
