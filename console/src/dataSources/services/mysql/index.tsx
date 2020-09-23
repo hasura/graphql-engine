@@ -31,7 +31,8 @@ import {
   getFKRelations,
   primaryKeysInfoSql,
   uniqueKeysSql,
-  schemaList,
+  schemaListSql,
+  getAdditionalColumnsInfoQuerySql,
 } from './sqlUtils';
 import { getTableSupportedQueries } from '../postgresql';
 
@@ -151,7 +152,7 @@ export const mysql: DataSourcesAPI = {
   arrayToPostgresArray: (...args: any) => {
     return args;
   },
-  additionalColumnsInfoQuery: undefined,
+  getAdditionalColumnsInfoQuerySql,
   parseColumnsInfoResult: (args: any) => args,
   getFetchTablesListQuery,
   fetchColumnTypesQuery: 'select "[]"',
@@ -180,7 +181,7 @@ WHERE
   cascadeSqlQuery: () => {
     throw new Error('not implemented');
   },
-  schemaList,
+  schemaListSql,
   dependencyErrorCode: '',
   columnDataTypes,
   commonDataTypes,

@@ -44,7 +44,6 @@ import {
   frequentlyUsedColumns,
   getFKRelations,
 } from './sqlUtils';
-import { getRunSqlQuery } from '../../../components/Common/utils/v1QueryUtils';
 
 export const isTable = (table: Table) => {
   return (
@@ -180,40 +179,14 @@ export const getGroupedTableComputedFields = (
   return groupedComputedFields;
 };
 
-const schemaListSQL = `SELECT schema_name FROM information_schema.schemata WHERE
-schema_name NOT IN (SELECT schema_name FROM information_schema.schemata
-WHERE schema_name = 'information_schema' OR schema_name = 'pg_catalog' OR schema_name = 'hdb_catalog'
-OR schema_name = 'hdb_views' OR schema_name = 'pg_temp_1' OR schema_name = 'pg_toast_temp_1' OR
-schema_name = 'pg_toast') ORDER BY schema_name ASC;`;
+const schemaListSql = `SELECT schema_name FROM information_schema.schemata WHERE
+schema_name NOT IN ('information_schema', 'pg_catalog', 'hdb_catalog', 'hdb_views', 'pg_temp_1', 'pg_toast_temp_1', 'pg_toast')
+ORDER BY schema_name ASC;`;
 
-const schemaList = (source: string) => getRunSqlQuery(schemaListSQL, source);
-
-const additionalColumnsInfoQuery = undefined;
-// (
-//   schemaName: string,
-//   currentSource: string
-// ) => ({
-//   type: 'select',
-//   source: currentSource,
-//   args: {
-//     table: {
-//       name: 'columns',
-//       schema: 'information_schema',
-//     },
-//     columns: [
-//       'column_name',
-//       'table_name',
-//       'is_generated',
-//       'is_identity',
-//       'identity_generation',
-//     ],
-//     where: {
-//       table_schema: {
-//         $eq: schemaName,
-//       },
-//     },
-//   },
-// });
+const getAdditionalColumnsInfoQuerySql = (
+  schemaName: string
+) => `SELECT column_name, table_name, is_generated, is_identity, identity_generation
+  FROM information_schema.columns where table_schema = '${schemaName}';`;
 
 type ColumnsInfoPayload = {
   column_name: string;
@@ -399,8 +372,8 @@ export const postgres: DataSourcesAPI = {
   getTableSupportedQueries,
   getColumnType,
   arrayToPostgresArray,
-  schemaList,
-  additionalColumnsInfoQuery,
+  schemaListSql,
+  getAdditionalColumnsInfoQuerySql,
   parseColumnsInfoResult,
   columnDataTypes,
   getFetchTablesListQuery,

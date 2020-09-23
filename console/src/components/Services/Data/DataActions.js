@@ -240,14 +240,12 @@ const fetchAdditionalColumnsInfo = () => (dispatch, getState) => {
   const schemaName = getState().tables.currentSchema;
   const currentSource = getState().tables.currentSource;
 
-  if (!dataSource.additionalColumnsInfoQuery) {
+  if (!dataSource.getAdditionalColumnsInfoQuerySql) {
     // unavailable for a data source
     return;
   }
-  const query = dataSource.additionalColumnsInfoQuery(
-    schemaName,
-    currentSource
-  );
+  const sql = dataSource.getAdditionalColumnsInfoQuerySql(schemaName);
+  const query = getRunSqlQuery(sql, currentSource);
 
   const options = {
     credentials: globalCookiePolicy,
@@ -290,7 +288,7 @@ const fetchDataInit = () => (dispatch, getState) => {
   const url = Endpoints.query;
 
   const source = getState().tables.currentDataSource;
-  const query = dataSource.schemaList(source);
+  const query = getRunSqlQuery(dataSource.schemaListSql, source);
 
   if (!getState().tables.currentDataSource) return;
 
@@ -393,7 +391,7 @@ const updateCurrentSchema = (
 const fetchSchemaList = () => (dispatch, getState) => {
   const url = Endpoints.query;
   const currentSource = getState().tables.currentDataSource;
-  const query = dataSource.schemaList(currentSource);
+  const query = getRunSqlQuery(dataSource.schemaListSql, currentSource);
 
   const options = {
     credentials: globalCookiePolicy,
