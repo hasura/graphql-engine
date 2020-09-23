@@ -29,7 +29,7 @@ allow-newer:
 package *
   optimization: 2
   -- For tooling, e.g. 'weeder', and IDE-like stuff:
-  ghc-options: -fwrite-ide-info
+  ghc-options: -fwrite-ide-info -fdefer-typed-holes
 
   haddock-html: true
   haddock-hoogle: true

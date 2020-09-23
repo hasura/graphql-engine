@@ -65,8 +65,15 @@ runAddRemoteSchemaPermissions
   => AddRemoteSchemaPermissions
   -> m EncJSON
 runAddRemoteSchemaPermissions q = do
+  remoteSchemaMap <- scRemoteSchemas <$> askSchemaCache
+  void $ onNothing (Map.lookup name remoteSchemaMap) $
+    throw400 NotExists "no such remote schema"
   liftTx $ addRemoteSchemaPermissionsToCatalog q
+--  TODO: validate the remote schema against the original remote schema
+--  buildSchemaCacheFor $ MORemoteSchema name
   pure successMsg
+  where
+    name = _arspRemoteSchema q
 
 addRemoteSchemaP1
   :: (QErrM m, CacheRM m)

@@ -39,7 +39,7 @@ import qualified Text.Shakespeare.Text   as ST
 
 data OpVar = OLD | NEW deriving (Show)
 
-pgIdenTrigger:: Ops -> TriggerName -> T.Text
+pgIdenTrigger :: Ops -> TriggerName -> T.Text
 pgIdenTrigger op trn = pgFmtIden . qualifyTriggerName op $ triggerNameToTxt trn
   where
     qualifyTriggerName op' trn' = "notify_hasura_" <> trn' <> "_" <> T.pack (show op')
