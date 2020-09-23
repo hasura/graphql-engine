@@ -121,7 +121,7 @@ data CreateEventTriggerQuery
   , cetqDelete         :: !(Maybe SubscribeOpSpec)
   , cetqEnableManual   :: !(Maybe Bool)
   , cetqRetryConf      :: !(Maybe RetryConf)
-  , cetqWebhook        :: !(Maybe T.Text)
+  , cetqWebhook        :: !(Maybe InputWebhook)
   , cetqWebhookFromEnv :: !(Maybe T.Text)
   , cetqHeaders        :: !(Maybe [HeaderConf])
   , cetqReplace        :: !Bool
@@ -198,7 +198,7 @@ data EventTriggerConf
   = EventTriggerConf
   { etcName           :: !TriggerName
   , etcDefinition     :: !TriggerOpsDef
-  , etcWebhook        :: !(Maybe T.Text)
+  , etcWebhook        :: !(Maybe InputWebhook)
   , etcWebhookFromEnv :: !(Maybe T.Text)
   , etcRetryConf      :: !RetryConf
   , etcHeaders        :: !(Maybe [HeaderConf])

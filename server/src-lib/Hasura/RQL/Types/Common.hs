@@ -37,10 +37,21 @@ module Hasura.RQL.Types.Common
        , isSystemDefined
 
        , successMsg
-       , NonNegativeDiffTime(..)
+       , NonNegativeDiffTime
+       , unNonNegativeDiffTime
+       , unsafeNonNegativeDiffTime
+       , mkNonNegativeDiffTime
        , InputWebhook(..)
        , ResolvedWebhook(..)
        , resolveWebhook
+
+       , NonNegativeInt
+       , getNonNegativeInt
+       , mkNonNegativeInt
+       , unsafeNonNegativeInt
+       , Timeout(..)
+       , defaultActionTimeoutSecs
+
        , SourceName(..)
        , defaultSource
 
@@ -63,6 +74,8 @@ import           Control.Lens                  (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Bifunctor                (bimap)
+import           Data.Scientific               (toBoundedInteger)
 import           Data.URL.Template
 import           Instances.TH.Lift             ()
 import           Language.Haskell.TH.Syntax    (Lift, Q, TExp)
@@ -295,12 +308,41 @@ isSystemDefined = unSystemDefined
 successMsg :: EncJSON
 successMsg = "{\"message\":\"success\"}"
 
+newtype NonNegativeInt = NonNegativeInt { getNonNegativeInt :: Int }
+  deriving (Show, Eq, ToJSON, Generic, NFData, Cacheable, Num)
+
+mkNonNegativeInt :: Int -> Maybe NonNegativeInt
+mkNonNegativeInt x = case x >= 0 of
+  True  -> Just $ NonNegativeInt x
+  False -> Nothing
+
+unsafeNonNegativeInt :: Int -> NonNegativeInt
+unsafeNonNegativeInt = NonNegativeInt
+
+instance FromJSON NonNegativeInt where
+  parseJSON = withScientific "NonNegativeInt" $ \t -> do
+    case (t >= 0) of
+      True  -> NonNegativeInt <$> maybeInt (toBoundedInteger t)
+      False -> fail "negative value not allowed"
+    where
+      maybeInt x = case x of
+        Just v  -> return v
+        Nothing -> fail "integer passed is out of bounds"
+
 newtype NonNegativeDiffTime = NonNegativeDiffTime { unNonNegativeDiffTime :: DiffTime }
-  deriving (Show, Eq,ToJSON,Generic, NFData, Cacheable)
+  deriving (Show, Eq,ToJSON,Generic, NFData, Cacheable, Num)
+
+unsafeNonNegativeDiffTime :: DiffTime -> NonNegativeDiffTime
+unsafeNonNegativeDiffTime = NonNegativeDiffTime
+
+mkNonNegativeDiffTime :: DiffTime -> Maybe NonNegativeDiffTime
+mkNonNegativeDiffTime x = case x >= 0 of
+  True  -> Just $ NonNegativeDiffTime x
+  False -> Nothing
 
 instance FromJSON NonNegativeDiffTime where
   parseJSON = withScientific "NonNegativeDiffTime" $ \t -> do
-    case (t > 0) of
+    case (t >= 0) of
       True  -> return $ NonNegativeDiffTime . realToFrac $ t
       False -> fail "negative value not allowed"
 
@@ -323,32 +365,56 @@ instance FromJSON InputWebhook where
       Left e  -> fail $ "Parsing URL template failed: " ++ e
       Right v -> pure $ InputWebhook v
 
+instance Q.FromCol InputWebhook where
+  fromCol bs = do
+    urlTemplate <- parseURLTemplate <$> Q.fromCol bs
+    bimap (\e -> "Parsing URL template failed: " <> T.pack e) InputWebhook urlTemplate
+
 resolveWebhook :: QErrM m => Env.Environment -> InputWebhook -> m ResolvedWebhook
 resolveWebhook env (InputWebhook urlTemplate) = do
   let eitherRenderedTemplate = renderURLTemplate env urlTemplate
   either (throw400 Unexpected . T.pack)
     (pure . ResolvedWebhook) eitherRenderedTemplate
 
+newtype Timeout = Timeout { unTimeout :: Int }
+  deriving (Show, Eq, ToJSON, Generic, NFData, Cacheable, Lift)
+
+instance FromJSON Timeout where
+  parseJSON = withScientific "Timeout" $ \t -> do
+    timeout <- onNothing (toBoundedInteger t) $ fail (show t <> " is out of bounds")
+    case (timeout >= 0) of
+      True  -> return $ Timeout timeout
+      False -> fail "timeout value cannot be negative"
+
+instance Arbitrary Timeout where
+  arbitrary = Timeout <$> QC.choose (0, 10000000)
+
+defaultActionTimeoutSecs :: Timeout
+defaultActionTimeoutSecs = Timeout 30
+
 data UrlConf
-  = UrlValue !T.Text
+  = UrlValue !InputWebhook
   | UrlFromEnv !T.Text
   deriving (Show, Eq, Generic, Lift)
 instance NFData UrlConf
 instance Cacheable UrlConf
 
 instance ToJSON UrlConf where
-  toJSON (UrlValue w)      = String w
+  toJSON (UrlValue w)      = toJSON w
   toJSON (UrlFromEnv wEnv) = object ["from_env" .= wEnv ]
 
 instance FromJSON UrlConf where
   parseJSON (Object o) = UrlFromEnv <$> o .: "from_env"
-  parseJSON (String t) = pure $ UrlValue t
+  parseJSON t@(String _) =
+    case (fromJSON t) of
+      Error s   -> fail s
+      Success a -> pure $ UrlValue a
   parseJSON _          = fail "one of string or object must be provided for url/webhook"
 
 resolveUrlConf
   :: MonadError QErr m => Env.Environment -> UrlConf -> m Text
 resolveUrlConf env = \case
-  UrlValue v -> pure v
+  UrlValue v        -> unResolvedWebhook <$> resolveWebhook env v
   UrlFromEnv envVar -> getEnv env envVar
 
 getEnv :: QErrM m => Env.Environment -> T.Text -> m T.Text

@@ -17,7 +17,8 @@ CREATE TABLE hdb_catalog.event_log
   error BOOLEAN NOT NULL DEFAULT FALSE,
   tries INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT NOW(),
-  locked BOOLEAN NOT NULL DEFAULT FALSE,
+  /* when locked IS NULL the event is unlocked and can be processed */
+  locked TIMESTAMPTZ,
   next_retry_at TIMESTAMP,
   archived BOOLEAN NOT NULL DEFAULT FALSE
 );
@@ -34,7 +35,7 @@ CREATE TABLE hdb_catalog.event_invocation_logs
   status INTEGER,
   request JSON,
   response JSON,
-  created_at TIMESTAMP DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
 
   FOREIGN KEY (event_id) REFERENCES hdb_catalog.event_log (id)
 );

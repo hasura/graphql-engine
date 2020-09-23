@@ -49,6 +49,8 @@ import           Hasura.Eventing.ScheduledTrigger
 import           Hasura.GraphQL.Execute                    (MonadGQLExecutionCheck (..),
                                                             checkQueryInAllowlist)
 import           Hasura.GraphQL.Execute.Action             (asyncActionsProcessor)
+import           Hasura.GraphQL.Execute.Query              (MonadQueryInstrumentation (..),
+                                                            noProfile)
 import           Hasura.GraphQL.Logging                    (MonadQueryLog (..), QueryLog (..))
 import           Hasura.GraphQL.Transport.HTTP             (MonadExecuteQuery (..))
 import           Hasura.GraphQL.Transport.HTTP.Protocol    (toParsed)
@@ -320,6 +322,7 @@ runHGEServer
      , WS.MonadWSLog m
      , MonadExecuteQuery m
      , Tracing.HasReporter m
+     , MonadQueryInstrumentation m
      , MonadMetadataManage m
      , MonadAsyncActions m
      )
@@ -403,8 +406,6 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime shutd
 
   lockedEventsCtx <- liftIO $ atomically initLockedEventsCtx
 
-  -- prepare event triggers data
-  prepareEvents allPgSources logger
   eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI
   unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
 
@@ -467,8 +468,10 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime shutd
   liftIO $ Warp.runSettings warpSettings app
 
   where
-    -- | prepareEvents is a function to unlock all the events that are
-    -- locked and unprocessed, which is called while hasura is started.
+    -- | prepareScheduledEvents is a function to unlock all the scheduled trigger
+    -- events that are locked and unprocessed, which is called while hasura is
+    -- started.
+    --
     -- Locked and unprocessed events can occur in 2 ways
     -- 1.
     -- Hasura's shutdown was not graceful in which all the fetched
@@ -478,13 +481,6 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime shutd
     -- There is another hasura instance which is processing events and
     -- it will lock events to process them.
     -- So, unlocking all the locked events might re-deliver an event(due to #2).
-    prepareEvents pgSources (Logger logger) = do
-      forM pgSources $ \pgSource -> do
-        liftIO $ logger $ mkGenericStrLog LevelInfo "event_triggers" "preparing data"
-        res <- liftIO $ runTx (_pscExecCtx pgSource) unlockAllEvents
-        either (printErrJExit EventSubSystemError) return res
-
-    -- | prepareScheduledEvents is like prepareEvents, but for scheduled triggers
     prepareScheduledEvents metadataPool (Logger logger) = do
       liftIO $ logger $ mkGenericStrLog LevelInfo "scheduled_triggers" "preparing data"
       let pgExecCtx = mkPGExecCtx Q.ReadCommitted metadataPool
@@ -510,7 +506,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime shutd
         liftIO $ logger $ mkGenericStrLog LevelInfo "scheduled_triggers" "unlocking scheduled events that are locked by the HGE"
       let pgExecCtx = mkPGExecCtx Q.ReadCommitted metadataPool
       unlockEventsForShutdown pgExecCtx hasuraLogger "scheduled_triggers" "cron events" unlockCronEvents leCronEvents
-      unlockEventsForShutdown pgExecCtx hasuraLogger "scheduled_triggers" "scheduled events" unlockCronEvents leStandAloneEvents
+      unlockEventsForShutdown pgExecCtx hasuraLogger "scheduled_triggers" "scheduled events" unlockCronEvents leOneOffEvents
 
     unlockEventsForShutdown
       :: PGExecCtx
@@ -665,6 +661,9 @@ execQuery env httpManager defPgSource metadata queryBs = runExceptT do
 
 instance Tracing.HasReporter AppM
 
+instance MonadQueryInstrumentation AppM where
+  askInstrumentQuery _ = pure (id, noProfile)
+
 instance HttpLog AppM where
   logHttpError logger userInfoM reqId waiReq req qErr headers =
     unLogger logger $ mkHttpLog $
@@ -675,7 +674,7 @@ instance HttpLog AppM where
       mkHttpAccessLogContext userInfoM reqId waiReq compressedResponse qTime cType headers
 
 instance MonadExecuteQuery AppM where
-  executeQuery _ _  _ tx =
+  executeQuery _ _ _ tx =
     ([],) <$> hoist (hoist AppM) tx
 
 instance UserAuthentication (Tracing.TraceT AppM) where

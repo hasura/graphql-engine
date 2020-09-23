@@ -764,7 +764,7 @@ CREATE TABLE hdb_catalog.hdb_cron_events
   scheduled_time TIMESTAMPTZ NOT NULL,
   status TEXT NOT NULL DEFAULT 'scheduled',
   tries INTEGER NOT NULL DEFAULT 0,
-  created_at TIMESTAMP DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
   next_retry_at TIMESTAMPTZ,
 
   -- FOREIGN KEY (trigger_name) REFERENCES hdb_catalog.hdb_cron_triggers(name)
@@ -781,7 +781,7 @@ CREATE TABLE hdb_catalog.hdb_cron_event_invocation_logs
   status INTEGER,
   request JSON,
   response JSON,
-  created_at TIMESTAMP DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
 
   FOREIGN KEY (event_id) REFERENCES hdb_catalog.hdb_cron_events (id)
     ON UPDATE CASCADE ON DELETE CASCADE
@@ -810,7 +810,7 @@ CREATE TABLE hdb_catalog.hdb_scheduled_events
   header_conf JSON,
   status TEXT NOT NULL DEFAULT 'scheduled',
   tries INTEGER NOT NULL DEFAULT 0,
-  created_at TIMESTAMP DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
   next_retry_at TIMESTAMPTZ,
   comment TEXT,
   CONSTRAINT valid_status CHECK (status IN ('scheduled','locked','delivered','error','dead'))
@@ -825,7 +825,7 @@ event_id TEXT,
 status INTEGER,
 request JSON,
 response JSON,
-created_at TIMESTAMP DEFAULT NOW(),
+created_at TIMESTAMPTZ DEFAULT NOW(),
 
 FOREIGN KEY (event_id) REFERENCES hdb_catalog.hdb_scheduled_events (id)
    ON DELETE CASCADE ON UPDATE CASCADE

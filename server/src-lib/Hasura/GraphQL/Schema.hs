@@ -468,20 +468,20 @@ buildRelayPostgresQueryFields sourceConfig allTables allFunctions = do
       in RFDB pgExecCtx
 
 queryRootFromFields
-  :: forall n
-   . MonadParse n
+  :: forall n m
+   . (MonadError QErr m, MonadParse n)
   => [P.FieldParser n (QueryRootField UnpreparedValue)]
-  -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 queryRootFromFields fps =
-      P.selectionSet $$(G.litName "query_root") Nothing fps
-  <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
+  P.safeSelectionSet $$(G.litName "query_root") Nothing fps
+    <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
 
 emptyIntrospection
   :: forall m n
    . (MonadSchema n m, MonadError QErr m)
   => m [P.FieldParser n (QueryRootField UnpreparedValue)]
 emptyIntrospection = do
-  let emptyQueryP = queryRootFromFields @n []
+  emptyQueryP <- queryRootFromFields @n []
   introspectionTypes <- collectTypes (P.parserType emptyQueryP)
   let introspectionSchema = Schema
         { sDescription = Nothing
@@ -511,14 +511,14 @@ queryWithIntrospectionHelper
   -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
-  let basicQueryP = queryRootFromFields basicQueryFP
+  basicQueryP <- queryRootFromFields basicQueryFP
   emptyIntro <- emptyIntrospection
   allBasicTypes <- collectTypes $
     [ P.parserType basicQueryP
     , P.parserType subscriptionP
     ]
     ++ maybeToList (P.parserType <$> mutationP)
-  allIntrospectionTypes <- collectTypes (P.parserType (queryRootFromFields emptyIntro))
+  allIntrospectionTypes <- collectTypes . P.parserType =<< queryRootFromFields emptyIntro
   let allTypes = Map.unions
         [ allBasicTypes
         , Map.filterWithKey (\name _info -> name /= queryRoot) allIntrospectionTypes

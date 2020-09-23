@@ -83,6 +83,8 @@ pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
   where
     resolveDependency :: SchemaDependency -> Either Text ()
     resolveDependency (SchemaDependency objectId _) = case objectId of
+      SOSource source -> void $ M.lookup source (_boSources cache)
+        `onNothing` Left ("source " <> source <<> " is not tracked")
       SOSourceObj source sourceObjId -> case sourceObjId of
         SOITable tableName -> void $ resolveTable source tableName
         SOIFunction functionName -> void $

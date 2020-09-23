@@ -267,7 +267,7 @@ migrations dryRun =
         :  migrationsFromFile [2..3]
         ++ [| ("3", (MigrationPair from3To4 Nothing)) |]
         :  migrationsFromFile [5..37]
-        ++ pure [| ("37", (MigrationPair from37To38 Nothing)) |])
+        ++ pure [| ("39", (MigrationPair from39To40 Nothing)) |])
   where
     runTxOrPrint :: Q.Query -> m ()
     runTxOrPrint
@@ -301,7 +301,7 @@ migrations dryRun =
                                              WHERE name = $2
                                              |] (Q.AltJ $ A.toJSON etc, name) True
 
-    from37To38 = do
+    from39To40 = do
       metadata <- fetchMetadataFromHdbTables
       dropHdbCatalogTables
       liftTx $ do

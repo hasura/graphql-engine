@@ -152,7 +152,7 @@ resolveActionExecution env logger userInfo metadataPool annAction execContext = 
   let actionContext = ActionContext actionName
       handlerPayload = ActionWebhookPayload actionContext sessionVariables inputPayload
   (webhookRes, respHeaders) <- flip runReaderT logger $ callWebhook env manager outputType outputFields reqHeaders confHeaders
-                               forwardClientHeaders resolvedWebhook handlerPayload
+                               forwardClientHeaders resolvedWebhook handlerPayload timeout
   let webhookResponseExpression = RS.AEInput $ UVLiteral $
         toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
       selectAstUnresolved = processOutputSelectionSet webhookResponseExpression
@@ -162,7 +162,7 @@ resolveActionExecution env logger userInfo metadataPool annAction execContext = 
   where
     AnnActionExecution actionName outputType annFields inputPayload
       outputFields definitionList resolvedWebhook confHeaders
-      forwardClientHeaders stringifyNum = annAction
+      forwardClientHeaders stringifyNum timeout = annAction
     ActionExecContext manager reqHeaders sessionVariables = execContext
 
 
@@ -266,12 +266,14 @@ asyncActionsProcessor env logger cacheRef pgPool httpManager = forever $ do
               webhookUrl = _adHandler definition
               forwardClientHeaders = _adForwardClientHeaders definition
               confHeaders = _adHeaders definition
+              timeout = _adTimeout definition
               outputType = _adOutputType definition
               actionContext = ActionContext actionName
           eitherRes <- runExceptT $ flip runReaderT logger $
                        callWebhook env httpManager outputType outputFields reqHeaders confHeaders
-                         forwardClientHeaders webhookUrl $
-                         ActionWebhookPayload actionContext sessionVariables inputPayload
+                         forwardClientHeaders webhookUrl
+                         (ActionWebhookPayload actionContext sessionVariables inputPayload)
+                         timeout
           setErrorTx <- getSetErrorTx
           setCompletedTx <- getSetCompletedTx
           liftIO $ runTx $ case eitherRes of
@@ -345,9 +347,10 @@ callWebhook
   -> Bool
   -> ResolvedWebhook
   -> ActionWebhookPayload
+  -> Timeout
   -> m (ActionWebhookResponse, HTTP.ResponseHeaders)
 callWebhook env manager outputType outputFields reqHeaders confHeaders
-            forwardClientHeaders resolvedWebhook actionWebhookPayload = do
+            forwardClientHeaders resolvedWebhook actionWebhookPayload timeoutSeconds = do
   resolvedConfHeaders <- makeHeadersFromConf env confHeaders
   let clientHeaders = if forwardClientHeaders then mkClientHeadersForward reqHeaders else []
       contentType = ("Content-Type", "application/json")
@@ -358,11 +361,13 @@ callWebhook env manager outputType outputFields reqHeaders confHeaders
       requestBody = J.encode postPayload
       requestBodySize = BL.length requestBody
       url = unResolvedWebhook resolvedWebhook
+      responseTimeout = HTTP.responseTimeoutMicro $ (unTimeout timeoutSeconds) * 1000000
   httpResponse <- do
     initReq <- liftIO $ HTTP.parseRequest (T.unpack url)
-    let req = initReq { HTTP.method         = "POST"
-                      , HTTP.requestHeaders = addDefaultHeaders hdrs
-                      , HTTP.requestBody    = HTTP.RequestBodyLBS requestBody
+    let req = initReq { HTTP.method          = "POST"
+                      , HTTP.requestHeaders  = addDefaultHeaders hdrs
+                      , HTTP.requestBody     = HTTP.RequestBodyLBS requestBody
+                      , HTTP.responseTimeout = responseTimeout
                       }
     Tracing.tracedHttpRequest req \req' ->
       liftIO . try $ HTTP.httpLbs req' manager

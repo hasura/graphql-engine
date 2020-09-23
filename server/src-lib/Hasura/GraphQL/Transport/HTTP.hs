@@ -49,8 +49,6 @@ class Monad m => MonadExecuteQuery m where
     :: GQLReqParsed
     -> [QueryRootField UnpreparedValue]
     -> Maybe EQ.GeneratedSqlMap
-    -- -> PGExecCtx
-    -- -> Q.TxAccess
     -> TraceT (ExceptT QErr IO) EncJSON
     -> TraceT (ExceptT QErr m) (HTTP.ResponseHeaders, EncJSON)
 
@@ -74,6 +72,7 @@ runGQ
      , MonadQueryLog m
      , MonadTrace m
      , MonadExecuteQuery m
+     , EQ.MonadQueryInstrumentation m
      , MonadAsyncActions m
      )
   => Env.Environment
@@ -155,6 +154,7 @@ runGQBatched
      , MonadQueryLog m
      , MonadTrace m
      , MonadExecuteQuery m
+     , EQ.MonadQueryInstrumentation m
      , MonadAsyncActions m
      )
   => Env.Environment
@@ -262,7 +262,7 @@ runHasuraGQ reqId (query, queryParsed) userInfo resolvedOp = do
     E.ExOpQuery tx genSql asts -> trace "Query" $ do
       -- log the generated SQL and the graphql query
       logQueryLog logger query genSql reqId
-      Tracing.interpTraceT id $ executeQuery queryParsed asts genSql pgExecCtx Q.ReadOnly tx
+      Tracing.interpTraceT id $ executeQuery queryParsed asts genSql pgExecCtx tx
 
     E.ExOpMutation respHeaders tx -> trace "Mutate" $ do
       logQueryLog logger query Nothing reqId
