@@ -39,11 +39,13 @@ newtype FromIr a = FromIr { runFromIr :: Validate (NonEmpty Error) a}
 
 fromSelectFields :: Ir.AnnSelectG (Ir.AnnFieldsG Sql.SQLExp) Sql.SQLExp -> FromIr Tsql.Select
 fromSelectFields annSelectG = do
-  fields <- traverse fromProjection _asnFields
+  -- Here is a spot here the from'd thing binds a scope that the
+  -- order/where will be related to.
   selectFrom <-
     case _asnFrom of
       Ir.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
       _ -> FromIr (refute (pure (FromTypeUnsupported _asnFrom)))
+  fields <- traverse fromProjection _asnFields
   filterExpression <- fromAnnBoolExp permFilter
   pure
     Select
@@ -112,6 +114,9 @@ fromGBoolExp =
 
 fromGExists :: Ir.GExists Expression -> FromIr Select
 fromGExists Ir.GExists {_geTable, _geWhere} = do
+  -- Here is a spot here the from'd thing binds a scope that the
+  -- order/where will be related to.
+  -- But the scope here is quite short.
   selectFrom <- fromQualifiedTable _geTable
   whereExpression <- fromGBoolExp _geWhere
   pure
