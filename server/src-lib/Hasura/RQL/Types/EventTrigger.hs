@@ -39,11 +39,11 @@ import qualified Data.Text                  as T
 import qualified Database.PG.Query          as Q
 import qualified Text.Regex.TDFA            as TDFA
 
--- PG allows for identifiers to be of length upto 63
--- So subtracting the length required for hasura_ and _(INSERT | UPDATE | DELETE) 
--- We are left with 49 chars alone for the actual name provided by the user and
--- save the correct functions for the event triggers without the function name being
--- truncated by PG
+-- This change helps us create functions for the event triggers
+-- without the function name being truncated by PG, since PG allows
+-- for only 63 chars for identifiers. 
+-- Reasoning for the 49 characters:
+-- 63 - (hasura_) - (_INSERT | _UPDATE | _DELETE)
 maxTriggerNameLength :: Int
 maxTriggerNameLength = 49
 
