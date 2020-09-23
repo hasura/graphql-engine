@@ -325,6 +325,7 @@ runHGEServer
      , MonadQueryInstrumentation m
      , MonadMetadataManage m
      , MonadAsyncActions m
+     , MonadTriggers m
      )
   => Env.Environment
   -> ServeOptions impl
@@ -418,8 +419,8 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime shutd
     asyncActionsProcessor env logger (_scrCache cacheRef) _icMetadataPool _icHttpManager
 
   -- start a background thread to create new cron events
-  -- cronEventsThread <- liftIO $ C.forkImmortal "runCronEventsGenerator" logger $
-  --   runCronEventsGenerator logger _icPgPool (getSCFromRef cacheRef)
+  cronEventsThread <- C.forkImmortal "runCronEventsGenerator" logger $
+    runCronEventsGenerator logger _icMetadataPool (getSCFromRef cacheRef)
 
   -- prepare scheduled triggers
   -- prepareScheduledEvents _icPgPool logger
@@ -452,18 +453,20 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime shutd
                         , asyncActionsThread
                         , eventQueueThread
                         -- , scheduledEventsThread
-                        -- , cronEventsThread
+                        , cronEventsThread
                         ] <> maybe [] pure telemetryThread
 
   finishTime <- liftIO Clock.getCurrentTime
   let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
   unLogger logger $
     mkGenericLog LevelInfo "server" $ StartupTimeInfo "starting API server" apiInitTime
-  let warpSettings = Warp.setPort soPort
+  unlockScheduledEventsTx <- getUnlockScheduledEventsTx
+  let shutdownHandler' = shutdownHandler _icLoggers immortalThreads stopWsServer lockedEventsCtx
+                         _icMetadataPool allPgSources unlockScheduledEventsTx
+      warpSettings = Warp.setPort soPort
                      . Warp.setHost soHost
                      . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
-                     . Warp.setInstallShutdownHandler
-                       (shutdownHandler _icLoggers immortalThreads stopWsServer lockedEventsCtx _icMetadataPool allPgSources)
+                     . Warp.setInstallShutdownHandler shutdownHandler'
                      $ Warp.defaultSettings
   liftIO $ Warp.runSettings warpSettings app
 
@@ -496,17 +499,18 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime shutd
     shutdownEvents
       :: Q.PGPool
       -> [PGSourceConfig]
+      -> UnlockScheduledEventsTx
       -> Logger Hasura
       -> LockedEventsCtx
       -> IO ()
-    shutdownEvents metadataPool pgSources hasuraLogger@(Logger logger) LockedEventsCtx {..} = do
+    shutdownEvents metadataPool pgSources unlockScheduledEventsTx hasuraLogger@(Logger logger) LockedEventsCtx {..} = do
       forM pgSources $ \pgSource -> do
-        liftIO $ logger $ mkGenericStrLog LevelInfo "event_triggers" "unlocking events that are locked by the HGE"
+        logger $ mkGenericStrLog LevelInfo "event_triggers" "unlocking events that are locked by the HGE"
         unlockEventsForShutdown (_pscExecCtx pgSource) hasuraLogger "event_triggers" "" unlockEvents leEvents
-        liftIO $ logger $ mkGenericStrLog LevelInfo "scheduled_triggers" "unlocking scheduled events that are locked by the HGE"
+        logger $ mkGenericStrLog LevelInfo "scheduled_triggers" "unlocking scheduled events that are locked by the HGE"
       let pgExecCtx = mkPGExecCtx Q.ReadCommitted metadataPool
-      unlockEventsForShutdown pgExecCtx hasuraLogger "scheduled_triggers" "cron events" unlockCronEvents leCronEvents
-      unlockEventsForShutdown pgExecCtx hasuraLogger "scheduled_triggers" "scheduled events" unlockCronEvents leOneOffEvents
+      unlockEventsForShutdown pgExecCtx hasuraLogger "scheduled_triggers" "cron events" (unlockScheduledEventsTx Cron) leCronEvents
+      unlockEventsForShutdown pgExecCtx hasuraLogger "scheduled_triggers" "scheduled events" (unlockScheduledEventsTx OneOff) leOneOffEvents
 
     unlockEventsForShutdown
       :: PGExecCtx
@@ -519,7 +523,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime shutd
     unlockEventsForShutdown pgExecCtx (Logger logger) triggerType eventType doUnlock lockedIdsVar = do
       lockedIds <- readTVarIO lockedIdsVar
       unless (Set.null lockedIds) $ do
-        result <- runTx pgExecCtx (doUnlock $ toList lockedIds)
+        result <- liftIO $ runTx pgExecCtx (doUnlock $ toList lockedIds)
         case result of
           Left err -> logger $ mkGenericStrLog LevelWarn triggerType $
             "Error while unlocking " ++ T.unpack eventType ++ " events: " ++ show err
@@ -542,14 +546,16 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime shutd
       -> LockedEventsCtx
       -> Q.PGPool
       -> [PGSourceConfig]
+      -> UnlockScheduledEventsTx
       -> IO ()
       -- ^ the closeSocket callback
       -> IO ()
-    shutdownHandler (Loggers loggerCtx (Logger logger) _) immortalThreads stopWsServer leCtx metadataPool pgSources closeSocket =
+    shutdownHandler (Loggers loggerCtx (Logger logger) _) immortalThreads stopWsServer
+        leCtx metadataPool pgSources unlockScheduledEventsTx closeSocket =
       LA.link =<< LA.async do
         waitForShutdown _icShutdownLatch
         logger $ mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
-        shutdownEvents metadataPool pgSources (Logger logger) leCtx
+        shutdownEvents metadataPool pgSources unlockScheduledEventsTx (Logger logger) leCtx
         closeSocket
         stopWsServer
         -- kill all the background immortal threads
@@ -722,6 +728,7 @@ instance WS.MonadWSLog AppM where
 
 instance MonadMetadataManage AppM
 instance MonadAsyncActions AppM
+instance MonadTriggers AppM
 
 --- helper functions ---
 

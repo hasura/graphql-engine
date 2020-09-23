@@ -52,7 +52,7 @@ data QueryWithSource
 
 instance FromJSON QueryWithSource where
   parseJSON = withObject "Object" $ \o -> do
-    source <- o .: "source" .!= defaultSource
+    source <- o .:? "source" .!= defaultSource
     rqlQuery <- parseJSON $ Object o
     pure $ QueryWithSource source rqlQuery
 

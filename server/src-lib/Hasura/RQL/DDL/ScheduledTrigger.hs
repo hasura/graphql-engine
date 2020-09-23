@@ -120,7 +120,9 @@ updateCronTriggerInCatalog CronTriggerMetadata {..} = liftTx $ do
   -- create the next 100 cron events, as the future events were deleted
   currentTime <- liftIO C.getCurrentTime
   let scheduleTimes = generateScheduleTimes currentTime 100 ctSchedule
-  insertCronEvents $ map (CronEventSeed ctName) scheduleTimes
+  pure ()
+  -- FIXME:
+  -- insertCronEvents $ map (CronEventSeed ctName) scheduleTimes
 
 runDeleteCronTrigger
   :: (CacheRWM m, MonadError QErr m) => ScheduledTriggerName -> m EncJSON
