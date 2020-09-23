@@ -22,6 +22,7 @@ data Projection
 
 data Join = Join
   { joinSelect :: !Select
+  , joinFieldName :: !FieldName
   } deriving (Eq, Show)
 
 data Where

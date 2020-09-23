@@ -1,4 +1,3 @@
-{-# LANGUAGE Unsafe #-}
 {-# LANGUAGE ApplicativeDo #-}
 
 -- | Translate from the DML to the TSql dialect.
@@ -17,10 +16,10 @@ import           Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.List.NonEmpty as NE
 import           Data.Maybe
 import qualified Database.ODBC.SQLServer as Odbc
+import qualified Hasura.RQL.Types.Common as Ir
 import qualified Hasura.RQL.DML.Select.Types as Ir
 import qualified Hasura.RQL.Types.BoolExp as Ir
 import qualified Hasura.RQL.Types.Column as Ir
-import qualified Hasura.RQL.Types.Common as Ir
 import qualified Hasura.SQL.DML as Sql
 import           Hasura.SQL.Tsql.Types as Tsql
 import qualified Hasura.SQL.Types as Sql
@@ -207,28 +206,14 @@ fromPGColumnName :: Ir.PGColumnInfo -> FromIr FieldName
 fromPGColumnName Ir.PGColumnInfo{pgiColumn = pgCol} =
   pure (FieldName (Sql.getPGColTxt pgCol))
 
--- AFColumn
---   (AnnColumnField
---      { _acfInfo =
---          PGColumnInfo
---            { pgiColumn = PGCol {getPGColTxt = "id"}
---            , pgiName = Name {unName = "id"}
---            , pgiPosition = 1
---            , pgiType = PGColumnScalar PGInteger
---            , pgiIsNullable = False
---            , pgiDescription = Nothing
---            }
---      , _acfAsText = False
---      , _acfOp = Nothing
---      })
-
 fieldSourceProjections :: FieldSource -> [Projection]
 fieldSourceProjections =
   \case
     ExpressionFieldSource aliasedExpression ->
       pure (ExpressionProjection aliasedExpression)
     ColumnFieldSource name -> pure (FieldNameProjection name)
-    _ -> [] -- FIXME:
+    JoinFieldSource aliasedJoin ->
+      pure (FieldNameProjection (fmap joinFieldName aliasedJoin))
 
 fieldSourceJoin :: FieldSource -> Maybe Join
 fieldSourceJoin =
@@ -249,9 +234,11 @@ fromObjectRelationSelectG annRelationSelectG = do
     case NE.nonEmpty (concatMap fieldSourceProjections fieldSources) of
       Nothing -> FromIr (refute (pure NoProjectionFields))
       Just ne -> pure ne
+  fieldName <- fromRelName aarRelationshipName
   pure
     Join
-      { joinSelect =
+      { joinFieldName = fieldName
+      , joinSelect =
           Select
             { selectTop = uncommented NoTop
             , selectProjections
@@ -265,10 +252,14 @@ fromObjectRelationSelectG annRelationSelectG = do
                         , _aosTableFrom = tableFrom :: Sql.QualifiedTable
                         , _aosTableFilter = tableFilter :: Ir.AnnBoolExp Sql.SQLExp
                         } = annObjectSelectG
-    Ir.AnnRelationSelectG { aarRelationshipName = _
+    Ir.AnnRelationSelectG { aarRelationshipName
                           , aarColumnMapping = mapping :: HashMap Sql.PGCol Sql.PGCol
                           , aarAnnSelect = annObjectSelectG :: Ir.AnnObjectSelectG Sql.SQLExp
                           } = annRelationSelectG
+
+fromRelName :: Ir.RelName -> FromIr FieldName
+fromRelName relName =
+  pure (FieldName (Ir.relNameToTxt relName))
 
 --------------------------------------------------------------------------------
 -- Comments
