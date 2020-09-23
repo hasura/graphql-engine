@@ -46,7 +46,13 @@ Let's see a few example use cases for views:
 Example: Group by and then aggregate
 ************************************
 
-Let’s see how to fetch the average article rating for each author in our author/article schema.
+Let’s see how to fetch the average article rating for each author in the following schema:
+
+.. code-block:: plpgsql
+  
+  author(id integer, name text)
+                                                      
+  article(id integer, author_id integer, title text, content text, rating integer)
 
 A view that averages the rating of articles for each author can be created using the following SQL query:
 
