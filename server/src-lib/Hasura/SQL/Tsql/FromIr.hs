@@ -2,8 +2,6 @@
 {-# LANGUAGE ApplicativeDo #-}
 
 -- | Translate from the DML to the TSql dialect.
---
--- TODO: Drop NE.fromList; replace with NE.nonEmpty.
 
 module Hasura.SQL.Tsql.FromIr
   ( fromSelectFields
@@ -34,6 +32,7 @@ import           Prelude
 data Error
   = FromTypeUnsupported (Ir.SelectFromG Sql.SQLExp)
   | FieldTypeUnsupported (Ir.AnnFieldG Sql.SQLExp)
+  | NoProjectionFields
   deriving (Show, Eq)
 
 newtype FromIr a = FromIr { runFromIr :: Validate (NonEmpty Error) a}
@@ -53,6 +52,10 @@ fromSelectFields annSelectG
       _ -> FromIr (refute (pure (FromTypeUnsupported _asnFrom)))
   fieldSources <- traverse fromAnnFieldsG _asnFields
   filterExpression <- fromAnnBoolExp permFilter
+  selectProjections <-
+    case NE.nonEmpty (concatMap fieldSourceProjections fieldSources) of
+      Nothing -> FromIr (refute (pure NoProjectionFields))
+      Just ne -> pure ne
   pure
     Select
       { selectTop =
@@ -63,8 +66,7 @@ fromSelectFields annSelectG
                 { commentedComment = pure DueToPermission
                 , commentedThing = Top limit
                 }
-      , selectProjections =
-          NE.fromList (concatMap fieldSourceProjections fieldSources)
+      , selectProjections
       , selectFrom
       , selectJoins = mapMaybe fieldSourceJoin fieldSources
       , selectWhere = ExpressionWhere filterExpression
@@ -96,8 +98,9 @@ fromAnnBoolExpFld =
 -- names of that entity.
 --
 fromPGColumnInfo :: Ir.PGColumnInfo -> FromIr Expression
-fromPGColumnInfo Ir.PGColumnInfo{pgiColumn = pgCol} =
-  pure (ColumnExpression (Sql.getPGColTxt pgCol))
+fromPGColumnInfo info = do
+  name <- fromPGColumnName info
+  pure (ColumnExpression name)
 
 fromOpExpG :: Expression -> Ir.OpExpG Sql.SQLExp -> FromIr Expression
 fromOpExpG expression =
@@ -161,12 +164,21 @@ fromQualifiedTable qualifiedObject =
 
 data FieldSource
   = ExpressionFieldSource (Aliased Expression)
+  | ColumnFieldSource (Aliased FieldName)
   | JoinFieldSource (Aliased Join)
   deriving (Eq, Show)
 
 fromAnnFieldsG :: (Ir.FieldName, Ir.AnnFieldG Sql.SQLExp) -> FromIr FieldSource
 fromAnnFieldsG (Ir.FieldName name, field) =
   case field of
+    Ir.AFColumn annColumnField -> do
+      fieldName <- fromAnnColumnField annColumnField
+      pure
+        (ColumnFieldSource
+           Aliased
+             { aliasedThing = fieldName
+             , aliasedAlias = Just (Alias {aliasText = name})
+             })
     Ir.AFExpression text ->
       pure
         (ExpressionFieldSource
@@ -183,17 +195,47 @@ fromAnnFieldsG (Ir.FieldName name, field) =
         (fromObjectRelationSelectG objectRelationSelectG)
     _ -> FromIr (refute (pure (FieldTypeUnsupported field)))
 
+fromAnnColumnField :: Ir.AnnColumnField -> FromIr FieldName
+fromAnnColumnField annColumnField = fromPGColumnName pgColumnInfo
+  where
+    Ir.AnnColumnField { _acfInfo = pgColumnInfo
+                      , _acfAsText = asText
+                      , _acfOp = op
+                      } = annColumnField
+
+fromPGColumnName :: Ir.PGColumnInfo -> FromIr FieldName
+fromPGColumnName Ir.PGColumnInfo{pgiColumn = pgCol} =
+  pure (FieldName (Sql.getPGColTxt pgCol))
+
+-- AFColumn
+--   (AnnColumnField
+--      { _acfInfo =
+--          PGColumnInfo
+--            { pgiColumn = PGCol {getPGColTxt = "id"}
+--            , pgiName = Name {unName = "id"}
+--            , pgiPosition = 1
+--            , pgiType = PGColumnScalar PGInteger
+--            , pgiIsNullable = False
+--            , pgiDescription = Nothing
+--            }
+--      , _acfAsText = False
+--      , _acfOp = Nothing
+--      })
+
 fieldSourceProjections :: FieldSource -> [Projection]
 fieldSourceProjections =
   \case
     ExpressionFieldSource aliasedExpression ->
       pure (ExpressionProjection aliasedExpression)
+    ColumnFieldSource name -> pure (FieldNameProjection name)
+    _ -> [] -- FIXME:
 
 fieldSourceJoin :: FieldSource -> Maybe Join
 fieldSourceJoin =
   \case
     JoinFieldSource aliasedJoin -> pure (aliasedThing aliasedJoin)
     ExpressionFieldSource {} -> Nothing
+    ColumnFieldSource {} -> Nothing
 
 --------------------------------------------------------------------------------
 -- Object joins
@@ -203,13 +245,16 @@ fromObjectRelationSelectG annRelationSelectG = do
   fieldSources <- traverse fromAnnFieldsG fields
   selectFrom <- fromQualifiedTable tableFrom
   filterExpression <- fromAnnBoolExp tableFilter
+  selectProjections <-
+    case NE.nonEmpty (concatMap fieldSourceProjections fieldSources) of
+      Nothing -> FromIr (refute (pure NoProjectionFields))
+      Just ne -> pure ne
   pure
     Join
       { joinSelect =
           Select
             { selectTop = uncommented NoTop
-            , selectProjections =
-                NE.fromList (concatMap fieldSourceProjections fieldSources)
+            , selectProjections
             , selectFrom
             , selectJoins = mapMaybe fieldSourceJoin fieldSources
             , selectWhere = ExpressionWhere filterExpression

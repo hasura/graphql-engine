@@ -17,6 +17,7 @@ data Select = Select
 
 data Projection
   = ExpressionProjection (Aliased Expression)
+  | FieldNameProjection (Aliased FieldName)
   deriving (Eq, Show)
 
 data Join = Join
@@ -40,7 +41,7 @@ data Expression
   | NotExpression Expression
   | SelectExpression Select
   | IsNullExpression Expression
-  | ColumnExpression Text
+  | ColumnExpression FieldName
   deriving (Eq, Show)
 
 data From =
@@ -67,6 +68,10 @@ newtype Alias = Alias
 
 newtype TableName = TableName
   { tableNameText :: Text
+  } deriving (Eq, Show)
+
+newtype FieldName = FieldName
+  { fieldNameText :: Text
   } deriving (Eq, Show)
 
 data Commented a = Commented
