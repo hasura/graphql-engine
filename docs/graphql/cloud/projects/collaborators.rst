@@ -15,7 +15,7 @@ Project Collaborators
 Introduction
 ------------
 
-You can invite collaborators to your project and grant them partial or complete access to your Hasura console. The `Collaborators` tab shows the current people who have access to the project and the people who have been invited to the project.
+You can invite collaborators to your project and grant them partial or complete access to your Hasura console. The ``Collaborators`` tab shows the current people who have access to the project and the people who have been invited to the project.
 
 Invite a collaborator
 ---------------------
