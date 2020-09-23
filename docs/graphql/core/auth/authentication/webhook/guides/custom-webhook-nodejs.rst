@@ -26,7 +26,16 @@ Before starting with this guide, you should have the following ready:
 
 - An account on Heroku
 
-Step 1: Set up auth webhook
+Step 1: Set up tables in Hasura
+-------------------------------
+
+First, :ref:`create the following table on Hasura <create-tables>`:
+
+.. code-block:: sql
+
+   user (id int SERIAL, email text UNIQUE NOT NULL, password text NOT NULL, auth_token text NOT NULL, role text DEFAULT 'user' NOT NULL )
+
+Step 2: Set up auth webhook
 ---------------------------
 
 Inside your main file (you can call it ``app.ts`` or ``server.ts``), add the following code:
@@ -61,7 +70,7 @@ Inside your main file (you can call it ``app.ts`` or ``server.ts``), add the fol
       {
         method: "POST",
         headers: {
-          "X-Hasura-Admin-Secret": "process.env.HASURA_GRAPHQL_ADMIN_SECRET",
+          "X-Hasura-Admin-Secret": process.env.HASURA_GRAPHQL_ADMIN_SECRET,
         },
         body: JSON.stringify({
           query: `
@@ -156,13 +165,12 @@ Inside your main file (you can call it ``app.ts`` or ``server.ts``), add the fol
     console.log('Your app is listening on port ' + port);
   })
 
-
-Step 2: Deploy the webhook
+Step 3: Deploy the webhook
 --------------------------
 
 Now let's deploy the webhook. You can deploy it to any cloud provider. In this example, we'll use Heroku.
 
-Step 2.1: Commit your webhook to Git
+Step 3.1: Commit your webhook to Git
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Inside your project directory, run:
@@ -171,7 +179,7 @@ Inside your project directory, run:
 
   git init && git add . && git commit -m "init auth webhook"
 
-Step 2.2: Set up a Heroku app
+Step 3.2: Set up a Heroku app
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Inside your project directory, run:
@@ -181,9 +189,69 @@ Inside your project directory, run:
   heroku apps:create
   git push heroku master
 
-You will get back a URL with your doployed webhook. If you open it in your browser, you will see the following: ``Webhooks are running.``
+You will get back a URL with your deployed webhook. If you open it in your browser, you will see the following: ``Webhooks are running.``
 
-Step 3: Set up webhook mode in Hasura
+Step 3: Test webhook endpoints
+------------------------------
+
+Let's test the endpoint we created in step 2. 
+
+Step 3.1: Signup
+^^^^^^^^^^^^^^^^
+
+Send a request to the ``signup`` endpoint (e.g. ``https://your-app-url.herokuapp.com/signup``) with the following request body:
+
+.. code-block:: json
+
+  {
+    "user": {
+      "email": "myemail@email.com",
+      "password": "password",
+      "role": "user"
+    }
+  }
+
+You should get back a response that looks like this:
+
+.. code-block:: json
+
+  {
+      "data": {
+          "insert_user_one": {
+              "id": 7,
+              "auth_token": "1aeb90035b2e09cd61637a38b0fda25e"
+          }
+      }
+  }
+
+Step 3.1: Login
+^^^^^^^^^^^^^^^
+
+Send a request to the ``signup`` endpoint (e.g. ``https://your-app-url.herokuapp.com/login``) with the following request body:
+
+.. code-block:: json
+
+  {
+    "user": {
+      "email": "myemail@email.com",
+      "password": "password",
+      "role": "user"
+    }
+  }
+
+You should get back a response that looks like this:
+
+.. code-block:: json
+
+  {
+    "id": 7,
+    "email": "myemail@email.com",
+    "password": "$2a$10$X5pWGkNEEwN8R//OMTra8uBsLfpoTWrlnLDfRr9HJg918WCYN.j.m",
+    "auth_token": "1aeb90035b2e79cd60637a38b0fda25e",
+    "role": "user"
+  }
+
+Step 5: Set up webhook mode in Hasura
 -------------------------------------
 
 There are two options to configure Hasura to run in webhook mode:
@@ -197,15 +265,13 @@ The value is the webhook endpoint. In this tutorial, the endpoint looks like thi
 
   See :ref:`GraphQL engine server options <server_flag_reference>` for more information on flags and environment variables.
 
-Step 4: Test your auth webhook
+Step 6: Test your auth webhook
 ------------------------------
+
+Make a 
 
 From now on, whenever a request comes in to Hasura, the auth webhook will be called. 
 
 Make an API call to your Hasura endpoint and see how the webhook returns the ``role`` and the ``user_id``.
 
-Next steps
-----------
 
-The next step would be not to use a mock function in ``fetchUserInfo``, but to take a token and then make an async call to the session cache or database to fetch
-data that is needed for Hasura's access control rules.
