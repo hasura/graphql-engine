@@ -22,10 +22,6 @@ module Hasura.RQL.Types.EventTrigger
 
   , defaultRetryConf
   , defaultTimeoutSeconds
-  , RestrictedText (..)
-  , mkRestrictedText
-  , realMkRestrictedText
-  , parseRestrictedText
   ) where
 
 import           Data.Aeson
@@ -34,7 +30,7 @@ import           Data.Aeson.TH
 import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.Types.Common    (InputWebhook)
+import           Hasura.RQL.Types.Common    (NonEmptyText(..), InputWebhook)
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax (Lift)
 
@@ -42,60 +38,21 @@ import qualified Data.ByteString.Lazy       as LBS
 import qualified Data.Text                  as T
 import qualified Database.PG.Query          as Q
 import qualified Text.Regex.TDFA            as TDFA
-import qualified Test.QuickCheck            as QC
-
-newtype RestrictedText = RestrictedText { getRestrictedText :: T.Text }
-  deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, DQuote, Generic, NFData, Cacheable)
 
 -- PG allows for identifiers to be of length upto 63
 -- So subtracting the length required for hasura_ and _(INSERT | UPDATE | DELETE) 
--- We are left with 49 chars alone for the actual name provided by the user
+-- We are left with 49 chars alone for the actual name provided by the user and
+-- save the correct functions for the event triggers without the function name being
+-- truncated by PG
 maxTriggerNameLength :: Int
 maxTriggerNameLength = 49
 
-minTriggerNameLength :: Int
-minTriggerNameLength = 1
-
-realMkRestrictedText :: Int -> Int -> T.Text -> Maybe RestrictedText
-realMkRestrictedText minLen maxLen t = do
-  let tLen = T.length t
-    in
-      case tLen > maxLen || tLen < minLen of
-        True  -> Nothing
-        False -> Just $ RestrictedText t
-
-mkRestrictedText :: T.Text -> Maybe RestrictedText
-mkRestrictedText = realMkRestrictedText minTriggerNameLength maxTriggerNameLength 
-
-instance Arbitrary RestrictedText where
-  arbitrary = RestrictedText . T.pack <$> QC.listOf1 (QC.elements $ take maxTriggerNameLength alphaNumerics)
-
-failMessage :: String
-failMessage = "event trigger names are restricted between " ++ (show minTriggerNameLength) ++ " - " ++ (show maxTriggerNameLength) ++ " characters"
-
-parseRestrictedText :: MonadFail m => Text -> m RestrictedText
-parseRestrictedText text = case mkRestrictedText text of
-  Nothing     -> fail failMessage
-  Just neText -> return neText
-
-parseUnsafeRestrictedText :: MonadFail m => Text -> m RestrictedText
-parseUnsafeRestrictedText text = return $ RestrictedText text
-
--- this was done to avoid problems when we parse JSON values
--- that were already longer the limits we've set here
-instance FromJSON RestrictedText where
-  parseJSON = withText "String" parseUnsafeRestrictedText
-
-instance Q.FromCol RestrictedText where
-  fromCol bs = mkRestrictedText <$> Q.fromCol bs
-    >>= maybe (Left $ T.pack failMessage) Right
-
 -- | Unique name for event trigger.
-newtype TriggerName = TriggerName { unTriggerName :: RestrictedText }
+newtype TriggerName = TriggerName { unTriggerName :: NonEmptyText }
   deriving (Show, Eq, Hashable, Lift, DQuote, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, Generic, NFData, Cacheable, Arbitrary, Q.FromCol)
 
 triggerNameToTxt :: TriggerName -> Text
-triggerNameToTxt = getRestrictedText . unTriggerName
+triggerNameToTxt = unNonEmptyText . unTriggerName
 
 type EventId = T.Text
 
@@ -197,25 +154,24 @@ data CreateEventTriggerQuery
 
 instance FromJSON CreateEventTriggerQuery where
   parseJSON (Object o) = do
-    (name::Text)           <- o .:  "name"
-    table                  <- o .:  "table"
-    insert                 <- o .:? "insert"
-    update                 <- o .:? "update"
-    delete                 <- o .:? "delete"
-    enableManual           <- o .:? "enable_manual" .!= False
-    retryConf              <- o .:? "retry_conf"
-    webhook                <- o .:? "webhook"
-    webhookFromEnv         <- o .:? "webhook_from_env"
-    headers                <- o .:? "headers"
-    replace                <- o .:? "replace" .!= False
+    name            <- o .:  "name"
+    table           <- o .:  "table"
+    insert          <- o .:? "insert"
+    update          <- o .:? "update"
+    delete          <- o .:? "delete"
+    enableManual    <- o .:? "enable_manual" .!= False
+    retryConf       <- o .:? "retry_conf"
+    webhook         <- o .:? "webhook"
+    webhookFromEnv  <- o .:? "webhook_from_env"
+    headers         <- o .:? "headers"
+    replace         <- o .:? "replace" .!= False
     let regex = "^[A-Za-z]+[A-Za-z0-9_\\-]*$" :: LBS.ByteString
         compiledRegex = TDFA.makeRegex regex :: TDFA.Regex
-        isMatch = TDFA.match compiledRegex . T.unpack $ name
-        triggerName = mkRestrictedText name
+        isMatch = TDFA.match compiledRegex . T.unpack $ triggerNameToTxt name
     if isMatch then return ()
       else fail "only alphanumeric and underscore and hyphens allowed for name"
-    if triggerName /= Nothing then return ()
-      else fail "trigger name has to be at most 49 characters"
+    if T.length (triggerNameToTxt name) <= maxTriggerNameLength then return ()
+      else fail "trigger name can be at most 49 characters"
     if any isJust [insert, update, delete] || enableManual then
       return ()
       else
@@ -226,7 +182,7 @@ instance FromJSON CreateEventTriggerQuery where
       (Just _, Just _)  -> fail "only one of webhook or webhook_from_env should be given"
       _                 ->   fail "must provide webhook or webhook_from_env"
     mapM_ checkEmptyCols [insert, update, delete]
-    return $ CreateEventTriggerQuery (TriggerName $ RestrictedText name) table insert update delete (Just enableManual) retryConf webhook webhookFromEnv headers replace
+    return $ CreateEventTriggerQuery name table insert update delete (Just enableManual) retryConf webhook webhookFromEnv headers replace
     where
       checkEmptyCols spec
         = case spec of
