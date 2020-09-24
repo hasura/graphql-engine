@@ -121,7 +121,7 @@ insertMultipleObjects env multiObjIns additionalColumns rjCtx mutationOutput pla
             columnInfos
           rowCount = T.pack . show . length $ _aiInsObj multiObjIns
       Tracing.trace ("Insert (" <> rowCount <> ") " <> qualObjectToText table) do
-        Tracing.attachMetadata [("count", rowCount)]  
+        Tracing.attachMetadata [("count", rowCount)]
         RQL.execInsertQuery env stringifyNum (Just rjCtx) (insertQuery, planVars)
 
     withRelsInsert = do

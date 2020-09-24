@@ -13,6 +13,8 @@ module Hasura.GraphQL.Transport.WebSocket.Protocol
   , ErrorMsg(..)
   , ConnErrMsg(..)
   , CompletionMsg(..)
+  , GraphqlResponse(..)
+  , encodeGraphqlResponse
   ) where
 
 import qualified Data.Aeson                             as J
@@ -65,6 +67,23 @@ instance J.FromJSON ClientMsg where
       "stop"                 -> CMStop <$> J.parseJSON (J.Object obj)
       "connection_terminate" -> return CMConnTerm
       _                      -> fail $ "unexpected type for ClientMessage: " <> t
+
+-- | Represents a proper GraphQL response
+data GraphqlResponse
+  = GRHasura !GQResponse
+  | GRRemote !RemoteGqlResp
+
+encodeRemoteGqlResp :: RemoteGqlResp -> EncJSON
+encodeRemoteGqlResp (RemoteGqlResp d e ex) =
+  encJFromAssocList [ ("data", encJFromJValue d)
+                    , ("errors", encJFromJValue e)
+                    , ("extensions", encJFromJValue ex)
+                    ]
+
+encodeGraphqlResponse :: GraphqlResponse -> EncJSON
+encodeGraphqlResponse = \case
+  GRHasura resp -> encodeGQResp resp
+  GRRemote resp -> encodeRemoteGqlResp resp
 
 -- server to client messages
 data DataMsg

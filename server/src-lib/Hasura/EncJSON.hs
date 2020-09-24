@@ -13,7 +13,6 @@ module Hasura.EncJSON
   , encJFromLBS
   , encJFromList
   , encJFromAssocList
-  , encJFromHashMap
   , encJFromInsOrdHashMap
   ) where
 
@@ -25,7 +24,6 @@ import qualified Data.ByteString.Builder         as BB
 import qualified Data.ByteString.Lazy            as BL
 import qualified Data.Text.Encoding              as TE
 import qualified Database.PG.Query               as Q
-import qualified Data.HashMap.Strict             as Map
 import qualified Data.HashMap.Strict.InsOrd      as OMap
 
 -- encoded json
@@ -97,9 +95,6 @@ encJFromAssocList = \case
     -- builds "key":value from (key,value)
     builder' (t, v) =
       encJFromChar '"' <> encJFromText t <> encJFromText "\":" <> v
-
-encJFromHashMap :: HashMap Text EncJSON -> EncJSON
-encJFromHashMap = encJFromAssocList . Map.toList
 
 encJFromInsOrdHashMap :: InsOrdHashMap Text EncJSON -> EncJSON
 encJFromInsOrdHashMap = encJFromAssocList . OMap.toList

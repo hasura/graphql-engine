@@ -32,6 +32,7 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Prepare
+import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
 import           Hasura.Prelude
@@ -39,7 +40,6 @@ import           Hasura.RQL.DML.RemoteJoin
 import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.Session
--- import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
 import qualified Hasura.RQL.DML.Select                  as DS
@@ -113,7 +113,6 @@ actionQueryToRootFieldPlan vars prepped = \case
 -- turn the current plan into a transaction
 mkCurPlanTx
   :: ( HasVersion
-     , MonadError QErr m
      , MonadIO tx
      , MonadTx tx
      , Tracing.MonadTrace tx
@@ -123,17 +122,16 @@ mkCurPlanTx
   -> [HTTP.Header]
   -> UserInfo
   -> RootFieldPlan
-  -> m (tx EncJSON, Maybe PreparedSql)
-mkCurPlanTx env manager reqHdrs userInfo fldPlan = do
+  -> (tx EncJSON, Maybe PreparedSql)
+mkCurPlanTx env manager reqHdrs userInfo fldPlan =
   -- generate the SQL and prepared vars or the bytestring
-  fldResp <- case fldPlan of
-    RFPPostgres (PGPlan q _ prepMap remoteJoins) -> do
-      let args = withUserVars (_uiSession userInfo) $ IntMap.elems prepMap
-      return $ RRSql $ PreparedSql q args remoteJoins
-    RFPActionQuery tx -> pure $ RRActionQuery tx
-  pure ( mkLazyRespTx env manager reqHdrs userInfo fldResp
-       , mkPreparedSql fldResp
-       )
+  let (tx, prep) = case fldPlan of
+        RFPPostgres (PGPlan q _ prepMap remoteJoins) ->
+          let args = withUserVars (_uiSession userInfo) $ IntMap.elems prepMap
+              ps = PreparedSql q args remoteJoins
+          in (RRSql ps, Just ps)
+        RFPActionQuery atx -> (RRActionQuery atx, Nothing)
+  in (mkLazyRespTx env manager reqHdrs userInfo tx, prep)
 
 -- convert a query from an intermediate representation to... another
 irToRootFieldPlan
@@ -228,18 +226,17 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
       >>= traverseAction (pure . actionQueryToRootFieldPlan planVars planVals)
 
   -- Transform the query plans into an execution plan
-  executionPlan <- flip traverse queryPlan \case
-    RFRemote (remoteSchemaInfo, remoteField) ->
-      let (remoteOperation, varValues) =
-            buildTypedOperation
+  let executionPlan = queryPlan <&> \case
+        RFRemote (remoteSchemaInfo, remoteField) ->
+          buildTypedOperation
+            remoteSchemaInfo
             G.OperationTypeQuery
             varDefs
             [G.SelectionField remoteField]
             varValsM
-      in pure $ ExecStepRemote (remoteSchemaInfo, remoteOperation, varValues)
-    RFDB db      -> ExecStepDB <$> mkCurPlanTx env manager reqHeaders userInfo (RFPPostgres db)
-    RFAction rfp -> ExecStepDB <$> mkCurPlanTx env manager reqHeaders userInfo rfp
-    RFRaw r      -> pure $ ExecStepRaw r
+        RFDB db      -> ExecStepDB $ mkCurPlanTx env manager reqHeaders userInfo (RFPPostgres db)
+        RFAction rfp -> ExecStepDB $ mkCurPlanTx env manager reqHeaders userInfo rfp
+        RFRaw r      -> ExecStepRaw r
 
   let asts :: [QueryRootField UnpreparedValue]
       asts = OMap.elems unpreparedQueries
@@ -337,9 +334,3 @@ mkLazyRespTx env manager reqHdrs userInfo node = do
           executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs remoteJoins
     RRActionQuery actionTx           -> actionTx
   return resp
-
-mkPreparedSql :: ResolvedQuery -> Maybe PreparedSql
-mkPreparedSql = \case
-  RRRaw _         -> Nothing
-  RRSql ps        -> Just ps
-  RRActionQuery _ -> Nothing

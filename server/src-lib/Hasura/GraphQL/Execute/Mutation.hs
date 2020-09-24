@@ -1,4 +1,6 @@
-module Hasura.GraphQL.Execute.Mutation where
+module Hasura.GraphQL.Execute.Mutation
+  ( convertMutationSelectionSet
+  ) where
 
 import           Hasura.Prelude
 
@@ -7,10 +9,8 @@ import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.HashSet                           as Set
-import qualified Data.IntMap                            as IntMap
 import qualified Data.Sequence                          as Seq
 import qualified Data.Sequence.NonEmpty                 as NE
-import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
@@ -30,6 +30,7 @@ import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Insert
 import           Hasura.GraphQL.Execute.Prepare
+import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
 import           Hasura.GraphQL.Schema.Insert
@@ -92,9 +93,6 @@ convertInsert env usrVars rjCtx insertOperation stringifyNum = do
   validateSessionVariables expectedVariables usrVars
   pure $ convertToSQLTransaction env preparedInsert rjCtx Seq.empty stringifyNum
 
-planVariablesSequence :: SessionVariables -> PlanningSt -> Seq.Seq Q.PrepArg
-planVariablesSequence usrVars = Seq.fromList . map fst . withUserVars usrVars . IntMap.elems . _psPrepped
-
 convertMutationDB
   :: ( HasVersion
      , MonadIO m
@@ -113,9 +111,9 @@ convertMutationDB env userSession rjCtx stringifyNum = \case
   MDBInsert s -> noResponseHeaders <$> convertInsert env userSession rjCtx s stringifyNum
   MDBUpdate s -> noResponseHeaders <$> convertUpdate env userSession rjCtx s stringifyNum
   MDBDelete s -> noResponseHeaders <$> convertDelete env userSession rjCtx s stringifyNum
-  where
-    noResponseHeaders :: tx EncJSON -> (tx EncJSON, HTTP.ResponseHeaders)
-    noResponseHeaders rTx = (rTx, [])
+
+noResponseHeaders :: tx EncJSON -> (tx EncJSON, HTTP.ResponseHeaders)
+noResponseHeaders rTx = (rTx, [])
 
 convertMutationAction
   ::( HasVersion
@@ -140,8 +138,6 @@ convertMutationAction env logger userInfo manager reqHeaders = \case
   where
     userSession = _uiSession userInfo
     actionExecContext = ActionExecContext manager reqHeaders $ _uiSession userInfo
-    noResponseHeaders :: tx EncJSON -> (tx EncJSON, HTTP.ResponseHeaders)
-    noResponseHeaders rTx = (rTx, [])
 
 convertMutationSelectionSet
   :: forall m tx
@@ -176,16 +172,15 @@ convertMutationSelectionSet env logger gqlContext sqlGenCtx userInfo manager req
   -- Transform the RQL AST into a prepared SQL query
   let userSession = _uiSession userInfo
       rjCtx = (manager, reqHeaders, userInfo)
-  txs <- for unpreparedQueries $ \case
+  txs <- for unpreparedQueries \case
     RFDB db             -> ExecStepDB <$> convertMutationDB env userSession rjCtx (stringifyNum sqlGenCtx) db
     RFRemote (remoteSchemaInfo, remoteField) ->
-      let (remoteOperation, varValues) =
-            buildTypedOperation
-            G.OperationTypeMutation
-            varDefs
-            [G.SelectionField remoteField]
-            varValsM
-      in pure $ ExecStepRemote (remoteSchemaInfo, remoteOperation, varValues)
+      pure $ buildTypedOperation
+             remoteSchemaInfo
+             G.OperationTypeMutation
+             varDefs
+             [G.SelectionField remoteField]
+             varValsM
     RFAction action     -> ExecStepDB <$> convertMutationAction env logger userInfo manager reqHeaders action
     RFRaw s             -> ExecStepRaw <$> pure s
 

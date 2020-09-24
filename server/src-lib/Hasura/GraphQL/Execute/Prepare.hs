@@ -11,7 +11,6 @@ module Hasura.GraphQL.Execute.Prepare
   , prepareWithoutPlan
   , validateSessionVariables
   , withUserVars
-  , buildTypedOperation
   ) where
 
 
@@ -154,34 +153,3 @@ getNextArgNum = do
   PlanningSt curArgNum vars prepped sessionVariables <- get
   put $ PlanningSt (curArgNum + 1) vars prepped sessionVariables
   return curArgNum
-
-unresolveVariables
-  :: forall fragments
-   . Functor fragments
-  => G.SelectionSet fragments Variable
-  -> G.SelectionSet fragments G.Name
-unresolveVariables =
-  fmap (fmap (getName . vInfo))
-
-collectVariables
-  :: forall fragments var
-   . (Foldable fragments, Hashable var, Eq var)
-  => G.SelectionSet fragments var
-  -> Set.HashSet var
-collectVariables =
-  Set.unions . fmap (foldMap Set.singleton)
-
-buildTypedOperation
-  :: forall frag
-   . (Functor frag, Foldable frag)
-  => G.OperationType
-  -> [G.VariableDefinition]
-  -> G.SelectionSet frag Variable
-  -> Maybe GH.VariableValues
-  -> (G.TypedOperationDefinition frag G.Name, Maybe GH.VariableValues)
-buildTypedOperation tp varDefs selSet varValsM =
-  let unresolvedSelSet = unresolveVariables selSet
-      requiredVars = collectVariables unresolvedSelSet
-      restrictedDefs = filter (\varDef -> G._vdName varDef `Set.member` requiredVars) varDefs
-      restrictedValsM = flip Map.intersection (Set.toMap requiredVars) <$> varValsM
-  in (G.TypedOperationDefinition tp Nothing restrictedDefs [] unresolvedSelSet, restrictedValsM)
