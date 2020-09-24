@@ -238,8 +238,12 @@ export const getDataSources = createSelector(getMetadata, metadata => {
         url:
           source.configuration?.database_url || 'HASURA_GRAPHQL_DATABASE_URL',
         fromEnv: false, // todo
-        connection_pool_setting:
-          source.configuration?.connection_pool_setting || {},
+        connection_pool_setting: source.configuration
+          ?.connection_pool_setting || {
+          retries: 1,
+          idle_timeout: 180,
+          max_connections: 50,
+        },
         driver: source.kind || 'postgres',
       });
     });

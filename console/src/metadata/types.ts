@@ -7,7 +7,8 @@ export type DataSource = {
   driver: Driver;
   connection_pool_setting?: {
     max_connections?: number;
-    connection_idle_timeout?: number;
+    idle_timeout?: number;
+    retries?: number;
   };
 };
 
@@ -850,8 +851,9 @@ export interface MetadataDataSource {
   configuration?: {
     database_url: string;
     connection_pool_setting?: {
-      max_connections?: number;
-      connection_idle_timeout?: number;
+      max_connections: number;
+      idle_timeout: number;
+      retries: number;
     };
   };
   tables: TableEntry[];

@@ -365,7 +365,8 @@ const generateRelationshipsQuery = (relMeta, currentDataSource) => {
 };
 
 const deleteRelMigrate = relMeta => (dispatch, getState) => {
-  const { upQuery, downQuery } = generateRelationshipsQuery(relMeta);
+  const source = getState().tables.currentDataSource;
+  const { upQuery, downQuery } = generateRelationshipsQuery(relMeta, source);
   const relChangesUp = [downQuery];
   const relChangesDown = [upQuery];
 
@@ -398,18 +399,22 @@ const deleteRelMigrate = relMeta => (dispatch, getState) => {
 };
 
 const addRelNewFromStateMigrate = () => (dispatch, getState) => {
+  const source = getState().tables.currentDataSource;
   const state = getState().tables.modify.relAdd;
-  const { upQuery, downQuery } = generateRelationshipsQuery({
-    lTable: state.lTable,
-    lSchema: state.lSchema,
-    isObjRel: state.isObjRel,
-    relName: state.relName,
-    lcol: state.lcol,
-    rcol: state.rcol,
-    rTable: state.rTable,
-    rSchema: state.rSchema,
-    isUnique: state.isUnique,
-  });
+  const { upQuery, downQuery } = generateRelationshipsQuery(
+    {
+      lTable: state.lTable,
+      lSchema: state.lSchema,
+      isObjRel: state.isObjRel,
+      relName: state.relName,
+      lcol: state.lcol,
+      rcol: state.rcol,
+      rTable: state.rTable,
+      rSchema: state.rSchema,
+      isUnique: state.isUnique,
+    },
+    source
+  );
   const relChangesUp = [upQuery];
   const relChangesDown = [downQuery];
 
@@ -662,7 +667,8 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema, currentSource) => {
         /* Added to ensure that fallback relationship name is created in case of tracking all relationship at once */
         table.existingFields[indivArrayRel.relName] = true;
         const { upQuery, downQuery } = generateRelationshipsQuery(
-          indivArrayRel
+          indivArrayRel,
+          currentSource
         );
 
         const arrTrack = {

@@ -42,7 +42,8 @@ const CreateDatabase = ({ onSubmit }: CreateDatabaseProps) => {
   const [urlType, setUrlType] = useState<'static' | 'from-env'>('static');
   const [retryConf, setRetryConf] = useState<{
     max_connections?: number;
-    connection_idle_timeout?: number;
+    idle_timeout?: number;
+    retries?: number;
   }>({});
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -119,7 +120,7 @@ const CreateDatabase = ({ onSubmit }: CreateDatabaseProps) => {
           <div style={{ paddingTop: '10px' }}>
             <b>Max connections: </b>
             <input
-              placeholder="max connections"
+              placeholder="default: 50"
               type="number"
               className={`${styles.add_mar_right_mid} input-sm form-control`}
               value={retryConf.max_connections || ''}
@@ -136,15 +137,32 @@ const CreateDatabase = ({ onSubmit }: CreateDatabaseProps) => {
           <div style={{ paddingTop: '16px' }}>
             <b>Connection idle timeout: </b>
             <input
-              placeholder="connection idle timeout"
+              placeholder="default: 180"
               type="number"
               className={`${styles.add_mar_right_mid} input-sm form-control`}
-              value={retryConf.connection_idle_timeout || ''}
+              value={retryConf.idle_timeout || ''}
               onChange={e => {
                 e.persist();
                 setRetryConf(prev => ({
                   ...prev,
-                  connection_idle_timeout: parseInt(e.target.value, 10),
+                  idle_timeout: parseInt(e.target.value, 10),
+                }));
+              }}
+              style={{ height: '34px', width: '200px', marginTop: '8px' }}
+            />
+          </div>
+          <div style={{ paddingTop: '16px' }}>
+            <b>Retries: </b>
+            <input
+              placeholder="default: 1"
+              type="number"
+              className={`${styles.add_mar_right_mid} input-sm form-control`}
+              value={retryConf.retries || ''}
+              onChange={e => {
+                e.persist();
+                setRetryConf(prev => ({
+                  ...prev,
+                  retries: parseInt(e.target.value, 10),
                 }));
               }}
               style={{ height: '34px', width: '200px', marginTop: '8px' }}

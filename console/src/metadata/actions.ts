@@ -99,7 +99,8 @@ export interface AddDataSourceRequest {
       dbUrl: string;
       connection_pool_setting: {
         max_connections?: number;
-        connection_idle_timeout?: number; // in seconds
+        idle_timeout?: number; // in seconds
+        retries?: number;
       };
     };
   };

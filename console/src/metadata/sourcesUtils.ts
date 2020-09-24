@@ -7,7 +7,7 @@ export const addSource = (
     dbUrl: string;
     connection_pool_setting?: {
       max_connections?: number;
-      connection_idle_timeout?: number; // in seconds
+      idle_timeout?: number; // in seconds
     };
   }
 ) => {
@@ -27,7 +27,7 @@ export const removeSource = (driver: Driver, name: string) => {
   const typePrefix = driver === 'postgres' ? 'pg_' : 'mysql_';
 
   return {
-    type: `${typePrefix}remove_source`,
+    type: `${typePrefix}drop_source`,
     args: {
       name,
     },

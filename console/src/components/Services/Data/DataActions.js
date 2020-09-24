@@ -612,6 +612,20 @@ const makeApiCall = (
 
 // todo: temp solution
 const makeMigrationCall = (dispatch, getState, upQueries, ...args) => {
+  const shouldmakeBulkQuery =
+    upQueries.every(query =>
+      ['run_sql', 'select', 'update', 'delete', 'insert'].includes(query.type)
+    ) ||
+    upQueries.every(
+      query =>
+        !['run_sql', 'select', 'update', 'delete', 'insert'].includes(
+          query.type
+        )
+    );
+  if (shouldmakeBulkQuery) {
+    makeApiCall(dispatch, getState, upQueries, ...args);
+    return;
+  }
   upQueries.forEach(query => {
     makeApiCall(dispatch, getState, [query], ...args);
   });
