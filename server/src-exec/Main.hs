@@ -8,9 +8,10 @@ import           Data.Text.Conversions      (convertText)
 import           Data.Time.Clock.POSIX      (getPOSIXTime)
 
 import           Hasura.App
+import           Hasura.Class               (fetchMetadata)
 import           Hasura.Logging             (Hasura)
 import           Hasura.Prelude
-import           Hasura.RQL.Types
+import           Hasura.RQL.Types           hiding (fetchMetadata)
 import           Hasura.Server.Init
 import           Hasura.Server.Migrate      (downgradeCatalog)
 import           Hasura.Server.Version
@@ -67,7 +68,7 @@ runApp env hgeOptions =
 
     HCExport -> do
       (InitCtx{..}, _) <- initialiseCtx env hgeOptions
-      res <- runTx' _icMetadataPool Q.ReadCommitted getMetadata
+      res <- runTx' _icMetadataPool Q.ReadCommitted fetchMetadata
       either (printErrJExit MetadataExportError) printJSON res
 
     HCClean -> do

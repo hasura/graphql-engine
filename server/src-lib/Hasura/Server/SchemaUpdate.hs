@@ -5,6 +5,7 @@ module Hasura.Server.SchemaUpdate
   )
 where
 
+import           Hasura.Class
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema          (runCacheRWT)
@@ -106,7 +107,7 @@ startSchemaSyncListenerThread defPgSource logger instanceId = do
 
 -- | An async thread which processes the schema sync events
 startSchemaSyncProcessorThread
-  :: (C.ForkableMonadIO m, MonadMetadataManage m)
+  :: (C.ForkableMonadIO m, MonadMetadataStorageTx m)
   => SQLGenCtx
   -> PGSourceConfig
   -> Logger Hasura
@@ -162,7 +163,7 @@ listener defPgSource logger schemaSyncEventRef =
 
 -- | An IO action that processes events from Queue, in a loop forever.
 processor
-  :: forall m void. (C.ForkableMonadIO m, MonadMetadataManage m)
+  :: forall m void. (C.ForkableMonadIO m, MonadMetadataStorageTx m)
   => SQLGenCtx
   -> PGSourceConfig
   -> Logger Hasura
@@ -198,7 +199,7 @@ processor sqlGenCtx defPgSource logger httpMgr schemaSyncEventRef
     threadType = TTProcessor
 
 refreshSchemaCache
-  :: ( MonadMetadataManage m
+  :: ( MonadMetadataStorageTx m
      , MonadIO m
      , MonadBaseControl IO m
      )
@@ -215,7 +216,7 @@ refreshSchemaCache sqlGenCtx defPgSource logger httpManager cacheRef invalidatio
   -- Reload schema cache from catalog
   resE <- runExceptT $ withRefUpdate $ do
     rebuildableCache <- fst <$> liftIO (readIORef $ _scrCache cacheRef)
-    metadata         <- fetchMetadataTx
+    metadata         <- getFetchMetadataTx
                         >>= (\tx -> liftIO $ runExceptT $ PG.runTx' metadataPool tx)
                         >>= liftEither
     (((), cache, _), _) <- buildSchemaCacheWithOptions CatalogSync invalidations noMetadataModify

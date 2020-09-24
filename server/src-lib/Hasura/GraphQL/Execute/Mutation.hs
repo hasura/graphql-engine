@@ -23,7 +23,7 @@ import qualified Hasura.RQL.DML.Returning.Types         as RQL
 import qualified Hasura.RQL.DML.Update                  as RQL
 import qualified Hasura.Tracing                         as Tracing
 
-
+import           Hasura.Class
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
@@ -34,7 +34,6 @@ import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
 import           Hasura.GraphQL.Schema.Insert
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Action.Class
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 
@@ -103,7 +102,7 @@ convertMutationRootField
     , MonadIO m
     , MonadError QErr m
     , Tracing.MonadTrace m
-    , MonadAsyncActions m
+    , MonadMetadataStorageTx m
     , Tracing.MonadTrace tx
     , MonadIO tx
     , MonadError QErr tx
@@ -154,7 +153,7 @@ convertMutationSelectionSet
      , Tracing.MonadTrace m
      , MonadIO m
      , MonadError QErr m
-     , MonadAsyncActions m
+     , MonadMetadataStorageTx m
      , MonadIO tx
      , MonadError QErr tx
      , Tracing.MonadTrace tx

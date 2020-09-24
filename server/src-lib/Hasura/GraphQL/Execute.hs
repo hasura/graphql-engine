@@ -35,6 +35,7 @@ import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
 
+import           Hasura.Class
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging
 import           Hasura.GraphQL.Parser.Column           (UnpreparedValue)
@@ -43,7 +44,6 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Utils                   (showName)
 import           Hasura.HTTP
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Action.Class
 import           Hasura.Server.Types                    (RequestId)
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
@@ -213,7 +213,7 @@ getResolvedExecPlan
      , MonadIO m
      , Tracing.MonadTrace m
      , EQ.MonadQueryInstrumentation m
-     , MonadAsyncActions m
+     , MonadMetadataStorageTx m
      , MonadIO tx
      , MonadError QErr tx
      , Tracing.MonadTrace tx

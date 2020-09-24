@@ -34,6 +34,7 @@ import           Hasura.Server.Version                  (HasVersion)
 import qualified Hasura.SQL.DML                         as S
 import qualified Hasura.Tracing                         as Tracing
 
+import           Hasura.Class
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
@@ -45,7 +46,6 @@ import           Hasura.Prelude
 import           Hasura.RQL.DML.RemoteJoin
 import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Action.Class
 import           Hasura.Session
 import           Hasura.SQL.Value
 
@@ -250,7 +250,7 @@ convertQuerySelSet
      , MonadIO m
      , Tracing.MonadTrace m
      , MonadQueryInstrumentation m
-     , MonadAsyncActions m
+     , MonadMetadataStorageTx m
      , MonadIO tx
      , MonadError QErr tx
      , Tracing.MonadTrace tx

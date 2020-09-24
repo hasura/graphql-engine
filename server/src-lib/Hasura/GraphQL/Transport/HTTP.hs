@@ -15,6 +15,7 @@ module Hasura.GraphQL.Transport.HTTP
 
 import           Control.Monad.Morph                    (hoist)
 
+import           Hasura.Class
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Logging                 (MonadQueryLog (..))
@@ -23,7 +24,6 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Action.Class
 import           Hasura.Server.Init.Config
 import           Hasura.Server.Types                    (RequestId)
 import           Hasura.Server.Version                  (HasVersion)
@@ -73,7 +73,7 @@ runGQ
      , MonadTrace m
      , MonadExecuteQuery m
      , EQ.MonadQueryInstrumentation m
-     , MonadAsyncActions m
+     , MonadMetadataStorageTx m
      )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -155,7 +155,7 @@ runGQBatched
      , MonadTrace m
      , MonadExecuteQuery m
      , EQ.MonadQueryInstrumentation m
-     , MonadAsyncActions m
+     , MonadMetadataStorageTx m
      )
   => Env.Environment
   -> L.Logger L.Hasura

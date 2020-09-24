@@ -41,6 +41,7 @@ import qualified Network.Wai.Handler.Warp                  as Warp
 import qualified System.Log.FastLogger                     as FL
 import qualified Text.Mustache.Compile                     as M
 
+import           Hasura.Class
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.Eventing.Common
@@ -58,7 +59,6 @@ import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Action.Class
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.API.Query
 import           Hasura.Server.App
@@ -323,9 +323,7 @@ runHGEServer
      , MonadExecuteQuery m
      , Tracing.HasReporter m
      , MonadQueryInstrumentation m
-     , MonadMetadataManage m
-     , MonadAsyncActions m
-     , MonadTriggers m
+     , MonadMetadataStorageTx m
      )
   => Env.Environment
   -> ServeOptions impl
@@ -423,11 +421,11 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime shutd
     runCronEventsGenerator logger _icMetadataPool (getSCFromRef cacheRef)
 
   -- prepare scheduled triggers
-  -- prepareScheduledEvents _icPgPool logger
+  prepareScheduledEvents _icMetadataPool logger
 
   -- start a background thread to deliver the scheduled events
-  -- scheduledEventsThread <- C.forkImmortal "processScheduledTriggers" logger $
-  --   processScheduledTriggers env logger logEnvHeaders _icHttpManager _icPgPool (getSCFromRef cacheRef) lockedEventsCtx
+  scheduledEventsThread <- C.forkImmortal "processScheduledTriggers" logger $
+    processScheduledTriggers env logger logEnvHeaders _icHttpManager _icMetadataPool (getSCFromRef cacheRef) lockedEventsCtx
 
   -- start a background thread to check for updates
   updateThread <- C.forkImmortal "checkForUpdates" logger $ liftIO $
@@ -452,9 +450,9 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime shutd
                         , updateThread
                         , asyncActionsThread
                         , eventQueueThread
-                        -- , scheduledEventsThread
+                        , scheduledEventsThread
                         , cronEventsThread
-                        ] <> maybe [] pure telemetryThread
+                        ] <> maybeToList telemetryThread
 
   finishTime <- liftIO Clock.getCurrentTime
   let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
@@ -487,6 +485,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime shutd
     prepareScheduledEvents metadataPool (Logger logger) = do
       liftIO $ logger $ mkGenericStrLog LevelInfo "scheduled_triggers" "preparing data"
       let pgExecCtx = mkPGExecCtx Q.ReadCommitted metadataPool
+      unlockAllLockedScheduledEvents <- getUnlockAllLockedScheduledEventsTx
       res <- liftIO $ runTx pgExecCtx unlockAllLockedScheduledEvents
       either (printErrJExit EventSubSystemError) return res
 
@@ -726,9 +725,7 @@ instance MonadQueryLog AppM where
 instance WS.MonadWSLog AppM where
   logWSLog = unLogger
 
-instance MonadMetadataManage AppM
-instance MonadAsyncActions AppM
-instance MonadTriggers AppM
+instance MonadMetadataStorageTx AppM
 
 --- helper functions ---
 

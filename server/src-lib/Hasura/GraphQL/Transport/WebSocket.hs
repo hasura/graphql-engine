@@ -44,6 +44,7 @@ import           Data.String
 import           GHC.AssertNF
 #endif
 
+import           Hasura.Class
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging                      (MonadQueryLog (..))
 import           Hasura.GraphQL.Transport.HTTP               (MonadExecuteQuery (..))
@@ -52,7 +53,6 @@ import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Action.Class
 import           Hasura.Server.Auth                          (AuthMode, UserAuthentication,
                                                               resolveUserInfo)
 import           Hasura.Server.Cors
@@ -319,7 +319,7 @@ onStart
   , Tracing.MonadTrace m
   , MonadExecuteQuery m
   , EQ.MonadQueryInstrumentation m
-  , MonadAsyncActions m
+  , MonadMetadataStorageTx m
   )
   => Env.Environment -> WSServerEnv -> WSConn -> StartMsg -> m ()
 onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
@@ -605,7 +605,7 @@ onMessage
      , Tracing.HasReporter m
      , MonadExecuteQuery m
      , EQ.MonadQueryInstrumentation m
-     , MonadAsyncActions m
+     , MonadMetadataStorageTx m
      )
   => Env.Environment
   -> AuthMode
@@ -796,7 +796,7 @@ createWSServerApp
      , Tracing.HasReporter m
      , MonadExecuteQuery m
      , EQ.MonadQueryInstrumentation m
-     , MonadAsyncActions m
+     , MonadMetadataStorageTx m
      )
   => Env.Environment
   -> AuthMode

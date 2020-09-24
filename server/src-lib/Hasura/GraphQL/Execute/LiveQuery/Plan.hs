@@ -52,12 +52,12 @@ import qualified Hasura.RQL.DML.RemoteJoin     as RR
 import qualified Hasura.RQL.DML.Select         as DS
 import qualified Hasura.SQL.DML                as S
 
+import           Hasura.Class
 import           Hasura.Db
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Query
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Action.Class
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -283,7 +283,7 @@ $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ReusableLiveQueryPlan)
 buildLiveQueryPlan
   :: ( MonadError QErr m
      , MonadIO m
-     , MonadAsyncActions m
+     , MonadMetadataStorageTx m
      )
   => PGExecCtx
   -> UserInfo

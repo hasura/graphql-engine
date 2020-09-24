@@ -38,6 +38,7 @@ import qualified Data.Environment                     as Env
 import qualified Hasura.Logging                       as L
 import qualified Hasura.Tracing                       as Tracing
 
+import           Hasura.Class
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Parser                hiding (column)
@@ -47,7 +48,6 @@ import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DML.Select                (asSingleRowJsonResp)
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Action.Class
 import           Hasura.Server.Utils                  (mkClientHeadersForward, mkSetCookieHeaders)
 import           Hasura.Server.Version                (HasVersion)
 import           Hasura.Session
@@ -195,7 +195,7 @@ table provides the action response. See Note [Resolving async action query/subsc
 
 -- | Resolve asynchronous action mutation which returns only the action uuid
 resolveActionMutationAsync
-  :: ( MonadAsyncActions m
+  :: ( MonadMetadataStorageTx m
      , MonadIO tx
      , MonadError QErr tx
      )
@@ -234,7 +234,7 @@ asyncActionsProcessor
      , MonadBaseControl IO m
      , LA.Forall (LA.Pure m)
      , Tracing.HasReporter m
-     , MonadAsyncActions m
+     , MonadMetadataStorageTx m
      )
   => Env.Environment
   -> L.Logger L.Hasura

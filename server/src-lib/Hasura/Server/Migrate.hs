@@ -24,6 +24,7 @@ module Hasura.Server.Migrate
   ) where
 
 import           Hasura.Db
+import           Hasura.Class          (fetchMetadata, setMetadata)
 import           Hasura.Prelude
 
 import qualified Data.Aeson                    as A
@@ -43,7 +44,7 @@ import           Hasura.Logging                (Hasura, LogLevel (..), ToEngineL
 import           Hasura.RQL.DDL.Metadata       (fetchMetadataFromHdbTables)
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Schema
-import           Hasura.RQL.Types
+import           Hasura.RQL.Types       hiding (fetchMetadata)
 import           Hasura.Server.Init            (DowngradeOptions (..))
 import           Hasura.Server.Logging         (StartupLog (..))
 import           Hasura.Server.Migrate.Version (latestCatalogVersion, latestCatalogVersionString)
@@ -161,7 +162,7 @@ migrateCatalog migrationTime = do
              traverse_ (mpMigrate . snd) neededMigrations
              updateCatalogVersion
              pure $ MRMigrated previousVersion
-      metadata <- liftTx getMetadata
+      metadata <- liftTx fetchMetadata
       pure (migrationResult, metadata)
       where
         neededMigrations = dropWhile ((/= previousVersion) . fst) (migrations False)
@@ -314,7 +315,6 @@ migrations dryRun =
              );
            |] () False
         setMetadata metadata
-
 
 -- | Drops and recreates all “system-defined” metadata, aka metadata for tables and views in the
 -- @information_schema@ and @hdb_catalog@ schemas. These tables and views are tracked to expose them
