@@ -17,7 +17,7 @@ import RetryConfEditor from '../../Common/Components/RetryConfEditor';
 import * as tooltip from '../Common/Tooltips';
 import { EVENTS_SERVICE_HEADING } from '../../constants';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
-import { Table, Schema } from '../../../../../dataSources/types';
+import { Table } from '../../../../../dataSources/types';
 
 interface Props extends InjectedProps {}
 
@@ -209,18 +209,11 @@ const Add: React.FC<Props> = props => {
               data-test="select-schema"
               className={`${styles.selectTrigger} form-control`}
             >
-              {schemaList.map(s => {
-                const sName = s.schema_name;
-                return (
-                  <option
-                    value={sName}
-                    key={sName}
-                    selected={sName === table.schema}
-                  >
-                    {sName}
-                  </option>
-                );
-              })}
+              {schemaList.map(s => (
+                <option value={s} key={s} selected={s === table.schema}>
+                  {s}
+                </option>
+              ))}
             </select>
             <select
               onChange={handleTableChange}
@@ -349,7 +342,7 @@ const Add: React.FC<Props> = props => {
 
 type PropsFromState = {
   allSchemas: Table[];
-  schemaList: Schema[];
+  schemaList: string[];
   readOnlyMode: boolean;
 };
 

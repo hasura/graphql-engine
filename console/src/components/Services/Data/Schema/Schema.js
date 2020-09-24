@@ -229,9 +229,7 @@ class Schema extends Component {
     this.setState({ loadingSchemas: true });
     this.props.dispatch(fetchSchemaList()).then(data => {
       if (data.length) {
-        this.props.dispatch(
-          updateCurrentSchema(data[0].schema_name, true, data)
-        );
+        this.props.dispatch(updateCurrentSchema(data[0], true, data));
       } else {
         this.props.dispatch(updateCurrentSchema('', true, []));
       }
@@ -320,9 +318,7 @@ class Schema extends Component {
       const getSchemaOptions = () => {
         return (
           !this.state.loadingSchemas &&
-          schemaList.map(s => (
-            <option key={s.schema_name}>{s.schema_name}</option>
-          ))
+          schemaList.map(s => <option key={s}>{s}</option>)
         );
       };
 

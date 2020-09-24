@@ -43,7 +43,7 @@ const ForeignKeyWrapper = ({
       }
     });
 
-    const orderedSchemaList = schemaList.map(s => s.schema_name).sort();
+    const orderedSchemaList = schemaList.sort();
 
     // The content when the editor is expanded
     const expandedContent = () => (

@@ -36,7 +36,7 @@ const AddManualRelationship = ({
     ts => (refTables[ts.table_name] = getTableColumnNames(ts))
   );
 
-  const orderedSchemaList = schemaList.map(s => s.schema_name).sort();
+  const orderedSchemaList = schemaList.sort();
 
   const resetManualRel = () => {
     dispatch(resetManualRelationshipForm());

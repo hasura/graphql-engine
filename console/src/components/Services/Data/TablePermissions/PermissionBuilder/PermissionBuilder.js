@@ -760,10 +760,8 @@ class PermissionBuilder extends React.Component {
 
       const tableNames = getSchemaTableNames(tableSchemas, selectedSchema);
 
-      const schemaNames = schemaList.map(s => s.schema_name);
-
       const schemaSelect = wrapDoubleQuotes(
-        renderSelect(schemaSelectDispatchFunc, selectedSchema, schemaNames)
+        renderSelect(schemaSelectDispatchFunc, selectedSchema, schemaList)
       );
 
       const tableSelect = wrapDoubleQuotes(

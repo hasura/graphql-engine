@@ -278,7 +278,7 @@ const ComputedFieldsEditor = ({
             </div>
             <div className={styles.wd50percent}>
               <SearchableSelectBox
-                options={schemaList.map(s => s.schema_name)}
+                options={schemaList}
                 onChange={handleFnSchemaChange}
                 value={computedFieldFunctionSchema}
                 bsClass={'function-schema-select'}

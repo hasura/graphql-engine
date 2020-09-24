@@ -222,7 +222,7 @@ const RelationshipEditor = ({
 
   // ref schema select
   const refSchemaSelect = () => {
-    const orderedSchemaList = schemaList.map(s => s.schema_name).sort();
+    const orderedSchemaList = schemaList.sort();
     return (
       <div className={`${styles.add_mar_bottom}`}>
         <div className={`${styles.add_mar_bottom_mid}`}>

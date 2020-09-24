@@ -160,11 +160,11 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
         }
 
         if (!currentSchema) {
-          if (schemaList.find(s => s.schema_name === 'public')) {
+          if (schemaList.find(s => s === 'public')) {
             currentSchema = 'public';
           } else if (schemaList.length) {
             // select new currentSchema from schemaList
-            currentSchema = schemaList[0].schema_name;
+            currentSchema = schemaList[0];
             if (
               /^data|data\/schema|data\/[^\w+]/.test(
                 nextState.location.pathname

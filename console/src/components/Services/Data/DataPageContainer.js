@@ -13,7 +13,6 @@ import {
   fetchDataInit,
 } from './DataActions';
 import { CLI_CONSOLE_MODE } from '../../../constants';
-import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
 import styles from '../../Common/TableCommon/Table.scss';
 import { useDataSource } from '../../../dataSources';
 import { getDataSources } from '../../../metadata/selector';
@@ -76,8 +75,8 @@ const DataPageContainer = ({
 
   const getSchemaOptions = () => {
     return schemaList.map(s => (
-      <option key={s.schema_name} value={s.schema_name}>
-        {s.schema_name}
+      <option key={s} value={s}>
+        {s}
       </option>
     ));
   };
