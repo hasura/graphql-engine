@@ -107,13 +107,11 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
       E.QueryExecutionPlan queryPlans asts -> do
         results <- forWithKey queryPlans $ \fieldName -> \case
           E.ExecStepDB txGenSql -> do
-            (telemTimeIO_DT, _telemQueryType, respHdrs, resp) <-
+            (telemTimeIO_DT, respHdrs, resp) <-
               runQueryDB reqId (reqUnparsed,reqParsed) asts userInfo txGenSql
             return $ ResultsFragment telemTimeIO_DT Telem.Local resp respHdrs
-          E.ExecStepRemote (rsi, opDef, varValsM) -> do
-            (telemTimeIO_DT, HttpResponse resp respHdrs) <- runRemoteGQ rsi opDef varValsM
-            value <- extractData fieldName $ encJToLBS resp
-            pure $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) respHdrs
+          E.ExecStepRemote (rsi, opDef, varValsM) ->
+            runRemoteGQ fieldName rsi opDef varValsM
           E.ExecStepRaw json -> do
             let obj = encJFromJValue json
                 telemTimeIO_DT = 0
@@ -125,12 +123,10 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
       E.MutationExecutionPlan mutationPlans -> do
         results <- forWithKey mutationPlans $ \fieldName -> \case
           E.ExecStepDB (tx, responseHeaders) -> do
-            (telemTimeIO_DT, _telemQueryType, resp) <- runMutationDB reqId reqUnparsed userInfo tx
+            (telemTimeIO_DT, resp) <- runMutationDB reqId reqUnparsed userInfo tx
             return $ ResultsFragment telemTimeIO_DT Telem.Local resp responseHeaders
-          E.ExecStepRemote (rsi, opDef, varValsM) -> do
-            (telemTimeIO_DT, HttpResponse resp respHdrs) <- runRemoteGQ rsi opDef varValsM
-            value <- extractData fieldName $ encJToLBS resp
-            pure $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) respHdrs
+          E.ExecStepRemote (rsi, opDef, varValsM) ->
+            runRemoteGQ fieldName rsi opDef varValsM
           E.ExecStepRaw json -> do
             let obj = encJFromJValue json
                 telemTimeIO_DT = 0
@@ -152,8 +148,11 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   where
     forWithKey = flip OMap.traverseWithKey
 
-    runRemoteGQ rsi opDef varValsM =
-      E.execRemoteGQ env reqId userInfo reqHeaders rsi opDef varValsM
+    runRemoteGQ fieldName rsi opDef varValsM = do
+      (telemTimeIO_DT, HttpResponse resp respHdrs) <-
+        E.execRemoteGQ env reqId userInfo reqHeaders rsi opDef varValsM
+      value <- extractData fieldName $ encJToLBS resp
+      pure $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) respHdrs
 
     extractData :: Text -> LBS.ByteString -> m JO.Value
     extractData fieldName = runAesonParser $ \bs ->
@@ -220,7 +219,7 @@ runQueryDB
   -> [QueryRootField UnpreparedValue]
   -> UserInfo
   -> (Tracing.TraceT (LazyTx QErr) EncJSON, Maybe EQ.PreparedSql)
-  -> m (DiffTime, Telem.QueryType, HTTP.ResponseHeaders, EncJSON)
+  -> m (DiffTime, HTTP.ResponseHeaders, EncJSON)
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
 runQueryDB reqId (query, queryParsed) asts _userInfo (tx, _genSql) =  do
@@ -230,8 +229,7 @@ runQueryDB reqId (query, queryParsed) asts _userInfo (tx, _genSql) =  do
   (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ trace "Query" $
     Tracing.interpTraceT id $ executeQuery queryParsed asts Nothing pgExecCtx Q.ReadOnly tx -- TODO genSql
   (respHdrs,!resp) <- liftEither respE
-  let telemQueryType = Telem.Query
-  return (telemTimeIO, telemQueryType, respHdrs, resp)
+  return (telemTimeIO, respHdrs, resp)
 
 runMutationDB
   :: ( MonadIO m
@@ -244,7 +242,7 @@ runMutationDB
   -> GQLReqUnparsed
   -> UserInfo
   -> Tracing.TraceT (LazyTx QErr) EncJSON
-  -> m (DiffTime, Telem.QueryType, EncJSON)
+  -> m (DiffTime, EncJSON)
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
 runMutationDB reqId query userInfo tx =  do
@@ -252,8 +250,7 @@ runMutationDB reqId query userInfo tx =  do
   -- log the graphql query
   logQueryLog logger query Nothing reqId
   ctx <- Tracing.currentContext
-  (telemTimeIO, respE) <- withElapsedTime $  runExceptT $ trace "Mutation" $
+  (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ trace "Mutation" $
     Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx .  withUserInfo userInfo)  tx
   !resp <- liftEither respE
-  let telemQueryType = Telem.Mutation
-  return (telemTimeIO, telemQueryType, resp)
+  return (telemTimeIO, resp)
