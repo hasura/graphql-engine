@@ -15,8 +15,8 @@ TEMP_PROJECT_DIR="/tmp/hasura-project"
 
 # install cli-ext plugin
 log "installing cli-ext plugin"
-hasura-cli plugins install cli-ext --manifest-file /tmp/manifest.yaml
-cp -r /tmp/hasura-home-directory ~/.hasura
+hasura-cli plugins install cli-ext --manifest-file /opt/manifest.yaml
+cp -r /opt/hasura-home-directory ~/.hasura
 
 # set an env var to let the cli know that
 # it is running in server environment

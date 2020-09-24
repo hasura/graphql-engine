@@ -19,8 +19,8 @@ cp ${BINARY} .
 # copy linux binary 
 cp ${CLI_EXT_LINUX_BINARY_PATH} .
 
-# edit manifest file cli-ext linux uri to file:///tmp/cli-ext-hasura-linux.tar.gz
-yq write -i ${CLI_EXT_MANIFEST_FILE} "platforms[0].uri" "file:///tmp/cli-ext/${CLI_EXT_BINARY_NAME}"
+# edit manifest file cli-ext linux uri to file:///opt/cli-ext-hasura-linux.tar.gz
+yq write -i ${CLI_EXT_MANIFEST_FILE} "platforms[0].uri" "file:///opt/cli-ext/${CLI_EXT_BINARY_NAME}"
 cp ${CLI_EXT_MANIFEST_FILE} manifest.yaml
 
 # edit hasura home template directory
