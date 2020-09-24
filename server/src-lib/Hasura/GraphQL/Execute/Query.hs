@@ -153,10 +153,11 @@ irToRootFieldPlan prepped = \case
   QDBSimple s      -> mkPreparedSql getRemoteJoins (DS.selectQuerySQL DS.JASMultipleRows) s
   QDBPrimaryKey s  -> mkPreparedSql getRemoteJoins (DS.selectQuerySQL DS.JASSingleObject) s
   QDBAggregation s -> mkPreparedSql getRemoteJoinsAggregateSelect DS.selectAggregateQuerySQL s
-  QDBConnection s  -> mkPreparedSql getRemoteJoinsAggregateSelect DS.connectionSelectQuerySQL s
+  QDBConnection s  -> mkPreparedSql getRemoteJoinsConnectionSelect DS.connectionSelectQuerySQL s
   where
-    mkPreparedSql get f simpleSel =
-      let (simpleSel',remoteJoins) = get simpleSel
+    mkPreparedSql :: (s -> (t, Maybe RemoteJoins)) -> (t -> Q.Query) -> s -> PreparedSql
+    mkPreparedSql getJoins f simpleSel =
+      let (simpleSel',remoteJoins) = getJoins simpleSel
       in PreparedSql (f simpleSel') prepped remoteJoins
 
 traverseQueryRootField
