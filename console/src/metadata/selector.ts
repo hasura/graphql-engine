@@ -31,9 +31,10 @@ export const getDataSourceMatadata = (state: ReduxState) => {
 
 export const getInitDataSource = (state: ReduxState) => {
   if (isMetadataV3(state.metadata.metadataObject)) {
-    const dataSources = state.metadata.metadataObject.sources.filter(
-      source => source.name !== 'default'
-    );
+    const dataSources = state.metadata.metadataObject.sources;
+    // .filter(
+    //   source => source.name !== 'default'
+    // );
     if (dataSources.length) {
       return {
         source: state.metadata.metadataObject.sources[0].name,
@@ -234,14 +235,16 @@ export const getDataSources = createSelector(getMetadata, metadata => {
     metadata.sources.forEach(source => {
       sources.push({
         name: source.name,
-        url: source.configuration?.database_url || '???',
+        url:
+          source.configuration?.database_url || 'HASURA_GRAPHQL_DATABASE_URL',
         fromEnv: false, // todo
         connection_pool_setting:
           source.configuration?.connection_pool_setting || {},
         driver: source.kind || 'postgres',
       });
     });
-    return sources.filter(source => source.name !== 'default');
+    return sources;
+    // .filter(source => source.name !== 'default');
   }
 
   return [];

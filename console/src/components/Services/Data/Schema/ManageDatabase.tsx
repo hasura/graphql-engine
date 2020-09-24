@@ -18,6 +18,7 @@ import {
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { getDataSources } from '../../../../metadata/selector';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import ToolTip from '../../../Common/Tooltip/Tooltip';
 
 type DatabaseListItemProps = {
   dataSource: DataSource;
@@ -31,6 +32,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
 }) => {
   const [reloading, setReloading] = useState(false);
   const [removing, setRemoving] = useState(false);
+  const [showUrl, setShowUrl] = useState(dataSource.name === 'default');
 
   return (
     <div className={styles.db_list_item}>
@@ -63,7 +65,38 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
         <b>
           {dataSource.name} ({dataSource.driver})
         </b>{' '}
-        - {dataSource.url}
+        -
+        <span style={{ paddingLeft: 5 }}>
+          {showUrl ? (
+            dataSource.url
+          ) : (
+            <ToolTip
+              id="connection-string-show"
+              placement="right"
+              message="Show connection string"
+            >
+              <i
+                className={`${styles.showAdminSecret} fa fa-eye`}
+                aria-hidden="true"
+                onClick={() => setShowUrl(true)}
+              />
+            </ToolTip>
+          )}
+          {showUrl && dataSource.name !== 'default' && (
+            <ToolTip
+              id="connection-string-hide"
+              placement="right"
+              message="Hide connection string"
+            >
+              <i
+                className={`${styles.closeHeader} fa fa-times`}
+                aria-hidden="true"
+                onClick={() => setShowUrl(false)}
+                style={{ paddingLeft: 10 }}
+              />
+            </ToolTip>
+          )}
+        </span>
       </div>
     </div>
   );
@@ -108,7 +141,7 @@ const ManageDatabase: React.FC<ManageDatabaseInjectedProps> = ({
         {
           driver: data.driver,
           payload: {
-            name: data.name,
+            name: data.name.trim(),
             connection_pool_setting: {
               ...(data.connection_pool_setting?.connection_idle_timeout && {
                 connection_idle_timeout:
@@ -150,6 +183,7 @@ const ManageDatabase: React.FC<ManageDatabaseInjectedProps> = ({
             {dataSources.length ? (
               dataSources.map(data => (
                 <DatabaseListItem
+                  key={data.name}
                   dataSource={data}
                   onReload={onReload}
                   onRemove={onRemove}

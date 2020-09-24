@@ -18,6 +18,7 @@ import {
 import {
   makeMigrationCall,
   setConsistentSchema,
+  UPDATE_CURRENT_DATA_SOURCE,
 } from '../components/Services/Data/DataActions';
 import { filterInconsistentMetadataObjects } from '../components/Services/Settings/utils';
 import { clearIntrospectionSchemaCache } from '../components/Services/RemoteSchema/graphqlUtils';
@@ -152,7 +153,8 @@ export type MetadataActions =
   | RemoveDataSourceRequest
   | RemoveDataSourceError
   | ReloadDataSourceRequest
-  | ReloadDataSourceError;
+  | ReloadDataSourceError
+  | { type: typeof UPDATE_CURRENT_DATA_SOURCE; source: string };
 
 export const exportMetadata = (
   successCb?: (data: HasuraMetadataV2) => void,
@@ -192,7 +194,7 @@ export const addDataSource = (
   dispatch,
   getState
 ) => {
-  const { dataHeaders } = getState().tables;
+  const { dataHeaders, currentDataSource } = getState().tables;
 
   const query = addSource(data.driver, data.payload);
 
@@ -207,6 +209,12 @@ export const addDataSource = (
       successCb();
       dispatch(showSuccessNotification('Data source added successfully!'));
       dispatch(exportMetadata());
+      if (!currentDataSource) {
+        dispatch({
+          type: UPDATE_CURRENT_DATA_SOURCE,
+          source: data.payload.name,
+        });
+      }
       return getState();
     })
     .catch(err => {

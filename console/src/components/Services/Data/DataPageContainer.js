@@ -88,7 +88,7 @@ const DataPageContainer = ({
       >
         <Link
           className={styles.linkBorder}
-          to={getSchemaBaseRoute(currentSchema)}
+          // to={getSchemaBaseRoute(currentSchema)} // todo
         >
           <div className={styles.schemaWrapper}>
             <div
