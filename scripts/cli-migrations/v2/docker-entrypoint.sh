@@ -18,10 +18,6 @@ log "installing cli-ext plugin"
 hasura-cli plugins install cli-ext --manifest-file /opt/manifest.yaml
 cp -r /opt/hasura-home-directory ~/.hasura
 
-# set an env var to let the cli know that
-# it is running in server environment
-HASURA_GRAPHQL_CLI_ENVIRONMENT=server-on-docker
-
 # configure the target database for migrations
 if [ ${HASURA_GRAPHQL_MIGRATIONS_DATABASE_ENV_VAR} ]; then
     log "migrations-startup" "database url for migrations is set by $HASURA_GRAPHQL_MIGRATIONS_DATABASE_ENV_VAR"
