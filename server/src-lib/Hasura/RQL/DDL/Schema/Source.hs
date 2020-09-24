@@ -58,7 +58,9 @@ initSource = do
              "pgcrypto extension is required, but could not find the extension in the "
              <> "PostgreSQL server. Please make sure this extension is available."
          initPgSourceCatalog
-     | not sourceVersionTableExist && eventLogTableExist -> do
+     | not sourceVersionTableExist && not eventLogTableExist ->
+         liftTx initPgSourceCatalog
+     | not sourceVersionTableExist && eventLogTableExist ->
          liftTx createVersionTable
      | otherwise -> migrateSourceCatalog
 
