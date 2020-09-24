@@ -12,6 +12,7 @@ import qualified Data.HashMap.Strict           as Map
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Data.HashSet                  as S
 import qualified Data.List.NonEmpty            as NE
+import qualified Data.Text                     as T
 
 
 data SchemaDocumentTypeDefinitions
@@ -25,9 +26,25 @@ data SchemaDocumentTypeDefinitions
   , _sdtdSchemaDef    :: ![G.SchemaDefinition]
   } deriving (Show, Eq)
 
-data FieldDefinitionType = ObjectField | InterfaceField deriving (Show, Eq)
+data FieldDefinitionType
+  = ObjectField
+  | InterfaceField
+  deriving (Show, Eq)
 
-data ArgumentDefinitionType = InputObjectArgument | DirectiveArgument deriving (Show, Eq)
+instance DQuote FieldDefinitionType where
+  dquoteTxt = \case
+    ObjectField    -> "Object"
+    InterfaceField -> "Interface"
+
+data ArgumentDefinitionType
+  = InputObjectArgument
+  | DirectiveArgument
+  deriving (Show, Eq)
+
+instance DQuote ArgumentDefinitionType where
+  dquoteTxt = \case
+    InputObjectArgument -> "Input object"
+    DirectiveArgument   -> "Directive"
 
 data GraphQLType
   = Enum
@@ -41,16 +58,26 @@ data GraphQLType
   | Argument !ArgumentDefinitionType
   deriving (Show, Eq)
 
+instance DQuote GraphQLType where
+  dquoteTxt = \case
+    Enum                         -> "Enum"
+    InputObject                  -> "Input object"
+    Object                       -> "Object"
+    Interface                    -> "Interface"
+    Union                        -> "Union"
+    Scalar                       -> "Scalar"
+    Directive                    -> "Directive"
+    Field ObjectField            -> "Object field"
+    Field InterfaceField         -> "Interface field"
+    Argument InputObjectArgument -> "Input object argument"
+    Argument DirectiveArgument   -> "Directive Argument"
+
 data RoleBasedSchemaValidationError
   = NonMatchingType !G.Name !GraphQLType !G.GType !G.GType
   -- gType - expected name - provided name
   -- ^ error to indicate that an user provided
   -- type differs from the type defined in the upstream
   -- remote schema
-  | ExtraneousFields !GraphQLType !G.Name !(NE.NonEmpty G.Name)
-  -- ^ error to indicate when an user provided type
-  -- has more fields than what's defined
-  -- in the remote schema
   | FieldDoesNotExist !GraphQLType !G.Name
   -- ^ error to indicate when a single field doesn't exist
   -- in the upstream remote schema
@@ -58,8 +85,8 @@ data RoleBasedSchemaValidationError
   -- ^ input-object-name - input-value-name - expected-def-val - provided-def-val
   | NonExistingInputArgument !G.Name !G.Name
   -- ^ input-object-name - argument-name
-  | NonExistingDirectiveArgument !G.Name !GraphQLType !G.Name ![G.Name]
-  -- ^ directive-name - argument-name
+  | NonExistingDirectiveArgument !G.Name !GraphQLType !G.Name !(NonEmpty G.Name)
+  -- ^ parent-name - parent-type - directive-name - [argument-name]
   | NonExistingField !G.Name !FieldDefinitionType !G.Name
   -- ^ parent-type-name - "object/interface" - provided-name
   | NonExistingScalar !G.Name
@@ -72,18 +99,59 @@ data RoleBasedSchemaValidationError
   | NonExistingEnumValues !G.Name !(NE.NonEmpty G.Name)
   deriving (Show, Eq)
 
+showRoleBasedSchemaValidationError :: RoleBasedSchemaValidationError -> Text
+showRoleBasedSchemaValidationError = \case
+  NonMatchingType fldName fldType expectedType providedType ->
+    "expected type of " <> fldName <<> "(" <> fldType <<> ")" <>" to be " <>
+    (G.showGT expectedType) <> " but recieved " <> (G.showGT providedType)
+  FieldDoesNotExist fldType fldName ->
+    fldType <<> ": " <> fldName <<> " does not exist in the upstream remote schema"
+  NonMatchingDefaultValue inpObjName inpValName expectedVal providedVal ->
+    "expected default value of input value: " <> inpValName <<> "of input object "
+    <> inpObjName <<> " to be "
+    -- TODO: DO NOT use "show" below, write a DQuote instance for Value Void
+    <> (T.pack $ show expectedVal) <> " but recieved " <> (T.pack $ show providedVal)
+  NonExistingInputArgument inpObjName inpArgName ->
+    "input argument " <> inpArgName <<> " does not exist in the input object:" <>> inpObjName
+  NonExistingDirectiveArgument parentName parentType directiveName nonExistingArgs ->
+    "the following directive argument(s) defined in the directive: "
+    <> directiveName
+    <<> " defined with the type name: "
+    <> parentName <<> " of type "
+    <> parentType <<> " do not exist in the corresponding upstream directive: "
+    <> (englishList "and" $ fmap dquoteTxt nonExistingArgs)
+  NonExistingField parentTypeName fldDefnType providedName ->
+    "field " <> providedName <<> " does not exist in the type:" <> parentTypeName
+    <<> "(" <> fldDefnType <<> ")"
+  NonExistingScalar scalarName ->
+    "scalar " <> scalarName <<> " does not exist in the upstream remote schema"
+  NonExistingUnionMemberTypes unionName nonExistingMembers ->
+    "union " <> unionName <<> " contains members which do not exist in the members"
+    <> " of the remote schema union :"
+    <> (englishList "and" $ fmap dquoteTxt nonExistingMembers)
+  CustomInterfacesNotAllowed objName customInterfaces ->
+    "custom interfaces are not supported. " <> "Object" <> objName
+    <<> " implements the following custom interfaces: "
+    <> (englishList "and" $ fmap dquoteTxt customInterfaces)
+  ObjectImplementsNonExistingInterfaces objName nonExistentInterfaces ->
+    "object " <> objName <<> " is trying to implement the following interfaces"
+    <> " that do not exist in the corresponding upstream remote object: "
+    <> (englishList "and" $ fmap dquoteTxt nonExistentInterfaces)
+  NonExistingEnumValues enumName nonExistentEnumVals ->
+    "enum " <> enumName <<> " contains the following enum values that do not exist "
+    <> " in the corresponding upstream remote enum" <>
+    (englishList "and" $ fmap dquoteTxt nonExistentEnumVals)
+
 validateDirective
-  :: (Eq a, MonadValidate [RoleBasedSchemaValidationError] m)
+  :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => G.Directive a -- ^ provided directive definition
   -> G.Directive a -- ^ original directive definition
   -> (GraphQLType, G.Name) -- ^ parent type and name
   -> m ()
 validateDirective providedDirective originalDirective (parentType, parentTypeName) = do
-  if argsDiff == Map.empty
-    then pure ()
-    else
+  onJust (NE.nonEmpty $ Map.keys argsDiff) $ \argNames ->
     dispute $ pure $
-      NonExistingDirectiveArgument parentTypeName parentType directiveName $ Map.keys argsDiff
+      NonExistingDirectiveArgument parentTypeName parentType directiveName argNames
   where
     argsDiff = Map.difference providedDirectiveArgs originalDirectiveArgs
 
@@ -93,9 +161,7 @@ validateDirective providedDirective originalDirective (parentType, parentTypeNam
     directiveName = G._dName providedDirective
 
 validateDirectives
-  :: ( Eq a
-     , MonadValidate [RoleBasedSchemaValidationError] m
-     )
+  :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => [G.Directive a]
   -> [G.Directive a]
   -> (GraphQLType, G.Name)
@@ -112,14 +178,6 @@ validateDirectives providedDirectives originalDirectives gType =
 
 getDifference :: (Eq a, Hashable a) => [a] -> [a] -> S.HashSet a
 getDifference left right = S.difference (S.fromList left) (S.fromList right)
-
-formatErrorMsg :: S.HashSet G.Name -> Text
-formatErrorMsg errorItems =
-  let errorItemsList = S.toList errorItems
-  in
-    case NE.nonEmpty errorItemsList of
-      Nothing     -> ""
-      Just neList -> englishList "and" $ fmap dquoteTxt neList
 
 -- helper function to check the validity of an enum definition
 -- provided by the user against the enum definition defined
