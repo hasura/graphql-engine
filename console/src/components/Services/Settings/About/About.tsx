@@ -27,7 +27,7 @@ class About extends Component<ConnectInjectedProps & StateProps> {
 
   componentDidMount() {
     const fetchPgVersion = () => {
-      const { dispatch, dataHeaders } = this.props;
+      const { dispatch, dataHeaders, source } = this.props;
 
       const url = Endpoints.query;
       const options: RequestInit = {
@@ -35,8 +35,8 @@ class About extends Component<ConnectInjectedProps & StateProps> {
         credentials: globalCookiePolicy,
         headers: dataHeaders,
         body: JSON.stringify(
-          getRunSqlQuery('SELECT version();', '', false, true)
-        ), // todo: datasource
+          getRunSqlQuery('SELECT version();', source, false, true)
+        ),
       };
 
       dispatch(requestAction(url, options)).then(
@@ -165,6 +165,7 @@ const mapStateToProps = (state: ReduxState) => {
   return {
     dataHeaders: state.tables.dataHeaders,
     serverVersion: state.main.serverVersion,
+    source: state.tables.currentDataSource,
     latestStableServerVersion: state.main.latestStableServerVersion,
   };
 };
