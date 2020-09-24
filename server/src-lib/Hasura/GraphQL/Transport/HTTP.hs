@@ -41,7 +41,6 @@ import qualified Hasura.GraphQL.Execute.Query           as EQ
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
 import qualified Hasura.Tracing                         as Tracing
-import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
 
@@ -101,7 +100,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
     reqParsed <- E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed
                  >>= flip onLeft throwError
 
-    (telemCacheHit, execPlan) <- E.getResolvedExecPlan env logger pgExecCtx {- planCache -}
+    (_telemCacheHit, execPlan) <- E.getResolvedExecPlan env logger pgExecCtx {- planCache -}
                                  userInfo sqlGenCtx sc scVer queryType
                                  httpManager reqHeaders (reqUnparsed, reqParsed)
     case execPlan of
@@ -111,8 +110,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             (telemTimeIO_DT, _telemQueryType, respHdrs, resp) <-
               runQueryDB reqId (reqUnparsed,reqParsed) asts userInfo txGenSql
             return $ ResultsFragment telemTimeIO_DT Telem.Local resp respHdrs
-          E.ExecStepRemote (rsi, opDef, _varValsM) -> do
-            (_telemCacheHit, _, (telemTimeIO_DT, _telemQueryType, HttpResponse resp respHdrs)) <- runRemoteGQ telemCacheHit rsi opDef
+          E.ExecStepRemote (rsi, opDef, varValsM) -> do
+            (telemTimeIO_DT, HttpResponse resp respHdrs) <- runRemoteGQ rsi opDef varValsM
             value <- extractData fieldName $ encJToLBS resp
             pure $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) respHdrs
           E.ExecStepRaw json -> do
@@ -128,8 +127,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
           E.ExecStepDB (tx, responseHeaders) -> do
             (telemTimeIO_DT, _telemQueryType, resp) <- runMutationDB reqId reqUnparsed userInfo tx
             return $ ResultsFragment telemTimeIO_DT Telem.Local resp responseHeaders
-          E.ExecStepRemote (rsi, opDef, _varValsM) -> do
-            (_telemCacheHit, _, (telemTimeIO_DT, _telemQueryType, HttpResponse resp respHdrs)) <- runRemoteGQ telemCacheHit rsi opDef
+          E.ExecStepRemote (rsi, opDef, varValsM) -> do
+            (telemTimeIO_DT, HttpResponse resp respHdrs) <- runRemoteGQ rsi opDef varValsM
             value <- extractData fieldName $ encJToLBS resp
             pure $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) respHdrs
           E.ExecStepRaw json -> do
@@ -153,11 +152,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   where
     forWithKey = flip OMap.traverseWithKey
 
-    runRemoteGQ telemCacheHit rsi opDef = do
-      let telemQueryType | G._todType opDef == G.OperationTypeMutation = Telem.Mutation
-                         | otherwise = Telem.Query
-      (telemTimeIO, resp) <- E.execRemoteGQ env reqId userInfo reqHeaders reqUnparsed rsi opDef
-      pure (telemCacheHit, Telem.Remote, (telemTimeIO, telemQueryType, resp))
+    runRemoteGQ rsi opDef varValsM =
+      E.execRemoteGQ env reqId userInfo reqHeaders rsi opDef varValsM
 
     extractData :: Text -> LBS.ByteString -> m JO.Value
     extractData fieldName = runAesonParser $ \bs ->

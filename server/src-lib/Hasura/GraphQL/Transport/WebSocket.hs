@@ -356,9 +356,9 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           (telemTimeIO_DT, (respHdrs, resp)) <- Tracing.interpTraceT id $ withElapsedTime $
             executeQuery reqParsed asts genSql pgExecCtx Q.ReadOnly tx
           return $ ResultsFragment telemTimeIO_DT Telem.Local resp respHdrs
-        E.ExecStepRemote (rsi, opDef, _varValsM) -> do
+        E.ExecStepRemote (rsi, opDef, varValsM) -> do
           (telemTimeIO_DT, HttpResponse resp respHdrs) <-
-            withExceptT Right $ runRemoteGQ execCtx requestId userInfo reqHdrs opDef rsi
+            withExceptT Right $ runRemoteGQ execCtx requestId userInfo reqHdrs opDef rsi varValsM
           value <- mapExceptT lift $ extractData fieldName (encJToLBS resp)
           return $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) respHdrs
         E.ExecStepRaw json -> withExceptT Right $ do
@@ -386,9 +386,9 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx . withUserInfo userInfo)
             $ withElapsedTime tx
           return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
-        E.ExecStepRemote (rsi, opDef, _varValsM) -> do
+        E.ExecStepRemote (rsi, opDef, varValsM) -> do
           (telemTimeIO_DT, HttpResponse resp respHdrs) <-
-            withExceptT Right $ runRemoteGQ execCtx requestId userInfo reqHdrs opDef rsi
+            withExceptT Right $ runRemoteGQ execCtx requestId userInfo reqHdrs opDef rsi varValsM
           value <- mapExceptT lift $ extractData fieldName $ encJToLBS resp
           return $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) respHdrs
         E.ExecStepRaw json -> withExceptT Right $ do
@@ -434,8 +434,9 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     runRemoteGQ :: E.ExecutionCtx -> RequestId -> UserInfo -> [H.Header]
                 -> G.TypedOperationDefinition G.NoFragments G.Name -> RemoteSchemaInfo
+                -> Maybe VariableValues
                 -> ExceptT QErr (ExceptT () m) (DiffTime, HttpResponse EncJSON)
-    runRemoteGQ execCtx reqId userInfo reqHdrs opDef rsi = do
+    runRemoteGQ execCtx reqId userInfo reqHdrs opDef rsi varValsM = do
       case G._todType opDef of
         G.OperationTypeSubscription ->
           lift $ withComplete $ preExecErr reqId $
@@ -443,7 +444,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         G.OperationTypeMutation -> return ()
         G.OperationTypeQuery    -> return ()
       -- if it's not a subscription, use HTTP to execute the query on the remote
-      flip runReaderT execCtx $ E.execRemoteGQ env reqId userInfo reqHdrs q rsi opDef
+      flip runReaderT execCtx $ E.execRemoteGQ env reqId userInfo reqHdrs rsi opDef varValsM
 
     extractData :: Text -> LBS.ByteString -> ExceptT (Either GQExecError QErr) m JO.Value
     extractData fieldName bs = do

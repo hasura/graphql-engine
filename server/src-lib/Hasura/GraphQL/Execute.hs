@@ -29,6 +29,7 @@ import qualified Data.HashMap.Strict                    as Map
 
 import qualified Data.HashSet                           as HS
 import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Language.GraphQL.Draft.Printer         as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
@@ -327,16 +328,22 @@ execRemoteGQ
   -> RequestId
   -> UserInfo
   -> [HTTP.Header]
-  -> GQLReqUnparsed
   -> RemoteSchemaInfo
   -> G.TypedOperationDefinition G.NoFragments G.Name
+  -> Maybe VariableValues
   -> m (DiffTime, HttpResponse EncJSON)
   -- ^ Also returns time spent in http request, for telemetry.
-execRemoteGQ env reqId userInfo reqHdrs q rsi opDef = do
+execRemoteGQ env reqId userInfo reqHdrs rsi opDef varVals = do
   execCtx <- ask
   let logger  = _ecxLogger execCtx
       manager = _ecxHttpManager execCtx
       opType  = G._todType opDef
+      inlined = opDef { G._todSelectionSet = G.fmapSelectionSetFragment G.inline $ G._todSelectionSet opDef }
+      q       =
+        GQLReq Nothing
+        ( GQLQueryText $ G.renderExecutableDoc $ G.ExecutableDocument $
+          pure $ G.ExecutableDefinitionOperation $ G.OperationDefinitionTyped $ inlined
+        ) varVals
   logQueryLog logger q Nothing reqId
   (time, respHdrs, resp) <- execRemoteGQ' env manager userInfo reqHdrs q rsi opType
   let !httpResp = HttpResponse (encJFromLBS resp) respHdrs
