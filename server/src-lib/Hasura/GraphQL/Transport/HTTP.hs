@@ -116,9 +116,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             let obj = encJFromJValue json
                 telemTimeIO_DT = 0
             return $ ResultsFragment telemTimeIO_DT Telem.Local obj []
-        let (durationsIO, localities, bodies, headers) =
-              (fmap rfTimeIO results, fmap rfLocality results, fmap rfResponse results, fmap rfHeaders results)
-        return $ (Telem.Query, sum durationsIO, fold localities, ) $ HttpResponse (encodeGQResp $ pure $ encJToLBS $ encJFromInsOrdHashMap bodies) (fold headers)
+        return $ buildResult Telem.Query results
 
       E.MutationExecutionPlan mutationPlans -> do
         results <- forWithKey mutationPlans $ \fieldName -> \case
@@ -131,9 +129,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             let obj = encJFromJValue json
                 telemTimeIO_DT = 0
             return $ ResultsFragment telemTimeIO_DT Telem.Local obj []
-        let (durationsIO, localities, bodies, headers) =
-              (fmap rfTimeIO results, fmap rfLocality results, fmap rfResponse results, fmap rfHeaders results)
-        return $ (Telem.Mutation, sum durationsIO, fold localities, ) $ HttpResponse (encodeGQResp $ pure $ encJToLBS $ encJFromInsOrdHashMap bodies) (fold headers)
+        return $ buildResult Telem.Mutation results
 
       E.SubscriptionExecutionPlan _sub ->
         throw400 UnexpectedPayload "subscriptions are not supported over HTTP, use websockets instead"
@@ -164,6 +160,14 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
          JO.asObject        >>=
          lookup' fieldName
 
+    buildResult telemType results =
+      ( telemType
+      , sum (fmap rfTimeIO results)
+      , fold (fmap rfLocality results)
+      , HttpResponse
+        ( encodeGQResp $ pure $ encJToLBS $ encJFromInsOrdHashMap (fmap rfResponse results))
+        (fold (fmap rfHeaders results))
+      )
 
 -- | Run (execute) a batched GraphQL query (see 'GQLBatchedReqs')
 runGQBatched
