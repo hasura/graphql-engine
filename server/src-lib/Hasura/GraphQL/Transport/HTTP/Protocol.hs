@@ -10,7 +10,8 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   , VariableValues
   , encodeGQErr
   , encodeGQResp
-  , GQResult(..)
+  , GQResult
+  , GQExecError(..)
   , GQResponse
   , isExecError
   , RemoteGqlResp(..)
@@ -23,6 +24,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 
 import           Language.Haskell.TH.Syntax       (Lift)
+import           Data.Either                      (isLeft)
 
 import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
@@ -99,25 +101,23 @@ encodeGQErr :: Bool -> QErr -> J.Value
 encodeGQErr includeInternal qErr =
   J.object [ "errors" J..= [encodeGQLErr includeInternal qErr]]
 
-data GQResult a
-  = GQSuccess !a
-  | GQPreExecError ![J.Value]
-  | GQExecError ![J.Value]
-  deriving (Show, Eq, Functor, Foldable, Traversable)
+type GQResultT m a = ExceptT GQExecError m a
+
+type GQResult a = GQResultT Identity a
+
+newtype GQExecError = GQExecError [J.Value]
+  deriving (Show, Eq, J.ToJSON)
 
 type GQResponse = GQResult BL.ByteString
 
 isExecError :: GQResult a -> Bool
-isExecError = \case
-  GQExecError _ -> True
-  _             -> False
+isExecError = isLeft . runIdentity . runExceptT
 
 encodeGQResp :: GQResponse -> EncJSON
 encodeGQResp gqResp =
-  encJFromAssocList $ case gqResp of
-    GQSuccess r      -> [("data", encJFromLBS r)]
-    GQPreExecError e -> [("errors", encJFromJValue e)]
-    GQExecError e    -> [("data", "null"), ("errors", encJFromJValue e)]
+  encJFromAssocList $ case runIdentity $ runExceptT gqResp of
+    Right r -> [("data", encJFromLBS r)]
+    Left e  -> [("data", "null"), ("errors", encJFromJValue e)]
 
 -- | Represents GraphQL response from a remote server
 data RemoteGqlResp

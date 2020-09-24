@@ -449,8 +449,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           lookupData object =
             case JO.toList object of
               [("data", val)] -> pure val
-              x -> do err <- lookupField "errors" object
-                      Left err
+              x -> do lookupField "errors" object -- TODO fix
       in either fail pure $
          JO.eitherDecode bs >>=
          JO.asObject        >>=
@@ -499,7 +498,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       let errFn = getErrFn errRespTy
       logOpEv (ODQueryErr qErr) (Just reqId)
       sendMsg wsConn $ SMData $
-        DataMsg opId $ GRHasura $ GQExecError $ pure $ errFn False qErr
+        DataMsg opId $ GRHasura $ throwError $ GQExecError $ pure $ errFn False qErr
 
     -- why wouldn't pre exec error use graphql response?
     preExecErr reqId qErr = do
@@ -513,7 +512,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     sendSuccResp :: EncJSON -> LQ.LiveQueryMetadata -> ExceptT () m ()
     sendSuccResp encJson =
       sendMsgWithMetadata wsConn
-        (SMData $ DataMsg opId $ GRHasura $ GQSuccess $ encJToLBS encJson)
+        (SMData $ DataMsg opId $ GRHasura $ pure $ encJToLBS encJson)
 
     withComplete :: ExceptT () m () -> ExceptT () m a
     withComplete action = do
@@ -523,13 +522,13 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     -- on change, send message on the websocket
     liveQOnChange :: LQ.OnChange
-    liveQOnChange = \case
-      GQSuccess (LQ.LiveQueryResponse bs dTime) ->
+    liveQOnChange result = case runIdentity $ runExceptT result of
+      Right (LQ.LiveQueryResponse bs dTime) ->
         sendMsgWithMetadata wsConn
-        (SMData $ DataMsg opId $ GRHasura $ GQSuccess $ LBS.fromStrict bs)
+        (SMData $ DataMsg opId $ GRHasura $ pure $ LBS.fromStrict bs)
         (LQ.LiveQueryMetadata dTime)
       resp -> sendMsg wsConn $ SMData $ DataMsg opId $ GRHasura $
-        LBS.fromStrict . LQ._lqrPayload <$> resp
+        LBS.fromStrict . LQ._lqrPayload <$> ExceptT (Identity resp)
 
     catchAndIgnore :: ExceptT () m () -> m ()
     catchAndIgnore m = void $ runExceptT m
