@@ -18,6 +18,7 @@ data Select = Select
 data Projection
   = ExpressionProjection (Aliased Expression)
   | FieldNameProjection (Aliased FieldName)
+  | AggregateProjection (Aliased Aggregate)
   deriving (Eq, Show)
 
 data Join = Join
@@ -43,6 +44,18 @@ data Expression
   | SelectExpression Select
   | IsNullExpression Expression
   | ColumnExpression FieldName
+  deriving (Eq, Show)
+
+data Aggregate
+  = CountAggregate Countable
+  | OpAggregate !Text FieldName
+  | TextAggregate !Text
+  deriving (Eq, Show)
+
+data Countable
+  = StarCountable
+  | NonNullFieldCountable (NonEmpty FieldName)
+  | DistinctCountable (NonEmpty FieldName)
   deriving (Eq, Show)
 
 data From =

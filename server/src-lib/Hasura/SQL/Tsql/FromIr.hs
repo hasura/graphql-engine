@@ -3,7 +3,8 @@
 -- | Translate from the DML to the TSql dialect.
 
 module Hasura.SQL.Tsql.FromIr
-  ( fromSelectFields
+  ( fromSelectRows
+  , fromSelectAggregate
   , Error(..)
   , runFromIr
   , FromIr
@@ -11,15 +12,16 @@ module Hasura.SQL.Tsql.FromIr
 
 import           Control.Monad
 import           Control.Monad.Validate
+import           Data.Foldable
 import           Data.HashMap.Strict (HashMap)
 import           Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.List.NonEmpty as NE
 import           Data.Maybe
 import qualified Database.ODBC.SQLServer as Odbc
-import qualified Hasura.RQL.Types.Common as Ir
 import qualified Hasura.RQL.DML.Select.Types as Ir
 import qualified Hasura.RQL.Types.BoolExp as Ir
 import qualified Hasura.RQL.Types.Column as Ir
+import qualified Hasura.RQL.Types.Common as Ir
 import qualified Hasura.SQL.DML as Sql
 import           Hasura.SQL.Tsql.Types as Tsql
 import qualified Hasura.SQL.Types as Sql
@@ -30,18 +32,22 @@ import           Prelude
 
 data Error
   = FromTypeUnsupported (Ir.SelectFromG Sql.SQLExp)
-  | FieldTypeUnsupported (Ir.AnnFieldG Sql.SQLExp)
+  | MalformedAgg
+  | FieldTypeUnsupportedForNow (Ir.AnnFieldG Sql.SQLExp)
+  | AggTypeUnsupportedForNow (Ir.TableAggregateFieldG Sql.SQLExp)
   | NoProjectionFields
+  | NoAggregatesMustBeABug
+  | UnsupportedArraySelect (Ir.ArraySelectG Sql.SQLExp)
   deriving (Show, Eq)
 
 newtype FromIr a = FromIr { runFromIr :: Validate (NonEmpty Error) a}
   deriving (Functor, Applicative, Monad)
 
 --------------------------------------------------------------------------------
--- Conversion functions
+-- Top-level exported functions
 
-fromSelectFields :: Ir.AnnSelectG (Ir.AnnFieldsG Sql.SQLExp) Sql.SQLExp -> FromIr Tsql.Select
-fromSelectFields annSelectG
+fromSelectRows :: Ir.AnnSelectG (Ir.AnnFieldsG Sql.SQLExp) Sql.SQLExp -> FromIr Tsql.Select
+fromSelectRows annSelectG
   -- Here is a spot where the from'd thing binds a scope that the
   -- order/where will be related to.
  = do
@@ -52,7 +58,7 @@ fromSelectFields annSelectG
   fieldSources <- traverse fromAnnFieldsG _asnFields
   filterExpression <- fromAnnBoolExp permFilter
   selectProjections <-
-    case NE.nonEmpty (concatMap fieldSourceProjections fieldSources) of
+    case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
       Nothing -> FromIr (refute (pure NoProjectionFields))
       Just ne -> pure ne
   pure
@@ -74,6 +80,43 @@ fromSelectFields annSelectG
     Ir.AnnSelectG {_asnFields, _asnFrom, _asnPerm, _asnArgs, _asnStrfyNum} =
       annSelectG
     Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = _asnPerm
+
+fromSelectAggregate ::
+     Ir.AnnSelectG [(Ir.FieldName, Ir.TableAggregateFieldG Sql.SQLExp)] Sql.SQLExp
+  -> FromIr Tsql.Select
+fromSelectAggregate annSelectG = do
+  selectFrom <-
+    case _asnFrom of
+      Ir.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
+      _ -> FromIr (refute (pure (FromTypeUnsupported _asnFrom)))
+  fieldSources <- traverse fromTableAggregateFieldG _asnFields
+  filterExpression <- fromAnnBoolExp permFilter
+  selectProjections <-
+    case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
+      Nothing -> FromIr (refute (pure NoProjectionFields))
+      Just ne -> pure ne
+  pure
+    Select
+      { selectTop =
+          case mPermLimit of
+            Nothing -> uncommented NoTop
+            Just limit ->
+              Commented
+                { commentedComment = pure DueToPermission
+                , commentedThing = Top limit
+                }
+      , selectProjections
+      , selectFrom
+      , selectJoins = mapMaybe fieldSourceJoin fieldSources
+      , selectWhere = ExpressionWhere filterExpression
+      }
+  where
+    Ir.AnnSelectG {_asnFields, _asnFrom, _asnPerm, _asnArgs, _asnStrfyNum} =
+      annSelectG
+    Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = _asnPerm
+
+--------------------------------------------------------------------------------
+-- Conversion functions
 
 fromAnnBoolExp :: Ir.GBoolExp (Ir.AnnBoolExpFld Sql.SQLExp) -> FromIr Expression
 fromAnnBoolExp = traverse fromAnnBoolExpFld >=> fromGBoolExp
@@ -101,30 +144,9 @@ fromPGColumnInfo info = do
   name <- fromPGColumnName info
   pure (ColumnExpression name)
 
-fromOpExpG :: Expression -> Ir.OpExpG Sql.SQLExp -> FromIr Expression
-fromOpExpG expression =
-  \case
-    Ir.ANISNULL -> pure (IsNullExpression expression)
-
-fromSQLExp :: Sql.SQLExp -> FromIr Expression
-fromSQLExp =
-  \case
-    Sql.SENull -> pure (ValueExpression Odbc.NullValue)
-
-fromGBoolExp :: Ir.GBoolExp Expression -> FromIr Expression
-fromGBoolExp =
-  \case
-    Ir.BoolAnd expressions ->
-      fmap AndExpression (traverse fromGBoolExp expressions)
-    Ir.BoolOr expressions ->
-      fmap OrExpression (traverse fromGBoolExp expressions)
-    Ir.BoolNot expression -> fmap NotExpression (fromGBoolExp expression)
-    Ir.BoolExists gExists -> fmap SelectExpression (fromGExists gExists)
-    Ir.BoolFld expression -> pure expression
-
 fromGExists :: Ir.GExists Expression -> FromIr Select
 fromGExists Ir.GExists {_geTable, _geWhere} = do
-  -- Here is a spot here the from'd thing binds a scope that the
+  -- Here is a spot where the from'd thing binds a scope that the
   -- order/where will be related to.
   -- But the scope here is quite short.
   selectFrom <- fromQualifiedTable _geTable
@@ -165,8 +187,65 @@ data FieldSource
   = ExpressionFieldSource (Aliased Expression)
   | ColumnFieldSource (Aliased FieldName)
   | JoinFieldSource (Aliased Join)
+  | AggregateFieldSource (NonEmpty (Aliased Aggregate))
   deriving (Eq, Show)
 
+fromTableAggregateFieldG ::
+     (Ir.FieldName, Ir.TableAggregateFieldG Sql.SQLExp) -> FromIr FieldSource
+fromTableAggregateFieldG (Ir.FieldName name, field) =
+  case field of
+    Ir.TAFAgg (aggregateFields :: [(Ir.FieldName, Ir.AggregateField)]) ->
+      case NE.nonEmpty aggregateFields of
+        Nothing -> FromIr (refute (pure NoAggregatesMustBeABug))
+        Just fields -> do
+          aggregates <-
+            traverse
+              (\(fieldName, aggregateField) -> do
+                 fmap
+                   (\aliasedThing ->
+                      Aliased
+                        { aliasedAlias =
+                            Just
+                              (Alias {aliasText = Ir.getFieldNameTxt fieldName})
+                        , ..
+                        })
+                   (fromAggregateField aggregateField))
+              fields
+          pure (AggregateFieldSource aggregates)
+    Ir.TAFExp text ->
+      pure
+        (ExpressionFieldSource
+           Aliased
+             { aliasedThing = Tsql.ValueExpression (Odbc.TextValue text)
+             , aliasedAlias = Just (Alias {aliasText = name})
+             })
+    Ir.TAFNodes {} -> FromIr (refute (pure (AggTypeUnsupportedForNow field)))
+
+fromAggregateField :: Ir.AggregateField -> FromIr Aggregate
+fromAggregateField aggregateField =
+  case aggregateField of
+    Ir.AFExp text -> pure (TextAggregate text)
+    Ir.AFCount countType ->
+      fmap
+        CountAggregate
+        (case countType of
+           Sql.CTStar -> pure StarCountable
+           Sql.CTSimple fields ->
+             case NE.nonEmpty fields of
+               Nothing -> FromIr (refute (pure MalformedAgg))
+               Just fields' -> do
+                 fields'' <- traverse fromPGCol fields'
+                 pure (NonNullFieldCountable fields'')
+           Sql.CTDistinct fields ->
+             case NE.nonEmpty fields of
+               Nothing -> FromIr (refute (pure MalformedAgg))
+               Just fields' -> do
+                 fields'' <- traverse fromPGCol fields'
+                 pure (DistinctCountable fields''))
+    Ir.AFOp Ir.AggregateOp{_aoOp,_aoFields} ->
+      error "Ir.AFOp Ir.AggregateOp"
+
+-- | The main sources of fields, either constants, fields or via joins.
 fromAnnFieldsG :: (Ir.FieldName, Ir.AnnFieldG Sql.SQLExp) -> FromIr FieldSource
 fromAnnFieldsG (Ir.FieldName name, field) =
   case field of
@@ -192,7 +271,18 @@ fromAnnFieldsG (Ir.FieldName name, field) =
              (Aliased
                 {aliasedThing, aliasedAlias = Just (Alias {aliasText = name})}))
         (fromObjectRelationSelectG objectRelationSelectG)
-    _ -> FromIr (refute (pure (FieldTypeUnsupported field)))
+    Ir.AFArrayRelation arraySelectG ->
+      fmap
+        (\aliasedThing ->
+           JoinFieldSource
+             (Aliased
+                {aliasedThing, aliasedAlias = Just (Alias {aliasText = name})}))
+        (fromArraySelectG arraySelectG)
+    -- Vamshi said to ignore these three for now:
+    Ir.AFNodeId {} -> FromIr (refute (pure (FieldTypeUnsupportedForNow field)))
+    Ir.AFRemote {} -> FromIr (refute (pure (FieldTypeUnsupportedForNow field)))
+    Ir.AFComputedField {} ->
+      FromIr (refute (pure (FieldTypeUnsupportedForNow field)))
 
 fromAnnColumnField :: Ir.AnnColumnField -> FromIr FieldName
 fromAnnColumnField annColumnField = fromPGColumnName pgColumnInfo
@@ -204,9 +294,13 @@ fromAnnColumnField annColumnField = fromPGColumnName pgColumnInfo
 
 fromPGColumnName :: Ir.PGColumnInfo -> FromIr FieldName
 fromPGColumnName Ir.PGColumnInfo{pgiColumn = pgCol} =
+  fromPGCol pgCol
+
+fromPGCol :: Sql.PGCol -> FromIr FieldName
+fromPGCol pgCol =
   pure (FieldName (Sql.getPGColTxt pgCol))
 
-fieldSourceProjections :: FieldSource -> [Projection]
+fieldSourceProjections :: FieldSource -> NonEmpty Projection
 fieldSourceProjections =
   \case
     ExpressionFieldSource aliasedExpression ->
@@ -214,6 +308,8 @@ fieldSourceProjections =
     ColumnFieldSource name -> pure (FieldNameProjection name)
     JoinFieldSource aliasedJoin ->
       pure (FieldNameProjection (fmap joinFieldName aliasedJoin))
+    AggregateFieldSource aggregates ->
+      fmap AggregateProjection aggregates
 
 fieldSourceJoin :: FieldSource -> Maybe Join
 fieldSourceJoin =
@@ -221,17 +317,19 @@ fieldSourceJoin =
     JoinFieldSource aliasedJoin -> pure (aliasedThing aliasedJoin)
     ExpressionFieldSource {} -> Nothing
     ColumnFieldSource {} -> Nothing
+    AggregateFieldSource {} -> Nothing
 
 --------------------------------------------------------------------------------
--- Object joins
+-- Joins
 
+-- TODO: field mappings.
 fromObjectRelationSelectG :: Ir.ObjectRelationSelectG Sql.SQLExp -> FromIr Join
 fromObjectRelationSelectG annRelationSelectG = do
   fieldSources <- traverse fromAnnFieldsG fields
   selectFrom <- fromQualifiedTable tableFrom
   filterExpression <- fromAnnBoolExp tableFilter
   selectProjections <-
-    case NE.nonEmpty (concatMap fieldSourceProjections fieldSources) of
+    case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
       Nothing -> FromIr (refute (pure NoProjectionFields))
       Just ne -> pure ne
   fieldName <- fromRelName aarRelationshipName
@@ -257,9 +355,55 @@ fromObjectRelationSelectG annRelationSelectG = do
                           , aarAnnSelect = annObjectSelectG :: Ir.AnnObjectSelectG Sql.SQLExp
                           } = annRelationSelectG
 
+fromArraySelectG :: Ir.ArraySelectG Sql.SQLExp -> FromIr Join
+fromArraySelectG =
+  \case
+    Ir.ASSimple arrayRelationSelectG ->
+      fromArrayRelationSelectG arrayRelationSelectG
+    Ir.ASAggregate arrayAggregateSelectG ->
+      error "Ir.ASAggregate arrayAggregateSelectG"
+    select@Ir.ASConnection {} ->
+      FromIr (refute (pure (UnsupportedArraySelect select)))
+
+-- TODO: field mappings.
+fromArrayRelationSelectG :: Ir.ArrayRelationSelectG Sql.SQLExp -> FromIr Join
+fromArrayRelationSelectG annRelationSelectG = do
+  fieldName <- fromRelName aarRelationshipName
+  select <- fromSelectRows annSelectG
+  pure Join {joinFieldName = fieldName, joinSelect = select}
+  where
+    Ir.AnnRelationSelectG { aarRelationshipName
+                          , aarColumnMapping = mapping :: HashMap Sql.PGCol Sql.PGCol
+                          , aarAnnSelect = annSelectG
+                          } = annRelationSelectG
+
 fromRelName :: Ir.RelName -> FromIr FieldName
 fromRelName relName =
   pure (FieldName (Ir.relNameToTxt relName))
+
+--------------------------------------------------------------------------------
+-- Basic SQL expression types
+
+fromOpExpG :: Expression -> Ir.OpExpG Sql.SQLExp -> FromIr Expression
+fromOpExpG expression =
+  \case
+    Ir.ANISNULL -> pure (IsNullExpression expression)
+
+fromSQLExp :: Sql.SQLExp -> FromIr Expression
+fromSQLExp =
+  \case
+    Sql.SENull -> pure (ValueExpression Odbc.NullValue)
+
+fromGBoolExp :: Ir.GBoolExp Expression -> FromIr Expression
+fromGBoolExp =
+  \case
+    Ir.BoolAnd expressions ->
+      fmap AndExpression (traverse fromGBoolExp expressions)
+    Ir.BoolOr expressions ->
+      fmap OrExpression (traverse fromGBoolExp expressions)
+    Ir.BoolNot expression -> fmap NotExpression (fromGBoolExp expression)
+    Ir.BoolExists gExists -> fmap SelectExpression (fromGExists gExists)
+    Ir.BoolFld expression -> pure expression
 
 --------------------------------------------------------------------------------
 -- Comments

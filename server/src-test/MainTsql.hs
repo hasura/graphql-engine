@@ -13,6 +13,7 @@ import qualified Hasura.RQL.DML.Select.Types as Ir
 import qualified Hasura.RQL.Types.BoolExp as Ir
 import qualified Hasura.RQL.Types.Column as Ir
 import qualified Hasura.RQL.Types.Common as Ir
+import qualified Hasura.SQL.DML as Sql
 import           Hasura.SQL.Tsql.FromIr as FromIr
 import           Hasura.SQL.Tsql.ToQuery as ToQuery
 import           Hasura.SQL.Tsql.Types as Tsql
@@ -81,6 +82,7 @@ fromIrTests = do
   tracks_id
   tracks_album_title
   albums_tracks_id
+  tracks_aggregate_count
 
 tracks_id :: SpecWith ()
 tracks_id =
@@ -89,7 +91,7 @@ tracks_id =
     (shouldBe
        (runValidate
           (FromIr.runFromIr
-             (FromIr.fromSelectFields
+             (FromIr.fromSelectRows
                 Ir.AnnSelectG
                   { _asnFields =
                       [ ( "id"
@@ -159,7 +161,7 @@ tracks_album_title =
     (shouldBe
        (runValidate
           (FromIr.runFromIr
-             (FromIr.fromSelectFields
+             (FromIr.fromSelectRows
                 Ir.AnnSelectG
                   { _asnFields =
                       [ ( "album"
@@ -286,15 +288,71 @@ tracks_album_title =
              , selectWhere = ExpressionWhere (AndExpression [])
              })))
 
+tracks_aggregate_count :: SpecWith ()
+tracks_aggregate_count =
+  it
+    "tracks_aggregate { aggregate { count } }"
+    (shouldBe
+       (runValidate
+          (FromIr.runFromIr
+             (FromIr.fromSelectAggregate
+                Ir.AnnSelectG
+                  { _asnFields =
+                      [ ( "aggregate"
+                        , Ir.TAFAgg [("count", Ir.AFCount Sql.CTStar)])
+                      ]
+                  , _asnFrom =
+                      Ir.FromTable
+                        (Sql.QualifiedObject
+                           {qSchema = "public", qName = "tracks"})
+                  , _asnPerm =
+                      Ir.TablePerm
+                        {_tpFilter = Ir.BoolAnd [], _tpLimit = Nothing}
+                  , _asnArgs =
+                      Ir.SelectArgs
+                        { _saWhere = Nothing
+                        , _saOrderBy = Nothing
+                        , _saLimit = Nothing
+                        , _saOffset = Nothing
+                        , _saDistinct = Nothing
+                        }
+                  , _asnStrfyNum = False
+                  })))
+       (Right
+          (Select
+             { selectTop =
+                 Commented {commentedComment = Nothing, commentedThing = NoTop}
+             , selectProjections =
+                 AggregateProjection
+                   (Aliased
+                      { aliasedThing = CountAggregate StarCountable
+                      , aliasedAlias = Just (Alias {aliasText = "count"})
+                      }) :|
+                 []
+             , selectFrom =
+                 FromQualifiedTable
+                   (Aliased
+                      { aliasedThing =
+                          Qualified
+                            { qualifiedThing =
+                                TableName {tableNameText = "tracks"}
+                            , qualifiedSchemaName =
+                                Just (SchemaName {schemaNameParts = ["public"]})
+                            }
+                      , aliasedAlias = Nothing
+                      })
+             , selectJoins = []
+             , selectWhere = ExpressionWhere (AndExpression [])
+             })))
+
 albums_tracks_id :: SpecWith ()
 albums_tracks_id =
   it
     "tracks { album { tracks { id } } }"
-    (do pendingWith "need to implement array relation"
-        shouldBe
+    (do shouldBe
           (runValidate
              (FromIr.runFromIr
-                (FromIr.fromSelectFields
+                (FromIr.fromSelectRows
                    Ir.AnnSelectG
                      { _asnFields =
                          [ ( "tracks"
@@ -374,12 +432,13 @@ albums_tracks_id =
           (Right
              (Select
                 { selectTop =
-                    Commented {commentedComment = Nothing, commentedThing = NoTop}
+                    Commented
+                      {commentedComment = Nothing, commentedThing = NoTop}
                 , selectProjections =
                     FieldNameProjection
                       (Aliased
-                         { aliasedThing = FieldName {fieldNameText = "album"}
-                         , aliasedAlias = Just (Alias {aliasText = "album"})
+                         { aliasedThing = FieldName {fieldNameText = "tracks"}
+                         , aliasedAlias = Just (Alias {aliasText = "tracks"})
                          }) :|
                     []
                 , selectFrom =
@@ -388,9 +447,10 @@ albums_tracks_id =
                          { aliasedThing =
                              Qualified
                                { qualifiedThing =
-                                   TableName {tableNameText = "tracks"}
+                                   TableName {tableNameText = "albums"}
                                , qualifiedSchemaName =
-                                   Just (SchemaName {schemaNameParts = ["public"]})
+                                   Just
+                                     (SchemaName {schemaNameParts = ["public"]})
                                }
                          , aliasedAlias = Nothing
                          })
@@ -407,9 +467,9 @@ albums_tracks_id =
                                   FieldNameProjection
                                     (Aliased
                                        { aliasedThing =
-                                           FieldName {fieldNameText = "title"}
+                                           FieldName {fieldNameText = "id"}
                                        , aliasedAlias =
-                                           Just (Alias {aliasText = "title"})
+                                           Just (Alias {aliasText = "id"})
                                        }) :|
                                   []
                               , selectFrom =
@@ -419,7 +479,7 @@ albums_tracks_id =
                                            Qualified
                                              { qualifiedThing =
                                                  TableName
-                                                   {tableNameText = "albums"}
+                                                   {tableNameText = "tracks"}
                                              , qualifiedSchemaName =
                                                  Just
                                                    (SchemaName
@@ -432,7 +492,7 @@ albums_tracks_id =
                               , selectJoins = []
                               , selectWhere = ExpressionWhere (AndExpression [])
                               }
-                        , joinFieldName = FieldName {fieldNameText = "album"}
+                        , joinFieldName = FieldName {fieldNameText = "tracks"}
                         }
                     ]
                 , selectWhere = ExpressionWhere (AndExpression [])

@@ -6,13 +6,17 @@ module Hasura.RQL.DML.Select.Internal
   )
 where
 
-import           Instances.TH.Lift           ()
-import           Control.Lens                 hiding (op)
-import           Control.Monad.Writer.Strict
+import qualified Hasura.SQL.Tsql.FromIr as FromIr
+import           Control.Monad.Validate (runValidate)
 
-import qualified Data.HashMap.Strict          as HM
-import qualified Data.List.NonEmpty           as NE
-import qualified Data.Text                    as T
+import           Control.Lens hiding (op)
+import           Control.Monad.Writer.Strict
+import           Debug.Trace
+import           Instances.TH.Lift ()
+
+import qualified Data.HashMap.Strict as HM
+import qualified Data.List.NonEmpty as NE
+import qualified Data.Text as T
 
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.Prelude
@@ -23,7 +27,7 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Rewrite
 import           Hasura.SQL.Types
 
-import qualified Hasura.SQL.DML               as S
+import qualified Hasura.SQL.DML as S
 
 -- Conversion of SelectQ happens in 2 Stages.
 -- Stage 1 : Convert input query into an annotated AST
@@ -932,7 +936,15 @@ generateSQLSelectFromArrayNode selectSource arraySelectNode joinCondition =
                  S.Alias $ _ssPrefix selectSource
 
 mkAggregateSelect :: AnnAggregateSelect -> S.Select
-mkAggregateSelect annAggSel =
+mkAggregateSelect simple =
+  mkAggregateSelect_ (trace
+     ("\nfromSelectAggregate =\n " <>
+      show simple <> "\n\n" <>
+      show (runValidate (FromIr.runFromIr (FromIr.fromSelectAggregate simple))) <> "\n")
+     simple)
+
+mkAggregateSelect_ :: AnnAggregateSelect -> S.Select
+mkAggregateSelect_ annAggSel =
   let ((selectSource, nodeExtractors, topExtractor), joinTree) =
         runWriter $ flip runReaderT strfyNum $
         processAnnAggregateSelect sourcePrefixes rootFieldName annAggSel
@@ -947,7 +959,17 @@ mkAggregateSelect annAggSel =
     sourcePrefixes = SourcePrefixes rootIden rootIden
 
 mkSQLSelect :: JsonAggSelect -> AnnSimpleSel -> S.Select
-mkSQLSelect jsonAggSelect annSel =
+mkSQLSelect agg simple =
+  mkSQLSelect_
+    agg
+    (trace
+       ("\nfromSelectRows =\n " <>
+        show simple <> "\n\n" <>
+        show (runValidate (FromIr.runFromIr (FromIr.fromSelectRows simple))) <> "\n")
+       simple)
+
+mkSQLSelect_ :: JsonAggSelect -> AnnSimpleSel -> S.Select
+mkSQLSelect_ jsonAggSelect annSel =
   let permLimitSubQuery = PLSQNotRequired
       ((selectSource, nodeExtractors), joinTree) =
         runWriter $ flip runReaderT strfyNum $
