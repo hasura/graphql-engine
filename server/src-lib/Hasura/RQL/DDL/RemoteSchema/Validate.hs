@@ -41,7 +41,7 @@ data GraphQLType
   | Argument !ArgumentDefinitionType
   deriving (Show, Eq)
 
-data CustomRemoteSchemaValidationError
+data RoleBasedSchemaValidationError
   = NonMatchingType !G.Name !GraphQLType !G.GType !G.GType
   -- gType - expected name - provided name
   -- ^ error to indicate that an user provided
@@ -73,7 +73,7 @@ data CustomRemoteSchemaValidationError
   deriving (Show, Eq)
 
 validateDirective
-  :: (Eq a, MonadValidate [CustomRemoteSchemaValidationError] m)
+  :: (Eq a, MonadValidate [RoleBasedSchemaValidationError] m)
   => G.Directive a -- ^ provided directive definition
   -> G.Directive a -- ^ original directive definition
   -> (GraphQLType, G.Name) -- ^ parent type and name
@@ -94,7 +94,7 @@ validateDirective providedDirective originalDirective (parentType, parentTypeNam
 
 validateDirectives
   :: ( Eq a
-     , MonadValidate [CustomRemoteSchemaValidationError] m
+     , MonadValidate [RoleBasedSchemaValidationError] m
      )
   => [G.Directive a]
   -> [G.Directive a]
@@ -125,7 +125,7 @@ formatErrorMsg errorItems =
 -- provided by the user against the enum definition defined
 -- in the remote
 validateEnumTypeDefinition
-  :: ( MonadValidate [CustomRemoteSchemaValidationError] m)
+  :: ( MonadValidate [RoleBasedSchemaValidationError] m)
   => G.EnumTypeDefinition -- ^ provided enum type definition
   -> G.EnumTypeDefinition -- ^ original enum type definition
   -> m ()
@@ -145,7 +145,7 @@ validateEnumTypeDefinition providedEnum upstreamEnum = do
     fieldsDifference       = getDifference providedEnumValNames upstreamEnumValNames
 
 validateEnumTypeDefinitions
-  :: ( MonadValidate [CustomRemoteSchemaValidationError] m)
+  :: ( MonadValidate [RoleBasedSchemaValidationError] m)
   => [G.EnumTypeDefinition]
   -> [G.EnumTypeDefinition]
   -> m ()
@@ -159,7 +159,7 @@ validateEnumTypeDefinitions providedEnums upstreamEnums = do
     upstreamEnumsMap = mapFromL G._etdName $ upstreamEnums
 
 validateInputValueDefinition
-  :: (MonadValidate [CustomRemoteSchemaValidationError] m)
+  :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => G.InputValueDefinition
   -> G.InputValueDefinition
   -> G.Name
@@ -177,7 +177,7 @@ validateInputValueDefinition providedDefn upstreamDefn inputObjectName = do
     G.InputValueDefinition _ _ upstreamType upstreamDefaultValue = upstreamDefn
 
 validateArguments
-  :: (MonadValidate [CustomRemoteSchemaValidationError] m)
+  :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => G.ArgumentsDefinition
   -> G.ArgumentsDefinition
   -> G.Name
@@ -192,7 +192,7 @@ validateArguments providedArgs upstreamArgs parentTypeName = do
     upstreamArgsMap = mapFromL G._ivdName $ upstreamArgs
 
 validateInputObjectTypeDefinition
-  :: (MonadValidate [CustomRemoteSchemaValidationError] m)
+  :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => G.InputObjectTypeDefinition
   -> G.InputObjectTypeDefinition
   -> m ()
@@ -206,7 +206,7 @@ validateInputObjectTypeDefinition providedInputObj upstreamInputObj = do
     G.InputObjectTypeDefinition _ _ upstreamDirectives upstreamArgs = upstreamInputObj
 
 validateInputObjectTypeDefinitions
-  :: (MonadValidate [CustomRemoteSchemaValidationError] m)
+  :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => [G.InputObjectTypeDefinition]
   -> [G.InputObjectTypeDefinition]
   -> m ()
@@ -220,7 +220,7 @@ validateInputObjectTypeDefinitions providedInputObjects upstreamInputObjects = d
     upstreamInputObjectsMap = mapFromL G._iotdName $ upstreamInputObjects
 
 validateFieldDefinition
-  :: (MonadValidate [CustomRemoteSchemaValidationError] m)
+  :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => G.FieldDefinition
   -> G.FieldDefinition
   -> (FieldDefinitionType, G.Name)
@@ -236,7 +236,7 @@ validateFieldDefinition providedFieldDefinition upstreamFieldDefinition (parentT
     G.FieldDefinition _ _ upstreamArgs upstreamType upstreamDirectives = upstreamFieldDefinition
 
 validateFieldDefinitions
-  :: (MonadValidate [CustomRemoteSchemaValidationError] m)
+  :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => [G.FieldDefinition]
   -> [G.FieldDefinition]
   -> (FieldDefinitionType, G.Name) -- ^ parent type and name
@@ -251,7 +251,7 @@ validateFieldDefinitions providedFldDefnitions upstreamFldDefinitions (parentTyp
     upstreamFldDefinitionsMap = mapFromL G._fldName upstreamFldDefinitions
 
 validateInterfaceDefinition
-  :: (MonadValidate [CustomRemoteSchemaValidationError] m)
+  :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => G.InterfaceTypeDefinition ()
   -> G.InterfaceTypeDefinition ()
   -> m ()
@@ -264,7 +264,7 @@ validateInterfaceDefinition providedInterfaceDefn upstreamInterfaceDefn = do
     G.InterfaceTypeDefinition _ _ upstreamDirectives upstreamFieldDefns _ = upstreamInterfaceDefn
 
 validateInterfaceDefinitions
-  :: (MonadValidate [CustomRemoteSchemaValidationError] m)
+  :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => [G.InterfaceTypeDefinition ()]
   -> [G.InterfaceTypeDefinition ()]
   -> m ()
@@ -278,7 +278,7 @@ validateInterfaceDefinitions providedInterfaces upstreamInterfaces = do
     upstreamInterfacesMap = mapFromL G._itdName $ upstreamInterfaces
 
 validateScalarDefinition
-  :: (MonadValidate [CustomRemoteSchemaValidationError] m)
+  :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => G.ScalarTypeDefinition
   -> G.ScalarTypeDefinition
   -> m ()
@@ -290,7 +290,7 @@ validateScalarDefinition providedScalar upstreamScalar = do
     G.ScalarTypeDefinition _ _ upstreamDirectives = upstreamScalar
 
 validateScalarDefinitions
-  :: (MonadValidate [CustomRemoteSchemaValidationError] m)
+  :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => [G.ScalarTypeDefinition]
   -> [G.ScalarTypeDefinition]
   -> m ()
@@ -304,7 +304,7 @@ validateScalarDefinitions providedScalars upstreamScalars = do
     upstreamScalarsMap = mapFromL G._stdName upstreamScalars
 
 validateUnionDefinition
-  :: (MonadValidate [CustomRemoteSchemaValidationError] m)
+  :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => G.UnionTypeDefinition
   -> G.UnionTypeDefinition
   -> m ()
@@ -320,7 +320,7 @@ validateUnionDefinition providedUnion upstreamUnion = do
     memberTypesDiff = getDifference providedMemberTypes upstreamMemberTypes
 
 validateUnionTypeDefinitions
-  :: (MonadValidate [CustomRemoteSchemaValidationError] m)
+  :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => [G.UnionTypeDefinition]
   -> [G.UnionTypeDefinition]
   -> m ()
@@ -334,7 +334,7 @@ validateUnionTypeDefinitions providedUnions upstreamUnions = do
     upstreamUnionsMap = mapFromL G._utdName $ upstreamUnions
 
 validateObjectDefinition
-  :: (MonadValidate [CustomRemoteSchemaValidationError] m)
+  :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => G.ObjectTypeDefinition
   -> G.ObjectTypeDefinition
   -> S.HashSet G.Name -- ^ Interfaces declared by in the role-based schema
@@ -362,7 +362,7 @@ validateObjectDefinition providedObj upstreamObj interfacesDeclared = do
     nonExistingInterfaces = S.toList $ S.difference providedIfacesSet interfacesDiff
 
 validateObjectDefinitions
-  :: (MonadValidate [CustomRemoteSchemaValidationError] m)
+  :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => [G.ObjectTypeDefinition]
   -> [G.ObjectTypeDefinition]
   -> S.HashSet G.Name
@@ -378,7 +378,7 @@ validateObjectDefinitions providedObjects upstreamObjects providedInterfaces = d
 
 -- For the love of god, This function needs to be refactored :(
 validateRemoteSchema
-  :: ( MonadValidate [CustomRemoteSchemaValidationError] m)
+  :: ( MonadValidate [RoleBasedSchemaValidationError] m)
   => G.SchemaDocument
   -> G.SchemaIntrospection
   -> m G.SchemaIntrospection
