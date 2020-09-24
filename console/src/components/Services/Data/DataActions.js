@@ -436,6 +436,7 @@ export const getSchemaList = (sourceType, sourceName) => (
   };
   return dispatch(requestAction(url, options)).then(
     data => {
+      // FIXME?: what exactly should be happening here?
       return data;
     },
     error => {
