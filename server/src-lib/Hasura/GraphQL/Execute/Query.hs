@@ -67,14 +67,6 @@ data RootFieldPlan
   = RFPPostgres !PreparedSql
   | RFPActionQuery !ActionExecuteTx
 
--- | Intermediate reperesentation of a computed SQL statement and prepared
--- arguments, or a raw bytestring (mostly, for introspection responses)
--- From this intermediate representation, a `LazyTx` can be generated, or the
--- SQL can be logged etc.
-data ResolvedQuery
-  = RRSql !PreparedSql
-  | RRActionQuery !ActionExecuteTx
-
 instance J.ToJSON RootFieldPlan where
   toJSON = \case
     RFPPostgres pgPlan -> J.toJSON pgPlan
@@ -135,15 +127,18 @@ mkCurPlanTx
   -> UserInfo
   -> RootFieldPlan
   -> (tx EncJSON, Maybe PreparedSql)
-mkCurPlanTx env manager reqHdrs userInfo fldPlan =
+mkCurPlanTx env manager reqHdrs userInfo = \case
   -- generate the SQL and prepared vars or the bytestring
-  let (tx, prep) = case fldPlan of
-        RFPPostgres (PreparedSql q prepMap remoteJoins) ->
-          let args = withUserVars (_uiSession userInfo) prepMap
-              ps = PreparedSql q args remoteJoins
-          in (RRSql ps, Just ps)
-        RFPActionQuery atx -> (RRActionQuery atx, Nothing)
-  in (mkLazyRespTx env manager reqHdrs userInfo tx, prep)
+    RFPPostgres ps@(PreparedSql q prepMap remoteJoinsM) ->
+      let args = withUserVars (_uiSession userInfo) prepMap
+          -- TODO this quietly assumes the intmap keys are contiguous
+          prepArgs = fst <$> IntMap.elems args
+      in (, Just ps) $ case remoteJoinsM of
+           Nothing -> Tracing.trace "Postgres" . liftTx $ asSingleRowJsonResp q prepArgs
+           Just remoteJoins ->
+             executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs remoteJoins
+    RFPActionQuery atx -> (atx, Nothing)
+
 
 -- convert a query from an intermediate representation to... another
 irToRootFieldPlan
@@ -283,26 +278,3 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
 --       RFPPostgres pgPlan -> RRSql <$> withPlan (_uiSession userInfo) pgPlan validatedVars
 
 --   (,) <$> mkLazyRespTx env manager reqHdrs userInfo resolved <*> pure (mkGeneratedSqlMap resolved)
-
-mkLazyRespTx
-  :: ( HasVersion
-     , MonadIO tx
-     , MonadTx tx
-     , Tracing.MonadTrace tx
-     )
-  => Env.Environment
-  -> HTTP.Manager
-  -> [HTTP.Header]
-  -> UserInfo
-  -> ResolvedQuery
-  -> tx EncJSON
-mkLazyRespTx env manager reqHdrs userInfo node = do
-  case node of
-    RRSql (PreparedSql q args maybeRemoteJoins) -> do
-      -- TODO this quietly assumes the intmap keys are contiguous
-      let prepArgs = fst <$> IntMap.elems args
-      case maybeRemoteJoins of
-        Nothing -> Tracing.trace "Postgres" . liftTx $ asSingleRowJsonResp q prepArgs
-        Just remoteJoins ->
-          executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs remoteJoins
-    RRActionQuery actionTx           -> actionTx
