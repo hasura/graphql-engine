@@ -17,7 +17,10 @@ import { getHeadersAsJSON } from '../utils';
 
 import '../GraphiQLWrapper/GraphiQL.css';
 import './OneGraphExplorer.css';
-import { showErrorNotification } from '../../Common/Notification';
+import {
+  showErrorNotification,
+  showWarningNotification,
+} from '../../Common/Notification';
 import requestAction from '../../../../utils/requestAction';
 
 class OneGraphExplorer extends React.Component {
@@ -123,12 +126,40 @@ class OneGraphExplorer extends React.Component {
           });
           return;
         }
+        let clientSchema = null;
+        try {
+          clientSchema = buildClientSchema(result.data);
+        } catch (err) {
+          console.error(err);
+          dispatch(
+            showWarningNotification(
+              `Failed to parse the schema`,
+              `We are not able to render GraphiQL Explorer and Docs.
+              You should still be able to try out your API from the GraphiQL Editor.`,
+              null,
+              <p style={{ paddingTop: '10px', margin: '0' }}>
+                Please report an issue on our{' '}
+                <a
+                  target="_blank"
+                  href="https://github.com/hasura/graphql-engine/issues/new"
+                  rel="noopener noreferrer"
+                >
+                  GitHub
+                </a>
+                , so we can triage this and improve your experience.
+              </p>
+            )
+          );
+        }
         this.setState({
-          schema: buildClientSchema(result.data),
+          schema: clientSchema,
           previousIntrospectionHeaders: headers,
         });
       })
-      .catch(() => {
+      .catch(err => {
+        dispatch(
+          showErrorNotification('Introspection query failed', err.message, err)
+        );
         this.setState({
           schema: null,
           previousIntrospectionHeaders: headers,
