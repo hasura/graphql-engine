@@ -126,13 +126,6 @@ const ManageDatabase: React.FC<ManageDatabaseInjectedProps> = ({
     );
   };
 
-  const dataList = dataSources.map(data => (
-    <DatabaseListItem
-      dataSource={data}
-      onReload={onReload}
-      onRemove={onRemove}
-    />
-  ));
   return (
     <RightContainer>
       <div className={`container-fluid ${styles.manage_dbs_page}`}>
@@ -153,7 +146,21 @@ const ManageDatabase: React.FC<ManageDatabaseInjectedProps> = ({
           <h3 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
             Databases
           </h3>
-          <div className={styles.data_list_container}>{dataList}</div>
+          <div className={styles.data_list_container}>
+            {dataSources.length ? (
+              dataSources.map(data => (
+                <DatabaseListItem
+                  dataSource={data}
+                  onReload={onReload}
+                  onRemove={onRemove}
+                />
+              ))
+            ) : (
+              <span style={{ paddingTop: 15 }}>
+                You don&apos;t have any data sources
+              </span>
+            )}
+          </div>
           <hr />
         </div>
         <CreateDatabase onSubmit={onCreateDataSource} />

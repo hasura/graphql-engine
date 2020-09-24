@@ -31,10 +31,10 @@ export const getDataSourceMatadata = (state: ReduxState) => {
 
 export const getInitDataSource = (state: ReduxState) => {
   if (isMetadataV3(state.metadata.metadataObject)) {
-    if (
-      state.metadata.metadataObject.sources &&
-      state.metadata.metadataObject.sources.length
-    ) {
+    const dataSources = state.metadata.metadataObject.sources.filter(
+      source => source.name !== 'default'
+    );
+    if (dataSources.length) {
       return {
         source: state.metadata.metadataObject.sources[0].name,
         driver: state.metadata.metadataObject.sources[0].kind || 'postgres',
@@ -241,7 +241,7 @@ export const getDataSources = createSelector(getMetadata, metadata => {
         driver: source.kind || 'postgres',
       });
     });
-    return sources;
+    return sources.filter(source => source.name !== 'default');
   }
 
   return [];
