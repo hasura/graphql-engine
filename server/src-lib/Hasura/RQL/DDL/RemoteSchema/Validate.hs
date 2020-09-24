@@ -1,9 +1,10 @@
-module Hasura.RQL.DDL.RemoteSchema.Validate () where
+module Hasura.RQL.DDL.RemoteSchema.Validate (
+  validateRemoteSchema
+  ) where
 
 import           Control.Monad.Validate
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types              hiding (GraphQLType)
 import           Hasura.SQL.Types
 import           Hasura.Server.Utils           (englishList)
 
@@ -46,15 +47,10 @@ data CustomRemoteSchemaValidationError
   -- ^ error to indicate that an user provided
   -- type differs from the type defined in the upstream
   -- remote schema
-  | ExtraneousFields !GraphQLType !G.Name !(S.HashSet G.Name)
+  | ExtraneousFields !GraphQLType !G.Name !(NE.NonEmpty G.Name)
   -- ^ error to indicate when an user provided type
   -- has more fields than what's defined
   -- in the remote schema
-  | ExtraneousArgs !GraphQLType !G.Name !(NE.NonEmpty G.Name)
-  -- ^ error to indicate when an user provided type
-  -- has more arguments than what's defined in a particular
-  -- type in the remote schema
-  | DifferingArgs !GraphQLType !(NE.NonEmpty G.Name)
   | FieldDoesNotExist !GraphQLType !G.Name
   -- ^ error to indicate when a single field doesn't exist
   -- in the upstream remote schema
@@ -62,17 +58,18 @@ data CustomRemoteSchemaValidationError
   -- ^ input-object-name - input-value-name - expected-def-val - provided-def-val
   | NonExistingInputArgument !G.Name !G.Name
   -- ^ input-object-name - argument-name
-  | NonExistingDirectiveArgument !G.Name ![G.Name]
+  | NonExistingDirectiveArgument !G.Name !GraphQLType !G.Name ![G.Name]
   -- ^ directive-name - argument-name
   | NonExistingField !G.Name !FieldDefinitionType !G.Name
   -- ^ parent-type-name - "object/interface" - provided-name
   | NonExistingScalar !G.Name
-  | NonExistingUnionMemberTypes !G.Name !(S.HashSet G.Name)
+  | NonExistingUnionMemberTypes !G.Name !(NE.NonEmpty G.Name)
   -- ^ union name - extra-fields
   | CustomInterfacesNotAllowed !G.Name !(NE.NonEmpty G.Name)
   -- ^ object name - custom interfaces
   | ObjectImplementsNonExistingInterfaces !G.Name !(NE.NonEmpty G.Name)
   -- ^ object-name
+  | NonExistingEnumValues !G.Name !(NE.NonEmpty G.Name)
   deriving (Show, Eq)
 
 validateDirective
@@ -81,18 +78,18 @@ validateDirective
   -> G.Directive a -- ^ original directive definition
   -> (GraphQLType, G.Name) -- ^ parent type and name
   -> m ()
-validateDirective providedDirective originalDirective gType = do
+validateDirective providedDirective originalDirective (parentType, parentTypeName) = do
   if argsDiff == Map.empty
     then pure ()
     else
-    dispute $ pure $ NonExistingDirectiveArgument directiveName $ Map.keys argsDiff
+    dispute $ pure $
+      NonExistingDirectiveArgument parentTypeName parentType directiveName $ Map.keys argsDiff
   where
     argsDiff = Map.difference providedDirectiveArgs originalDirectiveArgs
 
     providedDirectiveArgs = G._dArguments providedDirective
     originalDirectiveArgs = G._dArguments originalDirective
 
-    extraneousKeys = Map.keys $ Map.difference providedDirectiveArgs originalDirectiveArgs
     directiveName = G._dName providedDirective
 
 validateDirectives
@@ -128,31 +125,27 @@ formatErrorMsg errorItems =
 -- provided by the user against the enum definition defined
 -- in the remote
 validateEnumTypeDefinition
-  :: (MonadValidate [CustomRemoteSchemaValidationError] m)
+  :: ( MonadValidate [CustomRemoteSchemaValidationError] m)
   => G.EnumTypeDefinition -- ^ provided enum type definition
   -> G.EnumTypeDefinition -- ^ original enum type definition
   -> m ()
-validateEnumTypeDefinition providedDefn originalDefn = do
-  validateDirectives (G._etdDirectives providedDefn) (G._etdDirectives originalDefn) $ (Enum, enumFieldName)
-  case fieldsDifference of
-    empty       -> pure ()
-    extraFields -> dispute $ pure $ ExtraneousFields Enum enumFieldName extraFields
-  pure ()
+validateEnumTypeDefinition providedEnum upstreamEnum = do
+  validateDirectives providedDirectives upstreamDirectives $ (Enum, providedName)
+  onJust (NE.nonEmpty $ S.toList fieldsDifference) $ \nonExistingEnumVals ->
+    dispute $ pure $ NonExistingEnumValues providedName nonExistingEnumVals
   where
-    providedEnumDirectives = (G._etdDirectives providedDefn)
+    G.EnumTypeDefinition _ providedName providedDirectives providedValueDefns = providedEnum
 
-    originalEnumDirectives = G._etdDirectives originalDefn
+    G.EnumTypeDefinition _ upstreamName upstreamDirectives upstreamValueDefns = upstreamEnum
 
-    providedEnumValNames   = map (G.unEnumValue . G._evdName) (G._etdValueDefinitions providedDefn)
+    providedEnumValNames   = map (G.unEnumValue . G._evdName) $ providedValueDefns
 
-    originalEnumValNames   = map (G.unEnumValue . G._evdName) (G._etdValueDefinitions originalDefn)
+    upstreamEnumValNames   = map (G.unEnumValue . G._evdName) $ upstreamValueDefns
 
-    fieldsDifference       = getDifference providedEnumValNames originalEnumValNames
-
-    enumFieldName          = G._etdName providedDefn
+    fieldsDifference       = getDifference providedEnumValNames upstreamEnumValNames
 
 validateEnumTypeDefinitions
-  :: (MonadValidate [CustomRemoteSchemaValidationError] m)
+  :: ( MonadValidate [CustomRemoteSchemaValidationError] m)
   => [G.EnumTypeDefinition]
   -> [G.EnumTypeDefinition]
   -> m ()
@@ -181,7 +174,7 @@ validateInputValueDefinition providedDefn upstreamDefn inputObjectName = do
   pure ()
   where
     G.InputValueDefinition _ providedName providedType providedDefaultValue = providedDefn
-    G.InputValueDefinition _ upstreamName upstreamType upstreamDefaultValue = upstreamDefn
+    G.InputValueDefinition _ _ upstreamType upstreamDefaultValue = upstreamDefn
 
 validateArguments
   :: (MonadValidate [CustomRemoteSchemaValidationError] m)
@@ -210,7 +203,7 @@ validateInputObjectTypeDefinition providedInputObj upstreamInputObj = do
   where
     G.InputObjectTypeDefinition _ providedName providedDirectives providedArgs = providedInputObj
 
-    G.InputObjectTypeDefinition _ upstreamName upstreamDirectives upstreamArgs = upstreamInputObj
+    G.InputObjectTypeDefinition _ _ upstreamDirectives upstreamArgs = upstreamInputObj
 
 validateInputObjectTypeDefinitions
   :: (MonadValidate [CustomRemoteSchemaValidationError] m)
@@ -260,7 +253,7 @@ validateFieldDefinitions providedFldDefnitions upstreamFldDefinitions (parentTyp
 validateInterfaceDefinition
   :: (MonadValidate [CustomRemoteSchemaValidationError] m)
   => G.InterfaceTypeDefinition ()
-  -> G.InterfaceTypeDefinition [G.Name]
+  -> G.InterfaceTypeDefinition ()
   -> m ()
 validateInterfaceDefinition providedInterfaceDefn upstreamInterfaceDefn = do
   validateDirectives providedDirectives upstreamDirectives $ (Interface, providedName)
@@ -268,12 +261,12 @@ validateInterfaceDefinition providedInterfaceDefn upstreamInterfaceDefn = do
   where
     G.InterfaceTypeDefinition _ providedName providedDirectives providedFieldDefns _ = providedInterfaceDefn
 
-    G.InterfaceTypeDefinition _ upstreamName upstreamDirectives upstreamFieldDefns _ = upstreamInterfaceDefn
+    G.InterfaceTypeDefinition _ _ upstreamDirectives upstreamFieldDefns _ = upstreamInterfaceDefn
 
 validateInterfaceDefinitions
   :: (MonadValidate [CustomRemoteSchemaValidationError] m)
   => [G.InterfaceTypeDefinition ()]
-  -> [G.InterfaceTypeDefinition [G.Name]]
+  -> [G.InterfaceTypeDefinition ()]
   -> m ()
 validateInterfaceDefinitions providedInterfaces upstreamInterfaces = do
   flip traverse_ providedInterfaces $ \providedInterface@(G.InterfaceTypeDefinition _ name _ _ _) -> do
@@ -294,7 +287,7 @@ validateScalarDefinition providedScalar upstreamScalar = do
   where
     G.ScalarTypeDefinition _ providedName providedDirectives = providedScalar
 
-    G.ScalarTypeDefinition _ upstreamName upstreamDirectives = upstreamScalar
+    G.ScalarTypeDefinition _ _ upstreamDirectives = upstreamScalar
 
 validateScalarDefinitions
   :: (MonadValidate [CustomRemoteSchemaValidationError] m)
@@ -317,8 +310,8 @@ validateUnionDefinition
   -> m ()
 validateUnionDefinition providedUnion upstreamUnion = do
   validateDirectives providedDirectives upstreamDirectives $ (Union, providedName)
-  when (S.empty /= memberTypesDiff) $ do
-    refute $ pure $ NonExistingUnionMemberTypes providedName memberTypesDiff
+  onJust (NE.nonEmpty $ S.toList memberTypesDiff) $ \nonExistingMembers ->
+    refute $ pure $ NonExistingUnionMemberTypes providedName nonExistingMembers
   where
     G.UnionTypeDefinition _ providedName providedDirectives providedMemberTypes = providedUnion
 
@@ -368,13 +361,13 @@ validateObjectDefinition providedObj upstreamObj interfacesDeclared = do
 
     nonExistingInterfaces = S.toList $ S.difference providedIfacesSet interfacesDiff
 
-validateObjectTypeDefinitions
+validateObjectDefinitions
   :: (MonadValidate [CustomRemoteSchemaValidationError] m)
   => [G.ObjectTypeDefinition]
   -> [G.ObjectTypeDefinition]
   -> S.HashSet G.Name
   -> m ()
-validateObjectTypeDefinitions providedObjects upstreamObjects providedInterfaces = do
+validateObjectDefinitions providedObjects upstreamObjects providedInterfaces = do
   flip traverse_ providedObjects $ \providedObject@(G.ObjectTypeDefinition _ name _ _ _) -> do
     upstreamObject <-
       onNothing (Map.lookup name upstreamObjectsMap) $
@@ -385,15 +378,17 @@ validateObjectTypeDefinitions providedObjects upstreamObjects providedInterfaces
 
 -- For the love of god, This function needs to be refactored :(
 validateRemoteSchema
-  :: (MonadValidate [CustomRemoteSchemaValidationError] m)
+  :: ( MonadValidate [CustomRemoteSchemaValidationError] m)
   => G.SchemaDocument
   -> G.SchemaIntrospection
   -> m G.SchemaIntrospection
-validateRemoteSchema (G.SchemaDocument typeSystemDefinitions) x@(G.SchemaIntrospection originalTypeDefns) = do
+validateRemoteSchema (G.SchemaDocument typeSystemDefinitions) x@(G.SchemaIntrospection upstreamSchemaTypes) = do
   let
-    (_, typeDefns) = flip runState emptySchemaDocTypeDefinitions $
+    (_, providedTypes) = flip runState emptySchemaDocTypeDefinitions $
                       traverse resolveTypeSystemDefinitions typeSystemDefinitions
-    objDefs = _sdtdObjects typeDefns
+    (_, upstreamTypes) = flip runState emptySchemaDocTypeDefinitions $
+                      traverse resolveSchemaIntrospection upstreamSchemaTypes
+    objDefs = _sdtdObjects providedTypes
     possibleTypesMap = createPossibleTypesMap objDefs
     interfaceDefsWithPossibleTypes = map (\iface -> -- UGH!
                                             let name = G._itdName iface
@@ -401,6 +396,13 @@ validateRemoteSchema (G.SchemaDocument typeSystemDefinitions) x@(G.SchemaIntrosp
                                             iface
                                               {G._itdPossibleTypes =
                                                  fromMaybe [] (Map.lookup name possibleTypesMap)})
+    providedInterfacesList = map G._itdName $ _sdtdInterfaces providedTypes
+  validateScalarDefinitions (_sdtdScalars providedTypes) (_sdtdScalars upstreamTypes)
+  validateObjectDefinitions (_sdtdObjects providedTypes) (_sdtdObjects upstreamTypes) $ S.fromList providedInterfacesList
+  validateInterfaceDefinitions (_sdtdInterfaces providedTypes) (_sdtdInterfaces upstreamTypes)
+  validateUnionTypeDefinitions (_sdtdUnions providedTypes) (_sdtdUnions upstreamTypes)
+  validateEnumTypeDefinitions (_sdtdEnums providedTypes) (_sdtdEnums upstreamTypes)
+  validateInputObjectTypeDefinitions (_sdtdInputObjects providedTypes) (_sdtdInputObjects upstreamTypes)
   return x
   where
     -- Construction of the `possibleTypes` map for interfaces, while parsing the
@@ -438,7 +440,7 @@ validateRemoteSchema (G.SchemaDocument typeSystemDefinitions) x@(G.SchemaIntrosp
     resolveTypeSystemDefinitions (G.TypeSystemDefinitionType typeDefn) =
       resolveTypeDefinition typeDefn
 
-    -- resolveSchemaIntroSpection :: G.TypeDefinition [G.Name] -> State SchemaDocumentTypeDefinitions ()
-    -- resolveSchemaIntroSpection typeDef = resolveTypeDefinition $ typeDef $> ()
+    resolveSchemaIntrospection :: G.TypeDefinition [G.Name] -> State SchemaDocumentTypeDefinitions ()
+    resolveSchemaIntrospection typeDef = resolveTypeDefinition (typeDef $> ())
 
     emptySchemaDocTypeDefinitions = SchemaDocumentTypeDefinitions [] [] [] [] [] [] []
