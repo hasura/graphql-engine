@@ -14,7 +14,6 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   , GQExecError(..)
   , GQResponse
   , isExecError
-  , RemoteGqlResp(..)
   ) where
 
 import           Hasura.EncJSON
@@ -114,12 +113,3 @@ encodeGQResp gqResp =
   encJFromAssocList $ case runIdentity $ runExceptT gqResp of
     Right r -> [("data", encJFromLBS r)]
     Left e  -> [("data", "null"), ("errors", encJFromJValue e)]
-
--- | Represents GraphQL response from a remote server
-data RemoteGqlResp
-  = RemoteGqlResp
-  { _rgqrData       :: !(Maybe J.Value)
-  , _rgqrErrors     :: !(Maybe [J.Value])
-  , _rgqrExtensions :: !(Maybe J.Value)
-  } deriving (Show, Eq)
-$(J.deriveFromJSON (J.aesonDrop 5 J.camelCase) ''RemoteGqlResp)

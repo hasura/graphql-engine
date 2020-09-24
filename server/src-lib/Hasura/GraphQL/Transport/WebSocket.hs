@@ -506,7 +506,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     postExecErr' :: RequestId -> GQExecError -> ExceptT () m ()
     postExecErr' _reqId qErr = do
       sendMsg wsConn $ SMData $
-        DataMsg opId $ GRHasura $ throwError qErr
+        DataMsg opId $ throwError qErr
 
     -- why wouldn't pre exec error use graphql response?
     preExecErr reqId qErr = do
@@ -520,7 +520,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     sendSuccResp :: EncJSON -> LQ.LiveQueryMetadata -> ExceptT () m ()
     sendSuccResp encJson =
       sendMsgWithMetadata wsConn
-        (SMData $ DataMsg opId $ GRHasura $ pure $ encJToLBS encJson)
+        (SMData $ DataMsg opId $ pure $ encJToLBS encJson)
 
     withComplete :: ExceptT () m () -> ExceptT () m a
     withComplete action = do
@@ -533,9 +533,9 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     liveQOnChange result = case runIdentity $ runExceptT result of
       Right (LQ.LiveQueryResponse bs dTime) ->
         sendMsgWithMetadata wsConn
-        (SMData $ DataMsg opId $ GRHasura $ pure $ LBS.fromStrict bs)
+        (SMData $ DataMsg opId $ pure $ LBS.fromStrict bs)
         (LQ.LiveQueryMetadata dTime)
-      resp -> sendMsg wsConn $ SMData $ DataMsg opId $ GRHasura $
+      resp -> sendMsg wsConn $ SMData $ DataMsg opId $
         LBS.fromStrict . LQ._lqrPayload <$> ExceptT (Identity resp)
 
     catchAndIgnore :: ExceptT () m () -> m ()

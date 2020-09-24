@@ -13,8 +13,6 @@ module Hasura.GraphQL.Transport.WebSocket.Protocol
   , ErrorMsg(..)
   , ConnErrMsg(..)
   , CompletionMsg(..)
-  , GraphqlResponse(..)
-  , encodeGraphqlResponse
   ) where
 
 import qualified Data.Aeson                             as J
@@ -68,28 +66,11 @@ instance J.FromJSON ClientMsg where
       "connection_terminate" -> return CMConnTerm
       _                      -> fail $ "unexpected type for ClientMessage: " <> t
 
--- | Represents a proper GraphQL response
-data GraphqlResponse
-  = GRHasura !GQResponse
-  | GRRemote !RemoteGqlResp
-
-encodeRemoteGqlResp :: RemoteGqlResp -> EncJSON
-encodeRemoteGqlResp (RemoteGqlResp d e ex) =
-  encJFromAssocList [ ("data", encJFromJValue d)
-                    , ("errors", encJFromJValue e)
-                    , ("extensions", encJFromJValue ex)
-                    ]
-
-encodeGraphqlResponse :: GraphqlResponse -> EncJSON
-encodeGraphqlResponse = \case
-  GRHasura resp -> encodeGQResp resp
-  GRRemote resp -> encodeRemoteGqlResp resp
-
 -- server to client messages
 data DataMsg
   = DataMsg
   { _dmId      :: !OperationId
-  , _dmPayload :: !GraphqlResponse
+  , _dmPayload :: !GQResponse
   }
 
 data ErrorMsg
@@ -161,7 +142,7 @@ encodeServerMsg msg =
   SMData (DataMsg opId payload) ->
     [ encTy SMT_GQL_DATA
     , ("id", encJFromJValue opId)
-    , ("payload", encodeGraphqlResponse payload)
+    , ("payload", encodeGQResp payload)
     ]
 
   SMErr (ErrorMsg opId payload) ->
