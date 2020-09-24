@@ -32,7 +32,7 @@ resolveSource env (SourceMetadata _ tables functions config) = runExceptT do
       pure $ PGSourceConfig pgExecCtx connInfo
 
   (tablesMeta, functionsMeta, pgScalars) <- runLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $ do
-    initSource
+    -- initSource
     tablesMeta <- fetchTableMetadataFromPgSource
     functionsMeta <- fetchFunctionMetadataFromPgSource allFunctions
     pgScalars <- fetchPgScalars

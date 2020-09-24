@@ -408,9 +408,9 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime shutd
   eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI
   unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
 
-  eventQueueThread <- C.forkImmortal "processEventQueue" logger $
-    processEventQueue logger logEnvHeaders
-    _icHttpManager (getSCFromRef cacheRef) eventEngineCtx lockedEventsCtx
+  -- eventQueueThread <- C.forkImmortal "processEventQueue" logger $
+  --   processEventQueue logger logEnvHeaders
+  --   _icHttpManager (getSCFromRef cacheRef) eventEngineCtx lockedEventsCtx
 
   -- start a backgroud thread to handle async actions
   asyncActionsThread <- C.forkImmortal "asyncActionsProcessor" logger $
@@ -449,7 +449,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime shutd
                         , schemaSyncProcessorThread
                         , updateThread
                         , asyncActionsThread
-                        , eventQueueThread
+                        -- , eventQueueThread
                         , scheduledEventsThread
                         , cronEventsThread
                         ] <> maybeToList telemetryThread
