@@ -17,6 +17,7 @@ import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
 import styles from '../../Common/TableCommon/Table.scss';
 import { useDataSource } from '../../../dataSources';
 import { getDataSources } from '../../../metadata/selector';
+import { push } from 'react-router-redux';
 
 const DataPageContainer = ({
   currentSchema,
@@ -44,6 +45,7 @@ const DataPageContainer = ({
       type: UPDATE_CURRENT_DATA_SOURCE,
       source: newName,
     });
+    dispatch(push('/data/schema/'));
     setLoadingSchemas(true);
     dispatch(fetchDataInit()).then(() => {
       setLoadingSchemas(false);
