@@ -255,11 +255,11 @@ const fetchAdditionalColumnsInfo = () => (dispatch, getState) => {
   };
 
   return dispatch(requestAction(Endpoints.query, options)).then(
-    result => {
-      if (result) {
+    data => {
+      if (data.result) {
         dispatch({
           type: SET_ADDITIONAL_COLUMNS_INFO,
-          data: dataSource.parseColumnsInfoResult(result),
+          data: dataSource.parseColumnsInfoResult(data.result),
         });
       }
     },
