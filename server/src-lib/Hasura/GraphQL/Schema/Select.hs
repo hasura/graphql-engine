@@ -44,6 +44,7 @@ import qualified Hasura.RQL.DML.Select                 as RQL
 import qualified Hasura.RQL.Types.BoolExp              as RQL
 import qualified Hasura.SQL.DML                        as SQL
 
+import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser                 (FieldParser, InputFieldsParser, Kind (..),
                                                         Parser, UnpreparedValue (..), mkParameter)
 import           Hasura.GraphQL.Parser.Class
@@ -1275,19 +1276,20 @@ node
      , MonadRole r m
      , Has QueryContext r
      )
-  => m (P.Parser 'Output n (HashMap QualifiedTable (SelPermInfo, PrimaryKeyColumns, AnnotatedFields)))
+  => m (P.Parser 'Output n (HashMap QualifiedTable (PGSourceConfig, SelPermInfo, PrimaryKeyColumns, AnnotatedFields)))
 node = memoizeOn 'node () do
   let idDescription = G.Description "A globally unique identifier"
       idField = P.selection_ $$(G.litName "id") (Just idDescription) P.identifier
       nodeInterfaceDescription = G.Description "An object with globally unique ID"
-  sourceTables :: SourceTables <- asks getter
-  let allTables = Map.unions $ Map.elems sourceTables -- FIXME? When source name is used in type generation?
-  tables :: HashMap QualifiedTable (Parser 'Output n (SelPermInfo, NESeq PGColumnInfo, AnnotatedFields)) <-
-    Map.mapMaybe id <$> flip Map.traverseWithKey allTables \table _ -> runMaybeT do
+  sources :: PGSourcesCache <- asks getter
+  let allTables = Map.fromList $ flip concatMap (Map.toList sources) $ -- FIXME? When source name is used in type generation?
+        \(_, sourceCache) -> map (,_pcConfiguration sourceCache) $ Map.keys $ _pcTables sourceCache
+  tables <-
+    Map.mapMaybe id <$> flip Map.traverseWithKey allTables \table sourceConfig -> runMaybeT do
       tablePkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns) <$> askTableInfo table
       selectPermissions <- MaybeT $ tableSelectPermissions table
       annotatedFieldsParser <- lift $ tableSelectionSet table selectPermissions
-      pure $ (selectPermissions, tablePkeyColumns,) <$> annotatedFieldsParser
+      pure $ (sourceConfig, selectPermissions, tablePkeyColumns,) <$> annotatedFieldsParser
   pure $ P.selectionSetInterface $$(G.litName "Node")
          (Just nodeInterfaceDescription) [idField] tables
 
@@ -1298,7 +1300,7 @@ nodeField
      , MonadRole r m
      , Has QueryContext r
      )
-  => m (P.FieldParser n SelectExp)
+  => m (P.FieldParser n (QueryRootField UnpreparedValue))
 nodeField = do
   let idDescription = G.Description "A globally unique id"
       idArgument = P.field $$(G.litName "id") (Just idDescription) P.identifier
@@ -1307,11 +1309,12 @@ nodeField = do
   return $ P.subselection $$(G.litName "node") Nothing idArgument nodeObject `P.bindField`
     \(ident, parseds) -> do
       NodeIdV1 (V1NodeId table columnValues) <- parseNodeId ident
-      (perms, pkeyColumns, fields) <-
+      (sourceConfig, perms, pkeyColumns, fields) <-
         onNothing (Map.lookup table parseds) $
         withArgsPath $  throwInvalidNodeId $ "the table " <>> ident
       whereExp <- buildNodeIdBoolExp columnValues pkeyColumns
-      return $ RQL.AnnSelectG
+      let pgExecCtx = _pscExecCtx sourceConfig
+      return $ RFDB pgExecCtx $ QDBPrimaryKey $ RQL.AnnSelectG
         { RQL._asnFields   = fields
         , RQL._asnFrom     = RQL.FromTable table
         , RQL._asnPerm     = tablePermissionsInfo perms

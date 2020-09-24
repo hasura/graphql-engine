@@ -14,7 +14,7 @@ import           Type.Reflection                       (Typeable)
 
 import {-# SOURCE #-} Hasura.GraphQL.Parser.Internal.Parser
 import           Hasura.RQL.Types.Error
-import           Hasura.RQL.Types.Source               (SourceTables)
+import           Hasura.RQL.Types.Source               (PGSourcesCache, _pcTables)
 import           Hasura.RQL.Types.Table                (TableInfo)
 import           Hasura.Session                        (RoleName)
 import           Hasura.SQL.Types
@@ -108,7 +108,7 @@ askRoleName
   => m RoleName
 askRoleName = asks getter
 
-type MonadTableInfo r m = (MonadReader r m, Has SourceTables r, MonadError QErr m)
+type MonadTableInfo r m = (MonadReader r m, Has PGSourcesCache r, MonadError QErr m)
 
 -- | Looks up table information for the given table name. This function
 -- should never fail, since the schema cache construction process is
@@ -118,8 +118,8 @@ askTableInfo
   => QualifiedTable
   -> m TableInfo
 askTableInfo tableName = do
-  let getTableInfo :: SourceTables -> Maybe TableInfo
-      getTableInfo st = Map.lookup tableName $ Map.unions $ Map.elems st
+  let getTableInfo :: PGSourcesCache -> Maybe TableInfo
+      getTableInfo sc = Map.lookup tableName $ Map.unions $ map _pcTables $ Map.elems sc
   tableInfo <- asks $ getTableInfo . getter
   -- This should never fail, since the schema cache construction process is
   -- supposed to ensure that all dependencies are resolved.

@@ -123,10 +123,10 @@ runMonadSchema
   :: (Monad m)
   => RoleName
   -> QueryContext
-  -> SourceTables
-  -> P.SchemaT (P.ParseT Identity) (ReaderT (RoleName, SourceTables, QueryContext) m) a -> m a
-runMonadSchema roleName queryContext sourceTables m =
-  flip runReaderT (roleName, sourceTables, queryContext) $ P.runSchemaT m
+  -> PGSourcesCache
+  -> P.SchemaT (P.ParseT Identity) (ReaderT (RoleName, PGSourcesCache, QueryContext) m) a -> m a
+runMonadSchema roleName queryContext sources m =
+  flip runReaderT (roleName, sources, queryContext) $ P.runSchemaT m
 
 buildRoleContext
   :: (MonadError QErr m, MonadIO m, MonadUnique m)
@@ -137,16 +137,15 @@ buildRoleContext
   -> m (RoleContext GQLContext)
 buildRoleContext queryContext pgSources allActionInfos
   nonObjectCustomTypes queryRemotes mutationRemotes roleName = do
-  let sourceTables = Map.map _pcTables pgSources
 
   fieldsList <- forM pgSources $ \(PGSourceSchemaCache tableCache functionCache sourceConfig) ->
-    runMonadSchema roleName queryContext sourceTables $
+    runMonadSchema roleName queryContext pgSources $
       buildPGFields sourceConfig tableCache functionCache
 
   let (queryPGFields, mutationFrontendFields, mutationBackendFields) =
         foldr (<>) mempty fieldsList
 
-  runMonadSchema roleName queryContext sourceTables $ do
+  runMonadSchema roleName queryContext pgSources $ do
 
     mutationParserFrontend <-
       buildMutationParser mutationRemotes allActionInfos
@@ -204,17 +203,18 @@ buildRelayRoleContext
   -> m (RoleContext GQLContext)
 buildRelayRoleContext queryContext pgSources allActionInfos
   nonObjectCustomTypes queryRemotes mutationRemotes roleName = do
-  let sourceTables = Map.map _pcTables pgSources
 
-  fieldsList <- forM pgSources $
-    \(PGSourceSchemaCache tableCache functionCache sourceConfig) ->
-      runMonadSchema roleName queryContext sourceTables $
-      buildRelayPGFields sourceConfig tableCache functionCache
+  (queryPGFields, mutationFrontendFields, mutationBackendFields) <-
+    runMonadSchema roleName queryContext pgSources $ do
+     fieldsList <- forM pgSources $
+       \(PGSourceSchemaCache tableCache functionCache sourceConfig) ->
+         buildRelayPGFields sourceConfig tableCache functionCache
+     let (queries, frontendMutations, backendMutations) = foldr (<>) mempty fieldsList
+     -- Add node field to query fields
+     nodeField_ <- nodeField
+     pure (nodeField_:queries, frontendMutations, backendMutations)
 
-  let (queryPGFields, mutationFrontendFields, mutationBackendFields) =
-        foldr (<>) mempty fieldsList
-
-  runMonadSchema roleName queryContext sourceTables $ do
+  runMonadSchema roleName queryContext pgSources $ do
     mutationParserFrontend <-
       buildMutationParser mutationRemotes allActionInfos
       nonObjectCustomTypes mutationFrontendFields
@@ -459,8 +459,7 @@ buildRelayPostgresQueryFields sourceConfig allTables allFunctions = do
                     <<> " which returns " <>> returnTable
     lift $ selectFunctionConnection function fieldName fieldDesc pkeyColumns selectPerms
 
-  nodeField_ <- fmap (asDbRootField . QDBPrimaryKey) <$> nodeField
-  pure $ (:) nodeField_ $ map (fmap (asDbRootField . QDBConnection)) $ catMaybes $
+  pure $ map (fmap (asDbRootField . QDBConnection)) $ catMaybes $
          tableConnectionFields <> functionConnectionFields
   where
     asDbRootField =

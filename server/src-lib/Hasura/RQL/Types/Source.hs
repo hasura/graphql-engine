@@ -54,6 +54,8 @@ data PGSourceSchemaCache
   }
 $(deriveToJSON (aesonDrop 3 snakeCase) ''PGSourceSchemaCache)
 
+type PGSourcesCache = HashMap SourceName PGSourceSchemaCache
+
 data ResolvedSource
   = ResolvedSource
   { _rsConfig    :: !PGSourceConfig

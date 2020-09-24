@@ -123,7 +123,6 @@ module Hasura.RQL.Types.SchemaCache
   , defaultSource
   , SourceM(..)
   , SourceT(..)
-  , PGSourcesCache
   , getPGTableInfo
   , getPGFunctionInfo
   ) where
@@ -245,8 +244,6 @@ getPGFunctionInfo sourceName qualifiedFunction m =
 getPGTableInfo :: SourceName -> QualifiedTable -> PGSourcesCache -> Maybe TableInfo
 getPGTableInfo sourceName qualifiedTable m =
   M.lookup sourceName m >>= M.lookup qualifiedTable . _pcTables
-
-type PGSourcesCache = M.HashMap SourceName PGSourceSchemaCache
 
 data SchemaCache
   = SchemaCache
