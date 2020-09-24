@@ -8,14 +8,13 @@ services:
     environment:
       POSTGRES_PASSWORD: postgrespassword
   graphql-engine:
-    image: hasura/graphql-engine:pull5797-300001d8
+    image: hasura/graphql-engine:v1.3.2
     ports:
     - "8080:8080"
     depends_on:
     - "postgres"
     restart: always
     environment:
-        ## HASURA_GRAPHQL_DATABASE_URL: postgres://xwlpvxnwewavxg:70a7e35d298480d6b1904efe1832ba62eead5a3be3439156552e165b5fbc8fdd@ec2-52-71-122-102.compute-1.amazonaws.com:5432/d553dv7f6utlad
       HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
       ## enable the console served by server
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true" # set to "false" to disable console
