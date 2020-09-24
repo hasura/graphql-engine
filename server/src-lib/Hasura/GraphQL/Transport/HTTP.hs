@@ -227,7 +227,7 @@ runQueryDB
   -> m (DiffTime, Telem.QueryType, HTTP.ResponseHeaders, EncJSON)
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
-runQueryDB reqId (query, queryParsed) asts _userInfo (tx, genSql) =  do
+runQueryDB reqId (query, queryParsed) asts _userInfo (tx, _genSql) =  do
   -- log the generated SQL and the graphql query
   E.ExecutionCtx logger _ pgExecCtx _ _ _ _ <- ask
   logQueryLog logger query Nothing reqId -- TODO genSql

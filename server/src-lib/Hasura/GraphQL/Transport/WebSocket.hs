@@ -352,21 +352,22 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   case execPlan of
     E.QueryExecutionPlan queryPlan asts -> do
       conclusion <- runExceptT $ forWithKey queryPlan $ \fieldName -> \case
-        E.ExecStepDB (tx, genSql) -> Tracing.trace "Query" $ do
+        E.ExecStepDB (tx, genSql) -> withExceptT Right $ Tracing.trace "Query" $ do
           (telemTimeIO_DT, (respHdrs, resp)) <- Tracing.interpTraceT id $ withElapsedTime $
             executeQuery reqParsed asts genSql pgExecCtx Q.ReadOnly tx
           return $ ResultsFragment telemTimeIO_DT Telem.Local resp respHdrs
         E.ExecStepRemote (rsi, opDef, _varValsM) -> do
           (telemTimeIO_DT, HttpResponse resp respHdrs) <-
-            runRemoteGQ execCtx requestId userInfo reqHdrs opDef rsi
-          value <- extractData fieldName $ encJToLBS resp
+            withExceptT Right $ runRemoteGQ execCtx requestId userInfo reqHdrs opDef rsi
+          value <- mapExceptT lift $ extractData fieldName (encJToLBS resp)
           return $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) respHdrs
-        E.ExecStepRaw json -> do
+        E.ExecStepRaw json -> withExceptT Right $ do
           let obj = encJFromJValue json
               telemTimeIO_DT = 0
           return $ ResultsFragment telemTimeIO_DT Telem.Local obj []
       case conclusion of
-        Left err -> postExecErr requestId err
+        Left (Left err) -> postExecErr' requestId err
+        Left (Right err) -> postExecErr requestId err
         Right results -> do
           let (durationsIO, localities, bodies, _headers) =
                 (fmap rfTimeIO results, fmap rfLocality results, fmap rfResponse results, fmap rfHeaders results)
@@ -379,7 +380,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       sendCompleted (Just requestId)
     E.MutationExecutionPlan mutationPlan -> do
       conclusion <- runExceptT $ forWithKey mutationPlan $ \fieldName -> \case
-        E.ExecStepDB (tx, _) -> Tracing.trace "Mutate" do
+        E.ExecStepDB (tx, _) -> withExceptT Right $ Tracing.trace "Mutate" do
           ctx <- Tracing.currentContext
           (telemTimeIO_DT, resp) <- Tracing.interpTraceT
             (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx . withUserInfo userInfo)
@@ -387,15 +388,16 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
         E.ExecStepRemote (rsi, opDef, _varValsM) -> do
           (telemTimeIO_DT, HttpResponse resp respHdrs) <-
-            runRemoteGQ execCtx requestId userInfo reqHdrs opDef rsi
-          value <- extractData fieldName $ encJToLBS resp
+            withExceptT Right $ runRemoteGQ execCtx requestId userInfo reqHdrs opDef rsi
+          value <- mapExceptT lift $ extractData fieldName $ encJToLBS resp
           return $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) respHdrs
-        E.ExecStepRaw json -> do
+        E.ExecStepRaw json -> withExceptT Right $ do
           let obj = encJFromJValue json
               telemTimeIO_DT = 0
           return $ ResultsFragment telemTimeIO_DT Telem.Local obj []
       case conclusion of
-        Left err -> postExecErr requestId err
+        Left (Left err) -> postExecErr' requestId err
+        Left (Right err) -> postExecErr requestId err
         Right results -> do
           let (durationsIO, localities, bodies, _headers) =
                 (fmap rfTimeIO results, fmap rfLocality results, fmap rfResponse results, fmap rfHeaders results)
@@ -443,27 +445,28 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       -- if it's not a subscription, use HTTP to execute the query on the remote
       flip runReaderT execCtx $ E.execRemoteGQ env reqId userInfo reqHdrs q rsi opDef
 
-    extractData :: Text -> LBS.ByteString -> ExceptT QErr (ExceptT () m) JO.Value
-    extractData fieldName = runAesonParser $ \bs ->
-      let lookupField key object = maybe (Left $ "expecting key " ++ T.unpack key) Right $ JO.lookup key object
-          lookupData object =
-            case JO.toList object of
-              [("data", val)] -> pure val
-              x -> do lookupField "errors" object -- TODO fix
-      in either fail pure $
-         JO.eitherDecode bs >>=
-         JO.asObject        >>=
-         lookupData         >>=
-         JO.asObject        >>=
-         lookupField fieldName
+    extractData :: Text -> LBS.ByteString -> ExceptT (Either GQExecError QErr) m JO.Value
+    extractData fieldName bs = do
+      val <- withExceptT (Right . err400 RemoteSchemaError . T.pack) $ ExceptT $ pure $ JO.eitherDecode bs
+      valObj <- withExceptT (Right . err400 RemoteSchemaError) $ ExceptT $ pure $ JO.asObject val
+      dataVal <- case JO.toList valObj of
+        [("data", v)] -> pure v
+        _ -> case JO.lookup "errors" valObj of
+          Just (JO.Array err) -> throwError $ Left $ GQExecError $ toList $ fmap JO.fromOrdered err
+          _ -> withExceptT Right $ throw400 RemoteSchemaError "Received invalid JSON value from remote"
+      dataObj <- withExceptT (Right . err400 RemoteSchemaError) $ ExceptT $ pure $ JO.asObject dataVal
+      fieldVal <- case JO.lookup fieldName dataObj of
+        Nothing -> withExceptT Right $ throw400 RemoteSchemaError $ "expecting key " <> fieldName
+        Just v -> pure v
+      return fieldVal
 
-    sendRemoteResp reqId resp meta =
-      case J.eitherDecodeStrict (encJToBS resp) of
-        Left e    -> postExecErr reqId $ invalidGqlErr $ T.pack e
-        Right res -> sendMsgWithMetadata wsConn (SMData $ DataMsg opId $ GRRemote res) meta
+    -- sendRemoteResp reqId resp meta =
+    --   case J.eitherDecodeStrict (encJToBS resp) of
+    --     Left e    -> postExecErr reqId $ invalidGqlErr $ T.pack e
+    --     Right res -> sendMsgWithMetadata wsConn (SMData $ DataMsg opId $ GRRemote res) meta
 
-    invalidGqlErr err = err500 Unexpected $
-      "Failed parsing GraphQL response from remote: " <> err
+    -- invalidGqlErr err = err500 Unexpected $
+    --   "Failed parsing GraphQL response from remote: " <> err
 
     WSServerEnv logger pgExecCtx lqMap getSchemaCache httpMgr _ sqlGenCtx {- planCache -}
       _ enableAL = serverEnv
@@ -495,10 +498,14 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     postExecErr :: RequestId -> QErr -> ExceptT () m ()
     postExecErr reqId qErr = do
-      let errFn = getErrFn errRespTy
+      let errFn = getErrFn errRespTy False
       logOpEv (ODQueryErr qErr) (Just reqId)
+      postExecErr' reqId $ GQExecError $ pure $ errFn qErr
+
+    postExecErr' :: RequestId -> GQExecError -> ExceptT () m ()
+    postExecErr' _reqId qErr = do
       sendMsg wsConn $ SMData $
-        DataMsg opId $ GRHasura $ throwError $ GQExecError $ pure $ errFn False qErr
+        DataMsg opId $ GRHasura $ throwError qErr
 
     -- why wouldn't pre exec error use graphql response?
     preExecErr reqId qErr = do
