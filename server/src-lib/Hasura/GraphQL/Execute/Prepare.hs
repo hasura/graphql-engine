@@ -120,11 +120,11 @@ retrieveAndFlagSessionVariableValue updateState sessVar currentSessionExp = do
   pure $ S.SEOpApp (S.SQLOp "->>")
     [currentSessionExp, S.SELit $ sessionVariableToText sessVar]
 
-withUserVars :: SessionVariables -> [(Q.PrepArg, PGScalarValue)] -> [(Q.PrepArg, PGScalarValue)]
+withUserVars :: SessionVariables -> PrepArgMap -> PrepArgMap
 withUserVars usrVars list =
   let usrVarsAsPgScalar = PGValJSON $ Q.JSON $ J.toJSON usrVars
       prepArg = Q.toPrepVal (Q.AltJ usrVars)
-  in (prepArg, usrVarsAsPgScalar):list
+  in IntMap.insert 1 (prepArg, usrVarsAsPgScalar) list
 
 validateSessionVariables :: MonadError QErr m => Set.HashSet SessionVariable -> SessionVariables -> m ()
 validateSessionVariables requiredVariables sessionVariables = do

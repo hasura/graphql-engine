@@ -10,7 +10,6 @@ module Hasura.GraphQL.Execute.Query
   ) where
 
 import qualified Data.Aeson                             as J
-import qualified Data.ByteString                        as B
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
@@ -44,24 +43,37 @@ import           Hasura.SQL.Value
 
 import qualified Hasura.RQL.DML.Select                  as DS
 
-data PGPlan
-  = PGPlan
-  { _ppQuery       :: !Q.Query
-  , _ppVariables   :: !PlanVariables
-  , _ppPrepared    :: !PrepArgMap
-  , _ppRemoteJoins :: !(Maybe RemoteJoins)
+data PreparedSql
+  = PreparedSql
+  { _psQuery       :: !Q.Query
+  , _psPrepArgs    :: !PrepArgMap
+  , _psRemoteJoins :: !(Maybe RemoteJoins)
   }
+  deriving Show
 
-instance J.ToJSON PGPlan where
-  toJSON (PGPlan q vars prepared _) =
-    J.object [ "query"     J..= Q.getQueryText q
-             , "variables" J..= vars
-             , "prepared"  J..= fmap show prepared
+-- | Required to log in `query-log`
+instance J.ToJSON PreparedSql where
+  toJSON (PreparedSql q prepArgs _) =
+    J.object [ "query" J..= Q.getQueryText q
+             , "prepared_arguments" J..= fmap (pgScalarValueToJson . snd) prepArgs
              ]
 
+-- | The computed SQL with alias which can be logged. Nothing here represents no
+-- SQL for cases like introspection responses. Tuple of alias to a (maybe)
+-- prepared statement
+type GeneratedSqlMap = HashMap G.Name (Maybe PreparedSql)
+
 data RootFieldPlan
-  = RFPPostgres !PGPlan
+  = RFPPostgres !PreparedSql
   | RFPActionQuery !ActionExecuteTx
+
+-- | Intermediate reperesentation of a computed SQL statement and prepared
+-- arguments, or a raw bytestring (mostly, for introspection responses)
+-- From this intermediate representation, a `LazyTx` can be generated, or the
+-- SQL can be logged etc.
+data ResolvedQuery
+  = RRSql !PreparedSql
+  | RRActionQuery !ActionExecuteTx
 
 instance J.ToJSON RootFieldPlan where
   toJSON = \case
@@ -73,10 +85,10 @@ data ActionQueryPlan
   | AQPQuery !ActionExecuteTx -- ^ Non cacheable transaction
 
 actionQueryToRootFieldPlan
-  :: PlanVariables -> PrepArgMap -> ActionQueryPlan -> RootFieldPlan
-actionQueryToRootFieldPlan vars prepped = \case
+  :: PrepArgMap -> ActionQueryPlan -> RootFieldPlan
+actionQueryToRootFieldPlan prepped = \case
   AQPAsyncQuery s -> RFPPostgres $
-    PGPlan (DS.selectQuerySQL DS.JASSingleObject s) vars prepped Nothing
+    PreparedSql (DS.selectQuerySQL DS.JASSingleObject s) prepped Nothing
   AQPQuery tx     -> RFPActionQuery tx
 
 -- See Note [Temporarily disabling query plan caching]
@@ -126,8 +138,8 @@ mkCurPlanTx
 mkCurPlanTx env manager reqHdrs userInfo fldPlan =
   -- generate the SQL and prepared vars or the bytestring
   let (tx, prep) = case fldPlan of
-        RFPPostgres (PGPlan q _ prepMap remoteJoins) ->
-          let args = withUserVars (_uiSession userInfo) $ IntMap.elems prepMap
+        RFPPostgres (PreparedSql q prepMap remoteJoins) ->
+          let args = withUserVars (_uiSession userInfo) prepMap
               ps = PreparedSql q args remoteJoins
           in (RRSql ps, Just ps)
         RFPActionQuery atx -> (RRActionQuery atx, Nothing)
@@ -135,22 +147,17 @@ mkCurPlanTx env manager reqHdrs userInfo fldPlan =
 
 -- convert a query from an intermediate representation to... another
 irToRootFieldPlan
-  :: PlanVariables
-  -> PrepArgMap
-  -> QueryDB S.SQLExp -> PGPlan
-irToRootFieldPlan vars prepped = \case
-  QDBSimple s      -> mkPGPlan (DS.selectQuerySQL DS.JASMultipleRows) s
-  QDBPrimaryKey s  -> mkPGPlan (DS.selectQuerySQL DS.JASSingleObject) s
-  QDBAggregation s ->
-    let (annAggSel, aggRemoteJoins) = getRemoteJoinsAggregateSelect s
-    in PGPlan (DS.selectAggregateQuerySQL annAggSel) vars prepped aggRemoteJoins
-  QDBConnection s ->
-    let (connSel, connRemoteJoins) = getRemoteJoinsConnectionSelect s
-    in PGPlan (DS.connectionSelectQuerySQL connSel) vars prepped connRemoteJoins
+  :: PrepArgMap
+  -> QueryDB S.SQLExp -> PreparedSql
+irToRootFieldPlan prepped = \case
+  QDBSimple s      -> mkPreparedSql getRemoteJoins (DS.selectQuerySQL DS.JASMultipleRows) s
+  QDBPrimaryKey s  -> mkPreparedSql getRemoteJoins (DS.selectQuerySQL DS.JASSingleObject) s
+  QDBAggregation s -> mkPreparedSql getRemoteJoinsAggregateSelect DS.selectAggregateQuerySQL s
+  QDBConnection s  -> mkPreparedSql getRemoteJoinsAggregateSelect DS.connectionSelectQuerySQL s
   where
-    mkPGPlan f simpleSel =
-      let (simpleSel',remoteJoins) = getRemoteJoins simpleSel
-      in PGPlan (f simpleSel') vars prepped remoteJoins
+    mkPreparedSql get f simpleSel =
+      let (simpleSel',remoteJoins) = get simpleSel
+      in PreparedSql (f simpleSel') prepped remoteJoins
 
 traverseQueryRootField
   :: forall f a b c d h
@@ -158,15 +165,11 @@ traverseQueryRootField
   => (a -> f b)
   -> RootField (QueryDB a) c h d
   -> f (RootField (QueryDB b) c h d)
-traverseQueryRootField f =
-  traverseDB f'
-  where
-    f' :: QueryDB a -> f (QueryDB b)
-    f' = \case
-      QDBSimple s       -> QDBSimple      <$> DS.traverseAnnSimpleSelect f s
-      QDBPrimaryKey s   -> QDBPrimaryKey  <$> DS.traverseAnnSimpleSelect f s
-      QDBAggregation s  -> QDBAggregation <$> DS.traverseAnnAggregateSelect f s
-      QDBConnection s   -> QDBConnection  <$> DS.traverseConnectionSelect f s
+traverseQueryRootField f = traverseDB \case
+  QDBSimple s       -> QDBSimple      <$> DS.traverseAnnSimpleSelect f s
+  QDBPrimaryKey s   -> QDBPrimaryKey  <$> DS.traverseAnnSimpleSelect f s
+  QDBAggregation s  -> QDBAggregation <$> DS.traverseAnnAggregateSelect f s
+  QDBConnection s   -> QDBConnection  <$> DS.traverseConnectionSelect f s
 
 parseGraphQLQuery
   :: MonadError QErr m
@@ -217,13 +220,13 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
 
   -- Transform the RQL AST into a prepared SQL query
   queryPlan <- for unpreparedQueries \unpreparedQuery -> do
-    (preparedQuery, PlanningSt _ planVars planVals expectedVariables)
+    (preparedQuery, PlanningSt _ _ planVals expectedVariables)
       <- flip runStateT initPlanningSt
          $ traverseQueryRootField prepareWithPlan unpreparedQuery
            >>= traverseAction convertActionQuery
     validateSessionVariables expectedVariables $ _uiSession userInfo
-    traverseDB (pure . irToRootFieldPlan planVars planVals) preparedQuery
-      >>= traverseAction (pure . actionQueryToRootFieldPlan planVars planVals)
+    traverseDB (pure . irToRootFieldPlan planVals) preparedQuery
+      >>= traverseAction (pure . actionQueryToRootFieldPlan planVals)
 
   -- Transform the query plans into an execution plan
   let executionPlan = queryPlan <&> \case
@@ -280,37 +283,6 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varD
 
 --   (,) <$> mkLazyRespTx env manager reqHdrs userInfo resolved <*> pure (mkGeneratedSqlMap resolved)
 
-data PreparedSql
-  = PreparedSql
-  { _psQuery       :: !Q.Query
-  , _psPrepArgs    :: ![(Q.PrepArg, PGScalarValue)]
-    -- ^ The value is (Q.PrepArg, PGScalarValue) because we want to log the human-readable value of the
-    -- prepared argument (PGScalarValue) and not the binary encoding in PG format (Q.PrepArg)
-  , _psRemoteJoins :: !(Maybe RemoteJoins)
-  }
-  deriving Show
-
--- | Required to log in `query-log`
-instance J.ToJSON PreparedSql where
-  toJSON (PreparedSql q prepArgs _) =
-    J.object [ "query" J..= Q.getQueryText q
-             , "prepared_arguments" J..= map (pgScalarValueToJson . snd) prepArgs
-             ]
-
--- | Intermediate reperesentation of a computed SQL statement and prepared
--- arguments, or a raw bytestring (mostly, for introspection responses)
--- From this intermediate representation, a `LazyTx` can be generated, or the
--- SQL can be logged etc.
-data ResolvedQuery
-  = RRRaw !B.ByteString
-  | RRSql !PreparedSql
-  | RRActionQuery !ActionExecuteTx
-
--- | The computed SQL with alias which can be logged. Nothing here represents no
--- SQL for cases like introspection responses. Tuple of alias to a (maybe)
--- prepared statement
-type GeneratedSqlMap = HashMap G.Name (Maybe PreparedSql)
-
 mkLazyRespTx
   :: ( HasVersion
      , MonadIO tx
@@ -324,13 +296,12 @@ mkLazyRespTx
   -> ResolvedQuery
   -> tx EncJSON
 mkLazyRespTx env manager reqHdrs userInfo node = do
-  resp <- case node of
-    RRRaw bs                   -> return $ encJFromBS bs
+  case node of
     RRSql (PreparedSql q args maybeRemoteJoins) -> do
-      let prepArgs = map fst args
+      -- TODO this quietly assumes the intmap keys are contiguous
+      let prepArgs = fst <$> IntMap.elems args
       case maybeRemoteJoins of
         Nothing -> Tracing.trace "Postgres" . liftTx $ asSingleRowJsonResp q prepArgs
         Just remoteJoins ->
           executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs remoteJoins
     RRActionQuery actionTx           -> actionTx
-  return resp
