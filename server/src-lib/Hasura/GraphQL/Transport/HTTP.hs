@@ -30,7 +30,8 @@ import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 import           Hasura.Tracing                         (MonadTrace, TraceT, trace)
 
-import qualified Data.Aeson.Ordered                     as J
+import qualified Data.Aeson.Ordered                     as JO
+import qualified Data.ByteString.Lazy                   as LBS
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.Text                              as T
@@ -49,7 +50,7 @@ class Monad m => MonadExecuteQuery m where
   executeQuery
     :: GQLReqParsed
     -> [QueryRootField UnpreparedValue]
-    -> Maybe EQ.PreparedSql
+    -> Maybe EQ.PreparedSql -- EQ.GeneratedSqlMap -- HashMap G.Name EQ.PreparedSql
     -> PGExecCtx
     -> Q.TxAccess
     -> TraceT (LazyTx QErr) EncJSON
@@ -73,7 +74,8 @@ data ResultsFragment = ResultsFragment
 
 -- | Run (execute) a single GraphQL query
 runGQ
-  :: ( HasVersion
+  :: forall m
+   . ( HasVersion
      , MonadIO m
      , MonadError QErr m
      , MonadReader E.ExecutionCtx m
@@ -104,7 +106,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                                  httpManager reqHeaders (reqUnparsed, reqParsed)
     case execPlan of
       E.QueryExecutionPlan queryPlans asts -> do
-        results <- flip OMap.traverseWithKey queryPlans $ \fieldName step -> case step of
+        results <- forWithKey queryPlans $ \fieldName -> \case
           E.ExecStepDB txGenSql -> do
             (telemTimeIO_DT, _telemQueryType, respHdrs, resp) <-
               runQueryDB reqId (reqUnparsed,reqParsed) asts userInfo txGenSql
@@ -112,7 +114,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
           E.ExecStepRemote (rsi, opDef, _varValsM) -> do
             (_telemCacheHit, _, (telemTimeIO_DT, _telemQueryType, HttpResponse resp respHdrs)) <- runRemoteGQ telemCacheHit rsi opDef
             value <- extractData fieldName $ encJToLBS resp
-            pure $ ResultsFragment telemTimeIO_DT Telem.Remote (J.toEncJSON value) respHdrs
+            pure $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) respHdrs
           E.ExecStepRaw json -> do
             let obj = encJFromJValue json
                 telemTimeIO_DT = 0
@@ -122,14 +124,14 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         return $ (Telem.Query, sum durationsIO, fold localities, ) $ HttpResponse (encodeGQResp $ GQSuccess $ encJToLBS $ encJFromInsOrdHashMap bodies) (fold headers)
 
       E.MutationExecutionPlan mutationPlans -> do
-        results <- flip OMap.traverseWithKey mutationPlans $ \fieldName step -> case step of
+        results <- forWithKey mutationPlans $ \fieldName -> \case
           E.ExecStepDB (tx, responseHeaders) -> do
             (telemTimeIO_DT, _telemQueryType, resp) <- runMutationDB reqId reqUnparsed userInfo tx
             return $ ResultsFragment telemTimeIO_DT Telem.Local resp responseHeaders
           E.ExecStepRemote (rsi, opDef, _varValsM) -> do
             (_telemCacheHit, _, (telemTimeIO_DT, _telemQueryType, HttpResponse resp respHdrs)) <- runRemoteGQ telemCacheHit rsi opDef
             value <- extractData fieldName $ encJToLBS resp
-            pure $ ResultsFragment telemTimeIO_DT Telem.Remote (J.toEncJSON value) respHdrs
+            pure $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) respHdrs
           E.ExecStepRaw json -> do
             let obj = encJFromJValue json
                 telemTimeIO_DT = 0
@@ -149,19 +151,22 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   when False $ Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
   return resp
   where
+    forWithKey = flip OMap.traverseWithKey
+
     runRemoteGQ telemCacheHit rsi opDef = do
       let telemQueryType | G._todType opDef == G.OperationTypeMutation = Telem.Mutation
                          | otherwise = Telem.Query
       (telemTimeIO, resp) <- E.execRemoteGQ env reqId userInfo reqHeaders reqUnparsed rsi opDef
       pure (telemCacheHit, Telem.Remote, (telemTimeIO, telemQueryType, resp))
 
+    extractData :: Text -> LBS.ByteString -> m JO.Value
     extractData fieldName = runAesonParser $ \bs ->
-      let lookup' key object = maybe (Left $ "expecting key " ++ T.unpack key) Right $ J.lookup key object
+      let lookup' key object = maybe (Left $ "expecting key " ++ T.unpack key) Right $ JO.lookup key object
       in either fail pure $
-         J.eitherDecode bs >>=
-         J.asObject        >>=
+         JO.eitherDecode bs >>=
+         JO.asObject        >>=
          lookup' "data"     >>=
-         J.asObject        >>=
+         JO.asObject        >>=
          lookup' fieldName
 
 

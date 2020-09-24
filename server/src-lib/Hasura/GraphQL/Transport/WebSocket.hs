@@ -21,10 +21,12 @@ import qualified Control.Monad.Trans.Control                 as MC
 import qualified Data.Aeson                                  as J
 import qualified Data.Aeson.Casing                           as J
 import qualified Data.Aeson.TH                               as J
-import qualified Data.ByteString.Lazy                        as BL
+import qualified Data.Aeson.Ordered                          as JO
+import qualified Data.ByteString.Lazy                        as LBS
 import qualified Data.CaseInsensitive                        as CI
 import qualified Data.Environment                            as Env
 import qualified Data.HashMap.Strict                         as Map
+import qualified Data.HashMap.Strict.InsOrd                  as OMap
 import qualified Data.Text                                   as T
 import qualified Data.Text.Encoding                          as TE
 import qualified Data.Time.Clock                             as TC
@@ -135,7 +137,7 @@ sendMsgWithMetadata wsConn msg (LQ.LiveQueryMetadata execTime) =
       { WS._wseiEventType = msgType
       , WS._wseiOperationId = operationId
       , WS._wseiQueryExecutionTime = Just $! realToFrac execTime
-      , WS._wseiResponseSize = Just $! BL.length bs
+      , WS._wseiResponseSize = Just $! LBS.length bs
       }
 
 data OpDetail
@@ -264,7 +266,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead ipAddress = do
       return $ Left $ WS.RejectRequest
         (H.statusCode $ qeStatus qErr)
         (H.statusMessage $ qeStatus qErr) []
-        (BL.toStrict $ J.encode $ encodeGQLErr False qErr)
+        (LBS.toStrict $ J.encode $ encodeGQLErr False qErr)
 
     checkPath = case WS.requestPath requestHead of
       "/v1alpha1/graphql" -> return (ERTLegacy, E.QueryHasura)
@@ -349,7 +351,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
   case execPlan of
     E.QueryExecutionPlan queryPlan asts -> do
-      conclusion <- runExceptT $ for queryPlan $ \case
+      conclusion <- runExceptT $ forWithKey queryPlan $ \fieldName -> \case
         E.ExecStepDB (tx, genSql) -> Tracing.trace "Query" $ do
           (telemTimeIO_DT, (respHdrs, resp)) <- Tracing.interpTraceT id $ withElapsedTime $
             executeQuery reqParsed asts genSql pgExecCtx Q.ReadOnly tx
@@ -357,7 +359,8 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         E.ExecStepRemote (rsi, opDef, _varValsM) -> do
           (telemTimeIO_DT, HttpResponse resp respHdrs) <-
             runRemoteGQ execCtx requestId userInfo reqHdrs opDef rsi
-          return $ ResultsFragment telemTimeIO_DT Telem.Remote resp respHdrs
+          value <- extractData fieldName $ encJToLBS resp
+          return $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) respHdrs
         E.ExecStepRaw json -> do
           let obj = encJFromJValue json
               telemTimeIO_DT = 0
@@ -375,7 +378,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           when False $ Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
       sendCompleted (Just requestId)
     E.MutationExecutionPlan mutationPlan -> do
-      conclusion <- runExceptT $ for mutationPlan $ \case
+      conclusion <- runExceptT $ forWithKey mutationPlan $ \fieldName -> \case
         E.ExecStepDB (tx, _) -> Tracing.trace "Mutate" do
           ctx <- Tracing.currentContext
           (telemTimeIO_DT, resp) <- Tracing.interpTraceT
@@ -385,7 +388,8 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         E.ExecStepRemote (rsi, opDef, _varValsM) -> do
           (telemTimeIO_DT, HttpResponse resp respHdrs) <-
             runRemoteGQ execCtx requestId userInfo reqHdrs opDef rsi
-          return $ ResultsFragment telemTimeIO_DT Telem.Remote resp respHdrs
+          value <- extractData fieldName $ encJToLBS resp
+          return $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) respHdrs
         E.ExecStepRaw json -> do
           let obj = encJFromJValue json
               telemTimeIO_DT = 0
@@ -404,7 +408,6 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       sendCompleted (Just requestId)
       -- when False $ Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
     E.SubscriptionExecutionPlan lqOp -> do
-      timerTot -- stop the timer; unused
       -- log the graphql query
       logQueryLog logger q Nothing requestId
       let subscriberMetadata = LQ.mkSubscriberMetadata $ J.object
@@ -423,6 +426,8 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         STMMap.insert (lqId, opName) opId opMap
       logOpEv ODStarted (Just requestId)
   where
+    forWithKey = flip OMap.traverseWithKey
+
     telemTransport = Telem.WebSocket
 
     runRemoteGQ :: E.ExecutionCtx -> RequestId -> UserInfo -> [H.Header]
@@ -437,6 +442,21 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         G.OperationTypeQuery    -> return ()
       -- if it's not a subscription, use HTTP to execute the query on the remote
       flip runReaderT execCtx $ E.execRemoteGQ env reqId userInfo reqHdrs q rsi opDef
+
+    extractData :: Text -> LBS.ByteString -> ExceptT QErr (ExceptT () m) JO.Value
+    extractData fieldName = runAesonParser $ \bs ->
+      let lookupField key object = maybe (Left $ "expecting key " ++ T.unpack key) Right $ JO.lookup key object
+          lookupData object =
+            case JO.toList object of
+              [("data", val)] -> pure val
+              x -> do err <- lookupField "errors" object
+                      Left err
+      in either fail pure $
+         JO.eitherDecode bs >>=
+         JO.asObject        >>=
+         lookupData         >>=
+         JO.asObject        >>=
+         lookupField fieldName
 
     sendRemoteResp reqId resp meta =
       case J.eitherDecodeStrict (encJToBS resp) of
@@ -506,10 +526,10 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     liveQOnChange = \case
       GQSuccess (LQ.LiveQueryResponse bs dTime) ->
         sendMsgWithMetadata wsConn
-        (SMData $ DataMsg opId $ GRHasura $ GQSuccess $ BL.fromStrict bs)
+        (SMData $ DataMsg opId $ GRHasura $ GQSuccess $ LBS.fromStrict bs)
         (LQ.LiveQueryMetadata dTime)
       resp -> sendMsg wsConn $ SMData $ DataMsg opId $ GRHasura $
-        BL.fromStrict . LQ._lqrPayload <$> resp
+        LBS.fromStrict . LQ._lqrPayload <$> resp
 
     catchAndIgnore :: ExceptT () m () -> m ()
     catchAndIgnore m = void $ runExceptT m
@@ -527,7 +547,7 @@ onMessage
   => Env.Environment
   -> AuthMode
   -> WSServerEnv
-  -> WSConn -> BL.ByteString -> m ()
+  -> WSConn -> LBS.ByteString -> m ()
 onMessage env authMode serverEnv wsConn msgRaw = Tracing.runTraceT "websocket" do
   case J.eitherDecode msgRaw of
     Left e    -> do
