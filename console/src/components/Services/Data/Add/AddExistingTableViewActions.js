@@ -160,9 +160,8 @@ const addAllUntrackedTablesSql = tableList => {
     for (let i = 0; i < tableList.length; i++) {
       if (tableList[i].table_name !== 'schema_migrations') {
         bulkQueryUp.push(
-          addExistingTableOrView(
-            tableList[i].table_name,
-            currentSchema,
+          getTrackTableQuery(
+            { name: tableList[i].table_name, schema: currentSchema },
             currentDataSource
           )
         );
