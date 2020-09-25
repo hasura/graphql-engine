@@ -360,6 +360,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         E.ExecStepRaw json ->
           buildRaw json
       buildResult Telem.Query timerTot requestId conclusion
+      sendCompleted (Just requestId)
 
     E.MutationExecutionPlan mutationPlan -> do
       conclusion <- runExceptT $ forWithKey mutationPlan $ \fieldName -> \case
@@ -374,6 +375,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         E.ExecStepRaw json ->
           buildRaw json
       buildResult Telem.Query timerTot requestId conclusion
+      sendCompleted (Just requestId)
 
     E.SubscriptionExecutionPlan lqOp -> do
       -- log the graphql query
@@ -402,7 +404,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     buildResult _ _ _         (Left (Left err )) = postExecErr' err
     buildResult _ _ requestId (Left (Right err)) = postExecErr requestId err
-    buildResult telemQueryType timerTot requestId (Right results) = do
+    buildResult telemQueryType timerTot _ (Right results) = do
       sendSuccResp (encJFromInsOrdHashMap (fmap rfResponse results)) $
         LQ.LiveQueryMetadata $ sum $ fmap rfTimeIO results
       let telemLocality = foldMap rfLocality results
@@ -410,7 +412,6 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           telemCacheHit = Telem.Miss -- TODO fix if we're reimplementing query caching
       telemTimeTot <- Seconds <$> timerTot
       when False $ Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
-      sendCompleted (Just requestId)
 
     runRemoteGQ fieldName execCtx reqId userInfo reqHdrs opDef rsi varValsM = do
       (telemTimeIO_DT, HttpResponse resp respHdrs) <-
