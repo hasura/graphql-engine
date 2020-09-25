@@ -274,11 +274,11 @@ waitForShutdown = C.readMVar . unShutdownLatch
 
 -- | Initiate a graceful shutdown of the server associated with the provided
 -- latch.
-shutdownGracefully :: InitCtx -> IO ()
+shutdownGracefully :: InitCtx -> IO Bool
 shutdownGracefully = shutdownGracefully' . _icShutdownLatch
 
-shutdownGracefully' :: ShutdownLatch -> IO ()
-shutdownGracefully' = void . flip C.tryPutMVar () . unShutdownLatch
+shutdownGracefully' :: ShutdownLatch -> IO Bool
+shutdownGracefully' = flip C.tryPutMVar () . unShutdownLatch
 
 -- | If an exception is encountered , flush the log buffer and
 -- rethrow If we do not flush the log buffer on exception, then log lines

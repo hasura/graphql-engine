@@ -63,7 +63,7 @@ runApp env (HGEOptionsG rci hgeCmd) =
       -- once again, we terminate the process immediately.
       _ <- liftIO $ Signals.installHandler
         Signals.sigTERM
-        (Signals.CatchOnce (shutdownGracefully initCtx))
+        (Signals.CatchOnce (void $ shutdownGracefully initCtx))
         Nothing
       runHGEServer env serveOptions initCtx Nothing initTime shutdownApp Nothing ekgStore
 
