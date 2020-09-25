@@ -440,9 +440,6 @@ jobs:
     - store_artifacts:
         path: /build/_cli_migrations_output
         destination: cli-migrations
-    - store_artifacts:
-        path: scripts/cli-migrations
-        destination: cli-migrations-out
     - persist_to_workspace:
         root: /build
         paths:
