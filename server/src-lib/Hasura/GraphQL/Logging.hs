@@ -9,8 +9,6 @@ module Hasura.GraphQL.Logging
   ) where
 
 import qualified Data.Aeson                             as J
-import qualified Language.GraphQL.Draft.Syntax          as G
-import qualified Data.HashMap.Strict                    as Map
 
 import           Hasura.GraphQL.Transport.HTTP.Protocol (GQLReqUnparsed)
 import           Hasura.Prelude
