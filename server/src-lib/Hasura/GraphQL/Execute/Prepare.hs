@@ -142,10 +142,10 @@ addPrepArg
   => Int -> (Q.PrepArg, PGScalarValue) -> m ()
 addPrepArg argNum arg = do
   prepped <- gets _psPrepped
-  modify {_psPrepped = IntMap.insert argNum arg prepped}
+  modify \x -> x {_psPrepped = IntMap.insert argNum arg prepped}
 
 getNextArgNum :: (MonadState PlanningSt m) => m Int
 getNextArgNum = do
   curArgNum <- gets _psArgNumber
-  modify {_psArgNumber = curArgNum + 1}
+  modify \x -> x {_psArgNumber = curArgNum + 1}
   return curArgNum
