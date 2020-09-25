@@ -2,6 +2,23 @@
 
 ## Next release
 
+### Heterogeneous execution
+
+The server could already execute queries that either fetch data from the database, or, through remotes, from other GraphQL servers.  This release also enables mixing such data sources within one query.  So one can have queries such as
+
+```
+query {
+  articles {
+    title
+  }
+  weather {
+    temperature
+  }
+}
+```
+
+where the articles are fetched from the database, and the weather is fetched from a remote server.
+
 ### Server - Support for mapping session variables to default JWT claims
 
 Some auth providers do not let users add custom claims in JWT. In such cases, the server can take a JWT configuration option called `claims_map` to specify a mapping of Hasura session variables to values in existing claims via JSONPath or literal values.
