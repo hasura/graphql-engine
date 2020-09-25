@@ -402,7 +402,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     telemTransport = Telem.WebSocket
 
-    buildResult _ _ _         (Left (Left err )) = postExecErr' err
+    buildResult _ _ _         (Left (Left  err)) = postExecErr' err
     buildResult _ _ requestId (Left (Right err)) = postExecErr requestId err
     buildResult telemQueryType timerTot _ (Right results) = do
       sendSuccResp (encJFromInsOrdHashMap (fmap rfResponse results)) $
