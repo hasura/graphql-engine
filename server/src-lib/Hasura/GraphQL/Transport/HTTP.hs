@@ -155,29 +155,29 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
       ( telemType
       , 0
       , Telem.Remote
-      , HttpResponse (encodeGQResp $ throwError $ err) []
+      , HttpResponse (encodeGQResp $ throwError err) []
       )
     buildResult _telemType (Left (Right err)) = throwError err
     buildResult telemType (Right results) = pure
       ( telemType
       , sum (fmap rfTimeIO results)
-      , fold (fmap rfLocality results)
+      , foldMap rfLocality results
       , HttpResponse
         (encodeGQResp $ pure $ encJToLBS $ encJFromInsOrdHashMap (fmap rfResponse results))
-        (fold (fmap rfHeaders results))
+        (foldMap rfHeaders results)
       )
 
 extractFieldFromResponse
   :: Monad m => Text -> LBS.ByteString -> ExceptT (Either GQExecError QErr) m JO.Value
 extractFieldFromResponse fieldName bs = do
   val <- onLeft (JO.eitherDecode bs) $ do400 . T.pack
-  valObj <- onLeft (JO.asObject val) $ do400
+  valObj <- onLeft (JO.asObject val) do400
   dataVal <- case JO.toList valObj of
     [("data", v)] -> pure v
     _ -> case JO.lookup "errors" valObj of
       Just (JO.Array err) -> doGQExecError $ toList $ fmap JO.fromOrdered err
       _ -> do400 "Received invalid JSON value from remote"
-  dataObj <- onLeft (JO.asObject dataVal) $ do400
+  dataObj <- onLeft (JO.asObject dataVal) do400
   fieldVal <- onNothing (JO.lookup fieldName dataObj) $
     do400 $ "expecting key " <> fieldName
   return fieldVal

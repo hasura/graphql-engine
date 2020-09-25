@@ -387,7 +387,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       !lqId <- liftIO $ LQ.addLiveQuery logger subscriberMetadata lqMap lqOp liveQOnChange
       let !opName = _grOperationName q
 #ifndef PROFILING
-      liftIO $ $assertNFHere $! (lqId, opName)  -- so we don't write thunks to mutable vars
+      liftIO $ $assertNFHere (lqId, opName)  -- so we don't write thunks to mutable vars
 #endif
       liftIO $ STM.atomically $
         -- NOTE: see crucial `lookup` check above, ensuring this doesn't clobber:
@@ -400,12 +400,12 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     telemTransport = Telem.WebSocket
 
-    buildResult _ _ requestId (Left (Left err)) = postExecErr' requestId err
+    buildResult _ _ _         (Left (Left err )) = postExecErr' err
     buildResult _ _ requestId (Left (Right err)) = postExecErr requestId err
     buildResult telemQueryType timerTot requestId (Right results) = do
       sendSuccResp (encJFromInsOrdHashMap (fmap rfResponse results)) $
         LQ.LiveQueryMetadata $ sum $ fmap rfTimeIO results
-      let telemLocality = fold $ fmap rfLocality results
+      let telemLocality = foldMap rfLocality results
           telemTimeIO   = convertDuration $ sum $ fmap rfTimeIO results
           telemCacheHit = Telem.Miss -- TODO fix if we're reimplementing query caching
       telemTimeTot <- Seconds <$> timerTot
@@ -418,31 +418,20 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       value <- mapExceptT lift $ extractFieldFromResponse fieldName (encJToLBS resp)
       return $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) respHdrs
 
-    -- sendRemoteResp reqId resp meta =
-    --   case J.eitherDecodeStrict (encJToBS resp) of
-    --     Left e    -> postExecErr reqId $ invalidGqlErr $ T.pack e
-    --     Right res -> sendMsgWithMetadata wsConn (SMData $ DataMsg opId $ GRRemote res) meta
-
-    -- invalidGqlErr err = err500 Unexpected $
-    --   "Failed parsing GraphQL response from remote: " <> err
-
     WSServerEnv logger pgExecCtx lqMap getSchemaCache httpMgr _ sqlGenCtx {- planCache -}
       _ enableAL = serverEnv
 
     WSConnData userInfoR opMap errRespTy queryType = WS.getData wsConn
 
-    logOpEv opTy reqId = logWSEvent logger wsConn $ EOperation opDet
-      where
-        opDet = OperationDetails opId reqId (_grOperationName q) opTy query
-        -- log the query only in errors
-        query =
-          case opTy of
-            ODQueryErr _ -> Just q
-            _            -> Nothing
-    getErrFn errTy =
-      case errTy of
-        ERTLegacy           -> encodeQErr
-        ERTGraphqlCompliant -> encodeGQLErr
+    logOpEv opTy reqId = logWSEvent logger wsConn $ EOperation $
+      OperationDetails opId reqId (_grOperationName q) opTy $
+      -- log the query only in errors
+      case opTy of
+        ODQueryErr _ -> Just q
+        _            -> Nothing
+
+    getErrFn ERTLegacy           = encodeQErr
+    getErrFn ERTGraphqlCompliant = encodeGQLErr
 
     sendStartErr e = do
       let errFn = getErrFn errRespTy
@@ -458,10 +447,10 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     postExecErr reqId qErr = do
       let errFn = getErrFn errRespTy False
       logOpEv (ODQueryErr qErr) (Just reqId)
-      postExecErr' reqId $ GQExecError $ pure $ errFn qErr
+      postExecErr' $ GQExecError $ pure $ errFn qErr
 
-    postExecErr' :: RequestId -> GQExecError -> ExceptT () m ()
-    postExecErr' _reqId qErr = do
+    postExecErr' :: GQExecError -> ExceptT () m ()
+    postExecErr' qErr = do
       sendMsg wsConn $ SMData $
         DataMsg opId $ throwError qErr
 
