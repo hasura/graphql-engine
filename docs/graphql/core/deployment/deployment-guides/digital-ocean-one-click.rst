@@ -65,6 +65,13 @@ can create a table on this Postgres instance and make your first GraphQL query.
    :class: no-shadow
    :alt: Hasura console
 
+To access the Postgres database via psql, you can issue the following command
+via the console:
+
+.. code-block:: bash
+
+   docker exec -it hasura_postgres_1 psql -U postgres
+
 Step 3: Create a table
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -339,6 +346,17 @@ database.
   through :ref:`Postgres permissions <postgres_permissions>`
   to configure all required permissions (not applicable with the default
   connection string with DO Managed Postgres).
+
+You can also connect to this Postgres database via psql, using the following command:
+
+.. code-block:: bash
+
+   docker exec -it hasura_postgres_1 psql -h <your database url> -p <your port> -d <your database> -U <your database user>
+
+.. note::
+
+  Different hosted Postgres providers may have different requirments for connection, e.g. seting sslmode.
+  Please refer to your provider's documentation for generating the proper psql command flags.
 
 Connection pooling
 ~~~~~~~~~~~~~~~~~~
