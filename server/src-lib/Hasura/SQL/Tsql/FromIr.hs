@@ -11,12 +11,17 @@ module Hasura.SQL.Tsql.FromIr
   ) where
 
 import           Control.Monad
+import           Control.Monad.Trans
+import           Control.Monad.Trans.Reader
+import           Control.Monad.Trans.State.Strict
 import           Control.Monad.Validate
 import           Data.Foldable
 import           Data.HashMap.Strict (HashMap)
 import           Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.List.NonEmpty as NE
 import           Data.Maybe
+import           Data.Text (Text)
+import qualified Data.Text as T
 import qualified Database.ODBC.SQLServer as Odbc
 import qualified Hasura.RQL.DML.Select.Types as Ir
 import qualified Hasura.RQL.Types.BoolExp as Ir
@@ -40,8 +45,15 @@ data Error
   | UnsupportedArraySelect (Ir.ArraySelectG Sql.SQLExp)
   deriving (Show, Eq)
 
-newtype FromIr a = FromIr { runFromIr :: Validate (NonEmpty Error) a}
-  deriving (Functor, Applicative, Monad)
+newtype FromIr a = FromIr
+  { unFromIr :: StateT Int (Validate (NonEmpty Error)) a
+  } deriving (Functor, Applicative, Monad)
+
+--------------------------------------------------------------------------------
+-- Runners
+
+runFromIr :: FromIr a -> Validate (NonEmpty Error) a
+runFromIr fromIr = evalStateT (unFromIr fromIr) 0
 
 --------------------------------------------------------------------------------
 -- Top-level exported functions
@@ -55,8 +67,8 @@ fromSelectRows annSelectG
     case _asnFrom of
       Ir.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
       _ -> FromIr (refute (pure (FromTypeUnsupported _asnFrom)))
-  fieldSources <- traverse fromAnnFieldsG _asnFields
-  filterExpression <- fromAnnBoolExp permFilter
+  fieldSources <- runReaderT (traverse fromAnnFieldsG _asnFields) (fromAlias selectFrom)
+  filterExpression <- runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
   selectProjections <-
     case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
       Nothing -> FromIr (refute (pure NoProjectionFields))
@@ -90,8 +102,12 @@ fromSelectAggregate annSelectG = do
     case _asnFrom of
       Ir.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
       _ -> FromIr (refute (pure (FromTypeUnsupported _asnFrom)))
-  fieldSources <- traverse fromTableAggregateFieldG _asnFields
-  filterExpression <- fromAnnBoolExp permFilter
+  fieldSources <-
+    runReaderT
+      (traverse fromTableAggregateFieldG _asnFields)
+      (fromAlias selectFrom)
+  filterExpression <-
+    runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
   selectProjections <-
     case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
       Nothing -> FromIr (refute (pure NoProjectionFields))
@@ -120,15 +136,18 @@ fromSelectAggregate annSelectG = do
 --------------------------------------------------------------------------------
 -- Conversion functions
 
-fromAnnBoolExp :: Ir.GBoolExp (Ir.AnnBoolExpFld Sql.SQLExp) -> FromIr Expression
+fromAnnBoolExp ::
+     Ir.GBoolExp (Ir.AnnBoolExpFld Sql.SQLExp)
+  -> ReaderT EntityAlias FromIr Expression
 fromAnnBoolExp = traverse fromAnnBoolExpFld >=> fromGBoolExp
 
-fromAnnBoolExpFld :: Ir.AnnBoolExpFld Sql.SQLExp -> FromIr Expression
+fromAnnBoolExpFld ::
+     Ir.AnnBoolExpFld Sql.SQLExp -> ReaderT EntityAlias FromIr Expression
 fromAnnBoolExpFld =
   \case
     Ir.AVCol pgColumnInfo opExpGs -> do
       expression <- fromPGColumnInfo pgColumnInfo
-      expressions <- traverse (fromOpExpG expression) opExpGs
+      expressions <- traverse (lift . fromOpExpG expression) opExpGs
       pure (AndExpression expressions)
 
 -- TODO: Question: how do we associate/confirm that this column name
@@ -141,24 +160,32 @@ fromAnnBoolExpFld =
 -- We should have an explicit mapping from included entities to field
 -- names of that entity.
 --
-fromPGColumnInfo :: Ir.PGColumnInfo -> FromIr Expression
+fromPGColumnInfo :: Ir.PGColumnInfo -> ReaderT EntityAlias FromIr Expression
 fromPGColumnInfo info = do
-  name <- fromPGColumnName info
+  name <- fromPGColumnName' info
   pure (ColumnExpression name)
 
-fromGExists :: Ir.GExists Expression -> FromIr Select
+fromPGColumnName' :: Ir.PGColumnInfo -> ReaderT EntityAlias FromIr FieldName
+fromPGColumnName' Ir.PGColumnInfo {pgiColumn = pgCol} = do
+  EntityAlias {entityAliasText} <- ask
+  pure
+    (FieldName
+       {fieldName = Sql.getPGColTxt pgCol, fieldNameEntity = entityAliasText})
+
+fromGExists :: Ir.GExists Expression -> ReaderT EntityAlias FromIr Select
 fromGExists Ir.GExists {_geTable, _geWhere} = do
-  -- Here is a spot where the from'd thing binds a scope that the
-  -- order/where will be related to.
-  -- But the scope here is quite short.
-  selectFrom <- fromQualifiedTable _geTable
-  whereExpression <- fromGBoolExp _geWhere
+  selectFrom <- lift (fromQualifiedTable _geTable)
+  whereExpression <-
+    local (const (fromAlias selectFrom)) (fromGBoolExp _geWhere)
   pure
     Select
-      {selectProjections =
+      { selectProjections =
           NE.fromList
             [ ExpressionProjection
-                (unaliased trueExpression)
+                (Aliased
+                   { aliasedThing = trueExpression
+                   , aliasedAlias = existsFieldName
+                   })
             ]
       , selectFrom
       , selectJoins = mempty
@@ -168,15 +195,15 @@ fromGExists Ir.GExists {_geTable, _geWhere} = do
       }
 
 fromQualifiedTable :: Sql.QualifiedObject Sql.TableName -> FromIr From
-fromQualifiedTable qualifiedObject =
+fromQualifiedTable qualifiedObject = do
+  alias <- generateEntityAlias
   pure
     (FromQualifiedTable
-       (unaliased
-          (Qualified
-             { qualifiedThing = TableName {tableNameText = qname}
-             , qualifiedSchemaName =
-                 Just (SchemaName {schemaNameParts = [schemaName]})
-             })))
+       (Aliased
+          { aliasedThing =
+              TableName {tableName = qname, tableNameSchema = schemaName}
+          , aliasedAlias = alias
+          }))
   where
     Sql.QualifiedObject { qSchema = Sql.SchemaName schemaName
                          -- TODO: Consider many x.y.z. in schema name.
@@ -194,24 +221,19 @@ data FieldSource
   deriving (Eq, Show)
 
 fromTableAggregateFieldG ::
-     (Ir.FieldName, Ir.TableAggregateFieldG Sql.SQLExp) -> FromIr FieldSource
+     (Ir.FieldName, Ir.TableAggregateFieldG Sql.SQLExp) -> ReaderT EntityAlias FromIr FieldSource
 fromTableAggregateFieldG (Ir.FieldName name, field) =
   case field of
     Ir.TAFAgg (aggregateFields :: [(Ir.FieldName, Ir.AggregateField)]) ->
       case NE.nonEmpty aggregateFields of
-        Nothing -> FromIr (refute (pure NoAggregatesMustBeABug))
+        Nothing -> lift (FromIr (refute (pure NoAggregatesMustBeABug)))
         Just fields -> do
           aggregates <-
             traverse
               (\(fieldName, aggregateField) -> do
                  fmap
                    (\aliasedThing ->
-                      Aliased
-                        { aliasedAlias =
-                            Just
-                              (Alias {aliasText = Ir.getFieldNameTxt fieldName})
-                        , ..
-                        })
+                      Aliased {aliasedAlias = Ir.getFieldNameTxt fieldName, ..})
                    (fromAggregateField aggregateField))
               fields
           pure (AggregateFieldSource aggregates)
@@ -220,11 +242,11 @@ fromTableAggregateFieldG (Ir.FieldName name, field) =
         (ExpressionFieldSource
            Aliased
              { aliasedThing = Tsql.ValueExpression (Odbc.TextValue text)
-             , aliasedAlias = Just (Alias {aliasText = name})
+             , aliasedAlias = name
              })
-    Ir.TAFNodes {} -> FromIr (refute (pure (AggTypeUnsupportedForNow field)))
+    Ir.TAFNodes {} -> lift (FromIr (refute (pure (AggTypeUnsupportedForNow field))))
 
-fromAggregateField :: Ir.AggregateField -> FromIr Aggregate
+fromAggregateField :: Ir.AggregateField -> ReaderT EntityAlias FromIr Aggregate
 fromAggregateField aggregateField =
   case aggregateField of
     Ir.AFExp text -> pure (TextAggregate text)
@@ -235,13 +257,13 @@ fromAggregateField aggregateField =
            Sql.CTStar -> pure StarCountable
            Sql.CTSimple fields ->
              case NE.nonEmpty fields of
-               Nothing -> FromIr (refute (pure MalformedAgg))
+               Nothing -> lift (FromIr (refute (pure MalformedAgg)))
                Just fields' -> do
                  fields'' <- traverse fromPGCol fields'
                  pure (NonNullFieldCountable fields'')
            Sql.CTDistinct fields ->
              case NE.nonEmpty fields of
-               Nothing -> FromIr (refute (pure MalformedAgg))
+               Nothing -> lift (FromIr (refute (pure MalformedAgg)))
                Just fields' -> do
                  fields'' <- traverse fromPGCol fields'
                  pure (DistinctCountable fields''))
@@ -249,7 +271,7 @@ fromAggregateField aggregateField =
       error "Ir.AFOp Ir.AggregateOp"
 
 -- | The main sources of fields, either constants, fields or via joins.
-fromAnnFieldsG :: (Ir.FieldName, Ir.AnnFieldG Sql.SQLExp) -> FromIr FieldSource
+fromAnnFieldsG :: (Ir.FieldName, Ir.AnnFieldG Sql.SQLExp) -> ReaderT EntityAlias FromIr FieldSource
 fromAnnFieldsG (Ir.FieldName name, field) =
   case field of
     Ir.AFColumn annColumnField -> do
@@ -258,50 +280,51 @@ fromAnnFieldsG (Ir.FieldName name, field) =
         (ColumnFieldSource
            Aliased
              { aliasedThing = fieldName
-             , aliasedAlias = Just (Alias {aliasText = name})
+             , aliasedAlias = name
              })
     Ir.AFExpression text ->
       pure
         (ExpressionFieldSource
            Aliased
              { aliasedThing = Tsql.ValueExpression (Odbc.TextValue text)
-             , aliasedAlias = Just (Alias {aliasText = name})
+             , aliasedAlias = name
              })
     Ir.AFObjectRelation objectRelationSelectG ->
       fmap
         (\aliasedThing ->
            JoinFieldSource
              (Aliased
-                {aliasedThing, aliasedAlias = Just (Alias {aliasText = name})}))
-        (fromObjectRelationSelectG objectRelationSelectG)
+                {aliasedThing, aliasedAlias = name}))
+        (lift (fromObjectRelationSelectG objectRelationSelectG))
     Ir.AFArrayRelation arraySelectG ->
       fmap
         (\aliasedThing ->
            JoinFieldSource
              (Aliased
-                {aliasedThing, aliasedAlias = Just (Alias {aliasText = name})}))
-        (fromArraySelectG arraySelectG)
+                {aliasedThing, aliasedAlias = name}))
+        (lift (fromArraySelectG arraySelectG))
     -- Vamshi said to ignore these three for now:
-    Ir.AFNodeId {} -> FromIr (refute (pure (FieldTypeUnsupportedForNow field)))
-    Ir.AFRemote {} -> FromIr (refute (pure (FieldTypeUnsupportedForNow field)))
+    Ir.AFNodeId {} -> lift (FromIr (refute (pure (FieldTypeUnsupportedForNow field))))
+    Ir.AFRemote {} -> lift (FromIr (refute (pure (FieldTypeUnsupportedForNow field))))
     Ir.AFComputedField {} ->
-      FromIr (refute (pure (FieldTypeUnsupportedForNow field)))
+      lift (FromIr (refute (pure (FieldTypeUnsupportedForNow field))))
 
-fromAnnColumnField :: Ir.AnnColumnField -> FromIr FieldName
+fromAnnColumnField :: Ir.AnnColumnField -> ReaderT EntityAlias FromIr FieldName
 fromAnnColumnField annColumnField = fromPGColumnName pgColumnInfo
   where
     Ir.AnnColumnField { _acfInfo = pgColumnInfo
-                      , _acfAsText = asText
-                      , _acfOp = op
+                      , _acfAsText = asText :: Bool
+                      , _acfOp = op :: Maybe Ir.ColumnOp
                       } = annColumnField
 
-fromPGColumnName :: Ir.PGColumnInfo -> FromIr FieldName
+fromPGColumnName :: Ir.PGColumnInfo -> ReaderT EntityAlias FromIr FieldName
 fromPGColumnName Ir.PGColumnInfo{pgiColumn = pgCol} =
   fromPGCol pgCol
 
-fromPGCol :: Sql.PGCol -> FromIr FieldName
-fromPGCol pgCol =
-  pure (FieldName (Sql.getPGColTxt pgCol))
+fromPGCol :: Sql.PGCol -> ReaderT EntityAlias FromIr FieldName
+fromPGCol pgCol = do
+  EntityAlias {entityAliasText} <- ask
+  pure (FieldName {fieldName = Sql.getPGColTxt pgCol, fieldNameEntity = entityAliasText})
 
 fieldSourceProjections :: FieldSource -> NonEmpty Projection
 fieldSourceProjections =
@@ -310,9 +333,14 @@ fieldSourceProjections =
       pure (ExpressionProjection aliasedExpression)
     ColumnFieldSource name -> pure (FieldNameProjection name)
     JoinFieldSource aliasedJoin ->
-      pure (FieldNameProjection (fmap joinFieldName aliasedJoin))
-    AggregateFieldSource aggregates ->
-      fmap AggregateProjection aggregates
+      pure
+        (FieldNameProjection
+           (fmap
+              ((\alias ->
+                  FieldName {fieldName = jsonFieldName, fieldNameEntity = alias}) .
+               joinAlias)
+              aliasedJoin))
+    AggregateFieldSource aggregates -> fmap AggregateProjection aggregates
 
 fieldSourceJoin :: FieldSource -> Maybe Join
 fieldSourceJoin =
@@ -328,9 +356,10 @@ fieldSourceJoin =
 -- TODO: field mappings.
 fromObjectRelationSelectG :: Ir.ObjectRelationSelectG Sql.SQLExp -> FromIr Join
 fromObjectRelationSelectG annRelationSelectG = do
-  fieldSources <- traverse fromAnnFieldsG fields
   selectFrom <- fromQualifiedTable tableFrom
-  filterExpression <- fromAnnBoolExp tableFilter
+  fieldSources <- runReaderT (traverse fromAnnFieldsG fields) (fromAlias selectFrom)
+  filterExpression <-
+    runReaderT (fromAnnBoolExp tableFilter) (fromAlias selectFrom)
   selectProjections <-
     case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
       Nothing -> FromIr (refute (pure NoProjectionFields))
@@ -338,7 +367,7 @@ fromObjectRelationSelectG annRelationSelectG = do
   fieldName <- fromRelName aarRelationshipName
   pure
     Join
-      { joinFieldName = fieldName
+      { joinAlias = fieldName
       , joinSelect =
           Select
             { selectTop = uncommented NoTop
@@ -374,16 +403,16 @@ fromArrayRelationSelectG :: Ir.ArrayRelationSelectG Sql.SQLExp -> FromIr Join
 fromArrayRelationSelectG annRelationSelectG = do
   fieldName <- fromRelName aarRelationshipName
   select <- fromSelectRows annSelectG
-  pure Join {joinFieldName = fieldName, joinSelect = select}
+  pure Join {joinAlias = fieldName, joinSelect = select}
   where
     Ir.AnnRelationSelectG { aarRelationshipName
                           , aarColumnMapping = mapping :: HashMap Sql.PGCol Sql.PGCol
                           , aarAnnSelect = annSelectG
                           } = annRelationSelectG
 
-fromRelName :: Ir.RelName -> FromIr FieldName
+fromRelName :: Ir.RelName -> FromIr Text
 fromRelName relName =
-  pure (FieldName (Ir.relNameToTxt relName))
+  pure (Ir.relNameToTxt relName)
 
 --------------------------------------------------------------------------------
 -- Basic SQL expression types
@@ -398,7 +427,7 @@ fromSQLExp =
   \case
     Sql.SENull -> pure (ValueExpression Odbc.NullValue)
 
-fromGBoolExp :: Ir.GBoolExp Expression -> FromIr Expression
+fromGBoolExp :: Ir.GBoolExp Expression -> ReaderT EntityAlias FromIr Expression
 fromGBoolExp =
   \case
     Ir.BoolAnd expressions ->
@@ -415,11 +444,29 @@ fromGBoolExp =
 uncommented :: a -> Commented a
 uncommented a = Commented {commentedComment = Nothing, commentedThing = a}
 
-unaliased :: a -> Aliased a
-unaliased a = Aliased {aliasedAlias = Nothing, aliasedThing = a}
-
 --------------------------------------------------------------------------------
 -- Misc combinators
 
 trueExpression :: Expression
 trueExpression = ValueExpression (Odbc.BoolValue True)
+
+--------------------------------------------------------------------------------
+-- Constants
+
+jsonFieldName :: Text
+jsonFieldName = "json"
+
+existsFieldName :: Text
+existsFieldName = "exists_placeholder"
+
+--------------------------------------------------------------------------------
+-- Name generation
+
+generateEntityAlias :: FromIr Text
+generateEntityAlias = do
+  i <- FromIr get
+  FromIr (modify' (+1))
+  pure (T.pack ("table" <> show i))
+
+fromAlias :: From -> EntityAlias
+fromAlias (FromQualifiedTable Aliased {aliasedAlias}) = EntityAlias aliasedAlias

@@ -44,7 +44,8 @@ fromExpression =
     ColumnExpression fieldName -> fromFieldName fieldName
 
 fromFieldName :: FieldName -> Query
-fromFieldName (FieldName text) = fromString (T.unpack text)
+fromFieldName (FieldName {..}) =
+  fromNameText fieldNameEntity <> "." <> fromNameText fieldName
 
 fromSelect :: Select -> Query
 fromSelect Select {..} =
@@ -61,7 +62,7 @@ fromSelect Select {..} =
            (map
               (\Join {..} ->
                  " OUTER APPLY (" <> fromSelect joinSelect <> ") AS " <>
-                 fromFieldName joinFieldName)
+                 fromNameText joinAlias)
               selectJoins)
        , fromWhere selectWhere
        , fromFor selectFor
@@ -125,27 +126,20 @@ fromFrom :: From -> Query
 fromFrom =
   \case
     FromQualifiedTable aliasedQualifiedTableName ->
-      fromAliased
-        (fmap (fromQualified . fmap fromTableName) aliasedQualifiedTableName)
+      fromAliased (fmap fromTableName aliasedQualifiedTableName)
 
 fromTableName :: TableName -> Query
-fromTableName TableName {tableNameText} = fromNameText tableNameText
+fromTableName TableName {tableName, tableNameSchema} =
+  fromNameText tableNameSchema <> "." <> fromNameText tableName
 
 fromAliased :: Aliased Query -> Query
 fromAliased Aliased {..} =
   aliasedThing <>
-  maybe mempty ((" AS " <>) . fromAlias) aliasedAlias
-
-fromQualified :: Qualified Query -> Query
-fromQualified Qualified {..} =
-  maybe mempty ((<> ".") . fromSchemaName) qualifiedSchemaName <> qualifiedThing
+  ((" AS " <>) . fromNameText) aliasedAlias
 
 fromSchemaName :: SchemaName -> Query
 fromSchemaName SchemaName {schemaNameParts} =
   mconcat (intersperse "." (map fromNameText schemaNameParts))
-
-fromAlias :: Alias -> Query
-fromAlias (Alias text) = fromNameText text
 
 fromNameText :: Text -> Query
 fromNameText t = "[" <> fromString (T.unpack t) <> "]"

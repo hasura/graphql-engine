@@ -29,7 +29,7 @@ data Projection
 
 data Join = Join
   { joinSelect :: !Select
-  , joinFieldName :: !FieldName
+  , joinAlias :: !Text
   } deriving (Eq, Show)
 
 data Where
@@ -65,33 +65,26 @@ data Countable
   deriving (Eq, Show)
 
 data From =
-  FromQualifiedTable (Aliased (Qualified TableName))
+  FromQualifiedTable (Aliased TableName)
   deriving (Eq, Show)
-
-data Qualified a = Qualified
-  { qualifiedThing :: !a
-  , qualifiedSchemaName :: !(Maybe SchemaName)
-  } deriving (Eq, Show, Functor)
 
 data Aliased a = Aliased
   { aliasedThing :: !a
-  , aliasedAlias :: !(Maybe Alias)
+  , aliasedAlias :: !Text
   } deriving (Eq, Show, Functor)
 
 newtype SchemaName = SchemaName
   { schemaNameParts :: [Text]
   } deriving (Eq, Show)
 
-newtype Alias = Alias
-  { aliasText :: Text
+data TableName = TableName
+  { tableName :: Text
+  , tableNameSchema :: Text
   } deriving (Eq, Show)
 
-newtype TableName = TableName
-  { tableNameText :: Text
-  } deriving (Eq, Show)
-
-newtype FieldName = FieldName
-  { fieldNameText :: Text
+data FieldName = FieldName
+  { fieldName :: Text
+  , fieldNameEntity :: !Text
   } deriving (Eq, Show)
 
 data Commented a = Commented
@@ -101,3 +94,7 @@ data Commented a = Commented
 
 data Comment = DueToPermission
   deriving (Eq, Show)
+
+newtype EntityAlias = EntityAlias
+  { entityAliasText :: Text
+  } deriving (Eq, Show)
