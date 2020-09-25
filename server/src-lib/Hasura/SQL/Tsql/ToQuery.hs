@@ -42,6 +42,8 @@ fromExpression =
     IsNullExpression expression ->
       "(" <> fromExpression expression <> ") IS NULL"
     ColumnExpression fieldName -> fromFieldName fieldName
+    EqualExpression x y ->
+      "(" <> fromExpression x <> ") = (" <> fromExpression y <> ")"
 
 fromFieldName :: FieldName -> Query
 fromFieldName (FieldName {..}) =
@@ -111,12 +113,11 @@ fromTop =
 fromWhere :: Where -> Query
 fromWhere =
   \case
-    NoWhere -> ""
-    ExpressionWhere expression ->
-      case collapse expression of
-        ValueExpression (BoolValue True) -> ""
-        collapsedExpression -> "WHERE " <> fromExpression collapsedExpression
-        -- Later move this to a rewrite module.
+    Where expressions ->
+      case (filter ((/= trueExpression) . collapse)) expressions of
+        [] -> ""
+        collapsedExpressions ->
+          "WHERE " <> fromExpression (AndExpression collapsedExpressions)
       where collapse (AndExpression [x]) = collapse x
             collapse (AndExpression []) = trueExpression
             collapse (OrExpression [x]) = collapse x

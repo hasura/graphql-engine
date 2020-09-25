@@ -33,10 +33,15 @@ data Join = Join
   , joinField :: !Text
   } deriving (Eq, Show)
 
-data Where
-  = NoWhere
-  | ExpressionWhere Expression
+newtype Where =
+  Where [Expression]
   deriving (Eq, Show)
+
+instance Monoid Where where
+  mempty = Where mempty
+
+instance Semigroup Where where
+  (Where x) <> (Where y) = Where (x <> y)
 
 data Top
   = NoTop
@@ -51,6 +56,7 @@ data Expression
   | SelectExpression Select
   | IsNullExpression Expression
   | ColumnExpression FieldName
+  | EqualExpression Expression Expression
   deriving (Eq, Show)
 
 data Aggregate

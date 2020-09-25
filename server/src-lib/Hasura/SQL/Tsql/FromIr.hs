@@ -17,6 +17,8 @@ import           Control.Monad.Trans.State.Strict
 import           Control.Monad.Validate
 import           Data.Foldable
 import           Data.HashMap.Strict (HashMap)
+import           Data.HashMap.Strict (HashMap)
+import qualified Data.HashMap.Strict as HM
 import           Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.List.NonEmpty as NE
 import           Data.Maybe
@@ -86,7 +88,7 @@ fromSelectRows annSelectG
       , selectProjections
       , selectFrom
       , selectJoins = mapMaybe fieldSourceJoin fieldSources
-      , selectWhere = ExpressionWhere filterExpression
+      , selectWhere = Where [filterExpression]
       , selectFor = JsonFor
       }
   where
@@ -125,7 +127,7 @@ fromSelectAggregate annSelectG = do
       , selectProjections
       , selectFrom
       , selectJoins = mapMaybe fieldSourceJoin fieldSources
-      , selectWhere = ExpressionWhere filterExpression
+      , selectWhere = Where [filterExpression]
       , selectFor = JsonFor
       }
   where
@@ -150,16 +152,6 @@ fromAnnBoolExpFld =
       expressions <- traverse (lift . fromOpExpG expression) opExpGs
       pure (AndExpression expressions)
 
--- TODO: Question: how do we associate/confirm that this column name
--- associates to an entity listed in the From list.
---
--- Example:
---
--- select x from a, b where f > 1;
---
--- We should have an explicit mapping from included entities to field
--- names of that entity.
---
 fromPGColumnInfo :: Ir.PGColumnInfo -> ReaderT EntityAlias FromIr Expression
 fromPGColumnInfo info = do
   name <- fromPGColumnName' info
@@ -189,7 +181,7 @@ fromGExists Ir.GExists {_geTable, _geWhere} = do
             ]
       , selectFrom
       , selectJoins = mempty
-      , selectWhere = ExpressionWhere whereExpression
+      , selectWhere = Where [whereExpression]
       , selectTop = uncommented NoTop
       , selectFor = NoFor
       }
@@ -295,14 +287,14 @@ fromAnnFieldsG (Ir.FieldName name, field) =
            JoinFieldSource
              (Aliased
                 {aliasedThing, aliasedAlias = name}))
-        (lift (fromObjectRelationSelectG objectRelationSelectG))
+        (fromObjectRelationSelectG objectRelationSelectG)
     Ir.AFArrayRelation arraySelectG ->
       fmap
         (\aliasedThing ->
            JoinFieldSource
              (Aliased
                 {aliasedThing, aliasedAlias = name}))
-        (lift (fromArraySelectG arraySelectG))
+        (fromArraySelectG arraySelectG)
     -- Vamshi said to ignore these three for now:
     Ir.AFNodeId {} -> lift (FromIr (refute (pure (FieldTypeUnsupportedForNow field))))
     Ir.AFRemote {} -> lift (FromIr (refute (pure (FieldTypeUnsupportedForNow field))))
@@ -353,18 +345,28 @@ fieldSourceJoin =
 --------------------------------------------------------------------------------
 -- Joins
 
--- TODO: field mappings.
-fromObjectRelationSelectG :: Ir.ObjectRelationSelectG Sql.SQLExp -> FromIr Join
+fromObjectRelationSelectG :: Ir.ObjectRelationSelectG Sql.SQLExp -> ReaderT EntityAlias FromIr Join
 fromObjectRelationSelectG annRelationSelectG = do
-  selectFrom <- fromQualifiedTable tableFrom
-  fieldSources <- runReaderT (traverse fromAnnFieldsG fields) (fromAlias selectFrom)
+  selectFrom <- lift (fromQualifiedTable tableFrom)
+  fieldSources <-
+    local (const ((fromAlias selectFrom))) (traverse fromAnnFieldsG fields)
   filterExpression <-
-    runReaderT (fromAnnBoolExp tableFilter) (fromAlias selectFrom)
+    local (const (fromAlias selectFrom)) (fromAnnBoolExp tableFilter)
   selectProjections <-
     case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
-      Nothing -> FromIr (refute (pure NoProjectionFields))
+      Nothing -> lift (FromIr (refute (pure NoProjectionFields)))
       Just ne -> pure ne
-  fieldName <- fromRelName aarRelationshipName
+  fieldName <- lift (fromRelName aarRelationshipName)
+  foreignKeyConditions <-
+    traverse
+      (\(from, to) -> do
+         fromFieldName <- fromPGCol from
+         toFieldName <- local (const (fromAlias selectFrom)) (fromPGCol to)
+         pure
+           (EqualExpression
+              (ColumnExpression fromFieldName)
+              (ColumnExpression toFieldName)))
+      (HM.toList mapping)
   pure
     Join
       { joinAlias = fieldName
@@ -375,7 +377,7 @@ fromObjectRelationSelectG annRelationSelectG = do
             , selectProjections
             , selectFrom
             , selectJoins = mapMaybe fieldSourceJoin fieldSources
-            , selectWhere = ExpressionWhere filterExpression
+            , selectWhere = Where (foreignKeyConditions <> [filterExpression])
             , selectFor = JsonFor
             }
       }
@@ -389,7 +391,7 @@ fromObjectRelationSelectG annRelationSelectG = do
                           , aarAnnSelect = annObjectSelectG :: Ir.AnnObjectSelectG Sql.SQLExp
                           } = annRelationSelectG
 
-fromArraySelectG :: Ir.ArraySelectG Sql.SQLExp -> FromIr Join
+fromArraySelectG :: Ir.ArraySelectG Sql.SQLExp -> ReaderT EntityAlias FromIr Join
 fromArraySelectG =
   \case
     Ir.ASSimple arrayRelationSelectG ->
@@ -397,15 +399,27 @@ fromArraySelectG =
     Ir.ASAggregate arrayAggregateSelectG ->
       error "Ir.ASAggregate arrayAggregateSelectG"
     select@Ir.ASConnection {} ->
-      FromIr (refute (pure (UnsupportedArraySelect select)))
+      lift (FromIr (refute (pure (UnsupportedArraySelect select))))
 
--- TODO: field mappings.
-fromArrayRelationSelectG :: Ir.ArrayRelationSelectG Sql.SQLExp -> FromIr Join
+fromArrayRelationSelectG :: Ir.ArrayRelationSelectG Sql.SQLExp -> ReaderT EntityAlias FromIr Join
 fromArrayRelationSelectG annRelationSelectG = do
-  fieldName <- fromRelName aarRelationshipName
-  select <- fromSelectRows annSelectG
-  pure
-    Join {joinAlias = fieldName, joinSelect = select, joinField = jsonFieldName}
+  fieldName <- lift (fromRelName aarRelationshipName)
+  select <- lift (fromSelectRows annSelectG)
+  joinSelect <-
+    do foreignKeyConditions <-
+         traverse
+           (\(from, to) -> do
+              fromFieldName <- fromPGCol from
+              toFieldName <-
+                local (const (fromAlias (selectFrom select))) (fromPGCol to)
+              pure
+                (EqualExpression
+                   (ColumnExpression fromFieldName)
+                   (ColumnExpression toFieldName)))
+           (HM.toList mapping)
+       pure
+         select {selectWhere = Where foreignKeyConditions <> selectWhere select}
+  pure Join {joinAlias = fieldName, joinSelect, joinField = jsonFieldName}
   where
     Ir.AnnRelationSelectG { aarRelationshipName
                           , aarColumnMapping = mapping :: HashMap Sql.PGCol Sql.PGCol
