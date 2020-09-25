@@ -64,7 +64,14 @@ fromSelect Select {..} =
                  fromFieldName joinFieldName)
               selectJoins)
        , fromWhere selectWhere
+       , fromFor selectFor
        ])
+
+fromFor :: For -> Query
+fromFor =
+  \case
+    NoFor -> ""
+    JsonFor -> "FOR JSON PATH"
 
 fromProjection :: Projection -> Query
 fromProjection =

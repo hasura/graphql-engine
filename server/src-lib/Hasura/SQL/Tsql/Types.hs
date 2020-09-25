@@ -13,7 +13,13 @@ data Select = Select
   , selectFrom :: !From
   , selectJoins :: ![Join]
   , selectWhere :: !Where
+  , selectFor :: !For
   } deriving (Eq, Show)
+
+data For
+  = JsonFor
+  | NoFor
+  deriving (Eq, Show)
 
 data Projection
   = ExpressionProjection (Aliased Expression)

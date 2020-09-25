@@ -75,6 +75,7 @@ fromSelectRows annSelectG
       , selectFrom
       , selectJoins = mapMaybe fieldSourceJoin fieldSources
       , selectWhere = ExpressionWhere filterExpression
+      , selectFor = JsonFor
       }
   where
     Ir.AnnSelectG {_asnFields, _asnFrom, _asnPerm, _asnArgs, _asnStrfyNum} =
@@ -109,6 +110,7 @@ fromSelectAggregate annSelectG = do
       , selectFrom
       , selectJoins = mapMaybe fieldSourceJoin fieldSources
       , selectWhere = ExpressionWhere filterExpression
+      , selectFor = JsonFor
       }
   where
     Ir.AnnSelectG {_asnFields, _asnFrom, _asnPerm, _asnArgs, _asnStrfyNum} =
@@ -162,6 +164,7 @@ fromGExists Ir.GExists {_geTable, _geWhere} = do
       , selectJoins = mempty
       , selectWhere = ExpressionWhere whereExpression
       , selectTop = uncommented NoTop
+      , selectFor = NoFor
       }
 
 fromQualifiedTable :: Sql.QualifiedObject Sql.TableName -> FromIr From
@@ -343,6 +346,7 @@ fromObjectRelationSelectG annRelationSelectG = do
             , selectFrom
             , selectJoins = mapMaybe fieldSourceJoin fieldSources
             , selectWhere = ExpressionWhere filterExpression
+            , selectFor = JsonFor
             }
       }
   where
