@@ -6,8 +6,10 @@ module Hasura.RQL.DML.Select.Internal
   )
 where
 
-import qualified Hasura.SQL.Tsql.FromIr as FromIr
 import           Control.Monad.Validate (runValidate)
+import qualified Hasura.SQL.Tsql.FromIr as FromIr
+import qualified Hasura.SQL.Tsql.ToQuery as ToQuery
+import qualified Database.ODBC.SQLServer as Odbc
 
 import           Control.Lens hiding (op)
 import           Control.Monad.Writer.Strict
@@ -937,11 +939,17 @@ generateSQLSelectFromArrayNode selectSource arraySelectNode joinCondition =
 
 mkAggregateSelect :: AnnAggregateSelect -> S.Select
 mkAggregateSelect simple =
-  mkAggregateSelect_ (trace
-     ("\nfromSelectAggregate =\n " <>
-      show simple <> "\n\n" <>
-      show (runValidate (FromIr.runFromIr (FromIr.fromSelectAggregate simple))) <> "\n")
-     simple)
+  mkAggregateSelect_
+    (trace
+       ("\nfromSelectAggregate =\n " <> show simple <> "\n\n" <>
+        show
+          (runValidate (FromIr.runFromIr (FromIr.fromSelectAggregate simple))) <>
+        "\n\n" <>
+        either (const "error")
+               (T.unpack . Odbc.renderQuery . ToQuery.fromSelect)
+               (runValidate (FromIr.runFromIr (FromIr.fromSelectAggregate simple))) <>
+        "\n")
+       simple)
 
 mkAggregateSelect_ :: AnnAggregateSelect -> S.Select
 mkAggregateSelect_ annAggSel =
@@ -963,9 +971,13 @@ mkSQLSelect agg simple =
   mkSQLSelect_
     agg
     (trace
-       ("\nfromSelectRows =\n " <>
-        show simple <> "\n\n" <>
-        show (runValidate (FromIr.runFromIr (FromIr.fromSelectRows simple))) <> "\n")
+       ("\nfromSelectRows =\n " <> show simple <> "\n\n" <>
+        show (runValidate (FromIr.runFromIr (FromIr.fromSelectRows simple))) <>
+        "\n\n" <>
+        either
+          (const "error")
+          (T.unpack . Odbc.renderQuery . ToQuery.fromSelect)
+          (runValidate (FromIr.runFromIr (FromIr.fromSelectRows simple))) <> "\n")
        simple)
 
 mkSQLSelect_ :: JsonAggSelect -> AnnSimpleSel -> S.Select

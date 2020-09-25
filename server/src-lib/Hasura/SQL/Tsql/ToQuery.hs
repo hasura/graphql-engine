@@ -19,6 +19,20 @@ fromExpression :: Expression -> Query
 fromExpression =
   \case
     ValueExpression value -> toSql value
+    AndExpression xs ->
+      mconcat
+        (intersperse " AND " (map (\x -> "(" <> fromExpression x <> ")") xs))
+    OrExpression xs ->
+      mconcat
+        (intersperse " OR " (map (\x -> "(" <> fromExpression x <> ")") xs))
+    NotExpression expression -> "NOT " <> (fromExpression expression)
+    SelectExpression select -> fromSelect select
+    IsNullExpression expression ->
+      "(" <> fromExpression expression <> ") IS NULL"
+    ColumnExpression fieldName -> fromFieldName fieldName
+
+fromFieldName :: FieldName -> Query
+fromFieldName (FieldName text) = fromString (T.unpack text)
 
 fromSelect :: Select -> Query
 fromSelect Select {..} =
@@ -27,9 +41,16 @@ fromSelect Select {..} =
        "\n"
        [ "SELECT"
        , fromCommented (fmap fromTop selectTop)
-       , mconcat (intersperse ", " (map fromProjection (toList selectProjections)))
+       , mconcat
+           (intersperse ", " (map fromProjection (toList selectProjections)))
        , "FROM"
        , fromFrom selectFrom
+       , mconcat
+           (map
+              (\Join {..} ->
+                 " OUTER APPLY (" <> fromSelect joinSelect <> ") AS " <>
+                 fromFieldName joinFieldName)
+              selectJoins)
        , fromWhere selectWhere
        ])
 
@@ -38,6 +59,28 @@ fromProjection =
   \case
     ExpressionProjection aliasedExpression ->
       fromAliased (fmap fromExpression aliasedExpression)
+    FieldNameProjection aliasedFieldName ->
+      fromAliased (fmap fromFieldName aliasedFieldName)
+    AggregateProjection aliasedAggregate ->
+      fromAliased (fmap fromAggregate aliasedAggregate)
+
+fromAggregate :: Aggregate -> Query
+fromAggregate =
+  \case
+    CountAggregate countable -> "COUNT(" <> fromCountable countable <> ")"
+    OpAggregate text fieldName ->
+      fromString (T.unpack text) <> "(" <> fromFieldName fieldName <> ")"
+    TextAggregate text -> fromExpression (ValueExpression (TextValue text))
+
+fromCountable :: Countable -> Query
+fromCountable =
+  \case
+    StarCountable -> "*"
+    NonNullFieldCountable fields ->
+      mconcat (intersperse ", " (map fromFieldName (toList fields)))
+    DistinctCountable fields ->
+      "DISTINCT " <>
+      mconcat (intersperse ", " (map fromFieldName (toList fields)))
 
 fromTop :: Top -> Query
 fromTop =
