@@ -1,5 +1,3 @@
-{-# LANGUAGE ApplicativeDo #-}
-
 -- | Translate from the DML to the TSql dialect.
 
 module Hasura.SQL.Tsql.FromIr
@@ -16,7 +14,6 @@ import           Control.Monad.Trans.Reader
 import           Control.Monad.Trans.State.Strict
 import           Control.Monad.Validate
 import           Data.Foldable
-import           Data.HashMap.Strict (HashMap)
 import           Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HM
 import           Data.List.NonEmpty (NonEmpty(..))
@@ -89,7 +86,7 @@ fromSelectRows annSelectG
       , selectFrom
       , selectJoins = mapMaybe fieldSourceJoin fieldSources
       , selectWhere = Where [filterExpression]
-      , selectFor = JsonFor
+      , selectFor = JsonFor JsonArray
       }
   where
     Ir.AnnSelectG {_asnFields, _asnFrom, _asnPerm, _asnArgs, _asnStrfyNum} =
@@ -128,7 +125,7 @@ fromSelectAggregate annSelectG = do
       , selectFrom
       , selectJoins = mapMaybe fieldSourceJoin fieldSources
       , selectWhere = Where [filterExpression]
-      , selectFor = JsonFor
+      , selectFor = JsonFor JsonSingleton
       }
   where
     Ir.AnnSelectG {_asnFields, _asnFrom, _asnPerm, _asnArgs, _asnStrfyNum} =
@@ -326,10 +323,13 @@ fieldSourceProjections =
     ColumnFieldSource name -> pure (FieldNameProjection name)
     JoinFieldSource aliasedJoin ->
       pure
-        (FieldNameProjection
+        (ExpressionProjection
            (fmap
               ((\alias ->
-                  FieldName {fieldName = jsonFieldName, fieldNameEntity = alias}) .
+                  JsonQueryExpression
+                    (ColumnExpression
+                       FieldName
+                         {fieldName = jsonFieldName, fieldNameEntity = alias})) .
                joinAlias)
               aliasedJoin))
     AggregateFieldSource aggregates -> fmap AggregateProjection aggregates
@@ -378,7 +378,7 @@ fromObjectRelationSelectG annRelationSelectG = do
             , selectFrom
             , selectJoins = mapMaybe fieldSourceJoin fieldSources
             , selectWhere = Where (foreignKeyConditions <> [filterExpression])
-            , selectFor = JsonFor
+            , selectFor = JsonFor JsonSingleton
             }
       }
   where

@@ -20,6 +20,7 @@ import           Prelude
 fromExpression :: Expression -> Query
 fromExpression =
   \case
+    JsonQueryExpression e -> "JSON_QUERY(" <> fromExpression e <> ")"
     ValueExpression value -> toSql value
     AndExpression xs ->
       mconcat
@@ -74,7 +75,11 @@ fromFor :: For -> Query
 fromFor =
   \case
     NoFor -> ""
-    JsonFor -> "FOR JSON PATH"
+    JsonFor cardinality ->
+      "FOR JSON PATH" <>
+      case cardinality of
+        JsonArray -> ""
+        JsonSingleton -> ", WITHOUT_ARRAY_WRAPPER"
 
 fromProjection :: Projection -> Query
 fromProjection =

@@ -17,8 +17,13 @@ data Select = Select
   } deriving (Eq, Show)
 
 data For
-  = JsonFor
+  = JsonFor JsonCardinality
   | NoFor
+  deriving (Eq, Show)
+
+data JsonCardinality
+  = JsonArray
+  | JsonSingleton
   deriving (Eq, Show)
 
 data Projection
@@ -57,6 +62,7 @@ data Expression
   | IsNullExpression Expression
   | ColumnExpression FieldName
   | EqualExpression Expression Expression
+  | JsonQueryExpression Expression
   deriving (Eq, Show)
 
 data Aggregate
