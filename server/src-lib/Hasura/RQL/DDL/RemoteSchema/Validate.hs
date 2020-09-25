@@ -1,11 +1,12 @@
 module Hasura.RQL.DDL.RemoteSchema.Validate (
-  validateRemoteSchema
+  resolveRoleBasedRemoteSchema
   ) where
 
 import           Control.Monad.Validate
 
 import           Hasura.Prelude
 import           Hasura.SQL.Types
+import           Hasura.RQL.Types              hiding (GraphQLType)
 import           Hasura.Server.Utils           (englishList)
 
 import qualified Data.HashMap.Strict           as Map
@@ -97,6 +98,8 @@ data RoleBasedSchemaValidationError
   | ObjectImplementsNonExistingInterfaces !G.Name !(NE.NonEmpty G.Name)
   -- ^ object-name
   | NonExistingEnumValues !G.Name !(NE.NonEmpty G.Name)
+  | MultipleSchemaDefinitionsFound
+  | MissingQueryRoot
   deriving (Show, Eq)
 
 showRoleBasedSchemaValidationError :: RoleBasedSchemaValidationError -> Text
@@ -141,6 +144,8 @@ showRoleBasedSchemaValidationError = \case
     "enum " <> enumName <<> " contains the following enum values that do not exist "
     <> " in the corresponding upstream remote enum" <>
     (englishList "and" $ fmap dquoteTxt nonExistentEnumVals)
+  MissingQueryRoot -> "query root does not exist in the schema definition"
+  MultipleSchemaDefinitionsFound -> "multiple schema definitions found"
 
 validateDirective
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
@@ -194,7 +199,7 @@ validateEnumTypeDefinition providedEnum upstreamEnum = do
   where
     G.EnumTypeDefinition _ providedName providedDirectives providedValueDefns = providedEnum
 
-    G.EnumTypeDefinition _ upstreamName upstreamDirectives upstreamValueDefns = upstreamEnum
+    G.EnumTypeDefinition _ _ upstreamDirectives upstreamValueDefns = upstreamEnum
 
     providedEnumValNames   = map (G.unEnumValue . G._evdName) $ providedValueDefns
 
@@ -434,50 +439,98 @@ validateObjectDefinitions providedObjects upstreamObjects providedInterfaces = d
   where
     upstreamObjectsMap = mapFromL G._otdName $ upstreamObjects
 
--- For the love of god, This function needs to be refactored :(
+validateSchemaDefinitions
+  :: (MonadValidate [RoleBasedSchemaValidationError] m)
+  => [G.SchemaDefinition]
+  -> m (G.Name, Maybe G.Name, Maybe G.Name)
+validateSchemaDefinitions [] =
+  -- The spec says that if a Schema document's root operation names
+  -- for the query root, mutation root and the subscription root are
+  -- "Query", "Mutation" and "Subscription", then it can be omitted
+  -- from the schema document.
+  -- https://spec.graphql.org/June2018/#sec-Root-Operation-Types
+  pure $ ($$(G.litName "Query"), Just $$(G.litName "Mutation"), Just $$(G.litName "Subscription"))
+validateSchemaDefinitions [schemaDefn] = do
+  let G.SchemaDefinition _ rootOpsTypes = schemaDefn
+      rootOpsTypesMap = mapFromL G._rotdOperationType rootOpsTypes
+      mQueryRootName = G._rotdOperationTypeType <$> Map.lookup G.OperationTypeQuery rootOpsTypesMap
+      mMutationRootName = G._rotdOperationTypeType <$> Map.lookup G.OperationTypeMutation rootOpsTypesMap
+      mSubscriptionRootName = G._rotdOperationTypeType <$> Map.lookup G.OperationTypeSubscription rootOpsTypesMap
+  queryRootName <-
+    onNothing mQueryRootName $
+      refute $ pure $ MissingQueryRoot
+  pure (queryRootName, mMutationRootName, mSubscriptionRootName)
+validateSchemaDefinitions _ = refute $ pure $ MultipleSchemaDefinitionsFound
+
+-- Construction of the `possibleTypes` map for interfaces, while parsing the
+-- user provided Schema document, it doesn't include the `possibleTypes`, so
+-- constructing here, manually.
+createPossibleTypesMap :: [G.ObjectTypeDefinition] -> HashMap G.Name [G.Name]
+createPossibleTypesMap objDefns =
+  let objMap = Map.fromList $ map (G._otdName &&& G._otdImplementsInterfaces) objDefns
+  in
+  Map.foldlWithKey' (\acc objTypeName interfaces ->
+                       let interfaceMap =
+                             Map.fromList $ map (\iface -> (iface, [objTypeName])) interfaces
+                       in
+                       Map.unionWith (<>) acc interfaceMap)
+                    mempty
+                    objMap
+
+getSchemaDocIntrospection
+  :: SchemaDocumentTypeDefinitions
+  -> (G.Name, Maybe G.Name, Maybe G.Name)
+  -> IntrospectionResult
+getSchemaDocIntrospection schemaDocTypeDefs (queryRoot, mutationRoot, subscriptionRoot) =
+  let scalarTypeDefs = map G.TypeDefinitionScalar scalars
+      objectTypeDefs = map G.TypeDefinitionObject objects
+      unionTypeDefs = map G.TypeDefinitionUnion unions
+      enumTypeDefs = map G.TypeDefinitionEnum enums
+      inpObjTypeDefs = map G.TypeDefinitionInputObject inpObjs
+
+      possibleTypesMap = createPossibleTypesMap objects
+      interfacesWithPossibleTypes = map (\iface ->
+                                           let name = G._itdName iface
+                                           in
+                                             iface
+                                               {G._itdPossibleTypes =
+                                                fromMaybe [] (Map.lookup name possibleTypesMap)})
+                                           interfaces
+      interfaceTypeDefs = map G.TypeDefinitionInterface $ interfacesWithPossibleTypes
+      modifiedTypeDefs =
+        scalarTypeDefs <> objectTypeDefs
+        <> interfaceTypeDefs <> unionTypeDefs
+        <> enumTypeDefs <> inpObjTypeDefs
+      schemaIntrospection = G.SchemaIntrospection modifiedTypeDefs
+  in IntrospectionResult schemaIntrospection queryRoot mutationRoot subscriptionRoot
+  where
+    SchemaDocumentTypeDefinitions scalars objects interfaces
+                            unions enums inpObjs _ = schemaDocTypeDefs
+
 validateRemoteSchema
   :: ( MonadValidate [RoleBasedSchemaValidationError] m)
   => G.SchemaDocument
   -> G.SchemaIntrospection
-  -> m G.SchemaIntrospection
-validateRemoteSchema (G.SchemaDocument typeSystemDefinitions) x@(G.SchemaIntrospection upstreamSchemaTypes) = do
+  -> m IntrospectionResult
+validateRemoteSchema (G.SchemaDocument providedTypeDefns) (G.SchemaIntrospection upstreamTypeDefns) = do
   let
     (_, providedTypes) = flip runState emptySchemaDocTypeDefinitions $
-                      traverse resolveTypeSystemDefinitions typeSystemDefinitions
+                      traverse resolveTypeSystemDefinitions providedTypeDefns
     (_, upstreamTypes) = flip runState emptySchemaDocTypeDefinitions $
-                      traverse resolveSchemaIntrospection upstreamSchemaTypes
-    objDefs = _sdtdObjects providedTypes
-    possibleTypesMap = createPossibleTypesMap objDefs
-    interfaceDefsWithPossibleTypes = map (\iface -> -- UGH!
-                                            let name = G._itdName iface
-                                            in
-                                            iface
-                                              {G._itdPossibleTypes =
-                                                 fromMaybe [] (Map.lookup name possibleTypesMap)})
+                      traverse resolveSchemaIntrospection upstreamTypeDefns
     providedInterfacesList = map G._itdName $ _sdtdInterfaces providedTypes
+  rootTypeNames <- validateSchemaDefinitions $ _sdtdSchemaDef providedTypes
   validateScalarDefinitions (_sdtdScalars providedTypes) (_sdtdScalars upstreamTypes)
   validateObjectDefinitions (_sdtdObjects providedTypes) (_sdtdObjects upstreamTypes) $ S.fromList providedInterfacesList
   validateInterfaceDefinitions (_sdtdInterfaces providedTypes) (_sdtdInterfaces upstreamTypes)
   validateUnionTypeDefinitions (_sdtdUnions providedTypes) (_sdtdUnions upstreamTypes)
   validateEnumTypeDefinitions (_sdtdEnums providedTypes) (_sdtdEnums upstreamTypes)
   validateInputObjectTypeDefinitions (_sdtdInputObjects providedTypes) (_sdtdInputObjects upstreamTypes)
-  return x
+  pure $ getSchemaDocIntrospection providedTypes rootTypeNames
   where
-    -- Construction of the `possibleTypes` map for interfaces, while parsing the
-    -- user provided Schema document, it doesn't include the `possibleTypes`, so
-    -- constructing here, manually.
-    createPossibleTypesMap :: [G.ObjectTypeDefinition] -> HashMap G.Name [G.Name]
-    createPossibleTypesMap objDefns =
-      let objMap = Map.fromList $ map (G._otdName &&& G._otdImplementsInterfaces) objDefns
-      in
-      Map.foldlWithKey' (\acc objTypeName interfaces ->
-                           let interfaceMap =
-                                 Map.fromList $ map (\iface -> (iface, [objTypeName])) interfaces
-                           in
-                           Map.unionWith (<>) acc interfaceMap)
-                        mempty
-                        objMap
+    emptySchemaDocTypeDefinitions = SchemaDocumentTypeDefinitions [] [] [] [] [] [] []
 
+    -- For the love of god, This function needs to be refactored :(
     resolveTypeDefinition :: G.TypeDefinition () -> State SchemaDocumentTypeDefinitions ()
     resolveTypeDefinition (G.TypeDefinitionScalar scalarDefn) =
       modify (\td -> td {_sdtdScalars = ((:) scalarDefn) . _sdtdScalars $ td})
@@ -501,4 +554,21 @@ validateRemoteSchema (G.SchemaDocument typeSystemDefinitions) x@(G.SchemaIntrosp
     resolveSchemaIntrospection :: G.TypeDefinition [G.Name] -> State SchemaDocumentTypeDefinitions ()
     resolveSchemaIntrospection typeDef = resolveTypeDefinition (typeDef $> ())
 
-    emptySchemaDocTypeDefinitions = SchemaDocumentTypeDefinitions [] [] [] [] [] [] []
+resolveRoleBasedRemoteSchema
+  :: (MonadError QErr m)
+  => G.SchemaDocument
+  -> G.SchemaIntrospection
+  -> m IntrospectionResult
+resolveRoleBasedRemoteSchema providedSchemaDoc upstreamSchemaIntrospection = do
+  either (throw400 InvalidRoleBasedRemoteSchema . showErrors) pure
+    =<< runValidateT (validateRemoteSchema providedSchemaDoc upstreamSchemaIntrospection)
+  where
+    showErrors :: [RoleBasedSchemaValidationError] -> Text
+    showErrors errors =
+      "validation for the given role-based schema failed " <> reasonsMessage
+      where
+        reasonsMessage = case errors of
+          [] -> "" -- this case is impossible
+          [singleError] -> "because " <> showRoleBasedSchemaValidationError singleError
+          _ -> "for the following reasons:\n" <> T.unlines
+             (map (("  • " <>) . showRoleBasedSchemaValidationError) errors)

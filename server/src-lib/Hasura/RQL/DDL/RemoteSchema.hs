@@ -21,6 +21,7 @@ import           Hasura.GraphQL.RemoteServer
 -- import           Hasura.GraphQL.Schema.Merge
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Deps
+import           Hasura.RQL.DDL.RemoteSchema.Validate
 
 import qualified Data.Aeson                  as J
 import qualified Data.HashMap.Strict         as Map
@@ -66,14 +67,17 @@ runAddRemoteSchemaPermissions
   -> m EncJSON
 runAddRemoteSchemaPermissions q = do
   remoteSchemaMap <- scRemoteSchemas <$> askSchemaCache
-  void $ onNothing (Map.lookup name remoteSchemaMap) $
-    throw400 NotExists "no such remote schema"
+  upstreamRemoteSchema <-
+    onNothing (Map.lookup name remoteSchemaMap) $
+      throw400 NotExists "no such remote schema"
+  resolveRoleBasedRemoteSchema providedSchemaDoc $ irDoc $ rscIntro upstreamRemoteSchema
   liftTx $ addRemoteSchemaPermissionsToCatalog q
---  TODO: validate the remote schema against the original remote schema
 --  buildSchemaCacheFor $ MORemoteSchema name
   pure successMsg
   where
     name = _arspRemoteSchema q
+
+    providedSchemaDoc = _rspdSchema $ _arspDefinition q
 
 addRemoteSchemaP1
   :: (QErrM m, CacheRM m)

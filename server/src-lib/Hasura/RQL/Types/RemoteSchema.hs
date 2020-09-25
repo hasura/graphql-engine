@@ -117,7 +117,7 @@ data RemoteSchemaPermissionDefinition
   = RemoteSchemaPermissionDefinition
   { _rspdSchema    :: !G.SchemaDocument
     -- FIXME: not sure, if this is a hack (to store the "raw" schema) in a Text field
-    -- rather than generating the `schema` again from `_rspdSchema`. Event if it were
+    -- rather than generating the `schema` again from `_rspdSchema`. Even, if it were
     -- to be done, the result will be exactly the same!
   , _rspdRawSchema :: !Text
   }  deriving (Show, Eq, Lift, Generic)
