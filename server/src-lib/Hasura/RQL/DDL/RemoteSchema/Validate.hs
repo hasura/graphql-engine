@@ -7,7 +7,7 @@ import           Control.Monad.Validate
 import           Hasura.Prelude
 import           Hasura.SQL.Types
 import           Hasura.RQL.Types              hiding (GraphQLType)
-import           Hasura.Server.Utils           (englishList)
+import           Hasura.Server.Utils           (englishList, duplicates)
 
 import qualified Data.HashMap.Strict           as Map
 import qualified Language.GraphQL.Draft.Syntax as G
@@ -100,6 +100,7 @@ data RoleBasedSchemaValidationError
   | NonExistingEnumValues !G.Name !(NE.NonEmpty G.Name)
   | MultipleSchemaDefinitionsFound
   | MissingQueryRoot
+  | DuplicateTypeNames !(NE.NonEmpty G.Name)
   deriving (Show, Eq)
 
 showRoleBasedSchemaValidationError :: RoleBasedSchemaValidationError -> Text
@@ -146,6 +147,9 @@ showRoleBasedSchemaValidationError = \case
     (englishList "and" $ fmap dquoteTxt nonExistentEnumVals)
   MissingQueryRoot -> "query root does not exist in the schema definition"
   MultipleSchemaDefinitionsFound -> "multiple schema definitions found"
+  DuplicateTypeNames typeNames ->
+    "duplicate type names found: "
+    <> (englishList "and" $ fmap dquoteTxt typeNames)
 
 validateDirective
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
@@ -519,6 +523,9 @@ validateRemoteSchema (G.SchemaDocument providedTypeDefns) (G.SchemaIntrospection
     (_, upstreamTypes) = flip runState emptySchemaDocTypeDefinitions $
                       traverse resolveSchemaIntrospection upstreamTypeDefns
     providedInterfacesList = map G._itdName $ _sdtdInterfaces providedTypes
+    duplicateTypesList = duplicateTypes providedTypes
+  onJust (NE.nonEmpty duplicateTypesList) $ \duplicateTypeNames ->
+    refute $ pure $ DuplicateTypeNames duplicateTypeNames
   rootTypeNames <- validateSchemaDefinitions $ _sdtdSchemaDef providedTypes
   validateScalarDefinitions (_sdtdScalars providedTypes) (_sdtdScalars upstreamTypes)
   validateObjectDefinitions (_sdtdObjects providedTypes) (_sdtdObjects upstreamTypes) $ S.fromList providedInterfacesList
@@ -553,6 +560,11 @@ validateRemoteSchema (G.SchemaDocument providedTypeDefns) (G.SchemaIntrospection
 
     resolveSchemaIntrospection :: G.TypeDefinition [G.Name] -> State SchemaDocumentTypeDefinitions ()
     resolveSchemaIntrospection typeDef = resolveTypeDefinition (typeDef $> ())
+
+    duplicateTypes (SchemaDocumentTypeDefinitions scalars objs ifaces unions enums inpObjs _) =
+      duplicates $
+      (map G._stdName scalars) <> (map G._otdName objs) <> (map G._itdName ifaces)
+      <> (map G._utdName unions) <> (map G._etdName enums) <> (map G._iotdName inpObjs)
 
 resolveRoleBasedRemoteSchema
   :: (MonadError QErr m)
