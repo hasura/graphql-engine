@@ -5,6 +5,7 @@ module Hasura.GraphQL.Transport.HTTP
   , runGQ
   , runGQBatched
   , extractFieldFromResponse
+  , buildRaw
   -- * imported from HTTP.Protocol; required by pro
   , GQLReq(..)
   , GQLReqUnparsed
@@ -31,6 +32,7 @@ import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 import           Hasura.Tracing                         (MonadTrace, TraceT, trace)
 
+import qualified Data.Aeson                             as J
 import qualified Data.Aeson.Ordered                     as JO
 import qualified Data.ByteString.Lazy                   as LBS
 import qualified Data.Environment                       as Env
@@ -113,10 +115,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             return $ ResultsFragment telemTimeIO_DT Telem.Local resp respHdrs
           E.ExecStepRemote (rsi, opDef, varValsM) ->
             runRemoteGQ fieldName rsi opDef varValsM
-          E.ExecStepRaw json -> doQErr $ do
-            let obj = encJFromJValue json
-                telemTimeIO_DT = 0
-            return $ ResultsFragment telemTimeIO_DT Telem.Local obj []
+          E.ExecStepRaw json ->
+            buildRaw json
         buildResult Telem.Query conclusion
 
       E.MutationExecutionPlan mutationPlans -> do
@@ -126,10 +126,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             return $ ResultsFragment telemTimeIO_DT Telem.Local resp responseHeaders
           E.ExecStepRemote (rsi, opDef, varValsM) ->
             runRemoteGQ fieldName rsi opDef varValsM
-          E.ExecStepRaw json -> doQErr $ do
-            let obj = encJFromJValue json
-                telemTimeIO_DT = 0
-            return $ ResultsFragment telemTimeIO_DT Telem.Local obj []
+          E.ExecStepRaw json ->
+            buildRaw json
         buildResult Telem.Mutation conclusion
 
       E.SubscriptionExecutionPlan _sub ->
@@ -157,9 +155,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
       ( telemType
       , 0
       , Telem.Remote
-      , HttpResponse
-        (encodeGQResp $ throwError $ err)
-        []
+      , HttpResponse (encodeGQResp $ throwError $ err) []
       )
     buildResult _telemType (Left (Right err)) = throwError err
     buildResult telemType (Right results) = pure
@@ -195,6 +191,12 @@ extractFieldFromResponse fieldName bs = do
   where
     doQErr = withExceptT Right
     doGQExecError = withExceptT Left
+
+buildRaw :: Applicative m => J.Value -> m ResultsFragment
+buildRaw json = do
+  let obj = encJFromJValue json
+      telemTimeIO_DT = 0
+  pure $ ResultsFragment telemTimeIO_DT Telem.Local obj []
 
 -- | Run (execute) a batched GraphQL query (see 'GQLBatchedReqs')
 runGQBatched
