@@ -29,12 +29,14 @@ data SchemaDocumentTypeDefinitions
 data FieldDefinitionType
   = ObjectField
   | InterfaceField
+  | EnumField
   deriving (Show, Eq)
 
 instance DQuote FieldDefinitionType where
   dquoteTxt = \case
     ObjectField    -> "Object"
     InterfaceField -> "Interface"
+    EnumField      -> "Enum"
 
 data ArgumentDefinitionType
   = InputObjectArgument
@@ -69,6 +71,7 @@ instance DQuote GraphQLType where
     Directive                    -> "Directive"
     Field ObjectField            -> "Object field"
     Field InterfaceField         -> "Interface field"
+    Field EnumField              -> "Enum field"
     Argument InputObjectArgument -> "Input object argument"
     Argument DirectiveArgument   -> "Directive Argument"
 
@@ -87,7 +90,7 @@ data RoleBasedSchemaValidationError
   -- ^ input-object-name - argument-name
   | NonExistingDirectiveArgument !G.Name !GraphQLType !G.Name !(NonEmpty G.Name)
   -- ^ parent-name - parent-type - directive-name - [argument-name]
-  | NonExistingField !G.Name !FieldDefinitionType !G.Name
+  | NonExistingField !(FieldDefinitionType, G.Name) !G.Name
   -- ^ parent-type-name - "object/interface" - provided-name
   | NonExistingScalar !G.Name
   | NonExistingUnionMemberTypes !G.Name !(NE.NonEmpty G.Name)
@@ -100,6 +103,10 @@ data RoleBasedSchemaValidationError
   | MultipleSchemaDefinitionsFound
   | MissingQueryRoot
   | DuplicateTypeNames !(NE.NonEmpty G.Name)
+  | DuplicateDirectives !(GraphQLType, G.Name) !(NE.NonEmpty G.Name)
+  | DuplicateFields !(FieldDefinitionType, G.Name) !(NE.NonEmpty G.Name)
+  | DuplicateArguments !G.Name !(NE.NonEmpty G.Name)
+  | DuplicateEnumValues !G.Name !(NE.NonEmpty G.Name)
   deriving (Show, Eq)
 
 showRoleBasedSchemaValidationError :: RoleBasedSchemaValidationError -> Text
@@ -123,7 +130,7 @@ showRoleBasedSchemaValidationError = \case
     <> parentName <<> " of type "
     <> parentType <<> " do not exist in the corresponding upstream directive: "
     <> (englishList "and" $ fmap dquoteTxt nonExistingArgs)
-  NonExistingField parentTypeName fldDefnType providedName ->
+  NonExistingField (parentTypeName, fldDefnType) providedName ->
     "field " <> providedName <<> " does not exist in the type:" <> parentTypeName
     <<> "(" <> fldDefnType <<> ")"
   NonExistingScalar scalarName ->
@@ -149,6 +156,19 @@ showRoleBasedSchemaValidationError = \case
   DuplicateTypeNames typeNames ->
     "duplicate type names found: "
     <> (englishList "and" $ fmap dquoteTxt typeNames)
+  DuplicateDirectives (parentType, parentName) directiveNames ->
+    "duplicate directives: " <> (englishList "and" $ fmap dquoteTxt directiveNames)
+    <> "found in the " <> parentType <<> " " <>> parentName
+  DuplicateFields (parentType, parentName) fieldNames ->
+    "duplicate fields: " <> (englishList "and" $ fmap dquoteTxt fieldNames)
+    <> "found in the " <> parentType <<> " " <>> parentName
+  DuplicateArguments fieldName args ->
+    "duplicate arguments: "
+    <> (englishList "and" $ fmap dquoteTxt args)
+    <> "found in the field: " <>> fieldName
+  DuplicateEnumValues enumName enumValues ->
+    "duplicate enum values: " <> (englishList "and" $ fmap dquoteTxt enumValues)
+    <> " found in the " <> enumName <<> " enum"
 
 validateDirective
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
@@ -174,13 +194,15 @@ validateDirectives
   -> [G.Directive a]
   -> (GraphQLType, G.Name)
   -> m ()
-validateDirectives providedDirectives originalDirectives gType =
+validateDirectives providedDirectives originalDirectives parentType = do
+  onJust (NE.nonEmpty $ duplicates $ map G._dName providedDirectives) $ \dups -> do
+    refute $ pure $ DuplicateDirectives parentType dups
   flip traverse_ providedDirectives $ \dir -> do
     let directiveName = G._dName dir
     originalDir <-
       onNothing (Map.lookup directiveName originalDirectivesMap) $
         refute $ pure $ FieldDoesNotExist Directive directiveName
-    validateDirective dir originalDir gType
+    validateDirective dir originalDir parentType
   where
     originalDirectivesMap = mapFromL G._dName originalDirectives
 
@@ -197,6 +219,8 @@ validateEnumTypeDefinition
   -> m ()
 validateEnumTypeDefinition providedEnum upstreamEnum = do
   validateDirectives providedDirectives upstreamDirectives $ (Enum, providedName)
+  onJust (NE.nonEmpty $ duplicates providedEnumValNames) $ \dups -> do
+    refute $ pure $ DuplicateEnumValues providedName dups
   onJust (NE.nonEmpty $ S.toList fieldsDifference) $ \nonExistingEnumVals ->
     dispute $ pure $ NonExistingEnumValues providedName nonExistingEnumVals
   where
@@ -232,12 +256,12 @@ validateInputValueDefinition
   -> m ()
 validateInputValueDefinition providedDefn upstreamDefn inputObjectName = do
   when (providedType /= upstreamType) $
-    dispute $ pure $ NonMatchingType providedName (Argument InputObjectArgument) providedType upstreamType
+    dispute $ pure $
+      NonMatchingType providedName (Argument InputObjectArgument) providedType upstreamType
   when (providedDefaultValue /= upstreamDefaultValue) $
     dispute $ pure $
       NonMatchingDefaultValue inputObjectName providedName
                               upstreamDefaultValue providedDefaultValue
-  pure ()
   where
     G.InputValueDefinition _ providedName providedType providedDefaultValue = providedDefn
     G.InputValueDefinition _ _ upstreamType upstreamDefaultValue = upstreamDefn
@@ -249,6 +273,8 @@ validateArguments
   -> G.Name
   -> m ()
 validateArguments providedArgs upstreamArgs parentTypeName = do
+  onJust (NE.nonEmpty $ duplicates $ map G._ivdName providedArgs) $ \dups -> do
+    refute $ pure $ DuplicateArguments parentTypeName dups
   flip traverse_ providedArgs $ \providedArg@(G.InputValueDefinition _ name _ _) -> do
     upstreamArg <-
       onNothing (Map.lookup name upstreamArgsMap) $
@@ -263,7 +289,6 @@ validateInputObjectTypeDefinition
   -> G.InputObjectTypeDefinition
   -> m ()
 validateInputObjectTypeDefinition providedInputObj upstreamInputObj = do
-  -- 1. Validate the directives
   validateDirectives providedDirectives upstreamDirectives $ (InputObject, providedName)
   validateArguments providedArgs upstreamArgs $ providedName
   where
@@ -307,12 +332,14 @@ validateFieldDefinitions
   -> [G.FieldDefinition]
   -> (FieldDefinitionType, G.Name) -- ^ parent type and name
   -> m ()
-validateFieldDefinitions providedFldDefnitions upstreamFldDefinitions (parentType, parentTypeName) = do
+validateFieldDefinitions providedFldDefnitions upstreamFldDefinitions parentType = do
+  onJust (NE.nonEmpty $ duplicates $ map G._fldName providedFldDefnitions) $ \dups -> do
+    refute $ pure $ DuplicateFields parentType dups
   flip traverse_ providedFldDefnitions $ \fldDefn@(G.FieldDefinition _ name _ _ _) -> do
     upstreamFldDefn <-
       onNothing (Map.lookup name upstreamFldDefinitionsMap) $
-        refute $ pure $ NonExistingField parentTypeName parentType name
-    validateFieldDefinition fldDefn upstreamFldDefn $ (parentType, parentTypeName)
+        refute $ pure $ NonExistingField parentType name
+    validateFieldDefinition fldDefn upstreamFldDefn parentType
   where
     upstreamFldDefinitionsMap = mapFromL G._fldName upstreamFldDefinitions
 
