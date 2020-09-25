@@ -6,7 +6,6 @@ module Hasura.GraphQL.Execute.Prepare
   , ExecutionPlan
   , ExecutionStep(..)
   , initPlanningSt
-  , runPlan
   , prepareWithPlan
   , prepareWithoutPlan
   , validateSessionVariables
@@ -70,9 +69,6 @@ data PlanningSt
 initPlanningSt :: PlanningSt
 initPlanningSt =
   PlanningSt 2 Map.empty IntMap.empty Set.empty
-
-runPlan :: StateT PlanningSt m a -> m (a, PlanningSt)
-runPlan = flip runStateT initPlanningSt
 
 prepareWithPlan :: (MonadState PlanningSt m) => UnpreparedValue -> m S.SQLExp
 prepareWithPlan = \case
@@ -145,11 +141,11 @@ addPrepArg
   :: (MonadState PlanningSt m)
   => Int -> (Q.PrepArg, PGScalarValue) -> m ()
 addPrepArg argNum arg = do
-  PlanningSt curArgNum vars prepped sessionVariables <- get
-  put $ PlanningSt curArgNum vars (IntMap.insert argNum arg prepped) sessionVariables
+  prepped <- gets _psPrepped
+  modify {_psPrepped = IntMap.insert argNum arg prepped}
 
 getNextArgNum :: (MonadState PlanningSt m) => m Int
 getNextArgNum = do
-  PlanningSt curArgNum vars prepped sessionVariables <- get
-  put $ PlanningSt (curArgNum + 1) vars prepped sessionVariables
+  curArgNum <- gets _psArgNumber
+  modify {_psArgNumber = curArgNum + 1}
   return curArgNum
