@@ -83,7 +83,7 @@ type query_root {
 For input objects presets, we can allow user to customize the argument type by providing new input object types (the new input object should also be a subset of the original input object). This way some input fields can be preset and remaining can be exposed in the schema :
 
 ```
-input UserBoolExpForRole {
+input UserBoolExpForRole { # this is a new type defined by the user for just this role schema, it is a duplicate of 'UserBoolExp' but with a preset
    id: IntBoolExp @preset(value = { _eq: "x-hasura-user-id"}) # field "id" is removed from the exposed schema
    name: StringBoolExp
 }
@@ -100,6 +100,7 @@ Again, we will need to type check the preset values here. One problem to tackle 
 ## Points to be noted:
 
 1. This will be a breaking change as we want to give default "deny" all fields for remote schemas. We need to introduce a flag (as was done in #2690) to enable remote schema permissions explicitly.
+2. The first version can skip allowing new types in the role-based schema (e.g. second example in Argument Presets section).
 
 ## Future work
 
