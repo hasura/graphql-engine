@@ -254,7 +254,6 @@ getResolvedExecPlan env logger pgExecCtx {- planCache-} userInfo sqlGenCtx
       -- part of a GraphQL query. Here we make sure to remember those
       -- pre-defined sections, so that when we encounter a fragment spread
       -- later, we can inline it instead.
-      -- req <- toParsed reqUnparsed
       let takeFragment = \case G.ExecutableDefinitionFragment f -> Just f; _ -> Nothing
           fragments =
             mapMaybe takeFragment $ unGQLExecDoc $ _grQuery reqParsed
@@ -263,8 +262,6 @@ getResolvedExecPlan env logger pgExecCtx {- planCache-} userInfo sqlGenCtx
         G.TypedOperationDefinition G.OperationTypeQuery _ varDefs _ selSet -> do
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
-          -- (unpreparedQueries, _) <-
-          --   E.parseGraphQLQuery gCtx varDefs
           (execPlan,asts) {-, plan-} <-
             EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- See Note [Temporarily disabling query plan caching]
@@ -299,22 +296,7 @@ getResolvedExecPlan env logger pgExecCtx {- planCache-} userInfo sqlGenCtx
                 throw400 ValidationFailed "subscriptions must select one top level field"
           validSubscriptionAST <- for unpreparedAST validateSubscriptionRootField
           (lqOp, _plan) <- EL.buildLiveQueryPlan pgExecCtx userInfo validSubscriptionAST
-          -- getSubsOpM pgExecCtx userInfo inlinedSelSet
           return $ SubscriptionExecutionPlan lqOp
-
-      -- forM partialExecPlan $ \(gCtx, rootSelSet) ->
-      --   case rootSelSet of
-      --     VQ.RMutation selSet -> do
-      --       (tx, respHeaders) <- getMutOp gCtx sqlGenCtx userInfo httpManager reqHeaders selSet
-      --       pure $ ExOpMutation respHeaders tx
-      --     VQ.RQuery selSet -> do
-      --       (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo queryReusability (allowQueryActionExecuter httpManager reqHeaders) selSet
-      --       traverse_ (addPlanToCache . EP.RPQuery) plan
-      --       return $ ExOpQuery queryTx (Just genSql)
-      --     VQ.RSubscription fld -> do
-      --       (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability (restrictActionExecuter "query actions cannot be run as a subscription") fld
-      --       traverse_ (addPlanToCache . EP.RPSubs) plan
-      --       return $ ExOpSubs lqOp
 
 execRemoteGQ
   :: ( HasVersion
