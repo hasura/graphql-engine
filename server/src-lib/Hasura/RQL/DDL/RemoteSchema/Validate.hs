@@ -77,31 +77,42 @@ instance DQuote GraphQLType where
 
 data RoleBasedSchemaValidationError
   = NonMatchingType !G.Name !GraphQLType !G.GType !G.GType
-  -- gType - expected name - provided name
-  -- ^ error to indicate that an user provided
-  -- type differs from the type defined in the upstream
+  -- ^ error to indicate that a type provided by the user
+  -- differs from the corresponding type defined in the upstream
   -- remote schema
   | FieldDoesNotExist !GraphQLType !G.Name
-  -- ^ error to indicate when a single field doesn't exist
+  -- ^ error to indicate when a field doesn't exist
   -- in the upstream remote schema
   | NonMatchingDefaultValue !G.Name !G.Name !(Maybe (G.Value Void)) !(Maybe (G.Value Void))
-  -- ^ input-object-name - input-value-name - expected-def-val - provided-def-val
+  -- ^ error to indicate when the default value of an argument
+  -- differs from the default value of the corresponding argument
   | NonExistingInputArgument !G.Name !G.Name
-  -- ^ input-object-name - argument-name
+  -- ^ error to indicate when a given input argument doesn't exist
+  -- in the corresponding upstream input object
   | NonExistingDirectiveArgument !G.Name !GraphQLType !G.Name !(NonEmpty G.Name)
-  -- ^ parent-name - parent-type - directive-name - [argument-name]
+  -- ^ error to indicate when a given directive argument
+  -- doesn't exist in the corresponding upstream directive
   | NonExistingField !(FieldDefinitionType, G.Name) !G.Name
-  -- ^ parent-type-name - "object/interface" - provided-name
+  -- ^ error to indicate when a given field doesn't exist in a field type (Object/Interface)
   | NonExistingScalar !G.Name
   | NonExistingUnionMemberTypes !G.Name !(NE.NonEmpty G.Name)
-  -- ^ union name - extra-fields
+  -- ^ error to indicate when member types of an Union don't exist in the
+  -- corresponding upstream union
   | CustomInterfacesNotAllowed !G.Name !(NE.NonEmpty G.Name)
-  -- ^ object name - custom interfaces
+  -- ^ error to indicate when an object is trying to implement an interface
+  -- which exists in the schema document but the interface doesn't exist
+  -- in the upstream remote.
   | ObjectImplementsNonExistingInterfaces !G.Name !(NE.NonEmpty G.Name)
-  -- ^ object-name
+  -- ^ error to indicate when object implements interfaces that don't exist
   | NonExistingEnumValues !G.Name !(NE.NonEmpty G.Name)
+  -- ^ error to indicate enum values in an enum do not exist in the
+  -- corresponding upstream enum
   | MultipleSchemaDefinitionsFound
+  -- ^ error to indicate when the user provided schema contains more than
+  -- one schema definition
   | MissingQueryRoot
+  -- ^ error to indicate when the schema definition doesn't contain the
+  -- query root.
   | DuplicateTypeNames !(NE.NonEmpty G.Name)
   | DuplicateDirectives !(GraphQLType, G.Name) !(NE.NonEmpty G.Name)
   | DuplicateFields !(FieldDefinitionType, G.Name) !(NE.NonEmpty G.Name)
@@ -170,31 +181,36 @@ showRoleBasedSchemaValidationError = \case
     "duplicate enum values: " <> (englishList "and" $ fmap dquoteTxt enumValues)
     <> " found in the " <> enumName <<> " enum"
 
+-- | validateDirective checks if the arguments of a given directive
+--   are a subset of the corresponding upstream directive arguments
 validateDirective
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => G.Directive a -- ^ provided directive definition
   -> G.Directive a -- ^ original directive definition
   -> (GraphQLType, G.Name) -- ^ parent type and name
   -> m ()
-validateDirective providedDirective originalDirective (parentType, parentTypeName) = do
+validateDirective providedDirective upstreamDirective (parentType, parentTypeName) = do
   onJust (NE.nonEmpty $ Map.keys argsDiff) $ \argNames ->
     dispute $ pure $
       NonExistingDirectiveArgument parentTypeName parentType directiveName argNames
   where
-    argsDiff = Map.difference providedDirectiveArgs originalDirectiveArgs
+    argsDiff = Map.difference providedDirectiveArgs upstreamDirectiveArgs
 
     providedDirectiveArgs = G._dArguments providedDirective
-    originalDirectiveArgs = G._dArguments originalDirective
+    upstreamDirectiveArgs = G._dArguments upstreamDirective
 
     directiveName = G._dName providedDirective
 
+-- | validateDirectives checks if the `providedDirectives`
+-- are a subset of `upstreamDirectives` and then validate
+-- each of the directives by calling the `validateDirective`
 validateDirectives
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => [G.Directive a]
   -> [G.Directive a]
   -> (GraphQLType, G.Name)
   -> m ()
-validateDirectives providedDirectives originalDirectives parentType = do
+validateDirectives providedDirectives upstreamDirectives parentType = do
   onJust (NE.nonEmpty $ duplicates $ map G._dName providedDirectives) $ \dups -> do
     refute $ pure $ DuplicateDirectives parentType dups
   flip traverse_ providedDirectives $ \dir -> do
@@ -209,9 +225,14 @@ validateDirectives providedDirectives originalDirectives parentType = do
 getDifference :: (Eq a, Hashable a) => [a] -> [a] -> S.HashSet a
 getDifference left right = S.difference (S.fromList left) (S.fromList right)
 
--- helper function to check the validity of an enum definition
--- provided by the user against the enum definition defined
--- in the remote
+-- |  `validateEnumTypeDefinition` checks the validity of an enum definition
+-- provided by the user against the corresponding upstream enum.
+-- The function does the following things:
+-- 1. Validates the directives (if any)
+-- 2. For each enum provided, check if the enum values are a subset of
+--    the enum values of the corresponding upstream enum
+-- *NOTE*: This function assumes that the `providedEnum` and the `upstreamEnum`
+-- have the same name.
 validateEnumTypeDefinition
   :: ( MonadValidate [RoleBasedSchemaValidationError] m)
   => G.EnumTypeDefinition -- ^ provided enum type definition
@@ -234,6 +255,10 @@ validateEnumTypeDefinition providedEnum upstreamEnum = do
 
     fieldsDifference       = getDifference providedEnumValNames upstreamEnumValNames
 
+-- | `validateEnumTypeDefinitions` checks if the `providedEnums`
+-- is a subset of `upstreamEnums`. Then, each enum provided by
+-- the user is validated against the corresponding upstream enum
+-- by calling the `validateEnumTypeDefinition`
 validateEnumTypeDefinitions
   :: ( MonadValidate [RoleBasedSchemaValidationError] m)
   => [G.EnumTypeDefinition]
@@ -454,6 +479,8 @@ validateObjectDefinition providedObj upstreamObj interfacesDeclared = do
 
     nonExistingInterfaces = S.toList $ S.difference interfacesDiff providedIfacesSet
 
+-- | function to compare objects of the role based schema against the
+-- objects of the upstream remote schema.
 validateObjectDefinitions
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => [G.ObjectTypeDefinition]
@@ -469,6 +496,8 @@ validateObjectDefinitions providedObjects upstreamObjects providedInterfaces = d
   where
     upstreamObjectsMap = mapFromL G._otdName $ upstreamObjects
 
+-- | helper function to validate the schema definitions mentioned in the schema
+-- document.
 validateSchemaDefinitions
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => [G.SchemaDefinition]
@@ -492,7 +521,7 @@ validateSchemaDefinitions [schemaDefn] = do
   pure (queryRootName, mMutationRootName, mSubscriptionRootName)
 validateSchemaDefinitions _ = refute $ pure $ MultipleSchemaDefinitionsFound
 
--- Construction of the `possibleTypes` map for interfaces, while parsing the
+-- | Construction of the `possibleTypes` map for interfaces, while parsing the
 -- user provided Schema document, it doesn't include the `possibleTypes`, so
 -- constructing here, manually.
 createPossibleTypesMap :: [G.ObjectTypeDefinition] -> HashMap G.Name [G.Name]
@@ -507,6 +536,14 @@ createPossibleTypesMap objDefns =
                     mempty
                     objMap
 
+-- | getSchemaDocIntrospection converts the `SchemaDocumentTypeDefinitions` to
+-- `IntrospectionResult` because the function `buildRemoteParser` function which
+-- builds the remote schema parsers accepts an `IntrospectionResult`. The
+-- conversion involves converting `G.TypeDefinition ()` to `G.TypeDefinition
+-- [G.Name]`. The `[G.Name]` here being the list of object names that an
+-- interface implements. This is needed to be done here by-hand because while
+-- specifying the `SchemaDocument` through the GraphQL DSL, it doesn't include
+-- the `possibleTypes` along with an object.
 getSchemaDocIntrospection
   :: SchemaDocumentTypeDefinitions
   -> (G.Name, Maybe G.Name, Maybe G.Name)
@@ -537,6 +574,10 @@ getSchemaDocIntrospection schemaDocTypeDefs (queryRoot, mutationRoot, subscripti
     SchemaDocumentTypeDefinitions scalars objects interfaces
                             unions enums inpObjs _ = schemaDocTypeDefs
 
+-- | validateRemoteSchema accepts two arguments, the `SchemaDocument` of
+-- the role-based schema, that is provided by the user and the `SchemaIntrospection`
+-- of the upstream remote schema. This function, in turn calls the other validation
+-- functions for scalars, enums, unions, interfaces,input objects and objects.
 validateRemoteSchema
   :: ( MonadValidate [RoleBasedSchemaValidationError] m)
   => G.SchemaDocument
@@ -544,12 +585,15 @@ validateRemoteSchema
   -> m IntrospectionResult
 validateRemoteSchema (G.SchemaDocument providedTypeDefns) (G.SchemaIntrospection upstreamTypeDefns) = do
   let
+    -- Converting `[G.TypeSystemDefinition]` into `SchemaDocumentTypeDefinitions`
     (_, providedTypes) = flip runState emptySchemaDocTypeDefinitions $
                       traverse resolveTypeSystemDefinitions providedTypeDefns
+    -- Converting `[G.TypeDefinition [Name]]` into `SchemaDocumentTypeDefinitions`
     (_, upstreamTypes) = flip runState emptySchemaDocTypeDefinitions $
                       traverse resolveSchemaIntrospection upstreamTypeDefns
     providedInterfacesList = map G._itdName $ _sdtdInterfaces providedTypes
     duplicateTypesList = duplicateTypes providedTypes
+  -- check for duplicate type names
   onJust (NE.nonEmpty duplicateTypesList) $ \duplicateTypeNames ->
     refute $ pure $ DuplicateTypeNames duplicateTypeNames
   rootTypeNames <- validateSchemaDefinitions $ _sdtdSchemaDef providedTypes
