@@ -62,7 +62,7 @@ fromSelect Select {..} =
            (map
               (\Join {..} ->
                  " OUTER APPLY (" <> fromSelect joinSelect <> ") AS " <>
-                 fromNameText joinAlias)
+                 fromNameText joinAlias <> "(" <> fromNameText joinField <> ")")
               selectJoins)
        , fromWhere selectWhere
        , fromFor selectFor

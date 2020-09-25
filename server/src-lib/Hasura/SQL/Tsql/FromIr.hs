@@ -368,6 +368,7 @@ fromObjectRelationSelectG annRelationSelectG = do
   pure
     Join
       { joinAlias = fieldName
+      , joinField = jsonFieldName
       , joinSelect =
           Select
             { selectTop = uncommented NoTop
@@ -403,7 +404,8 @@ fromArrayRelationSelectG :: Ir.ArrayRelationSelectG Sql.SQLExp -> FromIr Join
 fromArrayRelationSelectG annRelationSelectG = do
   fieldName <- fromRelName aarRelationshipName
   select <- fromSelectRows annSelectG
-  pure Join {joinAlias = fieldName, joinSelect = select}
+  pure
+    Join {joinAlias = fieldName, joinSelect = select, joinField = jsonFieldName}
   where
     Ir.AnnRelationSelectG { aarRelationshipName
                           , aarColumnMapping = mapping :: HashMap Sql.PGCol Sql.PGCol

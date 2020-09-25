@@ -30,6 +30,7 @@ data Projection
 data Join = Join
   { joinSelect :: !Select
   , joinAlias :: !Text
+  , joinField :: !Text
   } deriving (Eq, Show)
 
 data Where
