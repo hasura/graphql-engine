@@ -54,18 +54,17 @@ class Monad m => MonadExecuteQuery m where
     -> [QueryRootField UnpreparedValue]
     -> Maybe EQ.PreparedSql
     -> PGExecCtx
-    -> Q.TxAccess
     -> TraceT (LazyTx QErr) EncJSON
     -> TraceT (ExceptT QErr m) (HTTP.ResponseHeaders, EncJSON)
 
 instance MonadExecuteQuery m => MonadExecuteQuery (ReaderT r m) where
-  executeQuery a b c d e f = hoist (hoist lift) $ executeQuery a b c d e f
+  executeQuery a b c d e = hoist (hoist lift) $ executeQuery a b c d e
 
 instance MonadExecuteQuery m => MonadExecuteQuery (ExceptT r m) where
-  executeQuery a b c d e f = hoist (hoist lift) $ executeQuery a b c d e f
+  executeQuery a b c d e = hoist (hoist lift) $ executeQuery a b c d e
 
 instance MonadExecuteQuery m => MonadExecuteQuery (TraceT m) where
-  executeQuery a b c d e f = hoist (hoist lift) $ executeQuery a b c d e f
+  executeQuery a b c d e = hoist (hoist lift) $ executeQuery a b c d e
 
 data ResultsFragment = ResultsFragment
   { rfTimeIO :: DiffTime
@@ -85,6 +84,7 @@ runGQ
      , MonadQueryLog m
      , MonadTrace m
      , MonadExecuteQuery m
+     , EQ.MonadQueryInstrumentation m
      )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -201,6 +201,7 @@ runGQBatched
      , MonadQueryLog m
      , MonadTrace m
      , MonadExecuteQuery m
+     , EQ.MonadQueryInstrumentation m
      )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -253,7 +254,7 @@ runQueryDB reqId (query, queryParsed) asts _userInfo (tx, _genSql) =  do
   E.ExecutionCtx logger _ pgExecCtx _ _ _ _ <- ask
   logQueryLog logger query Nothing reqId -- TODO genSql
   (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ trace "Query" $
-    Tracing.interpTraceT id $ executeQuery queryParsed asts Nothing pgExecCtx Q.ReadOnly tx -- TODO genSql
+    Tracing.interpTraceT id $ executeQuery queryParsed asts Nothing pgExecCtx tx -- TODO genSql
   (respHdrs,!resp) <- liftEither respE
   return (telemTimeIO, respHdrs, resp)
 

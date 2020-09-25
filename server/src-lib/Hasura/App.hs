@@ -50,6 +50,7 @@ import           Hasura.Eventing.ScheduledTrigger
 import           Hasura.GraphQL.Execute                    (MonadGQLExecutionCheck (..),
                                                             checkQueryInAllowlist)
 import           Hasura.GraphQL.Execute.Action             (asyncActionsProcessor)
+import           Hasura.GraphQL.Execute.Query              (MonadQueryInstrumentation(..), noProfile)
 import           Hasura.GraphQL.Logging                    (MonadQueryLog (..), QueryLog (..))
 import           Hasura.GraphQL.Transport.HTTP             (MonadExecuteQuery (..))
 import           Hasura.GraphQL.Transport.HTTP.Protocol    (toParsed)
@@ -302,6 +303,7 @@ runHGEServer
      , WS.MonadWSLog m
      , MonadExecuteQuery m
      , Tracing.HasReporter m
+     , MonadQueryInstrumentation m
      )
   => Env.Environment
   -> ServeOptions impl
@@ -617,6 +619,9 @@ execQuery env queryBs = do
 
 instance Tracing.HasReporter AppM
 
+instance MonadQueryInstrumentation AppM where
+  askInstrumentQuery _ = pure (id, noProfile)
+
 instance HttpLog AppM where
   logHttpError logger userInfoM reqId waiReq req qErr headers =
     unLogger logger $ mkHttpLog $
@@ -627,7 +632,7 @@ instance HttpLog AppM where
       mkHttpAccessLogContext userInfoM reqId waiReq compressedResponse qTime cType headers
 
 instance MonadExecuteQuery AppM where
-  executeQuery _ _  _ pgCtx _txAccess tx =
+  executeQuery _ _ _ pgCtx tx =
     ([],) <$> hoist (runQueryTx pgCtx) tx
 
 instance UserAuthentication (Tracing.TraceT AppM) where

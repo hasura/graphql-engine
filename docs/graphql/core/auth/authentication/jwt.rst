@@ -659,7 +659,7 @@ Generating JWT Config
 ---------------------
 
 The JWT Config to be used in env ``HASURA_GRAPHQL_JWT_SECRET`` or ``--jwt-secret`` flag can be generated using:
-https://hasura.io/jwt-config.
+https://hasura.io/jwt-config/.
 
 **Currently the UI supports generating config for Auth0 and Firebase**.
 

@@ -63,6 +63,7 @@ import           Hasura.Session
 import qualified Hasura.GraphQL.Execute                      as E
 import qualified Hasura.GraphQL.Execute.LiveQuery            as LQ
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll       as LQ
+import qualified Hasura.GraphQL.Execute.Query                as EQ
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
 import qualified Hasura.Logging                              as L
 import qualified Hasura.Server.Telemetry.Counters            as Telem
@@ -316,6 +317,7 @@ onStart
   , MonadQueryLog m
   , Tracing.MonadTrace m
   , MonadExecuteQuery m
+  , EQ.MonadQueryInstrumentation m
   )
   => Env.Environment -> WSServerEnv -> WSConn -> StartMsg -> m ()
 onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
@@ -353,7 +355,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       conclusion <- runExceptT $ forWithKey queryPlan $ \fieldName -> \case
         E.ExecStepDB (tx, genSql) -> doQErr $ Tracing.trace "Query" $ do
           (telemTimeIO_DT, (respHdrs, resp)) <- Tracing.interpTraceT id $ withElapsedTime $
-            executeQuery reqParsed asts genSql pgExecCtx Q.ReadOnly tx
+            executeQuery reqParsed asts genSql pgExecCtx tx
           return $ ResultsFragment telemTimeIO_DT Telem.Local resp respHdrs
         E.ExecStepRemote (rsi, opDef, varValsM) -> do
           runRemoteGQ fieldName execCtx requestId userInfo reqHdrs opDef rsi varValsM
@@ -497,6 +499,7 @@ onMessage
      , MonadQueryLog m
      , Tracing.HasReporter m
      , MonadExecuteQuery m
+     , EQ.MonadQueryInstrumentation m
      )
   => Env.Environment
   -> AuthMode
@@ -686,6 +689,7 @@ createWSServerApp
      , MonadQueryLog m
      , Tracing.HasReporter m
      , MonadExecuteQuery m
+     , EQ.MonadQueryInstrumentation m
      )
   => Env.Environment
   -> AuthMode
