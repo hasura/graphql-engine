@@ -13,7 +13,7 @@ BINARY=${BUILD_DIR}/_cli_output/binaries/cli-hasura-linux-amd64
 CLI_EXT_BINARY_NAME=cli-ext-hasura-linux.tar.gz
 CLI_EXT_LINUX_BINARY_PATH=${BUILD_DIR}/_cli_ext_output/${CLI_EXT_BINARY_NAME}
 CLI_EXT_MANIFEST_FILE=${BUILD_DIR}/_cli_ext_output/manifest.yaml
-TEMPLATE_CLI_EXT_INDEX_DIR='hasura-home-dir-tmpl/plugins/index/cli-ext'
+TEMPLATE_CLI_EXT_INDEX_DIR='hasura-home-dir-tmpl/plugins/index/plugins/cli-ext'
 
 cp ${BINARY} .
 # copy linux binary 
