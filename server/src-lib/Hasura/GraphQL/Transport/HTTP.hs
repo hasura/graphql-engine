@@ -4,6 +4,7 @@ module Hasura.GraphQL.Transport.HTTP
   ( MonadExecuteQuery(..)
   , runGQ
   , runGQBatched
+  , extractFieldFromResponse
   -- * imported from HTTP.Protocol; required by pro
   , GQLReq(..)
   , GQLReqUnparsed
@@ -105,31 +106,31 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                                  httpManager reqHeaders (reqUnparsed, reqParsed)
     case execPlan of
       E.QueryExecutionPlan queryPlans asts -> do
-        results <- forWithKey queryPlans $ \fieldName -> \case
-          E.ExecStepDB txGenSql -> do
+        conclusion <- runExceptT $ forWithKey queryPlans $ \fieldName -> \case
+          E.ExecStepDB txGenSql -> doQErr $ do
             (telemTimeIO_DT, respHdrs, resp) <-
               runQueryDB reqId (reqUnparsed,reqParsed) asts userInfo txGenSql
             return $ ResultsFragment telemTimeIO_DT Telem.Local resp respHdrs
           E.ExecStepRemote (rsi, opDef, varValsM) ->
             runRemoteGQ fieldName rsi opDef varValsM
-          E.ExecStepRaw json -> do
+          E.ExecStepRaw json -> doQErr $ do
             let obj = encJFromJValue json
                 telemTimeIO_DT = 0
             return $ ResultsFragment telemTimeIO_DT Telem.Local obj []
-        return $ buildResult Telem.Query results
+        buildResult Telem.Query conclusion
 
       E.MutationExecutionPlan mutationPlans -> do
-        results <- forWithKey mutationPlans $ \fieldName -> \case
-          E.ExecStepDB (tx, responseHeaders) -> do
+        conclusion <- runExceptT $ forWithKey mutationPlans $ \fieldName -> \case
+          E.ExecStepDB (tx, responseHeaders) -> doQErr $ do
             (telemTimeIO_DT, resp) <- runMutationDB reqId reqUnparsed userInfo tx
             return $ ResultsFragment telemTimeIO_DT Telem.Local resp responseHeaders
           E.ExecStepRemote (rsi, opDef, varValsM) ->
             runRemoteGQ fieldName rsi opDef varValsM
-          E.ExecStepRaw json -> do
+          E.ExecStepRaw json -> doQErr $ do
             let obj = encJFromJValue json
                 telemTimeIO_DT = 0
             return $ ResultsFragment telemTimeIO_DT Telem.Local obj []
-        return $ buildResult Telem.Mutation results
+        buildResult Telem.Mutation conclusion
 
       E.SubscriptionExecutionPlan _sub ->
         throw400 UnexpectedPayload "subscriptions are not supported over HTTP, use websockets instead"
@@ -142,32 +143,58 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   when False $ Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
   return resp
   where
+    doQErr = withExceptT Right
+
     forWithKey = flip OMap.traverseWithKey
 
     runRemoteGQ fieldName rsi opDef varValsM = do
       (telemTimeIO_DT, HttpResponse resp respHdrs) <-
-        E.execRemoteGQ env reqId userInfo reqHeaders rsi opDef varValsM
-      value <- extractData fieldName $ encJToLBS resp
+        doQErr $ E.execRemoteGQ env reqId userInfo reqHeaders rsi opDef varValsM
+      value <- extractFieldFromResponse fieldName $ encJToLBS resp
       pure $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) respHdrs
 
-    extractData :: Text -> LBS.ByteString -> m JO.Value
-    extractData fieldName = runAesonParser $ \bs ->
-      let lookup' key object = maybe (Left $ "expecting key " ++ T.unpack key) Right $ JO.lookup key object
-      in either fail pure $
-         JO.eitherDecode bs >>=
-         JO.asObject        >>=
-         lookup' "data"     >>=
-         JO.asObject        >>=
-         lookup' fieldName
-
-    buildResult telemType results =
+    buildResult telemType (Left (Left err)) = pure
+      ( telemType
+      , 0
+      , Telem.Remote
+      , HttpResponse
+        (encodeGQResp $ throwError $ err)
+        []
+      )
+    buildResult _telemType (Left (Right err)) = throwError err
+    buildResult telemType (Right results) = pure
       ( telemType
       , sum (fmap rfTimeIO results)
       , fold (fmap rfLocality results)
       , HttpResponse
-        ( encodeGQResp $ pure $ encJToLBS $ encJFromInsOrdHashMap (fmap rfResponse results))
+        (encodeGQResp $ pure $ encJToLBS $ encJFromInsOrdHashMap (fmap rfResponse results))
         (fold (fmap rfHeaders results))
       )
+
+extractFieldFromResponse
+  :: Monad m => Text -> LBS.ByteString -> ExceptT (Either GQExecError QErr) m JO.Value
+extractFieldFromResponse fieldName bs = do
+  val <- case JO.eitherDecode bs of
+    Left err -> doQErr $ throw400 RemoteSchemaError $ T.pack err
+    Right v -> pure v
+  valObj <- case JO.asObject val of
+    Left err -> doQErr $ throw400 RemoteSchemaError err
+    Right v -> pure v
+  dataVal <- case JO.toList valObj of
+    [("data", v)] -> pure v
+    _ -> case JO.lookup "errors" valObj of
+      Just (JO.Array err) -> doGQExecError $ throwError $ GQExecError $ toList $ fmap JO.fromOrdered err
+      _ -> doQErr $ throw400 RemoteSchemaError "Received invalid JSON value from remote"
+  dataObj <- case JO.asObject dataVal of
+    Left err -> doQErr $ throw400 RemoteSchemaError err
+    Right v -> pure v
+  fieldVal <- case JO.lookup fieldName dataObj of
+    Nothing -> doQErr $ throw400 RemoteSchemaError $ "expecting key " <> fieldName
+    Just v -> pure v
+  return fieldVal
+  where
+    doQErr = withExceptT Right
+    doGQExecError = withExceptT Left
 
 -- | Run (execute) a batched GraphQL query (see 'GQLBatchedReqs')
 runGQBatched

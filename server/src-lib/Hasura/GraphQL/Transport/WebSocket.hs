@@ -48,7 +48,7 @@ import           GHC.AssertNF
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging                      (MonadQueryLog (..))
-import           Hasura.GraphQL.Transport.HTTP               (MonadExecuteQuery (..), ResultsFragment (..))
+import           Hasura.GraphQL.Transport.HTTP               (MonadExecuteQuery (..), ResultsFragment (..), extractFieldFromResponse)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import           Hasura.HTTP
@@ -352,16 +352,16 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   case execPlan of
     E.QueryExecutionPlan queryPlan asts -> do
       conclusion <- runExceptT $ forWithKey queryPlan $ \fieldName -> \case
-        E.ExecStepDB (tx, genSql) -> withExceptT Right $ Tracing.trace "Query" $ do
+        E.ExecStepDB (tx, genSql) -> doQErr $ Tracing.trace "Query" $ do
           (telemTimeIO_DT, (respHdrs, resp)) <- Tracing.interpTraceT id $ withElapsedTime $
             executeQuery reqParsed asts genSql pgExecCtx Q.ReadOnly tx
           return $ ResultsFragment telemTimeIO_DT Telem.Local resp respHdrs
         E.ExecStepRemote (rsi, opDef, varValsM) -> do
           (telemTimeIO_DT, HttpResponse resp respHdrs) <-
-            withExceptT Right $ runRemoteGQ execCtx requestId userInfo reqHdrs opDef rsi varValsM
-          value <- mapExceptT lift $ extractData fieldName (encJToLBS resp)
+            doQErr $ runRemoteGQ execCtx requestId userInfo reqHdrs opDef rsi varValsM
+          value <- mapExceptT lift $ extractFieldFromResponse fieldName (encJToLBS resp)
           return $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) respHdrs
-        E.ExecStepRaw json -> withExceptT Right $ do
+        E.ExecStepRaw json -> doQErr $ do
           let obj = encJFromJValue json
               telemTimeIO_DT = 0
           return $ ResultsFragment telemTimeIO_DT Telem.Local obj []
@@ -380,7 +380,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       sendCompleted (Just requestId)
     E.MutationExecutionPlan mutationPlan -> do
       conclusion <- runExceptT $ forWithKey mutationPlan $ \fieldName -> \case
-        E.ExecStepDB (tx, _) -> withExceptT Right $ Tracing.trace "Mutate" do
+        E.ExecStepDB (tx, _) -> doQErr $ Tracing.trace "Mutate" do
           ctx <- Tracing.currentContext
           (telemTimeIO_DT, resp) <- Tracing.interpTraceT
             (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx . withUserInfo userInfo)
@@ -388,10 +388,10 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
         E.ExecStepRemote (rsi, opDef, varValsM) -> do
           (telemTimeIO_DT, HttpResponse resp respHdrs) <-
-            withExceptT Right $ runRemoteGQ execCtx requestId userInfo reqHdrs opDef rsi varValsM
-          value <- mapExceptT lift $ extractData fieldName $ encJToLBS resp
+            doQErr $ runRemoteGQ execCtx requestId userInfo reqHdrs opDef rsi varValsM
+          value <- mapExceptT lift $ extractFieldFromResponse fieldName $ encJToLBS resp
           return $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) respHdrs
-        E.ExecStepRaw json -> withExceptT Right $ do
+        E.ExecStepRaw json -> doQErr $ do
           let obj = encJFromJValue json
               telemTimeIO_DT = 0
           return $ ResultsFragment telemTimeIO_DT Telem.Local obj []
@@ -428,6 +428,8 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         STMMap.insert (lqId, opName) opId opMap
       logOpEv ODStarted (Just requestId)
   where
+    doQErr = withExceptT Right
+
     forWithKey = flip OMap.traverseWithKey
 
     telemTransport = Telem.WebSocket
@@ -445,21 +447,6 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         G.OperationTypeQuery    -> return ()
       -- if it's not a subscription, use HTTP to execute the query on the remote
       flip runReaderT execCtx $ E.execRemoteGQ env reqId userInfo reqHdrs rsi opDef varValsM
-
-    extractData :: Text -> LBS.ByteString -> ExceptT (Either GQExecError QErr) m JO.Value
-    extractData fieldName bs = do
-      val <- withExceptT (Right . err400 RemoteSchemaError . T.pack) $ ExceptT $ pure $ JO.eitherDecode bs
-      valObj <- withExceptT (Right . err400 RemoteSchemaError) $ ExceptT $ pure $ JO.asObject val
-      dataVal <- case JO.toList valObj of
-        [("data", v)] -> pure v
-        _ -> case JO.lookup "errors" valObj of
-          Just (JO.Array err) -> throwError $ Left $ GQExecError $ toList $ fmap JO.fromOrdered err
-          _ -> withExceptT Right $ throw400 RemoteSchemaError "Received invalid JSON value from remote"
-      dataObj <- withExceptT (Right . err400 RemoteSchemaError) $ ExceptT $ pure $ JO.asObject dataVal
-      fieldVal <- case JO.lookup fieldName dataObj of
-        Nothing -> withExceptT Right $ throw400 RemoteSchemaError $ "expecting key " <> fieldName
-        Just v -> pure v
-      return fieldVal
 
     -- sendRemoteResp reqId resp meta =
     --   case J.eitherDecodeStrict (encJToBS resp) of
