@@ -29,11 +29,11 @@ Before starting with this guide, you should have the following ready:
 Step 1: Set up tables in Hasura
 -------------------------------
 
-First, :ref:`create the following table on Hasura <create-tables>`:
+First, :ref:`create the following table <create-tables>` on your Hasura project:
 
 .. code-block:: sql
 
-   user (id int SERIAL, email text UNIQUE NOT NULL, password text NOT NULL, auth_token text NOT NULL, role text DEFAULT 'user' NOT NULL )
+   user (id int SERIAL, email text UNIQUE NOT NULL, password text NOT NULL, auth_token text, role text DEFAULT 'user')
 
 Step 2: Set up auth webhook
 ---------------------------
@@ -194,7 +194,7 @@ You will get back a URL with your deployed webhook. If you open it in your brows
 Step 3: Test webhook endpoints
 ------------------------------
 
-Let's test the endpoint we created in step 2. 
+Let's test the webhook endpoints we created in step 2. 
 
 Step 3.1: Signup
 ^^^^^^^^^^^^^^^^
@@ -227,7 +227,7 @@ You should get back a response that looks like this:
 Step 3.1: Login
 ^^^^^^^^^^^^^^^
 
-Send a request to the ``signup`` endpoint (e.g. ``https://your-app-url.herokuapp.com/login``) with the following request body:
+Send a request to the ``login`` endpoint (e.g. ``https://your-app-url.herokuapp.com/login``) with the following request body:
 
 .. code-block:: json
 
