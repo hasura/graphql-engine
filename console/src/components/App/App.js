@@ -22,6 +22,9 @@ const App = ({
   children,
   notifications,
   connectionFailed,
+  requestError,
+  error,
+  reqURL,
   dispatch,
   metadata,
   telemetry,
@@ -53,14 +56,14 @@ const App = ({
           instance. Please ensure that your instance is running and the endpoint
           is configured correctly.
         </strong>
-      </div>
+      </div> 
     );
   }
 
   return (
     <GlobalContext.Provider value={globals}>
       <ThemeProvider theme={theme}>
-        <ErrorBoundary metadata={metadata} dispatch={dispatch}>
+        <ErrorBoundary metadata={metadata} dispatch={dispatch} errorValue={error} requestError={requestError} requestURL={reqURL} >
           <div>
             {connectionFailMsg}
             {ongoingRequest && (

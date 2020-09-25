@@ -8,6 +8,7 @@ import Spinner from '../Common/Spinner/Spinner';
 
 import PageNotFound, { NotFoundError } from './PageNotFound';
 import RuntimeError from './RuntimeError';
+import ApiError from './ApiError';
 import { registerRunTimeError } from '../Main/Actions';
 
 export interface Metadata {
@@ -19,16 +20,19 @@ export interface Metadata {
 export interface ErrorBoundaryProps {
   metadata: Metadata;
   dispatch: (arg: unknown) => Promise<unknown>; // TODO update when Redux is migrated to TS;
+  errorValue: any;
+  requestError: any;
+  requestURL: any;
 }
 
 interface ErrorBoundaryState {
-  hasError: boolean;
+  hasReactError: boolean;
   error: Error | null;
   type: string;
 }
 
 const initialState: ErrorBoundaryState = {
-  hasError: false,
+  hasReactError: false,
   error: null,
   type: '500',
 };
@@ -53,7 +57,7 @@ class ErrorBoundary extends React.Component<
       });
     }
 
-    this.setState({ hasError: true, error });
+    this.setState({ hasReactError: true, error });
 
     // trigger telemetry
     dispatch(
@@ -79,19 +83,23 @@ class ErrorBoundary extends React.Component<
   };
 
   render() {
-    const { metadata } = this.props;
-    const { hasError, type, error } = this.state;
+    const { metadata, errorValue, requestError, requestURL } = this.props;
+    const { hasReactError, type, error } = this.state;
 
-    if (hasError && metadata.ongoingRequest) {
+    if (hasReactError && metadata.ongoingRequest) {
       return <Spinner />;
     }
 
-    if (hasError) {
+    if (hasReactError) {
       return type === '404' ? (
         <PageNotFound resetCallback={this.resetState} />
       ) : (
         <RuntimeError resetCallback={this.resetState} error={error} />
       );
+    }
+
+    if (requestError===null && errorValue) {
+        return <ApiError error={errorValue} requestURL={requestURL} />
     }
 
     return this.props.children;
