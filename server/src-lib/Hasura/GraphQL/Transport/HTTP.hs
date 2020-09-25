@@ -170,27 +170,20 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
 extractFieldFromResponse
   :: Monad m => Text -> LBS.ByteString -> ExceptT (Either GQExecError QErr) m JO.Value
 extractFieldFromResponse fieldName bs = do
-  val <- case JO.eitherDecode bs of
-    Left err -> doQErr $ throw400 RemoteSchemaError $ T.pack err
-    Right v -> pure v
-  valObj <- case JO.asObject val of
-    Left err -> doQErr $ throw400 RemoteSchemaError err
-    Right v -> pure v
+  val <- onLeft (JO.eitherDecode bs) $ do400 . T.pack
+  valObj <- onLeft (JO.asObject val) $ do400
   dataVal <- case JO.toList valObj of
     [("data", v)] -> pure v
     _ -> case JO.lookup "errors" valObj of
-      Just (JO.Array err) -> doGQExecError $ throwError $ GQExecError $ toList $ fmap JO.fromOrdered err
-      _ -> doQErr $ throw400 RemoteSchemaError "Received invalid JSON value from remote"
-  dataObj <- case JO.asObject dataVal of
-    Left err -> doQErr $ throw400 RemoteSchemaError err
-    Right v -> pure v
-  fieldVal <- case JO.lookup fieldName dataObj of
-    Nothing -> doQErr $ throw400 RemoteSchemaError $ "expecting key " <> fieldName
-    Just v -> pure v
+      Just (JO.Array err) -> doGQExecError $ toList $ fmap JO.fromOrdered err
+      _ -> do400 "Received invalid JSON value from remote"
+  dataObj <- onLeft (JO.asObject dataVal) $ do400
+  fieldVal <- onNothing (JO.lookup fieldName dataObj) $
+    do400 $ "expecting key " <> fieldName
   return fieldVal
   where
-    doQErr = withExceptT Right
-    doGQExecError = withExceptT Left
+    do400 = withExceptT Right . throw400 RemoteSchemaError
+    doGQExecError = withExceptT Left . throwError . GQExecError
 
 buildRaw :: Applicative m => J.Value -> m ResultsFragment
 buildRaw json = do
