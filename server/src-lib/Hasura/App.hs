@@ -273,7 +273,8 @@ waitForShutdown :: ShutdownLatch -> IO ()
 waitForShutdown = C.readMVar . unShutdownLatch
 
 -- | Initiate a graceful shutdown of the server associated with the provided
--- latch.
+-- latch. Returns 'True' if the shutdown was initiated successfully - that is,
+-- the latch is not blocked by another existing shutdown attempt.
 shutdownGracefully :: InitCtx -> IO Bool
 shutdownGracefully = shutdownGracefully' . _icShutdownLatch
 
