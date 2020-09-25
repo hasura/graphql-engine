@@ -7,6 +7,8 @@ module Hasura.SQL.Tsql.ToQuery where
 
 import           Data.Foldable
 import           Data.List (intersperse)
+import qualified Data.List.NonEmpty as NE
+import           Data.Maybe
 import           Data.Monoid
 import           Data.String
 import           Data.Text (Text)
@@ -21,10 +23,20 @@ fromExpression =
     ValueExpression value -> toSql value
     AndExpression xs ->
       mconcat
-        (intersperse " AND " (map (\x -> "(" <> fromExpression x <> ")") xs))
+        (intersperse
+           " AND "
+           (toList
+              (fmap
+                 (\x -> "(" <> fromExpression x <> ")")
+                 (fromMaybe (pure trueExpression) (NE.nonEmpty xs)))))
     OrExpression xs ->
       mconcat
-        (intersperse " OR " (map (\x -> "(" <> fromExpression x <> ")") xs))
+        (intersperse
+           " OR "
+           (toList
+              (fmap
+                 (\x -> "(" <> fromExpression x <> ")")
+                 (fromMaybe (pure falseExpression) (NE.nonEmpty xs)))))
     NotExpression expression -> "NOT " <> (fromExpression expression)
     SelectExpression select -> fromSelect select
     IsNullExpression expression ->
@@ -92,7 +104,15 @@ fromWhere :: Where -> Query
 fromWhere =
   \case
     NoWhere -> ""
-    ExpressionWhere i -> "WHERE " <> fromExpression i
+    ExpressionWhere expression ->
+      case collapse expression of
+        ValueExpression (BoolValue True) -> ""
+        collapsedExpression -> "WHERE " <> fromExpression collapsedExpression
+        -- Later move this to a rewrite module.
+      where collapse (AndExpression [x]) = collapse x
+            collapse (AndExpression []) = trueExpression
+            collapse (OrExpression [x]) = collapse x
+            collapse x = x
 
 fromFrom :: From -> Query
 fromFrom =
@@ -135,3 +155,9 @@ fromComment :: Comment -> Query
 fromComment =
   \case
     DueToPermission -> "Due to permission"
+
+trueExpression :: Expression
+trueExpression = ValueExpression (BoolValue True)
+
+falseExpression :: Expression
+falseExpression = ValueExpression (BoolValue False)
