@@ -15,7 +15,6 @@ import qualified Data.HashSet                  as S
 import qualified Data.List.NonEmpty            as NE
 import qualified Data.Text                     as T
 
-
 data SchemaDocumentTypeDefinitions
   = SchemaDocumentTypeDefinitions
   { _sdtdScalars      :: ![G.ScalarTypeDefinition]
@@ -424,9 +423,9 @@ validateObjectDefinition providedObj upstreamObj interfacesDeclared = do
 
     providedIfacesSet = S.fromList providedIfaces
 
-    customInterfaces = S.intersection providedIfacesSet interfacesDeclared
+    customInterfaces = S.intersection interfacesDiff interfacesDeclared
 
-    nonExistingInterfaces = S.toList $ S.difference providedIfacesSet interfacesDiff
+    nonExistingInterfaces = S.toList $ S.difference interfacesDiff providedIfacesSet
 
 validateObjectDefinitions
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
@@ -528,11 +527,11 @@ validateRemoteSchema (G.SchemaDocument providedTypeDefns) (G.SchemaIntrospection
     refute $ pure $ DuplicateTypeNames duplicateTypeNames
   rootTypeNames <- validateSchemaDefinitions $ _sdtdSchemaDef providedTypes
   validateScalarDefinitions (_sdtdScalars providedTypes) (_sdtdScalars upstreamTypes)
-  validateObjectDefinitions (_sdtdObjects providedTypes) (_sdtdObjects upstreamTypes) $ S.fromList providedInterfacesList
+  validateEnumTypeDefinitions (_sdtdEnums providedTypes) (_sdtdEnums upstreamTypes)
   validateInterfaceDefinitions (_sdtdInterfaces providedTypes) (_sdtdInterfaces upstreamTypes)
   validateUnionTypeDefinitions (_sdtdUnions providedTypes) (_sdtdUnions upstreamTypes)
-  validateEnumTypeDefinitions (_sdtdEnums providedTypes) (_sdtdEnums upstreamTypes)
   validateInputObjectTypeDefinitions (_sdtdInputObjects providedTypes) (_sdtdInputObjects upstreamTypes)
+  validateObjectDefinitions (_sdtdObjects providedTypes) (_sdtdObjects upstreamTypes) $ S.fromList providedInterfacesList
   pure $ getSchemaDocIntrospection providedTypes rootTypeNames
   where
     emptySchemaDocTypeDefinitions = SchemaDocumentTypeDefinitions [] [] [] [] [] [] []
