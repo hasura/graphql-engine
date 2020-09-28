@@ -252,7 +252,7 @@ Using Auth0 Rules again, add the following rule which will insert a new user eve
      });
    }
 
-Make sure to specify the `HASURA_ADMIN_SECRET` variable in the "Rules > Settings" section of Auth0. 
+Make sure to specify the ``HASURA_ADMIN_SECRET`` variable in the "Rules > Settings" section of Auth0. 
 
 That’s it! This rule will be triggered on every successful signup/login and sync your Auth0 user into your postgres database.
 
