@@ -67,7 +67,6 @@ Example: Text-search functions
 
 Let's take a look at an example where the ``SETOF`` table is already part of the following existing schema.
 
-Let's say we have the following schema:
 
 .. code-block:: plpgsql
 
