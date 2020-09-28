@@ -65,13 +65,6 @@ can create a table on this Postgres instance and make your first GraphQL query.
    :class: no-shadow
    :alt: Hasura console
 
-To access the Postgres database via psql, you can issue the following command
-via the console:
-
-.. code-block:: bash
-
-   docker exec -it hasura_postgres_1 psql -U postgres
-
 Step 3: Create a table
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -126,6 +119,30 @@ Switch to the ``GraphiQL`` tab on top and execute the following GraphQL query:
 .. image:: https://graphql-engine-cdn.hasura.io/heroku-repo/assets/hasura_graphql_query.png
    :class: no-shadow
    :alt: Hasura console - GraphiQL
+
+.. _digital_ocean_connect_psql:
+
+Access Database via psql
+-----------------------------
+
+To access the Postgres database via psql, you can issue the following command
+via the console:
+
+.. code-block:: bash
+
+   docker exec -it hasura_postgres_1 psql -U postgres
+
+If you are using a hosted database `as outlined below
+<#using-digitalocean-managed-postgres-database>`__, it's a little different:
+
+.. code-block:: bash
+
+   docker exec -it hasura_postgres_1 psql -h <your database url> -p <your port> -d <your database> -U <your database user>
+
+.. note::
+
+  Different hosted Postgres providers may have different requirments for connection, e.g. seting sslmode.
+  Please refer to your provider's documentation for generating the proper psql command flags.
 
 .. _digital_ocean_secure:
 
@@ -346,17 +363,6 @@ database.
   through :ref:`Postgres permissions <postgres_permissions>`
   to configure all required permissions (not applicable with the default
   connection string with DO Managed Postgres).
-
-You can also connect to this Postgres database via psql, using the following command:
-
-.. code-block:: bash
-
-   docker exec -it hasura_postgres_1 psql -h <your database url> -p <your port> -d <your database> -U <your database user>
-
-.. note::
-
-  Different hosted Postgres providers may have different requirments for connection, e.g. seting sslmode.
-  Please refer to your provider's documentation for generating the proper psql command flags.
 
 Connection pooling
 ~~~~~~~~~~~~~~~~~~
