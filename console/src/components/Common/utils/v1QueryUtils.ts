@@ -4,7 +4,11 @@ import { LocalAdhocEventState } from '../../Services/Events/AdhocEvents/Add/stat
 import { LocalEventTriggerState } from '../../Services/Events/EventTriggers/state';
 import { RemoteRelationshipPayload } from '../../Services/Data/TableRelationships/RemoteRelationships/utils';
 import { transformHeaders } from '../Headers/utils';
-import { generateTableDef } from './pgUtils';
+import {
+  generateTableDef,
+  TablePermission,
+  PermissionActionType,
+} from './pgUtils';
 import { Nullable } from './tsUtils';
 
 // TODO add type for the where clause
@@ -312,8 +316,10 @@ export const getSetTableEnumQuery = (
 
 export const getTrackTableQuery = (tableDef: TableDefinition) => {
   return {
-    type: 'add_existing_table_or_view',
-    args: tableDef,
+    type: 'track_table',
+    args: {
+      table: tableDef,
+    },
   };
 };
 
@@ -679,3 +685,179 @@ export const getConsoleOptsQuery = () =>
     null,
     null
   );
+
+type PermissionUpQueryArgs = {
+  table: string | { name: string; schema: string };
+  role: string;
+};
+
+interface PermissionDownQueryArgs extends PermissionUpQueryArgs {
+  comment?: string | null;
+  // TODO: perhaps better type than any here
+  permission: Record<string, any>;
+}
+
+type PermissionUpQuery = {
+  type: string;
+  args: PermissionUpQueryArgs;
+};
+
+type PermissionDownQuery = {
+  type: string;
+  args: PermissionDownQueryArgs;
+};
+
+const getPermissionUpQuery = (
+  table_name: string,
+  schema_name: string,
+  role_name: string,
+  queryType: PermissionActionType
+): PermissionUpQuery => {
+  return {
+    type: `drop_${queryType}_permission`,
+    args: {
+      table: {
+        name: table_name,
+        schema: schema_name,
+      },
+      role: role_name,
+    },
+  };
+};
+
+const getSelectPermissionDownQuery = (
+  perm: TablePermission
+): PermissionDownQuery => {
+  return {
+    type: 'create_select_permission',
+    args: {
+      table: {
+        name: perm.table_name,
+        schema: perm.table_schema,
+      },
+      role: perm.role_name,
+      comment: perm?.comment ?? null,
+      permission: {
+        columns: perm.permissions.select?.columns ?? [],
+        filter: perm.permissions.select?.filter ?? {},
+        limit: perm.permissions.select?.limit ?? null,
+        allow_aggregations: perm.permissions.select?.allow_aggregations ?? null,
+        computed_fields: perm.permissions.select?.computedFields ?? null,
+      },
+    },
+  };
+};
+
+const getInsertPermissionDownQuery = (
+  perm: TablePermission
+): PermissionDownQuery => {
+  return {
+    type: 'create_insert_permission',
+    args: {
+      table: {
+        name: perm.table_name,
+        schema: perm.table_schema,
+      },
+      role: perm.role_name,
+      permission: {
+        check: perm.permissions.insert?.check ?? false,
+        set: perm.permissions.insert?.set ?? null,
+        columns: perm.permissions.insert?.columns ?? [],
+        backend_only: perm.permissions.insert?.backend_only ?? null,
+      },
+      comment: perm?.comment ?? null,
+    },
+  };
+};
+
+const getUpdatePermissionDownQuery = (
+  perm: TablePermission
+): PermissionDownQuery => {
+  return {
+    type: 'create_update_permission',
+    args: {
+      table: { name: perm.table_name, schema: perm.table_schema },
+      role: perm.role_name,
+      permission: {
+        columns: perm.permissions.update?.columns ?? [],
+        filter: perm.permissions.update?.filter ?? {},
+        check: perm.permissions.update?.check ?? null,
+        set: perm.permissions.update?.set ?? null,
+      },
+      comment: perm?.comment ?? null,
+    },
+  };
+};
+
+const getDeletePermissionDownQuery = (
+  perm: TablePermission
+): PermissionDownQuery => {
+  return {
+    type: 'create_delete_permission',
+    args: {
+      table: {
+        name: perm.table_name,
+        schema: perm.table_schema,
+      },
+      role: perm.role_name,
+      permission: {
+        filter: perm.permissions.update?.filter ?? {},
+      },
+      comment: perm?.comment ?? null,
+    },
+  };
+};
+
+export const getTablePermissionsQuery = (permissions: TablePermission[]) => {
+  const allUpQueries: PermissionUpQuery[] = [];
+  const allDownQueries: PermissionDownQuery[] = [];
+
+  permissions.forEach(perm => {
+    if (perm.permissions?.select) {
+      allUpQueries.push(
+        getPermissionUpQuery(
+          perm.table_name,
+          perm.table_schema,
+          perm.role_name,
+          'select'
+        )
+      );
+      allDownQueries.push(getSelectPermissionDownQuery(perm));
+    }
+    if (perm.permissions?.insert) {
+      allUpQueries.push(
+        getPermissionUpQuery(
+          perm.table_name,
+          perm.table_schema,
+          perm.role_name,
+          'insert'
+        )
+      );
+      allDownQueries.push(getInsertPermissionDownQuery(perm));
+    }
+    if (perm.permissions?.delete) {
+      allUpQueries.push(
+        getPermissionUpQuery(
+          perm.table_name,
+          perm.table_schema,
+          perm.role_name,
+          'delete'
+        )
+      );
+      allDownQueries.push(getDeletePermissionDownQuery(perm));
+    }
+    if (perm.permissions?.update) {
+      allUpQueries.push(
+        getPermissionUpQuery(
+          perm.table_name,
+          perm.table_schema,
+          perm.role_name,
+          'update'
+        )
+      );
+      allDownQueries.push(getUpdatePermissionDownQuery(perm));
+    }
+  });
+
+  return [allUpQueries, allDownQueries];
+};

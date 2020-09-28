@@ -14,11 +14,25 @@ export type TableRelationship = {
   rel_type: 'object' | 'array';
 };
 
+export type PermissionActionType = 'select' | 'insert' | 'delete' | 'update';
+
+type PermissionValueType = {
+  columns?: string[];
+  allow_aggregations?: boolean;
+  computedFields?: Record<string, any>[];
+  filter?: Record<string, any>;
+  limit?: number;
+  check?: boolean;
+  set?: Record<string, any>;
+  backend_only?: boolean;
+};
+
 export type TablePermission = {
+  table_name: string;
+  table_schema: string;
   role_name: string;
-  permissions: {
-    [action: string]: any;
-  };
+  permissions: Record<PermissionActionType, PermissionValueType>;
+  comment?: string;
 };
 
 export interface BaseTableColumn {
@@ -439,7 +453,7 @@ export const getEnumColumnMappings = (
 export const getTablePermissions = (
   table: Table,
   role: string | null = null,
-  action: string | null = null
+  action: PermissionActionType | null = null
 ) => {
   const tablePermissions = table.permissions;
 

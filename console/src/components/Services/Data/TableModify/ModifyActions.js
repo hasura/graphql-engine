@@ -53,6 +53,7 @@ import {
   getSetTableEnumQuery,
   getUntrackTableQuery,
   getTrackTableQuery,
+  getTablePermissionsQuery,
 } from '../../../Common/utils/v1QueryUtils';
 import {
   fetchColumnCastsQuery,
@@ -873,13 +874,35 @@ const deleteTableSql = tableName => {
 
 const untrackTableSql = tableName => {
   return (dispatch, getState) => {
-    const currentSchema = getState().tables.currentSchema;
+    const { currentSchema, allSchemas } = getState().tables;
     const tableDef = generateTableDef(tableName, currentSchema);
-    const upQueries = [getUntrackTableQuery(tableDef)];
-    const downQueries = [getTrackTableQuery(tableDef)];
+    const currentTableInfo = allSchemas.find(
+      table =>
+        table.table_name === tableName && table.table_schema === currentSchema
+    );
+
+    let upQueries = [getUntrackTableQuery(tableDef)];
+    let downQueries = [getTrackTableQuery(tableDef)];
+
+    // TODO: there might other fields that might be affected here (most things in the modify section)
+    // 1. computed fields are a part of certain permissions here (select) - this needs more thorough inspection, but if the
+    //    custom function exists on the DB, while running the down migration, this should be fine
+    // 2. primary keys, unique keys, foreign keys remain, if all dependent tables/functions exist
+    //    prior to running the down migration, since the table still exists on the DB
+    // 3. constraints are also similar, they exist on the DB had hence might not need checks on untrack/track op.
+    // 4. Custom GraphQL root fields - migration requests exist for these - https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/table-view.html#set-table-custom-fields
+    // 5. There might other things that I am missing here.
+    if (currentTableInfo.permissions.length) {
+      const [
+        permissionUpQueries,
+        permissionDownQueries,
+      ] = getTablePermissionsQuery(currentTableInfo.permissions);
+      upQueries = [...permissionUpQueries, ...upQueries];
+      downQueries = [...permissionDownQueries, ...downQueries];
+    }
 
     // apply migrations
-    const migrationName = 'untrack_table_' + currentSchema + '_' + tableName;
+    const migrationName = `untrack_table_${currentSchema}_${tableName}`;
 
     const requestMsg = 'Untracking table...';
     const successMsg = 'Table untracked';
@@ -982,13 +1005,6 @@ const deleteViewSql = (viewName, viewType) => {
     const property = viewType.toLowerCase();
     const sqlDropView = `DROP ${viewType} "${currentSchema}"."${viewName}"`;
     const sqlUpQueries = [getRunSqlQuery(sqlDropView)];
-    // const sqlCreateView = ''; //pending
-    // const sqlDownQueries = [
-    //   {
-    //     type: 'run_sql',
-    //     args: { 'sql': sqlCreateView }
-    //   }
-    // ];
 
     // Apply migrations
     const migrationName = 'drop_view_' + currentSchema + '_' + viewName;
