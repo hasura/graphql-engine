@@ -34,8 +34,12 @@ data Projection
 
 data Join = Join
   { joinSelect :: !Select
-  , joinAlias :: !Text
-  , joinField :: !Text
+  , joinJoinAlias :: !JoinAlias
+  } deriving (Eq, Show)
+
+data JoinAlias = JoinAlias
+  { joinAliasEntity :: Text
+  , joinAliasField :: Text
   } deriving (Eq, Show)
 
 newtype Where =

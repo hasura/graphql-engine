@@ -65,11 +65,15 @@ fromSelect Select {..} =
            (map
               (\Join {..} ->
                  " OUTER APPLY (" <> fromSelect joinSelect <> ") AS " <>
-                 fromNameText joinAlias <> "(" <> fromNameText joinField <> ")")
+                 fromJoinAlias joinJoinAlias)
               selectJoins)
        , fromWhere selectWhere
        , fromFor selectFor
        ])
+
+fromJoinAlias :: JoinAlias -> Query
+fromJoinAlias JoinAlias {..} =
+  fromNameText joinAliasEntity <> "(" <> fromNameText joinAliasField <> ")"
 
 fromFor :: For -> Query
 fromFor =

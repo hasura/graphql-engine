@@ -195,7 +195,86 @@ tracks_album_title =
                         }
                   , _asnStrfyNum = False
                   })))
-       (Right (Select {selectTop = Commented {commentedComment = Nothing, commentedThing = NoTop}, selectProjections = ExpressionProjection (Aliased {aliasedThing = JsonQueryExpression (ColumnExpression (FieldName {fieldName = "json", fieldNameEntity = "album"})), aliasedAlias = "album"}) :| [], selectFrom = FromQualifiedTable (Aliased {aliasedThing = TableName {tableName = "tracks", tableNameSchema = "public"}, aliasedAlias = "table0"}), selectJoins = [Join {joinSelect = Select {selectTop = Commented {commentedComment = Nothing, commentedThing = NoTop}, selectProjections = FieldNameProjection (Aliased {aliasedThing = FieldName {fieldName = "title", fieldNameEntity = "table1"}, aliasedAlias = "title"}) :| [], selectFrom = FromQualifiedTable (Aliased {aliasedThing = TableName {tableName = "albums", tableNameSchema = "public"}, aliasedAlias = "table1"}), selectJoins = [], selectWhere = Where [EqualExpression (ColumnExpression (FieldName {fieldName = "album_id", fieldNameEntity = "table0"})) (ColumnExpression (FieldName {fieldName = "id", fieldNameEntity = "table1"})),AndExpression []], selectFor = JsonFor JsonSingleton}, joinAlias = "album", joinField = "json"}], selectWhere = Where [AndExpression []], selectFor = JsonFor JsonArray})))
+       (Right
+          (Select
+             { selectTop =
+                 Commented {commentedComment = Nothing, commentedThing = NoTop}
+             , selectProjections =
+                 ExpressionProjection
+                   (Aliased
+                      { aliasedThing =
+                          JsonQueryExpression
+                            (ColumnExpression
+                               (FieldName
+                                  { fieldName = "json"
+                                  , fieldNameEntity = "album"
+                                  }))
+                      , aliasedAlias = "album"
+                      }) :|
+                 []
+             , selectFrom =
+                 FromQualifiedTable
+                   (Aliased
+                      { aliasedThing =
+                          TableName
+                            {tableName = "tracks", tableNameSchema = "public"}
+                      , aliasedAlias = "table0"
+                      })
+             , selectJoins =
+                 [ Join
+                     { joinSelect =
+                         Select
+                           { selectTop =
+                               Commented
+                                 { commentedComment = Nothing
+                                 , commentedThing = NoTop
+                                 }
+                           , selectProjections =
+                               FieldNameProjection
+                                 (Aliased
+                                    { aliasedThing =
+                                        FieldName
+                                          { fieldName = "title"
+                                          , fieldNameEntity = "table1"
+                                          }
+                                    , aliasedAlias = "title"
+                                    }) :|
+                               []
+                           , selectFrom =
+                               FromQualifiedTable
+                                 (Aliased
+                                    { aliasedThing =
+                                        TableName
+                                          { tableName = "albums"
+                                          , tableNameSchema = "public"
+                                          }
+                                    , aliasedAlias = "table1"
+                                    })
+                           , selectJoins = []
+                           , selectWhere =
+                               Where
+                                 [ EqualExpression
+                                     (ColumnExpression
+                                        (FieldName
+                                           { fieldName = "album_id"
+                                           , fieldNameEntity = "table0"
+                                           }))
+                                     (ColumnExpression
+                                        (FieldName
+                                           { fieldName = "id"
+                                           , fieldNameEntity = "table1"
+                                           }))
+                                 , AndExpression []
+                                 ]
+                           , selectFor = JsonFor JsonSingleton
+                           }
+                     , joinAlias = "album"
+                     , joinField = "json"
+                     }
+                 ]
+             , selectWhere = Where [AndExpression []]
+             , selectFor = JsonFor JsonArray
+             })))
 
 tracks_aggregate_count :: SpecWith ()
 tracks_aggregate_count =
@@ -227,7 +306,29 @@ tracks_aggregate_count =
                         }
                   , _asnStrfyNum = False
                   })))
-       (Right (Select {selectTop = Commented {commentedComment = Nothing, commentedThing = NoTop}, selectProjections = AggregateProjection (Aliased {aliasedThing = CountAggregate StarCountable, aliasedAlias = "count"}) :| [], selectFrom = FromQualifiedTable (Aliased {aliasedThing = TableName {tableName = "tracks", tableNameSchema = "public"}, aliasedAlias = "table0"}), selectJoins = [], selectWhere = Where [AndExpression []], selectFor = JsonFor JsonSingleton})))
+       (Right
+          (Select
+             { selectTop =
+                 Commented {commentedComment = Nothing, commentedThing = NoTop}
+             , selectProjections =
+                 AggregateProjection
+                   (Aliased
+                      { aliasedThing = CountAggregate StarCountable
+                      , aliasedAlias = "count"
+                      }) :|
+                 []
+             , selectFrom =
+                 FromQualifiedTable
+                   (Aliased
+                      { aliasedThing =
+                          TableName
+                            {tableName = "tracks", tableNameSchema = "public"}
+                      , aliasedAlias = "table0"
+                      })
+             , selectJoins = []
+             , selectWhere = Where [AndExpression []]
+             , selectFor = JsonFor JsonSingleton
+             })))
 
 albums_tracks_id :: SpecWith ()
 albums_tracks_id =
