@@ -77,6 +77,31 @@ class EditItem extends Component {
         defaultNode: null,
       };
 
+      const onChange = (e, val) => {
+        const textValue = typeof val === 'string' ? val : e.target.value;
+
+        const radioToSelectWhenEmpty = prevValue
+          ? refs[colName].defaultNode
+          : refs[colName].nullNode;
+
+        refs[colName].insertRadioNode.checked = !!textValue.length;
+        radioToSelectWhenEmpty.checked = !textValue.length;
+      };
+      const onFocus = e => {
+        const textValue = e.target.value;
+        if (
+          textValue === undefined ||
+          textValue === null ||
+          textValue.length === 0
+        ) {
+          const radioToSelectWhenEmpty = prevValue
+            ? refs[colName].defaultNode
+            : refs[colName].nullNode;
+
+          refs[colName].insertRadioNode.checked = false;
+          radioToSelectWhenEmpty.checked = true;
+        }
+      };
       return (
         <TableRow
           key={i}
@@ -85,6 +110,8 @@ class EditItem extends Component {
           enumOptions={enumOptions}
           index={i}
           prevValue={prevValue}
+          onFocus={onFocus}
+          onChange={onChange}
         />
       );
     });
