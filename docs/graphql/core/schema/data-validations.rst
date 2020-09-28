@@ -42,7 +42,7 @@ columns of the table, you can use `Postgres check constraints <https://www.postg
 
 **Example:** Check that the ``rating`` for an author is between 1 and 10 only.
 
-Let's say we have a schema:
+Let's say we have the following table in our schema:
 
 .. code-block:: sql
 
