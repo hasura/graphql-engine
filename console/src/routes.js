@@ -54,7 +54,8 @@ const routes = store => {
           cb();
         },
         r => {
-          if (r.code === 'data_api_error') {
+          // TODO: let's add one more case here when 'r' is not defined.
+          if (r && r.code === 'data_api_error') {
             dispatch(showErrorNotification('Error', null, r));
           } else {
             dispatch(

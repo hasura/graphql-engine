@@ -98,8 +98,9 @@ class ErrorBoundary extends React.Component<
       );
     }
 
-    if (requestError===null && errorValue) {
-        return <ApiError error={errorValue} requestURL={requestURL} />
+    // TODO: Check the condition here, it causes the console to keep making repeated requests
+    if (!requestError && errorValue) {
+      return <ApiError error={errorValue} requestURL={requestURL} />;
     }
 
     return this.props.children;

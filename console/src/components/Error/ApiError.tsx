@@ -11,7 +11,6 @@ type ApiErrorProps = {
 };
 
 const ApiError = (props: ApiErrorProps) => {
-
   const errorImage = `${globals.assetsPath}/common/img/hasura_icon_green.svg`;
 
   const { error, requestURL } = props;
@@ -19,19 +18,18 @@ const ApiError = (props: ApiErrorProps) => {
   return (
     <div className={styles.viewContainer}>
       <Helmet title="Error | Hasura" />
-      <div className={`container ${  styles.centerContent}`}>
-        <div className={`row ${  styles.message}`}>
+      <div className={`container ${styles.centerContent}`}>
+        <div className={`row ${styles.message}`}>
           <div className="col-xs-8">
             <h1>Error</h1>
             <br />
             <div>
-              Something went wrong while trying to request <span className={styles.errorStack}>{requestURL}</span> .
+              Something went wrong while trying to request{' '}
+              <span className={styles.errorStack}>{requestURL}</span> .
             </div>
             <br />
             <div>
-              <pre className={styles.errorStack}>
-                {error.error}
-              </pre>
+              <pre className={styles.errorStack}>{error.error}</pre>
             </div>
             <br />
             <div>
@@ -39,8 +37,7 @@ const ApiError = (props: ApiErrorProps) => {
               <a href="https://github.com/hasura/graphql-engine/issues">
                 GitHub
               </a>{' '}
-              or chat with us on{' '}
-              <a href="http://discord.gg/hasura">Discord</a>
+              or chat with us on <a href="http://discord.gg/hasura">Discord</a>
             </div>
           </div>
           <div className="col-xs-4">

@@ -56,20 +56,26 @@ const App = ({
           instance. Please ensure that your instance is running and the endpoint
           is configured correctly.
         </strong>
-      </div> 
+      </div>
     );
   }
 
   return (
     <GlobalContext.Provider value={globals}>
       <ThemeProvider theme={theme}>
-        <ErrorBoundary metadata={metadata} dispatch={dispatch} errorValue={error} requestError={requestError} requestURL={reqURL} >
+        <ErrorBoundary
+          metadata={metadata}
+          dispatch={dispatch}
+          errorValue={error}
+          requestError={requestError}
+          requestURL={reqURL}
+        >
           <div>
             {connectionFailMsg}
             {ongoingRequest && (
               <ProgressBar
                 percent={percent}
-                autoIncrement={true} // eslint-disable-line react/jsx-boolean-value
+                autoIncrement
                 intervalTime={intervalTime}
                 spinner={false}
               />
@@ -87,16 +93,12 @@ App.propTypes = {
   reqURL: PropTypes.string,
   reqData: PropTypes.object,
   statusCode: PropTypes.number,
-
   ongoingRequest: PropTypes.bool,
   connectionFailed: PropTypes.bool,
-
   intervalTime: PropTypes.number,
   percent: PropTypes.number,
-
   children: PropTypes.element,
   dispatch: PropTypes.func.isRequired,
-
   notifications: PropTypes.array,
 };
 
