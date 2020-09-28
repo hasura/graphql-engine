@@ -93,7 +93,7 @@ and/or functions, then you can use `Postgres triggers <https://www.postgresql.or
 
 **Example:** Validate that an article's ``content`` does not exceed a certain number of words.
 
-Suppose we have the following schema:
+Suppose we have the following table in our schema:
 
 .. code-block:: sql
 
