@@ -20,7 +20,7 @@ export interface Notification {
   level?: 'error' | 'warning' | 'info' | 'success';
   position?: 'tr' | 'tl' | 'tc' | 'br' | 'bl' | 'bc';
   autoDismiss?: number;
-  dismissible?: boolean;
+  dismissible?: 'both' | 'button' | 'click' | 'hide' | 'none' | boolean;
   children?: React.ReactNode;
   uid?: number | string;
   action?: {
@@ -43,7 +43,9 @@ export const showNotification = (
         {
           position: options.position || 'tr',
           autoDismiss: ['error', 'warning'].includes(level) ? 0 : 5,
-          dismissible: ['error', 'warning'].includes(level),
+          dismissible: ['error', 'warning'].includes(level)
+            ? ('button' as any) // bug in @types/react-notification-system-redux types
+            : ('click' as any),
           ...options,
         },
         level
