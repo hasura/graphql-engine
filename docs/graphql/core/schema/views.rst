@@ -52,7 +52,7 @@ Let’s see how to fetch the average article rating for each author in the follo
   
   author(id integer, name text)
                                                       
-  article(id integer, author_id integer, title text, content text, rating integer)
+  article(id integer, title text, content text, rating integer, author_id integer)
 
 A view that averages the rating of articles for each author can be created using the following SQL query:
 
