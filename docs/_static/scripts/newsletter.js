@@ -3,12 +3,25 @@ const submit_btn = document.getElementById('mc-embedded-subscribe');
 const mcStatusSuccess = document.getElementById('mce-success-response');
 const mcStatusError = document.getElementById('mce-error-response');
 
+const inner_email_input = document.getElementById('inner-mce-EMAIL');
+const inner_submit_btn = document.getElementById('inner-mc-embedded-subscribe');
+const innermcStatusSuccess = document.getElementById('inner-mce-success-response');
+const innermcStatusError = document.getElementById('inner-mce-error-response');
+
 email_input.addEventListener('input', function() {
     submit_btn.value = 'Subscribe';
     submit_btn.disabled = false;
 
     mcStatusError.innerHTML = '';
     mcStatusError.classList.add('hide');
+});
+
+inner_email_input.addEventListener('input', function() {
+    inner_submit_btn.value = 'Subscribe';
+    inner_submit_btn.disabled = false;
+
+    innermcStatusError.innerHTML = '';
+    innermcStatusError.classList.add('hide');
 });
 
 const readCookie = (name) => {
@@ -30,16 +43,32 @@ const showErrorMsg = () => {
     clearMsg();
 };
 
+const innershowErrorMsg = () => {
+    inner_submit_btn.value = 'Subscribe';
+    inner_submit_btn.disabled = false;
+    innermcStatusError.innerHTML = 'Please enter a valid email';
+    innermcStatusError.classList.remove('hide');
+    clearMsg();
+};
+
 const clearMsg = () => {
     setTimeout(function(){
         mcStatusSuccess.innerHTML = '';
         mcStatusError.innerHTML = '';
+        innermcStatusSuccess.innerHTML = '';
+        innermcStatusError.innerHTML = '';
 
         mcStatusSuccess.classList.add('hide');
         mcStatusError.classList.add('hide');
+
+        innermcStatusSuccess.classList.add('hide');
+        innermcStatusError.classList.add('hide');
+
         submit_btn.disabled = true;
+        inner_submit_btn.disabled = true;
         //reset input
         email_input.value = '';
+        inner_email_input.value = '';
     }, 3000);
 }
 
@@ -52,7 +81,8 @@ const submitNewsletterForm = function (form) {
     // change button state
     submit_btn.value = 'Subscribing...';
     submit_btn.disabled = true;
-
+    inner_submit_btn.value = 'Subscribing...';
+    inner_submit_btn.disabled = true;
     const email = form.elements["EMAIL"].value;
 
     const hbs_context = {
@@ -85,16 +115,24 @@ const submitNewsletterForm = function (form) {
         // change button state
         submit_btn.value = 'Subscribe';
         submit_btn.disabled = false;
+        inner_submit_btn.value = 'Subscribe';
+        inner_submit_btn.disabled = false;
+
         if(data && data.data && data.data.signupNewsletter.affected_rows) {
             mcStatusSuccess.innerHTML = 'Thank you for subscribing!';
             mcStatusSuccess.classList.remove('hide');
+            innermcStatusError.innerHTML = 'Thank you for subscribing!';
+            innermcStatusError.classList.remove('hide');
         } else {
             if(data.errors && data.errors[0].extensions.code === 'constraint-violation') {
                 mcStatusError.innerHTML = 'You have already subscribed';
+                innermcStatusError.innerHTML = 'You have already subscribed';
             } else {
                 mcStatusError.innerHTML = 'Something went wrong';
+                innermcStatusError.innerHTML = 'You have already subscribed';
             }
             mcStatusError.classList.remove('hide');
+            innermcStatusError.classList.remove('hide');
         }
         clearMsg();
     })
@@ -102,6 +140,8 @@ const submitNewsletterForm = function (form) {
         console.error('Error:', error);
         submit_btn.value = 'Subscribe';
         submit_btn.disabled = false;
+        inner_submit_btn.value = 'Subscribe';
+        inner_submit_btn.disabled = false;
     });
 
 };
@@ -119,6 +159,28 @@ document.addEventListener('submit', function (event) {
 
     if(!emailPattern.test(email_input.value)) {
       showErrorMsg();
+      return;
+    }
+
+    // Otherwise, let the form submit normally
+    submitNewsletterForm(event.target);
+
+
+}, false);
+
+document.addEventListener('submit', function (event) {
+
+    // Only run on forms flagged for newsletter-form validation
+    if (!event.target.classList.contains('newsletter-form-inner')) return;
+
+    // Prevent form from submitting
+    event.preventDefault();
+
+    // email validation
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if(!emailPattern.test(inner_email_input.value)) {
+      innershowErrorMsg();
       return;
     }
 

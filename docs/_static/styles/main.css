@@ -102,6 +102,7 @@ p {
 .mc_embed_signup {
   display: flex;
   align-items: center;
+  position: relative;
 }
 .mc_embed_signup .subscribe-form-content {
   font-weight: bold;
