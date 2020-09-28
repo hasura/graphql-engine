@@ -177,7 +177,7 @@ to perform the validations. (Read more about :ref:`Authorization <authorization>
 
 **Example 1:** Validate that an ``article`` can be inserted only if ``title`` is not empty.
 
-Suppose, we have a schema:
+Suppose, we have the following table in our schema:
 
 .. code-block:: sql
 
