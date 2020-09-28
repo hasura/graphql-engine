@@ -17,6 +17,9 @@ import           Database.ODBC.SQLServer
 import           Hasura.SQL.Tsql.Types
 import           Prelude
 
+--------------------------------------------------------------------------------
+-- Types
+
 fromExpression :: Expression -> Query
 fromExpression =
   \case
@@ -39,7 +42,7 @@ fromExpression =
                  (\x -> "(" <> fromExpression x <> ")")
                  (fromMaybe (pure falseExpression) (NE.nonEmpty xs)))))
     NotExpression expression -> "NOT " <> (fromExpression expression)
-    SelectExpression select -> fromSelect select
+    ExistsExpression select -> "EXISTS (" <> fromSelect select <> ")"
     IsNullExpression expression ->
       "(" <> fromExpression expression <> ") IS NULL"
     ColumnExpression fieldName -> fromFieldName fieldName

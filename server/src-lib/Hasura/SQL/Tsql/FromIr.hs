@@ -150,6 +150,37 @@ fromAnnBoolExpFld =
       expression <- fromPGColumnInfo pgColumnInfo
       expressions <- traverse (lift . fromOpExpG expression) opExpGs
       pure (AndExpression expressions)
+    Ir.AVRel Ir.RelInfo {riMapping = mapping, riRTable = table} annBoolExp -> do
+      selectFrom <- lift (fromQualifiedTable table)
+      foreignKeyConditions <-
+        traverse
+          (\(from, to) -> do
+             fromFieldName <- fromPGCol from
+             toFieldName <- local (const (fromAlias selectFrom)) (fromPGCol to)
+             pure
+               (EqualExpression
+                  (ColumnExpression fromFieldName)
+                  (ColumnExpression toFieldName)))
+          (HM.toList mapping)
+      whereExpression <-
+        local (const (fromAlias selectFrom)) (fromAnnBoolExp annBoolExp)
+      pure
+        (ExistsExpression
+           Select
+             { selectProjections =
+                 NE.fromList
+                   [ ExpressionProjection
+                       (Aliased
+                          { aliasedThing = trueExpression
+                          , aliasedAlias = existsFieldName
+                          })
+                   ]
+             , selectFrom
+             , selectJoins = mempty
+             , selectWhere = Where (foreignKeyConditions <> [whereExpression])
+             , selectTop = uncommented NoTop
+             , selectFor = NoFor
+             })
 
 fromPGColumnInfo :: Ir.PGColumnInfo -> ReaderT EntityAlias FromIr Expression
 fromPGColumnInfo info = do
@@ -187,7 +218,7 @@ fromGExists Ir.GExists {_geTable, _geWhere} = do
 
 fromQualifiedTable :: Sql.QualifiedObject Sql.TableName -> FromIr From
 fromQualifiedTable qualifiedObject = do
-  alias <- generateEntityAlias "table"
+  alias <- generateEntityAlias tableAliasName
   pure
     (FromQualifiedTable
        (Aliased
@@ -294,6 +325,7 @@ fromAnnFieldsG (Ir.FieldName name, field) =
              (Aliased
                 {aliasedThing, aliasedAlias = name}))
         (fromArraySelectG arraySelectG)
+    -- TODO:
     -- Vamshi said to ignore these three for now:
     Ir.AFNodeId {} -> lift (FromIr (refute (pure (FieldTypeUnsupportedForNow field))))
     Ir.AFRemote {} -> lift (FromIr (refute (pure (FieldTypeUnsupportedForNow field))))
@@ -304,8 +336,8 @@ fromAnnColumnField :: Ir.AnnColumnField -> ReaderT EntityAlias FromIr FieldName
 fromAnnColumnField annColumnField = fromPGColumnName pgColumnInfo
   where
     Ir.AnnColumnField { _acfInfo = pgColumnInfo
-                      , _acfAsText = asText :: Bool
-                      , _acfOp = op :: Maybe Ir.ColumnOp
+                      , _acfAsText = _ :: Bool -- TODO: What's this?
+                      , _acfOp = _ :: Maybe Ir.ColumnOp -- TODO: What's this?
                       } = annColumnField
 
 fromPGColumnName :: Ir.PGColumnInfo -> ReaderT EntityAlias FromIr FieldName
@@ -372,7 +404,7 @@ fromObjectRelationSelectG annRelationSelectG = do
               (ColumnExpression fromFieldName)
               (ColumnExpression toFieldName)))
       (HM.toList mapping)
-  alias <- lift (generateEntityAlias "object_relation")
+  alias <- lift (generateEntityAlias objectRelationAlias)
   pure
     Join
       { joinJoinAlias =
@@ -403,13 +435,46 @@ fromArraySelectG =
     Ir.ASSimple arrayRelationSelectG ->
       fromArrayRelationSelectG arrayRelationSelectG
     Ir.ASAggregate arrayAggregateSelectG ->
-      error "Ir.ASAggregate arrayAggregateSelectG"
+      fromArrayAggregateSelectG arrayAggregateSelectG
     select@Ir.ASConnection {} ->
       lift (FromIr (refute (pure (UnsupportedArraySelect select))))
 
+fromArrayAggregateSelectG ::
+     Ir.AnnRelationSelectG (Ir.AnnAggregateSelectG Sql.SQLExp)
+  -> ReaderT EntityAlias FromIr Join
+fromArrayAggregateSelectG annRelationSelectG = do
+  _fieldName <- lift (fromRelName aarRelationshipName) -- TODO: use it?
+  select <- lift (fromSelectAggregate annSelectG)
+  joinSelect <-
+    do foreignKeyConditions <-
+         traverse
+           (\(from, to) -> do
+              fromFieldName <- fromPGCol from
+              toFieldName <-
+                local (const (fromAlias (selectFrom select))) (fromPGCol to)
+              pure
+                (EqualExpression
+                   (ColumnExpression fromFieldName)
+                   (ColumnExpression toFieldName)))
+           (HM.toList mapping)
+       pure
+         select {selectWhere = Where foreignKeyConditions <> selectWhere select}
+  alias <- lift (generateEntityAlias arrayAggregateName)
+  pure
+    Join
+      { joinJoinAlias =
+          JoinAlias {joinAliasEntity = alias, joinAliasField = jsonFieldName}
+      , joinSelect
+      }
+  where
+    Ir.AnnRelationSelectG { aarRelationshipName
+                          , aarColumnMapping = mapping :: HashMap Sql.PGCol Sql.PGCol
+                          , aarAnnSelect = annSelectG
+                          } = annRelationSelectG
+
 fromArrayRelationSelectG :: Ir.ArrayRelationSelectG Sql.SQLExp -> ReaderT EntityAlias FromIr Join
 fromArrayRelationSelectG annRelationSelectG = do
-  _fieldName <- lift (fromRelName aarRelationshipName)
+  _fieldName <- lift (fromRelName aarRelationshipName) -- TODO: use it?
   select <- lift (fromSelectRows annSelectG)
   joinSelect <-
     do foreignKeyConditions <-
@@ -425,7 +490,7 @@ fromArrayRelationSelectG annRelationSelectG = do
            (HM.toList mapping)
        pure
          select {selectWhere = Where foreignKeyConditions <> selectWhere select}
-  alias <- lift (generateEntityAlias "array_relation")
+  alias <- lift (generateEntityAlias arrayRelationAlias)
   pure
     Join
       { joinJoinAlias = JoinAlias {joinAliasEntity = alias, joinAliasField = jsonFieldName}
@@ -462,7 +527,7 @@ fromGBoolExp =
     Ir.BoolOr expressions ->
       fmap OrExpression (traverse fromGBoolExp expressions)
     Ir.BoolNot expression -> fmap NotExpression (fromGBoolExp expression)
-    Ir.BoolExists gExists -> fmap SelectExpression (fromGExists gExists)
+    Ir.BoolExists gExists -> fmap ExistsExpression (fromGExists gExists)
     Ir.BoolFld expression -> pure expression
 
 --------------------------------------------------------------------------------
@@ -486,14 +551,27 @@ jsonFieldName = "json"
 existsFieldName :: Text
 existsFieldName = "exists_placeholder"
 
+arrayRelationAlias :: Text
+arrayRelationAlias = "array_relation"
+
+arrayAggregateName :: Text
+arrayAggregateName = "array_aggregate_relation"
+
+objectRelationAlias :: Text
+objectRelationAlias = "object_relation"
+
+tableAliasName :: Text
+tableAliasName = "table"
+
 --------------------------------------------------------------------------------
 -- Name generation
 
 generateEntityAlias :: Text -> FromIr Text
 generateEntityAlias prefix = do
+  FromIr (modify' (M.insertWith (+) prefix start))
   i <- FromIr get
-  FromIr (modify' (M.insertWith (+) prefix 1))
-  pure (prefix <> T.pack (show (fromMaybe 1 (M.lookup prefix i))))
+  pure (prefix <> T.pack (show (fromMaybe start (M.lookup prefix i))))
+  where start = 1
 
 fromAlias :: From -> EntityAlias
 fromAlias (FromQualifiedTable Aliased {aliasedAlias}) = EntityAlias aliasedAlias

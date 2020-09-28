@@ -62,7 +62,7 @@ data Expression
   | AndExpression [Expression]
   | OrExpression [Expression]
   | NotExpression Expression
-  | SelectExpression Select
+  | ExistsExpression Select
   | IsNullExpression Expression
   | ColumnExpression FieldName
   | EqualExpression Expression Expression
