@@ -82,6 +82,5 @@ The following guides will help you model the different types of table relationsh
   :hidden:
 
   create
-  track
   rename
   Database modelling <database-modelling/index>
