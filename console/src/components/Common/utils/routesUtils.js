@@ -11,7 +11,7 @@ export const getSchemaBaseRoute = schemaName => {
 
 export const getSchemaAddTableRoute = schemaName => {
   // FIXME: sometimes on changing the new schema, we don't have the current schema being selected, so hence
-  // passing the incorrect route 
+  // passing the incorrect route
   return `${getSchemaBaseRoute(schemaName) || 'public'}/table/add`;
 };
 
