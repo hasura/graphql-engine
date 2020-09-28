@@ -112,7 +112,7 @@ Let's say we have the following schema:
   
   author(id integer, first_name text, last_name text )
                                                       
-  article(id integer, author_id integer, title text, content text)
+  article(id integer, title text, content text, author_id integer)
 
 We can define a :ref:`table relationship <table_relationships>` on the ``author``
 table to fetch authors along with their articles.
