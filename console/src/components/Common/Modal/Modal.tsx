@@ -66,7 +66,7 @@ const Modal: React.FC<ModalProps> = ({
     );
   };
 
-  const bootstrapModalProps: BootstrapModal.ModalProps = {
+  const bootstrapModalProps = {
     show,
     dialogClassName: customClass,
     onHide() {},

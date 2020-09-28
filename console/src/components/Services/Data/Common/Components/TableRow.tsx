@@ -56,12 +56,12 @@ export interface TableRowProps {
     refName: 'valueNode' | 'nullNode' | 'defaultNode' | 'insertRadioNode',
     node: HTMLInputElement | null
   ) => void;
-  enumOptions: Record<string, unknown>;
+  enumOptions: Record<string, string[]>;
   index: number;
   clone?: Record<string, unknown>;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>, val: unknown) => void;
   onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
-  prevValue?: unknown;
+  prevValue?: string;
 }
 
 export const TableRow: React.FC<TableRowProps> = ({
@@ -123,7 +123,7 @@ export const TableRow: React.FC<TableRowProps> = ({
           inputRef={(node: HTMLInputElement) => {
             setRef('valueNode', node);
           }}
-          prevValue={prevValue}
+          prevValue={prevValue || ''}
           enumOptions={enumOptions}
           col={column}
           clone={clone}

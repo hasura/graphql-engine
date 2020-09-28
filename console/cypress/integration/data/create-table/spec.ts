@@ -129,7 +129,6 @@ export const passCTWithFK = () => {
   cy.get(getElementFromAlias('column-0')).type(getColName(0));
   tableColumnTypeSelector('col-type-0');
   cy.get(getElementFromAlias('data_test_column_type_value_serial'))
-    .first()
     .click();
   // Set second column
   cy.get(getElementFromAlias('column-1')).type(getColName(1));

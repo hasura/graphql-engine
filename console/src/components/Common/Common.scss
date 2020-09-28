@@ -429,6 +429,10 @@ input {
   padding-right: 5px;
 }
 
+.padd_right_40 {
+  padding-right: 40px;
+}
+
 .border_bottom {
   border-bottom: 1px solid #e7e7e7;
 }
@@ -468,10 +472,6 @@ input {
 
 .remove_pad_bottom {
   padding-bottom: 0 !important;
-}
-
-.remove_pad_right {
-  padding-right: 0 !important;
 }
 
 .add_pad_right {
@@ -1355,6 +1355,10 @@ code {
 
 .hiddenMoreWidth {
   width: 300px;
+}
+
+.width_40 {
+  width: 40px;
 }
 
 .columnListElement {

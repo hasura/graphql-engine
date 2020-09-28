@@ -89,6 +89,7 @@ class ModifyTable extends React.Component {
       schemaList,
       tableEnum,
       rootFieldsEdit,
+      consoleOpts,
       postgresVersion,
     } = this.props;
 
@@ -276,6 +277,7 @@ class ModifyTable extends React.Component {
               schemaList={schemaList}
               dispatch={dispatch}
               fkModify={fkModify}
+              consoleOpts={consoleOpts}
             />
             <hr />
             <h4 className={styles.subheading_text}>
@@ -354,6 +356,7 @@ const mapStateToProps = (state, ownProps) => ({
   validTypeCasts: state.tables.columnTypeCasts,
   columnDataTypeFetchErr: state.tables.columnDataTypeFetchErr,
   schemaList: state.tables.schemaList,
+  consoleOpts: state.tables.consoleOpts,
   postgresVersion: state.main.postgresVersion,
   ...state.tables.modify,
 });

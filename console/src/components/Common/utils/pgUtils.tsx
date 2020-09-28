@@ -24,6 +24,7 @@ export type TablePermission = {
 export interface BaseTableColumn {
   column_name: string;
   data_type: string;
+  table_name?: string;
 }
 
 export interface TableColumn extends BaseTableColumn {
@@ -38,6 +39,9 @@ export interface TableColumn extends BaseTableColumn {
 export type ForeignKeyConstraint = {
   ref_table: string;
   ref_table_table_schema: string;
+  table_name: string;
+  table_schema?: string;
+  columns: string[];
   column_mapping: {
     [lcol: string]: string;
   };

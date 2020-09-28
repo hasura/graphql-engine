@@ -37,9 +37,10 @@ const ForeignKeyWrapper = ({
     const refTables = {};
     allSchemas.forEach(tableSchema => {
       if (fk.refSchemaName === tableSchema.table_schema) {
-        refTables[tableSchema.table_name] = tableSchema.columns.map(
-          c => c.column_name
-        );
+        refTables[tableSchema.table_name] = tableSchema.columns.map(c => ({
+          name: c.column_name,
+          type: c.data_type,
+        }));
       }
     });
 
