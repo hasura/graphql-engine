@@ -28,21 +28,21 @@ response:
           message: intentional-error
           locations:
           - line: 1
-            column: 54
+            column: 49
         - path:
           - messageBasic__1
           - errorMsg
           message: intentional-error
           locations:
           - line: 1
-            column: 120
+            column: 100
         - path:
           - messageBasic__2
           - errorMsg
           message: intentional-error
           locations:
           - line: 1
-            column: 186
+            column: 151
       path: $
       code: unexpected
     message: Errors from remote server

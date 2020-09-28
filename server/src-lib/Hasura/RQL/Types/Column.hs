@@ -35,23 +35,21 @@ import           Control.Lens.TH
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Sequence.NonEmpty
-import           Language.Haskell.TH.Syntax    (Lift)
-
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.Instances          ()
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
+import           Language.Haskell.TH.Syntax    (Lift)
 
 newtype EnumValue
-  = EnumValue { getEnumValue :: T.Text }
-  deriving (Show, Eq, Lift, NFData, Hashable, ToJSON, ToJSONKey, FromJSON, FromJSONKey, Cacheable)
+  = EnumValue { getEnumValue :: G.Name }
+  deriving (Show, Eq, Ord, Lift, NFData, Hashable, ToJSON, ToJSONKey, FromJSON, FromJSONKey, Cacheable)
 
 newtype EnumValueInfo
   = EnumValueInfo
   { evComment :: Maybe T.Text
-  } deriving (Show, Eq, Lift, NFData, Hashable, Cacheable)
+  } deriving (Show, Eq, Ord, Lift, NFData, Hashable, Cacheable)
 $(deriveJSON (aesonDrop 2 snakeCase) ''EnumValueInfo)
 
 type EnumValues = M.HashMap EnumValue EnumValueInfo
@@ -62,7 +60,7 @@ data EnumReference
   = EnumReference
   { erTable  :: !QualifiedTable
   , erValues :: !EnumValues
-  } deriving (Show, Eq, Generic, Lift)
+  } deriving (Show, Eq, Ord, Generic, Lift)
 instance NFData EnumReference
 instance Hashable EnumReference
 instance Cacheable EnumReference
@@ -79,7 +77,7 @@ data PGColumnType
   -- always have type @text@), but we really want to distinguish this case, since we treat it
   -- /completely/ differently in the GraphQL schema.
   | PGColumnEnumReference !EnumReference
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 instance NFData PGColumnType
 instance Hashable PGColumnType
 instance Cacheable PGColumnType
@@ -113,13 +111,13 @@ parsePGScalarValue columnType value = case columnType of
   PGColumnEnumReference (EnumReference tableName enumValues) ->
     WithScalarType PGText <$> (maybe (pure $ PGNull PGText) parseEnumValue =<< decodeValue value)
     where
-      parseEnumValue :: Text -> m PGScalarValue
-      parseEnumValue textValue = do
-        let enumTextValues = map getEnumValue $ M.keys enumValues
-        unless (textValue `elem` enumTextValues) $ throw400 UnexpectedPayload
-          $ "expected one of the values " <> T.intercalate ", " (map dquote enumTextValues)
-          <> " for type " <> snakeCaseQualObject tableName <<> ", given " <>> textValue
-        pure $ PGValText textValue
+      parseEnumValue :: G.Name -> m PGScalarValue
+      parseEnumValue enumValueName = do
+        let enums = map getEnumValue $ M.keys enumValues
+        unless (enumValueName `elem` enums) $ throw400 UnexpectedPayload
+          $ "expected one of the values " <> T.intercalate ", " (map dquote enums)
+          <> " for type " <> snakeCaseQualObject tableName <<> ", given " <>> enumValueName
+        pure $ PGValText $ G.unName enumValueName
 
 parsePGScalarValues
   :: (MonadError QErr m)
@@ -149,7 +147,7 @@ data PGRawColumnInfo
   -- consistently identified by its position.
   , prciType        :: !PGScalarType
   , prciIsNullable  :: !Bool
-  , prciDescription :: !(Maybe PGDescription)
+  , prciDescription :: !(Maybe G.Description)
   } deriving (Show, Eq, Generic)
 instance NFData PGRawColumnInfo
 instance Cacheable PGRawColumnInfo
@@ -165,7 +163,7 @@ data PGColumnInfo
   , pgiPosition    :: !Int
   , pgiType        :: !PGColumnType
   , pgiIsNullable  :: !Bool
-  , pgiDescription :: !(Maybe PGDescription)
+  , pgiDescription :: !(Maybe G.Description)
   } deriving (Show, Eq, Generic)
 instance NFData PGColumnInfo
 instance Cacheable PGColumnInfo
