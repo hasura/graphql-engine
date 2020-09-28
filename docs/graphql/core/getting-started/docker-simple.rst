@@ -22,6 +22,32 @@ Hasura GraphQL engine on your **local environment**.
 In case you'd like to run Hasura on an existing Postgres database, follow :ref:`this guide <deployment_docker>`
 to deploy the Hasura GraphQL engine as a standalone docker container and connect it to your Postgres instance.
 
+Stay updated with product news
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+We push frequent updates to keep improving your Hasura experience. 
+Sign up for our newsletter to stay updated with product news.
+
+.. raw:: html
+
+   <form id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate post-subscription-form mc_embed_signup newsletter-form" target="_blank" rel="noopener" novalidate>
+      <div style="width: 40%">
+         <div class="input-box">
+            <input type="email" name="EMAIL" id="mce-EMAIL" class="mce-EMAIL" aria-label="Email" placeholder="Your Email Address" pattern="^([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x22([^\x0d\x22\x5c\x80-\xff]|\x5c[\x00-\x7f])*\x22)(\x2e([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x22([^\x0d\x22\x5c\x80-\xff]|\x5c[\x00-\x7f])*\x22))*\x40([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x5b([^\x0d\x5b-\x5d\x80-\xff]|\x5c[\x00-\x7f])*\x5d)(\x2e([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x5b([^\x0d\x5b-\x5d\x80-\xff]|\x5c[\x00-\x7f])*\x5d))*(\.\w{2,})+$" required>
+         </div>
+         <div id="mce-responses" class="clear display-inline mce-responses">
+            <div id="mce-error-response" class="mce-error-response response error-message hide">
+            </div>
+            <div id="mce-success-response" class="mce-success-response response success-message hide">
+            </div>
+         </div>
+      </div>
+      <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_9b63e92a98ecdc99732456b0e_f5c4f66bcf" tabindex="-1" value=""></div>
+      <div class="clear submit-box" style="max-width: 120px !important">
+         <input type="submit" disabled="true" value="Subscribe" name="subscribe" id="mc-embedded-subscribe" class="button mc-embedded-subscribe">
+      </div>
+   </form>
+
 Prerequisites
 -------------
 

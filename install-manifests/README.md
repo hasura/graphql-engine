@@ -11,6 +11,10 @@ Various installation / deployment methods for Hasura GraphQL Engine
 7. [Azure Container Instance without Postgres](azure-container)
 8. [Azure Container Instances with Postgres](azure-container-with-pg)
 
+## Stay updated
+
+You can [sign up for our newsletter](https://hasura.io/newsletter/) to stay up to date with product updates.
+
 ## License
 
 All content in this directory is under [MIT License](../LICENSE-community).
