@@ -971,14 +971,15 @@ mkSQLSelect agg simple =
   mkSQLSelect_
     agg
     (trace
-       ("\nfromSelectRows =\n " <> show simple <> "\n\n" <>
-        show (runValidate (FromIr.runFromIr (FromIr.fromSelectRows simple))) <>
+       ("\nmkSQLSelect (" <> show agg <> ") =\n " <> show simple <> "\n\n" <>
+        show result <>
         "\n\n" <>
         either
           (const "error")
           (T.unpack . Odbc.renderQuery . ToQuery.fromSelect)
-          (runValidate (FromIr.runFromIr (FromIr.fromSelectRows simple))) <> "\n")
+          result <> "\n")
        simple)
+  where result = runValidate (FromIr.runFromIr (FromIr.mkSQLSelect agg simple))
 
 mkSQLSelect_ :: JsonAggSelect -> AnnSimpleSel -> S.Select
 mkSQLSelect_ jsonAggSelect annSel =

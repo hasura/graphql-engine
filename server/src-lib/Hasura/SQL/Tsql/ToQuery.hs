@@ -169,6 +169,7 @@ fromComment :: Comment -> Query
 fromComment =
   \case
     DueToPermission -> "Due to permission"
+    RequestedSingleObject -> "Requested single object"
 
 trueExpression :: Expression
 trueExpression = ValueExpression (BoolValue True)

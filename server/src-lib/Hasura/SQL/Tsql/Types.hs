@@ -109,7 +109,7 @@ data Commented a = Commented
   , commentedThing :: !a
   } deriving (Eq, Show, Functor)
 
-data Comment = DueToPermission
+data Comment = DueToPermission | RequestedSingleObject
   deriving (Eq, Show)
 
 newtype EntityAlias = EntityAlias

@@ -2,6 +2,7 @@
 
 module Hasura.SQL.Tsql.FromIr
   ( fromSelectRows
+  , mkSQLSelect
   , fromSelectAggregate
   , Error(..)
   , runFromIr
@@ -55,6 +56,25 @@ newtype FromIr a = FromIr
 
 runFromIr :: FromIr a -> Validate (NonEmpty Error) a
 runFromIr fromIr = evalStateT (unFromIr fromIr) mempty
+
+--------------------------------------------------------------------------------
+-- Similar rendition of old API
+
+mkSQLSelect :: Ir.JsonAggSelect -> Ir.AnnSimpleSel -> FromIr Tsql.Select
+mkSQLSelect jsonAggSelect annSimpleSel =
+  case jsonAggSelect of
+    Ir.JASMultipleRows -> fromSelectRows annSimpleSel
+    Ir.JASSingleObject -> do
+      select <- fromSelectRows annSimpleSel
+      pure
+        select
+          { selectFor = JsonFor JsonSingleton
+          , selectTop =
+              Commented
+                { commentedThing = Top 1
+                , commentedComment = Just RequestedSingleObject
+                }
+          }
 
 --------------------------------------------------------------------------------
 -- Top-level exported functions
