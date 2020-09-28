@@ -102,8 +102,8 @@ processSchemaSyncEventPayload' instanceId payloadValue = pure $ do
 
 -- Transactions related to Async actions
 type InsertActionTx = ActionName -> SessionVariables -> [HTTP.Header] -> J.Value -> Q.TxE QErr ActionId
-type SetCompletedTx = ActionId -> J.Value -> Q.TxE QErr ()
-type SetErrorTx = ActionId -> QErr -> Q.TxE QErr ()
+type UndeliveredActionsTx = Q.TxE QErr [ActionLogItem]
+type SetActionStatusTx = ActionId -> AsyncActionStatus -> Q.TxE QErr ()
 type AsyncActionQueryResolver = UserInfo -> AnnActionAsyncQuery UnpreparedValue -> RS.AnnSimpleSelG UnpreparedValue
 
 insertActionTx :: InsertActionTx
@@ -125,7 +125,7 @@ insertActionTx actionName sessionVariables httpHeaders inputArgsPayload =
   where
     toHeadersMap = Map.fromList . map ((bsToTxt . CI.original) *** bsToTxt)
 
-undeliveredEventsTx :: Q.TxE QErr [ActionLogItem]
+undeliveredEventsTx :: UndeliveredActionsTx
 undeliveredEventsTx =
   map mapEvent <$> Q.listQE defaultTxErrorHandler [Q.sql|
     update hdb_catalog.hdb_action_log set status = 'processing'
@@ -145,21 +145,21 @@ undeliveredEventsTx =
 
    fromHeadersMap = map ((CI.mk . txtToBs) *** txtToBs) . Map.toList
 
-setCompletedTx :: SetCompletedTx
-setCompletedTx actionId responsePayload =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-    update hdb_catalog.hdb_action_log
-    set response_payload = $1, status = 'completed'
-    where id = $2
-  |] (Q.AltJ responsePayload, actionId) False
+setActionStatusTx :: SetActionStatusTx
+setActionStatusTx actionId = \case
+  AASCompleted responsePayload ->
+    Q.unitQE defaultTxErrorHandler [Q.sql|
+      update hdb_catalog.hdb_action_log
+      set response_payload = $1, status = 'completed'
+      where id = $2
+    |] (Q.AltJ responsePayload, actionId) False
 
-setErrorTx :: SetErrorTx
-setErrorTx actionId e =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-    update hdb_catalog.hdb_action_log
-    set errors = $1, status = 'error'
-    where id = $2
-  |] (Q.AltJ e, actionId) False
+  AASError qerr                ->
+    Q.unitQE defaultTxErrorHandler [Q.sql|
+      update hdb_catalog.hdb_action_log
+      set errors = $1, status = 'error'
+      where id = $2
+    |] (Q.AltJ qerr, actionId) False
 
 -- TODO: Add tracing here? Avoided now because currently the function is pure
 resolveAsyncActionQuery :: AsyncActionQueryResolver
@@ -467,17 +467,13 @@ class (Monad m) => MonadMetadataStorageTx m where
   default getInsertActionTx :: m InsertActionTx
   getInsertActionTx = pure insertActionTx
 
-  getUndeliveredEventsTx :: m (Q.TxE QErr [ActionLogItem])
-  default getUndeliveredEventsTx :: m (Q.TxE QErr [ActionLogItem])
+  getUndeliveredEventsTx :: m UndeliveredActionsTx
+  default getUndeliveredEventsTx :: m UndeliveredActionsTx
   getUndeliveredEventsTx = pure undeliveredEventsTx
 
-  getSetCompletedTx :: m SetCompletedTx
-  default getSetCompletedTx :: m SetCompletedTx
-  getSetCompletedTx = pure setCompletedTx
-
-  getSetErrorTx :: m SetErrorTx
-  default getSetErrorTx :: m SetErrorTx
-  getSetErrorTx = pure setErrorTx
+  getSetActionStatusTx :: m SetActionStatusTx
+  default getSetActionStatusTx :: m SetActionStatusTx
+  getSetActionStatusTx = pure setActionStatusTx
 
   getAsyncActionQueryResolver :: m AsyncActionQueryResolver
   default getAsyncActionQueryResolver :: m AsyncActionQueryResolver
@@ -532,8 +528,7 @@ instance (MonadMetadataStorageTx m) => MonadMetadataStorageTx (ReaderT r m) wher
 
   getInsertActionTx      = lift getInsertActionTx
   getUndeliveredEventsTx = lift getUndeliveredEventsTx
-  getSetCompletedTx      = lift getSetCompletedTx
-  getSetErrorTx          = lift getSetErrorTx
+  getSetActionStatusTx   = lift getSetActionStatusTx
 
   getDeprivedCronTriggerStatsTx       = lift getDeprivedCronTriggerStatsTx
   getPartialCronEventsTx              = lift getPartialCronEventsTx
@@ -553,8 +548,7 @@ instance (MonadMetadataStorageTx m) => MonadMetadataStorageTx (ExceptT e m) wher
 
   getInsertActionTx      = lift getInsertActionTx
   getUndeliveredEventsTx = lift getUndeliveredEventsTx
-  getSetCompletedTx      = lift getSetCompletedTx
-  getSetErrorTx          = lift getSetErrorTx
+  getSetActionStatusTx   = lift getSetActionStatusTx
 
   getDeprivedCronTriggerStatsTx       = lift getDeprivedCronTriggerStatsTx
   getPartialCronEventsTx              = lift getPartialCronEventsTx
@@ -574,8 +568,7 @@ instance (MonadMetadataStorageTx m) => MonadMetadataStorageTx (Tracing.TraceT m)
 
   getInsertActionTx      = lift getInsertActionTx
   getUndeliveredEventsTx = lift getUndeliveredEventsTx
-  getSetCompletedTx      = lift getSetCompletedTx
-  getSetErrorTx          = lift getSetErrorTx
+  getSetActionStatusTx   = lift getSetActionStatusTx
 
   getDeprivedCronTriggerStatsTx       = lift getDeprivedCronTriggerStatsTx
   getPartialCronEventsTx              = lift getPartialCronEventsTx

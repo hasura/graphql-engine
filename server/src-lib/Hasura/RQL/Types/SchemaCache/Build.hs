@@ -124,13 +124,16 @@ data CacheInvalidations = CacheInvalidations
   , ciRemoteSchemas :: !(HashSet RemoteSchemaName)
   -- ^ Force refetching of the given remote schemas, even if their definition has not changed. Set
   -- by the @reload_remote_schema@ API.
+  , ciSources       :: !(HashSet SourceName)
+  -- ^ Force re-establishing connections of the given data sources, even if their configuration has not changed. Set
+  -- by the @pg_reload_source@ API.
   }
 $(deriveJSON (aesonDrop 2 snakeCase) ''CacheInvalidations)
 
 instance Semigroup CacheInvalidations where
-  CacheInvalidations a1 b1 <> CacheInvalidations a2 b2 = CacheInvalidations (a1 || a2) (b1 <> b2)
+  CacheInvalidations a1 b1 c1 <> CacheInvalidations a2 b2 c2 = CacheInvalidations (a1 || a2) (b1 <> b2) (c1 <> c2)
 instance Monoid CacheInvalidations where
-  mempty = CacheInvalidations False mempty
+  mempty = CacheInvalidations False mempty mempty
 
 instance (CacheRWM m) => CacheRWM (ReaderT r m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c

@@ -180,6 +180,21 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
         <> toList relaySchemaInconsistentObjects
     }
   where
+    resolveSourceIfNeeded
+      :: ( ArrowChoice arr, Inc.ArrowCache m arr
+         , ArrowWriter (Seq CollectedInfo) arr
+         , HasDefaultSource m, MonadIO m
+         )
+      => ( Inc.Dependency (HashMap SourceName Inc.InvalidationKey)
+         , SourceMetadata
+         ) `arr` Maybe ResolvedSource
+    resolveSourceIfNeeded = Inc.cache proc (invalidationKeys, sourceMetadata) -> do
+      let sourceName = _smName sourceMetadata
+          metadataObj = MetadataObject (MOSource sourceName) $ toJSON sourceName
+      Inc.dependOn -< Inc.selectKeyD sourceName invalidationKeys
+      (| withRecordInconsistency (liftEitherA <<< bindA -< resolveSource env sourceMetadata)
+       |) metadataObj
+
     buildSource
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
          , ArrowWriter (Seq CollectedInfo) arr, MonadReader BuildReason m
@@ -262,11 +277,9 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 
       -- sources
       sourcesOutput <-
-        (| Inc.keyed (\source sourceMetadata -> do
-             let metadataObj = MetadataObject (MOSource source) $ toJSON source
-             maybeResolvedSource <-
-               (| withRecordInconsistency (liftEitherA <<< bindA -< resolveSource env sourceMetadata)
-                |) metadataObj
+        (| Inc.keyed (\_ sourceMetadata -> do
+             let sourceInvalidationsKeys = Inc.selectD #_ikSources invalidationKeys
+             maybeResolvedSource <- resolveSourceIfNeeded -< (sourceInvalidationsKeys, sourceMetadata)
              case maybeResolvedSource of
                Nothing -> returnA -< Nothing
                Just (ResolvedSource pgSourceConfig tablesMeta functionsMeta pgScalars) -> do

@@ -12,6 +12,7 @@ import           Data.Aeson
 
 import qualified Data.Environment             as Env
 import qualified Data.HashMap.Strict          as HM
+import qualified Data.HashSet                 as S
 import qualified Database.PG.Query            as Q
 
 resolveSource
@@ -167,3 +168,13 @@ runDropPgSource (DropPgSource name cascade) = do
       SOSource s      -> s == name
       SOSourceObj s _ -> s == name
       _               -> False
+
+runReloadPgSource
+  :: (MonadError QErr m, CacheRWM m)
+  => PGSourceName -> m EncJSON
+runReloadPgSource (PGSourceName sourceName) = do
+  void $ askSourceCache sourceName
+  let invalidations = mempty {ciSources = S.singleton sourceName}
+  withNewInconsistentObjsCheck $
+    buildSchemaCacheWithOptions CatalogUpdate invalidations noMetadataModify
+  pure successMsg

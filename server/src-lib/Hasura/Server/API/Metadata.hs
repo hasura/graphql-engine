@@ -33,6 +33,7 @@ import qualified Network.HTTP.Client                as HTTP
 data RQLMetadata
   = RMPgAddSource !AddPgSource
   | RMPgDropSource !DropPgSource
+  | RMPgReloadSource !PGSourceName
 
   | RMPgTrackTable !TrackTable
   | RMPgUntrackTable !UntrackTable
@@ -166,8 +167,9 @@ runMetadataRequestM
   -> RQLMetadata
   -> m EncJSON
 runMetadataRequestM env = \case
-  RMPgAddSource q  -> runAddPgSource q
-  RMPgDropSource q -> runDropPgSource q
+  RMPgAddSource q    -> runAddPgSource q
+  RMPgDropSource q   -> runDropPgSource q
+  RMPgReloadSource q -> runReloadPgSource q
 
   RMPgTrackTable q     -> runTrackTableQ q
   RMPgUntrackTable q   -> runUntrackTableQ q

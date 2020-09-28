@@ -53,6 +53,7 @@ module Hasura.RQL.Types.Action
 
   , ActionId(..)
   , ActionLogItem(..)
+  , AsyncActionStatus(..)
   ) where
 
 
@@ -63,6 +64,7 @@ import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.CustomTypes
+import           Hasura.RQL.Types.Error
 import           Hasura.Session
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax    (Lift)
@@ -326,3 +328,7 @@ data ActionLogItem
   , _aliSessionVariables :: !SessionVariables
   , _aliInputPayload     :: !J.Value
   } deriving (Show, Eq)
+
+data AsyncActionStatus
+  = AASCompleted !J.Value
+  | AASError !QErr

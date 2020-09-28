@@ -25,20 +25,26 @@ import           Hasura.SQL.Types
 data InvalidationKeys = InvalidationKeys
   { _ikMetadata      :: !Inc.InvalidationKey
   , _ikRemoteSchemas :: !(HashMap RemoteSchemaName Inc.InvalidationKey)
+  , _ikSources       :: !(HashMap SourceName Inc.InvalidationKey)
   } deriving (Show, Eq, Generic)
 instance Inc.Cacheable InvalidationKeys
 instance Inc.Select InvalidationKeys
 $(makeLenses ''InvalidationKeys)
 
 initialInvalidationKeys :: InvalidationKeys
-initialInvalidationKeys = InvalidationKeys Inc.initialInvalidationKey mempty
+initialInvalidationKeys = InvalidationKeys Inc.initialInvalidationKey mempty mempty
 
 invalidateKeys :: CacheInvalidations -> InvalidationKeys -> InvalidationKeys
 invalidateKeys CacheInvalidations{..} InvalidationKeys{..} = InvalidationKeys
   { _ikMetadata = if ciMetadata then Inc.invalidate _ikMetadata else _ikMetadata
-  , _ikRemoteSchemas = foldl' (flip invalidateRemoteSchema) _ikRemoteSchemas ciRemoteSchemas }
+  , _ikRemoteSchemas = foldl' (flip invalidate) _ikRemoteSchemas ciRemoteSchemas
+  , _ikSources = foldl' (flip invalidate) _ikSources ciSources
+  }
   where
-    invalidateRemoteSchema = M.alter $ Just . maybe Inc.initialInvalidationKey Inc.invalidate
+    invalidate
+      :: (Eq a, Hashable a)
+      => a -> HashMap a Inc.InvalidationKey -> HashMap a Inc.InvalidationKey
+    invalidate = M.alter $ Just . maybe Inc.initialInvalidationKey Inc.invalidate
 
 data TableBuildInput
   = TableBuildInput

@@ -1,5 +1,6 @@
 module Hasura.RQL.Types.Relationship where
 
+import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
 import           Hasura.SQL.Types
 
@@ -20,7 +21,7 @@ data RelDef a
   , _rdUsing   :: !a
   , _rdComment :: !(Maybe T.Text)
   } deriving (Show, Eq, Lift, Generic)
-
+instance (Cacheable a) => Cacheable (RelDef a)
 $(deriveFromJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''RelDef)
 $(makeLenses ''RelDef)
 
@@ -39,6 +40,7 @@ data RelManualConfig
   { rmTable   :: !QualifiedTable
   , rmColumns :: !(HashMap PGCol PGCol)
   } deriving (Show, Eq, Lift, Generic)
+instance Cacheable RelManualConfig
 
 instance FromJSON RelManualConfig where
   parseJSON (Object v) =
@@ -59,6 +61,7 @@ data RelUsing a
   = RUFKeyOn !a
   | RUManual !RelManualConfig
   deriving (Show, Eq, Lift, Generic)
+instance (Cacheable a) => Cacheable (RelUsing a)
 
 instance (ToJSON a) => ToJSON (RelUsing a) where
   toJSON (RUFKeyOn fkey) =
@@ -84,6 +87,7 @@ data ArrRelUsingFKeyOn
   { arufTable  :: !QualifiedTable
   , arufColumn :: !PGCol
   } deriving (Show, Eq, Lift, Generic)
+instance Cacheable ArrRelUsingFKeyOn
 
 $(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''ArrRelUsingFKeyOn)
 

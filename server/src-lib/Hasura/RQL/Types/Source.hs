@@ -82,6 +82,7 @@ data SourceConnSettings
   , _scsIdleTimeout    :: !Int
   , _scsRetries        :: !Int
   } deriving (Show, Eq, Lift, Generic)
+instance Cacheable SourceConnSettings
 $(deriveToJSON (aesonDrop 4 snakeCase) ''SourceConnSettings)
 
 instance FromJSON SourceConnSettings where
@@ -116,3 +117,8 @@ $(deriveToJSON (aesonDrop 4 snakeCase) ''DropPgSource)
 instance FromJSON DropPgSource where
   parseJSON = withObject "Object" $ \o ->
     DropPgSource <$> o .: "name" <*> o .:? "cascade" .!= False
+
+newtype PGSourceName =
+  PGSourceName {_psnName :: SourceName}
+  deriving (Show, Eq, Lift)
+$(deriveJSON (aesonDrop 4 snakeCase) ''PGSourceName)

@@ -13,6 +13,7 @@ import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax          (Lift)
 
 
+import           Hasura.Incremental                  (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Common
@@ -181,6 +182,7 @@ data ComputedFieldMetadata
   , _cfmDefinition :: !ComputedFieldDefinition
   , _cfmComment    :: !(Maybe Text)
   } deriving (Show, Eq, Lift, Generic)
+instance Cacheable ComputedFieldMetadata
 $(deriveJSON (aesonDrop 4 snakeCase) ''ComputedFieldMetadata)
 
 data RemoteRelationshipMeta
@@ -188,6 +190,7 @@ data RemoteRelationshipMeta
   { _rrmName       :: !RemoteRelationshipName
   , _rrmDefinition :: !RemoteRelationshipDef
   } deriving (Show, Eq, Lift, Generic)
+instance Cacheable RemoteRelationshipMeta
 $(deriveJSON (aesonDrop 4 snakeCase) ''RemoteRelationshipMeta)
 $(makeLenses ''RemoteRelationshipMeta)
 
@@ -212,6 +215,7 @@ data TableMetadata
   , _tmDeletePermissions   :: !(Permissions DelPermDef)
   , _tmEventTriggers       :: !EventTriggers
   } deriving (Show, Eq, Lift, Generic)
+instance Cacheable TableMetadata
 $(makeLenses ''TableMetadata)
 
 mkTableMeta :: QualifiedTable -> Bool -> TableConfig -> TableMetadata
@@ -267,6 +271,7 @@ data FunctionMetadata
   { _fmFunction      :: !QualifiedFunction
   , _fmConfiguration :: !FunctionConfig
   } deriving (Show, Eq, Lift, Generic)
+instance Cacheable FunctionMetadata
 $(makeLenses ''FunctionMetadata)
 $(deriveFromJSON (aesonDrop 3 snakeCase) ''FunctionMetadata)
 
@@ -283,12 +288,14 @@ data SourceCustomConfiguration
   { _sccDatabaseUrl            :: !UrlConf
   , _sccConnectionPoolSettings :: !SourceConnSettings
   } deriving (Show, Eq, Lift, Generic)
+instance Cacheable SourceCustomConfiguration
 $(deriveJSON (aesonDrop 4 snakeCase) ''SourceCustomConfiguration)
 
 data SourceConfiguration
   = SCDefault -- ^ the default configuraion, to be resolved from --database-url option
   | SCCustom !SourceCustomConfiguration -- ^ the custom configuration
   deriving (Show, Eq, Lift, Generic)
+instance Cacheable SourceConfiguration
 
 data SourceMetadata
   = SourceMetadata
@@ -297,6 +304,7 @@ data SourceMetadata
   , _smFunctions     :: !Functions
   , _smConfiguration :: !SourceConfiguration
   } deriving (Show, Eq, Lift, Generic)
+instance Cacheable SourceMetadata
 $(makeLenses ''SourceMetadata)
 instance FromJSON SourceMetadata where
   parseJSON = withObject "Object" $ \o -> do

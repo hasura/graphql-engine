@@ -241,14 +241,17 @@ runExportMetadata _ =
   (AO.toEncJSON . metadataToOrdJSON) <$> fetchMetadata
 
 runReloadMetadata :: (QErrM m, CacheRWM m) => ReloadMetadata -> m EncJSON
-runReloadMetadata (ReloadMetadata reloadRemoteSchemas) = do
+runReloadMetadata (ReloadMetadata reloadRemoteSchemas reloadSources) = do
   sc <- askSchemaCache
   let remoteSchemaInvalidations =
         if reloadRemoteSchemas then HS.fromList (getAllRemoteSchemas sc) else mempty
+      pgSourcesInvalidations =
+        if reloadSources then HS.fromList (HM.keys $ scPostgres sc) else mempty
   flip (buildSchemaCacheWithOptions CatalogUpdate) noMetadataModify
     CacheInvalidations
     { ciMetadata = True
     , ciRemoteSchemas = remoteSchemaInvalidations
+    , ciSources = pgSourcesInvalidations
     }
   pure successMsg
 

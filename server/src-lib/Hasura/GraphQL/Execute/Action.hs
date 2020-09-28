@@ -274,11 +274,11 @@ asyncActionsProcessor env logger cacheRef pgPool httpManager = forever $ do
                          forwardClientHeaders webhookUrl
                          (ActionWebhookPayload actionContext sessionVariables inputPayload)
                          timeout
-          setErrorTx <- getSetErrorTx
-          setCompletedTx <- getSetCompletedTx
-          liftIO $ runTx $ case eitherRes of
-            Left e                     -> setErrorTx actionId e
-            Right (responsePayload, _) -> setCompletedTx actionId $ J.toJSON responsePayload
+          setStatusTx <- getSetActionStatusTx
+          liftIO $ runTx $
+            setStatusTx actionId $ case eitherRes of
+            Left e                     -> AASError e
+            Right (responsePayload, _) -> AASCompleted $ J.toJSON responsePayload
 
     -- setError :: ActionId -> QErr -> IO ()
     -- setError actionId e =

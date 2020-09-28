@@ -268,6 +268,7 @@ data RemoteRelationshipDef
   , _rrdHasuraFields :: !(Set FieldName)
   , _rrdRemoteField  :: !RemoteFields
   } deriving (Show, Eq, Generic, Lift)
+instance Cacheable RemoteRelationshipDef
 $(deriveJSON (aesonDrop 4 snakeCase) ''RemoteRelationshipDef)
 $(makeLenses ''RemoteRelationshipDef)
 
