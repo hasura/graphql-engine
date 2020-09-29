@@ -1,7 +1,8 @@
 -- | Execution of GraphQL queries over HTTP transport
 {-# LANGUAGE RecordWildCards #-}
 module Hasura.GraphQL.Transport.HTTP
-  ( MonadExecuteQuery(..)
+  ( QueryCacheKey(..)
+  , MonadExecuteQuery(..)
   , runGQ
   , runGQBatched
   -- * imported from HTTP.Protocol; required by pro
@@ -41,8 +42,6 @@ import qualified Hasura.Tracing                         as Tracing
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
-
-import           Control.Lens                           (over, _3)
 
 data QueryCacheKey = QueryCacheKey
   { qckQueryString :: !GQLReqParsed
@@ -116,7 +115,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                                  httpManager reqHeaders (reqUnparsed, reqParsed)
     case execPlan of
       E.QueryExecutionPlan queryPlan asts -> do
-        let cacheKey = undefined -- FIXME
+        let cacheKey = QueryCacheKey reqParsed $ _uiRole userInfo
         (responseHeaders, cachedValue) <- cacheLookup reqParsed asts (Just cacheKey)
         (tch, tl, (ttio, tqt, HttpResponse responseData newHeaders)) <- case cachedValue of
           Just cachedResponseData ->

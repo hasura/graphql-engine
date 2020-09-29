@@ -47,7 +47,8 @@ import           GHC.AssertNF
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging                      (MonadQueryLog (..))
-import           Hasura.GraphQL.Transport.HTTP               (MonadExecuteQuery (..))
+import           Hasura.GraphQL.Transport.HTTP               (MonadExecuteQuery (..),
+                                                              QueryCacheKey (..))
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import           Hasura.HTTP
@@ -352,7 +353,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
   case execPlan of
     E.QueryExecutionPlan queryPlan asts -> do
-      let cacheKey = undefined -- FIXME
+      let cacheKey = QueryCacheKey reqParsed $ _uiRole userInfo
       (responseHeaders, cachedValue) <- cacheLookup reqParsed asts (Just cacheKey)
       responseData <- case cachedValue of
         Just cachedResponseData -> pure cachedResponseData
