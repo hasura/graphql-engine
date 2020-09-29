@@ -13,6 +13,7 @@ module Hasura.RQL.DDL.RemoteSchema
   , addRemoteSchemaPermissionsToCatalog
   , runAddRemoteSchemaPermissions
   , dropRemoteSchemaPermFromCatalog
+  , runDropRemoteSchemaPermissions
   ) where
 
 import           Control.Monad.Unique
@@ -66,10 +67,13 @@ runAddRemoteSchemaPermissions
   -> m EncJSON
 runAddRemoteSchemaPermissions q = do
   remoteSchemaMap <- scRemoteSchemas <$> askSchemaCache
-  upstreamRemoteSchema <-
+  (RemoteSchemaCtxWithPermissions _ ctx perms) <-
     onNothing (Map.lookup name remoteSchemaMap) $
       throw400 NotExists $ "remote schema " <> name <<> " doesn't exist"
-  resolveRoleBasedRemoteSchema providedSchemaDoc $ irDoc $ rscIntro $ _rscpContext upstreamRemoteSchema
+  onJust (Map.lookup role perms) $ \_ ->
+    throw400 AlreadyExists $ "permissions for role: " <> role <<> " for remote schema:"
+      <> name <<> " already exists"
+  resolveRoleBasedRemoteSchema providedSchemaDoc ctx
   liftTx $ addRemoteSchemaPermissionsToCatalog q
   buildSchemaCacheFor $ MORemoteSchemaPermissions name role
   pure successMsg
@@ -77,6 +81,25 @@ runAddRemoteSchemaPermissions q = do
     AddRemoteSchemaPermissions name role defn _ = q
 
     providedSchemaDoc = _rspdSchema defn
+
+runDropRemoteSchemaPermissions
+  :: ( QErrM m
+     , CacheRWM m
+     , MonadTx m
+     )
+  => DropRemoteSchemaPermissions
+  -> m EncJSON
+runDropRemoteSchemaPermissions (DropRemoteSchemaPermissions name roleName) = do
+  remoteSchemaMap <- scRemoteSchemas <$> askSchemaCache
+  (RemoteSchemaCtxWithPermissions _ _ perms) <-
+    onNothing (Map.lookup name remoteSchemaMap) $
+      throw400 NotExists $ "remote schema " <> name <<> " doesn't exist"
+  onNothing (Map.lookup roleName perms) $
+    throw400 NotExists $ "permissions for role: " <> roleName <<> " for remote schema:"
+     <> name <<> " doesn't exist"
+  liftTx $ dropRemoteSchemaPermFromCatalog name roleName
+  withNewInconsistentObjsCheck buildSchemaCache
+  pure successMsg
 
 addRemoteSchemaP1
   :: (QErrM m, CacheRM m)

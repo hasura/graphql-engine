@@ -156,8 +156,10 @@ buildGQLContext =
                   Just _  -> returnA -< (newSchemaName, rscParsed $ _rscpContext newSchemaContext):okSchemas
               ) |) [] (Map.toList allRemoteSchemas)
 
-    -- TODO: I think this will need to change, we'll have to read the unauthenticated role from the server options
-    -- and then use the remote schema defined for that role!
+    -- The `unauthenticatedContext` is used when the user queries the graphql-engine
+    -- with a role that it's unaware of. Before remote schema permissions, remotes
+    -- were considered to be a public entity, hence, we allowed an unknown role also
+    -- to query the remotes.
     let unauthenticatedContext :: m GQLContext
         unauthenticatedContext = P.runSchemaT do
           ucQueries   <- finalizeParser <$> unauthenticatedQueryWithIntrospection adminQueryRemotes adminMutationRemotes

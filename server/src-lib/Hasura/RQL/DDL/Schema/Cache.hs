@@ -369,16 +369,16 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
           let AddRemoteSchemaPermissions rsName roleName defn _ = remoteSchemaPerm
               metadataObject = mkRemoteSchemaPermissionMetadataObject remoteSchemaPerm
               schemaObject = SORemoteSchemaPermission rsName roleName
-              upstreamSchemaIntrospection = irDoc $ rscIntro remoteSchemaCtx
               providedSchemaDoc = _rspdSchema defn
               addPermContext err = "in remote schema permission for role " <> roleName <<> ": " <> err
           (| withRecordInconsistency (
              (| modifyErrA (do
                  bindErrorA -< when (roleName == adminRoleName) $
                    throw400 ConstraintViolation $ "cannot define permission for admin role"
-                 validatedSchemaDoc <- bindErrorA -< resolveRoleBasedRemoteSchema providedSchemaDoc upstreamSchemaIntrospection
-                 recordDependencies -< (metadataObject, schemaObject, []) -- TODO: should the last arg be `[]` here?
-                 returnA -< validatedSchemaDoc)
+                 (resolvedSchemaIntrospection, dependencies) <-
+                    bindErrorA -< resolveRoleBasedRemoteSchema providedSchemaDoc remoteSchemaCtx
+                 recordDependencies -< (metadataObject, schemaObject, dependencies)
+                 returnA -< resolvedSchemaIntrospection)
              |) addPermContext)
            |) metadataObject
 

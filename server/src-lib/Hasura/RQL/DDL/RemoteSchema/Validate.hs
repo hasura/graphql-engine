@@ -642,11 +642,13 @@ validateRemoteSchema (G.SchemaDocument providedTypeDefns) (G.SchemaIntrospection
 resolveRoleBasedRemoteSchema
   :: (MonadError QErr m)
   => G.SchemaDocument
-  -> G.SchemaIntrospection
-  -> m IntrospectionResult
-resolveRoleBasedRemoteSchema providedSchemaDoc upstreamSchemaIntrospection = do
-  either (throw400 InvalidRoleBasedRemoteSchema . showErrors) pure
-    =<< runValidateT (validateRemoteSchema providedSchemaDoc upstreamSchemaIntrospection)
+  -> RemoteSchemaCtx
+  -> m (IntrospectionResult, [SchemaDependency])
+resolveRoleBasedRemoteSchema providedSchemaDoc upstreamRemoteCtx = do
+  introspectionRes <-
+    either (throw400 InvalidRoleBasedRemoteSchema . showErrors) pure
+    =<< runValidateT (validateRemoteSchema providedSchemaDoc $ irDoc $ rscIntro upstreamRemoteCtx)
+  pure (introspectionRes, [schemaDependency])
   where
     showErrors :: [RoleBasedSchemaValidationError] -> Text
     showErrors errors =
@@ -656,4 +658,6 @@ resolveRoleBasedRemoteSchema providedSchemaDoc upstreamSchemaIntrospection = do
           [] -> "" -- this case is impossible
           [singleError] -> "because " <> showRoleBasedSchemaValidationError singleError
           _ -> "for the following reasons:\n" <> T.unlines
-             (map (("  • " <>) . showRoleBasedSchemaValidationError) errors)
+             (map ((" • " <>) . showRoleBasedSchemaValidationError) errors)
+
+    schemaDependency = SchemaDependency (SORemoteSchema $ rscName upstreamRemoteCtx) DRRemoteSchema

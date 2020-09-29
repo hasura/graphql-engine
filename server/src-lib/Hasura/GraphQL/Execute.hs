@@ -302,20 +302,6 @@ getResolvedExecPlan env logger pgExecCtx {- planCache-} userInfo sqlGenCtx
           -- getSubsOpM pgExecCtx userInfo inlinedSelSet
           return $ SubscriptionExecutionPlan lqOp
 
-      -- forM partialExecPlan $ \(gCtx, rootSelSet) ->
-      --   case rootSelSet of
-      --     VQ.RMutation selSet -> do
-      --       (tx, respHeaders) <- getMutOp gCtx sqlGenCtx userInfo httpManager reqHeaders selSet
-      --       pure $ ExOpMutation respHeaders tx
-      --     VQ.RQuery selSet -> do
-      --       (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo queryReusability (allowQueryActionExecuter httpManager reqHeaders) selSet
-      --       traverse_ (addPlanToCache . EP.RPQuery) plan
-      --       return $ ExOpQuery queryTx (Just genSql)
-      --     VQ.RSubscription fld -> do
-      --       (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability (restrictActionExecuter "query actions cannot be run as a subscription") fld
-      --       traverse_ (addPlanToCache . EP.RPSubs) plan
-      --       return $ ExOpSubs lqOp
-
 execRemoteGQ
   :: ( HasVersion
      , MonadIO m

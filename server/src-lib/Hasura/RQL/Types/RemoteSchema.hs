@@ -149,3 +149,12 @@ data AddRemoteSchemaPermissions
 instance NFData AddRemoteSchemaPermissions
 instance Cacheable AddRemoteSchemaPermissions
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''AddRemoteSchemaPermissions)
+
+data DropRemoteSchemaPermissions
+  = DropRemoteSchemaPermissions
+  { _drspRemoteSchema :: !RemoteSchemaName
+  , _drspRole         :: !RoleName
+  } deriving (Show, Eq, Lift, Generic)
+instance NFData DropRemoteSchemaPermissions
+instance Cacheable DropRemoteSchemaPermissions
+$(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''DropRemoteSchemaPermissions)
