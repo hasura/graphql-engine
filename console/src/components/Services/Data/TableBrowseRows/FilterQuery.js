@@ -26,7 +26,7 @@ import { setDefaultQuery, runQuery, setOffset } from './FilterActions';
 import Button from '../../../Common/Button/Button';
 import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton';
 import styles from '../../../Common/FilterQuery/FilterQuery.scss';
-import { getPersistedPageSize } from './localStorageUtils';
+import { getPersistedPageSize } from './tableUtils';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 
 const history = createHistory();
