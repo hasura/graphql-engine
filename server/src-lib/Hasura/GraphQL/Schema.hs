@@ -52,7 +52,7 @@ buildGQLContext
   => ( GraphQLQueryType
      , TableCache
      , FunctionCache
-     , HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
+     , HashMap RemoteSchemaName (RemoteSchemaCtxWithPermissions, MetadataObject)
      , ActionCache
      , NonObjectTypeMap
      )
@@ -77,7 +77,7 @@ buildGQLContext =
 
         allActionInfos = Map.elems allActions
         queryRemotesMap =
-          fmap (map fDefinition . piQuery . rscParsed . fst) allRemoteSchemas
+          fmap (map fDefinition . piQuery . rscParsed . rscpContext . fst) allRemoteSchemas
         buildFullestDBSchema
           :: m ( Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
                , Maybe (Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
@@ -123,7 +123,7 @@ buildGQLContext =
                      let (queryOld, mutationOld) =
                            unzip $ fmap ((\case ParsedIntrospection q m _ -> (q,m)) . snd) okSchemas
                      let ParsedIntrospection queryNew mutationNew _subscriptionNew
-                           = rscParsed newSchemaContext
+                           = rscParsed $ rscpContext newSchemaContext
                      -- Check for conflicts between remotes
                      bindErrorA -<
                        for_ (duplicates (fmap (P.getName . fDefinition) (queryNew ++ concat queryOld))) $
@@ -148,7 +148,7 @@ buildGQLContext =
                   |) newMetadataObject
                 case checkedDuplicates of
                   Nothing -> returnA -< okSchemas
-                  Just _  -> returnA -< (newSchemaName, rscParsed newSchemaContext):okSchemas
+                  Just _  -> returnA -< (newSchemaName, rscParsed $ rscpContext newSchemaContext):okSchemas
               ) |) [] (Map.toList allRemoteSchemas)
 
     let unauthenticatedContext :: m GQLContext

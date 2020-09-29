@@ -70,7 +70,7 @@ runAddRemoteSchemaPermissions q = do
   upstreamRemoteSchema <-
     onNothing (Map.lookup name remoteSchemaMap) $
       throw400 NotExists "no such remote schema"
-  resolveRoleBasedRemoteSchema providedSchemaDoc $ irDoc $ rscIntro upstreamRemoteSchema
+  resolveRoleBasedRemoteSchema providedSchemaDoc $ irDoc $ rscIntro $ rscpContext upstreamRemoteSchema
   liftTx $ addRemoteSchemaPermissionsToCatalog q
 --  buildSchemaCacheFor $ MORemoteSchema name
   pure successMsg
@@ -181,7 +181,7 @@ runIntrospectRemoteSchema
 runIntrospectRemoteSchema (RemoteSchemaNameQuery rsName) = do
   sc <- askSchemaCache
   (RemoteSchemaCtx _ _ _ introspectionByteString _) <-
-    onNothing (Map.lookup rsName (scRemoteSchemas sc)) $
+    rscpContext <$> (onNothing (Map.lookup rsName (scRemoteSchemas sc)) $
     throw400 NotExists $
-    "remote schema: " <> rsName <<> " not found"
+    "remote schema: " <> rsName <<> " not found")
   pure $ encJFromLBS introspectionByteString

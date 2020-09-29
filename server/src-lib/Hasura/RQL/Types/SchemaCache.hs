@@ -194,6 +194,9 @@ data RemoteSchemaCtx
   , rscParsed                 :: ParsedIntrospection
   }
 
+instance ToJSON RemoteSchemaCtx where
+  toJSON = toJSON . rscInfo
+
 data RemoteSchemaCtxWithPermissions
   = RemoteSchemaCtxWithPermissions
   { rscpName        :: !RemoteSchemaName
@@ -201,8 +204,12 @@ data RemoteSchemaCtxWithPermissions
   , rscpPermissions :: !(M.HashMap RoleName IntrospectionResult)
   }
 
-instance ToJSON RemoteSchemaCtx where
-  toJSON = toJSON . rscInfo
+instance ToJSON RemoteSchemaCtxWithPermissions where
+  toJSON (RemoteSchemaCtxWithPermissions name ctx _ ) =
+    object $
+      [ "name" .= name
+      , "context" .= ctx
+      ]
 
 type RemoteSchemaMap = M.HashMap RemoteSchemaName RemoteSchemaCtx
 
@@ -240,7 +247,7 @@ data SchemaCache
   { scTables                      :: !TableCache
   , scActions                     :: !ActionCache
   , scFunctions                   :: !FunctionCache
-  , scRemoteSchemas               :: !RemoteSchemaMap
+  , scRemoteSchemas               :: !(M.HashMap RemoteSchemaName RemoteSchemaCtxWithPermissions)
   , scAllowlist                   :: !(HS.HashSet GQLQuery)
   , scGQLContext                  :: !(HashMap RoleName (RoleContext GQLContext))
   , scUnauthenticatedGQLContext   :: !GQLContext
