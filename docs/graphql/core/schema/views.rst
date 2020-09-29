@@ -68,6 +68,7 @@ Example: Hide certain fields of a table
 ***************************************
 
 Say, we have some sensitive information in a table which we wouldn't want to expose. In our case, we want to expose the ``author`` table without the fields ``email``, ``phone`` and ``address``.
+
 We can create a view that only exposes the non-sensitive fields as follows:
 
 .. code-block:: SQL
