@@ -20,10 +20,10 @@ module Hasura.RQL.DDL.Schema.Cache
 
 import           Hasura.Prelude
 
+import qualified Data.Environment                         as Env
 import qualified Data.HashMap.Strict.Extended             as M
 import qualified Data.HashSet                             as HS
 import qualified Data.Text                                as T
-import qualified Data.Environment                         as Env
 import qualified Database.PG.Query                        as Q
 
 import           Control.Arrow.Extended
@@ -43,6 +43,7 @@ import           Hasura.RQL.DDL.CustomTypes
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.RemoteSchema
+import           Hasura.RQL.DDL.RemoteSchema.Validate     (resolveRoleBasedRemoteSchema)
 import           Hasura.RQL.DDL.ScheduledTrigger
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Cache.Dependencies
@@ -53,7 +54,6 @@ import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DDL.Utils                     (clearHdbViews)
-import           Hasura.RQL.DDL.RemoteSchema.Validate     (resolveRoleBasedRemoteSchema)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.Server.Version                    (HasVersion)
@@ -202,9 +202,9 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
                    permissionInfo <-
                      buildRemoteSchemaPermissions -< (remoteSchemaCtx, remoteSchemaPerms)
                    returnA -< (RemoteSchemaCtxWithPermissions
-                     { rscpName = rscName remoteSchemaCtx
-                     , rscpContext = remoteSchemaCtx
-                     , rscpPermissions = permissionInfo
+                     { _rscpName = rscName remoteSchemaCtx
+                     , _rscpContext = remoteSchemaCtx
+                     , _rscpPermissions = permissionInfo
                      }, metadataObj)
                    )
              |)

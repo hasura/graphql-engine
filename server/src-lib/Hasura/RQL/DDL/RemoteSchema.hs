@@ -24,16 +24,16 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.RemoteSchema.Validate
 
-import qualified Data.Aeson                  as J
-import qualified Data.HashMap.Strict         as Map
-import qualified Data.HashSet                as S
-import qualified Database.PG.Query           as Q
+import qualified Data.Aeson                           as J
+import qualified Data.HashMap.Strict                  as Map
+import qualified Data.HashSet                         as S
+import qualified Database.PG.Query                    as Q
 
 import           Hasura.RQL.Types
-import           Hasura.Server.Version             (HasVersion)
+import           Hasura.Server.Version                (HasVersion)
 import           Hasura.SQL.Types
 
-import qualified Data.Environment                  as Env
+import qualified Data.Environment                     as Env
 
 import           Hasura.Session
 
@@ -69,7 +69,7 @@ runAddRemoteSchemaPermissions q = do
   upstreamRemoteSchema <-
     onNothing (Map.lookup name remoteSchemaMap) $
       throw400 NotExists $ "remote schema " <> name <<> " doesn't exist"
-  resolveRoleBasedRemoteSchema providedSchemaDoc $ irDoc $ rscIntro $ rscpContext upstreamRemoteSchema
+  resolveRoleBasedRemoteSchema providedSchemaDoc $ irDoc $ rscIntro $ _rscpContext upstreamRemoteSchema
   liftTx $ addRemoteSchemaPermissionsToCatalog q
   buildSchemaCacheFor $ MORemoteSchemaPermissions name role
   pure successMsg
@@ -187,7 +187,7 @@ runIntrospectRemoteSchema
 runIntrospectRemoteSchema (RemoteSchemaNameQuery rsName) = do
   sc <- askSchemaCache
   (RemoteSchemaCtx _ _ _ introspectionByteString _) <-
-    rscpContext <$> (onNothing (Map.lookup rsName (scRemoteSchemas sc)) $
+    _rscpContext <$> (onNothing (Map.lookup rsName (scRemoteSchemas sc)) $
     throw400 NotExists $
     "remote schema: " <> rsName <<> " not found")
   pure $ encJFromLBS introspectionByteString

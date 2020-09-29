@@ -47,6 +47,9 @@ module Hasura.RQL.Types.SchemaCache
   , ParsedIntrospection(..)
   , RemoteSchemaCtx(..)
   , RemoteSchemaCtxWithPermissions(..)
+  , rscpName
+  , rscpContext
+  , rscpPermissions
   , RemoteSchemaMap
 
   , DepMap
@@ -116,11 +119,12 @@ module Hasura.RQL.Types.SchemaCache
   , CronTriggerInfo(..)
   ) where
 
-import           Control.Lens                     (makeLenses)
+import           Control.Lens                      (makeLenses)
 import           Hasura.Db
 import           Hasura.GraphQL.Context            (GQLContext, RoleContext)
 import qualified Hasura.GraphQL.Parser             as P
-import           Hasura.Incremental                (Dependency, MonadDepend (..), selectKeyD, Cacheable)
+import           Hasura.Incremental                (Cacheable, Dependency, MonadDepend (..),
+                                                    selectKeyD)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.BoolExp
@@ -200,9 +204,9 @@ instance ToJSON RemoteSchemaCtx where
 
 data RemoteSchemaCtxWithPermissions
   = RemoteSchemaCtxWithPermissions
-  { rscpName        :: !RemoteSchemaName
-  , rscpContext     :: !RemoteSchemaCtx
-  , rscpPermissions :: !(M.HashMap RoleName IntrospectionResult)
+  { _rscpName        :: !RemoteSchemaName
+  , _rscpContext     :: !RemoteSchemaCtx
+  , _rscpPermissions :: !(M.HashMap RoleName IntrospectionResult)
   }
 $(makeLenses ''RemoteSchemaCtxWithPermissions)
 

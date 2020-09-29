@@ -29,9 +29,9 @@ import           Hasura.GraphQL.Schema.Action
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Introspect
 import           Hasura.GraphQL.Schema.Mutation
+import           Hasura.GraphQL.Schema.Remote          (buildRemoteParser)
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
-import           Hasura.GraphQL.Schema.Remote           (buildRemoteParser)
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
 import           Hasura.Session
@@ -68,7 +68,7 @@ buildGQLContext =
 
     -- Scroll down a few pages for the actual body...
 
-    let remoteSchemasRoles = concatMap (Map.keys . rscpPermissions . fst . snd) $ Map.toList allRemoteSchemas
+    let remoteSchemasRoles = concatMap (Map.keys . _rscpPermissions . fst . snd) $ Map.toList allRemoteSchemas
         allRoles = Set.insert adminRoleName $
              (allTables ^.. folded.tiRolePermInfoMap.to Map.keys.folded)
           <> (allActionInfos ^.. folded.aiPermissions.to Map.keys.folded)
@@ -82,7 +82,7 @@ buildGQLContext =
 
         allActionInfos = Map.elems allActions
         queryRemotesMap =
-          fmap (map fDefinition . piQuery . rscParsed . rscpContext . fst) allRemoteSchemas
+          fmap (map fDefinition . piQuery . rscParsed . _rscpContext . fst) allRemoteSchemas
         buildFullestDBSchema
           :: m ( Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
                , Maybe (Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
@@ -128,7 +128,7 @@ buildGQLContext =
                      let (queryOld, mutationOld) =
                            unzip $ fmap ((\case ParsedIntrospection q m _ -> (q,m)) . snd) okSchemas
                      let ParsedIntrospection queryNew mutationNew _subscriptionNew
-                           = rscParsed $ rscpContext newSchemaContext
+                           = rscParsed $ _rscpContext newSchemaContext
                      -- Check for conflicts between remotes
                      bindErrorA -<
                        for_ (duplicates (fmap (P.getName . fDefinition) (queryNew ++ concat queryOld))) $
@@ -153,7 +153,7 @@ buildGQLContext =
                   |) newMetadataObject
                 case checkedDuplicates of
                   Nothing -> returnA -< okSchemas
-                  Just _  -> returnA -< (newSchemaName, rscParsed $ rscpContext newSchemaContext):okSchemas
+                  Just _  -> returnA -< (newSchemaName, rscParsed $ _rscpContext newSchemaContext):okSchemas
               ) |) [] (Map.toList allRemoteSchemas)
 
     -- TODO: I think this will need to change, we'll have to read the unauthenticated role from the server options
@@ -207,7 +207,7 @@ buildGQLContext =
               -- The admin role will have full access to the remote schema, so
               -- we just re-use the `ParsedIntrospection` we already have in the
               -- `remotes` object
-              True -> pure $ map snd remotes
+              True  -> pure $ map snd remotes
               False -> buildRoleBasedRemoteSchemaParser roleName allRemoteSchemas
           let qRemotes = queryRemotes roleBasedRemoteSchemas
               mRemotes = mutationRemotes roleBasedRemoteSchemas

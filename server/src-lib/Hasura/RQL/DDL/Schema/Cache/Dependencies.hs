@@ -92,7 +92,7 @@ pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
         remoteSchema <-
           onNothing (M.lookup remoteSchemaName $ _boRemoteSchemas cache)
             $ Left $ "remote schema " <> remoteSchemaName <<> " is not found"
-        unless (roleName `M.member` (rscpPermissions $ fst remoteSchema)) $
+        unless (roleName `M.member` (_rscpPermissions $ fst remoteSchema)) $
           Left $ "no permission defined on remote schema " <> remoteSchemaName
                   <<> " for role " <>> roleName
       SOTableObj tableName tableObjectId -> do
