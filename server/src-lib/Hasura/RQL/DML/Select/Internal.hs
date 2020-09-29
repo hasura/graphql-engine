@@ -946,7 +946,7 @@ mkAggregateSelect simple =
           (runValidate (FromIr.runFromIr (FromIr.fromSelectAggregate simple))) <>
         "\n\n" <>
         either (const "error")
-               (T.unpack . Odbc.renderQuery . ToQuery.fromSelect)
+               (T.unpack . Odbc.renderQuery . ToQuery.toQuery . ToQuery.fromSelect)
                (runValidate (FromIr.runFromIr (FromIr.fromSelectAggregate simple))) <>
         "\n")
        simple)
@@ -976,7 +976,7 @@ mkSQLSelect agg simple =
         "\n\n" <>
         either
           (const "error")
-          (T.unpack . Odbc.renderQuery . ToQuery.fromSelect)
+          (T.unpack . Odbc.renderQuery . ToQuery.toQuery .  ToQuery.fromSelect)
           result <> "\n")
        simple)
   where result = runValidate (FromIr.runFromIr (FromIr.mkSQLSelect agg simple))

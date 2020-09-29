@@ -3,13 +3,16 @@
 -- | Convert the simple T-SQL AST to an SQL query, ready to be passed
 -- to the odbc package's query/exec functions.
 
-module Hasura.SQL.Tsql.ToQuery where
+module Hasura.SQL.Tsql.ToQuery
+  ( fromSelect
+  , toQuery
+  , Printer
+  ) where
 
 import           Data.Foldable
 import           Data.List (intersperse)
 import qualified Data.List.NonEmpty as NE
 import           Data.Maybe
-import           Data.Monoid
 import           Data.String
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -20,75 +23,100 @@ import           Prelude
 --------------------------------------------------------------------------------
 -- Types
 
-fromExpression :: Expression -> Query
+data Printer
+  = SeqPrinter [Printer]
+  | SepByPrinter Printer [Printer]
+  | NewlinePrinter
+  | QueryPrinter Query
+  | IndentPrinter Int Printer
+  deriving (Show, Eq)
+
+instance IsString Printer where
+  fromString = QueryPrinter . fromString
+
+(<+>) :: Printer -> Printer -> Printer
+(<+>) x y = SeqPrinter [x,y]
+
+(<+>?) :: Printer -> Maybe Printer -> Printer
+(<+>?) x Nothing = x
+(<+>?) x (Just y) = SeqPrinter [x,y]
+
+--------------------------------------------------------------------------------
+-- Printer generators
+
+fromExpression :: Expression -> Printer
 fromExpression =
   \case
-    JsonQueryExpression e -> "JSON_QUERY(" <> fromExpression e <> ")"
-    ValueExpression value -> toSql value
+    JsonQueryExpression e -> "JSON_QUERY(" <+> fromExpression e <+> ")"
+    ValueExpression value -> QueryPrinter (toSql value)
     AndExpression xs ->
-      mconcat
-        (intersperse
-           " AND "
-           (toList
-              (fmap
-                 (\x -> "(" <> fromExpression x <> ")")
-                 (fromMaybe (pure trueExpression) (NE.nonEmpty xs)))))
+      SepByPrinter
+        (NewlinePrinter <+> "AND ")
+        (toList
+           (fmap
+              (\x -> "(" <+> fromExpression x <+> ")")
+              (fromMaybe (pure trueExpression) (NE.nonEmpty xs))))
     OrExpression xs ->
-      mconcat
-        (intersperse
-           " OR "
-           (toList
-              (fmap
-                 (\x -> "(" <> fromExpression x <> ")")
-                 (fromMaybe (pure falseExpression) (NE.nonEmpty xs)))))
-    NotExpression expression -> "NOT " <> (fromExpression expression)
-    ExistsExpression select -> "EXISTS (" <> fromSelect select <> ")"
+      SepByPrinter
+        (NewlinePrinter <+> " OR ")
+        (toList
+           (fmap
+              (\x -> "(" <+> fromExpression x <+> ")")
+              (fromMaybe (pure falseExpression) (NE.nonEmpty xs))))
+    NotExpression expression -> "NOT " <+> (fromExpression expression)
+    ExistsExpression select -> "EXISTS (" <+> fromSelect select <+> ")"
     IsNullExpression expression ->
-      "(" <> fromExpression expression <> ") IS NULL"
+      "(" <+> fromExpression expression <+> ") IS NULL"
     ColumnExpression fieldName -> fromFieldName fieldName
     EqualExpression x y ->
-      "(" <> fromExpression x <> ") = (" <> fromExpression y <> ")"
+      "(" <+> fromExpression x <+> ") = (" <+> fromExpression y <+> ")"
 
-fromFieldName :: FieldName -> Query
+fromFieldName :: FieldName -> Printer
 fromFieldName (FieldName {..}) =
-  fromNameText fieldNameEntity <> "." <> fromNameText fieldName
+  fromNameText fieldNameEntity <+> "." <+> fromNameText fieldName
 
-fromSelect :: Select -> Query
+fromSelect :: Select -> Printer
 fromSelect Select {..} =
-  mconcat
-    (intersperse
-       "\n"
-       [ "SELECT"
-       , fromCommented (fmap fromTop selectTop)
-       , mconcat
-           (intersperse ", " (map fromProjection (toList selectProjections)))
-       , "FROM"
-       , fromFrom selectFrom
-       , mconcat
-           (map
-              (\Join {..} ->
-                 " OUTER APPLY (" <> fromSelect joinSelect <> ") AS " <>
-                 fromJoinAlias joinJoinAlias)
-              selectJoins)
-       , fromWhere selectWhere
-       , fromFor selectFor
-       ])
+  SepByPrinter
+    NewlinePrinter
+    [ "SELECT " <+>
+      IndentPrinter
+        7
+        (SepByPrinter
+           NewlinePrinter
+           [ fromCommented (fmap fromTop selectTop)
+           , SepByPrinter
+               (QueryPrinter "," <+> NewlinePrinter)
+               (map fromProjection (toList selectProjections))
+           ])
+    , "FROM " <+> IndentPrinter 5 (fromFrom selectFrom)
+    , SepByPrinter
+        NewlinePrinter
+        (map
+           (\Join {..} ->
+              "OUTER APPLY (" <+>
+              IndentPrinter 13 (fromSelect joinSelect) <+>
+              ") " <+> NewlinePrinter <+> "AS " <+> fromJoinAlias joinJoinAlias)
+           selectJoins)
+    , fromWhere selectWhere
+    , fromFor selectFor
+    ]
 
-fromJoinAlias :: JoinAlias -> Query
+fromJoinAlias :: JoinAlias -> Printer
 fromJoinAlias JoinAlias {..} =
-  fromNameText joinAliasEntity <> "(" <> fromNameText joinAliasField <> ")"
+  fromNameText joinAliasEntity <+> "(" <+> fromNameText joinAliasField <+> ")"
 
-fromFor :: For -> Query
+fromFor :: For -> Printer
 fromFor =
   \case
     NoFor -> ""
     JsonFor cardinality ->
-      "FOR JSON PATH" <>
+      "FOR JSON PATH" <+>
       case cardinality of
         JsonArray -> ""
         JsonSingleton -> ", WITHOUT_ARRAY_WRAPPER"
 
-fromProjection :: Projection -> Query
+fromProjection :: Projection -> Printer
 fromProjection =
   \case
     ExpressionProjection aliasedExpression ->
@@ -98,74 +126,68 @@ fromProjection =
     AggregateProjection aliasedAggregate ->
       fromAliased (fmap fromAggregate aliasedAggregate)
 
-fromAggregate :: Aggregate -> Query
+fromAggregate :: Aggregate -> Printer
 fromAggregate =
   \case
-    CountAggregate countable -> "COUNT(" <> fromCountable countable <> ")"
+    CountAggregate countable -> "COUNT(" <+> fromCountable countable <+> ")"
     OpAggregate text fieldName ->
-      fromString (T.unpack text) <> "(" <> fromFieldName fieldName <> ")"
+      QueryPrinter (rawUnescapedText text) <+> "(" <+> fromFieldName fieldName <+> ")"
     TextAggregate text -> fromExpression (ValueExpression (TextValue text))
 
-fromCountable :: Countable -> Query
+fromCountable :: Countable -> Printer
 fromCountable =
   \case
     StarCountable -> "*"
     NonNullFieldCountable fields ->
-      mconcat (intersperse ", " (map fromFieldName (toList fields)))
+      SepByPrinter ", " (map fromFieldName (toList fields))
     DistinctCountable fields ->
-      "DISTINCT " <>
-      mconcat (intersperse ", " (map fromFieldName (toList fields)))
+      "DISTINCT " <+>
+      SepByPrinter ", " (map fromFieldName (toList fields))
 
-fromTop :: Top -> Query
+fromTop :: Top -> Printer
 fromTop =
   \case
     NoTop -> ""
-    Top i -> "TOP " <> toSql i
+    Top i -> "TOP " <+> QueryPrinter (toSql i)
 
-fromWhere :: Where -> Query
+fromWhere :: Where -> Printer
 fromWhere =
   \case
     Where expressions ->
       case (filter ((/= trueExpression) . collapse)) expressions of
         [] -> ""
         collapsedExpressions ->
-          "WHERE " <> fromExpression (AndExpression collapsedExpressions)
+          "WHERE " <+>
+          IndentPrinter 6 (fromExpression (AndExpression collapsedExpressions))
       where collapse (AndExpression [x]) = collapse x
             collapse (AndExpression []) = trueExpression
             collapse (OrExpression [x]) = collapse x
             collapse x = x
 
-fromFrom :: From -> Query
+fromFrom :: From -> Printer
 fromFrom =
   \case
     FromQualifiedTable aliasedQualifiedTableName ->
       fromAliased (fmap fromTableName aliasedQualifiedTableName)
 
-fromTableName :: TableName -> Query
+fromTableName :: TableName -> Printer
 fromTableName TableName {tableName, tableNameSchema} =
-  fromNameText tableNameSchema <> "." <> fromNameText tableName
+  fromNameText tableNameSchema <+> "." <+> fromNameText tableName
 
-fromAliased :: Aliased Query -> Query
+fromAliased :: Aliased Printer -> Printer
 fromAliased Aliased {..} =
-  aliasedThing <>
-  ((" AS " <>) . fromNameText) aliasedAlias
+  aliasedThing <+>
+  ((" AS " <+>) . fromNameText) aliasedAlias
 
-fromSchemaName :: SchemaName -> Query
-fromSchemaName SchemaName {schemaNameParts} =
-  mconcat (intersperse "." (map fromNameText schemaNameParts))
+fromNameText :: Text -> Printer
+fromNameText t = QueryPrinter (rawUnescapedText ("[" <> t <> "]"))
 
-fromNameText :: Text -> Query
-fromNameText t = "[" <> fromString (T.unpack t) <> "]"
-
-fromCommented :: Commented Query -> Query
+fromCommented :: Commented Printer -> Printer
 fromCommented Commented {..} =
-  commentedThing <>
-  maybe
-    mempty
-    (\comment -> " /* " <> fromComment comment <> " */ ")
-    commentedComment
+  commentedThing <+>?
+  fmap (\comment -> " /* " <+> fromComment comment <+> " */ ") commentedComment
 
-fromComment :: Comment -> Query
+fromComment :: Comment -> Printer
 fromComment =
   \case
     DueToPermission -> "Due to permission"
@@ -176,3 +198,21 @@ trueExpression = ValueExpression (BoolValue True)
 
 falseExpression :: Expression
 falseExpression = ValueExpression (BoolValue False)
+
+--------------------------------------------------------------------------------
+-- Basic printing API
+
+toQuery :: Printer -> Query
+toQuery = go 0
+  where
+    go level =
+      \case
+        QueryPrinter q -> q
+        SeqPrinter xs -> mconcat (filter notEmpty (map (go level) xs))
+        SepByPrinter x xs ->
+          mconcat
+            (intersperse (go level x) (filter notEmpty (map (go level) xs)))
+        NewlinePrinter -> "\n" <> indentation level
+        IndentPrinter n p -> go (level + n) p
+    indentation n = rawUnescapedText (T.replicate n " ")
+    notEmpty = (/= mempty) . renderQuery
