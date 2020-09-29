@@ -14,7 +14,24 @@ data Select = Select
   , selectJoins :: ![Join]
   , selectWhere :: !Where
   , selectFor :: !For
+  , selectOrderBy :: ![OrderBy]
   } deriving (Eq, Show)
+
+data OrderBy = OrderBy
+  { orderByFieldName :: FieldName
+  , orderByOrder :: Order
+  , orderByNullsOrder :: NullsOrder
+  } deriving (Eq, Show)
+
+data Order
+  = AscOrder
+  | DescOrder
+  deriving (Eq, Show)
+
+data NullsOrder
+  = NullsFirst
+  | NullsLast
+  deriving (Eq, Show)
 
 data For
   = JsonFor JsonCardinality
@@ -30,6 +47,7 @@ data Projection
   = ExpressionProjection (Aliased Expression)
   | FieldNameProjection (Aliased FieldName)
   | AggregateProjection (Aliased Aggregate)
+  | StarProjection
   deriving (Eq, Show)
 
 data Join = Join
@@ -56,6 +74,15 @@ data Top
   = NoTop
   | Top Int
   deriving (Eq, Show)
+
+instance Monoid Top where
+  mempty = NoTop
+
+instance Semigroup Top where
+  (<>) :: Top -> Top -> Top
+  (<>) NoTop x = x
+  (<>) x NoTop = x
+  (<>) (Top x) (Top y) = Top (min x y)
 
 data Expression
   = ValueExpression Odbc.Value

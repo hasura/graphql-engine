@@ -29,6 +29,7 @@ import qualified Hasura.RQL.DML.Select.Types as Ir
 import qualified Hasura.RQL.Types.BoolExp as Ir
 import qualified Hasura.RQL.Types.Column as Ir
 import qualified Hasura.RQL.Types.Common as Ir
+import qualified Hasura.RQL.Types.DML as Ir
 import qualified Hasura.SQL.DML as Sql
 import           Hasura.SQL.Tsql.Types as Tsql
 import qualified Hasura.SQL.Types as Sql
@@ -85,25 +86,22 @@ fromSelectRows annSelectG
   -- order/where will be related to.
  = do
   selectFrom <-
-    case _asnFrom of
+    case from of
       Ir.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
-      _ -> FromIr (refute (pure (FromTypeUnsupported _asnFrom)))
-  fieldSources <- runReaderT (traverse fromAnnFieldsG _asnFields) (fromAlias selectFrom)
-  filterExpression <- runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
+      _ -> FromIr (refute (pure (FromTypeUnsupported from)))
+  fieldSources <-
+    runReaderT (traverse fromAnnFieldsG fields) (fromAlias selectFrom)
+  filterExpression <-
+    runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
+  args <-
+    runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
   selectProjections <-
     case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
       Nothing -> FromIr (refute (pure NoProjectionFields))
       Just ne -> pure ne
   pure
     Select
-      { selectTop =
-          case mPermLimit of
-            Nothing -> uncommented NoTop
-            Just limit ->
-              Commented
-                { commentedComment = pure DueToPermission
-                , commentedThing = Top limit
-                }
+      {selectOrderBy = undefined,  selectTop = uncommented permissionBasedTop
       , selectProjections
       , selectFrom
       , selectJoins = mapMaybe fieldSourceJoin fieldSources
@@ -111,24 +109,31 @@ fromSelectRows annSelectG
       , selectFor = JsonFor JsonArray
       }
   where
-    Ir.AnnSelectG {_asnFields, _asnFrom, _asnPerm, _asnArgs, _asnStrfyNum} =
-      annSelectG
-    Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = _asnPerm
+    Ir.AnnSelectG { _asnFields = fields
+                  , _asnFrom = from
+                  , _asnPerm = perm
+                  , _asnArgs = args
+                  , _asnStrfyNum = num -- TODO: Apply this transformation to numbers.
+                  } = annSelectG
+    Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
+    permissionBasedTop =
+      case mPermLimit of
+        Nothing -> NoTop
+        Just limit -> Top limit
 
 fromSelectAggregate ::
      Ir.AnnSelectG [(Ir.FieldName, Ir.TableAggregateFieldG Sql.SQLExp)] Sql.SQLExp
   -> FromIr Tsql.Select
 fromSelectAggregate annSelectG = do
   selectFrom <-
-    case _asnFrom of
+    case from of
       Ir.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
-      _ -> FromIr (refute (pure (FromTypeUnsupported _asnFrom)))
+      _ -> FromIr (refute (pure (FromTypeUnsupported from)))
   fieldSources <-
-    runReaderT
-      (traverse fromTableAggregateFieldG _asnFields)
-      (fromAlias selectFrom)
+    runReaderT (traverse fromTableAggregateFieldG fields) (fromAlias selectFrom)
   filterExpression <-
     runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
+  args <- runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
   selectProjections <-
     case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
       Nothing -> FromIr (refute (pure NoProjectionFields))
@@ -148,11 +153,120 @@ fromSelectAggregate annSelectG = do
       , selectJoins = mapMaybe fieldSourceJoin fieldSources
       , selectWhere = Where [filterExpression]
       , selectFor = JsonFor JsonSingleton
+      , selectOrderBy = undefined
       }
   where
-    Ir.AnnSelectG {_asnFields, _asnFrom, _asnPerm, _asnArgs, _asnStrfyNum} =
-      annSelectG
-    Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = _asnPerm
+    Ir.AnnSelectG { _asnFields = fields
+                  , _asnFrom = from
+                  , _asnPerm = perm
+                  , _asnArgs = args
+                  , _asnStrfyNum = num
+                  } = annSelectG
+    Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
+
+--------------------------------------------------------------------------------
+-- GraphQL Args
+
+data Args = Args
+  { argsWhere :: Where
+  , argsOrderSpecs :: [OrderSpec]
+  , argsTop :: Top
+  , argsOffset :: Maybe Expression
+  , argsDistinct :: Maybe (NonEmpty FieldName)
+  }
+
+data OrderSpec = OrderSpec
+  { orderSpecOrderBy :: OrderBy
+  , orderSpecOrderSource :: OrderSource
+  }
+
+data OrderSource
+  = ColumnOrderSource !FieldName
+  | JoinOrderSource Join
+  | AggregateOrderSource (NonEmpty Aggregate)
+  deriving (Eq, Show)
+
+orderSourceJoin :: OrderSource -> Maybe Join
+orderSourceJoin =
+  \case
+    JoinOrderSource j -> pure j
+    ColumnOrderSource {} -> Nothing
+    AggregateOrderSource {} -> Nothing
+
+fromSelectArgsG :: Ir.SelectArgsG Sql.SQLExp -> ReaderT EntityAlias FromIr Args
+fromSelectArgsG selectArgsG = do
+  argsWhere <-
+    maybe (pure mempty) (fmap (Where . pure) . fromAnnBoolExp) mannBoolExp
+  argsTop <- maybe (pure mempty) (pure . Top) mlimit
+  argsOffset <- maybe (pure Nothing) (fmap Just . lift . fromSQLExp) moffset
+  argsDistinct <-
+    maybe (pure Nothing) (fmap Just . traverse fromPGCol) mdistinct
+  argsOrderSpecs <- traverse fromAnnOrderByItemG (maybe [] toList orders)
+  pure Args { ..}
+  where
+    Ir.SelectArgs { _saWhere = mannBoolExp
+                  , _saLimit = mlimit
+                  , _saOffset = moffset
+                  , _saDistinct = mdistinct
+                  , _saOrderBy = orders
+                  } = selectArgsG
+
+fromAnnOrderByItemG ::
+     Ir.AnnOrderByItemG Sql.SQLExp -> ReaderT EntityAlias FromIr OrderSpec
+fromAnnOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
+  orderSpecOrderSource <- fromAnnOrderByElement obiColumn
+  orderOrderBy <- do orderByFieldName <- undefined
+                     pure OrderBy {..}
+  pure OrderSpec {..}
+
+-- data AnnOrderByElementG v
+--   = AOCColumn !PGColumnInfo
+--   | AOCObjectRelation !RelInfo
+--                       !v
+--                       !(AnnOrderByElementG v)
+--   | AOCArrayAggregation !RelInfo
+--                         !v
+--                         !AnnAggregateOrderBy
+fromAnnOrderByElement ::
+     Ir.AnnOrderByElement Sql.SQLExp -> ReaderT EntityAlias FromIr OrderSource
+fromAnnOrderByElement =
+  \case
+    Ir.AOCColumn pgColumnInfo ->
+      fmap ColumnOrderSource (fromPGColumnName' pgColumnInfo)
+    Ir.AOCObjectRelation Ir.RelInfo {riMapping = mapping, riRTable = table} annBoolExp annOrderByElementG -> do
+      orderSource <- fromAnnOrderByElement annOrderByElementG -- TODO: think about this.
+      selectFrom <- lift (fromQualifiedTable table)
+      foreignKeyConditions <-
+        traverse
+          (\(from, to) -> do
+             fromFieldName <- fromPGCol from
+             toFieldName <- local (const (fromAlias selectFrom)) (fromPGCol to)
+             pure
+               (EqualExpression
+                  (ColumnExpression fromFieldName)
+                  (ColumnExpression toFieldName)))
+          (HM.toList mapping)
+      whereExpression <-
+        local (const (fromAlias selectFrom)) (fromAnnBoolExp annBoolExp)
+      alias <- lift (generateEntityAlias objectRelationForOrderAlias)
+      pure
+        (JoinOrderSource
+           Join
+             { joinJoinAlias =
+                 JoinAlias
+                   {joinAliasEntity = alias, joinAliasField = orderFieldName}
+             , joinSelect =
+                 Select
+                   { selectOrderBy = undefined
+                   , selectProjections = NE.fromList [StarProjection]
+                   , selectFrom
+                   , selectJoins = maybe [] pure (orderSourceJoin orderSource) -- TODO: is this correct?
+                   , selectWhere =
+                       Where (foreignKeyConditions <> [whereExpression])
+                   , selectTop = uncommented NoTop
+                   , selectFor = NoFor
+                   }
+             })
 
 --------------------------------------------------------------------------------
 -- Conversion functions
@@ -187,7 +301,7 @@ fromAnnBoolExpFld =
       pure
         (ExistsExpression
            Select
-             { selectProjections =
+             {selectOrderBy = undefined,  selectProjections =
                  NE.fromList
                    [ ExpressionProjection
                        (Aliased
@@ -221,7 +335,7 @@ fromGExists Ir.GExists {_geTable, _geWhere} = do
     local (const (fromAlias selectFrom)) (fromGBoolExp _geWhere)
   pure
     Select
-      { selectProjections =
+      {selectOrderBy = undefined,  selectProjections =
           NE.fromList
             [ ExpressionProjection
                 (Aliased
@@ -431,7 +545,8 @@ fromObjectRelationSelectG annRelationSelectG = do
           JoinAlias {joinAliasEntity = alias, joinAliasField = jsonFieldName}
       , joinSelect =
           Select
-            { selectTop = uncommented NoTop
+            { selectOrderBy = undefined
+            , selectTop = uncommented NoTop
             , selectProjections
             , selectFrom
             , selectJoins = mapMaybe fieldSourceJoin fieldSources
@@ -568,6 +683,9 @@ trueExpression = ValueExpression (Odbc.BoolValue True)
 jsonFieldName :: Text
 jsonFieldName = "json"
 
+orderFieldName :: Text
+orderFieldName = "order_field"
+
 existsFieldName :: Text
 existsFieldName = "exists_placeholder"
 
@@ -579,6 +697,9 @@ arrayAggregateName = "array_aggregate_relation"
 
 objectRelationAlias :: Text
 objectRelationAlias = "object_relation"
+
+objectRelationForOrderAlias :: Text
+objectRelationForOrderAlias = "object_relation_for_order"
 
 tableAliasName :: Text
 tableAliasName = "table"
