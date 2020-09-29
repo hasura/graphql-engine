@@ -1,0 +1,10 @@
+type: bulk
+args:
+- type: set_custom_types
+  args: {}
+- type: run_sql
+  args:
+    cascade: true
+    sql: |
+      DROP TABLE "user";
+      DROP TABLE users;

@@ -2,6 +2,43 @@
 
 ## Next release
 
+- console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
+
+### Server - Support for mapping session variables to default JWT claims
+
+Some auth providers do not let users add custom claims in JWT. In such cases, the server can take a JWT configuration option called `claims_map` to specify a mapping of Hasura session variables to values in existing claims via JSONPath or literal values.
+
+Example:-
+
+Consider the following JWT claim:
+
+```
+  {
+    "sub": "1234567890",
+    "name": "John Doe",
+    "admin": true,
+    "iat": 1516239022,
+    "user": {
+      "id": "ujdh739kd",
+      "appRoles": ["user", "editor"]
+    }
+  }
+```
+
+The corresponding JWT config can be:
+
+```
+  {
+    "type":"RS512",
+    "key": "<The public Key>",
+    "claims_map": {
+      "x-hasura-allowed-roles": {"path":"$.user.appRoles"},
+      "x-hasura-default-role": {"path":"$.user.appRoles[0]","default":"user"},
+      "x-hasura-user-id": {"path":"$.user.id"}
+    }
+  }
+```
+
 ### Breaking changes
 
 This release contains the [PDV refactor (#4111)](https://github.com/hasura/graphql-engine/pull/4111), a significant rewrite of the internals of the server, which did include some breaking changes:
@@ -11,7 +48,6 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
   - if a query selects table `bar` through table `foo` via a relationship, the required permissions headers will be the union of the required headers of table `foo` and table `bar` (we used to only check the headers of the root table);
   - if an insert does not have an `on_conflict` clause, it will not require the update permissions headers.
 
-
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
@@ -19,10 +55,25 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - server: some mutations that cannot be performed will no longer be in the schema (for instance, `delete_by_pk` mutations won't be shown to users that do not have select permissions on all primary keys) (#4111)
 - server: miscellaneous description changes (#4111)
 - server: treat the absence of `backend_only` configuration and `backend_only: false` equally (closing #5059) (#4111)
+- server: allow remote relationships joining `type` column with `[type]` input argument as spec allows this coercion (fixes #5133)
+- server: add action-like URL templating for event triggers and remote schemas (fixes #2483)
+- server: change `created_at` column type from `timestamp` to `timestamptz` for scheduled triggers tables (fix #5722)
+- server: allow configuring timeouts for actions (fixes #4966)
+- server: accept only non-negative integers for batch size and refetch interval (close #5653) (#5759)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - cli: add missing global flags for seeds command (#5565)
 - docs: add docs page on networking with docker (close #4346) (#4811)
+
+
+## `v1.3.2`
+
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+
+- server: fixes column masking in select permission for computed fields regression (fix #5696)
+
 
 ## `v1.3.1`, `v1.3.1-beta.1`
 
