@@ -29,7 +29,7 @@ import qualified Hasura.RQL.DML.Select.Types as Ir
 import qualified Hasura.RQL.Types.BoolExp as Ir
 import qualified Hasura.RQL.Types.Column as Ir
 import qualified Hasura.RQL.Types.Common as Ir
-import qualified Hasura.RQL.Types.DML as Ir
+-- import qualified Hasura.RQL.Types.DML as Ir
 import qualified Hasura.SQL.DML as Sql
 import           Hasura.SQL.Tsql.Types as Tsql
 import qualified Hasura.SQL.Types as Sql
@@ -46,6 +46,8 @@ data Error
   | NoProjectionFields
   | NoAggregatesMustBeABug
   | UnsupportedArraySelect (Ir.ArraySelectG Sql.SQLExp)
+  | UnsupportedOpExpG (Ir.OpExpG Sql.SQLExp)
+  | UnsupportedSQLExp Sql.SQLExp
   deriving (Show, Eq)
 
 newtype FromIr a = FromIr
@@ -93,15 +95,15 @@ fromSelectRows annSelectG
     runReaderT (traverse fromAnnFieldsG fields) (fromAlias selectFrom)
   filterExpression <-
     runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
-  args <-
-    runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
+  args <- runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
   selectProjections <-
     case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
       Nothing -> FromIr (refute (pure NoProjectionFields))
       Just ne -> pure ne
   pure
     Select
-      {selectOrderBy = undefined,  selectTop = uncommented permissionBasedTop
+      { selectOrderBy = [] -- TODO: use args
+      , selectTop = uncommented permissionBasedTop
       , selectProjections
       , selectFrom
       , selectJoins = mapMaybe fieldSourceJoin fieldSources
@@ -153,7 +155,7 @@ fromSelectAggregate annSelectG = do
       , selectJoins = mapMaybe fieldSourceJoin fieldSources
       , selectWhere = Where [filterExpression]
       , selectFor = JsonFor JsonSingleton
-      , selectOrderBy = undefined
+      , selectOrderBy = [] -- TODO: use args
       }
   where
     Ir.AnnSelectG { _asnFields = fields
@@ -186,13 +188,6 @@ data OrderSource
   | AggregateOrderSource (NonEmpty Aggregate)
   deriving (Eq, Show)
 
-orderSourceJoin :: OrderSource -> Maybe Join
-orderSourceJoin =
-  \case
-    JoinOrderSource j -> pure j
-    ColumnOrderSource {} -> Nothing
-    AggregateOrderSource {} -> Nothing
-
 fromSelectArgsG :: Ir.SelectArgsG Sql.SQLExp -> ReaderT EntityAlias FromIr Args
 fromSelectArgsG selectArgsG = do
   argsWhere <-
@@ -201,7 +196,8 @@ fromSelectArgsG selectArgsG = do
   argsOffset <- maybe (pure Nothing) (fmap Just . lift . fromSQLExp) moffset
   argsDistinct <-
     maybe (pure Nothing) (fmap Just . traverse fromPGCol) mdistinct
-  argsOrderSpecs <- traverse fromAnnOrderByItemG (maybe [] toList orders)
+  -- argsOrderSpecs <- traverse fromAnnOrderByItemG (maybe [] toList orders)
+  argsOrderSpecs <- pure []
   pure Args { ..}
   where
     Ir.SelectArgs { _saWhere = mannBoolExp
@@ -211,62 +207,23 @@ fromSelectArgsG selectArgsG = do
                   , _saOrderBy = orders
                   } = selectArgsG
 
-fromAnnOrderByItemG ::
-     Ir.AnnOrderByItemG Sql.SQLExp -> ReaderT EntityAlias FromIr OrderSpec
-fromAnnOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
-  orderSpecOrderSource <- fromAnnOrderByElement obiColumn
-  orderOrderBy <- do orderByFieldName <- undefined
-                     pure OrderBy {..}
-  pure OrderSpec {..}
+-- fromAnnOrderByItemG ::
+--      Ir.AnnOrderByItemG Sql.SQLExp -> ReaderT EntityAlias FromIr OrderSpec
+-- fromAnnOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
+--   orderSpecOrderSource <- fromAnnOrderByElement obiColumn
+--   orderOrderBy <-
+--     do orderByFieldName <- undefined
+--        pure OrderBy {..}
+--   pure OrderSpec {..}
 
--- data AnnOrderByElementG v
---   = AOCColumn !PGColumnInfo
---   | AOCObjectRelation !RelInfo
---                       !v
---                       !(AnnOrderByElementG v)
---   | AOCArrayAggregation !RelInfo
---                         !v
---                         !AnnAggregateOrderBy
-fromAnnOrderByElement ::
-     Ir.AnnOrderByElement Sql.SQLExp -> ReaderT EntityAlias FromIr OrderSource
-fromAnnOrderByElement =
-  \case
-    Ir.AOCColumn pgColumnInfo ->
-      fmap ColumnOrderSource (fromPGColumnName' pgColumnInfo)
-    Ir.AOCObjectRelation Ir.RelInfo {riMapping = mapping, riRTable = table} annBoolExp annOrderByElementG -> do
-      orderSource <- fromAnnOrderByElement annOrderByElementG -- TODO: think about this.
-      selectFrom <- lift (fromQualifiedTable table)
-      foreignKeyConditions <-
-        traverse
-          (\(from, to) -> do
-             fromFieldName <- fromPGCol from
-             toFieldName <- local (const (fromAlias selectFrom)) (fromPGCol to)
-             pure
-               (EqualExpression
-                  (ColumnExpression fromFieldName)
-                  (ColumnExpression toFieldName)))
-          (HM.toList mapping)
-      whereExpression <-
-        local (const (fromAlias selectFrom)) (fromAnnBoolExp annBoolExp)
-      alias <- lift (generateEntityAlias objectRelationForOrderAlias)
-      pure
-        (JoinOrderSource
-           Join
-             { joinJoinAlias =
-                 JoinAlias
-                   {joinAliasEntity = alias, joinAliasField = orderFieldName}
-             , joinSelect =
-                 Select
-                   { selectOrderBy = undefined
-                   , selectProjections = NE.fromList [StarProjection]
-                   , selectFrom
-                   , selectJoins = maybe [] pure (orderSourceJoin orderSource) -- TODO: is this correct?
-                   , selectWhere =
-                       Where (foreignKeyConditions <> [whereExpression])
-                   , selectTop = uncommented NoTop
-                   , selectFor = NoFor
-                   }
-             })
+-- fromAnnOrderByElement ::
+--      Ir.AnnOrderByElement Sql.SQLExp -> ReaderT EntityAlias FromIr OrderSource
+-- fromAnnOrderByElement =
+--   \case
+--     Ir.AOCColumn pgColumnInfo ->
+--       fmap ColumnOrderSource (fromPGColumnName' pgColumnInfo)
+--     Ir.AOCObjectRelation Ir.RelInfo {riMapping = mapping, riRTable = table} annBoolExp annOrderByElementG -> do
+--       undefined
 
 --------------------------------------------------------------------------------
 -- Conversion functions
@@ -301,7 +258,8 @@ fromAnnBoolExpFld =
       pure
         (ExistsExpression
            Select
-             {selectOrderBy = undefined,  selectProjections =
+             { selectOrderBy = []
+             , selectProjections =
                  NE.fromList
                    [ ExpressionProjection
                        (Aliased
@@ -335,7 +293,8 @@ fromGExists Ir.GExists {_geTable, _geWhere} = do
     local (const (fromAlias selectFrom)) (fromGBoolExp _geWhere)
   pure
     Select
-      {selectOrderBy = undefined,  selectProjections =
+      { selectOrderBy = []
+      , selectProjections =
           NE.fromList
             [ ExpressionProjection
                 (Aliased
@@ -545,7 +504,7 @@ fromObjectRelationSelectG annRelationSelectG = do
           JoinAlias {joinAliasEntity = alias, joinAliasField = jsonFieldName}
       , joinSelect =
           Select
-            { selectOrderBy = undefined
+            { selectOrderBy = []
             , selectTop = uncommented NoTop
             , selectProjections
             , selectFrom
@@ -648,11 +607,13 @@ fromOpExpG :: Expression -> Ir.OpExpG Sql.SQLExp -> FromIr Expression
 fromOpExpG expression =
   \case
     Ir.ANISNULL -> pure (IsNullExpression expression)
+    op -> (FromIr (refute (pure (UnsupportedOpExpG op))))
 
 fromSQLExp :: Sql.SQLExp -> FromIr Expression
 fromSQLExp =
   \case
     Sql.SENull -> pure (ValueExpression Odbc.NullValue)
+    e -> (FromIr (refute (pure (UnsupportedSQLExp e))))
 
 fromGBoolExp :: Ir.GBoolExp Expression -> ReaderT EntityAlias FromIr Expression
 fromGBoolExp =
@@ -683,8 +644,8 @@ trueExpression = ValueExpression (Odbc.BoolValue True)
 jsonFieldName :: Text
 jsonFieldName = "json"
 
-orderFieldName :: Text
-orderFieldName = "order_field"
+-- orderFieldName :: Text
+-- orderFieldName = "order_field"
 
 existsFieldName :: Text
 existsFieldName = "exists_placeholder"
