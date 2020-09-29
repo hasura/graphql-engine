@@ -118,22 +118,22 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
       E.QueryExecutionPlan queryPlan asts -> do
         let cacheKey = undefined -- FIXME
         (responseHeaders, cachedValue) <- cacheLookup reqParsed asts (Just cacheKey)
-        (tch, tl, (ttio, tqt, responseData)) <- case cachedValue of
+        (tch, tl, (ttio, tqt, HttpResponse responseData newHeaders)) <- case cachedValue of
           Just cachedResponseData ->
-            pure (telemCacheHit, Telem.Local, (0, Telem.Query, cachedResponseData))
+            pure (telemCacheHit, Telem.Local, (0, Telem.Query, HttpResponse cachedResponseData []))
           Nothing -> case queryPlan of
             E.ExecStepDB txGenSql -> do
               (telemTimeIO, telemQueryType, resp) <-
                 runQueryDB reqId (reqUnparsed,reqParsed) asts userInfo txGenSql
-              return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, resp))
+              return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp []))
             E.ExecStepRemote (rsi, opDef, _varValsM) ->
-              over (_3 . _3) _hrBody <$> runRemoteGQ telemCacheHit rsi opDef
+              runRemoteGQ telemCacheHit rsi opDef
             E.ExecStepRaw (name, json) -> do
               (telemTimeIO, obj) <- withElapsedTime $
                 return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
-              return (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, obj))
+              return (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj []))
         cacheStore reqParsed asts cacheKey responseData
-        pure (tch, tl, (ttio, tqt, HttpResponse responseData responseHeaders))
+        pure (tch, tl, (ttio, tqt, HttpResponse responseData $ newHeaders <> responseHeaders))
       E.MutationExecutionPlan mutationPlan ->
         case mutationPlan of
           E.ExecStepDB (tx, responseHeaders) -> do
