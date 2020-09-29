@@ -46,6 +46,7 @@ module Hasura.RQL.Types.SchemaCache
   , IntrospectionResult(..)
   , ParsedIntrospection(..)
   , RemoteSchemaCtx(..)
+  , RemoteSchemaCtxWithPermissions(..)
   , RemoteSchemaMap
 
   , DepMap
@@ -118,7 +119,7 @@ module Hasura.RQL.Types.SchemaCache
 import           Hasura.Db
 import           Hasura.GraphQL.Context            (GQLContext, RoleContext)
 import qualified Hasura.GraphQL.Parser             as P
-import           Hasura.Incremental                (Dependency, MonadDepend (..), selectKeyD)
+import           Hasura.Incremental                (Dependency, MonadDepend (..), selectKeyD, Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.BoolExp
@@ -174,7 +175,8 @@ data IntrospectionResult
   , irQueryRoot        :: G.Name
   , irMutationRoot     :: Maybe G.Name
   , irSubscriptionRoot :: Maybe G.Name
-  }
+  } deriving (Show, Eq, Generic)
+instance Cacheable IntrospectionResult
 
 data ParsedIntrospection
   = ParsedIntrospection
@@ -190,6 +192,13 @@ data RemoteSchemaCtx
   , rscInfo                   :: !RemoteSchemaInfo
   , rscRawIntrospectionResult :: !BL.ByteString
   , rscParsed                 :: ParsedIntrospection
+  }
+
+data RemoteSchemaCtxWithPermissions
+  = RemoteSchemaCtxWithPermissions
+  { rscpName        :: !RemoteSchemaName
+  , rscpContext     :: !RemoteSchemaCtx
+  , rscpPermissions :: !(M.HashMap RoleName IntrospectionResult)
   }
 
 instance ToJSON RemoteSchemaCtx where

@@ -53,10 +53,14 @@ import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DDL.Utils                     (clearHdbViews)
+import           Hasura.RQL.DDL.RemoteSchema.Validate     (resolveRoleBasedRemoteSchema)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
+import           Hasura.RQL.Types.SchemaCacheTypes        (RemoteSchemaPermObjId(..))
 import           Hasura.Server.Version                    (HasVersion)
 import           Hasura.SQL.Types
+
+import           Hasura.Session
 
 buildRebuildableSchemaCache
   :: (HasVersion, MonadIO m, MonadUnique m, MonadTx m, HasHttpManager m, HasSQLGenCtx m)
@@ -182,7 +186,7 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
       let CatalogMetadata tables relationships permissions
             eventTriggers remoteSchemas functions allowlistDefs
             computedFields catalogCustomTypes actions remoteRelationships
-            cronTriggers = catalogMetadata
+            cronTriggers remoteSchemaPermissions = catalogMetadata
 
       -- tables
       tableRawInfos <- buildTableCache -< (tables, Inc.selectD #_ikMetadata invalidationKeys)
@@ -190,6 +194,21 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
       -- remote schemas
       let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
       remoteSchemaMap <- buildRemoteSchemas -< (remoteSchemaInvalidationKeys, remoteSchemas)
+
+      -- remote schema permissions
+      remoteSchemaCache <- (remoteSchemaMap >- returnA)
+        >-> (\info -> (info, M.groupOn _arspRemoteSchema remoteSchemaPermissions)
+                     >- alignExtraRemoteSchemaInfo mkRemoteSchemaPermissionMetadataObject)
+        >-> (| Inc.keyed (\_ ((remoteSchemaCtx, metadataObj), remoteSchemaPerms) -> do
+                   permissionInfo <-
+                     buildRemoteSchemaPermissions -< (remoteSchemaCtx, remoteSchemaPerms)
+                   returnA -< (RemoteSchemaCtxWithPermissions
+                     { rscpName = rscName remoteSchemaCtx
+                     , rscpContext = remoteSchemaCtx
+                     , rscpPermissions = permissionInfo
+                     }, metadataObj)
+                   )
+             |)
 
       -- relationships and computed fields
       let relationshipsByTable = M.groupOn _crTable relationships
@@ -318,6 +337,51 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
             let errorMessage = "table " <> tableName <<> " does not exist"
             recordInconsistencies -< (map mkMetadataObject extras, errorMessage)
             returnA -< Nothing
+
+    alignExtraRemoteSchemaInfo
+      :: forall a b arr
+       . (ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr)
+      => (b -> MetadataObject)
+      -> ( M.HashMap RemoteSchemaName a
+         , M.HashMap RemoteSchemaName [b]
+         ) `arr` M.HashMap RemoteSchemaName (a, [b])
+    alignExtraRemoteSchemaInfo mkMetadataObject = proc (baseInfo, extraInfo) -> do
+      combinedInfo <-
+        (| Inc.keyed (\remoteSchemaName infos -> combine -< (remoteSchemaName, infos))
+        |) (align baseInfo extraInfo)
+      returnA -< M.catMaybes combinedInfo
+      where
+        combine :: (RemoteSchemaName, These a [b]) `arr` Maybe (a, [b])
+        combine = proc (remoteSchemaName, infos) -> case infos of
+          This  base        -> returnA -< Just (base, [])
+          These base extras -> returnA -< Just (base, extras)
+          That       extras -> do
+            let errorMessage = "remote schema  " <> unRemoteSchemaName remoteSchemaName <<> " does not exist"
+            recordInconsistencies -< (map mkMetadataObject extras, errorMessage)
+            returnA -< Nothing
+
+    buildRemoteSchemaPermissions
+      :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
+         , Inc.ArrowCache m arr, MonadTx m)
+      => (RemoteSchemaCtx, [CatalogRemoteSchemaPermission]) `arr` (M.HashMap RoleName IntrospectionResult)
+    buildRemoteSchemaPermissions = buildInfoMap _arspRole mkRemoteSchemaPermissionMetadataObject buildRemoteSchemaPermission
+      where
+        buildRemoteSchemaPermission = proc (remoteSchemaCtx, remoteSchemaPerm) -> do
+          let AddRemoteSchemaPermissions rsName roleName defn _ = remoteSchemaPerm
+              metadataObject = mkRemoteSchemaPermissionMetadataObject remoteSchemaPerm
+              schemaObject = SORemoteSchemaObj rsName $ RemoteSchemaPermObjId roleName
+              upstreamSchemaIntrospection = irDoc $ rscIntro remoteSchemaCtx
+              providedSchemaDoc = _rspdSchema defn
+              addPermContext err = "in remote schema permission for role " <> roleName <<> ": " <> err
+          (| withRecordInconsistency (
+             (| modifyErrA (do
+                 bindErrorA -< when (roleName == adminRoleName) $
+                   throw400 ConstraintViolation $ "cannot define permission for admin role"
+                 validatedSchemaDoc <- bindErrorA -< resolveRoleBasedRemoteSchema providedSchemaDoc upstreamSchemaIntrospection
+                 recordDependencies -< (metadataObject, schemaObject, []) -- TODO: should the last arg be `[]` here?
+                 returnA -< validatedSchemaDoc)
+             |) addPermContext)
+           |) metadataObject
 
     buildTableEventTriggers
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr

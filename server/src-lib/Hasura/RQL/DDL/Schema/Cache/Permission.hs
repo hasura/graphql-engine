@@ -3,6 +3,7 @@
 module Hasura.RQL.DDL.Schema.Cache.Permission
   ( buildTablePermissions
   , mkPermissionMetadataObject
+  , mkRemoteSchemaPermissionMetadataObject
   ) where
 
 import           Hasura.Prelude
@@ -62,6 +63,15 @@ mkPermissionMetadataObject (CatalogPermission qt rn pt pDef cmnt) =
   let objectId = MOTableObj qt $ MTOPerm rn pt
       definition = toJSON $ WithTable qt $ PermDef rn pDef cmnt
   in MetadataObject objectId definition
+
+mkRemoteSchemaPermissionMetadataObject
+  :: CatalogRemoteSchemaPermission
+  -> MetadataObject
+mkRemoteSchemaPermissionMetadataObject (AddRemoteSchemaPermissions rsName roleName defn _) =
+  let objectId = MORemoteSchemaPermissions rsName roleName
+      -- FIXME: include the remote schema name and rolename in the defn
+      -- like used in `mkPermissionMetadataObject`
+  in MetadataObject objectId $ toJSON defn
 
 withPermission
   :: (ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr)

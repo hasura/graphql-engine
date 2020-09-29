@@ -14,6 +14,7 @@ module Hasura.RQL.Types.Catalog
   , CatalogFunction(..)
   , CatalogCronTrigger(..)
   , CatalogCustomTypes(..)
+  , CatalogRemoteSchemaPermission
   ) where
 
 import           Hasura.Prelude
@@ -181,20 +182,23 @@ instance NFData CatalogCronTrigger
 instance Cacheable CatalogCronTrigger
 $(deriveJSON (aesonDrop 4 snakeCase) ''CatalogCronTrigger)
 
+type CatalogRemoteSchemaPermission = AddRemoteSchemaPermissions
+
 data CatalogMetadata
   = CatalogMetadata
-  { _cmTables               :: ![CatalogTable]
-  , _cmRelations            :: ![CatalogRelation]
-  , _cmPermissions          :: ![CatalogPermission]
-  , _cmEventTriggers        :: ![CatalogEventTrigger]
-  , _cmRemoteSchemas        :: ![AddRemoteSchemaQuery]
-  , _cmFunctions            :: ![CatalogFunction]
-  , _cmAllowlistCollections :: ![CollectionDef]
-  , _cmComputedFields       :: ![CatalogComputedField]
-  , _cmCustomTypes          :: !CatalogCustomTypes
-  , _cmActions              :: ![CatalogAction]
-  , _cmRemoteRelationships  :: ![RemoteRelationship]
-  , _cmCronTriggers         :: ![CatalogCronTrigger]
+  { _cmTables                  :: ![CatalogTable]
+  , _cmRelations               :: ![CatalogRelation]
+  , _cmPermissions             :: ![CatalogPermission]
+  , _cmEventTriggers           :: ![CatalogEventTrigger]
+  , _cmRemoteSchemas           :: ![AddRemoteSchemaQuery]
+  , _cmFunctions               :: ![CatalogFunction]
+  , _cmAllowlistCollections    :: ![CollectionDef]
+  , _cmComputedFields          :: ![CatalogComputedField]
+  , _cmCustomTypes             :: !CatalogCustomTypes
+  , _cmActions                 :: ![CatalogAction]
+  , _cmRemoteRelationships     :: ![RemoteRelationship]
+  , _cmCronTriggers            :: ![CatalogCronTrigger]
+  , _cmRemoteSchemaPermissions :: ![CatalogRemoteSchemaPermission]
   } deriving (Show, Eq, Generic)
 instance NFData CatalogMetadata
 instance Cacheable CatalogMetadata

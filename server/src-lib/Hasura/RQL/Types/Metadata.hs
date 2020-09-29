@@ -29,6 +29,7 @@ data MetadataObjId
   = MOTable !QualifiedTable
   | MOFunction !QualifiedFunction
   | MORemoteSchema !RemoteSchemaName
+  | MORemoteSchemaPermissions !RemoteSchemaName !RoleName
   | MOTableObj !QualifiedTable !TableMetadataObjId
   | MOCustomTypes
   | MOAction !ActionName
@@ -43,6 +44,7 @@ moiTypeName = \case
   MOTable _ -> "table"
   MOFunction _ -> "function"
   MORemoteSchema _ -> "remote_schema"
+  MORemoteSchemaPermissions _ _ -> "remote_schema_permission"
   MOCronTrigger _ -> "cron_trigger"
   MOTableObj _ tableObjectId -> case tableObjectId of
     MTORel _ relType   -> relTypeToTxt relType <> "_relation"
@@ -59,6 +61,8 @@ moiName objectId = moiTypeName objectId <> " " <> case objectId of
   MOTable name -> dquoteTxt name
   MOFunction name -> dquoteTxt name
   MORemoteSchema name -> dquoteTxt name
+  MORemoteSchemaPermissions name roleName ->
+    dquoteTxt roleName <> " permission in remote schema " <> dquoteTxt name
   MOCronTrigger name -> dquoteTxt name
   MOTableObj tableName tableObjectId ->
     let tableObjectName = case tableObjectId of

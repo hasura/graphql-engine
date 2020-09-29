@@ -215,12 +215,12 @@ validateDirectives providedDirectives upstreamDirectives parentType = do
     refute $ pure $ DuplicateDirectives parentType dups
   flip traverse_ providedDirectives $ \dir -> do
     let directiveName = G._dName dir
-    originalDir <-
-      onNothing (Map.lookup directiveName originalDirectivesMap) $
+    upstreamDir <-
+      onNothing (Map.lookup directiveName upstreamDirectivesMap) $
         refute $ pure $ FieldDoesNotExist Directive directiveName
-    validateDirective dir originalDir parentType
+    validateDirective dir upstreamDir parentType
   where
-    originalDirectivesMap = mapFromL G._dName originalDirectives
+    upstreamDirectivesMap = mapFromL G._dName upstreamDirectives
 
 getDifference :: (Eq a, Hashable a) => [a] -> [a] -> S.HashSet a
 getDifference left right = S.difference (S.fromList left) (S.fromList right)
@@ -236,7 +236,7 @@ getDifference left right = S.difference (S.fromList left) (S.fromList right)
 validateEnumTypeDefinition
   :: ( MonadValidate [RoleBasedSchemaValidationError] m)
   => G.EnumTypeDefinition -- ^ provided enum type definition
-  -> G.EnumTypeDefinition -- ^ original enum type definition
+  -> G.EnumTypeDefinition -- ^ upstream enum type definition
   -> m ()
 validateEnumTypeDefinition providedEnum upstreamEnum = do
   validateDirectives providedDirectives upstreamDirectives $ (Enum, providedName)

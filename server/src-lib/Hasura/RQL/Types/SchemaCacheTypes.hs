@@ -28,11 +28,17 @@ data TableObjId
   deriving (Show, Eq, Generic)
 instance Hashable TableObjId
 
+data RemoteSchemaPermObjId =
+  RemoteSchemaPermObjId !RoleName
+  deriving (Show, Eq, Generic)
+instance Hashable RemoteSchemaPermObjId
+
 data SchemaObjId
   = SOTable !QualifiedTable
   | SOTableObj !QualifiedTable !TableObjId
   | SOFunction !QualifiedFunction
   | SORemoteSchema !RemoteSchemaName
+  | SORemoteSchemaObj !RemoteSchemaName !RemoteSchemaPermObjId
   deriving (Eq, Generic)
 
 instance Hashable SchemaObjId
@@ -57,6 +63,10 @@ reportSchemaObj (SOTableObj tn (TORemoteRel rn)) =
   "remote relationship " <> qualObjectToText tn <> "." <> remoteRelationshipNameToText rn
 reportSchemaObj (SORemoteSchema remoteSchemaName) =
   "remote schema " <> unNonEmptyText (unRemoteSchemaName remoteSchemaName)
+reportSchemaObj (SORemoteSchemaObj remoteSchemaName (RemoteSchemaPermObjId roleName)) =
+  "remote schema permission "
+  <> unNonEmptyText (unRemoteSchemaName remoteSchemaName)
+  <> "." <> roleNameToTxt roleName
 
 instance Show SchemaObjId where
   show soi = T.unpack $ reportSchemaObj soi

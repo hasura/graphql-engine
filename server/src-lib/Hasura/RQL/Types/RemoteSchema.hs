@@ -123,6 +123,7 @@ data RemoteSchemaPermissionDefinition
   }  deriving (Show, Eq, Lift, Generic)
 instance NFData RemoteSchemaPermissionDefinition
 instance Cacheable RemoteSchemaPermissionDefinition
+instance Hashable RemoteSchemaPermissionDefinition
 
 instance J.FromJSON RemoteSchemaPermissionDefinition where
   parseJSON = J.withObject "RemoteSchemaPermissionDefinition" $ \obj -> do
@@ -135,7 +136,8 @@ instance J.FromJSON RemoteSchemaPermissionDefinition where
         J.Success a -> return $ RemoteSchemaPermissionDefinition a t
 
 instance J.ToJSON RemoteSchemaPermissionDefinition where
-  toJSON (RemoteSchemaPermissionDefinition _ rawSchema) = J.String rawSchema
+  toJSON (RemoteSchemaPermissionDefinition _ rawSchema) =
+    J.object $ [ "schema" J..= J.String rawSchema ]
 
 data AddRemoteSchemaPermissions
   = AddRemoteSchemaPermissions
