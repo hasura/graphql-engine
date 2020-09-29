@@ -137,6 +137,7 @@ deleteMetadataObject objectId = case objectId of
   MOTable        name -> boTables        %~ M.delete name
   MOFunction     name -> boFunctions     %~ M.delete name
   MORemoteSchema name -> boRemoteSchemas %~ M.delete name
+  MORemoteSchemaPermissions name role -> boRemoteSchemas.ix name._1.rscpPermissions %~ M.delete role
   MOCronTrigger name  -> boCronTriggers %~ M.delete name
   MOTableObj tableName tableObjectId -> boTables.ix tableName %~ case tableObjectId of
     MTORel           name _ -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromRel name)

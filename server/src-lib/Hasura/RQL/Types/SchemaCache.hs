@@ -116,6 +116,7 @@ module Hasura.RQL.Types.SchemaCache
   , CronTriggerInfo(..)
   ) where
 
+import           Control.Lens                     (makeLenses)
 import           Hasura.Db
 import           Hasura.GraphQL.Context            (GQLContext, RoleContext)
 import qualified Hasura.GraphQL.Parser             as P
@@ -203,6 +204,7 @@ data RemoteSchemaCtxWithPermissions
   , rscpContext     :: !RemoteSchemaCtx
   , rscpPermissions :: !(M.HashMap RoleName IntrospectionResult)
   }
+$(makeLenses ''RemoteSchemaCtxWithPermissions)
 
 instance ToJSON RemoteSchemaCtxWithPermissions where
   toJSON (RemoteSchemaCtxWithPermissions name ctx _ ) =
