@@ -56,7 +56,6 @@ import           Hasura.RQL.DDL.Utils                     (clearHdbViews)
 import           Hasura.RQL.DDL.RemoteSchema.Validate     (resolveRoleBasedRemoteSchema)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
-import           Hasura.RQL.Types.SchemaCacheTypes        (RemoteSchemaPermObjId(..))
 import           Hasura.Server.Version                    (HasVersion)
 import           Hasura.SQL.Types
 
@@ -369,7 +368,7 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
         buildRemoteSchemaPermission = proc (remoteSchemaCtx, remoteSchemaPerm) -> do
           let AddRemoteSchemaPermissions rsName roleName defn _ = remoteSchemaPerm
               metadataObject = mkRemoteSchemaPermissionMetadataObject remoteSchemaPerm
-              schemaObject = SORemoteSchemaObj rsName $ RemoteSchemaPermObjId roleName
+              schemaObject = SORemoteSchemaPermission rsName roleName
               upstreamSchemaIntrospection = irDoc $ rscIntro remoteSchemaCtx
               providedSchemaDoc = _rspdSchema defn
               addPermContext err = "in remote schema permission for role " <> roleName <<> ": " <> err

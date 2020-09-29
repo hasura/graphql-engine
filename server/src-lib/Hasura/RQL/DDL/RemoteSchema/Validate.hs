@@ -6,7 +6,7 @@ import           Control.Monad.Validate
 
 import           Hasura.Prelude
 import           Hasura.SQL.Types
-import           Hasura.RQL.Types              hiding (GraphQLType)
+import           Hasura.RQL.Types              hiding (GraphQLType, defaultScalars)
 import           Hasura.Server.Utils           (englishList, duplicates)
 
 import qualified Data.HashMap.Strict           as Map
@@ -549,7 +549,7 @@ getSchemaDocIntrospection
   -> (G.Name, Maybe G.Name, Maybe G.Name)
   -> IntrospectionResult
 getSchemaDocIntrospection schemaDocTypeDefs (queryRoot, mutationRoot, subscriptionRoot) =
-  let scalarTypeDefs = map G.TypeDefinitionScalar scalars
+  let scalarTypeDefs = map G.TypeDefinitionScalar $ scalars <> defaultScalars
       objectTypeDefs = map G.TypeDefinitionObject objects
       unionTypeDefs = map G.TypeDefinitionUnion unions
       enumTypeDefs = map G.TypeDefinitionEnum enums
@@ -573,6 +573,9 @@ getSchemaDocIntrospection schemaDocTypeDefs (queryRoot, mutationRoot, subscripti
   where
     SchemaDocumentTypeDefinitions scalars objects interfaces
                             unions enums inpObjs _ = schemaDocTypeDefs
+
+    defaultScalars = map (\n -> G.ScalarTypeDefinition Nothing n [])
+                         $ [intScalar, floatScalar, stringScalar, boolScalar, idScalar]
 
 -- | validateRemoteSchema accepts two arguments, the `SchemaDocument` of
 -- the role-based schema, that is provided by the user and the `SchemaIntrospection`

@@ -12,6 +12,7 @@ module Hasura.RQL.DDL.RemoteSchema
   , addRemoteSchemaToCatalog
   , addRemoteSchemaPermissionsToCatalog
   , runAddRemoteSchemaPermissions
+  , dropRemoteSchemaPermFromCatalog
   ) where
 
 import           Control.Monad.Unique
@@ -34,6 +35,8 @@ import           Hasura.SQL.Types
 
 import qualified Data.Environment                  as Env
 
+import           Hasura.Session
+
 runAddRemoteSchema
   :: ( HasVersion
      , QErrM m
@@ -55,13 +58,9 @@ runAddRemoteSchema env q = do
     name = _arsqName q
 
 runAddRemoteSchemaPermissions
-  :: ( HasVersion
-     , QErrM m
+  :: ( QErrM m
      , CacheRWM m
      , MonadTx m
-     , MonadIO m
-     , MonadUnique m
-     , HasHttpManager m
      )
   => AddRemoteSchemaPermissions
   -> m EncJSON
@@ -69,15 +68,15 @@ runAddRemoteSchemaPermissions q = do
   remoteSchemaMap <- scRemoteSchemas <$> askSchemaCache
   upstreamRemoteSchema <-
     onNothing (Map.lookup name remoteSchemaMap) $
-      throw400 NotExists "no such remote schema"
+      throw400 NotExists $ "remote schema " <> name <<> " doesn't exist"
   resolveRoleBasedRemoteSchema providedSchemaDoc $ irDoc $ rscIntro $ rscpContext upstreamRemoteSchema
   liftTx $ addRemoteSchemaPermissionsToCatalog q
---  buildSchemaCacheFor $ MORemoteSchema name
+  buildSchemaCacheFor $ MORemoteSchemaPermissions name role
   pure successMsg
   where
-    name = _arspRemoteSchema q
+    AddRemoteSchemaPermissions name role defn _ = q
 
-    providedSchemaDoc = _rspdSchema $ _arspDefinition q
+    providedSchemaDoc = _rspdSchema defn
 
 addRemoteSchemaP1
   :: (QErrM m, CacheRM m)
@@ -163,6 +162,13 @@ removeRemoteSchemaFromCatalog name =
     DELETE FROM hdb_catalog.remote_schemas
       WHERE name = $1
   |] (Identity name) True
+
+dropRemoteSchemaPermFromCatalog :: RemoteSchemaName -> RoleName -> Q.TxE QErr ()
+dropRemoteSchemaPermFromCatalog name role =
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+    DELETE FROM hdb_catalog.hdb_remote_schema_permission
+      WHERE remote_schema_name = $1 AND role_name = $2
+  |] (name, role) True
 
 fetchRemoteSchemas :: Q.TxE QErr [AddRemoteSchemaQuery]
 fetchRemoteSchemas =

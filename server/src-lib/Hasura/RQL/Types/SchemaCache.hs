@@ -207,7 +207,7 @@ data RemoteSchemaCtxWithPermissions
 instance ToJSON RemoteSchemaCtxWithPermissions where
   toJSON (RemoteSchemaCtxWithPermissions name ctx _ ) =
     object $
-      [ "name" .= name
+      [ "name"    .= name
       , "context" .= ctx
       ]
 

@@ -31,6 +31,7 @@ import           Hasura.GraphQL.Schema.Introspect
 import           Hasura.GraphQL.Schema.Mutation
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
+import           Hasura.GraphQL.Schema.Remote           (buildRemoteParser)
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
 import           Hasura.Session
@@ -38,6 +39,8 @@ import           Hasura.SQL.Types
 
 -- | Whether the request is sent with `x-hasura-use-backend-only-permissions` set to `true`.
 data Scenario = Backend | Frontend deriving (Enum, Show, Eq)
+
+type RemoteSchemaCache = HashMap RemoteSchemaName (RemoteSchemaCtxWithPermissions, MetadataObject)
 
 buildGQLContext
   :: forall arr m
@@ -52,7 +55,7 @@ buildGQLContext
   => ( GraphQLQueryType
      , TableCache
      , FunctionCache
-     , HashMap RemoteSchemaName (RemoteSchemaCtxWithPermissions, MetadataObject)
+     , RemoteSchemaCache
      , ActionCache
      , NonObjectTypeMap
      )
@@ -65,9 +68,11 @@ buildGQLContext =
 
     -- Scroll down a few pages for the actual body...
 
-    let allRoles = Set.insert adminRoleName $
+    let remoteSchemasRoles = concatMap (Map.keys . rscpPermissions . fst . snd) $ Map.toList allRemoteSchemas
+        allRoles = Set.insert adminRoleName $
              (allTables ^.. folded.tiRolePermInfoMap.to Map.keys.folded)
           <> (allActionInfos ^.. folded.aiPermissions.to Map.keys.folded)
+          <> (Set.fromList remoteSchemasRoles)
 
         tableFilter    = not . isSystemDefined . _tciSystemDefined
         functionFilter = not . isSystemDefined . fiSystemDefined
@@ -151,29 +156,64 @@ buildGQLContext =
                   Just _  -> returnA -< (newSchemaName, rscParsed $ rscpContext newSchemaContext):okSchemas
               ) |) [] (Map.toList allRemoteSchemas)
 
+    -- TODO: I think this will need to change, we'll have to read the unauthenticated role from the server options
+    -- and then use the remote schema defined for that role!
     let unauthenticatedContext :: m GQLContext
         unauthenticatedContext = P.runSchemaT do
-          ucQueries   <- finalizeParser <$> unauthenticatedQueryWithIntrospection queryRemotes mutationRemotes
-          ucMutations <- fmap finalizeParser <$> unauthenticatedMutation mutationRemotes
+          ucQueries   <- finalizeParser <$> unauthenticatedQueryWithIntrospection adminQueryRemotes adminMutationRemotes
+          ucMutations <- fmap finalizeParser <$> unauthenticatedMutation adminMutationRemotes
           pure $ GQLContext ucQueries ucMutations
+
+        buildRoleBasedRemoteSchemaParser :: RoleName -> RemoteSchemaCache -> m [ParsedIntrospection]
+        buildRoleBasedRemoteSchemaParser role remoteSchemaCache = do
+          let remoteSchemaIntroInfos = map fst $ toList remoteSchemaCache
+          remoteSchemaPerms <-
+            flip traverse remoteSchemaIntroInfos $ \(RemoteSchemaCtxWithPermissions _ ctx perms) ->
+              case Map.lookup role perms of
+                Nothing -> return Nothing
+                Just introspectRes -> do
+                  (queryParsers, mutationParsers, subscriptionParsers) <-
+                     P.runSchemaT @m @(P.ParseT Identity) $ buildRemoteParser introspectRes $ rscInfo ctx
+                  return $ Just $ ParsedIntrospection queryParsers mutationParsers subscriptionParsers
+          return $ catMaybes remoteSchemaPerms
 
         -- | The 'query' type of the remotes. TODO: also expose mutation
         -- remotes. NOT TODO: subscriptions, as we do not yet aim to support
         -- these.
-        queryRemotes = concatMap (piQuery . snd) remotes
-        mutationRemotes = concatMap (concat . piMutation . snd) remotes
-        queryHasuraOrRelay = case queryType of
+        adminQueryRemotes = concatMap (piQuery . snd) remotes
+        adminMutationRemotes = concatMap (concat . piMutation . snd) remotes
+
+        queryRemotes
+          :: [ParsedIntrospection]
+          -> [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+        queryRemotes = concatMap piQuery
+
+        mutationRemotes
+          :: [ParsedIntrospection]
+          -> [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+        mutationRemotes = concatMap (concat . piMutation)
+
+        queryHasuraOrRelay (qRemotes, mRemotes) = case queryType of
           QueryHasura -> queryWithIntrospection (Set.fromMap $ validTables $> ())
-                         validFunctions queryRemotes mutationRemotes
+                         validFunctions qRemotes mRemotes
                          allActionInfos nonObjectCustomTypes
           QueryRelay  -> relayWithIntrospection (Set.fromMap $ validTables $> ()) validFunctions
 
         buildContextForRoleAndScenario :: RoleName -> Scenario -> m GQLContext
         buildContextForRoleAndScenario roleName scenario = do
           SQLGenCtx{ stringifyNum } <- askSQLGenCtx
+          roleBasedRemoteSchemas <-
+            case roleName == adminRoleName of
+              -- The admin role will have full access to the remote schema, so
+              -- we just re-use the `ParsedIntrospection` we already have in the
+              -- `remotes` object
+              True -> pure $ map snd remotes
+              False -> buildRoleBasedRemoteSchemaParser roleName allRemoteSchemas
+          let qRemotes = queryRemotes roleBasedRemoteSchemas
+              mRemotes = mutationRemotes roleBasedRemoteSchemas
           let gqlContext = GQLContext
-                <$> (finalizeParser <$> queryHasuraOrRelay)
-                <*> (fmap finalizeParser <$> mutation (Set.fromList $ Map.keys validTables) mutationRemotes
+                <$> (finalizeParser <$> queryHasuraOrRelay (qRemotes,mRemotes))
+                <*> (fmap finalizeParser <$> mutation (Set.fromList $ Map.keys validTables) adminMutationRemotes
                      allActionInfos nonObjectCustomTypes)
           flip runReaderT (roleName, validTables, scenario, QueryContext stringifyNum queryType queryRemotesMap) $
             P.runSchemaT gqlContext

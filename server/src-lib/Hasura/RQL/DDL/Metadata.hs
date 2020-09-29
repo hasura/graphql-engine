@@ -28,7 +28,7 @@ import           Hasura.RQL.DDL.EventTrigger        (delEventTriggerFromCatalog,
 import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.DDL.Permission.Internal (dropPermFromCatalog)
 import           Hasura.RQL.DDL.RemoteSchema        (addRemoteSchemaToCatalog, fetchRemoteSchemas,
-                                                     removeRemoteSchemaFromCatalog)
+                                                     removeRemoteSchemaFromCatalog, dropRemoteSchemaPermFromCatalog)
 import           Hasura.RQL.DDL.ScheduledTrigger    (addCronTriggerToCatalog,
                                                      deleteCronTriggerFromCatalog)
 import           Hasura.RQL.DDL.Schema.Catalog      (saveTableToCatalog)
@@ -537,6 +537,7 @@ purgeMetadataObj = liftTx . \case
   MOTable qt                                 -> Schema.deleteTableFromCatalog qt
   MOFunction qf                              -> Schema.delFunctionFromCatalog qf
   MORemoteSchema rsn                         -> removeRemoteSchemaFromCatalog rsn
+  MORemoteSchemaPermissions rsName role      -> dropRemoteSchemaPermFromCatalog rsName role
   MOTableObj qt (MTORel rn _)                -> Relationship.delRelFromCatalog qt rn
   MOTableObj qt (MTOPerm rn pt)              -> dropPermFromCatalog qt rn pt
   MOTableObj _ (MTOTrigger trn)              -> delEventTriggerFromCatalog trn
