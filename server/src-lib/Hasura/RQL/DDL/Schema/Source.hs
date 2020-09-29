@@ -29,14 +29,14 @@ resolveSource env (SourceMetadata _ tables functions config) = runExceptT do
                                           , Q.cpConns = maxConns
                                           }
       pgPool <- liftIO $ Q.initPGPool connInfo connParams (\_ -> pure ()) -- FIXME? Pg logger
-      let pgExecCtx = mkPGExecCtx Q.Serializable pgPool
+      let pgExecCtx = mkPGExecCtx Q.ReadCommitted pgPool
       pure $ PGSourceConfig pgExecCtx connInfo
 
   (tablesMeta, functionsMeta, pgScalars) <- runLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $ do
     initSource
-    tablesMeta <- fetchTableMetadataFromPgSource
+    tablesMeta    <- fetchTableMetadataFromPgSource
     functionsMeta <- fetchFunctionMetadataFromPgSource allFunctions
-    pgScalars <- fetchPgScalars
+    pgScalars     <- fetchPgScalars
     pure (tablesMeta, functionsMeta, pgScalars)
   pure $ ResolvedSource sourceConfig tablesMeta functionsMeta pgScalars
   where
@@ -101,7 +101,6 @@ setSourceCatalogVersion = liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
 getSourceCatalogVersion :: MonadTx m => m Text
 getSourceCatalogVersion = liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
   [Q.sql| SELECT version FROM hdb_catalog.hdb_source_catalog_version |] () False
-
 
 -- | Fetch all user tables with metadata
 fetchTableMetadataFromPgSource :: (MonadTx m) => m PostgresTablesMetadata

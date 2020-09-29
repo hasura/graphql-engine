@@ -13,6 +13,7 @@ module Hasura.RQL.Types.SchemaCache.Build
 
   , CacheRWM(..)
   , BuildReason(..)
+  , getResolvedSourceFromBuildReason
   , CacheInvalidations(..)
   , buildSchemaCache
   , buildSchemaCacheFor
@@ -37,6 +38,7 @@ import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.RemoteSchema (RemoteSchemaName)
 import           Hasura.RQL.Types.SchemaCache
+import           Hasura.RQL.Types.Source
 import           Hasura.Tracing                (TraceT)
 
 -- ----------------------------------------------------------------------------
@@ -115,7 +117,15 @@ data BuildReason
   -- updated the metadata. Since that instance already updated event triggers, this build should be
   -- read-only.
   | CatalogSync
-  deriving (Show, Eq)
+  -- | The build was triggered by a @run_sql API.
+  | RunSql !SourceName !ResolvedSource
+  deriving (Eq)
+
+getResolvedSourceFromBuildReason :: SourceName -> BuildReason -> Maybe ResolvedSource
+getResolvedSourceFromBuildReason sourceName = \case
+  CatalogUpdate -> Nothing
+  CatalogSync   -> Nothing
+  RunSql s rs   -> bool Nothing (Just rs) $ s == sourceName
 
 data CacheInvalidations = CacheInvalidations
   { ciMetadata      :: !Bool

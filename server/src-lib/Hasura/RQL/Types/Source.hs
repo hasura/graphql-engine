@@ -62,7 +62,7 @@ data ResolvedSource
   , _rsTables    :: !PostgresTablesMetadata
   , _rsFunctions :: !PostgresFunctionsMetadata
   , _rsPgScalars :: !(HashSet PGScalarType)
-  }
+  } deriving (Eq)
 
 type SourceTables = HashMap SourceName TableCache
 

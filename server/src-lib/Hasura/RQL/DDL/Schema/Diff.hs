@@ -59,7 +59,9 @@ data TableMeta
 
 fetchMeta
   :: (MonadTx m)
-  => TableCache -> FunctionCache -> m ([TableMeta], [FunctionMeta])
+  => TableCache
+  -> FunctionCache
+  -> m ([TableMeta], [FunctionMeta], PostgresFunctionsMetadata)
 fetchMeta tables functions = do
   tableMetaInfos <- fetchTableMetadataFromPgSource
   functionMetaInfos <- fetchFunctionMetadataFromPgSource allFunctions
@@ -83,7 +85,7 @@ fetchMeta tables functions = do
       functionMetas = flip concatMap (M.keys functions) \function ->
                       maybe [] (map (mkFunctionMeta function)) $ M.lookup function functionMetaInfos
 
-  pure (tableMetas, functionMetas)
+  pure (tableMetas, functionMetas, functionMetaInfos)
   where
     -- Along with computed field functions
     allFunctions = M.keys functions

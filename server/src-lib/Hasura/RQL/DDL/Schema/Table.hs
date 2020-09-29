@@ -56,7 +56,6 @@ import           Hasura.RQL.Types                   hiding (fmFunction)
 import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 
-
 data TrackTable
   = TrackTable
   { tSource :: !SourceName
