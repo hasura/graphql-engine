@@ -15,16 +15,15 @@ Queries
 Introduction
 ------------
 
-GraphQL queries are used to fetch data from the server that the client requests for and a graphql query 
-can be likened to a GET HTTP method of the REST Api architecture.
+GraphQL queries are used to fetch data from the server.
 
 Hasura GraphQL engine auto-generates queries as part of the GraphQL schema from your Postgres schema model.
 It generates a range of possible queries and operators that also work with relationships defined in your SQL
 schema.
 
 All tables of the database tracked by the GraphQL engine can be queried over the GraphQL endpoint.
-If you have a tracked table in your database, the query field is added as a nested field under the
-``query_root`` root level type.
+If you have a tracked table in your database, its query field is added as a nested
+field under the ``query_root`` root level type.
 
 Auto-generated query field schema
 ---------------------------------

@@ -41,16 +41,18 @@ Use cases
 Views are ideal solutions for retrieving some derived data based on some custom business logic. If your custom logic
 requires any user input, you should use :ref:`custom SQL functions <custom_sql_functions>` instead.
 
-Let's see a few example use cases for views with the following schema: 
+Let's look a few example use cases for views based on the following schema: 
 
 .. code-block:: plpgsql
   
-  author(id integer, name text)
+  author(id integer, name text, city text, email text, phone integer, address text)
                                                       
   article(id integer, title text, content text, rating integer, author_id integer)
 
 Example: Group by and then aggregate
 ************************************
+
+Let’s see how to fetch the average article rating for each author in our author/article schema.
 
 A view that averages the rating of articles for each author can be created using the following SQL query:
 
@@ -65,8 +67,8 @@ A view that averages the rating of articles for each author can be created using
 Example: Hide certain fields of a table
 ***************************************
 
-Say, we have some sensitive information in a table which we wouldn't want to expose. We can create a view that only
-exposes the non-sensitive fields like the following:
+Say, we have some sensitive information in a table which we wouldn't want to expose. In our case, we want to expose the ``author`` table without the fields ``email``, ``phone`` and ``address``.
+We can create a view that only exposes the non-sensitive fields as follows:
 
 .. code-block:: SQL
 

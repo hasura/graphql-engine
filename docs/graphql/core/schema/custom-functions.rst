@@ -65,12 +65,11 @@ Let's see a few example use cases for custom functions:
 Example: Text-search functions
 ******************************
 
-Let's take a look at an example where the ``SETOF`` table is already part of the following existing schema.
-
+Let's take a look at an example where the ``SETOF`` table is already part of the following existing schema:
 
 .. code-block:: plpgsql
 
-  article (id uuid, title text, content text)
+  article(id integer, title text, content text)
 
 Let's say we've created and tracked a custom function, ``search_articles``, with the following definition:
 
