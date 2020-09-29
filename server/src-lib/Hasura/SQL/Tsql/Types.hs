@@ -57,7 +57,7 @@ data Join = Join
 
 data JoinAlias = JoinAlias
   { joinAliasEntity :: Text
-  , joinAliasField :: Text
+  , joinAliasField :: Maybe Text
   } deriving (Eq, Show)
 
 newtype Where =

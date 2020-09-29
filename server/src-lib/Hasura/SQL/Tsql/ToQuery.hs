@@ -104,7 +104,8 @@ fromSelect Select {..} =
 
 fromJoinAlias :: JoinAlias -> Printer
 fromJoinAlias JoinAlias {..} =
-  fromNameText joinAliasEntity <+> "(" <+> fromNameText joinAliasField <+> ")"
+  fromNameText joinAliasEntity <+>?
+  fmap (\name -> "(" <+> fromNameText name <+> ")") joinAliasField
 
 fromFor :: For -> Printer
 fromFor =
@@ -125,6 +126,7 @@ fromProjection =
       fromAliased (fmap fromFieldName aliasedFieldName)
     AggregateProjection aliasedAggregate ->
       fromAliased (fmap fromAggregate aliasedAggregate)
+    StarProjection -> "*"
 
 fromAggregate :: Aggregate -> Printer
 fromAggregate =

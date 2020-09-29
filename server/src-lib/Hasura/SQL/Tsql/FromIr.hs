@@ -10,10 +10,11 @@ module Hasura.SQL.Tsql.FromIr
   ) where
 
 import           Control.Monad
+import           Control.Monad.Reader
 import           Control.Monad.Trans
-import           Control.Monad.Trans.Reader
 import           Control.Monad.Trans.State.Strict
 import           Control.Monad.Validate
+import           Control.Monad.Writer.Strict
 import           Data.Foldable
 import           Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HM
@@ -22,14 +23,16 @@ import qualified Data.List.NonEmpty as NE
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
 import           Data.Maybe
+import           Data.Sequence (Seq)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Database.ODBC.SQLServer as Odbc
+import           Debug.Trace
 import qualified Hasura.RQL.DML.Select.Types as Ir
 import qualified Hasura.RQL.Types.BoolExp as Ir
 import qualified Hasura.RQL.Types.Column as Ir
 import qualified Hasura.RQL.Types.Common as Ir
--- import qualified Hasura.RQL.Types.DML as Ir
+import qualified Hasura.RQL.Types.DML as Ir
 import qualified Hasura.SQL.DML as Sql
 import           Hasura.SQL.Tsql.Types as Tsql
 import qualified Hasura.SQL.Types as Sql
@@ -171,22 +174,12 @@ fromSelectAggregate annSelectG = do
 
 data Args = Args
   { argsWhere :: Where
-  , argsOrderSpecs :: [OrderSpec]
+  , argsOrderBy :: [OrderBy]
+  , argsJoins :: [Join]
   , argsTop :: Top
   , argsOffset :: Maybe Expression
   , argsDistinct :: Maybe (NonEmpty FieldName)
-  }
-
-data OrderSpec = OrderSpec
-  { orderSpecOrderBy :: OrderBy
-  , orderSpecOrderSource :: OrderSource
-  }
-
-data OrderSource
-  = ColumnOrderSource !FieldName
-  | JoinOrderSource Join
-  | AggregateOrderSource (NonEmpty Aggregate)
-  deriving (Eq, Show)
+  } deriving (Show)
 
 fromSelectArgsG :: Ir.SelectArgsG Sql.SQLExp -> ReaderT EntityAlias FromIr Args
 fromSelectArgsG selectArgsG = do
@@ -196,9 +189,10 @@ fromSelectArgsG selectArgsG = do
   argsOffset <- maybe (pure Nothing) (fmap Just . lift . fromSQLExp) moffset
   argsDistinct <-
     maybe (pure Nothing) (fmap Just . traverse fromPGCol) mdistinct
-  -- argsOrderSpecs <- traverse fromAnnOrderByItemG (maybe [] toList orders)
-  argsOrderSpecs <- pure []
-  pure Args { ..}
+  (argsOrderBy, joins) <-
+    runWriterT (traverse fromAnnOrderByItemG (maybe [] toList orders))
+  let !args = traceShowId (Args {argsJoins = toList joins, ..})
+  pure args
   where
     Ir.SelectArgs { _saWhere = mannBoolExp
                   , _saLimit = mlimit
@@ -207,23 +201,48 @@ fromSelectArgsG selectArgsG = do
                   , _saOrderBy = orders
                   } = selectArgsG
 
--- fromAnnOrderByItemG ::
---      Ir.AnnOrderByItemG Sql.SQLExp -> ReaderT EntityAlias FromIr OrderSpec
--- fromAnnOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
---   orderSpecOrderSource <- fromAnnOrderByElement obiColumn
---   orderOrderBy <-
---     do orderByFieldName <- undefined
---        pure OrderBy {..}
---   pure OrderSpec {..}
+-- | Produce a valid ORDER BY construct, telling about any joins
+-- needed on the side.
+fromAnnOrderByItemG ::
+     Ir.AnnOrderByItemG Sql.SQLExp -> WriterT (Seq Join) (ReaderT EntityAlias FromIr) OrderBy
+fromAnnOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
+  orderByFieldName <- unfurlAnnOrderByElement obiColumn
+  let orderByOrder = AscOrder
+  let orderByNullsOrder = NullsFirst
+  pure OrderBy {..}
 
--- fromAnnOrderByElement ::
---      Ir.AnnOrderByElement Sql.SQLExp -> ReaderT EntityAlias FromIr OrderSource
--- fromAnnOrderByElement =
---   \case
---     Ir.AOCColumn pgColumnInfo ->
---       fmap ColumnOrderSource (fromPGColumnName' pgColumnInfo)
---     Ir.AOCObjectRelation Ir.RelInfo {riMapping = mapping, riRTable = table} annBoolExp annOrderByElementG -> do
---       undefined
+-- | Unfurl the nested set of object relations (tell'd in the writer)
+-- that are terminated by field name (Ir.AOCColumn and
+-- Ir.AOCArrayAggregation).
+unfurlAnnOrderByElement ::
+     Ir.AnnOrderByElement Sql.SQLExp -> WriterT (Seq Join) (ReaderT EntityAlias FromIr) FieldName
+unfurlAnnOrderByElement =
+  \case
+    Ir.AOCColumn pgColumnInfo -> do
+      fieldName <- lift (fromPGColumnName' pgColumnInfo)
+      pure fieldName
+    Ir.AOCObjectRelation Ir.RelInfo {riMapping = mapping, riRTable = table} annBoolExp annOrderByElementG -> do
+      selectFrom <- lift (lift (fromQualifiedTable table))
+      alias <- lift (lift (generateEntityAlias objectRelationForOrderAlias))
+      tell
+        (pure
+           Join
+             { joinSelect =
+                 Select
+                   { selectTop = uncommented NoTop
+                   , selectProjections = NE.fromList [StarProjection]
+                   , selectFrom
+                   , selectJoins = []
+                   , selectWhere = mempty
+                   , selectFor = NoFor
+                   , selectOrderBy = []
+                   }
+             , joinJoinAlias =
+                 JoinAlias {joinAliasEntity = alias, joinAliasField = Nothing}
+             })
+      local
+        (const (fromAlias selectFrom))
+        (unfurlAnnOrderByElement annOrderByElementG)
 
 --------------------------------------------------------------------------------
 -- Conversion functions
@@ -462,7 +481,10 @@ fieldSourceProjections =
 
 joinAliasToField :: JoinAlias -> FieldName
 joinAliasToField JoinAlias {..} =
-  FieldName {fieldNameEntity = joinAliasEntity, fieldName = joinAliasField}
+  FieldName
+    { fieldNameEntity = joinAliasEntity
+    , fieldName = fromMaybe (error "TODO: Eliminate this case. joinAliasToField") joinAliasField
+    }
 
 fieldSourceJoin :: FieldSource -> Maybe Join
 fieldSourceJoin =
@@ -501,7 +523,7 @@ fromObjectRelationSelectG annRelationSelectG = do
   pure
     Join
       { joinJoinAlias =
-          JoinAlias {joinAliasEntity = alias, joinAliasField = jsonFieldName}
+          JoinAlias {joinAliasEntity = alias, joinAliasField = pure jsonFieldName}
       , joinSelect =
           Select
             { selectOrderBy = []
@@ -557,7 +579,7 @@ fromArrayAggregateSelectG annRelationSelectG = do
   pure
     Join
       { joinJoinAlias =
-          JoinAlias {joinAliasEntity = alias, joinAliasField = jsonFieldName}
+          JoinAlias {joinAliasEntity = alias, joinAliasField = pure jsonFieldName}
       , joinSelect
       }
   where
@@ -587,7 +609,7 @@ fromArrayRelationSelectG annRelationSelectG = do
   alias <- lift (generateEntityAlias arrayRelationAlias)
   pure
     Join
-      { joinJoinAlias = JoinAlias {joinAliasEntity = alias, joinAliasField = jsonFieldName}
+      { joinJoinAlias = JoinAlias {joinAliasEntity = alias, joinAliasField = pure jsonFieldName}
       , joinSelect
       }
   where
@@ -644,8 +666,8 @@ trueExpression = ValueExpression (Odbc.BoolValue True)
 jsonFieldName :: Text
 jsonFieldName = "json"
 
--- orderFieldName :: Text
--- orderFieldName = "order_field"
+orderFieldName :: Text
+orderFieldName = "order_field"
 
 existsFieldName :: Text
 existsFieldName = "exists_placeholder"
