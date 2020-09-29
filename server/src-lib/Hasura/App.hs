@@ -1,5 +1,5 @@
-{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE CPP                  #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.App where
 
@@ -50,7 +50,8 @@ import           Hasura.Eventing.ScheduledTrigger
 import           Hasura.GraphQL.Execute                    (MonadGQLExecutionCheck (..),
                                                             checkQueryInAllowlist)
 import           Hasura.GraphQL.Execute.Action             (asyncActionsProcessor)
-import           Hasura.GraphQL.Execute.Query              (MonadQueryInstrumentation(..), noProfile)
+import           Hasura.GraphQL.Execute.Query              (MonadQueryInstrumentation (..),
+                                                            noProfile)
 import           Hasura.GraphQL.Logging                    (MonadQueryLog (..), QueryLog (..))
 import           Hasura.GraphQL.Transport.HTTP             (MonadExecuteQuery (..))
 import           Hasura.GraphQL.Transport.HTTP.Protocol    (toParsed)
@@ -443,7 +444,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
 
   where
     -- | prepareScheduledEvents is a function to unlock all the scheduled trigger
-    -- events that are locked and unprocessed, which is called while hasura is 
+    -- events that are locked and unprocessed, which is called while hasura is
     -- started.
     --
     -- Locked and unprocessed events can occur in 2 ways
@@ -632,8 +633,8 @@ instance HttpLog AppM where
       mkHttpAccessLogContext userInfoM reqId waiReq compressedResponse qTime cType headers
 
 instance MonadExecuteQuery AppM where
-  executeQuery _ _ _ pgCtx tx =
-    ([],) <$> hoist (runQueryTx pgCtx) tx
+  cacheLookup _ _ _   = pure ([], Nothing)
+  cacheStore  _ _ _ _ = pure ()
 
 instance UserAuthentication (Tracing.TraceT AppM) where
   resolveUserInfo logger manager headers authMode =
