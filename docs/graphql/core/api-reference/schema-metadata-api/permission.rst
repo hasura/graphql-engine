@@ -673,6 +673,10 @@ An example:
 
 .. _set_permission_comment_syntax:
 
+.. note::
+
+   It is possible to do these requests in **bulk** by using [a bulk request](https://hasura.io/docs/1.0/graphql/core/api-reference/schema-metadata-api/index.html#request-types).
+
 Args syntax
 ^^^^^^^^^^^
 
