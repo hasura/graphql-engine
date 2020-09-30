@@ -27,8 +27,9 @@ import           Hasura.RQL.DDL.ComputedField       (dropComputedFieldFromCatalo
 import           Hasura.RQL.DDL.EventTrigger        (delEventTriggerFromCatalog, subTableP2)
 import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.DDL.Permission.Internal (dropPermFromCatalog)
-import           Hasura.RQL.DDL.RemoteSchema        (addRemoteSchemaToCatalog, fetchRemoteSchemas,
-                                                     removeRemoteSchemaFromCatalog, dropRemoteSchemaPermFromCatalog)
+import           Hasura.RQL.DDL.RemoteSchema        (addRemoteSchemaToCatalog,
+                                                     removeRemoteSchemaFromCatalog,
+                                                     dropRemoteSchemaPermFromCatalog)
 import           Hasura.RQL.DDL.ScheduledTrigger    (addCronTriggerToCatalog,
                                                      deleteCronTriggerFromCatalog)
 import           Hasura.RQL.DDL.Schema.Catalog      (saveTableToCatalog)
@@ -43,6 +44,7 @@ import qualified Hasura.RQL.DDL.Permission          as Permission
 import qualified Hasura.RQL.DDL.QueryCollection     as Collection
 import qualified Hasura.RQL.DDL.Relationship        as Relationship
 import qualified Hasura.RQL.DDL.RemoteRelationship  as RemoteRelationship
+import qualified Hasura.RQL.DDL.RemoteSchema        as RemoteSchema
 import qualified Hasura.RQL.DDL.Schema              as Schema
 
 -- | Purge all user-defined metadata; metadata with is_system_defined = false
@@ -62,6 +64,7 @@ clearUserMetadata = liftTx $ Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.hdb_action_permission" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_action WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_cron_triggers WHERE include_in_metadata" () False
+  Q.unitQ "DELETE FROM hdb_catalog.hdb_remote_schema_permission" () False
 
 runClearMetadata
   :: (MonadTx m, CacheRWM m)
@@ -74,7 +77,7 @@ runClearMetadata _ = do
 applyQP1
   :: (QErrM m)
   => ReplaceMetadata -> m ()
-applyQP1 (ReplaceMetadata _ tables functionsMeta schemas
+applyQP1 (ReplaceMetadata _ tables functionsMeta remoteSchemas
           collections
           allowlist  _ actions
           cronTriggers) = do
@@ -111,8 +114,12 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta schemas
       FMVersion2 functionsV2 ->
         checkMultipleDecls "functions" $ map Schema._tfv2Function functionsV2
 
-  withPathK "remote_schemas" $
-    checkMultipleDecls "remote schemas" $ map _arsqName schemas
+  withPathK "remote_schemas" $ do
+
+    checkMultipleDecls "remote schemas" $ map _rsmName remoteSchemas
+
+    void $ indexedForM remoteSchemas $ \(RemoteSchemaMeta _ _ _ perms) ->
+      checkMultipleDecls "remote schema permissions" $ map _rspmRole perms
 
   withPathK "query_collections" $
     checkMultipleDecls "query collections" $ map Collection._ccName collections
@@ -147,7 +154,7 @@ applyQP2 replaceMetadata = do
 
 saveMetadata :: (MonadTx m, HasSystemDefined m) => ReplaceMetadata -> m ()
 saveMetadata (ReplaceMetadata _ tables functionsMeta
-              schemas collections allowlist customTypes actions cronTriggers) = do
+              remoteSchemas collections allowlist customTypes actions cronTriggers) = do
 
   withPathK "tables" $ do
     indexedForM_ tables $ \TableMeta{..} -> do
@@ -206,7 +213,13 @@ saveMetadata (ReplaceMetadata _ tables functionsMeta
 
   -- remote schemas
   withPathK "remote_schemas" $
-    indexedMapM_ (liftTx . addRemoteSchemaToCatalog) schemas
+    indexedForM_ remoteSchemas $ \(RemoteSchemaMeta name defn comment permissions) -> do
+      liftTx $ addRemoteSchemaToCatalog $ AddRemoteSchemaQuery name defn comment
+      withPathK (unNonEmptyText $ unRemoteSchemaName name) $ do
+        withPathK "permissions" $
+          indexedForM_ permissions $ \(RemoteSchemaPermissionMeta role permDefn permComment) ->
+          liftTx $ RemoteSchema.addRemoteSchemaPermissionsToCatalog
+            $ AddRemoteSchemaPermissions name role permDefn permComment
 
   -- custom types
   withPathK "custom_types" $
@@ -471,6 +484,41 @@ fetchMetadata = do
             where
               ap.action_name = a.action_name
           ) ap on true;
+                            |] [] False
+
+    fetchRemoteSchemas =
+      Q.getAltJ . runIdentity . Q.getRow <$> Q.rawQE defaultTxErrorHandler [Q.sql|
+        select
+          coalesce(
+            json_agg(
+              json_build_object(
+                'name', rs.name,
+                'definition', rs.definition,
+                'comment', rs.comment,
+                'permissions', rsp.permissions
+              ) order by rs.name asc
+            ),
+            '[]'
+          )
+        from
+          hdb_catalog.remote_schemas as rs
+          left outer join lateral (
+            select
+              coalesce(
+                json_agg(
+                  json_build_object(
+                    'role', rsp.role_name,
+                    'definition', rsp.definition,
+                    'comment', rsp.comment
+                  ) order by rsp.role_name asc
+                ),
+                '[]'
+              ) as permissions
+            from
+              hdb_catalog.hdb_remote_schema_permission rsp
+            where
+              rsp.remote_schema_name = rs.name
+          ) rsp on true;
                             |] [] False
 
     fetchRemoteRelationships = do

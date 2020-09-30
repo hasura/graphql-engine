@@ -31,6 +31,8 @@ module Hasura.RQL.DDL.Metadata.Types
   , DumpInternalState(..)
   , GetInconsistentMetadata(..)
   , DropInconsistentMetadata(..)
+  , RemoteSchemaPermissionMeta(..)
+  , RemoteSchemaMeta(..)
   ) where
 
 import           Hasura.Prelude
@@ -55,6 +57,8 @@ import qualified Hasura.RQL.DDL.QueryCollection      as Collection
 import qualified Hasura.RQL.DDL.Relationship         as Relationship
 import qualified Hasura.RQL.DDL.Schema               as Schema
 import qualified Hasura.RQL.Types.RemoteRelationship as RemoteRelationship
+
+import           Hasura.Session
 
 data MetadataVersion
   = MVVersion1
@@ -90,6 +94,23 @@ data RemoteRelationshipMeta
   , _rrmDefinition :: !RemoteRelationship.RemoteRelationshipDef
   } deriving (Show, Eq, Lift, Generic)
 $(deriveJSON (aesonDrop 4 snakeCase) ''RemoteRelationshipMeta)
+
+data RemoteSchemaPermissionMeta
+  = RemoteSchemaPermissionMeta
+  { _rspmRole       :: !RoleName
+  , _rspmDefinition :: !RemoteSchemaPermissionDefinition
+  , _rspmComment    :: !(Maybe Text)
+  } deriving (Show, Eq, Lift, Generic)
+$(deriveJSON (aesonDrop 5 snakeCase){omitNothingFields=True} ''RemoteSchemaPermissionMeta)
+
+data RemoteSchemaMeta
+  = RemoteSchemaMeta
+  { _rsmName        :: !RemoteSchemaName
+  , _rsmDefinition  :: !RemoteSchemaDef
+  , _rsmComment     :: !(Maybe Text)
+  , _rsmPermissions :: ![RemoteSchemaPermissionMeta]
+  } deriving (Show, Eq, Lift, Generic)
+$(deriveJSON (aesonDrop 4 snakeCase) ''RemoteSchemaMeta)
 
 data TableMeta
   = TableMeta
@@ -180,7 +201,7 @@ data ReplaceMetadata
   { aqVersion           :: !MetadataVersion
   , aqTables            :: ![TableMeta]
   , aqFunctions         :: !FunctionsMetadata
-  , aqRemoteSchemas     :: ![AddRemoteSchemaQuery]
+  , aqRemoteSchemas     :: ![RemoteSchemaMeta]
   , aqQueryCollections  :: ![Collection.CreateCollection]
   , aqAllowlist         :: ![Collection.CollectionReq]
   , aqCustomTypes       :: !CustomTypes
@@ -423,11 +444,15 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
         FMVersion1 functionsV1 -> withList AO.toOrdered functionsV1
         FMVersion2 functionsV2 -> withList (AO.array . map functionV2ToOrdJSON) functionsV2
 
-    remoteSchemaQToOrdJSON :: AddRemoteSchemaQuery -> AO.Value
-    remoteSchemaQToOrdJSON (AddRemoteSchemaQuery name definition comment) =
+    remoteSchemaQToOrdJSON :: RemoteSchemaMeta -> AO.Value
+    remoteSchemaQToOrdJSON (RemoteSchemaMeta name definition comment permissions) =
       AO.object $ [ ("name", AO.toOrdered name)
                   , ("definition", remoteSchemaDefToOrdJSON definition)
-                  ] <> catMaybes [maybeCommentToMaybeOrdPair comment]
+                  ]
+                  <> catMaybes [ maybeCommentToMaybeOrdPair comment
+                               , listToMaybeOrdPair "permissions" AO.toOrdered permissions
+                               ]
+
       where
         remoteSchemaDefToOrdJSON :: RemoteSchemaDef -> AO.Value
         remoteSchemaDefToOrdJSON (RemoteSchemaDef url urlFromEnv headers frwrdClientHdrs timeout) =
