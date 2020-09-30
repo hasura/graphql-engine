@@ -26,6 +26,7 @@ import           Data.Proxy
 import           Data.Sequence (Seq)
 import           Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.Read as T
 import qualified Database.ODBC.SQLServer as Odbc
 import qualified Hasura.RQL.DML.Select.Types as Ir
 import qualified Hasura.RQL.Types.BoolExp as Ir
@@ -53,6 +54,7 @@ data Error
   | UnsupportedOpExpG (Ir.OpExpG Sql.SQLExp)
   | UnsupportedSQLExp Sql.SQLExp
   | UnsupportedDistinctOn
+  | InvalidIntegerishSql Sql.SQLExp
   deriving (Show, Eq)
 
 newtype FromIr a = FromIr
@@ -188,7 +190,8 @@ fromSelectArgsG selectArgsG = do
   argsWhere <-
     maybe (pure mempty) (fmap (Where . pure) . fromAnnBoolExp) mannBoolExp
   argsTop <- maybe (pure mempty) (pure . Top) mlimit
-  argsOffset <- maybe (pure Nothing) (fmap Just . lift . fromSQLExp) moffset
+  argsOffset <-
+    maybe (pure Nothing) (fmap Just . lift . fromSQLExpAsInt) moffset
   argsDistinct' <-
     maybe (pure Nothing) (fmap Just . traverse fromPGCol) mdistinct
   -- Not supported presently, per Vamshi:
@@ -695,12 +698,21 @@ fromOpExpG expression =
     Ir.ANISNULL -> pure (IsNullExpression expression)
     op -> (FromIr (refute (pure (UnsupportedOpExpG op))))
 
-fromSQLExp :: Sql.SQLExp -> FromIr Expression
-fromSQLExp =
+fromSQLExpAsInt :: Sql.SQLExp -> FromIr Expression
+fromSQLExpAsInt =
+  \case
+    s@(Sql.SELit text) ->
+      case T.decimal text of
+        Right (d, "") -> pure (ValueExpression (Odbc.IntValue d))
+        _ -> FromIr (refute (pure (InvalidIntegerishSql s)))
+    s -> FromIr (refute (pure (InvalidIntegerishSql s)))
+
+_fromSQLExp :: Sql.SQLExp -> FromIr Expression
+_fromSQLExp =
   \case
     Sql.SENull -> pure (ValueExpression Odbc.NullValue)
-    -- TODO: Left (UnsupportedSQLExp (SELit "10") :| [])
-    e -> (FromIr (refute (pure (UnsupportedSQLExp e))))
+    Sql.SELit raw -> pure (ValueExpression (Odbc.TextValue raw))
+    e -> FromIr (refute (pure (UnsupportedSQLExp e)))
 
 fromGBoolExp :: Ir.GBoolExp Expression -> ReaderT EntityAlias FromIr Expression
 fromGBoolExp =
