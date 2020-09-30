@@ -1,7 +1,8 @@
 -- | Execution of GraphQL queries over HTTP transport
 {-# LANGUAGE RecordWildCards #-}
 module Hasura.GraphQL.Transport.HTTP
-  ( MonadExecuteQuery(..)
+  ( QueryCacheKey(..)
+  , MonadExecuteQuery(..)
   , runGQ
   , runGQBatched
   , extractFieldFromResponse
@@ -47,24 +48,40 @@ import qualified Hasura.Tracing                         as Tracing
 import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
 
+data QueryCacheKey = QueryCacheKey
+  { qckQueryString :: !GQLReqParsed
+  , qckUserRole    :: !RoleName
+  }
+
+instance J.ToJSON QueryCacheKey where
+  toJSON (QueryCacheKey qs ur ) =
+    J.object ["query_string" J..= qs, "user_role" J..= ur]
+
 
 class Monad m => MonadExecuteQuery m where
-  executeQuery
+  cacheLookup
     :: GQLReqParsed
     -> [QueryRootField UnpreparedValue]
-    -> Maybe EQ.PreparedSql
-    -> PGExecCtx
-    -> TraceT (LazyTx QErr) EncJSON
-    -> TraceT (ExceptT QErr m) (HTTP.ResponseHeaders, EncJSON)
+    -> Maybe QueryCacheKey
+    -> m (HTTP.ResponseHeaders, Maybe EncJSON)
+  cacheStore
+    :: GQLReqParsed
+    -> [QueryRootField UnpreparedValue]
+    -> QueryCacheKey
+    -> EncJSON
+    -> m ()
 
 instance MonadExecuteQuery m => MonadExecuteQuery (ReaderT r m) where
-  executeQuery a b c d e = hoist (hoist lift) $ executeQuery a b c d e
+  cacheLookup a b c   = lift $ cacheLookup a b c
+  cacheStore  a b c d = lift $ cacheStore  a b c d
 
 instance MonadExecuteQuery m => MonadExecuteQuery (ExceptT r m) where
-  executeQuery a b c d e = hoist (hoist lift) $ executeQuery a b c d e
+  cacheLookup a b c   = lift $ cacheLookup a b c
+  cacheStore  a b c d = lift $ cacheStore  a b c d
 
 instance MonadExecuteQuery m => MonadExecuteQuery (TraceT m) where
-  executeQuery a b c d e = hoist (hoist lift) $ executeQuery a b c d e
+  cacheLookup a b c   = lift $ cacheLookup a b c
+  cacheStore  a b c d = lift $ cacheStore  a b c d
 
 data ResultsFragment = ResultsFragment
   { rfTimeIO :: DiffTime
@@ -108,16 +125,28 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                                  httpManager reqHeaders (reqUnparsed, reqParsed)
     case execPlan of
       E.QueryExecutionPlan queryPlans asts -> do
+{- TODO
+        let cacheKey = QueryCacheKey reqParsed $ _uiRole userInfo
+        (responseHeaders, cachedValue) <- cacheLookup reqParsed asts (Just cacheKey)
+        (tch, tl, (ttio, tqt, HttpResponse responseData newHeaders)) <- case cachedValue of
+          Just cachedResponseData ->
+            pure (telemCacheHit, Telem.Local, (0, Telem.Query, HttpResponse cachedResponseData []))
+          Nothing -> case queryPlan of
+-}
         conclusion <- runExceptT $ forWithKey queryPlans $ \fieldName -> \case
           E.ExecStepDB txGenSql -> doQErr $ do
-            (telemTimeIO_DT, respHdrs, resp) <-
+            (telemTimeIO_DT, resp) <-
               runQueryDB reqId (reqUnparsed,reqParsed) asts userInfo txGenSql
-            return $ ResultsFragment telemTimeIO_DT Telem.Local resp respHdrs
+            return $ ResultsFragment telemTimeIO_DT Telem.Local resp [] -- TODO respHdrs
           E.ExecStepRemote (rsi, opDef, varValsM) ->
             runRemoteGQ fieldName rsi opDef varValsM
           E.ExecStepRaw json ->
             buildRaw json
         buildResult Telem.Query conclusion
+{- TODO
+        cacheStore reqParsed asts cacheKey responseData
+        pure (tch, tl, (ttio, tqt, HttpResponse responseData $ newHeaders <> responseHeaders))
+-}
 
       E.MutationExecutionPlan mutationPlans -> do
         conclusion <- runExceptT $ forWithKey mutationPlans $ \fieldName -> \case
@@ -238,15 +267,15 @@ runQueryDB
      , MonadError QErr m
      , MonadReader E.ExecutionCtx m
      , MonadQueryLog m
-     , MonadTrace m
      , MonadExecuteQuery m
+     , MonadTrace m
      )
   => RequestId
   -> (GQLReqUnparsed, GQLReqParsed)
   -> [QueryRootField UnpreparedValue]
   -> UserInfo
   -> (Tracing.TraceT (LazyTx QErr) EncJSON, Maybe EQ.PreparedSql)
-  -> m (DiffTime, HTTP.ResponseHeaders, EncJSON)
+  -> m (DiffTime, EncJSON)
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
 runQueryDB reqId (query, queryParsed) asts _userInfo (tx, _genSql) =  do
@@ -254,9 +283,9 @@ runQueryDB reqId (query, queryParsed) asts _userInfo (tx, _genSql) =  do
   E.ExecutionCtx logger _ pgExecCtx _ _ _ _ <- ask
   logQueryLog logger query Nothing reqId -- TODO genSql
   (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ trace "Query" $
-    Tracing.interpTraceT id $ executeQuery queryParsed asts Nothing pgExecCtx tx -- TODO genSql
-  (respHdrs,!resp) <- liftEither respE
-  return (telemTimeIO, respHdrs, resp)
+    Tracing.interpTraceT id $ hoist (runQueryTx pgExecCtx) tx
+  !resp <- liftEither respE
+  return (telemTimeIO, resp)
 
 runMutationDB
   :: ( MonadIO m

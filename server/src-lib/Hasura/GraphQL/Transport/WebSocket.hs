@@ -40,6 +40,7 @@ import qualified StmContainers.Map                           as STMMap
 
 import           Control.Concurrent.Extended                 (sleep)
 import           Control.Exception.Lifted
+import           Control.Monad.Morph
 import           Data.String
 #ifndef PROFILING
 import           GHC.AssertNF
@@ -47,7 +48,7 @@ import           GHC.AssertNF
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging                      (MonadQueryLog (..))
-import           Hasura.GraphQL.Transport.HTTP               (MonadExecuteQuery (..), ResultsFragment (..), extractFieldFromResponse, buildRaw)
+import           Hasura.GraphQL.Transport.HTTP               (MonadExecuteQuery (..), QueryCacheKey (..), ResultsFragment (..), extractFieldFromResponse, buildRaw)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import           Hasura.HTTP
@@ -352,17 +353,27 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
   case execPlan of
     E.QueryExecutionPlan queryPlan asts -> do
+{- TODO
+      let cacheKey = QueryCacheKey reqParsed $ _uiRole userInfo
+      (responseHeaders, cachedValue) <- cacheLookup reqParsed asts (Just cacheKey)
+      responseData <- case cachedValue of
+        Just cachedResponseData -> pure cachedResponseData
+        Nothing -> case queryPlan of
+-}
       conclusion <- runExceptT $ forWithKey queryPlan $ \fieldName -> \case
         E.ExecStepDB (tx, genSql) -> doQErr $ Tracing.trace "Query" $ do
-          (telemTimeIO_DT, (respHdrs, resp)) <- Tracing.interpTraceT id $ withElapsedTime $
-            executeQuery reqParsed asts genSql pgExecCtx tx
-          return $ ResultsFragment telemTimeIO_DT Telem.Local resp respHdrs
+          (telemTimeIO_DT, (resp)) <- Tracing.interpTraceT id $ withElapsedTime $
+            hoist (runQueryTx pgExecCtx) tx
+          return $ ResultsFragment telemTimeIO_DT Telem.Local resp [] -- TODO respHdrs
         E.ExecStepRemote (rsi, opDef, varValsM) -> do
           runRemoteGQ fieldName execCtx requestId userInfo reqHdrs opDef rsi varValsM
         E.ExecStepRaw json ->
           buildRaw json
       buildResult Telem.Query timerTot requestId conclusion
       sendCompleted (Just requestId)
+{- TODO
+      cacheStore reqParsed asts cacheKey responseData
+-}
 
     E.MutationExecutionPlan mutationPlan -> do
       conclusion <- runExceptT $ forWithKey mutationPlan $ \fieldName -> \case
