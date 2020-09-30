@@ -80,10 +80,7 @@ mkSQLSelect jsonAggSelect annSimpleSel =
 -- Top-level exported functions
 
 fromSelectRows :: Ir.AnnSelectG (Ir.AnnFieldsG Sql.SQLExp) Sql.SQLExp -> FromIr Tsql.Select
-fromSelectRows annSelectG
-  -- Here is a spot where the from'd thing binds a scope that the
-  -- order/where will be related to.
- = do
+fromSelectRows annSelectG = do
   selectFrom <-
     case from of
       Ir.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
