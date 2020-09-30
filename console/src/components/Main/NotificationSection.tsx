@@ -27,7 +27,7 @@ import { Nullable } from '../Common/utils/tsUtils';
 import { mapDispatchToPropsEmpty } from '../Common/utils/reactUtils';
 import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
 import { StyledText } from '../UIKit/atoms/Typography/Typography';
-import { LS_VERSION_UPDATE_CHECK_LAST_CLOSED } from '../Common/utils/localStorageUtils';
+import { LS_KEYS } from '../../utils/localStorage';
 
 const getDateString = (date: NotificationDate) => {
   if (!date) {
@@ -231,7 +231,7 @@ const VersionUpdateNotification: React.FC<VersionUpdateNotificationProps> = ({
 
   const handleClick = () => {
     window.localStorage.setItem(
-      LS_VERSION_UPDATE_CHECK_LAST_CLOSED,
+      LS_KEYS.versionUpdateCheckLastClosed,
       latestVersion || ''
     );
     onClick();
@@ -352,7 +352,7 @@ const checkVersionUpdate = (
 
   try {
     const lastUpdateCheckClosed = window.localStorage.getItem(
-      LS_VERSION_UPDATE_CHECK_LAST_CLOSED
+      LS_KEYS.versionUpdateCheckLastClosed
     );
     if (
       lastUpdateCheckClosed !== latestServerVersionToCheck ||
