@@ -27,4 +27,4 @@ response:
   - extensions:
       path: $.selectionSet.author.selectionSet.authorFragment.selectionSet.articles.selectionSet.articleFragment.selectionSet.author.selectionSet
       code: validation-failed
-    message: cannot spread fragment "authorFragment" within itself via articleFragment,authorFragment
+    message: the fragment definition(s) authorFragment and articleFragment form a cycle

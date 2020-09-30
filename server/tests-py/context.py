@@ -179,6 +179,11 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             resp, status = self.create_user()
             self._send_response(status, resp)
 
+        elif req_path == "/create-user-timeout":
+            time.sleep(2)
+            resp, status = self.create_user()
+            self._send_response(status, resp)
+
         elif req_path == "/create-users":
             resp, status = self.create_users()
             self._send_response(status, resp)

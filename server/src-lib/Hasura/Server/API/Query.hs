@@ -1,9 +1,9 @@
 -- | The RQL query ('/v1/query')
 {-# LANGUAGE NamedFieldPuns #-}
-
 module Hasura.Server.API.Query where
 
 import           Control.Lens
+import           Control.Monad.Unique
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -198,13 +198,14 @@ runQuery
   -> SQLGenCtx -> SystemDefined -> RQLQuery -> m (EncJSON, RebuildableSchemaCache Run)
 runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query = do
   accessMode <- getQueryAccessMode query
+  traceCtx <- Tracing.currentContext
   resE <- runQueryM env query & Tracing.interpTraceT \x -> do
     a <- x & runHasSystemDefinedT systemDefined
            & runCacheRWT sc
-           & peelRun runCtx pgExecCtx accessMode
+           & peelRun runCtx pgExecCtx accessMode (Just traceCtx)
            & runExceptT
            & liftIO
-    pure (either 
+    pure (either
       ((, mempty) . Left)
       (\((js, meta), rsc, ci) -> (Right (js, rsc, ci), meta)) a)
   either throwError withReload resE
@@ -348,7 +349,7 @@ reconcileAccessModes (Just mode1) (Just mode2)
 
 runQueryM
   :: ( HasVersion, QErrM m, CacheRWM m, UserInfoM m, MonadTx m
-     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     , MonadIO m, MonadUnique m, HasHttpManager m, HasSQLGenCtx m
      , HasSystemDefined m
      , Tracing.MonadTrace m
      )

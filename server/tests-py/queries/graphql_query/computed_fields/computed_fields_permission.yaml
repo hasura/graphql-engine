@@ -1,28 +1,73 @@
-description: Query author with computed fields as user role
-url: /v1/graphql
-status: 200
-headers:
-  X-Hasura-Role: user
-  X-Hasura-User-Id: '1'
-query:
-  query: |
-    query {
-      author{
-        full_name
-        get_articles(args:{search:"Article"}){
-          id
-          title
-          content
-          author_id
+- description: Query author with computed fields as user role
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: '1'
+  query:
+    query: |
+      query {
+        author{
+          full_name
+          get_articles(args:{search:"Article"}){
+            id
+            title
+            content
+            author_id
+          }
         }
       }
-    }
-response:
-  data:
-    author:
-    - full_name: Roger Chris
-      get_articles:
-      - id: 1
-        title: Article 1
-        content: Content for Article 1
-        author_id: 1
+  response:
+    data:
+      author:
+      - full_name: Roger Chris
+        get_articles:
+        - id: 1
+          title: Article 1
+          content: Content for Article 1
+          author_id: 1
+
+- description: Query author with computed fields as public role
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: public_role
+  query:
+    query: |
+      query {
+        author{
+          full_name
+          id
+          title
+        }
+      }
+  response:
+    errors:
+      - extensions:
+          path: $.selectionSet.author.selectionSet.full_name
+          code: validation-failed
+        message: "field \"full_name\" not found in type: 'author'"
+
+- description: Query author with computed fields as public role
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: public_role
+  query:
+    query: |
+      query {
+        author{
+          get_articles(args:{search:"Article"}){
+            id
+            title
+            content
+          }
+        }
+      }
+  response:
+    errors:
+      - extensions:
+          path: $.selectionSet.author.selectionSet.get_articles.selectionSet.id
+          code: validation-failed
+       # the "public_role" role doesn't have access to "id" field
+        message: "field \"id\" not found in type: 'article'"

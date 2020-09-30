@@ -1,4 +1,5 @@
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE CPP                  #-}
 
 module Hasura.App where
 
@@ -12,9 +13,12 @@ import           Control.Monad.Morph                       (hoist)
 import           Control.Monad.Stateless
 import           Control.Monad.STM                         (atomically)
 import           Control.Monad.Trans.Control               (MonadBaseControl (..))
+import           Control.Monad.Unique
 import           Data.Aeson                                ((.=))
 import           Data.Time.Clock                           (UTCTime)
+#ifndef PROFILING
 import           GHC.AssertNF
+#endif
 import           GHC.Stats
 import           Options.Applicative
 import           System.Environment                        (getEnvironment)
@@ -45,8 +49,9 @@ import           Hasura.Eventing.EventTrigger
 import           Hasura.Eventing.ScheduledTrigger
 import           Hasura.GraphQL.Execute                    (MonadGQLExecutionCheck (..),
                                                             checkQueryInAllowlist)
+import           Hasura.GraphQL.Execute.Action             (asyncActionsProcessor)
+import           Hasura.GraphQL.Execute.Query              (MonadQueryInstrumentation(..), noProfile)
 import           Hasura.GraphQL.Logging                    (MonadQueryLog (..), QueryLog (..))
-import           Hasura.GraphQL.Resolve.Action             (asyncActionsProcessor)
 import           Hasura.GraphQL.Transport.HTTP             (MonadExecuteQuery (..))
 import           Hasura.GraphQL.Transport.HTTP.Protocol    (toParsed)
 import           Hasura.Logging
@@ -75,6 +80,8 @@ import           Hasura.Session
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll     as EL
 import qualified Hasura.GraphQL.Transport.WebSocket.Server as WS
 import qualified Hasura.Tracing                            as Tracing
+import qualified System.Metrics                            as EKG
+
 
 data ExitCode
   = InvalidEnvironmentVariableOptionsError
@@ -163,7 +170,7 @@ data InitCtx
   }
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger
--- TODO: better naming?
+-- TODO (from master): better naming?
 data Loggers
   = Loggers
   { _lsLoggerCtx :: !(LoggerCtx Hasura)
@@ -235,7 +242,7 @@ migrateCatalogSchema env logger pool httpManager sqlGenCtx = do
   let pgExecCtx = mkPGExecCtx Q.Serializable pool
       adminRunCtx = RunCtx adminUserInfo httpManager sqlGenCtx
   currentTime <- liftIO Clock.getCurrentTime
-  initialiseResult <- runExceptT $ peelRun adminRunCtx pgExecCtx Q.ReadWrite $
+  initialiseResult <- runExceptT $ peelRun adminRunCtx pgExecCtx Q.ReadWrite Nothing $
     (,) <$> migrateCatalog env currentTime <*> liftTx fetchLastUpdate
 
   ((migrationResult, schemaCache), lastUpdateEvent) <-
@@ -296,6 +303,7 @@ runHGEServer
      , WS.MonadWSLog m
      , MonadExecuteQuery m
      , Tracing.HasReporter m
+     , MonadQueryInstrumentation m
      )
   => Env.Environment
   -> ServeOptions impl
@@ -308,15 +316,18 @@ runHGEServer
   -> IO ()
   -- ^ shutdown function
   -> Maybe EL.LiveQueryPostPollHook
+  -> EKG.Store
   -> m ()
-runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp postPollHook = do
+runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp postPollHook ekgStore = do
   -- Comment this to enable expensive assertions from "GHC.AssertNF". These
   -- will log lines to STDOUT containing "not in normal form". In the future we
   -- could try to integrate this into our tests. For now this is a development
   -- tool.
   --
   -- NOTE: be sure to compile WITHOUT code coverage, for this to work properly.
+#ifndef PROFILING
   liftIO disableAssertNF
+#endif
 
   let sqlGenCtx = SQLGenCtx soStringifyNum
       Loggers loggerCtx logger _ = _icLoggers
@@ -351,6 +362,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
              soResponseInternalErrorsConfig
              postPollHook
              _icSchemaCache
+             ekgStore
 
   -- log inconsistent schema objects
   inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)
@@ -369,7 +381,6 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
   lockedEventsCtx <- liftIO $ atomically initLockedEventsCtx
 
   -- prepare event triggers data
-  prepareEvents _icPgPool logger
   eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI
   unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
 
@@ -431,8 +442,10 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
   liftIO $ Warp.runSettings warpSettings app
 
   where
-    -- | prepareEvents is a function to unlock all the events that are
-    -- locked and unprocessed, which is called while hasura is started.
+    -- | prepareScheduledEvents is a function to unlock all the scheduled trigger
+    -- events that are locked and unprocessed, which is called while hasura is 
+    -- started.
+    --
     -- Locked and unprocessed events can occur in 2 ways
     -- 1.
     -- Hasura's shutdown was not graceful in which all the fetched
@@ -442,12 +455,6 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
     -- There is another hasura instance which is processing events and
     -- it will lock events to process them.
     -- So, unlocking all the locked events might re-deliver an event(due to #2).
-    prepareEvents pool (Logger logger) = do
-      liftIO $ logger $ mkGenericStrLog LevelInfo "event_triggers" "preparing data"
-      res <- liftIO $ runTx pool (Q.ReadCommitted, Nothing) unlockAllEvents
-      either (printErrJExit EventSubSystemError) return res
-
-    -- | prepareScheduledEvents is like prepareEvents, but for scheduled triggers
     prepareScheduledEvents pool (Logger logger) = do
       liftIO $ logger $ mkGenericStrLog LevelInfo "scheduled_triggers" "preparing data"
       res <- liftIO $ runTx pool (Q.ReadCommitted, Nothing) unlockAllLockedScheduledEvents
@@ -469,7 +476,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
       unlockEventsForShutdown pool hasuraLogger "event_triggers" "" unlockEvents leEvents
       liftIO $ logger $ mkGenericStrLog LevelInfo "scheduled_triggers" "unlocking scheduled events that are locked by the HGE"
       unlockEventsForShutdown pool hasuraLogger "scheduled_triggers" "cron events" unlockCronEvents leCronEvents
-      unlockEventsForShutdown pool hasuraLogger "scheduled_triggers" "scheduled events" unlockCronEvents leStandAloneEvents
+      unlockEventsForShutdown pool hasuraLogger "scheduled_triggers" "scheduled events" unlockCronEvents leOneOffEvents
 
     unlockEventsForShutdown
       :: Q.PGPool
@@ -531,9 +538,9 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
 --      see memory stay high after finishing). In the theoretical worst case
 --      there is such low haskell heap pressure that we never run finalizers to
 --      free the foreign data from e.g. libpq.
---    - `-Iw` is not yet implemented in 8.10.1: https://gitlab.haskell.org/ghc/ghc/-/issues/18433
---    - even if it was these two knobs would still not give us a guarentee that
---      a major GC would always run at some minumum frequency (e.g. for finalizers)
+--    - as of GHC 8.10.2 we have access to `-Iw`, but those two knobs still
+--      don’t give us a guarantee that a major GC will always run at some
+--      minumum frequency (e.g. for finalizers)
 --
 -- ...so we hack together our own using GHC.Stats, which should have
 -- insignificant runtime overhead.
@@ -586,13 +593,14 @@ runAsAdmin
 runAsAdmin pool sqlGenCtx httpManager m = do
   let runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
       pgCtx = mkPGExecCtx Q.Serializable pool
-  runExceptT $ peelRun runCtx pgCtx Q.ReadWrite m
+  runExceptT $ peelRun runCtx pgCtx Q.ReadWrite Nothing m
 
 execQuery
   :: ( HasVersion
      , CacheRWM m
      , MonadTx m
      , MonadIO m
+     , MonadUnique m
      , HasHttpManager m
      , HasSQLGenCtx m
      , UserInfoM m
@@ -611,6 +619,9 @@ execQuery env queryBs = do
 
 instance Tracing.HasReporter AppM
 
+instance MonadQueryInstrumentation AppM where
+  askInstrumentQuery _ = pure (id, noProfile)
+
 instance HttpLog AppM where
   logHttpError logger userInfoM reqId waiReq req qErr headers =
     unLogger logger $ mkHttpLog $
@@ -621,7 +632,7 @@ instance HttpLog AppM where
       mkHttpAccessLogContext userInfoM reqId waiReq compressedResponse qTime cType headers
 
 instance MonadExecuteQuery AppM where
-  executeQuery _ _ _ pgCtx _txAccess tx =
+  executeQuery _ _ _ pgCtx tx =
     ([],) <$> hoist (runQueryTx pgCtx) tx
 
 instance UserAuthentication (Tracing.TraceT AppM) where
@@ -655,7 +666,6 @@ instance MonadQueryLog AppM where
 
 instance WS.MonadWSLog AppM where
   logWSLog = unLogger
-
 
 --- helper functions ---
 
