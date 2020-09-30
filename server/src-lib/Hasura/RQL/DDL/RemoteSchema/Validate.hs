@@ -1,5 +1,6 @@
 module Hasura.RQL.DDL.RemoteSchema.Validate (
-  resolveRoleBasedRemoteSchema
+    resolveRoleBasedRemoteSchema
+  , partitionTypeDefinition
   ) where
 
 import           Control.Monad.Validate
@@ -14,17 +15,6 @@ import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Data.HashSet                  as S
 import qualified Data.List.NonEmpty            as NE
 import qualified Data.Text                     as T
-
-data PartitionedTypeDefinitions
-  = PartitionedTypeDefinitions
-  { _ptdScalars      :: ![G.ScalarTypeDefinition]
-  , _ptdObjects      :: ![G.ObjectTypeDefinition]
-  , _ptdInterfaces   :: ![G.InterfaceTypeDefinition ()]
-  , _ptdUnions       :: ![G.UnionTypeDefinition]
-  , _ptdEnums        :: ![G.EnumTypeDefinition]
-  , _ptdInputObjects :: ![G.InputObjectTypeDefinition]
-  , _ptdSchemaDef    :: ![G.SchemaDefinition]
-  } deriving (Show, Eq)
 
 data FieldDefinitionType
   = ObjectField
