@@ -251,18 +251,9 @@ unfurlAnnOrderByElement =
       pure fieldName
     Ir.AOCObjectRelation Ir.RelInfo {riMapping = mapping, riRTable = table} annBoolExp annOrderByElementG -> do
       selectFrom <- lift (lift (fromQualifiedTable table))
-      joinAliasEntity <- lift (lift (generateEntityAlias objectRelationForOrderAlias))
-      foreignKeyConditions <-
-        traverse
-          (\(from, to) -> do
-             fromFieldName <- lift (fromPGCol from)
-             toFieldName <-
-               lift (local (const (fromAlias selectFrom)) (fromPGCol to))
-             pure
-               (EqualExpression
-                  (ColumnExpression fromFieldName)
-                  (ColumnExpression toFieldName)))
-          (HM.toList mapping)
+      joinAliasEntity <-
+        lift (lift (generateEntityAlias objectRelationForOrderAlias))
+      foreignKeyConditions <- lift (fromMapping selectFrom mapping)
       whereExpression <-
         lift (local (const (fromAlias selectFrom)) (fromAnnBoolExp annBoolExp))
       tell
@@ -305,16 +296,7 @@ fromAnnBoolExpFld =
       pure (AndExpression expressions)
     Ir.AVRel Ir.RelInfo {riMapping = mapping, riRTable = table} annBoolExp -> do
       selectFrom <- lift (fromQualifiedTable table)
-      foreignKeyConditions <-
-        traverse
-          (\(from, to) -> do
-             fromFieldName <- fromPGCol from
-             toFieldName <- local (const (fromAlias selectFrom)) (fromPGCol to)
-             pure
-               (EqualExpression
-                  (ColumnExpression fromFieldName)
-                  (ColumnExpression toFieldName)))
-          (HM.toList mapping)
+      foreignKeyConditions <- fromMapping selectFrom mapping
       whereExpression <-
         local (const (fromAlias selectFrom)) (fromAnnBoolExp annBoolExp)
       pure
@@ -554,21 +536,13 @@ fromObjectRelationSelectG annRelationSelectG = do
       Nothing -> lift (FromIr (refute (pure NoProjectionFields)))
       Just ne -> pure ne
   _fieldName <- lift (fromRelName aarRelationshipName) -- TODO: Maybe use later for more readable names.
-  foreignKeyConditions <-
-    traverse
-      (\(from, to) -> do
-         fromFieldName <- fromPGCol from
-         toFieldName <- local (const (fromAlias selectFrom)) (fromPGCol to)
-         pure
-           (EqualExpression
-              (ColumnExpression fromFieldName)
-              (ColumnExpression toFieldName)))
-      (HM.toList mapping)
+  foreignKeyConditions <- fromMapping selectFrom mapping
   alias <- lift (generateEntityAlias objectRelationAlias)
   pure
     Join
       { joinJoinAlias =
-          JoinAlias {joinAliasEntity = alias, joinAliasField = pure jsonFieldName}
+          JoinAlias
+            {joinAliasEntity = alias, joinAliasField = pure jsonFieldName}
       , joinSelect =
           Select
             { selectOrderBy = Nothing
@@ -608,24 +582,15 @@ fromArrayAggregateSelectG annRelationSelectG = do
   _fieldName <- lift (fromRelName aarRelationshipName) -- TODO: use it?
   select <- lift (fromSelectAggregate annSelectG)
   joinSelect <-
-    do foreignKeyConditions <-
-         traverse
-           (\(from, to) -> do
-              fromFieldName <- fromPGCol from
-              toFieldName <-
-                local (const (fromAlias (selectFrom select))) (fromPGCol to)
-              pure
-                (EqualExpression
-                   (ColumnExpression fromFieldName)
-                   (ColumnExpression toFieldName)))
-           (HM.toList mapping)
+    do foreignKeyConditions <- fromMapping (selectFrom select) mapping
        pure
          select {selectWhere = Where foreignKeyConditions <> selectWhere select}
   alias <- lift (generateEntityAlias arrayAggregateName)
   pure
     Join
       { joinJoinAlias =
-          JoinAlias {joinAliasEntity = alias, joinAliasField = pure jsonFieldName}
+          JoinAlias
+            {joinAliasEntity = alias, joinAliasField = pure jsonFieldName}
       , joinSelect
       }
   where
@@ -639,17 +604,7 @@ fromArrayRelationSelectG annRelationSelectG = do
   _fieldName <- lift (fromRelName aarRelationshipName) -- TODO: use it?
   select <- lift (fromSelectRows annSelectG)
   joinSelect <-
-    do foreignKeyConditions <-
-         traverse
-           (\(from, to) -> do
-              fromFieldName <- fromPGCol from
-              toFieldName <-
-                local (const (fromAlias (selectFrom select))) (fromPGCol to)
-              pure
-                (EqualExpression
-                   (ColumnExpression fromFieldName)
-                   (ColumnExpression toFieldName)))
-           (HM.toList mapping)
+    do foreignKeyConditions <- fromMapping (selectFrom select) mapping
        pure
          select {selectWhere = Where foreignKeyConditions <> selectWhere select}
   alias <- lift (generateEntityAlias arrayRelationAlias)
@@ -667,6 +622,21 @@ fromArrayRelationSelectG annRelationSelectG = do
 fromRelName :: Ir.RelName -> FromIr Text
 fromRelName relName =
   pure (Ir.relNameToTxt relName)
+
+fromMapping ::
+     From
+  -> HashMap Sql.PGCol Sql.PGCol
+  -> ReaderT EntityAlias FromIr [Expression]
+fromMapping selectFrom =
+  traverse
+    (\(from, to) -> do
+       fromFieldName <- fromPGCol from
+       toFieldName <- local (const (fromAlias selectFrom)) (fromPGCol to)
+       pure
+         (EqualExpression
+            (ColumnExpression fromFieldName)
+            (ColumnExpression toFieldName))) .
+  HM.toList
 
 --------------------------------------------------------------------------------
 -- Basic SQL expression types
