@@ -364,7 +364,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         E.ExecStepDB (tx, genSql) -> doQErr $ Tracing.trace "Query" $ do
           (telemTimeIO_DT, (resp)) <- Tracing.interpTraceT id $ withElapsedTime $
             hoist (runQueryTx pgExecCtx) tx
-          return $ ResultsFragment telemTimeIO_DT Telem.Local resp [] -- TODO respHdrs
+          return $ ResultsFragment telemTimeIO_DT Telem.Local resp -- TODO respHdrs
         E.ExecStepRemote (rsi, opDef, varValsM) -> do
           runRemoteGQ fieldName execCtx requestId userInfo reqHdrs opDef rsi varValsM
         E.ExecStepRaw json ->
@@ -382,7 +382,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           (telemTimeIO_DT, resp) <- Tracing.interpTraceT
             (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx . withUserInfo userInfo)
             $ withElapsedTime tx
-          return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
+          return $ ResultsFragment telemTimeIO_DT Telem.Local resp
         E.ExecStepRemote (rsi, opDef, varValsM) -> do
           runRemoteGQ fieldName execCtx requestId userInfo reqHdrs opDef rsi varValsM
         E.ExecStepRaw json ->
@@ -427,10 +427,10 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       when False $ Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
     runRemoteGQ fieldName execCtx reqId userInfo reqHdrs opDef rsi varValsM = do
-      (telemTimeIO_DT, HttpResponse resp respHdrs) <-
+      (telemTimeIO_DT, HttpResponse resp _respHdrs) <-
         doQErr $ flip runReaderT execCtx $ E.execRemoteGQ env reqId userInfo reqHdrs rsi opDef varValsM
       value <- mapExceptT lift $ extractFieldFromResponse fieldName (encJToLBS resp)
-      return $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) respHdrs
+      return $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value)
 
     WSServerEnv logger pgExecCtx lqMap getSchemaCache httpMgr _ sqlGenCtx {- planCache -}
       _ enableAL = serverEnv

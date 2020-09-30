@@ -87,7 +87,6 @@ data ResultsFragment = ResultsFragment
   { rfTimeIO :: DiffTime
   , rfLocality :: Telem.Locality
   , rfResponse :: EncJSON
-  , rfHeaders :: HTTP.ResponseHeaders
   }
 
 -- | Run (execute) a single GraphQL query
@@ -137,12 +136,12 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
           E.ExecStepDB txGenSql -> doQErr $ do
             (telemTimeIO_DT, resp) <-
               runQueryDB reqId (reqUnparsed,reqParsed) asts userInfo txGenSql
-            return $ ResultsFragment telemTimeIO_DT Telem.Local resp [] -- TODO respHdrs
+            return $ ResultsFragment telemTimeIO_DT Telem.Local resp
           E.ExecStepRemote (rsi, opDef, varValsM) ->
             runRemoteGQ fieldName rsi opDef varValsM
           E.ExecStepRaw json ->
             buildRaw json
-        buildResult Telem.Query conclusion
+        buildResult Telem.Query conclusion [] -- TODO respHdrs
 {- TODO
         cacheStore reqParsed asts cacheKey responseData
         pure (tch, tl, (ttio, tqt, HttpResponse responseData $ newHeaders <> responseHeaders))
@@ -150,14 +149,14 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
 
       E.MutationExecutionPlan mutationPlans -> do
         conclusion <- runExceptT $ forWithKey mutationPlans $ \fieldName -> \case
-          E.ExecStepDB (tx, responseHeaders) -> doQErr $ do
+          E.ExecStepDB (tx, _responseHeaders) -> doQErr $ do
             (telemTimeIO_DT, resp) <- runMutationDB reqId reqUnparsed userInfo tx
-            return $ ResultsFragment telemTimeIO_DT Telem.Local resp responseHeaders
+            return $ ResultsFragment telemTimeIO_DT Telem.Local resp
           E.ExecStepRemote (rsi, opDef, varValsM) ->
             runRemoteGQ fieldName rsi opDef varValsM
           E.ExecStepRaw json ->
             buildRaw json
-        buildResult Telem.Mutation conclusion
+        buildResult Telem.Mutation conclusion []
 
       E.SubscriptionExecutionPlan _sub ->
         throw400 UnexpectedPayload "subscriptions are not supported over HTTP, use websockets instead"
@@ -175,25 +174,25 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
     forWithKey = flip OMap.traverseWithKey
 
     runRemoteGQ fieldName rsi opDef varValsM = do
-      (telemTimeIO_DT, HttpResponse resp respHdrs) <-
+      (telemTimeIO_DT, HttpResponse resp _respHdrs) <-
         doQErr $ E.execRemoteGQ env reqId userInfo reqHeaders rsi opDef varValsM
       value <- extractFieldFromResponse fieldName $ encJToLBS resp
-      pure $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) respHdrs
+      pure $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value)
 
-    buildResult telemType (Left (Left err)) = pure
+    buildResult telemType (Left (Left err)) _ = pure
       ( telemType
       , 0
       , Telem.Remote
       , HttpResponse (encodeGQResp $ throwError err) []
       )
-    buildResult _telemType (Left (Right err)) = throwError err
-    buildResult telemType (Right results) = pure
+    buildResult _telemType (Left (Right err)) _ = throwError err
+    buildResult telemType (Right results) headers = pure
       ( telemType
       , sum (fmap rfTimeIO results)
       , foldMap rfLocality results
       , HttpResponse
         (encodeGQResp $ pure $ encJToLBS $ encJFromInsOrdHashMap (fmap rfResponse results))
-        (foldMap rfHeaders results)
+        headers
       )
 
 extractFieldFromResponse
@@ -218,7 +217,7 @@ buildRaw :: Applicative m => J.Value -> m ResultsFragment
 buildRaw json = do
   let obj = encJFromJValue json
       telemTimeIO_DT = 0
-  pure $ ResultsFragment telemTimeIO_DT Telem.Local obj []
+  pure $ ResultsFragment telemTimeIO_DT Telem.Local obj
 
 -- | Run (execute) a batched GraphQL query (see 'GQLBatchedReqs')
 runGQBatched
