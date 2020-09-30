@@ -37,14 +37,10 @@ import {
 
 import { checkStableVersion, versionGT } from '../../helpers/versionUtils';
 import { getSchemaBaseRoute } from '../Common/utils/routesUtils';
-import {
-  getLocalStorageItem,
-  LS_VERSION_UPDATE_CHECK_LAST_CLOSED,
-  setLocalStorageItem,
-} from '../Common/utils/localStorageUtils';
 import ToolTip from '../Common/Tooltip/Tooltip';
 import { setPreReleaseNotificationOptOutInDB } from '../../telemetry/Actions';
 import { Icon } from '../UIKit/atoms/Icon';
+import { getLSItem, setLSItem, LS_KEYS } from '../../utils/localStorage';
 import { Help, ProPopup } from './components/';
 
 class Main extends React.Component {
@@ -115,8 +111,8 @@ class Main extends React.Component {
     }
 
     try {
-      const lastUpdateCheckClosed = getLocalStorageItem(
-        LS_VERSION_UPDATE_CHECK_LAST_CLOSED
+      const lastUpdateCheckClosed = getLSItem(
+        LS_KEYS.versionUpdateCheckLastClosed
       );
 
       if (lastUpdateCheckClosed !== latestServerVersionToCheck) {
@@ -190,10 +186,7 @@ class Main extends React.Component {
 
   closeUpdateBanner() {
     const { updateNotificationVersion } = this.state;
-    setLocalStorageItem(
-      LS_VERSION_UPDATE_CHECK_LAST_CLOSED,
-      updateNotificationVersion
-    );
+    setLSItem(LS_KEYS.versionUpdateCheckLastClosed, updateNotificationVersion);
     this.setState({ updateNotificationVersion: null });
   }
 
