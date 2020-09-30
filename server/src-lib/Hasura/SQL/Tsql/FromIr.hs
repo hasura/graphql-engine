@@ -58,6 +58,20 @@ data Error
   | DistinctIsn'tSupported
   deriving (Show, Eq)
 
+-- | The base monad used throughout this module for all conversion
+-- functions.
+--
+-- It's a Validate, so it'll continue going when it encounters errors
+-- to accumulate as many as possible.
+--
+-- It also contains a mapping from entity prefixes to counters. So if
+-- my prefix is "table" then there'll be a counter that lets me
+-- generate table1, table2, etc. Same for any other prefix needed
+-- (e.g. names for joins).
+--
+-- A ReaderT is used around this in most of the module too, for
+-- setting the current entity that a given field name refers to. See
+-- @fromPGCol@.
 newtype FromIr a = FromIr
   { unFromIr :: StateT (Map Text Int) (Validate (NonEmpty Error)) a
   } deriving (Functor, Applicative, Monad)
@@ -248,7 +262,7 @@ unfurlAnnOrderByElement ::
 unfurlAnnOrderByElement =
   \case
     Ir.AOCColumn pgColumnInfo -> do
-      fieldName <- lift (fromPGColumnName' pgColumnInfo)
+      fieldName <- lift (fromPGColumnInfo pgColumnInfo)
       pure fieldName
     Ir.AOCObjectRelation Ir.RelInfo {riMapping = mapping, riRTable = table} annBoolExp annOrderByElementG -> do
       selectFrom <- lift (lift (fromQualifiedTable table))
@@ -293,7 +307,7 @@ unfurlAnnOrderByElement =
              (case annAggregateOrderBy of
                 Ir.AAOCount -> pure (CountAggregate StarCountable)
                 Ir.AAOOp text pgColumnInfo -> do
-                  fieldName <- fromPGColumnName' pgColumnInfo
+                  fieldName <- fromPGColumnInfo pgColumnInfo
                   pure (OpAggregate text fieldName)))
       tell
         (pure
@@ -323,6 +337,24 @@ unfurlAnnOrderByElement =
 --------------------------------------------------------------------------------
 -- Conversion functions
 
+-- | This is really the start where you query the base table,
+-- everything else is joins attached to it.
+fromQualifiedTable :: Sql.QualifiedObject Sql.TableName -> FromIr From
+fromQualifiedTable qualifiedObject = do
+  alias <- generateEntityAlias tableAliasName
+  pure
+    (FromQualifiedTable
+       (Aliased
+          { aliasedThing =
+              TableName {tableName = qname, tableNameSchema = schemaName}
+          , aliasedAlias = alias
+          }))
+  where
+    Sql.QualifiedObject { qSchema = Sql.SchemaName schemaName
+                         -- TODO: Consider many x.y.z. in schema name.
+                        , qName = Sql.TableName qname
+                        } = qualifiedObject
+
 fromAnnBoolExp ::
      Ir.GBoolExp (Ir.AnnBoolExpFld Sql.SQLExp)
   -> ReaderT EntityAlias FromIr Expression
@@ -333,7 +365,7 @@ fromAnnBoolExpFld ::
 fromAnnBoolExpFld =
   \case
     Ir.AVCol pgColumnInfo opExpGs -> do
-      expression <- fromPGColumnInfo pgColumnInfo
+      expression <- fmap ColumnExpression (fromPGColumnInfo pgColumnInfo)
       expressions <- traverse (lift . fromOpExpG expression) opExpGs
       pure (AndExpression expressions)
     Ir.AVRel Ir.RelInfo {riMapping = mapping, riRTable = table} annBoolExp -> do
@@ -361,13 +393,8 @@ fromAnnBoolExpFld =
              , selectOffset = Nothing
              })
 
-fromPGColumnInfo :: Ir.PGColumnInfo -> ReaderT EntityAlias FromIr Expression
-fromPGColumnInfo info = do
-  name <- fromPGColumnName' info
-  pure (ColumnExpression name)
-
-fromPGColumnName' :: Ir.PGColumnInfo -> ReaderT EntityAlias FromIr FieldName
-fromPGColumnName' Ir.PGColumnInfo {pgiColumn = pgCol} = do
+fromPGColumnInfo :: Ir.PGColumnInfo -> ReaderT EntityAlias FromIr FieldName
+fromPGColumnInfo Ir.PGColumnInfo {pgiColumn = pgCol} = do
   EntityAlias {entityAliasText} <- ask
   pure
     (FieldName
@@ -397,24 +424,14 @@ fromGExists Ir.GExists {_geTable, _geWhere} = do
       , selectOffset = Nothing
       }
 
-fromQualifiedTable :: Sql.QualifiedObject Sql.TableName -> FromIr From
-fromQualifiedTable qualifiedObject = do
-  alias <- generateEntityAlias tableAliasName
-  pure
-    (FromQualifiedTable
-       (Aliased
-          { aliasedThing =
-              TableName {tableName = qname, tableNameSchema = schemaName}
-          , aliasedAlias = alias
-          }))
-  where
-    Sql.QualifiedObject { qSchema = Sql.SchemaName schemaName
-                         -- TODO: Consider many x.y.z. in schema name.
-                        , qName = Sql.TableName qname
-                        } = qualifiedObject
-
 --------------------------------------------------------------------------------
 -- Sources of projected fields
+--
+-- Because in the IR, a field projected can be a foreign object, we
+-- have to both generate a projection AND on the side generate a join.
+--
+-- So a @FieldSource@ couples the idea of the projected thing and the
+-- source of it.
 
 data FieldSource
   = ExpressionFieldSource (Aliased Expression)
@@ -525,6 +542,9 @@ fromPGColumnName :: Ir.PGColumnInfo -> ReaderT EntityAlias FromIr FieldName
 fromPGColumnName Ir.PGColumnInfo{pgiColumn = pgCol} =
   fromPGCol pgCol
 
+-- | This is where a field name "foo" is resolved to a fully qualified
+-- field name [table].[foo]. The table name comes from EntityAlias in
+-- the ReaderT.
 fromPGCol :: Sql.PGCol -> ReaderT EntityAlias FromIr FieldName
 fromPGCol pgCol = do
   EntityAlias {entityAliasText} <- ask
