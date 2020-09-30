@@ -577,6 +577,20 @@ getSchemaDocIntrospection schemaDocTypeDefs (queryRoot, mutationRoot, subscripti
     defaultScalars = map (\n -> G.ScalarTypeDefinition Nothing n [])
                          $ [intScalar, floatScalar, stringScalar, boolScalar, idScalar]
 
+partitionTypeDefinition :: G.TypeDefinition () -> State PartitionedTypeDefinitions ()
+partitionTypeDefinition (G.TypeDefinitionScalar scalarDefn) =
+  modify (\td -> td {_ptdScalars = ((:) scalarDefn) . _ptdScalars $ td})
+partitionTypeDefinition (G.TypeDefinitionObject objectDefn) =
+  modify (\td -> td {_ptdObjects = ((:) objectDefn) . _ptdObjects $ td})
+partitionTypeDefinition (G.TypeDefinitionInterface interfaceDefn) =
+  modify (\td -> td {_ptdInterfaces = ((:) interfaceDefn) . _ptdInterfaces $ td})
+partitionTypeDefinition (G.TypeDefinitionUnion unionDefn) =
+  modify (\td -> td {_ptdUnions = ((:) unionDefn) . _ptdUnions $ td})
+partitionTypeDefinition (G.TypeDefinitionEnum enumDefn) =
+  modify (\td -> td {_ptdEnums = ((:) enumDefn) . _ptdEnums $ td})
+partitionTypeDefinition (G.TypeDefinitionInputObject inputObjectDefn) =
+  modify (\td -> td {_ptdInputObjects = ((:) inputObjectDefn) . _ptdInputObjects $ td})
+
 -- | validateRemoteSchema accepts two arguments, the `SchemaDocument` of
 -- the role-based schema, that is provided by the user and the `SchemaIntrospection`
 -- of the upstream remote schema. This function, in turn calls the other validation
@@ -590,10 +604,10 @@ validateRemoteSchema (G.SchemaDocument providedTypeDefns) (G.SchemaIntrospection
   let
     -- Converting `[G.TypeSystemDefinition]` into `PartitionedTypeDefinitions`
     (_, providedTypes) = flip runState emptySchemaDocTypeDefinitions $
-                      traverse resolveTypeSystemDefinitions providedTypeDefns
+                      traverse partitionTypeSystemDefinitions providedTypeDefns
     -- Converting `[G.TypeDefinition [Name]]` into `PartitionedTypeDefinitions`
     (_, upstreamTypes) = flip runState emptySchemaDocTypeDefinitions $
-                      traverse resolveSchemaIntrospection upstreamTypeDefns
+                      traverse partitionSchemaIntrospection upstreamTypeDefns
     providedInterfacesList = map G._itdName $ _ptdInterfaces providedTypes
     duplicateTypesList = duplicateTypes providedTypes
   -- check for duplicate type names
@@ -610,29 +624,14 @@ validateRemoteSchema (G.SchemaDocument providedTypeDefns) (G.SchemaIntrospection
   where
     emptySchemaDocTypeDefinitions = PartitionedTypeDefinitions [] [] [] [] [] [] []
 
-    -- For the love of god, This function needs to be refactored :(
-    resolveTypeDefinition :: G.TypeDefinition () -> State PartitionedTypeDefinitions ()
-    resolveTypeDefinition (G.TypeDefinitionScalar scalarDefn) =
-      modify (\td -> td {_ptdScalars = ((:) scalarDefn) . _ptdScalars $ td})
-    resolveTypeDefinition (G.TypeDefinitionObject objectDefn) =
-      modify (\td -> td {_ptdObjects = ((:) objectDefn) . _ptdObjects $ td})
-    resolveTypeDefinition (G.TypeDefinitionInterface interfaceDefn) =
-      modify (\td -> td {_ptdInterfaces = ((:) interfaceDefn) . _ptdInterfaces $ td})
-    resolveTypeDefinition (G.TypeDefinitionUnion unionDefn) =
-      modify (\td -> td {_ptdUnions = ((:) unionDefn) . _ptdUnions $ td})
-    resolveTypeDefinition (G.TypeDefinitionEnum enumDefn) =
-      modify (\td -> td {_ptdEnums = ((:) enumDefn) . _ptdEnums $ td})
-    resolveTypeDefinition (G.TypeDefinitionInputObject inputObjectDefn) =
-      modify (\td -> td {_ptdInputObjects = ((:) inputObjectDefn) . _ptdInputObjects $ td})
-
-    resolveTypeSystemDefinitions :: G.TypeSystemDefinition -> State PartitionedTypeDefinitions ()
-    resolveTypeSystemDefinitions (G.TypeSystemDefinitionSchema schemaDefn) =
+    partitionTypeSystemDefinitions :: G.TypeSystemDefinition -> State PartitionedTypeDefinitions ()
+    partitionTypeSystemDefinitions (G.TypeSystemDefinitionSchema schemaDefn) =
       modify (\td -> td {_ptdSchemaDef = ((:) schemaDefn) . _ptdSchemaDef $ td})
-    resolveTypeSystemDefinitions (G.TypeSystemDefinitionType typeDefn) =
-      resolveTypeDefinition typeDefn
+    partitionTypeSystemDefinitions (G.TypeSystemDefinitionType typeDefn) =
+      partitionTypeDefinition typeDefn
 
-    resolveSchemaIntrospection :: G.TypeDefinition [G.Name] -> State PartitionedTypeDefinitions ()
-    resolveSchemaIntrospection typeDef = resolveTypeDefinition (typeDef $> ())
+    partitionSchemaIntrospection :: G.TypeDefinition [G.Name] -> State PartitionedTypeDefinitions ()
+    partitionSchemaIntrospection typeDef = partitionTypeDefinition (typeDef $> ())
 
     duplicateTypes (PartitionedTypeDefinitions scalars objs ifaces unions enums inpObjs _) =
       duplicates $
