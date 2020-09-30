@@ -274,6 +274,47 @@ unfurlAnnOrderByElement =
       local
         (const (EntityAlias joinAliasEntity))
         (unfurlAnnOrderByElement annOrderByElementG)
+    Ir.AOCArrayAggregation Ir.RelInfo {riMapping = mapping, riRTable = table} annBoolExp annAggregateOrderBy -> do
+      selectFrom <- lift (lift (fromQualifiedTable table))
+      let alias = aggFieldName
+      joinAliasEntity <-
+        lift (lift (generateEntityAlias objectRelationForOrderAlias))
+      foreignKeyConditions <- lift (fromMapping selectFrom mapping)
+      whereExpression <-
+        lift (local (const (fromAlias selectFrom)) (fromAnnBoolExp annBoolExp))
+      aggregate <-
+        lift
+          (local
+             (const (fromAlias selectFrom))
+             (case annAggregateOrderBy of
+                Ir.AAOCount -> pure (CountAggregate StarCountable)
+                Ir.AAOOp text pgColumnInfo -> do
+                  fieldName <- fromPGColumnName' pgColumnInfo
+                  pure (OpAggregate text fieldName)))
+      tell
+        (pure
+           Join
+             { joinSelect =
+                 Select
+                   { selectTop = NoTop
+                   , selectProjections =
+                       NE.fromList
+                         [ AggregateProjection
+                             Aliased
+                               {aliasedThing = aggregate, aliasedAlias = alias}
+                         ]
+                   , selectFrom
+                   , selectJoins = []
+                   , selectWhere =
+                       Where (foreignKeyConditions <> [whereExpression])
+                   , selectFor = NoFor
+                   , selectOrderBy = Nothing
+                   , selectOffset = Nothing
+                   }
+             , joinJoinAlias =
+                 JoinAlias {joinAliasEntity, joinAliasField = Nothing}
+             })
+      pure FieldName {fieldNameEntity = joinAliasEntity, fieldName = alias}
 
 --------------------------------------------------------------------------------
 -- Conversion functions
@@ -673,6 +714,9 @@ trueExpression = ValueExpression (Odbc.BoolValue True)
 
 jsonFieldName :: Text
 jsonFieldName = "json"
+
+aggFieldName :: Text
+aggFieldName = "agg"
 
 existsFieldName :: Text
 existsFieldName = "exists_placeholder"
