@@ -259,6 +259,16 @@ The various types of queries are listed in the following table:
      - 1
      - Reload schema of an existing remote schema
 
+   * - :ref:`add_remote_schema_permissions`
+     - :ref:`add_remote_schema_permissions <add_remote_schema_permissions_syntax>`
+     - 1
+     - Add permissions to a role of an existing remote schema
+
+   * - :ref:`drop_remote_schema_permissions`
+     - :ref:`drop_remote_schema_permissions <drop_remote_schema_permissions_syntax>`
+     - 1
+     - Drop existing permissions defined for a role for a remote schema
+
    * - :ref:`create_remote_relationship`
      - :ref:`create_remote_relationship_args <create_remote_relationship_syntax>`
      - 1
@@ -373,6 +383,7 @@ The various types of queries are listed in the following table:
 - :ref:`Relationships <api_relationship>`
 - :ref:`Computed Fields <api_computed_field>`
 - :ref:`Permissions <api_permission>`
+- :ref:`Remote Schema Permissions <remote_schema_api_permission>`
 - :ref:`Event Triggers <api_event_triggers>`
 - :ref:`Remote Schemas <api_remote_schemas>`
 - :ref:`Query Collections <api_query_collections>`
@@ -458,6 +469,7 @@ See :ref:`server_flag_reference` for info on setting the above flag/env var.
   Custom Functions <custom-functions>
   Relationships <relationship>
   Permissions <permission>
+  Remote Schema Permission <remote-schema-permissions>
   Computed Fields <computed-field>
   Event Triggers <event-triggers>
   Scheduled Triggers <scheduled-triggers>
