@@ -61,7 +61,8 @@ class Monad m => MonadExecuteQuery m where
     -- ^ Key that uniquely identifies the result of a query execution
     -> m (HTTP.ResponseHeaders, Maybe EncJSON)
     -- ^ HTTP headers to be sent back to the caller for this GraphQL request,
-    -- and a cached value if found and within time-to-live
+    -- containing e.g. time-to-live information, and a cached value if found and
+    -- within time-to-live
   cacheStore
     :: QueryCacheKey
     -- ^ Key under which to store the result of a query execution
@@ -127,7 +128,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
           Nothing -> case queryPlan of
             E.ExecStepDB txGenSql -> do
               (telemTimeIO, telemQueryType, resp) <-
-                runQueryDB reqId (reqUnparsed,reqParsed) asts userInfo txGenSql
+                runQueryDB reqId reqUnparsed userInfo txGenSql
               return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp []))
             E.ExecStepRemote (rsi, opDef, _varValsM) ->
               runRemoteGQ telemCacheHit rsi opDef
@@ -218,18 +219,16 @@ runQueryDB
      , MonadError QErr m
      , MonadReader E.ExecutionCtx m
      , MonadQueryLog m
-     , MonadExecuteQuery m
      , MonadTrace m
      )
   => RequestId
-  -> (GQLReqUnparsed, GQLReqParsed)
-  -> [QueryRootField UnpreparedValue]
+  -> GQLReqUnparsed
   -> UserInfo
   -> (Tracing.TraceT (LazyTx QErr) EncJSON, EQ.GeneratedSqlMap)
   -> m (DiffTime, Telem.QueryType, EncJSON)
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
-runQueryDB reqId (query, queryParsed) asts _userInfo (tx, genSql) =  do
+runQueryDB reqId query _userInfo (tx, genSql) =  do
   -- log the generated SQL and the graphql query
   E.ExecutionCtx logger _ pgExecCtx _ _ _ _ <- ask
   logQueryLog logger query (Just genSql) reqId
