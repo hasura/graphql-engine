@@ -31,6 +31,7 @@ data Order
 data NullsOrder
   = NullsFirst
   | NullsLast
+  | NullsAnyOrder
   deriving (Eq, Show)
 
 data For

@@ -41,8 +41,10 @@ import           Prelude
 --------------------------------------------------------------------------------
 -- Types
 
+-- | Most of these errors should be checked for legitimacy.
 data Error
   = FromTypeUnsupported (Ir.SelectFromG Sql.SQLExp)
+  | NoOrderSpecifiedInOrderBy
   | MalformedAgg
   | FieldTypeUnsupportedForNow (Ir.AnnFieldG Sql.SQLExp)
   | AggTypeUnsupportedForNow (Ir.TableAggregateFieldG Sql.SQLExp)
@@ -207,9 +209,22 @@ fromAnnOrderByItemG ::
      Ir.AnnOrderByItemG Sql.SQLExp -> WriterT (Seq Join) (ReaderT EntityAlias FromIr) OrderBy
 fromAnnOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
   orderByFieldName <- unfurlAnnOrderByElement obiColumn
-  let orderByOrder = AscOrder
-  let orderByNullsOrder = NullsFirst
-  pure OrderBy {..}
+  let morderByOrder =
+        fmap
+          (\case
+             Sql.OTAsc -> AscOrder
+             Sql.OTDesc -> DescOrder)
+          (fmap Ir.unOrderType obiType)
+  let orderByNullsOrder =
+        case fmap Ir.unNullsOrder obiNulls of
+          Nothing -> NullsAnyOrder
+          Just nullsOrder ->
+            case nullsOrder of
+              Sql.NFirst -> NullsFirst
+              Sql.NLast -> NullsLast
+  case morderByOrder of
+    Just orderByOrder -> pure OrderBy {..}
+    Nothing -> lift (lift (FromIr (refute (pure NoOrderSpecifiedInOrderBy))))
 
 -- | Unfurl the nested set of object relations (tell'd in the writer)
 -- that are terminated by field name (Ir.AOCColumn and
