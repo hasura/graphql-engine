@@ -136,7 +136,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
               (telemTimeIO, obj) <- withElapsedTime $
                 return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
               return (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj []))
-        cacheStore cacheKey responseData
+        onNothing (void cachedValue) $ cacheStore cacheKey responseData
         pure (tch, tl, (ttio, tqt, HttpResponse responseData $ newHeaders <> responseHeaders))
       E.MutationExecutionPlan mutationPlan ->
         case mutationPlan of
