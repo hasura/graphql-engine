@@ -169,13 +169,16 @@ mkServeOptions rso = do
   eventsHttpPoolSize <- withEnv (rsoEventsHttpPoolSize rso) (fst eventsHttpPoolSizeEnv)
   eventsFetchInterval <- withEnv (rsoEventsFetchInterval rso) (fst eventsFetchIntervalEnv)
   logHeadersFromEnv <- withEnvBool (rsoLogHeadersFromEnv rso) (fst logHeadersFromEnvEnv)
+  enableRemoteSchemaPerms <-
+    withEnvBool (rsoEnableRemoteSchemaPermissions rso) $
+                (fst enableRemoteSchemaPermsEnv)
 
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
                         enabledLogs serverLogLevel planCacheOptions
                         internalErrorsConfig eventsHttpPoolSize eventsFetchInterval
-                        logHeadersFromEnv
+                        logHeadersFromEnv enableRemoteSchemaPerms
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -507,6 +510,13 @@ devModeEnv =
   , "Set dev mode for GraphQL requests; include 'internal' key in the errors extensions (if required) of the response"
   )
 
+enableRemoteSchemaPermsEnv :: (String, String)
+enableRemoteSchemaPermsEnv =
+  ( "HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS"
+  , "Enables remote schema permissions (default: false)"
+  )
+
+
 adminInternalErrorsEnv :: (String, String)
 adminInternalErrorsEnv =
   ( "HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS"
@@ -822,6 +832,12 @@ parseLogHeadersFromEnv =
            help (snd devModeEnv)
          )
 
+parseEnableRemoteSchemaPerms :: Parser Bool
+parseEnableRemoteSchemaPerms =
+  switch ( long "enable-remote-schema-permissions" <>
+           help (snd devModeEnv)
+         )
+
 mxRefetchDelayEnv :: (String, String)
 mxRefetchDelayEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL"
@@ -931,6 +947,7 @@ serveOptsToLog so =
       , "enabled_log_types" J..= soEnabledLogTypes so
       , "log_level" J..= soLogLevel so
       , "plan_cache_options" J..= soPlanCacheOptions so
+      , "enable_remote_schema_permissions" J..= soEnableRemoteSchemaPermissions so
       ]
 
 mkGenericStrLog :: L.LogLevel -> T.Text -> String -> StartupLog
@@ -976,6 +993,7 @@ serveOptionsParser =
   <*> parseGraphqlEventsHttpPoolSize
   <*> parseGraphqlEventsFetchInterval
   <*> parseLogHeadersFromEnv
+  <*> parseEnableRemoteSchemaPerms
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.

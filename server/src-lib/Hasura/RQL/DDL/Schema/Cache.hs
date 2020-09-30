@@ -62,7 +62,14 @@ import           Hasura.SQL.Types
 import           Hasura.Session
 
 buildRebuildableSchemaCache
-  :: (HasVersion, MonadIO m, MonadUnique m, MonadTx m, HasHttpManager m, HasSQLGenCtx m)
+  :: ( HasVersion
+     , MonadIO m
+     , MonadUnique m
+     , MonadTx m
+     , HasHttpManager m
+     , HasSQLGenCtx m
+     , HasEnableRemoteSchemaPermsCtx m
+     )
   => Env.Environment
   -> m (RebuildableSchemaCache m)
 buildRebuildableSchemaCache env = do
@@ -117,7 +124,7 @@ buildSchemaCacheRule
   -- what we want!
   :: ( HasVersion, ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
      , MonadIO m, MonadUnique m, MonadTx m
-     , MonadReader BuildReason m, HasHttpManager m, HasSQLGenCtx m )
+     , MonadReader BuildReason m, HasHttpManager m, HasSQLGenCtx m, HasEnableRemoteSchemaPermsCtx m)
   => Env.Environment
   -> (CatalogMetadata, InvalidationKeys) `arr` SchemaCache
 buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do

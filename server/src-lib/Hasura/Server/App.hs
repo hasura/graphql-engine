@@ -110,6 +110,7 @@ data ServerCtx
   , scEkgStore                     :: !EKG.Store
   , scResponseInternalErrorsConfig :: !ResponseInternalErrorsConfig
   , scEnvironment                  :: !Env.Environment
+  , scEnableRemoteSchemaPermsCtx   :: !EnableRemoteSchemaPermsCtx
   }
 
 data HandlerCtx
@@ -352,20 +353,20 @@ v1QueryHandler query = do
   authorizeMetadataApi query userInfo
   scRef  <- asks (scCacheRef . hcServerCtx)
   logger <- asks (scLogger . hcServerCtx)
-  res    <- bool (fst <$> dbAction) (withSCUpdate scRef logger dbAction) $ queryModifiesSchemaCache query
+  res    <- bool (fst <$> action) (withSCUpdate scRef logger action) $ queryModifiesSchemaCache query
   return $ HttpResponse res []
   where
-    -- Hit postgres
-    dbAction = do
-      userInfo    <- asks hcUser
-      scRef       <- asks (scCacheRef . hcServerCtx)
-      schemaCache <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
-      httpMgr     <- asks (scManager . hcServerCtx)
-      sqlGenCtx   <- asks (scSQLGenCtx . hcServerCtx)
-      pgExecCtx   <- asks (scPGExecCtx . hcServerCtx)
-      instanceId  <- asks (scInstanceId . hcServerCtx)
-      env         <- asks (scEnvironment . hcServerCtx)
-      runQuery env pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx (SystemDefined False) query
+    action = do
+      userInfo         <- asks hcUser
+      scRef            <- asks (scCacheRef . hcServerCtx)
+      schemaCache      <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
+      httpMgr          <- asks (scManager . hcServerCtx)
+      sqlGenCtx        <- asks (scSQLGenCtx . hcServerCtx)
+      pgExecCtx        <- asks (scPGExecCtx . hcServerCtx)
+      instanceId       <- asks (scInstanceId . hcServerCtx)
+      env              <- asks (scEnvironment . hcServerCtx)
+      enableRSPermsCtx <- asks (scEnableRemoteSchemaPermsCtx . hcServerCtx)
+      runQuery env pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx enableRSPermsCtx (SystemDefined False) query
 
 v1Alpha1GQHandler
   :: ( HasVersion
@@ -603,9 +604,10 @@ mkWaiApp
   -> Maybe EL.LiveQueryPostPollHook
   -> (RebuildableSchemaCache Run, Maybe UTCTime)
   -> EKG.Store
+  -> EnableRemoteSchemaPermsCtx
   -> m HasuraApp
 mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpManager mode corsCfg enableConsole consoleAssetsDir
-         enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig liveQueryHook (schemaCache, cacheBuiltTime) ekgStore  = do
+         enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig liveQueryHook (schemaCache, cacheBuiltTime) ekgStore enableRSPermsCtx = do
 
     -- See Note [Temporarily disabling query plan caching]
     -- (planCache, schemaCacheRef) <- initialiseCache
@@ -636,6 +638,7 @@ mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpMana
                     , scEkgStore        =  ekgStore
                     , scEnvironment     =  env
                     , scResponseInternalErrorsConfig = responseErrorsConfig
+                    , scEnableRemoteSchemaPermsCtx = enableRSPermsCtx
                     }
 
     spockApp <- liftWithStateless $ \lowerIO ->

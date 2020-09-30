@@ -44,17 +44,17 @@ runApp env (HGEOptionsG rci hgeCmd) =
   withVersion $$(getVersionFromEnvironment) $ case hgeCmd of
     HCServe serveOptions -> do
       (initCtx, initTime) <- initialiseCtx env hgeCmd rci
-      
+
       ekgStore <- liftIO do
         s <- EKG.newStore
         EKG.registerGcMetrics s
-        
+
         let getTimeMs :: IO Int64
             getTimeMs = (round . (* 1000)) `fmap` getPOSIXTime
 
         EKG.registerCounter "ekg.server_timestamp_ms" getTimeMs s
         pure s
-        
+
       let shutdownApp = return ()
       -- Catches the SIGTERM signal and initiates a graceful shutdown.
       -- Graceful shutdown for regular HTTP requests is already implemented in
@@ -81,7 +81,8 @@ runApp env (HGEOptionsG rci hgeCmd) =
       (InitCtx{..}, _) <- initialiseCtx env hgeCmd rci
       queryBs <- liftIO BL.getContents
       let sqlGenCtx = SQLGenCtx False
-      res <- runAsAdmin _icPgPool sqlGenCtx _icHttpManager $ do
+          enableRSPermsCtx = EnableRemoteSchemaPermsCtx False
+      res <- runAsAdmin _icPgPool sqlGenCtx enableRSPermsCtx _icHttpManager  $ do
         schemaCache <- buildRebuildableSchemaCache env
         execQuery env queryBs
           & Tracing.runTraceTWithReporter Tracing.noReporter "execute"
@@ -93,8 +94,9 @@ runApp env (HGEOptionsG rci hgeCmd) =
     HCDowngrade opts -> do
       (InitCtx{..}, initTime) <- initialiseCtx env hgeCmd rci
       let sqlGenCtx = SQLGenCtx False
+          enableRSPermsCtx = EnableRemoteSchemaPermsCtx False
       res <- downgradeCatalog opts initTime
-             & runAsAdmin _icPgPool sqlGenCtx _icHttpManager
+             & runAsAdmin _icPgPool sqlGenCtx enableRSPermsCtx _icHttpManager
       either (printErrJExit DowngradeProcessError) (liftIO . print) res
 
     HCVersion -> liftIO $ putStrLn $ "Hasura GraphQL Engine: " ++ convertText currentVersion

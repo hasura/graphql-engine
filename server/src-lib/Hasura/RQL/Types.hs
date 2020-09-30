@@ -9,6 +9,9 @@ module Hasura.RQL.Types
   , SQLGenCtx(..)
   , HasSQLGenCtx(..)
 
+  , EnableRemoteSchemaPermsCtx(..)
+  , HasEnableRemoteSchemaPermsCtx(..)
+
   , HasSystemDefined(..)
   , HasSystemDefinedT
   , runHasSystemDefinedT
@@ -150,6 +153,30 @@ instance (HasHttpManager m) => HasHttpManager (TraceT m) where
 --   askGCtxMap = lift askGCtxMap
 -- instance (Monoid w, HasGCtxMap m) => HasGCtxMap (WriterT w m) where
 --   askGCtxMap = lift askGCtxMap
+
+newtype EnableRemoteSchemaPermsCtx
+  = EnableRemoteSchemaPermsCtx
+  { enableRemoteSchemaPerms :: Bool
+  } deriving (Show, Eq)
+
+class (Monad m) => HasEnableRemoteSchemaPermsCtx m where
+  askEnableRemoteSchemaPermsCtx :: m EnableRemoteSchemaPermsCtx
+
+instance (HasEnableRemoteSchemaPermsCtx m)
+         => HasEnableRemoteSchemaPermsCtx (ReaderT r m) where
+  askEnableRemoteSchemaPermsCtx = lift askEnableRemoteSchemaPermsCtx
+instance (HasEnableRemoteSchemaPermsCtx m)
+         => HasEnableRemoteSchemaPermsCtx (StateT s m) where
+  askEnableRemoteSchemaPermsCtx = lift askEnableRemoteSchemaPermsCtx
+instance (Monoid w, HasEnableRemoteSchemaPermsCtx m)
+         => HasEnableRemoteSchemaPermsCtx (WriterT w m) where
+  askEnableRemoteSchemaPermsCtx = lift askEnableRemoteSchemaPermsCtx
+instance (HasEnableRemoteSchemaPermsCtx m)
+         => HasEnableRemoteSchemaPermsCtx (TableCoreCacheRT m) where
+  askEnableRemoteSchemaPermsCtx = lift askEnableRemoteSchemaPermsCtx
+instance (HasEnableRemoteSchemaPermsCtx m)
+         => HasEnableRemoteSchemaPermsCtx (TraceT m) where
+  askEnableRemoteSchemaPermsCtx = lift askEnableRemoteSchemaPermsCtx
 
 newtype SQLGenCtx
   = SQLGenCtx

@@ -61,6 +61,7 @@ import           Hasura.RQL.Types                          (CacheRWM, Code (..),
                                                             HasSQLGenCtx, HasSystemDefined,
                                                             QErr (..), SQLGenCtx (..),
                                                             SchemaCache (..), UserInfoM,
+                                                            EnableRemoteSchemaPermsCtx(..),
                                                             buildSchemaCacheStrict, decodeValue,
                                                             throw400, withPathK)
 import           Hasura.RQL.Types.Run
@@ -199,7 +200,7 @@ initialiseCtx env hgeCmd rci = do
   instanceId <- liftIO generateInstanceId
   connInfo <- liftIO procConnInfo
   latch <- liftIO newShutdownLatch
-  (loggers, pool, sqlGenCtx) <- case hgeCmd of
+  (loggers, pool, sqlGenCtx, enableRSPermsCtx) <- case hgeCmd of
     -- for the @serve@ command generate a regular PG pool
     HCServe so@ServeOptions{..} -> do
       l@(Loggers _ logger pgLogger) <- mkLoggers soEnabledLogTypes soLogLevel
@@ -208,16 +209,17 @@ initialiseCtx env hgeCmd rci = do
       -- log postgres connection info
       unLogger logger $ connInfoToLog connInfo
       pool <- liftIO $ Q.initPGPool connInfo soConnParams pgLogger
-      pure (l, pool, SQLGenCtx soStringifyNum)
+      let remoteSchemaPermsCtx = EnableRemoteSchemaPermsCtx soEnableRemoteSchemaPermissions
+      pure (l, pool, SQLGenCtx soStringifyNum, remoteSchemaPermsCtx)
 
     -- for other commands generate a minimal PG pool
     _ -> do
       l@(Loggers _ _ pgLogger) <- mkLoggers defaultEnabledLogTypes LevelInfo
       pool <- getMinimalPool pgLogger connInfo
-      pure (l, pool, SQLGenCtx False)
+      pure (l, pool, SQLGenCtx False, EnableRemoteSchemaPermsCtx False)
 
   res <- flip onException (flushLogger (_lsLoggerCtx loggers)) $
-    migrateCatalogSchema env (_lsLogger loggers) pool httpManager sqlGenCtx
+    migrateCatalogSchema env (_lsLogger loggers) pool httpManager sqlGenCtx enableRSPermsCtx
   pure (InitCtx httpManager instanceId loggers connInfo pool latch res, initTime)
   where
     procConnInfo =
@@ -237,10 +239,11 @@ initialiseCtx env hgeCmd rci = do
 migrateCatalogSchema
   :: (HasVersion, MonadIO m)
   => Env.Environment -> Logger Hasura -> Q.PGPool -> HTTP.Manager -> SQLGenCtx
+  -> EnableRemoteSchemaPermsCtx
   -> m (RebuildableSchemaCache Run, Maybe UTCTime)
-migrateCatalogSchema env logger pool httpManager sqlGenCtx = do
+migrateCatalogSchema env logger pool httpManager sqlGenCtx enableRSPermsCtx = do
   let pgExecCtx = mkPGExecCtx Q.Serializable pool
-      adminRunCtx = RunCtx adminUserInfo httpManager sqlGenCtx
+      adminRunCtx = RunCtx adminUserInfo httpManager sqlGenCtx enableRSPermsCtx
   currentTime <- liftIO Clock.getCurrentTime
   initialiseResult <- runExceptT $ peelRun adminRunCtx pgExecCtx Q.ReadWrite Nothing $
     (,) <$> migrateCatalog env currentTime <*> liftTx fetchLastUpdate
@@ -330,6 +333,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
 #endif
 
   let sqlGenCtx = SQLGenCtx soStringifyNum
+      enableRSPermsCtx = EnableRemoteSchemaPermsCtx soEnableRemoteSchemaPermissions
       Loggers loggerCtx logger _ = _icLoggers
 
   authModeRes <- runExceptT $ setupAuthMode soAdminSecret soAuthHook soJwtSecret soUnAuthRole
@@ -363,6 +367,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
              postPollHook
              _icSchemaCache
              ekgStore
+             enableRSPermsCtx
 
   -- log inconsistent schema objects
   inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)
@@ -371,7 +376,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
   -- start background threads for schema sync
   (schemaSyncListenerThread, schemaSyncProcessorThread) <-
     startSchemaSyncThreads sqlGenCtx _icPgPool logger _icHttpManager
-                           cacheRef _icInstanceId cacheInitTime
+                           cacheRef _icInstanceId cacheInitTime enableRSPermsCtx
 
   let
     maxEvThrds    = fromMaybe defaultMaxEventThreads soEventsHttpPoolSize
@@ -443,7 +448,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
 
   where
     -- | prepareScheduledEvents is a function to unlock all the scheduled trigger
-    -- events that are locked and unprocessed, which is called while hasura is 
+    -- events that are locked and unprocessed, which is called while hasura is
     -- started.
     --
     -- Locked and unprocessed events can occur in 2 ways
@@ -587,11 +592,12 @@ runAsAdmin
   :: (MonadIO m)
   => Q.PGPool
   -> SQLGenCtx
+  -> EnableRemoteSchemaPermsCtx
   -> HTTP.Manager
   -> Run a
   -> m (Either QErr a)
-runAsAdmin pool sqlGenCtx httpManager m = do
-  let runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
+runAsAdmin pool sqlGenCtx enableRSPermsCtx httpManager m = do
+  let runCtx = RunCtx adminUserInfo httpManager sqlGenCtx enableRSPermsCtx
       pgCtx = mkPGExecCtx Q.Serializable pool
   runExceptT $ peelRun runCtx pgCtx Q.ReadWrite Nothing m
 

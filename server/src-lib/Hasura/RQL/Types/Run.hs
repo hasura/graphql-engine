@@ -20,9 +20,10 @@ import qualified Hasura.Tracing              as Tracing
 
 data RunCtx
   = RunCtx
-  { _rcUserInfo  :: !UserInfo
-  , _rcHttpMgr   :: !HTTP.Manager
-  , _rcSqlGenCtx :: !SQLGenCtx
+  { _rcUserInfo                   :: !UserInfo
+  , _rcHttpMgr                    :: !HTTP.Manager
+  , _rcSqlGenCtx                  :: !SQLGenCtx
+  , _rcEnableRemoteSchemaPermsCtx :: !EnableRemoteSchemaPermsCtx
   }
 
 newtype Run a
@@ -46,6 +47,9 @@ instance HasHttpManager Run where
 instance HasSQLGenCtx Run where
   askSQLGenCtx = asks _rcSqlGenCtx
 
+instance HasEnableRemoteSchemaPermsCtx Run where
+  askEnableRemoteSchemaPermsCtx = asks _rcEnableRemoteSchemaPermsCtx
+
 peelRun
   :: (MonadIO m)
   => RunCtx
@@ -54,5 +58,5 @@ peelRun
   -> Maybe Tracing.TraceContext
   -> Run a
   -> ExceptT QErr m a
-peelRun runCtx@(RunCtx userInfo _ _) pgExecCtx txAccess ctx (Run m) =
+peelRun runCtx@(RunCtx userInfo _ _ _) pgExecCtx txAccess ctx (Run m) =
   runLazyTx pgExecCtx txAccess $ maybe id withTraceContext ctx $ withUserInfo userInfo $ runReaderT m runCtx

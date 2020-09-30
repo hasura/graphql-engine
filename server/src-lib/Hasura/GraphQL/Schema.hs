@@ -51,6 +51,7 @@ buildGQLContext
      , MonadIO m
      , MonadUnique m
      , HasSQLGenCtx m
+     , HasEnableRemoteSchemaPermsCtx m
      )
   => ( GraphQLQueryType
      , TableCache
@@ -66,13 +67,14 @@ buildGQLContext
 buildGQLContext =
   proc (queryType, allTables, allFunctions, allRemoteSchemas, allActions, nonObjectCustomTypes) -> do
 
+    isEnabledRemoteSchemaPerms <- bindA -< enableRemoteSchemaPerms <$> askEnableRemoteSchemaPermsCtx
     -- Scroll down a few pages for the actual body...
-
     let remoteSchemasRoles = concatMap (Map.keys . _rscpPermissions . fst . snd) $ Map.toList allRemoteSchemas
         allRoles = Set.insert adminRoleName $
              (allTables ^.. folded.tiRolePermInfoMap.to Map.keys.folded)
           <> (allActionInfos ^.. folded.aiPermissions.to Map.keys.folded)
-          <> (Set.fromList remoteSchemasRoles)
+          -- include the new roles only if remote schema permissions are enabled
+          <> (Set.fromList $ (bool mempty remoteSchemasRoles $ isEnabledRemoteSchemaPerms))
 
         tableFilter    = not . isSystemDefined . _tciSystemDefined
         functionFilter = not . isSystemDefined . fiSystemDefined
@@ -205,12 +207,8 @@ buildGQLContext =
         buildContextForRoleAndScenario roleName scenario = do
           SQLGenCtx{ stringifyNum } <- askSQLGenCtx
           roleBasedRemoteSchemas <-
-            case roleName == adminRoleName of
-              -- The admin role will have full access to the remote schema, so
-              -- we just re-use the `ParsedIntrospection` we already have in the
-              -- `remotes` object
-              True  -> pure $ map snd remotes
-              False -> buildRoleBasedRemoteSchemaParser roleName allRemoteSchemas
+             if | (roleName == adminRoleName) || (not isEnabledRemoteSchemaPerms) -> pure $ map snd remotes
+                | otherwise -> buildRoleBasedRemoteSchemaParser roleName allRemoteSchemas
           let qRemotes = queryRemotes roleBasedRemoteSchemas
               mRemotes = mutationRemotes roleBasedRemoteSchemas
           let gqlContext = GQLContext

@@ -89,21 +89,22 @@ startSchemaSyncThreads
   -> SchemaCacheRef
   -> InstanceId
   -> Maybe UTC.UTCTime
+  -> EnableRemoteSchemaPermsCtx
   -> m (Immortal.Thread, Immortal.Thread)
   -- ^ Returns: (listener handle, processor handle)
-startSchemaSyncThreads sqlGenCtx pool logger httpMgr cacheRef instanceId cacheInitTime = do
+startSchemaSyncThreads sqlGenCtx pool logger httpMgr cacheRef instanceId cacheInitTime enableRSPermsCtx = do
   -- only the latest event is recorded here
   -- we don't want to store and process all the events, only the latest event
   updateEventRef <- liftIO $ STM.newTVarIO Nothing
 
   -- Start listener thread
   lTId <- liftIO $ C.forkImmortal "SchemeUpdate.listener" logger $
-    listener sqlGenCtx pool logger httpMgr updateEventRef cacheRef instanceId cacheInitTime
+    listener sqlGenCtx pool logger httpMgr updateEventRef cacheRef instanceId cacheInitTime enableRSPermsCtx
   logThreadStarted TTListener lTId
 
   -- Start processor thread
   pTId <- liftIO $ C.forkImmortal "SchemeUpdate.processor" logger $
-    processor sqlGenCtx pool logger httpMgr updateEventRef cacheRef instanceId
+    processor sqlGenCtx pool logger httpMgr updateEventRef cacheRef instanceId enableRSPermsCtx
   logThreadStarted TTProcessor pTId
 
   return (lTId, pTId)
@@ -127,9 +128,11 @@ listener
   -> STM.TVar (Maybe EventPayload)
   -> SchemaCacheRef
   -> InstanceId
-  -> Maybe UTC.UTCTime -> IO void
+  -> Maybe UTC.UTCTime
+  -> EnableRemoteSchemaPermsCtx
+  -> IO void
 listener sqlGenCtx pool logger httpMgr updateEventRef
-  cacheRef instanceId cacheInitTime =
+  cacheRef instanceId cacheInitTime enableRSPermsCtx =
   -- Never exits
   forever $ do
     listenResE <-
@@ -149,7 +152,7 @@ listener sqlGenCtx pool logger httpMgr updateEventRef
     refreshCache (Just (dbInstId, accrdAt, invalidations)) =
       when (shouldRefresh dbInstId accrdAt) $
         refreshSchemaCache sqlGenCtx pool logger httpMgr cacheRef invalidations
-          threadType "schema cache reloaded after postgres listen init"
+          threadType "schema cache reloaded after postgres listen init" enableRSPermsCtx
 
     notifyHandler = \case
       PG.PNEOnStart -> do
@@ -186,16 +189,18 @@ processor
   -> HTTP.Manager
   -> STM.TVar (Maybe EventPayload)
   -> SchemaCacheRef
-  -> InstanceId -> IO void
+  -> InstanceId
+  -> EnableRemoteSchemaPermsCtx
+  -> IO void
 processor sqlGenCtx pool logger httpMgr updateEventRef
-  cacheRef instanceId =
+  cacheRef instanceId enableRSPermsCtx =
   -- Never exits
   forever $ do
     event <- STM.atomically getLatestEvent
     logInfo logger threadType $ object ["processed_event" .= event]
     when (shouldReload event) $
       refreshSchemaCache sqlGenCtx pool logger httpMgr cacheRef (_epInvalidations event)
-        threadType "schema cache reloaded"
+        threadType "schema cache reloaded" enableRSPermsCtx
   where
     -- checks if there is an event
     -- and replaces it with Nothing
@@ -219,8 +224,11 @@ refreshSchemaCache
   -> SchemaCacheRef
   -> CacheInvalidations
   -> ThreadType
-  -> T.Text -> IO ()
-refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef invalidations threadType msg = do
+  -> T.Text
+  -> EnableRemoteSchemaPermsCtx
+  -> IO ()
+refreshSchemaCache sqlGenCtx pool logger httpManager
+    cacheRef invalidations threadType msg enableRSPermsCtx = do
   -- Reload schema cache from catalog
   resE <- liftIO $ runExceptT $ withSCUpdate cacheRef logger do
     rebuildableCache <- fst <$> liftIO (readIORef $ _scrCache cacheRef)
@@ -232,7 +240,7 @@ refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef invalidations thre
     Left e   -> logError logger threadType $ TEQueryError e
     Right () -> logInfo logger threadType $ object ["message" .= msg]
  where
-  runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
+  runCtx = RunCtx adminUserInfo httpManager sqlGenCtx enableRSPermsCtx
   pgCtx = mkPGExecCtx PG.Serializable pool
 
 logInfo :: Logger Hasura -> ThreadType -> Value -> IO ()
