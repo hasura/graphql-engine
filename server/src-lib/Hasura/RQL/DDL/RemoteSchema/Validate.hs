@@ -15,15 +15,15 @@ import qualified Data.HashSet                  as S
 import qualified Data.List.NonEmpty            as NE
 import qualified Data.Text                     as T
 
-data SchemaDocumentTypeDefinitions
-  = SchemaDocumentTypeDefinitions
-  { _sdtdScalars      :: ![G.ScalarTypeDefinition]
-  , _sdtdObjects      :: ![G.ObjectTypeDefinition]
-  , _sdtdInterfaces   :: ![G.InterfaceTypeDefinition ()]
-  , _sdtdUnions       :: ![G.UnionTypeDefinition]
-  , _sdtdEnums        :: ![G.EnumTypeDefinition]
-  , _sdtdInputObjects :: ![G.InputObjectTypeDefinition]
-  , _sdtdSchemaDef    :: ![G.SchemaDefinition]
+data PartitionedTypeDefinitions
+  = PartitionedTypeDefinitions
+  { _ptdScalars      :: ![G.ScalarTypeDefinition]
+  , _ptdObjects      :: ![G.ObjectTypeDefinition]
+  , _ptdInterfaces   :: ![G.InterfaceTypeDefinition ()]
+  , _ptdUnions       :: ![G.UnionTypeDefinition]
+  , _ptdEnums        :: ![G.EnumTypeDefinition]
+  , _ptdInputObjects :: ![G.InputObjectTypeDefinition]
+  , _ptdSchemaDef    :: ![G.SchemaDefinition]
   } deriving (Show, Eq)
 
 data FieldDefinitionType
@@ -536,7 +536,7 @@ createPossibleTypesMap objDefns =
                     mempty
                     objMap
 
--- | getSchemaDocIntrospection converts the `SchemaDocumentTypeDefinitions` to
+-- | getSchemaDocIntrospection converts the `PartitionedTypeDefinitions` to
 -- `IntrospectionResult` because the function `buildRemoteParser` function which
 -- builds the remote schema parsers accepts an `IntrospectionResult`. The
 -- conversion involves converting `G.TypeDefinition ()` to `G.TypeDefinition
@@ -545,7 +545,7 @@ createPossibleTypesMap objDefns =
 -- specifying the `SchemaDocument` through the GraphQL DSL, it doesn't include
 -- the `possibleTypes` along with an object.
 getSchemaDocIntrospection
-  :: SchemaDocumentTypeDefinitions
+  :: PartitionedTypeDefinitions
   -> (G.Name, Maybe G.Name, Maybe G.Name)
   -> IntrospectionResult
 getSchemaDocIntrospection schemaDocTypeDefs (queryRoot, mutationRoot, subscriptionRoot) =
@@ -571,7 +571,7 @@ getSchemaDocIntrospection schemaDocTypeDefs (queryRoot, mutationRoot, subscripti
       schemaIntrospection = G.SchemaIntrospection modifiedTypeDefs
   in IntrospectionResult schemaIntrospection queryRoot mutationRoot subscriptionRoot
   where
-    SchemaDocumentTypeDefinitions scalars objects interfaces
+    PartitionedTypeDefinitions scalars objects interfaces
                             unions enums inpObjs _ = schemaDocTypeDefs
 
     defaultScalars = map (\n -> G.ScalarTypeDefinition Nothing n [])
@@ -588,53 +588,53 @@ validateRemoteSchema
   -> m IntrospectionResult
 validateRemoteSchema (G.SchemaDocument providedTypeDefns) (G.SchemaIntrospection upstreamTypeDefns) = do
   let
-    -- Converting `[G.TypeSystemDefinition]` into `SchemaDocumentTypeDefinitions`
+    -- Converting `[G.TypeSystemDefinition]` into `PartitionedTypeDefinitions`
     (_, providedTypes) = flip runState emptySchemaDocTypeDefinitions $
                       traverse resolveTypeSystemDefinitions providedTypeDefns
-    -- Converting `[G.TypeDefinition [Name]]` into `SchemaDocumentTypeDefinitions`
+    -- Converting `[G.TypeDefinition [Name]]` into `PartitionedTypeDefinitions`
     (_, upstreamTypes) = flip runState emptySchemaDocTypeDefinitions $
                       traverse resolveSchemaIntrospection upstreamTypeDefns
-    providedInterfacesList = map G._itdName $ _sdtdInterfaces providedTypes
+    providedInterfacesList = map G._itdName $ _ptdInterfaces providedTypes
     duplicateTypesList = duplicateTypes providedTypes
   -- check for duplicate type names
   onJust (NE.nonEmpty duplicateTypesList) $ \duplicateTypeNames ->
     refute $ pure $ DuplicateTypeNames duplicateTypeNames
-  rootTypeNames <- validateSchemaDefinitions $ _sdtdSchemaDef providedTypes
-  validateScalarDefinitions (_sdtdScalars providedTypes) (_sdtdScalars upstreamTypes)
-  validateEnumTypeDefinitions (_sdtdEnums providedTypes) (_sdtdEnums upstreamTypes)
-  validateInterfaceDefinitions (_sdtdInterfaces providedTypes) (_sdtdInterfaces upstreamTypes)
-  validateUnionTypeDefinitions (_sdtdUnions providedTypes) (_sdtdUnions upstreamTypes)
-  validateInputObjectTypeDefinitions (_sdtdInputObjects providedTypes) (_sdtdInputObjects upstreamTypes)
-  validateObjectDefinitions (_sdtdObjects providedTypes) (_sdtdObjects upstreamTypes) $ S.fromList providedInterfacesList
+  rootTypeNames <- validateSchemaDefinitions $ _ptdSchemaDef providedTypes
+  validateScalarDefinitions (_ptdScalars providedTypes) (_ptdScalars upstreamTypes)
+  validateEnumTypeDefinitions (_ptdEnums providedTypes) (_ptdEnums upstreamTypes)
+  validateInterfaceDefinitions (_ptdInterfaces providedTypes) (_ptdInterfaces upstreamTypes)
+  validateUnionTypeDefinitions (_ptdUnions providedTypes) (_ptdUnions upstreamTypes)
+  validateInputObjectTypeDefinitions (_ptdInputObjects providedTypes) (_ptdInputObjects upstreamTypes)
+  validateObjectDefinitions (_ptdObjects providedTypes) (_ptdObjects upstreamTypes) $ S.fromList providedInterfacesList
   pure $ getSchemaDocIntrospection providedTypes rootTypeNames
   where
-    emptySchemaDocTypeDefinitions = SchemaDocumentTypeDefinitions [] [] [] [] [] [] []
+    emptySchemaDocTypeDefinitions = PartitionedTypeDefinitions [] [] [] [] [] [] []
 
     -- For the love of god, This function needs to be refactored :(
-    resolveTypeDefinition :: G.TypeDefinition () -> State SchemaDocumentTypeDefinitions ()
+    resolveTypeDefinition :: G.TypeDefinition () -> State PartitionedTypeDefinitions ()
     resolveTypeDefinition (G.TypeDefinitionScalar scalarDefn) =
-      modify (\td -> td {_sdtdScalars = ((:) scalarDefn) . _sdtdScalars $ td})
+      modify (\td -> td {_ptdScalars = ((:) scalarDefn) . _ptdScalars $ td})
     resolveTypeDefinition (G.TypeDefinitionObject objectDefn) =
-      modify (\td -> td {_sdtdObjects = ((:) objectDefn) . _sdtdObjects $ td})
+      modify (\td -> td {_ptdObjects = ((:) objectDefn) . _ptdObjects $ td})
     resolveTypeDefinition (G.TypeDefinitionInterface interfaceDefn) =
-      modify (\td -> td {_sdtdInterfaces = ((:) interfaceDefn) . _sdtdInterfaces $ td})
+      modify (\td -> td {_ptdInterfaces = ((:) interfaceDefn) . _ptdInterfaces $ td})
     resolveTypeDefinition (G.TypeDefinitionUnion unionDefn) =
-      modify (\td -> td {_sdtdUnions = ((:) unionDefn) . _sdtdUnions $ td})
+      modify (\td -> td {_ptdUnions = ((:) unionDefn) . _ptdUnions $ td})
     resolveTypeDefinition (G.TypeDefinitionEnum enumDefn) =
-      modify (\td -> td {_sdtdEnums = ((:) enumDefn) . _sdtdEnums $ td})
+      modify (\td -> td {_ptdEnums = ((:) enumDefn) . _ptdEnums $ td})
     resolveTypeDefinition (G.TypeDefinitionInputObject inputObjectDefn) =
-      modify (\td -> td {_sdtdInputObjects = ((:) inputObjectDefn) . _sdtdInputObjects $ td})
+      modify (\td -> td {_ptdInputObjects = ((:) inputObjectDefn) . _ptdInputObjects $ td})
 
-    resolveTypeSystemDefinitions :: G.TypeSystemDefinition -> State SchemaDocumentTypeDefinitions ()
+    resolveTypeSystemDefinitions :: G.TypeSystemDefinition -> State PartitionedTypeDefinitions ()
     resolveTypeSystemDefinitions (G.TypeSystemDefinitionSchema schemaDefn) =
-      modify (\td -> td {_sdtdSchemaDef = ((:) schemaDefn) . _sdtdSchemaDef $ td})
+      modify (\td -> td {_ptdSchemaDef = ((:) schemaDefn) . _ptdSchemaDef $ td})
     resolveTypeSystemDefinitions (G.TypeSystemDefinitionType typeDefn) =
       resolveTypeDefinition typeDefn
 
-    resolveSchemaIntrospection :: G.TypeDefinition [G.Name] -> State SchemaDocumentTypeDefinitions ()
+    resolveSchemaIntrospection :: G.TypeDefinition [G.Name] -> State PartitionedTypeDefinitions ()
     resolveSchemaIntrospection typeDef = resolveTypeDefinition (typeDef $> ())
 
-    duplicateTypes (SchemaDocumentTypeDefinitions scalars objs ifaces unions enums inpObjs _) =
+    duplicateTypes (PartitionedTypeDefinitions scalars objs ifaces unions enums inpObjs _) =
       duplicates $
       (map G._stdName scalars) <> (map G._otdName objs) <> (map G._itdName ifaces)
       <> (map G._utdName unions) <> (map G._etdName enums) <> (map G._iotdName inpObjs)
