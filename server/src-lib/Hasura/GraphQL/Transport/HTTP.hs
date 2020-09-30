@@ -59,7 +59,7 @@ class Monad m => MonadExecuteQuery m where
     -- ^ Used to check that the query is cacheable
     -> QueryCacheKey
     -- ^ Key that uniquely identifies the result of a query execution
-    -> m (HTTP.ResponseHeaders, Maybe EncJSON)
+    -> TraceT m (HTTP.ResponseHeaders, Maybe EncJSON)
     -- ^ HTTP headers to be sent back to the caller for this GraphQL request,
     -- containing e.g. time-to-live information, and a cached value if found and
     -- within time-to-live
@@ -68,20 +68,20 @@ class Monad m => MonadExecuteQuery m where
     -- ^ Key under which to store the result of a query execution
     -> EncJSON
     -- ^ Result of a query execution
-    -> m ()
+    -> TraceT m ()
     -- ^ always succeeds
 
 instance MonadExecuteQuery m => MonadExecuteQuery (ReaderT r m) where
-  cacheLookup a b = lift $ cacheLookup a b
-  cacheStore  a b = lift $ cacheStore  a b
+  cacheLookup a b = hoist lift $ cacheLookup a b
+  cacheStore  a b = hoist lift $ cacheStore  a b
 
 instance MonadExecuteQuery m => MonadExecuteQuery (ExceptT r m) where
-  cacheLookup a b = lift $ cacheLookup a b
-  cacheStore  a b = lift $ cacheStore  a b
+  cacheLookup a b = hoist lift $ cacheLookup a b
+  cacheStore  a b = hoist lift $ cacheStore  a b
 
 instance MonadExecuteQuery m => MonadExecuteQuery (TraceT m) where
-  cacheLookup a b = lift $ cacheLookup a b
-  cacheStore  a b = lift $ cacheStore  a b
+  cacheLookup a b = hoist lift $ cacheLookup a b
+  cacheStore  a b = hoist lift $ cacheStore  a b
 
 
 -- | Run (execute) a single GraphQL query
@@ -119,9 +119,9 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                                  userInfo sqlGenCtx sc scVer queryType
                                  httpManager reqHeaders (reqUnparsed, reqParsed)
     case execPlan of
-      E.QueryExecutionPlan queryPlan asts -> do
+      E.QueryExecutionPlan queryPlan asts -> trace "Query" $ do
         let cacheKey = QueryCacheKey reqParsed $ _uiRole userInfo
-        (responseHeaders, cachedValue) <- cacheLookup asts cacheKey
+        (responseHeaders, cachedValue) <- Tracing.interpTraceT id $ cacheLookup asts cacheKey
         (tch, tl, (ttio, tqt, HttpResponse responseData newHeaders)) <- case cachedValue of
           Just cachedResponseData ->
             pure (telemCacheHit, Telem.Local, (0, Telem.Query, HttpResponse cachedResponseData []))
@@ -136,7 +136,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
               (telemTimeIO, obj) <- withElapsedTime $
                 return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
               return (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj []))
-        onNothing (void cachedValue) $ cacheStore cacheKey responseData
+        onNothing (void cachedValue) $ Tracing.interpTraceT id $ cacheStore cacheKey responseData
         pure (tch, tl, (ttio, tqt, HttpResponse responseData $ newHeaders <> responseHeaders))
       E.MutationExecutionPlan mutationPlan ->
         case mutationPlan of
@@ -232,7 +232,8 @@ runQueryDB reqId query _userInfo (tx, genSql) =  do
   -- log the generated SQL and the graphql query
   E.ExecutionCtx logger _ pgExecCtx _ _ _ _ <- ask
   logQueryLog logger query (Just genSql) reqId
-  (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ trace "Query" $
+  (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ trace "Postgres Query" $
+    -- TODO: add root field name to trace metadata when doing heterogeneous execution
     Tracing.interpTraceT id $ hoist (runQueryTx pgExecCtx) tx
   resp <- liftEither respE
   let !json = encodeGQResp $ GQSuccess $ encJToLBS resp

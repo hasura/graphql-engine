@@ -352,18 +352,18 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx {- planCache -} sc scVer httpMgr enableAL
 
   case execPlan of
-    E.QueryExecutionPlan queryPlan asts -> do
+    E.QueryExecutionPlan queryPlan asts -> Tracing.trace "Query" $ do
       let cacheKey = QueryCacheKey reqParsed $ _uiRole userInfo
       -- We ignore the response headers (containing TTL information) because
       -- WebSockets don't support them.
-      (_responseHeaders, cachedValue) <- cacheLookup asts cacheKey
+      (_responseHeaders, cachedValue) <- Tracing.interpTraceT id $ cacheLookup asts cacheKey
       case cachedValue of
         Just cachedResponseData -> do
           sendSuccResp cachedResponseData $ LQ.LiveQueryMetadata 0
           sendCompleted $ Just requestId
         Nothing -> do
           responseData <- case queryPlan of
-            E.ExecStepDB (tx, genSql) -> Tracing.trace "Query" $
+            E.ExecStepDB (tx, genSql) -> Tracing.trace "Postgres Query" $
               execQueryOrMut timerTot Telem.Query telemCacheHit (Just genSql) requestId $
                 Tracing.interpTraceT id $ hoist (runQueryTx pgExecCtx) tx
             E.ExecStepRemote (rsi, opDef, _varValsM) ->
@@ -371,7 +371,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             E.ExecStepRaw (name, json) ->
               execQueryOrMut timerTot Telem.Query telemCacheHit Nothing requestId $
               return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
-          onJust responseData $ cacheStore cacheKey
+          onJust responseData $ Tracing.interpTraceT id . cacheStore cacheKey
     E.MutationExecutionPlan mutationPlan ->
       case mutationPlan of
         E.ExecStepDB (tx, _) -> Tracing.trace "Mutate" do
