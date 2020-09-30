@@ -14,7 +14,7 @@ data Select = Select
   , selectJoins :: ![Join]
   , selectWhere :: !Where
   , selectFor :: !For
-  , selectOrderBy :: ![OrderBy]
+  , selectOrderBy :: !(Maybe (NonEmpty OrderBy))
   } deriving (Eq, Show)
 
 data OrderBy = OrderBy

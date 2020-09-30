@@ -11,6 +11,7 @@ module Hasura.SQL.Tsql.ToQuery
 
 import           Data.Foldable
 import           Data.List (intersperse)
+import           Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.List.NonEmpty as NE
 import           Data.Maybe
 import           Data.String
@@ -94,13 +95,52 @@ fromSelect Select {..} =
         NewlinePrinter
         (map
            (\Join {..} ->
-              "OUTER APPLY (" <+>
-              IndentPrinter 13 (fromSelect joinSelect) <+>
-              ") " <+> NewlinePrinter <+> "AS " <+> fromJoinAlias joinJoinAlias)
+              SeqPrinter
+                [ "OUTER APPLY ("
+                , IndentPrinter 13 (fromSelect joinSelect)
+                , ") "
+                , NewlinePrinter
+                , "AS "
+                , fromJoinAlias joinJoinAlias
+                ])
            selectJoins)
     , fromWhere selectWhere
+    , fromOrderBys selectOrderBy
     , fromFor selectFor
     ]
+
+fromOrderBys :: Maybe (NonEmpty OrderBy) -> Printer
+fromOrderBys =
+  \case
+    Nothing -> ""
+    Just orderBys ->
+      SeqPrinter
+        [ "ORDER BY "
+        , IndentPrinter
+            9
+            (SepByPrinter
+               (QueryPrinter "," <+> NewlinePrinter)
+               (concatMap fromOrderBy (toList orderBys)))
+        ]
+
+fromOrderBy :: OrderBy -> [Printer]
+fromOrderBy OrderBy {..} =
+  [ fromNullsOrder orderByFieldName orderByNullsOrder
+  , fromFieldName orderByFieldName <+> " " <+> fromOrder orderByOrder
+  ]
+
+fromOrder :: Order -> Printer
+fromOrder =
+  \case
+    AscOrder -> "ASC"
+    DescOrder -> "DESC"
+
+fromNullsOrder :: FieldName -> NullsOrder -> Printer
+fromNullsOrder fieldName =
+  \case
+    NullsAnyOrder -> ""
+    NullsFirst -> "IIF(" <+> fromFieldName fieldName <+> " IS NULL, 0, 1)"
+    NullsLast -> "IIF(" <+> fromFieldName fieldName <+> " IS NULL, 1, 0)"
 
 fromJoinAlias :: JoinAlias -> Printer
 fromJoinAlias JoinAlias {..} =

@@ -11,7 +11,6 @@ module Hasura.SQL.Tsql.FromIr
 
 import           Control.Monad
 import           Control.Monad.Reader
-import           Control.Monad.Trans
 import           Control.Monad.Trans.State.Strict
 import           Control.Monad.Validate
 import           Control.Monad.Writer.Strict
@@ -27,7 +26,6 @@ import           Data.Sequence (Seq)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Database.ODBC.SQLServer as Odbc
-import           Debug.Trace
 import qualified Hasura.RQL.DML.Select.Types as Ir
 import qualified Hasura.RQL.Types.BoolExp as Ir
 import qualified Hasura.RQL.Types.Column as Ir
@@ -100,19 +98,20 @@ fromSelectRows annSelectG
     runReaderT (traverse fromAnnFieldsG fields) (fromAlias selectFrom)
   filterExpression <-
     runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
-  args <- runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
+  Args {argsOrderBy, argsWhere, argsJoins, argsTop, argsOffset, argsDistinct} <-
+    runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
   selectProjections <-
     case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
       Nothing -> FromIr (refute (pure NoProjectionFields))
       Just ne -> pure ne
   pure
     Select
-      { selectOrderBy = [] -- TODO: use args
-      , selectTop = uncommented permissionBasedTop
+      { selectOrderBy = argsOrderBy -- TODO: use args
+      , selectTop = uncommented (permissionBasedTop <> argsTop)
       , selectProjections
       , selectFrom
-      , selectJoins = mapMaybe fieldSourceJoin fieldSources
-      , selectWhere = Where [filterExpression]
+      , selectJoins = mapMaybe fieldSourceJoin fieldSources <> argsJoins
+      , selectWhere = argsWhere <> Where [filterExpression]
       , selectFor = JsonFor JsonArray
       }
   where
@@ -160,7 +159,7 @@ fromSelectAggregate annSelectG = do
       , selectJoins = mapMaybe fieldSourceJoin fieldSources
       , selectWhere = Where [filterExpression]
       , selectFor = JsonFor JsonSingleton
-      , selectOrderBy = [] -- TODO: use args
+      , selectOrderBy = Nothing -- TODO: use args
       }
   where
     Ir.AnnSelectG { _asnFields = fields
@@ -176,7 +175,7 @@ fromSelectAggregate annSelectG = do
 
 data Args = Args
   { argsWhere :: Where
-  , argsOrderBy :: [OrderBy]
+  , argsOrderBy :: Maybe (NonEmpty OrderBy)
   , argsJoins :: [Join]
   , argsTop :: Top
   , argsOffset :: Maybe Expression
@@ -193,8 +192,8 @@ fromSelectArgsG selectArgsG = do
     maybe (pure Nothing) (fmap Just . traverse fromPGCol) mdistinct
   (argsOrderBy, joins) <-
     runWriterT (traverse fromAnnOrderByItemG (maybe [] toList orders))
-  let !args = traceShowId (Args {argsJoins = toList joins, ..})
-  pure args
+  pure
+    Args {argsJoins = toList joins, argsOrderBy = NE.nonEmpty argsOrderBy, ..}
   where
     Ir.SelectArgs { _saWhere = mannBoolExp
                   , _saLimit = mlimit
@@ -238,7 +237,20 @@ unfurlAnnOrderByElement =
       pure fieldName
     Ir.AOCObjectRelation Ir.RelInfo {riMapping = mapping, riRTable = table} annBoolExp annOrderByElementG -> do
       selectFrom <- lift (lift (fromQualifiedTable table))
-      alias <- lift (lift (generateEntityAlias objectRelationForOrderAlias))
+      joinAliasEntity <- lift (lift (generateEntityAlias objectRelationForOrderAlias))
+      foreignKeyConditions <-
+        traverse
+          (\(from, to) -> do
+             fromFieldName <- lift (fromPGCol from)
+             toFieldName <-
+               lift (local (const (fromAlias selectFrom)) (fromPGCol to))
+             pure
+               (EqualExpression
+                  (ColumnExpression fromFieldName)
+                  (ColumnExpression toFieldName)))
+          (HM.toList mapping)
+      whereExpression <-
+        lift (local (const (fromAlias selectFrom)) (fromAnnBoolExp annBoolExp))
       tell
         (pure
            Join
@@ -248,15 +260,16 @@ unfurlAnnOrderByElement =
                    , selectProjections = NE.fromList [StarProjection]
                    , selectFrom
                    , selectJoins = []
-                   , selectWhere = mempty
+                   , selectWhere =
+                       Where (foreignKeyConditions <> [whereExpression])
                    , selectFor = NoFor
-                   , selectOrderBy = []
+                   , selectOrderBy = Nothing
                    }
              , joinJoinAlias =
-                 JoinAlias {joinAliasEntity = alias, joinAliasField = Nothing}
+                 JoinAlias {joinAliasEntity, joinAliasField = Nothing}
              })
       local
-        (const (fromAlias selectFrom))
+        (const (EntityAlias joinAliasEntity))
         (unfurlAnnOrderByElement annOrderByElementG)
 
 --------------------------------------------------------------------------------
@@ -292,7 +305,7 @@ fromAnnBoolExpFld =
       pure
         (ExistsExpression
            Select
-             { selectOrderBy = []
+             { selectOrderBy = Nothing
              , selectProjections =
                  NE.fromList
                    [ ExpressionProjection
@@ -327,7 +340,7 @@ fromGExists Ir.GExists {_geTable, _geWhere} = do
     local (const (fromAlias selectFrom)) (fromGBoolExp _geWhere)
   pure
     Select
-      { selectOrderBy = []
+      { selectOrderBy = Nothing
       , selectProjections =
           NE.fromList
             [ ExpressionProjection
@@ -541,7 +554,7 @@ fromObjectRelationSelectG annRelationSelectG = do
           JoinAlias {joinAliasEntity = alias, joinAliasField = pure jsonFieldName}
       , joinSelect =
           Select
-            { selectOrderBy = []
+            { selectOrderBy = Nothing
             , selectTop = uncommented NoTop
             , selectProjections
             , selectFrom
