@@ -105,7 +105,7 @@ fromSelectRows annSelectG
       Just ne -> pure ne
   pure
     Select
-      { selectOrderBy = argsOrderBy -- TODO: use args
+      { selectOrderBy = argsOrderBy
       , selectTop = permissionBasedTop <> argsTop
       , selectProjections
       , selectFrom
@@ -152,16 +152,13 @@ fromSelectAggregate annSelectG = do
       Just ne -> pure ne
   pure
     Select
-      { selectTop =
-          case mPermLimit of
-            Nothing -> NoTop
-            Just limit -> Top limit
-      , selectProjections
+      { selectProjections
+      , selectTop = permissionBasedTop <> argsTop
       , selectFrom
-      , selectJoins = mapMaybe fieldSourceJoin fieldSources
-      , selectWhere = Where [filterExpression]
+      , selectJoins = mapMaybe fieldSourceJoin fieldSources <> argsJoins
+      , selectWhere = argsWhere <> Where [filterExpression]
       , selectFor = JsonFor JsonSingleton
-      , selectOrderBy = Nothing -- TODO: use args
+      , selectOrderBy = argsOrderBy
       , selectOffset = argsOffset
       }
   where
@@ -172,6 +169,10 @@ fromSelectAggregate annSelectG = do
                   , _asnStrfyNum = num
                   } = annSelectG
     Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
+    permissionBasedTop =
+      case mPermLimit of
+        Nothing -> NoTop
+        Just limit -> Top limit
 
 --------------------------------------------------------------------------------
 -- GraphQL Args
@@ -705,9 +706,6 @@ trueExpression = ValueExpression (Odbc.BoolValue True)
 
 jsonFieldName :: Text
 jsonFieldName = "json"
-
-orderFieldName :: Text
-orderFieldName = "order_field"
 
 existsFieldName :: Text
 existsFieldName = "exists_placeholder"
