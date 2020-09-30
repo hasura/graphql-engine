@@ -227,12 +227,7 @@ class Schema extends Component {
       // Functions that are being used within computed fields should not be tracked. See issue #3757
       const allComputedFieldFunctions = allSchemas
         .filter(tableInfo => tableInfo.table_schema === currentSchema)
-        .filter(table => {
-          if (!table.computed_fields || !table.computed_fields.length) {
-            return;
-          }
-          return table;
-        })
+        .filter(table => table.computed_fields && table.computed_fields.length)
         .map(table =>
           table.computed_fields.map(comp => comp.definition.function.name)
         )
