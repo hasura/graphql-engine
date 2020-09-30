@@ -161,11 +161,15 @@ buildGQLContext =
     -- The `unauthenticatedContext` is used when the user queries the graphql-engine
     -- with a role that it's unaware of. Before remote schema permissions, remotes
     -- were considered to be a public entity, hence, we allowed an unknown role also
-    -- to query the remotes.
+    -- to query the remotes. To maintain backwards compatibility, we check if the
+    -- remote schema permissions are enabled, and if it's we don't expose the remote
+    -- schema fields in the unauthenticatedContext, otherwise we expose them.
     let unauthenticatedContext :: m GQLContext
         unauthenticatedContext = P.runSchemaT do
-          ucQueries   <- finalizeParser <$> unauthenticatedQueryWithIntrospection adminQueryRemotes adminMutationRemotes
-          ucMutations <- fmap finalizeParser <$> unauthenticatedMutation adminMutationRemotes
+          let qRemotes = bool adminQueryRemotes [] isEnabledRemoteSchemaPerms
+              mRemotes = bool adminMutationRemotes [] isEnabledRemoteSchemaPerms
+          ucQueries   <- finalizeParser <$> unauthenticatedQueryWithIntrospection qRemotes mRemotes
+          ucMutations <- fmap finalizeParser <$> unauthenticatedMutation mRemotes
           pure $ GQLContext ucQueries ucMutations
 
         buildRoleBasedRemoteSchemaParser :: RoleName -> RemoteSchemaCache -> m [ParsedIntrospection]
