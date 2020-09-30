@@ -354,7 +354,9 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   case execPlan of
     E.QueryExecutionPlan queryPlan asts -> do
       let cacheKey = QueryCacheKey reqParsed $ _uiRole userInfo
-      (responseHeaders, cachedValue) <- cacheLookup reqParsed asts (Just cacheKey)
+      -- We ignore the response headers (containing TTL information) because
+      -- WebSockets don't support them.
+      (_responseHeaders, cachedValue) <- cacheLookup asts cacheKey
       responseData <- case cachedValue of
         Just cachedResponseData -> pure cachedResponseData
         Nothing -> case queryPlan of
@@ -366,7 +368,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           E.ExecStepRaw (name, json) ->
             execQueryOrMut timerTot Telem.Query telemCacheHit Nothing requestId $
             return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
-      cacheStore reqParsed asts cacheKey responseData
+      cacheStore cacheKey responseData
     E.MutationExecutionPlan mutationPlan ->
       case mutationPlan of
         E.ExecStepDB (tx, _) -> Tracing.trace "Mutate" do

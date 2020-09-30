@@ -55,28 +55,32 @@ instance J.ToJSON QueryCacheKey where
 
 class Monad m => MonadExecuteQuery m where
   cacheLookup
-    :: GQLReqParsed
-    -> [QueryRootField UnpreparedValue]
-    -> Maybe QueryCacheKey
-    -> m (HTTP.ResponseHeaders, Maybe EncJSON)
-  cacheStore
-    :: GQLReqParsed
-    -> [QueryRootField UnpreparedValue]
+    :: [QueryRootField UnpreparedValue]
+    -- ^ Used to check that the query is cacheable
     -> QueryCacheKey
+    -- ^ Key that uniquely identifies the result of a query execution
+    -> m (HTTP.ResponseHeaders, Maybe EncJSON)
+    -- ^ HTTP headers to be sent back to the caller for this GraphQL request,
+    -- and a cached value if found and within time-to-live
+  cacheStore
+    :: QueryCacheKey
+    -- ^ Key under which to store the result of a query execution
     -> EncJSON
+    -- ^ Result of a query execution
     -> m ()
+    -- ^ always succeeds
 
 instance MonadExecuteQuery m => MonadExecuteQuery (ReaderT r m) where
-  cacheLookup a b c   = lift $ cacheLookup a b c
-  cacheStore  a b c d = lift $ cacheStore  a b c d
+  cacheLookup a b = lift $ cacheLookup a b
+  cacheStore  a b = lift $ cacheStore  a b
 
 instance MonadExecuteQuery m => MonadExecuteQuery (ExceptT r m) where
-  cacheLookup a b c   = lift $ cacheLookup a b c
-  cacheStore  a b c d = lift $ cacheStore  a b c d
+  cacheLookup a b = lift $ cacheLookup a b
+  cacheStore  a b = lift $ cacheStore  a b
 
 instance MonadExecuteQuery m => MonadExecuteQuery (TraceT m) where
-  cacheLookup a b c   = lift $ cacheLookup a b c
-  cacheStore  a b c d = lift $ cacheStore  a b c d
+  cacheLookup a b = lift $ cacheLookup a b
+  cacheStore  a b = lift $ cacheStore  a b
 
 
 -- | Run (execute) a single GraphQL query
@@ -116,7 +120,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
     case execPlan of
       E.QueryExecutionPlan queryPlan asts -> do
         let cacheKey = QueryCacheKey reqParsed $ _uiRole userInfo
-        (responseHeaders, cachedValue) <- cacheLookup reqParsed asts (Just cacheKey)
+        (responseHeaders, cachedValue) <- cacheLookup asts cacheKey
         (tch, tl, (ttio, tqt, HttpResponse responseData newHeaders)) <- case cachedValue of
           Just cachedResponseData ->
             pure (telemCacheHit, Telem.Local, (0, Telem.Query, HttpResponse cachedResponseData []))
@@ -131,7 +135,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
               (telemTimeIO, obj) <- withElapsedTime $
                 return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
               return (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj []))
-        cacheStore reqParsed asts cacheKey responseData
+        cacheStore cacheKey responseData
         pure (tch, tl, (ttio, tqt, HttpResponse responseData $ newHeaders <> responseHeaders))
       E.MutationExecutionPlan mutationPlan ->
         case mutationPlan of
