@@ -124,28 +124,24 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                                  httpManager reqHeaders (reqUnparsed, reqParsed)
     case execPlan of
       E.QueryExecutionPlan queryPlans asts -> do
-{- TODO
         let cacheKey = QueryCacheKey reqParsed $ _uiRole userInfo
         (responseHeaders, cachedValue) <- cacheLookup reqParsed asts (Just cacheKey)
-        (tch, tl, (ttio, tqt, HttpResponse responseData newHeaders)) <- case cachedValue of
+        case cachedValue of
           Just cachedResponseData ->
-            pure (telemCacheHit, Telem.Local, (0, Telem.Query, HttpResponse cachedResponseData []))
-          Nothing -> case queryPlan of
--}
-        conclusion <- runExceptT $ forWithKey queryPlans $ \fieldName -> \case
-          E.ExecStepDB txGenSql -> doQErr $ do
-            (telemTimeIO_DT, resp) <-
-              runQueryDB reqId (reqUnparsed,reqParsed) asts userInfo txGenSql
-            return $ ResultsFragment telemTimeIO_DT Telem.Local resp
-          E.ExecStepRemote (rsi, opDef, varValsM) ->
-            runRemoteGQ fieldName rsi opDef varValsM
-          E.ExecStepRaw json ->
-            buildRaw json
-        buildResult Telem.Query conclusion [] -- TODO respHdrs
-{- TODO
-        cacheStore reqParsed asts cacheKey responseData
-        pure (tch, tl, (ttio, tqt, HttpResponse responseData $ newHeaders <> responseHeaders))
--}
+            pure (Telem.Query, 0, Telem.Local, HttpResponse cachedResponseData responseHeaders)
+          Nothing -> do
+            conclusion <- runExceptT $ forWithKey queryPlans $ \fieldName -> \case
+              E.ExecStepDB txGenSql -> doQErr $ do
+                (telemTimeIO_DT, resp) <-
+                  runQueryDB reqId (reqUnparsed,reqParsed) asts userInfo txGenSql
+                return $ ResultsFragment telemTimeIO_DT Telem.Local resp
+              E.ExecStepRemote (rsi, opDef, varValsM) ->
+                runRemoteGQ fieldName rsi opDef varValsM
+              E.ExecStepRaw json ->
+                buildRaw json
+            out@(_, _, _, HttpResponse responseData _) <- buildResult Telem.Query conclusion responseHeaders
+            cacheStore reqParsed asts cacheKey responseData
+            pure out
 
       E.MutationExecutionPlan mutationPlans -> do
         conclusion <- runExceptT $ forWithKey mutationPlans $ \fieldName -> \case
@@ -186,14 +182,16 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
       , HttpResponse (encodeGQResp $ throwError err) []
       )
     buildResult _telemType (Left (Right err)) _ = throwError err
-    buildResult telemType (Right results) headers = pure
-      ( telemType
-      , sum (fmap rfTimeIO results)
-      , foldMap rfLocality results
-      , HttpResponse
-        (encodeGQResp $ pure $ encJToLBS $ encJFromInsOrdHashMap (fmap rfResponse results))
-        headers
-      )
+    buildResult telemType (Right results) headers = do
+      let responseData = encodeGQResp $ pure $ encJToLBS $ encJFromInsOrdHashMap (fmap rfResponse results)
+      pure
+        ( telemType
+        , sum (fmap rfTimeIO results)
+        , foldMap rfLocality results
+        , HttpResponse
+          responseData
+          headers
+        )
 
 extractFieldFromResponse
   :: Monad m => Text -> LBS.ByteString -> ExceptT (Either GQExecError QErr) m JO.Value

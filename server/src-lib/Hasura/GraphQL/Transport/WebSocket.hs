@@ -353,27 +353,28 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
   case execPlan of
     E.QueryExecutionPlan queryPlan asts -> do
-{- TODO
       let cacheKey = QueryCacheKey reqParsed $ _uiRole userInfo
       (responseHeaders, cachedValue) <- cacheLookup reqParsed asts (Just cacheKey)
-      responseData <- case cachedValue of
-        Just cachedResponseData -> pure cachedResponseData
-        Nothing -> case queryPlan of
--}
-      conclusion <- runExceptT $ forWithKey queryPlan $ \fieldName -> \case
-        E.ExecStepDB (tx, genSql) -> doQErr $ Tracing.trace "Query" $ do
-          (telemTimeIO_DT, (resp)) <- Tracing.interpTraceT id $ withElapsedTime $
-            hoist (runQueryTx pgExecCtx) tx
-          return $ ResultsFragment telemTimeIO_DT Telem.Local resp -- TODO respHdrs
-        E.ExecStepRemote (rsi, opDef, varValsM) -> do
-          runRemoteGQ fieldName execCtx requestId userInfo reqHdrs opDef rsi varValsM
-        E.ExecStepRaw json ->
-          buildRaw json
-      buildResult Telem.Query timerTot requestId conclusion
+      case cachedValue of
+        Just cachedResponseData ->
+          sendSuccResp cachedResponseData $
+          LQ.LiveQueryMetadata 0 -- cachedResponseData
+        Nothing -> do
+          conclusion <- runExceptT $ forWithKey queryPlan $ \fieldName -> \case
+            E.ExecStepDB (tx, genSql) -> doQErr $ Tracing.trace "Query" $ do
+              (telemTimeIO_DT, (resp)) <- Tracing.interpTraceT id $ withElapsedTime $
+                hoist (runQueryTx pgExecCtx) tx
+              return $ ResultsFragment telemTimeIO_DT Telem.Local resp -- TODO respHdrs
+            E.ExecStepRemote (rsi, opDef, varValsM) -> do
+              runRemoteGQ fieldName execCtx requestId userInfo reqHdrs opDef rsi varValsM
+            E.ExecStepRaw json ->
+              buildRaw json
+          buildResult Telem.Query timerTot requestId conclusion
+          case conclusion of
+            Left _ -> pure ()
+            Right results ->
+              cacheStore reqParsed asts cacheKey (encJFromInsOrdHashMap (fmap rfResponse results))
       sendCompleted (Just requestId)
-{- TODO
-      cacheStore reqParsed asts cacheKey responseData
--}
 
     E.MutationExecutionPlan mutationPlan -> do
       conclusion <- runExceptT $ forWithKey mutationPlan $ \fieldName -> \case
