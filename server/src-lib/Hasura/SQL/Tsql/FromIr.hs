@@ -55,6 +55,7 @@ data Error
   | UnsupportedSQLExp Sql.SQLExp
   | UnsupportedDistinctOn
   | InvalidIntegerishSql Sql.SQLExp
+  | DistinctIsn'tSupported
   deriving (Show, Eq)
 
 newtype FromIr a = FromIr
@@ -203,7 +204,7 @@ fromSelectArgsG selectArgsG = do
   argsDistinct <-
     case argsDistinct' of
       Nothing -> pure Proxy
-      Just {} -> lift (FromIr (refute (pure NoOrderSpecifiedInOrderBy)))
+      Just {} -> lift (FromIr (refute (pure DistinctIsn'tSupported)))
   (argsOrderBy, joins) <-
     runWriterT (traverse fromAnnOrderByItemG (maybe [] toList orders))
   pure
