@@ -8,13 +8,14 @@ import qualified Database.ODBC.SQLServer as Odbc
 import           Prelude
 
 data Select = Select
-  { selectTop :: !(Commented Top)
+  { selectTop :: !Top
   , selectProjections :: !(NonEmpty Projection)
   , selectFrom :: !From
   , selectJoins :: ![Join]
   , selectWhere :: !Where
   , selectFor :: !For
   , selectOrderBy :: !(Maybe (NonEmpty OrderBy))
+  , selectOffset :: !(Maybe Expression)
   } deriving (Eq, Show)
 
 data OrderBy = OrderBy
@@ -131,11 +132,6 @@ data FieldName = FieldName
   { fieldName :: Text
   , fieldNameEntity :: !Text
   } deriving (Eq, Show)
-
-data Commented a = Commented
-  { commentedComment :: !(Maybe Comment)
-  , commentedThing :: !a
-  } deriving (Eq, Show, Functor)
 
 data Comment = DueToPermission | RequestedSingleObject
   deriving (Eq, Show)

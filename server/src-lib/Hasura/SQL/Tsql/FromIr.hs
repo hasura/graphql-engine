@@ -22,6 +22,7 @@ import qualified Data.List.NonEmpty as NE
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
 import           Data.Maybe
+import           Data.Proxy
 import           Data.Sequence (Seq)
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -51,6 +52,7 @@ data Error
   | UnsupportedArraySelect (Ir.ArraySelectG Sql.SQLExp)
   | UnsupportedOpExpG (Ir.OpExpG Sql.SQLExp)
   | UnsupportedSQLExp Sql.SQLExp
+  | UnsupportedDistinctOn
   deriving (Show, Eq)
 
 newtype FromIr a = FromIr
@@ -72,15 +74,7 @@ mkSQLSelect jsonAggSelect annSimpleSel =
     Ir.JASMultipleRows -> fromSelectRows annSimpleSel
     Ir.JASSingleObject -> do
       select <- fromSelectRows annSimpleSel
-      pure
-        select
-          { selectFor = JsonFor JsonSingleton
-          , selectTop =
-              Commented
-                { commentedThing = Top 1
-                , commentedComment = Just RequestedSingleObject
-                }
-          }
+      pure select {selectFor = JsonFor JsonSingleton, selectTop = Top 1}
 
 --------------------------------------------------------------------------------
 -- Top-level exported functions
@@ -98,8 +92,13 @@ fromSelectRows annSelectG
     runReaderT (traverse fromAnnFieldsG fields) (fromAlias selectFrom)
   filterExpression <-
     runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
-  Args {argsOrderBy, argsWhere, argsJoins, argsTop, argsOffset, argsDistinct} <-
-    runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
+  Args { argsOrderBy
+       , argsWhere
+       , argsJoins
+       , argsTop
+       , argsDistinct = Proxy
+       , argsOffset
+       } <- runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
   selectProjections <-
     case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
       Nothing -> FromIr (refute (pure NoProjectionFields))
@@ -107,12 +106,13 @@ fromSelectRows annSelectG
   pure
     Select
       { selectOrderBy = argsOrderBy -- TODO: use args
-      , selectTop = uncommented (permissionBasedTop <> argsTop)
+      , selectTop = permissionBasedTop <> argsTop
       , selectProjections
       , selectFrom
       , selectJoins = mapMaybe fieldSourceJoin fieldSources <> argsJoins
       , selectWhere = argsWhere <> Where [filterExpression]
       , selectFor = JsonFor JsonArray
+      , selectOffset = argsOffset
       }
   where
     Ir.AnnSelectG { _asnFields = fields
@@ -139,7 +139,13 @@ fromSelectAggregate annSelectG = do
     runReaderT (traverse fromTableAggregateFieldG fields) (fromAlias selectFrom)
   filterExpression <-
     runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
-  args <- runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
+  Args { argsOrderBy
+       , argsWhere
+       , argsJoins
+       , argsTop
+       , argsDistinct = Proxy
+       , argsOffset
+       } <- runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
   selectProjections <-
     case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
       Nothing -> FromIr (refute (pure NoProjectionFields))
@@ -148,18 +154,15 @@ fromSelectAggregate annSelectG = do
     Select
       { selectTop =
           case mPermLimit of
-            Nothing -> uncommented NoTop
-            Just limit ->
-              Commented
-                { commentedComment = pure DueToPermission
-                , commentedThing = Top limit
-                }
+            Nothing -> NoTop
+            Just limit -> Top limit
       , selectProjections
       , selectFrom
       , selectJoins = mapMaybe fieldSourceJoin fieldSources
       , selectWhere = Where [filterExpression]
       , selectFor = JsonFor JsonSingleton
       , selectOrderBy = Nothing -- TODO: use args
+      , selectOffset = argsOffset
       }
   where
     Ir.AnnSelectG { _asnFields = fields
@@ -179,7 +182,7 @@ data Args = Args
   , argsJoins :: [Join]
   , argsTop :: Top
   , argsOffset :: Maybe Expression
-  , argsDistinct :: Maybe (NonEmpty FieldName)
+  , argsDistinct :: Proxy (Maybe (NonEmpty FieldName))
   } deriving (Show)
 
 fromSelectArgsG :: Ir.SelectArgsG Sql.SQLExp -> ReaderT EntityAlias FromIr Args
@@ -188,8 +191,18 @@ fromSelectArgsG selectArgsG = do
     maybe (pure mempty) (fmap (Where . pure) . fromAnnBoolExp) mannBoolExp
   argsTop <- maybe (pure mempty) (pure . Top) mlimit
   argsOffset <- maybe (pure Nothing) (fmap Just . lift . fromSQLExp) moffset
-  argsDistinct <-
+  argsDistinct' <-
     maybe (pure Nothing) (fmap Just . traverse fromPGCol) mdistinct
+  -- Not supported presently, per Vamshi:
+  --
+  -- > It is hardly used and we don't have to go to great lengths to support it.
+  --
+  -- But placeholdering the code so that when it's ready to be used,
+  -- you can just drop the Proxy wrapper.
+  argsDistinct <-
+    case argsDistinct' of
+      Nothing -> pure Proxy
+      Just {} -> lift (FromIr (refute (pure NoOrderSpecifiedInOrderBy)))
   (argsOrderBy, joins) <-
     runWriterT (traverse fromAnnOrderByItemG (maybe [] toList orders))
   pure
@@ -256,7 +269,7 @@ unfurlAnnOrderByElement =
            Join
              { joinSelect =
                  Select
-                   { selectTop = uncommented NoTop
+                   { selectTop = NoTop
                    , selectProjections = NE.fromList [StarProjection]
                    , selectFrom
                    , selectJoins = []
@@ -264,6 +277,7 @@ unfurlAnnOrderByElement =
                        Where (foreignKeyConditions <> [whereExpression])
                    , selectFor = NoFor
                    , selectOrderBy = Nothing
+                   , selectOffset = Nothing
                    }
              , joinJoinAlias =
                  JoinAlias {joinAliasEntity, joinAliasField = Nothing}
@@ -317,8 +331,9 @@ fromAnnBoolExpFld =
              , selectFrom
              , selectJoins = mempty
              , selectWhere = Where (foreignKeyConditions <> [whereExpression])
-             , selectTop = uncommented NoTop
+             , selectTop = NoTop
              , selectFor = NoFor
+             , selectOffset = Nothing
              })
 
 fromPGColumnInfo :: Ir.PGColumnInfo -> ReaderT EntityAlias FromIr Expression
@@ -352,8 +367,9 @@ fromGExists Ir.GExists {_geTable, _geWhere} = do
       , selectFrom
       , selectJoins = mempty
       , selectWhere = Where [whereExpression]
-      , selectTop = uncommented NoTop
+      , selectTop = NoTop
       , selectFor = NoFor
+      , selectOffset = Nothing
       }
 
 fromQualifiedTable :: Sql.QualifiedObject Sql.TableName -> FromIr From
@@ -555,12 +571,13 @@ fromObjectRelationSelectG annRelationSelectG = do
       , joinSelect =
           Select
             { selectOrderBy = Nothing
-            , selectTop = uncommented NoTop
+            , selectTop = NoTop
             , selectProjections
             , selectFrom
             , selectJoins = mapMaybe fieldSourceJoin fieldSources
             , selectWhere = Where (foreignKeyConditions <> [filterExpression])
             , selectFor = JsonFor JsonSingleton
+            , selectOffset = Nothing
             }
       }
   where
@@ -663,6 +680,7 @@ fromSQLExp :: Sql.SQLExp -> FromIr Expression
 fromSQLExp =
   \case
     Sql.SENull -> pure (ValueExpression Odbc.NullValue)
+    -- TODO: Left (UnsupportedSQLExp (SELit "10") :| [])
     e -> (FromIr (refute (pure (UnsupportedSQLExp e))))
 
 fromGBoolExp :: Ir.GBoolExp Expression -> ReaderT EntityAlias FromIr Expression
@@ -675,12 +693,6 @@ fromGBoolExp =
     Ir.BoolNot expression -> fmap NotExpression (fromGBoolExp expression)
     Ir.BoolExists gExists -> fmap ExistsExpression (fromGExists gExists)
     Ir.BoolFld expression -> pure expression
-
---------------------------------------------------------------------------------
--- Comments
-
-uncommented :: a -> Commented a
-uncommented a = Commented {commentedComment = Nothing, commentedThing = a}
 
 --------------------------------------------------------------------------------
 -- Misc combinators

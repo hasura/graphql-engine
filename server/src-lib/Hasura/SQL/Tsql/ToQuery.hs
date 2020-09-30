@@ -84,12 +84,8 @@ fromSelect Select {..} =
       IndentPrinter
         7
         (SepByPrinter
-           NewlinePrinter
-           [ fromCommented (fmap fromTop selectTop)
-           , SepByPrinter
-               (QueryPrinter "," <+> NewlinePrinter)
-               (map fromProjection (toList selectProjections))
-           ])
+           (QueryPrinter "," <+> NewlinePrinter)
+           (map fromProjection (toList selectProjections)))
     , "FROM " <+> IndentPrinter 5 (fromFrom selectFrom)
     , SepByPrinter
         NewlinePrinter
@@ -105,23 +101,40 @@ fromSelect Select {..} =
                 ])
            selectJoins)
     , fromWhere selectWhere
-    , fromOrderBys selectOrderBy
+    , fromOrderBys selectTop selectOffset selectOrderBy
     , fromFor selectFor
     ]
 
-fromOrderBys :: Maybe (NonEmpty OrderBy) -> Printer
-fromOrderBys =
-  \case
-    Nothing -> ""
-    Just orderBys ->
-      SeqPrinter
-        [ "ORDER BY "
-        , IndentPrinter
-            9
-            (SepByPrinter
-               (QueryPrinter "," <+> NewlinePrinter)
-               (concatMap fromOrderBy (toList orderBys)))
-        ]
+fromOrderBys ::
+     Top -> Maybe Expression -> Maybe (NonEmpty OrderBy) -> Printer
+fromOrderBys NoTop Nothing Nothing = "" -- An ORDER BY is wasteful if not needed.
+fromOrderBys top moffset morderBys =
+  SeqPrinter
+    [ "ORDER BY "
+    , IndentPrinter
+        9
+        (SepByPrinter
+           NewlinePrinter
+           [ case morderBys of
+               Nothing -> "1"
+               Just orderBys ->
+                 SepByPrinter
+                   (QueryPrinter "," <+> NewlinePrinter)
+                   (concatMap fromOrderBy (toList orderBys))
+           , case (top, moffset) of
+               (NoTop, Nothing) -> ""
+               (NoTop, Just offset) ->
+                 "OFFSET " <+> fromExpression offset <+> " ROWS"
+               (Top n, Nothing) ->
+                 "OFFSET 0 ROWS FETCH NEXT " <+>
+                 QueryPrinter (toSql n) <+> " ROWS ONLY"
+               (Top n, Just offset) ->
+                 "OFFSET " <+>
+                 fromExpression offset <+>
+                 " ROWS FETCH NEXT " <+> QueryPrinter (toSql n) <+> " ROWS ONLY"
+           ])
+    ]
+
 
 fromOrderBy :: OrderBy -> [Printer]
 fromOrderBy OrderBy {..} =
@@ -186,12 +199,6 @@ fromCountable =
       "DISTINCT " <+>
       SepByPrinter ", " (map fromFieldName (toList fields))
 
-fromTop :: Top -> Printer
-fromTop =
-  \case
-    NoTop -> ""
-    Top i -> "TOP " <+> QueryPrinter (toSql i)
-
 fromWhere :: Where -> Printer
 fromWhere =
   \case
@@ -223,17 +230,6 @@ fromAliased Aliased {..} =
 
 fromNameText :: Text -> Printer
 fromNameText t = QueryPrinter (rawUnescapedText ("[" <> t <> "]"))
-
-fromCommented :: Commented Printer -> Printer
-fromCommented Commented {..} =
-  commentedThing <+>?
-  fmap (\comment -> " /* " <+> fromComment comment <+> " */ ") commentedComment
-
-fromComment :: Comment -> Printer
-fromComment =
-  \case
-    DueToPermission -> "Due to permission"
-    RequestedSingleObject -> "Requested single object"
 
 trueExpression :: Expression
 trueExpression = ValueExpression (BoolValue True)
