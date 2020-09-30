@@ -661,19 +661,29 @@ fromRelName :: Ir.RelName -> FromIr Text
 fromRelName relName =
   pure (Ir.relNameToTxt relName)
 
+-- | The context given by the reader is of the previous/parent
+-- "remote" table. The WHERE that we're generating goes in the child,
+-- "local" query. The @From@ passed in as argument is the local table.
+--
+-- We should hope to see e.g. "post.category = category.id" for a
+-- local table of post and a remote table of category.
+--
+-- The left/right columns in @HashMap Sql.PGCol Sql.PGCol@ corresponds
+-- to the left/right of @select ... join ...@. Therefore left=remote,
+-- right=local in this context.
 fromMapping ::
      From
   -> HashMap Sql.PGCol Sql.PGCol
   -> ReaderT EntityAlias FromIr [Expression]
-fromMapping selectFrom =
+fromMapping localFrom =
   traverse
-    (\(from, to) -> do
-       fromFieldName <- fromPGCol from
-       toFieldName <- local (const (fromAlias selectFrom)) (fromPGCol to)
+    (\(remotePgCol, localPgCol) -> do
+       localFieldName <- local (const (fromAlias localFrom)) (fromPGCol localPgCol)
+       remoteFieldName <- fromPGCol remotePgCol
        pure
          (EqualExpression
-            (ColumnExpression fromFieldName)
-            (ColumnExpression toFieldName))) .
+            (ColumnExpression localFieldName)
+            (ColumnExpression remoteFieldName))) .
   HM.toList
 
 --------------------------------------------------------------------------------
