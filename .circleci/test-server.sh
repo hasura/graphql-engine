@@ -626,6 +626,18 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 
 	kill_hge_servers
 
+	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH REMOTE SCHEMA PERMISSIONS ENABLED ########>\n"
+	TEST_TYPE="remote-schema-permissions"
+  export HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS=true
+
+	run_hge_with_args serve
+
+	wait_for_port 8080
+
+	pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" --enable-remote-schema-permissions test_remote_schema_permissions.py
+
+	kill_hge_servers
+
 	kill $WH_PID
 
 fi

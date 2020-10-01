@@ -6,6 +6,10 @@ import time
 
 from validate import check_query_f
 from remote_server import NodeGraphQL
+from context import PytestConf
+
+if not PytestConf.config.getoption('--enable-remote-schema-permissions'):
+    pytest.skip('--enable-remote-schema-permissions is missing, skipping remote schema permissions tests', allow_module_level=True)
 
 @pytest.fixture(scope="module")
 def graphql_service():
