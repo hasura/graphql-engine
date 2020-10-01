@@ -2,9 +2,6 @@
 
 ## Next release
 
-- console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
-- console: add option to flag an insertion as a migration from `Data` section (close #1766) (#4933)
-
 ### Server - Support for mapping session variables to default JWT claims
 
 Some auth providers do not let users add custom claims in JWT. In such cases, the server can take a JWT configuration option called `claims_map` to specify a mapping of Hasura session variables to values in existing claims via JSONPath or literal values.
@@ -63,6 +60,9 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - server: accept only non-negative integers for batch size and refetch interval (close #5653) (#5759)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
+- console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
+- console: add option to flag an insertion as a migration from `Data` section (close #1766) (#4933)
+- console: add `<3 hasura` section to view updates and notifications from Hasura (#5070)
 - cli: add missing global flags for seeds command (#5565)
 - docs: add docs page on networking with docker (close #4346) (#4811)
 
@@ -151,7 +151,6 @@ If you do have such headers configured, then you must update the header configur
 - console: allow manual edit of column types and handle array data types (close #2544, #3335, #2583) (#4546)
 - console: add the ability to delete a role in permissions summary page (close #3353) (#4987)
 - console: fix styling of table row contents on tables on relationship page (#4974)
-- console: add `<3 hasura` section to view updates and notifications from Hasura (#5070)
 - cli: handle missing files during metadata apply (close #5163) (#5170)
 - docs: add pages on remote joins (close #4911) (#5132)
 - docs: add page on scheduled triggers (close #4913) (#5141)
