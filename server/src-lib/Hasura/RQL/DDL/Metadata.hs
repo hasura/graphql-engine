@@ -119,7 +119,7 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta remoteSchemas
     checkMultipleDecls "remote schemas" $ map _rsmName remoteSchemas
 
     void $ indexedForM remoteSchemas $ \(RemoteSchemaMeta _ _ _ perms) ->
-      checkMultipleDecls "remote schema permissions" $ map _rspmRole perms
+      onJust perms $ (checkMultipleDecls "remote schema permissions" . map _rspmRole)
 
   withPathK "query_collections" $
     checkMultipleDecls "query collections" $ map Collection._ccName collections
@@ -213,13 +213,14 @@ saveMetadata (ReplaceMetadata _ tables functionsMeta
 
   -- remote schemas
   withPathK "remote_schemas" $
-    indexedForM_ remoteSchemas $ \(RemoteSchemaMeta name defn comment permissions) -> do
+    indexedForM_ remoteSchemas $ \(RemoteSchemaMeta name defn comment mPermissions) -> do
       liftTx $ addRemoteSchemaToCatalog $ AddRemoteSchemaQuery name defn comment
-      withPathK (unNonEmptyText $ unRemoteSchemaName name) $ do
-        withPathK "permissions" $
-          indexedForM_ permissions $ \(RemoteSchemaPermissionMeta role permDefn permComment) ->
-          liftTx $ RemoteSchema.addRemoteSchemaPermissionsToCatalog
-            $ AddRemoteSchemaPermissions name role permDefn permComment
+      onJust mPermissions $ \permissions ->
+        withPathK (unNonEmptyText $ unRemoteSchemaName name) $ do
+          withPathK "permissions" $
+            indexedForM_ permissions $ \(RemoteSchemaPermissionMeta role permDefn permComment) ->
+            liftTx $ RemoteSchema.addRemoteSchemaPermissionsToCatalog
+              $ AddRemoteSchemaPermissions name role permDefn permComment
 
   -- custom types
   withPathK "custom_types" $

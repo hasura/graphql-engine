@@ -108,7 +108,7 @@ data RemoteSchemaMeta
   { _rsmName        :: !RemoteSchemaName
   , _rsmDefinition  :: !RemoteSchemaDef
   , _rsmComment     :: !(Maybe Text)
-  , _rsmPermissions :: ![RemoteSchemaPermissionMeta]
+  , _rsmPermissions :: !(Maybe [RemoteSchemaPermissionMeta])
   } deriving (Show, Eq, Lift, Generic)
 $(deriveJSON (aesonDrop 4 snakeCase) ''RemoteSchemaMeta)
 
@@ -449,11 +449,15 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
       AO.object $ [ ("name", AO.toOrdered name)
                   , ("definition", remoteSchemaDefToOrdJSON definition)
                   ]
-                  <> catMaybes [ maybeCommentToMaybeOrdPair comment
-                               , listToMaybeOrdPair "permissions" AO.toOrdered permissions
-                               ]
-
+                  <> (catMaybes [ maybeCommentToMaybeOrdPair comment
+                                , permsToMaybeOrdJSON permissions
+                                ])
       where
+        permsToMaybeOrdJSON :: Maybe [RemoteSchemaPermissionMeta] -> Maybe (Text, AO.Value)
+        permsToMaybeOrdJSON Nothing = Nothing
+        permsToMaybeOrdJSON (Just []) = Nothing
+        permsToMaybeOrdJSON (Just perms) = Just $ ("permissions", AO.toOrdered perms)
+
         remoteSchemaDefToOrdJSON :: RemoteSchemaDef -> AO.Value
         remoteSchemaDefToOrdJSON (RemoteSchemaDef url urlFromEnv headers frwrdClientHdrs timeout) =
           AO.object $ catMaybes [ maybeToPair "url" url
