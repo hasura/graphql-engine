@@ -44,9 +44,10 @@ class Monad m => MonadQueryLog m where
     -- ^ logger
     -> GQLReqUnparsed
     -- ^ GraphQL request
-    -> (Maybe EQ.GeneratedSqlMap)
+    -> Maybe EQ.GeneratedSqlMap
     -- ^ Generated SQL if any
     -> RequestId
+    -- ^ unique identifier for a request. NOTE this can be spoofed!
     -> m ()
 
 instance MonadQueryLog m => MonadQueryLog (ExceptT e m) where

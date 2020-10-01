@@ -48,7 +48,10 @@ import           GHC.AssertNF
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging                      (MonadQueryLog (..))
-import           Hasura.GraphQL.Transport.HTTP               (MonadExecuteQuery (..), QueryCacheKey (..), ResultsFragment (..), extractFieldFromResponse, buildRaw)
+import           Hasura.GraphQL.Transport.HTTP               ( MonadExecuteQuery (..), QueryCacheKey (..)
+                                                             , ResultsFragment (..), extractFieldFromResponse
+                                                             , buildRaw
+                                                             )
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import           Hasura.HTTP
@@ -352,19 +355,21 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx {- planCache -} sc scVer httpMgr enableAL
 
   case execPlan of
-    E.QueryExecutionPlan queryPlan asts -> do
+    E.QueryExecutionPlan queryPlan asts -> Tracing.trace "Query" $ do
       let cacheKey = QueryCacheKey reqParsed $ _uiRole userInfo
-      (responseHeaders, cachedValue) <- cacheLookup reqParsed asts (Just cacheKey)
+      -- We ignore the response headers (containing TTL information) because
+      -- WebSockets don't support them.
+      (_responseHeaders, cachedValue) <- Tracing.interpTraceT id $ cacheLookup asts cacheKey
       case cachedValue of
         Just cachedResponseData ->
           sendSuccResp cachedResponseData $
-          LQ.LiveQueryMetadata 0 -- cachedResponseData
+          LQ.LiveQueryMetadata 0
         Nothing -> do
           conclusion <- runExceptT $ forWithKey queryPlan $ \fieldName -> \case
-            E.ExecStepDB (tx, genSql) -> doQErr $ Tracing.trace "Query" $ do
+            E.ExecStepDB (tx, _genSql) -> doQErr $ Tracing.trace "Postgres Query" $ do -- TODO genSql logging
               (telemTimeIO_DT, (resp)) <- Tracing.interpTraceT id $ withElapsedTime $
                 hoist (runQueryTx pgExecCtx) tx
-              return $ ResultsFragment telemTimeIO_DT Telem.Local resp -- TODO respHdrs
+              return $ ResultsFragment telemTimeIO_DT Telem.Local resp
             E.ExecStepRemote (rsi, opDef, varValsM) -> do
               runRemoteGQ fieldName execCtx requestId userInfo reqHdrs opDef rsi varValsM
             E.ExecStepRaw json ->
@@ -373,7 +378,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           case conclusion of
             Left _ -> pure ()
             Right results ->
-              cacheStore reqParsed asts cacheKey (encJFromInsOrdHashMap (fmap rfResponse results))
+              Tracing.interpTraceT id $ cacheStore cacheKey (encJFromInsOrdHashMap (fmap rfResponse results))
       sendCompleted (Just requestId)
 
     E.MutationExecutionPlan mutationPlan -> do

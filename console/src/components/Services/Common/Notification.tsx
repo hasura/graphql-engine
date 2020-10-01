@@ -31,10 +31,11 @@ export interface Notification {
 
 export const showNotification = (
   options: Notification,
-  level: NotificationLevel
+  level: NotificationLevel,
+  noDismissNotifications?: boolean
 ): Thunk => {
   return dispatch => {
-    if (level === 'success') {
+    if (level === 'success' && !noDismissNotifications) {
       dispatch(removeNotifications());
     }
 
@@ -212,7 +213,11 @@ const showErrorNotification = (
   };
 };
 
-const showSuccessNotification = (title: string, message?: string): Thunk => {
+const showSuccessNotification = (
+  title: string,
+  message?: string,
+  noDismiss?: boolean
+): Thunk => {
   return dispatch => {
     dispatch(
       showNotification(
@@ -221,7 +226,8 @@ const showSuccessNotification = (title: string, message?: string): Thunk => {
           title,
           message,
         },
-        'success'
+        'success',
+        noDismiss
       )
     );
   };
