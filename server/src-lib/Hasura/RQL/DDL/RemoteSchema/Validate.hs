@@ -154,7 +154,7 @@ showRoleBasedSchemaValidationError = \case
     <> (englishList "and" $ fmap dquoteTxt nonExistentInterfaces)
   NonExistingEnumValues enumName nonExistentEnumVals ->
     "enum " <> enumName <<> " contains the following enum values that do not exist "
-    <> " in the corresponding upstream remote enum" <>
+    <> "in the corresponding upstream remote enum: " <>
     (englishList "and" $ fmap dquoteTxt nonExistentEnumVals)
   MissingQueryRoot -> "query root does not exist in the schema definition"
   MultipleSchemaDefinitionsFound -> "multiple schema definitions found"
