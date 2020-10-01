@@ -374,7 +374,7 @@ If you are using a hosted database :ref:`as outlined above <do_managed_pg_db>`, 
 
 .. note::
 
-  Different hosted Postgres providers may have different requirments for connection, e.g. setting ``sslmode``.
+  Different hosted Postgres providers may have different requirements for connection, e.g. setting ``sslmode``.
   Please refer to your provider's documentation for generating the proper ``psql`` command flags.
 
 .. _do_logs:
