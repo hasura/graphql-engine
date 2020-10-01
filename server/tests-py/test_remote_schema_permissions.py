@@ -34,5 +34,14 @@ class TestAddRemoteSchemaPermissions:
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'add_permission_with_valid_subset_of_arguments.yaml')
         assert st_code == 200, resp
 
-    def test_add_permission_with_invalid_enums(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + 'add_permission_with_dangling_fields.yaml')
+    def test_role_based_schema_enums_validation(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + 'role_based_schema_enum_validations.yaml')
+
+    def test_role_based_schema_scalars_validation(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + 'role_based_schema_scalar_validation.yaml')
+
+    def test_role_based_schema_interface_validation(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + 'role_based_schema_interface_validation.yaml')
+
+    def test_role_based_schema_union_validation(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + 'role_based_schema_union_validation.yaml')

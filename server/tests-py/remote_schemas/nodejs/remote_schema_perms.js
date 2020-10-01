@@ -55,6 +55,22 @@ const typeDefs = gql`
     SENT
   }
 
+  type Person {
+    name: String
+    age: Int
+  }
+
+  type Photo {
+    height: Int
+    width: Int
+  }
+
+  type SearchQuery {
+    firstSearchResult: SearchResult
+  }
+
+  union SearchResult = Photo | Person
+
   type Query {
     hello: String
     messages(where: MessageWhereInpObj, includes: IncludeInpObj): [Message]

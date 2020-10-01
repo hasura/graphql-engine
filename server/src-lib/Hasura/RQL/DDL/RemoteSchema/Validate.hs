@@ -135,7 +135,7 @@ showRoleBasedSchemaValidationError = \case
     <> parentName <<> " of type "
     <> parentType <<> " do not exist in the corresponding upstream directive: "
     <> (englishList "and" $ fmap dquoteTxt nonExistingArgs)
-  NonExistingField (parentTypeName, fldDefnType) providedName ->
+  NonExistingField (fldDefnType, parentTypeName) providedName ->
     "field " <> providedName <<> " does not exist in the "
     <> fldDefnType <<> ": " <>> parentTypeName
   NonExistingScalar scalarName ->
