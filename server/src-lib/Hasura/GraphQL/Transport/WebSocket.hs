@@ -423,12 +423,13 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     buildResult _ _ _         (Left (Left  err)) = postExecErr' err
     buildResult _ _ requestId (Left (Right err)) = postExecErr requestId err
     buildResult telemQueryType timerTot _ (Right results) = do
-      sendSuccResp (encJFromInsOrdHashMap (fmap rfResponse results)) $
-        LQ.LiveQueryMetadata $ sum $ fmap rfTimeIO results
       let telemLocality = foldMap rfLocality results
           telemTimeIO   = convertDuration $ sum $ fmap rfTimeIO results
           telemCacheHit = Telem.Miss -- TODO fix if we're reimplementing query caching
       telemTimeTot <- Seconds <$> timerTot
+      sendSuccResp (encJFromInsOrdHashMap (fmap rfResponse results)) $
+        LQ.LiveQueryMetadata $ sum $ fmap rfTimeIO results
+      -- Telemetry. NOTE: don't time network IO:
       when False $ Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
     runRemoteGQ fieldName execCtx reqId userInfo reqHdrs opDef rsi varValsM = do
