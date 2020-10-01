@@ -267,7 +267,7 @@ unfurlAnnOrderByElement =
     Ir.AOCObjectRelation Ir.RelInfo {riMapping = mapping, riRTable = table} annBoolExp annOrderByElementG -> do
       selectFrom <- lift (lift (fromQualifiedTable table))
       joinAliasEntity <-
-        lift (lift (generateEntityAlias objectRelationForOrderAlias))
+        lift (lift (generateEntityAlias (ForOrderAlias (tableNameText table))))
       foreignKeyConditions <- lift (fromMapping selectFrom mapping)
       whereExpression <-
         lift (local (const (fromAlias selectFrom)) (fromAnnBoolExp annBoolExp))
@@ -290,13 +290,13 @@ unfurlAnnOrderByElement =
                  JoinAlias {joinAliasEntity, joinAliasField = Nothing}
              })
       local
-        (const (EntityAlias joinAliasEntity))
+        (const (fromAlias selectFrom))
         (unfurlAnnOrderByElement annOrderByElementG)
     Ir.AOCArrayAggregation Ir.RelInfo {riMapping = mapping, riRTable = table} annBoolExp annAggregateOrderBy -> do
       selectFrom <- lift (lift (fromQualifiedTable table))
       let alias = aggFieldName
       joinAliasEntity <-
-        lift (lift (generateEntityAlias objectRelationForOrderAlias))
+        lift (lift (generateEntityAlias (ForOrderAlias (tableNameText table))))
       foreignKeyConditions <- lift (fromMapping selectFrom mapping)
       whereExpression <-
         lift (local (const (fromAlias selectFrom)) (fromAnnBoolExp annBoolExp))
@@ -337,11 +337,16 @@ unfurlAnnOrderByElement =
 --------------------------------------------------------------------------------
 -- Conversion functions
 
+tableNameText :: Sql.QualifiedObject Sql.TableName -> Text
+tableNameText qualifiedObject = qname
+  where
+    Sql.QualifiedObject {qName = Sql.TableName qname} = qualifiedObject
+
 -- | This is really the start where you query the base table,
 -- everything else is joins attached to it.
 fromQualifiedTable :: Sql.QualifiedObject Sql.TableName -> FromIr From
 fromQualifiedTable qualifiedObject = do
-  alias <- generateEntityAlias tableAliasName
+  alias <- generateEntityAlias (TableTemplate qname)
   pure
     (FromQualifiedTable
        (Aliased
@@ -607,9 +612,9 @@ fromObjectRelationSelectG annRelationSelectG = do
     case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
       Nothing -> refute (pure NoProjectionFields)
       Just ne -> pure ne
-  _fieldName <- lift (fromRelName aarRelationshipName) -- TODO: Maybe use later for more readable names.
+  fieldName <- lift (fromRelName aarRelationshipName)
   foreignKeyConditions <- fromMapping selectFrom mapping
-  alias <- lift (generateEntityAlias objectRelationAlias)
+  alias <- lift (generateEntityAlias (ObjectRelationTemplate fieldName))
   pure
     Join
       { joinJoinAlias =
@@ -651,13 +656,13 @@ fromArrayAggregateSelectG ::
      Ir.AnnRelationSelectG (Ir.AnnAggregateSelectG Sql.SQLExp)
   -> ReaderT EntityAlias FromIr Join
 fromArrayAggregateSelectG annRelationSelectG = do
-  _fieldName <- lift (fromRelName aarRelationshipName) -- TODO: use it?
+  fieldName <- lift (fromRelName aarRelationshipName) -- TODO: use it?
   select <- lift (fromSelectAggregate annSelectG)
   joinSelect <-
     do foreignKeyConditions <- fromMapping (selectFrom select) mapping
        pure
          select {selectWhere = Where foreignKeyConditions <> selectWhere select}
-  alias <- lift (generateEntityAlias arrayAggregateName)
+  alias <- lift (generateEntityAlias (ArrayAggregateTemplate fieldName))
   pure
     Join
       { joinJoinAlias =
@@ -673,16 +678,18 @@ fromArrayAggregateSelectG annRelationSelectG = do
 
 fromArrayRelationSelectG :: Ir.ArrayRelationSelectG Sql.SQLExp -> ReaderT EntityAlias FromIr Join
 fromArrayRelationSelectG annRelationSelectG = do
-  _fieldName <- lift (fromRelName aarRelationshipName) -- TODO: use it?
+  fieldName <- lift (fromRelName aarRelationshipName) -- TODO: use it?
   select <- lift (fromSelectRows annSelectG)
   joinSelect <-
     do foreignKeyConditions <- fromMapping (selectFrom select) mapping
        pure
          select {selectWhere = Where foreignKeyConditions <> selectWhere select}
-  alias <- lift (generateEntityAlias arrayRelationAlias)
+  alias <- lift (generateEntityAlias (ArrayRelationTemplate fieldName))
   pure
     Join
-      { joinJoinAlias = JoinAlias {joinAliasEntity = alias, joinAliasField = pure jsonFieldName}
+      { joinJoinAlias =
+          JoinAlias
+            {joinAliasEntity = alias, joinAliasField = pure jsonFieldName}
       , joinSelect
       }
   where
@@ -774,30 +781,31 @@ aggFieldName = "agg"
 existsFieldName :: Text
 existsFieldName = "exists_placeholder"
 
-arrayRelationAlias :: Text
-arrayRelationAlias = "array_relation"
-
-arrayAggregateName :: Text
-arrayAggregateName = "array_aggregate_relation"
-
-objectRelationAlias :: Text
-objectRelationAlias = "object_relation"
-
-objectRelationForOrderAlias :: Text
-objectRelationForOrderAlias = "object_relation_for_order"
-
-tableAliasName :: Text
-tableAliasName = "table"
-
 --------------------------------------------------------------------------------
 -- Name generation
 
-generateEntityAlias :: Text -> FromIr Text
-generateEntityAlias prefix = do
+data NameTemplate
+  = ArrayRelationTemplate Text
+  | ArrayAggregateTemplate Text
+  | ObjectRelationTemplate Text
+  | TableTemplate Text
+  | ForOrderAlias Text
+
+generateEntityAlias :: NameTemplate -> FromIr Text
+generateEntityAlias template = do
   FromIr (modify' (M.insertWith (+) prefix start))
   i <- FromIr get
   pure (prefix <> T.pack (show (fromMaybe start (M.lookup prefix i))))
-  where start = 1
+  where
+    start = 1
+    prefix = T.take 20 rendered
+    rendered =
+      case template of
+        ArrayRelationTemplate sample -> "ar_" <> sample
+        ArrayAggregateTemplate sample -> "aa_" <> sample
+        ObjectRelationTemplate sample -> "or_" <> sample
+        TableTemplate sample -> "t_" <> sample
+        ForOrderAlias sample -> "order_" <> sample
 
 fromAlias :: From -> EntityAlias
 fromAlias (FromQualifiedTable Aliased {aliasedAlias}) = EntityAlias aliasedAlias
