@@ -198,7 +198,7 @@ histogramParser = do
   _ <- takeIncludingFirstMatch "Detailed Percentile spectrum" AT.<?> "Histogram start heading"
   -- Take the rest of the line
   void takeLineText AT.<?> "Till the end of histogram start heading"
-  -- Take upto the next line with histogram headers.
+  -- Take up to the next line with histogram headers.
   _ <- takeIncludingFirstMatch "Value" AT.<?> "Till Histogram headers"
   void takeLineText AT.<?> "Till Histogram headers"
   -- Take the next empty line

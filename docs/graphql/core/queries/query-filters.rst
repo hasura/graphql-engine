@@ -57,10 +57,10 @@ argument to filter on equality.
 
 You can see the complete specification of the ``where`` argument in the :ref:`API reference <WhereExp>`.
 
-Comparision operators
+Somparison operators
 ---------------------
 
-Let’s take a look at different comparision operators that can be used to filter results.
+Let’s take a look at different comparison operators that can be used to filter results.
 
 Equality operators (_eq, _neq)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1737,10 +1737,10 @@ The expression ``{}`` evaluates to ``true`` if an object exists (even if it's ``
 
 .. _null_value_evaluation:
 
-Evaluation of **null** values in comparision expressions
+Evaluation of **null** values in comparison expressions
 --------------------------------------------------------
 
-If in any comparision expression a ``null`` (or ``undefined``) value is passed, the expression currently gets
+If in any comparison expression a ``null`` (or ``undefined``) value is passed, the expression currently gets
 reduced to ``{}`` (:ref:`TRUE expression <true_expression>`)
 
 **For example**, the expression ``{ where: { _eq: null } }`` will be reduced to ``{ where: {} }``
