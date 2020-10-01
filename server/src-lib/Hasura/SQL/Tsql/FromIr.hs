@@ -308,7 +308,7 @@ unfurlAnnOrderByElement =
                 Ir.AAOCount -> pure (CountAggregate StarCountable)
                 Ir.AAOOp text pgColumnInfo -> do
                   fieldName <- fromPGColumnInfo pgColumnInfo
-                  pure (OpAggregate text fieldName)))
+                  pure (OpAggregate text (pure (ColumnExpression fieldName)))))
       tell
         (pure
            Join
@@ -487,8 +487,18 @@ fromAggregateField aggregateField =
                Just fields' -> do
                  fields'' <- traverse fromPGCol fields'
                  pure (DistinctCountable fields''))
-    Ir.AFOp Ir.AggregateOp{_aoOp,_aoFields} ->
-      error "Ir.AFOp Ir.AggregateOp"
+    Ir.AFOp Ir.AggregateOp {_aoOp = op, _aoFields = fields} -> do
+      fs <- case NE.nonEmpty fields of
+              Nothing -> lift (FromIr (refute (pure MalformedAgg)))
+              Just fs -> pure fs
+      args <-
+        traverse
+          (\(_fieldName, pgColFld) ->
+             case pgColFld of
+               Ir.PCFCol pgCol -> fmap ColumnExpression (fromPGCol pgCol)
+               Ir.PCFExp text -> pure (ValueExpression (Odbc.TextValue text)))
+          fs
+      pure (OpAggregate op args)
 
 -- | The main sources of fields, either constants, fields or via joins.
 fromAnnFieldsG :: (Ir.FieldName, Ir.AnnFieldG Sql.SQLExp) -> ReaderT EntityAlias FromIr FieldSource

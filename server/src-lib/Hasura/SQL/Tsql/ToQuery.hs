@@ -185,8 +185,9 @@ fromAggregate :: Aggregate -> Printer
 fromAggregate =
   \case
     CountAggregate countable -> "COUNT(" <+> fromCountable countable <+> ")"
-    OpAggregate text fieldName ->
-      QueryPrinter (rawUnescapedText text) <+> "(" <+> fromFieldName fieldName <+> ")"
+    OpAggregate text args ->
+      QueryPrinter (rawUnescapedText text) <+>
+      "(" <+> SepByPrinter ", " (map fromExpression (toList args)) <+> ")"
     TextAggregate text -> fromExpression (ValueExpression (TextValue text))
 
 fromCountable :: Countable -> Printer

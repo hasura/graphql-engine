@@ -100,7 +100,7 @@ data Expression
 
 data Aggregate
   = CountAggregate Countable
-  | OpAggregate !Text FieldName
+  | OpAggregate !Text (NonEmpty Expression)
   | TextAggregate !Text
   deriving (Eq, Show)
 
