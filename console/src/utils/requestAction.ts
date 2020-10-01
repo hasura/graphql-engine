@@ -46,7 +46,7 @@ const requestAction = (
               resolve(results);
             });
           }
-
+          dispatch({ type: FAILED_REQUEST });
           if (response.status >= 400 && response.status <= 500) {
             let isResponseJSON = true;
             const responseContentType = response.headers.get('Content-Type');
@@ -56,17 +56,23 @@ const requestAction = (
 
             if (!isResponseJSON) {
               return response.text().then(errorMsg => {
-                dispatch({ type: FAILED_REQUEST });
+                const msg = errorMsg;
                 if (ERROR) {
-                  dispatch({ type: ERROR, response, data: errorMsg });
+                  dispatch({ type: ERROR, data: msg });
+                } else {
+                  dispatch({
+                    type: ERROR_REQUEST,
+                    data: msg,
+                    url,
+                    params: options.body,
+                    statusCode: response.status,
+                  });
                 }
-                // a bool to check whether loading screen is shown, and based on this call error request
                 reject();
               });
             }
 
             return response.json().then(errorMsg => {
-              dispatch({ type: FAILED_REQUEST });
               const msg = errorMsg;
               if (ERROR) {
                 dispatch({ type: ERROR, data: msg });
@@ -87,6 +93,13 @@ const requestAction = (
               reject(msg);
             });
           }
+          return response.text().then(errorMsg => {
+            dispatch({ type: FAILED_REQUEST });
+            if (ERROR) {
+              dispatch({ type: ERROR, response, data: errorMsg });
+            }
+            reject();
+          });
         },
         error => {
           console.error('Request error: ', error);

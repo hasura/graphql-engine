@@ -8,7 +8,6 @@ import Spinner from '../Common/Spinner/Spinner';
 
 import PageNotFound, { NotFoundError } from './PageNotFound';
 import RuntimeError from './RuntimeError';
-import ApiError from './ApiError';
 import { registerRunTimeError } from '../Main/Actions';
 
 export interface Metadata {
@@ -20,9 +19,9 @@ export interface Metadata {
 export interface ErrorBoundaryProps {
   metadata: Metadata;
   dispatch: (arg: unknown) => Promise<unknown>; // TODO update when Redux is migrated to TS;
-  errorValue: any;
-  requestError: any;
-  requestURL: any;
+  errorValue: Error;
+  requestError: Error;
+  requestURL: string;
 }
 
 interface ErrorBoundaryState {
@@ -83,7 +82,7 @@ class ErrorBoundary extends React.Component<
   };
 
   render() {
-    const { metadata, errorValue, requestError, requestURL } = this.props;
+    const { metadata } = this.props;
     const { hasReactError, type, error } = this.state;
 
     if (hasReactError && metadata.ongoingRequest) {
@@ -98,10 +97,7 @@ class ErrorBoundary extends React.Component<
       );
     }
 
-    // TODO: Check the condition here, it causes the console to keep making repeated requests
-    if (!requestError && errorValue) {
-      return <ApiError error={errorValue} requestURL={requestURL} />;
-    }
+    // Catch Api errors
 
     return this.props.children;
   }
