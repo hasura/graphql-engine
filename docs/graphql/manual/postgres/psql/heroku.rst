@@ -1,4 +1,4 @@
-Using psql usning Heroku
+Using psql using Heroku
 ========================
 
 .. contents:: Table of contents
