@@ -63,7 +63,8 @@ import           Hasura.RQL.Types                          (CacheRWM, Code (..),
                                                             SchemaCache (..), UserInfoM,
                                                             EnableRemoteSchemaPermsCtx(..),
                                                             buildSchemaCacheStrict, decodeValue,
-                                                            throw400, withPathK)
+                                                            throw400, withPathK,
+                                                            HasEnableRemoteSchemaPermsCtx)
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.API.Query                   (fetchLastUpdate, requiresAdmin,
                                                             runQueryM)
@@ -612,6 +613,7 @@ execQuery
      , UserInfoM m
      , HasSystemDefined m
      , Tracing.MonadTrace m
+     , HasEnableRemoteSchemaPermsCtx m
      )
   => Env.Environment
   -> BLC.ByteString

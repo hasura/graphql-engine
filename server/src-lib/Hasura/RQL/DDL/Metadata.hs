@@ -145,14 +145,16 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta remoteSchemas
     getDups l =
       l L.\\ HS.toList (HS.fromList l)
 
-applyQP2 :: (CacheRWM m, MonadTx m, HasSystemDefined m) => ReplaceMetadata -> m EncJSON
+applyQP2
+  :: (CacheRWM m, MonadTx m, HasSystemDefined m, HasEnableRemoteSchemaPermsCtx m)
+  => ReplaceMetadata -> m EncJSON
 applyQP2 replaceMetadata = do
   clearUserMetadata
   saveMetadata replaceMetadata
   buildSchemaCacheStrict
   pure successMsg
 
-saveMetadata :: (MonadTx m, HasSystemDefined m) => ReplaceMetadata -> m ()
+saveMetadata :: (MonadTx m, HasSystemDefined m, HasEnableRemoteSchemaPermsCtx m) => ReplaceMetadata -> m ()
 saveMetadata (ReplaceMetadata _ tables functionsMeta
               remoteSchemas collections allowlist customTypes actions cronTriggers) = do
 
@@ -217,9 +219,17 @@ saveMetadata (ReplaceMetadata _ tables functionsMeta
       liftTx $ addRemoteSchemaToCatalog $ AddRemoteSchemaQuery name defn comment
       onJust mPermissions $ \permissions ->
         withPathK (unNonEmptyText $ unRemoteSchemaName name) $ do
-          withPathK "permissions" $
+          withPathK "permissions" $ do
+            -- remote schema permissions should allowed to be added only
+            -- when the graphql-engine is started with remote schema
+            -- permissions enabled
+            isRSPermsEnabled <- enableRemoteSchemaPerms <$> askEnableRemoteSchemaPermsCtx
+            unless isRSPermsEnabled $ do
+              throw400 ConstraintViolation
+                $ "remote schema permissions can only be added when "
+                <> "remote schema permissions are enabled in the graphql-engine"
             indexedForM_ permissions $ \(RemoteSchemaPermissionMeta role permDefn permComment) ->
-            liftTx $ RemoteSchema.addRemoteSchemaPermissionsToCatalog
+              liftTx $ RemoteSchema.addRemoteSchemaPermissionsToCatalog
               $ AddRemoteSchemaPermissions name role permDefn permComment
 
   -- custom types
@@ -250,6 +260,7 @@ runReplaceMetadata
   :: ( MonadTx m
      , CacheRWM m
      , HasSystemDefined m
+     , HasEnableRemoteSchemaPermsCtx m
      )
   => ReplaceMetadata -> m EncJSON
 runReplaceMetadata q = do

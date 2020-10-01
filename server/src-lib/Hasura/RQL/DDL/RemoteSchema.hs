@@ -62,10 +62,16 @@ runAddRemoteSchemaPermissions
   :: ( QErrM m
      , CacheRWM m
      , MonadTx m
+     , HasEnableRemoteSchemaPermsCtx m
      )
   => AddRemoteSchemaPermissions
   -> m EncJSON
 runAddRemoteSchemaPermissions q = do
+  isRSPermsEnabled <- enableRemoteSchemaPerms <$> askEnableRemoteSchemaPermsCtx
+  unless isRSPermsEnabled $ do
+    throw400 ConstraintViolation
+      $ "remote schema permissions can only be added when "
+      <> "remote schema permissions are enabled in the graphql-engine"
   remoteSchemaMap <- scRemoteSchemas <$> askSchemaCache
   (RemoteSchemaCtxWithPermissions _ ctx perms) <-
     onNothing (Map.lookup name remoteSchemaMap) $

@@ -358,6 +358,7 @@ reconcileAccessModes (Just mode1) (Just mode2)
 runQueryM
   :: ( HasVersion, QErrM m, CacheRWM m, UserInfoM m, MonadTx m
      , MonadIO m, MonadUnique m, HasHttpManager m, HasSQLGenCtx m
+     , HasEnableRemoteSchemaPermsCtx m
      , HasSystemDefined m
      , Tracing.MonadTrace m
      )
