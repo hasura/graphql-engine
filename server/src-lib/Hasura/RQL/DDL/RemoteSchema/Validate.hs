@@ -300,14 +300,14 @@ validateArguments providedArgs upstreamArgs parentTypeName = do
         refute $ pure $ NonExistingInputArgument parentTypeName name
     validateInputValueDefinition providedArg upstreamArg parentTypeName
   let argsDiff = getDifference nonNullableUpstreamArgs nonNullableProvidedArgs
-  onJust (NE.nonEmpty $ map G._ivdName $ S.toList argsDiff) $ \nonNullableArgs -> do
+  onJust (NE.nonEmpty $ S.toList argsDiff) $ \nonNullableArgs -> do
     refute $ pure $ MissingNonNullableArguments parentTypeName nonNullableArgs
   where
     upstreamArgsMap = mapFromL G._ivdName $ upstreamArgs
 
-    nonNullableUpstreamArgs = filter (not . G.isNullable . G._ivdType) upstreamArgs
+    nonNullableUpstreamArgs = map G._ivdName $ filter (not . G.isNullable . G._ivdType) upstreamArgs
 
-    nonNullableProvidedArgs = filter (not . G.isNullable . G._ivdType) providedArgs
+    nonNullableProvidedArgs = map G._ivdName $ filter (not . G.isNullable . G._ivdType) providedArgs
 
 validateInputObjectTypeDefinition
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
