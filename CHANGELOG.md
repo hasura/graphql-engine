@@ -3,6 +3,7 @@
 ## Next release
 
 - console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
+- console: add option to flag an insertion as a migration from `Data` section (close #1766) (#4933)
 
 ### Server - Support for mapping session variables to default JWT claims
 
