@@ -121,7 +121,7 @@ insertMultipleObjects env multiObjIns additionalColumns rjCtx mutationOutput pla
             columnInfos
           rowCount = T.pack . show . length $ _aiInsObj multiObjIns
       Tracing.trace ("Insert (" <> rowCount <> ") " <> qualObjectToText table) do
-        Tracing.attachMetadata [("count", rowCount)]  
+        Tracing.attachMetadata [("count", rowCount)]
         RQL.execInsertQuery env stringifyNum (Just rjCtx) (insertQuery, planVars)
 
     withRelsInsert = do
@@ -132,9 +132,8 @@ insertMultipleObjects env multiObjIns additionalColumns rjCtx mutationOutput pla
           columnValues = mapMaybe snd insertRequests
       selectExpr <- RQL.mkSelCTEFromColVals table columnInfos columnValues
       let (mutOutputRJ, remoteJoins) = RQL.getRemoteJoinsMutationOutput mutationOutput
-          sqlQuery = Q.fromBuilder $ toSQL $
-                     RQL.mkMutationOutputExp table columnInfos (Just affectedRows) selectExpr mutOutputRJ stringifyNum
-      RQL.executeMutationOutputQuery env sqlQuery [] $ (,rjCtx) <$> remoteJoins
+      RQL.executeMutationOutputQuery env table columnInfos (Just affectedRows) selectExpr
+        mutOutputRJ stringifyNum [] $ (,rjCtx) <$> remoteJoins
 
 insertObject
   :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m)
@@ -285,11 +284,9 @@ mkInsertQ table onConflictM insCols defVals (insCheck, updCheck) = do
           . Just
           $ S.RetExp
             [ S.selectStar
-            , S.Extractor
-                (RQL.insertOrUpdateCheckExpr table onConflictM
+            , RQL.insertOrUpdateCheckExpr table onConflictM
                   (RQL.toSQLBoolExp (S.QualTable table) insCheck)
-                  (fmap (RQL.toSQLBoolExp (S.QualTable table)) updCheck))
-                Nothing
+                  (fmap (RQL.toSQLBoolExp (S.QualTable table)) updCheck)
             ]
   pure $ S.CTEInsert sqlInsert
 

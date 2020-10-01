@@ -11,15 +11,15 @@ where
 
 import           Hasura.Prelude
 
-import qualified Data.Environment          as Env
-import qualified Data.HashMap.Strict       as Map
-import qualified Data.Sequence             as DS
-import qualified Database.PG.Query         as Q
-import qualified Network.HTTP.Client       as HTTP
-import qualified Network.HTTP.Types        as N
+import qualified Data.Environment               as Env
+import qualified Data.HashMap.Strict            as Map
+import qualified Data.Sequence                  as DS
+import qualified Database.PG.Query              as Q
+import qualified Network.HTTP.Client            as HTTP
+import qualified Network.HTTP.Types             as N
 
-import qualified Hasura.SQL.DML            as S
-import qualified Hasura.Tracing            as Tracing
+import qualified Hasura.SQL.DML                 as S
+import qualified Hasura.Tracing                 as Tracing
 
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
@@ -30,9 +30,9 @@ import           Hasura.RQL.DML.Select
 import           Hasura.RQL.Instances           ()
 import           Hasura.RQL.Types
 import           Hasura.Server.Version          (HasVersion)
+import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-import           Hasura.Session
 
 type MutationRemoteJoinCtx = (HTTP.Manager, [N.Header], UserInfo)
 
@@ -84,10 +84,7 @@ mutateAndReturn
   -> Mutation
   -> m EncJSON
 mutateAndReturn env (Mutation qt (cte, p) mutationOutput allCols remoteJoins strfyNum) =
-  executeMutationOutputQuery env sqlQuery (toList p) remoteJoins
-  where
-    sqlQuery = Q.fromBuilder $ toSQL $
-               mkMutationOutputExp qt allCols Nothing cte mutationOutput strfyNum
+  executeMutationOutputQuery env qt allCols Nothing cte mutationOutput strfyNum (toList p) remoteJoins
 
 {- Note: [Prepared statements in Mutations]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -117,9 +114,8 @@ mutateAndSel env (Mutation qt q mutationOutput allCols remoteJoins strfyNum) = d
   -- Perform mutation and fetch unique columns
   MutateResp _ columnVals <- liftTx $ mutateAndFetchCols qt allCols q strfyNum
   selCTE <- mkSelCTEFromColVals qt allCols columnVals
-  let selWith = mkMutationOutputExp qt allCols Nothing selCTE mutationOutput strfyNum
   -- Perform select query and fetch returning fields
-  executeMutationOutputQuery env (Q.fromBuilder $ toSQL selWith) [] remoteJoins
+  executeMutationOutputQuery env qt allCols Nothing selCTE mutationOutput strfyNum [] remoteJoins
 
 executeMutationOutputQuery
   ::
@@ -129,17 +125,28 @@ executeMutationOutputQuery
   , Tracing.MonadTrace m
   )
   => Env.Environment
-  -> Q.Query -- ^ SQL query
+  -> QualifiedTable
+  -> [PGColumnInfo]
+  -> Maybe Int
+  -> S.CTE
+  -> MutationOutput
+  -> Bool
   -> [Q.PrepArg] -- ^ Prepared params
   -> Maybe (RemoteJoins, MutationRemoteJoinCtx)  -- ^ Remote joins context
   -> m EncJSON
-executeMutationOutputQuery env query prepArgs = \case
-  Nothing ->
-    runIdentity . Q.getRow
-      -- See Note [Prepared statements in Mutations]
-      <$> liftTx (Q.rawQE dmlTxErrorHandler query prepArgs False)
-  Just (remoteJoins, (httpManager, reqHeaders, userInfo)) ->
-    executeQueryWithRemoteJoins env httpManager reqHeaders userInfo query prepArgs remoteJoins
+executeMutationOutputQuery env qt allCols preCalAffRows cte mutOutput strfyNum prepArgs maybeRJ = do
+  let selectWith = mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum
+      query = Q.fromBuilder $ toSQL selectWith
+  (rawResponse, maybeCheckError) <-
+        -- See Note [Prepared statements in Mutations]
+      Q.getRow <$> liftTx (Q.rawQE dmlTxErrorHandler query prepArgs False)
+
+  case maybeCheckError of
+    Just err -> throw400 ConstraintViolation err
+    Nothing  -> case maybeRJ of
+      Nothing -> pure $ encJFromLBS rawResponse
+      Just (remoteJoins, (httpManager, reqHeaders, userInfo)) ->
+        processRemoteJoins env httpManager reqHeaders userInfo rawResponse remoteJoins
 
 mutateAndFetchCols
   :: QualifiedTable

@@ -91,6 +91,12 @@ mkMutFldExp cteAlias preCalAffRows strfyNum = \case
     in S.SESelect $ mkSQLSelect JASMultipleRows $
        AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum
 
+checkErrorIden :: Iden
+checkErrorIden = Iden "check__error"
+
+withCheckErrorExtractor :: S.SQLExp -> S.Extractor
+withCheckErrorExtractor s =
+  S.Extractor s $ Just $ S.Alias checkErrorIden
 
 {- Note [Mutation output expression]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -104,8 +110,9 @@ WITH "<table-name>__mutation_result_alias" AS (
     -- An extra column expression which performs the 'CHECK' validation
     CASE
       WHEN (<CHECK Condition>) THEN NULL
-      ELSE "hdb_catalog"."check_violation"('insert check constraint failed')
+      ELSE 'insert check constraint failed'
     END
+      AS "check__error"
 ),
 "<table-name>__all_columns_alias" AS (
   -- Only extract columns from mutated rows. Columns sorted by ordinal position so that
@@ -114,7 +121,8 @@ WITH "<table-name>__mutation_result_alias" AS (
   FROM
     "<table-name>__mutation_result_alias"
 )
-<SELECT statement to generate mutation response using '<table-name>__all_columns_alias' as FROM>
+<SELECT statement to generate mutation response using '<table-name>__all_columns_alias' as FROM
+ and "check__error" from "<table-name>__mutation_result_alias">
 -}
 
 -- | Generate mutation output expression with given mutation CTE statement.
@@ -139,8 +147,15 @@ mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
                        , S.selFrom = Just $ S.mkIdenFromExp mutationResultAlias
                        }
 
-    sel = S.mkSelect { S.selExtr = [S.Extractor extrExp Nothing] }
+    sel = S.mkSelect { S.selExtr = [ S.Extractor extrExp Nothing
+                                   , S.Extractor checkErrorExp Nothing
+                                   ]
+                     }
           where
+            checkErrorExp =
+              S.SESelect $ S.mkSelect { S.selExtr = [S.Extractor (S.SEIden checkErrorIden) Nothing]
+                                      , S.selFrom = Just $ S.mkIdenFromExp mutationResultAlias
+                                      }
             extrExp = case mutOutput of
               MOutMultirowFields mutFlds ->
                 let jsonBuildObjArgs = flip concatMap mutFlds $
@@ -154,7 +169,6 @@ mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
                     tabPerm = TablePerm annBoolExpTrue Nothing
                 in S.SESelect $ mkSQLSelect JASSingleObject $
                    AnnSelectG annFlds tabFrom tabPerm noSelectArgs strfyNum
-
 
 checkRetCols
   :: (UserInfoM m, QErrM m)

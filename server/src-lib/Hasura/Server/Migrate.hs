@@ -143,7 +143,6 @@ migrateCatalog migrationTime = do
           <> "PostgreSQL server. Please make sure this extension is available."
 
       runTx $(Q.sqlFromFile "src-rsr/initialise.sql")
-
       updateCatalogVersion
       pure (MRInitialized, emptyMetadata)
       where

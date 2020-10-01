@@ -26,10 +26,10 @@ import           Hasura.Server.Version       (HasVersion)
 import           Hasura.Session
 import           Hasura.SQL.Types
 
+import qualified Data.Environment            as Env
 import qualified Database.PG.Query           as Q
 import qualified Hasura.SQL.DML              as S
-import qualified Data.Environment         as Env
-import qualified Hasura.Tracing           as Tracing
+import qualified Hasura.Tracing              as Tracing
 
 
 -- NOTE: This function can be improved, because we use
@@ -71,7 +71,8 @@ mkUpdateCTE (AnnUpd tn opExps (permFltr, wc) chk _ columnsInfo) =
         . Just
         . S.RetExp
         $ [ S.selectStar
-          , S.Extractor (insertCheckExpr "update check constraint failed" checkExpr) Nothing
+          , withCheckErrorExtractor $
+            insertCheckExpr "update check constraint failed" checkExpr
           ]
     setExp    = S.SetExp $ map (expandOperator columnsInfo) opExps
     tableFltr = Just $ S.WhereFrag tableFltrExpr
