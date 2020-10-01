@@ -1574,9 +1574,9 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     let columnDefaultUpQuery;
     let columnDefaultDownQuery;
     if (colDefault !== '') {
-      // ALTER TABLE ONLY <table> ALTER COLUMN <column> SET DEFAULT <default>;
+      // ALTER TABLE <table> ALTER COLUMN <column> SET DEFAULT <default>;
       columnDefaultUpQuery =
-        'ALTER TABLE ONLY ' +
+        'ALTER TABLE ' +
         '"' +
         currentSchema +
         '"' +
@@ -1611,7 +1611,7 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
 
     if (originalColDefault !== '') {
       columnDefaultDownQuery =
-        'ALTER TABLE ONLY ' +
+        'ALTER TABLE ' +
         '"' +
         currentSchema +
         '"' +
@@ -1629,7 +1629,7 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     } else {
       // there was no default value originally. so drop default.
       columnDefaultDownQuery =
-        'ALTER TABLE ONLY ' +
+        'ALTER TABLE ' +
         '"' +
         currentSchema +
         '"' +

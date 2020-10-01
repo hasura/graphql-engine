@@ -49,18 +49,17 @@ class Monad m => MonadExecuteQuery m where
     -> [QueryRootField UnpreparedValue]
     -> Maybe EQ.GeneratedSqlMap
     -> PGExecCtx
-    -> Q.TxAccess
     -> TraceT (LazyTx QErr) EncJSON
     -> TraceT (ExceptT QErr m) (HTTP.ResponseHeaders, EncJSON)
 
 instance MonadExecuteQuery m => MonadExecuteQuery (ReaderT r m) where
-  executeQuery a b c d e f = hoist (hoist lift) $ executeQuery a b c d e f
+  executeQuery a b c d e = hoist (hoist lift) $ executeQuery a b c d e
 
 instance MonadExecuteQuery m => MonadExecuteQuery (ExceptT r m) where
-  executeQuery a b c d e f = hoist (hoist lift) $ executeQuery a b c d e f
+  executeQuery a b c d e = hoist (hoist lift) $ executeQuery a b c d e
 
 instance MonadExecuteQuery m => MonadExecuteQuery (TraceT m) where
-  executeQuery a b c d e f = hoist (hoist lift) $ executeQuery a b c d e f
+  executeQuery a b c d e = hoist (hoist lift) $ executeQuery a b c d e
 
 
 -- | Run (execute) a single GraphQL query
@@ -73,6 +72,7 @@ runGQ
      , MonadQueryLog m
      , MonadTrace m
      , MonadExecuteQuery m
+     , EQ.MonadQueryInstrumentation m
      )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -153,6 +153,7 @@ runGQBatched
      , MonadQueryLog m
      , MonadTrace m
      , MonadExecuteQuery m
+     , EQ.MonadQueryInstrumentation m
      )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -204,8 +205,8 @@ runQueryDB reqId (query, queryParsed) asts _userInfo (tx, genSql) =  do
   -- log the generated SQL and the graphql query
   E.ExecutionCtx logger _ pgExecCtx _ _ _ _ <- ask
   logQueryLog logger query (Just genSql) reqId
-  (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ trace "pg" $
-    Tracing.interpTraceT id $ executeQuery queryParsed asts (Just genSql) pgExecCtx Q.ReadOnly tx
+  (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ trace "Query" $
+    Tracing.interpTraceT id $ executeQuery queryParsed asts (Just genSql) pgExecCtx tx
   (respHdrs,resp) <- liftEither respE
   let !json = encodeGQResp $ GQSuccess $ encJToLBS resp
       telemQueryType = Telem.Query
@@ -230,7 +231,7 @@ runMutationDB reqId query userInfo tx =  do
   -- log the graphql query
   logQueryLog logger query Nothing reqId
   ctx <- Tracing.currentContext
-  (telemTimeIO, respE) <- withElapsedTime $  runExceptT $ trace "pg" $
+  (telemTimeIO, respE) <- withElapsedTime $  runExceptT $ trace "Mutation" $
     Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx .  withUserInfo userInfo)  tx
   resp <- liftEither respE
   let !json = encodeGQResp $ GQSuccess $ encJToLBS resp
@@ -259,7 +260,7 @@ runHasuraGQ reqId (query, queryParsed) userInfo resolvedOp = do
     E.ExOpQuery tx genSql asts -> trace "Query" $ do
       -- log the generated SQL and the graphql query
       logQueryLog logger query genSql reqId
-      Tracing.interpTraceT id $ executeQuery queryParsed asts genSql pgExecCtx Q.ReadOnly tx
+      Tracing.interpTraceT id $ executeQuery queryParsed asts genSql pgExecCtx tx
 
     E.ExOpMutation respHeaders tx -> trace "Mutate" $ do
       logQueryLog logger query Nothing reqId

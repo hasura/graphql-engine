@@ -63,19 +63,17 @@ Step 3: Open the Hasura console
 
 Head to ``http://localhost:8080/console`` to open the Hasura console.
 
-Hello World (GraphQL or event triggers)
----------------------------------------
+Step 4: Try Hasura out
+----------------------
 
-Make your :ref:`first graphql query <first_graphql_query>`
+Make your :ref:`first graphql query <first_graphql_query>` or set up your :ref:`first event trigger <first_event_trigger>`
 
-OR
-
-Set up your :ref:`first event trigger <first_event_trigger>`
+You can also check out our `30-Minute Hasura Basics Course <https://hasura.io/learn/graphql/hasura/introduction/>`__
+and other `GraphQL & Hasura Courses <https://hasura.io/learn/>`__ for a more detailed introduction to Hasura.
 
 Advanced
 --------
 
 This was a quickstart guide to get the Hasura GraphQL engine up and running
-quickly. For more detailed instructions on deploying using Docker, check out
-:ref:`deployment_docker`.
-
+quickly. For more detailed instructions on deploying using Docker with an
+external database, check out :ref:`deployment_docker`.
