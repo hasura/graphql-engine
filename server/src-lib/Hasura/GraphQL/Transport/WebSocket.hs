@@ -361,9 +361,8 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       -- WebSockets don't support them.
       (_responseHeaders, cachedValue) <- Tracing.interpTraceT id $ cacheLookup asts cacheKey
       case cachedValue of
-        Just cachedResponseData ->
-          sendSuccResp cachedResponseData $
-          LQ.LiveQueryMetadata 0
+        Just cachedResponseData -> do
+          sendSuccResp cachedResponseData $ LQ.LiveQueryMetadata 0
         Nothing -> do
           conclusion <- runExceptT $ forWithKey queryPlan $ \fieldName -> \case
             E.ExecStepDB (tx, _genSql) -> doQErr $ Tracing.trace "Postgres Query" $ do -- TODO genSql logging
