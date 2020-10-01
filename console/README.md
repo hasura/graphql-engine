@@ -99,8 +99,7 @@ Environment variables accepted in `cli` mode:
 
 - `NODE_ENV`: Console build environment (`development`/`production`) 
 - `PORT`: The port where Hasura console will run locally
-- `API_HOST`: Hasura CLI host. Hasura CLI runs on `http://localhost` by default.
-- `API_PORT`: Hasura CLI port. Hasura CLI exposes the API at `9693` by default
+- `MIGRATE_API_URL`: CLI Migrate API URL, `http://localhost:9693` by default.
 - `CDN_ASSETS`: Should assets be loaded from CDN (`true`/`false`)
 - `ASSETS_PATH`: Path to console assets
 - `ASSETS_VERSION`: Version of console assets being served 
@@ -109,15 +108,14 @@ Environment variables accepted in `cli` mode:
 - `DATA_API_URL`: The Hasura GraphQL engine url. (If you are running it on Heroku, it will look like <app-name\>.herokuapp.com, if you are running locally, it will look like http://localhost:<port\>)
 - `SERVER_VERSION`: Hasura GraphQL Engine server version
 - `CONSOLE_MODE`: In cli mode, it should be `cli`
-- `ADMIN_SECRET`: the admin secret passed via the CLI
+- `IS_ADMIN_SECRET_SET`: Is GraphQl engine configured with an admin secret (`true`/`false`)
 
 Here's an example `.env` file for `cli` mode:
 
 ```bash
 NODE_ENV=development
 PORT=3000
-API_HOST=http://localhost
-API_PORT=9693
+MIGRATE_API_URL=http://localhost:9693
 CDN_ASSETS=true
 ASSETS_PATH=https://graphql-engine-cdn.hasura.io/console/assets
 ASSETS_VERSION=channel/stable/v1.0
@@ -126,7 +124,7 @@ URL_PREFIX=/
 DATA_API_URL=http://localhost:8080
 SERVER_VERSION=v1.0.0
 CONSOLE_MODE=cli
-ADMIN_SECRET=my-admin-secret
+IS_ADMIN_SECRET_SET=true
 ```
 
 ##### Run console development server:

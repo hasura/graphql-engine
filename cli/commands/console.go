@@ -1,10 +1,16 @@
 package commands
 
 import (
+	"net/http"
 	"os"
 	"sync"
 
+	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/static"
+	"github.com/hasura/graphql-engine/cli/migrate"
+	"github.com/hasura/graphql-engine/cli/migrate/api"
 	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/sirupsen/logrus"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli"
@@ -55,7 +61,9 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f.StringVar(&opts.APIPort, "api-port", "9693", "port for serving migrate api")
 	f.StringVar(&opts.ConsolePort, "console-port", "9695", "port for serving console")
-	f.StringVar(&opts.Address, "address", "localhost", "address to serve console and migration API from")
+	f.StringVar(&opts.Address, "address", "localhost", "address to serve console and migrate api from")
+	f.StringVar(&opts.ServerExternalEndpoint, "server-external-endpoint", "", "endpoint using which console can access graphql engine")
+	f.StringVar(&opts.CliExternalEndpoint, "cli-external-endpoint", "", "endpoint using which console can access the migrate api served by cli")
 	f.BoolVar(&opts.DontOpenBrowser, "no-browser", false, "do not automatically open console in browser")
 	f.StringVar(&opts.StaticDir, "static-dir", "", "directory where static assets mentioned in the console html template can be served from")
 	f.StringVar(&opts.Browser, "browser", "", "open console in a specific browser")
@@ -81,11 +89,12 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 type ConsoleOptions struct {
 	EC *cli.ExecutionContext
 
-	APIPort     string
-	ConsolePort string
-	Address     string
-
-	DontOpenBrowser bool
+	APIPort                string
+	ConsolePort            string
+	Address                string
+	ServerExternalEndpoint string
+	CliExternalEndpoint    string
+	DontOpenBrowser        bool
 
 	WG *sync.WaitGroup
 
@@ -113,6 +122,26 @@ func (o *ConsoleOptions) Run() error {
 	templateProvider := console.NewDefaultTemplateProvider(basePath, templateFilename)
 	consoleTemplateVersion := templateProvider.GetTemplateVersion(o.EC.Version)
 	consoleAssetsVersion := templateProvider.GetAssetsVersion(o.EC.Version)
+
+	if o.CliExternalEndpoint == "" {
+		o.CliExternalEndpoint = "http://" + o.Address + ":" + o.APIPort
+	}
+	if o.ServerExternalEndpoint == "" {
+		o.ServerExternalEndpoint = o.EC.Config.ServerConfig.Endpoint
+	}
+
+	// FIXME: My Router struct
+	r := &cRouter{
+		g,
+		t,
+	}
+
+	r.router.Use(verifyAdminSecret())
+	r.setRoutes(o.EC.MigrationDir, o.EC.Logger)
+
+	// consoleTemplateVersion := o.EC.Version.GetConsoleTemplateVersion()
+	// consoleAssetsVersion := o.EC.Version.GetConsoleAssetsVersion()
+
 	o.EC.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)
 
 	adminSecretHeader := cli.GetAdminSecretHeaderName(o.EC.Version)
@@ -170,4 +199,127 @@ func (o *ConsoleOptions) Run() error {
 	}
 
 	return console.Serve(serveOpts)
+}
+
+func verifyAdminSecret() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if ec.Config.ServerConfig.AdminSecret != "" {
+			if c.GetHeader(cli.XHasuraAdminSecret) != ec.Config.ServerConfig.AdminSecret {
+				//reject
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "unauthorized"})
+			}
+		}
+	}
+}
+
+type cRouter struct {
+	router  *gin.Engine
+	migrate *migrate.Migrate
+}
+
+func (r *cRouter) setRoutes(migrationDir string, logger *logrus.Logger) {
+	apis := r.router.Group("/apis")
+	{
+		apis.Use(setLogger(logger))
+		apis.Use(setFilePath(migrationDir))
+		apis.Use(setMigrate(r.migrate))
+		apis.Use(setConfigVersion())
+		// Migrate api endpoints and middleware
+		migrateAPIs := apis.Group("/migrate")
+		{
+			settingsAPIs := migrateAPIs.Group("/settings")
+			{
+				settingsAPIs.Any("", api.SettingsAPI)
+			}
+			squashAPIs := migrateAPIs.Group("/squash")
+			{
+				squashAPIs.POST("/create", api.SquashCreateAPI)
+				squashAPIs.POST("/delete", api.SquashDeleteAPI)
+			}
+			migrateAPIs.Any("", api.MigrateAPI)
+		}
+		// Migrate api endpoints and middleware
+		metadataAPIs := apis.Group("/metadata")
+		{
+			metadataAPIs.Any("", api.MetadataAPI)
+		}
+	}
+}
+
+func setMigrate(t *migrate.Migrate) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("migrate", t)
+		c.Next()
+	}
+}
+
+func setFilePath(dir string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// FIXME
+		host := getFilePath(dir)
+		c.Set("filedir", host)
+		c.Next()
+	}
+}
+
+func setConfigVersion() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("version", int(ec.Config.Version))
+		c.Next()
+	}
+}
+
+func setMetadataFile(file string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("metadataFile", file)
+		c.Next()
+	}
+}
+
+func setLogger(logger *logrus.Logger) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("logger", logger)
+		c.Next()
+	}
+}
+
+func allowCors() gin.HandlerFunc {
+	config := cors.DefaultConfig()
+	config.AddAllowHeaders("X-Hasura-User-Id")
+	config.AddAllowHeaders(cli.XHasuraAccessKey)
+	config.AddAllowHeaders(cli.XHasuraAdminSecret)
+	config.AddAllowHeaders("X-Hasura-Role")
+	config.AddAllowHeaders("X-Hasura-Allowed-Roles")
+	config.AddAllowMethods("DELETE")
+	config.AllowAllOrigins = true
+	config.AllowCredentials = false
+	return cors.New(config)
+}
+
+func serveConsole(assetsVersion, staticDir string, opts gin.H) (*gin.Engine, error) {
+	// An Engine instance with the Logger and Recovery middleware already attached.
+	r := gin.New()
+
+	// FIXME: DoAssetExist
+	if !util.DoAssetExist("assets/" + assetsVersion + "/console.html") {
+		assetsVersion = "latest"
+	}
+
+	// Template console.html
+	// FIXME: LoadTemplates
+	templateRender, err := util.LoadTemplates("assets/"+assetsVersion+"/", "console.html")
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot fetch template")
+	}
+	r.HTMLRender = templateRender
+
+	if staticDir != "" {
+		r.Use(static.Serve("/static", static.LocalFile(staticDir, false)))
+		opts["cliStaticDir"] = staticDir
+	}
+	r.GET("/*action", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "console.html", &opts)
+	})
+
+	return r, nil
 }
