@@ -221,7 +221,7 @@ The permission for ``org-member`` role changes to this:
     ]
   }
 
-.. admonition:: Arrays in permission rules
+.. admonition:: Array session variables in permission rules
 
    Support for using session variables for array operators like ``_in``, ``_nin``, ``_has_any_keys``,
    ``_has_all_keys`` is available in versions ``v.1.0.0-beta.3`` and above.
