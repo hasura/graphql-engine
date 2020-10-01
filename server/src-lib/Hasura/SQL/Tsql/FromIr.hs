@@ -74,7 +74,7 @@ data Error
 -- @fromPGCol@.
 newtype FromIr a = FromIr
   { unFromIr :: StateT (Map Text Int) (Validate (NonEmpty Error)) a
-  } deriving (Functor, Applicative, Monad)
+  } deriving (Functor, Applicative, Monad, MonadValidate (NonEmpty Error))
 
 --------------------------------------------------------------------------------
 -- Runners
@@ -101,7 +101,7 @@ fromSelectRows annSelectG = do
   selectFrom <-
     case from of
       Ir.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
-      _ -> FromIr (refute (pure (FromTypeUnsupported from)))
+      _ -> refute (pure (FromTypeUnsupported from))
   fieldSources <-
     runReaderT (traverse fromAnnFieldsG fields) (fromAlias selectFrom)
   filterExpression <-
@@ -115,7 +115,7 @@ fromSelectRows annSelectG = do
        } <- runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
   selectProjections <-
     case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
-      Nothing -> FromIr (refute (pure NoProjectionFields))
+      Nothing -> refute (pure NoProjectionFields)
       Just ne -> pure ne
   pure
     Select
@@ -148,7 +148,7 @@ fromSelectAggregate annSelectG = do
   selectFrom <-
     case from of
       Ir.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
-      _ -> FromIr (refute (pure (FromTypeUnsupported from)))
+      _ -> refute (pure (FromTypeUnsupported from))
   fieldSources <-
     runReaderT (traverse fromTableAggregateFieldG fields) (fromAlias selectFrom)
   filterExpression <-
@@ -162,7 +162,7 @@ fromSelectAggregate annSelectG = do
        } <- runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
   selectProjections <-
     case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
-      Nothing -> FromIr (refute (pure NoProjectionFields))
+      Nothing -> refute (pure NoProjectionFields)
       Just ne -> pure ne
   pure
     Select
@@ -218,7 +218,7 @@ fromSelectArgsG selectArgsG = do
   argsDistinct <-
     case argsDistinct' of
       Nothing -> pure Proxy
-      Just {} -> lift (FromIr (refute (pure DistinctIsn'tSupported)))
+      Just {} -> refute (pure DistinctIsn'tSupported)
   (argsOrderBy, joins) <-
     runWriterT (traverse fromAnnOrderByItemG (maybe [] toList orders))
   pure
@@ -252,7 +252,7 @@ fromAnnOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
               Sql.NLast -> NullsLast
   case morderByOrder of
     Just orderByOrder -> pure OrderBy {..}
-    Nothing -> lift (lift (FromIr (refute (pure NoOrderSpecifiedInOrderBy))))
+    Nothing -> refute (pure NoOrderSpecifiedInOrderBy)
 
 -- | Unfurl the nested set of object relations (tell'd in the writer)
 -- that are terminated by field name (Ir.AOCColumn and
@@ -446,7 +446,7 @@ fromTableAggregateFieldG (Ir.FieldName name, field) =
   case field of
     Ir.TAFAgg (aggregateFields :: [(Ir.FieldName, Ir.AggregateField)]) ->
       case NE.nonEmpty aggregateFields of
-        Nothing -> lift (FromIr (refute (pure NoAggregatesMustBeABug)))
+        Nothing -> refute (pure NoAggregatesMustBeABug)
         Just fields -> do
           aggregates <-
             traverse
@@ -464,7 +464,7 @@ fromTableAggregateFieldG (Ir.FieldName name, field) =
              { aliasedThing = Tsql.ValueExpression (Odbc.TextValue text)
              , aliasedAlias = name
              })
-    Ir.TAFNodes {} -> lift (FromIr (refute (pure (AggTypeUnsupportedForNow field))))
+    Ir.TAFNodes {} -> refute (pure (AggTypeUnsupportedForNow field))
 
 fromAggregateField :: Ir.AggregateField -> ReaderT EntityAlias FromIr Aggregate
 fromAggregateField aggregateField =
@@ -477,19 +477,19 @@ fromAggregateField aggregateField =
            Sql.CTStar -> pure StarCountable
            Sql.CTSimple fields ->
              case NE.nonEmpty fields of
-               Nothing -> lift (FromIr (refute (pure MalformedAgg)))
+               Nothing -> refute (pure MalformedAgg)
                Just fields' -> do
                  fields'' <- traverse fromPGCol fields'
                  pure (NonNullFieldCountable fields'')
            Sql.CTDistinct fields ->
              case NE.nonEmpty fields of
-               Nothing -> lift (FromIr (refute (pure MalformedAgg)))
+               Nothing -> refute (pure MalformedAgg)
                Just fields' -> do
                  fields'' <- traverse fromPGCol fields'
                  pure (DistinctCountable fields''))
     Ir.AFOp Ir.AggregateOp {_aoOp = op, _aoFields = fields} -> do
       fs <- case NE.nonEmpty fields of
-              Nothing -> lift (FromIr (refute (pure MalformedAgg)))
+              Nothing -> refute (pure MalformedAgg)
               Just fs -> pure fs
       args <-
         traverse
@@ -535,10 +535,10 @@ fromAnnFieldsG (Ir.FieldName name, field) =
         (fromArraySelectG arraySelectG)
     -- TODO:
     -- Vamshi said to ignore these three for now:
-    Ir.AFNodeId {} -> lift (FromIr (refute (pure (FieldTypeUnsupportedForNow field))))
-    Ir.AFRemote {} -> lift (FromIr (refute (pure (FieldTypeUnsupportedForNow field))))
+    Ir.AFNodeId {} -> refute (pure (FieldTypeUnsupportedForNow field))
+    Ir.AFRemote {} -> refute (pure (FieldTypeUnsupportedForNow field))
     Ir.AFComputedField {} ->
-      lift (FromIr (refute (pure (FieldTypeUnsupportedForNow field))))
+      refute (pure (FieldTypeUnsupportedForNow field))
 
 fromAnnColumnField :: Ir.AnnColumnField -> ReaderT EntityAlias FromIr FieldName
 fromAnnColumnField annColumnField = fromPGColumnName pgColumnInfo
@@ -605,7 +605,7 @@ fromObjectRelationSelectG annRelationSelectG = do
     local (const (fromAlias selectFrom)) (fromAnnBoolExp tableFilter)
   selectProjections <-
     case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
-      Nothing -> lift (FromIr (refute (pure NoProjectionFields)))
+      Nothing -> refute (pure NoProjectionFields)
       Just ne -> pure ne
   _fieldName <- lift (fromRelName aarRelationshipName) -- TODO: Maybe use later for more readable names.
   foreignKeyConditions <- fromMapping selectFrom mapping
@@ -645,7 +645,7 @@ fromArraySelectG =
     Ir.ASAggregate arrayAggregateSelectG ->
       fromArrayAggregateSelectG arrayAggregateSelectG
     select@Ir.ASConnection {} ->
-      lift (FromIr (refute (pure (UnsupportedArraySelect select))))
+      refute (pure (UnsupportedArraySelect select))
 
 fromArrayAggregateSelectG ::
      Ir.AnnRelationSelectG (Ir.AnnAggregateSelectG Sql.SQLExp)
@@ -727,7 +727,7 @@ fromOpExpG :: Expression -> Ir.OpExpG Sql.SQLExp -> FromIr Expression
 fromOpExpG expression =
   \case
     Ir.ANISNULL -> pure (IsNullExpression expression)
-    op -> (FromIr (refute (pure (UnsupportedOpExpG op))))
+    op -> (refute (pure (UnsupportedOpExpG op)))
 
 fromSQLExpAsInt :: Sql.SQLExp -> FromIr Expression
 fromSQLExpAsInt =
@@ -735,15 +735,15 @@ fromSQLExpAsInt =
     s@(Sql.SELit text) ->
       case T.decimal text of
         Right (d, "") -> pure (ValueExpression (Odbc.IntValue d))
-        _ -> FromIr (refute (pure (InvalidIntegerishSql s)))
-    s -> FromIr (refute (pure (InvalidIntegerishSql s)))
+        _ -> refute (pure (InvalidIntegerishSql s))
+    s -> refute (pure (InvalidIntegerishSql s))
 
 _fromSQLExp :: Sql.SQLExp -> FromIr Expression
 _fromSQLExp =
   \case
     Sql.SENull -> pure (ValueExpression Odbc.NullValue)
     Sql.SELit raw -> pure (ValueExpression (Odbc.TextValue raw))
-    e -> FromIr (refute (pure (UnsupportedSQLExp e)))
+    e -> refute (pure (UnsupportedSQLExp e))
 
 fromGBoolExp :: Ir.GBoolExp Expression -> ReaderT EntityAlias FromIr Expression
 fromGBoolExp =
