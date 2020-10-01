@@ -2,7 +2,7 @@ import React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Helmet from 'react-helmet';
-import { MapStateToProps } from '../../../../../types';
+import { MapStateToProps, ReduxState } from '../../../../../types';
 import {
   Schema,
   Table,
@@ -358,9 +358,11 @@ type PropsFromState = {
   readOnlyMode: boolean;
 };
 
-const mapStateToProps: MapStateToProps<PropsFromState> = state => {
+const mapStateToProps: MapStateToProps<PropsFromState> = (
+  state: ReduxState
+) => {
   return {
-    allSchemas: state.tables.allSchemas,
+    allSchemas: state.tables.allSchemas as Table[],
     schemaList: state.tables.schemaList,
     readOnlyMode: state.main.readOnlyMode,
   };

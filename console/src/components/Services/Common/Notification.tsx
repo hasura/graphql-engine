@@ -78,7 +78,7 @@ const getNotificationDetails = (
   );
 };
 export const getErrorMessage = (
-  message: string | null,
+  message?: string | null,
   error?: Record<string, any>
 ) => {
   let notificationMessage;
@@ -129,7 +129,7 @@ export const getErrorMessage = (
 };
 const showErrorNotification = (
   title: string,
-  message: string | null,
+  message?: string | null,
   error?: Record<string, any>
 ): Thunk => {
   const getRefreshBtn = () => {
