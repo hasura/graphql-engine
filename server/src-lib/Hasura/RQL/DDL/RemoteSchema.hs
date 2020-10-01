@@ -129,23 +129,42 @@ runRemoveRemoteSchema
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
   => RemoteSchemaNameQuery -> m EncJSON
 runRemoveRemoteSchema (RemoteSchemaNameQuery rsn) = do
-  removeRemoteSchemaP1 rsn
+  roles <- removeRemoteSchemaP1 rsn
+  -- drop the permissions defined with this remote schema
+  flip traverse_ roles $ (liftTx . dropRemoteSchemaPermFromCatalog rsn)
   liftTx $ removeRemoteSchemaFromCatalog rsn
   withNewInconsistentObjsCheck buildSchemaCache
   pure successMsg
 
 removeRemoteSchemaP1
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => RemoteSchemaName -> m ()
+  => RemoteSchemaName -> m [RoleName]
 removeRemoteSchemaP1 rsn = do
   sc <- askSchemaCache
   let rmSchemas = scRemoteSchemas sc
   void $ onNothing (Map.lookup rsn rmSchemas) $
     throw400 NotExists "no such remote schema"
   let depObjs = getDependentObjs sc remoteSchemaDepId
-  when (depObjs /= []) $ reportDeps depObjs
+      roles = mapMaybe getRole depObjs
+      nonPermDependentObjs = filter nonPermDependentObjPredicate depObjs
+  -- report non permission dependencies (if any), this happens
+  -- mostly when a remote relationship is defined with
+  -- the current remote schema
+
+  -- we only report the non permission dependencies because we
+  -- drop the related permissions
+  when (nonPermDependentObjs /= []) $ reportDeps depObjs
+  pure roles
   where
     remoteSchemaDepId = SORemoteSchema rsn
+
+    getRole depObj =
+      case depObj of
+        SORemoteSchemaPermission _ role -> Just role
+        _                               -> Nothing
+
+    nonPermDependentObjPredicate (SORemoteSchemaPermission _ _) = False
+    nonPermDependentObjPredicate _                              = True
 
 runReloadRemoteSchema
   :: (QErrM m, CacheRWM m)
