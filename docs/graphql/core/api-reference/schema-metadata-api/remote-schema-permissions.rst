@@ -215,6 +215,11 @@ RemoteSchemaPermission
      - GraphQL SDL
      - GraphQL SDL defining the role based schema
 
+.. note::
+   ``add_remote_schema_permissions`` will only work when the graphql-engine has enabled remote
+   schema permissions. Remote schema permissions can be enabled by running the graphql-engine
+   with ``--enable-remote-schema-permissions`` server flag or by setting the   ``HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS`` environment variable.
+
 .. _drop_remote_schema_permissions:
 
 drop_remote_schema_permissions
