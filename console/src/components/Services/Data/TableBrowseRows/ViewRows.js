@@ -55,7 +55,7 @@ import {
   persistColumnOrderChange,
   getPersistedColumnsOrder,
   persistPageSizeChange,
-} from './localStorageUtils';
+} from './tableUtils';
 import { compareRows, isTableWithPK } from './utils';
 import styles from '../../../Common/TableCommon/Table.scss';
 
@@ -228,12 +228,12 @@ const ViewRows = ({
     const pkClause = {};
 
     if (!isView && hasPrimaryKey) {
-      tableSchema.primary_key.columns.map(pk => {
-        pkClause[pk] = row[pk];
+      tableSchema.primary_key.columns.map(key => {
+        pkClause[key] = row[key];
       });
     } else {
-      tableSchema.columns.map(k => {
-        pkClause[k.column_name] = row[k.column_name];
+      tableSchema.columns.map(key => {
+        pkClause[key.column_name] = row[key.column_name];
       });
     }
 

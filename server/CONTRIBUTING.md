@@ -5,7 +5,7 @@ own machine and how to contribute.
 
 ## Pre-requisites
 
-- [GHC](https://www.haskell.org/ghc/) 8.10.1 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
+- [GHC](https://www.haskell.org/ghc/) 8.10.2 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
   - There are various ways these can be installed, but [ghcup](https://www.haskell.org/ghcup/) is a good choice if you’re not sure.
 - [Node.js](https://nodejs.org/en/) (>= v8.9)
 - npm >= 5.7
@@ -18,11 +18,6 @@ own machine and how to contribute.
 The last few prerequisites can be installed on Debian or Ubuntu with:
 
     $ sudo apt install libpq-dev libkrb5-dev python3 python3-pip python3-venv openssl libssl-dev
-
-Additionally, you will need a way to run a Postgres database server. The `dev.sh` script (described below) can set up a Postgres instance for you via [Docker](https://www.docker.com), but if you want to run it yourself, you’ll need:
-
-- [PostgreSQL](https://www.postgresql.org) >= 9.5
-- [postgis](https://postgis.net)
 
 Additionally, you will need a way to run a Postgres database server. The `dev.sh` script (described below) can set up a Postgres instance for you via [Docker](https://www.docker.com), but if you want to run it yourself, you’ll need:
 
