@@ -159,7 +159,7 @@ removeRemoteSchemaP1 rsn = do
 
   -- we only report the non permission dependencies because we
   -- drop the related permissions
-  when (nonPermDependentObjs /= []) $ reportDeps depObjs
+  when (nonPermDependentObjs /= []) $ reportDeps nonPermDependentObjs
   pure roles
   where
     remoteSchemaDepId = SORemoteSchema rsn
