@@ -151,9 +151,9 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
 
       E.MutationExecutionPlan mutationPlans -> do
         conclusion <- runExceptT $ forWithKey mutationPlans $ \fieldName -> \case
-          E.ExecStepDB (tx, _responseHeaders) -> doQErr $ do
+          E.ExecStepDB (tx, responseHeaders) -> doQErr $ do
             (telemTimeIO_DT, resp) <- runMutationDB reqId reqUnparsed userInfo tx
-            return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
+            return $ ResultsFragment telemTimeIO_DT Telem.Local resp responseHeaders
           E.ExecStepRemote (rsi, opDef, varValsM) ->
             runRemoteGQ fieldName rsi opDef varValsM
           E.ExecStepRaw json ->
