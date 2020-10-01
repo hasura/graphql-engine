@@ -55,8 +55,9 @@ const typeDefs = gql`
     SENT
   }
 
-  type Person {
-    name: String
+  type Person implements Name {
+    firstName: String
+    lastName: String
     age: Int
   }
 
@@ -70,6 +71,11 @@ const typeDefs = gql`
   }
 
   union SearchResult = Photo | Person
+
+  interface Name {
+    firstName: String
+    lastName: String
+  }
 
   type Query {
     hello: String
