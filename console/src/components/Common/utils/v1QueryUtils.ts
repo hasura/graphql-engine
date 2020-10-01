@@ -102,18 +102,6 @@ export const getEnumOptionsQuery = (
   },
 });
 
-export const fetchEventTriggersQuery = {
-  type: 'select',
-  args: {
-    table: {
-      name: 'event_triggers',
-      schema: 'hdb_catalog',
-    },
-    columns: ['*'],
-    order_by: [makeOrderBy('name', 'asc')],
-  },
-};
-
 export const fetchScheduledTriggersQuery = {
   type: 'select',
   args: {

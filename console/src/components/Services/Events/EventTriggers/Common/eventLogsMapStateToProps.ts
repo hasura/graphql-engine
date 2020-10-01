@@ -2,6 +2,7 @@ import { connect, ConnectedProps } from 'react-redux';
 import { MapStateToProps, Dispatch } from '../../../../../types';
 import { RouterTriggerProps } from '../../types';
 import { NotFoundError } from '../../../../Error/PageNotFound';
+import { getEventTriggers } from '../../../../../metadata/selector';
 
 type PropsFromState = {
   triggerName: string;
@@ -12,7 +13,7 @@ const mapStateToProps: MapStateToProps<PropsFromState, RouterTriggerProps> = (
   state,
   ownProps
 ) => {
-  const triggerList = state.events.triggers.event;
+  const triggerList = getEventTriggers(state);
   const triggerName = ownProps.params.triggerName;
 
   const currentTrigger = triggerList.find(tr => tr.name === triggerName);

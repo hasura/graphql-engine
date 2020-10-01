@@ -81,6 +81,7 @@ export type MetadataQueryType =
   | 'drop_update_permission'
   | 'drop_delete_permission'
   | 'drop_insert_permission'
+  | 'create_event_trigger'
   | 'set_custom_types'
   | 'create_action'
   | 'set_table_custom_fields'
@@ -101,7 +102,8 @@ export type MetadataQueryType =
   | 'drop_relationship'
   | 'create_array_relationship'
   | 'create_object_relationship'
-  | 'create_array_relationship';
+  | 'create_array_relationship'
+  | 'create_scheduled_event';
 
 export type MetadataQueries = Record<Driver, Record<MetadataQueryType, string>>;
 
@@ -381,10 +383,10 @@ export const resetMetadataQuery = {
 
 export const generateCreateEventTriggerQuery = (
   state: LocalEventTriggerState,
+  source: string,
   replace = false
-) => ({
-  type: 'create_event_trigger',
-  args: {
+) =>
+  getMetadataQuery('create_event_trigger', source, {
     name: state.name.trim(),
     table: state.table,
     webhook:
@@ -412,8 +414,7 @@ export const generateCreateEventTriggerQuery = (
     retry_conf: state.retryConf,
     headers: transformHeaders(state.headers),
     replace,
-  },
-});
+  });
 
 export const getDropEventTriggerQuery = (name: string) => ({
   type: 'delete_event_trigger',
@@ -437,7 +438,6 @@ export const generateCreateScheduledTriggerQuery = (
       num_retries: state.retryConf.num_retries,
       retry_interval_seconds: state.retryConf.interval_sec,
       timeout_seconds: state.retryConf.timeout_sec,
-      tolerance_seconds: state.retryConf.tolerance_sec,
     },
     comment: state.comment,
     include_in_metadata: state.includeInMetadata,
@@ -456,23 +456,22 @@ export const getDropScheduledTriggerQuery = (name: string) => ({
   },
 });
 
-export const getCreateScheduledEventQuery = (state: LocalAdhocEventState) => {
-  return {
-    type: 'create_scheduled_event',
-    args: {
-      webhook: state.webhook,
-      schedule_at: state.time.toISOString(),
-      headers: transformHeaders(state.headers),
-      retry_conf: {
-        num_retries: state.retryConf.num_retries,
-        retry_interval_seconds: state.retryConf.interval_sec,
-        timeout_seconds: state.retryConf.timeout_sec,
-        tolerance_seconds: state.retryConf.tolerance_sec,
-      },
-      payload: state.payload,
-      comment: state.comment,
+export const getCreateScheduledEventQuery = (
+  state: LocalAdhocEventState,
+  source: string
+) => {
+  return getMetadataQuery('create_scheduled_event', source, {
+    webhook: state.webhook,
+    schedule_at: state.time.toISOString(),
+    headers: transformHeaders(state.headers),
+    retry_conf: {
+      num_retries: state.retryConf.num_retries,
+      retry_interval_seconds: state.retryConf.interval_sec,
+      timeout_seconds: state.retryConf.timeout_sec,
     },
-  };
+    payload: state.payload,
+    comment: state.comment,
+  });
 };
 
 export const getRedeliverDataEventQuery = (eventId: string) => ({

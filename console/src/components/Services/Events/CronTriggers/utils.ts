@@ -57,7 +57,6 @@ export const parseServerScheduledTrigger = (
       timeout_sec: trigger.retry_conf.timeout_seconds,
       interval_sec: trigger.retry_conf.retry_interval_seconds,
       num_retries: trigger.retry_conf.num_retries,
-      tolerance_sec: trigger.retry_conf.tolerance_seconds,
     },
     comment: trigger.comment,
     includeInMetadata: trigger.include_in_metadata,

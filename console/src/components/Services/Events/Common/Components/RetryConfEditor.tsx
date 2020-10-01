@@ -2,7 +2,6 @@ import React from 'react';
 import { RetryConf } from '../../types';
 import Tooltip from '../../../../Common/Tooltip/Tooltip';
 import styles from '../../Events.scss';
-import { exists } from '../../../../Common/utils/jsUtils';
 
 type Props = {
   setRetryConf: (r: RetryConf) => void;
@@ -92,7 +91,7 @@ const RetryConfEditor: React.FC<Props> = props => {
           />
         </div>
       </div>
-      {exists(retryConf.tolerance_sec) ? (
+      {/* exists(retryConf.tolerance_sec) ? (
         <div
           className={`${styles.display_flex} ${styles.add_mar_bottom_small}`}
         >
@@ -105,7 +104,7 @@ const RetryConfEditor: React.FC<Props> = props => {
               />
             </label>
           </div>
-          <div className={`col-md-6 ${styles.padd_left_remove}`}>
+           <div className={`col-md-6 ${styles.padd_left_remove}`}>
             <input
               onChange={handleRetryConfChange}
               name="tolerance_sec"
@@ -118,7 +117,7 @@ const RetryConfEditor: React.FC<Props> = props => {
             />
           </div>
         </div>
-      ) : null}
+      ) : null TODO */}
     </div>
   );
 };

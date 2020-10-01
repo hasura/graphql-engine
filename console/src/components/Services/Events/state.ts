@@ -12,7 +12,6 @@ export type EventsState = {
 const state: EventsState = {
   triggers: {
     scheduled: [],
-    event: [],
   },
   currentTrigger: '',
   loading: true,

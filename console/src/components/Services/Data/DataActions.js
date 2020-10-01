@@ -511,6 +511,7 @@ const makeApiCall = (
   // todo: this is a temprorary, super ugly, pre-release solution
   if (migrateUrl === Endpoints.query) {
     upQueries.forEach(query => {
+      console.log({ query });
       let type = '';
       if (query.type === 'bulk') {
         type = query.args[0].type.replace('pg_', '').replace('mysql_', '');

@@ -9,6 +9,7 @@ import {
 import { filterInconsistentMetadataObjects } from '../components/Services/Settings/utils';
 import { parseCustomTypes } from '../shared/utils/hasuraCustomTypeUtils';
 import { currentDriver } from '../dataSources';
+import { EventTrigger } from '../components/Services/Events/types';
 
 const isMetadataV3 = (
   x: HasuraMetadataV2 | HasuraMetadataV3 | null
@@ -222,6 +223,31 @@ export const getRemoteSchemaSelector = createSelector(
   getRemoteSchemas,
   schemas => (name: string) => {
     return schemas.find(schema => schema.name === name);
+  }
+);
+
+export const getEventTriggers = createSelector(
+  getDataSourceMatadata,
+  source => {
+    if (!source) return [];
+
+    return source.tables.reduce((acc, t) => {
+      const triggers: EventTrigger[] =
+        t.event_triggers?.map(trigger => ({
+          table_name: t.table.name,
+          schema_name: t.table.schema,
+          name: trigger.name,
+          comment: '',
+          configuration: {
+            definition: trigger.definition as any, // todo
+            headers: trigger.headers || [],
+            retry_conf: trigger.retry_conf,
+            webhook: trigger.webhook || '',
+            webhook_from_env: trigger.webhook_from_env,
+          },
+        })) || [];
+      return [...triggers, ...acc];
+    }, [] as EventTrigger[]);
   }
 );
 

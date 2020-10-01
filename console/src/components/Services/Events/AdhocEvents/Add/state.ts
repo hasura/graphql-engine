@@ -23,7 +23,6 @@ const defaultState: LocalAdhocEventState = {
     num_retries: 0,
     timeout_sec: 60,
     interval_sec: 10,
-    tolerance_sec: 21600,
   },
   comment: '',
   loading: false,

@@ -7,7 +7,6 @@ import { ServerHeader } from '../../../metadata/types';
 export const LOADING_TRIGGERS = 'Events/LOADING_TRIGGERS';
 export const LOADED_TRIGGERS = 'Events/LOADED_TRIGGERS';
 export const LOADED_SCHEDULED_TRIGGERS = 'Events/LOADED_SCHEDULED_TRIGGERS';
-export const LOADED_EVENT_TRIGGERS = 'Events/LOADED_EVENT_TRIGGERS';
 export const SET_CURRENT_TRIGGER = 'Events/SET_CURRENT_TRIGGER';
 export const LOAD_PENDING_DATA_EVENTS = 'Events/LOAD_PENDING_DATA_EVENTS';
 
@@ -46,10 +45,9 @@ export type ServerWebhookConf =
       from_env: string;
     };
 export type RetryConf = {
-  num_retries: number;
-  interval_sec: number;
-  timeout_sec: number;
-  tolerance_sec: Nullable<number>;
+  num_retries?: number;
+  interval_sec?: number;
+  timeout_sec?: number;
 };
 
 export type TriggerEventsProps = {
@@ -127,26 +125,15 @@ export type ScheduledTrigger = {
  */
 export type Triggers = {
   scheduled: ScheduledTrigger[];
-  event: EventTrigger[];
 };
 
 /*
  * Redux Action types
  */
 
-export interface RASetAllTriggers extends ReduxAction {
-  type: typeof LOADED_TRIGGERS;
-  data: Triggers;
-}
-
 export interface RASetScheduledTriggers extends ReduxAction {
   type: typeof LOADED_SCHEDULED_TRIGGERS;
   data: ScheduledTrigger[];
-}
-
-export interface RASetEventTriggers extends ReduxAction {
-  type: typeof LOADED_EVENT_TRIGGERS;
-  data: EventTrigger[];
 }
 
 export interface RASetCurrentTrigger extends ReduxAction {
@@ -155,8 +142,6 @@ export interface RASetCurrentTrigger extends ReduxAction {
 }
 
 export type RAEvents =
-  | RASetAllTriggers
   | RASetScheduledTriggers
-  | RASetEventTriggers
   | RASetCurrentTrigger
   | { type: typeof LOADING_TRIGGERS };
