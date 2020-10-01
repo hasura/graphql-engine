@@ -92,6 +92,7 @@ data ResultsFragment = ResultsFragment
   { rfTimeIO :: DiffTime
   , rfLocality :: Telem.Locality
   , rfResponse :: EncJSON
+  , rfHeaders :: HTTP.ResponseHeaders
   }
 
 -- | Run (execute) a single GraphQL query
@@ -139,7 +140,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
               E.ExecStepDB txGenSql -> doQErr $ do
                 (telemTimeIO_DT, resp) <-
                   runQueryDB reqId reqUnparsed userInfo txGenSql
-                return $ ResultsFragment telemTimeIO_DT Telem.Local resp
+                return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
               E.ExecStepRemote (rsi, opDef, varValsM) ->
                 runRemoteGQ fieldName rsi opDef varValsM
               E.ExecStepRaw json ->
@@ -152,7 +153,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         conclusion <- runExceptT $ forWithKey mutationPlans $ \fieldName -> \case
           E.ExecStepDB (tx, _responseHeaders) -> doQErr $ do
             (telemTimeIO_DT, resp) <- runMutationDB reqId reqUnparsed userInfo tx
-            return $ ResultsFragment telemTimeIO_DT Telem.Local resp
+            return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
           E.ExecStepRemote (rsi, opDef, varValsM) ->
             runRemoteGQ fieldName rsi opDef varValsM
           E.ExecStepRaw json ->
@@ -175,10 +176,11 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
     forWithKey = flip OMap.traverseWithKey
 
     runRemoteGQ fieldName rsi opDef varValsM = do
-      (telemTimeIO_DT, HttpResponse resp _respHdrs) <-
+      (telemTimeIO_DT, HttpResponse resp remoteResponseHeaders) <-
         doQErr $ E.execRemoteGQ env reqId userInfo reqHeaders rsi opDef varValsM
       value <- extractFieldFromResponse fieldName $ encJToLBS resp
-      pure $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value)
+      let filteredHeaders = filter ((== "Set-Cookie") . fst) remoteResponseHeaders
+      pure $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) filteredHeaders
 
     buildResult telemType (Left (Left err)) _ = pure
       ( telemType
@@ -187,7 +189,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
       , HttpResponse (encodeGQResp $ throwError err) []
       )
     buildResult _telemType (Left (Right err)) _ = throwError err
-    buildResult telemType (Right results) headers = do
+    buildResult telemType (Right results) cacheHeaders = do
       let responseData = encodeGQResp $ pure $ encJToLBS $ encJFromInsOrdHashMap (fmap rfResponse results)
       pure
         ( telemType
@@ -195,7 +197,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         , foldMap rfLocality results
         , HttpResponse
           responseData
-          headers
+          (cacheHeaders <> foldMap rfHeaders results)
         )
 
 extractFieldFromResponse
@@ -220,7 +222,7 @@ buildRaw :: Applicative m => J.Value -> m ResultsFragment
 buildRaw json = do
   let obj = encJFromJValue json
       telemTimeIO_DT = 0
-  pure $ ResultsFragment telemTimeIO_DT Telem.Local obj
+  pure $ ResultsFragment telemTimeIO_DT Telem.Local obj []
 
 -- | Run (execute) a batched GraphQL query (see 'GQLBatchedReqs')
 runGQBatched
