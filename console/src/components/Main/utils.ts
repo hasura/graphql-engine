@@ -1,5 +1,5 @@
-const loveConsentState = 'console:loveIcon';
-const proClickState = 'console:pro';
+import { setLSItem, getLSItem, LS_KEYS } from '../../utils/localStorage';
+
 const defaultState = {
   isDismissed: false,
 };
@@ -8,41 +8,38 @@ const defaultProClickState = {
 };
 
 const setLoveConsentState = (stateData: { isDismissed: boolean }) => {
-  window.localStorage.setItem(loveConsentState, JSON.stringify(stateData));
+  setLSItem(LS_KEYS.loveConsent, JSON.stringify(stateData));
 };
 
 const getLoveConsentState = () => {
-  const s = window.localStorage.getItem(loveConsentState);
+  const s = getLSItem(LS_KEYS.loveConsent);
 
   if (s) {
     return JSON.parse(s);
   }
 
-  window.localStorage.setItem(loveConsentState, JSON.stringify(defaultState));
+  setLSItem(LS_KEYS.loveConsent, JSON.stringify(defaultState));
 
   return defaultState;
 };
 
 const setProClickState = (proStateData: { isProClicked: boolean }) => {
-  window.localStorage.setItem(proClickState, JSON.stringify(proStateData));
+  setLSItem(LS_KEYS.proClick, JSON.stringify(proStateData));
 };
 
 const getProClickState = () => {
   try {
-    const p = window.localStorage.getItem(proClickState);
+    const proState = getLSItem(LS_KEYS.proClick);
 
-    if (p) {
-      return JSON.parse(p);
+    if (proState) {
+      return JSON.parse(proState);
     }
 
-    window.localStorage.setItem(
-      proClickState,
-      JSON.stringify(defaultProClickState)
-    );
+    setLSItem(LS_KEYS.proClick, JSON.stringify(defaultProClickState));
 
     return defaultProClickState;
-  } catch (e) {
-    console.error(e);
+  } catch (err) {
+    console.error(err);
     return defaultProClickState;
   }
 };
