@@ -79,6 +79,7 @@ data RoleBasedSchemaValidationError
   | NonExistingInputArgument !G.Name !G.Name
   -- ^ error to indicate when a given input argument doesn't exist
   -- in the corresponding upstream input object
+  | MissingNonNullableArguments !G.Name !(NonEmpty G.Name)
   | NonExistingDirectiveArgument !G.Name !GraphQLType !G.Name !(NonEmpty G.Name)
   -- ^ error to indicate when a given directive argument
   -- doesn't exist in the corresponding upstream directive
@@ -124,6 +125,9 @@ showRoleBasedSchemaValidationError = \case
     <> (T.pack $ show expectedVal) <> " but recieved " <> (T.pack $ show providedVal)
   NonExistingInputArgument inpObjName inpArgName ->
     "input argument " <> inpArgName <<> " does not exist in the input object:" <>> inpObjName
+  MissingNonNullableArguments fieldName nonNullableArgs ->
+    "field: " <> fieldName <<> " expects the following non nullable arguments to "
+    <> "be present: " <> (englishList "and" $ fmap dquoteTxt nonNullableArgs)
   NonExistingDirectiveArgument parentName parentType directiveName nonExistingArgs ->
     "the following directive argument(s) defined in the directive: "
     <> directiveName
@@ -132,8 +136,8 @@ showRoleBasedSchemaValidationError = \case
     <> parentType <<> " do not exist in the corresponding upstream directive: "
     <> (englishList "and" $ fmap dquoteTxt nonExistingArgs)
   NonExistingField (parentTypeName, fldDefnType) providedName ->
-    "field " <> providedName <<> " does not exist in the type:" <> parentTypeName
-    <<> "(" <> fldDefnType <<> ")"
+    "field " <> providedName <<> " does not exist in the "
+    <> fldDefnType <<> ": " <>> parentTypeName
   NonExistingScalar scalarName ->
     "scalar " <> scalarName <<> " does not exist in the upstream remote schema"
   NonExistingUnionMemberTypes unionName nonExistingMembers ->
@@ -295,8 +299,15 @@ validateArguments providedArgs upstreamArgs parentTypeName = do
       onNothing (Map.lookup name upstreamArgsMap) $
         refute $ pure $ NonExistingInputArgument parentTypeName name
     validateInputValueDefinition providedArg upstreamArg parentTypeName
+  let argsDiff = getDifference nonNullableUpstreamArgs nonNullableProvidedArgs
+  onJust (NE.nonEmpty $ map G._ivdName $ S.toList argsDiff) $ \nonNullableArgs -> do
+    refute $ pure $ MissingNonNullableArguments parentTypeName nonNullableArgs
   where
     upstreamArgsMap = mapFromL G._ivdName $ upstreamArgs
+
+    nonNullableUpstreamArgs = filter (not . G.isNullable . G._ivdType) upstreamArgs
+
+    nonNullableProvidedArgs = filter (not . G.isNullable . G._ivdType) providedArgs
 
 validateInputObjectTypeDefinition
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
