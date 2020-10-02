@@ -536,7 +536,7 @@ export HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS=true
 run_hge_with_args serve
 wait_for_port 8080
 
-pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" --enable-remote-schema-permissions test_remote_schema_permissions.py
+pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"  --enable-remote-schema-permissions test_remote_schema_permissions.py
 
 unset HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS
 
