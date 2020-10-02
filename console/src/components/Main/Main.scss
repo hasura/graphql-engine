@@ -1323,7 +1323,9 @@
   left: auto;
   border: none;
   user-select: none;
-  box-shadow: none;
+  -webkit-box-shadow: -5px 0px 12px 0px rgba(0,0,0,0.19);
+  -moz-box-shadow: -5px 0px 12px 0px rgba(0,0,0,0.19);
+  box-shadow: -5px 0px 12px 0px rgba(0,0,0,0.19);
 }
 
 .notificationsContainer {
