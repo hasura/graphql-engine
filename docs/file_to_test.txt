@@ -1,1 +1,21 @@
 This file is just added to test whether the github action is working or not!
+
+
+
+
+
+const files = await github.pulls.listFiles({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            pull_number: context.payload.pull_request.number,
+          });
+          let imageAdded = false; 
+          for (const file of files.data) {
+            if (file.filename === '**.jpg' || file.filename === '**.png' || file.filename === '**.jpeg' ) {
+              imageAdded = true;
+              break;
+            }
+          }
+          if (!imageAdded) {
+            return;
+          }
