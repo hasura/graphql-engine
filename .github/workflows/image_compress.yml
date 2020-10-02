@@ -20,6 +20,7 @@ jobs:
           });
           let docs_pr = false;
           for (const label of labels.data) {
+            console.log(label.name);
             if (label.name === 'c/docs') {
               docs_pr=true;
             }
