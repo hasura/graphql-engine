@@ -40,6 +40,7 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
 
   const { isTableTrackChecked, isCascadeChecked, sql } = getState().rawSQL;
   const { migrationMode, readOnlyMode } = getState().main;
+
   const isStatementTimeout = statementTimeout && !isMigration;
 
   const migrateUrl = returnMigrateUrl(migrationMode);
@@ -88,6 +89,7 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
   let requestBody = {
     type: 'bulk',
     args: schemaChangesUp,
+    source,
   };
   // check if its a migration and send to hasuractl migrate
   if (isMigration) {

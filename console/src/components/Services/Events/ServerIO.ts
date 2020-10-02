@@ -1,8 +1,8 @@
 import { push, replace } from 'react-router-redux';
 import {
-  fetchScheduledTriggersQuery,
   getSelectQuery,
   makeOrderBy,
+  getRunSqlQuery,
 } from '../../Common/utils/v1QueryUtils';
 import { Thunk } from '../../../types';
 import { makeMigrationCall } from '../Data/DataActions';
@@ -55,7 +55,6 @@ import {
   getDropScheduledTriggerQuery,
   getCreateScheduledEventQuery,
   getRedeliverDataEventQuery,
-  getBulkQuery,
 } from '../../../metadata/queryUtils';
 import { exportMetadata } from '../../../metadata/actions';
 
@@ -64,23 +63,41 @@ export const fetchTriggers = (
 ): Thunk<Promise<void>> => (dispatch, getState) => {
   dispatch({ type: LOADING_TRIGGERS });
 
+  const currentSource = getState().tables.currentDataSource;
+
   const bulkQueryArgs = [];
   if (kind === 'cron') {
-    bulkQueryArgs.push(fetchScheduledTriggersQuery);
+    bulkQueryArgs.push(
+      getRunSqlQuery(
+        'SELECT * FROM "hdb_catalog"."hdb_cron_triggers" ORDER BY name ASC NULLS LAST;',
+        currentSource
+      )
+    );
   } else {
-    bulkQueryArgs.push(fetchScheduledTriggersQuery);
+    // bulkQueryArgs.push(getRunSqlQuery(
+    //   'SELECT * FROM "hdb_catalog"."hdb_cron_triggers" ORDER BY name ASC NULLS LAST;',
+    //     currentSource,
+    // ));
+    // todo
   }
+
+  const bulkQuery = {
+    type: 'bulk',
+    source: currentSource,
+    args: bulkQueryArgs,
+  };
 
   return dispatch(
     requestAction(Endpoints.query, {
       method: 'POST',
       credentials: globalCookiePolicy,
       headers: dataHeaders(getState),
-      body: JSON.stringify(getBulkQuery(bulkQueryArgs)),
+      body: JSON.stringify(bulkQuery),
     })
   ).then(
     (data: (ScheduledTrigger[] | EventTrigger[])[]) => {
       if (kind && kind === 'cron') {
+        // todo
         dispatch(setScheduledTriggers(data[0] as ScheduledTrigger[]));
       }
       return Promise.resolve();
@@ -107,8 +124,10 @@ export const addScheduledTrigger = (
     return dispatch(showErrorNotification(errorMsg, validationError));
   }
 
-  const upQuery = generateCreateScheduledTriggerQuery(state);
-  const downQuery = getDropScheduledTriggerQuery(state.name);
+  const { currentDataSource } = getState().tables;
+
+  const upQuery = generateCreateScheduledTriggerQuery(state, currentDataSource);
+  const downQuery = getDropScheduledTriggerQuery(state.name, currentDataSource);
 
   const migrationName = `create_scheduled_trigger_${state.name}`;
   const requestMsg = 'Creating scheduled trigger...';
@@ -165,6 +184,8 @@ export const saveScheduledTrigger = (
     return dispatch(showErrorNotification(errorMsg, validationError));
   }
 
+  const { currentDataSource } = getState().tables;
+
   const isRenamed = state.name !== existingTrigger.name;
   if (isRenamed) {
     const isOk = getConfirmation(
@@ -180,19 +201,24 @@ export const saveScheduledTrigger = (
     }
   }
 
-  const replaceQueryUp = generateUpdateScheduledTriggerQuery(state);
+  const replaceQueryUp = generateUpdateScheduledTriggerQuery(
+    state,
+    currentDataSource
+  );
   const replaceQueryDown = generateUpdateScheduledTriggerQuery(
-    parseServerScheduledTrigger(existingTrigger)
+    parseServerScheduledTrigger(existingTrigger),
+    currentDataSource
   );
 
   const upRenameQueries = [
-    generateCreateScheduledTriggerQuery(state),
-    getDropScheduledTriggerQuery(existingTrigger.name),
+    generateCreateScheduledTriggerQuery(state, currentDataSource),
+    getDropScheduledTriggerQuery(existingTrigger.name, currentDataSource),
   ];
   const downRenameQueries = [
-    getDropScheduledTriggerQuery(state.name),
+    getDropScheduledTriggerQuery(state.name, currentDataSource),
     generateCreateScheduledTriggerQuery(
-      parseServerScheduledTrigger(existingTrigger)
+      parseServerScheduledTrigger(existingTrigger),
+      currentDataSource
     ),
   ];
 
@@ -259,9 +285,12 @@ export const deleteScheduledTrigger = (
     return;
   }
 
-  const upQuery = getDropScheduledTriggerQuery(trigger.name);
+  const { currentDataSource } = getState().tables;
+
+  const upQuery = getDropScheduledTriggerQuery(trigger.name, currentDataSource);
   const downQuery = generateCreateScheduledTriggerQuery(
-    parseServerScheduledTrigger(trigger)
+    parseServerScheduledTrigger(trigger),
+    currentDataSource
   );
 
   const migrationName = `delete_scheduled_trigger_${trigger.name}`;

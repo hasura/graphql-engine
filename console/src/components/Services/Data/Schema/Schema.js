@@ -228,8 +228,9 @@ class Schema extends Component {
     });
     this.setState({ loadingSchemas: true });
     this.props.dispatch(fetchSchemaList()).then(data => {
-      if (data.length) {
-        this.props.dispatch(updateCurrentSchema(data[0], true, data));
+      const schemas = data.result;
+      if (schemas.length) {
+        this.props.dispatch(updateCurrentSchema(schemas[1][0], true, data));
       } else {
         this.props.dispatch(updateCurrentSchema('', true, []));
       }
@@ -322,6 +323,10 @@ class Schema extends Component {
         );
       };
 
+      const currentDataSourceDetails = dataSources.find(
+        s => s.name === currentDataSource
+      );
+
       return (
         <div className={styles.add_mar_top}>
           <div>
@@ -333,12 +338,15 @@ class Schema extends Component {
                 onChange={this.onDataSourceChange}
                 className={`${styles.add_mar_left_mid} ${styles.width_auto} form-control`}
                 style={{ width: '200px' }}
+                value={JSON.stringify([
+                  currentDataSourceDetails.name,
+                  currentDataSourceDetails.driver,
+                ])}
               >
                 {dataSources.map(s => (
                   <option
                     key={s.name}
                     value={JSON.stringify([s.name, s.driver])}
-                    selected={s.name === currentDataSource}
                   >
                     {s.name} ({s.driver})
                   </option>
