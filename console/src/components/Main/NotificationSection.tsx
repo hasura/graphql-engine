@@ -33,7 +33,14 @@ const getDateString = (date: NotificationDate) => {
   if (!date) {
     return '';
   }
-  return new Date(date).toLocaleString().split(', ')[0];
+  try {
+    const dateString = new Date(date).toDateString().split(' ');
+    const month = dateString[1].toUpperCase();
+    const day = dateString[2];
+    return `${month} ${day}`;
+  } catch {
+    return '';
+  }
 };
 
 // toShowNotification is used to help render the valid notifications on the screen
