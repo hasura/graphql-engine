@@ -636,6 +636,8 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 
 	pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" --enable-remote-schema-permissions test_remote_schema_permissions.py
 
+  unset HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS
+
 	kill_hge_servers
 
 	kill $WH_PID
