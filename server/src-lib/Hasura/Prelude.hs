@@ -94,20 +94,20 @@ alphaNumerics = alphabet ++ "0123456789"
 instance Arbitrary Text where
   arbitrary = T.pack <$> QC.listOf (QC.elements alphaNumerics)
 
-onNothing :: (Applicative m) => Maybe a -> m a -> m a
+onNothing :: Applicative m => Maybe a -> m a -> m a
 onNothing m act = maybe act pure m
 
-onJust :: (Applicative m) => Maybe a -> (a -> m ()) -> m ()
+onJust :: Applicative m => Maybe a -> (a -> m ()) -> m ()
 onJust m action = maybe (pure ()) action m
 
-onLeft :: (Applicative m) => Either e a -> (e -> m a) -> m a
+onLeft :: Applicative m => Either e a -> (e -> m a) -> m a
 onLeft e f = either f pure e
 
 whenMaybe :: Applicative m => Bool -> m a -> m (Maybe a)
 whenMaybe True  = fmap Just
 whenMaybe False = const $ pure Nothing
 
-choice :: (Alternative f) => [f a] -> f a
+choice :: Alternative f => [f a] -> f a
 choice = asum
 
 afold :: (Foldable t, Alternative f) => t a -> f a
