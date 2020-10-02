@@ -1314,15 +1314,15 @@
   border-radius: 4px;
   font-size: 10px;
   line-height: 12px;
+  margin-left: 166px;
   text-transform: uppercase;
 }
 
 .closeNotificationIcon {
   user-select: none;
-  position: fixed;
-    font-size: 16px;
-    top: 52px;
-    right: 8px;
+  font-size: 16px;
+  top: 52px;
+  right: 8px;
   &:hover{
     cursor: pointer;
   }
@@ -1334,9 +1334,9 @@
   left: auto;
   border: none;
   user-select: none;
-  -webkit-box-shadow: -5px 0px 12px 0px rgba(0,0,0,0.19);
-  -moz-box-shadow: -5px 0px 12px 0px rgba(0,0,0,0.19);
-  box-shadow: -5px 0px 12px 0px rgba(0,0,0,0.19);
+  -webkit-box-shadow: -3px 4px 6px 0px rgba(143,133,143,0.6);
+  -moz-box-shadow: -3px 4px 6px 0px rgba(143,133,143,0.6);
+  box-shadow: -3px 4px 6px 0px rgba(143,133,143,0.6);
 }
 
 .notificationsContainer {
