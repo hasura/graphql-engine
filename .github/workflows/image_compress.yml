@@ -22,7 +22,6 @@ jobs:
           for (const label of labels.data) {
             if (label.name === 'c/docs') {
               docs_pr=true;
-              break;
             }
           }
           if(!docs_pr){
@@ -32,7 +31,6 @@ jobs:
           for (const label of labels.data) {
             if (label.name === 'docs-compress-images') {
               label_present=true;
-              break;
             }
           }
           if(!label_present){
