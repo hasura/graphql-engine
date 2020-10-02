@@ -27,13 +27,13 @@ jobs:
           if(!docs_pr){
             return;
           }
-          const labels = await github.issues.listLabelsOnIssue({
+          const a = await github.issues.listLabelsOnIssue({
             owner: context.repo.owner,
             repo: context.repo.repo,
             issue_number: context.payload.pull_request.number,
           });
           let label_present=false;
-          for (const label of labels.data) {
+          for (const label of a.data) {
             if (label.name === 'docs-compress-images') {
               label_present=true;
             }
