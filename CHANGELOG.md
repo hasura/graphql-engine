@@ -329,7 +329,7 @@ using this flag is insecure since verification is not carried out.
 
 - console: update graphiql explorer to support operation transform (#4567)
 - console: make GraphiQL Explorer taking the whole viewport (#4553)
-- console: fix table columns type comparison during column edit (close #4125) (#4393)
+- console: fix table columns type comparision during column edit (close #4125) (#4393)
 - cli: allow initialising project in current directory (fix #4560) #4566
 - cli: remove irrelevant flags from init command (close #4508) (#4549)
 - docs: update migrations docs with config v2 (#4586)
