@@ -732,7 +732,7 @@ const HasuraNotifications: React.FC<
           alignItems="center"
           p={16}
           justifyContent="space-between"
-          border="4px solid #f2f2f2"
+          border="1px solid #f2f2f2"
         >
           <Flex alignItems="center" justifyContent="center">
             <Heading as="h4" color="#000" fontSize="12px" marginLeft="8px">

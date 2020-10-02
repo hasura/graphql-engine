@@ -1334,19 +1334,19 @@
   left: auto;
   border: none;
   user-select: none;
-  -webkit-box-shadow: -3px 4px 6px 0px rgba(143,133,143,0.6);
-  -moz-box-shadow: -3px 4px 6px 0px rgba(143,133,143,0.6);
-  box-shadow: -3px 4px 6px 0px rgba(143,133,143,0.6);
+  -webkit-box-shadow: -3px 4px 10px 0px rgba(0,0,0,0.1);
+  -moz-box-shadow: -3px 4px 10px 0px rgba(0,0,0,0.1);
+  box-shadow: -3px 4px 10px 0px rgba(0,0,0,0.1);
 }
 
 .notificationsContainer {
-  border: 4px solid #f2f2f2;
+  border: 1px solid #f2f2f2;
   border-top: none;
   background-color: white;
   text-transform: none;
   overflow: hidden;
   height: auto;
-  max-height: calc(100vh - 120px);
+  max-height: calc(100vh - 112px);
   &:hover {
     overflow-y: scroll;
   }
@@ -1384,7 +1384,7 @@
 
 .updateBox {
   padding: 15px 0px;
-  border-bottom: 4px solid #f2f2f2;
+  border-bottom: 1px solid #f2f2f2;
   &:hover {
     cursor: pointer;
   }
@@ -1401,7 +1401,7 @@
 
 .updateStyleBox {
   padding: 15px 0px;
-  border-bottom: 4px solid #f2f2f2;
+  border-bottom: 1px solid #f2f2f2;
   &:hover {
     cursor: pointer;
   }
