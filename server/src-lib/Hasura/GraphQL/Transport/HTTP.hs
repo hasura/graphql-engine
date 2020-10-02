@@ -286,10 +286,9 @@ runQueryDB reqId query _userInfo (tx, genSql) =  do
   -- log the generated SQL and the graphql query
   E.ExecutionCtx logger _ pgExecCtx _ _ _ _ <- ask
   logQueryLog logger query genSql reqId
-  (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ trace "Postgres Query" $
+  (telemTimeIO, !resp) <- withElapsedTime $ trace "Postgres Query" $
     -- TODO: add root field name to trace metadata when doing heterogeneous execution
     Tracing.interpTraceT id $ hoist (runQueryTx pgExecCtx) tx
-  !resp <- liftEither respE
   return (telemTimeIO, resp)
 
 runMutationDB
@@ -311,7 +310,6 @@ runMutationDB reqId query userInfo tx =  do
   -- log the graphql query
   logQueryLog logger query Nothing reqId
   ctx <- Tracing.currentContext
-  (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ trace "Mutation" $
+  (telemTimeIO, !resp) <- withElapsedTime $ trace "Mutation" $
     Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx .  withUserInfo userInfo)  tx
-  !resp <- liftEither respE
   return (telemTimeIO, resp)
