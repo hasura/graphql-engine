@@ -94,7 +94,7 @@ fromSelect Select {..} =
            (\Join {..} ->
               SeqPrinter
                 [ "OUTER APPLY ("
-                , IndentPrinter 13 (fromSelect joinSelect)
+                , IndentPrinter 13 (fromJoinSource joinSource)
                 , ") "
                 , NewlinePrinter
                 , "AS "
@@ -104,6 +104,26 @@ fromSelect Select {..} =
     , fromWhere selectWhere
     , fromOrderBys selectTop selectOffset selectOrderBy
     , fromFor selectFor
+    ]
+
+fromJoinSource :: JoinSource -> Printer
+fromJoinSource =
+  \case
+    JoinSelect select -> fromSelect select
+    JoinReselect reselect -> fromReselect reselect
+
+fromReselect :: Reselect -> Printer
+fromReselect Reselect {..} =
+  SepByPrinter
+    NewlinePrinter
+    [ "SELECT " <+>
+      IndentPrinter
+        7
+        (SepByPrinter
+           (QueryPrinter "," <+> NewlinePrinter)
+           (map fromProjection (toList reselectProjections)))
+    , fromFor reselectFor
+    , fromWhere reselectWhere
     ]
 
 fromOrderBys ::

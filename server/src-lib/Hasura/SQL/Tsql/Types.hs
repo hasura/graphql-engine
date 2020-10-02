@@ -18,6 +18,12 @@ data Select = Select
   , selectOffset :: !(Maybe Expression)
   } deriving (Eq, Show)
 
+data Reselect = Reselect
+  { reselectProjections :: !(NonEmpty Projection)
+  , reselectFor :: !For
+  , reselectWhere :: !Where
+  } deriving (Eq, Show)
+
 data OrderBy = OrderBy
   { orderByFieldName :: FieldName
   , orderByOrder :: Order
@@ -53,9 +59,14 @@ data Projection
   deriving (Eq, Show)
 
 data Join = Join
-  { joinSelect :: !Select
+  { joinSource :: !JoinSource
   , joinJoinAlias :: !JoinAlias
   } deriving (Eq, Show)
+
+data JoinSource
+  = JoinSelect Select
+  | JoinReselect Reselect
+  deriving (Eq, Show)
 
 data JoinAlias = JoinAlias
   { joinAliasEntity :: Text
