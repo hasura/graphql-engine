@@ -30,7 +30,7 @@ jobs:
           let imageAdded = false; 
           for (const file of files.data) {
             if (file.filename === '**.jpg' || file.filename === '**.png' || file.filename === '**.jpeg' ) {
-              changeLogPresent = true;
+              imageAdded = true;
               break;
             }
           }
