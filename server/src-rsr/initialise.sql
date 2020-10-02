@@ -99,7 +99,7 @@ FROM
     WHERE
         r.contype = 'f'
     ) 
-     q
+    q
     JOIN pg_catalog.pg_attribute ac
       ON q.column_id = ac.attnum
          AND q.table_id = ac.attrelid
