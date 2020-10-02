@@ -31,6 +31,7 @@ import qualified Data.Text                                   as T
 import qualified Data.Text.Encoding                          as TE
 import qualified Data.Time.Clock                             as TC
 import qualified Database.PG.Query                           as Q
+import qualified Language.GraphQL.Draft.Syntax               as G
 import qualified ListT
 import qualified Network.HTTP.Client                         as H
 import qualified Network.HTTP.Types                          as H
@@ -365,7 +366,8 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           sendSuccResp cachedResponseData $ LQ.LiveQueryMetadata 0
         Nothing -> do
           conclusion <- runExceptT $ forWithKey queryPlan $ \fieldName -> \case
-            E.ExecStepDB (tx, _genSql) -> doQErr $ Tracing.trace "Postgres Query" $ do -- TODO genSql logging
+            E.ExecStepDB (tx, genSql) -> doQErr $ Tracing.trace "Postgres Query" $ do
+              logQueryLog logger q (Map.singleton (G.unsafeMkName fieldName) . Just <$> genSql) requestId
               (telemTimeIO_DT, (resp)) <- Tracing.interpTraceT id $ withElapsedTime $
                 hoist (runQueryTx pgExecCtx) tx
               return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
@@ -382,7 +384,9 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     E.MutationExecutionPlan mutationPlan -> do
       conclusion <- runExceptT $ forWithKey mutationPlan $ \fieldName -> \case
-        E.ExecStepDB (tx, _) -> doQErr $ Tracing.trace "Mutate" do
+        -- Ignoring response headers since we can't send them over WebSocket
+        E.ExecStepDB (tx, _responseHeaders) -> doQErr $ Tracing.trace "Mutate" do
+          logQueryLog logger q Nothing requestId
           ctx <- Tracing.currentContext
           (telemTimeIO_DT, resp) <- Tracing.interpTraceT
             (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx . withUserInfo userInfo)

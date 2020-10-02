@@ -37,6 +37,7 @@ import qualified Data.Aeson                             as J
 import qualified Data.Aeson.Ordered                     as JO
 import qualified Data.ByteString.Lazy                   as LBS
 import qualified Data.Environment                       as Env
+import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
@@ -45,6 +46,7 @@ import qualified Hasura.GraphQL.Execute.Query           as EQ
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
 import qualified Hasura.Tracing                         as Tracing
+import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
 
@@ -139,7 +141,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             conclusion <- runExceptT $ forWithKey queryPlans $ \fieldName -> \case
               E.ExecStepDB txGenSql -> doQErr $ do
                 (telemTimeIO_DT, resp) <-
-                  runQueryDB reqId reqUnparsed userInfo txGenSql
+                  runQueryDB reqId reqUnparsed userInfo
+                  (Just . Map.singleton (G.unsafeMkName fieldName) <$> txGenSql)
                 return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
               E.ExecStepRemote (rsi, opDef, varValsM) ->
                 runRemoteGQ fieldName rsi opDef varValsM
@@ -276,13 +279,13 @@ runQueryDB
   => RequestId
   -> GQLReqUnparsed
   -> UserInfo
-  -> (Tracing.TraceT (LazyTx QErr) EncJSON, Maybe EQ.PreparedSql)
+  -> (Tracing.TraceT (LazyTx QErr) EncJSON, Maybe EQ.GeneratedSqlMap)
   -> m (DiffTime, EncJSON)
   -- ^ Also return the time spent in the PG query; for telemetry.
-runQueryDB reqId query _userInfo (tx, _genSql) =  do
+runQueryDB reqId query _userInfo (tx, genSql) =  do
   -- log the generated SQL and the graphql query
   E.ExecutionCtx logger _ pgExecCtx _ _ _ _ <- ask
-  logQueryLog logger query Nothing reqId -- TODO genSql
+  logQueryLog logger query genSql reqId
   (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ trace "Postgres Query" $
     -- TODO: add root field name to trace metadata when doing heterogeneous execution
     Tracing.interpTraceT id $ hoist (runQueryTx pgExecCtx) tx
