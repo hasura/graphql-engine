@@ -141,7 +141,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             conclusion <- runExceptT $ forWithKey queryPlans $ \fieldName -> \case
               E.ExecStepDB txGenSql -> doQErr $ do
                 (telemTimeIO_DT, resp) <-
-                  runQueryDB reqId reqUnparsed userInfo
+                  runQueryDB reqId reqUnparsed userInfo fieldName
                   (Just . Map.singleton (G.unsafeMkName fieldName) <$> txGenSql)
                 return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
               E.ExecStepRemote (rsi, opDef, varValsM) ->
@@ -279,15 +279,15 @@ runQueryDB
   => RequestId
   -> GQLReqUnparsed
   -> UserInfo
+  -> Text
   -> (Tracing.TraceT (LazyTx QErr) EncJSON, Maybe EQ.GeneratedSqlMap)
   -> m (DiffTime, EncJSON)
   -- ^ Also return the time spent in the PG query; for telemetry.
-runQueryDB reqId query _userInfo (tx, genSql) =  do
+runQueryDB reqId query _userInfo fieldName (tx, genSql) =  do
   -- log the generated SQL and the graphql query
   E.ExecutionCtx logger _ pgExecCtx _ _ _ _ <- ask
   logQueryLog logger query genSql reqId
-  (telemTimeIO, !resp) <- withElapsedTime $ trace "Postgres Query" $
-    -- TODO: add root field name to trace metadata when doing heterogeneous execution
+  (telemTimeIO, !resp) <- withElapsedTime $ trace ("Postgres Query for root field " <> fieldName) $
     Tracing.interpTraceT id $ hoist (runQueryTx pgExecCtx) tx
   return (telemTimeIO, resp)
 
