@@ -38,6 +38,6 @@ jobs:
               label_present=true;
             }
           }
-          if(label_present){
+          if(!label_present){
             core.setFailed('docs-compress-images label is required');
           }
