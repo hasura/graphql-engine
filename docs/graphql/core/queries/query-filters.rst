@@ -57,7 +57,7 @@ argument to filter on equality.
 
 You can see the complete specification of the ``where`` argument in the :ref:`API reference <WhereExp>`.
 
-Somparison operators
+Comparison operators
 ---------------------
 
 Let’s take a look at different comparison operators that can be used to filter results.
