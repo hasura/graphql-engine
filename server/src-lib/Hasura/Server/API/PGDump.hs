@@ -87,6 +87,9 @@ execPGDump b ci = do
 
     notifyTriggerRegex =
       let regexStr :: String =
+        -- "notify_hasura_" is here for backwards compatibility. Prior to "hasura_"
+        -- pg functions created by hasura for event triggers used "notify_hasura"
+        -- These changes are also documented on the method pgIdenTrigger
             "^CREATE TRIGGER \"?(notify_hasura_|hasura_).+\"? AFTER [[:alnum:]]+ "
               <> "ON .+ FOR EACH ROW EXECUTE (FUNCTION|PROCEDURE) "
               <> "\"?hdb_views\"?\\.\"?(notify_hasura_|hasura_).+\"?\\(\\);$"
