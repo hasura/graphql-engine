@@ -13,6 +13,20 @@ jobs:
     - uses: actions/github-script@0.9.0
       with:
         script: |
+          const labels = await github.issues.listLabelsOnIssue({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.payload.pull_request.number,
+          })
+          let docs_pr = false;
+          for (const label of labels.data) {
+            if (label.name === 'c/docs') {
+              docs_pr=true;
+            }
+          }
+          if(!docs_pr){
+            return;
+          }
           const a = await github.issues.listLabelsOnIssue({
             owner: context.repo.owner,
             repo: context.repo.repo,
