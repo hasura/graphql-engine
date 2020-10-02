@@ -748,6 +748,12 @@ const HasuraNotifications: React.FC<
           >
             mark all as read
           </Button>
+          <div
+            className={styles.closeNotificationIcon}
+            onClick={onClickOutside}
+          >
+            <i className="fa fa-times" />
+          </div>
         </Flex>
         <Box className={styles.notificationsContainer}>
           {dataShown.length &&

@@ -1317,6 +1317,17 @@
   text-transform: uppercase;
 }
 
+.closeNotificationIcon {
+  user-select: none;
+  position: fixed;
+    font-size: 16px;
+    top: 52px;
+    right: 8px;
+  &:hover{
+    cursor: pointer;
+  }
+}
+
 .consoleNotificationPanel {
   width: 460px;
   padding: 0;
