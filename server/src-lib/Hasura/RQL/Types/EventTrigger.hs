@@ -124,7 +124,7 @@ instance ToJSON WebhookConf where
 instance FromJSON WebhookConf where
   parseJSON (Object o) = WCEnv <$> o .: "from_env"
   parseJSON t@(String _) =
-    case (fromJSON t) of
+    case fromJSON t of
       Error s   -> fail s
       Success a -> pure $ WCValue a
   parseJSON _          = fail "one of string or object must be provided for webhook"
@@ -168,13 +168,11 @@ instance FromJSON CreateEventTriggerQuery where
     let regex = "^[A-Za-z]+[A-Za-z0-9_\\-]*$" :: LBS.ByteString
         compiledRegex = TDFA.makeRegex regex :: TDFA.Regex
         isMatch = TDFA.match compiledRegex . T.unpack $ triggerNameToTxt name
-    if isMatch then return ()
-      else fail "only alphanumeric and underscore and hyphens allowed for name"
-    if T.length (triggerNameToTxt name) <= maxTriggerNameLength then return ()
-      else fail "trigger name can be at most 49 characters"
-    if any isJust [insert, update, delete] || enableManual then
-      return ()
-      else
+    unless isMatch $
+      fail "only alphanumeric and underscore and hyphens allowed for name"
+    unless (T.length (triggerNameToTxt name) <= maxTriggerNameLength) $
+      fail "trigger name can be at most 49 characters"
+    unless (any isJust [insert, update, delete] || enableManual) $
       fail "atleast one amongst insert/update/delete/enable_manual spec must be provided"
     case (webhook, webhookFromEnv) of
       (Just _, Nothing) -> return ()
@@ -205,10 +203,8 @@ instance NFData TriggerOpsDef
 instance Cacheable TriggerOpsDef
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerOpsDef)
 
-data DeleteEventTriggerQuery
-  = DeleteEventTriggerQuery
-  { detqName :: !TriggerName
-  } deriving (Show, Eq, Lift)
+newtype DeleteEventTriggerQuery = DeleteEventTriggerQuery { detqName :: TriggerName }
+  deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''DeleteEventTriggerQuery)
 
