@@ -27,12 +27,17 @@ jobs:
           if(!docs_pr){
             return;
           }
+          const labels = await github.issues.listLabelsOnIssue({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.payload.pull_request.number,
+          });
           let label_present=false;
           for (const label of labels.data) {
             if (label.name === 'docs-compress-images') {
               label_present=true;
             }
           }
-          if(!label_present){
+          if(label_present){
             core.setFailed('docs-compress-images label is required');
           }
