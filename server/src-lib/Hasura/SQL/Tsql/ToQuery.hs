@@ -71,6 +71,7 @@ fromExpression =
     ColumnExpression fieldName -> fromFieldName fieldName
     EqualExpression x y ->
       "(" <+> fromExpression x <+> ") = (" <+> fromExpression y <+> ")"
+    ToStringExpression e -> "CONCAT(" <+> fromExpression e <+> ", '')"
 
 fromFieldName :: FieldName -> Printer
 fromFieldName (FieldName {..}) =

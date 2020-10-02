@@ -76,6 +76,11 @@ newtype FromIr a = FromIr
   { unFromIr :: StateT (Map Text Int) (Validate (NonEmpty Error)) a
   } deriving (Functor, Applicative, Monad, MonadValidate (NonEmpty Error))
 
+data StringifyNumbers
+  = StringifyNumbers
+  | LeaveNumbersAlone
+  deriving (Eq)
+
 --------------------------------------------------------------------------------
 -- Runners
 
@@ -103,7 +108,9 @@ fromSelectRows annSelectG = do
       Ir.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
       _ -> refute (pure (FromTypeUnsupported from))
   fieldSources <-
-    runReaderT (traverse fromAnnFieldsG fields) (fromAlias selectFrom)
+    runReaderT
+      (traverse (fromAnnFieldsG stringifyNumbers) fields)
+      (fromAlias selectFrom)
   filterExpression <-
     runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
   Args { argsOrderBy
@@ -140,6 +147,10 @@ fromSelectRows annSelectG = do
       case mPermLimit of
         Nothing -> NoTop
         Just limit -> Top limit
+    stringifyNumbers =
+      if num
+        then StringifyNumbers
+        else LeaveNumbersAlone
 
 fromSelectAggregate ::
      Ir.AnnSelectG [(Ir.FieldName, Ir.TableAggregateFieldG Sql.SQLExp)] Sql.SQLExp
@@ -180,7 +191,7 @@ fromSelectAggregate annSelectG = do
                   , _asnFrom = from
                   , _asnPerm = perm
                   , _asnArgs = args
-                  , _asnStrfyNum = num
+                  , _asnStrfyNum = _num -- TODO: Do we ignore this for aggregates?
                   } = annSelectG
     Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
     permissionBasedTop =
@@ -440,7 +451,6 @@ fromGExists Ir.GExists {_geTable, _geWhere} = do
 
 data FieldSource
   = ExpressionFieldSource (Aliased Expression)
-  | ColumnFieldSource (Aliased FieldName)
   | JoinFieldSource (Aliased Join)
   | AggregateFieldSource (NonEmpty (Aliased Aggregate))
   deriving (Eq, Show)
@@ -506,17 +516,17 @@ fromAggregateField aggregateField =
       pure (OpAggregate op args)
 
 -- | The main sources of fields, either constants, fields or via joins.
-fromAnnFieldsG :: (Ir.FieldName, Ir.AnnFieldG Sql.SQLExp) -> ReaderT EntityAlias FromIr FieldSource
-fromAnnFieldsG (Ir.FieldName name, field) =
+fromAnnFieldsG ::
+     StringifyNumbers
+  -> (Ir.FieldName, Ir.AnnFieldG Sql.SQLExp)
+  -> ReaderT EntityAlias FromIr FieldSource
+fromAnnFieldsG stringifyNumbers (Ir.FieldName name, field) =
   case field of
     Ir.AFColumn annColumnField -> do
-      fieldName <- fromAnnColumnField annColumnField
+      expression <- fromAnnColumnField stringifyNumbers annColumnField
       pure
-        (ColumnFieldSource
-           Aliased
-             { aliasedThing = fieldName
-             , aliasedAlias = name
-             })
+        (ExpressionFieldSource
+           Aliased {aliasedThing = expression, aliasedAlias = name})
     Ir.AFExpression text ->
       pure
         (ExpressionFieldSource
@@ -527,35 +537,36 @@ fromAnnFieldsG (Ir.FieldName name, field) =
     Ir.AFObjectRelation objectRelationSelectG ->
       fmap
         (\aliasedThing ->
-           JoinFieldSource
-             (Aliased
-                {aliasedThing, aliasedAlias = name}))
+           JoinFieldSource (Aliased {aliasedThing, aliasedAlias = name}))
         (fromObjectRelationSelectG objectRelationSelectG)
     Ir.AFArrayRelation arraySelectG ->
       fmap
         (\aliasedThing ->
-           JoinFieldSource
-             (Aliased
-                {aliasedThing, aliasedAlias = name}))
+           JoinFieldSource (Aliased {aliasedThing, aliasedAlias = name}))
         (fromArraySelectG arraySelectG)
     -- TODO:
     -- Vamshi said to ignore these three for now:
     Ir.AFNodeId {} -> refute (pure (FieldTypeUnsupportedForNow field))
     Ir.AFRemote {} -> refute (pure (FieldTypeUnsupportedForNow field))
-    Ir.AFComputedField {} ->
-      refute (pure (FieldTypeUnsupportedForNow field))
+    Ir.AFComputedField {} -> refute (pure (FieldTypeUnsupportedForNow field))
 
-fromAnnColumnField :: Ir.AnnColumnField -> ReaderT EntityAlias FromIr FieldName
-fromAnnColumnField annColumnField = fromPGColumnName pgColumnInfo
+-- | Here is where we project a field as a column expression. If
+-- number stringification is on, then we wrap it in a
+-- 'ToStringExpression' so that it's casted when being projected.
+fromAnnColumnField ::
+     StringifyNumbers
+  -> Ir.AnnColumnField
+  -> ReaderT EntityAlias FromIr Expression
+fromAnnColumnField stringifyNumbers annColumnField = do
+  fieldName <- fromPGCol pgCol
+  if asText || (Ir.isScalarColumnWhere Sql.isBigNum typ && stringifyNumbers == StringifyNumbers)
+     then pure (ToStringExpression (ColumnExpression fieldName))
+     else pure (ColumnExpression fieldName)
   where
-    Ir.AnnColumnField { _acfInfo = pgColumnInfo
-                      , _acfAsText = _ :: Bool -- TODO: What's this?
+    Ir.AnnColumnField { _acfInfo = Ir.PGColumnInfo{pgiColumn=pgCol,pgiType=typ}
+                      , _acfAsText = asText :: Bool
                       , _acfOp = _ :: Maybe Ir.ColumnOp -- TODO: What's this?
                       } = annColumnField
-
-fromPGColumnName :: Ir.PGColumnInfo -> ReaderT EntityAlias FromIr FieldName
-fromPGColumnName Ir.PGColumnInfo{pgiColumn = pgCol} =
-  fromPGCol pgCol
 
 -- | This is where a field name "foo" is resolved to a fully qualified
 -- field name [table].[foo]. The table name comes from EntityAlias in
@@ -570,7 +581,6 @@ fieldSourceProjections =
   \case
     ExpressionFieldSource aliasedExpression ->
       pure (ExpressionProjection aliasedExpression)
-    ColumnFieldSource name -> pure (FieldNameProjection name)
     JoinFieldSource aliasedJoin ->
       pure
         (ExpressionProjection
@@ -595,7 +605,6 @@ fieldSourceJoin =
   \case
     JoinFieldSource aliasedJoin -> pure (aliasedThing aliasedJoin)
     ExpressionFieldSource {} -> Nothing
-    ColumnFieldSource {} -> Nothing
     AggregateFieldSource {} -> Nothing
 
 --------------------------------------------------------------------------------
@@ -605,7 +614,9 @@ fromObjectRelationSelectG :: Ir.ObjectRelationSelectG Sql.SQLExp -> ReaderT Enti
 fromObjectRelationSelectG annRelationSelectG = do
   selectFrom <- lift (fromQualifiedTable tableFrom)
   fieldSources <-
-    local (const ((fromAlias selectFrom))) (traverse fromAnnFieldsG fields)
+    local
+      (const ((fromAlias selectFrom)))
+      (traverse (fromAnnFieldsG LeaveNumbersAlone) fields)
   filterExpression <-
     local (const (fromAlias selectFrom)) (fromAnnBoolExp tableFilter)
   selectProjections <-

@@ -96,6 +96,7 @@ data Expression
   | ColumnExpression FieldName
   | EqualExpression Expression Expression
   | JsonQueryExpression Expression
+  | ToStringExpression Expression
   deriving (Eq, Show)
 
 data Aggregate
