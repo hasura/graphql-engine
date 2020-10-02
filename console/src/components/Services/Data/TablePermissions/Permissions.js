@@ -57,6 +57,7 @@ import {
   getTablePermissionsByRoles,
   getPermissionRowAccessSummary,
 } from '../PermissionsSummary/utils';
+import { tooltipMsg } from './utils';
 import Button from '../../../Common/Button/Button';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
@@ -80,16 +81,15 @@ import {
   getTableSupportedQueries,
   QUERY_TYPES,
 } from '../../../Common/utils/pgUtils';
-import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import {
   getFilterQueries,
   replaceLegacyOperators,
   updateFilterTypeLabel,
   getDefaultFilterType,
-  getUpdateTooltip,
   getQuerySingleRowMutation,
 } from './utils';
 import PermButtonSection from './PermButtonsSection';
+import PermissionSectionHeader from './PermissionSectionHeader';
 
 class Permissions extends Component {
   constructor() {
@@ -216,17 +216,6 @@ class Permissions extends Component {
       currentTableSchema,
       allFunctions
     );
-
-    const addTooltip = (text, tooltip) => {
-      return (
-        <span>
-          <span className={styles.add_mar_right_small}>{text}</span>
-          <OverlayTrigger placement="right" overlay={tooltip}>
-            <i className="fa fa-question-circle" aria-hidden="true" />
-          </OverlayTrigger>
-        </span>
-      );
-    };
 
     /********************/
 
@@ -585,34 +574,6 @@ class Permissions extends Component {
         sectionClasses += ' ' + styles.disabled;
       }
 
-      const getSectionHeader = (title, toolTip, sectionStatus, knowMoreRef) => {
-        let sectionStatusHtml;
-        if (sectionStatus) {
-          sectionStatusHtml = (
-            <span className={styles.add_mar_left}>
-              - <i className={styles.sectionStatus}>{sectionStatus}</i>
-            </span>
-          );
-        }
-
-        let knowMoreHtml;
-        if (knowMoreRef) {
-          knowMoreHtml = (
-            <span
-              className={`${styles.add_mar_left_small} ${styles.sectionStatus}`}
-            >
-              <KnowMoreLink href={knowMoreRef} />
-            </span>
-          );
-        }
-
-        return (
-          <div>
-            {addTooltip(title, toolTip)} {knowMoreHtml} {sectionStatusHtml}
-          </div>
-        );
-      };
-
       const getRowSection = () => {
         let filterString;
         if (query === 'update') {
@@ -851,47 +812,38 @@ class Permissions extends Component {
             dispatch(permToggleModifyLimit(parsedLimit));
           };
 
-          let _limitSection;
-
-          const rowLimitTooltip = (
-            <Tooltip id="tooltip-row-permissions">
-              Set limit on number of rows fetched per request
-            </Tooltip>
-          );
-
           if (query === 'select') {
             const limitValue =
               permissionsState.select && exists(permissionsState.select.limit)
                 ? permissionsState.select.limit
                 : '';
 
-            _limitSection = (
-              <div className={styles.inline_block}>
-                <label>Limit number of rows:</label>
-                <input
-                  className={
-                    styles.mar_small_left + ' form-control ' + styles.limitInput
-                  }
-                  value={limitValue}
-                  onChange={e => dispatchLimit(e.target.value)}
-                  disabled={noPermissions}
-                  title={noPermissions ? noPermissionsMsg : ''}
-                  type="number"
-                  min="0"
-                />
-                <div className={styles.clear_fix} />
-              </div>
+            return (
+              <PermissionSectionHeader
+                title={
+                  <div className={styles.inline_block}>
+                    <label>Limit number of rows:</label>
+                    <input
+                      className={`${styles.mar_small_left} form-control ${styles.limitInput}`}
+                      value={limitValue}
+                      onChange={e => dispatchLimit(e.target.value)}
+                      disabled={noPermissions}
+                      title={noPermissions ? noPermissionsMsg : ''}
+                      type="number"
+                      min="0"
+                    />
+                    <div className={styles.clear_fix} />
+                  </div>
+                }
+                tooltip={
+                  <Tooltip id="tooltip-row-permissions">
+                    Set limit on number of rows fetched per request
+                  </Tooltip>
+                }
+              />
             );
-
-            return addTooltip(_limitSection, rowLimitTooltip);
           }
         };
-
-        const rowPermissionTooltip = (
-          <Tooltip id="tooltip-row-permissions">
-            Set permission rule for {getIngForm(permissionsState.query)} rows
-          </Tooltip>
-        );
 
         const getUpdateFilterOptions = (filterType, disabled = false) => {
           return (
@@ -900,25 +852,38 @@ class Permissions extends Component {
               title={disabled ? noFilterPermissionMsg : ''}
             >
               <hr />
-              {addTooltip(
-                updateFilterTypeLabel[filterType],
-                getUpdateTooltip(filterType)
-              )}
+
+              <PermissionSectionHeader
+                title={updateFilterTypeLabel[filterType]}
+                tooltip={
+                  <Tooltip id={`tooltip-update-${filterType}`}>
+                    {tooltipMsg[filterType]}
+                  </Tooltip>
+                }
+              />
+
               {getFilterOptions(filterType, disabled)}
             </div>
           );
         };
 
-        const rowSectionTitle = 'Row ' + query + ' permissions';
         const singleRowMutation = getQuerySingleRowMutation(query);
 
         return (
           <CollapsibleToggle
-            title={getSectionHeader(
-              rowSectionTitle,
-              rowPermissionTooltip,
-              rowSectionStatus
-            )}
+            title={
+              <PermissionSectionHeader
+                title={`Row ${query} permissions`}
+                tooltip={
+                  <Tooltip id="tooltip-row-permissions">
+                    {`Set permission rule for ${getIngForm(
+                      permissionsState.query
+                    )} rows`}
+                  </Tooltip>
+                }
+                sectionStatus={rowSectionStatus}
+              />
+            }
             useDefaultTitleStyle
             testId={'toggle-row-permission'}
             isOpen={rowSectionStatus === 'no access'}
@@ -1091,14 +1056,6 @@ class Permissions extends Component {
             return accessText;
           };
 
-          const colPermissionTooltip = (
-            <Tooltip id="tooltip-row-permissions">
-              Choose columns allowed to be {getEdForm(permissionsState.query)}
-            </Tooltip>
-          );
-
-          const colSectionTitle = 'Column ' + query + ' permissions';
-
           const tableFields = {};
           tableFields.columns = getTableColumns(tableSchema);
           if (query === 'select') {
@@ -1112,11 +1069,19 @@ class Permissions extends Component {
 
           _columnSection = (
             <CollapsibleToggle
-              title={getSectionHeader(
-                colSectionTitle,
-                colPermissionTooltip,
-                colSectionStatus
-              )}
+              title={
+                <PermissionSectionHeader
+                  title={`Column ${query} permissions`}
+                  tooltip={
+                    <Tooltip id="tooltip-row-permissions">
+                      {`Choose columns allowed to be ${getEdForm(
+                        permissionsState.query
+                      )}`}
+                    </Tooltip>
+                  }
+                  sectionStatus={colSectionStatus}
+                />
+              }
               useDefaultTitleStyle
               testId={'toggle-col-permission'}
               isOpen={colSectionStatus === 'no columns'}
@@ -1144,60 +1109,6 @@ class Permissions extends Component {
 
         return _columnSection;
       };
-
-      // const getUpsertSection = () => {
-      //   if (query !== 'insert') {
-      //     return;
-      //   }
-      //
-      //   const dispatchToggleAllowUpsert = checked => {
-      //     dispatch(permToggleAllowUpsert(checked));
-      //   };
-      //
-      //   const upsertAllowed = permissionsState.insert
-      //     ? permissionsState.insert.allow_upsert
-      //     : false;
-      //
-      //   const upsertToolTip = (
-      //     <Tooltip id="tooltip-upsert">
-      //       Allow upsert queries. Upsert lets you update a row if it already
-      //       exists, otherwise insert it
-      //     </Tooltip>
-      //   );
-      //
-      //   const upsertStatus = upsertAllowed ? 'enabled' : 'disabled';
-      //
-      //   return (
-      //     <CollapsibleToggle
-      //       title={getSectionHeader(
-      //         'Upsert queries permissions',
-      //         upsertToolTip,
-      //         upsertStatus
-      //       )}
-      //       useDefaultTitleStyle
-      //       testId={'toggle-upsert-permission'}
-      //     >
-      //       <div
-      //         className={sectionClasses}
-      //         title={noPermissions ? noPermissionsMsg : ''}
-      //       >
-      //         <div className="checkbox">
-      //           <label>
-      //             <input
-      //               type="checkbox"
-      //               checked={upsertAllowed}
-      //               value="toggle_upsert"
-      //               onChange={e => dispatchToggleAllowUpsert(e.target.checked)}
-      //               disabled={noPermissions}
-      //             />
-      //             Allow role <b>{permissionsState.role}</b> to make upsert
-      //             queries
-      //           </label>
-      //         </div>
-      //       </div>
-      //     </CollapsibleToggle>
-      //   );
-      // };
 
       const getPresetsSection = action => {
         if (query !== action) {
@@ -1492,24 +1403,25 @@ class Permissions extends Component {
           });
         };
 
-        const presetTooltip = (
-          <Tooltip id="tooltip-insert-set-operations">
-            Set static values or session variables as pre-determined values for
-            columns while {getIngForm(query)}
-          </Tooltip>
-        );
-
         const presetStatus = !isEmpty(presets)
           ? Object.keys(presets).join(', ')
           : 'no presets';
 
         return (
           <CollapsibleToggle
-            title={getSectionHeader(
-              'Column presets',
-              presetTooltip,
-              presetStatus
-            )}
+            title={
+              <PermissionSectionHeader
+                title="Column presets"
+                tooltip={
+                  <Tooltip id="tooltip-insert-set-operations">
+                    {`Set static values or session variables as pre-determined values for columns while ${getIngForm(
+                      query
+                    )}`}
+                  </Tooltip>
+                }
+                sectionStatus={presetStatus}
+              />
+            }
             useDefaultTitleStyle
             testId={'toggle-presets-permission'}
           >
@@ -1540,22 +1452,20 @@ class Permissions extends Component {
           ? permissionsState.select.allow_aggregations
           : false;
 
-        const aggregationToolTip = (
-          <Tooltip id="tooltip-aggregation">
-            Allow queries with aggregate functions like sum, count, avg, max,
-            min, etc
-          </Tooltip>
-        );
-
-        const aggregationStatus = aggregationAllowed ? 'enabled' : 'disabled';
-
         return (
           <CollapsibleToggle
-            title={getSectionHeader(
-              'Aggregation queries permissions',
-              aggregationToolTip,
-              aggregationStatus
-            )}
+            title={
+              <PermissionSectionHeader
+                title="Aggregation queries permissions"
+                tooltip={
+                  <Tooltip id="tooltip-aggregation">
+                    Allow queries with aggregate functions like sum, count, avg,
+                    max, min, etc
+                  </Tooltip>
+                }
+                sectionStatus={aggregationAllowed ? 'enabled' : 'disabled'}
+              />
+            }
             useDefaultTitleStyle
             testId={'toggle-agg-permission'}
           >
@@ -1697,12 +1607,6 @@ class Permissions extends Component {
 
         let clonePermissionsHtml = null;
         if (applyToListHtml.length) {
-          const cloneToolTip = (
-            <Tooltip id="tooltip-clone">
-              Apply same permissions to other tables/roles/actions
-            </Tooltip>
-          );
-
           const validApplyToList = permissionsState.applySamePermissions.filter(
             applyTo => applyTo.table && applyTo.action && applyTo.role
           );
@@ -1711,7 +1615,16 @@ class Permissions extends Component {
             <div>
               <hr />
               <CollapsibleToggle
-                title={getSectionHeader('Clone permissions', cloneToolTip)}
+                title={
+                  <PermissionSectionHeader
+                    title="Clone permissions"
+                    tooltip={
+                      <Tooltip id="tooltip-clone">
+                        Apply same permissions to other tables/roles/actions
+                      </Tooltip>
+                    }
+                  />
+                }
                 useDefaultTitleStyle
                 testId={'toggle-clone-permission'}
               >
@@ -1749,12 +1662,7 @@ class Permissions extends Component {
         if (!isQueryTypeBackendOnlyCompatible(permissionsState.query)) {
           return null;
         }
-        const tooltip = (
-          <Tooltip id="tooltip-backend-only">
-            When enabled, this {permissionsState.query} mutation is accessible
-            only via "trusted backends"
-          </Tooltip>
-        );
+
         const isBackendOnly = !!(
           permissionsState[permissionsState.query] &&
           permissionsState[permissionsState.query].backend_only
@@ -1762,12 +1670,18 @@ class Permissions extends Component {
         const backendStatus = isBackendOnly ? 'enabled' : 'disabled';
         return (
           <CollapsibleToggle
-            title={getSectionHeader(
-              'Backend only',
-              tooltip,
-              backendStatus,
-              'https://hasura.io/docs/1.0/graphql/manual/auth/authorization/permission-rules.html#backend-only'
-            )}
+            title={
+              <PermissionSectionHeader
+                title="Backend only"
+                tooltip={
+                  <Tooltip id="tooltip-backend-only">
+                    {`When enabled, this ${permissionsState.query} mutation is accessible only via "trusted backends"`}
+                  </Tooltip>
+                }
+                sectionStatus={backendStatus}
+                knowMoreRef="https://hasura.io/docs/1.0/graphql/manual/auth/authorization/permission-rules.html#backend-only"
+              />
+            }
             useDefaultTitleStyle
             testId={'toggle-backend-only'}
           >

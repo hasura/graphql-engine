@@ -38,16 +38,10 @@ export const updateFilterTypeLabel: Record<FilterType, React.ReactElement> = {
   ),
 };
 
-const tooltipMsg: Record<FilterType, string> = {
+export const tooltipMsg: Record<FilterType, string> = {
   filter: 'Only rows satisfying the check will be updatable',
   check: 'Rows must satisfy the check after update',
 };
-
-export const getUpdateTooltip = (filterType: FilterType) => (
-  <Tooltip id={`tooltip-update-${filterType}`}>
-    {tooltipMsg[filterType]}
-  </Tooltip>
-);
 
 const getOptionsForUpdate = (
   currentFilterType: FilterType,
