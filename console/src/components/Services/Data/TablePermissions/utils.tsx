@@ -1,15 +1,41 @@
 import React from 'react';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
 
 import { getPermissionFilterString } from '../PermissionsSummary/utils';
 import { getLegacyOperator, allOperators } from './PermissionBuilder/utils';
 import { escapeRegExp } from '../utils';
 import { UNSAFE_keys } from '../../../Common/utils/tsUtils';
 
+export const noPermissionsMsg = 'Set row permissions first';
+export const noFilterPermissionMsg = 'Set pre-update permissions first';
+
 type FilterType = 'check' | 'filter';
 export type BaseQueryType = 'select' | 'update' | 'insert' | 'delete';
 export interface FilterState {
   [key: string]: BaseQueryType;
+}
+
+export function hasPermission(data: {
+  permissionsState: any;
+  query: BaseQueryType;
+  fieldType: string;
+  fieldName: string;
+}): boolean {
+  const { permissionsState, query, fieldType, fieldName } = data;
+  if (permissionsState[query]) {
+    const permittedFields = permissionsState[query][fieldType] || [];
+    return permittedFields === '*' || permittedFields.includes(fieldName);
+  }
+  return false;
+}
+
+export function getAccessText(query: BaseQueryType): string {
+  const texts: Record<BaseQueryType, string> = {
+    insert: 'to set input for',
+    select: 'to access',
+    update: 'to update',
+    delete: 'to delete',
+  };
+  return texts[query];
 }
 
 type DisplayQueryType =

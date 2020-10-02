@@ -34,6 +34,7 @@ import {
   X_HASURA_CONST,
 } from './Actions';
 
+import { CollapsiblePermissionsColumns } from './CollapsiblePermissionsColumns';
 import PermTableHeader from '../../../Common/Permissions/TableHeader';
 import PermTableBody from '../../../Common/Permissions/TableBody';
 import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
@@ -50,7 +51,7 @@ import {
   updateSchemaInfo,
   fetchRoleList,
 } from '../DataActions';
-import { getIngForm, getEdForm } from '../utils';
+import { getIngForm } from '../utils';
 import {
   getPermissionFilterString,
   getPermissionColumnAccessSummary,
@@ -87,9 +88,30 @@ import {
   updateFilterTypeLabel,
   getDefaultFilterType,
   getQuerySingleRowMutation,
+  noPermissionsMsg,
+  noFilterPermissionMsg,
 } from './utils';
 import PermButtonSection from './PermButtonsSection';
 import PermissionSectionHeader from './PermissionSectionHeader';
+
+function toggleAllPermissions(
+  dispatch,
+  tableSchema,
+  query,
+  groupedComputedFields
+) {
+  const allFields = {
+    columns: getTableColumns(tableSchema).map(c => getColumnName(c)),
+  };
+
+  if (query === 'select') {
+    allFields.computed_fields = groupedComputedFields.scalar.map(cf =>
+      getComputedFieldName(cf)
+    );
+  }
+
+  dispatch(permToggleAllFields(allFields));
+}
 
 class Permissions extends Component {
   constructor() {
@@ -549,6 +571,17 @@ class Permissions extends Component {
 
       const query = permissionsState.query;
 
+      const tableFields = {};
+      tableFields.columns = getTableColumns(tableSchema);
+      if (query === 'select') {
+        tableFields.computed_fields = groupedComputedFields.scalar;
+      }
+
+      const colSectionStatus = getPermissionColumnAccessSummary(
+        permissionsState[query],
+        tableFields
+      );
+
       const rolePermissions = tableSchema.permissions.find(
         p => p.role_name === permissionsState.role
       );
@@ -560,11 +593,6 @@ class Permissions extends Component {
       const newQueryPermissions = permissionsState[query];
 
       const noPermissions = !newQueryPermissions;
-
-      const noPermissionsMsg = 'Set row permissions first';
-
-      const noFilterPermissionMsg = 'Set pre-update permissions first';
-
       const permsChanged =
         JSON.stringify(newQueryPermissions) !==
         JSON.stringify(currQueryPermissions);
@@ -918,196 +946,6 @@ class Permissions extends Component {
             </div>
           </CollapsibleToggle>
         );
-      };
-
-      const getColumnSection = () => {
-        const getColumnList = () => {
-          const _columnList = [];
-
-          const dispatchToggleField = fieldType => e => {
-            const fieldName = e.target.value;
-            dispatch(permToggleField(fieldType, fieldName));
-          };
-
-          const getFieldCheckbox = (fieldType, fieldName) => {
-            let checked = false;
-            if (permissionsState[query]) {
-              const permittedFields = permissionsState[query][fieldType] || [];
-
-              if (permittedFields === '*') {
-                checked = true;
-              } else {
-                checked = permittedFields.includes(fieldName);
-              }
-            }
-
-            return (
-              <div key={fieldName} className={styles.columnListElement}>
-                <div className="checkbox">
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      value={fieldName}
-                      onChange={dispatchToggleField(fieldType)}
-                      disabled={noPermissions}
-                      title={noPermissions ? noPermissionsMsg : ''}
-                    />
-                    {fieldType === 'columns' ? fieldName : <i>{fieldName}</i>}
-                  </label>
-                </div>
-              </div>
-            );
-          };
-
-          tableSchema.columns.forEach(colObj => {
-            const columnName = colObj.column_name;
-
-            _columnList.push(getFieldCheckbox('columns', columnName));
-          });
-
-          if (query === 'select') {
-            groupedComputedFields.scalar.forEach(scalarComputedField => {
-              const computedFieldName = getComputedFieldName(
-                scalarComputedField
-              );
-
-              _columnList.push(
-                getFieldCheckbox('computed_fields', computedFieldName)
-              );
-            });
-          }
-
-          _columnList.push(<div key={-1} className={styles.clear_fix} />);
-
-          return _columnList;
-        };
-
-        const getExternalTablePermissionsMsg = () => {
-          let _externalPermissionsMsg = '';
-
-          // eg. relationships, table computed fields
-          const externalObjects = [];
-
-          if (tableSchema.relationships.length) {
-            externalObjects.push('relationships');
-          }
-
-          if (query === 'select' && groupedComputedFields.table.length) {
-            externalObjects.push('table computed fields');
-          }
-
-          if (externalObjects.length) {
-            _externalPermissionsMsg = (
-              <div className={styles.add_mar_top_small}>
-                For <b>{externalObjects.join(', ')}</b>, set permissions for the
-                corresponding tables/views.
-              </div>
-            );
-          }
-
-          return _externalPermissionsMsg;
-        };
-
-        const getToggleAllBtn = () => {
-          const dispatchToggleAllColumns = () => {
-            const allFields = {};
-
-            allFields.columns = getTableColumns(tableSchema).map(c =>
-              getColumnName(c)
-            );
-
-            if (query === 'select') {
-              allFields.computed_fields = groupedComputedFields.scalar.map(cf =>
-                getComputedFieldName(cf)
-              );
-            }
-
-            dispatch(permToggleAllFields(allFields));
-          };
-
-          return (
-            <Button
-              size={'xs'}
-              onClick={dispatchToggleAllColumns}
-              disabled={noPermissions}
-              title={noPermissions ? noPermissionsMsg : ''}
-              data-test={'toggle-all-col-btn'}
-            >
-              Toggle All
-            </Button>
-          );
-        };
-
-        let _columnSection = '';
-
-        const queriesWithPermColumns = ['select', 'update', 'insert'];
-
-        if (queriesWithPermColumns.includes(query)) {
-          const getAccessText = () => {
-            let accessText;
-            if (query === 'insert') {
-              accessText = 'to set input for';
-            } else if (query === 'select') {
-              accessText = 'to access';
-            } else {
-              accessText = 'to update';
-            }
-            return accessText;
-          };
-
-          const tableFields = {};
-          tableFields.columns = getTableColumns(tableSchema);
-          if (query === 'select') {
-            tableFields.computed_fields = groupedComputedFields.scalar;
-          }
-
-          const colSectionStatus = getPermissionColumnAccessSummary(
-            permissionsState[query],
-            tableFields
-          );
-
-          _columnSection = (
-            <CollapsibleToggle
-              title={
-                <PermissionSectionHeader
-                  title={`Column ${query} permissions`}
-                  tooltip={
-                    <Tooltip id="tooltip-row-permissions">
-                      {`Choose columns allowed to be ${getEdForm(
-                        permissionsState.query
-                      )}`}
-                    </Tooltip>
-                  }
-                  sectionStatus={colSectionStatus}
-                />
-              }
-              useDefaultTitleStyle
-              testId={'toggle-col-permission'}
-              isOpen={colSectionStatus === 'no columns'}
-            >
-              <div
-                className={sectionClasses}
-                title={noPermissions ? noPermissionsMsg : ''}
-              >
-                <div>
-                  <span className={styles.add_mar_right}>
-                    Allow role <b>{permissionsState.role}</b> {getAccessText()}{' '}
-                    <b>columns</b>:
-                  </span>
-
-                  {getToggleAllBtn()}
-                </div>
-
-                {getColumnList()}
-
-                {getExternalTablePermissionsMsg()}
-              </div>
-            </CollapsibleToggle>
-          );
-        }
-
-        return _columnSection;
       };
 
       const getPresetsSection = action => {
@@ -1726,7 +1564,30 @@ class Permissions extends Component {
           </div>
           <div>
             {getRowSection()}
-            {getColumnSection()}
+
+            <CollapsiblePermissionsColumns
+              isOpen={status === 'no columns'}
+              query={query}
+              status={colSectionStatus}
+              title={noPermissions ? noPermissionsMsg : ''}
+              className={sectionClasses}
+              groupedComputedFields={groupedComputedFields}
+              columns={tableSchema.columns}
+              permissionsState={permissionsState}
+              relationships={tableSchema.relationships}
+              onTogglePermission={({ name, type }) =>
+                dispatch(permToggleField(type, name))
+              }
+              onToggleAllPermissions={() =>
+                toggleAllPermissions(
+                  dispatch,
+                  tableSchema,
+                  query,
+                  groupedComputedFields
+                )
+              }
+            />
+
             {getAggregationSection()}
             {/*{getUpsertSection()}*/}
             {getPresetsSection('insert')}
