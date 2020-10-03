@@ -70,7 +70,12 @@ The sample ``Caddyfile`` for Caddy 2:
 .. code-block:: bash
 
    hasura.my-domain.com {
-     reverse_proxy localhost:8080
+     websockets {
+        header Connection *Upgrade*
+        header Upgrade    websocket
+     }
+
+     reverse_proxy @websockets localhost:8080
    }
 
 Caddy has SSL provisioning built-in with Let's Encrypt. You can find the docs at
