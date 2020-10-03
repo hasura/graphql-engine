@@ -2,6 +2,8 @@
 
 ## Next release
 
+- console: append "IF NOT EXISTS" for adding and "IF EXISTS" for removing of columns (fix #5284) (#5895)
+
 ### Heterogeneous execution
 
 Previous releases have allowed queries to request data from either Postgres or remote schemas, but not both. This release removes that restriction, so multiple data sources may be mixed within a single query. For example, GraphQL Engine can execute a query like

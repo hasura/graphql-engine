@@ -1045,14 +1045,20 @@ const deleteColumnSql = (column, tableSchema) => {
 
     const schemaChangesUp = [
       getRunSqlQuery(
-        alterStatement + 'DROP COLUMN ' + '"' + name + '" CASCADE'
+        alterStatement + 'DROP COLUMN IF EXISTS ' + '"' + name + '" CASCADE'
       ),
     ];
     const schemaChangesDown = [];
 
     schemaChangesDown.push(
       getRunSqlQuery(
-        alterStatement + 'ADD COLUMN ' + '"' + name + '"' + ' ' + col_type
+        alterStatement +
+          'ADD COLUMN IF NOT EXISTS ' +
+          '"' +
+          name +
+          '"' +
+          ' ' +
+          col_type
       )
     );
 
@@ -1216,7 +1222,7 @@ const addColSql = (
       '"' +
       tableName +
       '"' +
-      ' ADD COLUMN ' +
+      ' ADD COLUMN IF NOT EXISTS ' +
       '"' +
       colName +
       '"' +
@@ -1279,7 +1285,7 @@ const addColSql = (
       '"' +
       tableName +
       '"' +
-      ' DROP COLUMN ' +
+      ' DROP COLUMN IF EXISTS ' +
       '"' +
       colName +
       '";';
