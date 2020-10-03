@@ -179,10 +179,11 @@ If you'd like to connect to an existing database, use that server's database url
    Any other special character should be url-encoded.
 
 If the ``<dns-name-label>`` is not available, choose another unique name and
-execute the command again
-.
+execute the command again.
+
 Setting up JWT
 ---------------
+
 To setup jwt we need to use HASURA_GRAPHQL_JWT_SECRET environemntal vraibale. HASURA_GRAPHQL_JWT_SECRET requires JSON while az container create --environmental-variables takes only key value pair https://docs.microsoft.com/en-us/cli/azure/container?view=azure-cli-latest#az_container_create.
 JSON value has to be passed as string with escape charecters to be accepted by az container create.
 In the public key all double quotes (") and backslash n (\n) to be prefixed by backslash (\) 
