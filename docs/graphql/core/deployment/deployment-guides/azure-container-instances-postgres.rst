@@ -188,15 +188,16 @@ To setup jwt we need to use HASURA_GRAPHQL_JWT_SECRET environemntal vraibale. HA
 JSON value has to be passed as string with escape charecters to be accepted by az container create.
 In the public key all double quotes (") and backslash n (\n) to be prefixed by backslash (\) 
 
-Example Key Value
+For example the below keey field of the HASURA_GRAPHQL_JWT_SECRET JSON object
 
 .. code-block:: bash
 
    key: "-----BEGIN CERTIFICATE-----\nMIIDBzCCAe+gAwIBAgIJTpEEoUJ/bOElMA0GCSqGSIb3DQEBCwUAMCExHzAdBgNV-----END CERTIFICATE-----"
 
-becomes 
+needs to be written as 
    
 .. code-block:: bash
+   
    \"key\": \"-----BEGIN CERTIFICATE-----\\nMIIDBzCCAe+gAwIBAgIJTpEEoUJ/bOElMA0GCSqGSIb3DQEBCwUAMCExHzAdBgNV-----END CERTIFICATE-----\"
 
 Full command
