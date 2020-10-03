@@ -14,6 +14,7 @@ import           Test.Hspec.Core.Spec
 import           Test.Hspec.Expectations.Lifted
 
 import qualified Database.PG.Query              as Q
+import qualified Data.Environment as Env
 
 import           Hasura.RQL.DDL.Metadata        (ClearMetadata (..), runClearMetadata)
 import           Hasura.RQL.DDL.Schema
@@ -24,11 +25,6 @@ import           Hasura.Server.Migrate
 import           Hasura.Server.Version          (HasVersion)
 
 -- -- NOTE: downgrade test disabled for now (see #5273)
--- import           Data.List.Split                (splitOn)
--- import           Data.List                      (isPrefixOf, stripPrefix)
--- import           System.Process                 (readProcess)
--- import qualified Safe
--- import           Hasura.Server.Init             (downgradeShortcuts)
 
 newtype CacheRefT m a
   = CacheRefT { runCacheRefT :: MVar (RebuildableSchemaCache m) -> m a }
@@ -69,33 +65,37 @@ spec
      )
   => Q.ConnInfo -> SpecWithCache m
 spec pgConnInfo = do
-  let dropAndInit time = CacheRefT $ flip modifyMVar \_ ->
-        dropCatalog *> (swap <$> migrateCatalog time)
+  let dropAndInit env time = CacheRefT $ flip modifyMVar \_ ->
+        dropCatalog *> (swap <$> migrateCatalog env time)
 
   describe "migrateCatalog" $ do
     it "initializes the catalog" $ singleTransaction do
-      (dropAndInit =<< liftIO getCurrentTime) `shouldReturn` MRInitialized
+      env <- liftIO Env.getEnvironment
+      time <- liftIO getCurrentTime
+      (dropAndInit env time) `shouldReturn` MRInitialized
 
     it "is idempotent" \(NT transact) -> do
       let dumpSchema = execPGDump (PGDumpReqBody ["--schema-only"] (Just False)) pgConnInfo
+      env <- Env.getEnvironment
       time <- getCurrentTime
-      transact (dropAndInit time) `shouldReturn` MRInitialized
+      transact (dropAndInit env time) `shouldReturn` MRInitialized
       firstDump <- transact dumpSchema
-      transact (dropAndInit time) `shouldReturn` MRInitialized
+      transact (dropAndInit env time) `shouldReturn` MRInitialized
       secondDump <- transact dumpSchema
       secondDump `shouldBe` firstDump
 
     it "supports upgrades after downgrade to version 12" \(NT transact) -> do
       let downgradeTo v = downgradeCatalog DowngradeOptions{ dgoDryRun = False, dgoTargetVersion = v }
-          upgradeToLatest time = CacheRefT $ flip modifyMVar \_ ->
-            swap <$> migrateCatalog time
+          upgradeToLatest env time = CacheRefT $ flip modifyMVar \_ ->
+            swap <$> migrateCatalog env time
+      env <- Env.getEnvironment
       time <- getCurrentTime
-      transact (dropAndInit time) `shouldReturn` MRInitialized
+      transact (dropAndInit env time) `shouldReturn` MRInitialized
       downgradeResult <- (transact . lift) (downgradeTo "12" time)
       downgradeResult `shouldSatisfy` \case
         MRMigrated{} -> True
         _ -> False
-      transact (upgradeToLatest time) `shouldReturn` MRMigrated "12"
+      transact (upgradeToLatest env time) `shouldReturn` MRMigrated "12"
 
     -- -- NOTE: this has been problematic in CI and we're not quite sure how to
     -- --       make this work reliably given the way we do releases and create
@@ -114,14 +114,18 @@ spec pgConnInfo = do
     let dumpMetadata = execPGDump (PGDumpReqBody ["--schema=hdb_catalog"] (Just False)) pgConnInfo
 
     it "is idempotent" \(NT transact) -> do
-      (transact . dropAndInit =<< getCurrentTime) `shouldReturn` MRInitialized
+      env <- Env.getEnvironment
+      time <- getCurrentTime
+      (transact $ dropAndInit env time) `shouldReturn` MRInitialized
       firstDump <- transact dumpMetadata
       transact recreateSystemMetadata
       secondDump <- transact dumpMetadata
       secondDump `shouldBe` firstDump
 
     it "does not create any objects affected by ClearMetadata" \(NT transact) -> do
-      (transact . dropAndInit =<< getCurrentTime) `shouldReturn` MRInitialized
+      env <- Env.getEnvironment
+      time <- getCurrentTime
+      (transact $ dropAndInit env time) `shouldReturn` MRInitialized
       firstDump <- transact dumpMetadata
       transact (runClearMetadata ClearMetadata) `shouldReturn` successMsg
       secondDump <- transact dumpMetadata

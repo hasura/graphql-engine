@@ -1,7 +1,11 @@
 import React from 'react';
 import { isEqual, isString } from './jsUtils';
 import { Nullable } from './tsUtils';
-import { TableDefinition, FunctionDefinition } from './v1QueryUtils';
+import {
+  TableDefinition,
+  FunctionDefinition,
+  PGReturnValueType,
+} from './v1QueryUtils';
 
 /** * Table/View utils ** */
 
@@ -24,6 +28,13 @@ export type TablePermission = {
 export interface BaseTableColumn {
   column_name: string;
   data_type: string;
+}
+
+export interface PrimaryKey {
+  table_name: string;
+  table_schema: string;
+  constraint_name: string;
+  columns: string[];
 }
 
 export interface TableColumn extends BaseTableColumn {
@@ -110,6 +121,7 @@ export interface Table extends BaseTable {
   };
   computed_fields: ComputedField[];
   is_enum: boolean;
+  primary_key: PrimaryKey;
   view_info: {
     is_trigger_insertable_into: 'YES' | 'NO';
     is_insertable_into: 'YES' | 'NO';
@@ -577,21 +589,29 @@ export const getGroupedTableComputedFields = (
   return groupedComputedFields;
 };
 
-// export const getDependentTables = (table) => {
+export const createPKClause = (
+  primaryKeyInfo: PrimaryKey,
+  insertion: Record<string, PGReturnValueType>,
+  columns: BaseTableColumn[]
+): Record<string, PGReturnValueType> => {
+  const newPKClause: Record<string, PGReturnValueType> = {};
+  const hasPrimaryKeys = primaryKeyInfo?.columns;
+  if (hasPrimaryKeys) {
+    primaryKeyInfo.columns.forEach(key => {
+      newPKClause[key] = insertion[key];
+    });
+  } else {
+    columns.forEach(col => {
+      newPKClause[col.column_name] = insertion[col.column_name];
+    });
+  }
 
-//   return [
-//     {
-//       table_schema: table.table_schema,
-//       table_name: table.table_name,
-//     },
-//     ...table.foreign_key_constraints.map(fk_obj => ({
-//       table_name: fk_obj.ref_table,
-//       table_schema: fk_obj.ref_table_table_schema
-//     })),
-//     ...table.opp_foreign_key_constraints.map(fk_obj => ({
-//       table_name: fk_obj.table_name,
-//       table_schema: fk_obj.table_schema,
-//     }))
-//   ]
+  Object.keys(newPKClause).forEach(key => {
+    const currentValue = newPKClause[key];
+    if (Array.isArray(currentValue)) {
+      newPKClause[key] = arrayToPostgresArray(currentValue);
+    }
+  });
 
-// };
+  return newPKClause;
+};
