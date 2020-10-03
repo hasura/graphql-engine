@@ -160,8 +160,8 @@ Launch Hasura using a container instance:
       --image hasura/graphql-engine \
       --dns-name-label "<dns-name-label>" \
       --ports 80 \
-      --environment-variables "HASURA_GRAPHQL_SERVER_PORT"="80" "HASURA_GRAPHQL_ENABLE_CONSOLE"="true" \
-      --secure-environment-variables "HASURA_GRAPHQL_DATABASE_URL"="<database-url>"
+      --environment-variables "HASURA_GRAPHQL_SERVER_PORT"="80" "HASURA_GRAPHQL_ENABLE_CONSOLE"="true" "HASURA_GRAPHQL_ADMIN_SECRET"="<admin-secret>"\
+      --secure-environment-variables "HASURA_GRAPHQL_DATABASE_URL"="<database-url>" 
 
 ``<database-url>`` should be replaced by the following format:
 
@@ -179,7 +179,24 @@ If you'd like to connect to an existing database, use that server's database url
    Any other special character should be url-encoded.
 
 If the ``<dns-name-label>`` is not available, choose another unique name and
-execute the command again.
+execute the command again
+.
+Setting up JWT
+---------------
+To setup jwt we need to use HASURA_GRAPHQL_JWT_SECRET environemntal vraibale. HASURA_GRAPHQL_JWT_SECRET requires JSON while az container create --environmental-variables takes only key value pair https://docs.microsoft.com/en-us/cli/azure/container?view=azure-cli-latest#az_container_create.
+JSON value has to be passed as string with escape charecters to be accepted by az container create.
+In the public key all double quotes (") and backslash n (\n) to be prefixed by backslash (\) 
+Example key: "-----BEGIN CERTIFICATE-----\nMIIDBzCCAe+gAwIBAgIJTpEEoUJ/bOElMA0GCSqGSIb3DQEBCwUAMCExHzAdBgNV-----END CERTIFICATE-----"
+becomes \"key\": \"-----BEGIN CERTIFICATE-----\\nMIIDBzCCAe+gAwIBAgIJTpEEoUJ/bOElMA0GCSqGSIb3DQEBCwUAMCExHzAdBgNV-----END CERTIFICATE-----\"
+
+az container create --resource-group hasura \
+      --name hasura-graphql-engine \
+      --image hasura/graphql-engine \
+      --dns-name-label "<dns-name-label>" \
+      --ports 80 \
+      --environment-variables "HASURA_GRAPHQL_SERVER_PORT"="80" "HASURA_GRAPHQL_ENABLE_CONSOLE"="true" "HASURA_GRAPHQL_ADMIN_SECRET"="<admin-secret>" "HASURA_GRAPHQL_JWT_SECRET"= \ "{\"type\": \"RS512\",\"key\": \"-----BEGIN CERTIFICATE-----\\nMIIDBzCCAe+gAwIBAgIJTpEEoUJ/bOElMA0GCSqGSIb3DQEBCwUAMCExHzAdBgNV\\nBAMTFnRyYWNrLWZyOC51cy5hdXRoMC5jb20wHhcNMjAwNzE3MDYxMjE4WhcNMzQw\\nMzI2MDYxMjE4WjAhMR8wHQYDVQQDExZ0cmFjay1mcjgudXMuYXV0aDAuY29tMIIB\\nIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuK9N9FWK1hEPtwQ8ltYjlcjF\\nX03jhGgUKkLCLxe8q4x84eGJPmeHpyK+iZZ8TWaPpyD3fk+s8BC3Dqa/Sd9QeOBh\\nZH/YnzoB3yKqF/FruFNAY+F3LUt2P2t72tcnuFg4Vr8N9u8f4ESz7OHazn+XJ7u+\\ncuqKulaxMI4mVT/fGinCiT4uGVr0VVaF8KeWsF/EJYeZTiWZyubMwJsaZ2uW2U52\\n+VDE0RE0kz0fzYiCCMfuNNPg5V94lY3ImcmSI1qSjUpJsodqACqk4srmnwMZhICO\\n14F/WUknqmIBgFdHacluC6pqgHdKLMuPnp37bf7ACnQ/L2Pw77ZwrKRymUrzlQID\\nAQABo0IwQDAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBSOG3E+4lHiI+l0i91u\\nxG2Rca2NATAOBgNVHQ8BAf8EBAMCAoQwDQYJKoZIhvcNAQELBQADggEBAKgmxr6c\\nYmSNJOTPtjMFFDZHHX/7iwr+vqzC3nalr6ku8E3Zs0/IpwAtzqXp0eVVdPCWUY3A\\nQCUTt63GrqshBHYAxTbT0rlXFkqL8UkJvdZQ3XoQuNsqcp22zlQWGHxsk3YP97rn\\nltPI56smyHqPj+SBqyN/Vs7Vga9G8fHCfltJOdeisbmVHaC9WquZ9S5eyT7JzPAC\\n5dI5ZUunm0cgKFVbLfPr7ykClTPy36WdHS1VWhiCyS+rKeN7KYUvoaQN2U3hXesL\\nr2M+8qaPOSQdcNmg1eMNgxZ9Dh7SXtLQB2DAOuHe/BesJj8eRyENJCSdZsUOgeZl\\nMinkSy2d927Vts8=\\n-----END CERTIFICATE-----\"}"
+      --secure-environment-variables "HASURA_GRAPHQL_DATABASE_URL"="<database-url>" 
+
 
 Open the Hasura Console
 -----------------------
