@@ -24,7 +24,7 @@ Only tracked custom functions are available for querying/mutating/subscribing da
 track_function
 --------------
 
-``track_function`` is used to add a custom SQL function to the GraphQL schema.
+``track_function`` is used to add a custom SQL function to the ``query`` root field of the GraphQL schema.
 Also refer a note :ref:`here <note>`.
 
 Add an SQL function ``search_articles``:
@@ -48,10 +48,12 @@ Add an SQL function ``search_articles``:
 track_function v2
 -----------------
 
-Version 2 of ``track_function`` is used to add a custom SQL function to the GraphQL schema with configuration.
+Version 2 of ``track_function`` is used to add a custom SQL function to the GraphQL schema.
+Its support more configuration options than v1, and also supports tracking
+``VOLATILE`` functions as mutations.
 Also refer a note :ref:`here <note>`.
 
-Add an SQL function called ``search_articles`` with a Hasura session argument.
+Track a SQL function called ``search_articles`` with a Hasura session argument:
 
 .. code-block:: http
 
@@ -69,6 +71,29 @@ Add an SQL function called ``search_articles`` with a Hasura session argument.
            },
            "configuration": {
                "session_argument": "hasura_session"
+           }
+       }
+   }
+
+Track ``VOLATILE`` SQL function ``reset_widget`` as a mutation, so it appears
+as a top-level field under the ``mutation`` root field:
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type": "track_function",
+       "version": 2,
+       "args": {
+           "function": {
+               "schema": "public",
+               "name": "reset_widget"
+           },
+           "configuration": {
+               "as_mutation": true
            }
        }
    }
@@ -110,6 +135,10 @@ Function Configuration
      - false
      - `String`
      - Function argument which accepts session info JSON
+   * - as_mutation
+     - false
+     - `Bool`
+     - Should this function be exposed as a mutation? If true, the function must be VOLATILE.
 
 .. _note:
 
@@ -118,8 +147,9 @@ Function Configuration
    Currently, only functions which satisfy the following constraints can be exposed over the GraphQL API
    (*terminology from* `Postgres docs <https://www.postgresql.org/docs/current/sql-createfunction.html>`__):
 
-   - **Function behaviour**: ONLY ``STABLE`` or ``IMMUTABLE``
-   - **Return type**: MUST be ``SETOF <table-name>``
+   - **Function behaviour**: ``STABLE`` or ``IMMUTABLE`` functions may *only* be exposed as queries 
+     (i.e. with ``as_mutation: false``), while ``VOLATILE`` functions may only be exposed as mutations.
+   - **Return type**: MUST be ``SETOF <table-name>`` where ``<table-name>`` is already tracked
    - **Argument modes**: ONLY ``IN``
 
 .. _untrack_function:

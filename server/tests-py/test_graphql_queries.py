@@ -541,6 +541,10 @@ class TestGraphQLQueryFunctions:
     def test_track_function_v2_errors(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/track_function_v2_errors.yaml')
 
+    # Additional error cases after extending v2 API to support mutations:
+    def test_track_function_v2_mutation_errors(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/track_function_v2_mutation_errors.yaml')
+
     @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_query_get_test_session_id(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/query_get_test_session_id.yaml')

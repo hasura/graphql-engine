@@ -1,0 +1,80 @@
+- description: setup a custom SQL function
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        /* STABLE function we'll try to add as mutation */
+        CREATE FUNCTION stable_func()
+        RETURNS SETOF text_result AS $$
+            SELECT * FROM text_result;
+        $$ LANGUAGE sql STABLE;
+        /* VOLATILE function (by default) we'll try to add as query */
+        CREATE FUNCTION volatile_func()
+        RETURNS SETOF text_result AS $$
+            SELECT * FROM text_result;
+        $$ LANGUAGE sql;
+
+# We take the 'as_mutation' parameter from users in order to verify their
+# intent; since VOLATILE is the default when creating a function, it would be
+# easy for users to create a function then track it expecting it to be a query,
+# only to find it ended up under the 'mutation' root field.
+- description: Track function v2 as query, but function is VOLATILE
+  url: /v1/query
+  status: 400
+  response:
+    internal:
+    - definition:
+        schema: public
+        name: volatile_func
+      reason: 'in function "volatile_func": the function "volatile_func" cannot be
+        tracked because the function is "VOLATILE" (the default) and can only be tracked
+        as a mutation, with "as_mutation: true"'
+      type: function
+    path: $.args
+    error: 'in function "volatile_func": the function "volatile_func" cannot be tracked
+      because the function is "VOLATILE" (the default) and can only be tracked as
+      a mutation, with "as_mutation: true"'
+    code: constraint-violation
+  query:
+    version: 2
+    type: track_function
+    args:
+      function: volatile_func
+      configuration:
+        as_mutation: false
+
+- description: Track function v2 as mutation, but function is non-VOLATILE
+  url: /v1/query
+  status: 400
+  response:
+    internal:
+    - definition:
+        schema: public
+        name: stable_func
+      reason: 'in function "stable_func": the function "stable_func" cannot be tracked
+        because only "VOLATILE" functions can be tracked as mutations'
+      type: function
+    path: $.args
+    error: 'in function "stable_func": the function "stable_func" cannot be tracked
+      because only "VOLATILE" functions can be tracked as mutations'
+    code: constraint-violation
+  query:
+    version: 2
+    type: track_function
+    args:
+      function: stable_func
+      configuration:
+        as_mutation: true
+
+- description: teardown function
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        DROP FUNCTION stable_func();
+        DROP FUNCTION volatile_func();
+      cascade: true

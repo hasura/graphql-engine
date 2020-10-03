@@ -17,21 +17,22 @@ import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.Types.Common
 
 
-data FunctionType
+-- | https://www.postgresql.org/docs/current/xfunc-volatility.html
+data FunctionVolatility
   = FTVOLATILE
   | FTIMMUTABLE
   | FTSTABLE
   deriving (Eq, Generic)
-instance NFData FunctionType
-instance Cacheable FunctionType
-$(deriveJSON defaultOptions{constructorTagModifier = drop 2} ''FunctionType)
+instance NFData FunctionVolatility
+instance Cacheable FunctionVolatility
+$(deriveJSON defaultOptions{constructorTagModifier = drop 2} ''FunctionVolatility)
 
-funcTypToTxt :: FunctionType -> Text
+funcTypToTxt :: FunctionVolatility -> Text
 funcTypToTxt FTVOLATILE  = "VOLATILE"
 funcTypToTxt FTIMMUTABLE = "IMMUTABLE"
 funcTypToTxt FTSTABLE    = "STABLE"
 
-instance Show FunctionType where
+instance Show FunctionVolatility where
   show = T.unpack . funcTypToTxt
 
 newtype FunctionArgName =
@@ -68,9 +69,12 @@ data FunctionInfo
   = FunctionInfo
   { fiName          :: !QualifiedFunction
   , fiSystemDefined :: !SystemDefined
-  , fiType          :: !FunctionType
+  , fiType          :: !FunctionVolatility
   , fiInputArgs     :: !(Seq.Seq FunctionInputArgument)
   , fiReturnType    :: !QualifiedTable
+  -- ^ NOTE: when a table is created, a new composite type of the same name is
+  -- automatically created; so strictly speaking this field means "the function
+  -- returns the composite type corresponding to this table".
   , fiDescription   :: !(Maybe PGDescription)
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionInfo)

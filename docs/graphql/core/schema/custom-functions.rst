@@ -20,7 +20,7 @@ that can be used to either encapsulate some custom business logic or extend the 
 are also referred to as **stored procedures**.
 
 Hasura GraphQL engine lets you expose certain types of custom functions as top level fields in the GraphQL API to allow
-querying them using both ``queries`` and ``subscriptions``.
+querying them as either ``queries`` or ``subscriptions``, or (for ``VOLATILE`` functions) as ``mutations``.
 
 .. note::
 
@@ -34,8 +34,9 @@ Supported SQL functions
 Currently, only functions which satisfy the following constraints can be exposed as top level fields in the GraphQL API
 (*terminology from* `Postgres docs <https://www.postgresql.org/docs/current/sql-createfunction.html>`__):
 
-- **Function behaviour**: ONLY ``STABLE`` or ``IMMUTABLE``
-- **Return type**: MUST be ``SETOF <table-name>``
+- **Function behaviour**: ``STABLE`` or ``IMMUTABLE`` functions may *only* be exposed as queries 
+ (i.e. with ``as_mutation: false``), while ``VOLATILE`` functions may only be exposed as mutations.
+- **Return type**: MUST be ``SETOF <table-name>`` where ``<table-name>`` is already tracked
 - **Argument modes**: ONLY ``IN``
 
 .. _create_sql_functions:
@@ -550,6 +551,26 @@ following example.
 .. note::
 
    The specified session argument will not be included in the ``<function-name>_args`` input object in the GraphQL schema.
+
+
+Using functions as mutations
+****************************
+
+You can also use the :ref:`track_function_v2 <track_function_v2>` API to track
+functions as mutations. In this case the SQL function *must* be marked
+``VOLATILE`` (this is the default if volatility isn't specified; see 
+`the postgres docs <https://www.postgresql.org/docs/current/xfunc-volatility.html>`).
+
+Aside from showing up under the ``mutation`` root (and presumably having
+side-effects), these behave the same as described above for ``queries``.
+
+.. note::
+
+   It's easy to accidentally give a SQL function the wrong volatility (or for a
+   function to end up with ``VOLATILE`` mistakenly, since it's the default).
+   That's one reason we require specifying ``as_mutation``: it lets us raise an
+   error rather than do something unintended.
+
 
 Permissions for custom function queries
 ---------------------------------------

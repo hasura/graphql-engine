@@ -78,6 +78,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - server: allow remote relationships joining `type` column with `[type]` input argument as spec allows this coercion (fixes #5133)
 - server: add action-like URL templating for event triggers and remote schemas (fixes #2483)
 - server: change `created_at` column type from `timestamp` to `timestamptz` for scheduled triggers tables (fix #5722)
+- server: Support tracking VOLATILE SQL functions as mutations. (closing #1514)
 - server: allow configuring timeouts for actions (fixes #4966)
 - server: accept only non-negative integers for batch size and refetch interval (close #5653) (#5759)
 - server: fix bug which arised when renaming a table which had a manual relationship defined (close #4158)

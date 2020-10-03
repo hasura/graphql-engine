@@ -31,7 +31,7 @@ import           Hasura.Server.Utils                (englishList, makeReasonMess
 data RawFunctionInfo
   = RawFunctionInfo
   { rfiHasVariadic      :: !Bool
-  , rfiFunctionType     :: !FunctionType
+  , rfiFunctionType     :: !FunctionVolatility
   , rfiReturnTypeSchema :: !SchemaName
   , rfiReturnTypeName   :: !PGScalarType
   , rfiReturnTypeType   :: !PGTypeKind
@@ -78,7 +78,8 @@ data FunctionIntegrityError
   | FunctionReturnNotCompositeType
   | FunctionReturnNotSetof
   | FunctionReturnNotSetofTable
-  | FunctionVolatile
+  | FunctionVolatilityMismatch !Bool
+  -- ^ Bool indicates: user requested a mutation
   | FunctionSessionArgumentNotJSON !FunctionArgName
   | FunctionInvalidSessionArgument !FunctionArgName
   | FunctionInvalidArgumentNames [FunctionArgName]
@@ -91,7 +92,7 @@ mkFunctionInfo
   -> FunctionConfig
   -> RawFunctionInfo
   -> m (FunctionInfo, SchemaDependency)
-mkFunctionInfo qf systemDefined config rawFuncInfo =
+mkFunctionInfo qf systemDefined FunctionConfig{..} rawFuncInfo =
   either (throw400 NotSupported . showErrors) pure
     =<< MV.runValidateT validateFunction
   where
@@ -110,7 +111,12 @@ mkFunctionInfo qf systemDefined config rawFuncInfo =
       when (retTyTyp /= PGKindComposite) $ throwValidateError FunctionReturnNotCompositeType
       unless retSet $ throwValidateError FunctionReturnNotSetof
       unless returnsTab $ throwValidateError FunctionReturnNotSetofTable
-      when (funTy == FTVOLATILE) $ throwValidateError FunctionVolatile
+      -- Only VOLATILE functions can be exposed as mutations; after validating
+      -- here we just use the volatility info in 'FunctionInfo' to decide
+      -- whether it should go under the query or mutation root:
+      let askedMutation = _fcAsMutation == Just True
+      when (funTy == FTVOLATILE && not askedMutation || funTy /= FTVOLATILE && askedMutation) $
+        throwValidateError $ FunctionVolatilityMismatch askedMutation
 
       -- validate function argument names
       validateFunctionArgNames
@@ -130,7 +136,7 @@ mkFunctionInfo qf systemDefined config rawFuncInfo =
         throwValidateError $ FunctionInvalidArgumentNames invalidArgs
 
     makeInputArguments =
-      case _fcSessionArgument config of
+      case _fcSessionArgument of
         Nothing -> pure $ Seq.fromList $ map IAUserProvided functionArgs
         Just sessionArgName -> do
           unless (any (\arg -> Just sessionArgName == faName arg) functionArgs) $
@@ -152,7 +158,9 @@ mkFunctionInfo qf systemDefined config rawFuncInfo =
       FunctionReturnNotCompositeType -> "the function does not return a \"COMPOSITE\" type"
       FunctionReturnNotSetof -> "the function does not return a SETOF"
       FunctionReturnNotSetofTable -> "the function does not return a SETOF table"
-      FunctionVolatile -> "function of type \"VOLATILE\" is not supported now"
+      FunctionVolatilityMismatch requestedMutation 
+        | requestedMutation -> "only \"VOLATILE\" functions can be tracked as mutations"
+        | otherwise -> "the function is \"VOLATILE\" (the default) and can only be tracked as a mutation, with \"as_mutation: true\""
       FunctionSessionArgumentNotJSON argName ->
         "given session argument " <> argName <<> " is not of type json"
       FunctionInvalidSessionArgument argName ->
@@ -188,13 +196,28 @@ newtype TrackFunction
 data FunctionConfig
   = FunctionConfig
   { _fcSessionArgument :: !(Maybe FunctionArgName)
+  -- ^ The argument, if any, to the _tfv2Function to which we'll pass the
+  -- user's session variables during execution. This must be a JSON type
+  -- argument, and disappears from the resulting graphql schema.
+  , _fcAsMutation :: !(Maybe Bool)
+  -- ^ Do we intend this function to end up under the 'mutation' top-level field?
+  --
+  -- We require the 'as_mutation' parameter from users in order to verify their
+  -- intent; since VOLATILE is the default when creating a function, it would
+  -- be easy for users to create a function then track it expecting it to be a
+  -- query, only to find it ended up under the 'mutation' root field.
+  --
+  -- This is Maybe so we can derive instances, with Nothing implying False.
   } deriving (Show, Eq, Generic, Lift)
 instance NFData FunctionConfig
 instance Cacheable FunctionConfig
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields = True} ''FunctionConfig)
+-- ^ TODO consider rejectUnknownFields for this and all API JSON (this could
+-- easily be hiding bugs in our test suite, for one thing)
 
+-- | The default function config; v1 of the API implies this.
 emptyFunctionConfig :: FunctionConfig
-emptyFunctionConfig = FunctionConfig Nothing
+emptyFunctionConfig = FunctionConfig Nothing Nothing
 
 -- | Track function, Phase 1:
 -- Validate function tracking operation. Fails if function is already being
@@ -244,6 +267,9 @@ runTrackFunc (TrackFunction qf)= do
   trackFunctionP1 qf
   trackFunctionP2 qf emptyFunctionConfig
 
+-- | JSON API payload for v2 of 'track_function':
+--
+-- https://hasura.io/docs/1.0/graphql/core/api-reference/schema-metadata-api/custom-functions.html#track-function-v2
 data TrackFunctionV2
   = TrackFunctionV2
   { _tfv2Function      :: !QualifiedFunction
@@ -266,6 +292,9 @@ runTrackFunctionV2 (TrackFunctionV2 qf config) = do
   trackFunctionP1 qf
   trackFunctionP2 qf config
 
+-- | JSON API payload for 'untrack_function':
+--
+-- https://hasura.io/docs/1.0/graphql/core/api-reference/schema-metadata-api/custom-functions.html#untrack-function
 newtype UnTrackFunction
   = UnTrackFunction
   { utfName :: QualifiedFunction }

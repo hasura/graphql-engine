@@ -28,6 +28,8 @@ import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Insert
 import           Hasura.GraphQL.Execute.Prepare
+-- We borrow some Query code to handle the case of VOLATILE functions:
+import           Hasura.GraphQL.Execute.Query
 import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
@@ -91,24 +93,6 @@ convertInsert env usrVars remoteJoinCtx insertOperation stringifyNum = do
   validateSessionVariables expectedVariables usrVars
   pure $ convertToSQLTransaction env preparedInsert remoteJoinCtx Seq.empty stringifyNum
 
-convertMutationDB
-  :: ( HasVersion
-     , MonadIO m
-     , MonadError QErr m
-     , Tracing.MonadTrace tx
-     , MonadIO tx
-     , MonadTx tx
-     )
-  => Env.Environment
-  -> SessionVariables
-  -> RQL.MutationRemoteJoinCtx
-  -> Bool
-  -> MutationDB 'Postgres UnpreparedValue
-  -> m (tx EncJSON, HTTP.ResponseHeaders)
-convertMutationDB env userSession remoteJoinCtx stringifyNum = \case
-  MDBInsert s -> noResponseHeaders <$> convertInsert env userSession remoteJoinCtx s stringifyNum
-  MDBUpdate s -> noResponseHeaders <$> convertUpdate env userSession remoteJoinCtx s stringifyNum
-  MDBDelete s -> noResponseHeaders <$> convertDelete env userSession remoteJoinCtx s stringifyNum
 
 noResponseHeaders :: tx EncJSON -> (tx EncJSON, HTTP.ResponseHeaders)
 noResponseHeaders rTx = (rTx, [])
@@ -158,7 +142,7 @@ convertMutationSelectionSet
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
   -> m (ExecutionPlan (tx EncJSON, HTTP.ResponseHeaders))
-convertMutationSelectionSet env logger gqlContext sqlGenCtx userInfo manager reqHeaders fields varDefs varValsM = do
+convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userInfo manager reqHeaders fields varDefs varValsM = do
   mutationParser <- onNothing (gqlMutationParser gqlContext) $
     throw400 ValidationFailed "no mutations exist"
   -- Parse the GraphQL query into the RQL AST
@@ -171,7 +155,12 @@ convertMutationSelectionSet env logger gqlContext sqlGenCtx userInfo manager req
   let userSession = _uiSession userInfo
       remoteJoinCtx = (manager, reqHeaders, userInfo)
   txs <- for unpreparedQueries \case
-    RFDB db             -> ExecStepDB <$> convertMutationDB env userSession remoteJoinCtx (stringifyNum sqlGenCtx) db
+    RFDB db -> ExecStepDB . noResponseHeaders <$> case db of
+      MDBInsert s -> convertInsert env userSession remoteJoinCtx s stringifyNum
+      MDBUpdate s -> convertUpdate env userSession remoteJoinCtx s stringifyNum
+      MDBDelete s -> convertDelete env userSession remoteJoinCtx s stringifyNum
+      MDBFunction s -> convertFunction env userInfo manager reqHeaders s
+
     RFRemote (remoteSchemaInfo, remoteField) ->
       pure $ buildExecStepRemote
              remoteSchemaInfo

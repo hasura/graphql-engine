@@ -15,6 +15,7 @@ import           Control.Arrow.Extended
 import           Control.Lens.Extended
 import           Control.Monad.Unique
 import           Data.Has
+import           Data.List                             (partition)
 import           Data.List.Extended                    (duplicates)
 
 import qualified Hasura.GraphQL.Parser                 as P
@@ -71,6 +72,7 @@ buildGQLContext =
           <> (allActionInfos ^.. folded.aiPermissions.to Map.keys.folded)
 
         tableFilter    = not . isSystemDefined . _tciSystemDefined
+        -- TODO and what about graphql-compliant function names?
         functionFilter = not . isSystemDefined . fiSystemDefined
 
         graphQLTableFilter tableName tableInfo =
@@ -84,11 +86,15 @@ buildGQLContext =
         -- We allow tables which don't have GraphQL compliant names, so that RQL CRUD
         -- operations can be performed on them
         graphQLTables = Map.filterWithKey graphQLTableFilter validTables
-        validFunctions = Map.elems $ Map.filter functionFilter allFunctions
+        -- VOLATILE functions end up under the mutation root; see 'mkFunctionInfo':
+        validFunctions@(validVolatileFunctions, _) = 
+          partition ((== FTVOLATILE) . fiType) $
+          Map.elems $ Map.filter functionFilter allFunctions
 
         allActionInfos = Map.elems allActions
         queryRemotesMap =
           fmap (map fDefinition . piQuery . rscParsed . fst) allRemoteSchemas
+
         buildFullestDBSchema
           :: m ( Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
                , Maybe (Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
@@ -100,7 +106,8 @@ buildGQLContext =
                 <$> queryWithIntrospection (Set.fromMap $ graphQLTables $> ())
                       validFunctions mempty mempty
                       allActionInfos nonObjectCustomTypes
-                <*> mutation (Set.fromMap $ graphQLTables $> ()) mempty
+                <*> mutation (Set.fromMap $ graphQLTables $> ()) 
+                      validVolatileFunctions mempty
                       allActionInfos nonObjectCustomTypes
           flip runReaderT (adminRoleName, graphQLTables, Frontend, QueryContext stringifyNum queryType queryRemotesMap) $
             P.runSchemaT gqlContext
@@ -114,6 +121,7 @@ buildGQLContext =
         P.TNamed (P.Definition _ _ _ (P.TIObject (P.ObjectInfo rootFields _interfaces))) ->
           pure $ fmap P.dName rootFields
         _ -> throw500 "We encountered an root query of unexpected GraphQL type.  It should be an object type."
+
     let mutationFieldNames :: [G.Name]
         mutationFieldNames =
           case P.discardNullability . P.parserType <$> snd adminHasuraContext of
@@ -184,7 +192,8 @@ buildGQLContext =
           SQLGenCtx{ stringifyNum } <- askSQLGenCtx
           let gqlContext = GQLContext
                 <$> (finalizeParser <$> queryHasuraOrRelay)
-                <*> (fmap finalizeParser <$> mutation (Set.fromList $ Map.keys graphQLTables) mutationRemotes
+                <*> (fmap finalizeParser <$> mutation (Set.fromList $ Map.keys graphQLTables) 
+                     validVolatileFunctions mutationRemotes
                      allActionInfos nonObjectCustomTypes)
           flip runReaderT (roleName, graphQLTables, scenario, QueryContext stringifyNum queryType queryRemotesMap) $
             P.runSchemaT gqlContext
@@ -221,7 +230,7 @@ query'
   -> [ActionInfo 'Postgres]
   -> NonObjectTypeMap
   -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
-query' allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
+query' allTables nonVolatileFunctions allRemotes allActions nonObjectCustomTypes = do
   tableSelectExpParsers <- for (toList allTables) \table -> do
     selectPerms <- tableSelectPermissions table
     customRootFields <- _tcCustomRootFields . _tciCustomConfig . _tiCoreInfo <$> askTableInfo table
@@ -237,7 +246,8 @@ query' allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
         , mapMaybeFieldParser (RFDB . QDBPrimaryKey)  $ selectTableByPk      table (fromMaybe pkName      $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms
         , mapMaybeFieldParser (RFDB . QDBAggregation) $ selectTableAggregate table (fromMaybe aggName     $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms
         ]
-  functionSelectExpParsers <- for allFunctions \function -> do
+
+  functionSelectExpParsers <- for nonVolatileFunctions \function -> do
     let targetTable = fiReturnType function
         functionName = fiName function
     selectPerms <- tableSelectPermissions targetTable
@@ -260,13 +270,14 @@ query' allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
   pure $ (concat . catMaybes) (tableSelectExpParsers <> functionSelectExpParsers <> toRemoteFieldParser allRemotes)
          <> catMaybes actionParsers
   where
-    requiredFieldParser :: (a -> b) -> m (P.FieldParser n a) -> m (Maybe (P.FieldParser n b))
-    requiredFieldParser f = fmap $ Just . fmap f
-
     mapMaybeFieldParser :: (a -> b) -> m (Maybe (P.FieldParser n a)) -> m (Maybe (P.FieldParser n b))
     mapMaybeFieldParser f = fmap $ fmap $ fmap f
 
     toRemoteFieldParser p = [Just $ fmap (fmap RFRemote) p]
+    
+requiredFieldParser :: (Functor n, Functor m)=> (a -> b) -> m (P.FieldParser n a) -> m (Maybe (P.FieldParser n b))
+requiredFieldParser f = fmap $ Just . fmap f
+
 
 -- | Similar to @query'@ but for Relay.
 relayQuery'
@@ -279,7 +290,7 @@ relayQuery'
   => HashSet QualifiedTable
   -> [FunctionInfo]
   -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
-relayQuery' allTables allFunctions = do
+relayQuery' allTables nonVolatileFunctions = do
   tableConnectionSelectParsers <-
     for (toList allTables) $ \table -> runMaybeT do
       pkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns)
@@ -291,7 +302,7 @@ relayQuery' allTables allFunctions = do
       lift $ selectTableConnection table fieldName fieldDesc pkeyColumns selectPerms
 
   functionConnectionSelectParsers <-
-    for allFunctions $ \function -> runMaybeT do
+    for nonVolatileFunctions $ \function -> runMaybeT do
       let returnTable = fiReturnType function
           functionName = fiName function
       pkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns)
@@ -317,8 +328,8 @@ query
   -> [ActionInfo 'Postgres]
   -> NonObjectTypeMap
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
-query name allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
-  queryFieldsParser <- query' allTables allFunctions allRemotes allActions nonObjectCustomTypes
+query name allTables nonVolatileFunctions allRemotes allActions nonObjectCustomTypes = do
+  queryFieldsParser <- query' allTables nonVolatileFunctions allRemotes allActions nonObjectCustomTypes
   P.safeSelectionSet name Nothing queryFieldsParser
     <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
 
@@ -329,8 +340,8 @@ subscription
   -> [FunctionInfo]
   -> [ActionInfo 'Postgres]
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
-subscription allTables allFunctions asyncActions =
-  query $$(G.litName "subscription_root") allTables allFunctions [] asyncActions mempty
+subscription allTables nonVolatileFunctions asyncActions =
+  query $$(G.litName "subscription_root") allTables nonVolatileFunctions [] asyncActions mempty
 
 queryRootFromFields
   :: forall n m
@@ -412,16 +423,17 @@ queryWithIntrospection
      , Has Scenario r
      )
   => HashSet QualifiedTable
-  -> [FunctionInfo]
+  -> ([FunctionInfo], [FunctionInfo])
   -> [P.FieldParser n RemoteField]
   -> [P.FieldParser n RemoteField]
   -> [ActionInfo 'Postgres]
   -> NonObjectTypeMap
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
-queryWithIntrospection allTables allFunctions queryRemotes mutationRemotes allActions nonObjectCustomTypes = do
-  basicQueryFP <- query' allTables allFunctions queryRemotes allActions nonObjectCustomTypes
-  mutationP <- mutation allTables mutationRemotes allActions nonObjectCustomTypes
-  subscriptionP <- subscription allTables allFunctions $
+queryWithIntrospection allTables (volatileFunctions, nonVolatileFunctions) queryRemotes 
+                       mutationRemotes allActions nonObjectCustomTypes = do
+  basicQueryFP <- query' allTables nonVolatileFunctions queryRemotes allActions nonObjectCustomTypes
+  mutationP <- mutation allTables volatileFunctions mutationRemotes allActions nonObjectCustomTypes
+  subscriptionP <- subscription allTables nonVolatileFunctions $
                    filter (has (aiDefinition.adType._ActionMutation._ActionAsynchronous)) allActions
   queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP
 
@@ -434,12 +446,12 @@ relayWithIntrospection
      , Has Scenario r
      )
   => HashSet QualifiedTable
-  -> [FunctionInfo]
+  -> ([FunctionInfo], [FunctionInfo])
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
-relayWithIntrospection allTables allFunctions = do
+relayWithIntrospection allTables (volatileFunctions, nonVolatileFunctions) = do
   nodeFP        <- fmap (RFDB . QDBPrimaryKey) <$> nodeField
-  basicQueryFP  <- relayQuery' allTables allFunctions
-  mutationP     <- mutation allTables [] [] mempty
+  basicQueryFP  <- relayQuery' allTables nonVolatileFunctions
+  mutationP     <- mutation allTables volatileFunctions [] [] mempty
   emptyIntro    <- emptyIntrospection
   let relayQueryFP = nodeFP:basicQueryFP
   basicQueryP   <- queryRootFromFields relayQueryFP
@@ -488,12 +500,14 @@ mutation
   :: forall m n r
    . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r, Has Scenario r)
   => HashSet QualifiedTable
+  -> [FunctionInfo]
+  -- ^ valid VOLATILE functions to be added under the graphql schema mutation root
   -> [P.FieldParser n RemoteField]
   -> [ActionInfo 'Postgres]
   -> NonObjectTypeMap
   -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue))))
-mutation allTables allRemotes allActions nonObjectCustomTypes = do
-  mutationParsers <- for (toList allTables) \table -> do
+mutation allTables volatileFunctions allRemotes allActions nonObjectCustomTypes = do
+  tableMutationParsers <- for (toList allTables) \table -> do
     tableCoreInfo <- _tiCoreInfo <$> askTableInfo table
     tableGQLName   <- getTableGQLName table
     tablePerms    <- tablePermissions table
@@ -549,6 +563,20 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
         pure $ fmap (RFDB . MDBDelete) delete : maybe [] (pure . fmap (RFDB . MDBDelete)) deleteByPk
 
       pure $ concat $ catMaybes [inserts, updates, deletes]
+  
+  -- NOTE: this is basically copied from functionSelectExpParsers body
+  functionMutationExpParsers <- for volatileFunctions \function@FunctionInfo{..} -> do
+    selectPerms <- tableSelectPermissions fiReturnType
+    for selectPerms \perms -> do
+      displayName <- qualifiedObjectToName fiName
+      let functionDesc = G.Description $ 
+            "execute VOLATILE function " <> fiName <<> " which returns " <>> fiReturnType
+      catMaybes <$> sequenceA
+        [ requiredFieldParser (RFDB . MDBFunction) $ 
+            selectFunction function displayName (Just functionDesc) perms
+        -- FWIW: The equivalent of this is possible for mutations; do we want that?:
+        -- , mapMaybeFieldParser (RFDB . QDBAggregation) $ selectFunctionAggregate function aggName     (Just aggDesc)      perms
+        ]
 
   actionParsers <- for allActions $ \actionInfo ->
     case _adType (_aiDefinition actionInfo) of
@@ -558,7 +586,10 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
         fmap (fmap (RFAction . AMAsync)) <$> actionAsyncMutation nonObjectCustomTypes actionInfo
       ActionQuery -> pure Nothing
 
-  let mutationFieldsParser = concat (catMaybes mutationParsers) <> catMaybes actionParsers <> fmap (fmap RFRemote) allRemotes
+  let mutationFieldsParser = 
+        concat (catMaybes tableMutationParsers) <> 
+        concat (catMaybes functionMutationExpParsers) <>
+        catMaybes actionParsers <> fmap (fmap RFRemote) allRemotes
   if null mutationFieldsParser
   then pure Nothing
   else fmap Just $ P.safeSelectionSet $$(G.litName "mutation_root") (Just $ G.Description "mutation root") mutationFieldsParser

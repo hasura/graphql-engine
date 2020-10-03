@@ -587,3 +587,21 @@ class TestGraphQLMutateEnums:
 
     def test_delete_where_enum_field(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/delete_where_enum_field.yaml', transport)
+
+# Tracking VOLATILE SQL functions as mutations (#1514)
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@use_mutation_fixtures
+class TestGraphQLMutationFunctions:
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_mutation/functions'
+
+    # Test tracking a VOLATILE function as top-level field of mutation root
+    # field, also smoke testing basic permissions on the table return type.
+    def test_functions_as_mutations(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/function_as_mutations.yaml', transport)
+
+    # Ensure select permissions on the corresponding SETOF table apply to
+    # the return set of the mutation field backed by the tracked function.
+    def test_functions_as_mutations_permissions(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/function_as_mutations_permissions.yaml', transport)

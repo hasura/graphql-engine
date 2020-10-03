@@ -106,6 +106,9 @@ data MutationDB (b :: Backend) v
   = MDBInsert (AnnInsert   b v)
   | MDBUpdate (RQL.AnnUpdG b v)
   | MDBDelete (RQL.AnnDelG b v)
+  | MDBFunction (RQL.AnnSimpleSelG b v)
+  -- ^ This represents a VOLATILE function, and is AnnSimpleSelG for easy
+  -- re-use of non-VOLATILE function tracking code.
 
 data ActionMutation (b :: Backend) v
   = AMSync !(RQL.AnnActionExecution b v)
