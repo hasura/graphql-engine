@@ -1,6 +1,6 @@
 # Contributing to Hasura graphql-engine
 
-_First_: if you feel insecure about how to start contributing, feel free to ask us on our [Discord channel](https://discordapp.com/invite/hasura) in the #contrib channel. You can also just go ahead with your contribution and we'll give you feedback. Don't worry - the worst that can happen is that you'll be politely asked to change something. We appreciate any contributions, and we don't want a wall of rules to stand in the way of that.
+_First_: if you feel unsure about how to start contributing, feel free to ask us on our [Discord channel](https://discordapp.com/invite/hasura) in the #contrib channel. You can also just go ahead with your contribution and we'll give you feedback. Don't worry - the worst that can happen is that you'll be politely asked to change something. We appreciate any contributions, and we don't want a wall of rules to stand in its way.
 
 However, for those individuals who want a bit more guidance on the best way to contribute to the project, read on. This document will cover what we're looking for. By addressing the points below, the chances that we
 can quickly merge or address your contributions will increase.
@@ -32,7 +32,7 @@ Please follow our [Code of conduct](code-of-conduct.md) in the context of any co
 ## 2. Repo overview
 
 [hasura/graphql-engine](https://github.com/hasura/graphql-engine) is a mono-repo
-consisting of 3 components. Each has their own contributing guides:
+consisting of 3 components. Each has its own contributing guides:
 
 1. [Server (Haskell)](server/CONTRIBUTING.md)
 
@@ -48,7 +48,7 @@ For all contributions, a CLA (Contributor License Agreement) needs to be signed 
 
 ## 3. First time contributors welcome!
 
-We appreciate first time contributors and we are happy to assist you in getting started. In case of questions, just reach out to us!
+We appreciate first time contributors and we are happy to assist you in getting started. In case of questions, do reach out to us!
 
 You find all issues suitable for first time contributors [here](https://github.com/hasura/graphql-engine/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22).
 
@@ -102,7 +102,7 @@ Feel free to submit a pull request if you have something to add even if it's not
 
 ### Hasura CLI
 
-We have some issues on the CLI that are suitable for open source contributions. If you know Go or if you would like to learn it by doing, check out the following [issues](https://github.com/hasura/graphql-engine/issues?q=is%3Aopen+is%3Aissue+label%3Ac%2Fcli+label%3A%22help+wanted%22).
+We have some issues on the CLI that are suitable for open source contributions. If you know CLI then cehck it out or if you would like to learn it by doing, check out the following [issues](https://github.com/hasura/graphql-engine/issues?q=is%3Aopen+is%3Aissue+label%3Ac%2Fcli+label%3A%22help+wanted%22).
 
 The README of the CLI repository can be found [here](https://github.com/hasura/graphql-engine/tree/master/cli).
 
