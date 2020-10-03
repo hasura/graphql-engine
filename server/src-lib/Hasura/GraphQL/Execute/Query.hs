@@ -1,5 +1,6 @@
 module Hasura.GraphQL.Execute.Query
   ( convertQuerySelSet
+  , convertFunction
   -- , queryOpFromPlan
   -- , ReusableQueryPlan
   , PreparedSql(..)
@@ -295,6 +296,35 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
         pure $ AQPQuery $ _aerTransaction result
       AQAsync s -> AQPAsyncQuery <$>
         DS.traverseAnnSimpleSelect prepareWithPlan (resolveAsyncActionQuery userInfo s)
+
+-- | A pared-down version of 'convertQuerySelSet', for use in execution of
+-- special case of SQL function mutations (see 'MDBFunction').
+convertFunction
+  :: forall m tx .
+     ( MonadError QErr m
+     , HasVersion
+     , MonadIO tx
+     , MonadTx tx
+     , Tracing.MonadTrace tx
+     )
+  => Env.Environment
+  -> UserInfo
+  -> HTTP.Manager
+  -> HTTP.RequestHeaders
+  -> DS.AnnSimpleSelG 'Postgres UnpreparedValue
+  -- ^ VOLATILE function as 'SelectExp'
+  -> m (tx EncJSON)
+convertFunction env userInfo manager reqHeaders unpreparedQuery = do
+  -- Transform the RQL AST into a prepared SQL query
+  (preparedQuery, PlanningSt _ _ planVals expectedVariables)
+    <- flip runStateT initPlanningSt
+       $ DS.traverseAnnSimpleSelect prepareWithPlan unpreparedQuery
+  validateSessionVariables expectedVariables $ _uiSession userInfo
+
+  pure $!
+    fst $ -- forget (Maybe PreparedSql)
+      mkCurPlanTx env manager reqHeaders userInfo id noProfile $
+        RFPPostgres $ irToRootFieldPlan planVals $ QDBSimple preparedQuery
 
 -- See Note [Temporarily disabling query plan caching]
 -- use the existing plan and new variables to create a pg query
