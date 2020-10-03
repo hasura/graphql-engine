@@ -78,3 +78,4 @@ available at https://www.contributor-covenant.org/version/1/4/code-of-conduct.ht
 This document is available in the following translations:
 
 - [French :fr:](translations/code-of-conduct.french.md)
+- [Polish :poland:](translations/code-of-conduct.polish.md)
