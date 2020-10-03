@@ -62,11 +62,11 @@ Of course, we appreciate contributions to all components of Hasura. However, we 
 
 Our goal is to keep our docs comprehensive and updated. If you would like to help us in doing so, we are grateful for any kind of contribution:
 
-- Report missing content
+- Report missing content.
 
-- Fix errors in existing docs
+- Fix errors in existing docs.
 
-- Help us in adding to the docs
+- Help us in adding to the docs.
 
 The contributing guide for docs can be found at [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).
 
