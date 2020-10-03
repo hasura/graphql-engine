@@ -482,9 +482,9 @@ class Permissions extends Component {
         });
 
         const dispatchRoleNameChange = e => {
-          const newRole = e.target.value.trim();
+          const role = e.target.value;
 
-          dispatch(permSetRoleName(newRole));
+          dispatch(permSetRoleName(role));
         };
 
         return (
