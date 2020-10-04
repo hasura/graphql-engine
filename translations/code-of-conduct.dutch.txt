@@ -1,0 +1,80 @@
+# Hasura GraphQL Engine Community Gedragscode
+
+## Onze belofte
+
+In het belang van het bevorderen van een open en gastvrije omgeving
+donateurs en onderhouders beloven deel te nemen aan ons project en
+onze gemeenschap een intimidatie-vrije ervaring voor iedereen, ongeacht leeftijd, lichaam
+handicap, etniciteit, geslachtskenmerken, genderidentiteit en -expressie,
+niveau van ervaring, opleiding, sociaal-economische status, nationaliteit, persoonlijke
+uiterlijk, ras, religie of seksuele identiteit en geaardheid.
+
+## Onze normen
+
+Voorbeelden van gedrag dat bijdraagt aan het creëren van een positieve omgeving
+o.a.
+
+* Met behulp van gastvrije, inclusieve en genderneutrale taal (bijvoorbeeld: in plaats van "Hey guys",
+je zou kunnen gebruiken "Hey mensen" of "Hey all")
+* Respectvol zijn voor verschillende standpunten en ervaringen
+* Sierlijk accepteren opbouwende kritiek
+* Focussen op wat het beste is voor de gemeenschap
+* Het tonen van empathie ten opzichte van andere leden van de gemeenschap
+
+Voorbeelden van onacceptabel gedrag van deelnemers zijn:
+
+* Het gebruik van geseksualiseerde taal of beelden en ongewenste seksuele aandacht of
+Vooruitgang
+* Trollen, beledigende / denigrerende opmerkingen, en persoonlijke of politieke aanvallen
+* Openbare of particuliere intimidatie
+* Het publiceren van privé-informatie van anderen, zoals een fysieke of elektronische
+adres, zonder expliciete toestemming
+* Ander gedrag dat redelijkerwijs als ongepast kan worden beschouwd in een
+professionele instelling
+
+## Onze verantwoordelijkheden
+
+Projectbeheerders zijn verantwoordelijk voor het verduidelijken van de normen van
+gedrag en wordt verwacht dat zij passende en eerlijke corrigerende maatregelen nemen in
+reactie op gevallen van onaanvaardbaar gedrag.
+
+Projectbeheerders hebben het recht en de verantwoordelijkheid om
+opmerkingen, commits, code, wikibewerkingen, problemen en andere bijdragen afwijzen
+die niet zijn afgestemd op deze gedragscode, of om tijdelijk of
+permanent elke bijdrager voor ander gedrag dat zij ongepast achten,
+bedreigend, beledigend of schadelijk.
+
+## Bereik
+
+Deze gedragscode is van toepassing zowel binnen projectruimten als in de openbare ruimte
+wanneer een individu het project of zijn gemeenschap vertegenwoordigt. Voorbeelden van
+vertegenwoordigen van een project of gemeenschap omvatten het gebruik van een officieel project e-mail
+adres, posten via een officieel social media-account, of optreden als een benoemde
+vertegenwoordiger bij een online of offline evenement. De vertegenwoordiging van een project kan
+verder gedefinieerd en verduidelijkt door projectbeheerders.
+
+## Handhaving
+
+Gevallen van beledigend, intimiderend of anderszins onaanvaardbaar gedrag kunnen
+door contact op te nemen met het projectteam van community@hasura.io. Alle
+klachten zullen worden beoordeeld en onderzocht en zullen resulteren in een reactie die
+noodzakelijk en passend geacht aan de omstandigheden. Het projectteam is
+verplicht om de vertrouwelijkheid te bewaren met betrekking tot de verslaggever van een incident.
+Verdere details van specifiek handhavingsbeleid kunnen afzonderlijk worden geplaatst.
+
+Projectbeheerders die de gedragscode niet in goede
+geloof kan worden geconfronteerd met tijdelijke of permanente gevolgen zoals bepaald door andere
+leden van de leiding van het project.
+
+## Toeschrijving
+
+Deze gedragscode is aangepast aan de [Convenant][homepage], versie 1.4,
+beschikbaar bij https://www.contributor-covenant.org/version/1/4/code-of-conduct.html
+
+[homepage]: https://www.contributor-covenant.org
+
+## Vertalingen
+
+Dit document is beschikbaar in de volgende vertalingen:
+
+- [Frans :fr:](vertalingen/gedragscode.french.md)
