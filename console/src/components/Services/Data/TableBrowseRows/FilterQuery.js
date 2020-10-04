@@ -141,6 +141,7 @@ const renderWheres = (whereAnd, tableSchema, dispatch) => {
           {opIsBoolean ? (
             <select
               className="form-control"
+              placeholder="-- value --"
               onChange={e => {
                 dispatch(setFilterVal(e.target.value, i));
                 if (i + 1 === whereAnd.length) {
@@ -160,6 +161,7 @@ const renderWheres = (whereAnd, tableSchema, dispatch) => {
           ) : (
             <input
               className="form-control"
+              placeholder="-- value --"
               value={getDefaultValue(clause[colName][opName], opName)}
               onChange={e => {
                 dispatch(setFilterVal(e.target.value, i));
