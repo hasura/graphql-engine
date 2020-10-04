@@ -214,7 +214,7 @@ Questo include tutti i file nelle cartelle [`docs`](../docs) e [`community`](../
 
 ## Traduzioni
 
-This readme is available in the following translations:
+Questo readme è disponibile anche nelle seguenti lingue:
 
 - [Inglese :gb:](https://github.com/hasura/graphql-engine/blob/stable/README.md)
 - [Giapponese :jp:](./README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
