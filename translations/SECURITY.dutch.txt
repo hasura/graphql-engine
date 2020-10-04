@@ -1,0 +1,37 @@
+## Kwetsbaarheden melden
+
+We zijn zeer dankbaar voor beveiligingsonderzoekers en gebruikers die kwetsbaarheden melden aan de Hasura-community. Alle rapporten worden grondig onderzocht door een set van de gemeenschap vrijwilligers en de Hasura team.
+
+Als u een beveiligingsprobleem wilt melden, u ons een e-mail sturen naar [build@hasura.io](mailto:build@hasura.io) met alle details, waarbij alle benodigde informatie wordt bijgevoegd.
+
+### Wanneer moet ik een kwetsbaarheid melden?
+
+- U denkt dat u een mogelijk beveiligingslek hebt ontdekt in de Hasura GraphQL Engine of gerelateerde onderdelen.
+- U weet niet zeker hoe een kwetsbaarheid de Hasura GraphQL Engine beïnvloedt.
+- U denkt dat u een kwetsbaarheid hebt ontdekt in een ander project waarvan Hasura GraphQL Engine afhankelijk is (bijvoorbeeld Heroku, Docker, enz.).
+- U wilt elk ander beveiligingsrisico melden dat mogelijk hasura GraphQL Engine-gebruikers kan schaden.
+
+### Wanneer moet ik geen kwetsbaarheid melden?
+
+- U hebt hulp nodig bij het afstemmen van Hasura GraphQL Engine-componenten voor beveiliging.
+- Je hebt hulp nodig bij het toepassen van beveiligingsgerelateerde updates.
+- Uw probleem is niet gerelateerd aan de beveiliging.
+
+## Reactie op beveiligingslek
+
+Elk rapport wordt erkend en geanalyseerd door de beheerders van het project en het beveiligingsteam binnen 3 werkdagen. 
+
+De verslaggever wordt in elke fase van de analyse en oplossing van het probleem op de hoogte gehouden (triage -> fix -> release).
+
+## Public Disclosure Timing
+
+Een openbaarmakingsdatum wordt onderhandeld door het Hasura productbeveiligingsteam en de buginzender. We geven de voorkeur aan volledig onthullen van de bug zo spoedig mogelijk zodra een gebruiker mitigatie beschikbaar is. Het is redelijk om openbaarmaking uit te stellen wanneer de bug of de oplossing nog niet volledig is begrepen, de oplossing niet goed is getest of voor de coördinatie van leveranciers. De termijn voor openbaarmaking is van onmiddellijke (vooral als het al publiekelijk bekend) tot een paar weken. We verwachten dat de termijn tussen een rapport aan een openbaarmaking meestal in de orde van 7 dagen. De Hasura GraphQL Engine-beheerders en het beveiligingsteam nemen de laatste oproep bij het instellen van een openbaarmakingsdatum.
+
+(Sommige secties zijn geïnspireerd en aangepast van [https://github.com/kubernetes/website/blob/master/content/en/docs/reference/issues-security/security.md](https://github.com/kubernetes/website/blob/master/content/en/docs/reference/issues-security/security.md)).
+
+## Vertalingen
+
+Dit document is beschikbaar in de volgende vertalingen:
+
+- [Frans :fr:](vertalingen/SECURITY.french.md)
+- [Hindi:india:](translations/SECURITY.hindi.md)
