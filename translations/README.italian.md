@@ -9,9 +9,9 @@
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="https://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
 
-Hasura GraphQL Engine è un server GraphQL fulmineo che ti fornisce **API GraphQL istantanee e realtime utilizzando Postgres**, inoltre integra [**webhook trigger**](../event-triggers.md) sugli eventi del database e [**schema remoti**](../remote-schemas.md) per gestire la logica di business.
+Hasura GraphQL Engine è un server GraphQL fulmineo che ti fornisce **API GraphQL istantanee e realtime utilizzando Postgres**, inoltre integra dei [**webhook come trigger**](../event-triggers.md) per gli eventi del database e gli [**schema remoti**](../remote-schemas.md) per la gestione della logica di business.
 
-Hasura ti aiuta a scrivere applicazioni [GraphQL](https://hasura.io/graphql/) supportate da Postgres o a migrare incrementalmente da applicazioni esistenti a GraphQL utilizzando Postgres.
+Hasura ti aiuta a scrivere applicazioni [GraphQL](https://hasura.io/graphql/) che utlizzano Postgres o ti permette di migrare incrementalmente da applicazioni esistenti a GraphQL utilizzando Postgres.
 
 Per saperne di più visita [hasura.io](https://hasura.io) e la [documentazione](https://hasura.io/docs/).
 
@@ -27,15 +27,15 @@ Per saperne di più visita [hasura.io](https://hasura.io) e la [documentazione](
 
 ## Caratteristiche
 
-* **Scrivi query avanzate**: Filtraggio integrato, paginazione, ricerca di pattern, inserimento di massa, aggiornamento e cancellazione delle mutazioni
-* **Realtime**: Converti qualsiasi query GraphQL in una query live utilizzando i subscription 
-* **Unisci più remote schema**: Accedi agli schema GraphQL personalizzati per la logica di business attraverso un unico endpoint GraphQL Engine. [Ulteriori informazioni](../remote-schemas.md)
+* **Scrivi query avanzate**: Filtraggio integrato, paginazione, ricerca di pattern, inserimento di massa, aggiornamento e cancellazione delle mutazioni.
+* **Realtime**: Converti qualsiasi query GraphQL in una query live utilizzando i subscription.
+* **Unisci più remote schema**: Accedi agli schema GraphQL personalizzati per la logica di business attraverso un unico endpoint GraphQL Engine. [Ulteriori informazioni](../remote-schemas.md).
 * **Trigger webhook o funzioni serverless**: Sugli eventi Postgres di inserimento/aggiornamento/cancellazione. [Ulteriori informazioni](../event-triggers.md).
 * **Lavora live su database esistenti**: Collega GraphQL Engine ad un database Postgres esistente per ottenere istantaneamente un'API GraphQL.
-* **Controllo dettagliato degli accessi**: Controllo dinamico degli accessi integrabile al tuo sistema di autenticazione (ad es.: auth0, firebase-auth)
-* **Alte prestazioni & low-footprint**: Immagine Docker da ~15MB; ~50MB RAM @ 1000 richieste/s; sfrutta CPU multi-core
-* **Interfaccia di amministrazione & Migrazioni**: Interfaccia di amministrazione & migrazioni degli schema ispirati a Rails
-* **Postgres** ❤️: Supporto dei tipi di Postgres (PostGIS/geo-location, ecc.), trasformazione delle viste in *grafi*, attivazione di funzioni o procedure memorizzate tramite le mutazioni
+* **Controllo dettagliato degli accessi**: Controllo dinamico degli accessi integrabile al tuo sistema di autenticazione (ad es.: auth0, firebase-auth).
+* **Alte prestazioni & low-footprint**: Immagine Docker da ~15MB; ~50MB RAM @ 1000 richieste/s; sfrutta CPU multi-core.
+* **Interfaccia di amministrazione & Migrazioni**: Interfaccia di amministrazione & migrazioni degli schema ispirati a Rails.
+* **Postgres** ❤️: Supporto dei tipi di Postgres (PostGIS/geo-location, ecc.), trasformazione delle viste in *grafi*, attivazione di funzioni o procedure memorizzate tramite le mutazioni.
 
 Per saperne di più visita [hasura.io](https://hasura.io) e la [documentazione](https://hasura.io/docs/).
 
@@ -67,9 +67,9 @@ Per saperne di più visita [hasura.io](https://hasura.io) e la [documentazione](
 
 ### Deploy su Hasura Cloud in un click
 
-Il modo più facile e veloce per provare Hasura è attraverso [Hasura Cloud](https://hasura.io/docs/cloud/1.0/manual/getting-started/index.html).
+Il modo più semplice e veloce per provare Hasura è utilizzando [Hasura Cloud](https://hasura.io/docs/cloud/1.0/manual/getting-started/index.html).
 
-1. Clicca sul seguente bottone per lanciare il deploy dell'engine GraphQL su Hasura Cloud incluso l'add-on Postgres o utilizzando un database Postgres esistente:
+1. Clicca sul seguente bottone per lanciare il deploy dell'engine GraphQL su Hasura Cloud sun un nuovo database Postgres o su uno già esistente:
 
     [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/)
 
@@ -103,7 +103,7 @@ i [manifesti di installazione](../install-manifests).
 ``
 ## Architettura
 
-Il GraphQL Engine di Hasura è il front-end di un'istanza del database Postgres e può accettare richieste di GraphQL dalle applicazioni dei tuoi client. Può essere configurato per utilizzare un sistema di autenticazione esistente e può gestire il controllo degli accessi dal tuo sistema di autenticazione usando regole a livello di campo con variabili dinamiche.
+Il GraphQL Engine di Hasura è il front-end di un'istanza del database Postgres e può accettare richieste di GraphQL dalle applicazioni dei tuoi client. Inoltre può essere configurato per utilizzare un sistema di autenticazione esistente e può gestire il controllo degli accessi dal tuo sistema di autenticazione usando regole a livello di campo con variabili dinamiche.
 
 È anche possibile unire degli schema remoti di GraphQL e fornire un'API GraphQL unificata.
 
@@ -119,7 +119,7 @@ GraphQL Engine fornisce metodi semplici, scalabili e performanti per aggiungere 
 
 ### Schema remoti
 
-Oltre agli schema GraphQL di Hasura basati su Postgres, è possibile aggiungere resolver personalizzati per gli schema remoti. Questi sono ideali per casi d'uso come l'implementazione di un API di pagamento o per interrogare dati che non si trovano nel tuo database - [leggi tutto](../remote-schemas.md)
+Oltre agli schema GraphQL di Hasura basati su Postgres, è possibile aggiungere resolver personalizzati per gli schema remoti. Questi sono ideali per casi d'uso come l'implementazione di un API di pagamento o per interrogare dati che non si trovano nel tuo database - [leggi tutto](../remote-schemas.md).
 
 ### Trigger webhook sugli eventi del database
 
@@ -139,17 +139,17 @@ Dai un'occhiata alle applicazioni d'esempio nella cartella [community/sample-app
 - Chat di gruppo scritta in React; implementa notifiche per i nuovi messaggi, l'indicatore di 
   digitazione e la visualizzazione degli utenti online.
   - [Provala ora](https://realtime-chat.demo.hasura.app/)
-  - [Tutorial](community/sample-apps/realtime-chat)
+  - [Tutorial](../community/sample-apps/realtime-chat)
   - [Browse APIs](https://realtime-chat.demo.hasura.app/console)
 
 - Applicazione di localizzazione in tempo reale che traccia e visualizza le coordinate di un veicolo su una mappa.
   - [Provala ora](https://realtime-location-tracking.demo.hasura.app/)
-  - [Tutorial](community/sample-apps/realtime-location-tracking)
+  - [Tutorial](../community/sample-apps/realtime-location-tracking)
   - [Esplora le API](https://realtime-location-tracking.demo.hasura.app/console)
 
 - Dashboard realtime per l'aggregazione di dati in continuo cambiamento.
   - [Provala ora](https://realtime-poll.demo.hasura.app/)
-  - [Tutorial](community/sample-apps/realtime-poll)
+  - [Tutorial](../community/sample-apps/realtime-poll)
   - [Esplora le API](https://realtime-poll.demo.hasura.app/console)
 
 ### Video
@@ -162,7 +162,7 @@ Dai un'occhiata alle applicazioni d'esempio nella cartella [community/sample-app
 
 ## Support & Troubleshooting
 
-La documentazione e la comunità ti aiuteranno a risolvere la maggior parte dei problemi. Se hai incontrato un bug o desieri contattarci, puoi trovarci utilizzando uno dei seguenti canali:
+La documentazione e la comunità ti aiuteranno a risolvere la maggior parte dei problemi. Se hai trovato un bug o desiederi contattarci, puoi trovarci utilizzando uno dei seguenti canali:
 
 * Supporto & feedback: [Discord](https://discord.gg/hasura)
 * Problemi & segnalazioni di bug: [GitHub issues](https://github.com/hasura/graphql-engine/issues)
@@ -171,7 +171,7 @@ La documentazione e la comunità ti aiuteranno a risolvere la maggior parte dei 
 
 Ci adoperiamo per promuovere un ambiente aperto e accogliente nella comunità. Si prega di consultare il [Codice di condotta](../code-of-conduct.md).
 
-Se si desidera segnalare un problema di sicurezza, si prega di [leggere questo](../SECURITY.md).
+Se vuoi segnalare un problema di sicurezza, leggi [questo documento](../SECURITY.md).
 
 ## Contribuire
 
@@ -180,7 +180,7 @@ Consulta la nostra [guida per contribuire](../CONTRIBUTING.md) per maggiori dett
 ## Asset del brand
 
 Asset del brand Hasura (loghi, a mascot di Hasura, powered by badges ecc.) possono
-essere trovati nella cartella [../assets/brand](assets/brand) folder. 
+essere trovati nella cartella [assets/brand](../assets/brand). 
 Gli asset possono essere inseriti liberamente in applicazioni, siti web, ecc. 
 
 Saremmo entusiasti se aggiungessi il badge "Powered by Hasura".
@@ -217,17 +217,17 @@ Questo include tutti i file nelle cartelle [`docs`](../docs) e [`community`](../
 This readme is available in the following translations:
 
 - [Inglese :gb:](https://github.com/hasura/graphql-engine/blob/stable/README.md)
-- [Giapponese :jp:](README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
-- [Francese :fr:](README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
-- [Bosniaco :bosnia_herzegovina:](README.bosnian.md) (:pray: [@hajro92](https://github.com/hajro92))
-- [Russo :ru:](README.russian.md) (:pray: [@highflyer910](https://github.com/highflyer910))
-- [Greco 🇬🇷](README.greek.md) (:pray: [@MIP2000](https://github.com/MIP2000))
-- [Spagnolo 🇲🇽](README.mx_spanish.md)(:pray: [@ferdox2](https://github.com/ferdox2))
-- [Indonesiano :indonesia:](README.indonesian.md) (:pray: [@anwari666](https://github.com/anwari666))
-- [Portoghese    :brazil:](README.portuguese_br.md) (:pray: [@rubensmp](https://github.com/rubensmp))
-- [Tedesco 🇩🇪](README.german.md) (:pray: [@FynnGrandke](https://github.com/FynnGrandke))
-- [Cinese :cn:](README.chinese.md) (:pray: [@jagreetdg](https://github.com/jagreetdg) & [@johnbanq](https://github.com/johnbanq))
-- [Turco :tr:](README.turkish.md) (:pray: [@berat](https://github.com/berat))
-- [Coreano :kr:](README.korean.md) (:pray: [@라스크](https://github.com/laskdjlaskdj12))
+- [Giapponese :jp:](./README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
+- [Francese :fr:](./README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
+- [Bosniaco :bosnia_herzegovina:](./README.bosnian.md) (:pray: [@hajro92](https://github.com/hajro92))
+- [Russo :ru:](./README.russian.md) (:pray: [@highflyer910](https://github.com/highflyer910))
+- [Greco 🇬🇷](./README.greek.md) (:pray: [@MIP2000](https://github.com/MIP2000))
+- [Spagnolo 🇲🇽](./README.mx_spanish.md)(:pray: [@ferdox2](https://github.com/ferdox2))
+- [Indonesiano :indonesia:](./README.indonesian.md) (:pray: [@anwari666](https://github.com/anwari666))
+- [Portoghese :brazil:](./README.portuguese_br.md) (:pray: [@rubensmp](https://github.com/rubensmp))
+- [Tedesco 🇩🇪](./README.german.md) (:pray: [@FynnGrandke](https://github.com/FynnGrandke))
+- [Cinese :cn:](./README.chinese.md) (:pray: [@jagreetdg](https://github.com/jagreetdg) & [@johnbanq](https://github.com/johnbanq))
+- [Turco :tr:](./README.turkish.md) (:pray: [@berat](https://github.com/berat))
+- [Coreano :kr:](./README.korean.md) (:pray: [@라스크](https://github.com/laskdjlaskdj12))
 
-Translations for other files can be found [here](translations).
+Puoi trovare [qui](../translations) le traduzioni per gli altri file.
