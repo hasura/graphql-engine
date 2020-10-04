@@ -19,14 +19,15 @@ export type Operator =
   | '$ilike'
   | '$nilike'
   | '$similar'
-  | '$nsimilar';
+  | '$nsimilar'
+  | '$is_null';
 
 // Operator with names and aliases
 export type OperatorDef = {
   alias: string;
   operator: Operator;
   name: string;
-  default?: string;
+  default?: string | boolean;
 };
 
 /*

@@ -28,6 +28,12 @@ export const Operators = [
   },
   { name: 'similar', value: '$similar', graphqlOp: '_similar' },
   { name: 'not similar', value: '$nsimilar', graphqlOp: '_nsimilar' },
+  {
+    name: 'is null',
+    value: '$is_null',
+    graphqlOp: '_is_null',
+    defaultValue: true,
+  },
 ];
 
 export const Integers = [

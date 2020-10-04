@@ -76,6 +76,12 @@ const runQuery = tableSchema => {
         return w;
       }
 
+      if (['$is_null'].includes(opName)) {
+        w[colName][opName] =
+          typeof val === 'boolean' ? val : !(val === 'false');
+        return w;
+      }
+
       const colType = tableSchema.columns.find(c => c.column_name === colName)
         .data_type;
       if (Integers.indexOf(colType) > 0) {

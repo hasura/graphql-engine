@@ -88,19 +88,30 @@ const renderOps = (opName, onChange, key) => (
 );
 
 const getDefaultValue = (possibleValue, opName) => {
+  const operator = Operators.find(op => op.value === opName);
+  const defaultValue =
+    operator && operator.defaultValue ? operator.defaultValue : '';
+
+  if (typeof defaultValue === 'boolean') {
+    return typeof possibleValue === 'boolean'
+      ? possibleValue
+      : !(possibleValue === 'false');
+  }
+
   if (possibleValue) {
     if (Array.isArray(possibleValue)) return JSON.stringify(possibleValue);
     return possibleValue;
   }
 
-  const operator = Operators.find(op => op.value === opName);
-  return operator && operator.defaultValue ? operator.defaultValue : '';
+  return defaultValue;
 };
 
 const renderWheres = (whereAnd, tableSchema, dispatch) => {
   return whereAnd.map((clause, i) => {
     const colName = Object.keys(clause)[0];
     const opName = Object.keys(clause[colName])[0];
+    const operator = Operators.find(op => op.value === opName);
+    const opIsBoolean = operator && typeof operator.defaultValue === 'boolean';
     const dSetFilterCol = e => {
       dispatch(setFilterCol(e.target.value, i));
     };
@@ -127,18 +138,40 @@ const renderWheres = (whereAnd, tableSchema, dispatch) => {
         </div>
         <div className="col-xs-3">{renderOps(opName, dSetFilterOp, i)}</div>
         <div className="col-xs-4">
-          <input
-            className="form-control"
-            placeholder="-- value --"
-            value={getDefaultValue(clause[colName][opName], opName)}
-            onChange={e => {
-              dispatch(setFilterVal(e.target.value, i));
-              if (i + 1 === whereAnd.length) {
-                dispatch(addFilter());
-              }
-            }}
-            data-test={`filter-value-${i}`}
-          />
+          {opIsBoolean ? (
+            <select
+              className="form-control"
+              placeholder="-- value --"
+              onChange={e => {
+                dispatch(setFilterVal(e.target.value, i));
+                if (i + 1 === whereAnd.length) {
+                  dispatch(addFilter());
+                }
+              }}
+              value={getDefaultValue(clause[colName][opName], opName)}
+              data-test={`filter-value-${i}`}
+            >
+              <option key={1} value>
+                true
+              </option>
+              <option key={2} value={false}>
+                false
+              </option>
+            </select>
+          ) : (
+            <input
+              className="form-control"
+              placeholder="-- value --"
+              value={getDefaultValue(clause[colName][opName], opName)}
+              onChange={e => {
+                dispatch(setFilterVal(e.target.value, i));
+                if (i + 1 === whereAnd.length) {
+                  dispatch(addFilter());
+                }
+              }}
+              data-test={`filter-value-${i}`}
+            />
+          )}
         </div>
         <div className="text-center col-xs-1">{removeIcon}</div>
       </div>

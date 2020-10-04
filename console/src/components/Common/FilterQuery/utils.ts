@@ -30,6 +30,7 @@ export const allOperators: OperatorDef[] = [
   },
   { name: 'similar', operator: '$similar', alias: '_similar' },
   { name: 'not similar', operator: '$nsimilar', alias: '_nsimilar' },
+  { name: 'is null', operator: '$is_null', alias: '_is_null', default: true },
 ];
 
 export const getOperatorDefaultValue = (op: Operator) => {
