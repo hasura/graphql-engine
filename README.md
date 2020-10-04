@@ -225,6 +225,6 @@ This readme is available in the following translations:
 - [Chinese :cn:](translations/README.chinese.md) (:pray: [@jagreetdg](https://github.com/jagreetdg) & [@johnbanq](https://github.com/johnbanq))
 - [Turkish :tr:](translations/README.turkish.md) (:pray: [@berat](https://github.com/berat))
 - [Korean :kr:](translations/README.korean.md) (:pray: [@라스크](https://github.com/laskdjlaskdj12))
-- [Hebrew :il:](translations/README.hebrew.md) (:pray: [@GuyKh](https://github.com/GuyKh))
+- [Hebrew :israel:](translations/README.hebrew.md) (:pray: [@GuyKh](https://github.com/GuyKh))
 
 Translations for other files can be found [here](translations).
