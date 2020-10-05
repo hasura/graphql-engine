@@ -103,6 +103,7 @@ export type MetadataQueryType =
   | 'create_array_relationship'
   | 'create_object_relationship'
   | 'create_array_relationship'
+  | 'create_cron_trigger'
   | 'create_scheduled_event';
 
 export type MetadataQueries = Record<Driver, Record<MetadataQueryType, string>>;
@@ -425,10 +426,10 @@ export const getDropEventTriggerQuery = (name: string) => ({
 
 export const generateCreateScheduledTriggerQuery = (
   state: LocalScheduledTriggerState,
+  source: string,
   replace = false
-) => ({
-  type: 'create_cron_trigger',
-  args: {
+) =>
+  getMetadataQuery('create_cron_trigger', source, {
     name: state.name.trim(),
     webhook: state.webhook,
     schedule: state.schedule,
@@ -442,16 +443,17 @@ export const generateCreateScheduledTriggerQuery = (
     comment: state.comment,
     include_in_metadata: state.includeInMetadata,
     replace,
-  },
-});
+  });
 
 export const generateUpdateScheduledTriggerQuery = (
-  state: LocalScheduledTriggerState
-) => generateCreateScheduledTriggerQuery(state, true);
+  state: LocalScheduledTriggerState,
+  source: string
+) => generateCreateScheduledTriggerQuery(state, source, true);
 
-export const getDropScheduledTriggerQuery = (name: string) => ({
+export const getDropScheduledTriggerQuery = (name: string, source: string) => ({
   type: 'delete_cron_trigger',
   args: {
+    source,
     name: name.trim(),
   },
 });
@@ -505,13 +507,6 @@ export const getRemoteSchemaIntrospectionQuery = (
     name: remoteSchemaName,
   },
 });
-
-export const getBulkQuery = (args: any[]) => {
-  return {
-    type: 'bulk',
-    args,
-  };
-};
 
 export const addExistingTableOrView = (
   tableName: string,

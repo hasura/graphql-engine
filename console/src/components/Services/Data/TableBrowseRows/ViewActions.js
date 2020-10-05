@@ -302,7 +302,6 @@ const deleteItems = (pkClauses, tableName, tableSchema) => {
     if (!isOk) {
       return;
     }
-
     const source = getState().tables.currentDataSource;
 
     const reqBody = {

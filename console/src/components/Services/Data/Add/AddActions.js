@@ -200,6 +200,7 @@ const createTableSql = () => {
 
     const upQuery = {
       type: 'bulk',
+      source: currentDataSource,
       args: upQueryArgs,
     };
 
@@ -208,6 +209,7 @@ const createTableSql = () => {
 
     const downQuery = {
       type: 'bulk',
+      source: currentDataSource,
       args: [getRunSqlQuery(sqlDropTable, currentDataSource)],
     };
 

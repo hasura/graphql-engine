@@ -434,12 +434,13 @@ export const loadInconsistentObjects = (
 ): Thunk<void, MetadataActions> => {
   return (dispatch, getState) => {
     const headers = getState().tables.dataHeaders;
-
+    const source = getState().tables.currentDataSource;
     const { shouldReloadMetadata, shouldReloadRemoteSchemas } = reloadConfig;
 
     const loadQuery = shouldReloadMetadata
       ? getReloadCacheAndGetInconsistentObjectsQuery(
-          !!shouldReloadRemoteSchemas
+          !!shouldReloadRemoteSchemas,
+          source
         )
       : inconsistentObjectsQuery;
 
@@ -486,9 +487,11 @@ export const reloadRemoteSchema = (
 ): Thunk<void, MetadataActions> => {
   return (dispatch, getState) => {
     const headers = getState().tables.dataHeaders;
+    const source = getState().tables.currentDataSource;
 
     const reloadQuery = reloadRemoteSchemaCacheAndGetInconsistentObjectsQuery(
-      remoteSchemaName
+      remoteSchemaName,
+      source
     );
 
     dispatch({ type: 'Metadata/LOAD_INCONSISTENT_OBJECTS_REQUEST' });
@@ -593,12 +596,13 @@ export const updateAllowedQuery = (
 ): Thunk<void, MetadataActions> => {
   return (dispatch, getState) => {
     const headers = getState().tables.dataHeaders;
-
+    const source = getState().tables.currentDataSource;
+    const query = updateAllowedQueryQuery(queryName, newQuery, source);
     return dispatch(
       requestAction(Endpoints.metadata, {
         method: 'POST',
         headers,
-        body: JSON.stringify(updateAllowedQueryQuery(queryName, newQuery)),
+        body: JSON.stringify(query),
       })
     ).then(
       () => {
@@ -696,10 +700,10 @@ export const addAllowedQueries = (
       return;
     }
     const headers = getState().tables.dataHeaders;
-
+    const source = getState().tables.currentDataSource;
     const addQuery = isEmptyList
-      ? createAllowListQuery(queries)
-      : addAllowedQueriesQuery(queries);
+      ? createAllowListQuery(queries, source)
+      : addAllowedQueriesQuery(queries, source);
 
     return dispatch(
       requestAction(Endpoints.metadata, {

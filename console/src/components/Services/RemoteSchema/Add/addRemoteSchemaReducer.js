@@ -165,13 +165,18 @@ const addRemoteSchema = () => {
     upQueryArgs.push(payload);
     const downQueryArgs = [];
     downQueryArgs.push(downPayload);
+
+    const source = getState().tables.currentDataSource;
+
     const upQuery = {
       type: 'bulk',
+      source,
       args: upQueryArgs,
     };
 
     const downQuery = {
       type: 'bulk',
+      source,
       args: downQueryArgs,
     };
 
@@ -246,12 +251,15 @@ const deleteRemoteSchema = () => {
     upQueryArgs.push(payload);
     const downQueryArgs = [];
     downQueryArgs.push(downPayload);
+    const source = getState().tables.currentDataSource;
     const upQuery = {
       type: 'bulk',
+      source,
       args: upQueryArgs,
     };
     const downQuery = {
       type: 'bulk',
+      source,
       args: downQueryArgs,
     };
     const requestMsg = 'Deleting remote schema...';
@@ -376,12 +384,16 @@ const modifyRemoteSchema = () => {
     downQueryArgs.push(createRemoteSchemaDown);
     // End of down
 
+    const source = getState().tables.currentDataSource;
+
     const upQuery = {
       type: 'bulk',
+      source,
       args: upQueryArgs,
     };
     const downQuery = {
       type: 'bulk',
+      source,
       args: downQueryArgs,
     };
 
