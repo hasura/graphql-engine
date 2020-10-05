@@ -15,12 +15,6 @@ Distinct query results
 The **distinct_on** argument
 ----------------------------
 
-Let's say we have the following schema:
-
-.. code-block:: plpgsql
-  
-  employee (id integer, name text, department text, salary integer)
-
 You can fetch rows with only distinct values of a column using the ``distinct_on`` argument.
 
 It is typically recommended to use ``order_by`` along with ``distinct_on`` to ensure we get predictable results
