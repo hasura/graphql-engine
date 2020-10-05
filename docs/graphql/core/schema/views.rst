@@ -41,7 +41,7 @@ Use cases
 Views are ideal solutions for retrieving some derived data based on some custom business logic. If your custom logic
 requires any user input, you should use :ref:`custom SQL functions <custom_sql_functions>` instead.
 
-Let's look a few example use cases for views:
+Let's look at a few example use cases for views:
 
 Example: Group by and then aggregate
 ************************************
