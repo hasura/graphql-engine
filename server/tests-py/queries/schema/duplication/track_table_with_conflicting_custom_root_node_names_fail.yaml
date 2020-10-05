@@ -1,0 +1,25 @@
+- description: Track the "user" table
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: track_table
+    args:
+      table: user
+
+- description: Track the users table with conflicting custom root level node names
+  url: /v1/query
+  status: 500
+  response:
+    path: $.args
+    code: unexpected
+    error: "found duplicate fields in selection set: user"
+  query:
+    type: track_table
+    version: 2
+    args:
+      table: users
+      configuration:
+        custom_root_fields:
+          select_by_pk: user
