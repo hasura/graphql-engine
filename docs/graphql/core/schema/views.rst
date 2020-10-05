@@ -41,12 +41,20 @@ Use cases
 Views are ideal solutions for retrieving some derived data based on some custom business logic. If your custom logic
 requires any user input, you should use :ref:`custom SQL functions <custom_sql_functions>` instead.
 
-Let's see a few example use cases for views:
+Let's look at a few example use cases for views:
 
 Example: Group by and then aggregate
 ************************************
 
-Let’s see how to fetch the average article rating for each author in our author/article schema.
+Sometimes we might want to fetch some data derived by aggregating (avg, min, max, etc.) over a group of rows in a table.
+
+Let’s say we want to fetch the average article rating for each author in the following schema:
+
+.. code-block:: plpgsql
+
+  author(id integer, name text, city text, email text, phone integer, address text)
+
+  article(id integer, title text, content text, rating integer, author_id integer)
 
 A view that averages the rating of articles for each author can be created using the following SQL query:
 
@@ -61,11 +69,15 @@ A view that averages the rating of articles for each author can be created using
 Example: Hide certain fields of a table
 ***************************************
 
-Say, we have some sensitive information in a table which we wouldn't want to expose. We can create a view that only
-exposes the non-sensitive fields.
+Sometimes we might have some sensitive information in a table which we wouldn't want to expose.
 
-Let's say our ``author`` table has the fields ``id, name, city, email, phone, address`` and we want to hide the ``email``,
-``phone`` and ``address`` fields. We can create the following view to achieve this:
+Let's say, we want to expose the following ``author`` table without the fields ``email``, ``phone`` and ``address``:
+
+.. code-block:: plpgsql
+
+  author(id integer, name text, city text, email text, phone integer, address text)
+
+A view that only exposes the non-sensitive fields of the ``author`` table can be created using the following SQL query:
 
 .. code-block:: SQL
 
