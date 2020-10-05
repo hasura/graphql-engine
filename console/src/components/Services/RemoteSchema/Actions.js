@@ -51,13 +51,16 @@ const makeRequest = (
   errorMsg
 ) => {
   return (dispatch, getState) => {
+    const source = getState().tables.currentDataSource;
     const upQuery = {
       type: 'bulk',
+      source,
       args: upQueries,
     };
 
     const downQuery = {
       type: 'bulk',
+      source,
       args: downQueries,
     };
 

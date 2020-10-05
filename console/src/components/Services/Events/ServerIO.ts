@@ -62,15 +62,13 @@ export const fetchTriggers = (
   kind: Nullable<TriggerKind>
 ): Thunk<Promise<void>> => (dispatch, getState) => {
   dispatch({ type: LOADING_TRIGGERS });
-
-  const currentSource = getState().tables.currentDataSource;
-
+  const { currentDataSource } = getState().tables;
   const bulkQueryArgs = [];
   if (kind === 'cron') {
     bulkQueryArgs.push(
       getRunSqlQuery(
         'SELECT * FROM "hdb_catalog"."hdb_cron_triggers" ORDER BY name ASC NULLS LAST;',
-        currentSource
+        currentDataSource
       )
     );
   } else {
@@ -80,19 +78,17 @@ export const fetchTriggers = (
     // ));
     // todo
   }
-
-  const bulkQuery = {
+  const query = {
     type: 'bulk',
-    source: currentSource,
+    source: currentDataSource,
     args: bulkQueryArgs,
   };
-
   return dispatch(
     requestAction(Endpoints.query, {
       method: 'POST',
       credentials: globalCookiePolicy,
       headers: dataHeaders(getState),
-      body: JSON.stringify(bulkQuery),
+      body: JSON.stringify(query),
     })
   ).then(
     (data: (ScheduledTrigger[] | EventTrigger[])[]) => {

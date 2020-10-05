@@ -63,13 +63,16 @@ const makeRequest = (
   errorMsg
 ) => {
   return (dispatch, getState) => {
+    const source = getState().tables.currentDataSource;
     const upQuery = {
       type: 'bulk',
+      source,
       args: upQueries,
     };
 
     const downQuery = {
       type: 'bulk',
+      source,
       args: downQueries,
     };
 
@@ -245,14 +248,18 @@ const unTrackCustomFunction = () => {
     upQueryArgs.push(payload);
     const downQueryArgs = [];
     downQueryArgs.push(downPayload);
+
     const upQuery = {
       type: 'bulk',
+      source: currentDataSource,
       args: upQueryArgs,
     };
     const downQuery = {
       type: 'bulk',
+      source: currentDataSource,
       args: downQueryArgs,
     };
+
     const requestMsg = 'Deleting custom function...';
     const successMsg = 'Custom function deleted successfully';
     const errorMsg = 'Delete custom function failed';
@@ -327,13 +334,16 @@ const updateSessVar = session_argument => {
 
     const upQuery = {
       type: 'bulk',
+      source: currentDataSource,
       args: [untrackPayloadUp, retrackPayloadUp],
     };
 
     const downQuery = {
       type: 'bulk',
+      source: currentDataSource,
       args: [untrackPayloadDown, retrackPayloadDown],
     };
+
     const requestMsg = 'Updating Session argument variable...';
     const successMsg = 'Session variable argument updated successfully';
     const errorMsg = 'Updating Session argument variable failed';

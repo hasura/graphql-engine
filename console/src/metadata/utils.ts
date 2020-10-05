@@ -24,9 +24,11 @@ const addAllowedQuery = (query: { name: string; query: string }) => ({
 
 export const updateAllowedQueryQuery = (
   queryName: string,
-  newQuery: { name: string; query: string }
+  newQuery: { name: string; query: string },
+  source: string
 ) => ({
   type: 'bulk',
+  source,
   args: [deleteAllowedQueryQuery(queryName), addAllowedQuery(newQuery)],
 });
 
@@ -39,18 +41,21 @@ export const deleteAllowListQuery = () => ({
 });
 
 export const addAllowedQueriesQuery = (
-  queries: Array<{ name: string; query: string }>
+  queries: Array<{ name: string; query: string }>,
+  source: string
 ) => {
   const addQueries = queries.map(query => addAllowedQuery(query));
 
   return {
     type: 'bulk',
+    source,
     args: addQueries,
   };
 };
 
 export const createAllowListQuery = (
-  queries: Array<{ name: string; query: string }>
+  queries: Array<{ name: string; query: string }>,
+  source: string
 ) => {
   const createAllowListCollectionQuery = () => ({
     type: 'create_query_collection',
@@ -71,15 +76,18 @@ export const createAllowListQuery = (
 
   return {
     type: 'bulk',
+    source,
     args: [createAllowListCollectionQuery(), addCollectionToAllowListQuery()],
   };
 };
 
 export const reloadRemoteSchemaCacheAndGetInconsistentObjectsQuery = (
-  remoteSchemaName: string
+  remoteSchemaName: string,
+  source: string
 ) => {
   return {
     type: 'bulk',
+    source,
     args: [
       getReloadRemoteSchemaCacheQuery(remoteSchemaName),
       inconsistentObjectsQuery,
@@ -88,9 +96,11 @@ export const reloadRemoteSchemaCacheAndGetInconsistentObjectsQuery = (
 };
 
 export const getReloadCacheAndGetInconsistentObjectsQuery = (
-  shouldReloadRemoteSchemas: boolean
+  shouldReloadRemoteSchemas: boolean,
+  source: string
 ) => ({
   type: 'bulk',
+  source,
   args: [
     getReloadMetadataQuery(shouldReloadRemoteSchemas),
     inconsistentObjectsQuery,
