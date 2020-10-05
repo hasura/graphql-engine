@@ -3,7 +3,7 @@ url: /v1/graphql
 status: 200
 response:
   errors:
-  - message: 'unexpected value "not_a_real_color" for enum: ''colors_enum'''
+  - message: 'expected one of the values red, purple, yellow, orange, green, or blue for type "colors_enum", but found "not_a_real_color"'
     extensions:
       code: validation-failed
       path: $.selectionSet.insert_users.args.objects[0].favorite_color

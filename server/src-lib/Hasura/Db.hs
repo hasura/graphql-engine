@@ -12,12 +12,14 @@ module Hasura.Db
   , runLazyTx
   , runQueryTx
   , withUserInfo
+  , withTraceContext
   , sessionInfoJsonExp
 
   , RespTx
   , LazyRespTx
   , defaultTxErrorHandler
   , mkTxErrorHandler
+  , lazyTxToQTx
   ) where
 
 import           Control.Lens
@@ -188,6 +190,23 @@ withUserInfo uInfo = \case
   LTTx tx  ->
     let vars = _uiSession uInfo
     in LTTx $ setHeadersTx vars >> tx
+
+-- | Inject the trace context as a transaction-local variable,
+-- so that it can be picked up by any triggers (including event triggers).
+withTraceContext
+  :: Tracing.TraceContext
+  -> LazyTx QErr a
+  -> LazyTx QErr a
+withTraceContext ctx = \case
+  LTErr e  -> LTErr e
+  LTNoTx a -> LTNoTx a
+  LTTx tx  -> 
+    let sql = Q.fromText $
+          "SET LOCAL \"hasura.tracecontext\" = " <> 
+            toSQLTxt (S.SELit . J.encodeToStrictText . Tracing.injectEventContext $ ctx)
+        setTraceContext = 
+          Q.unitQE defaultTxErrorHandler sql () False
+     in LTTx $ setTraceContext >> tx
 
 instance Functor (LazyTx e) where
   fmap f = \case

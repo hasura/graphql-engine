@@ -13,9 +13,9 @@ import           Data.Char                        (toLower)
 import           Data.Time
 import           Network.Wai.Handler.Warp         (HostPreference)
 
-import qualified Hasura.Cache                     as Cache
-import qualified Hasura.GraphQL.Execute           as E
+import qualified Hasura.Cache.Bounded             as Cache
 import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
+import qualified Hasura.GraphQL.Execute.Plan      as E
 import qualified Hasura.Logging                   as L
 
 import           Hasura.Prelude
@@ -142,7 +142,7 @@ data API
   | DEVELOPER
   | CONFIG
   deriving (Show, Eq, Read, Generic)
-  
+
 $(J.deriveJSON (J.defaultOptions { J.constructorTagModifier = map toLower })
   ''API)
 
@@ -257,10 +257,14 @@ instance FromEnv [API] where
   fromEnv = readAPIs
 
 instance FromEnv LQ.BatchSize where
-  fromEnv = fmap LQ.BatchSize . readEither
+  fromEnv s = do
+    val <- readEither s
+    maybe (Left "batch size should be a non negative integer") Right $ LQ.mkBatchSize val
 
 instance FromEnv LQ.RefetchInterval where
-  fromEnv = fmap (LQ.RefetchInterval . milliseconds . fromInteger) . readEither
+  fromEnv x = do
+    val <- fmap (milliseconds . fromInteger) . readEither $ x
+    maybe (Left "refetch interval should be a non negative integer") Right $ LQ.mkRefetchInterval val
 
 instance FromEnv Milliseconds where
   fromEnv = fmap fromInteger . readEither

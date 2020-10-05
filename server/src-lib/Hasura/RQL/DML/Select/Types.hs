@@ -3,21 +3,26 @@
 
 module Hasura.RQL.DML.Select.Types where
 
-import           Control.Lens                  hiding ((.=))
+import           Control.Lens.TH                     (makeLenses, makePrisms)
 import           Data.Aeson.Types
-import           Data.Hashable
-import           Language.Haskell.TH.Syntax    (Lift)
+import           Language.Haskell.TH.Syntax          (Lift)
 
-import qualified Data.Aeson                    as J
-import qualified Data.HashMap.Strict           as HM
-import qualified Data.List.NonEmpty            as NE
-import qualified Data.Sequence                 as Seq
-import qualified Data.Text                     as T
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.HashMap.Strict                 as HM
+import qualified Data.List.NonEmpty                  as NE
+import qualified Data.Sequence                       as Seq
+import qualified Data.Text                           as T
+import qualified Language.GraphQL.Draft.Syntax       as G
 
+import           Hasura.GraphQL.Parser.Schema
 import           Hasura.Prelude
-import           Hasura.RQL.Types
-import qualified Hasura.SQL.DML                as S
+import           Hasura.RQL.Types.BoolExp
+import           Hasura.RQL.Types.Column
+import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.DML
+import           Hasura.RQL.Types.Function
+import           Hasura.RQL.Types.RemoteRelationship
+import           Hasura.RQL.Types.RemoteSchema
+import qualified Hasura.SQL.DML                      as S
 import           Hasura.SQL.Types
 
 type SelectQExt = SelectG ExtCol BoolExp Int
@@ -195,14 +200,14 @@ data AnnColumnField
 
 data RemoteFieldArgument
   = RemoteFieldArgument
-  { _rfaArgument :: !G.Argument
-  , _rfaVariable :: !(Maybe [(G.VariableDefinition,J.Value)])
+  { _rfaArgument :: !G.Name
+  , _rfaValue    :: !(InputValue Variable)
   } deriving (Eq,Show)
 
 data RemoteSelect
   = RemoteSelect
   { _rselArgs          :: ![RemoteFieldArgument]
-  , _rselSelection     :: !G.SelectionSet
+  , _rselSelection     :: !(G.SelectionSet G.NoFragments Variable)
   , _rselHasuraColumns :: !(HashSet PGColumnInfo)
   , _rselFieldCall     :: !(NonEmpty FieldCall)
   , _rselRemoteSchema  :: !RemoteSchemaInfo
