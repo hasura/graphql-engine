@@ -60,7 +60,8 @@ During the startup, two threads are started:
 -}
 module Hasura.Eventing.ScheduledTrigger
   ( runCronEventsGenerator
-  , processScheduledTriggers
+  , processCronEvents
+  , processOneOffScheduledEvents
 
   , CronEventSeed(..)
   , generateScheduleTimes
@@ -108,7 +109,6 @@ import qualified Network.HTTP.Client         as HTTP
 import qualified PostgreSQL.Binary.Decoding  as PD
 import qualified PostgreSQL.Binary.Encoding  as PE
 import qualified Text.Builder                as TB (run)
-
 
 newtype ScheduledTriggerInternalErr
   = ScheduledTriggerInternalErr QErr
@@ -355,42 +355,44 @@ processCronEvents
   -> Q.PGPool
   -> IO SchemaCache
   -> TVar (Set.Set CronEventId)
-  -> m ()
-processCronEvents logger logEnv httpMgr pgpool getSC lockedCronEvents = do
-  cronTriggersInfo <- scCronTriggers <$> liftIO getSC
-  cronScheduledEvents <-
-    liftIO . runExceptT $
-      Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) getPartialCronEvents
-  case cronScheduledEvents of
-    Right partialEvents -> do
-      -- save the locked cron events that have been fetched from the
-      -- database, the events stored here will be unlocked in case a
-      -- graceful shutdown is initiated in midst of processing these events
-      saveLockedEvents (map cepId partialEvents) lockedCronEvents
-      -- The `createdAt` of a cron event is the `created_at` of the cron trigger
-      for_ partialEvents $ \(CronEventPartial id' name st tries createdAt)-> do
-        case Map.lookup name cronTriggersInfo of
-          Nothing ->  logInternalError $
-            err500 Unexpected "could not find cron trigger in cache"
-          Just CronTriggerInfo{..} -> do
-            let webhook = unResolvedWebhook ctiWebhookInfo
-                payload' = fromMaybe J.Null ctiPayload
-                scheduledEvent =
-                    ScheduledEventFull id'
-                                       (Just name)
-                                       st
-                                       tries
-                                       webhook
-                                       payload'
-                                       ctiRetryConf
-                                       ctiHeaders
-                                       ctiComment
-                                       createdAt
-            finally <- runExceptT $
-              runReaderT (processScheduledEvent logEnv pgpool scheduledEvent Cron) (logger, httpMgr)
-            removeEventFromLockedEvents id' lockedCronEvents
-            either logInternalError pure finally
-    Left err -> logInternalError err
+  -> m void
+processCronEvents logger logEnv httpMgr pgpool getSC lockedCronEvents =
+  forever $ do
+    cronTriggersInfo <- scCronTriggers <$> liftIO getSC
+    cronScheduledEvents <-
+      liftIO . runExceptT $
+        Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) getPartialCronEvents
+    case cronScheduledEvents of
+      Right partialEvents -> do
+        -- save the locked cron events that have been fetched from the
+        -- database, the events stored here will be unlocked in case a
+        -- graceful shutdown is initiated in midst of processing these events
+        saveLockedEvents (map cepId partialEvents) lockedCronEvents
+        -- The `createdAt` of a cron event is the `created_at` of the cron trigger
+        for_ partialEvents $ \(CronEventPartial id' name st tries createdAt)-> do
+          case Map.lookup name cronTriggersInfo of
+            Nothing ->  logInternalError $
+              err500 Unexpected "could not find cron trigger in cache"
+            Just CronTriggerInfo{..} -> do
+              let webhook = unResolvedWebhook ctiWebhookInfo
+                  payload' = fromMaybe J.Null ctiPayload
+                  scheduledEvent =
+                      ScheduledEventFull id'
+                                         (Just name)
+                                         st
+                                         tries
+                                         webhook
+                                         payload'
+                                         ctiRetryConf
+                                         ctiHeaders
+                                         ctiComment
+                                         createdAt
+              finally <- runExceptT $
+                runReaderT (processScheduledEvent logEnv pgpool scheduledEvent Cron) (logger, httpMgr)
+              removeEventFromLockedEvents id' lockedCronEvents
+              either logInternalError pure finally
+      Left err -> logInternalError err
+    liftIO $ sleep (minutes 1)
   where
     logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
 
@@ -401,77 +403,64 @@ processOneOffScheduledEvents
   -> LogEnvHeaders
   -> HTTP.Manager
   -> Q.PGPool
+  -> Seconds
   -> TVar (Set.Set OneOffScheduledEventId)
-  -> m ()
-processOneOffScheduledEvents env logger logEnv httpMgr pgpool lockedOneOffScheduledEvents = do
-  oneOffScheduledEvents <-
-    liftIO . runExceptT $
-      Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) getOneOffScheduledEvents
-  case oneOffScheduledEvents of
-    Right oneOffScheduledEvents' -> do
-      -- save the locked one-off events that have been fetched from the
-      -- database, the events stored here will be unlocked in case a
-      -- graceful shutdown is initiated in midst of processing these events
-      saveLockedEvents (map ooseId oneOffScheduledEvents') lockedOneOffScheduledEvents
-      for_ oneOffScheduledEvents' $
-             \(OneOffScheduledEvent id'
-                                    scheduledTime
-                                    tries
-                                    webhookConf
-                                    payload
-                                    retryConf
-                                    headerConf
-                                    comment
-                                    createdAt)
-        -> do
-        webhookInfo <- liftIO . runExceptT $ resolveWebhook env webhookConf
-        headerInfo <- liftIO . runExceptT $ getHeaderInfosFromConf env headerConf
+  -> m void
+processOneOffScheduledEvents env logger logEnv httpMgr pgpool refetchInterval lockedOneOffScheduledEvents =
+  forever $ do
+    oneOffScheduledEvents <-
+      liftIO . runExceptT $
+        Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) getOneOffScheduledEvents
+    case oneOffScheduledEvents of
+      Right oneOffScheduledEvents' -> do
+        -- save the locked one-off events that have been fetched from the
+        -- database, the events stored here will be unlocked in case a
+        -- graceful shutdown is initiated in midst of processing these events
+        saveLockedEvents (map ooseId oneOffScheduledEvents') lockedOneOffScheduledEvents
+        for_ oneOffScheduledEvents' $
+               \(OneOffScheduledEvent id'
+                                      scheduledTime
+                                      tries
+                                      webhookConf
+                                      payload
+                                      retryConf
+                                      headerConf
+                                      comment
+                                      createdAt)
+          -> do
+          webhookInfo <- liftIO . runExceptT $ resolveWebhook env webhookConf
+          headerInfo <- liftIO . runExceptT $ getHeaderInfosFromConf env headerConf
 
-        case webhookInfo of
-          Right webhookInfo' -> do
-            case headerInfo of
-              Right headerInfo' -> do
-                let webhook = unResolvedWebhook webhookInfo'
-                    payload' = fromMaybe J.Null payload
-                    scheduledEvent = ScheduledEventFull id'
-                                                        Nothing
-                                                        scheduledTime
-                                                        tries
-                                                        webhook
-                                                        payload'
-                                                        retryConf
-                                                        headerInfo'
-                                                        comment
-                                                        createdAt
-                finally <- runExceptT $
-                  runReaderT (processScheduledEvent logEnv pgpool scheduledEvent OneOff) $
-                    (logger, httpMgr)
-                removeEventFromLockedEvents id' lockedOneOffScheduledEvents
-                either logInternalError pure finally
+          case webhookInfo of
+            Right webhookInfo' -> do
+              case headerInfo of
+                Right headerInfo' -> do
+                  let webhook = unResolvedWebhook webhookInfo'
+                      payload' = fromMaybe J.Null payload
+                      scheduledEvent = ScheduledEventFull id'
+                                                          Nothing
+                                                          scheduledTime
+                                                          tries
+                                                          webhook
+                                                          payload'
+                                                          retryConf
+                                                          headerInfo'
+                                                          comment
+                                                          createdAt
+                  finally <- runExceptT $
+                    runReaderT (processScheduledEvent logEnv pgpool scheduledEvent OneOff) $
+                      (logger, httpMgr)
+                  removeEventFromLockedEvents id' lockedOneOffScheduledEvents
+                  either logInternalError pure finally
 
-              Left headerInfoErr -> logInternalError headerInfoErr
+                Left headerInfoErr -> logInternalError headerInfoErr
 
-          Left webhookInfoErr -> logInternalError webhookInfoErr
+            Left webhookInfoErr -> logInternalError webhookInfoErr
 
-    Left oneOffScheduledEventsErr -> logInternalError oneOffScheduledEventsErr
+      Left oneOffScheduledEventsErr -> logInternalError oneOffScheduledEventsErr
+    liftIO $ sleep $ seconds refetchInterval
   where
     logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
-
-processScheduledTriggers
-  :: (HasVersion, MonadIO m, Tracing.HasReporter m)
-  => Env.Environment
-  -> L.Logger L.Hasura
-  -> LogEnvHeaders
-  -> HTTP.Manager
-  -> Q.PGPool
-  -> IO SchemaCache
-  -> LockedEventsCtx
-  -> m void
-processScheduledTriggers env logger logEnv httpMgr pgpool getSC LockedEventsCtx {..} =
-  forever $ do
-    processCronEvents logger logEnv httpMgr pgpool getSC leCronEvents
-    processOneOffScheduledEvents env logger logEnv httpMgr pgpool leOneOffEvents
-    liftIO $ sleep (minutes 1)
 
 processScheduledEvent ::
   ( MonadReader r m

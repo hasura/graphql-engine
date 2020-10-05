@@ -46,6 +46,30 @@ class TestScheduledEvent(object):
         st, resp = hge_ctx.v1q(query)
         assert st == 200,resp
 
+    def test_check_fired_webhook_event(self,hge_ctx,scheduled_triggers_evts_webhook):
+        query = {
+            "type":"run_sql",
+            "args":{
+                "sql":'''
+                select timezone('utc',created_at) as created_at
+                from hdb_catalog.hdb_scheduled_events
+                where comment = 'test scheduled event';
+                '''
+            }
+        }
+        st, resp = hge_ctx.v1q(query)
+        assert st == 200, resp
+        db_created_at = resp['result'][1][0]
+        event = scheduled_triggers_evts_webhook.get_event(1)
+        validate_event_webhook(event['path'],'/test')
+        validate_event_headers(event['headers'],{"header-key":"header-value"})
+        assert event['body']['payload'] == self.webhook_payload
+        assert event['body']['created_at'] == db_created_at.replace(" ","T") + "Z"
+        payload_keys = dict.keys(event['body'])
+        for k in ["scheduled_time","created_at","id"]: # additional keys
+            assert k in payload_keys
+        assert scheduled_triggers_evts_webhook.is_queue_empty()
+
     def test_create_scheduled_event_with_very_old_scheduled_time(self,hge_ctx):
         query = {
             "type":"create_scheduled_event",
@@ -78,32 +102,8 @@ class TestScheduledEvent(object):
         st, resp = hge_ctx.v1q(query)
         assert st == 200, resp
 
-    def test_check_fired_webhook_event(self,hge_ctx,scheduled_triggers_evts_webhook):
-        query = {
-            "type":"run_sql",
-            "args":{
-                "sql":'''
-                select timezone('utc',created_at) as created_at
-                from hdb_catalog.hdb_scheduled_events
-                where comment = 'test scheduled event';
-                '''
-            }
-        }
-        st, resp = hge_ctx.v1q(query)
-        assert st == 200, resp
-        db_created_at = resp['result'][1][0]
-        event = scheduled_triggers_evts_webhook.get_event(65)
-        validate_event_webhook(event['path'],'/test')
-        validate_event_headers(event['headers'],{"header-key":"header-value"})
-        assert event['body']['payload'] == self.webhook_payload
-        assert event['body']['created_at'] == db_created_at.replace(" ","T") + "Z"
-        payload_keys = dict.keys(event['body'])
-        for k in ["scheduled_time","created_at","id"]: # additional keys
-            assert k in payload_keys
-        assert scheduled_triggers_evts_webhook.is_queue_empty()
-
     def test_check_events_statuses(self,hge_ctx):
-        time.sleep(65) # need to sleep here for atleast a minute for the failed event to be retried
+        time.sleep(2) # need to sleep here for the retry attempt
         query = {
             "type":"run_sql",
             "args":{
