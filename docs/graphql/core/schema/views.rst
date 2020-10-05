@@ -46,6 +46,8 @@ Let's look at a few example use cases for views:
 Example: Group by and then aggregate
 ************************************
 
+Sometimes we might want to fetch some data derived by aggregating (avg, min, max, etc.) over a group of rows in a table.
+
 Let’s say we want to fetch the average article rating for each author in the following schema:
 
 .. code-block:: plpgsql
