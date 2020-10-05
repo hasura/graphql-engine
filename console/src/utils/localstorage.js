@@ -1,3 +1,5 @@
+import globals from '../Globals';
+
 let localStorageAvailable = null;
 
 /**
@@ -77,4 +79,27 @@ export const initializeStore = () => {
     }
   }
   return localStorageAvailable;
+};
+
+export const LS_KEYS = {
+  consoleAdminSecret: 'console:adminSecret',
+  consoleLocalInfo: `console:localInfo:${globals.dataApiUrl}`,
+  versionUpdateCheckLastClosed: 'console:versionUpdateCheckLastClosed',
+  loveConsent: 'console:loveIcon',
+  proClick: 'console:pro',
+  derivedActions: 'actions:derivedActions',
+  apiExplorerEndpointSectionIsOpen: 'apiExplorer:endpointSectionIsOpen',
+  apiExplorerGraphiqlMode: 'apiExplorer:graphiQLMode',
+  apiExplorerHeaderSectionIsOpen: 'apiExplorer:headersSectionIsOpen',
+  apiExplorerAdminSecretWasAdded: 'apiExplorer:adminSecretHeaderWasAdded',
+  apiExplorerConsoleGraphQLHeaders: 'apiExplorer:graphiqlHeaders',
+  oneGraphExplorerWidth: 'graphiql:explorerWidth',
+  oneGraphExplorerOpen: 'graphiql:explorerOpen',
+  oneGraphExplorerCodeExporterOpen: 'graphiql:codeExporterOpen',
+  graphiqlQuery: 'graphiql:query',
+  rawSQLKey: 'rawSql:sql',
+  rawSqlStatementTimeout: 'rawSql:rawSqlStatementTimeout',
+  dataColumnsCollapsedKey: 'data:collapsed',
+  dataPageSizeKey: 'data:pageSize',
+  dataColumnsOrderKey: 'data:order',
 };
