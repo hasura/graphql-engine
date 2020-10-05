@@ -13,7 +13,7 @@ const Collapsed: React.FC<Props> = ({ relationship }) => {
   const parseRelationship = parseRemoteRelationship(relationship);
   const relationMap = () => {
     const fields = parseRelationship.remoteFields.map(field => field.name);
-    return ['', ...fields].join(' →');
+    return ['', ...fields].join(' . ');
   };
   return (
     <div className={styles.display_flex}>
