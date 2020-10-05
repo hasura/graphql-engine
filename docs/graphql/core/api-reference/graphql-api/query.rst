@@ -317,10 +317,10 @@ Argument
 
 .. parsed-literal::
 
-   :ref:`DistinctOnExp <distinct_on_exp>` | :ref:`WhereExp <where_exp>` | :ref:`OrderByExp <order_by_exp>` | PaginationExp_
+   DistinctOnExp_ | WhereExp_ | OrderByExp_ | PaginationExp_
 
 
-.. _distinct_on_exp:
+.. _DistinctOnExp:
 
 DistinctOnExp
 *************
@@ -355,7 +355,7 @@ TableSelectColumnEnum
    }
 
 
-.. _where_exp:
+.. _WhereExp:
 
 WhereExp
 ********
@@ -758,7 +758,7 @@ CastExp
 
    Currently, only casting between ``geometry`` and ``geography`` types is allowed.
 
-.. _order_by_exp:
+.. _OrderByExp:
 
 OrderByExp
 **********

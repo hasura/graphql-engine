@@ -177,7 +177,7 @@ Edge is an object type that consists of a :ref:`cursor <Cursor>` and ``node`` fi
 Cursor
 ^^^^^^
 
-The cursor field returns a unique non-null String value which is useful for :ref:`pagination <PaginationExp>`.
+The cursor field returns a unique non-null String value which is useful for :ref:`pagination <RelayPaginationExp>`.
 
 .. note::
 
@@ -188,9 +188,30 @@ Argument
 
 .. parsed-literal::
 
-   :ref:`DistinctOnExp <distinct_on_exp>` | :ref:`WhereExp <where_exp>` | :ref:`OrderByExp <order_by_exp>` | PaginationExp_
+   :ref:`DistinctOnExp <RelayDistinctOnExp>` | :ref:`WhereExp <RelayWhereExp>` | :ref:`OrderByExp <RelayOrderByExp>` | :ref:`PaginationExp <RelayPaginationExp>`
 
-.. _PaginationExp:
+.. _RelayDistinctOnExp:
+
+DistinctOnExp
+*************
+
+Same as the generic :ref:`DistinctOnExp`
+
+.. _RelayWhereExp:
+
+WhereExp
+********
+
+Same as the generic :ref:`WhereExp`
+
+.. _RelayOrderByExp:
+
+OrderByExp
+**********
+
+Same as the generic :ref:`OrderByExp`
+
+.. _RelayPaginationExp:
 
 PaginationExp
 *************
