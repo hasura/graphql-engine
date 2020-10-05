@@ -965,8 +965,12 @@ relationshipField relationshipInfo = runMaybeT do
                        ]
   where
     -- temporary, until we work on proper generalized joins
-    extractSimpleSelect (RootTree (RFDB (QDBSimple selectExp)) _) = selectExp
-    extractAggSelect (RootTree (RFDB (QDBAggregation selectExp)) _) = selectExp
+    extractSimpleSelect = \case
+      RootTree (RFDB (QDBSimple selectExp)) _ -> selectExp
+      _                                       -> error "internal error: unexpected tree in relationship"
+    extractAggSelect = \case
+      RootTree (RFDB (QDBAggregation selectExp)) _ -> selectExp
+      _                                            -> error "internal error: unexpected tree in aggregate relationsh"
 
 -- | Computed field parser
 computedField

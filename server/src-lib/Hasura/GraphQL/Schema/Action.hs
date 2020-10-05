@@ -202,18 +202,20 @@ actionOutputFields outputObject = do
       roleName <- lift askRoleName
       tablePerms <- MaybeT $ pure $ RQL.getPermInfoMaybe roleName PASelect tableInfo
       tableParser <- lift $ selectTable tableName fieldName Nothing tablePerms
-      pure $ tableParser <&> \(RootTree (RFDB (QDBSimple selectExp)) _) ->
-        let tableRelName = RelName $ mkNonEmptyTextUnsafe $ G.unName fieldName
-            columnMapping = Map.fromList $
-              [ (unsafePGCol $ G.unName $ unObjectFieldName k, pgiColumn v)
-              | (k, v) <- Map.toList fieldMapping
-              ]
-        in case relType of
-              ObjRel -> RQL.AFObjectRelation $ RQL.AnnRelationSelectG tableRelName columnMapping $
-                        RQL.AnnObjectSelectG (RQL._asnFields selectExp) tableName $
-                        RQL._tpFilter $ RQL._asnPerm selectExp
-              ArrRel -> RQL.AFArrayRelation $ RQL.ASSimple $
-                        RQL.AnnRelationSelectG tableRelName columnMapping selectExp
+      pure $ tableParser <&> \case
+        RootTree (RFDB (QDBSimple selectExp)) _ ->
+          let tableRelName = RelName $ mkNonEmptyTextUnsafe $ G.unName fieldName
+              columnMapping = Map.fromList $
+                [ (unsafePGCol $ G.unName $ unObjectFieldName k, pgiColumn v)
+                | (k, v) <- Map.toList fieldMapping
+                ]
+          in case relType of
+                ObjRel -> RQL.AFObjectRelation $ RQL.AnnRelationSelectG tableRelName columnMapping $
+                          RQL.AnnObjectSelectG (RQL._asnFields selectExp) tableName $
+                          RQL._tpFilter $ RQL._asnPerm selectExp
+                ArrRel -> RQL.AFArrayRelation $ RQL.ASSimple $
+                          RQL.AnnRelationSelectG tableRelName columnMapping selectExp
+        _ -> error "internal error: unexpected tree in action"
 
 mkDefinitionList :: AnnotatedObjectType -> [(PGCol, PGScalarType)]
 mkDefinitionList ObjectTypeDefinition{..} =

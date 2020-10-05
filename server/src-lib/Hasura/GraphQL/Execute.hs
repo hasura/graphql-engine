@@ -28,8 +28,8 @@ import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 
 import qualified Data.HashSet                           as HS
-import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Language.GraphQL.Draft.Printer         as G
+import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
@@ -295,7 +295,7 @@ getResolvedExecPlan env logger pgExecCtx {- planCache-} userInfo sqlGenCtx
               in
               unless (multipleAllowed || null rst) $
                 throw400 ValidationFailed "subscriptions must select one top level field"
-          validSubscriptionAST <- for unpreparedAST validateSubscriptionRootField
+          validSubscriptionAST <- for unpreparedAST \(C.RootTree rootField _) -> validateSubscriptionRootField rootField
           (lqOp, _plan) <- EL.buildLiveQueryPlan pgExecCtx userInfo validSubscriptionAST
           return $ SubscriptionExecutionPlan lqOp
 

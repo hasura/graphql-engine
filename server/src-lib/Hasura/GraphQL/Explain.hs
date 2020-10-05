@@ -125,7 +125,7 @@ explainGQLQuery pgExecCtx sc (GQLExplain query userVarsRaw maybeIsRelay) = do
       (unpreparedQueries, _) <-
         E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) inlinedSelSet
       runInTx $ encJFromJValue
-        <$> for (OMap.toList unpreparedQueries) (uncurry (explainQueryField userInfo))
+        <$> for (OMap.toList unpreparedQueries) \(name, RootTree queryField _) -> explainQueryField userInfo name queryField
 
     G.TypedOperationDefinition G.OperationTypeMutation _ _ _ _ ->
       throw400 InvalidParams "only queries can be explained"
@@ -134,7 +134,7 @@ explainGQLQuery pgExecCtx sc (GQLExplain query userVarsRaw maybeIsRelay) = do
       -- (Here the above fragment inlining is actually executed.)
       inlinedSelSet <- E.inlineSelectionSet fragments selSet
       (unpreparedQueries, _) <- E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) inlinedSelSet
-      validSubscriptionQueries <- for unpreparedQueries E.validateSubscriptionRootField
+      validSubscriptionQueries <- for unpreparedQueries \(RootTree queryField _) -> E.validateSubscriptionRootField queryField
       (plan, _) <- E.buildLiveQueryPlan pgExecCtx userInfo validSubscriptionQueries
       runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where

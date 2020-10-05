@@ -13,10 +13,12 @@ module Hasura.GraphQL.Context
   , QueryDB(..)
   , ActionQuery(..)
   , QueryRootTree
+  , QueryRootField
   , QueryRootJoin
   , MutationDB(..)
   , ActionMutation(..)
   , MutationRootTree
+  , MutationRootField
   , MutationRootJoin
   , SubscriptionRootField
   , SubscriptionRootFieldResolved
@@ -105,8 +107,9 @@ data ActionQuery v
 
 type RemoteField = (RQL.RemoteSchemaInfo, G.Field G.NoFragments Variable)
 
-type QueryRootTree v = RootTree (RootField (QueryDB v) RemoteField (ActionQuery v) J.Value)
-type QueryRootJoin v = RootJoin (RootField (QueryDB v) RemoteField (ActionQuery v) J.Value)
+type QueryRootField v = RootField (QueryDB v) RemoteField (ActionQuery v) J.Value
+type QueryRootTree  v = RootTree (QueryRootField v)
+type QueryRootJoin  v = RootJoin (QueryRootField v)
 
 data MutationDB v
   = MDBInsert (AnnInsert   v)
@@ -117,10 +120,9 @@ data ActionMutation v
   = AMSync !(RQL.AnnActionExecution v)
   | AMAsync !RQL.AnnActionMutationAsync
 
-type MutationRootTree v =
-  RootTree (RootField (MutationDB v) RemoteField (ActionMutation v) J.Value)
-type MutationRootJoin v =
-  RootJoin (RootField (MutationDB v) RemoteField (ActionMutation v) J.Value)
+type MutationRootField v = RootField (MutationDB v) RemoteField (ActionMutation v) J.Value
+type MutationRootTree  v = RootTree (MutationRootField v)
+type MutationRootJoin  v = RootJoin (MutationRootField v)
 
 type SubscriptionRootField v = RootField (QueryDB v) Void (RQL.AnnActionAsyncQuery v) Void
 type SubscriptionRootFieldResolved = RootField (QueryDB S.SQLExp) Void RQL.AnnSimpleSel Void
