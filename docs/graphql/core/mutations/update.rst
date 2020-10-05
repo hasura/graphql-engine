@@ -15,7 +15,7 @@ Update mutation
 Auto-generated update mutation schema
 -------------------------------------
 
-**For example**, the auto-generated schema for the update mutation field for a table ``article`` looks like this:
+**For example**, the auto-generated schema for the update mutation field for a table ``article`` looks like the following:
 
 .. code-block:: graphql
 
