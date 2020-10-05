@@ -2,7 +2,6 @@
 
 module Hasura.SQL.Tsql.FromIr
   ( fromSelectRows
-  , mkSQLSelect
   , fromSelectAggregate
   , Error(..)
   , runFromIr
@@ -28,6 +27,7 @@ import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Read as T
 import qualified Database.ODBC.SQLServer as Odbc
+import qualified Hasura.GraphQL.Parser.Column as Graphql
 import qualified Hasura.RQL.DML.Select.Types as Ir
 import qualified Hasura.RQL.Types.BoolExp as Ir
 import qualified Hasura.RQL.Types.Column as Ir
@@ -43,16 +43,16 @@ import           Prelude
 
 -- | Most of these errors should be checked for legitimacy.
 data Error
-  = FromTypeUnsupported (Ir.SelectFromG Sql.SQLExp)
+  = FromTypeUnsupported (Ir.SelectFromG Graphql.UnpreparedValue)
   | NoOrderSpecifiedInOrderBy
   | MalformedAgg
-  | FieldTypeUnsupportedForNow (Ir.AnnFieldG Sql.SQLExp)
-  | AggTypeUnsupportedForNow (Ir.TableAggregateFieldG Sql.SQLExp)
+  | FieldTypeUnsupportedForNow (Ir.AnnFieldG Graphql.UnpreparedValue)
+  | AggTypeUnsupportedForNow (Ir.TableAggregateFieldG Graphql.UnpreparedValue)
   | NoProjectionFields
   | NoAggregatesMustBeABug
-  | UnsupportedArraySelect (Ir.ArraySelectG Sql.SQLExp)
-  | UnsupportedOpExpG (Ir.OpExpG Sql.SQLExp)
-  | UnsupportedSQLExp Sql.SQLExp
+  | UnsupportedArraySelect (Ir.ArraySelectG Graphql.UnpreparedValue)
+  | UnsupportedOpExpG (Ir.OpExpG Graphql.UnpreparedValue)
+  | UnsupportedSQLExp Graphql.UnpreparedValue
   | UnsupportedDistinctOn
   | InvalidIntegerishSql Sql.SQLExp
   | DistinctIsn'tSupported
@@ -90,18 +90,18 @@ runFromIr fromIr = evalStateT (unFromIr fromIr) mempty
 --------------------------------------------------------------------------------
 -- Similar rendition of old API
 
-mkSQLSelect :: Ir.JsonAggSelect -> Ir.AnnSimpleSel -> FromIr Tsql.Select
-mkSQLSelect jsonAggSelect annSimpleSel =
-  case jsonAggSelect of
-    Ir.JASMultipleRows -> fromSelectRows annSimpleSel
-    Ir.JASSingleObject -> do
-      select <- fromSelectRows annSimpleSel
-      pure select {selectFor = JsonFor JsonSingleton, selectTop = Top 1}
+-- mkSQLSelect :: Ir.JsonAggSelect -> Ir.AnnSimpleSel -> FromIr Tsql.Select
+-- mkSQLSelect jsonAggSelect annSimpleSel =
+--   case jsonAggSelect of
+--     Ir.JASMultipleRows -> fromSelectRows annSimpleSel
+--     Ir.JASSingleObject -> do
+--       select <- fromSelectRows annSimpleSel
+--       pure select {selectFor = JsonFor JsonSingleton, selectTop = Top 1}
 
 --------------------------------------------------------------------------------
 -- Top-level exported functions
 
-fromSelectRows :: Ir.AnnSelectG (Ir.AnnFieldsG Sql.SQLExp) Sql.SQLExp -> FromIr Tsql.Select
+fromSelectRows :: Ir.AnnSelectG (Ir.AnnFieldsG Graphql.UnpreparedValue) Graphql.UnpreparedValue -> FromIr Tsql.Select
 fromSelectRows annSelectG = do
   selectFrom <-
     case from of
@@ -154,7 +154,7 @@ fromSelectRows annSelectG = do
         else LeaveNumbersAlone
 
 fromSelectAggregate ::
-     Ir.AnnSelectG [(Ir.FieldName, Ir.TableAggregateFieldG Sql.SQLExp)] Sql.SQLExp
+     Ir.AnnSelectG [(Ir.FieldName, Ir.TableAggregateFieldG Graphql.UnpreparedValue)] Graphql.UnpreparedValue
   -> FromIr Tsql.Select
 fromSelectAggregate annSelectG = do
   selectFrom <-
@@ -219,7 +219,7 @@ data UnfurledJoin = UnfurledJoin
     -- ^ Recorded if we joined onto an object relation.
   } deriving (Show)
 
-fromSelectArgsG :: Ir.SelectArgsG Sql.SQLExp -> ReaderT EntityAlias FromIr Args
+fromSelectArgsG :: Ir.SelectArgsG Graphql.UnpreparedValue -> ReaderT EntityAlias FromIr Args
 fromSelectArgsG selectArgsG = do
   argsWhere <-
     maybe (pure mempty) (fmap (Where . pure) . fromAnnBoolExp) mannBoolExp
@@ -261,7 +261,7 @@ fromSelectArgsG selectArgsG = do
 -- | Produce a valid ORDER BY construct, telling about any joins
 -- needed on the side.
 fromAnnOrderByItemG ::
-     Ir.AnnOrderByItemG Sql.SQLExp -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) OrderBy
+     Ir.AnnOrderByItemG Graphql.UnpreparedValue -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) OrderBy
 fromAnnOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
   orderByFieldName <- unfurlAnnOrderByElement obiColumn
   let morderByOrder =
@@ -285,7 +285,7 @@ fromAnnOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
 -- that are terminated by field name (Ir.AOCColumn and
 -- Ir.AOCArrayAggregation).
 unfurlAnnOrderByElement ::
-     Ir.AnnOrderByElement Sql.SQLExp -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) FieldName
+     Ir.AnnOrderByElement Graphql.UnpreparedValue -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) FieldName
 unfurlAnnOrderByElement =
   \case
     Ir.AOCColumn pgColumnInfo -> do
@@ -409,12 +409,12 @@ fromQualifiedTable qualifiedObject = do
                         } = qualifiedObject
 
 fromAnnBoolExp ::
-     Ir.GBoolExp (Ir.AnnBoolExpFld Sql.SQLExp)
+     Ir.GBoolExp (Ir.AnnBoolExpFld Graphql.UnpreparedValue)
   -> ReaderT EntityAlias FromIr Expression
 fromAnnBoolExp = traverse fromAnnBoolExpFld >=> fromGBoolExp
 
 fromAnnBoolExpFld ::
-     Ir.AnnBoolExpFld Sql.SQLExp -> ReaderT EntityAlias FromIr Expression
+     Ir.AnnBoolExpFld Graphql.UnpreparedValue -> ReaderT EntityAlias FromIr Expression
 fromAnnBoolExpFld =
   \case
     Ir.AVCol pgColumnInfo opExpGs -> do
@@ -493,7 +493,7 @@ data FieldSource
   deriving (Eq, Show)
 
 fromTableAggregateFieldG ::
-     (Ir.FieldName, Ir.TableAggregateFieldG Sql.SQLExp) -> ReaderT EntityAlias FromIr FieldSource
+     (Ir.FieldName, Ir.TableAggregateFieldG Graphql.UnpreparedValue) -> ReaderT EntityAlias FromIr FieldSource
 fromTableAggregateFieldG (Ir.FieldName name, field) =
   case field of
     Ir.TAFAgg (aggregateFields :: [(Ir.FieldName, Ir.AggregateField)]) ->
@@ -556,7 +556,7 @@ fromAggregateField aggregateField =
 fromAnnFieldsG ::
      Map Sql.QualifiedTable EntityAlias
   -> StringifyNumbers
-  -> (Ir.FieldName, Ir.AnnFieldG Sql.SQLExp)
+  -> (Ir.FieldName, Ir.AnnFieldG Graphql.UnpreparedValue)
   -> ReaderT EntityAlias FromIr FieldSource
 fromAnnFieldsG existingJoins stringifyNumbers (Ir.FieldName name, field) =
   case field of
@@ -650,7 +650,7 @@ fieldSourceJoin =
 
 fromObjectRelationSelectG ::
      Map Sql.QualifiedTable EntityAlias
-  -> Ir.ObjectRelationSelectG Sql.SQLExp
+  -> Ir.ObjectRelationSelectG Graphql.UnpreparedValue
   -> ReaderT EntityAlias FromIr Join
 fromObjectRelationSelectG existingJoins annRelationSelectG = do
   eitherAliasOrFrom <- lift (lookupTableFrom existingJoins tableFrom)
@@ -704,13 +704,13 @@ fromObjectRelationSelectG existingJoins annRelationSelectG = do
                   }
           }
   where
-    Ir.AnnObjectSelectG { _aosFields = fields :: Ir.AnnFieldsG Sql.SQLExp
+    Ir.AnnObjectSelectG { _aosFields = fields :: Ir.AnnFieldsG Graphql.UnpreparedValue
                         , _aosTableFrom = tableFrom :: Sql.QualifiedTable
-                        , _aosTableFilter = tableFilter :: Ir.AnnBoolExp Sql.SQLExp
+                        , _aosTableFilter = tableFilter :: Ir.AnnBoolExp Graphql.UnpreparedValue
                         } = annObjectSelectG
     Ir.AnnRelationSelectG { aarRelationshipName
                           , aarColumnMapping = mapping :: HashMap Sql.PGCol Sql.PGCol
-                          , aarAnnSelect = annObjectSelectG :: Ir.AnnObjectSelectG Sql.SQLExp
+                          , aarAnnSelect = annObjectSelectG :: Ir.AnnObjectSelectG Graphql.UnpreparedValue
                           } = annRelationSelectG
 
 lookupTableFrom ::
@@ -722,7 +722,7 @@ lookupTableFrom existingJoins tableFrom = do
     Just entityAlias -> pure (Left entityAlias)
     Nothing -> fmap Right (fromQualifiedTable tableFrom)
 
-fromArraySelectG :: Ir.ArraySelectG Sql.SQLExp -> ReaderT EntityAlias FromIr Join
+fromArraySelectG :: Ir.ArraySelectG Graphql.UnpreparedValue -> ReaderT EntityAlias FromIr Join
 fromArraySelectG =
   \case
     Ir.ASSimple arrayRelationSelectG ->
@@ -733,7 +733,7 @@ fromArraySelectG =
       refute (pure (UnsupportedArraySelect select))
 
 fromArrayAggregateSelectG ::
-     Ir.AnnRelationSelectG (Ir.AnnAggregateSelectG Sql.SQLExp)
+     Ir.AnnRelationSelectG (Ir.AnnAggregateSelectG Graphql.UnpreparedValue)
   -> ReaderT EntityAlias FromIr Join
 fromArrayAggregateSelectG annRelationSelectG = do
   fieldName <- lift (fromRelName aarRelationshipName) -- TODO: use it?
@@ -756,7 +756,7 @@ fromArrayAggregateSelectG annRelationSelectG = do
                           , aarAnnSelect = annSelectG
                           } = annRelationSelectG
 
-fromArrayRelationSelectG :: Ir.ArrayRelationSelectG Sql.SQLExp -> ReaderT EntityAlias FromIr Join
+fromArrayRelationSelectG :: Ir.ArrayRelationSelectG Graphql.UnpreparedValue -> ReaderT EntityAlias FromIr Join
 fromArrayRelationSelectG annRelationSelectG = do
   fieldName <- lift (fromRelName aarRelationshipName) -- TODO: use it?
   select <- lift (fromSelectRows annSelectG)
@@ -810,7 +810,7 @@ fromMapping localFrom =
 --------------------------------------------------------------------------------
 -- Basic SQL expression types
 
-fromOpExpG :: Expression -> Ir.OpExpG Sql.SQLExp -> FromIr Expression
+fromOpExpG :: Expression -> Ir.OpExpG Graphql.UnpreparedValue -> FromIr Expression
 fromOpExpG expression =
   \case
     Ir.ANISNULL -> pure (IsNullExpression expression)
@@ -824,13 +824,6 @@ fromSQLExpAsInt =
         Right (d, "") -> pure (ValueExpression (Odbc.IntValue d))
         _ -> refute (pure (InvalidIntegerishSql s))
     s -> refute (pure (InvalidIntegerishSql s))
-
-_fromSQLExp :: Sql.SQLExp -> FromIr Expression
-_fromSQLExp =
-  \case
-    Sql.SENull -> pure (ValueExpression Odbc.NullValue)
-    Sql.SELit raw -> pure (ValueExpression (Odbc.TextValue raw))
-    e -> refute (pure (UnsupportedSQLExp e))
 
 fromGBoolExp :: Ir.GBoolExp Expression -> ReaderT EntityAlias FromIr Expression
 fromGBoolExp =

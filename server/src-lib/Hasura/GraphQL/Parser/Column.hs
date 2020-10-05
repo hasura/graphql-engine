@@ -58,11 +58,13 @@ data UnpreparedValue
   | UVSession
   -- | A single session variable.
   | UVSessionVar (PGType PGScalarType) SessionVariable
+  deriving (Show, Eq)
 
 data PGColumnValue = PGColumnValue
   { pcvType  :: PGColumnType
   , pcvValue :: WithScalarType PGScalarValue
   }
+  deriving (Show, Eq)
 
 mkParameter :: Opaque PGColumnValue -> UnpreparedValue
 mkParameter (Opaque variable value) = UVParameter value variable
