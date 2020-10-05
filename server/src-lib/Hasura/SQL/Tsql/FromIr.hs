@@ -141,7 +141,7 @@ fromSelectRows annSelectG = do
                   , _asnFrom = from
                   , _asnPerm = perm
                   , _asnArgs = args
-                  , _asnStrfyNum = num -- TODO: Apply this transformation to numbers.
+                  , _asnStrfyNum = num
                   } = annSelectG
     Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
     permissionBasedTop =
@@ -736,7 +736,7 @@ fromArrayAggregateSelectG ::
      Ir.AnnRelationSelectG (Ir.AnnAggregateSelectG Graphql.UnpreparedValue)
   -> ReaderT EntityAlias FromIr Join
 fromArrayAggregateSelectG annRelationSelectG = do
-  fieldName <- lift (fromRelName aarRelationshipName) -- TODO: use it?
+  fieldName <- lift (fromRelName aarRelationshipName)
   select <- lift (fromSelectAggregate annSelectG)
   joinSelect <-
     do foreignKeyConditions <- fromMapping (selectFrom select) mapping
@@ -758,7 +758,7 @@ fromArrayAggregateSelectG annRelationSelectG = do
 
 fromArrayRelationSelectG :: Ir.ArrayRelationSelectG Graphql.UnpreparedValue -> ReaderT EntityAlias FromIr Join
 fromArrayRelationSelectG annRelationSelectG = do
-  fieldName <- lift (fromRelName aarRelationshipName) -- TODO: use it?
+  fieldName <- lift (fromRelName aarRelationshipName)
   select <- lift (fromSelectRows annSelectG)
   joinSelect <-
     do foreignKeyConditions <- fromMapping (selectFrom select) mapping
