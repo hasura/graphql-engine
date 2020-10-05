@@ -42,7 +42,7 @@ columns of the table, you can use `Postgres check constraints <https://www.postg
 
 **Example:** Check that the ``rating`` for an author is between 1 and 10 only.
 
-Let's say we have a table:
+Let's say we have the following table in our schema:
 
 .. code-block:: sql
 
@@ -93,7 +93,7 @@ and/or functions, then you can use `Postgres triggers <https://www.postgresql.or
 
 **Example:** Validate that an article's ``content`` does not exceed a certain number of words.
 
-Suppose we have the following table:
+Suppose we have the following table in our schema:
 
 .. code-block:: sql
 
@@ -177,7 +177,7 @@ to perform the validations. (Read more about :ref:`Authorization <authorization>
 
 **Example 1:** Validate that an ``article`` can be inserted only if ``title`` is not empty.
 
-Suppose, we have a table:
+Suppose, we have the following table in our schema:
 
 .. code-block:: sql
 
