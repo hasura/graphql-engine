@@ -41,18 +41,18 @@ Use cases
 Views are ideal solutions for retrieving some derived data based on some custom business logic. If your custom logic
 requires any user input, you should use :ref:`custom SQL functions <custom_sql_functions>` instead.
 
-Let's look a few example use cases for views based on the following schema: 
-
-.. code-block:: plpgsql
-  
-  author(id integer, name text, city text, email text, phone integer, address text)
-                                                      
-  article(id integer, title text, content text, rating integer, author_id integer)
+Let's look a few example use cases for views:
 
 Example: Group by and then aggregate
 ************************************
 
-Let’s see how to fetch the average article rating for each author in our author/article schema.
+Let’s say we want to fetch the average article rating for each author in the following schema:
+
+.. code-block:: plpgsql
+
+  author(id integer, name text, city text, email text, phone integer, address text)
+
+  article(id integer, title text, content text, rating integer, author_id integer)
 
 A view that averages the rating of articles for each author can be created using the following SQL query:
 
@@ -67,9 +67,15 @@ A view that averages the rating of articles for each author can be created using
 Example: Hide certain fields of a table
 ***************************************
 
-Say, we have some sensitive information in a table which we wouldn't want to expose. In our case, we want to expose the ``author`` table without the fields ``email``, ``phone`` and ``address``.
+Sometimes we might have some sensitive information in a table which we wouldn't want to expose.
 
-We can create a view that only exposes the non-sensitive fields as follows:
+Let's say, we want to expose the following ``author`` table without the fields ``email``, ``phone`` and ``address``:
+
+.. code-block:: plpgsql
+
+  author(id integer, name text, city text, email text, phone integer, address text)
+
+A view that only exposes the non-sensitive fields of the ``author`` table can be created using the following SQL query:
 
 .. code-block:: SQL
 
