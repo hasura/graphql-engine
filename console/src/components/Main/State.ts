@@ -1,3 +1,5 @@
+import { ConsoleNotification } from './ConsoleNotification';
+
 export interface MainState {
   migrationError: unknown | null;
   hasuractlEnv: unknown | null;
@@ -27,6 +29,7 @@ export interface MainState {
   };
   featuresCompatibility: Record<string, unknown>;
   postgresVersion: string | null;
+  consoleNotifications: ConsoleNotification[];
 }
 
 const defaultState: MainState = {
@@ -58,6 +61,7 @@ const defaultState: MainState = {
   },
   featuresCompatibility: {},
   postgresVersion: null,
+  consoleNotifications: [],
 };
 
 export default defaultState;
