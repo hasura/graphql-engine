@@ -2,6 +2,7 @@
 
 module Hasura.SQL.Tsql.FromIr
   ( fromSelectRows
+  , mkSQLSelect
   , fromSelectAggregate
   , Error(..)
   , runFromIr
@@ -90,13 +91,16 @@ runFromIr fromIr = evalStateT (unFromIr fromIr) mempty
 --------------------------------------------------------------------------------
 -- Similar rendition of old API
 
--- mkSQLSelect :: Ir.JsonAggSelect -> Ir.AnnSimpleSel -> FromIr Tsql.Select
--- mkSQLSelect jsonAggSelect annSimpleSel =
---   case jsonAggSelect of
---     Ir.JASMultipleRows -> fromSelectRows annSimpleSel
---     Ir.JASSingleObject -> do
---       select <- fromSelectRows annSimpleSel
---       pure select {selectFor = JsonFor JsonSingleton, selectTop = Top 1}
+mkSQLSelect ::
+     Ir.JsonAggSelect
+  -> Ir.AnnSelectG (Ir.AnnFieldsG Graphql.UnpreparedValue) Graphql.UnpreparedValue
+  -> FromIr Tsql.Select
+mkSQLSelect jsonAggSelect annSimpleSel =
+  case jsonAggSelect of
+    Ir.JASMultipleRows -> fromSelectRows annSimpleSel
+    Ir.JASSingleObject -> do
+      select <- fromSelectRows annSimpleSel
+      pure select {selectFor = JsonFor JsonSingleton, selectTop = Top 1}
 
 --------------------------------------------------------------------------------
 -- Top-level exported functions
