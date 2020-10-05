@@ -57,6 +57,8 @@ data Error
   | UnsupportedDistinctOn
   | InvalidIntegerishSql Sql.SQLExp
   | DistinctIsn'tSupported
+  | ConnectionsNotSupported
+  | ActionsNotSupported
   deriving (Show, Eq)
 
 -- | The base monad used throughout this module for all conversion

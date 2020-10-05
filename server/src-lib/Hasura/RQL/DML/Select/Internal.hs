@@ -6,20 +6,13 @@ module Hasura.RQL.DML.Select.Internal
   )
 where
 
-import           Control.Monad.Validate (runValidate)
-import qualified Hasura.SQL.Tsql.FromIr as FromIr
-import qualified Hasura.SQL.Tsql.ToQuery as ToQuery
-import qualified Database.ODBC.SQLServer as Odbc
 
 import           Control.Lens hiding (op)
 import           Control.Monad.Writer.Strict
-import           Debug.Trace
 import           Instances.TH.Lift ()
-
 import qualified Data.HashMap.Strict as HM
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Text as T
-
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
@@ -28,7 +21,6 @@ import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
 import           Hasura.SQL.Rewrite
 import           Hasura.SQL.Types
-
 import qualified Hasura.SQL.DML as S
 
 -- Conversion of SelectQ happens in 2 Stages.
@@ -937,22 +929,22 @@ generateSQLSelectFromArrayNode selectSource arraySelectNode joinCondition =
                  (generateSQLSelect joinCondition selectSource selectNode) $
                  S.Alias $ _ssPrefix selectSource
 
-mkAggregateSelect :: AnnAggregateSelect -> S.Select
-mkAggregateSelect simple =
-  mkAggregateSelect_
-    (trace
-       ("\nfromSelectAggregate =\n " <> show simple <> "\n\n" <>
-        show
-          (runValidate (FromIr.runFromIr (FromIr.fromSelectAggregate simple))) <>
-        "\n\n" <>
-        either (const "error")
-               (T.unpack . Odbc.renderQuery . ToQuery.toQuery . ToQuery.fromSelect)
-               (runValidate (FromIr.runFromIr (FromIr.fromSelectAggregate simple))) <>
-        "\n")
-       simple)
+-- mkAggregateSelect :: AnnAggregateSelect -> S.Select
+-- mkAggregateSelect simple =
+--   mkAggregateSelect_
+--     (trace
+--        ("\nfromSelectAggregate =\n " <> show simple <> "\n\n" <>
+--         show
+--           (runValidate (FromIr.runFromIr (FromIr.fromSelectAggregate simple))) <>
+--         "\n\n" <>
+--         either (const "error")
+--                (T.unpack . Odbc.renderQuery . ToQuery.toQuery . ToQuery.fromSelect)
+--                (runValidate (FromIr.runFromIr (FromIr.fromSelectAggregate simple))) <>
+--         "\n")
+--        simple)
 
-mkAggregateSelect_ :: AnnAggregateSelect -> S.Select
-mkAggregateSelect_ annAggSel =
+mkAggregateSelect :: AnnAggregateSelect -> S.Select
+mkAggregateSelect annAggSel =
   let ((selectSource, nodeExtractors, topExtractor), joinTree) =
         runWriter $ flip runReaderT strfyNum $
         processAnnAggregateSelect sourcePrefixes rootFieldName annAggSel
@@ -966,23 +958,23 @@ mkAggregateSelect_ annAggSel =
     rootIden = toIden rootFieldName
     sourcePrefixes = SourcePrefixes rootIden rootIden
 
-mkSQLSelect :: JsonAggSelect -> AnnSimpleSel -> S.Select
-mkSQLSelect agg simple =
-  mkSQLSelect_
-    agg
-    (trace
-       ("\nmkSQLSelect (" <> show agg <> ") =\n " <> show simple <> "\n\n" <>
-        show result <>
-        "\n\n" <>
-        either
-          (const "error")
-          (T.unpack . Odbc.renderQuery . ToQuery.toQuery .  ToQuery.fromSelect)
-          result <> "\n")
-       simple)
-  where result = runValidate (FromIr.runFromIr (FromIr.mkSQLSelect agg simple))
+-- mkSQLSelect :: JsonAggSelect -> AnnSimpleSel -> S.Select
+-- mkSQLSelect agg simple =
+--   mkSQLSelect_
+--     agg
+--     (trace
+--        ("\nmkSQLSelect (" <> show agg <> ") =\n " <> show simple <> "\n\n" <>
+--         show result <>
+--         "\n\n" <>
+--         either
+--           (const "error")
+--           (T.unpack . Odbc.renderQuery . ToQuery.toQuery .  ToQuery.fromSelect)
+--           result <> "\n")
+--        simple)
+--   where result = runValidate (FromIr.runFromIr (FromIr.mkSQLSelect agg simple))
 
-mkSQLSelect_ :: JsonAggSelect -> AnnSimpleSel -> S.Select
-mkSQLSelect_ jsonAggSelect annSel =
+mkSQLSelect :: JsonAggSelect -> AnnSimpleSel -> S.Select
+mkSQLSelect jsonAggSelect annSel =
   let permLimitSubQuery = PLSQNotRequired
       ((selectSource, nodeExtractors), joinTree) =
         runWriter $ flip runReaderT strfyNum $
