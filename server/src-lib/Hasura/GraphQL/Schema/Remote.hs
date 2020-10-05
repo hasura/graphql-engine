@@ -18,6 +18,8 @@ import           Data.Foldable                       (sequenceA_)
 
 import           Hasura.GraphQL.Parser               as P
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
+import           Hasura.GraphQL.Schema.Common
+import qualified Data.HashMap.Strict as Map
 
 buildRemoteParser
   :: forall m n
@@ -364,6 +366,20 @@ argumentsParser
   -> m (InputFieldsParser n ())
 argumentsParser args schemaDoc =
   sequenceA_ <$> traverse (inputValueDefinitionParser schemaDoc) args
+
+argumentsParser1
+  :: forall n m
+  .  (MonadSchema n m, MonadError QErr m)
+  => G.ArgumentsDefinition
+  -> G.SchemaIntrospection
+  -> m (InputFieldsParser n (HashMap Name (InputValue Variable)))
+argumentsParser1 args schemaDoc =
+  let parser =
+        sequenceA <$> flip traverse args
+          (\inpValDef -> do
+              p <- inputValueDefinitionParser schemaDoc inpValDef
+              pure $ p `mapField` ((G._ivdName inpValDef),))
+  in (fmap . fmap) (Map.fromList . catMaybes) parser
 
 -- | 'remoteField' accepts a 'G.TypeDefinition' and will returns a 'FieldParser' for it.
 --   Note that the 'G.TypeDefinition' should be of the GraphQL 'Output' kind, when an
