@@ -11,7 +11,10 @@ import { setTable } from '../DataActions.js';
 import { getTableModifyRoute } from '../../../Common/utils/routesUtils';
 import { dataSource } from '../../../../dataSources';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
-import { getTrackTableQuery } from '../../../../metadata/queryUtils';
+import {
+  getTrackTableQuery,
+  getUntrackTableQuery,
+} from '../../../../metadata/queryUtils';
 
 const SET_DEFAULTS = 'AddTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddTable/SET_TABLENAME';
@@ -142,10 +145,53 @@ const validationError = error => {
 };
 const resetValidation = () => ({ type: RESET_VALIDATION_ERROR });
 
+/**
+ *
+ * @param {{name: string, schema: string}} payload
+ */
+const trackTable = payload => (dispatch, getState) => {
+  dispatch({ type: MAKING_REQUEST });
+  const currentDataSource = getState().tables.currentDataSource;
+
+  const requestBodyUp = getTrackTableQuery(payload, currentDataSource);
+  const requestBodyDown = getUntrackTableQuery(payload, currentDataSource);
+
+  const migrationName = 'track_table_' + payload.schema + '_' + payload.name;
+
+  const successMsg = 'Table created successfully';
+  const errorMsg = 'Tracking a created table failed';
+
+  const customOnSuccess = () => {
+    dispatch({ type: REQUEST_SUCCESS });
+    dispatch({ type: SET_DEFAULTS });
+    dispatch(setTable(payload.name));
+    dispatch(updateSchemaInfo()).then(() =>
+      dispatch(_push(getTableModifyRoute(payload.schema, payload.name, true)))
+    );
+    return;
+  };
+
+  const customOnError = err => {
+    dispatch({ type: REQUEST_ERROR, data: err });
+  };
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    [requestBodyUp],
+    [requestBodyDown],
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    null,
+    successMsg,
+    errorMsg
+  );
+};
+
 const createTableSql = () => {
   return (dispatch, getState) => {
     dispatch({ type: MAKING_REQUEST });
-    dispatch(showSuccessNotification('Creating Table...'));
 
     const state = getState().addTable.table;
     const currentSchema = getState().tables.currentSchema;
@@ -187,45 +233,20 @@ const createTableSql = () => {
     const migrationName = 'create_table_' + currentSchema + '_' + tableName;
 
     // up migration
-    const upQueryArgs = createTableQueries.map(sql =>
+    const upChanges = createTableQueries.map(sql =>
       getRunSqlQuery(sql, currentDataSource)
     );
 
-    upQueryArgs.push(
-      getTrackTableQuery(
-        { name: tableName, schema: currentSchema },
-        currentDataSource
-      )
-    );
-
-    const upQuery = {
-      type: 'bulk',
-      source: currentDataSource,
-      args: upQueryArgs,
-    };
-
     // down migration
     const sqlDropTable = dataSource.getDropTableSql(currentSchema, tableName);
-
-    const downQuery = {
-      type: 'bulk',
-      source: currentDataSource,
-      args: [getRunSqlQuery(sqlDropTable, currentDataSource)],
-    };
+    const downChanges = [getRunSqlQuery(sqlDropTable, currentDataSource)];
 
     // make request
     const requestMsg = 'Creating table...';
-    const successMsg = 'Table Created';
     const errorMsg = 'Create table failed';
 
     const customOnSuccess = () => {
-      dispatch({ type: REQUEST_SUCCESS });
-      dispatch({ type: SET_DEFAULTS });
-      dispatch(setTable(tableName));
-      dispatch(updateSchemaInfo()).then(() =>
-        dispatch(_push(getTableModifyRoute(currentSchema, tableName, true)))
-      );
-      return;
+      dispatch(trackTable({ schema: currentSchema, name: tableName }));
     };
     const customOnError = err => {
       dispatch({ type: REQUEST_ERROR, data: errorMsg });
@@ -236,13 +257,13 @@ const createTableSql = () => {
     makeMigrationCall(
       dispatch,
       getState,
-      upQuery.args,
-      downQuery.args,
+      upChanges,
+      downChanges,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
-      successMsg,
+      null,
       errorMsg,
       true
     );

@@ -367,8 +367,6 @@ const generateRelationshipsQuery = (relMeta, currentDataSource) => {
 const deleteRelMigrate = relMeta => (dispatch, getState) => {
   const source = getState().tables.currentDataSource;
   const { upQuery, downQuery } = generateRelationshipsQuery(relMeta, source);
-  const relChangesUp = [downQuery];
-  const relChangesDown = [upQuery];
 
   // Apply migrations
   const migrationName = `drop_relationship_${relMeta.relName}_${relMeta.lSchema}_table_${relMeta.lTable}`;
@@ -386,8 +384,8 @@ const deleteRelMigrate = relMeta => (dispatch, getState) => {
   makeMigrationCall(
     dispatch,
     getState,
-    relChangesUp,
-    relChangesDown,
+    [downQuery],
+    [upQuery],
     migrationName,
     customOnSuccess,
     customOnError,
@@ -415,8 +413,6 @@ const addRelNewFromStateMigrate = () => (dispatch, getState) => {
     },
     source
   );
-  const relChangesUp = [upQuery];
-  const relChangesDown = [downQuery];
 
   // Apply migrations
   const migrationName = `add_relationship_${state.name}_table_${state.lSchema}_${state.lTable}`;
@@ -440,8 +436,8 @@ const addRelNewFromStateMigrate = () => (dispatch, getState) => {
   makeMigrationCall(
     dispatch,
     getState,
-    relChangesUp,
-    relChangesDown,
+    [upQuery],
+    [downQuery],
     migrationName,
     customOnSuccess,
     customOnError,
@@ -714,12 +710,9 @@ const autoTrackRelations = autoTrackData => (dispatch, getState) => {
   );
 };
 
-const autoAddRelName = obj => (dispatch, getState) => {
+const autoAddRelName = ({ upQuery, downQuery }) => (dispatch, getState) => {
   const currentSchema = getState().tables.currentSchema;
-  const relName = obj.upQuery.args.name;
-
-  const relChangesUp = [obj.upQuery];
-  const relChangesDown = [obj.downQuery];
+  const relName = upQuery.args.name;
 
   // Apply migrations
   const migrationName = `add_relationship_${relName}_table_${currentSchema}_${obj.data.tableName}`;
@@ -736,8 +729,8 @@ const autoAddRelName = obj => (dispatch, getState) => {
   makeMigrationCall(
     dispatch,
     getState,
-    relChangesUp,
-    relChangesDown,
+    [upQuery],
+    [downQuery],
     migrationName,
     customOnSuccess,
     customOnError,

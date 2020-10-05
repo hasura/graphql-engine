@@ -244,22 +244,6 @@ const unTrackCustomFunction = () => {
       currentDataSource
     );
 
-    const upQueryArgs = [];
-    upQueryArgs.push(payload);
-    const downQueryArgs = [];
-    downQueryArgs.push(downPayload);
-
-    const upQuery = {
-      type: 'bulk',
-      source: currentDataSource,
-      args: upQueryArgs,
-    };
-    const downQuery = {
-      type: 'bulk',
-      source: currentDataSource,
-      args: downQueryArgs,
-    };
-
     const requestMsg = 'Deleting custom function...';
     const successMsg = 'Custom function deleted successfully';
     const errorMsg = 'Delete custom function failed';
@@ -278,8 +262,8 @@ const unTrackCustomFunction = () => {
     dispatch({ type: UNTRACKING_CUSTOM_FUNCTION });
     return dispatch(
       makeRequest(
-        upQuery.args,
-        downQuery.args,
+        [payload],
+        [downPayload],
         migrationName,
         customOnSuccess,
         customOnError,

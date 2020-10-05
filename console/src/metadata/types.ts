@@ -5,7 +5,7 @@ export type DataSource = {
   url: string;
   fromEnv: boolean;
   driver: Driver;
-  connection_pool_setting?: {
+  connection_pool_settings?: {
     max_connections?: number;
     idle_timeout?: number;
     retries?: number;
@@ -850,7 +850,7 @@ export interface MetadataDataSource {
   kind?: 'postgres' | 'mysql';
   configuration?: {
     database_url: string;
-    connection_pool_setting?: {
+    connection_pool_settings?: {
       max_connections: number;
       idle_timeout: number;
       retries: number;

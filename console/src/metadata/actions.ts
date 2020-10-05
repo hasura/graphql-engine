@@ -98,7 +98,7 @@ export interface AddDataSourceRequest {
     payload: {
       name: string;
       dbUrl: string;
-      connection_pool_setting: {
+      connection_pool_settings: {
         max_connections?: number;
         idle_timeout?: number; // in seconds
         retries?: number;

@@ -142,15 +142,15 @@ const ManageDatabase: React.FC<ManageDatabaseInjectedProps> = ({
           driver: data.driver,
           payload: {
             name: data.name.trim(),
-            connection_pool_setting: {
-              ...(data.connection_pool_setting?.idle_timeout && {
-                idle_timeout: data.connection_pool_setting.idle_timeout,
+            connection_pool_settings: {
+              ...(data.connection_pool_settings?.idle_timeout && {
+                idle_timeout: data.connection_pool_settings.idle_timeout,
               }),
-              ...(data.connection_pool_setting?.max_connections && {
-                max_connections: data.connection_pool_setting.max_connections,
+              ...(data.connection_pool_settings?.max_connections && {
+                max_connections: data.connection_pool_settings.max_connections,
               }),
-              ...(data.connection_pool_setting?.retries && {
-                max_connections: data.connection_pool_setting.retries,
+              ...(data.connection_pool_settings?.retries && {
+                retries: data.connection_pool_settings.retries,
               }),
             },
             dbUrl: data.url,

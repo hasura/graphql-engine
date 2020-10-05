@@ -109,16 +109,6 @@ const addExistingFunction = name => {
     );
 
     const migrationName = 'add_existing_function ' + currentSchema + '_' + name;
-    const upQuery = {
-      type: 'bulk',
-      source: currentDataSource,
-      args: [requestBodyUp],
-    };
-    const downQuery = {
-      type: 'bulk',
-      source: currentDataSource,
-      args: [requestBodyDown],
-    };
 
     const requestMsg = 'Adding existing function...';
     const successMsg = 'Existing function added';
@@ -137,8 +127,8 @@ const addExistingFunction = name => {
     makeMigrationCall(
       dispatch,
       getState,
-      upQuery.args,
-      downQuery.args,
+      [requestBodyUp],
+      [requestBodyDown],
       migrationName,
       customOnSuccess,
       customOnError,
@@ -155,7 +145,7 @@ const addAllUntrackedTablesSql = tableList => {
     const currentDataSource = getState().tables.currentDataSource;
 
     dispatch({ type: MAKING_REQUEST });
-    dispatch(showSuccessNotification('Existing table/view added!'));
+    dispatch(showSuccessNotification('Adding...'));
     const bulkQueryUp = [];
     const bulkQueryDown = [];
     for (let i = 0; i < tableList.length; i++) {
@@ -180,16 +170,6 @@ const addAllUntrackedTablesSql = tableList => {
       }
     }
     const migrationName = 'add_all_existing_table_or_view_' + currentSchema;
-    const upQuery = {
-      type: 'bulk',
-      source: currentDataSource,
-      args: bulkQueryUp,
-    };
-    const downQuery = {
-      type: 'bulk',
-      source: currentDataSource,
-      args: bulkQueryDown,
-    };
 
     const requestMsg = 'Adding existing table/view...';
     const successMsg = 'Existing table/view added';
@@ -209,8 +189,8 @@ const addAllUntrackedTablesSql = tableList => {
     makeMigrationCall(
       dispatch,
       getState,
-      upQuery.args,
-      downQuery.args,
+      [bulkQueryUp],
+      [bulkQueryDown],
       migrationName,
       customOnSuccess,
       customOnError,
