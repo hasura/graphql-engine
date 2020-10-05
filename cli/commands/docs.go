@@ -85,16 +85,6 @@ func printOptionsReST(buf *bytes.Buffer, cmd *cobra.Command, name string) error 
 	return nil
 }
 
-// linkHandler for default ReST hyperlink markup
-func defaultLinkHandler(name, ref string) string {
-	return fmt.Sprintf("`%s <%s.rst>`_", name, ref)
-}
-
-// genReST creates reStructured Text output.
-func genReST(cmd *cobra.Command, w io.Writer, titlePrefix string) error {
-	return genReSTCustom(cmd, w, titlePrefix, defaultLinkHandler)
-}
-
 // genReSTCustom creates custom reStructured Text output.
 func genReSTCustom(cmd *cobra.Command, w io.Writer, titlePrefix string, linkHandler func(string, string) string) error {
 	cmd.InitDefaultHelpCmd()
@@ -172,17 +162,6 @@ func genReSTCustom(cmd *cobra.Command, w io.Writer, titlePrefix string, linkHand
 	return err
 }
 
-// genReSTTree will generate a ReST page for this command and all
-// descendants in the directory given.
-// This function may not work correctly if your command names have `-` in them.
-// If you have `cmd` with two subcmds, `sub` and `sub-third`,
-// and `sub` has a subcommand called `third`, it is undefined which
-// help output will be in the file `cmd-sub-third.1`.
-func genReSTTree(cmd *cobra.Command, dir, titlePrefix string) error {
-	emptyStr := func(s string) string { return "" }
-	return genReSTTreeCustom(cmd, dir, titlePrefix, emptyStr, defaultLinkHandler)
-}
-
 // genReSTTreeCustom is the the same as genReSTTree, but
 // with custom filePrepender and linkHandler.
 func genReSTTreeCustom(cmd *cobra.Command, dir, titlePrefix string, filePrepender func(string) string, linkHandler func(string, string) string) error {
@@ -242,15 +221,6 @@ func hasSeeAlso(cmd *cobra.Command) bool {
 		return true
 	}
 	return false
-}
-
-// Temporary workaround for yaml lib generating incorrect yaml with long strings
-// that do not contain \n.
-func forceMultiLine(s string) string {
-	if len(s) > 60 && !strings.Contains(s, "\n") {
-		s = s + "\n"
-	}
-	return s
 }
 
 type byName []*cobra.Command
