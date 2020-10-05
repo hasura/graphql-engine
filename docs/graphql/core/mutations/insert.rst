@@ -15,7 +15,7 @@ Insert mutation
 Auto-generated insert mutation schema
 -------------------------------------
 
-**For example**, the auto-generated schema for the insert mutation field for a table ``article`` looks like this:
+**For example**, the auto-generated schema for the insert mutation field for a table ``article`` looks like the following:
 
 .. code-block:: graphql
 
