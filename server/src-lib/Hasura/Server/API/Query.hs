@@ -44,6 +44,12 @@ $(deriveJSON
                  }
   ''RQLQuery)
 
+queryNeedsAdmin :: RQLQuery -> Bool
+queryNeedsAdmin = \case
+  RQRunSql _ -> True
+  RQBulk   l -> any queryNeedsAdmin l
+  _          -> False
+
 data QueryWithSource
   = QueryWithSource
     { _qwsSource :: !SourceName

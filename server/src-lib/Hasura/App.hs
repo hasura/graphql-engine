@@ -698,10 +698,6 @@ instance MonadApiAuthorization AppM where
 
   authorizeQueryApi query userInfo = do
     let currRole = _uiRole userInfo
-        queryNeedsAdmin = \case
-          RQRunSql _ -> True
-          RQBulk   l -> any queryNeedsAdmin l
-          _          -> False
     when (queryNeedsAdmin query && currRole /= adminRoleName) $
       withPathK "args" $ throw400 AccessDenied accessDeniedErrMsg
 
