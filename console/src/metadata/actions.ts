@@ -31,6 +31,7 @@ import {
 } from './queryUtils';
 import { Driver } from '../dataSources';
 import { addSource, removeSource, reloadSource } from './sourcesUtils';
+import { getDataSources } from './selector';
 
 export interface ExportMetadataSuccess {
   type: 'Metadata/EXPORT_METADATA_SUCCESS';
@@ -230,7 +231,8 @@ export const removeDataSource = (
   dispatch,
   getState
 ) => {
-  const { dataHeaders } = getState().tables;
+  const { dataHeaders, currentDataSource } = getState().tables;
+  const sources = getDataSources(getState()).filter(s => s.name !== data.name);
 
   const query = removeSource(data.driver, data.name);
 
@@ -241,8 +243,13 @@ export const removeDataSource = (
   };
 
   return dispatch(requestAction(Endpoints.metadata, options))
-    .then(res => {
-      console.log({ res });
+    .then(() => {
+      if (currentDataSource === data.name) {
+        dispatch({
+          type: UPDATE_CURRENT_DATA_SOURCE,
+          source: sources.length ? sources[0].name : '',
+        });
+      }
       dispatch(showSuccessNotification('Data source removed successfully!'));
       dispatch(exportMetadata());
       return getState();
