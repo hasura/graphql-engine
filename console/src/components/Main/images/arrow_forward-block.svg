@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="baseline-arrow_forward-24px" width="16" height="16" viewBox="0 0 16 16">
+    <defs>
+        <style>
+            .cls-1{fill:none}.cls-2{fill:#303030}
+        </style>
+    </defs>
+    <path id="Path_290" d="M0 0h16v16H0z" class="cls-1" data-name="Path 290"/>
+    <path id="Path_291" d="M9.333 4l-.94.94 3.72 3.727H4V10h8.113l-3.72 3.727.94.94 5.333-5.333z" class="cls-2" data-name="Path 291" transform="translate(-1.333 -1.333)"/>
+</svg>
