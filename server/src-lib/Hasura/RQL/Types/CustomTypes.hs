@@ -158,7 +158,7 @@ instance (J.FromJSON a, J.FromJSON b, J.FromJSON c) => J.FromJSON (ObjectTypeDef
       <*> o J..: "description"
       <*> o J..: "fields"
       <*> o J..:? "source" J..!= defaultSource
-      <*> o J..: "relationships"
+      <*> o J..:? "relationships"
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ObjectTypeDefinition)
 
 data ScalarTypeDefinition
