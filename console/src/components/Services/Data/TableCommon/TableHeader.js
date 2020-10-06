@@ -25,6 +25,7 @@ const TableHeader = ({
   table,
   migrationMode,
   readOnlyMode,
+  source,
   dispatch,
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
@@ -64,7 +65,7 @@ const TableHeader = ({
       },
       {
         title: tableName,
-        url: getTableBrowseRoute(tableSchema, tableName, isTableType),
+        url: getTableBrowseRoute(tableSchema, source, tableName, isTableType),
       },
       {
         title: activeTab,
@@ -102,7 +103,7 @@ const TableHeader = ({
           <ul className="nav nav-pills">
             {getTab(
               'browse',
-              getTableBrowseRoute(tableSchema, tableName, isTableType),
+              getTableBrowseRoute(tableSchema, source, tableName, isTableType),
               `Browse Rows ${countDisplay}`,
               'table-browse-rows'
             )}
@@ -110,30 +111,55 @@ const TableHeader = ({
               isTableType &&
               getTab(
                 'insert',
-                getTableInsertRowRoute(tableSchema, tableName, isTableType),
+                getTableInsertRowRoute(
+                  tableSchema,
+                  source,
+                  tableName,
+                  isTableType
+                ),
                 'Insert Row',
                 'table-insert-rows'
               )}
             {migrationMode &&
               getTab(
                 'modify',
-                getTableModifyRoute(tableSchema, tableName, isTableType),
+                getTableModifyRoute(
+                  tableSchema,
+                  source,
+                  tableName,
+                  isTableType
+                ),
                 'Modify'
               )}
             {getTab(
               'relationships',
-              getTableRelationshipsRoute(tableSchema, tableName, isTableType),
+              getTableRelationshipsRoute(
+                tableSchema,
+                source,
+                tableName,
+                isTableType
+              ),
               'Relationships'
             )}
             {getTab(
               'permissions',
-              getTablePermissionsRoute(tableSchema, tableName, isTableType),
+              getTablePermissionsRoute(
+                tableSchema,
+                source,
+                tableName,
+                isTableType
+              ),
               'Permissions'
             )}
             {tabName === 'edit' &&
               getTab(
                 'edit',
-                getTableEditRowRoute(tableSchema, tableName, isTableType),
+                getTableEditRowRoute(
+                  tableSchema,
+                  source,
+                  tableName,
+                  isTableType
+                ),
                 'Edit Row'
               )}
           </ul>

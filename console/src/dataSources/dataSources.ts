@@ -57,10 +57,10 @@ export const useDataSource = (): {
 
 if ((module as any).hot) {
   // todo
-  (module as any).hot.dispose((data: any) => {
-    data.driver = currentDriver;
-  });
-  (module as any).hot.accept(['./postgres', './mysql'], () => {
-    currentDriver = (module as any).hot.data.driver;
-  });
+  // (module as any).hot.dispose((data: any) => {
+  //   data.driver = currentDriver;
+  // });
+  // (module as any).hot.accept(['./postgres', './mysql'], () => {
+  //   currentDriver = (module as any).hot.data.driver;
+  // });
 }

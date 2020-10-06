@@ -44,6 +44,7 @@ const ModifyView = props => {
     rootFieldsEdit,
     migrationMode,
     readOnlyMode,
+    currentSource,
   } = props;
 
   React.useEffect(() => {
@@ -240,6 +241,7 @@ const ModifyView = props => {
         <TableHeader
           dispatch={dispatch}
           table={tableSchema}
+          source={currentSource}
           tabName="modify"
           migrationMode={migrationMode}
           readOnlyMode={readOnlyMode}
@@ -309,6 +311,7 @@ const mapStateToProps = (state, ownProps) => {
     tableName,
     tableType,
     currentSchema: schemaName,
+    currentSource: state.table.currentDataSource,
     allSchemas: state.tables.allSchemas,
     migrationMode: state.main.migrationMode,
     readOnlyMode: state.main.readOnlyMode,

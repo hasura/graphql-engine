@@ -462,18 +462,22 @@ export const getCreateScheduledEventQuery = (
   state: LocalAdhocEventState,
   source: string
 ) => {
-  return getMetadataQuery('create_scheduled_event', source, {
-    webhook: state.webhook,
-    schedule_at: state.time.toISOString(),
-    headers: transformHeaders(state.headers),
-    retry_conf: {
-      num_retries: state.retryConf.num_retries,
-      retry_interval_seconds: state.retryConf.interval_sec,
-      timeout_seconds: state.retryConf.timeout_sec,
+  return {
+    type: 'create_scheduled_event',
+    args: {
+      source,
+      webhook: state.webhook,
+      schedule_at: state.time.toISOString(),
+      headers: transformHeaders(state.headers),
+      retry_conf: {
+        num_retries: state.retryConf.num_retries,
+        retry_interval_seconds: state.retryConf.interval_sec,
+        timeout_seconds: state.retryConf.timeout_sec,
+      },
+      payload: state.payload,
+      comment: state.comment,
     },
-    payload: state.payload,
-    comment: state.comment,
-  });
+  };
 };
 
 export const getRedeliverDataEventQuery = (eventId: string) => ({

@@ -204,6 +204,7 @@ class Main extends React.Component {
       serverVersion,
       metadata,
       dispatch,
+      currentSource,
     } = this.props;
 
     const {
@@ -592,7 +593,7 @@ class Main extends React.Component {
                   'Data',
                   'fa-database',
                   tooltips.data,
-                  getSchemaBaseRoute(currentSchema)
+                  getSchemaBaseRoute(currentSchema, currentSource)
                 )}
                 {getSidebarItem(
                   'Actions',
@@ -666,6 +667,7 @@ const mapStateToProps = (state, ownProps) => {
     header: { ...state.header },
     pathname: ownProps.location.pathname,
     currentSchema: state.tables.currentSchema,
+    currentSource: state.tables.currentDataSource,
     metadata: state.metadata,
     console_opts: state.telemetry.console_opts,
   };

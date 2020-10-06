@@ -90,6 +90,7 @@ class ModifyTable extends React.Component {
       tableEnum,
       rootFieldsEdit,
       postgresVersion,
+      currentSource,
     } = this.props;
 
     const dataTypeIndexMap = getAllDataTypeMap(dataTypes);
@@ -214,6 +215,7 @@ class ModifyTable extends React.Component {
           <TableHeader
             dispatch={dispatch}
             table={table}
+            source={currentSource}
             tabName="modify"
             migrationMode={migrationMode}
             readOnlyMode={readOnlyMode}
@@ -357,6 +359,7 @@ const mapStateToProps = (state, ownProps) => ({
   columnDataTypeFetchErr: state.tables.columnDataTypeFetchErr,
   schemaList: state.tables.schemaList,
   postgresVersion: state.main.postgresVersion,
+  currentSource: state.tables.currentDataSource,
   ...state.tables.modify,
 });
 

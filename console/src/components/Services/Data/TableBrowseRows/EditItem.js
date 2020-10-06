@@ -39,6 +39,7 @@ class EditItem extends Component {
       count,
       dispatch,
       enumOptions,
+      currentSource,
     } = this.props;
 
     // check if item exists
@@ -47,6 +48,7 @@ class EditItem extends Component {
         replace(
           `${globals.urlPrefix || ''}${getTableBrowseRoute(
             currentSchema,
+            currentSource,
             tableName,
             true
           )}`
@@ -144,6 +146,7 @@ class EditItem extends Component {
             count={count}
             dispatch={dispatch}
             table={currentTable}
+            source={currentSource}
             tabName="edit"
             migrationMode={migrationMode}
             readOnlyMode={readOnlyMode}
@@ -201,6 +204,7 @@ const mapStateToProps = (state, ownProps) => {
     migrationMode: state.main.migrationMode,
     readOnlyMode: state.main.readOnlyMode,
     currentSchema: state.tables.currentSchema,
+    currentSource: state.tables.currentDataSource,
   };
 };
 

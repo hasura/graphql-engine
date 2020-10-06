@@ -42,7 +42,7 @@ const STContainer: React.FC<Props> = ({ children, tabName }) => {
     },
     {
       title: ADHOC_EVENTS_HEADING,
-      url: getAdhocEventsRoute(),
+      url: getAdhocEventsRoute(undefined),
     },
     {
       title: activeTab,

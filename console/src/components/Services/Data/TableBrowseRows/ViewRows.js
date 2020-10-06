@@ -84,6 +84,7 @@ const ViewRows = ({
   location,
   readOnlyMode,
   shouldHidePagination,
+  currentSource,
 }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   useEffect(() => {
@@ -327,7 +328,14 @@ const ViewRows = ({
           const handleEditClick = () => {
             dispatch({ type: E_SET_EDITITEM, oldItem: row, pkClause });
             dispatch(
-              _push(getTableEditRowRoute(currentSchema, curTableName, true))
+              _push(
+                getTableEditRowRoute(
+                  currentSchema,
+                  currentSource,
+                  curTableName,
+                  true
+                )
+              )
             );
           };
 
@@ -369,7 +377,14 @@ const ViewRows = ({
           const handleCloneClick = () => {
             dispatch({ type: I_SET_CLONE, clone: row });
             dispatch(
-              _push(getTableInsertRowRoute(currentSchema, curTableName, true))
+              _push(
+                getTableInsertRowRoute(
+                  currentSchema,
+                  currentSource,
+                  curTableName,
+                  true
+                )
+              )
             );
           };
 
@@ -783,6 +798,7 @@ const ViewRows = ({
               dispatch={dispatch}
               expandedRow={expandedRow}
               readOnlyMode={readOnlyMode}
+              currentSource={currentSource}
             />
           );
         }

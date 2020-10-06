@@ -69,7 +69,7 @@ class PermissionsSummary extends Component {
 
   render() {
     const { currRole, currAction, currTable, copyState } = this.state;
-    const { dispatch } = this.props;
+    const { dispatch, currentSource } = this.props;
 
     // ------------------------------------------------------------------------------
 
@@ -194,6 +194,7 @@ class PermissionsSummary extends Component {
           push(
             getTablePermissionsRoute(
               table.table_schema,
+              currentSource,
               table.table_name,
               dataSource.isTable(table)
             )
@@ -1009,6 +1010,7 @@ const permissionsSummaryConnector = connect => {
     return {
       allSchemas: state.tables.allSchemas,
       currentSchema: state.tables.currentSchema,
+      currentSource: state.tables.currentDataSource,
     };
   };
   return connect(mapStateToProps)(PermissionsSummary);

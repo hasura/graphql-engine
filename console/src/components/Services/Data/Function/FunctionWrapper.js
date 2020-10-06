@@ -38,6 +38,7 @@ const mapStateToProps = state => {
       ...state.functions,
       configuration: getFunctionConfiguration(state),
     },
+    currentSource: state.tables.currentDataSource,
     migrationMode: state.main.migrationMode,
   };
 };

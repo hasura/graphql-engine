@@ -144,7 +144,11 @@ class ModifyCustomFunction extends React.Component {
 
     const { migrationMode, dispatch } = this.props;
 
-    const functionBaseUrl = getFunctionBaseRoute(schema, functionName);
+    const functionBaseUrl = getFunctionBaseRoute(
+      schema,
+      this.props.currentSource,
+      functionName
+    );
 
     const generateMigrateBtns = () => {
       return (

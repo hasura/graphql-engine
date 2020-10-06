@@ -571,7 +571,7 @@ const makeMigrationCall = (
           action: {
             label: 'Continue',
             callback: () =>
-              makeApiCall(
+              makeMigrationCall(
                 dispatch,
                 getState,
                 cascadeUpQueries(upQueries, isPgCascade), // cascaded new up queries

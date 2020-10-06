@@ -124,6 +124,7 @@ const CreateSchemaSection = React.forwardRef(
     handleCreateNewClick,
     handleSchemaNameChange,
     handleCreateClick,
+    currentDataSource,
   }) =>
     migrationMode && (
       <div className={`${styles.display_flex}`}>
@@ -138,13 +139,16 @@ const CreateSchemaSection = React.forwardRef(
         ) : (
           <ClosedCreateSection onClick={handleCreateNewClick} />
         )}
-        <SchemaPermissionsButton schema={schema} />
+        <SchemaPermissionsButton schema={schema} source={currentDataSource} />
       </div>
     )
 );
 
-const SchemaPermissionsButton = ({ schema }) => (
-  <Link to={getSchemaPermissionsRoute(schema)} style={{ marginLeft: '20px' }}>
+const SchemaPermissionsButton = ({ schema, source }) => (
+  <Link
+    to={getSchemaPermissionsRoute(schema, source)}
+    style={{ marginLeft: '20px' }}
+  >
     <Button color="white" size="xs">
       Show Permissions Summary
     </Button>
@@ -296,7 +300,9 @@ class Schema extends Component {
         const handleClick = e => {
           e.preventDefault();
 
-          dispatch(push(getSchemaAddTableRoute(currentSchema)));
+          dispatch(
+            push(getSchemaAddTableRoute(currentSchema, currentDataSource))
+          );
         };
 
         createBtn = (
@@ -384,6 +390,7 @@ class Schema extends Component {
                   handleCreateNewClick={this.onCreateNewClick}
                   handleSchemaNameChange={this.onChangeSchemaName}
                   handleCreateClick={this.handleCreateClick}
+                  currentDataSource={currentDataSource}
                 />
               </div>
             </div>

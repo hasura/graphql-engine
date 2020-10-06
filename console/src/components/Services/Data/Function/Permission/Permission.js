@@ -64,11 +64,16 @@ class Permission extends React.Component {
       throw new NotFoundError();
     }
 
-    const { dispatch } = this.props;
+    const { dispatch, currentSource } = this.props;
 
-    const functionBaseUrl = getFunctionBaseRoute(schema, functionName);
+    const functionBaseUrl = getFunctionBaseRoute(
+      schema,
+      currentSource,
+      functionName
+    );
     const permissionTableUrl = getTablePermissionsRoute(
       setOffTableSchema,
+      currentSource,
       setOffTable,
       true
     );

@@ -311,6 +311,7 @@ const Relationships = ({
   migrationMode,
   schemaList,
   readOnlyMode,
+  currentSource,
 }) => {
   useEffect(() => {
     dispatch(resetRelationshipForm());
@@ -456,6 +457,7 @@ const Relationships = ({
         <TableHeader
           dispatch={dispatch}
           table={tableSchema}
+          source={currentSource}
           tabName="relationships"
           migrationMode={migrationMode}
         />
@@ -516,6 +518,7 @@ const mapStateToProps = (state, ownProps) => ({
   schemaList: state.tables.schemaList,
   remoteSchemas: getRemoteSchemasSelector(state).map(schema => schema.name),
   adminHeaders: state.tables.dataHeaders,
+  currentSource: state.tables.currentDataSource,
   ...state.tables.modify,
 });
 

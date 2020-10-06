@@ -52,6 +52,7 @@ class DataSubSidebar extends React.Component {
       currentFunction,
       trackedFunctions,
       allSchemas,
+      currentSource,
     } = this.props;
 
     const { searchInput } = this.state;
@@ -111,6 +112,7 @@ class DataSubSidebar extends React.Component {
               <Link
                 to={getTableBrowseRoute(
                   currentSchema,
+                  currentSource,
                   tableName,
                   dataSource.isTable(table)
                 )}
@@ -151,6 +153,7 @@ class DataSubSidebar extends React.Component {
               <Link
                 to={getFunctionModifyRoute(
                   dataSource.getFunctionSchema(func),
+                  currentSource,
                   funcName
                 )}
                 data-test={funcName}
@@ -187,7 +190,7 @@ class DataSubSidebar extends React.Component {
         showAddBtn={migrationMode}
         searchInput={getSearchInput()}
         heading={`Tables/Views/Functions (${tablesViewsFunctionsCount})`}
-        addLink={getSchemaAddTableRoute(currentSchema)}
+        addLink={getSchemaAddTableRoute(currentSchema, currentSource)}
         addLabel={'Add Table'}
         addTestString={'sidebar-add-table'}
         childListTestString={'table-links'}
@@ -206,6 +209,7 @@ const mapStateToProps = state => {
     allSchemas: state.tables.allSchemas,
     currentTable: state.tables.currentTable,
     currentSchema: state.tables.currentSchema,
+    currentSource: state.tables.currentDataSource,
     serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
     metadata: state.metadata,
   };

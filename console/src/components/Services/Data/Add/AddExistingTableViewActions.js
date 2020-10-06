@@ -65,8 +65,18 @@ const addExistingTableSql = () => {
         );
         const isTableType = dataSource.isTable(newTable);
         const nextRoute = isTableType
-          ? getTableModifyRoute(currentSchema, tableName, isTableType)
-          : getTableBrowseRoute(currentSchema, tableName, isTableType);
+          ? getTableModifyRoute(
+              currentSchema,
+              currentDataSource,
+              tableName,
+              isTableType
+            )
+          : getTableBrowseRoute(
+              currentSchema,
+              currentDataSource,
+              tableName,
+              isTableType
+            );
         dispatch(_push(nextRoute));
       });
       return;
@@ -117,7 +127,9 @@ const addExistingFunction = name => {
       dispatch({ type: REQUEST_SUCCESS });
       // Update the left side bar
       dispatch(exportMetadata());
-      dispatch(_push(getFunctionModifyRoute(currentSchema, name)));
+      dispatch(
+        _push(getFunctionModifyRoute(currentSchema, currentDataSource, name))
+      );
       return;
     };
     const customOnError = err => {

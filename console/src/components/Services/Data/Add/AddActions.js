@@ -166,7 +166,16 @@ export const trackTable = payload => (dispatch, getState) => {
     dispatch({ type: SET_DEFAULTS });
     dispatch(setTable(payload.name));
     dispatch(updateSchemaInfo()).then(() =>
-      dispatch(_push(getTableModifyRoute(payload.schema, payload.name, true)))
+      dispatch(
+        _push(
+          getTableModifyRoute(
+            payload.schema,
+            currentDataSource,
+            payload.name,
+            true
+          )
+        )
+      )
     );
     return;
   };

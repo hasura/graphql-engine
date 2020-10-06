@@ -8,7 +8,7 @@ import {
 } from './types';
 import { filterInconsistentMetadataObjects } from '../components/Services/Settings/utils';
 import { parseCustomTypes } from '../shared/utils/hasuraCustomTypeUtils';
-import { currentDriver } from '../dataSources';
+import { currentDriver, Driver } from '../dataSources';
 import { EventTrigger } from '../components/Services/Events/types';
 
 const isMetadataV3 = (
@@ -30,7 +30,9 @@ export const getDataSourceMatadata = (state: ReduxState) => {
   return state.metadata.metadataObject;
 };
 
-export const getInitDataSource = (state: ReduxState) => {
+export const getInitDataSource = (
+  state: ReduxState
+): { source: string; driver: Driver } => {
   if (isMetadataV3(state.metadata.metadataObject)) {
     const dataSources = state.metadata.metadataObject.sources;
     // .filter(
@@ -55,7 +57,6 @@ const getInconsistentObjects = (state: ReduxState) => {
 };
 
 const getTables = createSelector(getDataSourceMatadata, source => {
-  console.log({ source });
   return source?.tables || [];
 });
 

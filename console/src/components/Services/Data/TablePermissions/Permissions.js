@@ -188,6 +188,7 @@ class Permissions extends Component {
       allRoles,
       nonTrackableFunctions,
       trackableFunctions,
+      currentSource,
     } = this.props;
 
     const { localFilterString, presetsOrdered } = this.state;
@@ -255,6 +256,7 @@ class Permissions extends Component {
         <TableHeader
           dispatch={dispatch}
           table={tableSchema}
+          source={currentSource}
           tabName="permissions"
           migrationMode={migrationMode}
           readOnlyMode={readOnlyMode}
@@ -1805,7 +1807,6 @@ class Permissions extends Component {
             {getRowSection()}
             {getColumnSection()}
             {getAggregationSection()}
-            {/*{getUpsertSection()}*/}
             {getPresetsSection('insert')}
             {getPresetsSection('update')}
             {getBackendOnlySection()}
@@ -1894,6 +1895,7 @@ const mapStateToProps = (state, ownProps) => ({
   readOnlyMode: state.main.readOnlyMode,
   currentSchema: state.tables.currentSchema,
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
+  currentSource: state.tables.currentDataSource,
   ...state.tables.modify,
 });
 
