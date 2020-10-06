@@ -156,7 +156,10 @@ domainParser parser = do
 
   where
     schemeParser :: AT.Parser Text
-    schemeParser = AT.string "http://" <|> AT.string "https://"
+    schemeParser = do
+      scheme <- AT.takeWhile1 (/= ':')
+      sep <- AT.string "://"
+      return $ scheme <> sep
 
     hostPortParser :: AT.Parser Text
     hostPortParser = hostWithPortParser <|> AT.takeText
