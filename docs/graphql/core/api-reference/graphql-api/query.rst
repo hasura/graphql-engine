@@ -394,7 +394,7 @@ AndExp
     {
       _and: [BoolExp_]
     }
-    
+
 *Example*
 
 .. code-block:: graphql
@@ -572,15 +572,15 @@ Operator
    * - ``_gt``
      - ``>``
    * - ``_lt``
-     - ``<`` 
+     - ``<``
    * - ``_gte``
      - ``>=``
    * - ``_lte``
-     - ``<=``  
+     - ``<=``
    * - ``_in``
      - ``IN``
    * - ``_nin``
-     - ``NOT IN``  
+     - ``NOT IN``
 
 (For more details, refer to the Postgres docs for `comparison operators <https://www.postgresql.org/docs/current/functions-comparison.html>`__ and `list based search operators <https://www.postgresql.org/docs/current/functions-comparisons.html>`__.)
 
@@ -745,7 +745,7 @@ CastExp
       id
     }
   }
-  
+
   Variables:
   {
     "coordinate": {
@@ -865,7 +865,7 @@ Order by type for ``article`` table:
      author: author_order_by
      #order by using "likes" array relationship aggregates
      likes_aggregate: likes_aggregate_order_by
-   }  
+   }
 
 .. _OrderByEnum:
 
