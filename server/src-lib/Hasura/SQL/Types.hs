@@ -195,30 +195,34 @@ instance ToTxt TableName where
 data TableType
   = TTBaseTable
   | TTView
+  | TTMaterializedView
   | TTForeignTable
   | TTLocalTemporary
   deriving (Eq)
 
 tableTyToTxt :: TableType -> T.Text
-tableTyToTxt TTBaseTable      = "BASE TABLE"
-tableTyToTxt TTView           = "VIEW"
-tableTyToTxt TTForeignTable   = "FOREIGN TABLE"
-tableTyToTxt TTLocalTemporary = "LOCAL TEMPORARY"
+tableTyToTxt TTBaseTable        = "BASE TABLE"
+tableTyToTxt TTView             = "VIEW"
+tableTyToTxt TTMaterializedView = "MATERIALIZED VIEW"
+tableTyToTxt TTForeignTable     = "FOREIGN TABLE"
+tableTyToTxt TTLocalTemporary   = "LOCAL TEMPORARY"
 
 instance Show TableType where
   show = T.unpack . tableTyToTxt
 
 instance Q.FromCol TableType where
   fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case
-    "BASE TABLE"      -> Just TTBaseTable
-    "VIEW"            -> Just TTView
-    "FOREIGN TABLE"   -> Just TTForeignTable
-    "LOCAL TEMPORARY" -> Just TTLocalTemporary
-    _                 -> Nothing
+    "BASE TABLE"        -> Just TTBaseTable
+    "VIEW"              -> Just TTView
+    "MATERIALIZED VIEW" -> Just TTMaterializedView
+    "FOREIGN TABLE"     -> Just TTForeignTable
+    "LOCAL TEMPORARY"   -> Just TTLocalTemporary
+    _                   -> Nothing
 
 isView :: TableType -> Bool
-isView TTView = True
-isView _      = False
+isView TTView             = True
+isView TTMaterializedView = True
+isView _                  = False
 
 newtype ConstraintName
   = ConstraintName { getConstraintTxt :: T.Text }
