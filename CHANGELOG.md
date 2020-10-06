@@ -58,6 +58,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - server: change `created_at` column type from `timestamp` to `timestamptz` for scheduled triggers tables (fix #5722)
 - server: allow configuring timeouts for actions (fixes #4966)
 - server: accept only non-negative integers for batch size and refetch interval (close #5653) (#5759)
+- server: track functions which return setof elements from a materialized view (close #5294)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
