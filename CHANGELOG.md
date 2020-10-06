@@ -67,6 +67,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - console: add `<3 hasura` section to view updates and notifications from Hasura (#5070)
 - cli: add missing global flags for seeds command (#5565)
 - docs: add docs page on networking with docker (close #4346) (#4811)
+- docs: add postgres concepts page to docs (close #4440) (#4471)
 
 
 ## `v1.3.2`
