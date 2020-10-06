@@ -28,7 +28,6 @@ import           Data.Sequence (Seq)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Read as T
-import           Data.Void
 import qualified Database.ODBC.SQLServer as Odbc
 import qualified Hasura.RQL.DML.Select.Types as Ir
 import qualified Hasura.RQL.Types.BoolExp as Ir
@@ -45,17 +44,17 @@ import           Prelude
 
 -- | Most of these errors should be checked for legitimacy.
 data Error
-  = FromTypeUnsupported (Ir.SelectFromG Void)
+  = FromTypeUnsupported (Ir.SelectFromG Expression)
   | NoOrderSpecifiedInOrderBy
   | MalformedAgg
-  | FieldTypeUnsupportedForNow (Ir.AnnFieldG Void)
-  | AggTypeUnsupportedForNow (Ir.TableAggregateFieldG Void)
-  | NodesUnsupportedForNow (Ir.TableAggregateFieldG Void)
+  | FieldTypeUnsupportedForNow (Ir.AnnFieldG Expression)
+  | AggTypeUnsupportedForNow (Ir.TableAggregateFieldG Expression)
+  | NodesUnsupportedForNow (Ir.TableAggregateFieldG Expression)
   | NoProjectionFields
   | NoAggregatesMustBeABug
-  | UnsupportedArraySelect (Ir.ArraySelectG Void)
-  | UnsupportedOpExpG (Ir.OpExpG Void)
-  | UnsupportedSQLExp Void
+  | UnsupportedArraySelect (Ir.ArraySelectG Expression)
+  | UnsupportedOpExpG (Ir.OpExpG Expression)
+  | UnsupportedSQLExp Expression
   | UnsupportedDistinctOn
   | InvalidIntegerishSql Sql.SQLExp
   | DistinctIsn'tSupported
@@ -97,7 +96,7 @@ runFromIr fromIr = evalStateT (unFromIr fromIr) mempty
 
 mkSQLSelect ::
      Ir.JsonAggSelect
-  -> Ir.AnnSelectG (Ir.AnnFieldsG Void) Void
+  -> Ir.AnnSelectG (Ir.AnnFieldsG Expression) Expression
   -> FromIr Tsql.Select
 mkSQLSelect jsonAggSelect annSimpleSel =
   case jsonAggSelect of
@@ -109,7 +108,7 @@ mkSQLSelect jsonAggSelect annSimpleSel =
 --------------------------------------------------------------------------------
 -- Top-level exported functions
 
-fromSelectRows :: Ir.AnnSelectG (Ir.AnnFieldsG Void) Void -> FromIr Tsql.Select
+fromSelectRows :: Ir.AnnSelectG (Ir.AnnFieldsG Expression) Expression -> FromIr Tsql.Select
 fromSelectRows annSelectG = do
   selectFrom <-
     case from of
@@ -162,7 +161,7 @@ fromSelectRows annSelectG = do
         else LeaveNumbersAlone
 
 fromSelectAggregate ::
-     Ir.AnnSelectG [(Ir.FieldName, Ir.TableAggregateFieldG Void)] Void
+     Ir.AnnSelectG [(Ir.FieldName, Ir.TableAggregateFieldG Expression)] Expression
   -> FromIr Tsql.Select
 fromSelectAggregate annSelectG = do
   selectFrom <-
@@ -227,7 +226,7 @@ data UnfurledJoin = UnfurledJoin
     -- ^ Recorded if we joined onto an object relation.
   } deriving (Show)
 
-fromSelectArgsG :: Ir.SelectArgsG Void -> ReaderT EntityAlias FromIr Args
+fromSelectArgsG :: Ir.SelectArgsG Expression -> ReaderT EntityAlias FromIr Args
 fromSelectArgsG selectArgsG = do
   argsWhere <-
     maybe (pure mempty) (fmap (Where . pure) . fromAnnBoolExp) mannBoolExp
@@ -269,7 +268,7 @@ fromSelectArgsG selectArgsG = do
 -- | Produce a valid ORDER BY construct, telling about any joins
 -- needed on the side.
 fromAnnOrderByItemG ::
-     Ir.AnnOrderByItemG Void -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) OrderBy
+     Ir.AnnOrderByItemG Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) OrderBy
 fromAnnOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
   orderByFieldName <- unfurlAnnOrderByElement obiColumn
   let morderByOrder =
@@ -293,7 +292,7 @@ fromAnnOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
 -- that are terminated by field name (Ir.AOCColumn and
 -- Ir.AOCArrayAggregation).
 unfurlAnnOrderByElement ::
-     Ir.AnnOrderByElement Void -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) FieldName
+     Ir.AnnOrderByElement Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) FieldName
 unfurlAnnOrderByElement =
   \case
     Ir.AOCColumn pgColumnInfo -> do
@@ -417,12 +416,12 @@ fromQualifiedTable qualifiedObject = do
                         } = qualifiedObject
 
 fromAnnBoolExp ::
-     Ir.GBoolExp (Ir.AnnBoolExpFld Void)
+     Ir.GBoolExp (Ir.AnnBoolExpFld Expression)
   -> ReaderT EntityAlias FromIr Expression
 fromAnnBoolExp = traverse fromAnnBoolExpFld >=> fromGBoolExp
 
 fromAnnBoolExpFld ::
-     Ir.AnnBoolExpFld Void -> ReaderT EntityAlias FromIr Expression
+     Ir.AnnBoolExpFld Expression -> ReaderT EntityAlias FromIr Expression
 fromAnnBoolExpFld =
   \case
     Ir.AVCol pgColumnInfo opExpGs -> do
@@ -501,7 +500,7 @@ data FieldSource
   deriving (Eq, Show)
 
 fromTableAggregateFieldG ::
-     (Ir.FieldName, Ir.TableAggregateFieldG Void) -> ReaderT EntityAlias FromIr FieldSource
+     (Ir.FieldName, Ir.TableAggregateFieldG Expression) -> ReaderT EntityAlias FromIr FieldSource
 fromTableAggregateFieldG (Ir.FieldName name, field) =
   case field of
     Ir.TAFAgg (aggregateFields :: [(Ir.FieldName, Ir.AggregateField)]) ->
@@ -564,7 +563,7 @@ fromAggregateField aggregateField =
 fromAnnFieldsG ::
      Map Sql.QualifiedTable EntityAlias
   -> StringifyNumbers
-  -> (Ir.FieldName, Ir.AnnFieldG Void)
+  -> (Ir.FieldName, Ir.AnnFieldG Expression)
   -> ReaderT EntityAlias FromIr FieldSource
 fromAnnFieldsG existingJoins stringifyNumbers (Ir.FieldName name, field) =
   case field of
@@ -659,7 +658,7 @@ fieldSourceJoin =
 
 fromObjectRelationSelectG ::
      Map Sql.QualifiedTable EntityAlias
-  -> Ir.ObjectRelationSelectG Void
+  -> Ir.ObjectRelationSelectG Expression
   -> ReaderT EntityAlias FromIr Join
 fromObjectRelationSelectG existingJoins annRelationSelectG = do
   eitherAliasOrFrom <- lift (lookupTableFrom existingJoins tableFrom)
@@ -713,13 +712,13 @@ fromObjectRelationSelectG existingJoins annRelationSelectG = do
                   }
           }
   where
-    Ir.AnnObjectSelectG { _aosFields = fields :: Ir.AnnFieldsG Void
+    Ir.AnnObjectSelectG { _aosFields = fields :: Ir.AnnFieldsG Expression
                         , _aosTableFrom = tableFrom :: Sql.QualifiedTable
-                        , _aosTableFilter = tableFilter :: Ir.AnnBoolExp Void
+                        , _aosTableFilter = tableFilter :: Ir.AnnBoolExp Expression
                         } = annObjectSelectG
     Ir.AnnRelationSelectG { aarRelationshipName
                           , aarColumnMapping = mapping :: HashMap Sql.PGCol Sql.PGCol
-                          , aarAnnSelect = annObjectSelectG :: Ir.AnnObjectSelectG Void
+                          , aarAnnSelect = annObjectSelectG :: Ir.AnnObjectSelectG Expression
                           } = annRelationSelectG
 
 lookupTableFrom ::
@@ -731,7 +730,7 @@ lookupTableFrom existingJoins tableFrom = do
     Just entityAlias -> pure (Left entityAlias)
     Nothing -> fmap Right (fromQualifiedTable tableFrom)
 
-fromArraySelectG :: Ir.ArraySelectG Void -> ReaderT EntityAlias FromIr Join
+fromArraySelectG :: Ir.ArraySelectG Expression -> ReaderT EntityAlias FromIr Join
 fromArraySelectG =
   \case
     Ir.ASSimple arrayRelationSelectG ->
@@ -742,7 +741,7 @@ fromArraySelectG =
       refute (pure (UnsupportedArraySelect select))
 
 fromArrayAggregateSelectG ::
-     Ir.AnnRelationSelectG (Ir.AnnAggregateSelectG Void)
+     Ir.AnnRelationSelectG (Ir.AnnAggregateSelectG Expression)
   -> ReaderT EntityAlias FromIr Join
 fromArrayAggregateSelectG annRelationSelectG = do
   fieldName <- lift (fromRelName aarRelationshipName)
@@ -765,7 +764,7 @@ fromArrayAggregateSelectG annRelationSelectG = do
                           , aarAnnSelect = annSelectG
                           } = annRelationSelectG
 
-fromArrayRelationSelectG :: Ir.ArrayRelationSelectG Void -> ReaderT EntityAlias FromIr Join
+fromArrayRelationSelectG :: Ir.ArrayRelationSelectG Expression -> ReaderT EntityAlias FromIr Join
 fromArrayRelationSelectG annRelationSelectG = do
   fieldName <- lift (fromRelName aarRelationshipName)
   select <- lift (fromSelectRows annSelectG)
@@ -819,7 +818,7 @@ fromMapping localFrom =
 --------------------------------------------------------------------------------
 -- Basic SQL expression types
 
-fromOpExpG :: Expression -> Ir.OpExpG Void -> FromIr Expression
+fromOpExpG :: Expression -> Ir.OpExpG Expression -> FromIr Expression
 fromOpExpG expression =
   \case
     Ir.ANISNULL -> pure (IsNullExpression expression)
@@ -891,3 +890,4 @@ generateEntityAlias template = do
 
 fromAlias :: From -> EntityAlias
 fromAlias (FromQualifiedTable Aliased {aliasedAlias}) = EntityAlias aliasedAlias
+fromAlias (FromOpenJson Aliased {aliasedAlias}) = EntityAlias aliasedAlias

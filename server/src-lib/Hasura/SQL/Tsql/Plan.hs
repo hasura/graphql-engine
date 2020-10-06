@@ -4,12 +4,14 @@ module Hasura.SQL.Tsql.Plan
   ( rootFieldToSelect
   , prepareValueNoPlan
   , prepareValueMultiplex
+  , test
   ) where
 
 import           Control.Applicative
 import           Control.Monad.Trans
 import           Control.Monad.Trans.State.Strict
 import           Control.Monad.Validate
+import           Data.Functor
 import           Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HM
 import qualified Data.HashMap.Strict.InsOrd as OMap
@@ -18,6 +20,7 @@ import qualified Data.List.NonEmpty as NE
 import           Data.Void
 import qualified Database.ODBC.SQLServer as Odbc
 import qualified Hasura.GraphQL.Context as Graphql
+import qualified Hasura.GraphQL.Execute.Query as Query
 import qualified Hasura.GraphQL.Parser.Column as Graphql
 import qualified Hasura.GraphQL.Parser.Schema as PS
 import qualified Hasura.RQL.DML.Select as DS
@@ -30,12 +33,39 @@ import qualified Language.GraphQL.Draft.Syntax as G
 import           Prelude
 
 --------------------------------------------------------------------------------
+-- Testing
+
+test :: OMap.InsOrdHashMap G.Name (Graphql.SubscriptionRootField Graphql.UnpreparedValue)
+     -> IO ()
+test i =
+  putStrLn
+    (unlines
+       [ "Tsql.test"
+       , "\naliases"
+       , show (void i)
+       , "\nroots"
+       , show i
+       , "\nprepared"
+       , show
+           (fmap
+              (either
+                 (error "Boo!")
+                 (runValidate .
+                  Tsql.runFromIr . rootFieldToSelect (error "todo: alias")) .
+               flip
+                 evalStateT
+                 PrepareState {positionalArguments = 0, namedArguments = mempty} .
+               Query.traverseQueryRootField prepareValueMultiplex)
+              i)
+       ])
+
+--------------------------------------------------------------------------------
 -- Converting a root field into a T-SQL select statement
 
 -- TODO: Use 'alias'.
 rootFieldToSelect ::
      Sql.Alias
-  -> Graphql.RootField (Graphql.QueryDB Void) Void Void Void
+  -> Graphql.RootField (Graphql.QueryDB Expression) void0 void1 void2
   -> Tsql.FromIr Select
 rootFieldToSelect _alias =
   \case

@@ -472,6 +472,7 @@ library
                      , Hasura.SQL.Tsql.FromIr
                      , Hasura.SQL.Tsql.ToQuery
                      , Hasura.SQL.Tsql.Types
+                     , Hasura.SQL.Tsql.Plan
                      , Hasura.Tracing
                      , Network.URI.Extended
                      , Network.Wai.Extended

@@ -63,6 +63,7 @@ data RootField db remote action raw
   | RFRemote remote
   | RFAction action
   | RFRaw raw
+  deriving (Show)
 
 traverseDB :: forall db db' remote action raw f
         . Applicative f
@@ -91,6 +92,7 @@ data QueryDB v
   | QDBPrimaryKey  (RQL.AnnSimpleSelG       v)
   | QDBAggregation (RQL.AnnAggregateSelectG v)
   | QDBConnection  (RQL.ConnectionSelect    v)
+  deriving (Show)
 
 data ActionQuery v
   = AQQuery !(RQL.AnnActionExecution v)
