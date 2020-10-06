@@ -133,7 +133,7 @@ runQueryTx
 runQueryTx pgExecCtx = \case
   LTErr e  -> throwError e
   LTNoTx a -> return a
-  LTTx tx  -> (liftEither =<<) $ liftIO $ runExceptT $ _pecRunReadNoTx pgExecCtx tx
+  LTTx tx  -> liftEither =<< liftIO (runExceptT $ _pecRunReadNoTx pgExecCtx tx)
 
 type RespTx = Q.TxE QErr EncJSON
 type LazyRespTx = LazyTx QErr EncJSON
