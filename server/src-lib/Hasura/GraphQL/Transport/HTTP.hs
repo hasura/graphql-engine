@@ -139,10 +139,9 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             pure (Telem.Query, 0, Telem.Local, HttpResponse cachedResponseData responseHeaders)
           Nothing -> do
             conclusion <- runExceptT $ forWithKey queryPlans $ \fieldName -> \case
-              E.ExecStepDB txGenSql -> doQErr $ do
+              E.ExecStepDB (tx, genSql) -> doQErr $ do
                 (telemTimeIO_DT, resp) <-
-                  runQueryDB reqId reqUnparsed userInfo fieldName
-                  (Just . Map.singleton (G.unsafeMkName fieldName) <$> txGenSql)
+                  runQueryDB reqId reqUnparsed fieldName tx genSql
                 return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
               E.ExecStepRemote (rsi, opDef, varValsM) ->
                 runRemoteGQ fieldName rsi opDef varValsM
@@ -277,15 +276,15 @@ runQueryDB
      )
   => RequestId
   -> GQLReqUnparsed
-  -> UserInfo
-  -> Text
-  -> (Tracing.TraceT (LazyTx QErr) EncJSON, Maybe EQ.GeneratedSqlMap)
+  -> Text -- ^ name of the root field we're fetching
+  -> Tracing.TraceT (LazyTx QErr) EncJSON
+  -> Maybe EQ.PreparedSql
   -> m (DiffTime, EncJSON)
   -- ^ Also return the time spent in the PG query; for telemetry.
-runQueryDB reqId query _userInfo fieldName (tx, genSql) =  do
+runQueryDB reqId query fieldName tx genSql =  do
   -- log the generated SQL and the graphql query
   E.ExecutionCtx logger _ pgExecCtx _ _ _ _ <- ask
-  logQueryLog logger query genSql reqId
+  logQueryLog logger query (Map.singleton (G.unsafeMkName fieldName) . Just <$> genSql) reqId
   (telemTimeIO, !resp) <- withElapsedTime $ trace ("Postgres Query for root field " <> fieldName) $
     Tracing.interpTraceT id $ hoist (runQueryTx pgExecCtx) tx
   return (telemTimeIO, resp)
