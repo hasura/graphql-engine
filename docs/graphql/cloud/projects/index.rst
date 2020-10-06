@@ -56,6 +56,7 @@ Dig deeper
    Project Env vars <env-vars>
    Project Domains <domains>
    Securing projects <secure>
+   Switching pricing plans <pricing>
    Heroku database URL Sync <heroku-url-sync>
    Deleting projects <delete>
    
