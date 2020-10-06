@@ -123,8 +123,8 @@ runLazyTx pgExecCtx txAccess = \case
   LTNoTx a -> return a
   LTTx tx  ->
     case txAccess of
-      Q.ReadOnly  -> (liftEither =<<) $ liftIO $ runExceptT $ _pecRunReadOnly pgExecCtx tx
-      Q.ReadWrite -> (liftEither =<<) $ liftIO $ runExceptT $ _pecRunReadWrite pgExecCtx tx
+      Q.ReadOnly  -> liftEither =<< liftIO (runExceptT $ _pecRunReadOnly pgExecCtx tx)
+      Q.ReadWrite -> liftEither =<< liftIO (runExceptT $ _pecRunReadWrite pgExecCtx tx)
 
 -- | This runs the given set of statements (Tx) without wrapping them in BEGIN
 -- and COMMIT. This should only be used for running a single statement query!
