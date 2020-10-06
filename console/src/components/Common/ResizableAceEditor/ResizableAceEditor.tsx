@@ -4,22 +4,22 @@ import 'brace/mode/markdown';
 import 'brace/theme/github';
 
 type ResizableAceEditorProps = {
-  id: string,
-  allProps: any,
-  mode: string,
-  theme: string,
-  name: string,
-  minLines: number,
-  maxLines: number,
-  value: any,
-  showPrintMargin: boolean,
-  onChange: any,
-  showGutter: boolean,
-  commands: any
+  id: string;
+  allProps: any;
+  mode: string;
+  theme: string;
+  name: string;
+  minLines: number;
+  maxLines: number;
+  maxWidth: number;
+  value: any;
+  showPrintMargin: boolean;
+  onChange: any;
+  showGutter: boolean;
+  commands: any;
 };
 
 const ResizableAceEditor = (props: ResizableAceEditorProps) => {
-  console.log('props: ', props);
   return (
     <AceEditor
       key={props.id}
@@ -29,6 +29,7 @@ const ResizableAceEditor = (props: ResizableAceEditorProps) => {
       name={props.name}
       minLines={props.minLines}
       maxLines={props.maxLines}
+      maxWidth={props.maxWidth}
       value={props.value}
       showPrintMargin={props.showPrintMargin}
       onChange={props.onChange}

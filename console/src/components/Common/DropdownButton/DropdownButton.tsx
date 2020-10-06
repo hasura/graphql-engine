@@ -64,10 +64,10 @@ const DDButton: React.FC<DropDownButtonProps> = props => {
       </DropdownButton>
       <input
         type="text"
-        style={{ width: '350px' }}
         data-key={dataKey}
         data-index-id={dataIndex}
-        className="form-control"
+        className='form-control'
+        style={{ width: '350px' }}
         required={required}
         onChange={onInputChange}
         disabled={disabled}

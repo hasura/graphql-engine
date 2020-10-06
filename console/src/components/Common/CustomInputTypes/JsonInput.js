@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import ResizableAceEditor from '../ResizableAceEditor/ResizableAceEditor'
+import ResizableAceEditor from '../ResizableAceEditor/ResizableAceEditor';
 
 const styles = require('./CustomInput.scss');
 
@@ -79,26 +79,27 @@ const JsonInput = props => {
 
   const getJsonEditor = () => {
     return (
-        <ResizableAceEditor
-          id="ace_json_editor"
-          allProps={allProps}
-          mode="json"
-          theme="github"
-          name="jsontoggler"
-          minLines={10}
-          maxLines={100}
-          value={data}
-          showPrintMargin={false}
-          onChange={handleTextAreaChangeAndPropagate}
-          showGutter={false}
-          commands={[
-            {
-              name: 'toggleEditor',
-              bindKey: { win: 'Ctrl-Space', mac: 'Command-Space' },
-              exec: handleEditorExec,
-            },
-          ]}
-        />
+      <ResizableAceEditor
+        id="ace_json_editor"
+        allProps={allProps}
+        mode="json"
+        theme="github"
+        name="jsontoggler"
+        minLines={10}
+        maxLines={100}
+        maxWidth={150}
+        value={data}
+        showPrintMargin={false}
+        onChange={handleTextAreaChangeAndPropagate}
+        showGutter={false}
+        commands={[
+          {
+            name: 'toggleEditor',
+            bindKey: { win: 'Ctrl-Space', mac: 'Command-Space' },
+            exec: handleEditorExec,
+          },
+        ]}
+      />
     );
   };
 
