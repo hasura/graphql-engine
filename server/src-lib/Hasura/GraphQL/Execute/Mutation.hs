@@ -174,7 +174,7 @@ convertMutationSelectionSet env logger gqlContext sqlGenCtx userInfo manager req
   txs <- for unpreparedQueries \case
     RFDB db             -> ExecStepDB <$> convertMutationDB env userSession rjCtx (stringifyNum sqlGenCtx) db
     RFRemote (remoteSchemaInfo, remoteField) ->
-      pure $ buildTypedOperation
+      pure $ buildExecStepRemote
              remoteSchemaInfo
              G.OperationTypeMutation
              varDefs

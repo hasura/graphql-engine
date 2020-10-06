@@ -1,5 +1,5 @@
 module Hasura.GraphQL.Execute.Remote
-  ( buildTypedOperation
+  ( buildExecStepRemote
   ) where
 
 import           Hasura.Prelude
@@ -30,7 +30,7 @@ collectVariables
 collectVariables =
   Set.unions . fmap (foldMap Set.singleton)
 
-buildTypedOperation
+buildExecStepRemote
   :: forall db
    . RemoteSchemaInfo
   -> G.OperationType
@@ -38,7 +38,7 @@ buildTypedOperation
   -> G.SelectionSet G.NoFragments Variable
   -> Maybe GH.VariableValues
   -> ExecutionStep db
-buildTypedOperation remoteSchemaInfo tp varDefs selSet varValsM =
+buildExecStepRemote remoteSchemaInfo tp varDefs selSet varValsM =
   let unresolvedSelSet = unresolveVariables selSet
       requiredVars = collectVariables unresolvedSelSet
       restrictedDefs = filter (\varDef -> G._vdName varDef `Set.member` requiredVars) varDefs
