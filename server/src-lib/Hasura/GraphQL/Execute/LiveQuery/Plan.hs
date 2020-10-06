@@ -55,6 +55,7 @@ import qualified Hasura.SQL.DML                as S
 import           Hasura.Class
 import           Hasura.Db
 import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Query
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.RQL.Types
@@ -283,7 +284,7 @@ $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ReusableLiveQueryPlan)
 buildLiveQueryPlan
   :: ( MonadError QErr m
      , MonadIO m
-     , MonadMetadataStorageTx m
+     , MonadMetadataStorage m
      )
   => PGExecCtx
   -> UserInfo
@@ -312,7 +313,6 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
       $  traverseSubscriptionRootField prepareWithPlan unpreparedQuery
     pure $! irToRootFieldPlan planVars planVals preparedQuery
 -}
-  resolveAsyncActionQuery <- getAsyncActionQueryResolver
   (preparedAST, (queryVariableValues, querySyntheticVariableValues)) <- flip runStateT (mempty, Seq.empty) $
     for unpreparedAST \unpreparedQuery -> do
       resolvedRootField <- traverseQueryRootField resolveMultiplexedValue unpreparedQuery
@@ -326,7 +326,8 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
           when (remoteJoins /= mempty)
             $ throw400 NotSupported "Remote relationships are not allowed in subscriptions"
         _ -> pure ()
-      traverseAction (DS.traverseAnnSimpleSelect resolveMultiplexedValue . resolveAsyncActionQuery userInfo) resolvedRootField
+      -- FIXME: Async action live queries
+      traverseAction (DS.traverseAnnSimpleSelect resolveMultiplexedValue <=< lift . resolveAsyncActionQuery userInfo) resolvedRootField
 
   let multiplexedQuery = mkMultiplexedQuery preparedAST
       roleName = _uiRole userInfo

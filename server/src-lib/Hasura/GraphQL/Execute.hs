@@ -213,7 +213,7 @@ getResolvedExecPlan
      , MonadIO m
      , Tracing.MonadTrace m
      , EQ.MonadQueryInstrumentation m
-     , MonadMetadataStorageTx m
+     , MonadMetadataStorage m
      , MonadIO tx
      , MonadError QErr tx
      , Tracing.MonadTrace tx

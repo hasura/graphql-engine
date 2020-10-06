@@ -102,7 +102,7 @@ convertMutationRootField
     , MonadIO m
     , MonadError QErr m
     , Tracing.MonadTrace m
-    , MonadMetadataStorageTx m
+    , MonadMetadataStorage m
     , Tracing.MonadTrace tx
     , MonadIO tx
     , MonadError QErr tx
@@ -123,7 +123,7 @@ convertMutationRootField env logger userInfo manager reqHeaders metadataPool str
   RFRemote remote     -> pure $ Right remote
   RFAction (AMSync s) -> Left . (_aerTransaction &&& _aerHeaders) <$>
                          resolveActionExecution env logger userInfo metadataPool s actionExecContext
-  RFAction (AMAsync s) -> (Left . (, [])) <$> resolveActionMutationAsync s metadataPool reqHeaders userSession
+  RFAction (AMAsync s) -> (Left . (, [])) <$> resolveActionMutationAsync s reqHeaders userSession
   RFRaw s              -> pure $ Left (pure $ encJFromJValue s, [])
   where
     noResponseHeaders pgExecCtx rTx = pure $ Left (runMutationTx userInfo pgExecCtx rTx, [])
@@ -153,7 +153,7 @@ convertMutationSelectionSet
      , Tracing.MonadTrace m
      , MonadIO m
      , MonadError QErr m
-     , MonadMetadataStorageTx m
+     , MonadMetadataStorage m
      , MonadIO tx
      , MonadError QErr tx
      , Tracing.MonadTrace tx

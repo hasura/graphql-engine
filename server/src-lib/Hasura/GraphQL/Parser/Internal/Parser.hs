@@ -14,6 +14,7 @@ import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.HashSet                  as S
 import qualified Data.Text                     as T
 import qualified Data.List.Extended            as LE
+import qualified Data.UUID                     as UUID
 
 import           Control.Lens.Extended         hiding (enum, index)
 import           Data.Int                      (Int32, Int64)
@@ -286,6 +287,19 @@ float = scalar floatScalar Nothing SRFloat
 
 string :: MonadParse m => Parser 'Both m Text
 string = scalar stringScalar Nothing SRString
+
+uuid :: MonadParse m => Parser 'Both m UUID.UUID
+uuid = Parser
+  { pType = schemaType
+  , pParser = peelVariable (Just $ toGraphQLType schemaType) >=> \case
+      GraphQLValue (VString s) -> parseUUID $ A.String s
+      JSONValue    v           -> parseUUID v
+      v                        -> typeMismatch name "a UUID" v
+  }
+  where
+    name = $$(litName "uuid")
+    schemaType = NonNullable $ TNamed $ mkDefinition name Nothing TIScalar
+    parseUUID = either (parseErrorWith ParseFailed . qeError) pure . runAesonParser A.parseJSON
 
 -- | As an input type, any string or integer input value should be coerced to ID as Text
 -- https://spec.graphql.org/June2018/#sec-ID

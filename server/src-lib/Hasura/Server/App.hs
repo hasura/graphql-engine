@@ -12,7 +12,6 @@ import           Hasura.Prelude                            hiding (get, put)
 import           Control.Monad.Stateless
 import           Data.Aeson                                hiding (json)
 import           Data.IORef
-import           Data.Time.Clock                           (UTCTime)
 import           Network.Mime                              (defaultMimeLookup)
 import           System.FilePath                           (joinPath, takeFileName)
 import           Web.Spock.Core                            ((<//>))
@@ -153,25 +152,22 @@ withSCUpdate
   :: ( MonadIO m
      , MonadBaseControl IO m
      , MonadError QErr m
-     , MonadMetadataStorageTx m
+     , MonadMetadataStorage m
      )
   => SchemaCacheRef
-  -> Q.PGPool
   -> InstanceId
   -> L.Logger L.Hasura
   -> m (a, Maybe MetadataStateResult) -> m a
-withSCUpdate scr metadataPool instanceId logger action =
+withSCUpdate scr instanceId logger action =
   withMVarMasked (_scrLock scr) $ \() -> do
     (!res, !maybeStateResult) <- action
     onJust maybeStateResult $
       \(MetadataStateResult newSC cacheInvalidations newMetadata) -> do
-        txUpdateMetadata   <- getSetMetadataTx
-        txNotifySchemaSync <- getNotifySchemaCacheSyncTx
-        liftEither =<< (liftIO . runExceptT . Q.runTx' metadataPool) do
+        liftEitherM $ runMetadataStorageT do
           -- update metadata in storage
-          txUpdateMetadata newMetadata
+          setMetadata newMetadata
           -- notify schema sync
-          txNotifySchemaSync instanceId cacheInvalidations
+          notifySchemaCacheSync instanceId cacheInvalidations
 
         -- update IO references
         updateStateRefs logger newSC newMetadata scr
@@ -410,7 +406,7 @@ v1MetadataHandler
   :: ( HasVersion
      , MonadIO m
      , MonadBaseControl IO m
-     , MonadMetadataStorageTx m
+     , MonadMetadataStorage m
      , MonadApiAuthorization m
      )
   => RQLMetadata -> Handler m (HttpResponse EncJSON)
@@ -425,9 +421,8 @@ v1MetadataHandler request = do
   defPgSource  <- asks (scDefaultPgSource . hcServerCtx)
   env          <- asks (scEnvironment . hcServerCtx)
   instanceId   <- asks (scInstanceId . hcServerCtx)
-  metadataPool <- asks (scMetadataPool . hcServerCtx)
   logger       <- asks (scLogger . hcServerCtx)
-  r <- withSCUpdate scRef metadataPool instanceId logger $
+  r <- withSCUpdate scRef instanceId logger $
        second Just <$> runMetadataRequest env userInfo httpMgr sqlGenCtx
                        defPgSource schemaCache metadata request
   pure $ HttpResponse r []
@@ -436,7 +431,7 @@ v2QueryHandler
   :: ( HasVersion
      , MonadIO m
      , MonadBaseControl IO m
-     , MonadMetadataStorageTx m
+     , MonadMetadataStorage m
      , Tracing.MonadTrace m
      , MonadApiAuthorization m
      )
@@ -452,9 +447,8 @@ v2QueryHandler request = do
   pgExecCtx    <- asks (scDefaultPgSource . hcServerCtx)
   env          <- asks (scEnvironment . hcServerCtx)
   instanceId   <- asks (scInstanceId . hcServerCtx)
-  metadataPool <- asks (scMetadataPool . hcServerCtx)
   logger       <- asks (scLogger . hcServerCtx)
-  r <- withSCUpdate scRef metadataPool instanceId logger $
+  r <- withSCUpdate scRef instanceId logger $
        runQuery env userInfo httpMgr sqlGenCtx pgExecCtx schemaCache metadata request
   pure $ HttpResponse r []
 
@@ -466,7 +460,7 @@ v1Alpha1GQHandler
      , Tracing.MonadTrace m
      , GH.MonadExecuteQuery m
      , EQ.MonadQueryInstrumentation m
-     , MonadMetadataStorageTx m
+     , MonadMetadataStorage m
      )
   => E.GraphQLQueryType -> GH.GQLBatchedReqs GH.GQLQueryText
   -> Handler m (HttpResponse EncJSON)
@@ -500,7 +494,7 @@ v1GQHandler
      , Tracing.MonadTrace m
      , GH.MonadExecuteQuery m
      , EQ.MonadQueryInstrumentation m
-     , MonadMetadataStorageTx m
+     , MonadMetadataStorage m
      )
   => GH.GQLBatchedReqs GH.GQLQueryText
   -> Handler m (HttpResponse EncJSON)
@@ -514,7 +508,7 @@ v1GQRelayHandler
      , Tracing.MonadTrace m
      , GH.MonadExecuteQuery m
      , EQ.MonadQueryInstrumentation m
-     , MonadMetadataStorageTx m
+     , MonadMetadataStorage m
      )
   => GH.GQLBatchedReqs GH.GQLQueryText
   -> Handler m (HttpResponse EncJSON)
@@ -522,7 +516,7 @@ v1GQRelayHandler = v1Alpha1GQHandler E.QueryRelay
 
 gqlExplainHandler
   :: forall m. ( MonadIO m
-               , MonadMetadataStorageTx m
+               , MonadMetadataStorage m
                )
   => GE.GQLExplain
   -> Handler (Tracing.TraceT m) (HttpResponse EncJSON)
@@ -668,7 +662,7 @@ mkWaiApp
      , Tracing.HasReporter m
      , GH.MonadExecuteQuery m
      , EQ.MonadQueryInstrumentation m
-     , MonadMetadataStorageTx m
+     , MonadMetadataStorage m
      )
   => Env.Environment
   -- ^ Set of environment variables for reference in UIs
@@ -780,7 +774,7 @@ httpApp
      , Tracing.HasReporter m
      , GH.MonadExecuteQuery m
      , EQ.MonadQueryInstrumentation m
-     , MonadMetadataStorageTx m
+     , MonadMetadataStorage m
      )
   => CorsConfig
   -> ServerCtx

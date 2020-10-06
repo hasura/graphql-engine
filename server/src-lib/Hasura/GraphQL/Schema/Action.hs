@@ -82,10 +82,9 @@ actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
   roleName <- lift askRoleName
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
   inputArguments <- lift $ actionInputArguments nonObjectTypeMap $ _adArguments definition
-  actionId <- lift actionIdParser
   let fieldName = unActionName actionName
       description = G.Description <$> comment
-  pure $ P.selection fieldName description inputArguments actionId
+  pure $ P.selection fieldName description inputArguments actionIdParser
          <&> AnnActionMutationAsync actionName
   where
     ActionInfo actionName _ definition permissions comment = actionInfo
@@ -110,7 +109,6 @@ actionAsyncQuery
 actionAsyncQuery actionInfo = runMaybeT do
   roleName <- lift askRoleName
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
-  actionId <- lift actionIdParser
   actionOutputParser <- lift $ actionOutputFields outputObject
   createdAtFieldParser <-
     lift $ P.column (PGColumnScalar PGTimeStampTZ) (G.Nullability False)
@@ -120,9 +118,9 @@ actionAsyncQuery actionInfo = runMaybeT do
   let fieldName = unActionName actionName
       description = G.Description <$> comment
       actionIdInputField =
-        P.field idFieldName (Just idFieldDescription) actionId
+        P.field idFieldName (Just idFieldDescription) actionIdParser
       allFieldParsers =
-        let idField        = P.selection_ idFieldName (Just idFieldDescription) actionId $> AsyncId
+        let idField        = P.selection_ idFieldName (Just idFieldDescription) actionIdParser $> AsyncId
             createdAtField = P.selection_ $$(G.litName "created_at")
                              (Just "the time at which this action was created")
                              createdAtFieldParser $> AsyncCreatedAt
@@ -156,10 +154,8 @@ actionAsyncQuery actionInfo = runMaybeT do
 
 -- | Async action's unique id
 actionIdParser
-  :: (MonadSchema n m, MonadError QErr m)
-  => m (Parser 'Both n UnpreparedValue)
-actionIdParser =
-  fmap P.mkParameter <$> P.column (PGColumnScalar PGUUID) (G.Nullability False)
+  :: MonadParse n => Parser 'Both n ActionId
+actionIdParser = ActionId <$> P.uuid
 
 actionOutputFields
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)

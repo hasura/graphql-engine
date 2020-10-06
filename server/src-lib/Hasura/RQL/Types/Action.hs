@@ -52,7 +52,9 @@ module Hasura.RQL.Types.Action
   , AnnActionAsyncQuery(..)
 
   , ActionId(..)
+  , actionIdToText
   , ActionLogItem(..)
+  , ActionLogResponse(..)
   , AsyncActionStatus(..)
   ) where
 
@@ -73,6 +75,7 @@ import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
 import qualified Data.Aeson.TH                 as J
 import qualified Data.HashMap.Strict           as Map
+import qualified Data.Time.Clock               as UTC
 import qualified Data.UUID                     as UUID
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
@@ -303,7 +306,7 @@ type AsyncActionQueryFieldsG v = Fields (AsyncActionQueryFieldG v)
 data AnnActionAsyncQuery v
   = AnnActionAsyncQuery
   { _aaaqName           :: !ActionName
-  , _aaaqActionId       :: !v
+  , _aaaqActionId       :: !ActionId
   , _aaaqOutputType     :: !GraphQLType
   , _aaaqFields         :: !(AsyncActionQueryFieldsG v)
   , _aaaqDefinitionList :: ![(PGCol, PGScalarType)]
@@ -318,7 +321,10 @@ data ActionExecContext
   }
 
 newtype ActionId = ActionId {unActionId :: UUID.UUID}
-  deriving (Show, Eq, Q.ToPrepArg, Q.FromCol)
+  deriving (Show, Eq, Q.ToPrepArg, Q.FromCol, J.ToJSON, J.FromJSON)
+
+actionIdToText :: ActionId -> Text
+actionIdToText = UUID.toText . unActionId
 
 data ActionLogItem
   = ActionLogItem
@@ -328,6 +334,15 @@ data ActionLogItem
   , _aliSessionVariables :: !SessionVariables
   , _aliInputPayload     :: !J.Value
   } deriving (Show, Eq)
+
+data ActionLogResponse
+  = ActionLogResponse
+  { _alrId              :: !ActionId
+  , _alrCreatedAt       :: !UTC.UTCTime
+  , _alrResponsePayload :: !J.Value
+  , _alrErrors          :: !J.Value
+  } deriving (Show, Eq)
+$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionLogResponse)
 
 data AsyncActionStatus
   = AASCompleted !J.Value

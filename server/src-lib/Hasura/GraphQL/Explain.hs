@@ -107,7 +107,7 @@ explainGQLQuery
   :: forall m
   . ( MonadError QErr m
     , MonadIO m
-    , MonadMetadataStorageTx m
+    , MonadMetadataStorage m
     )
   => Q.PGPool
   -> SchemaCache

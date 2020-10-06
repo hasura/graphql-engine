@@ -21,10 +21,11 @@ module Hasura.Server.Migrate
   -- , recreateSystemMetadata
   , dropHdbCatalogSchema
   , downgradeCatalog
+  , fetchMetadataTx
+  , setMetadataTx
   ) where
 
 import           Hasura.Db
-import           Hasura.Class          (fetchMetadata, setMetadata)
 import           Hasura.Prelude
 
 import qualified Data.Aeson                    as A
@@ -44,7 +45,7 @@ import           Hasura.Logging                (Hasura, LogLevel (..), ToEngineL
 import           Hasura.RQL.DDL.Metadata       (fetchMetadataFromHdbTables)
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Schema
-import           Hasura.RQL.Types       hiding (fetchMetadata)
+import           Hasura.RQL.Types       hiding (fetchMetadataTx)
 import           Hasura.Server.Init            (DowngradeOptions (..))
 import           Hasura.Server.Logging         (StartupLog (..))
 import           Hasura.Server.Migrate.Version (latestCatalogVersion, latestCatalogVersionString)
@@ -161,7 +162,7 @@ migrateCatalog migrationTime = do
              traverse_ (mpMigrate . snd) neededMigrations
              updateCatalogVersion
              pure $ MRMigrated previousVersion
-      metadata <- liftTx fetchMetadata
+      metadata <- liftTx fetchMetadataTx
       pure (migrationResult, metadata)
       where
         neededMigrations = dropWhile ((/= previousVersion) . fst) (migrations False)
@@ -313,7 +314,27 @@ migrations dryRun =
                metadata json not null
              );
            |] () False
-        setMetadata metadata
+        setMetadataTx metadata
+
+fetchMetadataTx :: Q.TxE QErr Metadata
+fetchMetadataTx = do
+  rows <- Q.withQE defaultTxErrorHandler
+    [Q.sql|
+       SELECT metadata from hdb_catalog.hdb_metadata where id = 1
+    |] () True
+  case rows of
+    []                             -> pure emptyMetadata
+    [(Identity (Q.AltJ metadata))] -> pure metadata
+    _                              -> throw500 "multiple rows in hdb_metadata table"
+
+setMetadataTx :: Metadata -> Q.TxE QErr ()
+setMetadataTx metadata =
+  Q.unitQE defaultTxErrorHandler
+    [Q.sql|
+     INSERT INTO hdb_catalog.hdb_metadata
+       (id, metadata) VALUES (1, $1::json)
+     ON CONFLICT (id) DO UPDATE SET metadata = $1::json
+    |] (Identity $ Q.AltJ metadata) True
 
 -- | Drops and recreates all “system-defined” metadata, aka metadata for tables and views in the
 -- @information_schema@ and @hdb_catalog@ schemas. These tables and views are tracked to expose them

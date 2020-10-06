@@ -73,7 +73,7 @@ runGQ
      , MonadTrace m
      , MonadExecuteQuery m
      , EQ.MonadQueryInstrumentation m
-     , MonadMetadataStorageTx m
+     , MonadMetadataStorage m
      )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -155,7 +155,7 @@ runGQBatched
      , MonadTrace m
      , MonadExecuteQuery m
      , EQ.MonadQueryInstrumentation m
-     , MonadMetadataStorageTx m
+     , MonadMetadataStorage m
      )
   => Env.Environment
   -> L.Logger L.Hasura

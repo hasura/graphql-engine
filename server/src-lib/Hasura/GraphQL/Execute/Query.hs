@@ -250,7 +250,7 @@ convertQuerySelSet
      , MonadIO m
      , Tracing.MonadTrace m
      , MonadQueryInstrumentation m
-     , MonadMetadataStorageTx m
+     , MonadMetadataStorage m
      , MonadIO tx
      , MonadError QErr tx
      , Tracing.MonadTrace tx
@@ -335,9 +335,9 @@ convertQuerySelSet env metadataPool logger gqlContext userInfo manager reqHeader
         result <- resolveActionExecution env logger userInfo metadataPool s $ ActionExecContext manager reqHeaders usrVars
         pure $ AQPQuery $ _aerTransaction result
       AQAsync s -> do
-        resolveAsyncActionQuery <- getAsyncActionQueryResolver
+        unpreparedAst <- resolveAsyncActionQuery userInfo s
         (resolved, _) <- flip runStateT mempty $
-          DS.traverseAnnSimpleSelect prepareWithoutPlan (resolveAsyncActionQuery userInfo s)
+          DS.traverseAnnSimpleSelect prepareWithoutPlan unpreparedAst
         -- let tx = asSingleRowJsonResp (Q.fromBuilder $ toSQL $ DS.mkSQLSelect DS.JASSingleObject resolved) []
         -- -- async action queries should be run in metadata storage
         -- r <-  liftEither =<< (liftIO $ runExceptT $ Q.runTx' metadataPool tx)

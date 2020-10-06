@@ -107,7 +107,7 @@ startSchemaSyncListenerThread defPgSource logger instanceId = do
 
 -- | An async thread which processes the schema sync events
 startSchemaSyncProcessorThread
-  :: (C.ForkableMonadIO m, MonadMetadataStorageTx m)
+  :: (C.ForkableMonadIO m, MonadMetadataStorage m)
   => SQLGenCtx
   -> PGSourceConfig
   -> Logger Hasura
@@ -163,7 +163,7 @@ listener defPgSource logger schemaSyncEventRef =
 
 -- | An IO action that processes events from Queue, in a loop forever.
 processor
-  :: forall m void. (C.ForkableMonadIO m, MonadMetadataStorageTx m)
+  :: forall m void. (C.ForkableMonadIO m, MonadMetadataStorage m)
   => SQLGenCtx
   -> PGSourceConfig
   -> Logger Hasura
@@ -179,9 +179,9 @@ processor sqlGenCtx defPgSource logger httpMgr schemaSyncEventRef
   forever $ do
     event <- liftIO $ STM.atomically getLatestEvent
     logInfo logger threadType $ object ["processed_event" .= event]
-    eitherResult <- processSchemaSyncEventPayload instanceId event
+    eitherResult <- runMetadataStorageT $ processSchemaSyncEventPayload instanceId event
     case eitherResult of
-      Left e -> logError logger threadType $ TEPayloadParse e
+      Left e -> logError logger threadType $ TEPayloadParse $ qeError e
       Right (SchemaSyncEventProcessResult shouldReload invalidations) ->
         when shouldReload $
           refreshSchemaCache sqlGenCtx defPgSource logger httpMgr cacheRef invalidations
@@ -199,7 +199,7 @@ processor sqlGenCtx defPgSource logger httpMgr schemaSyncEventRef
     threadType = TTProcessor
 
 refreshSchemaCache
-  :: ( MonadMetadataStorageTx m
+  :: ( MonadMetadataStorage m
      , MonadIO m
      , MonadBaseControl IO m
      )
@@ -216,9 +216,10 @@ refreshSchemaCache sqlGenCtx defPgSource logger httpManager cacheRef invalidatio
   -- Reload schema cache from catalog
   resE <- runExceptT $ withRefUpdate $ do
     rebuildableCache <- fst <$> liftIO (readIORef $ _scrCache cacheRef)
-    metadata         <- getFetchMetadataTx
-                        >>= (\tx -> liftIO $ runExceptT $ PG.runTx' metadataPool tx)
-                        >>= liftEither
+    metadata         <- liftEitherM $ runMetadataStorageT getMetadata
+    -- metadata         <- getFetchMetadataTx
+    --                     >>= (\tx -> liftIO $ runExceptT $ PG.runTx' metadataPool tx)
+    --                     >>= liftEither
     (((), cache, _), _) <- buildSchemaCacheWithOptions CatalogSync invalidations noMetadataModify
       & runCacheRWT rebuildableCache
       & peelMetadataRun runCtx metadata

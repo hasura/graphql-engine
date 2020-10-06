@@ -8,12 +8,11 @@ import           Data.Text.Conversions      (convertText)
 import           Data.Time.Clock.POSIX      (getPOSIXTime)
 
 import           Hasura.App
-import           Hasura.Class               (fetchMetadata)
 import           Hasura.Logging             (Hasura)
 import           Hasura.Prelude
-import           Hasura.RQL.Types           hiding (fetchMetadata)
+import           Hasura.RQL.Types
 import           Hasura.Server.Init
-import           Hasura.Server.Migrate      (downgradeCatalog)
+import           Hasura.Server.Migrate      (downgradeCatalog, fetchMetadataTx)
 import           Hasura.Server.Version
 
 import qualified Data.ByteString.Char8      as BC
@@ -31,13 +30,13 @@ main = do
   tryExit $ do
     args <- parseArgs
     env  <- Env.getEnvironment
-    unAppM (runApp env args)
+    runApp env args
   where
     tryExit io = try io >>= \case
       Left (ExitException _code msg) -> BC.putStrLn msg >> Sys.exitFailure
       Right r -> return r
 
-runApp :: Env.Environment -> HGEOptions Hasura -> AppM ()
+runApp :: Env.Environment -> HGEOptions Hasura -> IO ()
 runApp env hgeOptions =
   withVersion $$(getVersionFromEnvironment) $ do
   case hoCommand hgeOptions of
@@ -64,11 +63,12 @@ runApp env hgeOptions =
         Signals.sigTERM
         (Signals.CatchOnce (shutdownGracefully initCtx))
         Nothing
-      runHGEServer env serveOptions initCtx Nothing initTime shutdownApp Nothing ekgStore
+      flip runReaderT (_icMetadataPool initCtx) $ unServerAppM $
+        runHGEServer env serveOptions initCtx Nothing initTime shutdownApp Nothing ekgStore
 
     HCExport -> do
       (InitCtx{..}, _) <- initialiseCtx env hgeOptions
-      res <- runTx' _icMetadataPool Q.ReadCommitted fetchMetadata
+      res <- runTx' _icMetadataPool Q.ReadCommitted fetchMetadataTx
       either (printErrJExit MetadataExportError) printJSON res
 
     HCClean -> do
