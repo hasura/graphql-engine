@@ -20,8 +20,8 @@ import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
-import           Language.Haskell.TH.Syntax       (Lift)
-import           Data.Either                      (isLeft)
+import           Data.Either                   (isLeft)
+import           Language.Haskell.TH.Syntax    (Lift)
 
 import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
@@ -98,7 +98,7 @@ encodeGQErr :: Bool -> QErr -> J.Value
 encodeGQErr includeInternal qErr =
   J.object [ "errors" J..= [encodeGQLErr includeInternal qErr]]
 
-type GQResult a = ExceptT GQExecError Identity a
+type GQResult a = Either GQExecError a
 
 newtype GQExecError = GQExecError [J.Value]
   deriving (Show, Eq, J.ToJSON)
@@ -106,10 +106,10 @@ newtype GQExecError = GQExecError [J.Value]
 type GQResponse = GQResult BL.ByteString
 
 isExecError :: GQResult a -> Bool
-isExecError = isLeft . runIdentity . runExceptT
+isExecError = isLeft
 
 encodeGQResp :: GQResponse -> EncJSON
 encodeGQResp gqResp =
-  encJFromAssocList $ case runIdentity $ runExceptT gqResp of
+  encJFromAssocList $ case gqResp of
     Right r -> [("data", encJFromLBS r)]
     Left e  -> [("data", "null"), ("errors", encJFromJValue e)]

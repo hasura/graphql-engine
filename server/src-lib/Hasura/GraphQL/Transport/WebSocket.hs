@@ -20,8 +20,8 @@ import qualified Control.Concurrent.STM                      as STM
 import qualified Control.Monad.Trans.Control                 as MC
 import qualified Data.Aeson                                  as J
 import qualified Data.Aeson.Casing                           as J
-import qualified Data.Aeson.TH                               as J
 import qualified Data.Aeson.Ordered                          as JO
+import qualified Data.Aeson.TH                               as J
 import qualified Data.ByteString.Lazy                        as LBS
 import qualified Data.CaseInsensitive                        as CI
 import qualified Data.Environment                            as Env
@@ -49,10 +49,10 @@ import           GHC.AssertNF
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging                      (MonadQueryLog (..))
-import           Hasura.GraphQL.Transport.HTTP               ( MonadExecuteQuery (..), QueryCacheKey (..)
-                                                             , ResultsFragment (..), extractFieldFromResponse
-                                                             , buildRaw
-                                                             )
+import           Hasura.GraphQL.Transport.HTTP               (MonadExecuteQuery (..),
+                                                              QueryCacheKey (..),
+                                                              ResultsFragment (..), buildRaw,
+                                                              extractFieldFromResponse)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import           Hasura.HTTP
@@ -499,13 +499,12 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     -- on change, send message on the websocket
     liveQOnChange :: LQ.OnChange
-    liveQOnChange result = case runIdentity $ runExceptT result of
+    liveQOnChange = \case
       Right (LQ.LiveQueryResponse bs dTime) ->
         sendMsgWithMetadata wsConn
         (SMData $ DataMsg opId $ pure $ LBS.fromStrict bs)
         (LQ.LiveQueryMetadata dTime)
-      resp -> sendMsg wsConn $ SMData $ DataMsg opId $
-        LBS.fromStrict . LQ._lqrPayload <$> ExceptT (Identity resp)
+      resp -> sendMsg wsConn $ SMData $ DataMsg opId $ LBS.fromStrict . LQ._lqrPayload <$> resp
 
     catchAndIgnore :: ExceptT () m () -> m ()
     catchAndIgnore m = void $ runExceptT m
