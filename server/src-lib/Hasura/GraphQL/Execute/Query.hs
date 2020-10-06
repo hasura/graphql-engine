@@ -63,9 +63,9 @@ instance J.ToJSON PreparedSql where
              , "prepared_arguments" J..= fmap (pgScalarValueToJson . snd) prepArgs
              ]
 
--- | The computed SQL with alias which can be logged. Nothing here represents no
--- SQL for cases like introspection responses. Tuple of alias to a (maybe)
--- prepared statement
+-- | Maps root fields to the SQL used to execute them. For fields that do not
+-- generate any SQL, the value is 'Nothing'. This information is retained in
+-- this form only for logging; it is not consulted during actual execution.
 type GeneratedSqlMap = HashMap G.Name (Maybe PreparedSql)
 
 data RootFieldPlan
