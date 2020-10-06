@@ -49,6 +49,7 @@ data Error
   | MalformedAgg
   | FieldTypeUnsupportedForNow (Ir.AnnFieldG Void)
   | AggTypeUnsupportedForNow (Ir.TableAggregateFieldG Void)
+  | NodesUnsupportedForNow (Ir.TableAggregateFieldG Void)
   | NoProjectionFields
   | NoAggregatesMustBeABug
   | UnsupportedArraySelect (Ir.ArraySelectG Void)
@@ -522,7 +523,7 @@ fromTableAggregateFieldG (Ir.FieldName name, field) =
              { aliasedThing = Tsql.ValueExpression (Odbc.TextValue text)
              , aliasedAlias = name
              })
-    Ir.TAFNodes {} -> refute (pure (AggTypeUnsupportedForNow field))
+    Ir.TAFNodes {} -> refute (pure (NodesUnsupportedForNow field))
 
 fromAggregateField :: Ir.AggregateField -> ReaderT EntityAlias FromIr Aggregate
 fromAggregateField aggregateField =
