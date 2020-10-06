@@ -41,11 +41,10 @@ data OpVar = OLD | NEW deriving (Show)
 
 -- pgIdenTrigger is a method used to construct the name of the pg function
 -- used for event triggers which are present in the hdb_views schema.
--- NOTE: pg functions were earlier prepended with "notify_hasura_"
 pgIdenTrigger:: Ops -> TriggerName -> T.Text
 pgIdenTrigger op trn = pgFmtIden . qualifyTriggerName op $ triggerNameToTxt trn
   where
-    qualifyTriggerName op' trn' = "hasura_" <> trn' <> "_" <> T.pack (show op')
+    qualifyTriggerName op' trn' = "notify_hasura_" <> trn' <> "_" <> T.pack (show op')
 
 getDropFuncSql :: Ops -> TriggerName -> T.Text
 getDropFuncSql op trn = "DROP FUNCTION IF EXISTS"

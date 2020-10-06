@@ -42,10 +42,10 @@ import qualified Text.Regex.TDFA            as TDFA
 -- This change helps us create functions for the event triggers
 -- without the function name being truncated by PG, since PG allows
 -- for only 63 chars for identifiers. 
--- Reasoning for the 49 characters:
--- 63 - (hasura_) - (_INSERT | _UPDATE | _DELETE)
+-- Reasoning for the 42 characters:
+-- 63 - (notify_hasura_) - (_INSERT | _UPDATE | _DELETE)
 maxTriggerNameLength :: Int
-maxTriggerNameLength = 49
+maxTriggerNameLength = 42
 
 -- | Unique name for event trigger.
 newtype TriggerName = TriggerName { unTriggerName :: NonEmptyText }
@@ -171,7 +171,7 @@ instance FromJSON CreateEventTriggerQuery where
     unless isMatch $
       fail "only alphanumeric and underscore and hyphens allowed for name"
     unless (T.length (triggerNameToTxt name) <= maxTriggerNameLength) $
-      fail "event trigger name can be at most 49 characters"
+      fail "event trigger name can be at most 42 characters"
     unless (any isJust [insert, update, delete] || enableManual) $
       fail "atleast one amongst insert/update/delete/enable_manual spec must be provided"
     case (webhook, webhookFromEnv) of

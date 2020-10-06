@@ -10,7 +10,7 @@ export const manualTriggerInfo = (
 export const triggerNameDescription = (
   <Tooltip id="tooltip-trigger-name-description">
     Trigger name can be alphanumeric, can contain underscores and hyphens, and
-    must be at most 49 characters.
+    must be at most 42 characters.
   </Tooltip>
 );
 
