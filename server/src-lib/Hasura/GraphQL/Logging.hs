@@ -9,6 +9,7 @@ module Hasura.GraphQL.Logging
   ) where
 
 import qualified Data.Aeson                             as J
+import qualified Language.GraphQL.Draft.Syntax          as G
 
 import           Hasura.GraphQL.Transport.HTTP.Protocol (GQLReqUnparsed)
 import           Hasura.Prelude
@@ -24,7 +25,7 @@ import qualified Hasura.Logging                         as L
 data QueryLog
   = QueryLog
   { _qlQuery        :: !GQLReqUnparsed
-  , _qlGeneratedSql :: !(Maybe EQ.GeneratedSqlMap)
+  , _qlGeneratedSql :: !(Maybe (G.Name, EQ.PreparedSql))
   , _qlRequestId    :: !RequestId
   }
 
@@ -44,7 +45,7 @@ class Monad m => MonadQueryLog m where
     -- ^ logger
     -> GQLReqUnparsed
     -- ^ GraphQL request
-    -> Maybe EQ.GeneratedSqlMap
+    -> Maybe (G.Name, EQ.PreparedSql)
     -- ^ Generated SQL if any
     -> RequestId
     -- ^ unique identifier for a request. NOTE this can be spoofed!

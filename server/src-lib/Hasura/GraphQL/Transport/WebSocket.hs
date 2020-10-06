@@ -367,7 +367,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         Nothing -> do
           conclusion <- runExceptT $ forWithKey queryPlan $ \fieldName -> \case
             E.ExecStepDB (tx, genSql) -> doQErr $ Tracing.trace "Postgres Query" $ do
-              logQueryLog logger q (Map.singleton fieldName . Just <$> genSql) requestId
+              logQueryLog logger q ((fieldName,) <$> genSql) requestId
               (telemTimeIO_DT, (resp)) <- Tracing.interpTraceT id $ withElapsedTime $
                 hoist (runQueryTx pgExecCtx) tx
               return $ ResultsFragment telemTimeIO_DT Telem.Local resp []

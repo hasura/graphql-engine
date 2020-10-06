@@ -3,7 +3,6 @@ module Hasura.GraphQL.Execute.Query
   ( convertQuerySelSet
   -- , queryOpFromPlan
   -- , ReusableQueryPlan
-  , GeneratedSqlMap
   , PreparedSql(..)
   , traverseQueryRootField -- for live query planning
   , irToRootFieldPlan
@@ -62,11 +61,6 @@ instance J.ToJSON PreparedSql where
     J.object [ "query" J..= Q.getQueryText q
              , "prepared_arguments" J..= fmap (pgScalarValueToJson . snd) prepArgs
              ]
-
--- | Maps root fields to the SQL used to execute them. For fields that do not
--- generate any SQL, the value is 'Nothing'. This information is retained in
--- this form only for logging; it is not consulted during actual execution.
-type GeneratedSqlMap = HashMap G.Name (Maybe PreparedSql)
 
 data RootFieldPlan
   = RFPPostgres !PreparedSql

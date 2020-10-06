@@ -37,7 +37,6 @@ import qualified Data.Aeson                             as J
 import qualified Data.Aeson.Ordered                     as JO
 import qualified Data.ByteString.Lazy                   as LBS
 import qualified Data.Environment                       as Env
-import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
@@ -91,10 +90,10 @@ instance MonadExecuteQuery m => MonadExecuteQuery (TraceT m) where
   cacheStore  a b = hoist lift $ cacheStore  a b
 
 data ResultsFragment = ResultsFragment
-  { rfTimeIO :: DiffTime
+  { rfTimeIO   :: DiffTime
   , rfLocality :: Telem.Locality
   , rfResponse :: EncJSON
-  , rfHeaders :: HTTP.ResponseHeaders
+  , rfHeaders  :: HTTP.ResponseHeaders
   }
 
 -- | Run (execute) a single GraphQL query
@@ -209,7 +208,7 @@ extractFieldFromResponse fieldName bs = do
     [("data", v)] -> pure v
     _ -> case JO.lookup "errors" valObj of
       Just (JO.Array err) -> doGQExecError $ toList $ fmap JO.fromOrdered err
-      _ -> do400 "Received invalid JSON value from remote"
+      _                   -> do400 "Received invalid JSON value from remote"
   dataObj <- onLeft (JO.asObject dataVal) do400
   fieldVal <- onNothing (JO.lookup fieldName dataObj) $
     do400 $ "expecting key " <> fieldName
@@ -283,7 +282,7 @@ runQueryDB
 runQueryDB reqId query fieldName tx genSql =  do
   -- log the generated SQL and the graphql query
   E.ExecutionCtx logger _ pgExecCtx _ _ _ _ <- ask
-  logQueryLog logger query (Map.singleton fieldName . Just <$> genSql) reqId
+  logQueryLog logger query ((fieldName,) <$> genSql) reqId
   (telemTimeIO, !resp) <- withElapsedTime $ trace ("Postgres Query for root field " <> G.unName fieldName) $
     Tracing.interpTraceT id $ hoist (runQueryTx pgExecCtx) tx
   return (telemTimeIO, resp)
