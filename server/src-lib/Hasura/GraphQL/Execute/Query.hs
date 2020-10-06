@@ -138,7 +138,7 @@ mkCurPlanTx env manager reqHdrs userInfo instrument ep = \case
   -- generate the SQL and prepared vars or the bytestring
     RFPPostgres ps@(PreparedSql q prepMap remoteJoinsM) ->
       let args = withUserVars (_uiSession userInfo) prepMap
-          -- TODO this quietly assumes the intmap keys are contiguous
+          -- WARNING: this quietly assumes the intmap keys are contiguous
           prepArgs = fst <$> IntMap.elems args
       in (, Just ps) $ case remoteJoinsM of
            Nothing -> do
