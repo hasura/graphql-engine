@@ -171,12 +171,12 @@ mkServeOptions rso = do
   eventsFetchInterval <- withEnv (rsoEventsFetchInterval rso) (fst eventsFetchIntervalEnv)
   logHeadersFromEnv <- withEnvBool (rsoLogHeadersFromEnv rso) (fst logHeadersFromEnvEnv)
 
-  connectionCompressionFromEnv <- withEnvBool (rsoConnectionCompression rso) $
-                                  fst connectionCompressionEnv
+  webSocketCompressionFromEnv <- withEnvBool (rsoWebSocketCompression rso) $
+                                 fst webSocketCompressionEnv
 
   let connectionOptions = WS.defaultConnectionOptions {
                             WS.connectionCompressionOptions =
-                              if connectionCompressionFromEnv
+                              if webSocketCompressionFromEnv
                                 then WS.PermessageDeflateCompression WS.defaultPermessageDeflate
                                 else WS.NoCompression
                           }
@@ -988,7 +988,7 @@ serveOptionsParser =
   <*> parseGraphqlEventsHttpPoolSize
   <*> parseGraphqlEventsFetchInterval
   <*> parseLogHeadersFromEnv
-  <*> parseConnectionCompression
+  <*> parseWebSocketCompression
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.
@@ -1024,14 +1024,14 @@ downgradeOptionsParser =
           help ("Downgrade to graphql-engine version " <> v <> " (equivalent to --to-catalog-version " <> catalogVersion <> ")")
         )
 
-connectionCompressionEnv :: (String, String)
-connectionCompressionEnv =
+webSocketCompressionEnv :: (String, String)
+webSocketCompressionEnv =
   ( "HASURA_GRAPHQL_CONNECTION_COMPRESSION"
-  , "Enable Websocket Compression (default: false)"
+  , "Enable WebSocket permessage-deflate compression (default: false)"
   )
 
-parseConnectionCompression :: Parser Bool
-parseConnectionCompression =
-  switch ( long "connection-compression" <>
-           help (snd connectionCompressionEnv)
+parseWebSocketCompression :: Parser Bool
+parseWebSocketCompression =
+  switch ( long "websocket-compression" <>
+           help (snd webSocketCompressionEnv)
          )

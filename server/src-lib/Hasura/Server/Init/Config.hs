@@ -65,7 +65,7 @@ data RawServeOptions impl
   , rsoEventsHttpPoolSize    :: !(Maybe Int)
   , rsoEventsFetchInterval   :: !(Maybe Milliseconds)
   , rsoLogHeadersFromEnv     :: !Bool
-  , rsoConnectionCompression :: !Bool
+  , rsoWebSocketCompression :: !Bool
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
