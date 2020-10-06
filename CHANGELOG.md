@@ -4,7 +4,7 @@
 
 ### Heterogeneous execution
 
-The server could already execute queries that either fetch data from the database, or, through remotes, from other GraphQL servers.  This release also enables mixing such data sources within one query.  So one can have queries such as
+Previous releases have allowed queries to request data from either Postgres or remote schemas, but not both. This release removes that restriction, so multiple data sources may be mixed within a single query. For example, GraphQL Engine can execute a query like
 
 ```
 query {
