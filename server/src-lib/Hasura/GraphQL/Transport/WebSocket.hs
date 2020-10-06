@@ -433,7 +433,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       sendSuccResp (encJFromInsOrdHashMap (fmap rfResponse (OMap.mapKeys G.unName results))) $
         LQ.LiveQueryMetadata $ sum $ fmap rfTimeIO results
       -- Telemetry. NOTE: don't time network IO:
-      when False $ Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
+      Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
     runRemoteGQ fieldName execCtx reqId userInfo reqHdrs opDef rsi varValsM = do
       (telemTimeIO_DT, HttpResponse resp _respHdrs) <-

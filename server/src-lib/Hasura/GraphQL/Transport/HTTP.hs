@@ -168,8 +168,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   let telemTimeIO = convertDuration telemTimeIO_DT
       telemTimeTot = convertDuration telemTimeTot_DT
       telemTransport = Telem.HTTP
-  -- Disabled for now until we make up our mind on the naming of localities
-  when False $ Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
+  Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
   return resp
   where
     doQErr = withExceptT Right
