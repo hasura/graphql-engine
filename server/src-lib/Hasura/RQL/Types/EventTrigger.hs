@@ -171,7 +171,7 @@ instance FromJSON CreateEventTriggerQuery where
     unless isMatch $
       fail "only alphanumeric and underscore and hyphens allowed for name"
     unless (T.length (triggerNameToTxt name) <= maxTriggerNameLength) $
-      fail "trigger name can be at most 49 characters"
+      fail "event trigger name can be at most 49 characters"
     unless (any isJust [insert, update, delete] || enableManual) $
       fail "atleast one amongst insert/update/delete/enable_manual spec must be provided"
     case (webhook, webhookFromEnv) of
