@@ -2,9 +2,6 @@
 
 ## Next release
 
-- console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
-- console: add option to flag an insertion as a migration from `Data` section (close #1766) (#4933)
-
 ### Server - Support for mapping session variables to default JWT claims
 
 Some auth providers do not let users add custom claims in JWT. In such cases, the server can take a JWT configuration option called `claims_map` to specify a mapping of Hasura session variables to values in existing claims via JSONPath or literal values.
@@ -64,6 +61,9 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - server: limit the length of event trigger names (close #5786)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
+- console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
+- console: add option to flag an insertion as a migration from `Data` section (close #1766) (#4933)
+- console: add `<3 hasura` section to view updates and notifications from Hasura (#5070)
 - cli: add missing global flags for seeds command (#5565)
 - docs: add docs page on networking with docker (close #4346) (#4811)
 
