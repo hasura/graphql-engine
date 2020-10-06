@@ -15,11 +15,7 @@ Moving between environments
 Introduction
 ------------
 
-<<<<<<< HEAD
-This guide talks about the process on how to approach various stages of development with Hasura.
-=======
 This guide will show how to approach various stages of development with Hasura.
->>>>>>> 9c1242f88b43d2a1ee7e7b2cae8e8fa6c8369ad8
 
 Local development
 -----------------
@@ -187,26 +183,6 @@ Moving to Staging
 
 Once you are done with local dev, you may want to move to a different environment, e.g. staging.
 
-Setting up CI/CD
-^^^^^^^^^^^^^^^^
-
-Generally, when you are done developing your app locally, you would push it to your upstream version control system like Github or Gitlab. 
-You can trigger CI/CD workflows when a push is made to your upstream repository. 
-When you want to deploy your changes to staging, you may push your latest code to a special branch or push a new tag which updates your staging environment.
-
-The process for CI/CD with Hasura instances is essentially a mirror of the manual local workflow you would use. 
-The CI/CD instance should download or be given the CLI as an artifact, and then run the series of commands you’d like to integrate. 
-This generally includes ``hasura migrate apply`` and ``hasura metadata apply``.
-
-To do this, you would download the CLI either through wget/curl, or if in a Dockerfile and okay with using a static version number, 
-use ``COPY --from`` to extract the binary from ``hasura/graphql-engine:vX.X-cli-migrations``.
-
-Then run the migrate/metadata/regression tests commands, passing in the endpoint and admin secret for the remote.
-
-.. note::
-
-    For a full CI/CD script and pre-made GitHub action, check out `this example <https://github.com/GavinRay97/hasura-ci-cd-action>`__.
-
 Configuring environment variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -238,6 +214,26 @@ Metadata can be :ref:`manually applied <hasura_metadata_apply>` via:
     hasura metadata apply --endpoint <graphql-engine-endpoint> --admin-secret <admin-secret>
 
 If you are self-hosting Hasura and have a CI/CD setup, you can also :ref:`auto-apply migrations/metadata <auto_apply_migrations>` when the graphql-engine server starts.
+
+Setting up CI/CD
+^^^^^^^^^^^^^^^^
+
+Generally, when you are done developing your app locally, you would push it to your upstream version control system like Github or Gitlab. 
+You can trigger CI/CD workflows when a push is made to your upstream repository. 
+When you want to deploy your changes to staging, you may push your latest code to a special branch or push a new tag which updates your staging environment.
+
+The process for CI/CD with Hasura instances is essentially a mirror of the manual local workflow you would use. 
+The CI/CD instance should download or be given the CLI as an artifact, and then run the series of commands you’d like to integrate. 
+This generally includes ``hasura migrate apply`` and ``hasura metadata apply``.
+
+To do this, you would download the CLI either through wget/curl, or if in a Dockerfile and okay with using a static version number, 
+use ``COPY --from`` to extract the binary from ``hasura/graphql-engine:vX.X-cli-migrations``.
+
+Then run the migrate/metadata/regression tests commands, passing in the endpoint and admin secret for the remote.
+
+.. note::
+
+    For a full CI/CD script and pre-made GitHub action, check out `this example <https://github.com/GavinRay97/hasura-ci-cd-action>`__.
 
 Going live / production
 -----------------------
