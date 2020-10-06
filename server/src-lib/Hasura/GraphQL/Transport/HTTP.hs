@@ -179,7 +179,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
     runRemoteGQ fieldName rsi opDef varValsM = do
       (telemTimeIO_DT, HttpResponse resp remoteResponseHeaders) <-
         doQErr $ E.execRemoteGQ env reqId userInfo reqHeaders rsi opDef varValsM
-      value <- extractFieldFromResponse fieldName $ encJToLBS resp
+      value <- extractFieldFromResponse (G.unName fieldName) $ encJToLBS resp
       let filteredHeaders = filter ((== "Set-Cookie") . fst) remoteResponseHeaders
       pure $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) filteredHeaders
 
@@ -191,7 +191,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
       )
     buildResult _telemType (Left (Right err)) _ = throwError err
     buildResult telemType (Right results) cacheHeaders = do
-      let responseData = encodeGQResp $ pure $ encJToLBS $ encJFromInsOrdHashMap (fmap rfResponse results)
+      let responseData = encodeGQResp $ pure $ encJToLBS $ encJFromInsOrdHashMap $ fmap rfResponse $ OMap.mapKeys G.unName results
       pure
         ( telemType
         , sum (fmap rfTimeIO results)
@@ -276,7 +276,7 @@ runQueryDB
      )
   => RequestId
   -> GQLReqUnparsed
-  -> Text -- ^ name of the root field we're fetching
+  -> G.Name -- ^ name of the root field we're fetching
   -> Tracing.TraceT (LazyTx QErr) EncJSON
   -> Maybe EQ.PreparedSql
   -> m (DiffTime, EncJSON)
@@ -284,8 +284,8 @@ runQueryDB
 runQueryDB reqId query fieldName tx genSql =  do
   -- log the generated SQL and the graphql query
   E.ExecutionCtx logger _ pgExecCtx _ _ _ _ <- ask
-  logQueryLog logger query (Map.singleton (G.unsafeMkName fieldName) . Just <$> genSql) reqId
-  (telemTimeIO, !resp) <- withElapsedTime $ trace ("Postgres Query for root field " <> fieldName) $
+  logQueryLog logger query (Map.singleton fieldName . Just <$> genSql) reqId
+  (telemTimeIO, !resp) <- withElapsedTime $ trace ("Postgres Query for root field " <> G.unName fieldName) $
     Tracing.interpTraceT id $ hoist (runQueryTx pgExecCtx) tx
   return (telemTimeIO, resp)
 

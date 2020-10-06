@@ -367,7 +367,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         Nothing -> do
           conclusion <- runExceptT $ forWithKey queryPlan $ \fieldName -> \case
             E.ExecStepDB (tx, genSql) -> doQErr $ Tracing.trace "Postgres Query" $ do
-              logQueryLog logger q (Map.singleton (G.unsafeMkName fieldName) . Just <$> genSql) requestId
+              logQueryLog logger q (Map.singleton fieldName . Just <$> genSql) requestId
               (telemTimeIO_DT, (resp)) <- Tracing.interpTraceT id $ withElapsedTime $
                 hoist (runQueryTx pgExecCtx) tx
               return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
@@ -379,7 +379,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           case conclusion of
             Left _ -> pure ()
             Right results ->
-              Tracing.interpTraceT id $ cacheStore cacheKey (encJFromInsOrdHashMap (fmap rfResponse results))
+              Tracing.interpTraceT id $ cacheStore cacheKey $ encJFromInsOrdHashMap $ fmap rfResponse $ OMap.mapKeys G.unName results
       sendCompleted (Just requestId)
 
     E.MutationExecutionPlan mutationPlan -> do
@@ -430,7 +430,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       let telemLocality = foldMap rfLocality results
           telemTimeIO   = convertDuration $ sum $ fmap rfTimeIO results
       telemTimeTot <- Seconds <$> timerTot
-      sendSuccResp (encJFromInsOrdHashMap (fmap rfResponse results)) $
+      sendSuccResp (encJFromInsOrdHashMap (fmap rfResponse (OMap.mapKeys G.unName results))) $
         LQ.LiveQueryMetadata $ sum $ fmap rfTimeIO results
       -- Telemetry. NOTE: don't time network IO:
       when False $ Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
@@ -438,7 +438,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     runRemoteGQ fieldName execCtx reqId userInfo reqHdrs opDef rsi varValsM = do
       (telemTimeIO_DT, HttpResponse resp _respHdrs) <-
         doQErr $ flip runReaderT execCtx $ E.execRemoteGQ env reqId userInfo reqHdrs rsi opDef varValsM
-      value <- mapExceptT lift $ extractFieldFromResponse fieldName (encJToLBS resp)
+      value <- mapExceptT lift $ extractFieldFromResponse (G.unName fieldName) (encJToLBS resp)
       return $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) []
 
     WSServerEnv logger pgExecCtx lqMap getSchemaCache httpMgr _ sqlGenCtx {- planCache -}

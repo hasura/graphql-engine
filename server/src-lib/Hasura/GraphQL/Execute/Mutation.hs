@@ -183,7 +183,7 @@ convertMutationSelectionSet env logger gqlContext sqlGenCtx userInfo manager req
     RFAction action     -> ExecStepDB <$> convertMutationAction env logger userInfo manager reqHeaders action
     RFRaw s             -> pure $ ExecStepRaw s
 
-  return $ OMap.mapKeys G.unName txs
+  return txs
   where
     reportParseErrors errs = case NE.head errs of
       -- TODO: Our error reporting machinery doesn’t currently support reporting
