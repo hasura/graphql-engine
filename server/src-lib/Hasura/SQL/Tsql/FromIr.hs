@@ -822,6 +822,11 @@ fromOpExpG :: Expression -> Ir.OpExpG Expression -> FromIr Expression
 fromOpExpG expression =
   \case
     Ir.ANISNULL -> pure (IsNullExpression expression)
+    Ir.AEQ equality expression' ->
+      pure
+        (if equality
+           then EqualExpression expression expression'
+           else NotEqualExpression expression expression')
     op -> (refute (pure (UnsupportedOpExpG op)))
 
 fromSQLExpAsInt :: Sql.SQLExp -> FromIr Expression

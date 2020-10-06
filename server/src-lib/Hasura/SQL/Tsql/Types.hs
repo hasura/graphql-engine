@@ -106,6 +106,7 @@ data Expression
   | IsNullExpression Expression
   | ColumnExpression FieldName
   | EqualExpression Expression Expression
+  | NotEqualExpression Expression Expression
   | JsonQueryExpression Expression (Maybe JsonPath)
   | ToStringExpression Expression
   deriving (Eq, Show)

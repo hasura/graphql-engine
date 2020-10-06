@@ -27,6 +27,7 @@ import qualified Hasura.RQL.DML.Select as DS
 import qualified Hasura.SQL.DML as Sql
 import qualified Hasura.SQL.Tsql.FromIr as Tsql
 import           Hasura.SQL.Tsql.Types as Tsql
+import           Hasura.SQL.Tsql.ToQuery as Tsql
 import qualified Hasura.SQL.Types as Sql
 import qualified Hasura.SQL.Value as Sql
 import qualified Language.GraphQL.Draft.Syntax as G
@@ -47,20 +48,23 @@ test i =
        , show i
        , "\nprepared"
        , show
-           (fmap
-              (either
-                 (error "Boo!")
-                 (runValidate .
-                  Tsql.runFromIr . rootFieldToSelect (error "todo: alias")) .
-               flip
-                 evalStateT
-                 PrepareState {positionalArguments = 0, namedArguments = mempty} .
-               Query.traverseQueryRootField prepareValueMultiplex)
-              i)
-       ])
+           (case traverse
+                   (flip
+                      evalStateT
+                      PrepareState
+                        {positionalArguments = 0, namedArguments = mempty} .
+                    Query.traverseQueryRootField prepareValueMultiplex)
+                   i of
+              Left e -> error (show e)
+              Right v -> runValidate $ Tsql.runFromIr $ (multiplexQueries v))
+       ]
+       )
+
+-- Next: collapse the omap into a single select
+-- Next: write printer for openjson
 
 --------------------------------------------------------------------------------
--- Converting a root field into a T-SQL select statement
+-- CONVERTING a root field into a T-SQL select statement
 
 -- TODO: Use 'alias'.
 rootFieldToSelect ::
@@ -158,10 +162,10 @@ prepareValueMultiplex =
 --
 
 multiplexQueries ::
-     OMap.InsOrdHashMap G.Name (Graphql.RootField (Graphql.QueryDB Void) Void Void Void)
-  -> Tsql.Select
-multiplexQueries _ =
-  undefined
+     OMap.InsOrdHashMap G.Name (Graphql.RootField (Graphql.QueryDB Expression) Void void Void)
+  -> Tsql.FromIr (OMap.InsOrdHashMap G.Name Tsql.Select)
+multiplexQueries =
+  OMap.traverseWithKey (\key root -> fmap multiplexedRootField(rootFieldToSelect (error "todo: alias") root))
 
 multiplexedRootField :: Tsql.Select -> Tsql.Select
 multiplexedRootField originalSelect =
@@ -189,7 +193,7 @@ multiplexedRootField originalSelect =
           Aliased
             { aliasedThing =
                 OpenJson
-                  { openJsonExpression = ValueExpression (Odbc.TextValue "{..}") -- TODO: this comes from somewhere...
+                  { openJsonExpression = ValueExpression (Odbc.TextValue "TODO:") -- TODO: this comes from somewhere...
                   , openJsonWith =
                       NE.fromList
                         [IntField "result_id", JsonField "result_vars"]

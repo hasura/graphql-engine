@@ -6,7 +6,7 @@
 module Hasura.SQL.Tsql.ToQuery
   ( fromSelect
   , toQuery
-  , Printer
+  , Printer(..)
   ) where
 
 import           Data.Foldable
@@ -73,6 +73,8 @@ fromExpression =
     ColumnExpression fieldName -> fromFieldName fieldName
     EqualExpression x y ->
       "(" <+> fromExpression x <+> ") = (" <+> fromExpression y <+> ")"
+    NotEqualExpression x y ->
+      "(" <+> fromExpression x <+> ") != (" <+> fromExpression y <+> ")"
     ToStringExpression e -> "CONCAT(" <+> fromExpression e <+> ", '')"
 
 fromPath :: JsonPath -> Printer
