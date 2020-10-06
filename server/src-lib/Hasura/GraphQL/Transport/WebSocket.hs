@@ -352,7 +352,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   execPlanE <- runExceptT $ E.getResolvedExecPlan env logger pgExecCtx
                {- planCache -} userInfo sqlGenCtx sc scVer queryType httpMgr reqHdrs (q, reqParsed)
 
-  (_telemCacheHit, execPlan) <- either (withComplete . preExecErr requestId) return execPlanE
+  (telemCacheHit, execPlan) <- either (withComplete . preExecErr requestId) return execPlanE
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx {- planCache -} sc scVer httpMgr enableAL
 
   case execPlan of
@@ -375,7 +375,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
               runRemoteGQ fieldName execCtx requestId userInfo reqHdrs opDef rsi varValsM
             E.ExecStepRaw json ->
               buildRaw json
-          buildResult Telem.Query timerTot requestId conclusion
+          buildResult Telem.Query telemCacheHit timerTot requestId conclusion
           case conclusion of
             Left _ -> pure ()
             Right results ->
@@ -396,7 +396,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           runRemoteGQ fieldName execCtx requestId userInfo reqHdrs opDef rsi varValsM
         E.ExecStepRaw json ->
           buildRaw json
-      buildResult Telem.Query timerTot requestId conclusion
+      buildResult Telem.Query telemCacheHit timerTot requestId conclusion
       sendCompleted (Just requestId)
 
     E.SubscriptionExecutionPlan lqOp -> do
@@ -424,12 +424,11 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     telemTransport = Telem.WebSocket
 
-    buildResult _ _ _         (Left (Left  err)) = postExecErr' err
-    buildResult _ _ requestId (Left (Right err)) = postExecErr requestId err
-    buildResult telemQueryType timerTot _ (Right results) = do
+    buildResult _ _ _ _         (Left (Left  err)) = postExecErr' err
+    buildResult _ _ _ requestId (Left (Right err)) = postExecErr requestId err
+    buildResult telemQueryType telemCacheHit timerTot _ (Right results) = do
       let telemLocality = foldMap rfLocality results
           telemTimeIO   = convertDuration $ sum $ fmap rfTimeIO results
-          telemCacheHit = Telem.Miss -- TODO fix if we're reimplementing query caching
       telemTimeTot <- Seconds <$> timerTot
       sendSuccResp (encJFromInsOrdHashMap (fmap rfResponse results)) $
         LQ.LiveQueryMetadata $ sum $ fmap rfTimeIO results
