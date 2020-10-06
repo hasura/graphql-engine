@@ -142,7 +142,8 @@ mkCurPlanTx env manager reqHdrs userInfo instrument ep = \case
           prepArgs = fst <$> IntMap.elems args
       in (, Just ps) $ case remoteJoinsM of
            Nothing -> do
-             Tracing.trace "Postgres" . (runExtractProfile ep =<<) . liftTx $ asSingleRowJsonResp (instrument q) prepArgs
+             Tracing.trace "Postgres" $ runExtractProfile ep =<< liftTx do
+               asSingleRowJsonResp (instrument q) prepArgs
            Just remoteJoins ->
              executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs remoteJoins
     RFPActionQuery atx -> (atx, Nothing)
