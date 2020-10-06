@@ -49,10 +49,10 @@ convertDelete
   -> RQL.AnnDelG UnpreparedValue
   -> Bool
   -> m (tx EncJSON)
-convertDelete env usrVars rjCtx deleteOperation stringifyNum = do
+convertDelete env usrVars remoteJoinCtx deleteOperation stringifyNum = do
   let (preparedDelete, expectedVariables) = flip runState Set.empty $ RQL.traverseAnnDel prepareWithoutPlan deleteOperation
   validateSessionVariables expectedVariables usrVars
-  pure $ RQL.execDeleteQuery env stringifyNum (Just rjCtx) (preparedDelete, Seq.empty)
+  pure $ RQL.execDeleteQuery env stringifyNum (Just remoteJoinCtx) (preparedDelete, Seq.empty)
 
 convertUpdate
   :: ( HasVersion
@@ -67,13 +67,13 @@ convertUpdate
   -> RQL.AnnUpdG UnpreparedValue
   -> Bool
   -> m (tx EncJSON)
-convertUpdate env usrVars rjCtx updateOperation stringifyNum = do
+convertUpdate env usrVars remoteJoinCtx updateOperation stringifyNum = do
   let (preparedUpdate, expectedVariables) = flip runState Set.empty $ RQL.traverseAnnUpd prepareWithoutPlan updateOperation
   if null $ RQL.uqp1OpExps updateOperation
   then pure $ pure $ RQL.buildEmptyMutResp $ RQL.uqp1Output preparedUpdate
   else do
     validateSessionVariables expectedVariables usrVars
-    pure $ RQL.execUpdateQuery env stringifyNum (Just rjCtx) (preparedUpdate, Seq.empty)
+    pure $ RQL.execUpdateQuery env stringifyNum (Just remoteJoinCtx) (preparedUpdate, Seq.empty)
 
 convertInsert
   :: ( HasVersion
@@ -87,10 +87,10 @@ convertInsert
   -> AnnInsert UnpreparedValue
   -> Bool
   -> m (tx EncJSON)
-convertInsert env usrVars rjCtx insertOperation stringifyNum = do
+convertInsert env usrVars remoteJoinCtx insertOperation stringifyNum = do
   let (preparedInsert, expectedVariables) = flip runState Set.empty $ traverseAnnInsert prepareWithoutPlan insertOperation
   validateSessionVariables expectedVariables usrVars
-  pure $ convertToSQLTransaction env preparedInsert rjCtx Seq.empty stringifyNum
+  pure $ convertToSQLTransaction env preparedInsert remoteJoinCtx Seq.empty stringifyNum
 
 convertMutationDB
   :: ( HasVersion
@@ -106,10 +106,10 @@ convertMutationDB
   -> Bool
   -> MutationDB UnpreparedValue
   -> m (tx EncJSON, HTTP.ResponseHeaders)
-convertMutationDB env userSession rjCtx stringifyNum = \case
-  MDBInsert s -> noResponseHeaders <$> convertInsert env userSession rjCtx s stringifyNum
-  MDBUpdate s -> noResponseHeaders <$> convertUpdate env userSession rjCtx s stringifyNum
-  MDBDelete s -> noResponseHeaders <$> convertDelete env userSession rjCtx s stringifyNum
+convertMutationDB env userSession remoteJoinCtx stringifyNum = \case
+  MDBInsert s -> noResponseHeaders <$> convertInsert env userSession remoteJoinCtx s stringifyNum
+  MDBUpdate s -> noResponseHeaders <$> convertUpdate env userSession remoteJoinCtx s stringifyNum
+  MDBDelete s -> noResponseHeaders <$> convertDelete env userSession remoteJoinCtx s stringifyNum
 
 noResponseHeaders :: tx EncJSON -> (tx EncJSON, HTTP.ResponseHeaders)
 noResponseHeaders rTx = (rTx, [])
@@ -170,9 +170,9 @@ convertMutationSelectionSet env logger gqlContext sqlGenCtx userInfo manager req
 
   -- Transform the RQL AST into a prepared SQL query
   let userSession = _uiSession userInfo
-      rjCtx = (manager, reqHeaders, userInfo)
+      remoteJoinCtx = (manager, reqHeaders, userInfo)
   txs <- for unpreparedQueries \case
-    RFDB db             -> ExecStepDB <$> convertMutationDB env userSession rjCtx (stringifyNum sqlGenCtx) db
+    RFDB db             -> ExecStepDB <$> convertMutationDB env userSession remoteJoinCtx (stringifyNum sqlGenCtx) db
     RFRemote (remoteSchemaInfo, remoteField) ->
       pure $ buildExecStepRemote
              remoteSchemaInfo
