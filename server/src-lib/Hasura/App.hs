@@ -347,8 +347,10 @@ runHGEServer
   -- ^ shutdown function
   -> Maybe EL.LiveQueryPostPollHook
   -> EKG.Store
+  -> SchemaSyncCtx
   -> m ()
-runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime shutdownApp postPollHook ekgStore = do
+runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime
+  shutdownApp postPollHook ekgStore schemaSyncCtx = do
   -- Comment this to enable expensive assertions from "GHC.AssertNF". These
   -- will log lines to STDOUT containing "not in normal form". In the future we
   -- could try to integrate this into our tests. For now this is a development
@@ -362,6 +364,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime shutd
   let sqlGenCtx = SQLGenCtx soStringifyNum
       Loggers loggerCtx logger _ = _icLoggers
       defaultPgSource = fromMaybe _icDefaultSourceConfig maybeCustomPgSource
+      SchemaSyncCtx schemaSyncListenerThread schemaSyncEventRef = schemaSyncCtx
 
   authModeRes <- runExceptT $ setupAuthMode soAdminSecret soAuthHook soJwtSecret soUnAuthRole
                               _icHttpManager logger
@@ -370,10 +373,6 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime shutd
 
   _idleGCThread <- C.forkImmortal "ourIdleGC" logger $ liftIO $
     ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
-
-  -- start backgroud thread for schema sync event listening
-  (schemaSyncListenerThread, schemaSyncEventRef) <-
-    startSchemaSyncListenerThread _icMetadataPool logger _icInstanceId
 
   HasuraApp app cacheRef stopWsServer <- flip onException (flushLogger loggerCtx) $
     mkWaiApp env
@@ -404,7 +403,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime shutd
   -- start background thread for schema sync event processing
   schemaSyncProcessorThread <-
     startSchemaSyncProcessorThread sqlGenCtx
-    defaultPgSource logger _icHttpManager schemaSyncEventRef cacheRef _icInstanceId _icMetadataPool
+    defaultPgSource logger _icHttpManager schemaSyncEventRef cacheRef _icInstanceId
 
   let
     maxEvThrds    = fromMaybe defaultMaxEventThreads soEventsHttpPoolSize
@@ -470,8 +469,8 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime shutd
     mkGenericLog LevelInfo "server" $ StartupTimeInfo "starting API server" apiInitTime
 
   shutdownHandler' <- liftWithStateless $ \lowerIO ->
-    pure $ shutdownHandler _icLoggers immortalThreads stopWsServer lockedEventsCtx allPgSources
-           (\a b -> hoist lowerIO $ unlockScheduledEvents a b)
+    pure $ shutdownHandler _icLoggers immortalThreads stopWsServer lockedEventsCtx allPgSources $
+           \a b -> hoist lowerIO $ unlockScheduledEvents a b
 
   let warpSettings = Warp.setPort soPort
                      . Warp.setHost soHost
@@ -511,14 +510,14 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime shutd
       -> Logger Hasura
       -> LockedEventsCtx
       -> IO ()
-    shutdownEvents pgSources unlockScheduledEventsTx hasuraLogger@(Logger logger) LockedEventsCtx {..} = do
+    shutdownEvents pgSources unlockScheduledEvents' hasuraLogger@(Logger logger) LockedEventsCtx {..} = do
       forM pgSources $ \pgSource -> do
         logger $ mkGenericStrLog LevelInfo "event_triggers" "unlocking events that are locked by the HGE"
         let unlockEvents' l = MetadataStorageT $ runLazyTx (_pscExecCtx pgSource) Q.ReadWrite $ liftTx $ unlockEvents l
         unlockEventsForShutdown hasuraLogger "event_triggers" "" unlockEvents' leEvents
         logger $ mkGenericStrLog LevelInfo "scheduled_triggers" "unlocking scheduled events that are locked by the HGE"
-      unlockEventsForShutdown hasuraLogger "scheduled_triggers" "cron events" (unlockScheduledEventsTx Cron) leCronEvents
-      unlockEventsForShutdown hasuraLogger "scheduled_triggers" "scheduled events" (unlockScheduledEventsTx OneOff) leOneOffEvents
+      unlockEventsForShutdown hasuraLogger "scheduled_triggers" "cron events" (unlockScheduledEvents' Cron) leCronEvents
+      unlockEventsForShutdown hasuraLogger "scheduled_triggers" "scheduled events" (unlockScheduledEvents' OneOff) leOneOffEvents
 
     unlockEventsForShutdown
       :: Logger Hasura

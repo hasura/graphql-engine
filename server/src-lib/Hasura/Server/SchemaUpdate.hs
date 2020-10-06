@@ -2,6 +2,8 @@
 module Hasura.Server.SchemaUpdate
   ( startSchemaSyncListenerThread
   , startSchemaSyncProcessorThread
+  , SchemaSyncEventRef
+  , SchemaSyncCtx(..)
   )
 where
 
@@ -75,6 +77,13 @@ $(deriveToJSON
 
 type SchemaSyncEventRef = STM.TVar (Maybe Value)
 
+-- | Context required for schema syncing. Listener thread id and event references
+data SchemaSyncCtx
+  = SchemaSyncCtx
+  { _sscListenerThreadId :: !Immortal.Thread
+  , _sscSyncEventRef     :: !SchemaSyncEventRef
+  }
+
 logThreadStarted
   :: (MonadIO m)
   => Logger Hasura -> InstanceId -> ThreadType -> Immortal.Thread -> m ()
@@ -93,7 +102,7 @@ startSchemaSyncListenerThread
   => PG.PGPool
   -> Logger Hasura
   -> InstanceId
-  -> m (Immortal.Thread, SchemaSyncEventRef)
+  -> m SchemaSyncCtx
 startSchemaSyncListenerThread defPgSource logger instanceId = do
   -- only the latest event is recorded here
   -- we don't want to store and process all the events, only the latest event
@@ -103,7 +112,7 @@ startSchemaSyncListenerThread defPgSource logger instanceId = do
   listenerThread <- liftIO $ C.forkImmortal "SchemeUpdate.listener" logger $
                     listener defPgSource logger schemaSyncEventRef
   logThreadStarted logger instanceId TTListener listenerThread
-  pure (listenerThread, schemaSyncEventRef)
+  pure $ SchemaSyncCtx listenerThread schemaSyncEventRef
 
 -- | An async thread which processes the schema sync events
 startSchemaSyncProcessorThread
@@ -115,13 +124,12 @@ startSchemaSyncProcessorThread
   -> SchemaSyncEventRef
   -> SchemaCacheRef
   -> InstanceId
-  -> PG.PGPool
   -> m Immortal.Thread
 startSchemaSyncProcessorThread sqlGenCtx defPgSource logger httpMgr
-  schemaSyncEventRef cacheRef instanceId metadataPool = do
+  schemaSyncEventRef cacheRef instanceId = do
   -- Start processor thread
   processorThread <- C.forkImmortal "SchemeUpdate.processor" logger $
-                     processor sqlGenCtx defPgSource logger httpMgr schemaSyncEventRef cacheRef instanceId metadataPool
+                     processor sqlGenCtx defPgSource logger httpMgr schemaSyncEventRef cacheRef instanceId
   logThreadStarted logger instanceId TTProcessor processorThread
   pure processorThread
 
@@ -171,10 +179,9 @@ processor
   -> SchemaSyncEventRef
   -> SchemaCacheRef
   -> InstanceId
-  -> PG.PGPool
   -> m void
 processor sqlGenCtx defPgSource logger httpMgr schemaSyncEventRef
-  cacheRef instanceId metadataPool =
+  cacheRef instanceId =
   -- Never exits
   forever $ do
     event <- liftIO $ STM.atomically getLatestEvent
@@ -185,7 +192,7 @@ processor sqlGenCtx defPgSource logger httpMgr schemaSyncEventRef
       Right (SchemaSyncEventProcessResult shouldReload invalidations) ->
         when shouldReload $
           refreshSchemaCache sqlGenCtx defPgSource logger httpMgr cacheRef invalidations
-            threadType metadataPool "schema cache reloaded"
+            threadType "schema cache reloaded"
   where
     -- checks if there is an event
     -- and replaces it with Nothing
@@ -210,9 +217,8 @@ refreshSchemaCache
   -> SchemaCacheRef
   -> CacheInvalidations
   -> ThreadType
-  -> PG.PGPool
   -> T.Text -> m ()
-refreshSchemaCache sqlGenCtx defPgSource logger httpManager cacheRef invalidations threadType metadataPool msg = do
+refreshSchemaCache sqlGenCtx defPgSource logger httpManager cacheRef invalidations threadType msg = do
   -- Reload schema cache from catalog
   resE <- runExceptT $ withRefUpdate $ do
     rebuildableCache <- fst <$> liftIO (readIORef $ _scrCache cacheRef)

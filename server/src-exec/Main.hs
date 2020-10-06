@@ -13,6 +13,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Init
 import           Hasura.Server.Migrate      (downgradeCatalog, fetchMetadataTx)
+import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Version
 
 import qualified Data.ByteString.Char8      as BC
@@ -63,8 +64,15 @@ runApp env hgeOptions =
         Signals.sigTERM
         (Signals.CatchOnce (shutdownGracefully initCtx))
         Nothing
-      flip runReaderT (_icMetadataPool initCtx) $ unServerAppM $
-        runHGEServer env serveOptions initCtx Nothing initTime shutdownApp Nothing ekgStore
+
+      -- start backgroud thread for schema sync event listening
+      let metadataPool = _icMetadataPool initCtx
+          logger = _lsLogger $ _icLoggers initCtx
+          instanceId = _icInstanceId initCtx
+      schemaSyncCtx <- startSchemaSyncListenerThread metadataPool logger instanceId
+
+      flip runReaderT metadataPool $ unServerAppM $
+        runHGEServer env serveOptions initCtx Nothing initTime shutdownApp Nothing ekgStore schemaSyncCtx
 
     HCExport -> do
       (InitCtx{..}, _) <- initialiseCtx env hgeOptions
