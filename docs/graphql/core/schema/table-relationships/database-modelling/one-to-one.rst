@@ -59,12 +59,12 @@ To access the nested objects via the GraphQL API, :ref:`create the following rel
 - Object relationship, ``passport_info`` from the ``author`` table using  ``id -> passport_info :: owner_id``
 - Object relationship, ``owner`` from the ``passport_info`` table using ``owner_id -> author :: id``
 
-Step 3: Query using relationships
----------------------------------
+Query using one-to-one relationships
+------------------------------------
 
 We can now:
 
-- fetch a list of authors with their ``passport_info``:
+- fetch a list of ``authors`` with their ``passport_info``:
 
   .. graphiql::
     :view_only:
@@ -104,7 +104,7 @@ We can now:
       }
 
 
-- fetch a list of passport_infos with their ``owner``:
+- fetch a list of ``passport_infos`` with their ``owner``:
 
   .. graphiql::
     :view_only:
@@ -143,8 +143,8 @@ We can now:
         }
       }
 
-Insert using relationships
---------------------------
+Insert using one-to-one relationships
+-------------------------------------
 
 We can now:
 
@@ -194,8 +194,8 @@ We can now:
         }
       }
 
-Current limitations with nested mutations
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Current limitations with nested one-to-one mutations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 With one-to-one relationships, currently nested mutations will work only in one of the two directions.
 
