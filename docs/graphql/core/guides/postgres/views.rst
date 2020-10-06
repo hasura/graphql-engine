@@ -97,7 +97,7 @@ Since the result of a query is stored in a materialized view like in a cache, yo
 
   REFRESH MATERIALIZED VIEW popular_active_authors;
 
-Materialized views can be refreshed periodically using :ref:`Postgres triggers <postgres_triggers>`.
+Materialized views can be refreshed when their underlying source data changes using :ref:`Postgres triggers <postgres_triggers>`.
 
 
 Postgres views & Hasura
@@ -105,4 +105,4 @@ Postgres views & Hasura
 
 After creating a view, you can expose it over your GraphQL API and query it like a normal table.
 
-See :ref:`here <create_views>` how to create and expose views in Hasura.
+See :ref:`this page <custom_views>` for more info on how to create and expose views in Hasura.

@@ -1,11 +1,11 @@
 .. meta::
-   :description: Manage remote schemas with Hasura
-   :keywords: hasura, docs, remote schema
+   :description: Useful Postgres concepts for Hasura
+   :keywords: hasura, docs, postgres
 
-.. _postgres:
+.. _postgres_concepts:
 
-Postgres Guide
-==============
+Postgres concepts
+=================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -38,8 +38,7 @@ The following are benefits of Postgres compared to other database management sys
 Postgres features
 -----------------
 
-Postgres has some features that can be used to extend your Hasura GraphQL API. 
-They are described in the following sections:
+The following are some Postgres features that can be used to manage your data and extend your Hasura GraphQL API:
 
 - :ref:`Constraints <postgres_constraints>`
 - :ref:`Views <postgres_views>`
