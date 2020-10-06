@@ -120,17 +120,17 @@ runGQ
   -> GQLReqUnparsed
   -> m (HttpResponse EncJSON)
 runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
-  (telemTimeTot_DT, (telemQueryType, telemTimeIO_DT, telemLocality, resp)) <- withElapsedTime $ do
+  (telemTimeTot_DT, (telemCacheHit, (telemQueryType, telemTimeIO_DT, telemLocality, resp))) <- withElapsedTime $ do
     E.ExecutionCtx _ sqlGenCtx pgExecCtx {- planCache -} sc scVer httpManager enableAL <- ask
 
     -- run system authorization on the GraphQL API
     reqParsed <- E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed
                  >>= flip onLeft throwError
 
-    (_telemCacheHit, execPlan) <- E.getResolvedExecPlan env logger pgExecCtx {- planCache -}
+    (telemCacheHit, execPlan) <- E.getResolvedExecPlan env logger pgExecCtx {- planCache -}
                                  userInfo sqlGenCtx sc scVer queryType
                                  httpManager reqHeaders (reqUnparsed, reqParsed)
-    case execPlan of
+    (telemCacheHit,) <$> case execPlan of
       E.QueryExecutionPlan queryPlans asts -> trace "Query" $ do
         let cacheKey = QueryCacheKey reqParsed $ _uiRole userInfo
         (responseHeaders, cachedValue) <- Tracing.interpTraceT id $ cacheLookup asts cacheKey
@@ -169,7 +169,6 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   let telemTimeIO = convertDuration telemTimeIO_DT
       telemTimeTot = convertDuration telemTimeTot_DT
       telemTransport = Telem.HTTP
-      telemCacheHit = Telem.Miss -- TODO fix if we're reimplementing query caching
   -- Disabled for now until we make up our mind on the naming of localities
   when False $ Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
   return resp
