@@ -67,8 +67,6 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
-- console: add option to flag an insertion as a migration from `Data` section (close #1766) (#4933)
-- console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
 - server: some mutations that cannot be performed will no longer be in the schema (for instance, `delete_by_pk` mutations won't be shown to users that do not have select permissions on all primary keys) (#4111)
 - server: miscellaneous description changes (#4111)
 - server: treat the absence of `backend_only` configuration and `backend_only: false` equally (closing #5059) (#4111)
@@ -79,6 +77,9 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - server: accept only non-negative integers for batch size and refetch interval (close #5653) (#5759)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
+- console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
+- console: add option to flag an insertion as a migration from `Data` section (close #1766) (#4933)
+- console: add `<3 hasura` section to view updates and notifications from Hasura (#5070)
 - cli: add missing global flags for seeds command (#5565)
 - docs: add docs page on networking with docker (close #4346) (#4811)
 
