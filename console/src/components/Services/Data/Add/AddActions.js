@@ -149,7 +149,7 @@ const resetValidation = () => ({ type: RESET_VALIDATION_ERROR });
  *
  * @param {{name: string, schema: string}} payload
  */
-const trackTable = payload => (dispatch, getState) => {
+export const trackTable = payload => (dispatch, getState) => {
   dispatch({ type: MAKING_REQUEST });
   const currentDataSource = getState().tables.currentDataSource;
 

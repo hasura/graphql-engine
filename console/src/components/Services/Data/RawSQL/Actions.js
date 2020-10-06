@@ -16,6 +16,10 @@ import requestAction from '../../../../utils/requestAction';
 import { dataSource } from '../../../../dataSources';
 import { exportMetadata } from '../../../../metadata/actions';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
+import {
+  getTrackFunctionQuery,
+  getTrackTableQuery,
+} from '../../../../metadata/queryUtils';
 
 const MAKING_REQUEST = 'RawSQL/MAKING_REQUEST';
 const SET_SQL = 'RawSQL/SET_SQL';
@@ -30,6 +34,65 @@ const MODAL_OPEN = 'EditItem/MODAL_OPEN';
 
 const modalOpen = () => ({ type: MODAL_OPEN });
 const modalClose = () => ({ type: MODAL_CLOSE });
+
+const executeSQLCallback = (isMigration, migrationName, url, sql) => (
+  dispatch,
+  getState
+) => {
+  const { currentDataSource } = getState().tables;
+
+  const upChanges = [];
+  const objects = parseCreateSQL(sql);
+
+  objects.forEach(object => {
+    let req = {};
+    if (object.type === 'function') {
+      req = getTrackFunctionQuery(
+        object.name,
+        object.schema,
+        currentDataSource
+      );
+    } else {
+      req = getTrackTableQuery(
+        {
+          name: object.name,
+          schema: object.schema,
+        },
+        currentDataSource
+      );
+    }
+
+    upChanges.push(req);
+  });
+
+  let requestBody = {
+    type: 'bulk',
+    source: currentDataSource,
+    args: upChanges,
+  };
+
+  if (isMigration) {
+    requestBody = {
+      name: `track_${migrationName}`,
+      up: upChanges,
+      down: [],
+    };
+  } else {
+    url = Endpoints.metadata;
+  }
+
+  const options = {
+    method: 'POST',
+    credentials: globalCookiePolicy,
+    headers: dataHeaders(getState),
+    body: JSON.stringify(requestBody),
+  };
+
+  return dispatch(requestAction(url, options)).then(res => {
+    dispatch(showSuccessNotification('Changes tracked!'));
+    return res;
+  });
+};
 
 const executeSQL = (isMigration, migrationName, statementTimeout) => (
   dispatch,
@@ -63,28 +126,6 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
     getRunSqlQuery(sql, source, isCascadeChecked, readOnlyMode)
   );
 
-  if (isTableTrackChecked) {
-    const objects = parseCreateSQL(sql);
-
-    objects.forEach(object => {
-      const trackQuery = {
-        type: '',
-        args: {},
-      };
-
-      if (object.type === 'function') {
-        trackQuery.type = 'track_function';
-      } else {
-        trackQuery.type = 'add_existing_table_or_view';
-      }
-
-      trackQuery.args.name = object.name;
-      trackQuery.args.schema = object.schema;
-
-      schemaChangesUp.push(trackQuery);
-    });
-  }
-
   let requestBody = {
     type: 'bulk',
     source,
@@ -106,20 +147,30 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
     body: JSON.stringify(requestBody),
   };
 
+  const callback = data => {
+    if (isMigration) {
+      dispatch(loadMigrationStatus());
+    }
+    dispatch(showSuccessNotification('SQL executed!'));
+    dispatch(fetchDataInit()).then(() => {
+      dispatch({
+        type: REQUEST_SUCCESS,
+        data: data && (isStatementTimeout ? data[1] : data[0]),
+      });
+    });
+    dispatch(exportMetadata());
+  };
+
   return dispatch(requestAction(url, options))
     .then(
       data => {
-        if (isMigration) {
-          dispatch(loadMigrationStatus());
+        if (isTableTrackChecked) {
+          dispatch(
+            executeSQLCallback(isMigration, migrationName, url, sql)
+          ).then(callback(data));
+          return;
         }
-        dispatch(showSuccessNotification('SQL executed!'));
-        dispatch(fetchDataInit()).then(() => {
-          dispatch({
-            type: REQUEST_SUCCESS,
-            data: data && (isStatementTimeout ? data[1] : data[0]),
-          });
-        });
-        dispatch(exportMetadata());
+        callback(data);
       },
       err => {
         const title = 'SQL Execution Failed';

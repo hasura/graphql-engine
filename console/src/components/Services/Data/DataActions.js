@@ -470,7 +470,7 @@ const handleMigrationErrors = (title, errorMsg) => dispatch => {
   }
 };
 
-const makeApiCall = (
+const makeMigrationCall = (
   dispatch,
   getState,
   upQueries,
@@ -511,7 +511,6 @@ const makeApiCall = (
   // todo: this is a temprorary, super ugly, pre-release solution
   if (migrateUrl === Endpoints.query) {
     upQueries.forEach(query => {
-      console.log({ query });
       let type = '';
       if (query.type === 'bulk') {
         type = query.args[0].type.replace('pg_', '').replace('mysql_', '');
@@ -612,27 +611,6 @@ const makeApiCall = (
     onSuccess,
     onError
   );
-};
-
-// todo: temp solution
-const makeMigrationCall = (dispatch, getState, upQueries, ...args) => {
-  const shouldmakeBulkQuery =
-    upQueries.every(query =>
-      ['run_sql', 'select', 'update', 'delete', 'insert'].includes(query.type)
-    ) ||
-    upQueries.every(
-      query =>
-        !['run_sql', 'select', 'update', 'delete', 'insert'].includes(
-          query.type
-        )
-    );
-  if (shouldmakeBulkQuery) {
-    makeApiCall(dispatch, getState, upQueries, ...args);
-    return;
-  }
-  upQueries.forEach(query => {
-    makeApiCall(dispatch, getState, [query], ...args);
-  });
 };
 
 const getBulkColumnInfoFetchQuery = (schema, source) => {
