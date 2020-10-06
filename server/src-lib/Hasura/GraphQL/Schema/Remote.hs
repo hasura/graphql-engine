@@ -221,12 +221,18 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
              case selFld of
                G.SelectionField (Field { _fName }) ->
                  filter (not . (== _fName)) acc
+               -- TODO: verify this once!
+               -- Since the selection field is already in a fragment
+               -- we can return the field as it is.
+               _ -> mempty
            commonFieldsFn = foldr getCommonFields (map G._fldName fields)
            commonFields = concat $ traverse (commonFieldsFn . snd) $ selSets
 
            filterCommonFields e =
              case e of
+             -- TODO: verify this once!
                G.SelectionField (Field { _fName }) -> _fName `elem` commonFields
+               _                                   -> False
 
            removeCommonFields = map (\(objName,selSet) ->
                                                 (objName, filter (not . filterCommonFields) selSet)) selSets
@@ -438,22 +444,24 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
   case typeDefn of
     G.TypeDefinitionObject objTypeDefn -> do
       remoteSchemaObj <- remoteSchemaObject sdoc objTypeDefn
-      let objSelection = P.subselectionWithAlias fieldName description argsParser remoteSchemaObj
-      pure $ objSelection <&> (\(alias, _argsParser, selSet) ->
-                                 (G.Field alias fieldName mempty mempty selSet)) -- TODO: fix the args part
+      let objSelection = P.subselectionWithAlias fieldName description argsParser1 remoteSchemaObj
+      pure $ objSelection <&> (\(alias, args, selSet) ->
+                                 (G.Field alias fieldName args mempty selSet))
     G.TypeDefinitionScalar scalarTypeDefn ->
       let scalarField = remoteFieldScalarParser scalarTypeDefn
           scalarSelection = P.selectionWithAlias fieldName description argsParser1 scalarField
       in
-      pure $ (scalarSelection <&> (\(alias, _) -> (G.Field alias fieldName mempty mempty []))) -- TODO: fix the args part
+      pure $ (scalarSelection <&> (\(alias, args) -> (G.Field alias fieldName args mempty [])))
     G.TypeDefinitionEnum enumTypeDefn ->
       let enumField = remoteFieldEnumParser enumTypeDefn
           enumSelection = P.selectionWithAlias fieldName description argsParser1 enumField
       in
-      pure $ enumSelection <&> (\(alias, _) -> (G.Field alias fieldName mempty mempty [])) -- TODO: fix the args part
-    -- G.TypeDefinitionInterface ifaceTypeDefn -> do
-    --   remoteSchemaObj <- remoteSchemaInterface sdoc ifaceTypeDefn
-    --   pure $ void $ P.subselection fieldName description argsParser1 remoteSchemaObj
+      pure $ enumSelection <&> (\(alias, _) -> (G.Field alias fieldName mempty mempty []))
+    G.TypeDefinitionInterface ifaceTypeDefn -> do
+      remoteSchemaObj <- remoteSchemaInterface sdoc ifaceTypeDefn
+      pure $ P.subselectionWithAlias fieldName description argsParser1 remoteSchemaObj <&>
+        (\(alias, args, selSet) ->
+           (G.Field alias fieldName args mempty selSet))
     -- G.TypeDefinitionUnion unionTypeDefn -> do
     --   remoteSchemaObj <- remoteSchemaUnion sdoc unionTypeDefn
     --   pure $ P.subselectionWithAlias fieldName description argsParser remoteSchemaObj
