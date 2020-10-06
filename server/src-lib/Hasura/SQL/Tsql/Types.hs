@@ -106,8 +106,14 @@ data Expression
   | IsNullExpression Expression
   | ColumnExpression FieldName
   | EqualExpression Expression Expression
-  | JsonQueryExpression Expression
+  | JsonQueryExpression Expression (Maybe JsonPath)
   | ToStringExpression Expression
+  deriving (Eq, Show)
+
+data JsonPath
+  = RootPath
+  | FieldPath JsonPath Text
+  | IndexPath JsonPath Integer
   deriving (Eq, Show)
 
 data Aggregate
@@ -122,8 +128,19 @@ data Countable
   | DistinctCountable (NonEmpty FieldName)
   deriving (Eq, Show)
 
-data From =
-  FromQualifiedTable (Aliased TableName)
+data From
+  = FromQualifiedTable (Aliased TableName)
+  | FromOpenJson (Aliased OpenJson)
+  deriving (Eq, Show)
+
+data OpenJson = OpenJson
+  { openJsonExpression :: Expression
+  , openJsonWith :: NonEmpty JsonFieldSpec
+  } deriving (Eq, Show)
+
+data JsonFieldSpec
+  = IntField Text
+  | JsonField Text
   deriving (Eq, Show)
 
 data Aliased a = Aliased

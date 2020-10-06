@@ -7,6 +7,7 @@ module Hasura.SQL.Tsql.FromIr
   , Error(..)
   , runFromIr
   , FromIr
+  , jsonFieldName
   ) where
 
 import           Control.Monad
@@ -635,6 +636,7 @@ fieldSourceProjections =
                     (ColumnExpression
                        (joinAliasToField
                           (joinJoinAlias (aliasedThing aliasedJoin))))
+                    Nothing
               }))
     AggregateFieldSource aggregates -> fmap AggregateProjection aggregates
 

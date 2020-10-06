@@ -17,6 +17,8 @@ import           Data.Maybe
 import           Data.String
 import           Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.Lazy as LT
+import qualified Data.Text.Lazy.Builder as LT
 import           Database.ODBC.SQLServer
 import           Hasura.SQL.Tsql.Types
 import           Prelude
@@ -48,7 +50,7 @@ instance IsString Printer where
 fromExpression :: Expression -> Printer
 fromExpression =
   \case
-    JsonQueryExpression e -> "JSON_QUERY(" <+> fromExpression e <+> ")"
+    JsonQueryExpression e path -> "JSON_QUERY(" <+> fromExpression e <+>? fmap fromPath path <+> ")"
     ValueExpression value -> QueryPrinter (toSql value)
     AndExpression xs ->
       SepByPrinter
@@ -72,6 +74,17 @@ fromExpression =
     EqualExpression x y ->
       "(" <+> fromExpression x <+> ") = (" <+> fromExpression y <+> ")"
     ToStringExpression e -> "CONCAT(" <+> fromExpression e <+> ", '')"
+
+fromPath :: JsonPath -> Printer
+fromPath =
+  fromExpression .
+  ValueExpression . TextValue . LT.toStrict . LT.toLazyText . go
+  where
+    go =
+      \case
+        RootPath -> "$"
+        IndexPath r i -> go r <> "[" <> LT.fromString (show i) <> "]"
+        FieldPath r f -> go r <> "." <> LT.fromText f
 
 fromFieldName :: FieldName -> Printer
 fromFieldName (FieldName {..}) =
