@@ -178,9 +178,9 @@ data IntrospectionResult
 
 data ParsedIntrospection
   = ParsedIntrospection
-  { piQuery        :: [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-  , piMutation     :: Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-  , piSubscription :: Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  { piQuery        :: [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments G.Name)]
+  , piMutation     :: Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments G.Name)]
+  , piSubscription :: Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments G.Name)]
   }
 
 data RemoteSchemaCtx

@@ -155,14 +155,6 @@ getNextArgNum = do
   put $ PlanningSt (curArgNum + 1) vars prepped sessionVariables
   return curArgNum
 
-unresolveVariables
-  :: forall fragments
-   . Functor fragments
-  => G.SelectionSet fragments Variable
-  -> G.SelectionSet fragments G.Name
-unresolveVariables =
-  fmap (fmap (getName . vInfo))
-
 collectVariables
   :: forall fragments var
    . (Foldable fragments, Hashable var, Eq var)
@@ -176,12 +168,11 @@ buildTypedOperation
    . (Functor frag, Foldable frag)
   => G.OperationType
   -> [G.VariableDefinition]
-  -> G.SelectionSet frag Variable
+  -> G.SelectionSet frag G.Name
   -> Maybe GH.VariableValues
   -> (G.TypedOperationDefinition frag G.Name, Maybe GH.VariableValues)
 buildTypedOperation tp varDefs selSet varValsM =
-  let unresolvedSelSet = unresolveVariables selSet
-      requiredVars = collectVariables unresolvedSelSet
+  let requiredVars = collectVariables selSet
       restrictedDefs = filter (\varDef -> G._vdName varDef `Set.member` requiredVars) varDefs
       restrictedValsM = flip Map.intersection (Set.toMap requiredVars) <$> varValsM
-  in (G.TypedOperationDefinition tp Nothing restrictedDefs [] unresolvedSelSet, restrictedValsM)
+  in (G.TypedOperationDefinition tp Nothing restrictedDefs [] selSet, restrictedValsM)
