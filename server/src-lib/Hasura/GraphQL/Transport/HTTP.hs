@@ -54,6 +54,10 @@ instance J.ToJSON QueryCacheKey where
 
 
 class Monad m => MonadExecuteQuery m where
+  -- | This method does two things: it looks up a query result in the
+  -- server-side cache, if a cache is used, and it additionally returns HTTP
+  -- headers that can instruct a client how long a response can be cached
+  -- locally (i.e. client-side).
   cacheLookup
     :: [QueryRootField UnpreparedValue]
     -- ^ Used to check that the query is cacheable
@@ -62,14 +66,25 @@ class Monad m => MonadExecuteQuery m where
     -> TraceT m (HTTP.ResponseHeaders, Maybe EncJSON)
     -- ^ HTTP headers to be sent back to the caller for this GraphQL request,
     -- containing e.g. time-to-live information, and a cached value if found and
-    -- within time-to-live
+    -- within time-to-live.  So a return value (non-empty-ttl-headers, Nothing)
+    -- represents that we don't have a server-side cache of the query, but that
+    -- the client should store it locally.  The value ([], Just json) represents
+    -- that the client should not store the response locally, but we do have a
+    -- server-side cache value that can be used to avoid query execution.
+
+  -- | Store a json response for a query that we've executed in the cache.  Note
+  -- that, as part of this, 'cacheStore' has to decide whether the response is
+  -- cacheable.  A very similar decision is also made in 'cacheLookup', since it
+  -- has to construct corresponding cache-enabling headers that are sent to the
+  -- client.  But note that the HTTP headers influence client-side caching,
+  -- whereas 'cacheStore' changes the server-side cache.
   cacheStore
     :: QueryCacheKey
     -- ^ Key under which to store the result of a query execution
     -> EncJSON
     -- ^ Result of a query execution
     -> TraceT m ()
-    -- ^ always succeeds
+    -- ^ Always succeeds
 
 instance MonadExecuteQuery m => MonadExecuteQuery (ReaderT r m) where
   cacheLookup a b = hoist lift $ cacheLookup a b
