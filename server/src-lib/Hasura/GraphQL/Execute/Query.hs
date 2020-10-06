@@ -253,7 +253,7 @@ convertQuerySelSet
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
-  -> m ( ExecutionPlan (tx EncJSON, Maybe PreparedSql) RemoteCall J.Value
+  -> m ( ExecutionPlan (tx EncJSON, Maybe PreparedSql)
        -- , Maybe ReusableQueryPlan
        , [QueryRootField UnpreparedValue]
        )

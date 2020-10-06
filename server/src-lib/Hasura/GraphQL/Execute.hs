@@ -164,11 +164,11 @@ getExecPlanPartial userInfo sc queryType req =
           "in the document when operationName is not specified"
 
 -- The graphql query is resolved into a sequence of execution operations
-data ResolvedExecutionPlan m
+data ResolvedExecutionPlan tx
   = QueryExecutionPlan
-      (EPr.ExecutionPlan (m EncJSON, Maybe EQ.PreparedSql) EPr.RemoteCall J.Value) [C.QueryRootField UnpreparedValue]
+      (EPr.ExecutionPlan (tx EncJSON, Maybe EQ.PreparedSql)) [C.QueryRootField UnpreparedValue]
   -- ^ query execution; remote schemas and introspection possible
-  | MutationExecutionPlan (EPr.ExecutionPlan (m EncJSON, HTTP.ResponseHeaders) EPr.RemoteCall J.Value)
+  | MutationExecutionPlan (EPr.ExecutionPlan (tx EncJSON, HTTP.ResponseHeaders))
   -- ^ mutation execution; only __typename introspection supported
   | SubscriptionExecutionPlan EL.LiveQueryPlan
   -- ^ live query execution; remote schemas and introspection not supported

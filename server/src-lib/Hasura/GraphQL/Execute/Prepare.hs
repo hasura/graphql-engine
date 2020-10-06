@@ -44,18 +44,18 @@ type PrepArgMap = IntMap.IntMap (Q.PrepArg, PGScalarValue)
 -- | Full execution plan to process one GraphQL query.  Once we work on
 -- heterogeneous execution this will contain a mixture of things to run on the
 -- database and things to run on remote schemas.
-type ExecutionPlan db remote raw = InsOrdHashMap Text (ExecutionStep db remote raw)
+type ExecutionPlan db = InsOrdHashMap Text (ExecutionStep db)
 
 type RemoteCall = (RemoteSchemaInfo, G.TypedOperationDefinition G.NoFragments G.Name, Maybe GH.VariableValues)
 
 -- | One execution step to processing a GraphQL query (e.g. one root field).
 -- Polymorphic to allow the SQL to be generated in stages.
-data ExecutionStep db remote raw
+data ExecutionStep db
   = ExecStepDB db
   -- ^ A query to execute against the database
-  | ExecStepRemote remote -- !RemoteSchemaInfo !(G.Selection G.NoFragments G.Name)
+  | ExecStepRemote RemoteCall  -- !RemoteSchemaInfo !(G.Selection G.NoFragments G.Name)
   -- ^ A query to execute against a remote schema
-  | ExecStepRaw raw
+  | ExecStepRaw J.Value
   -- ^ Output a plain JSON object
 
 data PlanningSt

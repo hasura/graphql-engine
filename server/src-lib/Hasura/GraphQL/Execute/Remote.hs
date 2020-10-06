@@ -12,6 +12,7 @@ import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Parser
+import           Hasura.RQL.Types
 
 unresolveVariables
   :: forall fragments
@@ -30,14 +31,13 @@ collectVariables =
   Set.unions . fmap (foldMap Set.singleton)
 
 buildTypedOperation
-  :: forall frag db remoteSchemaInfo raw
-   . (Functor frag, Foldable frag)
-  => remoteSchemaInfo
+  :: forall db
+   . RemoteSchemaInfo
   -> G.OperationType
   -> [G.VariableDefinition]
-  -> G.SelectionSet frag Variable
+  -> G.SelectionSet G.NoFragments Variable
   -> Maybe GH.VariableValues
-  -> ExecutionStep db (remoteSchemaInfo, G.TypedOperationDefinition frag G.Name, Maybe GH.VariableValues) raw
+  -> ExecutionStep db
 buildTypedOperation remoteSchemaInfo tp varDefs selSet varValsM =
   let unresolvedSelSet = unresolveVariables selSet
       requiredVars = collectVariables unresolvedSelSet
