@@ -48,3 +48,13 @@ export interface PostgresTrigger {
   action_orientation: string;
   event_manipulation: string;
 }
+
+type InputArgType = {
+  schema: string;
+  name: string;
+};
+
+export interface FunctionState {
+  functionName: string;
+  inputArgTypes: InputArgType[];
+}

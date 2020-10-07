@@ -110,6 +110,7 @@ export const addScheduledTrigger = (
   successCb?: () => void,
   errorCb?: () => void
 ): Thunk => (dispatch, getState) => {
+  const { currentDataSource } = getState().tables;
   const validationError = validateAddState(state);
 
   const errorMsg = 'Creating scheduled trigger failed';
@@ -119,8 +120,6 @@ export const addScheduledTrigger = (
     }
     return dispatch(showErrorNotification(errorMsg, validationError));
   }
-
-  const { currentDataSource } = getState().tables;
 
   const upQuery = generateCreateScheduledTriggerQuery(state, currentDataSource);
   const downQuery = getDropScheduledTriggerQuery(state.name, currentDataSource);
@@ -170,6 +169,7 @@ export const saveScheduledTrigger = (
   successCb?: () => void,
   errorCb?: () => void
 ): Thunk => (dispatch, getState) => {
+  const { currentDataSource } = getState().tables;
   const validationError = validateAddState(state);
 
   const errorMsg = 'Updating scheduled trigger failed';
@@ -179,8 +179,6 @@ export const saveScheduledTrigger = (
     }
     return dispatch(showErrorNotification(errorMsg, validationError));
   }
-
-  const { currentDataSource } = getState().tables;
 
   const isRenamed = state.name !== existingTrigger.name;
   if (isRenamed) {
@@ -340,7 +338,7 @@ export const createEventTrigger = (
     const migrationName = `create_event_trigger_${state.name.trim()}`;
 
     const upQuery = generateCreateEventTriggerQuery(state, currentSource);
-    const downQuery = getDropEventTriggerQuery(state.name);
+    const downQuery = getDropEventTriggerQuery(state.name, currentSource);
 
     const requestMsg = 'Creating event trigger...';
     const successMsg = 'Event Trigger Created';
@@ -387,14 +385,14 @@ export const modifyEventTrigger = (
   const currentSource = getState().tables.currentDataSource;
 
   const downQuery = generateCreateEventTriggerQuery(
-    parseServerETDefinition(trigger, table),
+    parseServerETDefinition(trigger, table, currentSource),
     currentSource,
     true
   );
 
   // TODO optimise redeclaration of queries
   const upQuery = generateCreateEventTriggerQuery(
-    parseServerETDefinition(trigger, table),
+    parseServerETDefinition(trigger, table, currentSource),
     currentSource,
     true
   );
@@ -480,7 +478,7 @@ export const deleteEventTrigger = (
   successCb?: () => void,
   errorCb?: () => void
 ): Thunk => (dispatch, getState) => {
-  const currentSource = getState().tables.currentDataSource;
+  const source = getState().tables.currentDataSource;
 
   const isOk = getConfirmation(
     `This will permanently delete the event trigger and the associated metadata`,
@@ -491,10 +489,10 @@ export const deleteEventTrigger = (
     return undefined;
   }
 
-  const upQuery = getDropEventTriggerQuery(trigger.name);
+  const upQuery = getDropEventTriggerQuery(trigger.name, source);
   const downQuery = generateCreateEventTriggerQuery(
-    parseServerETDefinition(trigger),
-    currentSource
+    parseServerETDefinition(trigger, undefined, source),
+    source
   );
 
   const migrationName = `delete_et_${trigger.name}`;

@@ -2,10 +2,7 @@ import defaultState from './AddState';
 
 import _push from '../push';
 import { updateSchemaInfo, makeMigrationCall } from '../DataActions';
-import {
-  showSuccessNotification,
-  showErrorNotification,
-} from '../../Common/Notification';
+import { showErrorNotification } from '../../Common/Notification';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { setTable } from '../DataActions.js';
 import { getTableModifyRoute } from '../../../Common/utils/routesUtils';

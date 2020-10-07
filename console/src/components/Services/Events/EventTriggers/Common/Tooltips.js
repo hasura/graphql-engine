@@ -3,7 +3,7 @@ import Tooltip from 'react-bootstrap/lib/Tooltip';
 
 export const manualTriggerInfo = (
   <Tooltip id="tooltip-manual-trigger-description">
-    Selecting this option will let you invoke this trigger from Data Broeser
+    Selecting this option will let you invoke this trigger from Data Browser
   </Tooltip>
 );
 
@@ -47,5 +47,11 @@ export const postgresDescription = (
 export const statusCodeDescription = (
   <Tooltip id="tooltip-trigger-status-code-description">
     Status code of the webhook response
+  </Tooltip>
+);
+
+export const dataSourceDescription = (
+  <Tooltip id="tooltip-trigger-status-code-description">
+    Select the data source where the table for the data trigger exists
   </Tooltip>
 );

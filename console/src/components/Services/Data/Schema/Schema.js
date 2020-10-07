@@ -391,6 +391,7 @@ class Schema extends Component {
                   handleSchemaNameChange={this.onChangeSchemaName}
                   handleCreateClick={this.handleCreateClick}
                   currentDataSource={currentDataSource}
+                  schema={currentSchema}
                 />
               </div>
             </div>

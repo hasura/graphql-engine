@@ -818,14 +818,7 @@ const changeTableName = (oldName, newName, isTable, tableType) => {
       dispatch(_push(getSchemaBaseRoute(currentSchema))); // to avoid 404
       dispatch(updateSchemaInfo()).then(() => {
         dispatch(
-          _push(
-            getTableModifyRoute(
-              currentSchema,
-              currentDataSource,
-              newName,
-              isTable
-            )
-          )
+          _push(getTableModifyRoute(currentSchema, source, newName, isTable))
         );
       });
     };

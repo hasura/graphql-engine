@@ -1,5 +1,6 @@
 import { Table, FrequentlyUsedColumn } from '../../types';
 import { isColTypeString } from '.';
+import { FunctionState } from './types';
 
 const sqlEscapeText = (rawText: string) => {
   let text = rawText;
@@ -1130,4 +1131,26 @@ FROM (
 		GROUP BY
 			q.table_schema,
 			q.table_name,
-			q.constraint_name) AS info;`;
+      q.constraint_name) AS info;`;
+
+export const deleteFunctionSql = (
+  schemaName: string,
+  functionState: FunctionState
+) => {
+  const { functionName, inputArgTypes } = functionState;
+
+  const functionNameWithSchema = `"${schemaName}"."${functionName}"`;
+
+  let functionArgString = '';
+  if (inputArgTypes.length > 0) {
+    functionArgString += '(';
+    inputArgTypes.forEach((inputArg, i) => {
+      functionArgString += i > 0 ? ', ' : '';
+
+      functionArgString += `"${inputArg.schema}"."${inputArg.name}"`;
+    });
+    functionArgString += ')';
+  }
+
+  return `DROP FUNCTION ${functionNameWithSchema}${functionArgString}`;
+};

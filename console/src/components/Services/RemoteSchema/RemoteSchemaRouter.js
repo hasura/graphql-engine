@@ -12,7 +12,6 @@ import {
 import { FILTER_REMOTE_SCHEMAS } from './Actions';
 
 import { appPrefix } from './constants';
-import { getRemoteSchemasSelector } from '../../../metadata/selector';
 
 const filterItem = dispatch => {
   return (dataList, searchVal) => {
@@ -37,7 +36,7 @@ const filterItem = dispatch => {
 const leftNavMapStateToProps = state => {
   return {
     ...state,
-    dataList: getRemoteSchemasSelector(state),
+    dataList: state.metadata.metadataObject?.remote_schemas ?? [],
     isError: state.remoteSchemas.listData.isError,
     isRequesting: state.remoteSchemas.listData.isRequesting,
     filtered: [...state.remoteSchemas.listData.filtered],

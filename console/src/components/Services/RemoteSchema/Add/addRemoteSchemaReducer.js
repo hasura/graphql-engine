@@ -83,12 +83,9 @@ const getReqHeader = headers => {
   return requestHeaders;
 };
 
-// todo: pre metadata separation there was an API call
-// the purpose of leaving a thunk was to reuse the previous logic and store model
 const fetchRemoteSchema = remoteSchema => {
   return (dispatch, getState) => {
     const schema = getRemoteSchemaSelector(getState())(remoteSchema);
-    console.log({ schema, state: getState() });
 
     if (schema) {
       dispatch({ type: REMOTE_SCHEMA_FETCH_SUCCESS, data: schema });
@@ -196,10 +193,9 @@ const addRemoteSchema = () => {
     const customOnError = err => {
       console.error('Failed to create remote schema' + JSON.stringify(err));
       dispatch({ type: ADD_REMOTE_SCHEMA_FAIL, data: err });
-      // dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
-      // alert(JSON.stringify(err));
     };
     dispatch({ type: ADDING_REMOTE_SCHEMA });
+
     return dispatch(
       makeRequest(
         upQuery.args,

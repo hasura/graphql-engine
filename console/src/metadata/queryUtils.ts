@@ -15,7 +15,9 @@ import { RemoteRelationshipPayload } from '../components/Services/Data/TableRela
 import { Driver, currentDriver } from '../dataSources';
 
 export const metadataQueryTypes = [
-  'add_existing_table_or_view',
+  'add_source',
+  'drop_source',
+  'reload_source',
   'track_table',
   'untrack_table',
   'set_table_is_enum',
@@ -40,16 +42,16 @@ export const metadataQueryTypes = [
   'drop_update_permission',
   'drop_delete_permission',
   'set_permission_comment',
+  'create_event_trigger',
+  'delete_event_trigger',
+  'redeliver_event',
+  'invoke_event_trigger',
   'get_inconsistent_metadata',
   'drop_inconsistent_metadata',
   'add_remote_schema',
   'remove_remote_schema',
   'reload_remote_schema',
   'introspect_remote_schema',
-  'create_event_trigger',
-  'delete_event_trigger',
-  'redeliver_event',
-  'invoke_event_trigger',
   'create_cron_trigger',
   'delete_cron_trigger',
   'create_scheduled_event',
@@ -68,8 +70,9 @@ export const metadataQueryTypes = [
   'update_action',
   'create_action_permission',
   'drop_action_permission',
-  'dump_internal_state',
   'set_custom_types',
+  'dump_internal_state',
+  'bulk',
 ];
 
 export type MetadataQueryType =
@@ -417,9 +420,11 @@ export const generateCreateEventTriggerQuery = (
     replace,
   });
 
-export const getDropEventTriggerQuery = (name: string) => ({
-  type: 'delete_event_trigger',
+export const getDropEventTriggerQuery = (name: string, source: string) => ({
+  // Not supported for MySQL
+  type: 'pg_delete_event_trigger',
   args: {
+    source,
     name: name.trim(),
   },
 });

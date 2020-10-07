@@ -17,7 +17,6 @@ import styles from '../../Common/TableCommon/Table.scss';
 import { useDataSource } from '../../../dataSources';
 import { getDataSources } from '../../../metadata/selector';
 import { push } from 'react-router-redux';
-import ConnectedDataSourceContainer from './DataSourceContainer';
 
 const DataPageContainer = ({
   currentSchema,
@@ -30,7 +29,9 @@ const DataPageContainer = ({
 }) => {
   const { setDriver } = useDataSource();
   const [loadingSchemas, setLoadingSchemas] = useState(false);
-
+  const currentDataSourceDetails = dataSources.find(
+    s => s.name === currentDataSource
+  );
   const onDatabaseChange = e => {
     const value = e.target.value;
     let newName;
@@ -81,10 +82,6 @@ const DataPageContainer = ({
       </option>
     ));
   };
-
-  const currentDataSourceDetails = dataSources.find(
-    s => s.name === currentDataSource
-  );
 
   const sidebarContent = (
     <ul>

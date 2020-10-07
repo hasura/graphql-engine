@@ -10,7 +10,12 @@ import DropdownButton from '../../../../Common/DropdownButton/DropdownButton';
 import Headers from '../../../../Common/Headers/Headers';
 import CollapsibleToggle from '../../../../Common/CollapsibleToggle/CollapsibleToggle';
 import Button from '../../../../Common/Button/Button';
-import { updateSchemaInfo } from '../../../Data/DataActions';
+import {
+  updateSchemaInfo,
+  fetchSchemaList,
+  updateCurrentSchema,
+  UPDATE_CURRENT_DATA_SOURCE,
+} from '../../../Data/DataActions';
 import { createEventTrigger } from '../../ServerIO';
 import Operations from '../Common/Operations';
 import RetryConfEditor from '../../Common/Components/RetryConfEditor';
@@ -18,6 +23,8 @@ import * as tooltip from '../Common/Tooltips';
 import { EVENTS_SERVICE_HEADING } from '../../constants';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import { Table } from '../../../../../dataSources/types';
+import { getDataSources } from '../../../../../metadata/selector';
+import { DataSource } from '../../../../../metadata/types';
 
 interface Props extends InjectedProps {}
 
@@ -31,8 +38,16 @@ const Add: React.FC<Props> = props => {
     webhook,
     retryConf,
     headers,
+    source,
   } = state;
-  const { dispatch, allSchemas, schemaList, readOnlyMode } = props;
+  const {
+    dispatch,
+    allSchemas,
+    schemaList,
+    readOnlyMode,
+    dataSourcesList,
+    currentDataSource,
+  } = props;
 
   const selectedTableSchema = findTable(allSchemas, table);
 
@@ -54,6 +69,10 @@ const Add: React.FC<Props> = props => {
     }
   }, [table.name, allSchemas]);
 
+  React.useEffect(() => {
+    setState.source(currentDataSource);
+  }, []);
+
   const createBtnText = 'Create Event Trigger';
 
   const submit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -69,6 +88,19 @@ const Add: React.FC<Props> = props => {
   const handleSchemaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedSchemaName = e.target.value;
     setState.table(undefined, selectedSchemaName);
+  };
+
+  const handleDataSourceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedSourceName = e.target.value;
+    dispatch(fetchSchemaList()).then((data: any) => {
+      const schemas = data.result;
+      if (schemas.length) {
+        dispatch(updateCurrentSchema(schemas[1][0], false, data));
+      } else {
+        dispatch(updateCurrentSchema('', false, []));
+      }
+    });
+    setState.source(selectedSourceName);
   };
 
   const handleTableChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -194,6 +226,35 @@ const Add: React.FC<Props> = props => {
               value={name}
               onChange={handleTriggerNameChange}
             />
+            <hr />
+            <div className={styles.add_mar_bottom}>
+              <h4 className={styles.subheading_text_no_padd}>
+                Data Source &nbsp; &nbsp;
+                <OverlayTrigger
+                  placement="right"
+                  overlay={tooltip.dataSourceDescription}
+                >
+                  <i className="fa fa-question-circle" aria-hidden="true" />
+                </OverlayTrigger>{' '}
+              </h4>
+              <small>
+                <i>Note: This feature is currently not supported for MySQL</i>
+              </small>
+            </div>
+            <select
+              onChange={handleDataSourceChange}
+              data-test="select-datasource-event-trigger"
+              className={`${styles.selectTrigger} form-control`}
+              value={source}
+            >
+              {dataSourcesList.map(s => {
+                return (
+                  <option value={s.name} key={s.name}>
+                    {s.name}
+                  </option>
+                );
+              })}
+            </select>
             <hr />
             <h4 className={styles.subheading_text}>
               Schema/Table &nbsp; &nbsp;
@@ -344,6 +405,8 @@ type PropsFromState = {
   allSchemas: Table[];
   schemaList: string[];
   readOnlyMode: boolean;
+  dataSourcesList: DataSource[];
+  currentDataSource: string;
 };
 
 const mapStateToProps: MapStateToProps<PropsFromState> = state => {
@@ -351,6 +414,8 @@ const mapStateToProps: MapStateToProps<PropsFromState> = state => {
     allSchemas: state.tables.allSchemas,
     schemaList: state.tables.schemaList,
     readOnlyMode: state.main.readOnlyMode,
+    dataSourcesList: getDataSources(state),
+    currentDataSource: state.tables.currentDataSource,
   };
 };
 

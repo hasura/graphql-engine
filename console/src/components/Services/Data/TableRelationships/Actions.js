@@ -715,7 +715,7 @@ const autoAddRelName = ({ upQuery, downQuery }) => (dispatch, getState) => {
   const relName = upQuery.args.name;
 
   // Apply migrations
-  const migrationName = `add_relationship_${relName}_table_${currentSchema}_${obj.data.tableName}`;
+  const migrationName = `add_relationship_${relName}_table_${currentSchema}_${upQuery.args.table}`;
 
   const requestMsg = 'Adding Relationship...';
   const successMsg = 'Relationship created';

@@ -43,6 +43,7 @@ import {
   uniqueKeysSql,
   frequentlyUsedColumns,
   getFKRelations,
+  deleteFunctionSql,
 } from './sqlUtils';
 
 export const isTable = (table: Table) => {
@@ -196,9 +197,20 @@ type ColumnsInfoPayload = {
   identity_generation: 'ALWAYS' | 'BY DEFAULT' | null;
 };
 
-const parseColumnsInfoResult = (data: ColumnsInfoPayload[]) => {
+const parseColumnsInfoResult = (data: string[][]) => {
+  const formattedData: ColumnsInfoPayload[] = data.slice(1).map(
+    arr =>
+      ({
+        column_name: arr[0],
+        table_name: arr[1],
+        is_generated: arr[2],
+        is_identity: arr[3],
+        identity_generation: arr[4] === 'NULL' ? null : arr[4],
+      } as ColumnsInfoPayload)
+  );
+
   let columnsInfo: ColumnsInfoResult = {};
-  data
+  formattedData
     .filter(
       (info: ColumnsInfoPayload) =>
         info.is_generated !== 'NEVER' || info.is_identity !== 'NO'
@@ -421,4 +433,5 @@ export const postgres: DataSourcesAPI = {
   frequentlyUsedColumns,
   getFKRelations,
   getReferenceOption,
+  deleteFunctionSql,
 };

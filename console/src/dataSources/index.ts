@@ -8,7 +8,7 @@ import {
   TableColumn,
   FrequentlyUsedColumn,
 } from './types';
-import { PGFunction } from './services/postgresql/types';
+import { PGFunction, FunctionState } from './services/postgresql/types';
 import { Operations } from './common';
 
 export const drivers = ['postgres', 'mysql'];
@@ -49,7 +49,7 @@ export interface DataSourcesAPI {
   arrayToPostgresArray(arr: any[]): string;
   schemaListSql: string;
   getAdditionalColumnsInfoQuerySql?: (currentSchema: string) => string;
-  parseColumnsInfoResult: (data: any) => ColumnsInfoResult;
+  parseColumnsInfoResult: (data: string[][]) => ColumnsInfoResult;
   columnDataTypes: {
     INTEGER: string;
     SERIAL: string;
@@ -276,6 +276,10 @@ export interface DataSourcesAPI {
   }) => string;
   getFKRelations: (options: { schemas: string[]; tables: Table[] }) => string;
   getReferenceOption: (opt: string) => string;
+  deleteFunctionSql?: (
+    schemaName: string,
+    functionState: FunctionState
+  ) => string;
 }
 
 export let currentDriver: Driver = 'postgres';

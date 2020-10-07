@@ -90,6 +90,7 @@ const RootFields = ({
     dispatch(setCustomRootFields(toggleEditor));
   };
 
+  // TODO: If the fields are empty, then don't make the calls
   return (
     <ExpandableEditor
       editorExpanded={editorExpanded}

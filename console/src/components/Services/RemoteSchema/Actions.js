@@ -1,5 +1,5 @@
 import { listState } from './state';
-import { globalCookiePolicy } from '../../../Endpoints';
+import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import requestAction from '../../../utils/requestAction';
 import dataHeaders from '../Data/Common/Headers';
 import globals from '../../../Globals';
@@ -15,6 +15,7 @@ const FILTER_REMOTE_SCHEMAS = '@remoteSchema/FILTER_REMOTE_SCHEMAS';
 const RESET = '@remoteSchema/RESET';
 
 const VIEW_REMOTE_SCHEMA = '@remoteSchema/VIEW_REMOTE_SCHEMA';
+const SET_REMOTE_SCHEMAS = '@remoteSchema/SET_REMOTE_SCHEMAS';
 
 const listReducer = (state = listState, action) => {
   switch (action.type) {
@@ -31,6 +32,11 @@ const listReducer = (state = listState, action) => {
       return {
         ...state,
         viewRemoteSchema: action.data,
+      };
+    case SET_REMOTE_SCHEMAS:
+      return {
+        ...state,
+        remoteSchemas: action.data,
       };
     default:
       return {
@@ -72,11 +78,12 @@ const makeRequest = (
 
     const currMigrationMode = getState().main.migrationMode;
 
-    const migrateUrl = returnMigrateUrl(currMigrationMode);
+    let migrateUrl = returnMigrateUrl(currMigrationMode);
 
     let finalReqBody;
     if (globals.consoleMode === SERVER_CONSOLE_MODE) {
       finalReqBody = upQuery;
+      migrateUrl = Endpoints.metadata;
     } else if (globals.consoleMode === CLI_CONSOLE_MODE) {
       finalReqBody = migrationBody;
     }
@@ -90,7 +97,7 @@ const makeRequest = (
 
     const onSuccess = data => {
       if (globals.consoleMode === CLI_CONSOLE_MODE) {
-        dispatch(loadMigrationStatus()); // don't call for server mode
+        dispatch(loadMigrationStatus());
       }
       // dispatch(loadTriggers());
       if (successMsg) {
@@ -108,7 +115,11 @@ const makeRequest = (
     return dispatch(requestAction(url, options)).then(onSuccess, onError);
   };
 };
-/* */
 
-export { VIEW_REMOTE_SCHEMA, makeRequest, FILTER_REMOTE_SCHEMAS };
+export {
+  VIEW_REMOTE_SCHEMA,
+  makeRequest,
+  FILTER_REMOTE_SCHEMAS,
+  SET_REMOTE_SCHEMAS,
+};
 export default listReducer;

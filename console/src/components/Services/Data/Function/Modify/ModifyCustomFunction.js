@@ -18,9 +18,9 @@ import TextAreaWithCopy from '../../../../Common/TextAreaWithCopy/TextAreaWithCo
 
 import {
   fetchCustomFunction,
-  deleteFunctionSql,
   unTrackCustomFunction,
   updateSessVar,
+  deleteFunction,
 } from '../customFunctionReducer';
 
 import { NotFoundError } from '../../../../Error/PageNotFound';
@@ -114,7 +114,7 @@ class ModifyCustomFunction extends React.Component {
     if (isOk) {
       try {
         this.updateDeleteConfirmationError(null);
-        this.props.dispatch(deleteFunctionSql());
+        this.props.dispatch(deleteFunction());
       } catch (err) {
         console.error('Delete custom function error: ', err);
       }

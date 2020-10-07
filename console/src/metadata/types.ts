@@ -872,4 +872,5 @@ export interface MetadataDataSource {
 export interface HasuraMetadataV3 {
   version: 3;
   sources: MetadataDataSource[];
+  remote_schemas?: RemoteSchema[];
 }
