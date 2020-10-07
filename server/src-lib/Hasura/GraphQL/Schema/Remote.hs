@@ -199,32 +199,48 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
   -- to 'possibleTypes'.
   pure $ P.selectionSetInterface name description subFieldParsers objs <&>
     (\objNameAndSelSets ->
-       let commonInterfaceFields =
-             catMaybes $ toList $
-             Map.map allTheSame $
-             Map.groupOn getSelectionName $
-             concat $ flip map objNameAndSelSets $ \(_, selSet) ->
-               filter (flip elem interfaceFieldNames . getSelectionName) selSet
+       -- This lambda function re-constructs a remote interface query.
+       -- We need to do this because the `SelectionSet`(s) that are
+       -- inputted to this function have the fragments (if any) flattened.
+       -- (Check `flattenSelectionSet` in 'Hasura.GraphQL.Parser.Collect' module)
+       -- This function makes a valid interface query by:
+       -- 1. Getting the common interface fields in all the selection sets
+       -- 2. Remove the common fields obtained in #1 from the selection sets
+       -- 3. Construct a selection field for every common interface field
+       -- 4. Construct inline fragments for non-common interface fields
+       --    using the result of #2 for every object
+       -- 5. Contruct the final selection set by combining #3 and #4
+       let selSetFields' = flip (fmap . fmap . fmap) objNameAndSelSets $
+                             \case
+                               G.SelectionField fld -> Just fld
+                               _                    -> Nothing
+           selSetFields = (fmap . fmap) catMaybes selSetFields'
+
+           -- common interface fields that exist in every
+           -- selection set provided
+           commonInterfaceFields =
+             toList $
+             Map.mapMaybe allTheSame $
+             Map.groupOn G._fName $
+             concat $ flip map selSetFields $ \(_, flds) ->
+               filter (flip elem interfaceFieldNames . G._fName) flds
 
            interfaceFieldNames = map G._fldName fields
-
-           getSelectionName :: G.Selection NoFragments G.Name -> G.Name
-           getSelectionName = \case
-             G.SelectionField fld -> G._fName fld
 
            allTheSame [] = Nothing
            allTheSame (x:xs) = bool Nothing (Just x) $ and $ map (== x) xs
 
            nonCommonInterfaceFields =
-             catMaybes $ flip map objNameAndSelSets $ \(objName, selSet) ->
-               let selSetWithoutCommonIfaceFields = filter (not . flip elem commonInterfaceFields) selSet
-               in mkObjInlineFragment (objName, selSetWithoutCommonIfaceFields)
+             catMaybes $ flip map selSetFields $ \(objName, flds) ->
+               let nonCommonFields = filter (not . flip elem commonInterfaceFields) flds
+               in mkObjInlineFragment (objName, map G.SelectionField nonCommonFields)
 
            mkObjInlineFragment (_, []) = Nothing
            mkObjInlineFragment (objName, selSet) =
              Just $ G.SelectionInlineFragment $
                G.InlineFragment (Just objName) mempty selSet
-       in commonInterfaceFields <> nonCommonInterfaceFields
+
+       in (map G.SelectionField commonInterfaceFields) <> nonCommonInterfaceFields
     )
   where
     getObject :: G.Name -> m G.ObjectTypeDefinition
