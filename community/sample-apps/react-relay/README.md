@@ -16,7 +16,7 @@ This app demonstrates pagination using Hasura with Relay. It's for demo purposes
 - In `App.js`, replace `MY_RESTAURANT_ID` with a restaurant `id` from your database (This is for demo purposes; normally you'd pass in the `id` via routing).
 - In your Terminal, at the root of the app:
   - Run `yarn install`.
-  - Run the Relay complier with `yarn run relay --watch`.
+  - Run the Relay compiler with `yarn run relay --watch`.
   - In a separate tab, run the React app with `yarn start`.
 - Open [http://localhost:3000](http://localhost:3000) to view the app in your browser.
 - Click the `Load More` button to load more reviews.

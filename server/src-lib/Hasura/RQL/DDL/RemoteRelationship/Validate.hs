@@ -305,7 +305,7 @@ validateRemoteArguments
   -> m ()
 validateRemoteArguments expectedArguments providedArguments permittedVariables schemaDocument = do
   traverse_ validateProvided (HM.toList providedArguments)
-  -- Not neccessary to validate if all required args are provided in the relationship
+  -- Not necessary to validate if all required args are provided in the relationship
   -- traverse validateExpected (HM.toList expectedArguments)
   where
     validateProvided (providedName, providedValue) =

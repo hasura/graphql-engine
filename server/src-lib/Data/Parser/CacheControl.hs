@@ -4,7 +4,7 @@ https://tools.ietf.org/html/rfc7234#section-5.2
 To get @max-age@/@s-maxage@ from @Cache-Control@ header, use 'parseMaxAge'. If you need to check
 other directives use 'parseCacheControl'.
 
-Rules which starts with @obs-@ is not required to implement because they are maked as "obsolete" as
+Rules which starts with @obs-@ is not required to implement because they are marked as "obsolete" as
 per https://tools.ietf.org/html/rfc7230#section-1.2
 -}
 

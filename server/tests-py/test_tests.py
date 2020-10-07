@@ -140,7 +140,7 @@ class TestTests2:
                     ('thing2', dict([("a",1), ("b",2), ("c",3)])),
                 ]))])
 
-        # NOTE: use str() to actually do a stong equality comparison, comparing
+        # NOTE: use str() to actually do a string equality comparison, comparing
         # types. Only works because str() on dict seems to have a canonical
         # ordering.
         assert str(relevant_ordered_result) == str(relevant_ordered_result_expected)

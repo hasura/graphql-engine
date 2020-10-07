@@ -144,7 +144,7 @@ class GQLWsClient():
                 self.ws_active_query_ids.discard( query_id )
             if not query_id in self.ws_id_query_queues:
                 self.ws_id_query_queues[json_msg['id']] = queue.Queue(maxsize=-1)
-            #Put event in the correponding query_queue
+            #Put event in the corresponding query_queue
             self.ws_id_query_queues[query_id].put(json_msg)
         elif json_msg['type'] != 'ka':
             #Put event in the main queue

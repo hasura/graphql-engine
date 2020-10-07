@@ -124,7 +124,7 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
 
    * - ``--cors-domain <DOMAINS>``
      - ``HASURA_GRAPHQL_CORS_DOMAIN``
-     - CSV of list of domains, incuding scheme (http/https) and port, to allow for CORS. Wildcard
+     - CSV of list of domains, including scheme (http/https) and port, to allow for CORS. Wildcard
        domains are allowed. (See :ref:`configure-cors`)
 
    * - ``--disable-cors``

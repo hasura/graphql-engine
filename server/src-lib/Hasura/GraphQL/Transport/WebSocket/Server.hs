@@ -348,7 +348,7 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !i
 
           -- terminates on WS.ConnectionException and JWT expiry
           let waitOnRefs = [keepAliveRef, onJwtExpiryRef, rcvRef, sendRef]
-          -- withAnyCancel re-raises exceptions from forkedThreads, and is guarenteed to cancel in
+          -- withAnyCancel re-raises exceptions from forkedThreads, and is guaranteed to cancel in
           -- case of async exceptions raised while blocking here:
           try (LA.waitAnyCancel waitOnRefs) >>= \case
             -- NOTE: 'websockets' is a bit of a rat's nest at the moment wrt

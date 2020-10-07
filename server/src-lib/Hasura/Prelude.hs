@@ -157,7 +157,7 @@ mapFromL f = Map.fromList . map (\v -> (f v, v))
 -- | Time an IO action, returning the time with microsecond precision. The
 -- result of the input action will be evaluated to WHNF.
 --
--- The result 'DiffTime' is guarenteed to be >= 0.
+-- The result 'DiffTime' is guaranteed to be >= 0.
 withElapsedTime :: MonadIO m=> m a -> m (DiffTime, a)
 withElapsedTime ma = do
   bef <- liftIO Clock.getMonotonicTimeNSec

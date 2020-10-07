@@ -85,7 +85,7 @@ appendPath :: FieldName -> FieldPath -> FieldPath
 appendPath fieldName = FieldPath . (<> [fieldName]) . unFieldPath
 
 -- | The counter which is used to append the alias generated for remote field. See 'pathToAlias'.
--- This guarentees the uniqueness of the alias.
+-- This guarantees the uniqueness of the alias.
 newtype Counter = Counter {unCounter :: Int}
   deriving (Show, Eq)
 

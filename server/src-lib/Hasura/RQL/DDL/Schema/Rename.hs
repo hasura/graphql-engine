@@ -53,7 +53,7 @@ data Rename
 
 otherDeps :: QErrM m => Text -> SchemaObjId -> m ()
 otherDeps errMsg d =
-  throw500 $ "unexpected dependancy "
+  throw500 $ "unexpected dependency "
     <> reportSchemaObj d <> "; " <> errMsg
 
 renameTableInCatalog

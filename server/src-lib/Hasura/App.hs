@@ -309,7 +309,7 @@ runHGEServer
   -> ServeOptions impl
   -> InitCtx
   -> Maybe PGExecCtx
-  -- ^ An optional specialized pg exection context for executing queries
+  -- ^ An optional specialized pg execution context for executing queries
   -- and mutations
   -> UTCTime
   -- ^ start time
@@ -540,7 +540,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
 --      free the foreign data from e.g. libpq.
 --    - as of GHC 8.10.2 we have access to `-Iw`, but those two knobs still
 --      don’t give us a guarantee that a major GC will always run at some
---      minumum frequency (e.g. for finalizers)
+--      minimum frequency (e.g. for finalizers)
 --
 -- ...so we hack together our own using GHC.Stats, which should have
 -- insignificant runtime overhead.

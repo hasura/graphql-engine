@@ -48,10 +48,10 @@ Examples
     # Apply only a particular version
     hasura migrate apply --type up --version "<version>"
     
-    # Apply all up migrations upto version 125, last applied is 100
+    # Apply all up migrations up to version 125, last applied is 100
     hasura migrate apply --goto 125
     
-    # Apply all down migrations upto version 125, last applied is 150
+    # Apply all down migrations up to version 125, last applied is 150
     hasura migrate apply --goto 125
 
     # Rollback a particular version:

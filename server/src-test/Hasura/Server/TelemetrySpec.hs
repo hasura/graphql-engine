@@ -19,7 +19,7 @@ telemetryCountersTests = do
     it "is at first empty" $ do
       fmap serviceTimingMetrics dumpServiceTimingMetrics `shouldReturn` []
 
-    -- excercise accumulating and buckets:
+    -- exercise accumulating and buckets:
     let expected =
           -- NOTE: ordering is arbitrary here (and hence fragile)
           [ServiceTimingMetric {

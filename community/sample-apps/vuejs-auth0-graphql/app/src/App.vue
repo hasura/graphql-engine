@@ -22,7 +22,7 @@ export default {
     try {
       await this.$auth.renewTokens();
     } catch {
-      // Supress the 'not logged in' error as we can illegitimately get that
+      // Suppress the 'not logged in' error as we can illegitimately get that
       // when processing the callback url
     }
   }
