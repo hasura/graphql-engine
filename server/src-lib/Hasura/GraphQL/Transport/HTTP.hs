@@ -5,6 +5,8 @@ module Hasura.GraphQL.Transport.HTTP
   , MonadExecuteQuery(..)
   , runGQ
   , runGQBatched
+  , extractFieldFromResponse
+  , buildRaw
   -- * imported from HTTP.Protocol; required by pro
   , GQLReq(..)
   , GQLReqUnparsed
@@ -12,6 +14,7 @@ module Hasura.GraphQL.Transport.HTTP
   , GQLExecDoc(..)
   , OperationName(..)
   , GQLQueryText(..)
+  , ResultsFragment(..)
   ) where
 
 import           Control.Monad.Morph                    (hoist)
@@ -31,8 +34,11 @@ import           Hasura.Session
 import           Hasura.Tracing                         (MonadTrace, TraceT, trace)
 
 import qualified Data.Aeson                             as J
+import qualified Data.Aeson.Ordered                     as JO
+import qualified Data.ByteString.Lazy                   as LBS
 import qualified Data.Environment                       as Env
-import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashMap.Strict.InsOrd             as OMap
+import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.Query           as EQ
@@ -98,10 +104,17 @@ instance MonadExecuteQuery m => MonadExecuteQuery (TraceT m) where
   cacheLookup a b = hoist lift $ cacheLookup a b
   cacheStore  a b = hoist lift $ cacheStore  a b
 
+data ResultsFragment = ResultsFragment
+  { rfTimeIO   :: DiffTime
+  , rfLocality :: Telem.Locality
+  , rfResponse :: EncJSON
+  , rfHeaders  :: HTTP.ResponseHeaders
+  }
 
 -- | Run (execute) a single GraphQL query
 runGQ
-  :: ( HasVersion
+  :: forall m
+   . ( HasVersion
      , MonadIO m
      , MonadError QErr m
      , MonadReader E.ExecutionCtx m
@@ -121,9 +134,7 @@ runGQ
   -> GQLReqUnparsed
   -> m (HttpResponse EncJSON)
 runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
-  -- The response and misc telemetry data:
-  let telemTransport = Telem.HTTP
-  (telemTimeTot_DT, (telemCacheHit, telemLocality, (telemTimeIO_DT, telemQueryType, !resp))) <- withElapsedTime $ do
+  (telemTimeTot_DT, (telemCacheHit, (telemQueryType, telemTimeIO_DT, telemLocality, resp))) <- withElapsedTime $ do
     E.ExecutionCtx _ sqlGenCtx pgExecCtx {- planCache -} sc scVer httpManager enableAL <- ask
 
     -- run system authorization on the GraphQL API
@@ -133,59 +144,99 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
     (telemCacheHit, execPlan) <- E.getResolvedExecPlan env logger pgExecCtx {- planCache -}
                                  userInfo sqlGenCtx sc scVer queryType
                                  httpManager reqHeaders (reqUnparsed, reqParsed)
-    case execPlan of
-      E.QueryExecutionPlan queryPlan asts -> trace "Query" $ do
+    (telemCacheHit,) <$> case execPlan of
+      E.QueryExecutionPlan queryPlans asts -> trace "Query" $ do
         let cacheKey = QueryCacheKey reqParsed $ _uiRole userInfo
         (responseHeaders, cachedValue) <- Tracing.interpTraceT id $ cacheLookup asts cacheKey
-        (tch, tl, (ttio, tqt, HttpResponse responseData newHeaders)) <- case cachedValue of
+        case cachedValue of
           Just cachedResponseData ->
-            pure (telemCacheHit, Telem.Local, (0, Telem.Query, HttpResponse cachedResponseData []))
-          Nothing -> case queryPlan of
-            E.ExecStepDB txGenSql -> do
-              (telemTimeIO, telemQueryType, resp) <-
-                runQueryDB reqId reqUnparsed userInfo txGenSql
-              return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp []))
-            E.ExecStepRemote (rsi, opDef, _varValsM) ->
-              runRemoteGQ telemCacheHit rsi opDef
-            E.ExecStepRaw (name, json) -> do
-              (telemTimeIO, obj) <- withElapsedTime $
-                return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
-              return (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj []))
-        onNothing (void cachedValue) $ Tracing.interpTraceT id $ cacheStore cacheKey responseData
-        pure (tch, tl, (ttio, tqt, HttpResponse responseData $ newHeaders <> responseHeaders))
-      E.MutationExecutionPlan mutationPlan ->
-        case mutationPlan of
-          E.ExecStepDB (tx, responseHeaders) -> do
-            (telemTimeIO, telemQueryType, resp) <- runMutationDB reqId reqUnparsed userInfo tx
-            return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp responseHeaders))
-          E.ExecStepRemote (rsi, opDef, _varValsM) ->
-            runRemoteGQ telemCacheHit rsi opDef
-          E.ExecStepRaw (name, json) -> do
-            (telemTimeIO, obj) <- withElapsedTime $
-              return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
-            return (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj []))
+            pure (Telem.Query, 0, Telem.Local, HttpResponse cachedResponseData responseHeaders)
+          Nothing -> do
+            conclusion <- runExceptT $ forWithKey queryPlans $ \fieldName -> \case
+              E.ExecStepDB (tx, genSql) -> doQErr $ do
+                (telemTimeIO_DT, resp) <-
+                  runQueryDB reqId reqUnparsed fieldName tx genSql
+                return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
+              E.ExecStepRemote (rsi, opDef, varValsM) ->
+                runRemoteGQ fieldName rsi opDef varValsM
+              E.ExecStepRaw json ->
+                buildRaw json
+            out@(_, _, _, HttpResponse responseData _) <- buildResult Telem.Query conclusion responseHeaders
+            Tracing.interpTraceT id $ cacheStore cacheKey responseData
+            pure out
+
+      E.MutationExecutionPlan mutationPlans -> do
+        conclusion <- runExceptT $ forWithKey mutationPlans $ \fieldName -> \case
+          E.ExecStepDB (tx, responseHeaders) -> doQErr $ do
+            (telemTimeIO_DT, resp) <- runMutationDB reqId reqUnparsed userInfo tx
+            return $ ResultsFragment telemTimeIO_DT Telem.Local resp responseHeaders
+          E.ExecStepRemote (rsi, opDef, varValsM) ->
+            runRemoteGQ fieldName rsi opDef varValsM
+          E.ExecStepRaw json ->
+            buildRaw json
+        buildResult Telem.Mutation conclusion []
+
       E.SubscriptionExecutionPlan _sub ->
         throw400 UnexpectedPayload "subscriptions are not supported over HTTP, use websockets instead"
-{-
-      E.GExPHasura resolvedOp -> do
-        (telemTimeIO, telemQueryType, respHdrs, resp) <- runHasuraGQ reqId (reqUnparsed, reqParsed) userInfo resolvedOp
-        return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs))
-      E.GExPRemote rsi opDef  -> do
-        let telemQueryType | G._todType opDef == G.OperationTypeMutation = Telem.Mutation
-                           | otherwise = Telem.Query
-        (telemTimeIO, resp) <- E.execRemoteGQ reqId userInfo reqHeaders reqUnparsed rsi $ G._todType opDef
-        return (telemCacheHit, Telem.Remote, (telemTimeIO, telemQueryType, resp))
--}
+  -- The response and misc telemetry data:
   let telemTimeIO = convertDuration telemTimeIO_DT
       telemTimeTot = convertDuration telemTimeTot_DT
+      telemTransport = Telem.HTTP
   Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
   return resp
   where
-    runRemoteGQ telemCacheHit rsi opDef = do
-      let telemQueryType | G._todType opDef == G.OperationTypeMutation = Telem.Mutation
-                         | otherwise = Telem.Query
-      (telemTimeIO, resp) <- E.execRemoteGQ env reqId userInfo reqHeaders reqUnparsed rsi opDef
-      return (telemCacheHit, Telem.Remote, (telemTimeIO, telemQueryType, resp))
+    doQErr = withExceptT Right
+
+    forWithKey = flip OMap.traverseWithKey
+
+    runRemoteGQ fieldName rsi opDef varValsM = do
+      (telemTimeIO_DT, HttpResponse resp remoteResponseHeaders) <-
+        doQErr $ E.execRemoteGQ env reqId userInfo reqHeaders rsi opDef varValsM
+      value <- extractFieldFromResponse (G.unName fieldName) $ encJToLBS resp
+      let filteredHeaders = filter ((== "Set-Cookie") . fst) remoteResponseHeaders
+      pure $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) filteredHeaders
+
+    buildResult telemType (Left (Left err)) _ = pure
+      ( telemType
+      , 0
+      , Telem.Remote
+      , HttpResponse (encodeGQResp $ throwError err) []
+      )
+    buildResult _telemType (Left (Right err)) _ = throwError err
+    buildResult telemType (Right results) cacheHeaders = do
+      let responseData = encodeGQResp $ pure $ encJToLBS $ encJFromInsOrdHashMap $ fmap rfResponse $ OMap.mapKeys G.unName results
+      pure
+        ( telemType
+        , sum (fmap rfTimeIO results)
+        , foldMap rfLocality results
+        , HttpResponse
+          responseData
+          (cacheHeaders <> foldMap rfHeaders results)
+        )
+
+extractFieldFromResponse
+  :: Monad m => Text -> LBS.ByteString -> ExceptT (Either GQExecError QErr) m JO.Value
+extractFieldFromResponse fieldName bs = do
+  val <- onLeft (JO.eitherDecode bs) $ do400 . T.pack
+  valObj <- onLeft (JO.asObject val) do400
+  dataVal <- case JO.toList valObj of
+    [("data", v)] -> pure v
+    _ -> case JO.lookup "errors" valObj of
+      Just (JO.Array err) -> doGQExecError $ toList $ fmap JO.fromOrdered err
+      _                   -> do400 "Received invalid JSON value from remote"
+  dataObj <- onLeft (JO.asObject dataVal) do400
+  fieldVal <- onNothing (JO.lookup fieldName dataObj) $
+    do400 $ "expecting key " <> fieldName
+  return fieldVal
+  where
+    do400 = withExceptT Right . throw400 RemoteSchemaError
+    doGQExecError = withExceptT Left . throwError . GQExecError
+
+buildRaw :: Applicative m => J.Value -> m ResultsFragment
+buildRaw json = do
+  let obj = encJFromJValue json
+      telemTimeIO_DT = 0
+  pure $ ResultsFragment telemTimeIO_DT Telem.Local obj []
 
 -- | Run (execute) a batched GraphQL query (see 'GQLBatchedReqs')
 runGQBatched
@@ -238,22 +289,17 @@ runQueryDB
      )
   => RequestId
   -> GQLReqUnparsed
-  -> UserInfo
-  -> (Tracing.TraceT (LazyTx QErr) EncJSON, EQ.GeneratedSqlMap)
-  -> m (DiffTime, Telem.QueryType, EncJSON)
-  -- ^ Also return 'Mutation' when the operation was a mutation, and the time
-  -- spent in the PG query; for telemetry.
-runQueryDB reqId query _userInfo (tx, genSql) =  do
+  -> G.Name -- ^ name of the root field we're fetching
+  -> Tracing.TraceT (LazyTx QErr) EncJSON
+  -> Maybe EQ.PreparedSql
+  -> m (DiffTime, EncJSON)
+  -- ^ Also return the time spent in the PG query; for telemetry.
+runQueryDB reqId query fieldName tx genSql =  do
   -- log the generated SQL and the graphql query
   E.ExecutionCtx logger _ pgExecCtx _ _ _ _ <- ask
-  logQueryLog logger query (Just genSql) reqId
-  (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ trace "Postgres Query" $
-    -- TODO: add root field name to trace metadata when doing heterogeneous execution
+  logQueryLog logger query ((fieldName,) <$> genSql) reqId
+  withElapsedTime $ trace ("Postgres Query for root field " <> G.unName fieldName) $
     Tracing.interpTraceT id $ hoist (runQueryTx pgExecCtx) tx
-  resp <- liftEither respE
-  let !json = encodeGQResp $ GQSuccess $ encJToLBS resp
-      telemQueryType = Telem.Query
-  return (telemTimeIO, telemQueryType, json)
 
 runMutationDB
   :: ( MonadIO m
@@ -266,7 +312,7 @@ runMutationDB
   -> GQLReqUnparsed
   -> UserInfo
   -> Tracing.TraceT (LazyTx QErr) EncJSON
-  -> m (DiffTime, Telem.QueryType, EncJSON)
+  -> m (DiffTime, EncJSON)
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
 runMutationDB reqId query userInfo tx =  do
@@ -274,49 +320,5 @@ runMutationDB reqId query userInfo tx =  do
   -- log the graphql query
   logQueryLog logger query Nothing reqId
   ctx <- Tracing.currentContext
-  (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ trace "Mutation" $
+  withElapsedTime $ trace "Mutation" $
     Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx .  withUserInfo userInfo)  tx
-  resp <- liftEither respE
-  let !json = encodeGQResp $ GQSuccess $ encJToLBS resp
-      telemQueryType = Telem.Mutation
-  return (telemTimeIO, telemQueryType, json)
-
-{-
-runHasuraGQ
-  :: ( MonadIO m
-     , MonadError QErr m
-     , MonadReader E.ExecutionCtx m
-     , MonadQueryLog m
-     , MonadTrace m
-     , MonadExecuteQuery m
-     )
-  => RequestId
-  -> (GQLReqUnparsed, GQLReqParsed)
-  -> UserInfo
-  -> E.ExecOp (Tracing.TraceT (LazyTx QErr))
-  -> m (DiffTime, Telem.QueryType, HTTP.ResponseHeaders, EncJSON)
-  -- ^ Also return 'Mutation' when the operation was a mutation, and the time
-  -- spent in the PG query; for telemetry.
-runHasuraGQ reqId (query, queryParsed) userInfo resolvedOp = do
-  (E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _) <- ask
-  (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ case resolvedOp of
-    E.ExOpQuery tx genSql asts -> trace "Query" $ do
-      -- log the generated SQL and the graphql query
-      logQueryLog logger query genSql reqId
-      Tracing.interpTraceT id $ executeQuery queryParsed asts genSql pgExecCtx tx
-
-    E.ExOpMutation respHeaders tx -> trace "Mutate" $ do
-      logQueryLog logger query Nothing reqId
-      ctx <- Tracing.currentContext
-      (respHeaders,) <$>
-        Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx . withUserInfo userInfo) tx
-
-    E.ExOpSubs _ ->
-      throw400 UnexpectedPayload
-      "subscriptions are not supported over HTTP, use websockets instead"
-
-  (respHdrs, resp) <- liftEither respE
-  let !json = encodeGQResp $ GQSuccess $ encJToLBS resp
-      telemQueryType = case resolvedOp of E.ExOpMutation{} -> Telem.Mutation ; _ -> Telem.Query
-  return (telemTimeIO, telemQueryType, respHdrs, json)
--}
