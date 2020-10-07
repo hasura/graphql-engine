@@ -265,7 +265,7 @@ convertQuerySelSet
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
-  -> m ( ExecutionPlan (tx EncJSON, GeneratedSqlMap) RemoteCall (G.Name, J.Value)
+  -> m ( ExecutionPlan (tx EncJSON, GeneratedSqlMap) RemoteCall (G.Name, J.Value) EncJSON
        -- , Maybe ReusableQueryPlan
        , [QueryRootField UnpreparedValue]
        )
@@ -323,7 +323,7 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
 
   let asts :: [QueryRootField UnpreparedValue]
       asts = OMap.elems unpreparedQueries
-  pure (executionPlan,asts)  -- See Note [Temporarily disabling query plan caching]
+  pure (ExecutionPlan executionPlan [], asts)  -- See Note [Temporarily disabling query plan caching]
   where
     usrVars = _uiSession userInfo
 
