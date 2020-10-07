@@ -103,6 +103,7 @@ data Expression
   | OrExpression [Expression]
   | NotExpression Expression
   | ExistsExpression Select
+  | SelectExpression Select
   | IsNullExpression Expression
   | ColumnExpression FieldName
   | EqualExpression Expression Expression

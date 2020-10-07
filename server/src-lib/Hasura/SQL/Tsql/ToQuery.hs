@@ -76,6 +76,7 @@ fromExpression =
     NotEqualExpression x y ->
       "(" <+> fromExpression x <+> ") != (" <+> fromExpression y <+> ")"
     ToStringExpression e -> "CONCAT(" <+> fromExpression e <+> ", '')"
+    SelectExpression s -> "(" <+> IndentPrinter 1 (fromSelect s) <+> ")"
 
 fromPath :: JsonPath -> Printer
 fromPath =
@@ -100,7 +101,7 @@ fromSelect Select {..} =
       IndentPrinter
         7
         (SepByPrinter
-           (QueryPrinter "," <+> NewlinePrinter)
+           ("," <+> NewlinePrinter)
            (map fromProjection (toList selectProjections)))
     , "FROM " <+> IndentPrinter 5 (fromFrom selectFrom)
     , SepByPrinter
@@ -135,7 +136,7 @@ fromReselect Reselect {..} =
       IndentPrinter
         7
         (SepByPrinter
-           (QueryPrinter "," <+> NewlinePrinter)
+           ("," <+> NewlinePrinter)
            (map fromProjection (toList reselectProjections)))
     , fromFor reselectFor
     , fromWhere reselectWhere
@@ -155,7 +156,7 @@ fromOrderBys top moffset morderBys =
                Nothing -> "1"
                Just orderBys ->
                  SepByPrinter
-                   (QueryPrinter "," <+> NewlinePrinter)
+                   ("," <+> NewlinePrinter)
                    (concatMap fromOrderBy (toList orderBys))
            , case (top, moffset) of
                (NoTop, Nothing) -> ""
@@ -255,6 +256,28 @@ fromFrom =
   \case
     FromQualifiedTable aliasedQualifiedTableName ->
       fromAliased (fmap fromTableName aliasedQualifiedTableName)
+    FromOpenJson openJson -> fromAliased (fmap fromOpenJson openJson)
+
+fromOpenJson :: OpenJson -> Printer
+fromOpenJson OpenJson {openJsonExpression, openJsonWith} =
+  SepByPrinter
+    NewlinePrinter
+    [ "OPENJSON(" <+>
+      IndentPrinter 9 (fromExpression openJsonExpression) <+> ")"
+    , "WITH (" <+>
+      IndentPrinter
+        5
+        (SepByPrinter
+           ("," <+> NewlinePrinter)
+           (toList (fmap fromJsonFieldSpec openJsonWith))) <+>
+      ")"
+    ]
+
+fromJsonFieldSpec :: JsonFieldSpec -> Printer
+fromJsonFieldSpec =
+  \case
+    IntField name -> fromNameText name <+> " INT"
+    JsonField name -> fromNameText name <+> " NVARCHAR(MAX) AS JSON"
 
 fromTableName :: TableName -> Printer
 fromTableName TableName {tableName, tableNameSchema} =
