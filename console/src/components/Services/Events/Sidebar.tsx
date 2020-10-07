@@ -41,7 +41,7 @@ const LeftSidebar: React.FC<Props> = props => {
           return getETModifyRoute(entityName);
           break;
         case 'cron':
-          return getSTModifyRoute(entityName);
+          return getSTModifyRoute(encodeURIComponent(entityName));
           break;
         default:
           return getSTModifyRoute(entityName);
