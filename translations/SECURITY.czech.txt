@@ -1,0 +1,19 @@
+Hlášení zranitelností
+Jsme extrémnì vdìèní za výzkumníky v oblasti bezpeènosti a uživatelé, kteøí hlásí zranitelnosti Hasura komunitì. Všechny hlášení jsou dùkladnì vyšetøovány skupinou komunitních dobrovolníkù a Hasura teamem.
+Pokud chcete nahlásit bezpeènostní chybu, prosím napište email na build@hasura.io se všemi detaily a pøiložte všechny nezbytné dokumenty.
+Kdy bych mìl nahlásit zranitelnost?
+•	Myslíte si, že jste objevili potenciální bezpeènostní zranitelnost v Hasura GraphQL Engine nebo v týkajících se komponentech.
+•	Nejste si jistí, jak zranitelnost ovlivòuje Hasura GraphQL Engine.
+•	Myslíte si, že jste objevili zranitelnost v jiném projektu, na kterém Hasura GraphQL Engine záleží (napø. Heroku, Docker, atd.).
+•	Chcete nahlásit jiné bezpeènostní riziko, co by mohlo potencionálnì poškodit Hasura GraphQL Engine uživatele.
+Kdy bych NEMÌL nahlásit zranitelnost?
+•	Potøebujete vyladit Hasura GraphQL Engine komponenty kvùli bezpeènosti.
+•	Potøebujete pomoct aplikovat bezpeènostní updaty. 
+•	Váš problém se netýká bezpeènosti.
+Odpovìï na bezpeèností hlášení
+O každém hlášení jsou informování správci projektu bìhem 3 pracovních dnù.
+Reportér bude informován o každém kroku ohlednì øešení problému. (tøídìní -> oprava -> vydání).
+Èas zveøejnìní informací
+Veøejné datum zveøejnìní je diskutováno s Hasura product security teamem a s reportérem bugu. Preferujeme co nejdøíve plnì zveøejnit bug. Mùžeme odkládat zveøejnìní pokud bug nebo oprava není plnì vyrozumìn, øešení není dobøe vyzkoušeno, nebo pro koordinaci s prodejcem. Èasové okno pro zveøejnìní se pohybuje od okamžitého zveøejnìní (speciálnì pokud je to veøejnì známé) až do pár týdnù. Oèekáváme èasové okno mezi nahlášením do veøejného zveøejnìní 7 dnù.
+Hasura GraphQL Engine správci a bezpeènostní team se postarají o finální datum zveøejnìní.
+(Nìkteré sekce byly inspirovány a adaptovány z https://github.com/kubernetes/website/blob/master/content/en/docs/reference/issues-security/security.md).
