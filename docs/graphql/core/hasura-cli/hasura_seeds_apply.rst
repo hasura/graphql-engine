@@ -1,4 +1,9 @@
-.. _hasura_seed_apply:
+
+.. meta::
+   :description: Use hasura seeds apply to apply seed data
+   :keywords: hasura, docs, CLI, hasura seeds apply
+
+.. _hasura_seeds_apply:
 
 Hasura CLI: hasura seed apply
 ------------------------------

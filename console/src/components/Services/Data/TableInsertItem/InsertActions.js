@@ -11,9 +11,15 @@ import {
   getEnumColumnMappings,
   arrayToPostgresArray,
 } from '../../../Common/utils/pgUtils';
-import { getEnumOptionsQuery } from '../../../Common/utils/v1QueryUtils';
+import {
+  getEnumOptionsQuery,
+  getInsertUpQuery,
+  getInsertDownQuery,
+} from '../../../Common/utils/v1QueryUtils';
 import { ARRAY } from '../utils';
 import { isStringArray } from '../../../Common/utils/jsUtils';
+import { makeMigrationCall } from '../DataActions';
+import { removeAll } from 'react-notification-system-redux';
 
 const I_SET_CLONE = 'InsertItem/I_SET_CLONE';
 const I_RESET = 'InsertItem/I_RESET';
@@ -28,17 +34,66 @@ const I_FETCH_ENUM_OPTIONS_ERROR = 'InsertItem/I_FETCH_ENUM_ERROR';
 const Open = () => ({ type: _OPEN });
 const Close = () => ({ type: _CLOSE });
 
+const insertItemAsMigration = (
+  tableInfo,
+  insertedData,
+  primaryKeyInfo,
+  columns,
+  callback
+) => (dispatch, getState) => {
+  const upQuery = getInsertUpQuery(
+    { name: tableInfo.name, schema: tableInfo.schema },
+    insertedData,
+    columns
+  );
+  const downQuery = getInsertDownQuery(
+    { name: tableInfo.name, schema: tableInfo.schema },
+    insertedData,
+    primaryKeyInfo,
+    columns
+  );
+
+  const migrationName = `insert_into_${tableInfo.schema}_${tableInfo.name}`;
+  const customOnSuccess = () => {
+    if (callback) {
+      callback();
+    }
+  };
+  const customOnError = () => {};
+  const requestMessage = 'Creating migration...';
+  const successMessage = 'Migration created';
+  const errorMessage = 'Creating migration failed';
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    [upQuery],
+    [downQuery],
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMessage,
+    successMessage,
+    errorMessage,
+    true,
+    true
+  );
+};
+
 /* ****************** insert action creators ************ */
-const insertItem = (tableName, colValues) => {
+const insertItem = (tableName, colValues, isMigration = false) => {
   return (dispatch, getState) => {
     /* Type all the values correctly */
     dispatch({ type: I_ONGOING_REQ });
     const insertObject = {};
     const state = getState();
     const { currentSchema } = state.tables;
-    const columns = state.tables.allSchemas.find(
+    const tableDef = { name: tableName, schema: currentSchema };
+
+    const currentTableInfo = state.tables.allSchemas.find(
       t => t.table_name === tableName && t.table_schema === currentSchema
-    ).columns;
+    );
+    const columns = currentTableInfo.columns;
     let error = false;
     let errorMessage = '';
     Object.keys(colValues).map(colName => {
@@ -90,12 +145,16 @@ const insertItem = (tableName, colValues) => {
         error: { message: 'Not valid JSON' },
       });
     }
+    let returning = [];
+    if (isMigration) {
+      returning = columns.map(col => col.column_name);
+    }
     const reqBody = {
       type: 'insert',
       args: {
-        table: { name: tableName, schema: getState().tables.currentSchema },
+        table: tableDef,
         objects: [insertObject],
-        returning: [],
+        returning,
       },
     };
     const options = {
@@ -105,18 +164,36 @@ const insertItem = (tableName, colValues) => {
       body: JSON.stringify(reqBody),
     };
     const url = Endpoints.query;
+    const migrationSuccessCB = affectedRows => {
+      dispatch(
+        showSuccessNotification(
+          'Inserted data!',
+          `Affected rows: ${affectedRows}`,
+          true
+        )
+      );
+    };
     return dispatch(
       requestAction(url, options, I_REQUEST_SUCCESS, I_REQUEST_ERROR)
     ).then(
       data => {
-        dispatch(
-          showSuccessNotification(
-            'Inserted!',
-            'Affected rows: ' + data.affected_rows
-          )
-        );
+        const affectedRows = data.affected_rows;
+        if (isMigration) {
+          dispatch(
+            insertItemAsMigration(
+              tableDef,
+              data.returning[0],
+              currentTableInfo.primary_key,
+              columns,
+              () => migrationSuccessCB(affectedRows)
+            )
+          );
+        } else {
+          migrationSuccessCB(affectedRows);
+        }
       },
       err => {
+        dispatch(removeAll());
         dispatch(showErrorNotification('Insert failed!', err.error, err));
       }
     );
