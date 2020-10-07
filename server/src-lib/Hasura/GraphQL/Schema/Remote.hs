@@ -260,15 +260,22 @@ remoteSchemaUnion
   . (MonadSchema n m, MonadError QErr m)
   => SchemaIntrospection
   -> G.UnionTypeDefinition
-  -> m (Parser 'Output n [SelectionSet NoFragments G.Name])
+  -> m (Parser 'Output n (SelectionSet NoFragments G.Name))
 remoteSchemaUnion schemaDoc defn@(G.UnionTypeDefinition description name _directives objectNames) =
   P.memoizeOn 'remoteSchemaObject defn do
-  objDefs <- traverse getObject objectNames
-  objs :: [Parser 'Output n (SelectionSet NoFragments G.Name)]
-    <- traverse (remoteSchemaObject schemaDoc) objDefs
+  objs :: [Parser 'Output n (Name, (SelectionSet NoFragments G.Name))] <-
+    traverse (\objName -> do
+                 obj <- getObject objName
+                 rsObj <- remoteSchemaObject schemaDoc obj
+                 return $ (objName,) <$> rsObj)
+             objectNames
   when (null objs) $
     throw400 RemoteSchemaError $ "List of member types cannot be empty for union type " <> squote name
-  pure $ P.selectionSetUnion name description objs
+  pure $ P.selectionSetUnion name description objs <&>
+    (\selSets ->
+       flip map selSets $ \(objName, selSet) ->
+         (G.SelectionInlineFragment $
+            G.InlineFragment (Just objName) mempty selSet))
   where
     getObject :: G.Name -> m G.ObjectTypeDefinition
     getObject objectName =
@@ -288,7 +295,7 @@ remoteSchemaInputObject
   -> m (Parser 'Input n ())
 remoteSchemaInputObject schemaDoc defn@(G.InputObjectTypeDefinition desc name _ valueDefns) =
   P.memoizeOn 'remoteSchemaInputObject defn do
-  argsParser <- argumentsParser valueDefns schemaDoc -- TODO: should this be using argumentsParser1?
+  argsParser <- argumentsParser valueDefns schemaDoc
   pure $ P.object name desc argsParser
 
 lookupType :: SchemaIntrospection -> G.Name -> Maybe (G.TypeDefinition [G.Name])
@@ -436,10 +443,9 @@ remoteField
   -> Maybe G.Description
   -> G.ArgumentsDefinition
   -> G.TypeDefinition [G.Name]
-  -> m (FieldParser n RemoteField) -- TODO return something useful, maybe?
+  -> m (FieldParser n RemoteField)
 remoteField sdoc fieldName description argsDefn typeDefn = do
   -- TODO add directives
-  argsParser <- argumentsParser argsDefn sdoc
   argsParser1 <- argumentsParser1 argsDefn sdoc
   case typeDefn of
     G.TypeDefinitionObject objTypeDefn -> do
@@ -462,9 +468,11 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
       pure $ P.subselectionWithAlias fieldName description argsParser1 remoteSchemaObj <&>
         (\(alias, args, selSet) ->
            (G.Field alias fieldName args mempty selSet))
-    -- G.TypeDefinitionUnion unionTypeDefn -> do
-    --   remoteSchemaObj <- remoteSchemaUnion sdoc unionTypeDefn
-    --   pure $ P.subselectionWithAlias fieldName description argsParser remoteSchemaObj
+    G.TypeDefinitionUnion unionTypeDefn -> do
+      remoteSchemaObj <- remoteSchemaUnion sdoc unionTypeDefn
+      pure $ P.subselectionWithAlias fieldName description argsParser1 remoteSchemaObj <&>
+        (\(alias, args, selSet) ->
+           (G.Field alias fieldName args mempty selSet))
     _ -> throw400 RemoteSchemaError "expected output type, but got input type"
 
 remoteFieldScalarParser
