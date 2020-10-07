@@ -87,7 +87,6 @@ const JsonInput = props => {
         name="jsontoggler"
         minLines={10}
         maxLines={100}
-        maxWidth={150}
         value={data}
         showPrintMargin={false}
         onChange={handleTextAreaChangeAndPropagate}

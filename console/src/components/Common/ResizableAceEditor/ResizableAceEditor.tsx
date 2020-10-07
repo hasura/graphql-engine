@@ -11,7 +11,6 @@ type ResizableAceEditorProps = {
   name: string;
   minLines: number;
   maxLines: number;
-  maxWidth: number;
   value: any;
   showPrintMargin: boolean;
   onChange: any;
@@ -29,7 +28,6 @@ const ResizableAceEditor = (props: ResizableAceEditorProps) => {
       name={props.name}
       minLines={props.minLines}
       maxLines={props.maxLines}
-      maxWidth={props.maxWidth}
       value={props.value}
       showPrintMargin={props.showPrintMargin}
       onChange={props.onChange}
