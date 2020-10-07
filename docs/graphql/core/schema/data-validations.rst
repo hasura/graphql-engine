@@ -34,6 +34,8 @@ validation logic and the layer where you would like to add it.
 
 These solutions are explained in some more detail below.
 
+.. _data_validations_check_constraints:
+
 Using Postgres check constraints
 --------------------------------
 
@@ -84,6 +86,8 @@ error is thrown:
     }
 
 Learn more about `Postgres check constraints <https://www.postgresql.org/docs/current/ddl-constraints.html>`__.
+
+.. _data_validations_pg_triggers:
 
 Using Postgres triggers
 -----------------------
