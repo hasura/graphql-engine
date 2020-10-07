@@ -36,4 +36,4 @@ This document is available in the following translations:
 
 - [French :fr:](translations/SECURITY.french.md)
 - [Hindi :india:](translations/SECURITY.hindi.md)
-- [Czech :cz:](translations/SECURITY.czech.md)
+- [Czech :czech_republic:](translations/SECURITY.czech.md)
