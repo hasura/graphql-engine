@@ -17,10 +17,10 @@ Introduction
 
 Adding tables allows you to define the GraphQL types of your schema including their corresponding fields. 
 
-.. _create-tables:
+.. _create_tables:
 
-Create tables
--------------
+Creating tables
+---------------
 
 Let's say we want to create two simple tables for an article/author schema:
 
@@ -54,23 +54,23 @@ Let's say we want to create two simple tables for an article/author schema:
 
   .. tab:: CLI
 
-    :ref:`Create a migration manually <manual_migrations>` and add the following SQL statement to the ``up.sql`` file:
+    1. :ref:`Create a migration manually <manual_migrations>` and add the following SQL statement to the ``up.sql`` file:
 
-    .. code-block:: sql
+       .. code-block:: sql
 
-      CREATE TABLE article(id serial NOT NULL, title text NOT NULL, content text NOT NULL, rating integer NOT NULL, author_id serial NOT NULL, PRIMARY KEY (id));
+         CREATE TABLE article(id serial NOT NULL, title text NOT NULL, content text NOT NULL, rating integer NOT NULL, author_id serial NOT NULL, PRIMARY KEY (id));
 
-    Add the following statement to the ``down.sql`` file in case you need to :ref:`roll back <roll_back_migrations>` the above statement:
+    2. Add the following statement to the ``down.sql`` file in case you need to :ref:`roll back <roll_back_migrations>` the above statement:
 
-    .. code-block:: sql
+       .. code-block:: sql
 
-        DROP TABLE article;
+          DROP TABLE article;
 
-    Apply the migration by running:
+    3. Apply the migration by running:
 
-    .. code-block:: bash
+       .. code-block:: bash
 
-      hasura migrate apply
+         hasura migrate apply
 
   .. tab:: API
 
@@ -89,10 +89,10 @@ Let's say we want to create two simple tables for an article/author schema:
         }
       }
 
-Track tables
-------------
+Tracking tables
+---------------
 
-Tables can be in the underlying Postgres database without being exposed over the GraphQL API.
+Tables can be present in the underlying Postgres database without being exposed over the GraphQL API.
 In order to expose a table over the GraphQL API, it needs to be **tracked**.
 
 .. rst-class:: api_tabs
@@ -109,23 +109,23 @@ In order to expose a table over the GraphQL API, it needs to be **tracked**.
 
   .. tab:: CLI
 
-    To track the table and expose it over the GraphQL API, edit the ``tables.yaml`` file in the ``metadata`` directory as follows:
+    1. To track the table and expose it over the GraphQL API, edit the ``tables.yaml`` file in the ``metadata`` directory as follows:
 
-    .. code-block:: yaml
-       :emphasize-lines: 4-6
+       .. code-block:: yaml
+         :emphasize-lines: 4-6
 
-        - table:
-            schema: public
-            name: author
-        - table:
-            schema: public
-            name: article
+          - table:
+              schema: public
+              name: author
+          - table:
+              schema: public
+              name: article
 
-    Apply the metadata by running:
+    2. Apply the metadata by running:
 
-    .. code-block:: bash
+       .. code-block:: bash
 
-      hasura metadata apply
+         hasura metadata apply
 
   .. tab:: API
 

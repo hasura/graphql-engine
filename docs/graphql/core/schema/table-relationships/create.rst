@@ -486,3 +486,92 @@ Fetch a list of authors with the average rating of their articles:
         ]
       }
     }
+
+Tracking existing relationships inferred via foreign-keys
+---------------------------------------------------------
+
+As mentioned in the Intro section above, relationships can be inferred via foreign-keys that exist in your database:
+
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    The console infers potential relationships using existing foreign-keys and recommends these on the ``Data -> Schema`` page
+
+    .. thumbnail:: /img/graphql/core/schema/schema-track-relationships.png
+      :alt: Track all relationships
+
+  .. tab:: CLI
+
+    You can add relationships in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+    .. code-block:: yaml
+      :emphasize-lines: 4-7,11-18
+
+      - table:
+          schema: public
+          name: article
+        object_relationships:
+        - name: author
+          using:
+            foreign_key_constraint_on: author_id
+      - table:
+          schema: public
+          name: author
+        array_relationships:
+        - name: articles
+          using:
+            foreign_key_constraint_on:
+              column: author_id
+              table:
+                schema: public
+                name: article
+
+    Apply the metadata by running:
+
+    .. code-block:: bash
+
+      hasura metadata apply
+
+  .. tab:: API
+
+    You can create multiple relationships by using the :ref:`create_object_relationship metadata API <create_object_relationship>`
+    and the :ref:`create_array_relationship metadata API <create_array_relationship>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "bulk",
+        "args": [
+          {
+            "type": "create_object_relationship",
+            "args": {
+              "table": "article",
+              "name": "author",
+              "using": {
+                "foreign_key_constraint_on": "author_id"
+              }
+            }
+          },
+          {
+            "type": "create_array_relationship",
+            "args": {
+              "table": "author",
+              "name": "articles",
+              "using": {
+                "foreign_key_constraint_on" : {
+                  "table" : "article",
+                  "column" : "author_id"
+                }
+              }
+            }
+          }
+        ]
+      }
+
+

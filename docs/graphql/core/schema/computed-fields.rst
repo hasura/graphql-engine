@@ -40,50 +40,6 @@ Only functions which satisfy the following constraints can be added as a compute
   Functions used as computed fields can also accept other arguments other than the mandatory table row argument.
   Values for these extra arguments can be passed as arguments to the computed field in the GraphQL API.
 
-.. _create_sql_functions:
-
-Creating SQL functions
-**********************
-
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: Console
-
-    SQL functions can be created using SQL which can be run in the Hasura console:
-
-    - Head to the ``Data -> SQL`` section of the Hasura console
-    - Enter your `create function SQL statement <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
-    - Hit the ``Run`` button
-
-  .. tab:: CLI
-
-    1. :ref:`Create a migration manually <manual_migrations>` and add your `create function SQL statement <https://www.postgresql.org/docs/current/sql-createfunction.html>`__ to the ``up.sql`` file. Also, add an SQL statement that reverts the previous statement to the ``down.sql`` file in case you need to :ref:`roll back <roll_back_migrations>` the migrations.
-
-    2. Apply the migration by running:
-
-    .. code-block:: bash
-
-      hasura migrate apply
-
-  .. tab:: API
-
-    You can add a function by making an API call to the :ref:`run_sql metadata API <run_sql>`:
-
-    .. code-block:: http
-
-      POST /v1/query HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "type": "run_sql",
-        "args": {
-          "sql": "<create function statement>"
-        }
-      }
-
-
 Computed field types
 --------------------
 
