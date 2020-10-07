@@ -79,10 +79,11 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 **NOTE:** If you have event triggers with names greater than 42 chars, then you should update their names to avoid running into Postgres identifier limit bug (#5786)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
+- cli: add missing global flags for seed command (#5565)
+- cli: allow seeds as alias for seed command (#5693)
 - console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
 - console: add option to flag an insertion as a migration from `Data` section (close #1766) (#4933)
 - console: add `<3 hasura` section to view updates and notifications from Hasura (#5070)
-- cli: add missing global flags for seeds command (#5565)
 - docs: add docs page on networking with docker (close #4346) (#4811)
 - docs: add postgres concepts page to docs (close #4440) (#4471)
 
