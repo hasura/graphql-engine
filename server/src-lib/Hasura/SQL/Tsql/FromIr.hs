@@ -3,6 +3,7 @@
 module Hasura.SQL.Tsql.FromIr
   ( fromSelectRows
   , mkSQLSelect
+  , fromRootField
   , fromSelectAggregate
   , Error(..)
   , runFromIr
@@ -28,7 +29,10 @@ import           Data.Sequence (Seq)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Read as T
+import           Data.Void
 import qualified Database.ODBC.SQLServer as Odbc
+import qualified Hasura.GraphQL.Context as Graphql
+import qualified Hasura.RQL.DML.Select as DS
 import qualified Hasura.RQL.DML.Select.Types as Ir
 import qualified Hasura.RQL.Types.BoolExp as Ir
 import qualified Hasura.RQL.Types.Column as Ir
@@ -104,6 +108,19 @@ mkSQLSelect jsonAggSelect annSimpleSel =
     Ir.JASSingleObject -> do
       select <- fromSelectRows annSimpleSel
       pure select {selectFor = JsonFor JsonSingleton, selectTop = Top 1}
+
+-- | Convert from the IR database query into a select.
+fromRootField ::
+     Graphql.RootField (Graphql.QueryDB Expression) Void void Void
+  -> FromIr Select
+fromRootField =
+  \case
+    Graphql.RFDB (Graphql.QDBPrimaryKey s) -> mkSQLSelect DS.JASSingleObject s
+    Graphql.RFDB (Graphql.QDBSimple s) -> mkSQLSelect DS.JASMultipleRows s
+    Graphql.RFDB (Graphql.QDBAggregation s) -> fromSelectAggregate s
+    Graphql.RFDB (Graphql.QDBConnection {}) ->
+      refute (pure ConnectionsNotSupported)
+    Graphql.RFAction {} -> refute (pure ActionsNotSupported)
 
 --------------------------------------------------------------------------------
 -- Top-level exported functions

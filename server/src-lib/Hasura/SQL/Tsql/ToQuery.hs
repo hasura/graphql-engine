@@ -5,7 +5,9 @@
 
 module Hasura.SQL.Tsql.ToQuery
   ( fromSelect
-  , toQuery
+  , fromReselect
+  , toQueryFlat
+  , toQueryPretty
   , Printer(..)
   ) where
 
@@ -79,10 +81,11 @@ fromExpression =
     SelectExpression s -> "(" <+> IndentPrinter 1 (fromSelect s) <+> ")"
 
 fromPath :: JsonPath -> Printer
-fromPath =
-  fromExpression .
-  ValueExpression . TextValue . LT.toStrict . LT.toLazyText . go
+fromPath path =
+  ", " <+> string path
   where
+    string = fromExpression .
+             ValueExpression . TextValue . LT.toStrict . LT.toLazyText . go
     go =
       \case
         RootPath -> "$"
@@ -300,8 +303,22 @@ falseExpression = ValueExpression (BoolValue False)
 --------------------------------------------------------------------------------
 -- Basic printing API
 
-toQuery :: Printer -> Query
-toQuery = go 0
+toQueryFlat :: Printer -> Query
+toQueryFlat = go 0
+  where
+    go level =
+      \case
+        QueryPrinter q -> q
+        SeqPrinter xs -> mconcat (filter notEmpty (map (go level) xs))
+        SepByPrinter x xs ->
+          mconcat
+            (intersperse (go level x) (filter notEmpty (map (go level) xs)))
+        NewlinePrinter -> " "
+        IndentPrinter n p -> go (level + n) p
+    notEmpty = (/= mempty) . renderQuery
+
+toQueryPretty :: Printer -> Query
+toQueryPretty = go 0
   where
     go level =
       \case

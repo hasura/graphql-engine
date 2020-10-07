@@ -1,9 +1,9 @@
 -- | Planning T-SQL queries and subscriptions.
 
 module Hasura.SQL.Tsql.Plan
-  ( rootFieldToSelect
-  , prepareValueNoPlan
-  , prepareValueMultiplex
+  ( planNoPlan
+  , planNoPlanMap
+  , planMultiplex
   , test
   ) where
 
@@ -11,23 +11,25 @@ import           Control.Applicative
 import           Control.Monad.Trans
 import           Control.Monad.Trans.State.Strict
 import           Control.Monad.Validate
+import           Data.Bifunctor
 import           Data.Functor
 import           Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HM
 import qualified Data.HashMap.Strict.InsOrd as OMap
 import           Data.Int
+import           Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.List.NonEmpty as NE
-import           Data.Void
+import qualified Data.Text as T
 import qualified Database.ODBC.SQLServer as Odbc
 import qualified Hasura.GraphQL.Context as Graphql
 import qualified Hasura.GraphQL.Execute.Query as Query
 import qualified Hasura.GraphQL.Parser.Column as Graphql
 import qualified Hasura.GraphQL.Parser.Schema as PS
-import qualified Hasura.RQL.DML.Select as DS
 import qualified Hasura.SQL.DML as Sql
+import qualified Hasura.SQL.Tsql.FromIr as FromIr
 import qualified Hasura.SQL.Tsql.FromIr as Tsql
-import           Hasura.SQL.Tsql.Types as Tsql
 import           Hasura.SQL.Tsql.ToQuery as Tsql
+import           Hasura.SQL.Tsql.Types as Tsql
 import qualified Hasura.SQL.Types as Sql
 import qualified Hasura.SQL.Value as Sql
 import qualified Language.GraphQL.Draft.Syntax as G
@@ -39,46 +41,115 @@ import           Prelude
 test :: OMap.InsOrdHashMap G.Name (Graphql.SubscriptionRootField Graphql.UnpreparedValue)
      -> IO ()
 test i =
-  putStrLn
-    (unlines
-       [ "Tsql.test"
-       , "\naliases"
-       , show (void i)
-       , "\nroots"
-       , show i
-       , "\nprepared"
-       , show
-           (case traverse
-                   (flip
-                      evalStateT
-                      PrepareState
-                        {positionalArguments = 0, namedArguments = mempty} .
-                    Query.traverseQueryRootField prepareValueMultiplex)
-                   i of
-              Left e -> error (show e)
-              Right v -> runValidate $ Tsql.runFromIr $ (multiplexQueries v))
-       ]
-       )
+  case rootFields of
+    Left _ -> putStrLn "errored out"
+    Right fields ->
+      putStrLn
+        (unlines
+           [ "Tsql.test"
+           , "\naliases"
+           , show (void i)
+           , "\nroots"
+           , show i
+           , "\nprepared"
+           , show rootFields
+           , "\ncollapsed"
+           , show (collapseMap fields)
+           , "\nmultiplexed"
+           , show (multiplexRootReselect (collapseMap fields))
+           , "\nprinted (pretty)"
+           , T.unpack
+               (Odbc.renderQuery
+                  (toQueryPretty
+                     (fromSelect (multiplexRootReselect (collapseMap fields)))))
+           , "\nprinted (flat)"
+           , T.unpack
+               (Odbc.renderQuery
+                  (toQueryFlat
+                     (fromSelect (multiplexRootReselect (collapseMap fields)))))
+           ])
+  where
+    rootFields =
+      case traverse
+             (flip
+                evalStateT
+                PrepareState {positionalArguments = 0, namedArguments = mempty} .
+              Query.traverseQueryRootField prepareValueMultiplex)
+             i of
+        Left e -> error (show e)
+        Right v -> do
+          x <- runValidate $ Tsql.runFromIr $ traverse Tsql.fromRootField v
+          pure x
 
 -- Next: collapse the omap into a single select
--- Next: write printer for openjson
 
 --------------------------------------------------------------------------------
--- CONVERTING a root field into a T-SQL select statement
+-- Top-level planner
 
--- TODO: Use 'alias'.
-rootFieldToSelect ::
-     Sql.Alias
-  -> Graphql.RootField (Graphql.QueryDB Expression) void0 void1 void2
-  -> Tsql.FromIr Select
-rootFieldToSelect _alias =
-  \case
-    Graphql.RFDB (Graphql.QDBPrimaryKey s) ->
-      Tsql.mkSQLSelect DS.JASSingleObject s
-    Graphql.RFDB (Graphql.QDBSimple s) -> Tsql.mkSQLSelect DS.JASMultipleRows s
-    Graphql.RFDB (Graphql.QDBAggregation s) -> Tsql.fromSelectAggregate s
-    Graphql.RFDB (Graphql.QDBConnection {}) ->
-      refute (pure Tsql.ConnectionsNotSupported)
+-- | Plan a query without prepare/exec.
+planNoPlan ::
+     Graphql.SubscriptionRootField Graphql.UnpreparedValue
+  -> Either PrepareError Select
+planNoPlan unpreparedRoot = do
+  rootField <-
+    Query.traverseQueryRootField prepareValueNoPlan unpreparedRoot
+  select <-
+    first
+      FromIrError
+      (runValidate (Tsql.runFromIr (Tsql.fromRootField rootField)))
+  pure select
+
+planMultiplex ::
+     OMap.InsOrdHashMap G.Name (Graphql.SubscriptionRootField Graphql.UnpreparedValue)
+  -> Either PrepareError Select
+planMultiplex unpreparedMap = do
+  rootFieldMap <-
+    evalStateT
+      (traverse
+         (Query.traverseQueryRootField prepareValueMultiplex)
+         unpreparedMap)
+      emptyPrepareState
+  selectMap <-
+    first
+      FromIrError
+      (runValidate (Tsql.runFromIr (traverse Tsql.fromRootField rootFieldMap)))
+  pure (multiplexRootReselect (collapseMap selectMap))
+
+-- | Plan a query without prepare/exec.
+planNoPlanMap ::
+     OMap.InsOrdHashMap G.Name (Graphql.SubscriptionRootField Graphql.UnpreparedValue)
+  -> Either PrepareError Reselect
+planNoPlanMap unpreparedMap = do
+  rootFieldMap <-
+    traverse (Query.traverseQueryRootField prepareValueNoPlan) unpreparedMap
+  selectMap <-
+    first
+      FromIrError
+      (runValidate (Tsql.runFromIr (traverse Tsql.fromRootField rootFieldMap)))
+  pure (collapseMap selectMap)
+
+--------------------------------------------------------------------------------
+-- Converting a root field into a T-SQL select statement
+
+-- | Collapse a set of selects into a single select that projects
+-- these as subselects.
+collapseMap :: OMap.InsOrdHashMap G.Name Select
+            -> Reselect
+collapseMap selects =
+  Reselect
+    { reselectFor = JsonFor JsonSingleton
+    , reselectWhere = Where mempty
+    , reselectProjections =
+        NE.fromList (map projectSelect (OMap.toList selects))
+    }
+  where
+    projectSelect :: (G.Name, Select) -> Projection
+    projectSelect (name, select) =
+      ExpressionProjection
+        (Aliased
+           { aliasedThing = SelectExpression select
+           , aliasedAlias = G.unName name
+           })
 
 --------------------------------------------------------------------------------
 -- Session variables
@@ -87,9 +158,10 @@ globalSessionExpression :: Tsql.Expression
 globalSessionExpression =
   ValueExpression (Odbc.TextValue "TODO: sessionExpression")
 
+-- TODO: real env object.
 envObjectExpression :: Tsql.Expression
 envObjectExpression =
-  ValueExpression (Odbc.TextValue "TODO: envObjectExpression")
+  ValueExpression (Odbc.TextValue "[{\"result_id\":1,\"result_vars\":{\"synthetic\":[10]}}]")
 
 --------------------------------------------------------------------------------
 -- Resolving values
@@ -98,12 +170,17 @@ data PrepareError
   = UVLiteralNotSupported
   | SessionVarNotSupported
   | UnsupportedPgType Sql.PGScalarValue
+  | FromIrError (NonEmpty FromIr.Error)
   deriving (Show, Eq)
 
 data PrepareState = PrepareState
   { positionalArguments :: !Integer
   , namedArguments :: !(HashMap G.Name Graphql.PGColumnValue)
   }
+
+emptyPrepareState :: PrepareState
+emptyPrepareState =
+  PrepareState {positionalArguments = 0, namedArguments = mempty}
 
 -- | Prepare a value without any query planning; we just execute the
 -- query with the values embedded.
@@ -135,7 +212,11 @@ prepareValueMultiplex =
           modify' (\s -> s {positionalArguments = index + 1})
           pure
             (JsonQueryExpression
-               envObjectExpression
+               (ColumnExpression
+                  FieldName
+                    { fieldNameEntity = rowAlias
+                    , fieldName = resultVarsAlias
+                    })
                (Just (RootPath `FieldPath` "synthetic" `IndexPath` index)))
         Just name -> do
           modify
@@ -161,14 +242,8 @@ prepareValueMultiplex =
 -- [ Select x y | (x,y) <- [..] ]
 --
 
-multiplexQueries ::
-     OMap.InsOrdHashMap G.Name (Graphql.RootField (Graphql.QueryDB Expression) Void void Void)
-  -> Tsql.FromIr (OMap.InsOrdHashMap G.Name Tsql.Select)
-multiplexQueries =
-  OMap.traverseWithKey (\key root -> fmap multiplexedRootField(rootFieldToSelect (error "todo: alias") root))
-
-multiplexedRootField :: Tsql.Select -> Tsql.Select
-multiplexedRootField originalSelect =
+multiplexRootReselect :: Tsql.Reselect -> Tsql.Select
+multiplexRootReselect rootReselect =
   Select
     { selectTop = NoTop
     , selectProjections =
@@ -177,15 +252,17 @@ multiplexedRootField originalSelect =
               Aliased
                 { aliasedThing =
                     FieldName
-                      {fieldNameEntity = rowAlias, fieldName = "result_id"}
-                , aliasedAlias = "result_id"
+                      {fieldNameEntity = rowAlias, fieldName = resultIdAlias}
+                , aliasedAlias = resultIdAlias
                 }
           , FieldNameProjection
               Aliased
                 { aliasedThing =
                     FieldName
-                      {fieldNameEntity = resultAlias, fieldName = Tsql.jsonFieldName}
-                , aliasedAlias = "result"
+                      { fieldNameEntity = resultAlias
+                      , fieldName = Tsql.jsonFieldName
+                      }
+                , aliasedAlias = resultAlias
                 }
           ]
     , selectFrom =
@@ -193,16 +270,16 @@ multiplexedRootField originalSelect =
           Aliased
             { aliasedThing =
                 OpenJson
-                  { openJsonExpression = ValueExpression (Odbc.TextValue "TODO:") -- TODO: this comes from somewhere...
+                  { openJsonExpression = envObjectExpression
                   , openJsonWith =
                       NE.fromList
-                        [IntField "result_id", JsonField "result_vars"]
+                        [IntField resultIdAlias, JsonField resultVarsAlias]
                   }
             , aliasedAlias = rowAlias
             }
     , selectJoins =
         [ Join
-            { joinSource = JoinSelect originalSelect
+            { joinSource = JoinReselect rootReselect
             , joinJoinAlias =
                 JoinAlias
                   { joinAliasEntity = resultAlias
@@ -215,9 +292,18 @@ multiplexedRootField originalSelect =
     , selectOrderBy = Nothing
     , selectOffset = Nothing
     }
-  where
-    resultAlias = "result"
-    rowAlias = "row"
+
+resultIdAlias :: T.Text
+resultIdAlias = "result_id"
+
+resultVarsAlias :: T.Text
+resultVarsAlias = "result_vars"
+
+resultAlias :: T.Text
+resultAlias = "result"
+
+rowAlias :: T.Text
+rowAlias = "row"
 
 --------------------------------------------------------------------------------
 -- PG compat
