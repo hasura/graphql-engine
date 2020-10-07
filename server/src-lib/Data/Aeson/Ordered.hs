@@ -179,7 +179,7 @@ fromOrdered v = case v of
   Bool boolean  -> J.Bool boolean
   Null          -> J.Null
 
-asObject :: Value -> Either Text Object
+asObject :: IsString s => Value -> Either s Object
 asObject = \case
   Object o -> Right o
   _        -> Left "expecting ordered object"

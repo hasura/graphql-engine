@@ -6,12 +6,10 @@ module Hasura.GraphQL.Execute.Prepare
   , ExecutionPlan
   , ExecutionStep(..)
   , initPlanningSt
-  , runPlan
   , prepareWithPlan
   , prepareWithoutPlan
   , validateSessionVariables
   , withUserVars
-  , buildTypedOperation
   ) where
 
 
@@ -46,18 +44,18 @@ type PrepArgMap = IntMap.IntMap (Q.PrepArg, PGScalarValue)
 -- | Full execution plan to process one GraphQL query.  Once we work on
 -- heterogeneous execution this will contain a mixture of things to run on the
 -- database and things to run on remote schemas.
-type ExecutionPlan db remote raw = ExecutionStep db remote raw
+type ExecutionPlan db = InsOrdHashMap G.Name (ExecutionStep db)
 
 type RemoteCall = (RemoteSchemaInfo, G.TypedOperationDefinition G.NoFragments G.Name, Maybe GH.VariableValues)
 
 -- | One execution step to processing a GraphQL query (e.g. one root field).
 -- Polymorphic to allow the SQL to be generated in stages.
-data ExecutionStep db remote raw
+data ExecutionStep db
   = ExecStepDB db
   -- ^ A query to execute against the database
-  | ExecStepRemote remote -- !RemoteSchemaInfo !(G.Selection G.NoFragments G.Name)
+  | ExecStepRemote RemoteCall  -- !RemoteSchemaInfo !(G.Selection G.NoFragments G.Name)
   -- ^ A query to execute against a remote schema
-  | ExecStepRaw raw
+  | ExecStepRaw J.Value
   -- ^ Output a plain JSON object
 
 data PlanningSt
@@ -71,9 +69,6 @@ data PlanningSt
 initPlanningSt :: PlanningSt
 initPlanningSt =
   PlanningSt 2 Map.empty IntMap.empty Set.empty
-
-runPlan :: StateT PlanningSt m a -> m (a, PlanningSt)
-runPlan = flip runStateT initPlanningSt
 
 prepareWithPlan :: (MonadState PlanningSt m) => UnpreparedValue -> m S.SQLExp
 prepareWithPlan = \case
@@ -121,11 +116,11 @@ retrieveAndFlagSessionVariableValue updateState sessVar currentSessionExp = do
   pure $ S.SEOpApp (S.SQLOp "->>")
     [currentSessionExp, S.SELit $ sessionVariableToText sessVar]
 
-withUserVars :: SessionVariables -> [(Q.PrepArg, PGScalarValue)] -> [(Q.PrepArg, PGScalarValue)]
+withUserVars :: SessionVariables -> PrepArgMap -> PrepArgMap
 withUserVars usrVars list =
   let usrVarsAsPgScalar = PGValJSON $ Q.JSON $ J.toJSON usrVars
       prepArg = Q.toPrepVal (Q.AltJ usrVars)
-  in (prepArg, usrVarsAsPgScalar):list
+  in IntMap.insert 1 (prepArg, usrVarsAsPgScalar) list
 
 validateSessionVariables :: MonadError QErr m => Set.HashSet SessionVariable -> SessionVariables -> m ()
 validateSessionVariables requiredVariables sessionVariables = do
@@ -146,13 +141,13 @@ addPrepArg
   :: (MonadState PlanningSt m)
   => Int -> (Q.PrepArg, PGScalarValue) -> m ()
 addPrepArg argNum arg = do
-  PlanningSt curArgNum vars prepped sessionVariables <- get
-  put $ PlanningSt curArgNum vars (IntMap.insert argNum arg prepped) sessionVariables
+  prepped <- gets _psPrepped
+  modify \x -> x {_psPrepped = IntMap.insert argNum arg prepped}
 
 getNextArgNum :: (MonadState PlanningSt m) => m Int
 getNextArgNum = do
-  PlanningSt curArgNum vars prepped sessionVariables <- get
-  put $ PlanningSt (curArgNum + 1) vars prepped sessionVariables
+  curArgNum <- gets _psArgNumber
+  modify \x -> x {_psArgNumber = curArgNum + 1}
   return curArgNum
 
 collectVariables
