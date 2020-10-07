@@ -26,7 +26,7 @@ export type RouterTriggerProps = RouteComponentProps<
   {
     triggerName: string;
   },
-  {}
+  unknown
 >;
 
 export type TriggerKind = 'event' | 'cron';

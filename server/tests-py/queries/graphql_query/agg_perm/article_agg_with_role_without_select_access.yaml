@@ -1,0 +1,63 @@
+- description: User can query for the count of the rows without having select access
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: role_without_access_to_cols
+  response:
+    data:
+      article_aggregate:
+        aggregate:
+          count: 3
+  query:
+    query: |
+      query {
+        article_aggregate {
+          aggregate {
+            count
+          }
+        }
+      }
+
+- description: The 'columns' argument to 'count' should not be exposed, because the role doesn't have access
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: role_without_access_to_cols
+  response:
+    errors:
+      - extensions:
+          path: $.selectionSet.article_aggregate.selectionSet.aggregate.selectionSet.count
+          code: validation-failed
+        message: "\"count\" has no argument named \"columns\""
+  query:
+    query: |
+      query {
+        article_aggregate {
+          aggregate {
+            count(columns:[title,content])
+          }
+        }
+      }
+
+- description: The aggregate functions that use column data should not be exposed
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: role_without_access_to_cols
+  response:
+    errors:
+      - extensions:
+          path: $.selectionSet.article_aggregate.selectionSet.aggregate.selectionSet.max
+          code: validation-failed
+        message: "field \"max\" not found in type: 'article_aggregate_fields'"
+  query:
+    query: |
+      query {
+        article_aggregate {
+          aggregate {
+            max {
+              published_on
+            }
+          }
+        }
+      }

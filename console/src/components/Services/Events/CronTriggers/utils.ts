@@ -46,7 +46,7 @@ export const parseServerScheduledTrigger = (
     name: trigger.name,
     webhook: trigger.webhook_conf,
     schedule: trigger.cron_schedule,
-    payload: JSON.stringify(trigger.payload),
+    payload: JSON.stringify(trigger.payload, null, 2),
     headers: parseServerHeaders(trigger.header_conf),
     loading: {
       modify: false,

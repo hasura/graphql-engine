@@ -1,170 +1,96 @@
-module Hasura.GraphQL.Schema.Common
-  ( qualObjectToName
-  , addTypeSuffix
-  , fromInpValL
+module Hasura.GraphQL.Schema.Common where
 
-  , RelationshipFieldInfo(..)
-  , SelField(..)
-  , _SFPGColumn
-  , getPGColumnFields
-  , getRelationshipFields
-  , getComputedFields
-  , getRemoteRelationships
-
-  , mkColumnType
-  , mkRelName
-  , mkAggRelName
-  , mkConnectionRelName
-  , mkComputedFieldName
-
-  , mkTableTy
-  , mkTableConnectionTy
-  , mkTableEdgeTy
-  , mkTableEnumType
-  , mkTableAggTy
-
-  , mkColumnEnumVal
-  , mkColumnInputVal
-  , mkDescriptionWith
-
-  , mkFuncArgsTy
-
-  , mkPGColGNameMap
-
-  , numAggregateOps
-  , compAggregateOps
-
-  , nodeType
-  , nodeIdType
-  ) where
-
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.Text                     as T
-import qualified Language.GraphQL.Draft.Syntax as G
-
-import           Control.Lens
-
-import           Hasura.GraphQL.Resolve.Types
-import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
+
+import qualified Data.Aeson                    as J
+import qualified Data.HashMap.Strict.InsOrd    as OMap
+
+import           Language.GraphQL.Draft.Syntax as G
+
+import qualified Data.Text                     as T
+import qualified Hasura.GraphQL.Execute.Types  as ET (GraphQLQueryType)
+import qualified Hasura.GraphQL.Parser         as P
+import qualified Hasura.RQL.DML.Select.Types   as RQL (Fields)
+
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-data RelationshipFieldInfo
-  = RelationshipFieldInfo
-  { _rfiInfo              :: !RelInfo
-  , _rfiAllowAgg          :: !Bool
-  , _rfiColumns           :: !PGColGNameMap
-  , _rfiPermFilter        :: !AnnBoolExpPartialSQL
-  , _rfiPermLimit         :: !(Maybe Int)
-  , _rfiPrimaryKeyColumns :: !(Maybe PrimaryKeyColumns)
-  , _rfiIsNullable        :: !Bool
-  } deriving (Show, Eq)
+data QueryContext =
+  QueryContext
+  { qcStringifyNum :: !Bool
+  , qcQueryType    :: !ET.GraphQLQueryType
+  , qcRemoteFields :: !(HashMap RemoteSchemaName [P.Definition P.FieldInfo])
+  }
 
-data SelField
-  = SFPGColumn !PGColumnInfo
-  | SFRelationship !RelationshipFieldInfo
-  | SFComputedField !ComputedField
-  | SFRemoteRelationship !RemoteFieldInfo
+textToName :: MonadError QErr m => Text -> m G.Name
+textToName textName = G.mkName textName `onNothing` throw400 ValidationFailed
+                      ("cannot include " <> textName <<> " in the GraphQL schema because "
+                       <> " it is not a valid GraphQL identifier")
+
+partialSQLExpToUnpreparedValue :: PartialSQLExp -> P.UnpreparedValue
+partialSQLExpToUnpreparedValue (PSESessVar pftype var) = P.UVSessionVar pftype var
+partialSQLExpToUnpreparedValue (PSESQLExp sqlExp)      = P.UVLiteral sqlExp
+
+mapField
+  :: Functor m
+  => P.InputFieldsParser m (Maybe a)
+  -> (a -> b)
+  -> P.InputFieldsParser m (Maybe b)
+mapField fp f = fmap (fmap f) fp
+
+parsedSelectionsToFields
+  :: (Text -> a) -- ^ how to handle @__typename@ fields
+  -> OMap.InsOrdHashMap G.Name (P.ParsedSelection a)
+  -> RQL.Fields a
+parsedSelectionsToFields mkTypename = OMap.toList
+  >>> map (FieldName . G.unName *** P.handleTypename (mkTypename . G.unName))
+
+numericAggOperators :: [G.Name]
+numericAggOperators =
+  [ $$(G.litName "sum")
+  , $$(G.litName "avg")
+  , $$(G.litName "stddev")
+  , $$(G.litName "stddev_samp")
+  , $$(G.litName "stddev_pop")
+  , $$(G.litName "variance")
+  , $$(G.litName "var_samp")
+  , $$(G.litName "var_pop")
+  ]
+
+comparisonAggOperators :: [G.Name]
+comparisonAggOperators = [$$(litName "max"), $$(litName "min")]
+
+data NodeIdVersion
+  = NIVersion1
   deriving (Show, Eq)
-$(makePrisms ''SelField)
 
-getPGColumnFields :: [SelField] -> [PGColumnInfo]
-getPGColumnFields = mapMaybe (^? _SFPGColumn)
+nodeIdVersionInt :: NodeIdVersion -> Int
+nodeIdVersionInt NIVersion1 = 1
 
-getRelationshipFields :: [SelField] -> [RelationshipFieldInfo]
-getRelationshipFields = mapMaybe (^? _SFRelationship)
+currentNodeIdVersion :: NodeIdVersion
+currentNodeIdVersion = NIVersion1
 
-getComputedFields :: [SelField] -> [ComputedField]
-getComputedFields = mapMaybe (^? _SFComputedField)
-
-getRemoteRelationships :: [SelField] -> [RemoteFieldInfo]
-getRemoteRelationships = mapMaybe (^? _SFRemoteRelationship)
-
-qualObjectToName :: (ToTxt a) => QualifiedObject a -> G.Name
-qualObjectToName = G.Name . snakeCaseQualObject
-
-addTypeSuffix :: Text -> G.NamedType -> G.NamedType
-addTypeSuffix suffix baseType =
-  G.NamedType $ G.unNamedType baseType <> G.Name suffix
-
-fromInpValL :: [InpValInfo] -> Map.HashMap G.Name InpValInfo
-fromInpValL = mapFromL _iviName
-
-mkRelName :: RelName -> G.Name
-mkRelName rn = G.Name $ relNameToTxt rn
-
-mkAggRelName :: RelName -> G.Name
-mkAggRelName rn = G.Name $ relNameToTxt rn <> "_aggregate"
-
-mkConnectionRelName :: RelName -> G.Name
-mkConnectionRelName rn = G.Name $ relNameToTxt rn <> "_connection"
-
-mkComputedFieldName :: ComputedFieldName -> G.Name
-mkComputedFieldName = G.Name . computedFieldNameToText
-
-mkColumnType :: PGColumnType -> G.NamedType
-mkColumnType = \case
-  PGColumnScalar scalarType -> mkScalarTy scalarType
-  PGColumnEnumReference (EnumReference enumTable _) -> mkTableEnumType enumTable
-
-mkTableTy :: QualifiedTable -> G.NamedType
-mkTableTy = G.NamedType . qualObjectToName
-
-mkTableConnectionTy :: QualifiedTable -> G.NamedType
-mkTableConnectionTy = addTypeSuffix "Connection" . mkTableTy
-
-mkTableEdgeTy :: QualifiedTable -> G.NamedType
-mkTableEdgeTy = addTypeSuffix "Edge" . mkTableTy
-
-mkTableEnumType :: QualifiedTable -> G.NamedType
-mkTableEnumType = addTypeSuffix "_enum" . mkTableTy
-
-mkTableAggTy :: QualifiedTable -> G.NamedType
-mkTableAggTy = addTypeSuffix "_aggregate" . mkTableTy
-
--- used for 'distinct_on' in select and upsert's 'update columns'
-mkColumnEnumVal :: G.Name -> EnumValInfo
-mkColumnEnumVal colName =
-  EnumValInfo (Just "column name") (G.EnumValue colName) False
-
-mkColumnInputVal :: PGColumnInfo -> InpValInfo
-mkColumnInputVal ci =
-  InpValInfo (mkDescription <$> pgiDescription ci) (pgiName ci)
-  Nothing $ G.toGT $ G.toNT $ mkColumnType $ pgiType ci
+instance J.FromJSON NodeIdVersion where
+  parseJSON v = do
+    versionInt :: Int <- J.parseJSON v
+    case versionInt of
+      1 -> pure NIVersion1
+      _ -> fail $ "expecting version 1 for node id, but got " <> show versionInt
 
 mkDescriptionWith :: Maybe PGDescription -> Text -> G.Description
 mkDescriptionWith descM defaultTxt = G.Description $ case descM of
   Nothing                      -> defaultTxt
   Just (PGDescription descTxt) -> T.unlines [descTxt, "\n", defaultTxt]
 
-mkDescription :: PGDescription -> G.Description
-mkDescription = G.Description . getPGDescription
-
-mkFuncArgsName :: QualifiedFunction -> G.Name
-mkFuncArgsName fn =
-  qualObjectToName fn <> "_args"
-
-mkFuncArgsTy :: QualifiedFunction -> G.NamedType
-mkFuncArgsTy =
-  G.NamedType . mkFuncArgsName
-
-mkPGColGNameMap :: [PGColumnInfo] -> PGColGNameMap
-mkPGColGNameMap cols = Map.fromList $
-  flip map cols $ \ci -> (pgiName ci, ci)
-
-numAggregateOps :: [G.Name]
-numAggregateOps = [ "sum", "avg", "stddev", "stddev_samp", "stddev_pop"
-            , "variance", "var_samp", "var_pop"
-            ]
-
-compAggregateOps :: [G.Name]
-compAggregateOps = ["max", "min"]
-
-nodeType :: G.NamedType
-nodeType =
-  G.NamedType "Node"
-
-nodeIdType :: G.GType
-nodeIdType =
-  G.toGT $ G.toNT $ G.NamedType "ID"
+-- | The default @'skip' and @'include' directives
+defaultDirectives :: [P.DirectiveInfo]
+defaultDirectives =
+  [mkDirective $$(G.litName "skip"), mkDirective $$(G.litName "include")]
+  where
+    ifInputField =
+      P.mkDefinition $$(G.litName "if") Nothing $ P.IFRequired $ P.TNamed $
+      P.mkDefinition $$(G.litName "Boolean") Nothing P.TIScalar
+    dirLocs = map G.DLExecutable
+      [G.EDLFIELD, G.EDLFRAGMENT_SPREAD, G.EDLINLINE_FRAGMENT]
+    mkDirective name =
+      P.DirectiveInfo name Nothing [ifInputField] dirLocs

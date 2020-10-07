@@ -12,12 +12,14 @@ module Hasura.Db
   , runLazyTx
   , runQueryTx
   , withUserInfo
+  , withTraceContext
   , sessionInfoJsonExp
 
   , RespTx
   , LazyRespTx
   , defaultTxErrorHandler
   , mkTxErrorHandler
+  , lazyTxToQTx
   ) where
 
 import           Control.Lens
@@ -38,6 +40,7 @@ import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 
 import qualified Hasura.SQL.DML               as S
+import qualified Hasura.Tracing               as Tracing
 
 data PGExecCtx
   = PGExecCtx
@@ -80,6 +83,8 @@ instance (MonadTx m) => MonadTx (ReaderT s m) where
 instance (Monoid w, MonadTx m) => MonadTx (WriterT w m) where
   liftTx = lift . liftTx
 instance (MonadTx m) => MonadTx (ValidateT e m) where
+  liftTx = lift . liftTx
+instance (MonadTx m) => MonadTx (Tracing.TraceT m) where
   liftTx = lift . liftTx
 
 -- | Like 'Q.TxE', but defers acquiring a Postgres connection until the first
@@ -134,7 +139,7 @@ type RespTx = Q.TxE QErr EncJSON
 type LazyRespTx = LazyTx QErr EncJSON
 
 setHeadersTx :: SessionVariables -> Q.TxE QErr ()
-setHeadersTx session =
+setHeadersTx session = do
   Q.unitQE defaultTxErrorHandler setSess () False
   where
     setSess = Q.fromText $
@@ -182,7 +187,26 @@ withUserInfo :: UserInfo -> LazyTx QErr a -> LazyTx QErr a
 withUserInfo uInfo = \case
   LTErr e  -> LTErr e
   LTNoTx a -> LTNoTx a
-  LTTx tx  -> LTTx $ setHeadersTx (_uiSession uInfo) >> tx
+  LTTx tx  ->
+    let vars = _uiSession uInfo
+    in LTTx $ setHeadersTx vars >> tx
+
+-- | Inject the trace context as a transaction-local variable,
+-- so that it can be picked up by any triggers (including event triggers).
+withTraceContext
+  :: Tracing.TraceContext
+  -> LazyTx QErr a
+  -> LazyTx QErr a
+withTraceContext ctx = \case
+  LTErr e  -> LTErr e
+  LTNoTx a -> LTNoTx a
+  LTTx tx  -> 
+    let sql = Q.fromText $
+          "SET LOCAL \"hasura.tracecontext\" = " <> 
+            toSQLTxt (S.SELit . J.encodeToStrictText . Tracing.injectEventContext $ ctx)
+        setTraceContext = 
+          Q.unitQE defaultTxErrorHandler sql () False
+     in LTTx $ setTraceContext >> tx
 
 instance Functor (LazyTx e) where
   fmap f = \case

@@ -5,13 +5,12 @@ module Hasura.Server.Auth.JWT.Logging
   where
 
 import           Data.Aeson
-import           Network.URI           (URI)
-
 import           Hasura.HTTP
 import           Hasura.Logging        (EngineLogType (..), Hasura, InternalLogTypes (..),
                                         LogLevel (..), ToEngineLog (..))
 import           Hasura.Prelude
 import           Hasura.Server.Logging ()
+import           Network.URI           (URI)
 
 import qualified Data.ByteString.Lazy  as BL
 import qualified Data.Text             as T

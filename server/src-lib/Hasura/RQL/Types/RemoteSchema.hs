@@ -2,7 +2,6 @@ module Hasura.RQL.Types.RemoteSchema where
 
 import           Hasura.Prelude
 import           Language.Haskell.TH.Syntax (Lift)
-import           System.Environment         (lookupEnv)
 
 import qualified Data.Aeson                 as J
 import qualified Data.Aeson.Casing          as J
@@ -10,10 +9,11 @@ import qualified Data.Aeson.TH              as J
 import qualified Data.Text                  as T
 import qualified Database.PG.Query          as Q
 import qualified Network.URI.Extended       as N
+import qualified Data.Environment           as Env
 
 import           Hasura.Incremental         (Cacheable)
 import           Hasura.RQL.DDL.Headers     (HeaderConf (..))
-import           Hasura.RQL.Types.Common    (NonEmptyText (..))
+import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Types
 
@@ -27,13 +27,9 @@ newtype RemoteSchemaName
            , Generic, Cacheable, Arbitrary
            )
 
-remoteSchemaNameToTxt :: RemoteSchemaName -> Text
-remoteSchemaNameToTxt = unNonEmptyText . unRemoteSchemaName
-
 data RemoteSchemaInfo
   = RemoteSchemaInfo
-  { rsName             :: !RemoteSchemaName
-  , rsUrl              :: !N.URI
+  { rsUrl              :: !N.URI
   , rsHeaders          :: ![HeaderConf]
   , rsFwdClientHeaders :: !Bool
   , rsTimeoutSeconds   :: !Int
@@ -46,7 +42,7 @@ $(J.deriveJSON (J.aesonDrop 2 J.snakeCase) ''RemoteSchemaInfo)
 
 data RemoteSchemaDef
   = RemoteSchemaDef
-  { _rsdUrl                  :: !(Maybe N.URI)
+  { _rsdUrl                  :: !(Maybe InputWebhook)
   , _rsdUrlFromEnv           :: !(Maybe UrlFromEnv)
   , _rsdHeaders              :: !(Maybe [HeaderConf])
   , _rsdForwardClientHeaders :: !Bool
@@ -82,29 +78,30 @@ newtype RemoteSchemaNameQuery
 
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''RemoteSchemaNameQuery)
 
-getUrlFromEnv :: (MonadIO m, MonadError QErr m) => Text -> m N.URI
-getUrlFromEnv urlFromEnv = do
-  mEnv <- liftIO . lookupEnv $ T.unpack urlFromEnv
-  env  <- maybe (throw400 InvalidParams $ envNotFoundMsg urlFromEnv) return
-          mEnv
-  maybe (throw400 InvalidParams $ invalidUri env) return $ N.parseURI env
+getUrlFromEnv :: (MonadIO m, MonadError QErr m) => Env.Environment -> Text -> m N.URI
+getUrlFromEnv env urlFromEnv = do
+  let mEnv = Env.lookupEnv env $ T.unpack urlFromEnv
+  uri <- maybe (throw400 InvalidParams $ envNotFoundMsg urlFromEnv) return mEnv
+  maybe (throw400 InvalidParams $ invalidUri uri) return $ N.parseURI uri
   where
-    invalidUri uri = "not a valid URI: " <> T.pack uri
-    envNotFoundMsg e =
-      "environment variable '" <> e <> "' not set"
+    invalidUri x = "not a valid URI: " <> T.pack x
+    envNotFoundMsg e = "environment variable '" <> e <> "' not set"
 
 validateRemoteSchemaDef
   :: (MonadError QErr m, MonadIO m)
-  => RemoteSchemaName
+  => Env.Environment
   -> RemoteSchemaDef
   -> m RemoteSchemaInfo
-validateRemoteSchemaDef rsName (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout) =
+validateRemoteSchemaDef env (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout) =
   case (mUrl, mUrlEnv) of
-    (Just url, Nothing)    ->
-      return $ RemoteSchemaInfo rsName url hdrs fwdHdrs timeout
+    (Just url, Nothing)    -> do
+      resolvedWebhookTxt <- unResolvedWebhook <$> resolveWebhook env url
+      case N.parseURI $ T.unpack resolvedWebhookTxt of
+        Nothing  -> throw400 InvalidParams $ "not a valid URI: " <> resolvedWebhookTxt
+        Just uri -> return $ RemoteSchemaInfo uri hdrs fwdHdrs timeout
     (Nothing, Just urlEnv) -> do
-      url <- getUrlFromEnv urlEnv
-      return $ RemoteSchemaInfo rsName url hdrs fwdHdrs timeout
+      url <- getUrlFromEnv env urlEnv
+      return $ RemoteSchemaInfo url hdrs fwdHdrs timeout
     (Nothing, Nothing)     ->
         throw400 InvalidParams "both `url` and `url_from_env` can't be empty"
     (Just _, Just _)       ->
