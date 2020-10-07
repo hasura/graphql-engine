@@ -51,28 +51,7 @@ import {
   checkConstraintsDescription,
 } from '../Common/TooltipMessages';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
-
-const NotSupportedNote = ({ currentDataSource, unSupportedTypes }) => {
-  const supportedDataSources = {
-    mysql: 'MySQL',
-    pg: 'Postgres',
-    //... can keep adding more here
-  };
-  const dataSourceUnsupported = unSupportedTypes.find(
-    source => source === currentDataSource
-  );
-  if (!currentDataSource || !dataSourceUnsupported) {
-    return null;
-  }
-  return (
-    <small>
-      <i>
-        Note: This feature is currently not supported for{' '}
-        {supportedDataSources[dataSourceUnsupported]}
-      </i>
-    </small>
-  );
-};
+import { NotSupportedNote } from '../../../Common/NotSupportedNote';
 
 class ModifyTable extends React.Component {
   componentDidMount() {
@@ -219,10 +198,7 @@ class ModifyTable extends React.Component {
               />
               <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/computed-fields.html" />
             </h4>
-            <NotSupportedNote
-              currentDataSource={currentSource}
-              unSupportedTypes={['mysql']}
-            />
+            <NotSupportedNote unsupported={['mysql']} />
           </div>
           <ComputedFieldsEditor
             table={table}
@@ -324,10 +300,7 @@ class ModifyTable extends React.Component {
               <hr />
               <div className={styles.add_mar_bottom}>
                 <h4 className={styles.subheading_text_no_padd}>Triggers</h4>
-                <NotSupportedNote
-                  currentDataSource={currentSource}
-                  unSupportedTypes={['mysql']}
-                />
+                <NotSupportedNote unsupported={['mysql']} />
               </div>
               <TriggerEditorList tableSchema={table} dispatch={dispatch} />
               <hr />
@@ -336,10 +309,7 @@ class ModifyTable extends React.Component {
                   Check Constraints &nbsp; &nbsp;
                   <ToolTip message={checkConstraintsDescription} />
                 </h4>
-                <NotSupportedNote
-                  currentDataSource={currentSource}
-                  unSupportedTypes={['mysql']}
-                />
+                <NotSupportedNote unsupported={['mysql']} />
               </div>
               <CheckConstraints
                 constraints={table.check_constraints}

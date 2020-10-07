@@ -25,6 +25,7 @@ import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import { Table } from '../../../../../dataSources/types';
 import { getDataSources } from '../../../../../metadata/selector';
 import { DataSource } from '../../../../../metadata/types';
+import { NotSupportedNote } from '../../../../Common/NotSupportedNote';
 
 interface Props extends InjectedProps {}
 
@@ -38,14 +39,14 @@ const Add: React.FC<Props> = props => {
     webhook,
     retryConf,
     headers,
-    source,
+    // source,
   } = state;
   const {
     dispatch,
     allSchemas,
     schemaList,
     readOnlyMode,
-    dataSourcesList,
+    // dataSourcesList,
     currentDataSource,
   } = props;
 
@@ -90,18 +91,19 @@ const Add: React.FC<Props> = props => {
     setState.table(undefined, selectedSchemaName);
   };
 
-  const handleDataSourceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedSourceName = e.target.value;
-    dispatch(fetchSchemaList()).then((data: any) => {
-      const schemas = data.result;
-      if (schemas.length) {
-        dispatch(updateCurrentSchema(schemas[1][0], false, data));
-      } else {
-        dispatch(updateCurrentSchema('', false, []));
-      }
-    });
-    setState.source(selectedSourceName);
-  };
+  // todo
+  // const handleDataSourceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  //   const selectedSourceName = e.target.value;
+  //   dispatch(fetchSchemaList()).then((data: any) => {
+  //     const schemas = data.result;
+  //     if (schemas.length) {
+  //       dispatch(updateCurrentSchema(schemas[1][0], false, data));
+  //     } else {
+  //       dispatch(updateCurrentSchema('', false, []));
+  //     }
+  //   });
+  //   setState.source(selectedSourceName);
+  // };
 
   const handleTableChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedTableName = e.target.value;
@@ -227,7 +229,7 @@ const Add: React.FC<Props> = props => {
               onChange={handleTriggerNameChange}
             />
             <hr />
-            <div className={styles.add_mar_bottom}>
+            {/* <div className={styles.add_mar_bottom}>
               <h4 className={styles.subheading_text_no_padd}>
                 Data Source &nbsp; &nbsp;
                 <OverlayTrigger
@@ -237,9 +239,7 @@ const Add: React.FC<Props> = props => {
                   <i className="fa fa-question-circle" aria-hidden="true" />
                 </OverlayTrigger>{' '}
               </h4>
-              <small>
-                <i>Note: This feature is currently not supported for MySQL</i>
-              </small>
+              <NotSupportedNote unsupported={['mysql']} />
             </div>
             <select
               onChange={handleDataSourceChange}
@@ -255,7 +255,7 @@ const Add: React.FC<Props> = props => {
                 );
               })}
             </select>
-            <hr />
+            <hr /> */}
             <h4 className={styles.subheading_text}>
               Schema/Table &nbsp; &nbsp;
               <OverlayTrigger

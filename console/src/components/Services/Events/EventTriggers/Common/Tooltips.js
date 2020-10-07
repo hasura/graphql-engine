@@ -49,9 +49,3 @@ export const statusCodeDescription = (
     Status code of the webhook response
   </Tooltip>
 );
-
-export const dataSourceDescription = (
-  <Tooltip id="tooltip-trigger-status-code-description">
-    Select the data source where the table for the data trigger exists
-  </Tooltip>
-);
