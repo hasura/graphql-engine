@@ -516,7 +516,7 @@ fromGExists Ir.GExists {_geTable, _geWhere} = do
 -- have to both generate a projection AND on the side generate a join.
 --
 -- So a @FieldSource@ couples the idea of the projected thing and the
--- source of it.
+-- source of it (via 'Aliased').
 
 data FieldSource
   = ExpressionFieldSource (Aliased Expression)
@@ -847,15 +847,50 @@ fromMapping localFrom =
 -- Basic SQL expression types
 
 fromOpExpG :: Expression -> Ir.OpExpG Expression -> FromIr Expression
-fromOpExpG expression =
-  \case
-    Ir.ANISNULL -> pure (IsNullExpression expression)
-    Ir.AEQ equality expression' ->
-      pure
-        (if equality
-           then EqualExpression expression expression'
-           else NotEqualExpression expression expression')
-    op -> (refute (pure (UnsupportedOpExpG op)))
+fromOpExpG expression op =
+  case op of
+    Ir.ANISNULL                  -> pure (IsNullExpression expression)
+    Ir.ANISNOTNULL               -> pure (IsNotNullExpression expression)
+    Ir.ACast casts               -> refute (pure (UnsupportedOpExpG op)) -- mkCastsExp casts
+    Ir.AEQ False val             -> refute (pure (UnsupportedOpExpG op)) -- equalsBoolExpBuilder lhs val
+    Ir.AEQ True val              -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SEQ lhs val
+    Ir.ANE False val             -> refute (pure (UnsupportedOpExpG op)) -- notEqualsBoolExpBuilder lhs val
+    Ir.ANE True val              -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNE lhs val
+    Ir.AIN val                   -> refute (pure (UnsupportedOpExpG op)) -- S.BECompareAny S.SEQ lhs val
+    Ir.ANIN val                  -> refute (pure (UnsupportedOpExpG op)) -- S.BENot $ S.BECompareAny S.SEQ lhs val
+    Ir.AGT val                   -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGT lhs val
+    Ir.ALT val                   -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLT lhs val
+    Ir.AGTE val                  -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGTE lhs val
+    Ir.ALTE val                  -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLTE lhs val
+    Ir.ALIKE val                 -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLIKE lhs val
+    Ir.ANLIKE val                -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNLIKE lhs val
+    Ir.AILIKE val                -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SILIKE lhs val
+    Ir.ANILIKE val               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNILIKE lhs val
+    Ir.ASIMILAR val              -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SSIMILAR lhs val
+    Ir.ANSIMILAR val             -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNSIMILAR lhs val
+    Ir.AContains val             -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SContains lhs val
+    Ir.AContainedIn val          -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SContainedIn lhs val
+    Ir.AHasKey val               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SHasKey lhs val
+    Ir.AHasKeysAny val           -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SHasKeysAny lhs val
+    Ir.AHasKeysAll val           -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SHasKeysAll lhs val
+    Ir.ASTContains val           -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Contains" val
+    Ir.ASTCrosses val            -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Crosses" val
+    Ir.ASTEquals val             -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Equals" val
+    Ir.ASTIntersects val         -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Intersects" val
+    Ir.ASTOverlaps val           -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Overlaps" val
+    Ir.ASTTouches val            -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Touches" val
+    Ir.ASTWithin val             -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Within" val
+    Ir.ASTDWithinGeom {}         -> refute (pure (UnsupportedOpExpG op)) -- applySQLFn "ST_DWithin" [lhs, val, r]
+    Ir.ASTDWithinGeog {}         -> refute (pure (UnsupportedOpExpG op)) -- applySQLFn "ST_DWithin" [lhs, val, r, sph]
+    Ir.ASTIntersectsRast val     -> refute (pure (UnsupportedOpExpG op)) -- applySTIntersects [lhs, val]
+    Ir.ASTIntersectsNbandGeom {} -> refute (pure (UnsupportedOpExpG op)) -- applySTIntersects [lhs, nband, geommin]
+    Ir.ASTIntersectsGeomNband {} -> refute (pure (UnsupportedOpExpG op)) -- applySTIntersects [lhs, geommin, withSQLNull mNband]
+    Ir.CEQ rhsCol                -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SEQ lhs $ mkQCol rhsCol
+    Ir.CNE rhsCol                -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNE lhs $ mkQCol rhsCol
+    Ir.CGT rhsCol                -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGT lhs $ mkQCol rhsCol
+    Ir.CLT rhsCol                -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLT lhs $ mkQCol rhsCol
+    Ir.CGTE rhsCol               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGTE lhs $ mkQCol rhsCol
+    Ir.CLTE rhsCol               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLTE lhs $ mkQCol rhsCol
 
 fromSQLExpAsInt :: Sql.SQLExp -> FromIr Expression
 fromSQLExpAsInt =

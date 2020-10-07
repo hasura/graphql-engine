@@ -115,6 +115,7 @@ data Expression
   | ExistsExpression Select
   | SelectExpression Select
   | IsNullExpression Expression
+  | IsNotNullExpression Expression
   | ColumnExpression FieldName
   | EqualExpression Expression Expression
   | NotEqualExpression Expression Expression
