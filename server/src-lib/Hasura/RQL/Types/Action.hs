@@ -10,9 +10,10 @@ module Hasura.RQL.Types.Action
   , adArguments
   , adOutputType
   , adType
-  , adHeaders
   , adForwardClientHeaders
+  , adHeaders
   , adHandler
+  , adTimeout
   , ActionType(..)
   , _ActionMutation
   , CreateAction(..)
@@ -31,6 +32,7 @@ module Hasura.RQL.Types.Action
   , aiDefinition
   , aiPermissions
   , aiComment
+  , defaultActionTimeoutSecs
   , ActionPermissionInfo(..)
 
   , ActionPermissionMap
@@ -122,6 +124,9 @@ data ActionDefinition a b
   , _adType                 :: !ActionType
   , _adHeaders              :: ![HeaderConf]
   , _adForwardClientHeaders :: !Bool
+  , _adTimeout              :: !Timeout
+  -- ^ If the timeout is not provided by the user, then
+  -- the default timeout of 30 seconds will be used
   , _adHandler              :: !b
   } deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Generic)
 instance (NFData a, NFData b) => NFData (ActionDefinition a b)
@@ -135,6 +140,7 @@ instance (J.FromJSON a, J.FromJSON b) => J.FromJSON (ActionDefinition a b) where
     _adHeaders <- o J..:? "headers" J..!= []
     _adForwardClientHeaders <- o J..:? "forward_client_headers" J..!= False
     _adHandler <- o J..:  "handler"
+    _adTimeout <- o J..:? "timeout" J..!= defaultActionTimeoutSecs
     actionType <- o J..:? "type" J..!= "mutation"
     _adType <- case actionType of
       "mutation" -> ActionMutation <$> o J..:? "kind" J..!= ActionSynchronous
@@ -143,7 +149,7 @@ instance (J.FromJSON a, J.FromJSON b) => J.FromJSON (ActionDefinition a b) where
     return ActionDefinition {..}
 
 instance (J.ToJSON a, J.ToJSON b) => J.ToJSON (ActionDefinition a b) where
-  toJSON (ActionDefinition args outputType actionType headers forwardClientHeaders handler) =
+  toJSON (ActionDefinition args outputType actionType headers forwardClientHeaders timeout handler) =
     let typeAndKind = case actionType of
           ActionQuery -> [ "type" J..= ("query" :: String)]
           ActionMutation kind -> [ "type" J..= ("mutation" :: String)
@@ -154,6 +160,7 @@ instance (J.ToJSON a, J.ToJSON b) => J.ToJSON (ActionDefinition a b) where
     , "headers"                J..= headers
     , "forward_client_headers" J..= forwardClientHeaders
     , "handler"                J..= handler
+    , "timeout"                J..= timeout
     ] <> typeAndKind
 
 type ResolvedActionDefinition =
@@ -262,6 +269,7 @@ data AnnActionExecution v
   , _aaeHeaders              :: ![HeaderConf]
   , _aaeForwardClientHeaders :: !Bool
   , _aaeStrfyNum             :: !Bool
+  , _aaeTimeOut              :: !Timeout
   } deriving (Show, Eq)
 
 data AnnActionMutationAsync
