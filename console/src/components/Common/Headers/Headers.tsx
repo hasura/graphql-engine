@@ -65,7 +65,6 @@ const Headers: React.FC<HeadersListProps> = ({
               onChange={setHeaderKey}
               placeholder="key"
               className={`form-control ${styles.add_mar_right} ${styles.headerInputWidth}`}
-              style={{ width: '203px' }}
               disabled={disabled}
             />
             <div className={styles.headerInputWidth}>
