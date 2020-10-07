@@ -446,31 +446,31 @@ remoteField
   -> m (FieldParser n RemoteField)
 remoteField sdoc fieldName description argsDefn typeDefn = do
   -- TODO add directives
-  argsParser1 <- argumentsParser1 argsDefn sdoc
+  argsParser <- argumentsParser1 argsDefn sdoc
   case typeDefn of
     G.TypeDefinitionObject objTypeDefn -> do
       remoteSchemaObj <- remoteSchemaObject sdoc objTypeDefn
-      let objSelection = P.subselectionWithAlias fieldName description argsParser1 remoteSchemaObj
+      let objSelection = P.subselectionWithAlias fieldName description argsParser remoteSchemaObj
       pure $ objSelection <&> (\(alias, args, selSet) ->
                                  (G.Field alias fieldName args mempty selSet))
     G.TypeDefinitionScalar scalarTypeDefn ->
       let scalarField = remoteFieldScalarParser scalarTypeDefn
-          scalarSelection = P.selectionWithAlias fieldName description argsParser1 scalarField
+          scalarSelection = P.selectionWithAlias fieldName description argsParser scalarField
       in
       pure $ (scalarSelection <&> (\(alias, args) -> (G.Field alias fieldName args mempty [])))
     G.TypeDefinitionEnum enumTypeDefn ->
       let enumField = remoteFieldEnumParser enumTypeDefn
-          enumSelection = P.selectionWithAlias fieldName description argsParser1 enumField
+          enumSelection = P.selectionWithAlias fieldName description argsParser enumField
       in
       pure $ enumSelection <&> (\(alias, _) -> (G.Field alias fieldName mempty mempty []))
     G.TypeDefinitionInterface ifaceTypeDefn -> do
       remoteSchemaObj <- remoteSchemaInterface sdoc ifaceTypeDefn
-      pure $ P.subselectionWithAlias fieldName description argsParser1 remoteSchemaObj <&>
+      pure $ P.subselectionWithAlias fieldName description argsParser remoteSchemaObj <&>
         (\(alias, args, selSet) ->
            (G.Field alias fieldName args mempty selSet))
     G.TypeDefinitionUnion unionTypeDefn -> do
       remoteSchemaObj <- remoteSchemaUnion sdoc unionTypeDefn
-      pure $ P.subselectionWithAlias fieldName description argsParser1 remoteSchemaObj <&>
+      pure $ P.subselectionWithAlias fieldName description argsParser remoteSchemaObj <&>
         (\(alias, args, selSet) ->
            (G.Field alias fieldName args mempty selSet))
     _ -> throw400 RemoteSchemaError "expected output type, but got input type"
