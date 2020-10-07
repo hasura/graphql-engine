@@ -33,10 +33,10 @@ module Hasura.GraphQL.Parser
   , ParsedSelection(..)
   , handleTypename
   , selection
-  , selectionWithAlias
+  , rawSelection
   , selection_
   , subselection
-  , subselectionWithAlias
+  , rawSubselection
   , subselection_
 
   , jsonToGraphQL

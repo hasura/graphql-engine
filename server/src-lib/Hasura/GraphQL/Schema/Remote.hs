@@ -414,24 +414,6 @@ argumentsParser
 argumentsParser args schemaDoc = do
   sequenceA_ <$> flip traverse args (inputValueDefinitionParser schemaDoc)
 
-inputValueVariableToGValue :: InputValue Variable -> G.Value G.Name
-inputValueVariableToGValue (JSONValue _j) = error "handle this better"
-inputValueVariableToGValue (GraphQLValue v) = getName <$> v
-
-argumentsParser1
-  :: forall n m
-  .  (MonadSchema n m, MonadError QErr m)
-  => G.ArgumentsDefinition
-  -> G.SchemaIntrospection
-  -> m (InputFieldsParser n (HashMap Name (G.Value G.Name)))
-argumentsParser1 args schemaDoc =
-  let parser =
-        sequenceA <$> flip traverse args
-          (\inpValDef -> do
-              p <- inputValueDefinitionParser schemaDoc inpValDef
-              pure $ p `mapField` ((G._ivdName inpValDef),))
-  in (fmap . fmap) (fmap inputValueVariableToGValue . Map.fromList . catMaybes) parser
-
 -- | 'remoteField' accepts a 'G.TypeDefinition' and will returns a 'FieldParser' for it.
 --   Note that the 'G.TypeDefinition' should be of the GraphQL 'Output' kind, when an
 --   GraphQL 'Input' kind is provided, then error will be thrown.
@@ -446,33 +428,33 @@ remoteField
   -> m (FieldParser n RemoteField)
 remoteField sdoc fieldName description argsDefn typeDefn = do
   -- TODO add directives
-  argsParser <- argumentsParser1 argsDefn sdoc
+  argsParser <- argumentsParser argsDefn sdoc
   case typeDefn of
     G.TypeDefinitionObject objTypeDefn -> do
       remoteSchemaObj <- remoteSchemaObject sdoc objTypeDefn
-      let objSelection = P.subselectionWithAlias fieldName description argsParser remoteSchemaObj
-      pure $ objSelection <&> (\(alias, args, selSet) ->
-                                 (G.Field alias fieldName args mempty selSet))
+      let objSelection = P.rawSubselection fieldName description argsParser remoteSchemaObj
+      pure $ objSelection <&> (\(alias, args, _, selSet) ->
+                                 (G.Field alias fieldName (fmap getName <$> args) mempty selSet))
     G.TypeDefinitionScalar scalarTypeDefn ->
       let scalarField = remoteFieldScalarParser scalarTypeDefn
-          scalarSelection = P.selectionWithAlias fieldName description argsParser scalarField
+          scalarSelection = P.rawSelection fieldName description argsParser scalarField
       in
-      pure $ (scalarSelection <&> (\(alias, args) -> (G.Field alias fieldName args mempty [])))
+      pure $ (scalarSelection <&> (\(alias, args, _) -> (G.Field alias fieldName (fmap getName <$> args) mempty [])))
     G.TypeDefinitionEnum enumTypeDefn ->
       let enumField = remoteFieldEnumParser enumTypeDefn
-          enumSelection = P.selectionWithAlias fieldName description argsParser enumField
+          enumSelection = P.rawSelection fieldName description argsParser enumField
       in
-      pure $ enumSelection <&> (\(alias, _) -> (G.Field alias fieldName mempty mempty []))
+      pure $ enumSelection <&> (\(alias, _, _) -> (G.Field alias fieldName mempty mempty []))
     G.TypeDefinitionInterface ifaceTypeDefn -> do
       remoteSchemaObj <- remoteSchemaInterface sdoc ifaceTypeDefn
-      pure $ P.subselectionWithAlias fieldName description argsParser remoteSchemaObj <&>
-        (\(alias, args, selSet) ->
-           (G.Field alias fieldName args mempty selSet))
+      pure $ P.rawSubselection fieldName description argsParser remoteSchemaObj <&>
+        (\(alias, args, _, selSet) ->
+           (G.Field alias fieldName (fmap getName <$> args) mempty selSet))
     G.TypeDefinitionUnion unionTypeDefn -> do
       remoteSchemaObj <- remoteSchemaUnion sdoc unionTypeDefn
-      pure $ P.subselectionWithAlias fieldName description argsParser remoteSchemaObj <&>
-        (\(alias, args, selSet) ->
-           (G.Field alias fieldName args mempty selSet))
+      pure $ P.rawSubselection fieldName description argsParser remoteSchemaObj <&>
+        (\(alias, args, _, selSet) ->
+           (G.Field alias fieldName (fmap getName <$> args) mempty selSet))
     _ -> throw400 RemoteSchemaError "expected output type, but got input type"
 
 remoteFieldScalarParser

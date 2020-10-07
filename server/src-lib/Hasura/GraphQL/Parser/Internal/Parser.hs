@@ -823,17 +823,18 @@ selection
   -> Parser 'Both m b -- ^ type of the result
   -> FieldParser m a
 selection name description argumentsParser resultParser =
-  selectionWithAlias name description argumentsParser resultParser <&> snd
+  rawSelection name description argumentsParser resultParser
+  <&> \(_alias, _args, a) -> a
 
-selectionWithAlias
+rawSelection
   :: forall m a b
    . MonadParse m
   => Name
   -> Maybe Description
   -> InputFieldsParser m a -- ^ parser for the input arguments
   -> Parser 'Both m b -- ^ type of the result
-  -> FieldParser m (Maybe Name, a) -- ^ alias provided (if any), and the arguments
-selectionWithAlias name description argumentsParser resultParser = FieldParser
+  -> FieldParser m (Maybe Name, HashMap Name (Value Variable), a) -- ^ alias provided (if any), and the arguments
+rawSelection name description argumentsParser resultParser = FieldParser
   { fDefinition = mkDefinition name description $
       FieldInfo (ifDefinitions argumentsParser) (pType resultParser)
   , fParser = \Field{ _fAlias, _fArguments, _fSelectionSet } -> do
@@ -844,7 +845,7 @@ selectionWithAlias name description argumentsParser resultParser = FieldParser
       for_ (M.keys _fArguments) \argumentName ->
         unless (argumentName `S.member` argumentNames) $
           parseError $ name <<> " has no argument named " <>> argumentName
-      fmap (_fAlias,) $ withPath (++[Key "args"]) $ ifParser argumentsParser $ GraphQLValue <$> _fArguments
+      fmap (_fAlias, _fArguments, ) $ withPath (++[Key "args"]) $ ifParser argumentsParser $ GraphQLValue <$> _fArguments
   }
   where
     argumentNames = S.fromList (dName <$> ifDefinitions argumentsParser)
@@ -862,18 +863,18 @@ subselection
   -> Parser 'Output m b -- ^ parser for the subselection set
   -> FieldParser m (a, b)
 subselection name description argumentsParser bodyParser =
-  subselectionWithAlias name description argumentsParser bodyParser
-  <&> \(_alias, a, b) -> (a, b)
+  rawSubselection name description argumentsParser bodyParser
+  <&> \(_alias, _args, a, b) -> (a, b)
 
-subselectionWithAlias
+rawSubselection
   :: forall m a b
    . MonadParse m
   => Name
   -> Maybe Description
   -> InputFieldsParser m a -- ^ parser for the input arguments
   -> Parser 'Output m b -- ^ parser for the subselection set
-  -> FieldParser m (Maybe Name, a, b)
-subselectionWithAlias name description argumentsParser bodyParser = FieldParser
+  -> FieldParser m (Maybe Name, HashMap Name (Value Variable), a, b)
+rawSubselection name description argumentsParser bodyParser = FieldParser
   { fDefinition = mkDefinition name description $
       FieldInfo (ifDefinitions argumentsParser) (pType bodyParser)
   , fParser = \Field{ _fAlias, _fArguments, _fSelectionSet } -> do
@@ -882,8 +883,8 @@ subselectionWithAlias name description argumentsParser bodyParser = FieldParser
       for_ (M.keys _fArguments) \argumentName ->
         unless (argumentName `S.member` argumentNames) $
           parseError $ name <<> " has no argument named " <>> argumentName
-      (_fAlias,,) <$> withPath (++[Key "args"]) (ifParser argumentsParser $ GraphQLValue <$> _fArguments)
-                  <*> pParser bodyParser _fSelectionSet
+      (_fAlias,_fArguments,,) <$> withPath (++[Key "args"]) (ifParser argumentsParser $ GraphQLValue <$> _fArguments)
+        <*> pParser bodyParser _fSelectionSet
   }
   where
     argumentNames = S.fromList (dName <$> ifDefinitions argumentsParser)
