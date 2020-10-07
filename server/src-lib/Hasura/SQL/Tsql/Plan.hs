@@ -81,8 +81,6 @@ test i =
           x <- runValidate $ Tsql.runFromIr $ traverse Tsql.fromRootField v
           pure x
 
--- Next: collapse the omap into a single select
-
 --------------------------------------------------------------------------------
 -- Top-level planner
 
