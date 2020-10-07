@@ -298,9 +298,8 @@ runQueryDB reqId query fieldName tx genSql =  do
   -- log the generated SQL and the graphql query
   E.ExecutionCtx logger _ pgExecCtx _ _ _ _ <- ask
   logQueryLog logger query ((fieldName,) <$> genSql) reqId
-  (telemTimeIO, !resp) <- withElapsedTime $ trace ("Postgres Query for root field " <> G.unName fieldName) $
+  withElapsedTime $ trace ("Postgres Query for root field " <> G.unName fieldName) $
     Tracing.interpTraceT id $ hoist (runQueryTx pgExecCtx) tx
-  return (telemTimeIO, resp)
 
 runMutationDB
   :: ( MonadIO m
@@ -321,6 +320,5 @@ runMutationDB reqId query userInfo tx =  do
   -- log the graphql query
   logQueryLog logger query Nothing reqId
   ctx <- Tracing.currentContext
-  (telemTimeIO, resp) <- withElapsedTime $ trace "Mutation" $
+  withElapsedTime $ trace "Mutation" $
     Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx .  withUserInfo userInfo)  tx
-  return (telemTimeIO, resp)
