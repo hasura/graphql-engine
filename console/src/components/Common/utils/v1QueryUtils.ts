@@ -12,6 +12,8 @@ import {
   arrayToPostgresArray,
 } from './pgUtils';
 import { Nullable } from './tsUtils';
+import { ConsoleState } from '../../../types';
+import { ConsoleScope } from '../../Main/ConsoleNotification';
 
 export type OrderByType = 'asc' | 'desc';
 export type OrderByNulls = 'first' | 'last';
@@ -774,3 +776,66 @@ export const getConsoleOptsQuery = () =>
     null,
     null
   );
+
+export const getUpdateConsoleStateQuery = (
+  updatedConsoleState: ConsoleState['console_opts']
+) => {
+  return {
+    type: 'update',
+    args: {
+      table: { name: 'hdb_version', schema: 'hdb_catalog' },
+      $set: { console_state: updatedConsoleState },
+      where: {},
+      returning: ['console_state'],
+    },
+  };
+};
+
+export const getConsoleNotificationQuery = (
+  time: Date | string | number,
+  userType?: Nullable<ConsoleScope>
+) => {
+  let consoleUserScope = {
+    $ilike: `%${userType}%`,
+  };
+  if (!userType) {
+    consoleUserScope = {
+      $ilike: '%OSS%',
+    };
+  }
+
+  return {
+    args: {
+      table: 'console_notification',
+      columns: ['*'],
+      where: {
+        $or: [
+          {
+            expiry_date: {
+              $gte: time,
+            },
+          },
+          {
+            expiry_date: {
+              $eq: null,
+            },
+          },
+        ],
+        scope: consoleUserScope,
+        start_date: { $lte: time },
+      },
+      order_by: [
+        {
+          type: 'asc',
+          nulls: 'last',
+          column: 'priority',
+        },
+        {
+          type: 'desc',
+          column: 'start_date',
+        },
+      ],
+    },
+    type: 'select',
+  };
+};
