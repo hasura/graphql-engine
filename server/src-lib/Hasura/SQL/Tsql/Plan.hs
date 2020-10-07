@@ -91,13 +91,18 @@ planNoPlan ::
      Graphql.SubscriptionRootField Graphql.UnpreparedValue
   -> Either PrepareError Select
 planNoPlan unpreparedRoot = do
-  rootField <-
-    Query.traverseQueryRootField prepareValueNoPlan unpreparedRoot
+  rootField <- Query.traverseQueryRootField prepareValueNoPlan unpreparedRoot
   select <-
     first
       FromIrError
       (runValidate (Tsql.runFromIr (Tsql.fromRootField rootField)))
-  pure select
+  pure
+    select
+      { selectFor =
+          case selectFor select of
+            NoFor -> NoFor
+            JsonFor forJson -> JsonFor forJson {jsonRoot = Root "root"}
+      }
 
 planMultiplex ::
      OMap.InsOrdHashMap G.Name (Graphql.SubscriptionRootField Graphql.UnpreparedValue)
@@ -137,7 +142,8 @@ collapseMap :: OMap.InsOrdHashMap G.Name Select
             -> Reselect
 collapseMap selects =
   Reselect
-    { reselectFor = JsonFor JsonSingleton
+    { reselectFor =
+        JsonFor ForJson {jsonCardinality = JsonSingleton, jsonRoot = NoRoot}
     , reselectWhere = Where mempty
     , reselectProjections =
         NE.fromList (map projectSelect (OMap.toList selects))
@@ -188,7 +194,7 @@ prepareValueNoPlan :: Graphql.UnpreparedValue -> Either PrepareError Tsql.Expres
 prepareValueNoPlan =
   \case
     Graphql.UVLiteral (_ :: Sql.SQLExp) -> Left UVLiteralNotSupported
-    Graphql.UVSession -> pure (JsonQueryExpression globalSessionExpression Nothing)
+    Graphql.UVSession -> pure (JsonQueryExpression globalSessionExpression)
     Graphql.UVSessionVar _typ _text -> Left SessionVarNotSupported
     Graphql.UVParameter Graphql.PGColumnValue {pcvValue = Sql.WithScalarType {pstValue}} _mVariableInfo ->
       case fromPgScalarValue pstValue of
@@ -203,7 +209,7 @@ prepareValueMultiplex =
   \case
     Graphql.UVLiteral (_ :: Sql.SQLExp) -> lift (Left UVLiteralNotSupported)
     Graphql.UVSession ->
-      pure (JsonQueryExpression globalSessionExpression Nothing)
+      pure (JsonQueryExpression globalSessionExpression)
     Graphql.UVSessionVar _typ _text -> lift (Left SessionVarNotSupported)
     Graphql.UVParameter pgcolumnvalue mVariableInfo ->
       case fmap PS.getName mVariableInfo of
@@ -211,13 +217,13 @@ prepareValueMultiplex =
           index <- gets positionalArguments
           modify' (\s -> s {positionalArguments = index + 1})
           pure
-            (JsonQueryExpression
+            (JsonValueExpression
                (ColumnExpression
                   FieldName
                     { fieldNameEntity = rowAlias
                     , fieldName = resultVarsAlias
                     })
-               (Just (RootPath `FieldPath` "synthetic" `IndexPath` index)))
+               (RootPath `FieldPath` "synthetic" `IndexPath` index))
         Just name -> do
           modify
             (\s ->
@@ -226,10 +232,9 @@ prepareValueMultiplex =
                      HM.insert name pgcolumnvalue (namedArguments s)
                  })
           pure
-            (JsonQueryExpression
+            (JsonValueExpression
                envObjectExpression
-               (Just
-                  (RootPath `FieldPath` "query" `FieldPath` G.unName name)))
+               (RootPath `FieldPath` "query" `FieldPath` G.unName name))
 
 --------------------------------------------------------------------------------
 -- Producing the correct SQL-level list comprehension to multiplex a query
@@ -255,13 +260,15 @@ multiplexRootReselect rootReselect =
                       {fieldNameEntity = rowAlias, fieldName = resultIdAlias}
                 , aliasedAlias = resultIdAlias
                 }
-          , FieldNameProjection
+          , ExpressionProjection
               Aliased
                 { aliasedThing =
-                    FieldName
-                      { fieldNameEntity = resultAlias
-                      , fieldName = Tsql.jsonFieldName
-                      }
+                    JsonQueryExpression
+                      (ColumnExpression
+                         (FieldName
+                            { fieldNameEntity = resultAlias
+                            , fieldName = Tsql.jsonFieldName
+                            }))
                 , aliasedAlias = resultAlias
                 }
           ]
@@ -288,7 +295,8 @@ multiplexRootReselect rootReselect =
             }
         ]
     , selectWhere = Where mempty
-    , selectFor = JsonFor JsonArray
+    , selectFor =
+        JsonFor ForJson {jsonCardinality = JsonArray, jsonRoot = NoRoot}
     , selectOrderBy = Nothing
     , selectOffset = Nothing
     }

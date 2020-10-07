@@ -52,7 +52,8 @@ instance IsString Printer where
 fromExpression :: Expression -> Printer
 fromExpression =
   \case
-    JsonQueryExpression e path -> "JSON_QUERY(" <+> fromExpression e <+>? fmap fromPath path <+> ")"
+    JsonQueryExpression e -> "JSON_QUERY(" <+> fromExpression e <+> ")"
+    JsonValueExpression e path -> "JSON_VALUE(" <+> fromExpression e <+> fromPath path <+> ")"
     ValueExpression value -> QueryPrinter (toSql value)
     AndExpression xs ->
       SepByPrinter
@@ -204,11 +205,15 @@ fromFor :: For -> Printer
 fromFor =
   \case
     NoFor -> ""
-    JsonFor cardinality ->
+    JsonFor ForJson {jsonCardinality, jsonRoot = root} ->
       "FOR JSON PATH" <+>
-      case cardinality of
+      case jsonCardinality of
         JsonArray -> ""
-        JsonSingleton -> ", WITHOUT_ARRAY_WRAPPER"
+        JsonSingleton ->
+          ", WITHOUT_ARRAY_WRAPPER" <+>
+          case root of
+            NoRoot -> ""
+            Root text -> "ROOT(" <+> QueryPrinter (toSql text) <+> ")"
 
 fromProjection :: Projection -> Printer
 fromProjection =

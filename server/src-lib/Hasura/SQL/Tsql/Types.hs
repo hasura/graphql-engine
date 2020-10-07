@@ -42,8 +42,18 @@ data NullsOrder
   deriving (Eq, Show)
 
 data For
-  = JsonFor JsonCardinality
+  = JsonFor ForJson
   | NoFor
+  deriving (Eq, Show)
+
+data ForJson = ForJson
+  { jsonCardinality :: JsonCardinality
+  , jsonRoot :: Root
+  } deriving (Eq, Show)
+
+data Root
+  = NoRoot
+  | Root Text
   deriving (Eq, Show)
 
 data JsonCardinality
@@ -108,8 +118,14 @@ data Expression
   | ColumnExpression FieldName
   | EqualExpression Expression Expression
   | NotEqualExpression Expression Expression
-  | JsonQueryExpression Expression (Maybe JsonPath)
+  | JsonQueryExpression Expression
+    -- ^ This one acts like a "cast to JSON" and makes SQL Server
+    -- behave like it knows your field is JSON and not double-encode
+    -- it.
   | ToStringExpression Expression
+  | JsonValueExpression Expression JsonPath
+    -- ^ This is for getting actual atomic values out of a JSON
+    -- string.
   deriving (Eq, Show)
 
 data JsonPath
