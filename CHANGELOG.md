@@ -58,6 +58,8 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - server: change `created_at` column type from `timestamp` to `timestamptz` for scheduled triggers tables (fix #5722)
 - server: allow configuring timeouts for actions (fixes #4966)
 - server: accept only non-negative integers for batch size and refetch interval (close #5653) (#5759)
+- server: limit the length of event trigger names (close #5786)
+**NOTE:** If you have event triggers with names greater than 42 chars, then you should update their names to avoid running into Postgres identifier limit bug (#5786)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
@@ -65,6 +67,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - console: add `<3 hasura` section to view updates and notifications from Hasura (#5070)
 - cli: add missing global flags for seeds command (#5565)
 - docs: add docs page on networking with docker (close #4346) (#4811)
+- docs: add postgres concepts page to docs (close #4440) (#4471)
 
 
 ## `v1.3.2`

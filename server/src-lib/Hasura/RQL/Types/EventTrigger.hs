@@ -30,7 +30,7 @@ import           Data.Aeson.TH
 import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.Types.Common    (NonEmptyText (..), InputWebhook)
+import           Hasura.RQL.Types.Common    (NonEmptyText(..), InputWebhook)
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax (Lift)
 
@@ -39,9 +39,17 @@ import qualified Data.Text                  as T
 import qualified Database.PG.Query          as Q
 import qualified Text.Regex.TDFA            as TDFA
 
+-- This change helps us create functions for the event triggers
+-- without the function name being truncated by PG, since PG allows
+-- for only 63 chars for identifiers. 
+-- Reasoning for the 42 characters:
+-- 63 - (notify_hasura_) - (_INSERT | _UPDATE | _DELETE)
+maxTriggerNameLength :: Int
+maxTriggerNameLength = 42
+
 -- | Unique name for event trigger.
 newtype TriggerName = TriggerName { unTriggerName :: NonEmptyText }
-  deriving (Show, Eq, Hashable, Lift, DQuote, FromJSON, ToJSON, ToJSONKey, Q.FromCol, Q.ToPrepArg, Generic, Arbitrary, NFData, Cacheable)
+  deriving (Show, Eq, Hashable, Lift, DQuote, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, Generic, NFData, Cacheable, Arbitrary, Q.FromCol)
 
 triggerNameToTxt :: TriggerName -> Text
 triggerNameToTxt = unNonEmptyText . unTriggerName
@@ -116,7 +124,7 @@ instance ToJSON WebhookConf where
 instance FromJSON WebhookConf where
   parseJSON (Object o) = WCEnv <$> o .: "from_env"
   parseJSON t@(String _) =
-    case (fromJSON t) of
+    case fromJSON t of
       Error s   -> fail s
       Success a -> pure $ WCValue a
   parseJSON _          = fail "one of string or object must be provided for webhook"
@@ -146,25 +154,25 @@ data CreateEventTriggerQuery
 
 instance FromJSON CreateEventTriggerQuery where
   parseJSON (Object o) = do
-    name           <- o .: "name"
-    table          <- o .: "table"
-    insert         <- o .:? "insert"
-    update         <- o .:? "update"
-    delete         <- o .:? "delete"
-    enableManual   <- o .:? "enable_manual" .!= False
-    retryConf      <- o .:? "retry_conf"
-    webhook        <- o .:? "webhook"
-    webhookFromEnv <- o .:? "webhook_from_env"
-    headers        <- o .:? "headers"
-    replace        <- o .:? "replace" .!= False
+    name            <- o .:  "name"
+    table           <- o .:  "table"
+    insert          <- o .:? "insert"
+    update          <- o .:? "update"
+    delete          <- o .:? "delete"
+    enableManual    <- o .:? "enable_manual" .!= False
+    retryConf       <- o .:? "retry_conf"
+    webhook         <- o .:? "webhook"
+    webhookFromEnv  <- o .:? "webhook_from_env"
+    headers         <- o .:? "headers"
+    replace         <- o .:? "replace" .!= False
     let regex = "^[A-Za-z]+[A-Za-z0-9_\\-]*$" :: LBS.ByteString
         compiledRegex = TDFA.makeRegex regex :: TDFA.Regex
         isMatch = TDFA.match compiledRegex . T.unpack $ triggerNameToTxt name
-    if isMatch then return ()
-      else fail "only alphanumeric and underscore and hyphens allowed for name"
-    if any isJust [insert, update, delete] || enableManual then
-      return ()
-      else
+    unless isMatch $
+      fail "only alphanumeric and underscore and hyphens allowed for name"
+    unless (T.length (triggerNameToTxt name) <= maxTriggerNameLength) $
+      fail "event trigger name can be at most 42 characters"
+    unless (any isJust [insert, update, delete] || enableManual) $
       fail "atleast one amongst insert/update/delete/enable_manual spec must be provided"
     case (webhook, webhookFromEnv) of
       (Just _, Nothing) -> return ()
@@ -195,10 +203,8 @@ instance NFData TriggerOpsDef
 instance Cacheable TriggerOpsDef
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerOpsDef)
 
-data DeleteEventTriggerQuery
-  = DeleteEventTriggerQuery
-  { detqName :: !TriggerName
-  } deriving (Show, Eq, Lift)
+newtype DeleteEventTriggerQuery = DeleteEventTriggerQuery { detqName :: TriggerName }
+  deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''DeleteEventTriggerQuery)
 
