@@ -149,25 +149,3 @@ getNextArgNum = do
   curArgNum <- gets _psArgNumber
   modify \x -> x {_psArgNumber = curArgNum + 1}
   return curArgNum
-
-collectVariables
-  :: forall fragments var
-   . (Foldable fragments, Hashable var, Eq var)
-  => G.SelectionSet fragments var
-  -> Set.HashSet var
-collectVariables =
-  Set.unions . fmap (foldMap Set.singleton)
-
-buildTypedOperation
-  :: forall frag
-   . (Functor frag, Foldable frag)
-  => G.OperationType
-  -> [G.VariableDefinition]
-  -> G.SelectionSet frag G.Name
-  -> Maybe GH.VariableValues
-  -> (G.TypedOperationDefinition frag G.Name, Maybe GH.VariableValues)
-buildTypedOperation tp varDefs selSet varValsM =
-  let requiredVars = collectVariables selSet
-      restrictedDefs = filter (\varDef -> G._vdName varDef `Set.member` requiredVars) varDefs
-      restrictedValsM = flip Map.intersection (Set.toMap requiredVars) <$> varValsM
-  in (G.TypedOperationDefinition tp Nothing restrictedDefs [] selSet, restrictedValsM)
