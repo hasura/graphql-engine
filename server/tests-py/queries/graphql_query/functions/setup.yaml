@@ -207,6 +207,11 @@ args:
     name: author
     schema: public
 
+- type: track_table
+  args:
+    name: author_mat_view
+    schema: public
+
 - type: track_function
   version: 2
   args:
