@@ -138,12 +138,12 @@ Step 1: Deploy Hasura on Heroku
 
 Deploy Hasura on Heroku as described in :ref:`this section <heroku_one_click>`. 
 
-Step 2: Remove the created Postgres add-on in the app
+Step 2: Delete the created Postgres add-on in the app
 *****************************************************
 
 Head to your Heroku dashboard and delete the Postgres add-on created in the previous step:
 
-.. thumbnail:: /img/graphql/core/deployment/remove-heroku-postgres-addon.png
+.. thumbnail:: /img/graphql/core/deployment/delete-heroku-postgres-addon.png
    :alt: Delete the Postgres add-on
 
 Step 3: Configure environment variables
