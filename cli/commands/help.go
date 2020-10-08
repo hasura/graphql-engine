@@ -68,7 +68,10 @@ func (o *helpOptions) run() {
 	cmd, _, e := c.Root().Find(args)
 	if cmd == nil || e != nil {
 		c.Printf("Unknown help topic %#q\n", args)
-		c.Root().Usage()
+		usageErr := c.Root().Usage()
+		if usageErr != nil {
+			c.Printf("Error printing usage: %v", usageErr)
+		}
 	} else {
 		if cmd.Name() == "hasura" {
 			// root command
@@ -85,7 +88,10 @@ func (o *helpOptions) run() {
 			fmt.Println(`Use "hasura [command] --help" for more information about a command.`)
 		} else {
 			cmd.InitDefaultHelpFlag() // make possible 'help' flag to be shown
-			cmd.Help()
+			helpErr := cmd.Help()
+			if helpErr != nil {
+				c.Printf("Error printing usage: %v", helpErr)
+			}
 		}
 	}
 
