@@ -9,4 +9,5 @@ args:
       DROP TABLE integer_column cascade;
       DROP TABLE "user" cascade;
       DROP TABLE text_result cascade;
+      DROP TABLE author cascade;
     cascade: true
