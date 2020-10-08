@@ -89,6 +89,7 @@ class (Monad m) => MonadMetadataStorage m where
   getPartialCronEvents :: MetadataStorageT m [CronEventPartial]
   getOneOffScheduledEvents :: MetadataStorageT m [OneOffScheduledEvent]
   insertCronEvents :: [CronEventSeed] -> MetadataStorageT m ()
+  insertScheduledEvent :: CreateScheduledEvent -> MetadataStorageT m ()
   insertScheduledEventInvocation
     :: Invocation 'ScheduledType -> ScheduledEventType -> MetadataStorageT m ()
   setScheduledEventRetry
@@ -116,6 +117,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (ReaderT r m) where
   getPartialCronEvents               = (hoist lift) getPartialCronEvents
   getOneOffScheduledEvents           = (hoist lift) getOneOffScheduledEvents
   insertCronEvents                   = (hoist lift) . insertCronEvents
+  insertScheduledEvent               = (hoist lift) . insertScheduledEvent
   insertScheduledEventInvocation a b = (hoist lift) $ insertScheduledEventInvocation a b
   setScheduledEventRetry a b c       = (hoist lift) $ setScheduledEventRetry a b c
   setScheduledEventStatus a b c      = (hoist lift) $ setScheduledEventStatus a b c
@@ -139,6 +141,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (ExceptT e m) where
   getPartialCronEvents               = (hoist lift) getPartialCronEvents
   getOneOffScheduledEvents           = (hoist lift) getOneOffScheduledEvents
   insertCronEvents                   = (hoist lift) . insertCronEvents
+  insertScheduledEvent               = (hoist lift) . insertScheduledEvent
   insertScheduledEventInvocation a b = (hoist lift) $ insertScheduledEventInvocation a b
   setScheduledEventRetry a b c       = (hoist lift) $ setScheduledEventRetry a b c
   setScheduledEventStatus a b c      = (hoist lift) $ setScheduledEventStatus a b c
@@ -162,6 +165,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (Tracing.TraceT m) whe
   getPartialCronEvents               = (hoist lift) getPartialCronEvents
   getOneOffScheduledEvents           = (hoist lift) getOneOffScheduledEvents
   insertCronEvents                   = (hoist lift) . insertCronEvents
+  insertScheduledEvent               = (hoist lift) . insertScheduledEvent
   insertScheduledEventInvocation a b = (hoist lift) $ insertScheduledEventInvocation a b
   setScheduledEventRetry a b c       = (hoist lift) $ setScheduledEventRetry a b c
   setScheduledEventStatus a b c      = (hoist lift) $ setScheduledEventStatus a b c

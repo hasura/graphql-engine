@@ -8,13 +8,13 @@ module Hasura.RQL.Types.Run
   , peelQueryRun
   ) where
 
+import           Hasura.Class
 import           Hasura.Prelude
 import           Hasura.Session
 
 import qualified Database.PG.Query           as Q
 import qualified Network.HTTP.Client         as HTTP
 
-import           Control.Monad.Morph         (hoist)
 import           Control.Monad.Trans.Control (MonadBaseControl)
 import           Control.Monad.Unique
 
@@ -31,43 +31,47 @@ data RunCtx
 
 type ReaderStateT m a = ReaderT RunCtx (StateT Metadata m) a
 
-newtype MetadataRun a
-  = MetadataRun {unRun :: ReaderStateT (ExceptT QErr IO) a}
+newtype MetadataRun m a
+  = MetadataRun {unRun :: ReaderStateT (ExceptT QErr m) a}
   deriving ( Functor, Applicative, Monad
            , MonadError QErr
            , MonadReader RunCtx
            , MonadIO
-           , MonadBase IO
-           , MonadBaseControl IO
            , MonadUnique
            , MonadState Metadata
            )
 
-instance UserInfoM MetadataRun where
+instance MonadTrans MetadataRun where
+  lift = lift
+
+instance (Monad m) => UserInfoM (MetadataRun m) where
   askUserInfo = asks _rcUserInfo
 
-instance HasHttpManager MetadataRun where
+instance (Monad m) => HasHttpManager (MetadataRun m) where
   askHttpManager = asks _rcHttpMgr
 
-instance HasSQLGenCtx MetadataRun where
+instance (Monad m) => HasSQLGenCtx (MetadataRun m) where
   askSQLGenCtx = asks _rcSqlGenCtx
 
-instance HasDefaultSource MetadataRun where
+instance (Monad m) => HasDefaultSource (MetadataRun m) where
   askDefaultSource = asks _rcDefaultPgSource
 
-instance MonadMetadata MetadataRun where
+instance (Monad m) => MonadMetadata (MetadataRun m) where
   fetchMetadata = get
-
   updateMetadata = put
 
+instance (MonadMetadataStorage m) => MonadScheduledEvents (MetadataRun m) where
+  createScheduledEvent = liftEitherM . lift . runMetadataStorageT . insertScheduledEvent
+  dropFutureCronEvents = liftEitherM . lift . runMetadataStorageT . clearFutureCronEvents
+  addCronEventSeeds    = liftEitherM . lift . runMetadataStorageT . insertCronEvents
+
 peelMetadataRun
-  :: (MonadIO m)
-  => RunCtx
+  :: RunCtx
   -> Metadata
-  -> MetadataRun a
+  -> MetadataRun m a
   -> ExceptT QErr m (a, Metadata)
 peelMetadataRun runCtx metadata (MetadataRun m) =
-  hoist liftIO $ runStateT (runReaderT m runCtx) metadata
+  runStateT (runReaderT m runCtx) metadata
 
 newtype QueryRun a
   = QueryRun {unQueryRun :: ReaderStateT (LazyTx QErr) a}

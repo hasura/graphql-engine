@@ -76,7 +76,7 @@ newtype CacheRWT m a
   = CacheRWT (StateT (RebuildableSchemaCache, CacheInvalidations) m a)
   deriving
     ( Functor, Applicative, Monad, MonadIO, MonadUnique, MonadReader r, MonadError e, MonadTx
-    , UserInfoM, HasHttpManager, HasSQLGenCtx, HasSystemDefined, MonadMetadata)
+    , UserInfoM, HasHttpManager, HasSQLGenCtx, HasSystemDefined, MonadMetadata, MonadScheduledEvents)
 
 runCacheRWT
   :: Functor m

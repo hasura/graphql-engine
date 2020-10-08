@@ -10,6 +10,7 @@ import           Data.String                               (fromString)
 import           Hasura.Prelude                            hiding (get, put)
 
 import           Control.Monad.Stateless
+import           Control.Monad.Unique
 import           Data.Aeson                                hiding (json)
 import           Data.IORef
 import           Network.Mime                              (defaultMimeLookup)
@@ -408,6 +409,7 @@ v1MetadataHandler
      , MonadBaseControl IO m
      , MonadMetadataStorage m
      , MonadApiAuthorization m
+     , MonadUnique m
      )
   => RQLMetadata -> Handler m (HttpResponse EncJSON)
 v1MetadataHandler request = do
@@ -648,7 +650,7 @@ mkWaiApp
   :: forall m.
      ( HasVersion
      , MonadIO m
---     , MonadUnique m
+     , MonadUnique m
      , MonadStateless IO m
      , LA.Forall (LA.Pure m)
      , ConsoleRenderer m
@@ -761,7 +763,7 @@ mkWaiApp env logger sqlGenCtx enableAL defPgSource httpManager mode corsCfg enab
 httpApp
   :: ( HasVersion
      , MonadIO m
---     , MonadUnique m
+     , MonadUnique m
      , MonadBaseControl IO m
      , ConsoleRenderer m
      , HttpLog m

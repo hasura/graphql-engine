@@ -7,6 +7,7 @@ module Hasura.RQL.Types.ScheduledTrigger
   , CreateScheduledEvent(..)
   , CronEventId
   , OneOffScheduledEventId
+  , CronEventSeed(..)
   , formatTime'
   , defaultSTRetryConf
   ) where
@@ -18,9 +19,10 @@ import           Data.Time.Clock
 import           Data.Time.Clock.Units
 import           Data.Time.Format.ISO8601
 import           Hasura.Incremental
-import           Hasura.RQL.Types.Common     (NonNegativeDiffTime, unsafeNonNegativeDiffTime)
-import           Hasura.RQL.Types.Action     (InputWebhook(..))
 import           Hasura.Prelude
+import           Hasura.RQL.Types.Action       (InputWebhook (..))
+import           Hasura.RQL.Types.Common       (NonNegativeDiffTime, unsafeNonNegativeDiffTime)
+import           Hasura.RQL.Types.EventTrigger
 import           System.Cron.Types
 
 import qualified Data.Aeson                    as J
@@ -144,15 +146,15 @@ formatTime'= T.pack . iso8601Show
 
 data CreateScheduledEvent
   = CreateScheduledEvent
-  { cseWebhook           :: !InputWebhook
-  , cseScheduleAt        :: !UTCTime
+  { cseWebhook    :: !InputWebhook
+  , cseScheduleAt :: !UTCTime
     -- ^ The timestamp should be in the
     -- <ISO 8601 https://en.wikipedia.org/wiki/ISO_8601>
     -- format (which is what @aeson@ expects by default for 'UTCTime').
-  , csePayload           :: !(Maybe J.Value)
-  , cseHeaders           :: ![ET.HeaderConf]
-  , cseRetryConf         :: !STRetryConf
-  , cseComment           :: !(Maybe Text)
+  , csePayload    :: !(Maybe J.Value)
+  , cseHeaders    :: ![ET.HeaderConf]
+  , cseRetryConf  :: !STRetryConf
+  , cseComment    :: !(Maybe Text)
   } deriving (Show, Eq, Generic)
 
 instance FromJSON CreateScheduledEvent where
@@ -166,3 +168,9 @@ instance FromJSON CreateScheduledEvent where
                                    <*> o .:? "comment"
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''CreateScheduledEvent)
+
+data CronEventSeed
+  = CronEventSeed
+  { cesName          :: !TriggerName
+  , cesScheduledTime :: !UTCTime
+  } deriving (Show, Eq)

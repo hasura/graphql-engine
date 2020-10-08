@@ -1,6 +1,7 @@
 -- | The RQL metadata query ('/v1/metadata')
 module Hasura.Server.API.Metadata where
 
+import           Hasura.Class
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Action
@@ -132,6 +133,8 @@ runMetadataRequest
   :: ( HasVersion
      , MonadIO m
      , MonadError QErr m
+     , MonadUnique m
+     , MonadMetadataStorage m
      )
   => Env.Environment
   -> UserInfo
@@ -160,6 +163,7 @@ runMetadataRequestM
      , UserInfoM m
      , MonadUnique m
      , MonadMetadata m
+     , MonadScheduledEvents m
      , HasHttpManager m
      , MonadError QErr m
      )

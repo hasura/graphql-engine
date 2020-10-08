@@ -362,6 +362,7 @@ library
                      , Hasura.RQL.Types.SchemaCacheTypes
                      , Hasura.RQL.Types.BoolExp
                      , Hasura.RQL.Types.Function
+                     , Hasura.RQL.Types.Class
                      , Hasura.RQL.Types.Column
                      , Hasura.RQL.Types.Common
                      , Hasura.RQL.Types.ComputedField
@@ -369,7 +370,6 @@ library
                      , Hasura.RQL.Types.Error
                      , Hasura.RQL.Types.EventTrigger
                      , Hasura.RQL.Types.Metadata
-                     , Hasura.RQL.Types.Metadata.Class
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.QueryCollection
                      , Hasura.RQL.Types.Action

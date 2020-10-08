@@ -78,6 +78,7 @@ module Hasura.Eventing.ScheduledTrigger
   , unlockScheduledEventsTx
   , unlockAllLockedScheduledEventsTx
   , clearFutureCronEventsTx
+  , insertScheduledEventTx
   ) where
 
 import           Control.Arrow.Extended                 (dup)
@@ -668,3 +669,19 @@ clearFutureCronEventsTx triggerName =
     DELETE FROM hdb_catalog.hdb_cron_events
     WHERE trigger_name = $1 AND scheduled_time > now() AND tries = 0
   |] (Identity triggerName) False
+
+insertScheduledEventTx :: CreateScheduledEvent -> Q.TxE QErr ()
+insertScheduledEventTx CreateScheduledEvent{..} =
+  Q.unitQE defaultTxErrorHandler
+     [Q.sql|
+      INSERT INTO hdb_catalog.hdb_scheduled_events
+      (webhook_conf,scheduled_time,payload,retry_conf,header_conf,comment)
+      VALUES
+      ($1, $2, $3, $4, $5, $6)
+     |] ( Q.AltJ cseWebhook
+        , cseScheduleAt
+        , Q.AltJ csePayload
+        , Q.AltJ cseRetryConf
+        , Q.AltJ cseHeaders
+        , cseComment)
+        False

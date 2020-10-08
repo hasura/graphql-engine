@@ -36,6 +36,7 @@ import qualified Network.HTTP.Client         as HTTP
 import qualified PostgreSQL.Binary.Decoding  as PD
 import qualified PostgreSQL.Binary.Encoding  as PE
 import qualified Text.Builder                as TB (run)
+
 newtype ScheduledTriggerInternalErr
   = ScheduledTriggerInternalErr QErr
   deriving (Show, Eq)
@@ -87,12 +88,6 @@ data CronTriggerStats
   { ctsName                :: !TriggerName
   , ctsUpcomingEventsCount :: !Int
   , ctsMaxScheduledTime    :: !UTCTime
-  } deriving (Show, Eq)
-
-data CronEventSeed
-  = CronEventSeed
-  { cesName          :: !TriggerName
-  , cesScheduledTime :: !UTCTime
   } deriving (Show, Eq)
 
 data CronEventPartial

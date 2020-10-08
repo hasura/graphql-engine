@@ -8,7 +8,6 @@ module Hasura.RQL.DDL.ScheduledTrigger
   , runCreateScheduledEvent
   ) where
 
-import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.Eventing.ScheduledTrigger
 import           Hasura.Prelude
@@ -18,13 +17,17 @@ import           Hasura.RQL.Types
 import qualified Data.Environment                 as Env
 import qualified Data.HashMap.Strict              as Map
 import qualified Data.Time.Clock                  as C
-import qualified Database.PG.Query                as Q
 
 -- | runCreateCronTrigger will update a existing cron trigger when the 'replace'
 --   value is set to @true@ and when replace is @false@ a new cron trigger will
 --   be created
 runCreateCronTrigger
-  :: (CacheRWM m, MonadError QErr m) => CreateCronTrigger ->  m EncJSON
+  :: ( CacheRWM m
+     , MonadError QErr m
+     , MonadScheduledEvents m
+     , MonadIO m
+     )
+  => CreateCronTrigger ->  m EncJSON
 runCreateCronTrigger CreateCronTrigger {..} = do
   let q = (CronTriggerMetadata cctName
                                cctWebhook
@@ -86,7 +89,12 @@ resolveCronTrigger env CronTriggerMetadata{..} = do
                     ctComment
 
 updateCronTrigger
-  :: (CacheRWM m, MonadError QErr m) => CronTriggerMetadata -> m EncJSON
+  :: ( MonadScheduledEvents m
+     , CacheRWM m
+     , MonadError QErr m
+     , MonadIO m
+     )
+  => CronTriggerMetadata -> m EncJSON
 updateCronTrigger cronTriggerMetadata = do
   let triggerName = ctName cronTriggerMetadata
   checkExists triggerName
@@ -94,35 +102,37 @@ updateCronTrigger cronTriggerMetadata = do
   buildSchemaCacheFor (MOCronTrigger triggerName)
     $ MetadataModifier
     $ metaCronTriggers %~ Map.insert triggerName cronTriggerMetadata
+  dropFutureCronEvents triggerName
+  currentTime <- liftIO C.getCurrentTime
+  addCronEventSeeds $ map (CronEventSeed triggerName) $
+    generateScheduleTimes currentTime 100 $ ctSchedule cronTriggerMetadata
   return successMsg
 
-updateCronTriggerInCatalog :: (MonadTx m) => CronTriggerMetadata -> m ()
-updateCronTriggerInCatalog CronTriggerMetadata {..} = liftTx $ do
-  Q.unitQE defaultTxErrorHandler
-   [Q.sql|
-    UPDATE hdb_catalog.hdb_cron_triggers
-    SET webhook_conf = $2,
-        cron_schedule = $3,
-        payload = $4,
-        retry_conf = $5,
-        header_conf = $6,
-        include_in_metadata = $7,
-        comment = $8
-    WHERE name = $1
-   |] (ctName, Q.AltJ ctWebhook, ctSchedule, Q.AltJ <$> ctPayload, Q.AltJ ctRetryConf,Q.AltJ ctHeaders
-      , ctIncludeInMetadata, ctComment) False
-  -- since the cron trigger is updated, clear all its future events which are not retries
-  Q.unitQE defaultTxErrorHandler
-   [Q.sql|
-    DELETE FROM hdb_catalog.hdb_cron_events
-    WHERE trigger_name = $1 AND scheduled_time > now() AND tries = 0
-   |] (Identity ctName) False
-  -- create the next 100 cron events, as the future events were deleted
-  currentTime <- liftIO C.getCurrentTime
-  let scheduleTimes = generateScheduleTimes currentTime 100 ctSchedule
-  pure ()
-  -- FIXME:
-  -- insertCronEvents $ map (CronEventSeed ctName) scheduleTimes
+-- updateCronTriggerInCatalog :: (MonadTx m) => CronTriggerMetadata -> m ()
+-- updateCronTriggerInCatalog CronTriggerMetadata {..} = liftTx $ do
+--   Q.unitQE defaultTxErrorHandler
+--    [Q.sql|
+--     UPDATE hdb_catalog.hdb_cron_triggers
+--     SET webhook_conf = $2,
+--         cron_schedule = $3,
+--         payload = $4,
+--         retry_conf = $5,
+--         header_conf = $6,
+--         include_in_metadata = $7,
+--         comment = $8
+--     WHERE name = $1
+--    |] (ctName, Q.AltJ ctWebhook, ctSchedule, Q.AltJ <$> ctPayload, Q.AltJ ctRetryConf,Q.AltJ ctHeaders
+--       , ctIncludeInMetadata, ctComment) False
+--   -- since the cron trigger is updated, clear all its future events which are not retries
+--   Q.unitQE defaultTxErrorHandler
+--    [Q.sql|
+--     DELETE FROM hdb_catalog.hdb_cron_events
+--     WHERE trigger_name = $1 AND scheduled_time > now() AND tries = 0
+--    |] (Identity ctName) False
+--   -- create the next 100 cron events, as the future events were deleted
+--   currentTime <- liftIO C.getCurrentTime
+--   let scheduleTimes = generateScheduleTimes currentTime 100 ctSchedule
+-- insertCronEvents $ map (CronEventSeed ctName) scheduleTimes
 
 runDeleteCronTrigger
   :: (CacheRWM m, MonadError QErr m) => ScheduledTriggerName -> m EncJSON
@@ -147,10 +157,9 @@ dropCronTriggerInMetadata name =
 --    |] (Identity triggerName) False
 
 runCreateScheduledEvent
-  :: (MonadError QErr m) => CreateScheduledEvent -> m EncJSON
-runCreateScheduledEvent CreateScheduledEvent {..} = do
-  -- FIXME:
-  throw400 NotSupported $ "creating scheduled events are temporarily disabled"
+  :: (MonadScheduledEvents m) => CreateScheduledEvent -> m EncJSON
+runCreateScheduledEvent scheduledEvent = do
+  createScheduledEvent scheduledEvent
   -- liftTx $ Q.unitQE defaultTxErrorHandler
   --    [Q.sql|
   --     INSERT INTO hdb_catalog.hdb_scheduled_events
@@ -164,7 +173,7 @@ runCreateScheduledEvent CreateScheduledEvent {..} = do
   --       , Q.AltJ cseHeaders
   --       , cseComment)
   --       False
-  -- pure successMsg
+  pure successMsg
 
 checkExists :: (CacheRM m, MonadError QErr m) => TriggerName -> m ()
 checkExists name = do

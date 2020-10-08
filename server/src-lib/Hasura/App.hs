@@ -12,6 +12,7 @@ import           Control.Monad.Morph                       (hoist)
 import           Control.Monad.Stateless
 import           Control.Monad.STM                         (atomically)
 import           Control.Monad.Trans.Control               (MonadBaseControl (..))
+import           Control.Monad.Unique
 import           Data.Aeson                                ((.=))
 import           Data.Time.Clock                           (UTCTime)
 #ifndef PROFILING
@@ -186,6 +187,7 @@ newtype ServerAppM a = ServerAppM { unServerAppM :: ReaderT Q.PGPool IO a }
            , MonadIO, MonadBase IO, MonadBaseControl IO
            , MonadCatch, MonadThrow, MonadMask
            , MonadReader Q.PGPool
+           , MonadUnique
            )
 
 -- | this function initializes the catalog and returns an @InitCtx@, based on the command given
@@ -320,6 +322,7 @@ runHGEServer
   .  ( HasVersion
      , MonadIO m
      , MonadMask m
+     , MonadUnique m
      , MonadStateless IO m
      , LA.Forall (LA.Pure m)
      , UserAuthentication (Tracing.TraceT m)
@@ -631,7 +634,7 @@ runAsAdmin
   -> SQLGenCtx
   -> HTTP.Manager
   -> Metadata
-  -> MetadataRun a
+  -> MetadataRun m a
   -> m (Either QErr a)
 runAsAdmin defPgSource sqlGenCtx httpManager metadata m =
   fmap (fmap fst) $ runExceptT $
@@ -781,6 +784,7 @@ instance MonadMetadataStorage ServerAppM where
   unlockScheduledEvents a b          = runTxInMetadataStorage $ unlockScheduledEventsTx a b
   unlockAllLockedScheduledEvents     = runTxInMetadataStorage unlockAllLockedScheduledEventsTx
   clearFutureCronEvents              = runTxInMetadataStorage . clearFutureCronEventsTx
+  insertScheduledEvent               = runTxInMetadataStorage . insertScheduledEventTx
 
 --- helper functions ---
 

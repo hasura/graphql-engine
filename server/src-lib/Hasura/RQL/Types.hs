@@ -57,6 +57,7 @@ import           Hasura.Tracing                      (TraceT)
 import           Hasura.Db                           as R
 import           Hasura.RQL.Types.Action             as R
 import           Hasura.RQL.Types.BoolExp            as R
+import           Hasura.RQL.Types.Class              as R
 import           Hasura.RQL.Types.Column             as R
 import           Hasura.RQL.Types.Common             as R
 import           Hasura.RQL.Types.ComputedField      as R
@@ -66,7 +67,6 @@ import           Hasura.RQL.Types.Error              as R
 import           Hasura.RQL.Types.EventTrigger       as R
 import           Hasura.RQL.Types.Function           as R
 import           Hasura.RQL.Types.Metadata           as R
-import           Hasura.RQL.Types.Metadata.Class     as R
 import           Hasura.RQL.Types.Permission         as R
 import           Hasura.RQL.Types.QueryCollection    as R
 import           Hasura.RQL.Types.Relationship       as R
@@ -212,8 +212,13 @@ instance (HasSystemDefined m) => HasSystemDefined (TraceT m) where
 
 newtype HasSystemDefinedT m a
   = HasSystemDefinedT { unHasSystemDefinedT :: ReaderT SystemDefined m a }
-  deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO, MonadUnique, MonadError e, MonadTx
-           , HasHttpManager, HasSQLGenCtx, SourceM, TableCoreInfoRM, TableInfoRM, CacheRM, CacheRWM, UserInfoM, MonadMetadata)
+  deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO
+           , MonadUnique, MonadError e, MonadTx
+           , HasHttpManager, HasSQLGenCtx, SourceM
+           , TableCoreInfoRM, TableInfoRM, CacheRM
+           , CacheRWM, UserInfoM, MonadMetadata
+           , MonadScheduledEvents
+           )
 
 -- instance (SourceM m) => TableCoreInfoRM (HasSystemDefinedT m) where
 --   lookupTableCoreInfo = lift . lookupTableCoreInfo
