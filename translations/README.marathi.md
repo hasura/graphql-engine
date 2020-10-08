@@ -17,11 +17,11 @@
 
 ------------------
 
-![Hasura GraphQL Engine Demo](assets/demo.gif)
+![Hasura GraphQL Engine Demo](../assets/demo.gif)
 
 ------------------
 
-![Hasura GraphQL Engine Realtime Demo](assets/realtime.gif)
+![Hasura GraphQL Engine Realtime Demo](../assets/realtime.gif)
 
 -------------------
 
@@ -132,7 +132,7 @@ guides](https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html) or
 
 ### Realtime अनुप्रयोग
 
-- Reactसह बनविलेले गट चॅट प्लिकेशनमध्ये एक टाइपिंग सूचक, ऑनलाइन वापरकर्ते आणि नवीन संदेश सूचना         समाविष्ट आहेत.
+- React सह बनविलेले गट चॅट प्लिकेशनमध्ये एक टाइपिंग सूचक, ऑनलाइन वापरकर्ते आणि नवीन संदेश सूचना         समाविष्ट आहेत.
   - [प्रयत्न करा](https://realtime-chat.demo.hasura.app/)
   - [प्रशिक्षण](community/sample-apps/realtime-chat)
   - [Browse APIs](https://realtime-chat.demo.hasura.app/console)
