@@ -1,4 +1,4 @@
-&#x202b; # מנוע GraphQL של Hasura
+#  &#x202b;  מנוע GraphQL של Hasura
 
 &#x202b; [![גרסא אחרונה](https://img.shields.io/github/v/release/hasura/graphql-engine)](https://github.com/hasura/graphql-engine/releases/latest)
 &#x202b; [![מסמכים](https://img.shields.io/badge/docs-v1.x-brightgreen.svg?style=flat)](https://hasura.io/docs)
