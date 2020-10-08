@@ -30,7 +30,10 @@ the following columns:
     name TEXT
   )
 
-.. thumbnail:: /img/graphql/core/getting-started/create-profile-table.png
+.. thumbnail:: /img/graphql/core/getting-started/create-profile-table1.png
+   :alt: Add the fields for a table
+
+.. thumbnail:: /img/graphql/core/getting-started/create-profile-table2.png
    :alt: Create a table
 
 Now, insert some sample data into the table using the ``Insert Row`` tab of the ``profile`` table.
