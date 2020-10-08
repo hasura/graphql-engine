@@ -54,7 +54,11 @@ Computed fields whose associated SQL function returns a
 
 **Example:**
 
-The ``author`` table has two ``text`` columns: ``first_name`` and ``last_name``.
+Let's say we have the following schema:
+
+.. code-block:: plpgsql
+  
+  author(id integer, first_name text, last_name text)
 
 Define an SQL function called ``author_full_name``:
 
@@ -102,7 +106,15 @@ The return table must be tracked to define such a computed field.
 
 **Example:**
 
-In a simple ``author <-> article`` schema, we can define a :ref:`table relationship <table_relationships>` on the ``author``
+Let's say we have the following schema:
+
+.. code-block:: plpgsql
+  
+  author(id integer, first_name text, last_name text)
+                                                      
+  article(id integer, title text, content text, author_id integer)
+
+Now we can define a :ref:`table relationship <table_relationships>` on the ``author``
 table to fetch authors along with their articles.
 
 We can make use of computed fields to fetch the author's articles with a search parameter.
