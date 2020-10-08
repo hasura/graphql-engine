@@ -1,32 +1,32 @@
-## Hlášení zranitelností
+## HlÃ¡Å¡enÃ­ zranitelnostÃ­
 
-Jsme extrémnì vdìèní za vızkumníky v oblasti bezpeènosti a uivatelé, kteøí hlásí zranitelnosti Hasura komunitì. Všechny hlášení jsou dùkladnì vyšetøovány skupinou komunitních dobrovolníkù a Hasura teamem.
+Jsme extrÃ©mnÄ› vdÄ›ÄnÃ­ za vÃ½zkumnÃ­ky v oblasti bezpeÄnosti a uÅ¾ivatele, kteÅ™Ã­ hlÃ¡sÃ­ zranitelnosti Hasura komunitÄ›. VÅ¡echny hlÃ¡Å¡enÃ­ jsou dÅ¯kladnÄ› vyÅ¡etÅ™ovÃ¡ny skupinou komunitnÃ­ch dobrovolnÃ­kÅ¯ a Hasura teamem.
 
-Pokud chcete nahlásit bezpeènostní chybu, prosím napište email na build@hasura.io se všemi detaily a pøilote všechny nezbytné dokumenty.
+Pokud chcete nahlÃ¡sit bezpeÄnostnÃ­ chybu, prosÃ­m napiÅ¡te email na build@hasura.io se vÅ¡emi detaily a pÅ™iloÅ¾te vÅ¡echny nezbytnÃ© dokumenty.
 
-### Kdy bych mìl nahlásit zranitelnost?
+### Kdy bych mÄ›l nahlÃ¡sit zranitelnost?
 
-- Myslíte si, e jste objevili potenciální bezpeènostní zranitelnost v Hasura GraphQL Engine nebo v tıkajících se komponentech.
-- Nejste si jistí, jak zranitelnost ovlivòuje Hasura GraphQL Engine.
+- MyslÃ­te si, Å¾e jste objevil potencionÃ¡lnÃ­ bezpeÄnostnÃ­ zranitelnost v Hasura GraphQL Engine nebo v tÃ½kajÃ­cÃ­ch se komponentech.
+- Nejste si jistÃ½, jak zranitelnost ovlivÅˆuje Hasura GraphQL Engine.
 
-- Myslíte si, e jste objevili zranitelnost v jiném projektu, na kterém Hasura GraphQL Engine záleí (napø. Heroku, Docker, atd.).
-- Chcete nahlásit jiné bezpeènostní riziko, co by mohlo potencionálnì poškodit Hasura GraphQL Engine uivatele.
+- MyslÃ­te si, Å¾e jste objevil zranitelnost v jinÃ©m projektu, na kterÃ©m Hasura GraphQL Engine zÃ¡leÅ¾Ã­ (napÅ™. Heroku, Docker, atd.).
+- Chcete nahlÃ¡sit jinÃ© bezpeÄnostnÃ­ riziko, co by mohlo potencionÃ¡lnÄ› poÅ¡kodit Hasura GraphQL Engine uÅ¾ivatele.
 
-### Kdy bych NEMÌL nahlásit zranitelnost?
+### Kdy bych NEMÄšL nahlÃ¡sit zranitelnost?
 
-- Potøebujete vyladit Hasura GraphQL Engine komponenty kvùli bezpeènosti.
-- Potøebujete pomoct aplikovat bezpeènostní updaty.
-- Váš problém se netıká bezpeènosti.
+- PotÅ™ebujete vyladit Hasura GraphQL Engine komponenty kvÅ¯li bezpeÄnosti.
+- PotÅ™ebujete pomoct aplikovat bezpeÄnostnÃ­ updaty.
+- VÃ¡Å¡ problÃ©m se netÃ½kÃ¡ bezpeÄnosti.
 
-## Odpovìï na bezpeèností hlášení
+## OdpovÄ›Ä na bezpeÄnostÃ­ hlÃ¡Å¡enÃ­
 
-O kadém hlášení jsou informování správci projektu bìhem 3 pracovních dnù.
+O kaÅ¾dÃ©m hlÃ¡Å¡enÃ­ jsou informovÃ¡nÃ­ sprÃ¡vci projektu bÄ›hem 3 pracovnÃ­ch dnÅ¯.
 
-Reportér bude informován o kadém kroku ohlednì øešení problému. (tøídìní -> oprava -> vydání).
+ReportÃ©r bude informovÃ¡n o kaÅ¾dÃ©m kroku ohlednÄ› Å™eÅ¡enÃ­ problÃ©mu. (tÅ™Ã­dÄ›nÃ­ -> oprava -> vydÃ¡nÃ­).
 
-## Èas zveøejnìní informací
+## ÄŒas zveÅ™ejnÄ›nÃ­ informacÃ­
 
-Veøejné datum zveøejnìní je diskutováno s Hasura product security teamem a s reportérem bugu. Preferujeme co nejdøíve plnì zveøejnit bug. Mùeme odkládat zveøejnìní pokud bug nebo oprava není plnì vyrozumìn, øešení není dobøe vyzkoušeno, nebo pro koordinaci s prodejcem. Èasové okno pro zveøejnìní se pohybuje od okamitého zveøejnìní (speciálnì pokud je to veøejnì známé) a do pár tıdnù. Oèekáváme èasové okno mezi nahlášením do veøejného zveøejnìní 7 dnù.
-Hasura GraphQL Engine správci a bezpeènostní team se postarají o finální datum zveøejnìní.
+VeÅ™ejnÃ© datum zveÅ™ejnÄ›nÃ­ je diskutovÃ¡no s Hasura product security teamem a s reportÃ©rem bugu. Preferujeme co nejdÅ™Ã­ve plnÄ› zveÅ™ejnit bug. MÅ¯Å¾eme odklÃ¡dat zveÅ™ejnÄ›nÃ­, pokud bug nebo oprava nenÃ­ plnÄ› vyrozumÄ›n, Å™eÅ¡enÃ­ nenÃ­ dobÅ™e vyzkouÅ¡eno nebo pro koordinaci s prodejcem. ÄŒasovÃ© okno pro zveÅ™ejnÄ›nÃ­ se pohybuje od okamÅ¾itÃ©ho zveÅ™ejnÄ›nÃ­ (speciÃ¡lnÄ› pokud je to veÅ™ejnÄ› znÃ¡mÃ©), aÅ¾ do pÃ¡r tÃ½dnÅ¯. OÄekÃ¡vÃ¡me ÄasovÃ© okno mezi nahlÃ¡Å¡enÃ­m do veÅ™ejnÃ©ho zveÅ™ejnÄ›nÃ­ 7 dnÃ­.
+Hasura GraphQL Engine sprÃ¡vci a bezpeÄnostnÃ­ team se postarajÃ­ o finÃ¡lnÃ­ datum zveÅ™ejnÄ›nÃ­.
 
-(Nìkteré sekce byly inspirovány a adaptovány z [https://github.com/kubernetes/website/blob/master/content/en/docs/reference/issues-security/security.md](https://github.com/kubernetes/website/blob/master/content/en/docs/reference/issues-security/security.md)).
+(NÄ›kterÃ© sekce byly inspirovÃ¡nÃ© a adaptovÃ¡nÃ© z [https://github.com/kubernetes/website/blob/master/content/en/docs/reference/issues-security/security.md](https://github.com/kubernetes/website/blob/master/content/en/docs/reference/issues-security/security.md)).
