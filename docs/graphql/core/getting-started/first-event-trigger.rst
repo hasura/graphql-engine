@@ -35,8 +35,9 @@ the following columns:
 .. thumbnail:: /img/graphql/core/getting-started/create-profile-table.png
    :alt: Create a table
 
-Set up an event trigger
------------------------
+
+Setup an event trigger
+----------------------
 
 In the Hasura console, navigate to ``Events -> Create trigger`` and:
 
