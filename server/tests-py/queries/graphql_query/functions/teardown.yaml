@@ -10,4 +10,5 @@ args:
       DROP TABLE "user" cascade;
       DROP TABLE text_result cascade;
       DROP TABLE author cascade;
+      DROP MATERIALIZED VIEW IF EXISTS author_mat_view cascade;
     cascade: true
