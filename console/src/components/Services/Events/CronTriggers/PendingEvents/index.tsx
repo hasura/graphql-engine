@@ -5,6 +5,7 @@ import { Triggers, RouterTriggerProps } from '../../types';
 import { MapStateToProps } from '../../../../../types';
 import PendingEvents from './PendingEvents';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
+import { getCronTriggers } from '../../../../../metadata/selector';
 
 interface Props extends InjectedProps {}
 
@@ -32,7 +33,7 @@ const mapStateToProps: MapStateToProps<PropsFromState, RouterTriggerProps> = (
   ownProps
 ) => {
   return {
-    allTriggers: state.events.triggers,
+    allTriggers: getCronTriggers(state),
     triggerName: ownProps.params.triggerName,
   };
 };

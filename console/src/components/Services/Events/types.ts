@@ -123,9 +123,7 @@ export type ScheduledTrigger = {
 /*
  * Redux State Type for Event and Scheduled Triggers
  */
-export type Triggers = {
-  scheduled: ScheduledTrigger[];
-};
+export type Triggers = ScheduledTrigger[];
 
 /*
  * Redux Action types

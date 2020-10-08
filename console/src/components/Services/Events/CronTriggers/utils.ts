@@ -36,7 +36,7 @@ export const findScheduledTrigger = (
   triggers: Triggers,
   triggerName: string
 ) => {
-  return triggers.scheduled.find(t => t.name === triggerName);
+  return triggers.find(t => t.name === triggerName);
 };
 
 export const parseServerScheduledTrigger = (
