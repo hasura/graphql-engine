@@ -209,5 +209,6 @@ Este archivo está disponible en los siguientes idiomas:
 - [Indonesian :indonesia:](translations/README.indonesian.md) (:pray: [@anwari666](https://github.com/anwari666))
 - [Brazilian Portuguese :brazil:](translations/README.portuguese_br.md) (:pray: [@rubensmp](https://github.com/rubensmp))
 - [German 🇩🇪](translations/README.german.md) (:pray: [@FynnGrandke](https://github.com/FynnGrandke))
+- [Marathi :india:](translations/README.marathi.md) (:pray: [@vieee](https://github.com/vieee))
 
 Las traducciones para otros idiomas se encuentran [aquí](../translations).
