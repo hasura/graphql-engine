@@ -857,20 +857,19 @@ export interface MetadataDataSource {
     };
   };
   tables: TableEntry[];
-  actions?: Action[];
-  custom_types?: CustomTypes;
   functions?: Array<{
     function: { schema: string; name: string };
     configuration: Record<string, any>;
   }>;
-  remote_schemas?: RemoteSchema[];
   query_collections?: QueryCollectionEntry[];
   allowlist?: AllowList[];
-  cron_triggers?: CronTrigger[];
 }
 
 export interface HasuraMetadataV3 {
   version: 3;
   sources: MetadataDataSource[];
   remote_schemas?: RemoteSchema[];
+  actions?: Action[];
+  custom_types?: CustomTypes;
+  cron_triggers?: CronTrigger[];
 }

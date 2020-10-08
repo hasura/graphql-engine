@@ -112,7 +112,9 @@ export type MetadataQueryType =
   | 'create_cron_trigger'
   | 'create_scheduled_event'
   | 'get_catalog_state'
-  | 'set_catalog_state';
+  | 'set_catalog_state'
+  | 'create_remote_relationship'
+  | 'update_remote_relationship';
 
 export type MetadataQueries = Record<Driver, Record<MetadataQueryType, string>>;
 
@@ -204,7 +206,12 @@ export const getDropPermissionQuery = (
 export const generateSetCustomTypesQuery = (customTypes: CustomTypes) => {
   return {
     type: 'set_custom_types',
-    args: customTypes,
+    args: {
+      ...customTypes,
+      // testing stuff
+      objects: customTypes.objects?.map(o => ({ ...o, source: 'lalalal' })),
+      source: 'test_source',
+    },
   };
 };
 
@@ -499,11 +506,14 @@ export const getRedeliverDataEventQuery = (eventId: string) => ({
 
 export const getSaveRemoteRelQuery = (
   args: RemoteRelationshipPayload,
-  isNew: boolean
-) => ({
-  type: `${isNew ? 'create' : 'update'}_remote_relationship`,
-  args,
-});
+  isNew: boolean,
+  source: string
+) =>
+  getMetadataQuery(
+    isNew ? 'create_remote_relationship' : 'update_remote_relationship',
+    source,
+    args
+  );
 
 export const getDropRemoteRelQuery = (name: string, table: QualifiedTable) => ({
   type: 'delete_remote_relationship',

@@ -425,7 +425,6 @@ export const addActionRel = (relConfig, successCb, existingRelConfig) => (
 
   const customTypesQueryDown = generateSetCustomTypesQuery({
     ...reformCustomTypes(existingTypes),
-    source: relConfig.refDb,
   });
 
   const upQueries = [customTypesQueryUp];

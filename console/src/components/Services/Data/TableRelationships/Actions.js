@@ -63,6 +63,8 @@ export const saveRemoteRelationship = (
       name: getState().tables.currentTable,
     };
 
+    const source = getState().tables.currentDataSource;
+
     const errorMsg = `${
       isNew ? 'Creating' : 'Updating'
     } remote relationship failed`;
@@ -77,14 +79,17 @@ export const saveRemoteRelationship = (
       return dispatch(showErrorNotification(errorMsg, e.message));
     }
 
-    const upQuery = [getSaveRemoteRelQuery(remoteRelQueryArgs, !existingRel)];
+    const upQuery = [
+      getSaveRemoteRelQuery(remoteRelQueryArgs, !existingRel, source),
+    ];
     const downQuery = [];
     if (isNew) {
       downQuery.push(getDropRemoteRelQuery(state.name, state.table));
     } else {
       const downQueryArgs = getSaveRemoteRelQuery(
         getRemoteRelPayload(parseRemoteRelationship(existingRel)),
-        isNew
+        isNew,
+        source
       );
       downQuery.push(downQueryArgs);
     }
@@ -144,10 +149,13 @@ export const dropRemoteRelationship = (
       return;
     }
 
+    const source = getState().tables.currentDataSource;
+
     const downQuery = [
       getSaveRemoteRelQuery(
         getRemoteRelPayload(parseRemoteRelationship(existingRel)),
-        true
+        true,
+        source
       ),
     ];
 

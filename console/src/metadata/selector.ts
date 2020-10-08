@@ -68,14 +68,14 @@ const getTables = createSelector(getDataSourceMetadata, source => {
   return source?.tables || [];
 });
 
-const getActions = createSelector(
-  getDataSourceMetadata,
-  source => source?.actions || []
-);
-
 const getMetadata = (state: ReduxState) => {
   return state.metadata.metadataObject;
 };
+
+const getActions = createSelector(
+  getMetadata,
+  metadata => metadata?.actions || []
+);
 
 type PermKeys = Pick<
   TableEntry,
@@ -198,10 +198,10 @@ export const getFunctionConfiguration = createSelector(
 );
 
 export const actionsSelector = createSelector(
-  [getDataSourceMetadata, getInconsistentObjects],
-  (source, objects) => {
+  [getMetadata, getInconsistentObjects],
+  (metadata, objects) => {
     const actions =
-      source?.actions?.map(action => ({
+      metadata?.actions?.map(action => ({
         ...action,
         definition: {
           ...action.definition,
@@ -214,14 +214,11 @@ export const actionsSelector = createSelector(
   }
 );
 
-export const customTypesSelector = createSelector(
-  getDataSourceMetadata,
-  source => {
-    if (!source) return [];
+export const customTypesSelector = createSelector(getMetadata, metadata => {
+  if (!metadata?.custom_types) return [];
 
-    return parseCustomTypes(source.custom_types || []);
-  }
-);
+  return parseCustomTypes(metadata.custom_types || []);
+});
 
 export const getRemoteSchemaSelector = createSelector(
   getRemoteSchemas,
