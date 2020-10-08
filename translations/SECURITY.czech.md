@@ -29,4 +29,4 @@ Reportér bude informován o každém kroku ohledně řešení problému. (tří
 Veřejné datum zveřejnění je diskutováno s Hasura product security teamem a s reportérem bugu. Preferujeme co nejdříve plně zveřejnit bug. Můžeme odkládat zveřejnění, pokud bug nebo oprava není plně vyrozuměn, řešení není dobře vyzkoušeno nebo pro koordinaci s prodejcem. Časové okno pro zveřejnění se pohybuje od okamžitého zveřejnění (speciálně pokud je to veřejně známé), až do pár týdnů. Očekáváme časové okno mezi nahlášením do veřejného zveřejnění 7 dní.
 Hasura GraphQL Engine správci a bezpečnostní team se postarají o finální datum zveřejnění.
 
-(Některé sekce byly inspirováné a adaptováné z [https://github.com/kubernetes/website/blob/master/content/en/docs/reference/issues-security/security.md](https://github.com/kubernetes/website/blob/master/content/en/docs/reference/issues-security/security.md)).
+(Některé sekce byly inspirované a adaptované z [https://github.com/kubernetes/website/blob/master/content/en/docs/reference/issues-security/security.md](https://github.com/kubernetes/website/blob/master/content/en/docs/reference/issues-security/security.md)).
