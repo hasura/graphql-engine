@@ -259,19 +259,29 @@ There are two options to configure Hasura to run in webhook mode:
 1. Running the GraphQL engine with the ``--auth-hook`` flag 
 2. Add the ``HASURA_GRAPHQL_AUTH_HOOK`` environment variable 
 
-The value is the webhook endpoint. In this tutorial, the endpoint looks like this: ``https://my-auth-webhook.herokuapp.com/webhook`` where ``my-auth-webhook`` should be replaced by your own app name.
+The value is the webhook endpoint. In this tutorial, the endpoint looks like this: ``https://<my-auth-webhook>.herokuapp.com/webhook`` where ``my-auth-webhook`` should be replaced by your own app name.
 
 .. note::
 
   See :ref:`GraphQL engine server options <server_flag_reference>` for more information on flags and environment variables.
 
+From now on, whenever a request comes in to Hasura, the auth webhook will be called. 
+
 Step 6: Test your auth webhook
 ------------------------------
 
-Make a 
+Let's try our new auth webhook assuming we have a schema with a table ``movies`` that contains a field ``title``.
 
-From now on, whenever a request comes in to Hasura, the auth webhook will be called. 
+In the Authorization header, pass the ``auth_token`` that you received from the ``/login`` endpoint.
 
-Make an API call to your Hasura endpoint and see how the webhook returns the ``role`` and the ``user_id``.
+.. code-block:: http
+
+  POST /v1/graphql HTTP/1.1
+  Content-Type: application/json
+  Authorization: Bearer <auth_token>
+
+  {
+    "query": "query { movies { title }}"
+  }
 
 
