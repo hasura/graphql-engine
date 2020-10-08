@@ -157,6 +157,41 @@ when a new column has been added to a table via an external tool such as ``psql`
    Reloading may result in inconsistent metadata status. You may need to resolve
    all inconsistent objects manually or delete them. After that, you need to reload
    metadata again.
+   
+   
+ .. _reset_metadata_manual:
+
+Reseting Hasura metadata
+-------------------------
+
+Clearing GraphQL Engine's metadata is an irreversible process, so use this functionality carefully.
+
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: CLI
+
+     Metadata can be reset with the coomand :ref:`hasura metadata clear [flags]`.
+
+  .. tab:: Console
+
+     1. Click on the settings (⚙) icon at the top right corner of the console screen.
+     2. Click on ``Reset`` button.
+     3. A notification should appear prompting you to write "CONFIRM" to conclude the process.
+
+  .. tab:: API
+
+     .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "type" : "clear_metadata",
+          "args": {}
+      }
+
 
 Managing Hasura metadata in CI/CD
 ---------------------------------
