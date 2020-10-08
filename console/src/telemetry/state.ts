@@ -1,6 +1,6 @@
 import { Nullable } from '../components/Common/utils/tsUtils';
 
-export type TelemetryState = {
+export type ConsoleState = {
   console_opts: Nullable<{
     telemetryNotificationShown?: boolean;
     disablePreReleaseUpdateNotifications?: boolean;
@@ -8,9 +8,9 @@ export type TelemetryState = {
   hasura_uuid: string;
 };
 
-const defaultTelemetryState: TelemetryState = {
+const defaultConsoleState: ConsoleState = {
   console_opts: null,
   hasura_uuid: '',
 };
 
-export default defaultTelemetryState;
+export default defaultConsoleState;

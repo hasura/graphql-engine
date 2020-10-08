@@ -13,6 +13,7 @@ import { LocalScheduledTriggerState } from '../components/Services/Events/CronTr
 import { LocalAdhocEventState } from '../components/Services/Events/AdhocEvents/Add/state';
 import { RemoteRelationshipPayload } from '../components/Services/Data/TableRelationships/RemoteRelationships/utils';
 import { Driver, currentDriver } from '../dataSources';
+import { ConsoleState } from '../telemetry/state';
 
 export const metadataQueryTypes = [
   'add_source',
@@ -73,6 +74,8 @@ export const metadataQueryTypes = [
   'set_custom_types',
   'dump_internal_state',
   'bulk',
+  'get_catalog_state',
+  'set_catalog_state',
 ];
 
 export type MetadataQueryType =
@@ -107,7 +110,9 @@ export type MetadataQueryType =
   | 'create_object_relationship'
   | 'create_array_relationship'
   | 'create_cron_trigger'
-  | 'create_scheduled_event';
+  | 'create_scheduled_event'
+  | 'get_catalog_state'
+  | 'set_catalog_state';
 
 export type MetadataQueries = Record<Driver, Record<MetadataQueryType, string>>;
 
@@ -623,4 +628,19 @@ export const getAddRelationshipQuery = (
   }
 
   return getMetadataQuery('create_array_relationship', source, args);
+};
+
+export const getSetConsoleStateQuery = (
+  state: ConsoleState['console_opts']
+) => ({
+  type: 'set_catalog_state',
+  args: {
+    type: 'console',
+    state,
+  },
+});
+
+export const getConsoleStateQuery = {
+  type: 'get_catalog_state',
+  args: {},
 };

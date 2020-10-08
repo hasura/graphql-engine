@@ -4,39 +4,37 @@ import Endpoints, { globalCookiePolicy } from '../Endpoints';
 import requestAction from '../utils/requestAction';
 import dataHeaders from '../components/Services/Data/Common/Headers';
 import {
-  getConsoleOptsQuery,
-  getRunSqlQuery,
-} from '../components/Common/utils/v1QueryUtils';
-import {
   showErrorNotification,
   showSuccessNotification,
 } from '../components/Services/Common/Notification';
 import globals from '../Globals';
-import defaultTelemetryState, { TelemetryState } from './state';
+import defaultConsoleState, { ConsoleState } from './state';
 import { GetReduxState, ReduxState } from '../types';
+import {
+  getSetConsoleStateQuery,
+  getConsoleStateQuery,
+} from '../metadata/queryUtils';
 
 const SET_CONSOLE_OPTS = 'Telemetry/SET_CONSOLE_OPTS';
 const SET_NOTIFICATION_SHOWN = 'Telemetry/SET_NOTIFICATION_SHOWN';
 const SET_HASURA_UUID = 'Telemetry/SET_HASURA_UUID';
 
-type Telemetry = {
-  console_state: TelemetryState['console_opts'];
-  hasura_uuid: string;
+type ConsoleStateResponse = {
+  console_state: ConsoleState['console_opts'];
+  id: string;
 };
 
 const setConsoleOptsInDB = (
-  opts: TelemetryState['console_opts'],
+  opts: ConsoleState['console_opts'],
   successCb: (arg: Record<string, any>) => void,
   errorCb: (arg: Error) => void
 ) => (
   dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>,
   getState: GetReduxState
 ) => {
-  const url = Endpoints.query;
-
   const { hasura_uuid, console_opts } = getState().telemetry;
 
-  const consoleState = {
+  const consoleState: ConsoleState['console_opts'] = {
     ...console_opts,
     ...opts,
   };
@@ -55,18 +53,11 @@ const setConsoleOptsInDB = (
     credentials: globalCookiePolicy,
     method: 'POST',
     headers: dataHeaders(getState),
-    body: JSON.stringify(
-      getRunSqlQuery(
-        `update hdb_catalog.hdb_version set console_state = '${JSON.stringify(
-          consoleState
-        )}' where hasura_uuid='${hasura_uuid}';`,
-        ''
-      )
-    ),
+    body: JSON.stringify(getSetConsoleStateQuery(consoleState)),
   };
 
   // eslint-disable-next-line consistent-return
-  return dispatch(requestAction(url, options)).then(
+  return dispatch(requestAction(Endpoints.metadata, options)).then(
     (data: Record<string, unknown>) => {
       if (successCb) {
         successCb(data);
@@ -136,29 +127,26 @@ const loadConsoleOpts = () => {
     dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>,
     getState: GetReduxState
   ) => {
-    const url = Endpoints.query;
     const options: RequestInit = {
       credentials: globalCookiePolicy,
       method: 'POST',
       headers: dataHeaders(getState),
-      body: JSON.stringify(getConsoleOptsQuery()),
+      body: JSON.stringify(getConsoleStateQuery),
     };
 
-    return dispatch(requestAction(url, options) as any).then(
-      (data: Telemetry[]) => {
-        if (data.length !== 0) {
-          dispatch({
-            type: SET_HASURA_UUID,
-            data: data[0].hasura_uuid,
-          });
-          globals.hasuraUUID = data[0].hasura_uuid;
-          dispatch({
-            type: SET_CONSOLE_OPTS,
-            data: data[0].console_state,
-          });
-          globals.telemetryNotificationShown = !!data[0].console_state
-            ?.telemetryNotificationShown;
-        }
+    return dispatch(requestAction(Endpoints.metadata, options) as any).then(
+      (data: ConsoleStateResponse) => {
+        dispatch({
+          type: SET_HASURA_UUID,
+          data: data.id,
+        });
+        globals.hasuraUUID = data.id;
+        dispatch({
+          type: SET_CONSOLE_OPTS,
+          data: data.console_state,
+        });
+        globals.telemetryNotificationShown = !!data.console_state
+          ?.telemetryNotificationShown;
         return Promise.resolve();
       },
       (error: Error) => {
@@ -200,7 +188,7 @@ export const requireConsoleOpts = ({
 };
 
 const telemetryReducer = (
-  state = defaultTelemetryState,
+  state = defaultConsoleState,
   action: TelemetryActionTypes
 ) => {
   switch (action.type) {

@@ -166,14 +166,3 @@ export const getFetchManualTriggersQuery = (tableDef: QualifiedTable) =>
       },
     ]
   );
-
-export const getConsoleOptsQuery = () =>
-  getSelectQuery(
-    'select',
-    { name: 'hdb_version', schema: 'hdb_catalog' },
-    ['hasura_uuid', 'console_state'],
-    {},
-    null,
-    null,
-    null
-  );
