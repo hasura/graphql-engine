@@ -195,11 +195,11 @@ args:
       CREATE MATERIALIZED VIEW author_mat_view AS
         SELECT * FROM author;
 
-      CREATE FUNCTION search_author_mview(search_text text)
+      CREATE FUNCTION search_author_mview(query text)
       RETURNS SETOF author_mat_view AS $FUNCTION$
           SELECT * FROM author_mat_view WHERE
-            first_name = search_text OR
-            last_name = search_text
+            first_name = query OR
+            last_name = query
       $FUNCTION$ LANGUAGE sql STABLE;
 
 - type: track_table
