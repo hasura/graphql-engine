@@ -32,7 +32,7 @@ the following columns:
     name TEXT
   )
 
-.. thumbnail:: /img/graphql/core/getting-started/create-profile-table.png
+.. thumbnail:: /img/graphql/core/getting-started/create-profile-table1.png
    :alt: Create a table
 
 Setup an event trigger
