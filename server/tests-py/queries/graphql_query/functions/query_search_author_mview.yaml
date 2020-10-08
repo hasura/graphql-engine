@@ -10,7 +10,7 @@ query:
   query: |
     query {
       search_author_mview(
-        args: {search: "kafka"}
+        args: {query: "kafka"}
       ) {
         first_name
         last_name
