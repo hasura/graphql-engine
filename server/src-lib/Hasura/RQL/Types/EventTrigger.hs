@@ -5,7 +5,7 @@ module Hasura.RQL.Types.EventTrigger
   , TriggerName(..)
   , triggerNameToTxt
   , Ops(..)
-  , EventId
+  , EventId(..)
   , TriggerOpsDef(..)
   , EventTriggerConf(..)
   , RetryConf(..)
@@ -45,7 +45,8 @@ newtype TriggerName = TriggerName { unTriggerName :: NonEmptyText }
 triggerNameToTxt :: TriggerName -> Text
 triggerNameToTxt = unNonEmptyText . unTriggerName
 
-type EventId = T.Text
+newtype EventId = EventId {unEventId :: Text}
+  deriving (Show, Eq, Ord, Hashable, Lift, DQuote, FromJSON, ToJSON, ToJSONKey, Q.FromCol, Q.ToPrepArg, Generic, Arbitrary, NFData, Cacheable)
 
 data Ops = INSERT | UPDATE | DELETE | MANUAL deriving (Show)
 

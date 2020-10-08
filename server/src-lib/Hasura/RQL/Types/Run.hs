@@ -60,10 +60,19 @@ instance (Monad m) => MonadMetadata (MetadataRun m) where
   fetchMetadata = get
   updateMetadata = put
 
+runInMetadataRun :: (Monad m) => MetadataStorageT m a -> MetadataRun m a
+runInMetadataRun =
+  MetadataRun . lift . lift . ExceptT . runMetadataStorageT
+
 instance (MonadMetadataStorage m) => MonadScheduledEvents (MetadataRun m) where
-  createScheduledEvent = liftEitherM . lift . runMetadataStorageT . insertScheduledEvent
-  dropFutureCronEvents = liftEitherM . lift . runMetadataStorageT . clearFutureCronEvents
-  addCronEventSeeds    = liftEitherM . lift . runMetadataStorageT . insertCronEvents
+  createScheduledEvent = runInMetadataRun . insertScheduledEvent
+  dropFutureCronEvents = runInMetadataRun . clearFutureCronEvents
+  addCronEventSeeds    = runInMetadataRun . insertCronEvents
+  fetchInvocations a b = runInMetadataRun $ getInvocations a b
+
+instance (MonadMetadataStorage m) => MonadCatalogState (MetadataRun m) where
+  fetchCatalogState      = runInMetadataRun getCatalogState
+  updateCatalogState a b = runInMetadataRun $ setCatalogState a b
 
 peelMetadataRun
   :: RunCtx

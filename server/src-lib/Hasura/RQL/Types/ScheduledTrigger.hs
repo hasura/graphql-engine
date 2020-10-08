@@ -7,9 +7,13 @@ module Hasura.RQL.Types.ScheduledTrigger
   , CreateScheduledEvent(..)
   , CronEventId
   , OneOffScheduledEventId
-  , CronEventSeed(..)
   , formatTime'
   , defaultSTRetryConf
+  , InvocationId
+  , CronEventSeed(..)
+  , ScheduledEventType(..)
+  , ScheduledEventInvocation(..)
+  , GetEventInvocations(..)
   ) where
 
 import           Data.Aeson
@@ -29,9 +33,11 @@ import qualified Data.Aeson                    as J
 import qualified Data.Text                     as T
 import qualified Hasura.RQL.Types.EventTrigger as ET
 
-type CronEventId = Text
+type CronEventId = EventId
 
-type OneOffScheduledEventId = Text
+type OneOffScheduledEventId = EventId
+
+type InvocationId = Text
 
 data STRetryConf
   = STRetryConf
@@ -168,6 +174,42 @@ instance FromJSON CreateScheduledEvent where
                                    <*> o .:? "comment"
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''CreateScheduledEvent)
+
+-- | The 'ScheduledEventType' data type is needed to differentiate
+--   between a 'CronScheduledEvent' and 'OneOffScheduledEvent' scheduled
+--   event because they both have different configurations
+--   and they live in different tables.
+data ScheduledEventType =
+    Cron
+  -- ^ A Cron scheduled event has a template defined which will
+  -- contain the webhook, header configuration, retry
+  -- configuration and a payload. Every cron event created
+  -- uses the above mentioned configurations defined in the template.
+  -- The configuration defined with the cron trigger is cached
+  -- and hence it's not fetched along the cron scheduled events.
+  | OneOff
+  -- ^ A One-off scheduled event doesn't have any template defined
+  -- so all the configuration is fetched along the scheduled events.
+    deriving (Eq, Show)
+$(deriveJSON defaultOptions{constructorTagModifier = snakeCase} ''ScheduledEventType)
+
+data ScheduledEventInvocation
+  = ScheduledEventInvocation
+  { _seiId        :: !InvocationId
+  , _seiEventId   :: !EventId
+  , _seiStatus    :: !Int
+  , _seiRequest   :: !J.Value
+  , _seiResponse  :: !J.Value
+  , _seiCreatedAt :: !UTCTime
+  } deriving (Show, Eq)
+$(deriveToJSON (aesonDrop 4 snakeCase) ''ScheduledEventInvocation)
+
+data GetEventInvocations
+  = GetEventInvocations
+  { _geiEventId :: !EventId
+  , _geiType    :: !ScheduledEventType
+  } deriving (Eq, Show)
+$(deriveJSON (aesonDrop 4 snakeCase) ''GetEventInvocations)
 
 data CronEventSeed
   = CronEventSeed

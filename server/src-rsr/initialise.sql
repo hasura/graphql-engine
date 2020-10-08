@@ -745,17 +745,17 @@ CREATE TABLE hdb_catalog.hdb_action_log
 --   ) q
 -- );
 
-CREATE TABLE hdb_catalog.hdb_cron_triggers
-(
-  name TEXT PRIMARY KEY,
-  webhook_conf JSON NOT NULL,
-  cron_schedule TEXT NOT NULL,
-  payload JSON,
-  retry_conf JSON,
-  header_conf JSON,
-  include_in_metadata BOOLEAN NOT NULL DEFAULT FALSE,
-  comment TEXT
-);
+-- CREATE TABLE hdb_catalog.hdb_cron_triggers
+-- (
+--   name TEXT PRIMARY KEY,
+--   webhook_conf JSON NOT NULL,
+--   cron_schedule TEXT NOT NULL,
+--   payload JSON,
+--   retry_conf JSON,
+--   header_conf JSON,
+--   include_in_metadata BOOLEAN NOT NULL DEFAULT FALSE,
+--   comment TEXT
+-- );
 
 CREATE TABLE hdb_catalog.hdb_cron_events
 (

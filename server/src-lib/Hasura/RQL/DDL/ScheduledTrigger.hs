@@ -6,6 +6,7 @@ module Hasura.RQL.DDL.ScheduledTrigger
   , dropCronTriggerInMetadata
   , resolveCronTrigger
   , runCreateScheduledEvent
+  , runGetEventInvocations
   ) where
 
 import           Hasura.EncJSON
@@ -14,6 +15,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.EventTrigger      (getHeaderInfosFromConf)
 import           Hasura.RQL.Types
 
+import qualified Data.Aeson                       as J
 import qualified Data.Environment                 as Env
 import qualified Data.HashMap.Strict              as Map
 import qualified Data.Time.Clock                  as C
@@ -181,3 +183,9 @@ checkExists name = do
   void $ onNothing (Map.lookup name cronTriggersMap) $
     throw400 NotExists $
       "cron trigger with name: " <> (triggerNameToTxt name) <> " does not exist"
+
+runGetEventInvocations
+  :: (MonadScheduledEvents m) => GetEventInvocations -> m EncJSON
+runGetEventInvocations GetEventInvocations{..} = do
+  invocations <- fetchInvocations _geiEventId _geiType
+  pure $ encJFromJValue $ J.object ["invocations" J..= invocations]

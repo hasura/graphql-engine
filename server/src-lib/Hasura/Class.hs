@@ -7,35 +7,21 @@ module Hasura.Class
   )
 where
 
-import           Hasura.Db
 import           Hasura.Eventing.HTTP
 import           Hasura.Eventing.ScheduledTrigger.Types
-import           Hasura.GraphQL.Parser                  hiding (column)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Types
-import           Hasura.Server.Utils
 import           Hasura.Session
-import           Hasura.SQL.DML
-import           Hasura.SQL.Types
-import           Hasura.SQL.Value
-
-import qualified Hasura.RQL.DML.Select.Internal         as RS
 
 import           Control.Monad.Morph                    (MFunctor, hoist)
-import           Data.Int                               (Int64)
 
 import qualified Data.Aeson                             as J
 import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.TH                          as J
-import qualified Data.CaseInsensitive                   as CI
-import qualified Data.HashMap.Strict                    as Map
 import qualified Data.Time                              as UTC
-import qualified Database.PG.Query                      as Q
 import qualified Hasura.Tracing                         as Tracing
-import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Types                     as HTTP
-import qualified Text.Builder                           as TB (run)
 
 data SchemaSyncEventProcessResult
   = SchemaSyncEventProcessResult
@@ -75,6 +61,8 @@ class (Monad m) => MonadMetadataStorage m where
   notifySchemaCacheSync :: InstanceId -> CacheInvalidations -> MetadataStorageT m ()
   processSchemaSyncEventPayload
     :: InstanceId -> J.Value -> MetadataStorageT m SchemaSyncEventProcessResult
+  getCatalogState :: MetadataStorageT m CatalogState
+  setCatalogState :: CatalogStateType -> J.Value -> MetadataStorageT m ()
 
   -- Async actions
   insertAction
@@ -88,6 +76,7 @@ class (Monad m) => MonadMetadataStorage m where
   getDeprivedCronTriggerStats :: MetadataStorageT m [CronTriggerStats]
   getPartialCronEvents :: MetadataStorageT m [CronEventPartial]
   getOneOffScheduledEvents :: MetadataStorageT m [OneOffScheduledEvent]
+  getInvocations :: EventId -> ScheduledEventType -> MetadataStorageT m [ScheduledEventInvocation]
   insertCronEvents :: [CronEventSeed] -> MetadataStorageT m ()
   insertScheduledEvent :: CreateScheduledEvent -> MetadataStorageT m ()
   insertScheduledEventInvocation
@@ -107,6 +96,8 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (ReaderT r m) where
   setMetadata                       = (hoist lift) . setMetadata
   notifySchemaCacheSync a b         = (hoist lift) $ notifySchemaCacheSync a b
   processSchemaSyncEventPayload a b = (hoist lift) $ processSchemaSyncEventPayload a b
+  getCatalogState                   = (hoist lift) getCatalogState
+  setCatalogState a b               = (hoist lift) $ setCatalogState a b
 
   insertAction a b c d = (hoist lift) $ insertAction a b c d
   fetchUndeliveredActionEvents = (hoist lift) fetchUndeliveredActionEvents
@@ -116,6 +107,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (ReaderT r m) where
   getDeprivedCronTriggerStats        = (hoist lift) getDeprivedCronTriggerStats
   getPartialCronEvents               = (hoist lift) getPartialCronEvents
   getOneOffScheduledEvents           = (hoist lift) getOneOffScheduledEvents
+  getInvocations a b                 = (hoist lift) $ getInvocations a b
   insertCronEvents                   = (hoist lift) . insertCronEvents
   insertScheduledEvent               = (hoist lift) . insertScheduledEvent
   insertScheduledEventInvocation a b = (hoist lift) $ insertScheduledEventInvocation a b
@@ -131,6 +123,8 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (ExceptT e m) where
   setMetadata                       = (hoist lift) . setMetadata
   notifySchemaCacheSync a b         = (hoist lift) $ notifySchemaCacheSync a b
   processSchemaSyncEventPayload a b = (hoist lift) $ processSchemaSyncEventPayload a b
+  getCatalogState                   = (hoist lift) getCatalogState
+  setCatalogState a b               = (hoist lift) $ setCatalogState a b
 
   insertAction a b c d = (hoist lift) $ insertAction a b c d
   fetchUndeliveredActionEvents = (hoist lift) fetchUndeliveredActionEvents
@@ -140,6 +134,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (ExceptT e m) where
   getDeprivedCronTriggerStats        = (hoist lift) getDeprivedCronTriggerStats
   getPartialCronEvents               = (hoist lift) getPartialCronEvents
   getOneOffScheduledEvents           = (hoist lift) getOneOffScheduledEvents
+  getInvocations a b                 = (hoist lift) $ getInvocations a b
   insertCronEvents                   = (hoist lift) . insertCronEvents
   insertScheduledEvent               = (hoist lift) . insertScheduledEvent
   insertScheduledEventInvocation a b = (hoist lift) $ insertScheduledEventInvocation a b
@@ -155,6 +150,8 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (Tracing.TraceT m) whe
   setMetadata                       = (hoist lift) . setMetadata
   notifySchemaCacheSync a b         = (hoist lift) $ notifySchemaCacheSync a b
   processSchemaSyncEventPayload a b = (hoist lift) $ processSchemaSyncEventPayload a b
+  getCatalogState                   = (hoist lift) getCatalogState
+  setCatalogState a b               = (hoist lift) $ setCatalogState a b
 
   insertAction a b c d = (hoist lift) $ insertAction a b c d
   fetchUndeliveredActionEvents = (hoist lift) fetchUndeliveredActionEvents
@@ -164,6 +161,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (Tracing.TraceT m) whe
   getDeprivedCronTriggerStats        = (hoist lift) getDeprivedCronTriggerStats
   getPartialCronEvents               = (hoist lift) getPartialCronEvents
   getOneOffScheduledEvents           = (hoist lift) getOneOffScheduledEvents
+  getInvocations a b                 = (hoist lift) $ getInvocations a b
   insertCronEvents                   = (hoist lift) . insertCronEvents
   insertScheduledEvent               = (hoist lift) . insertScheduledEvent
   insertScheduledEventInvocation a b = (hoist lift) $ insertScheduledEventInvocation a b

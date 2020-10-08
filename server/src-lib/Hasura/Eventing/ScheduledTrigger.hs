@@ -79,6 +79,7 @@ module Hasura.Eventing.ScheduledTrigger
   , unlockAllLockedScheduledEventsTx
   , clearFutureCronEventsTx
   , insertScheduledEventTx
+  , getInvocationsTx
   ) where
 
 import           Control.Arrow.Extended                 (dup)
@@ -685,3 +686,22 @@ insertScheduledEventTx CreateScheduledEvent{..} =
         , Q.AltJ cseHeaders
         , cseComment)
         False
+
+getInvocationsTx
+  :: EventId -> ScheduledEventType -> Q.TxE QErr [ScheduledEventInvocation]
+getInvocationsTx eventId = \case
+  OneOff ->
+    map mapInvocation <$> Q.withQE defaultTxErrorHandler [Q.sql|
+      SELECT id, status, request::json, response::json, created_at
+        FROM hdb_catalog.hdb_scheduled_event_invocation_logs
+       WHERE event_id = $1
+     |] (Identity eventId) True
+  Cron   ->
+    map mapInvocation <$> Q.withQE defaultTxErrorHandler [Q.sql|
+      SELECT id, status, request::json, response::json, created_at
+        FROM hdb_catalog.hdb_cron_event_invocation_logs
+       WHERE event_id = $1
+     |] (Identity eventId) True
+  where
+    mapInvocation (invocationId, status, Q.AltJ req, Q.AltJ resp, createdAt) =
+      ScheduledEventInvocation invocationId eventId status req resp createdAt

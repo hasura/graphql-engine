@@ -448,6 +448,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime
     then do
       unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
 
+      -- FIXME: Use abstraction to fetch Id
       (dbId, pgVersion) <- liftIO $ runTxIO _icMetadataPool (Q.ReadCommitted, Nothing) $
         (,) <$> getDbId <*> getPgVersion
 
@@ -757,6 +758,30 @@ processSchemaSyncEventPayload' instanceId payloadValue = pure $ do
       _sseprCacheInvalidations = _ssepInvalidations eventPayload
   pure SchemaSyncEventProcessResult{..}
 
+getCatalogStateTx :: Q.TxE QErr CatalogState
+getCatalogStateTx =
+  mkCatalogState . Q.getRow <$> Q.withQE defaultTxErrorHandler [Q.sql|
+    SELECT hasura_uuid::text, cli_state::json, console_state::json
+      FROM hdb_catalog.hdb_version
+  |] () False
+  where
+    mkCatalogState (dbId, Q.AltJ cliState, Q.AltJ consoleState) =
+      CatalogState dbId cliState consoleState
+
+setCatalogStateTx :: CatalogStateType -> A.Value -> Q.TxE QErr ()
+setCatalogStateTx stateTy stateValue =
+  case stateTy of
+    CSTCli ->
+      Q.unitQE defaultTxErrorHandler [Q.sql|
+        UPDATE hdb_catalog.hdb_version
+           SET cli_state = $1
+      |] (Identity $ Q.AltJ stateValue) False
+    CSTConsole ->
+      Q.unitQE defaultTxErrorHandler [Q.sql|
+        UPDATE hdb_catalog.hdb_version
+           SET console_state = $1
+      |] (Identity $ Q.AltJ stateValue) False
+
 
 instance MonadMetadataStorage ServerAppM where
 
@@ -768,6 +793,8 @@ instance MonadMetadataStorage ServerAppM where
     let _sseprShouldReload = instanceId /= _ssepInstanceId eventPayload
         _sseprCacheInvalidations = _ssepInvalidations eventPayload
     pure SchemaSyncEventProcessResult{..}
+  getCatalogState     = runTxInMetadataStorage getCatalogStateTx
+  setCatalogState a b = runTxInMetadataStorage $ setCatalogStateTx a b
 
   insertAction a b c d         = runTxInMetadataStorage $ insertActionTx a b c d
   fetchUndeliveredActionEvents = runTxInMetadataStorage undeliveredEventsTx
@@ -777,6 +804,7 @@ instance MonadMetadataStorage ServerAppM where
   getDeprivedCronTriggerStats        = runTxInMetadataStorage getDeprivedCronTriggerStatsTx
   getPartialCronEvents               = runTxInMetadataStorage getPartialCronEventsTx
   getOneOffScheduledEvents           = runTxInMetadataStorage getOneOffScheduledEventsTx
+  getInvocations a b                 = runTxInMetadataStorage $ getInvocationsTx a b
   insertCronEvents                   = runTxInMetadataStorage . insertCronEventsTx
   insertScheduledEventInvocation a b = runTxInMetadataStorage $ insertInvocationTx a b
   setScheduledEventRetry a b c       = runTxInMetadataStorage $ setRetryTx a b c

@@ -716,3 +716,32 @@ instance Monoid MetadataModifier where
 
 noMetadataModify :: MetadataModifier
 noMetadataModify = mempty
+
+data CatalogStateType
+  = CSTCli
+  | CSTConsole
+  deriving (Show, Eq, Lift)
+$(deriveJSON defaultOptions{constructorTagModifier = snakeCase . drop 3} ''CatalogStateType)
+
+data SetCatalogState
+  = SetCatalogState
+  { _scsType  :: !CatalogStateType
+  , _scsState :: !Value
+  } deriving (Show, Eq, Lift)
+$(deriveJSON (aesonDrop 4 snakeCase) ''SetCatalogState)
+
+data CatalogState
+  = CatalogState
+  { _csId           :: !Text
+  , _csCliState     :: !Value
+  , _csConsoleState :: !Value
+  } deriving (Show, Eq)
+$(deriveToJSON (aesonDrop 3 snakeCase) ''CatalogState)
+
+data GetCatalogState
+  = GetCatalogState
+  deriving (Show, Eq, Lift)
+$(deriveToJSON defaultOptions ''GetCatalogState)
+
+instance FromJSON GetCatalogState where
+  parseJSON _ = pure GetCatalogState

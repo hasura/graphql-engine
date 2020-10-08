@@ -8,6 +8,8 @@ module Hasura.RQL.DDL.Metadata
   , runGetInconsistentMetadata
   , runDropInconsistentMetadata
   , fetchMetadataFromHdbTables
+  , runGetCatalogState
+  , runSetCatalogState
   , module Hasura.RQL.DDL.Metadata.Types
   ) where
 
@@ -286,6 +288,17 @@ runDropInconsistentMetadata _ = do
   metadataModifier <- execWriterT $ mapM_ (tell . purgeMetadataObj) (reverse inconsSchObjs)
   buildSchemaCacheStrict metadataModifier
   return successMsg
+
+runGetCatalogState
+  :: (MonadCatalogState m) => GetCatalogState -> m EncJSON
+runGetCatalogState _ =
+  encJFromJValue <$> fetchCatalogState
+
+runSetCatalogState
+  :: (MonadCatalogState m) => SetCatalogState -> m EncJSON
+runSetCatalogState SetCatalogState{..} = do
+  updateCatalogState _scsType _scsState
+  pure successMsg
 
 purgeMetadataObj :: MetadataObjId -> MetadataModifier
 purgeMetadataObj = \case

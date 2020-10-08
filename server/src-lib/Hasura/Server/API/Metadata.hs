@@ -92,8 +92,8 @@ data RQLMetadata
   -- scheduled triggers
   | RMCreateCronTrigger !CreateCronTrigger
   | RMDeleteCronTrigger !ScheduledTriggerName
-
   | RMCreateScheduledEvent !CreateScheduledEvent
+  | RMGetEventInvocations !GetEventInvocations
 
   -- query collections, allow list related
   | RMCreateQueryCollection !CreateCollection
@@ -119,6 +119,9 @@ data RQLMetadata
   | RMSetCustomTypes !CustomTypes
 
   | RMDumpInternalState !DumpInternalState
+
+  | RMGetCatalogState !GetCatalogState
+  | RMSetCatalogState !SetCatalogState
 
   -- bulk metadata queries
   | RMBulk [RQLMetadata]
@@ -165,6 +168,7 @@ runMetadataRequestM
      , MonadUnique m
      , MonadMetadata m
      , MonadScheduledEvents m
+     , MonadCatalogState m
      , HasHttpManager m
      , MonadError QErr m
      )
@@ -221,10 +225,10 @@ runMetadataRequestM env = \case
   RMReloadRemoteSchema q -> runReloadRemoteSchema q
   RMIntrospectRemoteSchema q -> runIntrospectRemoteSchema q
 
-  RMCreateCronTrigger q -> runCreateCronTrigger q
-  RMDeleteCronTrigger q -> runDeleteCronTrigger q
-
+  RMCreateCronTrigger q    -> runCreateCronTrigger q
+  RMDeleteCronTrigger q    -> runDeleteCronTrigger q
   RMCreateScheduledEvent q -> runCreateScheduledEvent q
+  RMGetEventInvocations q  -> runGetEventInvocations q
 
   RMCreateQueryCollection q -> runCreateCollection q
   RMDropQueryCollection q -> runDropCollection q
@@ -247,5 +251,8 @@ runMetadataRequestM env = \case
   RMSetCustomTypes q -> runSetCustomTypes q
 
   RMDumpInternalState q -> runDumpInternalState q
+
+  RMGetCatalogState q -> runGetCatalogState q
+  RMSetCatalogState q -> runSetCatalogState q
 
   RMBulk q -> encJFromList <$> indexedMapM (runMetadataRequestM env) q

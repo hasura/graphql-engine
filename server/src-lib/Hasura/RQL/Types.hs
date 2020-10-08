@@ -217,7 +217,7 @@ newtype HasSystemDefinedT m a
            , HasHttpManager, HasSQLGenCtx, SourceM
            , TableCoreInfoRM, TableInfoRM, CacheRM
            , CacheRWM, UserInfoM, MonadMetadata
-           , MonadScheduledEvents
+           , MonadScheduledEvents, MonadCatalogState
            )
 
 -- instance (SourceM m) => TableCoreInfoRM (HasSystemDefinedT m) where

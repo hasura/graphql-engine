@@ -75,8 +75,12 @@ newtype CacheRWT m a
   -- Control.Monad.Trans.Writer.CPS) are leaky, and we don’t have that yet.
   = CacheRWT (StateT (RebuildableSchemaCache, CacheInvalidations) m a)
   deriving
-    ( Functor, Applicative, Monad, MonadIO, MonadUnique, MonadReader r, MonadError e, MonadTx
-    , UserInfoM, HasHttpManager, HasSQLGenCtx, HasSystemDefined, MonadMetadata, MonadScheduledEvents)
+    ( Functor, Applicative, Monad
+    , MonadIO, MonadUnique, MonadReader r
+    , MonadError e, MonadTx , UserInfoM
+    , HasHttpManager, HasSQLGenCtx, HasSystemDefined
+    , MonadMetadata, MonadScheduledEvents, MonadCatalogState
+    )
 
 runCacheRWT
   :: Functor m
