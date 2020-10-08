@@ -760,7 +760,7 @@ CREATE TABLE hdb_catalog.hdb_action_log
 CREATE TABLE hdb_catalog.hdb_cron_events
 (
   id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
-  trigger_name TEXT NOT NULL, -- TODO: Make unique?
+  trigger_name TEXT NOT NULL,
   scheduled_time TIMESTAMPTZ NOT NULL,
   status TEXT NOT NULL DEFAULT 'scheduled',
   tries INTEGER NOT NULL DEFAULT 0,
@@ -787,18 +787,18 @@ CREATE TABLE hdb_catalog.hdb_cron_event_invocation_logs
     ON UPDATE CASCADE ON DELETE CASCADE
 );
 
-CREATE VIEW hdb_catalog.hdb_cron_events_stats AS
-  SELECT ct.name,
-         COALESCE(ce.upcoming_events_count,0) as upcoming_events_count,
-         COALESCE(ce.max_scheduled_time, now()) as max_scheduled_time
-  FROM hdb_catalog.hdb_cron_triggers ct
-  LEFT JOIN
-  ( SELECT trigger_name, count(*) as upcoming_events_count, max(scheduled_time) as max_scheduled_time
-    FROM hdb_catalog.hdb_cron_events
-    WHERE tries = 0 and status = 'scheduled'
-    GROUP BY trigger_name
-  ) ce
-  ON ct.name = ce.trigger_name;
+-- CREATE VIEW hdb_catalog.hdb_cron_events_stats AS
+--   SELECT ct.name,
+--          COALESCE(ce.upcoming_events_count,0) as upcoming_events_count,
+--          COALESCE(ce.max_scheduled_time, now()) as max_scheduled_time
+--   FROM hdb_catalog.hdb_cron_triggers ct
+--   LEFT JOIN
+--   ( SELECT trigger_name, count(*) as upcoming_events_count, max(scheduled_time) as max_scheduled_time
+--     FROM hdb_catalog.hdb_cron_events
+--     WHERE tries = 0 and status = 'scheduled'
+--     GROUP BY trigger_name
+--   ) ce
+--   ON ct.name = ce.trigger_name;
 
 CREATE TABLE hdb_catalog.hdb_scheduled_events
 (

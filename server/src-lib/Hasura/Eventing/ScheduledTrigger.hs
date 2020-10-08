@@ -478,9 +478,16 @@ getDeprivedCronTriggerStatsTx =
   map (\(n, count, maxTx) -> CronTriggerStats n count maxTx) <$>
     Q.listQE defaultTxErrorHandler
     [Q.sql|
-     SELECT name, upcoming_events_count, max_scheduled_time
-      FROM hdb_catalog.hdb_cron_events_stats
-      WHERE upcoming_events_count < 100
+     SELECT * FROM
+      ( SELECT
+         trigger_name,
+          count(*) as upcoming_events_count,
+          max(scheduled_time) as max_scheduled_time
+         FROM hdb_catalog.hdb_cron_events
+         WHERE tries = 0 and status = 'scheduled'
+         GROUP BY trigger_name
+      ) AS q
+      WHERE q.upcoming_events_count < 100
      |] () True
 
 getPartialCronEventsTx :: Q.TxE QErr [CronEventPartial]

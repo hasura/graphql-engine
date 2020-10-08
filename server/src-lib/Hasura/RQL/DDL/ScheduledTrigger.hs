@@ -58,6 +58,9 @@ runCreateCronTrigger CreateCronTrigger {..} = do
         buildSchemaCacheFor metadataObj
           $ MetadataModifier
           $ metaCronTriggers %~ Map.insert cctName metadata
+        currentTime <- liftIO C.getCurrentTime
+        let scheduleTimes = generateScheduleTimes currentTime 100 cctCronSchedule -- generate next 100 events
+        addCronEventSeeds $ map (CronEventSeed cctName) scheduleTimes
         return successMsg
 
 -- addCronTriggerToCatalog :: (MonadTx m) => CronTriggerMetadata ->  m ()
