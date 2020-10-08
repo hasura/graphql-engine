@@ -1,18 +1,18 @@
-# מנוע GraphQL של Hasura
+&#x202b; # מנוע GraphQL של Hasura
 
-[![גרסא אחרונה](https://img.shields.io/github/v/release/hasura/graphql-engine)](https://github.com/hasura/graphql-engine/releases/latest)
-[![מסמכים](https://img.shields.io/badge/docs-v1.x-brightgreen.svg?style=flat)](https://hasura.io/docs)
-[![CircleCI](https://circleci.com/gh/hasura/graphql-engine.svg?style=shield)](https://circleci.com/gh/hasura/graphql-engine)
+&#x202b; [![גרסא אחרונה](https://img.shields.io/github/v/release/hasura/graphql-engine)](https://github.com/hasura/graphql-engine/releases/latest)
+&#x202b; [![מסמכים](https://img.shields.io/badge/docs-v1.x-brightgreen.svg?style=flat)](https://hasura.io/docs)
+&#x202b; [![CircleCI](https://circleci.com/gh/hasura/graphql-engine.svg?style=shield)](https://circleci.com/gh/hasura/graphql-engine)
 
 
 <a href="https://discord.gg/vBPpJkS"><img src="https://img.shields.io/badge/chat-discord-brightgreen.svg?logo=discord&style=flat"></a>
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="https://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
 
-מנוע GraphQL של Hasura הוא שרת GraphQL מהיר שמאפשר **פניות API של GraphQL בצורה מיידית, בזמן אמת מעל Postgres** עם [**טריגרי וובהוק**](event-triggers.md) על ארועי דאטהבייס ו [**סכמות מרוחקות**](remote-schemas.md) עבור לוגיקה עסקית.
-Hasura עוזרת לך לבנות יישומי [GraphQL](https://hasura.io/graphql/) מעל Postgress או לעבור בצורה הדרגתית לGraphQL עבור יישומים קיימים המשתמשים ב-Postgress.
+&#x202b; מנוע GraphQL של Hasura הוא שרת GraphQL מהיר שמאפשר **פניות API של GraphQL בצורה מיידית, בזמן אמת מעל Postgres** עם [**טריגרי וובהוק**](event-triggers.md) על ארועי דאטהבייס ו [**סכמות מרוחקות**](remote-schemas.md) עבור לוגיקה עסקית.
+&#x202b; Hasura עוזרת לך לבנות יישומי [GraphQL](https://hasura.io/graphql/) מעל Postgress או לעבור בצורה הדרגתית לGraphQL עבור יישומים קיימים המשתמשים ב-Postgress.
 
-קרא עוד ב [hasura.io](https://hasura.io) ואת ה [תיעוד](https://hasura.io/docs).
+&#x202b; קרא עוד ב [hasura.io](https://hasura.io) ואת ה [תיעוד](https://hasura.io/docs).
 
 ------------------
 
