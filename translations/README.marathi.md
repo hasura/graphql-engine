@@ -175,11 +175,11 @@ guides](https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html) or
 
 ## ब्रँड मालमत्ता
 
-[../assets/brand](../assets/brand) फोल्डरमध्ये हसुरा ब्रँड मालमत्ता (लोगो, हसुरा मॅस्कॉट, बॅज इत्यादिद्वारे समर्थित) आढळू शकतात. आपल्या अनुप्रयोग / वेबसाइट इत्यादी मध्ये त्यांचा वापर मोकळ्या मनाने करा जर आपण हसुरा वापरुन तयार केलेल्या आपल्या अनुप्रयोगांमध्ये "पॉवर्ड बाय हसुरा" बॅज जोडला तर आम्हाला आनंद होईल. ❤️
+[assets/brand](../assets/brand) फोल्डरमध्ये हसुरा ब्रँड मालमत्ता (लोगो, हसुरा मॅस्कॉट, बॅज इत्यादिद्वारे समर्थित) आढळू शकतात. आपल्या अनुप्रयोग / वेबसाइट इत्यादी मध्ये त्यांचा वापर मोकळ्या मनाने करा जर आपण हसुरा वापरुन तयार केलेल्या आपल्या अनुप्रयोगांमध्ये "पॉवर्ड बाय हसुरा" बॅज जोडला तर आम्हाला आनंद होईल. ❤️
 
 <div style="display: flex;">
-  <img src="assets/brand/powered_by_hasura_blue.svg" width="150px"/>
-  <img src="assets/brand/powered_by_hasura_white.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_blue.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_white.svg" width="150px"/>
 </div>
 
 ```html
