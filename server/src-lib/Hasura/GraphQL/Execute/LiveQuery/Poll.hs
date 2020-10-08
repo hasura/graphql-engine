@@ -468,7 +468,7 @@ pollQuery pollerId lqOpts pgExecCtx pgQuery cohortMap postPollHook = do
     getCohortOperations cohorts = \case
       Left e ->
         -- TODO: this is internal error
-        let resp = GQExecError [encodeGQLErr False e]
+        let resp = throwError $ GQExecError [encodeGQLErr False e]
         in [(resp, cohortId, Nothing, snapshot) | (cohortId, snapshot) <- cohorts]
       Right responses -> do
         let cohortSnapshotMap = Map.fromList cohorts
@@ -479,5 +479,5 @@ pollQuery pollerId lqOpts pgExecCtx pgQuery cohortMap postPollHook = do
           -- Postgres response is not present in the cohort map of this batch
           -- (this shouldn't happen but if it happens it means a logic error and
           -- we should log it)
-          in (GQSuccess respBS, cohortId, Just $!(respHash, respSize),) <$>
+          in (pure respBS, cohortId, Just $!(respHash, respSize),) <$>
              Map.lookup cohortId cohortSnapshotMap

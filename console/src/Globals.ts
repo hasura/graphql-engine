@@ -3,6 +3,7 @@ import { SERVER_CONSOLE_MODE } from './constants';
 import { getFeaturesCompatibility } from './helpers/versionUtils';
 import { stripTrailingSlash } from './components/Common/utils/urlUtils';
 import { isEmpty } from './components/Common/utils/jsUtils';
+import { Nullable } from './components/Common/utils/tsUtils';
 
 // TODO: move this section to a more appropriate location
 
@@ -22,6 +23,7 @@ declare global {
       serverVersion: string;
       consolePath: string;
       cliUUID: string;
+      consoleId: Nullable<string>;
     };
   }
   const CONSOLE_ASSET_VERSION: string;
