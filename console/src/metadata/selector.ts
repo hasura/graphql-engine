@@ -9,7 +9,10 @@ import {
 import { filterInconsistentMetadataObjects } from '../components/Services/Settings/utils';
 import { parseCustomTypes } from '../shared/utils/hasuraCustomTypeUtils';
 import { Driver } from '../dataSources';
-import { EventTrigger } from '../components/Services/Events/types';
+import {
+  EventTrigger,
+  ScheduledTrigger,
+} from '../components/Services/Events/types';
 
 const isMetadataV3 = (
   x: HasuraMetadataV2 | HasuraMetadataV3 | null
@@ -251,6 +254,24 @@ export const getEventTriggers = createSelector(
     }, [] as EventTrigger[]);
   }
 );
+
+export const getCronTriggers = createSelector(getMetadata, metadata => {
+  const cronTriggers: ScheduledTrigger[] = (metadata?.cron_triggers || []).map(
+    cron => ({
+      name: cron.name,
+      payload: cron.payload,
+      retry_conf: {
+        ...cron.retry_conf,
+      },
+      header_conf: cron.headers,
+      webhook_conf: cron.webhook,
+      cron_schedule: cron.schedule,
+      include_in_metadata: cron.include_in_metadata,
+      comment: cron.comment,
+    })
+  );
+  return cronTriggers || [];
+});
 
 export const getAllowedQueries = (state: ReduxState) =>
   state.metadata.allowedQueries || [];

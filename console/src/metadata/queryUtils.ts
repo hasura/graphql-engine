@@ -445,8 +445,10 @@ export const generateCreateScheduledTriggerQuery = (
   state: LocalScheduledTriggerState,
   source: string,
   replace = false
-) =>
-  getMetadataQuery('create_cron_trigger', source, {
+) => ({
+  type: 'create_cron_trigger',
+  args: {
+    source,
     name: state.name.trim(),
     webhook: state.webhook,
     schedule: state.schedule,
@@ -460,7 +462,8 @@ export const generateCreateScheduledTriggerQuery = (
     comment: state.comment,
     include_in_metadata: state.includeInMetadata,
     replace,
-  });
+  },
+});
 
 export const generateUpdateScheduledTriggerQuery = (
   state: LocalScheduledTriggerState,

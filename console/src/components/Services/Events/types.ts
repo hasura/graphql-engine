@@ -111,10 +111,10 @@ export type ScheduledTrigger = {
   webhook_conf: string;
   cron_schedule: string;
   retry_conf: {
-    num_retries: number;
-    retry_interval_seconds: number;
-    timeout_seconds: number;
-    tolerance_seconds: number;
+    num_retries?: number;
+    retry_interval_seconds?: number;
+    timeout_seconds?: number;
+    tolerance_seconds?: number;
   };
   include_in_metadata: boolean;
   comment: Nullable<string>;
@@ -131,17 +131,9 @@ export type Triggers = {
  * Redux Action types
  */
 
-export interface RASetScheduledTriggers extends ReduxAction {
-  type: typeof LOADED_SCHEDULED_TRIGGERS;
-  data: ScheduledTrigger[];
-}
-
 export interface RASetCurrentTrigger extends ReduxAction {
   type: typeof SET_CURRENT_TRIGGER;
   name: string;
 }
 
-export type RAEvents =
-  | RASetScheduledTriggers
-  | RASetCurrentTrigger
-  | { type: typeof LOADING_TRIGGERS };
+export type RAEvents = RASetCurrentTrigger | { type: typeof LOADING_TRIGGERS };

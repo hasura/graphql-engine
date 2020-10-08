@@ -2,9 +2,7 @@ import React from 'react';
 import { Connect } from 'react-redux';
 import { Route, IndexRedirect, EnterHook, RouterState } from 'react-router';
 import Container from './Container';
-import { fetchTriggers } from './ServerIO';
-import globals from '../../../Globals';
-import { Dispatch, ReplaceRouterState, ReduxStore } from '../../../types';
+import { ReduxStore } from '../../../types';
 import {
   getDataEventsLandingRoute,
   getScheduledEventsLandingRoute,
@@ -53,39 +51,13 @@ import {
 } from './AdhocEvents';
 import { RightContainer } from '../../Common/Layout/RightContainer';
 
-const triggersInit = (dispatch: Dispatch): EnterHook => {
-  return (
-    nextState: RouterState,
-    replaceState: ReplaceRouterState,
-    cb?: VoidFunction
-  ) => {
-    Promise.all([dispatch(fetchTriggers(null))]).then(
-      () => {
-        if (cb) {
-          cb();
-        }
-      },
-      () => {
-        replaceState(globals.urlPrefix);
-        if (cb) {
-          cb();
-        }
-      }
-    );
-  };
-};
-
 const getTriggersRouter = (
   connect: Connect,
   store: ReduxStore,
   composeOnEnterHooks: (hooks: EnterHook[]) => EnterHook
 ) => {
   return (
-    <Route
-      path={eventsPrefix}
-      component={Container}
-      onEnter={composeOnEnterHooks([triggersInit(store.dispatch)])}
-    >
+    <Route path={eventsPrefix} component={Container}>
       <IndexRedirect to={dataEventsPrefix} />
       <Route path={dataEventsPrefix} component={RightContainer}>
         <IndexRedirect to={getDataEventsLandingRoute('relative')} />

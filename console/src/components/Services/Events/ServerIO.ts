@@ -27,7 +27,7 @@ import {
   InvocationLog,
   LOADING_TRIGGERS,
 } from './types';
-import { setScheduledTriggers, setCurrentTrigger } from './reducer';
+import { setCurrentTrigger } from './reducer';
 import { LocalScheduledTriggerState } from './CronTriggers/state';
 import { LocalAdhocEventState } from './AdhocEvents/Add/state';
 import {
@@ -58,53 +58,6 @@ import {
 } from '../../../metadata/queryUtils';
 import { exportMetadata } from '../../../metadata/actions';
 
-export const fetchTriggers = (
-  kind: Nullable<TriggerKind>
-): Thunk<Promise<void>> => (dispatch, getState) => {
-  dispatch({ type: LOADING_TRIGGERS });
-  const { currentDataSource } = getState().tables;
-  const bulkQueryArgs = [];
-  if (kind === 'cron') {
-    bulkQueryArgs.push(
-      getRunSqlQuery(
-        'SELECT * FROM "hdb_catalog"."hdb_cron_triggers" ORDER BY name ASC NULLS LAST;',
-        currentDataSource
-      )
-    );
-  } else {
-    // bulkQueryArgs.push(getRunSqlQuery(
-    //   'SELECT * FROM "hdb_catalog"."hdb_cron_triggers" ORDER BY name ASC NULLS LAST;',
-    //     currentSource,
-    // ));
-    // todo
-  }
-  const query = {
-    type: 'bulk',
-    source: currentDataSource,
-    args: bulkQueryArgs,
-  };
-  return dispatch(
-    requestAction(Endpoints.query, {
-      method: 'POST',
-      credentials: globalCookiePolicy,
-      headers: dataHeaders(getState),
-      body: JSON.stringify(query),
-    })
-  ).then(
-    (data: (ScheduledTrigger[] | EventTrigger[])[]) => {
-      if (kind && kind === 'cron') {
-        // todo
-        dispatch(setScheduledTriggers(data[0] as ScheduledTrigger[]));
-      }
-      return Promise.resolve();
-    },
-    (error: any) => {
-      console.error(`Failed to load event triggers${JSON.stringify(error)}`);
-      return Promise.reject();
-    }
-  );
-};
-
 export const addScheduledTrigger = (
   state: LocalScheduledTriggerState,
   successCb?: () => void,
@@ -129,7 +82,7 @@ export const addScheduledTrigger = (
   const successMsg = 'Created scheduled trigger successfully';
 
   const customOnSuccess = () => {
-    dispatch(fetchTriggers('cron'))
+    dispatch(exportMetadata())
       .then(() => {
         if (successCb) {
           successCb();
@@ -221,7 +174,7 @@ export const saveScheduledTrigger = (
   const successMsg = 'Updated scheduled trigger successfully';
 
   const customOnSuccess = () => {
-    return dispatch(fetchTriggers('cron'))
+    return dispatch(exportMetadata())
       .then(() => {
         if (successCb) {
           successCb();
@@ -297,7 +250,7 @@ export const deleteScheduledTrigger = (
       successCb();
     }
     dispatch(push(getScheduledEventsLandingRoute('absolute')));
-    dispatch(fetchTriggers('cron'));
+    dispatch(exportMetadata());
   };
   const customOnError = () => {
     if (errorCb) {

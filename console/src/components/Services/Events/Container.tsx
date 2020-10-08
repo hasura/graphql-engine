@@ -24,17 +24,17 @@ import { findEventTrigger, findScheduledTrigger } from './utils';
 import { ReduxState } from '../../../types';
 
 import { mapDispatchToPropsEmpty } from '../../Common/utils/reactUtils';
-import { getEventTriggers } from '../../../metadata/selector';
+import { getEventTriggers, getCronTriggers } from '../../../metadata/selector';
 
 interface Props extends InjectedProps {}
 
 const Container: React.FC<Props> = props => {
   const {
-    triggers,
     children,
     pathname: currentLocation,
     triggerName: currentTriggerName,
     eventTriggers,
+    cronTriggers,
   } = props;
 
   let currentEventTrigger;
@@ -46,7 +46,7 @@ const Container: React.FC<Props> = props => {
     } else {
       currentScheduledTrigger = findScheduledTrigger(
         currentTriggerName,
-        triggers.scheduled
+        cronTriggers
       );
     }
   }
@@ -80,7 +80,7 @@ const Container: React.FC<Props> = props => {
         </Link>
         {isScheduledEventsRoute(currentLocation) ? (
           <LeftSidebar
-            triggers={triggers.scheduled}
+            triggers={cronTriggers}
             service="cron"
             currentTrigger={currentScheduledTrigger}
           />
@@ -124,6 +124,7 @@ const mapStateToProps = (state: ReduxState, ownProps: ExternalProps) => {
   return {
     ...state.events,
     eventTriggers: getEventTriggers(state),
+    cronTriggers: getCronTriggers(state),
     pathname: ownProps.location.pathname,
     triggerName: ownProps.params.triggerName,
   };
