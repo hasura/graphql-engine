@@ -36,12 +36,13 @@ data RQLMetadata
   | RMPgDropSource !DropPgSource
   | RMPgReloadSource !PGSourceName
 
-  | RMPgTrackTable !TrackTable
+  | RMPgTrackTable !TrackTableV2
   | RMPgUntrackTable !UntrackTable
   | RMPgSetTableIsEnum !SetTableIsEnum
+  | RMPgSetTableCustomFields !SetTableCustomFields
 
   -- Postgres functions
-  | RMPgTrackFunction !TrackFunction
+  | RMPgTrackFunction !TrackFunctionV2
   | RMPgUntrackFunction !UnTrackFunction
 
   -- Postgres table relationships
@@ -175,11 +176,12 @@ runMetadataRequestM env = \case
   RMPgDropSource q   -> runDropPgSource q
   RMPgReloadSource q -> runReloadPgSource q
 
-  RMPgTrackTable q     -> runTrackTableQ q
-  RMPgUntrackTable q   -> runUntrackTableQ q
-  RMPgSetTableIsEnum q -> runSetExistingTableIsEnumQ q
+  RMPgTrackTable q           -> runTrackTableV2Q q
+  RMPgUntrackTable q         -> runUntrackTableQ q
+  RMPgSetTableIsEnum q       -> runSetExistingTableIsEnumQ q
+  RMPgSetTableCustomFields q -> runSetTableCustomFieldsQV2 q
 
-  RMPgTrackFunction q -> runTrackFunc q
+  RMPgTrackFunction q   -> runTrackFunctionV2 q
   RMPgUntrackFunction q -> runUntrackFunc q
 
   RMPgCreateObjectRelationship q -> runCreateRelationship ObjRel q
