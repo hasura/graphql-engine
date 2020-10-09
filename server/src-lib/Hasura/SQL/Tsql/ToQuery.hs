@@ -53,7 +53,8 @@ fromExpression :: Expression -> Printer
 fromExpression =
   \case
     JsonQueryExpression e -> "JSON_QUERY(" <+> fromExpression e <+> ")"
-    JsonValueExpression e path -> "JSON_VALUE(" <+> fromExpression e <+> fromPath path <+> ")"
+    JsonValueExpression e path ->
+      "JSON_VALUE(" <+> fromExpression e <+> fromPath path <+> ")"
     ValueExpression value -> QueryPrinter (toSql value)
     AndExpression xs ->
       SepByPrinter
@@ -80,6 +81,18 @@ fromExpression =
       "(" <+> fromExpression x <+> ") != (" <+> fromExpression y <+> ")"
     ToStringExpression e -> "CONCAT(" <+> fromExpression e <+> ", '')"
     SelectExpression s -> "(" <+> IndentPrinter 1 (fromSelect s) <+> ")"
+    OpExpression op x y ->
+      "(" <+>
+      fromExpression x <+>
+      ") " <+> fromOp op <+> " (" <+> fromExpression y <+> ")"
+
+fromOp :: Op -> Printer
+fromOp =
+  \case
+    LessOp -> "<"
+    MoreOp -> ">"
+    MoreOrEqualOp -> ">="
+    LessOrEqualOp -> "<="
 
 fromPath :: JsonPath -> Printer
 fromPath path =

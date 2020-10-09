@@ -127,6 +127,7 @@ data Expression
   | JsonValueExpression Expression JsonPath
     -- ^ This is for getting actual atomic values out of a JSON
     -- string.
+  | OpExpression Op Expression Expression
   deriving (Eq, Show)
 
 data JsonPath
@@ -187,3 +188,26 @@ data Comment = DueToPermission | RequestedSingleObject
 newtype EntityAlias = EntityAlias
   { entityAliasText :: Text
   } deriving (Eq, Show)
+
+data Op
+  = LessOp
+  | LessOrEqualOp
+  | MoreOp
+  | MoreOrEqualOp
+  -- | SIN
+  -- | SNE
+  -- | SLIKE
+  -- | SNLIKE
+  -- | SILIKE
+  -- | SNILIKE
+  -- | SSIMILAR
+  -- | SNSIMILAR
+  -- | SGTE
+  -- | SLTE
+  -- | SNIN
+  -- | SContains
+  -- | SContainedIn
+  -- | SHasKey
+  -- | SHasKeysAny
+  -- | SHasKeysAll
+  deriving (Eq, Show)
