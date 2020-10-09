@@ -157,9 +157,9 @@ when a new column has been added to a table via an external tool such as ``psql`
    Reloading may result in inconsistent metadata status. You may need to resolve
    all inconsistent objects manually or delete them. After that, you need to reload
    metadata again.
-   
-   
- .. _reset_metadata_manual:
+
+
+.. _reset_metadata_manual:
 
 Reseting Hasura metadata
 -------------------------
@@ -183,14 +183,12 @@ Clearing GraphQL Engine's metadata is an irreversible process, so use this funct
 
      .. code-block:: http
 
-      POST /v1/query HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
+     Example using ``curl``:
 
-      {
-          "type" : "clear_metadata",
-          "args": {}
-      }
+     .. code-block:: bash
+
+        curl -d'{"type": "reset_metadata", "args": {}}' http://localhost:8080/v1/query
+
 
 
 Managing Hasura metadata in CI/CD
