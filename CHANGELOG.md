@@ -516,7 +516,7 @@ For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/
 - server: support inserting unquoted bigint, and throw an error if value overflows the bounds of the integer type (fix #576) (fix #4368)
 - console: change react ace editor theme to eclipse (close #4437)
 - console: fix columns reordering for relationship tables in data browser (#4483)
-- console: format row count in data browser for readablity (#4433)
+- console: format row count in data browser for readability (#4433)
 - console: move pre-release notification tooltip msg to top (#4433)
 - console: remove extra localPresets key present in migration files on permissions change (close #3976) (#4433)
 - console: make nullable and unique labels for columns clickable in insert and modify (#4433)
@@ -595,7 +595,7 @@ Read more about check constraints on [Postgres Docs](https://www.postgresql.org/
 
 ### CLI: V2 migrations architecture
 
-A new CLI migrations image is introduced to account for the new migrations workflow. If you're have a project with `version: 2` in `config.yaml`, you should use the new image: `hasura/graphql-engine:v1.2.0-cli-migrations-v2`. Mount the migrations at `/hasura-migrations` and metadata at `/hasura-metadata`.
+A new CLI migrations image is introduced to account for the new migrations workflow. If you have a project with `version: 2` in `config.yaml`, you should use the new image: `hasura/graphql-engine:v1.2.0-cli-migrations-v2`. Mount the migrations at `/hasura-migrations` and metadata at `/hasura-metadata`.
 
 See [upgrade docs](https://hasura.io/docs/1.0/graphql/manual/migrations/upgrade-v2.html).
 
