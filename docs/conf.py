@@ -83,6 +83,7 @@ extensions = [
     "sphinxcontrib.swaggerdoc",
     "sphinxcontrib.httpdomain",
     "sphinxcontrib.images",
+    "sphinx_copybutton",
     "sphinx.ext.todo",
     "sphinx_tabs.tabs",
     "graphiql",
@@ -153,6 +154,8 @@ exclude_patterns = ['_build', 'venv', 'Thumbs.db', '.DS_Store']
 # documents.
 #
 # default_role = None
+
+copybutton_prompt_text = "$ "
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
 #
@@ -401,3 +404,4 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #
 # texinfo_no_detailmenu = False
+
