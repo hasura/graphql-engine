@@ -3,18 +3,13 @@ package helpers
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 )
 
-var (
-	testHasuraCLIAPIUrl = "http://localhost:9693/apis"
-)
-
-func SendToHasuraMigrateAPIBodyFromFile(filepath string) (*http.Response, error) {
+func SendHTTPRequestWithFileAsBody(filepath, url string) (*http.Response, error) {
 	b, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		return nil, err
@@ -25,7 +20,7 @@ func SendToHasuraMigrateAPIBodyFromFile(filepath string) (*http.Response, error)
 		return nil, err
 	}
 
-	req, err := NewRequest("POST", fmt.Sprintf("%s/%s", testHasuraCLIAPIUrl, "migrate"), body)
+	req, err := NewRequest("POST", url, body)
 	if err != nil {
 		return nil, err
 	}

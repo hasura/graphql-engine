@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -43,7 +44,7 @@ var _ = Describe("console command", func() {
 		When("api requests are send", func() {
 			It("generates metadata and migration files", func() {
 				checkRequiredServersAreStarted()
-				sendAPIRequestsToCreateMetadataAndMigrations()
+				v1SendAPIRequestsToCreateMetadataAndMigrations()
 			})
 		})
 	})
@@ -75,7 +76,7 @@ var _ = Describe("console command", func() {
 		When("api requests are send", func() {
 			It("generates metadata and migration files", func() {
 				checkRequiredServersAreStarted()
-				sendAPIRequestsToCreateMetadataAndMigrations()
+				v1SendAPIRequestsToCreateMetadataAndMigrations()
 			})
 		})
 	})
@@ -94,8 +95,9 @@ func checkRequiredServersAreStarted() {
 	defer resp.Body.Close()
 }
 
-func sendAPIRequestsToCreateMetadataAndMigrations() {
-	resp, err := helpers.SendToHasuraMigrateAPIBodyFromFile("testdata/fixtures/create_table_users.json")
+func v1SendAPIRequestsToCreateMetadataAndMigrations() {
+	url := fmt.Sprintf("%s/%s", "http://localhost:9693/apis", "migrate")
+	resp, err := helpers.SendHTTPRequestWithFileAsBody("testdata/fixtures/create_table_users.json", url)
 	Expect(err).ShouldNot(HaveOccurred())
 	Expect(resp.StatusCode).To(Equal(http.StatusOK))
 }
