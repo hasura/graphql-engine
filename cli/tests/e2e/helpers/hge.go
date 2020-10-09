@@ -26,37 +26,39 @@ import (
 )
 
 func StartNewHge() (endpoint string, teardown func()) {
-	// create a new postgres testcontainer
-	if IsHGEBinaryPathSet() {
-		fmt.Fprintln(GinkgoWriter, hgeBinaryPath, hgeServerDirectoryPath)
-		// start a postgres container
-		ctx := context.Background()
-		postgresC := startPostgresContainer(ctx)
-		ip, err := postgresC.Host(ctx)
-		Expect(err).ShouldNot(HaveOccurred())
-		port, err := postgresC.MappedPort(ctx, "5432")
-		Expect(err).ShouldNot(HaveOccurred())
-		postgresConnectionString := fmt.Sprintf("postgres://postgres:postgrespassword@%s:%d/postgres", ip, port.Int())
+	switch {
+	case IsHGEBinaryPathSet():
+		{
+			fmt.Fprintln(GinkgoWriter, hgeBinaryPath, hgeServerDirectoryPath)
+			// start a postgres container
+			ctx := context.Background()
+			postgresC := startPostgresContainer(ctx)
+			ip, err := postgresC.Host(ctx)
+			Expect(err).ShouldNot(HaveOccurred())
+			port, err := postgresC.MappedPort(ctx, "5432")
+			Expect(err).ShouldNot(HaveOccurred())
+			postgresConnectionString := fmt.Sprintf("postgres://postgres:postgrespassword@%s:%d/postgres", ip, port.Int())
 
-		// run HGE server on a random port
-		if hgeBinaryPath == "" {
-			hgeBinaryPath = "/build/_server_output/graphql-engine"
-		}
-		hgePort := getFreePort()
-		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%d", hgePort)
-		session := startHgeBinary(startHgeBinaryOpts{
-			postgresConnectionString, hgePort, hgeBinaryPath, hgeServerDirectoryPath,
-		})
+			// run HGE server on a random port
+			if hgeBinaryPath == "" {
+				hgeBinaryPath = "/build/_server_output/graphql-engine"
+			}
+			hgePort := getFreePort()
+			hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%d", hgePort)
+			session := startHgeBinary(startHgeBinaryOpts{
+				postgresConnectionString, hgePort, hgeBinaryPath, hgeServerDirectoryPath,
+			})
 
-		teardown := func() {
-			Expect(postgresC.Terminate(ctx)).ShouldNot(HaveOccurred())
-			session.Terminate()
+			teardown := func() {
+				Expect(postgresC.Terminate(ctx)).ShouldNot(HaveOccurred())
+				session.Terminate()
+			}
+			return hgeEndpoint, teardown
 		}
-		return hgeEndpoint, teardown
+	default:
+		teardown = startHGEDockerCompose()
+		return "http://0.0.0.0:8080", teardown
 	}
-
-	teardown = startHGEDockerCompose()
-	return fmt.Sprintf("http://0.0.0.0:8080"), teardown
 }
 
 func startPostgresContainer(ctx context.Context) tc.Container {
@@ -134,8 +136,14 @@ func startHGEDockerCompose() func() {
 	err := execError.Error
 	Expect(err).ShouldNot(HaveOccurred())
 
+	// wait for server to be ready
+	retryClient := retryablehttp.NewClient()
+	retryClient.RetryMax = 10
+	_, err = retryablehttp.Get(fmt.Sprintf("%s:%d/healthz", "http://0.0.0.0", 8080))
+	Expect(err).ShouldNot(HaveOccurred())
+
 	teardown := func() {
-		execError := compose.WithCommand([]string{"down", "-v"}).Invoke()
+		execError := compose.Down()
 		err := execError.Error
 		if err != nil {
 			Expect(err).ShouldNot(gomega.HaveOccurred())

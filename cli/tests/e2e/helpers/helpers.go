@@ -112,8 +112,5 @@ func EditEndpointInConfig(configFilePath, endpoint string) {
 }
 
 func IsHGEBinaryPathSet() bool {
-	if hgeBinaryPath != "" {
-		return true
-	}
-	return false
+	return hgeBinaryPath != ""
 }

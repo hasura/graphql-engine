@@ -373,13 +373,16 @@ jobs:
 
   # test and build cli
   test_and_build_cli:
-    machine:
-      image: ubuntu-1604:201903-01
-      docker_layer_caching: true 
+    docker:
+    - image: hasura/graphql-engine-cli-builder:20191205
+    - image: circleci/postgres:10-alpine
+      environment:
+        POSTGRES_USER: gql_test
+        POSTGRES_DB: gql_test
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
-        at: ~/build
+        at: /build
     - *skip_job_on_ciignore
     - checkout
     - restore_cache:
@@ -405,17 +408,12 @@ jobs:
           make compress
           make ci-copy-binary
     - store_artifacts:
-        path: ~/build/_cli_output
+        path: /build/_cli_output
         destination: cli
     - persist_to_workspace:
-        root: ~/build
+        root: /build
         paths:
           - _cli_output
-    - run:
-        name: e2e tests
-        working_directory: cli
-        command: make test-e2e-ci
-  
 
   test_and_build_cli_migrations:
     docker:

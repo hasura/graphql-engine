@@ -31,7 +31,7 @@ var _ = Describe("console command", func() {
 			Eventually(session, 5).Should(Say(want))
 
 			teardown = func() {
-				session.Signal(os.Interrupt)
+				session.Kill()
 				os.RemoveAll(projectDir)
 				teardownHGE()
 			}
@@ -64,7 +64,7 @@ var _ = Describe("console command", func() {
 			Eventually(session, 5).Should(Say(want))
 
 			teardown = func() {
-				session.Terminate()
+				session.Kill()
 				os.RemoveAll(projectDir)
 				teardownHGE()
 			}
