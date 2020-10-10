@@ -119,7 +119,7 @@ Switch to the ``GraphiQL`` tab on top and execute the following GraphQL query:
    }
 
 .. thumbnail:: /img/graphql/core/deployment/hasura-graphql-query.png
-   :alt: Hasura console - GraphiQL
+   :alt: Hasura console - GraphQL
 
 
 .. _digital_ocean_secure:
