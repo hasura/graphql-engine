@@ -60,13 +60,12 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - server: accept only non-negative integers for batch size and refetch interval (close #5653) (#5759)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
-- console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
+- console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) (#5706)
 - console: add option to flag an insertion as a migration from `Data` section (close #1766) (#4933)
 - console: add `<3 hasura` section to view updates and notifications from Hasura (#5070)
-- console: fix select font family in firefox (#3955)
+- console: fix select font family in firefox (close #3955) (#5923)
 - cli: add missing global flags for seeds command (#5565)
 - docs: add docs page on networking with docker (close #4346) (#4811)
-
 
 ## `v1.3.2`
 
@@ -75,7 +74,6 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 (Add entries here in the order of: server, console, cli, docs, others)
 
 - server: fixes column masking in select permission for computed fields regression (fix #5696)
-
 
 ## `v1.3.1`, `v1.3.1-beta.1`
 
@@ -92,7 +90,7 @@ If you do have such headers configured, then you must update the header configur
 
 - server: fix failing introspection query when an enum column is part of a primary key (fixes #5200)
 - server: disallow headers from env variables starting with `HASURA_GRAPHQL_` in actions, event triggers & remote schemas (#5519)
-**WARNING**: This might break certain deployments. See `Breaking change` section above.
+  **WARNING**: This might break certain deployments. See `Breaking change` section above.
 - server: bugfix to allow HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE of 0 (#5363)
 - server: support only a bounded plan cache, with a default size of 4000 (closes #5363)
 - server: add logs for action handlers
@@ -131,7 +129,7 @@ If you do have such headers configured, then you must update the header configur
 - server: unlock locked scheduled events on graceful shutdown (#4928)
 - server: disable prepared statements for mutations as we end up with single-use objects which result in excessive memory consumption for mutation heavy workloads (#5255)
 - server: include scheduled event metadata (`created_at`,`scheduled_time`,`id`, etc) along with the configured payload in the request body to the webhook.
-**WARNING:** This is breaking for beta versions as the payload is now inside a key called `payload`.
+  **WARNING:** This is breaking for beta versions as the payload is now inside a key called `payload`.
 - console: allow configuring statement timeout on console RawSQL page (close #4998) (#5045)
 - console: support tracking partitioned tables (close #5071) (#5258)
 - console: add button to cancel one-off scheduled events and cron-trigger events (close #5161) (#5236)
@@ -140,7 +138,6 @@ If you do have such headers configured, then you must update the header configur
 - docs: add note for managed databases in postgres requirements (close #1677, #3783) (#5228)
 - docs: add 1-click deployment to Nhost page to the deployment guides (#5180)
 - docs: add hasura cloud to getting started section (close #5206) (#5208)
-
 
 ## `v1.3.0-beta.3`
 
@@ -244,9 +241,11 @@ Support for this is now added through the `add_computed_field` API.
 Read more about the session argument for computed fields in the [docs](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html).
 
 ### Manage seed migrations as SQL files
+
 A new `seeds` command is introduced in CLI, this will allow managing seed migrations as SQL files
 
 #### Creating seed
+
 ```
 # create a new seed file and use editor to add SQL content
 hasura seed create new_table_seed
@@ -257,7 +256,9 @@ hasura seed create table1_seed --from-table table1
 # create from data in multiple tables:
 hasura seed create tables_seed --from-table table1 --from-table table2
 ```
+
 #### Applying seed
+
 ```
 # apply all seeds on the database:
 hasura seed apply
