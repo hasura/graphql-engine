@@ -130,6 +130,7 @@ const initQueries = {
         'return_type_name',
         'return_type_type',
         'returns_set',
+        'input_arg_types',
         {
           name: 'return_table_info',
           columns: ['table_schema', 'table_name'],
@@ -174,6 +175,7 @@ const initQueries = {
         'return_type_name',
         'return_type_type',
         'returns_set',
+        'input_arg_types',
         {
           name: 'return_table_info',
           columns: ['table_schema', 'table_name'],

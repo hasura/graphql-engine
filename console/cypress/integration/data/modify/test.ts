@@ -19,6 +19,8 @@ import {
   passModifyUniqueKey,
   passRemoveUniqueKey,
   passMTChangeDefaultValueForPKey,
+  passMTFunctionList,
+  passMTCreateFunctions,
 } from './spec';
 
 import { testMode } from '../../../helpers/common';
@@ -40,7 +42,9 @@ export const runModifyTableTests = () => {
   describe('Modify Table', () => {
     it('Creating a table', passMTCreateTable);
     it('Moving to the table', passMTMoveToTable);
+    it('Creating functions', passMTCreateFunctions);
     it('Modify table button opens the correct route', passMTCheckRoute);
+    it('Can create computed field with compatible functions', passMTFunctionList);
     it('Pass renaming table', passMTRenameTable);
     it('Pass renaming column', passMTRenameColumn);
     it('Fails to add column without column name', failMTWithoutColName);

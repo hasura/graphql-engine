@@ -2,6 +2,8 @@
 
 ## Next release
 
+- console: show only compatible postgres functions in computed fields section (close #5155)
+
 ### Heterogeneous execution
 
 Previous releases have allowed queries to request data from either Postgres or remote schemas, but not both. This release removes that restriction, so multiple data sources may be mixed within a single query. For example, GraphQL Engine can execute a query like

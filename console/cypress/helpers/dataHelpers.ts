@@ -122,6 +122,30 @@ export const testCustomFunctionSQLWithSessArg = (
     ],
   };
 };
+
+export const createUntrackedFunctionSQL = (fnName: string, tableName: string) => {
+  return {
+    type: 'bulk',
+    args: [
+      {
+        type: 'run_sql',
+        args: {
+          sql: `
+          CREATE OR REPLACE FUNCTION ${fnName}(table_row "${tableName}")
+           RETURNS int
+           LANGUAGE sql
+           STABLE
+          AS $function$
+            SELECT table_row.id
+          $function$
+          `,
+          cascade: false,
+        },
+      },
+    ],
+  };
+};
+
 export const getTrackFnPayload = (name = 'customfunctionwithsessionarg') => ({
   type: 'bulk',
   args: [

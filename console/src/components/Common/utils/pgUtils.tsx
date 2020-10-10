@@ -131,11 +131,19 @@ export interface Table extends BaseTable {
   };
 }
 
+export type PGInputArgType = {
+  schema: string;
+  name: string;
+  type: string;
+};
+
 export type PGFunction = {
   function_name: string;
   function_schema: string;
   function_definition: string;
+  function_type: string;
   return_type_type: string;
+  input_arg_types?: PGInputArgType[];
 };
 
 export type PGSchema = {
@@ -500,11 +508,47 @@ export const getFunctionDefinition = (pgFunction: PGFunction) => {
   return pgFunction.function_definition;
 };
 
+export const isFunctionTypeSupported = (pgFunction: PGFunction) =>
+  pgFunction.function_type === 'IMMUTABLE' ||
+  pgFunction.function_type === 'STABLE';
+
+export const isFunctionCompatibleToTable = (
+  pgFunction: PGFunction,
+  tableName: string,
+  tableSchema: string
+) => {
+  const inputArgTypes = pgFunction?.input_arg_types || [];
+
+  let hasTableRowInArguments = false;
+  let hasUnsupportedArguments = false;
+
+  inputArgTypes.forEach(inputArgType => {
+    if (!hasTableRowInArguments) {
+      hasTableRowInArguments =
+        inputArgType.name === tableName && inputArgType.schema === tableSchema;
+    }
+
+    if (!hasUnsupportedArguments) {
+      hasUnsupportedArguments =
+        inputArgType.type !== 'c' && inputArgType.type !== 'b';
+    }
+  });
+
+  return hasTableRowInArguments && !hasUnsupportedArguments;
+};
+
 export const getSchemaFunctions = (
   allFunctions: PGFunction[],
-  fnSchema: string
+  fnSchema: string,
+  tableName: string,
+  tableSchema: string
 ) => {
-  return allFunctions.filter(fn => getFunctionSchema(fn) === fnSchema);
+  return allFunctions.filter(
+    fn =>
+      getFunctionSchema(fn) === fnSchema &&
+      isFunctionTypeSupported(fn) &&
+      isFunctionCompatibleToTable(fn, tableName, tableSchema)
+  );
 };
 
 export const findFunction = (
