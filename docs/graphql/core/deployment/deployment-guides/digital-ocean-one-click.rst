@@ -50,6 +50,8 @@ The Hasura console will be at:
 
    http://<your_droplet_ip>/console
 
+.. thumbnail:: /img/graphql/core/deployment/dashboard-digital-ocean.png
+   :alt: Dashboard for digital ocean droplet
 
 The GraphQL endpoint will be:
 
@@ -61,8 +63,7 @@ The GraphQL endpoint will be:
 A Postgres database is also provisioned on the Droplet. Using the console, you
 can create a table on this Postgres instance and make your first GraphQL query.
 
-.. image:: https://graphql-engine-cdn.hasura.io/heroku-repo/assets/hasura_console.png
-   :class: no-shadow
+.. thumbnail:: /img/graphql/core/deployment/digital-ocean-hasura-console.png
    :alt: Hasura console
 
 Step 3: Create a table
@@ -81,9 +82,11 @@ Navigate to ``Data -> Create table`` on the console and create a table called ``
 
 Choose ``id`` as the Primary key and click the ``Create`` button.
 
-.. image:: https://graphql-engine-cdn.hasura.io/heroku-repo/assets/hasura_create_table.png
-   :class: no-shadow
-   :alt: Hasura console - create table
+.. thumbnail:: /img/graphql/core/deployment/digital-ocean-table-fields.png
+   :alt: Hasura console - table fields
+
+.. thumbnail:: /img/graphql/core/deployment/digital-ocean-create-table.png
+   :alt: Hasura console - create table   
 
 Step 4: Insert sample data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -98,8 +101,7 @@ Once the table is created, go to the ``Insert Row`` tab and insert some sample r
    Captain America
    Black Widow
 
-.. image:: https://graphql-engine-cdn.hasura.io/heroku-repo/assets/hasura_insert_row.png
-   :class: no-shadow
+.. thumbnail:: /img/graphql/core/deployment/digital-ocean-hasura-insert-row.png
    :alt: Hasura console - insert data
 
 Step 5: Try out GraphQL
@@ -116,8 +118,7 @@ Switch to the ``GraphiQL`` tab on top and execute the following GraphQL query:
      }
    }
 
-.. image:: https://graphql-engine-cdn.hasura.io/heroku-repo/assets/hasura_graphql_query.png
-   :class: no-shadow
+.. thumbnail:: /img/graphql/core/deployment/hasura-graphql-query.png
    :alt: Hasura console - GraphiQL
 
 
