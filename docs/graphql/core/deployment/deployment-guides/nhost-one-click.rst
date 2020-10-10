@@ -30,7 +30,7 @@ Once you're logged into your Nhost account, click the button bellow to configure
 
 On the following page you can choose a plan and a location for your project:
 
-.. thumbnail:: /img/graphql/core/deployment/choose-a-plan-nhost.png
+.. thumbnail:: /img/graphql/core/deployment/choose-a-plan.png
    :alt: Choose a plan and location for your project
 
 The creation and provisioning of your backend should be ready in roughly 30 seconds. 
@@ -41,12 +41,12 @@ Access your Hasura console
 
 Once your Nhost project is up and running, a dashboard will come up and you can click on the ``Hasura`` menu on the navigation bar.
 
-.. thumbnail:: /img/graphql/core/deployment/dashboard-nhost.png
+.. thumbnail:: /img/graphql/core/deployment/nhost-dashboard.png
    :alt: Dashboard   
 
 Once the ``Hasura`` menu has been clicked on, the console becomes visible:
 
-.. thumbnail:: /img/graphql/core/deployment/hasura-console-nhost.png
+.. thumbnail:: /img/graphql/core/deployment/nhost-hasura-console.png
    :alt: Nhost Hasura console  
 
 To test it, you can either create tables directly using the console, or add new users to your project clicking on ``Auth`` on the navigation menu.
