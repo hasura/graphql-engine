@@ -25,7 +25,7 @@ One-click deploy on Nhost
 
 Once you're logged into your Nhost account, click the button bellow to configure your project.
 
-.. thumbnail:: /img/graphql/core/deployment/create-a-project-nhost.png
+.. thumbnail:: /img/graphql/core/deployment/create-project-nhost.png
    :alt: Create a project
 
 On the following page you can choose a plan and a location for your project:
