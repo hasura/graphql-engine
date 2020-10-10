@@ -82,10 +82,10 @@ Navigate to ``Data -> Create table`` on the console and create a table called ``
 
 Choose ``id`` as the Primary key and click the ``Create`` button.
 
-.. thumbnail:: /img/graphql/core/deployment/digital-ocean-table-fields.png
+.. thumbnail:: /img/graphql/core/deployment/digital-ocean-row.png
    :alt: Hasura console - table fields
 
-.. thumbnail:: /img/graphql/core/deployment/digital-ocean-create-table.png
+.. thumbnail:: /img/graphql/core/deployment/digital-ocean-create-a-table.png
    :alt: Hasura console - create table   
 
 Step 4: Insert sample data
@@ -101,7 +101,7 @@ Once the table is created, go to the ``Insert Row`` tab and insert some sample r
    Captain America
    Black Widow
 
-.. thumbnail:: /img/graphql/core/deployment/digital-ocean-hasura-insert-row.png
+.. thumbnail:: /img/graphql/core/deployment/digital-ocean-hasura-insert-data.png
    :alt: Hasura console - insert data
 
 Step 5: Try out GraphQL
