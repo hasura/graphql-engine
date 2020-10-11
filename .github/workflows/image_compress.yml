@@ -2,10 +2,10 @@ name: image
 on: 
   pull_request:
     paths:
-      - '**.jpg'
-      - '**.jpeg'
-      - '**.png'
-      - '**.webp'
+      - 'docs/**.jpg'
+      - 'docs/**.jpeg'
+      - 'docs/**.png'
+      - 'docs/**.webp'
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -18,22 +18,8 @@ jobs:
             repo: context.repo.repo,
             issue_number: context.payload.pull_request.number,
           })
-          let docs_pr = false;
-          for (const label of labels.data) {
-            if (label.name === 'c/docs') {
-              docs_pr=true;
-            }
-          }
-          if(!docs_pr){
-            return;
-          }
-          const a = await github.issues.listLabelsOnIssue({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            issue_number: context.payload.pull_request.number,
-          })
           let label_present=false;
-          for (const label of a.data) {
+          for (const label of labels.data) {
             if (label.name === 'docs-compress-images') {
               label_present=true;
             }
