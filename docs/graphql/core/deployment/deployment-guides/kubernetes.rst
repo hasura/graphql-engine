@@ -43,7 +43,7 @@ Edit ``deployment.yaml`` and set the right database url:
 
   ...
     env:
-    - name: HASURA_GRAPHQL_DATABASE_URL
+    - name: <HASURA_GRAPHQL_DATABASE_URL>
       value: postgres://username:password@hostname:port/dbname
   ...
 
@@ -118,9 +118,9 @@ Update the ``deployment.yaml`` to set the ``HASURA_GRAPHQL_ADMIN_SECRET`` enviro
         command: ["graphql-engine"]
         args: ["serve", "--enable-console"]
         env:
-        - name: HASURA_GRAPHQL_DATABASE_URL
+        - name: <HASURA_GRAPHQL_DATABASE_URL>
           value: postgres://username:password@hostname:port/dbname
-        - name: HASURA_GRAPHQL_ADMIN_SECRET
+        - name: <HASURA_GRAPHQL_ADMIN_SECRET>
           value: mysecretkey
         ports:
         - containerPort: 8080
