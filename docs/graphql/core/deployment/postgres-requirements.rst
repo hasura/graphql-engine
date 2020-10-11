@@ -51,7 +51,7 @@ Here's a sample SQL block that you can run on your database (as a **superuser**)
     -- These permissions/grants are required for Hasura to work properly.
 
     -- create a separate user for hasura
-    CREATE USER hasurauser WITH PASSWORD 'hasurauser';
+    CREATE USER hasurauser WITH PASSWORD <hasurauser>;
 
     -- create pgcrypto extension, required for UUID
     CREATE EXTENSION IF NOT EXISTS pgcrypto;
