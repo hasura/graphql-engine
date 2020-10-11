@@ -2,10 +2,10 @@ name: image
 on: 
   pull_request:
     paths:
-      - 'docs/**.jpg'
-      - 'docs/**.jpeg'
-      - 'docs/**.png'
-      - 'docs/**.webp'
+      - 'docs/**/*.jpg'
+      - 'docs/**/*.jpeg'
+      - 'docs/**/*.png'
+      - 'docs/**/*.webp'
 jobs:
   check:
     runs-on: ubuntu-latest
