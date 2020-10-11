@@ -27,8 +27,10 @@ sys.setrecursionlimit(2000)
 
 from sphinx.builders.html import StandaloneHTMLBuilder
 from docutils.parsers.rst.directives.admonitions import BaseAdmonition
+from docutils.parsers.rst import directives, Directive
 from sphinx.util import compat
 compat.make_admonition = BaseAdmonition
+compat.Directive = Directive
 
 # from sphinx.util.osutil import relative_uri
 StandaloneHTMLBuilder.script_files = ["_static/scripts/vendor.js"]
@@ -155,8 +157,6 @@ exclude_patterns = ['_build', 'venv', 'Thumbs.db', '.DS_Store']
 #
 # default_role = None
 
-copybutton_prompt_text = "$ "
-
 # If true, '()' will be appended to :func: etc. cross-reference text.
 #
 # add_function_parentheses = True
@@ -176,6 +176,16 @@ pygments_style = 'sphinx'
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
+
+# Define the prompt text that you’d like removed from copied text in your code blocks.
+# When this variable is set, sphinx-copybutton will remove the prompt from the beginning of 
+# any lines that start with the text you specify. In addition, only the lines that contain 
+# prompts will be copied if any are discovered. If no lines with prompts are found, 
+# then the full contents of the cell will be copied.
+# The copybutton prompt text is regular expression, solved in JavaScript.
+
+copybutton_prompt_text = r"\$ "
+copybutton_prompt_is_regexp = True
 
 # If true, keep warnings as "system message" paragraphs in the built documents.
 # keep_warnings = False
