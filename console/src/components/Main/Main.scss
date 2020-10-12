@@ -99,6 +99,7 @@
   border-right: 1px solid #788095;
   display: inline-block;
   width: 20%;
+  min-width: 240px;
 
   .logoParent {
     display: flex;
@@ -150,7 +151,8 @@
 }
 
 .clusterInfoWrapper {
-  width: 35%;
+  width: auto;
+  margin-left: auto;
   display: flex;
   justify-content: flex-end;
   position: relative;
@@ -428,7 +430,6 @@
   align-items: center;
   position: fixed;
   width: 100%;
-  min-width: $minContainerWidth;
   z-index: 100;
 
   hr {
@@ -1323,7 +1324,7 @@
   font-size: 16px;
   top: 52px;
   right: 8px;
-  &:hover{
+  &:hover {
     cursor: pointer;
   }
 }
@@ -1334,9 +1335,9 @@
   left: auto;
   border: none;
   user-select: none;
-  -webkit-box-shadow: -3px 4px 10px 0px rgba(0,0,0,0.1);
-  -moz-box-shadow: -3px 4px 10px 0px rgba(0,0,0,0.1);
-  box-shadow: -3px 4px 10px 0px rgba(0,0,0,0.1);
+  -webkit-box-shadow: -3px 4px 10px 0px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: -3px 4px 10px 0px rgba(0, 0, 0, 0.1);
+  box-shadow: -3px 4px 10px 0px rgba(0, 0, 0, 0.1);
 }
 
 .notificationsContainer {
@@ -1491,7 +1492,7 @@
 
 @media (max-width: 1500px) {
   .header_items {
-    width: 52%;
+    width: auto;
   }
   .iconCenter {
     i {
@@ -1528,6 +1529,34 @@
     a {
       font-size: 12px;
     }
+  }
+}
+
+@media (max-width: 1250px) {
+  .secureSectionText {
+    display: none;
+  }
+
+  .shareSection {
+    display: none;
+  }
+}
+
+@media (max-width: 1050px) {
+  .sidebar {
+    .sidebarItems {
+      li {
+        p {
+          display: none;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .sidebar {
+    min-width: 600px;
   }
 }
 
