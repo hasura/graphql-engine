@@ -1,6 +1,5 @@
 module Hasura.GraphQL.Schema.Remote
   ( buildRemoteParser
---  , remoteFieldFullSchema
   , inputValueDefinitionParser
   , lookupObject
   , lookupType
@@ -273,6 +272,11 @@ remoteSchemaUnion schemaDoc defn@(G.UnionTypeDefinition description name _direct
     (\objNameAndSelSets ->
        catMaybes $ flip map objNameAndSelSets $ \(objName, selSet) ->
         case selSet of
+          -- In the case of an incoming query containing an union type, which has
+          -- 3 objects in it's object member types, but an incoming query only
+          -- queries 2 out of the 3 objects using fragments, then we get the
+          -- selectionSet for the object that was not queried as `[]`. So,
+          -- we omit it while constructing the query
           [] -> Nothing
           _  -> Just (G.SelectionInlineFragment $ G.InlineFragment (Just objName) mempty selSet)
     )
@@ -412,7 +416,7 @@ argumentsParser
   -> G.SchemaIntrospection
   -> m (InputFieldsParser n ())
 argumentsParser args schemaDoc = do
-  sequenceA_ <$> flip traverse args (inputValueDefinitionParser schemaDoc)
+  sequenceA_ <$> for args (inputValueDefinitionParser schemaDoc)
 
 -- | 'remoteField' accepts a 'G.TypeDefinition' and will returns a 'FieldParser' for it.
 --   Note that the 'G.TypeDefinition' should be of the GraphQL 'Output' kind, when an
@@ -431,37 +435,57 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
   argsParser <- argumentsParser argsDefn sdoc
   case typeDefn of
     G.TypeDefinitionObject objTypeDefn -> do
-      remoteSchemaObj <- remoteSchemaObject sdoc objTypeDefn
-      let objSelection = P.rawSubselection fieldName description argsParser remoteSchemaObj
-      pure $ objSelection <&> (\(alias, args, _, selSet) ->
-                                 (G.Field alias fieldName (fmap getName <$> args) mempty selSet))
+      remoteSchemaObject sdoc objTypeDefn >>=
+        mkFieldParserWithSelectionSet fieldName description argsParser
     G.TypeDefinitionScalar scalarTypeDefn ->
       let scalarField = remoteFieldScalarParser scalarTypeDefn
-          scalarSelection = P.rawSelection fieldName description argsParser scalarField
-      in
-      pure $ (scalarSelection <&> (\(alias, args, _) -> (G.Field alias fieldName (fmap getName <$> args) mempty [])))
+      in mkFieldParserWithoutSelectionSet fieldName description argsParser scalarField
     G.TypeDefinitionEnum enumTypeDefn ->
       let enumField = remoteFieldEnumParser enumTypeDefn
-          enumSelection = P.rawSelection fieldName description argsParser enumField
-      in
-      pure $ enumSelection <&> (\(alias, _, _) -> (G.Field alias fieldName mempty mempty []))
-    G.TypeDefinitionInterface ifaceTypeDefn -> do
-      remoteSchemaObj <- remoteSchemaInterface sdoc ifaceTypeDefn
-      pure $ P.rawSubselection fieldName description argsParser remoteSchemaObj <&>
-        (\(alias, args, _, selSet) ->
-           (G.Field alias fieldName (fmap getName <$> args) mempty selSet))
-    G.TypeDefinitionUnion unionTypeDefn -> do
-      remoteSchemaObj <- remoteSchemaUnion sdoc unionTypeDefn
-      pure $ P.rawSubselection fieldName description argsParser remoteSchemaObj <&>
-        (\(alias, args, _, selSet) ->
-           (G.Field alias fieldName (fmap getName <$> args) mempty selSet))
+      in mkFieldParserWithoutSelectionSet fieldName description argsParser enumField
+    G.TypeDefinitionInterface ifaceTypeDefn ->
+      remoteSchemaInterface sdoc ifaceTypeDefn >>=
+        mkFieldParserWithSelectionSet fieldName description argsParser
+    G.TypeDefinitionUnion unionTypeDefn ->
+      remoteSchemaUnion sdoc unionTypeDefn >>=
+        mkFieldParserWithSelectionSet fieldName description argsParser
     _ -> throw400 RemoteSchemaError "expected output type, but got input type"
+  where
+    mkFieldParserWithoutSelectionSet
+      :: G.Name
+      -> (Maybe Description)
+      -> (InputFieldsParser n ())
+      -> (Parser 'Both n ())
+      -> m (FieldParser n RemoteField)
+    mkFieldParserWithoutSelectionSet fldName desc argsParser outputParser =
+      let selectionFldParser = P.rawSelection fldName desc argsParser outputParser
+      in
+        pure $
+          (selectionFldParser
+           <&>
+           (\(alias, args, _)
+              -> (G.Field alias fieldName (fmap getName <$> args) mempty [])))
+
+    mkFieldParserWithSelectionSet
+      :: G.Name
+      -> (Maybe Description)
+      -> (InputFieldsParser n ())
+      -> (Parser 'Output n (SelectionSet NoFragments G.Name))
+      -> m (FieldParser n RemoteField)
+    mkFieldParserWithSelectionSet fldName desc argsParser outputParser =
+      let selectionFldParser = P.rawSubselection fldName desc argsParser outputParser
+      in
+        pure $
+          (selectionFldParser
+           <&>
+           (\(alias, args, _, selSet)
+              -> (G.Field alias fieldName (fmap getName <$> args) mempty selSet)))
 
 remoteFieldScalarParser
   :: MonadParse n
   => G.ScalarTypeDefinition
   -> Parser 'Both n ()
-remoteFieldScalarParser (G.ScalarTypeDefinition description name _) =
+remoteFieldScalarParser (G.ScalarTypeDefinition description name _directives) =
   case G.unName name of
     "Boolean" -> P.boolean $> ()
     "Int" -> P.int $> ()
@@ -474,7 +498,7 @@ remoteFieldEnumParser
   :: MonadParse n
   => G.EnumTypeDefinition
   -> Parser 'Both n ()
-remoteFieldEnumParser (G.EnumTypeDefinition desc name _ valueDefns) =
+remoteFieldEnumParser (G.EnumTypeDefinition desc name _directives valueDefns) =
   let enumValDefns = valueDefns <&> \(G.EnumValueDefinition enumDesc enumName _) ->
         (mkDefinition (G.unEnumValue enumName) enumDesc P.EnumValueInfo,())
   in P.enum name desc $ NE.fromList enumValDefns

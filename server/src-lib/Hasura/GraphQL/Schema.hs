@@ -206,7 +206,7 @@ query'
      )
   => HashSet QualifiedTable
   -> [FunctionInfo]
-  -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments G.Name)]
+  -> [P.FieldParser n RemoteField]
   -> [ActionInfo]
   -> NonObjectTypeMap
   -> m [P.FieldParser n (QueryRootField UnpreparedValue)]

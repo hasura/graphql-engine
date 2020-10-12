@@ -833,7 +833,8 @@ rawSelection
   -> Maybe Description
   -> InputFieldsParser m a -- ^ parser for the input arguments
   -> Parser 'Both m b -- ^ type of the result
-  -> FieldParser m (Maybe Name, HashMap Name (Value Variable), a) -- ^ alias provided (if any), and the arguments
+  -> FieldParser m (Maybe Name, HashMap Name (Value Variable), a)
+  -- ^ alias provided (if any), and the arguments
 rawSelection name description argumentsParser resultParser = FieldParser
   { fDefinition = mkDefinition name description $
       FieldInfo (ifDefinitions argumentsParser) (pType resultParser)
