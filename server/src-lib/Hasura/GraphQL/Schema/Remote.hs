@@ -83,7 +83,7 @@ remoteSchemaObject
   . (MonadSchema n m, MonadError QErr m)
   => SchemaIntrospection
   -> G.ObjectTypeDefinition
-  -> m (Parser 'Output n (SelectionSet NoFragments G.Name))
+  -> m (Parser 'Output n [Field NoFragments Name])
 remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name interfaces _directives subFields) =
   P.memoizeOn 'remoteSchemaObject defn do
   subFieldParsers <- traverse (remoteField' schemaDoc) subFields
@@ -93,9 +93,9 @@ remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name inter
   traverse_ validateImplementsFields interfaceDefs
   pure $ P.selectionSetObject name description subFieldParsers implements <&>
     toList . (OMap.mapWithKey $ \alias -> \case
-        P.SelectField fld  -> G.SelectionField fld
+        P.SelectField fld  -> fld
         P.SelectTypename _ ->
-          G.SelectionField (G.Field (Just alias) $$(G.litName "__typename") mempty mempty mempty)
+          G.Field (Just alias) $$(G.litName "__typename") mempty mempty mempty
     )
   where
     getInterface :: G.Name -> m (G.InterfaceTypeDefinition [G.Name])
@@ -180,7 +180,7 @@ getObjectParser
   => SchemaIntrospection
   -> (G.Name -> m G.ObjectTypeDefinition)
   -> G.Name
-  -> m (Parser 'Output n (Name, SelectionSet NoFragments G.Name))
+  -> m (Parser 'Output n (Name, [Field NoFragments G.Name]))
 getObjectParser schemaDoc getObject objName = do
   obj <- remoteSchemaObject schemaDoc =<< getObject objName
   return $ (objName,) <$> obj
@@ -272,24 +272,10 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
 
     -- 'constructInterfaceQuery' constructs a remote interface query.
     constructInterfaceSelectionSet
-      :: [(G.Name, SelectionSet NoFragments G.Name)]
+      :: [(G.Name, [Field NoFragments G.Name])]
       -> SelectionSet NoFragments G.Name
-    constructInterfaceSelectionSet objNameAndSelSets =
-      let selSetFieldsWithoutFragments' =
-            flip (fmap . fmap . fmap) objNameAndSelSets $
-              \case
-                -- We're omitting a selection field with fragments
-                -- here because the `SelectionSet` we recieve is
-                -- a "flattened" selection set without any fragments
-                -- (atleast at the top level of the selection set).
-                -- This is needed to extract the common interface
-                -- fields from the various objects that have been
-                -- queried.
-                G.SelectionField fld -> Just fld
-                _                    -> Nothing
-          selSetFieldsWithoutFragments = (fmap . fmap) catMaybes selSetFieldsWithoutFragments'
-
-          -- common interface fields that exist in every
+    constructInterfaceSelectionSet objNameAndFields =
+      let -- common interface fields that exist in every
           -- selection set provided
           -- #1 of Note [Querying remote schema Interfaces]
           commonInterfaceFields =
@@ -298,7 +284,7 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
             Map.groupOn G._fName $
             concatMap (\(_, flds) ->
                          filter ((`elem` interfaceFieldNames) . G._fName) flds)
-                      $ selSetFieldsWithoutFragments
+                      $ objNameAndFields
 
           interfaceFieldNames = map G._fldName fields
 
@@ -307,7 +293,7 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
 
           -- #2 of Note [Querying remote schema interface fields]
           nonCommonInterfaceFields =
-            catMaybes $ flip map selSetFieldsWithoutFragments $ \(objName, flds) ->
+            catMaybes $ flip map objNameAndFields $ \(objName, flds) ->
               let nonCommonFields = filter (not . flip elem commonInterfaceFields) flds
               in mkObjInlineFragment (objName, map G.SelectionField nonCommonFields)
 
@@ -318,7 +304,7 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
               G.InlineFragment (Just objName) mempty selSet
 
       -- #5 of Note [Querying remote schema interface fields]
-      in (map G.SelectionField commonInterfaceFields) <> nonCommonInterfaceFields
+      in (fmap G.SelectionField commonInterfaceFields) <> nonCommonInterfaceFields
 
 -- | 'remoteSchemaUnion' returns a output parser for a given 'UnionTypeDefinition'.
 remoteSchemaUnion
@@ -334,8 +320,8 @@ remoteSchemaUnion schemaDoc defn@(G.UnionTypeDefinition description name _direct
     throw400 RemoteSchemaError $ "List of member types cannot be empty for union type " <> squote name
   pure $ P.selectionSetUnion name description objs <&>
     (\objNameAndSelSets ->
-       catMaybes $ objNameAndSelSets <&> \(objName, selSet) ->
-        case selSet of
+       catMaybes $ objNameAndSelSets <&> \(objName, flds) ->
+        case flds of
           -- The return value obtained from the parsing of a union selection set
           -- specifies, for each object in the union type, a fragment-free
           -- selection set for that object type. In particular, if, for a given
@@ -346,7 +332,9 @@ remoteSchemaUnion schemaDoc defn@(G.UnionTypeDefinition description name _direct
           -- object types from the reconstructed selection set for the union
           -- type, as selection sets cannot be empty.
           [] -> Nothing
-          _  -> Just (G.SelectionInlineFragment $ G.InlineFragment (Just objName) mempty selSet))
+          _  ->
+            Just (G.SelectionInlineFragment
+                    $ G.InlineFragment (Just objName) mempty $ fmap G.SelectionField flds))
   where
     getObject :: G.Name -> m G.ObjectTypeDefinition
     getObject objectName =
@@ -502,14 +490,17 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
   argsParser <- argumentsParser argsDefn sdoc
   case typeDefn of
     G.TypeDefinitionObject objTypeDefn -> do
-      remoteSchemaObject sdoc objTypeDefn <&>
-        mkFieldParserWithSelectionSet fieldName description argsParser
+      remoteSchemaObjFields <- remoteSchemaObject sdoc objTypeDefn
+      -- converting [Field NoFragments Name] to (SelectionSet NoFragments G.Name)
+      let remoteSchemaObjSelSet = fmap G.SelectionField <$> remoteSchemaObjFields
+      pure remoteSchemaObjSelSet
+        <&> mkFieldParserWithSelectionSet fieldName description argsParser
     G.TypeDefinitionScalar scalarTypeDefn ->
       pure $ mkFieldParserWithoutSelectionSet fieldName description argsParser
              $ remoteFieldScalarParser scalarTypeDefn
     G.TypeDefinitionEnum enumTypeDefn ->
-      let enumField = remoteFieldEnumParser enumTypeDefn
-      in pure $ mkFieldParserWithoutSelectionSet fieldName description argsParser enumField
+      pure $ mkFieldParserWithoutSelectionSet fieldName description argsParser
+             $ remoteFieldEnumParser enumTypeDefn
     G.TypeDefinitionInterface ifaceTypeDefn ->
       remoteSchemaInterface sdoc ifaceTypeDefn <&>
         mkFieldParserWithSelectionSet fieldName description argsParser
@@ -536,7 +527,8 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
       -> FieldParser n (Field NoFragments G.Name)
     mkFieldParserWithSelectionSet fldName desc argsParser outputParser =
       P.rawSubselection fldName desc argsParser outputParser
-      <&> (\(alias, args, _, selSet) -> (G.Field alias fieldName (fmap getName <$> args) mempty selSet))
+      <&> (\(alias, args, _, selSet) ->
+             (G.Field alias fieldName (fmap getName <$> args) mempty selSet))
 
 remoteFieldScalarParser
   :: MonadParse n
