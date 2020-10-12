@@ -218,24 +218,20 @@ Suppose, a field 'hero' returns 'Character'.
    }
 }
 
-After parsing, the above query, the selection set is modified to:
+When we parse the selection set of the `hero` field, we parse the selection set
+twice: once for the `Droid` object type, which would be passed a selection set
+containing the field(s) defined in the `Droid` object type and similarly once
+for the 'Human' object type. The result of the interface selection set parsing
+would then be the results of the parsing of the object types when passed their
+corresponding flattened selection sets and the results of the parsing of the
+interface fields.
 
-{
-   hero {
-     id
-     name
-     primaryFunction
-     homePlanet
-   }
-}
-
-The above query is an invalid query because the `primaryFunction`
-and `homePlanet` fields are not part of the `Character` interface.
-
-Since, we know that the `primaryFunction` belongs to the `Droid`
-object and `homePlanet` belongs to the `Human` object, we can simply make
-them into inline fragments as the original query and then query the
-upstream remote schema.
+After we parse the above GraphQL query, we get a selection set containing
+the interface fields and the selection sets of the objects that were queried
+in the GraphQL query. Since, we have the selection sets of the objects that
+were being queried, we can convert them into inline fragments resembling
+the original query and then query the remote schema with the newly
+constructed query.
 -}
 
 -- | 'remoteSchemaInterface' returns a output parser for a given 'InterfaceTypeDefinition'.
@@ -516,6 +512,8 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
       -> Parser 'Both n ()
       -> FieldParser n (Field NoFragments G.Name)
     mkFieldParserWithoutSelectionSet fldName desc argsParser outputParser =
+      -- 'rawSelection' is used here to get the alias and args data
+      -- specified to be able to construct the `Field NoFragments G.Name`
       P.rawSelection fldName desc argsParser outputParser
       <&> (\(alias, args, _) -> (G.Field alias fieldName (fmap getName <$> args) mempty []))
 
@@ -526,6 +524,8 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
       -> Parser 'Output n (SelectionSet NoFragments G.Name)
       -> FieldParser n (Field NoFragments G.Name)
     mkFieldParserWithSelectionSet fldName desc argsParser outputParser =
+      -- 'rawSubselection' is used here to get the alias and args data
+      -- specified to be able to construct the `Field NoFragments G.Name`
       P.rawSubselection fldName desc argsParser outputParser
       <&> (\(alias, args, _, selSet) ->
              (G.Field alias fieldName (fmap getName <$> args) mempty selSet))
