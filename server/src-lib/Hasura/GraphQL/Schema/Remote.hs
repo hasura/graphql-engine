@@ -36,11 +36,11 @@ buildRemoteParser (IntrospectionResult sdoc query_root mutation_root subscriptio
   subscriptionT <- traverse makeParsers subscription_root
   return (queryT, mutationT, subscriptionT)
   where
-    makeFieldParser :: G.FieldDefinition -> m (P.FieldParser n (RemoteSchemaInfo, (Field NoFragments G.Name)))
+    makeFieldParser :: G.FieldDefinition -> m (P.FieldParser n RemoteField)
     makeFieldParser fieldDef = do
       fldParser <- remoteField' sdoc fieldDef
       pure $ (info, ) <$> fldParser
-    makeParsers :: G.Name -> m [P.FieldParser n (RemoteSchemaInfo, (Field NoFragments G.Name))]
+    makeParsers :: G.Name -> m [P.FieldParser n RemoteField]
     makeParsers rootName =
       case lookupType sdoc rootName of
         Just (G.TypeDefinitionObject o) ->
@@ -180,7 +180,7 @@ getObjectParser
   => SchemaIntrospection
   -> (G.Name -> m G.ObjectTypeDefinition)
   -> G.Name
-  -> m (Parser 'Output n (Name, (SelectionSet NoFragments G.Name)))
+  -> m (Parser 'Output n (Name, SelectionSet NoFragments G.Name))
 getObjectParser schemaDoc getObject objName = do
   obj <- remoteSchemaObject schemaDoc =<< getObject objName
   return $ (objName,) <$> obj
@@ -273,7 +273,7 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
     -- 'constructInterfaceQuery' constructs a remote interface query.
     constructInterfaceSelectionSet
       :: [(G.Name, SelectionSet NoFragments G.Name)]
-      -> (SelectionSet NoFragments G.Name)
+      -> SelectionSet NoFragments G.Name
     constructInterfaceSelectionSet objNameAndSelSets =
       let selSetFieldsWithoutFragments' =
             flip (fmap . fmap . fmap) objNameAndSelSets $
@@ -298,12 +298,12 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
             Map.groupOn G._fName $
             concatMap (\(_, flds) ->
                          filter ((`elem` interfaceFieldNames) . G._fName) flds)
-                         $ selSetFieldsWithoutFragments
+                      $ selSetFieldsWithoutFragments
 
           interfaceFieldNames = map G._fldName fields
 
-          allTheSame [] = Nothing
-          allTheSame (x:xs) = bool Nothing (Just x) $ all (== x) xs
+          allTheSame (x:xs) | all (== x) xs = Just x
+          allTheSame _ = Nothing
 
           -- #2 of Note [Querying remote schema interface fields]
           nonCommonInterfaceFields =
@@ -329,19 +329,22 @@ remoteSchemaUnion
   -> m (Parser 'Output n (SelectionSet NoFragments G.Name))
 remoteSchemaUnion schemaDoc defn@(G.UnionTypeDefinition description name _directives objectNames) =
   P.memoizeOn 'remoteSchemaObject defn do
-  objs :: [Parser 'Output n (Name, (SelectionSet NoFragments G.Name))] <-
-    traverse (getObjectParser schemaDoc getObject) objectNames
+  objs <- traverse (getObjectParser schemaDoc getObject) objectNames
   when (null objs) $
     throw400 RemoteSchemaError $ "List of member types cannot be empty for union type " <> squote name
   pure $ P.selectionSetUnion name description objs <&>
     (\objNameAndSelSets ->
-       catMaybes $ flip map objNameAndSelSets $ \(objName, selSet) ->
+       catMaybes $ objNameAndSelSets <&> \(objName, selSet) ->
         case selSet of
-          -- In the case of an incoming query containing an union type, which has
-          -- 3 objects in it's object member types, but an incoming query only
-          -- queries 2 out of the 3 objects using fragments, then we get the
-          -- selectionSet for the object that was not queried as `[]`. So,
-          -- we omit it while constructing the query
+          -- The return value obtained from the parsing of a union selection set
+          -- specifies, for each object in the union type, a fragment-free
+          -- selection set for that object type. In particular, if, for a given
+          -- object type, the selection set passed to the union type did not
+          -- specify any fields for that object type (i.e. if no inline fragment
+          -- applied to that object), the selection set resulting from the parsing
+          -- through that object type would be empty, i.e. []. We exclude such
+          -- object types from the reconstructed selection set for the union
+          -- type, as selection sets cannot be empty.
           [] -> Nothing
           _  -> Just (G.SelectionInlineFragment $ G.InlineFragment (Just objName) mempty selSet))
   where
@@ -499,48 +502,44 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
   argsParser <- argumentsParser argsDefn sdoc
   case typeDefn of
     G.TypeDefinitionObject objTypeDefn -> do
-      remoteSchemaObject sdoc objTypeDefn >>=
+      remoteSchemaObject sdoc objTypeDefn <&>
         mkFieldParserWithSelectionSet fieldName description argsParser
     G.TypeDefinitionScalar scalarTypeDefn ->
-      let scalarField = remoteFieldScalarParser scalarTypeDefn
-      in mkFieldParserWithoutSelectionSet fieldName description argsParser scalarField
+      pure $ mkFieldParserWithoutSelectionSet fieldName description argsParser
+             $ remoteFieldScalarParser scalarTypeDefn
     G.TypeDefinitionEnum enumTypeDefn ->
       let enumField = remoteFieldEnumParser enumTypeDefn
-      in mkFieldParserWithoutSelectionSet fieldName description argsParser enumField
+      in pure $ mkFieldParserWithoutSelectionSet fieldName description argsParser enumField
     G.TypeDefinitionInterface ifaceTypeDefn ->
-      remoteSchemaInterface sdoc ifaceTypeDefn >>=
+      remoteSchemaInterface sdoc ifaceTypeDefn <&>
         mkFieldParserWithSelectionSet fieldName description argsParser
     G.TypeDefinitionUnion unionTypeDefn ->
-      remoteSchemaUnion sdoc unionTypeDefn >>=
+      remoteSchemaUnion sdoc unionTypeDefn <&>
         mkFieldParserWithSelectionSet fieldName description argsParser
     _ -> throw400 RemoteSchemaError "expected output type, but got input type"
   where
     mkFieldParserWithoutSelectionSet
       :: G.Name
-      -> (Maybe Description)
-      -> (InputFieldsParser n ())
-      -> (Parser 'Both n ())
-      -> m (FieldParser n (Field NoFragments G.Name))
+      -> Maybe Description
+      -> InputFieldsParser n ()
+      -> Parser 'Both n ()
+      -> FieldParser n (Field NoFragments G.Name)
     mkFieldParserWithoutSelectionSet fldName desc argsParser outputParser =
       let selectionFldParser = P.rawSelection fldName desc argsParser outputParser
-      in
-        pure $
-          (selectionFldParser
+      in (selectionFldParser
            <&>
            (\(alias, args, _)
               -> (G.Field alias fieldName (fmap getName <$> args) mempty [])))
 
     mkFieldParserWithSelectionSet
       :: G.Name
-      -> (Maybe Description)
-      -> (InputFieldsParser n ())
-      -> (Parser 'Output n (SelectionSet NoFragments G.Name))
-      -> m (FieldParser n (Field NoFragments G.Name))
+      -> Maybe Description
+      -> InputFieldsParser n ()
+      -> Parser 'Output n (SelectionSet NoFragments G.Name)
+      -> FieldParser n (Field NoFragments G.Name)
     mkFieldParserWithSelectionSet fldName desc argsParser outputParser =
       let selectionFldParser = P.rawSubselection fldName desc argsParser outputParser
-      in
-        pure $
-          (selectionFldParser
+      in (selectionFldParser
            <&>
            (\(alias, args, _, selSet)
               -> (G.Field alias fieldName (fmap getName <$> args) mempty selSet)))
