@@ -315,9 +315,9 @@ remoteSchemaUnion schemaDoc defn@(G.UnionTypeDefinition description name _direct
   when (null objs) $
     throw400 RemoteSchemaError $ "List of member types cannot be empty for union type " <> squote name
   pure $ P.selectionSetUnion name description objs <&>
-    (\objNameAndSelSets ->
-       catMaybes $ objNameAndSelSets <&> \(objName, flds) ->
-        case flds of
+    (\objNameAndFields ->
+       catMaybes $ objNameAndFields <&> \(objName, fields) ->
+        case fields of
           -- The return value obtained from the parsing of a union selection set
           -- specifies, for each object in the union type, a fragment-free
           -- selection set for that object type. In particular, if, for a given
@@ -330,7 +330,7 @@ remoteSchemaUnion schemaDoc defn@(G.UnionTypeDefinition description name _direct
           [] -> Nothing
           _  ->
             Just (G.SelectionInlineFragment
-                    $ G.InlineFragment (Just objName) mempty $ fmap G.SelectionField flds))
+                    $ G.InlineFragment (Just objName) mempty $ fmap G.SelectionField fields))
   where
     getObject :: G.Name -> m G.ObjectTypeDefinition
     getObject objectName =
@@ -490,43 +490,39 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
       -- converting [Field NoFragments Name] to (SelectionSet NoFragments G.Name)
       let remoteSchemaObjSelSet = fmap G.SelectionField <$> remoteSchemaObjFields
       pure remoteSchemaObjSelSet
-        <&> mkFieldParserWithSelectionSet fieldName description argsParser
+        <&> mkFieldParserWithSelectionSet argsParser
     G.TypeDefinitionScalar scalarTypeDefn ->
-      pure $ mkFieldParserWithoutSelectionSet fieldName description argsParser
+      pure $ mkFieldParserWithoutSelectionSet argsParser
              $ remoteFieldScalarParser scalarTypeDefn
     G.TypeDefinitionEnum enumTypeDefn ->
-      pure $ mkFieldParserWithoutSelectionSet fieldName description argsParser
+      pure $ mkFieldParserWithoutSelectionSet argsParser
              $ remoteFieldEnumParser enumTypeDefn
     G.TypeDefinitionInterface ifaceTypeDefn ->
       remoteSchemaInterface sdoc ifaceTypeDefn <&>
-        mkFieldParserWithSelectionSet fieldName description argsParser
+        mkFieldParserWithSelectionSet argsParser
     G.TypeDefinitionUnion unionTypeDefn ->
       remoteSchemaUnion sdoc unionTypeDefn <&>
-        mkFieldParserWithSelectionSet fieldName description argsParser
+        mkFieldParserWithSelectionSet argsParser
     _ -> throw400 RemoteSchemaError "expected output type, but got input type"
   where
     mkFieldParserWithoutSelectionSet
-      :: G.Name
-      -> Maybe Description
-      -> InputFieldsParser n ()
+      :: InputFieldsParser n ()
       -> Parser 'Both n ()
       -> FieldParser n (Field NoFragments G.Name)
-    mkFieldParserWithoutSelectionSet fldName desc argsParser outputParser =
+    mkFieldParserWithoutSelectionSet argsParser outputParser =
       -- 'rawSelection' is used here to get the alias and args data
       -- specified to be able to construct the `Field NoFragments G.Name`
-      P.rawSelection fldName desc argsParser outputParser
+      P.rawSelection fieldName description argsParser outputParser
       <&> (\(alias, args, _) -> (G.Field alias fieldName (fmap getName <$> args) mempty []))
 
     mkFieldParserWithSelectionSet
-      :: G.Name
-      -> Maybe Description
-      -> InputFieldsParser n ()
+      :: InputFieldsParser n ()
       -> Parser 'Output n (SelectionSet NoFragments G.Name)
       -> FieldParser n (Field NoFragments G.Name)
-    mkFieldParserWithSelectionSet fldName desc argsParser outputParser =
+    mkFieldParserWithSelectionSet argsParser outputParser =
       -- 'rawSubselection' is used here to get the alias and args data
       -- specified to be able to construct the `Field NoFragments G.Name`
-      P.rawSubselection fldName desc argsParser outputParser
+      P.rawSubselection fieldName description argsParser outputParser
       <&> (\(alias, args, _, selSet) ->
              (G.Field alias fieldName (fmap getName <$> args) mempty selSet))
 
