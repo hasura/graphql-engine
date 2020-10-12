@@ -7,7 +7,11 @@ import {
 import styles from '../../../../Common/TableCommon/Table.scss';
 import { TypedInput } from './TypedInput';
 
-const getColumnInfo = (col: TableColumn, prevValue?: unknown) => {
+const getColumnInfo = (
+  col: TableColumn,
+  prevValue?: unknown,
+  clone?: Record<string, unknown>
+) => {
   const isEditing = prevValue !== undefined;
 
   const hasDefault = col.column_default
@@ -24,7 +28,8 @@ const getColumnInfo = (col: TableColumn, prevValue?: unknown) => {
 
   let columnValueType;
   switch (true) {
-    case !isEditing && (isIdentity || hasDefault || isGenerated):
+    case !isEditing && !clone && (isIdentity || hasDefault || isGenerated):
+    case clone && isDisabled:
     case identityGeneration === 'ALWAYS':
       columnValueType = 'default';
       break;
@@ -56,9 +61,9 @@ export interface TableRowProps {
     refName: 'valueNode' | 'nullNode' | 'defaultNode' | 'insertRadioNode',
     node: HTMLInputElement | null
   ) => void;
-  enumOptions: Record<string, unknown>;
+  enumOptions: Record<string, any>;
   index: number;
-  clone?: Record<string, unknown>;
+  clone?: Record<string, any>;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>, val: unknown) => void;
   onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
   prevValue?: unknown;
@@ -80,7 +85,7 @@ export const TableRow: React.FC<TableRowProps> = ({
     isNullable,
     hasDefault,
     columnValueType,
-  } = getColumnInfo(column, prevValue);
+  } = getColumnInfo(column, prevValue, clone);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement>,
