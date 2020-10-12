@@ -24,11 +24,11 @@ jobs:
           });
           let imagesPresent = false; 
           for (const file of files.data) {
-            if (file.filename === 'docs/**/*.png') {
+            if (file.filename === 'docs/**/*.png' || file.filename === 'docs/**/*.jpg' || file.filename === 'docs/**/*.jpeg') {
               imagesPresent = true;
               break;
             }
           }
-          if (!imagesPresent) {
+          if (imagesPresent) {
             core.setFailed('compress images and add the docs-compress-images label);
           }
