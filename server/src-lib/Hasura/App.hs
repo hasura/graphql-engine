@@ -48,7 +48,6 @@ import           Hasura.EncJSON
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.EventTrigger
 import           Hasura.Eventing.ScheduledTrigger
-import           Hasura.Eventing.ScheduledTrigger.Types
 import           Hasura.GraphQL.Execute                    (MonadGQLExecutionCheck (..),
                                                             checkQueryInAllowlist)
 import           Hasura.GraphQL.Execute.Action             (asyncActionsProcessor)
@@ -802,17 +801,17 @@ instance MonadMetadataStorage ServerAppM where
   fetchActionResponse          = runTxInMetadataStorage . fetchActionResponseTx
 
   getDeprivedCronTriggerStats        = runTxInMetadataStorage getDeprivedCronTriggerStatsTx
-  getPartialCronEvents               = runTxInMetadataStorage getPartialCronEventsTx
+  getScheduledEventsForDelivery      = runTxInMetadataStorage getScheduledEventsForDeliveryTx
   getOneOffScheduledEvents           = runTxInMetadataStorage getOneOffScheduledEventsTx
+  getCronEvents                      = runTxInMetadataStorage . getCronEventsTx
   getInvocations a b                 = runTxInMetadataStorage $ getInvocationsTx a b
-  insertCronEvents                   = runTxInMetadataStorage . insertCronEventsTx
+  insertScheduledEvent               = runTxInMetadataStorage . insertScheduledEventTx
   insertScheduledEventInvocation a b = runTxInMetadataStorage $ insertInvocationTx a b
-  setScheduledEventRetry a b c       = runTxInMetadataStorage $ setRetryTx a b c
-  setScheduledEventStatus a b c      = runTxInMetadataStorage $ setScheduledEventStatusTx a b c
+  setScheduledEventOp a b c          = runTxInMetadataStorage $ setScheduledEventOpTx a b c
   unlockScheduledEvents a b          = runTxInMetadataStorage $ unlockScheduledEventsTx a b
   unlockAllLockedScheduledEvents     = runTxInMetadataStorage unlockAllLockedScheduledEventsTx
   clearFutureCronEvents              = runTxInMetadataStorage . clearFutureCronEventsTx
-  insertScheduledEvent               = runTxInMetadataStorage . insertScheduledEventTx
+  deleteScheduledEvent a b           = runTxInMetadataStorage $ deleteScheduledEventTx a b
 
 --- helper functions ---
 

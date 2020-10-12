@@ -3,7 +3,6 @@ module Hasura.Eventing.ScheduledTrigger.Types where
 import           Data.Time.Clock
 import           Hasura.Eventing.HTTP
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -14,7 +13,6 @@ import qualified Data.Text                  as T
 import qualified Database.PG.Query          as Q
 import qualified Database.PG.Query.PTI      as PTI
 import qualified Hasura.Logging             as L
-import qualified PostgreSQL.Binary.Decoding as PD
 import qualified PostgreSQL.Binary.Encoding as PE
 
 newtype ScheduledTriggerInternalErr
@@ -31,38 +29,6 @@ cronEventsTable =
     hdbCatalogSchema
     (TableName $ T.pack "hdb_cron_events")
 
-data ScheduledEventStatus
-  = SESScheduled
-  | SESLocked
-  | SESDelivered
-  | SESError
-  | SESDead
-  deriving (Show, Eq)
-
-scheduledEventStatusToText :: ScheduledEventStatus -> Text
-scheduledEventStatusToText SESScheduled = "scheduled"
-scheduledEventStatusToText SESLocked    = "locked"
-scheduledEventStatusToText SESDelivered = "delivered"
-scheduledEventStatusToText SESError     = "error"
-scheduledEventStatusToText SESDead      = "dead"
-
-instance Q.ToPrepArg ScheduledEventStatus where
-  toPrepVal = Q.toPrepVal . scheduledEventStatusToText
-
-instance Q.FromCol ScheduledEventStatus where
-  fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case
-    "scheduled" -> Just SESScheduled
-    "locked"    -> Just SESLocked
-    "delivered" -> Just SESDelivered
-    "error"     -> Just SESError
-    "dead"      -> Just SESDead
-    _           -> Nothing
-
-instance J.ToJSON ScheduledEventStatus where
-  toJSON = J.String . scheduledEventStatusToText
-
-type ScheduledEventId = EventId
-
 data CronTriggerStats
   = CronTriggerStats
   { ctsName                :: !TriggerName
@@ -70,48 +36,40 @@ data CronTriggerStats
   , ctsMaxScheduledTime    :: !UTCTime
   } deriving (Show, Eq)
 
-data CronEventPartial
-  = CronEventPartial
-  { cepId            :: !CronEventId
-  , cepName          :: !TriggerName
-  , cepScheduledTime :: !UTCTime
-  , cepTries         :: !Int
-  , cepCreatedAt     :: !UTCTime
-  -- ^ cepCreatedAt is the time at which the cron event generator
-  -- created the cron event
+-- data CronEventPartial
+--   = CronEventPartial
+--   { cepId            :: !CronEventId
+--   , cepName          :: !TriggerName
+--   , cepScheduledTime :: !UTCTime
+--   , cepTries         :: !Int
+--   , cepCreatedAt     :: !UTCTime
+--   -- ^ cepCreatedAt is the time at which the cron event generator
+--   -- created the cron event
+--   } deriving (Show, Eq)
+
+data RetryContext
+  = RetryContext
+  { _rctxTries :: !Int
+  , _rctxConf  :: !STRetryConf
   } deriving (Show, Eq)
 
-data ScheduledEventFull
-  = ScheduledEventFull
-  { sefId            :: !ScheduledEventId
-  , sefName          :: !(Maybe TriggerName)
-  -- ^ sefName is the name of the cron trigger.
-  -- A one-off scheduled event is not associated with a name, so in that
-  -- case, 'sefName' will be @Nothing@
-  , sefScheduledTime :: !UTCTime
-  , sefTries         :: !Int
-  , sefWebhook       :: !Text
-  , sefPayload       :: !J.Value
-  , sefRetryConf     :: !STRetryConf
-  , sefHeaders       :: ![EventHeaderInfo]
-  , sefComment       :: !(Maybe Text)
-  , sefCreatedAt     :: !UTCTime
-  } deriving (Show, Eq)
-$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = True} ''ScheduledEventFull)
-
-data OneOffScheduledEvent
-  = OneOffScheduledEvent
-  { ooseId            :: !OneOffScheduledEventId
-  , ooseScheduledTime :: !UTCTime
-  , ooseTries         :: !Int
-  , ooseWebhook       :: !InputWebhook
-  , oosePayload       :: !(Maybe J.Value)
-  , ooseRetryConf     :: !STRetryConf
-  , ooseHeaderConf    :: ![HeaderConf]
-  , ooseComment       :: !(Maybe Text)
-  , ooseCreatedAt     :: !UTCTime
-  } deriving (Show, Eq)
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = True} ''OneOffScheduledEvent)
+-- data ScheduledEventFull
+--   = ScheduledEventFull
+--   { sefId            :: !ScheduledEventId
+--   , sefName          :: !(Maybe TriggerName)
+--   -- ^ sefName is the name of the cron trigger.
+--   -- A one-off scheduled event is not associated with a name, so in that
+--   -- case, 'sefName' will be @Nothing@
+--   , sefScheduledTime :: !UTCTime
+--   , sefTries         :: !Int
+--   , sefWebhook       :: !Text
+--   , sefPayload       :: !J.Value
+--   , sefRetryConf     :: !STRetryConf
+--   , sefHeaders       :: ![EventHeaderInfo]
+--   , sefComment       :: !(Maybe Text)
+--   , sefCreatedAt     :: !UTCTime
+--   } deriving (Show, Eq)
+-- $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = True} ''ScheduledEventFull)
 
 data ScheduledEventWebhookPayload
   = ScheduledEventWebhookPayload
@@ -141,3 +99,8 @@ instance Q.ToPrepArg ScheduledEventIdArray where
     where
       -- 25 is the OID value of TEXT, https://jdbc.postgresql.org/development/privateapi/constant-values.html
       encoder = PE.array 25 . PE.dimensionArray foldl' (PE.encodingArray . PE.text_strict)
+
+data ScheduledEventOp
+  = SEOpRetry !UTCTime
+  | SEOpStatus !ScheduledEventStatus
+  deriving (Show, Eq)

@@ -93,6 +93,8 @@ data RQLMetadata
   | RMCreateCronTrigger !CreateCronTrigger
   | RMDeleteCronTrigger !ScheduledTriggerName
   | RMCreateScheduledEvent !CreateScheduledEvent
+  | RMDeleteScheduledEvent !DeleteScheduledEvent
+  | RMGetScheduledEvents !GetScheduledEvents
   | RMGetEventInvocations !GetEventInvocations
 
   -- query collections, allow list related
@@ -228,6 +230,8 @@ runMetadataRequestM env = \case
   RMCreateCronTrigger q    -> runCreateCronTrigger q
   RMDeleteCronTrigger q    -> runDeleteCronTrigger q
   RMCreateScheduledEvent q -> runCreateScheduledEvent q
+  RMDeleteScheduledEvent q -> runDeleteScheduledEvent q
+  RMGetScheduledEvents q   -> runGetScheduledEvents q
   RMGetEventInvocations q  -> runGetEventInvocations q
 
   RMCreateQueryCollection q -> runCreateCollection q

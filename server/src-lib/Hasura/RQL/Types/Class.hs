@@ -30,35 +30,41 @@ instance MonadMetadata m => MonadMetadata (Tracing.TraceT m) where
   updateMetadata       = lift . updateMetadata
 
 class (Monad m) => MonadScheduledEvents m where
-  -- | Record the scheduled event
-  createScheduledEvent :: CreateScheduledEvent -> m ()
+  -- | Record a cron/one-off event
+  createEvent :: ScheduledEventSeed -> m ()
 
   -- | Clear cron events
   dropFutureCronEvents :: TriggerName -> m ()
 
-  -- | Record cron events
-  addCronEventSeeds :: [CronEventSeed] -> m ()
-
   -- | Fetch cron/oneoff scheduled event invocations
-  fetchInvocations :: EventId -> ScheduledEventType -> m [ScheduledEventInvocation]
+  fetchInvocations :: ScheduledEventId -> ScheduledEventType -> m [ScheduledEventInvocation]
+
+  -- | Fetch cron/oneoff scheduled events
+  fetchScheduledEvents :: GetScheduledEvents -> m Value
+
+  -- | Drop a cron/oneoff scheduled event
+  dropEvent :: ScheduledEventId -> ScheduledEventType -> m ()
 
 instance MonadScheduledEvents m => MonadScheduledEvents (ReaderT r m) where
-  createScheduledEvent = lift . createScheduledEvent
-  dropFutureCronEvents = lift . dropFutureCronEvents
-  addCronEventSeeds    = lift . addCronEventSeeds
-  fetchInvocations a b = lift $ fetchInvocations a b
+  createEvent                = lift . createEvent
+  dropFutureCronEvents       = lift . dropFutureCronEvents
+  fetchInvocations a b       = lift $ fetchInvocations a b
+  fetchScheduledEvents       = lift . fetchScheduledEvents
+  dropEvent a b              = lift $ dropEvent a b
 
 instance MonadScheduledEvents m => MonadScheduledEvents (StateT s m) where
-  createScheduledEvent = lift . createScheduledEvent
-  dropFutureCronEvents = lift . dropFutureCronEvents
-  addCronEventSeeds    = lift . addCronEventSeeds
-  fetchInvocations a b = lift $ fetchInvocations a b
+  createEvent                = lift . createEvent
+  dropFutureCronEvents       = lift . dropFutureCronEvents
+  fetchInvocations a b       = lift $ fetchInvocations a b
+  fetchScheduledEvents       = lift . fetchScheduledEvents
+  dropEvent a b              = lift $ dropEvent a b
 
 instance MonadScheduledEvents m => MonadScheduledEvents (Tracing.TraceT m) where
-  createScheduledEvent = lift . createScheduledEvent
-  dropFutureCronEvents = lift . dropFutureCronEvents
-  addCronEventSeeds    = lift . addCronEventSeeds
-  fetchInvocations a b = lift $ fetchInvocations a b
+  createEvent                = lift . createEvent
+  dropFutureCronEvents       = lift . dropFutureCronEvents
+  fetchInvocations a b       = lift $ fetchInvocations a b
+  fetchScheduledEvents       = lift . fetchScheduledEvents
+  dropEvent a b              = lift $ dropEvent a b
 
 class (Monad m) => MonadCatalogState m where
   -- | Retrieve the state from metadata storage catalog

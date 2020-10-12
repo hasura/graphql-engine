@@ -17,6 +17,7 @@ import qualified Network.HTTP.Client         as HTTP
 
 import           Control.Monad.Trans.Control (MonadBaseControl)
 import           Control.Monad.Unique
+import           Data.Aeson
 
 import           Hasura.RQL.Types
 import qualified Hasura.Tracing              as Tracing
@@ -65,10 +66,13 @@ runInMetadataRun =
   MetadataRun . lift . lift . ExceptT . runMetadataStorageT
 
 instance (MonadMetadataStorage m) => MonadScheduledEvents (MetadataRun m) where
-  createScheduledEvent = runInMetadataRun . insertScheduledEvent
-  dropFutureCronEvents = runInMetadataRun . clearFutureCronEvents
-  addCronEventSeeds    = runInMetadataRun . insertCronEvents
-  fetchInvocations a b = runInMetadataRun $ getInvocations a b
+  createEvent                = runInMetadataRun . insertScheduledEvent
+  dropFutureCronEvents       = runInMetadataRun . clearFutureCronEvents
+  fetchInvocations a b       = runInMetadataRun $ getInvocations a b
+  fetchScheduledEvents ev    = runInMetadataRun $ case _scheduledEvent ev of
+    SEOneOff    -> toJSON <$> getOneOffScheduledEvents
+    SECron name -> toJSON <$> getCronEvents name
+  dropEvent a b              = runInMetadataRun $ deleteScheduledEvent a b
 
 instance (MonadMetadataStorage m) => MonadCatalogState (MetadataRun m) where
   fetchCatalogState      = runInMetadataRun getCatalogState

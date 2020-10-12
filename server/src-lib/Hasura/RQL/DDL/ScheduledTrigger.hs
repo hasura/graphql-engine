@@ -6,6 +6,8 @@ module Hasura.RQL.DDL.ScheduledTrigger
   , dropCronTriggerInMetadata
   , resolveCronTrigger
   , runCreateScheduledEvent
+  , runDeleteScheduledEvent
+  , runGetScheduledEvents
   , runGetEventInvocations
   ) where
 
@@ -60,7 +62,7 @@ runCreateCronTrigger CreateCronTrigger {..} = do
           $ metaCronTriggers %~ Map.insert cctName metadata
         currentTime <- liftIO C.getCurrentTime
         let scheduleTimes = generateScheduleTimes currentTime 100 cctCronSchedule -- generate next 100 events
-        addCronEventSeeds $ map (CronEventSeed cctName) scheduleTimes
+        createEvent $ SESCron $ map (CronEventSeed cctName) scheduleTimes
         return successMsg
 
 -- addCronTriggerToCatalog :: (MonadTx m) => CronTriggerMetadata ->  m ()
@@ -109,7 +111,7 @@ updateCronTrigger cronTriggerMetadata = do
     $ metaCronTriggers %~ Map.insert triggerName cronTriggerMetadata
   dropFutureCronEvents triggerName
   currentTime <- liftIO C.getCurrentTime
-  addCronEventSeeds $ map (CronEventSeed triggerName) $
+  createEvent $ SESCron $ map (CronEventSeed triggerName) $
     generateScheduleTimes currentTime 100 $ ctSchedule cronTriggerMetadata
   return successMsg
 
@@ -140,13 +142,18 @@ updateCronTrigger cronTriggerMetadata = do
 -- insertCronEvents $ map (CronEventSeed ctName) scheduleTimes
 
 runDeleteCronTrigger
-  :: (CacheRWM m, MonadError QErr m) => ScheduledTriggerName -> m EncJSON
+  :: ( CacheRWM m
+     , MonadError QErr m
+     , MonadScheduledEvents m
+     )
+  => ScheduledTriggerName -> m EncJSON
 runDeleteCronTrigger (ScheduledTriggerName stName) = do
   checkExists stName
   -- deleteCronTriggerFromCatalog stName
   withNewInconsistentObjsCheck
     $ buildSchemaCache
     $ dropCronTriggerInMetadata stName
+  dropFutureCronEvents stName
   return successMsg
 
 dropCronTriggerInMetadata :: TriggerName -> MetadataModifier
@@ -164,7 +171,7 @@ dropCronTriggerInMetadata name =
 runCreateScheduledEvent
   :: (MonadScheduledEvents m) => CreateScheduledEvent -> m EncJSON
 runCreateScheduledEvent scheduledEvent = do
-  createScheduledEvent scheduledEvent
+  createEvent $ SESOneOff scheduledEvent
   -- liftTx $ Q.unitQE defaultTxErrorHandler
   --    [Q.sql|
   --     INSERT INTO hdb_catalog.hdb_scheduled_events
@@ -179,6 +186,25 @@ runCreateScheduledEvent scheduledEvent = do
   --       , cseComment)
   --       False
   pure successMsg
+
+runDeleteScheduledEvent
+  :: (MonadScheduledEvents m) => DeleteScheduledEvent -> m EncJSON
+runDeleteScheduledEvent DeleteScheduledEvent{..} = do
+  dropEvent _dseEventId _dseType
+  pure successMsg
+
+runGetScheduledEvents
+  :: ( CacheRM m
+     , MonadError QErr m
+     , MonadScheduledEvents m
+     )
+  => GetScheduledEvents -> m EncJSON
+runGetScheduledEvents gse = do
+  case _scheduledEvent gse of
+    SEOneOff    -> pure ()
+    SECron name -> checkExists name
+  events <- fetchScheduledEvents gse
+  pure $ encJFromJValue $ J.object ["events" J..= events]
 
 checkExists :: (CacheRM m, MonadError QErr m) => TriggerName -> m ()
 checkExists name = do

@@ -9,11 +9,19 @@ module Hasura.RQL.Types.ScheduledTrigger
   , OneOffScheduledEventId
   , formatTime'
   , defaultSTRetryConf
+  , ScheduledEventId
   , InvocationId
   , CronEventSeed(..)
+  , ScheduledEventSeed(..)
+  , ScheduledEventStatus(..)
   , ScheduledEventType(..)
   , ScheduledEventInvocation(..)
   , GetEventInvocations(..)
+  , OneOffScheduledEvent(..)
+  , CronEvent(..)
+  , ScheduledEvent(..)
+  , GetScheduledEvents(..)
+  , DeleteScheduledEvent(..)
   ) where
 
 import           Data.Aeson
@@ -29,13 +37,16 @@ import           Hasura.RQL.Types.Common       (NonNegativeDiffTime, unsafeNonNe
 import           Hasura.RQL.Types.EventTrigger
 import           System.Cron.Types
 
-import qualified Data.Aeson                    as J
 import qualified Data.Text                     as T
+import qualified Database.PG.Query             as Q
 import qualified Hasura.RQL.Types.EventTrigger as ET
+import qualified PostgreSQL.Binary.Decoding    as PD
 
 type CronEventId = EventId
 
 type OneOffScheduledEventId = EventId
+
+type ScheduledEventId = EventId
 
 type InvocationId = Text
 
@@ -84,7 +95,7 @@ data CronTriggerMetadata
   { ctName              :: !ET.TriggerName
   , ctWebhook           :: !InputWebhook
   , ctSchedule          :: !CronSchedule
-  , ctPayload           :: !(Maybe J.Value)
+  , ctPayload           :: !(Maybe Value)
   , ctRetryConf         :: !STRetryConf
   , ctHeaders           :: ![ET.HeaderConf]
   , ctIncludeInMetadata :: !Bool
@@ -114,7 +125,7 @@ data CreateCronTrigger
   { cctName              :: !ET.TriggerName
   , cctWebhook           :: !InputWebhook
   , cctCronSchedule      :: !CronSchedule
-  , cctPayload           :: !(Maybe J.Value)
+  , cctPayload           :: !(Maybe Value)
   , cctRetryConf         :: !STRetryConf
   , cctHeaders           :: ![ET.HeaderConf]
   , cctIncludeInMetadata :: !Bool
@@ -150,6 +161,8 @@ $(deriveJSON (aesonDrop 2 snakeCase) ''ScheduledTriggerName)
 formatTime' :: UTCTime -> T.Text
 formatTime'= T.pack . iso8601Show
 
+-- | Query type to create a one-off scheduled event. For Cron events see
+-- @'CreateCronTrigger'
 data CreateScheduledEvent
   = CreateScheduledEvent
   { cseWebhook    :: !InputWebhook
@@ -157,7 +170,7 @@ data CreateScheduledEvent
     -- ^ The timestamp should be in the
     -- <ISO 8601 https://en.wikipedia.org/wiki/ISO_8601>
     -- format (which is what @aeson@ expects by default for 'UTCTime').
-  , csePayload    :: !(Maybe J.Value)
+  , csePayload    :: !(Maybe Value)
   , cseHeaders    :: ![ET.HeaderConf]
   , cseRetryConf  :: !STRetryConf
   , cseComment    :: !(Maybe Text)
@@ -198,8 +211,8 @@ data ScheduledEventInvocation
   { _seiId        :: !InvocationId
   , _seiEventId   :: !EventId
   , _seiStatus    :: !Int
-  , _seiRequest   :: !J.Value
-  , _seiResponse  :: !J.Value
+  , _seiRequest   :: !Value
+  , _seiResponse  :: !Value
   , _seiCreatedAt :: !UTCTime
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 4 snakeCase) ''ScheduledEventInvocation)
@@ -216,3 +229,108 @@ data CronEventSeed
   { cesName          :: !TriggerName
   , cesScheduledTime :: !UTCTime
   } deriving (Show, Eq)
+
+data ScheduledEventSeed
+  = SESCron ![CronEventSeed]
+  | SESOneOff !CreateScheduledEvent
+  deriving (Show, Eq)
+
+data ScheduledEventStatus
+  = SESScheduled
+  | SESLocked
+  | SESDelivered
+  | SESError
+  | SESDead
+  deriving (Show, Eq)
+
+scheduledEventStatusToText :: ScheduledEventStatus -> Text
+scheduledEventStatusToText SESScheduled = "scheduled"
+scheduledEventStatusToText SESLocked    = "locked"
+scheduledEventStatusToText SESDelivered = "delivered"
+scheduledEventStatusToText SESError     = "error"
+scheduledEventStatusToText SESDead      = "dead"
+
+textToScheduledEventStatus :: Text -> Maybe ScheduledEventStatus
+textToScheduledEventStatus = \case
+  "scheduled" -> Just SESScheduled
+  "locked"    -> Just SESLocked
+  "delivered" -> Just SESDelivered
+  "error"     -> Just SESError
+  "dead"      -> Just SESDead
+  _           -> Nothing
+
+instance Q.ToPrepArg ScheduledEventStatus where
+  toPrepVal = Q.toPrepVal . scheduledEventStatusToText
+
+instance Q.FromCol ScheduledEventStatus where
+  fromCol bs =
+    flip Q.fromColHelper bs $ PD.enum textToScheduledEventStatus
+
+instance ToJSON ScheduledEventStatus where
+  toJSON = String . scheduledEventStatusToText
+
+instance FromJSON ScheduledEventStatus where
+  parseJSON = withText "String" $ \s ->
+    case textToScheduledEventStatus s of
+      Nothing     -> fail $ T.unpack $ "unexpected status: " <> s
+      Just status -> pure status
+
+
+data OneOffScheduledEvent
+  = OneOffScheduledEvent
+  { _ooseId            :: !OneOffScheduledEventId
+  , _ooseWebhookConf   :: !InputWebhook
+  , _ooseScheduledTime :: !UTCTime
+  , _ooseRetryConf     :: !STRetryConf
+  , _oosePayload       :: !(Maybe Value)
+  , _ooseHeaderConf    :: ![HeaderConf]
+  , _ooseStatus        :: !Text
+  , _ooseTries         :: !Int
+  , _ooseCreatedAt     :: !UTCTime
+  , _ooseNextRetryAt   :: !(Maybe UTCTime)
+  , _ooseComment       :: !(Maybe Text)
+  } deriving (Show, Eq)
+$(deriveJSON (aesonDrop 5 snakeCase) ''OneOffScheduledEvent)
+
+data CronEvent
+  = CronEvent
+  { _ceId            :: !CronEventId
+  , _ceTriggerName   :: !TriggerName
+  , _ceScheduledTime :: !UTCTime
+  , _ceStatus        :: !Text
+  , _ceTries         :: !Int
+  , _ceCreatedAt     :: !UTCTime
+  -- ^ it is the time at which the cron event generator created the event
+  , _ceNextRetryAt   :: !(Maybe UTCTime)
+  } deriving (Show, Eq)
+$(deriveJSON (aesonDrop 3 snakeCase) ''CronEvent)
+
+data ScheduledEvent
+  = SEOneOff
+  | SECron !TriggerName
+  deriving (Show, Eq)
+
+-- | Query type to fetch all one-off/cron scheduled events
+newtype GetScheduledEvents
+  = GetScheduledEvents {_scheduledEvent :: ScheduledEvent}
+  deriving (Show, Eq)
+instance ToJSON GetScheduledEvents where
+  toJSON (GetScheduledEvents scheduledEvent) =
+    case scheduledEvent of
+      SEOneOff    -> object ["type" .= OneOff]
+      SECron name -> object ["type" .= Cron, "trigger_name" .= name]
+
+instance FromJSON GetScheduledEvents where
+  parseJSON = withObject "Object" $ \o -> do
+    ty <- o .: "type"
+    GetScheduledEvents <$> case ty of
+      Cron   -> SECron <$> o .: "trigger_name"
+      OneOff -> pure SEOneOff
+
+-- | Query type to delete cron/one-off events.
+data DeleteScheduledEvent
+  = DeleteScheduledEvent
+  { _dseType    :: !ScheduledEventType
+  , _dseEventId :: !ScheduledEventId
+  } deriving (Show, Eq)
+$(deriveJSON (aesonDrop 4 snakeCase) ''DeleteScheduledEvent)
