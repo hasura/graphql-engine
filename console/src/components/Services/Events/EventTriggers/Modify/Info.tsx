@@ -4,10 +4,11 @@ import { EventTrigger } from '../../types';
 
 type ETInfoProps = {
   currentTrigger: EventTrigger;
+  currentDataSource: string;
   styles: Record<string, any>;
 };
 
-const Info = ({ currentTrigger, styles }: ETInfoProps) => (
+const Info = ({ currentTrigger, styles, currentDataSource }: ETInfoProps) => (
   <div className={`${styles.container} ${styles.borderBottom}`}>
     <div className={styles.modifySection}>
       <h4 className={styles.modifySectionHeading}>
@@ -29,6 +30,10 @@ const Info = ({ currentTrigger, styles }: ETInfoProps) => (
             <tr>
               <td>Schema</td>
               <td>{currentTrigger.schema_name}</td>
+            </tr>
+            <tr>
+              <td>Database</td>
+              <td>{currentDataSource}</td>
             </tr>
           </tbody>
         </table>

@@ -80,7 +80,11 @@ const Modify: React.FC<Props> = props => {
       />
       <br />
       <div className={styles.container}>
-        <Info currentTrigger={currentTrigger} styles={styles} />
+        <Info
+          currentTrigger={currentTrigger}
+          currentDataSource={currentDataSource}
+          styles={styles}
+        />
         <WebhookEditor
           currentTrigger={currentTrigger}
           webhook={state.webhook}
