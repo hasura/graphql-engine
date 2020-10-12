@@ -161,35 +161,37 @@ when a new column has been added to a table via an external tool such as ``psql`
 
 .. _reset_metadata_manual:
 
-Reseting Hasura metadata
+Resetting Hasura metadata
 -------------------------
 
-Clearing GraphQL Engine's metadata is an irreversible process, so use this functionality carefully.
+Resetting GraphQL engine's metadata is an irreversible process. You'll have to configure it again from scratch (e.g. tracking tables and relationships).
 
 .. rst-class:: api_tabs
 .. tabs::
 
   .. tab:: CLI
 
-     Metadata can be reset with the coomand :ref:`hasura metadata clear [flags]`.
+     Metadata can be reset with the :ref:`hasura metadata clear <hasura_metadata_clear>`
+     command.
 
   .. tab:: Console
 
      1. Click on the settings (⚙) icon at the top right corner of the console screen.
      2. Click on ``Reset`` button.
-     3. A notification should appear prompting you to write "CONFIRM" to conclude the process.
+     3. A pop-up will appear prompting you to confirm the process.
+     4. A notification should appear indicating the success.
 
   .. tab:: API
 
-     .. code-block:: http
+   The reset of metadata can be done via the :ref:`Metadata API <api_manage_metadata>`.
+   Here is an example using ``curl``:
 
-     Example using ``curl``:
+   .. code-block:: bash
 
-     .. code-block:: bash
+      curl -d'{"type": "clear_metadata", "args": {}}' http://localhost:8080/v1/query
 
-        curl -d'{"type": "reset_metadata", "args": {}}' http://localhost:8080/v1/query
-
-
+   If an admin secret is set, add ``-H 'X-Hasura-Admin-Secret: <your-admin-secret>'`` as the API is an
+   admin-only API.
 
 Managing Hasura metadata in CI/CD
 ---------------------------------
