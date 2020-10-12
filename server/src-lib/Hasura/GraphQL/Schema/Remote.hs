@@ -41,7 +41,7 @@ buildRemoteParser (IntrospectionResult sdoc query_root mutation_root subscriptio
     makeFieldParser :: G.FieldDefinition -> m (P.FieldParser n (RemoteSchemaInfo, RemoteField))
     makeFieldParser fieldDef = do
       fldParser <- remoteField' sdoc fieldDef
-      pure $ fldParser <&> (\fp -> (info, fp))
+      pure $ (info, ) <$> fldParser
     makeParsers :: G.Name -> m [P.FieldParser n (RemoteSchemaInfo, RemoteField)]
     makeParsers rootName =
       case lookupType sdoc rootName of
@@ -171,6 +171,22 @@ remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name inter
       = True -- TODO write appropriate check (may require saving 'possibleTypes' in Syntax.hs)
     validateSubTypeDefinition _ _ = False
 
+-- | helper function to get a parser of an object with it's name
+--   This function is called from 'remoteSchemaInterface' and
+--   'remoteSchemaObject' functions. Both of these have a slightly
+--   different implementation of 'getObject', which is the
+--   reason 'getObject' is an argument to this function
+getObjectParser
+  :: forall n m
+  . (MonadSchema n m, MonadError QErr m)
+  => SchemaIntrospection
+  -> (G.Name -> m G.ObjectTypeDefinition)
+  -> G.Name
+  -> m (Parser 'Output n (Name, (SelectionSet NoFragments G.Name)))
+getObjectParser schemaDoc getObject objName = do
+  obj <- remoteSchemaObject schemaDoc =<< getObject objName
+  return $ (objName,) <$> obj
+
 -- | 'remoteSchemaInterface' returns a output parser for a given 'InterfaceTypeDefinition'.
 remoteSchemaInterface
   :: forall n m
@@ -182,11 +198,7 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
   P.memoizeOn 'remoteSchemaObject defn do
   subFieldParsers <- traverse (remoteField' schemaDoc) fields
   objs :: [Parser 'Output n (Name, (SelectionSet NoFragments G.Name))] <-
-    traverse (\objName -> do
-                 obj <- getObject objName
-                 rsObj <- remoteSchemaObject schemaDoc obj
-                 return $ (objName,) <$> rsObj)
-             possibleTypes
+    traverse (getObjectParser schemaDoc getObject) possibleTypes
   -- In the Draft GraphQL spec (> June 2018), interfaces can themselves
   -- implement superinterfaces.  In the future, we may need to support this
   -- here.
@@ -261,11 +273,7 @@ remoteSchemaUnion
 remoteSchemaUnion schemaDoc defn@(G.UnionTypeDefinition description name _directives objectNames) =
   P.memoizeOn 'remoteSchemaObject defn do
   objs :: [Parser 'Output n (Name, (SelectionSet NoFragments G.Name))] <-
-    traverse (\objName -> do
-                 obj <- getObject objName
-                 rsObj <- remoteSchemaObject schemaDoc obj
-                 return $ (objName,) <$> rsObj)
-             objectNames
+    traverse (getObjectParser schemaDoc getObject) objectNames
   when (null objs) $
     throw400 RemoteSchemaError $ "List of member types cannot be empty for union type " <> squote name
   pure $ P.selectionSetUnion name description objs <&>
@@ -278,8 +286,7 @@ remoteSchemaUnion schemaDoc defn@(G.UnionTypeDefinition description name _direct
           -- selectionSet for the object that was not queried as `[]`. So,
           -- we omit it while constructing the query
           [] -> Nothing
-          _  -> Just (G.SelectionInlineFragment $ G.InlineFragment (Just objName) mempty selSet)
-    )
+          _  -> Just (G.SelectionInlineFragment $ G.InlineFragment (Just objName) mempty selSet))
   where
     getObject :: G.Name -> m G.ObjectTypeDefinition
     getObject objectName =
