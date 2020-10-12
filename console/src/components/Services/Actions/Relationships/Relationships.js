@@ -14,6 +14,7 @@ const Relationships = ({
   const existingRelationships = (objectType.relationships || []).map(r => {
     return (
       <TypeRelationship
+        key={r.name}
         dispatch={dispatch}
         relConfig={r}
         objectType={objectType}

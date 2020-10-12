@@ -1,5 +1,6 @@
 import { defaultRelFieldMapping } from '../Common/stateDefaults';
 import { generateTableDef } from '../../../../dataSources';
+import { Source } from 'graphql';
 
 const reformRelationship = relConfig => {
   return {
@@ -23,6 +24,7 @@ export const parseCustomTypeRelationship = relConfig => {
     ...relConfig,
     refSchema: relConfig.remote_table.schema,
     refTable: relConfig.remote_table.name,
+    refDb: relConfig.source,
     fieldMapping: Object.keys(relConfig.field_mapping).map(field => {
       return {
         field,
@@ -76,7 +78,9 @@ export const getRelDef = relMeta => {
     ? `${relMeta.remote_table.schema}.${relMeta.remote_table.name}`
     : relMeta.remote_table;
 
-  return `${relMeta.typename} . ${lcol} → ${tableLabel} . ${rcol}`;
+  const sourceDef = relMeta.source ? `${relMeta.source} . ` : '';
+
+  return `${relMeta.typename} . ${lcol} → ${sourceDef}${tableLabel} . ${rcol}`;
 };
 
 export const removeTypeRelationship = (types, typename, relName) => {
