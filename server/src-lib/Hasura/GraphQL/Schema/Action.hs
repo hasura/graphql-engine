@@ -161,8 +161,9 @@ actionOutputFields
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => AnnotatedObjectType
   -> m (Parser 'Output n (RQL.AnnFieldsG UnpreparedValue))
-actionOutputFields outputObject = do
-  let scalarOrEnumFields = map scalarOrEnumFieldParser $ toList $ _otdFields outputObject
+actionOutputFields annOutputObject = do
+  let outputObject = _aotDefinition annOutputObject
+      scalarOrEnumFields = map scalarOrEnumFieldParser $ toList $ _otdFields outputObject
   relationshipFields <- forM (_otdRelationships outputObject) $ traverse relationshipFieldParser
   let allFieldParsers = scalarOrEnumFields <>
                         maybe [] (catMaybes . toList) relationshipFields
@@ -191,7 +192,7 @@ actionOutputFields outputObject = do
       :: TypeRelationship TableInfo PGColumnInfo
       -> m (Maybe (FieldParser n (RQL.AnnFieldG UnpreparedValue)))
     relationshipFieldParser typeRelationship = runMaybeT do
-      let TypeRelationship relName relType tableInfo fieldMapping = typeRelationship
+      let TypeRelationship relName relType _ tableInfo fieldMapping = typeRelationship
           tableName = _tciName $ _tiCoreInfo tableInfo
           fieldName = unRelationshipName relName
       roleName <- lift askRoleName
@@ -211,13 +212,14 @@ actionOutputFields outputObject = do
                         RQL.AnnRelationSelectG tableRelName columnMapping selectExp
 
 mkDefinitionList :: AnnotatedObjectType -> [(PGCol, PGScalarType)]
-mkDefinitionList ObjectTypeDefinition{..} =
+mkDefinitionList objectType =
   flip map (toList _otdFields) $ \ObjectFieldDefinition{..} ->
     (unsafePGCol . G.unName . unObjectFieldName $ _ofdName,) $
     case Map.lookup _ofdName fieldReferences of
       Nothing         -> fieldTypeToScalarType $ snd _ofdType
       Just columnInfo -> unsafePGColumnToRepresentation $ pgiType columnInfo
   where
+    ObjectTypeDefinition{..} = _aotDefinition objectType
     fieldReferences =
       Map.unions $ map _trFieldMapping $ maybe [] toList _otdRelationships
 

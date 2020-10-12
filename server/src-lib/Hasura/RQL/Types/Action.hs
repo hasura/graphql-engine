@@ -192,7 +192,7 @@ type ActionOutputFields = Map.HashMap G.Name G.GType
 
 getActionOutputFields :: AnnotatedObjectType -> ActionOutputFields
 getActionOutputFields =
-  Map.fromList . map ( (unObjectFieldName . _ofdName) &&& (fst . _ofdType)) . toList . _otdFields
+  Map.fromList . map ( (unObjectFieldName . _ofdName) &&& (fst . _ofdType)) . toList . _otdFields . _aotDefinition
 
 data ActionInfo
   = ActionInfo
