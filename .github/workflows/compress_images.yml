@@ -24,7 +24,7 @@ jobs:
           });
           let imagesPresent = false; 
           for (const file of files.data) {
-            if (file.filename === 'docs/**/*.png') || (file.filename === 'docs/**/*.jpg') || (file.filename === 'docs/**/*.jpeg') {
+            if (file.filename === 'docs/**/*.png' || file.filename === 'docs/**/*.jpg' || file.filename === 'docs/**/*.jpeg') {
               imagesPresent = true;
               break;
             }
