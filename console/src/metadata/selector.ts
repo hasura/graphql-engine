@@ -21,23 +21,17 @@ const isMetadataV3 = (
 };
 
 export const getDataSourceMetadata = (state: ReduxState) => {
-  if (isMetadataV3(state.metadata.metadataObject)) {
-    const currentDataSource = state.tables.currentDataSource;
-    if (!currentDataSource) return null;
-    return state.metadata.metadataObject.sources.find(
-      source => source.name === currentDataSource
-      // NOTE: Commented this since, kind is not being mentioned on the metadata object atm
-      // &&
-      // (source.kind || 'postgres') === currentDriver
-    );
-  }
-  return state.metadata.metadataObject;
+  const currentDataSource = state.tables.currentDataSource;
+  if (!currentDataSource) return null;
+  return state.metadata.metadataObject?.sources.find(
+    source => source.name === currentDataSource
+    // NOTE: Commented this since, kind is not being mentioned on the metadata object atm
+    // &&
+    // (source.kind || 'postgres') === currentDriver
+  );
 };
 
 export const getRemoteSchemas = (state: ReduxState) => {
-  if (isMetadataV3(state.metadata.metadataObject)) {
-    return state.metadata.metadataObject?.remote_schemas ?? [];
-  }
   return state.metadata.metadataObject?.remote_schemas ?? [];
 };
 
@@ -240,6 +234,7 @@ export const getEventTriggers = createSelector(
         t.event_triggers?.map(trigger => ({
           table_name: t.table.name,
           schema_name: t.table.schema,
+          source: source.name,
           name: trigger.name,
           comment: '',
           configuration: {
