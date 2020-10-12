@@ -8,12 +8,18 @@ module Hasura.GraphQL.Context
   , traverseDB
   , traverseAction
   , RemoteField
+  , RootTree(..)
+  , RootJoin(..)
   , QueryDB(..)
   , ActionQuery(..)
+  , QueryRootTree
   , QueryRootField
+  , QueryRootJoin
   , MutationDB(..)
   , ActionMutation(..)
+  , MutationRootTree
   , MutationRootField
+  , MutationRootJoin
   , SubscriptionRootField
   , SubscriptionRootFieldResolved
   ) where
@@ -47,8 +53,8 @@ data RoleContext a
 $(deriveToJSON (aesonDrop 5 snakeCase) ''RoleContext)
 
 data GQLContext = GQLContext
-  { gqlQueryParser    :: ParserFn (InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
-  , gqlMutationParser :: Maybe (ParserFn (InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
+  { gqlQueryParser    :: ParserFn (InsOrdHashMap G.Name (QueryRootTree UnpreparedValue))
+  , gqlMutationParser :: Maybe (ParserFn (InsOrdHashMap G.Name (MutationRootTree UnpreparedValue)))
   }
 
 instance J.ToJSON GQLContext where
@@ -63,6 +69,9 @@ data RootField db remote action raw
   | RFRemote remote
   | RFAction action
   | RFRaw raw
+
+data RootTree v = RootTree v [RootJoin v]
+data RootJoin v = RootJoin (RootTree v) G.Name G.Name
 
 traverseDB :: forall db db' remote action raw f
         . Applicative f
@@ -99,6 +108,8 @@ data ActionQuery v
 type RemoteField = (RQL.RemoteSchemaInfo, G.Field G.NoFragments Variable)
 
 type QueryRootField v = RootField (QueryDB v) RemoteField (ActionQuery v) J.Value
+type QueryRootTree  v = RootTree (QueryRootField v)
+type QueryRootJoin  v = RootJoin (QueryRootField v)
 
 data MutationDB v
   = MDBInsert (AnnInsert   v)
@@ -109,8 +120,9 @@ data ActionMutation v
   = AMSync !(RQL.AnnActionExecution v)
   | AMAsync !RQL.AnnActionMutationAsync
 
-type MutationRootField v =
-  RootField (MutationDB v) RemoteField (ActionMutation v) J.Value
+type MutationRootField v = RootField (MutationDB v) RemoteField (ActionMutation v) J.Value
+type MutationRootTree  v = RootTree (MutationRootField v)
+type MutationRootJoin  v = RootJoin (MutationRootField v)
 
 type SubscriptionRootField v = RootField (QueryDB v) Void (RQL.AnnActionAsyncQuery v) Void
 type SubscriptionRootFieldResolved = RootField (QueryDB S.SQLExp) Void RQL.AnnSimpleSel Void

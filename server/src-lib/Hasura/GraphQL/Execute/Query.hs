@@ -1,4 +1,3 @@
-
 module Hasura.GraphQL.Execute.Query
   ( convertQuerySelSet
   -- , queryOpFromPlan
@@ -175,7 +174,7 @@ parseGraphQLQuery
   -> [G.VariableDefinition]
   -> Maybe (HashMap G.Name J.Value)
   -> G.SelectionSet G.NoFragments G.Name
-  -> m ( InsOrdHashMap G.Name (QueryRootField UnpreparedValue)
+  -> m ( InsOrdHashMap G.Name (QueryRootTree UnpreparedValue)
        , QueryReusability
        )
 parseGraphQLQuery gqlContext varDefs varValsM fields =
@@ -257,7 +256,8 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
   (unpreparedQueries, _reusability) <- parseGraphQLQuery gqlContext varDefs varValsM fields
 
   -- Transform the RQL AST into a prepared SQL query
-  queryPlan <- for unpreparedQueries \unpreparedQuery -> do
+  -- FIXME: we're ignoring any sub-queries for now, only processing top-level entries
+  queryPlan <- for unpreparedQueries \(RootTree unpreparedQuery _) -> do
     (preparedQuery, PlanningSt _ _ planVals expectedVariables)
       <- flip runStateT initPlanningSt
          $ traverseQueryRootField prepareWithPlan unpreparedQuery
@@ -281,8 +281,9 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
         RFAction rfp -> ExecStepDB $ mkCurPlanTx env manager reqHeaders userInfo instrument ep rfp
         RFRaw r      -> ExecStepRaw r
 
+  -- FIXME: we're ignoring sub-queries for now
   let asts :: [QueryRootField UnpreparedValue]
-      asts = OMap.elems unpreparedQueries
+      asts = [rootField | RootTree rootField _ <- OMap.elems unpreparedQueries]
   pure (executionPlan, asts)  -- See Note [Temporarily disabling query plan caching]
   where
     usrVars = _uiSession userInfo

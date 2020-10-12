@@ -15,12 +15,12 @@ import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+import qualified Hasura.Logging                         as L
 import qualified Hasura.RQL.DML.Delete                  as RQL
 import qualified Hasura.RQL.DML.Mutation                as RQL
 import qualified Hasura.RQL.DML.Returning.Types         as RQL
 import qualified Hasura.RQL.DML.Update                  as RQL
 import qualified Hasura.Tracing                         as Tracing
-import qualified Hasura.Logging                         as L
 
 
 import           Hasura.Db
@@ -164,14 +164,14 @@ convertMutationSelectionSet env logger gqlContext sqlGenCtx userInfo manager req
     throw400 ValidationFailed "no mutations exist"
   -- Parse the GraphQL query into the RQL AST
   (unpreparedQueries, _reusability)
-    :: (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue), QueryReusability)
+    :: (OMap.InsOrdHashMap G.Name (MutationRootTree UnpreparedValue), QueryReusability)
     <-  resolveVariables varDefs (fromMaybe Map.empty varValsM) fields
     >>= (mutationParser >>> (`onLeft` reportParseErrors))
 
   -- Transform the RQL AST into a prepared SQL query
   let userSession = _uiSession userInfo
       remoteJoinCtx = (manager, reqHeaders, userInfo)
-  txs <- for unpreparedQueries \case
+  txs <- for unpreparedQueries \(RootTree unprepatedQuery _) -> case unprepatedQuery of
     RFDB db             -> ExecStepDB <$> convertMutationDB env userSession remoteJoinCtx (stringifyNum sqlGenCtx) db
     RFRemote (remoteSchemaInfo, remoteField) ->
       pure $ buildExecStepRemote

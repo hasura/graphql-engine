@@ -101,7 +101,7 @@ insertOneIntoTable table fieldName description insertPerms selectPerms updatePer
         object <- P.field objectName (Just objectDesc) objectParser
         pure (conflictClause, object)
   pure $ P.subselection fieldName description argsParser selectionParser
-    <&> \((conflictClause, object), output) -> AnnInsert (G.unName fieldName) True
+    <&> \((conflictClause, object), (output, _)) -> AnnInsert (G.unName fieldName) True
        ( mkInsertObject [object] table columns conflictClause insertPerms updatePerms
        , RQL.MOutSinglerowObject output
        )
@@ -312,7 +312,7 @@ updateTableByPk table fieldName description updatePerms selectPerms = runMaybeT 
         primaryKeys <- P.field pkFieldName Nothing $ P.object pkObjectName (Just pkObjectDesc) pkArgs
         pure (operators, primaryKeys)
   pure $ P.subselection fieldName description argsParser selection
-    <&> mkUpdateObject table columns updatePerms . fmap RQL.MOutSinglerowObject
+    <&> mkUpdateObject table columns updatePerms . fmap (RQL.MOutSinglerowObject . fst)
 
 mkUpdateObject
   :: QualifiedTable
@@ -465,7 +465,7 @@ deleteFromTableByPk table fieldName description deletePerms selectPerms = runMay
   pkArgs    <- MaybeT $ primaryKeysArguments table selectPerms
   selection <- lift $ tableSelectionSet table selectPerms
   pure $ P.subselection fieldName description pkArgs selection
-    <&> mkDeleteObject table columns deletePerms . fmap RQL.MOutSinglerowObject
+    <&> mkDeleteObject table columns deletePerms . fmap (RQL.MOutSinglerowObject . fst)
 
 mkDeleteObject
   :: QualifiedTable
@@ -501,7 +501,7 @@ mutationSelectionSet table selectPerms =
     tableSet    <- lift $ tableSelectionList table permissions
     let returningName = $$(G.litName "returning")
         returningDesc = "data from the rows affected by the mutation"
-    pure $ RQL.MRet <$> P.subselection_ returningName  (Just returningDesc) tableSet
+    pure $ RQL.MRet . fst <$> P.subselection_ returningName  (Just returningDesc) tableSet
   let affectedRowsName = $$(G.litName "affected_rows")
       affectedRowsDesc = "number of rows affected by the mutation"
       selectionName    = tableName <> $$(G.litName "_mutation_response")
