@@ -295,7 +295,7 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
           commonInterfaceFields =
             Map.elems $
             Map.mapMaybe allTheSame $
-            Map.groupOn (\(Field alias fldName _ _ _) -> fromMaybe fldName alias) $
+            Map.groupOn G._fName $
             concatMap (\(_, flds) ->
                          filter ((`elem` interfaceFieldNames) . G._fName) flds)
                          $ selSetFieldsWithoutFragments
