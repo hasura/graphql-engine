@@ -40,8 +40,8 @@ export type Snippet = {
   generateCodesandboxFiles?: (options: GenerateOptions) => CodesandboxFiles;
 };
 
-const getQuery = (query: string) => {
-  return ` `.repeat(2) + query.replace(/\n/g, `\n${` `.repeat(2)}`);
+const getQuery = (query: string, spacing = 0) => {
+  return ` `.repeat(2) + query.replace(/\n/g, `\n${` `.repeat(2 + spacing)}`);
 };
 
 const getVariables = (operationData: OperationData): string => {
@@ -52,6 +52,48 @@ const getVariables = (operationData: OperationData): string => {
   const variables = `{${variablesBody}}`;
   return variables;
 };
+
+const vueScriptSnippet: Snippet = {
+  name: `vue-apollo`,
+  language: `JavaScript`,
+  codeMirrorMode: `jsx`,
+  options: [],
+  generate: ({ operationDataList }) => {
+    const queryDef = operationDataList[0];
+
+    return `
+/*
+This is an example snippet - you should consider tailoring it
+to your service.
+
+Please refer here, for the vue-apollo installation process
+https://apollo.vuejs.org/guide/installation.html#installation
+*/
+
+<template>
+  <div>{{ ${queryDef.name} }}</div>
+</template>
+
+<script>
+import gql from 'graphql-tag'
+
+export default {
+  apollo: {
+    ${queryDef.name}: {
+      query: gql\`
+      ${getQuery(queryDef.query, 6)}
+      \`,
+      variables: ${getVariables(queryDef)},
+      error(error) {
+        console.error(error);
+      },
+    },
+  },
+}
+</script>
+`;
+  },
+}
 
 const typeScriptSnippet: Snippet = {
   name: `fetch`,
@@ -106,4 +148,4 @@ fetch${queryDef.name}()
   },
 };
 
-export default [...snippets, typeScriptSnippet];
+export default [...snippets, typeScriptSnippet, vueScriptSnippet];
