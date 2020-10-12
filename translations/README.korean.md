@@ -213,7 +213,7 @@ GraphQL Engine core 는 [아파치 라이선스 2.0](https://www.apache.org/lice
 - [Bosnian :bosnia_herzegovina:](../translations/README.bosnian.md) (:pray: [@hajro92](https://github.com/hajro92))
 - [Russian :ru:](../translations/README.russian.md) (:pray: [@highflyer910](https://github.com/highflyer910))
 - [Greek 🇬🇷](../translations/README.greek.md) (:pray: [@MIP2000](https://github.com/MIP2000))
-- [Spanish :sp:](../translations/README.spanish.md)(:pray: [@ferdox2](https://github.com/ferdox2))
+- [Spanish :es:](../translations/README.spanish.md)(:pray: [@ferdox2](https://github.com/ferdox2))
 - [Indonesian :indonesia:](../translations/README.indonesian.md) (:pray: [@anwari666](https://github.com/anwari666))
 - [Brazilian Portuguese :brazil:](../translations/README.portuguese_br.md) (:pray: [@rubensmp](https://github.com/rubensmp))
 - [German 🇩🇪](../translations/README.german.md) (:pray: [@FynnGrandke](https://github.com/FynnGrandke))

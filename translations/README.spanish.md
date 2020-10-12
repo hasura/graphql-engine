@@ -1,7 +1,7 @@
 # Motor Hasura GraphQL
 
 [![Latest release](https://img.shields.io/github/v/release/hasura/graphql-engine)](https://github.com/hasura/graphql-engine/releases/latest)
-[![Docs](https://img.shields.io/badge/docs-v1.0-brightgreen.svg?style=flat)](https://hasura.io/docs)
+[![Docs](https://img.shields.io/badge/docs-v1.x-brightgreen.svg?style=flat)](https://hasura.io/docs)
 [![CircleCI](https://circleci.com/gh/hasura/graphql-engine.svg?style=shield)](https://circleci.com/gh/hasura/graphql-engine)
 
 
@@ -215,7 +215,7 @@ Este archivo está disponible en los siguientes idiomas:
 - [Bosnio :bosnia_herzegovina:](translations/README.bosnian.md) (:pray: [@hajro92](https://github.com/hajro92))
 - [Ruso :ru:](translations/README.russian.md) (:pray: [@highflyer910](https://github.com/highflyer910))
 - [Griego 🇬🇷](translations/README.greek.md) (:pray: [@MIP2000](https://github.com/MIP2000))
-- [Español 🇲🇽](/translations/README.spanish.md)(:pray: [@ferdox2](https://github.com/ferdox2))
+- [Español :es:](/translations/README.spanish.md)(:pray: [@ferdox2](https://github.com/ferdox2))
 - [Indonesio :indonesia:](translations/README.indonesian.md) (:pray: [@anwari666](https://github.com/anwari666))
 - [Portugués Brasileño :brazil:](translations/README.portuguese_br.md) (:pray: [@rubensmp](https://github.com/rubensmp))
 - [Alemán 🇩🇪](translations/README.german.md) (:pray: [@FynnGrandke](https://github.com/FynnGrandke))

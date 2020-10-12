@@ -211,7 +211,7 @@ Bu Readme sayfası aşağıdaki çevirilerde mevcuttur:
 - [Boşnakça :bosnia_herzegovina:](./README.bosnian.md) (:pray: [@hajro92](https://github.com/hajro92))
 - [Rusca :ru:](./README.russian.md) (:pray: [@highflyer910](https://github.com/highflyer910))
 - [Yunanca 🇬🇷](./README.greek.md) (:pray: [@MIP2000](https://github.com/MIP2000))
-- [İspanyolca :sp:](./README.spanish.md)(:pray: [@ferdox2](https://github.com/ferdox2))
+- [İspanyolca :es:](./README.spanish.md)(:pray: [@ferdox2](https://github.com/ferdox2))
 - [Endonezyaca :indonesia:](./README.indonesian.md) (:pray: [@anwari666](https://github.com/anwari666))
 - [Brezilya Portekizcesi :brazil:](./README.portuguese_br.md) (:pray: [@rubensmp](https://github.com/rubensmp))
 - [Almanca 🇩🇪](./README.german.md) (:pray: [@FynnGrandke](https://github.com/FynnGrandke))
