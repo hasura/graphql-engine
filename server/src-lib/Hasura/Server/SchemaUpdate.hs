@@ -2,8 +2,17 @@
 module Hasura.Server.SchemaUpdate
   ( startSchemaSyncListenerThread
   , startSchemaSyncProcessorThread
+  , logThreadStarted
+  , processor
+  , refreshSchemaCache
+  , pgChannel
+  , logInfo
+  , logError
+  , ThreadError(..)
   , SchemaSyncEventRef
   , SchemaSyncCtx(..)
+  , ThreadType(..)
+  , SchemaSyncThreadLog(..)
   )
 where
 
