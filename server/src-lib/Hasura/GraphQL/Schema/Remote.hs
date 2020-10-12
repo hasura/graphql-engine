@@ -278,9 +278,8 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
             Map.elems $
             Map.mapMaybe allTheSame $
             Map.groupOn G._fName $
-            concatMap (\(_, flds) ->
-                         filter ((`elem` interfaceFieldNames) . G._fName) flds)
-                      $ objNameAndFields
+            concatMap (filter ((`elem` interfaceFieldNames) . G._fName) . snd) $
+            objNameAndFields
 
           interfaceFieldNames = map G._fldName fields
 
@@ -289,8 +288,8 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
 
           -- #2 of Note [Querying remote schema interface fields]
           nonCommonInterfaceFields =
-            catMaybes $ flip map objNameAndFields $ \(objName, flds) ->
-              let nonCommonFields = filter (not . flip elem commonInterfaceFields) flds
+            catMaybes $ flip map objNameAndFields $ \(objName, objFields) ->
+              let nonCommonFields = filter (not . flip elem commonInterfaceFields) objFields
               in mkObjInlineFragment (objName, map G.SelectionField nonCommonFields)
 
           -- helper function for #4 of Note [Querying remote schema interface fields]
