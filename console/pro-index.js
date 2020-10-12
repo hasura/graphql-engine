@@ -7,6 +7,12 @@ import {
   // getGraphiQLHeadersFromLocalStorage,
 } from './src/components/Services/ApiExplorer/ApiRequest/utils';
 
+import {
+  fetchConsoleNotifications
+} from './src/components/Main/Actions';
+
+import NotificationSection from './src/components/Main/NotificationSection';
+
 import GraphiQLWrapper from './src/components/Services/ApiExplorer/GraphiQLWrapper/GraphiQLWrapper';
 
 import { CONSOLE_ADMIN_SECRET } from './src/components/AppState';
@@ -21,6 +27,16 @@ import {
   showInfoNotification,
   showWarningNotification,
 } from './src/components/Services/Common/Notification';
+
+// Import main reducer
+
+import mainReducer from './src/components/Main/Actions';
+
+// Export main reducer
+
+export {
+  mainReducer,
+};
 
 // import Data Tab parts
 import { dataRouterUtils } from './src/components/Services/Data/';
@@ -177,3 +193,11 @@ export { CONSOLE_ADMIN_SECRET };
 export { filterQueryScss, tableScss };
 export * from './src/components/Common';
 export { actionReducer, getActionsRouter, typesReducer };
+
+/* Notification section exports
+ */
+
+export {
+  fetchConsoleNotifications,
+  NotificationSection,
+}
