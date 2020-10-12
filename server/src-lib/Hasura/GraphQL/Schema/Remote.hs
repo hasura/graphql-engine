@@ -208,51 +208,7 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
   -- types in the schema document that claim to implement this interface.  We
   -- should have a check that expresses that that collection of objects is equal
   -- to 'possibleTypes'.
-  pure $ P.selectionSetInterface name description subFieldParsers objs <&>
-    (\objNameAndSelSets ->
-       -- This lambda function re-constructs a remote interface query.
-       -- We need to do this because the `SelectionSet`(s) that are
-       -- inputted to this function have the fragments (if any) flattened.
-       -- (Check `flattenSelectionSet` in 'Hasura.GraphQL.Parser.Collect' module)
-       -- This function makes a valid interface query by:
-       -- 1. Getting the common interface fields in all the selection sets
-       -- 2. Remove the common fields obtained in #1 from the selection sets
-       -- 3. Construct a selection field for every common interface field
-       -- 4. Construct inline fragments for non-common interface fields
-       --    using the result of #2 for every object
-       -- 5. Contruct the final selection set by combining #3 and #4
-       let selSetFields' = flip (fmap . fmap . fmap) objNameAndSelSets $
-                             \case
-                               G.SelectionField fld -> Just fld
-                               _                    -> Nothing
-           selSetFields = (fmap . fmap) catMaybes selSetFields'
-
-           -- common interface fields that exist in every
-           -- selection set provided
-           commonInterfaceFields =
-             toList $
-             Map.mapMaybe allTheSame $
-             Map.groupOn G._fName $
-             concat $ flip map selSetFields $ \(_, flds) ->
-               filter (flip elem interfaceFieldNames . G._fName) flds
-
-           interfaceFieldNames = map G._fldName fields
-
-           allTheSame [] = Nothing
-           allTheSame (x:xs) = bool Nothing (Just x) $ and $ map (== x) xs
-
-           nonCommonInterfaceFields =
-             catMaybes $ flip map selSetFields $ \(objName, flds) ->
-               let nonCommonFields = filter (not . flip elem commonInterfaceFields) flds
-               in mkObjInlineFragment (objName, map G.SelectionField nonCommonFields)
-
-           mkObjInlineFragment (_, []) = Nothing
-           mkObjInlineFragment (objName, selSet) =
-             Just $ G.SelectionInlineFragment $
-               G.InlineFragment (Just objName) mempty selSet
-
-       in (map G.SelectionField commonInterfaceFields) <> nonCommonInterfaceFields
-    )
+  pure $ P.selectionSetInterface name description subFieldParsers objs <&> constructInterfaceSelectionSet
   where
     getObject :: G.Name -> m G.ObjectTypeDefinition
     getObject objectName =
@@ -262,6 +218,62 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
             <> ", which is defined as a member type of Interface " <> squote name
           Just _  -> throw400 RemoteSchemaError $ "Interface type " <> squote name <>
             " can only include object types. It cannot include " <> squote objectName
+
+    -- 'constructInterfaceQuery' constructs a remote interface query.
+    -- We need to do this because the `SelectionSet`(s) that are
+    -- inputted to this function have the fragments (if any) flattened.
+    -- (Check `flattenSelectionSet` in 'Hasura.GraphQL.Parser.Collect' module)
+    -- This function makes a valid interface query by:
+    -- 1. Getting the common interface fields in all the selection sets
+    -- 2. Remove the common fields obtained in #1 from the selection sets
+    -- 3. Construct a selection field for every common interface field
+    -- 4. Construct inline fragments for non-common interface fields
+    --    using the result of #2 for every object
+    -- 5. Construct the final selection set by combining #3 and #4
+    constructInterfaceSelectionSet
+      :: [(G.Name, SelectionSet NoFragments G.Name)]
+      -> (SelectionSet NoFragments G.Name)
+    constructInterfaceSelectionSet objNameAndSelSets =
+      let selSetFieldsWithoutFragments' =
+            flip (fmap . fmap . fmap) objNameAndSelSets $
+              \case
+                -- We're omitting a selection field with fragments
+                -- here because the `SelectionSet` we recieve is
+                -- a "flattened" selection set without any fragments
+                -- (atleast at the top level of the selection set).
+                -- This is needed to extract the common interface
+                -- fields from the various objects that have been
+                -- queried.
+                G.SelectionField fld -> Just fld
+                _                    -> Nothing
+          selSetFieldsWithoutFragments = (fmap . fmap) catMaybes selSetFieldsWithoutFragments'
+
+          -- common interface fields that exist in every
+          -- selection set provided
+          commonInterfaceFields =
+            Map.elems $
+            Map.mapMaybe allTheSame $
+            Map.groupOn G._fName $
+            concatMap (\(_, flds) ->
+                         filter ((`elem` interfaceFieldNames) . G._fName) flds)
+                         $ selSetFieldsWithoutFragments
+
+          interfaceFieldNames = map G._fldName fields
+
+          allTheSame [] = Nothing
+          allTheSame (x:xs) = bool Nothing (Just x) $ all (== x) xs
+
+          nonCommonInterfaceFields =
+            catMaybes $ flip map selSetFieldsWithoutFragments $ \(objName, flds) ->
+              let nonCommonFields = filter (not . flip elem commonInterfaceFields) flds
+              in mkObjInlineFragment (objName, map G.SelectionField nonCommonFields)
+
+          mkObjInlineFragment (_, []) = Nothing
+          mkObjInlineFragment (objName, selSet) =
+            Just $ G.SelectionInlineFragment $
+              G.InlineFragment (Just objName) mempty selSet
+
+      in (map G.SelectionField commonInterfaceFields) <> nonCommonInterfaceFields
 
 -- | 'remoteSchemaUnion' returns a output parser for a given 'UnionTypeDefinition'.
 remoteSchemaUnion
