@@ -15,10 +15,10 @@ Customise auto-generated field names
 Introduction
 ------------
 
-Hasura auto-generates GrapqhQL field names based on your database column names. If you'd like to change the default, 
+Hasura auto-generates GraphQL field names based on your database table and column names. If you'd like to change the defaults,
 it is possible to override the auto-generated table and column field names exposed over the GraphQL API.
 
-..  note::
+..  admonition:: Supported from
 
   This feature is supported in versions ``v1.0.0-beta.8`` and later.
 
@@ -61,43 +61,43 @@ Expose columns with a different name in the GraphQL API
 
     1. passing a :ref:`table_config` with the :ref:`CustomColumnNames` to the :ref:`track_table_v2` API while tracking a table:
 
-    .. code-block:: http
+       .. code-block:: http
 
-      POST /v1/query HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
 
-      {
-        "type": "track_table",
-        "version": 2,
-        "args": {
-          "table": "author",
-          "configuration": {
-            "custom_column_names": {
-              "addr": "address"
-            }
-          }
-        }
-      }
+         {
+           "type": "track_table",
+           "version": 2,
+           "args": {
+             "table": "author",
+             "configuration": {
+               "custom_column_names": {
+                 "addr": "address"
+               }
+             }
+           }
+         }
 
     2. using the :ref:`set_table_custom_fields` API to set the :ref:`CustomColumnNames`:
 
-    .. code-block:: http
+       .. code-block:: http
 
-      POST /v1/query HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
 
-      {
-        "type": "set_table_custom_fields",
-        "version": 2,
-        "args": {
-          "table": "author",
-          "custom_column_names": {
-            "addr": "address"
-          }
-        }
-      }
+         {
+           "type": "set_table_custom_fields",
+           "version": 2,
+           "args": {
+             "table": "author",
+             "custom_column_names": {
+               "addr": "address"
+             }
+           }
+         }
 
 Expose table root fields with a different name in the GraphQL API
 -----------------------------------------------------------------
@@ -139,42 +139,42 @@ Expose table root fields with a different name in the GraphQL API
 
     1. passing a :ref:`table_config` with the :ref:`custom_root_fields` names to the :ref:`track_table_v2` API while tracking a table:
 
-    .. code-block:: http
+       .. code-block:: http
 
-      POST /v1/query HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
 
-      {
-        "type": "track_table",
-        "version": 2,
-        "args": {
-          "table": "author",
-          "configuration": {
-            "custom_root_fields": {
-              "select": "authors",
-              "select_by_pk": "author"
-            }
-          }
-        }
-      }
+         {
+           "type": "track_table",
+           "version": 2,
+           "args": {
+             "table": "author",
+             "configuration": {
+               "custom_root_fields": {
+                 "select": "authors",
+                 "select_by_pk": "author"
+               }
+             }
+           }
+         }
 
     2. using the :ref:`set_table_custom_fields` API to set the :ref:`custom_root_fields` names
 
-    .. code-block:: http
+       .. code-block:: http
 
-      POST /v1/query HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
 
-      {
-        "type": "set_table_custom_fields",
-        "version": 2,
-        "args": {
-          "table": "author",
-          "custom_root_fields": {
-              "select": "authors",
-              "select_by_pk": "author"
-          }
-        }
-      }
+         {
+           "type": "set_table_custom_fields",
+           "version": 2,
+           "args": {
+             "table": "author",
+             "custom_root_fields": {
+                 "select": "authors",
+                 "select_by_pk": "author"
+             }
+           }
+         }
