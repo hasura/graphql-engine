@@ -160,24 +160,21 @@ archiveEvents trn = do
            WHERE trigger_name = $1
                 |] (Identity trn) False
 
-fetchEvent :: EventId -> Q.TxE QErr (EventId, Bool)
-fetchEvent eid = do
+checkEvent :: EventId -> Q.TxE QErr ()
+checkEvent eid = do
   events <- Q.listQE defaultTxErrorHandler
             [Q.sql|
-              SELECT l.id, l.locked IS NOT NULL AND l.locked >= (NOW() - interval '30 minute')
+              SELECT l.locked IS NOT NULL AND l.locked >= (NOW() - interval '30 minute')
               FROM hdb_catalog.event_log l
-              JOIN hdb_catalog.event_triggers e
-              ON l.trigger_name = e.name
               WHERE l.id = $1
               |] (Identity eid) True
   event <- getEvent events
   assertEventUnlocked event
-  return event
   where
     getEvent []    = throw400 NotExists "event not found"
     getEvent (x:_) = return x
 
-    assertEventUnlocked (_, locked) = when locked $
+    assertEventUnlocked (Identity locked) = when locked $
       throw400 Busy "event is already being processed"
 
 markForDelivery :: EventId -> Q.TxE QErr ()
@@ -301,21 +298,18 @@ dropEventTriggerInMetadata :: TriggerName -> TableMetadata -> TableMetadata
 dropEventTriggerInMetadata name =
   tmEventTriggers %~ HM.delete name
 
-deliverEvent
-  :: (QErrM m, MonadTx m)
-  => RedeliverEventQuery -> m EncJSON
-deliverEvent (RedeliverEventQuery eventId) = do
-  _ <- liftTx $ fetchEvent eventId
-  liftTx $ markForDelivery eventId
-  return successMsg
+deliverEvent ::EventId -> Q.TxE QErr ()
+deliverEvent eventId = do
+  checkEvent eventId
+  markForDelivery eventId
 
 runRedeliverEvent
-  :: (MonadError QErr m)
+  :: (MonadIO m, CacheRM m, MonadError QErr m)
   => RedeliverEventQuery -> m EncJSON
-runRedeliverEvent _ =
-  -- FIXME:
-  --deliverEvent
-  throw400 NotSupported $ "Redelivering events is temporarily disabled"
+runRedeliverEvent (RedeliverEventQuery eventId source) = do
+  sourceConfig <- _pcConfiguration <$> askSourceCache source
+  liftEitherM $ runPgSourceWriteTx sourceConfig $ deliverEvent eventId
+  pure successMsg
 
 insertManualEvent
   :: QualifiedTable
@@ -334,17 +328,16 @@ insertManualEvent qt trn rowData = do
     getEid (x:_) = return x
 
 runInvokeEventTrigger
-  :: (QErrM m, CacheRM m)
+  :: (MonadIO m, QErrM m, CacheRM m)
   => InvokeEventTriggerQuery -> m EncJSON
-runInvokeEventTrigger (InvokeEventTriggerQuery name payload) = do
-  trigInfo <- askEventTriggerInfo defaultSource name
+runInvokeEventTrigger (InvokeEventTriggerQuery name source payload) = do
+  trigInfo <- askEventTriggerInfo source name
   assertManual $ etiOpsDef trigInfo
-  ti  <- askTabInfoFromTrigger defaultSource name
-  -- FIXME:
-  throw400 NotSupported $ "Invoking triggers is temporarily disabled"
-
-  -- eid <- liftTx $ insertManualEvent (_tciName $ _tiCoreInfo ti) name payload
-  -- return $ encJFromJValue $ object ["event_id" .= eid]
+  ti  <- askTabInfoFromTrigger source name
+  sourceConfig <- _pcConfiguration <$> askSourceCache source
+  eid <- liftEitherM $ runPgSourceWriteTx sourceConfig $
+         insertManualEvent (_tciName $ _tiCoreInfo ti) name payload
+  pure $ encJFromJValue $ object ["event_id" .= eid]
   where
     assertManual (TriggerOpsDef _ _ _ man) = case man of
       Just True -> return ()

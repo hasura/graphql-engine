@@ -209,17 +209,32 @@ instance Cacheable EventTriggerConf
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventTriggerConf)
 
-newtype RedeliverEventQuery
+data RedeliverEventQuery
   = RedeliverEventQuery
-  { rdeqEventId :: EventId
+  { rdeqEventId :: !EventId
+  , rdeqSource  :: !SourceName
   } deriving (Show, Eq, Lift)
 
-$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''RedeliverEventQuery)
+$(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''RedeliverEventQuery)
+
+instance FromJSON RedeliverEventQuery where
+  parseJSON = withObject "Object" $ \o ->
+    RedeliverEventQuery
+      <$> o .: "event_id"
+      <*> o .:? "source" .!= defaultSource
 
 data InvokeEventTriggerQuery
   = InvokeEventTriggerQuery
   { ietqName    :: !TriggerName
+  , ietqSource  :: !SourceName
   , ietqPayload :: !Value
   } deriving (Show, Eq, Lift)
 
-$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''InvokeEventTriggerQuery)
+$(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''InvokeEventTriggerQuery)
+
+instance FromJSON InvokeEventTriggerQuery where
+  parseJSON = withObject "Object" $ \o ->
+    InvokeEventTriggerQuery
+      <$> o .: "name"
+      <*> o .:? "source" .!= defaultSource
+      <*> o .: "payload"
