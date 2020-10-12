@@ -525,11 +525,8 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
       -> Parser 'Both n ()
       -> FieldParser n (Field NoFragments G.Name)
     mkFieldParserWithoutSelectionSet fldName desc argsParser outputParser =
-      let selectionFldParser = P.rawSelection fldName desc argsParser outputParser
-      in (selectionFldParser
-           <&>
-           (\(alias, args, _)
-              -> (G.Field alias fieldName (fmap getName <$> args) mempty [])))
+      P.rawSelection fldName desc argsParser outputParser
+      <&> (\(alias, args, _) -> (G.Field alias fieldName (fmap getName <$> args) mempty []))
 
     mkFieldParserWithSelectionSet
       :: G.Name
@@ -538,11 +535,8 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
       -> Parser 'Output n (SelectionSet NoFragments G.Name)
       -> FieldParser n (Field NoFragments G.Name)
     mkFieldParserWithSelectionSet fldName desc argsParser outputParser =
-      let selectionFldParser = P.rawSubselection fldName desc argsParser outputParser
-      in (selectionFldParser
-           <&>
-           (\(alias, args, _, selSet)
-              -> (G.Field alias fieldName (fmap getName <$> args) mempty selSet)))
+      P.rawSubselection fldName desc argsParser outputParser
+      <&> (\(alias, args, _, selSet) -> (G.Field alias fieldName (fmap getName <$> args) mempty selSet))
 
 remoteFieldScalarParser
   :: MonadParse n
