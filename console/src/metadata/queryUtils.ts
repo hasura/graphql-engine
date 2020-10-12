@@ -56,6 +56,7 @@ export const metadataQueryTypes = [
   'create_cron_trigger',
   'delete_cron_trigger',
   'create_scheduled_event',
+  'add_existing_table_or_view',
   'create_query_collection',
   'drop_query_collection',
   'add_query_to_collection',
@@ -76,45 +77,10 @@ export const metadataQueryTypes = [
   'bulk',
   'get_catalog_state',
   'set_catalog_state',
-];
+  'set_table_custom_fields',
+] as const;
 
-export type MetadataQueryType =
-  | 'create_select_permission'
-  | 'create_update_permission'
-  | 'create_delete_permission'
-  | 'create_insert_permission'
-  | 'drop_select_permission'
-  | 'drop_update_permission'
-  | 'drop_delete_permission'
-  | 'drop_insert_permission'
-  | 'create_event_trigger'
-  | 'set_custom_types'
-  | 'create_action'
-  | 'set_table_custom_fields'
-  | 'drop_action'
-  | 'create_action_permission'
-  | 'update_action'
-  | 'drop_action_permission'
-  | 'set_table_is_enum'
-  | 'untrack_table'
-  | 'track_table'
-  | 'add_computed_field'
-  | 'drop_computed_field'
-  | 'add_source'
-  | 'add_existing_table_or_view'
-  | 'track_function'
-  | 'untrack_function'
-  | 'rename_relationship'
-  | 'drop_relationship'
-  | 'create_array_relationship'
-  | 'create_object_relationship'
-  | 'create_array_relationship'
-  | 'create_cron_trigger'
-  | 'create_scheduled_event'
-  | 'get_catalog_state'
-  | 'set_catalog_state'
-  | 'create_remote_relationship'
-  | 'update_remote_relationship';
+export type MetadataQueryType = typeof metadataQueryTypes[number];
 
 export type MetadataQueries = Record<Driver, Record<MetadataQueryType, string>>;
 
@@ -233,17 +199,22 @@ export const generateCreateActionQuery = (
 export const getSetCustomRootFieldsQuery = (
   tableDef: QualifiedTable,
   rootFields: CustomRootFields,
-  customColumnNames: Record<string, string>
+  customColumnNames: Record<string, string>,
+  source: string
 ) => {
-  return {
-    type: 'set_table_custom_fields',
-    version: 2,
-    args: {
+  return getMetadataQuery(
+    'set_table_custom_fields',
+    source,
+    {
+      source,
       table: tableDef,
       custom_root_fields: rootFields,
       custom_column_names: customColumnNames,
     },
-  };
+    {
+      version: 2,
+    }
+  );
 };
 
 export const generateDropActionQuery = (name: string) => {

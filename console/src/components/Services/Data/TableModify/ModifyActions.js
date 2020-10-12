@@ -284,6 +284,7 @@ export const setCustomRootFields = successCb => (dispatch, getState) => {
     allSchemas: allTables,
     currentTable: tableName,
     currentSchema: schemaName,
+    currentDataSource,
     modify: { rootFieldsEdit: newRootFields },
   } = getState().tables;
 
@@ -299,12 +300,14 @@ export const setCustomRootFields = successCb => (dispatch, getState) => {
   const upQuery = getSetCustomRootFieldsQuery(
     tableDef,
     sanitiseRootFields(newRootFields),
-    existingCustomColumnNames
+    existingCustomColumnNames,
+    currentDataSource
   );
   const downQuery = getSetCustomRootFieldsQuery(
     tableDef,
     existingRootFields,
-    existingCustomColumnNames
+    existingCustomColumnNames,
+    currentDataSource
   );
 
   const migrationName = `set_custom_root_fields_${schemaName}_${tableName}`;
@@ -2168,6 +2171,7 @@ export const setViewCustomColumnNames = (
   successCb,
   errorCb
 ) => (dispatch, getState) => {
+  const source = getState().tables.currentDataSource;
   const viewDef = generateTableDef(viewName, schemaName);
   const view = findTable(getState().tables.allSchemas, viewDef);
 
@@ -2177,12 +2181,14 @@ export const setViewCustomColumnNames = (
   const upQuery = getSetCustomRootFieldsQuery(
     viewDef,
     existingCustomRootFields,
-    sanitiseColumnNames(customColumnNames)
+    sanitiseColumnNames(customColumnNames),
+    source
   );
   const downQuery = getSetCustomRootFieldsQuery(
     viewDef,
     existingCustomRootFields,
-    existingColumnNames
+    existingColumnNames,
+    source
   );
 
   const migrationName = 'alter_view_custom_column_names';

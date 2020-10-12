@@ -88,14 +88,14 @@ const DataPageContainer = ({
       <li
         role="presentation"
         className={
-          currentLocation.match(/(\/)?data\/\D+\/schema?(\w+)/)
+          currentLocation.match(/(\/)?data\/(\w|%)+\/schema?(\w+)/)
             ? styles.active
             : ''
         }
       >
         <Link
           className={styles.linkBorder}
-          // to={getSchemaBaseRoute(currentSchema)} // todo
+          // todo — don't use Link
         >
           <div className={styles.schemaWrapper}>
             <div
