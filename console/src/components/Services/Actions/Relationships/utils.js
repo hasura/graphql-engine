@@ -1,6 +1,5 @@
 import { defaultRelFieldMapping } from '../Common/stateDefaults';
 import { generateTableDef } from '../../../../dataSources';
-import { Source } from 'graphql';
 
 const reformRelationship = relConfig => {
   return {
