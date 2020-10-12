@@ -90,6 +90,7 @@ export type EventTrigger = {
   name: string;
   table_name: string;
   schema_name: string;
+  source: string;
   comment: string | null;
   configuration: {
     definition: Record<EventTriggerOperation, EventTriggerOperationDefinition>;

@@ -1,7 +1,7 @@
 import { Thunk, ReduxState } from '../types';
 import requestAction from '../utils/requestAction';
 import Endpoints, { globalCookiePolicy } from '../Endpoints';
-import { HasuraMetadataV2 } from './types';
+import { HasuraMetadataV2, HasuraMetadataV3 } from './types';
 import {
   showSuccessNotification,
   showErrorNotification,

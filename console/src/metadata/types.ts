@@ -872,4 +872,5 @@ export interface HasuraMetadataV3 {
   actions?: Action[];
   custom_types?: CustomTypes;
   cron_triggers?: CronTrigger[];
+  query_collections: QueryCollectionEntry[];
 }
