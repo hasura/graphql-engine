@@ -78,16 +78,16 @@
           name
         }
         user_alias : user(id: 2) {
-          blah
+          generateError
         }
       }
   response:
     data:
     errors:
-    - message: Cannot query field "blah" on type "User".
+    - message: Cannot query field "generateError" on type "User".
       path:
         - user_alias
-        - blah
+        - generateError
       locations:
       - line: 1
         column: 36

@@ -55,7 +55,7 @@ class HelloGraphQL(RequestHandler):
 class User(graphene.ObjectType):
     id = graphene.Int()
     username = graphene.String()
-    blah = graphene.String()
+    generateError = graphene.String()
 
     def __init__(self, id, username):
         self.id = id
@@ -67,8 +67,8 @@ class User(graphene.ObjectType):
     def resolve_username(self, info):
         return self.username
 
-    def resolve_blah(self, info):
-        return GraphQLError ('Cannot query field "blah" on type "User".')
+    def resolve_generateError(self, info):
+        return GraphQLError ('Cannot query field "generateError" on type "User".')
 
     @staticmethod
     def get_by_id(_id):
