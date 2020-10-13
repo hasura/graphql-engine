@@ -419,7 +419,7 @@ inputValueDefinitionParser
   => G.SchemaIntrospection
   -> G.InputValueDefinition
   -> m (InputFieldsParser n (Maybe (InputValue Variable)))
-inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType maybeDefaultVal) =
+inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType _directives maybeDefaultVal) =
   let fieldConstructor :: forall k. 'Input <: k => Parser k n () -> InputFieldsParser n (Maybe (InputValue Variable))
       fieldConstructor parser =
         let wrappedParser :: Parser k n (InputValue Variable)

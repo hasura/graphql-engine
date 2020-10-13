@@ -78,7 +78,7 @@ instance ToJSON RemoteFieldInfo where
     , "remote_schema" .= _rfiRemoteSchema
     ]
     where
-      toJsonInpValInfo (G.InputValueDefinition desc name type' defVal)  =
+      toJsonInpValInfo (G.InputValueDefinition desc name type' _directives defVal)  =
         object
           [ "desc" .= desc
           , "name" .= name

@@ -282,8 +282,8 @@ validateInputValueDefinition providedDefn upstreamDefn inputObjectName = do
       NonMatchingDefaultValue inputObjectName providedName
                               upstreamDefaultValue providedDefaultValue
   where
-    G.InputValueDefinition _ providedName providedType providedDefaultValue = providedDefn
-    G.InputValueDefinition _ _ upstreamType upstreamDefaultValue = upstreamDefn
+    G.InputValueDefinition _ providedName providedType _providedDirectives providedDefaultValue = providedDefn
+    G.InputValueDefinition _ _ upstreamType _upstreamDirectives upstreamDefaultValue = upstreamDefn
 
 validateArguments
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
@@ -294,7 +294,7 @@ validateArguments
 validateArguments providedArgs upstreamArgs parentTypeName = do
   onJust (NE.nonEmpty $ duplicates $ map G._ivdName providedArgs) $ \dups -> do
     refute $ pure $ DuplicateArguments parentTypeName dups
-  flip traverse_ providedArgs $ \providedArg@(G.InputValueDefinition _ name _ _) -> do
+  flip traverse_ providedArgs $ \providedArg@(G.InputValueDefinition _ name _ _ _) -> do
     upstreamArg <-
       onNothing (Map.lookup name upstreamArgsMap) $
         refute $ pure $ NonExistingInputArgument parentTypeName name
