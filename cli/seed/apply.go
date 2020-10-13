@@ -24,7 +24,7 @@ func ApplySeedsToDatabase(ec *cli.ExecutionContext, fs afero.Fs, m *migrate.Migr
 
 	if len(filenames) > 0 {
 		for _, filename := range filenames {
-			absFilename := filepath.Join(ec.SeedsDirectory, filename)
+			absFilename := filepath.Join(ec.ExecutionDirectory, filename)
 			b, err := afero.ReadFile(fs, absFilename)
 			if err != nil {
 				return errors.Wrap(err, "error opening file")
