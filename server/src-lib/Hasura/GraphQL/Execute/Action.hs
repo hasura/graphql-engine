@@ -62,7 +62,11 @@ import           Hasura.SQL.Types
 import           Hasura.SQL.Value                     (PGScalarValue (..), toTxtValue)
 
 type ActionExecuteTx =
-  forall tx. (MonadIO tx, MonadError QErr tx, Tracing.MonadTrace tx) => tx EncJSON
+  forall tx. ( MonadIO tx
+             , MonadBaseControl IO tx
+             , MonadError QErr tx
+             , Tracing.MonadTrace tx
+             ) => tx EncJSON
 
 newtype ActionContext
   = ActionContext {_acName :: ActionName}

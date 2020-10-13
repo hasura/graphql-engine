@@ -1,5 +1,6 @@
 module Hasura.RQL.DDL.Schema.Source where
 
+import           Control.Monad.Trans.Control  (MonadBaseControl)
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.Prelude
@@ -16,7 +17,7 @@ import qualified Data.HashSet                 as S
 import qualified Database.PG.Query            as Q
 
 resolveSource
-  :: (MonadIO m, HasDefaultSource m)
+  :: (MonadIO m, MonadBaseControl IO m, HasDefaultSource m)
   => Env.Environment -> SourceMetadata -> m (Either QErr ResolvedSource)
 resolveSource env (SourceMetadata _ tables functions config) = runExceptT do
   sourceConfig <- case config of

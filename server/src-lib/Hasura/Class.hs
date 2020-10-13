@@ -7,6 +7,7 @@ module Hasura.Class
   )
 where
 
+import           Hasura.Db
 import           Hasura.Eventing.HTTP
 import           Hasura.Eventing.ScheduledTrigger.Types
 import           Hasura.Prelude
@@ -144,6 +145,33 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (ExceptT e m) where
   deleteScheduledEvent a b           = (hoist lift) $ deleteScheduledEvent a b
 
 instance (MonadMetadataStorage m) => MonadMetadataStorage (Tracing.TraceT m) where
+
+  getMetadata                       = (hoist lift) getMetadata
+  setMetadata                       = (hoist lift) . setMetadata
+  notifySchemaCacheSync a b         = (hoist lift) $ notifySchemaCacheSync a b
+  processSchemaSyncEventPayload a b = (hoist lift) $ processSchemaSyncEventPayload a b
+  getCatalogState                   = (hoist lift) getCatalogState
+  setCatalogState a b               = (hoist lift) $ setCatalogState a b
+
+  insertAction a b c d = (hoist lift) $ insertAction a b c d
+  fetchUndeliveredActionEvents = (hoist lift) fetchUndeliveredActionEvents
+  setActionStatus a b = (hoist lift) $ setActionStatus a b
+  fetchActionResponse = (hoist lift) . fetchActionResponse
+
+  getDeprivedCronTriggerStats        = (hoist lift) getDeprivedCronTriggerStats
+  getScheduledEventsForDelivery      = (hoist lift) getScheduledEventsForDelivery
+  getOneOffScheduledEvents           = (hoist lift) getOneOffScheduledEvents
+  getCronEvents                      = (hoist lift) . getCronEvents
+  getInvocations a b                 = (hoist lift) $ getInvocations a b
+  insertScheduledEvent               = (hoist lift) . insertScheduledEvent
+  insertScheduledEventInvocation a b = (hoist lift) $ insertScheduledEventInvocation a b
+  setScheduledEventOp a b c          = (hoist lift) $ setScheduledEventOp a b c
+  unlockScheduledEvents a b          = (hoist lift) $ unlockScheduledEvents a b
+  unlockAllLockedScheduledEvents     = (hoist lift) unlockAllLockedScheduledEvents
+  clearFutureCronEvents              = (hoist lift) . clearFutureCronEvents
+  deleteScheduledEvent a b           = (hoist lift) $ deleteScheduledEvent a b
+
+instance (MonadMetadataStorage m) => MonadMetadataStorage (LazyTxT e m) where
 
   getMetadata                       = (hoist lift) getMetadata
   setMetadata                       = (hoist lift) . setMetadata

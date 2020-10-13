@@ -2,6 +2,8 @@ module Hasura.GraphQL.Execute.Mutation where
 
 import           Hasura.Prelude
 
+import           Control.Monad.Trans.Control            (MonadBaseControl)
+
 import qualified Data.Aeson                             as J
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
@@ -105,6 +107,7 @@ convertMutationRootField
     , MonadMetadataStorage m
     , Tracing.MonadTrace tx
     , MonadIO tx
+    , MonadBaseControl IO tx
     , MonadError QErr tx
     )
   => Env.Environment
@@ -136,12 +139,13 @@ convertMutationRootField env logger userInfo manager reqHeaders metadataPool str
 runMutationTx
   :: ( MonadError QErr m
      , MonadIO m
+     , MonadBaseControl IO m
      , Tracing.MonadTrace m
      )
-  => UserInfo -> PGExecCtx -> Tracing.TraceT (LazyTx QErr) a -> m a
+  => UserInfo -> PGExecCtx -> Tracing.TraceT (LazyTxT QErr m) a -> m a
 runMutationTx userInfo pgExec lazyTx = do
   ctx <- Tracing.currentContext
-  liftEither =<< runExceptT
+  liftEitherM $ runExceptT
    ( Tracing.interpTraceT
      (runLazyTx pgExec Q.ReadWrite . withTraceContext ctx . withUserInfo userInfo)
      lazyTx
@@ -156,6 +160,7 @@ convertMutationSelectionSet
      , MonadMetadataStorage m
      , MonadIO tx
      , MonadError QErr tx
+     , MonadBaseControl IO tx
      , Tracing.MonadTrace tx
      )
   => Env.Environment

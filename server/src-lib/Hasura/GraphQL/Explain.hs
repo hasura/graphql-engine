@@ -11,6 +11,8 @@ import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 
+import           Control.Monad.Trans.Control            (MonadBaseControl)
+
 import           Hasura.Class
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
@@ -73,7 +75,10 @@ resolveUnpreparedValue userInfo = \case
 -- NOTE: This function has a 'MonadTrace' constraint in master, but we don't need it
 -- here. We should evaluate if we need it here.
 explainQueryField
-  :: (MonadError QErr m, MonadIO m)
+  :: ( MonadError QErr m
+     , MonadIO m
+     , MonadBaseControl IO m
+     )
   => UserInfo
   -> G.Name
   -> QueryRootField UnpreparedValue
@@ -108,6 +113,7 @@ explainGQLQuery
   . ( MonadError QErr m
     , MonadIO m
     , MonadMetadataStorage m
+    , MonadBaseControl IO m
     )
   => Q.PGPool
   -> SchemaCache

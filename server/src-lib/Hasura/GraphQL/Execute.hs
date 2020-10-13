@@ -21,6 +21,7 @@ module Hasura.GraphQL.Execute
   , checkQueryInAllowlist
   ) where
 
+import           Control.Monad.Trans.Control            (MonadBaseControl)
 import           Hasura.Prelude
 
 import qualified Data.Aeson                             as J
@@ -215,6 +216,7 @@ getResolvedExecPlan
      , EQ.MonadQueryInstrumentation m
      , MonadMetadataStorage m
      , MonadIO tx
+     , MonadBaseControl IO tx
      , MonadError QErr tx
      , Tracing.MonadTrace tx
      )

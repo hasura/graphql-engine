@@ -28,9 +28,10 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 
+import           Control.Monad.Trans.Control            (MonadBaseControl)
+
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.Logging                         as L
-import           Hasura.Server.Version                  (HasVersion)
 import qualified Hasura.SQL.DML                         as S
 import qualified Hasura.Tracing                         as Tracing
 
@@ -46,6 +47,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DML.RemoteJoin
 import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
 import           Hasura.RQL.Types
+import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 import           Hasura.SQL.Value
 
@@ -127,6 +129,7 @@ mkCurPlanTx
      , MonadError QErr m
      , MonadQueryInstrumentation m
      , MonadIO tx
+     , MonadBaseControl IO tx
      , MonadError QErr tx
      , Tracing.MonadTrace tx
      )
@@ -252,6 +255,7 @@ convertQuerySelSet
      , MonadQueryInstrumentation m
      , MonadMetadataStorage m
      , MonadIO tx
+     , MonadBaseControl IO tx
      , MonadError QErr tx
      , Tracing.MonadTrace tx
      )
@@ -405,6 +409,7 @@ mkLazyRespTx
   :: ( HasVersion
      , MonadQueryInstrumentation m
      , MonadIO tx
+     , MonadBaseControl IO tx
      , MonadError QErr tx
      , Tracing.MonadTrace tx
      )

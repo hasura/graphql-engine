@@ -43,6 +43,7 @@ import           Hasura.GraphQL.Logging                    (MonadQueryLog (..))
 import           Hasura.HTTP
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Run
 import           Hasura.Server.API.Config                  (runGetConfig)
 import           Hasura.Server.API.Metadata
 import           Hasura.Server.API.Query
@@ -70,6 +71,7 @@ import qualified Hasura.GraphQL.Transport.WebSocket        as WS
 import qualified Hasura.GraphQL.Transport.WebSocket.Server as WS
 import qualified Hasura.Logging                            as L
 import qualified Hasura.Server.API.PGDump                  as PGD
+import qualified Hasura.Server.API.V1Query                 as V1Q
 import qualified Hasura.Tracing                            as Tracing
 import qualified Network.Wai.Handler.WebSockets.Custom     as WSC
 
@@ -376,32 +378,50 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
         Spock.lazyBytes compressedResp
 
 v1QueryHandler
-  :: (MonadIO m)
-  => Value
+  :: ( HasVersion
+     , MonadIO m
+     , MonadBaseControl IO m
+     , Tracing.MonadTrace m
+     , MonadMetadataStorage m
+     )
+  => V1Q.RQLQuery
   -> Handler m (HttpResponse EncJSON)
-v1QueryHandler _ =
-  throw400 NotSupported
-  "\"/v1/query\" API is disabled. Please use \"/v2/query\" or \"/v1/metadata\" API"
---   authorizeMetadataApi query userInfo
---   scRef  <- asks (scCacheRef . hcServerCtx)
---   logger <- asks (scLogger . hcServerCtx)
---   metadataPool <- asks (scMetadataPool . hcServerCtx)
---   instanceId  <- asks (scInstanceId . hcServerCtx)
---   res    <- bool (fst <$> dbAction) (withSCUpdate scRef metadataPool instanceId logger dbAction) $
---             queryModifiesSchemaCache query
---   return $ HttpResponse res []
---   where
---     -- Hit postgres
---     dbAction = do
---       userInfo    <- asks hcUser
---       scRef       <- asks (scCacheRef . hcServerCtx)
---       schemaCache <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
---       metadata    <- liftIO $ readIORef $ _scrMetadata scRef
---       httpMgr     <- asks (scManager . hcServerCtx)
---       sqlGenCtx   <- asks (scSQLGenCtx . hcServerCtx)
---       pgExecCtx   <- asks (scDefaultPgSource . hcServerCtx)
---       env         <- asks (scEnvironment . hcServerCtx)
---       runQuery env pgExecCtx userInfo schemaCache metadata httpMgr sqlGenCtx (SystemDefined False) query
+v1QueryHandler v1Query = do
+  userInfo     <- asks hcUser
+  scRef        <- asks (scCacheRef . hcServerCtx)
+  schemaCache  <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
+  logger       <- asks (scLogger . hcServerCtx)
+  instanceId   <- asks (scInstanceId . hcServerCtx)
+  metadata     <- liftIO $ readIORef $ _scrMetadata scRef
+  defPgSource  <- asks (scDefaultPgSource . hcServerCtx)
+  httpMgr      <- asks (scManager . hcServerCtx)
+  sqlGenCtx    <- asks (scSQLGenCtx . hcServerCtx)
+  env          <- asks (scEnvironment . hcServerCtx)
+
+  let sources = scPostgres $ lastBuiltSchemaCache schemaCache
+      runCtx = RunCtx userInfo httpMgr sqlGenCtx defPgSource
+
+  (sourceName, sourceConfig) <- case M.toList sources of
+    []  -> throw400 NotSupported "no postgres source exist"
+    [s] -> pure $ second _pcConfiguration s
+    _   -> throw400 NotSupported "multiple postgres sources found"
+
+  accessMode <- V1Q.getQueryAccessMode v1Query
+  traceCtx <- Tracing.currentContext
+  r <- runLazyTx (_pscExecCtx sourceConfig) accessMode
+       . withUserInfo userInfo
+       . maybe id withTraceContext (Just traceCtx)
+       . withSCUpdate scRef instanceId logger $
+           V1Q.runQueryM env sourceName v1Query & Tracing.interpTraceT \x -> do
+             (((r, tracemeta), rsc, ci), meta)
+               <- x & runCacheRWT schemaCache
+                    & runBaseRunT runCtx metadata . V1Q.unRun
+             let metadataStateResult = MetadataStateResult rsc ci meta
+             pure $ bool ((r, Nothing), tracemeta)
+                         ((r, Just metadataStateResult), tracemeta)
+                         $ V1Q.queryModifiesSchemaCache v1Query
+
+  pure $ HttpResponse r []
 
 v1MetadataHandler
   :: ( HasVersion
@@ -519,6 +539,7 @@ v1GQRelayHandler = v1Alpha1GQHandler E.QueryRelay
 gqlExplainHandler
   :: forall m. ( MonadIO m
                , MonadMetadataStorage m
+               , MonadBaseControl IO m
                )
   => GE.GQLExplain
   -> Handler (Tracing.TraceT m) (HttpResponse EncJSON)
@@ -596,31 +617,36 @@ renderHtmlTemplate template jVal =
 
 newtype LegacyQueryParser m
   = LegacyQueryParser
-  { getLegacyQueryParser :: QualifiedTable -> Object -> Handler m RQLQuery }
+  { getLegacyQueryParser :: QualifiedTable -> Object -> Handler m V1Q.RQLQuery }
 
 queryParsers :: (Monad m) => M.HashMap T.Text (LegacyQueryParser m)
 queryParsers =
   M.fromList
-  [ ("select", mkLegacyQueryParser RQSelect)
-  , ("insert", mkLegacyQueryParser RQInsert)
-  , ("update", mkLegacyQueryParser RQUpdate)
-  , ("delete", mkLegacyQueryParser RQDelete)
-  , ("count", mkLegacyQueryParser RQCount)
+  [ ("select", mkLegacyQueryParser V1Q.RQSelect)
+  , ("insert", mkLegacyQueryParser V1Q.RQInsert)
+  , ("update", mkLegacyQueryParser V1Q.RQUpdate)
+  , ("delete", mkLegacyQueryParser V1Q.RQDelete)
+  , ("count", mkLegacyQueryParser V1Q.RQCount)
   ]
   where
     mkLegacyQueryParser f =
       LegacyQueryParser $ \qt obj -> do
       let val = Object $ M.insert "table" (toJSON qt) obj
       q <- decodeValue val
-      return $ f q
+      return $ V1Q.RQV1 $ f q
 
 legacyQueryHandler
-  :: (MonadIO m)
+  :: ( HasVersion
+     , MonadIO m
+     , MonadBaseControl IO m
+     , Tracing.MonadTrace m
+     , MonadMetadataStorage m
+     )
   => TableName -> T.Text -> Object
   -> Handler m (HttpResponse EncJSON)
 legacyQueryHandler tn queryType req =
   case M.lookup queryType queryParsers of
-    Just queryParser -> getLegacyQueryParser queryParser qt req >>= v1QueryHandler . toJSON
+    Just queryParser -> getLegacyQueryParser queryParser qt req >>= v1QueryHandler
     Nothing          -> throw404 "No such resource exists"
   where
     qt = QualifiedObject publicSchema tn

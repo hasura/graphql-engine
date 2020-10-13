@@ -30,6 +30,7 @@ import qualified Data.Text                                as T
 
 import           Control.Arrow.Extended
 import           Control.Lens                             hiding ((.=))
+import           Control.Monad.Trans.Control              (MonadBaseControl)
 import           Control.Monad.Unique
 import           Data.Aeson
 
@@ -124,7 +125,7 @@ buildSchemaCacheRule
   :: ( HasVersion, ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
      , MonadIO m, MonadUnique m, MonadError QErr m
      , MonadReader BuildReason m, HasHttpManager m, HasSQLGenCtx m
-     , HasDefaultSource m
+     , HasDefaultSource m, MonadBaseControl IO m
      )
   => Env.Environment
   -> (Metadata, InvalidationKeys) `arr` SchemaCache
@@ -187,7 +188,8 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     resolveSourceIfNeeded
       :: ( ArrowChoice arr, Inc.ArrowCache m arr
          , ArrowWriter (Seq CollectedInfo) arr
-         , HasDefaultSource m, MonadIO m, MonadReader BuildReason m
+         , HasDefaultSource m, MonadIO m, MonadBaseControl IO m
+         , MonadReader BuildReason m
          )
       => ( Inc.Dependency (HashMap SourceName Inc.InvalidationKey)
          , SourceMetadata
@@ -271,7 +273,8 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 
     buildAndCollectInfo
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
-         , ArrowWriter (Seq CollectedInfo) arr, MonadIO m, MonadError QErr m, MonadUnique m, MonadReader BuildReason m
+         , ArrowWriter (Seq CollectedInfo) arr, MonadIO m, MonadBaseControl IO m
+         , MonadError QErr m, MonadUnique m, MonadReader BuildReason m
          , HasHttpManager m, HasSQLGenCtx m, HasDefaultSource m )
       => (Metadata, Inc.Dependency InvalidationKeys) `arr` BuildOutputs
     buildAndCollectInfo = proc (metadata, invalidationKeys) -> do

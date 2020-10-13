@@ -1,5 +1,6 @@
-{-# LANGUAGE Arrows          #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE Arrows               #-}
+{-# LANGUAGE RecordWildCards      #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | Types/functions shared between modules that implement "Hasura.RQL.DDL.Schema.Cache". Other
 -- modules should not import this module directly.
@@ -14,6 +15,7 @@ import qualified Network.HTTP.Client          as HTTP
 
 import           Control.Arrow.Extended
 import           Control.Lens
+import           Control.Monad.Trans.Control  (MonadBaseControl)
 import           Control.Monad.Unique
 
 import qualified Hasura.Incremental           as Inc
@@ -133,6 +135,8 @@ newtype CacheBuild a
            , MonadError QErr
            , MonadReader CacheBuildCtx
            , MonadIO
+           , MonadBase IO
+           , MonadBaseControl IO
            , MonadUnique
            )
 

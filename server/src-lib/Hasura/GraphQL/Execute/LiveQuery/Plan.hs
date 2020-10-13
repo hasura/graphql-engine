@@ -44,6 +44,7 @@ import qualified Database.PG.Query.PTI         as PTI
 import qualified PostgreSQL.Binary.Encoding    as PE
 
 import           Control.Lens
+import           Control.Monad.Trans.Control   (MonadBaseControl)
 import           Data.UUID                     (UUID)
 
 import qualified Hasura.GraphQL.Parser.Schema  as PS
@@ -385,7 +386,12 @@ data LiveQueryPlanExplanation
   } deriving (Show)
 $(J.deriveToJSON (J.aesonDrop 5 J.snakeCase) ''LiveQueryPlanExplanation)
 
-explainLiveQueryPlan :: (MonadError QErr m, MonadIO m) => LiveQueryPlan -> m LiveQueryPlanExplanation
+explainLiveQueryPlan
+  :: ( MonadError QErr m
+     , MonadIO m
+     , MonadBaseControl IO m
+     )
+  => LiveQueryPlan -> m LiveQueryPlanExplanation
 explainLiveQueryPlan plan = do
   let parameterizedPlan = _lqpParameterizedPlan plan
       pgExecCtx = _lqpPGExecCtx plan

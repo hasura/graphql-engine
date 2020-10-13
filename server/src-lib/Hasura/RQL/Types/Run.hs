@@ -1,7 +1,9 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.Types.Run
-  ( MetadataRun(..)
+  ( BaseRunT(..)
+  , runBaseRunT
+  , MetadataRun(..)
   , RunCtx(..)
   , peelMetadataRun
   , QueryRun(..)
@@ -15,6 +17,7 @@ import           Hasura.Session
 import qualified Database.PG.Query           as Q
 import qualified Network.HTTP.Client         as HTTP
 
+import           Control.Monad.Morph         (hoist)
 import           Control.Monad.Trans.Control (MonadBaseControl)
 import           Control.Monad.Unique
 import           Data.Aeson
@@ -30,40 +33,56 @@ data RunCtx
   , _rcDefaultPgSource :: !PGSourceConfig
   }
 
-type ReaderStateT m a = ReaderT RunCtx (StateT Metadata m) a
-
-newtype MetadataRun m a
-  = MetadataRun {unRun :: ReaderStateT (ExceptT QErr m) a}
+newtype BaseRunT m a
+  = BaseRunT {unBaseRunT :: ReaderT RunCtx (StateT Metadata m) a}
   deriving ( Functor, Applicative, Monad
-           , MonadError QErr
            , MonadReader RunCtx
            , MonadIO
            , MonadUnique
            , MonadState Metadata
            )
+deriving instance (MonadError QErr m) => MonadError QErr (BaseRunT m)
+deriving instance (MonadTx m) => MonadTx (BaseRunT m)
+deriving instance (MonadBase IO m) => MonadBase IO (BaseRunT m)
+deriving instance (MonadBaseControl IO m) => MonadBaseControl IO (BaseRunT m)
 
-instance MonadTrans MetadataRun where
-  lift = lift
-
-instance (Monad m) => UserInfoM (MetadataRun m) where
+instance (Monad m) => UserInfoM (BaseRunT m) where
   askUserInfo = asks _rcUserInfo
 
-instance (Monad m) => HasHttpManager (MetadataRun m) where
+instance (Monad m) => HasHttpManager (BaseRunT m) where
   askHttpManager = asks _rcHttpMgr
 
-instance (Monad m) => HasSQLGenCtx (MetadataRun m) where
+instance (Monad m) => HasSQLGenCtx (BaseRunT m) where
   askSQLGenCtx = asks _rcSqlGenCtx
 
-instance (Monad m) => HasDefaultSource (MetadataRun m) where
+instance (Monad m) => HasDefaultSource (BaseRunT m) where
   askDefaultSource = asks _rcDefaultPgSource
 
-instance (Monad m) => MonadMetadata (MetadataRun m) where
+instance (Monad m) => MonadMetadata (BaseRunT m) where
   fetchMetadata = get
   updateMetadata = put
 
+runBaseRunT :: RunCtx -> Metadata -> BaseRunT m a -> m (a, Metadata)
+runBaseRunT runCtx metadata (BaseRunT m) =
+  runStateT (runReaderT m runCtx) metadata
+
+newtype MetadataRun m a
+  = MetadataRun {unMetadataRun :: BaseRunT (ExceptT QErr m) a}
+  deriving ( Functor, Applicative, Monad
+           , MonadError QErr
+           , MonadReader RunCtx
+           , MonadIO
+           , MonadUnique
+           , MonadMetadata
+           , UserInfoM
+           , HasHttpManager
+           , HasSQLGenCtx
+           , HasDefaultSource
+           )
+
 runInMetadataRun :: (Monad m) => MetadataStorageT m a -> MetadataRun m a
 runInMetadataRun =
-  MetadataRun . lift . lift . ExceptT . runMetadataStorageT
+  MetadataRun . BaseRunT . lift . lift . ExceptT . runMetadataStorageT
 
 instance (MonadMetadataStorage m) => MonadScheduledEvents (MetadataRun m) where
   createEvent                = runInMetadataRun . insertScheduledEvent
@@ -84,10 +103,10 @@ peelMetadataRun
   -> MetadataRun m a
   -> ExceptT QErr m (a, Metadata)
 peelMetadataRun runCtx metadata (MetadataRun m) =
-  runStateT (runReaderT m runCtx) metadata
+  runBaseRunT runCtx metadata m
 
 newtype QueryRun a
-  = QueryRun {unQueryRun :: ReaderStateT (LazyTx QErr) a}
+  = QueryRun {unQueryRun :: BaseRunT (LazyTxT QErr IO) a}
   deriving ( Functor, Applicative, Monad
            , MonadError QErr
            , MonadReader RunCtx
@@ -96,25 +115,12 @@ newtype QueryRun a
            , MonadBase IO
            , MonadBaseControl IO
            , MonadUnique
-           , MonadState Metadata
+           , MonadMetadata
+           , UserInfoM
+           , HasHttpManager
+           , HasSQLGenCtx
+           , HasDefaultSource
            )
-
-instance UserInfoM QueryRun where
-  askUserInfo = asks _rcUserInfo
-
-instance HasHttpManager QueryRun where
-  askHttpManager = asks _rcHttpMgr
-
-instance HasSQLGenCtx QueryRun where
-  askSQLGenCtx = asks _rcSqlGenCtx
-
-instance HasDefaultSource QueryRun where
-  askDefaultSource = asks _rcDefaultPgSource
-
-instance MonadMetadata QueryRun where
-  fetchMetadata = get
-
-  updateMetadata = put
 
 peelQueryRun
   :: (MonadIO m)
@@ -125,9 +131,10 @@ peelQueryRun
   -> Metadata
   -> QueryRun a -> ExceptT QErr m (a, Metadata)
 peelQueryRun pgSourceConfig accessMode maybeTraceCtx runCtx metadata (QueryRun m) =
-  runStateT (runReaderT m runCtx) metadata
+  runBaseRunT runCtx metadata m
   & runLazyTx (_pscExecCtx pgSourceConfig) accessMode
     . withUserInfo userInfo
     . maybe id withTraceContext maybeTraceCtx
+  & hoist liftIO
   where
     userInfo = _rcUserInfo runCtx
