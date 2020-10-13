@@ -163,7 +163,7 @@ convSelectQ
   -> SelectQExt     -- Given Select Query
   -> SessVarBldr m
   -> (PGColumnType -> Value -> m S.SQLExp)
-  -> m AnnSimpleSel
+  -> m (AnnSimpleSel backend)
 convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
 
   annFlds <- withPathK "columns" $
@@ -229,7 +229,7 @@ convExtRel
   -> SelectQExt
   -> SessVarBldr m
   -> (PGColumnType -> Value -> m S.SQLExp)
-  -> m (Either ObjectRelationSelect ArraySelect)
+  -> m (Either (ObjectRelationSelect backend) (ArraySelect backend))
 convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
   -- Point to the name key
   relInfo <- withPathK "name" $
@@ -264,7 +264,7 @@ convSelectQuery
   => SessVarBldr m
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> SelectQuery
-  -> m AnnSimpleSel
+  -> m (AnnSimpleSel backend)
 convSelectQuery sessVarBldr prepArgBuilder (DMLQuery qt selQ) = do
   tabInfo     <- withPathK "table" $ askTabInfo qt
   selPermInfo <- askSelPermInfo tabInfo
@@ -273,22 +273,22 @@ convSelectQuery sessVarBldr prepArgBuilder (DMLQuery qt selQ) = do
   validateHeaders $ spiRequiredHeaders selPermInfo
   convSelectQ qt fieldInfo selPermInfo extSelQ sessVarBldr prepArgBuilder
 
-selectP2 :: JsonAggSelect -> (AnnSimpleSel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
+selectP2 :: JsonAggSelect -> (AnnSimpleSel 'Postgres, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 selectP2 jsonAggSelect (sel, p) =
   encJFromBS . runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
   where
     selectSQL = toSQL $ mkSQLSelect jsonAggSelect sel
 
-selectQuerySQL :: JsonAggSelect -> AnnSimpleSel -> Q.Query
+selectQuerySQL :: JsonAggSelect -> AnnSimpleSel 'Postgres -> Q.Query
 selectQuerySQL jsonAggSelect sel =
   Q.fromBuilder $ toSQL $ mkSQLSelect jsonAggSelect sel
 
-selectAggregateQuerySQL :: AnnAggregateSelect -> Q.Query
+selectAggregateQuerySQL :: AnnAggregateSelect 'Postgres -> Q.Query
 selectAggregateQuerySQL =
   Q.fromBuilder . toSQL . mkAggregateSelect
 
-connectionSelectQuerySQL :: ConnectionSelect S.SQLExp -> Q.Query
+connectionSelectQuerySQL :: ConnectionSelect 'Postgres S.SQLExp -> Q.Query
 connectionSelectQuerySQL =
   Q.fromBuilder . toSQL . mkConnectionSelect
 
@@ -299,11 +299,11 @@ asSingleRowJsonResp query args =
 
 phaseOne
   :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
-  => SelectQuery -> m (AnnSimpleSel, DS.Seq Q.PrepArg)
+  => SelectQuery -> m (AnnSimpleSel backend, DS.Seq Q.PrepArg)
 phaseOne =
   runDMLP1T . convSelectQuery sessVarFromCurrentSetting binRHSBuilder
 
-phaseTwo :: (MonadTx m) => (AnnSimpleSel, DS.Seq Q.PrepArg) -> m EncJSON
+phaseTwo :: (MonadTx m) => (AnnSimpleSel 'Postgres, DS.Seq Q.PrepArg) -> m EncJSON
 phaseTwo =
   liftTx . selectP2 JASMultipleRows
 

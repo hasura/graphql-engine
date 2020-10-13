@@ -246,7 +246,7 @@ traverseAnnField f = \case
 
 type AnnField (b :: Backend) = AnnFieldG b S.SQLExp
 
-data SelectArgsG v
+data SelectArgsG (b :: Backend) v
   = SelectArgs
   { _saWhere    :: !(Maybe (AnnBoolExp v))
   , _saOrderBy  :: !(Maybe (NE.NonEmpty (AnnOrderByItemG v)))
@@ -254,11 +254,11 @@ data SelectArgsG v
   , _saOffset   :: !(Maybe S.SQLExp)
   , _saDistinct :: !(Maybe (NE.NonEmpty PGCol))
   } deriving (Show, Eq, Generic)
-instance (Hashable v) => Hashable (SelectArgsG v)
+instance (Hashable v) => Hashable (SelectArgsG b v)
 
 traverseSelectArgs
   :: (Applicative f)
-  => (a -> f b) -> SelectArgsG a -> f (SelectArgsG b)
+  => (a -> f b) -> SelectArgsG backend a -> f (SelectArgsG backend b)
 traverseSelectArgs f (SelectArgs wh ordBy lmt ofst distCols) =
   SelectArgs
   <$> traverse (traverseAnnBoolExp f) wh
@@ -268,9 +268,9 @@ traverseSelectArgs f (SelectArgs wh ordBy lmt ofst distCols) =
   <*> pure ofst
   <*> pure distCols
 
-type SelectArgs = SelectArgsG S.SQLExp
+type SelectArgs b = SelectArgsG b S.SQLExp
 
-noSelectArgs :: SelectArgsG v
+noSelectArgs :: SelectArgsG backend v
 noSelectArgs = SelectArgs Nothing Nothing Nothing Nothing Nothing
 
 data PGColFld
@@ -404,12 +404,12 @@ noTablePermissions =
 
 type TablePerm = TablePermG S.SQLExp
 
-data AnnSelectG a v
+data AnnSelectG (b :: Backend) a v
   = AnnSelectG
   { _asnFields   :: !a
   , _asnFrom     :: !(SelectFromG v)
   , _asnPerm     :: !(TablePermG v)
-  , _asnArgs     :: !(SelectArgsG v)
+  , _asnArgs     :: !(SelectArgsG b v)
   , _asnStrfyNum :: !Bool
   } deriving (Show, Eq)
 
@@ -429,7 +429,7 @@ traverseAnnAggregateSelect f =
 traverseAnnSelect
   :: (Applicative f)
   => (a -> f b) -> (v -> f w)
-  -> AnnSelectG a v -> f (AnnSelectG b w)
+  -> AnnSelectG backend a v -> f (AnnSelectG backend b w)
 traverseAnnSelect f1 f2 (AnnSelectG flds tabFrom perm args strfyNum) =
   AnnSelectG
   <$> f1 flds
@@ -438,10 +438,10 @@ traverseAnnSelect f1 f2 (AnnSelectG flds tabFrom perm args strfyNum) =
   <*> traverseSelectArgs f2 args
   <*> pure strfyNum
 
-type AnnSimpleSelG (b :: Backend) v = AnnSelectG (AnnFieldsG b v) v
+type AnnSimpleSelG (b :: Backend) v = AnnSelectG b (AnnFieldsG b v) v
 type AnnSimpleSel (b :: Backend) = AnnSimpleSelG b S.SQLExp
 
-type AnnAggregateSelectG (b :: Backend) v = AnnSelectG (TableAggregateFieldsG b v) v
+type AnnAggregateSelectG (b :: Backend) v = AnnSelectG b (TableAggregateFieldsG b v) v
 type AnnAggregateSelect (b :: Backend) = AnnAggregateSelectG b S.SQLExp
 
 data ConnectionSlice
@@ -475,7 +475,7 @@ data ConnectionSelect (b :: Backend) v
   { _csPrimaryKeyColumns :: !PrimaryKeyColumns
   , _csSplit             :: !(Maybe (NE.NonEmpty (ConnectionSplit v)))
   , _csSlice             :: !(Maybe ConnectionSlice)
-  , _csSelect            :: !(AnnSelectG (ConnectionFields b v) v)
+  , _csSelect            :: !(AnnSelectG b (ConnectionFields b v) v)
   } deriving (Show, Eq)
 
 traverseConnectionSelect

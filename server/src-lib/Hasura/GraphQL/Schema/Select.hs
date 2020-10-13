@@ -58,13 +58,13 @@ import           Hasura.Server.Utils                   (executeJSONPath)
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-type SelectExp       = RQL.AnnSimpleSelG UnpreparedValue
-type AggSelectExp    = RQL.AnnAggregateSelectG UnpreparedValue
-type ConnectionSelectExp = RQL.ConnectionSelect UnpreparedValue
-type SelectArgs       = RQL.SelectArgsG UnpreparedValue
-type TablePerms      = RQL.TablePermG UnpreparedValue
-type AnnotatedFields = RQL.AnnFieldsG UnpreparedValue
-type AnnotatedField  = RQL.AnnFieldG UnpreparedValue
+type SelectExp           b = RQL.AnnSimpleSelG b UnpreparedValue
+type AggSelectExp        b = RQL.AnnAggregateSelectG b UnpreparedValue
+type ConnectionSelectExp b = RQL.ConnectionSelect b UnpreparedValue
+type SelectArgs          b = RQL.SelectArgsG b UnpreparedValue
+type TablePerms          b = RQL.TablePermG b UnpreparedValue
+type AnnotatedFields     b = RQL.AnnFieldsG b UnpreparedValue
+type AnnotatedField      b = RQL.AnnFieldG b UnpreparedValue
 
 
 
