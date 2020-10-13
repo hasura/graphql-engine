@@ -315,7 +315,7 @@ mkSimilarArrayFields annFields maybeOrderBys =
       Just (riName ri, mkOrderByFieldName $ riName ri)
     fetchAggOrderByRels _               = Nothing
 
-getArrayRelNameAndSelectArgs :: ArraySelectG backend v -> (RelName, SelectArgsG v)
+getArrayRelNameAndSelectArgs :: ArraySelectG backend v -> (RelName, SelectArgsG backend v)
 getArrayRelNameAndSelectArgs = \case
   ASSimple r -> (aarRelationshipName r, _asnArgs $ aarAnnSelect r)
   ASAggregate r -> (aarRelationshipName r, _asnArgs $ aarAnnSelect r)
@@ -554,7 +554,7 @@ processArrayRelation sourcePrefixes fieldAlias relAlias arrSel =
            )
 
 processSelectParams
-  :: forall m. ( MonadReader Bool m
+  :: forall m backend. ( MonadReader Bool m
                , MonadWriter JoinTree m
                )
   => SourcePrefixes
@@ -563,7 +563,7 @@ processSelectParams
   -> SelectFrom
   -> PermissionLimitSubQuery
   -> TablePerm
-  -> SelectArgs
+  -> SelectArgs backend
   -> m ( SelectSource
        , [(S.Alias, S.SQLExp)]
        , Maybe S.SQLExp -- Order by cursor
