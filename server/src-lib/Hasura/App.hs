@@ -1,5 +1,5 @@
-{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE CPP                  #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.App where
 
@@ -9,7 +9,6 @@ import           Control.Lens                              (view, _2)
 import           Control.Monad.Base
 import           Control.Monad.Catch                       (Exception, MonadCatch, MonadMask,
                                                             MonadThrow, onException)
-import           Control.Monad.Morph                       (hoist)
 import           Control.Monad.Stateless
 import           Control.Monad.STM                         (atomically)
 import           Control.Monad.Trans.Control               (MonadBaseControl (..))
@@ -50,7 +49,8 @@ import           Hasura.Eventing.ScheduledTrigger
 import           Hasura.GraphQL.Execute                    (MonadGQLExecutionCheck (..),
                                                             checkQueryInAllowlist)
 import           Hasura.GraphQL.Execute.Action             (asyncActionsProcessor)
-import           Hasura.GraphQL.Execute.Query              (MonadQueryInstrumentation(..), noProfile)
+import           Hasura.GraphQL.Execute.Query              (MonadQueryInstrumentation (..),
+                                                            noProfile)
 import           Hasura.GraphQL.Logging                    (MonadQueryLog (..), QueryLog (..))
 import           Hasura.GraphQL.Transport.HTTP             (MonadExecuteQuery (..))
 import           Hasura.GraphQL.Transport.HTTP.Protocol    (toParsed)
@@ -369,6 +369,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
              _icSchemaCache
              ekgStore
              enableRSPermsCtx
+             soConnectionOptions
 
   -- log inconsistent schema objects
   inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)
@@ -640,8 +641,8 @@ instance HttpLog AppM where
       mkHttpAccessLogContext userInfoM reqId waiReq compressedResponse qTime cType headers
 
 instance MonadExecuteQuery AppM where
-  executeQuery _ _ _ pgCtx tx =
-    ([],) <$> hoist (runQueryTx pgCtx) tx
+  cacheLookup _ _ = pure ([], Nothing)
+  cacheStore  _ _ = pure ()
 
 instance UserAuthentication (Tracing.TraceT AppM) where
   resolveUserInfo logger manager headers authMode =

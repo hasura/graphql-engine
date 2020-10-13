@@ -514,7 +514,7 @@ processScheduledEvent logEnv pgpool se@ScheduledEventFull {..} type' = Tracing.r
         (processSuccess pgpool se decodedHeaders type' webhookReqBodyJson)
         res
   where
-    traceNote = "Scheduled trigger" <> foldMap ((": " <>) . unNonEmptyText . unTriggerName) sefName
+    traceNote = "Scheduled trigger" <> foldMap ((": " <>) . triggerNameToTxt) sefName
 
 processError
   :: (MonadIO m, MonadError QErr m)
@@ -542,7 +542,7 @@ processError pgpool se decodedHeaders type' reqJson err = do
           let errMsg = (TBS.fromLBS $ J.encode detail)
           mkInvocation se 500 decodedHeaders errMsg [] reqJson
   liftExceptTIO $
-    Q.runTx pgpool (Q.RepeatableRead, Just Q.ReadWrite) $ do
+    Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) $ do
     insertInvocation invocation type'
     retryOrMarkError se err type'
 
@@ -610,14 +610,14 @@ processSuccess pgpool se decodedHeaders type' reqBodyJson resp = do
       respStatus = hrsStatus resp
       invocation = mkInvocation se respStatus decodedHeaders respBody respHeaders reqBodyJson
   liftExceptTIO $
-    Q.runTx pgpool (Q.RepeatableRead, Just Q.ReadWrite) $ do
+    Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) $ do
     insertInvocation invocation type'
     setScheduledEventStatus (sefId se) SESDelivered type'
 
 processDead :: (MonadIO m, MonadError QErr m) => Q.PGPool -> ScheduledEventFull -> ScheduledEventType -> m ()
 processDead pgpool se type' =
   liftExceptTIO $
-  Q.runTx pgpool (Q.RepeatableRead, Just Q.ReadWrite) $
+  Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) $
     setScheduledEventStatus (sefId se) SESDead type'
 
 setRetry :: ScheduledEventFull -> UTCTime -> ScheduledEventType ->  Q.TxE QErr ()

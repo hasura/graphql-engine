@@ -12,6 +12,7 @@ import qualified Database.PG.Query                as Q
 import           Data.Char                        (toLower)
 import           Data.Time
 import           Network.Wai.Handler.Warp         (HostPreference)
+import qualified Network.WebSockets               as WS
 
 import qualified Hasura.Cache.Bounded             as Cache
 import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
@@ -65,6 +66,7 @@ data RawServeOptions impl
   , rsoEventsFetchInterval           :: !(Maybe Milliseconds)
   , rsoLogHeadersFromEnv             :: !Bool
   , rsoEnableRemoteSchemaPermissions :: !Bool
+  , rsoWebSocketCompression          :: !Bool
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -108,6 +110,7 @@ data ServeOptions impl
   , soEventsFetchInterval           :: !(Maybe Milliseconds)
   , soLogHeadersFromEnv             :: !Bool
   , soEnableRemoteSchemaPermissions :: !Bool
+  , soConnectionOptions            :: !WS.ConnectionOptions
   }
 
 data DowngradeOptions

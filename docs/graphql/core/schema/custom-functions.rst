@@ -37,6 +37,8 @@ Currently, only functions which satisfy the following constraints can be exposed
 - **Return type**: MUST be ``SETOF <table-name>``
 - **Argument modes**: ONLY ``IN``
 
+.. _create_and_expose_sql_functions:
+
 Creating & exposing SQL functions
 ---------------------------------
 
@@ -65,10 +67,13 @@ Let's see a few example use cases for custom functions:
 Example: Text-search functions
 ******************************
 
-Let's take a look at an example where the ``SETOF`` table is already part of the existing schema.
+Let's take a look at an example where the ``SETOF`` table is already part of the existing schema:
 
-In our article/author schema, let's say we've created and tracked a custom function, ``search_articles``,
-with the following definition:
+.. code-block:: plpgsql
+
+  article(id integer, title text, content text)
+
+Let's say we've created and tracked a custom function, ``search_articles``, with the following definition:
 
 .. code-block:: plpgsql
 

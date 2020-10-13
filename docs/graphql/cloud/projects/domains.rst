@@ -4,8 +4,8 @@
 
 .. _manage_project_domains:
 
-Domains tab
-===========
+Project Domains
+===============
 
 .. contents:: Table of contents
   :backlinks: none

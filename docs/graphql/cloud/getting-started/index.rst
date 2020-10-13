@@ -63,7 +63,7 @@ Step 4: Try Hasura out
 Click ``Launch Console`` to open the Hasura console in your browser and
 :ref:`make your first GraphQL query <first_graphql_query>` or :ref:`set up your first event trigger <first_event_trigger>`.
 
-.. thumbnail:: /img/graphql/cloud/getting-started/project-functionalities.png
+.. thumbnail:: /img/graphql/cloud/getting-started/project-launch-console.png
   :alt: Project actions
   :width: 860px
 
@@ -79,11 +79,11 @@ Next steps
 You can check out our `30-Minute Hasura Basics Course <https://hasura.io/learn/graphql/hasura/introduction/>`__
 and other `GraphQL & Hasura Courses <https://hasura.io/learn/>`__ for a more detailed introduction to Hasura.
 
-You can also click the gear icon to :ref:`manage your Hasura Cloud project <manage_project>` (e.g. add
-collaborators, env vars or custom domains) and :ref:`add an admin secret <secure_project>` to make sure that your
-GraphQL endpoint and the Hasura console are not publicly accessible.
+You can also click the gear icon to manage your Hasura Cloud project. (e.g. add :ref:`collaborators <manage_project_collaborators>`,
+:ref:`env vars <manage_project_env_vars>` or :ref:`custom domains <manage_project_domains>`) and :ref:`add an admin secret <secure_project>`
+to make sure that your GraphQL endpoint and the Hasura console are not publicly accessible.
 
-.. thumbnail:: /img/graphql/cloud/getting-started/project-functionalities.png
+.. thumbnail:: /img/graphql/cloud/getting-started/project-manage.png
   :alt: Project actions
   :width: 860px
 
