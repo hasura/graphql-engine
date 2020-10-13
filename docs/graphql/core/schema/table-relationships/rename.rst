@@ -12,18 +12,18 @@ Renaming relationships
   :depth: 1
   :local:
 
-To rename a relationship:
+An existing relationship can be renamed as follows:
 
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: Console
 
     - Head to ``Data -> [table-name] -> Relationships`` in the console
     - Drop the existing relationship
     - Recreate the relationship with the new name
 
-  .. tab:: Via CLI
+  .. tab:: CLI
 
     You can rename a relationship by changing the relationship name in the ``tables.yaml`` file inside the ``metadata`` directory:
 
@@ -47,7 +47,7 @@ To rename a relationship:
 
       hasura metadata apply
 
-  .. tab:: Via API
+  .. tab:: API
 
     You can rename a relationship by using the :ref:`rename_relationship metadata API <rename_relationship>`:
 

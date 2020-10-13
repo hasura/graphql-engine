@@ -144,7 +144,7 @@ we need to tell Hasura that this table represents an enum.
 
   .. tab:: Console
 
-    Head to the ``Data -> [table] -> Modify`` tab in the console and toggle the switch in the
+    Head to the ``Data -> [table-name] -> Modify`` tab in the console and toggle the switch in the
     ``Set table as enum`` section:
 
     .. thumbnail:: /img/graphql/core/schema/enum-set.png
