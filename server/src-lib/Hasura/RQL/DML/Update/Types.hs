@@ -8,10 +8,11 @@ import qualified Hasura.SQL.DML                 as S
 import           Hasura.RQL.DML.Returning.Types
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
+import           Hasura.RQL.Types.Backend
 import           Hasura.SQL.Types
 
 
-data AnnUpdG v
+data AnnUpdG (b :: Backend) v
   = AnnUpd
   { uqp1Table   :: !QualifiedTable
   , uqp1OpExps  :: ![(PGCol, UpdOpExpG v)]
@@ -20,11 +21,11 @@ data AnnUpdG v
   -- we don't prepare the arguments for returning
   -- however the session variable can still be
   -- converted as desired
-  , uqp1Output  :: !(MutationOutputG v)
+  , uqp1Output  :: !(MutationOutputG b v)
   , uqp1AllCols :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
-type AnnUpd = AnnUpdG S.SQLExp
+type AnnUpd b = AnnUpdG b S.SQLExp
 
 data UpdOpExpG v = UpdSet !v
                  | UpdInc !v
