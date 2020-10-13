@@ -16,6 +16,7 @@ import qualified Data.Text                    as T
 
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.Prelude
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.GBoolExp
@@ -289,7 +290,7 @@ type SimilarArrayFields = HM.HashMap FieldName [FieldName]
 
 mkSimilarArrayFields
   :: Eq v
-  => AnnFieldsG v
+  => AnnFieldsG backend v
   -> Maybe (NE.NonEmpty (AnnOrderByItemG v))
   -> SimilarArrayFields
 mkSimilarArrayFields annFields maybeOrderBys =
@@ -314,13 +315,13 @@ mkSimilarArrayFields annFields maybeOrderBys =
       Just (riName ri, mkOrderByFieldName $ riName ri)
     fetchAggOrderByRels _               = Nothing
 
-getArrayRelNameAndSelectArgs :: ArraySelectG v -> (RelName, SelectArgsG v)
+getArrayRelNameAndSelectArgs :: ArraySelectG backend v -> (RelName, SelectArgsG v)
 getArrayRelNameAndSelectArgs = \case
   ASSimple r -> (aarRelationshipName r, _asnArgs $ aarAnnSelect r)
   ASAggregate r -> (aarRelationshipName r, _asnArgs $ aarAnnSelect r)
   ASConnection r -> (aarRelationshipName r, _asnArgs $ _csSelect $ aarAnnSelect r)
 
-getAnnArr :: (a, AnnFieldG v) -> Maybe (a, ArraySelectG v)
+getAnnArr :: (a, AnnFieldG backend v) -> Maybe (a, ArraySelectG backend v)
 getAnnArr (f, annFld) = case annFld of
   AFArrayRelation (ASConnection _) -> Nothing
   AFArrayRelation ar               -> Just (f, ar)
@@ -409,13 +410,13 @@ withWriteComputedFieldTableSet action =
 
 
 processAnnSimpleSelect
-  :: forall m. ( MonadReader Bool m
+  :: forall m backend. ( MonadReader Bool m
                , MonadWriter JoinTree m
                )
   => SourcePrefixes
   -> FieldName
   -> PermissionLimitSubQuery
-  -> AnnSimpleSel
+  -> AnnSimpleSel backend
   -> m ( SelectSource
        , HM.HashMap S.Alias S.SQLExp
        )
@@ -432,12 +433,12 @@ processAnnSimpleSelect sourcePrefixes fieldAlias permLimitSubQuery annSimpleSel 
       mkSimilarArrayFields annSelFields $ _saOrderBy tableArgs
 
 processAnnAggregateSelect
-  :: forall m. ( MonadReader Bool m
+  :: forall m backend. ( MonadReader Bool m
                , MonadWriter JoinTree m
                )
   => SourcePrefixes
   -> FieldName
-  -> AnnAggregateSelect
+  -> AnnAggregateSelect backend
   -> m ( SelectSource
        , HM.HashMap S.Alias S.SQLExp
        , S.Extractor
@@ -487,7 +488,7 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
 
 mkPermissionLimitSubQuery
   :: Maybe Int
-  -> TableAggregateFields
+  -> TableAggregateFields backend
   -> Maybe (NE.NonEmpty AnnOrderByItem)
   -> PermissionLimitSubQuery
 mkPermissionLimitSubQuery permLimit aggFields orderBys =
@@ -510,13 +511,13 @@ mkPermissionLimitSubQuery permLimit aggFields orderBys =
                   _        -> False
 
 processArrayRelation
-  :: forall m. ( MonadReader Bool m
+  :: forall m backend. ( MonadReader Bool m
                , MonadWriter JoinTree m
                )
   => SourcePrefixes
   -> FieldName
   -> S.Alias
-  -> ArraySelect
+  -> ArraySelect backend
   -> m ()
 processArrayRelation sourcePrefixes fieldAlias relAlias arrSel =
   case arrSel of
@@ -719,13 +720,13 @@ aggregateFieldsToExtractorExps sourcePrefix aggregateFields =
     mkColExp _ = Nothing
 
 processAnnFields
-  :: forall m. ( MonadReader Bool m
+  :: forall m backend. ( MonadReader Bool m
                , MonadWriter JoinTree m
                )
   => Iden
   -> FieldName
   -> SimilarArrayFields
-  -> AnnFields
+  -> AnnFields backend
   -> m (S.Alias, S.SQLExp)
 processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
   fieldExps <- forM annFields $ \(fieldName, field) ->
@@ -931,7 +932,7 @@ generateSQLSelectFromArrayNode selectSource arraySelectNode joinCondition =
                  (generateSQLSelect joinCondition selectSource selectNode) $
                  S.Alias $ _ssPrefix selectSource
 
-mkAggregateSelect :: AnnAggregateSelect -> S.Select
+mkAggregateSelect :: AnnAggregateSelect 'Postgres -> S.Select
 mkAggregateSelect annAggSel =
   let ((selectSource, nodeExtractors, topExtractor), joinTree) =
         runWriter $ flip runReaderT strfyNum $
@@ -946,7 +947,7 @@ mkAggregateSelect annAggSel =
     rootIden = toIden rootFieldName
     sourcePrefixes = SourcePrefixes rootIden rootIden
 
-mkSQLSelect :: JsonAggSelect -> AnnSimpleSel -> S.Select
+mkSQLSelect :: JsonAggSelect -> AnnSimpleSel 'Postgres -> S.Select
 mkSQLSelect jsonAggSelect annSel =
   let permLimitSubQuery = PLSQNotRequired
       ((selectSource, nodeExtractors), joinTree) =
@@ -965,7 +966,7 @@ mkSQLSelect jsonAggSelect annSel =
     rootFldName = FieldName "root"
     rootFldAls  = S.Alias $ toIden rootFldName
 
-mkConnectionSelect :: ConnectionSelect S.SQLExp -> S.SelectWithG S.Select
+mkConnectionSelect :: ConnectionSelect 'Postgres S.SQLExp -> S.SelectWithG S.Select
 mkConnectionSelect connectionSelect =
   let ((connectionSource, topExtractor, nodeExtractors), joinTree) =
         runWriter $ flip runReaderT strfyNum $
@@ -1039,7 +1040,7 @@ processConnectionSelect
   -> FieldName
   -> S.Alias
   -> HM.HashMap PGCol PGCol
-  -> ConnectionSelect S.SQLExp
+  -> ConnectionSelect backend S.SQLExp
   -> m ( ArrayConnectionSource
        , S.Extractor
        , HM.HashMap S.Alias S.SQLExp
