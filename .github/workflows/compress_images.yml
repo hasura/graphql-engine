@@ -24,7 +24,6 @@ jobs:
           });
           let imagesPresent = false; 
           for (const file of files.data) {
-            console.log(file.filename)
             if (file.filename.match(/docs\/.+.png/i) || file.filename.match(/docs\/.+.jpg/i) || file.filename.match(/docs\/.+.jpeg/i)) {
               imagesPresent = true;
               break;
