@@ -13,6 +13,7 @@ import qualified Data.HashMap.Strict.Extended  as M
 import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.HashSet                  as S
 import qualified Data.Text                     as T
+import qualified Data.List.Extended            as LE
 
 import           Control.Lens.Extended         hiding (enum, index)
 import           Data.Int                      (Int32, Int64)
@@ -679,6 +680,18 @@ selectionSet
   -> Parser 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a))
 selectionSet name desc fields = selectionSetObject name desc fields []
 
+safeSelectionSet
+  :: (MonadError QErr n, MonadParse m)
+  => Name
+  -> Maybe Description
+  -> [FieldParser m a]
+  -> n (Parser 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a)))
+safeSelectionSet name desc fields
+  | S.null duplicates = pure $ selectionSetObject name desc fields []
+  | otherwise         = throw500 $ "found duplicate fields in selection set: " <> T.intercalate ", " (unName <$> toList duplicates)
+  where
+    duplicates = LE.duplicates $ getName . fDefinition <$> fields
+
 -- Should this rather take a non-empty `FieldParser` list?
 -- See also Note [Selectability of tables].
 selectionSetObject
@@ -809,10 +822,23 @@ selection
   -> InputFieldsParser m a -- ^ parser for the input arguments
   -> Parser 'Both m b -- ^ type of the result
   -> FieldParser m a
-selection name description argumentsParser resultParser = FieldParser
+selection name description argumentsParser resultParser =
+  rawSelection name description argumentsParser resultParser
+  <&> \(_alias, _args, a) -> a
+
+rawSelection
+  :: forall m a b
+   . MonadParse m
+  => Name
+  -> Maybe Description
+  -> InputFieldsParser m a -- ^ parser for the input arguments
+  -> Parser 'Both m b -- ^ type of the result
+  -> FieldParser m (Maybe Name, HashMap Name (Value Variable), a)
+  -- ^ alias provided (if any), and the arguments
+rawSelection name description argumentsParser resultParser = FieldParser
   { fDefinition = mkDefinition name description $
       FieldInfo (ifDefinitions argumentsParser) (pType resultParser)
-  , fParser = \Field{ _fArguments, _fSelectionSet } -> do
+  , fParser = \Field{ _fAlias, _fArguments, _fSelectionSet } -> do
       unless (null _fSelectionSet) $
         parseError "unexpected subselection set for non-object field"
       -- check for extraneous arguments here, since the InputFieldsParser just
@@ -820,7 +846,7 @@ selection name description argumentsParser resultParser = FieldParser
       for_ (M.keys _fArguments) \argumentName ->
         unless (argumentName `S.member` argumentNames) $
           parseError $ name <<> " has no argument named " <>> argumentName
-      withPath (++[Key "args"]) $ ifParser argumentsParser $ GraphQLValue <$> _fArguments
+      fmap (_fAlias, _fArguments, ) $ withPath (++[Key "args"]) $ ifParser argumentsParser $ GraphQLValue <$> _fArguments
   }
   where
     argumentNames = S.fromList (dName <$> ifDefinitions argumentsParser)
@@ -837,17 +863,29 @@ subselection
   -> InputFieldsParser m a -- ^ parser for the input arguments
   -> Parser 'Output m b -- ^ parser for the subselection set
   -> FieldParser m (a, b)
-subselection name description argumentsParser bodyParser = FieldParser
+subselection name description argumentsParser bodyParser =
+  rawSubselection name description argumentsParser bodyParser
+  <&> \(_alias, _args, a, b) -> (a, b)
+
+rawSubselection
+  :: forall m a b
+   . MonadParse m
+  => Name
+  -> Maybe Description
+  -> InputFieldsParser m a -- ^ parser for the input arguments
+  -> Parser 'Output m b -- ^ parser for the subselection set
+  -> FieldParser m (Maybe Name, HashMap Name (Value Variable), a, b)
+rawSubselection name description argumentsParser bodyParser = FieldParser
   { fDefinition = mkDefinition name description $
       FieldInfo (ifDefinitions argumentsParser) (pType bodyParser)
-  , fParser = \Field{ _fArguments, _fSelectionSet } -> do
+  , fParser = \Field{ _fAlias, _fArguments, _fSelectionSet } -> do
       -- check for extraneous arguments here, since the InputFieldsParser just
       -- handles parsing the fields it cares about
       for_ (M.keys _fArguments) \argumentName ->
         unless (argumentName `S.member` argumentNames) $
           parseError $ name <<> " has no argument named " <>> argumentName
-      (,) <$> withPath (++[Key "args"]) (ifParser argumentsParser $ GraphQLValue <$> _fArguments)
-          <*> pParser bodyParser _fSelectionSet
+      (_fAlias,_fArguments,,) <$> withPath (++[Key "args"]) (ifParser argumentsParser $ GraphQLValue <$> _fArguments)
+        <*> pParser bodyParser _fSelectionSet
   }
   where
     argumentNames = S.fromList (dName <$> ifDefinitions argumentsParser)
@@ -870,7 +908,6 @@ subselection_
   -> FieldParser m a
 subselection_ name description bodyParser =
   snd <$> subselection name description (pure ()) bodyParser
-
 
 -- -----------------------------------------------------------------------------
 -- helpers

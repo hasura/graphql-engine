@@ -428,6 +428,7 @@ library
                      , Hasura.GraphQL.Execute.Plan
                      , Hasura.GraphQL.Execute.Types
                      , Hasura.GraphQL.Execute.Mutation
+                     , Hasura.GraphQL.Execute.Remote
                      , Hasura.GraphQL.Execute.Resolve
                      , Hasura.GraphQL.Execute.Prepare
                      , Hasura.GraphQL.Execute.LiveQuery.Options
@@ -483,6 +484,7 @@ executable graphql-engine
                    , pg-client
                    , text
                    , text-conversions
+                   , time
                    , unix
                    , ekg-core
 
@@ -509,6 +511,7 @@ test-suite graphql-engine-tests
     , pg-client
     , process
     , QuickCheck
+    , text
     , safe
     , split
     , time
@@ -522,6 +525,7 @@ test-suite graphql-engine-tests
     Data.Parser.URLTemplate
     Data.Parser.JSONPathSpec
     Data.TimeSpec
+    Data.NonNegativeIntSpec
     Hasura.IncrementalSpec
     Hasura.RQL.MetadataSpec
     Hasura.Server.MigrateSpec

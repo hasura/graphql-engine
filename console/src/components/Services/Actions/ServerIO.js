@@ -31,11 +31,6 @@ import {
   getOverlappingTypeConfirmation,
 } from './Common/utils';
 import { showErrorNotification } from '../Common/Notification';
-import {
-  removePersistedDerivedAction,
-  persistDerivedAction,
-  updatePersistedDerivation,
-} from './lsUtils';
 import { appPrefix } from './constants';
 import { push } from 'react-router-redux';
 import {
@@ -62,9 +57,15 @@ import {
   setRequestSuccess as setPermRequestSuccess,
   setRequestFailure as setPermRequestFailure,
 } from './Permissions/reducer';
-import { findAction, getActionPermissions } from './utils';
 import { getActionPermissionMigration } from './Permissions/utils';
 import Migration from '../../../utils/migration/Migration';
+import {
+  findAction,
+  getActionPermissions,
+  removePersistedDerivedAction,
+  persistDerivedAction,
+  updatePersistedDerivation,
+} from './utils';
 
 export const fetchActions = () => {
   return (dispatch, getState) => {
