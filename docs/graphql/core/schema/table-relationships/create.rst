@@ -490,7 +490,7 @@ Fetch a list of authors with the average rating of their articles:
 Tracking existing relationships inferred via foreign-keys
 ---------------------------------------------------------
 
-As mentioned in the Intro section above, relationships can be inferred via foreign-keys that exist in your database:
+As mentioned in the Introduction section above, relationships can be inferred via foreign-keys that exist in your database:
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -501,6 +501,9 @@ As mentioned in the Intro section above, relationships can be inferred via forei
 
     .. thumbnail:: /img/graphql/core/schema/schema-track-relationships.png
       :alt: Track all relationships
+
+    You can choose to track the relationships individually using the ``Track`` buttons or hit the ``Track all`` button to
+    track all the inferred relationships in one go.
 
   .. tab:: CLI
 
