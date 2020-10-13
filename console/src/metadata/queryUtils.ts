@@ -628,3 +628,14 @@ export const getConsoleStateQuery = {
   type: 'get_catalog_state',
   args: {},
 };
+
+export const getInvocationLogsQuery = (
+  eventType: 'one_off' | 'cron',
+  eventID: string
+) => ({
+  type: 'get_event_invocations',
+  args: {
+    type: eventType,
+    event_id: eventID,
+  },
+});

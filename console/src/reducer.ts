@@ -1,5 +1,7 @@
 import { combineReducers } from 'redux';
+import { reducer as notifications } from 'react-notification-system-redux';
 import { routerReducer } from 'react-router-redux';
+
 import { dataReducer } from './components/Services/Data';
 import { remoteSchemaReducer } from './components/Services/RemoteSchema';
 import { actionsReducer } from './components/Services/Actions';
@@ -10,8 +12,6 @@ import mainReducer from './components/Main/Actions';
 import apiExplorerReducer from './components/Services/ApiExplorer/Actions';
 import progressBarReducer from './components/App/Actions';
 import telemetryReducer from './telemetry/Actions';
-
-import { reducer as notifications } from 'react-notification-system-redux';
 import { metadataReducer } from './metadata/reducer';
 
 const reducer = combineReducers({

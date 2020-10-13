@@ -12,9 +12,9 @@ import CollapsibleToggle from '../../../../Common/CollapsibleToggle/CollapsibleT
 import Button from '../../../../Common/Button/Button';
 import {
   updateSchemaInfo,
-  fetchSchemaList,
-  updateCurrentSchema,
-  UPDATE_CURRENT_DATA_SOURCE,
+  // fetchSchemaList,
+  // updateCurrentSchema,
+  // UPDATE_CURRENT_DATA_SOURCE,
 } from '../../../Data/DataActions';
 import { createEventTrigger } from '../../ServerIO';
 import Operations from '../Common/Operations';
@@ -25,7 +25,7 @@ import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import { Table } from '../../../../../dataSources/types';
 import { getDataSources } from '../../../../../metadata/selector';
 import { DataSource } from '../../../../../metadata/types';
-import { NotSupportedNote } from '../../../../Common/NotSupportedNote';
+// import { NotSupportedNote } from '../../../../Common/NotSupportedNote';
 
 interface Props extends InjectedProps {}
 

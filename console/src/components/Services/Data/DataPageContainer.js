@@ -38,7 +38,7 @@ const DataPageContainer = ({
     let newDriver;
     try {
       [newName, newDriver] = JSON.parse(value);
-    } catch (err) {
+    } catch {
       return;
     }
     setDriver(newDriver);
@@ -72,7 +72,7 @@ const DataPageContainer = ({
   }
 
   const handleSchemaChange = e => {
-    dispatch(updateCurrentSchema(e.target.value));
+    dispatch(updateCurrentSchema(e.target.value, currentDataSource));
   };
 
   const getSchemaOptions = () => {
@@ -107,7 +107,7 @@ const DataPageContainer = ({
               <label style={{ width: '70px' }}>Database:</label>
               <select
                 onChange={onDatabaseChange}
-                className={styles.changeSchema + ' form-control'}
+                className={`${styles.changeSchema} form-control`}
                 value={JSON.stringify([
                   currentDataSourceDetails?.name,
                   currentDataSourceDetails?.driver,
