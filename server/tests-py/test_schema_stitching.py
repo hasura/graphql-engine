@@ -355,7 +355,7 @@ class TestRemoteSchemaQueriesOverWebsocket:
         query = """
         query {
           user(id: 2) {
-            generateError
+            blah
             username
           }
         }
@@ -369,7 +369,7 @@ class TestRemoteSchemaQueriesOverWebsocket:
             assert ev['type'] == 'data' and ev['id'] == query_id, ev
             assert 'errors' in ev['payload']
             assert ev['payload']['errors'][0]['message'] == \
-                'Cannot query field "generateError" on type "User".'
+                'Cannot query field "blah" on type "User".'
         finally:
             ws_client.stop(query_id)
 
