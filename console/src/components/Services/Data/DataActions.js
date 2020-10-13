@@ -369,6 +369,7 @@ const fetchFunctionInit = (schema = null) => (dispatch, getState) => {
 
 const updateCurrentSchema = (
   schemaName,
+  sourceName,
   redirect = true,
   schemaList = []
 ) => dispatch => {
@@ -377,7 +378,7 @@ const updateCurrentSchema = (
   }
 
   if (redirect) {
-    dispatch(_push(getSchemaBaseRoute(schemaName)));
+    dispatch(_push(getSchemaBaseRoute(schemaName, sourceName)));
   }
 
   Promise.all([

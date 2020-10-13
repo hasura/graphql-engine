@@ -15,8 +15,8 @@ import {
   updateSchemaInfo,
   fetchFunctionInit,
   updateCurrentSchema,
-  fetchSchemaList,
   UPDATE_CURRENT_DATA_SOURCE,
+  fetchDataInit,
 } from '../DataActions';
 import {
   autoAddRelName,
@@ -50,9 +50,9 @@ import {
 } from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 
-const DeleteSchemaButton = ({ dispatch, migrationMode }) => {
+const DeleteSchemaButton = ({ dispatch, migrationMode, currentDataSource }) => {
   const successCb = () => {
-    dispatch(updateCurrentSchema('public'));
+    dispatch(updateCurrentSchema('public', currentDataSource));
   };
 
   const handleDelete = () => {
@@ -205,7 +205,9 @@ class Schema extends Component {
     }
 
     const successCb = () => {
-      this.props.dispatch(updateCurrentSchema(schemaName));
+      this.props.dispatch(
+        updateCurrentSchema(schemaName, this.props.currentDataSource)
+      );
 
       this.setState({
         schemaNameEdit: '',
@@ -222,7 +224,7 @@ class Schema extends Component {
     let newDriver;
     try {
       [newName, newDriver] = JSON.parse(value);
-    } catch (err) {
+    } catch {
       return;
     }
     setDriver(newDriver);
@@ -230,15 +232,14 @@ class Schema extends Component {
       type: UPDATE_CURRENT_DATA_SOURCE,
       source: newName,
     });
+    this.props.dispatch(push(`/data/${newName}/schema/`));
     this.setState({ loadingSchemas: true });
-    this.props.dispatch(fetchSchemaList()).then(data => {
-      const schemas = data.result;
-      if (schemas.length) {
-        this.props.dispatch(updateCurrentSchema(schemas[1][0], true, data));
-      } else {
-        this.props.dispatch(updateCurrentSchema('', true, []));
-      }
+    this.props.dispatch(fetchDataInit()).then(() => {
       this.setState({ loadingSchemas: false });
+    });
+    this.props.dispatch({
+      type: UPDATE_CURRENT_DATA_SOURCE,
+      source: newName,
     });
   };
 
@@ -258,8 +259,12 @@ class Schema extends Component {
       currentDataSource,
     } = this.props;
 
+    const currentDataSourceDetails = dataSources.find(
+      s => s.name === currentDataSource
+    );
+
     const handleSchemaChange = e => {
-      dispatch(updateCurrentSchema(e.target.value));
+      dispatch(updateCurrentSchema(e.target.value, currentDataSource));
     };
 
     const _getTrackableFunctions = () => {
@@ -329,10 +334,6 @@ class Schema extends Component {
         );
       };
 
-      const currentDataSourceDetails = dataSources.find(
-        s => s.name === currentDataSource
-      );
-
       return (
         <div className={styles.add_mar_top}>
           <div>
@@ -380,6 +381,7 @@ class Schema extends Component {
                 <DeleteSchemaButton
                   dispatch={dispatch}
                   migrationMode={migrationMode}
+                  currentDataSource={currentDataSource}
                 />
                 <CreateSchemaSection
                   ref={this.schemaNameInputRef}

@@ -10,6 +10,7 @@ import {
 } from './types';
 import { PGFunction, FunctionState } from './services/postgresql/types';
 import { Operations } from './common';
+import { QualifiedTable } from '../metadata/types';
 
 export const drivers = ['postgres', 'mysql'];
 export type Driver = 'postgres' | 'mysql';
@@ -279,6 +280,19 @@ export interface DataSourcesAPI {
   deleteFunctionSql?: (
     schemaName: string,
     functionState: FunctionState
+  ) => string;
+  getInvocationLogSql?: (
+    type: 'cron' | 'scheduled',
+    invocationTable: QualifiedTable,
+    relationshipTable: QualifiedTable,
+    triggerName?: string,
+    limit?: number,
+    offset?: number
+  ) => string;
+  getEventInvocationInfoByIDSql?: (
+    logTableDef: QualifiedTable,
+    eventLogTable: QualifiedTable,
+    eventId: string
   ) => string;
 }
 

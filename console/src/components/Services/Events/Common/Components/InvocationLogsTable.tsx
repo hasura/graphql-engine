@@ -191,8 +191,16 @@ const InvocationLogsTable: React.FC<Props> = props => {
       SubComponent={logRow => {
         const finalIndex = logRow.index;
         const finalRow = rows[finalIndex];
-        const currentPayload = JSON.stringify(finalRow.request, null, 4);
-        const finalResponse = JSON.stringify(finalRow.response, null, 4);
+        const currentPayload = JSON.stringify(
+          JSON.parse(finalRow.request),
+          null,
+          4
+        );
+        const finalResponse = JSON.stringify(
+          JSON.parse(finalRow.response),
+          null,
+          4
+        );
         return (
           <InvocationLogDetails
             requestPayload={currentPayload}

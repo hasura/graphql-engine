@@ -1,5 +1,4 @@
 import { push, replace } from 'react-router-redux';
-import { getSelectQuery, makeOrderBy } from '../../Common/utils/v1QueryUtils';
 import { Thunk } from '../../../types';
 import { makeMigrationCall } from '../Data/DataActions';
 import requestAction from '../../../utils/requestAction';
@@ -50,6 +49,9 @@ import {
   getRedeliverDataEventQuery,
 } from '../../../metadata/queryUtils';
 import { exportMetadata } from '../../../metadata/actions';
+import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
+import { QualifiedTable } from '../../../metadata/types';
+import { dataSource } from '../../../dataSources';
 
 export const addScheduledTrigger = (
   state: LocalScheduledTriggerState,
@@ -563,20 +565,20 @@ export const getEventLogs = (
   errorCallback: (error: any) => void
 ): Thunk => dispatch => {
   const logTableDef = getLogsTableDef(eventKind);
+  const eventLogTable: QualifiedTable = {
+    schema: 'hdb_catalog',
+    name: 'event_log',
+  };
+  if (!dataSource.getEventInvocationInfoByIDSql) {
+    return;
+  }
 
-  const query = getSelectQuery(
-    'select',
+  const sql = dataSource.getEventInvocationInfoByIDSql(
     logTableDef,
-    ['*'],
-    {
-      event_id: {
-        $eq: eventId,
-      },
-    },
-    0,
-    null,
-    [makeOrderBy('created_at', 'desc')]
+    eventLogTable,
+    eventId
   );
+  const query = getRunSqlQuery(sql, 'default');
 
   dispatch(
     requestAction(
@@ -590,8 +592,18 @@ export const getEventLogs = (
       true,
       true
     )
-  ).then((data: InvocationLog[]) => {
-    successCallback(data);
+  ).then((data: { result: string[][] }) => {
+    const resultData = data.result[0][1];
+    const formattedData: InvocationLog = {
+      event_id: resultData[1],
+      id: resultData[0],
+      status: parseInt(resultData[2], 10),
+      created_at: resultData[5],
+      request: resultData[3],
+      response: resultData[4],
+    };
+    // FIXME: I'm not sure if this is the only thing that is required.
+    successCallback([formattedData]);
   }, errorCallback);
 };
 
