@@ -96,14 +96,14 @@ instance MonadTrans CacheRWT where
 instance (Monad m) => CacheRM (CacheRWT m) where
   askSchemaCache = CacheRWT $ gets (lastBuiltSchemaCache . fst)
 
-instance ( MonadIO m, MonadMetadata m, MonadError QErr m
-         , HasHttpManager m, HasSQLGenCtx m, HasDefaultSource m) => CacheRWM (CacheRWT m) where
+instance ( MonadIO m , MonadMetadata m, MonadError QErr m
+         , HasHttpManager m, HasSQLGenCtx m, HasDefaultSource m
+         ) => CacheRWM (CacheRWT m) where
   buildSchemaCacheWithOptions buildReason invalidations metadataModifier = CacheRWT do
     (RebuildableSchemaCache _ invalidationKeys rule, oldInvalidations) <- get
     let newInvalidationKeys = invalidateKeys invalidations invalidationKeys
     metadata <- fetchMetadata
     let modifiedMetadata = (unMetadataModifier metadataModifier) metadata
-    -- catalogMetadata <- buildCatalogMetadata modifiedMetadata
     result <- lift $ runCacheBuild $ flip runReaderT buildReason $
               Inc.build rule (modifiedMetadata, newInvalidationKeys)
     let schemaCache = Inc.result result
