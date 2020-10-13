@@ -792,7 +792,7 @@ export const isColTypeString = colType =>
   ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
 
 const isCascadable = sql => {
-  const regex = new RegExp(/ drop /gi); // all queries with drop (with space on both sides Ie:this would ignore names matches with "" or prefix/suffix)
+  const regex = new RegExp(/(\s|^)drop\s/i); // all queries with drop (with space on both sides Ie:this would ignore names matches with "" or prefix/suffix)
   return regex.test(sql);
 };
 const cascadePGSqlQuery = sql => {
