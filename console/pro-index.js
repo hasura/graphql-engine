@@ -13,14 +13,17 @@ import {
 
 import NotificationSection from './src/components/Main/NotificationSection';
 
+// Not required
 import GraphiQLWrapper from './src/components/Services/ApiExplorer/GraphiQLWrapper/GraphiQLWrapper';
 
 import { CONSOLE_ADMIN_SECRET } from './src/components/AppState';
 
 // import utility functions
 
+// Not used
 import { loadMigrationStatus } from './src/components/Main/Actions';
 
+// Not used
 import {
   showErrorNotification,
   showSuccessNotification,
@@ -39,8 +42,8 @@ export {
 };
 
 // import Data Tab parts
-import { dataRouterUtils } from './src/components/Services/Data/';
-import { dataReducer } from './src/components/Services/Data';
+// import { dataRouterUtils } from './src/components/Services/Data/';
+// import { dataReducer } from './src/components/Services/Data';
 import dataHeaders from './src/components/Services/Data/Common/Headers';
 import { handleMigrationErrors } from './src/components/Services/Data/TableModify/ModifyActions';
 import {
@@ -52,7 +55,7 @@ import {
 } from './src/components/Services/Data/DataActions';
 
 // import Event Tab parts
-import { getEventsRouter, eventsReducer } from './src/components/Services/Events';
+// import { getEventsRouter, eventsReducer } from './src/components/Services/Events';
 // import { eventReducer } from './src/components/Services/EventTrigger';
 
 // import Remote Schema parts
@@ -66,6 +69,7 @@ import {
 import generatedApiExplorer from './src/components/Services/ApiExplorer/ApiExplorer';
 import apiExplorerReducer from './src/components/Services/ApiExplorer/Actions';
 
+// Not used
 import generatedLoginConnector from './src/components/Login/Login';
 
 import generatedVoyagerConnector from './src/components/Services/VoyagerView/VoyagerView';
@@ -113,12 +117,15 @@ import {
   removeRequestHeader,
 } from './src/components/Services/ApiExplorer/Actions';
 
-import actionReducer from './src/components/Services/Actions/reducer';
-import getActionsRouter from './src/components/Services/Actions/Router';
-import typesReducer from './src/components/Services/Types/reducer';
+// TODO:
+// import actionReducer from './src/components/Services/Actions/reducer';
+// import getActionsRouter from './src/components/Services/Actions/Router';
+// import typesReducer from './src/components/Services/Types/reducer';
 
+// Not used
 import validateLogin from './src/utils/validateLogin';
 
+// Not used
 import DragFoldTable from './src/components/Common/TableCommon/DragFoldTable';
 
 const filterQueryScss = require('./src/components/Common/FilterQuery/FilterQuery.scss');
@@ -159,13 +166,14 @@ export {
 export { GraphiQLWrapper };
 
 // export Data Tab parts
-export { dataRouterUtils, dataReducer };
+// export { dataRouterUtils, dataReducer };
 export { fetchSchemaList, updateSchemaInfo };
 export { ADMIN_SECRET_ERROR, UPDATE_CURRENT_SCHEMA, UPDATE_DATA_HEADERS };
 export { dataHeaders };
 
 // export Event Tab parts
-export { getEventsRouter, eventsReducer, invokeEventTriggerReducer};
+// export { getEventsRouter, eventsReducer, invokeEventTriggerReducer};
+export { invokeEventTriggerReducer};
 
 // export Remote Schema parts
 export { getRemoteSchemaRouter, remoteSchemaReducer };
@@ -192,7 +200,8 @@ export { CONSOLE_ADMIN_SECRET };
 // export styles
 export { filterQueryScss, tableScss };
 export * from './src/components/Common';
-export { actionReducer, getActionsRouter, typesReducer };
+
+// export { actionReducer, getActionsRouter, typesReducer };
 
 /* Notification section exports
  */

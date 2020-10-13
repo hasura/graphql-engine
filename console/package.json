@@ -12,6 +12,7 @@
   "homepage": "https://hasura.io/",
   "keywords": [],
   "scripts": {
+    "copy-lib": "npx babel ./src -x .es6,.js,.es,.jsx,.mjs,.ts,.tsx --out-dir ./packages/console-oss/lib --copy-files",
     "start-dev": "node -r dotenv/config ./bin/server.js",
     "watch-client": "node -r dotenv/config webpack/webpack-dev-server.js",
     "dev": "concurrently --kill-others \"npm run watch-client\" \"npm run start-dev\"",

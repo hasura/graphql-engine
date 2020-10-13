@@ -34,7 +34,14 @@ module.exports = {
   externals: [nodeExternals()],
   mode: 'production',
   context: path.resolve(__dirname, '..'),
-  entry: './pro-index.js',
+  entry: {
+    main: './pro-index.js',
+    hoc: './exports',
+    // data: './src/components/Services/Data',
+    // actions: './src/components/Services/Actions',
+    // "event-triggers": './src/components/Services/Events',
+    // "types": './src/components/Services/Types',
+  },
   output: {
     path: assetsPath,
     filename: '[name].js',
@@ -188,8 +195,10 @@ module.exports = {
     new MiniCssExtractPlugin({
       // Options similar to the same options in webpackOptions.output
       // both options are optional
-      filename: 'main.css',
-      chunkFilename: 'main.css',
+      filename: '[name].css',
+      chunkFilename: '[name].css',
+      // filename: 'main.css',
+      // chunkFilename: 'main.css',
     }),
     new webpack.DefinePlugin({
       __CLIENT__: true,
