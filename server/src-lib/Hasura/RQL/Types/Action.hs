@@ -55,6 +55,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.Session
 import           Hasura.SQL.Types
@@ -256,11 +257,11 @@ instance J.FromJSON ActionMetadata where
 
 ----------------- Resolve Types ----------------
 
-data AnnActionExecution v
+data AnnActionExecution (b :: Backend) v
   = AnnActionExecution
   { _aaeName                 :: !ActionName
   , _aaeOutputType           :: !GraphQLType -- ^ output type
-  , _aaeFields               :: !(AnnFieldsG v) -- ^ output selection
+  , _aaeFields               :: !(AnnFieldsG b v) -- ^ output selection
   , _aaePayload              :: !J.Value -- ^ jsonified input arguments
   , _aaeOutputFields         :: !ActionOutputFields
   -- ^ to validate the response fields from webhook
@@ -278,22 +279,22 @@ data AnnActionMutationAsync
   , _aamaPayload :: !J.Value -- ^ jsonified input arguments
   } deriving (Show, Eq)
 
-data AsyncActionQueryFieldG v
+data AsyncActionQueryFieldG (b :: Backend) v
   = AsyncTypename !Text
-  | AsyncOutput !(AnnFieldsG v)
+  | AsyncOutput !(AnnFieldsG b v)
   | AsyncId
   | AsyncCreatedAt
   | AsyncErrors
   deriving (Show, Eq)
 
-type AsyncActionQueryFieldsG v = Fields (AsyncActionQueryFieldG v)
+type AsyncActionQueryFieldsG (b :: Backend) v = Fields (AsyncActionQueryFieldG b v)
 
-data AnnActionAsyncQuery v
+data AnnActionAsyncQuery (b :: Backend) v
   = AnnActionAsyncQuery
   { _aaaqName           :: !ActionName
   , _aaaqActionId       :: !v
   , _aaaqOutputType     :: !GraphQLType
-  , _aaaqFields         :: !(AsyncActionQueryFieldsG v)
+  , _aaaqFields         :: !(AsyncActionQueryFieldsG b v)
   , _aaaqDefinitionList :: ![(PGCol, PGScalarType)]
   , _aaaqStringifyNum   :: !Bool
   } deriving (Show, Eq)
