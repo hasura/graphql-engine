@@ -42,12 +42,12 @@ Currently, only functions which satisfy the following constraints can be exposed
 Creating SQL functions
 ----------------------
 
+SQL functions can be created using SQL statements which can be executed as follows:
+
 .. rst-class:: api_tabs
 .. tabs::
 
   .. tab:: Console
-
-    SQL functions can be created using SQL which can be run in the Hasura console:
 
     - Head to the ``Data -> SQL`` section of the Hasura console
     - Enter your `create function SQL statement <https://www.postgresql.org/docs/current/sql-createfunction.html>`__

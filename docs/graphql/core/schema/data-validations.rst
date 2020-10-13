@@ -50,12 +50,14 @@ Let's say we have the following table in our schema:
 
    author (id uuid, name text, rating integer)
 
+We can now add a check constraint to limit the ``rating`` values as follows:
+
 .. rst-class:: api_tabs
 .. tabs::
 
   .. tab:: Console
 
-    Now, we can head to the ``Modify`` tab in the table page and add a check
+    Head to the ``Modify`` tab in the table page and add a check
     constraint in the ``Check Constraints`` section:
 
     .. thumbnail:: /img/graphql/core/schema/validation-add-check-constraint.png
@@ -146,21 +148,24 @@ Suppose we have the following table in our schema:
 
   article (id uuid, title text, content text)
 
+We can now create a `Postgres function <https://www.postgresql.org/docs/current/sql-createfunction.html>`__ that checks if an article's
+content exceeds a certain number of words, and then add a `Postgres trigger <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__
+that will call this function every time before an article is inserted or updated.
+
 .. rst-class:: api_tabs
 .. tabs::
 
   .. tab:: Console
 
-    Now, we can head to the ``Data -> SQL`` tab in the console and
-    create a `Postgres function <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
-    that checks if an article's content exceeds a certain number of words,
-    and then add a `Postgres trigger <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__
-    that will call this function every time before an article is inserted or updated.
+    - Head to the ``Data -> SQL`` section of the Hasura console
+    - Enter the SQL statement below to create a Postgres function and trigger
+    - Hit the ``Run`` button
 
   .. tab:: CLI
 
-    :ref:`Create a migration manually <manual_migrations>` and add your `Postgres function <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
-    and your `Postgres trigger <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__ to the ``up.sql`` file. Also, add an SQL statement to the ``down.sql`` to revert the previous statement in case you need to :ref:`roll back <roll_back_migrations>` the migration.
+    :ref:`Create a migration manually <manual_migrations>` and add the SQL statement below to create a Postgres function and trigger to
+    the ``up.sql`` file. Also, add an SQL statement to the ``down.sql`` to revert the previous statement in case you need to
+    :ref:`roll back <roll_back_migrations>` the migration.
 
     Apply the migration by running:
 
@@ -170,8 +175,7 @@ Suppose we have the following table in our schema:
 
   .. tab:: API
 
-    You can add a `Postgres function <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
-    and a `Postgres trigger <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__ by using the :ref:`run_sql metadata API <run_sql>`:
+    You can add a Postgres function and trigger by using the :ref:`run_sql metadata API <run_sql>`:
 
     .. code-block:: http
 
@@ -182,7 +186,7 @@ Suppose we have the following table in our schema:
       {
         "type": "run_sql",
         "args": {
-          "sql": "<SQL statement>"
+          "sql": "<SQL statement below>"
         }
       }
 
@@ -264,7 +268,7 @@ Suppose, we have the following table in our schema:
 
   article (id uuid, title text, content text, author_id uuid)
 
-Now, we can create a role ``user`` and add the following rule:
+Now, we can create a role ``user`` and add an insert validation rule as follows:
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -299,7 +303,7 @@ Now, we can create a role ``user`` and add the following rule:
 
   .. tab:: API
 
-    You can add column presets by using the :ref:`create_insert_permission metadata API <create_insert_permission>`:
+    You can add an insert permission rule by using the :ref:`create_insert_permission metadata API <create_insert_permission>`:
 
     .. code-block:: http
 
@@ -365,7 +369,7 @@ Also, suppose there is an :ref:`object relationship <graphql_relationships>` ``a
 
   article.author_id -> author.id
 
-Now, we can create a role ``user`` and add the following rule:
+Now, we can create a role ``user`` and add an insert validation rule as follows:
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -401,7 +405,7 @@ Now, we can create a role ``user`` and add the following rule:
 
   .. tab:: API
 
-    You can add column presets by using the :ref:`create_insert_permission metadata API <create_insert_permission>`:
+    You can add an insert permission rule by using the :ref:`create_insert_permission metadata API <create_insert_permission>`:
 
     .. code-block:: http
 
@@ -486,116 +490,24 @@ The validation process looks as follows:
 
 Actions allow us to define :ref:`custom types <custom_types>` in our GraphQL schema.
 
-We create a new action called ``InsertAuthor`` that takes an ``author`` object with type ``AuthorInput`` as input and
-returns an object of type ``AuthorOutput``:
+We can :ref:`create a new action <create_actions>` called ``InsertAuthor`` that takes an ``author``
+object with type ``AuthorInput`` as input and returns an object of type ``AuthorOutput``.
 
-.. rst-class:: api_tabs
-.. tabs::
+.. code-block:: graphql
 
-  .. tab:: Console
+  type Mutation {
+    InsertAuthor (author: AuthorInput!): AuthorOutput
+  }
 
-    .. thumbnail:: /img/graphql/core/schema/validation-actions-def.png
-      :alt: Create action
+  input AuthorInput {
+    name: String!
+    rating: Int!
+    is_active: Boolean!
+  }
 
-  .. tab:: CLI
-
-    To create an action, run
-
-    .. code-block:: bash
-
-      hasura actions create InsertAuthor
-
-    This will open up an editor with ``metadata/actions.graphql``. You can enter
-    the action's mutation definition and the required types in this file. For your
-    ``InsertAuthor`` mutation, replace the content of this file with the following
-    and save:
-
-    .. code-block:: graphql
-
-      type Mutation {
-        InsertAuthor (author: AuthorInput!): AuthorOutput
-      }
-
-      input AuthorInput {
-        name: String!
-        rating: Int!
-        is_active: Boolean!
-      }
-
-      type AuthorOutput {
-        id: Int!
-      }
-
-  .. tab:: API
-
-    It is essential that the custom types used in the action are defined *beforehand* via the :ref:`set_custom_types metadata API <set_custom_types>`:
-
-    .. code-block:: http
-
-      POST /v1/query HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "type": "set_custom_types",
-        "args": {
-          "scalars": [],
-          "enums": [],
-          "input_objects": [
-            {
-              "name": "AuthorInput",
-              "fields": [
-                {
-                  "name": "name",
-                  "type": "String!"
-                },
-                {
-                  "name": "rating",
-                  "type": "Int!"
-                },
-                {
-                  "name": "is_active",
-                  "type": "Boolean!"
-                }
-              ]
-            }
-          ],
-          "objects": [
-            {
-              "name": "AuthorOutput",
-              "fields": [
-                {
-                  "name": "id",
-                  "type": "Int!"
-                }
-              ]
-            }
-          ]
-        }
-      }
-
-    Once the custom types are defined, we can create an action via the :ref:`create_action metadata API <create_action>`:
-
-    .. code-block:: http
-
-        POST /v1/query HTTP/1.1
-        Content-Type: application/json
-        X-Hasura-Role: admin
-
-        {
-          "type": "create_action",
-          "args": {
-            "name": "InsertAuthor",
-            "type": "mutation",
-            "definition": {
-              "kind": "synchronous",
-              "input_type": "AuthorInput",
-              "output_type": "AuthorOutput",
-              "handler": "https://action.my_app.com/insert-author"
-            }
-          }
-        }
- 
+  type AuthorOutput {
+    id: Int!
+  }
 
 The business logic of an action - in our case the author validation - happens in the :ref:`action handler <action_handlers>`
 which is an HTTP webhook which contains the code to call the external service.
