@@ -375,3 +375,58 @@ export const getRemoteRelConfig = (rel, tableName, styles) => {
     </div>
   );
 };
+
+export const hasRelationshipsMetadata = ({ tables = [] }) =>
+  tables.find(item => !item.table || Object.keys(item).length > 1);
+
+const findTableIndex = (tables, { name, schema }) =>
+  tables.findIndex(
+    tbl => tbl.table.name === name && tbl.table.schema === schema
+  );
+
+const getRelationKey = type => {
+  if (type === 'create_array_relationship') return 'array_relationships';
+  if (type === 'create_object_relationship') return 'object_relationships';
+  return null;
+};
+
+const getPrevRelationships = (tables, tableIx, relationshipType) =>
+  tables && tables[tableIx] && tables[tableIx][relationshipType]
+    ? tables[tableIx][relationshipType]
+    : [];
+
+export const addRelationships = (metadata, trackPayload) => {
+  const result = { ...metadata, tables: [...metadata.tables] };
+  trackPayload.forEach(({ upQuery = {} }) => {
+    const { name, using, table } = upQuery.args;
+    const tableIndex = findTableIndex(result.tables, table);
+    if (tableIndex >= 0) {
+      const relationshipType = getRelationKey(upQuery.type);
+      if (relationshipType) {
+        const prevRel =
+          getPrevRelationships(
+            [...result.tables],
+            tableIndex,
+            relationshipType
+          ) || [];
+
+        result.tables[tableIndex] = {
+          ...result.tables[tableIndex],
+          [relationshipType]: [...prevRel, { name, using }],
+        };
+      }
+    }
+  });
+  return result;
+};
+
+/**
+ * # isMetadataEmpty
+ *
+ * @param {*} metadata : generated metadata
+ * @returns boolean
+ */
+export const isMetadataEmpty = metadata =>
+  Object.keys(metadata).length === 2 &&
+  metadata.tables &&
+  metadata.tables.length === 0;

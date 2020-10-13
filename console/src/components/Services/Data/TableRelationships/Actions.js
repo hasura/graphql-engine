@@ -13,6 +13,8 @@ import {
   getRemoteRelPayload,
   parseRemoteRelationship,
 } from './RemoteRelationships/utils';
+import { exportMetadata } from '../../Settings/Actions';
+import { hasRelationshipsMetadata, addRelationships } from './utils';
 
 export const SET_MANUAL_REL_ADD = 'ModifyTable/SET_MANUAL_REL_ADD';
 export const MANUAL_REL_SET_TYPE = 'ModifyTable/MANUAL_REL_SET_TYPE';
@@ -701,15 +703,77 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
   return { bulkRelTrack: bulkRelTrack, bulkRelTrackDown: bulkRelTrackDown };
 };
 
-const autoTrackRelations = autoTrackData => (dispatch, getState) => {
-  const relChangesUp = autoTrackData.map(data => data.upQuery);
-  const relChangesDown = autoTrackData.map(data => data.downQuery);
+const replaceMetadataMigration = (
+  metadata,
+  oldMetadata = {
+    version: 2,
+    tables: [],
+  },
+  errorCallback,
+  { migrationName, requestMsg, successMsg, errorMsg }
+) => {
+  return (dispatch, getState) => {
+    const requestBodyUp = {
+      type: 'replace_metadata',
+      args: metadata,
+    };
+    const requestBodyDown = {
+      // set default metadata
+      type: 'replace_metadata',
+      args: oldMetadata,
+    };
+
+    const customOnSuccess = () => {};
+    const customOnError = () => {
+      if (errorCallback) errorCallback();
+    };
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      [requestBodyUp],
+      [requestBodyDown],
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
+const replaceMetadata = (autoTrackData, skipMetadataCheck = false) => (
+  dispatch,
+  getState
+) => {
   // Apply migrations
   const migrationName = 'track_all_relationships';
 
   const requestMsg = 'Adding Relationship...';
   const successMsg = 'Relationship created';
   const errorMsg = 'Creating relationship failed';
+
+  if (!skipMetadataCheck) {
+    const fallback = () => dispatch(replaceMetadata(autoTrackData, true));
+    return dispatch(
+      exportMetadata(metadata => {
+        if (hasRelationshipsMetadata(metadata)) return fallback();
+        const newMetaData = addRelationships({ ...metadata }, autoTrackData);
+        return dispatch(
+          replaceMetadataMigration(newMetaData, metadata, fallback, {
+            migrationName,
+            requestMsg,
+            successMsg,
+            errorMsg,
+          })
+        );
+      })
+    );
+  }
+  const relChangesUp = autoTrackData.map(data => data.upQuery);
+  const relChangesDown = autoTrackData.map(data => data.downQuery);
+
   const customOnSuccess = () => {
     dispatch(updateSchemaInfo());
   };
@@ -777,10 +841,11 @@ export {
   relNameChanged,
   resetRelationshipForm,
   resetManualRelationshipForm,
-  autoTrackRelations,
+  replaceMetadata,
   autoAddRelName,
   formRelName,
   getAllUnTrackedRelations,
   saveRenameRelationship,
   getExistingFieldsMap,
+  replaceMetadataMigration,
 };
