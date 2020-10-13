@@ -6,7 +6,10 @@ import globals from '../../../Globals';
 import { baseUrl } from '../../../Endpoints';
 import { ReduxState } from '../../../types';
 
-export const getSchemaBaseRoute = (schemaName: string, sourceName: string) => {
+export const getSchemaBaseRoute = (
+  schemaName: string,
+  sourceName = 'default'
+) => {
   // return `${globals.urlPrefix}/data/${source}/schema/${schemaName}`;
   return `/data/${encodeURIComponent(sourceName)}/schema/${encodeURIComponent(
     schemaName

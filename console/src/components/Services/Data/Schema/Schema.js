@@ -37,6 +37,7 @@ import {
   getUntrackedTables,
   dataSource,
   setDriver,
+  currentDriver,
 } from '../../../../dataSources';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
@@ -259,10 +260,6 @@ class Schema extends Component {
       currentDataSource,
     } = this.props;
 
-    const currentDataSourceDetails = dataSources.find(
-      s => s.name === currentDataSource
-    );
-
     const handleSchemaChange = e => {
       dispatch(updateCurrentSchema(e.target.value, currentDataSource));
     };
@@ -345,10 +342,7 @@ class Schema extends Component {
                 onChange={this.onDataSourceChange}
                 className={`${styles.add_mar_left_mid} ${styles.width_auto} form-control`}
                 style={{ width: '200px' }}
-                value={JSON.stringify([
-                  currentDataSourceDetails.name,
-                  currentDataSourceDetails.driver,
-                ])}
+                value={JSON.stringify([currentDataSource, currentDriver])}
               >
                 {dataSources.map(s => (
                   <option

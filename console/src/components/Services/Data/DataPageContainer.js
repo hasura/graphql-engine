@@ -14,7 +14,7 @@ import {
 } from './DataActions';
 import { CLI_CONSOLE_MODE } from '../../../constants';
 import styles from '../../Common/TableCommon/Table.scss';
-import { useDataSource } from '../../../dataSources';
+import { currentDriver, useDataSource } from '../../../dataSources';
 import { getDataSources } from '../../../metadata/selector';
 import { push } from 'react-router-redux';
 
@@ -29,9 +29,6 @@ const DataPageContainer = ({
 }) => {
   const { setDriver } = useDataSource();
   const [loadingSchemas, setLoadingSchemas] = useState(false);
-  const currentDataSourceDetails = dataSources.find(
-    s => s.name === currentDataSource
-  );
   const onDatabaseChange = e => {
     const value = e.target.value;
     let newName;
@@ -108,10 +105,7 @@ const DataPageContainer = ({
               <select
                 onChange={onDatabaseChange}
                 className={`${styles.changeSchema} form-control`}
-                value={JSON.stringify([
-                  currentDataSourceDetails?.name,
-                  currentDataSourceDetails?.driver,
-                ])}
+                value={JSON.stringify([currentDataSource, currentDriver])}
               >
                 {dataSources.map(s => (
                   <option
