@@ -25,11 +25,10 @@ jobs:
           let imagesPresent = false; 
           for (const file of files.data) {
             if (file.filename === '**.png' || file.filename === '**.jpg' || file.filename === '**.jpeg') {
-              console.log(file.filename)
               imagesPresent = true;
               break;
             }
           }
-          if (imagesPresent) {
+          if (!imagesPresent) {
             core.setFailed('compress images and add the docs-compress-images label');
           }
