@@ -2,6 +2,23 @@
 
 ## Next release
 
+### Heterogeneous execution
+
+Previous releases have allowed queries to request data from either Postgres or remote schemas, but not both. This release removes that restriction, so multiple data sources may be mixed within a single query. For example, GraphQL Engine can execute a query like
+
+```
+query {
+  articles {
+    title
+  }
+  weather {
+    temperature
+  }
+}
+```
+
+where the articles are fetched from the database, and the weather is fetched from a remote server.
+
 ### Server - Support for mapping session variables to default JWT claims
 
 Some auth providers do not let users add custom claims in JWT. In such cases, the server can take a JWT configuration option called `claims_map` to specify a mapping of Hasura session variables to values in existing claims via JSONPath or literal values.
@@ -50,6 +67,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: add `--websocket-compression` command-line flag for enabling websocket compression (fix #3292)
 - server: some mutations that cannot be performed will no longer be in the schema (for instance, `delete_by_pk` mutations won't be shown to users that do not have select permissions on all primary keys) (#4111)
 - server: miscellaneous description changes (#4111)
 - server: treat the absence of `backend_only` configuration and `backend_only: false` equally (closing #5059) (#4111)
@@ -60,13 +78,16 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - server: accept only non-negative integers for batch size and refetch interval (close #5653) (#5759)
 - server: limit the length of event trigger names (close #5786)
 **NOTE:** If you have event triggers with names greater than 42 chars, then you should update their names to avoid running into Postgres identifier limit bug (#5786)
+- server: validate remote schema queries (fixes #4143)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
+- cli: add missing global flags for seed command (#5565)
+- cli: allow seeds as alias for seed command (#5693)
 - console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
 - console: add option to flag an insertion as a migration from `Data` section (close #1766) (#4933)
-- console: add `<3 hasura` section to view updates and notifications from Hasura (#5070)
-- cli: add missing global flags for seeds command (#5565)
+- console: add notifications (#5070)
 - docs: add docs page on networking with docker (close #4346) (#4811)
+- docs: add tabs for console / cli / api workflows (close #3593) (#4948)
 - docs: add postgres concepts page to docs (close #4440) (#4471)
 
 
