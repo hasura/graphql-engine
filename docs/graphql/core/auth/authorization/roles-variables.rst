@@ -221,10 +221,14 @@ The permission for ``org-member`` role changes to this:
     ]
   }
 
-.. admonition:: Arrays in permission rules
+.. admonition:: Array session variables in permission rules
 
    Support for using session variables for array operators like ``_in``, ``_nin``, ``_has_any_keys``,
-   ``_has_all_keys`` is only added in ``beta.3`` release.
+   ``_has_all_keys`` is available in versions ``v.1.0.0-beta.3`` and above.
+
+   When you use array operators such as ``_in`` in the permissions builder in the Hasura console, it will automatically open an array for your values. 
+   If your session variable value is already an array, you can click the ``[X-Hasura-Allowed-Ids]`` suggestion to remove the brackets and set your 
+   session variable in its place.
 
 Format of session variables
 ---------------------------

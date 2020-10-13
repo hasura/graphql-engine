@@ -15,7 +15,7 @@ Docker networking
 Introduction
 ------------
 
-Sometimes you might want to connect Hasura with APIs (e.g. auth webhooks, event triggers, remote schemas) that are either running outside of Docker or in a different Docker container.
+Sometimes you might want to connect Hasura running in Docker with APIs (e.g. auth webhooks, event triggers, remote schemas) that are either running outside of Docker or in a different Docker container.
 Depending on the setting, the network config is different. This section shows how to connect in each of these use cases.
 
 Network config
@@ -34,7 +34,7 @@ Network config
          - Config
          - Comment
        * - **Hasura to API (outside Docker)**
-         - 1. With ``--net=host``, e.g. ``localhost:3000 --net=host``
+         - 1. With ``--net=host``, ``localhost:3000``
            2. Otherwise, ``<docker-bridge-ip>:3000``, e.g. ``172.17.0.1:3000``
          - 1. Assuming the API is running on port ``3000``
            2. The Docker bridge IP can be found via ``ifconfig``

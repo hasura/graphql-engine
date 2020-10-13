@@ -39,6 +39,8 @@ import qualified Text.Shakespeare.Text   as ST
 
 data OpVar = OLD | NEW deriving (Show)
 
+-- pgIdenTrigger is a method used to construct the name of the pg function
+-- used for event triggers which are present in the hdb_views schema.
 pgIdenTrigger:: Ops -> TriggerName -> T.Text
 pgIdenTrigger op trn = pgFmtIden . qualifyTriggerName op $ triggerNameToTxt trn
   where
@@ -158,7 +160,7 @@ fetchEvent :: EventId -> Q.TxE QErr (EventId, Bool)
 fetchEvent eid = do
   events <- Q.listQE defaultTxErrorHandler
             [Q.sql|
-              SELECT l.id, l.locked
+              SELECT l.id, l.locked IS NOT NULL AND l.locked >= (NOW() - interval '30 minute')
               FROM hdb_catalog.event_log l
               JOIN hdb_catalog.event_triggers e
               ON l.trigger_name = e.name
@@ -332,7 +334,9 @@ getWebhookInfoFromConf
   -> WebhookConf
   -> m WebhookConfInfo
 getWebhookInfoFromConf env wc = case wc of
-  WCValue w -> return $ WebhookConfInfo wc w
+  WCValue w -> do
+    resolvedWebhook <- resolveWebhook env w
+    return $ WebhookConfInfo wc $ unResolvedWebhook resolvedWebhook
   WCEnv we -> do
     envVal <- getEnv env we
     return $ WebhookConfInfo wc envVal
