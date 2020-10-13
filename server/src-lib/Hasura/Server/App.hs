@@ -2,6 +2,8 @@
 
 module Hasura.Server.App where
 
+import qualified Debug.Trace                               as Debug
+
 import           Control.Concurrent.MVar.Lifted
 import           Control.Exception                         (IOException, try)
 import           Control.Monad.Morph                       (hoist)
@@ -73,7 +75,9 @@ import qualified Network.Wai.Handler.WebSockets.Custom     as WSC
 
 data SchemaCacheRef
   = SchemaCacheRef
-  { _scrLock     :: MVar ()
+  {
+
+    -- _scrLock     :: MVar ()
   -- ^ The idea behind explicit locking here is to
   --
   --   1. Allow maximum throughput for serving requests (/v1/graphql) (as each
@@ -88,7 +92,7 @@ data SchemaCacheRef
   -- the IORef) where we serve a request with a stale schemacache but I guess
   -- it is an okay trade-off to pay for a higher throughput (I remember doing a
   -- bunch of benchmarks to test this hypothesis).
-  , _scrCache    :: IORef (RebuildableSchemaCache Run, SchemaCacheVer)
+  _scrCache      :: MVar (RebuildableSchemaCache Run, SchemaCacheVer)
   , _scrOnChange :: IO ()
   -- ^ an action to run when schemacache changes
   }
@@ -140,7 +144,7 @@ isAdminSecretSet AMNoAuth = boolToText False
 isAdminSecretSet _        = boolToText True
 
 getSCFromRef :: (MonadIO m) => SchemaCacheRef -> m SchemaCache
-getSCFromRef scRef = lastBuiltSchemaCache . fst <$> liftIO (readIORef $ _scrCache scRef)
+getSCFromRef scRef = lastBuiltSchemaCache . fst <$> liftIO (readMVar $ _scrCache scRef)
 
 logInconsObjs :: L.Logger L.Hasura -> [InconsistentMetadata] -> IO ()
 logInconsObjs logger objs =
@@ -149,20 +153,21 @@ logInconsObjs logger objs =
 withSCUpdate
   :: (MonadIO m, MonadBaseControl IO m)
   => SchemaCacheRef -> L.Logger L.Hasura -> m (a, RebuildableSchemaCache Run) -> m a
-withSCUpdate scr logger action =
-  withMVarMasked lk $ \() -> do
+withSCUpdate scr logger action = do
+  -- withMVarMasked lk $ \() -> do
     (!res, !newSC) <- action
     liftIO $ do
       -- update schemacache in IO reference
-      modifyIORef' cacheRef $ \(_, prevVer) ->
+      modifyMVar_ cacheRef $ \(_, prevVer) ->
         let !newVer = incSchemaCacheVer prevVer
-          in (newSC, newVer)
+          in pure (newSC, newVer)
       -- log any inconsistent objects
       logInconsObjs logger $ scInconsistentObjs $ lastBuiltSchemaCache newSC
+      Debug.traceIO "updating sc"
       onChange
     return res
   where
-    SchemaCacheRef lk cacheRef onChange = scr
+    SchemaCacheRef cacheRef onChange = scr
 
 mkGetHandler :: Handler m APIResp -> APIHandler m ()
 mkGetHandler = AHGet
@@ -359,7 +364,7 @@ v1QueryHandler query = do
     dbAction = do
       userInfo    <- asks hcUser
       scRef       <- asks (scCacheRef . hcServerCtx)
-      schemaCache <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
+      schemaCache <- fmap fst $ liftIO $ readMVar $ _scrCache scRef
       httpMgr     <- asks (scManager . hcServerCtx)
       sqlGenCtx   <- asks (scSQLGenCtx . hcServerCtx)
       pgExecCtx   <- asks (scPGExecCtx . hcServerCtx)
@@ -385,7 +390,7 @@ v1Alpha1GQHandler queryType query = do
   requestId            <- asks hcRequestId
   manager              <- asks (scManager . hcServerCtx)
   scRef                <- asks (scCacheRef . hcServerCtx)
-  (sc, scVer)          <- liftIO $ readIORef $ _scrCache scRef
+  (sc, scVer)          <- liftIO $ readMVar $ _scrCache scRef
   pgExecCtx            <- asks (scPGExecCtx . hcServerCtx)
   sqlGenCtx            <- asks (scSQLGenCtx . hcServerCtx)
   -- planCache            <- asks (scPlanCache . hcServerCtx)
@@ -610,7 +615,7 @@ mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpMana
     -- See Note [Temporarily disabling query plan caching]
     -- (planCache, schemaCacheRef) <- initialiseCache
     schemaCacheRef <- initialiseCache
-    let getSchemaCache = first lastBuiltSchemaCache <$> readIORef (_scrCache schemaCacheRef)
+    let getSchemaCache = first lastBuiltSchemaCache <$> readMVar (_scrCache schemaCacheRef)
 
     let corsPolicy = mkDefaultCorsPolicy corsCfg
         pgExecCtx = fromMaybe (mkPGExecCtx isoLevel pool) pgExecCtxCustom
@@ -653,10 +658,10 @@ mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpMana
     -- initialiseCache :: m (E.PlanCache, SchemaCacheRef)
     initialiseCache :: m SchemaCacheRef
     initialiseCache = do
-      cacheLock <- liftIO $ newMVar ()
-      cacheCell <- liftIO $ newIORef (schemaCache, initSchemaCacheVer)
+      -- cacheLock <- liftIO $ newMVar ()
+      cacheCell <- liftIO $ newMVar (schemaCache, initSchemaCacheVer)
       -- planCache <- liftIO $ E.initPlanCache planCacheOptions
-      let cacheRef = SchemaCacheRef cacheLock cacheCell (E.clearPlanCache {- planCache -})
+      let cacheRef = SchemaCacheRef cacheCell (E.clearPlanCache {- planCache -})
       -- pure (planCache, cacheRef)
       pure cacheRef
 

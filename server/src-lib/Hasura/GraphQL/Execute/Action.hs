@@ -9,6 +9,7 @@ module Hasura.GraphQL.Execute.Action
 
 import           Hasura.Prelude
 
+import           Control.Concurrent.MVar.Lifted
 import qualified Data.Aeson                           as J
 import qualified Data.Aeson.Casing                    as J
 import qualified Data.Aeson.TH                        as J
@@ -304,13 +305,13 @@ asyncActionsProcessor
      )
   => Env.Environment
   -> L.Logger L.Hasura
-  -> IORef (RebuildableSchemaCache Run, SchemaCacheVer)
+  -> MVar (RebuildableSchemaCache Run, SchemaCacheVer)
   -> Q.PGPool
   -> HTTP.Manager
   -> m void
 asyncActionsProcessor env logger cacheRef pgPool httpManager = forever $ do
   asyncInvocations <- liftIO getUndeliveredEvents
-  actionCache <- scActions . lastBuiltSchemaCache . fst <$> liftIO (readIORef cacheRef)
+  actionCache <- scActions . lastBuiltSchemaCache . fst <$> liftIO (readMVar cacheRef)
   LA.mapConcurrently_ (callHandler actionCache) asyncInvocations
   liftIO $ threadDelay (1 * 1000 * 1000)
   where
