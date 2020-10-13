@@ -47,8 +47,8 @@
     }
   },
   "dependencies": {
-    "@graphql-codegen/core": "1.13.5",
-    "@graphql-codegen/typescript": "1.13.5",
+    "@graphql-codegen/core": "^1.17.8",
+    "@graphql-codegen/typescript": "^1.17.10",
     "@types/highlight.js": "9.12.4",
     "@types/reselect": "^2.2.0",
     "@types/sql-formatter": "2.3.0",

@@ -1,13 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import { ThunkDispatch } from 'redux-thunk';
 import { RouteComponentProps } from 'react-router';
 import { push } from 'react-router-redux';
+import { AnyAction } from 'redux';
 
 import { ReduxState } from '../../../types';
 import { getDataSources, getInitDataSource } from '../../../metadata/selector';
 import { showErrorNotification } from '../Common/Notification';
 import {
+  fetchDataInit,
   UPDATE_CURRENT_DATA_SOURCE,
   UPDATE_CURRENT_SCHEMA,
 } from './DataActions';
@@ -31,6 +33,7 @@ const DataSourceContainer = ({
   currentSource,
   driver,
 }: DataSourceContainerProps) => {
+  const [dataLoaded, setDataLoaded] = useState(false);
   const { source, schema } = params;
 
   useEffect(() => {
@@ -87,6 +90,18 @@ const DataSourceContainer = ({
     setDriver(driver);
   }, [driver]);
 
+  useEffect(() => {
+    if (currentSource) {
+      dispatch(fetchDataInit()).then(() => {
+        setDataLoaded(true);
+      });
+    }
+  }, [currentSource, dataLoaded, dispatch]);
+
+  if (!currentSource || !dataLoaded) {
+    return <div style={{ margin: '20px' }}>Loading...</div>;
+  }
+
   return <>{children}</>;
 };
 
@@ -100,7 +115,7 @@ const mapStateToProps = (state: ReduxState) => {
 };
 const dataSourceConnector = connect(
   mapStateToProps,
-  (dispatch: ThunkDispatch<ReduxState, unknown, any>) => ({
+  (dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>) => ({
     dispatch,
   })
 );

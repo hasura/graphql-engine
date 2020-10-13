@@ -109,8 +109,8 @@ const DataPageContainer = ({
                 onChange={onDatabaseChange}
                 className={styles.changeSchema + ' form-control'}
                 value={JSON.stringify([
-                  currentDataSourceDetails.name,
-                  currentDataSourceDetails.driver,
+                  currentDataSourceDetails?.name,
+                  currentDataSourceDetails?.driver,
                 ])}
               >
                 {dataSources.map(s => (

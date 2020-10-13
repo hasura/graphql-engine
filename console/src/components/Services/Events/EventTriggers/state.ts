@@ -52,7 +52,7 @@ const defaultState: LocalEventTriggerState = {
     timeout_sec: 60,
   },
   headers: [defaultHeader],
-  source: 'default',
+  source: '',
 };
 
 export const parseServerETDefinition = (

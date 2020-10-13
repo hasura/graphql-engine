@@ -116,7 +116,7 @@ export const getSelectQuery = (
 ) => {
   return {
     type,
-    source: currentDataSource || 'default',
+    source: currentDataSource,
     args: {
       table,
       columns,

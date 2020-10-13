@@ -273,9 +273,10 @@ const fetchAdditionalColumnsInfo = () => (dispatch, getState) => {
 
 const updateSchemaInfo = options => (dispatch, getState) => {
   if (!getState().tables.currentDataSource) return;
-  return dispatch(loadSchema(options)).then(() => {
+  return dispatch(loadSchema(options)).then(data => {
     dispatch(fetchAdditionalColumnsInfo());
     dispatch(setUntrackedRelations());
+    return data;
   });
 };
 
@@ -311,8 +312,7 @@ const fetchDataInit = () => (dispatch, getState) => {
         type: FETCH_SCHEMA_LIST,
         schemaList,
       });
-      dispatch(updateSchemaInfo());
-      return data;
+      return dispatch(updateSchemaInfo());
     },
     error => {
       console.error('Failed to fetch schema ' + JSON.stringify(error));

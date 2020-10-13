@@ -13,13 +13,15 @@ const PageContainer: React.FC<PageContainerProps> = ({
   children,
 }) => {
   return (
-    <div>
+    <>
       <Helmet title={helmet} />
-      <div className={`${styles.wd20} ${styles.align_left}`}>
+      <div
+        className={`${styles.wd20} ${styles.align_left} ${styles.height100}`}
+      >
         {leftContainer}
       </div>
       <div className={styles.wd80}>{children}</div>
-    </div>
+    </>
   );
 };
 
