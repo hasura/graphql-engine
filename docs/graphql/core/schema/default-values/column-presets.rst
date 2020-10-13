@@ -38,7 +38,7 @@ Step 1: Configure a column preset
   .. tab:: Console
 
     The column preset option is available under the ``Permissions`` tab of a table. Open the console and head to
-    ``Data -> article -> Permissions``:
+    ``Data -> [article] -> Permissions``:
 
     .. thumbnail:: /img/graphql/core/schema/column-presets-option.png
       :alt: Add a column preset in the permissions tab
@@ -85,6 +85,7 @@ Step 1: Configure a column preset
     You can add column presets by using the :ref:`create_insert_permission metadata API <create_insert_permission>`:
 
     .. code-block:: http
+      :emphasize-lines: 12-14
 
       POST /v1/query HTTP/1.1
       Content-Type: application/json

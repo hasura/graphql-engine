@@ -17,7 +17,7 @@ What are computed fields?
 
 Computed fields are virtual values or objects that are dynamically computed and can be queried along with a table's
 columns. Computed fields are computed when requested for via `custom SQL functions <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
-using other columns of the table and other custom inputs if needed.
+(a.k.a. stored procedures) using other columns of the table and other custom inputs if needed.
 
 .. note::
 

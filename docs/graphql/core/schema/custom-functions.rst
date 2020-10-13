@@ -1,6 +1,6 @@
 .. meta::
    :description: Customise the Hasura GraphQL schema with SQL functions
-   :keywords: hasura, docs, schema, custom function
+   :keywords: hasura, docs, schema, sql functions, stored procedures
 
 .. _custom_sql_functions:
 
@@ -15,8 +15,9 @@ Extend schema with SQL functions
 What are custom SQL functions?
 ------------------------------
 
-Custom SQL functions are `user-defined SQL functions <https://www.postgresql.org/docs/current/sql-createfunction.html>`_
-that can be used to either encapsulate some custom business logic or extend the built-in SQL functions and operators.
+Custom SQL functions are `user-defined SQL functions <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
+that can be used to either encapsulate some custom business logic or extend the built-in SQL functions and operators. SQL functions
+are also referred to as **stored procedures**.
 
 Hasura GraphQL engine lets you expose certain types of custom functions as top level fields in the GraphQL API to allow
 querying them using both ``queries`` and ``subscriptions``.

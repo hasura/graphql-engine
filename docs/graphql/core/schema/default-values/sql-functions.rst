@@ -4,8 +4,8 @@
 
 .. _sql_functions_as_default:
 
-Setting values of fields using SQL functions/stored procedures
-==============================================================
+Setting values of fields using SQL functions
+============================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -15,8 +15,8 @@ Setting values of fields using SQL functions/stored procedures
 Introduction
 ------------
 
-Let's say you want to set the value of some fields as the output of some custom SQL functions or stored procedures.
-This is useful to set values of fields which depend on other fields passed in the input. E.g. set
+Let's say you want to set the value of some fields as the output of some `custom SQL functions <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
+(a.k.a. stored procedures). This is useful to set values of fields which depend on other fields passed in the input. E.g. set
 ``submission_time`` of an online quiz as 1 hour from the ``start_time``.
 
 This can be achieved by:
@@ -45,7 +45,7 @@ Modify the table ``sql_function_table`` and make its ``output`` column nullable.
 
   .. tab:: Console
 
-    Open the console and head to ``Data -> sql_function_table -> Modify``:
+    Open the console and head to ``Data -> [sql_function_table] -> Modify``:
 
     .. thumbnail:: /img/graphql/core/schema/modify-sql-fn-table.png
       :alt: Modify the table
