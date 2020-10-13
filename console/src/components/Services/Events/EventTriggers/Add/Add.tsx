@@ -10,12 +10,7 @@ import DropdownButton from '../../../../Common/DropdownButton/DropdownButton';
 import Headers from '../../../../Common/Headers/Headers';
 import CollapsibleToggle from '../../../../Common/CollapsibleToggle/CollapsibleToggle';
 import Button from '../../../../Common/Button/Button';
-import {
-  updateSchemaInfo,
-  fetchSchemaList,
-  updateCurrentSchema,
-  UPDATE_CURRENT_DATA_SOURCE,
-} from '../../../Data/DataActions';
+import { updateSchemaInfo } from '../../../Data/DataActions';
 import { createEventTrigger } from '../../ServerIO';
 import Operations from '../Common/Operations';
 import RetryConfEditor from '../../Common/Components/RetryConfEditor';
@@ -25,7 +20,6 @@ import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import { Table } from '../../../../../dataSources/types';
 import { getDataSources } from '../../../../../metadata/selector';
 import { DataSource } from '../../../../../metadata/types';
-import { NotSupportedNote } from '../../../../Common/NotSupportedNote';
 
 interface Props extends InjectedProps {}
 

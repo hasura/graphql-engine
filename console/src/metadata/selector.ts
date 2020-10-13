@@ -277,3 +277,11 @@ export const getDataSources = createSelector(getMetadata, metadata => {
   return sources;
   // .filter(source => source.name !== 'default');
 });
+
+export const getTablesBySource = createSelector(getMetadata, metadata => {
+  const res: Record<string, { name: string; schema: string }[]> = {};
+  metadata?.sources.forEach(source => {
+    res[source.name] = source.tables.map(({ table }) => table);
+  });
+  return res;
+});
