@@ -116,7 +116,7 @@ module Hasura.RQL.Types.SchemaCache
   ) where
 
 import           Hasura.Db
-import           Hasura.GraphQL.Context            (GQLContext, RoleContext)
+import           Hasura.GraphQL.Context            (GQLContext, RoleContext, RemoteField)
 import qualified Hasura.GraphQL.Parser             as P
 import           Hasura.Incremental                (Dependency, MonadDepend (..), selectKeyD)
 import           Hasura.Prelude
@@ -178,9 +178,9 @@ data IntrospectionResult
 
 data ParsedIntrospection
   = ParsedIntrospection
-  { piQuery        :: [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-  , piMutation     :: Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-  , piSubscription :: Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  { piQuery        :: [P.FieldParser (P.ParseT Identity) RemoteField]
+  , piMutation     :: Maybe [P.FieldParser (P.ParseT Identity) RemoteField]
+  , piSubscription :: Maybe [P.FieldParser (P.ParseT Identity) RemoteField]
   }
 
 data RemoteSchemaCtx

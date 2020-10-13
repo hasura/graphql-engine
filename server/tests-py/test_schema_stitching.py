@@ -12,6 +12,7 @@ import time
 import pytest
 
 from validate import check_query_f, check_query
+from graphql import GraphQLError
 
 def mk_add_remote_q(name, url, headers=None, client_hdrs=False, timeout=None):
     return {
@@ -349,7 +350,7 @@ class TestRemoteSchemaQueriesOverWebsocket:
         finally:
             ws_client.stop(query_id)
 
-    @pytest.mark.allow_server_upgrade_test
+    @pytest.mark.skip_server_upgrade_test
     def test_remote_query_error(self, ws_client):
         query = """
         query {
@@ -598,3 +599,20 @@ class TestRemoteSchemaReload:
         # Delete remote schema
         st_code, resp = hge_ctx.v1q(mk_delete_remote_q('simple 1'))
         assert st_code == 200, resp
+
+@pytest.mark.usefixtures('per_class_tests_db_state')
+class TestValidateRemoteSchemaQuery:
+
+    @classmethod
+    def dir(cls):
+        return "queries/remote_schemas/validation/"
+
+    def test_remote_schema_argument_validation(self, hge_ctx):
+        """ test to check that the graphql-engine throws an validation error
+            when an remote object is queried with an unknown argument  """
+        check_query_f(hge_ctx, self.dir() + '/argument_validation.yaml')
+
+    def test_remote_schema_field_validation(self, hge_ctx):
+        """ test to check that the graphql-engine throws an validation error
+            when an remote object is queried with an unknown field  """
+        check_query_f(hge_ctx, self.dir() + '/field_validation.yaml')
