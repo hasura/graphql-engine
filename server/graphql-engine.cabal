@@ -358,6 +358,7 @@ library
                      , Hasura.RQL.Types.SchemaCache.Build
                      , Hasura.RQL.Types.SchemaCacheTypes
                      , Hasura.RQL.Types.BoolExp
+                     , Hasura.RQL.Types.Backend
                      , Hasura.RQL.Types.Function
                      , Hasura.RQL.Types.Catalog
                      , Hasura.RQL.Types.Column
