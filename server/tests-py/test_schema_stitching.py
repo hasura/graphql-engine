@@ -350,6 +350,7 @@ class TestRemoteSchemaQueriesOverWebsocket:
         finally:
             ws_client.stop(query_id)
 
+    @pytest.mark.allow_server_upgrade_test
     def test_remote_query_error(self, ws_client):
         query = """
         query {
