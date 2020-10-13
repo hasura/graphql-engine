@@ -43,8 +43,10 @@ Also, copy the Hasura Cloud IP for later.
 
 .. _create_pg_db_gcp:
 
-Step 2: Create a Postgres DB on GCP
------------------------------------
+Step 2: Create a Postgres DB on GCP (optional)
+----------------------------------------------
+
+*If you already have an existing database on GCP, you can skip this step.*
 
 Log into the `GCP console <https://console.cloud.google.com/>`__.
 
@@ -93,10 +95,14 @@ In the popup, add a user name and a password for the new user account:
    :alt: Add a new user name and password for DB in GCP
    :width: 600px
 
+.. note::
+
+   Whenever the database user name is not ``postgres``, you need to make sure to give the user appropriate :ref:`Postgres permissions <cloud_postgres_permissions>`.
+
 Step 4: Connect the Hasura Cloud IP
 -----------------------------------
 
-On the dashboard of your new database instance, on the left sidebar, click on ``Connections``. Then scroll down to the checkbox ``Public IP``, and click ``+ Add network``:
+On the dashboard of your GCP database instance, on the left sidebar, click on ``Connections``. Then scroll down to the checkbox ``Public IP``, and click ``+ Add network``:
 
 .. thumbnail:: /img/graphql/cloud/existing-db/gcp/gcp-connections.png
    :alt: Navigate to connections in GCP
@@ -166,8 +172,3 @@ Voilà. You are ready to start developing.
 .. thumbnail:: /img/graphql/cloud/existing-db/hasura-console.png
    :alt: Hasura console
    :width: 900px
-
-Existing database
------------------
-
-If you have an existing database in GCP that already contains data, make sure to give it the necessary :ref:`Hasura permissions <cloud_postgres_permissions>`
