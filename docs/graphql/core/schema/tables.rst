@@ -4,8 +4,8 @@
 
 .. _schema_tables:
 
-Tables
-======
+Tables basics
+=============
 
 .. contents:: Table of contents
   :backlinks: none
