@@ -145,7 +145,7 @@ mkCurPlanTx env manager reqHdrs userInfo instrument ep = \case
 -- convert a query from an intermediate representation to... another
 irToRootFieldPlan
   :: PrepArgMap
-  -> QueryDB S.SQLExp -> PreparedSql
+  -> QueryDB 'Postgres S.SQLExp -> PreparedSql
 irToRootFieldPlan prepped = \case
   QDBSimple s      -> mkPreparedSql getRemoteJoins (DS.selectQuerySQL DS.JASMultipleRows) s
   QDBPrimaryKey s  -> mkPreparedSql getRemoteJoins (DS.selectQuerySQL DS.JASSingleObject) s
@@ -161,8 +161,8 @@ traverseQueryRootField
   :: forall f a b c d h
    . Applicative f
   => (a -> f b)
-  -> RootField (QueryDB a) c h d
-  -> f (RootField (QueryDB b) c h d)
+  -> RootField (QueryDB backend a) c h d
+  -> f (RootField (QueryDB backend b) c h d)
 traverseQueryRootField f = traverseDB \case
   QDBSimple s       -> QDBSimple      <$> DS.traverseAnnSimpleSelect f s
   QDBPrimaryKey s   -> QDBPrimaryKey  <$> DS.traverseAnnSimpleSelect f s

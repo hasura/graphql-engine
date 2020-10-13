@@ -4,6 +4,7 @@ module Hasura.RQL.DML.Insert.Types where
 import           Hasura.Prelude
 
 import           Hasura.RQL.DML.Returning.Types
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.SQL.Types
@@ -22,13 +23,13 @@ data ConflictClauseP1 v
   deriving (Show, Eq, Functor, Foldable, Traversable)
 
 
-data InsertQueryP1
+data InsertQueryP1 (b :: Backend)
   = InsertQueryP1
   { iqp1Table     :: !QualifiedTable
   , iqp1Cols      :: ![PGCol]
   , iqp1Tuples    :: ![[S.SQLExp]]
   , iqp1Conflict  :: !(Maybe (ConflictClauseP1 S.SQLExp))
   , iqp1CheckCond :: !(AnnBoolExpSQL, Maybe AnnBoolExpSQL)
-  , iqp1Output    :: !MutationOutput
+  , iqp1Output    :: !(MutationOutput b)
   , iqp1AllCols   :: ![PGColumnInfo]
   } deriving (Show, Eq)

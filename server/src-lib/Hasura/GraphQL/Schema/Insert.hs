@@ -5,6 +5,7 @@ import           Hasura.Prelude
 import qualified Hasura.RQL.DML.Insert.Types    as RQL
 import qualified Hasura.RQL.DML.Returning.Types as RQL
 
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
@@ -29,11 +30,11 @@ import           Hasura.SQL.Types
 -- quite likely that some of the information stored in those structures is
 -- redundant, and that they can be simplified.
 
-data AnnInsert v
+data AnnInsert (b :: Backend) v
   = AnnInsert
   { _aiFieldName :: !Text
   , _aiIsSingle  :: Bool
-  , _aiData      :: AnnMultiInsert v
+  , _aiData      :: AnnMultiInsert b v
   }
 
 data AnnIns a v
@@ -65,8 +66,8 @@ data AnnInsObj v
   , _aioArrRels :: ![ArrRelIns v]
   } deriving (Show, Eq)
 
-type AnnSingleInsert v = (SingleObjIns v, RQL.MutationOutputG v)
-type AnnMultiInsert  v = (MultiObjIns  v, RQL.MutationOutputG v)
+type AnnSingleInsert b v = (SingleObjIns v, RQL.MutationOutputG b v)
+type AnnMultiInsert  b v = (MultiObjIns  v, RQL.MutationOutputG b v)
 
 instance Semigroup (AnnInsObj v) where
   (AnnInsObj col1 obj1 rel1) <> (AnnInsObj col2 obj2 rel2) =
