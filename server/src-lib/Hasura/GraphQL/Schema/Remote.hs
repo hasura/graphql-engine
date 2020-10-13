@@ -410,7 +410,10 @@ remoteFieldFromName sdoc fieldName description fieldTypeName argsDefns =
     Nothing -> throw400 RemoteSchemaError $ "Could not find type with name " <>> fieldName
     Just typeDef -> remoteField sdoc fieldName description argsDefns typeDef
 
--- | 'inputValuefinitionParser' accepts a 'G.InputValueDefinition' and will return an
+getPresetDirective :: [Directive Void] -> Maybe (Directive Void)
+getPresetDirective = find ((== $$(G.litName "preset")) . G._dName)
+
+-- | 'inputValueDefinitionParser' accepts a 'G.InputValueDefinition' and will return an
 --   'InputFieldsParser' for it. If a non 'Input' GraphQL type is found in the 'type' of
 --    the 'InputValueDefinition' then an error will be thrown.
 inputValueDefinitionParser
@@ -419,7 +422,7 @@ inputValueDefinitionParser
   => G.SchemaIntrospection
   -> G.InputValueDefinition
   -> m (InputFieldsParser n (Maybe (InputValue Variable)))
-inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType _directives maybeDefaultVal) =
+inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType maybeDefaultVal _directives) =
   let fieldConstructor :: forall k. 'Input <: k => Parser k n () -> InputFieldsParser n (Maybe (InputValue Variable))
       fieldConstructor parser =
         let wrappedParser :: Parser k n (InputValue Variable)

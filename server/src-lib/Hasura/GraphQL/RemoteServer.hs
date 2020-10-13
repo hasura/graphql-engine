@@ -188,7 +188,7 @@ instance J.FromJSON (FromIntrospection G.InputValueDefinition) where
     defVal <- o .:? "defaultValue"
     let desc' = fmap fromIntrospection desc
     let defVal' = fmap fromIntrospection defVal
-        r = G.InputValueDefinition desc' name (fromIntrospection _type) [] defVal'
+        r = G.InputValueDefinition desc' name (fromIntrospection _type) defVal' []
     return $ FromIntrospection r
 
 instance J.FromJSON (FromIntrospection (G.Value Void)) where

@@ -305,8 +305,8 @@ validateInputValueDefinition providedDefn upstreamDefn inputObjectName = do
       NonMatchingDefaultValue inputObjectName providedName
                               upstreamDefaultValue providedDefaultValue
   where
-    G.InputValueDefinition _ providedName providedType _providedDirectives providedDefaultValue = providedDefn
-    G.InputValueDefinition _ _ upstreamType _upstreamDirectives upstreamDefaultValue = upstreamDefn
+    G.InputValueDefinition _ providedName providedType providedDefaultValue _providedDirectives  = providedDefn
+    G.InputValueDefinition _ _ upstreamType upstreamDefaultValue _upstreamDirectives  = upstreamDefn
 
 validateArguments
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
