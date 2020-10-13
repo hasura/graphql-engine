@@ -949,8 +949,9 @@ const untrackTableSql = tableName => {
     const errorMsg = 'Untrack table failed';
 
     const customOnSuccess = () => {
-      dispatch(exportMetadata());
-      dispatch(_push('/data/'));
+      dispatch(exportMetadata()).then(
+        dispatch(_push(getSchemaBaseRoute(currentSchema, currentDataSource)))
+      );
     };
     const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
