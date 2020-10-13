@@ -528,6 +528,23 @@ export const exportMetadataQuery = {
   args: {},
 };
 
+export const exportSchemaQueryParams = {
+  opts: [
+    '-O',
+    '-x',
+    '--schema-only',
+    '--exclude-schema',
+    'hdb_catalog',
+    '--exclude-schema',
+    'hdb_views',
+    '--exclude-schema',
+    'pg_toast*',
+    '--exclude-schema',
+    'pg_temp*',
+  ],
+  clean_output: true,
+};
+
 // type the metadata
 export const generateReplaceMetadataQuery = (metadataJson: any) => ({
   type: 'replace_metadata',
