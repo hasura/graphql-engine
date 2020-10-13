@@ -62,7 +62,7 @@ type SelectExp           b = RQL.AnnSimpleSelG b UnpreparedValue
 type AggSelectExp        b = RQL.AnnAggregateSelectG b UnpreparedValue
 type ConnectionSelectExp b = RQL.ConnectionSelect b UnpreparedValue
 type SelectArgs          b = RQL.SelectArgsG b UnpreparedValue
-type TablePerms          b = RQL.TablePermG b UnpreparedValue
+type TablePerms            = RQL.TablePermG   UnpreparedValue
 type AnnotatedFields     b = RQL.AnnFieldsG b UnpreparedValue
 type AnnotatedField      b = RQL.AnnFieldG b UnpreparedValue
 
