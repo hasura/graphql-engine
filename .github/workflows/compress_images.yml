@@ -25,8 +25,9 @@ jobs:
           let imagesPresent = false; 
           for (const file of files.data) {
             console.log(file.filename)
-            if (file.filename === /docs\/.+.png/i || file.filename === 'docs/**/*.jpg' || file.filename === 'docs/**/*.jpeg') {
+            if (file.filename === /docs\/.+.png/i || file.filename === /docs\/.+.jpg/i || file.filename === /docs\/.+.jpeg/i) {
               imagesPresent = true;
+              console.log(imagesPresent);
               break;
             }
           }
