@@ -9,7 +9,7 @@ Setting up a GraphQL schema using an existing database
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 Introduction
@@ -26,8 +26,8 @@ Step 1: Track tables/views
 
 Tracking a table or a view means telling Hasura GraphQL engine that you want to expose that table/view over GraphQL.
 
-To track a table or a view:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To track a table or a view
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -72,8 +72,8 @@ To track a table or a view:
          }
       }
 
-To track all tables and views present in the database:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To track all tables and views present in the database
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -88,13 +88,16 @@ To track all tables and views present in the database:
    To track all tables and expose them over the GraphQL API, add them to the ``tables.yaml`` file in the ``metadata`` directory as follows:
 
    .. code-block:: yaml
-      :emphasize-lines: 1-3
+      :emphasize-lines: 1-6
 
       - table:
          schema: public
-         name: <table name>
+         name: <table-name-1>
+      - table:
+         schema: public
+         name: <table-name-2>
 
-   To automate this, add the tables in a loop through a script.
+   To automate this, you could add the tables in a loop through a script.
 
    Apply the metadata by running:
 
@@ -113,14 +116,26 @@ To track all tables and views present in the database:
       X-Hasura-Role: admin
 
       {
-         "type": "track_table",
-         "args": {
-            "schema": "public",
-            "name": "article"
-         }
+        "type": "bulk",
+        "args": [
+          {
+             "type": "track_table",
+             "args": {
+                "schema": "public",
+                "name": "<table-name-1>"
+             }
+          },
+          {
+             "type": "track_table",
+             "args": {
+                "schema": "public",
+                "name": "<table-name-2>"
+             }
+          }
+        ]
       }
 
-   To automate this, add the tables in a loop through a script.
+   To automate this, you could add the ``track_table`` requests to the ``bulk`` request in a loop through a script.
 
 Step 2: Track foreign-keys
 --------------------------
@@ -128,8 +143,8 @@ Step 2: Track foreign-keys
 Tracking a foreign-key means creating a :ref:`relationship <table_relationships>` between the tables involved in the
 foreign-key.
 
-To track a foreign-key between two tables in the database:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To track a foreign-key between two tables in the database
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -158,7 +173,7 @@ To track a foreign-key between two tables in the database:
            object_relationships:
            - name: <relationship name>
              using:
-               foreign_key_constraint_on: <reference key>
+               foreign_key_constraint_on: <reference column>
 
       **Array relationship**
 
@@ -172,7 +187,7 @@ To track a foreign-key between two tables in the database:
             - name: <relationship name>
                using:
                foreign_key_constraint_on:
-                  column: <reference key>
+                  column: <reference column>
                   table:
                      schema: public
                      name: <reference table name>
@@ -201,7 +216,7 @@ To track a foreign-key between two tables in the database:
                "table": "<table name>",
                "name": "<relationship name>",
                "using": {
-                  "foreign_key_constraint_on": "<reference key>"
+                  "foreign_key_constraint_on": "<reference column>"
                }
             }
          }
@@ -224,14 +239,14 @@ To track a foreign-key between two tables in the database:
                "using": {
                   "foreign_key_constraint_on" : {
                      "table" : "<reference table name>",
-                     "column" : "<reference key>"
+                     "column" : "<reference column>"
                   }
                }
             }
          }
 
-To track all the foreign-keys of all tables in the database:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To track all the foreign-keys of all tables in the database
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -257,7 +272,7 @@ To track all the foreign-keys of all tables in the database:
            object_relationships:
            - name: <relationship name>
              using:
-               foreign_key_constraint_on: <reference key>
+               foreign_key_constraint_on: <reference column>
 
       **Array relationship**
 
@@ -271,12 +286,12 @@ To track all the foreign-keys of all tables in the database:
            - name: <relationship name>
              using:
                foreign_key_constraint_on:
-                 column: <reference key>
+                 column: <reference column>
                  table:
                    schema: public
                    name: <reference table name>
 
-      To automate this, add the relationships in a loop through a script.
+      To automate this, you could add the relationships in a loop through a script.
 
       Apply the metadata by running:
 
@@ -286,54 +301,45 @@ To track all the foreign-keys of all tables in the database:
 
    .. tab:: API
 
-      To track all relationships and expose them over the GraphQL API, there are two APIs you can use depending on the kind of relationship.
-
-      **Object relationship**
-
-      You can create an object relationship by using the :ref:`create_object_relationship metadata API <create_object_relationship>`:
+      You can create multiple relationships by using the :ref:`create_object_relationship metadata API <create_object_relationship>`
+      and the :ref:`create_array_relationship metadata API <create_array_relationship>`:
 
       .. code-block:: http
 
-         POST /v1/query HTTP/1.1
-         Content-Type: application/json
-         X-Hasura-Role: admin
+        POST /v1/query HTTP/1.1
+        Content-Type: application/json
+        X-Hasura-Role: admin
 
-         {
-            "type": "create_object_relationship",
-            "args": {
-               "table": "<table name>",
-               "name": "<relationship name>",
-               "using": {
-                  "foreign_key_constraint_on": "<reference key>"
-               }
-            }
-         }
-
-      **Array relationship**
-
-      You can create an array relationship by using the :ref:`create_array_relationship metadata API <create_array_relationship>`:
-
-      .. code-block:: http
-
-         POST /v1/query HTTP/1.1
-         Content-Type: application/json
-         X-Hasura-Role: admin
-
-         {
-            "type": "create_array_relationship",
-            "args": {
-               "table": "<table name>",
-               "name": "<relationship name>",
-               "using": {
+        {
+          "type": "bulk",
+          "args": [
+            {
+              "type": "create_object_relationship",
+              "args": {
+                "table": "<table name>",
+                "name": "<relationship name>",
+                "using": {
+                  "foreign_key_constraint_on": "<reference column>"
+                }
+              }
+            },
+            {
+              "type": "create_array_relationship",
+              "args": {
+                "table": "<table name>",
+                "name": "<relationship name>",
+                "using": {
                   "foreign_key_constraint_on" : {
-                     "table" : "<reference table name>",
-                     "column" : "<reference key>"
+                    "table" : "<reference table name>",
+                    "column" : "<reference column>"
                   }
-               }
+                }
+              }
             }
-         }
+          ]
+        }
 
-      To automate this, add the relationships in a loop through a script.
+      To automate this, you could add the create relationships requests to the ``bulk`` request in a loop through a script.
 
 .. admonition:: Relationship nomenclature
 
