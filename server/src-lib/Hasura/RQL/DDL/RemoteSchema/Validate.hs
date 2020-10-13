@@ -109,6 +109,8 @@ data RoleBasedSchemaValidationError
   | DuplicateFields !(FieldDefinitionType, G.Name) !(NE.NonEmpty G.Name)
   | DuplicateArguments !G.Name !(NE.NonEmpty G.Name)
   | DuplicateEnumValues !G.Name !(NE.NonEmpty G.Name)
+  | InvalidPresetDirectiveLocation !(GraphQLType, G.Name)
+  | MultiplePresetDirectives !(GraphQLType, G.Name)
   deriving (Show, Eq)
 
 showRoleBasedSchemaValidationError :: RoleBasedSchemaValidationError -> Text
@@ -174,6 +176,11 @@ showRoleBasedSchemaValidationError = \case
   DuplicateEnumValues enumName enumValues ->
     "duplicate enum values: " <> (englishList "and" $ fmap dquoteTxt enumValues)
     <> " found in the " <> enumName <<> " enum"
+  InvalidPresetDirectiveLocation (parentType, parentName) ->
+    "found invalid preset directive at " <> parentType <<> " " <> parentName <<>
+    ". Preset directives can be defined on INPUT_FIELD_DEFINITION or ARGUMENT_DEFINITION"
+  MultiplePresetDirectives (parentType, parentName) ->
+    "found multiple preset directives at " <> parentType <<> " " <>> parentName
 
 -- | validateDirective checks if the arguments of a given directive
 --   are a subset of the corresponding upstream directive arguments
@@ -202,12 +209,22 @@ validateDirectives
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => [G.Directive a]
   -> [G.Directive a]
+  -> G.TypeSystemDirectiveLocation
   -> (GraphQLType, G.Name)
   -> m ()
-validateDirectives providedDirectives upstreamDirectives parentType = do
-  onJust (NE.nonEmpty $ duplicates $ map G._dName providedDirectives) $ \dups -> do
+validateDirectives providedDirectives upstreamDirectives directiveLocation parentType = do
+  case presetDirectives of
+    [] -> pure ()
+    [_] ->
+      case directiveLocation of
+        G.TSDLINPUT_FIELD_DEFINITION -> pure ()
+        G.TSDLARGUMENT_DEFINITION    -> pure ()
+        _                            ->
+          dispute $ pure $ InvalidPresetDirectiveLocation parentType
+    _ -> dispute $ pure $ MultiplePresetDirectives parentType
+  onJust (NE.nonEmpty $ duplicates $ map G._dName nonPresetDirectives) $ \dups -> do
     refute $ pure $ DuplicateDirectives parentType dups
-  flip traverse_ providedDirectives $ \dir -> do
+  flip traverse_ nonPresetDirectives $ \dir -> do
     let directiveName = G._dName dir
     upstreamDir <-
       onNothing (Map.lookup directiveName upstreamDirectivesMap) $
@@ -215,6 +232,12 @@ validateDirectives providedDirectives upstreamDirectives parentType = do
     validateDirective dir upstreamDir parentType
   where
     upstreamDirectivesMap = mapFromL G._dName upstreamDirectives
+
+    presetFilterFn = (== $$(G.litName "preset")) . G._dName
+
+    presetDirectives = filter presetFilterFn providedDirectives
+
+    nonPresetDirectives = filter (not . presetFilterFn) providedDirectives
 
 getDifference :: (Eq a, Hashable a) => [a] -> [a] -> S.HashSet a
 getDifference left right = S.difference (S.fromList left) (S.fromList right)
@@ -233,7 +256,7 @@ validateEnumTypeDefinition
   -> G.EnumTypeDefinition -- ^ upstream enum type definition
   -> m ()
 validateEnumTypeDefinition providedEnum upstreamEnum = do
-  validateDirectives providedDirectives upstreamDirectives $ (Enum, providedName)
+  validateDirectives providedDirectives upstreamDirectives G.TSDLENUM $ (Enum, providedName)
   onJust (NE.nonEmpty $ duplicates providedEnumValNames) $ \dups -> do
     refute $ pure $ DuplicateEnumValues providedName dups
   onJust (NE.nonEmpty $ S.toList fieldsDifference) $ \nonExistingEnumVals ->
@@ -315,7 +338,7 @@ validateInputObjectTypeDefinition
   -> G.InputObjectTypeDefinition
   -> m ()
 validateInputObjectTypeDefinition providedInputObj upstreamInputObj = do
-  validateDirectives providedDirectives upstreamDirectives $ (InputObject, providedName)
+  validateDirectives providedDirectives upstreamDirectives G.TSDLINPUT_OBJECT $ (InputObject, providedName)
   validateArguments providedArgs upstreamArgs $ providedName
   where
     G.InputObjectTypeDefinition _ providedName providedDirectives providedArgs = providedInputObj
@@ -343,7 +366,7 @@ validateFieldDefinition
   -> (FieldDefinitionType, G.Name)
   -> m ()
 validateFieldDefinition providedFieldDefinition upstreamFieldDefinition (parentType, parentTypeName) = do
-  validateDirectives providedDirectives upstreamDirectives $ (Field parentType, parentTypeName)
+  validateDirectives providedDirectives upstreamDirectives G.TSDLFIELD_DEFINITION $ (Field parentType, parentTypeName)
   when (providedType /= upstreamType) $
     dispute $ pure $ NonMatchingType providedName (Field parentType) upstreamType providedType
   validateArguments providedArgs upstreamArgs $ providedName
@@ -375,7 +398,7 @@ validateInterfaceDefinition
   -> G.InterfaceTypeDefinition ()
   -> m ()
 validateInterfaceDefinition providedInterfaceDefn upstreamInterfaceDefn = do
-  validateDirectives providedDirectives upstreamDirectives $ (Interface, providedName)
+  validateDirectives providedDirectives upstreamDirectives G.TSDLINTERFACE $ (Interface, providedName)
   validateFieldDefinitions providedFieldDefns upstreamFieldDefns $ (InterfaceField, providedName)
   where
     G.InterfaceTypeDefinition _ providedName providedDirectives providedFieldDefns _ = providedInterfaceDefn
@@ -402,7 +425,7 @@ validateScalarDefinition
   -> G.ScalarTypeDefinition
   -> m ()
 validateScalarDefinition providedScalar upstreamScalar = do
-  validateDirectives providedDirectives upstreamDirectives $ (Scalar, providedName)
+  validateDirectives providedDirectives upstreamDirectives G.TSDLSCALAR $ (Scalar, providedName)
   where
     G.ScalarTypeDefinition _ providedName providedDirectives = providedScalar
 
@@ -428,7 +451,7 @@ validateUnionDefinition
   -> G.UnionTypeDefinition
   -> m ()
 validateUnionDefinition providedUnion upstreamUnion = do
-  validateDirectives providedDirectives upstreamDirectives $ (Union, providedName)
+  validateDirectives providedDirectives upstreamDirectives G.TSDLUNION $ (Union, providedName)
   onJust (NE.nonEmpty $ S.toList memberTypesDiff) $ \nonExistingMembers ->
     refute $ pure $ NonExistingUnionMemberTypes providedName nonExistingMembers
   where
@@ -459,7 +482,7 @@ validateObjectDefinition
   -> S.HashSet G.Name -- ^ Interfaces declared by in the role-based schema
   -> m ()
 validateObjectDefinition providedObj upstreamObj interfacesDeclared = do
-  validateDirectives providedDirectives upstreamDirectives $ (Object, providedName)
+  validateDirectives providedDirectives upstreamDirectives G.TSDLOBJECT $ (Object, providedName)
   validateFieldDefinitions providedFldDefnitions upstreamFldDefnitions $ (ObjectField, providedName)
   onJust (NE.nonEmpty $ S.toList customInterfaces) $ \ifaces ->
     dispute $ pure $ CustomInterfacesNotAllowed providedName ifaces
