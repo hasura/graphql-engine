@@ -67,3 +67,8 @@ class TestRemoteSchemaPermissionsExecution:
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'add_permission_with_valid_subset_of_fields.yaml')
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'execution_with_partial_fields_exposed_to_role.yaml')
+
+    def test_execution_with_subset_of_arguments_exposed_to_role(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'add_permission_with_valid_subset_of_arguments.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'execution_with_partial_args_exposed_to_role.yaml')
