@@ -5,10 +5,10 @@ import           Hasura.Prelude
 import qualified Hasura.RQL.DML.Insert.Types    as RQL
 import qualified Hasura.RQL.DML.Returning.Types as RQL
 
-import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
+import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 
 

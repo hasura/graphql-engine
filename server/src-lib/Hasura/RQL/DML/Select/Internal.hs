@@ -6,9 +6,9 @@ module Hasura.RQL.DML.Select.Internal
   )
 where
 
-import           Instances.TH.Lift           ()
 import           Control.Lens                 hiding (op)
 import           Control.Monad.Writer.Strict
+import           Instances.TH.Lift            ()
 
 import qualified Data.HashMap.Strict          as HM
 import qualified Data.List.NonEmpty           as NE
@@ -16,11 +16,11 @@ import qualified Data.Text                    as T
 
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
+import           Hasura.SQL.Backend
 import           Hasura.SQL.Rewrite
 import           Hasura.SQL.Types
 

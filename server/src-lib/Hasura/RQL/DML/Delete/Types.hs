@@ -6,9 +6,9 @@ import           Hasura.Prelude
 import qualified Hasura.SQL.DML                 as S
 
 import           Hasura.RQL.DML.Returning.Types
-import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
+import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 
 data AnnDelG (b :: Backend) v

@@ -55,9 +55,9 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.Session
+import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax    (Lift)
 

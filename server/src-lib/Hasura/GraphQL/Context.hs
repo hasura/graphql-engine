@@ -23,8 +23,8 @@ import           Hasura.Prelude
 import qualified Data.Aeson                    as J
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Hasura.SQL.Backend
 import qualified Language.GraphQL.Draft.Syntax as G
-import           Hasura.RQL.Types.Backend
 
 import qualified Hasura.RQL.DML.Delete.Types   as RQL
 import qualified Hasura.RQL.DML.Select.Types   as RQL

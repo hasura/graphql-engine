@@ -1,6 +1,6 @@
 module Hasura.RQL.DML.Returning.Types where
 
-import Hasura.RQL.Types.Backend
+import           Hasura.SQL.Backend
 
 import           Hasura.Prelude
 
