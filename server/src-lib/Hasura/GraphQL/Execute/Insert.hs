@@ -35,8 +35,8 @@ import           Hasura.SQL.Value
 traverseAnnInsert
   :: (Applicative f)
   => (a -> f b)
-  -> AnnInsert a
-  -> f (AnnInsert b)
+  -> AnnInsert backend a
+  -> f (AnnInsert backend b)
 traverseAnnInsert f (AnnInsert fieldName isSingle (annIns, mutationOutput)) =
   AnnInsert fieldName isSingle
   <$> ( (,)
@@ -74,7 +74,7 @@ traverseAnnInsert f (AnnInsert fieldName isSingle (annIns, mutationOutput)) =
 convertToSQLTransaction
   :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m)
   => Env.Environment
-  -> AnnInsert S.SQLExp
+  -> AnnInsert 'Postgres S.SQLExp
   -> RQL.MutationRemoteJoinCtx
   -> Seq.Seq Q.PrepArg
   -> Bool
@@ -94,7 +94,7 @@ insertMultipleObjects
   -> MultiObjIns S.SQLExp
   -> [(PGCol, S.SQLExp)]
   -> RQL.MutationRemoteJoinCtx
-  -> RQL.MutationOutput
+  -> RQL.MutationOutput 'Postgres
   -> Seq.Seq Q.PrepArg
   -> Bool
   -> m EncJSON

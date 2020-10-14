@@ -147,7 +147,7 @@ resolveActionExecution
   => Env.Environment
   -> L.Logger L.Hasura
   -> UserInfo
-  -> AnnActionExecution UnpreparedValue
+  -> AnnActionExecution 'Postgres UnpreparedValue
   -> ActionExecContext
   -> m ActionExecuteResult
 resolveActionExecution env logger userInfo annAction execContext = do
@@ -168,7 +168,7 @@ resolveActionExecution env logger userInfo annAction execContext = do
     ActionExecContext manager reqHeaders sessionVariables = execContext
 
 
-    executeAction :: RS.AnnSimpleSel -> ActionExecuteTx
+    executeAction :: RS.AnnSimpleSel 'Postgres -> ActionExecuteTx
     executeAction astResolved = do
       let (astResolvedWithoutRemoteJoins,maybeRemoteJoins) = RJ.getRemoteJoins astResolved
           jsonAggType = mkJsonAggSelect outputType
@@ -234,8 +234,8 @@ action's type. Here, we treat the "output" field as a computed field to hdb_acti
 -- TODO: Add tracing here? Avoided now because currently the function is pure
 resolveAsyncActionQuery
   :: UserInfo
-  -> AnnActionAsyncQuery UnpreparedValue
-  -> RS.AnnSimpleSelG UnpreparedValue
+  -> AnnActionAsyncQuery backend UnpreparedValue
+  -> RS.AnnSimpleSelG backend UnpreparedValue
 resolveAsyncActionQuery userInfo annAction =
   let annotatedFields = asyncFields <&> second \case
         AsyncTypename t -> RS.AFExpression t
@@ -519,9 +519,9 @@ processOutputSelectionSet
   :: RS.ArgumentExp v
   -> GraphQLType
   -> [(PGCol, PGScalarType)]
-  -> RS.AnnFieldsG v
+  -> RS.AnnFieldsG backend v
   -> Bool
-  -> RS.AnnSimpleSelG v
+  -> RS.AnnSimpleSelG backend v
 processOutputSelectionSet tableRowInput actionOutputType definitionList annotatedFields =
   RS.AnnSelectG annotatedFields selectFrom RS.noTablePermissions RS.noSelectArgs
   where

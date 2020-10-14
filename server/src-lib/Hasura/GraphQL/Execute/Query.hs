@@ -71,12 +71,12 @@ instance J.ToJSON RootFieldPlan where
     RFPPostgres pgPlan -> J.toJSON pgPlan
     RFPActionQuery _   -> J.String "Action Execution Tx"
 
-data ActionQueryPlan
-  = AQPAsyncQuery !DS.AnnSimpleSel -- ^ Cacheable plan
+data ActionQueryPlan (b :: Backend)
+  = AQPAsyncQuery !(DS.AnnSimpleSel b) -- ^ Cacheable plan
   | AQPQuery !ActionExecuteTx -- ^ Non cacheable transaction
 
 actionQueryToRootFieldPlan
-  :: PrepArgMap -> ActionQueryPlan -> RootFieldPlan
+  :: PrepArgMap -> ActionQueryPlan 'Postgres -> RootFieldPlan
 actionQueryToRootFieldPlan prepped = \case
   AQPAsyncQuery s -> RFPPostgres $
     PreparedSql (DS.selectQuerySQL DS.JASSingleObject s) prepped Nothing
@@ -158,7 +158,7 @@ irToRootFieldPlan prepped = \case
       in PreparedSql (f simpleSel') prepped remoteJoins
 
 traverseQueryRootField
-  :: forall f a b c d h
+  :: forall f a b c d h backend
    . Applicative f
   => (a -> f b)
   -> RootField (QueryDB backend a) c h d
@@ -288,7 +288,7 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
     usrVars = _uiSession userInfo
 
     convertActionQuery
-      :: ActionQuery UnpreparedValue -> StateT PlanningSt m ActionQueryPlan
+      :: ActionQuery 'Postgres UnpreparedValue -> StateT PlanningSt m (ActionQueryPlan 'Postgres)
     convertActionQuery = \case
       AQQuery s -> lift $ do
         result <- resolveActionExecution env logger userInfo s $ ActionExecContext manager reqHeaders usrVars

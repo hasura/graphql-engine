@@ -51,7 +51,7 @@ insertIntoTable
   -> InsPermInfo          -- ^ insert permissions of the table
   -> Maybe SelPermInfo    -- ^ select permissions of the table (if any)
   -> Maybe UpdPermInfo    -- ^ update permissions of the table (if any)
-  -> m (FieldParser n (AnnInsert UnpreparedValue))
+  -> m (FieldParser n (AnnInsert 'Postgres UnpreparedValue))
 insertIntoTable table fieldName description insertPerms selectPerms updatePerms = do
   columns         <- tableColumns table
   selectionParser <- mutationSelectionSet table selectPerms
@@ -88,7 +88,7 @@ insertOneIntoTable
   -> InsPermInfo          -- ^ insert permissions of the table
   -> SelPermInfo          -- ^ select permissions of the table
   -> Maybe UpdPermInfo    -- ^ update permissions of the table (if any)
-  -> m (FieldParser n (AnnInsert UnpreparedValue))
+  -> m (FieldParser n (AnnInsert 'Postgres UnpreparedValue))
 insertOneIntoTable table fieldName description insertPerms selectPerms updatePerms  = do
   columns         <- tableColumns table
   selectionParser <- tableSelectionSet table selectPerms
@@ -274,7 +274,7 @@ updateTable
   -> Maybe G.Description  -- ^ field description, if any
   -> UpdPermInfo          -- ^ update permissions of the table
   -> Maybe SelPermInfo    -- ^ select permissions of the table (if any)
-  -> m (Maybe (FieldParser n (RQL.AnnUpdG UnpreparedValue)))
+  -> m (Maybe (FieldParser n (RQL.AnnUpdG 'Postgres UnpreparedValue)))
 updateTable table fieldName description updatePerms selectPerms = runMaybeT $ do
   let whereName = $$(G.litName "where")
       whereDesc = "filter the rows which have to be updated"
@@ -297,7 +297,7 @@ updateTableByPk
   -> Maybe G.Description  -- ^ field description, if any
   -> UpdPermInfo          -- ^ update permissions of the table
   -> SelPermInfo          -- ^ select permissions of the table
-  -> m (Maybe (FieldParser n (RQL.AnnUpdG UnpreparedValue)))
+  -> m (Maybe (FieldParser n (RQL.AnnUpdG 'Postgres UnpreparedValue)))
 updateTableByPk table fieldName description updatePerms selectPerms = runMaybeT $ do
   tableName <- qualifiedObjectToName table
   columns   <- lift   $ tableSelectColumns table selectPerms
@@ -321,9 +321,9 @@ mkUpdateObject
   -> ( ( [(PGCol, RQL.UpdOpExpG UnpreparedValue)]
        , AnnBoolExp UnpreparedValue
        )
-     , RQL.MutationOutputG UnpreparedValue
+     , RQL.MutationOutputG backend UnpreparedValue
      )
-  -> RQL.AnnUpdG UnpreparedValue
+  -> RQL.AnnUpdG backend UnpreparedValue
 mkUpdateObject table columns updatePerms ((opExps, whereExp), mutationOutput) =
   RQL.AnnUpd { RQL.uqp1Table   = table
              , RQL.uqp1OpExps  = opExps
@@ -440,7 +440,7 @@ deleteFromTable
   -> Maybe G.Description  -- ^ field description, if any
   -> DelPermInfo          -- ^ delete permissions of the table
   -> Maybe SelPermInfo    -- ^ select permissions of the table (if any)
-  -> m (FieldParser n (RQL.AnnDelG UnpreparedValue))
+  -> m (FieldParser n (RQL.AnnDelG 'Postgres UnpreparedValue))
 deleteFromTable table fieldName description deletePerms selectPerms = do
   let whereName = $$(G.litName "where")
       whereDesc = "filter the rows which have to be deleted"
@@ -459,7 +459,7 @@ deleteFromTableByPk
   -> Maybe G.Description  -- ^ field description, if any
   -> DelPermInfo          -- ^ delete permissions of the table
   -> SelPermInfo          -- ^ select permissions of the table
-  -> m (Maybe (FieldParser n (RQL.AnnDelG UnpreparedValue)))
+  -> m (Maybe (FieldParser n (RQL.AnnDelG 'Postgres UnpreparedValue)))
 deleteFromTableByPk table fieldName description deletePerms selectPerms = runMaybeT $ do
   columns   <- lift   $ tableSelectColumns table selectPerms
   pkArgs    <- MaybeT $ primaryKeysArguments table selectPerms
@@ -471,8 +471,8 @@ mkDeleteObject
   :: QualifiedTable
   -> [PGColumnInfo]
   -> DelPermInfo
-  -> (AnnBoolExp UnpreparedValue, RQL.MutationOutputG UnpreparedValue)
-  -> RQL.AnnDelG UnpreparedValue
+  -> (AnnBoolExp UnpreparedValue, RQL.MutationOutputG backend UnpreparedValue)
+  -> RQL.AnnDelG backend UnpreparedValue
 mkDeleteObject table columns deletePerms (whereExp, mutationOutput) =
   RQL.AnnDel { RQL.dqp1Table   = table
              , RQL.dqp1Where   = (permissionFilter, whereExp)
@@ -492,7 +492,7 @@ mutationSelectionSet
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => QualifiedTable
   -> Maybe SelPermInfo
-  -> m (Parser 'Output n (RQL.MutFldsG UnpreparedValue))
+  -> m (Parser 'Output n (RQL.MutFldsG 'Postgres UnpreparedValue))
 mutationSelectionSet table selectPerms =
   memoizeOn 'mutationSelectionSet table do
   tableName <- qualifiedObjectToName table
