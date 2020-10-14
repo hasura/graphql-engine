@@ -5,7 +5,7 @@ response:
   errors:
   - extensions:
       code: parse-failed
-      path: $.variableValues.areas[0].area.coordinates[0]
+      path: $.selectionSet.insert_area.args.objects[0].area
     message: A LinearRing needs at least 4 Positions
 query:
   variables:

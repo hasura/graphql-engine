@@ -12,12 +12,14 @@ module Hasura.Db
   , runLazyTx
   , runQueryTx
   , withUserInfo
+  , withTraceContext
   , sessionInfoJsonExp
 
   , RespTx
   , LazyRespTx
   , defaultTxErrorHandler
   , mkTxErrorHandler
+  , lazyTxToQTx
   ) where
 
 import           Control.Lens
@@ -112,26 +114,26 @@ lazyTxToQTx = \case
   LTTx tx  -> tx
 
 runLazyTx
-  :: (MonadIO m)
+  :: (MonadIO m, MonadError QErr m)
   => PGExecCtx
   -> Q.TxAccess
-  -> LazyTx QErr a -> ExceptT QErr m a
+  -> LazyTx QErr a -> m a
 runLazyTx pgExecCtx txAccess = \case
   LTErr e  -> throwError e
   LTNoTx a -> return a
   LTTx tx  ->
     case txAccess of
-      Q.ReadOnly  -> ExceptT <$> liftIO $ runExceptT $ _pecRunReadOnly pgExecCtx tx
-      Q.ReadWrite -> ExceptT <$> liftIO $ runExceptT $ _pecRunReadWrite pgExecCtx tx
+      Q.ReadOnly  -> liftEither =<< liftIO (runExceptT $ _pecRunReadOnly pgExecCtx tx)
+      Q.ReadWrite -> liftEither =<< liftIO (runExceptT $ _pecRunReadWrite pgExecCtx tx)
 
 -- | This runs the given set of statements (Tx) without wrapping them in BEGIN
 -- and COMMIT. This should only be used for running a single statement query!
 runQueryTx
-  :: MonadIO m => PGExecCtx -> LazyTx QErr a -> ExceptT QErr m a
+  :: (MonadIO m, MonadError QErr m) => PGExecCtx -> LazyTx QErr a -> m a
 runQueryTx pgExecCtx = \case
   LTErr e  -> throwError e
   LTNoTx a -> return a
-  LTTx tx  -> ExceptT <$> liftIO $ runExceptT $ _pecRunReadNoTx pgExecCtx tx
+  LTTx tx  -> liftEither =<< liftIO (runExceptT $ _pecRunReadNoTx pgExecCtx tx)
 
 type RespTx = Q.TxE QErr EncJSON
 type LazyRespTx = LazyTx QErr EncJSON
@@ -188,6 +190,23 @@ withUserInfo uInfo = \case
   LTTx tx  ->
     let vars = _uiSession uInfo
     in LTTx $ setHeadersTx vars >> tx
+
+-- | Inject the trace context as a transaction-local variable,
+-- so that it can be picked up by any triggers (including event triggers).
+withTraceContext
+  :: Tracing.TraceContext
+  -> LazyTx QErr a
+  -> LazyTx QErr a
+withTraceContext ctx = \case
+  LTErr e  -> LTErr e
+  LTNoTx a -> LTNoTx a
+  LTTx tx  ->
+    let sql = Q.fromText $
+          "SET LOCAL \"hasura.tracecontext\" = " <>
+            toSQLTxt (S.SELit . J.encodeToStrictText . Tracing.injectEventContext $ ctx)
+        setTraceContext =
+          Q.unitQE defaultTxErrorHandler sql () False
+     in LTTx $ setTraceContext >> tx
 
 instance Functor (LazyTx e) where
   fmap f = \case

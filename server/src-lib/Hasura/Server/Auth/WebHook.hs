@@ -32,7 +32,6 @@ import           Hasura.Server.Utils
 import           Hasura.Session
 import qualified Hasura.Tracing              as Tracing
 
-
 data AuthHookType
   = AHTGet
   | AHTPost
@@ -75,10 +74,10 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
   mkUserInfoFromResp logger (ahUrl hook) (hookMethod hook) status respBody
   where
     performHTTPRequest :: m (Wreq.Response BL.ByteString)
-    performHTTPRequest = Tracing.traceHttpRequest (ahUrl hook) do
+    performHTTPRequest =  do
       let url = T.unpack $ ahUrl hook
       req <- liftIO $ H.parseRequest url
-      pure $ Tracing.SuspendedRequest req \req' -> liftIO do
+      Tracing.tracedHttpRequest req \req' -> liftIO do
         case ahType hook of
           AHTGet  -> do
             let isCommonHeader  = (`elem` commonClientHeadersIgnored)
@@ -88,9 +87,9 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
             let contentType = ("Content-Type", "application/json")
                 headersPayload = J.toJSON $ Map.fromList $ hdrsToText reqHeaders
             H.httpLbs (req' { H.method         = "POST"
-                            , H.requestHeaders = addDefaultHeaders [contentType] 
-                            , H.requestBody    = H.RequestBodyLBS . J.encode $ object ["headers" J..= headersPayload]
-                            }) manager
+                           , H.requestHeaders = addDefaultHeaders [contentType]
+                           , H.requestBody    = H.RequestBodyLBS . J.encode $ object ["headers" J..= headersPayload]
+                           }) manager
 
     logAndThrow :: H.HttpException -> m a
     logAndThrow err = do

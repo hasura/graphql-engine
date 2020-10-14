@@ -31,11 +31,6 @@ import {
   getOverlappingTypeConfirmation,
 } from './Common/utils';
 import { showErrorNotification } from '../Common/Notification';
-import {
-  removePersistedDerivedAction,
-  persistDerivedAction,
-  updatePersistedDerivation,
-} from './lsUtils';
 import { appPrefix } from './constants';
 import { push } from 'react-router-redux';
 import {
@@ -62,7 +57,13 @@ import {
   setRequestSuccess as setPermRequestSuccess,
   setRequestFailure as setPermRequestFailure,
 } from './Permissions/reducer';
-import { findAction, getActionPermissions } from './utils';
+import {
+  findAction,
+  getActionPermissions,
+  removePersistedDerivedAction,
+  persistDerivedAction,
+  updatePersistedDerivation,
+} from './utils';
 import { getActionPermissionQueries } from './Permissions/utils';
 
 export const fetchActions = () => {
@@ -138,7 +139,7 @@ export const createAction = () => (dispatch, getState) => {
   }
 
   const state = {
-    handler: rawState.handler,
+    handler: rawState.handler.trim(),
     kind: rawState.kind,
     types,
     actionType,
@@ -258,7 +259,7 @@ export const saveAction = currentAction => (dispatch, getState) => {
   }
 
   const state = {
-    handler: rawState.handler,
+    handler: rawState.handler.trim(),
     kind: rawState.kind,
     types,
     actionType,

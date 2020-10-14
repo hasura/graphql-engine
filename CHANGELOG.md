@@ -2,10 +2,132 @@
 
 ## Next release
 
+### Heterogeneous execution
+
+Previous releases have allowed queries to request data from either Postgres or remote schemas, but not both. This release removes that restriction, so multiple data sources may be mixed within a single query. For example, GraphQL Engine can execute a query like
+
+```
+query {
+  articles {
+    title
+  }
+  weather {
+    temperature
+  }
+}
+```
+
+where the articles are fetched from the database, and the weather is fetched from a remote server.
+
+### Server - Support for mapping session variables to default JWT claims
+
+Some auth providers do not let users add custom claims in JWT. In such cases, the server can take a JWT configuration option called `claims_map` to specify a mapping of Hasura session variables to values in existing claims via JSONPath or literal values.
+
+Example:-
+
+Consider the following JWT claim:
+
+```
+  {
+    "sub": "1234567890",
+    "name": "John Doe",
+    "admin": true,
+    "iat": 1516239022,
+    "user": {
+      "id": "ujdh739kd",
+      "appRoles": ["user", "editor"]
+    }
+  }
+```
+
+The corresponding JWT config can be:
+
+```
+  {
+    "type":"RS512",
+    "key": "<The public Key>",
+    "claims_map": {
+      "x-hasura-allowed-roles": {"path":"$.user.appRoles"},
+      "x-hasura-default-role": {"path":"$.user.appRoles[0]","default":"user"},
+      "x-hasura-user-id": {"path":"$.user.id"}
+    }
+  }
+```
+
+### Breaking changes
+
+This release contains the [PDV refactor (#4111)](https://github.com/hasura/graphql-engine/pull/4111), a significant rewrite of the internals of the server, which did include some breaking changes:
+
+- The semantics of explicit `null` values in `where` filters have changed according to the discussion in [issue 704](https://github.com/hasura/graphql-engine/issues/704#issuecomment-635571407): an explicit `null` value in a comparison input object will be treated as an error rather than resulting in the expression being evaluated to `True`. For instance: `delete_users(where: {id: {_eq: $userId}}) { name }` will yield an error if `$userId` is `null` instead of deleting all users.
+- The validation of required headers has been fixed (closing #14 and #3659):
+  - if a query selects table `bar` through table `foo` via a relationship, the required permissions headers will be the union of the required headers of table `foo` and table `bar` (we used to only check the headers of the root table);
+  - if an insert does not have an `on_conflict` clause, it will not require the update permissions headers.
+
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: add `--websocket-compression` command-line flag for enabling websocket compression (fix #3292)
+- server: some mutations that cannot be performed will no longer be in the schema (for instance, `delete_by_pk` mutations won't be shown to users that do not have select permissions on all primary keys) (#4111)
+- server: miscellaneous description changes (#4111)
+- server: treat the absence of `backend_only` configuration and `backend_only: false` equally (closing #5059) (#4111)
+- server: allow remote relationships joining `type` column with `[type]` input argument as spec allows this coercion (fixes #5133)
+- server: add action-like URL templating for event triggers and remote schemas (fixes #2483)
+- server: change `created_at` column type from `timestamp` to `timestamptz` for scheduled triggers tables (fix #5722)
+- server: allow configuring timeouts for actions (fixes #4966)
+- server: accept only non-negative integers for batch size and refetch interval (close #5653) (#5759)
+- server: limit the length of event trigger names (close #5786)
+**NOTE:** If you have event triggers with names greater than 42 chars, then you should update their names to avoid running into Postgres identifier limit bug (#5786)
+- server: validate remote schema queries (fixes #4143)
+- console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
+- console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
+- cli: add missing global flags for seed command (#5565)
+- cli: allow seeds as alias for seed command (#5693)
+- console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
+- console: add option to flag an insertion as a migration from `Data` section (close #1766) (#4933)
+- console: add notifications (#5070)
+- docs: add docs page on networking with docker (close #4346) (#4811)
+- docs: add tabs for console / cli / api workflows (close #3593) (#4948)
+- docs: add postgres concepts page to docs (close #4440) (#4471)
+
+
+## `v1.3.2`
+
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+
+- server: fixes column masking in select permission for computed fields regression (fix #5696)
+
+
+## `v1.3.1`, `v1.3.1-beta.1`
+
+### Breaking change
+
+Headers from environment variables starting with `HASURA_GRAPHQL_` are not allowed
+in event triggers, actions & remote schemas.
+
+If you do have such headers configured, then you must update the header configuration before upgrading.
+
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+
+- server: fix failing introspection query when an enum column is part of a primary key (fixes #5200)
+- server: disallow headers from env variables starting with `HASURA_GRAPHQL_` in actions, event triggers & remote schemas (#5519)
+**WARNING**: This might break certain deployments. See `Breaking change` section above.
+- server: bugfix to allow HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE of 0 (#5363)
+- server: support only a bounded plan cache, with a default size of 4000 (closes #5363)
+- server: add logs for action handlers
+- server: add request/response sizes in event triggers (and scheduled trigger) logs (#5463)
+- server: change startup log kind `db_migrate` to `catalog_migrate` (#5531)
+- console: handle nested fragments in allowed queries (close #5137) (#5252)
+- console: update sidebar icons for different action and trigger types (#5445)
+- console: make add column UX consistent with others (#5486)
+- console: add "identity" to frequently used columns (close #4279) (#5360)
+- cli: improve error messages thrown when metadata apply fails (#5513)
+- cli: fix issue with creating seed migrations while using tables with capital letters (closes #5532) (#5549)
+- build: introduce additional log kinds for cli-migrations image (#5529)
 
 ## `v1.3.0`
 
@@ -31,7 +153,7 @@
 - server: have haskell runtime release blocks of memory back to the OS eagerly (related to #3388)
 - server: unlock locked scheduled events on graceful shutdown (#4928)
 - server: disable prepared statements for mutations as we end up with single-use objects which result in excessive memory consumption for mutation heavy workloads (#5255)
-- server: include scheduled event metadata (`created_at`,`scheduled_time`,`id`, etc) along with the configured payload in the request body to the webhook. 
+- server: include scheduled event metadata (`created_at`,`scheduled_time`,`id`, etc) along with the configured payload in the request body to the webhook.
 **WARNING:** This is breaking for beta versions as the payload is now inside a key called `payload`.
 - console: allow configuring statement timeout on console RawSQL page (close #4998) (#5045)
 - console: support tracking partitioned tables (close #5071) (#5258)
@@ -44,7 +166,6 @@
 
 
 ## `v1.3.0-beta.3`
-
 
 ### Bug fixes and improvements
 

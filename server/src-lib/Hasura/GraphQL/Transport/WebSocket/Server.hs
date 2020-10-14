@@ -1,10 +1,12 @@
 {-# LANGUAGE NondecreasingIndentation #-}
 {-# LANGUAGE RankNTypes               #-}
+{-# LANGUAGE CPP #-}
 
 module Hasura.GraphQL.Transport.WebSocket.Server
   ( WSId(..)
   , WSLog(..)
   , WSEvent(..)
+  , MessageDetails(..)
   , WSConn
   , getData
   , getWSId
@@ -44,7 +46,9 @@ import qualified Data.TByteString                            as TBS
 import qualified Data.UUID                                   as UUID
 import qualified Data.UUID.V4                                as UUID
 import           Data.Word                                   (Word16)
+#ifndef PROFILING
 import           GHC.AssertNF
+#endif
 import           GHC.Int                                     (Int64)
 import           Hasura.Prelude
 import qualified ListT
@@ -64,12 +68,20 @@ instance J.ToJSON WSId where
   toJSON (WSId uuid) =
     J.toJSON $ UUID.toText uuid
 
+-- | Websocket message and other details
+data MessageDetails
+  = MessageDetails
+  { _mdMessage     :: !TBS.TByteString
+  , _mdMessageSize :: !Int64
+  } deriving (Show, Eq)
+$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''MessageDetails)
+
 data WSEvent
   = EConnectionRequest
   | EAccepted
   | ERejected
-  | EMessageReceived !TBS.TByteString
-  | EMessageSent !TBS.TByteString
+  | EMessageReceived !MessageDetails
+  | EMessageSent !MessageDetails
   | EJwtExpired
   | ECloseReceived
   | ECloseSent !TBS.TByteString
@@ -107,10 +119,6 @@ $(J.deriveToJSON
                    }
   ''WSLog)
 
-instance L.ToEngineLog WSLog L.Hasura where
-  toEngineLog wsLog =
-    (L.LevelDebug, L.ELTInternal L.ILTWsServer, J.toJSON wsLog)
-
 class Monad m => MonadWSLog m where
   -- | Takes WS server log data and logs it
   -- logWSServer
@@ -121,6 +129,10 @@ instance MonadWSLog m => MonadWSLog (ExceptT e m) where
 
 instance MonadWSLog m => MonadWSLog (ReaderT r m) where
   logWSLog l ws = lift $ logWSLog l ws
+
+instance L.ToEngineLog WSLog L.Hasura where
+  toEngineLog wsLog =
+    (L.LevelDebug, L.ELTInternal L.ILTWsServer, J.toJSON wsLog)
 
 data WSQueueResponse
   = WSQueueResponse
@@ -163,7 +175,9 @@ closeConnWithCode wsConn code bs = do
 -- so that sendMsg doesn't block
 sendMsg :: WSConn a -> WSQueueResponse -> IO ()
 sendMsg wsConn = \ !resp -> do
+#ifndef PROFILING
   $assertNFHere resp  -- so we don't write thunks to mutable vars
+#endif
   STM.atomically $ STM.writeTQueue (_wcSendQ wsConn) resp
 
 type ConnMap a = STMMap.Map WSId (WSConn a)
@@ -315,13 +329,15 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !i
                   -- Regardless this should be safe:
                   handleJust (guard . E.isResourceVanishedError) (\()-> throw WS.ConnectionClosed) $
                     WS.receiveData conn
-                logWSLog logger $ WSLog wsId (EMessageReceived $ TBS.fromLBS msg) Nothing
+                let message = MessageDetails (TBS.fromLBS msg) (BL.length msg)
+                logWSLog logger $ WSLog wsId (EMessageReceived message) Nothing
                 _hOnMessage wsHandlers wsConn msg
 
           let send = forever $ do
                 WSQueueResponse msg wsInfo <- liftIO $ STM.atomically $ STM.readTQueue sendQ
+                let message = MessageDetails (TBS.fromLBS msg) (BL.length msg)
                 liftIO $ WS.sendTextData conn msg
-                logWSLog logger $ WSLog wsId (EMessageSent $ TBS.fromLBS msg) wsInfo
+                logWSLog logger $ WSLog wsId (EMessageSent message) wsInfo
 
           -- withAsync lets us be very sure that if e.g. an async exception is raised while we're
           -- forking that the threads we launched will be cleaned up. See also below.
@@ -350,7 +366,6 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !i
         liftIO $ STM.atomically $ STMMap.delete (_wcConnId wsConn) connMap
         _hOnClose wsHandlers wsConn
         logWSLog logger $ WSLog (_wcConnId wsConn) EClosed Nothing
-
 
 shutdown :: WSServer a -> IO ()
 shutdown (WSServer (L.Logger writeLog) serverStatus) = do

@@ -1,6 +1,12 @@
 type: bulk
 args:
 
+#Set timezone
+- type: run_sql
+  args:
+    sql: |
+      SET TIME ZONE 'UTC';
+
 #Author table
 - type: run_sql
   args:
@@ -43,6 +49,23 @@ args:
   args:
     schema: public
     name: person
+
+#Person views
+- type: run_sql
+  args:
+    sql: |
+      CREATE VIEW person_const_view AS select * from person LIMIT 600;
+      CREATE VIEW person_mut_view AS select * from person;
+
+- type: track_table
+  args:
+    schema: public
+    name: person_const_view
+
+- type: track_table
+  args:
+    schema: public
+    name: person_mut_view
 
 #Order table
 - type: run_sql
@@ -148,9 +171,3 @@ args:
   args:
     schema: public
     name: test_types
-
-#Set timezone
-- type: run_sql
-  args:
-    sql: |
-      SET TIME ZONE 'UTC';

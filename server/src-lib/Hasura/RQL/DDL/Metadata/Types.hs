@@ -490,16 +490,16 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                           ]
               <> catMaybes [maybeDescriptionToMaybeOrdPair fieldDescM]
 
-        objectTypeToOrdJSON :: ObjectTypeDefinition -> AO.Value
+        objectTypeToOrdJSON :: ObjectType -> AO.Value
         objectTypeToOrdJSON (ObjectTypeDefinition tyName descM fields rels) =
           AO.object $ [ ("name", AO.toOrdered tyName)
                       , ("fields", AO.array $ map fieldDefinitionToOrdJSON $ toList fields)
                       ]
           <> catMaybes [ maybeDescriptionToMaybeOrdPair descM
-                       , listToMaybeOrdPair "relationships" AO.toOrdered =<< rels
+                       , maybeAnyToMaybeOrdPair "relationships" AO.toOrdered rels
                        ]
           where
-            fieldDefinitionToOrdJSON :: ObjectFieldDefinition -> AO.Value
+            fieldDefinitionToOrdJSON :: ObjectFieldDefinition GraphQLType -> AO.Value
             fieldDefinitionToOrdJSON (ObjectFieldDefinition fieldName argsValM fieldDescM ty) =
               AO.object $ [ ("name", AO.toOrdered fieldName)
                           , ("type", AO.toOrdered ty)
@@ -530,7 +530,7 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                    , listToMaybeOrdPair "permissions" permToOrdJSON permissions
                    ]
       where
-        argDefinitionToOrdJSON :: ArgumentDefinition -> AO.Value
+        argDefinitionToOrdJSON :: ArgumentDefinition GraphQLType -> AO.Value
         argDefinitionToOrdJSON (ArgumentDefinition argName ty descM) =
           AO.object $  [ ("name", AO.toOrdered argName)
                        , ("type", AO.toOrdered ty)
@@ -538,7 +538,8 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
           <> catMaybes [maybeAnyToMaybeOrdPair "description" AO.toOrdered descM]
 
         actionDefinitionToOrdJSON :: ActionDefinitionInput -> AO.Value
-        actionDefinitionToOrdJSON (ActionDefinition args outputType actionType headers frwrdClientHdrs handler) =
+        actionDefinitionToOrdJSON (ActionDefinition args outputType actionType
+                                   headers frwrdClientHdrs timeout handler) =
           let typeAndKind = case actionType of
                 ActionQuery -> [("type", AO.toOrdered ("query" :: String))]
                 ActionMutation kind -> [ ("type", AO.toOrdered ("mutation" :: String))
@@ -551,6 +552,7 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
           <> catMaybes [ listToMaybeOrdPair "headers" AO.toOrdered headers
                        , listToMaybeOrdPair "arguments" argDefinitionToOrdJSON args]
           <> typeAndKind
+          <> (bool [("timeout",AO.toOrdered timeout)] mempty $ timeout == defaultActionTimeoutSecs)
 
         permToOrdJSON :: ActionPermissionMetadata -> AO.Value
         permToOrdJSON (ActionPermissionMetadata role permComment) =
