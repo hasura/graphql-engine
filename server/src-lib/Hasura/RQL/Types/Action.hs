@@ -287,7 +287,7 @@ data AsyncActionQueryFieldG (b :: Backend) v
   | AsyncErrors
   deriving (Show, Eq)
 
-type AsyncActionQueryFieldsG (b :: Backend) v = Fields (AsyncActionQueryFieldG b v)
+type AsyncActionQueryFieldsG b v = Fields (AsyncActionQueryFieldG b v)
 
 data AnnActionAsyncQuery (b :: Backend) v
   = AnnActionAsyncQuery

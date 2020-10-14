@@ -110,10 +110,10 @@ data AnnRelationSelectG a
   , aarAnnSelect        :: !a -- Current table. Almost ~ to SQL Select
   } deriving (Show, Eq, Functor, Foldable, Traversable)
 
-type ArrayRelationSelectG (b :: Backend) v = AnnRelationSelectG (AnnSimpleSelG b v)
-type ArrayAggregateSelectG (b :: Backend) v = AnnRelationSelectG (AnnAggregateSelectG b v)
-type ArrayConnectionSelect (b :: Backend) v = AnnRelationSelectG (ConnectionSelect b v)
-type ArrayAggregateSelect (b :: Backend) = ArrayAggregateSelectG b S.SQLExp
+type ArrayRelationSelectG b v = AnnRelationSelectG (AnnSimpleSelG b v)
+type ArrayAggregateSelectG b v = AnnRelationSelectG (AnnAggregateSelectG b v)
+type ArrayConnectionSelect b v = AnnRelationSelectG (ConnectionSelect b v)
+type ArrayAggregateSelect b = ArrayAggregateSelectG b S.SQLExp
 
 data AnnObjectSelectG (b :: Backend) v
   = AnnObjectSelectG
@@ -122,7 +122,7 @@ data AnnObjectSelectG (b :: Backend) v
   , _aosTableFilter :: !(AnnBoolExp v)
   } deriving (Show, Eq)
 
-type AnnObjectSelect (b :: Backend) = AnnObjectSelectG b S.SQLExp
+type AnnObjectSelect b = AnnObjectSelectG b S.SQLExp
 
 traverseAnnObjectSelect
   :: (Applicative f)
@@ -134,8 +134,8 @@ traverseAnnObjectSelect f (AnnObjectSelectG fields fromTable permissionFilter) =
   <*> pure fromTable
   <*> traverseAnnBoolExp f permissionFilter
 
-type ObjectRelationSelectG (b :: Backend) v = AnnRelationSelectG (AnnObjectSelectG b v)
-type ObjectRelationSelect (b :: Backend) = ObjectRelationSelectG b S.SQLExp
+type ObjectRelationSelectG b v = AnnRelationSelectG (AnnObjectSelectG b v)
+type ObjectRelationSelect b = ObjectRelationSelectG b S.SQLExp
 
 data ComputedFieldScalarSelect v
   = ComputedFieldScalarSelect
@@ -179,9 +179,9 @@ traverseArraySelect f = \case
   ASConnection relConnection ->
     ASConnection <$> traverse (traverseConnectionSelect f) relConnection
 
-type ArraySelect (b :: Backend) = ArraySelectG b S.SQLExp
+type ArraySelect b = ArraySelectG b S.SQLExp
 
-type ArraySelectFieldsG (b :: Backend) v = Fields (ArraySelectG b v)
+type ArraySelectFieldsG b v = Fields (ArraySelectG b v)
 
 data ColumnOp
   = ColumnOp
@@ -244,7 +244,7 @@ traverseAnnField f = \case
   AFNodeId qt pKeys -> pure $ AFNodeId qt pKeys
   AFExpression t -> AFExpression <$> pure t
 
-type AnnField (b :: Backend) = AnnFieldG b S.SQLExp
+type AnnField b = AnnFieldG b S.SQLExp
 
 data SelectArgsG (b :: Backend) v
   = SelectArgs
@@ -293,14 +293,14 @@ data AggregateField
   deriving (Show, Eq)
 
 type AggregateFields = Fields AggregateField
-type AnnFieldsG (b :: Backend) v = Fields (AnnFieldG b v)
+type AnnFieldsG b v = Fields (AnnFieldG b v)
 
 traverseAnnFields
   :: (Applicative f)
   => (a -> f b) -> AnnFieldsG backend a -> f (AnnFieldsG backend b)
 traverseAnnFields f = traverse (traverse (traverseAnnField f))
 
-type AnnFields (b :: Backend) = AnnFieldsG b S.SQLExp
+type AnnFields b = AnnFieldsG b S.SQLExp
 
 data TableAggregateFieldG (b :: Backend) v
   = TAFAgg !AggregateFields
@@ -322,7 +322,7 @@ data EdgeField (b :: Backend) v
   | EdgeCursor
   | EdgeNode !(AnnFieldsG b v)
   deriving (Show, Eq)
-type EdgeFields (b :: Backend) v = Fields (EdgeField b v)
+type EdgeFields b v = Fields (EdgeField b v)
 
 traverseEdgeField
   :: (Applicative f)
@@ -337,7 +337,7 @@ data ConnectionField (b :: Backend) v
   | ConnectionPageInfo !PageInfoFields
   | ConnectionEdges !(EdgeFields b v)
   deriving (Show, Eq)
-type ConnectionFields (b :: Backend) v = Fields (ConnectionField b v)
+type ConnectionFields b v = Fields (ConnectionField b v)
 
 traverseConnectionField
   :: (Applicative f)
@@ -356,9 +356,9 @@ traverseTableAggregateField f = \case
   TAFNodes annFlds -> TAFNodes <$> traverseAnnFields f annFlds
   TAFExp t -> pure $ TAFExp t
 
-type TableAggregateField (b :: Backend) = TableAggregateFieldG b S.SQLExp
-type TableAggregateFieldsG (b :: Backend) v = Fields (TableAggregateFieldG b v)
-type TableAggregateFields (b :: Backend) = TableAggregateFieldsG b S.SQLExp
+type TableAggregateField b = TableAggregateFieldG b S.SQLExp
+type TableAggregateFieldsG b v = Fields (TableAggregateFieldG b v)
+type TableAggregateFields b = TableAggregateFieldsG b S.SQLExp
 
 data ArgumentExp a
   = AETableRow !(Maybe Iden) -- ^ table row accessor
@@ -438,11 +438,11 @@ traverseAnnSelect f1 f2 (AnnSelectG flds tabFrom perm args strfyNum) =
   <*> traverseSelectArgs f2 args
   <*> pure strfyNum
 
-type AnnSimpleSelG (b :: Backend) v = AnnSelectG b (AnnFieldsG b v) v
-type AnnSimpleSel (b :: Backend) = AnnSimpleSelG b S.SQLExp
+type AnnSimpleSelG b v = AnnSelectG b (AnnFieldsG b v) v
+type AnnSimpleSel b = AnnSimpleSelG b S.SQLExp
 
-type AnnAggregateSelectG (b :: Backend) v = AnnSelectG b (TableAggregateFieldsG b v) v
-type AnnAggregateSelect (b :: Backend) = AnnAggregateSelectG b S.SQLExp
+type AnnAggregateSelectG b v = AnnSelectG b (TableAggregateFieldsG b v) v
+type AnnAggregateSelect b = AnnAggregateSelectG b S.SQLExp
 
 data ConnectionSlice
   = SliceFirst !Int
