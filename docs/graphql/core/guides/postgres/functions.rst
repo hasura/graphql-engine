@@ -1,6 +1,6 @@
 .. meta::
    :description: Use Postgres functions with Hasura
-   :keywords: hasura, docs, postgres, functions
+   :keywords: hasura, docs, postgres, functions, stored procedures
 
 .. _postgres_functions:
 
@@ -15,8 +15,9 @@ Postgres functions
 Introduction
 ------------
 
-`Postgres functions <https://www.postgresql.org/docs/current/sql-createfunction.html>`__ allow you to customize your database schema by defining a set of operations that can include several statements such as declarations, assignments and conditional workflows. 
-Postgres functions are similar to views but allow more procedural computations and can take arguments.
+`Postgres functions <https://www.postgresql.org/docs/current/sql-createfunction.html>`__ allow you to customize your database
+schema by defining a set of operations that can include several statements such as declarations, assignments and conditional workflows. Postgres
+functions are similar to views but allow more procedural computations and can take arguments. SQL functions are also referred to as **stored procedures**.
 
 .. note::
 
