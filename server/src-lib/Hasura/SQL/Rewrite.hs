@@ -48,8 +48,8 @@ addAlias (S.Alias iden) = do
   put $ UniqSt (var + 1) $ Map.insert iden var idens
   return $ S.Alias $ withNumPfx iden var
 
-getIdentifier :: Iden -> Uniq Iden
-getIdentifier iden = do
+getIden :: Iden -> Uniq Iden
+getIden iden = do
   UniqSt _ idens <- get
   let varNumM = Map.lookup iden idens
   return $ maybe iden (withNumPfx iden) varNumM
@@ -186,7 +186,7 @@ uSqlExp = restoringIdens . \case
   -- this is for row expressions
   -- todo: check if this is always okay
   S.SEIden iden                 -> return $ S.SEIden iden
-  S.SERowIden iden              -> S.SERowIden <$> getIdentifier iden
+  S.SERowIden iden              -> S.SERowIden <$> getIden iden
   S.SEQIden (S.QIden qual iden) -> do
     newQual <- uQual qual
     return $ S.SEQIden $ S.QIden newQual iden
@@ -222,6 +222,6 @@ uSqlExp = restoringIdens . \case
   S.SEFunction funcExp          -> S.SEFunction <$> uFunctionExp funcExp
   where
     uQual = \case
-      S.QualIden iden ty -> S.QualIden <$> getIdentifier iden <*> pure ty
+      S.QualIden iden ty -> S.QualIden <$> getIden iden <*> pure ty
       S.QualTable t   -> return $ S.QualTable t
       S.QualVar t     -> return $ S.QualVar t
