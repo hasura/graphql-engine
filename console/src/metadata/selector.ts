@@ -237,6 +237,38 @@ export const getEventTriggers = createSelector(
   }
 );
 
+export const getEventTriggerByName = createSelector(
+  getEventTriggers,
+  getMetadata,
+  (triggers, metadata) => (name: string) => {
+    const currentTrigger = triggers.find(tr => tr.name === name);
+    if (currentTrigger) return currentTrigger;
+
+    for (const source of metadata?.sources || []) {
+      for (const table of source.tables) {
+        const trigger = table.event_triggers?.find(tr => tr.name === name);
+        if (trigger)
+          return {
+            table_name: table.table.name,
+            schema_name: table.table.schema,
+            source: source.name,
+            name: trigger.name,
+            comment: '',
+            configuration: {
+              definition: trigger.definition as any, // todo
+              headers: trigger.headers || [],
+              retry_conf: trigger.retry_conf,
+              webhook: trigger.webhook || '',
+              webhook_from_env: trigger.webhook_from_env,
+            },
+          };
+      }
+    }
+
+    return null;
+  }
+);
+
 export const getCronTriggers = createSelector(getMetadata, metadata => {
   const cronTriggers: ScheduledTrigger[] = (metadata?.cron_triggers || []).map(
     cron => ({

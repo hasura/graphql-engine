@@ -212,17 +212,23 @@ export const getAddETRoute = (type?: string) => {
 export const getDataEventsLandingRoute = (type?: string) => {
   return getETRoute(type, 'manage');
 };
-export const getETModifyRoute = (etName: string, type?: string) => {
-  return getETRoute(type, `${etName}/modify`);
+export const getETModifyRoute = ({
+  type,
+  name,
+}: {
+  type?: string;
+  name?: string;
+}) => {
+  return getETRoute(type, `${name ? `${name}/` : ''}modify`);
 };
-export const getETPendingEventsRoute = (etName: string, type?: string) => {
-  return getETRoute(type, `${etName}/pending`);
+export const getETPendingEventsRoute = (type?: string) => {
+  return getETRoute(type, 'pending');
 };
-export const getETProcessedEventsRoute = (etName: string, type?: string) => {
-  return getETRoute(type, `${etName}/processed`);
+export const getETProcessedEventsRoute = (type?: string) => {
+  return getETRoute(type, 'processed');
 };
-export const getETInvocationLogsRoute = (etName: string, type?: string) => {
-  return getETRoute(type, `${etName}/logs`);
+export const getETInvocationLogsRoute = (type?: string) => {
+  return getETRoute(type, 'logs');
 };
 export const getAddAdhocEventRoute = (type?: string) => {
   return getAdhocEventsRoute(type, 'add');

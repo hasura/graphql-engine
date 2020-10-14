@@ -5,8 +5,6 @@ import { getReactHelmetTitle } from '../../../../Common/utils/reactUtils';
 import BreadCrumb from '../../../../Common/Layout/BreadCrumb/BreadCrumb';
 import {
   getETModifyRoute,
-  getETInvocationLogsRoute,
-  getETPendingEventsRoute,
   getETProcessedEventsRoute,
   getDataEventsLandingRoute,
 } from '../../../../Common/utils/routesUtils';
@@ -69,7 +67,7 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
                 className={tabName === 'modify' ? styles.active : ''}
               >
                 <Link
-                  to={getETModifyRoute(triggerName)}
+                  to={getETModifyRoute({ name: triggerName })}
                   data-test="trigger-modify"
                 >
                   Modify
@@ -80,10 +78,7 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
               role="presentation"
               className={tabName === 'pending' ? styles.active : ''}
             >
-              <Link
-                to={getETPendingEventsRoute(triggerName)}
-                data-test="trigger-pending-events"
-              >
+              <Link to="pending" data-test="trigger-pending-events">
                 Pending Events {tabName === 'pending' ? showCount : null}
               </Link>
             </li>
@@ -91,10 +86,7 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
               role="presentation"
               className={tabName === 'processed' ? styles.active : ''}
             >
-              <Link
-                to={getETProcessedEventsRoute(triggerName)}
-                data-test="trigger-processed-events"
-              >
+              <Link to="processed" data-test="trigger-processed-events">
                 Processed Events {tabName === 'processed' ? showCount : null}
               </Link>
             </li>
@@ -102,10 +94,7 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
               role="presentation"
               className={tabName === 'logs' ? styles.active : ''}
             >
-              <Link
-                to={getETInvocationLogsRoute(triggerName)}
-                data-test="trigger-invocation-logs"
-              >
+              <Link to="logs" data-test="trigger-invocation-logs">
                 Invocation Logs
               </Link>
             </li>
