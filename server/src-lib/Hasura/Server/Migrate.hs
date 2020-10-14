@@ -96,51 +96,46 @@ migrateCatalog
   => Env.Environment
   -> UTCTime
   -> m (MigrationResult, RebuildableSchemaCache m)
-migrateCatalog env migrationTime = do
-  doesSchemaExist (SchemaName "hdb_catalog") >>= \case
-    False -> initialize True
-    True  -> doesTableExist (SchemaName "hdb_catalog") (TableName "hdb_version") >>= \case
-      False -> initialize False
-      True  -> migrateFrom =<< getCatalogVersion
+migrateCatalog env migrationTime = migrateFrom =<< getCatalogVersion
   where
     -- initializes the catalog, creating the schema if necessary
-    initialize :: Bool -> m (MigrationResult, RebuildableSchemaCache m)
-    initialize createSchema =  do
-      liftTx $ Q.catchE defaultTxErrorHandler $
-        when createSchema $ do
-          Q.unitQ "CREATE SCHEMA hdb_catalog" () False
-          -- This is where the generated views and triggers are stored
-          Q.unitQ "CREATE SCHEMA hdb_views" () False
+    -- initialize :: Bool -> m (MigrationResult, RebuildableSchemaCache m)
+    -- initialize createSchema =  do
+    --   liftTx $ Q.catchE defaultTxErrorHandler $
+    --     when createSchema $ do
+    --       Q.unitQ "CREATE SCHEMA hdb_catalog" () False
+    --       -- This is where the generated views and triggers are stored
+    --       Q.unitQ "CREATE SCHEMA hdb_views" () False
 
-      isExtensionAvailable (SchemaName "pgcrypto") >>= \case
-        -- only if we created the schema, create the extension
-        True -> when createSchema $ liftTx $ Q.unitQE needsPGCryptoError
-          "CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA public" () False
-        False -> throw500 $
-          "pgcrypto extension is required, but could not find the extension in the "
-          <> "PostgreSQL server. Please make sure this extension is available."
+    --   isExtensionAvailable (SchemaName "pgcrypto") >>= \case
+    --     -- only if we created the schema, create the extension
+    --     True -> when createSchema $ liftTx $ Q.unitQE needsPGCryptoError
+    --       "CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA public" () False
+    --     False -> throw500 $
+    --       "pgcrypto extension is required, but could not find the extension in the "
+    --       <> "PostgreSQL server. Please make sure this extension is available."
 
-      runTx $(Q.sqlFromFile "src-rsr/initialise.sql")
-      schemaCache <- buildCacheAndRecreateSystemMetadata
-      updateCatalogVersion
-      pure (MRInitialized, schemaCache)
-      where
-        needsPGCryptoError e@(Q.PGTxErr _ _ _ err) =
-          case err of
-            Q.PGIUnexpected _ -> requiredError
-            Q.PGIStatement pgErr -> case Q.edStatusCode pgErr of
-              Just "42501" -> err500 PostgresError permissionsMessage
-              _            -> requiredError
-          where
-            requiredError =
-              (err500 PostgresError requiredMessage) { qeInternal = Just $ A.toJSON e }
-            requiredMessage =
-              "pgcrypto extension is required, but it could not be created;"
-              <> " encountered unknown postgres error"
-            permissionsMessage =
-              "pgcrypto extension is required, but the current user doesn’t have permission to"
-              <> " create it. Please grant superuser permission, or setup the initial schema via"
-              <> " https://hasura.io/docs/1.0/graphql/manual/deployment/postgres-permissions.html"
+    --   runTx $(Q.sqlFromFile "src-rsr/initialise.sql")
+    --   schemaCache <- buildCacheAndRecreateSystemMetadata
+    --   updateCatalogVersion
+    --   pure (MRInitialized, schemaCache)
+    --   where
+    --     needsPGCryptoError e@(Q.PGTxErr _ _ _ err) =
+    --       case err of
+    --         Q.PGIUnexpected _ -> requiredError
+    --         Q.PGIStatement pgErr -> case Q.edStatusCode pgErr of
+    --           Just "42501" -> err500 PostgresError permissionsMessage
+    --           _            -> requiredError
+    --       where
+    --         requiredError =
+    --           (err500 PostgresError requiredMessage) { qeInternal = Just $ A.toJSON e }
+    --         requiredMessage =
+    --           "pgcrypto extension is required, but it could not be created;"
+    --           <> " encountered unknown postgres error"
+    --         permissionsMessage =
+    --           "pgcrypto extension is required, but the current user doesn’t have permission to"
+    --           <> " create it. Please grant superuser permission, or setup the initial schema via"
+    --           <> " https://hasura.io/docs/1.0/graphql/manual/deployment/postgres-permissions.html"
 
     -- migrates an existing catalog to the latest version from an existing verion
     migrateFrom :: T.Text -> m (MigrationResult, RebuildableSchemaCache m)
@@ -148,20 +143,13 @@ migrateCatalog env migrationTime = do
       | previousVersion == latestCatalogVersionString = do
           schemaCache <- buildRebuildableSchemaCache env
           pure (MRNothingToDo, schemaCache)
-      | [] <- neededMigrations =
+      | otherwise =
           throw400 NotSupported $
-            "Cannot use database previously used with a newer version of graphql-engine (expected"
+            "Read replica is not on latest catalog version (expected"
               <> " a catalog version <=" <> latestCatalogVersionString <> ", but the current version"
               <> " is " <> previousVersion <> ")."
-      | otherwise = do
-          traverse_ (mpMigrate . snd) neededMigrations
-          schemaCache <- buildCacheAndRecreateSystemMetadata
-          updateCatalogVersion
-          pure (MRMigrated previousVersion, schemaCache)
-      where
-        neededMigrations = dropWhile ((/= previousVersion) . fst) (migrations False)
-
-    updateCatalogVersion = setCatalogVersion latestCatalogVersionString migrationTime
+ 
+    -- updateCatalogVersion = setCatalogVersion latestCatalogVersionString migrationTime
 
     buildCacheAndRecreateSystemMetadata :: m (RebuildableSchemaCache m)
     buildCacheAndRecreateSystemMetadata = do

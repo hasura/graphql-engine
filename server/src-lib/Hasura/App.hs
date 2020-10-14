@@ -210,7 +210,7 @@ initialiseCtx env hgeCmd rci = do
       pure (l, pool, SQLGenCtx False)
 
   res <- flip onException (flushLogger (_lsLoggerCtx loggers)) $
-    migrateCatalogSchema env (_lsLogger loggers) pool httpManager sqlGenCtx
+    migrateCatalogSchemaRR env (_lsLogger loggers) pool httpManager sqlGenCtx
   pure (InitCtx httpManager instanceId loggers connInfo pool latch res, initTime)
   where
     procConnInfo =
@@ -227,15 +227,15 @@ initialiseCtx env hgeCmd rci = do
       return $ Loggers loggerCtx logger pgLogger
 
 -- | helper function to initialize or migrate the @hdb_catalog@ schema (used by pro as well)
-migrateCatalogSchema
+migrateCatalogSchemaRR
   :: (HasVersion, MonadIO m)
   => Env.Environment -> Logger Hasura -> Q.PGPool -> HTTP.Manager -> SQLGenCtx
   -> m (RebuildableSchemaCache Run, Maybe UTCTime)
-migrateCatalogSchema env logger pool httpManager sqlGenCtx = do
-  let pgExecCtx = mkPGExecCtx Q.Serializable pool
+migrateCatalogSchemaRR env logger pool httpManager sqlGenCtx = do
+  let pgExecCtx = mkPGExecCtx Q.ReadCommitted pool
       adminRunCtx = RunCtx adminUserInfo httpManager sqlGenCtx
   currentTime <- liftIO Clock.getCurrentTime
-  initialiseResult <- runExceptT $ peelRun adminRunCtx pgExecCtx Q.ReadWrite Nothing $
+  initialiseResult <- runExceptT $ peelRun adminRunCtx pgExecCtx Q.ReadOnly Nothing $
     (,) <$> migrateCatalog env currentTime <*> liftTx fetchLastUpdate
 
   ((migrationResult, schemaCache), lastUpdateEvent) <-
@@ -357,9 +357,9 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
   liftIO $ logInconsObjs logger inconsObjs
 
   -- start background threads for schema sync
-  (schemaSyncListenerThread, schemaSyncProcessorThread) <-
-    startSchemaSyncThreads sqlGenCtx _icPgPool logger _icHttpManager
-                           cacheRef _icInstanceId cacheInitTime
+  -- (schemaSyncListenerThread, schemaSyncProcessorThread) <-
+  --   startSchemaSyncThreads sqlGenCtx _icPgPool logger _icHttpManager
+  --                          cacheRef _icInstanceId cacheInitTime
 
   let
     maxEvThrds    = fromMaybe defaultMaxEventThreads soEventsHttpPoolSize
@@ -369,28 +369,28 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
   lockedEventsCtx <- liftIO $ atomically initLockedEventsCtx
 
   -- prepare event triggers data
-  prepareEvents _icPgPool logger
-  eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI
-  unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
+  -- prepareEvents _icPgPool logger
+  -- eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI
+  unLogger logger $ mkGenericStrLog LevelWarn "event_triggers" "event triggers are disabled"
 
-  eventQueueThread <- C.forkImmortal "processEventQueue" logger $
-    processEventQueue logger logEnvHeaders
-    _icHttpManager _icPgPool (getSCFromRef cacheRef) eventEngineCtx lockedEventsCtx
+  -- eventQueueThread <- C.forkImmortal "processEventQueue" logger $
+  --   processEventQueue logger logEnvHeaders
+  --   _icHttpManager _icPgPool (getSCFromRef cacheRef) eventEngineCtx lockedEventsCtx
 
   -- start a backgroud thread to handle async actions
-  asyncActionsThread <- C.forkImmortal "asyncActionsProcessor" logger $
-    asyncActionsProcessor env logger (_scrCache cacheRef) _icPgPool _icHttpManager
+  -- asyncActionsThread <- C.forkImmortal "asyncActionsProcessor" logger $
+  --   asyncActionsProcessor env logger (_scrCache cacheRef) _icPgPool _icHttpManager
 
-  -- start a background thread to create new cron events
-  cronEventsThread <- liftIO $ C.forkImmortal "runCronEventsGenerator" logger $
-    runCronEventsGenerator logger _icPgPool (getSCFromRef cacheRef)
+  -- -- start a background thread to create new cron events
+  -- cronEventsThread <- liftIO $ C.forkImmortal "runCronEventsGenerator" logger $
+  --   runCronEventsGenerator logger _icPgPool (getSCFromRef cacheRef)
 
-  -- prepare scheduled triggers
-  prepareScheduledEvents _icPgPool logger
+  -- -- prepare scheduled triggers
+  -- prepareScheduledEvents _icPgPool logger
 
-  -- start a background thread to deliver the scheduled events
-  scheduledEventsThread <- C.forkImmortal "processScheduledTriggers" logger $
-    processScheduledTriggers env logger logEnvHeaders _icHttpManager _icPgPool (getSCFromRef cacheRef) lockedEventsCtx
+  -- -- start a background thread to deliver the scheduled events
+  -- scheduledEventsThread <- C.forkImmortal "processScheduledTriggers" logger $
+  --   processScheduledTriggers env logger logEnvHeaders _icHttpManager _icPgPool (getSCFromRef cacheRef) lockedEventsCtx
 
   -- start a background thread to check for updates
   updateThread <- C.forkImmortal "checkForUpdates" logger $ liftIO $
@@ -410,13 +410,14 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
     else return Nothing
 
   -- all the immortal threads are collected so that they can be stopped when gracefully shutting down
-  let immortalThreads = [ schemaSyncListenerThread
-                        , schemaSyncProcessorThread
-                        , updateThread
-                        , asyncActionsThread
-                        , eventQueueThread
-                        , scheduledEventsThread
-                        , cronEventsThread
+  let immortalThreads = [
+                        -- schemaSyncListenerThread
+                        -- , schemaSyncProcessorThread
+                        updateThread
+                        -- , asyncActionsThread
+                        -- , eventQueueThread
+                        -- , scheduledEventsThread
+                        -- , cronEventsThread
                         ] <> maybe [] pure telemetryThread
 
   finishTime <- liftIO Clock.getCurrentTime
