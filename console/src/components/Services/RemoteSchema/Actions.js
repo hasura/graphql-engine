@@ -8,6 +8,25 @@ import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
 import { loadMigrationStatus } from '../../Main/Actions';
 import { handleMigrationErrors } from '../../../utils/migration';
 import { showSuccessNotification } from '../Common/Notification';
+import { makeMigrationCall, fetchRoleList } from '../Data/DataActions';
+import { getConfirmation } from '../../Common/utils/jsUtils';
+import {
+  makeRequest as makePermRequest,
+  setRequestSuccess as setPermRequestSuccess,
+  setRequestFailure as setPermRequestFailure,
+} from './Permissions/reducer';
+
+// TODO: update
+import {
+  findRemoteSchema,
+  getRemoteSchemaPermissions,
+  removePersistedDerivedAction,
+  persistDerivedAction,
+  updatePersistedDerivation,
+} from './utils';
+
+// TODO: update
+import { getActionPermissionQueries } from './Permissions/utils';
 
 /* Action constants */
 
@@ -131,7 +150,7 @@ const makeRequest = (
     const upQuery = {
       type: 'bulk',
       args: upQueries,
-    };
+    }; 
 
     const downQuery = {
       type: 'bulk',
@@ -181,7 +200,117 @@ const makeRequest = (
     return dispatch(requestAction(url, options)).then(onSuccess, onError);
   };
 };
-/* */
+
+// TODO: update
+const saveRemoteSchemaPermission = (successCb, errorCb) => {
+  return (dispatch, getState) => {
+    const {
+      common: { actions: allActions, currentAction },
+      permissions: { permissionEdit },
+    } = getState().actions;
+
+    const allPermissions = getRemoteSchemaPermissions(
+      findRemoteSchema(allActions, currentAction)
+    );
+
+    // change this . console.log ??
+    const { upQueries, downQueries } = getActionPermissionQueries(
+      permissionEdit,
+      allPermissions,
+      currentAction
+    );
+
+    const migrationName = 'save_remoteSchema_perm';
+    const requestMsg = 'Saving permission...';
+    const successMsg = 'Permission saved successfully';
+    const errorMsg = 'Saving permission failed';
+
+    const customOnSuccess = () => {
+      dispatch(fetchRemoteSchemas());
+      dispatch(fetchRoleList());
+      dispatch(setPermRequestSuccess());
+      if (successCb) {
+        successCb();
+      }
+    };
+    const customOnError = () => {
+      dispatch(setPermRequestFailure());
+      if (errorCb) {
+        errorCb();
+      }
+    };
+
+    dispatch(makePermRequest());
+    makeMigrationCall(
+      dispatch,
+      getState,
+      upQueries,
+      downQueries,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
+const removeRemoteSchemaPermission = (successCb, errorCb) => {
+  return (dispatch, getState) => {
+    const isOk = getConfirmation(
+      'This will remove the permission for this role'
+    );
+    if (!isOk) return;
+
+    const {
+      common: { currentAction },
+      permissions: { permissionEdit },
+    } = getState().actions;
+
+    const { role, filter } = permissionEdit;
+
+    const upQuery = getDropActionPermissionQuery(role, currentAction);
+    const downQuery = getCreateActionPermissionQuery(
+      { role, filter },
+      currentAction
+    );
+
+    const migrationName = 'removing_remoteSchema_perm';
+    const requestMsg = 'Removing permission...';
+    const successMsg = 'Permission removed successfully';
+    const errorMsg = 'Removing permission failed';
+
+    const customOnSuccess = () => {
+      dispatch(fetchRemoteSchemas());
+      dispatch(fetchRoleList());
+      dispatch(setPermRequestSuccess());
+      if (successCb) {
+        successCb();
+      }
+    };
+    const customOnError = () => {
+      dispatch(setPermRequestFailure());
+      if (errorCb) {
+        errorCb();
+      }
+    };
+
+    dispatch(makePermRequest());
+    makeMigrationCall(
+      dispatch,
+      getState,
+      [upQuery],
+      [downQuery],
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
 
 export {
   fetchRemoteSchemas,
@@ -189,5 +318,7 @@ export {
   VIEW_REMOTE_SCHEMA,
   makeRequest,
   setConsistentRemoteSchemas,
+  saveRemoteSchemaPermission,
+  removeRemoteSchemaPermission,
 };
 export default listReducer;
