@@ -32,20 +32,79 @@ the value of the user's session variable whenever a new row is added to the ``ar
 Step 1: Configure a column preset
 ---------------------------------
 
-The column preset option is available under the ``Permissions`` tab of a table. Open the console and head to
-``Data -> article -> Permissions``:
+.. rst-class:: api_tabs
+.. tabs::
 
-.. thumbnail:: /img/graphql/core/schema/column-presets-option.png
-   :alt: Add a column preset in the permissions tab
+  .. tab:: Console
 
-Enable the column preset option to define presets for one or more columns. For each column, you can pick between
-setting the preset using a static value or from a session variable.
+    The column preset option is available under the ``Permissions`` tab of a table. Open the console and head to
+    ``Data -> [article] -> Permissions``:
 
-.. thumbnail:: /img/graphql/core/schema/column-presets-value-options.png
-   :alt: Configure the column preset
+    .. thumbnail:: /img/graphql/core/schema/column-presets-option.png
+      :alt: Add a column preset in the permissions tab
 
-For our chosen example, we'll use the ``from session variable`` option and configure the ``user_id`` column to be
-automatically populated based on the value of the ``X-Hasura-User-Id`` session variable.
+    Enable the column preset option to define presets for one or more columns. For each column, you can pick between
+    setting the preset using a static value or from a session variable.
+
+    .. thumbnail:: /img/graphql/core/schema/column-presets-value-options.png
+      :alt: Configure the column preset
+
+    For our chosen example, we'll use the ``from session variable`` option and configure the ``user_id`` column to be
+    automatically populated based on the value of the ``X-Hasura-User-Id`` session variable.
+
+  .. tab:: CLI
+
+    You can set column presets in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+    .. code-block:: yaml
+       :emphasize-lines: 8-9
+
+        - table:
+            schema: public
+            name: article
+          insert_permissions:
+          - role: user
+            permission:
+              check: {}
+              set:
+                user_id: x-hasura-User-Id
+              columns:
+              - content
+              - rating
+              - title
+              backend_only: false
+
+    Apply the metadata by running:
+
+    .. code-block:: bash
+
+      hasura metadata apply
+
+  .. tab:: API
+
+    You can add column presets by using the :ref:`create_insert_permission metadata API <create_insert_permission>`:
+
+    .. code-block:: http
+      :emphasize-lines: 12-14
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type" : "create_insert_permission",
+        "args" : {
+          "table" : "article",
+          "role" : "user",
+          "permission" : {
+            "check" : {},
+            "set":{
+              "user_id":"X-Hasura-User-Id"
+            },
+            "columns":["title","content", "rating"]
+          }
+        }
+      }
 
 .. note::
 
@@ -66,13 +125,13 @@ As mentioned earlier, you'll notice when you add the ``X-Hasura-Role`` header th
 available as the mutation type's field:
 
 .. thumbnail:: /img/graphql/core/schema/column-preset-schema-change-for-role.png
-   :alt: Write an insert mutation
+  :alt: Write an insert mutation
 
 Now, if we run the following insert mutation, we'll see that the ``user_id`` field is indeed being set with the value
 passed in the ``X-Hasura-User-Id`` variable:
 
 .. thumbnail:: /img/graphql/core/schema/column-preset-mutation-result.png
-   :alt: Run the insert mutation
+  :alt: Run the insert mutation
 
 .. note::
 
