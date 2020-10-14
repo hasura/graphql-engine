@@ -82,7 +82,7 @@ main = defaultMain [
 -- correct, or might be incorrect for some users. Or it might be that many
 -- users interact with hasura ONLY with parameterized queries with variables,
 -- where all of these fit into a fairly small cache (but where occurrences of
--- these are zipf-distributed). (TODO It should be simple to adapt this to the latter
+-- these are zipf-distributed). (TODO (from master) It should be simple to adapt this to the latter
 -- case (just test on zipf Word8 domain), but these benchmarks don't seem very
 -- useful if we assume we effectively get only cache hits).
 --
@@ -141,7 +141,7 @@ realisticBenches name wrk =
       _hitsMisses <- forConcurrently localPayloads $ \payloadL -> do
         foldM lookupInsertLoop (0,0) payloadL
       aft <- getMonotonicTimeNSec
-      -- TODO we need to decide whether to rewrite these benchmarks or fix
+      -- TODO (from master) we need to decide whether to rewrite these benchmarks or fix
       -- criterion so it can support what I want here (to run a slow benchmark
       -- perhaps one time, with an actual time limit).
       --   We should also look into just generating a report by hand that takes

@@ -2,8 +2,11 @@ module Hasura.RQL.DML.Select
   ( selectP2
   , convSelectQuery
   , asSingleRowJsonResp
-  , module Hasura.RQL.DML.Select.Internal
   , runSelect
+  , selectQuerySQL
+  , selectAggregateQuerySQL
+  , connectionSelectQuerySQL
+  , module Hasura.RQL.DML.Select.Internal
   )
 where
 
@@ -36,7 +39,7 @@ convSelCol fieldInfoMap _ (SCExtRel rn malias selQ) = do
   let pgWhenRelErr = "only relationships can be expanded"
   relInfo <- withPathK "name" $
     askRelType fieldInfoMap rn pgWhenRelErr
-  let (RelInfo _ _ _ relTab _) = relInfo
+  let (RelInfo _ _ _ relTab _ _) = relInfo
   (rfim, rspi) <- fetchRelDet rn relTab
   resolvedSelQ <- resolveStar rfim rspi selQ
   return [ECRel rn malias resolvedSelQ]
@@ -125,7 +128,7 @@ convOrderByElem sessVarBldr (flds, spi) = \case
         [ fldName <<> " is a"
         , " computed field and can't be used in 'order_by'"
         ]
-      -- TODO Rakesh
+      -- TODO Rakesh (from master)
       FIRemoteRelationship {} ->
         throw400 UnexpectedPayload (mconcat [ fldName <<> " is a remote field" ])
   OCRel fldName rest -> do
@@ -231,7 +234,7 @@ convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
   -- Point to the name key
   relInfo <- withPathK "name" $
     askRelType fieldInfoMap relName pgWhenRelErr
-  let (RelInfo _ relTy colMapping relTab _) = relInfo
+  let (RelInfo _ relTy colMapping relTab _ _) = relInfo
   (relCIM, relSPI) <- fetchRelDet relName relTab
   annSel <- convSelectQ relTab relCIM relSPI selQ sessVarBldr prepValBldr
   case relTy of
@@ -276,6 +279,18 @@ selectP2 jsonAggSelect (sel, p) =
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
   where
     selectSQL = toSQL $ mkSQLSelect jsonAggSelect sel
+
+selectQuerySQL :: JsonAggSelect -> AnnSimpleSel -> Q.Query
+selectQuerySQL jsonAggSelect sel =
+  Q.fromBuilder $ toSQL $ mkSQLSelect jsonAggSelect sel
+
+selectAggregateQuerySQL :: AnnAggregateSelect -> Q.Query
+selectAggregateQuerySQL =
+  Q.fromBuilder . toSQL . mkAggregateSelect
+
+connectionSelectQuerySQL :: ConnectionSelect S.SQLExp -> Q.Query
+connectionSelectQuerySQL =
+  Q.fromBuilder . toSQL . mkConnectionSelect
 
 asSingleRowJsonResp :: Q.Query -> [Q.PrepArg] -> Q.TxE QErr EncJSON
 asSingleRowJsonResp query args =

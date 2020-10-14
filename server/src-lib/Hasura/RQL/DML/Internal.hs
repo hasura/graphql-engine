@@ -52,13 +52,18 @@ askPermInfo'
   -> m (Maybe c)
 askPermInfo' pa tableInfo = do
   roleName <- askCurRole
-  let mrpi = getRolePermInfo roleName
-  return $ mrpi >>= (^. permAccToLens pa)
-  where
-    rpim = _tiRolePermInfoMap tableInfo
-    getRolePermInfo roleName
-      | roleName == adminRoleName = Just $ mkAdminRolePermInfo (_tiCoreInfo tableInfo)
-      | otherwise             = M.lookup roleName rpim
+  return $ getPermInfoMaybe roleName pa tableInfo
+
+getPermInfoMaybe :: RoleName -> PermAccessor c -> TableInfo -> Maybe c
+getPermInfoMaybe roleName pa tableInfo =
+  getRolePermInfo roleName tableInfo >>= (^. permAccToLens pa)
+
+getRolePermInfo :: RoleName -> TableInfo -> Maybe RolePermInfo
+getRolePermInfo roleName tableInfo
+  | roleName == adminRoleName =
+    Just $ mkAdminRolePermInfo (_tiCoreInfo tableInfo)
+  | otherwise                 =
+    M.lookup roleName (_tiRolePermInfoMap tableInfo)
 
 askPermInfo
   :: (UserInfoM m, QErrM m)
@@ -79,9 +84,9 @@ askPermInfo pa tableInfo = do
     pt = permTypeToCode $ permAccToType pa
 
 isTabUpdatable :: RoleName -> TableInfo -> Bool
-isTabUpdatable roleName ti
-  | roleName == adminRoleName = True
-  | otherwise = isJust $ M.lookup roleName rpim >>= _permUpd
+isTabUpdatable role ti
+  | role == adminRoleName = True
+  | otherwise = isJust $ M.lookup role rpim >>= _permUpd
   where
     rpim = _tiRolePermInfoMap ti
 

@@ -18,6 +18,7 @@ import dataHeaders from '../Common/Headers';
 import returnMigrateUrl from '../Common/getMigrateUrl';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import requestAction from '../../../../utils/requestAction';
+import { getDownQueryComments } from '../../../../utils/migration/utils';
 
 const MAKING_REQUEST = 'RawSQL/MAKING_REQUEST';
 const SET_SQL = 'RawSQL/SET_SQL';
@@ -42,14 +43,16 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
 
   const { isTableTrackChecked, isCascadeChecked, sql } = getState().rawSQL;
   const { migrationMode, readOnlyMode } = getState().main;
+  const isStatementTimeout = statementTimeout && !isMigration;
 
   const migrateUrl = returnMigrateUrl(migrationMode);
 
   let url = Endpoints.rawSQL;
 
   const schemaChangesUp = [];
+  let schemaChangesDown = [];
 
-  if (statementTimeout && !isMigration) {
+  if (isStatementTimeout) {
     schemaChangesUp.push(
       getRunSqlQuery(
         getStatementTimeoutSql(statementTimeout),
@@ -59,7 +62,9 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
     );
   }
 
-  schemaChangesUp.push(getRunSqlQuery(sql, isCascadeChecked, readOnlyMode));
+  const runSQLQuery = getRunSqlQuery(sql, isCascadeChecked, readOnlyMode);
+  schemaChangesUp.push(runSQLQuery);
+  schemaChangesDown = [...getDownQueryComments([runSQLQuery])];
 
   if (isTableTrackChecked) {
     const objects = parseCreateSQL(sql);
@@ -69,17 +74,27 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
         type: '',
         args: {},
       };
+      const unTrackQuery = {
+        type: '',
+        args: {},
+      };
 
       if (object.type === 'function') {
         trackQuery.type = 'track_function';
+        unTrackQuery.type = 'untrack_function';
       } else {
         trackQuery.type = 'add_existing_table_or_view';
+        unTrackQuery.type = 'untrack_table';
       }
 
       trackQuery.args.name = object.name;
       trackQuery.args.schema = object.schema;
 
+      unTrackQuery.args.name = object.name;
+      unTrackQuery.args.schema = object.schema;
+
       schemaChangesUp.push(trackQuery);
+      schemaChangesDown.unshift(unTrackQuery);
     });
   }
 
@@ -93,7 +108,7 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
     requestBody = {
       name: migrationName,
       up: schemaChangesUp,
-      down: [],
+      down: schemaChangesDown,
     };
   }
   const options = {
@@ -111,7 +126,10 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
         }
         dispatch(showSuccessNotification('SQL executed!'));
         dispatch(fetchDataInit()).then(() => {
-          dispatch({ type: REQUEST_SUCCESS, data });
+          dispatch({
+            type: REQUEST_SUCCESS,
+            data: data && (isStatementTimeout ? data[1] : data[0]),
+          });
         });
         dispatch(fetchTrackedFunctions());
       },
@@ -168,11 +186,7 @@ const rawSQLReducer = (state = defaultState, action) => {
         lastSuccess: null,
       };
     case REQUEST_SUCCESS:
-      if (
-        action.data &&
-        action.data[0] &&
-        action.data[0].result_type === 'CommandOk'
-      ) {
+      if (action.data && action.data.result_type === 'CommandOk') {
         return {
           ...state,
           ongoingRequest: false,
@@ -188,8 +202,8 @@ const rawSQLReducer = (state = defaultState, action) => {
         lastError: null,
         lastSuccess: true,
         resultType: 'tuples',
-        result: action.data[0].result.slice(1),
-        resultHeaders: action.data[0].result[0],
+        result: action.data.result.slice(1),
+        resultHeaders: action.data.result[0],
       };
     case REQUEST_ERROR:
       return {
