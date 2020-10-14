@@ -79,45 +79,56 @@ const Container: React.FC<Props> = props => {
 
   const sidebarContent = (
     <ul>
-      <li role="presentation" className={styles.active}>
-        {/* @ts-ignore TODO */}
-        <Link
-          className={styles.linkBorder}
-          style={{
-            paddingRight: '20px',
-          }}
-        >
-          Database:
-          <select
-            className="form-control"
-            style={{
-              width: '100%',
-              marginTop: 10,
-            }}
-            onChange={onDatabaseChange}
-            value={JSON.stringify([currentDataSource, currentDriver])}
-          >
-            {dataSources.map(s => (
-              <option key={s.name} value={JSON.stringify([s.name, s.driver])}>
-                {s.name} ({s.driver})
-              </option>
-            ))}
-          </select>
-        </Link>
-      </li>
       <li
         role="presentation"
         className={isDataEventsRoute(currentLocation) ? styles.active : ''}
       >
+        {/* <li role="presentation" className={styles.active}>
+          <Link
+            className={styles.linkBorder}
+            style={{
+              paddingRight: '20px',
+            }}
+          >
+
+          </Link>
+        </li> */}
         <Link className={styles.linkBorder} to={getDataEventsLandingRoute()}>
           {DATA_EVENTS_HEADING}
         </Link>
+
         {isDataEventsRoute(currentLocation) ? (
-          <LeftSidebar
-            triggers={eventTriggers}
-            service="data"
-            currentTrigger={currentEventTrigger}
-          />
+          <>
+            <div
+              style={{
+                padding: '15px 20px',
+                color: '#767e93',
+              }}
+            >
+              Database:
+              <select
+                className="form-control"
+                style={{ marginTop: 10 }}
+                onChange={onDatabaseChange}
+                value={JSON.stringify([currentDataSource, currentDriver])}
+              >
+                {dataSources.map(s => (
+                  <option
+                    key={s.name}
+                    value={JSON.stringify([s.name, s.driver])}
+                  >
+                    {s.name} ({s.driver})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <hr />
+            <LeftSidebar
+              triggers={eventTriggers}
+              service="data"
+              currentTrigger={currentEventTrigger}
+            />
+          </>
         ) : null}
       </li>
       <li
