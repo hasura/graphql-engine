@@ -36,11 +36,11 @@ import           Hasura.Session
 
 type MutationRemoteJoinCtx = (HTTP.Manager, [N.Header], UserInfo)
 
-data Mutation
+data Mutation (b :: Backend)
   = Mutation
   { _mTable       :: !QualifiedTable
   , _mQuery       :: !(S.CTE, DS.Seq Q.PrepArg)
-  , _mOutput      :: !MutationOutput
+  , _mOutput      :: !(MutationOutput b)
   , _mCols        :: ![PGColumnInfo]
   , _mRemoteJoins :: !(Maybe (RemoteJoins, MutationRemoteJoinCtx))
   , _mStrfyNum    :: !Bool
@@ -50,10 +50,10 @@ mkMutation
   :: Maybe MutationRemoteJoinCtx
   -> QualifiedTable
   -> (S.CTE, DS.Seq Q.PrepArg)
-  -> MutationOutput
+  -> MutationOutput backend
   -> [PGColumnInfo]
   -> Bool
-  -> Mutation
+  -> Mutation backend
 mkMutation ctx table query output' allCols strfyNum =
   let (output, remoteJoins) = getRemoteJoinsMutationOutput output'
       remoteJoinsCtx = (,) <$> remoteJoins <*> ctx
@@ -67,7 +67,7 @@ runMutation
   , Tracing.MonadTrace m
   )
   => Env.Environment
-  -> Mutation
+  -> Mutation 'Postgres
   -> m EncJSON
 runMutation env mut =
   bool (mutateAndReturn env mut) (mutateAndSel env mut) $
@@ -81,7 +81,7 @@ mutateAndReturn
   , Tracing.MonadTrace m
   )
   => Env.Environment
-  -> Mutation
+  -> Mutation 'Postgres
   -> m EncJSON
 mutateAndReturn env (Mutation qt (cte, p) mutationOutput allCols remoteJoins strfyNum) =
   executeMutationOutputQuery env sqlQuery (toList p) remoteJoins
@@ -111,7 +111,7 @@ mutateAndSel
   , Tracing.MonadTrace m
   )
   => Env.Environment
-  -> Mutation
+  -> Mutation 'Postgres
   -> m EncJSON
 mutateAndSel env (Mutation qt q mutationOutput allCols remoteJoins strfyNum) = do
   -- Perform mutation and fetch unique columns

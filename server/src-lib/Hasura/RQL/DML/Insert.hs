@@ -33,7 +33,7 @@ import           Hasura.SQL.Types
 import qualified Data.Environment            as Env
 import qualified Hasura.Tracing              as Tracing
 
-mkInsertCTE :: InsertQueryP1 -> S.CTE
+mkInsertCTE :: InsertQueryP1 backend -> S.CTE
 mkInsertCTE (InsertQueryP1 tn cols vals conflict (insCheck, updCheck) _ _) =
     S.CTEInsert insert
   where
@@ -163,7 +163,7 @@ convInsertQuery
   -> SessVarBldr m
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> InsertQuery
-  -> m InsertQueryP1
+  -> m (InsertQueryP1 backend)
 convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRetCols) = do
 
   insObjs <- objsParser val
@@ -234,7 +234,7 @@ decodeInsObjs v = do
 convInsQ
   :: (QErrM m, UserInfoM m, CacheRM m)
   => InsertQuery
-  -> m (InsertQueryP1, DS.Seq Q.PrepArg)
+  -> m (InsertQueryP1 backend, DS.Seq Q.PrepArg)
 convInsQ =
   runDMLP1T .
   convInsertQuery (withPathK "objects" . decodeInsObjs)
@@ -250,7 +250,7 @@ execInsertQuery
   => Env.Environment
   -> Bool
   -> Maybe MutationRemoteJoinCtx
-  -> (InsertQueryP1, DS.Seq Q.PrepArg)
+  -> (InsertQueryP1 'Postgres, DS.Seq Q.PrepArg)
   -> m EncJSON
 execInsertQuery env strfyNum remoteJoinCtx (u, p) =
   runMutation env

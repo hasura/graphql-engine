@@ -41,7 +41,7 @@ actionExecute
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => NonObjectTypeMap
   -> ActionInfo
-  -> m (Maybe (FieldParser n (AnnActionExecution UnpreparedValue)))
+  -> m (Maybe (FieldParser n (AnnActionExecution 'Postgres UnpreparedValue)))
 actionExecute nonObjectTypeMap actionInfo = runMaybeT do
   roleName <- lift askRoleName
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
@@ -106,7 +106,7 @@ actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
 actionAsyncQuery
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => ActionInfo
-  -> m (Maybe (FieldParser n (AnnActionAsyncQuery UnpreparedValue)))
+  -> m (Maybe (FieldParser n (AnnActionAsyncQuery 'Postgres UnpreparedValue)))
 actionAsyncQuery actionInfo = runMaybeT do
   roleName <- lift askRoleName
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
@@ -164,7 +164,7 @@ actionIdParser =
 actionOutputFields
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => AnnotatedObjectType
-  -> m (Parser 'Output n (RQL.AnnFieldsG UnpreparedValue))
+  -> m (Parser 'Output n (RQL.AnnFieldsG 'Postgres UnpreparedValue))
 actionOutputFields outputObject = do
   let scalarOrEnumFields = map scalarOrEnumFieldParser $ toList $ _otdFields outputObject
   relationshipFields <- forM (_otdRelationships outputObject) $ traverse relationshipFieldParser
@@ -177,7 +177,7 @@ actionOutputFields outputObject = do
   where
     scalarOrEnumFieldParser
       :: ObjectFieldDefinition (G.GType, AnnotatedObjectFieldType)
-      -> FieldParser n (RQL.AnnFieldG UnpreparedValue)
+      -> FieldParser n (RQL.AnnFieldG 'Postgres UnpreparedValue)
     scalarOrEnumFieldParser (ObjectFieldDefinition name _ description ty) =
       let (gType, objectFieldType) = ty
           fieldName = unObjectFieldName name
@@ -193,7 +193,7 @@ actionOutputFields outputObject = do
 
     relationshipFieldParser
       :: TypeRelationship TableInfo PGColumnInfo
-      -> m (Maybe (FieldParser n (RQL.AnnFieldG UnpreparedValue)))
+      -> m (Maybe (FieldParser n (RQL.AnnFieldG 'Postgres UnpreparedValue)))
     relationshipFieldParser typeRelationship = runMaybeT do
       let TypeRelationship relName relType tableInfo fieldMapping = typeRelationship
           tableName = _tciName $ _tiCoreInfo tableInfo

@@ -130,32 +130,32 @@ mapToNonEmpty :: RemoteJoinMap -> Maybe RemoteJoins
 mapToNonEmpty = NE.nonEmpty . Map.toList
 
 -- | Traverse through 'AnnSimpleSel' and collect remote join fields (if any).
-getRemoteJoins :: AnnSimpleSel -> (AnnSimpleSel, Maybe RemoteJoins)
+getRemoteJoins :: AnnSimpleSel backend -> (AnnSimpleSel backend, Maybe RemoteJoins)
 getRemoteJoins =
   second mapToNonEmpty . flip runState mempty . transformSelect mempty
 
-transformSelect :: FieldPath -> AnnSimpleSel -> State RemoteJoinMap AnnSimpleSel
+transformSelect :: FieldPath -> AnnSimpleSel backend -> State RemoteJoinMap (AnnSimpleSel backend)
 transformSelect path sel = do
   let fields = _asnFields sel
   -- Transform selects in array, object and computed fields
   transformedFields <- transformAnnFields path fields
   pure sel{_asnFields = transformedFields}
 
-transformObjectSelect :: FieldPath -> AnnObjectSelect -> State RemoteJoinMap AnnObjectSelect
+transformObjectSelect :: FieldPath -> AnnObjectSelect backend -> State RemoteJoinMap (AnnObjectSelect backend)
 transformObjectSelect path sel = do
   let fields = _aosFields sel
   transformedFields <- transformAnnFields path fields
   pure sel{_aosFields = transformedFields}
 
 -- | Traverse through @'AnnAggregateSelect' and collect remote join fields (if any).
-getRemoteJoinsAggregateSelect :: AnnAggregateSelect -> (AnnAggregateSelect, Maybe RemoteJoins)
+getRemoteJoinsAggregateSelect :: AnnAggregateSelect backend -> (AnnAggregateSelect backend, Maybe RemoteJoins)
 getRemoteJoinsAggregateSelect =
   second mapToNonEmpty . flip runState mempty . transformAggregateSelect mempty
 
 transformAggregateSelect
   :: FieldPath
-  -> AnnAggregateSelect
-  -> State RemoteJoinMap AnnAggregateSelect
+  -> AnnAggregateSelect backend
+  -> State RemoteJoinMap (AnnAggregateSelect backend)
 transformAggregateSelect path sel = do
   let aggFields = _asnFields sel
   transformedFields <- forM aggFields $ \(fieldName, aggField) ->
@@ -166,14 +166,14 @@ transformAggregateSelect path sel = do
   pure sel{_asnFields = transformedFields}
 
 -- | Traverse through @'ConnectionSelect' and collect remote join fields (if any).
-getRemoteJoinsConnectionSelect :: ConnectionSelect S.SQLExp -> (ConnectionSelect S.SQLExp, Maybe RemoteJoins)
+getRemoteJoinsConnectionSelect :: ConnectionSelect backend S.SQLExp -> (ConnectionSelect backend S.SQLExp, Maybe RemoteJoins)
 getRemoteJoinsConnectionSelect =
   second mapToNonEmpty . flip runState mempty . transformConnectionSelect mempty
 
 transformConnectionSelect
   :: FieldPath
-  -> ConnectionSelect S.SQLExp
-  -> State RemoteJoinMap (ConnectionSelect S.SQLExp)
+  -> ConnectionSelect backend S.SQLExp
+  -> State RemoteJoinMap (ConnectionSelect backend S.SQLExp)
 transformConnectionSelect path ConnectionSelect{..} = do
   let connectionFields = _asnFields _csSelect
   transformedFields <- forM connectionFields $ \(fieldName, field) ->
@@ -193,11 +193,14 @@ transformConnectionSelect path ConnectionSelect{..} = do
           EdgeNode <$> transformAnnFields (appendPath fieldName edgePath) annFields
 
 -- | Traverse through 'MutationOutput' and collect remote join fields (if any)
-getRemoteJoinsMutationOutput :: MutationOutput -> (MutationOutput, Maybe RemoteJoins)
+getRemoteJoinsMutationOutput
+  :: forall backend
+   . MutationOutput backend
+  -> (MutationOutput backend, Maybe RemoteJoins)
 getRemoteJoinsMutationOutput =
   second mapToNonEmpty . flip runState mempty . transformMutationOutput mempty
   where
-    transformMutationOutput :: FieldPath -> MutationOutput -> State RemoteJoinMap MutationOutput
+    transformMutationOutput :: FieldPath -> MutationOutput backend -> State RemoteJoinMap (MutationOutput backend)
     transformMutationOutput path = \case
       MOutMultirowFields mutationFields ->
         MOutMultirowFields <$> transfromMutationFields mutationFields
@@ -212,7 +215,7 @@ getRemoteJoinsMutationOutput =
             MExp t         -> pure $ MExp t
             MRet annFields -> MRet <$> transformAnnFields fieldPath annFields
 
-transformAnnFields :: FieldPath -> AnnFields -> State RemoteJoinMap AnnFields
+transformAnnFields :: FieldPath -> AnnFields backend -> State RemoteJoinMap (AnnFields backend)
 transformAnnFields path fields = do
   let pgColumnFields = map fst $ getFields _AFColumn fields
       remoteSelects = getFields _AFRemote fields

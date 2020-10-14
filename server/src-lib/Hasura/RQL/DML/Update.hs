@@ -49,8 +49,8 @@ updateOperatorText (UpdDeleteAtPath _) = "_delete_at_path"
 traverseAnnUpd
   :: (Applicative f)
   => (a -> f b)
-  -> AnnUpdG a
-  -> f (AnnUpdG b)
+  -> AnnUpdG backend a
+  -> f (AnnUpdG backend b)
 traverseAnnUpd f annUpd =
   AnnUpd tn
   <$> traverse (traverse $ traverse f) opExps
@@ -62,7 +62,7 @@ traverseAnnUpd f annUpd =
     AnnUpd tn opExps (whr, fltr) chk mutOutput allCols = annUpd
 
 mkUpdateCTE
-  :: AnnUpd -> S.CTE
+  :: AnnUpd backend -> S.CTE
 mkUpdateCTE (AnnUpd tn opExps (permFltr, wc) chk _ columnsInfo) =
   S.CTEUpdate update
   where
@@ -164,7 +164,7 @@ validateUpdateQueryWith
   => SessVarBldr m
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> UpdateQuery
-  -> m AnnUpd
+  -> m (AnnUpd backend)
 validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   let tableName = uqTable uq
   tableInfo <- withPathK "table" $ askTabInfo tableName
@@ -244,7 +244,7 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
 
 validateUpdateQuery
   :: (QErrM m, UserInfoM m, CacheRM m)
-  => UpdateQuery -> m (AnnUpd, DS.Seq Q.PrepArg)
+  => UpdateQuery -> m (AnnUpd backend, DS.Seq Q.PrepArg)
 validateUpdateQuery =
   runDMLP1T . validateUpdateQueryWith sessVarFromCurrentSetting binRHSBuilder
 
@@ -258,7 +258,7 @@ execUpdateQuery
   => Env.Environment
   -> Bool
   -> Maybe MutationRemoteJoinCtx
-  -> (AnnUpd, DS.Seq Q.PrepArg)
+  -> (AnnUpd 'Postgres, DS.Seq Q.PrepArg)
   -> m EncJSON
 execUpdateQuery env strfyNum remoteJoinCtx (u, p) =
   runMutation env $ mkMutation remoteJoinCtx (uqp1Table u) (updateCTE, p)
