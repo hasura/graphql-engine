@@ -55,6 +55,7 @@ import           Hasura.GraphQL.Schema.Remote
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                   (executeJSONPath)
+import           Hasura.SQL.Postgres.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 

@@ -5,17 +5,20 @@ module Hasura.RQL.GBoolExp
   ) where
 
 import           Hasura.Prelude
+
+import qualified Data.HashMap.Strict       as M
+import qualified Data.Text.Extended        as T
+
+import           Control.Lens              (filtered, has)
+import           Data.Aeson
+import           Data.Data.Lens            (template)
+
+import qualified Hasura.SQL.DML            as S
+
 import           Hasura.RQL.Types
+import           Hasura.SQL.Postgres.Types
 import           Hasura.SQL.Types
 
-import qualified Hasura.SQL.DML      as S
-
-import           Control.Lens        (filtered, has)
-import           Data.Aeson
-import           Data.Data.Lens      (template)
-
-import qualified Data.HashMap.Strict as M
-import qualified Data.Text.Extended  as T
 
 type OpRhsParser m v =
   PGType PGColumnType -> Value -> m v

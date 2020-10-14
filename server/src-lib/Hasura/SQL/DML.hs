@@ -1,16 +1,25 @@
 module Hasura.SQL.DML where
 
-import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
-import           Hasura.SQL.Types
-
-import           Data.String                (fromString)
-import           Language.Haskell.TH.Syntax (Lift)
 
 import qualified Data.Aeson                 as J
 import qualified Data.HashMap.Strict        as HM
 import qualified Data.Text.Extended         as T
 import qualified Text.Builder               as TB
+
+import           Data.String                (fromString)
+import           Language.Haskell.TH.Syntax (Lift)
+
+import           Hasura.Incremental         (Cacheable)
+import           Hasura.SQL.Backend
+import           Hasura.SQL.Postgres.Types
+import           Hasura.SQL.Types
+
+
+type family ScalarType b where
+  ScalarType 'Postgres = PGScalarType
+  ScalarType 'MySQL    = ()
+
 
 infixr 6 <->
 (<->) :: TB.Builder -> TB.Builder -> TB.Builder

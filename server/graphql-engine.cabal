@@ -470,6 +470,7 @@ library
                      , Hasura.SQL.Time
                      , Hasura.SQL.Types
                      , Hasura.SQL.Value
+                     , Hasura.SQL.Postgres.Types
                      , Hasura.Tracing
                      , Network.URI.Extended
                      , Network.Wai.Extended

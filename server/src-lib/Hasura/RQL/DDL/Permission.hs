@@ -36,15 +36,11 @@ module Hasura.RQL.DDL.Permission
     , fetchPermDef
     ) where
 
-import           Hasura.EncJSON
-import           Hasura.Incremental                 (Cacheable)
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Permission.Internal
-import           Hasura.RQL.DML.Internal            hiding (askPermInfo)
-import           Hasura.RQL.Types
-import           Hasura.Session
-import           Hasura.SQL.Types
 
+import qualified Data.HashMap.Strict                as HM
+import qualified Data.HashSet                       as HS
+import qualified Data.Text                          as T
 import qualified Database.PG.Query                  as Q
 
 import           Data.Aeson
@@ -52,9 +48,15 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax         (Lift)
 
-import qualified Data.HashMap.Strict                as HM
-import qualified Data.HashSet                       as HS
-import qualified Data.Text                          as T
+import           Hasura.EncJSON
+import           Hasura.Incremental                 (Cacheable)
+import           Hasura.RQL.DDL.Permission.Internal
+import           Hasura.RQL.DML.Internal            hiding (askPermInfo)
+import           Hasura.RQL.Types
+import           Hasura.Session
+import           Hasura.SQL.Postgres.Types
+import           Hasura.SQL.Types
+
 
 {- Note [Backend only permissions]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -88,9 +90,9 @@ TRUE            TRUE (OR NOT-SET)         TRUE                                  
 -- Insert permission
 data InsPerm
   = InsPerm
-  { ipCheck   :: !BoolExp
-  , ipSet     :: !(Maybe (ColumnValues Value))
-  , ipColumns :: !(Maybe PermColSpec)
+  { ipCheck       :: !BoolExp
+  , ipSet         :: !(Maybe (ColumnValues Value))
+  , ipColumns     :: !(Maybe PermColSpec)
   , ipBackendOnly :: !(Maybe Bool) -- see Note [Backend only permissions]
   } deriving (Show, Eq, Lift, Generic)
 instance Cacheable InsPerm

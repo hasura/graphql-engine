@@ -38,6 +38,7 @@ import           Data.Aeson.TH
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.Instances          ()
 import           Hasura.RQL.Types.Error
+import           Hasura.SQL.Postgres.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 import           Language.Haskell.TH.Syntax    (Lift)

@@ -21,6 +21,7 @@ import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Schema.Function     (RawFunctionInfo (..), mkFunctionArgs)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                (makeReasonMessage)
+import           Hasura.SQL.Postgres.Types
 import           Hasura.SQL.Types
 
 import           Data.Aeson

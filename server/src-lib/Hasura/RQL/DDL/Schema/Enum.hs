@@ -32,6 +32,7 @@ import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.Server.Utils           (makeReasonMessage)
+import           Hasura.SQL.Postgres.Types
 import           Hasura.SQL.Types
 
 import qualified Hasura.SQL.DML                as S

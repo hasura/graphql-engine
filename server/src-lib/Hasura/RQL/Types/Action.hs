@@ -49,17 +49,7 @@ module Hasura.RQL.Types.Action
   ) where
 
 
-import           Control.Lens                  (makeLenses, makePrisms)
-import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.DML.Select.Types
-import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.CustomTypes
-import           Hasura.Session
-import           Hasura.SQL.Backend
-import           Hasura.SQL.Types
-import           Language.Haskell.TH.Syntax    (Lift)
 
 import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
@@ -69,6 +59,20 @@ import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.HTTP.Types            as HTTP
+
+import           Control.Lens                  (makeLenses, makePrisms)
+import           Language.Haskell.TH.Syntax    (Lift)
+
+import           Hasura.Incremental            (Cacheable)
+import           Hasura.RQL.DDL.Headers
+import           Hasura.RQL.DML.Select.Types
+import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.CustomTypes
+import           Hasura.Session
+import           Hasura.SQL.Backend
+import           Hasura.SQL.Postgres.Types
+import           Hasura.SQL.Types
+
 
 newtype ActionName
   = ActionName { unActionName :: G.Name }

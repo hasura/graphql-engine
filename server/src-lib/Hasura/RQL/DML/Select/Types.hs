@@ -3,9 +3,7 @@
 
 module Hasura.RQL.DML.Select.Types where
 
-import           Control.Lens.TH                     (makeLenses, makePrisms)
-import           Data.Aeson.Types
-import           Language.Haskell.TH.Syntax          (Lift)
+import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                 as HM
 import qualified Data.List.NonEmpty                  as NE
@@ -13,8 +11,13 @@ import qualified Data.Sequence                       as Seq
 import qualified Data.Text                           as T
 import qualified Language.GraphQL.Draft.Syntax       as G
 
+import           Control.Lens.TH                     (makeLenses, makePrisms)
+import           Data.Aeson.Types
+import           Language.Haskell.TH.Syntax          (Lift)
+
+import qualified Hasura.SQL.DML                      as S
+
 import           Hasura.GraphQL.Parser.Schema
-import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
@@ -23,8 +26,9 @@ import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Backend
-import qualified Hasura.SQL.DML                      as S
+import           Hasura.SQL.Postgres.Types
 import           Hasura.SQL.Types
+
 
 type SelectQExt = SelectG ExtCol BoolExp Int
 

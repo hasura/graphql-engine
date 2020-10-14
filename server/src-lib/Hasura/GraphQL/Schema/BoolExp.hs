@@ -15,8 +15,10 @@ import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
 import           Hasura.SQL.DML
+import           Hasura.SQL.Postgres.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
+
 
 type ComparisonExp = OpExpG UnpreparedValue
 

@@ -52,6 +52,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common        (RelType)
 import           Hasura.RQL.Types.Table
+import           Hasura.SQL.Postgres.Types
 import           Hasura.SQL.Types
 
 newtype GraphQLType
