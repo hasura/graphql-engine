@@ -10,7 +10,7 @@ import { parse } from 'graphql';
 import { execute } from 'apollo-link';
 
 import { getHeadersAsJSON, getGraphQLEndpoint } from './utils';
-import { saveAppState, clearState } from '../../AppState.js';
+import { saveAppState, clearState } from '../../AppState';
 import { ADMIN_SECRET_HEADER_KEY } from '../../../constants';
 import requestActionPlain from '../../../utils/requestActionPlain';
 
@@ -272,6 +272,8 @@ const analyzeFetcher = (headers, mode) => {
 
 const changeRequestHeader = (index, key, newValue, isDisabled) => {
   return (dispatch, getState) => {
+    websocketSubscriptionClient = null;
+
     const currentState = getState().apiexplorer;
 
     const updatedHeader = {

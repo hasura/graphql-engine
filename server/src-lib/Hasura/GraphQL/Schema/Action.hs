@@ -62,6 +62,7 @@ actionExecute nonObjectTypeMap actionInfo = runMaybeT do
                , _aaeHeaders = _adHeaders definition
                , _aaeForwardClientHeaders = _adForwardClientHeaders definition
                , _aaeStrfyNum = stringifyNum
+               , _aaeTimeOut = _adTimeout definition
                }
   where
     ActionInfo actionName outputObject definition permissions comment = actionInfo

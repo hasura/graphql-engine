@@ -24,16 +24,17 @@ Step 2: Connect new/existing database
 -------------------------------------
 
 - To use an existing database, choose ``I have an existing Postgres database``.
-- To create a new database, choose ``Try a free database with Heroku``.
+- To try out with a new database, choose ``Try a free database with Heroku``.
 
 .. thumbnail:: /img/graphql/cloud/getting-started/connect-db.png
    :alt: Connect new or existing database
    :width: 591px
 
-Step 2a: Enter database URL (for existing database)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 2.1: Enter database URL (for existing database)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you chose ``I have an existing Postgres database`` in :ref:`Step 2 <cloud_connect_db>`, enter a database URL.
+If you chose ``I have an existing Postgres database`` in :ref:`Step 2 <cloud_connect_db>`, enter
+your database connection URL.
 
 .. thumbnail:: /img/graphql/cloud/getting-started/connect-existing-db.png
    :alt: Enter URL for existing database
@@ -56,38 +57,33 @@ Click ``Create Project``.
    :group: create
    :class: inline-block
 
-Next steps
-----------
+Step 4: Try Hasura out
+----------------------
 
-Once you've created your project, you can get started with building with Hasura or manage your project.
+Click ``Launch Console`` to open the Hasura console in your browser and
+:ref:`make your first GraphQL query <first_graphql_query>` or :ref:`set up your first event trigger <first_event_trigger>`.
 
-.. contents::
-  :backlinks: none
-  :depth: 1
-  :local:
-
-.. thumbnail:: /img/graphql/cloud/getting-started/project-functionalities.png
+.. thumbnail:: /img/graphql/cloud/getting-started/project-launch-console.png
   :alt: Project actions
   :width: 860px
 
-
-Explore the Hasura console
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Click ``Launch Console`` to open the Hasura console in your browser and :ref:`make your first GraphQL query <first_graphql_query>` or :ref:`set up your first event trigger <first_event_trigger>`.
-
-You can navigate to the ``Pro`` tab to check out the Pro features that Hasura Cloud has set up for you.
+You can navigate to the ``Pro`` tab in the console to check out the Pro features that Hasura Cloud has set up for you.
 
 .. thumbnail:: /img/graphql/cloud/metrics/pro-tab-overview.png
-   :alt: Hasura Console: Pro tab
-   :width: 1118px
+  :alt: Hasura Console: Pro tab
+  :width: 1000px
 
-Manage your project
-^^^^^^^^^^^^^^^^^^^
+Next steps
+----------
 
-Click the gear icon to :ref:`manage your project <manage_project>` (e.g. add collaborators, env vars or custom domains).
+You can check out our `30-Minute Hasura Basics Course <https://hasura.io/learn/graphql/hasura/introduction/>`__
+and other `GraphQL & Hasura Courses <https://hasura.io/learn/>`__ for a more detailed introduction to Hasura.
 
-Add an admin secret
-^^^^^^^^^^^^^^^^^^^
+You can also click the gear icon to manage your Hasura Cloud project. (e.g. add :ref:`collaborators <manage_project_collaborators>`,
+:ref:`env vars <manage_project_env_vars>` or :ref:`custom domains <manage_project_domains>`) and :ref:`add an admin secret <secure_project>`
+to make sure that your GraphQL endpoint and the Hasura console are not publicly accessible.
 
-:ref:`Add an admin secret <secure_project>` to make sure that your GraphQL endpoint and the Hasura console are not publicly accessible.
+.. thumbnail:: /img/graphql/cloud/getting-started/project-manage.png
+  :alt: Project actions
+  :width: 860px
+

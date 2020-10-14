@@ -11,10 +11,8 @@ import           Hasura.Prelude                            hiding (get, put)
 
 import           Control.Monad.Stateless
 import           Data.Aeson                                hiding (json)
-import           Data.Int                                  (Int64)
 import           Data.IORef
 import           Data.Time.Clock                           (UTCTime)
-import           Data.Time.Clock.POSIX                     (getPOSIXTime)
 import           Network.Mime                              (defaultMimeLookup)
 import           System.FilePath                           (joinPath, takeFileName)
 import           Web.Spock.Core                            ((<//>))
@@ -62,6 +60,7 @@ import qualified Hasura.GraphQL.Execute                    as E
 import qualified Hasura.GraphQL.Execute.LiveQuery          as EL
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll     as EL
 import qualified Hasura.GraphQL.Execute.Plan               as E
+import qualified Hasura.GraphQL.Execute.Query              as EQ
 import qualified Hasura.GraphQL.Explain                    as GE
 import qualified Hasura.GraphQL.Transport.HTTP             as GH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
@@ -375,6 +374,7 @@ v1Alpha1GQHandler
      , MonadQueryLog m
      , Tracing.MonadTrace m
      , GH.MonadExecuteQuery m
+     , EQ.MonadQueryInstrumentation m
      )
   => E.GraphQLQueryType -> GH.GQLBatchedReqs GH.GQLQueryText
   -> Handler m (HttpResponse EncJSON)
@@ -407,6 +407,7 @@ v1GQHandler
      , MonadQueryLog m
      , Tracing.MonadTrace m
      , GH.MonadExecuteQuery m
+     , EQ.MonadQueryInstrumentation m
      )
   => GH.GQLBatchedReqs GH.GQLQueryText
   -> Handler m (HttpResponse EncJSON)
@@ -419,6 +420,7 @@ v1GQRelayHandler
      , MonadQueryLog m
      , Tracing.MonadTrace m
      , GH.MonadExecuteQuery m
+     , EQ.MonadQueryInstrumentation m
      )
   => GH.GQLBatchedReqs GH.GQLQueryText
   -> Handler m (HttpResponse EncJSON)
@@ -564,6 +566,7 @@ mkWaiApp
      , WS.MonadWSLog m
      , Tracing.HasReporter m
      , GH.MonadExecuteQuery m
+     , EQ.MonadQueryInstrumentation m
      )
   => Env.Environment
   -- ^ Set of environment variables for reference in UIs
@@ -600,9 +603,10 @@ mkWaiApp
   -> Maybe EL.LiveQueryPostPollHook
   -> (RebuildableSchemaCache Run, Maybe UTCTime)
   -> EKG.Store
+  -> WS.ConnectionOptions
   -> m HasuraApp
 mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpManager mode corsCfg enableConsole consoleAssetsDir
-         enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig liveQueryHook (schemaCache, cacheBuiltTime) ekgStore  = do
+         enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig liveQueryHook (schemaCache, cacheBuiltTime) ekgStore connectionOptions  = do
 
     -- See Note [Temporarily disabling query plan caching]
     -- (planCache, schemaCacheRef) <- initialiseCache
@@ -635,10 +639,6 @@ mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpMana
                     , scResponseInternalErrorsConfig = responseErrorsConfig
                     }
 
-    when (isDeveloperAPIEnabled serverCtx) $ do
-      liftIO $ EKG.registerGcMetrics ekgStore
-      liftIO $ EKG.registerCounter "ekg.server_timestamp_ms" getTimeMs ekgStore
-
     spockApp <- liftWithStateless $ \lowerIO ->
       Spock.spockAsApp $ Spock.spockT lowerIO $
         httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry
@@ -647,13 +647,10 @@ mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpMana
         stopWSServer = WS.stopWSServerApp wsServerEnv
 
     waiApp <- liftWithStateless $ \lowerIO ->
-      pure $ WSC.websocketsOr WS.defaultConnectionOptions (\ip conn -> lowerIO $ wsServerApp ip conn) spockApp
+      pure $ WSC.websocketsOr connectionOptions (\ip conn -> lowerIO $ wsServerApp ip conn) spockApp
 
     return $ HasuraApp waiApp schemaCacheRef cacheBuiltTime stopWSServer
   where
-    getTimeMs :: IO Int64
-    getTimeMs = (round . (* 1000)) `fmap` getPOSIXTime
-
     -- initialiseCache :: m (E.PlanCache, SchemaCacheRef)
     initialiseCache :: m SchemaCacheRef
     initialiseCache = do
@@ -680,6 +677,7 @@ httpApp
      , MonadQueryLog m
      , Tracing.HasReporter m
      , GH.MonadExecuteQuery m
+     , EQ.MonadQueryInstrumentation m
      )
   => CorsConfig
   -> ServerCtx
