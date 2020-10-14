@@ -227,3 +227,5 @@ This readme is available in the following translations:
 - [Korean :kr:](translations/README.korean.md) (:pray: [@라스크](https://github.com/laskdjlaskdj12))
 
 Translations for other files can be found [here](translations).
+
+### hasura
