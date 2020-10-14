@@ -12,8 +12,10 @@ module Hasura.RQL.Types.SchemaCache.Build
   , withRecordInconsistency
 
   , CacheRWM(..)
+  , ResolvedSources
+  , BuildContext(..)
   , BuildReason(..)
-  , getResolvedSourceFromBuildReason
+  , getResolvedSourceFromBuildContext
   , CacheInvalidations(..)
   , buildSchemaCache
   , buildSchemaCacheFor
@@ -108,6 +110,11 @@ class (CacheRM m) => CacheRWM m where
     -> MetadataModifier
     -> m ()
 
+  setPreResolvedSource
+    :: SourceName
+    -> ResolvedSource
+    -> m ()
+
 data BuildReason
   -- | The build was triggered by an update this instance made to the metadata,
   -- so information in Postgres that needs to be kept in sync with
@@ -117,15 +124,23 @@ data BuildReason
   -- updated the metadata. Since that instance already updated event triggers, this build should be
   -- read-only.
   | CatalogSync
-  -- | The build was triggered by a @run_sql API.
-  | RunSql !SourceName !ResolvedSource
   deriving (Eq)
 
-getResolvedSourceFromBuildReason :: SourceName -> BuildReason -> Maybe ResolvedSource
-getResolvedSourceFromBuildReason sourceName = \case
-  CatalogUpdate -> Nothing
-  CatalogSync   -> Nothing
-  RunSql s rs   -> bool Nothing (Just rs) $ s == sourceName
+type ResolvedSources = HashMap SourceName ResolvedSource
+
+data BuildContext
+  = BuildContext
+    { _bcReason          :: !BuildReason
+    -- ^ Reason to invoke the schame cache build
+    , _bcResolvedSources :: !ResolvedSources
+    -- ^ Sources are resolved in the @'run_sql' API before invoking the
+    -- schema cache build
+    } deriving (Eq)
+
+getResolvedSourceFromBuildContext
+  :: SourceName -> BuildContext -> Maybe ResolvedSource
+getResolvedSourceFromBuildContext sourceName =
+  M.lookup sourceName . _bcResolvedSources
 
 data CacheInvalidations = CacheInvalidations
   { ciMetadata      :: !Bool
@@ -147,8 +162,10 @@ instance Monoid CacheInvalidations where
 
 instance (CacheRWM m) => CacheRWM (ReaderT r m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
+  setPreResolvedSource a b          = lift $ setPreResolvedSource a b
 instance (CacheRWM m) => CacheRWM (TraceT m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
+  setPreResolvedSource a b          = lift $ setPreResolvedSource a b
 
 buildSchemaCache :: (CacheRWM m) => MetadataModifier -> m ()
 buildSchemaCache = buildSchemaCacheWithOptions CatalogUpdate mempty

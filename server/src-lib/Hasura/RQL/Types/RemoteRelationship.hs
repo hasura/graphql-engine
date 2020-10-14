@@ -260,7 +260,17 @@ data RemoteRelationship =
     }  deriving (Show, Eq, Lift, Generic)
 instance NFData RemoteRelationship
 instance Cacheable RemoteRelationship
-$(deriveJSON (aesonDrop 3 snakeCase) ''RemoteRelationship)
+$(deriveToJSON (aesonDrop 3 snakeCase) ''RemoteRelationship)
+
+instance FromJSON RemoteRelationship where
+  parseJSON = withObject "Object" $ \o ->
+    RemoteRelationship
+      <$> o .: "name"
+      <*> o .:? "source" .!= defaultSource
+      <*> o .: "table"
+      <*> o .: "hasura_fields"
+      <*> o .: "remote_schema"
+      <*> o .: "remote_field"
 
 data RemoteRelationshipDef
   = RemoteRelationshipDef

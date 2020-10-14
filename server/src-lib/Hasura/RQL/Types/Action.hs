@@ -337,10 +337,11 @@ data ActionLogItem
 
 data ActionLogResponse
   = ActionLogResponse
-  { _alrId              :: !ActionId
-  , _alrCreatedAt       :: !UTC.UTCTime
-  , _alrResponsePayload :: !J.Value
-  , _alrErrors          :: !J.Value
+  { _alrId               :: !ActionId
+  , _alrCreatedAt        :: !UTC.UTCTime
+  , _alrResponsePayload  :: !(Maybe J.Value)
+  , _alrErrors           :: !(Maybe J.Value)
+  , _alrSessionVariables :: !SessionVariables
   } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionLogResponse)
 

@@ -384,15 +384,10 @@ fetchMetadataFromHdbTables = liftTx do
   cronTriggers <- fetchCronTriggers
 
   let tableMetadatas = mapFromL _tmTable $ HM.elems postRelMap
-      sources = HM.singleton defaultSource $ SourceMetadata defaultSource tableMetadatas functions SCDefault
-  pure $ Metadata currentMetadataVersion
-                  sources
-                  remoteSchemas
-                  collections
-                  allowlist
-                  customTypes
-                  actions
-                  cronTriggers
+      sources = HM.singleton defaultSource $
+                SourceMetadata defaultSource tableMetadatas functions SCDefault
+  pure $ Metadata sources remoteSchemas collections
+                  allowlist customTypes actions cronTriggers
 
   where
 

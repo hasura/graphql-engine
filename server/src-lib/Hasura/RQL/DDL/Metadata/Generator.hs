@@ -30,7 +30,7 @@ import           Test.QuickCheck.Instances.UnorderedContainers ()
 
 genMetadata :: Gen Metadata
 genMetadata =
-  Metadata currentMetadataVersion
+  Metadata
     <$> arbitrary
     <*> arbitrary
     <*> arbitrary

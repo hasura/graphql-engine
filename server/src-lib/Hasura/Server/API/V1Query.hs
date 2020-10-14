@@ -16,7 +16,6 @@ import qualified Data.Environment                   as Env
 import qualified Data.HashMap.Strict                as HM
 import qualified Data.Text                          as T
 import qualified Database.PG.Query                  as Q
-import qualified Network.HTTP.Client                as HTTP
 
 import           Hasura.Class
 import           Hasura.EncJSON
@@ -42,9 +41,7 @@ import           Hasura.RQL.DML.Update
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.Types
-import           Hasura.Server.Utils
 import           Hasura.Server.Version              (HasVersion)
-import           Hasura.Session
 
 import qualified Hasura.Tracing                     as Tracing
 
@@ -273,44 +270,6 @@ recordSchemaUpdate instanceId invalidations =
              ON CONFLICT ((occurred_at IS NOT NULL))
              DO UPDATE SET instance_id = $1::uuid, occurred_at = DEFAULT, invalidations = $2::json
             |] (instanceId, Q.AltJ invalidations) True
-
-runQuery
-  :: ( HasVersion
-     , MonadIO m
-     , MonadError QErr m
-     , Tracing.MonadTrace m
-     , MonadMetadataStorage m
-     )
-  => Env.Environment
-  -> InstanceId
-  -> UserInfo
-  -> HTTP.Manager
-  -> SQLGenCtx
-  -> PGSourceConfig
-  -> RebuildableSchemaCache
-  -> Metadata
-  -> RQLQuery
-  -> LazyTxT QErr m (EncJSON, Maybe MetadataStateResult)
-runQuery env instanceId userInfo hMgr sqlGenCtx defSource schemaCache metadata query = do
-  accessMode <- getQueryAccessMode query
-  traceCtx <- lift Tracing.currentContext
-  let sources = scPostgres $ lastBuiltSchemaCache schemaCache
-  (sourceName, sourceConfig) <- case HM.toList sources of
-    []  -> throw400 NotSupported $ "no postgres source exist"
-    [s] -> pure $ second _pcConfiguration s
-    _   -> throw400 NotSupported $ "multiple postgres sources found"
-
-  runQueryM env sourceName query & Tracing.interpTraceT \x -> do
-    (((r, tracemeta), rsc, ci), meta)
-      <- x & runCacheRWT schemaCache
-           & runBaseRunT runCtx metadata . unRun
-    let metadataStateResult = MetadataStateResult rsc ci meta
-    pure $ bool ((r, Nothing), tracemeta)
-                ((r, Just metadataStateResult), tracemeta)
-                $ queryModifiesSchemaCache query
-
-  where
-    runCtx = RunCtx userInfo hMgr sqlGenCtx defSource
 
 -- | A predicate that determines whether the given query might modify/rebuild the schema cache. If
 -- so, it needs to acquire the global lock on the schema cache so that other queries do not modify

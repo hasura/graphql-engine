@@ -256,9 +256,10 @@ resolveAsyncActionQuery userInfo annAction = do
         AsyncErrors    -> mkAnnFldFromPGCol errorsColumn
 
       jsonbToRecordSet = QualifiedObject "pg_catalog" $ FunctionName "jsonb_to_recordset"
-      functionArgs = RS.FunctionArgsExp [RS.AEInput $ UVLiteral $ S.SELit $ lbsToTxt $ J.encode [actionLogResponse]] mempty
+      actionLogInput = UVLiteral $ S.SELit $ lbsToTxt $ J.encode [actionLogResponse]
+      functionArgs = RS.FunctionArgsExp [RS.AEInput actionLogInput] mempty
       tableFromExp = RS.FromFunction jsonbToRecordSet functionArgs $ Just
-                     [idColumn, createdAtColumn, responsePayloadColumn, errorsColumn]
+                     [idColumn, createdAtColumn, responsePayloadColumn, errorsColumn, sessionVarsColumn]
       tableArguments = RS.noSelectArgs
                        { RS._saWhere = Just tableBoolExpression}
       tablePermissions = RS.TablePerm annBoolExpTrue Nothing
@@ -272,18 +273,19 @@ resolveAsyncActionQuery userInfo annAction = do
     responsePayloadColumn = (unsafePGCol "response_payload", PGJSONB)
     createdAtColumn = (unsafePGCol "created_at", PGTimeStampTZ)
     errorsColumn = (unsafePGCol "errors", PGJSONB)
+    sessionVarsColumn = (unsafePGCol "session_variables", PGJSONB)
 
     -- TODO (from master):- Avoid using PGColumnInfo
-    mkAnnFldFromPGCol (column', columnType) =
-      flip RS.mkAnnColumnField Nothing $
+    mkAnnFldFromPGCol = flip RS.mkAnnColumnField Nothing . mkPGColumnInfo
+
+    mkPGColumnInfo (column', columnType) =
       PGColumnInfo column' (G.unsafeMkName $ getPGColTxt column') 0 (PGColumnScalar columnType) True Nothing
 
     tableBoolExpression =
       let actionIdColumnInfo = PGColumnInfo (unsafePGCol "id") $$(G.litName "id")
                                0 (PGColumnScalar PGUUID) False Nothing
           actionIdColumnEq = BoolFld $ AVCol actionIdColumnInfo [AEQ True $ UVLiteral $ S.SELit $ actionIdToText actionId]
-          sessionVarsColumnInfo = PGColumnInfo (unsafePGCol "session_variables") $$(G.litName "session_variables")
-                                  0 (PGColumnScalar PGJSONB) False Nothing
+          sessionVarsColumnInfo = mkPGColumnInfo sessionVarsColumn
           sessionVarValue = flip UVParameter Nothing $ PGColumnValue (PGColumnScalar PGJSONB) $
                             WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON $ _uiSession userInfo
           sessionVarsColumnEq = BoolFld $ AVCol sessionVarsColumnInfo [AEQ True sessionVarValue]
@@ -595,10 +597,10 @@ setActionStatusTx actionId = \case
 
 fetchActionResponseTx :: ActionId -> Q.TxE QErr ActionLogResponse
 fetchActionResponseTx actionId = do
-  (ca, Q.AltJ rp, Q.AltJ errs) <-
+  (ca, rp, errs, Q.AltJ sessVars) <-
     Q.getRow <$> Q.withQE defaultTxErrorHandler [Q.sql|
-     SELECT created_at, response_payload, errors
+     SELECT created_at, response_payload::json, errors::json, session_variables::json
        FROM hdb_catalog.hdb_action_log
       WHERE id = $1
     |] (Identity actionId) True
-  pure $ ActionLogResponse actionId ca rp errs
+  pure $ ActionLogResponse actionId ca (Q.getAltJ <$> rp) (Q.getAltJ <$> errs) sessVars

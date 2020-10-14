@@ -122,7 +122,7 @@ WITH "<table-name>__mutation_result_alias" AS (
     "<table-name>__mutation_result_alias"
 )
 <SELECT statement to generate mutation response using '<table-name>__all_columns_alias' as FROM
- and "check__error" from "<table-name>__mutation_result_alias">
+ and string_agg("check__error", ',') from "<table-name>__mutation_result_alias">
 -}
 
 -- | Generate mutation output expression with given mutation CTE statement.
@@ -153,9 +153,11 @@ mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
                      }
           where
             checkErrorExp =
-              S.SESelect $ S.mkSelect { S.selExtr = [S.Extractor (S.SEIden checkErrorIden) Nothing]
-                                      , S.selFrom = Just $ S.mkIdenFromExp mutationResultAlias
-                                      }
+              let stringAggCheckError =
+                    S.SEFnApp "string_agg" [S.SEIden checkErrorIden, S.SELit ","] Nothing
+              in S.SESelect $ S.mkSelect { S.selExtr = [S.Extractor stringAggCheckError Nothing]
+                                         , S.selFrom = Just $ S.mkIdenFromExp mutationResultAlias
+                                         }
             extrExp = case mutOutput of
               MOutMultirowFields mutFlds ->
                 let jsonBuildObjArgs = flip concatMap mutFlds $

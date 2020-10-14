@@ -327,8 +327,7 @@ type Sources = M.HashMap SourceName SourceMetadata
 -- exported/replaced via metadata queries.
 data Metadata
   = Metadata
-  { _metaVersion          :: !MetadataVersion
-  , _metaSources          :: !Sources
+  { _metaSources          :: !Sources
   , _metaRemoteSchemas    :: !RemoteSchemas
   , _metaQueryCollections :: !QueryCollections
   , _metaAllowlist        :: !Allowlist
@@ -342,7 +341,7 @@ instance FromJSON Metadata where
   parseJSON = withObject "Object" $ \o -> do
     version <- o .:? "version" .!= MVVersion1
     sources <- parseSources o version
-    Metadata version sources
+    Metadata sources
       <$> (mapFromL _arsqName <$> o .:? "remote_schemas" .!= [])
       <*> (mapFromL _ccName <$> o .:? "query_collections" .!= [])
       <*> o .:? "allowlist" .!= HS.empty
@@ -366,7 +365,7 @@ instance FromJSON Metadata where
 
 emptyMetadata :: Metadata
 emptyMetadata =
-  Metadata currentMetadataVersion emptySources mempty mempty mempty emptyCustomTypes mempty mempty
+  Metadata emptySources mempty mempty mempty emptyCustomTypes mempty mempty
   where
     emptySources = M.singleton defaultSource $ SourceMetadata defaultSource mempty mempty SCDefault
 
@@ -385,7 +384,6 @@ tableMetadataSetter source table =
 -- parsable via its 'FromJSON' instance.
 metadataToOrdJSON :: Metadata -> AO.Value
 metadataToOrdJSON ( Metadata
-                    version
                     sources
                     remoteSchemas
                     queryCollections
@@ -402,7 +400,7 @@ metadataToOrdJSON ( Metadata
                                 , cronTriggersPair
                                 ]
   where
-    versionPair = ("version", AO.toOrdered version)
+    versionPair = ("version", AO.toOrdered currentMetadataVersion)
     sourcesPair = ("sources", AO.array $ map sourceMetaToOrdJSON $ M.elems sources)
 
     remoteSchemasPair = listToMaybeOrdPair "remote_schemas" remoteSchemaQToOrdJSON $ M.elems remoteSchemas
