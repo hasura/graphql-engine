@@ -97,7 +97,7 @@ In the popup, add a user name and a password for the new user account:
 
 .. note::
 
-   Whenever the database user name is not ``postgres``, you need to make sure to give the user appropriate :ref:`Postgres permissions <cloud_postgres_permissions>`.
+   Whenever the database user name is not ``postgres``, you need to make sure to give the user appropriate :ref:`Postgres permissions <postgres_permissions>`.
 
 Step 4: Connect the Hasura Cloud IP
 -----------------------------------

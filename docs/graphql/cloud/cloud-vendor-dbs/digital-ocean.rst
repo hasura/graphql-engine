@@ -79,20 +79,18 @@ Navigate to the database cluster's ``Users & Databases`` page. Add a new user an
 
 A password has been generated automatically by Digital Ocean.
 
+.. note::
+
+  When using a custom database user, you need to make sure to give the user appropriate :ref:`Postgres permissions <postgres_permissions>`.
+
 Step 4: Connect the Hasura Cloud IP
 -----------------------------------
 
 Navigate to the database cluster's ``Overview`` page:
 
-.. thumbnail:: /img/graphql/cloud/existing-db/do/do-db-overview.png
-   :alt: Navigate to database overview in Digital Ocean
+.. thumbnail:: /img/graphql/cloud/existing-db/do/do-db-settings.png
+   :alt: Navigate to database settings in Digital Ocean
    :width: 1000px
-
-Scroll down to ``Trusted Sources``. If you see the below warning, click on ``Secure this database cluster by restricting access``:
-
-.. thumbnail:: /img/graphql/cloud/existing-db/do/do-trusted-sources.png
-   :alt: Select trusted sources for database in Digital Ocean
-   :width: 700px
 
 Scroll down to ``Trusted sources`` and click the ``Edit`` button:
 
@@ -113,13 +111,19 @@ Then click ``Save``.
 Step 5: Get the database connection URL
 ---------------------------------------
 
-Navigate to the database cluster's ``Settings`` page:
+The structure of the database connection URL looks as follows:
 
-.. thumbnail:: /img/graphql/cloud/existing-db/do/do-db-settings.png
-   :alt: Navigate to database settings in Digital Ocean
+.. code-block:: bash
+
+    postgresql://<user-name>:<password>@<public-ip>:<postgres-port>/postgres
+
+To get it, navigate to the database cluster's ``Overview`` page:
+
+.. thumbnail:: /img/graphql/cloud/existing-db/do/do-db-overview.png
+   :alt: Navigate to database overview in Digital Ocean
    :width: 1000px
 
-Scroll down to ``Connection details``. Select ``Private network`` on the left and ``Connection string`` on the right.
+Scroll down to ``Connection details``. Select ``Public network`` on the left and ``Connection string`` on the right.
 
 .. thumbnail:: /img/graphql/cloud/existing-db/do/do-connection-string.png
    :alt: Get the database connection string in Digital Ocean
@@ -132,10 +136,6 @@ Custom database user
 
 If you have added a new database user in :ref:`step 3 <create_user_account_do>`, replace ``doadmin`` with the user name you created.
 Also, replace the password with the one that was created with the new user.
-
-.. note::
-
-  When using a custom database user, you need to make sure to give the user appropriate :ref:`Postgres permissions <cloud_postgres_permissions>`.
 
 Step 6: Finish creating the Hasura Cloud project
 ------------------------------------------------
