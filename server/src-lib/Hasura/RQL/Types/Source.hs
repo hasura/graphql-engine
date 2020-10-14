@@ -41,11 +41,6 @@ runPgSourceWriteTx
 runPgSourceWriteTx psc =
   liftIO . runExceptT . (_pecRunReadWrite $ _pscExecCtx psc)
 
-runPgSourceRepeatableReadTx
-  :: (MonadIO m) => PGSourceConfig -> Q.TxE QErr a -> m (Either QErr a)
-runPgSourceRepeatableReadTx psc =
-  liftIO . runExceptT . (_pecRunRepeatableRead $ _pscExecCtx psc)
-
 data PGSourceSchemaCache
   = PGSourceSchemaCache
   { _pcTables        :: !TableCache

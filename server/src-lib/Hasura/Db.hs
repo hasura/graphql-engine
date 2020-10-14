@@ -55,15 +55,13 @@ type RunTx =
 
 data PGExecCtx
   = PGExecCtx
-  { _pecRunReadOnly       :: RunTx
+  { _pecRunReadOnly  :: RunTx
   -- ^ Run a Q.ReadOnly transaction
-  , _pecRunReadNoTx       :: RunTx
+  , _pecRunReadNoTx  :: RunTx
   -- ^ Run a read only statement without an explicit transaction block
-  , _pecRunReadWrite      :: RunTx
+  , _pecRunReadWrite :: RunTx
   -- ^ Run a Q.ReadWrite transaction
-  , _pecRunRepeatableRead :: RunTx
-  -- ^ Run a transaction in Q.RepeatableRead isolation level
-  , _pecCheckHealth       :: (IO Bool)
+  , _pecCheckHealth  :: (IO Bool)
   -- ^ Checks the health of this execution context
   }
 
@@ -74,11 +72,10 @@ instance Show PGExecCtx where
 mkPGExecCtx :: Q.TxIsolation -> Q.PGPool -> PGExecCtx
 mkPGExecCtx isoLevel pool =
   PGExecCtx
-  { _pecRunReadOnly = (Q.runTx pool (isoLevel, Just Q.ReadOnly))
-  , _pecRunReadNoTx = (Q.runTx' pool)
-  , _pecRunReadWrite = (Q.runTx pool (isoLevel, Just Q.ReadWrite))
-  , _pecRunRepeatableRead = (Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite))
-  , _pecCheckHealth = checkDbConnection
+  { _pecRunReadOnly       = (Q.runTx pool (isoLevel, Just Q.ReadOnly))
+  , _pecRunReadNoTx       = (Q.runTx' pool)
+  , _pecRunReadWrite      = (Q.runTx pool (isoLevel, Just Q.ReadWrite))
+  , _pecCheckHealth       = checkDbConnection
   }
   where
     checkDbConnection = do
