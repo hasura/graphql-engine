@@ -3,6 +3,6 @@
 reject-unconstrained-dependencies: all
 
 package graphql-engine
-  ghc-options: -j3 -Werror
+  ghc-options: -j3
   tests: true
   benchmarks: true
