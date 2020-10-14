@@ -5,7 +5,7 @@ module Hasura.SQL.Types
   , (<+>)
 
   , pgFmtLit
-  , pgFmtIden
+  , pgFmtIdentifier
   , isView
 
   , QualifiedTable
@@ -28,8 +28,8 @@ module Hasura.SQL.Types
   , geoTypes
   , isGeoType
 
-  , IsIden(..)
-  , Iden(..)
+  , IsIdentifier(..)
+  , Identifier(..)
 
   , SchemaName(..)
   , publicSchema
@@ -40,8 +40,8 @@ module Hasura.SQL.Types
   , ConstraintName(..)
 
   , QualifiedObject(..)
-  , qualObjectToText
-  , snakeCaseQualObject
+  , qualifiedObjectToText
+  , snakeCaseQualifiedObject
   , qualifiedObjectToName
 
   , PGScalarType(..)
@@ -96,22 +96,22 @@ infixr 6 <+>
   toSQL x <> mconcat [ TB.text kat <> toSQL x' | x' <- xs ]
 {-# INLINE (<+>) #-}
 
-newtype Iden
-  = Iden { getIdenTxt :: Text }
+newtype Identifier
+  = Identifier { getIdenTxt :: Text }
   deriving (Show, Eq, NFData, FromJSON, ToJSON, Hashable, Semigroup, Data, Cacheable)
 
-instance ToSQL Iden where
-  toSQL (Iden t) =
-    TB.text $ pgFmtIden t
+instance ToSQL Identifier where
+  toSQL (Identifier t) =
+    TB.text $ pgFmtIdentifier t
 
-class IsIden a where
-  toIden :: a -> Iden
+class IsIdentifier a where
+  toIdentifier :: a -> Identifier
 
-instance IsIden Iden where
-  toIden = id
+instance IsIdentifier Identifier where
+  toIdentifier = id
 
-pgFmtIden :: Text -> Text
-pgFmtIden x =
+pgFmtIdentifier :: Text -> Text
+pgFmtIdentifier x =
   "\"" <> T.replace "\"" "\"\"" (trimNullChars x) <> "\""
 
 pgFmtLit :: T.Text -> T.Text
@@ -135,14 +135,14 @@ newtype TableName
   deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data
            , Generic, Arbitrary, NFData, Cacheable, IsString )
 
-instance IsIden TableName where
-  toIden (TableName t) = Iden t
+instance IsIdentifier TableName where
+  toIdentifier (TableName t) = Identifier t
 
 instance ToTxt TableName where
   toTxt (TableName t) = t
 
 instance ToSQL TableName where
-  toSQL = toSQL . toIden
+  toSQL = toSQL . toIdentifier
 
 data TableType
   = TTBaseTable
@@ -180,24 +180,24 @@ newtype ConstraintName
   = ConstraintName { getConstraintTxt :: T.Text }
   deriving (Show, Eq, ToTxt, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift, NFData, Cacheable)
 
-instance IsIden ConstraintName where
-  toIden (ConstraintName t) = Iden t
+instance IsIdentifier ConstraintName where
+  toIdentifier (ConstraintName t) = Identifier t
 
 instance ToSQL ConstraintName where
-  toSQL = toSQL . toIden
+  toSQL = toSQL . toIdentifier
 
 newtype FunctionName
   = FunctionName { getFunctionTxt :: T.Text }
   deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift, Data, Generic, Arbitrary, NFData, Cacheable)
 
-instance IsIden FunctionName where
-  toIden (FunctionName t) = Iden t
+instance IsIdentifier FunctionName where
+  toIdentifier (FunctionName t) = Identifier t
 
 instance ToTxt FunctionName where
   toTxt (FunctionName t) = t
 
 instance ToSQL FunctionName where
-  toSQL = toSQL . toIden
+  toSQL = toSQL . toIdentifier
 
 newtype SchemaName
   = SchemaName { getSchemaTxt :: T.Text }
@@ -210,11 +210,11 @@ publicSchema = SchemaName "public"
 hdbCatalogSchema :: SchemaName
 hdbCatalogSchema = SchemaName "hdb_catalog"
 
-instance IsIden SchemaName where
-  toIden (SchemaName t) = Iden t
+instance IsIdentifier SchemaName where
+  toIdentifier (SchemaName t) = Identifier t
 
 instance ToSQL SchemaName where
-  toSQL = toSQL . toIden
+  toSQL = toSQL . toIdentifier
 
 data QualifiedObject a
   = QualifiedObject
@@ -241,10 +241,10 @@ instance (ToJSON a) => ToJSON (QualifiedObject a) where
            ]
 
 instance (ToJSON a, ToTxt a) => ToJSONKey (QualifiedObject a) where
-  toJSONKey = ToJSONKeyText qualObjectToText (text . qualObjectToText)
+  toJSONKey = ToJSONKeyText qualifiedObjectToText (text . qualifiedObjectToText)
 
 instance (ToTxt a) => ToTxt (QualifiedObject a) where
-  toTxt = qualObjectToText
+  toTxt = qualifiedObjectToText
 
 instance (Hashable a) => Hashable (QualifiedObject a)
 
@@ -252,19 +252,19 @@ instance (ToSQL a) => ToSQL (QualifiedObject a) where
   toSQL (QualifiedObject sn o) =
     toSQL sn <> "." <> toSQL o
 
-qualObjectToText :: ToTxt a => QualifiedObject a -> T.Text
-qualObjectToText (QualifiedObject sn o)
+qualifiedObjectToText :: ToTxt a => QualifiedObject a -> T.Text
+qualifiedObjectToText (QualifiedObject sn o)
   | sn == publicSchema = toTxt o
   | otherwise = getSchemaTxt sn <> "." <> toTxt o
 
-snakeCaseQualObject :: ToTxt a => QualifiedObject a -> T.Text
-snakeCaseQualObject (QualifiedObject sn o)
+snakeCaseQualifiedObject :: ToTxt a => QualifiedObject a -> T.Text
+snakeCaseQualifiedObject (QualifiedObject sn o)
   | sn == publicSchema = toTxt o
   | otherwise = getSchemaTxt sn <> "_" <> toTxt o
 
 qualifiedObjectToName :: (ToTxt a, MonadError QErr m) => QualifiedObject a -> m G.Name
 qualifiedObjectToName objectName = do
-  let textName = snakeCaseQualObject objectName
+  let textName = snakeCaseQualifiedObject objectName
   onNothing (G.mkName textName) $ throw400 ValidationFailed $
     "cannot include " <> objectName <<> " in the GraphQL schema because " <> textName
     <<> " is not a valid GraphQL identifier"
@@ -282,11 +282,11 @@ newtype PGCol
   deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey
            , FromJSONKey, Lift, Data, Generic, Arbitrary, NFData, Cacheable, IsString )
 
-instance IsIden PGCol where
-  toIden (PGCol t) = Iden t
+instance IsIdentifier PGCol where
+  toIdentifier (PGCol t) = Identifier t
 
 instance ToSQL PGCol where
-  toSQL = toSQL . toIden
+  toSQL = toSQL . toIdentifier
 
 instance ToTxt PGCol where
   toTxt (PGCol t) = t

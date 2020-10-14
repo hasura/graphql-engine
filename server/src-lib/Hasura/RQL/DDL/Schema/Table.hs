@@ -166,7 +166,7 @@ trackExistingTableOrViewP2 tableName isEnum config = do
   tables, and then clicking "track all" in the console.  Curiously, this high
   memory usage happens even when no substantial GraphQL schema is generated.
   -}
-  checkConflictingNode sc $ snakeCaseQualObject tableName
+  checkConflictingNode sc $ snakeCaseQualifiedObject tableName
   saveTableToCatalog tableName isEnum config
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
@@ -272,7 +272,7 @@ processTableChanges ti tableDiff = do
         procAlteredCols sc tn
 
       withNewTabName newTN = do
-        let tnGQL = snakeCaseQualObject newTN
+        let tnGQL = snakeCaseQualifiedObject newTN
         -- check for GraphQL schema conflicts on new name
         checkConflictingNode sc tnGQL
         procAlteredCols sc tn

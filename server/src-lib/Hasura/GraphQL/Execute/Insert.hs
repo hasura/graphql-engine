@@ -121,7 +121,7 @@ insertMultipleObjects env multiObjIns additionalColumns remoteJoinCtx mutationOu
             mutationOutput
             columnInfos
           rowCount = T.pack . show . length $ _aiInsObj multiObjIns
-      Tracing.trace ("Insert (" <> rowCount <> ") " <> qualObjectToText table) do
+      Tracing.trace ("Insert (" <> rowCount <> ") " <> qualifiedObjectToText table) do
         Tracing.attachMetadata [("count", rowCount)]
         RQL.execInsertQuery env stringifyNum (Just remoteJoinCtx) (insertQuery, planVars)
 
@@ -146,7 +146,7 @@ insertObject
   -> Seq.Seq Q.PrepArg
   -> Bool
   -> m (Int, Maybe (ColumnValues TxtEncodedPGVal))
-insertObject env singleObjIns additionalColumns remoteJoinCtx planVars stringifyNum = Tracing.trace ("Insert " <> qualObjectToText table) do
+insertObject env singleObjIns additionalColumns remoteJoinCtx planVars stringifyNum = Tracing.trace ("Insert " <> qualifiedObjectToText table) do
   validateInsert (map fst columns) (map _riRelInfo objectRels) (map fst additionalColumns)
 
   -- insert all object relations and fetch this insert dependent column values
