@@ -17,6 +17,7 @@ import { getHeadersAsJSON } from '../utils';
 
 import '../GraphiQLWrapper/GraphiQL.css';
 import './OneGraphExplorer.css';
+import styles from '../ApiExplorer.scss';
 import { showErrorNotification } from '../../Common/Notification';
 import Spinner from '../../../Common/Spinner/Spinner';
 
@@ -193,9 +194,10 @@ class OneGraphExplorer extends React.Component {
     const { renderGraphiql } = this.props;
 
     const explorer = this.props.loading ? (
-      <div style={{ width: explorerWidth, marginTop: 170 }}>
+      <div
+        className={`${styles.height100} ${styles.display_flex} ${styles.wd300Px}`}
+      >
         <Spinner />
-        <div style={{ marginLeft: 90 }}>Loading...Schema</div>
       </div>
     ) : (
       <GraphiQLExplorer
