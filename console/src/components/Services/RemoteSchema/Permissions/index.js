@@ -2,7 +2,7 @@ import Permissions from './Main';
 
 const mapStateToProps = state => {
   return {
-    ...state.actions.permissions,
+    ...state.remoteSchemas.permissions,
     allRoles: state.tables.allRoles,
     allRemoteSchemas: state.remoteSchemas.listData.remoteSchemas,
     readOnlyMode: state.main.readOnlyMode,

@@ -1,6 +1,7 @@
 import defaultState from './state';
 
-const SET_REMOTESCHEMA_PERMISSIONS = 'RemoteSchemas/Permissions/SET_REMOTESCHEMA_PERMISSIONS';
+const SET_REMOTESCHEMA_PERMISSIONS =
+  'RemoteSchemas/Permissions/SET_REMOTESCHEMA_PERMISSIONS';
 
 // TODO: ??
 export const setRemoteSchemaPermission = perms => ({
@@ -16,7 +17,8 @@ export const permOpenEdit = (role, isNewRole, isNewPerm) => ({
   isNewPerm,
 });
 
-const PERMISSIONS_CLOSE_EDIT = 'RemoteSchemas/Permissions/PERMISSIONS_CLOSE_EDIT';
+const PERMISSIONS_CLOSE_EDIT =
+  'RemoteSchemas/Permissions/PERMISSIONS_CLOSE_EDIT';
 export const permCloseEdit = () => ({
   type: PERMISSIONS_CLOSE_EDIT,
 });
@@ -30,6 +32,12 @@ export const permSetRoleName = rolename => ({
 const SET_DEFAULTS = 'RemoteSchemas/Permissions/SET_DEFAULTS';
 export const setDefaults = () => ({
   type: SET_DEFAULTS,
+});
+
+const SET_SCHEMA_DEFINITION = 'RemoteSchemas/Permissions/SET_SCHEMA_DEFINITION';
+export const setSchemaDefinition = schemaDefinition => ({
+  type: SET_SCHEMA_DEFINITION,
+  schemaDefinition,
 });
 
 const MAKE_REQUEST = 'RemoteSchemas/Permissions/MAKE_REQUEST';
@@ -73,6 +81,14 @@ const reducer = (state = defaultState, action) => {
         ...state,
         isEditing: false,
         permissionEdit: { ...defaultState.permissionEdit },
+      };
+    case SET_SCHEMA_DEFINITION:
+      return {
+        ...state,
+        permissionEdit: {
+          ...state.permissionEdit,
+          schemaDefinition: action.schemaDefinition
+        }
       };
     case SET_ROLE_NAME:
       return {

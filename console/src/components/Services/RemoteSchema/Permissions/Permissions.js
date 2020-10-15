@@ -1,5 +1,8 @@
 import React from 'react';
-import { getRemoteSchemaPermissions, findRemoteSchemaPermission } from '../utils';
+import {
+  getRemoteSchemaPermissions,
+  findRemoteSchemaPermission,
+} from '../utils';
 import Helmet from 'react-helmet';
 import { fetchRoleList } from '../../Data/DataActions';
 import PermTableHeader from '../../../Common/Permissions/TableHeader';
@@ -69,7 +72,10 @@ const Permissions = ({
             if (isNewRole && !!role) {
               dispatch(permOpenEdit(role, isNewRole, true));
             } else if (role) {
-              const existingPerm = findRemoteSchemaPermission(allPermissions, role);
+              const existingPerm = findRemoteSchemaPermission(
+                allPermissions,
+                role
+              );
               dispatch(permOpenEdit(role, isNewRole, !existingPerm));
             } else {
               document.getElementById('new-role-input').focus();
@@ -106,7 +112,10 @@ const Permissions = ({
             } else if (isNewRole) {
               _permission = permissionsSymbols.noAccess;
             } else {
-              const existingPerm = findRemoteSchemaPermission(allPermissions, role);
+              const existingPerm = findRemoteSchemaPermission(
+                allPermissions,
+                role
+              );
               if (!existingPerm) {
                 _permission = permissionsSymbols.noAccess;
               } else {
@@ -152,6 +161,7 @@ const Permissions = ({
       );
     };
 
+    console.log('read only: ', readOnlyMode);
     return (
       <div>
         {getPermissionsLegend()}
@@ -166,7 +176,7 @@ const Permissions = ({
   return (
     <div>
       <Helmet
-        title={`Permissions - ${currentRemoteSchema.action_name} - Actions | Hasura`}
+        title={`Permissions - ${currentRemoteSchema.name} - Remote Schemas | Hasura`}
       />
       {getPermissionsTable()}
       <div className={`${styles.add_mar_bottom}`}>

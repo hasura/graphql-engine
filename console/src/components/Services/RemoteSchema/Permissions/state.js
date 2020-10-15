@@ -6,6 +6,7 @@ const state = {
     newRole: '',
     role: '',
     filter: '',
+    schemaDefinition: '',
   },
 };
 

@@ -1,9 +1,12 @@
 import React from 'react';
 import Button from '../../../Common/Button/Button';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
-
-import { saveRemoteSchemaPermission, removeRemoteSchemaPermission } from '../Actions';
-import { permCloseEdit } from './reducer';
+import {
+  saveRemoteSchemaPermission,
+  removeRemoteSchemaPermission,
+} from '../Actions';
+import { permCloseEdit, setSchemaDefinition } from './reducer';
+import AceEditor from '../../../Common/AceEditor/BaseEditor';
 
 const PermissionEditor = ({
   permissionEdit,
@@ -13,24 +16,11 @@ const PermissionEditor = ({
 }) => {
   if (!isEditing) return null;
 
-  const { newRole, role, isNewRole, isNewPerm } = permissionEdit;
+  const { isNewRole, isNewPerm } = permissionEdit;
 
-  const permRole = newRole || role;
-
-  let permText = (
-    <div>
-      This remote schema is allowed for role: <b>{permRole}</b>
-      <br />
-      Click "Remove" if you wish to disallow it.
-    </div>
-  );
-  if (isNewPerm) {
-    permText = (
-      <div>
-        Click save to allow this remote schema for role: <b>{permRole}</b>
-      </div>
-    );
-  }
+  const schemaDefinitionOnChange = value => {
+    dispatch(setSchemaDefinition(value));
+  };
 
   const buttonStyle = styles.add_mar_right;
 
@@ -82,7 +72,14 @@ const PermissionEditor = ({
 
   return (
     <div className={styles.activeEdit}>
-      <div className={styles.add_mar_bottom}>{permText}</div>
+      <div className={styles.add_mar_bottom}>
+        <AceEditor
+          name="sdl-editor"
+          onChange={schemaDefinitionOnChange}
+          mode="graphqlschema"
+          width="600px"
+        />
+      </div>
       {getSaveButton()}
       {getRemoveButton()}
       {getCancelButton()}
