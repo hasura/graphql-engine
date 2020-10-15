@@ -17,6 +17,11 @@ Introduction
 
 This guide explains how to connect a Digital Ocean Postgres database to a Hasura Cloud project.
 
+.. note::
+
+   Managed database services only work for the default database user. 
+   Support for other database users will be added in the future.
+
 Before you begin
 ----------------
 
@@ -64,26 +69,7 @@ Scroll to the bottom and choose a unique database cluster name. Also, select a p
 
 Then click ``Create a Database Cluster``.
 
-.. _create_user_account_do:
-
-Step 3: Create a new database user account (optional)
------------------------------------------------------
-
-If several developers will work with this database, a new database user account can be added for each of them.
-
-Navigate to the database cluster's ``Users & Databases`` page. Add a new user and click ``Save``.
-
-.. thumbnail:: /img/graphql/cloud/existing-db/do/do-add-db-user.png
-   :alt: Add database user in Digital Ocean
-   :width: 1000px
-
-A password has been generated automatically by Digital Ocean.
-
-.. note::
-
-  When using a custom database user, you need to make sure to give the user appropriate :ref:`Postgres permissions <postgres_permissions>`.
-
-Step 4: Connect the Hasura Cloud IP
+Step 3: Connect the Hasura Cloud IP
 -----------------------------------
 
 Navigate to the database cluster's ``Overview`` page:
@@ -108,14 +94,14 @@ Then click ``Save``.
 
 .. _get_db_url_do:
 
-Step 5: Get the database connection URL
+Step 4: Get the database connection URL
 ---------------------------------------
 
 The structure of the database connection URL looks as follows:
 
 .. code-block:: bash
 
-    postgresql://<user-name>:<password>@<public-ip>:<postgres-port>/postgres
+    postgresql://<user-name>:<password>@<public-ip>:<postgres-port>/<db>
 
 To get it, navigate to the database cluster's ``Overview`` page:
 
@@ -131,13 +117,7 @@ Scroll down to ``Connection details``. Select ``Public network`` on the left and
 
 Then click the ``Copy`` button for the next step.
 
-Custom database user
-^^^^^^^^^^^^^^^^^^^^
-
-If you have added a new database user in :ref:`step 3 <create_user_account_do>`, replace ``doadmin`` with the user name you created.
-Also, replace the password with the one that was created with the new user.
-
-Step 6: Finish creating the Hasura Cloud project
+Step 5: Finish creating the Hasura Cloud project
 ------------------------------------------------
 
 Back on the Hasura Cloud dashboard, enter the database URL that we configured in :ref:`step 5 <get_db_url_do>`:
@@ -148,7 +128,7 @@ Back on the Hasura Cloud dashboard, enter the database URL that we configured in
 
 Then click ``Create project``.
 
-Step 7: Launch Hasura console
+Step 6: Launch Hasura console
 -----------------------------
 
 After the project is initialized successfully, click on ``Launch console``:

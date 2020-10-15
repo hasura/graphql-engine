@@ -17,6 +17,11 @@ Introduction
 
 This guide explains how to connect a GCP Postgres database to a Hasura Cloud project.
 
+.. note::
+
+   Managed database services only work for the default database user. 
+   Support for other database users will be added in the future.
+
 Before you begin
 ----------------
 
@@ -76,30 +81,7 @@ Select an instance ID, as well as a default user password. If required, choose a
 
 Then click ``Create``.
 
-.. _create_user_account_gcp:
-
-Step 3: Create a new database user account (optional)
------------------------------------------------------
-
-If several developers will work with this database, a new database user account can be added for each of them.
-
-In order to do so, navigate to ``Users`` on the left-side navigation and click on ``Add user account``:
-
-.. thumbnail:: /img/graphql/cloud/existing-db/gcp/gcp-add-user-account.png
-   :alt: Add a new user account for DB in GCP
-   :width: 600px
-
-In the popup, add a user name and a password for the new user account:
-
-.. thumbnail:: /img/graphql/cloud/existing-db/gcp/gcp-add-user-name.png
-   :alt: Add a new user name and password for DB in GCP
-   :width: 600px
-
-.. note::
-
-   Whenever the database user name is not ``postgres``, you need to make sure to give the user appropriate :ref:`Postgres permissions <postgres_permissions>`.
-
-Step 4: Connect the Hasura Cloud IP
+Step 3: Connect the Hasura Cloud IP
 -----------------------------------
 
 On the dashboard of your GCP database instance, on the left sidebar, click on ``Connections``. Then scroll down to the checkbox ``Public IP``, and click ``+ Add network``:
@@ -118,14 +100,14 @@ Then click ``Save``.
 
 .. _configure_db_url_gcp:
 
-Step 5: Configure the database connection URL
+Step 4: Configure the database connection URL
 ---------------------------------------------
 
 The structure of the database connection URL looks as follows:
 
 .. code-block:: bash
 
-    postgresql://<user-name>:<password>@<public-ip>:<postgres-port>/postgres
+    postgresql://<user-name>:<password>@<public-ip>:<postgres-port>/<db>
 
 If you have added a new user account in :ref:`step 3 <create_user_account_gcp>`, the user name refers to the one you created there.
 
@@ -147,7 +129,7 @@ The public IP can be optained by clicking on ``Overview`` on the left-side navig
 
 The Postgres port is ``5432`` by default, but it can be customized.
 
-Step 6: Finish creating the Hasura Cloud project
+Step 5: Finish creating the Hasura Cloud project
 ------------------------------------------------
 
 Back on the Hasura Cloud dashboard, enter the database URL that we configured in :ref:`step 5 <configure_db_url_gcp>`:
@@ -158,7 +140,7 @@ Back on the Hasura Cloud dashboard, enter the database URL that we configured in
 
 Then click ``Create project``.
 
-Step 7: Launch Hasura console
+Step 6: Launch Hasura console
 -----------------------------
 
 After the project is initialized successfully, click on ``Launch console``:

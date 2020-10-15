@@ -17,6 +17,11 @@ Introduction
 
 This guide explains how to connect an AWS Postgres database to a Hasura Cloud project.
 
+.. note::
+
+   Managed database services only work for the default database user. 
+   Support for other database users will be added in the future.
+
 Before you begin
 ----------------
 
