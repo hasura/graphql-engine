@@ -75,8 +75,8 @@ directive @preset(
 
 type query_root {
   hello: String
-  user(id: Int @preset(value = "x-hasura-user-id")): User   # argument "id" gets removed from the exposed schema
-  users(where: UserBoolExp @preset(value = { id : {_eq: "x-hasura-user-id"}}) ): [User]   # argument "where" gets removed from the exposed schema
+  user(id: Int @preset(value: "x-hasura-user-id")): User   # argument "id" gets removed from the exposed schema
+  users(where: UserBoolExp @preset(value: { id : {_eq: "x-hasura-user-id"}}) ): [User]   # argument "where" gets removed from the exposed schema
 }
 ```
 
