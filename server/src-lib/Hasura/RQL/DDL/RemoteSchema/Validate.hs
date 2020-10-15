@@ -233,7 +233,7 @@ validateDirectives providedDirectives upstreamDirectives directiveLocation paren
   where
     upstreamDirectivesMap = mapFromL G._dName upstreamDirectives
 
-    presetFilterFn = (== $$(G.litName "preset")) . G._dName
+    presetFilterFn = (`elem` [$$(G.litName "static_preset"),$$(G.litName "session_preset")]) . G._dName
 
     presetDirectives = filter presetFilterFn providedDirectives
 
@@ -297,6 +297,8 @@ validateInputValueDefinition
   -> G.Name
   -> m ()
 validateInputValueDefinition providedDefn upstreamDefn inputObjectName = do
+  validateDirectives providedDirectives upstreamDirectives G.TSDLINPUT_FIELD_DEFINITION
+     $ (Argument InputObjectArgument, inputObjectName)
   when (providedType /= upstreamType) $
     dispute $ pure $
       NonMatchingType providedName (Argument InputObjectArgument) providedType upstreamType
@@ -305,8 +307,8 @@ validateInputValueDefinition providedDefn upstreamDefn inputObjectName = do
       NonMatchingDefaultValue inputObjectName providedName
                               upstreamDefaultValue providedDefaultValue
   where
-    G.InputValueDefinition _ providedName providedType providedDefaultValue _providedDirectives  = providedDefn
-    G.InputValueDefinition _ _ upstreamType upstreamDefaultValue _upstreamDirectives  = upstreamDefn
+    G.InputValueDefinition _ providedName providedType providedDefaultValue providedDirectives  = providedDefn
+    G.InputValueDefinition _ _ upstreamType upstreamDefaultValue upstreamDirectives  = upstreamDefn
 
 validateArguments
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
