@@ -15,26 +15,26 @@ Projects & collaborators
 Introduction
 ------------
 
-The ``Projects`` page show a list of your projects.
+The ``Projects`` page shows a list of your projects.
 
 .. thumbnail:: /img/graphql/cloud/projects/projects-list.png
    :alt: Projects list
    :width: 1200px
 
-For each project, you can do the one of the following actions:
+For each project, you can do one of the following actions:
 
-.. thumbnail:: /img/graphql/cloud/getting-started/project-actions.png
+.. thumbnail:: /img/graphql/cloud/projects/project-actions.png
    :alt: Project actions
    :width: 860px
 
-- Click the gear icon to manage your project
+- Click the gear icon to manage your project:
 
   .. thumbnail:: /img/graphql/cloud/projects/project-details.png
      :alt: General tab
      :width: 900px
 
 - Click ``Launch Console`` to open the Hasura console in your browser. The ``Pro`` tab
-  lets you use the Pro features that Hasura Cloud has set up for you.
+  lets you use the Pro features that Hasura Cloud has set up for you:
 
   .. thumbnail:: /img/graphql/cloud/metrics/pro-tab-overview.png
      :alt: Hasura Console: Pro tab
@@ -43,6 +43,23 @@ For each project, you can do the one of the following actions:
 .. note::
 
    Please see the :ref:`API reference <cloud_api_reference>` to create and manage Hasura Cloud projects programmatically.
+
+Label projects
+--------------
+
+You can add a label to a project by clicking on the ``+`` button at the bottom of a project:
+
+.. thumbnail:: /img/graphql/cloud/projects/project-add-label.png
+   :alt: Add label to project
+   :width: 860px
+
+This will allow you to add a new label and choose a color for it.
+
+You can add numerous labels to your Hasura Cloud projects:
+
+.. thumbnail:: /img/graphql/cloud/projects/project-labels.png
+   :alt: Add label to project
+   :width: 860px
 
 Dig deeper
 ----------
