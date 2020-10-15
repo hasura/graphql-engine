@@ -535,7 +535,7 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
       -- 'rawSelection' is used here to get the alias and args data
       -- specified to be able to construct the `Field NoFragments G.Name`
       P.rawSelection fieldName description argsParser outputParser
-      <&> (\(alias, args, _) -> (G.Field alias fieldName args mempty []))
+      <&> (\(alias, args, _) -> (G.Field alias fieldName (presetArgsMap <> args) mempty []))
 
     mkFieldParserWithSelectionSet
       :: InputFieldsParser n ()
