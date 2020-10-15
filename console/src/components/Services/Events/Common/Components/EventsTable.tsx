@@ -103,17 +103,11 @@ const EventsTable: React.FC<Props> = props => {
     }
   };
 
-  const expanderActions = {
+  const expanderActions: GridHeadingProps = {
     expander: true,
     Header: '',
     accessor: 'expander',
-    Expander: ({
-      isExpanded,
-      viewIndex,
-    }: {
-      isExpanded: boolean;
-      viewIndex: number;
-    }) => {
+    Expander: ({ isExpanded, viewIndex }) => {
       const row = rows[viewIndex];
       return (
         <>
@@ -132,7 +126,7 @@ const EventsTable: React.FC<Props> = props => {
     },
   };
 
-  const gridHeadings: GridHeadingProps[] = [expanderActions];
+  const gridHeadings = [expanderActions];
 
   sortedColumns.forEach(column => {
     if (column !== 'actions') {
