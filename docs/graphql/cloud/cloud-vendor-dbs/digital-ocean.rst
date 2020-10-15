@@ -120,7 +120,7 @@ Then click the ``Copy`` button for the next step.
 Step 5: Finish creating the Hasura Cloud project
 ------------------------------------------------
 
-Back on the Hasura Cloud dashboard, enter the database URL that we configured in :ref:`step 5 <get_db_url_do>`:
+Back on the Hasura Cloud dashboard, enter the database URL that we configured in :ref:`step 4 <get_db_url_do>`:
 
 .. thumbnail:: /img/graphql/cloud/existing-db/finish-create-project.png
    :alt: Finish creating the Hasura Cloud project

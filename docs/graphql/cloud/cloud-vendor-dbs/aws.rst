@@ -78,7 +78,13 @@ Scroll down to ``Settings``:
 Now you can choose a ``DB instance identifier`` as a name for your database. The ``Master username`` is ``postgres`` by default. 
 You can change that if you have to. As for the password, you can click the checkbox for AWS to auto-generate one for you, or you can type in a password of your choice.
 
-Scroll down and customize other database attributes such as ``DB instance size``, ``Storage`` and ``Authentication``, based on your requirements.
+Scroll down and customize other database attributes such as ``DB instance size`` and ``Storage``, based on your requirements.
+
+In the ``Connectivity`` section, set ``Public access`` to ``Yes`` and choose or add a new security group:
+
+.. thumbnail:: /img/graphql/cloud/existing-db/aws/aws-rds-connectivity.png
+   :alt: Connectivity for RDS instance on AWS
+   :width: 600px
 
 When you're done, at the bottom, click the ``Create database`` button:
 
@@ -86,23 +92,18 @@ When you're done, at the bottom, click the ``Create database`` button:
    :alt: Create RDS instance on AWS
    :width: 700px
 
-Step 3: Create a new database user account (optional)
------------------------------------------------------
-
-If several developers will work with this database, a new database user account can be added for each of them.
-
-Step 4: Connect the Hasura Cloud IP
+Step 3: Connect the Hasura Cloud IP
 -----------------------------------
 
 .. _configure_db_url_aws:
 
-Step 5: Configure the database connection URL
+Step 4: Configure the database connection URL
 ---------------------------------------------
 
-Step 6: Finish creating the Hasura Cloud project
+Step 5: Finish creating the Hasura Cloud project
 ------------------------------------------------
 
-Back on the Hasura Cloud dashboard, enter the database URL that we configured in :ref:`step 5 <configure_db_url_aws>`:
+Back on the Hasura Cloud dashboard, enter the database URL that we configured in :ref:`step 4 <configure_db_url_aws>`:
 
 .. thumbnail:: /img/graphql/cloud/existing-db/finish-create-project.png
    :alt: Finish creating the Hasura Cloud project
@@ -110,7 +111,7 @@ Back on the Hasura Cloud dashboard, enter the database URL that we configured in
 
 Then click ``Create project``.
 
-Step 7: Launch Hasura console
+Step 6: Launch Hasura console
 -----------------------------
 
 After the project is initialized successfully, click on ``Launch console``:
