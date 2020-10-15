@@ -114,26 +114,26 @@ lazyTxToQTx = \case
   LTTx tx  -> tx
 
 runLazyTx
-  :: (MonadIO m)
+  :: (MonadIO m, MonadError QErr m)
   => PGExecCtx
   -> Q.TxAccess
-  -> LazyTx QErr a -> ExceptT QErr m a
+  -> LazyTx QErr a -> m a
 runLazyTx pgExecCtx txAccess = \case
   LTErr e  -> throwError e
   LTNoTx a -> return a
   LTTx tx  ->
     case txAccess of
-      Q.ReadOnly  -> ExceptT <$> liftIO $ runExceptT $ _pecRunReadOnly pgExecCtx tx
-      Q.ReadWrite -> ExceptT <$> liftIO $ runExceptT $ _pecRunReadWrite pgExecCtx tx
+      Q.ReadOnly  -> liftEither =<< liftIO (runExceptT $ _pecRunReadOnly pgExecCtx tx)
+      Q.ReadWrite -> liftEither =<< liftIO (runExceptT $ _pecRunReadWrite pgExecCtx tx)
 
 -- | This runs the given set of statements (Tx) without wrapping them in BEGIN
 -- and COMMIT. This should only be used for running a single statement query!
 runQueryTx
-  :: MonadIO m => PGExecCtx -> LazyTx QErr a -> ExceptT QErr m a
+  :: (MonadIO m, MonadError QErr m) => PGExecCtx -> LazyTx QErr a -> m a
 runQueryTx pgExecCtx = \case
   LTErr e  -> throwError e
   LTNoTx a -> return a
-  LTTx tx  -> ExceptT <$> liftIO $ runExceptT $ _pecRunReadNoTx pgExecCtx tx
+  LTTx tx  -> liftEither =<< liftIO (runExceptT $ _pecRunReadNoTx pgExecCtx tx)
 
 type RespTx = Q.TxE QErr EncJSON
 type LazyRespTx = LazyTx QErr EncJSON
@@ -200,11 +200,11 @@ withTraceContext
 withTraceContext ctx = \case
   LTErr e  -> LTErr e
   LTNoTx a -> LTNoTx a
-  LTTx tx  -> 
+  LTTx tx  ->
     let sql = Q.fromText $
-          "SET LOCAL \"hasura.tracecontext\" = " <> 
+          "SET LOCAL \"hasura.tracecontext\" = " <>
             toSQLTxt (S.SELit . J.encodeToStrictText . Tracing.injectEventContext $ ctx)
-        setTraceContext = 
+        setTraceContext =
           Q.unitQE defaultTxErrorHandler sql () False
      in LTTx $ setTraceContext >> tx
 
