@@ -274,9 +274,7 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
           buildExecStepRemote
             remoteSchemaInfo
             G.OperationTypeQuery
-            varDefs
             [G.SelectionField remoteField]
-            varValsM
         RFDB db      -> ExecStepDB $ mkCurPlanTx env manager reqHeaders userInfo instrument ep (RFPPostgres db)
         RFAction rfp -> ExecStepDB $ mkCurPlanTx env manager reqHeaders userInfo instrument ep rfp
         RFRaw r      -> ExecStepRaw r

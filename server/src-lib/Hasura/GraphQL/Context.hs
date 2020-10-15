@@ -99,7 +99,7 @@ data ActionQuery v
 data RemoteField
   = RemoteField
   { _rfRemoteSchemaInfo :: !RQL.RemoteSchemaInfo
-  , _rfField            :: !(G.Field G.NoFragments G.Name)
+  , _rfField            :: !(G.Field G.NoFragments Variable)
   } deriving (Show, Eq)
 
 type QueryRootField v = RootField (QueryDB v) RemoteField (ActionQuery v) J.Value

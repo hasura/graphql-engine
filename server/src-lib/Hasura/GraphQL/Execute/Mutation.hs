@@ -177,9 +177,7 @@ convertMutationSelectionSet env logger gqlContext sqlGenCtx userInfo manager req
       pure $ buildExecStepRemote
              remoteSchemaInfo
              G.OperationTypeMutation
-             varDefs
              [G.SelectionField remoteField]
-             varValsM
     RFAction action     -> ExecStepDB <$> convertMutationAction env logger userInfo manager reqHeaders action
     RFRaw s             -> pure $ ExecStepRaw s
 

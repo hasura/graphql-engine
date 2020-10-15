@@ -665,7 +665,8 @@ JSON values, but fortunately, the duplication of logic is minimal. -}
 data InputValue v
   = GraphQLValue (Value v)
   | JSONValue J.Value
-  deriving (Show, Eq, Functor)
+  deriving (Show, Eq, Functor, Generic)
+instance (Hashable v) => Hashable (InputValue v)
 
 data Variable = Variable
   { vInfo  :: VariableInfo
@@ -673,8 +674,8 @@ data Variable = Variable
   , vValue :: InputValue Void
   -- ^ Note: if the variable was null or was not provided and the field has a
   -- non-null default value, this field contains the default value, not 'VNull'.
-  } deriving (Show,Eq)
-
+  } deriving (Show,Eq, Generic)
+instance Hashable Variable
 
 data VariableInfo
   = VIRequired Name
@@ -682,7 +683,8 @@ data VariableInfo
   -- value are indistinguishable from variables with a default value of null, so
   -- we don’t distinguish those cases here.
   | VIOptional Name (Value Void)
-  deriving (Show,Eq)
+  deriving (Show,Eq, Generic)
+instance Hashable VariableInfo
 
 instance HasName Variable where
   getName = getName . vInfo

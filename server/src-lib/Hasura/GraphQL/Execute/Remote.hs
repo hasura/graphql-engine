@@ -7,11 +7,37 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict                    as Map
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Data.HashSet                           as Set
-
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+import qualified Data.Aeson                             as J
 
 import           Hasura.GraphQL.Execute.Prepare
+import           Hasura.GraphQL.Parser
 import           Hasura.RQL.Types
+
+mkVariableDefinitionAndValue :: Variable -> (G.VariableDefinition, (G.Name, J.Value))
+mkVariableDefinitionAndValue var@(Variable varInfo gType varValue) =
+  (varDefn, (varName, varJSONValue))
+  where
+    varName = getName var
+
+    varDefn = G.VariableDefinition varName gType defaultVal
+
+    defaultVal =
+      case varInfo of
+        VIRequired _ -> Nothing
+        VIOptional _ val -> Just val
+
+    varJSONValue =
+      case varValue of
+        JSONValue v -> v
+        GraphQLValue val -> gValueToJSONValue val
+
+unresolveVariables
+  :: forall fragments
+   . Functor fragments
+  => G.SelectionSet fragments Variable
+  -> G.SelectionSet fragments G.Name
+unresolveVariables =
+  fmap (fmap (getName . vInfo))
 
 collectVariables
   :: forall fragments var
@@ -25,12 +51,12 @@ buildExecStepRemote
   :: forall db
    . RemoteSchemaInfo
   -> G.OperationType
-  -> [G.VariableDefinition]
-  -> G.SelectionSet G.NoFragments G.Name
-  -> Maybe GH.VariableValues
+  -> G.SelectionSet G.NoFragments Variable
   -> ExecutionStep db
-buildExecStepRemote remoteSchemaInfo tp varDefs selSet varValsM =
-  let requiredVars = collectVariables selSet
-      restrictedDefs = filter (\varDef -> G._vdName varDef `Set.member` requiredVars) varDefs
-      restrictedValsM = flip Map.intersection (Set.toMap requiredVars) <$> varValsM
-  in ExecStepRemote (remoteSchemaInfo, G.TypedOperationDefinition tp Nothing restrictedDefs [] selSet, restrictedValsM)
+buildExecStepRemote remoteSchemaInfo tp selSet =
+  let unresolvedSelSet = unresolveVariables selSet
+      allVars = map mkVariableDefinitionAndValue $ Set.toList $ collectVariables selSet
+      varValues = Map.fromList $ map snd allVars
+      varValsM = bool (Just varValues) Nothing $ Map.null varValues
+      varDefs = map fst allVars
+  in ExecStepRemote (remoteSchemaInfo, G.TypedOperationDefinition tp Nothing varDefs [] unresolvedSelSet, varValsM)

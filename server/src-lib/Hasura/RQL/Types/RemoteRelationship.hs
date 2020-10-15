@@ -13,6 +13,7 @@ module Hasura.RQL.Types.RemoteRelationship
   , FieldCall(..)
   , RemoteArguments(..)
   , DeleteRemoteRelationship(..)
+  , gValueToJSONValue
   ) where
 
 import           Hasura.Incremental            (Cacheable)
@@ -69,6 +70,27 @@ data RemoteFieldInfo
   } deriving (Show, Eq, Generic)
 instance Cacheable RemoteFieldInfo
 
+gValueToJSONValue :: G.Value Void -> Value
+gValueToJSONValue =
+  \case
+    G.VNull       -> Null
+    G.VInt i      -> toJSON i
+    G.VFloat f    -> toJSON f
+    G.VString s   -> toJSON s
+    G.VBoolean b  -> toJSON b
+    G.VEnum s     -> toJSON s
+    G.VList list  -> toJSON (map gValueToJSONValue list)
+    G.VObject obj -> fieldsToObject obj
+  where
+    fieldsToObject =
+      Object .
+      HM.fromList .
+      map
+        (\(name, val) ->
+           (G.unName name, gValueToJSONValue val)) .
+      HM.toList
+
+
 instance ToJSON RemoteFieldInfo where
   toJSON RemoteFieldInfo{..} = object
     [ "name" .= _rfiName
@@ -85,26 +107,6 @@ instance ToJSON RemoteFieldInfo where
           , "def_val" .= fmap gValueToJSONValue defVal
           , "type" .= type'
           ]
-
-      gValueToJSONValue :: G.Value Void -> Value
-      gValueToJSONValue =
-        \case
-          G.VNull       -> Null
-          G.VInt i      -> toJSON i
-          G.VFloat f    -> toJSON f
-          G.VString s   -> toJSON s
-          G.VBoolean b  -> toJSON b
-          G.VEnum s     -> toJSON s
-          G.VList list  -> toJSON (map gValueToJSONValue list)
-          G.VObject obj -> fieldsToObject obj
-
-      fieldsToObject =
-        Object .
-        HM.fromList .
-        map
-          (\(name, val) ->
-             (G.unName name, gValueToJSONValue val)) .
-        HM.toList
 
 -- | For some 'FieldCall', for instance, associates a field argument name with
 -- either a list of either scalar values or some 'G.Variable' we are closed
