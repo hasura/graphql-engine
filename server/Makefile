@@ -58,6 +58,15 @@ ci-image:
 	upx packaging/build/rootfs/bin/graphql-engine
 	docker build -t '$(registry)/graphql-engine:$(VERSION)' packaging/build/
 
+
+# runs our own formatter
+format-all:
+	curl -sSL https://raw.github.com/hasura/stylish-haskell/main/scripts/latest.sh | sh -s $(find src-* -type f -regex ".*\.l?hs" | grep -v "src-lib/Hasura/GraphQL/Execute/LiveQuery.hs") -i
+
+# this assumes that there is an `origin/master` to compare to, which will be true in ci
+format-branch:
+	curl -sSL https://raw.github.com/hasura/stylish-haskell/main/scripts/latest.sh | sh -s $(git diff --name-only origin/master...HEAD -- . | grep -E '\.hs$|\.lhs$' | sed 's%^server/%%' | grep -v "src-lib/Hasura/GraphQL/Execute/LiveQuery.hs") -i
+
 ci-save-image:
 	docker save -o '$(build_output)/image.tar' '$(registry)/graphql-engine:$(VERSION)'
 ci-load-image:
