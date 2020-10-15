@@ -593,7 +593,9 @@ class Main extends React.Component {
                   'Data',
                   'fa-database',
                   tooltips.data,
-                  getSchemaBaseRoute(currentSchema, currentSource)
+                  currentSource
+                    ? getSchemaBaseRoute(currentSchema, currentSource)
+                    : '/data'
                 )}
                 {getSidebarItem(
                   'Actions',

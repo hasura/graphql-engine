@@ -10,6 +10,8 @@ import { getDataSources, getInitDataSource } from '../../../metadata/selector';
 import { showErrorNotification } from '../Common/Notification';
 import {
   fetchDataInit,
+  fetchFunctionInit,
+  updateSchemaInfo,
   UPDATE_CURRENT_DATA_SOURCE,
   UPDATE_CURRENT_SCHEMA,
 } from './DataActions';
@@ -93,6 +95,7 @@ const DataSourceContainer = ({
   useEffect(() => {
     if (currentSource) {
       dispatch(fetchDataInit()).then(() => {
+        dispatch(fetchFunctionInit());
         setDataLoaded(true);
       });
     }

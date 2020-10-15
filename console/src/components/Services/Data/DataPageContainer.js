@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import globals from '../../../Globals';
 
@@ -14,7 +14,7 @@ import {
 } from './DataActions';
 import { CLI_CONSOLE_MODE } from '../../../constants';
 import styles from '../../Common/TableCommon/Table.scss';
-import { currentDriver, useDataSource } from '../../../dataSources';
+import { currentDriver, dataSource, useDataSource } from '../../../dataSources';
 import { getDataSources } from '../../../metadata/selector';
 import { push } from 'react-router-redux';
 
@@ -27,6 +27,15 @@ const DataPageContainer = ({
   dataSources,
   currentDataSource,
 }) => {
+  useEffect(() => {
+    if (!currentDataSource && dataSources.length) {
+      dispatch({
+        type: UPDATE_CURRENT_DATA_SOURCE,
+        source: dataSources[0].name,
+      });
+    }
+  }, [currentDataSource, dataSources, dispatch]);
+
   const { setDriver } = useDataSource();
   const [loadingSchemas, setLoadingSchemas] = useState(false);
   const onDatabaseChange = e => {

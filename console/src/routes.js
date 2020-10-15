@@ -74,7 +74,7 @@ const routes = store => {
     return;
   };
   const _dataRouterUtils = dataRouterUtils(connect, store, composeOnEnterHooks);
-  const requireSchema = _dataRouterUtils.requireSchema;
+  const requireSource = _dataRouterUtils.requireSource;
   const dataRouter = _dataRouterUtils.makeDataRouter;
 
   const remoteSchemaRouter = getRemoteSchemaRouter(
@@ -113,7 +113,7 @@ const routes = store => {
       <Route
         path=""
         component={Main}
-        onEnter={composeOnEnterHooks([requireSchema, requireMigrationStatus])}
+        onEnter={composeOnEnterHooks([requireSource, requireMigrationStatus])}
       >
         <Route path="">
           <IndexRoute component={generatedApiExplorer(connect)} />
