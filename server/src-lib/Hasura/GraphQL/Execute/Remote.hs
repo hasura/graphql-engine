@@ -11,16 +11,7 @@ import qualified Data.HashSet                           as Set
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 
 import           Hasura.GraphQL.Execute.Prepare
-import           Hasura.GraphQL.Parser
 import           Hasura.RQL.Types
-
-unresolveVariables
-  :: forall fragments
-   . Functor fragments
-  => G.SelectionSet fragments Variable
-  -> G.SelectionSet fragments G.Name
-unresolveVariables =
-  fmap (fmap (getName . vInfo))
 
 collectVariables
   :: forall fragments var
@@ -35,12 +26,11 @@ buildExecStepRemote
    . RemoteSchemaInfo
   -> G.OperationType
   -> [G.VariableDefinition]
-  -> G.SelectionSet G.NoFragments Variable
+  -> G.SelectionSet G.NoFragments G.Name
   -> Maybe GH.VariableValues
   -> ExecutionStep db
 buildExecStepRemote remoteSchemaInfo tp varDefs selSet varValsM =
-  let unresolvedSelSet = unresolveVariables selSet
-      requiredVars = collectVariables unresolvedSelSet
+  let requiredVars = collectVariables selSet
       restrictedDefs = filter (\varDef -> G._vdName varDef `Set.member` requiredVars) varDefs
       restrictedValsM = flip Map.intersection (Set.toMap requiredVars) <$> varValsM
-  in ExecStepRemote (remoteSchemaInfo, G.TypedOperationDefinition tp Nothing restrictedDefs [] unresolvedSelSet, restrictedValsM)
+  in ExecStepRemote (remoteSchemaInfo, G.TypedOperationDefinition tp Nothing restrictedDefs [] selSet, restrictedValsM)

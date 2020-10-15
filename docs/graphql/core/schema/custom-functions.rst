@@ -1,6 +1,6 @@
 .. meta::
    :description: Customise the Hasura GraphQL schema with SQL functions
-   :keywords: hasura, docs, schema, custom function
+   :keywords: hasura, docs, schema, sql functions, stored procedures
 
 .. _custom_sql_functions:
 
@@ -15,8 +15,9 @@ Extend schema with SQL functions
 What are custom SQL functions?
 ------------------------------
 
-Custom SQL functions are `user-defined SQL functions <https://www.postgresql.org/docs/current/sql-createfunction.html>`_
-that can be used to either encapsulate some custom business logic or extend the built-in SQL functions and operators.
+Custom SQL functions are `user-defined SQL functions <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
+that can be used to either encapsulate some custom business logic or extend the built-in SQL functions and operators. SQL functions
+are also referred to as **stored procedures**.
 
 Hasura GraphQL engine lets you expose certain types of custom functions as top level fields in the GraphQL API to allow
 querying them using both ``queries`` and ``subscriptions``.
@@ -37,17 +38,104 @@ Currently, only functions which satisfy the following constraints can be exposed
 - **Return type**: MUST be ``SETOF <table-name>``
 - **Argument modes**: ONLY ``IN``
 
-.. _create_and_expose_sql_functions:
+.. _create_sql_functions:
 
-Creating & exposing SQL functions
----------------------------------
+Creating SQL functions
+----------------------
 
-Custom SQL functions can be created using SQL which can be run in the Hasura console:
+SQL functions can be created using SQL statements which can be executed as follows:
 
-- Head to the ``Data -> SQL`` section of the Hasura console
-- Enter your `create function SQL statement <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
-- Select the ``Track this`` checkbox to expose the new function over the GraphQL API
-- Hit the ``Run`` button
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    - Head to the ``Data -> SQL`` section of the Hasura console
+    - Enter your `create function SQL statement <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
+    - Hit the ``Run`` button
+
+  .. tab:: CLI
+
+    1. :ref:`Create a migration manually <manual_migrations>` and add your `create function SQL statement <https://www.postgresql.org/docs/current/sql-createfunction.html>`__ to the ``up.sql`` file. Also, add an SQL statement that reverts the previous statement to the ``down.sql`` file in case you need to :ref:`roll back <roll_back_migrations>` the migrations.
+
+    2. Apply the migration by running:
+
+       .. code-block:: bash
+
+         hasura migrate apply
+
+  .. tab:: API
+
+    You can add a function by making an API call to the :ref:`run_sql metadata API <run_sql>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "run_sql",
+        "args": {
+          "sql": "<create function statement>"
+        }
+      }
+
+.. _track_custom_sql_functions:
+
+Track SQL functions
+-------------------
+
+Functions can be present in the underlying Postgres database without being exposed over the GraphQL API.
+In order to expose a function over the GraphQL API, it needs to be **tracked**.
+
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    While creating functions from the ``Data -> SQL`` page, selecting the ``Track this`` checkbox
+    will expose the new function over the GraphQL API right after creation if it is supported.
+
+    You can track any existing supported functions in your database from the ``Data -> Schema`` page:
+
+    .. thumbnail:: /img/graphql/core/schema/schema-track-functions.png
+      :alt: Track functions
+
+  .. tab:: CLI
+
+    1. To track the function and expose it over the GraphQL API, edit the ``functions.yaml`` file in the ``metadata`` directory as follows:
+
+       .. code-block:: yaml
+         :emphasize-lines: 1-3
+
+          - function:
+              schema: public
+              name: <function name>
+
+    2. Apply the metadata by running:
+
+       .. code-block:: bash
+
+         hasura metadata apply
+
+  .. tab:: API
+
+    To track the function and expose it over the GraphQL API, make the following API call to the :ref:`track_function metadata API <track_function>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "track_function",
+        "args": {
+          "schema": "public",
+          "name": "<name of function>"
+        }
+      }
 
 .. note::
 
