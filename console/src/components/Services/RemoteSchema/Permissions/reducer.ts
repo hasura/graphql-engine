@@ -24,7 +24,7 @@ export const permCloseEdit = () => ({
 });
 
 const SET_ROLE_NAME = 'RemoteSchemas/Permissions/SET_ROLE_NAME';
-export const permSetRoleName = rolename => ({
+export const permSetRoleName = (rolename: string) => ({
   type: SET_ROLE_NAME,
   rolename,
 });
@@ -35,7 +35,7 @@ export const setDefaults = () => ({
 });
 
 const SET_SCHEMA_DEFINITION = 'RemoteSchemas/Permissions/SET_SCHEMA_DEFINITION';
-export const setSchemaDefinition = schemaDefinition => ({
+export const setSchemaDefinition = (schemaDefinition: string) => ({
   type: SET_SCHEMA_DEFINITION,
   schemaDefinition,
 });

@@ -1,17 +1,21 @@
 import React from 'react';
+import Helmet from 'react-helmet';
 import {
   getRemoteSchemaPermissions,
   findRemoteSchemaPermission,
 } from '../utils';
-import Helmet from 'react-helmet';
 import { fetchRoleList } from '../../Data/DataActions';
 import PermTableHeader from '../../../Common/Permissions/TableHeader';
 import PermTableBody from '../../../Common/Permissions/TableBody';
 import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
-import { permOpenEdit, permCloseEdit, permSetRoleName } from './reducer';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import PermissionEditor from './PermissionEditor';
-import { setDefaults } from './reducer';
+import {
+  permOpenEdit,
+  permCloseEdit,
+  permSetRoleName,
+  setDefaults,
+} from './reducer';
 
 const queryTypes = ['Permission'];
 
@@ -128,7 +132,7 @@ const Permissions = ({
           return {
             permType: queryType,
             className,
-            editIcon: editIcon,
+            editIcon,
             onClick,
             dataTest: `${role}-${queryType}`,
             access: getRoleQueryPermission(),

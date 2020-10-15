@@ -15,18 +15,14 @@ import {
   setRequestSuccess as setPermRequestSuccess,
   setRequestFailure as setPermRequestFailure,
 } from './Permissions/reducer';
+import { findRemoteSchema, getRemoteSchemaPermissions } from './utils';
 
 // TODO: update
 import {
-  findRemoteSchema,
-  getRemoteSchemaPermissions,
-  removePersistedDerivedAction,
-  persistDerivedAction,
-  updatePersistedDerivation,
-} from './utils';
-
-// TODO: update
-import { getActionPermissionQueries } from './Permissions/utils';
+  getActionPermissionQueries,
+  getCreateRemoteSchemaPermissionQuery,
+  getDropRemoteSchemaPermissionQuery,
+} from './Permissions/utils';
 
 /* Action constants */
 
@@ -150,7 +146,7 @@ const makeRequest = (
     const upQuery = {
       type: 'bulk',
       args: upQueries,
-    }; 
+    };
 
     const downQuery = {
       type: 'bulk',
@@ -213,7 +209,6 @@ const saveRemoteSchemaPermission = (successCb, errorCb) => {
       findRemoteSchema(allActions, currentAction)
     );
 
-    // change this . console.log ??
     const { upQueries, downQueries } = getActionPermissionQueries(
       permissionEdit,
       allPermissions,
@@ -264,16 +259,19 @@ const removeRemoteSchemaPermission = (successCb, errorCb) => {
     if (!isOk) return;
 
     const {
-      common: { currentAction },
+      common: { currentRemoteSchema },
       permissions: { permissionEdit },
     } = getState().actions;
 
     const { role, filter } = permissionEdit;
 
-    const upQuery = getDropActionPermissionQuery(role, currentAction);
-    const downQuery = getCreateActionPermissionQuery(
+    const upQuery = getDropRemoteSchemaPermissionQuery(
+      role,
+      currentRemoteSchema
+    );
+    const downQuery = getCreateRemoteSchemaPermissionQuery(
       { role, filter },
-      currentAction
+      currentRemoteSchema
     );
 
     const migrationName = 'removing_remoteSchema_perm';

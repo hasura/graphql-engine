@@ -18,7 +18,7 @@ const PermissionEditor = ({
 
   const { isNewRole, isNewPerm, schemaDefinition } = permissionEdit;
 
-  const schemaDefinitionOnChange = val => {
+  const schemaDefinitionOnChange = (val: string) => {
     dispatch(setSchemaDefinition(val));
   };
 
