@@ -15,28 +15,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install stylish-haskell
-        working-directory: ${{env.working-directory}}
-        run: |
-          RELEASES=$(curl --silent https://github.com/jaspervdj/stylish-haskell/releases)
-          URL=https://github.com/$(echo $RELEASES | grep -o '\"[^\"]*-linux-x86_64\.tar\.gz\"' | sed s/\"//g | head -n1)
-          VERSION=$(echo $URL | sed -e 's/.*-\(v[\.0-9]\+-linux-x86_64\)\.tar\.gz/\1/')
-          mkdir -p ${{env.temp-directory}}
-          curl --progress-bar --location -o${{env.temp-directory}}/stylish-haskell.tar.gz $URL
-          tar -xzf ${{env.temp-directory}}/stylish-haskell.tar.gz -C${{env.temp-directory}}
-
       - name: Run stylish-haskell
         working-directory: ${{env.working-directory}}
         run: |
-          COMMON_ANCESTOR=$(git merge-base origin/${{github.base_ref}} ${{github.sha}})
-          BINARY=${{env.temp-directory}}/*/stylish-haskell
-          for hfile in $(git diff --name-only $COMMON_ANCESTOR..${{github.sha}} -- . | grep -E '\.hs$|\.lhs$' | sed 's%^server/%%'); do
-            echo "Running on $hfile"
-            $BINARY -i $hfile &> /dev/null || true
-            if [ -n "$(git diff)" ]; then
-              echo "::warning file=server/$hfile::This file needs to be formatted using stylish-haskell."
-            fi
-            git reset --hard
+          make format-branch || true
+          for hfile in $(git status --porcelain | sed -n 's/^ M //p'); do
+            echo "::warning file=server/$hfile::This file needs to be formatted using stylish-haskell.\nPlease run `make format-branch`."
           done
 
   hlint:
