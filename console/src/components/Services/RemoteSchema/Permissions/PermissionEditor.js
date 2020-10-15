@@ -16,10 +16,10 @@ const PermissionEditor = ({
 }) => {
   if (!isEditing) return null;
 
-  const { isNewRole, isNewPerm } = permissionEdit;
+  const { isNewRole, isNewPerm, schemaDefinition } = permissionEdit;
 
-  const schemaDefinitionOnChange = value => {
-    dispatch(setSchemaDefinition(value));
+  const schemaDefinitionOnChange = val => {
+    dispatch(setSchemaDefinition(val));
   };
 
   const buttonStyle = styles.add_mar_right;
@@ -75,6 +75,7 @@ const PermissionEditor = ({
       <div className={styles.add_mar_bottom}>
         <AceEditor
           name="sdl-editor"
+          value={schemaDefinition}
           onChange={schemaDefinitionOnChange}
           mode="graphqlschema"
           width="600px"

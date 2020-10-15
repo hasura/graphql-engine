@@ -87,8 +87,8 @@ const reducer = (state = defaultState, action) => {
         ...state,
         permissionEdit: {
           ...state.permissionEdit,
-          schemaDefinition: action.schemaDefinition
-        }
+          schemaDefinition: action.schemaDefinition,
+        },
       };
     case SET_ROLE_NAME:
       return {
