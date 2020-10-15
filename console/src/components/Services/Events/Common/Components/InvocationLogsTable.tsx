@@ -18,6 +18,25 @@ import RedeliverEvent from './RedeliverEvent';
 import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 import { Nullable } from '../../../../Common/utils/tsUtils';
 import { getInvocationLogStatus } from './utils';
+import Button from '../../../../Common/Button/Button';
+
+type RedeliverButtonProps = {
+  onClickHandler: (e: React.MouseEvent) => void;
+};
+
+const RedliverEventButton: React.FC<RedeliverButtonProps> = ({
+  onClickHandler,
+}) => (
+  <Button
+    color="white"
+    size="xs"
+    title="Redeliver event"
+    onClick={onClickHandler}
+    className={`${styles.cursorPointer} ${styles.add_mar_right_small}`}
+  >
+    <ReloadIcon className="" />
+  </Button>
+);
 
 interface Props extends FilterTableProps {
   dispatch: Dispatch;
@@ -115,18 +134,15 @@ const InvocationLogsTable: React.FC<Props> = props => {
       return (
         <>
           {columns.includes('redeliver') && (
-            <div
-              onClick={(e: React.MouseEvent) => {
+            <RedliverEventButton
+              onClickHandler={(e: React.MouseEvent) => {
                 if (isRedelivering) {
                   return;
                 }
                 redeliverHandler(row.event_id);
                 e.stopPropagation();
               }}
-              className={`${styles.cursorPointer} ${styles.add_mar_right_small}`}
-            >
-              <ReloadIcon className="" />
-            </div>
+            />
           )}
           <ExpanderButton isExpanded={isExpanded} />
         </>
