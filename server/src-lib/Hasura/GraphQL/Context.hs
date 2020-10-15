@@ -7,7 +7,7 @@ module Hasura.GraphQL.Context
   , RootField(..)
   , traverseDB
   , traverseAction
-  , RemoteField
+  , RemoteField(..)
   , QueryDB(..)
   , ActionQuery(..)
   , QueryRootField
@@ -96,7 +96,11 @@ data ActionQuery v
   = AQQuery !(RQL.AnnActionExecution v)
   | AQAsync !(RQL.AnnActionAsyncQuery v)
 
-type RemoteField = (RQL.RemoteSchemaInfo, G.Field G.NoFragments G.Name)
+data RemoteField
+  = RemoteField
+  { _rfRemoteSchemaInfo :: !RQL.RemoteSchemaInfo
+  , _rfField            :: !(G.Field G.NoFragments G.Name)
+  } deriving (Show, Eq)
 
 type QueryRootField v = RootField (QueryDB v) RemoteField (ActionQuery v) J.Value
 

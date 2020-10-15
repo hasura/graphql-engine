@@ -20,7 +20,7 @@ import           Data.Foldable                         (sequenceA_)
 
 import           Hasura.GraphQL.Parser                 as P
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
-import           Hasura.GraphQL.Context                (RemoteField)
+import           Hasura.GraphQL.Context                (RemoteField(..))
 
 buildRemoteParser
   :: forall m n
@@ -39,7 +39,7 @@ buildRemoteParser (IntrospectionResult sdoc query_root mutation_root subscriptio
     makeFieldParser :: G.FieldDefinition -> m (P.FieldParser n RemoteField)
     makeFieldParser fieldDef = do
       fldParser <- remoteField' sdoc fieldDef
-      pure $ (info, ) <$> fldParser
+      pure $ (RemoteField info) <$> fldParser
     makeParsers :: G.Name -> m [P.FieldParser n RemoteField]
     makeParsers rootName =
       case lookupType sdoc rootName of
@@ -437,9 +437,11 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
             then fieldOptional name desc wrappedParser
             else Just <$> field name desc wrappedParser
           Just defaultVal -> Just <$> fieldWithDefault name desc defaultVal wrappedParser
+
       doNullability :: forall k . 'Input <: k => G.Nullability -> Parser k n () -> Parser k n ()
       doNullability (G.Nullability True)  = void . P.nullable
       doNullability (G.Nullability False) = id
+
       buildField
         :: G.GType
         -> (forall k. 'Input <: k => Parser k n () -> InputFieldsParser n (Maybe (InputValue Variable)))
@@ -460,6 +462,7 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
                G.TypeDefinitionUnion _ -> throw400 RemoteSchemaError "expected input type, but got output type"
                G.TypeDefinitionInterface _ -> throw400 RemoteSchemaError "expected input type, but got output type"
        G.TypeList nullability subType -> buildField subType (fieldConstructor' . doNullability nullability . void . P.list)
+
   in buildField fieldType fieldConstructor
 
 argumentsParser
