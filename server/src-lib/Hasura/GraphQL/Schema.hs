@@ -54,7 +54,7 @@ buildGQLContext
      , FunctionCache
      , HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
      , ActionCache
-     , NonObjectTypeMap
+     , NonObjectTypeMap 'Postgres
      )
      `arr`
      ( HashMap RoleName (RoleContext GQLContext)
@@ -207,8 +207,8 @@ query'
   => HashSet QualifiedTable
   -> [FunctionInfo]
   -> [P.FieldParser n RemoteField]
-  -> [ActionInfo]
-  -> NonObjectTypeMap
+  -> [ActionInfo 'Postgres]
+  -> NonObjectTypeMap 'Postgres
   -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
 query' allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
   tableSelectExpParsers <- for (toList allTables) \table -> do
@@ -303,8 +303,8 @@ query
   -> HashSet QualifiedTable
   -> [FunctionInfo]
   -> [P.FieldParser n RemoteField]
-  -> [ActionInfo]
-  -> NonObjectTypeMap
+  -> [ActionInfo 'Postgres]
+  -> NonObjectTypeMap 'Postgres
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 query name allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
   queryFieldsParser <- query' allTables allFunctions allRemotes allActions nonObjectCustomTypes
@@ -316,7 +316,7 @@ subscription
    . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => HashSet QualifiedTable
   -> [FunctionInfo]
-  -> [ActionInfo]
+  -> [ActionInfo 'Postgres]
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 subscription allTables allFunctions asyncActions =
   query $$(G.litName "subscription_root") allTables allFunctions [] asyncActions mempty
@@ -404,8 +404,8 @@ queryWithIntrospection
   -> [FunctionInfo]
   -> [P.FieldParser n RemoteField]
   -> [P.FieldParser n RemoteField]
-  -> [ActionInfo]
-  -> NonObjectTypeMap
+  -> [ActionInfo 'Postgres]
+  -> NonObjectTypeMap 'Postgres
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 queryWithIntrospection allTables allFunctions queryRemotes mutationRemotes allActions nonObjectCustomTypes = do
   basicQueryFP <- query' allTables allFunctions queryRemotes allActions nonObjectCustomTypes
@@ -478,8 +478,8 @@ mutation
    . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r, Has Scenario r)
   => HashSet QualifiedTable
   -> [P.FieldParser n RemoteField]
-  -> [ActionInfo]
-  -> NonObjectTypeMap
+  -> [ActionInfo 'Postgres]
+  -> NonObjectTypeMap 'Postgres
   -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue))))
 mutation allTables allRemotes allActions nonObjectCustomTypes = do
   mutationParsers <- for (toList allTables) \table -> do

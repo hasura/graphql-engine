@@ -33,8 +33,8 @@ type ComparisonExp = OpExpG UnpreparedValue
 boolExp
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
-  -> Maybe SelPermInfo
-  -> m (Parser 'Input n (AnnBoolExp UnpreparedValue))
+  -> Maybe (SelPermInfo 'Postgres)
+  -> m (Parser 'Input n (AnnBoolExp 'Postgres UnpreparedValue))
 boolExp table selectPermissions = memoizeOn 'boolExp table $ do
   name <- qualifiedObjectToName table <&> (<> $$(G.litName "_bool_exp"))
   let description = G.Description $
@@ -60,7 +60,7 @@ boolExp table selectPermissions = memoizeOn 'boolExp table $ do
     pure (tableFields ++ specialFields)
   where
     mkField
-      :: FieldInfo -> m (Maybe (InputFieldsParser n (Maybe (AnnBoolExpFld UnpreparedValue))))
+      :: FieldInfo 'Postgres -> m (Maybe (InputFieldsParser n (Maybe (AnnBoolExpFld 'Postgres UnpreparedValue))))
     mkField fieldInfo = runMaybeT do
       fieldName <- MaybeT $ pure $ fieldInfoGraphQLName fieldInfo
       P.fieldOptional fieldName Nothing <$> case fieldInfo of

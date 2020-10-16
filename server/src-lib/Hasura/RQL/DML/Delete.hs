@@ -53,10 +53,10 @@ mkDeleteCTE (AnnDel tn (fltr, wc) _ _) =
 
 validateDeleteQWith
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => SessVarBldr m
-  -> (PGColumnType -> Value -> m S.SQLExp)
+  => SessVarBldr 'Postgres m
+  -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> DeleteQuery
-  -> m (AnnDel backend)
+  -> m (AnnDel 'Postgres)
 validateDeleteQWith sessVarBldr prepValBldr
   (DeleteQuery tableName rqlBE mRetCols) = do
   tableInfo <- askTabInfo tableName
@@ -102,7 +102,7 @@ validateDeleteQWith sessVarBldr prepValBldr
 
 validateDeleteQ
   :: (QErrM m, UserInfoM m, CacheRM m)
-  => DeleteQuery -> m (AnnDel backend, DS.Seq Q.PrepArg)
+  => DeleteQuery -> m (AnnDel 'Postgres, DS.Seq Q.PrepArg)
 validateDeleteQ =
   runDMLP1T . validateDeleteQWith sessVarFromCurrentSetting binRHSBuilder
 

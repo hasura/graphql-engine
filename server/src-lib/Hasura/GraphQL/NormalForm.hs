@@ -266,8 +266,8 @@ data AnnGEnumValue
   | AGEReference !RQL.EnumReference !(Maybe RQL.EnumValue)
   deriving (Show, Eq)
 
-data AnnGValue
-  = AGScalar !PGScalarType !(Maybe PGScalarValue)
+data AnnGValue (b :: Backend)
+  = AGScalar !(ScalarType b) !(Maybe PGScalarValue) -- TODO type family for PGScalarValue
   | AGEnum !G.NamedType !AnnGEnumValue
   | AGObject !G.NamedType !(Maybe AnnGObject)
   | AGArray !G.ListType !(Maybe [AnnInpVal])

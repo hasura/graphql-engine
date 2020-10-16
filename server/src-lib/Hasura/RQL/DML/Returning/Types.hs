@@ -17,7 +17,6 @@ data MutFldG (b :: Backend) v
   = MCount
   | MExp !T.Text
   | MRet !(AnnFieldsG b v)
-  deriving (Show, Eq)
 
 type MutFld b = MutFldG b S.SQLExp
 
@@ -26,7 +25,6 @@ type MutFldsG b v = Fields (MutFldG b v)
 data MutationOutputG (b :: Backend) v
   = MOutMultirowFields !(MutFldsG b v)
   | MOutSinglerowObject !(AnnFieldsG b v)
-  deriving (Show, Eq)
 
 type MutationOutput b = MutationOutputG b S.SQLExp
 

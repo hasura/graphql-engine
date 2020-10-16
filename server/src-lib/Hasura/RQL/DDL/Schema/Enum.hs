@@ -33,6 +33,7 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.Server.Utils           (makeReasonMessage)
 import           Hasura.SQL.Postgres.Types
+import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 
 import qualified Hasura.SQL.DML                as S
@@ -60,18 +61,17 @@ resolveEnumReferences enumTables =
 data EnumTableIntegrityError
   = EnumTableMissingPrimaryKey
   | EnumTableMultiColumnPrimaryKey ![PGCol]
-  | EnumTableNonTextualPrimaryKey !PGRawColumnInfo
+  | EnumTableNonTextualPrimaryKey !(RawColumnInfo 'Postgres)
   | EnumTableNoEnumValues
   | EnumTableInvalidEnumValueNames !(NE.NonEmpty T.Text)
-  | EnumTableNonTextualCommentColumn !PGRawColumnInfo
+  | EnumTableNonTextualCommentColumn !(RawColumnInfo 'Postgres)
   | EnumTableTooManyColumns ![PGCol]
-  deriving (Show, Eq)
 
 fetchAndValidateEnumValues
   :: (MonadTx m)
   => QualifiedTable
-  -> Maybe (PrimaryKey PGRawColumnInfo)
-  -> [PGRawColumnInfo]
+  -> Maybe (PrimaryKey (RawColumnInfo 'Postgres))
+  -> [RawColumnInfo 'Postgres]
   -> m EnumValues
 fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
   either (throw400 ConstraintViolation . showErrors) pure =<< runValidateT fetchAndValidate

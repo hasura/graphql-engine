@@ -56,9 +56,9 @@ validateCustomTypeDefinitions
   :: (MonadValidate [CustomTypeValidationError] m)
   => TableCache
   -> CustomTypes
-  -> HashSet PGScalarType
+  -> HashSet (ScalarType 'Postgres)
   -- ^ all Postgres base types. See Note [Postgres scalars in custom types]
-  -> m AnnotatedCustomTypes
+  -> m (AnnotatedCustomTypes 'Postgres)
 validateCustomTypeDefinitions tableCache customTypes allPGScalars = do
   unless (null duplicateTypes) $ dispute $ pure $ DuplicateTypeNames duplicateTypes
   traverse_ validateEnum enumDefinitions
@@ -137,7 +137,7 @@ validateCustomTypeDefinitions tableCache customTypes allPGScalars = do
 
     validateObject
       :: (MonadValidate [CustomTypeValidationError] m)
-      => ObjectType -> m AnnotatedObjectType
+      => ObjectType -> m (AnnotatedObjectType 'Postgres)
     validateObject objectDefinition = do
       let objectTypeName = _otdName objectDefinition
           fieldNames = map (unObjectFieldName . _ofdName) $
@@ -204,7 +204,7 @@ validateCustomTypeDefinitions tableCache customTypes allPGScalars = do
                   objectTypeName _trName fieldName
 
             -- the column should be a column of the table
-            case getPGColumnInfoM remoteTableInfo (fromPGCol columnName) of
+            case getColumnInfoM remoteTableInfo (fromPGCol columnName) of
               Nothing ->
                 refute $ pure $ ObjectRelationshipColumnDoesNotExist
                 objectTypeName _trName _trRemoteTable columnName
@@ -337,8 +337,8 @@ resolveCustomTypes
   :: (MonadError QErr m)
   => TableCache
   -> CustomTypes
-  -> HashSet PGScalarType
-  -> m AnnotatedCustomTypes
+  -> HashSet (ScalarType 'Postgres)
+  -> m (AnnotatedCustomTypes 'Postgres)
 resolveCustomTypes tableCache customTypes allPGScalars =
   either (throw400 ConstraintViolation . showErrors) pure
     =<< runValidateT (validateCustomTypeDefinitions tableCache customTypes allPGScalars)

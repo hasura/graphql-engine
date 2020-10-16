@@ -46,7 +46,7 @@ import           Hasura.SQL.Types
 
 getActionInfo
   :: (QErrM m, CacheRM m)
-  => ActionName -> m ActionInfo
+  => ActionName -> m (ActionInfo 'Postgres)
 getActionInfo actionName = do
   actionMap <- scActions <$> askSchemaCache
   case Map.lookup actionName actionMap of
@@ -99,11 +99,11 @@ referred scalars.
 resolveAction
   :: QErrM m
   => Env.Environment
-  -> AnnotatedCustomTypes
+  -> AnnotatedCustomTypes 'Postgres
   -> ActionDefinitionInput
   -> HashSet PGScalarType -- See Note [Postgres scalars in custom types]
-  -> m ( ResolvedActionDefinition
-       , AnnotatedObjectType
+  -> m ( ResolvedActionDefinition 'Postgres
+       , AnnotatedObjectType 'Postgres
        )
 resolveAction env AnnotatedCustomTypes{..} ActionDefinition{..} allPGScalars = do
   resolvedArguments <- forM _adArguments $ \argumentDefinition -> do

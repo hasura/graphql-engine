@@ -1,3 +1,4 @@
+{-# LANGUAGE UndecidableInstances #-}
 module Hasura.RQL.Types.BoolExp
        ( GBoolExp(..)
        , gBoolExpTrue
@@ -44,6 +45,7 @@ import qualified Data.HashMap.Strict        as M
 
 import qualified Hasura.SQL.DML             as S
 
+import           Data.Typeable
 import           Control.Lens.Plated
 import           Control.Lens.TH
 import           Data.Aeson
@@ -58,6 +60,7 @@ import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.Session
 import           Hasura.SQL.Postgres.Types
+import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 
 
@@ -308,22 +311,23 @@ opExpToJPair f = \case
   where
     opExpsToJSON = object . map (opExpToJPair f)
 
-data AnnBoolExpFld a
-  = AVCol !PGColumnInfo ![OpExpG a]
-  | AVRel !RelInfo !(AnnBoolExp a)
-  deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
-instance (NFData a) => NFData (AnnBoolExpFld a)
-instance (Cacheable a) => Cacheable (AnnBoolExpFld a)
-instance (Hashable a) => Hashable (AnnBoolExpFld a)
+data AnnBoolExpFld (b :: Backend) a
+  = AVCol !(ColumnInfo b) ![OpExpG a]
+  | AVRel !RelInfo !(AnnBoolExp b a)
+  deriving (Functor, Foldable, Traversable, Generic)
+deriving instance Eq a => Eq (AnnBoolExpFld 'Postgres a)
+instance (NFData a) => NFData (AnnBoolExpFld 'Postgres a)
+instance (Cacheable a) => Cacheable (AnnBoolExpFld 'Postgres a)
+instance (Hashable a) => Hashable (AnnBoolExpFld 'Postgres a)
 
-type AnnBoolExp a
-  = GBoolExp (AnnBoolExpFld a)
+type AnnBoolExp b a
+  = GBoolExp (AnnBoolExpFld b a)
 
 traverseAnnBoolExp
   :: (Applicative f)
   => (a -> f b)
-  -> AnnBoolExp a
-  -> f (AnnBoolExp b)
+  -> AnnBoolExp backend a
+  -> f (AnnBoolExp backend b)
 traverseAnnBoolExp f =
   traverse $ \case
    AVCol pgColInfo opExps ->
@@ -333,46 +337,48 @@ traverseAnnBoolExp f =
 
 fmapAnnBoolExp
   :: (a -> b)
-  -> AnnBoolExp a
-  -> AnnBoolExp b
+  -> AnnBoolExp backend a
+  -> AnnBoolExp backend b
 fmapAnnBoolExp f =
   runIdentity . traverseAnnBoolExp (pure . f)
 
-annBoolExpTrue :: AnnBoolExp a
+annBoolExpTrue :: AnnBoolExp backend a
 annBoolExpTrue = gBoolExpTrue
 
-andAnnBoolExps :: AnnBoolExp a -> AnnBoolExp a -> AnnBoolExp a
+andAnnBoolExps :: AnnBoolExp backend a -> AnnBoolExp backend a -> AnnBoolExp backend a
 andAnnBoolExps l r =
   BoolAnd [l, r]
 
-type AnnBoolExpFldSQL = AnnBoolExpFld S.SQLExp
-type AnnBoolExpSQL = AnnBoolExp S.SQLExp
+type AnnBoolExpFldSQL b = AnnBoolExpFld b S.SQLExp
+type AnnBoolExpSQL b = AnnBoolExp b S.SQLExp
 
-type AnnBoolExpFldPartialSQL = AnnBoolExpFld PartialSQLExp
-type AnnBoolExpPartialSQL = AnnBoolExp PartialSQLExp
+type AnnBoolExpFldPartialSQL b = AnnBoolExpFld b (PartialSQLExp b)
+type AnnBoolExpPartialSQL b = AnnBoolExp b (PartialSQLExp b)
 
 type PreSetColsG v = M.HashMap PGCol v
-type PreSetColsPartial = M.HashMap PGCol PartialSQLExp
+type PreSetColsPartial b = M.HashMap PGCol (PartialSQLExp b)
 type PreSetCols = M.HashMap PGCol S.SQLExp
 
 -- doesn't resolve the session variable
-data PartialSQLExp
-  = PSESessVar !(PGType PGScalarType) !SessionVariable
+data PartialSQLExp (b :: Backend)
+  = PSESessVar !(PGType (ScalarType b)) !SessionVariable
   | PSESQLExp !S.SQLExp
-  deriving (Show, Eq, Generic, Data)
-instance NFData PartialSQLExp
-instance Cacheable PartialSQLExp
+  deriving (Generic)
+deriving instance Eq (PartialSQLExp 'Postgres)
+deriving instance (Typeable backend, Data (ScalarType backend)) => Data (PartialSQLExp backend)
+instance NFData (PartialSQLExp 'Postgres)
+instance Cacheable (PartialSQLExp 'Postgres)
 
-mkTypedSessionVar :: PGType PGColumnType -> SessionVariable -> PartialSQLExp
+mkTypedSessionVar :: PGType PGColumnType -> SessionVariable -> PartialSQLExp 'Postgres
 mkTypedSessionVar columnType =
   PSESessVar (unsafePGColumnToRepresentation <$> columnType)
 
-instance ToJSON PartialSQLExp where
+instance ToJSON (PartialSQLExp 'Postgres) where
   toJSON = \case
     PSESessVar colTy sessVar -> toJSON (colTy, sessVar)
     PSESQLExp e -> toJSON $ toSQLTxt e
 
-instance ToJSON AnnBoolExpPartialSQL where
+instance ToJSON (AnnBoolExpPartialSQL 'Postgres) where
   toJSON = gBoolExpToJSON f
     where
       f annFld = case annFld of
@@ -384,11 +390,11 @@ instance ToJSON AnnBoolExpPartialSQL where
           ( relNameToTxt $ riName ri
           , toJSON (ri, toJSON relBoolExp)
           )
-      opExpSToJSON :: OpExpG PartialSQLExp -> Value
+      opExpSToJSON :: OpExpG (PartialSQLExp 'Postgres) -> Value
       opExpSToJSON =
         object . pure . opExpToJPair toJSON
 
-isStaticValue :: PartialSQLExp -> Bool
+isStaticValue :: PartialSQLExp backend -> Bool
 isStaticValue = \case
   PSESessVar _ _ -> False
   PSESQLExp _    -> True

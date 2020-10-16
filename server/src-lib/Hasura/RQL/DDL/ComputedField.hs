@@ -125,7 +125,7 @@ addComputedFieldP2Setup
   -> ComputedFieldDefinition
   -> RawFunctionInfo
   -> Maybe Text
-  -> m ComputedFieldInfo
+  -> m (ComputedFieldInfo 'Postgres)
 addComputedFieldP2Setup trackedTables table computedField definition rawFunctionInfo comment =
   either (throw400 NotSupported . showErrors) pure =<< MV.runValidateT (mkComputedFieldInfo)
   where
@@ -138,7 +138,7 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
     computedFieldGraphQLName = G.mkName $ computedFieldNameToText computedField
 
     mkComputedFieldInfo :: (MV.MonadValidate [ComputedFieldValidateError] m)
-                          => m ComputedFieldInfo
+                          => m (ComputedFieldInfo 'Postgres)
     mkComputedFieldInfo = do
       -- Check if computed field name is a valid GraphQL name
       unless (isJust computedFieldGraphQLName) $

@@ -91,7 +91,7 @@ convertToSQLTransaction env (AnnInsert fieldName isSingle (annIns, mutationOutpu
 insertMultipleObjects
   :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m)
   => Env.Environment
-  -> MultiObjIns S.SQLExp
+  -> MultiObjIns 'Postgres S.SQLExp
   -> [(PGCol, S.SQLExp)]
   -> RQL.MutationRemoteJoinCtx
   -> RQL.MutationOutput 'Postgres
@@ -139,7 +139,7 @@ insertMultipleObjects env multiObjIns additionalColumns remoteJoinCtx mutationOu
 insertObject
   :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m)
   => Env.Environment
-  -> SingleObjIns S.SQLExp
+  -> SingleObjIns 'Postgres S.SQLExp
   -> [(PGCol, S.SQLExp)]
   -> RQL.MutationRemoteJoinCtx
   -> Seq.Seq Q.PrepArg
@@ -193,7 +193,7 @@ insertObjRel
   -> Seq.Seq Q.PrepArg
   -> RQL.MutationRemoteJoinCtx
   -> Bool
-  -> ObjRelIns S.SQLExp
+  -> ObjRelIns 'Postgres S.SQLExp
   -> m (Int, [(PGCol, S.SQLExp)])
 insertObjRel env planVars remoteJoinCtx stringifyNum objRelIns =
   withPathK (relNameToTxt relName) $ do
@@ -223,7 +223,7 @@ insertArrRel
   -> RQL.MutationRemoteJoinCtx
   -> Seq.Seq Q.PrepArg
   -> Bool
-  -> ArrRelIns S.SQLExp
+  -> ArrRelIns 'Postgres S.SQLExp
   -> m Int
 insertArrRel env resCols remoteJoinCtx planVars stringifyNum arrRelIns =
   withPathK (relNameToTxt $ riName relInfo) $ do
@@ -270,10 +270,10 @@ validateInsert insCols objRels addCols = do
 mkInsertQ
   :: MonadError QErr m
   => QualifiedTable
-  -> Maybe (RQL.ConflictClauseP1 S.SQLExp)
+  -> Maybe (RQL.ConflictClauseP1 'Postgres S.SQLExp)
   -> [(PGCol, S.SQLExp)]
   -> Map.HashMap PGCol S.SQLExp
-  -> (AnnBoolExpSQL, Maybe AnnBoolExpSQL)
+  -> (AnnBoolExpSQL 'Postgres, Maybe (AnnBoolExpSQL 'Postgres))
   -> m S.CTE
 mkInsertQ table onConflictM insCols defVals (insCheck, updCheck) = do
   let sqlConflict = RQL.toSQLConflict table <$> onConflictM
@@ -296,7 +296,7 @@ mkInsertQ table onConflictM insCols defVals (insCheck, updCheck) = do
 fetchFromColVals
   :: MonadError QErr m
   => ColumnValues TxtEncodedPGVal
-  -> [PGColumnInfo]
+  -> [ColumnInfo 'Postgres]
   -> m [(PGCol, S.SQLExp)]
 fetchFromColVals colVal reqCols =
   forM reqCols $ \ci -> do

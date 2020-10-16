@@ -51,9 +51,8 @@ data PreparedSql
   = PreparedSql
   { _psQuery       :: !Q.Query
   , _psPrepArgs    :: !PrepArgMap
-  , _psRemoteJoins :: !(Maybe RemoteJoins)
+  , _psRemoteJoins :: !(Maybe (RemoteJoins 'Postgres))
   }
-  deriving Show
 
 -- | Required to log in `query-log`
 instance J.ToJSON PreparedSql where
@@ -152,7 +151,7 @@ irToRootFieldPlan prepped = \case
   QDBAggregation s -> mkPreparedSql getRemoteJoinsAggregateSelect DS.selectAggregateQuerySQL s
   QDBConnection s  -> mkPreparedSql getRemoteJoinsConnectionSelect DS.connectionSelectQuerySQL s
   where
-    mkPreparedSql :: (s -> (t, Maybe RemoteJoins)) -> (t -> Q.Query) -> s -> PreparedSql
+    mkPreparedSql :: (s -> (t, Maybe (RemoteJoins 'Postgres))) -> (t -> Q.Query) -> s -> PreparedSql
     mkPreparedSql getJoins f simpleSel =
       let (simpleSel',remoteJoins) = getJoins simpleSel
       in PreparedSql (f simpleSel') prepped remoteJoins

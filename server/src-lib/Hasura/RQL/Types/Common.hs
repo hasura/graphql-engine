@@ -6,6 +6,8 @@ module Hasura.RQL.Types.Common
        , relTypeToTxt
        , RelInfo(..)
 
+       , ScalarType
+
        , FieldName(..)
        , fromPGCol
        , fromRel
@@ -57,7 +59,9 @@ import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers        ()
 import           Hasura.RQL.Types.Error
+import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
+import           Hasura.SQL.Postgres.Types
 
 
 
@@ -79,6 +83,10 @@ import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.Haskell.TH.Syntax    as TH
 import qualified PostgreSQL.Binary.Decoding    as PD
 import qualified Test.QuickCheck               as QC
+
+type family ScalarType (b :: Backend) where
+  ScalarType 'Postgres = PGScalarType
+  ScalarType 'MySQL    = Void -- TODO
 
 newtype NonEmptyText = NonEmptyText { unNonEmptyText :: T.Text }
   deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, DQuote, Generic, NFData, Cacheable)

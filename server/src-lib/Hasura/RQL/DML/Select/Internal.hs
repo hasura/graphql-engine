@@ -34,7 +34,7 @@ import           Hasura.SQL.Types
 functionToIden :: QualifiedFunction -> Iden
 functionToIden = Iden . qualObjectToText
 
-selectFromToFromItem :: Iden -> SelectFrom -> S.FromItem
+selectFromToFromItem :: Iden -> SelectFrom 'Postgres -> S.FromItem
 selectFromToFromItem pfx = \case
   FromTable tn -> S.FISimple tn Nothing
   FromIden i   -> S.FIIden i
@@ -47,7 +47,7 @@ selectFromToFromItem pfx = \case
 -- from the FromItem generated with selectFromToFromItem
 -- however given from S.FromItem is modelled, it is not
 -- possible currently
-selectFromToQual :: SelectFrom -> S.Qual
+selectFromToQual :: SelectFrom backend -> S.Qual
 selectFromToQual = \case
   FromTable tn         -> S.QualTable tn
   FromIden i           -> S.QualIden i Nothing
@@ -179,7 +179,7 @@ mkOrderByFieldName :: RelName -> FieldName
 mkOrderByFieldName relName =
   FieldName $ relNameToTxt relName <> "." <> "order_by"
 
-mkAggregateOrderByAlias :: AnnAggregateOrderBy -> S.Alias
+mkAggregateOrderByAlias :: AnnAggregateOrderBy backend -> S.Alias
 mkAggregateOrderByAlias = (S.Alias . Iden) . \case
   AAOCount -> "count"
   AAOOp opText col -> opText <> "." <> getPGColTxt (pgiColumn col)
@@ -237,7 +237,7 @@ withForceAggregation tyAnn e =
   S.SEFnApp "coalesce" [e, S.SETyAnn (S.SEUnsafe "bool_or('true')") tyAnn] Nothing
 
 mkAggregateOrderByExtractorAndFields
-  :: AnnAggregateOrderBy -> (S.Extractor, AggregateFields)
+  :: AnnAggregateOrderBy backend -> (S.Extractor, AggregateFields)
 mkAggregateOrderByExtractorAndFields annAggOrderBy =
   case annAggOrderBy of
     AAOCount       ->
@@ -253,7 +253,7 @@ mkAggregateOrderByExtractorAndFields annAggOrderBy =
     alias = Just $ mkAggregateOrderByAlias annAggOrderBy
 
 mkAnnOrderByAlias
-  :: Iden -> FieldName -> SimilarArrayFields -> AnnOrderByElementG v -> S.Alias
+  :: Iden -> FieldName -> SimilarArrayFields -> AnnOrderByElementG backend v -> S.Alias
 mkAnnOrderByAlias pfx parAls similarFields = \case
   AOCColumn pgColumnInfo ->
     let pgColumn = pgiColumn pgColumnInfo
@@ -291,8 +291,8 @@ type SimilarArrayFields = HM.HashMap FieldName [FieldName]
 
 mkSimilarArrayFields
   :: Eq v
-  => AnnFieldsG backend v
-  -> Maybe (NE.NonEmpty (AnnOrderByItemG v))
+  => AnnFieldsG 'Postgres v
+  -> Maybe (NE.NonEmpty (AnnOrderByItemG 'Postgres v))
   -> SimilarArrayFields
 mkSimilarArrayFields annFields maybeOrderBys =
   HM.fromList $ flip map allTuples $
@@ -411,13 +411,13 @@ withWriteComputedFieldTableSet action =
 
 
 processAnnSimpleSelect
-  :: forall m backend. ( MonadReader Bool m
+  :: forall m . ( MonadReader Bool m
                , MonadWriter JoinTree m
                )
   => SourcePrefixes
   -> FieldName
   -> PermissionLimitSubQuery
-  -> AnnSimpleSel backend
+  -> AnnSimpleSel 'Postgres
   -> m ( SelectSource
        , HM.HashMap S.Alias S.SQLExp
        )
@@ -434,12 +434,12 @@ processAnnSimpleSelect sourcePrefixes fieldAlias permLimitSubQuery annSimpleSel 
       mkSimilarArrayFields annSelFields $ _saOrderBy tableArgs
 
 processAnnAggregateSelect
-  :: forall m backend. ( MonadReader Bool m
+  :: forall m. ( MonadReader Bool m
                , MonadWriter JoinTree m
                )
   => SourcePrefixes
   -> FieldName
-  -> AnnAggregateSelect backend
+  -> AnnAggregateSelect 'Postgres
   -> m ( SelectSource
        , HM.HashMap S.Alias S.SQLExp
        , S.Extractor
@@ -490,7 +490,7 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
 mkPermissionLimitSubQuery
   :: Maybe Int
   -> TableAggregateFields backend
-  -> Maybe (NE.NonEmpty AnnOrderByItem)
+  -> Maybe (NE.NonEmpty (AnnOrderByItem backend))
   -> PermissionLimitSubQuery
 mkPermissionLimitSubQuery permLimit aggFields orderBys =
   case permLimit of
@@ -512,13 +512,13 @@ mkPermissionLimitSubQuery permLimit aggFields orderBys =
                   _        -> False
 
 processArrayRelation
-  :: forall m backend. ( MonadReader Bool m
+  :: forall m. ( MonadReader Bool m
                , MonadWriter JoinTree m
                )
   => SourcePrefixes
   -> FieldName
   -> S.Alias
-  -> ArraySelect backend
+  -> ArraySelect 'Postgres
   -> m ()
 processArrayRelation sourcePrefixes fieldAlias relAlias arrSel =
   case arrSel of
@@ -555,16 +555,16 @@ processArrayRelation sourcePrefixes fieldAlias relAlias arrSel =
            )
 
 processSelectParams
-  :: forall m backend. ( MonadReader Bool m
+  :: forall m. ( MonadReader Bool m
                , MonadWriter JoinTree m
                )
   => SourcePrefixes
   -> FieldName
   -> SimilarArrayFields
-  -> SelectFrom
+  -> SelectFrom 'Postgres
   -> PermissionLimitSubQuery
-  -> TablePerm
-  -> SelectArgs backend
+  -> TablePerm 'Postgres
+  -> SelectArgs 'Postgres
   -> m ( SelectSource
        , [(S.Alias, S.SQLExp)]
        , Maybe S.SQLExp -- Order by cursor
@@ -611,7 +611,7 @@ processOrderByItems
   => Iden
   -> FieldName
   -> SimilarArrayFields
-  -> NE.NonEmpty AnnOrderByItem
+  -> NE.NonEmpty (AnnOrderByItem 'Postgres)
   -> m ( [(S.Alias, S.SQLExp)] -- Order by Extractors
        , S.OrderByExp
        , S.SQLExp -- The cursor expression
@@ -623,13 +623,13 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields orderByItems = 
       cursor = mkCursorExp $ toList orderByItemExps
   pure (orderByExtractors, orderByExp, cursor)
   where
-    processAnnOrderByItem :: AnnOrderByItem -> m OrderByItemExp
+    processAnnOrderByItem :: AnnOrderByItem 'Postgres -> m (OrderByItemExp 'Postgres)
     processAnnOrderByItem orderByItem =
       forM orderByItem $ \ordByCol -> (ordByCol,) <$>
       processAnnOrderByElement sourcePrefix' fieldAlias' ordByCol
 
     processAnnOrderByElement
-      :: Iden -> FieldName -> AnnOrderByElement S.SQLExp -> m (S.Alias, S.SQLExp)
+      :: Iden -> FieldName -> AnnOrderByElement 'Postgres S.SQLExp -> m (S.Alias, S.SQLExp)
     processAnnOrderByElement sourcePrefix fieldAlias annObCol = do
       let ordByAlias = mkAnnOrderByAlias sourcePrefix fieldAlias similarArrayFields annObCol
       (ordByAlias, ) <$> case annObCol of
@@ -669,13 +669,13 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields orderByItems = 
                , S.mkQIdenExp relSourcePrefix (mkAggregateOrderByAlias aggOrderBy)
                )
 
-    toOrderByExp :: OrderByItemExp -> S.OrderByItem
+    toOrderByExp :: OrderByItemExp backend -> S.OrderByItem
     toOrderByExp orderByItemExp =
       let OrderByItemG obTyM expAlias obNullsM = fst . snd <$> orderByItemExp
       in S.OrderByItem (S.SEIden $ toIden expAlias)
          (unOrderType <$> obTyM) (unNullsOrder <$> obNullsM)
 
-    mkCursorExp :: [OrderByItemExp] -> S.SQLExp
+    mkCursorExp :: [OrderByItemExp backend] -> S.SQLExp
     mkCursorExp orderByItemExps =
       S.applyJsonBuildObj $ flip concatMap orderByItemExps $
       \orderByItemExp ->
@@ -721,13 +721,13 @@ aggregateFieldsToExtractorExps sourcePrefix aggregateFields =
     mkColExp _ = Nothing
 
 processAnnFields
-  :: forall m backend. ( MonadReader Bool m
+  :: forall m . ( MonadReader Bool m
                , MonadWriter JoinTree m
                )
   => Iden
   -> FieldName
   -> SimilarArrayFields
-  -> AnnFields backend
+  -> AnnFields 'Postgres
   -> m (S.Alias, S.SQLExp)
 processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
   fieldExps <- forM annFields $ \(fieldName, field) ->
@@ -793,7 +793,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
     toRowToJsonExtr (fieldName, fieldExp) =
       S.Extractor fieldExp $ Just $ S.toAlias fieldName
 
-    toSQLCol :: AnnColumnField -> m S.SQLExp
+    toSQLCol :: AnnColumnField 'Postgres -> m S.SQLExp
     toSQLCol (AnnColumnField col asText colOpM) = do
       strfyNum <- ask
       pure $ toJSONableExp strfyNum (pgiType col) asText $ withColumnOp colOpM $
@@ -812,7 +812,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
       Nothing                     -> sqlExp
       Just (ColumnOp opText cExp) -> S.mkSQLOpExp opText sqlExp cExp
 
-    mkNodeId :: QualifiedTable -> PrimaryKeyColumns -> S.SQLExp
+    mkNodeId :: QualifiedTable -> PrimaryKeyColumns 'Postgres -> S.SQLExp
     mkNodeId (QualifiedObject tableSchema tableName) pkeyColumns =
       let columnInfoToSQLExp pgColumnInfo =
             toJSONableExp False (pgiType pgColumnInfo) False $
@@ -1041,7 +1041,7 @@ processConnectionSelect
   -> FieldName
   -> S.Alias
   -> HM.HashMap PGCol PGCol
-  -> ConnectionSelect backend S.SQLExp
+  -> ConnectionSelect 'Postgres S.SQLExp
   -> m ( ArrayConnectionSource
        , S.Extractor
        , HM.HashMap S.Alias S.SQLExp

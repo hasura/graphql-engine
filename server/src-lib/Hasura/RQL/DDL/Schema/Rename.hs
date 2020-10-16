@@ -91,7 +91,7 @@ renameTableInCatalog newQT oldQT = do
 
 renameColInCatalog
   :: (MonadTx m, CacheRM m)
-  => PGCol -> PGCol -> QualifiedTable -> FieldInfoMap FieldInfo -> m ()
+  => PGCol -> PGCol -> QualifiedTable -> FieldInfoMap (FieldInfo 'Postgres) -> m ()
 renameColInCatalog oCol nCol qt fieldInfo = do
   sc <- askSchemaCache
   -- Check if any relation exists with new column name

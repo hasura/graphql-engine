@@ -235,8 +235,8 @@ action's type. Here, we treat the "output" field as a computed field to hdb_acti
 -- TODO: Add tracing here? Avoided now because currently the function is pure
 resolveAsyncActionQuery
   :: UserInfo
-  -> AnnActionAsyncQuery backend UnpreparedValue
-  -> RS.AnnSimpleSelG backend UnpreparedValue
+  -> AnnActionAsyncQuery 'Postgres UnpreparedValue
+  -> RS.AnnSimpleSelG 'Postgres UnpreparedValue
 resolveAsyncActionQuery userInfo annAction =
   let annotatedFields = asyncFields <&> second \case
         AsyncTypename t -> RS.AFExpression t
@@ -263,16 +263,16 @@ resolveAsyncActionQuery userInfo annAction =
     AnnActionAsyncQuery actionName actionId outputType asyncFields definitionList stringifyNumerics = annAction
     actionLogTable = QualifiedObject (SchemaName "hdb_catalog") (TableName "hdb_action_log")
 
-    -- TODO (from master):- Avoid using PGColumnInfo
+    -- TODO (from master):- Avoid using ColumnInfo
     mkAnnFldFromPGCol column' columnType =
       flip RS.mkAnnColumnField Nothing $
-      PGColumnInfo (unsafePGCol column') (G.unsafeMkName column') 0 (PGColumnScalar columnType) True Nothing
+      ColumnInfo (unsafePGCol column') (G.unsafeMkName column') 0 (PGColumnScalar columnType) True Nothing
 
     tableBoolExpression =
-      let actionIdColumnInfo = PGColumnInfo (unsafePGCol "id") $$(G.litName "id")
+      let actionIdColumnInfo = ColumnInfo (unsafePGCol "id") $$(G.litName "id")
                                0 (PGColumnScalar PGUUID) False Nothing
           actionIdColumnEq = BoolFld $ AVCol actionIdColumnInfo [AEQ True actionId]
-          sessionVarsColumnInfo = PGColumnInfo (unsafePGCol "session_variables") $$(G.litName "session_variables")
+          sessionVarsColumnInfo = ColumnInfo (unsafePGCol "session_variables") $$(G.litName "session_variables")
                                   0 (PGColumnScalar PGJSONB) False Nothing
           sessionVarValue = flip UVParameter Nothing $ PGColumnValue (PGColumnScalar PGJSONB) $
                             WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON $ _uiSession userInfo
@@ -519,7 +519,7 @@ mkJsonAggSelect =
 processOutputSelectionSet
   :: RS.ArgumentExp v
   -> GraphQLType
-  -> [(PGCol, PGScalarType)]
+  -> [(PGCol, ScalarType backend)]
   -> RS.AnnFieldsG backend v
   -> Bool
   -> RS.AnnSimpleSelG backend v

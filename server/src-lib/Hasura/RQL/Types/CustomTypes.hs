@@ -50,9 +50,10 @@ import qualified Text.Builder                   as T
 import           Hasura.Incremental             (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Column
-import           Hasura.RQL.Types.Common        (RelType)
+import           Hasura.RQL.Types.Common        (RelType, ScalarType)
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Postgres.Types
+import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 
 newtype GraphQLType
@@ -217,28 +218,33 @@ $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''CustomTypes)
 emptyCustomTypes :: CustomTypes
 emptyCustomTypes = CustomTypes Nothing Nothing Nothing Nothing
 
-data AnnotatedScalarType
+data AnnotatedScalarType (b :: Backend)
   = ASTCustom !ScalarTypeDefinition
-  | ASTReusedPgScalar !G.Name !PGScalarType
-  deriving (Show, Eq, Lift)
-$(J.deriveJSON J.defaultOptions ''AnnotatedScalarType)
+  | ASTReusedPgScalar !G.Name !(ScalarType b)
+  deriving (Generic)
+deriving instance Eq (AnnotatedScalarType 'Postgres)
+instance J.ToJSON (AnnotatedScalarType 'Postgres) where
+  toJSON = J.genericToJSON $ J.defaultOptions
 
-data NonObjectCustomType
-  = NOCTScalar !AnnotatedScalarType
+data NonObjectCustomType (b :: Backend)
+  = NOCTScalar !(AnnotatedScalarType b)
   | NOCTEnum !EnumTypeDefinition
   | NOCTInputObject !InputObjectTypeDefinition
-  deriving (Show, Eq, Lift)
-$(J.deriveJSON J.defaultOptions ''NonObjectCustomType)
+  deriving (Generic)
+deriving instance Eq (NonObjectCustomType 'Postgres)
+instance J.ToJSON (NonObjectCustomType 'Postgres) where
+  toJSON = J.genericToJSON $ J.defaultOptions
 
-type NonObjectTypeMap = Map.HashMap G.Name NonObjectCustomType
+type NonObjectTypeMap b = Map.HashMap G.Name (NonObjectCustomType b)
 
-data AnnotatedObjectFieldType
-  = AOFTScalar !AnnotatedScalarType
+data AnnotatedObjectFieldType (b :: Backend)
+  = AOFTScalar !(AnnotatedScalarType b)
   | AOFTEnum !EnumTypeDefinition
-  deriving (Show, Eq)
-$(J.deriveToJSON J.defaultOptions ''AnnotatedObjectFieldType)
+  deriving (Generic)
+instance J.ToJSON (AnnotatedObjectFieldType 'Postgres) where
+  toJSON = J.genericToJSON $ J.defaultOptions
 
-fieldTypeToScalarType :: AnnotatedObjectFieldType -> PGScalarType
+fieldTypeToScalarType :: AnnotatedObjectFieldType 'Postgres -> PGScalarType
 fieldTypeToScalarType = \case
   AOFTEnum _                 -> PGText
   AOFTScalar annotatedScalar -> annotatedScalarToPgScalar annotatedScalar
@@ -253,17 +259,17 @@ fieldTypeToScalarType = \case
            | _stdName == boolScalar   -> PGBoolean
            | otherwise                -> PGJSON
 
-type AnnotatedObjectType =
-  ObjectTypeDefinition (G.GType, AnnotatedObjectFieldType) TableInfo PGColumnInfo
+type AnnotatedObjectType b =
+  ObjectTypeDefinition (G.GType, AnnotatedObjectFieldType b) (TableInfo b) (ColumnInfo b)
 
-type AnnotatedObjects = Map.HashMap G.Name AnnotatedObjectType
+type AnnotatedObjects b = Map.HashMap G.Name (AnnotatedObjectType b)
 
-data AnnotatedCustomTypes
+data AnnotatedCustomTypes (b :: Backend)
   = AnnotatedCustomTypes
-    { _actNonObjects :: !NonObjectTypeMap
-    , _actObjects    :: !AnnotatedObjects
-    } deriving (Show, Eq)
+    { _actNonObjects :: !(NonObjectTypeMap b)
+    , _actObjects    :: !(AnnotatedObjects b)
+    }
 
-emptyAnnotatedCustomTypes :: AnnotatedCustomTypes
+emptyAnnotatedCustomTypes :: AnnotatedCustomTypes backend
 emptyAnnotatedCustomTypes =
   AnnotatedCustomTypes mempty mempty

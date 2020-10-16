@@ -63,7 +63,7 @@ traverseAnnUpd f annUpd =
     AnnUpd tn opExps (whr, fltr) chk mutOutput allCols = annUpd
 
 mkUpdateCTE
-  :: AnnUpd backend -> S.CTE
+  :: AnnUpd 'Postgres -> S.CTE
 mkUpdateCTE (AnnUpd tn opExps (permFltr, wc) chk _ columnsInfo) =
   S.CTEUpdate update
   where
@@ -79,7 +79,7 @@ mkUpdateCTE (AnnUpd tn opExps (permFltr, wc) chk _ columnsInfo) =
     tableFltrExpr = toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps permFltr wc
     checkExpr = toSQLBoolExp (S.QualTable tn) chk
 
-expandOperator :: [PGColumnInfo] -> (PGCol, UpdOpExpG S.SQLExp) -> S.SetExpItem
+expandOperator :: [ColumnInfo 'Postgres] -> (PGCol, UpdOpExpG S.SQLExp) -> S.SetExpItem
 expandOperator infos (column, op) = S.SetExpItem $ (column,) $ case op of
   UpdSet          e -> e
   UpdInc          e -> S.mkSQLOpExp S.incOp               identifier (asNum  e)
@@ -137,9 +137,9 @@ convDefault col _ _ = return (col, S.SEUnsafe "DEFAULT")
 
 convOp
   :: (UserInfoM m, QErrM m)
-  => FieldInfoMap FieldInfo
+  => FieldInfoMap (FieldInfo 'Postgres)
   -> [PGCol]
-  -> UpdPermInfo
+  -> UpdPermInfo 'Postgres
   -> [(PGCol, a)]
   -> (PGCol -> PGColumnType -> a -> m (PGCol, S.SQLExp))
   -> m [(PGCol, S.SQLExp)]
@@ -162,10 +162,10 @@ convOp fieldInfoMap preSetCols updPerm objs conv =
 
 validateUpdateQueryWith
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => SessVarBldr m
+  => SessVarBldr 'Postgres m
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> UpdateQuery
-  -> m (AnnUpd backend)
+  -> m (AnnUpd 'Postgres)
 validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   let tableName = uqTable uq
   tableInfo <- withPathK "table" $ askTabInfo tableName
@@ -245,7 +245,7 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
 
 validateUpdateQuery
   :: (QErrM m, UserInfoM m, CacheRM m)
-  => UpdateQuery -> m (AnnUpd backend, DS.Seq Q.PrepArg)
+  => UpdateQuery -> m (AnnUpd 'Postgres, DS.Seq Q.PrepArg)
 validateUpdateQuery =
   runDMLP1T . validateUpdateQueryWith sessVarFromCurrentSetting binRHSBuilder
 

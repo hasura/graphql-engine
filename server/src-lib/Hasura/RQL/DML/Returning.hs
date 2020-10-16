@@ -51,24 +51,24 @@ hasNestedFld = \case
       AFArrayRelation _  -> True
       _                  -> False
 
-pgColsFromMutFld :: MutFld backend -> [(PGCol, PGColumnType)]
+pgColsFromMutFld :: MutFld 'Postgres -> [(PGCol, ColumnType 'Postgres)]
 pgColsFromMutFld = \case
   MCount -> []
   MExp _ -> []
   MRet selFlds ->
     flip mapMaybe selFlds $ \(_, annFld) -> case annFld of
-    AFColumn (AnnColumnField (PGColumnInfo col _ _ colTy _ _) _ _) -> Just (col, colTy)
+    AFColumn (AnnColumnField (ColumnInfo col _ _ colTy _ _) _ _) -> Just (col, colTy)
     _                                                              -> Nothing
 
-pgColsFromMutFlds :: MutFlds backend -> [(PGCol, PGColumnType)]
+pgColsFromMutFlds :: MutFlds 'Postgres -> [(PGCol, PGColumnType)]
 pgColsFromMutFlds = concatMap (pgColsFromMutFld . snd)
 
-pgColsToSelFlds :: [PGColumnInfo] -> [(FieldName, AnnField backend)]
+pgColsToSelFlds :: [ColumnInfo backend] -> [(FieldName, AnnField backend)]
 pgColsToSelFlds cols =
   flip map cols $
   \pgColInfo -> (fromPGCol $ pgiColumn pgColInfo, mkAnnColumnField pgColInfo Nothing)
 
-mkDefaultMutFlds :: Maybe [PGColumnInfo] -> MutationOutput backend
+mkDefaultMutFlds :: Maybe [ColumnInfo backend] -> MutationOutput backend
 mkDefaultMutFlds = MOutMultirowFields . \case
   Nothing   -> mutFlds
   Just cols -> ("returning", MRet $ pgColsToSelFlds cols):mutFlds
@@ -121,7 +121,7 @@ WITH "<table-name>__mutation_result_alias" AS (
 -- See Note [Mutation output expression].
 mkMutationOutputExp
   :: QualifiedTable
-  -> [PGColumnInfo]
+  -> [ColumnInfo backend]
   -> Maybe Int
   -> S.CTE
   -> MutationOutput 'Postgres
@@ -158,10 +158,10 @@ mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
 
 checkRetCols
   :: (UserInfoM m, QErrM m)
-  => FieldInfoMap FieldInfo
-  -> SelPermInfo
+  => FieldInfoMap (FieldInfo 'Postgres)
+  -> SelPermInfo 'Postgres
   -> [PGCol]
-  -> m [PGColumnInfo]
+  -> m [ColumnInfo 'Postgres]
 checkRetCols fieldInfoMap selPermInfo cols = do
   mapM_ (checkSelOnCol selPermInfo) cols
   forM cols $ \col -> askPGColInfo fieldInfoMap col relInRetErr

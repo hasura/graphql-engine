@@ -31,8 +31,8 @@ import           Hasura.SQL.Types
 
 
 convSelCol :: (UserInfoM m, QErrM m, CacheRM m)
-           => FieldInfoMap FieldInfo
-           -> SelPermInfo
+           => FieldInfoMap (FieldInfo 'Postgres)
+           -> SelPermInfo 'Postgres
            -> SelCol
            -> m [ExtCol]
 convSelCol _ _ (SCExtSimple cn) =
@@ -51,8 +51,8 @@ convSelCol fieldInfoMap spi (SCStar wildcard) =
 
 convWildcard
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => FieldInfoMap FieldInfo
-  -> SelPermInfo
+  => FieldInfoMap (FieldInfo 'Postgres)
+  -> SelPermInfo 'Postgres
   -> Wildcard
   -> m [ExtCol]
 convWildcard fieldInfoMap selPermInfo wildcard =
@@ -80,8 +80,8 @@ convWildcard fieldInfoMap selPermInfo wildcard =
     relExtCols wc = mapM (mkRelCol wc) relColInfos
 
 resolveStar :: (UserInfoM m, QErrM m, CacheRM m)
-            => FieldInfoMap FieldInfo
-            -> SelPermInfo
+            => FieldInfoMap (FieldInfo 'Postgres)
+            -> SelPermInfo 'Postgres
             -> SelectQ
             -> m SelectQExt
 resolveStar fim spi (SelectG selCols mWh mOb mLt mOf) = do
@@ -106,10 +106,10 @@ resolveStar fim spi (SelectG selCols mWh mOb mLt mOf) = do
 
 convOrderByElem
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => SessVarBldr m
-  -> (FieldInfoMap FieldInfo, SelPermInfo)
+  => SessVarBldr 'Postgres m
+  -> (FieldInfoMap (FieldInfo 'Postgres), SelPermInfo 'Postgres)
   -> OrderByCol
-  -> m (AnnOrderByElement S.SQLExp)
+  -> m (AnnOrderByElement 'Postgres S.SQLExp)
 convOrderByElem sessVarBldr (flds, spi) = \case
   OCPG fldName -> do
     fldInfo <- askFieldInfo flds fldName
@@ -161,12 +161,12 @@ convOrderByElem sessVarBldr (flds, spi) = \case
 convSelectQ
   :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
   => QualifiedTable
-  -> FieldInfoMap FieldInfo  -- Table information of current table
-  -> SelPermInfo   -- Additional select permission info
+  -> FieldInfoMap (FieldInfo 'Postgres)  -- Table information of current table
+  -> SelPermInfo 'Postgres   -- Additional select permission info
   -> SelectQExt     -- Given Select Query
-  -> SessVarBldr m
+  -> SessVarBldr 'Postgres m
   -> (PGColumnType -> Value -> m S.SQLExp)
-  -> m (AnnSimpleSel backend)
+  -> m (AnnSimpleSel 'Postgres)
 convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
 
   annFlds <- withPathK "columns" $
@@ -214,10 +214,10 @@ convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
 
 convExtSimple
   :: (UserInfoM m, QErrM m)
-  => FieldInfoMap FieldInfo
-  -> SelPermInfo
+  => FieldInfoMap (FieldInfo 'Postgres)
+  -> SelPermInfo 'Postgres
   -> PGCol
-  -> m PGColumnInfo
+  -> m (ColumnInfo 'Postgres)
 convExtSimple fieldInfoMap selPermInfo pgCol = do
   checkSelOnCol selPermInfo pgCol
   askPGColInfo fieldInfoMap pgCol relWhenPGErr
@@ -226,13 +226,13 @@ convExtSimple fieldInfoMap selPermInfo pgCol = do
 
 convExtRel
   :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
-  => FieldInfoMap FieldInfo
+  => FieldInfoMap (FieldInfo 'Postgres)
   -> RelName
   -> Maybe RelName
   -> SelectQExt
-  -> SessVarBldr m
+  -> SessVarBldr 'Postgres m
   -> (PGColumnType -> Value -> m S.SQLExp)
-  -> m (Either (ObjectRelationSelect backend) (ArraySelect backend))
+  -> m (Either (ObjectRelationSelect 'Postgres) (ArraySelect 'Postgres))
 convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
   -- Point to the name key
   relInfo <- withPathK "name" $
@@ -264,10 +264,10 @@ convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
 
 convSelectQuery
   :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
-  => SessVarBldr m
-  -> (PGColumnType -> Value -> m S.SQLExp)
+  => SessVarBldr 'Postgres m
+  -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> SelectQuery
-  -> m (AnnSimpleSel backend)
+  -> m (AnnSimpleSel  'Postgres)
 convSelectQuery sessVarBldr prepArgBuilder (DMLQuery qt selQ) = do
   tabInfo     <- withPathK "table" $ askTabInfo qt
   selPermInfo <- askSelPermInfo tabInfo
@@ -302,7 +302,7 @@ asSingleRowJsonResp query args =
 
 phaseOne
   :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
-  => SelectQuery -> m (AnnSimpleSel backend, DS.Seq Q.PrepArg)
+  => SelectQuery -> m (AnnSimpleSel  'Postgres, DS.Seq Q.PrepArg)
 phaseOne =
   runDMLP1T . convSelectQuery sessVarFromCurrentSetting binRHSBuilder
 

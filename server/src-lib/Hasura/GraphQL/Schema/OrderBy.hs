@@ -33,8 +33,8 @@ import           Hasura.SQL.Types
 orderByExp
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
-  -> SelPermInfo
-  -> m (Parser 'Input n [RQL.AnnOrderByItemG UnpreparedValue])
+  -> SelPermInfo 'Postgres
+  -> m (Parser 'Input n [RQL.AnnOrderByItemG 'Postgres UnpreparedValue])
 orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
   name <- qualifiedObjectToName table <&> (<> $$(G.litName "_order_by"))
   let description = G.Description $
@@ -44,8 +44,8 @@ orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
   pure $ concat . catMaybes <$> P.object name (Just description) fieldParsers
   where
     mkField
-      :: FieldInfo
-      -> m (Maybe (InputFieldsParser n (Maybe [RQL.AnnOrderByItemG UnpreparedValue])))
+      :: FieldInfo 'Postgres
+      -> m (Maybe (InputFieldsParser n (Maybe [RQL.AnnOrderByItemG 'Postgres UnpreparedValue])))
     mkField fieldInfo = runMaybeT $
       case fieldInfo of
         FIColumn columnInfo -> do
@@ -82,8 +82,8 @@ type OrderInfo = (SQL.OrderType, SQL.NullsOrder)
 orderByAggregation
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
-  -> SelPermInfo
-  -> m (Parser 'Input n [OrderByItemG RQL.AnnAggregateOrderBy])
+  -> SelPermInfo 'Postgres
+  -> m (Parser 'Input n [OrderByItemG (RQL.AnnAggregateOrderBy 'Postgres)])
 orderByAggregation table selectPermissions = do
   -- WIP NOTE
   -- there is heavy duplication between this and Select.tableAggregationFields
@@ -112,7 +112,7 @@ orderByAggregation table selectPermissions = do
       description = G.Description $ "order by aggregate values of table " <>> table
   pure $ P.object objectName (Just description) aggFields
   where
-    mkField :: PGColumnInfo -> InputFieldsParser n (Maybe (PGColumnInfo, OrderInfo))
+    mkField :: ColumnInfo 'Postgres -> InputFieldsParser n (Maybe (ColumnInfo 'Postgres, OrderInfo))
     mkField columnInfo =
       P.fieldOptional (pgiName columnInfo) (pgiDescription columnInfo) orderByOperator
         <&> fmap (columnInfo,) . join
@@ -120,8 +120,8 @@ orderByAggregation table selectPermissions = do
     parseOperator
       :: G.Name
       -> G.Name
-      -> InputFieldsParser n [(PGColumnInfo, OrderInfo)]
-      -> InputFieldsParser n (Maybe [OrderByItemG RQL.AnnAggregateOrderBy])
+      -> InputFieldsParser n [(ColumnInfo 'Postgres, OrderInfo)]
+      -> InputFieldsParser n (Maybe [OrderByItemG (RQL.AnnAggregateOrderBy 'Postgres)])
     parseOperator operator tableName columns =
       let opText     = G.unName operator
           objectName = tableName <> $$(G.litName "_") <> operator <> $$(G.litName "_order_by")

@@ -25,9 +25,9 @@ import qualified Hasura.SQL.DML          as S
 data CountQueryP1
   = CountQueryP1
   { cqp1Table    :: !QualifiedTable
-  , cqp1Where    :: !(AnnBoolExpSQL, Maybe AnnBoolExpSQL)
+  , cqp1Where    :: !(AnnBoolExpSQL 'Postgres, Maybe (AnnBoolExpSQL 'Postgres))
   , cqp1Distinct :: !(Maybe [PGCol])
-  } deriving (Show, Eq)
+  } deriving (Eq)
 
 mkSQLCount
   :: CountQueryP1 -> S.Select
@@ -62,7 +62,7 @@ mkSQLCount (CountQueryP1 tn (permFltr, mWc) mDistCols) =
 -- SELECT count(*) FROM (SELECT * FROM .. WHERE ..) r;
 validateCountQWith
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => SessVarBldr m
+  => SessVarBldr 'Postgres m
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> CountQuery
   -> m CountQueryP1

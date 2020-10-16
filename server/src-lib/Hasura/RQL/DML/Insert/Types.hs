@@ -17,10 +17,10 @@ data ConflictTarget
   | CTConstraint !ConstraintName
   deriving (Show, Eq)
 
-data ConflictClauseP1 v
+data ConflictClauseP1 (b :: Backend) v
   = CP1DoNothing !(Maybe ConflictTarget)
-  | CP1Update !ConflictTarget ![PGCol] !(PreSetColsG v) (AnnBoolExp v)
-  deriving (Show, Eq, Functor, Foldable, Traversable)
+  | CP1Update !ConflictTarget ![PGCol] !(PreSetColsG v) (AnnBoolExp b v)
+  deriving (Functor, Foldable, Traversable)
 
 
 data InsertQueryP1 (b :: Backend)
@@ -28,8 +28,8 @@ data InsertQueryP1 (b :: Backend)
   { iqp1Table     :: !QualifiedTable
   , iqp1Cols      :: ![PGCol]
   , iqp1Tuples    :: ![[S.SQLExp]]
-  , iqp1Conflict  :: !(Maybe (ConflictClauseP1 S.SQLExp))
-  , iqp1CheckCond :: !(AnnBoolExpSQL, Maybe AnnBoolExpSQL)
+  , iqp1Conflict  :: !(Maybe (ConflictClauseP1 b S.SQLExp))
+  , iqp1CheckCond :: !(AnnBoolExpSQL b, Maybe (AnnBoolExpSQL b))
   , iqp1Output    :: !(MutationOutput b)
-  , iqp1AllCols   :: ![PGColumnInfo]
-  } deriving (Show, Eq)
+  , iqp1AllCols   :: ![ColumnInfo b]
+  }
