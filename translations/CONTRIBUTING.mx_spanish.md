@@ -2,7 +2,7 @@
 
 _Primero_: Si te sientes inseguro acerca de cómo empezar a contribuir, no dudes en preguntarnos en nuestro [Canal de Discord](https://discordapp.com/invite/hasura) en el canal #contrib. También puedes seguir adelante con tu contribución y te daremos retroalimentación. No te preocupes, lo peor que puede suceder es que te pidan amablemente que cambies algo. Agradecemos cualquier contribución y no queremos que un muro de reglas se interponga en ese camino.
 
-Sin embargo, para aquellas personas que deseen un poco más de orientación sobre la mejor manera de contribuir al proyecto, sigan leyendo. Este documento cubrirá lo que estamos buscando. Al abordar los puntos siguientes, las posibilidades de hacer un rapido merge o abordar tus contribuciones aumentará.
+Sin embargo, para aquellas personas que deseen un poco más de orientación sobre la mejor manera de contribuir al proyecto, sigan leyendo. Este documento cubrirá lo que estamos buscando. Siguiendo los siguientes puntos, las probabilidades de que podamos rápidamente unir o revisar tus contribuciones aumentarán.
 
 ## Tabla de contenido
 
@@ -10,7 +10,7 @@ Sin embargo, para aquellas personas que deseen un poco más de orientación sobr
 
 [2. Descripción general del repositorio](#overview)
 
-[3. ¡Bienvenidos colaboradores por primera vez! ](#first-timers)
+[3. ¡Contribuyentes nuevos bienvenidos! ](#first-timers)
 
 [4. Áreas para contribuir](#areas)
 
@@ -30,7 +30,7 @@ Siga nuestro [Código de conducta](code-of-conduct.md) en el contexto de cualqui
 
 ## 2. Descripción general del repositorio
 
-[hasura / graphql-engine](https://github.com/hasura/graphql-engine) es un mono-repositorio constistiendo de 3 componentes. Cada uno tiene sus propias guías de contribución:
+[hasura / graphql-engine](https://github.com/hasura/graphql-engine) es un mono-repositorio que consiste de 3 componentes. Cada uno tiene sus propias guías de contribución:
 
 1. [Server (Haskell)](server/CONTRIBUTING.md)
 
@@ -38,15 +38,15 @@ Siga nuestro [Código de conducta](code-of-conduct.md) en el contexto de cualqui
 
 3. [Console (JavaScript)](console/README.md#contributing-to-hasura-console)
 
-Los tres componentes tienen una única versión, indicada por la etiqueta git o una combinación de nombre de rama y git commit SHA.
+Los tres componentes tienen una única versión, indicada por una etiqueta de git o una combinación del nombre de la rama y el número SHA del commit.
 
 Para todas las contribuciones, se debe firmar un CLA (Contributor License Agreement) [aquí](https://cla-assistant.io/hasura/graphql-engine) antes (o después) de que se haya enviado la solicitud de extracción. Un bot solicitará a los contribuyentes que firmen el CLA a través de un comentario de pull request, si es necesario.
 
 <a name="first-timers"> </a>
 
-## 3. ¡Bienvenidos los contribuyentes primerizos!
+## 3. ¡Contribuyentes nuevos bienvenidos!
 
-Agradecemos a contribuyentes primerizos y nos complace ayudarles a comenzar. En caso de preguntas, ¡comuníquese con nosotros!
+Agradecemos a contribuyentes nuevos y nos complace ayudarles a comenzar. En caso de preguntas, ¡comuníquese con nosotros!
 
 Encontrará todos los problemas adecuados para quienes contribuyen por primera vez [aquí](https://github.com/hasura/graphql-engine/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22).
 
@@ -72,7 +72,7 @@ La guía de contribución para la documentación se puede encontrar en [docs/CON
 
 Desde que lanzamos nuestra [página de aprendizaje](https://hasura.io/learn/), estamos felices por las contribuciones:
 
-- Corregir errores en tutoriales de aprendizaje existentes
+- Corregir errores existentes en tutoriales de aprendizaje
 
 - Agregue nuevos tutoriales (comuníquese con nosotros si tiene ideas para evitar palabras duplicadas)
 
@@ -80,7 +80,7 @@ El archivo README del repositorio de aprendizaje se puede encontrar [aquí](http
 
 Además del contenido de aprendizaje, hemos identificado otras tres formas de contribuir con el contenido de la comunidad técnica:
 
-- [Boilerplates](https://github.com/hasura/graphql-engine/tree/master/community/boilerplates)
+- [Plantillas](https://github.com/hasura/graphql-engine/tree/master/community/boilerplates)
 
 - [Aplicaciones de muestra](https://github.com/hasura/graphql-engine/tree/master/community/sample-apps)
 
@@ -100,7 +100,7 @@ No dude en enviar un pull request si tiene algo que agregar, incluso si no está
 
 ### Hasura CLI
 
-Tenemos algunos problemas en la CLI que son adecuados para contribuciones de código abierto. Si conoce Go o si le gustaría aprenderlo con la práctica, consulte los siguientes [problemas](https://github.com/hasura/graphql-engine/issues?q=is%3Aopen+is%3Aissue+label%3Ac%2Fcli+label%3A%22help+wanted%22).
+Tenemos algunos problemas en el CLI que son adecuados para contribuciones de código abierto. Si conoce Go o si le gustaría aprenderlo con la práctica, consulte los siguientes [problemas](https://github.com/hasura/graphql-engine/issues?q=is%3Aopen+is%3Aissue+label%3Ac%2Fcli+label%3A%22help+wanted%22).
 
 El archivo README del repositorio CLI se puede encontrar [aquí](https://github.com/hasura/graphql-engine/tree/master/cli).
 
@@ -115,7 +115,7 @@ El archivo README del repositorio CLI se puede encontrar [aquí](https://github.
 - Proporcione los pasos para reproducir el problema, incluyendo la versión de Postgres,
   graphql-engine y el proveedor en el que se está ejecutando (Heroku, Docker, etc.).
 
-- Incluya los registros del servidor, si procede.
+- Por favor, incluya los registros del servidor, si son relevantes.
 
 ### Trabajando en un problema
 
@@ -125,14 +125,14 @@ El archivo README del repositorio CLI se puede encontrar [aquí](https://github.
 
 - Si está trabajando en un problema, comente que lo está haciendo para evitar que otros también dupliquen el trabajo.
 
-- Haga squash a sus commits y consulte el issue usando `fix # <issue-no>` o `close # <issue-no>` en el mensaje de confirmación, al final.
+- Haga squash a sus commits y enlace el issue usando `fix # <issue-no>` o `close # <issue-no>` en el mensaje de confirmación, al final.
   Por ejemplo: `resolve answers to everything (fix #42)` o `resolve answers to everything, fix #42`
 
 - Rebase master con su rama antes de enviar una solicitud de extracción.
 
 <a name="commit-messages"> </a>
 
-## 6. Confirmar mensajes
+## 6. Mensajes de Commit
 
 - La primera línea debe ser un resumen de los cambios, no más de 50
   caracteres, seguido de un cuerpo opcional que tiene más detalles sobre el
