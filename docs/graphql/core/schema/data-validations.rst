@@ -50,11 +50,56 @@ Let's say we have the following table in our schema:
 
    author (id uuid, name text, rating integer)
 
-Now, we can head to the ``Modify`` tab in the table page and add a check
-constraint in the ``Check Constraints`` section:
+We can now add a check constraint to limit the ``rating`` values as follows:
 
-.. thumbnail:: /img/graphql/core/schema/validation-add-check-constraint.png
-   :alt: Add check constraint
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    Head to the ``Modify`` tab in the table page and add a check
+    constraint in the ``Check Constraints`` section:
+
+    .. thumbnail:: /img/graphql/core/schema/validation-add-check-constraint.png
+      :alt: Add check constraint
+
+  .. tab:: CLI
+
+    :ref:`Create a migration manually <manual_migrations>` and add the following SQL statement to the ``up.sql`` file:
+
+    .. code-block:: sql
+
+      ALTER TABLE author
+      ADD CONSTRAINT authors_rating_check CHECK (rating > 0 AND rating <= 10);
+
+    Add the following statement to the ``down.sql`` file in case you need to :ref:`roll back <roll_back_migrations>` the above statement:
+
+    .. code-block:: sql
+
+      ALTER TABLE author DROP CONSTRAINT authors_rating_check;
+
+    Apply the migration by running:
+
+    .. code-block:: bash
+
+      hasura migrate apply
+
+  .. tab:: API
+
+    You can add a check constraint by using the :ref:`run_sql metadata API <run_sql>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "run_sql",
+        "args": {
+          "sql": "ALTER TABLE author ADD CONSTRAINT authors_rating_check CHECK (rating > 0 AND rating <= 10);"
+        }
+      }
 
 If someone now tries to add an author with a rating of ``11``, the following
 error is thrown:
@@ -103,11 +148,47 @@ Suppose we have the following table in our schema:
 
   article (id uuid, title text, content text)
 
-Now, we can head to the ``Data -> SQL`` tab in the console and
-create a `Postgres function <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
-that checks if an article's content exceeds a certain number of words,
-and then add a `Postgres trigger <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__
+We can now create a `Postgres function <https://www.postgresql.org/docs/current/sql-createfunction.html>`__ that checks if an article's
+content exceeds a certain number of words, and then add a `Postgres trigger <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__
 that will call this function every time before an article is inserted or updated.
+
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    - Head to the ``Data -> SQL`` section of the Hasura console
+    - Enter the SQL statement below to create a Postgres function and trigger
+    - Hit the ``Run`` button
+
+  .. tab:: CLI
+
+    :ref:`Create a migration manually <manual_migrations>` and add the SQL statement below to create a Postgres function and trigger to
+    the ``up.sql`` file. Also, add an SQL statement to the ``down.sql`` to revert the previous statement in case you need to
+    :ref:`roll back <roll_back_migrations>` the migration.
+
+    Apply the migration by running:
+
+    .. code-block:: bash
+
+      hasura migrate apply
+
+  .. tab:: API
+
+    You can add a Postgres function and trigger by using the :ref:`run_sql metadata API <run_sql>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "run_sql",
+        "args": {
+          "sql": "<SQL statement below>"
+        }
+      }
 
 .. code-block:: plpgsql
 
@@ -187,10 +268,63 @@ Suppose, we have the following table in our schema:
 
   article (id uuid, title text, content text, author_id uuid)
 
-Now, we can create a role ``user`` and add the following rule:
+Now, we can create a role ``user`` and add an insert validation rule as follows:
 
-.. thumbnail:: /img/graphql/core/schema/validation-not-empty.png
-   :alt: validation using permission: title cannot be empty
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. thumbnail:: /img/graphql/core/schema/validation-not-empty.png
+      :alt: validation using permission: title cannot be empty
+
+  .. tab:: CLI
+  
+    You can add roles and permissions in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+    .. code-block:: yaml
+      :emphasize-lines: 4-9
+
+        - table:
+            schema: public
+            name: article
+          insert_permissions:
+          - role: user
+            permission:
+              check:
+                title:
+                  _ne: ''
+
+    Apply the metadata by running:
+
+    .. code-block:: bash
+
+      hasura metadata apply
+
+  .. tab:: API
+
+    You can add an insert permission rule by using the :ref:`create_insert_permission metadata API <create_insert_permission>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "create_insert_permission",
+        "args": {
+          "table": "article",
+          "role": "user",
+          "permission": {
+            "check": {
+              "title": {
+                "_ne": ""
+              }
+            }
+          }
+        }
+      }
 
 If we try to insert an article with ``title = ""``, we will get a ``permission-error``:
 
@@ -235,10 +369,64 @@ Also, suppose there is an :ref:`object relationship <graphql_relationships>` ``a
 
   article.author_id -> author.id
 
-Now, we can create a role ``user`` and add the following rule:
+Now, we can create a role ``user`` and add an insert validation rule as follows:
 
-.. thumbnail:: /img/graphql/core/schema/validation-author-isactive.png
-   :alt: validation using permissions: author should be active
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. thumbnail:: /img/graphql/core/schema/validation-author-isactive.png
+      :alt: validation using permissions: author should be active
+
+  .. tab:: CLI
+
+    You can add roles and permissions in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+    .. code-block:: yaml
+      :emphasize-lines: 4-10
+
+        - table:
+            schema: public
+            name: article
+          insert_permissions:
+          - role: user
+            permission:
+              check:
+                author:
+                  is_active:
+                    _eq: true
+
+    Apply the metadata by running:
+
+    .. code-block:: bash
+
+      hasura metadata apply
+
+  .. tab:: API
+
+    You can add an insert permission rule by using the :ref:`create_insert_permission metadata API <create_insert_permission>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "create_insert_permission",
+        "args": {
+          "table": "article",
+          "role": "user",
+          "permission": {
+            "check": {
+              "author": {
+                "is_active": true
+              }
+            }
+          }
+        }
+      }
 
 If we try to insert an article for an author for whom ``is_active = false``, we
 will receive a ``permission-error`` :
@@ -302,11 +490,24 @@ The validation process looks as follows:
 
 Actions allow us to define :ref:`custom types <custom_types>` in our GraphQL schema.
 
-We create a new action called ``InsertAuthor`` that takes an ``author`` object with type ``AuthorInput`` as input and
-returns an object of type ``AuthorOutput``:
+We can :ref:`create a new action <create_actions>` called ``InsertAuthor`` that takes an ``author``
+object with type ``AuthorInput`` as input and returns an object of type ``AuthorOutput``.
 
-.. thumbnail:: /img/graphql/core/schema/validation-actions-def.png
-   :alt: Create action
+.. code-block:: graphql
+
+  type Mutation {
+    InsertAuthor (author: AuthorInput!): AuthorOutput
+  }
+
+  input AuthorInput {
+    name: String!
+    rating: Int!
+    is_active: Boolean!
+  }
+
+  type AuthorOutput {
+    id: Int!
+  }
 
 The business logic of an action - in our case the author validation - happens in the :ref:`action handler <action_handlers>`
 which is an HTTP webhook which contains the code to call the external service.

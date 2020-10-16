@@ -13,6 +13,7 @@ import { isColTypeString, isPostgresFunction } from '../utils';
 import { sqlEscapeText } from '../../../Common/utils/sqlUtils';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import { getTableModifyRoute } from '../../../Common/utils/routesUtils';
+import Migration from '../../../../utils/migration/Migration';
 
 const SET_DEFAULTS = 'AddTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddTable/SET_TABLENAME';
@@ -334,39 +335,25 @@ const createTableSql = () => {
 
     // apply migrations
     const migrationName = 'create_table_' + currentSchema + '_' + tableName;
+    const sqlDropTable =
+      'DROP TABLE ' + '"' + currentSchema + '"' + '.' + '"' + tableName + '"';
 
-    // up migration
-    const upQueryArgs = [];
+    const migration = new Migration();
 
     if (hasUUIDDefault) {
       const sqlCreateExtension = 'CREATE EXTENSION IF NOT EXISTS pgcrypto;';
-
-      upQueryArgs.push(getRunSqlQuery(sqlCreateExtension));
+      migration.add(getRunSqlQuery(sqlCreateExtension));
     }
 
-    upQueryArgs.push(getRunSqlQuery(sqlCreateTable));
+    migration.add(getRunSqlQuery(sqlCreateTable), getRunSqlQuery(sqlDropTable));
 
-    upQueryArgs.push({
+    migration.add({
       type: 'add_existing_table_or_view',
       args: {
         name: tableName,
         schema: currentSchema,
       },
     });
-
-    const upQuery = {
-      type: 'bulk',
-      args: upQueryArgs,
-    };
-
-    // down migration
-    const sqlDropTable =
-      'DROP TABLE ' + '"' + currentSchema + '"' + '.' + '"' + tableName + '"';
-
-    const downQuery = {
-      type: 'bulk',
-      args: [getRunSqlQuery(sqlDropTable)],
-    };
 
     // make request
     const requestMsg = 'Creating table...';
@@ -391,8 +378,8 @@ const createTableSql = () => {
     makeMigrationCall(
       dispatch,
       getState,
-      upQuery.args,
-      downQuery.args,
+      migration.upMigration,
+      migration.downMigration,
       migrationName,
       customOnSuccess,
       customOnError,
