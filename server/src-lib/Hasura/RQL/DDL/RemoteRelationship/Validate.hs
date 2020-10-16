@@ -163,7 +163,7 @@ stripInMap
   -> HM.HashMap G.Name G.InputValueDefinition
   -> HM.HashMap G.Name (G.Value G.Name)
   -> StateT
-       (HashMap G.Name (G.TypeDefinition [G.Name]))
+       (HashMap G.Name (G.TypeDefinition G.InputValueDefinition [G.Name]))
        (Either ValidationError)
        (HM.HashMap G.Name G.InputValueDefinition)
 stripInMap remoteRelationship types schemaArguments providedArguments =
@@ -188,7 +188,7 @@ stripValue
   -> G.SchemaIntrospection
   -> G.GType
   -> G.Value G.Name
-  -> StateT (HashMap G.Name (G.TypeDefinition [G.Name])) (Either ValidationError) (Maybe G.GType)
+  -> StateT (HashMap G.Name (G.TypeDefinition G.InputValueDefinition [G.Name])) (Either ValidationError) (Maybe G.GType)
 stripValue remoteRelationshipName types gtype value = do
   case value of
     G.VVariable {} -> pure Nothing
@@ -212,7 +212,7 @@ stripList
   -> G.SchemaIntrospection
   -> G.GType
   -> G.Value G.Name
-  -> StateT (HashMap G.Name (G.TypeDefinition [G.Name])) (Either ValidationError) (Maybe G.GType)
+  -> StateT (HashMap G.Name (G.TypeDefinition G.InputValueDefinition [G.Name])) (Either ValidationError) (Maybe G.GType)
 stripList remoteRelationshipName types originalOuterGType value =
   case originalOuterGType of
     G.TypeList nullability innerGType -> do
@@ -231,7 +231,7 @@ stripObject
   -> G.SchemaIntrospection
   -> G.GType
   -> HashMap G.Name (G.Value G.Name)
-  -> StateT (HashMap G.Name (G.TypeDefinition [G.Name])) (Either ValidationError) G.GType
+  -> StateT (HashMap G.Name (G.TypeDefinition G.InputValueDefinition [G.Name])) (Either ValidationError) G.GType
 stripObject remoteRelationshipName schemaDoc originalGtype templateArguments =
   case originalGtype of
     G.TypeNamed nullability originalNamedType ->
@@ -284,8 +284,8 @@ pgColumnToVariable pgCol =
 lookupField
   :: (MonadError ValidationError m)
   => G.Name
-  -> G.ObjectTypeDefinition
-  -> m G.FieldDefinition
+  -> G.ObjectTypeDefinition G.InputValueDefinition
+  -> m (G.FieldDefinition G.InputValueDefinition)
 lookupField name objFldInfo = viaObject objFldInfo
   where
     viaObject =

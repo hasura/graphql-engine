@@ -48,14 +48,14 @@ instance (NFData (a b), NFData b) => NFData (G.Selection a b)
 instance (NFData (a b), NFData b) => NFData (G.TypedOperationDefinition a b)
 instance NFData G.InputValueDefinition
 instance NFData G.InputObjectTypeDefinition
-instance NFData G.ObjectTypeDefinition
+instance (NFData a) => NFData (G.ObjectTypeDefinition a)
 instance NFData G.UnionTypeDefinition
 instance NFData G.EnumTypeDefinition
 instance NFData G.EnumValueDefinition
-instance NFData G.FieldDefinition
+instance (NFData a) => NFData (G.FieldDefinition a)
 instance NFData G.ScalarTypeDefinition
-instance NFData a => NFData (G.InterfaceTypeDefinition a)
-instance (NFData a) => NFData (G.TypeDefinition a)
+instance (NFData a, NFData b) => NFData (G.InterfaceTypeDefinition a b)
+instance (NFData a, NFData b) => NFData (G.TypeDefinition a b)
 instance NFData a => NFData (G.Value a)
 
 deriving instance NFData G.Description

@@ -162,10 +162,48 @@ $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''DropRemoteSchemaPermissions)
 data PartitionedTypeDefinitions
   = PartitionedTypeDefinitions
   { _ptdScalars      :: ![G.ScalarTypeDefinition]
-  , _ptdObjects      :: ![G.ObjectTypeDefinition]
-  , _ptdInterfaces   :: ![G.InterfaceTypeDefinition ()]
+  , _ptdObjects      :: ![G.ObjectTypeDefinition G.InputValueDefinition]
+  , _ptdInterfaces   :: ![G.InterfaceTypeDefinition G.InputValueDefinition ()]
   , _ptdUnions       :: ![G.UnionTypeDefinition]
   , _ptdEnums        :: ![G.EnumTypeDefinition]
   , _ptdInputObjects :: ![G.InputObjectTypeDefinition]
   , _ptdSchemaDef    :: ![G.SchemaDefinition]
   } deriving (Show, Eq)
+
+data RemoteSchemaPresetArgument
+  = StaticPresetArgument !(G.Value Void)
+  | SessionPresetArgument !G.Name !SessionVariable !(G.Value Void)
+  -- ^ name of the argument where the session variable is supposed to
+  -- be substituted -- session variable name -- value where the session
+  -- variable is to be inserted.
+  deriving (Show, Eq, Generic)
+instance Hashable RemoteSchemaPresetArgument
+instance Cacheable RemoteSchemaPresetArgument
+
+data RemoteSchemaInputTypeDefinition
+  = RemoteSchemaInputTypeDefinition
+  { _rsitdDefn      :: !G.InputObjectTypeDefinition
+  -- TODO: change the below, only if needed, to differentiate
+  -- for scalar, enum and input object types. For scalar and
+  -- enum only a single argument preset is expected and for
+  -- input objects there may be more than one!
+  , _rsitdPresetArg :: !(Maybe [RemoteSchemaPresetArgument])
+  } deriving (Show, Eq, Generic)
+instance Hashable RemoteSchemaInputTypeDefinition
+instance Cacheable RemoteSchemaInputTypeDefinition
+
+-- TODO: exlain why this is needed
+-- data RemoteTypeDefinition
+--   = RemoteTypeDefinitionScalar !G.ScalarTypeDefinition
+--   | RemoteTypeDefinitionObject !G.ObjectTypeDefinition
+--   | RemoteTypeDefinitionInterface (G.InterfaceTypeDefinition [G.Name])
+--   | RemoteTypeDefinitionUnion !G.UnionTypeDefinition
+--   | RemoteTypeDefinitionEnum !G.EnumTypeDefinition
+--   | RemoteTypeDefinitionInputObject !RemoteSchemaInputTypeDefinition
+--   deriving (Show, Eq, Generic)
+-- instance Hashable RemoteTypeDefinition
+-- instance Cacheable RemoteTypeDefinition
+
+-- newtype RemoteSchemaIntrospection
+--   = RemoteSchemaIntrospection [RemoteTypeDefinition]
+--   deriving (Show, Eq, Hashable, Generic, Cacheable)

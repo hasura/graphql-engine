@@ -36,7 +36,7 @@ buildRemoteParser (IntrospectionResult sdoc query_root mutation_root subscriptio
   subscriptionT <- traverse makeParsers subscription_root
   return (queryT, mutationT, subscriptionT)
   where
-    makeFieldParser :: G.FieldDefinition -> m (P.FieldParser n RemoteField)
+    makeFieldParser :: G.FieldDefinition G.InputValueDefinition -> m (P.FieldParser n RemoteField)
     makeFieldParser fieldDef = do
       fldParser <- remoteField' sdoc fieldDef
       pure $ (RemoteField info) <$> fldParser
@@ -51,7 +51,7 @@ remoteField'
   :: forall n m
   . (MonadSchema n m, MonadError QErr m)
   => SchemaIntrospection
-  -> G.FieldDefinition
+  -> G.FieldDefinition G.InputValueDefinition
   -> m (FieldParser n (Field NoFragments Variable))
 remoteField' schemaDoc (G.FieldDefinition description name argsDefinition gType _) =
   let
@@ -82,7 +82,7 @@ remoteSchemaObject
   :: forall n m
   . (MonadSchema n m, MonadError QErr m)
   => SchemaIntrospection
-  -> G.ObjectTypeDefinition
+  -> G.ObjectTypeDefinition G.InputValueDefinition
   -> m (Parser 'Output n [Field NoFragments Variable])
 remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name interfaces _directives subFields) =
   P.memoizeOn 'remoteSchemaObject defn do
@@ -98,15 +98,15 @@ remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name inter
           G.Field (Just alias) $$(G.litName "__typename") mempty mempty mempty
     )
   where
-    getInterface :: G.Name -> m (G.InterfaceTypeDefinition [G.Name])
+    getInterface :: G.Name -> m (G.InterfaceTypeDefinition G.InputValueDefinition [G.Name])
     getInterface interfaceName =
       onNothing (lookupInterface schemaDoc interfaceName) $
         throw400 RemoteSchemaError $ "Could not find interface " <> squote interfaceName
         <> " implemented by Object type " <> squote name
-    validateImplementsFields :: G.InterfaceTypeDefinition [G.Name] -> m ()
+    validateImplementsFields :: G.InterfaceTypeDefinition G.InputValueDefinition [G.Name] -> m ()
     validateImplementsFields interface =
       traverse_ (validateImplementsField (_itdName interface)) (G._itdFieldsDefinition interface)
-    validateImplementsField :: G.Name -> G.FieldDefinition -> m ()
+    validateImplementsField :: G.Name -> G.FieldDefinition G.InputValueDefinition -> m ()
     validateImplementsField interfaceName interfaceField =
       case lookup (G._fldName interfaceField) (zip (fmap G._fldName subFields) subFields) of
         Nothing -> throw400 RemoteSchemaError $
@@ -123,7 +123,7 @@ remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name inter
           traverse_ (validateArgument (G._fldArgumentsDefinition f)) (G._fldArgumentsDefinition interfaceField)
           traverse_ (validateNoExtraNonNull (G._fldArgumentsDefinition interfaceField)) (G._fldArgumentsDefinition f)
             where
-              validateArgument :: G.ArgumentsDefinition -> G.InputValueDefinition -> m ()
+              validateArgument :: G.ArgumentsDefinition G.InputValueDefinition -> G.InputValueDefinition -> m ()
               validateArgument objectFieldArgs ifaceArgument =
                 case lookup (G._ivdName ifaceArgument) (zip (fmap G._ivdName objectFieldArgs) objectFieldArgs) of
                   Nothing ->
@@ -140,7 +140,7 @@ remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name inter
                       <> ", but " <> squote name <> "." <> dquote (G._fldName f) <> "("
                       <> dquote (G._ivdName ifaceArgument) <> ":) has type "
                       <> G.showGT (G._ivdType a)
-              validateNoExtraNonNull :: G.ArgumentsDefinition -> G.InputValueDefinition -> m ()
+              validateNoExtraNonNull :: G.ArgumentsDefinition G.InputValueDefinition -> G.InputValueDefinition -> m ()
               validateNoExtraNonNull ifaceArguments objectFieldArg =
                 case lookup (G._ivdName objectFieldArg) (zip (fmap G._ivdName ifaceArguments) ifaceArguments) of
                   Just _ -> pure ()
@@ -178,7 +178,7 @@ getObjectParser
   :: forall n m
   . (MonadSchema n m, MonadError QErr m)
   => SchemaIntrospection
-  -> (G.Name -> m G.ObjectTypeDefinition)
+  -> (G.Name -> m (G.ObjectTypeDefinition G.InputValueDefinition))
   -> G.Name
   -> m (Parser 'Output n (Name, [Field NoFragments Variable]))
 getObjectParser schemaDoc getObject objName = do
@@ -240,7 +240,7 @@ remoteSchemaInterface
   :: forall n m
   . (MonadSchema n m, MonadError QErr m)
   => SchemaIntrospection
-  -> G.InterfaceTypeDefinition [G.Name]
+  -> G.InterfaceTypeDefinition G.InputValueDefinition [G.Name]
   -> m (Parser 'Output n (G.SelectionSet NoFragments Variable))
 remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name _directives fields possibleTypes) =
   P.memoizeOn 'remoteSchemaObject defn do
@@ -257,7 +257,7 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
   -- to 'possibleTypes'.
   pure $ P.selectionSetInterface name description subFieldParsers objs <&> constructInterfaceSelectionSet
   where
-    getObject :: G.Name -> m G.ObjectTypeDefinition
+    getObject :: G.Name -> m (G.ObjectTypeDefinition G.InputValueDefinition)
     getObject objectName =
       onNothing (lookupObject schemaDoc objectName) $
         case lookupInterface schemaDoc objectName of
@@ -331,7 +331,7 @@ remoteSchemaUnion schemaDoc defn@(G.UnionTypeDefinition description name _direct
             Just (G.SelectionInlineFragment
                     $ G.InlineFragment (Just objName) mempty $ fmap G.SelectionField fields))
   where
-    getObject :: G.Name -> m G.ObjectTypeDefinition
+    getObject :: G.Name -> m (G.ObjectTypeDefinition G.InputValueDefinition)
     getObject objectName =
       onNothing (lookupObject schemaDoc objectName) $
         case lookupInterface schemaDoc objectName of
@@ -352,10 +352,10 @@ remoteSchemaInputObject schemaDoc defn@(G.InputObjectTypeDefinition desc name _ 
   argsParser <- argumentsParser valueDefns schemaDoc
   pure $ P.object name desc argsParser
 
-lookupType :: SchemaIntrospection -> G.Name -> Maybe (G.TypeDefinition [G.Name])
+lookupType :: SchemaIntrospection -> G.Name -> Maybe (G.TypeDefinition G.InputValueDefinition [G.Name])
 lookupType (SchemaIntrospection types) name = find (\tp -> getNamedTyp tp == name) types
   where
-    getNamedTyp :: G.TypeDefinition possibleTypes -> G.Name
+    getNamedTyp :: G.TypeDefinition G.InputValueDefinition possibleTypes -> G.Name
     getNamedTyp ty = case ty of
       G.TypeDefinitionScalar t      -> G._stdName t
       G.TypeDefinitionObject t      -> G._otdName t
@@ -364,20 +364,21 @@ lookupType (SchemaIntrospection types) name = find (\tp -> getNamedTyp tp == nam
       G.TypeDefinitionEnum t        -> G._etdName t
       G.TypeDefinitionInputObject t -> G._iotdName t
 
-lookupObject :: SchemaIntrospection -> G.Name -> Maybe G.ObjectTypeDefinition
+lookupObject :: SchemaIntrospection -> G.Name -> Maybe (G.ObjectTypeDefinition G.InputValueDefinition)
 lookupObject (SchemaIntrospection types) name = go types
   where
-    go :: [TypeDefinition possibleTypes] -> Maybe G.ObjectTypeDefinition
+    go :: [TypeDefinition G.InputValueDefinition possibleTypes] -> Maybe (G.ObjectTypeDefinition G.InputValueDefinition)
     go ((G.TypeDefinitionObject t):tps)
       | G._otdName t == name = Just t
       | otherwise = go tps
     go (_:tps) = go tps
     go [] = Nothing
 
-lookupInterface :: SchemaIntrospection -> G.Name -> Maybe (G.InterfaceTypeDefinition [G.Name])
+lookupInterface :: SchemaIntrospection -> G.Name -> Maybe (G.InterfaceTypeDefinition G.InputValueDefinition [G.Name])
 lookupInterface (SchemaIntrospection types) name = go types
   where
-    go :: [TypeDefinition possibleTypes] -> Maybe (G.InterfaceTypeDefinition possibleTypes)
+    go :: [TypeDefinition G.InputValueDefinition possibleTypes]
+        -> Maybe (G.InterfaceTypeDefinition G.InputValueDefinition possibleTypes)
     go ((G.TypeDefinitionInterface t):tps)
       | G._itdName t == name = Just t
       | otherwise = go tps
@@ -387,7 +388,7 @@ lookupInterface (SchemaIntrospection types) name = go types
 lookupScalar :: SchemaIntrospection -> G.Name -> Maybe G.ScalarTypeDefinition
 lookupScalar (SchemaIntrospection types) name = go types
   where
-    go :: [TypeDefinition possibleTypes] -> Maybe G.ScalarTypeDefinition
+    go :: [TypeDefinition G.InputValueDefinition possibleTypes] -> Maybe G.ScalarTypeDefinition
     go ((G.TypeDefinitionScalar t):tps)
       | G._stdName t == name = Just t
       | otherwise = go tps
@@ -403,7 +404,7 @@ remoteFieldFromName
   -> G.Name
   -> Maybe G.Description
   -> G.Name
-  -> G.ArgumentsDefinition
+  -> G.ArgumentsDefinition G.InputValueDefinition
   -> m (FieldParser n (Field NoFragments Variable))
 remoteFieldFromName sdoc fieldName description fieldTypeName argsDefns =
   case lookupType sdoc fieldTypeName of
@@ -468,7 +469,7 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
 argumentsParser
   :: forall n m
   .  (MonadSchema n m, MonadError QErr m)
-  => G.ArgumentsDefinition
+  => G.ArgumentsDefinition G.InputValueDefinition
   -> G.SchemaIntrospection
   -> m (InputFieldsParser n ())
 argumentsParser args schemaDoc = do
@@ -483,8 +484,8 @@ remoteField
   => SchemaIntrospection
   -> G.Name
   -> Maybe G.Description
-  -> G.ArgumentsDefinition
-  -> G.TypeDefinition [G.Name]
+  -> G.ArgumentsDefinition G.InputValueDefinition
+  -> G.TypeDefinition G.InputValueDefinition [G.Name]
   -> m (FieldParser n (Field NoFragments Variable))
 remoteField sdoc fieldName description argsDefn typeDefn = do
   -- TODO add directives

@@ -312,8 +312,8 @@ validateInputValueDefinition providedDefn upstreamDefn inputObjectName = do
 
 validateArguments
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
-  => G.ArgumentsDefinition
-  -> G.ArgumentsDefinition
+  => (G.ArgumentsDefinition G.InputValueDefinition)
+  -> (G.ArgumentsDefinition G.InputValueDefinition)
   -> G.Name
   -> m ()
 validateArguments providedArgs upstreamArgs parentTypeName = do
@@ -363,8 +363,8 @@ validateInputObjectTypeDefinitions providedInputObjects upstreamInputObjects = d
 
 validateFieldDefinition
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
-  => G.FieldDefinition
-  -> G.FieldDefinition
+  => (G.FieldDefinition G.InputValueDefinition)
+  -> (G.FieldDefinition G.InputValueDefinition)
   -> (FieldDefinitionType, G.Name)
   -> m ()
 validateFieldDefinition providedFieldDefinition upstreamFieldDefinition (parentType, parentTypeName) = do
@@ -379,8 +379,8 @@ validateFieldDefinition providedFieldDefinition upstreamFieldDefinition (parentT
 
 validateFieldDefinitions
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
-  => [G.FieldDefinition]
-  -> [G.FieldDefinition]
+  => [(G.FieldDefinition G.InputValueDefinition)]
+  -> [(G.FieldDefinition G.InputValueDefinition)]
   -> (FieldDefinitionType, G.Name) -- ^ parent type and name
   -> m ()
 validateFieldDefinitions providedFldDefnitions upstreamFldDefinitions parentType = do
@@ -396,8 +396,8 @@ validateFieldDefinitions providedFldDefnitions upstreamFldDefinitions parentType
 
 validateInterfaceDefinition
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
-  => G.InterfaceTypeDefinition ()
-  -> G.InterfaceTypeDefinition ()
+  => G.InterfaceTypeDefinition G.InputValueDefinition ()
+  -> G.InterfaceTypeDefinition G.InputValueDefinition ()
   -> m ()
 validateInterfaceDefinition providedInterfaceDefn upstreamInterfaceDefn = do
   validateDirectives providedDirectives upstreamDirectives G.TSDLINTERFACE $ (Interface, providedName)
@@ -409,8 +409,8 @@ validateInterfaceDefinition providedInterfaceDefn upstreamInterfaceDefn = do
 
 validateInterfaceDefinitions
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
-  => [G.InterfaceTypeDefinition ()]
-  -> [G.InterfaceTypeDefinition ()]
+  => [G.InterfaceTypeDefinition G.InputValueDefinition ()]
+  -> [G.InterfaceTypeDefinition G.InputValueDefinition ()]
   -> m ()
 validateInterfaceDefinitions providedInterfaces upstreamInterfaces = do
   flip traverse_ providedInterfaces $ \providedInterface@(G.InterfaceTypeDefinition _ name _ _ _) -> do
@@ -479,8 +479,8 @@ validateUnionTypeDefinitions providedUnions upstreamUnions = do
 
 validateObjectDefinition
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
-  => G.ObjectTypeDefinition
-  -> G.ObjectTypeDefinition
+  => (G.ObjectTypeDefinition G.InputValueDefinition)
+  -> (G.ObjectTypeDefinition G.InputValueDefinition)
   -> S.HashSet G.Name -- ^ Interfaces declared by in the role-based schema
   -> m ()
 validateObjectDefinition providedObj upstreamObj interfacesDeclared = do
@@ -509,8 +509,8 @@ validateObjectDefinition providedObj upstreamObj interfacesDeclared = do
 -- objects of the upstream remote schema.
 validateObjectDefinitions
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
-  => [G.ObjectTypeDefinition]
-  -> [G.ObjectTypeDefinition]
+  => [G.ObjectTypeDefinition G.InputValueDefinition]
+  -> [G.ObjectTypeDefinition G.InputValueDefinition]
   -> S.HashSet G.Name
   -> m ()
 validateObjectDefinitions providedObjects upstreamObjects providedInterfaces = do
@@ -550,7 +550,7 @@ validateSchemaDefinitions _ = refute $ pure $ MultipleSchemaDefinitionsFound
 -- | Construction of the `possibleTypes` map for interfaces, while parsing the
 -- user provided Schema document, it doesn't include the `possibleTypes`, so
 -- constructing here, manually.
-createPossibleTypesMap :: [G.ObjectTypeDefinition] -> HashMap G.Name [G.Name]
+createPossibleTypesMap :: [(G.ObjectTypeDefinition G.InputValueDefinition)] -> HashMap G.Name [G.Name]
 createPossibleTypesMap objDefns =
   let objMap = Map.fromList $ map (G._otdName &&& G._otdImplementsInterfaces) objDefns
   in
@@ -603,7 +603,7 @@ getSchemaDocIntrospection schemaDocTypeDefs (queryRoot, mutationRoot, subscripti
     defaultScalars = map (\n -> G.ScalarTypeDefinition Nothing n [])
                          $ [intScalar, floatScalar, stringScalar, boolScalar, idScalar]
 
-partitionTypeDefinition :: G.TypeDefinition () -> State PartitionedTypeDefinitions ()
+partitionTypeDefinition :: G.TypeDefinition G.InputValueDefinition () -> State PartitionedTypeDefinitions ()
 partitionTypeDefinition (G.TypeDefinitionScalar scalarDefn) =
   modify (\td -> td {_ptdScalars = ((:) scalarDefn) . _ptdScalars $ td})
 partitionTypeDefinition (G.TypeDefinitionObject objectDefn) =
@@ -656,7 +656,7 @@ validateRemoteSchema (G.SchemaDocument providedTypeDefns) (G.SchemaIntrospection
     partitionTypeSystemDefinitions (G.TypeSystemDefinitionType typeDefn) =
       partitionTypeDefinition typeDefn
 
-    partitionSchemaIntrospection :: G.TypeDefinition [G.Name] -> State PartitionedTypeDefinitions ()
+    partitionSchemaIntrospection :: G.TypeDefinition G.InputValueDefinition [G.Name] -> State PartitionedTypeDefinitions ()
     partitionSchemaIntrospection typeDef = partitionTypeDefinition (typeDef $> ())
 
     duplicateTypes (PartitionedTypeDefinitions scalars objs ifaces unions enums inpObjs _) =

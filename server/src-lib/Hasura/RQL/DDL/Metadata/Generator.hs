@@ -333,7 +333,7 @@ instance Arbitrary (G.Value Void) where
 instance Arbitrary (G.Value G.Name) where
   arbitrary = genericArbitrary
 
-instance Arbitrary G.FieldDefinition where
+instance (Arbitrary a) => Arbitrary (G.FieldDefinition a) where
   arbitrary = genericArbitrary
 
 instance Arbitrary G.ScalarTypeDefinition where
@@ -345,7 +345,7 @@ instance Arbitrary G.InputValueDefinition where
 instance Arbitrary G.InputObjectTypeDefinition where
   arbitrary = genericArbitrary
 
-instance Arbitrary G.ObjectTypeDefinition where
+instance (Arbitrary a) => Arbitrary (G.ObjectTypeDefinition a) where
   arbitrary = genericArbitrary
 
 instance Arbitrary G.RootOperationTypeDefinition where
@@ -363,10 +363,10 @@ instance Arbitrary G.EnumValueDefinition where
 instance Arbitrary G.EnumTypeDefinition where
   arbitrary = genericArbitrary
 
-instance (Arbitrary a) => Arbitrary (G.InterfaceTypeDefinition a) where
+instance (Arbitrary a, Arbitrary b) => Arbitrary (G.InterfaceTypeDefinition a b) where
   arbitrary = genericArbitrary
 
-instance (Arbitrary a) => Arbitrary (G.TypeDefinition a) where
+instance (Arbitrary a, Arbitrary b) => Arbitrary (G.TypeDefinition a b) where
   arbitrary = genericArbitrary
 
 instance Arbitrary G.TypeSystemDefinition where

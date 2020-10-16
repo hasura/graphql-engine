@@ -135,13 +135,13 @@ instance J.FromJSON (FromIntrospection G.ScalarTypeDefinition) where
         r = G.ScalarTypeDefinition desc' name []
     return $ FromIntrospection r
 
-instance J.FromJSON (FromIntrospection G.ObjectTypeDefinition) where
+instance J.FromJSON (FromIntrospection (G.ObjectTypeDefinition G.InputValueDefinition)) where
   parseJSON = J.withObject "ObjectTypeDefinition" $ \o -> do
     kind   <- o .:  "kind"
     name   <- o .:  "name"
     desc   <- o .:? "description"
     fields <- o .:? "fields"
-    interfaces :: Maybe [FromIntrospection (G.InterfaceTypeDefinition [G.Name])] <- o .:? "interfaces"
+    interfaces :: Maybe [FromIntrospection (G.InterfaceTypeDefinition G.InputValueDefinition [G.Name])] <- o .:? "interfaces"
     when (kind /= "OBJECT") $ kindErr kind "object"
     let implIfaces = map G._itdName $ maybe [] (fmap fromIntrospection) interfaces
         flds = maybe [] (fmap fromIntrospection) fields
@@ -149,7 +149,7 @@ instance J.FromJSON (FromIntrospection G.ObjectTypeDefinition) where
         r = G.ObjectTypeDefinition desc' name implIfaces [] flds
     return $ FromIntrospection r
 
-instance J.FromJSON (FromIntrospection G.FieldDefinition) where
+instance J.FromJSON (FromIntrospection (G.FieldDefinition G.InputValueDefinition)) where
   parseJSON = J.withObject "FieldDefinition" $ \o -> do
     name  <- o .:  "name"
     desc  <- o .:? "description"
@@ -196,13 +196,13 @@ instance J.FromJSON (FromIntrospection (G.Value Void)) where
      let parseValueConst = G.runParser G.value
      in fmap FromIntrospection $ either (fail . T.unpack) return $ parseValueConst t
 
-instance J.FromJSON (FromIntrospection (G.InterfaceTypeDefinition [G.Name])) where
+instance J.FromJSON (FromIntrospection (G.InterfaceTypeDefinition G.InputValueDefinition [G.Name])) where
   parseJSON = J.withObject "InterfaceTypeDefinition" $ \o -> do
     kind  <- o .: "kind"
     name  <- o .:  "name"
     desc  <- o .:? "description"
     fields <- o .:? "fields"
-    possibleTypes :: Maybe [FromIntrospection G.ObjectTypeDefinition] <- o .:? "possibleTypes"
+    possibleTypes :: Maybe [FromIntrospection (G.ObjectTypeDefinition G.InputValueDefinition)] <- o .:? "possibleTypes"
     let flds = maybe [] (fmap fromIntrospection) fields
         desc' = fmap fromIntrospection desc
         possTps = map G._otdName $ maybe [] (fmap fromIntrospection) possibleTypes
@@ -217,7 +217,7 @@ instance J.FromJSON (FromIntrospection G.UnionTypeDefinition) where
     kind  <- o .: "kind"
     name  <- o .:  "name"
     desc  <- o .:? "description"
-    possibleTypes <- o .: "possibleTypes"
+    possibleTypes :: [FromIntrospection (G.ObjectTypeDefinition G.InputValueDefinition)] <-  o .: "possibleTypes"
     let possibleTypes' = map G._otdName $ fmap fromIntrospection possibleTypes
         desc' = fmap fromIntrospection desc
     when (kind /= "UNION") $ kindErr kind "union"
@@ -255,7 +255,7 @@ instance J.FromJSON (FromIntrospection G.InputObjectTypeDefinition) where
     let r = G.InputObjectTypeDefinition desc' name [] inputFields
     return $ FromIntrospection r
 
-instance J.FromJSON (FromIntrospection (G.TypeDefinition [G.Name])) where
+instance J.FromJSON (FromIntrospection (G.TypeDefinition G.InputValueDefinition [G.Name])) where
   parseJSON = J.withObject "TypeDefinition" $ \o -> do
     kind :: Text <- o .: "kind"
     r <- case kind of
