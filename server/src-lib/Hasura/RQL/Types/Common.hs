@@ -61,9 +61,6 @@ import           Hasura.RQL.DDL.Headers        ()
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
-import           Hasura.SQL.Postgres.Types
-
-
 
 import           Control.Lens                  (makeLenses)
 import           Data.Aeson

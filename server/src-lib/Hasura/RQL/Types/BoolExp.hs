@@ -59,7 +59,6 @@ import           Hasura.Incremental         (Cacheable)
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.Session
-import           Hasura.SQL.Postgres.Types
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 

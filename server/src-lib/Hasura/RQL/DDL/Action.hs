@@ -23,7 +23,13 @@ module Hasura.RQL.DDL.Action
   , deleteActionPermissionFromCatalog
   ) where
 
+import           Hasura.EncJSON
+import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.CustomTypes    (lookupPGScalar)
+import           Hasura.RQL.Types
+import           Hasura.Session
+import           Hasura.SQL.Types
 
 import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
@@ -34,15 +40,6 @@ import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Language.Haskell.TH.Syntax    (Lift)
-
-import           Hasura.EncJSON
-import           Hasura.GraphQL.Utils
-import           Hasura.RQL.DDL.CustomTypes    (lookupPGScalar)
-import           Hasura.RQL.Types
-import           Hasura.Session
-import           Hasura.SQL.Postgres.Types
-import           Hasura.SQL.Types
-
 
 getActionInfo
   :: (QErrM m, CacheRM m)

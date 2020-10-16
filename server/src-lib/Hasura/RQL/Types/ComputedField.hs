@@ -4,12 +4,13 @@ Description: Schema cache types related to computed field
 
 module Hasura.RQL.Types.ComputedField where
 
+import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
+import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.Function
+import           Hasura.SQL.Types
 
-import qualified Data.Sequence              as Seq
-import qualified Database.PG.Query          as Q
-
-import           Control.Lens               hiding ((.=))
+import           Control.Lens                  hiding ((.=))
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -21,7 +22,11 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Function
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
+import           Instances.TH.Lift             ()
+import           Language.Haskell.TH.Syntax    (Lift)
 
+import qualified Data.Sequence                 as Seq
+import qualified Database.PG.Query             as Q
 
 newtype ComputedFieldName =
   ComputedFieldName { unComputedFieldName :: NonEmptyText}

@@ -3,12 +3,6 @@
 
 module Hasura.RQL.DDL.Permission.Internal where
 
-import           Hasura.Prelude
-
-import qualified Data.HashMap.Strict        as M
-import qualified Data.Text.Extended         as T
-import qualified Database.PG.Query          as Q
-
 import           Control.Lens               hiding ((.=))
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -16,18 +10,21 @@ import           Data.Aeson.Types
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
+import qualified Data.HashMap.Strict        as M
+import qualified Data.Text.Extended         as T
 import qualified Hasura.SQL.DML             as S
 
 import           Hasura.EncJSON
 import           Hasura.Incremental         (Cacheable)
+import           Hasura.Prelude
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.Session
-import           Hasura.SQL.Postgres.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
+import qualified Database.PG.Query          as Q
 
 data PermColSpec
   = PCStar

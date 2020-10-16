@@ -6,19 +6,16 @@ module Hasura.RQL.DML.Select.Internal
   )
 where
 
-import           Hasura.Prelude
+import           Control.Lens                 hiding (op)
+import           Control.Monad.Writer.Strict
+import           Instances.TH.Lift            ()
 
 import qualified Data.HashMap.Strict          as HM
 import qualified Data.List.NonEmpty           as NE
 import qualified Data.Text                    as T
 
-import           Control.Lens                 hiding (op)
-import           Control.Monad.Writer.Strict
-import           Instances.TH.Lift            ()
-
-import qualified Hasura.SQL.DML               as S
-
 import           Hasura.GraphQL.Schema.Common
+import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.GBoolExp
@@ -26,6 +23,7 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Rewrite
 import           Hasura.SQL.Types
 
+import qualified Hasura.SQL.DML               as S
 
 -- Conversion of SelectQ happens in 2 Stages.
 -- Stage 1 : Convert input query into an annotated AST

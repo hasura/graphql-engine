@@ -17,18 +17,19 @@ module Hasura.SQL.Value
   , toPrepParam
   ) where
 
-import           Hasura.Prelude
+import           Hasura.SQL.GeoJSON
+import           Hasura.SQL.Time
+import           Hasura.SQL.Types
 
 import qualified Database.PG.Query          as Q
 import qualified Database.PG.Query.PTI      as PTI
-import qualified Database.PostgreSQL.LibPQ  as PQ
 import qualified Hasura.SQL.DML             as S
-import qualified PostgreSQL.Binary.Encoding as PE
 
 import           Data.Aeson
 import           Data.Int
 import           Data.Scientific
 import           Data.Time
+import           Hasura.Prelude
 
 import qualified Data.Aeson.Text            as AE
 import qualified Data.Aeson.Types           as AT
@@ -39,10 +40,8 @@ import qualified Data.Text.Encoding         as TE
 import qualified Data.Text.Lazy             as TL
 import qualified Data.UUID                  as UUID
 
-import           Hasura.SQL.GeoJSON
-import           Hasura.SQL.Postgres.Types
-import           Hasura.SQL.Time
-
+import qualified Database.PostgreSQL.LibPQ  as PQ
+import qualified PostgreSQL.Binary.Encoding as PE
 
 newtype RasterWKB
   = RasterWKB { getRasterWKB :: TC.Base16 B.ByteString }

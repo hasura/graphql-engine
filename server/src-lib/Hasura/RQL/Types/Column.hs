@@ -41,7 +41,6 @@ import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.Instances          ()
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
-import           Hasura.SQL.Postgres.Types
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value

@@ -1,9 +1,9 @@
 module Hasura.RQL.Types.Function where
 
+import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
-
-import qualified Data.Sequence              as Seq
-import qualified Data.Text                  as T
+import           Hasura.RQL.Types.Common
+import           Hasura.SQL.Types
 
 import           Control.Lens
 import           Data.Aeson
@@ -11,11 +11,8 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax (Lift)
 
-import           Hasura.Incremental         (Cacheable)
-import           Hasura.RQL.Types.Common
-import           Hasura.SQL.Postgres.Types
-import           Hasura.SQL.Types
-
+import qualified Data.Sequence              as Seq
+import qualified Data.Text                  as T
 
 data FunctionType
   = FTVOLATILE

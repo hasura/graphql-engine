@@ -36,7 +36,6 @@ import           Hasura.GraphQL.Schema.Insert
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
-import           Hasura.SQL.Postgres.Types
 import           Hasura.SQL.Types
 
 

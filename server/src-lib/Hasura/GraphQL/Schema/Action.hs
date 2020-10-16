@@ -24,7 +24,6 @@ import           Hasura.GraphQL.Schema.Select
 import           Hasura.RQL.Types
 import           Hasura.Session
 import           Hasura.SQL.Types
-import           Hasura.SQL.Postgres.Types
 import           Hasura.SQL.Value
 
 
