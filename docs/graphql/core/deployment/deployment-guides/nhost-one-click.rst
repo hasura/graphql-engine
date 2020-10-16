@@ -30,7 +30,7 @@ Once you're logged into your Nhost account, click the button bellow to configure
 
 On the following page you can choose a plan and a location for your project:
 
-.. thumbnail:: /img/graphql/core/deployment/choose-a-plan.png
+.. thumbnail:: /img/graphql/core/deployment/choose-plan-nhost.png
    :alt: Choose a plan and location for your project
 
 The creation and provisioning of your backend should be ready in roughly 30 seconds. 

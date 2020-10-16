@@ -85,7 +85,7 @@ Choose ``id`` as the Primary key and click the ``Create`` button.
 .. thumbnail:: /img/graphql/core/deployment/digital-ocean-row.png
    :alt: Hasura console - table fields
 
-.. thumbnail:: /img/graphql/core/deployment/digital-ocean-create-a-table.png
+.. thumbnail:: /img/graphql/core/deployment/digital-ocean-create-table.png
    :alt: Hasura console - create table   
 
 Step 4: Insert sample data
