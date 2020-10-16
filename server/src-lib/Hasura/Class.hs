@@ -102,6 +102,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (ReaderT r m) where
   processSchemaSyncEventPayload a b = (hoist lift) $ processSchemaSyncEventPayload a b
   getCatalogState                   = (hoist lift) getCatalogState
   setCatalogState a b               = (hoist lift) $ setCatalogState a b
+  getDatabaseUid                    = (hoist lift) getDatabaseUid
 
   insertAction a b c d = (hoist lift) $ insertAction a b c d
   fetchUndeliveredActionEvents = (hoist lift) fetchUndeliveredActionEvents
@@ -129,6 +130,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (ExceptT e m) where
   processSchemaSyncEventPayload a b = (hoist lift) $ processSchemaSyncEventPayload a b
   getCatalogState                   = (hoist lift) getCatalogState
   setCatalogState a b               = (hoist lift) $ setCatalogState a b
+  getDatabaseUid                    = (hoist lift) getDatabaseUid
 
   insertAction a b c d = (hoist lift) $ insertAction a b c d
   fetchUndeliveredActionEvents = (hoist lift) fetchUndeliveredActionEvents
@@ -156,6 +158,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (Tracing.TraceT m) whe
   processSchemaSyncEventPayload a b = (hoist lift) $ processSchemaSyncEventPayload a b
   getCatalogState                   = (hoist lift) getCatalogState
   setCatalogState a b               = (hoist lift) $ setCatalogState a b
+  getDatabaseUid                    = (hoist lift) getDatabaseUid
 
   insertAction a b c d = (hoist lift) $ insertAction a b c d
   fetchUndeliveredActionEvents = (hoist lift) fetchUndeliveredActionEvents
@@ -183,6 +186,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (LazyTxT e m) where
   processSchemaSyncEventPayload a b = (hoist lift) $ processSchemaSyncEventPayload a b
   getCatalogState                   = (hoist lift) getCatalogState
   setCatalogState a b               = (hoist lift) $ setCatalogState a b
+  getDatabaseUid                    = (hoist lift) getDatabaseUid
 
   insertAction a b c d = (hoist lift) $ insertAction a b c d
   fetchUndeliveredActionEvents = (hoist lift) fetchUndeliveredActionEvents
