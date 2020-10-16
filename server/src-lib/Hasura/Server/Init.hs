@@ -39,8 +39,8 @@ import           Hasura.Server.Utils
 import           Hasura.Session
 import           Network.URI                      (parseURI)
 
-getDbId :: Q.TxE QErr Text
-getDbId =
+getDbIdTx :: Q.TxE QErr Text
+getDbIdTx =
   (runIdentity . Q.getRow) <$>
   Q.withQE defaultTxErrorHandler
   [Q.sql|

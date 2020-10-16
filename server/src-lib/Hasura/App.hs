@@ -89,6 +89,7 @@ data ExitCode
   | InvalidDatabaseConnectionParamsError
   | CacheBuildError
   | MetadataCatalogFetchingError
+  | MetadataDbUidFetchError
   | AuthConfigurationError
   | EventSubSystemError
   | EventEnvironmentVariableError
@@ -447,12 +448,18 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime
     then do
       unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
 
-      -- FIXME: Use abstraction to fetch Id
-      (dbId, pgVersion) <- liftIO $ runTxIO _icMetadataPool (Q.ReadCommitted, Nothing) $
-        (,) <$> getDbId <*> getPgVersion
+      -- TODO: (anon) here we are getting the pg-version and db_uuid of the
+      -- metadata database. And we are using it for telemetry. I think for
+      -- telemetry we want these from the user's source databases, not the
+      -- metadata db?
+      pgVersion <- liftIO $
+        runTxIO _icMetadataPool (Q.ReadCommitted, Nothing) $ getPgVersion
+
+      dbUidE <- runMetadataStorageT getDatabaseUid
+      dbUid <- either (printErrJExit MetadataDbUidFetchError) return dbUidE
 
       telemetryThread <- C.forkImmortal "runTelemetry" logger $ liftIO $
-        runTelemetry logger _icHttpManager (getSCFromRef cacheRef) dbId _icInstanceId pgVersion
+        runTelemetry logger _icHttpManager (getSCFromRef cacheRef) dbUid _icInstanceId pgVersion
       return $ Just telemetryThread
     else return Nothing
 
@@ -786,14 +793,17 @@ instance MonadMetadataStorage ServerAppM where
 
   getMetadata = runTxInMetadataStorage fetchMetadataTx
   setMetadata = runTxInMetadataStorage . setMetadataTx
+
   notifySchemaCacheSync a b = runTxInMetadataStorage $ notifySchemaCacheSyncTx a b
   processSchemaSyncEventPayload instanceId payloadValue = do
     eventPayload <- decodeValue payloadValue
     let _sseprShouldReload = instanceId /= _ssepInstanceId eventPayload
         _sseprCacheInvalidations = _ssepInvalidations eventPayload
     pure SchemaSyncEventProcessResult{..}
+
   getCatalogState     = runTxInMetadataStorage getCatalogStateTx
   setCatalogState a b = runTxInMetadataStorage $ setCatalogStateTx a b
+  getDatabaseUid      = runTxInMetadataStorage getDbIdTx
 
   insertAction a b c d         = runTxInMetadataStorage $ insertActionTx a b c d
   fetchUndeliveredActionEvents = runTxInMetadataStorage undeliveredEventsTx

@@ -65,6 +65,10 @@ class (Monad m) => MonadMetadataStorage m where
   getCatalogState :: MetadataStorageT m CatalogState
   setCatalogState :: CatalogStateType -> J.Value -> MetadataStorageT m ()
 
+  -- get the @db_uuid@ that we store in the database.
+  -- TODO: (anon) do we need this anymore?
+  getDatabaseUid :: MetadataStorageT m Text
+
   -- Async actions
   insertAction
     :: ActionName -> SessionVariables -> [HTTP.Header] -> J.Value
