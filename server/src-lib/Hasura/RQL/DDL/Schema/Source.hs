@@ -17,21 +17,19 @@ import qualified Data.HashSet                 as S
 import qualified Database.PG.Query            as Q
 
 resolveSource
-  :: (MonadIO m, MonadBaseControl IO m, HasDefaultSource m)
+  :: (MonadIO m, MonadBaseControl IO m)
   => Env.Environment -> SourceMetadata -> m (Either QErr ResolvedSource)
 resolveSource env (SourceMetadata _ tables functions config) = runExceptT do
-  sourceConfig <- case config of
-    SCDefault -> askDefaultSource
-    SCCustom (SourceCustomConfiguration urlConf connSettings) -> do
-      let SourceConnSettings maxConns idleTimeout retries = connSettings
-      urlText <- resolveUrlConf env urlConf
-      let connInfo = Q.ConnInfo retries $ Q.CDDatabaseURI $ txtToBs urlText
-          connParams = Q.defaultConnParams{ Q.cpIdleTime = idleTimeout
-                                          , Q.cpConns = maxConns
-                                          }
-      pgPool <- liftIO $ Q.initPGPool connInfo connParams (\_ -> pure ()) -- FIXME? Pg logger
-      let pgExecCtx = mkPGExecCtx Q.ReadCommitted pgPool
-      pure $ PGSourceConfig pgExecCtx connInfo
+  let SourceConfiguration urlConf connSettings = config
+      SourceConnSettings maxConns idleTimeout retries = connSettings
+  urlText <- resolveUrlConf env urlConf
+  let connInfo = Q.ConnInfo retries $ Q.CDDatabaseURI $ txtToBs urlText
+      connParams = Q.defaultConnParams{ Q.cpIdleTime = idleTimeout
+                                      , Q.cpConns = maxConns
+                                      }
+  pgPool <- liftIO $ Q.initPGPool connInfo connParams (\_ -> pure ()) -- FIXME? Pg logger
+  let pgExecCtx = mkPGExecCtx Q.ReadCommitted pgPool
+      sourceConfig  = PGSourceConfig pgExecCtx connInfo
 
   (tablesMeta, functionsMeta, pgScalars) <- runLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $ do
     initSource
@@ -54,11 +52,7 @@ initSource = do
   sourceVersionTableExist <- doesTableExist "hdb_catalog" "hdb_source_catalog_version"
   if | not hdbCatalogExist -> liftTx do
          Q.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_catalog" () False
-         pgcryptoAvailable <- isExtensionAvailable "pgcrypto"
-         if pgcryptoAvailable then createPgcryptoExtension
-           else throw400 Unexpected $
-             "pgcrypto extension is required, but could not find the extension in the "
-             <> "PostgreSQL server. Please make sure this extension is available."
+         enablePgcryptoExtension
          initPgSourceCatalog
      | not sourceVersionTableExist && not eventLogTableExist ->
          liftTx initPgSourceCatalog

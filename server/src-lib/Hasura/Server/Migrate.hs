@@ -16,7 +16,7 @@
 -- the @graphql-engine@ executable.
 module Hasura.Server.Migrate
   ( MigrationResult(..)
-  , migrateCatalog
+  , migrateMetadataStorageCatalog
   , latestCatalogVersion
   -- , recreateSystemMetadata
   , dropHdbCatalogSchema
@@ -39,14 +39,17 @@ import qualified Language.Haskell.TH.Lib       as TH
 import qualified Language.Haskell.TH.Syntax    as TH
 
 import           Control.Lens                  (view, _2)
+import           Control.Monad.Trans.Control   (MonadBaseControl)
 import           Control.Monad.Unique
 import           Data.Time.Clock               (UTCTime)
 import           Hasura.Logging                (Hasura, LogLevel (..), ToEngineLog (..))
+import           Hasura.Logging
 import           Hasura.RQL.DDL.Metadata       (fetchMetadataFromHdbTables)
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Schema
-import           Hasura.RQL.Types       hiding (fetchMetadataTx)
-import           Hasura.Server.Init            (DowngradeOptions (..))
+import           Hasura.RQL.Types
+import           Hasura.Server.Init
+import           Hasura.Server.Init.Config
 import           Hasura.Server.Logging         (StartupLog (..))
 import           Hasura.Server.Migrate.Version (latestCatalogVersion, latestCatalogVersionString)
 import           Hasura.Server.Version
@@ -84,6 +87,7 @@ dropHdbCatalogTables = liftTx $
      DROP TABLE hdb_catalog.hdb_remote_relationship;
      DROP TABLE hdb_catalog.hdb_relationship;
      DROP TABLE hdb_catalog.hdb_table;
+     DROP FUNCTION hdb_catalog.check_violation(text);
    |]
 
 data MigrationResult
@@ -115,41 +119,88 @@ data MigrationPair m = MigrationPair
   , mpDown    :: Maybe (m ())
   }
 
-migrateCatalog
-  :: forall m
-   . ( MonadIO m
-     , MonadTx m
+migrateMetadataStorageCatalog
+  :: ( MonadIO m
+     , MonadBaseControl IO m
+     , MonadError QErr m
      )
-  => UTCTime
-  -> m (MigrationResult, Metadata)
-migrateCatalog migrationTime = do
-  doesSchemaExist (SchemaName "hdb_catalog") >>= \case
-    False -> initialize True
-    True  -> doesTableExist (SchemaName "hdb_catalog") (TableName "hdb_version") >>= \case
-      False -> initialize False
-      True  -> migrateFrom =<< getCatalogVersion
+  => Env.Environment
+  -> Q.ConnParams
+  -> Logger Hasura
+  -> Q.PGLogger
+  -> Maybe (DefaultConnInfo UrlConf)
+  -> Maybe String
+  -> UTCTime
+  -> m (MigrationResult, Metadata, Q.PGPool)
+migrateMetadataStorageCatalog env connParams logger pgLogger databaseUrlM
+  metadataDatabaseUrlM migrationTime = do
+  case (databaseUrlM, metadataDatabaseUrlM) of
+    (Just databaseUrl, _) -> do
+      let DefaultConnInfo urlConf maybeRetries = databaseUrl
+          defaultRetries = _scsRetries defaultConnSettings
+          sourceConnSettings = SourceConnSettings
+                               (Q.cpConns connParams)
+                               (Q.cpIdleTime connParams)
+                               (fromMaybe defaultRetries maybeRetries)
+          defaultSourceConfig = SourceConfiguration urlConf sourceConnSettings
+      databaseUrlConnInfo <- mkConnInfoFromText <$> resolveUrlConf env urlConf
+
+      -- log database-url postgres connection info
+      unLogger logger $ connInfoToLog "database_url" databaseUrlConnInfo
+
+      let metadataConnInfo =
+            maybe databaseUrlConnInfo (mkConnInfoFromText . T.pack) metadataDatabaseUrlM
+      -- log metadata-database-url postgres connection info
+      unLogger logger $ connInfoToLog "metadata_database_url" metadataConnInfo
+
+      metadataPool <- liftIO $ Q.initPGPool metadataConnInfo connParams pgLogger
+      (migrateResult, metadata) <- liftEitherM $ runExceptT $
+        Q.runTx metadataPool (Q.Serializable, Just Q.ReadWrite) $ do
+        initCatalog
+        migrateFrom defaultSourceConfig =<< getCatalogVersion
+      pure (migrateResult, metadata, metadataPool)
+
+    (Nothing, Just metadataDatabaseUrl) -> do
+      let connInfo = Q.ConnInfo 1 $
+            Q.CDDatabaseURI $ txtToBs $ T.pack metadataDatabaseUrl
+      metadataPool <- liftIO $ Q.initPGPool connInfo Q.defaultConnParams pgLogger
+      metadata <- liftEitherM $ runExceptT $
+        Q.runTx metadataPool (Q.Serializable, Just Q.ReadWrite) $ do
+          initCatalog
+          catalogVersion <- getCatalogVersion
+          for_ (readMaybe @Int $ T.unpack catalogVersion) $ \versionInt ->
+            when (versionInt < multiSourceSupportCatalogVersion) $
+            throw500 $ "can't initialise on metadata storage with catalog version < "
+                       <> T.pack (show multiSourceSupportCatalogVersion)
+          fromMaybe emptyMetadata <$> liftTx fetchMetadataTx
+      pure (MRInitialized, metadata, metadataPool)
+    (Nothing, Nothing) -> throw500 "expecting either of database-url or metadata-database-url"
   where
-    -- initializes the catalog, creating the schema if necessary
-    initialize :: Bool -> m (MigrationResult, Metadata)
-    initialize createSchema =  do
-      liftTx $ Q.catchE defaultTxErrorHandler $
-        when createSchema $ do
-          Q.unitQ "CREATE SCHEMA hdb_catalog" () False
+    multiSourceSupportCatalogVersion = 40
 
-      isExtensionAvailable "pgcrypto" >>= \case
-        -- only if we created the schema, create the extension
-        True -> when createSchema $ createPgcryptoExtension
-        False -> throw500 $
-          "pgcrypto extension is required, but could not find the extension in the "
-          <> "PostgreSQL server. Please make sure this extension is available."
+    mkConnInfoFromText = Q.ConnInfo 1 . Q.CDDatabaseURI . txtToBs
 
-      runTx $(Q.sqlFromFile "src-rsr/initialise.sql")
-      updateCatalogVersion
-      pure (MRInitialized, emptyMetadata)
+    updateCatalogVersion :: MonadTx m => m ()
+    updateCatalogVersion =
+      setCatalogVersion latestCatalogVersionString migrationTime
+
+    initCatalog :: MonadTx m => m ()
+    initCatalog = do
+      hdbCatalogSchemaExists <- doesSchemaExist "hdb_catalog"
+      hdbVersionTableExists <- doesTableExist "hdb_catalog" "hdb_version"
+      if | not hdbCatalogSchemaExists -> do
+           liftTx $ Q.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_catalog" () False
+           enablePgcryptoExtension
+           definePgSchema
+         | not hdbVersionTableExists -> definePgSchema
+         | otherwise -> pure ()
       where
-    -- migrates an existing catalog to the latest version from an existing verion
-    migrateFrom :: T.Text -> m (MigrationResult, Metadata)
-    migrateFrom previousVersion = do
+        definePgSchema = do
+          runTx $(Q.sqlFromFile "src-rsr/initialise.sql")
+          updateCatalogVersion
+
+    migrateFrom :: (MonadTx m, MonadIO m) => SourceConfiguration -> T.Text -> m (MigrationResult, Metadata)
+    migrateFrom defaultSourceConfig previousVersion = do
       migrationResult <-
        if | previousVersion == latestCatalogVersionString -> do
             pure MRNothingToDo
@@ -162,17 +213,77 @@ migrateCatalog migrationTime = do
              traverse_ (mpMigrate . snd) neededMigrations
              updateCatalogVersion
              pure $ MRMigrated previousVersion
-      metadata <- liftTx fetchMetadataTx
-      pure (migrationResult, metadata)
+      maybeMetadata <- liftTx fetchMetadataTx
+      case maybeMetadata of
+        Just metadata -> pure (migrationResult, metadata)
+        Nothing -> do
+          let defaultSourceMetadata =
+                SourceMetadata defaultSource mempty mempty defaultSourceConfig
+              defaultMetadata =
+                emptyMetadata{_metaSources = HM.singleton defaultSource defaultSourceMetadata}
+          liftTx $ setMetadataTx defaultMetadata
+          pure (migrationResult, defaultMetadata)
       where
-        neededMigrations = dropWhile ((/= previousVersion) . fst) (migrations False)
+        neededMigrations = dropWhile ((/= previousVersion) . fst) (migrations defaultSourceConfig False)
 
-    updateCatalogVersion = setCatalogVersion latestCatalogVersionString migrationTime
+-- migrateCatalog
+--   :: forall m
+--    . ( MonadIO m
+--      , MonadTx m
+--      )
+--   => UTCTime
+--   -> m (MigrationResult, Metadata)
+-- migrateCatalog migrationTime = do
+--   doesSchemaExist (SchemaName "hdb_catalog") >>= \case
+--     False -> initialize True
+--     True  -> doesTableExist (SchemaName "hdb_catalog") (TableName "hdb_version") >>= \case
+--       False -> initialize False
+--       True  -> migrateFrom =<< getCatalogVersion
+--   where
+--     -- initializes the catalog, creating the schema if necessary
+--     initialize :: Bool -> m (MigrationResult, Metadata)
+--     initialize createSchema =  do
+--       liftTx $ Q.catchE defaultTxErrorHandler $
+--         when createSchema $ do
+--           Q.unitQ "CREATE SCHEMA hdb_catalog" () False
+
+--       isExtensionAvailable "pgcrypto" >>= \case
+--         -- only if we created the schema, create the extension
+--         True -> when createSchema $ undefined -- createPgcryptoExtension
+--         False -> throw500 $
+--           "pgcrypto extension is required, but could not find the extension in the "
+--           <> "PostgreSQL server. Please make sure this extension is available."
+
+--       runTx $(Q.sqlFromFile "src-rsr/initialise.sql")
+--       updateCatalogVersion
+--       pure (MRInitialized, emptyMetadata)
+--       where
+--     -- migrates an existing catalog to the latest version from an existing verion
+--     migrateFrom :: T.Text -> m (MigrationResult, Metadata)
+--     migrateFrom previousVersion = do
+--       migrationResult <-
+--        if | previousVersion == latestCatalogVersionString -> do
+--             pure MRNothingToDo
+--           | [] <- neededMigrations ->
+--             throw400 NotSupported $
+--             "Cannot use database previously used with a newer version of graphql-engine (expected"
+--               <> " a catalog version <=" <> latestCatalogVersionString <> ", but the current version"
+--               <> " is " <> previousVersion <> ")."
+--           | otherwise -> do
+--              traverse_ (mpMigrate . snd) neededMigrations
+--              updateCatalogVersion
+--              pure $ MRMigrated previousVersion
+--       metadata <- liftTx fetchMetadataTx
+--       pure (migrationResult, metadata)
+--       where
+--         neededMigrations = dropWhile ((/= previousVersion) . fst) (migrations defaultSourceConfig False)
+
+--     updateCatalogVersion = setCatalogVersion latestCatalogVersionString migrationTime
 
 downgradeCatalog
   :: forall m. (MonadIO m, MonadTx m)
-  => DowngradeOptions -> UTCTime -> m MigrationResult
-downgradeCatalog opts time = do
+  => DowngradeOptions -> SourceConfiguration -> UTCTime -> m MigrationResult
+downgradeCatalog opts defaultSourceConfig time = do
     downgradeFrom =<< getCatalogVersion
   where
     -- downgrades an existing catalog to the specified version
@@ -198,7 +309,7 @@ downgradeCatalog opts time = do
       where
         neededDownMigrations newVersion =
           downgrade previousVersion newVersion
-            (reverse (migrations (dgoDryRun opts)))
+            (reverse (migrations defaultSourceConfig (dgoDryRun opts)))
 
         downgrade
           :: T.Text
@@ -239,8 +350,9 @@ setCatalogVersion ver time = liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
     DO UPDATE SET version = $1, upgraded_on = $2
   |] (ver, time) False
 
-migrations :: forall m. (MonadIO m, MonadTx m) => Bool -> [(T.Text, MigrationPair m)]
-migrations dryRun =
+migrations :: forall m. (MonadIO m, MonadTx m)
+           => SourceConfiguration -> Bool -> [(T.Text, MigrationPair m)]
+migrations defaultSourceConfig dryRun =
     -- We need to build the list of migrations at compile-time so that we can compile the SQL
     -- directly into the executable using `Q.sqlFromFile`. The GHC stage restriction makes
     -- doing this a little bit awkward (we can’t use any definitions in this module at
@@ -267,7 +379,7 @@ migrations dryRun =
         $  [| ("0.8", (MigrationPair $(migrationFromFile "08" "1") Nothing)) |]
         :  migrationsFromFile [2..3]
         ++ [| ("3", (MigrationPair from3To4 Nothing)) |]
-        :  migrationsFromFile [5..37]
+        :  migrationsFromFile [5..38]
         ++ pure [| ("39", (MigrationPair from39To40 Nothing)) |])
   where
     runTxOrPrint :: Q.Query -> m ()
@@ -303,7 +415,7 @@ migrations dryRun =
                                              |] (Q.AltJ $ A.toJSON etc, name) True
 
     from39To40 = do
-      metadata <- fetchMetadataFromHdbTables
+      metadata <- fetchMetadataFromHdbTables defaultSourceConfig
       dropHdbCatalogTables
       liftTx $ do
         Q.unitQE defaultTxErrorHandler
@@ -316,15 +428,15 @@ migrations dryRun =
            |] () False
         setMetadataTx metadata
 
-fetchMetadataTx :: Q.TxE QErr Metadata
+fetchMetadataTx :: Q.TxE QErr (Maybe Metadata)
 fetchMetadataTx = do
   rows <- Q.withQE defaultTxErrorHandler
     [Q.sql|
        SELECT metadata from hdb_catalog.hdb_metadata where id = 1
     |] () True
   case rows of
-    []                             -> pure emptyMetadata
-    [(Identity (Q.AltJ metadata))] -> pure metadata
+    []                             -> pure Nothing
+    [(Identity (Q.AltJ metadata))] -> pure $ Just metadata
     _                              -> throw500 "multiple rows in hdb_metadata table"
 
 setMetadataTx :: Metadata -> Q.TxE QErr ()

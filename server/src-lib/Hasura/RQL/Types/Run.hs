@@ -27,10 +27,9 @@ import qualified Hasura.Tracing              as Tracing
 
 data RunCtx
   = RunCtx
-  { _rcUserInfo        :: !UserInfo
-  , _rcHttpMgr         :: !HTTP.Manager
-  , _rcSqlGenCtx       :: !SQLGenCtx
-  , _rcDefaultPgSource :: !PGSourceConfig
+  { _rcUserInfo  :: !UserInfo
+  , _rcHttpMgr   :: !HTTP.Manager
+  , _rcSqlGenCtx :: !SQLGenCtx
   }
 
 newtype BaseRunT m a
@@ -55,9 +54,6 @@ instance (Monad m) => HasHttpManager (BaseRunT m) where
 instance (Monad m) => HasSQLGenCtx (BaseRunT m) where
   askSQLGenCtx = asks _rcSqlGenCtx
 
-instance (Monad m) => HasDefaultSource (BaseRunT m) where
-  askDefaultSource = asks _rcDefaultPgSource
-
 instance (Monad m) => MonadMetadata (BaseRunT m) where
   fetchMetadata = get
   updateMetadata = put
@@ -77,7 +73,6 @@ newtype MetadataRun m a
            , UserInfoM
            , HasHttpManager
            , HasSQLGenCtx
-           , HasDefaultSource
            )
 
 runInMetadataRun :: (Monad m) => MetadataStorageT m a -> MetadataRun m a
@@ -119,7 +114,6 @@ newtype QueryRun a
            , UserInfoM
            , HasHttpManager
            , HasSQLGenCtx
-           , HasDefaultSource
            )
 
 peelQueryRun

@@ -245,7 +245,7 @@ data ActionPermissionMetadata
 instance NFData ActionPermissionMetadata
 instance Cacheable ActionPermissionMetadata
 
-$(J.deriveFromJSON
+$(J.deriveJSON
   (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True}
   ''ActionPermissionMetadata)
 
@@ -258,6 +258,7 @@ data ActionMetadata
   , _amPermissions :: ![ActionPermissionMetadata]
   } deriving (Show, Eq, Lift, Generic)
 $(makeLenses ''ActionMetadata)
+$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ActionMetadata)
 instance NFData ActionMetadata
 instance Cacheable ActionMetadata
 

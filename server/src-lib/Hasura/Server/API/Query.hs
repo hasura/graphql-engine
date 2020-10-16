@@ -79,12 +79,11 @@ runQuery
   -> UserInfo
   -> HTTP.Manager
   -> SQLGenCtx
-  -> PGSourceConfig
   -> RebuildableSchemaCache
   -> Metadata
   -> QueryWithSource
   -> m (EncJSON, Maybe MetadataStateResult)
-runQuery env userInfo httpManager sqlGenCtx defSourceConfig schemaCache metadata request = do
+runQuery env userInfo httpManager sqlGenCtx schemaCache metadata request = do
   traceCtx <- Tracing.currentContext
   accessMode <- fromMaybe Q.ReadWrite <$> getQueryAccessMode rqlQuery
   let sc = lastBuiltSchemaCache schemaCache
@@ -94,7 +93,7 @@ runQuery env userInfo httpManager sqlGenCtx defSourceConfig schemaCache metadata
     (((r, tracemeta), rsc, ci), meta)
       <- x & runCacheRWT schemaCache
            & peelQueryRun sourceConfig accessMode (Just traceCtx)
-             (RunCtx userInfo httpManager sqlGenCtx defSourceConfig) metadata
+             (RunCtx userInfo httpManager sqlGenCtx) metadata
            & runExceptT
            & liftEitherM
     let metadataStateRes = MetadataStateResult rsc ci meta

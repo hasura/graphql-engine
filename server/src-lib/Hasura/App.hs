@@ -69,7 +69,8 @@ import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates                (checkForUpdates)
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
-import           Hasura.Server.Migrate                     (fetchMetadataTx, migrateCatalog,
+import           Hasura.Server.Migrate                     (fetchMetadataTx,
+                                                            migrateMetadataStorageCatalog,
                                                             setMetadataTx)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
@@ -147,7 +148,7 @@ parseArgs = do
              header "Hasura GraphQL Engine: Realtime GraphQL API over Postgres with access control" <>
              footerDoc (Just mainCmdFooter)
            )
-    hgeOpts = HGEOptionsG <$> parseRawConnInfo <*> parseMetadataDbUrl <*> parseHGECommand
+    hgeOpts = HGEOptionsG <$> parseDefaultConnInfo <*> parseMetadataDbUrl <*> parseHGECommand
 
 printJSON :: (A.ToJSON a, MonadIO m) => a -> m ()
 printJSON = liftIO . BLC.putStrLn . A.encode
@@ -163,14 +164,13 @@ mkPGLogger (Logger logger) (Q.PLERetryMsg msg) =
 -- | most of the required types for initializing graphql-engine
 data InitCtx
   = InitCtx
-  { _icHttpManager         :: !HTTP.Manager
-  , _icInstanceId          :: !InstanceId
-  , _icLoggers             :: !Loggers
-  , _icDefaultSourceConfig :: !PGSourceConfig
-  , _icShutdownLatch       :: !ShutdownLatch
-  , _icSchemaCache         :: !RebuildableSchemaCache
-  , _icMetadata            :: !Metadata
-  , _icMetadataPool        :: !Q.PGPool
+  { _icHttpManager   :: !HTTP.Manager
+  , _icInstanceId    :: !InstanceId
+  , _icLoggers       :: !Loggers
+  , _icShutdownLatch :: !ShutdownLatch
+  , _icSchemaCache   :: !RebuildableSchemaCache
+  , _icMetadata      :: !Metadata
+  , _icMetadataPool  :: !Q.PGPool
   }
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger
@@ -205,35 +205,30 @@ initialiseCtx env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
   -- global http manager
   httpManager <- liftIO $ HTTP.newManager HTTP.tlsManagerSettings
   instanceId <- liftIO generateInstanceId
-  connInfo <- liftIO procConnInfo
   latch <- liftIO newShutdownLatch
-  (loggers, pool, sqlGenCtx, metadataPool) <- case hgeCmd of
+  (loggers, sqlGenCtx, connParams) <- case hgeCmd of
     -- for the @serve@ command generate a regular PG pool
     HCServe so@ServeOptions{..} -> do
-      l@(Loggers _ logger pgLogger) <- mkLoggers soEnabledLogTypes soLogLevel
+      l <- mkLoggers soEnabledLogTypes soLogLevel
+
       -- log serve options
-      unLogger logger $ serveOptsToLog so
-      -- log postgres connection info
-      unLogger logger $ connInfoToLog connInfo
-      pool <- liftIO $ Q.initPGPool connInfo soConnParams pgLogger
-      metadataPool <- maybe (pure pool) (getMetadataPool pgLogger) metadataDbUrl
-      pure (l, pool, SQLGenCtx soStringifyNum, metadataPool)
+      unLogger (_lsLogger l) $ serveOptsToLog so
+
+      pure (l, SQLGenCtx soStringifyNum, soConnParams)
 
     -- for other commands generate a minimal PG pool
     _ -> do
-      l@(Loggers _ _ pgLogger) <- mkLoggers defaultEnabledLogTypes LevelInfo
-      pool <- getMinimalPool pgLogger connInfo
-      metadataPool <- maybe (pure pool) (getMetadataPool pgLogger) metadataDbUrl
-      pure (l, pool, SQLGenCtx False, metadataPool)
+      l <- mkLoggers defaultEnabledLogTypes LevelInfo
+      pure (l, SQLGenCtx False, Q.defaultConnParams{Q.cpConns = 1})
 
-  let logger = _lsLogger loggers
-  metadata <- flip onException (flushLogger (_lsLoggerCtx loggers)) $
-              migrateCatalogSchema logger metadataPool
+  let Loggers loggerCtx logger pgLogger = loggers
 
-  let defSourceConfig = PGSourceConfig (mkPGExecCtx Q.Serializable pool) connInfo
+  (metadata, metadataPool) <-
+    flip onException (flushLogger loggerCtx) $
+    migrateCatalogSchema logger pgLogger env connParams rci metadataDbUrl
 
   schemaCacheE <- runExceptT
-    $ peelMetadataRun (RunCtx adminUserInfo httpManager sqlGenCtx defSourceConfig) metadata
+    $ peelMetadataRun (RunCtx adminUserInfo httpManager sqlGenCtx) metadata
     $ buildRebuildableSchemaCache env
 
   schemaCache <- fmap fst $ onLeft schemaCacheE $ \err -> do
@@ -244,20 +239,8 @@ initialiseCtx env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
         }
     liftIO $ printErrExit CacheBuildError $ BLC.unpack $ A.encode err
 
-  pure (InitCtx httpManager instanceId loggers defSourceConfig latch schemaCache metadata metadataPool, initTime)
-
+  pure (InitCtx httpManager instanceId loggers latch schemaCache metadata metadataPool, initTime)
   where
-    procConnInfo =
-      either (printErrExit InvalidDatabaseConnectionParamsError . ("Fatal Error : " <>)) return $ mkConnInfo rci
-
-    getMetadataPool pgLogger url = do
-      let connInfo = Q.ConnInfo 1 $ mkDatabaseUrlConnDetails url
-      liftIO $ Q.initPGPool connInfo Q.defaultConnParams pgLogger
-
-    getMinimalPool pgLogger ci = do
-      let connParams = Q.defaultConnParams { Q.cpConns = 1 }
-      liftIO $ Q.initPGPool ci connParams pgLogger
-
     mkLoggers enabledLogs logLevel = do
       loggerCtx <- liftIO $ mkLoggerCtx (defaultLoggerSettings True logLevel) enabledLogs
       let logger = mkLogger loggerCtx
@@ -267,14 +250,20 @@ initialiseCtx env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
 -- | helper function to initialize or migrate the @hdb_catalog@ schema (used by pro as well)
 migrateCatalogSchema
   :: (MonadIO m)
-  => Logger Hasura -> Q.PGPool -> m Metadata
-migrateCatalogSchema logger metadataPool = do
+  => Logger Hasura
+  -> Q.PGLogger
+  -> Env.Environment
+  -> Q.ConnParams
+  -> Maybe (DefaultConnInfo UrlConf)
+  -> Maybe String
+  -> m (Metadata, Q.PGPool)
+migrateCatalogSchema logger pgLogger env connParams dbUrl mdUrl = do
       -- adminRunCtx = RunCtx adminUserInfo httpManager sqlGenCtx
   currentTime <- liftIO Clock.getCurrentTime
-  initialiseResult <- liftIO $ runExceptT $
-    Q.runTx metadataPool (Q.Serializable, Just Q.ReadWrite) $ migrateCatalog currentTime
+  eitherResult <- liftIO $ runExceptT $
+    migrateMetadataStorageCatalog env connParams logger pgLogger dbUrl mdUrl currentTime
 
-  (migrationResult, metadata) <- case initialiseResult of
+  (migrationResult, metadata, metadataPool) <- case eitherResult of
     Left err -> do
       unLogger logger StartupLog
         { slLogLevel = LevelError
@@ -284,7 +273,7 @@ migrateCatalogSchema logger metadataPool = do
       liftIO (printErrExit DatabaseMigrationError (BLC.unpack $ A.encode err))
     Right a -> pure a
   unLogger logger migrationResult
-  pure metadata
+  pure (metadata, metadataPool)
 
 -- | Run a transaction and if an error is encountered, log the error and abort the program
 runTxIO :: Q.PGPool -> Q.TxMode -> Q.TxE QErr a -> IO a
@@ -352,7 +341,7 @@ runHGEServer
   -> EKG.Store
   -> SchemaSyncCtx
   -> m ()
-runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime
+runHGEServer env ServeOptions{..} InitCtx{..} _ initTime
   shutdownApp postPollHook ekgStore schemaSyncCtx = do
   -- Comment this to enable expensive assertions from "GHC.AssertNF". These
   -- will log lines to STDOUT containing "not in normal form". In the future we
@@ -366,7 +355,6 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime
 
   let sqlGenCtx = SQLGenCtx soStringifyNum
       Loggers loggerCtx logger _ = _icLoggers
-      defaultPgSource = fromMaybe _icDefaultSourceConfig maybeCustomPgSource
       SchemaSyncCtx schemaSyncListenerThread schemaSyncEventRef = schemaSyncCtx
 
   authModeRes <- runExceptT $ setupAuthMode soAdminSecret soAuthHook soJwtSecret soUnAuthRole
@@ -382,7 +370,6 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime
              logger
              sqlGenCtx
              soEnableAllowlist
-             defaultPgSource
              _icHttpManager
              authMode
              soCorsConfig
@@ -406,7 +393,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime
   -- start background thread for schema sync event processing
   schemaSyncProcessorThread <-
     startSchemaSyncProcessorThread sqlGenCtx
-    defaultPgSource logger _icHttpManager schemaSyncEventRef cacheRef _icInstanceId
+    logger _icHttpManager schemaSyncEventRef cacheRef _icInstanceId
 
   let
     maxEvThrds    = fromMaybe defaultMaxEventThreads soEventsHttpPoolSize
@@ -636,15 +623,14 @@ ourIdleGC (Logger logger) idleInterval minGCInterval maxNoGCInterval =
 
 runAsAdmin
   :: (MonadIO m)
-  => PGSourceConfig
-  -> SQLGenCtx
+  => SQLGenCtx
   -> HTTP.Manager
   -> Metadata
   -> MetadataRun m a
   -> m (Either QErr a)
-runAsAdmin defPgSource sqlGenCtx httpManager metadata m =
+runAsAdmin sqlGenCtx httpManager metadata m =
   fmap (fmap fst) $ runExceptT $
-    peelMetadataRun (RunCtx adminUserInfo httpManager sqlGenCtx defPgSource) metadata m
+    peelMetadataRun (RunCtx adminUserInfo httpManager sqlGenCtx) metadata m
 
 execQuery
   :: ( HasVersion
@@ -652,15 +638,14 @@ execQuery
      )
   => Env.Environment
   -> HTTP.Manager
-  -> PGSourceConfig
   -> Metadata
   -> BLC.ByteString
   -> m (Either QErr BLC.ByteString)
-execQuery env httpManager defPgSource metadata queryBs = runExceptT do
+execQuery env httpManager metadata queryBs = runExceptT do
   QueryWithSource source query <- case A.decode queryBs of
     Just jVal -> decodeValue jVal
     Nothing   -> throw400 InvalidJSON "invalid json"
-  let runCtx = RunCtx adminUserInfo httpManager (SQLGenCtx False) defPgSource
+  let runCtx = RunCtx adminUserInfo httpManager (SQLGenCtx False)
       actionM = do
         buildSchemaCacheStrict noMetadataModify
         encJToLBS <$> runQueryM env source query
@@ -790,7 +775,7 @@ setCatalogStateTx stateTy stateValue =
 
 instance MonadMetadataStorage ServerAppM where
 
-  getMetadata = runTxInMetadataStorage fetchMetadataTx
+  getMetadata = runTxInMetadataStorage (fromMaybe emptyMetadata <$> fetchMetadataTx)
   setMetadata = runTxInMetadataStorage . setMetadataTx
 
   notifySchemaCacheSync a b = runTxInMetadataStorage $ notifySchemaCacheSyncTx a b

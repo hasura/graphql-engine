@@ -1,6 +1,6 @@
 -- | Types and functions related to the server initialisation
 {-# OPTIONS_GHC -O0 #-}
-{-# LANGUAGE CPP    #-}
+{-# LANGUAGE CPP #-}
 module Hasura.Server.Init
   ( module Hasura.Server.Init
   , module Hasura.Server.Init.Config
@@ -19,6 +19,7 @@ import qualified Text.PrettyPrint.ANSI.Leijen     as PP
 
 import           Data.FileEmbed                   (embedStringFile)
 import           Data.Time                        (NominalDiffTime)
+import           Data.URL.Template                (parseURLTemplate)
 import           Network.Wai.Handler.Warp         (HostPreference)
 import           Options.Applicative
 
@@ -30,6 +31,7 @@ import qualified Hasura.Logging                   as L
 import           Hasura.Db
 import           Hasura.Prelude
 import           Hasura.RQL.Types                 (QErr, SchemaCache (..))
+import           Hasura.RQL.Types.Common
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Server.Init.Config
@@ -110,16 +112,21 @@ mkHGEOptions (HGEOptionsG rawConnInfo metadataDbUrl rawCmd) =
       HCVersion       -> return HCVersion
       HCDowngrade tgt -> return (HCDowngrade tgt)
 
-mkRawConnInfo :: RawConnInfo -> WithEnv RawConnInfo
-mkRawConnInfo rawConnInfo = do
-  withEnvUrl <- withEnv rawDBUrl $ fst databaseUrlEnv
-  withEnvRetries <- withEnv retries $ fst retriesNumEnv
-  return $ rawConnInfo { connUrl = withEnvUrl
-                       , connRetries = withEnvRetries
-                       }
-  where
-    rawDBUrl = connUrl rawConnInfo
-    retries = connRetries rawConnInfo
+mkRawConnInfo
+  :: DefaultConnInfo (Maybe InputWebhook)
+  -> WithEnv (Maybe (DefaultConnInfo UrlConf))
+mkRawConnInfo DefaultConnInfo{..} = do
+  env <- ask
+  let databaseUrlEnvVar = fst databaseUrlEnv
+      hasDatabaseUrlEnv = any ((== databaseUrlEnvVar) . fst) env
+  withEnvRetries <- withEnv _dciRetries $ fst retriesNumEnv
+  case _dciDatabaseUrl of
+    Nothing ->
+      if hasDatabaseUrlEnv then pure $ Just $
+      DefaultConnInfo (UrlFromEnv $ T.pack databaseUrlEnvVar) withEnvRetries
+      else pure Nothing
+    Just databaseUrl ->
+      pure $ Just $ DefaultConnInfo (UrlValue databaseUrl) withEnvRetries
 
 mkServeOptions :: L.EnabledLogTypes impl => RawServeOptions impl -> WithEnv (ServeOptions impl)
 mkServeOptions rso = do
@@ -511,11 +518,36 @@ adminInternalErrorsEnv =
   , "Enables including 'internal' information in an error response for requests made by an 'admin' (default: true)"
   )
 
-parseRawConnInfo :: Parser RawConnInfo
-parseRawConnInfo =
-  RawConnInfo <$> host <*> port <*> user <*> password
-              <*> dbUrl <*> dbName <*> options
-              <*> retries
+parseDefaultConnInfo :: Parser (DefaultConnInfo (Maybe InputWebhook))
+parseDefaultConnInfo = do
+  inputWebhook <- fmap InputWebhook <$>
+    (dbUrlParser <|> (fmap connInfoToUrl <$> parseRawConnInfo))
+  retries' <- retries
+  pure $ DefaultConnInfo inputWebhook retries'
+  where
+    retries = optional $
+      option auto ( long "retries" <>
+                    metavar "NO OF RETRIES" <>
+                    help (snd retriesNumEnv)
+                  )
+
+    dbUrlParser = optional $
+      option (eitherReader (parseURLTemplate . T.pack) )
+                ( long "database-url" <>
+                  metavar "<DATABASE-URL>" <>
+                  help (snd databaseUrlEnv)
+                )
+
+parseRawConnInfo :: Parser (Maybe RawConnInfo)
+parseRawConnInfo = do
+  host' <- host
+  port' <- port
+  user' <- user
+  password' <- password
+  dbName' <- dbName
+  options' <- options
+  pure $ RawConnInfo <$> host' <*> port' <*> user' <*> (pure password')
+                     <*> dbName' <*> (pure options')
   where
     host = optional $
       strOption ( long "host" <>
@@ -541,13 +573,6 @@ parseRawConnInfo =
                   help "Password of the user"
                 )
 
-    dbUrl = optional $
-      strOption
-                ( long "database-url" <>
-                  metavar "<DATABASE-URL>" <>
-                  help (snd databaseUrlEnv)
-                )
-
     dbName = optional $
       strOption ( long "dbname" <>
                   short 'd' <>
@@ -562,12 +587,6 @@ parseRawConnInfo =
                   help "PostgreSQL options"
                 )
 
-    retries = optional $
-      option auto ( long "retries" <>
-                    metavar "NO OF RETRIES" <>
-                    help (snd retriesNumEnv)
-                  )
-
 parseMetadataDbUrl :: Parser (Maybe String)
 parseMetadataDbUrl = optional $
   strOption ( long "metadata-database-url" <>
@@ -575,22 +594,22 @@ parseMetadataDbUrl = optional $
               help (snd metadataDbUrlEnv)
             )
 
-mkConnInfo :: RawConnInfo -> Either String Q.ConnInfo
-mkConnInfo (RawConnInfo mHost mPort mUser password mURL mDB opts mRetries) =
-  Q.ConnInfo retries <$>
-  case (mHost, mPort, mUser, mDB, mURL) of
+-- mkConnInfo :: RawConnInfo -> Q.ConnInfo
+-- mkConnInfo (RawConnInfo mHost mPort mUser password mURL mDB opts mRetries) =
+--   Q.ConnInfo retries <$>
+--   case (mHost, mPort, mUser, mDB, mURL) of
 
-    (Just host, Just port, Just user, Just db, Nothing) ->
-      return $ Q.CDOptions $ Q.ConnOptions host port user password db opts
+--     (Just host, Just port, Just user, Just db, Nothing) ->
+--       return $ Q.CDOptions $ Q.ConnOptions host port user password db opts
 
-    (_, _, _, _, Just dbURL) ->
-      return $ mkDatabaseUrlConnDetails dbURL
-    _ -> throwError $ "Invalid options. "
-                    ++ "Expecting all database connection params "
-                    ++ "(host, port, user, dbname, password) or "
-                    ++ "database-url (HASURA_GRAPHQL_DATABASE_URL)"
-  where
-    retries = fromMaybe 1 mRetries
+--     (_, _, _, _, Just dbURL) ->
+--       return $ mkDatabaseUrlConnDetails dbURL
+--     _ -> throwError $ "Invalid options. "
+--                     ++ "Expecting all database connection params "
+--                     ++ "(host, port, user, dbname, password) or "
+--                     ++ "database-url (HASURA_GRAPHQL_DATABASE_URL)"
+--   where
+--     retries = fromMaybe 1 mRetries
 
 mkDatabaseUrlConnDetails :: String -> Q.ConnDetails
 mkDatabaseUrlConnDetails =
@@ -890,8 +909,8 @@ parseLogLevel = optional $
          )
 
 -- Init logging related
-connInfoToLog :: Q.ConnInfo -> StartupLog
-connInfoToLog connInfo =
+connInfoToLog :: Text -> Q.ConnInfo -> StartupLog
+connInfoToLog urlName connInfo =
   StartupLog L.LevelInfo "postgres_connection" infoVal
   where
     Q.ConnInfo retries details = connInfo
@@ -908,10 +927,10 @@ connInfoToLog connInfo =
     mkDBUriLog uri =
       case show <$> parseURI uri of
         Nothing -> J.object
-          [ "error" J..= ("parsing database url failed" :: String)]
+          [ "error" J..= ("parsing postgres url failed" :: String)]
         Just s  -> J.object
           [ "retries" J..= retries
-          , "database_url" J..= s
+          , urlName J..= s
           ]
 
 serveOptsToLog :: J.ToJSON (L.EngineLogType impl) => ServeOptions impl -> StartupLog

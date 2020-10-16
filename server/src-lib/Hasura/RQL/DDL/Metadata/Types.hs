@@ -6,6 +6,7 @@ module Hasura.RQL.DDL.Metadata.Types
   , ExportMetadata(..)
   , ClearMetadata(..)
   , ReloadMetadata(..)
+  , ReplaceMetadata(..)
   , DumpInternalState(..)
   , GetInconsistentMetadata(..)
   , DropInconsistentMetadata(..)
@@ -49,6 +50,19 @@ instance FromJSON ReloadMetadata where
                 <$> o .:? "reload_remote_schemas" .!= False
                 <*> o .:? "reload_sources" .!= False
     _        -> pure $ ReloadMetadata False False
+
+data ReplaceMetadata
+  = RMWithSources !Metadata
+  | RMWithoutSources !MetadataNoSources
+  deriving (Show, Eq)
+
+instance FromJSON ReplaceMetadata where
+  parseJSON v = (RMWithSources <$> parseJSON v) <|> (RMWithoutSources <$> parseJSON v)
+
+instance ToJSON ReplaceMetadata where
+  toJSON = \case
+    RMWithSources v -> toJSON v
+    RMWithoutSources v -> toJSON v
 
 data DumpInternalState
   = DumpInternalState

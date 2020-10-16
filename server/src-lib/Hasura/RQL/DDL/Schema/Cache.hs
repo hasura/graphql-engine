@@ -60,7 +60,6 @@ import           Hasura.SQL.Types
 buildRebuildableSchemaCache
   :: ( HasVersion, MonadIO m, MonadError QErr m
      , HasHttpManager m, HasSQLGenCtx m, MonadMetadata m
-     , HasDefaultSource m
      )
   => Env.Environment
   -> m RebuildableSchemaCache
@@ -95,7 +94,7 @@ instance (Monad m) => CacheRM (CacheRWT m) where
   askSchemaCache = CacheRWT $ gets (lastBuiltSchemaCache . (^. _1))
 
 instance ( MonadIO m , MonadMetadata m, MonadError QErr m
-         , HasHttpManager m, HasSQLGenCtx m, HasDefaultSource m
+         , HasHttpManager m, HasSQLGenCtx m
          ) => CacheRWM (CacheRWT m) where
   buildSchemaCacheWithOptions buildReason invalidations metadataModifier = CacheRWT do
     (RebuildableSchemaCache _ invalidationKeys rule, oldInvalidations, resolvedSources) <- get
@@ -127,7 +126,7 @@ buildSchemaCacheRule
   :: ( HasVersion, ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
      , MonadIO m, MonadUnique m, MonadError QErr m
      , MonadReader BuildContext m, HasHttpManager m, HasSQLGenCtx m
-     , HasDefaultSource m, MonadBaseControl IO m
+     , MonadBaseControl IO m
      )
   => Env.Environment
   -> (Metadata, InvalidationKeys) `arr` SchemaCache
@@ -190,7 +189,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     resolveSourceIfNeeded
       :: ( ArrowChoice arr, Inc.ArrowCache m arr
          , ArrowWriter (Seq CollectedInfo) arr
-         , HasDefaultSource m, MonadIO m, MonadBaseControl IO m
+         , MonadIO m, MonadBaseControl IO m
          , MonadReader BuildContext m
          )
       => ( Inc.Dependency (HashMap SourceName Inc.InvalidationKey)
@@ -277,7 +276,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
          , ArrowWriter (Seq CollectedInfo) arr, MonadIO m, MonadBaseControl IO m
          , MonadError QErr m, MonadUnique m, MonadReader BuildContext m
-         , HasHttpManager m, HasSQLGenCtx m, HasDefaultSource m )
+         , HasHttpManager m, HasSQLGenCtx m )
       => (Metadata, Inc.Dependency InvalidationKeys) `arr` BuildOutputs
     buildAndCollectInfo = proc (metadata, invalidationKeys) -> do
       let Metadata sources remoteSchemas collections allowlists

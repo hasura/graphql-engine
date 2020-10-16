@@ -100,8 +100,7 @@ data SchemaCacheRef
 
 data ServerCtx
   = ServerCtx
-  { scDefaultPgSource              :: !PGSourceConfig
-  , scLogger                       :: !(L.Logger L.Hasura)
+  { scLogger                       :: !(L.Logger L.Hasura)
   , scCacheRef                     :: !SchemaCacheRef
   , scAuthMode                     :: !AuthMode
   , scManager                      :: !HTTP.Manager
@@ -393,13 +392,12 @@ v1QueryHandler v1Query = do
   logger       <- asks (scLogger . hcServerCtx)
   instanceId   <- asks (scInstanceId . hcServerCtx)
   metadata     <- liftIO $ readIORef $ _scrMetadata scRef
-  defPgSource  <- asks (scDefaultPgSource . hcServerCtx)
   httpMgr      <- asks (scManager . hcServerCtx)
   sqlGenCtx    <- asks (scSQLGenCtx . hcServerCtx)
   env          <- asks (scEnvironment . hcServerCtx)
 
   let sources = scPostgres $ lastBuiltSchemaCache schemaCache
-      runCtx = RunCtx userInfo httpMgr sqlGenCtx defPgSource
+      runCtx = RunCtx userInfo httpMgr sqlGenCtx
 
   (sourceName, sourceConfig) <- case M.toList sources of
     []  -> throw400 NotSupported "no postgres source exist"
@@ -440,13 +438,12 @@ v1MetadataHandler request = do
   metadata     <- liftIO $ readIORef $ _scrMetadata scRef
   httpMgr      <- asks (scManager . hcServerCtx)
   sqlGenCtx    <- asks (scSQLGenCtx . hcServerCtx)
-  defPgSource  <- asks (scDefaultPgSource . hcServerCtx)
   env          <- asks (scEnvironment . hcServerCtx)
   instanceId   <- asks (scInstanceId . hcServerCtx)
   logger       <- asks (scLogger . hcServerCtx)
   r <- withSCUpdate scRef instanceId logger $
        second Just <$> runMetadataRequest env userInfo httpMgr sqlGenCtx
-                       defPgSource schemaCache metadata request
+                       schemaCache metadata request
   pure $ HttpResponse r []
 
 v2QueryHandler
@@ -466,12 +463,11 @@ v2QueryHandler request = do
   metadata     <- liftIO $ readIORef $ _scrMetadata scRef
   httpMgr      <- asks (scManager . hcServerCtx)
   sqlGenCtx    <- asks (scSQLGenCtx . hcServerCtx)
-  pgExecCtx    <- asks (scDefaultPgSource . hcServerCtx)
   env          <- asks (scEnvironment . hcServerCtx)
   instanceId   <- asks (scInstanceId . hcServerCtx)
   logger       <- asks (scLogger . hcServerCtx)
   r <- withSCUpdate scRef instanceId logger $
-       runQuery env userInfo httpMgr sqlGenCtx pgExecCtx schemaCache metadata request
+       runQuery env userInfo httpMgr sqlGenCtx schemaCache metadata request
   pure $ HttpResponse r []
 
 v1Alpha1GQHandler
@@ -699,8 +695,6 @@ mkWaiApp
   -> SQLGenCtx
   -> Bool
   -- ^ is AllowList enabled - TODO: change this boolean to sumtype
-  -> PGSourceConfig
-  -- ^ default postgres source
   -> HTTP.Manager
   -- ^ HTTP manager so that we can re-use sessions
   -> AuthMode
@@ -728,7 +722,7 @@ mkWaiApp
   -> Metadata
   -- ^ Metadata
   -> m HasuraApp
-mkWaiApp env logger sqlGenCtx enableAL defPgSource httpManager mode corsCfg enableConsole consoleAssetsDir
+mkWaiApp env logger sqlGenCtx enableAL httpManager mode corsCfg enableConsole consoleAssetsDir
          enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig
          liveQueryHook schemaCache ekgStore metadataPool metadata = do
 
@@ -745,8 +739,7 @@ mkWaiApp env logger sqlGenCtx enableAL defPgSource httpManager mode corsCfg enab
                                         corsPolicy sqlGenCtx enableAL metadataPool {- planCache -}
 
     let serverCtx = ServerCtx
-                    { scDefaultPgSource = defPgSource
-                    , scLogger          =  logger
+                    { scLogger          =  logger
                     , scCacheRef        =  schemaCacheRef
                     , scAuthMode        =  mode
                     , scManager         =  httpManager
@@ -822,7 +815,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
     -- Health check endpoint
     Spock.get "healthz" $ do
       sc <- getSCFromRef $ scCacheRef serverCtx
-      dbOk <- liftIO $ _pecCheckHealth $ _pscExecCtx $ scDefaultPgSource serverCtx
+      dbOk <- liftIO $ _pecCheckHealth $ mkPGExecCtx Q.ReadCommitted $ scMetadataPool serverCtx
       if dbOk
         then Spock.setStatus HTTP.status200 >> (Spock.text $ if null (scInconsistentObjs sc)
                                                  then "OK"

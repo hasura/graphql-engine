@@ -76,7 +76,6 @@ newtype Run m a = Run {unRun :: BaseRunT (LazyTxT QErr m) a}
            , UserInfoM
            , HasHttpManager
            , HasSQLGenCtx
-           , HasDefaultSource
            )
 
 deriving instance (MonadIO m, MonadBaseControl IO m) => MonadBaseControl IO (Run m)
@@ -195,7 +194,7 @@ data RQLQueryV1
 
   | RQRunSql !RunSQL
 
-  | RQReplaceMetadata !Metadata
+  | RQReplaceMetadata !MetadataNoSources
   | RQExportMetadata !ExportMetadata
   | RQClearMetadata !ClearMetadata
   | RQReloadMetadata !ReloadMetadata
@@ -479,7 +478,7 @@ runQueryM env source rq = withPathK "args" $ case rq of
       RQAddCollectionToAllowlist q     -> runAddCollectionToAllowlist q
       RQDropCollectionFromAllowlist q  -> runDropCollectionFromAllowlist q
 
-      RQReplaceMetadata q          -> runReplaceMetadata q
+      RQReplaceMetadata q          -> runReplaceMetadata $ RMWithoutSources q
       RQClearMetadata q            -> runClearMetadata q
       RQExportMetadata q           -> runExportMetadata q
       RQReloadMetadata q           -> runReloadMetadata q

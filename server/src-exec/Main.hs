@@ -87,13 +87,21 @@ runApp env hgeOptions =
     HCExecute -> do
       (InitCtx{..}, _) <- initialiseCtx env hgeOptions
       queryBs <- liftIO BL.getContents
-      result <- execQuery env _icHttpManager _icDefaultSourceConfig _icMetadata queryBs
+      result <- execQuery env _icHttpManager _icMetadata queryBs
       either (printErrJExit ExecuteProcessError) (liftIO . BLC.putStrLn) result
 
     HCDowngrade opts -> do
       (InitCtx{..}, initTime) <- initialiseCtx env hgeOptions
-      res <- runTx' _icMetadataPool Q.ReadCommitted $ downgradeCatalog opts initTime
-      either (printErrJExit DowngradeProcessError) (liftIO . print) res
+      case hoDefaultConnInfo hgeOptions of
+        Nothing -> printErrJExit DowngradeProcessError ("cannot downgrade with no database-url" ::Text)
+        Just dbUrl -> do
+          let DefaultConnInfo urlConf retries = dbUrl
+              defaultSourceConf = SourceConfiguration urlConf
+                                  defaultConnSettings
+                                  {_scsRetries = fromMaybe 1 retries}
+          res <- runTx' _icMetadataPool Q.ReadCommitted $
+                 downgradeCatalog opts defaultSourceConf initTime
+          either (printErrJExit DowngradeProcessError) (liftIO . print) res
 
     HCVersion -> liftIO $ putStrLn $ "Hasura GraphQL Engine: " ++ convertText currentVersion
   where

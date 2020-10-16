@@ -4,6 +4,7 @@ module Data.URL.Template
   , TemplateItem
   , Variable
   , printURLTemplate
+  , mkPlainURLTemplate
   , parseURLTemplate
   , renderURLTemplate
   , genURLTemplate
@@ -12,8 +13,8 @@ where
 
 import           Hasura.Prelude
 
-import qualified Data.Text                  as T
 import qualified Data.Environment           as Env
+import qualified Data.Text                  as T
 
 import           Data.Attoparsec.Combinator (lookAhead)
 import           Data.Attoparsec.Text
@@ -44,6 +45,10 @@ newtype URLTemplate = URLTemplate {unURLTemplate :: [TemplateItem]}
 
 printURLTemplate :: URLTemplate -> Text
 printURLTemplate = T.concat . map printTemplateItem . unURLTemplate
+
+mkPlainURLTemplate :: Text -> URLTemplate
+mkPlainURLTemplate =
+  URLTemplate . pure . TIText
 
 parseURLTemplate :: Text -> Either String URLTemplate
 parseURLTemplate t = parseOnly parseTemplate t

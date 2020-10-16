@@ -106,7 +106,7 @@ data RQLMetadata
   | RMDropCollectionFromAllowlist !CollectionReq
 
   -- basic metadata management
-  | RMReplaceMetadata !Metadata
+  | RMReplaceMetadata !ReplaceMetadata
   | RMExportMetadata !ExportMetadata
   | RMClearMetadata !ClearMetadata
   | RMReloadMetadata !ReloadMetadata
@@ -146,17 +146,15 @@ runMetadataRequest
   -> UserInfo
   -> HTTP.Manager
   -> SQLGenCtx
-  -> PGSourceConfig
   -> RebuildableSchemaCache
   -> Metadata
   -> RQLMetadata
   -> m (EncJSON, MetadataStateResult)
-runMetadataRequest env userInfo httpManager sqlGenCtx defPGSource schemaCache metadata request = do
+runMetadataRequest env userInfo httpManager sqlGenCtx schemaCache metadata request = do
   ((r, modSchemaCache, cacheInvalidations), modMetadata) <-
     runMetadataRequestM env request
-    & runHasSystemDefinedT (SystemDefined False)
     & runCacheRWT schemaCache
-    & peelMetadataRun (RunCtx userInfo httpManager sqlGenCtx defPGSource) metadata
+    & peelMetadataRun (RunCtx userInfo httpManager sqlGenCtx) metadata
     & runExceptT
     & liftEitherM
   pure (r, MetadataStateResult modSchemaCache cacheInvalidations modMetadata)
@@ -165,7 +163,6 @@ runMetadataRequestM
   :: ( HasVersion
      , MonadIO m
      , CacheRWM m
-     , HasSystemDefined m
      , UserInfoM m
      , MonadUnique m
      , MonadMetadata m

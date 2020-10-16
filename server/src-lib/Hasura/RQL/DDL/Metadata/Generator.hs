@@ -51,9 +51,6 @@ instance Arbitrary FunctionMetadata where
 instance Arbitrary SourceConnSettings where
   arbitrary = genericArbitrary
 
-instance Arbitrary SourceCustomConfiguration where
-  arbitrary = genericArbitrary
-
 instance Arbitrary SourceConfiguration where
   arbitrary = genericArbitrary
 

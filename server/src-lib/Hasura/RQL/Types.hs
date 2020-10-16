@@ -16,8 +16,6 @@ module Hasura.RQL.Types
   , HasSystemDefinedT
   , runHasSystemDefinedT
 
-  , HasDefaultSource(..)
-
   , QCtx(..)
   , HasQCtx(..)
   , mkAdminQCtx
@@ -229,17 +227,17 @@ runHasSystemDefinedT systemDefined = flip runReaderT systemDefined . unHasSystem
 instance (Monad m) => HasSystemDefined (HasSystemDefinedT m) where
   askSystemDefined = HasSystemDefinedT ask
 
-class (Monad m) => HasDefaultSource m where
-  askDefaultSource :: m PGSourceConfig
+-- class (Monad m) => HasDefaultSource m where
+--   askDefaultSource :: m PGSourceConfig
 
-instance (HasDefaultSource m) => HasDefaultSource (ReaderT r m) where
-  askDefaultSource = lift askDefaultSource
-instance (HasDefaultSource m) => HasDefaultSource (ExceptT e m) where
-  askDefaultSource = lift askDefaultSource
-instance (HasDefaultSource m) => HasDefaultSource (StateT s m) where
-  askDefaultSource = lift askDefaultSource
-instance (HasDefaultSource m) => HasDefaultSource (TraceT m) where
-  askDefaultSource = lift askDefaultSource
+-- instance (HasDefaultSource m) => HasDefaultSource (ReaderT r m) where
+--   askDefaultSource = lift askDefaultSource
+-- instance (HasDefaultSource m) => HasDefaultSource (ExceptT e m) where
+--   askDefaultSource = lift askDefaultSource
+-- instance (HasDefaultSource m) => HasDefaultSource (StateT s m) where
+--   askDefaultSource = lift askDefaultSource
+-- instance (HasDefaultSource m) => HasDefaultSource (TraceT m) where
+--   askDefaultSource = lift askDefaultSource
 
 liftMaybe :: (QErrM m) => QErr -> Maybe a -> m a
 liftMaybe e = maybe (throwError e) return

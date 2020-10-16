@@ -124,9 +124,8 @@ $(makeLenses ''BuildOutputs)
 -- | Parameters required for schema cache build
 data CacheBuildParams
   = CacheBuildParams
-  { _cbpManager         :: !HTTP.Manager
-  , _cbpSqlGenCtx       :: !SQLGenCtx
-  , _cbpDefaultPgConfig :: !PGSourceConfig
+  { _cbpManager   :: !HTTP.Manager
+  , _cbpSqlGenCtx :: !SQLGenCtx
   }
 
 -- | The monad in which @'RebuildableSchemaCache' is being run
@@ -147,22 +146,17 @@ instance HasHttpManager CacheBuild where
 instance HasSQLGenCtx CacheBuild where
   askSQLGenCtx = asks _cbpSqlGenCtx
 
-instance HasDefaultSource CacheBuild where
-  askDefaultSource = asks _cbpDefaultPgConfig
-
 runCacheBuild
   :: ( MonadIO m
      , MonadError QErr m
      , HasHttpManager m
      , HasSQLGenCtx m
-     , HasDefaultSource m
      )
   => CacheBuild a -> m a
 runCacheBuild (CacheBuild m) = do
   httpManager <- askHttpManager
   sqlGenCtx   <- askSQLGenCtx
-  defPgSource <- askDefaultSource
-  let params = CacheBuildParams httpManager sqlGenCtx defPgSource
+  let params = CacheBuildParams httpManager sqlGenCtx
   liftEitherM $ liftIO $ runExceptT (runReaderT m params)
 
 data RebuildableSchemaCache

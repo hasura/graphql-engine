@@ -10,6 +10,7 @@ import           Control.Lens                        hiding (set, (.=))
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Aeson.Types
 import           Language.Haskell.TH.Syntax          (Lift)
 
 
@@ -216,6 +217,7 @@ data TableMetadata
   , _tmEventTriggers       :: !EventTriggers
   } deriving (Show, Eq, Lift, Generic)
 instance Cacheable TableMetadata
+$(deriveToJSON (aesonDrop 3 snakeCase) ''TableMetadata)
 $(makeLenses ''TableMetadata)
 
 mkTableMeta :: QualifiedTable -> Bool -> TableConfig -> TableMetadata
@@ -273,7 +275,7 @@ data FunctionMetadata
   } deriving (Show, Eq, Lift, Generic)
 instance Cacheable FunctionMetadata
 $(makeLenses ''FunctionMetadata)
-$(deriveFromJSON (aesonDrop 3 snakeCase) ''FunctionMetadata)
+$(deriveJSON (aesonDrop 3 snakeCase) ''FunctionMetadata)
 
 type Tables = M.HashMap QualifiedTable TableMetadata
 type Functions = M.HashMap QualifiedFunction FunctionMetadata
@@ -283,19 +285,19 @@ type Allowlist = HS.HashSet CollectionReq
 type Actions = M.HashMap ActionName ActionMetadata
 type CronTriggers = M.HashMap TriggerName CronTriggerMetadata
 
-data SourceCustomConfiguration
-  = SourceCustomConfiguration
-  { _sccDatabaseUrl            :: !UrlConf
-  , _sccConnectionPoolSettings :: !SourceConnSettings
-  } deriving (Show, Eq, Lift, Generic)
-instance Cacheable SourceCustomConfiguration
-$(deriveJSON (aesonDrop 4 snakeCase) ''SourceCustomConfiguration)
-
 data SourceConfiguration
-  = SCDefault -- ^ the default configuraion, to be resolved from --database-url option
-  | SCCustom !SourceCustomConfiguration -- ^ the custom configuration
-  deriving (Show, Eq, Lift, Generic)
+  = SourceConfiguration
+  { _scDatabaseUrl            :: !UrlConf
+  , _scConnectionPoolSettings :: !SourceConnSettings
+  } deriving (Show, Eq, Lift, Generic)
 instance Cacheable SourceConfiguration
+$(deriveJSON (aesonDrop 3 snakeCase) ''SourceConfiguration)
+
+-- data SourceConfiguration
+--   = SCDefault -- ^ the default configuraion, to be resolved from --database-url option
+--   | SCCustom !SourceCustomConfiguration -- ^ the custom configuration
+--   deriving (Show, Eq, Lift, Generic)
+-- instance Cacheable SourceConfiguration
 
 data SourceMetadata
   = SourceMetadata
@@ -311,15 +313,13 @@ instance FromJSON SourceMetadata where
     _smName          <- o .: "name"
     _smTables        <- mapFromL _tmTable <$> o .: "tables"
     _smFunctions     <- mapFromL _fmFunction <$> o .:? "functions" .!= []
-    _smConfiguration <- if _smName == defaultSource then pure SCDefault
-                        else SCCustom <$> o .: "configuration"
+    _smConfiguration <- o .: "configuration"
     pure SourceMetadata{..}
 
 mkSourceMetadata
   :: SourceName -> UrlConf -> SourceConnSettings -> SourceMetadata
 mkSourceMetadata name urlConf connSettings =
-  SourceMetadata name mempty mempty $ SCCustom $
-  SourceCustomConfiguration urlConf connSettings
+  SourceMetadata name mempty mempty $ SourceConfiguration urlConf connSettings
 
 type Sources = M.HashMap SourceName SourceMetadata
 
@@ -337,37 +337,75 @@ data Metadata
   } deriving (Show, Eq)
 $(makeLenses ''Metadata)
 
+parseNonSourcesMetadata
+  :: Object
+  -> Parser
+     ( RemoteSchemas
+     , QueryCollections
+     , Allowlist
+     , CustomTypes
+     , Actions
+     , CronTriggers
+     )
+parseNonSourcesMetadata o = do
+  remoteSchemas <- (mapFromL _arsqName <$> o .:? "remote_schemas" .!= [])
+  queryCollections <- (mapFromL _ccName <$> o .:? "query_collections" .!= [])
+  allowlist <- o .:? "allowlist" .!= HS.empty
+  customTypes <- o .:? "custom_types" .!= emptyCustomTypes
+  actions <- (mapFromL _amName <$> o .:? "actions" .!= [])
+  cronTriggers <- (mapFromL ctName <$> o .:? "cron_triggers" .!= [])
+  pure ( remoteSchemas, queryCollections, allowlist, customTypes
+       , actions, cronTriggers
+       )
+
 instance FromJSON Metadata where
   parseJSON = withObject "Object" $ \o -> do
     version <- o .:? "version" .!= MVVersion1
-    sources <- parseSources o version
-    Metadata sources
-      <$> (mapFromL _arsqName <$> o .:? "remote_schemas" .!= [])
-      <*> (mapFromL _ccName <$> o .:? "query_collections" .!= [])
-      <*> o .:? "allowlist" .!= HS.empty
-      <*> o .:? "custom_types" .!= emptyCustomTypes
-      <*> (mapFromL _amName <$> o .:? "actions" .!= [])
-      <*> (mapFromL ctName <$> o .:? "cron_triggers" .!= [])
-    where
-      parseSources o = \case
+    when (version /= MVVersion3) $ fail $
+      "unexpected metadata version from storage: " <> show version
+    sources <- mapFromL _smName <$> o .: "sources"
+    (remoteSchemas, queryCollections, allowlist, customTypes,
+     actions, cronTriggers) <- parseNonSourcesMetadata o
+    pure $ Metadata sources remoteSchemas queryCollections allowlist
+           customTypes actions cronTriggers
+
+data MetadataNoSources
+  = MetadataNoSources
+  { _mnsTables           :: !Tables
+  , _mnsFunctions        :: !Functions
+  , _mnsRemoteSchemas    :: !RemoteSchemas
+  , _mnsQueryCollections :: !QueryCollections
+  , _mnsAllowlist        :: !Allowlist
+  , _mnsCustomTypes      :: !CustomTypes
+  , _mnsActions          :: !Actions
+  , _mnsCronTriggers     :: !CronTriggers
+  } deriving (Show, Eq)
+$(deriveToJSON (aesonDrop 4 snakeCase) ''MetadataNoSources)
+
+instance FromJSON MetadataNoSources where
+  parseJSON = withObject "Object" $ \o -> do
+    version <- o .:? "version" .!= MVVersion1
+    (tables, functions) <-
+      case version of
         MVVersion1 -> do
           tables       <- mapFromL _tmTable <$> o .: "tables"
           functionList <- o .:? "functions" .!= []
           let functions = M.fromList $ flip map functionList $
                 \function -> (function, FunctionMetadata function emptyFunctionConfig)
-          pure $ M.singleton defaultSource $ SourceMetadata defaultSource tables functions SCDefault
+          pure (tables, functions)
         MVVersion2 -> do
           tables    <- mapFromL _tmTable <$> o .: "tables"
           functions <- mapFromL _fmFunction <$> o .:? "functions" .!= []
-          pure $ M.singleton defaultSource $ SourceMetadata defaultSource tables functions SCDefault
-        MVVersion3 ->
-          mapFromL _smName <$> o .: "sources"
+          pure (tables, functions)
+        MVVersion3 -> fail "unexpected version for metadata without sources: 3"
+    (remoteSchemas, queryCollections, allowlist, customTypes,
+     actions, cronTriggers) <- parseNonSourcesMetadata o
+    pure $ MetadataNoSources tables functions remoteSchemas queryCollections
+                             allowlist customTypes actions cronTriggers
 
 emptyMetadata :: Metadata
 emptyMetadata =
-  Metadata emptySources mempty mempty mempty emptyCustomTypes mempty mempty
-  where
-    emptySources = M.singleton defaultSource $ SourceMetadata defaultSource mempty mempty SCDefault
+  Metadata mempty mempty mempty mempty emptyCustomTypes mempty mempty
 
 instance ToJSON Metadata where
   toJSON = AO.fromOrdered . metadataToOrdJSON
@@ -419,9 +457,7 @@ metadataToOrdJSON ( Metadata
       let sourceNamePair = ("name", AO.toOrdered _smName)
           tablesPair = ("tables", AO.array $ map tableMetaToOrdJSON $ M.elems _smTables)
           functionsPair = listToMaybeOrdPair "functions" functionMetadataToOrdJSON $ M.elems _smFunctions
-          configurationPair = case _smConfiguration of
-            SCDefault     -> []
-            SCCustom conf -> [("configuration", AO.toOrdered conf)]
+          configurationPair = [("configuration", AO.toOrdered _smConfiguration)]
       in AO.object $ [sourceNamePair, tablesPair] <> maybeToList functionsPair <> configurationPair
 
     tableMetaToOrdJSON :: TableMetadata -> AO.Value

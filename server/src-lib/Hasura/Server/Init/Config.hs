@@ -11,6 +11,7 @@ import qualified Database.PG.Query                as Q
 
 import           Data.Char                        (toLower)
 import           Data.Time
+import           Data.URL.Template
 import           Network.Wai.Handler.Warp         (HostPreference)
 
 import qualified Hasura.Cache.Bounded             as Cache
@@ -19,6 +20,7 @@ import qualified Hasura.GraphQL.Execute.Plan      as E
 import qualified Hasura.Logging                   as L
 
 import           Hasura.Prelude
+import           Hasura.RQL.Types.Common
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Session
@@ -114,17 +116,32 @@ data DowngradeOptions
   , dgoDryRun        :: !Bool
   } deriving (Show, Eq)
 
+-- | Postgres connection details provided at startup
+data DefaultConnInfo a
+  = DefaultConnInfo
+  { _dciDatabaseUrl :: !a
+  , _dciRetries     :: !(Maybe Int)
+  } deriving (Show, Eq)
+
 data RawConnInfo =
   RawConnInfo
-  { connHost     :: !(Maybe String)
-  , connPort     :: !(Maybe Int)
-  , connUser     :: !(Maybe String)
+  { connHost     :: !String
+  , connPort     :: !Int
+  , connUser     :: !String
   , connPassword :: !String
-  , connUrl      :: !(Maybe String)
-  , connDatabase :: !(Maybe String)
+  , connDatabase :: !String
   , connOptions  :: !(Maybe String)
-  , connRetries  :: !(Maybe Int)
   } deriving (Eq, Read, Show)
+
+connInfoToUrl :: RawConnInfo -> URLTemplate
+connInfoToUrl RawConnInfo{..} =
+  mkPlainURLTemplate $ T.pack $
+    "postgresql://" <> connUser <>
+    ":" <> connPassword <>
+    "@" <> connHost <>
+    ":" <> show connPort <>
+    "/" <> connDatabase <>
+    maybe "" ("?options=" <>) connOptions
 
 data HGECommandG a
   = HCServe !a
@@ -153,15 +170,18 @@ $(J.deriveJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True} ''RawConnIn
 type HGECommand impl = HGECommandG (ServeOptions impl)
 type RawHGECommand impl = HGECommandG (RawServeOptions impl)
 
-data HGEOptionsG a
+data HGEOptionsG a b
   = HGEOptionsG
-  { hoConnInfo      :: !RawConnInfo
-  , hoMetadataDbUrl :: !(Maybe String)
-  , hoCommand       :: !(HGECommandG a)
+  { hoDefaultConnInfo :: !a
+  , hoMetadataDbUrl   :: !(Maybe String)
+  , hoCommand         :: !(HGECommandG b)
   } deriving (Show, Eq)
 
-type RawHGEOptions impl = HGEOptionsG (RawServeOptions impl)
-type HGEOptions impl = HGEOptionsG (ServeOptions impl)
+type RawHGEOptions impl =
+  HGEOptionsG (DefaultConnInfo (Maybe InputWebhook)) (RawServeOptions impl)
+
+type HGEOptions impl =
+  HGEOptionsG (Maybe (DefaultConnInfo UrlConf)) (ServeOptions impl)
 
 type Env = [(String, String)]
 

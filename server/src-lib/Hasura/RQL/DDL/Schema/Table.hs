@@ -82,15 +82,29 @@ data SetTableIsEnum
   , stieTable  :: !QualifiedTable
   , stieIsEnum :: !Bool
   } deriving (Show, Eq, Lift)
-$(deriveJSON (aesonDrop 4 snakeCase) ''SetTableIsEnum)
+$(deriveToJSON (aesonDrop 4 snakeCase) ''SetTableIsEnum)
+
+instance FromJSON SetTableIsEnum where
+  parseJSON = withObject "Object" $ \o ->
+    SetTableIsEnum
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "table"
+      <*> o .: "is_enum"
 
 data UntrackTable =
   UntrackTable
   { utSource  :: !SourceName
   , utTable   :: !QualifiedTable
-  , utCascade :: !(Maybe Bool)
+  , utCascade :: !Bool
   } deriving (Show, Eq, Lift)
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''UntrackTable)
+$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''UntrackTable)
+
+instance FromJSON UntrackTable where
+  parseJSON = withObject "Object" $ \o ->
+    UntrackTable
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "table"
+      <*> o .:? "cascade" .!= False
 
 isTableTracked :: SchemaCache -> SourceName -> QualifiedTable -> Bool
 isTableTracked sc source tableName =
@@ -263,7 +277,7 @@ unTrackExistingTableOrViewP2 (UntrackTable source qtn cascade) = withNewInconsis
   let allDeps = getDependentObjs sc (SOSourceObj source $ SOITable qtn)
       indirectDeps = filter (not . isDirectDep) allDeps
   -- Report bach with an error if cascade is not set
-  when (indirectDeps /= [] && not (or cascade)) $ reportDepsExt indirectDeps []
+  when (indirectDeps /= [] && not cascade) $ reportDepsExt indirectDeps []
   -- Purge all the dependents from state
   metadataModifier <- execWriterT do
     mapM_ (purgeDependentObject >=> tell) indirectDeps

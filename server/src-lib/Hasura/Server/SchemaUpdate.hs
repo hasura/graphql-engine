@@ -129,18 +129,17 @@ startSchemaSyncListenerThread defPgSource logger instanceId = do
 startSchemaSyncProcessorThread
   :: (C.ForkableMonadIO m, MonadMetadataStorage m)
   => SQLGenCtx
-  -> PGSourceConfig
   -> Logger Hasura
   -> HTTP.Manager
   -> SchemaSyncEventRef
   -> SchemaCacheRef
   -> InstanceId
   -> m Immortal.Thread
-startSchemaSyncProcessorThread sqlGenCtx defPgSource logger httpMgr
+startSchemaSyncProcessorThread sqlGenCtx logger httpMgr
   schemaSyncEventRef cacheRef instanceId = do
   -- Start processor thread
   processorThread <- C.forkImmortal "SchemeUpdate.processor" logger $
-                     processor sqlGenCtx defPgSource logger httpMgr schemaSyncEventRef cacheRef instanceId
+                     processor sqlGenCtx logger httpMgr schemaSyncEventRef cacheRef instanceId
   logThreadStarted logger instanceId TTProcessor processorThread
   pure processorThread
 
@@ -184,14 +183,13 @@ listener defPgSource logger schemaSyncEventRef =
 processor
   :: forall m void. (C.ForkableMonadIO m, MonadMetadataStorage m)
   => SQLGenCtx
-  -> PGSourceConfig
   -> Logger Hasura
   -> HTTP.Manager
   -> SchemaSyncEventRef
   -> SchemaCacheRef
   -> InstanceId
   -> m void
-processor sqlGenCtx defPgSource logger httpMgr schemaSyncEventRef
+processor sqlGenCtx logger httpMgr schemaSyncEventRef
   cacheRef instanceId =
   -- Never exits
   forever $ do
@@ -202,7 +200,7 @@ processor sqlGenCtx defPgSource logger httpMgr schemaSyncEventRef
       Left e -> logError logger threadType $ TEPayloadParse $ qeError e
       Right (SchemaSyncEventProcessResult shouldReload invalidations) ->
         when shouldReload $
-          refreshSchemaCache sqlGenCtx defPgSource logger httpMgr cacheRef invalidations
+          refreshSchemaCache sqlGenCtx logger httpMgr cacheRef invalidations
             threadType "schema cache reloaded"
   where
     -- checks if there is an event
@@ -222,14 +220,13 @@ refreshSchemaCache
      , MonadBaseControl IO m
      )
   => SQLGenCtx
-  -> PGSourceConfig
   -> Logger Hasura
   -> HTTP.Manager
   -> SchemaCacheRef
   -> CacheInvalidations
   -> ThreadType
   -> T.Text -> m ()
-refreshSchemaCache sqlGenCtx defPgSource logger httpManager cacheRef invalidations threadType msg = do
+refreshSchemaCache sqlGenCtx logger httpManager cacheRef invalidations threadType msg = do
   -- Reload schema cache from catalog
   resE <- runExceptT $ withRefUpdate $ do
     rebuildableCache <- fst <$> liftIO (readIORef $ _scrCache cacheRef)
@@ -245,7 +242,7 @@ refreshSchemaCache sqlGenCtx defPgSource logger httpManager cacheRef invalidatio
     Left e   -> logError logger threadType $ TEQueryError e
     Right () -> logInfo logger threadType $ object ["message" .= msg]
  where
-  runCtx = RunCtx adminUserInfo httpManager sqlGenCtx defPgSource
+  runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
 
   withRefUpdate action =
     withMVarMasked (_scrLock cacheRef) $ \() -> do
