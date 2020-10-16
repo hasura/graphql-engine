@@ -464,14 +464,13 @@ runHGEServer env ServeOptions{..} InitCtx{..} maybeCustomPgSource initTime
     else return Nothing
 
   -- all the immortal threads are collected so that they can be stopped when gracefully shutting down
-  let immortalThreads = [ schemaSyncListenerThread
-                        , schemaSyncProcessorThread
+  let immortalThreads = [ schemaSyncProcessorThread
                         , updateThread
                         , asyncActionsThread
                         , eventQueueThread
                         , scheduledEventsThread
                         , cronEventsThread
-                        ] <> maybeToList telemetryThread
+                        ] <> catMaybes [telemetryThread, schemaSyncListenerThread]
 
   finishTime <- liftIO Clock.getCurrentTime
   let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime

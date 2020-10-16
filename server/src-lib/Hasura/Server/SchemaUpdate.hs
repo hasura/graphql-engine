@@ -87,9 +87,11 @@ $(deriveToJSON
 type SchemaSyncEventRef = STM.TVar (Maybe Value)
 
 -- | Context required for schema syncing. Listener thread id and event references
+-- | ListenerThread is a 'Maybe' for the scenarios where we want to start the thread but do not want to
+-- | pass it to the 'runHGEServer'
 data SchemaSyncCtx
   = SchemaSyncCtx
-  { _sscListenerThreadId :: !Immortal.Thread
+  { _sscListenerThreadId :: !(Maybe Immortal.Thread)
   , _sscSyncEventRef     :: !SchemaSyncEventRef
   }
 
@@ -121,7 +123,7 @@ startSchemaSyncListenerThread defPgSource logger instanceId = do
   listenerThread <- liftIO $ C.forkImmortal "SchemeUpdate.listener" logger $
                     listener defPgSource logger schemaSyncEventRef
   logThreadStarted logger instanceId TTListener listenerThread
-  pure $ SchemaSyncCtx listenerThread schemaSyncEventRef
+  pure $ SchemaSyncCtx (Just listenerThread) schemaSyncEventRef
 
 -- | An async thread which processes the schema sync events
 startSchemaSyncProcessorThread
