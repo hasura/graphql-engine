@@ -233,7 +233,7 @@ validateDirectives providedDirectives upstreamDirectives directiveLocation paren
   where
     upstreamDirectivesMap = mapFromL G._dName upstreamDirectives
 
-    presetFilterFn = (`elem` [$$(G.litName "static_preset"),$$(G.litName "session_preset")]) . G._dName
+    presetFilterFn = (== $$(G.litName "preset")) . G._dName
 
     presetDirectives = filter presetFilterFn providedDirectives
 
