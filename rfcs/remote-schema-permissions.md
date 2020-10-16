@@ -95,7 +95,11 @@ type query_root {
 }
 ```
 
-Again, we will need to type check the preset values here. One problem to tackle is how do we differentiate static values from session variables (suppose the static value is, in the off-chance, "x-hasura-user-id").
+Again, we will need to type check the preset values here. One problem to tackle is how do we differentiate static values from session variables (suppose the static value is, in the off-chance, "x-hasura-user-id"). The solution here can be the introduction of another directive `@static` (or `@literal`) which can be provided to parse a session variable to it's literal value:
+
+```
+@preset(value: { id : {_eq: "x-hasura-user-id" @static}, something_else: 10})
+```
 
 ## Points to be noted:
 
