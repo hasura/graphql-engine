@@ -64,6 +64,8 @@ import {
   getSchemaBaseRoute,
   getTableModifyRoute,
 } from '../../../Common/utils/routesUtils';
+import { getColumnUpdateMigration } from '../../../../utils/migration/utils';
+import Migration from '../../../../utils/migration/Migration';
 
 const DELETE_PK_WARNING =
   'Without a primary key there is no way to uniquely identify a row of a table';
@@ -176,35 +178,17 @@ export const saveComputedField = (
   originalComputedField,
   successCb
 ) => (dispatch, getState) => {
-  const migrationUp = [];
-  const migrationDown = [];
-
+  const migration = new Migration();
   const tableDef = getTableDef(table);
 
   const computedFieldName = getComputedFieldName(computedField);
 
   if (originalComputedField) {
-    migrationUp.push(
+    migration.add(
       getDropComputedFieldQuery(
         tableDef,
         getComputedFieldName(originalComputedField)
-      )
-    );
-  }
-
-  migrationUp.push(
-    getAddComputedFieldQuery(
-      tableDef,
-      computedFieldName,
-      computedField.definition,
-      computedField.comment
-    )
-  );
-
-  migrationDown.push(getDropComputedFieldQuery(tableDef, computedFieldName));
-
-  if (originalComputedField) {
-    migrationDown.push(
+      ),
       getAddComputedFieldQuery(
         tableDef,
         getComputedFieldName(originalComputedField),
@@ -214,7 +198,17 @@ export const saveComputedField = (
     );
   }
 
-  const migrationName = `save_computed_field_${computedField.table_schema}_${computedField.table_name}_${computedFieldName}`;
+  migration.add(
+    getAddComputedFieldQuery(
+      tableDef,
+      computedFieldName,
+      computedField.definition,
+      computedField.comment
+    ),
+    getDropComputedFieldQuery(tableDef, computedFieldName)
+  );
+
+  const migrationName = `save_computed_field_${table.table_schema}_${table.table_name}_${computedFieldName}`;
   const requestMsg = 'Saving computed field...';
   const successMsg = 'Saving computed field successful';
   const errorMsg = 'Saving computed field failed';
@@ -226,8 +220,8 @@ export const saveComputedField = (
   makeMigrationCall(
     dispatch,
     getState,
-    migrationUp,
-    migrationDown,
+    migration.upMigration,
+    migration.downMigration,
     migrationName,
     customOnSuccess,
     customOnError,
@@ -241,15 +235,11 @@ export const deleteComputedField = (computedField, table) => (
   dispatch,
   getState
 ) => {
-  const migrationUp = [];
-  const migrationDown = [];
-
   const tableDef = getTableDef(table);
   const computedFieldName = getComputedFieldName(computedField);
-
-  migrationUp.push(getDropComputedFieldQuery(tableDef, computedFieldName));
-
-  migrationDown.push(
+  const migration = new Migration();
+  migration.add(
+    getDropComputedFieldQuery(tableDef, computedFieldName),
     getAddComputedFieldQuery(
       tableDef,
       computedFieldName,
@@ -268,8 +258,8 @@ export const deleteComputedField = (computedField, table) => (
   makeMigrationCall(
     dispatch,
     getState,
-    migrationUp,
-    migrationDown,
+    migration.upMigration,
+    migration.downMigration,
     migrationName,
     customOnSuccess,
     customOnError,
@@ -295,16 +285,19 @@ export const setCustomRootFields = successCb => (dispatch, getState) => {
 
   const existingRootFields = getTableCustomRootFields(table);
   const existingCustomColumnNames = getTableCustomColumnNames(table);
+  const migration = new Migration();
 
-  const upQuery = getSetCustomRootFieldsQuery(
-    tableDef,
-    sanitiseRootFields(newRootFields),
-    existingCustomColumnNames
-  );
-  const downQuery = getSetCustomRootFieldsQuery(
-    tableDef,
-    existingRootFields,
-    existingCustomColumnNames
+  migration.add(
+    getSetCustomRootFieldsQuery(
+      tableDef,
+      sanitiseRootFields(newRootFields),
+      existingCustomColumnNames
+    ),
+    getSetCustomRootFieldsQuery(
+      tableDef,
+      existingRootFields,
+      existingCustomColumnNames
+    )
   );
 
   const migrationName = `set_custom_root_fields_${schemaName}_${tableName}`;
@@ -323,8 +316,8 @@ export const setCustomRootFields = successCb => (dispatch, getState) => {
   makeMigrationCall(
     dispatch,
     getState,
-    [upQuery],
-    [downQuery],
+    migration.upMigration,
+    migration.downMigration,
     migrationName,
     customOnSuccess,
     customOnError,
@@ -353,16 +346,18 @@ export const removeCheckConstraint = (constraintName, successCb, errorCb) => (
     getTableCheckConstraints(table),
     constraintName
   );
-
-  const upQuery = getRunSqlQuery(
-    getDropConstraintSql(tableName, currentSchema, constraintName)
-  );
-  const downQuery = getRunSqlQuery(
-    getCreateCheckConstraintSql(
-      tableName,
-      currentSchema,
-      constraintName,
-      constraint.check
+  const migration = new Migration();
+  migration.add(
+    getRunSqlQuery(
+      getDropConstraintSql(tableName, currentSchema, constraintName)
+    ),
+    getRunSqlQuery(
+      getCreateCheckConstraintSql(
+        tableName,
+        currentSchema,
+        constraintName,
+        constraint.check
+      )
     )
   );
 
@@ -384,8 +379,8 @@ export const removeCheckConstraint = (constraintName, successCb, errorCb) => (
   makeMigrationCall(
     dispatch,
     getState,
-    [upQuery],
-    [downQuery],
+    migration.upMigration,
+    migration.downMigration,
     migrationName,
     customOnSuccess,
     customOnError,
@@ -433,17 +428,24 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
     if (!changeDetected) {
       return dispatch(showSuccessNotification('No changes'));
     }
-
-    const migrationUp = [];
+    const migration = new Migration();
     // skip dropping existing constraint if there is none
     if (constraintName) {
-      migrationUp.push(
-        getRunSqlQuery(getDropPkSql({ schemaName, tableName, constraintName }))
+      migration.add(
+        getRunSqlQuery(getDropPkSql({ schemaName, tableName, constraintName })),
+        getRunSqlQuery(
+          getCreatePkSql({
+            schemaName,
+            tableName,
+            selectedPkColumns: tableSchema.primary_key.columns,
+            constraintName,
+          })
+        )
       );
     }
     // skip creating a new config if no columns were selected
     if (numSelectedPkColumns) {
-      migrationUp.push(
+      migration.add(
         getRunSqlQuery(
           getCreatePkSql({
             schemaName,
@@ -451,33 +453,14 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
             selectedPkColumns,
             constraintName: `${tableName}_pkey`,
           })
-        )
-      );
-    }
+        ),
+        // skip dropping in down migration if no constraint was created
 
-    const migrationDown = [];
-    // skip dropping in down migration if no constraint was created
-    if (numSelectedPkColumns) {
-      migrationDown.push(
         getRunSqlQuery(
           getDropPkSql({
             schemaName,
             tableName,
             constraintName: `${tableName}_pkey`,
-          })
-        )
-      );
-    }
-
-    // skip creating in down migration if no constraint was dropped in up migration
-    if (constraintName) {
-      migrationDown.push(
-        getRunSqlQuery(
-          getCreatePkSql({
-            schemaName,
-            tableName,
-            selectedPkColumns: tableSchema.primary_key.columns,
-            constraintName,
           })
         )
       );
@@ -496,8 +479,8 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
     makeMigrationCall(
       dispatch,
       getState,
-      migrationUp,
-      migrationDown,
+      migration.upMigration,
+      migration.downMigration,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -544,14 +527,13 @@ const saveForeignKeys = (index, tableSchema, columns) => {
     const lcols = filteredMappings.map(cm => `"${columns[cm.column].name}"`);
     const rcols = filteredMappings.map(cm => `"${cm.refColumn}"`);
 
-    const migrationUp = [];
     const generatedConstraintName = generateFKConstraintName(
       tableName,
       lcols,
       tableSchema.foreign_key_constraints,
       [constraintName]
     );
-
+    const migration = new Migration();
     if (constraintName) {
       // foreign key already exists, alter the foreign key
       const migrationUpAlterFKeySql = `
@@ -561,7 +543,28 @@ const saveForeignKeys = (index, tableSchema, columns) => {
              references "${refSchemaName}"."${refTableName}"
              (${rcols.join(', ')}) on update ${onUpdate} on delete ${onDelete};
       `;
-      migrationUp.push(getRunSqlQuery(migrationUpAlterFKeySql));
+
+      const oldConstraint = tableSchema.foreign_key_constraints[index];
+      const migrationDownAlterFKeySql = `
+         alter table "${schemaName}"."${tableName}" drop constraint "${generatedConstraintName}",
+         add constraint "${constraintName}"
+         foreign key (${Object.keys(oldConstraint.column_mapping)
+           .map(lc => `"${lc}"`)
+           .join(', ')})
+         references "${oldConstraint.ref_table_table_schema}"."${
+        oldConstraint.ref_table
+      }"
+         (${Object.values(oldConstraint.column_mapping)
+           .map(rc => `"${rc}"`)
+           .join(', ')})
+         on update ${pgConfTypes[oldConstraint.on_update]}
+         on delete ${pgConfTypes[oldConstraint.on_delete]};
+       `;
+
+      migration.add(
+        getRunSqlQuery(migrationUpAlterFKeySql),
+        getRunSqlQuery(migrationDownAlterFKeySql)
+      );
     } else {
       // foreign key not found, create a new one
       const migrationUpCreateFKeySql = `
@@ -571,39 +574,15 @@ const saveForeignKeys = (index, tableSchema, columns) => {
            references "${refSchemaName}"."${refTableName}"
            (${rcols.join(', ')}) on update ${onUpdate} on delete ${onDelete};
       `;
-
-      migrationUp.push(getRunSqlQuery(migrationUpCreateFKeySql));
-    }
-
-    const migrationDown = [];
-
-    if (constraintName) {
-      // when foreign key is altered
-      const oldConstraint = tableSchema.foreign_key_constraints[index];
-      const migrationDownAlterFKeySql = `
-          alter table "${schemaName}"."${tableName}" drop constraint "${generatedConstraintName}",
-          add constraint "${constraintName}"
-          foreign key (${Object.keys(oldConstraint.column_mapping)
-            .map(lc => `"${lc}"`)
-            .join(', ')})
-          references "${oldConstraint.ref_table_table_schema}"."${
-        oldConstraint.ref_table
-      }"
-          (${Object.values(oldConstraint.column_mapping)
-            .map(rc => `"${rc}"`)
-            .join(', ')})
-          on update ${pgConfTypes[oldConstraint.on_update]}
-          on delete ${pgConfTypes[oldConstraint.on_delete]};
-        `;
-
-      migrationDown.push(getRunSqlQuery(migrationDownAlterFKeySql));
-    } else {
       // when foreign key is created
       const migrationDownDeleteFKeySql = `
-          alter table "${schemaName}"."${tableName}" drop constraint "${generatedConstraintName}"
+      alter table "${schemaName}"."${tableName}" drop constraint "${generatedConstraintName}"
       `;
 
-      migrationDown.push(getRunSqlQuery(migrationDownDeleteFKeySql));
+      migration.add(
+        getRunSqlQuery(migrationUpCreateFKeySql),
+        getRunSqlQuery(migrationDownDeleteFKeySql)
+      );
     }
 
     const migrationName = `set_fk_${schemaName}_${tableName}_${lcols.join(
@@ -645,8 +624,8 @@ const saveForeignKeys = (index, tableSchema, columns) => {
     makeMigrationCall(
       dispatch,
       getState,
-      migrationUp,
-      migrationDown,
+      migration.upMigration,
+      migration.downMigration,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -674,8 +653,10 @@ const removeForeignKey = (index, tableSchema) => {
       .join(', ')}) on update ${
       pgConfTypes[oldConstraint.on_update]
     } on delete ${pgConfTypes[oldConstraint.on_delete]};`;
-    const migrationUp = [getRunSqlQuery(upSql)];
-    const migrationDown = [getRunSqlQuery(downSql)];
+
+    const migration = new Migration();
+    migration.add(getRunSqlQuery(upSql), getRunSqlQuery(downSql));
+
     const migrationName = `delete_fk_${schemaName}_${tableName}_${oldConstraint.constraint_name}`;
     const requestMsg = 'Deleting foreign key...';
     const successMsg = 'Foreign key deleted';
@@ -696,8 +677,8 @@ const removeForeignKey = (index, tableSchema) => {
     makeMigrationCall(
       dispatch,
       getState,
-      migrationUp,
-      migrationDown,
+      migration.upMigration,
+      migration.downMigration,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -747,8 +728,11 @@ const changeTableName = (oldName, newName, isTable, tableType) => {
     const currentSchema = getState().tables.currentSchema;
     const upSql = `alter ${property} "${currentSchema}"."${oldName}" rename to "${newName}";`;
     const downSql = `alter ${property} "${currentSchema}"."${newName}" rename to "${oldName}";`;
-    const migrateUp = [getRunSqlQuery(upSql)];
-    const migrateDown = [getRunSqlQuery(downSql)];
+
+    // Migration
+    const migration = new Migration();
+    migration.add(getRunSqlQuery(upSql), getRunSqlQuery(downSql));
+
     // apply migrations
     const migrationName =
       `rename_${compositeName}_` + currentSchema + '_' + oldName;
@@ -769,8 +753,8 @@ const changeTableName = (oldName, newName, isTable, tableType) => {
     makeMigrationCall(
       dispatch,
       getState,
-      migrateUp,
-      migrateDown,
+      migration.upMigration,
+      migration.downMigration,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -791,8 +775,6 @@ const deleteTrigger = (trigger, table) => {
 
     const upMigrationSql = `DROP TRIGGER "${triggerName}" ON "${tableSchema}"."${tableName}";`;
 
-    const migrationUp = [getRunSqlQuery(upMigrationSql)];
-
     let downMigrationSql = '';
 
     downMigrationSql += `CREATE TRIGGER "${triggerName}"
@@ -803,7 +785,12 @@ FOR EACH ${trigger.action_orientation} ${trigger.action_statement};`;
       downMigrationSql += `COMMENT ON TRIGGER "${triggerName}" ON "${tableSchema}"."${tableName}"
 IS ${sqlEscapeText(trigger.comment)};`;
     }
-    const migrationDown = [getRunSqlQuery(downMigrationSql)];
+
+    const migration = new Migration();
+    migration.add(
+      getRunSqlQuery(upMigrationSql),
+      getRunSqlQuery(downMigrationSql)
+    );
 
     const migrationName = `delete_trigger_${triggerSchema}_${triggerName}`;
 
@@ -819,8 +806,8 @@ IS ${sqlEscapeText(trigger.comment)};`;
     makeMigrationCall(
       dispatch,
       getState,
-      migrationUp,
-      migrationDown,
+      migration.upMigration,
+      migration.downMigration,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -837,7 +824,9 @@ const deleteTableSql = tableName => {
     // handle no primary key
     const sqlDropTable =
       'DROP TABLE ' + '"' + currentSchema + '"' + '.' + '"' + tableName + '"';
-    const sqlUpQueries = [getRunSqlQuery(sqlDropTable)];
+
+    const migration = new Migration();
+    migration.add(getRunSqlQuery(sqlDropTable));
     // apply migrations
     const migrationName = 'drop_table_' + currentSchema + '_' + tableName;
 
@@ -858,8 +847,8 @@ const deleteTableSql = tableName => {
     makeMigrationCall(
       dispatch,
       getState,
-      sqlUpQueries,
-      [],
+      migration.upMigration,
+      migration.downMigration,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -875,8 +864,8 @@ const untrackTableSql = tableName => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
     const tableDef = generateTableDef(tableName, currentSchema);
-    const upQueries = [getUntrackTableQuery(tableDef)];
-    const downQueries = [getTrackTableQuery(tableDef)];
+    const migration = new Migration();
+    migration.add(getUntrackTableQuery(tableDef), getTrackTableQuery(tableDef));
 
     // apply migrations
     const migrationName = 'untrack_table_' + currentSchema + '_' + tableName;
@@ -895,8 +884,8 @@ const untrackTableSql = tableName => {
     makeMigrationCall(
       dispatch,
       getState,
-      upQueries,
-      downQueries,
+      migration.upMigration,
+      migration.downMigration,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -981,7 +970,9 @@ const deleteViewSql = (viewName, viewType) => {
     const currentSchema = getState().tables.currentSchema;
     const property = viewType.toLowerCase();
     const sqlDropView = `DROP ${viewType} "${currentSchema}"."${viewName}"`;
-    const sqlUpQueries = [getRunSqlQuery(sqlDropView)];
+
+    const migration = new Migration();
+    migration.add(getRunSqlQuery(sqlDropView)); // TODO Down migrations
     // const sqlCreateView = ''; //pending
     // const sqlDownQueries = [
     //   {
@@ -1005,8 +996,8 @@ const deleteViewSql = (viewName, viewType) => {
     makeMigrationCall(
       dispatch,
       getState,
-      sqlUpQueries,
-      [],
+      migration.upMigration,
+      migration.downMigration,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -1043,14 +1034,11 @@ const deleteColumnSql = (column, tableSchema) => {
     const alterStatement =
       'ALTER TABLE ' + '"' + currentSchema + '"' + '.' + '"' + tableName + '" ';
 
-    const schemaChangesUp = [
+    const migration = new Migration();
+    migration.add(
       getRunSqlQuery(
         alterStatement + 'DROP COLUMN IF EXISTS ' + '"' + name + '" CASCADE'
       ),
-    ];
-    const schemaChangesDown = [];
-
-    schemaChangesDown.push(
       getRunSqlQuery(
         alterStatement +
           'ADD COLUMN IF NOT EXISTS ' +
@@ -1062,19 +1050,14 @@ const deleteColumnSql = (column, tableSchema) => {
       )
     );
 
-    if (is_nullable) {
-      schemaChangesDown.push(
-        getRunSqlQuery(
-          alterStatement + 'ALTER COLUMN ' + '"' + name + '" ' + 'DROP NOT NULL'
-        )
-      );
-    } else {
-      schemaChangesDown.push(
-        getRunSqlQuery(
-          alterStatement + 'ALTER COLUMN ' + '"' + name + '" ' + 'SET NOT NULL'
-        )
-      );
-    }
+    migration.UNSAFE_add(
+      null,
+      getRunSqlQuery(
+        alterStatement + 'ALTER COLUMN ' + '"' + name + '" ' + is_nullable
+          ? 'DROP NOT NULL'
+          : 'SET NOT NULL'
+      )
+    );
 
     const merged_fkc = foreign_key_constraints.concat(
       opp_foreign_key_constraints
@@ -1086,7 +1069,8 @@ const deleteColumnSql = (column, tableSchema) => {
         const rcol = Object.values(fkc.column_mapping);
         const onUpdate = pgConfTypes[fkc.on_update];
         const onDelete = pgConfTypes[fkc.on_delete];
-        schemaChangesDown.push(
+        migration.UNSAFE_add(
+          null,
           getRunSqlQuery(
             alterStatement +
               'ADD CONSTRAINT ' +
@@ -1106,7 +1090,8 @@ const deleteColumnSql = (column, tableSchema) => {
     if (unique_constraints.length > 0) {
       unique_constraints.forEach(uc => {
         // add unique constraint to down migration
-        schemaChangesDown.push(
+        migration.UNSAFE_add(
+          null,
           getRunSqlQuery(
             alterStatement +
               'ADD CONSTRAINT ' +
@@ -1120,7 +1105,8 @@ const deleteColumnSql = (column, tableSchema) => {
 
     if (column.column_default !== null) {
       // add column default to down migration
-      schemaChangesDown.push(
+      migration.UNSAFE_add(
+        null,
         getRunSqlQuery(
           alterStatement +
             'ALTER COLUMN ' +
@@ -1133,7 +1119,8 @@ const deleteColumnSql = (column, tableSchema) => {
 
     // COMMENT ON COLUMN my_table.my_column IS 'Employee ID number';
     if (comment) {
-      schemaChangesDown.push(
+      migration.UNSAFE_add(
+        null,
         getRunSqlQuery(
           'COMMENT ON COLUMN ' +
             '"' +
@@ -1180,8 +1167,8 @@ const deleteColumnSql = (column, tableSchema) => {
     makeMigrationCall(
       dispatch,
       getState,
-      schemaChangesUp,
-      schemaChangesDown,
+      migration.upMigration,
+      migration.downMigration,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -1259,15 +1246,10 @@ const addColSql = (
       runSqlQueryUp += colDependentSQL.upSql;
     }
 
-    const schemaChangesUp = [];
-
+    const migration = new Migration();
     if (colType === 'uuid' && colDefault !== '') {
-      schemaChangesUp.push(
-        getRunSqlQuery('CREATE EXTENSION IF NOT EXISTS pgcrypto;')
-      );
+      migration.add(getRunSqlQuery('CREATE EXTENSION IF NOT EXISTS pgcrypto;'));
     }
-
-    schemaChangesUp.push(getRunSqlQuery(runSqlQueryUp));
 
     let runSqlQueryDown = '';
 
@@ -1290,7 +1272,10 @@ const addColSql = (
       colName +
       '";';
 
-    const schemaChangesDown = [getRunSqlQuery(runSqlQueryDown)];
+    migration.add(
+      getRunSqlQuery(runSqlQueryUp),
+      getRunSqlQuery(runSqlQueryDown)
+    );
 
     // Apply migrations
     const migrationName =
@@ -1313,8 +1298,8 @@ const addColSql = (
     makeMigrationCall(
       dispatch,
       getState,
-      schemaChangesUp,
-      schemaChangesDown,
+      migration.upMigration,
+      migration.downMigration,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -1350,10 +1335,9 @@ const deleteConstraintSql = (tableName, cName) => {
       '"' +
       cName +
       '"';
-    const schemaChangesUp = [getRunSqlQuery(dropContraintQuery)];
 
-    // pending
-    const schemaChangesDown = [];
+    const migration = new Migration();
+    migration.add(getRunSqlQuery(dropContraintQuery));
 
     // Apply migrations
     const migrationName =
@@ -1369,8 +1353,8 @@ const deleteConstraintSql = (tableName, cName) => {
     makeMigrationCall(
       dispatch,
       getState,
-      schemaChangesUp,
-      schemaChangesDown,
+      migration.upMigration,
+      migration.downMigration,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -1408,8 +1392,11 @@ const saveTableCommentSql = tableType => {
         : commentQueryBase + sqlEscapeText(updatedComment);
 
     const commentDownQuery = commentQueryBase + 'NULL';
-    const schemaChangesUp = [getRunSqlQuery(commentUpQuery)];
-    const schemaChangesDown = [getRunSqlQuery(commentDownQuery)];
+    const migration = new Migration();
+    migration.add(
+      getRunSqlQuery(commentUpQuery),
+      getRunSqlQuery(commentDownQuery)
+    );
 
     // Apply migrations
     const migrationName =
@@ -1447,8 +1434,8 @@ const saveTableCommentSql = tableType => {
     makeMigrationCall(
       dispatch,
       getState,
-      schemaChangesUp,
-      schemaChangesDown,
+      migration.upMigration,
+      migration.downMigration,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -1472,416 +1459,27 @@ const isColumnUnique = (tableSchema, colName) => {
 const saveColumnChangesSql = (colName, column, onSuccess) => {
   // eslint-disable-line no-unused-vars
   return (dispatch, getState) => {
-    const columnEdit = getState().tables.modify.columnEdit[colName];
+    const state = getState();
+    const columnEdit = state.tables.modify.columnEdit[colName];
+    const allSchemas = state.tables.allSchemas;
 
-    const { tableName } = columnEdit;
-    const colType = columnEdit.type;
-    const nullable = columnEdit.isNullable;
-    const unique = columnEdit.isUnique;
-    const colDefault = (columnEdit.default || '').trim();
-    const comment = (columnEdit.comment || '').trim();
-    const newName = columnEdit.name.trim();
-    const currentSchema = columnEdit.schemaName;
-    const customFieldName = (columnEdit.customFieldName || '').trim();
-
-    const tableDef = generateTableDef(tableName, currentSchema);
-    const table = findTable(getState().tables.allSchemas, tableDef);
-
-    // check if column type has changed before making it part of the migration
-    const originalColType = column.udt_name; // "value"
-    const originalColDefault = column.column_default || ''; // null or "value"
-    const originalColComment = column.comment || ''; // null or "value"
-    const originalColNullable = column.is_nullable; // "YES" or "NO"
-    const originalColUnique = isColumnUnique(table, colName);
-
-    /* column type up/down migration */
-    const columnChangesUpQuery =
-      'ALTER TABLE ' +
-      '"' +
-      currentSchema +
-      '"' +
-      '.' +
-      '"' +
-      tableName +
-      '"' +
-      ' ALTER COLUMN ' +
-      '"' +
-      colName +
-      '"' +
-      ' TYPE ' +
-      colType +
-      ';';
-    const columnChangesDownQuery =
-      'ALTER TABLE ' +
-      '"' +
-      currentSchema +
-      '"' +
-      '.' +
-      '"' +
-      tableName +
-      '"' +
-      ' ALTER COLUMN ' +
-      '"' +
-      colName +
-      '"' +
-      ' TYPE ' +
-      column.data_type +
-      ';';
-    const schemaChangesUp =
-      originalColType !== colType ? [getRunSqlQuery(columnChangesUpQuery)] : [];
-    const schemaChangesDown =
-      originalColType !== colType
-        ? [getRunSqlQuery(columnChangesDownQuery)]
-        : [];
-
-    /* column custom field up/down migration*/
-    const existingCustomColumnNames = getTableCustomColumnNames(table);
-    const existingRootFields = getTableCustomRootFields(table);
-    const newCustomColumnNames = { ...existingCustomColumnNames };
-    let isCustomFieldNameChanged = false;
-    if (customFieldName) {
-      if (customFieldName !== existingCustomColumnNames[colName]) {
-        isCustomFieldNameChanged = true;
-        newCustomColumnNames[colName] = customFieldName.trim();
-      }
-    } else {
-      if (existingCustomColumnNames[colName]) {
-        isCustomFieldNameChanged = true;
-        delete newCustomColumnNames[colName];
-      }
-    }
-    if (isCustomFieldNameChanged) {
-      schemaChangesUp.push(
-        getSetCustomRootFieldsQuery(
-          tableDef,
-          existingRootFields,
-          newCustomColumnNames
+    const onInvalidGqlColName = () =>
+      dispatch(
+        showErrorNotification(
+          gqlColumnErrorNotif[3],
+          gqlColumnErrorNotif[1],
+          gqlColumnErrorNotif[2]
         )
       );
-      schemaChangesDown.push(
-        getSetCustomRootFieldsQuery(
-          tableDef,
-          existingRootFields,
-          existingCustomColumnNames
-        )
-      );
-    }
-
-    const colDefaultWithQuotes =
-      isColTypeString(colType) && !isPostgresFunction(colDefault)
-        ? `'${colDefault}'`
-        : colDefault;
-    const originalColDefaultWithQuotes =
-      isColTypeString(colType) && !isPostgresFunction(originalColDefault)
-        ? `'${originalColDefault}'`
-        : originalColDefault;
-
-    /* column default up/down migration */
-    let columnDefaultUpQuery;
-    let columnDefaultDownQuery;
-    if (colDefault !== '') {
-      // ALTER TABLE <table> ALTER COLUMN <column> SET DEFAULT <default>;
-      columnDefaultUpQuery =
-        'ALTER TABLE ' +
-        '"' +
-        currentSchema +
-        '"' +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        ' ALTER COLUMN ' +
-        '"' +
-        colName +
-        '"' +
-        ' SET DEFAULT ' +
-        colDefaultWithQuotes +
-        ';';
-    } else {
-      // ALTER TABLE <table> ALTER COLUMN <column> DROP DEFAULT;
-      columnDefaultUpQuery =
-        'ALTER TABLE ' +
-        '"' +
-        currentSchema +
-        '"' +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        ' ALTER COLUMN ' +
-        '"' +
-        colName +
-        '"' +
-        ' DROP DEFAULT;';
-    }
-
-    if (originalColDefault !== '') {
-      columnDefaultDownQuery =
-        'ALTER TABLE ' +
-        '"' +
-        currentSchema +
-        '"' +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        ' ALTER COLUMN ' +
-        '"' +
-        colName +
-        '"' +
-        ' SET DEFAULT ' +
-        originalColDefaultWithQuotes +
-        ';';
-    } else {
-      // there was no default value originally. so drop default.
-      columnDefaultDownQuery =
-        'ALTER TABLE ' +
-        '"' +
-        currentSchema +
-        '"' +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        ' ALTER COLUMN ' +
-        '"' +
-        colName +
-        '"' +
-        ' DROP DEFAULT;';
-    }
-
-    // check if default is unchanged and then do a drop. if not skip
-    if (originalColDefault !== colDefault) {
-      schemaChangesUp.push(getRunSqlQuery(columnDefaultUpQuery));
-      schemaChangesDown.push(getRunSqlQuery(columnDefaultDownQuery));
-    }
-
-    /* column nullable up/down migration */
-    if (nullable) {
-      // ALTER TABLE <table> ALTER COLUMN <column> DROP NOT NULL;
-      const nullableUpQuery =
-        'ALTER TABLE ' +
-        '"' +
-        currentSchema +
-        '"' +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        ' ALTER COLUMN ' +
-        '"' +
-        colName +
-        '"' +
-        ' DROP NOT NULL;';
-      const nullableDownQuery =
-        'ALTER TABLE ' +
-        '"' +
-        currentSchema +
-        '"' +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        ' ALTER COLUMN ' +
-        '"' +
-        colName +
-        '"' +
-        ' SET NOT NULL;';
-      // check with original null
-      if (originalColNullable !== 'YES') {
-        schemaChangesUp.push(getRunSqlQuery(nullableUpQuery));
-        schemaChangesDown.push(getRunSqlQuery(nullableDownQuery));
-      }
-    } else {
-      // ALTER TABLE <table> ALTER COLUMN <column> SET NOT NULL;
-      const nullableUpQuery =
-        'ALTER TABLE ' +
-        '"' +
-        currentSchema +
-        '"' +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        ' ALTER COLUMN ' +
-        '"' +
-        colName +
-        '"' +
-        ' SET NOT NULL;';
-      const nullableDownQuery =
-        'ALTER TABLE ' +
-        '"' +
-        currentSchema +
-        '"' +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        ' ALTER COLUMN ' +
-        '"' +
-        colName +
-        '"' +
-        ' DROP NOT NULL;';
-      // check with original null
-      if (originalColNullable !== 'NO') {
-        schemaChangesUp.push(getRunSqlQuery(nullableUpQuery));
-        schemaChangesDown.push(getRunSqlQuery(nullableDownQuery));
-      }
-    }
-
-    /* column unique up/down migration */
-    if (unique) {
-      const uniqueUpQuery =
-        'ALTER TABLE ' +
-        '"' +
-        currentSchema +
-        '"' +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        ' ADD CONSTRAINT ' +
-        '"' +
-        tableName +
-        '_' +
-        colName +
-        '_key"' +
-        ' UNIQUE ' +
-        '("' +
-        colName +
-        '")';
-      const uniqueDownQuery =
-        'ALTER TABLE ' +
-        '"' +
-        currentSchema +
-        '"' +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        ' DROP CONSTRAINT ' +
-        '"' +
-        tableName +
-        '_' +
-        colName +
-        '_key"';
-      // check with original unique
-      if (!originalColUnique) {
-        schemaChangesUp.push(getRunSqlQuery(uniqueUpQuery));
-        schemaChangesDown.push(getRunSqlQuery(uniqueDownQuery));
-      }
-    } else {
-      const uniqueDownQuery =
-        'ALTER TABLE ' +
-        '"' +
-        currentSchema +
-        '"' +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        ' ADD CONSTRAINT ' +
-        '"' +
-        tableName +
-        '_' +
-        colName +
-        '_key"' +
-        ' UNIQUE ' +
-        '("' +
-        colName +
-        '")';
-      const uniqueUpQuery =
-        'ALTER TABLE ' +
-        '"' +
-        currentSchema +
-        '"' +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        ' DROP CONSTRAINT ' +
-        '"' +
-        tableName +
-        '_' +
-        colName +
-        '_key"';
-      // check with original unique
-      if (originalColUnique) {
-        schemaChangesUp.push(getRunSqlQuery(uniqueUpQuery));
-        schemaChangesDown.push(getRunSqlQuery(uniqueDownQuery));
-      }
-    }
-
-    /* column comment up/down migration */
-    const columnCommentUpQuery =
-      'COMMENT ON COLUMN ' +
-      '"' +
-      currentSchema +
-      '"' +
-      '.' +
-      '"' +
-      tableName +
-      '"' +
-      '.' +
-      '"' +
-      colName +
-      '"' +
-      ' IS ' +
-      sqlEscapeText(comment);
-
-    const columnCommentDownQuery =
-      'COMMENT ON COLUMN ' +
-      '"' +
-      currentSchema +
-      '"' +
-      '.' +
-      '"' +
-      tableName +
-      '"' +
-      '.' +
-      '"' +
-      colName +
-      '"' +
-      ' IS ' +
-      sqlEscapeText(originalColComment);
-
-    // check if comment is unchanged and then do an update. if not skip
-    if (originalColComment !== comment) {
-      schemaChangesUp.push(getRunSqlQuery(columnCommentUpQuery));
-      schemaChangesDown.push(getRunSqlQuery(columnCommentDownQuery));
-    }
-
-    /* rename column */
-    if (newName && colName !== newName) {
-      if (!gqlPattern.test(newName)) {
-        return dispatch(
-          showErrorNotification(
-            gqlColumnErrorNotif[3],
-            gqlColumnErrorNotif[1],
-            gqlColumnErrorNotif[2]
-          )
-        );
-      }
-      schemaChangesUp.push(
-        getRunSqlQuery(
-          `alter table "${currentSchema}"."${tableName}" rename column "${colName}" to "${newName}";`
-        )
-      );
-      schemaChangesDown.push(
-        getRunSqlQuery(
-          `alter table "${currentSchema}"."${tableName}" rename column "${newName}" to "${colName}";`
-        )
-      );
-    }
+    const { migrationName, migration } = getColumnUpdateMigration(
+      column,
+      columnEdit,
+      allSchemas,
+      colName,
+      onInvalidGqlColName
+    );
 
     // Apply migrations
-    const migrationName =
-      'alter_table_' +
-      currentSchema +
-      '_' +
-      tableName +
-      '_alter_column_' +
-      colName;
 
     const requestMsg = 'Saving Column Changes...';
     const successMsg = 'Column modified';
@@ -1893,12 +1491,12 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     };
     const customOnError = () => {};
 
-    if (schemaChangesUp.length > 0) {
+    if (migration.hasValue()) {
       makeMigrationCall(
         dispatch,
         getState,
-        schemaChangesUp,
-        schemaChangesDown,
+        migration.upMigration,
+        migration.downMigration,
         migrationName,
         customOnSuccess,
         customOnError,
@@ -1956,15 +1554,13 @@ const removeUniqueKey = (index, tableName, existingConstraints, callback) => {
     const { currentSchema } = getState().tables;
     const existingConstraint = existingConstraints[index];
 
-    // Up migration: Drop the constraint
-    const sqlUp = [
+    const migration = new Migration();
+    migration.add(
+      // Up migration: Drop the constraint
       getRunSqlQuery(
         `alter table "${currentSchema}"."${tableName}" drop constraint "${existingConstraint.constraint_name}";`
       ),
-    ];
-
-    // Down Migration: Create the constraint that is being dropped
-    const sqlDown = [
+      // Down Migration: Create the constraint that is being dropped
       getRunSqlQuery(
         `alter table "${currentSchema}"."${tableName}" add constraint "${getUniqueConstraintName(
           tableName,
@@ -1972,8 +1568,8 @@ const removeUniqueKey = (index, tableName, existingConstraints, callback) => {
         )}" unique (${existingConstraint.columns
           .map(c => `"${c}"`)
           .join(', ')});`
-      ),
-    ];
+      )
+    );
 
     const migrationName =
       'alter_table_' +
@@ -2008,8 +1604,8 @@ const removeUniqueKey = (index, tableName, existingConstraints, callback) => {
     makeMigrationCall(
       dispatch,
       getState,
-      sqlUp,
-      sqlDown,
+      migration.upMigration,
+      migration.downMigration,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -2036,17 +1632,14 @@ export const toggleTableAsEnum = (isEnum, successCallback, failureCallback) => (
 
   const { currentTable, currentSchema } = getState().tables;
   const { allSchemas } = getState().tables;
-
-  const upQuery = [
+  const migration = new Migration();
+  migration.add(
     getSetTableEnumQuery(
       generateTableDef(currentTable, currentSchema),
       !isEnum
     ),
-  ];
-  const downQuery = [
-    getSetTableEnumQuery(generateTableDef(currentTable, currentSchema), isEnum),
-  ];
-
+    getSetTableEnumQuery(generateTableDef(currentTable, currentSchema), isEnum)
+  );
   const migrationName =
     'alter_table_' +
     currentSchema +
@@ -2096,8 +1689,8 @@ export const toggleTableAsEnum = (isEnum, successCallback, failureCallback) => (
   makeMigrationCall(
     dispatch,
     getState,
-    upQuery,
-    downQuery,
+    migration.upMigration,
+    migration.downMigration,
     migrationName,
     customOnSuccess,
     customOnError,
@@ -2128,39 +1721,16 @@ export const saveCheckConstraint = (index, successCb, errorCb) => (
 
   const existingConstraint = allConstraints[index];
 
-  const upQueries = [];
-  const downQueries = [];
-
+  const migration = new Migration();
   if (!isNew) {
-    upQueries.push(
+    migration.add(
       getRunSqlQuery(
         getDropConstraintSql(
           existingConstraint.table_name,
           existingConstraint.table_schema,
           existingConstraint.constraint_name
         )
-      )
-    );
-  }
-  upQueries.push(
-    getRunSqlQuery(
-      getCreateCheckConstraintSql(
-        currentTable,
-        currentSchema,
-        newConstraint.name,
-        newConstraint.check
-      )
-    )
-  );
-
-  downQueries.push(
-    getRunSqlQuery(
-      getDropConstraintSql(currentTable, currentSchema, newConstraint.name)
-    )
-  );
-
-  if (!isNew) {
-    downQueries.push(
+      ),
       getRunSqlQuery(
         getCreateCheckConstraintSql(
           currentTable,
@@ -2171,6 +1741,19 @@ export const saveCheckConstraint = (index, successCb, errorCb) => (
       )
     );
   }
+  migration.add(
+    getRunSqlQuery(
+      getCreateCheckConstraintSql(
+        currentTable,
+        currentSchema,
+        newConstraint.name,
+        newConstraint.check
+      )
+    ),
+    getRunSqlQuery(
+      getDropConstraintSql(currentTable, currentSchema, newConstraint.name)
+    )
+  );
 
   const migrationName =
     'alter_table_' +
@@ -2200,8 +1783,8 @@ export const saveCheckConstraint = (index, successCb, errorCb) => (
   makeMigrationCall(
     dispatch,
     getState,
-    upQueries,
-    downQueries,
+    migration.upMigration,
+    migration.downMigration,
     migrationName,
     customOnSuccess,
     customOnError,
@@ -2227,20 +1810,15 @@ const saveUniqueKey = (
     const columns = uniqueKey.map(c => allColumns[c].name);
     const existingConstraint = existingConstraints[index];
 
-    // Down migration
-    const downMigration = [];
-    // drop the newly created constraint
-    downMigration.push(
-      getRunSqlQuery(
-        `alter table "${currentSchema}"."${tableName}" drop constraint "${getUniqueConstraintName(
-          tableName,
-          columns
-        )}";`
-      )
-    );
+    // Migration
+    const migration = new Migration();
     // if any constraint is being dropped, create it back
     if (index < numUniqueKeys - 1) {
-      downMigration.push(
+      // drop the old constraint if there is any
+      migration.add(
+        getRunSqlQuery(
+          `alter table "${currentSchema}"."${tableName}" drop constraint "${existingConstraint.constraint_name}";`
+        ),
         getRunSqlQuery(
           `alter table "${currentSchema}"."${tableName}" add constraint "${getUniqueConstraintName(
             tableName,
@@ -2252,24 +1830,20 @@ const saveUniqueKey = (
       );
     }
 
-    // up migration
-    const upMigration = [];
-    // drop the old constraint if there is any
-    if (index < numUniqueKeys - 1) {
-      upMigration.push(
-        getRunSqlQuery(
-          `alter table "${currentSchema}"."${tableName}" drop constraint "${existingConstraint.constraint_name}";`
-        )
-      );
-    }
-
     // create the new constraint
-    upMigration.push(
+    migration.add(
       getRunSqlQuery(
         `alter table "${currentSchema}"."${tableName}" add constraint "${getUniqueConstraintName(
           tableName,
           columns
         )}" unique (${columns.map(c => `"${c}"`).join(', ')});`
+      ),
+      // drop the newly created constraint
+      getRunSqlQuery(
+        `alter table "${currentSchema}"."${tableName}" drop constraint "${getUniqueConstraintName(
+          tableName,
+          columns
+        )}";`
       )
     );
 
@@ -2300,8 +1874,8 @@ const saveUniqueKey = (
     makeMigrationCall(
       dispatch,
       getState,
-      upMigration,
-      downMigration,
+      migration.upMigration,
+      migration.downMigration,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -2325,15 +1899,19 @@ export const setViewCustomColumnNames = (
   const existingCustomRootFields = getTableCustomRootFields(view);
   const existingColumnNames = getTableCustomColumnNames(view);
 
-  const upQuery = getSetCustomRootFieldsQuery(
-    viewDef,
-    existingCustomRootFields,
-    sanitiseColumnNames(customColumnNames)
-  );
-  const downQuery = getSetCustomRootFieldsQuery(
-    viewDef,
-    existingCustomRootFields,
-    existingColumnNames
+  const migration = new Migration();
+
+  migration.add(
+    getSetCustomRootFieldsQuery(
+      viewDef,
+      existingCustomRootFields,
+      sanitiseColumnNames(customColumnNames)
+    ),
+    getSetCustomRootFieldsQuery(
+      viewDef,
+      existingCustomRootFields,
+      existingColumnNames
+    )
   );
 
   const migrationName = 'alter_view_custom_column_names';
@@ -2357,8 +1935,8 @@ export const setViewCustomColumnNames = (
   makeMigrationCall(
     dispatch,
     getState,
-    [upQuery],
-    [downQuery],
+    migration.upMigration,
+    migration.downMigration,
     migrationName,
     customOnSuccess,
     customOnError,

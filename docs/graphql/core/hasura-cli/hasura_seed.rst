@@ -3,10 +3,10 @@
    :description: Use hasura seeds to manage seed data
    :keywords: hasura, docs, CLI, hasura seeds
 
-.. _hasura_seeds:
+.. _hasura_seed:
 
 Hasura CLI: hasura seed
-------------------------
+-----------------------
 
 Manage seed data
 
