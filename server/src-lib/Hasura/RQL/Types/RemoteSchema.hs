@@ -166,7 +166,7 @@ data PartitionedTypeDefinitions
   , _ptdInterfaces   :: ![G.InterfaceTypeDefinition G.InputValueDefinition ()]
   , _ptdUnions       :: ![G.UnionTypeDefinition]
   , _ptdEnums        :: ![G.EnumTypeDefinition]
-  , _ptdInputObjects :: ![G.InputObjectTypeDefinition]
+  , _ptdInputObjects :: ![G.InputObjectTypeDefinition G.InputValueDefinition]
   , _ptdSchemaDef    :: ![G.SchemaDefinition]
   } deriving (Show, Eq)
 

@@ -345,7 +345,7 @@ remoteSchemaInputObject
   :: forall n m
   .  (MonadSchema n m, MonadError QErr m)
   => SchemaIntrospection
-  -> G.InputObjectTypeDefinition
+  -> G.InputObjectTypeDefinition G.InputValueDefinition
   -> m (Parser 'Input n ())
 remoteSchemaInputObject schemaDoc defn@(G.InputObjectTypeDefinition desc name _ valueDefns) =
   P.memoizeOn 'remoteSchemaInputObject defn do

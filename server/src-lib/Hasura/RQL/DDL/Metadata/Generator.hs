@@ -342,7 +342,7 @@ instance Arbitrary G.ScalarTypeDefinition where
 instance Arbitrary G.InputValueDefinition where
   arbitrary = genericArbitrary
 
-instance Arbitrary G.InputObjectTypeDefinition where
+instance (Arbitrary a) => Arbitrary (G.InputObjectTypeDefinition a) where
   arbitrary = genericArbitrary
 
 instance (Arbitrary a) => Arbitrary (G.ObjectTypeDefinition a) where

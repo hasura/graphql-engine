@@ -47,7 +47,7 @@ instance (NFData (a b), NFData b) => NFData (G.OperationDefinition a b)
 instance (NFData (a b), NFData b) => NFData (G.Selection a b)
 instance (NFData (a b), NFData b) => NFData (G.TypedOperationDefinition a b)
 instance NFData G.InputValueDefinition
-instance NFData G.InputObjectTypeDefinition
+instance NFData a => NFData (G.InputObjectTypeDefinition a)
 instance (NFData a) => NFData (G.ObjectTypeDefinition a)
 instance NFData G.UnionTypeDefinition
 instance NFData G.EnumTypeDefinition

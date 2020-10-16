@@ -243,7 +243,7 @@ instance J.FromJSON (FromIntrospection G.EnumValueDefinition) where
     let r = G.EnumValueDefinition desc' name []
     return $ FromIntrospection r
 
-instance J.FromJSON (FromIntrospection G.InputObjectTypeDefinition) where
+instance J.FromJSON (FromIntrospection (G.InputObjectTypeDefinition G.InputValueDefinition)) where
   parseJSON = J.withObject "InputObjectTypeDefinition" $ \o -> do
     kind  <- o .: "kind"
     name  <- o .:  "name"

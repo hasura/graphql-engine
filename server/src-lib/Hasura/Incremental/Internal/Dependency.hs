@@ -216,7 +216,7 @@ instance Cacheable G.ScalarTypeDefinition
 instance Cacheable G.UnionTypeDefinition
 instance (Cacheable possibleTypes, Cacheable a) => Cacheable (G.InterfaceTypeDefinition a possibleTypes)
 instance Cacheable G.EnumTypeDefinition
-instance Cacheable G.InputObjectTypeDefinition
+instance (Cacheable a) => Cacheable (G.InputObjectTypeDefinition a)
 instance (Cacheable a) => Cacheable (G.ObjectTypeDefinition a)
 instance (Cacheable a, Cacheable possibleTypes) => Cacheable (G.TypeDefinition a possibleTypes)
 instance Cacheable N.URI

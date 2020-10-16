@@ -336,8 +336,8 @@ validateArguments providedArgs upstreamArgs parentTypeName = do
 
 validateInputObjectTypeDefinition
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
-  => G.InputObjectTypeDefinition
-  -> G.InputObjectTypeDefinition
+  => G.InputObjectTypeDefinition G.InputValueDefinition
+  -> G.InputObjectTypeDefinition G.InputValueDefinition
   -> m ()
 validateInputObjectTypeDefinition providedInputObj upstreamInputObj = do
   validateDirectives providedDirectives upstreamDirectives G.TSDLINPUT_OBJECT $ (InputObject, providedName)
@@ -349,8 +349,8 @@ validateInputObjectTypeDefinition providedInputObj upstreamInputObj = do
 
 validateInputObjectTypeDefinitions
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
-  => [G.InputObjectTypeDefinition]
-  -> [G.InputObjectTypeDefinition]
+  => [G.InputObjectTypeDefinition G.InputValueDefinition]
+  -> [G.InputObjectTypeDefinition G.InputValueDefinition]
   -> m ()
 validateInputObjectTypeDefinitions providedInputObjects upstreamInputObjects = do
   flip traverse_ providedInputObjects $ \providedInputObject@(G.InputObjectTypeDefinition _ name _ _) -> do
