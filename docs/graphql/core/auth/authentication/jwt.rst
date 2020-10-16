@@ -146,7 +146,7 @@ Valid values are : ``HS256``, ``HS384``, ``HS512``, ``RS256``,
 
 ``HS*`` is for HMAC-SHA based algorithms. ``RS*`` is for RSA based signing. For
 example, if your auth server is using HMAC-SHA256 for signing the JWTs, then
-use ``HS256``. If it is using RSA with 512-bit keys, then use ``RS512``. EC
+use ``HS256``. If it is using RSA with SHA-512, then use ``RS512``. EC
 public keys are not yet supported.
 
 This is an optional field. This is required only if you are using ``key`` in the config.
