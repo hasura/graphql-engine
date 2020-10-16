@@ -86,6 +86,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
 - console: add option to flag an insertion as a migration from `Data` section (close #1766) (#4933)
 - console: add notifications (#5070)
+- console: down migrations improvements (close #3503, #4988) (#4790)
 - docs: add docs page on networking with docker (close #4346) (#4811)
 - docs: add tabs for console / cli / api workflows (close #3593) (#4948)
 - docs: add postgres concepts page to docs (close #4440) (#4471)
