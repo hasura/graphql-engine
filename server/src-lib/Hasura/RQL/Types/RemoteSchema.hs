@@ -176,34 +176,18 @@ data RemoteSchemaPresetArgument
   -- ^ name of the argument where the session variable is supposed to
   -- be substituted -- session variable name -- value where the session
   -- variable is to be inserted.
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 instance Hashable RemoteSchemaPresetArgument
 instance Cacheable RemoteSchemaPresetArgument
 
-data RemoteSchemaInputTypeDefinition
-  = RemoteSchemaInputTypeDefinition
-  { _rsitdDefn      :: !G.InputObjectTypeDefinition
-  -- TODO: change the below, only if needed, to differentiate
-  -- for scalar, enum and input object types. For scalar and
-  -- enum only a single argument preset is expected and for
-  -- input objects there may be more than one!
-  , _rsitdPresetArg :: !(Maybe [RemoteSchemaPresetArgument])
-  } deriving (Show, Eq, Generic)
-instance Hashable RemoteSchemaInputTypeDefinition
-instance Cacheable RemoteSchemaInputTypeDefinition
+data RemoteSchemaInputValueDefinition
+  = RemoteSchemaInputValueDefinition
+  { _rsitdDefn      :: !G.InputValueDefinition
+  , _rsitdPresetArg :: !(Maybe RemoteSchemaPresetArgument)
+  } deriving (Show, Eq, Generic, Ord)
+instance Hashable RemoteSchemaInputValueDefinition
+instance Cacheable RemoteSchemaInputValueDefinition
 
--- TODO: exlain why this is needed
--- data RemoteTypeDefinition
---   = RemoteTypeDefinitionScalar !G.ScalarTypeDefinition
---   | RemoteTypeDefinitionObject !G.ObjectTypeDefinition
---   | RemoteTypeDefinitionInterface (G.InterfaceTypeDefinition [G.Name])
---   | RemoteTypeDefinitionUnion !G.UnionTypeDefinition
---   | RemoteTypeDefinitionEnum !G.EnumTypeDefinition
---   | RemoteTypeDefinitionInputObject !RemoteSchemaInputTypeDefinition
---   deriving (Show, Eq, Generic)
--- instance Hashable RemoteTypeDefinition
--- instance Cacheable RemoteTypeDefinition
-
--- newtype RemoteSchemaIntrospection
---   = RemoteSchemaIntrospection [RemoteTypeDefinition]
---   deriving (Show, Eq, Hashable, Generic, Cacheable)
+newtype RemoteSchemaIntrospection
+  = RemoteSchemaIntrospection [G.TypeDefinition RemoteSchemaInputValueDefinition [G.Name]]
+  deriving (Show, Eq, Generic, Hashable, Cacheable, Ord)

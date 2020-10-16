@@ -624,9 +624,9 @@ partitionTypeDefinition (G.TypeDefinitionInputObject inputObjectDefn) =
 validateRemoteSchema
   :: ( MonadValidate [RoleBasedSchemaValidationError] m)
   => G.SchemaDocument
-  -> G.SchemaIntrospection
+  -> RemoteSchemaIntrospection
   -> m IntrospectionResult
-validateRemoteSchema (G.SchemaDocument providedTypeDefns) (G.SchemaIntrospection upstreamTypeDefns) = do
+validateRemoteSchema (G.SchemaDocument providedTypeDefns) (RemoteSchemaIntrospection upstreamTypeDefns) = do
   let
     -- Converting `[G.TypeSystemDefinition]` into `PartitionedTypeDefinitions`
     (_, providedTypes) = flip runState emptySchemaDocTypeDefinitions $

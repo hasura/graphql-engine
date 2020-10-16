@@ -176,7 +176,7 @@ type WithDeps a = (a, [SchemaDependency])
 
 data IntrospectionResult
   = IntrospectionResult
-  { irDoc              :: G.SchemaIntrospection
+  { irDoc              :: RemoteSchemaIntrospection
   , irQueryRoot        :: G.Name
   , irMutationRoot     :: Maybe G.Name
   , irSubscriptionRoot :: Maybe G.Name

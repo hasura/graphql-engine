@@ -63,7 +63,7 @@ data RemoteFieldInfo
   -- ^ Hasura fields used to join the remote schema node
   , _rfiRemoteFields     :: !RemoteFields
   , _rfiRemoteSchema     :: !RemoteSchemaInfo
-  , _rfiSchemaIntrospect :: G.SchemaIntrospection
+  , _rfiSchemaIntrospect :: RemoteSchemaIntrospection
   -- ^ The introspection data is used to make parsers for the arguments and the selection set
   , _rfiRemoteSchemaName :: !RemoteSchemaName
   -- ^ Name of the remote schema, that's used for joining

@@ -114,7 +114,7 @@ fetchRemoteSchema env manager schemaName schemaInfo@(RemoteSchemaInfo url header
 -- introspection results.
 newtype FromIntrospection a
   = FromIntrospection { fromIntrospection :: a }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Generic, Functor)
 
 pErr :: (MonadFail m) => Text -> m a
 pErr = fail . T.unpack
@@ -135,13 +135,13 @@ instance J.FromJSON (FromIntrospection G.ScalarTypeDefinition) where
         r = G.ScalarTypeDefinition desc' name []
     return $ FromIntrospection r
 
-instance J.FromJSON (FromIntrospection (G.ObjectTypeDefinition G.InputValueDefinition)) where
+instance (J.FromJSON (FromIntrospection a)) => J.FromJSON (FromIntrospection (G.ObjectTypeDefinition a)) where
   parseJSON = J.withObject "ObjectTypeDefinition" $ \o -> do
     kind   <- o .:  "kind"
     name   <- o .:  "name"
     desc   <- o .:? "description"
     fields <- o .:? "fields"
-    interfaces :: Maybe [FromIntrospection (G.InterfaceTypeDefinition G.InputValueDefinition [G.Name])] <- o .:? "interfaces"
+    interfaces :: Maybe [FromIntrospection (G.InterfaceTypeDefinition a [G.Name])] <- o .:? "interfaces"
     when (kind /= "OBJECT") $ kindErr kind "object"
     let implIfaces = map G._itdName $ maybe [] (fmap fromIntrospection) interfaces
         flds = maybe [] (fmap fromIntrospection) fields
@@ -149,7 +149,7 @@ instance J.FromJSON (FromIntrospection (G.ObjectTypeDefinition G.InputValueDefin
         r = G.ObjectTypeDefinition desc' name implIfaces [] flds
     return $ FromIntrospection r
 
-instance J.FromJSON (FromIntrospection (G.FieldDefinition G.InputValueDefinition)) where
+instance (J.FromJSON (FromIntrospection a)) => J.FromJSON (FromIntrospection (G.FieldDefinition a)) where
   parseJSON = J.withObject "FieldDefinition" $ \o -> do
     name  <- o .:  "name"
     desc  <- o .:? "description"
@@ -180,8 +180,8 @@ instance J.FromJSON (FromIntrospection G.GType) where
         G.TypeList _ ty -> G.TypeList (G.Nullability False) ty
         G.TypeNamed _ n -> G.TypeNamed (G.Nullability False) n
 
-instance J.FromJSON (FromIntrospection G.InputValueDefinition) where
-  parseJSON = J.withObject "InputValueDefinition" $ \o -> do
+instance J.FromJSON (FromIntrospection RemoteSchemaInputValueDefinition) where
+  parseJSON = J.withObject "RemoteSchemaInputValueDefinition" $ \o -> do
     name  <- o .:  "name"
     desc  <- o .:? "description"
     _type <- o .: "type"
@@ -189,20 +189,23 @@ instance J.FromJSON (FromIntrospection G.InputValueDefinition) where
     let desc' = fmap fromIntrospection desc
     let defVal' = fmap fromIntrospection defVal
         r = G.InputValueDefinition desc' name (fromIntrospection _type) defVal' []
-    return $ FromIntrospection r
+    -- presets are only defined for non-admin roles, an admin will not have any presets
+    -- defined and the admin will be the one, who'll be adding the remote schema,
+    -- hence presets are set to `Nothing`
+    return $ FromIntrospection $ RemoteSchemaInputValueDefinition r Nothing
 
 instance J.FromJSON (FromIntrospection (G.Value Void)) where
    parseJSON = J.withText "Value Void" $ \t ->
      let parseValueConst = G.runParser G.value
      in fmap FromIntrospection $ either (fail . T.unpack) return $ parseValueConst t
 
-instance J.FromJSON (FromIntrospection (G.InterfaceTypeDefinition G.InputValueDefinition [G.Name])) where
+instance (J.FromJSON (FromIntrospection a)) => J.FromJSON (FromIntrospection (G.InterfaceTypeDefinition a [G.Name])) where
   parseJSON = J.withObject "InterfaceTypeDefinition" $ \o -> do
     kind  <- o .: "kind"
     name  <- o .:  "name"
     desc  <- o .:? "description"
     fields <- o .:? "fields"
-    possibleTypes :: Maybe [FromIntrospection (G.ObjectTypeDefinition G.InputValueDefinition)] <- o .:? "possibleTypes"
+    possibleTypes :: Maybe [FromIntrospection (G.ObjectTypeDefinition a)] <- o .:? "possibleTypes"
     let flds = maybe [] (fmap fromIntrospection) fields
         desc' = fmap fromIntrospection desc
         possTps = map G._otdName $ maybe [] (fmap fromIntrospection) possibleTypes
@@ -217,7 +220,9 @@ instance J.FromJSON (FromIntrospection G.UnionTypeDefinition) where
     kind  <- o .: "kind"
     name  <- o .:  "name"
     desc  <- o .:? "description"
-    possibleTypes :: [FromIntrospection (G.ObjectTypeDefinition G.InputValueDefinition)] <-  o .: "possibleTypes"
+    -- TODO: maybe instead of using `RemoteSchemaInputValueDefinition` here
+    -- we can generalize it, like in other places?
+    possibleTypes :: [FromIntrospection (G.ObjectTypeDefinition RemoteSchemaInputValueDefinition)] <- o .: "possibleTypes"
     let possibleTypes' = map G._otdName $ fmap fromIntrospection possibleTypes
         desc' = fmap fromIntrospection desc
     when (kind /= "UNION") $ kindErr kind "union"
@@ -243,7 +248,7 @@ instance J.FromJSON (FromIntrospection G.EnumValueDefinition) where
     let r = G.EnumValueDefinition desc' name []
     return $ FromIntrospection r
 
-instance J.FromJSON (FromIntrospection (G.InputObjectTypeDefinition G.InputValueDefinition)) where
+instance (J.FromJSON (FromIntrospection a)) => J.FromJSON (FromIntrospection (G.InputObjectTypeDefinition a)) where
   parseJSON = J.withObject "InputObjectTypeDefinition" $ \o -> do
     kind  <- o .: "kind"
     name  <- o .:  "name"
@@ -255,7 +260,7 @@ instance J.FromJSON (FromIntrospection (G.InputObjectTypeDefinition G.InputValue
     let r = G.InputObjectTypeDefinition desc' name [] inputFields
     return $ FromIntrospection r
 
-instance J.FromJSON (FromIntrospection (G.TypeDefinition G.InputValueDefinition [G.Name])) where
+instance (J.FromJSON (FromIntrospection a)) => J.FromJSON (FromIntrospection (G.TypeDefinition a [G.Name])) where
   parseJSON = J.withObject "TypeDefinition" $ \o -> do
     kind :: Text <- o .: "kind"
     r <- case kind of
@@ -297,7 +302,7 @@ instance J.FromJSON (FromIntrospection IntrospectionResult) where
       Just subsType -> do
         subRoot <- subsType .: "name"
         return $ Just subRoot
-    let r = IntrospectionResult (G.SchemaIntrospection (fmap fromIntrospection types))
+    let r = IntrospectionResult (RemoteSchemaIntrospection (fmap fromIntrospection types))
             queryRoot mutationRoot subsRoot
     return $ FromIntrospection r
 

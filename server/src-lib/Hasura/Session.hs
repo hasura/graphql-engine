@@ -67,7 +67,7 @@ isAdmin :: RoleName -> Bool
 isAdmin = (adminRoleName ==)
 
 newtype SessionVariable = SessionVariable {unSessionVariable :: CI.CI Text}
-  deriving (Show, Eq, Hashable, IsString, Cacheable, Data, NFData)
+  deriving (Show, Eq, Hashable, IsString, Cacheable, Data, NFData, Ord)
 
 instance ToJSON SessionVariable where
   toJSON = toJSON . CI.original . unSessionVariable
