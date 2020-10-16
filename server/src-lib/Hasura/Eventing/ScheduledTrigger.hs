@@ -320,7 +320,7 @@ processScheduledEvent logEnv eventId eventHeaders retryCtx payload webhookUrl ty
         (processSuccess eventId decodedHeaders type' webhookReqBodyJson)
         res
   where
-    traceNote = "Scheduled trigger" <> foldMap ((": " <>) . unNonEmptyText . unTriggerName) (sewpName payload)
+    traceNote = "Scheduled trigger" <> foldMap ((": " <>) . triggerNameToTxt) (sewpName payload)
 
 processError
   :: ( MonadIO m

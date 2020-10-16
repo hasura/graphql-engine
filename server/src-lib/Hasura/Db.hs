@@ -128,7 +128,9 @@ lazyTxToQTx = \case
   LTTx tx  -> tx
 
 runLazyTx
-  :: (MonadIO m, MonadBaseControl IO m)
+  :: ( MonadIO m
+     , MonadBaseControl IO m
+     )
   => PGExecCtx
   -> Q.TxAccess
   -> LazyTxT QErr m a -> ExceptT QErr m a
@@ -143,11 +145,11 @@ runLazyTx pgExecCtx txAccess = \case
 -- | This runs the given set of statements (Tx) without wrapping them in BEGIN
 -- and COMMIT. This should only be used for running a single statement query!
 runQueryTx
-  :: MonadIO m => PGExecCtx -> LazyTx QErr a -> ExceptT QErr m a
+  :: (MonadIO m, MonadError QErr m) => PGExecCtx -> LazyTx QErr a -> m a
 runQueryTx pgExecCtx = \case
   LTErr e  -> throwError e
   LTNoTx a -> return a
-  LTTx tx  -> ExceptT <$> liftIO $ runExceptT $ _pecRunReadNoTx pgExecCtx tx
+  LTTx tx  -> liftEither =<< liftIO (runExceptT $ _pecRunReadNoTx pgExecCtx tx)
 
 type RespTx = Q.TxE QErr EncJSON
 type LazyTx e a = LazyTxT e IO a

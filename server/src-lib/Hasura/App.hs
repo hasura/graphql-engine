@@ -50,8 +50,8 @@ import           Hasura.Eventing.EventTrigger
 import           Hasura.Eventing.ScheduledTrigger
 import           Hasura.GraphQL.Execute                    (MonadGQLExecutionCheck (..),
                                                             checkQueryInAllowlist)
-import           Hasura.GraphQL.Execute.Action             (asyncActionsProcessor)
-import           Hasura.GraphQL.Execute.Action             (fetchActionResponseTx, insertActionTx,
+import           Hasura.GraphQL.Execute.Action             (asyncActionsProcessor,
+                                                            fetchActionResponseTx, insertActionTx,
                                                             setActionStatusTx, undeliveredEventsTx)
 import           Hasura.GraphQL.Execute.Query              (MonadQueryInstrumentation (..),
                                                             noProfile)
@@ -386,6 +386,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} _ initTime
              ekgStore
              _icMetadataPool
              _icMetadata
+             soConnectionOptions
 
   -- log inconsistent schema objects
   liftIO $ logInconsObjs logger $ scInconsistentObjs $ lastBuiltSchemaCache _icSchemaCache
@@ -679,8 +680,8 @@ instance HttpLog ServerAppM where
       mkHttpAccessLogContext userInfoM reqId waiReq compressedResponse qTime cType headers
 
 instance MonadExecuteQuery ServerAppM where
-  executeQuery _ _ _ tx =
-    ([],) <$> hoist (hoist liftIO) tx
+  cacheLookup _ _ = pure ([], Nothing)
+  cacheStore  _ _ = pure ()
 
 instance UserAuthentication (Tracing.TraceT ServerAppM) where
   resolveUserInfo logger manager headers authMode =

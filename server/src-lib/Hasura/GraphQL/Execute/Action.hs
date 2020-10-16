@@ -1,6 +1,5 @@
 module Hasura.GraphQL.Execute.Action
-  ( ActionExecuteTx
-  , ActionExecuteResult(..)
+  ( ActionExecuteResult(..)
   , asyncActionsProcessor
   , resolveActionExecution
   , resolveActionMutationAsync
@@ -48,6 +47,7 @@ import qualified Hasura.Tracing                       as Tracing
 import           Hasura.Class
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Prepare
+import           Hasura.GraphQL.Execute.Types
 import           Hasura.GraphQL.Parser                hiding (column)
 import           Hasura.GraphQL.Utils                 (showNames)
 import           Hasura.HTTP
@@ -60,13 +60,6 @@ import           Hasura.Server.Version                (HasVersion)
 import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value                     (PGScalarValue (..), toTxtValue)
-
-type ActionExecuteTx =
-  forall tx. ( MonadIO tx
-             , MonadBaseControl IO tx
-             , MonadError QErr tx
-             , Tracing.MonadTrace tx
-             ) => tx EncJSON
 
 newtype ActionContext
   = ActionContext {_acName :: ActionName}
@@ -141,8 +134,8 @@ instance L.ToEngineLog ActionHandlerLog L.Hasura where
 
 data ActionExecuteResult
   = ActionExecuteResult
-  { _aerTransaction :: !ActionExecuteTx
-  , _aerHeaders     :: !HTTP.ResponseHeaders
+  { _aerExecution :: !ActionExecution
+  , _aerHeaders   :: !HTTP.ResponseHeaders
   }
 
 -- | Synchronously execute webhook handler and resolve response to action "output"
@@ -177,8 +170,8 @@ resolveActionExecution env logger userInfo metadataPool annAction execContext = 
     ActionExecContext manager reqHeaders sessionVariables = execContext
 
 
-    executeAction :: RS.AnnSimpleSel -> ActionExecuteTx
-    executeAction astResolved = do
+    executeAction :: RS.AnnSimpleSel -> ActionExecution
+    executeAction astResolved = ActionExecution do
       let (astResolvedWithoutRemoteJoins,maybeRemoteJoins) = RJ.getRemoteJoins astResolved
           jsonAggType = mkJsonAggSelect outputType
       liftEitherM $ runExceptT $ Tracing.interpTraceT
@@ -208,16 +201,15 @@ table provides the action response. See Note [Resolving async action query/subsc
 resolveActionMutationAsync
   :: ( MonadMetadataStorage m
      , MonadError QErr m
-     , Monad tx
      )
   => AnnActionMutationAsync
   -> [HTTP.Header]
   -> SessionVariables
-  -> m (tx EncJSON)
+  -> m ActionExecution
 resolveActionMutationAsync annAction reqHeaders sessionVariables = do
   actionId <- liftEitherM $ runMetadataStorageT $
               insertAction actionName sessionVariables reqHeaders inputArgs
-  pure $
+  pure $ ActionExecution $
     pure $ encJFromJValue $ UUID.toText $ unActionId actionId
   where
     AnnActionMutationAsync actionName inputArgs = annAction

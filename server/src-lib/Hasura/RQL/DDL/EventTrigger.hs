@@ -42,7 +42,9 @@ import qualified Text.Shakespeare.Text   as ST
 
 data OpVar = OLD | NEW deriving (Show)
 
-pgIdenTrigger :: Ops -> TriggerName -> T.Text
+-- | pgIdenTrigger is a method used to construct the name of the pg function
+-- used for event triggers which are present in the hdb_catalog schema of the pg source.
+pgIdenTrigger:: Ops -> TriggerName -> T.Text
 pgIdenTrigger op trn = pgFmtIden . qualifyTriggerName op $ triggerNameToTxt trn
   where
     qualifyTriggerName op' trn' = "notify_hasura_" <> trn' <> "_" <> T.pack (show op')

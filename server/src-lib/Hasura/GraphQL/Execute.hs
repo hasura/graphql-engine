@@ -31,6 +31,7 @@ import qualified Data.HashMap.Strict.InsOrd             as OMap
 
 import qualified Data.HashSet                           as HS
 import qualified Database.PG.Query                      as Q
+import qualified Language.GraphQL.Draft.Printer         as G
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
@@ -167,11 +168,13 @@ getExecPlanPartial userInfo sc queryType req =
           "in the document when operationName is not specified"
 
 -- The graphql query is resolved into a sequence of execution operations
-data ResolvedExecutionPlan m
+data ResolvedExecutionPlan tx
   = QueryExecutionPlan
-      (EPr.ExecutionPlan (m EncJSON, EQ.GeneratedSqlMap) EPr.RemoteCall (G.Name, J.Value)) [C.QueryRootField UnpreparedValue]
+      (EPr.ExecutionPlan (tx EncJSON, Maybe EQ.PreparedSql) ET.ActionExecution)
+      [C.QueryRootField UnpreparedValue]
   -- ^ query execution; remote schemas and introspection possible
-  | MutationExecutionPlan (EPr.ExecutionPlan (m EncJSON, HTTP.ResponseHeaders) EPr.RemoteCall (G.Name, J.Value))
+  | MutationExecutionPlan
+      (EPr.ExecutionPlan (tx EncJSON, HTTP.ResponseHeaders) (ET.ActionExecution, HTTP.ResponseHeaders))
   -- ^ mutation execution; only __typename introspection supported
   | SubscriptionExecutionPlan EL.LiveQueryPlan
   -- ^ live query execution; remote schemas and introspection not supported
@@ -216,8 +219,7 @@ getResolvedExecPlan
      , EQ.MonadQueryInstrumentation m
      , MonadMetadataStorage m
      , MonadIO tx
-     , MonadBaseControl IO tx
-     , MonadError QErr tx
+     , MonadTx tx
      , Tracing.MonadTrace tx
      )
   => Env.Environment
@@ -260,7 +262,6 @@ getResolvedExecPlan env metadataPool logger {- planCache-} userInfo sqlGenCtx
       -- part of a GraphQL query. Here we make sure to remember those
       -- pre-defined sections, so that when we encounter a fragment spread
       -- later, we can inline it instead.
-      -- req <- toParsed reqUnparsed
       let takeFragment = \case G.ExecutableDefinitionFragment f -> Just f; _ -> Nothing
           fragments =
             mapMaybe takeFragment $ unGQLExecDoc $ _grQuery reqParsed
@@ -269,8 +270,6 @@ getResolvedExecPlan env metadataPool logger {- planCache-} userInfo sqlGenCtx
         G.TypedOperationDefinition G.OperationTypeQuery _ varDefs dirs selSet -> do
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
-          -- (unpreparedQueries, _) <-
-          --   E.parseGraphQLQuery gCtx varDefs
           (execPlan,asts) {-, plan-} <-
             EQ.convertQuerySelSet env metadataPool logger gCtx userInfo httpManager
               reqHeaders dirs inlinedSelSet varDefs (_grVariables reqUnparsed)
@@ -311,22 +310,7 @@ getResolvedExecPlan env metadataPool logger {- planCache-} userInfo sqlGenCtx
               pure $ getPGExecCtx v
 
           (lqOp, _plan) <- EL.buildLiveQueryPlan pgExecCtx userInfo validSubscriptionAST
-          -- getSubsOpM pgExecCtx userInfo inlinedSelSet
           return $ SubscriptionExecutionPlan lqOp
-
-      -- forM partialExecPlan $ \(gCtx, rootSelSet) ->
-      --   case rootSelSet of
-      --     VQ.RMutation selSet -> do
-      --       (tx, respHeaders) <- getMutOp gCtx sqlGenCtx userInfo httpManager reqHeaders selSet
-      --       pure $ ExOpMutation respHeaders tx
-      --     VQ.RQuery selSet -> do
-      --       (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo queryReusability (allowQueryActionExecuter httpManager reqHeaders) selSet
-      --       traverse_ (addPlanToCache . EP.RPQuery) plan
-      --       return $ ExOpQuery queryTx (Just genSql)
-      --     VQ.RSubscription fld -> do
-      --       (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability (restrictActionExecuter "query actions cannot be run as a subscription") fld
-      --       traverse_ (addPlanToCache . EP.RPSubs) plan
-      --       return $ ExOpSubs lqOp
 
 execRemoteGQ
   :: ( HasVersion
@@ -340,16 +324,22 @@ execRemoteGQ
   -> RequestId
   -> UserInfo
   -> [HTTP.Header]
-  -> GQLReqUnparsed
   -> RemoteSchemaInfo
   -> G.TypedOperationDefinition G.NoFragments G.Name
+  -> Maybe VariableValues
   -> m (DiffTime, HttpResponse EncJSON)
   -- ^ Also returns time spent in http request, for telemetry.
-execRemoteGQ env reqId userInfo reqHdrs q rsi opDef = do
+execRemoteGQ env reqId userInfo reqHdrs rsi opDef varVals = do
   execCtx <- ask
   let logger  = _ecxLogger execCtx
       manager = _ecxHttpManager execCtx
       opType  = G._todType opDef
+      inlined = opDef { G._todSelectionSet = G.fmapSelectionSetFragment G.inline $ G._todSelectionSet opDef }
+      q       =
+        GQLReq Nothing
+        ( GQLQueryText $ G.renderExecutableDoc $ G.ExecutableDocument $
+          pure $ G.ExecutableDefinitionOperation $ G.OperationDefinitionTyped $ inlined
+        ) varVals
   logQueryLog logger q Nothing reqId
   (time, respHdrs, resp) <- execRemoteGQ' env manager userInfo reqHdrs q rsi opType
   let !httpResp = HttpResponse (encJFromLBS resp) respHdrs

@@ -473,6 +473,7 @@ v2QueryHandler request = do
 v1Alpha1GQHandler
   :: ( HasVersion
      , MonadIO m
+     , MonadBaseControl IO m
      , E.MonadGQLExecutionCheck m
      , MonadQueryLog m
      , Tracing.MonadTrace m
@@ -507,6 +508,7 @@ v1Alpha1GQHandler queryType query = do
 v1GQHandler
   :: ( HasVersion
      , MonadIO m
+     , MonadBaseControl IO m
      , E.MonadGQLExecutionCheck m
      , MonadQueryLog m
      , Tracing.MonadTrace m
@@ -521,6 +523,7 @@ v1GQHandler = v1Alpha1GQHandler E.QueryHasura
 v1GQRelayHandler
   :: ( HasVersion
      , MonadIO m
+     , MonadBaseControl IO m
      , E.MonadGQLExecutionCheck m
      , MonadQueryLog m
      , Tracing.MonadTrace m
@@ -721,10 +724,11 @@ mkWaiApp
   -- ^ Metadata storage connection pool - TODO: Better rep
   -> Metadata
   -- ^ Metadata
+  -> WS.ConnectionOptions
   -> m HasuraApp
 mkWaiApp env logger sqlGenCtx enableAL httpManager mode corsCfg enableConsole consoleAssetsDir
-         enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig
-         liveQueryHook schemaCache ekgStore metadataPool metadata = do
+         enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig liveQueryHook
+         schemaCache ekgStore metadataPool metadata connectionOptions  = do
 
     -- See Note [Temporarily disabling query plan caching]
     -- (planCache, schemaCacheRef) <- initialiseCache
@@ -763,7 +767,7 @@ mkWaiApp env logger sqlGenCtx enableAL httpManager mode corsCfg enableConsole co
         stopWSServer = WS.stopWSServerApp wsServerEnv
 
     waiApp <- liftWithStateless $ \lowerIO ->
-      pure $ WSC.websocketsOr WS.defaultConnectionOptions (\ip conn -> lowerIO $ wsServerApp ip conn) spockApp
+      pure $ WSC.websocketsOr connectionOptions (\ip conn -> lowerIO $ wsServerApp ip conn) spockApp
 
     return $ HasuraApp waiApp schemaCacheRef stopWSServer
   where
