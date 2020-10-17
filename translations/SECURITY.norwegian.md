@@ -28,10 +28,3 @@ Reporteren vil holdes oppdatert på hvert trinn av problemets analyse og løsnin
 En offentlig utleveringsdato forhandles av Hasura produktsikkerhetslaget og feil innsenderen. Vi foretrekker å avsløre feilen så snart som mulig når en brukerreduksjon er tilgjengelig. Det er rimelig å utsette avsløringen når feilen eller løsningen ennå ikke er fullstendig forstått, løsningen ikke er godt testet eller for leverandør koordinering. Tidsrammen for avsløring er fra øyeblikkelig (spesielt hvis den allerede er kjent) til noen få uker. Vi forventer at tidsrammen mellom en rapport til offentliggjøring vanligvis vil være i orden til 7 dager. Hasura GraphQL Engine-vedlikeholdere og sikkerhetslaget tar den siste samtalen om å sette en avsløringsdato.
 
 (Noen seksjoner er inspirert og tilpasset fra [https://github.com/kubernetes/website/blob/master/content/en/docs/reference/issues-security/security.md](https://github.com/kubernetes/website/blob/master/content/en/docs/reference/issues-security/security.md)).
-
-## Oversettelser
-
-Dette dokumentet er tilgjengelig i følgende oversettelser:
-
-- [French :fr:](translations/SECURITY.french.md)
-- [Hindi :india:](translations/SECURITY.hindi.md)
