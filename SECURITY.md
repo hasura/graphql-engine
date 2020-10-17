@@ -36,3 +36,4 @@ This document is available in the following translations:
 
 - [French :fr:](translations/SECURITY.french.md)
 - [Hindi :india:](translations/SECURITY.hindi.md)
+- [Norwegian :norway:](translations/SECURITY.norwegian.md)
