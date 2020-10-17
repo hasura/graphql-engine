@@ -2,6 +2,8 @@
 
 ## Next release
 
+- console: select first operator by default on the browse rows screen (close #5729)
+
 ### Heterogeneous execution
 
 Previous releases have allowed queries to request data from either Postgres or remote schemas, but not both. This release removes that restriction, so multiple data sources may be mixed within a single query. For example, GraphQL Engine can execute a query like
