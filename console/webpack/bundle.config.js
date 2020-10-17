@@ -37,6 +37,8 @@ module.exports = {
   entry: {
     main: './pro-index.js',
     hoc: './exports',
+    app: './exports/app',
+    appState: './exports/appState',
     // data: './src/components/Services/Data',
     // actions: './src/components/Services/Actions',
     // "event-triggers": './src/components/Services/Events',

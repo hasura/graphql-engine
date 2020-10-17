@@ -24,11 +24,11 @@ const CONNECTION_FAILED = 'App/CONNECTION_FAILED';
  * uid: integer/string, null, unique identifier to the notification, same uid will not be shown again
  */
 
-export const requireAsyncGlobals = ({ dispatch }) => {
+export const requireAsyncGlobals = ({ dispatch }, shouldLoadOpts, shouldLoadServerConfig) => {
   return (nextState, finalState, callback) => {
     Promise.all([
-      dispatch(loadConsoleOpts()),
-      dispatch(fetchServerConfig),
+      shouldLoadOpts && dispatch(loadConsoleOpts()),
+      shouldLoadServerConfig && dispatch(fetchServerConfig()),
     ]).finally(callback);
   };
 };

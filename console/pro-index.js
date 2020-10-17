@@ -2,9 +2,6 @@
 import {
   persistGraphiQLHeaders,
   getPersistedGraphiQLHeaders,
-  // HASURA_CONSOLE_GRAPHIQL_HEADERS,
-  // setGraphiQLHeadersInLocalStorage,
-  // getGraphiQLHeadersFromLocalStorage,
 } from './src/components/Services/ApiExplorer/ApiRequest/utils';
 
 import {
@@ -13,37 +10,12 @@ import {
 
 import NotificationSection from './src/components/Main/NotificationSection';
 
-// Not required
-import GraphiQLWrapper from './src/components/Services/ApiExplorer/GraphiQLWrapper/GraphiQLWrapper';
+export { default as PageNotFound } from './src/components/Error/PageNotFound';
 
 import { CONSOLE_ADMIN_SECRET } from './src/components/AppState';
 
 // import utility functions
 
-// Not used
-import { loadMigrationStatus } from './src/components/Main/Actions';
-
-// Not used
-import {
-  showErrorNotification,
-  showSuccessNotification,
-  showInfoNotification,
-  showWarningNotification,
-} from './src/components/Services/Common/Notification';
-
-// Import main reducer
-
-import mainReducer from './src/components/Main/Actions';
-
-// Export main reducer
-
-export {
-  mainReducer,
-};
-
-// import Data Tab parts
-// import { dataRouterUtils } from './src/components/Services/Data/';
-// import { dataReducer } from './src/components/Services/Data';
 import dataHeaders from './src/components/Services/Data/Common/Headers';
 import { handleMigrationErrors } from './src/components/Services/Data/TableModify/ModifyActions';
 import {
@@ -59,30 +31,25 @@ import {
 // import { eventReducer } from './src/components/Services/EventTrigger';
 
 // import Remote Schema parts
-import {
-  getRemoteSchemaRouter,
-  remoteSchemaReducer,
-} from './src/components/Services/RemoteSchema';
+// import {
+//   getRemoteSchemaRouter,
+//   remoteSchemaReducer,
+// } from './src/components/Services/RemoteSchema';
 
 // Api Explorer and other exports */
 
-import generatedApiExplorer from './src/components/Services/ApiExplorer/ApiExplorer';
-import apiExplorerReducer from './src/components/Services/ApiExplorer/Actions';
-
-// Not used
-import generatedLoginConnector from './src/components/Login/Login';
-
+// import generatedApiExplorer from './src/components/Services/ApiExplorer/ApiExplorer';
+// import apiExplorerReducer from './src/components/Services/ApiExplorer/Actions';
 import generatedVoyagerConnector from './src/components/Services/VoyagerView/VoyagerView';
-//
 
-import telemetryReducer from './src/telemetry/Actions';
+// import telemetryReducer from './src/telemetry/Actions';
 
 // Common components
 
 // React components
 import Spinner from './src/components/Common/Spinner/Spinner';
 
-import invokeEventTriggerReducer from './src/components/Services/Events/EventTriggers/InvokeManualTrigger/InvokeManualTriggerAction';
+// import invokeEventTriggerReducer from './src/components/Services/Events/EventTriggers/InvokeManualTrigger/InvokeManualTriggerAction';
 
 // import Button from './src/components/Common/Button/Button';
 // Css modules
@@ -105,8 +72,6 @@ import {
   isMetadataStatusPage,
 } from './src/components/Services/Settings/Actions';
 
-import { metadataReducer } from './src/components/Services/Settings/Actions';
-
 // import other globals
 // import routes from './src/routes';
 import globals from './src/Globals';
@@ -117,23 +82,9 @@ import {
   removeRequestHeader,
 } from './src/components/Services/ApiExplorer/Actions';
 
-// TODO:
-// import actionReducer from './src/components/Services/Actions/reducer';
-// import getActionsRouter from './src/components/Services/Actions/Router';
-// import typesReducer from './src/components/Services/Types/reducer';
-
-// Not used
-import validateLogin from './src/utils/validateLogin';
-
-// Not used
-import DragFoldTable from './src/components/Common/TableCommon/DragFoldTable';
-
 const filterQueryScss = require('./src/components/Common/FilterQuery/FilterQuery.scss');
 const tableScss = require('./src/components/Common/TableCommon/Table.scss');
 
-// Export telemetry stuff
-
-export { telemetryReducer };
 
 // Export APIExplorer and entrypoints
 export {
@@ -142,15 +93,11 @@ export {
   // getGraphiQLHeadersFromLocalStorage,
   persistGraphiQLHeaders,
   getPersistedGraphiQLHeaders,
-  generatedApiExplorer,
-  apiExplorerReducer,
-  generatedLoginConnector,
   generatedVoyagerConnector,
 };
 
 // Export the metadata parts
 export {
-  metadataReducer,
   metadataContainer,
   metadataOptionsContainer,
   metadataStatusContainer,
@@ -162,46 +109,21 @@ export {
   aboutContainer,
 };
 
-// export GraphiQL parts
-export { GraphiQLWrapper };
-
-// export Data Tab parts
-// export { dataRouterUtils, dataReducer };
 export { fetchSchemaList, updateSchemaInfo };
 export { ADMIN_SECRET_ERROR, UPDATE_CURRENT_SCHEMA, UPDATE_DATA_HEADERS };
 export { dataHeaders };
 
-// export Event Tab parts
-// export { getEventsRouter, eventsReducer, invokeEventTriggerReducer};
-export { invokeEventTriggerReducer};
-
-// export Remote Schema parts
-export { getRemoteSchemaRouter, remoteSchemaReducer };
-
 // export other globals
 
 export { globals, endpoints, mainState };
-export { changeRequestHeader, loadMigrationStatus, removeRequestHeader };
-export { validateLogin };
+export { changeRequestHeader, removeRequestHeader };
 export { handleMigrationErrors };
-
-/* Export notification utilities */
-export {
-  showErrorNotification,
-  showSuccessNotification,
-  showInfoNotification,
-  showWarningNotification,
-};
-
-export { DragFoldTable };
 
 export { CONSOLE_ADMIN_SECRET };
 
 // export styles
 export { filterQueryScss, tableScss };
 export * from './src/components/Common';
-
-// export { actionReducer, getActionsRouter, typesReducer };
 
 /* Notification section exports
  */
@@ -210,3 +132,16 @@ export {
   fetchConsoleNotifications,
   NotificationSection,
 }
+
+export {
+  loadConsoleOpts
+} from './src/telemetry/Actions';
+export * from './src/telemetry';
+
+
+import * as EndpointNamedExps from './src/Endpoints';
+
+export { default as Endpoints } from './src/Endpoints';
+export { EndpointNamedExps };
+
+
