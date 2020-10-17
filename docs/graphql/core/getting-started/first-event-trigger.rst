@@ -34,7 +34,6 @@ the following columns:
 
 .. thumbnail:: /img/graphql/core/getting-started/create-profile-table.png
    :alt: Create a table
-   :width: 700px
 
 Setup an event trigger
 ----------------------
