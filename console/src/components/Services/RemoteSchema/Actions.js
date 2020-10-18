@@ -16,10 +16,8 @@ import {
   setRequestFailure as setPermRequestFailure,
 } from './Permissions/reducer';
 import { findRemoteSchema, getRemoteSchemaPermissions } from './utils';
-
-// TODO: update
 import {
-  getActionPermissionQueries,
+  getRemoteSchemaPermissionQueries,
   getCreateRemoteSchemaPermissionQuery,
   getDropRemoteSchemaPermissionQuery,
 } from './Permissions/utils';
@@ -209,7 +207,7 @@ const saveRemoteSchemaPermission = (successCb, errorCb) => {
       findRemoteSchema(allActions, currentAction)
     );
 
-    const { upQueries, downQueries } = getActionPermissionQueries(
+    const { upQueries, downQueries } = getRemoteSchemaPermissionQueries(
       permissionEdit,
       allPermissions,
       currentAction

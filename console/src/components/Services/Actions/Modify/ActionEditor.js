@@ -17,7 +17,7 @@ import {
 } from './reducer';
 import { saveAction, deleteAction } from '../ServerIO';
 import { getActionDefinitionFromSdl } from '../../../../shared/utils/sdlUtils';
-import GraphQLEditor from '../Common/components/GraphQLEditor';
+import GraphQLEditorWrapper from '../Common/components/GraphQLEditorWrapper';
 import { typeDefinitionInfo } from '../Add/Add';
 
 export const actionDefinitionInfo = {
@@ -104,7 +104,7 @@ const ActionEditor = ({
   return (
     <div>
       <Helmet title={`Modify Action - ${actionName} - Actions | Hasura`} />
-      <GraphQLEditor
+      <GraphQLEditorWrapper
         value={actionDefinitionSdl}
         error={actionDefinitionError}
         onChange={actionDefinitionOnChange}
@@ -114,7 +114,7 @@ const ActionEditor = ({
         tooltip={actionDefinitionInfo.tooltip}
       />
       <hr />
-      <GraphQLEditor
+      <GraphQLEditorWrapper
         value={typesDefinitionSdl}
         error={typesDefinitionError}
         onChange={typeDefinitionOnChange}

@@ -30,7 +30,6 @@ export const getDropRemoteSchemaPermissionQuery = (
   };
 };
 
-// TODO: imports
 export const getRemoteSchemaPermissionQueries = (
   permissionEdit,
   allPermissions,

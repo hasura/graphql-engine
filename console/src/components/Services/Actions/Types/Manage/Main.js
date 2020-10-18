@@ -10,7 +10,7 @@ import { setTypeDefinition, setFetching, unsetFetching } from '../reducer';
 import { setCustomGraphQLTypes } from '../../../Types/ServerIO';
 import { showErrorNotification } from '../../../Common/Notification';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
-import GraphQLEditor from '../../Common/components/GraphQLEditor';
+import GraphQLEditorWrapper from '../../Common/components/GraphQLEditorWrapper';
 
 const Manage = ({ allTypes, dispatch, readOnlyMode, ...manageProps }) => {
   const sdlOnChange = (value, _error, _timer, ast) => {
@@ -51,7 +51,7 @@ const Manage = ({ allTypes, dispatch, readOnlyMode, ...manageProps }) => {
 
   return (
     <CustomTypesContainer tabName="manage" dispatch={dispatch}>
-      <GraphQLEditor
+      <GraphQLEditorWrapper
         value={sdl}
         error={error}
         timer={timer}
