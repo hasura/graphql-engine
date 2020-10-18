@@ -1,0 +1,14 @@
+{
+  "baseUrl": "http://localhost:3000",
+  "env": {
+    "BASE_URL": "http://localhost:3000",
+    "TEST_MODE": "parallel",
+    "MIGRATE_URL": "http://localhost:9693/apis/migrate"
+  },
+  "ignoreTestFiles": ["spec.ts", "validators.ts", "utils.ts"],
+  "viewportWidth": 1280,
+  "viewportHeight": 720,
+  "chromeWebSecurity": false,
+  "video": false,
+  "projectId": "5yiuic"
+}
