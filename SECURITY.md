@@ -34,5 +34,6 @@ A public disclosure date is negotiated by the Hasura product security team and t
 
 This document is available in the following translations:
 
+- [Bosnian :bosnia_herzegovina:](translations/SECURITY.bosnian.md)
 - [French :fr:](translations/SECURITY.french.md)
 - [Hindi :india:](translations/SECURITY.hindi.md)
