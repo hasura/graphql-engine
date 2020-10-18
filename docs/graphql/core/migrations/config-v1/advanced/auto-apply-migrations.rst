@@ -50,7 +50,7 @@ Example:
    # Start Hasura after applying the migrations present in /home/me/my-project/migrations
    docker run -p 8080:8080 \
           -v /home/me/my-project/migrations:/hasura-migrations \
-          -e HASURA_GRAPHQL_DATABASE_URL=postgres://postgres:@postgres:5432/postgres \
+          -e HASURA_GRAPHQL_DATABASE_URL=postgres://<postgres>:@<postgres>:5432/<postgres> \
           hasura/graphql-engine:v1.1.0.cli-migrations
 
 

@@ -43,14 +43,14 @@ Edit ``deployment.yaml`` and set the right database url:
 
   ...
     env:
-    - name: <HASURA_GRAPHQL_DATABASE_URL>
-      value: postgres://username:password@hostname:port/dbname
+    - name: HASURA_GRAPHQL_DATABASE_URL
+      value: postgres://<username>:<password>@hostname:port/<dbname>
   ...
 
 Examples of ``HASURA_GRAPHQL_DATABASE_URL``:
 
-- ``postgres://admin:password@localhost:5432/my-db``
-- ``postgres://admin:@localhost:5432/my-db`` *(if there is no password)*
+- ``postgres://<admin>:<password>@localhost:5432/<my-db>``
+- ``postgres://<admin>:@localhost:5432/<my-db>`` *(if there is no password)*
 
 .. note::
 
@@ -118,9 +118,9 @@ Update the ``deployment.yaml`` to set the ``HASURA_GRAPHQL_ADMIN_SECRET`` enviro
         command: ["graphql-engine"]
         args: ["serve", "--enable-console"]
         env:
-        - name: <HASURA_GRAPHQL_DATABASE_URL>
-          value: postgres://username:password@hostname:port/dbname
-        - name: <HASURA_GRAPHQL_ADMIN_SECRET>
+        - name: HASURA_GRAPHQL_DATABASE_URL
+          value: postgres://<username>:<password>@hostname:port/<dbname>
+        - name: HASURA_GRAPHQL_ADMIN_SECRET
           value: mysecretkey
         ports:
         - containerPort: 8080
@@ -141,7 +141,7 @@ In case you're using the CLI to open the Hasura console, use the ``admin-secret`
 
 .. code-block:: bash
 
-   hasura console --admin-secret=myadminsecretkey
+   hasura console --admin-secret=<myadminsecretkey>
 
 .. _kubernetes_logs:
 
