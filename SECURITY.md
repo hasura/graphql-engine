@@ -36,3 +36,5 @@ This document is available in the following translations:
 
 - [French :fr:](translations/SECURITY.french.md)
 - [Hindi :india:](translations/SECURITY.hindi.md)
+- [Russian :ru:](translations/SECURITY.russian.md)
+- [Ukrainian :ukraine:](translations/SECURITY.ukrainian.md)
