@@ -12,9 +12,6 @@ Reset Hasura migrations
   :depth: 1
   :local:
 
-Introduction
-------------
-
 If you have a lot of migrations and you need to squash them or your current migration state on the local machine is corrupted, you can reset the state and create new migrations from the state that is on the server.
 
 Step 1: Delete the local migrations
@@ -50,7 +47,7 @@ We will set up fresh migrations by pulling the schema and metadata from the serv
 
    ## note down the version
    ## mark the migration as applied on this server
-   
+
    hasura migrate apply --version "<version>" --skip-execution
 
 
