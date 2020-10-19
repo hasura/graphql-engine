@@ -1198,7 +1198,7 @@ const addColSql = (
 ) => {
   let defWithQuotes = "''";
 
-  defWithQuotes = wrapQuotes(colType, colDefault);
+  defWithQuotes = wrapQuotes(colDefault);
 
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
@@ -1556,11 +1556,8 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
       );
     }
 
-    const colDefaultWithQuotes = wrapQuotes(colType, colDefault);
-    const originalColDefaultWithQuotes = wrapQuotes(
-      colType,
-      originalColDefault
-    );
+    const colDefaultWithQuotes = wrapQuotes(colDefault);
+    const originalColDefaultWithQuotes = wrapQuotes(originalColDefault);
     /* column default up/down migration */
     let columnDefaultUpQuery;
     let columnDefaultDownQuery;

@@ -791,16 +791,12 @@ WHERE
 export const isColTypeString = colType =>
   ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
 
-export const wrapQuotes = (colType, colDefault) => {
+export const wrapQuotes = colDefault => {
   const checkIfFunctionFormat = isPostgresFunction(colDefault);
-  if (
-    (isColTypeString(colType) && !checkIfFunctionFormat) ||
-    colType === 'json' ||
-    colType === 'jsonb'
-  ) {
-    return `'${colDefault}'`;
+  if (checkIfFunctionFormat) {
+    return colDefault;
   }
-  return colDefault;
+  return `'${colDefault}'`;
 };
 
 const cascadePGSqlQuery = sql => {

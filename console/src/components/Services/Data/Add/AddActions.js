@@ -192,9 +192,7 @@ const createTableSql = () => {
         currentCols[i].default !== undefined &&
         currentCols[i].default.value !== ''
       ) {
-        tableDefSql +=
-          ' DEFAULT ' +
-          wrapQuotes(currentCols[i].type, currentCols[i].default.value);
+        tableDefSql += ' DEFAULT ' + wrapQuotes(currentCols[i].default.value);
 
         if (currentCols[i].type === 'uuid') {
           hasUUIDDefault = true;
