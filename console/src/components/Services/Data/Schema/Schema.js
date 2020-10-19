@@ -205,7 +205,6 @@ class Schema extends Component {
       functionsList,
       nonTrackableFunctions,
       trackedFunctions,
-      allSchemas,
     } = this.props;
 
     const handleSchemaChange = e => {
@@ -221,25 +220,7 @@ class Schema extends Component {
         return !trackedFuncNames.includes(getFunctionName(func));
       };
 
-      const allTrackableFunctions = functionsList.filter(filterCondition);
-
-      // This function is to help filter out custom functions that are being used for computed fields.
-      // Functions that are being used within computed fields should not be tracked. See issue #3757
-      const allComputedFieldFunctions = allSchemas
-        .filter(tableInfo => tableInfo.table_schema === currentSchema)
-        .filter(table => table.computed_fields && table.computed_fields.length)
-        .map(table =>
-          table.computed_fields.map(comp => comp.definition.function.name)
-        )
-        .flat();
-
-      if (!allComputedFieldFunctions.length) {
-        return allTrackableFunctions;
-      }
-
-      return allTrackableFunctions.filter(
-        func => !allComputedFieldFunctions.includes(func.function_name)
-      );
+      return functionsList.filter(filterCondition);
     };
 
     const getSectionHeading = (headingText, tooltip, actionElement = null) => {
@@ -764,7 +745,6 @@ const mapStateToProps = state => ({
   nonTrackableFunctions: [...state.tables.nonTrackablePostgresFunctions],
   trackedFunctions: [...state.tables.trackedFunctions],
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
-  allSchemas: state.tables.allSchemas,
 });
 
 const schemaConnector = connect => connect(mapStateToProps)(Schema);

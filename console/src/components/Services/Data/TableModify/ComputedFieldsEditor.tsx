@@ -1,6 +1,6 @@
 import React from 'react';
 import AceEditor from 'react-ace';
-import { ValueType, OptionTypeBase } from 'react-select';
+import { OptionTypeBase } from 'react-select';
 
 import styles from './ModifyTable.scss';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
@@ -11,7 +11,6 @@ import {
   findFunction,
   getFunctionDefinition,
   getFunctionName,
-  getQualifiedTableDef,
   getSchemaFunctions,
   getSchemaName,
   Table,
@@ -23,7 +22,6 @@ import { deleteComputedField, saveComputedField } from './ModifyActions';
 import { fetchFunctionInit } from '../DataActions';
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
 import { Dispatch } from '../../../../types';
-import { TableDefinition } from '../../../Common/utils/v1QueryUtils';
 
 type ComputedFieldsEditorProps = {
   table: Table;
@@ -31,7 +29,6 @@ type ComputedFieldsEditorProps = {
   functions: PGFunction[];
   schemaList: PGSchema[];
   dispatch: Dispatch;
-  trackedFunctions: PGFunction[];
 };
 
 const ComputedFieldsEditor = ({
@@ -40,7 +37,6 @@ const ComputedFieldsEditor = ({
   functions,
   schemaList,
   dispatch,
-  trackedFunctions,
 }: ComputedFieldsEditorProps) => {
   const computedFields = table.computed_fields;
 
@@ -69,7 +65,7 @@ const ComputedFieldsEditor = ({
 
   React.useEffect(() => {
     setComputedFieldsState(getStateComputedFields());
-  }, [computedFields]); // Only re-run the effect if computedFields change
+  }, [computedFields]);
 
   // State management - end
 
@@ -81,9 +77,8 @@ const ComputedFieldsEditor = ({
     let origComputedFieldFunctionName = '';
     let origComputedFieldComment = '';
     if (origComputedField) {
-      const origComputedFieldFunctionDef = getQualifiedTableDef(
-        origComputedField.definition.function
-      ) as TableDefinition;
+      const origComputedFieldFunctionDef =
+        origComputedField.definition.function;
 
       origComputedFieldName = origComputedField.computed_field_name;
       origComputedFieldFunctionName = origComputedFieldFunctionDef.name;
@@ -92,9 +87,7 @@ const ComputedFieldsEditor = ({
       }
     }
 
-    const computedFieldFunctionDef = getQualifiedTableDef(
-      computedField.definition.function
-    ) as TableDefinition;
+    const computedFieldFunctionDef = computedField.definition.function;
 
     const computedFieldName = computedField.computed_field_name;
     const computedFieldFunctionName = computedFieldFunctionDef.name;
@@ -228,16 +221,16 @@ const ComputedFieldsEditor = ({
       };
 
       const handleFnSchemaChange = (
-        selectedOption: ValueType<OptionTypeBase> | string
+        selectedOption: string | OptionTypeBase | null | undefined
       ) => {
         // fetch schema fn
 
-        if (!selectedOption) {
+        if (!selectedOption || typeof selectedOption === 'string') {
           return;
         }
 
         if (selectedOption) {
-          dispatch(fetchFunctionInit((selectedOption as OptionTypeBase).value));
+          dispatch(fetchFunctionInit(selectedOption.value));
         }
 
         const newState = [...stateComputedFields];
@@ -248,7 +241,7 @@ const ComputedFieldsEditor = ({
             ...newState[i].definition,
             function: {
               ...newState[i].definition.function,
-              schema: (selectedOption as OptionTypeBase).value,
+              schema: selectedOption.value,
             },
           },
         };
@@ -257,11 +250,11 @@ const ComputedFieldsEditor = ({
       };
 
       const handleFnNameChange = (
-        selectedOption: ValueType<OptionTypeBase> | string
+        selectedOption: string | OptionTypeBase | null | undefined
       ) => {
         const newState = [...stateComputedFields];
 
-        if (!selectedOption) {
+        if (!selectedOption || typeof selectedOption === 'string') {
           return;
         }
 
@@ -271,7 +264,7 @@ const ComputedFieldsEditor = ({
             ...newState[i].definition,
             function: {
               ...newState[i].definition.function,
-              name: (selectedOption as OptionTypeBase).value,
+              name: selectedOption.value,
             },
           },
         };
@@ -321,15 +314,10 @@ const ComputedFieldsEditor = ({
       };
 
       const schemaListOptions = schemaList.map(s => getSchemaName(s));
-      const trackedFunctionNames = trackedFunctions.map(
-        func => func.function_name
-      );
       const functionNameOptions = getSchemaFunctions(
         functions,
         computedFieldFunctionSchema
-      )
-        .filter(fn => !trackedFunctionNames.includes(fn.function_name))
-        .map(fn => getFunctionName(fn));
+      ).map(fn => getFunctionName(fn));
 
       return (
         <div>
@@ -411,7 +399,7 @@ const ComputedFieldsEditor = ({
           <div className={`${styles.add_mar_top}`}>
             <div className={`${styles.add_mar_bottom_mid}`}>
               <b>Session argument:</b>
-              <Tooltip message="the function argument into which hasura session variables will be passed" />
+              <Tooltip message="The function argument into which Hasura session variables will be passed" />
             </div>
             <input
               type="text"

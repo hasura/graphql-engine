@@ -157,7 +157,6 @@ class OneGraphExplorer extends React.Component {
         });
       })
       .catch(err => {
-        console.error(err, err.message);
         dispatch(
           showErrorNotification(
             'Schema introspection query failed',
