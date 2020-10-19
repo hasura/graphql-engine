@@ -10,11 +10,12 @@ import           Hasura.SQL.Types
 import           Hasura.RQL.Types              hiding (GraphQLType, defaultScalars)
 import           Hasura.Server.Utils           (englishList, duplicates, isSessionVariable)
 
-import qualified Data.HashMap.Strict           as Map
-import qualified Language.GraphQL.Draft.Syntax as G
-import qualified Data.HashSet                  as S
-import qualified Data.List.NonEmpty            as NE
-import qualified Data.Text                     as T
+import qualified Data.HashMap.Strict                   as Map
+import qualified Language.GraphQL.Draft.Syntax         as G
+import qualified Data.HashSet                          as S
+import qualified Data.List.NonEmpty                    as NE
+import qualified Data.Text                             as T
+import qualified Hasura.GraphQL.Parser                 as P
 
 import           Hasura.Session
 data FieldDefinitionType
@@ -116,6 +117,7 @@ data RoleBasedSchemaValidationError
   | InvalidPresetArgument !G.Name
   | MultipleArgumentsInPresetFound
   | ExpectedListButGotNameType
+  | ExpectedNameTypeButGotListType
   deriving (Show, Eq)
 
 convertTypeDef :: G.TypeDefinition [G.Name] a -> G.TypeDefinition () a
@@ -206,7 +208,7 @@ presetDirectiveDefn :: G.DirectiveDefinition G.InputValueDefinition
 presetDirectiveDefn =
   G.DirectiveDefinition Nothing $$(G.litName "preset") [directiveArg] directiveLocations
   where
-    gType = G.TypeNamed (G.Nullability False) $ $$(G.litName "PresetValue")
+    gType = G.TypeNamed (G.Nullability False) $ G._stdName presetValueScalar
 
     directiveLocations = map G.DLTypeSystem [G.TSDLARGUMENT_DEFINITION, G.TSDLINPUT_FIELD_DEFINITION]
 
@@ -219,9 +221,10 @@ parsePresetDirective
   :: forall m
   .  (MonadValidate [RoleBasedSchemaValidationError] m)
   => G.GType
+  -> G.Name
   -> G.Directive Void
   -> m [RemoteSchemaPresetArgument]
-parsePresetDirective gType (G.Directive name args) = do
+parsePresetDirective gType parentArgName (G.Directive name args) = do
   case (Map.toList args) of
     [] -> refute $ pure $ NoPresetArgumentFound
     [(argName, argVal)] -> do
@@ -260,6 +263,34 @@ parsePresetDirective gType (G.Directive name args) = do
                   concat . Map.elems <$> traverse (mkPresetArgument gType'') obj
             v -> pure . pure $ StaticPresetArgument gType' v
       | otherwise = pure . pure $ StaticPresetArgument gType' val
+
+    mkPresetArgument' :: G.GType -> G.Name -> G.Value Void -> m (G.Value P.Variable)
+    mkPresetArgument' gType' varName val =
+      let isListType' = G.isListType gType'
+          baseType = G.getBaseType gType'
+      in
+      case val of
+        s@(G.VString t) -> do
+          unless isListType' $ do
+            refute $ pure $ ExpectedNameTypeButGotListType
+          case isSessionVariable t of
+            -- FIXME: obviously, this is wrong but it's in the same vain of the ideal
+            -- answer, this function should be returning something like (G.Value RemoteSchemaVariable)
+            -- `data RemoteSchemaVariable = RemoteSchemaVariable !SessionVariable !G.GType !Variable`
+            True  -> pure $ G.VVariable (P.Variable (P.VIRequired varName) gType' (P.GraphQLValue s))
+            False -> pure $ G.literal s
+        G.VObject obj ->
+          G.VObject <$>
+          case gType' of
+            G.TypeNamed _ _      -> refute $ pure $ ExpectedListButGotNameType
+            G.TypeList _ gType'' ->
+              flip Map.traverseWithKey obj $ \k objVal ->
+                mkPresetArgument' gType'' (varName <> $$(G.litName "_") <> k) objVal
+        G.VList lst -> G.VList <$> traverse (mkPresetArgument' gType' varName) lst
+        v -> do
+          unless isListType' $ do
+            refute $ pure $ ExpectedNameTypeButGotListType
+          pure $ G.literal v
 
 -- | validateDirective checks if the arguments of a given directive
 --   are a subset of the corresponding upstream directive arguments
@@ -387,7 +418,7 @@ validateInputValueDefinition providedDefn upstreamDefn inputObjectName = do
     dispute $ pure $
       NonMatchingDefaultValue inputObjectName providedName
                               upstreamDefaultValue providedDefaultValue
-  presetArguments <- for presetDirective $ parsePresetDirective providedType
+  presetArguments <- for presetDirective $ parsePresetDirective providedType providedName
   pure $ RemoteSchemaInputValueDefinition providedDefn presetArguments
   where
     G.InputValueDefinition _ providedName providedType providedDefaultValue providedDirectives  = providedDefn
