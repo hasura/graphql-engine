@@ -12,11 +12,11 @@ Remote schemas are ideal for use cases such as:
 
 To support custom business logic, you'll need to create a custom GraphQL server (see [boilerplates](community/boilerplates/remote-schemas)) and merge its schema with GraphQL Engine's.
 
-![remote schems architecture](assets/remote-schemas-arch.png)
+![Remote schemas architecture](assets/remote-schemas-arch.png)
 
 ## Demo (*40 seconds*)
 
-[![video demo of merging remote schemas](https://img.youtube.com/vi/eY4n9aPsi0M/0.jpg)](https://www.youtube.com/watch?v=eY4n9aPsi0M)
+[![Video demo of merging remote schemas](https://img.youtube.com/vi/eY4n9aPsi0M/0.jpg)](https://www.youtube.com/watch?v=eY4n9aPsi0M)
 
 [Merge remote GraphQL schemas (YouTube link)](https://youtu.be/eY4n9aPsi0M)
 
