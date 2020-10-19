@@ -43,10 +43,11 @@ Exporting Hasura metadata
 
      1. Click on the settings (⚙) icon at the top right corner of the console screen.
      2. In the Hasura metadata actions page that opens, click on the ``Export Metadata`` button.
-     3. This will prompt a file download for ``hasura_metadata_<timestamp>.json``. Save the file.
 
-     .. thumbnail:: /img/graphql/core/migrations/metadata-export.png
-        :alt: Export metadata
+        .. thumbnail:: /img/graphql/core/migrations/metadata-export.png
+           :alt: Export metadata
+
+     3. This will prompt a file download for ``hasura_metadata_<timestamp>.json``. Save the file.
 
   .. tab:: API
 
@@ -94,11 +95,12 @@ before.
 
      1. Click on the settings (⚙) icon at the top right corner of the console screen.
      2. Click on ``Import Metadata`` button.
+
+        .. thumbnail:: /img/graphql/core/migrations/metadata-import.png
+           :alt: Import metadata
+
      3. Choose a ``hasura_metadata.json`` file that was exported earlier.
      4. A notification should appear indicating the success or error.
-
-     .. thumbnail:: /img/graphql/core/migrations/metadata-import.png
-        :alt: import metadata
 
   .. tab:: API
 
@@ -143,10 +145,11 @@ when a new column has been added to a table via an external tool such as ``psql`
 
      1. Click on the settings (⚙) icon at the top right corner of the console screen.
      2. Click on ``Reload`` button.
-     3. A notification should appear indicating the success.
 
-     .. thumbnail:: /img/graphql/core/migrations/metadata-reload.png
-        :alt: Reload metadata
+        .. thumbnail:: /img/graphql/core/migrations/metadata-reload.png
+           :alt: Reload metadata
+
+     3. A notification should appear indicating the success.
 
   .. tab:: API
 
@@ -189,11 +192,12 @@ again from scratch (e.g. tracking tables, relationships, creating triggers, acti
 
      1. Click on the settings (⚙) icon at the top right corner of the console screen.
      2. Click on ``Reset`` button.
+
+        .. thumbnail:: /img/graphql/core/migrations/metadata-reset.png
+           :alt: Reset metadata
+
      3. A pop-up will appear prompting you to confirm the process.
      4. A notification should appear indicating the success.
-
-     .. thumbnail:: /img/graphql/core/migrations/metadata-reset.png
-        :alt: Reset metadata
 
   .. tab:: API
 
