@@ -26,6 +26,7 @@ const Permissions = ({
   permissionEdit,
   isEditing,
   isFetching,
+  schemaDefinition,
   readOnlyMode = false,
 }) => {
   React.useEffect(() => {
@@ -190,6 +191,8 @@ const Permissions = ({
             dispatch={dispatch}
             isFetching={isFetching}
             isEditing={isEditing}
+            readOnlyMode={readOnlyMode}
+            schemaDefinition={schemaDefinition}
           />
         )}
       </div>

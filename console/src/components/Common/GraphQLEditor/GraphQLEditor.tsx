@@ -14,7 +14,7 @@ type GraphQLEditorProps = {
     timer: Nullable<NodeJS.Timeout>,
     ast: Nullable<Record<string, any>>
   ) => void;
-  placeholder: string;
+  placeholder?: string;
   error: GraphQLError;
   timer: number;
   readOnlyMode: boolean;
@@ -30,7 +30,7 @@ const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
   timer,
   readOnlyMode,
   height,
-  allowEmpty = false,
+  allowEmpty,
 }) => {
   const onChangeWithError = (val: string) => {
     if (timer) {

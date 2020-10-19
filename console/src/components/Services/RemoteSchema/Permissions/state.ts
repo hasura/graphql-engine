@@ -1,3 +1,8 @@
+const defaultSchemaDefSdl = `type SampleType {
+  user_id: Int
+  name: String
+}`;
+
 const state = {
   isEditing: false,
   isFetching: false,
@@ -6,7 +11,12 @@ const state = {
     newRole: '',
     role: '',
     filter: '',
-    schemaDefinition: '',
+  },
+  schemaDefinition: {
+    sdl: defaultSchemaDefSdl,
+    error: '',
+    timer: null,
+    ast: null,
   },
 };
 

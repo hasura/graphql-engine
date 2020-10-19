@@ -6,20 +6,22 @@ import {
   removeRemoteSchemaPermission,
 } from '../Actions';
 import { permCloseEdit, setSchemaDefinition } from './reducer';
-import AceEditor from '../../../Common/AceEditor/BaseEditor';
+import GraphQLEditor from '../../../Common/GraphQLEditor/GraphQLEditor';
 
 const PermissionEditor = ({
   permissionEdit,
   isEditing,
   isFetching,
   dispatch,
+  schemaDefinition,
+  readOnlyMode,
 }) => {
   if (!isEditing) return null;
 
-  const { isNewRole, isNewPerm, schemaDefinition } = permissionEdit;
+  const { isNewRole, isNewPerm } = permissionEdit;
 
-  const schemaDefinitionOnChange = (val: string) => {
-    dispatch(setSchemaDefinition(val));
+  const schemaDefinitionOnChange = (value, error, timer, ast) => {
+    dispatch(setSchemaDefinition(value, error, timer, ast));
   };
 
   const buttonStyle = styles.add_mar_right;
@@ -62,6 +64,12 @@ const PermissionEditor = ({
     );
   };
 
+  const {
+    sdl: schemaDefinitionSdl,
+    error: schemaDefinitionError,
+    timer: schemaParseTimer,
+  } = schemaDefinition;
+
   const getCancelButton = () => {
     return (
       <Button color="white" className={buttonStyle} onClick={closeEditor}>
@@ -73,12 +81,14 @@ const PermissionEditor = ({
   return (
     <div className={styles.activeEdit}>
       <div className={styles.add_mar_bottom}>
-        <AceEditor
-          name="sdl-editor"
-          value={schemaDefinition}
+        <GraphQLEditor
+          value={schemaDefinitionSdl}
           onChange={schemaDefinitionOnChange}
-          mode="graphqlschema"
-          width="600px"
+          error={schemaDefinitionError}
+          timer={schemaParseTimer}
+          readOnlyMode={readOnlyMode}
+          allowEmpty={false}
+          height='400px'
         />
       </div>
       {getSaveButton()}

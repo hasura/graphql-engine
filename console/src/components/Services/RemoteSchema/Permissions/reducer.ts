@@ -35,9 +35,9 @@ export const setDefaults = () => ({
 });
 
 const SET_SCHEMA_DEFINITION = 'RemoteSchemas/Permissions/SET_SCHEMA_DEFINITION';
-export const setSchemaDefinition = (schemaDefinition: string) => ({
+export const setSchemaDefinition = (sdl, error = null, timer, ast) => ({
   type: SET_SCHEMA_DEFINITION,
-  schemaDefinition,
+  definition: { sdl, error, timer, ast },
 });
 
 const MAKE_REQUEST = 'RemoteSchemas/Permissions/MAKE_REQUEST';
@@ -85,9 +85,12 @@ const reducer = (state = defaultState, action) => {
     case SET_SCHEMA_DEFINITION:
       return {
         ...state,
-        permissionEdit: {
-          ...state.permissionEdit,
-          schemaDefinition: action.schemaDefinition,
+        schemaDefinition: {
+          ...action.definition,
+          sdl:
+            action.definition.sdl !== null
+              ? action.definition.sdl
+              : state.schemaDefinition.sdl,
         },
       };
     case SET_ROLE_NAME:

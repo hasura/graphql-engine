@@ -9,4 +9,5 @@ const mapStateToProps = state => {
   };
 };
 
+// TODO
 export default connect => connect(mapStateToProps)(Permissions);

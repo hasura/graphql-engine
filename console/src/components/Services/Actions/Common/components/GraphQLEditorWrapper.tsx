@@ -5,7 +5,8 @@ import Tooltip from './Tooltip';
 import { Nullable } from '../../../../Common/utils/tsUtils';
 import GraphQLEditor from '../../../../Common/GraphQLEditor/GraphQLEditor';
 
-type GraphQLEditorProps = {
+// NOTE TODO ??
+type GraphQLEditorWrapperProps = {
   value: string;
   onChange: (
     value: Nullable<string>,
@@ -24,7 +25,7 @@ type GraphQLEditorProps = {
   allowEmpty?: boolean;
 };
 
-const GraphQLEditorWrapper: React.FC<GraphQLEditorProps> = ({
+const GraphQLEditorWrapper: React.FC<GraphQLEditorWrapperProps> = ({
   value,
   onChange,
   className,
