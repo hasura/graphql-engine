@@ -16,14 +16,17 @@ Hasura helps you build [GraphQL](https://hasura.io/graphql/) apps backed by Post
 Read more at [hasura.io](https://hasura.io) and the [docs](https://hasura.io/docs/).
 
 ------------------
+------------------
 
 ![Hasura GraphQL Engine Demo](assets/demo.gif)
 
+------------------
 ------------------
 
 ![Hasura GraphQL Engine Realtime Demo](assets/realtime.gif)
 
 -------------------
+------------------
 
 ## Features
 
@@ -73,11 +76,11 @@ The fastest and easiest way to try Hasura out is via [Hasura Cloud](https://hasu
 
     [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/)
 
-2. Open the Hasura console
+2. Open the Hasura console-
 
    Click on the button "Launch console" to open the Hasura console.
 
-3. Make your first GraphQL query
+3. Make your first GraphQL query-
 
    Create a table and instantly run your first query. Follow this [simple guide](https://hasura.io/docs/1.0/graphql/manual/getting-started/first-graphql-query.html).
 
@@ -112,7 +115,7 @@ Hasura works with any GraphQL client. We recommend using [Apollo Client](https:/
 
 ## Add business logic
 
-GraphQL Engine provides easy-to-reason, scalable and performant methods for adding custom business logic to your backend:
+GraphQL Engine provides easy-to-reason, scalable and performant methods for adding custom business logic to your Backend:
 
 ### Remote schemas
 
@@ -121,16 +124,15 @@ Add custom resolvers in a remote schema in addition to Hasura's Postgres-based G
 ### Trigger webhooks on database events
 
 Add asynchronous business logic that is triggered based on database events.
-Ideal for notifications, data-pipelines from Postgres or asynchronous
-processing - [read more](event-triggers.md).
+Ideal for notifications, data-pipelines from Postgres or asynchronous processing - [read more](event-triggers.md).
 
 ### Derived data or data transformations
 
-Transform data in Postgres or run business logic on it to derive another dataset that can be queried using GraphQL Engine - [read more](https://hasura.io/docs/1.0/graphql/manual/queries/derived-data.html).
+Transform data in Postgres or run business logic on it to derive another dataset that can be queried by using GraphQL Engine - [read more](https://hasura.io/docs/1.0/graphql/manual/queries/derived-data.html).
 
 ## Demos
 
-Check out all the example applications in the [community/sample-apps](community/sample-apps) directory.
+Check out all the example of applications in the [community/sample-apps](community/sample-apps) directory.
 
 ### Realtime applications
 
