@@ -8,13 +8,15 @@ import           Control.Monad.Validate
 import           Hasura.Prelude
 import           Hasura.SQL.Types
 import           Hasura.RQL.Types              hiding (GraphQLType, defaultScalars)
-import           Hasura.Server.Utils           (englishList, duplicates)
+import           Hasura.Server.Utils           (englishList, duplicates, isSessionVariable)
 
 import qualified Data.HashMap.Strict           as Map
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Data.HashSet                  as S
 import qualified Data.List.NonEmpty            as NE
 import qualified Data.Text                     as T
+
+import           Hasura.Session
 
 data FieldDefinitionType
   = ObjectField
@@ -109,8 +111,12 @@ data RoleBasedSchemaValidationError
   | DuplicateFields !(FieldDefinitionType, G.Name) !(NE.NonEmpty G.Name)
   | DuplicateArguments !G.Name !(NE.NonEmpty G.Name)
   | DuplicateEnumValues !G.Name !(NE.NonEmpty G.Name)
-  | InvalidPresetDirectiveLocation !(GraphQLType, G.Name)
+  | InvalidPresetDirectiveLocation
   | MultiplePresetDirectives !(GraphQLType, G.Name)
+  | NoPresetArgumentFound
+  | InvalidPresetArgument !G.Name
+  | MultipleArgumentsInPresetFound
+  | ExpectedListButGotNameType
   deriving (Show, Eq)
 
 showRoleBasedSchemaValidationError :: RoleBasedSchemaValidationError -> Text
@@ -176,18 +182,70 @@ showRoleBasedSchemaValidationError = \case
   DuplicateEnumValues enumName enumValues ->
     "duplicate enum values: " <> (englishList "and" $ fmap dquoteTxt enumValues)
     <> " found in the " <> enumName <<> " enum"
-  InvalidPresetDirectiveLocation (parentType, parentName) ->
-    "found invalid preset directive at " <> parentType <<> " " <> parentName <<>
-    ". Preset directives can be defined on INPUT_FIELD_DEFINITION or ARGUMENT_DEFINITION"
+  InvalidPresetDirectiveLocation ->
+    "Preset directives can be defined only on INPUT_FIELD_DEFINITION or ARGUMENT_DEFINITION"
   MultiplePresetDirectives (parentType, parentName) ->
     "found multiple preset directives at " <> parentType <<> " " <>> parentName
+  NoPresetArgumentFound -> "no arguments found in the preset directive"
+  InvalidPresetArgument argName ->
+    "expected preset argument \"value\" but found " <>> argName
+  MultipleArgumentsInPresetFound -> "expected only one preset argument \"value\" but found multiple preset arguments"
+
+presetValueScalar :: G.ScalarTypeDefinition
+presetValueScalar = G.ScalarTypeDefinition Nothing $$(G.litName "PresetValue") mempty
+
+presetDirectiveDefn :: G.DirectiveDefinition G.InputValueDefinition
+presetDirectiveDefn =
+  G.DirectiveDefinition Nothing $$(G.litName "preset") [directiveArg] directiveLocations
+  where
+    gType = G.TypeNamed (G.Nullability False) $ $$(G.litName "PresetValue")
+
+    directiveLocations = map G.DLTypeSystem [G.TSDLARGUMENT_DEFINITION, G.TSDLINPUT_FIELD_DEFINITION]
+
+    directiveArg = G.InputValueDefinition Nothing $$(G.litName "value") gType Nothing mempty
+
+presetDirectiveName :: G.Name
+presetDirectiveName = $$(G.litName "preset")
+
+parsePresetDirective
+  :: forall m
+  .  (MonadValidate [RoleBasedSchemaValidationError] m)
+  => G.GType
+  -> G.Directive Void
+  -> m [RemoteSchemaPresetArgument]
+parsePresetDirective gType (G.Directive name args) = do
+  case (Map.toList args) of
+    [] -> refute $ pure $ NoPresetArgumentFound
+    [(argName, argVal)] -> do
+      -- TODO: typecheck `argVal` with the GType, along with which it was provided?
+      -- I guess this will only be possible only in the case of static presets
+      unless (argName == $$(G.litName "value")) $ do
+        refute $ pure $ InvalidPresetArgument argName
+      mkPresetArgument gType argVal
+    _ -> refute $ pure $ MultipleArgumentsInPresetFound
+  where
+    mkPresetArgument :: G.GType -> G.Value Void -> m [RemoteSchemaPresetArgument]
+    mkPresetArgument gType' = \case
+      G.VString t ->
+        case isSessionVariable t of
+          True  -> pure . pure $ (SessionPresetArgument gType' $ mkSessionVariable t)
+          False -> pure . pure $ StaticPresetArgument $ G.VString t
+      G.VObject obj ->
+        case gType' of
+          G.TypeNamed _ _ -> do
+            unless (G.isListType gType') $ do
+              refute $ pure $ ExpectedListButGotNameType
+            pure [] -- TODO: is this correct?
+          G.TypeList _ gType'' ->
+            concat . Map.elems <$> traverse (mkPresetArgument gType'') obj
+      v -> pure . pure $ StaticPresetArgument v
 
 -- | validateDirective checks if the arguments of a given directive
 --   are a subset of the corresponding upstream directive arguments
 validateDirective
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
-  => G.Directive a -- ^ provided directive definition
-  -> G.Directive a -- ^ original directive definition
+  => G.Directive a -- ^ provided directive
+  -> G.Directive a -- ^ upstream directive
   -> (GraphQLType, G.Name) -- ^ parent type and name
   -> m ()
 validateDirective providedDirective upstreamDirective (parentType, parentTypeName) = do
@@ -211,17 +269,8 @@ validateDirectives
   -> [G.Directive a]
   -> G.TypeSystemDirectiveLocation
   -> (GraphQLType, G.Name)
-  -> m ()
+  -> m (Maybe (G.Directive a))
 validateDirectives providedDirectives upstreamDirectives directiveLocation parentType = do
-  case presetDirectives of
-    [] -> pure ()
-    [_] ->
-      case directiveLocation of
-        G.TSDLINPUT_FIELD_DEFINITION -> pure ()
-        G.TSDLARGUMENT_DEFINITION    -> pure ()
-        _                            ->
-          dispute $ pure $ InvalidPresetDirectiveLocation parentType
-    _ -> dispute $ pure $ MultiplePresetDirectives parentType
   onJust (NE.nonEmpty $ duplicates $ map G._dName nonPresetDirectives) $ \dups -> do
     refute $ pure $ DuplicateDirectives parentType dups
   flip traverse_ nonPresetDirectives $ \dir -> do
@@ -230,6 +279,16 @@ validateDirectives providedDirectives upstreamDirectives directiveLocation paren
       onNothing (Map.lookup directiveName upstreamDirectivesMap) $
         refute $ pure $ FieldDoesNotExist Directive directiveName
     validateDirective dir upstreamDir parentType
+  case presetDirectives of
+    [] -> pure Nothing
+    [presetDirective] -> do
+      case directiveLocation of
+        G.TSDLINPUT_FIELD_DEFINITION -> pure ()
+        G.TSDLARGUMENT_DEFINITION    -> pure ()
+        _                            -> dispute $ pure $ InvalidPresetDirectiveLocation
+      pure $ Just presetDirective
+    _ ->
+      refute $ pure $ MultiplePresetDirectives parentType
   where
     upstreamDirectivesMap = mapFromL G._dName upstreamDirectives
 
@@ -295,9 +354,10 @@ validateInputValueDefinition
   => G.InputValueDefinition
   -> G.InputValueDefinition
   -> G.Name
-  -> m ()
+  -> m RemoteSchemaInputValueDefinition
 validateInputValueDefinition providedDefn upstreamDefn inputObjectName = do
-  validateDirectives providedDirectives upstreamDirectives G.TSDLINPUT_FIELD_DEFINITION
+  presetDirective <-
+    validateDirectives providedDirectives upstreamDirectives G.TSDLINPUT_FIELD_DEFINITION
      $ (Argument InputObjectArgument, inputObjectName)
   when (providedType /= upstreamType) $
     dispute $ pure $
@@ -306,6 +366,8 @@ validateInputValueDefinition providedDefn upstreamDefn inputObjectName = do
     dispute $ pure $
       NonMatchingDefaultValue inputObjectName providedName
                               upstreamDefaultValue providedDefaultValue
+  presetArguments <- for presetDirective $ parsePresetDirective providedType
+  pure $ RemoteSchemaInputValueDefinition providedDefn presetArguments
   where
     G.InputValueDefinition _ providedName providedType providedDefaultValue providedDirectives  = providedDefn
     G.InputValueDefinition _ _ upstreamType upstreamDefaultValue upstreamDirectives  = upstreamDefn
@@ -313,35 +375,36 @@ validateInputValueDefinition providedDefn upstreamDefn inputObjectName = do
 validateArguments
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => (G.ArgumentsDefinition G.InputValueDefinition)
-  -> (G.ArgumentsDefinition G.InputValueDefinition)
+  -> (G.ArgumentsDefinition RemoteSchemaInputValueDefinition)
   -> G.Name
-  -> m ()
+  -> m [RemoteSchemaInputValueDefinition]
 validateArguments providedArgs upstreamArgs parentTypeName = do
   onJust (NE.nonEmpty $ duplicates $ map G._ivdName providedArgs) $ \dups -> do
     refute $ pure $ DuplicateArguments parentTypeName dups
-  flip traverse_ providedArgs $ \providedArg@(G.InputValueDefinition _ name _ _ _) -> do
+  let argsDiff = getDifference nonNullableUpstreamArgs nonNullableProvidedArgs
+  onJust (NE.nonEmpty $ S.toList argsDiff) $ \nonNullableArgs -> do
+    refute $ pure $ MissingNonNullableArguments parentTypeName nonNullableArgs
+  flip traverse providedArgs $ \providedArg@(G.InputValueDefinition _ name _ _ _) -> do
     upstreamArg <-
       onNothing (Map.lookup name upstreamArgsMap) $
         refute $ pure $ NonExistingInputArgument parentTypeName name
     validateInputValueDefinition providedArg upstreamArg parentTypeName
-  let argsDiff = getDifference nonNullableUpstreamArgs nonNullableProvidedArgs
-  onJust (NE.nonEmpty $ S.toList argsDiff) $ \nonNullableArgs -> do
-    refute $ pure $ MissingNonNullableArguments parentTypeName nonNullableArgs
   where
-    upstreamArgsMap = mapFromL G._ivdName $ upstreamArgs
+    upstreamArgsMap = mapFromL G._ivdName $  map _rsitdDefn upstreamArgs
 
-    nonNullableUpstreamArgs = map G._ivdName $ filter (not . G.isNullable . G._ivdType) upstreamArgs
+    nonNullableUpstreamArgs = map G._ivdName $ filter (not . G.isNullable . G._ivdType) $ map _rsitdDefn upstreamArgs
 
     nonNullableProvidedArgs = map G._ivdName $ filter (not . G.isNullable . G._ivdType) providedArgs
 
 validateInputObjectTypeDefinition
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => G.InputObjectTypeDefinition G.InputValueDefinition
-  -> G.InputObjectTypeDefinition G.InputValueDefinition
-  -> m ()
+  -> G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition
+  -> m (G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition)
 validateInputObjectTypeDefinition providedInputObj upstreamInputObj = do
   validateDirectives providedDirectives upstreamDirectives G.TSDLINPUT_OBJECT $ (InputObject, providedName)
-  validateArguments providedArgs upstreamArgs $ providedName
+  args <- validateArguments providedArgs upstreamArgs $ providedName
+  pure $ providedInputObj { G._iotdValueDefinitions = args }
   where
     G.InputObjectTypeDefinition _ providedName providedDirectives providedArgs = providedInputObj
 
@@ -350,10 +413,10 @@ validateInputObjectTypeDefinition providedInputObj upstreamInputObj = do
 validateInputObjectTypeDefinitions
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => [G.InputObjectTypeDefinition G.InputValueDefinition]
-  -> [G.InputObjectTypeDefinition G.InputValueDefinition]
-  -> m ()
+  -> [G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition]
+  -> m [G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition]
 validateInputObjectTypeDefinitions providedInputObjects upstreamInputObjects = do
-  flip traverse_ providedInputObjects $ \providedInputObject@(G.InputObjectTypeDefinition _ name _ _) -> do
+  flip traverse providedInputObjects $ \providedInputObject@(G.InputObjectTypeDefinition _ name _ _) -> do
     upstreamInputObject <-
       onNothing (Map.lookup name upstreamInputObjectsMap) $
         refute $ pure $ FieldDoesNotExist InputObject name
@@ -364,14 +427,15 @@ validateInputObjectTypeDefinitions providedInputObjects upstreamInputObjects = d
 validateFieldDefinition
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => (G.FieldDefinition G.InputValueDefinition)
-  -> (G.FieldDefinition G.InputValueDefinition)
+  -> (G.FieldDefinition RemoteSchemaInputValueDefinition)
   -> (FieldDefinitionType, G.Name)
-  -> m ()
+  -> m (G.FieldDefinition RemoteSchemaInputValueDefinition)
 validateFieldDefinition providedFieldDefinition upstreamFieldDefinition (parentType, parentTypeName) = do
   validateDirectives providedDirectives upstreamDirectives G.TSDLFIELD_DEFINITION $ (Field parentType, parentTypeName)
   when (providedType /= upstreamType) $
     dispute $ pure $ NonMatchingType providedName (Field parentType) upstreamType providedType
-  validateArguments providedArgs upstreamArgs $ providedName
+  args <- validateArguments providedArgs upstreamArgs $ providedName
+  pure $ providedFieldDefinition { G._fldArgumentsDefinition = args }
   where
     G.FieldDefinition _ providedName providedArgs providedType providedDirectives = providedFieldDefinition
 
@@ -380,13 +444,13 @@ validateFieldDefinition providedFieldDefinition upstreamFieldDefinition (parentT
 validateFieldDefinitions
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => [(G.FieldDefinition G.InputValueDefinition)]
-  -> [(G.FieldDefinition G.InputValueDefinition)]
+  -> [(G.FieldDefinition RemoteSchemaInputValueDefinition)]
   -> (FieldDefinitionType, G.Name) -- ^ parent type and name
-  -> m ()
+  -> m [(G.FieldDefinition RemoteSchemaInputValueDefinition)]
 validateFieldDefinitions providedFldDefnitions upstreamFldDefinitions parentType = do
   onJust (NE.nonEmpty $ duplicates $ map G._fldName providedFldDefnitions) $ \dups -> do
     refute $ pure $ DuplicateFields parentType dups
-  flip traverse_ providedFldDefnitions $ \fldDefn@(G.FieldDefinition _ name _ _ _) -> do
+  flip traverse providedFldDefnitions $ \fldDefn@(G.FieldDefinition _ name _ _ _) -> do
     upstreamFldDefn <-
       onNothing (Map.lookup name upstreamFldDefinitionsMap) $
         refute $ pure $ NonExistingField parentType name
@@ -397,11 +461,12 @@ validateFieldDefinitions providedFldDefnitions upstreamFldDefinitions parentType
 validateInterfaceDefinition
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => G.InterfaceTypeDefinition G.InputValueDefinition ()
-  -> G.InterfaceTypeDefinition G.InputValueDefinition ()
-  -> m ()
+  -> G.InterfaceTypeDefinition RemoteSchemaInputValueDefinition ()
+  -> m (G.InterfaceTypeDefinition RemoteSchemaInputValueDefinition ())
 validateInterfaceDefinition providedInterfaceDefn upstreamInterfaceDefn = do
   validateDirectives providedDirectives upstreamDirectives G.TSDLINTERFACE $ (Interface, providedName)
-  validateFieldDefinitions providedFieldDefns upstreamFieldDefns $ (InterfaceField, providedName)
+  fieldDefinitions <- validateFieldDefinitions providedFieldDefns upstreamFieldDefns $ (InterfaceField, providedName)
+  pure $ providedInterfaceDefn { G._itdFieldsDefinition = fieldDefinitions }
   where
     G.InterfaceTypeDefinition _ providedName providedDirectives providedFieldDefns _ = providedInterfaceDefn
 
@@ -410,10 +475,10 @@ validateInterfaceDefinition providedInterfaceDefn upstreamInterfaceDefn = do
 validateInterfaceDefinitions
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => [G.InterfaceTypeDefinition G.InputValueDefinition ()]
-  -> [G.InterfaceTypeDefinition G.InputValueDefinition ()]
-  -> m ()
+  -> [G.InterfaceTypeDefinition RemoteSchemaInputValueDefinition ()]
+  -> m [(G.InterfaceTypeDefinition RemoteSchemaInputValueDefinition ())]
 validateInterfaceDefinitions providedInterfaces upstreamInterfaces = do
-  flip traverse_ providedInterfaces $ \providedInterface@(G.InterfaceTypeDefinition _ name _ _ _) -> do
+  flip traverse providedInterfaces $ \providedInterface@(G.InterfaceTypeDefinition _ name _ _ _) -> do
     upstreamInterface <-
       onNothing (Map.lookup name upstreamInterfacesMap) $
         refute $ pure $ FieldDoesNotExist Interface name
@@ -427,7 +492,7 @@ validateScalarDefinition
   -> G.ScalarTypeDefinition
   -> m ()
 validateScalarDefinition providedScalar upstreamScalar = do
-  validateDirectives providedDirectives upstreamDirectives G.TSDLSCALAR $ (Scalar, providedName)
+  void $ validateDirectives providedDirectives upstreamDirectives G.TSDLSCALAR $ (Scalar, providedName)
   where
     G.ScalarTypeDefinition _ providedName providedDirectives = providedScalar
 
@@ -480,16 +545,18 @@ validateUnionTypeDefinitions providedUnions upstreamUnions = do
 validateObjectDefinition
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => (G.ObjectTypeDefinition G.InputValueDefinition)
-  -> (G.ObjectTypeDefinition G.InputValueDefinition)
+  -> (G.ObjectTypeDefinition RemoteSchemaInputValueDefinition)
   -> S.HashSet G.Name -- ^ Interfaces declared by in the role-based schema
-  -> m ()
+  -> m (G.ObjectTypeDefinition RemoteSchemaInputValueDefinition)
 validateObjectDefinition providedObj upstreamObj interfacesDeclared = do
   validateDirectives providedDirectives upstreamDirectives G.TSDLOBJECT $ (Object, providedName)
-  validateFieldDefinitions providedFldDefnitions upstreamFldDefnitions $ (ObjectField, providedName)
   onJust (NE.nonEmpty $ S.toList customInterfaces) $ \ifaces ->
     dispute $ pure $ CustomInterfacesNotAllowed providedName ifaces
   onJust (NE.nonEmpty nonExistingInterfaces) $ \ifaces ->
     dispute $ pure $ ObjectImplementsNonExistingInterfaces providedName ifaces
+  fieldDefinitions <-
+    validateFieldDefinitions providedFldDefnitions upstreamFldDefnitions $ (ObjectField, providedName)
+  pure $ providedObj { G._otdFieldsDefinition = fieldDefinitions }
   where
     G.ObjectTypeDefinition _ providedName
        providedIfaces providedDirectives providedFldDefnitions = providedObj
@@ -510,11 +577,11 @@ validateObjectDefinition providedObj upstreamObj interfacesDeclared = do
 validateObjectDefinitions
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => [G.ObjectTypeDefinition G.InputValueDefinition]
-  -> [G.ObjectTypeDefinition G.InputValueDefinition]
+  -> [G.ObjectTypeDefinition RemoteSchemaInputValueDefinition]
   -> S.HashSet G.Name
-  -> m ()
+  -> m [G.ObjectTypeDefinition RemoteSchemaInputValueDefinition]
 validateObjectDefinitions providedObjects upstreamObjects providedInterfaces = do
-  flip traverse_ providedObjects $ \providedObject@(G.ObjectTypeDefinition _ name _ _ _) -> do
+  flip traverse providedObjects $ \providedObject@(G.ObjectTypeDefinition _ name _ _ _) -> do
     upstreamObject <-
       onNothing (Map.lookup name upstreamObjectsMap) $
         refute $ pure $ FieldDoesNotExist Object name
@@ -550,7 +617,7 @@ validateSchemaDefinitions _ = refute $ pure $ MultipleSchemaDefinitionsFound
 -- | Construction of the `possibleTypes` map for interfaces, while parsing the
 -- user provided Schema document, it doesn't include the `possibleTypes`, so
 -- constructing here, manually.
-createPossibleTypesMap :: [(G.ObjectTypeDefinition G.InputValueDefinition)] -> HashMap G.Name [G.Name]
+createPossibleTypesMap :: [(G.ObjectTypeDefinition RemoteSchemaInputValueDefinition)] -> HashMap G.Name [G.Name]
 createPossibleTypesMap objDefns =
   let objMap = Map.fromList $ map (G._otdName &&& G._otdImplementsInterfaces) objDefns
   in
@@ -571,10 +638,15 @@ createPossibleTypesMap objDefns =
 -- specifying the `SchemaDocument` through the GraphQL DSL, it doesn't include
 -- the `possibleTypes` along with an object.
 getSchemaDocIntrospection
-  :: PartitionedTypeDefinitions
+  :: [G.ScalarTypeDefinition]
+  -> [G.EnumTypeDefinition]
+  -> [G.InterfaceTypeDefinition RemoteSchemaInputValueDefinition ()]
+  -> [G.UnionTypeDefinition]
+  -> [G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition]
+  -> [G.ObjectTypeDefinition RemoteSchemaInputValueDefinition]
   -> (G.Name, Maybe G.Name, Maybe G.Name)
   -> IntrospectionResult
-getSchemaDocIntrospection schemaDocTypeDefs (queryRoot, mutationRoot, subscriptionRoot) =
+getSchemaDocIntrospection scalars enums interfaces unions inpObjs objects (queryRoot, mutationRoot, subscriptionRoot) =
   let scalarTypeDefs = map G.TypeDefinitionScalar $ scalars <> defaultScalars
       objectTypeDefs = map G.TypeDefinitionObject objects
       unionTypeDefs = map G.TypeDefinitionUnion unions
@@ -594,16 +666,13 @@ getSchemaDocIntrospection schemaDocTypeDefs (queryRoot, mutationRoot, subscripti
         scalarTypeDefs <> objectTypeDefs
         <> interfaceTypeDefs <> unionTypeDefs
         <> enumTypeDefs <> inpObjTypeDefs
-      schemaIntrospection = G.SchemaIntrospection modifiedTypeDefs
+      schemaIntrospection = RemoteSchemaIntrospection modifiedTypeDefs
   in IntrospectionResult schemaIntrospection queryRoot mutationRoot subscriptionRoot
   where
-    PartitionedTypeDefinitions scalars objects interfaces
-                            unions enums inpObjs _ = schemaDocTypeDefs
-
     defaultScalars = map (\n -> G.ScalarTypeDefinition Nothing n [])
                          $ [intScalar, floatScalar, stringScalar, boolScalar, idScalar]
 
-partitionTypeDefinition :: G.TypeDefinition G.InputValueDefinition () -> State PartitionedTypeDefinitions ()
+partitionTypeDefinition :: G.TypeDefinition a () -> State (PartitionedTypeDefinitions a) ()
 partitionTypeDefinition (G.TypeDefinitionScalar scalarDefn) =
   modify (\td -> td {_ptdScalars = ((:) scalarDefn) . _ptdScalars $ td})
 partitionTypeDefinition (G.TypeDefinitionObject objectDefn) =
@@ -642,21 +711,22 @@ validateRemoteSchema (G.SchemaDocument providedTypeDefns) (RemoteSchemaIntrospec
   rootTypeNames <- validateSchemaDefinitions $ _ptdSchemaDef providedTypes
   validateScalarDefinitions (_ptdScalars providedTypes) (_ptdScalars upstreamTypes)
   validateEnumTypeDefinitions (_ptdEnums providedTypes) (_ptdEnums upstreamTypes)
-  validateInterfaceDefinitions (_ptdInterfaces providedTypes) (_ptdInterfaces upstreamTypes)
+  interfaceTypeDefns <- validateInterfaceDefinitions (_ptdInterfaces providedTypes) (_ptdInterfaces upstreamTypes)
   validateUnionTypeDefinitions (_ptdUnions providedTypes) (_ptdUnions upstreamTypes)
-  validateInputObjectTypeDefinitions (_ptdInputObjects providedTypes) (_ptdInputObjects upstreamTypes)
-  validateObjectDefinitions (_ptdObjects providedTypes) (_ptdObjects upstreamTypes) $ S.fromList providedInterfacesList
-  pure $ getSchemaDocIntrospection providedTypes rootTypeNames
+  inpObjTypeDefns <- validateInputObjectTypeDefinitions (_ptdInputObjects providedTypes) (_ptdInputObjects upstreamTypes)
+  objTypeDefns <- validateObjectDefinitions (_ptdObjects providedTypes) (_ptdObjects upstreamTypes) $ S.fromList providedInterfacesList
+  let PartitionedTypeDefinitions scalars _ _ unions enums _ _ = providedTypes
+  pure $ getSchemaDocIntrospection scalars enums interfaceTypeDefns unions inpObjTypeDefns objTypeDefns rootTypeNames
   where
     emptySchemaDocTypeDefinitions = PartitionedTypeDefinitions [] [] [] [] [] [] []
 
-    partitionTypeSystemDefinitions :: G.TypeSystemDefinition -> State PartitionedTypeDefinitions ()
+    partitionTypeSystemDefinitions :: G.TypeSystemDefinition -> State (PartitionedTypeDefinitions G.InputValueDefinition) ()
     partitionTypeSystemDefinitions (G.TypeSystemDefinitionSchema schemaDefn) =
       modify (\td -> td {_ptdSchemaDef = ((:) schemaDefn) . _ptdSchemaDef $ td})
     partitionTypeSystemDefinitions (G.TypeSystemDefinitionType typeDefn) =
       partitionTypeDefinition typeDefn
 
-    partitionSchemaIntrospection :: G.TypeDefinition G.InputValueDefinition [G.Name] -> State PartitionedTypeDefinitions ()
+    partitionSchemaIntrospection :: G.TypeDefinition a [G.Name] -> State (PartitionedTypeDefinitions a) ()
     partitionSchemaIntrospection typeDef = partitionTypeDefinition (typeDef $> ())
 
     duplicateTypes (PartitionedTypeDefinitions scalars objs ifaces unions enums inpObjs _) =

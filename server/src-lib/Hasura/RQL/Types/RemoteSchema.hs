@@ -159,20 +159,20 @@ instance NFData DropRemoteSchemaPermissions
 instance Cacheable DropRemoteSchemaPermissions
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''DropRemoteSchemaPermissions)
 
-data PartitionedTypeDefinitions
+data PartitionedTypeDefinitions a
   = PartitionedTypeDefinitions
   { _ptdScalars      :: ![G.ScalarTypeDefinition]
-  , _ptdObjects      :: ![G.ObjectTypeDefinition G.InputValueDefinition]
-  , _ptdInterfaces   :: ![G.InterfaceTypeDefinition G.InputValueDefinition ()]
+  , _ptdObjects      :: ![G.ObjectTypeDefinition a]
+  , _ptdInterfaces   :: ![G.InterfaceTypeDefinition a ()]
   , _ptdUnions       :: ![G.UnionTypeDefinition]
   , _ptdEnums        :: ![G.EnumTypeDefinition]
-  , _ptdInputObjects :: ![G.InputObjectTypeDefinition G.InputValueDefinition]
+  , _ptdInputObjects :: ![G.InputObjectTypeDefinition a]
   , _ptdSchemaDef    :: ![G.SchemaDefinition]
   } deriving (Show, Eq)
 
 data RemoteSchemaPresetArgument
   = StaticPresetArgument !(G.Value Void)
-  | SessionPresetArgument !G.Name !SessionVariable !(G.Value Void)
+  | SessionPresetArgument !G.GType !SessionVariable
   -- ^ name of the argument where the session variable is supposed to
   -- be substituted -- session variable name -- value where the session
   -- variable is to be inserted.
@@ -183,7 +183,7 @@ instance Cacheable RemoteSchemaPresetArgument
 data RemoteSchemaInputValueDefinition
   = RemoteSchemaInputValueDefinition
   { _rsitdDefn      :: !G.InputValueDefinition
-  , _rsitdPresetArg :: !(Maybe RemoteSchemaPresetArgument)
+  , _rsitdPresetArg :: !(Maybe [RemoteSchemaPresetArgument])
   } deriving (Show, Eq, Generic, Ord)
 instance Hashable RemoteSchemaInputValueDefinition
 instance Cacheable RemoteSchemaInputValueDefinition
