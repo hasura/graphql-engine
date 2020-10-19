@@ -23,9 +23,9 @@ import qualified Hasura.GraphQL.Parser.Internal.Parser as P
 import           Hasura.GraphQL.Context                (RemoteField(..))
 
 type RemoteSchemaObjectDefinition = G.ObjectTypeDefinition RemoteSchemaInputValueDefinition
-type RemoteSchemaInterfaceDefinition = G.InterfaceTypeDefinition RemoteSchemaInputValueDefinition [G.Name]
+type RemoteSchemaInterfaceDefinition = G.InterfaceTypeDefinition [G.Name] RemoteSchemaInputValueDefinition
 type RemoteSchemaFieldDefinition = G.FieldDefinition RemoteSchemaInputValueDefinition
-type RemoteSchemaTypeDefinition = G.TypeDefinition RemoteSchemaInputValueDefinition [G.Name]
+type RemoteSchemaTypeDefinition = G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition
 
 buildRemoteParser
   :: forall m n
@@ -369,7 +369,7 @@ lookupType
   -> Maybe RemoteSchemaTypeDefinition
 lookupType (RemoteSchemaIntrospection types) name = find (\tp -> getNamedTyp tp == name) types
   where
-    getNamedTyp :: G.TypeDefinition RemoteSchemaInputValueDefinition possibleTypes -> G.Name
+    getNamedTyp :: G.TypeDefinition possibleTypes RemoteSchemaInputValueDefinition -> G.Name
     getNamedTyp ty = case ty of
       G.TypeDefinitionScalar t      -> G._stdName t
       G.TypeDefinitionObject t      -> G._otdName t
@@ -381,7 +381,7 @@ lookupType (RemoteSchemaIntrospection types) name = find (\tp -> getNamedTyp tp 
 lookupObject :: RemoteSchemaIntrospection -> G.Name -> Maybe RemoteSchemaObjectDefinition
 lookupObject (RemoteSchemaIntrospection types) name = go types
   where
-    go :: [TypeDefinition RemoteSchemaInputValueDefinition possibleTypes] -> Maybe RemoteSchemaObjectDefinition
+    go :: [TypeDefinition possibleTypes  RemoteSchemaInputValueDefinition] -> Maybe RemoteSchemaObjectDefinition
     go ((G.TypeDefinitionObject t):tps)
       | G._otdName t == name = Just t
       | otherwise = go tps
@@ -391,8 +391,8 @@ lookupObject (RemoteSchemaIntrospection types) name = go types
 lookupInterface :: RemoteSchemaIntrospection -> G.Name -> Maybe RemoteSchemaInterfaceDefinition
 lookupInterface (RemoteSchemaIntrospection types) name = go types
   where
-    go :: [TypeDefinition RemoteSchemaInputValueDefinition possibleTypes]
-        -> Maybe (G.InterfaceTypeDefinition RemoteSchemaInputValueDefinition possibleTypes)
+    go :: [TypeDefinition possibleTypes RemoteSchemaInputValueDefinition]
+        -> Maybe (G.InterfaceTypeDefinition possibleTypes RemoteSchemaInputValueDefinition)
     go ((G.TypeDefinitionInterface t):tps)
       | G._itdName t == name = Just t
       | otherwise = go tps
@@ -402,7 +402,7 @@ lookupInterface (RemoteSchemaIntrospection types) name = go types
 lookupScalar :: RemoteSchemaIntrospection -> G.Name -> Maybe G.ScalarTypeDefinition
 lookupScalar (RemoteSchemaIntrospection types) name = go types
   where
-    go :: [TypeDefinition RemoteSchemaInputValueDefinition possibleTypes] -> Maybe G.ScalarTypeDefinition
+    go :: [TypeDefinition possibleTypes RemoteSchemaInputValueDefinition] -> Maybe G.ScalarTypeDefinition
     go ((G.TypeDefinitionScalar t):tps)
       | G._stdName t == name = Just t
       | otherwise = go tps
@@ -520,7 +520,7 @@ remoteField
   -> G.Name
   -> Maybe G.Description
   -> G.ArgumentsDefinition RemoteSchemaInputValueDefinition
-  -> G.TypeDefinition RemoteSchemaInputValueDefinition [G.Name]
+  -> G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition
   -> m (FieldParser n (Field NoFragments Variable))
 remoteField sdoc fieldName description argsDefn typeDefn = do
   -- TODO add directives

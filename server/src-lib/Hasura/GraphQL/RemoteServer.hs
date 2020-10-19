@@ -141,7 +141,7 @@ instance (J.FromJSON (FromIntrospection a)) => J.FromJSON (FromIntrospection (G.
     name   <- o .:  "name"
     desc   <- o .:? "description"
     fields <- o .:? "fields"
-    interfaces :: Maybe [FromIntrospection (G.InterfaceTypeDefinition a [G.Name])] <- o .:? "interfaces"
+    interfaces :: Maybe [FromIntrospection (G.InterfaceTypeDefinition [G.Name] a)] <- o .:? "interfaces"
     when (kind /= "OBJECT") $ kindErr kind "object"
     let implIfaces = map G._itdName $ maybe [] (fmap fromIntrospection) interfaces
         flds = maybe [] (fmap fromIntrospection) fields
@@ -199,7 +199,7 @@ instance J.FromJSON (FromIntrospection (G.Value Void)) where
      let parseValueConst = G.runParser G.value
      in fmap FromIntrospection $ either (fail . T.unpack) return $ parseValueConst t
 
-instance (J.FromJSON (FromIntrospection a)) => J.FromJSON (FromIntrospection (G.InterfaceTypeDefinition a [G.Name])) where
+instance (J.FromJSON (FromIntrospection a)) => J.FromJSON (FromIntrospection (G.InterfaceTypeDefinition [G.Name] a)) where
   parseJSON = J.withObject "InterfaceTypeDefinition" $ \o -> do
     kind  <- o .: "kind"
     name  <- o .:  "name"
@@ -260,7 +260,7 @@ instance (J.FromJSON (FromIntrospection a)) => J.FromJSON (FromIntrospection (G.
     let r = G.InputObjectTypeDefinition desc' name [] inputFields
     return $ FromIntrospection r
 
-instance (J.FromJSON (FromIntrospection a)) => J.FromJSON (FromIntrospection (G.TypeDefinition a [G.Name])) where
+instance (J.FromJSON (FromIntrospection a)) => J.FromJSON (FromIntrospection (G.TypeDefinition [G.Name] a)) where
   parseJSON = J.withObject "TypeDefinition" $ \o -> do
     kind :: Text <- o .: "kind"
     r <- case kind of

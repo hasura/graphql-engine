@@ -17,7 +17,6 @@ import qualified Data.List.NonEmpty            as NE
 import qualified Data.Text                     as T
 
 import           Hasura.Session
-
 data FieldDefinitionType
   = ObjectField
   | InterfaceField
@@ -118,6 +117,15 @@ data RoleBasedSchemaValidationError
   | MultipleArgumentsInPresetFound
   | ExpectedListButGotNameType
   deriving (Show, Eq)
+
+convertTypeDef :: G.TypeDefinition [G.Name] a -> G.TypeDefinition () a
+convertTypeDef (G.TypeDefinitionInterface (G.InterfaceTypeDefinition desc name dirs flds _)) =
+  G.TypeDefinitionInterface $ G.InterfaceTypeDefinition desc name dirs flds ()
+convertTypeDef (G.TypeDefinitionScalar s) = G.TypeDefinitionScalar $ s
+convertTypeDef (G.TypeDefinitionInputObject inpObj) = G.TypeDefinitionInputObject $ inpObj
+convertTypeDef (G.TypeDefinitionEnum s) = G.TypeDefinitionEnum $ s
+convertTypeDef (G.TypeDefinitionUnion s) = G.TypeDefinitionUnion $ s
+convertTypeDef (G.TypeDefinitionObject s) = G.TypeDefinitionObject $ s
 
 showRoleBasedSchemaValidationError :: RoleBasedSchemaValidationError -> Text
 showRoleBasedSchemaValidationError = \case
@@ -460,9 +468,9 @@ validateFieldDefinitions providedFldDefnitions upstreamFldDefinitions parentType
 
 validateInterfaceDefinition
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
-  => G.InterfaceTypeDefinition G.InputValueDefinition ()
-  -> G.InterfaceTypeDefinition RemoteSchemaInputValueDefinition ()
-  -> m (G.InterfaceTypeDefinition RemoteSchemaInputValueDefinition ())
+  => G.InterfaceTypeDefinition () G.InputValueDefinition
+  -> G.InterfaceTypeDefinition () RemoteSchemaInputValueDefinition
+  -> m (G.InterfaceTypeDefinition () RemoteSchemaInputValueDefinition)
 validateInterfaceDefinition providedInterfaceDefn upstreamInterfaceDefn = do
   validateDirectives providedDirectives upstreamDirectives G.TSDLINTERFACE $ (Interface, providedName)
   fieldDefinitions <- validateFieldDefinitions providedFieldDefns upstreamFieldDefns $ (InterfaceField, providedName)
@@ -474,9 +482,9 @@ validateInterfaceDefinition providedInterfaceDefn upstreamInterfaceDefn = do
 
 validateInterfaceDefinitions
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
-  => [G.InterfaceTypeDefinition G.InputValueDefinition ()]
-  -> [G.InterfaceTypeDefinition RemoteSchemaInputValueDefinition ()]
-  -> m [(G.InterfaceTypeDefinition RemoteSchemaInputValueDefinition ())]
+  => [G.InterfaceTypeDefinition () G.InputValueDefinition]
+  -> [G.InterfaceTypeDefinition () RemoteSchemaInputValueDefinition]
+  -> m [(G.InterfaceTypeDefinition () RemoteSchemaInputValueDefinition)]
 validateInterfaceDefinitions providedInterfaces upstreamInterfaces = do
   flip traverse providedInterfaces $ \providedInterface@(G.InterfaceTypeDefinition _ name _ _ _) -> do
     upstreamInterface <-
@@ -544,8 +552,8 @@ validateUnionTypeDefinitions providedUnions upstreamUnions = do
 
 validateObjectDefinition
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
-  => (G.ObjectTypeDefinition G.InputValueDefinition)
-  -> (G.ObjectTypeDefinition RemoteSchemaInputValueDefinition)
+  => G.ObjectTypeDefinition G.InputValueDefinition
+  -> G.ObjectTypeDefinition RemoteSchemaInputValueDefinition
   -> S.HashSet G.Name -- ^ Interfaces declared by in the role-based schema
   -> m (G.ObjectTypeDefinition RemoteSchemaInputValueDefinition)
 validateObjectDefinition providedObj upstreamObj interfacesDeclared = do
@@ -640,7 +648,7 @@ createPossibleTypesMap objDefns =
 getSchemaDocIntrospection
   :: [G.ScalarTypeDefinition]
   -> [G.EnumTypeDefinition]
-  -> [G.InterfaceTypeDefinition RemoteSchemaInputValueDefinition ()]
+  -> [G.InterfaceTypeDefinition () RemoteSchemaInputValueDefinition]
   -> [G.UnionTypeDefinition]
   -> [G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition]
   -> [G.ObjectTypeDefinition RemoteSchemaInputValueDefinition]
@@ -672,7 +680,7 @@ getSchemaDocIntrospection scalars enums interfaces unions inpObjs objects (query
     defaultScalars = map (\n -> G.ScalarTypeDefinition Nothing n [])
                          $ [intScalar, floatScalar, stringScalar, boolScalar, idScalar]
 
-partitionTypeDefinition :: G.TypeDefinition a () -> State (PartitionedTypeDefinitions a) ()
+partitionTypeDefinition :: G.TypeDefinition () a  -> State (PartitionedTypeDefinitions a) ()
 partitionTypeDefinition (G.TypeDefinitionScalar scalarDefn) =
   modify (\td -> td {_ptdScalars = ((:) scalarDefn) . _ptdScalars $ td})
 partitionTypeDefinition (G.TypeDefinitionObject objectDefn) =
@@ -726,8 +734,8 @@ validateRemoteSchema (G.SchemaDocument providedTypeDefns) (RemoteSchemaIntrospec
     partitionTypeSystemDefinitions (G.TypeSystemDefinitionType typeDefn) =
       partitionTypeDefinition typeDefn
 
-    partitionSchemaIntrospection :: G.TypeDefinition a [G.Name] -> State (PartitionedTypeDefinitions a) ()
-    partitionSchemaIntrospection typeDef = partitionTypeDefinition (typeDef $> ())
+    partitionSchemaIntrospection :: G.TypeDefinition [G.Name] a  -> State (PartitionedTypeDefinitions a) ()
+    partitionSchemaIntrospection typeDef = partitionTypeDefinition $ convertTypeDef typeDef
 
     duplicateTypes (PartitionedTypeDefinitions scalars objs ifaces unions enums inpObjs _) =
       duplicates $

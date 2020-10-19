@@ -163,7 +163,7 @@ data PartitionedTypeDefinitions a
   = PartitionedTypeDefinitions
   { _ptdScalars      :: ![G.ScalarTypeDefinition]
   , _ptdObjects      :: ![G.ObjectTypeDefinition a]
-  , _ptdInterfaces   :: ![G.InterfaceTypeDefinition a ()]
+  , _ptdInterfaces   :: ![G.InterfaceTypeDefinition () a]
   , _ptdUnions       :: ![G.UnionTypeDefinition]
   , _ptdEnums        :: ![G.EnumTypeDefinition]
   , _ptdInputObjects :: ![G.InputObjectTypeDefinition a]
@@ -189,5 +189,5 @@ instance Hashable RemoteSchemaInputValueDefinition
 instance Cacheable RemoteSchemaInputValueDefinition
 
 newtype RemoteSchemaIntrospection
-  = RemoteSchemaIntrospection [G.TypeDefinition RemoteSchemaInputValueDefinition [G.Name]]
+  = RemoteSchemaIntrospection [(G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition)]
   deriving (Show, Eq, Generic, Hashable, Cacheable, Ord)
