@@ -88,3 +88,4 @@ This document is available in the following translations:
 
 - [French :fr:](translations/remote-schemas.french.md)
 - [Hindi  :india:](translations/remote-schemas.hindi.md)
+- [Brazilian Portuguese :brazil:](translations/remote-schemas.portuguese_br.md)
