@@ -1,4 +1,5 @@
 import React from 'react';
+import { connect, ConnectedProps } from 'react-redux';
 import AceEditor from 'react-ace';
 import { OptionTypeBase } from 'react-select';
 
@@ -21,23 +22,23 @@ import {
 import { deleteComputedField, saveComputedField } from './ModifyActions';
 import { fetchFunctionInit } from '../DataActions';
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
-import { Dispatch } from '../../../../types';
+import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
 
-type ComputedFieldsEditorProps = {
+interface ComputedFieldsEditorProps extends InjectedProps {
   table: Table;
   currentSchema: string;
   functions: PGFunction[];
   schemaList: PGSchema[];
-  dispatch: Dispatch;
-};
+}
 
-const ComputedFieldsEditor = ({
+const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
   table,
   currentSchema,
   functions,
   schemaList,
-  dispatch,
-}: ComputedFieldsEditorProps) => {
+  ...props
+}) => {
+  const { dispatch } = props;
   const computedFields = table.computed_fields;
 
   const emptyComputedField: ComputedField = {
@@ -69,22 +70,20 @@ const ComputedFieldsEditor = ({
 
   // State management - end
 
-  return stateComputedFields.map((computedField, i) => {
+  const fieldsEditor = stateComputedFields.map((computedField, i) => {
     const isLast = computedFields.length <= i;
 
     const origComputedField = isLast ? null : computedFields[i];
     let origComputedFieldName = '';
     let origComputedFieldFunctionName = '';
-    let origComputedFieldComment = '';
+    let origComputedFieldComment: string | null = '';
     if (origComputedField) {
       const origComputedFieldFunctionDef =
         origComputedField.definition.function;
 
       origComputedFieldName = origComputedField.computed_field_name;
       origComputedFieldFunctionName = origComputedFieldFunctionDef.name;
-      if (origComputedField?.comment) {
-        origComputedFieldComment = origComputedField.comment;
-      }
+      origComputedFieldComment = origComputedField.comment;
     }
 
     const computedFieldFunctionDef = computedField.definition.function;
@@ -459,6 +458,13 @@ const ComputedFieldsEditor = ({
       </div>
     );
   });
+
+  return <>{fieldsEditor}</>;
 };
 
-export default ComputedFieldsEditor;
+const connector = connect(null, mapDispatchToPropsEmpty);
+type InjectedProps = ConnectedProps<typeof connector>;
+
+const connectedComputedFieldsEditor = connector(ComputedFieldsEditor);
+
+export default connectedComputedFieldsEditor;

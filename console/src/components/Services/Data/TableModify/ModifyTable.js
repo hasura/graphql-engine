@@ -200,7 +200,6 @@ class ModifyTable extends React.Component {
             currentSchema={currentSchema}
             functions={allFunctions} // TODO: fix cross schema functions
             schemaList={schemaList}
-            dispatch={dispatch}
           />
           <hr />
         </React.Fragment>
