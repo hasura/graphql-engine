@@ -232,21 +232,34 @@ parsePresetDirective gType (G.Directive name args) = do
       mkPresetArgument gType argVal
     _ -> refute $ pure $ MultipleArgumentsInPresetFound
   where
+    isExistsSessionVariable :: G.Value Void -> Bool
+    isExistsSessionVariable (G.VString t) = isSessionVariable t
+    isExistsSessionVariable (G.VObject obj) = not . Map.null $ Map.filter isExistsSessionVariable obj
+    isExistsSessionVariable (G.VList l) = not . null $ filter isExistsSessionVariable l
+    isExistsSessionVariable _ = False
+
+    -- | we first check if the value contains a session variable and if it does
+    --   then we traverse the value until we get the session variable and make
+    --   a preset argument out of it, otherwise we just simple return the value
+    --   as it is.
     mkPresetArgument :: G.GType -> G.Value Void -> m [RemoteSchemaPresetArgument]
-    mkPresetArgument gType' = \case
-      G.VString t ->
-        case isSessionVariable t of
-          True  -> pure . pure $ (SessionPresetArgument gType' $ mkSessionVariable t)
-          False -> pure . pure $ StaticPresetArgument $ G.VString t
-      G.VObject obj ->
-        case gType' of
-          G.TypeNamed _ _ -> do
-            unless (G.isListType gType') $ do
-              refute $ pure $ ExpectedListButGotNameType
-            pure [] -- TODO: is this correct?
-          G.TypeList _ gType'' ->
-            concat . Map.elems <$> traverse (mkPresetArgument gType'') obj
-      v -> pure . pure $ StaticPresetArgument v
+    mkPresetArgument gType' val
+      | isExistsSessionVariable val =
+          case val of
+            G.VString t ->
+              case isSessionVariable t of
+                True  -> pure . pure $ (SessionPresetArgument gType' $ mkSessionVariable t)
+                False -> pure . pure $ StaticPresetArgument gType' $ G.VString t
+            G.VObject obj ->
+              case gType' of
+                G.TypeNamed _ _ -> do
+                  unless (G.isListType gType') $ do
+                    refute $ pure $ ExpectedListButGotNameType
+                  pure [] -- TODO: is this correct?
+                G.TypeList _ gType'' ->
+                  concat . Map.elems <$> traverse (mkPresetArgument gType'') obj
+            v -> pure . pure $ StaticPresetArgument gType' v
+      | otherwise = pure . pure $ StaticPresetArgument gType' val
 
 -- | validateDirective checks if the arguments of a given directive
 --   are a subset of the corresponding upstream directive arguments

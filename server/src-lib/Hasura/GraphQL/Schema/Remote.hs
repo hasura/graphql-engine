@@ -560,9 +560,9 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
              case preset of
                Nothing -> Nothing
                -- FIXME: handle the case when there are multiple vals, of course!
-               Just [(StaticPresetArgument val)] ->
+               Just [(StaticPresetArgument gType' val)] ->
                  Just $
-                 (argName, (G.VVariable (P.Variable (P.VIRequired argName) gType (P.GraphQLValue val))))
+                 (argName, (G.VVariable (P.Variable (P.VIRequired argName) gType' (P.GraphQLValue val))))
                --TODO: handle the case of SessionPresetArgument
 
     mkFieldParserWithoutSelectionSet

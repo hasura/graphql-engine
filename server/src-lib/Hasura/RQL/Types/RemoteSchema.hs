@@ -171,7 +171,7 @@ data PartitionedTypeDefinitions a
   } deriving (Show, Eq)
 
 data RemoteSchemaPresetArgument
-  = StaticPresetArgument !(G.Value Void)
+  = StaticPresetArgument !G.GType !(G.Value Void)
   | SessionPresetArgument !G.GType !SessionVariable
   -- ^ name of the argument where the session variable is supposed to
   -- be substituted -- session variable name -- value where the session
