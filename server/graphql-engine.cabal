@@ -115,7 +115,7 @@ library
                      , bytestring
                      , postgresql-libpq
                      , mtl
-                     , aeson
+                     , aeson >= 1.5.4
                      , aeson-casing
                      , unordered-containers >= 0.2.12
                      , template-haskell

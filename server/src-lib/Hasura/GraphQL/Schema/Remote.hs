@@ -17,6 +17,7 @@ import qualified Data.HashMap.Strict                   as Map
 import qualified Data.HashMap.Strict.Extended          as Map
 import qualified Data.HashMap.Strict.InsOrd            as OMap
 import           Data.Foldable                         (sequenceA_)
+import qualified Data.Text                             as T
 
 import           Hasura.GraphQL.Parser                 as P
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
@@ -360,8 +361,12 @@ remoteSchemaInputObject schemaDoc defn@(G.InputObjectTypeDefinition desc name _ 
   P.memoizeOn 'remoteSchemaInputObject defn do
   -- TODO: here's where I should be filtering all the `valueDefns` with
   -- `preset` as `Nothing`
-  argsParser <- argumentsParser valueDefns schemaDoc
+  argsParser <- argumentsParser nonPresetArgs schemaDoc
   pure $ P.object name desc argsParser
+  where
+    nonPresetArgs =
+      flip filter valueDefns $ \(RemoteSchemaInputValueDefinition _inpValDef preset) ->
+        maybe True (\_ -> False) preset
 
 lookupType
   :: RemoteSchemaIntrospection
@@ -424,9 +429,6 @@ remoteFieldFromName sdoc fieldName description fieldTypeName argsDefns =
   case lookupType sdoc fieldTypeName of
     Nothing -> throw400 RemoteSchemaError $ "Could not find type with name " <>> fieldName
     Just typeDef -> remoteField sdoc fieldName description argsDefns typeDef
-
-getPresetDirective :: [Directive Void] -> Maybe (Directive Void)
-getPresetDirective = find ((== $$(G.litName "preset")) . G._dName)
 
 -- | 'inputValueDefinitionParser' accepts a 'G.InputValueDefinition' and will return an
 --   'InputFieldsParser' for it. If a non 'Input' GraphQL type is found in the 'type' of
@@ -555,14 +557,11 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
       Map.fromList $
         flip mapMaybe argsDefn $ \(RemoteSchemaInputValueDefinition inpValDefn preset) ->
            let argName = G._ivdName inpValDefn
-               gType = G._ivdType inpValDefn
            in
              case preset of
                Nothing -> Nothing
                -- FIXME: handle the case when there are multiple vals, of course!
-               Just [(StaticPresetArgument gType' val)] ->
-                 Just $
-                 (argName, (G.VVariable (P.Variable (P.VIRequired argName) gType' (P.GraphQLValue val))))
+               Just presetVal -> Just (argName, presetVal)
                --TODO: handle the case of SessionPresetArgument
 
     mkFieldParserWithoutSelectionSet

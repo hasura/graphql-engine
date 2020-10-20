@@ -18,6 +18,7 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Types
 import           Hasura.Session
+import           Hasura.GraphQL.Parser.Schema      (Variable)
 
 type UrlFromEnv = Text
 
@@ -183,7 +184,7 @@ instance Cacheable RemoteSchemaPresetArgument
 data RemoteSchemaInputValueDefinition
   = RemoteSchemaInputValueDefinition
   { _rsitdDefn      :: !G.InputValueDefinition
-  , _rsitdPresetArg :: !(Maybe [RemoteSchemaPresetArgument])
+  , _rsitdPresetArg :: !(Maybe (G.Value Variable))
   } deriving (Show, Eq, Generic, Ord)
 instance Hashable RemoteSchemaInputValueDefinition
 instance Cacheable RemoteSchemaInputValueDefinition

@@ -17,7 +17,6 @@ import qualified Data.List.NonEmpty                    as NE
 import qualified Data.Text                             as T
 import qualified Hasura.GraphQL.Parser                 as P
 
-import           Hasura.Session
 data FieldDefinitionType
   = ObjectField
   | InterfaceField
@@ -200,6 +199,8 @@ showRoleBasedSchemaValidationError = \case
   InvalidPresetArgument argName ->
     "expected preset argument \"value\" but found " <>> argName
   MultipleArgumentsInPresetFound -> "expected only one preset argument \"value\" but found multiple preset arguments"
+  ExpectedListButGotNameType -> "expected list type but got named type" -- TODO: improve error message, something related to the preset perhaps?
+  ExpectedNameTypeButGotListType -> "expected name type but got list type" -- TODO: improve error message, something related to the preset perhaps?
 
 presetValueScalar :: G.ScalarTypeDefinition
 presetValueScalar = G.ScalarTypeDefinition Nothing $$(G.litName "PresetValue") mempty
@@ -223,7 +224,7 @@ parsePresetDirective
   => G.GType
   -> G.Name
   -> G.Directive Void
-  -> m [RemoteSchemaPresetArgument]
+  -> m (G.Value P.Variable)
 parsePresetDirective gType parentArgName (G.Directive name args) = do
   case (Map.toList args) of
     [] -> refute $ pure $ NoPresetArgumentFound
@@ -232,38 +233,9 @@ parsePresetDirective gType parentArgName (G.Directive name args) = do
       -- I guess this will only be possible only in the case of static presets
       unless (argName == $$(G.litName "value")) $ do
         refute $ pure $ InvalidPresetArgument argName
-      mkPresetArgument gType argVal
+      mkPresetArgument' gType parentArgName argVal
     _ -> refute $ pure $ MultipleArgumentsInPresetFound
   where
-    isExistsSessionVariable :: G.Value Void -> Bool
-    isExistsSessionVariable (G.VString t) = isSessionVariable t
-    isExistsSessionVariable (G.VObject obj) = not . Map.null $ Map.filter isExistsSessionVariable obj
-    isExistsSessionVariable (G.VList l) = not . null $ filter isExistsSessionVariable l
-    isExistsSessionVariable _ = False
-
-    -- | we first check if the value contains a session variable and if it does
-    --   then we traverse the value until we get the session variable and make
-    --   a preset argument out of it, otherwise we just simple return the value
-    --   as it is.
-    mkPresetArgument :: G.GType -> G.Value Void -> m [RemoteSchemaPresetArgument]
-    mkPresetArgument gType' val
-      | isExistsSessionVariable val =
-          case val of
-            G.VString t ->
-              case isSessionVariable t of
-                True  -> pure . pure $ (SessionPresetArgument gType' $ mkSessionVariable t)
-                False -> pure . pure $ StaticPresetArgument gType' $ G.VString t
-            G.VObject obj ->
-              case gType' of
-                G.TypeNamed _ _ -> do
-                  unless (G.isListType gType') $ do
-                    refute $ pure $ ExpectedListButGotNameType
-                  pure [] -- TODO: is this correct?
-                G.TypeList _ gType'' ->
-                  concat . Map.elems <$> traverse (mkPresetArgument gType'') obj
-            v -> pure . pure $ StaticPresetArgument gType' v
-      | otherwise = pure . pure $ StaticPresetArgument gType' val
-
     mkPresetArgument' :: G.GType -> G.Name -> G.Value Void -> m (G.Value P.Variable)
     mkPresetArgument' gType' varName val =
       let isListType' = G.isListType gType'
@@ -288,7 +260,7 @@ parsePresetDirective gType parentArgName (G.Directive name args) = do
                 mkPresetArgument' gType'' (varName <> $$(G.litName "_") <> k) objVal
         G.VList lst -> G.VList <$> traverse (mkPresetArgument' gType' varName) lst
         v -> do
-          unless isListType' $ do
+          when isListType' $ do
             refute $ pure $ ExpectedNameTypeButGotListType
           pure $ G.literal v
 
@@ -570,7 +542,7 @@ validateUnionDefinition
   -> G.UnionTypeDefinition
   -> m ()
 validateUnionDefinition providedUnion upstreamUnion = do
-  validateDirectives providedDirectives upstreamDirectives G.TSDLUNION $ (Union, providedName)
+  void $ validateDirectives providedDirectives upstreamDirectives G.TSDLUNION $ (Union, providedName)
   onJust (NE.nonEmpty $ S.toList memberTypesDiff) $ \nonExistingMembers ->
     refute $ pure $ NonExistingUnionMemberTypes providedName nonExistingMembers
   where
