@@ -14,19 +14,23 @@ module Hasura.RQL.Types.ScheduledTrigger
   , CronEventSeed(..)
   , ScheduledEventSeed(..)
   , ScheduledEventStatus(..)
+  , scheduledEventStatusToText
   , ScheduledEventType(..)
+  , ScheduledEvent(..)
+  , ScheduledEventPagination(..)
   , ScheduledEventInvocation(..)
   , GetEventInvocations(..)
   , OneOffScheduledEvent(..)
   , CronEvent(..)
-  , ScheduledEvent(..)
   , GetScheduledEvents(..)
+  , WithTotalCount(..)
   , DeleteScheduledEvent(..)
   ) where
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Aeson.Types
 import           Data.Time.Clock
 import           Data.Time.Clock.Units
 import           Data.Time.Format.ISO8601
@@ -210,19 +214,62 @@ data ScheduledEventInvocation
   = ScheduledEventInvocation
   { _seiId        :: !InvocationId
   , _seiEventId   :: !EventId
-  , _seiStatus    :: !Int
-  , _seiRequest   :: !Value
-  , _seiResponse  :: !Value
+  , _seiStatus    :: !(Maybe Int)
+  , _seiRequest   :: !(Maybe Value)
+  , _seiResponse  :: !(Maybe Value)
   , _seiCreatedAt :: !UTCTime
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 4 snakeCase) ''ScheduledEventInvocation)
+$(deriveJSON (aesonDrop 4 snakeCase) ''ScheduledEventInvocation)
+
+data ScheduledEvent
+  = SEOneOff
+  | SECron !TriggerName
+  deriving (Show, Eq)
+
+parseScheduledEvent :: Object -> Parser ScheduledEvent
+parseScheduledEvent o = do
+  ty <- o .: "type"
+  case ty of
+    Cron   -> SECron <$> o .: "trigger_name"
+    OneOff -> pure SEOneOff
+
+scheduledEventToPairs :: ScheduledEvent -> [Pair]
+scheduledEventToPairs = \case
+  SEOneOff    -> ["type" .= OneOff]
+  SECron name -> ["type" .= Cron, "trigger_name" .= name]
+
+data ScheduledEventPagination
+  = ScheduledEventPagination
+  { _sepLimit  :: !(Maybe Int)
+  , _sepOffset :: !(Maybe Int)
+  } deriving (Show, Eq)
+
+parseScheduledEventPagination :: Object -> Parser ScheduledEventPagination
+parseScheduledEventPagination o =
+  ScheduledEventPagination
+    <$> o .:? "limit"
+    <*> o .:? "offset"
+
+scheduledEventPaginationToPairs :: ScheduledEventPagination -> [Pair]
+scheduledEventPaginationToPairs ScheduledEventPagination{..} =
+  ["limit" .= _sepLimit, "offset" .= _sepOffset]
 
 data GetEventInvocations
   = GetEventInvocations
-  { _geiEventId :: !EventId
-  , _geiType    :: !ScheduledEventType
+  { _geiScheduledEvent :: !ScheduledEvent
+  , _geiPagination     :: !ScheduledEventPagination
   } deriving (Eq, Show)
-$(deriveJSON (aesonDrop 4 snakeCase) ''GetEventInvocations)
+
+instance FromJSON GetEventInvocations where
+  parseJSON = withObject "Object" $ \o ->
+    GetEventInvocations
+      <$> parseScheduledEvent o
+      <*> parseScheduledEventPagination o
+
+instance ToJSON GetEventInvocations where
+  toJSON GetEventInvocations{..} =
+    object $ scheduledEventToPairs _geiScheduledEvent
+          <> scheduledEventPaginationToPairs _geiPagination
 
 data CronEventSeed
   = CronEventSeed
@@ -305,27 +352,31 @@ data CronEvent
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CronEvent)
 
-data ScheduledEvent
-  = SEOneOff
-  | SECron !TriggerName
-  deriving (Show, Eq)
-
 -- | Query type to fetch all one-off/cron scheduled events
-newtype GetScheduledEvents
-  = GetScheduledEvents {_scheduledEvent :: ScheduledEvent}
-  deriving (Show, Eq)
+data GetScheduledEvents
+  = GetScheduledEvents
+  { _gseScheduledEvent :: !ScheduledEvent
+  , _gsePagination     :: !ScheduledEventPagination
+  , _gseStatus         :: ![ScheduledEventStatus]
+  } deriving (Show, Eq)
 instance ToJSON GetScheduledEvents where
-  toJSON (GetScheduledEvents scheduledEvent) =
-    case scheduledEvent of
-      SEOneOff    -> object ["type" .= OneOff]
-      SECron name -> object ["type" .= Cron, "trigger_name" .= name]
+  toJSON GetScheduledEvents{..} =
+    object $ scheduledEventToPairs _gseScheduledEvent
+          <> scheduledEventPaginationToPairs _gsePagination
+          <> ["status" .= _gseStatus]
 
 instance FromJSON GetScheduledEvents where
-  parseJSON = withObject "Object" $ \o -> do
-    ty <- o .: "type"
-    GetScheduledEvents <$> case ty of
-      Cron   -> SECron <$> o .: "trigger_name"
-      OneOff -> pure SEOneOff
+  parseJSON = withObject "Object" $ \o ->
+    GetScheduledEvents
+      <$> parseScheduledEvent o
+      <*> parseScheduledEventPagination o
+      <*> o .:? "status" .!= []
+
+data WithTotalCount a
+  = WithTotalCount
+  { _wtcCount :: !Int
+  , _wtcData  :: !a
+  } deriving (Show, Eq)
 
 -- | Query type to delete cron/one-off events.
 data DeleteScheduledEvent

@@ -200,11 +200,10 @@ runGetScheduledEvents
      )
   => GetScheduledEvents -> m EncJSON
 runGetScheduledEvents gse = do
-  case _scheduledEvent gse of
+  case _gseScheduledEvent gse of
     SEOneOff    -> pure ()
     SECron name -> checkExists name
-  events <- fetchScheduledEvents gse
-  pure $ encJFromJValue $ J.object ["events" J..= events]
+  encJFromJValue <$> fetchScheduledEvents gse
 
 checkExists :: (CacheRM m, MonadError QErr m) => TriggerName -> m ()
 checkExists name = do
@@ -214,7 +213,16 @@ checkExists name = do
       "cron trigger with name: " <> (triggerNameToTxt name) <> " does not exist"
 
 runGetEventInvocations
-  :: (MonadScheduledEvents m) => GetEventInvocations -> m EncJSON
+  :: ( CacheRM m
+     , MonadError QErr m
+     , MonadScheduledEvents m
+     )
+  => GetEventInvocations -> m EncJSON
 runGetEventInvocations GetEventInvocations{..} = do
-  invocations <- fetchInvocations _geiEventId _geiType
-  pure $ encJFromJValue $ J.object ["invocations" J..= invocations]
+  case _geiScheduledEvent of
+    SEOneOff    -> pure ()
+    SECron name -> checkExists name
+  WithTotalCount count invocations <- fetchInvocations _geiScheduledEvent _geiPagination
+  pure $ encJFromJValue $ J.object [ "invocations" J..= invocations
+                                   , "count" J..= count
+                                   ]

@@ -4,7 +4,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 module Hasura.Server.API.V1Query where
 
-import           Control.Lens
+import           Control.Lens                       hiding ((.=))
 import           Control.Monad.Trans.Control        (MonadBaseControl)
 import           Control.Monad.Unique
 import           Data.Aeson
@@ -91,9 +91,12 @@ instance (MonadMetadataStorage m) => MonadScheduledEvents (Run m) where
   createEvent                = executeMetadataRun . insertScheduledEvent
   dropFutureCronEvents       = executeMetadataRun . clearFutureCronEvents
   fetchInvocations a b       = executeMetadataRun $ getInvocations a b
-  fetchScheduledEvents ev    = executeMetadataRun $ case _scheduledEvent ev of
-    SEOneOff    -> toJSON <$> getOneOffScheduledEvents
-    SECron name -> toJSON <$> getCronEvents name
+  fetchScheduledEvents ev    = executeMetadataRun $ do
+    let totalCountToJSON WithTotalCount{..} =
+          object ["count" .= _wtcCount, "events" .= _wtcData]
+    case _gseScheduledEvent ev of
+      SEOneOff    -> totalCountToJSON <$> getOneOffScheduledEvents (_gsePagination ev) (_gseStatus ev)
+      SECron name -> totalCountToJSON <$> getCronEvents name (_gsePagination ev) (_gseStatus ev)
   dropEvent a b              = executeMetadataRun $ deleteScheduledEvent a b
 
 -- peelRun

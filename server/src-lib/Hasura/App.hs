@@ -797,8 +797,8 @@ instance MonadMetadataStorage ServerAppM where
 
   getDeprivedCronTriggerStats        = runTxInMetadataStorage getDeprivedCronTriggerStatsTx
   getScheduledEventsForDelivery      = runTxInMetadataStorage getScheduledEventsForDeliveryTx
-  getOneOffScheduledEvents           = runTxInMetadataStorage getOneOffScheduledEventsTx
-  getCronEvents                      = runTxInMetadataStorage . getCronEventsTx
+  getOneOffScheduledEvents a b       = runTxInMetadataStorage $ getOneOffScheduledEventsTx a b
+  getCronEvents a b c                = runTxInMetadataStorage $ getCronEventsTx a b c
   getInvocations a b                 = runTxInMetadataStorage $ getInvocationsTx a b
   insertScheduledEvent               = runTxInMetadataStorage . insertScheduledEventTx
   insertScheduledEventInvocation a b = runTxInMetadataStorage $ insertInvocationTx a b

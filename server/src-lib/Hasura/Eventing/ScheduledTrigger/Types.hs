@@ -4,12 +4,10 @@ import           Data.Time.Clock
 import           Hasura.Eventing.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 
 import qualified Data.Aeson                 as J
 import qualified Data.Aeson.Casing          as J
 import qualified Data.Aeson.TH              as J
-import qualified Data.Text                  as T
 import qualified Database.PG.Query          as Q
 import qualified Database.PG.Query.PTI      as PTI
 import qualified Hasura.Logging             as L
@@ -22,12 +20,6 @@ newtype ScheduledTriggerInternalErr
 instance L.ToEngineLog ScheduledTriggerInternalErr L.Hasura where
   toEngineLog (ScheduledTriggerInternalErr qerr) =
     (L.LevelError, L.scheduledTriggerLogType, J.toJSON qerr)
-
-cronEventsTable :: QualifiedTable
-cronEventsTable =
-  QualifiedObject
-    hdbCatalogSchema
-    (TableName $ T.pack "hdb_cron_events")
 
 data CronTriggerStats
   = CronTriggerStats

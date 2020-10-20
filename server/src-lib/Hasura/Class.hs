@@ -80,9 +80,9 @@ class (Monad m) => MonadMetadataStorage m where
   -- Scheduled triggers
   getDeprivedCronTriggerStats :: MetadataStorageT m [CronTriggerStats]
   getScheduledEventsForDelivery :: MetadataStorageT m ([CronEvent], [OneOffScheduledEvent])
-  getOneOffScheduledEvents :: MetadataStorageT m [OneOffScheduledEvent]
-  getCronEvents :: TriggerName -> MetadataStorageT m [CronEvent]
-  getInvocations :: ScheduledEventId -> ScheduledEventType -> MetadataStorageT m [ScheduledEventInvocation]
+  getOneOffScheduledEvents :: ScheduledEventPagination -> [ScheduledEventStatus] -> MetadataStorageT m (WithTotalCount [OneOffScheduledEvent])
+  getCronEvents :: TriggerName -> ScheduledEventPagination -> [ScheduledEventStatus] -> MetadataStorageT m (WithTotalCount [CronEvent])
+  getInvocations :: ScheduledEvent -> ScheduledEventPagination -> MetadataStorageT m (WithTotalCount [ScheduledEventInvocation])
   insertScheduledEvent :: ScheduledEventSeed -> MetadataStorageT m ()
   deleteScheduledEvent :: ScheduledEventId -> ScheduledEventType -> MetadataStorageT m ()
   insertScheduledEventInvocation
@@ -111,8 +111,8 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (ReaderT r m) where
 
   getDeprivedCronTriggerStats        = (hoist lift) getDeprivedCronTriggerStats
   getScheduledEventsForDelivery      = (hoist lift) getScheduledEventsForDelivery
-  getOneOffScheduledEvents           = (hoist lift) getOneOffScheduledEvents
-  getCronEvents                      = (hoist lift) . getCronEvents
+  getOneOffScheduledEvents a b       = (hoist lift) $ getOneOffScheduledEvents a b
+  getCronEvents a b c                = (hoist lift) $ getCronEvents a b c
   getInvocations a b                 = (hoist lift) $ getInvocations a b
   insertScheduledEvent               = (hoist lift) . insertScheduledEvent
   insertScheduledEventInvocation a b = (hoist lift) $ insertScheduledEventInvocation a b
@@ -139,8 +139,8 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (ExceptT e m) where
 
   getDeprivedCronTriggerStats        = (hoist lift) getDeprivedCronTriggerStats
   getScheduledEventsForDelivery      = (hoist lift) getScheduledEventsForDelivery
-  getOneOffScheduledEvents           = (hoist lift) getOneOffScheduledEvents
-  getCronEvents                      = (hoist lift) . getCronEvents
+  getOneOffScheduledEvents a b       = (hoist lift) $ getOneOffScheduledEvents a b
+  getCronEvents a b c                = (hoist lift) $ getCronEvents a b c
   getInvocations a b                 = (hoist lift) $ getInvocations a b
   insertScheduledEvent               = (hoist lift) . insertScheduledEvent
   insertScheduledEventInvocation a b = (hoist lift) $ insertScheduledEventInvocation a b
@@ -167,8 +167,8 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (Tracing.TraceT m) whe
 
   getDeprivedCronTriggerStats        = (hoist lift) getDeprivedCronTriggerStats
   getScheduledEventsForDelivery      = (hoist lift) getScheduledEventsForDelivery
-  getOneOffScheduledEvents           = (hoist lift) getOneOffScheduledEvents
-  getCronEvents                      = (hoist lift) . getCronEvents
+  getOneOffScheduledEvents a b       = (hoist lift) $ getOneOffScheduledEvents a b
+  getCronEvents a b c                = (hoist lift) $ getCronEvents a b c
   getInvocations a b                 = (hoist lift) $ getInvocations a b
   insertScheduledEvent               = (hoist lift) . insertScheduledEvent
   insertScheduledEventInvocation a b = (hoist lift) $ insertScheduledEventInvocation a b
@@ -195,8 +195,8 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (LazyTxT e m) where
 
   getDeprivedCronTriggerStats        = (hoist lift) getDeprivedCronTriggerStats
   getScheduledEventsForDelivery      = (hoist lift) getScheduledEventsForDelivery
-  getOneOffScheduledEvents           = (hoist lift) getOneOffScheduledEvents
-  getCronEvents                      = (hoist lift) . getCronEvents
+  getOneOffScheduledEvents a b       = (hoist lift) $ getOneOffScheduledEvents a b
+  getCronEvents a b c                = (hoist lift) $ getCronEvents a b c
   getInvocations a b                 = (hoist lift) $ getInvocations a b
   insertScheduledEvent               = (hoist lift) . insertScheduledEvent
   insertScheduledEventInvocation a b = (hoist lift) $ insertScheduledEventInvocation a b

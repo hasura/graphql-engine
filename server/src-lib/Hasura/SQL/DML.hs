@@ -211,6 +211,9 @@ instance ToSQL Qual where
 mkQIden :: (IsIden a, IsIden b) => a -> b -> QIden
 mkQIden q t = QIden (QualIden (toIden q) Nothing) (toIden t)
 
+mkQIdenTable :: (IsIden a) => QualifiedTable -> a -> QIden
+mkQIdenTable q = QIden (mkQual q) . toIden
+
 data QIden
   = QIden !Qual !Iden
   deriving (Show, Eq, Generic, Data)

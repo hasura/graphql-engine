@@ -83,9 +83,12 @@ instance (MonadMetadataStorage m) => MonadScheduledEvents (MetadataRun m) where
   createEvent                = runInMetadataRun . insertScheduledEvent
   dropFutureCronEvents       = runInMetadataRun . clearFutureCronEvents
   fetchInvocations a b       = runInMetadataRun $ getInvocations a b
-  fetchScheduledEvents ev    = runInMetadataRun $ case _scheduledEvent ev of
-    SEOneOff    -> toJSON <$> getOneOffScheduledEvents
-    SECron name -> toJSON <$> getCronEvents name
+  fetchScheduledEvents ev    = runInMetadataRun $ do
+    let totalCountToJSON WithTotalCount{..} =
+          object ["count" .= _wtcCount, "events" .= _wtcData]
+    case _gseScheduledEvent ev of
+      SEOneOff    -> totalCountToJSON <$> getOneOffScheduledEvents (_gsePagination ev) (_gseStatus ev)
+      SECron name -> totalCountToJSON <$> getCronEvents name (_gsePagination ev) (_gseStatus ev)
   dropEvent a b              = runInMetadataRun $ deleteScheduledEvent a b
 
 instance (MonadMetadataStorage m) => MonadCatalogState (MetadataRun m) where

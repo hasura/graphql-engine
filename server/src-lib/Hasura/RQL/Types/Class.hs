@@ -37,7 +37,10 @@ class (Monad m) => MonadScheduledEvents m where
   dropFutureCronEvents :: TriggerName -> m ()
 
   -- | Fetch cron/oneoff scheduled event invocations
-  fetchInvocations :: ScheduledEventId -> ScheduledEventType -> m [ScheduledEventInvocation]
+  fetchInvocations
+    :: ScheduledEvent
+    -> ScheduledEventPagination
+    -> m (WithTotalCount [ScheduledEventInvocation])
 
   -- | Fetch cron/oneoff scheduled events
   fetchScheduledEvents :: GetScheduledEvents -> m Value
