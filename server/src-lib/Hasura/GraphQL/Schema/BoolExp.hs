@@ -34,8 +34,11 @@ boolExp
   -> Maybe SelPermInfo
   -> m (Parser 'Input n (AnnBoolExp UnpreparedValue))
 boolExp table selectPermissions = memoizeOn 'boolExp table $ do
-  name <- qualifiedObjectToName table <&> (<> $$(G.litName "_bool_exp"))
-  let description = G.Description $
+  tableName <- getTableName table
+  customTypeNames <- getTableCustomTypeNames table
+  let name = fromMaybe (tableName <> $$(G.litName "_bool_exp"))
+               $ _tctnBooleanExpression customTypeNames
+      description = G.Description $
         "Boolean expression to filter rows from the table " <> table <<>
         ". All fields are combined with a logical 'AND'."
 

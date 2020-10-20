@@ -215,7 +215,7 @@ query' allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
     selectPerms <- tableSelectPermissions table
     customRootFields <- _tcCustomRootFields . _tciCustomConfig . _tiCoreInfo <$> askTableInfo table
     for selectPerms \perms -> do
-      displayName <- qualifiedObjectToName table
+      displayName <- getTableName table
       let fieldsDesc = G.Description $ "fetch data from the table: " <>> table
           aggName = displayName <> $$(G.litName "_aggregate")
           aggDesc = G.Description $ "fetch aggregated fields from the table: " <>> table
@@ -274,7 +274,7 @@ relayQuery' allTables allFunctions = do
       pkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns)
                      <$> askTableInfo table
       selectPerms <- MaybeT $ tableSelectPermissions table
-      displayName <- qualifiedObjectToName table
+      displayName <- getTableName table
       let fieldName = displayName <> $$(G.litName "_connection")
           fieldDesc = Just $ G.Description $ "fetch data from the table: " <>> table
       lift $ selectTableConnection table fieldName fieldDesc pkeyColumns selectPerms
@@ -484,7 +484,7 @@ mutation
 mutation allTables allRemotes allActions nonObjectCustomTypes = do
   mutationParsers <- for (toList allTables) \table -> do
     tableCoreInfo <- _tiCoreInfo <$> askTableInfo table
-    displayName   <- qualifiedObjectToName table
+    displayName   <- getTableName table
     tablePerms    <- tablePermissions table
     for tablePerms \permissions -> do
       let customRootFields = _tcCustomRootFields $ _tciCustomConfig tableCoreInfo

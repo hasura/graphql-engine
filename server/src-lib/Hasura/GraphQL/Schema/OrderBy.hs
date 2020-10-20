@@ -36,8 +36,11 @@ orderByExp
   -> SelPermInfo
   -> m (Parser 'Input n [RQL.AnnOrderByItemG UnpreparedValue])
 orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
-  name <- qualifiedObjectToName table <&> (<> $$(G.litName "_order_by"))
-  let description = G.Description $
+  tableName <- getTableName table
+  customTypeName <- _tctnOrderBy <$> getTableCustomTypeNames table
+  let name = fromMaybe (tableName <> $$(G.litName "_order_by")) $
+               customTypeName
+      description = G.Description $
         "Ordering options when selecting data from " <> table <<> "."
   tableFields  <- tableSelectFields table selectPermissions
   fieldParsers <- sequenceA . catMaybes <$> traverse mkField tableFields
@@ -89,8 +92,9 @@ orderByAggregation table selectPermissions = do
   -- there is heavy duplication between this and Select.tableAggregationFields
   -- it might be worth putting some of it in common, just to avoid issues when
   -- we change one but not the other?
-  tableName  <- qualifiedObjectToName table
+  tableName  <- getTableName table
   allColumns <- tableSelectColumns table selectPermissions
+  customTypeName <- _tctnAggregateOrderBy <$> getTableCustomTypeNames table
   let numColumns  = onlyNumCols allColumns
       compColumns = onlyComparableCols allColumns
       numFields   = catMaybes <$> traverse mkField numColumns
@@ -108,7 +112,7 @@ orderByAggregation table selectPermissions = do
           for comparisonAggOperators \operator ->
             parseOperator operator tableName compFields
         ]
-  let objectName  = tableName <> $$(G.litName "_aggregate_order_by")
+  let objectName  = fromMaybe (tableName <> $$(G.litName "_aggregate_order_by")) customTypeName
       description = G.Description $ "order by aggregate values of table " <>> table
   pure $ P.object objectName (Just description) aggFields
   where

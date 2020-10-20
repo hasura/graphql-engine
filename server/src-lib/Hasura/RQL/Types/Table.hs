@@ -76,6 +76,8 @@ module Hasura.RQL.Types.Table
        , EventTriggerInfoMap
        , TableCustomRootFields(..)
        , emptyCustomRootFields
+       , TableCustomTypeNames(..)
+       , emptyCustomTypeNames
 
        ) where
 
@@ -147,6 +149,130 @@ instance FromJSON TableCustomRootFields where
 
     pure $ TableCustomRootFields select selectByPk selectAggregate
                                  insert insertOne update updateByPk delete deleteByPk
+
+data TableCustomTypeNames
+  = TableCustomTypeNames
+  { _tctnSelect                        :: !(Maybe G.Name)
+  , _tctnSelectColumn                  :: !(Maybe G.Name)
+  , _tctnSelectAggregate               :: !(Maybe G.Name)
+  , _tctnMutationResponse              :: !(Maybe G.Name)
+  , _tctnUpdateColumn                  :: !(Maybe G.Name)
+  , _tctnConstraint                    :: !(Maybe G.Name)
+  , _tctnOnConflict                    :: !(Maybe G.Name)
+  , _tctnOrderBy                       :: !(Maybe G.Name)
+  , _tctnPkColumnsInput                :: !(Maybe G.Name)
+  , _tctnBooleanExpression             :: !(Maybe G.Name)
+  -- aggregate types
+  , _tctnAggregateFields               :: !(Maybe G.Name)
+  , _tctnAverageFields                 :: !(Maybe G.Name)
+  , _tctnMaxFields                     :: !(Maybe G.Name)
+  , _tctnMinFields                     :: !(Maybe G.Name)
+  , _tctnStddevFields                  :: !(Maybe G.Name)
+  , _tctnStddevSampFields              :: !(Maybe G.Name)
+  , _tctnStddevPopFields               :: !(Maybe G.Name)
+  , _tctnSumFields                     :: !(Maybe G.Name)
+  , _tctnVarianceSampFields            :: !(Maybe G.Name)
+  , _tctnVariancePopFields             :: !(Maybe G.Name)
+  , _tctnVarianceFields                :: !(Maybe G.Name)
+  , _tctnAggregateOrderBy              :: !(Maybe G.Name)
+  -- relay types
+  , _tctnConnection                    :: !(Maybe G.Name)
+  , _tctnEdge                          :: !(Maybe G.Name)
+  -- insert input types
+  , _tctnInsertInput                   :: !(Maybe G.Name)
+  , _tctnObjectRelationshipInsertInput :: !(Maybe G.Name)
+  , _tctnArrayRelationshipInsertInput  :: !(Maybe G.Name)
+  -- Update Operators
+  , _tctnSetInput                      :: !(Maybe G.Name)
+  , _tctnIncInput                      :: !(Maybe G.Name)
+  , _tctnJsonPrependInput              :: !(Maybe G.Name)
+  , _tctnJsonAppendInput               :: !(Maybe G.Name)
+  , _tctnJsonDeleteKeyInput            :: !(Maybe G.Name)
+  , _tctnJsonDeleteElemInput           :: !(Maybe G.Name)
+  , _tctnJsonDeleteAtPathInput         :: !(Maybe G.Name)
+  } deriving (Show, Eq, Lift, Generic)
+$(deriveToJSON (aesonDrop 5 snakeCase){omitNothingFields=True} ''TableCustomTypeNames)
+instance NFData TableCustomTypeNames
+instance Cacheable TableCustomTypeNames
+
+instance FromJSON TableCustomTypeNames where
+  parseJSON = withObject "TableCustomTypeNames" $ \obj -> do
+    select                 <- obj .:? "select"
+    selectColumn           <- obj .:? "select_column"
+    selectAggregate        <- obj .:? "select_aggregate"
+    mutationResponse       <- obj .:? "mutation_response"
+    updateColumn           <- obj .:? "update_column"
+    constraint             <- obj .:? "constraint"
+    onConflict             <- obj .:? "on_conflict"
+    orderBy                <- obj .:? "order_by"
+    pkColumnsInput         <- obj .:? "pk_columns_input"
+    boolExpression         <- obj .:? "boolean_expression"
+
+    aggregateFields        <- obj .:? "aggregate_fields"
+    averageFields          <- obj .:? "average_fields"
+    maxFields              <- obj .:? "max_fields"
+    minFields              <- obj .:? "min_fields"
+    stddevFields           <- obj .:? "stddev_fields"
+    stddevSampFields       <- obj .:? "stddev_samp_fields"
+    stddevPopFields        <- obj .:? "stddev_pop_fields"
+    sumFields              <- obj .:? "sum_fields"
+    varianceSampFields     <- obj .:? "variance_samp_fields"
+    variancePopFields      <- obj .:? "variance_pop_fields"
+    varianceFields         <- obj .:? "variance_fields"
+    aggregateOrderBy       <- obj .:? "aggregate_order_by"
+
+    connection             <- obj .:? "connection"
+    edge                   <- obj .:? "edge"
+
+    insertInput            <- obj .:? "insert_input"
+    objRelnInsertInput     <- obj .:? "object_relationship_insert_input"
+    arrRelnInsertInput     <- obj .:? "array_relationship_insert_input"
+
+    incInput               <- obj .:? "inc_input"
+    setInput               <- obj .:? "set_input"
+    jsonPrependInput       <- obj .:? "json_prepend_input"
+    jsonAppendInput        <- obj .:? "json_append_input"
+    jsonDeleteKeyInput     <- obj .:? "json_delete_key_input"
+    jsonDeleteElemInput    <- obj .:? "json_delete_elem_input"
+    jsonDeleteAtPathInput  <- obj .:? "json_delete_at_path_input"
+
+    let duplicateTypeNames = duplicates $
+                              catMaybes [ select, selectColumn, selectAggregate
+                                        , mutationResponse, updateColumn
+                                        , constraint, onConflict, orderBy
+                                        , pkColumnsInput, boolExpression
+                                        , aggregateFields, averageFields
+                                        , maxFields, minFields
+                                        , stddevFields, stddevSampFields
+                                        , stddevPopFields, sumFields
+                                        , varianceSampFields, variancePopFields
+                                        , varianceFields, aggregateOrderBy
+                                        , connection, edge
+                                        , insertInput, objRelnInsertInput
+                                        , arrRelnInsertInput, incInput, setInput
+                                        , jsonPrependInput, jsonAppendInput
+                                        , jsonDeleteKeyInput, jsonDeleteElemInput
+                                        , jsonDeleteAtPathInput
+                                        ]
+    for_ (nonEmpty duplicateTypeNames) \duplicatedTypeNames -> fail $ T.unpack $
+      "the following custom type names are duplicated: "
+      <> englishList "and" (dquoteTxt <$> duplicatedTypeNames)
+
+    pure $ TableCustomTypeNames select selectColumn selectAggregate
+                                mutationResponse updateColumn
+                                constraint onConflict orderBy
+                                pkColumnsInput boolExpression
+                                aggregateFields averageFields
+                                maxFields minFields
+                                stddevFields stddevSampFields stddevPopFields
+                                sumFields
+                                varianceSampFields variancePopFields varianceFields
+                                aggregateOrderBy
+                                connection edge
+                                insertInput objRelnInsertInput arrRelnInsertInput
+                                incInput setInput jsonPrependInput jsonAppendInput
+                                jsonDeleteKeyInput jsonDeleteElemInput jsonDeleteAtPathInput
+
 emptyCustomRootFields :: TableCustomRootFields
 emptyCustomRootFields =
   TableCustomRootFields
@@ -159,6 +285,48 @@ emptyCustomRootFields =
   , _tcrfUpdateByPk      = Nothing
   , _tcrfDelete          = Nothing
   , _tcrfDeleteByPk      = Nothing
+  }
+
+emptyCustomTypeNames :: TableCustomTypeNames
+emptyCustomTypeNames = TableCustomTypeNames
+  { _tctnSelect                        = Nothing
+  , _tctnSelectColumn                  = Nothing
+  , _tctnSelectAggregate               = Nothing
+  , _tctnMutationResponse              = Nothing
+  , _tctnUpdateColumn                  = Nothing
+  , _tctnConstraint                    = Nothing
+  , _tctnOnConflict                    = Nothing
+  , _tctnOrderBy                       = Nothing
+  , _tctnPkColumnsInput                = Nothing
+  , _tctnBooleanExpression             = Nothing
+
+  , _tctnAggregateFields               = Nothing
+  , _tctnAverageFields                 = Nothing
+  , _tctnMaxFields                     = Nothing
+  , _tctnMinFields                     = Nothing
+  , _tctnStddevFields                  = Nothing
+  , _tctnStddevSampFields              = Nothing
+  , _tctnStddevPopFields               = Nothing
+  , _tctnSumFields                     = Nothing
+  , _tctnVarianceSampFields            = Nothing
+  , _tctnVariancePopFields             = Nothing
+  , _tctnVarianceFields                = Nothing
+  , _tctnAggregateOrderBy              = Nothing
+
+  , _tctnConnection                    = Nothing
+  , _tctnEdge                          = Nothing
+
+  , _tctnInsertInput                   = Nothing
+  , _tctnObjectRelationshipInsertInput = Nothing
+  , _tctnArrayRelationshipInsertInput  = Nothing
+
+  , _tctnSetInput                      = Nothing
+  , _tctnIncInput                      = Nothing
+  , _tctnJsonPrependInput              = Nothing
+  , _tctnJsonAppendInput               = Nothing
+  , _tctnJsonDeleteKeyInput            = Nothing
+  , _tctnJsonDeleteElemInput           = Nothing
+  , _tctnJsonDeleteAtPathInput         = Nothing
   }
 
 data FieldInfo
@@ -378,6 +546,8 @@ data TableConfig
   = TableConfig
   { _tcCustomRootFields  :: !TableCustomRootFields
   , _tcCustomColumnNames :: !CustomColumnNames
+  , _tcIdentifier        :: !(Maybe G.Name)
+  , _tcCustomTypeNames   :: !TableCustomTypeNames
   } deriving (Show, Eq, Lift, Generic)
 instance NFData TableConfig
 instance Cacheable TableConfig
@@ -385,13 +555,15 @@ $(deriveToJSON (aesonDrop 3 snakeCase) ''TableConfig)
 
 emptyTableConfig :: TableConfig
 emptyTableConfig =
-  TableConfig emptyCustomRootFields M.empty
+  TableConfig emptyCustomRootFields M.empty Nothing emptyCustomTypeNames
 
 instance FromJSON TableConfig where
   parseJSON = withObject "TableConfig" $ \obj ->
     TableConfig
     <$> obj .:? "custom_root_fields" .!= emptyCustomRootFields
     <*> obj .:? "custom_column_names" .!= M.empty
+    <*> obj .:? "identifier"
+    <*> obj .:? "custom_type_names" .!= emptyCustomTypeNames
 
 -- | The @field@ and @primaryKeyColumn@ type parameters vary as the schema cache is built and more
 -- information is accumulated. See 'TableRawInfo' and 'TableCoreInfo'.

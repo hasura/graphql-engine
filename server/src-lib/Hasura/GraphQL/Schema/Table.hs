@@ -40,9 +40,12 @@ tableSelectColumnsEnum
   -> SelPermInfo
   -> m (Maybe (Parser 'Both n PGCol))
 tableSelectColumnsEnum table selectPermissions = do
-  tableName <- qualifiedObjectToName table
+  tableName <- getTableName table
+  customTypeNames <- getTableCustomTypeNames table
   columns   <- tableSelectColumns table selectPermissions
-  let enumName    = tableName <> $$(G.litName "_select_column")
+  let enumName    =
+        fromMaybe (tableName <> $$(G.litName "_select_column"))
+          $ _tctnSelectColumn customTypeNames
       description = Just $ G.Description $
         "select columns of table " <>> table
   pure $ P.enum enumName description <$> nonEmpty
@@ -69,9 +72,12 @@ tableUpdateColumnsEnum
   -> UpdPermInfo
   -> m (Maybe (Parser 'Both n PGCol))
 tableUpdateColumnsEnum table updatePermissions = do
-  tableName <- qualifiedObjectToName table
+  tableName <- getTableName table
   columns   <- tableUpdateColumns table updatePermissions
-  let enumName    = tableName <> $$(G.litName "_update_column")
+  customTypeName <- _tctnUpdateColumn <$> getTableCustomTypeNames table
+  let enumName    =
+        fromMaybe (tableName <> $$(G.litName "_update_column"))
+          $ customTypeName
       description = Just $ G.Description $
         "update columns of table " <>> table
   pure $ P.enum enumName description <$> nonEmpty

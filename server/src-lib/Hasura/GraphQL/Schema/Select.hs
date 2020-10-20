@@ -206,11 +206,13 @@ selectTableAggregate
 selectTableAggregate table fieldName description selectPermissions = runMaybeT do
   guard $ spiAllowAgg selectPermissions
   stringifyNum    <- asks $ qcStringifyNum . getter
-  tableName       <- lift $ qualifiedObjectToName table
+  tableName       <- lift $ getTableName table
+  customTypeNames <- lift $ getTableCustomTypeNames table
   tableArgsParser <- lift $ tableArgs table selectPermissions
   aggregateParser <- lift $ tableAggregationFields table selectPermissions
   nodesParser     <- lift $ tableSelectionList table selectPermissions
-  let selectionName = tableName <> $$(G.litName "_aggregate")
+  let selectionName = fromMaybe (tableName <> $$(G.litName "_aggregate"))
+                         $ _tctnSelectAggregate customTypeNames
       aggregationParser = P.nonNullableParser $
         parsedSelectionsToFields RQL.TAFExp <$>
         P.selectionSet selectionName (Just $ G.Description $ "aggregated selection of " <>> table)
@@ -299,11 +301,13 @@ tableSelectionSet
   -> m (Parser 'Output n AnnotatedFields)
 tableSelectionSet table selectPermissions = memoizeOn 'tableSelectionSet table do
   tableInfo <- _tiCoreInfo <$> askTableInfo table
-  tableName <- qualifiedObjectToName table
+  customTypeNames <- getTableCustomTypeNames table
+  tableName <- getTableName table
   let tableFields = Map.elems  $ _tciFieldInfoMap tableInfo
       tablePkeyColumns = _pkColumns <$> _tciPrimaryKey tableInfo
       description  = Just $ mkDescriptionWith (_tciDescription tableInfo) $
                      "columns and relationships of " <>> table
+      typeName = fromMaybe tableName $ _tctnSelect customTypeNames
   fieldParsers <- concat <$> for tableFields \fieldInfo ->
     fieldSelection table tablePkeyColumns fieldInfo selectPermissions
 
@@ -323,10 +327,10 @@ tableSelectionSet table selectPermissions = memoizeOn 'tableSelectionSet table d
             P.selection_ $$(G.litName "id") Nothing P.identifier $> RQL.AFNodeId table pkeyColumns
           allFieldParsers = fieldParsers <> [nodeIdFieldParser]
       nodeInterface <- node
-      pure $ P.selectionSetObject tableName description allFieldParsers [nodeInterface]
+      pure $ P.selectionSetObject typeName description allFieldParsers [nodeInterface]
             <&> parsedSelectionsToFields RQL.AFExpression
     _                                 ->
-      pure $ P.selectionSetObject tableName description fieldParsers []
+      pure $ P.selectionSetObject typeName description fieldParsers []
             <&> parsedSelectionsToFields RQL.AFExpression
 
 -- | List of table fields object.
@@ -377,9 +381,11 @@ tableConnectionSelectionSet
   -> SelPermInfo
   -> m (Parser 'Output n (RQL.ConnectionFields UnpreparedValue))
 tableConnectionSelectionSet table selectPermissions = do
-  tableName   <- qualifiedObjectToName table
   edgesParser <- tableEdgesSelectionSet
-  let connectionTypeName = tableName <> $$(G.litName "Connection")
+  tableName <- getTableName table
+  customTypeName <- _tctnConnection <$> getTableCustomTypeNames table
+  let connectionTypeName =
+        fromMaybe (tableName <> $$(G.litName "Connection")) customTypeName
       pageInfo = P.subselection_ $$(G.litName "pageInfo") Nothing
                  pageInfoSelectionSet <&> RQL.ConnectionPageInfo
       edges = P.subselection_ $$(G.litName "edges") Nothing
@@ -406,12 +412,14 @@ tableConnectionSelectionSet table selectPermissions = do
       in P.nonNullableParser $ P.selectionSet $$(G.litName "PageInfo") Nothing allFields
          <&> parsedSelectionsToFields RQL.PageInfoTypename
 
+
     tableEdgesSelectionSet
       :: m (Parser 'Output n (RQL.EdgeFields UnpreparedValue))
     tableEdgesSelectionSet = do
-      tableName           <- qualifiedObjectToName table
+      tableName           <- getTableName table
+      customTypeName      <- _tctnEdge <$> getTableCustomTypeNames table
       edgeNodeParser      <- P.nonNullableParser <$> tableSelectionSet table selectPermissions
-      let edgesType = tableName <> $$(G.litName "Edge")
+      let edgesType = fromMaybe (tableName <> $$(G.litName "Edge")) $ customTypeName
           cursor    = P.selection_ $$(G.litName "cursor") Nothing
                       P.string $> RQL.EdgeCursor
           edgeNode  = P.subselection_ $$(G.litName "node") Nothing
@@ -454,10 +462,11 @@ selectFunctionAggregate function fieldName description selectPermissions = runMa
   let table = fiReturnType function
   stringifyNum <- asks $ qcStringifyNum . getter
   guard $ spiAllowAgg selectPermissions
+  tableName <- getTableName table
   tableArgsParser    <- lift $ tableArgs table selectPermissions
   functionArgsParser <- lift $ customSQLFunctionArgs function
   aggregateParser    <- lift $ tableAggregationFields table selectPermissions
-  selectionName      <- lift $ qualifiedObjectToName table <&> (<> $$(G.litName "_aggregate"))
+  selectionName      <- lift $ pure tableName <&> (<> $$(G.litName "_aggregate"))
   nodesParser        <- lift $ tableSelectionList table selectPermissions
   let argsParser = liftA2 (,) functionArgsParser tableArgsParser
       aggregationParser = fmap (parsedSelectionsToFields RQL.TAFExp) $
@@ -784,11 +793,14 @@ tableAggregationFields
   -> SelPermInfo
   -> m (Parser 'Output n RQL.AggregateFields)
 tableAggregationFields table selectPermissions = do
-  tableName  <- qualifiedObjectToName table
+  tableName  <- getTableName table
   allColumns <- tableSelectColumns table selectPermissions
+  customTypeName <- _tctnAggregateFields <$> getTableCustomTypeNames table
   let numericColumns   = onlyNumCols allColumns
       comparableColumns  = onlyComparableCols allColumns
-      selectName   = tableName <> $$(G.litName "_aggregate_fields")
+      selectName   =
+        fromMaybe (tableName <> $$(G.litName "_aggregate_fields"))
+          $ customTypeName
       description  = G.Description $ "aggregate fields of " <>> table
   count     <- countField
   numericAndComparable <- fmap concat $ sequenceA $ catMaybes
