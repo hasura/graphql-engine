@@ -52,6 +52,7 @@ Dig deeper
    :titlesonly:
 
    Creating projects <create>
+   Project Details <details>
    Project Collaborators <collaborators>
    Project Env vars <env-vars>
    Project Domains <domains>
