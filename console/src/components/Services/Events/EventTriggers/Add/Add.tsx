@@ -221,6 +221,7 @@ const Add: React.FC<Props> = props => {
               className={`${styles.tableNameInput} form-control`}
               value={name}
               onChange={handleTriggerNameChange}
+              maxLength={42}
             />
             <hr />
             {/* <div className={styles.add_mar_bottom}>

@@ -1,6 +1,7 @@
 -- | The RQL metadata query ('/v1/metadata')
 module Hasura.Server.API.Metadata where
 
+import           Hasura.Class
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Action
@@ -35,12 +36,13 @@ data RQLMetadata
   | RMPgDropSource !DropPgSource
   | RMPgReloadSource !PGSourceName
 
-  | RMPgTrackTable !TrackTable
+  | RMPgTrackTable !TrackTableV2
   | RMPgUntrackTable !UntrackTable
   | RMPgSetTableIsEnum !SetTableIsEnum
+  | RMPgSetTableCustomFields !SetTableCustomFields
 
   -- Postgres functions
-  | RMPgTrackFunction !TrackFunction
+  | RMPgTrackFunction !TrackFunctionV2
   | RMPgUntrackFunction !UnTrackFunction
 
   -- Postgres table relationships
@@ -90,8 +92,10 @@ data RQLMetadata
   -- scheduled triggers
   | RMCreateCronTrigger !CreateCronTrigger
   | RMDeleteCronTrigger !ScheduledTriggerName
-
   | RMCreateScheduledEvent !CreateScheduledEvent
+  | RMDeleteScheduledEvent !DeleteScheduledEvent
+  | RMGetScheduledEvents !GetScheduledEvents
+  | RMGetEventInvocations !GetEventInvocations
 
   -- query collections, allow list related
   | RMCreateQueryCollection !CreateCollection
@@ -102,7 +106,7 @@ data RQLMetadata
   | RMDropCollectionFromAllowlist !CollectionReq
 
   -- basic metadata management
-  | RMReplaceMetadata !Metadata
+  | RMReplaceMetadata !ReplaceMetadata
   | RMExportMetadata !ExportMetadata
   | RMClearMetadata !ClearMetadata
   | RMReloadMetadata !ReloadMetadata
@@ -118,6 +122,9 @@ data RQLMetadata
 
   | RMDumpInternalState !DumpInternalState
 
+  | RMGetCatalogState !GetCatalogState
+  | RMSetCatalogState !SetCatalogState
+
   -- bulk metadata queries
   | RMBulk [RQLMetadata]
   deriving (Show, Eq)
@@ -132,22 +139,22 @@ runMetadataRequest
   :: ( HasVersion
      , MonadIO m
      , MonadError QErr m
+     , MonadUnique m
+     , MonadMetadataStorage m
      )
   => Env.Environment
   -> UserInfo
   -> HTTP.Manager
   -> SQLGenCtx
-  -> PGSourceConfig
   -> RebuildableSchemaCache
   -> Metadata
   -> RQLMetadata
   -> m (EncJSON, MetadataStateResult)
-runMetadataRequest env userInfo httpManager sqlGenCtx defPGSource schemaCache metadata request = do
+runMetadataRequest env userInfo httpManager sqlGenCtx schemaCache metadata request = do
   ((r, modSchemaCache, cacheInvalidations), modMetadata) <-
     runMetadataRequestM env request
-    & runHasSystemDefinedT (SystemDefined False)
     & runCacheRWT schemaCache
-    & peelMetadataRun (RunCtx userInfo httpManager sqlGenCtx defPGSource) metadata
+    & peelMetadataRun (RunCtx userInfo httpManager sqlGenCtx) metadata
     & runExceptT
     & liftEitherM
   pure (r, MetadataStateResult modSchemaCache cacheInvalidations modMetadata)
@@ -156,10 +163,11 @@ runMetadataRequestM
   :: ( HasVersion
      , MonadIO m
      , CacheRWM m
-     , HasSystemDefined m
      , UserInfoM m
      , MonadUnique m
      , MonadMetadata m
+     , MonadScheduledEvents m
+     , MonadCatalogState m
      , HasHttpManager m
      , MonadError QErr m
      )
@@ -171,11 +179,12 @@ runMetadataRequestM env = \case
   RMPgDropSource q   -> runDropPgSource q
   RMPgReloadSource q -> runReloadPgSource q
 
-  RMPgTrackTable q     -> runTrackTableQ q
-  RMPgUntrackTable q   -> runUntrackTableQ q
-  RMPgSetTableIsEnum q -> runSetExistingTableIsEnumQ q
+  RMPgTrackTable q           -> runTrackTableV2Q q
+  RMPgUntrackTable q         -> runUntrackTableQ q
+  RMPgSetTableIsEnum q       -> runSetExistingTableIsEnumQ q
+  RMPgSetTableCustomFields q -> runSetTableCustomFieldsQV2 q
 
-  RMPgTrackFunction q -> runTrackFunc q
+  RMPgTrackFunction q   -> runTrackFunctionV2 q
   RMPgUntrackFunction q -> runUntrackFunc q
 
   RMPgCreateObjectRelationship q -> runCreateRelationship ObjRel q
@@ -215,10 +224,12 @@ runMetadataRequestM env = \case
   RMReloadRemoteSchema q -> runReloadRemoteSchema q
   RMIntrospectRemoteSchema q -> runIntrospectRemoteSchema q
 
-  RMCreateCronTrigger q -> runCreateCronTrigger q
-  RMDeleteCronTrigger q -> runDeleteCronTrigger q
-
+  RMCreateCronTrigger q    -> runCreateCronTrigger q
+  RMDeleteCronTrigger q    -> runDeleteCronTrigger q
   RMCreateScheduledEvent q -> runCreateScheduledEvent q
+  RMDeleteScheduledEvent q -> runDeleteScheduledEvent q
+  RMGetScheduledEvents q   -> runGetScheduledEvents q
+  RMGetEventInvocations q  -> runGetEventInvocations q
 
   RMCreateQueryCollection q -> runCreateCollection q
   RMDropQueryCollection q -> runDropCollection q
@@ -241,5 +252,8 @@ runMetadataRequestM env = \case
   RMSetCustomTypes q -> runSetCustomTypes q
 
   RMDumpInternalState q -> runDumpInternalState q
+
+  RMGetCatalogState q -> runGetCatalogState q
+  RMSetCatalogState q -> runSetCatalogState q
 
   RMBulk q -> encJFromList <$> indexedMapM (runMetadataRequestM env) q

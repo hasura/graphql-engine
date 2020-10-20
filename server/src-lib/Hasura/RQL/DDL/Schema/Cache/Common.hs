@@ -1,5 +1,6 @@
-{-# LANGUAGE Arrows          #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE Arrows               #-}
+{-# LANGUAGE RecordWildCards      #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | Types/functions shared between modules that implement "Hasura.RQL.DDL.Schema.Cache". Other
 -- modules should not import this module directly.
@@ -14,6 +15,7 @@ import qualified Network.HTTP.Client          as HTTP
 
 import           Control.Arrow.Extended
 import           Control.Lens
+import           Control.Monad.Trans.Control  (MonadBaseControl)
 import           Control.Monad.Unique
 
 import qualified Hasura.Incremental           as Inc
@@ -119,52 +121,49 @@ data BuildOutputs
   }
 $(makeLenses ''BuildOutputs)
 
-data CacheBuildCtx
-  = CacheBuildCtx
-  { _cbcManager         :: !HTTP.Manager
-  , _cbcSqlGenCtx       :: !SQLGenCtx
-  , _cbcDefaultPgConfig :: !PGSourceConfig
+-- | Parameters required for schema cache build
+data CacheBuildParams
+  = CacheBuildParams
+  { _cbpManager   :: !HTTP.Manager
+  , _cbpSqlGenCtx :: !SQLGenCtx
   }
 
 -- | The monad in which @'RebuildableSchemaCache' is being run
 newtype CacheBuild a
-  = CacheBuild {unCacheBuild :: ReaderT CacheBuildCtx (ExceptT QErr IO) a}
+  = CacheBuild {unCacheBuild :: ReaderT CacheBuildParams (ExceptT QErr IO) a}
   deriving ( Functor, Applicative, Monad
            , MonadError QErr
-           , MonadReader CacheBuildCtx
+           , MonadReader CacheBuildParams
            , MonadIO
+           , MonadBase IO
+           , MonadBaseControl IO
            , MonadUnique
            )
 
 instance HasHttpManager CacheBuild where
-  askHttpManager = asks _cbcManager
+  askHttpManager = asks _cbpManager
 
 instance HasSQLGenCtx CacheBuild where
-  askSQLGenCtx = asks _cbcSqlGenCtx
-
-instance HasDefaultSource CacheBuild where
-  askDefaultSource = asks _cbcDefaultPgConfig
+  askSQLGenCtx = asks _cbpSqlGenCtx
 
 runCacheBuild
   :: ( MonadIO m
      , MonadError QErr m
      , HasHttpManager m
      , HasSQLGenCtx m
-     , HasDefaultSource m
      )
   => CacheBuild a -> m a
 runCacheBuild (CacheBuild m) = do
   httpManager <- askHttpManager
   sqlGenCtx   <- askSQLGenCtx
-  defPgSource <- askDefaultSource
-  let ctx = CacheBuildCtx httpManager sqlGenCtx defPgSource
-  liftEitherM $ liftIO $ runExceptT (runReaderT m ctx)
+  let params = CacheBuildParams httpManager sqlGenCtx
+  liftEitherM $ liftIO $ runExceptT (runReaderT m params)
 
 data RebuildableSchemaCache
   = RebuildableSchemaCache
   { lastBuiltSchemaCache :: !SchemaCache
   , _rscInvalidationMap :: !InvalidationKeys
-  , _rscRebuild :: !(Inc.Rule (ReaderT BuildReason CacheBuild) (Metadata, InvalidationKeys) SchemaCache)
+  , _rscRebuild :: !(Inc.Rule (ReaderT BuildContext CacheBuild) (Metadata, InvalidationKeys) SchemaCache)
   }
 $(makeLenses ''RebuildableSchemaCache)
 

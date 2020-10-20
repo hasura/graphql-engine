@@ -44,6 +44,7 @@ import qualified Database.PG.Query.PTI         as PTI
 import qualified PostgreSQL.Binary.Encoding    as PE
 
 import           Control.Lens
+import           Control.Monad.Trans.Control   (MonadBaseControl)
 import           Data.UUID                     (UUID)
 
 import qualified Hasura.GraphQL.Parser.Schema  as PS
@@ -55,6 +56,7 @@ import qualified Hasura.SQL.DML                as S
 import           Hasura.Class
 import           Hasura.Db
 import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Query
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.RQL.Types
@@ -283,7 +285,7 @@ $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ReusableLiveQueryPlan)
 buildLiveQueryPlan
   :: ( MonadError QErr m
      , MonadIO m
-     , MonadMetadataStorageTx m
+     , MonadMetadataStorage m
      )
   => PGExecCtx
   -> UserInfo
@@ -312,7 +314,6 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
       $  traverseSubscriptionRootField prepareWithPlan unpreparedQuery
     pure $! irToRootFieldPlan planVars planVals preparedQuery
 -}
-  resolveAsyncActionQuery <- getAsyncActionQueryResolver
   (preparedAST, (queryVariableValues, querySyntheticVariableValues)) <- flip runStateT (mempty, Seq.empty) $
     for unpreparedAST \unpreparedQuery -> do
       resolvedRootField <- traverseQueryRootField resolveMultiplexedValue unpreparedQuery
@@ -326,7 +327,8 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
           when (remoteJoins /= mempty)
             $ throw400 NotSupported "Remote relationships are not allowed in subscriptions"
         _ -> pure ()
-      traverseAction (DS.traverseAnnSimpleSelect resolveMultiplexedValue . resolveAsyncActionQuery userInfo) resolvedRootField
+      -- FIXME: Async action live queries
+      traverseAction (DS.traverseAnnSimpleSelect resolveMultiplexedValue <=< lift . resolveAsyncActionQuery userInfo) resolvedRootField
 
   let multiplexedQuery = mkMultiplexedQuery preparedAST
       roleName = _uiRole userInfo
@@ -384,7 +386,12 @@ data LiveQueryPlanExplanation
   } deriving (Show)
 $(J.deriveToJSON (J.aesonDrop 5 J.snakeCase) ''LiveQueryPlanExplanation)
 
-explainLiveQueryPlan :: (MonadError QErr m, MonadIO m) => LiveQueryPlan -> m LiveQueryPlanExplanation
+explainLiveQueryPlan
+  :: ( MonadError QErr m
+     , MonadIO m
+     , MonadBaseControl IO m
+     )
+  => LiveQueryPlan -> m LiveQueryPlanExplanation
 explainLiveQueryPlan plan = do
   let parameterizedPlan = _lqpParameterizedPlan plan
       pgExecCtx = _lqpPGExecCtx plan

@@ -1,6 +1,18 @@
-import { Nullable } from './tsUtils';
-import { generateTableDef, terminateSql } from '../../../dataSources';
+import {
+  dataSource,
+  generateTableDef,
+  terminateSql,
+} from '../../../dataSources';
 import { QualifiedTable } from '../../../metadata/types';
+import { LocalScheduledTriggerState } from '../../Services/Events/CronTriggers/state';
+import { LocalAdhocEventState } from '../../Services/Events/AdhocEvents/Add/state';
+import { LocalEventTriggerState } from '../../Services/Events/EventTriggers/state';
+import { RemoteRelationshipPayload } from '../../Services/Data/TableRelationships/RemoteRelationships/utils';
+import { transformHeaders } from '../Headers/utils';
+import { Nullable } from './tsUtils';
+import { ConsoleState } from '../../../types';
+import { ConsoleScope } from '../../Main/ConsoleNotification';
+import { BaseTable, BaseTableColumn, Table } from '../../../dataSources/types';
 
 export type OrderByType = 'asc' | 'desc';
 export type OrderByNulls = 'first' | 'last';
@@ -8,17 +20,16 @@ export type OrderByNulls = 'first' | 'last';
 export const getRunSqlQuery = (
   sql: string,
   source: string,
-  shouldCascade?: boolean,
-  readOnly?: boolean
+  cascade = false,
+  read_only = false
 ) => {
-  if (!sql) return {};
   return {
     type: 'run_sql',
     source,
     args: {
       sql: terminateSql(sql),
-      cascade: !!shouldCascade,
-      read_only: !!readOnly,
+      cascade,
+      read_only,
     },
   };
 };
@@ -27,6 +38,115 @@ export type OrderBy = {
   column: string;
   type: OrderByType;
   nulls: Nullable<OrderByNulls>;
+};
+
+export const convertPGValue = (
+  value: any,
+  columnInfo: BaseTableColumn
+): string | number => {
+  if (value === 'null' || value === null) {
+    return 'null';
+  }
+
+  if (typeof value === 'string') {
+    return `'${value}'`;
+  }
+
+  if (
+    Array.isArray(value) &&
+    columnInfo.data_type !== 'json' &&
+    columnInfo.data_type !== 'jsonb'
+  ) {
+    return `'${dataSource.arrayToPostgresArray(value)}'`;
+  }
+
+  if (typeof value === 'object') {
+    return `'${JSON.stringify(value)}'`;
+  }
+
+  if (value === undefined) {
+    return '';
+  }
+
+  return value;
+};
+
+// TODO
+export const createPKClause = (
+  primaryKeyInfo: any,
+  insertion: Record<string, any>,
+  columns: BaseTableColumn[]
+): Record<string, any> => {
+  const newPKClause: Record<string, any> = {};
+  const hasPrimaryKeys = primaryKeyInfo?.columns;
+  if (hasPrimaryKeys) {
+    primaryKeyInfo.columns.forEach((key: any) => {
+      newPKClause[key] = insertion[key];
+    });
+  } else {
+    columns.forEach(col => {
+      newPKClause[col.column_name] = insertion[col.column_name];
+    });
+  }
+
+  Object.keys(newPKClause).forEach(key => {
+    const currentValue = newPKClause[key];
+    if (Array.isArray(currentValue)) {
+      newPKClause[key] = dataSource.arrayToPostgresArray(currentValue);
+    }
+  });
+
+  return newPKClause;
+};
+
+export const getInsertUpQuery = (
+  tableDef: any, // todo
+  insertion: Record<string, any>,
+  columns: BaseTableColumn[]
+) => {
+  const columnValues = Object.keys(insertion)
+    .map(key => `"${key}"`)
+    .join(', ');
+
+  const values = Object.values(insertion)
+    .map((value, valIndex) => convertPGValue(value, columns[valIndex]))
+    .join(', ');
+
+  const sql = `INSERT INTO "${tableDef.schema}"."${tableDef.name}"(${columnValues}) VALUES (${values});`;
+
+  return getRunSqlQuery(sql, '' /** TODO */);
+};
+
+export const convertPGPrimaryKeyValue = (value: any, pk: string): string => {
+  if (typeof value === 'string') {
+    return `"${pk}" = '${value}'`;
+  }
+
+  if (Array.isArray(value)) {
+    return `"${pk}" = '${dataSource.arrayToPostgresArray(value)}'`;
+  }
+
+  if (typeof value === 'object') {
+    return `"${pk}" = '${JSON.stringify(value)}'`;
+  }
+
+  return `"${pk}" = ${value}`;
+};
+
+export const getInsertDownQuery = (
+  tableDef: any, // todo
+  insertion: Record<string, any>,
+  primaryKeyInfo: any,
+  columns: BaseTableColumn[]
+) => {
+  const whereClause = createPKClause(primaryKeyInfo, insertion, columns);
+  const clauses = Object.keys(whereClause).map(pk =>
+    convertPGPrimaryKeyValue(whereClause[pk], pk)
+  );
+  const condition = clauses.join(' AND ');
+  const sql = `DELETE FROM "${tableDef.schema}"."${tableDef.name}" WHERE ${condition};`;
+
+  return getRunSqlQuery(sql, '' /** TODO */);
 };
 
 type validOperators =
@@ -128,41 +248,51 @@ export const getSelectQuery = (
   };
 };
 
-export const getFetchInvocationLogsQuery = (
-  where: Nullable<WhereClause>,
-  offset: Nullable<number>,
-  order_by: Nullable<OrderBy[]>,
-  limit: Nullable<number>
+export const getConsoleNotificationQuery = (
+  time: Date | string | number,
+  userType?: Nullable<ConsoleScope>
 ) => {
-  return getSelectQuery(
-    'select',
-    generateTableDef('hdb_scheduled_event_invocation_logs', 'hdb_catalog'),
-    ['*'],
-    where,
-    offset,
-    limit,
-    order_by
-  );
-};
+  let consoleUserScope = {
+    $ilike: `%${userType}%`,
+  };
+  if (!userType) {
+    consoleUserScope = {
+      $ilike: '%OSS%',
+    };
+  }
 
-export type SelectQueryGenerator = typeof getFetchInvocationLogsQuery;
-
-export const getFetchManualTriggersQuery = (tableDef: QualifiedTable) =>
-  getSelectQuery(
-    'select',
-    generateTableDef('event_triggers', 'hdb_catalog'),
-    ['*'],
-    {
-      table_name: tableDef.name,
-      schema_name: tableDef.schema,
-    },
-    undefined,
-    undefined,
-    [
-      {
-        column: 'name',
-        type: 'asc',
-        nulls: 'last',
+  return {
+    args: {
+      table: 'console_notification',
+      columns: ['*'],
+      where: {
+        $or: [
+          {
+            expiry_date: {
+              $gte: time,
+            },
+          },
+          {
+            expiry_date: {
+              $eq: null,
+            },
+          },
+        ],
+        scope: consoleUserScope,
+        start_date: { $lte: time },
       },
-    ]
-  );
+      order_by: [
+        {
+          type: 'asc',
+          nulls: 'last',
+          column: 'priority',
+        },
+        {
+          type: 'desc',
+          column: 'start_date',
+        },
+      ],
+    },
+    type: 'select',
+  };
+};

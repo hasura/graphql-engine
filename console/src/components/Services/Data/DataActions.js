@@ -5,7 +5,6 @@ import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import requestAction from '../../../utils/requestAction';
 import defaultState from './DataState';
-import insertReducer from './TableInsertItem/InsertActions';
 import viewReducer from './TableBrowseRows/ViewActions';
 import editReducer from './TableBrowseRows/EditActions';
 import modifyReducer from './TableCommon/TableReducer';
@@ -31,6 +30,7 @@ import { mergeLoadSchemaData } from './mergeData';
 import _push from './push';
 import { convertArrayToJson } from './TableModify/utils';
 import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
+import { getDownQueryComments } from '../../../utils/migration/utils';
 import { isEmpty } from '../../Common/utils/jsUtils';
 import { dataSource } from '../../../dataSources';
 import { exportMetadata } from '../../../metadata/actions';
@@ -45,6 +45,7 @@ import {
   // getSetTableEnumQuery,
 } from '../../../metadata/queryUtils';
 import { services } from '../../../dataSources/services';
+import insertReducer from './TableInsertItem/InsertActions';
 
 const SET_TABLE = 'Data/SET_TABLE';
 const LOAD_FUNCTIONS = 'Data/LOAD_FUNCTIONS';
@@ -475,7 +476,7 @@ const makeMigrationCall = (
   dispatch,
   getState,
   upQueries,
-  downQueries,
+  downQueries = [],
   migrationName,
   customOnSuccess,
   customOnError,
@@ -496,7 +497,10 @@ const makeMigrationCall = (
   const downQuery = {
     type: 'bulk',
     source,
-    args: downQueries,
+    args:
+      downQueries.length > 0
+        ? downQueries
+        : getDownQueryComments(upQueries, source),
   };
 
   const migrationBody = {

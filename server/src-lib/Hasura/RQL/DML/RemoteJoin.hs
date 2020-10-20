@@ -1,6 +1,7 @@
 -- | Types and Functions for resolving remote join fields
 module Hasura.RQL.DML.RemoteJoin
   ( executeQueryWithRemoteJoins
+  , processRemoteJoins
   , getRemoteJoins
   , getRemoteJoinsAggregateSelect
   , getRemoteJoinsMutationOutput
@@ -32,6 +33,7 @@ import qualified Hasura.SQL.DML                         as S
 
 import qualified Data.Aeson                             as A
 import qualified Data.Aeson.Ordered                     as AO
+import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.Extended           as Map
@@ -41,8 +43,8 @@ import qualified Data.List.NonEmpty                     as NE
 import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.Tracing                         as Tracing
-import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Language.GraphQL.Draft.Printer         as G
+import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 
@@ -62,8 +64,26 @@ executeQueryWithRemoteJoins
   -> RemoteJoins
   -> m EncJSON
 executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs rjs = do
-  -- Step 1: Perform the query on database and fetch the response
+  -- Perform the query on database and fetch the response
   pgRes <- runIdentity . Q.getRow <$> Tracing.trace "Postgres" (liftTx (Q.rawQE dmlTxErrorHandler q prepArgs True))
+  -- Process remote joins in the response
+  processRemoteJoins env manager reqHdrs userInfo pgRes rjs
+
+processRemoteJoins
+  :: ( HasVersion
+     , MonadTx m
+     , MonadIO m
+     , Tracing.MonadTrace m
+     )
+  => Env.Environment
+  -> HTTP.Manager
+  -> [N.Header]
+  -> UserInfo
+  -> BL.ByteString
+  -> RemoteJoins
+  -> m EncJSON
+processRemoteJoins env manager reqHdrs userInfo pgRes rjs = do
+  -- Step 1: Decode the given bytestring as a JSON value
   jsonRes <- either (throw500 . T.pack) pure $ AO.eitherDecode pgRes
   -- Step 2: Traverse through the JSON obtained in above step and generate composite JSON value with remote joins
   compositeJson <- traverseQueryResponseJSON rjMap jsonRes

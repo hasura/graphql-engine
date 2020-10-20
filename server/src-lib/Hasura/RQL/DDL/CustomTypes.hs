@@ -14,6 +14,7 @@ import           Control.Monad.Validate
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
 import qualified Data.List.Extended            as L
+import qualified Data.List.NonEmpty            as NE
 import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
 
@@ -60,7 +61,7 @@ validateCustomTypeDefinitions sourceTables customTypes allPGScalars = do
   unless (null duplicateTypes) $ dispute $ pure $ DuplicateTypeNames duplicateTypes
   traverse_ validateEnum enumDefinitions
   reusedPGScalars <- execWriterT $ traverse_ validateInputObject inputObjectDefinitions
-  annotatedObjects <- mapFromL (unObjectTypeName . _otdName) <$>
+  annotatedObjects <- mapFromL (unObjectTypeName . _otdName . _aotDefinition) <$>
                       traverse validateObject objectDefinitions
   let scalarTypeMap = Map.map NOCTScalar $
         Map.map ASTCustom scalarTypes <> Map.mapWithKey ASTReusedPgScalar reusedPGScalars
@@ -144,7 +145,6 @@ validateCustomTypeDefinitions sourceTables customTypes allPGScalars = do
             (map (unRelationshipName . _trName) . toList) maybeRelationships
           duplicateFieldNames = L.duplicates $ fieldNames <> relNames
           fields = _otdFields objectDefinition
-          source = _otdSource objectDefinition
 
       -- check for duplicate field names
       unless (null duplicateFieldNames) $
@@ -182,6 +182,13 @@ validateCustomTypeDefinitions sourceTables customTypes allPGScalars = do
       let scalarOrEnumFieldMap = Map.fromList $
             map (_ofdName &&& (fst . _ofdType)) $ toList scalarOrEnumFields
 
+      source <- fmap (fromMaybe defaultSource . join) $
+                forM maybeRelationships $ \relationships -> do
+                  let headSource NE.:| rest = _trSource <$> relationships
+                  unless (all (headSource ==) rest) $
+                    refute $ pure $ ObjectRelationshipMultiSources objectTypeName
+                  pure headSource
+
       annotatedRelationships <- forM maybeRelationships $ \relationships ->
         forM relationships $ \TypeRelationship{..} -> do
         --check that the table exists
@@ -208,10 +215,11 @@ validateCustomTypeDefinitions sourceTables customTypes allPGScalars = do
                 objectTypeName _trName _trRemoteTable columnName
               Just pgColumnInfo -> pure pgColumnInfo
 
-        pure $ TypeRelationship _trName _trType remoteTableInfo annotatedFieldMapping
+        pure $ TypeRelationship _trName _trType _trSource remoteTableInfo annotatedFieldMapping
 
-      pure $ ObjectTypeDefinition objectTypeName (_otdDescription objectDefinition)
-             scalarOrEnumFields source annotatedRelationships
+      pure $ flip AnnotatedObjectType source $
+             ObjectTypeDefinition objectTypeName (_otdDescription objectDefinition)
+             scalarOrEnumFields annotatedRelationships
 
 -- see Note [Postgres scalars in custom types]
 lookupPGScalar :: Set.HashSet PGScalarType -> G.Name -> Maybe PGScalarType
@@ -251,6 +259,8 @@ data CustomTypeValidationError
   | ObjectRelationshipColumnDoesNotExist
     !ObjectTypeName !RelationshipName !QualifiedTable !PGCol
   -- ^ The column specified in the relationship mapping does not exist
+  | ObjectRelationshipMultiSources !ObjectTypeName
+  -- ^ Object relationship refers to table in multiple sources
   | DuplicateEnumValues !EnumTypeName !(Set.HashSet G.EnumValue)
   -- ^ duplicate enum values
   deriving (Show, Eq)
@@ -300,6 +310,9 @@ showCustomTypeValidationError = \case
     "the column " <> column <<> " of remote table " <> remoteTable
     <<> " for relationship " <> relName <<> " of object type " <> objType
     <<> " does not exist"
+
+  ObjectRelationshipMultiSources objType ->
+    "the object " <> objType <<> " has relationships refers to tables in multiple sources"
 
   DuplicateEnumValues tyName values ->
     "the enum type " <> tyName <<> " has duplicate values: " <> dquoteList values

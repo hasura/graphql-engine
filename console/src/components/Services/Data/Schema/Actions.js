@@ -4,6 +4,7 @@ import { makeMigrationCall, fetchSchemaList } from '../DataActions';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import { dataSource } from '../../../../dataSources';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
+import Migration from '../../../../utils/migration/Migration';
 
 export const createNewSchema = (schemaName, successCb, errorCb) => {
   return (dispatch, getState) => {
@@ -17,14 +18,11 @@ export const createNewSchema = (schemaName, successCb, errorCb) => {
         )
       );
     }
-
-    const migrationUp = [
+    const migration = new Migration();
+    migration.add(
       getRunSqlQuery(dataSource.getCreateSchemaSql(schemaName), source),
-    ];
-
-    const migrationDown = [
-      getRunSqlQuery(dataSource.getDropSchemaSql(schemaName), source),
-    ];
+      getRunSqlQuery(dataSource.getDropSchemaSql(schemaName), source)
+    );
 
     const migrationName = `create_schema_${schemaName}`;
     const requestMsg = 'Creating schema';
@@ -47,8 +45,8 @@ export const createNewSchema = (schemaName, successCb, errorCb) => {
     makeMigrationCall(
       dispatch,
       getState,
-      migrationUp,
-      migrationDown,
+      migration.upMigration,
+      migration.downMigration,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -68,13 +66,13 @@ export const deleteCurrentSchema = (successCb, errorCb) => {
     if (!isOk) {
       return;
     }
-
-    const migrationUp = [
+    const migration = new Migration();
+    migration.add(
       getRunSqlQuery(
         dataSource.getDropSchemaSql(currentSchema),
         currentDataSource
-      ),
-    ];
+      )
+    );
     const migrationName = `drop_schema_${currentSchema}`;
     const requestMsg = 'Dropping schema';
     const successMsg = 'Successfully dropped schema';
@@ -95,8 +93,8 @@ export const deleteCurrentSchema = (successCb, errorCb) => {
     makeMigrationCall(
       dispatch,
       getState,
-      migrationUp,
-      [],
+      migration.upMigration,
+      migration.downMigration,
       migrationName,
       customOnSuccess,
       customOnError,

@@ -126,7 +126,6 @@ instance ToJSON (Response 'ScheduledType) where
     , "version" .= invocationVersionST
     ]
 
-
 data Invocation (a :: TriggerTypes)
   = Invocation
   { iEventId  :: EventId

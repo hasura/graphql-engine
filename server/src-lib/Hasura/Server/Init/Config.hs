@@ -11,7 +11,9 @@ import qualified Database.PG.Query                as Q
 
 import           Data.Char                        (toLower)
 import           Data.Time
+import           Data.URL.Template
 import           Network.Wai.Handler.Warp         (HostPreference)
+import qualified Network.WebSockets               as WS
 
 import qualified Hasura.Cache.Bounded             as Cache
 import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
@@ -19,6 +21,7 @@ import qualified Hasura.GraphQL.Execute.Plan      as E
 import qualified Hasura.Logging                   as L
 
 import           Hasura.Prelude
+import           Hasura.RQL.Types.Common
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Session
@@ -38,32 +41,33 @@ type RawAuthHook = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
 
 data RawServeOptions impl
   = RawServeOptions
-  { rsoPort                :: !(Maybe Int)
-  , rsoHost                :: !(Maybe HostPreference)
-  , rsoConnParams          :: !RawConnParams
-  , rsoTxIso               :: !(Maybe Q.TxIsolation)
-  , rsoAdminSecret         :: !(Maybe AdminSecretHash)
-  , rsoAuthHook            :: !RawAuthHook
-  , rsoJwtSecret           :: !(Maybe JWTConfig)
-  , rsoUnAuthRole          :: !(Maybe RoleName)
-  , rsoCorsConfig          :: !(Maybe CorsConfig)
-  , rsoEnableConsole       :: !Bool
-  , rsoConsoleAssetsDir    :: !(Maybe Text)
-  , rsoEnableTelemetry     :: !(Maybe Bool)
-  , rsoWsReadCookie        :: !Bool
-  , rsoStringifyNum        :: !Bool
-  , rsoEnabledAPIs         :: !(Maybe [API])
-  , rsoMxRefetchInt        :: !(Maybe LQ.RefetchInterval)
-  , rsoMxBatchSize         :: !(Maybe LQ.BatchSize)
-  , rsoEnableAllowlist     :: !Bool
-  , rsoEnabledLogTypes     :: !(Maybe [L.EngineLogType impl])
-  , rsoLogLevel            :: !(Maybe L.LogLevel)
-  , rsoPlanCacheSize       :: !(Maybe Cache.CacheSize)
-  , rsoDevMode             :: !Bool
-  , rsoAdminInternalErrors :: !(Maybe Bool)
-  , rsoEventsHttpPoolSize  :: !(Maybe Int)
-  , rsoEventsFetchInterval :: !(Maybe Milliseconds)
-  , rsoLogHeadersFromEnv   :: !Bool
+  { rsoPort                  :: !(Maybe Int)
+  , rsoHost                  :: !(Maybe HostPreference)
+  , rsoConnParams            :: !RawConnParams
+  , rsoTxIso                 :: !(Maybe Q.TxIsolation)
+  , rsoAdminSecret           :: !(Maybe AdminSecretHash)
+  , rsoAuthHook              :: !RawAuthHook
+  , rsoJwtSecret             :: !(Maybe JWTConfig)
+  , rsoUnAuthRole            :: !(Maybe RoleName)
+  , rsoCorsConfig            :: !(Maybe CorsConfig)
+  , rsoEnableConsole         :: !Bool
+  , rsoConsoleAssetsDir      :: !(Maybe Text)
+  , rsoEnableTelemetry       :: !(Maybe Bool)
+  , rsoWsReadCookie          :: !Bool
+  , rsoStringifyNum          :: !Bool
+  , rsoEnabledAPIs           :: !(Maybe [API])
+  , rsoMxRefetchInt          :: !(Maybe LQ.RefetchInterval)
+  , rsoMxBatchSize           :: !(Maybe LQ.BatchSize)
+  , rsoEnableAllowlist       :: !Bool
+  , rsoEnabledLogTypes       :: !(Maybe [L.EngineLogType impl])
+  , rsoLogLevel              :: !(Maybe L.LogLevel)
+  , rsoPlanCacheSize         :: !(Maybe Cache.CacheSize)
+  , rsoDevMode               :: !Bool
+  , rsoAdminInternalErrors   :: !(Maybe Bool)
+  , rsoEventsHttpPoolSize    :: !(Maybe Int)
+  , rsoEventsFetchInterval   :: !(Maybe Milliseconds)
+  , rsoLogHeadersFromEnv     :: !Bool
+  , rsoWebSocketCompression :: !Bool
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -106,6 +110,7 @@ data ServeOptions impl
   , soEventsHttpPoolSize           :: !(Maybe Int)
   , soEventsFetchInterval          :: !(Maybe Milliseconds)
   , soLogHeadersFromEnv            :: !Bool
+  , soConnectionOptions            :: !WS.ConnectionOptions
   }
 
 data DowngradeOptions
@@ -114,17 +119,32 @@ data DowngradeOptions
   , dgoDryRun        :: !Bool
   } deriving (Show, Eq)
 
+-- | Postgres connection details provided at startup
+data DefaultConnInfo a
+  = DefaultConnInfo
+  { _dciDatabaseUrl :: !a
+  , _dciRetries     :: !(Maybe Int)
+  } deriving (Show, Eq)
+
 data RawConnInfo =
   RawConnInfo
-  { connHost     :: !(Maybe String)
-  , connPort     :: !(Maybe Int)
-  , connUser     :: !(Maybe String)
+  { connHost     :: !String
+  , connPort     :: !Int
+  , connUser     :: !String
   , connPassword :: !String
-  , connUrl      :: !(Maybe String)
-  , connDatabase :: !(Maybe String)
+  , connDatabase :: !String
   , connOptions  :: !(Maybe String)
-  , connRetries  :: !(Maybe Int)
   } deriving (Eq, Read, Show)
+
+connInfoToUrl :: RawConnInfo -> URLTemplate
+connInfoToUrl RawConnInfo{..} =
+  mkPlainURLTemplate $ T.pack $
+    "postgresql://" <> connUser <>
+    ":" <> connPassword <>
+    "@" <> connHost <>
+    ":" <> show connPort <>
+    "/" <> connDatabase <>
+    maybe "" ("?options=" <>) connOptions
 
 data HGECommandG a
   = HCServe !a
@@ -153,15 +173,18 @@ $(J.deriveJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True} ''RawConnIn
 type HGECommand impl = HGECommandG (ServeOptions impl)
 type RawHGECommand impl = HGECommandG (RawServeOptions impl)
 
-data HGEOptionsG a
+data HGEOptionsG a b
   = HGEOptionsG
-  { hoConnInfo      :: !RawConnInfo
-  , hoMetadataDbUrl :: !(Maybe String)
-  , hoCommand       :: !(HGECommandG a)
+  { hoDefaultConnInfo :: !a
+  , hoMetadataDbUrl   :: !(Maybe String)
+  , hoCommand         :: !(HGECommandG b)
   } deriving (Show, Eq)
 
-type RawHGEOptions impl = HGEOptionsG (RawServeOptions impl)
-type HGEOptions impl = HGEOptionsG (ServeOptions impl)
+type RawHGEOptions impl =
+  HGEOptionsG (DefaultConnInfo (Maybe InputWebhook)) (RawServeOptions impl)
+
+type HGEOptions impl =
+  HGEOptionsG (Maybe (DefaultConnInfo UrlConf)) (ServeOptions impl)
 
 type Env = [(String, String)]
 

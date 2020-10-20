@@ -131,8 +131,8 @@ runMonadSchema roleName queryContext sources m =
 buildRoleContext
   :: (MonadError QErr m, MonadIO m, MonadUnique m)
   => QueryContext -> PGSourcesCache -> [ActionInfo] -> NonObjectTypeMap
-  -> [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-  -> [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  -> [P.FieldParser (P.ParseT Identity) RemoteField]
+  -> [P.FieldParser (P.ParseT Identity) RemoteField]
   -> RoleName
   -> m (RoleContext GQLContext)
 buildRoleContext queryContext pgSources allActionInfos
@@ -197,8 +197,8 @@ buildPGFields sourceConfig tableCache functionCache = do
 buildRelayRoleContext
   :: (MonadError QErr m, MonadIO m, MonadUnique m)
   => QueryContext -> PGSourcesCache -> [ActionInfo] -> NonObjectTypeMap
-  -> [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-  -> [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  -> [P.FieldParser (P.ParseT Identity) RemoteField]
+  -> [P.FieldParser (P.ParseT Identity) RemoteField]
   -> RoleName
   -> m (RoleContext GQLContext)
 buildRelayRoleContext queryContext pgSources allActionInfos
@@ -270,8 +270,8 @@ unauthenticatedContext
      , MonadIO m
      , MonadUnique m
      )
-  => [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-  -> [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  => [P.FieldParser (P.ParseT Identity) RemoteField]
+  -> [P.FieldParser (P.ParseT Identity) RemoteField]
   -> m GQLContext
 unauthenticatedContext queryRemotes mutationRemotes = P.runSchemaT $ do
   let queryFields = fmap (fmap RFRemote) queryRemotes
@@ -545,7 +545,7 @@ buildQueryParser
      , Has QueryContext r
      )
   => [P.FieldParser n (QueryRootField UnpreparedValue)]
-  -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  -> [P.FieldParser n RemoteField]
   -> [ActionInfo]
   -> NonObjectTypeMap
   -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
@@ -679,7 +679,7 @@ queryRoot = $$(G.litName "query_root")
 buildMutationParser
   :: forall m n r
    . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
-  => [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  => [P.FieldParser n RemoteField]
   -> [ActionInfo]
   -> NonObjectTypeMap
   -> [P.FieldParser n (MutationRootField UnpreparedValue)]

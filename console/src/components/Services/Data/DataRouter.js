@@ -26,13 +26,7 @@ import {
   ConnectedDatabaseManagePage,
 } from '.';
 
-import {
-  fetchDataInit,
-  fetchFunctionInit,
-  updateSchemaInfo,
-  fetchSchemaList,
-  UPDATE_CURRENT_DATA_SOURCE,
-} from './DataActions';
+import { UPDATE_CURRENT_DATA_SOURCE } from './DataActions';
 import { exportMetadata } from '../../../metadata/actions';
 import ConnectedDataSourceContainer from './DataSourceContainer';
 
@@ -148,7 +142,6 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
       } else if (!sources.length) {
         replaceState('/data/manage');
       }
-
       return cb();
     });
   };

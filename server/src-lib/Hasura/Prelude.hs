@@ -11,6 +11,7 @@ module Hasura.Prelude
   , choice
   , afold
   , bsToTxt
+  , lbsToTxt
   , txtToBs
   , base64Decode
   , spanMaybeM
@@ -118,6 +119,9 @@ afold = getAlt . foldMap pure
 bsToTxt :: B.ByteString -> Text
 bsToTxt = TE.decodeUtf8With TE.lenientDecode
 
+lbsToTxt :: BL.ByteString -> Text
+lbsToTxt = bsToTxt . BL.toStrict
+
 txtToBs :: Text -> B.ByteString
 txtToBs = TE.encodeUtf8
 
@@ -164,7 +168,7 @@ mapFromL f = Map.fromList . map (\v -> (f v, v))
 -- result of the input action will be evaluated to WHNF.
 --
 -- The result 'DiffTime' is guarenteed to be >= 0.
-withElapsedTime :: MonadIO m=> m a -> m (DiffTime, a)
+withElapsedTime :: MonadIO m => m a -> m (DiffTime, a)
 withElapsedTime ma = do
   bef <- liftIO Clock.getMonotonicTimeNSec
   !a <- ma
@@ -181,7 +185,7 @@ withElapsedTime ma = do
 --   moreStuff
 --   elapsedBoth <- timer
 -- @
-startTimer :: (MonadIO m, MonadIO n)=> m (n DiffTime)
+startTimer :: (MonadIO m, MonadIO n) => m (n DiffTime)
 startTimer = do
   !bef <- liftIO Clock.getMonotonicTimeNSec
   return $ do

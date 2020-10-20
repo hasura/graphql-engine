@@ -8,6 +8,8 @@ module Hasura.RQL.DDL.Metadata
   , runGetInconsistentMetadata
   , runDropInconsistentMetadata
   , fetchMetadataFromHdbTables
+  , runGetCatalogState
+  , runSetCatalogState
   , module Hasura.RQL.DDL.Metadata.Types
   ) where
 
@@ -225,11 +227,22 @@ runClearMetadata _ = do
 runReplaceMetadata
   :: ( MonadError QErr m
      , CacheRWM m
+     , MonadMetadata m
      )
-  => Metadata -> m EncJSON
-runReplaceMetadata q = do
-  -- FIXME:- report duplicate declarations?
-  buildSchemaCacheStrict $ MetadataModifier $ const q
+  => ReplaceMetadata -> m EncJSON
+runReplaceMetadata replaceMetadata = do
+  metadata <- case replaceMetadata of
+    RMWithSources m -> pure m
+    RMWithoutSources MetadataNoSources{..} -> do
+      currMetadata <- fetchMetadata
+      defaultSourceMetadata <- onNothing (HM.lookup defaultSource $ _metaSources currMetadata) $
+        throw400 NotSupported $ "cannot import metadata without sources since no default source is defined"
+      let newDefaultSourceMetadata = defaultSourceMetadata
+                                     { _smTables = _mnsTables
+                                     , _smFunctions = _mnsFunctions
+                                     }
+      pure $ (metaSources.ix defaultSource .~ newDefaultSourceMetadata) currMetadata
+  buildSchemaCacheStrict $ MetadataModifier $ const metadata
   pure successMsg
   -- applyQP1 q
   -- applyQP2 q
@@ -287,6 +300,17 @@ runDropInconsistentMetadata _ = do
   buildSchemaCacheStrict metadataModifier
   return successMsg
 
+runGetCatalogState
+  :: (MonadCatalogState m) => GetCatalogState -> m EncJSON
+runGetCatalogState _ =
+  encJFromJValue <$> fetchCatalogState
+
+runSetCatalogState
+  :: (MonadCatalogState m) => SetCatalogState -> m EncJSON
+runSetCatalogState SetCatalogState{..} = do
+  updateCatalogState _scsType _scsState
+  pure successMsg
+
 purgeMetadataObj :: MetadataObjId -> MetadataModifier
 purgeMetadataObj = \case
   MOSource source -> MetadataModifier $ metaSources %~ HM.delete source
@@ -306,8 +330,8 @@ purgeMetadataObj = \case
   MOActionPermission action role             -> dropActionPermissionInMetadata action role
   MOCronTrigger ctName                       -> dropCronTriggerInMetadata ctName
 
-fetchMetadataFromHdbTables :: MonadTx m => m Metadata
-fetchMetadataFromHdbTables = liftTx do
+fetchMetadataFromHdbTables :: MonadTx m => SourceConfiguration -> m Metadata
+fetchMetadataFromHdbTables defaultSourceConfig = liftTx do
   tables <- Q.catchE defaultTxErrorHandler fetchTables
   let tableMetaMap = HM.fromList . flip map tables $
         \(schema, name, isEnum, maybeConfig) ->
@@ -371,15 +395,10 @@ fetchMetadataFromHdbTables = liftTx do
   cronTriggers <- fetchCronTriggers
 
   let tableMetadatas = mapFromL _tmTable $ HM.elems postRelMap
-      sources = HM.singleton defaultSource $ SourceMetadata defaultSource tableMetadatas functions SCDefault
-  pure $ Metadata currentMetadataVersion
-                  sources
-                  remoteSchemas
-                  collections
-                  allowlist
-                  customTypes
-                  actions
-                  cronTriggers
+      sources = HM.singleton defaultSource $
+                SourceMetadata defaultSource tableMetadatas functions defaultSourceConfig
+  pure $ Metadata sources remoteSchemas collections
+                  allowlist customTypes actions cronTriggers
 
   where
 

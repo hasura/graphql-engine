@@ -30,7 +30,7 @@ import           Test.QuickCheck.Instances.UnorderedContainers ()
 
 genMetadata :: Gen Metadata
 genMetadata =
-  Metadata currentMetadataVersion
+  Metadata
     <$> arbitrary
     <*> arbitrary
     <*> arbitrary
@@ -49,9 +49,6 @@ instance Arbitrary FunctionMetadata where
   arbitrary = genericArbitrary
 
 instance Arbitrary SourceConnSettings where
-  arbitrary = genericArbitrary
-
-instance Arbitrary SourceCustomConfiguration where
   arbitrary = genericArbitrary
 
 instance Arbitrary SourceConfiguration where

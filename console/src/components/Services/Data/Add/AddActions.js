@@ -12,6 +12,7 @@ import {
   getTrackTableQuery,
   getUntrackTableQuery,
 } from '../../../../metadata/queryUtils';
+import Migration from '../../../../utils/migration/Migration';
 
 const SET_DEFAULTS = 'AddTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddTable/SET_TABLENAME';

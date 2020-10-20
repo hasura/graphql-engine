@@ -12,11 +12,6 @@ import {
   getOverlappingTypeConfirmation,
 } from './Common/utils';
 import { showErrorNotification } from '../Common/Notification';
-import {
-  removePersistedDerivedAction,
-  persistDerivedAction,
-  updatePersistedDerivation,
-} from './lsUtils';
 import { appPrefix } from './constants';
 import { push } from 'react-router-redux';
 import {
@@ -38,12 +33,10 @@ import {
 } from './Modify/reducer';
 
 import {
-  makeRequest as makePermRequest,
+  makePermRequest,
   setRequestSuccess as setPermRequestSuccess,
   setRequestFailure as setPermRequestFailure,
 } from './Permissions/reducer';
-import { findAction, getActionPermissions } from './utils';
-import { getActionPermissionQueries } from './Permissions/utils';
 import { exportMetadata } from '../../../metadata/actions';
 import {
   customTypesSelector,
@@ -57,6 +50,15 @@ import {
   getUpdateActionQuery,
   getDropActionPermissionQuery,
 } from '../../../metadata/queryUtils';
+import { getActionPermissionMigration } from './Permissions/utils';
+import Migration from '../../../utils/migration/Migration';
+import {
+  findAction,
+  getActionPermissions,
+  removePersistedDerivedAction,
+  persistDerivedAction,
+  updatePersistedDerivation,
+} from './utils';
 
 export const createAction = () => (dispatch, getState) => {
   const { add: rawState } = getState().actions;
@@ -126,6 +128,8 @@ export const createAction = () => (dispatch, getState) => {
       return;
     }
   }
+  // Migration queries start
+  const migration = new Migration();
 
   const customFieldsQueryUp = generateSetCustomTypesQuery(
     reformCustomTypes(mergedTypes)
@@ -134,6 +138,7 @@ export const createAction = () => (dispatch, getState) => {
   const customFieldsQueryDown = generateSetCustomTypesQuery(
     reformCustomTypes(existingTypesList)
   );
+  migration.add(customFieldsQueryUp, customFieldsQueryDown);
 
   const actionQueryUp = generateCreateActionQuery(
     state.name,
@@ -143,8 +148,8 @@ export const createAction = () => (dispatch, getState) => {
 
   const actionQueryDown = generateDropActionQuery(state.name);
 
-  const upQueries = [customFieldsQueryUp, actionQueryUp];
-  const downQueries = [actionQueryDown, customFieldsQueryDown];
+  migration.add(actionQueryUp, actionQueryDown);
+  // Migration queries end
 
   const migrationName = `create_action_${state.name}`;
   const requestMsg = 'Creating action...';
@@ -168,8 +173,8 @@ export const createAction = () => (dispatch, getState) => {
   makeMigrationCall(
     dispatch,
     getState,
-    upQueries,
-    downQueries,
+    migration.upMigration,
+    migration.downMigration,
     migrationName,
     customOnSuccess,
     customOnError,
@@ -272,22 +277,19 @@ export const saveAction = currentAction => (dispatch, getState) => {
     currentAction.comment
   );
 
-  let upQueries;
-  let downQueries;
+  // Migration queries start
+  const migration = new Migration();
   if (!isActionNameChange) {
-    upQueries = [customFieldsQueryUp, updateCurrentActionQuery];
-    downQueries = [customFieldsQueryDown, rollbackActionQuery];
+    migration.add(customFieldsQueryUp, customFieldsQueryDown);
+    migration.add(updateCurrentActionQuery, rollbackActionQuery);
   } else {
     const isOk = getConfirmation(
       'You seem to have changed the action name. This will cause the permissions to be dropped.'
     );
     if (!isOk) return;
-    upQueries = [
-      dropCurrentActionQuery,
-      customFieldsQueryUp,
-      createNewActionQuery,
-    ];
-    downQueries = [actionQueryDown, customFieldsQueryDown, oldActionQueryUp];
+    migration.add(dropCurrentActionQuery, oldActionQueryUp);
+    migration.add(customFieldsQueryUp, customFieldsQueryDown);
+    migration.add(createNewActionQuery, actionQueryDown);
   }
 
   const migrationName = `modify_action_${currentAction.name}_to_${state.name}`;
@@ -315,8 +317,8 @@ export const saveAction = currentAction => (dispatch, getState) => {
   makeMigrationCall(
     dispatch,
     getState,
-    upQueries,
-    downQueries,
+    migration.upMigration,
+    migration.downMigration,
     migrationName,
     customOnSuccess,
     customOnError,
@@ -332,11 +334,17 @@ export const deleteAction = currentAction => (dispatch, getState) => {
   if (!isOk) {
     return;
   }
-  const upQuery = generateDropActionQuery(currentAction.name);
-  const downQuery = generateCreateActionQuery(
-    currentAction.name,
-    currentAction.definition,
-    currentAction.comment
+
+  // Migration queries start
+  const migration = new Migration();
+
+  migration.add(
+    generateDropActionQuery(currentAction.action_name),
+    generateCreateActionQuery(
+      currentAction.action_name,
+      currentAction.action_defn,
+      currentAction.comment
+    )
   );
 
   const migrationName = `delete_action_${currentAction.name}`;
@@ -357,8 +365,8 @@ export const deleteAction = currentAction => (dispatch, getState) => {
   makeMigrationCall(
     dispatch,
     getState,
-    [upQuery],
-    [downQuery],
+    migration.upMigration,
+    migration.downMigration,
     migrationName,
     customOnSuccess,
     customOnError,
@@ -423,12 +431,11 @@ export const addActionRel = (relConfig, successCb, existingRelConfig) => (
     source: relConfig.refDb,
   });
 
-  const customTypesQueryDown = generateSetCustomTypesQuery({
-    ...reformCustomTypes(existingTypes),
-  });
-
-  const upQueries = [customTypesQueryUp];
-  const downQueries = [customTypesQueryDown];
+  const customTypesQueryDown = generateSetCustomTypesQuery(
+    reformCustomTypes(existingTypes)
+  );
+  const migration = new Migration();
+  migration.add(customTypesQueryUp, customTypesQueryDown);
 
   const migrationName = `save_rel_${relConfig.name}_on_${relConfig.typename}`;
   const requestMsg = 'Saving relationship...';
@@ -437,8 +444,8 @@ export const addActionRel = (relConfig, successCb, existingRelConfig) => (
   makeMigrationCall(
     dispatch,
     getState,
-    upQueries,
-    downQueries,
+    migration.upMigration,
+    migration.downMigration,
     migrationName,
     () => dispatch(exportMetadata(successCb)),
     () => {},
@@ -472,13 +479,12 @@ export const removeActionRel = (relName, source, typename, successCb) => (
     source,
   });
 
-  const customTypesQueryDown = generateSetCustomTypesQuery({
-    ...reformCustomTypes(existingTypes),
-    source,
-  });
-
-  const upQueries = [customTypesQueryUp];
-  const downQueries = [customTypesQueryDown];
+  const customTypesQueryDown = generateSetCustomTypesQuery(
+    reformCustomTypes(existingTypes),
+    source
+  );
+  const migration = new Migration();
+  migration.add(customTypesQueryUp, customTypesQueryDown);
 
   const migrationName = 'remove_action_rel'; // TODO: better migration name
   const requestMsg = 'Removing relationship...';
@@ -488,8 +494,8 @@ export const removeActionRel = (relName, source, typename, successCb) => (
   makeMigrationCall(
     dispatch,
     getState,
-    upQueries,
-    downQueries,
+    migration.upMigration,
+    migration.downMigration,
     migrationName,
     () => dispatch(exportMetadata(successCb)),
     () => {},
@@ -513,7 +519,7 @@ export const saveActionPermission = (successCb, errorCb) => (
     findAction(allActions, currentAction)
   );
 
-  const { upQueries, downQueries } = getActionPermissionQueries(
+  const migration = getActionPermissionMigration(
     permissionEdit,
     allPermissions,
     currentAction
@@ -542,8 +548,8 @@ export const saveActionPermission = (successCb, errorCb) => (
   makeMigrationCall(
     dispatch,
     getState,
-    upQueries,
-    downQueries,
+    migration.upMigration,
+    migration.downMigration,
     migrationName,
     customOnSuccess,
     customOnError,
@@ -567,10 +573,10 @@ export const removeActionPermission = (successCb, errorCb) => (
 
   const { role, filter } = permissionEdit;
 
-  const upQuery = getDropActionPermissionQuery(role, currentAction);
-  const downQuery = getCreateActionPermissionQuery(
-    { role, filter },
-    currentAction
+  const migration = new Migration();
+  migration.add(
+    getDropActionPermissionQuery(role, currentAction),
+    getCreateActionPermissionQuery({ role, filter }, currentAction)
   );
 
   const migrationName = 'removing_action_perm';
@@ -596,8 +602,8 @@ export const removeActionPermission = (successCb, errorCb) => (
   makeMigrationCall(
     dispatch,
     getState,
-    [upQuery],
-    [downQuery],
+    migration.upMigration,
+    migration.downMigration,
     migrationName,
     customOnSuccess,
     customOnError,

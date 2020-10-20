@@ -43,11 +43,9 @@ mkInsertCTE (InsertQueryP1 tn cols vals conflict (insCheck, updCheck) _ _) =
         . Just
         . S.RetExp
         $ [ S.selectStar
-          , S.Extractor
-              (insertOrUpdateCheckExpr tn conflict
-                (toSQLBool insCheck)
-                (fmap toSQLBool updCheck))
-              Nothing
+          , insertOrUpdateCheckExpr tn conflict
+              (toSQLBool insCheck)
+              (fmap toSQLBool updCheck)
           ]
     toSQLBool = toSQLBoolExp $ S.QualTable tn
 
@@ -259,7 +257,7 @@ execInsertQuery env strfyNum remoteJoinCtx (u, p) =
   where
     insertCTE = mkInsertCTE u
 
--- | Create an expression which will fail with a check constraint violation error
+-- | Create an expression which will return non-null text with a check constraint violation fail
 -- if the condition is not met on any of the inserted rows.
 --
 -- The resulting SQL will look something like this:
@@ -270,18 +268,11 @@ execInsertQuery env strfyNum remoteJoinCtx (u, p) =
 -- >   *,
 -- >   CASE WHEN {cond}
 -- >     THEN NULL
--- >     ELSE hdb_catalog.check_violation('insert check constraint failed')
+-- >     ELSE 'insert check constraint failed'
 -- >   END
--- FIXME? Avoid dependancy on hdb_catalog schema
 insertCheckExpr :: Text -> S.BoolExp -> S.SQLExp
 insertCheckExpr errorMessage condExpr =
-  S.SECond condExpr S.SENull
-    (S.SEFunction
-      (S.FunctionExp
-        (QualifiedObject (SchemaName "hdb_catalog") (FunctionName "check_violation"))
-        (S.FunctionArgs [S.SELit errorMessage] mempty)
-        Nothing)
-    )
+  S.SECond condExpr S.SENull (S.SELit errorMessage)
 
 -- | When inserting data, we might need to also enforce the update
 -- check condition, because we might fall back to an update via an
@@ -298,13 +289,14 @@ insertCheckExpr errorMessage condExpr =
 -- >   CASE WHEN xmax = 0
 -- >     THEN CASE WHEN {insert_cond}
 -- >            THEN NULL
--- >            ELSE hdb_catalog.check_violation('insert check constraint failed')
+-- >            'insert check constraint failed'
 -- >          END
 -- >     ELSE CASE WHEN {update_cond}
 -- >            THEN NULL
--- >            ELSE hdb_catalog.check_violation('update check constraint failed')
+-- >            'update check constraint failed'
 -- >          END
 -- >   END
+-- >     AS "check__error"
 --
 -- See @https://stackoverflow.com/q/34762732@ for more information on the use of
 -- the @xmax@ system column.
@@ -313,8 +305,9 @@ insertOrUpdateCheckExpr
   -> Maybe (ConflictClauseP1 S.SQLExp)
   -> S.BoolExp
   -> Maybe S.BoolExp
-  -> S.SQLExp
+  -> S.Extractor
 insertOrUpdateCheckExpr qt (Just _conflict) insCheck (Just updCheck) =
+  withCheckErrorExtractor $
   S.SECond
     (S.BECompare
       S.SEQ
@@ -331,6 +324,7 @@ insertOrUpdateCheckExpr _ _ insCheck _ =
   --
   -- Alternatively, if there is no update check constraint, we should
   -- use the insert check constraint, for backwards compatibility.
+  withCheckErrorExtractor $
   insertCheckExpr "insert check constraint failed" insCheck
 
 runInsert

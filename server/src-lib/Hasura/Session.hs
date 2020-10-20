@@ -28,13 +28,13 @@ module Hasura.Session
   ) where
 
 import           Hasura.Incremental         (Cacheable)
-import           Hasura.Tracing             (TraceT)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Common    (NonEmptyText, adminText, mkNonEmptyText,
                                              unNonEmptyText)
 import           Hasura.RQL.Types.Error
 import           Hasura.Server.Utils
 import           Hasura.SQL.Types
+import           Hasura.Tracing             (TraceT)
 
 import           Data.Aeson
 import           Data.Aeson.Types           (Parser, toJSONKeyText)
@@ -228,4 +228,3 @@ instance (UserInfoM m) => UserInfoM (StateT s m) where
   askUserInfo = lift askUserInfo
 instance (UserInfoM m) => UserInfoM (TraceT m) where
   askUserInfo = lift askUserInfo
-

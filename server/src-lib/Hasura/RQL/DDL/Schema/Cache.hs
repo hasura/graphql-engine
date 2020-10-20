@@ -25,13 +25,14 @@ import           Hasura.Prelude
 import qualified Data.Environment                         as Env
 import qualified Data.HashMap.Strict.Extended             as M
 import qualified Data.HashSet                             as HS
+import qualified Data.HashSet                             as S
 import qualified Data.Text                                as T
 
 import           Control.Arrow.Extended
 import           Control.Lens                             hiding ((.=))
+import           Control.Monad.Trans.Control              (MonadBaseControl)
 import           Control.Monad.Unique
 import           Data.Aeson
-import           Data.List                                (nub)
 
 import qualified Hasura.Incremental                       as Inc
 
@@ -50,7 +51,7 @@ import           Hasura.RQL.DDL.Schema.Cache.Fields
 import           Hasura.RQL.DDL.Schema.Cache.Permission
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Function
-import           Hasura.RQL.DDL.Schema.Source             (resolveSource)
+import           Hasura.RQL.DDL.Schema.Source             (fetchPgScalars, resolveSource)
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.Types                         hiding (tmTable)
 import           Hasura.Server.Version                    (HasVersion)
@@ -59,13 +60,13 @@ import           Hasura.SQL.Types
 buildRebuildableSchemaCache
   :: ( HasVersion, MonadIO m, MonadError QErr m
      , HasHttpManager m, HasSQLGenCtx m, MonadMetadata m
-     , HasDefaultSource m
      )
   => Env.Environment
   -> m RebuildableSchemaCache
 buildRebuildableSchemaCache env = do
   metadata    <- fetchMetadata
-  result <- runCacheBuild $ flip runReaderT CatalogSync $
+  let buildContext = BuildContext CatalogSync mempty
+  result <- runCacheBuild $ flip runReaderT buildContext $
     Inc.build (buildSchemaCacheRule env) (metadata, initialInvalidationKeys)
   pure $ RebuildableSchemaCache (Inc.result result) initialInvalidationKeys (Inc.rebuildRule result)
 
@@ -73,40 +74,42 @@ newtype CacheRWT m a
   -- The CacheInvalidations component of the state could actually be collected using WriterT, but
   -- WriterT implementations prior to transformers-0.5.6.0 (which added
   -- Control.Monad.Trans.Writer.CPS) are leaky, and we don’t have that yet.
-  = CacheRWT (StateT (RebuildableSchemaCache, CacheInvalidations) m a)
+  = CacheRWT (StateT (RebuildableSchemaCache, CacheInvalidations, ResolvedSources) m a)
   deriving
-    ( Functor, Applicative, Monad, MonadIO, MonadUnique, MonadReader r, MonadError e, MonadTx
-    , UserInfoM, HasHttpManager, HasSQLGenCtx, HasSystemDefined, MonadMetadata)
+    ( Functor, Applicative, Monad
+    , MonadIO, MonadUnique, MonadReader r
+    , MonadError e, MonadTx , UserInfoM
+    , HasHttpManager, HasSQLGenCtx, HasSystemDefined
+    , MonadMetadata, MonadScheduledEvents, MonadCatalogState
+    )
 
 runCacheRWT
   :: Functor m
   => RebuildableSchemaCache -> CacheRWT m a -> m (a, RebuildableSchemaCache, CacheInvalidations)
 runCacheRWT cache (CacheRWT m) =
-  runStateT m (cache, mempty) <&> \(v, (newCache, invalidations)) -> (v, newCache, invalidations)
-
-instance MonadTrans CacheRWT where
-  lift = CacheRWT . lift
+  runStateT m (cache, mempty, mempty) <&> \(v, (newCache, invalidations, _)) -> (v, newCache, invalidations)
 
 -- instance (Monad m) => TableCoreInfoRM (CacheRWT m)
 instance (Monad m) => CacheRM (CacheRWT m) where
-  askSchemaCache = CacheRWT $ gets (lastBuiltSchemaCache . fst)
+  askSchemaCache = CacheRWT $ gets (lastBuiltSchemaCache . (^. _1))
 
-instance ( MonadIO m, MonadMetadata m, MonadError QErr m
-         , HasHttpManager m, HasSQLGenCtx m, HasDefaultSource m) => CacheRWM (CacheRWT m) where
+instance ( MonadIO m , MonadMetadata m, MonadError QErr m
+         , HasHttpManager m, HasSQLGenCtx m
+         ) => CacheRWM (CacheRWT m) where
   buildSchemaCacheWithOptions buildReason invalidations metadataModifier = CacheRWT do
-    (RebuildableSchemaCache _ invalidationKeys rule, oldInvalidations) <- get
+    (RebuildableSchemaCache _ invalidationKeys rule, oldInvalidations, resolvedSources) <- get
     let newInvalidationKeys = invalidateKeys invalidations invalidationKeys
     metadata <- fetchMetadata
     let modifiedMetadata = (unMetadataModifier metadataModifier) metadata
-    -- catalogMetadata <- buildCatalogMetadata modifiedMetadata
-    result <- lift $ runCacheBuild $ flip runReaderT buildReason $
+        buildContext     = BuildContext buildReason resolvedSources
+    result <- lift $ runCacheBuild $ flip runReaderT buildContext $
               Inc.build rule (modifiedMetadata, newInvalidationKeys)
     let schemaCache = Inc.result result
         prunedInvalidationKeys = pruneInvalidationKeys schemaCache newInvalidationKeys
         !newCache = RebuildableSchemaCache schemaCache prunedInvalidationKeys (Inc.rebuildRule result)
         !newInvalidations = oldInvalidations <> invalidations
     when (metadata /= modifiedMetadata) $ updateMetadata modifiedMetadata
-    put (newCache, newInvalidations)
+    put (newCache, newInvalidations, resolvedSources)
     where
       -- Prunes invalidation keys that no longer exist in the schema to avoid leaking memory by
       -- hanging onto unnecessary keys.
@@ -114,13 +117,16 @@ instance ( MonadIO m, MonadMetadata m, MonadError QErr m
         -- see Note [Keep invalidation keys for inconsistent objects]
         name `elem` getAllRemoteSchemas schemaCache
 
+  setPreResolvedSource sourceName resolvedSource = CacheRWT $
+    modify' $ _3 %~ M.insert sourceName resolvedSource
+
 buildSchemaCacheRule
   -- Note: by supplying BuildReason via MonadReader, it does not participate in caching, which is
   -- what we want!
   :: ( HasVersion, ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
      , MonadIO m, MonadUnique m, MonadError QErr m
-     , MonadReader BuildReason m, HasHttpManager m, HasSQLGenCtx m
-     , HasDefaultSource m
+     , MonadReader BuildContext m, HasHttpManager m, HasSQLGenCtx m
+     , MonadBaseControl IO m
      )
   => Env.Environment
   -> (Metadata, InvalidationKeys) `arr` SchemaCache
@@ -183,7 +189,8 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     resolveSourceIfNeeded
       :: ( ArrowChoice arr, Inc.ArrowCache m arr
          , ArrowWriter (Seq CollectedInfo) arr
-         , HasDefaultSource m, MonadIO m
+         , MonadIO m, MonadBaseControl IO m
+         , MonadReader BuildContext m
          )
       => ( Inc.Dependency (HashMap SourceName Inc.InvalidationKey)
          , SourceMetadata
@@ -192,12 +199,15 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       let sourceName = _smName sourceMetadata
           metadataObj = MetadataObject (MOSource sourceName) $ toJSON sourceName
       Inc.dependOn -< Inc.selectKeyD sourceName invalidationKeys
-      (| withRecordInconsistency (liftEitherA <<< bindA -< resolveSource env sourceMetadata)
+      (| withRecordInconsistency (
+           liftEitherA <<< bindA -< (getResolvedSourceFromBuildContext sourceName <$> ask) >>= \case
+               Nothing -> resolveSource env sourceMetadata
+               Just rs -> pure $ Right rs)
        |) metadataObj
 
     buildSource
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
-         , ArrowWriter (Seq CollectedInfo) arr, MonadReader BuildReason m
+         , ArrowWriter (Seq CollectedInfo) arr, MonadReader BuildContext m
          , HasSQLGenCtx m, MonadIO m, MonadError QErr m)
       => ( SourceMetadata
          , PGSourceConfig
@@ -264,11 +274,12 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 
     buildAndCollectInfo
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
-         , ArrowWriter (Seq CollectedInfo) arr, MonadIO m, MonadError QErr m, MonadUnique m, MonadReader BuildReason m
-         , HasHttpManager m, HasSQLGenCtx m, HasDefaultSource m )
+         , ArrowWriter (Seq CollectedInfo) arr, MonadIO m, MonadBaseControl IO m
+         , MonadError QErr m, MonadUnique m, MonadReader BuildContext m
+         , HasHttpManager m, HasSQLGenCtx m )
       => (Metadata, Inc.Dependency InvalidationKeys) `arr` BuildOutputs
     buildAndCollectInfo = proc (metadata, invalidationKeys) -> do
-      let Metadata _ sources remoteSchemas collections allowlists
+      let Metadata sources remoteSchemas collections allowlists
             customTypes actions cronTriggers = metadata
 
       -- remote schemas
@@ -301,10 +312,10 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 
       -- custom types
       let pgScalars = mconcat $ map snd $ M.elems sourcesOutput
-          existingTables = M.map (_soTables . fst) sourcesOutput
+          preActionTables = M.map (_soTables . fst) sourcesOutput
       maybeResolvedCustomTypes <-
         (| withRecordInconsistency
-             (bindErrorA -< resolveCustomTypes existingTables customTypes pgScalars)
+             (bindErrorA -< resolveCustomTypes preActionTables customTypes pgScalars)
          |) (MetadataObject MOCustomTypes $ toJSON customTypes)
 
       -- -- actions
@@ -377,7 +388,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 
     buildTableEventTriggers
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
-         , Inc.ArrowCache m arr, MonadError QErr m, MonadIO m, MonadReader BuildReason m, HasSQLGenCtx m )
+         , Inc.ArrowCache m arr, MonadError QErr m, MonadIO m, MonadReader BuildContext m, HasSQLGenCtx m )
       => (SourceName, PGSourceConfig, TableCoreInfo, [EventTriggerConf]) `arr` EventTriggerInfoMap
     buildTableEventTriggers = proc (source, pgSourceConfig, tableInfo, eventTriggerConfs) ->
       buildInfoMap (etcName . (^. _4)) mkEventTriggerMetadataObject buildEventTrigger
@@ -400,7 +411,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 
         recreateViewIfNeeded = Inc.cache $
           arrM \(tableName, tableColumns, triggerName, triggerDefinition, sourceConfig) -> do
-            buildReason <- ask
+            buildReason <- asks _bcReason
             sqlGenCtx <- askSQLGenCtx
             when (buildReason == CatalogUpdate) $ do
               eitherResult <- runPgSourceWriteTx sourceConfig $ do
@@ -471,27 +482,25 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 withMetadataCheck
   :: (MonadTx m, CacheRWM m, HasSQLGenCtx m) => SourceName -> Bool -> m a -> m a
 withMetadataCheck source cascade action = do
-  PGSourceSchemaCache existingTables existingFunctions _ <- askSourceCache source
+  PGSourceSchemaCache preActionTables preActionFunctions sourceConfig <- askSourceCache source
   -- Drop event triggers so no interference is caused to the sql query
-  forM_ (M.elems existingTables) $ \tableInfo -> do
+  forM_ (M.elems preActionTables) $ \tableInfo -> do
     let eventTriggers = _tiEventTriggerInfoMap tableInfo
     forM_ (M.keys eventTriggers) (liftTx . delTriggerQ)
 
-  sc <- askSchemaCache
-  let existingInconsistentObjs = scInconsistentObjs sc
-
   -- Get the metadata before the sql query, everything, need to filter this
-  (oldTableMeta, oldFunctionMeta) <- fetchMeta existingTables existingFunctions
+  (preActionTableMeta, preActionFunctionMeta, _) <- fetchMeta preActionTables preActionFunctions
+
   -- Run the action
-  res <- action
+  actionResult <- action
 
   -- Get the metadata after the sql query
-  (newTableMeta, newFunctionMeta) <- fetchMeta existingTables existingFunctions
+  (postActionTableMeta, postActionFunctionMeta, postActionFunctionInfos) <- fetchMeta preActionTables preActionFunctions
 
-  let existingTablesOldMeta = filter (flip M.member existingTables . tmTable) oldTableMeta
-      schemaDiff = getSchemaDiff existingTablesOldMeta newTableMeta
-      FunctionDiff droppedFuncs alteredFuncs = getFuncDiff oldFunctionMeta newFunctionMeta
-      overloadedFuncs = getOverloadedFuncs (M.keys existingFunctions) newFunctionMeta
+  let preActionTablesMeta = filter (flip M.member preActionTables . tmTable) preActionTableMeta
+      schemaDiff = getSchemaDiff preActionTablesMeta postActionTableMeta
+      FunctionDiff droppedFuncs alteredFuncs = getFuncDiff preActionFunctionMeta postActionFunctionMeta
+      overloadedFuncs = getOverloadedFuncs (M.keys preActionFunctions) postActionFunctionMeta
 
   -- Do not allow overloading functions
   unless (null overloadedFuncs) $
@@ -523,25 +532,30 @@ withMetadataCheck source cascade action = do
         "type of function " <> qf <<> " is altered to \"VOLATILE\" which is not supported now"
 
     -- update the schema cache and metadata with the changes
-    processSchemaChanges existingTables schemaDiff
+    processSchemaChanges preActionTables schemaDiff
 
-  buildSchemaCache metadataUpdater
-  postSc <- askSchemaCache
+  pgScalars <- fetchPgScalars
+  let postActionTableInfos = M.fromList $ map (tmTable &&& tmInfo) postActionTableMeta
+      resolvedSource = ResolvedSource sourceConfig postActionTableInfos postActionFunctionInfos pgScalars
 
-  let postTables = maybe mempty _pcTables $ M.lookup source $ scPostgres postSc
+  -- Set the source as pre-resolved
+  setPreResolvedSource source resolvedSource
+
+  withNewInconsistentObjsCheck $
+    buildSchemaCacheWithOptions CatalogUpdate  mempty{ciSources = S.singleton source} metadataUpdater
+
+  postActionSchemaCache <- askSchemaCache
 
   -- Recreate event triggers in hdb_catalog
-  forM_ (M.elems postTables) $ \(TableInfo coreInfo _ eventTriggers) -> do
+  let postActionTables = maybe mempty _pcTables $ M.lookup source $ scPostgres postActionSchemaCache
+  forM_ (M.elems postActionTables) $ \(TableInfo coreInfo _ eventTriggers) -> do
           let table = _tciName coreInfo
               columns = getCols $ _tciFieldInfoMap coreInfo
           forM_ (M.toList eventTriggers) $ \(triggerName, eti) -> do
             let opsDefinition = etiOpsDef eti
             mkAllTriggersQ triggerName table columns opsDefinition
 
-  let currentInconsistentObjs = scInconsistentObjs postSc
-  checkNewInconsistentMeta existingInconsistentObjs currentInconsistentObjs
-
-  return res
+  pure actionResult
   where
     reportFuncs = T.intercalate ", " . map dquoteTxt
 
@@ -551,30 +565,18 @@ withMetadataCheck source cascade action = do
          , MonadWriter MetadataModifier m
          )
       => TableCache -> SchemaDiff -> m ()
-    processSchemaChanges existingTables schemaDiff = do
+    processSchemaChanges preActionTables schemaDiff = do
       -- Purge the dropped tables
       forM_ droppedTables $
         \tn -> tell $ MetadataModifier $ metaSources.ix source.smTables %~ M.delete tn
 
       for_ alteredTables $ \(oldQtn, tableDiff) -> do
-        ti <- case M.lookup oldQtn existingTables of
+        ti <- case M.lookup oldQtn preActionTables of
           Just ti -> return ti
           Nothing -> throw500 $ "old table metadata not found in cache : " <>> oldQtn
         processTableChanges source (_tiCoreInfo ti) tableDiff
       where
         SchemaDiff droppedTables alteredTables = schemaDiff
-
-    checkNewInconsistentMeta
-      :: (QErrM m)
-      => [InconsistentMetadata] -> [InconsistentMetadata] -> m ()
-    checkNewInconsistentMeta originalInconsMeta currentInconsMeta =
-      unless (null newInconsistentObjects) $
-        throwError (err500 Unexpected "cannot continue due to newly found inconsistent metadata")
-          { qeInternal = Just $ toJSON newInconsistentObjects }
-      where
-        diffInconsistentObjects = M.difference `on` groupInconsistentMetadataById
-        newInconsistentObjects = nub $ concatMap toList $
-          M.elems (currentInconsMeta `diffInconsistentObjects` originalInconsMeta)
 
 {- Note [Keep invalidation keys for inconsistent objects]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

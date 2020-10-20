@@ -20,6 +20,7 @@ import {
   getTrackFunctionQuery,
   getTrackTableQuery,
 } from '../../../../metadata/queryUtils';
+import { getDownQueryComments } from '../../../../utils/migration/utils';
 
 const MAKING_REQUEST = 'RawSQL/MAKING_REQUEST';
 const SET_SQL = 'RawSQL/SET_SQL';
@@ -110,6 +111,7 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
   let url = Endpoints.query;
   const source = getState().tables.currentDataSource;
   const schemaChangesUp = [];
+  const schemaChangesDown = getDownQueryComments([sql], source);
 
   if (isStatementTimeout) {
     schemaChangesUp.push(
@@ -138,7 +140,7 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
     requestBody = {
       name: migrationName,
       up: schemaChangesUp,
-      down: [],
+      down: schemaChangesDown,
     };
   }
   const options = {

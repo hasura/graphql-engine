@@ -55,6 +55,8 @@ Hasura exposes a Relay schema for GraphQL requests for queries, subscriptions an
 
 See docs at :ref:`relay_schema`.
 
+See details at :ref:`api_reference_relay_graphql`.
+
 .. _schema_metadata_api:
 
 Schema / metadata API
@@ -128,6 +130,7 @@ You can refer to the following to know about all PostgreSQL types supported by t
   :hidden:
 
   GraphQL API <graphql-api/index>
+  Relay GraphQL API <relay-graphql-api/index>
   Schema / Metadata APIs <schema-metadata-api/index>
   Version API <version>
   Health check API <health>

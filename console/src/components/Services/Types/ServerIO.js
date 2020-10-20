@@ -7,6 +7,7 @@ import { getConfirmation } from '../../Common/utils/jsUtils';
 import { exportMetadata } from '../../../metadata/actions';
 import { customTypesSelector } from '../../../metadata/selector';
 import { generateSetCustomTypesQuery } from '../../../metadata/queryUtils';
+import Migration from '../../../utils/migration/Migration';
 
 export const setCustomGraphQLTypes = (types, successCb, errorCb) => (
   dispatch,
@@ -24,9 +25,10 @@ export const setCustomGraphQLTypes = (types, successCb, errorCb) => (
 
   const hydratedTypes = hydrateTypeRelationships(types, existingTypes);
 
-  const upQuery = generateSetCustomTypesQuery(reformCustomTypes(hydratedTypes));
-  const downQuery = generateSetCustomTypesQuery(
-    reformCustomTypes(existingTypes)
+  const migration = new Migration();
+  migration.add(
+    generateSetCustomTypesQuery(reformCustomTypes(hydratedTypes)),
+    generateSetCustomTypesQuery(reformCustomTypes(existingTypes))
   );
 
   const migrationName = 'set_custom_types';
@@ -46,8 +48,8 @@ export const setCustomGraphQLTypes = (types, successCb, errorCb) => (
   makeMigrationCall(
     dispatch,
     getState,
-    [upQuery],
-    [downQuery],
+    migration.upMigration,
+    migration.downMigration,
     migrationName,
     customOnSuccess,
     customOnError,

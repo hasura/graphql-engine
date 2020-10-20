@@ -16,8 +16,6 @@ module Hasura.RQL.Types
   , HasSystemDefinedT
   , runHasSystemDefinedT
 
-  , HasDefaultSource(..)
-
   , QCtx(..)
   , HasQCtx(..)
   , mkAdminQCtx
@@ -57,6 +55,7 @@ import           Hasura.Tracing                      (TraceT)
 import           Hasura.Db                           as R
 import           Hasura.RQL.Types.Action             as R
 import           Hasura.RQL.Types.BoolExp            as R
+import           Hasura.RQL.Types.Class              as R
 import           Hasura.RQL.Types.Column             as R
 import           Hasura.RQL.Types.Common             as R
 import           Hasura.RQL.Types.ComputedField      as R
@@ -66,7 +65,6 @@ import           Hasura.RQL.Types.Error              as R
 import           Hasura.RQL.Types.EventTrigger       as R
 import           Hasura.RQL.Types.Function           as R
 import           Hasura.RQL.Types.Metadata           as R
-import           Hasura.RQL.Types.Metadata.Class     as R
 import           Hasura.RQL.Types.Permission         as R
 import           Hasura.RQL.Types.QueryCollection    as R
 import           Hasura.RQL.Types.Relationship       as R
@@ -212,8 +210,13 @@ instance (HasSystemDefined m) => HasSystemDefined (TraceT m) where
 
 newtype HasSystemDefinedT m a
   = HasSystemDefinedT { unHasSystemDefinedT :: ReaderT SystemDefined m a }
-  deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO, MonadUnique, MonadError e, MonadTx
-           , HasHttpManager, HasSQLGenCtx, SourceM, TableCoreInfoRM, TableInfoRM, CacheRM, CacheRWM, UserInfoM, MonadMetadata)
+  deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO
+           , MonadUnique, MonadError e, MonadTx
+           , HasHttpManager, HasSQLGenCtx, SourceM
+           , TableCoreInfoRM, TableInfoRM, CacheRM
+           , CacheRWM, UserInfoM, MonadMetadata
+           , MonadScheduledEvents, MonadCatalogState
+           )
 
 -- instance (SourceM m) => TableCoreInfoRM (HasSystemDefinedT m) where
 --   lookupTableCoreInfo = lift . lookupTableCoreInfo
@@ -224,17 +227,17 @@ runHasSystemDefinedT systemDefined = flip runReaderT systemDefined . unHasSystem
 instance (Monad m) => HasSystemDefined (HasSystemDefinedT m) where
   askSystemDefined = HasSystemDefinedT ask
 
-class (Monad m) => HasDefaultSource m where
-  askDefaultSource :: m PGSourceConfig
+-- class (Monad m) => HasDefaultSource m where
+--   askDefaultSource :: m PGSourceConfig
 
-instance (HasDefaultSource m) => HasDefaultSource (ReaderT r m) where
-  askDefaultSource = lift askDefaultSource
-instance (HasDefaultSource m) => HasDefaultSource (ExceptT e m) where
-  askDefaultSource = lift askDefaultSource
-instance (HasDefaultSource m) => HasDefaultSource (StateT s m) where
-  askDefaultSource = lift askDefaultSource
-instance (HasDefaultSource m) => HasDefaultSource (TraceT m) where
-  askDefaultSource = lift askDefaultSource
+-- instance (HasDefaultSource m) => HasDefaultSource (ReaderT r m) where
+--   askDefaultSource = lift askDefaultSource
+-- instance (HasDefaultSource m) => HasDefaultSource (ExceptT e m) where
+--   askDefaultSource = lift askDefaultSource
+-- instance (HasDefaultSource m) => HasDefaultSource (StateT s m) where
+--   askDefaultSource = lift askDefaultSource
+-- instance (HasDefaultSource m) => HasDefaultSource (TraceT m) where
+--   askDefaultSource = lift askDefaultSource
 
 liftMaybe :: (QErrM m) => QErr -> Maybe a -> m a
 liftMaybe e = maybe (throwError e) return

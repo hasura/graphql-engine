@@ -18,6 +18,7 @@ import {
   getDropRelationshipQuery,
   getAddRelationshipQuery,
 } from '../../../../metadata/queryUtils';
+import Migration from '../../../../utils/migration/Migration';
 
 export const SET_MANUAL_REL_ADD = 'ModifyTable/SET_MANUAL_REL_ADD';
 export const MANUAL_REL_SET_TYPE = 'ModifyTable/MANUAL_REL_SET_TYPE';
@@ -82,16 +83,15 @@ export const saveRemoteRelationship = (
     const upQuery = [
       getSaveRemoteRelQuery(remoteRelQueryArgs, !existingRel, source),
     ];
-    const downQuery = [];
+    let downQuery = [];
     if (isNew) {
-      downQuery.push(getDropRemoteRelQuery(state.name, state.table));
+      downQuery = getDropRemoteRelQuery(state.name, state.table);
     } else {
-      const downQueryArgs = getSaveRemoteRelQuery(
+      downQuery = getSaveRemoteRelQuery(
         getRemoteRelPayload(parseRemoteRelationship(existingRel)),
         isNew,
         source
       );
-      downQuery.push(downQueryArgs);
     }
 
     // Apply migrations
@@ -150,20 +150,21 @@ export const dropRemoteRelationship = (
     }
 
     const source = getState().tables.currentDataSource;
+    const table = state.table;
+    const migration = new Migration();
 
-    const downQuery = [
+    migration.add(
+      getDropRemoteRelQuery(
+        existingRel.remote_relationship_name,
+        table,
+        source
+      ),
       getSaveRemoteRelQuery(
         getRemoteRelPayload(parseRemoteRelationship(existingRel)),
         true,
         source
-      ),
-    ];
-
-    const table = state.table;
-    const upQuery = [
-      getDropRemoteRelQuery(existingRel.remote_relationship_name, table),
-    ];
-
+      )
+    );
     // Apply migrations
     const migrationName = `table_${table.name}_drop_remote_relationship_${state.name}`;
 
@@ -186,8 +187,8 @@ export const dropRemoteRelationship = (
     makeMigrationCall(
       dispatch,
       getState,
-      upQuery,
-      downQuery,
+      migration.upMigration,
+      migration.downMigration,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -376,6 +377,8 @@ const deleteRelMigrate = relMeta => (dispatch, getState) => {
   const source = getState().tables.currentDataSource;
   const { upQuery, downQuery } = generateRelationshipsQuery(relMeta, source);
 
+  const migration = new Migration();
+  migration.add(downQuery, upQuery); // upquery from generateRelationshipsQuery used as downMigratio and vice versa
   // Apply migrations
   const migrationName = `drop_relationship_${relMeta.relName}_${relMeta.lSchema}_table_${relMeta.lTable}`;
 
@@ -392,8 +395,8 @@ const deleteRelMigrate = relMeta => (dispatch, getState) => {
   makeMigrationCall(
     dispatch,
     getState,
-    [downQuery],
-    [upQuery],
+    migration.upMigration,
+    migration.downMigration,
     migrationName,
     customOnSuccess,
     customOnError,
@@ -690,8 +693,11 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema, currentSource) => {
 };
 
 const autoTrackRelations = autoTrackData => (dispatch, getState) => {
-  const relChangesUp = autoTrackData.map(data => data.upQuery);
-  const relChangesDown = autoTrackData.map(data => data.downQuery);
+  const migration = new Migration();
+  autoTrackData.forEach(({ upQuery, downQuery }) =>
+    migration.add(upQuery, downQuery)
+  );
+
   // Apply migrations
   const migrationName = 'track_all_relationships';
 
@@ -706,8 +712,8 @@ const autoTrackRelations = autoTrackData => (dispatch, getState) => {
   makeMigrationCall(
     dispatch,
     getState,
-    relChangesUp,
-    relChangesDown,
+    migration.upMigration,
+    migration.downMigration,
     migrationName,
     customOnSuccess,
     customOnError,
@@ -721,6 +727,9 @@ const autoTrackRelations = autoTrackData => (dispatch, getState) => {
 const autoAddRelName = ({ upQuery, downQuery }) => (dispatch, getState) => {
   const currentSchema = getState().tables.currentSchema;
   const relName = upQuery.args.name;
+
+  const migration = new Migration();
+  migration.add(upQuery, downQuery);
 
   // Apply migrations
   const migrationName = `add_relationship_${relName}_table_${currentSchema}_${upQuery.args.table}`;
@@ -737,8 +746,8 @@ const autoAddRelName = ({ upQuery, downQuery }) => (dispatch, getState) => {
   makeMigrationCall(
     dispatch,
     getState,
-    [upQuery],
-    [downQuery],
+    migration.upMigration,
+    migration.downMigration,
     migrationName,
     customOnSuccess,
     customOnError,

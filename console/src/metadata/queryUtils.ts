@@ -489,11 +489,16 @@ export const getSaveRemoteRelQuery = (
     args
   );
 
-export const getDropRemoteRelQuery = (name: string, table: QualifiedTable) => ({
+export const getDropRemoteRelQuery = (
+  name: string,
+  table: QualifiedTable,
+  source: string
+) => ({
   type: 'delete_remote_relationship',
   args: {
     name,
     table,
+    source,
   },
 });
 

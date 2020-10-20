@@ -1,8 +1,13 @@
-module Hasura.GraphQL.Execute.Types (GraphQLQueryType(..)) where
+module Hasura.GraphQL.Execute.Types where
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
+import           Hasura.RQL.Types.Error
 
-import qualified Data.Aeson     as J
+import           Control.Monad.Trans.Control (MonadBaseControl)
+
+import qualified Data.Aeson                  as J
+import qualified Hasura.Tracing              as Tracing
 
 -- graphql-engine supports two GraphQL interfaces: one at v1/graphql, and a Relay one at v1beta1/relay
 data GraphQLQueryType
@@ -15,3 +20,14 @@ instance J.ToJSON GraphQLQueryType where
   toJSON = \case
     QueryHasura -> "hasura"
     QueryRelay  -> "relay"
+
+newtype ActionExecution =
+  ActionExecution {
+  unActionExecution
+    :: forall m
+     . ( MonadIO m
+       , MonadBaseControl IO m
+       , MonadError QErr m
+       , Tracing.MonadTrace m
+       ) => m EncJSON
+  }

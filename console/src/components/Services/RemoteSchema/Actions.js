@@ -99,7 +99,6 @@ const makeRequest = (
       if (globals.consoleMode === CLI_CONSOLE_MODE) {
         dispatch(loadMigrationStatus());
       }
-      // dispatch(loadTriggers());
       if (successMsg) {
         dispatch(showSuccessNotification(successMsg));
       }

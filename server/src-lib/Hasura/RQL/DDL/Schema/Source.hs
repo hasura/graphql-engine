@@ -1,5 +1,6 @@
 module Hasura.RQL.DDL.Schema.Source where
 
+import           Control.Monad.Trans.Control  (MonadBaseControl)
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.Prelude
@@ -16,27 +17,25 @@ import qualified Data.HashSet                 as S
 import qualified Database.PG.Query            as Q
 
 resolveSource
-  :: (MonadIO m, HasDefaultSource m)
+  :: (MonadIO m, MonadBaseControl IO m)
   => Env.Environment -> SourceMetadata -> m (Either QErr ResolvedSource)
 resolveSource env (SourceMetadata _ tables functions config) = runExceptT do
-  sourceConfig <- case config of
-    SCDefault -> askDefaultSource
-    SCCustom (SourceCustomConfiguration urlConf connSettings) -> do
-      let SourceConnSettings maxConns idleTimeout retries = connSettings
-      urlText <- resolveUrlConf env urlConf
-      let connInfo = Q.ConnInfo retries $ Q.CDDatabaseURI $ txtToBs urlText
-          connParams = Q.defaultConnParams{ Q.cpIdleTime = idleTimeout
-                                          , Q.cpConns = maxConns
-                                          }
-      pgPool <- liftIO $ Q.initPGPool connInfo connParams (\_ -> pure ()) -- FIXME? Pg logger
-      let pgExecCtx = mkPGExecCtx Q.Serializable pgPool
-      pure $ PGSourceConfig pgExecCtx connInfo
+  let SourceConfiguration urlConf connSettings = config
+      SourceConnSettings maxConns idleTimeout retries = connSettings
+  urlText <- resolveUrlConf env urlConf
+  let connInfo = Q.ConnInfo retries $ Q.CDDatabaseURI $ txtToBs urlText
+      connParams = Q.defaultConnParams{ Q.cpIdleTime = idleTimeout
+                                      , Q.cpConns = maxConns
+                                      }
+  pgPool <- liftIO $ Q.initPGPool connInfo connParams (\_ -> pure ()) -- FIXME? Pg logger
+  let pgExecCtx = mkPGExecCtx Q.ReadCommitted pgPool
+      sourceConfig  = PGSourceConfig pgExecCtx connInfo
 
   (tablesMeta, functionsMeta, pgScalars) <- runLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $ do
     initSource
-    tablesMeta <- fetchTableMetadataFromPgSource
+    tablesMeta    <- fetchTableMetadataFromPgSource
     functionsMeta <- fetchFunctionMetadataFromPgSource allFunctions
-    pgScalars <- fetchPgScalars
+    pgScalars     <- fetchPgScalars
     pure (tablesMeta, functionsMeta, pgScalars)
   pure $ ResolvedSource sourceConfig tablesMeta functionsMeta pgScalars
   where
@@ -53,11 +52,7 @@ initSource = do
   sourceVersionTableExist <- doesTableExist "hdb_catalog" "hdb_source_catalog_version"
   if | not hdbCatalogExist -> liftTx do
          Q.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_catalog" () False
-         pgcryptoAvailable <- isExtensionAvailable "pgcrypto"
-         if pgcryptoAvailable then createPgcryptoExtension
-           else throw400 Unexpected $
-             "pgcrypto extension is required, but could not find the extension in the "
-             <> "PostgreSQL server. Please make sure this extension is available."
+         enablePgcryptoExtension
          initPgSourceCatalog
      | not sourceVersionTableExist && not eventLogTableExist ->
          liftTx initPgSourceCatalog
@@ -101,7 +96,6 @@ setSourceCatalogVersion = liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
 getSourceCatalogVersion :: MonadTx m => m Text
 getSourceCatalogVersion = liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
   [Q.sql| SELECT version FROM hdb_catalog.hdb_source_catalog_version |] () False
-
 
 -- | Fetch all user tables with metadata
 fetchTableMetadataFromPgSource :: (MonadTx m) => m PostgresTablesMetadata

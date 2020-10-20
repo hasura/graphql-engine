@@ -13,11 +13,14 @@ import styles from '../../../Common/TableCommon/Table.scss';
 import { TableRow } from '../Common/Components/TableRow';
 import { generateTableDef } from '../../../../dataSources';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
+import MigrationCheckbox from './MigrationCheckbox';
+import globals from '../../../../Globals';
+import { CLI_CONSOLE_MODE } from '../../../../constants';
 
 class InsertItem extends Component {
   constructor() {
     super();
-    this.state = { insertedRows: 0 };
+    this.state = { insertedRows: 0, isMigration: false };
   }
 
   componentDidMount() {
@@ -38,6 +41,10 @@ class InsertItem extends Component {
       insertedRows: prev.insertedRows + 1,
     }));
   }
+
+  toggleMigrationCheckBox = () => {
+    this.setState(prev => ({ isMigration: !prev.isMigration }));
+  };
 
   render() {
     const {
@@ -66,6 +73,8 @@ class InsertItem extends Component {
       // throw a 404 exception
       throw new NotFoundError();
     }
+
+    const isCLIMode = globals.consoleMode === CLI_CONSOLE_MODE;
 
     const columns = currentTable.columns.sort(ordinalColSort);
 
@@ -150,6 +159,46 @@ class InsertItem extends Component {
       );
     }
 
+    const onClickClear = () => {
+      const form = document.getElementById('insertForm');
+      const inputs = form.getElementsByTagName('input');
+      Array.from(inputs).forEach(input => {
+        switch (input.type) {
+          case 'text':
+            input.value = '';
+            break;
+          case 'radio':
+          case 'checkbox':
+            break;
+          default:
+        }
+      });
+    };
+
+    const onClickSave = e => {
+      e.preventDefault();
+      const inputValues = {};
+      Object.keys(refs).map(colName => {
+        if (refs[colName].nullNode.checked) {
+          // null
+          inputValues[colName] = null;
+        } else if (refs[colName].defaultNode.checked) {
+          // default
+          return;
+        } else {
+          inputValues[colName] =
+            refs[colName].valueNode.props !== undefined
+              ? refs[colName].valueNode.props.value
+              : refs[colName].valueNode.value;
+        }
+      });
+      dispatch(insertItem(tableName, inputValues, this.state.isMigration)).then(
+        () => {
+          this.nextInsert();
+        }
+      );
+    };
+
     return (
       <RightContainer>
         <div className={styles.container + ' container-fluid'}>
@@ -166,66 +215,36 @@ class InsertItem extends Component {
           <div className={styles.insertContainer + ' container-fluid'}>
             <div className="col-xs-9">
               <form id="insertForm" className="form-horizontal">
-                {elements}
-                <Button
-                  type="submit"
-                  color="yellow"
-                  size="sm"
-                  onClick={e => {
-                    e.preventDefault();
-                    const inputValues = {};
-                    Object.keys(refs).map(colName => {
-                      if (refs[colName].nullNode.checked) {
-                        // null
-                        inputValues[colName] = null;
-                      } else if (refs[colName].defaultNode.checked) {
-                        // default
-                        return;
-                      } else {
-                        inputValues[colName] =
-                          refs[colName].valueNode.props !== undefined
-                            ? refs[colName].valueNode.props.value
-                            : refs[colName].valueNode.value;
-                      }
-                    });
-                    dispatch(insertItem(tableName, inputValues)).then(() => {
-                      this.nextInsert();
-                    });
-                  }}
-                  data-test="insert-save-button"
-                >
-                  {buttonText}
-                </Button>
-                <Button
-                  color="white"
-                  size="sm"
-                  onClick={e => {
-                    e.preventDefault();
-                    const form = document.getElementById('insertForm');
-                    const inputs = form.getElementsByTagName('input');
-                    for (let i = 0; i < inputs.length; i++) {
-                      switch (inputs[i].type) {
-                        // case 'hidden':
-                        case 'text':
-                          inputs[i].value = '';
-                          break;
-                        case 'radio':
-                        case 'checkbox':
-                          // inputs[i].checked = false;
-                          break;
-                        default:
-                        // pass
-                      }
-                    }
-                  }}
-                  data-test="clear-button"
-                >
-                  Clear
-                </Button>
-                <ReloadEnumValuesButton
-                  dispatch={dispatch}
-                  isEnum={currentTable.is_enum}
-                />
+                <div className={styles.form_flex}>
+                  {elements}
+                  <MigrationCheckbox
+                    onChange={this.toggleMigrationCheckBox}
+                    isChecked={this.state.isMigration}
+                    isCLIMode={isCLIMode}
+                  />
+                </div>
+                <div className={styles.display_flex}>
+                  <Button
+                    type="submit"
+                    color="yellow"
+                    size="sm"
+                    onClick={onClickSave}
+                    data-test="insert-save-button"
+                  >
+                    {buttonText}
+                  </Button>
+                  <Button
+                    color="white"
+                    size="sm"
+                    onClick={onClickClear}
+                    data-test="clear-button"
+                  >
+                    Clear
+                  </Button>
+                  {currentTable.is_enum ? (
+                    <ReloadEnumValuesButton dispatch={dispatch} />
+                  ) : null}
+                </div>
               </form>
             </div>
             <div className="col-xs-3">{alert}</div>

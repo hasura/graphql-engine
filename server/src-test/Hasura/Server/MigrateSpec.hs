@@ -46,6 +46,8 @@ instance (MonadIO m, MonadBaseControl IO m, MonadTx m, MonadMetadata m
     ((), cache, _) <- runCacheRWT schemaCache (buildSchemaCacheWithOptions reason invalidations metadataModifier)
     pure (cache, ())
 
+  setPreResolvedSource _ _ = pure () -- No need for resolving a source beforehand
+
 instance Example (CacheRefT m ()) where
   type Arg (CacheRefT m ()) = CacheRefT m :~> IO
   evaluateExample m params action = evaluateExample (action ($$ m)) params ($ ())

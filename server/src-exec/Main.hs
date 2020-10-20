@@ -8,12 +8,12 @@ import           Data.Text.Conversions      (convertText)
 import           Data.Time.Clock.POSIX      (getPOSIXTime)
 
 import           Hasura.App
-import           Hasura.Class               (fetchMetadata)
 import           Hasura.Logging             (Hasura)
 import           Hasura.Prelude
-import           Hasura.RQL.Types           hiding (fetchMetadata)
+import           Hasura.RQL.Types
 import           Hasura.Server.Init
-import           Hasura.Server.Migrate      (downgradeCatalog)
+import           Hasura.Server.Migrate      (downgradeCatalog, fetchMetadataTx)
+import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Version
 
 import qualified Data.ByteString.Char8      as BC
@@ -31,13 +31,13 @@ main = do
   tryExit $ do
     args <- parseArgs
     env  <- Env.getEnvironment
-    unAppM (runApp env args)
+    runApp env args
   where
     tryExit io = try io >>= \case
       Left (ExitException _code msg) -> BC.putStrLn msg >> Sys.exitFailure
       Right r -> return r
 
-runApp :: Env.Environment -> HGEOptions Hasura -> AppM ()
+runApp :: Env.Environment -> HGEOptions Hasura -> IO ()
 runApp env hgeOptions =
   withVersion $$(getVersionFromEnvironment) $ do
   case hoCommand hgeOptions of
@@ -64,11 +64,19 @@ runApp env hgeOptions =
         Signals.sigTERM
         (Signals.CatchOnce (shutdownGracefully initCtx))
         Nothing
-      runHGEServer env serveOptions initCtx Nothing initTime shutdownApp Nothing ekgStore
+
+      -- start backgroud thread for schema sync event listening
+      let metadataPool = _icMetadataPool initCtx
+          logger = _lsLogger $ _icLoggers initCtx
+          instanceId = _icInstanceId initCtx
+      schemaSyncCtx <- startSchemaSyncListenerThread metadataPool logger instanceId
+
+      flip runReaderT metadataPool $ unServerAppM $
+        runHGEServer env serveOptions initCtx Nothing initTime shutdownApp Nothing ekgStore schemaSyncCtx
 
     HCExport -> do
       (InitCtx{..}, _) <- initialiseCtx env hgeOptions
-      res <- runTx' _icMetadataPool Q.ReadCommitted fetchMetadata
+      res <- runTx' _icMetadataPool Q.ReadCommitted fetchMetadataTx
       either (printErrJExit MetadataExportError) printJSON res
 
     HCClean -> do
@@ -79,13 +87,21 @@ runApp env hgeOptions =
     HCExecute -> do
       (InitCtx{..}, _) <- initialiseCtx env hgeOptions
       queryBs <- liftIO BL.getContents
-      result <- execQuery env _icHttpManager _icDefaultSourceConfig _icMetadata queryBs
+      result <- execQuery env _icHttpManager _icMetadata queryBs
       either (printErrJExit ExecuteProcessError) (liftIO . BLC.putStrLn) result
 
     HCDowngrade opts -> do
       (InitCtx{..}, initTime) <- initialiseCtx env hgeOptions
-      res <- runTx' _icMetadataPool Q.ReadCommitted $ downgradeCatalog opts initTime
-      either (printErrJExit DowngradeProcessError) (liftIO . print) res
+      case hoDefaultConnInfo hgeOptions of
+        Nothing -> printErrJExit DowngradeProcessError ("cannot downgrade with no database-url" ::Text)
+        Just dbUrl -> do
+          let DefaultConnInfo urlConf retries = dbUrl
+              defaultSourceConf = SourceConfiguration urlConf
+                                  defaultConnSettings
+                                  {_scsRetries = fromMaybe 1 retries}
+          res <- runTx' _icMetadataPool Q.ReadCommitted $
+                 downgradeCatalog opts defaultSourceConf initTime
+          either (printErrJExit DowngradeProcessError) (liftIO . print) res
 
     HCVersion -> liftIO $ putStrLn $ "Hasura GraphQL Engine: " ++ convertText currentVersion
   where
