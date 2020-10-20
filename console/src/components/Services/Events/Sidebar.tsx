@@ -38,7 +38,7 @@ const LeftSidebar: React.FC<Props> = props => {
     getServiceEntityLink: entityName => {
       switch (service) {
         case 'data':
-          return getETModifyRoute(entityName);
+          return getETModifyRoute({ name: entityName });
           break;
         case 'cron':
           return getSTModifyRoute(entityName);

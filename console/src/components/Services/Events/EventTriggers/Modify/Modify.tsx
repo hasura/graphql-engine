@@ -20,7 +20,7 @@ import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import { modifyEventTrigger, deleteEventTrigger } from '../../ServerIO';
 
 import { NotFoundError } from '../../../../Error/PageNotFound';
-import { getEventTriggers } from '../../../../../metadata/selector';
+import { getEventTriggerByName } from '../../../../../metadata/selector';
 
 interface Props extends InjectedProps {}
 
@@ -32,6 +32,11 @@ const Modify: React.FC<Props> = props => {
     dispatch,
     currentDataSource,
   } = props;
+  if (!currentTrigger) {
+    // throw a 404 exception
+    throw new NotFoundError();
+  }
+
   const { state, setState } = useEventTriggerModify(
     currentTrigger,
     allSchemas,
@@ -134,14 +139,8 @@ const Modify: React.FC<Props> = props => {
 };
 
 const mapStateToProps = (state: ReduxState, ownProps: RouterTriggerProps) => {
-  const triggerList = getEventTriggers(state);
   const modifyTriggerName = ownProps.params.triggerName;
-  const currentTrigger = triggerList.find(tr => tr.name === modifyTriggerName);
-
-  if (!currentTrigger) {
-    // throw a 404 exception
-    throw new NotFoundError();
-  }
+  const currentTrigger = getEventTriggerByName(state)(modifyTriggerName);
 
   return {
     currentTrigger,

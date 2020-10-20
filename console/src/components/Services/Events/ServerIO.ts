@@ -309,7 +309,7 @@ export const createEventTrigger = (
         successCb();
       }
       dispatch(exportMetadata()).then(() => {
-        dispatch(push(getETModifyRoute(state.name)));
+        dispatch(push(getETModifyRoute({ name: state.name })));
       });
     };
     const customOnError = () => {
