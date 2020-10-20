@@ -23,22 +23,12 @@ Navigate to `cloud.hasura.io
 Step 2: Connect new/existing database
 -------------------------------------
 
-- To use an existing database, choose ``I have an existing Postgres database``.
+- To use an existing database, choose ``I have an existing Postgres database``. If you want to used managed cloud database services, you can follow :ref:`these guides <cloud_databases>`.
 - To try out with a new database, choose ``Try a free database with Heroku``.
 
 .. thumbnail:: /img/graphql/cloud/getting-started/connect-db.png
    :alt: Connect new or existing database
    :width: 591px
-
-Step 2.1: Enter database URL (for existing database)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If you chose ``I have an existing Postgres database`` in :ref:`Step 2 <cloud_connect_db>`, enter
-your database connection URL.
-
-.. thumbnail:: /img/graphql/cloud/getting-started/connect-existing-db.png
-   :alt: Enter URL for existing database
-   :width: 556px
 
 Step 3: Create project
 ----------------------
@@ -87,3 +77,9 @@ to make sure that your GraphQL endpoint and the Hasura console are not publicly 
   :alt: Project actions
   :width: 860px
 
+.. toctree::
+   :maxdepth: 1
+   :titlesonly:
+   :hidden:
+
+   Cloud databases <cloud-databases/index>

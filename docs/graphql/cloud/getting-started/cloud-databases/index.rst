@@ -2,10 +2,10 @@
    :description: Use an existing database with Hasura Cloud
    :keywords: hasura, docs, cloud, existing database
 
-.. _cloud_vendors:
+.. _cloud_databases:
 
-Connecting with databases of different cloud vendors
-====================================================
+Connecting with different cloud databases
+=========================================
 
 .. contents:: Table of contents
   :backlinks: none

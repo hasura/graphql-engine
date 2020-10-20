@@ -64,7 +64,6 @@ realtime monitoring, caching, tracing, and rate-limiting. It supports both new a
   :hidden:
 
   Getting Started <getting-started/index>
-  Cloud vendor DBs <cloud-vendor-dbs/index>
   projects/index
   metrics/index
   api-limits

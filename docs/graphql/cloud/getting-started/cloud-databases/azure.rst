@@ -15,12 +15,7 @@ Using Hasura Cloud with an Azure Postgres database
 Introduction
 ------------
 
-This guide explains how to connect an Azure Postgres database to a Hasura Cloud project.
-
-.. note::
-
-   Managed database services only work for the default database user. 
-   Support for other database users will be added in the future.
+This guide explains how to connect a new or existing Azure Postgres database to a Hasura Cloud project.
 
 Before you begin
 ----------------
@@ -46,8 +41,8 @@ You will get prompted for a Postgres Database URL. We will create this in the ne
 
 Also, copy the Hasura Cloud IP for later.
 
-Step 2: Create a Postgres DB on Azure (optional)
-------------------------------------------------
+Step 2: Create a Postgres DB on Azure (skip if you have an existing DB)
+-----------------------------------------------------------------------
 
 *If you already have an existing database on Digital Ocean, you can skip this step.*
 
@@ -81,11 +76,15 @@ Configure your database with all required fields:
 
 Then click ``Review + create``.
 
-Step 3: Connect the Hasura Cloud IP
------------------------------------
+.. note::
 
-Step 4: Get the database connection URL
----------------------------------------
+   If you're using a database user other than the default one, make sure to give it the right :ref:`Postgres permissions <cloud_postgres_permissions>`.
+
+Step 3: Allow connections to your DB from Hasura Cloud
+------------------------------------------------------
+
+Step 4: Construct the database connection URL
+---------------------------------------------
 
 The structure of the database connection URL looks as follows:
 
@@ -118,3 +117,17 @@ Voilà. You are ready to start developing.
 .. thumbnail:: /img/graphql/cloud/existing-db/hasura-console.png
    :alt: Hasura console
    :width: 900px
+
+Next steps
+----------
+
+You can check out our `30-Minute Hasura Basics Course <https://hasura.io/learn/graphql/hasura/introduction/>`__
+and other `GraphQL & Hasura Courses <https://hasura.io/learn/>`__ for a more detailed introduction to Hasura.
+
+You can also click the gear icon to manage your Hasura Cloud project. (e.g. add :ref:`collaborators <manage_project_collaborators>`,
+:ref:`env vars <manage_project_env_vars>` or :ref:`custom domains <manage_project_domains>`) and :ref:`add an admin secret <secure_project>`
+to make sure that your GraphQL endpoint and the Hasura console are not publicly accessible.
+
+.. thumbnail:: /img/graphql/cloud/getting-started/project-manage.png
+  :alt: Project actions
+  :width: 860px

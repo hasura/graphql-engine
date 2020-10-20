@@ -15,12 +15,7 @@ Using Hasura Cloud with a GCP Postgres database
 Introduction
 ------------
 
-This guide explains how to connect a GCP Postgres database to a Hasura Cloud project.
-
-.. note::
-
-   Managed database services only work for the default database user. 
-   Support for other database users will be added in the future.
+This guide explains how to connect a new or existing GCP Postgres database to a Hasura Cloud project.
 
 Before you begin
 ----------------
@@ -48,8 +43,8 @@ Also, copy the Hasura Cloud IP for later.
 
 .. _create_pg_db_gcp:
 
-Step 2: Create a Postgres DB on GCP (optional)
-----------------------------------------------
+Step 2: Create a Postgres DB on GCP (skip if you have an existing DB)
+---------------------------------------------------------------------
 
 *If you already have an existing database on GCP, you can skip this step.*
 
@@ -81,8 +76,8 @@ Select an instance ID, as well as a default user password. If required, choose a
 
 Then click ``Create``.
 
-Step 3: Connect the Hasura Cloud IP
------------------------------------
+Step 3: Allow connections to your DB from Hasura Cloud
+------------------------------------------------------
 
 On the dashboard of your GCP database instance, on the left sidebar, click on ``Connections``. Then scroll down to the checkbox ``Public IP``, and click ``+ Add network``:
 
@@ -98,9 +93,13 @@ You can choose an optional name (e.g. "Hasura"). Then enter the Hasura Cloud IP 
 
 Then click ``Save``.
 
+.. note::
+
+   If you're using a database user other than the default one, make sure to give it the right :ref:`Postgres permissions <cloud_postgres_permissions>`.
+
 .. _configure_db_url_gcp:
 
-Step 4: Configure the database connection URL
+Step 4: Construct the database connection URL
 ---------------------------------------------
 
 The structure of the database connection URL looks as follows:
@@ -109,25 +108,16 @@ The structure of the database connection URL looks as follows:
 
     postgresql://<user-name>:<password>@<public-ip>:<postgres-port>/<db>
 
-If you have added a new user account in :ref:`step 3 <create_user_account_gcp>`, the user name refers to the one you created there.
-
-If you didn't specify a user name, it is ``postgres`` by default and can be optained by navigating to ``Databases``:
-
-.. thumbnail:: /img/graphql/cloud/existing-db/gcp/gcp-db-user-name.png
-   :alt: Find the user name for a GCP Postgres database
-   :width: 700px
-
-If you have added a new user account in :ref:`step 3 <create_user_account_gcp>`, the password refers to the one you created there.
-
-Otherwise, the password is the one we set when we created the database instance in :ref:`step 2 <create_pg_db_gcp>`.
-
-The public IP can be optained by clicking on ``Overview`` on the left-side navigation and then scrolling down to ``Connect to this instance``:
+- ``user-name``: If you have a separate database user the user name will be their name. If you didn't specify a user, the default user name is ``postgres``.
+- ``password``: If you have a separate database user, use their password. Otherwise, use the password that you chose when creating the database.
+- ``public-ip``: The public IP can be optained by clicking on ``Overview`` on the left-side navigation and then scrolling down to ``Connect to this instance``:
 
 .. thumbnail:: /img/graphql/cloud/existing-db/gcp/gcp-public-ip.png
    :alt: Find the public IP for a GCP Postgres database
    :width: 700px
-
-The Postgres port is ``5432`` by default, but it can be customized.
+   
+- ``postgres-port``: The default port for Postgres is ``5432`` if not specified otherwise.
+- ``db``: The DB is ``postgres`` by default unless otherwise specified.
 
 Step 5: Finish creating the Hasura Cloud project
 ------------------------------------------------
@@ -154,3 +144,17 @@ Voilà. You are ready to start developing.
 .. thumbnail:: /img/graphql/cloud/existing-db/hasura-console.png
    :alt: Hasura console
    :width: 900px
+
+Next steps
+----------
+
+You can check out our `30-Minute Hasura Basics Course <https://hasura.io/learn/graphql/hasura/introduction/>`__
+and other `GraphQL & Hasura Courses <https://hasura.io/learn/>`__ for a more detailed introduction to Hasura.
+
+You can also click the gear icon to manage your Hasura Cloud project. (e.g. add :ref:`collaborators <manage_project_collaborators>`,
+:ref:`env vars <manage_project_env_vars>` or :ref:`custom domains <manage_project_domains>`) and :ref:`add an admin secret <secure_project>`
+to make sure that your GraphQL endpoint and the Hasura console are not publicly accessible.
+
+.. thumbnail:: /img/graphql/cloud/getting-started/project-manage.png
+  :alt: Project actions
+  :width: 860px

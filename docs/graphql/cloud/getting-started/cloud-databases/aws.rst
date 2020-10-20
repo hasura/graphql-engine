@@ -15,12 +15,7 @@ Using Hasura Cloud with an AWS Postgres database
 Introduction
 ------------
 
-This guide explains how to connect an AWS Postgres database to a Hasura Cloud project.
-
-.. note::
-
-   Managed database services only work for the default database user. 
-   Support for other database users will be added in the future.
+This guide explains how to connect a new or existing AWS Postgres database to a Hasura Cloud project.
 
 Before you begin
 ----------------
@@ -44,8 +39,10 @@ You will get prompted for a Postgres Database URL. We will create this in the ne
 
 Also, copy the Hasura Cloud IP for later.
 
-Step 2: Create a Postgres DB on AWS (optional)
-----------------------------------------------
+.. _create_aws_db:
+
+Step 2: Create a Postgres DB on AWS (skip if you have an existing DB)
+---------------------------------------------------------------------
 
 *If you already have an existing database on AWS, you can skip this step.*
 
@@ -92,13 +89,67 @@ When you're done, at the bottom, click the ``Create database`` button:
    :alt: Create RDS instance on AWS
    :width: 700px
 
-Step 3: Connect the Hasura Cloud IP
------------------------------------
+.. note::
+
+   If you're using a database user other than the default one, make sure to give it the right :ref:`Postgres permissions <cloud_postgres_permissions>`.
+
+Step 3: Allow connections to your DB from Hasura Cloud
+------------------------------------------------------
+
+On the database dashboard, click on ``Connectivity & security``. On the right, click on the security group that you selected or added in :ref:`step 2 <create_aws_db>`.
+
+.. thumbnail:: /img/graphql/cloud/existing-db/aws/aws-find-security-group.png
+   :alt: Find the security group on AWS RDS
+   :width: 1000px
+
+Click on the security group:
+
+.. thumbnail:: /img/graphql/cloud/existing-db/aws/aws-select-security-group.png
+   :alt: Click on the security group
+   :width: 1000px
+
+Click on ``Edit inbound rules``:
+
+.. thumbnail:: /img/graphql/cloud/existing-db/aws/aws-inbound-rules.png
+   :alt: Edit inbound rules for AWS RDS database
+   :width: 1000px
+
+Click on ``Add rule``:
+
+.. thumbnail:: /img/graphql/cloud/existing-db/aws/aws-add-inbound-rule.png
+   :alt: Add an inbound rule for AWS RDS database
+   :width: 1000px
+
+Add the Hasura IP as follows:
+
+.. thumbnail:: /img/graphql/cloud/existing-db/aws/aws-add-hasura-ip.png
+   :alt: Add the Hasura IP for AWS RDS database
+   :width: 1000px
+
+Then click ``Save rules``.
 
 .. _configure_db_url_aws:
 
-Step 4: Configure the database connection URL
+Step 4: Construct the database connection URL
 ---------------------------------------------
+
+The structure of the database connection URL looks as follows:
+
+.. code-block:: bash
+
+    postgresql://<user-name>:<password>@<public-ip>:<postgres-port>/<db>
+
+On the database dashboard, click on ``Connectivity & security``:
+
+.. thumbnail:: /img/graphql/cloud/existing-db/aws/aws-get-db-connection-string.png
+   :alt: Construct the database connection string for AWS RDS
+   :width: 1000px
+
+- ``user-name``: If you have a separate database user the user name will be their name. If you didn't specify a user, the default user name is ``postgres``.
+- ``password``: If you have a separate database user, use their password. Otherwise, use the password that you chose when creating the database.
+- ``public-ip``: On the screenshot above, the ``Endpoint`` is the public IP.
+- ``postgres-port``: On the screenshot above you can find it under ``Port``. The default port for Postgres is ``5432``.
+- ``db``: The DB is ``postgres`` by default unless otherwise specified.
 
 Step 5: Finish creating the Hasura Cloud project
 ------------------------------------------------
@@ -125,3 +176,17 @@ Voilà. You are ready to start developing.
 .. thumbnail:: /img/graphql/cloud/existing-db/hasura-console.png
    :alt: Hasura console
    :width: 900px
+
+Next steps
+----------
+
+You can check out our `30-Minute Hasura Basics Course <https://hasura.io/learn/graphql/hasura/introduction/>`__
+and other `GraphQL & Hasura Courses <https://hasura.io/learn/>`__ for a more detailed introduction to Hasura.
+
+You can also click the gear icon to manage your Hasura Cloud project. (e.g. add :ref:`collaborators <manage_project_collaborators>`,
+:ref:`env vars <manage_project_env_vars>` or :ref:`custom domains <manage_project_domains>`) and :ref:`add an admin secret <secure_project>`
+to make sure that your GraphQL endpoint and the Hasura console are not publicly accessible.
+
+.. thumbnail:: /img/graphql/cloud/getting-started/project-manage.png
+  :alt: Project actions
+  :width: 860px
