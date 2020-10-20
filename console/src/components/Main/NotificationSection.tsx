@@ -10,7 +10,7 @@ import {
 } from './ConsoleNotification';
 import styles from './Main.scss';
 import useOnClickOutside from '../../hooks/useOnClickOutside';
-import { ReduxState, NotificationsState, ConsoleState } from '../../types';
+import { ReduxState } from '../../types';
 import { versionGT, checkStableVersion } from '../../helpers/versionUtils';
 import ToolTip from '../Common/Tooltip/Tooltip';
 import {
@@ -28,6 +28,7 @@ import { mapDispatchToPropsEmpty } from '../Common/utils/reactUtils';
 import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
 import { StyledText } from '../UIKit/atoms/Typography/Typography';
 import { LS_KEYS } from '../../utils/localStorage';
+import { ConsoleState, NotificationsState } from '../../telemetry/state';
 
 const getDateString = (date: NotificationDate) => {
   if (!date) {
@@ -686,8 +687,9 @@ const HasuraNotifications: React.FC<
           onClick: onClickUpdate,
         },
       },
-      ...consoleNotifications.slice(0, pagination.shownCount).map(
-        (payload): NotificationsListItemProps => ({
+      ...consoleNotifications
+        .slice(0, pagination.shownCount)
+        .map((payload: any) => ({
           kind: 'default',
           props: {
             id: payload.id,
@@ -696,8 +698,7 @@ const HasuraNotifications: React.FC<
             consoleScope,
             ...payload,
           },
-        })
-      ),
+        })),
     ].filter((x): x is NotificationsListItemProps => Boolean(x));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [

@@ -8,20 +8,19 @@ import {
   showSuccessNotification,
 } from '../components/Services/Common/Notification';
 import globals from '../Globals';
-import defaultConsoleState from './state';
+import defaultConsoleState, {
+  ConsoleState,
+  NotificationsState,
+  TelemetryNotificationsState,
+} from './state';
 import {
   getSetConsoleStateQuery,
   getConsoleStateQuery,
 } from '../metadata/queryUtils';
-import {
-  GetReduxState,
-  ReduxState,
-  ConsoleState,
-  NotificationsState,
-} from '../types';
+import { GetReduxState, ReduxState } from '../types';
 import { isUpdateIDsEqual } from './utils';
 import { HASURA_COLLABORATOR_TOKEN } from '../constants';
-import { getUserType } from '../components/Main';
+import { getUserType } from '../components/Main/utils';
 
 const SET_CONSOLE_OPTS = 'Telemetry/SET_CONSOLE_OPTS';
 const SET_NOTIFICATION_SHOWN = 'Telemetry/SET_NOTIFICATION_SHOWN';
@@ -34,7 +33,7 @@ type ConsoleStateResponse = {
 };
 
 const setConsoleOptsInDB = (
-  opts: ConsoleState['console_opts'],
+  opts: Partial<ConsoleState['console_opts']>,
   successCb: (arg: Record<string, any>) => void,
   errorCb: (arg: Error) => void
 ) => (
@@ -108,9 +107,11 @@ const setTelemetryNotificationShownInDB = () => {
   return setConsoleOptsInDB(opts, successCb, errorCb);
 };
 
+type X = ReduxState['telemetry'];
+
 const setPreReleaseNotificationOptOutInDB = () => (
   dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>,
-  getState: GetReduxState
+  getState: () => ReduxState
 ) => {
   const successCb = () => {
     dispatch(
@@ -274,12 +275,11 @@ const loadConsoleOpts = () => {
 
 interface SetConsoleOptsAction {
   type: typeof SET_CONSOLE_OPTS;
-  data: Record<string, unknown>;
+  data: ConsoleState['console_opts'];
 }
 
 interface SetNotificationShowAction {
   type: typeof SET_NOTIFICATION_SHOWN;
-  data?: Record<string, unknown>;
 }
 
 interface SetHasuraUuid {
@@ -289,7 +289,7 @@ interface SetHasuraUuid {
 
 interface UpdateConsoleNotifications {
   type: typeof UPDATE_CONSOLE_NOTIFICATIONS;
-  data: Record<string, any>;
+  data: TelemetryNotificationsState;
 }
 
 type TelemetryActionTypes =
@@ -309,7 +309,7 @@ export const requireConsoleOpts = ({
 const telemetryReducer = (
   state = defaultConsoleState,
   action: TelemetryActionTypes
-) => {
+): ConsoleState => {
   switch (action.type) {
     case SET_CONSOLE_OPTS:
       return {

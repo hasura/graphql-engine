@@ -2,7 +2,6 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import {
   vSetDefaults,
-  // vExpandHeading,
   fetchManualTriggers,
   UPDATE_TRIGGER_ROW,
   UPDATE_TRIGGER_FUNCTION,
@@ -14,9 +13,9 @@ import ViewRows from './ViewRows';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { exists } from '../../../Common/utils/jsUtils';
-import { getPersistedPageSize } from './localStorageUtils';
 import { dataSource } from '../../../../dataSources';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
+import { getPersistedPageSize } from './tableUtils';
 
 class ViewTable extends Component {
   constructor(props) {

@@ -4,15 +4,9 @@ import {
   terminateSql,
 } from '../../../dataSources';
 import { QualifiedTable } from '../../../metadata/types';
-import { LocalScheduledTriggerState } from '../../Services/Events/CronTriggers/state';
-import { LocalAdhocEventState } from '../../Services/Events/AdhocEvents/Add/state';
-import { LocalEventTriggerState } from '../../Services/Events/EventTriggers/state';
-import { RemoteRelationshipPayload } from '../../Services/Data/TableRelationships/RemoteRelationships/utils';
-import { transformHeaders } from '../Headers/utils';
 import { Nullable } from './tsUtils';
-import { ConsoleState } from '../../../types';
 import { ConsoleScope } from '../../Main/ConsoleNotification';
-import { BaseTable, BaseTableColumn, Table } from '../../../dataSources/types';
+import { BaseTableColumn } from '../../../dataSources/types';
 
 export type OrderByType = 'asc' | 'desc';
 export type OrderByNulls = 'first' | 'last';
@@ -296,3 +290,24 @@ export const getConsoleNotificationQuery = (
     type: 'select',
   };
 };
+
+// todo
+export const getFetchManualTriggersQuery = (tableDef: QualifiedTable) =>
+  getSelectQuery(
+    'select',
+    generateTableDef('event_triggers', 'hdb_catalog'),
+    ['*'],
+    {
+      table_name: tableDef.name,
+      schema_name: tableDef.schema,
+    },
+    undefined,
+    undefined,
+    [
+      {
+        column: 'name',
+        type: 'asc',
+        nulls: 'last',
+      },
+    ]
+  );

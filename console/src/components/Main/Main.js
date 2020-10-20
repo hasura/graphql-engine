@@ -26,20 +26,19 @@ import {
 } from './Actions';
 
 import {
-  loadInconsistentObjects,
-  redirectToMetadataStatus,
-} from '../Services/Settings/Actions';
-
-import {
   getProClickState,
   setProClickState,
   getLoveConsentState,
   setLoveConsentState,
 } from './utils';
 
-import { getSchemaBaseRoute } from '../Common/utils/routesUtils';
+import {
+  getSchemaBaseRoute,
+  redirectToMetadataStatus,
+} from '../Common/utils/routesUtils';
 import LoveSection from './LoveSection';
 import { Help, ProPopup } from './components/';
+import { loadInconsistentObjects } from '../../metadata/actions';
 
 class Main extends React.Component {
   constructor(props) {

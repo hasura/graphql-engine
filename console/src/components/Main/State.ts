@@ -11,7 +11,8 @@ export interface MainState {
   loginInProgress: boolean;
   loginError: boolean;
   serverVersion: null;
-  latestStableServerVersion: null;
+  latestStableServerVersion: null | string;
+  latestPreReleaseServerVersion: null | string;
   telemetryEnabled: boolean;
   serverConfig: {
     data: {
@@ -44,6 +45,7 @@ const defaultState: MainState = {
   loginError: false,
   serverVersion: null,
   latestStableServerVersion: null,
+  latestPreReleaseServerVersion: null,
   telemetryEnabled: true,
   serverConfig: {
     data: {

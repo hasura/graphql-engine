@@ -11,9 +11,9 @@ import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
   getBulkDeleteQuery,
   getSelectQuery,
-  getFetchManualTriggersQuery,
   getDeleteQuery,
   getRunSqlQuery,
+  getFetchManualTriggersQuery,
 } from '../../../Common/utils/v1QueryUtils';
 import { COUNT_LIMIT } from '../constants';
 import {
