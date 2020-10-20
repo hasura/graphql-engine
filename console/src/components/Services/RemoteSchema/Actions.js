@@ -249,6 +249,75 @@ const saveRemoteSchemaPermission = (successCb, errorCb) => {
   };
 };
 
+const permRemoveMultipleRoles = tableSchema => {
+  return (dispatch, getState) => {
+    const currentSchema = getState().tables.currentSchema;
+    const permissionsState = getState().tables.modify.permissionsState;
+
+    const table = tableSchema.table_name;
+    const roles = permissionsState.bulkSelect;
+
+    const migration = new Migration();
+    const currentPermissions = tableSchema.permissions;
+
+    roles.map(role => {
+      const currentRolePermission = currentPermissions.filter(el => {
+        return el.role_name === role;
+      });
+      Object.keys(currentRolePermission[0].permissions).forEach(type => {
+        const deleteQuery = {
+          type: 'drop_' + type + '_permission',
+          args: {
+            table: { name: table, schema: currentSchema },
+            role: role,
+          },
+        };
+        const createQuery = {
+          type: 'create_' + type + '_permission',
+          args: {
+            table: { name: table, schema: currentSchema },
+            role: role,
+            permission: currentRolePermission[0].permissions[type],
+          },
+        };
+        migration.add(deleteQuery, createQuery);
+      });
+    });
+
+    // Apply migration
+    const migrationName = 'remove_roles_' + currentSchema + '_table_' + table;
+
+    const requestMsg = 'Removing permissions...';
+    const successMsg = 'Permissions removed';
+    const errorMsg = 'Removing permissions failed';
+
+    const customOnSuccess = () => {
+      // reset new role name
+      dispatch(permSetRoleName(''));
+      // close edit box
+      dispatch(permCloseEdit());
+      // reset checkbox selections
+      dispatch({ type: PERM_RESET_BULK_SELECT });
+      // fetch all roles
+      dispatch(fetchRoleList());
+    };
+    const customOnError = () => {};
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      migration.upMigration,
+      migration.downMigration,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
 const removeRemoteSchemaPermission = (successCb, errorCb) => {
   return (dispatch, getState) => {
     const isOk = getConfirmation(
@@ -316,5 +385,6 @@ export {
   setConsistentRemoteSchemas,
   saveRemoteSchemaPermission,
   removeRemoteSchemaPermission,
+  permRemoveMultipleRoles,
 };
 export default listReducer;

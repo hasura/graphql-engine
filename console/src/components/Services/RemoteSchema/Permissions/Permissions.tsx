@@ -15,11 +15,16 @@ import {
   permCloseEdit,
   permSetRoleName,
   setDefaults,
+  permSetBulkSelect,
 } from './reducer';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { permRemoveMultipleRoles } from '../Actions';
+import Button from '../../../Common/Button/Button';
 
 const queryTypes = ['Permission'];
 
 const Permissions = ({
+  // TODO reduce args.
   currentRemoteSchema,
   allRoles,
   dispatch,
@@ -27,6 +32,7 @@ const Permissions = ({
   isEditing,
   isFetching,
   schemaDefinition,
+  bulkSelect,
   readOnlyMode = false,
 }) => {
   React.useEffect(() => {
@@ -57,7 +63,21 @@ const Permissions = ({
       return <PermTableHeader headings={headings} />;
     };
 
+    // TODO : remove
+    const getTablePermissionsByRoles = () => {
+      const tablePermissionsByRoles: any = {};
+      console.log('all role is : ',allRoles);
+
+      allRoles.forEach((p: any) => {
+        tablePermissionsByRoles[p] = p;
+      });
+
+      return tablePermissionsByRoles;
+    };
+
     const getPermissionsTableBody = () => {
+      const rolePermission = getTablePermissionsByRoles();
+
       const dispatchRoleNameChange = e => {
         dispatch(permSetRoleName(e.target.value));
       };
@@ -68,6 +88,29 @@ const Permissions = ({
             <i className="fa fa-pencil" aria-hidden="true" />
           </span>
         );
+      };
+
+      const getBulkCheckbox = (role, isNewRole) => {
+        const dispatchBulkSelect = e => {
+          const isChecked = e.target.checked;
+          const selectedRole = e.target.getAttribute('data-role');
+          dispatch(permSetBulkSelect(isChecked, selectedRole));
+        };
+
+        const disableCheckbox = !Object.keys(rolePermission).includes(role);
+
+        return {
+          showCheckbox: !(role === 'admin' || isNewRole),
+          disableCheckbox,
+          title: disableCheckbox
+            ? 'No permissions exist'
+            : 'Select for bulk actions',
+          bulkSelect,
+          onChange: dispatchBulkSelect,
+          role,
+          isNewRole,
+          checked: bulkSelect.filter(e => e === role).length,
+        };
       };
 
       // get root types for a given role
@@ -147,6 +190,7 @@ const Permissions = ({
         return {
           roleName: r,
           permTypes: getQueryTypes(r, false),
+          bulkSection: getBulkCheckbox(r, false),
         };
       });
 
@@ -154,6 +198,7 @@ const Permissions = ({
       rolePermissions.push({
         roleName: permissionEdit.newRole,
         permTypes: getQueryTypes(permissionEdit.newRole, true),
+        bulkSection: getBulkCheckbox(permissionEdit.newRole, true),
         isNewRole: true,
       });
 
@@ -178,12 +223,56 @@ const Permissions = ({
     );
   };
 
+  const getBulkSection = () => {
+    let bulkSelectedRoles = bulkSelect;
+    bulkSelectedRoles = [];
+
+    if (!bulkSelectedRoles.length) {
+      return;
+    }
+
+    const getSelectedRoles = () => {
+      return bulkSelectedRoles.map(r => {
+        return (
+          <span key={r} className={styles.add_pad_right}>
+            <b>{r}</b>{' '}
+          </span>
+        );
+      });
+    };
+
+    const handleBulkRemoveClick = () => {
+      const confirmMessage =
+        'This will remove all currently set permissions for the selected role(s)';
+      const isOk = getConfirmation(confirmMessage);
+      if (isOk) {
+        dispatch(permRemoveMultipleRoles());
+      }
+    };
+
+    return (
+      <div id={'bulk-section'} className={styles.activeEdit}>
+        <div className={styles.editPermsHeading}>Apply Bulk Actions</div>
+        <div>
+          <span className={styles.add_pad_right}>Selected Roles</span>
+          {getSelectedRoles()}
+        </div>
+        <div className={`${styles.add_mar_top} ${styles.add_mar_bottom_mid}`}>
+          <Button onClick={handleBulkRemoveClick} color="red" size="sm">
+            Remove All Permissions
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div>
       <Helmet
         title={`Permissions - ${currentRemoteSchema.name} - Remote Schemas | Hasura`}
       />
       {getPermissionsTable()}
+      {getBulkSection()}
       <div className={`${styles.add_mar_bottom}`}>
         {!readOnlyMode && (
           <PermissionEditor

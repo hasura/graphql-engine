@@ -18,6 +18,7 @@ const state = {
     timer: null,
     ast: null,
   },
+  bulkSelect: [],
 };
 
 export default state;
