@@ -204,7 +204,8 @@ html_theme = "djangodocs"
 #
 # html_theme = 'alabaster'
 
-# Theme options are theme-specific and customize the look and feel of a theme
+# Theme options are theme-specific and customize the look and feelcopybutton_prompt_text = r"\$ "
+# copybutton_prompt_is_regexp = True of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
