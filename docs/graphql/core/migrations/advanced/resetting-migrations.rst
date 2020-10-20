@@ -5,17 +5,20 @@
 .. _reset_migration:
 
 Reset Hasura migrations
-==============================
+=======================
 
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
   :local:
 
+Introduction
+------------
+
 If you have a lot of migrations and you need to squash them or your current migration state on the local machine is corrupted, you can reset the state and create new migrations from the state that is on the server.
 
 Step 1: Delete the local migrations
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------------
 
 In the local migrations directory, delete all its contents using the following command:
 
@@ -24,7 +27,7 @@ In the local migrations directory, delete all its contents using the following c
    rm migrations/*
 
 Step 2: Reset the migration history on the server
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------------------------
 
 On the SQL tab of the console, run the following command:
 
@@ -33,7 +36,7 @@ On the SQL tab of the console, run the following command:
    TRUNCATE hdb_catalog.schema_migrations;
 
 Step 3: Pull the schema and metadata from server
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------------------
 
 We will set up fresh migrations by pulling the schema and metadata from the server using the following commands:
 
@@ -50,9 +53,13 @@ We will set up fresh migrations by pulling the schema and metadata from the serv
 
    hasura migrate apply --version "<version>" --skip-execution
 
+.. note::
+
+   If you are using schemas other than public, use --schema "schema_name" flag to indicate each one of them in the create command. This flag can be used multiple times.
+
 
 Step 4: Verify the status of the migrations
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------------------
 
 Run the following command to verify status of migration:
 
