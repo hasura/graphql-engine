@@ -25,7 +25,7 @@ For each project, you can do one of the following actions:
 
 .. thumbnail:: /img/graphql/cloud/projects/project-actions.png
    :alt: Project actions
-   :width: 860px
+   :width: 900px
 
 - Click the gear icon to manage your project:
 
@@ -51,7 +51,7 @@ You can add a label to a project by clicking on the ``+`` button at the bottom o
 
 .. thumbnail:: /img/graphql/cloud/projects/project-add-label.png
    :alt: Add label to project
-   :width: 860px
+   :width: 900px
 
 This will allow you to add a new label and choose a color for it.
 
@@ -59,7 +59,7 @@ You can add numerous labels to your Hasura Cloud projects:
 
 .. thumbnail:: /img/graphql/cloud/projects/project-labels.png
    :alt: Add label to project
-   :width: 860px
+   :width: 900px
 
 Dig deeper
 ----------
