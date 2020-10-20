@@ -66,7 +66,7 @@ This is the NAT gateway IP of Hasura Cloud. If your database is not exposed to t
 Labels
 ~~~~~~
 
-You can create and assign labels to your projects (``dev``, ``staging``, ``production`` etc). Click on the ``+`` button in the project labels pane to assign (or create and assign) a label.
+You can create and assign one or more labels to your projects (``dev``, ``staging``, ``production`` etc). Click on the ``+`` button in the project labels pane to assign (or create and assign) a label.
 
 .. thumbnail:: /img/graphql/cloud/projects/project-assing-label.png
    :alt: Project labels
