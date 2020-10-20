@@ -3,7 +3,8 @@ const CleanPlugin = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 // const hasuraConfig = require('../hasuraconfig');
 
-const relativeAssetsPath = '../packages/console-oss/build';
+// const relativeAssetsPath = '../packages/console-oss/build';
+const relativeAssetsPath = '../lib';
 const assetsPath = path.join(__dirname, relativeAssetsPath);
 
 const WebpackIsomorphicToolsPlugin = require('webpack-isomorphic-tools/plugin');
@@ -35,16 +36,16 @@ module.exports = {
   mode: 'production',
   context: path.resolve(__dirname, '..'),
   entry: {
-    main: './pro-index.js',
+    main: './exports/main.js',
     hoc: './exports',
     app: './exports/app',
     appState: './exports/appState',
-    // data: './src/components/Services/Data',
-    // actions: './src/components/Services/Actions',
-    // "event-triggers": './src/components/Services/Events',
-    // "types": './src/components/Services/Types',
+    constants: './exports/constants',
   },
   output: {
+    // Required to allow requiring modules bundled by nodejs apps
+    // Ref: https://webpack.js.org/configuration/output/#outputglobalobject
+    globalObject: "this",
     path: assetsPath,
     filename: '[name].js',
     chunkFilename: '[name].js',
@@ -188,7 +189,7 @@ module.exports = {
     ],
   },
   plugins: [
-    new CleanPlugin(['./packages/console-oss/build/*.*'], cleanOptions),
+    new CleanPlugin(['./lib/*.*'], cleanOptions),
 
     new webpack.ProvidePlugin({
       $: 'jquery',

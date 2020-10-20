@@ -1,19 +1,18 @@
 {
-  "name": "graphql-engine-console",
+  "name": "@vksci123/console-oss",
   "description": "Console for Hasura GraphQL Engine",
   "author": "Hasura (https://github.com/hasura/graphql-engine)",
   "license": "Apache 2.0",
-  "version": "0.1.0",
+  "version": "0.1.0-test",
   "repository": {
     "type": "git",
     "url": "https://github.com/hasura/graphql-engine"
   },
-  "main": "index.js",
+  "main": "lib/main.js",
+  "module": "lib/main.js",
   "homepage": "https://hasura.io/",
   "keywords": [],
   "scripts": {
-    "copy-lib": "npx babel ./src -x .es6,.js,.es,.jsx,.mjs,.ts,.tsx --out-dir ./packages/console-oss/lib --copy-files",
-    "copy-cypress": "cp -r cypress* ./packages/console-oss",
     "start-dev": "node -r dotenv/config ./bin/server.js",
     "watch-client": "node -r dotenv/config webpack/webpack-dev-server.js",
     "dev": "concurrently --kill-others \"npm run watch-client\" \"npm run start-dev\"",
@@ -104,7 +103,7 @@
     "subscriptions-transport-ws": "0.9.16"
   },
   "devDependencies": {
-    "@types/jwt-decode": "2.2.1",
+    "@babel/cli": "^7.12.1",
     "@babel/core": "7.9.6",
     "@babel/plugin-proposal-class-properties": "7.8.3",
     "@babel/plugin-proposal-export-default-from": "^7.10.4",
@@ -124,6 +123,7 @@
     "@types/fork-ts-checker-webpack-plugin": "0.4.5",
     "@types/isomorphic-fetch": "0.0.35",
     "@types/jquery": "3.3.33",
+    "@types/jwt-decode": "2.2.1",
     "@types/mini-css-extract-plugin": "0.9.1",
     "@types/node-sass": "4.11.0",
     "@types/optimize-css-assets-webpack-plugin": "5.0.1",

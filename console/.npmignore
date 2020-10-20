@@ -1,0 +1,13 @@
+./exports/
+./src/
+./scripts/
+./node_modules/
+./packages/
+./webpack/
+./webpack-assets.json
+./Makefile
+./coverage
+./hasuraconfig
+./pro-table.js
+./static/
+./tsconfig.json

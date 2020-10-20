@@ -2,7 +2,7 @@
   "name": "@vksci123/console-oss",
   "version": "0.0.1-notif.4",
   "description": "Contains modules from open-source console",
-  "main": "index.js",
+  "main": "build/main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
