@@ -41,7 +41,7 @@ instance (MonadBase IO m) => CacheRM (CacheRefT m) where
   askSchemaCache = CacheRefT (fmap lastBuiltSchemaCache . readMVar)
 
 instance (MonadIO m, MonadBaseControl IO m, MonadTx m, MonadMetadata m
-         , HasHttpManager m, HasSQLGenCtx m, HasDefaultSource m) => CacheRWM (CacheRefT m) where
+         , HasHttpManager m, HasSQLGenCtx m) => CacheRWM (CacheRefT m) where
   buildSchemaCacheWithOptions reason invalidations metadataModifier = CacheRefT $ flip modifyMVar \schemaCache -> do
     ((), cache, _) <- runCacheRWT schemaCache (buildSchemaCacheWithOptions reason invalidations metadataModifier)
     pure (cache, ())

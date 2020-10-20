@@ -21,17 +21,17 @@ import qualified Test.Hspec.Runner            as Hspec
 import           Hasura.Db                    (mkPGExecCtx)
 import           Hasura.RQL.Types             (SQLGenCtx (..))
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Init           (RawConnInfo, mkConnInfo, mkRawConnInfo,
-                                               parseRawConnInfo, runWithEnv)
+import           Hasura.Server.Init           (RawConnInfo, mkRawConnInfo, parseRawConnInfo,
+                                               runWithEnv)
 import           Hasura.Server.Migrate
 import           Hasura.Server.Version
 import           Hasura.Session               (adminUserInfo)
 
+import qualified Data.NonNegativeIntSpec      as NonNegetiveIntSpec
 import qualified Data.Parser.CacheControlSpec as CacheControlParser
 import qualified Data.Parser.JSONPathSpec     as JsonPath
 import qualified Data.Parser.URLTemplate      as URLTemplate
 import qualified Data.TimeSpec                as TimeSpec
-import qualified Data.NonNegativeIntSpec      as NonNegetiveIntSpec
 import qualified Hasura.IncrementalSpec       as IncrementalSpec
 -- import qualified Hasura.RQL.MetadataSpec      as MetadataSpec
 import qualified Hasura.CacheBoundedSpec      as CacheBoundedSpec
@@ -40,7 +40,7 @@ import qualified Hasura.Server.MigrateSpec    as MigrateSpec
 import qualified Hasura.Server.TelemetrySpec  as TelemetrySpec
 
 data TestSuites
-  = AllSuites !RawConnInfo
+  = AllSuites !(Maybe RawConnInfo)
   -- ^ Run all test suites. It probably doesn't make sense to be able to specify additional
   -- hspec args here.
   | SingleSuite ![String] !TestSuite
@@ -48,16 +48,16 @@ data TestSuites
 
 data TestSuite
   = UnitSuite
-  | PostgresSuite !RawConnInfo
+  | PostgresSuite !(Maybe RawConnInfo)
 
 main :: IO ()
 main = withVersion $$(getVersionFromEnvironment) $ parseArgs >>= \case
-  AllSuites pgConnOptions -> do
+  AllSuites _ -> do
     -- postgresSpecs <- buildPostgresSpecs pgConnOptions
     runHspec [] unitSpecs -- (unitSpecs *> postgresSpecs)
   SingleSuite hspecArgs suite -> runHspec hspecArgs =<< case suite of
-    UnitSuite                   -> pure unitSpecs
-    PostgresSuite pgConnOptions -> error "Postgres tests are disabled temporarily" -- buildPostgresSpecs pgConnOptions
+    UnitSuite       -> pure unitSpecs
+    PostgresSuite _ -> error "Postgres tests are disabled temporarily" -- buildPostgresSpecs pgConnOptions
 
 unitSpecs :: Spec
 unitSpecs = do
