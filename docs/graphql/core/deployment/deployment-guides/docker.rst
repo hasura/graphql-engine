@@ -61,14 +61,14 @@ Edit the ``HASURA_GRAPHQL_DATABASE_URL`` env var value, so that you can connect 
 
    #! /bin/bash
    docker run -d -p 8080:8080 \
-     -e HASURA_GRAPHQL_DATABASE_URL=postgres://<username>:<password>@hostname:port/<dbname> \
+     -e HASURA_GRAPHQL_DATABASE_URL=postgres://<username>:<password>@hostname:<port>/<dbname> \
      -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
      hasura/graphql-engine:latest
 
 Examples of ``HASURA_GRAPHQL_DATABASE_URL``:
 
-- ``postgres://<admin>:<password>@localhost:5432/<my-db>``
-- ``postgres://<admin>:@localhost:5432/<my-db>`` *(if there is no password)*
+- ``postgres://admin:password@localhost:5432/my-db``
+- ``postgres://admin:@localhost:5432/my-db`` *(if there is no password)*
 
 .. note::
 
