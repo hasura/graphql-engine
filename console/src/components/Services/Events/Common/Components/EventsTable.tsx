@@ -14,6 +14,7 @@ import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 import { getEventStatusIcon, getEventDeliveryIcon } from './utils';
 import Button from '../../../../Common/Button';
+import { SupportedEvents } from '../../../../../metadata/queryUtils';
 
 type CancelButtonProps = {
   id: string;
@@ -42,9 +43,10 @@ const CancelEventButton: React.FC<CancelButtonProps> = ({
 interface Props extends FilterTableProps {
   onCancelEvent?: (
     id: string,
-    scheduledAt: string,
+    scheduled_at: string | Date | number,
     onSuccess: () => void
   ) => void;
+  triggerType?: SupportedEvents;
 }
 
 const EventsTable: React.FC<Props> = props => {
@@ -56,6 +58,7 @@ const EventsTable: React.FC<Props> = props => {
     columns,
     identifier,
     onCancelEvent,
+    triggerType,
   } = props;
 
   if (rows.length === 0) {
@@ -97,9 +100,12 @@ const EventsTable: React.FC<Props> = props => {
     }
   };
 
-  const onCancelHandler = (id: string, scheduledAt: string) => {
-    if (onCancelEvent) {
-      onCancelEvent(id, scheduledAt, runQuery);
+  const onCancelHandler = (
+    id: string,
+    scheduled_time: string | Date | number
+  ) => {
+    if (onCancelEvent && triggerType) {
+      onCancelEvent(id, scheduled_time, runQuery);
     }
   };
 
@@ -217,10 +223,22 @@ const EventsTable: React.FC<Props> = props => {
       defaultPageSize={10}
       SubComponent={row => {
         const currentRow = rows[row.index];
+        if (triggerType) {
+          return (
+            <EventsSubTable
+              event={currentRow}
+              rows={[]}
+              rowsFormatted={[]}
+              headings={invocationGridHeadings}
+              makeAPICall
+              triggerType={triggerType}
+            />
+          );
+        }
         const logs =
+          currentRow.logs ||
           currentRow.cron_event_logs ||
           currentRow.scheduled_event_logs ||
-          currentRow.logs ||
           [];
         const invocationRows = logs.map((r: any) => {
           const newRow: Record<string, JSX.Element> = {};

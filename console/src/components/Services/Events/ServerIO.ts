@@ -47,6 +47,8 @@ import {
   getDropScheduledTriggerQuery,
   getCreateScheduledEventQuery,
   getRedeliverDataEventQuery,
+  deleteScheduledEvent,
+  SupportedEvents,
 } from '../../../metadata/queryUtils';
 import { exportMetadata } from '../../../metadata/actions';
 import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
@@ -621,26 +623,17 @@ export const getEventLogs = (
 };
 
 export const cancelEvent = (
-  type: 'one-off scheduled' | 'cron',
-  tableName: string,
+  type: SupportedEvents,
   id: string,
   onSuccessCallback: () => void
 ): Thunk => dispatch => {
-  const url = Endpoints.query;
-  const payload = {
-    type: 'delete',
-    args: {
-      table: { name: tableName, schema: 'hdb_catalog' },
-      where: {
-        id: { $eq: id },
-      },
-    },
-  };
+  const url = Endpoints.metadata;
+  const payload = deleteScheduledEvent(type, id);
   const options = {
     method: 'POST',
     body: JSON.stringify(payload),
   };
-  const successText = `Successfully deleted ${type} event`;
+  const successText = `Successfully deleted event`;
   const errorText = 'Error in cancelling the event';
 
   dispatch(requestAction(url, options, successText, errorText, true, true))

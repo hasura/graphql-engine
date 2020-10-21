@@ -1,27 +1,33 @@
 import React from 'react';
+
 import { OrderBy } from '../utils/v1QueryUtils';
-import Where from './Where';
-import Sorts from './Sorts';
-import { useFilterQuery } from './state';
+import { useFilterQuery, TriggerOperation } from './state';
 import { Filter, FilterRenderProp } from './types';
-import { Dispatch } from '../../../types';
-import ReloadEnumValuesButton from '../../Services/Data/Common/Components/ReloadEnumValuesButton';
-import Button from '../Button/Button';
 import { Nullable } from '../utils/tsUtils';
 import styles from './FilterQuery.scss';
 import { BaseTable } from '../../../dataSources/types';
 import { generateTableDef } from '../../../dataSources';
+import { Dispatch } from '../../../types';
+import { EventKind } from '../../Services/Events/types';
+// import ReloadEnumValuesButton from '../../Services/Data/Common/Components/ReloadEnumValuesButton';
+// import Button from '../Button/Button';
+// import Where from './Where';
+// import Sorts from './Sorts';
 
-type Props = {
+interface Props {
   table: BaseTable;
   relationships: Nullable<string[]>; // TODO better
   render: FilterRenderProp;
-  dispatch: Dispatch;
   presets: {
     filters: Filter[];
     sorts: OrderBy[];
   };
-};
+  dispatch: Dispatch;
+  triggerOp: TriggerOperation;
+  triggerType: EventKind;
+  triggerName?: string;
+  currentSource?: string; // mainly needed by data triggers
+}
 
 /*
  * Where clause and sorts builder
@@ -29,18 +35,33 @@ type Props = {
  */
 
 const FilterQuery: React.FC<Props> = props => {
-  const { table, dispatch, presets, render, relationships } = props;
+  const {
+    table,
+    dispatch,
+    presets,
+    render,
+    relationships,
+    triggerName,
+    currentSource,
+    triggerOp,
+    triggerType,
+  } = props;
 
   const { rows, count, runQuery, state, setState } = useFilterQuery(
     generateTableDef(table.table_name, table.table_schema),
     dispatch,
     presets,
-    relationships
+    relationships,
+    triggerOp,
+    triggerType,
+    triggerName,
+    currentSource
   );
 
   return (
     <div className={styles.add_mar_top}>
-      <form
+      {/* NOTE: temp. disabled until an API is ready for this purpose */}
+      {/* <form
         onSubmit={e => {
           e.preventDefault();
           runQuery();
@@ -86,7 +107,7 @@ const FilterQuery: React.FC<Props> = props => {
             />
           ) : null}
         </div>
-      </form>
+      </form> */}
       {/* TODO: Handle loading state */}
       {render(rows, count, state, setState, runQuery)}
     </div>

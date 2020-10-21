@@ -219,6 +219,5 @@ WHERE
   checkConstraintsSql: undefined, // todo
   getFKRelations,
   getReferenceOption: (option: string) => option,
-  getInvocationLogSql: undefined,
   getEventInvocationInfoByIDSql: undefined,
 };

@@ -7,6 +7,7 @@ import { getEventTriggerByName } from '../../../../../metadata/selector';
 type PropsFromState = {
   triggerName: string;
   readOnlyMode: boolean;
+  currentSource: string;
 };
 
 const mapStateToProps: MapStateToProps<PropsFromState, RouterTriggerProps> = (
@@ -24,6 +25,7 @@ const mapStateToProps: MapStateToProps<PropsFromState, RouterTriggerProps> = (
   return {
     triggerName,
     readOnlyMode: state.main.readOnlyMode,
+    currentSource: state.tables.currentDataSource,
   };
 };
 

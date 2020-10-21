@@ -55,6 +55,9 @@ const InvocationLogs: React.FC<Props> = props => {
           ),
         ],
       }}
+      triggerName={triggerName}
+      triggerOp="invocation"
+      triggerType="cron"
     />
   );
 };

@@ -14,6 +14,7 @@ import { LocalAdhocEventState } from '../components/Services/Events/AdhocEvents/
 import { RemoteRelationshipPayload } from '../components/Services/Data/TableRelationships/RemoteRelationships/utils';
 import { Driver, currentDriver } from '../dataSources';
 import { ConsoleState } from '../telemetry/state';
+import { TriggerOperation } from '../components/Common/FilterQuery/state';
 
 export const metadataQueryTypes = [
   'add_source',
@@ -78,6 +79,9 @@ export const metadataQueryTypes = [
   'get_catalog_state',
   'set_catalog_state',
   'set_table_custom_fields',
+  'get_event_invocations',
+  'get_scheduled_events',
+  'delete_scheduled_event',
 ] as const;
 
 export type MetadataQueryType = typeof metadataQueryTypes[number];
@@ -634,13 +638,106 @@ export const getConsoleStateQuery = {
   args: {},
 };
 
-export const getInvocationLogsQuery = (
-  eventType: 'one_off' | 'cron',
-  eventID: string
+export type SupportedEvents = 'cron' | 'one_off';
+
+// FIXME: this does not work anymore, new API needs to support this too, to make it work
+export const getEventInvocationsLogByID = (
+  type: SupportedEvents,
+  event_id: string
 ) => ({
   type: 'get_event_invocations',
   args: {
-    type: eventType,
-    event_id: eventID,
+    type,
+    event_id,
+  },
+});
+
+export const getEventInvocations = (
+  type: SupportedEvents,
+  limit: number,
+  offset: number,
+  triggerName?: string // is required for cron
+) => {
+  const query = {
+    type: 'get_event_invocations',
+    args: {},
+  };
+
+  if (type === 'one_off') {
+    query.args = {
+      type,
+    };
+  } else {
+    query.args = {
+      type,
+      trigger_name: triggerName,
+    };
+  }
+
+  return {
+    ...query,
+    args: {
+      ...query.args,
+      limit,
+      offset,
+    },
+  };
+};
+
+export const getScheduledEvents = (
+  type: SupportedEvents,
+  limit: number,
+  offset: number,
+  triggerOp: Exclude<TriggerOperation, 'invocation'>,
+  triggerName?: string // is required for cron triggers
+) => {
+  const query = {
+    type: 'get_scheduled_events',
+    args: {},
+  };
+  const statusPending = ['scheduled'];
+  const statusProcessed = ['delivered', 'dead', 'error'];
+
+  if (type === 'one_off') {
+    query.args = {
+      type,
+    };
+  } else {
+    query.args = {
+      type,
+      trigger_name: triggerName,
+    };
+  }
+
+  if (triggerOp === 'pending') {
+    query.args = {
+      ...query.args,
+      status: statusPending,
+    };
+  } else {
+    query.args = {
+      ...query.args,
+      status: statusProcessed,
+    };
+  }
+
+  return {
+    ...query,
+    args: {
+      ...query.args,
+      limit,
+      offset,
+    },
+  };
+};
+
+export const deleteScheduledEvent = (
+  type: SupportedEvents,
+  event_id: string
+) => ({
+  type: 'delete_scheduled_event',
+  args: {
+    type,
+    event_id,
   },
 });

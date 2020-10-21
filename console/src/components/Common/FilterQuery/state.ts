@@ -13,15 +13,20 @@ import {
 } from './types';
 
 import { Nullable } from '../utils/tsUtils';
-import { isNotDefined } from '../utils/jsUtils';
-import { parseFilter } from './utils';
 import { QualifiedTable } from '../../../metadata/types';
-import { getLogSql } from '../../../metadata/metadataTableUtils';
+import {
+  getScheduledEvents,
+  getEventInvocations,
+} from '../../../metadata/queryUtils';
+import { EventKind } from '../../Services/Events/types';
+import { isNotDefined } from '../utils/jsUtils';
+import { getDataTriggerLogsQuery } from '../../../metadata/metadataTableUtils';
 
 const defaultFilter = makeValueFilter('', null, '');
 const defaultSort = makeOrderBy('', 'asc');
-
 const defaultState = makeFilterState([defaultFilter], [defaultSort], 10, 0);
+
+export type TriggerOperation = 'pending' | 'processed' | 'invocation';
 
 export const useFilterQuery = (
   table: QualifiedTable,
@@ -30,7 +35,11 @@ export const useFilterQuery = (
     filters: Filter[];
     sorts: OrderBy[];
   },
-  relationships: Nullable<string[]>
+  relationships: Nullable<string[]>,
+  triggerOp: TriggerOperation,
+  triggerType: EventKind,
+  triggerName?: string,
+  currentSource?: string
 ) => {
   const [state, setState] = React.useState(defaultState);
   const [rows, setRows] = React.useState<any[]>([]);
@@ -44,11 +53,11 @@ export const useFilterQuery = (
 
     const { offset, limit, sorts: newSorts } = runQueryOpts;
 
-    const where = {
-      $and: [...state.filters, ...presets.filters]
-        .filter(f => !!f.key && !!f.value)
-        .map(f => parseFilter(f)),
-    };
+    // const where = {
+    //   $and: [...state.filters, ...presets.filters]
+    //     .filter(f => !!f.key && !!f.value)
+    //     .map(f => parseFilter(f)),
+    // };
 
     // const orderBy = newSorts || [
     //   ...state.sorts.filter(f => !!f.column),
@@ -58,23 +67,55 @@ export const useFilterQuery = (
     const offsetValue = isNotDefined(offset) ? state.offset : offset;
     const limitValue = isNotDefined(limit) ? state.limit : limit;
 
-    const query = getLogSql(
-      'select',
-      where.$and[0].cron_event.trigger_name.$eq ?? '',
-      table,
-      relationships ?? [],
-      limitValue ?? 10,
-      offsetValue ?? 0
-    );
+    let query = {};
+    let endpoint = endpoints.metadata;
 
-    const countQuery = getLogSql(
-      'count',
-      where.$and[0].cron_event.trigger_name.$eq ?? '',
-      table,
-      relationships ?? [],
-      undefined,
-      undefined
-    );
+    if (triggerType === 'scheduled') {
+      if (triggerOp !== 'invocation') {
+        query = getScheduledEvents(
+          'one_off',
+          limitValue ?? 10,
+          offsetValue ?? 0,
+          triggerOp
+        );
+      } else {
+        query = getEventInvocations(
+          'one_off',
+          limitValue ?? 10,
+          offsetValue ?? 0
+        );
+      }
+    } else if (triggerType === 'cron') {
+      if (triggerOp !== 'invocation') {
+        query = getScheduledEvents(
+          'cron',
+          limitValue ?? 10,
+          offsetValue ?? 0,
+          triggerOp,
+          triggerName
+        );
+      } else {
+        query = getEventInvocations(
+          'cron',
+          limitValue ?? 10,
+          offsetValue ?? 0,
+          triggerName
+        );
+      }
+    } else if (triggerType === 'data') {
+      endpoint = endpoints.query;
+      if (triggerName) {
+        query = getDataTriggerLogsQuery(
+          triggerOp,
+          currentSource ?? 'default',
+          triggerName,
+          limitValue,
+          offsetValue
+        );
+      } else {
+        return; // fixme: this should just be an error saying that there's no trigger name provided
+      }
+    }
 
     const options = {
       method: 'POST',
@@ -82,23 +123,36 @@ export const useFilterQuery = (
     };
 
     dispatch(
-      requestAction(endpoints.query, options, undefined, undefined, true, true)
+      requestAction(endpoint, options, undefined, undefined, true, true)
     ).then(
       (data: any) => {
-        const receivedData = data.result.slice(1);
-        const formattedData =
-          receivedData.map((val: any) => ({
-            id: val[0],
-            event_id: val[1],
-            status: val[2],
-            created_at: val[5],
-            request: val[3],
-            response: val[4],
-            tries: val[10],
-            next_retry_at: val[12],
-          })) ?? [];
+        if (triggerType === 'data') {
+          // formatting of the data
+          const allKeys = data.results[0];
+          const resultsData = data.results.slice(0);
+          const formattedData: any = [];
+          resultsData.forEach((values: any[]) => {
+            const dataObj: any = {};
+            allKeys.forEach((key: string, idx: number) => {
+              // FIXME: there may be duplicate keys here
+              dataObj[key] = values[idx];
+            });
+            formattedData.push(dataObj);
+          });
 
-        setRows(formattedData);
+          if (limitValue && offsetValue) {
+            setRows(formattedData.slice(offsetValue, limitValue));
+          } else {
+            setRows(formattedData);
+          }
+        }
+
+        if (triggerOp !== 'invocation' && triggerType !== 'data') {
+          setRows(data?.events ?? []);
+        } else {
+          setRows(data?.invocations ?? []);
+        }
+
         setLoading(false);
         if (offset !== undefined) {
           setState(s => ({ ...s, offset }));
@@ -112,21 +166,8 @@ export const useFilterQuery = (
             sorts: newSorts,
           }));
         }
-        dispatch(
-          requestAction(
-            endpoints.query,
-            {
-              method: 'POST',
-              body: JSON.stringify(countQuery),
-            },
-            undefined,
-            undefined,
-            true,
-            true
-          )
-        ).then((countData: { count: number }) => {
-          setCount(countData.count);
-        });
+        // FIXME: 10 is the default size and hence using it here
+        setCount(data?.count ?? 10);
       },
       () => {
         setError(true);

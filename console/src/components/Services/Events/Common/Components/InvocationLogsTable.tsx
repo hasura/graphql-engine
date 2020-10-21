@@ -224,13 +224,14 @@ const InvocationLogsTable: React.FC<Props> = props => {
       SubComponent={logRow => {
         const finalIndex = logRow.index;
         const finalRow = rows[finalIndex];
+        // FIXME: once the new invocation logs APIs have been hooked up
         const currentPayload = JSON.stringify(
-          JSON.parse(finalRow.request),
+          JSON.parse(finalRow?.request ?? '{}'),
           null,
           4
         );
         const finalResponse = JSON.stringify(
-          JSON.parse(finalRow.response),
+          JSON.parse(finalRow?.response ?? '{}'),
           null,
           4
         );

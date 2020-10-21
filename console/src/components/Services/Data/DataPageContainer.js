@@ -14,7 +14,7 @@ import {
 } from './DataActions';
 import { CLI_CONSOLE_MODE } from '../../../constants';
 import styles from '../../Common/TableCommon/Table.scss';
-import { currentDriver, dataSource, useDataSource } from '../../../dataSources';
+import { currentDriver, useDataSource } from '../../../dataSources';
 import { getDataSources } from '../../../metadata/selector';
 import { push } from 'react-router-redux';
 

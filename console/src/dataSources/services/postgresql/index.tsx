@@ -44,7 +44,6 @@ import {
   frequentlyUsedColumns,
   getFKRelations,
   deleteFunctionSql,
-  getInvocationLogSql,
   getEventInvocationInfoByIDSql,
 } from './sqlUtils';
 
@@ -436,6 +435,5 @@ export const postgres: DataSourcesAPI = {
   getFKRelations,
   getReferenceOption,
   deleteFunctionSql,
-  getInvocationLogSql,
   getEventInvocationInfoByIDSql,
 };

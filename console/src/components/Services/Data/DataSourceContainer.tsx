@@ -11,7 +11,7 @@ import { showErrorNotification } from '../Common/Notification';
 import {
   fetchDataInit,
   fetchFunctionInit,
-  updateSchemaInfo,
+  // updateSchemaInfo,
   UPDATE_CURRENT_DATA_SOURCE,
   UPDATE_CURRENT_SCHEMA,
 } from './DataActions';
