@@ -34,16 +34,24 @@ const MODAL_OPEN = 'EditItem/MODAL_OPEN';
 const modalOpen = () => ({ type: MODAL_OPEN });
 const modalClose = () => ({ type: MODAL_CLOSE });
 
-const editRowAsMigration = (
-  tableDef,
-  pkClause,
-  oldItem,
-  newItem,
-  callback,
-  columns
-) => (dispatch, getState) => {
-  const upQuery = getEditRowQuery(tableDef, newItem, columns, pkClause);
-  const downQuery = getEditRowQuery(tableDef, oldItem, columns, pkClause);
+const whereClause = oldItem => {
+  const listOfElems = [];
+  const oldItemKeys = Object.keys(oldItem);
+  oldItemKeys.forEach(key => {
+    listOfElems.push({ [key]: { $eq: oldItem[key] } });
+  });
+
+  return {
+    $and: listOfElems,
+  };
+};
+
+const editRowAsMigration = (tableDef, oldItem, newItem, callback, columns) => (
+  dispatch,
+  getState
+) => {
+  const upQuery = getEditRowQuery(tableDef, newItem, columns, oldItem);
+  const downQuery = getEditRowQuery(tableDef, oldItem, columns, newItem);
 
   const migrationName = `update_row_in_${tableDef.schema}_${tableDef.name}`;
   const customOnSuccess = () => {
@@ -148,14 +156,15 @@ const editItem = (tableName, colValues, isMigration = false) => {
     if (isMigration) {
       returning = columns.map(col => col.column_name);
     }
-    const { pkClause, oldItem } = state.tables.update;
+    const { oldItem } = state.tables.update;
+    const newWhereClause = whereClause(oldItem);
     const reqBody = {
       type: 'update',
       args: {
         table: tableDef,
         $set: _setObject,
         $default: _defaultArray,
-        where: pkClause,
+        where: newWhereClause,
         returning,
       },
     };
@@ -188,7 +197,6 @@ const editItem = (tableName, colValues, isMigration = false) => {
           dispatch(
             editRowAsMigration(
               tableDef,
-              pkClause,
               oldItem,
               data.returning[0],
               () => cb(affectedRows),
