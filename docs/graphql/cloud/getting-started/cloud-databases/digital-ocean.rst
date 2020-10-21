@@ -2,7 +2,7 @@
    :description: Using Hasura with a DO Postgres database
    :keywords: hasura, docs, existing database, guide, digital ocean
 
-.. _cloud_existing_db_do:
+.. _cloud_db_do:
 
 Using Hasura Cloud with a Digital Ocean Postgres database
 =========================================================
@@ -17,8 +17,8 @@ Introduction
 
 This guide explains how to connect a new or existing Digital Ocean Postgres database to a Hasura Cloud project.
 
-Before you begin
-----------------
+Step 0: Sign up or log in to Hasura Cloud
+-----------------------------------------
 
 Navigate to `Hasura Cloud <https://cloud.hasura.io/>`__ and sign up or log in.
 
@@ -119,7 +119,7 @@ Then click the ``Copy`` button for the next step.
 Step 5: Finish creating the Hasura Cloud project
 ------------------------------------------------
 
-Back on the Hasura Cloud dashboard, enter the database URL that we configured in :ref:`step 4 <get_db_url_do>`:
+Back on the Hasura Cloud dashboard, enter the database URL that we retrieved in :ref:`step 4 <get_db_url_do>`:
 
 .. thumbnail:: /img/graphql/cloud/existing-db/finish-create-project.png
    :alt: Finish creating the Hasura Cloud project

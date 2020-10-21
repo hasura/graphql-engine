@@ -27,7 +27,11 @@ Check out the following guides for tutorials on how to use Hasura Cloud with an 
    :maxdepth: 1
    :titlesonly:
 
-   AWS <aws>
+   AWS Postgres <aws-postgres>
    GCP <gcp>
    Azure <azure>
    Digital Ocean <digital-ocean>
+   Aiven <aiven>
+   Timescale Cloud <timescale-cloud>
+   YugaByte <yugabyte>
+   AWS Aurora <aws-aurora>

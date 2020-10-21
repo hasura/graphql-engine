@@ -2,7 +2,7 @@
    :description: Using Hasura with an Azure Postgres database
    :keywords: hasura, docs, existing database, guide, azure
 
-.. _cloud_existing_db_azure:
+.. _cloud_db_azure:
 
 Using Hasura Cloud with an Azure Postgres database
 ==================================================
@@ -17,8 +17,8 @@ Introduction
 
 This guide explains how to connect a new or existing Azure Postgres database to a Hasura Cloud project.
 
-Before you begin
-----------------
+Step 0: Sign up or log in to Hasura Cloud
+-----------------------------------------
 
 Navigate to `Hasura Cloud <https://cloud.hasura.io/>`__ and sign up or log in.
 
@@ -83,6 +83,15 @@ Then click ``Review + create``.
 Step 3: Allow connections to your DB from Hasura Cloud
 ------------------------------------------------------
 
+On the database dashboard, click on ``Connection security`` under ``Settings`` on the left navigation bar. 
+On ``Allow access to Azure services``, click the ``Yes button``. Then add a Firewall rule for Hasura.
+
+.. thumbnail:: /img/graphql/cloud/existing-db/azure/azure-add-hasura-ip.png
+   :alt: Add Hasura IP on Azure
+   :width: 1000px
+
+Then click ``Save`` on the top left.
+
 Step 4: Construct the database connection URL
 ---------------------------------------------
 
@@ -92,10 +101,23 @@ The structure of the database connection URL looks as follows:
 
     postgresql://<user-name>:<password>@<public-ip>:<postgres-port>/<db>
 
+On the database dashboard, click on ``Overview``:
+
+.. thumbnail:: /img/graphql/cloud/existing-db/azure/azure-get-database-connection-string.png
+   :alt: Construct the database connection string for Azure
+   :width: 1000px
+
+- ``user-name``: If you have a separate database user the user name will be their name. If you didn't specify a user, use the ``Admin username`` (see screenshot above). 
+   **Note:** you need to escape the ``@``. Replace it with ``%40``.
+- ``password``: If you have a separate database user, use their password. Otherwise, use the password that you chose when creating the database.
+- ``public-ip``: On the screenshot above, the ``Server name`` is the public IP.
+- ``postgres-port``: The default port for Postgres is ``5432``.
+- ``db``: The DB is ``postgres`` by default unless otherwise specified.
+
 Step 5: Finish creating the Hasura Cloud project
 ------------------------------------------------
 
-Back on the Hasura Cloud dashboard, enter the database URL that we configured in :ref:`step 4 <get_db_url_do>`:
+Back on the Hasura Cloud dashboard, enter the database URL that we constructed in :ref:`step 4 <get_db_url_do>`:
 
 .. thumbnail:: /img/graphql/cloud/existing-db/finish-create-project.png
    :alt: Finish creating the Hasura Cloud project

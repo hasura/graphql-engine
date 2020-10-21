@@ -2,7 +2,7 @@
    :description: Using Hasura with a GCP Postgres database
    :keywords: hasura, docs, existing database, guide, gcp
 
-.. _cloud_existing_db_gcp:
+.. _cloud_db_gcp:
 
 Using Hasura Cloud with a GCP Postgres database
 ===============================================
@@ -17,8 +17,8 @@ Introduction
 
 This guide explains how to connect a new or existing GCP Postgres database to a Hasura Cloud project.
 
-Before you begin
-----------------
+Step 0: Sign up or log in to Hasura Cloud
+-----------------------------------------
 
 Navigate to `Hasura Cloud <https://cloud.hasura.io/>`__ and sign up or log in.
 
@@ -122,7 +122,7 @@ The structure of the database connection URL looks as follows:
 Step 5: Finish creating the Hasura Cloud project
 ------------------------------------------------
 
-Back on the Hasura Cloud dashboard, enter the database URL that we configured in :ref:`step 4 <configure_db_url_gcp>`:
+Back on the Hasura Cloud dashboard, enter the database URL that we constructed in :ref:`step 4 <configure_db_url_gcp>`:
 
 .. thumbnail:: /img/graphql/cloud/existing-db/finish-create-project.png
    :alt: Finish creating the Hasura Cloud project
