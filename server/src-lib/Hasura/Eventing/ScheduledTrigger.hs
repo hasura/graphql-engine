@@ -81,6 +81,7 @@ module Hasura.Eventing.ScheduledTrigger
   , unlockAllLockedScheduledEventsTx
   , clearFutureCronEventsTx
   , insertScheduledEventTx
+  , mkEventIdBoolExp
   , getInvocationsTx
   , mkPaginationSelectExp
   , invocationFieldExtractors
@@ -809,44 +810,65 @@ cronEventsTable =
 withCount :: (Int, Q.AltJ a) -> WithTotalCount a
 withCount (count, Q.AltJ a) = WithTotalCount count a
 
+mkEventIdBoolExp :: QualifiedTable -> EventId -> S.BoolExp
+mkEventIdBoolExp table eventId =
+  S.BECompare S.SEQ (S.SEQIden $ S.mkQIdenTable table $ Iden "event_id")
+  (S.SELit $ unEventId eventId)
+
 getInvocationsTx
-  :: ScheduledEvent
+  :: GetInvocationsBy
   -> ScheduledEventPagination
   -> Q.TxE QErr (WithTotalCount [ScheduledEventInvocation])
-getInvocationsTx scheduledEvent pagination = do
+getInvocationsTx invocationsBy pagination = do
   let sql = Q.fromBuilder $ toSQL $ mkPaginationSelectExp allRowsSelect pagination
   (withCount . Q.getRow) <$> Q.withQE defaultTxErrorHandler sql () True
   where
     createdAtOrderBy table =
       let createdAtCol = S.SEQIden $ S.mkQIdenTable table $ Iden "created_at"
       in S.OrderByExp $ flip (NE.:|) [] $ OrderByItem createdAtCol (Just S.OTDesc) Nothing
-    allRowsSelect = case scheduledEvent of
-      SEOneOff ->
-        let table = QualifiedObject "hdb_catalog" $ TableName "hdb_scheduled_event_invocation_logs"
+
+    oneOffInvocationsTable = QualifiedObject "hdb_catalog" $ TableName "hdb_scheduled_event_invocation_logs"
+    cronInvocationsTable = QualifiedObject "hdb_catalog" $ TableName "hdb_cron_event_invocation_logs"
+
+    allRowsSelect = case invocationsBy of
+      GIBEventId eventId eventType ->
+        let table = case eventType of
+              OneOff -> oneOffInvocationsTable
+              Cron   -> cronInvocationsTable
         in S.mkSelect
            { S.selExtr = invocationFieldExtractors table
            , S.selFrom = Just $ S.mkSimpleFromExp table
            , S.selOrderBy = Just $ createdAtOrderBy table
+           , S.selWhere = Just $ S.WhereFrag $ mkEventIdBoolExp table eventId
            }
-      SECron triggerName ->
-        let invocationTable = QualifiedObject "hdb_catalog" $ TableName "hdb_cron_event_invocation_logs"
-            eventTable = cronEventsTable
-            joinCondition = S.JoinOn $ S.BECompare S.SEQ
-              (S.SEQIden $ S.mkQIdenTable eventTable $ Iden "id")
-              (S.SEQIden $ S.mkQIdenTable invocationTable $ Iden "event_id")
-            joinTables =
-              S.JoinExpr (S.FISimple invocationTable Nothing) S.Inner
-                   (S.FISimple eventTable Nothing) joinCondition
-            triggerBoolExp = S.BECompare S.SEQ
-              (S.SEQIden $ S.mkQIdenTable eventTable (Iden "trigger_name"))
-              (S.SELit $ triggerNameToTxt triggerName)
 
-        in S.mkSelect
-           { S.selExtr = invocationFieldExtractors invocationTable
-           , S.selFrom = Just $ S.FromExp [S.FIJoin joinTables]
-           , S.selWhere = Just $ S.WhereFrag triggerBoolExp
-           , S.selOrderBy = Just $ createdAtOrderBy invocationTable
-           }
+      GIBEvent event -> case event of
+        SEOneOff ->
+          let table = oneOffInvocationsTable
+          in S.mkSelect
+             { S.selExtr = invocationFieldExtractors table
+             , S.selFrom = Just $ S.mkSimpleFromExp table
+             , S.selOrderBy = Just $ createdAtOrderBy table
+             }
+        SECron triggerName ->
+          let invocationTable = cronInvocationsTable
+              eventTable = cronEventsTable
+              joinCondition = S.JoinOn $ S.BECompare S.SEQ
+                (S.SEQIden $ S.mkQIdenTable eventTable $ Iden "id")
+                (S.SEQIden $ S.mkQIdenTable invocationTable $ Iden "event_id")
+              joinTables =
+                S.JoinExpr (S.FISimple invocationTable Nothing) S.Inner
+                     (S.FISimple eventTable Nothing) joinCondition
+              triggerBoolExp = S.BECompare S.SEQ
+                (S.SEQIden $ S.mkQIdenTable eventTable (Iden "trigger_name"))
+                (S.SELit $ triggerNameToTxt triggerName)
+
+          in S.mkSelect
+             { S.selExtr = invocationFieldExtractors invocationTable
+             , S.selFrom = Just $ S.FromExp [S.FIJoin joinTables]
+             , S.selWhere = Just $ S.WhereFrag triggerBoolExp
+             , S.selOrderBy = Just $ createdAtOrderBy invocationTable
+             }
 
 -- | Build a select expression which outputs total count and
 -- list of json rows with pagination limit and offset applied
@@ -856,11 +878,12 @@ mkPaginationSelectExp
   -> S.Select
 mkPaginationSelectExp allRowsSelect ScheduledEventPagination{..} =
   S.mkSelect
-  { S.selCTEs = [(toAlias countCteAlias, allRowsSelect)]
+  { S.selCTEs = [(toAlias countCteAlias, allRowsSelect), (toAlias limitCteAlias, limitCteSelect)]
   , S.selExtr = [countExtractor, rowsExtractor]
   }
   where
     countCteAlias = Iden "count_cte"
+    limitCteAlias = Iden "limit_cte"
 
     countExtractor =
       let selectExp = S.mkSelect
@@ -869,13 +892,18 @@ mkPaginationSelectExp allRowsSelect ScheduledEventPagination{..} =
             }
       in S.Extractor (S.SESelect selectExp) Nothing
 
+    limitCteSelect = S.mkSelect
+      { S.selExtr = [selectStar]
+      , S.selFrom = Just $ S.mkIdenFromExp countCteAlias
+      , S.selLimit = (S.LimitExp . S.intToSQLExp) <$> _sepLimit
+      , S.selOffset = (S.OffsetExp . S.intToSQLExp) <$> _sepOffset
+      }
+
     rowsExtractor =
-      let jsonAgg = S.SEUnsafe "json_agg(row_to_json(count_cte.*))"
+      let jsonAgg = S.SEUnsafe "json_agg(row_to_json(limit_cte.*))"
           selectExp = S.mkSelect
             { S.selExtr = [S.Extractor jsonAgg Nothing]
-            , S.selFrom = Just $ S.mkIdenFromExp countCteAlias
-            , S.selLimit = (S.LimitExp . S.intToSQLExp) <$> _sepLimit
-            , S.selOffset = (S.OffsetExp . S.intToSQLExp) <$> _sepOffset
+            , S.selFrom = Just $ S.mkIdenFromExp limitCteAlias
             }
       in S.Extractor (S.handleIfNull (S.SELit "[]") (S.SESelect selectExp)) Nothing
 

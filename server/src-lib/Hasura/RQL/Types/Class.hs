@@ -38,7 +38,7 @@ class (Monad m) => MonadScheduledEvents m where
 
   -- | Fetch cron/oneoff scheduled event invocations
   fetchInvocations
-    :: ScheduledEvent
+    :: GetInvocationsBy
     -> ScheduledEventPagination
     -> m (WithTotalCount [ScheduledEventInvocation])
 

@@ -17,6 +17,7 @@ module Hasura.RQL.Types.ScheduledTrigger
   , scheduledEventStatusToText
   , ScheduledEventType(..)
   , ScheduledEvent(..)
+  , GetInvocationsBy(..)
   , ScheduledEventPagination(..)
   , ScheduledEventInvocation(..)
   , GetEventInvocations(..)
@@ -254,21 +255,31 @@ scheduledEventPaginationToPairs :: ScheduledEventPagination -> [Pair]
 scheduledEventPaginationToPairs ScheduledEventPagination{..} =
   ["limit" .= _sepLimit, "offset" .= _sepOffset]
 
+data GetInvocationsBy
+  = GIBEventId !EventId !ScheduledEventType
+  | GIBEvent !ScheduledEvent
+  deriving (Show, Eq)
+
 data GetEventInvocations
   = GetEventInvocations
-  { _geiScheduledEvent :: !ScheduledEvent
-  , _geiPagination     :: !ScheduledEventPagination
+  { _geiInvocationsBy :: !GetInvocationsBy
+  , _geiPagination    :: !ScheduledEventPagination
   } deriving (Eq, Show)
 
 instance FromJSON GetEventInvocations where
   parseJSON = withObject "Object" $ \o ->
     GetEventInvocations
-      <$> parseScheduledEvent o
+      <$> (parseEventId o <|> (GIBEvent <$> parseScheduledEvent o))
       <*> parseScheduledEventPagination o
+    where
+      parseEventId o =
+        GIBEventId <$> o .: "event_id" <*> o .: "type"
 
 instance ToJSON GetEventInvocations where
   toJSON GetEventInvocations{..} =
-    object $ scheduledEventToPairs _geiScheduledEvent
+    object $ case _geiInvocationsBy of
+             GIBEventId eventId eventType -> ["event_id" .= eventId, "type" .= eventType]
+             GIBEvent event               -> scheduledEventToPairs event
           <> scheduledEventPaginationToPairs _geiPagination
 
 data CronEventSeed

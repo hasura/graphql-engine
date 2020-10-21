@@ -219,10 +219,12 @@ runGetEventInvocations
      )
   => GetEventInvocations -> m EncJSON
 runGetEventInvocations GetEventInvocations{..} = do
-  case _geiScheduledEvent of
-    SEOneOff    -> pure ()
-    SECron name -> checkExists name
-  WithTotalCount count invocations <- fetchInvocations _geiScheduledEvent _geiPagination
+  case _geiInvocationsBy of
+    GIBEventId _ _ -> pure ()
+    GIBEvent event -> case event of
+      SEOneOff    -> pure ()
+      SECron name -> checkExists name
+  WithTotalCount count invocations <- fetchInvocations _geiInvocationsBy _geiPagination
   pure $ encJFromJValue $ J.object [ "invocations" J..= invocations
                                    , "count" J..= count
                                    ]

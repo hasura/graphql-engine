@@ -82,7 +82,7 @@ class (Monad m) => MonadMetadataStorage m where
   getScheduledEventsForDelivery :: MetadataStorageT m ([CronEvent], [OneOffScheduledEvent])
   getOneOffScheduledEvents :: ScheduledEventPagination -> [ScheduledEventStatus] -> MetadataStorageT m (WithTotalCount [OneOffScheduledEvent])
   getCronEvents :: TriggerName -> ScheduledEventPagination -> [ScheduledEventStatus] -> MetadataStorageT m (WithTotalCount [CronEvent])
-  getInvocations :: ScheduledEvent -> ScheduledEventPagination -> MetadataStorageT m (WithTotalCount [ScheduledEventInvocation])
+  getInvocations :: GetInvocationsBy -> ScheduledEventPagination -> MetadataStorageT m (WithTotalCount [ScheduledEventInvocation])
   insertScheduledEvent :: ScheduledEventSeed -> MetadataStorageT m ()
   deleteScheduledEvent :: ScheduledEventId -> ScheduledEventType -> MetadataStorageT m ()
   insertScheduledEventInvocation
