@@ -32,6 +32,7 @@ import           Control.Arrow.Extended
 import           Control.Lens                             hiding ((.=))
 import           Control.Monad.Trans.Control              (MonadBaseControl)
 import           Control.Monad.Unique
+import           Control.Monad.Validate
 import           Data.Aeson
 
 import qualified Hasura.Incremental                       as Inc
@@ -50,6 +51,7 @@ import           Hasura.RQL.DDL.Schema.Cache.Dependencies
 import           Hasura.RQL.DDL.Schema.Cache.Fields
 import           Hasura.RQL.DDL.Schema.Cache.Permission
 import           Hasura.RQL.DDL.Schema.Diff
+import           Hasura.RQL.DDL.Schema.Enum               (fetchEnumValuesFromDb)
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Source             (fetchPgScalars, resolveSource)
 import           Hasura.RQL.DDL.Schema.Table
@@ -201,7 +203,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       Inc.dependOn -< Inc.selectKeyD sourceName invalidationKeys
       (| withRecordInconsistency (
            liftEitherA <<< bindA -< (getResolvedSourceFromBuildContext sourceName <$> ask) >>= \case
-               Nothing -> resolveSource env sourceMetadata
+               Nothing -> resolveSource env $ _smConfiguration sourceMetadata
                Just rs -> pure $ Right rs)
        |) metadataObj
 
@@ -213,10 +215,11 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
          , PGSourceConfig
          , PostgresTablesMetadata
          , PostgresFunctionsMetadata
+         , ProbableEnumTables
          , RemoteSchemaMap
          , Inc.Dependency InvalidationKeys
          ) `arr` SourceOutput
-    buildSource = proc (sourceMetadata, sourceConfig, pgTables, pgFunctions, remoteSchemaMap, invalidationKeys) -> do
+    buildSource = proc (sourceMetadata, sourceConfig, pgTables, pgFunctions, enumTables, remoteSchemaMap, invalidationKeys) -> do
       let SourceMetadata source tables functions _ = sourceMetadata
           (tableInputs, nonColumnInputs, permissions) = unzip3 $ map mkTableInputs $ M.elems tables
           eventTriggers = map (_tmTable &&& (M.elems . _tmEventTriggers)) (M.elems tables)
@@ -229,7 +232,9 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
             in M.catMaybes $ alignWith alignFn lMap rMap
 
       -- tables
-      tableRawInfos <- buildTableCache -< (source, sourceConfig, pgTables, tableInputs, Inc.selectD #_ikMetadata invalidationKeys)
+      tableRawInfos <- buildTableCache -< ( source, sourceConfig, pgTables, enumTables
+                                          , tableInputs, Inc.selectD #_ikMetadata invalidationKeys
+                                          )
 
       -- relationships and computed fields
       let nonColumnsByTable = mapFromL _nctiTable nonColumnInputs
@@ -293,9 +298,9 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
              maybeResolvedSource <- resolveSourceIfNeeded -< (sourceInvalidationsKeys, sourceMetadata)
              case maybeResolvedSource of
                Nothing -> returnA -< Nothing
-               Just (ResolvedSource pgSourceConfig tablesMeta functionsMeta pgScalars) -> do
-                 so <- buildSource -< ( sourceMetadata, pgSourceConfig, tablesMeta
-                                      , functionsMeta, M.map fst remoteSchemaMap, invalidationKeys
+               Just (ResolvedSource pgSourceConfig tablesMeta functionsMeta pgScalars enumTables) -> do
+                 so <- buildSource -< ( sourceMetadata, pgSourceConfig, tablesMeta, functionsMeta
+                                      , enumTables, M.map fst remoteSchemaMap, invalidationKeys
                                       )
                  returnA -< Just (so, pgScalars))
          |) sources
@@ -403,13 +408,13 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
              (| modifyErrA (do
                   (info, dependencies) <- bindErrorA -< subTableP2Setup env source table eventTriggerConf
                   let tableColumns = M.mapMaybe (^? _FIColumn) (_tciFieldInfoMap tableInfo)
-                  recreateViewIfNeeded -< (table, tableColumns, triggerName, etcDefinition eventTriggerConf, sourceConfig)
+                  recreateTriggerIfNeeded -< (table, tableColumns, triggerName, etcDefinition eventTriggerConf, sourceConfig)
                   recordDependencies -< (metadataObject, schemaObjectId, dependencies)
                   returnA -< info)
              |) (addTableContext table . addTriggerContext))
            |) metadataObject
 
-        recreateViewIfNeeded = Inc.cache $
+        recreateTriggerIfNeeded = Inc.cache $
           arrM \(tableName, tableColumns, triggerName, triggerDefinition, sourceConfig) -> do
             buildReason <- asks _bcReason
             sqlGenCtx <- askSQLGenCtx
@@ -497,10 +502,11 @@ withMetadataCheck source cascade action = do
   -- Get the metadata after the sql query
   (postActionTableMeta, postActionFunctionMeta, postActionFunctionInfos) <- fetchMeta preActionTables preActionFunctions
 
-  let preActionTablesMeta = filter (flip M.member preActionTables . tmTable) preActionTableMeta
-      schemaDiff = getSchemaDiff preActionTablesMeta postActionTableMeta
+  let preActionTableMeta' = filter (flip M.member preActionTables . tmTable) preActionTableMeta
+      schemaDiff = getSchemaDiff preActionTableMeta' postActionTableMeta
       FunctionDiff droppedFuncs alteredFuncs = getFuncDiff preActionFunctionMeta postActionFunctionMeta
       overloadedFuncs = getOverloadedFuncs (M.keys preActionFunctions) postActionFunctionMeta
+      newTables = getNewlyAddedTables preActionTableMeta postActionTableMeta
 
   -- Do not allow overloading functions
   unless (null overloadedFuncs) $
@@ -535,8 +541,18 @@ withMetadataCheck source cascade action = do
     processSchemaChanges preActionTables schemaDiff
 
   pgScalars <- fetchPgScalars
+  probableNewEnumTables <- fmap (M.fromList . catMaybes) $ for newTables $ \(tableName, tableInfo) ->
+    fmap (fmap (tableName,) . join) $
+    forM (enumTable tableInfo) $ \(pkeyColumn, maybeDescriptionColumn) -> do
+      eitherResult <- runValidateT $
+        fetchEnumValuesFromDb tableName pkeyColumn maybeDescriptionColumn
+      case eitherResult of
+        Left _  -> pure Nothing
+        Right r -> pure $ Just r
+
   let postActionTableInfos = M.fromList $ map (tmTable &&& tmInfo) postActionTableMeta
-      resolvedSource = ResolvedSource sourceConfig postActionTableInfos postActionFunctionInfos pgScalars
+      resolvedSource = ResolvedSource sourceConfig postActionTableInfos
+                       postActionFunctionInfos pgScalars probableNewEnumTables
 
   -- Set the source as pre-resolved
   setPreResolvedSource source resolvedSource

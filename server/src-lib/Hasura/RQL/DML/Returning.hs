@@ -131,12 +131,12 @@ mkMutationOutputExp
   :: QualifiedTable
   -> [PGColumnInfo]
   -> Maybe Int
-  -> S.CTE
+  -> MutationCTE
   -> MutationOutput
   -> Bool
   -> S.SelectWith
 mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
-  S.SelectWith [ (S.Alias mutationResultAlias, cte)
+  S.SelectWith [ (S.Alias mutationResultAlias, getMutationCTE cte)
                , (S.Alias allColumnsAlias, allColumnsSelect)
                ] sel
   where
@@ -147,17 +147,11 @@ mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
                        , S.selFrom = Just $ S.mkIdenFromExp mutationResultAlias
                        }
 
-    sel = S.mkSelect { S.selExtr = [ S.Extractor extrExp Nothing
-                                   , S.Extractor checkErrorExp Nothing
-                                   ]
+    sel = S.mkSelect { S.selExtr = S.Extractor extrExp Nothing
+                                   : bool [] [S.Extractor checkErrorExp Nothing] (checkPermissionReq cte)
                      }
           where
-            checkErrorExp =
-              let stringAggCheckError =
-                    S.SEFnApp "string_agg" [S.SEIden checkErrorIden, S.SELit ","] Nothing
-              in S.SESelect $ S.mkSelect { S.selExtr = [S.Extractor stringAggCheckError Nothing]
-                                         , S.selFrom = Just $ S.mkIdenFromExp mutationResultAlias
-                                         }
+            checkErrorExp = mkCheckErrorExp mutationResultAlias
             extrExp = case mutOutput of
               MOutMultirowFields mutFlds ->
                 let jsonBuildObjArgs = flip concatMap mutFlds $
@@ -171,6 +165,14 @@ mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
                     tabPerm = TablePerm annBoolExpTrue Nothing
                 in S.SESelect $ mkSQLSelect JASSingleObject $
                    AnnSelectG annFlds tabFrom tabPerm noSelectArgs strfyNum
+
+mkCheckErrorExp :: IsIden a => a -> S.SQLExp
+mkCheckErrorExp alias =
+  let stringAggCheckError =
+        S.SEFnApp "string_agg" [S.SEIden checkErrorIden, S.SELit ","] Nothing
+  in S.SESelect $ S.mkSelect { S.selExtr = [S.Extractor stringAggCheckError Nothing]
+                             , S.selFrom = Just $ S.mkIdenFromExp alias
+                             }
 
 checkRetCols
   :: (UserInfoM m, QErrM m)

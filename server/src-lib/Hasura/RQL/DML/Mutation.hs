@@ -39,7 +39,7 @@ type MutationRemoteJoinCtx = (HTTP.Manager, [N.Header], UserInfo)
 data Mutation
   = Mutation
   { _mTable       :: !QualifiedTable
-  , _mQuery       :: !(S.CTE, DS.Seq Q.PrepArg)
+  , _mQuery       :: !(MutationCTE, DS.Seq Q.PrepArg)
   , _mOutput      :: !MutationOutput
   , _mCols        :: ![PGColumnInfo]
   , _mRemoteJoins :: !(Maybe (RemoteJoins, MutationRemoteJoinCtx))
@@ -49,7 +49,7 @@ data Mutation
 mkMutation
   :: Maybe MutationRemoteJoinCtx
   -> QualifiedTable
-  -> (S.CTE, DS.Seq Q.PrepArg)
+  -> (MutationCTE, DS.Seq Q.PrepArg)
   -> MutationOutput
   -> [PGColumnInfo]
   -> Bool
@@ -115,10 +115,18 @@ mutateAndSel env (Mutation qt q mutationOutput allCols remoteJoins strfyNum) = d
   MutateResp _ columnVals <- liftTx $ mutateAndFetchCols qt allCols q strfyNum
   selCTE <- mkSelCTEFromColVals qt allCols columnVals
   -- Perform select query and fetch returning fields
-  executeMutationOutputQuery env qt allCols Nothing selCTE mutationOutput strfyNum [] remoteJoins
+  executeMutationOutputQuery env qt allCols Nothing
+    (MCNoPermissionCheck selCTE) mutationOutput strfyNum [] remoteJoins
+
+withCheckPermission :: (MonadError QErr m) => m (a, Maybe Text) -> m a
+withCheckPermission sqlTx = do
+  (rawResponse, maybeCheckError) <- sqlTx
+  case maybeCheckError of
+    Just err -> throw400 PermissionError $ "Check constraint violation. " <> err
+    Nothing  -> pure rawResponse
 
 executeMutationOutputQuery
-  ::
+  :: forall m.
   ( HasVersion
   , MonadTx m
   , MonadIO m
@@ -128,36 +136,54 @@ executeMutationOutputQuery
   -> QualifiedTable
   -> [PGColumnInfo]
   -> Maybe Int
-  -> S.CTE
+  -> MutationCTE
   -> MutationOutput
   -> Bool
   -> [Q.PrepArg] -- ^ Prepared params
   -> Maybe (RemoteJoins, MutationRemoteJoinCtx)  -- ^ Remote joins context
   -> m EncJSON
 executeMutationOutputQuery env qt allCols preCalAffRows cte mutOutput strfyNum prepArgs maybeRJ = do
-  let selectWith = mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum
-      query = Q.fromBuilder $ toSQL selectWith
-  (rawResponse, maybeCheckError) <-
+  let queryTx :: Q.FromRes a => m a
+      queryTx = do
+        let selectWith = mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum
+            query = Q.fromBuilder $ toSQL selectWith
         -- See Note [Prepared statements in Mutations]
-      Q.getRow <$> liftTx (Q.rawQE dmlTxErrorHandler query prepArgs False)
+        liftTx (Q.rawQE dmlTxErrorHandler query prepArgs False)
 
-  case maybeCheckError of
-    Just err -> throw400 ConstraintViolation err
-    Nothing  -> case maybeRJ of
-      Nothing -> pure $ encJFromLBS rawResponse
-      Just (remoteJoins, (httpManager, reqHeaders, userInfo)) ->
-        processRemoteJoins env httpManager reqHeaders userInfo rawResponse remoteJoins
+  rawResponse <- case cte of
+    MCPermissionCheck _   -> withCheckPermission $ Q.getRow <$> queryTx
+    MCNoPermissionCheck _ -> (runIdentity . Q.getRow) <$> queryTx
+  case maybeRJ of
+    Nothing -> pure $ encJFromLBS rawResponse
+    Just (remoteJoins, (httpManager, reqHeaders, userInfo)) ->
+      processRemoteJoins env httpManager reqHeaders userInfo rawResponse remoteJoins
+  -- (rawResponse, maybeCheckError) <-
+  --     Q.getRow <$> liftTx (Q.rawQE dmlTxErrorHandler query prepArgs False)
+
+  -- case maybeCheckError of
+  --   Just err -> throw400 PermissionError $ "Check constraint violation. " <> err
+  --   Nothing  -> case maybeRJ of
+  --     Nothing -> pure $ encJFromLBS rawResponse
+  --     Just (remoteJoins, (httpManager, reqHeaders, userInfo)) ->
+  --       processRemoteJoins env httpManager reqHeaders userInfo rawResponse remoteJoins
 
 mutateAndFetchCols
   :: QualifiedTable
   -> [PGColumnInfo]
-  -> (S.CTE, DS.Seq Q.PrepArg)
+  -> (MutationCTE, DS.Seq Q.PrepArg)
   -> Bool
   -> Q.TxE QErr (MutateResp TxtEncodedPGVal)
-mutateAndFetchCols qt cols (cte, p) strfyNum =
-  Q.getAltJ . runIdentity . Q.getRow
-    -- See Note [Prepared statements in Mutations]
-    <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sql) (toList p) False
+mutateAndFetchCols qt cols (cte, p) strfyNum = do
+  let mutationTx :: Q.FromRes a => Q.TxE QErr a
+      mutationTx =
+        -- See Note [Prepared statements in Mutations]
+        Q.rawQE dmlTxErrorHandler sqlText (toList p) False
+
+  case cte of
+    MCPermissionCheck _ ->
+      withCheckPermission $ (first Q.getAltJ . Q.getRow) <$> mutationTx
+    MCNoPermissionCheck _ ->
+      (Q.getAltJ . runIdentity . Q.getRow) <$> mutationTx
   where
     aliasIden = Iden $ qualObjectToText qt <> "__mutation_result"
     tabFrom = FromIden aliasIden
@@ -165,9 +191,12 @@ mutateAndFetchCols qt cols (cte, p) strfyNum =
     selFlds = flip map cols $
               \ci -> (fromPGCol $ pgiColumn ci, mkAnnColumnFieldAsText ci)
 
-    sql = toSQL selectWith
-    selectWith = S.SelectWith [(S.Alias aliasIden, cte)] select
-    select = S.mkSelect {S.selExtr = [S.Extractor extrExp Nothing]}
+    sqlText = Q.fromBuilder $ toSQL selectWith
+    selectWith = S.SelectWith [(S.Alias aliasIden, getMutationCTE cte)] select
+    select = S.mkSelect { S.selExtr = S.Extractor extrExp Nothing
+                                      : bool [] [S.Extractor checkErrExp Nothing] (checkPermissionReq cte)
+                        }
+    checkErrExp = mkCheckErrorExp aliasIden
     extrExp = S.applyJsonBuildObj
               [ S.SELit "affected_rows", affRowsSel
               , S.SELit "returning_columns", colSel

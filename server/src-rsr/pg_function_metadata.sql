@@ -1,11 +1,8 @@
 SELECT
-  "hdb_function".schema,
-  "hdb_function".name,
+  "function_info".function_schema,
+  "function_info".function_name,
   coalesce("function_info".info, '[]'::json) AS info
-FROM
-  -- only required functions given as json array
-  json_to_recordset($1) AS "hdb_function"(schema text, name text)
-LEFT JOIN (
+FROM (
   SELECT
     function_name,
     function_schema,
@@ -99,7 +96,23 @@ LEFT JOIN (
         JOIN pg_namespace rtn ON (rtn.oid = rt.typnamespace)
         LEFT JOIN pg_description pd ON p.oid = pd.objoid
       WHERE
-        pn.nspname :: text NOT LIKE 'pg_%'
+        -- Do not fetch some default functions in public schema
+        p.proname :: text NOT LIKE 'pgp_%'
+        AND p.proname :: text NOT IN
+                          ( 'armor'
+                          , 'crypt'
+                          , 'dearmor'
+                          , 'decrypt'
+                          , 'decrypt_iv'
+                          , 'digest'
+                          , 'encrypt'
+                          , 'encrypt_iv'
+                          , 'gen_random_bytes'
+                          , 'gen_random_uuid'
+                          , 'gen_salt'
+                          , 'hmac'
+                          )
+        AND pn.nspname :: text NOT LIKE 'pg_%'
         AND pn.nspname :: text NOT IN ('information_schema', 'hdb_catalog')
         AND (NOT EXISTS (
                 SELECT
@@ -113,5 +126,3 @@ LEFT JOIN (
     ) AS "pg_function"
     GROUP BY "pg_function".function_schema, "pg_function".function_name
   ) "function_info"
-    ON  "function_info".function_name = "hdb_function".name
-    AND "function_info".function_schema = "hdb_function".schema

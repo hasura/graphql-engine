@@ -40,3 +40,18 @@ buildEmptyMutResp = \case
       MCount -> J.toJSON (0 :: Int)
       MExp e -> J.toJSON e
       MRet _ -> J.toJSON ([] :: [J.Value])
+
+data MutationCTE
+  = MCPermissionCheck !S.CTE
+  | MCNoPermissionCheck !S.CTE
+  deriving (Show, Eq)
+
+getMutationCTE :: MutationCTE -> S.CTE
+getMutationCTE = \case
+  MCPermissionCheck c   -> c
+  MCNoPermissionCheck c -> c
+
+checkPermissionReq :: MutationCTE -> Bool
+checkPermissionReq = \case
+  MCPermissionCheck _   -> True
+  MCNoPermissionCheck _ -> False

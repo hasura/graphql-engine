@@ -3,6 +3,7 @@ module Hasura.RQL.Types.Source where
 import           Hasura.Db
 import           Hasura.Incremental         (Cacheable (..))
 import           Hasura.Prelude
+import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Function
@@ -50,13 +51,15 @@ data PGSourceSchemaCache
 $(deriveToJSON (aesonDrop 3 snakeCase) ''PGSourceSchemaCache)
 
 type PGSourcesCache = HashMap SourceName PGSourceSchemaCache
+type ProbableEnumTables = HashMap QualifiedTable EnumValues
 
 data ResolvedSource
   = ResolvedSource
-  { _rsConfig    :: !PGSourceConfig
-  , _rsTables    :: !PostgresTablesMetadata
-  , _rsFunctions :: !PostgresFunctionsMetadata
-  , _rsPgScalars :: !(HashSet PGScalarType)
+  { _rsConfig             :: !PGSourceConfig
+  , _rsTables             :: !PostgresTablesMetadata
+  , _rsFunctions          :: !PostgresFunctionsMetadata
+  , _rsPgScalars          :: !(HashSet PGScalarType)
+  , _rsProbableEnumTables :: !ProbableEnumTables
   } deriving (Eq)
 
 type SourceTables = HashMap SourceName TableCache

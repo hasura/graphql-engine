@@ -58,11 +58,20 @@ import           Hasura.RQL.DDL.Schema
 --   Q.unitQ "DELETE FROM hdb_catalog.hdb_cron_triggers WHERE include_in_metadata" () False
 
 runClearMetadata
-  :: (MonadError QErr m, CacheRWM m)
+  :: (MonadError QErr m, CacheRWM m, MonadMetadata m)
   => ClearMetadata -> m EncJSON
 runClearMetadata _ = do
   -- clearUserMetadata
-  buildSchemaCacheStrict $ MetadataModifier $ const emptyMetadata
+  metadata <- fetchMetadata
+  let maybeDefaultSourceMetadata = metadata ^? metaSources.ix defaultSource
+  buildSchemaCacheStrict $ MetadataModifier $ const $
+    case maybeDefaultSourceMetadata of
+      Nothing -> emptyMetadata
+      Just defaultSourceMetadata ->
+        let emptyDefaultSource = SourceMetadata defaultSource mempty mempty
+                                 $ _smConfiguration defaultSourceMetadata
+        in emptyMetadata
+           & metaSources %~ HM.insert defaultSource emptyDefaultSource
   pure successMsg
 
 -- applyQP1

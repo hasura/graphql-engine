@@ -9,11 +9,11 @@ module Hasura.RQL.DML.Delete
   ) where
 
 import           Data.Aeson
-import           Instances.TH.Lift           ()
+import           Instances.TH.Lift              ()
 
-import qualified Data.Sequence            as DS
-import qualified Data.Environment         as Env
-import qualified Hasura.Tracing           as Tracing
+import qualified Data.Environment               as Env
+import qualified Data.Sequence                  as DS
+import qualified Hasura.Tracing                 as Tracing
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
@@ -21,12 +21,13 @@ import           Hasura.RQL.DML.Delete.Types
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.DML.Returning
+import           Hasura.RQL.DML.Returning.Types
 import           Hasura.RQL.GBoolExp
-import           Hasura.Server.Version       (HasVersion)
 import           Hasura.RQL.Types
+import           Hasura.Server.Version          (HasVersion)
 
-import qualified Database.PG.Query           as Q
-import qualified Hasura.SQL.DML              as S
+import qualified Database.PG.Query              as Q
+import qualified Hasura.SQL.DML                 as S
 
 
 traverseAnnDel
@@ -120,8 +121,9 @@ execDeleteQuery
   -> (AnnDel, DS.Seq Q.PrepArg)
   -> m EncJSON
 execDeleteQuery env strfyNum remoteJoinCtx (u, p) =
-  runMutation env $ mkMutation remoteJoinCtx (dqp1Table u) (mkDeleteCTE u, p)
-                (dqp1Output u) (dqp1AllCols u) strfyNum
+  runMutation env $ mkMutation remoteJoinCtx (dqp1Table u)
+                   (MCNoPermissionCheck $ mkDeleteCTE u, p)
+                   (dqp1Output u) (dqp1AllCols u) strfyNum
 
 runDelete
   :: ( HasVersion, QErrM m, UserInfoM m, CacheRM m

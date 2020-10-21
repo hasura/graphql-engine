@@ -1,5 +1,6 @@
 module Hasura.RQL.DDL.Schema.Diff
   ( TableMeta(..)
+  , getNewlyAddedTables
   , ComputedFieldMeta(..)
 
   , getDifference
@@ -64,7 +65,7 @@ fetchMeta
   -> m ([TableMeta], [FunctionMeta], PostgresFunctionsMetadata)
 fetchMeta tables functions = do
   tableMetaInfos <- fetchTableMetadataFromPgSource
-  functionMetaInfos <- fetchFunctionMetadataFromPgSource allFunctions
+  functionMetaInfos <- fetchFunctionMetadataFromPgSource
 
   let mkFunctionMeta function rawInfo =
         FunctionMeta (rfiOid rawInfo) function (rfiFunctionType rawInfo)
@@ -86,14 +87,6 @@ fetchMeta tables functions = do
                       maybe [] (map (mkFunctionMeta function)) $ M.lookup function functionMetaInfos
 
   pure (tableMetas, functionMetas, functionMetaInfos)
-  where
-    -- Along with computed field functions
-    allFunctions = M.keys functions
-      <> concatMap (map (_cffName . _cfiFunction)
-                    . getComputedFieldInfos
-                    . _tciFieldInfoMap
-                    . _tiCoreInfo
-                   ) (M.elems tables)
 
 -- fetchTableMeta :: Q.Tx [TableMeta]
 -- fetchTableMeta = Q.listQ $(Q.sqlFromFile "src-rsr/table_meta.sql") () False <&>
@@ -210,6 +203,10 @@ data SchemaDiff
   { _sdDroppedTables :: ![QualifiedTable]
   , _sdAlteredTables :: ![(QualifiedTable, TableDiff)]
   } deriving (Show, Eq)
+
+getNewlyAddedTables :: [TableMeta] -> [TableMeta] -> [(QualifiedTable, TableMetadataInfo)]
+getNewlyAddedTables oldMeta newMeta =
+  map (tmTable &&& tmInfo) $ getDifference (_tmiOid . tmInfo) newMeta oldMeta
 
 getSchemaDiff :: [TableMeta] -> [TableMeta] -> SchemaDiff
 getSchemaDiff oldMeta newMeta =

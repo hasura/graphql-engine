@@ -4,7 +4,7 @@ response:
 - {result: null, result_type: CommandOk}
 - {message: success}
 - {result: null, result_type: CommandOk}
-- []
+# - []
 query:
   type: bulk
   args:
@@ -20,13 +20,15 @@ query:
       args:
         sql: |
           drop table hge_tests.t;
-    - type: select
-      args:
-        table:
-          schema: hdb_catalog
-          name: hdb_table
-        columns:
-        - table_name
-        where:
-          table_name: t
-          table_schema: hge_tests
+    # FIXME:- Using export_metadata instead will dump
+    # the source configuration dependent on --database-url
+    # - type: select
+    #   args:
+    #     table:
+    #       schema: hdb_catalog
+    #       name: hdb_table
+    #     columns:
+    #     - table_name
+    #     where:
+    #       table_name: t
+    #       table_schema: hge_tests

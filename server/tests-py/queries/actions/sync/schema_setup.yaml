@@ -10,7 +10,6 @@ args:
         is_admin BOOLEAN NOT NULL DEFAULT false
       );
 
-      not MonadTx
 - type: track_table
   args:
     name: user

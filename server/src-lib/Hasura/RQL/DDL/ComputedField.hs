@@ -45,7 +45,16 @@ data AddComputedField
   } deriving (Show, Eq, Lift, Generic)
 instance NFData AddComputedField
 instance Cacheable AddComputedField
-$(deriveJSON (aesonDrop 4 snakeCase) ''AddComputedField)
+$(deriveToJSON (aesonDrop 4 snakeCase) ''AddComputedField)
+
+instance FromJSON AddComputedField where
+  parseJSON = withObject "Object" $ \o ->
+    AddComputedField
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "table"
+      <*> o .: "name"
+      <*> o .: "definition"
+      <*> o .:? "commment"
 
 runAddComputedField :: (MonadError QErr m, CacheRWM m) => AddComputedField -> m EncJSON
 runAddComputedField q = do

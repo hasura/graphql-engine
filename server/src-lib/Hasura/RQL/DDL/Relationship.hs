@@ -83,7 +83,7 @@ runDropRel (DropRel source qt rn cascade) = do
       relType <- riType <$> askRelType (_tciFieldInfoMap tabInfo) rn ""
       sc      <- askSchemaCache
       let depObjs = getDependentObjs sc (SOSourceObj source $ SOITableObj qt $ TORel rn relType)
-      when (depObjs /= [] && not (or cascade)) $ reportDeps depObjs
+      when (depObjs /= [] && not cascade) $ reportDeps depObjs
       pure (relType, depObjs)
 
 dropRelationshipInMetadata

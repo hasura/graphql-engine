@@ -17,6 +17,7 @@ module Hasura.RQL.Types.Table
 
        , ForeignKeyMetadata(..)
        , TableMetadataInfo(..)
+       , enumTable
        , PostgresTablesMetadata
 
        , TableCoreInfoG(..)
@@ -477,6 +478,25 @@ data TableMetadataInfo
 instance NFData TableMetadataInfo
 instance Cacheable TableMetadataInfo
 $(deriveFromJSON (aesonDrop 4 snakeCase) ''TableMetadataInfo)
+
+enumTable
+  :: TableMetadataInfo -> Maybe (PGRawColumnInfo, Maybe PGRawColumnInfo)
+enumTable TableMetadataInfo{..} = do
+  guard $ length _tmiColumns <= 2
+  guard $ all ((== PGText) . prciType) _tmiColumns
+  pkey <- _tmiPrimaryKey
+  let pkeyCols = toList $ _pkColumns pkey
+  pkeyColumn <- case pkeyCols of
+    [col] -> M.lookup col rawColumnsMap
+    _     -> Nothing
+  let maybeDescriptionColumn =
+        case M.toList (M.delete (prciName pkeyColumn) rawColumnsMap) of
+          [(_, col)] -> Just col
+          _          -> Nothing
+  pure (pkeyColumn, maybeDescriptionColumn)
+  where
+    rawColumnsMap = mapFromL prciName _tmiColumns
+
 
 type PostgresTablesMetadata = HashMap QualifiedTable TableMetadataInfo
 

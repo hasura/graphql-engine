@@ -12,6 +12,7 @@ module Hasura.RQL.DDL.Schema.Enum (
   -- * Loading table info
   , resolveEnumReferences
   , fetchAndValidateEnumValues
+  , fetchEnumValuesFromDb
   ) where
 
 import           Hasura.Prelude
@@ -80,9 +81,17 @@ fetchAndValidateEnumValues pgSourceConfig tableName maybePrimaryKey columnInfos 
   where
     fetchAndValidate :: (MonadIO m, MonadValidate [EnumTableIntegrityError] m) => m EnumValues
     fetchAndValidate = do
-      primaryKeyColumn <- tolerate validatePrimaryKey
-      maybeCommentColumn <- validateColumns primaryKeyColumn
-      maybe (refute mempty) (fetchEnumValues maybeCommentColumn) primaryKeyColumn
+      maybePrimaryKeyColumn <- tolerate validatePrimaryKey
+      maybeCommentColumn <- validateColumns maybePrimaryKeyColumn
+      case maybePrimaryKeyColumn of
+        Nothing               -> refute mempty
+        Just primaryKeyColumn -> do
+          result <- runPgSourceReadTx pgSourceConfig $ runValidateT $
+                    fetchEnumValuesFromDb tableName primaryKeyColumn maybeCommentColumn
+          case result of
+            Left e             -> (refute . pure . EnumTablePostgresError . qeError) e
+            Right (Left vErrs) -> refute vErrs
+            Right (Right r)    -> pure r
       where
         validatePrimaryKey = case maybePrimaryKey of
           Nothing -> refute [EnumTableMissingPrimaryKey]
@@ -100,31 +109,6 @@ fetchAndValidateEnumValues pgSourceConfig tableName maybePrimaryKey columnInfos 
               PGText -> pure $ Just column
               _      -> dispute [EnumTableNonTextualCommentColumn column] $> Nothing
             columns -> dispute [EnumTableTooManyColumns $ map prciName columns] $> Nothing
-
-        fetchEnumValues maybeCommentColumn primaryKeyColumn = do
-          let nullExtr = S.Extractor S.SENull Nothing
-              commentExtr = maybe nullExtr (S.mkExtr . prciName) maybeCommentColumn
-              query = Q.fromBuilder $ toSQL S.mkSelect
-                { S.selFrom = Just $ S.mkSimpleFromExp tableName
-                , S.selExtr = [S.mkExtr (prciName primaryKeyColumn), commentExtr] }
-          eitherRawEnumValues <- runPgSourceReadTx pgSourceConfig $ Q.withQE defaultTxErrorHandler query () True
-          rawEnumValues <- either (refute . pure . EnumTablePostgresError . qeError) pure eitherRawEnumValues
-          when (null rawEnumValues) $ dispute [EnumTableNoEnumValues]
-          let enumValues = flip map rawEnumValues $
-                \(enumValueText, comment) ->
-                  case mkValidEnumValueName enumValueText of
-                    Nothing        -> Left enumValueText
-                    Just enumValue -> Right (EnumValue enumValue, EnumValueInfo comment)
-              badNames = lefts enumValues
-              validEnums = rights enumValues
-          case NE.nonEmpty badNames of
-            Just someBadNames -> refute [EnumTableInvalidEnumValueNames someBadNames]
-            Nothing           -> pure $ M.fromList validEnums
-
-        -- https://graphql.github.io/graphql-spec/June2018/#EnumValue
-        mkValidEnumValueName name =
-          if name `elem` ["true", "false", "null"] then Nothing
-          else G.mkName name
 
     showErrors :: [EnumTableIntegrityError] -> T.Text
     showErrors allErrors =
@@ -159,3 +143,33 @@ fetchAndValidateEnumValues pgSourceConfig tableName maybePrimaryKey columnInfos 
             typeMismatch description colInfo expected =
               "the table’s " <> description <> " (" <> prciName colInfo <<> ") must have type "
                 <> expected <<> ", not type " <>> prciType colInfo
+
+fetchEnumValuesFromDb
+  :: (MonadTx m, MonadValidate [EnumTableIntegrityError] m)
+  => QualifiedTable
+  -> PGRawColumnInfo
+  -> Maybe PGRawColumnInfo
+  -> m EnumValues
+fetchEnumValuesFromDb tableName primaryKeyColumn maybeCommentColumn = do
+  let nullExtr = S.Extractor S.SENull Nothing
+      commentExtr = maybe nullExtr (S.mkExtr . prciName) maybeCommentColumn
+      query = Q.fromBuilder $ toSQL S.mkSelect
+        { S.selFrom = Just $ S.mkSimpleFromExp tableName
+        , S.selExtr = [S.mkExtr (prciName primaryKeyColumn), commentExtr] }
+  rawEnumValues <- liftTx $ Q.withQE defaultTxErrorHandler query () True
+  when (null rawEnumValues) $ dispute [EnumTableNoEnumValues]
+  let enumValues = flip map rawEnumValues $
+        \(enumValueText, comment) ->
+          case mkValidEnumValueName enumValueText of
+            Nothing        -> Left enumValueText
+            Just enumValue -> Right (EnumValue enumValue, EnumValueInfo comment)
+      badNames = lefts enumValues
+      validEnums = rights enumValues
+  case NE.nonEmpty badNames of
+    Just someBadNames -> refute [EnumTableInvalidEnumValueNames someBadNames]
+    Nothing           -> pure $ M.fromList validEnums
+  where
+    -- https://graphql.github.io/graphql-spec/June2018/#EnumValue
+    mkValidEnumValueName name =
+      if name `elem` ["true", "false", "null"] then Nothing
+      else G.mkName name

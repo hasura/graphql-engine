@@ -406,13 +406,15 @@ buildTableCache
   => ( SourceName
      , PGSourceConfig
      , PostgresTablesMetadata
+     , ProbableEnumTables
      , [TableBuildInput]
      , Inc.Dependency Inc.InvalidationKey
      ) `arr` Map.HashMap QualifiedTable TableRawInfo
-buildTableCache = Inc.cache proc (source, pgSourceConfig, pgTables, tableBuildInputs, reloadMetadataInvalidationKey) -> do
+buildTableCache = Inc.cache proc ( source, pgSourceConfig, pgTables, probableEnumTables
+                                 , tableBuildInputs, reloadMetadataInvalidationKey) -> do
   rawTableInfos <-
     (| Inc.keyed (| withTable (\tables
-         -> (tables, (pgSourceConfig, pgTables, reloadMetadataInvalidationKey))
+         -> (tables, (pgSourceConfig, pgTables, probableEnumTables, reloadMetadataInvalidationKey))
          >- first noDuplicateTables >>> buildRawTableInfo) |)
     |) (withSourceInKey source $ Map.groupOnNE _tbiName tableBuildInputs)
   let rawTableCache = removeSourceInKey $ Map.catMaybes rawTableInfos
@@ -441,9 +443,9 @@ buildTableCache = Inc.cache proc (source, pgSourceConfig, pgTables, tableBuildIn
     buildRawTableInfo
       :: ErrorA QErr arr
        ( TableBuildInput
-       , (PGSourceConfig, PostgresTablesMetadata, Inc.Dependency Inc.InvalidationKey)
+       , (PGSourceConfig, PostgresTablesMetadata, ProbableEnumTables, Inc.Dependency Inc.InvalidationKey)
        ) (TableCoreInfoG PGRawColumnInfo PGCol)
-    buildRawTableInfo = Inc.cache proc (tableBuildInput, (pgSourceConfig, pgTables, reloadMetadataInvalidationKey)) -> do
+    buildRawTableInfo = Inc.cache proc (tableBuildInput, (pgSourceConfig, pgTables, enumTables, reloadMetadataInvalidationKey)) -> do
       let TableBuildInput name isEnum config = tableBuildInput
           maybeInfo = Map.lookup name pgTables
       metadataTable <-
@@ -460,7 +462,9 @@ buildTableCache = Inc.cache proc (source, pgSourceConfig, pgTables, tableBuildIn
           -- We want to make sure we reload enum values whenever someone explicitly calls
           -- `reload_metadata`.
           Inc.dependOn -< reloadMetadataInvalidationKey
-          eitherEnums <- bindA -< fetchAndValidateEnumValues pgSourceConfig name rawPrimaryKey columns
+          eitherEnums <- bindA -< case Map.lookup name enumTables of
+                           Just enumValues -> pure $ Right enumValues
+                           Nothing         -> fetchAndValidateEnumValues pgSourceConfig name rawPrimaryKey columns
           liftEitherA -< Just <$> eitherEnums
         else returnA -< Nothing
 

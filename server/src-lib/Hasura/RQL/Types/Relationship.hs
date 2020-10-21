@@ -104,11 +104,17 @@ data DropRel
   { drSource       :: !SourceName
   , drTable        :: !QualifiedTable
   , drRelationship :: !RelName
-  , drCascade      :: !(Maybe Bool)
+  , drCascade      :: !Bool
   } deriving (Show, Eq, Lift)
+$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DropRel)
 
--- TODO: multiple sources
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DropRel)
+instance FromJSON DropRel where
+  parseJSON = withObject "Object" $ \o ->
+    DropRel
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "table"
+      <*> o .: "relationship"
+      <*> o .:? "cascade" .!= False
 
 data SetRelComment
   = SetRelComment
@@ -117,9 +123,14 @@ data SetRelComment
   , arRelationship :: !RelName
   , arComment      :: !(Maybe T.Text)
   } deriving (Show, Eq, Lift)
-
--- TODO: multiple sources
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SetRelComment)
+$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SetRelComment)
+instance FromJSON SetRelComment where
+  parseJSON = withObject "Object" $ \o ->
+    SetRelComment
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "table"
+      <*> o .: "relationship"
+      <*> o .:? "comment"
 
 data RenameRel
   = RenameRel
@@ -128,6 +139,12 @@ data RenameRel
   , rrName    :: !RelName
   , rrNewName :: !RelName
   } deriving (Show, Eq, Lift)
+$(deriveToJSON (aesonDrop 2 snakeCase) ''RenameRel)
 
--- TODO: multiple sources
-$(deriveJSON (aesonDrop 2 snakeCase) ''RenameRel)
+instance FromJSON RenameRel where
+  parseJSON = withObject "Object" $ \o ->
+    RenameRel
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "table"
+      <*> o .: "name"
+      <*> o .: "new_name"

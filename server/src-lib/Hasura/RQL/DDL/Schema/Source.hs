@@ -9,8 +9,6 @@ import           Hasura.RQL.DDL.Schema.Common
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import           Data.Aeson
-
 import qualified Data.Environment             as Env
 import qualified Data.HashMap.Strict          as HM
 import qualified Data.HashSet                 as S
@@ -18,8 +16,8 @@ import qualified Database.PG.Query            as Q
 
 resolveSource
   :: (MonadIO m, MonadBaseControl IO m)
-  => Env.Environment -> SourceMetadata -> m (Either QErr ResolvedSource)
-resolveSource env (SourceMetadata _ tables functions config) = runExceptT do
+  => Env.Environment -> SourceConfiguration -> m (Either QErr ResolvedSource)
+resolveSource env config = runExceptT do
   let SourceConfiguration urlConf connSettings = config
       SourceConnSettings maxConns idleTimeout retries = connSettings
   urlText <- resolveUrlConf env urlConf
@@ -34,16 +32,10 @@ resolveSource env (SourceMetadata _ tables functions config) = runExceptT do
   (tablesMeta, functionsMeta, pgScalars) <- runLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $ do
     initSource
     tablesMeta    <- fetchTableMetadataFromPgSource
-    functionsMeta <- fetchFunctionMetadataFromPgSource allFunctions
+    functionsMeta <- fetchFunctionMetadataFromPgSource
     pgScalars     <- fetchPgScalars
     pure (tablesMeta, functionsMeta, pgScalars)
-  pure $ ResolvedSource sourceConfig tablesMeta functionsMeta pgScalars
-  where
-    allFunctions =
-      let computedFieldFunctions = concatMap
-            (map (_cfdFunction . _cfmDefinition) . HM.elems . _tmComputedFields)
-            (HM.elems tables)
-      in computedFieldFunctions <> map _fmFunction (HM.elems functions)
+  pure $ ResolvedSource sourceConfig tablesMeta functionsMeta pgScalars mempty
 
 initSource :: MonadTx m => m ()
 initSource = do
@@ -108,11 +100,11 @@ fetchTableMetadataFromPgSource = do
 
 -- | Fetch Postgres metadata for the given functions
 fetchFunctionMetadataFromPgSource
-  :: (MonadTx m) => [QualifiedFunction] -> m PostgresFunctionsMetadata
-fetchFunctionMetadataFromPgSource functionList = do
+  :: (MonadTx m) => m PostgresFunctionsMetadata
+fetchFunctionMetadataFromPgSource = do
   results <- liftTx $ Q.withQE defaultTxErrorHandler
              $(Q.sqlFromFile "src-rsr/pg_function_metadata.sql")
-             (Identity $ Q.AltJ $ toJSON functionList) True
+             () True
   pure $ HM.fromList $ flip map results $
     \(schema, table, Q.AltJ infos) -> (QualifiedObject schema table, infos)
 

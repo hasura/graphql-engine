@@ -275,7 +275,13 @@ data FunctionMetadata
   } deriving (Show, Eq, Lift, Generic)
 instance Cacheable FunctionMetadata
 $(makeLenses ''FunctionMetadata)
-$(deriveJSON (aesonDrop 3 snakeCase) ''FunctionMetadata)
+$(deriveToJSON (aesonDrop 3 snakeCase) ''FunctionMetadata)
+
+instance FromJSON FunctionMetadata where
+  parseJSON = withObject "Object" $ \o ->
+    FunctionMetadata
+      <$> o .: "function"
+      <*> o .:? "configuration" .!= emptyFunctionConfig
 
 type Tables = M.HashMap QualifiedTable TableMetadata
 type Functions = M.HashMap QualifiedFunction FunctionMetadata

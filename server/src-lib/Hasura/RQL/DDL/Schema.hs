@@ -103,7 +103,7 @@ isSchemaCacheBuildRequiredRunSQL RunSQL {..} =
         , TDFA.lastStarGreedy = True }
         TDFA.defaultExecOpt
         { TDFA.captureGroups = False }
-        "\\balter\\b|\\bdrop\\b|\\breplace\\b|\\bcreate function\\b|\\bcomment on\\b|\\bcreate table\\b")
+        "\\balter\\b|\\bdrop\\b|\\breplace\\b|\\bcreate function\\b|\\bcomment on\\b|\\bcreate table\\b|\\bcreate view\\b")
 
 runRunSQL
   :: (MonadTx m, CacheRWM m, HasSQLGenCtx m)
