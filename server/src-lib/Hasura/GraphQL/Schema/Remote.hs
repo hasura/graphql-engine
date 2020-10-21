@@ -16,8 +16,6 @@ import           Data.Type.Equality
 import qualified Data.HashMap.Strict                   as Map
 import qualified Data.HashMap.Strict.Extended          as Map
 import qualified Data.HashMap.Strict.InsOrd            as OMap
-import           Data.Foldable                         (sequenceA_)
-import qualified Data.Text                             as T
 
 import           Hasura.GraphQL.Parser                 as P
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
@@ -356,17 +354,11 @@ remoteSchemaInputObject
   .  (MonadSchema n m, MonadError QErr m)
   => RemoteSchemaIntrospection
   -> G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition
-  -> m (Parser 'Input n ())
+  -> m (Parser 'Input n (Maybe (HashMap G.Name (Value Variable))))
 remoteSchemaInputObject schemaDoc defn@(G.InputObjectTypeDefinition desc name _ valueDefns) =
   P.memoizeOn 'remoteSchemaInputObject defn do
-  -- TODO: here's where I should be filtering all the `valueDefns` with
-  -- `preset` as `Nothing`
-  argsParser <- argumentsParser nonPresetArgs schemaDoc
-  pure $ P.object name desc argsParser
-  where
-    nonPresetArgs =
-      flip filter valueDefns $ \(RemoteSchemaInputValueDefinition _inpValDef preset) ->
-        maybe True (\_ -> False) preset
+  argsParser <- argumentsParser valueDefns schemaDoc
+  pure $ P.object name desc $ argsParser
 
 lookupType
   :: RemoteSchemaIntrospection
@@ -438,9 +430,12 @@ inputValueDefinitionParser
    . (MonadSchema n m, MonadError QErr m)
   => RemoteSchemaIntrospection
   -> G.InputValueDefinition
-  -> m (InputFieldsParser n (Maybe (InputValue Variable)))
+  -> m (InputFieldsParser n ((Maybe (InputValue Variable)),(Maybe (HashMap G.Name (Value Variable)))))
 inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType maybeDefaultVal _directives) =
-  let fieldConstructor :: forall k. 'Input <: k => Parser k n () -> InputFieldsParser n (Maybe (InputValue Variable))
+  let fieldConstructor
+        :: forall k. 'Input <: k
+        => Parser k n ()
+        -> InputFieldsParser n ((Maybe (InputValue Variable)),(Maybe (HashMap G.Name (Value Variable))))
       fieldConstructor parser =
         let wrappedParser :: Parser k n (InputValue Variable)
             wrappedParser =
@@ -451,18 +446,45 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
         in case maybeDefaultVal of
           Nothing ->
             if G.isNullable fieldType
-            then fieldOptional name desc wrappedParser
-            else Just <$> field name desc wrappedParser
-          Just defaultVal -> Just <$> fieldWithDefault name desc defaultVal wrappedParser
+            then fieldOptional name desc wrappedParser <&> (,Nothing)
+            else Just <$> field name desc wrappedParser <&> (,Nothing)
+          Just defaultVal -> Just <$> fieldWithDefault name desc defaultVal wrappedParser <&> (,Nothing)
 
       doNullability :: forall k . 'Input <: k => G.Nullability -> Parser k n () -> Parser k n ()
       doNullability (G.Nullability True)  = void . P.nullable
       doNullability (G.Nullability False) = id
 
+      fieldConstructor''
+        :: forall k. 'Input <: k
+        => Parser k n (Maybe (HashMap G.Name (Value Variable)))
+        -> InputFieldsParser n ((Maybe (InputValue Variable)), Maybe (HashMap G.Name (Value Variable)))
+      fieldConstructor'' parser =
+        let wrappedParser :: Parser k n (InputValue Variable, Maybe (HashMap G.Name (Value Variable)))
+            wrappedParser =
+              P.Parser
+                { P.pType   = P.pType parser
+                , P.pParser = \value ->
+                    let inputValP = castWith (P.inputParserInput @k) value
+                    in P.pParser parser value <&>
+                      (\presetVal -> (inputValP, presetVal))
+                }
+        in case maybeDefaultVal of
+          Nothing ->
+            if G.isNullable fieldType
+            then fieldOptional name desc wrappedParser <&> f
+            else Just <$> field name desc wrappedParser <&> f
+          Just defaultVal -> Just <$> fieldWithDefault name desc defaultVal wrappedParser <&> f
+        where
+          f :: Maybe (InputValue Variable, (Maybe (HashMap G.Name (G.Value Variable))))
+            -> (Maybe (InputValue Variable), Maybe (HashMap G.Name (G.Value Variable)))
+          f Nothing =  (Nothing, Nothing)
+          f (Just (inpValue, presetVal)) = (Just inpValue, (Map.singleton name . G.VObject) <$> presetVal)
+
+
       buildField
         :: G.GType
-        -> (forall k. 'Input <: k => Parser k n () -> InputFieldsParser n (Maybe (InputValue Variable)))
-        -> m (InputFieldsParser n (Maybe (InputValue Variable)))
+        -> (forall k. 'Input <: k => Parser k n () -> InputFieldsParser n ((Maybe (InputValue Variable)), (Maybe (HashMap G.Name (G.Value Variable)))))
+        -> m (InputFieldsParser n ((Maybe (InputValue Variable)), (Maybe (HashMap G.Name (G.Value Variable)))))
       buildField fieldType' fieldConstructor' = case fieldType' of
        G.TypeNamed nullability typeName ->
          case lookupType schemaDoc typeName of
@@ -475,7 +497,7 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
                  pure $ fieldConstructor' $ doNullability nullability $ remoteFieldEnumParser defn
                G.TypeDefinitionObject _ -> throw400 RemoteSchemaError "expected input type, but got output type" -- couldn't find the equivalent error in Validate/Types.hs, so using a new error message
                G.TypeDefinitionInputObject defn ->
-                 fieldConstructor' . doNullability nullability <$> remoteSchemaInputObject schemaDoc defn
+                 fieldConstructor'' <$> remoteSchemaInputObject schemaDoc defn
                G.TypeDefinitionUnion _ -> throw400 RemoteSchemaError "expected input type, but got output type"
                G.TypeDefinitionInterface _ -> throw400 RemoteSchemaError "expected input type, but got output type"
        G.TypeList nullability subType -> buildField subType (fieldConstructor' . doNullability nullability . void . P.list)
@@ -487,30 +509,27 @@ argumentsParser
   .  (MonadSchema n m, MonadError QErr m)
   => G.ArgumentsDefinition RemoteSchemaInputValueDefinition
   -> RemoteSchemaIntrospection
-  -> m (InputFieldsParser n ())
+  -> m (InputFieldsParser n (Maybe (HashMap G.Name (Value Variable))))
 argumentsParser args schemaDoc = do
-  sequenceA_ <$> for args' (inputValueDefinitionParser schemaDoc)
+  nonPresetArgsParser <- sequenceA <$> for nonPresetArgs (inputValueDefinitionParser schemaDoc)
+  let argsP' = (fmap . fmap) snd nonPresetArgsParser
+      argsP1 = fmap (\t -> presetArgsMap <> (Map.unions <$> (sequenceA $ (filter isJust t)))) argsP'
+  pure $ argsP1
   where
-    args' = map _rsitdDefn args
+    nonPresetArgs =
+      map _rsitdDefn $
+      filter (isNothing . _rsitdPresetArg) args
 
-    -- TODO: Just use the `nonPresetArgs`'s G.InputValueDefinition above
-    -- nonPresetArgs =
-    --   flip filter args $ \(RemoteSchemaInputValueDefinition _inpValDef preset) ->
-    --     maybe True (\_ -> False) preset
+    presetArgsMap :: Maybe (HashMap G.Name (Value Variable))
+    presetArgsMap =
+      let presetArgs' =
+            flip mapMaybe args $ \(RemoteSchemaInputValueDefinition inpValDefn preset) ->
+            let argName = G._ivdName inpValDefn
+            in (argName, ) <$> preset
+      in case presetArgs' of
+           [] -> Nothing
+           _  -> Just $ Map.fromList presetArgs'
 
-    -- presetArgsMap :: HashMap Name (Value Variable)
-    -- presetArgsMap =
-    --   Map.fromList $
-    --     flip mapMaybe args $ \(RemoteSchemaInputValueDefinition inpValDefn preset) ->
-    --        let argName = G._ivdName inpValDefn
-    --            gType = G._ivdType inpValDefn
-    --        in
-    --          case preset of
-    --            Nothing -> Nothing
-    --            Just (StaticPresetArgument val) ->
-    --              Just $
-    --              (argName, (G.VVariable (P.Variable (P.VIRequired argName) gType (P.GraphQLValue val))))
-    --            --TODO: handle the case of SessionPresetArgument
 
 -- | 'remoteField' accepts a 'G.TypeDefinition' and will returns a 'FieldParser' for it.
 --   Note that the 'G.TypeDefinition' should be of the GraphQL 'Output' kind, when an
@@ -526,7 +545,7 @@ remoteField
   -> m (FieldParser n (Field NoFragments Variable))
 remoteField sdoc fieldName description argsDefn typeDefn = do
   -- TODO add directives
-  argsParser <- argumentsParser nonPresetArgs sdoc
+  argsParser <- argumentsParser argsDefn sdoc
   case typeDefn of
     G.TypeDefinitionObject objTypeDefn -> do
       remoteSchemaObjFields <- remoteSchemaObject sdoc objTypeDefn
@@ -548,42 +567,41 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
         mkFieldParserWithSelectionSet argsParser
     _ -> throw400 RemoteSchemaError "expected output type, but got input type"
   where
-    nonPresetArgs =
-      flip filter argsDefn $ \(RemoteSchemaInputValueDefinition _inpValDef preset) ->
-        maybe True (\_ -> False) preset
-
-    presetArgsMap :: HashMap Name (Value Variable)
-    presetArgsMap =
-      Map.fromList $
-        flip mapMaybe argsDefn $ \(RemoteSchemaInputValueDefinition inpValDefn preset) ->
-           let argName = G._ivdName inpValDefn
-           in
-             case preset of
-               Nothing -> Nothing
-               -- FIXME: handle the case when there are multiple vals, of course!
-               Just presetVal -> Just (argName, presetVal)
-               --TODO: handle the case of SessionPresetArgument
+    mergeValue :: G.Value Variable -> G.Value Variable -> G.Value Variable
+    mergeValue userArgVal presetArgVal =
+      case (userArgVal, presetArgVal) of
+        (G.VList l, G.VList r) -> G.VList $ l <> r
+        (G.VObject l, G.VObject r) ->
+          G.VObject $ Map.unionWith mergeValue l r
+        (v',_) -> v'
 
     mkFieldParserWithoutSelectionSet
-      :: InputFieldsParser n ()
+      :: InputFieldsParser n (Maybe (HashMap G.Name (G.Value Variable)))
       -> Parser 'Both n ()
       -> FieldParser n (Field NoFragments Variable)
     mkFieldParserWithoutSelectionSet argsParser outputParser =
       -- 'rawSelection' is used here to get the alias and args data
       -- specified to be able to construct the `Field NoFragments G.Name`
       P.rawSelection fieldName description argsParser outputParser
-      <&> (\(alias, args, _) -> (G.Field alias fieldName (presetArgsMap <> args) mempty []))
+      <&> (\(alias, args, presetArg) ->
+             case presetArg of
+               Just presetArg' -> (G.Field alias fieldName (Map.unionWith mergeValue args presetArg') mempty [])
+               Nothing -> (G.Field alias fieldName args mempty [])
+             )
 
     mkFieldParserWithSelectionSet
-      :: InputFieldsParser n ()
+      :: InputFieldsParser n (Maybe (HashMap G.Name (G.Value Variable)))
       -> Parser 'Output n (SelectionSet NoFragments Variable)
       -> FieldParser n (Field NoFragments P.Variable)
     mkFieldParserWithSelectionSet argsParser outputParser =
       -- 'rawSubselection' is used here to get the alias and args data
       -- specified to be able to construct the `Field NoFragments G.Name`
       P.rawSubselection fieldName description argsParser outputParser
-      <&> (\(alias, args, _, selSet) ->
-             (G.Field alias fieldName (presetArgsMap <> args) mempty selSet))
+      <&> (\(alias, args, presetArg, selSet) ->
+             case presetArg of
+               Just presetArg' -> (G.Field alias fieldName (Map.unionWith mergeValue args presetArg') mempty selSet)
+               Nothing -> (G.Field alias fieldName args mempty selSet)
+             )
 
 remoteFieldScalarParser
   :: MonadParse n

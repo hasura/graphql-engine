@@ -1038,7 +1038,7 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
   remoteFieldsArgumentsParser <-
     sequenceA <$> for (Map.toList $ _rfiParamMap remoteFieldInfo) \(name, inpValDefn) -> do
       parser <- lift $ inputValueDefinitionParser (_rfiSchemaIntrospect remoteFieldInfo) inpValDefn
-      pure $ parser `mapField` RQL.RemoteFieldArgument name
+      pure $ (fmap fst parser) `mapField` RQL.RemoteFieldArgument name
 
   -- This selection set parser, should be of the remote node's selection set parser, which comes
   -- from the fieldCall
