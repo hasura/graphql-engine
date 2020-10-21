@@ -101,7 +101,7 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
               className={tabName === 'logs' ? styles.active : ''}
             >
               <Link
-                to={`/events/data/${triggerName}/processed`}
+                to={`/events/data/${triggerName}/logs`}
                 data-test="trigger-invocation-logs"
               >
                 Invocation Logs
