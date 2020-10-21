@@ -14,9 +14,7 @@ module Hasura.RQL.DDL.RemoteSchema
 
 import           Control.Monad.Unique
 import           Hasura.EncJSON
--- import           Hasura.GraphQL.NormalForm
 import           Hasura.GraphQL.RemoteServer
--- import           Hasura.GraphQL.Schema.Merge
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Deps
 
