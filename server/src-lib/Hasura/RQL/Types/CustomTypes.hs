@@ -217,39 +217,42 @@ $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''CustomTypes)
 emptyCustomTypes :: CustomTypes
 emptyCustomTypes = CustomTypes Nothing Nothing Nothing Nothing
 
-data AnnotatedScalarType (b :: Backend)
+data AnnotatedScalarType
   = ASTCustom !ScalarTypeDefinition
-  | ASTReusedPgScalar !G.Name !(ScalarType b)
-  deriving (Generic)
-deriving instance Eq (AnnotatedScalarType 'Postgres)
-instance J.ToJSON (AnnotatedScalarType 'Postgres) where
-  toJSON = J.genericToJSON $ J.defaultOptions
+  | forall b . (b ~ 'Postgres) => ASTReusedScalar !G.Name !(ScalarType b)
+  -- TODO: at a later stage, we shouldn't hardcode reused scalar types to be
+  -- Postgres, but allow scalar types to come from any kind of backend.  In
+  -- order words, the restriction (b ~ 'Postgres) should be relaxed.
+deriving instance Eq AnnotatedScalarType
+instance J.ToJSON AnnotatedScalarType where
+  toJSON (ASTCustom std) = J.toJSON std
+  toJSON (ASTReusedScalar name st) = J.object ["name" J..= name, "type" J..= st]
 
-data NonObjectCustomType (b :: Backend)
-  = NOCTScalar !(AnnotatedScalarType b)
+data NonObjectCustomType
+  = NOCTScalar !(AnnotatedScalarType)
   | NOCTEnum !EnumTypeDefinition
   | NOCTInputObject !InputObjectTypeDefinition
   deriving (Generic)
-deriving instance Eq (NonObjectCustomType 'Postgres)
-instance J.ToJSON (NonObjectCustomType 'Postgres) where
+deriving instance Eq NonObjectCustomType
+instance J.ToJSON NonObjectCustomType where
   toJSON = J.genericToJSON $ J.defaultOptions
 
-type NonObjectTypeMap b = Map.HashMap G.Name (NonObjectCustomType b)
+type NonObjectTypeMap = Map.HashMap G.Name NonObjectCustomType
 
-data AnnotatedObjectFieldType (b :: Backend)
-  = AOFTScalar !(AnnotatedScalarType b)
+data AnnotatedObjectFieldType
+  = AOFTScalar !AnnotatedScalarType
   | AOFTEnum !EnumTypeDefinition
   deriving (Generic)
-instance J.ToJSON (AnnotatedObjectFieldType 'Postgres) where
+instance J.ToJSON AnnotatedObjectFieldType where
   toJSON = J.genericToJSON $ J.defaultOptions
 
-fieldTypeToScalarType :: AnnotatedObjectFieldType 'Postgres -> PGScalarType
+fieldTypeToScalarType :: AnnotatedObjectFieldType -> PGScalarType
 fieldTypeToScalarType = \case
   AOFTEnum _                 -> PGText
   AOFTScalar annotatedScalar -> annotatedScalarToPgScalar annotatedScalar
   where
     annotatedScalarToPgScalar = \case
-      ASTReusedPgScalar _ scalarType     -> scalarType
+      ASTReusedScalar _ scalarType     -> scalarType
       ASTCustom ScalarTypeDefinition{..} ->
         if | _stdName == idScalar     -> PGText
            | _stdName == intScalar    -> PGInteger
@@ -259,13 +262,13 @@ fieldTypeToScalarType = \case
            | otherwise                -> PGJSON
 
 type AnnotatedObjectType b =
-  ObjectTypeDefinition (G.GType, AnnotatedObjectFieldType b) (TableInfo b) (ColumnInfo b)
+  ObjectTypeDefinition (G.GType, AnnotatedObjectFieldType) (TableInfo b) (ColumnInfo b)
 
 type AnnotatedObjects b = Map.HashMap G.Name (AnnotatedObjectType b)
 
 data AnnotatedCustomTypes (b :: Backend)
   = AnnotatedCustomTypes
-    { _actNonObjects :: !(NonObjectTypeMap b)
+    { _actNonObjects :: !NonObjectTypeMap
     , _actObjects    :: !(AnnotatedObjects b)
     }
 

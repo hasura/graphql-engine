@@ -39,7 +39,7 @@ import           Hasura.SQL.Value
 -- > }
 actionExecute
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
-  => NonObjectTypeMap 'Postgres
+  => NonObjectTypeMap
   -> ActionInfo 'Postgres
   -> m (Maybe (FieldParser n (AnnActionExecution 'Postgres UnpreparedValue)))
 actionExecute nonObjectTypeMap actionInfo = runMaybeT do
@@ -75,7 +75,7 @@ actionExecute nonObjectTypeMap actionInfo = runMaybeT do
 -- > action_name(action_input_arguments)
 actionAsyncMutation
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
-  => NonObjectTypeMap 'Postgres
+  => NonObjectTypeMap
   -> ActionInfo 'Postgres
   -> m (Maybe (FieldParser n AnnActionMutationAsync))
 actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
@@ -176,7 +176,7 @@ actionOutputFields outputObject = do
          <&> parsedSelectionsToFields RQL.AFExpression
   where
     scalarOrEnumFieldParser
-      :: ObjectFieldDefinition (G.GType, AnnotatedObjectFieldType 'Postgres)
+      :: ObjectFieldDefinition (G.GType, AnnotatedObjectFieldType)
       -> FieldParser n (RQL.AnnFieldG 'Postgres UnpreparedValue)
     scalarOrEnumFieldParser (ObjectFieldDefinition name _ description ty) =
       let (gType, objectFieldType) = ty
@@ -228,8 +228,8 @@ mkDefinitionList ObjectTypeDefinition{..} =
 
 actionInputArguments
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
-  => NonObjectTypeMap 'Postgres
-  -> [ArgumentDefinition (G.GType, NonObjectCustomType 'Postgres)]
+  => NonObjectTypeMap
+  -> [ArgumentDefinition (G.GType, NonObjectCustomType)]
   -> m (InputFieldsParser n J.Value)
 actionInputArguments nonObjectTypeMap arguments = do
   argumentParsers <- for arguments $ \argument -> do
@@ -249,7 +249,7 @@ actionInputArguments nonObjectTypeMap arguments = do
       :: G.Name
       -> Maybe G.Description
       -> G.GType
-      -> NonObjectCustomType 'Postgres
+      -> NonObjectCustomType
       -> m (InputFieldsParser n (Maybe J.Value))
     argumentParser name description gType = \case
       NOCTScalar def -> pure $ mkArgumentInputFieldParser name description gType $ customScalarParser def
@@ -295,7 +295,7 @@ mkArgumentInputFieldParser name description gType parser =
 
 customScalarParser
   :: MonadParse m
-  => AnnotatedScalarType 'Postgres -> Parser 'Both m J.Value
+  => AnnotatedScalarType -> Parser 'Both m J.Value
 customScalarParser = \case
   ASTCustom ScalarTypeDefinition{..} ->
         if | _stdName == idScalar     -> J.toJSON <$> P.identifier
@@ -304,7 +304,7 @@ customScalarParser = \case
            | _stdName == stringScalar -> J.toJSON <$> P.string
            | _stdName == boolScalar   -> J.toJSON <$> P.boolean
            | otherwise                -> P.namedJSON _stdName _stdDescription
-  ASTReusedPgScalar name pgScalarType ->
+  ASTReusedScalar name pgScalarType ->
     let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
     in P.Parser
        { pType = schemaType

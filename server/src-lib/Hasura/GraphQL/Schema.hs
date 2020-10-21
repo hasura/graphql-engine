@@ -54,7 +54,7 @@ buildGQLContext
      , FunctionCache
      , HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
      , ActionCache
-     , NonObjectTypeMap 'Postgres
+     , NonObjectTypeMap
      )
      `arr`
      ( HashMap RoleName (RoleContext GQLContext)
@@ -208,7 +208,7 @@ query'
   -> [FunctionInfo]
   -> [P.FieldParser n RemoteField]
   -> [ActionInfo 'Postgres]
-  -> NonObjectTypeMap 'Postgres
+  -> NonObjectTypeMap
   -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
 query' allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
   tableSelectExpParsers <- for (toList allTables) \table -> do
@@ -304,7 +304,7 @@ query
   -> [FunctionInfo]
   -> [P.FieldParser n RemoteField]
   -> [ActionInfo 'Postgres]
-  -> NonObjectTypeMap 'Postgres
+  -> NonObjectTypeMap
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 query name allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
   queryFieldsParser <- query' allTables allFunctions allRemotes allActions nonObjectCustomTypes
@@ -405,7 +405,7 @@ queryWithIntrospection
   -> [P.FieldParser n RemoteField]
   -> [P.FieldParser n RemoteField]
   -> [ActionInfo 'Postgres]
-  -> NonObjectTypeMap 'Postgres
+  -> NonObjectTypeMap
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 queryWithIntrospection allTables allFunctions queryRemotes mutationRemotes allActions nonObjectCustomTypes = do
   basicQueryFP <- query' allTables allFunctions queryRemotes allActions nonObjectCustomTypes
@@ -479,7 +479,7 @@ mutation
   => HashSet QualifiedTable
   -> [P.FieldParser n RemoteField]
   -> [ActionInfo 'Postgres]
-  -> NonObjectTypeMap 'Postgres
+  -> NonObjectTypeMap
   -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue))))
 mutation allTables allRemotes allActions nonObjectCustomTypes = do
   mutationParsers <- for (toList allTables) \table -> do

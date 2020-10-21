@@ -62,7 +62,7 @@ validateCustomTypeDefinitions tableCache customTypes allPGScalars = do
   annotatedObjects <- mapFromL (unObjectTypeName . _otdName) <$>
                       traverse validateObject objectDefinitions
   let scalarTypeMap = Map.map NOCTScalar $
-        Map.map ASTCustom scalarTypes <> Map.mapWithKey ASTReusedPgScalar reusedPGScalars
+        Map.map ASTCustom scalarTypes <> Map.mapWithKey ASTReusedScalar reusedPGScalars
       enumTypeMap = Map.map NOCTEnum enumTypes
       inputObjectTypeMap = Map.map NOCTInputObject inputObjectTypes
       nonObjectTypeMap = scalarTypeMap <> enumTypeMap <> inputObjectTypeMap
@@ -171,7 +171,7 @@ validateCustomTypeDefinitions tableCache customTypes allPGScalars = do
                    refute $ pure $ ObjectFieldObjectBaseType
                      objectTypeName fieldName fieldBaseType
                | Just pgScalar <- lookupPGScalar allPGScalars fieldBaseType ->
-                   pure $ AOFTScalar $ ASTReusedPgScalar fieldBaseType pgScalar
+                   pure $ AOFTScalar $ ASTReusedScalar fieldBaseType pgScalar
                | otherwise ->
                    refute $ pure $ ObjectFieldTypeDoesNotExist
                      objectTypeName fieldName fieldBaseType

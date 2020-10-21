@@ -99,7 +99,7 @@ resolveAction
   -> AnnotatedCustomTypes 'Postgres
   -> ActionDefinitionInput
   -> HashSet PGScalarType -- See Note [Postgres scalars in custom types]
-  -> m ( ResolvedActionDefinition 'Postgres
+  -> m ( ResolvedActionDefinition
        , AnnotatedObjectType 'Postgres
        )
 resolveAction env AnnotatedCustomTypes{..} ActionDefinition{..} allPGScalars = do
@@ -109,7 +109,7 @@ resolveAction env AnnotatedCustomTypes{..} ActionDefinition{..} allPGScalars = d
           argumentBaseType = G.getBaseType gType
       (gType,) <$>
         if | Just pgScalar <- lookupPGScalar allPGScalars argumentBaseType ->
-               pure $ NOCTScalar $ ASTReusedPgScalar argumentBaseType pgScalar
+               pure $ NOCTScalar $ ASTReusedScalar argumentBaseType pgScalar
            | Just nonObjectType <- Map.lookup argumentBaseType _actNonObjects ->
                pure nonObjectType
            | otherwise ->

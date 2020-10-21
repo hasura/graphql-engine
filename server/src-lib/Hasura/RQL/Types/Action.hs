@@ -164,8 +164,8 @@ instance (J.ToJSON a, J.ToJSON b) => J.ToJSON (ActionDefinition a b) where
     , "timeout"                J..= timeout
     ] <> typeAndKind
 
-type ResolvedActionDefinition b =
-  ActionDefinition (ArgumentDefinition (G.GType, NonObjectCustomType b)) ResolvedWebhook
+type ResolvedActionDefinition =
+  ActionDefinition (ArgumentDefinition (G.GType, NonObjectCustomType)) ResolvedWebhook
 
 data ActionPermissionInfo
   = ActionPermissionInfo
@@ -185,7 +185,7 @@ data ActionInfo (b :: Backend)
   = ActionInfo
   { _aiName         :: !ActionName
   , _aiOutputObject :: !(AnnotatedObjectType b)
-  , _aiDefinition   :: !(ResolvedActionDefinition b)
+  , _aiDefinition   :: !ResolvedActionDefinition
   , _aiPermissions  :: !ActionPermissionMap
   , _aiComment      :: !(Maybe Text)
   } deriving (Generic)
