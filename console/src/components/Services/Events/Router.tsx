@@ -51,7 +51,7 @@ import {
 import { RightContainer } from '../../Common/Layout/RightContainer';
 import { TriggerContainerConnector } from './EventTriggers/TriggerContainer';
 
-const getTriggersRouter = () => (
+const triggerRoutes = (
   <Route path={eventsPrefix} component={Container}>
     <IndexRedirect to={dataEventsPrefix} />
     <Route path={dataEventsPrefix} component={RightContainer}>
@@ -130,4 +130,4 @@ const getTriggersRouter = () => (
   </Route>
 );
 
-export default getTriggersRouter;
+export default triggerRoutes;

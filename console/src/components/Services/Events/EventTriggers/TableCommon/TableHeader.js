@@ -78,7 +78,10 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
               role="presentation"
               className={tabName === 'pending' ? styles.active : ''}
             >
-              <Link to="pending" data-test="trigger-pending-events">
+              <Link
+                to={`/events/data/${triggerName}/pending`}
+                data-test="trigger-pending-events"
+              >
                 Pending Events {tabName === 'pending' ? showCount : null}
               </Link>
             </li>
@@ -86,7 +89,10 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
               role="presentation"
               className={tabName === 'processed' ? styles.active : ''}
             >
-              <Link to="processed" data-test="trigger-processed-events">
+              <Link
+                to={`/events/data/${triggerName}/processed`}
+                data-test="trigger-processed-events"
+              >
                 Processed Events {tabName === 'processed' ? showCount : null}
               </Link>
             </li>
@@ -94,7 +100,10 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
               role="presentation"
               className={tabName === 'logs' ? styles.active : ''}
             >
-              <Link to="logs" data-test="trigger-invocation-logs">
+              <Link
+                to={`/events/data/${triggerName}/processed`}
+                data-test="trigger-invocation-logs"
+              >
                 Invocation Logs
               </Link>
             </li>
