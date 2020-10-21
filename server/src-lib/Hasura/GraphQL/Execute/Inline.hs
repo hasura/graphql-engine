@@ -45,11 +45,11 @@ import qualified Data.List                     as L
 import qualified Data.Text                     as T
 
 import           Control.Lens
+import           Data.Text.Extended
 import           Language.GraphQL.Draft.Syntax
 
 import           Hasura.RQL.Types.Error
 import           Hasura.Server.Utils
-import           Hasura.SQL.Text
 
 -- | Internal bookkeeping used during inlining.
 data InlineEnv = InlineEnv

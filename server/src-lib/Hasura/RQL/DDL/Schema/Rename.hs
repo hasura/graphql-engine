@@ -12,15 +12,15 @@ where
 
 import           Control.Lens.Combinators
 import           Control.Lens.Operators
+import           Data.Text.Extended
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Relationship.Types
 import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.Types
-import           Hasura.Session
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 import qualified Hasura.RQL.DDL.EventTrigger        as DS
 import qualified Hasura.RQL.DDL.RemoteRelationship  as RR
@@ -426,7 +426,7 @@ updateColInObjRel
   :: QualifiedTable -> QualifiedTable
   -> RenameCol -> ObjRelUsing -> ObjRelUsing
 updateColInObjRel fromQT toQT rnCol = \case
-  RUFKeyOn col -> RUFKeyOn $ getNewCol rnCol fromQT col
+  RUFKeyOn col       -> RUFKeyOn $ getNewCol rnCol fromQT col
   RUManual manConfig -> RUManual $ updateRelManualConfig fromQT toQT rnCol manConfig
 
 updateColInArrRel

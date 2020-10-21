@@ -33,6 +33,7 @@ module Hasura.RQL.Types.CustomTypes
   ) where
 
 import           Control.Lens.TH                (makeLenses)
+import           Data.Text.Extended
 import           Instances.TH.Lift              ()
 import           Language.Haskell.TH.Syntax     (Lift)
 
@@ -52,7 +53,6 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common        (RelType)
 import           Hasura.RQL.Types.Table
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 newtype GraphQLType

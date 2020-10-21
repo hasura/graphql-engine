@@ -34,12 +34,12 @@ import qualified Text.Regex.TDFA            as TDFA
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Text.Extended
 import           Language.Haskell.TH.Syntax (Lift)
 
 import           Hasura.Incremental         (Cacheable)
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types.Common    (InputWebhook, NonEmptyText (..))
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 

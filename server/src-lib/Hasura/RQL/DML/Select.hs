@@ -17,12 +17,12 @@ import qualified Data.HashSet                   as HS
 import qualified Data.List.NonEmpty             as NE
 import qualified Data.Sequence                  as DS
 
+import           Data.Text.Extended
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Select.Internal
 import           Hasura.RQL.Types
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query              as Q

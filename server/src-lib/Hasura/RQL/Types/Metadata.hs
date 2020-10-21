@@ -4,6 +4,7 @@ import qualified Data.HashMap.Strict.Extended        as M
 
 import           Control.Lens                        hiding ((.=))
 import           Data.Aeson
+import           Data.Text.Extended
 import           Hasura.Prelude
 import           Hasura.Session
 
@@ -14,7 +15,6 @@ import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.RemoteSchema
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 data TableMetadataObjId
@@ -93,9 +93,9 @@ getInconsistentRemoteSchemas =
 
 imObjectIds :: InconsistentMetadata -> [MetadataObjId]
 imObjectIds = \case
-  InconsistentObject _ metadata -> [_moId metadata]
+  InconsistentObject _ metadata  -> [_moId metadata]
   ConflictingObjects _ metadatas -> map _moId metadatas
-  DuplicateObjects objectId _ -> [objectId]
+  DuplicateObjects objectId _    -> [objectId]
 
 imReason :: InconsistentMetadata -> Text
 imReason = \case

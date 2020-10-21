@@ -27,6 +27,7 @@ import qualified Hasura.RQL.DML.Update               as RQL
 import qualified Hasura.RQL.DML.Update.Types         as RQL
 import qualified Hasura.SQL.DML                      as S
 
+import           Data.Text.Extended
 import           Hasura.GraphQL.Parser               (FieldParser, InputFieldsParser, Kind (..),
                                                       Parser, UnpreparedValue (..), mkParameter)
 import           Hasura.GraphQL.Parser.Class
@@ -36,7 +37,6 @@ import           Hasura.GraphQL.Schema.Insert
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 
@@ -387,14 +387,14 @@ updateOperators table updatePermissions = do
         -- there needs to be at least one operator in the update, even if it is empty
         let presetColumns = Map.toList $ RQL.UpdSet . partialSQLExpToUnpreparedValue <$> upiSet updatePermissions
         when (null opExps && null presetColumns) $ parseError $
-          "at least any one of " <> T.intercalate ", " allowedOperators <> " is expected"
+          "at least any one of " <> commaSeparated allowedOperators <> " is expected"
 
         -- no column should appear twice
         let flattenedExps = concat opExps
             erroneousExps = OMap.filter ((>1) . length) $ OMap.groupTuples flattenedExps
         unless (OMap.null erroneousExps) $ parseError $
           "column found in multiple operators; " <>
-          T.intercalate ". " [ dquote column <> " in " <> T.intercalate ", " (toList $ RQL.updateOperatorText <$> ops)
+          T.intercalate ". " [ dquote column <> " in " <> commaSeparated (RQL.updateOperatorText <$> ops)
                              | (column, ops) <- OMap.toList erroneousExps
                              ]
 

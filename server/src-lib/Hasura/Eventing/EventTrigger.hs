@@ -51,6 +51,7 @@ import           Data.Aeson.TH
 import           Data.Has
 import           Data.Int                             (Int64)
 import           Data.String
+import           Data.Text.Extended
 import           Data.Time.Clock
 import           Data.Word
 import           Hasura.Eventing.Common
@@ -59,9 +60,8 @@ import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
-import           Hasura.Server.Version                (HasVersion)
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
+import           Hasura.Server.Version                (HasVersion)
 import qualified Hasura.Tracing                       as Tracing
 
 import qualified Control.Concurrent.Async.Lifted.Safe as LA

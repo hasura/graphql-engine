@@ -16,11 +16,11 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Data.Foldable
 
+import           Data.Text.Extended
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Schema.Remote
 import           Hasura.GraphQL.Utils          (getBaseTyWithNestedLevelsCount)
 import           Hasura.RQL.Types
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 
@@ -321,7 +321,7 @@ validateRemoteArguments expectedArguments providedArguments permittedVariables s
 unwrapGraphQLType :: G.GType -> G.GType
 unwrapGraphQLType = \case
   G.TypeList _ lt -> lt
-  nt -> nt
+  nt              -> nt
 
 -- | Validate a value against a type.
 validateType

@@ -20,12 +20,12 @@ import           Language.Haskell.TH.Syntax    (Lift)
 
 import qualified Language.GraphQL.Draft.Syntax as G
 
+import           Data.Text.Extended
 import           Hasura.EncJSON
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils           (englishList, makeReasonMessage)
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
+import           Hasura.Server.Utils           (englishList, makeReasonMessage)
 
 
 data RawFunctionInfo

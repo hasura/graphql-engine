@@ -1,7 +1,6 @@
 {-# OPTIONS_HADDOCK not-home #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE StrictData          #-}
-{-# LANGUAGE ViewPatterns        #-}
 
 -- | Defines the 'Parser' type and its primitive combinators.
 module Hasura.GraphQL.Parser.Internal.Parser where
@@ -12,13 +11,14 @@ import qualified Data.Aeson                    as A
 import qualified Data.HashMap.Strict.Extended  as M
 import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.HashSet                  as S
-import qualified Data.Text                     as T
 import qualified Data.List.Extended            as LE
+import qualified Data.Text                     as T
 
 import           Control.Lens.Extended         hiding (enum, index)
 import           Data.Int                      (Int32, Int64)
-import           Data.Scientific               (toBoundedInteger)
 import           Data.Parser.JSONPath
+import           Data.Scientific               (toBoundedInteger)
+import           Data.Text.Extended
 import           Data.Type.Equality
 import           Language.GraphQL.Draft.Syntax hiding (Definition)
 
@@ -27,9 +27,8 @@ import           Hasura.GraphQL.Parser.Collect
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Error
-import           Hasura.Server.Utils           (englishList)
-import           Hasura.SQL.Text
 import           Hasura.SQL.Value
+import           Hasura.Server.Utils           (englishList)
 
 
 -- -----------------------------------------------------------------------------
@@ -247,9 +246,9 @@ scalar name description representation = Parser
         JSONValue    (A.Bool   b) -> pure b
         _                         -> typeMismatch name "a boolean" v
       SRInt -> case v of
-        GraphQLValue (VInt i)     -> convertWith scientificToInteger $ fromInteger i
-        JSONValue (A.Number n)    -> convertWith scientificToInteger n
-        _                         -> typeMismatch name "a 32-bit integer" v
+        GraphQLValue (VInt i)  -> convertWith scientificToInteger $ fromInteger i
+        JSONValue (A.Number n) -> convertWith scientificToInteger n
+        _                      -> typeMismatch name "a 32-bit integer" v
       SRFloat -> case v of
         GraphQLValue (VFloat f)   -> convertWith scientificToFloat f
         GraphQLValue (VInt   i)   -> convertWith scientificToFloat $ fromInteger i
@@ -688,7 +687,7 @@ safeSelectionSet
   -> n (Parser 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a)))
 safeSelectionSet name desc fields
   | S.null duplicates = pure $ selectionSetObject name desc fields []
-  | otherwise         = throw500 $ "found duplicate fields in selection set: " <> T.intercalate ", " (unName <$> toList duplicates)
+  | otherwise         = throw500 $ "found duplicate fields in selection set: " <> commaSeparated (unName <$> toList duplicates)
   where
     duplicates = LE.duplicates $ getName . fDefinition <$> fields
 

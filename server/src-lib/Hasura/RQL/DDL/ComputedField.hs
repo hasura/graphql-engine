@@ -25,15 +25,15 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax         (Lift)
 
+import           Data.Text.Extended
 import           Hasura.EncJSON
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Schema.Function     (RawFunctionInfo (..), mkFunctionArgs)
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils                (makeReasonMessage)
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
+import           Hasura.Server.Utils                (makeReasonMessage)
 
 
 data ComputedFieldDefinition
@@ -112,7 +112,7 @@ showError qf = \case
     "the function " <> qf <<> " is of type VOLATILE; cannot be added as a computed field"
   where
     showFunctionTableArgument = \case
-      FTAFirst          -> "first argument of the function " <>> qf
+      FTAFirst           -> "first argument of the function " <>> qf
       FTANamed argName _ -> argName <<> " argument of the function " <>> qf
     showFunctionSessionArgument = \case
       FunctionSessionArgument argName _ -> argName <<> " argument of the function " <>> qf

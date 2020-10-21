@@ -16,16 +16,14 @@ module Hasura.RQL.DDL.QueryCollection
 
 import           Hasura.Prelude
 
-import qualified Data.Text                        as T
-import qualified Data.Text.Extended               as T
 import qualified Database.PG.Query                as Q
 
 import           Data.List.Extended               (duplicates)
 
+import           Data.Text.Extended
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.QueryCollection
-import           Hasura.SQL.Text
 
 
 addCollectionP2
@@ -35,7 +33,7 @@ addCollectionP2 (CollectionDef queryList) =
   withPathK "queries" $
     unless (null duplicateNames) $ throw400 NotSupported $
       "found duplicate query names "
-      <> T.intercalate ", " (map (T.dquote . unNonEmptyText . unQueryName) $ toList duplicateNames)
+      <> dquoteList (unNonEmptyText . unQueryName <$> toList duplicateNames)
   where
     duplicateNames = duplicates $ map _lqName queryList
 

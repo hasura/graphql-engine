@@ -19,9 +19,9 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Control.Monad.Validate
 
+import           Data.Text.Extended
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 {- Note [Postgres scalars in custom types]

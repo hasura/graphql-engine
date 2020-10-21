@@ -32,10 +32,10 @@ import           Hasura.RQL.Types.Common    (NonEmptyText, adminText, mkNonEmpty
                                              unNonEmptyText)
 import           Hasura.RQL.Types.Error
 import           Hasura.Server.Utils
-import           Hasura.SQL.Text
 
 import           Data.Aeson
 import           Data.Aeson.Types           (Parser, toJSONKeyText)
+import           Data.Text.Extended
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 

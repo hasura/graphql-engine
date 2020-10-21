@@ -13,13 +13,13 @@ import           Data.Aeson.Types
 
 import qualified Hasura.SQL.DML      as S
 
+import           Data.Text.Extended
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
-import           Hasura.Session
 import           Hasura.SQL.Error
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
+import           Hasura.Session
 
 
 newtype DMLP1T m a
@@ -210,7 +210,7 @@ convPartialSQLExp
   -> PartialSQLExp
   -> f S.SQLExp
 convPartialSQLExp f = \case
-  PSESQLExp sqlExp -> pure sqlExp
+  PSESQLExp sqlExp                 -> pure sqlExp
   PSESessVar colTy sessionVariable -> f colTy sessionVariable
 
 sessVarFromCurrentSetting

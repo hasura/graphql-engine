@@ -61,6 +61,7 @@ import qualified Network.HTTP.Client           as HTTP
 import qualified Network.HTTP.Types            as HTTP
 
 import           Control.Lens                  (makeLenses, makePrisms)
+import           Data.Text.Extended
 import           Language.Haskell.TH.Syntax    (Lift)
 
 import           Hasura.Incremental            (Cacheable)
@@ -68,9 +69,8 @@ import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.CustomTypes
-import           Hasura.Session
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 
 newtype ActionName

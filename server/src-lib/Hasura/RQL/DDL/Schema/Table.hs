@@ -42,6 +42,7 @@ import           Network.URI.Extended               ()
 
 import qualified Hasura.Incremental                 as Inc
 
+import           Data.Text.Extended
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Schema.Common       (textToName)
@@ -53,9 +54,8 @@ import           Hasura.RQL.DDL.Schema.Enum
 import           Hasura.RQL.DDL.Schema.Rename
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
-import           Hasura.Server.Utils
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
+import           Hasura.Server.Utils
 
 
 data TrackTable
@@ -488,7 +488,7 @@ buildTableCache = Inc.cache proc (catalogTables, reloadMetadataInvalidationKey) 
             Just enumReferences -> throw400 ConstraintViolation
               $ "column " <> prciName rawInfo <<> " in table " <> tableName
               <<> " references multiple enum tables ("
-              <> T.intercalate ", " (map (dquote . erTable) $ toList enumReferences) <> ")"
+              <> dquoteList (erTable <$> enumReferences) <> ")"
 
     assertNoDuplicateFieldNames columns =
       flip Map.traverseWithKey (Map.groupOn pgiName columns) \name columnsWithName ->

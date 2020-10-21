@@ -27,13 +27,13 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Scientific
 import           Data.Set                      (Set)
+import           Data.Text.Extended
 import           Language.Haskell.TH.Syntax    (Lift)
 
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.RemoteSchema
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 

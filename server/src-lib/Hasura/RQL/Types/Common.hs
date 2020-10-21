@@ -69,6 +69,7 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Bifunctor                (bimap)
 import           Data.Scientific               (toBoundedInteger)
+import           Data.Text.Extended
 import           Data.URL.Template
 import           Instances.TH.Lift             ()
 import           Language.Haskell.TH.Syntax    (Lift, Q, TExp)
@@ -77,7 +78,6 @@ import           Hasura.EncJSON
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.DDL.Headers        ()
 import           Hasura.RQL.Types.Error
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 
@@ -158,7 +158,7 @@ instance Q.FromCol RelType where
   fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case
     "object" -> Just ObjRel
     "array"  -> Just ArrRel
-    _   -> Nothing
+    _        -> Nothing
 
 data RelInfo
   = RelInfo

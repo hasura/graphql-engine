@@ -57,28 +57,28 @@ module Hasura.SQL.Types
   )
 where
 
+import           Hasura.Prelude
+
+import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Database.PG.Query.PTI         as PTI
-
-import           Hasura.Prelude
-import           Hasura.RQL.Types.Error
+import qualified Database.PostgreSQL.LibPQ     as PQ
+import qualified Language.GraphQL.Draft.Syntax as G
+import qualified PostgreSQL.Binary.Decoding    as PD
+import qualified Text.Builder                  as TB
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.Encoding           (text)
 import           Data.Aeson.TH
 import           Data.Aeson.Types              (toJSONKeyText)
+import           Data.Text.Extended
 import           Instances.TH.Lift             ()
 import           Language.Haskell.TH.Syntax    (Lift)
 
-import qualified Data.Text.Extended            as T
-import qualified Database.PostgreSQL.LibPQ     as PQ
-import qualified Language.GraphQL.Draft.Syntax as G
-import qualified PostgreSQL.Binary.Decoding    as PD
-import qualified Text.Builder                  as TB
-
 import           Hasura.Incremental            (Cacheable)
-import           Hasura.SQL.Text
+import           Hasura.RQL.Types.Error
+
 
 class ToSQL a where
   toSQL :: a -> TB.Builder
@@ -86,18 +86,18 @@ class ToSQL a where
 instance ToSQL TB.Builder where
   toSQL x = x
 
-toSQLTxt :: (ToSQL a) => a -> T.Text
+toSQLTxt :: (ToSQL a) => a -> Text
 toSQLTxt = TB.run . toSQL
 
 infixr 6 <+>
-(<+>) :: (ToSQL a) => T.Text -> [a] -> TB.Builder
+(<+>) :: (ToSQL a) => Text -> [a] -> TB.Builder
 (<+>) _ [] = mempty
 (<+>) kat (x:xs) =
   toSQL x <> mconcat [ TB.text kat <> toSQL x' | x' <- xs ]
 {-# INLINE (<+>) #-}
 
 newtype Iden
-  = Iden { getIdenTxt :: T.Text }
+  = Iden { getIdenTxt :: Text }
   deriving (Show, Eq, NFData, FromJSON, ToJSON, Hashable, Semigroup, Data, Cacheable)
 
 instance ToSQL Iden where
@@ -110,7 +110,7 @@ class IsIden a where
 instance IsIden Iden where
   toIden = id
 
-pgFmtIden :: T.Text -> T.Text
+pgFmtIden :: Text -> Text
 pgFmtIden x =
   "\"" <> T.replace "\"" "\"\"" (trimNullChars x) <> "\""
 
@@ -290,9 +290,8 @@ instance ToTxt PGCol where
 unsafePGCol :: Text -> PGCol
 unsafePGCol = PGCol
 
-showPGCols :: (Foldable t) => t PGCol -> T.Text
-showPGCols cols =
-  T.intercalate ", " $ map (T.dquote . getPGColTxt) $ toList cols
+showPGCols :: (Foldable t, Functor t) => t PGCol -> T.Text
+showPGCols = dquoteList . fmap getPGColTxt
 
 data PGScalarType
   = PGSmallInt
@@ -531,7 +530,7 @@ instance (ToSQL a) => ToSQL (PGType a) where
   toSQL = \case
     PGTypeScalar ty -> toSQL ty
     -- typename array is an sql standard way of declaring types
-    PGTypeArray ty -> toSQL ty <> " array"
+    PGTypeArray ty  -> toSQL ty <> " array"
 
 data PGTypeKind
   = PGKindBase

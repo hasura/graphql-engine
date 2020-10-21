@@ -8,6 +8,7 @@ import qualified Data.Aeson.Casing          as J
 import qualified Data.Aeson.TH              as J
 import qualified Data.Environment           as Env
 import qualified Data.Text                  as T
+import           Data.Text.Extended
 import qualified Database.PG.Query          as Q
 import qualified Network.URI.Extended       as N
 
@@ -15,7 +16,6 @@ import           Hasura.Incremental         (Cacheable)
 import           Hasura.RQL.DDL.Headers     (HeaderConf (..))
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
-import           Hasura.SQL.Text
 
 type UrlFromEnv = Text
 

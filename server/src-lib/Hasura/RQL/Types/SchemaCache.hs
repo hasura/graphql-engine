@@ -143,20 +143,20 @@ import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Metadata
 --import           Hasura.RQL.Types.Permission
+import           Data.Text.Extended
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Table
-import           Hasura.Session
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
+import           Hasura.Session
 import           Hasura.Tracing                    (TraceT)
 
 
 
 reportSchemaObjs :: [SchemaObjId] -> T.Text
-reportSchemaObjs = T.intercalate ", " . sort . map reportSchemaObj
+reportSchemaObjs = commaSeparated . sort . map reportSchemaObj
 
 mkParentDep :: QualifiedTable -> SchemaDependency
 mkParentDep tn = SchemaDependency (SOTable tn) DRTable

@@ -95,6 +95,7 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax          (Lift)
 
+import           Data.Text.Extended
 import           Hasura.Incremental                  (Cacheable)
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
@@ -104,10 +105,9 @@ import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteRelationship
+import           Hasura.SQL.Types
 import           Hasura.Server.Utils                 (duplicates, englishList)
 import           Hasura.Session
-import           Hasura.SQL.Text
-import           Hasura.SQL.Types
 
 
 data TableCustomRootFields
@@ -182,16 +182,16 @@ type FieldInfoMap = M.HashMap FieldName
 
 fieldInfoName :: FieldInfo -> FieldName
 fieldInfoName = \case
-  FIColumn info -> fromPGCol $ pgiColumn info
-  FIRelationship info -> fromRel $ riName info
-  FIComputedField info -> fromComputedField $ _cfiName info
+  FIColumn info             -> fromPGCol $ pgiColumn info
+  FIRelationship info       -> fromRel $ riName info
+  FIComputedField info      -> fromComputedField $ _cfiName info
   FIRemoteRelationship info -> fromRemoteRelationship $ _rfiName info
 
 fieldInfoGraphQLName :: FieldInfo -> Maybe G.Name
 fieldInfoGraphQLName = \case
-  FIColumn info -> Just $ pgiName info
-  FIRelationship info -> G.mkName $ relNameToTxt $ riName info
-  FIComputedField info -> G.mkName $ computedFieldNameToText $ _cfiName info
+  FIColumn info             -> Just $ pgiName info
+  FIRelationship info       -> G.mkName $ relNameToTxt $ riName info
+  FIComputedField info      -> G.mkName $ computedFieldNameToText $ _cfiName info
   FIRemoteRelationship info -> G.mkName $ remoteRelationshipNameToText $ _rfiName info
 
 -- | Returns all the field names created for the given field. Columns, object relationships, and

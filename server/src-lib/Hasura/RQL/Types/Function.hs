@@ -9,11 +9,11 @@ import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Text.Extended
 import           Language.Haskell.TH.Syntax (Lift)
 
 import           Hasura.Incremental         (Cacheable)
 import           Hasura.RQL.Types.Common
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 

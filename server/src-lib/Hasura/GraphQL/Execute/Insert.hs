@@ -23,14 +23,14 @@ import qualified Hasura.RQL.GBoolExp            as RQL
 import qualified Hasura.SQL.DML                 as S
 import qualified Hasura.Tracing                 as Tracing
 
+import           Data.Text.Extended
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Schema.Insert
 import           Hasura.RQL.Types
-import           Hasura.Server.Version          (HasVersion)
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
+import           Hasura.Server.Version          (HasVersion)
 
 
 traverseAnnInsert
@@ -180,9 +180,9 @@ insertObject env singleObjIns additionalColumns remoteJoinCtx planVars stringify
       return $ sum arrInsARows
 
     asSingleObject = \case
-      [] -> pure Nothing
+      []  -> pure Nothing
       [r] -> pure $ Just r
-      _ -> throw500 "more than one row returned"
+      _   -> throw500 "more than one row returned"
 
     cannotInsArrRelErr =
       "cannot proceed to insert array relations since insert to table "

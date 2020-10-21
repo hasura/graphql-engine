@@ -26,10 +26,10 @@ import           Hasura.EncJSON
 -- import           Hasura.GraphQL.NormalForm
 import           Hasura.GraphQL.RemoteServer
 -- import           Hasura.GraphQL.Schema.Merge
+import           Data.Text.Extended
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.Types
 import           Hasura.Server.Version       (HasVersion)
-import           Hasura.SQL.Text
 
 
 runAddRemoteSchema

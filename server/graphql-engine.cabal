@@ -466,7 +466,6 @@ library
                      , Hasura.SQL.Error
                      , Hasura.SQL.GeoJSON
                      , Hasura.SQL.Rewrite
-                     , Hasura.SQL.Text
                      , Hasura.SQL.Time
                      , Hasura.SQL.Types
                      , Hasura.SQL.Value

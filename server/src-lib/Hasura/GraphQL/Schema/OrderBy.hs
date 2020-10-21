@@ -12,12 +12,12 @@ import qualified Hasura.RQL.DML.Select         as RQL
 import           Hasura.RQL.Types              as RQL
 import           Hasura.SQL.DML                as SQL
 
+import           Data.Text.Extended
 import           Hasura.GraphQL.Parser         (InputFieldsParser, Kind (..), Parser,
                                                 UnpreparedValue)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Table
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 

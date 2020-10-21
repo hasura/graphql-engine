@@ -6,7 +6,7 @@ module Hasura.RQL.DDL.Permission.Internal where
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict        as M
-import qualified Data.Text.Extended         as T
+import qualified Data.Text                  as T
 import qualified Database.PG.Query          as Q
 import qualified Hasura.SQL.DML             as S
 
@@ -17,15 +17,15 @@ import           Data.Aeson.Types
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
+import           Data.Text.Extended
 import           Hasura.EncJSON
 import           Hasura.Incremental         (Cacheable)
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils
-import           Hasura.Session
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
+import           Hasura.Server.Utils
+import           Hasura.Session
 
 
 data PermColSpec

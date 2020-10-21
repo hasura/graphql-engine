@@ -18,6 +18,7 @@ import           Data.Aeson
 
 import qualified Hasura.Incremental                 as Inc
 
+import           Data.Text.Extended
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.RemoteRelationship
@@ -25,7 +26,6 @@ import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 addNonColumnFields

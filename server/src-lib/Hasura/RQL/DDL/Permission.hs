@@ -38,14 +38,14 @@ module Hasura.RQL.DDL.Permission
 
 import           Hasura.Prelude
 
+import           Data.Text.Extended
 import           Hasura.EncJSON
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DML.Internal            hiding (askPermInfo)
 import           Hasura.RQL.Types
-import           Hasura.Session
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 import qualified Database.PG.Query                  as Q
 

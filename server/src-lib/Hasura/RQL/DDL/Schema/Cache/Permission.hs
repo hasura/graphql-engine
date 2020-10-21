@@ -15,15 +15,15 @@ import           Data.Aeson
 
 import qualified Hasura.Incremental                 as Inc
 
+import           Data.Text.Extended
 import           Hasura.Db
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
-import           Hasura.Session
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 buildTablePermissions
   :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr

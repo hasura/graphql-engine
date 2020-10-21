@@ -35,13 +35,13 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Language.Haskell.TH.Syntax    (Lift)
 
+import           Data.Text.Extended
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Utils
 import           Hasura.RQL.DDL.CustomTypes    (lookupPGScalar)
 import           Hasura.RQL.Types
-import           Hasura.Session
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 
 getActionInfo

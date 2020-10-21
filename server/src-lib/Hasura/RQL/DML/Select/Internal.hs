@@ -14,6 +14,7 @@ import qualified Data.Text                    as T
 
 import           Control.Lens                 hiding (op)
 import           Control.Monad.Writer.Strict
+import           Data.Text.Extended
 import           Instances.TH.Lift            ()
 
 import qualified Hasura.SQL.DML               as S
@@ -24,7 +25,6 @@ import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
 import           Hasura.SQL.Rewrite
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 
@@ -50,9 +50,9 @@ selectFromToFromItem pfx = \case
 -- possible currently
 selectFromToQual :: SelectFrom -> S.Qual
 selectFromToQual = \case
-  FromTable tn         -> S.QualTable tn
-  FromIden i           -> S.QualIden i Nothing
-  FromFunction qf _ _  -> S.QualIden (functionToIden qf) Nothing
+  FromTable tn        -> S.QualTable tn
+  FromIden i          -> S.QualIden i Nothing
+  FromFunction qf _ _ -> S.QualIden (functionToIden qf) Nothing
 
 aggregateFieldToExp :: AggregateFields -> S.SQLExp
 aggregateFieldToExp aggFlds = jsonRow
@@ -182,7 +182,7 @@ mkOrderByFieldName relName =
 
 mkAggregateOrderByAlias :: AnnAggregateOrderBy -> S.Alias
 mkAggregateOrderByAlias = (S.Alias . Iden) . \case
-  AAOCount -> "count"
+  AAOCount         -> "count"
   AAOOp opText col -> opText <> "." <> getPGColTxt (pgiColumn col)
 
 mkArrayRelationSourcePrefix
@@ -319,8 +319,8 @@ mkSimilarArrayFields annFields maybeOrderBys =
 
 getArrayRelNameAndSelectArgs :: ArraySelectG v -> (RelName, SelectArgsG v)
 getArrayRelNameAndSelectArgs = \case
-  ASSimple r -> (aarRelationshipName r, _asnArgs $ aarAnnSelect r)
-  ASAggregate r -> (aarRelationshipName r, _asnArgs $ aarAnnSelect r)
+  ASSimple r     -> (aarRelationshipName r, _asnArgs $ aarAnnSelect r)
+  ASAggregate r  -> (aarRelationshipName r, _asnArgs $ aarAnnSelect r)
   ASConnection r -> (aarRelationshipName r, _asnArgs $ _csSelect $ aarAnnSelect r)
 
 getAnnArr :: (a, AnnFieldG v) -> Maybe (a, ArraySelectG v)
@@ -510,7 +510,7 @@ mkPermissionLimitSubQuery permLimit aggFields orderBys =
       Just l -> flip any (concatMap toList $ toList l) $
                 \case
                   AOCArrayAggregation{} -> True
-                  _        -> False
+                  _                     -> False
 
 processArrayRelation
   :: forall m. ( MonadReader Bool m

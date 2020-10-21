@@ -1,23 +1,23 @@
 -- | Classes for monads used during schema construction and query parsing.
 module Hasura.GraphQL.Parser.Class where
 
-import           Hasura.Prelude
+import                          Hasura.Prelude
 
-import qualified Data.HashMap.Strict                   as Map
-import qualified Language.Haskell.TH                   as TH
+import                qualified Data.HashMap.Strict                   as Map
+import                qualified Language.Haskell.TH                   as TH
 
-import           Data.Has
-import           Data.Parser.JSONPath
-import           Data.Tuple.Extended
-import           GHC.Stack                             (HasCallStack)
-import           Type.Reflection                       (Typeable)
+import                          Data.Has
+import                          Data.Parser.JSONPath
+import                          Data.Tuple.Extended
+import                          GHC.Stack                             (HasCallStack)
+import                          Type.Reflection                       (Typeable)
 
-import {-# SOURCE #-} Hasura.GraphQL.Parser.Internal.Parser
-import           Hasura.RQL.Types.Error
-import           Hasura.RQL.Types.Table                (TableCache, TableInfo)
-import           Hasura.Session                        (RoleName)
-import           Hasura.SQL.Text
-import           Hasura.SQL.Types
+import                          Data.Text.Extended
+import {-# SOURCE #-}           Hasura.GraphQL.Parser.Internal.Parser
+import                          Hasura.RQL.Types.Error
+import                          Hasura.RQL.Types.Table                (TableCache, TableInfo)
+import                          Hasura.SQL.Types
+import                          Hasura.Session                        (RoleName)
 
 {- Note [Tying the knot]
 ~~~~~~~~~~~~~~~~~~~~~~~~

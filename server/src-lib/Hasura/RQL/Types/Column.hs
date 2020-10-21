@@ -35,13 +35,14 @@ import           Control.Lens.TH
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Text.Extended
+import           Language.Haskell.TH.Syntax    (Lift)
+
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.Instances          ()
 import           Hasura.RQL.Types.Error
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-import           Language.Haskell.TH.Syntax    (Lift)
 
 newtype EnumValue
   = EnumValue { getEnumValue :: G.Name }
@@ -87,12 +88,12 @@ $(makePrisms ''PGColumnType)
 
 instance ToTxt PGColumnType where
   toTxt = \case
-    PGColumnScalar scalar -> toTxt scalar
+    PGColumnScalar scalar                             -> toTxt scalar
     PGColumnEnumReference (EnumReference tableName _) -> toTxt tableName
 
 isScalarColumnWhere :: (PGScalarType -> Bool) -> PGColumnType -> Bool
 isScalarColumnWhere f = \case
-  PGColumnScalar scalar -> f scalar
+  PGColumnScalar scalar   -> f scalar
   PGColumnEnumReference _ -> False
 
 -- | Gets the representation type associated with a 'PGColumnType'. Avoid using this if possible.
@@ -101,7 +102,7 @@ isScalarColumnWhere f = \case
 unsafePGColumnToRepresentation :: PGColumnType -> PGScalarType
 unsafePGColumnToRepresentation = \case
   PGColumnScalar scalarType -> scalarType
-  PGColumnEnumReference _ -> PGText
+  PGColumnEnumReference _   -> PGText
 
 -- | Note: Unconditionally accepts null values and returns 'PGNull'.
 parsePGScalarValue
@@ -116,7 +117,7 @@ parsePGScalarValue columnType value = case columnType of
       parseEnumValue enumValueName = do
         let enums = map getEnumValue $ M.keys enumValues
         unless (enumValueName `elem` enums) $ throw400 UnexpectedPayload
-          $ "expected one of the values " <> T.intercalate ", " (map dquote enums)
+          $ "expected one of the values " <> dquoteList enums
           <> " for type " <> snakeCaseQualObject tableName <<> ", given " <>> enumValueName
         pure $ PGValText $ G.unName enumValueName
 

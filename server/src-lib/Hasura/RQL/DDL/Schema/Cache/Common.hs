@@ -16,10 +16,10 @@ import           Control.Lens
 
 import qualified Hasura.Incremental           as Inc
 
+import           Data.Text.Extended
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.RQL.Types.Run
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 -- | 'InvalidationKeys' used to apply requested 'CacheInvalidations'.

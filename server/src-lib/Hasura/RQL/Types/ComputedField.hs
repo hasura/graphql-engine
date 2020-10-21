@@ -14,13 +14,13 @@ import           Control.Lens               hiding ((.=))
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Text.Extended
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
 import           Hasura.Incremental         (Cacheable)
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Function
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 
 

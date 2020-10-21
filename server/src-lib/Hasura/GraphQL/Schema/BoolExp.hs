@@ -9,13 +9,13 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import qualified Hasura.GraphQL.Parser         as P
 
+import           Data.Text.Extended
 import           Hasura.GraphQL.Parser         (InputFieldsParser, Kind (..), Parser,
                                                 UnpreparedValue, mkParameter)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
 import           Hasura.SQL.DML
-import           Hasura.SQL.Text
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
