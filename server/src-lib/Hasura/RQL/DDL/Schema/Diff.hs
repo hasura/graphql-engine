@@ -85,7 +85,7 @@ data ComputedFieldDiff
 data TableDiff (b :: Backend)
   = TableDiff
   { _tdNewName         :: !(Maybe QualifiedTable)
-  , _tdDroppedCols     :: ![PGCol]
+  , _tdDroppedCols     :: ![Column b]
   , _tdAddedCols       :: ![RawColumnInfo b]
   , _tdAlteredCols     :: ![(RawColumnInfo b, RawColumnInfo b)]
   , _tdDroppedFKeyCons :: ![ConstraintName]

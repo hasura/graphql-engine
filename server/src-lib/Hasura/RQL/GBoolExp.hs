@@ -44,19 +44,19 @@ parseOperationsExpression
   -> FieldInfoMap (FieldInfo 'Postgres)
   -> ColumnInfo 'Postgres
   -> Value
-  -> m [OpExpG v]
+  -> m [OpExpG 'Postgres v]
 parseOperationsExpression rhsParser fim columnInfo =
   withPathK (getPGColTxt $ pgiColumn columnInfo) .
     parseOperations (ColumnReferenceColumn columnInfo)
   where
-    parseOperations :: ColumnReference 'Postgres -> Value -> m [OpExpG v]
+    parseOperations :: ColumnReference 'Postgres -> Value -> m [OpExpG 'Postgres v]
     parseOperations column = \case
       Object o -> mapM (parseOperation column) (M.toList o)
       val      -> pure . AEQ False <$> rhsParser columnType val
       where
         columnType = PGTypeScalar $ columnReferenceType column
 
-    parseOperation :: ColumnReference 'Postgres -> (T.Text, Value) -> m (OpExpG v)
+    parseOperation :: ColumnReference 'Postgres -> (T.Text, Value) -> m (OpExpG 'Postgres v)
     parseOperation column (opStr, val) = withPathK opStr $
       case opStr of
         "$cast"          -> parseCast
@@ -174,8 +174,8 @@ parseOperationsExpression rhsParser fim columnInfo =
         parseLte      = ALTE <$> parseOne -- <=
         parseLike     = guardType stringTypes >> ALIKE <$> parseOne
         parseNlike    = guardType stringTypes >> ANLIKE <$> parseOne
-        parseIlike    = guardType stringTypes >> AILIKE <$> parseOne
-        parseNilike   = guardType stringTypes >> ANILIKE <$> parseOne
+        parseIlike    = guardType stringTypes >> AILIKE () <$> parseOne
+        parseNilike   = guardType stringTypes >> ANILIKE () <$> parseOne
         parseSimilar  = guardType stringTypes >> ASIMILAR <$> parseOne
         parseNsimilar = guardType stringTypes >> ANSIMILAR <$> parseOne
 
@@ -317,17 +317,17 @@ annColExp rhsParser colInfoMap (ColExp fieldName colVal) = do
       throw400 UnexpectedPayload "remote field unsupported"
 
 toSQLBoolExp
-  :: S.Qual -> AnnBoolExpSQL backend -> S.BoolExp
+  :: S.Qual -> AnnBoolExpSQL 'Postgres -> S.BoolExp
 toSQLBoolExp tq e =
   evalState (convBoolRhs' tq e) 0
 
 convBoolRhs'
-  :: S.Qual -> AnnBoolExpSQL backend -> State Word64 S.BoolExp
+  :: S.Qual -> AnnBoolExpSQL 'Postgres -> State Word64 S.BoolExp
 convBoolRhs' tq =
   foldBoolExp (convColRhs tq)
 
 convColRhs
-  :: S.Qual -> AnnBoolExpFldSQL backend -> State Word64 S.BoolExp
+  :: S.Qual -> AnnBoolExpFldSQL 'Postgres -> State Word64 S.BoolExp
 convColRhs tableQual = \case
   AVCol colInfo opExps -> do
     let colFld = fromPGCol $ pgiColumn colInfo
@@ -352,14 +352,14 @@ convColRhs tableQual = \case
   where
     mkQCol q = S.SEQIden . S.QIden q . toIden
 
-foldExists :: GExists (AnnBoolExpFldSQL backend) -> State Word64 S.BoolExp
+foldExists :: GExists (AnnBoolExpFldSQL 'Postgres) -> State Word64 S.BoolExp
 foldExists (GExists qt wh) = do
   whereExp <- foldBoolExp (convColRhs (S.QualTable qt)) wh
   return $ S.mkExists (S.FISimple qt Nothing) whereExp
 
 foldBoolExp
-  :: (AnnBoolExpFldSQL backend -> State Word64 S.BoolExp)
-  -> AnnBoolExpSQL backend
+  :: (AnnBoolExpFldSQL 'Postgres -> State Word64 S.BoolExp)
+  -> AnnBoolExpSQL 'Postgres
   -> State Word64 S.BoolExp
 foldBoolExp f = \case
   BoolAnd bes           -> do
@@ -375,13 +375,13 @@ foldBoolExp f = \case
   BoolFld ce           -> f ce
 
 mkFieldCompExp
-  :: S.Qual -> FieldName -> OpExpG S.SQLExp -> S.BoolExp
+  :: S.Qual -> FieldName -> OpExpG 'Postgres S.SQLExp -> S.BoolExp
 mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
   where
     mkQCol = S.SEQIden . S.QIden qual . toIden
     mkQField = S.SEQIden . S.QIden qual . Iden . getFieldNameTxt
 
-    mkCompExp :: S.SQLExp -> OpExpG S.SQLExp -> S.BoolExp
+    mkCompExp :: S.SQLExp -> OpExpG 'Postgres S.SQLExp -> S.BoolExp
     mkCompExp lhs = \case
       ACast casts      -> mkCastsExp casts
       AEQ False val    -> equalsBoolExpBuilder lhs val
@@ -398,8 +398,8 @@ mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
       ALTE val         -> S.BECompare S.SLTE lhs val
       ALIKE val        -> S.BECompare S.SLIKE lhs val
       ANLIKE val       -> S.BECompare S.SNLIKE lhs val
-      AILIKE val       -> S.BECompare S.SILIKE lhs val
-      ANILIKE val      -> S.BECompare S.SNILIKE lhs val
+      AILIKE _ val     -> S.BECompare S.SILIKE lhs val
+      ANILIKE _ val    -> S.BECompare S.SNILIKE lhs val
       ASIMILAR val     -> S.BECompare S.SSIMILAR lhs val
       ANSIMILAR val    -> S.BECompare S.SNSIMILAR lhs val
       AContains val    -> S.BECompare S.SContains lhs val
@@ -452,7 +452,7 @@ mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
 
         sqlAll = foldr (S.BEBin S.AndOp) (S.BELit True)
 
-hasStaticExp :: OpExpG (PartialSQLExp backend) -> Bool
+hasStaticExp :: OpExpG backend (PartialSQLExp backend) -> Bool
 hasStaticExp = getAny . foldMap (coerce isStaticValue)
 
 getColExpDeps

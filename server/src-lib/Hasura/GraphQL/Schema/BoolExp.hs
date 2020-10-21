@@ -18,7 +18,7 @@ import           Hasura.SQL.DML
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-type ComparisonExp = OpExpG UnpreparedValue
+type ComparisonExp b = OpExpG b UnpreparedValue
 
 -- |
 -- > input type_bool_exp {
@@ -80,7 +80,7 @@ boolExp table selectPermissions = memoizeOn 'boolExp table $ do
 
 comparisonExps
   :: forall m n. (MonadSchema n m, MonadError QErr m)
-  => PGColumnType -> m (Parser 'Input n [ComparisonExp])
+  => PGColumnType -> m (Parser 'Input n [ComparisonExp 'Postgres])
 comparisonExps = P.memoize 'comparisonExps \columnType -> do
   geogInputParser <- geographyWithinDistanceInput
   geomInputParser <- geometryWithinDistanceInput
@@ -137,10 +137,10 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
         (ANLIKE    . mkParameter <$> columnParser)
       , P.fieldOptional $$(G.litName "_ilike")
         (Just "does the column match the given case-insensitive pattern")
-        (AILIKE    . mkParameter <$> columnParser)
+        (AILIKE () . mkParameter <$> columnParser)
       , P.fieldOptional $$(G.litName "_nilike")
         (Just "does the column NOT match the given case-insensitive pattern")
-        (ANILIKE   . mkParameter <$> columnParser)
+        (ANILIKE () . mkParameter <$> columnParser)
       , P.fieldOptional $$(G.litName "_similar")
         (Just "does the column match the given SQL regular expression")
         (ASIMILAR  . mkParameter <$> columnParser)
@@ -209,7 +209,7 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
       (SEArray $ txtEncoder . pstValue . P.pcvValue <$> columnValues)
       (mkTypeAnn $ PGTypeArray $ unsafePGColumnToRepresentation columnType)
 
-    castExp :: PGColumnType -> m (Maybe (Parser 'Input n (CastExp UnpreparedValue)))
+    castExp :: PGColumnType -> m (Maybe (Parser 'Input n (CastExp 'Postgres UnpreparedValue)))
     castExp sourceType = do
       let maybeScalars = case sourceType of
             PGColumnScalar PGGeography -> Just (PGGeography, PGGeometry)

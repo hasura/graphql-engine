@@ -8,6 +8,7 @@ import qualified Hasura.SQL.DML                 as S
 import           Hasura.RQL.DML.Returning.Types
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
+import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 
@@ -15,7 +16,7 @@ import           Hasura.SQL.Types
 data AnnUpdG (b :: Backend) v
   = AnnUpd
   { uqp1Table   :: !QualifiedTable
-  , uqp1OpExps  :: ![(PGCol, UpdOpExpG v)]
+  , uqp1OpExps  :: ![(Column b, UpdOpExpG v)]
   , uqp1Where   :: !(AnnBoolExp b v, AnnBoolExp b v)
   , uqp1Check   :: !(AnnBoolExp b v)
   -- we don't prepare the arguments for returning

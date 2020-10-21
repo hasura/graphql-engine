@@ -7,6 +7,7 @@ module Hasura.RQL.Types.Common
        , RelInfo(..)
 
        , ScalarType
+       , Column
 
        , FieldName(..)
        , fromPGCol
@@ -83,7 +84,9 @@ import qualified Test.QuickCheck               as QC
 
 type family ScalarType (b :: Backend) where
   ScalarType 'Postgres = PGScalarType
-  ScalarType 'MySQL    = Void -- TODO
+
+type family Column (b :: Backend)  where
+  Column 'Postgres = PGCol
 
 newtype NonEmptyText = NonEmptyText { unNonEmptyText :: T.Text }
   deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, DQuote, Generic, NFData, Cacheable)

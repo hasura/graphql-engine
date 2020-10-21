@@ -179,14 +179,14 @@ $(makePrisms ''FieldInfo)
 
 type FieldInfoMap = M.HashMap FieldName
 
-fieldInfoName :: FieldInfo backend -> FieldName
+fieldInfoName :: FieldInfo 'Postgres -> FieldName
 fieldInfoName = \case
   FIColumn info -> fromPGCol $ pgiColumn info
   FIRelationship info -> fromRel $ riName info
   FIComputedField info -> fromComputedField $ _cfiName info
   FIRemoteRelationship info -> fromRemoteRelationship $ _rfiName info
 
-fieldInfoGraphQLName :: FieldInfo backend -> Maybe G.Name
+fieldInfoGraphQLName :: FieldInfo 'Postgres -> Maybe G.Name
 fieldInfoGraphQLName = \case
   FIColumn info -> Just $ pgiName info
   FIRelationship info -> G.mkName $ relNameToTxt $ riName info
@@ -196,7 +196,7 @@ fieldInfoGraphQLName = \case
 -- | Returns all the field names created for the given field. Columns, object relationships, and
 -- computed fields only ever produce a single field, but array relationships also contain an
 -- @_aggregate@ field.
-fieldInfoGraphQLNames :: FieldInfo backend -> [G.Name]
+fieldInfoGraphQLNames :: FieldInfo 'Postgres -> [G.Name]
 fieldInfoGraphQLNames info = case info of
   FIColumn _ -> maybeToList $ fieldInfoGraphQLName info
   FIRelationship relationshipInfo -> fold do
@@ -226,7 +226,7 @@ isPGColInfo _            = False
 
 data InsPermInfo (b :: Backend)
   = InsPermInfo
-  { ipiCols            :: !(HS.HashSet PGCol)
+  { ipiCols            :: !(HS.HashSet (Column b))
   , ipiCheck           :: !(AnnBoolExpPartialSQL b)
   , ipiSet             :: !(PreSetColsPartial b)
   , ipiBackendOnly     :: !Bool
@@ -240,7 +240,7 @@ instance ToJSON (InsPermInfo 'Postgres) where
 
 data SelPermInfo (b :: Backend)
   = SelPermInfo
-  { spiCols                 :: !(HS.HashSet PGCol)
+  { spiCols                 :: !(HS.HashSet (Column b))
   , spiScalarComputedFields :: !(HS.HashSet ComputedFieldName)
   , spiFilter               :: !(AnnBoolExpPartialSQL b)
   , spiLimit                :: !(Maybe Int)
@@ -255,7 +255,7 @@ instance ToJSON (SelPermInfo 'Postgres) where
 
 data UpdPermInfo (b :: Backend)
   = UpdPermInfo
-  { upiCols            :: !(HS.HashSet PGCol)
+  { upiCols            :: !(HS.HashSet (Column b))
   , upiTable           :: !QualifiedTable
   , upiFilter          :: !(AnnBoolExpPartialSQL b)
   , upiCheck           :: !(Maybe (AnnBoolExpPartialSQL b))

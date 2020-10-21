@@ -148,7 +148,7 @@ parseTxtEncodedPGValue colTy val =
 -- 'pcirReferences' field and other table data to eventually resolve the type to a 'PGColumnType'.
 data RawColumnInfo (b :: Backend)
   = RawColumnInfo
-  { prciName        :: !PGCol
+  { prciName        :: !(Column b)
   , prciPosition    :: !Int
   -- ^ The “ordinal position” of the column according to Postgres. Numbering starts at 1 and
   -- increases. Dropping a column does /not/ cause the columns to be renumbered, so a column can be
@@ -169,7 +169,7 @@ instance FromJSON (RawColumnInfo 'Postgres) where
 -- other schema information to produce a 'PGColumnType'.
 data ColumnInfo (b :: Backend)
   = ColumnInfo
-  { pgiColumn      :: !PGCol
+  { pgiColumn      :: !(Column b)
   , pgiName        :: !G.Name
   -- ^ field name exposed in GraphQL interface
   , pgiPosition    :: !Int
@@ -199,6 +199,6 @@ onlyJSONBCols = filter (isScalarColumnWhere (== PGJSONB) . pgiType)
 onlyComparableCols :: [ColumnInfo 'Postgres] -> [ColumnInfo 'Postgres]
 onlyComparableCols = filter (isScalarColumnWhere isComparableType . pgiType)
 
-getColInfos :: [PGCol] -> [ColumnInfo backend] -> [ColumnInfo backend]
+getColInfos :: Eq (Column backend) => [Column backend] -> [ColumnInfo backend] -> [ColumnInfo backend]
 getColInfos cols allColInfos =
   flip filter allColInfos $ \ci -> pgiColumn ci `elem` cols

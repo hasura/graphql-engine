@@ -50,10 +50,10 @@ mkMutation
   :: Maybe MutationRemoteJoinCtx
   -> QualifiedTable
   -> (S.CTE, DS.Seq Q.PrepArg)
-  -> MutationOutput backend
-  -> [ColumnInfo backend]
+  -> MutationOutput 'Postgres
+  -> [ColumnInfo 'Postgres]
   -> Bool
-  -> Mutation backend
+  -> Mutation 'Postgres
 mkMutation ctx table query output' allCols strfyNum =
   let (output, remoteJoins) = getRemoteJoinsMutationOutput output'
       remoteJoinsCtx = (,) <$> remoteJoins <*> ctx

@@ -31,7 +31,7 @@ convSelCol :: (UserInfoM m, QErrM m, CacheRM m)
            => FieldInfoMap (FieldInfo 'Postgres)
            -> SelPermInfo 'Postgres
            -> SelCol
-           -> m [ExtCol]
+           -> m [ExtCol 'Postgres]
 convSelCol _ _ (SCExtSimple cn) =
   return [ECSimple cn]
 convSelCol fieldInfoMap _ (SCExtRel rn malias selQ) = do
@@ -51,7 +51,7 @@ convWildcard
   => FieldInfoMap (FieldInfo 'Postgres)
   -> SelPermInfo 'Postgres
   -> Wildcard
-  -> m [ExtCol]
+  -> m [ExtCol 'Postgres]
 convWildcard fieldInfoMap selPermInfo wildcard =
   case wildcard of
   Star         -> return simpleCols
@@ -80,7 +80,7 @@ resolveStar :: (UserInfoM m, QErrM m, CacheRM m)
             => FieldInfoMap (FieldInfo 'Postgres)
             -> SelPermInfo 'Postgres
             -> SelectQ
-            -> m SelectQExt
+            -> m (SelectQExt 'Postgres)
 resolveStar fim spi (SelectG selCols mWh mOb mLt mOf) = do
   procOverrides <- fmap (concat . catMaybes) $ withPathK "columns" $
     indexedForM selCols $ \selCol -> case selCol of
@@ -160,7 +160,7 @@ convSelectQ
   => QualifiedTable
   -> FieldInfoMap (FieldInfo 'Postgres)  -- Table information of current table
   -> SelPermInfo 'Postgres   -- Additional select permission info
-  -> SelectQExt     -- Given Select Query
+  -> SelectQExt 'Postgres     -- Given Select Query
   -> SessVarBldr 'Postgres m
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> m (AnnSimpleSel 'Postgres)
@@ -226,7 +226,7 @@ convExtRel
   => FieldInfoMap (FieldInfo 'Postgres)
   -> RelName
   -> Maybe RelName
-  -> SelectQExt
+  -> SelectQExt 'Postgres
   -> SessVarBldr 'Postgres m
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> m (Either (ObjectRelationSelect 'Postgres) (ArraySelect 'Postgres))

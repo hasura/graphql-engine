@@ -43,7 +43,7 @@ traverseAnnDel f annUpd =
     AnnDel tn (whr, fltr) mutOutput allCols = annUpd
 
 mkDeleteCTE
-  :: AnnDel backend -> S.CTE
+  :: AnnDel 'Postgres -> S.CTE
 mkDeleteCTE (AnnDel tn (fltr, wc) _ _) =
   S.CTEDelete delete
   where

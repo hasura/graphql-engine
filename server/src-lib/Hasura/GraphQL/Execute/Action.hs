@@ -518,7 +518,7 @@ mkJsonAggSelect =
 processOutputSelectionSet
   :: RS.ArgumentExp v
   -> GraphQLType
-  -> [(PGCol, ScalarType backend)]
+  -> [(Column backend, ScalarType backend)]
   -> RS.AnnFieldsG backend v
   -> Bool
   -> RS.AnnSimpleSelG backend v

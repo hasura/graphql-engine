@@ -63,12 +63,12 @@ pgColsFromMutFld = \case
 pgColsFromMutFlds :: MutFlds 'Postgres -> [(PGCol, PGColumnType)]
 pgColsFromMutFlds = concatMap (pgColsFromMutFld . snd)
 
-pgColsToSelFlds :: [ColumnInfo backend] -> [(FieldName, AnnField backend)]
+pgColsToSelFlds :: [ColumnInfo 'Postgres] -> [(FieldName, AnnField 'Postgres)]
 pgColsToSelFlds cols =
   flip map cols $
   \pgColInfo -> (fromPGCol $ pgiColumn pgColInfo, mkAnnColumnField pgColInfo Nothing)
 
-mkDefaultMutFlds :: Maybe [ColumnInfo backend] -> MutationOutput backend
+mkDefaultMutFlds :: Maybe [ColumnInfo 'Postgres] -> MutationOutput 'Postgres
 mkDefaultMutFlds = MOutMultirowFields . \case
   Nothing   -> mutFlds
   Just cols -> ("returning", MRet $ pgColsToSelFlds cols):mutFlds
@@ -121,7 +121,7 @@ WITH "<table-name>__mutation_result_alias" AS (
 -- See Note [Mutation output expression].
 mkMutationOutputExp
   :: QualifiedTable
-  -> [ColumnInfo backend]
+  -> [ColumnInfo 'Postgres]
   -> Maybe Int
   -> S.CTE
   -> MutationOutput 'Postgres

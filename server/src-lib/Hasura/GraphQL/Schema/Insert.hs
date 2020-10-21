@@ -44,7 +44,7 @@ data AnnIns (b :: Backend) a v
   , _aiConflictClause :: !(Maybe (RQL.ConflictClauseP1 b v))
   , _aiCheckCond      :: !(AnnBoolExp b v, Maybe (AnnBoolExp b v))
   , _aiTableCols      :: ![ColumnInfo b]
-  , _aiDefVals        :: !(PreSetColsG v)
+  , _aiDefVals        :: !(PreSetColsG b v)
   }
 
 type SingleObjIns b v = AnnIns b (AnnInsObj b v) v
@@ -61,7 +61,7 @@ type ArrRelIns b v = RelIns (MultiObjIns  b v)
 
 data AnnInsObj (b :: Backend) v
   = AnnInsObj
-  { _aioColumns :: ![(PGCol, v)]
+  { _aioColumns :: ![(Column b, v)]
   , _aioObjRels :: ![ObjRelIns b v]
   , _aioArrRels :: ![ArrRelIns b v]
   }

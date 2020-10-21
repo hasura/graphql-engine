@@ -266,7 +266,7 @@ data AnnActionExecution (b :: Backend) v
   , _aaePayload              :: !J.Value -- ^ jsonified input arguments
   , _aaeOutputFields         :: !ActionOutputFields
   -- ^ to validate the response fields from webhook
-  , _aaeDefinitionList       :: ![(PGCol, ScalarType b)]
+  , _aaeDefinitionList       :: ![(Column b, ScalarType b)]
   , _aaeWebhook              :: !ResolvedWebhook
   , _aaeHeaders              :: ![HeaderConf]
   , _aaeForwardClientHeaders :: !Bool
@@ -295,7 +295,7 @@ data AnnActionAsyncQuery (b :: Backend) v
   , _aaaqActionId       :: !v
   , _aaaqOutputType     :: !GraphQLType
   , _aaaqFields         :: !(AsyncActionQueryFieldsG b v)
-  , _aaaqDefinitionList :: ![(PGCol, ScalarType b)]
+  , _aaaqDefinitionList :: ![(Column b, ScalarType b)]
   , _aaaqStringifyNum   :: !Bool
   }
 

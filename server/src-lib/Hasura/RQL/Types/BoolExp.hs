@@ -185,10 +185,10 @@ instance (Cacheable a) => Cacheable (STIntersectsGeomminNband a)
 instance (Hashable a) => Hashable (STIntersectsGeomminNband a)
 $(deriveJSON (aesonDrop 4 snakeCase) ''STIntersectsGeomminNband)
 
-type CastExp a = M.HashMap PGScalarType [OpExpG a]
+type CastExp b a = M.HashMap (ScalarType b) [OpExpG b a]
 
-data OpExpG a
-  = ACast !(CastExp a)
+data OpExpG (b :: Backend) a
+  = ACast !(CastExp b a)
 
   | AEQ !Bool !a
   | ANE !Bool !a
@@ -204,8 +204,8 @@ data OpExpG a
   | ALIKE !a -- LIKE
   | ANLIKE !a -- NOT LIKE
 
-  | AILIKE !a -- ILIKE, case insensitive
-  | ANILIKE !a-- NOT ILIKE, case insensitive
+  | AILIKE (XAILIKE b) !a -- ILIKE, case insensitive
+  | ANILIKE (XANILIKE b) !a-- NOT ILIKE, case insensitive
 
   | ASIMILAR !a -- similar, regex
   | ANSIMILAR !a-- not similar, regex
@@ -233,18 +233,25 @@ data OpExpG a
   | ANISNULL -- IS NULL
   | ANISNOTNULL -- IS NOT NULL
 
-  | CEQ !PGCol
-  | CNE !PGCol
-  | CGT !PGCol
-  | CLT !PGCol
-  | CGTE !PGCol
-  | CLTE !PGCol
-  deriving (Eq, Show, Functor, Foldable, Traversable, Generic, Data)
-instance (NFData a) => NFData (OpExpG a)
-instance (Cacheable a) => Cacheable (OpExpG a)
-instance (Hashable a) => Hashable (OpExpG a)
+  | CEQ !(Column b)
+  | CNE !(Column b)
+  | CGT !(Column b)
+  | CLT !(Column b)
+  | CGTE !(Column b)
+  | CLTE !(Column b)
+  deriving (Functor, Foldable, Traversable, Generic)
+deriving instance (Eq a) => Eq (OpExpG 'Postgres a)
+instance (NFData a) => NFData (OpExpG 'Postgres a)
+instance (Cacheable a) => Cacheable (OpExpG 'Postgres a)
+instance (Hashable a) => Hashable (OpExpG 'Postgres a)
+type family XAILIKE (b :: Backend) where
+  XAILIKE 'Postgres = ()
+  XAILIKE 'MySQL = Void
+type family XANILIKE (b :: Backend) where
+  XANILIKE 'Postgres = ()
+  XANILIKE 'MySQL = Void
 
-opExpDepCol :: OpExpG a -> Maybe PGCol
+opExpDepCol :: OpExpG backend a -> Maybe (Column backend)
 opExpDepCol = \case
   CEQ c  -> Just c
   CNE c  -> Just c
@@ -254,7 +261,7 @@ opExpDepCol = \case
   CLTE c -> Just c
   _      -> Nothing
 
-opExpToJPair :: (a -> Value) -> OpExpG a -> (Text, Value)
+opExpToJPair :: (a -> Value) -> OpExpG 'Postgres a -> (Text, Value)
 opExpToJPair f = \case
   ACast a        -> ("_cast", toJSON $ M.map opExpsToJSON a)
 
@@ -272,8 +279,8 @@ opExpToJPair f = \case
   ALIKE a        -> ("_like", f a)
   ANLIKE a       -> ("_nlike", f a)
 
-  AILIKE a       -> ("_ilike", f a)
-  ANILIKE a      -> ("_nilike", f a)
+  AILIKE _ a     -> ("_ilike", f a)
+  ANILIKE _ a    -> ("_nilike", f a)
 
   ASIMILAR a     -> ("_similar", f a)
   ANSIMILAR a    -> ("_nsimilar", f a)
@@ -311,7 +318,7 @@ opExpToJPair f = \case
     opExpsToJSON = object . map (opExpToJPair f)
 
 data AnnBoolExpFld (b :: Backend) a
-  = AVCol !(ColumnInfo b) ![OpExpG a]
+  = AVCol !(ColumnInfo b) ![OpExpG 'Postgres a]
   | AVRel !RelInfo !(AnnBoolExp b a)
   deriving (Functor, Foldable, Traversable, Generic)
 deriving instance Eq a => Eq (AnnBoolExpFld 'Postgres a)
@@ -354,8 +361,8 @@ type AnnBoolExpSQL b = AnnBoolExp b S.SQLExp
 type AnnBoolExpFldPartialSQL b = AnnBoolExpFld b (PartialSQLExp b)
 type AnnBoolExpPartialSQL b = AnnBoolExp b (PartialSQLExp b)
 
-type PreSetColsG v = M.HashMap PGCol v
-type PreSetColsPartial b = M.HashMap PGCol (PartialSQLExp b)
+type PreSetColsG b v = M.HashMap (Column b) v
+type PreSetColsPartial b = M.HashMap (Column b) (PartialSQLExp b)
 type PreSetCols = M.HashMap PGCol S.SQLExp
 
 -- doesn't resolve the session variable
@@ -389,7 +396,7 @@ instance ToJSON (AnnBoolExpPartialSQL 'Postgres) where
           ( relNameToTxt $ riName ri
           , toJSON (ri, toJSON relBoolExp)
           )
-      opExpSToJSON :: OpExpG (PartialSQLExp 'Postgres) -> Value
+      opExpSToJSON :: OpExpG 'Postgres (PartialSQLExp 'Postgres) -> Value
       opExpSToJSON =
         object . pure . opExpToJPair toJSON
 

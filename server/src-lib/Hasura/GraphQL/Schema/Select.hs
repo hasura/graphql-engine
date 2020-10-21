@@ -782,7 +782,7 @@ tableAggregationFields
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
   -> SelPermInfo 'Postgres
-  -> m (Parser 'Output n RQL.AggregateFields)
+  -> m (Parser 'Output n (RQL.AggregateFields 'Postgres))
 tableAggregationFields table selectPermissions = do
   tableName  <- qualifiedObjectToName table
   allColumns <- tableSelectColumns table selectPermissions
@@ -807,20 +807,20 @@ tableAggregationFields table selectPermissions = do
   pure $ P.selectionSet selectName (Just description) aggregateFields
         <&> parsedSelectionsToFields RQL.AFExp
   where
-    mkNumericAggFields :: G.Name -> [ColumnInfo 'Postgres] -> m [FieldParser n RQL.PGColFld]
+    mkNumericAggFields :: G.Name -> [ColumnInfo 'Postgres] -> m [FieldParser n (RQL.ColFld 'Postgres)]
     mkNumericAggFields name
       | name == $$(G.litName "sum") = traverse mkColumnAggField
       | otherwise                   = traverse \columnInfo ->
           pure $ P.selection_ (pgiName columnInfo) (pgiDescription columnInfo)
-                 (P.nullable P.float) $> RQL.PCFCol (pgiColumn columnInfo)
+                 (P.nullable P.float) $> RQL.CFCol (pgiColumn columnInfo)
 
-    mkColumnAggField :: ColumnInfo 'Postgres -> m (FieldParser n RQL.PGColFld)
+    mkColumnAggField :: ColumnInfo 'Postgres -> m (FieldParser n (RQL.ColFld 'Postgres))
     mkColumnAggField columnInfo = do
       field <- P.column (pgiType columnInfo) (G.Nullability True)
       pure $ P.selection_ (pgiName columnInfo) (pgiDescription columnInfo) field
-        $> RQL.PCFCol (pgiColumn columnInfo)
+        $> RQL.CFCol (pgiColumn columnInfo)
 
-    countField :: m (FieldParser n RQL.AggregateField)
+    countField :: m (FieldParser n (RQL.AggregateField 'Postgres))
     countField = do
       columnsEnum <- tableSelectColumnsEnum table selectPermissions
       let columnsName  = $$(G.litName "columns")
@@ -838,14 +838,14 @@ tableAggregationFields table selectPermissions = do
     parseAggOperator
       :: G.Name
       -> G.Name
-      -> [FieldParser n RQL.PGColFld]
-      -> FieldParser n RQL.AggregateField
+      -> [FieldParser n (RQL.ColFld 'Postgres)]
+      -> FieldParser n (RQL.AggregateField 'Postgres)
     parseAggOperator operator tableName columns =
       let opText  = G.unName operator
           setName = tableName <> $$(G.litName "_") <> operator <> $$(G.litName "_fields")
           setDesc = Just $ G.Description $ "aggregate " <> opText <> " on columns"
           subselectionParser = P.selectionSet setName setDesc columns
-            <&> parsedSelectionsToFields RQL.PCFExp
+            <&> parsedSelectionsToFields RQL.CFExp
       in P.subselection_ operator Nothing subselectionParser
          <&> (RQL.AFOp . RQL.AggregateOp opText)
 
