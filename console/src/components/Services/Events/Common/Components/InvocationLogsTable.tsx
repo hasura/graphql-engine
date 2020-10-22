@@ -4,13 +4,13 @@ import ReactTable, {
   ComponentPropsGetter0,
 } from 'react-table';
 import 'react-table/react-table.css';
-import { FilterTableProps } from './types';
+import { FilterTableProps, GridHeadingProps } from './types';
 import { Dispatch } from '../../../../../types';
-// import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import { ordinalColSort } from '../../../Data/utils';
 import styles from '../../Events.scss';
 import InvocationLogDetails from './InvocationLogDetails';
+import ExpanderButton from './ExpanderButton';
 import { redeliverDataEvent } from '../../ServerIO';
 import ReloadIcon from '../../../../Common/Icons/Reload';
 import Modal from '../../../../Common/Modal/Modal';
@@ -18,6 +18,25 @@ import RedeliverEvent from './RedeliverEvent';
 import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 import { Nullable } from '../../../../Common/utils/tsUtils';
 import { getInvocationLogStatus } from './utils';
+import Button from '../../../../Common/Button/Button';
+
+type RedeliverButtonProps = {
+  onClickHandler: (e: React.MouseEvent) => void;
+};
+
+const RedliverEventButton: React.FC<RedeliverButtonProps> = ({
+  onClickHandler,
+}) => (
+  <Button
+    color="white"
+    size="xs"
+    title="Redeliver event"
+    onClick={onClickHandler}
+    className={`${styles.cursorPointer} ${styles.add_mar_right_small}`}
+  >
+    <ReloadIcon className="" />
+  </Button>
+);
 
 interface Props extends FilterTableProps {
   dispatch: Dispatch;
@@ -100,11 +119,40 @@ const InvocationLogsTable: React.FC<Props> = props => {
     }
   };
 
-  const gridHeadings = sortedColumns.map(column => {
-    return {
-      Header: column,
-      accessor: column,
-    };
+  const expanderActions: GridHeadingProps = {
+    expander: true,
+    Header: '',
+    accessor: 'expander',
+    Expander: ({ isExpanded, viewIndex }) => {
+      const row = rows[viewIndex];
+      return (
+        <>
+          {columns.includes('redeliver') && (
+            <RedliverEventButton
+              onClickHandler={e => {
+                if (isRedelivering) {
+                  return;
+                }
+                redeliverHandler(row.event_id);
+                e.stopPropagation();
+              }}
+            />
+          )}
+          <ExpanderButton isExpanded={isExpanded} />
+        </>
+      );
+    },
+  };
+
+  const gridHeadings = [expanderActions];
+
+  sortedColumns.forEach(column => {
+    if (column !== 'redeliver') {
+      gridHeadings.push({
+        Header: column,
+        accessor: column,
+      });
+    }
   });
 
   const rowsFormatted = rows.map(r => {
@@ -125,21 +173,6 @@ const InvocationLogsTable: React.FC<Props> = props => {
         </div>
       ),
     };
-    if (columns.includes('redeliver')) {
-      formattedRow.redeliver = (
-        <div
-          onClick={() => {
-            if (isRedelivering) {
-              return;
-            }
-            redeliverHandler(r.event_id);
-          }}
-          className={styles.cursorPointer}
-        >
-          <ReloadIcon className="" />
-        </div>
-      );
-    }
     return formattedRow;
   });
 
