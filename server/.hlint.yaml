@@ -35,6 +35,10 @@
 # Will suggest replacing "wibbleMany [myvar]" with "wibbleOne myvar"
 # - error: {lhs: "wibbleMany [x]", rhs: wibbleOne x}
 
+- warn: {lhs: "maybe (f x) f", rhs: "f . fromMaybe x"}
+- warn: {lhs: "either (f . g) (f . h)", rhs: "f . either g h"}
+- warn: {lhs: "onNothing x (return y)", rhs: "return (fromMaybe y x)"}
+- warn: {lhs: "onLeft x (return . f)", rhs: "return (either f id x)"}
 
 # Turn on hints that are off by default
 #
