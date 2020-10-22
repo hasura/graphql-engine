@@ -44,14 +44,16 @@ Once the Hasura GraphQL engine Droplet is ready, you can visit the Droplet IP to
 open the Hasura console, where you can create tables, explore GraphQL APIs etc.
 Note that it might take 1 or 2 minutes for everything to start running.
 
+The ``Droplet IP`` is highlighted in the image below:
+
+.. thumbnail:: /img/graphql/core/deployment/dashboard-digital-ocean.png
+   :alt: Dashboard for digital ocean droplet
+
 The Hasura console will be at:
 
 .. code-block:: bash
 
    http://<your_droplet_ip>/console
-
-.. thumbnail:: /img/graphql/core/deployment/dashboard-digital-ocean.png
-   :alt: Dashboard for digital ocean droplet
 
 The GraphQL endpoint will be:
 
