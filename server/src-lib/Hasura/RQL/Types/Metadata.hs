@@ -1,9 +1,10 @@
 module Hasura.RQL.Types.Metadata where
 
-import qualified Data.HashMap.Strict.Extended   as M
+import qualified Data.HashMap.Strict.Extended        as M
 
-import           Control.Lens                   hiding ((.=))
+import           Control.Lens                        hiding ((.=))
 import           Data.Aeson
+import           Data.Text.Extended
 import           Hasura.Prelude
 import           Hasura.Session
 
@@ -45,10 +46,10 @@ moiTypeName = \case
   MORemoteSchema _ -> "remote_schema"
   MOCronTrigger _ -> "cron_trigger"
   MOTableObj _ tableObjectId -> case tableObjectId of
-    MTORel _ relType   -> relTypeToTxt relType <> "_relation"
-    MTOPerm _ permType -> permTypeToCode permType <> "_permission"
-    MTOTrigger _       -> "event_trigger"
-    MTOComputedField _ -> "computed_field"
+    MTORel _ relType        -> relTypeToTxt relType <> "_relation"
+    MTOPerm _ permType      -> permTypeToCode permType <> "_permission"
+    MTOTrigger _            -> "event_trigger"
+    MTOComputedField _      -> "computed_field"
     MTORemoteRelationship _ -> "remote_relationship"
   MOCustomTypes -> "custom_types"
   MOAction _ -> "action"
@@ -56,21 +57,21 @@ moiTypeName = \case
 
 moiName :: MetadataObjId -> Text
 moiName objectId = moiTypeName objectId <> " " <> case objectId of
-  MOTable name -> dquoteTxt name
-  MOFunction name -> dquoteTxt name
-  MORemoteSchema name -> dquoteTxt name
-  MOCronTrigger name -> dquoteTxt name
+  MOTable name -> toTxt name
+  MOFunction name -> toTxt name
+  MORemoteSchema name -> toTxt name
+  MOCronTrigger name -> toTxt name
   MOTableObj tableName tableObjectId ->
     let tableObjectName = case tableObjectId of
-          MTORel name _         -> dquoteTxt name
-          MTOComputedField name -> dquoteTxt name
-          MTORemoteRelationship name -> dquoteTxt name
-          MTOPerm name _        -> dquoteTxt name
-          MTOTrigger name       -> dquoteTxt name
+          MTORel name _              -> toTxt name
+          MTOComputedField name      -> toTxt name
+          MTORemoteRelationship name -> toTxt name
+          MTOPerm name _             -> toTxt name
+          MTOTrigger name            -> toTxt name
     in tableObjectName <> " in " <> moiName (MOTable tableName)
   MOCustomTypes -> "custom_types"
-  MOAction name -> dquoteTxt name
-  MOActionPermission name roleName -> dquoteTxt roleName <> " permission in " <> dquoteTxt name
+  MOAction name -> toTxt name
+  MOActionPermission name roleName -> toTxt roleName <> " permission in " <> toTxt name
 
 data MetadataObject
   = MetadataObject
@@ -92,9 +93,9 @@ getInconsistentRemoteSchemas =
 
 imObjectIds :: InconsistentMetadata -> [MetadataObjId]
 imObjectIds = \case
-  InconsistentObject _ metadata -> [_moId metadata]
+  InconsistentObject _ metadata  -> [_moId metadata]
   ConflictingObjects _ metadatas -> map _moId metadatas
-  DuplicateObjects objectId _ -> [objectId]
+  DuplicateObjects objectId _    -> [objectId]
 
 imReason :: InconsistentMetadata -> Text
 imReason = \case

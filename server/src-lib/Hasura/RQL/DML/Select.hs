@@ -17,6 +17,7 @@ import qualified Data.HashSet                   as HS
 import qualified Data.List.NonEmpty             as NE
 import qualified Data.Sequence                  as DS
 
+import           Data.Text.Extended
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal

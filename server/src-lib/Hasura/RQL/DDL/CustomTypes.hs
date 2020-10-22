@@ -7,7 +7,8 @@ module Hasura.RQL.DDL.CustomTypes
   , lookupPGScalar
   ) where
 
-import           Control.Monad.Validate
+
+import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
@@ -16,8 +17,10 @@ import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 
+import           Control.Monad.Validate
+
+import           Data.Text.Extended
 import           Hasura.EncJSON
-import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
