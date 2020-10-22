@@ -239,11 +239,10 @@ parsePresetDirective gType parentArgName (G.Directive name args) = do
     mkPresetArgument' :: G.GType -> G.Name -> G.Value Void -> m (G.Value P.Variable)
     mkPresetArgument' gType' varName val =
       let isListType' = G.isListType gType'
-          baseType = G.getBaseType gType'
       in
       case val of
         s@(G.VString t) -> do
-          unless isListType' $ do
+          when isListType' $ do
             refute $ pure $ ExpectedNameTypeButGotListType
           case isSessionVariable t of
             -- FIXME: obviously, this is wrong but it's in the same vain of the ideal
@@ -251,14 +250,14 @@ parsePresetDirective gType parentArgName (G.Directive name args) = do
             -- `data RemoteSchemaVariable = RemoteSchemaVariable !SessionVariable !G.GType !Variable`
             True  -> pure $ G.VVariable (P.Variable (P.VIRequired varName) gType' (P.GraphQLValue s))
             False -> pure $ G.literal s
-        G.VObject obj ->
-          G.VObject <$>
-          case gType' of
-            G.TypeNamed _ _      -> refute $ pure $ ExpectedListButGotNameType
-            G.TypeList _ gType'' ->
-              flip Map.traverseWithKey obj $ \k objVal ->
-                mkPresetArgument' gType'' (varName <> $$(G.litName "_") <> k) objVal
-        G.VList lst -> G.VList <$> traverse (mkPresetArgument' gType' varName) lst
+        G.VObject obj -> do
+          when isListType' $ do
+            refute $ pure $ ExpectedNameTypeButGotListType
+          G.VObject <$> traverse (mkPresetArgument' gType' varName) obj
+        G.VList lst -> do
+          unless isListType' $ do
+            refute $ pure $ ExpectedListButGotNameType
+          G.VList <$> traverse (mkPresetArgument' gType' varName) lst
         v -> do
           when isListType' $ do
             refute $ pure $ ExpectedNameTypeButGotListType
