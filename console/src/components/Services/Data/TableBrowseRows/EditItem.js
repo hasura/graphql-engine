@@ -160,10 +160,9 @@ class EditItem extends Component {
               >
                 {buttonText}
               </Button>
-              <ReloadEnumValuesButton
-                dispatch={dispatch}
-                isEnum={currentTable.is_enum}
-              />
+              {currentTable.is_enum ? (
+                <ReloadEnumValuesButton dispatch={dispatch} />
+              ) : null}
             </form>
           </div>
           <div className="col-xs-3">{alert}</div>

@@ -31,7 +31,7 @@ the following ways:
   :hidden:
 
   Postgres defaults <postgres-defaults>
-  Custom SQL functions/stored procedures <sql-functions>
+  Custom SQL functions <sql-functions>
   Role based column presets <column-presets>
   Created_at / updated_at timestamps <created-updated-timestamps>
 
