@@ -28,8 +28,8 @@ import           Control.Concurrent                   (threadDelay)
 import           Control.Exception                    (try)
 import           Control.Lens
 import           Data.Has
-import           Data.Int                             (Int64)
 import           Data.IORef
+import           Data.Int                             (Int64)
 
 import qualified Hasura.RQL.DML.RemoteJoin            as RJ
 import qualified Hasura.RQL.DML.Select                as RS
@@ -41,6 +41,7 @@ import qualified Data.Environment                     as Env
 import qualified Hasura.Logging                       as L
 import qualified Hasura.Tracing                       as Tracing
 
+import           Data.Text.Extended
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Parser                hiding (column)
@@ -51,11 +52,11 @@ import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DML.Select                (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
+import           Hasura.SQL.Types
+import           Hasura.SQL.Value                     (PGScalarValue (..), toTxtValue)
 import           Hasura.Server.Utils                  (mkClientHeadersForward, mkSetCookieHeaders)
 import           Hasura.Server.Version                (HasVersion)
 import           Hasura.Session
-import           Hasura.SQL.Types
-import           Hasura.SQL.Value                     (PGScalarValue (..), toTxtValue)
 
 type ActionExecuteTx =
   forall tx. (MonadIO tx, MonadTx tx, Tracing.MonadTrace tx) => tx EncJSON
@@ -154,7 +155,7 @@ resolveActionExecution env logger userInfo annAction execContext = do
   let actionContext = ActionContext actionName
       handlerPayload = ActionWebhookPayload actionContext sessionVariables inputPayload
   (webhookRes, respHeaders) <- flip runReaderT logger $ callWebhook env manager outputType outputFields reqHeaders confHeaders
-                               forwardClientHeaders resolvedWebhook handlerPayload
+                               forwardClientHeaders resolvedWebhook handlerPayload timeout
   let webhookResponseExpression = RS.AEInput $ UVLiteral $
         toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
       selectAstUnresolved = processOutputSelectionSet webhookResponseExpression
@@ -164,7 +165,7 @@ resolveActionExecution env logger userInfo annAction execContext = do
   where
     AnnActionExecution actionName outputType annFields inputPayload
       outputFields definitionList resolvedWebhook confHeaders
-      forwardClientHeaders stringifyNum = annAction
+      forwardClientHeaders stringifyNum timeout = annAction
     ActionExecContext manager reqHeaders sessionVariables = execContext
 
 
@@ -331,12 +332,14 @@ asyncActionsProcessor env logger cacheRef pgPool httpManager = forever $ do
               webhookUrl = _adHandler definition
               forwardClientHeaders = _adForwardClientHeaders definition
               confHeaders = _adHeaders definition
+              timeout = _adTimeout definition
               outputType = _adOutputType definition
               actionContext = ActionContext actionName
           eitherRes <- runExceptT $ flip runReaderT logger $
                        callWebhook env httpManager outputType outputFields reqHeaders confHeaders
-                         forwardClientHeaders webhookUrl $
-                         ActionWebhookPayload actionContext sessionVariables inputPayload
+                         forwardClientHeaders webhookUrl (ActionWebhookPayload actionContext sessionVariables inputPayload)
+                         timeout
+
           liftIO $ case eitherRes of
             Left e                     -> setError actionId e
             Right (responsePayload, _) -> setCompleted actionId $ J.toJSON responsePayload
@@ -408,9 +411,10 @@ callWebhook
   -> Bool
   -> ResolvedWebhook
   -> ActionWebhookPayload
+  -> Timeout
   -> m (ActionWebhookResponse, HTTP.ResponseHeaders)
 callWebhook env manager outputType outputFields reqHeaders confHeaders
-            forwardClientHeaders resolvedWebhook actionWebhookPayload = do
+            forwardClientHeaders resolvedWebhook actionWebhookPayload timeoutSeconds = do
   resolvedConfHeaders <- makeHeadersFromConf env confHeaders
   let clientHeaders = if forwardClientHeaders then mkClientHeadersForward reqHeaders else []
       contentType = ("Content-Type", "application/json")
@@ -421,11 +425,13 @@ callWebhook env manager outputType outputFields reqHeaders confHeaders
       requestBody = J.encode postPayload
       requestBodySize = BL.length requestBody
       url = unResolvedWebhook resolvedWebhook
+      responseTimeout = HTTP.responseTimeoutMicro $ (unTimeout timeoutSeconds) * 1000000
   httpResponse <- do
     initReq <- liftIO $ HTTP.parseRequest (T.unpack url)
-    let req = initReq { HTTP.method         = "POST"
-                      , HTTP.requestHeaders = addDefaultHeaders hdrs
-                      , HTTP.requestBody    = HTTP.RequestBodyLBS requestBody
+    let req = initReq { HTTP.method          = "POST"
+                      , HTTP.requestHeaders  = addDefaultHeaders hdrs
+                      , HTTP.requestBody     = HTTP.RequestBodyLBS requestBody
+                      , HTTP.responseTimeout = responseTimeout
                       }
     Tracing.tracedHttpRequest req \req' ->
       liftIO . try $ HTTP.httpLbs req' manager

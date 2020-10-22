@@ -6,16 +6,16 @@ import           Language.Haskell.TH.Syntax (Lift)
 import qualified Data.Aeson                 as J
 import qualified Data.Aeson.Casing          as J
 import qualified Data.Aeson.TH              as J
+import qualified Data.Environment           as Env
 import qualified Data.Text                  as T
+import           Data.Text.Extended
 import qualified Database.PG.Query          as Q
 import qualified Network.URI.Extended       as N
-import qualified Data.Environment           as Env
 
 import           Hasura.Incremental         (Cacheable)
 import           Hasura.RQL.DDL.Headers     (HeaderConf (..))
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
-import           Hasura.SQL.Types
 
 type UrlFromEnv = Text
 
@@ -23,7 +23,7 @@ newtype RemoteSchemaName
   = RemoteSchemaName
   { unRemoteSchemaName :: NonEmptyText }
   deriving ( Show, Eq, Ord, Lift, Hashable, J.ToJSON, J.ToJSONKey
-           , J.FromJSON, Q.ToPrepArg, Q.FromCol, DQuote, NFData
+           , J.FromJSON, Q.ToPrepArg, Q.FromCol, ToTxt, NFData
            , Generic, Cacheable, Arbitrary
            )
 

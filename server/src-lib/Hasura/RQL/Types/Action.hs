@@ -10,9 +10,10 @@ module Hasura.RQL.Types.Action
   , adArguments
   , adOutputType
   , adType
-  , adHeaders
   , adForwardClientHeaders
+  , adHeaders
   , adHandler
+  , adTimeout
   , ActionType(..)
   , _ActionMutation
   , CreateAction(..)
@@ -31,6 +32,7 @@ module Hasura.RQL.Types.Action
   , aiDefinition
   , aiPermissions
   , aiComment
+  , defaultActionTimeoutSecs
   , ActionPermissionInfo(..)
 
   , ActionPermissionMap
@@ -47,16 +49,7 @@ module Hasura.RQL.Types.Action
   ) where
 
 
-import           Control.Lens                  (makeLenses, makePrisms)
-import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.DML.Select.Types
-import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.CustomTypes
-import           Hasura.Session
-import           Hasura.SQL.Types
-import           Language.Haskell.TH.Syntax    (Lift)
 
 import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
@@ -67,10 +60,23 @@ import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.HTTP.Types            as HTTP
 
+import           Control.Lens                  (makeLenses, makePrisms)
+import           Data.Text.Extended
+import           Language.Haskell.TH.Syntax    (Lift)
+
+import           Hasura.Incremental            (Cacheable)
+import           Hasura.RQL.DDL.Headers
+import           Hasura.RQL.DML.Select.Types
+import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.CustomTypes
+import           Hasura.SQL.Types
+import           Hasura.Session
+
+
 newtype ActionName
   = ActionName { unActionName :: G.Name }
   deriving ( Show, Eq, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey
-           , Hashable, DQuote, Lift, Generic, NFData, Cacheable)
+           , Hashable, ToTxt, Lift, Generic, NFData, Cacheable)
 
 instance Q.FromCol ActionName where
   fromCol bs = do
@@ -95,7 +101,7 @@ $(makePrisms ''ActionMutationKind)
 newtype ArgumentName
   = ArgumentName { unArgumentName :: G.Name }
   deriving ( Show, Eq, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey
-           , Hashable, DQuote, Lift, Generic, NFData, Cacheable)
+           , Hashable, ToTxt, Lift, Generic, NFData, Cacheable)
 
 data ArgumentDefinition a
   = ArgumentDefinition
@@ -122,6 +128,9 @@ data ActionDefinition a b
   , _adType                 :: !ActionType
   , _adHeaders              :: ![HeaderConf]
   , _adForwardClientHeaders :: !Bool
+  , _adTimeout              :: !Timeout
+  -- ^ If the timeout is not provided by the user, then
+  -- the default timeout of 30 seconds will be used
   , _adHandler              :: !b
   } deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Generic)
 instance (NFData a, NFData b) => NFData (ActionDefinition a b)
@@ -135,6 +144,7 @@ instance (J.FromJSON a, J.FromJSON b) => J.FromJSON (ActionDefinition a b) where
     _adHeaders <- o J..:? "headers" J..!= []
     _adForwardClientHeaders <- o J..:? "forward_client_headers" J..!= False
     _adHandler <- o J..:  "handler"
+    _adTimeout <- o J..:? "timeout" J..!= defaultActionTimeoutSecs
     actionType <- o J..:? "type" J..!= "mutation"
     _adType <- case actionType of
       "mutation" -> ActionMutation <$> o J..:? "kind" J..!= ActionSynchronous
@@ -143,7 +153,7 @@ instance (J.FromJSON a, J.FromJSON b) => J.FromJSON (ActionDefinition a b) where
     return ActionDefinition {..}
 
 instance (J.ToJSON a, J.ToJSON b) => J.ToJSON (ActionDefinition a b) where
-  toJSON (ActionDefinition args outputType actionType headers forwardClientHeaders handler) =
+  toJSON (ActionDefinition args outputType actionType headers forwardClientHeaders timeout handler) =
     let typeAndKind = case actionType of
           ActionQuery -> [ "type" J..= ("query" :: String)]
           ActionMutation kind -> [ "type" J..= ("mutation" :: String)
@@ -154,6 +164,7 @@ instance (J.ToJSON a, J.ToJSON b) => J.ToJSON (ActionDefinition a b) where
     , "headers"                J..= headers
     , "forward_client_headers" J..= forwardClientHeaders
     , "handler"                J..= handler
+    , "timeout"                J..= timeout
     ] <> typeAndKind
 
 type ResolvedActionDefinition =
@@ -262,6 +273,7 @@ data AnnActionExecution v
   , _aaeHeaders              :: ![HeaderConf]
   , _aaeForwardClientHeaders :: !Bool
   , _aaeStrfyNum             :: !Bool
+  , _aaeTimeOut              :: !Timeout
   } deriving (Show, Eq)
 
 data AnnActionMutationAsync

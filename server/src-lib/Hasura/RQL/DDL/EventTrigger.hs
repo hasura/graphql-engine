@@ -19,26 +19,31 @@ module Hasura.RQL.DDL.EventTrigger
   , updateEventTriggerInCatalog
   ) where
 
+import           Hasura.Prelude
+
+import qualified Data.Environment        as Env
+import qualified Data.Text               as T
+import qualified Data.Text.Lazy          as TL
+import qualified Database.PG.Query       as Q
+import qualified Text.Shakespeare.Text   as ST
+
 import           Data.Aeson
 
+import qualified Hasura.SQL.DML          as S
+
 import           Hasura.EncJSON
-import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Hasura.SQL.DML          as S
 
-import qualified Data.Text               as T
-import qualified Data.Environment        as Env
-import qualified Data.Text.Lazy          as TL
-import qualified Database.PG.Query       as Q
-import qualified Text.Shakespeare.Text   as ST
 
 
 data OpVar = OLD | NEW deriving (Show)
 
+-- pgIdenTrigger is a method used to construct the name of the pg function
+-- used for event triggers which are present in the hdb_views schema.
 pgIdenTrigger:: Ops -> TriggerName -> T.Text
 pgIdenTrigger op trn = pgFmtIden . qualifyTriggerName op $ triggerNameToTxt trn
   where

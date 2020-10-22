@@ -4,8 +4,8 @@ module Hasura.GraphQL.Schema.Action
   , actionAsyncQuery
   ) where
 
-import           Hasura.Prelude
 import           Data.Has
+import           Hasura.Prelude
 
 import qualified Data.Aeson                            as J
 import qualified Data.HashMap.Strict                   as Map
@@ -16,15 +16,16 @@ import qualified Hasura.GraphQL.Parser.Internal.Parser as P
 import qualified Hasura.RQL.DML.Internal               as RQL
 import qualified Hasura.RQL.DML.Select.Types           as RQL
 
+import           Data.Text.Extended
 import           Hasura.GraphQL.Parser                 (FieldParser, InputFieldsParser, Kind (..),
                                                         Parser, UnpreparedValue (..))
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.RQL.Types
-import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
+import           Hasura.Session
 
 
 -- | actionExecute is used to execute either a query action or a synchronous
@@ -62,6 +63,7 @@ actionExecute nonObjectTypeMap actionInfo = runMaybeT do
                , _aaeHeaders = _adHeaders definition
                , _aaeForwardClientHeaders = _adForwardClientHeaders definition
                , _aaeStrfyNum = stringifyNum
+               , _aaeTimeOut = _adTimeout definition
                }
   where
     ActionInfo actionName outputObject definition permissions comment = actionInfo

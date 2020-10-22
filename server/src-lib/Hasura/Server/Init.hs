@@ -1,5 +1,6 @@
 -- | Types and functions related to the server initialisation
-{-# LANGUAGE CPP #-}
+{-# OPTIONS_GHC -O0 #-}
+{-# LANGUAGE CPP    #-}
 module Hasura.Server.Init
   ( module Hasura.Server.Init
   , module Hasura.Server.Init.Config
@@ -19,6 +20,7 @@ import qualified Text.PrettyPrint.ANSI.Leijen     as PP
 import           Data.FileEmbed                   (embedStringFile)
 import           Data.Time                        (NominalDiffTime)
 import           Network.Wai.Handler.Warp         (HostPreference)
+import qualified Network.WebSockets               as WS
 import           Options.Applicative
 
 import qualified Hasura.Cache.Bounded             as Cache
@@ -169,12 +171,22 @@ mkServeOptions rso = do
   eventsFetchInterval <- withEnv (rsoEventsFetchInterval rso) (fst eventsFetchIntervalEnv)
   logHeadersFromEnv <- withEnvBool (rsoLogHeadersFromEnv rso) (fst logHeadersFromEnvEnv)
 
+  webSocketCompressionFromEnv <- withEnvBool (rsoWebSocketCompression rso) $
+                                 fst webSocketCompressionEnv
+
+  let connectionOptions = WS.defaultConnectionOptions {
+                            WS.connectionCompressionOptions =
+                              if webSocketCompressionFromEnv
+                                then WS.PermessageDeflateCompression WS.defaultPermessageDeflate
+                                else WS.NoCompression
+                          }
+
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
                         enabledLogs serverLogLevel planCacheOptions
                         internalErrorsConfig eventsHttpPoolSize eventsFetchInterval
-                        logHeadersFromEnv
+                        logHeadersFromEnv connectionOptions
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -930,6 +942,7 @@ serveOptsToLog so =
       , "enabled_log_types" J..= soEnabledLogTypes so
       , "log_level" J..= soLogLevel so
       , "plan_cache_options" J..= soPlanCacheOptions so
+      , "websocket_compression_options" J..= show (WS.connectionCompressionOptions . soConnectionOptions $ so)
       ]
 
 mkGenericStrLog :: L.LogLevel -> T.Text -> String -> StartupLog
@@ -975,6 +988,7 @@ serveOptionsParser =
   <*> parseGraphqlEventsHttpPoolSize
   <*> parseGraphqlEventsFetchInterval
   <*> parseLogHeadersFromEnv
+  <*> parseWebSocketCompression
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.
@@ -1009,3 +1023,15 @@ downgradeOptionsParser =
         ( long ("to-" <> v) <>
           help ("Downgrade to graphql-engine version " <> v <> " (equivalent to --to-catalog-version " <> catalogVersion <> ")")
         )
+
+webSocketCompressionEnv :: (String, String)
+webSocketCompressionEnv =
+  ( "HASURA_GRAPHQL_CONNECTION_COMPRESSION"
+  , "Enable WebSocket permessage-deflate compression (default: false)"
+  )
+
+parseWebSocketCompression :: Parser Bool
+parseWebSocketCompression =
+  switch ( long "websocket-compression" <>
+           help (snd webSocketCompressionEnv)
+         )

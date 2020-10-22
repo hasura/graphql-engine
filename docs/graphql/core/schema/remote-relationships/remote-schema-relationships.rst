@@ -32,8 +32,8 @@ Because Hasura is meant to be a GraphQL server that you can expose directly to y
 Create remote schema relationships
 ----------------------------------
 
-Before you begin
-^^^^^^^^^^^^^^^^
+Step 0: Add a remote schema
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Add a remote schema as described :ref:`here <adding_schema>`.
 

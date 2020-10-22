@@ -6,6 +6,9 @@ module Hasura.RQL.DML.RemoteJoin
   , getRemoteJoinsMutationOutput
   , getRemoteJoinsConnectionSelect
   , RemoteJoins
+  -- * These are required in pro:
+  , FieldPath(..)
+  , RemoteJoin(..)
   ) where
 
 import           Hasura.Prelude
@@ -13,6 +16,7 @@ import           Hasura.Prelude
 import           Control.Lens
 import           Data.Validation
 
+import           Data.Text.Extended                     (commaSeparated, (<<>))
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Parser                  hiding (field)
 import           Hasura.GraphQL.RemoteServer            (execRemoteGQ')
@@ -23,7 +27,6 @@ import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
-import           Hasura.SQL.Types                       ((<<>))
 
 import qualified Hasura.SQL.DML                         as S
 
@@ -38,8 +41,8 @@ import qualified Data.List.NonEmpty                     as NE
 import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.Tracing                         as Tracing
-import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Language.GraphQL.Draft.Printer         as G
+import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 
@@ -175,8 +178,8 @@ transformConnectionSelect path ConnectionSelect{..} = do
   let connectionFields = _asnFields _csSelect
   transformedFields <- forM connectionFields $ \(fieldName, field) ->
     (fieldName,) <$> case field of
-      ConnectionTypename t -> pure $ ConnectionTypename t
-      ConnectionPageInfo p -> pure $ ConnectionPageInfo p
+      ConnectionTypename t  -> pure $ ConnectionTypename t
+      ConnectionPageInfo p  -> pure $ ConnectionPageInfo p
       ConnectionEdges edges -> ConnectionEdges <$> transformEdges (appendPath fieldName path) edges
   let select = _csSelect{_asnFields = transformedFields}
   pure $ ConnectionSelect _csPrimaryKeyColumns _csSplit _csSlice select
@@ -280,10 +283,10 @@ collectRemoteFields = toList
 
 compositeValueToJSON :: CompositeValue AO.Value -> AO.Value
 compositeValueToJSON = \case
-  CVOrdValue v -> v
-  CVObject obj -> AO.object $ OMap.toList $ OMap.map compositeValueToJSON obj
+  CVOrdValue v       -> v
+  CVObject obj       -> AO.object $ OMap.toList $ OMap.map compositeValueToJSON obj
   CVObjectArray vals -> AO.array $ map compositeValueToJSON vals
-  CVFromRemote v -> v
+  CVFromRemote v     -> v
 
 -- | A 'RemoteJoinField' carries the minimal GraphQL AST of a remote relationship field.
 -- All such 'RemoteJoinField's of a particular remote schema are batched together
@@ -312,8 +315,8 @@ traverseQueryResponseJSON rjm =
                   => FieldPath -> AO.Value -> m (CompositeValue RemoteJoinField)
     traverseValue path = \case
       AO.Object obj -> traverseObject obj
-      AO.Array arr -> CVObjectArray <$> mapM (traverseValue path) (toList arr)
-      v            -> pure $ CVOrdValue v
+      AO.Array arr  -> CVObjectArray <$> mapM (traverseValue path) (toList arr)
+      v             -> pure $ CVOrdValue v
 
       where
         mkRemoteSchemaField siblingFields remoteJoin = do
@@ -582,7 +585,7 @@ createArguments
   -> m (HashMap G.Name (G.Value Void))
 createArguments variables (RemoteArguments arguments) =
   either
-    (throw400 Unexpected . \errors -> "Found errors: " <> T.intercalate ", " errors)
+    (throw400 Unexpected . \errors -> "Found errors: " <> commaSeparated errors)
     pure
     (toEither (substituteVariables variables arguments))
 

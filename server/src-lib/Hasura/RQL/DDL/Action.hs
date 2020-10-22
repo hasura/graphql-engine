@@ -23,13 +23,7 @@ module Hasura.RQL.DDL.Action
   , deleteActionPermissionFromCatalog
   ) where
 
-import           Hasura.EncJSON
-import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.CustomTypes    (lookupPGScalar)
-import           Hasura.RQL.Types
-import           Hasura.Session
-import           Hasura.SQL.Types
 
 import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
@@ -40,6 +34,15 @@ import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Language.Haskell.TH.Syntax    (Lift)
+
+import           Data.Text.Extended
+import           Hasura.EncJSON
+import           Hasura.GraphQL.Utils
+import           Hasura.RQL.DDL.CustomTypes    (lookupPGScalar)
+import           Hasura.RQL.Types
+import           Hasura.SQL.Types
+import           Hasura.Session
+
 
 getActionInfo
   :: (QErrM m, CacheRM m)
@@ -125,7 +128,7 @@ resolveAction env AnnotatedCustomTypes{..} ActionDefinition{..} allPGScalars = d
     <> " is not an object type defined in custom types"
   resolvedWebhook <- resolveWebhook env _adHandler
   pure ( ActionDefinition resolvedArguments _adOutputType _adType
-         _adHeaders _adForwardClientHeaders resolvedWebhook
+         _adHeaders _adForwardClientHeaders _adTimeout resolvedWebhook
        , outputObject
        )
 

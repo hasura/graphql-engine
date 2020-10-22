@@ -15,30 +15,33 @@ module Hasura.RQL.Types.RemoteRelationship
   , DeleteRemoteRelationship(..)
   ) where
 
-import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Column
-import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.RemoteSchema
-import           Hasura.SQL.Types
-
-import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
-import           Data.Scientific
-import           Data.Set                      (Set)
-import           Language.Haskell.TH.Syntax    (Lift)
 
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
+import           Data.Scientific
+import           Data.Set                      (Set)
+import           Data.Text.Extended
+import           Language.Haskell.TH.Syntax    (Lift)
+
+import           Hasura.Incremental            (Cacheable)
+import           Hasura.RQL.Types.Column
+import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.RemoteSchema
+import           Hasura.SQL.Types
+
+
 newtype RemoteRelationshipName
   = RemoteRelationshipName
   { unRemoteRelationshipName :: NonEmptyText}
   deriving ( Show, Eq, Lift, Hashable, ToJSON, ToJSONKey, FromJSON
-           , Q.ToPrepArg, Q.FromCol, DQuote, Cacheable, NFData, Arbitrary
+           , Q.ToPrepArg, Q.FromCol, ToTxt, Cacheable, NFData, Arbitrary
            )
 
 remoteRelationshipNameToText :: RemoteRelationshipName -> Text

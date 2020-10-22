@@ -19,6 +19,7 @@ import           Data.List.Extended                    (duplicates)
 
 import qualified Hasura.GraphQL.Parser                 as P
 
+import           Data.Text.Extended
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Types
 import           Hasura.GraphQL.Parser                 (Kind (..), Parser, Schema (..),
@@ -33,8 +34,8 @@ import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
-import           Hasura.Session
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 -- | Whether the request is sent with `x-hasura-use-backend-only-permissions` set to `true`.
 data Scenario = Backend | Frontend deriving (Enum, Show, Eq)
@@ -206,7 +207,7 @@ query'
      )
   => HashSet QualifiedTable
   -> [FunctionInfo]
-  -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  -> [P.FieldParser n RemoteField]
   -> [ActionInfo]
   -> NonObjectTypeMap
   -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
@@ -302,7 +303,7 @@ query
   => G.Name
   -> HashSet QualifiedTable
   -> [FunctionInfo]
-  -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  -> [P.FieldParser n RemoteField]
   -> [ActionInfo]
   -> NonObjectTypeMap
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
@@ -402,8 +403,8 @@ queryWithIntrospection
      )
   => HashSet QualifiedTable
   -> [FunctionInfo]
-  -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-  -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  -> [P.FieldParser n RemoteField]
+  -> [P.FieldParser n RemoteField]
   -> [ActionInfo]
   -> NonObjectTypeMap
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
@@ -464,8 +465,8 @@ unauthenticatedQueryWithIntrospection
    . ( MonadSchema n m
      , MonadError QErr m
      )
-  => [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-  -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  => [P.FieldParser n RemoteField]
+  -> [P.FieldParser n RemoteField]
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 unauthenticatedQueryWithIntrospection queryRemotes mutationRemotes = do
   let basicQueryFP = fmap (fmap RFRemote) queryRemotes
@@ -477,7 +478,7 @@ mutation
   :: forall m n r
    . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r, Has Scenario r)
   => HashSet QualifiedTable
-  -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  -> [P.FieldParser n RemoteField]
   -> [ActionInfo]
   -> NonObjectTypeMap
   -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue))))
@@ -556,7 +557,7 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
 unauthenticatedMutation
   :: forall n m
    . (MonadError QErr m, MonadParse n)
-  => [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  => [P.FieldParser n RemoteField]
   -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue))))
 unauthenticatedMutation allRemotes =
   let mutationFieldsParser = fmap (fmap RFRemote) allRemotes

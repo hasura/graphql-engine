@@ -120,6 +120,7 @@ Switch to the ``GraphiQL`` tab on top and execute the following GraphQL query:
    :class: no-shadow
    :alt: Hasura console - GraphiQL
 
+
 .. _digital_ocean_secure:
 
 Securing the GraphQL endpoint
@@ -286,6 +287,7 @@ Step 4: Restart the container
 
    docker-compose up -d
 
+.. _do_managed_pg_db:
 
 Using DigitalOcean Managed Postgres Database
 --------------------------------------------
@@ -352,6 +354,29 @@ If you need to configure the pool size or the timeout, you can use the below env
 
   If you still want to enable connection pooling on your managed database on DigitalOcean, you should do so in the ``session`` mode.
 
+.. _digital_ocean_connect_psql:
+
+Access database via psql
+------------------------
+
+To access the Postgres database via ``psql``, you can use the following command
+via the terminal:
+
+.. code-block:: bash
+
+   docker exec -it hasura_postgres_1 psql -U postgres
+
+If you are using a hosted database :ref:`as outlined above <do_managed_pg_db>`, it's a little different:
+
+.. code-block:: bash
+
+   docker exec -it hasura_postgres_1 psql -h <your database url> -p <your port> -d <your database> -U <your database user>
+
+.. note::
+
+  Different hosted Postgres providers may have different requirements for connection, e.g. setting ``sslmode``.
+  Please refer to your provider's documentation for generating the proper ``psql`` command flags.
+
 .. _do_logs:
 
 Logs
@@ -383,6 +408,7 @@ To checks logs for any container, use the following command:
 
 Where ``<container_name>`` is one of ``graphql-engine``, ``postgres`` or
 ``caddy``.
+
 
 Troubleshooting
 ---------------
