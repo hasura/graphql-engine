@@ -18,6 +18,7 @@ import           Data.Aeson
 
 import qualified Hasura.Incremental                 as Inc
 
+import           Data.Text.Extended
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.RemoteRelationship

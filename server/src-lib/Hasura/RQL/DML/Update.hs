@@ -12,6 +12,7 @@ import           Instances.TH.Lift           ()
 import qualified Data.HashMap.Strict         as M
 import qualified Data.Sequence               as DS
 
+import           Data.Text.Extended
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Insert       (insertCheckExpr)
@@ -22,14 +23,14 @@ import           Hasura.RQL.DML.Update.Types
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Instances        ()
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 import           Hasura.Server.Version       (HasVersion)
 import           Hasura.Session
-import           Hasura.SQL.Types
 
+import qualified Data.Environment            as Env
 import qualified Database.PG.Query           as Q
 import qualified Hasura.SQL.DML              as S
-import qualified Data.Environment         as Env
-import qualified Hasura.Tracing           as Tracing
+import qualified Hasura.Tracing              as Tracing
 
 
 -- NOTE: This function can be improved, because we use
