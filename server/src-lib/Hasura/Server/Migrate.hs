@@ -406,7 +406,11 @@ recreateSystemMetadata = do
         [ objectRel $$(nonEmptyText "return_table_info") $ manualConfig "hdb_catalog" "hdb_table"
           [ ("return_type_schema", "table_schema")
           , ("return_type_name", "table_name") ] ]
-      , table "hdb_catalog" "remote_schemas" []
+      , table "hdb_catalog" "remote_schemas"
+        [ arrayRel $$(nonEmptyText "permissions") $
+          manualConfig "hdb_catalog" "hdb_remote_schema_permission" [("name", "remote_schema_name")]
+        ]
+      , table "hdb_catalog" "hdb_remote_schema_permission" []
       , table "hdb_catalog" "hdb_version" []
       , table "hdb_catalog" "hdb_query_collection" []
       , table "hdb_catalog" "hdb_allowlist" []
@@ -421,6 +425,8 @@ recreateSystemMetadata = do
         [ arrayRel $$(nonEmptyText "action_permissions") $ manualConfig "hdb_catalog" "hdb_action_permission"
           [("role_name", "role_name")]
         , arrayRel $$(nonEmptyText "permissions") $ manualConfig "hdb_catalog" "hdb_permission_agg"
+          [("role_name", "role_name")]
+        , arrayRel $$(nonEmptyText "remote_schema_permissions") $ manualConfig "hdb_catalog" "hdb_remote_schema_permission"
           [("role_name", "role_name")]
         ]
       , table "hdb_catalog" "hdb_cron_triggers"
