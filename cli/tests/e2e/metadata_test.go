@@ -1,12 +1,5 @@
 package e2e
 
-// "path/filepath"
-
-// 	"github.com/hasura/graphql-engine/cli/tests/e2e/helpers"
-// 	. "github.com/onsi/ginkgo"
-// 	. "github.com/onsi/gomega"
-// 	. "github.com/onsi/gomega/gbytes"
-
 import (
 	"fmt"
 	"os"
@@ -111,13 +104,13 @@ var _ = Describe("metadata_command", func() {
 		})
 	})
 
-	Context("metadata reload", func() {
-		It("should reload metadata", func() {
+	Context("metadata inconsistency", func() {
+		It("Manage inconsistent objects in Hasura metadata", func() {
 			session := helpers.Hasura(helpers.CmdOpts{
-				Args:             []string{"metadata", "reload"},
+				Args:             []string{"metadata", "inconsistency"},
 				WorkingDirectory: dirName,
 			})
-			want := `.*Metadata reloaded*.`
+			want := `.*Manage inconsistent objects in Hasura Metadata*.`
 			Eventually(session, 60).Should(Say(want))
 			Eventually(session, 60).Should(Exit(0))
 		})
