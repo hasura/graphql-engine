@@ -63,7 +63,6 @@ import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 
 
-
 data GExists a
   = GExists
   { _geTable :: !QualifiedTable

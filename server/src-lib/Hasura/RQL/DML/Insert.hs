@@ -19,6 +19,7 @@ import qualified Database.PG.Query           as Q
 
 import qualified Hasura.SQL.DML              as S
 
+import           Data.Text.Extended
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Insert.Types
 import           Hasura.RQL.DML.Internal
@@ -26,9 +27,10 @@ import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 import           Hasura.Server.Version       (HasVersion)
 import           Hasura.Session
-import           Hasura.SQL.Types
+
 
 import qualified Data.Environment            as Env
 import qualified Hasura.Tracing              as Tracing

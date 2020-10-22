@@ -55,23 +55,7 @@ module Hasura.RQL.Types.Common
        , defaultActionTimeoutSecs
        ) where
 
-import           Hasura.EncJSON
-import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Headers        ()
-import           Hasura.RQL.Types.Error
-import           Hasura.SQL.Backend
-import           Hasura.SQL.Types
-
-import           Control.Lens                  (makeLenses)
-import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Bifunctor                (bimap)
-import           Data.Aeson.TH
-import           Data.Scientific               (toBoundedInteger)
-import           Data.URL.Template
-import           Instances.TH.Lift             ()
-import           Language.Haskell.TH.Syntax    (Lift, Q, TExp)
 
 import qualified Data.Environment              as Env
 import qualified Data.HashMap.Strict           as HM
@@ -82,6 +66,25 @@ import qualified Language.Haskell.TH.Syntax    as TH
 import qualified PostgreSQL.Binary.Decoding    as PD
 import qualified Test.QuickCheck               as QC
 
+import           Control.Lens                  (makeLenses)
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
+import           Data.Bifunctor                (bimap)
+import           Data.Scientific               (toBoundedInteger)
+import           Data.Text.Extended
+import           Data.URL.Template
+import           Instances.TH.Lift             ()
+import           Language.Haskell.TH.Syntax    (Lift, Q, TExp)
+
+import           Hasura.EncJSON
+import           Hasura.Incremental            (Cacheable)
+import           Hasura.RQL.DDL.Headers        ()
+import           Hasura.RQL.Types.Error
+import           Hasura.SQL.Backend
+import           Hasura.SQL.Types
+
+
 type family ScalarType (b :: Backend) where
   ScalarType 'Postgres = PGScalarType
 
@@ -89,7 +92,7 @@ type family Column (b :: Backend)  where
   Column 'Postgres = PGCol
 
 newtype NonEmptyText = NonEmptyText { unNonEmptyText :: T.Text }
-  deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, DQuote, Generic, NFData, Cacheable)
+  deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, ToTxt, Generic, NFData, Cacheable)
 
 instance Arbitrary NonEmptyText where
   arbitrary = NonEmptyText . T.pack <$> QC.listOf1 (QC.elements alphaNumerics)
@@ -132,8 +135,8 @@ newtype RelName
 instance IsIden RelName where
   toIden rn = Iden $ relNameToTxt rn
 
-instance DQuote RelName where
-  dquoteTxt = relNameToTxt
+instance ToTxt RelName where
+  toTxt = relNameToTxt
 
 rootRelName :: RelName
 rootRelName = RelName rootText
@@ -165,7 +168,7 @@ instance Q.FromCol RelType where
   fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case
     "object" -> Just ObjRel
     "array"  -> Just ArrRel
-    _   -> Nothing
+    _        -> Nothing
 
 data RelInfo
   = RelInfo
@@ -192,8 +195,8 @@ newtype FieldName
 instance IsIden FieldName where
   toIden (FieldName f) = Iden f
 
-instance DQuote FieldName where
-  dquoteTxt (FieldName c) = c
+instance ToTxt FieldName where
+  toTxt (FieldName c) = c
 
 fromPGCol :: PGCol -> FieldName
 fromPGCol c = FieldName $ getPGColTxt c
@@ -335,7 +338,7 @@ instance FromJSON NonNegativeDiffTime where
 
 newtype ResolvedWebhook
   = ResolvedWebhook { unResolvedWebhook :: Text}
-  deriving ( Show, Eq, FromJSON, ToJSON, Hashable, DQuote, Lift)
+  deriving ( Show, Eq, FromJSON, ToJSON, Hashable, ToTxt, Lift)
 
 newtype InputWebhook
   = InputWebhook {unInputWebhook :: URLTemplate}

@@ -36,14 +36,16 @@ module Hasura.RQL.DDL.Permission
     , fetchPermDef
     ) where
 
+import           Hasura.Prelude
+
+import           Data.Text.Extended
 import           Hasura.EncJSON
 import           Hasura.Incremental                 (Cacheable)
-import           Hasura.Prelude
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DML.Internal            hiding (askPermInfo)
 import           Hasura.RQL.Types
-import           Hasura.Session
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 import qualified Database.PG.Query                  as Q
 
@@ -88,9 +90,9 @@ TRUE            TRUE (OR NOT-SET)         TRUE                                  
 -- Insert permission
 data InsPerm
   = InsPerm
-  { ipCheck   :: !BoolExp
-  , ipSet     :: !(Maybe (ColumnValues Value))
-  , ipColumns :: !(Maybe PermColSpec)
+  { ipCheck       :: !BoolExp
+  , ipSet         :: !(Maybe (ColumnValues Value))
+  , ipColumns     :: !(Maybe PermColSpec)
   , ipBackendOnly :: !(Maybe Bool) -- see Note [Backend only permissions]
   } deriving (Show, Eq, Lift, Generic)
 instance Cacheable InsPerm

@@ -38,12 +38,14 @@ module Hasura.RQL.Types
   , module R
   ) where
 
-import           Control.Monad.Unique
-
 import           Hasura.Prelude
-import           Hasura.Session
-import           Hasura.SQL.Types
-import           Hasura.Tracing                      (TraceT)
+
+import qualified Data.HashMap.Strict                 as M
+import qualified Data.Text                           as T
+import qualified Network.HTTP.Client                 as HTTP
+
+import           Control.Monad.Unique
+import           Data.Text.Extended
 
 import           Hasura.Db                           as R
 import           Hasura.RQL.Types.Action             as R
@@ -66,10 +68,9 @@ import           Hasura.RQL.Types.SchemaCache        as R
 import           Hasura.RQL.Types.SchemaCache.Build  as R
 import           Hasura.RQL.Types.Table              as R
 import           Hasura.SQL.Backend                  as R
-
-import qualified Data.HashMap.Strict                 as M
-import qualified Data.Text                           as T
-import qualified Network.HTTP.Client                 as HTTP
+import           Hasura.SQL.Types
+import           Hasura.Session
+import           Hasura.Tracing                      (TraceT)
 
 data QCtx
   = QCtx

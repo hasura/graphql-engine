@@ -1,23 +1,26 @@
 module Hasura.RQL.DML.Internal where
 
-import qualified Database.PG.Query   as Q
-import qualified Hasura.SQL.DML      as S
-
 import           Hasura.Prelude
-import           Hasura.RQL.GBoolExp
-import           Hasura.RQL.Types
-import           Hasura.Session
-import           Hasura.SQL.Error
-import           Hasura.SQL.Types
-import           Hasura.SQL.Value
-
-import           Control.Lens
-import           Data.Aeson.Types
 
 import qualified Data.HashMap.Strict as M
 import qualified Data.HashSet        as HS
 import qualified Data.Sequence       as DS
 import qualified Data.Text           as T
+import qualified Database.PG.Query   as Q
+
+import           Control.Lens
+import           Data.Aeson.Types
+
+import qualified Hasura.SQL.DML      as S
+
+import           Data.Text.Extended
+import           Hasura.RQL.GBoolExp
+import           Hasura.RQL.Types
+import           Hasura.SQL.Error
+import           Hasura.SQL.Types
+import           Hasura.SQL.Value
+import           Hasura.Session
+
 
 newtype DMLP1T m a
   = DMLP1T { unDMLP1T :: StateT (DS.Seq Q.PrepArg) m a }
@@ -207,7 +210,7 @@ convPartialSQLExp
   -> PartialSQLExp backend
   -> f S.SQLExp
 convPartialSQLExp f = \case
-  PSESQLExp sqlExp -> pure sqlExp
+  PSESQLExp sqlExp                 -> pure sqlExp
   PSESessVar colTy sessionVariable -> f colTy sessionVariable
 
 sessVarFromCurrentSetting

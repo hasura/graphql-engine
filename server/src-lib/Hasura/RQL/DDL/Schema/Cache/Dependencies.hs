@@ -13,9 +13,9 @@ import           Data.Aeson
 import           Data.List                          (nub)
 import           Data.Monoid                        (First)
 
+import           Data.Text.Extended
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 
 -- | Processes collected 'CIDependency' values into a 'DepMap', performing integrity checking to
 -- ensure the dependencies actually exist. If a dependency is missing, its transitive dependents are
