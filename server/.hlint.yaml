@@ -90,3 +90,11 @@
     - warn: {lhs: "maybe b return a", rhs: "onNothing a b"}
     - warn: {lhs: "maybe (return ()) b a", rhs: "onJust a b"}
     - warn: {lhs: "either b return a", rhs: "onLeft a b"}
+
+- group:
+    name: data-text-extended
+    enabled: true
+    imports:
+    - package base
+    rules:
+    - warn: {lhs: "Data.Text.intercalate \", \" x", rhs: "commaSeparated x", note: "From Data.Text.Extended"}
