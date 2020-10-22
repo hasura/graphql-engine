@@ -100,7 +100,7 @@ withEnvBool bVal envVar =
   where
     considerEnv' = do
       mEnvVal <- considerEnv envVar
-      onNothing mEnvVal (return False)
+      return $ Just True == mEnvVal
 
 withEnvJwtConf :: Maybe JWTConfig -> String -> WithEnv (Maybe JWTConfig)
 withEnvJwtConf jVal envVar =

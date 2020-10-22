@@ -56,7 +56,7 @@ processReq conn msg lock = do
     catchIO :: IO (Either ErrorMessage a) -> IO (Either ErrorMessage a)
     catchIO f = do
       resIOE <- E.try f
-      either (return . Left . ioExToErr) return resIOE
+      return $ either (Left . ioExToErr) id resIOE
     ioExToErr :: E.SomeException -> ErrorMessage
     ioExToErr e = ErrorMessage $ J.object ["IOError" J..= show e ]
 

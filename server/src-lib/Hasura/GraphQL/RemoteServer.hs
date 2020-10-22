@@ -194,7 +194,7 @@ instance J.FromJSON (FromIntrospection G.InputValueDefinition) where
 instance J.FromJSON (FromIntrospection (G.Value Void)) where
    parseJSON = J.withText "Value Void" $ \t ->
      let parseValueConst = G.runParser G.value
-     in fmap FromIntrospection $ onLeft (parseValueConst t) (fail . T.unpack)
+     in FromIntrospection <$> onLeft (parseValueConst t) (fail . T.unpack)
 
 instance J.FromJSON (FromIntrospection (G.InterfaceTypeDefinition [G.Name])) where
   parseJSON = J.withObject "InterfaceTypeDefinition" $ \o -> do
