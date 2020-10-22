@@ -23,9 +23,10 @@ import qualified Language.GraphQL.Draft.Syntax      as G
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Text.Extended
 import           Language.Haskell.TH.Syntax         (Lift)
 
-import           Data.Text.Extended
+import           Hasura.Backends.Postgres.Types
 import           Hasura.EncJSON
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.DDL.Deps

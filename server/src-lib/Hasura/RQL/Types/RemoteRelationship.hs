@@ -17,25 +17,25 @@ module Hasura.RQL.Types.RemoteRelationship
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict           as HM
-import qualified Data.Text                     as T
-import qualified Database.PG.Query             as Q
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.HashMap.Strict            as HM
+import qualified Data.Text                      as T
+import qualified Database.PG.Query              as Q
+import qualified Language.GraphQL.Draft.Syntax  as G
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Scientific
-import           Data.Set                      (Set)
+import           Data.Set                       (Set)
 import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax    (Lift)
+import           Language.Haskell.TH.Syntax     (Lift)
 
-import           Hasura.Incremental            (Cacheable)
+import           Hasura.Backends.Postgres.Types
+import           Hasura.Incremental             (Cacheable)
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Backend
-import           Hasura.SQL.Types
 
 
 newtype RemoteRelationshipName

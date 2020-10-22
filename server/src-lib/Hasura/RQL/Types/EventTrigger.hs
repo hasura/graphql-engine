@@ -26,21 +26,21 @@ module Hasura.RQL.Types.EventTrigger
 
 import           Hasura.Prelude
 
-import qualified Data.ByteString.Lazy       as LBS
-import qualified Data.Text                  as T
-import qualified Database.PG.Query          as Q
-import qualified Text.Regex.TDFA            as TDFA
+import qualified Data.ByteString.Lazy           as LBS
+import qualified Data.Text                      as T
+import qualified Database.PG.Query              as Q
+import qualified Text.Regex.TDFA                as TDFA
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax (Lift)
+import           Language.Haskell.TH.Syntax     (Lift)
 
-import           Hasura.Incremental         (Cacheable)
+import           Hasura.Backends.Postgres.Types
+import           Hasura.Incremental             (Cacheable)
 import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.Types.Common    (InputWebhook, NonEmptyText (..))
-import           Hasura.SQL.Types
+import           Hasura.RQL.Types.Common        (InputWebhook, NonEmptyText (..))
 
 
 -- This change helps us create functions for the event triggers
@@ -58,7 +58,7 @@ newtype TriggerName = TriggerName { unTriggerName :: NonEmptyText }
 triggerNameToTxt :: TriggerName -> Text
 triggerNameToTxt = unNonEmptyText . unTriggerName
 
-type EventId = T.Text
+type EventId = Text
 
 data Ops = INSERT | UPDATE | DELETE | MANUAL deriving (Show)
 
@@ -111,12 +111,12 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RetryConf)
 data EventHeaderInfo
   = EventHeaderInfo
   { ehiHeaderConf  :: !HeaderConf
-  , ehiCachedValue :: !T.Text
+  , ehiCachedValue :: !Text
   } deriving (Show, Eq, Generic, Lift)
 instance NFData EventHeaderInfo
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventHeaderInfo)
 
-data WebhookConf = WCValue InputWebhook | WCEnv T.Text
+data WebhookConf = WCValue InputWebhook | WCEnv Text
   deriving (Show, Eq, Generic, Lift)
 instance NFData WebhookConf
 instance Cacheable WebhookConf
@@ -136,7 +136,7 @@ instance FromJSON WebhookConf where
 data WebhookConfInfo
   = WebhookConfInfo
   { wciWebhookConf :: !WebhookConf
-  , wciCachedValue :: !T.Text
+  , wciCachedValue :: !Text
   } deriving (Show, Eq, Generic, Lift)
 instance NFData WebhookConfInfo
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''WebhookConfInfo)
@@ -151,7 +151,7 @@ data CreateEventTriggerQuery
   , cetqEnableManual   :: !(Maybe Bool)
   , cetqRetryConf      :: !(Maybe RetryConf)
   , cetqWebhook        :: !(Maybe InputWebhook)
-  , cetqWebhookFromEnv :: !(Maybe T.Text)
+  , cetqWebhookFromEnv :: !(Maybe Text)
   , cetqHeaders        :: !(Maybe [HeaderConf])
   , cetqReplace        :: !Bool
   } deriving (Show, Eq, Lift)
@@ -217,7 +217,7 @@ data EventTriggerConf
   { etcName           :: !TriggerName
   , etcDefinition     :: !TriggerOpsDef
   , etcWebhook        :: !(Maybe InputWebhook)
-  , etcWebhookFromEnv :: !(Maybe T.Text)
+  , etcWebhookFromEnv :: !(Maybe Text)
   , etcRetryConf      :: !RetryConf
   , etcHeaders        :: !(Maybe [HeaderConf])
   } deriving (Show, Eq, Lift, Generic)

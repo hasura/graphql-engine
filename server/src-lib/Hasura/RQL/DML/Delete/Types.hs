@@ -1,13 +1,12 @@
 module Hasura.RQL.DML.Delete.Types where
 
+import qualified Hasura.Backends.Postgres.DML   as S
 
-import qualified Hasura.SQL.DML                 as S
-
+import           Hasura.Backends.Postgres.Types
 import           Hasura.RQL.DML.Returning.Types
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.SQL.Backend
-import           Hasura.SQL.Types
 
 data AnnDelG (b :: Backend) v
   = AnnDel

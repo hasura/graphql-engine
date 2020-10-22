@@ -1,17 +1,18 @@
-module Hasura.SQL.DML where
+module Hasura.Backends.Postgres.DML where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                 as J
-import qualified Data.HashMap.Strict        as HM
-import qualified Data.Text                  as T
-import qualified Text.Builder               as TB
+import qualified Data.Aeson                     as J
+import qualified Data.HashMap.Strict            as HM
+import qualified Data.Text                      as T
+import qualified Text.Builder                   as TB
 
-import           Data.String                (fromString)
+import           Data.String                    (fromString)
 import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax (Lift)
+import           Language.Haskell.TH.Syntax     (Lift)
 
-import           Hasura.Incremental         (Cacheable)
+import           Hasura.Backends.Postgres.Types
+import           Hasura.Incremental             (Cacheable)
 import           Hasura.SQL.Types
 
 

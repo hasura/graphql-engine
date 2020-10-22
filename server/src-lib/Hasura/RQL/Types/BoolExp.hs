@@ -40,27 +40,28 @@ module Hasura.RQL.Types.BoolExp
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson.Types           as J
-import qualified Data.HashMap.Strict        as M
+import qualified Data.Aeson.Types               as J
+import qualified Data.HashMap.Strict            as M
 
-import qualified Hasura.SQL.DML             as S
+import qualified Hasura.Backends.Postgres.DML   as S
 
-import           Data.Typeable
 import           Control.Lens.Plated
 import           Control.Lens.TH
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.Internal
 import           Data.Aeson.TH
-import           Instances.TH.Lift          ()
-import           Language.Haskell.TH.Syntax (Lift)
+import           Data.Typeable
+import           Instances.TH.Lift              ()
+import           Language.Haskell.TH.Syntax     (Lift)
 
-import           Hasura.Incremental         (Cacheable)
+import           Hasura.Backends.Postgres.Types
+import           Hasura.Incremental             (Cacheable)
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
-import           Hasura.Session
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 
 data GExists a
@@ -116,11 +117,11 @@ gBoolExpToJSON f be = case be of
   where
     kv = getKV be
     getKV = \case
-      BoolAnd bExps -> "_and" .= map (gBoolExpToJSON f) bExps
-      BoolOr bExps  -> "_or" .= map (gBoolExpToJSON f) bExps
-      BoolNot bExp  -> "_not" .= gBoolExpToJSON f bExp
+      BoolAnd bExps      -> "_and" .= map (gBoolExpToJSON f) bExps
+      BoolOr bExps       -> "_or" .= map (gBoolExpToJSON f) bExps
+      BoolNot bExp       -> "_not" .= gBoolExpToJSON f bExp
       BoolExists bExists -> "_exists" .= gExistsToJSON f bExists
-      BoolFld a     ->  f a
+      BoolFld a          ->  f a
 
 
 parseGBoolExp
@@ -262,57 +263,57 @@ opExpDepCol = \case
 
 opExpToJPair :: (a -> Value) -> OpExpG 'Postgres a -> (Text, Value)
 opExpToJPair f = \case
-  ACast a        -> ("_cast", toJSON $ M.map opExpsToJSON a)
+  ACast a                  -> ("_cast", toJSON $ M.map opExpsToJSON a)
 
-  AEQ _ a          -> ("_eq", f a)
-  ANE _ a          -> ("_ne", f a)
+  AEQ _ a                  -> ("_eq", f a)
+  ANE _ a                  -> ("_ne", f a)
 
-  AIN a          -> ("_in", f a)
-  ANIN a         -> ("_nin", f a)
+  AIN a                    -> ("_in", f a)
+  ANIN a                   -> ("_nin", f a)
 
-  AGT a          -> ("_gt", f a)
-  ALT a          -> ("_lt", f a)
-  AGTE a         -> ("_gte", f a)
-  ALTE a         -> ("_lte", f a)
+  AGT a                    -> ("_gt", f a)
+  ALT a                    -> ("_lt", f a)
+  AGTE a                   -> ("_gte", f a)
+  ALTE a                   -> ("_lte", f a)
 
-  ALIKE a        -> ("_like", f a)
-  ANLIKE a       -> ("_nlike", f a)
+  ALIKE a                  -> ("_like", f a)
+  ANLIKE a                 -> ("_nlike", f a)
 
-  AILIKE _ a     -> ("_ilike", f a)
-  ANILIKE _ a    -> ("_nilike", f a)
+  AILIKE _ a               -> ("_ilike", f a)
+  ANILIKE _ a              -> ("_nilike", f a)
 
-  ASIMILAR a     -> ("_similar", f a)
-  ANSIMILAR a    -> ("_nsimilar", f a)
+  ASIMILAR a               -> ("_similar", f a)
+  ANSIMILAR a              -> ("_nsimilar", f a)
 
-  AContains a    -> ("_contains", f a)
-  AContainedIn a -> ("_contained_in", f a)
-  AHasKey a      -> ("_has_key", f a)
-  AHasKeysAny a  -> ("_has_keys_any", f a)
-  AHasKeysAll a  -> ("_has_keys_all", f a)
+  AContains a              -> ("_contains", f a)
+  AContainedIn a           -> ("_contained_in", f a)
+  AHasKey a                -> ("_has_key", f a)
+  AHasKeysAny a            -> ("_has_keys_any", f a)
+  AHasKeysAll a            -> ("_has_keys_all", f a)
 
-  ASTContains a    -> ("_st_contains", f a)
-  ASTCrosses a     -> ("_st_crosses", f a)
-  ASTDWithinGeom o -> ("_st_d_within", toJSON $ f <$> o)
-  ASTDWithinGeog o -> ("_st_d_within", toJSON $ f <$> o)
-  ASTEquals a      -> ("_st_equals", f a)
-  ASTIntersects a  -> ("_st_intersects", f a)
-  ASTOverlaps a    -> ("_st_overlaps", f a)
-  ASTTouches a     -> ("_st_touches", f a)
-  ASTWithin a      -> ("_st_within", f a)
+  ASTContains a            -> ("_st_contains", f a)
+  ASTCrosses a             -> ("_st_crosses", f a)
+  ASTDWithinGeom o         -> ("_st_d_within", toJSON $ f <$> o)
+  ASTDWithinGeog o         -> ("_st_d_within", toJSON $ f <$> o)
+  ASTEquals a              -> ("_st_equals", f a)
+  ASTIntersects a          -> ("_st_intersects", f a)
+  ASTOverlaps a            -> ("_st_overlaps", f a)
+  ASTTouches a             -> ("_st_touches", f a)
+  ASTWithin a              -> ("_st_within", f a)
 
   ASTIntersectsRast a      -> ("_st_intersects_rast", f a)
   ASTIntersectsNbandGeom a -> ("_st_intersects_nband_geom", toJSON $ f <$> a)
   ASTIntersectsGeomNband a -> ("_st_intersects_geom_nband", toJSON $ f <$> a)
 
-  ANISNULL       -> ("_is_null", toJSON True)
-  ANISNOTNULL    -> ("_is_null", toJSON False)
+  ANISNULL                 -> ("_is_null", toJSON True)
+  ANISNOTNULL              -> ("_is_null", toJSON False)
 
-  CEQ a          -> ("_ceq", toJSON a)
-  CNE a          -> ("_cne", toJSON a)
-  CGT a          -> ("_cgt", toJSON a)
-  CLT a          -> ("_clt", toJSON a)
-  CGTE a         -> ("_cgte", toJSON a)
-  CLTE a         -> ("_clte", toJSON a)
+  CEQ a                    -> ("_ceq", toJSON a)
+  CNE a                    -> ("_cne", toJSON a)
+  CGT a                    -> ("_cgt", toJSON a)
+  CLT a                    -> ("_clt", toJSON a)
+  CGTE a                   -> ("_cgte", toJSON a)
+  CLTE a                   -> ("_clte", toJSON a)
   where
     opExpsToJSON = object . map (opExpToJPair f)
 
@@ -381,7 +382,7 @@ mkTypedSessionVar columnType =
 instance ToJSON (PartialSQLExp 'Postgres) where
   toJSON = \case
     PSESessVar colTy sessVar -> toJSON (colTy, sessVar)
-    PSESQLExp e -> toJSON $ toSQLTxt e
+    PSESQLExp e              -> toJSON $ toSQLTxt e
 
 instance ToJSON (AnnBoolExpPartialSQL 'Postgres) where
   toJSON = gBoolExpToJSON f

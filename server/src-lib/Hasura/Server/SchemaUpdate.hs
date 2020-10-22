@@ -71,7 +71,7 @@ data EventPayload
 $(deriveJSON (aesonDrop 3 snakeCase) ''EventPayload)
 
 data ThreadError
-  = TEJsonParse !T.Text
+  = TEJsonParse !Text
   | TEQueryError !QErr
 $(deriveToJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 2
@@ -219,7 +219,7 @@ refreshSchemaCache
   -> SchemaCacheRef
   -> CacheInvalidations
   -> ThreadType
-  -> T.Text -> IO ()
+  -> Text -> IO ()
 refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef invalidations threadType msg = do
   -- Reload schema cache from catalog
   resE <- liftIO $ runExceptT $ withSCUpdate cacheRef logger do

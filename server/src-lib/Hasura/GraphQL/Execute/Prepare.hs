@@ -22,16 +22,17 @@ import qualified Data.IntMap                            as IntMap
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
-import qualified Hasura.SQL.DML                         as S
-
 import           Data.Text.Extended
+
+import qualified Hasura.Backends.Postgres.DML           as S
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+
+import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.Value
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.DML.Internal                (currentSession)
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
-import           Hasura.SQL.Value
 import           Hasura.Session
 
 

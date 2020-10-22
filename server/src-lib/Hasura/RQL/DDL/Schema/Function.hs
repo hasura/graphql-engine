@@ -6,26 +6,26 @@ module Hasura.RQL.DDL.Schema.Function where
 
 import           Hasura.Prelude
 
-import qualified Control.Monad.Validate        as MV
-import qualified Data.HashMap.Strict           as M
-import qualified Data.Sequence                 as Seq
-import qualified Data.Text                     as T
-import qualified Database.PG.Query             as Q
+import qualified Control.Monad.Validate         as MV
+import qualified Data.HashMap.Strict            as M
+import qualified Data.Sequence                  as Seq
+import qualified Data.Text                      as T
+import qualified Database.PG.Query              as Q
 
 import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax    (Lift)
-
-import qualified Language.GraphQL.Draft.Syntax as G
-
 import           Data.Text.Extended
+import           Language.Haskell.TH.Syntax     (Lift)
+
+import qualified Language.GraphQL.Draft.Syntax  as G
+
+import           Hasura.Backends.Postgres.Types
 import           Hasura.EncJSON
-import           Hasura.Incremental            (Cacheable)
+import           Hasura.Incremental             (Cacheable)
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
-import           Hasura.Server.Utils           (englishList, makeReasonMessage)
+import           Hasura.Server.Utils            (englishList, makeReasonMessage)
 
 
 data RawFunctionInfo

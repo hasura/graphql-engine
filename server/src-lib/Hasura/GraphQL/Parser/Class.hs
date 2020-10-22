@@ -8,16 +8,16 @@ import                qualified Language.Haskell.TH                   as TH
 
 import                          Data.Has
 import                          Data.Parser.JSONPath
+import                          Data.Text.Extended
 import                          Data.Tuple.Extended
 import                          GHC.Stack                             (HasCallStack)
 import                          Type.Reflection                       (Typeable)
 
-import                          Data.Text.Extended
+import                          Hasura.Backends.Postgres.Types
 import {-# SOURCE #-}           Hasura.GraphQL.Parser.Internal.Parser
 import                          Hasura.RQL.Types.Error
 import                          Hasura.RQL.Types.Table                (TableCache, TableInfo)
 import                          Hasura.SQL.Backend
-import                          Hasura.SQL.Types
 import                          Hasura.Session                        (RoleName)
 
 {- Note [Tying the knot]

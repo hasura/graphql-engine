@@ -1,13 +1,16 @@
-module Hasura.SQL.Rewrite
+module Hasura.Backends.Postgres.Rewrite
   ( prefixNumToAliases
   , prefixNumToAliasesSelectWith
   ) where
 
-import qualified Data.HashMap.Strict as Map
-import qualified Data.Text           as T
 import           Hasura.Prelude
-import qualified Hasura.SQL.DML      as S
-import           Hasura.SQL.Types    (Identifier (..))
+
+import qualified Data.HashMap.Strict            as Map
+import qualified Data.Text                      as T
+
+import qualified Hasura.Backends.Postgres.DML   as S
+
+import           Hasura.Backends.Postgres.Types (Identifier (..))
 
 {- Note [Postgres identifier length limitations]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -223,5 +226,5 @@ uSqlExp = restoringIdens . \case
   where
     uQual = \case
       S.QualifiedIdentifier iden ty -> S.QualifiedIdentifier <$> getIdentifier iden <*> pure ty
-      S.QualTable t   -> return $ S.QualTable t
-      S.QualVar t     -> return $ S.QualVar t
+      S.QualTable t                 -> return $ S.QualTable t
+      S.QualVar t                   -> return $ S.QualVar t

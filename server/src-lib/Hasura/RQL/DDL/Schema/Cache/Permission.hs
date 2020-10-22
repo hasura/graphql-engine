@@ -12,17 +12,17 @@ import qualified Data.Sequence                      as Seq
 
 import           Control.Arrow.Extended
 import           Data.Aeson
+import           Data.Text.Extended
 
 import qualified Hasura.Incremental                 as Inc
 
-import           Data.Text.Extended
+import           Hasura.Backends.Postgres.Types
 import           Hasura.Db
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
-import           Hasura.SQL.Types
 import           Hasura.Session
 
 buildTablePermissions

@@ -8,6 +8,7 @@ import           Data.Text.Extended
 import           Hasura.Prelude
 import           Hasura.Session
 
+import           Hasura.Backends.Postgres.Types
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
@@ -15,7 +16,6 @@ import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.RemoteSchema
-import           Hasura.SQL.Types
 
 data TableMetadataObjId
   = MTORel !RelName !RelType

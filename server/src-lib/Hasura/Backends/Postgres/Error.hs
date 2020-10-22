@@ -1,5 +1,5 @@
 -- | Functions and datatypes for interpreting Postgres errors.
-module Hasura.SQL.Error
+module Hasura.Backends.Postgres.Error
   ( PGErrorType(..)
   , _PGDataException
   , _PGIntegrityConstraintViolation
@@ -17,10 +17,10 @@ module Hasura.SQL.Error
 
 import           Hasura.Prelude
 
-import           Control.Lens.TH              (makePrisms)
-
 import qualified Data.Text                    as T
 import qualified Database.PG.Query.Connection as Q
+
+import           Control.Lens.TH              (makePrisms)
 
 -- | The top-level error code type. Errors in Postgres are divided into different /classes/, which
 -- are further subdivided into individual error codes. Even if a particular status code is not known
@@ -88,10 +88,10 @@ pgErrorType errorDetails = parseTypes =<< Q.edStatusCode errorDetails
       where
         (classText, codeText) = T.splitAt 2 fullCodeText
 
-        withClass :: T.Text -> (Maybe a -> b) -> [Maybe a] -> Maybe b
+        withClass :: Text -> (Maybe a -> b) -> [Maybe a] -> Maybe b
         withClass expectedClassText mkClass codes =
           guard (classText == expectedClassText) $> mkClass (choice codes)
 
-        code :: T.Text -> a -> Maybe (PGErrorCode a)
+        code :: Text -> a -> Maybe (PGErrorCode a)
         code expectedCodeText codeValue =
           guard (codeText == expectedCodeText) $> PGErrorSpecific codeValue

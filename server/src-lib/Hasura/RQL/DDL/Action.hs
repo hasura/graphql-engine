@@ -25,22 +25,22 @@ module Hasura.RQL.DDL.Action
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                    as J
-import qualified Data.Aeson.Casing             as J
-import qualified Data.Aeson.TH                 as J
-import qualified Data.Environment              as Env
-import qualified Data.HashMap.Strict           as Map
-import qualified Database.PG.Query             as Q
-import qualified Language.GraphQL.Draft.Syntax as G
-
-import           Language.Haskell.TH.Syntax    (Lift)
+import qualified Data.Aeson                     as J
+import qualified Data.Aeson.Casing              as J
+import qualified Data.Aeson.TH                  as J
+import qualified Data.Environment               as Env
+import qualified Data.HashMap.Strict            as Map
+import qualified Database.PG.Query              as Q
+import qualified Language.GraphQL.Draft.Syntax  as G
 
 import           Data.Text.Extended
+import           Language.Haskell.TH.Syntax     (Lift)
+
+import           Hasura.Backends.Postgres.Types
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Utils
-import           Hasura.RQL.DDL.CustomTypes    (lookupPGScalar)
+import           Hasura.RQL.DDL.CustomTypes     (lookupPGScalar)
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 import           Hasura.Session
 
 

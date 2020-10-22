@@ -48,13 +48,13 @@ import qualified Language.GraphQL.Draft.Printer as GPrint
 import qualified Language.GraphQL.Draft.Syntax  as G
 import qualified Text.Builder                   as T
 
+import           Hasura.Backends.Postgres.Types
 import           Hasura.Incremental             (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common        (RelType, ScalarType)
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
-import           Hasura.SQL.Types
 
 newtype GraphQLType
   = GraphQLType { unGraphQLType :: G.GType }
@@ -226,7 +226,7 @@ data AnnotatedScalarType
   -- order words, the restriction (b ~ 'Postgres) should be relaxed.
 deriving instance Eq AnnotatedScalarType
 instance J.ToJSON AnnotatedScalarType where
-  toJSON (ASTCustom std) = J.toJSON std
+  toJSON (ASTCustom std)           = J.toJSON std
   toJSON (ASTReusedScalar name st) = J.object ["name" J..= name, "type" J..= st]
 
 data NonObjectCustomType

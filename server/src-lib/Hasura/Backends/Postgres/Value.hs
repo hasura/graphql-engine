@@ -1,4 +1,4 @@
-module Hasura.SQL.Value
+module Hasura.Backends.Postgres.Value
   ( PGScalarValue(..)
   , pgColValueToInt
   , pgScalarValueToJson
@@ -17,31 +17,31 @@ module Hasura.SQL.Value
   , toPrepParam
   ) where
 
-import           Hasura.SQL.GeoJSON
-import           Hasura.SQL.Time
-import           Hasura.SQL.Types
+import           Hasura.Prelude
 
-import qualified Database.PG.Query          as Q
-import qualified Database.PG.Query.PTI      as PTI
-import qualified Hasura.SQL.DML             as S
+import qualified Data.Aeson.Text                as AE
+import qualified Data.Aeson.Types               as AT
+import qualified Data.ByteString                as B
+import qualified Data.Text                      as T
+import qualified Data.Text.Conversions          as TC
+import qualified Data.Text.Encoding             as TE
+import qualified Data.Text.Lazy                 as TL
+import qualified Data.UUID                      as UUID
+import qualified Database.PG.Query              as Q
+import qualified Database.PG.Query.PTI          as PTI
+import qualified Database.PostgreSQL.LibPQ      as PQ
+import qualified PostgreSQL.Binary.Encoding     as PE
 
 import           Data.Aeson
 import           Data.Int
 import           Data.Scientific
 import           Data.Time
-import           Hasura.Prelude
 
-import qualified Data.Aeson.Text            as AE
-import qualified Data.Aeson.Types           as AT
-import qualified Data.ByteString            as B
-import qualified Data.Text                  as T
-import qualified Data.Text.Conversions      as TC
-import qualified Data.Text.Encoding         as TE
-import qualified Data.Text.Lazy             as TL
-import qualified Data.UUID                  as UUID
+import qualified Hasura.Backends.Postgres.DML   as S
 
-import qualified Database.PostgreSQL.LibPQ  as PQ
-import qualified PostgreSQL.Binary.Encoding as PE
+import           Hasura.Backends.Postgres.Types
+import           Hasura.SQL.GeoJSON
+import           Hasura.SQL.Time
 
 newtype RasterWKB
   = RasterWKB { getRasterWKB :: TC.Base16 B.ByteString }
@@ -69,9 +69,9 @@ data PGScalarValue
   | PGValMoney !Scientific
   | PGValBoolean !Bool
   | PGValChar !Char
-  | PGValVarchar !T.Text
-  | PGValText !T.Text
-  | PGValCitext !T.Text
+  | PGValVarchar !Text
+  | PGValText !Text
+  | PGValCitext !Text
   | PGValDate !Day
   | PGValTimeStamp !LocalTime
   | PGValTimeStampTZ !UTCTime
@@ -82,7 +82,7 @@ data PGScalarValue
   | PGValGeo !GeometryWithCRS
   | PGValRaster !RasterWKB
   | PGValUUID !UUID.UUID
-  | PGValUnknown !T.Text
+  | PGValUnknown !Text
   deriving (Show, Eq)
 
 pgScalarValueToJson :: PGScalarValue -> Value

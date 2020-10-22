@@ -7,17 +7,17 @@ module Hasura.RQL.GBoolExp
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict as M
-import qualified Data.Text           as T
+import qualified Data.HashMap.Strict            as M
+import qualified Data.Text                      as T
 
 import           Data.Aeson
 import           Data.Monoid
-
-import qualified Hasura.SQL.DML      as S
-
 import           Data.Text.Extended
+
+import qualified Hasura.Backends.Postgres.DML   as S
+
+import           Hasura.Backends.Postgres.Types
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 
 type OpRhsParser m v =
   PGType PGColumnType -> Value -> m v

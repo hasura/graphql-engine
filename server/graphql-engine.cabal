@@ -299,6 +299,11 @@ library
                      , Data.Time.Clock.Units
                      , Data.URL.Template
                      , Hasura.App
+                     , Hasura.Backends.Postgres.DML
+                     , Hasura.Backends.Postgres.Error
+                     , Hasura.Backends.Postgres.Value
+                     , Hasura.Backends.Postgres.Types
+                     , Hasura.Backends.Postgres.Rewrite
                      , Hasura.Db
                      -- Exposed for benchmark:
                      , Hasura.Cache.Bounded
@@ -463,13 +468,9 @@ library
                      , Data.GADT.Compare.Extended
                      , Data.Tuple.Extended
                      , Hasura.SQL.Backend
-                     , Hasura.SQL.DML
-                     , Hasura.SQL.Error
                      , Hasura.SQL.GeoJSON
-                     , Hasura.SQL.Rewrite
                      , Hasura.SQL.Time
                      , Hasura.SQL.Types
-                     , Hasura.SQL.Value
                      , Hasura.Tracing
                      , Network.URI.Extended
                      , Network.Wai.Extended

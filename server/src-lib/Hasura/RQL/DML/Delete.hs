@@ -8,25 +8,26 @@ module Hasura.RQL.DML.Delete
   , runDelete
   ) where
 
-import           Data.Aeson
-import           Instances.TH.Lift           ()
+import           Hasura.Prelude
 
-import qualified Data.Sequence            as DS
-import qualified Data.Environment         as Env
-import qualified Hasura.Tracing           as Tracing
+import qualified Data.Environment             as Env
+import qualified Data.Sequence                as DS
+import qualified Database.PG.Query            as Q
+
+import           Data.Aeson
+import           Instances.TH.Lift            ()
+
+import qualified Hasura.Backends.Postgres.DML as S
+import qualified Hasura.Tracing               as Tracing
 
 import           Hasura.EncJSON
-import           Hasura.Prelude
 import           Hasura.RQL.DML.Delete.Types
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.GBoolExp
-import           Hasura.Server.Version       (HasVersion)
 import           Hasura.RQL.Types
-
-import qualified Database.PG.Query           as Q
-import qualified Hasura.SQL.DML              as S
+import           Hasura.Server.Version        (HasVersion)
 
 
 traverseAnnDel

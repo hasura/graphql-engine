@@ -3,14 +3,14 @@ module Hasura.RQL.DML.Update.Types where
 
 import           Hasura.Prelude
 
-import qualified Hasura.SQL.DML                 as S
+import qualified Hasura.Backends.Postgres.DML   as S
 
+import           Hasura.Backends.Postgres.Types
 import           Hasura.RQL.DML.Returning.Types
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend
-import           Hasura.SQL.Types
 
 
 data AnnUpdG (b :: Backend) v

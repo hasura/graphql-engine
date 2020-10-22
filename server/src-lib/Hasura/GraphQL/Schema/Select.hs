@@ -37,14 +37,16 @@ import qualified Data.Sequence.NonEmpty                as NESeq
 import qualified Data.Text                             as T
 import qualified Language.GraphQL.Draft.Syntax         as G
 
+import qualified Hasura.Backends.Postgres.DML          as SQL
 import qualified Hasura.GraphQL.Execute.Types          as ET
 import qualified Hasura.GraphQL.Parser                 as P
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
 import qualified Hasura.RQL.DML.Select                 as RQL
 import qualified Hasura.RQL.Types.BoolExp              as RQL
-import qualified Hasura.SQL.DML                        as SQL
 
 import           Data.Text.Extended
+import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.Value
 import           Hasura.GraphQL.Parser                 (FieldParser, InputFieldsParser, Kind (..),
                                                         Parser, UnpreparedValue (..), mkParameter)
 import           Hasura.GraphQL.Parser.Class
@@ -55,8 +57,6 @@ import           Hasura.GraphQL.Schema.OrderBy
 import           Hasura.GraphQL.Schema.Remote
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
-import           Hasura.SQL.Value
 import           Hasura.Server.Utils                   (executeJSONPath)
 
 type SelectExp           b = RQL.AnnSimpleSelG b UnpreparedValue

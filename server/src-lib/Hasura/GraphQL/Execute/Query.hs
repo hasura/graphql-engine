@@ -13,6 +13,8 @@ module Hasura.GraphQL.Execute.Query
   , noProfile
   ) where
 
+import           Hasura.Prelude
+
 import qualified Data.Aeson                             as J
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
@@ -24,12 +26,13 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 
+import qualified Hasura.Backends.Postgres.DML           as S
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.Logging                         as L
-import           Hasura.Server.Version                  (HasVersion)
-import qualified Hasura.SQL.DML                         as S
+import qualified Hasura.RQL.DML.Select                  as DS
 import qualified Hasura.Tracing                         as Tracing
 
+import           Hasura.Backends.Postgres.Value
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
@@ -38,14 +41,11 @@ import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
-import           Hasura.Prelude
 import           Hasura.RQL.DML.RemoteJoin
 import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
 import           Hasura.RQL.Types
+import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
-import           Hasura.SQL.Value
-
-import qualified Hasura.RQL.DML.Select                  as DS
 
 data PreparedSql
   = PreparedSql
@@ -163,10 +163,10 @@ traverseQueryRootField
   -> RootField (QueryDB backend a) c h d
   -> f (RootField (QueryDB backend b) c h d)
 traverseQueryRootField f = traverseDB \case
-  QDBSimple s       -> QDBSimple      <$> DS.traverseAnnSimpleSelect f s
-  QDBPrimaryKey s   -> QDBPrimaryKey  <$> DS.traverseAnnSimpleSelect f s
-  QDBAggregation s  -> QDBAggregation <$> DS.traverseAnnAggregateSelect f s
-  QDBConnection s   -> QDBConnection  <$> DS.traverseConnectionSelect f s
+  QDBSimple s      -> QDBSimple      <$> DS.traverseAnnSimpleSelect f s
+  QDBPrimaryKey s  -> QDBPrimaryKey  <$> DS.traverseAnnSimpleSelect f s
+  QDBAggregation s -> QDBAggregation <$> DS.traverseAnnAggregateSelect f s
+  QDBConnection s  -> QDBConnection  <$> DS.traverseConnectionSelect f s
 
 parseGraphQLQuery
   :: MonadError QErr m

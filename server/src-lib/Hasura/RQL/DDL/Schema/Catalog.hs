@@ -16,6 +16,7 @@ import qualified Database.PG.Query                  as Q
 
 import           Data.Aeson
 
+import           Hasura.Backends.Postgres.Types
 import           Hasura.Db
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.EventTrigger
@@ -25,7 +26,6 @@ import           Hasura.RQL.DDL.RemoteRelationship
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
-import           Hasura.SQL.Types
 
 fetchCatalogData :: (MonadTx m) => m CatalogMetadata
 fetchCatalogData =

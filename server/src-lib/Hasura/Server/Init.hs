@@ -945,7 +945,7 @@ serveOptsToLog so =
       , "websocket_compression_options" J..= show (WS.connectionCompressionOptions . soConnectionOptions $ so)
       ]
 
-mkGenericStrLog :: L.LogLevel -> T.Text -> String -> StartupLog
+mkGenericStrLog :: L.LogLevel -> Text -> String -> StartupLog
 mkGenericStrLog logLevel k msg =
   StartupLog logLevel k $ J.toJSON msg
 

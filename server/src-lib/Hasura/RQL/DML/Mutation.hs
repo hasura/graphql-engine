@@ -18,10 +18,13 @@ import qualified Database.PG.Query              as Q
 import qualified Network.HTTP.Client            as HTTP
 import qualified Network.HTTP.Types             as N
 
-import qualified Hasura.SQL.DML                 as S
+import           Data.Text.Extended
+
+import qualified Hasura.Backends.Postgres.DML   as S
 import qualified Hasura.Tracing                 as Tracing
 
-import           Data.Text.Extended
+import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.Value
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.RemoteJoin
@@ -31,9 +34,9 @@ import           Hasura.RQL.DML.Select
 import           Hasura.RQL.Instances           ()
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.SQL.Value
 import           Hasura.Server.Version          (HasVersion)
 import           Hasura.Session
+
 
 type MutationRemoteJoinCtx = (HTTP.Manager, [N.Header], UserInfo)
 

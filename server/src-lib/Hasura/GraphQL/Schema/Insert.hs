@@ -5,11 +5,11 @@ import           Hasura.Prelude
 import qualified Hasura.RQL.DML.Insert.Types    as RQL
 import qualified Hasura.RQL.DML.Returning.Types as RQL
 
+import           Hasura.Backends.Postgres.Types
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend
-import           Hasura.SQL.Types
 
 
 -- At time of writing (August 2020), GraphQL queries and mutations get

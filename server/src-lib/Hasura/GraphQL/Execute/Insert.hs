@@ -12,7 +12,9 @@ import qualified Data.Sequence                  as Seq
 import qualified Data.Text                      as T
 import qualified Database.PG.Query              as Q
 
+import           Data.Text.Extended
 
+import qualified Hasura.Backends.Postgres.DML   as S
 import qualified Hasura.RQL.DML.Insert          as RQL
 import qualified Hasura.RQL.DML.Insert.Types    as RQL
 import qualified Hasura.RQL.DML.Mutation        as RQL
@@ -20,16 +22,15 @@ import qualified Hasura.RQL.DML.RemoteJoin      as RQL
 import qualified Hasura.RQL.DML.Returning       as RQL
 import qualified Hasura.RQL.DML.Returning.Types as RQL
 import qualified Hasura.RQL.GBoolExp            as RQL
-import qualified Hasura.SQL.DML                 as S
 import qualified Hasura.Tracing                 as Tracing
 
-import           Data.Text.Extended
+import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.Value
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Schema.Insert
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.SQL.Value
 import           Hasura.Server.Version          (HasVersion)
 
 
@@ -234,7 +235,7 @@ insertArrRel env resCols remoteJoinCtx planVars stringifyNum arrRelIns =
     resBS <- withPathK "data" $
       insertMultipleObjects env multiObjIns additionalColumns remoteJoinCtx mutOutput planVars stringifyNum
     resObj <- decodeEncJSON resBS
-    onNothing (Map.lookup ("affected_rows" :: T.Text) resObj) $
+    onNothing (Map.lookup ("affected_rows" :: Text) resObj) $
       throw500 "affected_rows not returned in array rel insert"
   where
     RelIns multiObjIns relInfo = arrRelIns

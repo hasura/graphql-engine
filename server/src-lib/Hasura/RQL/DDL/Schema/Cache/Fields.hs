@@ -15,10 +15,11 @@ import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Control.Arrow.Extended
 import           Data.Aeson
+import           Data.Text.Extended
 
 import qualified Hasura.Incremental                 as Inc
 
-import           Data.Text.Extended
+import           Hasura.Backends.Postgres.Types
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.RemoteRelationship
@@ -26,7 +27,6 @@ import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
-import           Hasura.SQL.Types
 
 addNonColumnFields
   :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr

@@ -7,28 +7,28 @@ module Hasura.GraphQL.Parser.Internal.Parser where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                    as A
-import qualified Data.HashMap.Strict.Extended  as M
-import qualified Data.HashMap.Strict.InsOrd    as OMap
-import qualified Data.HashSet                  as S
-import qualified Data.List.Extended            as LE
-import qualified Data.Text                     as T
+import qualified Data.Aeson                     as A
+import qualified Data.HashMap.Strict.Extended   as M
+import qualified Data.HashMap.Strict.InsOrd     as OMap
+import qualified Data.HashSet                   as S
+import qualified Data.List.Extended             as LE
+import qualified Data.Text                      as T
 
-import           Control.Lens.Extended         hiding (enum, index)
-import           Data.Int                      (Int32, Int64)
+import           Control.Lens.Extended          hiding (enum, index)
+import           Data.Int                       (Int32, Int64)
 import           Data.Parser.JSONPath
-import           Data.Scientific               (toBoundedInteger)
+import           Data.Scientific                (toBoundedInteger)
 import           Data.Text.Extended
 import           Data.Type.Equality
-import           Language.GraphQL.Draft.Syntax hiding (Definition)
+import           Language.GraphQL.Draft.Syntax  hiding (Definition)
 
+import           Hasura.Backends.Postgres.Value
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Collect
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Error
-import           Hasura.SQL.Value
-import           Hasura.Server.Utils           (englishList)
+import           Hasura.Server.Utils            (englishList)
 
 
 -- -----------------------------------------------------------------------------
@@ -269,7 +269,7 @@ There's a delicate balance between GraphQL types and Postgres types.
 
 The mapping is done in the 'column' parser. But we want to only have
 one source of truth for parsing postgres values, which happens to be
-the JSON parsing code in SQL.Value. So here we reuse some of that code
+the JSON parsing code in Backends.Postgres.Value. So here we reuse some of that code
 despite not having a JSON value.
 
 -}
