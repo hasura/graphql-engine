@@ -81,8 +81,8 @@ $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''RemoteSchemaNameQuery)
 getUrlFromEnv :: (MonadIO m, MonadError QErr m) => Env.Environment -> Text -> m N.URI
 getUrlFromEnv env urlFromEnv = do
   let mEnv = Env.lookupEnv env $ T.unpack urlFromEnv
-  uri <- maybe (throw400 InvalidParams $ envNotFoundMsg urlFromEnv) return mEnv
-  maybe (throw400 InvalidParams $ invalidUri uri) return $ N.parseURI uri
+  uri <- onNothing mEnv (throw400 InvalidParams $ envNotFoundMsg urlFromEnv)
+  onNothing (N.parseURI uri) (throw400 InvalidParams $ invalidUri uri)
   where
     invalidUri x = "not a valid URI: " <> T.pack x
     envNotFoundMsg e = "environment variable '" <> e <> "' not set"

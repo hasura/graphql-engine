@@ -34,7 +34,7 @@ execPGDump
   -> m BL.ByteString
 execPGDump b ci = do
   eOutput <- liftIO $ try execProcess
-  output <- either throwException return eOutput
+  output <- onLeft eOutput throwException
   case output of
     Left err ->
       RTE.throw500 $ "error while executing pg_dump: " <> err

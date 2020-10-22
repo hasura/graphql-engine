@@ -225,7 +225,7 @@ jwkRefreshCtrl logger manager url ref time = do
     liftIO $ C.sleep time
     forever $ Tracing.runTraceT "jwk refresh" do
       res <- runExceptT $ updateJwkRef logger manager url ref
-      mTime <- either (const $ logNotice >> return Nothing) return res
+      mTime <- onLeft res (const $ logNotice >> return Nothing)
       -- if can't parse time from header, defaults to 1 min
       -- let delay = maybe (minutes 1) fromUnits mTime
       let delay = maybe (minutes 1) convertDuration mTime
@@ -257,7 +257,7 @@ updateJwkRef (Logger logger) manager url jwkRef = do
     let req = initReq { HTTP.requestHeaders = addDefaultHeaders (HTTP.requestHeaders initReq) }
     Tracing.tracedHttpRequest req \req' -> do
       liftIO $ HTTP.httpLbs req' manager
-  resp <- either logAndThrowHttp return res
+  resp <- onLeft res logAndThrowHttp
   let status = resp ^. Wreq.responseStatus
       respBody = resp ^. Wreq.responseBody
       statusCode = status ^. Wreq.statusCode
@@ -268,7 +268,7 @@ updateJwkRef (Logger logger) manager url jwkRef = do
     logAndThrow err
 
   let parseErr e = JFEJwkParseError (T.pack e) $ "Error parsing JWK from url: " <> urlT
-  !jwkset <- either (logAndThrow . parseErr) return $ J.eitherDecode' respBody
+  !jwkset <- onLeft (J.eitherDecode' respBody) (logAndThrow . parseErr)
   liftIO $ do
 #ifndef PROFILING
     $assertNFHere jwkset  -- so we don't write thunks to mutable vars
@@ -371,7 +371,7 @@ processJwt_ processAuthZHeader_ jwtCtx headers mUnAuthRole =
       pure (userInfo, expTimeM)
 
     withoutAuthZHeader = do
-      unAuthRole <- maybe missingAuthzHeader return mUnAuthRole
+      unAuthRole <- onNothing mUnAuthRole missingAuthzHeader
       userInfo <- mkUserInfo (URBPreDetermined unAuthRole) UAdminSecretNotSent $
         mkSessionVariablesHeaders headers
       pure (userInfo, Nothing)
@@ -413,7 +413,7 @@ processAuthZHeader jwtCtx authzHeader = do
     liftJWTError :: (MonadError e' m) => (e -> e') -> ExceptT e m a -> m a
     liftJWTError ef action = do
       res <- runExceptT action
-      either (throwError . ef) return res
+      onLeft res (throwError . ef)
 
     invalidJWTError e =
       err400 JWTInvalid $ "Could not verify JWT: " <> T.pack (show e)
@@ -497,8 +497,7 @@ parseClaimsMap unregisteredClaims jcxClaims =
     parseObjectFromString namespace claimsFmt jVal =
       case (claimsFmt, jVal) of
         (JCFStringifiedJson, J.String v) ->
-          either (const $ claimsErr $ strngfyErr v) return
-          $ J.eitherDecodeStrict $ T.encodeUtf8 v
+          onLeft (J.eitherDecodeStrict $ T.encodeUtf8 v) (const $ claimsErr $ strngfyErr v)
         (JCFStringifiedJson, _) ->
           claimsErr "expecting a string when claims_format is stringified_json"
         (JCFJson, J.Object o) -> return o
@@ -622,7 +621,7 @@ parseHasuraClaims claimsMap = do
   where
     parseClaim :: J.FromJSON a => SessionVariable -> Text -> m a
     parseClaim claim hint = do
-      claimV <- maybe missingClaim return $ Map.lookup claim claimsMap
+      claimV <- onNothing (Map.lookup claim claimsMap) missingClaim
       parseJwtClaim claimV $ "invalid " <> claimText <> "; " <> hint
       where
         missingClaim = throw400 JWTRoleClaimMissing $ "JWT claim does not contain " <> claimText

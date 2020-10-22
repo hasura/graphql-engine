@@ -100,7 +100,7 @@ withEnvBool bVal envVar =
   where
     considerEnv' = do
       mEnvVal <- considerEnv envVar
-      maybe (return False) return mEnvVal
+      onNothing mEnvVal (return False)
 
 withEnvJwtConf :: Maybe JWTConfig -> String -> WithEnv (Maybe JWTConfig)
 withEnvJwtConf jVal envVar =
@@ -206,7 +206,7 @@ mkServeOptions rso = do
     mkAuthHook (AuthHookG mUrl mType) = do
       mUrlEnv <- withEnv mUrl $ fst authHookEnv
       authModeM <- withEnv mType (fst authHookModeEnv)
-      ty <- maybe (authHookTyEnv mType) return authModeM
+      ty <- onNothing authModeM (authHookTyEnv mType)
       return (flip AuthHookG ty <$> mUrlEnv)
 
     -- Also support HASURA_GRAPHQL_AUTH_HOOK_TYPE

@@ -251,7 +251,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead ipAddress = do
         case connState of
           CSNotInitialised _ _      -> STM.retry
           CSInitError _             -> STM.retry
-          CSInitialised clientState -> maybe STM.retry return $ wscsTokenExpTime clientState
+          CSInitialised clientState -> onNothing (wscsTokenExpTime clientState) STM.retry
       currTime <- TC.getCurrentTime
       sleep $ convertDuration $ TC.diffUTCTime expTime currTime
 
@@ -348,11 +348,11 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   (sc, scVer) <- liftIO getSchemaCache
 
   reqParsedE <- lift $ E.checkGQLExecution userInfo (reqHdrs, ipAddress) enableAL sc q
-  reqParsed <- either (withComplete . preExecErr requestId) return reqParsedE
+  reqParsed <- onLeft reqParsedE (withComplete . preExecErr requestId)
   execPlanE <- runExceptT $ E.getResolvedExecPlan env logger pgExecCtx
                {- planCache -} userInfo sqlGenCtx sc scVer queryType httpMgr reqHdrs (q, reqParsed)
 
-  (telemCacheHit, execPlan) <- either (withComplete . preExecErr requestId) return execPlanE
+  (telemCacheHit, execPlan) <- onLeft execPlanE (withComplete . preExecErr requestId)
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx {- planCache -} sc scVer httpMgr enableAL
 
   case execPlan of

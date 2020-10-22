@@ -317,7 +317,7 @@ asyncActionsProcessor env logger cacheRef pgPool httpManager = forever $ do
     runTx :: (Monoid a) => Q.TxE QErr a -> IO a
     runTx q = do
       res <- runExceptT $ Q.runTx' pgPool q
-      either mempty return res
+      onLeft res mempty
 
     callHandler :: ActionCache -> ActionLogItem -> m ()
     callHandler actionCache actionLogItem = Tracing.runTraceT "async actions processor" do
