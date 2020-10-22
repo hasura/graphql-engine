@@ -81,11 +81,17 @@
 # $ hlint --default > .hlint.yaml
 
 
+- package:
+    name: hasura-prelude
+    modules:
+    - import Hasura.Prelude
+
 - group:
     name: hasura-prelude
     enabled: true
     imports:
     - package base
+    - package hasura-prelude
     rules:
     - warn: {lhs: "maybe b return a", rhs: "onNothing a b"}
     - warn: {lhs: "maybe (return ()) b a", rhs: "onJust a b"}
