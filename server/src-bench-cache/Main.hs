@@ -35,7 +35,7 @@ main = defaultMain [
     ]
     -- simple insert benchmark. Try to avoid drift by initialising fresh
     -- and measuring 1000 inserts at a time.
-  , env (randomInts 1000) $ \ ~rs->
+  , env (randomInts 1000) $ \rs ->
       bgroup "insert x1000" [
         -- use perRunEnv so we can be sure we're not triggering cache
         -- evictions in bounded due to long bootstrap batch runs

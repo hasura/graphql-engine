@@ -53,7 +53,7 @@ execPGDump b ci = do
     opts = connString : "--encoding=utf8" : prbOpts b
 
     clean str
-      | Just True == (prbCleanOutput b) =
+      | Just True == prbCleanOutput b =
           unlines $ filter (not . shouldDropLine) (lines str)
       | otherwise = str
 

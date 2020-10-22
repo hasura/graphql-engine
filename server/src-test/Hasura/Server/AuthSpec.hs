@@ -531,7 +531,7 @@ mkCustomDefaultRoleClaim claimPath defVal =
   where
     defRoleName = mkRoleNameE <$> defVal
 
-mkCustomAllowedRoleClaim :: (Maybe Text) -> (Maybe [Text]) -> JWTCustomClaimsMapAllowedRoles
+mkCustomAllowedRoleClaim :: Maybe Text -> Maybe [Text] -> JWTCustomClaimsMapAllowedRoles
 mkCustomAllowedRoleClaim claimPath defVal =
   -- check if claimPath is provided, if not then use the default value
   -- as the literal value by removing the `Maybe` of defVal
@@ -544,7 +544,7 @@ mkCustomAllowedRoleClaim claimPath defVal =
     defAllowedRoles = fmap mkRoleNameE <$> defVal
 
 -- use for claims other than `x-hasura-default-role` and `x-hasura-allowed-roles`
-mkCustomOtherClaim :: (Maybe Text) -> (Maybe Text) -> JWTCustomClaimsMapValue
+mkCustomOtherClaim :: Maybe Text -> Maybe Text -> JWTCustomClaimsMapValue
 mkCustomOtherClaim claimPath defVal =
   -- check if claimPath is provided, if not then use the default value
   -- as the literal value by removing the `Maybe` of defVal

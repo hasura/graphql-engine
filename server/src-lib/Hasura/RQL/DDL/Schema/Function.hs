@@ -130,7 +130,7 @@ mkFunctionInfo qf systemDefined config rawFuncInfo =
       case _fcSessionArgument config of
         Nothing -> pure $ Seq.fromList $ map IAUserProvided functionArgs
         Just sessionArgName -> do
-          unless (any (\arg -> (Just sessionArgName) == faName arg) functionArgs) $
+          unless (any (\arg -> Just sessionArgName == faName arg) functionArgs) $
             throwValidateError $ FunctionInvalidSessionArgument sessionArgName
           fmap Seq.fromList $ forM functionArgs $ \arg ->
             if Just sessionArgName == faName arg then do

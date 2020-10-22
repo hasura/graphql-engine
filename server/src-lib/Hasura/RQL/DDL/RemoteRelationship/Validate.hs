@@ -91,7 +91,7 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
   pgColumnsVariables <- mapM (\(k,v) -> do
                                   variableName <- pgColumnToVariable k
                                   pure $ (variableName,v)
-                              ) $ HM.toList (mapFromL (pgiColumn) pgColumns)
+                              ) $ HM.toList (mapFromL pgiColumn pgColumns)
   let pgColumnsVariablesMap = HM.fromList pgColumnsVariables
   (RemoteSchemaCtx rsName introspectionResult rsi _ _) <-
     onNothing (HM.lookup remoteSchemaName remoteSchemaMap) $
@@ -366,12 +366,12 @@ validateType permittedVariables value expectedGType schemaDocument =
            let expectedNamedType = G.getBaseType expectedGType
            in
            case lookupType schemaDocument expectedNamedType of
-             Nothing -> throwError $ (TypeNotFound expectedNamedType)
+             Nothing -> throwError $ TypeNotFound expectedNamedType
              Just typeInfo ->
                case typeInfo of
                  G.TypeDefinitionInputObject inpObjTypeInfo ->
                    let objectTypeDefnsMap =
-                         mapFromL G._ivdName $ (G._iotdValueDefinitions inpObjTypeInfo)
+                         mapFromL G._ivdName $ G._iotdValueDefinitions inpObjTypeInfo
                    in
                    case HM.lookup name objectTypeDefnsMap of
                      Nothing -> throwError $ NoSuchArgumentForRemote name
@@ -413,7 +413,7 @@ isTypeCoercible actualType expectedType =
 
 assertListType :: (MonadError ValidationError m) => G.GType -> m ()
 assertListType actualType =
-  when (not $ G.isListType actualType)
+  unless (G.isListType actualType)
     (throwError $ InvalidType actualType "is not a list type")
 
 -- | Convert a field info to a named type, if possible.

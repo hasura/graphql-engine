@@ -699,9 +699,9 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       sc <- getSCFromRef $ scCacheRef serverCtx
       dbOk <- liftIO $ _pecCheckHealth $ scPGExecCtx serverCtx
       if dbOk
-        then Spock.setStatus HTTP.status200 >> (Spock.text $ if null (scInconsistentObjs sc)
-                                                 then "OK"
-                                                 else "WARN: inconsistent objects in schema")
+        then Spock.setStatus HTTP.status200 >> Spock.text (if null (scInconsistentObjs sc)
+                                               then "OK"
+                                               else "WARN: inconsistent objects in schema")
         else Spock.setStatus HTTP.status500 >> Spock.text "ERROR"
 
     Spock.get "v1/version" $ do

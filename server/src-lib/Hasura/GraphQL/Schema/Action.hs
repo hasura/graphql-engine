@@ -243,7 +243,7 @@ actionInputArguments nonObjectTypeMap arguments = do
       -> InputFieldsParser n J.Object
     inputFieldsToObject inputFields =
       let mkTuple (name, parser) = fmap (G.unName name,) <$> parser
-      in (Map.fromList . catMaybes) <$> traverse mkTuple inputFields
+      in Map.fromList . catMaybes <$> traverse mkTuple inputFields
 
     argumentParser
       :: G.Name
