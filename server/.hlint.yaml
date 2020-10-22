@@ -79,3 +79,14 @@
 
 # To generate a suitable file for HLint do:
 # $ hlint --default > .hlint.yaml
+
+
+- group:
+    name: hasura-prelude
+    enabled: true
+    imports:
+    - package base
+    rules:
+    - warn: {lhs: "maybe b return a", rhs: "onNothing a b"}
+    - warn: {lhs: "maybe (return ()) b a", rhs: "onJust a b"}
+    - warn: {lhs: "either b return a", rhs: "onLeft a b"}
