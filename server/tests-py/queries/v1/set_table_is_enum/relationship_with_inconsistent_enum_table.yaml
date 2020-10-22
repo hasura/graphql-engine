@@ -17,7 +17,8 @@
           foreign_key_constraint_on: favorite_color
     - type: run_sql
       args:
-        sql: INSERT INTO colors (value, comment) VALUES ('illegal+graphql+identifier', '')
+        sql: INSERT INTO colors (value, comment) VALUES ('illegal+graphql+identifier',
+          '')
 
 - description: Reload metadata
   url: /v1/query
@@ -35,13 +36,14 @@
     - definition:
         schema: public
         name: colors
-      reason: the table "colors" cannot be used as an enum because the value
-        "illegal+graphql+identifier" is not a valid GraphQL enum value name
+      reason: the table "colors" cannot be used as an enum because the value "illegal+graphql+identifier"
+        is not a valid GraphQL enum value name
       type: table
     - definition:
         using:
           foreign_key_constraint_on: favorite_color
         name: favorite_color_object
+        source: default
         comment:
         table:
           schema: public

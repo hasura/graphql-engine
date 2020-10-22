@@ -67,24 +67,23 @@ fetchMeta tables functions = do
   tableMetaInfos <- fetchTableMetadataFromPgSource
   functionMetaInfos <- fetchFunctionMetadataFromPgSource
 
-  let mkFunctionMeta function rawInfo =
-        FunctionMeta (rfiOid rawInfo) function (rfiFunctionType rawInfo)
+  let getFunctionMetas function =
+        let mkFunctionMeta rawInfo =
+              FunctionMeta (rfiOid rawInfo) function (rfiFunctionType rawInfo)
+        in maybe [] (map mkFunctionMeta) $ M.lookup function functionMetaInfos
 
       mkComputedFieldMeta computedField =
-        let function          = _cffName $ _cfiFunction computedField
-            maybeFunctionMeta = M.lookup function functionMetaInfos >>=
-              (fmap (mkFunctionMeta function) . listToMaybe)
-        in ComputedFieldMeta (_cfiName computedField) <$> maybeFunctionMeta
+        let function = _cffName $ _cfiFunction computedField
+        in map (ComputedFieldMeta (_cfiName computedField)) $ getFunctionMetas function
 
       tableMetas = flip map (M.toList tableMetaInfos) $ \(table, tableMetaInfo) ->
                    TableMeta table tableMetaInfo $ fromMaybe [] $
                      M.lookup table tables <&> \tableInfo ->
                      let tableCoreInfo  = _tiCoreInfo tableInfo
                          computedFields = getComputedFieldInfos $ _tciFieldInfoMap tableCoreInfo
-                     in  mapMaybe mkComputedFieldMeta computedFields
+                     in  concatMap mkComputedFieldMeta computedFields
 
-      functionMetas = flip concatMap (M.keys functions) \function ->
-                      maybe [] (map (mkFunctionMeta function)) $ M.lookup function functionMetaInfos
+      functionMetas = concatMap getFunctionMetas $ M.keys functions
 
   pure (tableMetas, functionMetas, functionMetaInfos)
 
@@ -176,7 +175,7 @@ getTableDiff oldtm newtm =
          ccmName l == ccmName r && getFunction l == getFunction r
 
     computedFieldDiff = ComputedFieldDiff droppedComputedFields alteredComputedFields
-                      overloadedComputedFieldFunctions
+                        overloadedComputedFieldFunctions
 
 getTableChangeDeps
   :: (QErrM m, CacheRM m)

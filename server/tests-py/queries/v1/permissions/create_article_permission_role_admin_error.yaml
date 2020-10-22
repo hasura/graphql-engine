@@ -5,6 +5,7 @@ response:
   internal:
   - definition:
       role: admin
+      source: default
       comment:
       permission:
         allow_aggregations: false

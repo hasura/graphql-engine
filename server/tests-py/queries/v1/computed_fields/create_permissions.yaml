@@ -43,6 +43,7 @@
     internal:
     - definition:
         role: user
+        source: default
         comment:
         permission:
           allow_aggregations: false
@@ -80,6 +81,7 @@
     internal:
     - definition:
         role: user
+        source: default
         comment:
         permission:
           allow_aggregations: false
@@ -140,9 +142,9 @@
       name: full_name
   response:
     path: $.args
-    error: 'cannot drop due to the following dependent objects : permission author.user.select'
+    error: 'cannot drop due to the following dependent objects : permission author.user.select
+      in source "default"'
     code: dependency-error
-
 - description: Drop a computed field with cascade
   url: /v1/query
   status: 200
