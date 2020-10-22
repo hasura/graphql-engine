@@ -52,7 +52,7 @@ const OperationEditor = (props: OperationEditorProps) => {
   };
 
   const editorToggle = () => {
-    const allSelected = operationColumns.every;
+    const allSelected = operationColumns.every(({ enabled }) => enabled);
     const newCols = operationColumns.map(oc => {
       return {
         ...oc,
