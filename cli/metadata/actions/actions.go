@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	actionsFileName string = "actions.yaml"
-	graphqlFileName        = "actions.graphql"
+	actionsFileName = "actions.yaml"
+	graphqlFileName = "actions.graphql"
 )
 
 type ActionConfig struct {
