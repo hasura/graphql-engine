@@ -13,8 +13,8 @@ load and modify the Hasura catalog and schema cache.
     representation of the data stored in the catalog. The in-memory representation is not identical
     to the data in the catalog, since it has some post-processing applied to it in order to make it
     easier to consume for other parts of the system, such as GraphQL schema generation. For example,
-    although column information is represented by 'PGRawColumnInfo', the schema cache contains
-    “processed” 'PGColumnInfo' values, instead.
+    although column information is represented by 'RawColumnInfo', the schema cache contains
+    “processed” 'ColumnInfo' values, instead.
 
     Ultimately, the catalog is the source of truth for all information contained in the schema
     cache, but to avoid rebuilding the entire schema cache on every change to the catalog, various

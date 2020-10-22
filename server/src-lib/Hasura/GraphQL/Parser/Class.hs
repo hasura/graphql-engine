@@ -16,6 +16,7 @@ import                          Data.Text.Extended
 import {-# SOURCE #-}           Hasura.GraphQL.Parser.Internal.Parser
 import                          Hasura.RQL.Types.Error
 import                          Hasura.RQL.Types.Table                (TableCache, TableInfo)
+import                          Hasura.SQL.Backend
 import                          Hasura.SQL.Types
 import                          Hasura.Session                        (RoleName)
 
@@ -116,7 +117,7 @@ type MonadTableInfo r m = (MonadReader r m, Has TableCache r, MonadError QErr m)
 askTableInfo
   :: MonadTableInfo r m
   => QualifiedTable
-  -> m TableInfo
+  -> m (TableInfo 'Postgres)
 askTableInfo tableName = do
   tableInfo <- asks $ Map.lookup tableName . getter
   -- This should never fail, since the schema cache construction process is

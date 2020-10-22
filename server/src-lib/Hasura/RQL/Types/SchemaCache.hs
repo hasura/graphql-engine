@@ -149,10 +149,10 @@ import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Table
+import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 import           Hasura.Session
 import           Hasura.Tracing                    (TraceT)
-
 
 
 reportSchemaObjs :: [SchemaObjId] -> T.Text
@@ -228,7 +228,7 @@ incSchemaCacheVer (SchemaCacheVer prev) =
   SchemaCacheVer $ prev + 1
 
 type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions
-type ActionCache = M.HashMap ActionName ActionInfo -- info of all actions
+type ActionCache = M.HashMap ActionName (ActionInfo 'Postgres) -- info of all actions
 
 data SchemaCache
   = SchemaCache
@@ -263,8 +263,8 @@ getAllRemoteSchemas sc =
 -- | A more limited version of 'CacheRM' that is used when building the schema cache, since the
 -- entire schema cache has not been built yet.
 class (Monad m) => TableCoreInfoRM m where
-  lookupTableCoreInfo :: QualifiedTable -> m (Maybe TableCoreInfo)
-  default lookupTableCoreInfo :: (CacheRM m) => QualifiedTable -> m (Maybe TableCoreInfo)
+  lookupTableCoreInfo :: QualifiedTable -> m (Maybe (TableCoreInfo 'Postgres))
+  default lookupTableCoreInfo :: (CacheRM m) => QualifiedTable -> m (Maybe (TableCoreInfo 'Postgres))
   lookupTableCoreInfo tableName = fmap _tiCoreInfo . M.lookup tableName . scTables <$> askSchemaCache
 
 instance (TableCoreInfoRM m) => TableCoreInfoRM (ReaderT r m) where

@@ -37,13 +37,13 @@ import           Hasura.Session
 
 type MutationRemoteJoinCtx = (HTTP.Manager, [N.Header], UserInfo)
 
-data Mutation
+data Mutation (b :: Backend)
   = Mutation
   { _mTable       :: !QualifiedTable
   , _mQuery       :: !(S.CTE, DS.Seq Q.PrepArg)
-  , _mOutput      :: !MutationOutput
-  , _mCols        :: ![PGColumnInfo]
-  , _mRemoteJoins :: !(Maybe (RemoteJoins, MutationRemoteJoinCtx))
+  , _mOutput      :: !(MutationOutput b)
+  , _mCols        :: ![ColumnInfo b]
+  , _mRemoteJoins :: !(Maybe (RemoteJoins b, MutationRemoteJoinCtx))
   , _mStrfyNum    :: !Bool
   }
 
@@ -51,10 +51,10 @@ mkMutation
   :: Maybe MutationRemoteJoinCtx
   -> QualifiedTable
   -> (S.CTE, DS.Seq Q.PrepArg)
-  -> MutationOutput
-  -> [PGColumnInfo]
+  -> MutationOutput 'Postgres
+  -> [ColumnInfo 'Postgres]
   -> Bool
-  -> Mutation
+  -> Mutation 'Postgres
 mkMutation ctx table query output' allCols strfyNum =
   let (output, remoteJoins) = getRemoteJoinsMutationOutput output'
       remoteJoinsCtx = (,) <$> remoteJoins <*> ctx
@@ -68,7 +68,7 @@ runMutation
   , Tracing.MonadTrace m
   )
   => Env.Environment
-  -> Mutation
+  -> Mutation 'Postgres
   -> m EncJSON
 runMutation env mut =
   bool (mutateAndReturn env mut) (mutateAndSel env mut) $
@@ -82,7 +82,7 @@ mutateAndReturn
   , Tracing.MonadTrace m
   )
   => Env.Environment
-  -> Mutation
+  -> Mutation 'Postgres
   -> m EncJSON
 mutateAndReturn env (Mutation qt (cte, p) mutationOutput allCols remoteJoins strfyNum) =
   executeMutationOutputQuery env sqlQuery (toList p) remoteJoins
@@ -112,7 +112,7 @@ mutateAndSel
   , Tracing.MonadTrace m
   )
   => Env.Environment
-  -> Mutation
+  -> Mutation 'Postgres
   -> m EncJSON
 mutateAndSel env (Mutation qt q mutationOutput allCols remoteJoins strfyNum) = do
   -- Perform mutation and fetch unique columns
@@ -132,7 +132,7 @@ executeMutationOutputQuery
   => Env.Environment
   -> Q.Query -- ^ SQL query
   -> [Q.PrepArg] -- ^ Prepared params
-  -> Maybe (RemoteJoins, MutationRemoteJoinCtx)  -- ^ Remote joins context
+  -> Maybe (RemoteJoins 'Postgres, MutationRemoteJoinCtx)  -- ^ Remote joins context
   -> m EncJSON
 executeMutationOutputQuery env query prepArgs = \case
   Nothing ->
@@ -144,7 +144,7 @@ executeMutationOutputQuery env query prepArgs = \case
 
 mutateAndFetchCols
   :: QualifiedTable
-  -> [PGColumnInfo]
+  -> [ColumnInfo 'Postgres]
   -> (S.CTE, DS.Seq Q.PrepArg)
   -> Bool
   -> Q.TxE QErr (MutateResp TxtEncodedPGVal)
@@ -181,7 +181,7 @@ mutateAndFetchCols qt cols (cte, p) strfyNum =
 -- `SELECT ("row"::table).* VALUES (1, 'Robert', 23) AS "row"`.
 mkSelCTEFromColVals
   :: (MonadError QErr m)
-  => QualifiedTable -> [PGColumnInfo] -> [ColumnValues TxtEncodedPGVal] -> m S.CTE
+  => QualifiedTable -> [ColumnInfo 'Postgres] -> [ColumnValues TxtEncodedPGVal] -> m S.CTE
 mkSelCTEFromColVals qt allCols colVals =
   S.CTESelect <$> case colVals of
     [] -> return selNoRows

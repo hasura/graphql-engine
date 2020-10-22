@@ -262,7 +262,7 @@ runUntrackTableQ q = do
   unTrackExistingTableOrViewP1 q
   unTrackExistingTableOrViewP2 q
 
-processTableChanges :: (MonadTx m, CacheRM m) => TableCoreInfo -> TableDiff -> m ()
+processTableChanges :: (MonadTx m, CacheRM m) => TableCoreInfo 'Postgres -> TableDiff 'Postgres -> m ()
 processTableChanges ti tableDiff = do
   -- If table rename occurs then don't replace constraints and
   -- process dropped/added columns, because schema reload happens eventually
@@ -294,8 +294,8 @@ processTableChanges ti tableDiff = do
         liftTx $ updateTableConfig tn $ TableConfig customFields modifiedCustomColumnNames
 
     procAlteredCols sc tn = for_ alteredCols $
-      \( PGRawColumnInfo oldName _ oldType _ _
-       , PGRawColumnInfo newName _ newType _ _ ) -> do
+      \( RawColumnInfo oldName _ oldType _ _
+       , RawColumnInfo newName _ newType _ _ ) -> do
         if | oldName /= newName -> renameColInCatalog oldName newName tn (_tciFieldInfoMap ti)
 
            | oldType /= newType -> do
@@ -348,7 +348,7 @@ delTableAndDirectDeps qtn@(QualifiedObject sn tn) = do
               |] (sn, tn) False
   deleteTableFromCatalog qtn
 
--- | Builds an initial @'TableCache' 'PGColumnInfo'@ from catalog information. Does not fill in
+-- | Builds an initial @'TableCache' 'ColumnInfo'@ from catalog information. Does not fill in
 -- '_tiRolePermInfoMap' or '_tiEventTriggerInfoMap' at all, and '_tiFieldInfoMap' only contains
 -- columns, not relationships; those pieces of information are filled in by later stages.
 buildTableCache
@@ -357,7 +357,7 @@ buildTableCache
      , Inc.ArrowCache m arr, MonadTx m )
   => ( [CatalogTable]
      , Inc.Dependency Inc.InvalidationKey
-     ) `arr` Map.HashMap QualifiedTable TableRawInfo
+     ) `arr` Map.HashMap QualifiedTable (TableRawInfo 'Postgres)
 buildTableCache = Inc.cache proc (catalogTables, reloadMetadataInvalidationKey) -> do
   rawTableInfos <-
     (| Inc.keyed (| withTable (\tables
@@ -385,7 +385,7 @@ buildTableCache = Inc.cache proc (catalogTables, reloadMetadataInvalidationKey) 
       :: ErrorA QErr arr
        ( CatalogTable
        , Inc.Dependency Inc.InvalidationKey
-       ) (TableCoreInfoG PGRawColumnInfo PGCol)
+       ) (TableCoreInfoG (RawColumnInfo 'Postgres) PGCol)
     buildRawTableInfo = Inc.cache proc (catalogTable, reloadMetadataInvalidationKey) -> do
       let CatalogTable name systemDefined isEnum config maybeInfo = catalogTable
       catalogInfo <-
@@ -423,8 +423,8 @@ buildTableCache = Inc.cache proc (catalogTables, reloadMetadataInvalidationKey) 
     processTableInfo
       :: ErrorA QErr arr
        ( Map.HashMap QualifiedTable (PrimaryKey PGCol, EnumValues)
-       , TableCoreInfoG PGRawColumnInfo PGCol
-       ) TableRawInfo
+       , TableCoreInfoG (RawColumnInfo 'Postgres) PGCol
+       ) (TableRawInfo 'Postgres)
     processTableInfo = proc (enumTables, rawInfo) -> liftEitherA -< do
       let columns = _tciFieldInfoMap rawInfo
           enumReferences = resolveEnumReferences enumTables (_tciForeignKeys rawInfo)
@@ -447,9 +447,9 @@ buildTableCache = Inc.cache proc (catalogTables, reloadMetadataInvalidationKey) 
 
     alignCustomColumnNames
       :: (QErrM n)
-      => FieldInfoMap PGRawColumnInfo
+      => FieldInfoMap (RawColumnInfo 'Postgres)
       -> CustomColumnNames
-      -> n (FieldInfoMap (PGRawColumnInfo, G.Name))
+      -> n (FieldInfoMap (RawColumnInfo 'Postgres, G.Name))
     alignCustomColumnNames columns customNames = do
       let customNamesByFieldName = Map.fromList $ map (first fromPGCol) $ Map.toList customNames
       flip Map.traverseWithKey (align columns customNamesByFieldName) \columnName -> \case
@@ -458,17 +458,17 @@ buildTableCache = Inc.cache proc (catalogTables, reloadMetadataInvalidationKey) 
         That customName -> throw400 NotExists $ "the custom field name " <> customName
           <<> " was given for the column " <> columnName <<> ", but no such column exists"
 
-    -- | “Processes” a 'PGRawColumnInfo' into a 'PGColumnInfo' by resolving its type using a map of
+    -- | “Processes” a 'RawColumnInfo' into a 'ColumnInfo' by resolving its type using a map of
     -- known enum tables.
     processColumnInfo
       :: (QErrM n)
       => Map.HashMap PGCol (NonEmpty EnumReference)
       -> QualifiedTable -- ^ the table this column belongs to
-      -> (PGRawColumnInfo, G.Name)
-      -> n PGColumnInfo
+      -> (RawColumnInfo 'Postgres, G.Name)
+      -> n (ColumnInfo 'Postgres)
     processColumnInfo tableEnumReferences tableName (rawInfo, name) = do
       resolvedType <- resolveColumnType
-      pure PGColumnInfo
+      pure ColumnInfo
         { pgiColumn = pgCol
         , pgiName = name
         , pgiPosition = prciPosition rawInfo

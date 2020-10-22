@@ -31,13 +31,13 @@ import           Hasura.SQL.Types
 addNonColumnFields
   :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
      , ArrowKleisli m arr, MonadError QErr m )
-  => ( HashMap QualifiedTable TableRawInfo
-     , FieldInfoMap PGColumnInfo
+  => ( HashMap QualifiedTable (TableRawInfo 'Postgres)
+     , FieldInfoMap (ColumnInfo 'Postgres)
      , RemoteSchemaMap
      , [CatalogRelation]
      , [CatalogComputedField]
      , [RemoteRelationship]
-     ) `arr` FieldInfoMap FieldInfo
+     ) `arr` FieldInfoMap (FieldInfo 'Postgres)
 addNonColumnFields = proc (rawTableInfo, columns, remoteSchemaMap, relationships, computedFields, remoteRelationships) -> do
   relationshipInfos
     <- buildInfoMapPreservingMetadata _crRelName mkRelationshipMetadataObject buildRelationship
@@ -144,7 +144,7 @@ mkComputedFieldMetadataObject (CatalogComputedField column _) =
 buildComputedField
   :: ( ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr
      , ArrowKleisli m arr, MonadError QErr m )
-  => (HashSet QualifiedTable, CatalogComputedField) `arr` Maybe ComputedFieldInfo
+  => (HashSet QualifiedTable, CatalogComputedField) `arr` Maybe (ComputedFieldInfo 'Postgres)
 buildComputedField = proc (trackedTableNames, computedField) -> do
   let CatalogComputedField column funcDefs = computedField
       AddComputedField qt name def comment = column
@@ -164,7 +164,7 @@ mkRemoteRelationshipMetadataObject rr =
 buildRemoteRelationship
   :: ( ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr
      , ArrowKleisli m arr, MonadError QErr m )
-  => (([PGColumnInfo], RemoteSchemaMap), RemoteRelationship) `arr` Maybe RemoteFieldInfo
+  => (([ColumnInfo 'Postgres], RemoteSchemaMap), RemoteRelationship) `arr` Maybe (RemoteFieldInfo 'Postgres)
 buildRemoteRelationship = proc ((pgColumns, remoteSchemaMap), remoteRelationship) -> do
   let relationshipName = rtrName remoteRelationship
       tableName = rtrTable remoteRelationship

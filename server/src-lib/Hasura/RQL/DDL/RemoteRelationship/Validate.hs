@@ -36,13 +36,12 @@ data ValidationError
   | TableFieldNonexistent !QualifiedTable !FieldName
   | ExpectedTypeButGot !G.GType !G.GType
   | InvalidType !G.GType !T.Text
-  | InvalidVariable !G.Name !(HM.HashMap G.Name PGColumnInfo)
+  | InvalidVariable !G.Name !(HM.HashMap G.Name (ColumnInfo 'Postgres))
   | NullNotAllowedHere
   | InvalidGTypeForStripping !G.GType
   | UnsupportedMultipleElementLists
   | UnsupportedEnum
   | InvalidGraphQLName !T.Text
-  deriving (Show, Eq)
 
 errorToText :: ValidationError -> Text
 errorToText = \case
@@ -84,8 +83,8 @@ validateRemoteRelationship
   :: (MonadError ValidationError m)
   => RemoteRelationship
   -> RemoteSchemaMap
-  -> [PGColumnInfo]
-  -> m RemoteFieldInfo
+  -> [ColumnInfo 'Postgres]
+  -> m (RemoteFieldInfo 'Postgres)
 validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
   let remoteSchemaName = rtrRemoteSchema remoteRelationship
       table = rtrTable remoteRelationship
@@ -304,7 +303,7 @@ validateRemoteArguments
   :: (MonadError ValidationError m)
   => HM.HashMap G.Name G.InputValueDefinition
   -> HM.HashMap G.Name (G.Value G.Name)
-  -> HM.HashMap G.Name PGColumnInfo
+  -> HM.HashMap G.Name (ColumnInfo 'Postgres)
   -> G.SchemaIntrospection
   -> m ()
 validateRemoteArguments expectedArguments providedArguments permittedVariables schemaDocument = do
@@ -326,7 +325,7 @@ unwrapGraphQLType = \case
 -- | Validate a value against a type.
 validateType
   :: (MonadError ValidationError m)
-  => HM.HashMap G.Name PGColumnInfo
+  => HM.HashMap G.Name (ColumnInfo 'Postgres)
   -> G.Value G.Name
   -> G.GType
   -> G.SchemaIntrospection
@@ -425,7 +424,7 @@ assertListType actualType =
 -- | Convert a field info to a named type, if possible.
 columnInfoToNamedType
   :: (MonadError ValidationError m)
-  => PGColumnInfo
+  => ColumnInfo 'Postgres
   -> m G.Name
 columnInfoToNamedType pci =
   case pgiType pci of

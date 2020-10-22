@@ -69,7 +69,7 @@ import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.CustomTypes
-import           Hasura.SQL.Types
+import           Hasura.SQL.Backend
 import           Hasura.Session
 
 
@@ -180,19 +180,20 @@ type ActionPermissionMap = Map.HashMap RoleName ActionPermissionInfo
 
 type ActionOutputFields = Map.HashMap G.Name G.GType
 
-getActionOutputFields :: AnnotatedObjectType -> ActionOutputFields
+getActionOutputFields :: AnnotatedObjectType backend -> ActionOutputFields
 getActionOutputFields =
   Map.fromList . map ( (unObjectFieldName . _ofdName) &&& (fst . _ofdType)) . toList . _otdFields
 
-data ActionInfo
+data ActionInfo (b :: Backend)
   = ActionInfo
   { _aiName         :: !ActionName
-  , _aiOutputObject :: !AnnotatedObjectType
+  , _aiOutputObject :: !(AnnotatedObjectType b)
   , _aiDefinition   :: !ResolvedActionDefinition
   , _aiPermissions  :: !ActionPermissionMap
   , _aiComment      :: !(Maybe Text)
-  } deriving (Show, Eq)
-$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ActionInfo)
+  } deriving (Generic)
+instance J.ToJSON (ActionInfo 'Postgres) where
+  toJSON = J.genericToJSON $ J.aesonDrop 3 J.snakeCase
 $(makeLenses ''ActionInfo)
 
 type ActionDefinitionInput =
@@ -260,21 +261,21 @@ instance J.FromJSON ActionMetadata where
 
 ----------------- Resolve Types ----------------
 
-data AnnActionExecution v
+data AnnActionExecution (b :: Backend) v
   = AnnActionExecution
   { _aaeName                 :: !ActionName
   , _aaeOutputType           :: !GraphQLType -- ^ output type
-  , _aaeFields               :: !(AnnFieldsG v) -- ^ output selection
+  , _aaeFields               :: !(AnnFieldsG b v) -- ^ output selection
   , _aaePayload              :: !J.Value -- ^ jsonified input arguments
   , _aaeOutputFields         :: !ActionOutputFields
   -- ^ to validate the response fields from webhook
-  , _aaeDefinitionList       :: ![(PGCol, PGScalarType)]
+  , _aaeDefinitionList       :: ![(Column b, ScalarType b)]
   , _aaeWebhook              :: !ResolvedWebhook
   , _aaeHeaders              :: ![HeaderConf]
   , _aaeForwardClientHeaders :: !Bool
   , _aaeStrfyNum             :: !Bool
   , _aaeTimeOut              :: !Timeout
-  } deriving (Show, Eq)
+  }
 
 data AnnActionMutationAsync
   = AnnActionMutationAsync
@@ -282,25 +283,24 @@ data AnnActionMutationAsync
   , _aamaPayload :: !J.Value -- ^ jsonified input arguments
   } deriving (Show, Eq)
 
-data AsyncActionQueryFieldG v
+data AsyncActionQueryFieldG (b :: Backend) v
   = AsyncTypename !Text
-  | AsyncOutput !(AnnFieldsG v)
+  | AsyncOutput !(AnnFieldsG b v)
   | AsyncId
   | AsyncCreatedAt
   | AsyncErrors
-  deriving (Show, Eq)
 
-type AsyncActionQueryFieldsG v = Fields (AsyncActionQueryFieldG v)
+type AsyncActionQueryFieldsG b v = Fields (AsyncActionQueryFieldG b v)
 
-data AnnActionAsyncQuery v
+data AnnActionAsyncQuery (b :: Backend) v
   = AnnActionAsyncQuery
   { _aaaqName           :: !ActionName
   , _aaaqActionId       :: !v
   , _aaaqOutputType     :: !GraphQLType
-  , _aaaqFields         :: !(AsyncActionQueryFieldsG v)
-  , _aaaqDefinitionList :: ![(PGCol, PGScalarType)]
+  , _aaaqFields         :: !(AsyncActionQueryFieldsG b v)
+  , _aaaqDefinitionList :: ![(Column b, ScalarType b)]
   , _aaaqStringifyNum   :: !Bool
-  } deriving (Show, Eq)
+  }
 
 data ActionExecContext
   = ActionExecContext

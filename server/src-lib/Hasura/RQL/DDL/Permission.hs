@@ -104,9 +104,9 @@ type CreateInsPerm = CreatePerm InsPerm
 procSetObj
   :: (QErrM m)
   => QualifiedTable
-  -> FieldInfoMap FieldInfo
+  -> FieldInfoMap (FieldInfo 'Postgres)
   -> Maybe (ColumnValues Value)
-  -> m (PreSetColsPartial, [Text], [SchemaDependency])
+  -> m (PreSetColsPartial 'Postgres, [Text], [SchemaDependency])
 procSetObj tn fieldInfoMap mObj = do
   (setColTups, deps) <- withPathK "set" $
     fmap unzip $ forM (HM.toList setObj) $ \(pgCol, val) -> do
@@ -126,9 +126,9 @@ procSetObj tn fieldInfoMap mObj = do
 buildInsPermInfo
   :: (QErrM m, TableCoreInfoRM m)
   => QualifiedTable
-  -> FieldInfoMap FieldInfo
+  -> FieldInfoMap (FieldInfo 'Postgres)
   -> PermDef InsPerm
-  -> m (WithDeps InsPermInfo)
+  -> m (WithDeps (InsPermInfo 'Postgres))
 buildInsPermInfo tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCols mBackendOnly) _) =
   withPathK "permission" $ do
     (be, beDeps) <- withPathK "check" $ procBoolExp tn fieldInfoMap checkCond
@@ -146,7 +146,10 @@ buildInsPermInfo tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCols mBack
     allCols = map pgiColumn $ getCols fieldInfoMap
     insCols = fromMaybe allCols $ convColSpec fieldInfoMap <$> mCols
 
-type instance PermInfo InsPerm = InsPermInfo
+-- TODO this is a dirty hack, hardcoding permissions to postgres.  When
+-- implementing support for other backends, the type family 'PermInfo' probably
+-- needs to be refactored.
+type instance PermInfo InsPerm = InsPermInfo 'Postgres
 
 instance IsPerm InsPerm where
 
@@ -178,9 +181,9 @@ instance FromJSON SelPerm where
 buildSelPermInfo
   :: (QErrM m, TableCoreInfoRM m)
   => QualifiedTable
-  -> FieldInfoMap FieldInfo
+  -> FieldInfoMap (FieldInfo 'Postgres)
   -> SelPerm
-  -> m (WithDeps SelPermInfo)
+  -> m (WithDeps (SelPermInfo 'Postgres))
 buildSelPermInfo tn fieldInfoMap sp = withPathK "permission" $ do
   let pgCols     = convColSpec fieldInfoMap $ spColumns sp
 
@@ -221,7 +224,8 @@ buildSelPermInfo tn fieldInfoMap sp = withPathK "permission" $ do
 type SelPermDef = PermDef SelPerm
 type CreateSelPerm = CreatePerm SelPerm
 
-type instance PermInfo SelPerm = SelPermInfo
+-- TODO see TODO for PermInfo above.
+type instance PermInfo SelPerm = SelPermInfo 'Postgres
 
 instance IsPerm SelPerm where
 
@@ -252,9 +256,9 @@ type CreateUpdPerm = CreatePerm UpdPerm
 buildUpdPermInfo
   :: (QErrM m, TableCoreInfoRM m)
   => QualifiedTable
-  -> FieldInfoMap FieldInfo
+  -> FieldInfoMap (FieldInfo 'Postgres)
   -> UpdPerm
-  -> m (WithDeps UpdPermInfo)
+  -> m (WithDeps (UpdPermInfo 'Postgres))
 buildUpdPermInfo tn fieldInfoMap (UpdPerm colSpec set fltr check) = do
   (be, beDeps) <- withPathK "filter" $
     procBoolExp tn fieldInfoMap fltr
@@ -279,7 +283,8 @@ buildUpdPermInfo tn fieldInfoMap (UpdPerm colSpec set fltr check) = do
     updCols     = convColSpec fieldInfoMap colSpec
     relInUpdErr = "relationships can't be used in update"
 
-type instance PermInfo UpdPerm = UpdPermInfo
+-- TODO see TODO for PermInfo above
+type instance PermInfo UpdPerm = UpdPermInfo 'Postgres
 
 instance IsPerm UpdPerm where
 
@@ -301,9 +306,9 @@ type CreateDelPerm = CreatePerm DelPerm
 buildDelPermInfo
   :: (QErrM m, TableCoreInfoRM m)
   => QualifiedTable
-  -> FieldInfoMap FieldInfo
+  -> FieldInfoMap (FieldInfo 'Postgres)
   -> DelPerm
-  -> m (WithDeps DelPermInfo)
+  -> m (WithDeps (DelPermInfo 'Postgres))
 buildDelPermInfo tn fieldInfoMap (DelPerm fltr) = do
   (be, beDeps) <- withPathK "filter" $
     procBoolExp tn fieldInfoMap  fltr
@@ -311,7 +316,8 @@ buildDelPermInfo tn fieldInfoMap (DelPerm fltr) = do
       depHeaders = getDependentHeaders fltr
   return (DelPermInfo tn be depHeaders, deps)
 
-type instance PermInfo DelPerm = DelPermInfo
+-- TODO see TODO for PermInfo above
+type instance PermInfo DelPerm = DelPermInfo 'Postgres
 
 instance IsPerm DelPerm where
 

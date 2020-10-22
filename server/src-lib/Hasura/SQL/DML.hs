@@ -8,9 +8,9 @@ import qualified Data.Text                  as T
 import qualified Text.Builder               as TB
 
 import           Data.String                (fromString)
+import           Data.Text.Extended
 import           Language.Haskell.TH.Syntax (Lift)
 
-import           Data.Text.Extended
 import           Hasura.Incremental         (Cacheable)
 import           Hasura.SQL.Types
 

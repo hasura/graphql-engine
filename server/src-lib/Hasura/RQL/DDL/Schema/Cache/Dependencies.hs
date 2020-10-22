@@ -116,7 +116,7 @@ pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
     resolveTable tableName = M.lookup tableName (_boTables cache) `onNothing`
       Left ("table " <> tableName <<> " is not tracked")
 
-    resolveField :: TableInfo -> FieldName -> Getting (First a) FieldInfo a -> Text -> Either Text a
+    resolveField :: TableInfo 'Postgres -> FieldName -> Getting (First a) (FieldInfo 'Postgres) a -> Text -> Either Text a
     resolveField tableInfo fieldName fieldType fieldTypeName = do
       let coreInfo = _tiCoreInfo tableInfo
           tableName = _tciName coreInfo
