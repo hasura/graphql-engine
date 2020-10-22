@@ -20,7 +20,7 @@ If you have a lot of migrations and you need to squash them or your current migr
 Step 1: Delete the local migrations
 -----------------------------------
 
-In the local migrations directory, delete all its contents using the following command:
+In the local ``migrations`` directory, delete all its contents using the following command:
 
 .. code-block:: bash
 
@@ -55,13 +55,13 @@ We will set up fresh migrations by pulling the schema and metadata from the serv
 
 .. note::
 
-   If you are using schemas other than public, use --schema "schema_name" flag to indicate each one of them in the create command. This flag can be used multiple times.
+   If you are using schemas other than ``public``, use ``--schema`` <schema_name> flag to indicate each one of them in the create command. This flag can be used multiple times.
 
 
 Step 4: Verify the status of the migrations
 -------------------------------------------
 
-Run the following command to verify status of migration:
+Run the following command to verify the migration status:
 
 .. code-block:: bash
 
