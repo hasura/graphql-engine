@@ -527,7 +527,7 @@ mkCustomDefaultRoleClaim claimPath defVal =
   -- as the literal value by removing the `Maybe` of defVal
   case claimPath of
     Just path -> JWTCustomClaimsMapJSONPath (mkJSONPathE path) $ defRoleName
-    Nothing -> JWTCustomClaimsMapStatic $ maybe (mkRoleNameE "user") id defRoleName
+    Nothing -> JWTCustomClaimsMapStatic $ fromMaybe (mkRoleNameE "user") defRoleName
   where
     defRoleName = mkRoleNameE <$> defVal
 
@@ -539,7 +539,7 @@ mkCustomAllowedRoleClaim claimPath defVal =
     Just path -> JWTCustomClaimsMapJSONPath (mkJSONPathE path) $ defAllowedRoles
     Nothing ->
       JWTCustomClaimsMapStatic $
-        maybe (mkRoleNameE <$> ["user", "editor"]) id defAllowedRoles
+        fromMaybe (mkRoleNameE <$> ["user", "editor"]) defAllowedRoles
   where
     defAllowedRoles = fmap mkRoleNameE <$> defVal
 
@@ -550,7 +550,7 @@ mkCustomOtherClaim claimPath defVal =
   -- as the literal value by removing the `Maybe` of defVal
   case claimPath of
     Just path -> JWTCustomClaimsMapJSONPath (mkJSONPathE path) $ defVal
-    Nothing -> JWTCustomClaimsMapStatic $ maybe "default claim value" id defVal
+    Nothing -> JWTCustomClaimsMapStatic $ fromMaybe "default claim value" defVal
 
 fakeJWTConfig :: JWTConfig
 fakeJWTConfig =

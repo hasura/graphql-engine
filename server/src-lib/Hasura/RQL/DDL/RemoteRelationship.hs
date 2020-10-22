@@ -50,11 +50,8 @@ resolveRemoteRelationship remoteRelationship
         let tableDep = SchemaDependency (SOTable table) DRTable
             columnsDep =
               map
-                (\column ->
-                   SchemaDependency
-                     (SOTableObj table $ TOCol column)
-                     DRRemoteRelationship ) $
-              map pgiColumn $ HS.toList $ _rfiHasuraFields remoteField
+                (flip SchemaDependency DRRemoteRelationship . SOTableObj table . TOCol . pgiColumn)
+                $ HS.toList $ _rfiHasuraFields remoteField
             remoteSchemaDep =
               SchemaDependency (SORemoteSchema $ rtrRemoteSchema remoteRelationship) DRRemoteSchema
          in (tableDep : remoteSchemaDep : columnsDep)
