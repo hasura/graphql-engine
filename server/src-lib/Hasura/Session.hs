@@ -75,6 +75,9 @@ instance ToJSON SessionVariable where
 instance ToJSONKey SessionVariable where
   toJSONKey = toJSONKeyText sessionVariableToText
 
+instance DQuote SessionVariable where
+  dquoteTxt = sessionVariableToText
+
 parseSessionVariable :: Text -> Parser SessionVariable
 parseSessionVariable t =
   if isSessionVariable t then pure $ mkSessionVariable t

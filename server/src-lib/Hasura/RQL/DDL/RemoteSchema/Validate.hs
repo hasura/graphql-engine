@@ -17,6 +17,9 @@ import qualified Data.List.NonEmpty                    as NE
 import qualified Data.Text                             as T
 import qualified Hasura.GraphQL.Parser                 as P
 
+import           Hasura.Session
+import           Debug.Pretty.Simple
+
 data FieldDefinitionType
   = ObjectField
   | InterfaceField
@@ -224,7 +227,7 @@ parsePresetDirective
   => G.GType
   -> G.Name
   -> G.Directive Void
-  -> m (G.Value P.Variable)
+  -> m (G.Value RemoteSchemaVariable)
 parsePresetDirective gType parentArgName (G.Directive name args) = do
   case (Map.toList args) of
     [] -> refute $ pure $ NoPresetArgumentFound
@@ -236,7 +239,7 @@ parsePresetDirective gType parentArgName (G.Directive name args) = do
       mkPresetArgument' gType parentArgName argVal
     _ -> refute $ pure $ MultipleArgumentsInPresetFound
   where
-    mkPresetArgument' :: G.GType -> G.Name -> G.Value Void -> m (G.Value P.Variable)
+    mkPresetArgument' :: G.GType -> G.Name -> G.Value Void -> m (G.Value RemoteSchemaVariable)
     mkPresetArgument' gType' varName val =
       let isListType' = G.isListType gType'
       in
@@ -245,10 +248,8 @@ parsePresetDirective gType parentArgName (G.Directive name args) = do
           when isListType' $ do
             refute $ pure $ ExpectedNameTypeButGotListType
           case isSessionVariable t of
-            -- FIXME: obviously, this is wrong but it's in the same vain of the ideal
-            -- answer, this function should be returning something like (G.Value RemoteSchemaVariable)
-            -- `data RemoteSchemaVariable = RemoteSchemaVariable !SessionVariable !G.GType !Variable`
-            True  -> pure $ G.VVariable (P.Variable (P.VIRequired varName) gType' (P.GraphQLValue s))
+            True  ->
+              pure $ G.VVariable $ SessionPresetVariable (mkSessionVariable t) gType' varName
             False -> pure $ G.literal s
         G.VObject obj -> do
           when isListType' $ do

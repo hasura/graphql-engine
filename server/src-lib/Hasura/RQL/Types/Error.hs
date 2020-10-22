@@ -96,6 +96,7 @@ data Code
   | RemoteSchemaError
   | RemoteSchemaConflicts
   | InvalidRoleBasedRemoteSchema
+  | CoercionError
   -- Websocket/Subscription errors
   | StartFailed
   | InvalidCustomTypes
@@ -141,6 +142,7 @@ instance Show Code where
     RemoteSchemaError            -> "remote-schema-error"
     RemoteSchemaConflicts        -> "remote-schema-conflicts"
     InvalidRoleBasedRemoteSchema -> "invalid-role-based-remote-schema"
+    CoercionError                -> "coercion-error"
     StartFailed                  -> "start-failed"
     InvalidCustomTypes           -> "invalid-custom-types"
     ActionWebhookCode t          -> T.unpack t

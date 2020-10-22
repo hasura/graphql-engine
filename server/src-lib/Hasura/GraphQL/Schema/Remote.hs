@@ -56,19 +56,19 @@ remoteField'
   . (MonadSchema n m, MonadError QErr m)
   => RemoteSchemaIntrospection
   -> RemoteSchemaFieldDefinition
-  -> m (FieldParser n (Field NoFragments Variable))
+  -> m (FieldParser n (Field NoFragments RemoteSchemaVariable))
 remoteField' schemaDoc (G.FieldDefinition description name argsDefinition gType _) =
   let
-    addNullableList :: FieldParser n (Field NoFragments Variable) -> FieldParser n (Field NoFragments Variable)
+    addNullableList :: FieldParser n (Field NoFragments RemoteSchemaVariable) -> FieldParser n (Field NoFragments RemoteSchemaVariable)
     addNullableList (P.FieldParser (Definition name' un desc (FieldInfo args typ)) parser)
       = P.FieldParser (Definition name' un desc (FieldInfo args (Nullable (TList typ)))) parser
 
-    addNonNullableList :: FieldParser n (Field NoFragments Variable) -> FieldParser n (Field NoFragments Variable)
+    addNonNullableList :: FieldParser n (Field NoFragments RemoteSchemaVariable) -> FieldParser n (Field NoFragments RemoteSchemaVariable)
     addNonNullableList (P.FieldParser (Definition name' un desc (FieldInfo args typ)) parser)
       = P.FieldParser (Definition name' un desc (FieldInfo args (NonNullable (TList typ)))) parser
 
     -- TODO add directives, deprecation
-    convertType :: G.GType -> m (FieldParser n (Field NoFragments Variable))
+    convertType :: G.GType -> m (FieldParser n (Field NoFragments RemoteSchemaVariable))
     convertType gType' = do
         case gType' of
           G.TypeNamed (Nullability True) fieldTypeName ->
@@ -87,7 +87,7 @@ remoteSchemaObject
   . (MonadSchema n m, MonadError QErr m)
   => RemoteSchemaIntrospection
   -> G.ObjectTypeDefinition RemoteSchemaInputValueDefinition
-  -> m (Parser 'Output n [Field NoFragments Variable])
+  -> m (Parser 'Output n [Field NoFragments RemoteSchemaVariable])
 remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name interfaces _directives subFields) =
   P.memoizeOn 'remoteSchemaObject defn do
   subFieldParsers <- traverse (remoteField' schemaDoc) subFields
@@ -188,7 +188,7 @@ getObjectParser
   => RemoteSchemaIntrospection
   -> (G.Name -> m RemoteSchemaObjectDefinition)
   -> G.Name
-  -> m (Parser 'Output n (Name, [Field NoFragments Variable]))
+  -> m (Parser 'Output n (Name, [Field NoFragments RemoteSchemaVariable]))
 getObjectParser schemaDoc getObject objName = do
   obj <- remoteSchemaObject schemaDoc =<< getObject objName
   return $ (objName,) <$> obj
@@ -249,7 +249,7 @@ remoteSchemaInterface
   . (MonadSchema n m, MonadError QErr m)
   => RemoteSchemaIntrospection
   -> RemoteSchemaInterfaceDefinition
-  -> m (Parser 'Output n (G.SelectionSet NoFragments Variable))
+  -> m (Parser 'Output n (G.SelectionSet NoFragments RemoteSchemaVariable))
 remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name _directives fields possibleTypes) =
   P.memoizeOn 'remoteSchemaObject defn do
   subFieldParsers <- traverse (remoteField' schemaDoc) fields
@@ -276,8 +276,8 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
 
     -- 'constructInterfaceQuery' constructs a remote interface query.
     constructInterfaceSelectionSet
-      :: [(G.Name, [Field NoFragments Variable])]
-      -> SelectionSet NoFragments Variable
+      :: [(G.Name, [Field NoFragments RemoteSchemaVariable])]
+      -> SelectionSet NoFragments RemoteSchemaVariable
     constructInterfaceSelectionSet objNameAndFields =
       let -- common interface fields that exist in every
           -- selection set provided
@@ -315,7 +315,7 @@ remoteSchemaUnion
   . (MonadSchema n m, MonadError QErr m)
   => RemoteSchemaIntrospection
   -> G.UnionTypeDefinition
-  -> m (Parser 'Output n (SelectionSet NoFragments Variable))
+  -> m (Parser 'Output n (SelectionSet NoFragments RemoteSchemaVariable))
 remoteSchemaUnion schemaDoc defn@(G.UnionTypeDefinition description name _directives objectNames) =
   P.memoizeOn 'remoteSchemaObject defn do
   objs <- traverse (getObjectParser schemaDoc getObject) objectNames
@@ -354,7 +354,7 @@ remoteSchemaInputObject
   .  (MonadSchema n m, MonadError QErr m)
   => RemoteSchemaIntrospection
   -> G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition
-  -> m (Parser 'Input n (Maybe (HashMap G.Name (Value Variable))))
+  -> m (Parser 'Input n (Maybe (HashMap G.Name (Value RemoteSchemaVariable))))
 remoteSchemaInputObject schemaDoc defn@(G.InputObjectTypeDefinition desc name _ valueDefns) =
   P.memoizeOn 'remoteSchemaInputObject defn do
   argsParser <- argumentsParser valueDefns schemaDoc
@@ -416,7 +416,7 @@ remoteFieldFromName
   -> Maybe G.Description
   -> G.Name
   -> G.ArgumentsDefinition RemoteSchemaInputValueDefinition
-  -> m (FieldParser n (Field NoFragments Variable))
+  -> m (FieldParser n (Field NoFragments RemoteSchemaVariable))
 remoteFieldFromName sdoc fieldName description fieldTypeName argsDefns =
   case lookupType sdoc fieldTypeName of
     Nothing -> throw400 RemoteSchemaError $ "Could not find type with name " <>> fieldName
@@ -430,12 +430,12 @@ inputValueDefinitionParser
    . (MonadSchema n m, MonadError QErr m)
   => RemoteSchemaIntrospection
   -> G.InputValueDefinition
-  -> m (InputFieldsParser n ((Maybe (InputValue Variable)),(Maybe (HashMap G.Name (Value Variable)))))
+  -> m (InputFieldsParser n ((Maybe (InputValue Variable)),(Maybe (HashMap G.Name (Value RemoteSchemaVariable)))))
 inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType maybeDefaultVal _directives) =
   let fieldConstructor
         :: forall k. 'Input <: k
         => Parser k n ()
-        -> InputFieldsParser n ((Maybe (InputValue Variable)),(Maybe (HashMap G.Name (Value Variable))))
+        -> InputFieldsParser n ((Maybe (InputValue Variable)),(Maybe (HashMap G.Name (Value RemoteSchemaVariable))))
       fieldConstructor parser =
         let wrappedParser :: Parser k n (InputValue Variable)
             wrappedParser =
@@ -456,10 +456,10 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
 
       fieldConstructor''
         :: forall k. 'Input <: k
-        => Parser k n (Maybe (HashMap G.Name (Value Variable)))
-        -> InputFieldsParser n ((Maybe (InputValue Variable)), Maybe (HashMap G.Name (Value Variable)))
+        => Parser k n (Maybe (HashMap G.Name (Value RemoteSchemaVariable)))
+        -> InputFieldsParser n ((Maybe (InputValue Variable)), Maybe (HashMap G.Name (Value RemoteSchemaVariable)))
       fieldConstructor'' parser =
-        let wrappedParser :: Parser k n (InputValue Variable, Maybe (HashMap G.Name (Value Variable)))
+        let wrappedParser :: Parser k n (InputValue Variable, Maybe (HashMap G.Name (Value RemoteSchemaVariable)))
             wrappedParser =
               P.Parser
                 { P.pType   = P.pType parser
@@ -475,16 +475,18 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
             else Just <$> field name desc wrappedParser <&> f
           Just defaultVal -> Just <$> fieldWithDefault name desc defaultVal wrappedParser <&> f
         where
-          f :: Maybe (InputValue Variable, (Maybe (HashMap G.Name (G.Value Variable))))
-            -> (Maybe (InputValue Variable), Maybe (HashMap G.Name (G.Value Variable)))
+          f :: Maybe (InputValue Variable, (Maybe (HashMap G.Name (G.Value RemoteSchemaVariable))))
+            -> (Maybe (InputValue Variable), Maybe (HashMap G.Name (G.Value RemoteSchemaVariable)))
           f Nothing =  (Nothing, Nothing)
           f (Just (inpValue, presetVal)) = (Just inpValue, (Map.singleton name . G.VObject) <$> presetVal)
 
 
       buildField
         :: G.GType
-        -> (forall k. 'Input <: k => Parser k n () -> InputFieldsParser n ((Maybe (InputValue Variable)), (Maybe (HashMap G.Name (G.Value Variable)))))
-        -> m (InputFieldsParser n ((Maybe (InputValue Variable)), (Maybe (HashMap G.Name (G.Value Variable)))))
+        -> (forall k. 'Input <: k
+               => Parser k n ()
+               -> InputFieldsParser n ((Maybe (InputValue Variable)), (Maybe (HashMap G.Name (G.Value RemoteSchemaVariable)))))
+        -> m (InputFieldsParser n ((Maybe (InputValue Variable)), (Maybe (HashMap G.Name (G.Value RemoteSchemaVariable)))))
       buildField fieldType' fieldConstructor' = case fieldType' of
        G.TypeNamed nullability typeName ->
          case lookupType schemaDoc typeName of
@@ -509,18 +511,18 @@ argumentsParser
   .  (MonadSchema n m, MonadError QErr m)
   => G.ArgumentsDefinition RemoteSchemaInputValueDefinition
   -> RemoteSchemaIntrospection
-  -> m (InputFieldsParser n (Maybe (HashMap G.Name (Value Variable))))
+  -> m (InputFieldsParser n (Maybe (HashMap G.Name (Value RemoteSchemaVariable))))
 argumentsParser args schemaDoc = do
   nonPresetArgsParser <- sequenceA <$> for nonPresetArgs (inputValueDefinitionParser schemaDoc)
   let argsP' = (fmap . fmap) snd nonPresetArgsParser
-      argsP1 = fmap (\t -> presetArgsMap <> (Map.unions <$> (sequenceA $ (filter isJust t)))) argsP'
-  pure $ argsP1
+      argsP'' = mkPresetsMap <$> argsP'
+  pure argsP''
   where
     nonPresetArgs =
       map _rsitdDefn $
       filter (isNothing . _rsitdPresetArg) args
 
-    presetArgsMap :: Maybe (HashMap G.Name (Value Variable))
+    presetArgsMap :: Maybe (HashMap G.Name (Value RemoteSchemaVariable))
     presetArgsMap =
       let presetArgs' =
             flip mapMaybe args $ \(RemoteSchemaInputValueDefinition inpValDefn preset) ->
@@ -530,6 +532,12 @@ argumentsParser args schemaDoc = do
            [] -> Nothing
            _  -> Just $ Map.fromList presetArgs'
 
+    mkPresetsMap
+      :: [(Maybe (HashMap G.Name (Value RemoteSchemaVariable)))]
+      -> Maybe (HashMap G.Name (Value RemoteSchemaVariable))
+    mkPresetsMap previousPresets =
+      let previousPreset = Map.unions <$> (sequenceA $ (filter isJust previousPresets))
+      in presetArgsMap <> previousPreset
 
 -- | 'remoteField' accepts a 'G.TypeDefinition' and will returns a 'FieldParser' for it.
 --   Note that the 'G.TypeDefinition' should be of the GraphQL 'Output' kind, when an
@@ -542,7 +550,7 @@ remoteField
   -> Maybe G.Description
   -> G.ArgumentsDefinition RemoteSchemaInputValueDefinition
   -> G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition
-  -> m (FieldParser n (Field NoFragments Variable))
+  -> m (FieldParser n (Field NoFragments RemoteSchemaVariable))
 remoteField sdoc fieldName description argsDefn typeDefn = do
   -- TODO add directives
   argsParser <- argumentsParser argsDefn sdoc
@@ -567,7 +575,7 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
         mkFieldParserWithSelectionSet argsParser
     _ -> throw400 RemoteSchemaError "expected output type, but got input type"
   where
-    mergeValue :: G.Value Variable -> G.Value Variable -> G.Value Variable
+    mergeValue :: G.Value RemoteSchemaVariable -> G.Value RemoteSchemaVariable -> G.Value RemoteSchemaVariable
     mergeValue userArgVal presetArgVal =
       case (userArgVal, presetArgVal) of
         (G.VList l, G.VList r) -> G.VList $ l <> r
@@ -575,33 +583,35 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
           G.VObject $ Map.unionWith mergeValue l r
         (v',_) -> v'
 
+    mkField alias fldName userProvidedArgs presetArgs selSet =
+      let userProvidedArgs' = fmap RawVariable <$> userProvidedArgs
+          resolvedArgs =
+            case presetArgs of
+              Just presetArg' -> Map.unionWith mergeValue userProvidedArgs' presetArg'
+              Nothing -> userProvidedArgs'
+      in G.Field alias fldName resolvedArgs mempty selSet
+
     mkFieldParserWithoutSelectionSet
-      :: InputFieldsParser n (Maybe (HashMap G.Name (G.Value Variable)))
+      :: InputFieldsParser n (Maybe (HashMap G.Name (G.Value RemoteSchemaVariable)))
       -> Parser 'Both n ()
-      -> FieldParser n (Field NoFragments Variable)
+      -> FieldParser n (Field NoFragments RemoteSchemaVariable)
     mkFieldParserWithoutSelectionSet argsParser outputParser =
       -- 'rawSelection' is used here to get the alias and args data
       -- specified to be able to construct the `Field NoFragments G.Name`
       P.rawSelection fieldName description argsParser outputParser
-      <&> (\(alias, args, presetArg) ->
-             case presetArg of
-               Just presetArg' -> (G.Field alias fieldName (Map.unionWith mergeValue args presetArg') mempty [])
-               Nothing -> (G.Field alias fieldName args mempty [])
-             )
+      <&> (\(alias, userProvidedArgs, presetArgs) ->
+             mkField alias fieldName userProvidedArgs presetArgs [])
 
     mkFieldParserWithSelectionSet
-      :: InputFieldsParser n (Maybe (HashMap G.Name (G.Value Variable)))
-      -> Parser 'Output n (SelectionSet NoFragments Variable)
-      -> FieldParser n (Field NoFragments P.Variable)
+      :: InputFieldsParser n (Maybe (HashMap G.Name (G.Value RemoteSchemaVariable)))
+      -> Parser 'Output n (SelectionSet NoFragments RemoteSchemaVariable)
+      -> FieldParser n (Field NoFragments RemoteSchemaVariable)
     mkFieldParserWithSelectionSet argsParser outputParser =
       -- 'rawSubselection' is used here to get the alias and args data
       -- specified to be able to construct the `Field NoFragments G.Name`
       P.rawSubselection fieldName description argsParser outputParser
-      <&> (\(alias, args, presetArg, selSet) ->
-             case presetArg of
-               Just presetArg' -> (G.Field alias fieldName (Map.unionWith mergeValue args presetArg') mempty selSet)
-               Nothing -> (G.Field alias fieldName args mempty selSet)
-             )
+      <&> (\(alias, userProvidedArgs, presetArgs, selSet) ->
+             mkField alias fieldName userProvidedArgs presetArgs selSet)
 
 remoteFieldScalarParser
   :: MonadParse n

@@ -1,5 +1,6 @@
 module Hasura.GraphQL.Execute.Remote
   ( buildExecStepRemote
+  , collectVariables
   ) where
 
 import           Hasura.Prelude
@@ -49,7 +50,7 @@ collectVariables =
 
 buildExecStepRemote
   :: forall db
-   . RemoteSchemaInfo
+  .  RemoteSchemaInfo
   -> G.OperationType
   -> G.SelectionSet G.NoFragments Variable
   -> ExecutionStep db

@@ -171,20 +171,17 @@ data PartitionedTypeDefinitions a
   , _ptdSchemaDef    :: ![G.SchemaDefinition]
   } deriving (Show, Eq)
 
-data RemoteSchemaPresetArgument
-  = StaticPresetArgument !G.GType !(G.Value Void)
-  | SessionPresetArgument !G.GType !SessionVariable
-  -- ^ name of the argument where the session variable is supposed to
-  -- be substituted -- session variable name -- value where the session
-  -- variable is to be inserted.
-  deriving (Show, Eq, Ord, Generic)
-instance Hashable RemoteSchemaPresetArgument
-instance Cacheable RemoteSchemaPresetArgument
+data RemoteSchemaVariable
+  = SessionPresetVariable !SessionVariable !G.GType !G.Name
+  | RawVariable !Variable
+  deriving (Show, Eq, Generic, Ord)
+instance Hashable RemoteSchemaVariable
+instance Cacheable RemoteSchemaVariable
 
 data RemoteSchemaInputValueDefinition
   = RemoteSchemaInputValueDefinition
   { _rsitdDefn      :: !G.InputValueDefinition
-  , _rsitdPresetArg :: !(Maybe (G.Value Variable))
+  , _rsitdPresetArg :: !(Maybe (G.Value RemoteSchemaVariable))
   } deriving (Show, Eq, Generic, Ord)
 instance Hashable RemoteSchemaInputValueDefinition
 instance Cacheable RemoteSchemaInputValueDefinition
