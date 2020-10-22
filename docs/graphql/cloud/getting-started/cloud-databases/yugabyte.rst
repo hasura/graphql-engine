@@ -29,13 +29,13 @@ Step 1: Create a Hasura Cloud project
 
 On the Hasura Cloud dashboard, create a new project:
 
-.. thumbnail:: /img/graphql/cloud/existing-db/create-hasura-cloud-project.png
+.. thumbnail:: /img/graphql/cloud/cloud-dbs/create-hasura-cloud-project.png
    :alt: Create Hasura Cloud project
    :width: 1000px
 
 You will get prompted for a Postgres Database URL. We will create this in the next step and then come back here.
 
-.. thumbnail:: /img/graphql/cloud/existing-db/database-setup.png
+.. thumbnail:: /img/graphql/cloud/cloud-dbs/database-setup.png
    :alt: Hasura Cloud database setup
    :width: 500px
 
@@ -46,15 +46,17 @@ Also, copy the Hasura Cloud IP for later.
 Step 2: Create a Postgres DB on YugaByte (skip if you have an existing DB)
 --------------------------------------------------------------------------
 
-*If you already have an existing database on YugaByte, you can skip this step.*
+Log into the `YugaByte Cloud dashboard <https://cloud.yugabyte.com/login>`__.
 
 On the YugaByte Cloud dashboard, click on ``Create cluster``:
 
-.. thumbnail:: /img/graphql/cloud/existing-db/yugabyte/yugabyte-create-cluster.png
+.. thumbnail:: /img/graphql/cloud/cloud-dbs/yugabyte/create-cluster.png
    :alt: Create cluster on YugaByte
    :width: 1000px
 
 Select a ``Cloud Provider`` and ``Region`` and then click ``Create Cluster``.
+
+.. _construct_db_url_yugabyte:
 
 Step 3: Construct the database connection URL
 ---------------------------------------------
@@ -67,23 +69,23 @@ The structure of the database connection URL looks as follows:
 
 To get it, click on your cluster on the cluster dashboard:
 
-.. thumbnail:: /img/graphql/cloud/existing-db/yugabyte/yugabyte-go-to-cluster.png
+.. thumbnail:: /img/graphql/cloud/cloud-dbs/yugabyte/go-to-cluster.png
    :alt: Go to cluster on YugaByte
    :width: 700px
 
 On your cluster's dashboard, click on ``Connect`` on the top right:
 
-.. thumbnail:: /img/graphql/cloud/existing-db/yugabyte/yugabyte-connect.png
+.. thumbnail:: /img/graphql/cloud/cloud-dbs/yugabyte/connect.png
    :alt: Connect to cluster on YugaByte
    :width: 1000px
 
 Now you can get the connection info from the following screen:
 
-.. thumbnail:: /img/graphql/cloud/existing-db/yugabyte/yugabyte-connection-info.png
+.. thumbnail:: /img/graphql/cloud/cloud-dbs/yugabyte/connection-info.png
    :alt: Connection info for YugaByte
    :width: 600px
 
-- ``user-name``: If you have a separate database user the user name will be their name. If you didn't specify a user, the default user name is ``admin``.
+- ``user-name``: If you have a separate database user, the user name will be their name. If you didn't specify a user, the default user name is ``admin`` (see after ``-U`` in the screenshot above).
 - ``password``: If you have a separate database user, use their password. Otherwise, use the password is what follows ``PGPASSWORD=`` in the screenshot above.
 - ``public-ip``: The public IP is what follows ``-h`` in the screenshot above.
 - ``postgres-port``: The port is ``10301`` (see on the screenshot after ``-p``). This can be configured if required.
@@ -92,9 +94,9 @@ Now you can get the connection info from the following screen:
 Step 4: Finish creating the Hasura Cloud project
 ------------------------------------------------
 
-Back on the Hasura Cloud dashboard, enter the database URL that we constructed in :ref:`step 3 <configure_db_url_gcp>`:
+Back on the Hasura Cloud dashboard, enter the database URL that we constructed in :ref:`step 3 <construct_db_url_yugabyte>`:
 
-.. thumbnail:: /img/graphql/cloud/existing-db/finish-create-project.png
+.. thumbnail:: /img/graphql/cloud/cloud-dbs/finish-create-project.png
    :alt: Finish creating the Hasura Cloud project
    :width: 500px
 
@@ -105,13 +107,13 @@ Step 5: Launch Hasura console
 
 After the project is initialized successfully, click on ``Launch console``:
 
-.. thumbnail:: /img/graphql/cloud/existing-db/launch-console.png
+.. thumbnail:: /img/graphql/cloud/cloud-dbs/launch-console.png
    :alt: Launch the Hasura console
    :width: 900px
 
 Voilà. You are ready to start developing.
 
-.. thumbnail:: /img/graphql/cloud/existing-db/hasura-console.png
+.. thumbnail:: /img/graphql/cloud/cloud-dbs/hasura-console.png
    :alt: Hasura console
    :width: 900px
 

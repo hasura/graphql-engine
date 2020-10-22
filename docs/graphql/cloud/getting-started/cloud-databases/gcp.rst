@@ -29,13 +29,13 @@ Step 1: Create a Hasura Cloud project
 
 On the Hasura Cloud dashboard, create a new project:
 
-.. thumbnail:: /img/graphql/cloud/existing-db/create-hasura-cloud-project.png
+.. thumbnail:: /img/graphql/cloud/cloud-dbs/create-hasura-cloud-project.png
    :alt: Create Hasura Cloud project
    :width: 1000px
 
 You will get prompted for a Postgres Database URL. We will create this in the next step and then come back here.
 
-.. thumbnail:: /img/graphql/cloud/existing-db/database-setup.png
+.. thumbnail:: /img/graphql/cloud/cloud-dbs/database-setup.png
    :alt: Hasura Cloud database setup
    :width: 500px
 
@@ -46,31 +46,29 @@ Also, copy the Hasura Cloud IP for later.
 Step 2: Create a Postgres DB on GCP (skip if you have an existing DB)
 ---------------------------------------------------------------------
 
-*If you already have an existing database on GCP, you can skip this step.*
-
 Log into the `GCP console <https://console.cloud.google.com/>`__.
 
 On the left-side navigation, scroll down to ``Storage`` and click on ``SQL``:
 
-.. thumbnail:: /img/graphql/cloud/existing-db/gcp/gcp-navigate-to-sql.png
+.. thumbnail:: /img/graphql/cloud/cloud-dbs/gcp/navigate-to-sql.png
    :alt: Navigate to SQL in GCP
    :width: 250px
 
 On the top, click on ``Create instance``:
 
-.. thumbnail:: /img/graphql/cloud/existing-db/gcp/gcp-create-instance.png
+.. thumbnail:: /img/graphql/cloud/cloud-dbs/gcp/create-instance.png
    :alt: Create database instance in GCP
    :width: 1000px
 
 Select Postgres:
 
-.. thumbnail:: /img/graphql/cloud/existing-db/gcp/gcp-select-postgres.png
+.. thumbnail:: /img/graphql/cloud/cloud-dbs/gcp/select-postgres.png
    :alt: Select Postgres database instance in GCP
    :width: 1000px
 
 Select an instance ID, as well as a default user password. If required, choose a specific region and zone. 
 
-.. thumbnail:: /img/graphql/cloud/existing-db/gcp/gcp-configure-instance.png
+.. thumbnail:: /img/graphql/cloud/cloud-dbs/gcp/configure-instance.png
    :alt: Configure database instance in GCP
    :width: 500px
 
@@ -81,13 +79,13 @@ Step 3: Allow connections to your DB from Hasura Cloud
 
 On the dashboard of your GCP database instance, on the left sidebar, click on ``Connections``. Then scroll down to the checkbox ``Public IP``, and click ``+ Add network``:
 
-.. thumbnail:: /img/graphql/cloud/existing-db/gcp/gcp-connections.png
+.. thumbnail:: /img/graphql/cloud/cloud-dbs/gcp/connections.png
    :alt: Navigate to connections in GCP
    :width: 600px
 
 You can choose an optional name (e.g. "Hasura"). Then enter the Hasura Cloud IP we have optained from :ref:`step 1 <create_hasura_project_gcp>`.
 
-.. thumbnail:: /img/graphql/cloud/existing-db/gcp/gcp-add-network.png
+.. thumbnail:: /img/graphql/cloud/cloud-dbs/gcp/add-network.png
    :alt: Add a new network in GCP
    :width: 600px
 
@@ -97,7 +95,7 @@ Then click ``Save``.
 
    If you're using a database user other than the default one, make sure to give it the right :ref:`Postgres permissions <cloud_postgres_permissions>`.
 
-.. _configure_db_url_gcp:
+.. _construct_db_url_gcp:
 
 Step 4: Construct the database connection URL
 ---------------------------------------------
@@ -108,11 +106,11 @@ The structure of the database connection URL looks as follows:
 
     postgresql://<user-name>:<password>@<public-ip>:<postgres-port>/<db>
 
-- ``user-name``: If you have a separate database user the user name will be their name. If you didn't specify a user, the default user name is ``postgres``.
+- ``user-name``: If you have a separate database user, the user name will be their name. If you didn't specify a user, the default user name is ``postgres``.
 - ``password``: If you have a separate database user, use their password. Otherwise, use the password that you chose when creating the database.
 - ``public-ip``: The public IP can be optained by clicking on ``Overview`` on the left-side navigation and then scrolling down to ``Connect to this instance``:
 
-.. thumbnail:: /img/graphql/cloud/existing-db/gcp/gcp-public-ip.png
+.. thumbnail:: /img/graphql/cloud/cloud-dbs/gcp/public-ip.png
    :alt: Find the public IP for a GCP Postgres database
    :width: 700px
    
@@ -122,9 +120,9 @@ The structure of the database connection URL looks as follows:
 Step 5: Finish creating the Hasura Cloud project
 ------------------------------------------------
 
-Back on the Hasura Cloud dashboard, enter the database URL that we constructed in :ref:`step 4 <configure_db_url_gcp>`:
+Back on the Hasura Cloud dashboard, enter the database URL that we constructed in :ref:`step 4 <construct_db_url_gcp>`:
 
-.. thumbnail:: /img/graphql/cloud/existing-db/finish-create-project.png
+.. thumbnail:: /img/graphql/cloud/cloud-dbs/finish-create-project.png
    :alt: Finish creating the Hasura Cloud project
    :width: 500px
 
@@ -135,13 +133,13 @@ Step 6: Launch Hasura console
 
 After the project is initialized successfully, click on ``Launch console``:
 
-.. thumbnail:: /img/graphql/cloud/existing-db/launch-console.png
+.. thumbnail:: /img/graphql/cloud/cloud-dbs/launch-console.png
    :alt: Launch the Hasura console
    :width: 900px
 
 Voilà. You are ready to start developing.
 
-.. thumbnail:: /img/graphql/cloud/existing-db/hasura-console.png
+.. thumbnail:: /img/graphql/cloud/cloud-dbs/hasura-console.png
    :alt: Hasura console
    :width: 900px
 
