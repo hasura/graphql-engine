@@ -116,7 +116,7 @@ runWebSockets opts req ipAddress app src sink = bracket mkStream ensureClose (ap
             (do
                 bs <- src
                 return $ if BC.null bs then Nothing else Just bs)
-            (\mbBl -> case mbBl of
+            (\case
                 Nothing -> return ()
                 Just bl -> mapM_ sink (BL.toChunks bl))
 

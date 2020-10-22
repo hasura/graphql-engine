@@ -446,10 +446,9 @@ withMetadataCheck cascade action = do
   mapM_ purgeDependentObject indirectDeps
 
   -- Purge all dropped functions
-  let purgedFuncs = flip mapMaybe indirectDeps $ \dep ->
-        case dep of
-          SOFunction qf -> Just qf
-          _             -> Nothing
+  let purgedFuncs = flip mapMaybe indirectDeps $ \case
+        SOFunction qf -> Just qf
+        _             -> Nothing
 
   forM_ (droppedFuncs \\ purgedFuncs) $ \qf -> do
     liftTx $ delFunctionFromCatalog qf

@@ -172,7 +172,7 @@ idScalar     = $$(G.litName "ID")
 
 defaultScalars :: [ScalarTypeDefinition]
 defaultScalars =
-  map (flip ScalarTypeDefinition Nothing)
+  map (`ScalarTypeDefinition` Nothing)
   [intScalar, floatScalar, stringScalar, boolScalar, idScalar]
 
 newtype EnumTypeName

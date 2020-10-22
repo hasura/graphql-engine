@@ -539,7 +539,7 @@ mkCustomAllowedRoleClaim claimPath defVal =
     Just path -> JWTCustomClaimsMapJSONPath (mkJSONPathE path) $ defAllowedRoles
     Nothing ->
       JWTCustomClaimsMapStatic $
-        maybe (fmap mkRoleNameE $ ["user", "editor"]) id defAllowedRoles
+        maybe (mkRoleNameE <$> ["user", "editor"]) id defAllowedRoles
   where
     defAllowedRoles = fmap mkRoleNameE <$> defVal
 

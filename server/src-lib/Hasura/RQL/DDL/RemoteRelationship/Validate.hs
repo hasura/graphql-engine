@@ -217,10 +217,7 @@ stripList remoteRelationshipName types originalOuterGType value =
   case originalOuterGType of
     G.TypeList nullability innerGType -> do
       maybeNewInnerGType <- stripValue remoteRelationshipName types innerGType value
-      pure
-        (fmap
-           (\newGType -> G.TypeList nullability newGType)
-           maybeNewInnerGType)
+      pure (G.TypeList nullability <$> maybeNewInnerGType)
     _ -> lift (Left (InvalidGTypeForStripping originalOuterGType))
 
 -- -- | Produce a new type for the given InpValInfo, modified by
