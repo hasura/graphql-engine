@@ -39,7 +39,7 @@ Your project has now a GraphQL API, a PostgreSQL database, user management, and 
 Access your Hasura console
 --------------------------
 
-Once your Nhost project is up and running, a dashboard will come up and you can click on the ``Hasura`` menu on the navigation bar.
+Once your Nhost project is up and running, the ``Overview`` page will give information about the endpoints.
 
 .. thumbnail:: /img/graphql/core/deployment/nhost-dashboard.png
    :alt: Dashboard   
