@@ -67,7 +67,7 @@ buildRebuildableSchemaCache
   -> m RebuildableSchemaCache
 buildRebuildableSchemaCache env = do
   metadata    <- fetchMetadata
-  let buildContext = BuildContext CatalogSync mempty
+  let buildContext = BuildContext CatalogSync APIMetadata
   result <- runCacheBuild $ flip runReaderT buildContext $
     Inc.build (buildSchemaCacheRule env) (metadata, initialInvalidationKeys)
   pure $ RebuildableSchemaCache (Inc.result result) initialInvalidationKeys (Inc.rebuildRule result)
@@ -76,7 +76,7 @@ newtype CacheRWT m a
   -- The CacheInvalidations component of the state could actually be collected using WriterT, but
   -- WriterT implementations prior to transformers-0.5.6.0 (which added
   -- Control.Monad.Trans.Writer.CPS) are leaky, and we don’t have that yet.
-  = CacheRWT (StateT (RebuildableSchemaCache, CacheInvalidations, ResolvedSources) m a)
+  = CacheRWT (StateT (RebuildableSchemaCache, CacheInvalidations, APIState) m a)
   deriving
     ( Functor, Applicative, Monad
     , MonadIO, MonadUnique, MonadReader r
@@ -87,9 +87,11 @@ newtype CacheRWT m a
 
 runCacheRWT
   :: Functor m
-  => RebuildableSchemaCache -> CacheRWT m a -> m (a, RebuildableSchemaCache, CacheInvalidations)
-runCacheRWT cache (CacheRWT m) =
-  runStateT m (cache, mempty, mempty) <&> \(v, (newCache, invalidations, _)) -> (v, newCache, invalidations)
+  => RebuildableSchemaCache
+  -> APIState
+  -> CacheRWT m a -> m (a, RebuildableSchemaCache, CacheInvalidations)
+runCacheRWT cache apiState (CacheRWT m) =
+  runStateT m (cache, mempty, apiState) <&> \(v, (newCache, invalidations, _)) -> (v, newCache, invalidations)
 
 -- instance (Monad m) => TableCoreInfoRM (CacheRWT m)
 instance (Monad m) => CacheRM (CacheRWT m) where
@@ -119,8 +121,11 @@ instance ( MonadIO m , MonadMetadata m, MonadError QErr m
         -- see Note [Keep invalidation keys for inconsistent objects]
         name `elem` getAllRemoteSchemas schemaCache
 
-  setPreResolvedSource sourceName resolvedSource = CacheRWT $
-    modify' $ _3 %~ M.insert sourceName resolvedSource
+  setPreResolvedSource sourceName resolvedSource probableEnumTables = CacheRWT $
+    modify' $ _3 %~ \case
+      APIV1Query _ _ _           -> APIV1Query sourceName (Just resolvedSource) probableEnumTables
+      APIV2Query resolvedSources -> APIV2Query $ M.insert sourceName resolvedSource resolvedSources
+      APIMetadata                -> APIMetadata
 
 buildSchemaCacheRule
   -- Note: by supplying BuildReason via MonadReader, it does not participate in caching, which is
@@ -202,7 +207,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
           metadataObj = MetadataObject (MOSource sourceName) $ toJSON sourceName
       Inc.dependOn -< Inc.selectKeyD sourceName invalidationKeys
       (| withRecordInconsistency (
-           liftEitherA <<< bindA -< (getResolvedSourceFromBuildContext sourceName <$> ask) >>= \case
+           liftEitherA <<< bindA -< (getResolvedSourceFromAPIState sourceName <$> asks _bcApiState) >>= \case
                Nothing -> resolveSource env $ _smConfiguration sourceMetadata
                Just rs -> pure $ Right rs)
        |) metadataObj
@@ -215,11 +220,10 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
          , PGSourceConfig
          , PostgresTablesMetadata
          , PostgresFunctionsMetadata
-         , ProbableEnumTables
          , RemoteSchemaMap
          , Inc.Dependency InvalidationKeys
          ) `arr` SourceOutput
-    buildSource = proc (sourceMetadata, sourceConfig, pgTables, pgFunctions, enumTables, remoteSchemaMap, invalidationKeys) -> do
+    buildSource = proc (sourceMetadata, sourceConfig, pgTables, pgFunctions, remoteSchemaMap, invalidationKeys) -> do
       let SourceMetadata source tables functions _ = sourceMetadata
           (tableInputs, nonColumnInputs, permissions) = unzip3 $ map mkTableInputs $ M.elems tables
           eventTriggers = map (_tmTable &&& (M.elems . _tmEventTriggers)) (M.elems tables)
@@ -232,7 +236,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
             in M.catMaybes $ alignWith alignFn lMap rMap
 
       -- tables
-      tableRawInfos <- buildTableCache -< ( source, sourceConfig, pgTables, enumTables
+      tableRawInfos <- buildTableCache -< ( source, sourceConfig, pgTables
                                           , tableInputs, Inc.selectD #_ikMetadata invalidationKeys
                                           )
 
@@ -298,9 +302,9 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
              maybeResolvedSource <- resolveSourceIfNeeded -< (sourceInvalidationsKeys, sourceMetadata)
              case maybeResolvedSource of
                Nothing -> returnA -< Nothing
-               Just (ResolvedSource pgSourceConfig tablesMeta functionsMeta pgScalars enumTables) -> do
+               Just (ResolvedSource pgSourceConfig tablesMeta functionsMeta pgScalars) -> do
                  so <- buildSource -< ( sourceMetadata, pgSourceConfig, tablesMeta, functionsMeta
-                                      , enumTables, M.map fst remoteSchemaMap, invalidationKeys
+                                      , M.map fst remoteSchemaMap, invalidationKeys
                                       )
                  returnA -< Just (so, pgScalars))
          |) sources
@@ -416,9 +420,12 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 
         recreateTriggerIfNeeded = Inc.cache $
           arrM \(tableName, tableColumns, triggerName, triggerDefinition, sourceConfig) -> do
-            buildReason <- asks _bcReason
+            BuildContext buildReason apiState <- ask
+            let isNotV1Query = case apiState of
+                 APIV1Query _ _ _ -> False
+                 _                -> True
             sqlGenCtx <- askSQLGenCtx
-            when (buildReason == CatalogUpdate) $ do
+            when (buildReason == CatalogUpdate && isNotV1Query) $ do
               eitherResult <- runPgSourceWriteTx sourceConfig $ do
                 delTriggerQ triggerName -- executes DROP IF EXISTS.. sql
                 runHasSQLGenCtxT sqlGenCtx $
@@ -552,10 +559,10 @@ withMetadataCheck source cascade action = do
 
   let postActionTableInfos = M.fromList $ map (tmTable &&& tmInfo) postActionTableMeta
       resolvedSource = ResolvedSource sourceConfig postActionTableInfos
-                       postActionFunctionInfos pgScalars probableNewEnumTables
+                       postActionFunctionInfos pgScalars
 
   -- Set the source as pre-resolved
-  setPreResolvedSource source resolvedSource
+  setPreResolvedSource source resolvedSource probableNewEnumTables
 
   withNewInconsistentObjsCheck $
     buildSchemaCacheWithOptions CatalogUpdate  mempty{ciSources = S.singleton source} metadataUpdater

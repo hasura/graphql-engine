@@ -74,7 +74,7 @@ renameTableInMetadata source newQT oldQT = do
   -- Update table name in metadata
   tell $ MetadataModifier $ metaSources.ix source.smTables %~ \tables ->
     flip (maybe tables) (M.lookup oldQT tables) $
-    \tableMeta -> M.delete oldQT $ M.insert newQT tableMeta tables
+    \tableMeta -> M.delete oldQT $ M.insert newQT tableMeta{_tmTable = newQT} tables
   where
     errMsg = "cannot rename table " <> oldQT <<> " to " <>> newQT
     -- updateTableInCatalog =

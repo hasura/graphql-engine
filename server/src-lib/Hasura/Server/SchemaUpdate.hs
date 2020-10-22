@@ -235,7 +235,7 @@ refreshSchemaCache sqlGenCtx logger httpManager cacheRef invalidations threadTyp
     --                     >>= (\tx -> liftIO $ runExceptT $ PG.runTx' metadataPool tx)
     --                     >>= liftEither
     (((), cache, _), _) <- buildSchemaCacheWithOptions CatalogSync invalidations noMetadataModify
-      & runCacheRWT rebuildableCache
+      & runCacheRWT rebuildableCache APIMetadata
       & peelMetadataRun runCtx metadata
     pure (cache, metadata)
   case resE of

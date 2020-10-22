@@ -81,6 +81,7 @@ import           Hasura.Session
 
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll     as EL
 import qualified Hasura.GraphQL.Transport.WebSocket.Server as WS
+import qualified Hasura.Server.API.V1Query                 as V1Q
 import qualified Hasura.Tracing                            as Tracing
 import qualified System.Metrics                            as EKG
 
@@ -660,7 +661,7 @@ execQuery env httpManager metadata queryBs = runExceptT do
                   throw400 NotExists $ "source " <> unSourceName source <> " does not exist"
 
   actionM & Tracing.runTraceTWithReporter Tracing.noReporter "execute"
-          & runCacheRWT schemaCache
+          & runCacheRWT schemaCache (APIV1Query source Nothing mempty)
           & fmap (\(res, _, _) -> res)
           & peelQueryRun sourceConfig Q.ReadWrite Nothing runCtx metadata
           & fmap fst
@@ -692,14 +693,14 @@ accessDeniedErrMsg =
   "restricted access : admin only"
 
 instance MonadApiAuthorization ServerAppM where
-  authorizeMetadataApi _ userInfo = do
-    let currRole = _uiRole userInfo
-    when (currRole /= adminRoleName) $
-      withPathK "args" $ throw400 AccessDenied accessDeniedErrMsg
-
   authorizeQueryApi query userInfo = do
     let currRole = _uiRole userInfo
     when (queryNeedsAdmin query && currRole /= adminRoleName) $
+      withPathK "args" $ throw400 AccessDenied accessDeniedErrMsg
+
+  authorizeV1QueryApi query userInfo = do
+    let currRole = _uiRole userInfo
+    when (V1Q.requiresAdmin query && currRole /= adminRoleName) $
       withPathK "args" $ throw400 AccessDenied accessDeniedErrMsg
 
 instance ConsoleRenderer ServerAppM where

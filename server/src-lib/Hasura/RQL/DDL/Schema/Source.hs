@@ -35,7 +35,7 @@ resolveSource env config = runExceptT do
     functionsMeta <- fetchFunctionMetadataFromPgSource
     pgScalars     <- fetchPgScalars
     pure (tablesMeta, functionsMeta, pgScalars)
-  pure $ ResolvedSource sourceConfig tablesMeta functionsMeta pgScalars mempty
+  pure $ ResolvedSource sourceConfig tablesMeta functionsMeta pgScalars
 
 initSource :: MonadTx m => m ()
 initSource = do

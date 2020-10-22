@@ -57,7 +57,11 @@ data ReplaceMetadata
   deriving (Show, Eq)
 
 instance FromJSON ReplaceMetadata where
-  parseJSON v = (RMWithSources <$> parseJSON v) <|> (RMWithoutSources <$> parseJSON v)
+  parseJSON = withObject "Object" $ \o -> do
+    version <- o .:? "version" .!= MVVersion1
+    case version of
+      MVVersion3 -> RMWithSources <$> parseJSON (Object o)
+      _          -> RMWithoutSources <$> parseJSON (Object o)
 
 instance ToJSON ReplaceMetadata where
   toJSON = \case

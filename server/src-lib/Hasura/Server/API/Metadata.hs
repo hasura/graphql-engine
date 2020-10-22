@@ -153,7 +153,7 @@ runMetadataRequest
 runMetadataRequest env userInfo httpManager sqlGenCtx schemaCache metadata request = do
   ((r, modSchemaCache, cacheInvalidations), modMetadata) <-
     runMetadataRequestM env request
-    & runCacheRWT schemaCache
+    & runCacheRWT schemaCache APIMetadata
     & peelMetadataRun (RunCtx userInfo httpManager sqlGenCtx) metadata
     & runExceptT
     & liftEitherM

@@ -247,12 +247,12 @@ setHeader (headerName, headerValue) =
 
 -- | Typeclass representing the metadata API authorization effect
 class Monad m => MonadApiAuthorization m where
-  authorizeMetadataApi :: HasVersion => RQLMetadata -> UserInfo -> Handler m ()
   authorizeQueryApi    :: HasVersion => RQLQuery    -> UserInfo -> Handler m ()
+  authorizeV1QueryApi  :: HasVersion => V1Q.RQLQuery -> UserInfo -> Handler m ()
 
 instance MonadApiAuthorization m => MonadApiAuthorization (Tracing.TraceT m) where
-  authorizeMetadataApi q ui = hoist (hoist lift) $ authorizeMetadataApi q ui
-  authorizeQueryApi q ui    = hoist (hoist lift) $ authorizeQueryApi q ui
+  authorizeQueryApi q ui      = hoist (hoist lift) $ authorizeQueryApi q ui
+  authorizeV1QueryApi q ui    = hoist (hoist lift) $ authorizeV1QueryApi q ui
 
 -- | The config API (/v1alpha1/config) handler
 class Monad m => MonadConfigApiHandler m where
@@ -381,12 +381,14 @@ v1QueryHandler
      , MonadIO m
      , MonadBaseControl IO m
      , Tracing.MonadTrace m
+     , MonadApiAuthorization m
      , MonadMetadataStorage m
      )
   => V1Q.RQLQuery
   -> Handler m (HttpResponse EncJSON)
 v1QueryHandler v1Query = do
   userInfo     <- asks hcUser
+  authorizeV1QueryApi v1Query userInfo
   scRef        <- asks (scCacheRef . hcServerCtx)
   schemaCache  <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
   logger       <- asks (scLogger . hcServerCtx)
@@ -410,9 +412,10 @@ v1QueryHandler v1Query = do
        . withUserInfo userInfo
        . maybe id withTraceContext (Just traceCtx)
        . withSCUpdate scRef instanceId logger $
-           V1Q.runQueryM env sourceName v1Query & Tracing.interpTraceT \x -> do
+           V1Q.runQueryM env sourceName v1Query <* V1Q.reDefineEventTriggers sourceName
+           & Tracing.interpTraceT \x -> do
              (((r, tracemeta), rsc, ci), meta)
-               <- x & runCacheRWT schemaCache
+               <- x & runCacheRWT schemaCache (APIV1Query sourceName Nothing mempty)
                     & runBaseRunT runCtx metadata . V1Q.unRun
              let metadataStateResult = MetadataStateResult rsc ci meta
              pure $ bool ((r, Nothing), tracemeta)
@@ -426,13 +429,12 @@ v1MetadataHandler
      , MonadIO m
      , MonadBaseControl IO m
      , MonadMetadataStorage m
-     , MonadApiAuthorization m
      , MonadUnique m
      )
   => RQLMetadata -> Handler m (HttpResponse EncJSON)
 v1MetadataHandler request = do
+  onlyAdmin
   userInfo     <- asks hcUser
-  authorizeMetadataApi request userInfo
   scRef        <- asks (scCacheRef . hcServerCtx)
   schemaCache  <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
   metadata     <- liftIO $ readIORef $ _scrMetadata scRef
@@ -639,6 +641,7 @@ legacyQueryHandler
      , MonadIO m
      , MonadBaseControl IO m
      , Tracing.MonadTrace m
+     , MonadApiAuthorization m
      , MonadMetadataStorage m
      )
   => TableName -> T.Text -> Object

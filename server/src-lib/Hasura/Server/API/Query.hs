@@ -91,7 +91,7 @@ runQuery env userInfo httpManager sqlGenCtx schemaCache metadata request = do
                   throw400 NotExists $ "source " <> source <<> " does not exist"
   runQueryM env source rqlQuery & Tracing.interpTraceT \x -> do
     (((r, tracemeta), rsc, ci), meta)
-      <- x & runCacheRWT schemaCache
+      <- x & runCacheRWT schemaCache (APIV2Query mempty)
            & peelQueryRun sourceConfig accessMode (Just traceCtx)
              (RunCtx userInfo httpManager sqlGenCtx) metadata
            & runExceptT

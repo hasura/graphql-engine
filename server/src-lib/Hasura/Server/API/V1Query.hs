@@ -197,7 +197,7 @@ data RQLQueryV1
 
   | RQRunSql !RunSQL
 
-  | RQReplaceMetadata !MetadataNoSources
+  | RQReplaceMetadata !ReplaceMetadata
   | RQExportMetadata !ExportMetadata
   | RQClearMetadata !ClearMetadata
   | RQReloadMetadata !ReloadMetadata
@@ -481,7 +481,7 @@ runQueryM env source rq = withPathK "args" $ case rq of
       RQAddCollectionToAllowlist q     -> runAddCollectionToAllowlist q
       RQDropCollectionFromAllowlist q  -> runDropCollectionFromAllowlist q
 
-      RQReplaceMetadata q          -> runReplaceMetadata $ RMWithoutSources q
+      RQReplaceMetadata q          -> runReplaceMetadata q
       RQClearMetadata q            -> runClearMetadata q
       RQExportMetadata q           -> runExportMetadata q
       RQReloadMetadata q           -> runReloadMetadata q
@@ -594,3 +594,15 @@ requiresAdmin = \case
     RQV2TrackTable _           -> True
     RQV2SetTableCustomFields _ -> True
     RQV2TrackFunction _        -> True
+
+reDefineEventTriggers
+  :: (MonadTx m, CacheRM m, HasSQLGenCtx m) => SourceName -> m ()
+reDefineEventTriggers source = do
+  tables <- _pcTables <$> askSourceCache source
+  forM_ (HM.elems tables) $ \(TableInfo coreInfo _ eventTriggers) -> do
+    let table = _tciName coreInfo
+        columns = getCols $ _tciFieldInfoMap coreInfo
+    forM_ (HM.toList eventTriggers) $ \(triggerName, eti) -> do
+      let opsDefinition = etiOpsDef eti
+      liftTx $ delTriggerQ triggerName -- executes DROP IF EXISTS.. sql
+      mkAllTriggersQ triggerName table columns opsDefinition

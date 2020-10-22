@@ -12,10 +12,13 @@ module Hasura.RQL.Types.SchemaCache.Build
   , withRecordInconsistency
 
   , CacheRWM(..)
+  , ProbableEnumTables
   , ResolvedSources
+  , APIState(..)
+  , getEnumValuesFromAPIState
+  , getResolvedSourceFromAPIState
   , BuildContext(..)
   , BuildReason(..)
-  , getResolvedSourceFromBuildContext
   , CacheInvalidations(..)
   , buildSchemaCache
   , buildSchemaCacheFor
@@ -36,11 +39,13 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.List                     (nub)
 
+import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.RemoteSchema (RemoteSchemaName)
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.RQL.Types.Source
+import           Hasura.SQL.Types
 import           Hasura.Tracing                (TraceT)
 
 -- ----------------------------------------------------------------------------
@@ -113,6 +118,7 @@ class (CacheRM m) => CacheRWM m where
   setPreResolvedSource
     :: SourceName
     -> ResolvedSource
+    -> ProbableEnumTables
     -> m ()
 
 data BuildReason
@@ -126,21 +132,42 @@ data BuildReason
   | CatalogSync
   deriving (Eq)
 
+type ProbableEnumTables = HashMap QualifiedTable EnumValues
 type ResolvedSources = HashMap SourceName ResolvedSource
+
+data APIState
+  = APIV1Query !SourceName !(Maybe ResolvedSource) !ProbableEnumTables
+  -- ^ If the build invoked in @`/v1/query` API. This API supports the query types related to
+  -- metadata configuration and DML/run_sql operation on the pg source and operated in a @'LazyTxT'
+  -- as a base monad. This state avoids performing (if any) pg transactions in the schema cache build.
+  | APIV2Query !ResolvedSources
+  -- ^ If the build invoked in @`/v2/query` API. -- The @'run_sql' queries will set the resolved source
+  -- so as to avoid the resolving the same in the schema cache build.
+  | APIMetadata
+  -- ^ If the build invoked in @`/v1/metadata` API. No special operations associated with this state.
+  deriving (Eq)
+
+getEnumValuesFromAPIState :: QualifiedTable -> APIState -> Maybe EnumValues
+getEnumValuesFromAPIState table = \case
+  APIV1Query _ _ enumTables -> M.lookup table enumTables
+  APIV2Query _              -> Nothing
+  APIMetadata               -> Nothing
+
+getResolvedSourceFromAPIState :: SourceName -> APIState -> Maybe ResolvedSource
+getResolvedSourceFromAPIState sourceName = \case
+  APIV1Query sourceName' maybeResolvedSource _ ->
+    guard (sourceName' == sourceName) *> maybeResolvedSource
+  APIV2Query resolvedSources -> M.lookup sourceName resolvedSources
+  APIMetadata -> Nothing
+
 
 data BuildContext
   = BuildContext
-    { _bcReason          :: !BuildReason
+    { _bcReason   :: !BuildReason
     -- ^ Reason to invoke the schame cache build
-    , _bcResolvedSources :: !ResolvedSources
-    -- ^ Sources are resolved in the @'run_sql' API before invoking the
-    -- schema cache build
+    , _bcApiState :: !APIState
+    -- ^ API under which the schema cache build is invoked
     } deriving (Eq)
-
-getResolvedSourceFromBuildContext
-  :: SourceName -> BuildContext -> Maybe ResolvedSource
-getResolvedSourceFromBuildContext sourceName =
-  M.lookup sourceName . _bcResolvedSources
 
 data CacheInvalidations = CacheInvalidations
   { ciMetadata      :: !Bool
@@ -162,10 +189,10 @@ instance Monoid CacheInvalidations where
 
 instance (CacheRWM m) => CacheRWM (ReaderT r m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
-  setPreResolvedSource a b          = lift $ setPreResolvedSource a b
+  setPreResolvedSource a b c        = lift $ setPreResolvedSource a b c
 instance (CacheRWM m) => CacheRWM (TraceT m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
-  setPreResolvedSource a b          = lift $ setPreResolvedSource a b
+  setPreResolvedSource a b c        = lift $ setPreResolvedSource a b c
 
 buildSchemaCache :: (CacheRWM m) => MetadataModifier -> m ()
 buildSchemaCache = buildSchemaCacheWithOptions CatalogUpdate mempty

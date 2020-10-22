@@ -401,21 +401,22 @@ processTableChanges source ti tableDiff = do
 buildTableCache
   :: forall arr m
    . ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
-     , Inc.ArrowCache m arr, MonadIO m
+     , Inc.ArrowCache m arr, MonadIO m, MonadReader BuildContext m
      )
   => ( SourceName
      , PGSourceConfig
      , PostgresTablesMetadata
-     , ProbableEnumTables
      , [TableBuildInput]
      , Inc.Dependency Inc.InvalidationKey
      ) `arr` Map.HashMap QualifiedTable TableRawInfo
-buildTableCache = Inc.cache proc ( source, pgSourceConfig, pgTables, probableEnumTables
-                                 , tableBuildInputs, reloadMetadataInvalidationKey) -> do
+buildTableCache = Inc.cache proc (source, pgSourceConfig, pgTables, tableBuildInputs, reloadMetadataInvalidationKey) -> do
   rawTableInfos <-
-    (| Inc.keyed (| withTable (\tables
-         -> (tables, (pgSourceConfig, pgTables, probableEnumTables, reloadMetadataInvalidationKey))
-         >- first noDuplicateTables >>> buildRawTableInfo) |)
+    (| Inc.keyed (| withTable (\tables -> do
+         table <- noDuplicateTables -< tables
+         let maybeInfo = Map.lookup (_tbiName table) pgTables
+         buildRawTableInfo -< (table, maybeInfo, pgSourceConfig, reloadMetadataInvalidationKey)
+         )
+       |)
     |) (withSourceInKey source $ Map.groupOnNE _tbiName tableBuildInputs)
   let rawTableCache = removeSourceInKey $ Map.catMaybes rawTableInfos
       enumTables = flip Map.mapMaybe rawTableCache \rawTableInfo ->
@@ -443,11 +444,12 @@ buildTableCache = Inc.cache proc ( source, pgSourceConfig, pgTables, probableEnu
     buildRawTableInfo
       :: ErrorA QErr arr
        ( TableBuildInput
-       , (PGSourceConfig, PostgresTablesMetadata, ProbableEnumTables, Inc.Dependency Inc.InvalidationKey)
+       , Maybe TableMetadataInfo
+       , PGSourceConfig
+       , Inc.Dependency Inc.InvalidationKey
        ) (TableCoreInfoG PGRawColumnInfo PGCol)
-    buildRawTableInfo = Inc.cache proc (tableBuildInput, (pgSourceConfig, pgTables, enumTables, reloadMetadataInvalidationKey)) -> do
+    buildRawTableInfo = Inc.cache proc (tableBuildInput, maybeInfo, pgSourceConfig, reloadMetadataInvalidationKey) -> do
       let TableBuildInput name isEnum config = tableBuildInput
-          maybeInfo = Map.lookup name pgTables
       metadataTable <-
         (| onNothingA (throwA -<
              err400 NotExists $ "no such table/view exists in postgres: " <>> name)
@@ -462,9 +464,11 @@ buildTableCache = Inc.cache proc ( source, pgSourceConfig, pgTables, probableEnu
           -- We want to make sure we reload enum values whenever someone explicitly calls
           -- `reload_metadata`.
           Inc.dependOn -< reloadMetadataInvalidationKey
-          eitherEnums <- bindA -< case Map.lookup name enumTables of
-                           Just enumValues -> pure $ Right enumValues
-                           Nothing         -> fetchAndValidateEnumValues pgSourceConfig name rawPrimaryKey columns
+          eitherEnums <- bindA -< do
+            apiState <- asks _bcApiState
+            case getEnumValuesFromAPIState name apiState of
+              Just enumValues -> pure $ Right enumValues
+              Nothing         -> fetchAndValidateEnumValues pgSourceConfig name rawPrimaryKey columns
           liftEitherA -< Just <$> eitherEnums
         else returnA -< Nothing
 
