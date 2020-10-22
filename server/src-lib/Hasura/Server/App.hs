@@ -237,7 +237,7 @@ mapActionT
   => (m (MTC.StT (Spock.ActionCtxT ()) a) -> n (MTC.StT (Spock.ActionCtxT ()) a))
   -> Spock.ActionT m a
   -> Spock.ActionT n a
-mapActionT f tma = MTC.restoreT . pure =<< (MTC.liftWith $ \run -> f (run tma))
+mapActionT f tma = MTC.restoreT . pure =<< MTC.liftWith (\run -> f (run tma))
 
 
 mkSpockAction
@@ -657,7 +657,7 @@ mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpMana
       cacheLock <- liftIO $ newMVar ()
       cacheCell <- liftIO $ newIORef (schemaCache, initSchemaCacheVer)
       -- planCache <- liftIO $ E.initPlanCache planCacheOptions
-      let cacheRef = SchemaCacheRef cacheLock cacheCell (E.clearPlanCache {- planCache -})
+      let cacheRef = SchemaCacheRef cacheLock cacheCell E.clearPlanCache
       -- pure (planCache, cacheRef)
       pure cacheRef
 

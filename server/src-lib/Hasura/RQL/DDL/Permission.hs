@@ -140,9 +140,9 @@ buildInsPermInfo tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCols mBack
         insColsWithoutPresets = insCols \\ HM.keys setColsSQL
     return (InsPermInfo (HS.fromList insColsWithoutPresets) be setColsSQL backendOnly reqHdrs, deps)
   where
-    backendOnly = fromMaybe False mBackendOnly
+    backendOnly = Just True == mBackendOnly
     allCols = map pgiColumn $ getCols fieldInfoMap
-    insCols = fromMaybe allCols $ convColSpec fieldInfoMap <$> mCols
+    insCols = maybe allCols (convColSpec fieldInfoMap) mCols
 
 type instance PermInfo InsPerm = InsPermInfo
 
@@ -381,7 +381,7 @@ fetchPermDef
   -> PermType
   -> Q.TxE QErr (Value, Maybe T.Text)
 fetchPermDef (QualifiedObject sn tn) rn pt =
- (first Q.getAltJ .  Q.getRow) <$> Q.withQE defaultTxErrorHandler
+ first Q.getAltJ .  Q.getRow <$> Q.withQE defaultTxErrorHandler
       [Q.sql|
             SELECT perm_def::json, comment
               FROM hdb_catalog.hdb_permission

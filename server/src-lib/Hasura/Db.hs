@@ -44,13 +44,13 @@ import qualified Hasura.Tracing               as Tracing
 
 data PGExecCtx
   = PGExecCtx
-  { _pecRunReadOnly  :: (forall a. Q.TxE QErr a -> ExceptT QErr IO a)
+  { _pecRunReadOnly  :: forall a. Q.TxE QErr a -> ExceptT QErr IO a
   -- ^ Run a Q.ReadOnly transaction
-  , _pecRunReadNoTx  :: (forall a. Q.TxE QErr a -> ExceptT QErr IO a)
+  , _pecRunReadNoTx  :: forall a. Q.TxE QErr a -> ExceptT QErr IO a
   -- ^ Run a read only statement without an explicit transaction block
-  , _pecRunReadWrite :: (forall a. Q.TxE QErr a -> ExceptT QErr IO a)
+  , _pecRunReadWrite :: forall a. Q.TxE QErr a -> ExceptT QErr IO a
   -- ^ Run a Q.ReadWrite transaction
-  , _pecCheckHealth  :: (IO Bool)
+  , _pecCheckHealth  :: IO Bool
   -- ^ Checks the health of this execution context
   }
 
@@ -58,9 +58,9 @@ data PGExecCtx
 mkPGExecCtx :: Q.TxIsolation -> Q.PGPool -> PGExecCtx
 mkPGExecCtx isoLevel pool =
   PGExecCtx
-  { _pecRunReadOnly = (Q.runTx pool (isoLevel, Just Q.ReadOnly))
-  , _pecRunReadNoTx = (Q.runTx' pool)
-  , _pecRunReadWrite = (Q.runTx pool (isoLevel, Just Q.ReadWrite))
+  { _pecRunReadOnly = Q.runTx pool (isoLevel, Just Q.ReadOnly)
+  , _pecRunReadNoTx = Q.runTx' pool
+  , _pecRunReadWrite = Q.runTx pool (isoLevel, Just Q.ReadWrite)
   , _pecCheckHealth = checkDbConnection
   }
   where

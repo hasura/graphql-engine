@@ -45,7 +45,7 @@ main = defaultMain [
       -- an eviction on each insert, all LRU counters at zero. Simulates a scan.
       , bench "bounded evicting scan" $
           let preloaded = populate 5000 (Cache.initialise 5000) Cache.insertAllStripes
-           in perRunEnv (preloaded) $ \(cache, _) ->
+           in perRunEnv preloaded $ \(cache, _) ->
                 V.mapM_ (\k -> Cache.insert k k cache) rs
       ]
 
@@ -147,7 +147,7 @@ realisticBenches name wrk =
       --   We should also look into just generating a report by hand that takes
       -- into account per-thread misses without actually simulating them with
       -- burnCycles.
-      putStrLn $ "TIMING: " <>(show $ fromIntegral (aft - bef) / (1000*1000 :: Double)) <> "ms"
+      putStrLn $ "TIMING: " <> show (fromIntegral (aft - bef) / (1000*1000 :: Double)) <> "ms"
       -- putStrLn $ "HITS/MISSES: "<> show _hitsMisses  -- DEBUGGING/FYI
       return ()
       where
@@ -198,9 +198,9 @@ readBenches n =
     env (populate n (Cache.initialise (fromIntegral $ n*2)) Cache.insertAllStripes) $ \ ~(cache, k)->
       bgroup "bounded" [
         bench "hit" $
-          nfAppIO (\k' -> Cache.lookup k' cache) k
+          nfAppIO (`Cache.lookup` cache) k
       , bench "miss" $
-          nfAppIO (\k' -> Cache.lookup k' cache) 0xDEAD
+          nfAppIO (`Cache.lookup` cache) 0xDEAD
       ]
   ]
 

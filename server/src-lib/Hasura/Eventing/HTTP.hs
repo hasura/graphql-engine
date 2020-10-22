@@ -132,7 +132,7 @@ data Invocation (a :: TriggerTypes)
   { iEventId  :: EventId
   , iStatus   :: Int
   , iRequest  :: WebhookRequest
-  , iResponse :: (Response a)
+  , iResponse :: Response a
   }
 
 data ExtraLogContext

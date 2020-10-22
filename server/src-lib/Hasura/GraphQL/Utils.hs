@@ -25,7 +25,7 @@ getBaseTyWithNestedLevelsCount ty = go ty 0
     go gType ctr =
       case gType of
         G.TypeNamed _ n      -> (n, ctr)
-        G.TypeList  _ gType' -> flip go (ctr + 1) gType'
+        G.TypeList  _ gType' -> go gType' (ctr + 1)
 
 groupListWith
   :: (Eq k, Hashable k, Foldable t, Functor t)

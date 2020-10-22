@@ -73,9 +73,7 @@ initPlanningSt =
 prepareWithPlan :: (MonadState PlanningSt m) => UnpreparedValue -> m S.SQLExp
 prepareWithPlan = \case
   UVParameter PGColumnValue{ pcvValue = colVal } varInfoM -> do
-    argNum <- case fmap getName varInfoM of
-      Just var -> getVarArgNum var
-      Nothing  -> getNextArgNum
+    argNum <- maybe getNextArgNum getVarArgNum (fmap getName varInfoM)
     addPrepArg argNum (toBinaryValue colVal, pstValue colVal)
     return $ toPrepParam argNum (pstType colVal)
 

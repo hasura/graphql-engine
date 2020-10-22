@@ -87,7 +87,7 @@ instance Arbitrary Variable where
 instance Arbitrary URLTemplate where
   arbitrary = URLTemplate <$> listOf (oneof [genText, genVariable])
     where
-      genText = (TIText . T.pack) <$> listOf1 (elements $ alphaNumerics <> " ://")
+      genText = TIText . T.pack <$> listOf1 (elements $ alphaNumerics <> " ://")
       genVariable = TIVariable <$> arbitrary
 
 genURLTemplate :: Gen URLTemplate

@@ -465,7 +465,7 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
           | otherwise = Just retryConfig
 
         maybeHeader headerConfig
-          | headerConfig == [] = Nothing
+          | null headerConfig = Nothing
           | otherwise = Just headerConfig
 
     customTypesToOrdJSON :: CustomTypes -> AO.Value
@@ -504,7 +504,7 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
               AO.object $ [ ("name", AO.toOrdered fieldName)
                           , ("type", AO.toOrdered ty)
                           ]
-              <> catMaybes [ (("arguments", ) . AO.toOrdered) <$> argsValM
+              <> catMaybes [ ("arguments", ) . AO.toOrdered <$> argsValM
                            , maybeDescriptionToMaybeOrdPair fieldDescM
                            ]
 
@@ -552,7 +552,7 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
           <> catMaybes [ listToMaybeOrdPair "headers" AO.toOrdered headers
                        , listToMaybeOrdPair "arguments" argDefinitionToOrdJSON args]
           <> typeAndKind
-          <> (bool [("timeout",AO.toOrdered timeout)] mempty $ timeout == defaultActionTimeoutSecs)
+          <> bool [("timeout",AO.toOrdered timeout)] mempty (timeout == defaultActionTimeoutSecs)
 
         permToOrdJSON :: ActionPermissionMetadata -> AO.Value
         permToOrdJSON (ActionPermissionMetadata role permComment) =

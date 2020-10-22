@@ -368,7 +368,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           conclusion <- runExceptT $ forWithKey queryPlan $ \fieldName -> \case
             E.ExecStepDB (tx, genSql) -> doQErr $ Tracing.trace "Postgres Query" $ do
               logQueryLog logger q ((fieldName,) <$> genSql) requestId
-              (telemTimeIO_DT, (resp)) <- Tracing.interpTraceT id $ withElapsedTime $
+              (telemTimeIO_DT, resp) <- Tracing.interpTraceT id $ withElapsedTime $
                 hoist (runQueryTx pgExecCtx) tx
               return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
             E.ExecStepRemote (rsi, opDef, varValsM) -> do
@@ -379,7 +379,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           case conclusion of
             Left _ -> pure ()
             Right results ->
-              Tracing.interpTraceT id $ cacheStore cacheKey $ encJFromInsOrdHashMap $ fmap rfResponse $ OMap.mapKeys G.unName results
+              Tracing.interpTraceT id $ cacheStore cacheKey $ encJFromInsOrdHashMap $ rfResponse <$> OMap.mapKeys G.unName results
       sendCompleted (Just requestId)
 
     E.MutationExecutionPlan mutationPlan -> do
@@ -723,7 +723,7 @@ createWSServerApp env authMode serverEnv = \ !ipAddress !pendingConn ->
       -- Mask async exceptions during event processing to help maintain integrity of mutable vars:
       (\rid rh ip -> mask_ $ onConn (_wseLogger serverEnv) (_wseCorsPolicy serverEnv) rid rh ip)
       (\conn bs -> mask_ $ onMessage env authMode serverEnv conn bs)
-      (\conn ->    mask_ $ onClose (_wseLogger serverEnv) (_wseLiveQMap serverEnv) conn)
+      (mask_ . onClose (_wseLogger serverEnv) (_wseLiveQMap serverEnv))
 
 stopWSServerApp :: WSServerEnv -> IO ()
 stopWSServerApp wsEnv = WS.shutdown (_wseServer wsEnv)

@@ -88,10 +88,10 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
   hasuraFields <- forM (toList $ rtrHasuraFields remoteRelationship) $
     \fieldName -> onNothing (find ((==) fieldName . fromPGCol . pgiColumn) pgColumns) $
       throwError $ TableFieldNonexistent table fieldName
-  pgColumnsVariables <- (mapM (\(k,v) -> do
+  pgColumnsVariables <- mapM (\(k,v) -> do
                                   variableName <- pgColumnToVariable k
                                   pure $ (variableName,v)
-                              )) $ (HM.toList $ mapFromL (pgiColumn) pgColumns)
+                              ) $ HM.toList (mapFromL (pgiColumn) pgColumns)
   let pgColumnsVariablesMap = HM.fromList pgColumnsVariables
   (RemoteSchemaCtx rsName introspectionResult rsi _ _) <-
     onNothing (HM.lookup remoteSchemaName remoteSchemaMap) $
@@ -126,11 +126,11 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
     buildRelationshipTypeInfo pgColumnsVariablesMap schemaDoc (objTyInfo,(_,typeMap)) fieldCall = do
       objFldDefinition <- lookupField (fcName fieldCall) objTyInfo
       let providedArguments = getRemoteArguments $ fcArguments fieldCall
-      (validateRemoteArguments
+      validateRemoteArguments
         (mapFromL G._ivdName (G._fldArgumentsDefinition objFldDefinition))
         providedArguments
         pgColumnsVariablesMap
-        schemaDoc)
+        schemaDoc
       let eitherParamAndTypeMap =
             runStateT
               (stripInMap
@@ -142,7 +142,7 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
       (newParamMap, newTypeMap) <- onLeft eitherParamAndTypeMap $ throwError
       innerObjTyInfo <- onNothing (getObjTyInfoFromField schemaDoc objFldDefinition) $
         bool (throwError $
-                    (InvalidType (G._fldType objFldDefinition) "only objects or scalar types expected"))
+                    InvalidType (G._fldType objFldDefinition) "only objects or scalar types expected")
              (pure objTyInfo)
              (isScalarType schemaDoc objFldDefinition)
       pure
@@ -336,17 +336,17 @@ validateType permittedVariables value expectedGType schemaDocument =
           namedType <- columnInfoToNamedType fieldInfo
           isTypeCoercible (mkGraphQLType namedType) expectedGType
     G.VInt {} -> do
-      intScalarGType <- (mkGraphQLType <$> mkScalarTy PGInteger)
+      intScalarGType <- mkGraphQLType <$> mkScalarTy PGInteger
       isTypeCoercible intScalarGType expectedGType
     G.VFloat {} -> do
-      floatScalarGType <- (mkGraphQLType <$> mkScalarTy PGFloat)
+      floatScalarGType <- mkGraphQLType <$> mkScalarTy PGFloat
       isTypeCoercible floatScalarGType expectedGType
     G.VBoolean {} -> do
-      boolScalarGType <- (mkGraphQLType <$> mkScalarTy PGBoolean)
+      boolScalarGType <- mkGraphQLType <$> mkScalarTy PGBoolean
       isTypeCoercible boolScalarGType expectedGType
     G.VNull -> throwError NullNotAllowedHere
     G.VString {} -> do
-      stringScalarGType <- (mkGraphQLType <$> mkScalarTy PGText)
+      stringScalarGType <- mkGraphQLType <$> mkScalarTy PGText
       isTypeCoercible stringScalarGType expectedGType
     G.VEnum _ -> throwError UnsupportedEnum
     G.VList values -> do
@@ -355,14 +355,12 @@ validateType permittedVariables value expectedGType schemaDocument =
         [_] -> pure ()
         _   -> throwError UnsupportedMultipleElementLists
       assertListType expectedGType
-      (flip
-         traverse_
-         values
-         (\val ->
-            validateType permittedVariables val (unwrapGraphQLType expectedGType) schemaDocument))
+      for_
+        values
+        (\val ->
+            validateType permittedVariables val (unwrapGraphQLType expectedGType) schemaDocument)
     G.VObject values ->
-      flip
-        traverse_
+      for_
         (HM.toList values)
         (\(name,val) ->
            let expectedNamedType = G.getBaseType expectedGType
@@ -415,8 +413,8 @@ isTypeCoercible actualType expectedType =
 
 assertListType :: (MonadError ValidationError m) => G.GType -> m ()
 assertListType actualType =
-  (when (not $ G.isListType actualType)
-    (throwError $ InvalidType actualType "is not a list type"))
+  when (not $ G.isListType actualType)
+    (throwError $ InvalidType actualType "is not a list type")
 
 -- | Convert a field info to a named type, if possible.
 columnInfoToNamedType

@@ -1,4 +1,3 @@
-{-# LANGUAGE DisambiguateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns           #-}
 {-# LANGUAGE RecordWildCards          #-}
 
@@ -111,7 +110,7 @@ instance ToJSON RemoteFieldInfo where
 -- over (brought into scope, e.g. in 'rtrHasuraFields'.
 newtype RemoteArguments =
   RemoteArguments
-    { getRemoteArguments :: (HashMap G.Name (G.Value G.Name))
+    { getRemoteArguments :: HashMap G.Name (G.Value G.Name)
     } deriving (Show, Eq, Lift, Cacheable, NFData)
 
 instance ToJSON RemoteArguments where

@@ -138,7 +138,7 @@ explainGQLQuery pgExecCtx sc (GQLExplain query userVarsRaw maybeIsRelay) = do
       (plan, _) <- E.buildLiveQueryPlan pgExecCtx userInfo validSubscriptionQueries
       runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where
-    queryType = bool E.QueryHasura E.QueryRelay $ fromMaybe False maybeIsRelay
+    queryType = bool E.QueryHasura E.QueryRelay $ Just True == maybeIsRelay
     sessionVariables = mkSessionVariablesText $ maybe [] Map.toList userVarsRaw
 
     runInTx :: LazyTx QErr EncJSON -> m EncJSON

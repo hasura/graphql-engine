@@ -47,7 +47,7 @@ newtype PGVersion = PGVersion { unPGVersion :: Int } deriving (Show, Eq, J.ToJSO
 
 getDbId :: Q.TxE QErr Text
 getDbId =
-  (runIdentity . Q.getRow) <$>
+  runIdentity . Q.getRow <$>
   Q.withQE defaultTxErrorHandler
   [Q.sql|
     SELECT (hasura_uuid :: text) FROM hdb_catalog.hdb_version
@@ -154,7 +154,7 @@ mkServeOptions rso = do
                      withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
   lqOpts <- mkLQOpts
   enableAL <- withEnvBool (rsoEnableAllowlist rso) $ fst enableAllowlistEnv
-  enabledLogs <- maybe L.defaultEnabledLogTypes (Set.fromList) <$>
+  enabledLogs <- maybe L.defaultEnabledLogTypes Set.fromList <$>
                  withEnv (rsoEnabledLogTypes rso) (fst enabledLogsEnv)
   serverLogLevel <- fromMaybe L.LevelInfo <$> withEnv (rsoLogLevel rso) (fst logLevelEnv)
   planCacheOptions <- E.PlanCacheOptions . fromMaybe 4000 <$>

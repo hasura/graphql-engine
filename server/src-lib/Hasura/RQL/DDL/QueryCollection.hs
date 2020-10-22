@@ -95,7 +95,7 @@ runDropQueryFromCollection
 runDropQueryFromCollection (DropQueryFromCollection collName queryName) = do
   CollectionDef qList <- getCollectionDef collName
   let queryExists = flip any qList $ \q -> _lqName q == queryName
-  when (not queryExists) $ throw400 NotFound $ "query with name "
+  unless queryExists $ throw400 NotFound $ "query with name "
     <> queryName <<> " not found in collection " <>> collName
   let collDef = CollectionDef $ flip filter qList $
                                 \q -> _lqName q /= queryName

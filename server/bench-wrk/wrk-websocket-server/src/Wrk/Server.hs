@@ -253,5 +253,5 @@ uptoFirstMatch str = fmap T.concat $ AT.manyTill nextPossibleMatch $ AT.string s
 takeIncludingFirstMatch :: T.Text -> AT.Parser T.Text
 takeIncludingFirstMatch str = withSubStr <|> errMsg
   where
-    withSubStr = fmap (`T.append` str) $ uptoFirstMatch str
+    withSubStr = (`T.append` str) <$> uptoFirstMatch str
     errMsg = fail $ "Could not find sub-string: " <> T.unpack str
