@@ -328,6 +328,6 @@ execRemoteGQ env reqId userInfo reqHdrs rsi opDef varVals = do
           pure $ G.ExecutableDefinitionOperation $ G.OperationDefinitionTyped $ inlined
         ) varVals
   logQueryLog logger q Nothing reqId
-  (time, respHdrs, resp) <- execRemoteGQ' env manager userInfo reqHdrs q rsi opType
+  (time, respHdrs, resp) <- execRemoteGQ' env manager userInfo reqHdrs q rsi opType TopLevelRemoteCall
   let !httpResp = HttpResponse (encJFromLBS resp) respHdrs
   return (time, httpResp)

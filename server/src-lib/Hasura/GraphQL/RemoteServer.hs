@@ -314,8 +314,9 @@ execRemoteGQ'
   -> GQLReqUnparsed
   -> RemoteSchemaInfo
   -> G.OperationType
+  -> RemoteCallReason
   -> m (DiffTime, [N.Header], BL.ByteString)
-execRemoteGQ' env manager userInfo reqHdrs q rsi opType =  do
+execRemoteGQ' env manager userInfo reqHdrs q rsi opType fieldPaths =  do
   when (opType == G.OperationTypeSubscription) $
     throw400 NotSupported "subscription to remote server is not supported"
   confHdrs <- makeHeadersFromConf env hdrConf
@@ -337,10 +338,16 @@ execRemoteGQ' env manager userInfo reqHdrs q rsi opType =  do
            , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
            }
   Tracing.tracedHttpRequest req \req' -> do
+    Tracing.attachMetadata [("field_paths", renderedFieldPaths)]
     (time, res)  <- withElapsedTime $ liftIO $ try $ HTTP.httpLbs req' manager
     resp <- either httpThrow return res
     pure (time, mkSetCookieHeaders resp, resp ^. Wreq.responseBody)
   where
+    renderFieldPath fp = T.intercalate "." $ map getFieldNameTxt (unFieldPath fp)
+    renderedFieldPaths = case fieldPaths of
+      TopLevelRemoteCall -> "toplevel"
+      RemoteJoinCall fps ->
+        T.intercalate ", " $ map renderFieldPath (toList fps)
     RemoteSchemaInfo url hdrConf fwdClientHdrs timeout = rsi
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
     httpThrow = \case
