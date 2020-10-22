@@ -730,15 +730,6 @@ CREATE TABLE hdb_catalog.hdb_custom_types
   custom_types jsonb NOT NULL
 );
 
-CREATE VIEW hdb_catalog.hdb_role AS
-(
-  SELECT DISTINCT role_name FROM (
-    SELECT role_name FROM hdb_catalog.hdb_permission
-    UNION ALL
-    SELECT role_name FROM hdb_catalog.hdb_action_permission
-  ) q
-);
-
 CREATE TABLE hdb_catalog.hdb_cron_triggers
 (
   name TEXT PRIMARY KEY,
@@ -831,4 +822,15 @@ role_name text,
 definition jsonb,
 comment text,
 PRIMARY KEY (remote_schema_name, role_name)
+);
+
+CREATE VIEW hdb_catalog.hdb_role AS
+(
+SELECT DISTINCT role_name FROM (
+SELECT role_name FROM hdb_catalog.hdb_permission
+UNION ALL
+SELECT role_name FROM hdb_catalog.hdb_action_permission
+UNION ALL
+SELECT role_name FROM hdb_catalog.hdb_remote_schema_permission
+) q
 );

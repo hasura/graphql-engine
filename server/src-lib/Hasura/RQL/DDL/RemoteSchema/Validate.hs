@@ -264,7 +264,9 @@ parsePresetDirective gType parentArgName (G.Directive name args) = do
           pure $ G.literal v
 
 -- | validateDirective checks if the arguments of a given directive
---   are a subset of the corresponding upstream directive arguments
+--   is a subset of the corresponding upstream directive arguments
+--   *NOTE*: This function assumes that the `providedDirective` and the
+--   `upstreamDirective` have the same name.
 validateDirective
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => G.Directive a -- ^ provided directive
@@ -284,8 +286,8 @@ validateDirective providedDirective upstreamDirective (parentType, parentTypeNam
     directiveName = G._dName providedDirective
 
 -- | validateDirectives checks if the `providedDirectives`
--- are a subset of `upstreamDirectives` and then validate
--- each of the directives by calling the `validateDirective`
+--   are a subset of `upstreamDirectives` and then validate
+--   each of the directives by calling the `validateDirective`
 validateDirectives
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => [G.Directive a]
@@ -372,6 +374,10 @@ validateEnumTypeDefinitions providedEnums upstreamEnums = do
   where
     upstreamEnumsMap = mapFromL G._etdName $ upstreamEnums
 
+-- | `validateInputValueDefinition` validates a given input value definition
+--   , against the corresponding upstream input value definition. Two things
+--   are validated to do the same, the type and the default value of the
+--   input value definitions should be equal.
 validateInputValueDefinition
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => G.InputValueDefinition
@@ -395,6 +401,8 @@ validateInputValueDefinition providedDefn upstreamDefn inputObjectName = do
     G.InputValueDefinition _ providedName providedType providedDefaultValue providedDirectives  = providedDefn
     G.InputValueDefinition _ _ upstreamType upstreamDefaultValue upstreamDirectives  = upstreamDefn
 
+-- | `validateArguments` validates the provided arguments against the corresponding
+--    upstream remote schema arguments.
 validateArguments
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => (G.ArgumentsDefinition G.InputValueDefinition)
