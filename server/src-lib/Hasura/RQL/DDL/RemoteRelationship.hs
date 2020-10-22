@@ -36,9 +36,9 @@ runCreateRemoteRelationship remoteRelationship = do
 resolveRemoteRelationship
   :: QErrM m
   => RemoteRelationship
-  -> [PGColumnInfo]
+  -> [ColumnInfo 'Postgres]
   -> RemoteSchemaMap
-  -> m (RemoteFieldInfo, [SchemaDependency])
+  -> m (RemoteFieldInfo 'Postgres, [SchemaDependency])
 resolveRemoteRelationship remoteRelationship
                           pgColumns
                           remoteSchemaMap = do

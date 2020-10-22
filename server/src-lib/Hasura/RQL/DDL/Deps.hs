@@ -9,9 +9,11 @@ module Hasura.RQL.DDL.Deps
 
 import           Hasura.Prelude
 
-import qualified Data.HashSet      as HS
-import qualified Data.Text         as T
-import qualified Database.PG.Query as Q
+import qualified Data.HashSet       as HS
+import qualified Data.Text          as T
+import qualified Database.PG.Query  as Q
+
+import           Data.Text.Extended
 
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -36,7 +38,7 @@ reportDepsExt deps unknownDeps =
   throw400 DependencyError $
     "cannot drop due to the following dependent objects : " <> depObjsTxt
   where
-    depObjsTxt = T.intercalate ", " (reportSchemaObjs deps:unknownDeps)
+    depObjsTxt = commaSeparated $ reportSchemaObjs deps:unknownDeps
 
 parseDropNotice :: (QErrM m ) => T.Text -> m [Either T.Text SchemaObjId]
 parseDropNotice t = do

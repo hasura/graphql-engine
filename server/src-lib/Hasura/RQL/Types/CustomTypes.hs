@@ -33,6 +33,7 @@ module Hasura.RQL.Types.CustomTypes
   ) where
 
 import           Control.Lens.TH                (makeLenses)
+import           Data.Text.Extended
 import           Instances.TH.Lift              ()
 import           Language.Haskell.TH.Syntax     (Lift)
 
@@ -50,8 +51,9 @@ import qualified Text.Builder                   as T
 import           Hasura.Incremental             (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Column
-import           Hasura.RQL.Types.Common        (RelType)
+import           Hasura.RQL.Types.Common        (RelType, ScalarType)
 import           Hasura.RQL.Types.Table
+import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 
 newtype GraphQLType
@@ -73,7 +75,7 @@ isListType (GraphQLType ty) = G.isListType ty
 
 newtype InputObjectFieldName
   = InputObjectFieldName { unInputObjectFieldName :: G.Name }
-  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, DQuote, Lift, Generic, NFData, Cacheable)
+  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, ToTxt, Lift, Generic, NFData, Cacheable)
 
 data InputObjectFieldDefinition
   = InputObjectFieldDefinition
@@ -88,7 +90,7 @@ $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''InputObjectFieldDefinition)
 
 newtype InputObjectTypeName
   = InputObjectTypeName { unInputObjectTypeName :: G.Name }
-  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, DQuote, Lift, Generic, NFData, Cacheable)
+  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, ToTxt, Lift, Generic, NFData, Cacheable)
 
 data InputObjectTypeDefinition
   = InputObjectTypeDefinition
@@ -102,7 +104,7 @@ $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''InputObjectTypeDefinition)
 
 newtype ObjectFieldName
   = ObjectFieldName { unObjectFieldName :: G.Name }
-  deriving ( Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, DQuote
+  deriving ( Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, ToTxt
            , J.FromJSONKey, J.ToJSONKey, Lift, Generic, NFData, Cacheable)
 
 data ObjectFieldDefinition a
@@ -122,7 +124,7 @@ $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ObjectFieldDefinition)
 
 newtype RelationshipName
   = RelationshipName { unRelationshipName :: G.Name }
-  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, DQuote, Lift, Generic, NFData, Cacheable)
+  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, ToTxt, Lift, Generic, NFData, Cacheable)
 
 data TypeRelationship t f
   = TypeRelationship
@@ -138,7 +140,7 @@ $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''TypeRelationship)
 
 newtype ObjectTypeName
   = ObjectTypeName { unObjectTypeName :: G.Name }
-  deriving ( Show, Eq, Ord, Hashable, J.FromJSON, J.FromJSONKey, DQuote
+  deriving ( Show, Eq, Ord, Hashable, J.FromJSON, J.FromJSONKey, ToTxt
            , J.ToJSONKey, J.ToJSON, Lift, Generic, NFData, Cacheable)
 
 data ObjectTypeDefinition a b c
@@ -177,7 +179,7 @@ defaultScalars =
 
 newtype EnumTypeName
   = EnumTypeName { unEnumTypeName :: G.Name }
-  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, DQuote, Lift, Generic, NFData, Cacheable)
+  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, ToTxt, Lift, Generic, NFData, Cacheable)
 
 data EnumValueDefinition
   = EnumValueDefinition
@@ -218,24 +220,32 @@ emptyCustomTypes = CustomTypes Nothing Nothing Nothing Nothing
 
 data AnnotatedScalarType
   = ASTCustom !ScalarTypeDefinition
-  | ASTReusedPgScalar !G.Name !PGScalarType
-  deriving (Show, Eq, Lift)
-$(J.deriveJSON J.defaultOptions ''AnnotatedScalarType)
+  | forall b . (b ~ 'Postgres) => ASTReusedScalar !G.Name !(ScalarType b)
+  -- TODO: at a later stage, we shouldn't hardcode reused scalar types to be
+  -- Postgres, but allow scalar types to come from any kind of backend.  In
+  -- order words, the restriction (b ~ 'Postgres) should be relaxed.
+deriving instance Eq AnnotatedScalarType
+instance J.ToJSON AnnotatedScalarType where
+  toJSON (ASTCustom std) = J.toJSON std
+  toJSON (ASTReusedScalar name st) = J.object ["name" J..= name, "type" J..= st]
 
 data NonObjectCustomType
-  = NOCTScalar !AnnotatedScalarType
+  = NOCTScalar !(AnnotatedScalarType)
   | NOCTEnum !EnumTypeDefinition
   | NOCTInputObject !InputObjectTypeDefinition
-  deriving (Show, Eq, Lift)
-$(J.deriveJSON J.defaultOptions ''NonObjectCustomType)
+  deriving (Generic)
+deriving instance Eq NonObjectCustomType
+instance J.ToJSON NonObjectCustomType where
+  toJSON = J.genericToJSON $ J.defaultOptions
 
 type NonObjectTypeMap = Map.HashMap G.Name NonObjectCustomType
 
 data AnnotatedObjectFieldType
   = AOFTScalar !AnnotatedScalarType
   | AOFTEnum !EnumTypeDefinition
-  deriving (Show, Eq)
-$(J.deriveToJSON J.defaultOptions ''AnnotatedObjectFieldType)
+  deriving (Generic)
+instance J.ToJSON AnnotatedObjectFieldType where
+  toJSON = J.genericToJSON $ J.defaultOptions
 
 fieldTypeToScalarType :: AnnotatedObjectFieldType -> PGScalarType
 fieldTypeToScalarType = \case
@@ -243,7 +253,7 @@ fieldTypeToScalarType = \case
   AOFTScalar annotatedScalar -> annotatedScalarToPgScalar annotatedScalar
   where
     annotatedScalarToPgScalar = \case
-      ASTReusedPgScalar _ scalarType     -> scalarType
+      ASTReusedScalar _ scalarType     -> scalarType
       ASTCustom ScalarTypeDefinition{..} ->
         if | _stdName == idScalar     -> PGText
            | _stdName == intScalar    -> PGInteger
@@ -252,17 +262,17 @@ fieldTypeToScalarType = \case
            | _stdName == boolScalar   -> PGBoolean
            | otherwise                -> PGJSON
 
-type AnnotatedObjectType =
-  ObjectTypeDefinition (G.GType, AnnotatedObjectFieldType) TableInfo PGColumnInfo
+type AnnotatedObjectType b =
+  ObjectTypeDefinition (G.GType, AnnotatedObjectFieldType) (TableInfo b) (ColumnInfo b)
 
-type AnnotatedObjects = Map.HashMap G.Name AnnotatedObjectType
+type AnnotatedObjects b = Map.HashMap G.Name (AnnotatedObjectType b)
 
-data AnnotatedCustomTypes
+data AnnotatedCustomTypes (b :: Backend)
   = AnnotatedCustomTypes
     { _actNonObjects :: !NonObjectTypeMap
-    , _actObjects    :: !AnnotatedObjects
-    } deriving (Show, Eq)
+    , _actObjects    :: !(AnnotatedObjects b)
+    }
 
-emptyAnnotatedCustomTypes :: AnnotatedCustomTypes
+emptyAnnotatedCustomTypes :: AnnotatedCustomTypes backend
 emptyAnnotatedCustomTypes =
   AnnotatedCustomTypes mempty mempty

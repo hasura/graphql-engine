@@ -19,20 +19,20 @@ import qualified Data.Aeson                             as J
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashSet                           as Set
 import qualified Data.IntMap                            as IntMap
-import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.SQL.DML                         as S
 
+import           Data.Text.Extended
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.DML.Internal                (currentSession)
 import           Hasura.RQL.Types
-import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
+import           Hasura.Session
 
 
 type PlanVariables = Map.HashMap G.Name Int
@@ -124,7 +124,7 @@ validateSessionVariables :: MonadError QErr m => Set.HashSet SessionVariable -> 
 validateSessionVariables requiredVariables sessionVariables = do
   let missingSessionVariables = requiredVariables `Set.difference` getSessionVariablesSet sessionVariables
   unless (null missingSessionVariables) do
-    throw400 NotFound $ "missing session variables: " <> T.intercalate ", " (dquote . sessionVariableToText <$> toList missingSessionVariables)
+    throw400 NotFound $ "missing session variables: " <> dquoteList (sessionVariableToText <$> toList missingSessionVariables)
 
 getVarArgNum :: (MonadState PlanningSt m) => G.Name -> m Int
 getVarArgNum var = do

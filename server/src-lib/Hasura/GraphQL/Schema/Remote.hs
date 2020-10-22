@@ -7,20 +7,23 @@ module Hasura.GraphQL.Schema.Remote
   ) where
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 
-import           Language.GraphQL.Draft.Syntax         as G
-import qualified Data.List.NonEmpty                    as NE
-import           Data.Type.Equality
 import qualified Data.HashMap.Strict                   as Map
 import qualified Data.HashMap.Strict.Extended          as Map
 import qualified Data.HashMap.Strict.InsOrd            as OMap
-import           Data.Foldable                         (sequenceA_)
+import qualified Data.List.NonEmpty                    as NE
 
-import           Hasura.GraphQL.Parser                 as P
+import           Data.Foldable                         (sequenceA_)
+import           Data.Type.Equality
+import           Language.GraphQL.Draft.Syntax         as G
+
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
+
+import           Data.Text.Extended
 import           Hasura.GraphQL.Context                (RemoteField)
+import           Hasura.GraphQL.Parser                 as P
+import           Hasura.RQL.Types
+
 
 buildRemoteParser
   :: forall m n
@@ -159,7 +162,7 @@ remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name inter
     validateSubType (G.TypeNamed nx x) (G.TypeNamed ny y) =
       case (lookupType schemaDoc x , lookupType schemaDoc y) of
         (Just x' , Just y') -> nx == ny && validateSubTypeDefinition x' y'
-        _ -> False
+        _                   -> False
     validateSubType _ _ = False
     validateSubTypeDefinition x' y' | x' == y' = True
     validateSubTypeDefinition (TypeDefinitionObject otd) (TypeDefinitionInterface itd)
@@ -406,7 +409,7 @@ remoteFieldFromName
   -> m (FieldParser n (Field NoFragments G.Name))
 remoteFieldFromName sdoc fieldName description fieldTypeName argsDefns =
   case lookupType sdoc fieldTypeName of
-    Nothing -> throw400 RemoteSchemaError $ "Could not find type with name " <>> fieldName
+    Nothing      -> throw400 RemoteSchemaError $ "Could not find type with name " <>> fieldName
     Just typeDef -> remoteField sdoc fieldName description argsDefns typeDef
 
 -- | 'inputValuefinitionParser' accepts a 'G.InputValueDefinition' and will return an
@@ -531,11 +534,11 @@ remoteFieldScalarParser
 remoteFieldScalarParser (G.ScalarTypeDefinition description name _directives) =
   case G.unName name of
     "Boolean" -> P.boolean $> ()
-    "Int" -> P.int $> ()
-    "Float" -> P.float $> ()
-    "String" -> P.string $> ()
-    "ID" -> P.identifier $> ()
-    _ -> P.unsafeRawScalar name description $> ()
+    "Int"     -> P.int $> ()
+    "Float"   -> P.float $> ()
+    "String"  -> P.string $> ()
+    "ID"      -> P.identifier $> ()
+    _         -> P.unsafeRawScalar name description $> ()
 
 remoteFieldEnumParser
   :: MonadParse n

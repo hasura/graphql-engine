@@ -11,15 +11,16 @@ import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 
+import           Data.Text.Extended
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
-import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
+import           Hasura.Session
 
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.Inline          as E
