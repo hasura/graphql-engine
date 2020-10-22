@@ -100,7 +100,7 @@ command to allow the Docker container to access the host's network:
         :emphasize-lines: 1
 
         docker run -d --net=host \
-          -e HASURA_GRAPHQL_DATABASE_URL=postgres://<username>:<password>@hostname:port/<dbname> \
+          -e HASURA_GRAPHQL_DATABASE_URL=postgres://<username>:<password>@hostname:<port>/<dbname> \
           -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
           hasura/graphql-engine:latest
 
@@ -114,7 +114,7 @@ command to allow the Docker container to access the host's network:
         :emphasize-lines: 2
 
         docker run -d -p 8080:8080 \
-          -e HASURA_GRAPHQL_DATABASE_URL=postgres://<username>:<password>@host.docker.internal:port/<dbname> \
+          -e HASURA_GRAPHQL_DATABASE_URL=postgres://<username>:<password>@host.docker.internal:<port>/<dbname> \
           -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
           hasura/graphql-engine:latest
 
@@ -128,7 +128,7 @@ command to allow the Docker container to access the host's network:
         :emphasize-lines: 2
 
         docker run -d -p 8080:8080 \
-          -e HASURA_GRAPHQL_DATABASE_URL=postgres://<username>:<password>@docker.for.win.localhost:port/<dbname> \
+          -e HASURA_GRAPHQL_DATABASE_URL=postgres://<username>:<password>@docker.for.win.localhost:<port>/<dbname> \
           -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
           hasura/graphql-engine:latest
           
