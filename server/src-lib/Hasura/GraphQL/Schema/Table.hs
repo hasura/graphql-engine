@@ -38,7 +38,7 @@ import           Hasura.SQL.Types
 tableSelectColumnsEnum
   :: (MonadSchema n m, MonadRole r m, MonadTableInfo r m)
   => QualifiedTable
-  -> SelPermInfo
+  -> SelPermInfo 'Postgres
   -> m (Maybe (Parser 'Both n PGCol))
 tableSelectColumnsEnum table selectPermissions = do
   tableName <- qualifiedObjectToName table
@@ -67,7 +67,7 @@ tableSelectColumnsEnum table selectPermissions = do
 tableUpdateColumnsEnum
   :: (MonadSchema n m, MonadRole r m, MonadTableInfo r m)
   => QualifiedTable
-  -> UpdPermInfo
+  -> UpdPermInfo 'Postgres
   -> m (Maybe (Parser 'Both n PGCol))
 tableUpdateColumnsEnum table updatePermissions = do
   tableName <- qualifiedObjectToName table
@@ -88,7 +88,7 @@ tableUpdateColumnsEnum table updatePermissions = do
 tablePermissions
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
-  -> m (Maybe RolePermInfo)
+  -> m (Maybe (RolePermInfo 'Postgres))
 tablePermissions table = do
   roleName  <- askRoleName
   tableInfo <- askTableInfo table
@@ -97,26 +97,26 @@ tablePermissions table = do
 tableSelectPermissions
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
-  -> m (Maybe SelPermInfo)
+  -> m (Maybe (SelPermInfo 'Postgres))
 tableSelectPermissions table = (_permSel =<<) <$> tablePermissions table
 
 tableUpdatePermissions
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
-  -> m (Maybe UpdPermInfo)
+  -> m (Maybe (UpdPermInfo 'Postgres))
 tableUpdatePermissions table = (_permUpd =<<) <$> tablePermissions table
 
 tableDeletePermissions
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
-  -> m (Maybe DelPermInfo)
+  -> m (Maybe (DelPermInfo 'Postgres))
 tableDeletePermissions table = (_permDel =<<) <$> tablePermissions table
 
 tableSelectFields
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
-  -> SelPermInfo
-  -> m [FieldInfo]
+  -> SelPermInfo 'Postgres
+  -> m [FieldInfo 'Postgres]
 tableSelectFields table permissions = do
   tableFields <- _tciFieldInfoMap . _tiCoreInfo <$> askTableInfo table
   filterM canBeSelected $ Map.elems tableFields
@@ -137,7 +137,7 @@ tableSelectFields table permissions = do
 tableColumns
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   => QualifiedTable
-  -> m [PGColumnInfo]
+  -> m [ColumnInfo 'Postgres]
 tableColumns table =
   mapMaybe columnInfo . Map.elems . _tciFieldInfoMap . _tiCoreInfo <$> askTableInfo table
   where
@@ -147,8 +147,8 @@ tableColumns table =
 tableSelectColumns
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
-  -> SelPermInfo
-  -> m [PGColumnInfo]
+  -> SelPermInfo 'Postgres
+  -> m [ColumnInfo 'Postgres]
 tableSelectColumns table permissions =
   mapMaybe columnInfo <$> tableSelectFields table permissions
   where
@@ -158,8 +158,8 @@ tableSelectColumns table permissions =
 tableUpdateColumns
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   => QualifiedTable
-  -> UpdPermInfo
-  -> m [PGColumnInfo]
+  -> UpdPermInfo 'Postgres
+  -> m [ColumnInfo 'Postgres]
 tableUpdateColumns table permissions = do
   tableFields <- _tciFieldInfoMap . _tiCoreInfo <$> askTableInfo table
   pure $ mapMaybe isUpdatable $ Map.elems tableFields

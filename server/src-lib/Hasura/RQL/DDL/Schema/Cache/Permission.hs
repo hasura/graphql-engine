@@ -30,9 +30,9 @@ buildTablePermissions
      , ArrowWriter (Seq CollectedInfo) arr, MonadTx m )
   => ( Inc.Dependency TableCoreCache
      , QualifiedTable
-     , FieldInfoMap FieldInfo
+     , FieldInfoMap (FieldInfo 'Postgres)
      , HashSet CatalogPermission
-     ) `arr` RolePermInfoMap
+     ) `arr` (RolePermInfoMap 'Postgres)
 buildTablePermissions = Inc.cache proc (tableCache, tableName, tableFields, tablePermissions) ->
   (| Inc.keyed (\_ rolePermissions -> do
        let (insertPerms, selectPerms, updatePerms, deletePerms) =
@@ -87,7 +87,7 @@ buildPermission
      )
   => ( Inc.Dependency TableCoreCache
      , QualifiedTable
-     , FieldInfoMap FieldInfo
+     , FieldInfoMap (FieldInfo 'Postgres)
      , [CatalogPermission]
      ) `arr` Maybe (PermInfo a)
 buildPermission = Inc.cache proc (tableCache, tableName, tableFields, permissions) -> do

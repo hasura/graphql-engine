@@ -58,7 +58,7 @@ mkAllTriggersQ
   :: (MonadTx m, HasSQLGenCtx m)
   => TriggerName
   -> QualifiedTable
-  -> [PGColumnInfo]
+  -> [ColumnInfo 'Postgres]
   -> TriggerOpsDef
   -> m ()
 mkAllTriggersQ trn qt allCols fullspec = do
@@ -70,7 +70,7 @@ mkTriggerQ
   :: (MonadTx m, HasSQLGenCtx m)
   => TriggerName
   -> QualifiedTable
-  -> [PGColumnInfo]
+  -> [ColumnInfo 'Postgres]
   -> Ops
   -> SubscribeOpSpec
   -> m ()

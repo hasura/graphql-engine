@@ -59,7 +59,7 @@ executeQueryWithRemoteJoins
   -> UserInfo
   -> Q.Query
   -> [Q.PrepArg]
-  -> RemoteJoins
+  -> RemoteJoins 'Postgres
   -> m EncJSON
 executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs rjs = do
   -- Step 1: Perform the query on database and fetch the response
@@ -110,7 +110,7 @@ pathToAlias path counter = do
                  <> "__" <> (T.pack . show . unCounter) counter
 
 -- | A 'RemoteJoin' represents the context of remote relationship to be extracted from 'AnnFieldG's.
-data RemoteJoin
+data RemoteJoin (b :: Backend)
   = RemoteJoin
   { _rjName          :: !FieldName -- ^ The remote join field name.
   , _rjArgs          :: ![RemoteFieldArgument] -- ^ User-provided arguments with variables.
@@ -118,44 +118,45 @@ data RemoteJoin
   , _rjHasuraFields  :: !(HashSet FieldName) -- ^ Table fields.
   , _rjFieldCall     :: !(NonEmpty FieldCall) -- ^ Remote server fields.
   , _rjRemoteSchema  :: !RemoteSchemaInfo -- ^ The remote schema server info.
-  , _rjPhantomFields :: ![PGColumnInfo]
+  , _rjPhantomFields :: ![ColumnInfo b]
     -- ^ Hasura fields which are not in the selection set, but are required as
     -- parameters to satisfy the remote join.
-  } deriving (Show, Eq)
+  }
+deriving instance Eq (RemoteJoin 'Postgres)
 
-type RemoteJoins = NE.NonEmpty (FieldPath, NE.NonEmpty RemoteJoin)
-type RemoteJoinMap = Map.HashMap FieldPath (NE.NonEmpty RemoteJoin)
+type RemoteJoins b = NE.NonEmpty (FieldPath, NE.NonEmpty (RemoteJoin b))
+type RemoteJoinMap b = Map.HashMap FieldPath (NE.NonEmpty (RemoteJoin b))
 
-mapToNonEmpty :: RemoteJoinMap -> Maybe RemoteJoins
+mapToNonEmpty :: RemoteJoinMap backend -> Maybe (RemoteJoins backend)
 mapToNonEmpty = NE.nonEmpty . Map.toList
 
 -- | Traverse through 'AnnSimpleSel' and collect remote join fields (if any).
-getRemoteJoins :: AnnSimpleSel -> (AnnSimpleSel, Maybe RemoteJoins)
+getRemoteJoins :: AnnSimpleSel 'Postgres -> (AnnSimpleSel 'Postgres, Maybe (RemoteJoins 'Postgres))
 getRemoteJoins =
   second mapToNonEmpty . flip runState mempty . transformSelect mempty
 
-transformSelect :: FieldPath -> AnnSimpleSel -> State RemoteJoinMap AnnSimpleSel
+transformSelect :: FieldPath -> AnnSimpleSel 'Postgres -> State (RemoteJoinMap 'Postgres) (AnnSimpleSel 'Postgres)
 transformSelect path sel = do
   let fields = _asnFields sel
   -- Transform selects in array, object and computed fields
   transformedFields <- transformAnnFields path fields
   pure sel{_asnFields = transformedFields}
 
-transformObjectSelect :: FieldPath -> AnnObjectSelect -> State RemoteJoinMap AnnObjectSelect
+transformObjectSelect :: FieldPath -> AnnObjectSelect 'Postgres -> State (RemoteJoinMap 'Postgres) (AnnObjectSelect 'Postgres)
 transformObjectSelect path sel = do
   let fields = _aosFields sel
   transformedFields <- transformAnnFields path fields
   pure sel{_aosFields = transformedFields}
 
 -- | Traverse through @'AnnAggregateSelect' and collect remote join fields (if any).
-getRemoteJoinsAggregateSelect :: AnnAggregateSelect -> (AnnAggregateSelect, Maybe RemoteJoins)
+getRemoteJoinsAggregateSelect :: AnnAggregateSelect 'Postgres -> (AnnAggregateSelect 'Postgres, Maybe (RemoteJoins 'Postgres))
 getRemoteJoinsAggregateSelect =
   second mapToNonEmpty . flip runState mempty . transformAggregateSelect mempty
 
 transformAggregateSelect
   :: FieldPath
-  -> AnnAggregateSelect
-  -> State RemoteJoinMap AnnAggregateSelect
+  -> AnnAggregateSelect 'Postgres
+  -> State (RemoteJoinMap 'Postgres) (AnnAggregateSelect 'Postgres)
 transformAggregateSelect path sel = do
   let aggFields = _asnFields sel
   transformedFields <- forM aggFields $ \(fieldName, aggField) ->
@@ -166,14 +167,14 @@ transformAggregateSelect path sel = do
   pure sel{_asnFields = transformedFields}
 
 -- | Traverse through @'ConnectionSelect' and collect remote join fields (if any).
-getRemoteJoinsConnectionSelect :: ConnectionSelect S.SQLExp -> (ConnectionSelect S.SQLExp, Maybe RemoteJoins)
+getRemoteJoinsConnectionSelect :: ConnectionSelect 'Postgres S.SQLExp -> (ConnectionSelect 'Postgres S.SQLExp, Maybe (RemoteJoins 'Postgres))
 getRemoteJoinsConnectionSelect =
   second mapToNonEmpty . flip runState mempty . transformConnectionSelect mempty
 
 transformConnectionSelect
   :: FieldPath
-  -> ConnectionSelect S.SQLExp
-  -> State RemoteJoinMap (ConnectionSelect S.SQLExp)
+  -> ConnectionSelect 'Postgres S.SQLExp
+  -> State (RemoteJoinMap 'Postgres) (ConnectionSelect 'Postgres S.SQLExp)
 transformConnectionSelect path ConnectionSelect{..} = do
   let connectionFields = _asnFields _csSelect
   transformedFields <- forM connectionFields $ \(fieldName, field) ->
@@ -193,11 +194,13 @@ transformConnectionSelect path ConnectionSelect{..} = do
           EdgeNode <$> transformAnnFields (appendPath fieldName edgePath) annFields
 
 -- | Traverse through 'MutationOutput' and collect remote join fields (if any)
-getRemoteJoinsMutationOutput :: MutationOutput -> (MutationOutput, Maybe RemoteJoins)
+getRemoteJoinsMutationOutput
+  :: MutationOutput 'Postgres
+  -> (MutationOutput 'Postgres, Maybe (RemoteJoins 'Postgres))
 getRemoteJoinsMutationOutput =
   second mapToNonEmpty . flip runState mempty . transformMutationOutput mempty
   where
-    transformMutationOutput :: FieldPath -> MutationOutput -> State RemoteJoinMap MutationOutput
+    transformMutationOutput :: FieldPath -> MutationOutput 'Postgres -> State (RemoteJoinMap 'Postgres) (MutationOutput 'Postgres)
     transformMutationOutput path = \case
       MOutMultirowFields mutationFields ->
         MOutMultirowFields <$> transfromMutationFields mutationFields
@@ -212,7 +215,7 @@ getRemoteJoinsMutationOutput =
             MExp t         -> pure $ MExp t
             MRet annFields -> MRet <$> transformAnnFields fieldPath annFields
 
-transformAnnFields :: FieldPath -> AnnFields -> State RemoteJoinMap AnnFields
+transformAnnFields :: FieldPath -> AnnFields 'Postgres -> State (RemoteJoinMap 'Postgres) (AnnFields 'Postgres)
 transformAnnFields path fields = do
   let pgColumnFields = map fst $ getFields _AFColumn fields
       remoteSelects = getFields _AFRemote fields
@@ -303,15 +306,15 @@ data RemoteJoinField
 --   from remote join map and query response JSON from Postgres.
 traverseQueryResponseJSON
   :: (MonadError QErr m)
-  => RemoteJoinMap -> AO.Value -> m (CompositeValue RemoteJoinField)
+  => RemoteJoinMap 'Postgres -> AO.Value -> m (CompositeValue RemoteJoinField)
 traverseQueryResponseJSON rjm =
   flip runReaderT rjm . flip evalStateT (Counter 0) . traverseValue mempty
   where
-    askRemoteJoins :: MonadReader RemoteJoinMap m
-                   => FieldPath -> m (Maybe (NE.NonEmpty RemoteJoin))
+    askRemoteJoins :: MonadReader (RemoteJoinMap 'Postgres) m
+                   => FieldPath -> m (Maybe (NE.NonEmpty (RemoteJoin 'Postgres)))
     askRemoteJoins path = asks (Map.lookup path)
 
-    traverseValue :: (MonadError QErr m, MonadReader RemoteJoinMap m, MonadState Counter m)
+    traverseValue :: (MonadError QErr m, MonadReader (RemoteJoinMap 'Postgres) m, MonadState Counter m)
                   => FieldPath -> AO.Value -> m (CompositeValue RemoteJoinField)
     traverseValue path = \case
       AO.Object obj -> traverseObject obj

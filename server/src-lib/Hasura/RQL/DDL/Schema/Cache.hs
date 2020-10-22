@@ -322,7 +322,7 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
     buildTableEventTriggers
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
          , Inc.ArrowCache m arr, MonadTx m, MonadReader BuildReason m, HasSQLGenCtx m )
-      => (TableCoreInfo, [CatalogEventTrigger]) `arr` EventTriggerInfoMap
+      => (TableCoreInfo 'Postgres, [CatalogEventTrigger]) `arr` EventTriggerInfoMap
     buildTableEventTriggers = buildInfoMap _cetName mkEventTriggerMetadataObject buildEventTrigger
       where
         buildEventTrigger = proc (tableInfo, eventTrigger) -> do
@@ -369,9 +369,9 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
     buildActions
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
          , ArrowWriter (Seq CollectedInfo) arr)
-      => ( (AnnotatedCustomTypes, HashSet PGScalarType)
+      => ( (AnnotatedCustomTypes 'Postgres, HashSet PGScalarType)
          , [ActionMetadata]
-         ) `arr` HashMap ActionName ActionInfo
+         ) `arr` HashMap ActionName (ActionInfo 'Postgres)
     buildActions = buildInfoMap _amName mkActionMetadataObject buildAction
       where
         buildAction = proc ((resolvedCustomTypes, pgScalars), action) -> do
@@ -479,7 +479,7 @@ withMetadataCheck cascade action = do
 
   return res
   where
-    processSchemaChanges :: (MonadTx m, CacheRM m) => SchemaDiff -> m ()
+    processSchemaChanges :: (MonadTx m, CacheRM m) => SchemaDiff 'Postgres -> m ()
     processSchemaChanges schemaDiff = do
       -- Purge the dropped tables
       mapM_ delTableAndDirectDeps droppedTables

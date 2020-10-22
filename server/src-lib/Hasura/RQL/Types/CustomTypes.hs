@@ -51,8 +51,9 @@ import qualified Text.Builder                   as T
 import           Hasura.Incremental             (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Column
-import           Hasura.RQL.Types.Common        (RelType)
+import           Hasura.RQL.Types.Common        (RelType, ScalarType)
 import           Hasura.RQL.Types.Table
+import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 
 newtype GraphQLType
@@ -219,24 +220,32 @@ emptyCustomTypes = CustomTypes Nothing Nothing Nothing Nothing
 
 data AnnotatedScalarType
   = ASTCustom !ScalarTypeDefinition
-  | ASTReusedPgScalar !G.Name !PGScalarType
-  deriving (Show, Eq, Lift)
-$(J.deriveJSON J.defaultOptions ''AnnotatedScalarType)
+  | forall b . (b ~ 'Postgres) => ASTReusedScalar !G.Name !(ScalarType b)
+  -- TODO: at a later stage, we shouldn't hardcode reused scalar types to be
+  -- Postgres, but allow scalar types to come from any kind of backend.  In
+  -- order words, the restriction (b ~ 'Postgres) should be relaxed.
+deriving instance Eq AnnotatedScalarType
+instance J.ToJSON AnnotatedScalarType where
+  toJSON (ASTCustom std) = J.toJSON std
+  toJSON (ASTReusedScalar name st) = J.object ["name" J..= name, "type" J..= st]
 
 data NonObjectCustomType
-  = NOCTScalar !AnnotatedScalarType
+  = NOCTScalar !(AnnotatedScalarType)
   | NOCTEnum !EnumTypeDefinition
   | NOCTInputObject !InputObjectTypeDefinition
-  deriving (Show, Eq, Lift)
-$(J.deriveJSON J.defaultOptions ''NonObjectCustomType)
+  deriving (Generic)
+deriving instance Eq NonObjectCustomType
+instance J.ToJSON NonObjectCustomType where
+  toJSON = J.genericToJSON $ J.defaultOptions
 
 type NonObjectTypeMap = Map.HashMap G.Name NonObjectCustomType
 
 data AnnotatedObjectFieldType
   = AOFTScalar !AnnotatedScalarType
   | AOFTEnum !EnumTypeDefinition
-  deriving (Show, Eq)
-$(J.deriveToJSON J.defaultOptions ''AnnotatedObjectFieldType)
+  deriving (Generic)
+instance J.ToJSON AnnotatedObjectFieldType where
+  toJSON = J.genericToJSON $ J.defaultOptions
 
 fieldTypeToScalarType :: AnnotatedObjectFieldType -> PGScalarType
 fieldTypeToScalarType = \case
@@ -244,7 +253,7 @@ fieldTypeToScalarType = \case
   AOFTScalar annotatedScalar -> annotatedScalarToPgScalar annotatedScalar
   where
     annotatedScalarToPgScalar = \case
-      ASTReusedPgScalar _ scalarType     -> scalarType
+      ASTReusedScalar _ scalarType     -> scalarType
       ASTCustom ScalarTypeDefinition{..} ->
         if | _stdName == idScalar     -> PGText
            | _stdName == intScalar    -> PGInteger
@@ -253,17 +262,17 @@ fieldTypeToScalarType = \case
            | _stdName == boolScalar   -> PGBoolean
            | otherwise                -> PGJSON
 
-type AnnotatedObjectType =
-  ObjectTypeDefinition (G.GType, AnnotatedObjectFieldType) TableInfo PGColumnInfo
+type AnnotatedObjectType b =
+  ObjectTypeDefinition (G.GType, AnnotatedObjectFieldType) (TableInfo b) (ColumnInfo b)
 
-type AnnotatedObjects = Map.HashMap G.Name AnnotatedObjectType
+type AnnotatedObjects b = Map.HashMap G.Name (AnnotatedObjectType b)
 
-data AnnotatedCustomTypes
+data AnnotatedCustomTypes (b :: Backend)
   = AnnotatedCustomTypes
     { _actNonObjects :: !NonObjectTypeMap
-    , _actObjects    :: !AnnotatedObjects
-    } deriving (Show, Eq)
+    , _actObjects    :: !(AnnotatedObjects b)
+    }
 
-emptyAnnotatedCustomTypes :: AnnotatedCustomTypes
+emptyAnnotatedCustomTypes :: AnnotatedCustomTypes backend
 emptyAnnotatedCustomTypes =
   AnnotatedCustomTypes mempty mempty

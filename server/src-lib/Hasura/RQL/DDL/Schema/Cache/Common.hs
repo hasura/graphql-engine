@@ -61,7 +61,7 @@ data BuildOutputs
   -- reuse it later if we need to mark the remote schema inconsistent during GraphQL schema
   -- generation (because of field conflicts).
   , _boAllowlist     :: !(HS.HashSet GQLQuery)
-  , _boCustomTypes   :: !AnnotatedCustomTypes
+  , _boCustomTypes   :: !(AnnotatedCustomTypes 'Postgres)
   , _boCronTriggers  :: !(M.HashMap TriggerName CronTriggerInfo)
   }
 $(makeLenses ''BuildOutputs)

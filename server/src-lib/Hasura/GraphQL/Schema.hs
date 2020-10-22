@@ -208,7 +208,7 @@ query'
   => HashSet QualifiedTable
   -> [FunctionInfo]
   -> [P.FieldParser n RemoteField]
-  -> [ActionInfo]
+  -> [ActionInfo 'Postgres]
   -> NonObjectTypeMap
   -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
 query' allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
@@ -304,7 +304,7 @@ query
   -> HashSet QualifiedTable
   -> [FunctionInfo]
   -> [P.FieldParser n RemoteField]
-  -> [ActionInfo]
+  -> [ActionInfo 'Postgres]
   -> NonObjectTypeMap
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 query name allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
@@ -317,7 +317,7 @@ subscription
    . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => HashSet QualifiedTable
   -> [FunctionInfo]
-  -> [ActionInfo]
+  -> [ActionInfo 'Postgres]
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 subscription allTables allFunctions asyncActions =
   query $$(G.litName "subscription_root") allTables allFunctions [] asyncActions mempty
@@ -405,7 +405,7 @@ queryWithIntrospection
   -> [FunctionInfo]
   -> [P.FieldParser n RemoteField]
   -> [P.FieldParser n RemoteField]
-  -> [ActionInfo]
+  -> [ActionInfo 'Postgres]
   -> NonObjectTypeMap
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 queryWithIntrospection allTables allFunctions queryRemotes mutationRemotes allActions nonObjectCustomTypes = do
@@ -479,7 +479,7 @@ mutation
    . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r, Has Scenario r)
   => HashSet QualifiedTable
   -> [P.FieldParser n RemoteField]
-  -> [ActionInfo]
+  -> [ActionInfo 'Postgres]
   -> NonObjectTypeMap
   -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue))))
 mutation allTables allRemotes allActions nonObjectCustomTypes = do
