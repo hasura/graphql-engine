@@ -776,6 +776,8 @@ const postgresFunctionTester = /.*\(\)$/gm;
 export const isPostgresFunction = str =>
   new RegExp(postgresFunctionTester).test(str);
 
+export const isTypeCast = (str = '') => str.split('::').length > 1;
+
 export const getEstimateCountQuery = (schemaName, tableName) => {
   return `
 SELECT
@@ -791,7 +793,12 @@ WHERE
 export const isColTypeString = colType =>
   ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
 
+const isCascadable = sql => {
+  const regex = new RegExp(/(\s|^)drop\s/i); // all queries with drop (with space on both sides Ie:this would ignore names matches with "" or prefix/suffix)
+  return regex.test(sql);
+};
 const cascadePGSqlQuery = sql => {
+  if (!isCascadable(sql)) return sql;
   if (sql[sql.length - 1] === ';')
     return sql.substr(0, sql.length - 1) + ' CASCADE;';
   // SQL might have  a " at the end

@@ -96,7 +96,7 @@ data ActionQuery v
   = AQQuery !(RQL.AnnActionExecution v)
   | AQAsync !(RQL.AnnActionAsyncQuery v)
 
-type RemoteField = (RQL.RemoteSchemaInfo, G.Field G.NoFragments Variable)
+type RemoteField = (RQL.RemoteSchemaInfo, G.Field G.NoFragments G.Name)
 
 type QueryRootField v = RootField (QueryDB v) RemoteField (ActionQuery v) J.Value
 
