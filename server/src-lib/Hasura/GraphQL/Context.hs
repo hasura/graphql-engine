@@ -152,18 +152,24 @@ resolveRemoteVariable userInfo = \case
     let baseType = G.getBaseType gType
         coercedValue =
           case G.unName baseType of
-            "Int" -> G.VInt . fst <$> T.decimal sessionVarVal
+            "Int" -> G.VInt <$>
+              case readMaybe $ T.unpack sessionVarVal of
+                Nothing -> Left $ "error in parsing " <> sessionVarVal <<> " Int value"
+                Just i -> Right i
             "Boolean" ->
               if | sessionVarVal `elem` ["true", "false"] -> Right $ G.VBoolean $ "true" == sessionVarVal
-                 | otherwise -> Left $ "invalid boolean value"
-            "Float" -> G.VFloat . fst <$> T.rational sessionVarVal
+                 | otherwise -> Left $ sessionVarVal <<> " is not a valid boolean value"
+            "Float" -> G.VFloat <$>
+              case readMaybe $ T.unpack sessionVarVal of
+                Nothing -> Left $ "error in parsing " <> sessionVarVal <<> " Float value"
+                Just i -> Right i
             "String" -> pure $ G.VString sessionVarVal
             "ID" -> pure $ G.VString sessionVarVal
             -- When we encounter a custom scalar, we just pass it as a string
             _ -> pure $ G.VString sessionVarVal
     coercedValue' <- onLeft coercedValue $
       \errMsg ->
-        let errMsg' = "error while coercing " <> sessionVar <<> ": " <> T.pack errMsg
+        let errMsg' = "error while coercing " <> sessionVar <<> ": " <> errMsg
         in RQL.throw400 RQL.CoercionError errMsg'
     pure $ Variable (VIRequired varName) gType (GraphQLValue coercedValue')
   RQL.RawVariable variable -> pure variable
