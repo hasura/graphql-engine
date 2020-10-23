@@ -12,6 +12,7 @@ import qualified Hasura.GraphQL.Execute.Types  as ET (GraphQLQueryType)
 import qualified Hasura.GraphQL.Parser         as P
 import qualified Hasura.RQL.DML.Select.Types   as RQL (Fields)
 
+import           Data.Text.Extended
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -27,7 +28,7 @@ textToName textName = G.mkName textName `onNothing` throw400 ValidationFailed
                       ("cannot include " <> textName <<> " in the GraphQL schema because "
                        <> " it is not a valid GraphQL identifier")
 
-partialSQLExpToUnpreparedValue :: PartialSQLExp -> P.UnpreparedValue
+partialSQLExpToUnpreparedValue :: PartialSQLExp 'Postgres -> P.UnpreparedValue
 partialSQLExpToUnpreparedValue (PSESessVar pftype var) = P.UVSessionVar pftype var
 partialSQLExpToUnpreparedValue (PSESQLExp sqlExp)      = P.UVLiteral sqlExp
 

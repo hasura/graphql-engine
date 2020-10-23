@@ -12,6 +12,7 @@ import           Instances.TH.Lift           ()
 import qualified Data.HashMap.Strict         as M
 import qualified Data.Sequence               as DS
 
+import           Data.Text.Extended
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Insert       (insertCheckExpr)
@@ -22,14 +23,14 @@ import           Hasura.RQL.DML.Update.Types
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Instances        ()
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 import           Hasura.Server.Version       (HasVersion)
 import           Hasura.Session
-import           Hasura.SQL.Types
 
+import qualified Data.Environment            as Env
 import qualified Database.PG.Query           as Q
 import qualified Hasura.SQL.DML              as S
-import qualified Data.Environment         as Env
-import qualified Hasura.Tracing           as Tracing
+import qualified Hasura.Tracing              as Tracing
 
 
 -- NOTE: This function can be improved, because we use
@@ -49,8 +50,8 @@ updateOperatorText (UpdDeleteAtPath _) = "_delete_at_path"
 traverseAnnUpd
   :: (Applicative f)
   => (a -> f b)
-  -> AnnUpdG a
-  -> f (AnnUpdG b)
+  -> AnnUpdG backend a
+  -> f (AnnUpdG backend b)
 traverseAnnUpd f annUpd =
   AnnUpd tn
   <$> traverse (traverse $ traverse f) opExps
@@ -62,7 +63,7 @@ traverseAnnUpd f annUpd =
     AnnUpd tn opExps (whr, fltr) chk mutOutput allCols = annUpd
 
 mkUpdateCTE
-  :: AnnUpd -> S.CTE
+  :: AnnUpd 'Postgres -> S.CTE
 mkUpdateCTE (AnnUpd tn opExps (permFltr, wc) chk _ columnsInfo) =
   S.CTEUpdate update
   where
@@ -78,7 +79,7 @@ mkUpdateCTE (AnnUpd tn opExps (permFltr, wc) chk _ columnsInfo) =
     tableFltrExpr = toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps permFltr wc
     checkExpr = toSQLBoolExp (S.QualTable tn) chk
 
-expandOperator :: [PGColumnInfo] -> (PGCol, UpdOpExpG S.SQLExp) -> S.SetExpItem
+expandOperator :: [ColumnInfo 'Postgres] -> (PGCol, UpdOpExpG S.SQLExp) -> S.SetExpItem
 expandOperator infos (column, op) = S.SetExpItem $ (column,) $ case op of
   UpdSet          e -> e
   UpdInc          e -> S.mkSQLOpExp S.incOp               identifier (asNum  e)
@@ -136,9 +137,9 @@ convDefault col _ _ = return (col, S.SEUnsafe "DEFAULT")
 
 convOp
   :: (UserInfoM m, QErrM m)
-  => FieldInfoMap FieldInfo
+  => FieldInfoMap (FieldInfo 'Postgres)
   -> [PGCol]
-  -> UpdPermInfo
+  -> UpdPermInfo 'Postgres
   -> [(PGCol, a)]
   -> (PGCol -> PGColumnType -> a -> m (PGCol, S.SQLExp))
   -> m [(PGCol, S.SQLExp)]
@@ -161,10 +162,10 @@ convOp fieldInfoMap preSetCols updPerm objs conv =
 
 validateUpdateQueryWith
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => SessVarBldr m
+  => SessVarBldr 'Postgres m
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> UpdateQuery
-  -> m AnnUpd
+  -> m (AnnUpd 'Postgres)
 validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   let tableName = uqTable uq
   tableInfo <- withPathK "table" $ askTabInfo tableName
@@ -244,7 +245,7 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
 
 validateUpdateQuery
   :: (QErrM m, UserInfoM m, CacheRM m)
-  => UpdateQuery -> m (AnnUpd, DS.Seq Q.PrepArg)
+  => UpdateQuery -> m (AnnUpd 'Postgres, DS.Seq Q.PrepArg)
 validateUpdateQuery =
   runDMLP1T . validateUpdateQueryWith sessVarFromCurrentSetting binRHSBuilder
 
@@ -258,7 +259,7 @@ execUpdateQuery
   => Env.Environment
   -> Bool
   -> Maybe MutationRemoteJoinCtx
-  -> (AnnUpd, DS.Seq Q.PrepArg)
+  -> (AnnUpd 'Postgres, DS.Seq Q.PrepArg)
   -> m EncJSON
 execUpdateQuery env strfyNum remoteJoinCtx (u, p) =
   runMutation env $ mkMutation remoteJoinCtx (uqp1Table u) (updateCTE, p)

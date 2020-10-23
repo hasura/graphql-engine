@@ -45,11 +45,11 @@ import qualified Data.List                     as L
 import qualified Data.Text                     as T
 
 import           Control.Lens
+import           Data.Text.Extended
 import           Language.GraphQL.Draft.Syntax
 
 import           Hasura.RQL.Types.Error
 import           Hasura.Server.Utils
-import           Hasura.SQL.Types
 
 -- | Internal bookkeeping used during inlining.
 data InlineEnv = InlineEnv
@@ -149,7 +149,7 @@ inlineFragmentSpread FragmentSpread{ _fsName, _fsDirectives } = do
      -- http://spec.graphql.org/June2018/#sec-Fragment-spreads-must-not-form-cycles
      | (fragmentCycle, _:_) <- break (== _fsName) _ieFragmentStack ->
        throw400 ValidationFailed $ "the fragment definition(s) "
-         <> englishList "and" (dquoteTxt <$> (_fsName :| reverse fragmentCycle))
+         <> englishList "and" (toTxt <$> (_fsName :| reverse fragmentCycle))
          <> " form a cycle"
 
      -- We didn’t hit the fragment cache, so look up the definition and convert

@@ -35,18 +35,65 @@ Step 2: Merge remote schema
 
 To merge your remote schema with the GraphQL engine's auto-generated schema:
 
-Head to the ``Remote Schemas`` tab of the console and click on the ``Add`` button.
+.. rst-class:: api_tabs
+.. tabs::
 
-.. thumbnail:: /img/graphql/core/business-logic/add-remote-schemas-interface.png
-   :alt: Merge remote schema
+  .. tab:: Console
 
-You need to enter the following information:
+    Head to the ``Remote Schemas`` tab of the console and click on the ``Add`` button.
 
-- **Remote Schema name**: an alias for the remote schema that must be unique on an instance of the GraphQL engine.
-- **GraphQL server URL**: the endpoint at which your remote GraphQL server is available. This value can be entered
-  manually or by specifying an environment variable that contains this information.
+    .. thumbnail:: /img/graphql/core/business-logic/add-remote-schemas-interface.png
+      :alt: Merge remote schema
 
-  .. note::
+    You need to enter the following information:
+
+    - **Remote Schema name**: an alias for the remote schema that must be unique on an instance of the GraphQL engine.
+    - **GraphQL server URL**: the endpoint at which your remote GraphQL server is available. This value can be entered
+      manually or by specifying an environment variable that contains this information.
+
+  .. tab:: CLI
+
+    To add a remote schema, edit the ``remote_schemas.yaml`` file in the ``metadata`` directory as in this example:
+
+    .. code-block:: yaml
+      :emphasize-lines: 1-5
+
+      - name: my-remote-schema
+        definition:
+          url: https://graphql-pokemon.now.sh/
+          timeout_seconds: 60
+          forward_client_headers: true
+
+    Apply the metadata by running:
+
+    .. code-block:: bash
+
+      hasura metadata apply
+
+  .. tab:: API
+
+    You can add a remote schema by using the :ref:`add_remote_schema metadata API <add_remote_schema>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "type": "add_remote_schema",
+          "args": {
+              "name": "my-remote-schema",
+              "definition": {
+                  "url": "https://graphql-pokemon.now.sh/",
+                  "forward_client_headers": true,
+                  "timeout_seconds": 60
+              }
+          }
+      }
+
+
+.. note::
 
     If you are running Hasura using Docker, ensure that the Hasura Docker container can reach the server endpoint.
     See :ref:`this page <docker_networking>` for Docker networking.
@@ -75,9 +122,17 @@ Click on the ``Add Remote Schema`` button to merge the remote schema.
 
 Step 3: Make queries to the remote server from Hasura
 -----------------------------------------------------
-Now you can head to the ``GraphiQL`` tab and make queries to your remote server from Hasura.
 
-You can query your remote server by making requests to the Hasura GraphQL endpoint (``/v1/graphql``).
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    Now you can head to the ``GraphiQL`` tab and make queries to your remote server from Hasura.
+
+  .. tab:: Via API
+
+    You can query your remote server by making requests to the Hasura GraphQL endpoint (``/v1/graphql``).
 
 Points to remember
 ------------------
@@ -97,9 +152,18 @@ For versions <= ``v1.0.0-beta.2``, GraphQL schema of each added remote server is
 metadata modifying operation like adding tables/functions, defining relationships/permissions etc. is done.
 
 From ``v1.0.0-beta.3`` onwards, a remote server's GraphQL schema is cached and refreshed only when user
-explicitly reloads remote schema by clicking the ``Reload`` button on the console or
-by making a :ref:`reload_remote_schema<api_remote_schemas>` metadata API request
+explicitly reloads the remote schema.
 
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    Click the ``Reload`` button in the ``Remote schema`` section on the Hasura console.
+
+  .. tab:: API
+
+    Make a request to the :ref:`reload_remote_schema<reload_remote_schema>` API.
 
 Current limitations
 ^^^^^^^^^^^^^^^^^^^
@@ -114,8 +178,8 @@ Extending the auto-generated GraphQL schema fields
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For some use cases, you may need to extend the GraphQL schema fields exposed by the Hasura GraphQL engine
-(and not merely augment as we have done :ref:`here <merge_remote_schema>`) with a custom schema/server. To support them, you can use
-community tooling to write your own client-facing GraphQL gateway that interacts with the GraphQL engine.
+(and not merely add new fields as we have done :ref:`here <merge_remote_schema>`) with a custom schema/server.
+To support them, you can use community tooling to write your own client-facing GraphQL gateway that interacts with the GraphQL engine.
 
 .. note::
 

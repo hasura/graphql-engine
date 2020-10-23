@@ -51,9 +51,8 @@ data PreparedSql
   = PreparedSql
   { _psQuery       :: !Q.Query
   , _psPrepArgs    :: !PrepArgMap
-  , _psRemoteJoins :: !(Maybe RemoteJoins)
+  , _psRemoteJoins :: !(Maybe (RemoteJoins 'Postgres))
   }
-  deriving Show
 
 -- | Required to log in `query-log`
 instance J.ToJSON PreparedSql where
@@ -71,12 +70,12 @@ instance J.ToJSON RootFieldPlan where
     RFPPostgres pgPlan -> J.toJSON pgPlan
     RFPActionQuery _   -> J.String "Action Execution Tx"
 
-data ActionQueryPlan
-  = AQPAsyncQuery !DS.AnnSimpleSel -- ^ Cacheable plan
+data ActionQueryPlan (b :: Backend)
+  = AQPAsyncQuery !(DS.AnnSimpleSel b) -- ^ Cacheable plan
   | AQPQuery !ActionExecuteTx -- ^ Non cacheable transaction
 
 actionQueryToRootFieldPlan
-  :: PrepArgMap -> ActionQueryPlan -> RootFieldPlan
+  :: PrepArgMap -> ActionQueryPlan 'Postgres -> RootFieldPlan
 actionQueryToRootFieldPlan prepped = \case
   AQPAsyncQuery s -> RFPPostgres $
     PreparedSql (DS.selectQuerySQL DS.JASSingleObject s) prepped Nothing
@@ -145,24 +144,24 @@ mkCurPlanTx env manager reqHdrs userInfo instrument ep = \case
 -- convert a query from an intermediate representation to... another
 irToRootFieldPlan
   :: PrepArgMap
-  -> QueryDB S.SQLExp -> PreparedSql
+  -> QueryDB 'Postgres S.SQLExp -> PreparedSql
 irToRootFieldPlan prepped = \case
   QDBSimple s      -> mkPreparedSql getRemoteJoins (DS.selectQuerySQL DS.JASMultipleRows) s
   QDBPrimaryKey s  -> mkPreparedSql getRemoteJoins (DS.selectQuerySQL DS.JASSingleObject) s
   QDBAggregation s -> mkPreparedSql getRemoteJoinsAggregateSelect DS.selectAggregateQuerySQL s
   QDBConnection s  -> mkPreparedSql getRemoteJoinsConnectionSelect DS.connectionSelectQuerySQL s
   where
-    mkPreparedSql :: (s -> (t, Maybe RemoteJoins)) -> (t -> Q.Query) -> s -> PreparedSql
+    mkPreparedSql :: (s -> (t, Maybe (RemoteJoins 'Postgres))) -> (t -> Q.Query) -> s -> PreparedSql
     mkPreparedSql getJoins f simpleSel =
       let (simpleSel',remoteJoins) = getJoins simpleSel
       in PreparedSql (f simpleSel') prepped remoteJoins
 
 traverseQueryRootField
-  :: forall f a b c d h
+  :: forall f a b c d h backend
    . Applicative f
   => (a -> f b)
-  -> RootField (QueryDB a) c h d
-  -> f (RootField (QueryDB b) c h d)
+  -> RootField (QueryDB backend a) c h d
+  -> f (RootField (QueryDB backend b) c h d)
 traverseQueryRootField f = traverseDB \case
   QDBSimple s       -> QDBSimple      <$> DS.traverseAnnSimpleSelect f s
   QDBPrimaryKey s   -> QDBPrimaryKey  <$> DS.traverseAnnSimpleSelect f s
@@ -288,7 +287,7 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
     usrVars = _uiSession userInfo
 
     convertActionQuery
-      :: ActionQuery UnpreparedValue -> StateT PlanningSt m ActionQueryPlan
+      :: ActionQuery 'Postgres UnpreparedValue -> StateT PlanningSt m (ActionQueryPlan 'Postgres)
     convertActionQuery = \case
       AQQuery s -> lift $ do
         result <- resolveActionExecution env logger userInfo s $ ActionExecContext manager reqHeaders usrVars
