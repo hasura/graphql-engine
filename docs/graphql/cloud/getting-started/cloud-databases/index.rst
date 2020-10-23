@@ -21,17 +21,17 @@ There are several cloud providers that offer Postgres databases.
 Guides
 ------
 
-Check out the following guides for tutorials on how to use Hasura Cloud with an existing database provided by specific cloud vendors.
+Check out the following guides for tutorials on how to use Hasura Cloud with a new or existing database provided by specific cloud vendors.
 
 .. toctree::
    :maxdepth: 1
    :titlesonly:
 
-   AWS Postgres <aws-postgres>
+   AWS RDS Postgres <aws-postgres>
    GCP <gcp>
    Azure <azure>
    Digital Ocean <digital-ocean>
    Aiven <aiven>
    Timescale Cloud <timescale-cloud>
    YugaByte <yugabyte>
-   AWS Aurora <aws-aurora>
+   AWS RDS Aurora <aws-aurora>

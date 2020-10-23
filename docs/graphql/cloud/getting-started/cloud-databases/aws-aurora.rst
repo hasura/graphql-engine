@@ -1,11 +1,11 @@
 .. meta::
-   :description: Using Hasura with an AWS Aurora database
-   :keywords: hasura, docs, existing database, guide, aws aurora
+   :description: Using Hasura with an AWS RDS Aurora database
+   :keywords: hasura, docs, existing database, guide, aws rds aurora
 
-.. _cloud_db_aws_aurora:
+.. _cloud_db_aws_rds_aurora:
 
-Using Hasura Cloud with an AWS Aurora Postgres database
-=======================================================
+Using Hasura Cloud with an AWS RDS Aurora Postgres database
+===========================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -15,14 +15,14 @@ Using Hasura Cloud with an AWS Aurora Postgres database
 Introduction
 ------------
 
-This guide explains how to connect a new or existing AWS Aurora Postgres database to a Hasura Cloud project.
+This guide explains how to connect a new or existing AWS RDS Aurora Postgres database to a Hasura Cloud project.
 
 Step 0: Sign up or log in to Hasura Cloud
 -----------------------------------------
 
 Navigate to `Hasura Cloud <https://cloud.hasura.io/>`__ and sign up or log in.
 
-.. _create_hasura_project_aws_aurora:
+.. _create_hasura_project_aws_rds_aurora:
 
 Step 1: Create a Hasura Cloud project
 -------------------------------------
@@ -41,10 +41,10 @@ You will get prompted for a Postgres Database URL. We will create this in the ne
 
 Also, copy the Hasura Cloud IP for later.
 
-.. _create_pg_aws_aurora:
+.. _create_pg_aws_rds_aurora:
 
-Step 2: Create an Aurora DB on AWS (skip if you have an existing DB)
---------------------------------------------------------------------
+Step 2: Create an Aurora DB on AWS RDS (skip if you have an existing DB)
+------------------------------------------------------------------------
 
 Log into the `AWS console <https://console.aws.amazon.com//>`__.
 
@@ -116,7 +116,7 @@ Click on ``Add rule``:
    :alt: Add an inbound rule for AWS RDS database
    :width: 1000px
 
-Add the Hasura IP you copied in :ref:`step 1 <create_hasura_project_aws_aurora>`:
+Add the Hasura IP you copied in :ref:`step 1 <create_hasura_project_aws_rds_aurora>`:
 
 .. thumbnail:: /img/graphql/cloud/cloud-dbs/aws/add-hasura-ip.png
    :alt: Add the Hasura IP for AWS RDS database

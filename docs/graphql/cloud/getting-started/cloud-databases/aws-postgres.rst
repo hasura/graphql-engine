@@ -1,11 +1,11 @@
 .. meta::
-   :description: Using Hasura with an AWS Postgres database
-   :keywords: hasura, docs, existing database, guide, aws postgres
+   :description: Using Hasura with an AWS RDS Postgres database
+   :keywords: hasura, docs, existing database, guide, aws rds postgres
 
-.. _cloud_db_aws_postgres:
+.. _cloud_db_aws_rds_postgres:
 
-Using Hasura Cloud with an AWS Postgres database
-================================================
+Using Hasura Cloud with an AWS RDS Postgres database
+====================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -15,14 +15,14 @@ Using Hasura Cloud with an AWS Postgres database
 Introduction
 ------------
 
-This guide explains how to connect a new or existing AWS Postgres database to a Hasura Cloud project.
+This guide explains how to connect a new or existing AWS RDS Postgres database to a Hasura Cloud project.
 
 Step 0: Sign up or log in to Hasura Cloud
 -----------------------------------------
 
 Navigate to `Hasura Cloud <https://cloud.hasura.io/>`__ and sign up or log in.
 
-.. _create_hasura_project_aws_postgres:
+.. _create_hasura_project_aws_rds_postgres:
 
 Step 1: Create a Hasura Cloud project
 -------------------------------------
@@ -41,7 +41,7 @@ You will get prompted for a Postgres Database URL. We will create this in the ne
 
 Also, copy the Hasura Cloud IP for later.
 
-.. _create_aws_postgres_db:
+.. _create_aws_rds_postgres_db:
 
 Step 2: Create a Postgres DB on AWS (skip if you have an existing DB)
 ---------------------------------------------------------------------
@@ -94,7 +94,7 @@ When you're done, at the bottom, click the ``Create database`` button:
 Step 3: Allow connections to your DB from Hasura Cloud
 ------------------------------------------------------
 
-On the database dashboard, click on ``Connectivity & security``. On the right, click on the security group that you selected or added in :ref:`step 2 <create_aws_postgres_db>`.
+On the database dashboard, click on ``Connectivity & security``. On the right, click on the security group that you selected or added in :ref:`step 2 <create_aws_rds_postgres_db>`.
 
 .. thumbnail:: /img/graphql/cloud/cloud-dbs/aws/postgres/find-security-group.png
    :alt: Find the security group on AWS RDS
@@ -118,7 +118,7 @@ Click on ``Add rule``:
    :alt: Add an inbound rule for AWS RDS database
    :width: 1000px
 
-Add the Hasura IP that you copied from :ref:`step 1 <create_hasura_project_aws_postgres>`:
+Add the Hasura IP that you copied from :ref:`step 1 <create_hasura_project_aws_rds_postgres>`:
 
 .. thumbnail:: /img/graphql/cloud/cloud-dbs/aws/add-hasura-ip.png
    :alt: Add the Hasura IP for AWS RDS database
