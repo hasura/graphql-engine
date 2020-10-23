@@ -11,7 +11,6 @@ export const findRemoteSchema = (remoteSchemas, remoteSchemaName) => {
 };
 
 export const getRemoteSchemaPermissions = remoteSchema => {
-  return [];
   return remoteSchema.permissions;
 };
 

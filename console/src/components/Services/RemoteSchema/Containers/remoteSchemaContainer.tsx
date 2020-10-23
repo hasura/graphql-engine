@@ -3,7 +3,7 @@ import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLay
 import tabInfo from './remoteSchemaTabs';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { appPrefix } from '../constants';
-import { setCurrentRemoteSchema } from '../remoteSchemaReducer';
+import { VIEW_REMOTE_SCHEMA } from '../Actions';
 
 import { findRemoteSchema } from '../utils';
 import styles from '../RemoteSchema.scss';
@@ -16,16 +16,19 @@ const RemoteSchemaContainer = ({
   dispatch,
 }) => {
   React.useEffect(() => {
-    dispatch(setCurrentRemoteSchema(remoteSchemaName));
+    dispatch({ type: VIEW_REMOTE_SCHEMA, data: remoteSchemaName });
     return () => {
-      dispatch(setCurrentRemoteSchema(''));
+      dispatch({ type: VIEW_REMOTE_SCHEMA, data: '' });
     };
   }, [remoteSchemaName]);
 
-  const currentRemoteSchema = findRemoteSchema(allRemoteSchemas, remoteSchemaName);
+  const currentRemoteSchema = findRemoteSchema(
+    allRemoteSchemas,
+    remoteSchemaName
+  );
 
   if (!currentRemoteSchema) {
-    dispatch(setCurrentRemoteSchema(''));
+    dispatch({ type: VIEW_REMOTE_SCHEMA, data: '' });
     throw new NotFoundError();
   }
 

@@ -51,7 +51,7 @@ const fetchRemoteSchemas = () => {
             name: 'remote_schemas',
             schema: 'hdb_catalog',
           },
-          columns: ['*'],
+          columns: ['*.*'],
           order_by: [{ column: 'name', type: 'asc', nulls: 'last' }],
         },
       }),
@@ -195,22 +195,25 @@ const makeRequest = (
   };
 };
 
-// TODO: update
 const saveRemoteSchemaPermission = (successCb, errorCb) => {
   return (dispatch, getState) => {
     const {
-      common: { actions: allActions, currentAction },
-      permissions: { permissionEdit },
-    } = getState().actions;
+      listData: {
+        remoteSchemas: allRemoteSchemas,
+        viewRemoteSchema: currentRemoteSchema,
+      },
+      permissions: { permissionEdit, schemaDefinition },
+    } = getState().remoteSchemas;
 
     const allPermissions = getRemoteSchemaPermissions(
-      findRemoteSchema(allActions, currentAction)
+      findRemoteSchema(allRemoteSchemas, currentRemoteSchema)
     );
 
     const { upQueries, downQueries } = getRemoteSchemaPermissionQueries(
       permissionEdit,
       allPermissions,
-      currentAction
+      currentRemoteSchema,
+      schemaDefinition
     );
 
     const migrationName = 'save_remoteSchema_perm';
@@ -239,6 +242,65 @@ const saveRemoteSchemaPermission = (successCb, errorCb) => {
       getState,
       upQueries,
       downQueries,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
+const removeRemoteSchemaPermission = (successCb, errorCb) => {
+  return (dispatch, getState) => {
+    const isOk = getConfirmation(
+      'This will remove the permission for this role'
+    );
+    if (!isOk) return;
+
+    const {
+      common: { currentRemoteSchema },
+      permissions: { permissionEdit },
+    } = getState().remoteSchemas;
+
+    const { role, filter } = permissionEdit;
+
+    const upQuery = getDropRemoteSchemaPermissionQuery(
+      role,
+      currentRemoteSchema
+    );
+    const downQuery = getCreateRemoteSchemaPermissionQuery(
+      { role, filter },
+      currentRemoteSchema
+    );
+
+    const migrationName = 'removing_remoteSchema_perm';
+    const requestMsg = 'Removing permission...';
+    const successMsg = 'Permission removed successfully';
+    const errorMsg = 'Removing permission failed';
+
+    const customOnSuccess = () => {
+      dispatch(fetchRemoteSchemas());
+      dispatch(fetchRoleList());
+      dispatch(setPermRequestSuccess());
+      if (successCb) {
+        successCb();
+      }
+    };
+    const customOnError = () => {
+      dispatch(setPermRequestFailure());
+      if (errorCb) {
+        errorCb();
+      }
+    };
+
+    dispatch(makePermRequest());
+    makeMigrationCall(
+      dispatch,
+      getState,
+      [upQuery],
+      [downQuery],
       migrationName,
       customOnSuccess,
       customOnError,
@@ -308,65 +370,6 @@ const permRemoveMultipleRoles = tableSchema => {
       getState,
       migration.upMigration,
       migration.downMigration,
-      migrationName,
-      customOnSuccess,
-      customOnError,
-      requestMsg,
-      successMsg,
-      errorMsg
-    );
-  };
-};
-
-const removeRemoteSchemaPermission = (successCb, errorCb) => {
-  return (dispatch, getState) => {
-    const isOk = getConfirmation(
-      'This will remove the permission for this role'
-    );
-    if (!isOk) return;
-
-    const {
-      common: { currentRemoteSchema },
-      permissions: { permissionEdit },
-    } = getState().actions;
-
-    const { role, filter } = permissionEdit;
-
-    const upQuery = getDropRemoteSchemaPermissionQuery(
-      role,
-      currentRemoteSchema
-    );
-    const downQuery = getCreateRemoteSchemaPermissionQuery(
-      { role, filter },
-      currentRemoteSchema
-    );
-
-    const migrationName = 'removing_remoteSchema_perm';
-    const requestMsg = 'Removing permission...';
-    const successMsg = 'Permission removed successfully';
-    const errorMsg = 'Removing permission failed';
-
-    const customOnSuccess = () => {
-      dispatch(fetchRemoteSchemas());
-      dispatch(fetchRoleList());
-      dispatch(setPermRequestSuccess());
-      if (successCb) {
-        successCb();
-      }
-    };
-    const customOnError = () => {
-      dispatch(setPermRequestFailure());
-      if (errorCb) {
-        errorCb();
-      }
-    };
-
-    dispatch(makePermRequest());
-    makeMigrationCall(
-      dispatch,
-      getState,
-      [upQuery],
-      [downQuery],
       migrationName,
       customOnSuccess,
       customOnError,

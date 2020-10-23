@@ -3,15 +3,15 @@ import { findRemoteSchemaPermission } from '../utils';
 export const getCreateRemoteSchemaPermissionQuery = (
   def: { role: string; filter: any },
   remoteSchemaName: string,
-  permissionEdit: any
+  schemaDefinition: any
 ) => {
   return {
-    type: 'add_remote_schema',
+    type: 'add_remote_schema_permissions',
     args: {
       remote_schema: remoteSchemaName,
       role: def.role,
       definition: {
-        schema: permissionEdit.schemaDefinition,
+        schema: schemaDefinition.sdl,
       },
     },
   };
@@ -30,10 +30,12 @@ export const getDropRemoteSchemaPermissionQuery = (
   };
 };
 
+// TODO
 export const getRemoteSchemaPermissionQueries = (
   permissionEdit,
   allPermissions,
-  remoteSchemaName
+  remoteSchemaName,
+  schemaDefinition
 ) => {
   const { role, newRole, filter } = permissionEdit;
 
@@ -52,7 +54,7 @@ export const getRemoteSchemaPermissionQueries = (
           filter,
         },
         remoteSchemaName,
-        permissionEdit
+        schemaDefinition
       )
     );
     downQueries.push(
@@ -68,7 +70,7 @@ export const getRemoteSchemaPermissionQueries = (
       getCreateRemoteSchemaPermissionQuery(
         { role: permRole, filter },
         remoteSchemaName,
-        permissionEdit
+        schemaDefinition
       )
     );
     downQueries.push(
@@ -78,7 +80,7 @@ export const getRemoteSchemaPermissionQueries = (
       getCreateRemoteSchemaPermissionQuery(
         { role: permRole, filter: existingPerm.definition.select.filter },
         remoteSchemaName,
-        permissionEdit
+        schemaDefinition
       )
     );
   }

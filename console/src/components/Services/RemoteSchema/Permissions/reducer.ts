@@ -3,7 +3,6 @@ import defaultState from './state';
 const SET_REMOTESCHEMA_PERMISSIONS =
   'RemoteSchemas/Permissions/SET_REMOTESCHEMA_PERMISSIONS';
 
-// TODO: ??
 export const setRemoteSchemaPermission = perms => ({
   type: SET_REMOTESCHEMA_PERMISSIONS,
   perms,
