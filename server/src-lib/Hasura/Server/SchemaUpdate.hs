@@ -23,6 +23,7 @@ import           Data.IORef
 import           GHC.AssertNF
 #endif
 
+import           Control.Concurrent.MVar.Lifted
 import qualified Control.Concurrent.Extended as C
 import qualified Control.Concurrent.STM      as STM
 import qualified Control.Immortal            as Immortal
@@ -223,7 +224,7 @@ refreshSchemaCache
 refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef invalidations threadType msg = do
   -- Reload schema cache from catalog
   resE <- liftIO $ runExceptT $ withSCUpdate cacheRef logger do
-    rebuildableCache <- fst <$> liftIO (readIORef $ _scrCache cacheRef)
+    rebuildableCache <- fst <$> liftIO (readMVar $ _scrCache cacheRef)
     ((), cache, _) <- buildSchemaCacheWithOptions CatalogSync invalidations
       & runCacheRWT rebuildableCache
       & peelRun runCtx pgCtx PG.ReadWrite Nothing
