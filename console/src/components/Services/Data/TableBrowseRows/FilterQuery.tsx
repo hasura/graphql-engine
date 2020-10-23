@@ -333,11 +333,25 @@ const FilterQuery: React.FC<FilterQueryProps> = ({
     setColumnsPanelOpen(false);
   }, [tableSchema.table_name]);
 
+  const selectedColumnsList = (cols: string[]) => {
+    persistSelectedColumns(
+      tableSchema.table_name,
+      tableSchema.table_schema,
+      cols
+    );
+    setSelectedColumns(cols);
+  };
+
   useEffect(() => {
     if (currentColumns && currentColumns.length) {
       setSelectedColumns(currentColumns);
     } else {
-      setSelectedColumns(allColumns);
+      const persistedColumns = getPersistedSelectedColumns(
+        tableSchema.table_name,
+        tableSchema.table_schema
+      );
+      if (persistedColumns) setSelectedColumns(persistedColumns);
+      else setSelectedColumns(allColumns);
     }
   }, [allColumns, currentColumns]);
 
@@ -397,7 +411,7 @@ const FilterQuery: React.FC<FilterQueryProps> = ({
         <ColumnsSelector
           allColumns={allColumns}
           selectedColumns={selectedColumns}
-          setSelected={setSelectedColumns}
+          setSelected={selectedColumnsList}
           isOpen={isColumnsPanelOpen}
           setIsOpen={setColumnsPanelOpen}
         />
