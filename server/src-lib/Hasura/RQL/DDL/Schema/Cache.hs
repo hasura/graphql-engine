@@ -43,7 +43,7 @@ import           Hasura.RQL.DDL.CustomTypes
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.RemoteSchema
-import           Hasura.RQL.DDL.RemoteSchema.Validate     (resolveRoleBasedRemoteSchema)
+import           Hasura.RQL.DDL.RemoteSchema.Permission     (resolveRoleBasedRemoteSchema)
 import           Hasura.RQL.DDL.ScheduledTrigger
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Cache.Dependencies

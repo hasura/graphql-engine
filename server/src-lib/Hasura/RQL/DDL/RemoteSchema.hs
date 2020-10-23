@@ -23,7 +23,7 @@ import           Hasura.GraphQL.RemoteServer
 -- import           Hasura.GraphQL.Schema.Merge
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Deps
-import           Hasura.RQL.DDL.RemoteSchema.Validate
+import           Hasura.RQL.DDL.RemoteSchema.Permission
 
 import qualified Data.Aeson                           as J
 import qualified Data.HashMap.Strict                  as Map

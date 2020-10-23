@@ -1,4 +1,4 @@
-module Hasura.RQL.DDL.RemoteSchema.Validate (
+module Hasura.RQL.DDL.RemoteSchema.Permission (
     resolveRoleBasedRemoteSchema
   , partitionTypeDefinition
   ) where
