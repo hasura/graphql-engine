@@ -6,6 +6,7 @@ import { RemoteRelationshipPayload } from '../../Services/Data/TableRelationship
 import { transformHeaders } from '../Headers/utils';
 import { generateTableDef } from './pgUtils';
 import { Nullable } from './tsUtils';
+import { RetryConf } from '../../Services/Events/types';
 
 // TODO add type for the where clause
 
@@ -473,10 +474,27 @@ export const getBulkQuery = (args: any[]) => {
   };
 };
 
+type TriggerOpsType = Record<'columns', string | string[]> | null;
+type CreateEventTrigger = {
+  type: 'create_event_trigger';
+  args: {
+    name: string;
+    table: TableDefinition;
+    webhook: string | null;
+    webhook_from_env: string | null;
+    insert: TriggerOpsType;
+    update: TriggerOpsType;
+    delete: TriggerOpsType;
+    enable_manual: boolean;
+    retry_conf: RetryConf;
+    headers: Header[];
+    replace: boolean;
+  };
+};
 export const generateCreateEventTriggerQuery = (
   state: LocalEventTriggerState,
   replace = false
-) => {
+): CreateEventTrigger => {
   return {
     type: 'create_event_trigger',
     args: {
@@ -493,7 +511,7 @@ export const generateCreateEventTriggerQuery = (
         : null,
       update: state.operations.update
         ? {
-            columns: ['*'],
+            columns: '*',
           }
         : null,
       delete: state.operations.delete
