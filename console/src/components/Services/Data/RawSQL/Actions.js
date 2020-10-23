@@ -18,6 +18,7 @@ import dataHeaders from '../Common/Headers';
 import returnMigrateUrl from '../Common/getMigrateUrl';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import requestAction from '../../../../utils/requestAction';
+import { getDownQueryComments } from '../../../../utils/migration/utils';
 
 const MAKING_REQUEST = 'RawSQL/MAKING_REQUEST';
 const SET_SQL = 'RawSQL/SET_SQL';
@@ -49,6 +50,7 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
   let url = Endpoints.rawSQL;
 
   const schemaChangesUp = [];
+  let schemaChangesDown = [];
 
   if (isStatementTimeout) {
     schemaChangesUp.push(
@@ -60,7 +62,9 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
     );
   }
 
-  schemaChangesUp.push(getRunSqlQuery(sql, isCascadeChecked, readOnlyMode));
+  const runSQLQuery = getRunSqlQuery(sql, isCascadeChecked, readOnlyMode);
+  schemaChangesUp.push(runSQLQuery);
+  schemaChangesDown = [...getDownQueryComments([runSQLQuery])];
 
   if (isTableTrackChecked) {
     const objects = parseCreateSQL(sql);
@@ -70,17 +74,27 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
         type: '',
         args: {},
       };
+      const unTrackQuery = {
+        type: '',
+        args: {},
+      };
 
       if (object.type === 'function') {
         trackQuery.type = 'track_function';
+        unTrackQuery.type = 'untrack_function';
       } else {
         trackQuery.type = 'add_existing_table_or_view';
+        unTrackQuery.type = 'untrack_table';
       }
 
       trackQuery.args.name = object.name;
       trackQuery.args.schema = object.schema;
 
+      unTrackQuery.args.name = object.name;
+      unTrackQuery.args.schema = object.schema;
+
       schemaChangesUp.push(trackQuery);
+      schemaChangesDown.unshift(unTrackQuery);
     });
   }
 
@@ -94,7 +108,7 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
     requestBody = {
       name: migrationName,
       up: schemaChangesUp,
-      down: [],
+      down: schemaChangesDown,
     };
   }
   const options = {
