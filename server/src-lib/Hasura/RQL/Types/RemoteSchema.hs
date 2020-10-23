@@ -171,8 +171,15 @@ data PartitionedTypeDefinitions a
   , _ptdSchemaDef    :: ![G.SchemaDefinition]
   } deriving (Show, Eq)
 
+data SessionArgumentPresetInfo
+  = SessionArgumentPresetScalar
+  | SessionArgumentPresetEnum ![G.EnumValue]
+  deriving (Show, Eq, Generic, Ord)
+instance Hashable SessionArgumentPresetInfo
+instance Cacheable SessionArgumentPresetInfo
+
 data RemoteSchemaVariable
-  = SessionPresetVariable !SessionVariable !G.GType !G.Name
+  = SessionPresetVariable !SessionVariable !G.GType !G.Name !SessionArgumentPresetInfo
   | RawVariable !Variable
   deriving (Show, Eq, Generic, Ord)
 instance Hashable RemoteSchemaVariable

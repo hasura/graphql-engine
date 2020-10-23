@@ -40,7 +40,6 @@ import           Hasura.SQL.Types              ((<<>))
 import           Hasura.GraphQL.Parser
 import           Hasura.GraphQL.Schema.Insert  (AnnInsert)
 
-import qualified Data.Text.Read                         as T
 import qualified Data.Text                              as T
 
 import           Hasura.Session
@@ -146,27 +145,36 @@ resolveRemoteVariable
   -> RQL.RemoteSchemaVariable
   -> m Variable
 resolveRemoteVariable userInfo = \case
-  RQL.SessionPresetVariable sessionVar gType varName -> do
+  RQL.SessionPresetVariable sessionVar gType varName presetType -> do
     sessionVarVal <- onNothing (getSessionVariableValue sessionVar $ _uiSession userInfo)
       $ RQL.throw400 RQL.NotFound $ sessionVar <<> " session variable expected, but not found"
     let baseType = G.getBaseType gType
         coercedValue =
-          case G.unName baseType of
-            "Int" -> G.VInt <$>
-              case readMaybe $ T.unpack sessionVarVal of
-                Nothing -> Left $ "error in parsing " <> sessionVarVal <<> " Int value"
-                Just i -> Right i
-            "Boolean" ->
-              if | sessionVarVal `elem` ["true", "false"] -> Right $ G.VBoolean $ "true" == sessionVarVal
-                 | otherwise -> Left $ sessionVarVal <<> " is not a valid boolean value"
-            "Float" -> G.VFloat <$>
-              case readMaybe $ T.unpack sessionVarVal of
-                Nothing -> Left $ "error in parsing " <> sessionVarVal <<> " Float value"
-                Just i -> Right i
-            "String" -> pure $ G.VString sessionVarVal
-            "ID" -> pure $ G.VString sessionVarVal
-            -- When we encounter a custom scalar, we just pass it as a string
-            _ -> pure $ G.VString sessionVarVal
+          case presetType of
+            RQL.SessionArgumentPresetScalar ->
+              case G.unName baseType of
+                "Int" -> G.VInt <$>
+                  case readMaybe $ T.unpack sessionVarVal of
+                    Nothing -> Left $ "error in parsing " <> sessionVarVal <<> " Int value"
+                    Just i -> Right i
+                "Boolean" ->
+                  if | sessionVarVal `elem` ["true", "false"] -> Right $ G.VBoolean $ "true" == sessionVarVal
+                     | otherwise -> Left $ sessionVarVal <<> " is not a valid boolean value"
+                "Float" -> G.VFloat <$>
+                   case readMaybe $ T.unpack sessionVarVal of
+                     Nothing -> Left $ "error in parsing " <> sessionVarVal <<> " Float value"
+                     Just i -> Right i
+                "String" -> pure $ G.VString sessionVarVal
+                "ID" -> pure $ G.VString sessionVarVal
+                -- When we encounter a custom scalar, we just pass it as a string
+                _ -> pure $ G.VString sessionVarVal
+            RQL.SessionArgumentPresetEnum enumVals -> do
+              sessionVarEnumVal <-
+                G.EnumValue <$> (onNothing (G.mkName sessionVarVal) $
+                  Left $ sessionVarVal <<> " is not a valid GraphQL name")
+              case find (== sessionVarEnumVal) enumVals of
+                Just enumVal -> Right $ G.VEnum enumVal
+                Nothing -> Left $ sessionVarEnumVal <<> " is not one of the valid enum valuesxs"
     coercedValue' <- onLeft coercedValue $
       \errMsg ->
         let errMsg' = "error while coercing " <> sessionVar <<> ": " <> errMsg

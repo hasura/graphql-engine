@@ -34,10 +34,21 @@ buildRemoteParser
   -> m ( [P.FieldParser n RemoteField]
        , Maybe [P.FieldParser n RemoteField]
        , Maybe [P.FieldParser n RemoteField])
-buildRemoteParser (IntrospectionResult sdoc query_root mutation_root subscription_root) info = do
-  queryT <- makeParsers query_root
-  mutationT <- traverse makeParsers mutation_root
-  subscriptionT <- traverse makeParsers subscription_root
+buildRemoteParser (IntrospectionResult sdoc qRoot mRoot subRoot) info = do
+  (queryRoot, mutationRoot, subscriptionRoot) <-
+    case (qRoot, mRoot, subRoot) of
+      -- The spec says that if a Schema document's root operation names
+      -- for the query root, mutation root and the subscription root are
+      -- "Query", "Mutation" and "Subscription", then it can be omitted
+      -- from the schema document.
+      -- https://spec.graphql.org/June2018/#sec-Root-Operation-Types
+      (Nothing, Nothing, Nothing) ->
+        pure $ ($$(G.litName "Query"), Just $$(G.litName "Mutation"),Just $$(G.litName "Subscription"))
+      (Nothing, _, _) -> throw400 NotFound $ "query root not found"
+      (Just qRoot', mRoot', sRoot') -> pure $ (qRoot', mRoot', sRoot')
+  queryT <- makeParsers queryRoot
+  mutationT <- traverse makeParsers mutationRoot
+  subscriptionT <- traverse makeParsers subscriptionRoot
   return (queryT, mutationT, subscriptionT)
   where
     makeFieldParser :: RemoteSchemaFieldDefinition -> m (P.FieldParser n RemoteField)

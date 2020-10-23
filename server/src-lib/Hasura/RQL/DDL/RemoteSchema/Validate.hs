@@ -40,6 +40,12 @@ instance DQuote ArgumentDefinitionType where
     InputObjectArgument -> "Input object"
     DirectiveArgument   -> "Directive"
 
+data PresetInputTypeInfo
+  = PresetScalar
+  | PresetEnum ![G.EnumValue]
+  | PresetInputObject ![G.InputValueDefinition]
+  deriving (Show, Eq, Generic, Ord)
+
 data GraphQLType
   = Enum
   | InputObject
@@ -122,6 +128,7 @@ data RoleBasedSchemaValidationError
   | KeyDoesNotExistInInputObject !G.Name !G.Name
   | ExpectedInputObject !G.Name !(G.Value Void)
   | ExpectedScalarValue !G.Name !(G.Value Void)
+  | DisallowSessionVarForListType !G.Name
   deriving (Show, Eq)
 
 convertTypeDef :: G.TypeDefinition [G.Name] a -> G.TypeDefinition () a
@@ -216,6 +223,8 @@ showRoleBasedSchemaValidationError = \case
     <<> " of type " <> typeName <<> " to be an input object value"
   KeyDoesNotExistInInputObject key' inpObjTypeName ->
     key' <<> " does not exist in the input object " <>> inpObjTypeName
+  DisallowSessionVarForListType name ->
+    "illegal preset value at " <> name <<> ". Session arguments can only be set for singleton values"
 
 presetValueScalar :: G.ScalarTypeDefinition
 presetValueScalar = G.ScalarTypeDefinition Nothing $$(G.litName "PresetValue") mempty
@@ -232,11 +241,6 @@ presetDirectiveDefn =
 
 presetDirectiveName :: G.Name
 presetDirectiveName = $$(G.litName "preset")
-
-data PresetInputTypeInfo
-  = PresetScalar
-  | PresetEnum ![G.EnumValue]
-  | PresetInputObject ![G.InputValueDefinition]
 
 lookupInputType
   :: G.SchemaDocument
@@ -282,7 +286,7 @@ validatePresetValue gType varName value = do
             G.VEnum _ -> refute $ pure $ ExpectedScalarValue typeName value
             G.VString t ->
               case isSessionVariable t of
-                True -> pure $ G.VVariable $ SessionPresetVariable (mkSessionVariable t) gType varName
+                True -> pure $ G.VVariable $ SessionPresetVariable (mkSessionVariable t) gType varName SessionArgumentPresetScalar
                 False -> pure $ G.VString t
             G.VList _ -> refute $ pure $ ExpectedScalarValue typeName value
             G.VObject _ -> refute $ pure $ ExpectedScalarValue typeName value
@@ -295,7 +299,11 @@ validatePresetValue gType varName value = do
                 False -> refute $ pure $ EnumValueNotFound typeName $ G.unEnumValue e
             G.VString t ->
               case isSessionVariable t of
-                True -> pure $ G.VVariable $ SessionPresetVariable (mkSessionVariable t) gType varName
+                True ->
+                  pure $
+                    G.VVariable $
+                    SessionPresetVariable (mkSessionVariable t) gType varName $
+                    SessionArgumentPresetEnum enumVals
                 False -> refute $ pure $ ExpectedEnumValue typeName value
             _ -> refute $ pure $ ExpectedEnumValue typeName value
         Just (PresetInputObject inputValueDefinitions) ->
@@ -316,6 +324,10 @@ validatePresetValue gType varName value = do
         -- The below is valid because singleton GraphQL values can be "upgraded"
         -- to array types. For ex: An `Int` value can be provided as input to
         -- a type `[Int]` or `[[Int]]`
+        s'@(G.VString s) ->
+          case isSessionVariable s of
+            True -> refute $ pure $ DisallowSessionVarForListType varName
+            False -> validatePresetValue gType' varName s'
         v -> validatePresetValue gType' varName v
 
 parsePresetDirective
@@ -720,24 +732,15 @@ validateObjectDefinitions providedObjects upstreamObjects providedInterfaces = d
 validateSchemaDefinitions
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => [G.SchemaDefinition]
-  -> m (G.Name, Maybe G.Name, Maybe G.Name)
-validateSchemaDefinitions [] =
-  -- The spec says that if a Schema document's root operation names
-  -- for the query root, mutation root and the subscription root are
-  -- "Query", "Mutation" and "Subscription", then it can be omitted
-  -- from the schema document.
-  -- https://spec.graphql.org/June2018/#sec-Root-Operation-Types
-  pure $ ($$(G.litName "Query"), Just $$(G.litName "Mutation"), Just $$(G.litName "Subscription"))
+  -> m (Maybe G.Name, Maybe G.Name, Maybe G.Name)
+validateSchemaDefinitions [] = pure $ (Nothing, Nothing, Nothing)
 validateSchemaDefinitions [schemaDefn] = do
   let G.SchemaDefinition _ rootOpsTypes = schemaDefn
       rootOpsTypesMap = mapFromL G._rotdOperationType rootOpsTypes
       mQueryRootName = G._rotdOperationTypeType <$> Map.lookup G.OperationTypeQuery rootOpsTypesMap
       mMutationRootName = G._rotdOperationTypeType <$> Map.lookup G.OperationTypeMutation rootOpsTypesMap
       mSubscriptionRootName = G._rotdOperationTypeType <$> Map.lookup G.OperationTypeSubscription rootOpsTypesMap
-  queryRootName <-
-    onNothing mQueryRootName $
-      refute $ pure $ MissingQueryRoot
-  pure (queryRootName, mMutationRootName, mSubscriptionRootName)
+  pure (mQueryRootName, mMutationRootName, mSubscriptionRootName)
 validateSchemaDefinitions _ = refute $ pure $ MultipleSchemaDefinitionsFound
 
 -- | Construction of the `possibleTypes` map for interfaces, while parsing the
@@ -770,7 +773,7 @@ getSchemaDocIntrospection
   -> [G.UnionTypeDefinition]
   -> [G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition]
   -> [G.ObjectTypeDefinition RemoteSchemaInputValueDefinition]
-  -> (G.Name, Maybe G.Name, Maybe G.Name)
+  -> (Maybe G.Name, Maybe G.Name, Maybe G.Name)
   -> IntrospectionResult
 getSchemaDocIntrospection scalars enums interfaces unions inpObjs objects (queryRoot, mutationRoot, subscriptionRoot) =
   let scalarTypeDefs = map G.TypeDefinitionScalar scalars

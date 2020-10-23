@@ -177,7 +177,7 @@ type WithDeps a = (a, [SchemaDependency])
 data IntrospectionResult
   = IntrospectionResult
   { irDoc              :: RemoteSchemaIntrospection
-  , irQueryRoot        :: G.Name
+  , irQueryRoot        :: Maybe G.Name
   , irMutationRoot     :: Maybe G.Name
   , irSubscriptionRoot :: Maybe G.Name
   } deriving (Show, Eq, Generic)
@@ -190,6 +190,8 @@ data ParsedIntrospection
   , piSubscription :: Maybe [P.FieldParser (P.ParseT Identity) RemoteField]
   }
 
+-- TODO: rename this to `PartialRemoteSchemaCtx` and after doing this
+-- change `RemoteSchemaCtxWithPermissions` to `RemoteSchemaCtx`
 data RemoteSchemaCtx
   = RemoteSchemaCtx
   { rscName                   :: !RemoteSchemaName

@@ -286,7 +286,7 @@ instance J.FromJSON (FromIntrospection IntrospectionResult) where
     -- the list of types
     types <- schema .: "types"
     -- query root
-    queryType <- schema .: "queryType"
+    queryType <- schema .:? "queryType"
     queryRoot <- queryType .: "name"
     -- mutation root
     mMutationType <- schema .:? "mutationType"
