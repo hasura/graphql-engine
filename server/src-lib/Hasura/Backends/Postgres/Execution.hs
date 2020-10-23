@@ -3,7 +3,7 @@
 
 -- A module for postgres execution related types and operations
 
-module Hasura.Db
+module Hasura.Backends.Postgres.Execution
   ( MonadTx(..)
   , LazyTx
 

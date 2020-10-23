@@ -46,8 +46,8 @@ import qualified Network.HTTP.Client                 as HTTP
 import           Control.Monad.Unique
 import           Data.Text.Extended
 
+import           Hasura.Backends.Postgres.Execution  as R
 import           Hasura.Backends.Postgres.Types
-import           Hasura.Db                           as R
 import           Hasura.RQL.Types.Action             as R
 import           Hasura.RQL.Types.BoolExp            as R
 import           Hasura.RQL.Types.Column             as R

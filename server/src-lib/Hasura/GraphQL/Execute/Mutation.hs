@@ -15,15 +15,15 @@ import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+import qualified Hasura.Logging                         as L
 import qualified Hasura.RQL.DML.Delete                  as RQL
 import qualified Hasura.RQL.DML.Mutation                as RQL
 import qualified Hasura.RQL.DML.Returning.Types         as RQL
 import qualified Hasura.RQL.DML.Update                  as RQL
 import qualified Hasura.Tracing                         as Tracing
-import qualified Hasura.Logging                         as L
 
 
-import           Hasura.Db
+import           Hasura.Backends.Postgres.Execution
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action

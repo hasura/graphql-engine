@@ -301,10 +301,10 @@ library
                      , Hasura.App
                      , Hasura.Backends.Postgres.DML
                      , Hasura.Backends.Postgres.Error
-                     , Hasura.Backends.Postgres.Value
-                     , Hasura.Backends.Postgres.Types
+                     , Hasura.Backends.Postgres.Execution
                      , Hasura.Backends.Postgres.Rewrite
-                     , Hasura.Db
+                     , Hasura.Backends.Postgres.Types
+                     , Hasura.Backends.Postgres.Value
                      -- Exposed for benchmark:
                      , Hasura.Cache.Bounded
                      , Hasura.Logging

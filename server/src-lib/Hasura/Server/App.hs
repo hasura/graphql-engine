@@ -51,8 +51,8 @@ import qualified Hasura.Logging                            as L
 import qualified Hasura.Server.API.PGDump                  as PGD
 import qualified Hasura.Tracing                            as Tracing
 
+import           Hasura.Backends.Postgres.Execution
 import           Hasura.Backends.Postgres.Types
-import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging                    (MonadQueryLog (..))
 import           Hasura.HTTP

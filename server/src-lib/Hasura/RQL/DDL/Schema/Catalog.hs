@@ -16,8 +16,8 @@ import qualified Database.PG.Query                  as Q
 
 import           Data.Aeson
 
+import           Hasura.Backends.Postgres.Execution
 import           Hasura.Backends.Postgres.Types
-import           Hasura.Db
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Permission.Internal

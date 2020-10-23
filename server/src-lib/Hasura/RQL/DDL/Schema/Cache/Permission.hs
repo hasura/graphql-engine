@@ -16,8 +16,8 @@ import           Data.Text.Extended
 
 import qualified Hasura.Incremental                 as Inc
 
+import           Hasura.Backends.Postgres.Execution
 import           Hasura.Backends.Postgres.Types
-import           Hasura.Db
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Schema.Cache.Common

@@ -32,8 +32,8 @@ import qualified Hasura.Logging                         as L
 import qualified Hasura.RQL.DML.Select                  as DS
 import qualified Hasura.Tracing                         as Tracing
 
+import           Hasura.Backends.Postgres.Execution
 import           Hasura.Backends.Postgres.Value
-import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action

@@ -34,8 +34,8 @@ import           Data.List                                (nub)
 import qualified Hasura.Incremental                       as Inc
 
 import           Data.Text.Extended
+import           Hasura.Backends.Postgres.Execution
 import           Hasura.Backends.Postgres.Types
-import           Hasura.Db
 import           Hasura.GraphQL.Execute.Types
 import           Hasura.GraphQL.Schema                    (buildGQLContext)
 import           Hasura.RQL.DDL.Action
