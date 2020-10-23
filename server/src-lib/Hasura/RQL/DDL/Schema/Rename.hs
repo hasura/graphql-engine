@@ -12,24 +12,25 @@ where
 
 import           Control.Lens.Combinators
 import           Control.Lens.Operators
+import           Data.Text.Extended
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Relationship.Types
 import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.Types
-import           Hasura.Session
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 import qualified Hasura.RQL.DDL.EventTrigger        as DS
 import qualified Hasura.RQL.DDL.RemoteRelationship  as RR
 
-import qualified Data.HashMap.Strict                as M
-import qualified Database.PG.Query                  as Q
-import qualified Data.Set                           as Set
-import qualified Data.List.NonEmpty                 as NE
-import qualified Language.GraphQL.Draft.Syntax      as G
 import           Data.Aeson
+import qualified Data.HashMap.Strict                as M
+import qualified Data.List.NonEmpty                 as NE
+import qualified Data.Set                           as Set
+import qualified Database.PG.Query                  as Q
+import qualified Language.GraphQL.Draft.Syntax      as G
 
 data RenameItem a
   = RenameItem
@@ -91,7 +92,7 @@ renameTableInCatalog newQT oldQT = do
 
 renameColInCatalog
   :: (MonadTx m, CacheRM m)
-  => PGCol -> PGCol -> QualifiedTable -> FieldInfoMap FieldInfo -> m ()
+  => PGCol -> PGCol -> QualifiedTable -> FieldInfoMap (FieldInfo 'Postgres) -> m ()
 renameColInCatalog oCol nCol qt fieldInfo = do
   sc <- askSchemaCache
   -- Check if any relation exists with new column name
@@ -425,7 +426,7 @@ updateColInObjRel
   :: QualifiedTable -> QualifiedTable
   -> RenameCol -> ObjRelUsing -> ObjRelUsing
 updateColInObjRel fromQT toQT rnCol = \case
-  RUFKeyOn col -> RUFKeyOn $ getNewCol rnCol fromQT col
+  RUFKeyOn col       -> RUFKeyOn $ getNewCol rnCol fromQT col
   RUManual manConfig -> RUManual $ updateRelManualConfig fromQT toQT rnCol manConfig
 
 updateColInArrRel
