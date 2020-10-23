@@ -15,30 +15,34 @@ module Hasura.RQL.Types.RemoteRelationship
   , DeleteRemoteRelationship(..)
   ) where
 
-import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Column
-import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.RemoteSchema
-import           Hasura.SQL.Types
-
-import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
-import           Data.Scientific
-import           Data.Set                      (Set)
-import           Language.Haskell.TH.Syntax    (Lift)
 
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
+import           Data.Scientific
+import           Data.Set                      (Set)
+import           Data.Text.Extended
+import           Language.Haskell.TH.Syntax    (Lift)
+
+import           Hasura.Incremental            (Cacheable)
+import           Hasura.RQL.Types.Column
+import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.RemoteSchema
+import           Hasura.SQL.Backend
+import           Hasura.SQL.Types
+
+
 newtype RemoteRelationshipName
   = RemoteRelationshipName
   { unRemoteRelationshipName :: NonEmptyText}
   deriving ( Show, Eq, Lift, Hashable, ToJSON, ToJSONKey, FromJSON
-           , Q.ToPrepArg, Q.FromCol, DQuote, Cacheable, NFData, Arbitrary
+           , Q.ToPrepArg, Q.FromCol, ToTxt, Cacheable, NFData, Arbitrary
            )
 
 remoteRelationshipNameToText :: RemoteRelationshipName -> Text
@@ -48,7 +52,7 @@ fromRemoteRelationship :: RemoteRelationshipName -> FieldName
 fromRemoteRelationship = FieldName . remoteRelationshipNameToText
 
 -- | Resolved remote relationship
-data RemoteFieldInfo
+data RemoteFieldInfo (b :: Backend)
   = RemoteFieldInfo
   { _rfiName             :: !RemoteRelationshipName
     -- ^ Field name to which we'll map the remote in hasura; this becomes part
@@ -58,7 +62,7 @@ data RemoteFieldInfo
   --   include the arguments to the remote field that is being joined. The
   --   names of the arguments here are modified, it will be in the format of
   --   <Original Field Name>_remote_rel_<hasura table schema>_<hasura table name><remote relationship name>
-  , _rfiHasuraFields     :: !(HashSet PGColumnInfo)
+  , _rfiHasuraFields     :: !(HashSet (ColumnInfo b))
   -- ^ Hasura fields used to join the remote schema node
   , _rfiRemoteFields     :: !RemoteFields
   , _rfiRemoteSchema     :: !RemoteSchemaInfo
@@ -66,10 +70,11 @@ data RemoteFieldInfo
   -- ^ The introspection data is used to make parsers for the arguments and the selection set
   , _rfiRemoteSchemaName :: !RemoteSchemaName
   -- ^ Name of the remote schema, that's used for joining
-  } deriving (Show, Eq, Generic)
-instance Cacheable RemoteFieldInfo
+  } deriving (Generic)
+deriving instance Eq (RemoteFieldInfo 'Postgres)
+instance Cacheable (RemoteFieldInfo 'Postgres)
 
-instance ToJSON RemoteFieldInfo where
+instance ToJSON (RemoteFieldInfo 'Postgres) where
   toJSON RemoteFieldInfo{..} = object
     [ "name" .= _rfiName
     , "param_map" .= fmap toJsonInpValInfo _rfiParamMap

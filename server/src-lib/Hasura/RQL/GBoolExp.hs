@@ -1,3 +1,4 @@
+{-# LANGUAGE PartialTypeSignatures #-}
 module Hasura.RQL.GBoolExp
   ( toSQLBoolExp
   , getBoolExpDeps
@@ -5,59 +6,59 @@ module Hasura.RQL.GBoolExp
   ) where
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types
-import           Hasura.SQL.Types
+
+import qualified Data.HashMap.Strict as M
+import qualified Data.Text           as T
+
+import           Data.Aeson
+import           Data.Monoid
 
 import qualified Hasura.SQL.DML      as S
 
-import           Control.Lens        (filtered, has)
-import           Data.Aeson
-import           Data.Data.Lens      (template)
-
-import qualified Data.HashMap.Strict as M
-import qualified Data.Text.Extended  as T
+import           Data.Text.Extended
+import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 
 type OpRhsParser m v =
   PGType PGColumnType -> Value -> m v
 
 -- | Represents a reference to a Postgres column, possibly casted an arbitrary
 -- number of times. Used within 'parseOperationsExpression' for bookkeeping.
-data ColumnReference
-  = ColumnReferenceColumn !PGColumnInfo
-  | ColumnReferenceCast !ColumnReference !PGColumnType
-  deriving (Show, Eq)
+data ColumnReference (b :: Backend)
+  = ColumnReferenceColumn !(ColumnInfo b)
+  | ColumnReferenceCast !(ColumnReference b) !(ColumnType b)
 
-columnReferenceType :: ColumnReference -> PGColumnType
+columnReferenceType :: ColumnReference backend -> ColumnType backend
 columnReferenceType = \case
-  ColumnReferenceColumn column -> pgiType column
+  ColumnReferenceColumn column     -> pgiType column
   ColumnReferenceCast _ targetType -> targetType
 
-instance DQuote ColumnReference where
-  dquoteTxt = \case
-    ColumnReferenceColumn column -> dquoteTxt $ pgiColumn column
+instance ToTxt (ColumnReference 'Postgres) where
+  toTxt = \case
+    ColumnReferenceColumn column -> toTxt $ pgiColumn column
     ColumnReferenceCast reference targetType ->
-      dquoteTxt reference <> "::" <> dquoteTxt targetType
+      toTxt reference <> "::" <> toTxt targetType
 
 parseOperationsExpression
   :: forall m v
    . (MonadError QErr m)
   => OpRhsParser m v
-  -> FieldInfoMap FieldInfo
-  -> PGColumnInfo
+  -> FieldInfoMap (FieldInfo 'Postgres)
+  -> ColumnInfo 'Postgres
   -> Value
-  -> m [OpExpG v]
+  -> m [OpExpG 'Postgres v]
 parseOperationsExpression rhsParser fim columnInfo =
   withPathK (getPGColTxt $ pgiColumn columnInfo) .
     parseOperations (ColumnReferenceColumn columnInfo)
   where
-    parseOperations :: ColumnReference -> Value -> m [OpExpG v]
+    parseOperations :: ColumnReference 'Postgres -> Value -> m [OpExpG 'Postgres v]
     parseOperations column = \case
       Object o -> mapM (parseOperation column) (M.toList o)
       val      -> pure . AEQ False <$> rhsParser columnType val
       where
         columnType = PGTypeScalar $ columnReferenceType column
 
-    parseOperation :: ColumnReference -> (T.Text, Value) -> m (OpExpG v)
+    parseOperation :: ColumnReference 'Postgres -> (Text, Value) -> m (OpExpG 'Postgres v)
     parseOperation column (opStr, val) = withPathK opStr $
       case opStr of
         "$cast"          -> parseCast
@@ -175,8 +176,8 @@ parseOperationsExpression rhsParser fim columnInfo =
         parseLte      = ALTE <$> parseOne -- <=
         parseLike     = guardType stringTypes >> ALIKE <$> parseOne
         parseNlike    = guardType stringTypes >> ANLIKE <$> parseOne
-        parseIlike    = guardType stringTypes >> AILIKE <$> parseOne
-        parseNilike   = guardType stringTypes >> ANILIKE <$> parseOne
+        parseIlike    = guardType stringTypes >> AILIKE () <$> parseOne
+        parseNilike   = guardType stringTypes >> ANILIKE () <$> parseOne
         parseSimilar  = guardType stringTypes >> ASIMILAR <$> parseOne
         parseNsimilar = guardType stringTypes >> ANSIMILAR <$> parseOne
 
@@ -274,9 +275,9 @@ notEqualsBoolExpBuilder qualColExp rhsExp =
 annBoolExp
   :: (QErrM m, TableCoreInfoRM m)
   => OpRhsParser m v
-  -> FieldInfoMap FieldInfo
+  -> FieldInfoMap (FieldInfo 'Postgres)
   -> GBoolExp ColExp
-  -> m (AnnBoolExp v)
+  -> m (AnnBoolExp 'Postgres v)
 annBoolExp rhsParser fim boolExp =
   case boolExp of
     BoolAnd exps -> BoolAnd <$> procExps exps
@@ -295,13 +296,13 @@ annBoolExp rhsParser fim boolExp =
 annColExp
   :: (QErrM m, TableCoreInfoRM m)
   => OpRhsParser m v
-  -> FieldInfoMap FieldInfo
+  -> FieldInfoMap (FieldInfo 'Postgres)
   -> ColExp
-  -> m (AnnBoolExpFld v)
+  -> m (AnnBoolExpFld 'Postgres v)
 annColExp rhsParser colInfoMap (ColExp fieldName colVal) = do
   colInfo <- askFieldInfo colInfoMap fieldName
   case colInfo of
-    FIColumn (PGColumnInfo _ _ _ (PGColumnScalar PGJSON) _ _) ->
+    FIColumn (ColumnInfo _ _ _ (PGColumnScalar PGJSON) _ _) ->
       throwError (err400 UnexpectedPayload "JSON column can not be part of where clause")
     FIColumn pgi ->
       AVCol pgi <$> parseOperationsExpression rhsParser colInfoMap pgi colVal
@@ -318,17 +319,17 @@ annColExp rhsParser colInfoMap (ColExp fieldName colVal) = do
       throw400 UnexpectedPayload "remote field unsupported"
 
 toSQLBoolExp
-  :: S.Qual -> AnnBoolExpSQL -> S.BoolExp
+  :: S.Qual -> AnnBoolExpSQL 'Postgres -> S.BoolExp
 toSQLBoolExp tq e =
   evalState (convBoolRhs' tq e) 0
 
 convBoolRhs'
-  :: S.Qual -> AnnBoolExpSQL -> State Word64 S.BoolExp
+  :: S.Qual -> AnnBoolExpSQL 'Postgres -> State Word64 S.BoolExp
 convBoolRhs' tq =
   foldBoolExp (convColRhs tq)
 
 convColRhs
-  :: S.Qual -> AnnBoolExpFldSQL -> State Word64 S.BoolExp
+  :: S.Qual -> AnnBoolExpFldSQL 'Postgres -> State Word64 S.BoolExp
 convColRhs tableQual = \case
   AVCol colInfo opExps -> do
     let colFld = fromPGCol $ pgiColumn colInfo
@@ -353,14 +354,14 @@ convColRhs tableQual = \case
   where
     mkQCol q = S.SEQIden . S.QIden q . toIden
 
-foldExists :: GExists AnnBoolExpFldSQL -> State Word64 S.BoolExp
+foldExists :: GExists (AnnBoolExpFldSQL 'Postgres) -> State Word64 S.BoolExp
 foldExists (GExists qt wh) = do
   whereExp <- foldBoolExp (convColRhs (S.QualTable qt)) wh
   return $ S.mkExists (S.FISimple qt Nothing) whereExp
 
 foldBoolExp
-  :: (AnnBoolExpFldSQL -> State Word64 S.BoolExp)
-  -> AnnBoolExpSQL
+  :: (AnnBoolExpFldSQL 'Postgres -> State Word64 S.BoolExp)
+  -> AnnBoolExpSQL 'Postgres
   -> State Word64 S.BoolExp
 foldBoolExp f = \case
   BoolAnd bes           -> do
@@ -376,13 +377,13 @@ foldBoolExp f = \case
   BoolFld ce           -> f ce
 
 mkFieldCompExp
-  :: S.Qual -> FieldName -> OpExpG S.SQLExp -> S.BoolExp
+  :: S.Qual -> FieldName -> OpExpG 'Postgres S.SQLExp -> S.BoolExp
 mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
   where
     mkQCol = S.SEQIden . S.QIden qual . toIden
     mkQField = S.SEQIden . S.QIden qual . Iden . getFieldNameTxt
 
-    mkCompExp :: S.SQLExp -> OpExpG S.SQLExp -> S.BoolExp
+    mkCompExp :: S.SQLExp -> OpExpG 'Postgres S.SQLExp -> S.BoolExp
     mkCompExp lhs = \case
       ACast casts      -> mkCastsExp casts
       AEQ False val    -> equalsBoolExpBuilder lhs val
@@ -399,8 +400,8 @@ mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
       ALTE val         -> S.BECompare S.SLTE lhs val
       ALIKE val        -> S.BECompare S.SLIKE lhs val
       ANLIKE val       -> S.BECompare S.SNLIKE lhs val
-      AILIKE val       -> S.BECompare S.SILIKE lhs val
-      ANILIKE val      -> S.BECompare S.SNILIKE lhs val
+      AILIKE _ val     -> S.BECompare S.SILIKE lhs val
+      ANILIKE _ val    -> S.BECompare S.SNILIKE lhs val
       ASIMILAR val     -> S.BECompare S.SSIMILAR lhs val
       ANSIMILAR val    -> S.BECompare S.SNSIMILAR lhs val
       AContains val    -> S.BECompare S.SContains lhs val
@@ -453,11 +454,11 @@ mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
 
         sqlAll = foldr (S.BEBin S.AndOp) (S.BELit True)
 
-hasStaticExp :: OpExpG PartialSQLExp -> Bool
-hasStaticExp = has (template . filtered isStaticValue)
+hasStaticExp :: OpExpG backend (PartialSQLExp backend) -> Bool
+hasStaticExp = getAny . foldMap (coerce isStaticValue)
 
 getColExpDeps
-  :: QualifiedTable -> AnnBoolExpFldPartialSQL -> [SchemaDependency]
+  :: QualifiedTable -> AnnBoolExpFldPartialSQL 'Postgres -> [SchemaDependency]
 getColExpDeps tn = \case
   AVCol colInfo opExps ->
     let cn = pgiColumn colInfo
@@ -472,7 +473,7 @@ getColExpDeps tn = \case
         pd = SchemaDependency (SOTableObj tn (TORel rn)) DROnType
     in pd : getBoolExpDeps relTN relBoolExp
 
-getBoolExpDeps :: QualifiedTable -> AnnBoolExpPartialSQL -> [SchemaDependency]
+getBoolExpDeps :: QualifiedTable -> AnnBoolExpPartialSQL 'Postgres -> [SchemaDependency]
 getBoolExpDeps tn = \case
   BoolAnd exps -> procExps exps
   BoolOr exps  -> procExps exps

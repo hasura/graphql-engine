@@ -4,12 +4,13 @@ Description: Create/delete SQL functions to/from Hasura metadata.
 
 module Hasura.RQL.DDL.Schema.Function where
 
-import           Hasura.EncJSON
-import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
-import           Hasura.RQL.Types
-import           Hasura.Server.Utils           (englishList, makeReasonMessage)
-import           Hasura.SQL.Types
+
+import qualified Control.Monad.Validate        as MV
+import qualified Data.HashMap.Strict           as M
+import qualified Data.Sequence                 as Seq
+import qualified Data.Text                     as T
+import qualified Database.PG.Query             as Q
 
 import           Control.Lens
 import           Data.Aeson
@@ -19,11 +20,13 @@ import           Language.Haskell.TH.Syntax    (Lift)
 
 import qualified Language.GraphQL.Draft.Syntax as G
 
-import qualified Control.Monad.Validate        as MV
-import qualified Data.HashMap.Strict           as M
-import qualified Data.Sequence                 as Seq
-import qualified Data.Text                     as T
-import qualified Database.PG.Query             as Q
+import           Data.Text.Extended
+import           Hasura.EncJSON
+import           Hasura.Incremental            (Cacheable)
+import           Hasura.RQL.Types
+import           Hasura.SQL.Types
+import           Hasura.Server.Utils           (englishList, makeReasonMessage)
+
 
 data RawFunctionInfo
   = RawFunctionInfo
