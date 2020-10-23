@@ -286,7 +286,7 @@ instance J.FromJSON (FromIntrospection IntrospectionResult) where
     -- the list of types
     types <- schema .: "types"
     -- query root
-    queryType <- schema .:? "queryType"
+    queryType <- schema .: "queryType"
     queryRoot <- queryType .: "name"
     -- mutation root
     mMutationType <- schema .:? "mutationType"
@@ -303,7 +303,7 @@ instance J.FromJSON (FromIntrospection IntrospectionResult) where
         subRoot <- subsType .: "name"
         return $ Just subRoot
     let r = IntrospectionResult (RemoteSchemaIntrospection (fmap fromIntrospection types))
-            queryRoot mutationRoot subsRoot
+            (Just queryRoot) mutationRoot subsRoot
     return $ FromIntrospection r
 
 execRemoteGQ'

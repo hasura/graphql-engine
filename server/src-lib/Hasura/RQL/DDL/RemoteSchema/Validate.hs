@@ -266,7 +266,7 @@ lookupInputType (G.SchemaDocument types) name = go types
             _ -> go tps
     go [] = Nothing
 
-validatePresetValue
+parsePresetValue
   :: forall m
    . ( MonadValidate [RoleBasedSchemaValidationError] m
      , MonadReader G.SchemaDocument m
@@ -275,7 +275,7 @@ validatePresetValue
   -> G.Name
   -> G.Value Void
   -> m (G.Value RemoteSchemaVariable)
-validatePresetValue gType varName value = do
+parsePresetValue gType varName value = do
   schemaDoc <- ask
   case gType of
     G.TypeNamed _ typeName ->
@@ -286,7 +286,10 @@ validatePresetValue gType varName value = do
             G.VEnum _ -> refute $ pure $ ExpectedScalarValue typeName value
             G.VString t ->
               case isSessionVariable t of
-                True -> pure $ G.VVariable $ SessionPresetVariable (mkSessionVariable t) gType varName SessionArgumentPresetScalar
+                True ->
+                  pure $
+                    G.VVariable $
+                    SessionPresetVariable (mkSessionVariable t) gType varName SessionArgumentPresetScalar
                 False -> pure $ G.VString t
             G.VList _ -> refute $ pure $ ExpectedScalarValue typeName value
             G.VObject _ -> refute $ pure $ ExpectedScalarValue typeName value
@@ -315,20 +318,20 @@ validatePresetValue gType varName value = do
                                inpVal <-
                                  onNothing (Map.lookup k inpValsMap)
                                    $ (refute $ pure $ KeyDoesNotExistInInputObject k typeName)
-                               validatePresetValue (G._ivdType inpVal) k val
+                               parsePresetValue (G._ivdType inpVal) k val
                             )
             _ -> refute $ pure $ ExpectedInputObject typeName value
     G.TypeList _ gType' ->
       case value of
-        G.VList lst -> G.VList <$> traverse (validatePresetValue gType' varName) lst
+        G.VList lst -> G.VList <$> traverse (parsePresetValue gType' varName) lst
         -- The below is valid because singleton GraphQL values can be "upgraded"
         -- to array types. For ex: An `Int` value can be provided as input to
         -- a type `[Int]` or `[[Int]]`
         s'@(G.VString s) ->
           case isSessionVariable s of
             True -> refute $ pure $ DisallowSessionVarForListType varName
-            False -> validatePresetValue gType' varName s'
-        v -> validatePresetValue gType' varName v
+            False -> parsePresetValue gType' varName s'
+        v -> parsePresetValue gType' varName v
 
 parsePresetDirective
   :: forall m
@@ -345,7 +348,7 @@ parsePresetDirective gType parentArgName (G.Directive name args) = do
     [(argName, argVal)] -> do
       unless (argName == $$(G.litName "value")) $ do
         refute $ pure $ InvalidPresetArgument argName
-      validatePresetValue gType parentArgName argVal
+      parsePresetValue gType parentArgName argVal
     _ -> refute $ pure $ MultipleArgumentsInPresetFound
 
 -- | validateDirective checks if the arguments of a given directive
