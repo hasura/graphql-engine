@@ -157,123 +157,132 @@ Insert using one-to-many relationships
 --------------------------------------
 
 We can now:
-
-- insert an ``author`` with their ``articles``:
-
-  .. graphiql::
-    :view_only:
-    :query:
-      mutation insertAuthorWithArticles {
-        insert_author(objects: 
-          {
-            name: "Jenny",
-            articles: {
-              data: [
+ 
+- insert an ``author`` with their ``articles`` where the author might already exist (assume unique ``name`` for ``author``):
+ 
+.. graphiql::
+  :view_only:
+  :query:
+    mutation UpsertAuthorWithArticles {
+      insert_author(objects: {
+        name: "Felix",
+        articles: {
+          data: [
+            {
+              title: "Article 1",
+              content: "Article 1 content"
+            },
+            {
+              title: "Article 2",
+              content: "Article 2 content"
+            }
+          ]
+        }
+      },
+        on_conflict: {
+          constraint: author_name_key,
+          update_columns: [name]
+        }
+      ) {
+        returning {
+          name
+          articles {
+            title
+            content
+          }
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_author": {
+          "returning": [
+            {
+              "name": "Felix",
+              "articles": [
                 {
-                  title: "Article 1"
+                  "title": "Article 1",
+                  "content": "Article 1 content"
                 },
                 {
-                  title: "Article 2"
+                  "title": "Article 2",
+                  "content": "Article 2 content"
                 }
               ]
             }
-          }) {
-          returning {
-            id
+          ]
+        }
+      }
+    }
+
+- insert ``articles`` with their ``author`` where the ``author`` might already exist (assume unique ``name`` for ``author``):
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation upsertArticleWithAuthors {
+      insert_article(objects: [
+        {
+          title: "Article 1",
+          content: "Article 1 content",
+          author: {
+            data: {
+              name: "Alice"
+            },
+            on_conflict: {
+              constraint: author_name_key,
+              update_columns: [name]
+            }
+          }
+        },
+        {
+          title: "Article 2",
+          content: "Article 2 content",
+          author: {
+            data: {
+              name: "Alice"
+            },
+            on_conflict: {
+              constraint: author_name_key,
+              update_columns: [name]
+            }
+          }
+        }
+      ]) {
+        returning {
+          title
+          content
+          author {
             name
-            articles {
-              id
-              title
-              author_id
-            }
           }
         }
       }
-    :response:
-      {
-        "data": {
-          "insert_author": {
-            "returning": [
-              {
-                "id": 4,
-                "name": "Jenny",
-                "articles": [
-                  {
-                    "id": 1,
-                    "title": "Article 1",
-                    "author_id": 4
-                  },
-                  {
-                    "id": 2,
-                    "title": "Article 2",
-                    "author_id": 4
-                  }
-                ]
+    }
+  :response:
+    {
+      "data": {
+        "insert_article": {
+          "returning": [
+            {
+              "title": "Article 1",
+              "content": "Article 1 content",
+              "author": {
+                "name": "Alice"
               }
-            ]
-          }
-        }
-      }
-
-- insert a list of ``articles`` with their ``author``:
-
-  .. graphiql::
-    :view_only:
-    :query:
-      mutation insertArticlesWithAuthor {
-        insert_article(objects: [
-          {
-            title: "Article 1",
-            author: {
-              data: {
-                name: "Kevin"
+            },
+            {
+              "title": "Article 2",
+              "content": "Article 2 content",
+              "author": {
+                "name": "Alice"
               }
             }
-          },
-          {
-            title: "Article 2",
-            author: {
-              data: {
-                name: "Gary"
-              }
-            }
-          }
-        ]) {
-          returning {
-            id
-            title
-            author_id
-            author {
-              id
-              name
-            }
-          }
+          ]
         }
       }
-    :response:
-      {
-        "data": {
-          "insert_article": {
-            "returning": [
-              {
-                "id": 3,
-                "title": "Article 1",
-                "author_id": 5,
-                "author": {
-                  "id": 5,
-                  "name": "Kevin"
-                }
-              },
-              {
-                "id": 4,
-                "title": "Article 2",
-                "author_id": 6,
-                "author": {
-                  "id": 6,
-                  "name": "Gary"
-                }
-              }
-            ]
-          }
-        }
-      }
+    }
+ 
+.. note::
+ 
+ You can avoid the ``on_conflict`` clause if you will never have conflicts.

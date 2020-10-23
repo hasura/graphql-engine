@@ -147,52 +147,55 @@ Insert using one-to-one relationships
 -------------------------------------
 
 We can now:
-
-- insert ``passport_infos`` with their ``owner``:
-
-  .. graphiql::
-    :view_only:
-    :query:
-      mutation insertPwInfoWithOwner {
-        insert_passport_info(objects: [
-          {
-            passport_number: "X98978765",
-            owner: {
-              data: {
-                name: "Kelly"
-              }
+ 
+- insert ``passport_info`` with their ``owner`` where the ``owner`` might already exist (assume unique ``name`` for ``owner``):
+ 
+.. graphiql::
+  :view_only:
+  :query:
+    mutation upsertPassportInfoWithOwner {
+      insert_passport_info(objects: [
+        {
+          passport_number: "X98973765",
+          owner: {
+            data: {
+              name: "Kelly"
+            },
+            on_conflict: {
+              constraint: owner_name_key,
+              update_columns: [name]
             }
-          }
-        ]) {
-          returning {
-            id
-            owner_id
-            passport_number
-            owner {
-              id
-              name
-            }
+          },
+        }
+      ]) {
+        returning {
+          passport_number
+          owner {
+            name
           }
         }
       }
-    :response:
-      {
-        "data": {
-          "insert_passport_info": {
-            "returning": [
-              {
-                "id": 14,
-                "owner_id": 11,
-                "passport_number": "X98978765",
-                "owner": {
-                  "id": 11,
-                  "name": "Kelly"
-                }
+    }
+  :response:
+    {
+      "data": {
+        "insert_passport_info": {
+          "returning": [
+            {
+              "passport_number": "X98973765",
+              "owner": {
+                "name": "Kelly"
               }
-            ]
-          }
+            }
+          ]
         }
       }
+    }
+ 
+.. note::
+ 
+ You can avoid the ``on_conflict`` clause if you will never have conflicts.
+
 
 Current limitations with nested one-to-one mutations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
