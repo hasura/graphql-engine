@@ -40,7 +40,7 @@ import           Hasura.SQL.Types
 -- | Whether the request is sent with `x-hasura-use-backend-only-permissions` set to `true`.
 data Scenario = Backend | Frontend deriving (Enum, Show, Eq)
 
-type RemoteSchemaCache = HashMap RemoteSchemaName (RemoteSchemaCtxWithPermissions, MetadataObject)
+type RemoteSchemaCache = HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
 
 buildGQLContext
   :: forall arr m
@@ -176,7 +176,7 @@ buildGQLContext =
         buildRoleBasedRemoteSchemaParser role remoteSchemaCache = do
           let remoteSchemaIntroInfos = map fst $ toList remoteSchemaCache
           remoteSchemaPerms <-
-            flip traverse remoteSchemaIntroInfos $ \(RemoteSchemaCtxWithPermissions _ ctx perms) ->
+            flip traverse remoteSchemaIntroInfos $ \(RemoteSchemaCtx _ ctx perms) ->
               case Map.lookup role perms of
                 Nothing -> return Nothing
                 Just introspectRes -> do
@@ -185,10 +185,11 @@ buildGQLContext =
                   return $ Just $ ParsedIntrospection queryParsers mutationParsers subscriptionParsers
           return $ catMaybes remoteSchemaPerms
 
-        -- | The 'query' type of the remotes. TODO: also expose mutation
-        -- remotes. NOT TODO: subscriptions, as we do not yet aim to support
+        -- | The 'query' type of the remotes.
+        --  NOT TODO: subscriptions, as we do not yet aim to support
         -- these.
         adminQueryRemotes = concatMap (piQuery . snd) remotes
+        -- | The 'mutation' type of the remotes.
         adminMutationRemotes = concatMap (concat . piMutation . snd) remotes
 
         queryRemotes

@@ -73,7 +73,7 @@ runAddRemoteSchemaPermissions q = do
       $ "remote schema permissions can only be added when "
       <> "remote schema permissions are enabled in the graphql-engine"
   remoteSchemaMap <- scRemoteSchemas <$> askSchemaCache
-  (RemoteSchemaCtxWithPermissions _ ctx perms) <-
+  (RemoteSchemaCtx _ ctx perms) <-
     onNothing (Map.lookup name remoteSchemaMap) $
       throw400 NotExists $ "remote schema " <> name <<> " doesn't exist"
   onJust (Map.lookup role perms) $ \_ ->
@@ -97,7 +97,7 @@ runDropRemoteSchemaPermissions
   -> m EncJSON
 runDropRemoteSchemaPermissions (DropRemoteSchemaPermissions name roleName) = do
   remoteSchemaMap <- scRemoteSchemas <$> askSchemaCache
-  (RemoteSchemaCtxWithPermissions _ _ perms) <-
+  (RemoteSchemaCtx _ _ perms) <-
     onNothing (Map.lookup name remoteSchemaMap) $
       throw400 NotExists $ "remote schema " <> name <<> " doesn't exist"
   onNothing (Map.lookup roleName perms) $
@@ -119,7 +119,7 @@ addRemoteSchemaP1 name = do
 addRemoteSchemaP2Setup
   :: (HasVersion, QErrM m, MonadIO m, MonadUnique m, HasHttpManager m)
   => Env.Environment
-  -> AddRemoteSchemaQuery -> m RemoteSchemaCtx
+  -> AddRemoteSchemaQuery -> m PartialRemoteSchemaCtx
 addRemoteSchemaP2Setup env (AddRemoteSchemaQuery name def _) = do
   httpMgr <- askHttpManager
   rsi <- validateRemoteSchemaDef env def
@@ -234,7 +234,7 @@ runIntrospectRemoteSchema
   :: (CacheRM m, QErrM m) => RemoteSchemaNameQuery -> m EncJSON
 runIntrospectRemoteSchema (RemoteSchemaNameQuery rsName) = do
   sc <- askSchemaCache
-  (RemoteSchemaCtx _ _ _ introspectionByteString _) <-
+  (PartialRemoteSchemaCtx _ _ _ introspectionByteString _) <-
     _rscpContext <$> (onNothing (Map.lookup rsName (scRemoteSchemas sc)) $
     throw400 NotExists $
     "remote schema: " <> rsName <<> " not found")

@@ -45,8 +45,8 @@ module Hasura.RQL.Types.SchemaCache
 
   , IntrospectionResult(..)
   , ParsedIntrospection(..)
+  , PartialRemoteSchemaCtx(..)
   , RemoteSchemaCtx(..)
-  , RemoteSchemaCtxWithPermissions(..)
   , rscpName
   , rscpContext
   , rscpPermissions
@@ -192,8 +192,8 @@ data ParsedIntrospection
 
 -- TODO: rename this to `PartialRemoteSchemaCtx` and after doing this
 -- change `RemoteSchemaCtxWithPermissions` to `RemoteSchemaCtx`
-data RemoteSchemaCtx
-  = RemoteSchemaCtx
+data PartialRemoteSchemaCtx
+  = PartialRemoteSchemaCtx
   { rscName                   :: !RemoteSchemaName
   , rscIntro                  :: !IntrospectionResult
   , rscInfo                   :: !RemoteSchemaInfo
@@ -201,25 +201,25 @@ data RemoteSchemaCtx
   , rscParsed                 :: ParsedIntrospection
   }
 
-instance ToJSON RemoteSchemaCtx where
+instance ToJSON PartialRemoteSchemaCtx where
   toJSON = toJSON . rscInfo
 
-data RemoteSchemaCtxWithPermissions
-  = RemoteSchemaCtxWithPermissions
+data RemoteSchemaCtx
+  = RemoteSchemaCtx
   { _rscpName        :: !RemoteSchemaName
-  , _rscpContext     :: !RemoteSchemaCtx
+  , _rscpContext     :: !PartialRemoteSchemaCtx
   , _rscpPermissions :: !(M.HashMap RoleName IntrospectionResult)
   }
-$(makeLenses ''RemoteSchemaCtxWithPermissions)
+$(makeLenses ''RemoteSchemaCtx)
 
-instance ToJSON RemoteSchemaCtxWithPermissions where
-  toJSON (RemoteSchemaCtxWithPermissions name ctx _ ) =
+instance ToJSON RemoteSchemaCtx where
+  toJSON (RemoteSchemaCtx name ctx _ ) =
     object $
       [ "name"    .= name
       , "context" .= ctx
       ]
 
-type RemoteSchemaMap = M.HashMap RemoteSchemaName RemoteSchemaCtx
+type RemoteSchemaMap = M.HashMap RemoteSchemaName PartialRemoteSchemaCtx
 
 type DepMap = M.HashMap SchemaObjId (HS.HashSet SchemaDependency)
 
@@ -255,7 +255,7 @@ data SchemaCache
   { scTables                      :: !TableCache
   , scActions                     :: !ActionCache
   , scFunctions                   :: !FunctionCache
-  , scRemoteSchemas               :: !(M.HashMap RemoteSchemaName RemoteSchemaCtxWithPermissions)
+  , scRemoteSchemas               :: !(M.HashMap RemoteSchemaName RemoteSchemaCtx)
   , scAllowlist                   :: !(HS.HashSet GQLQuery)
   , scGQLContext                  :: !(HashMap RoleName (RoleContext GQLContext))
   , scUnauthenticatedGQLContext   :: !GQLContext

@@ -97,7 +97,7 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
                                   pure $ (variableName,v)
                               )) $ (HM.toList $ mapFromL (pgiColumn) pgColumns)
   let pgColumnsVariablesMap = HM.fromList pgColumnsVariables
-  (RemoteSchemaCtx rsName introspectionResult rsi _ _) <-
+  (PartialRemoteSchemaCtx rsName introspectionResult rsi _ _) <-
     onNothing (HM.lookup remoteSchemaName remoteSchemaMap) $
     throwError $ RemoteSchemaNotFound remoteSchemaName
   let schemaDoc@(RemoteSchemaIntrospection originalDefns) = irDoc introspectionResult

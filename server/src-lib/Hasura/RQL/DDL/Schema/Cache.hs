@@ -208,7 +208,7 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
         >-> (| Inc.keyed (\_ ((remoteSchemaCtx, metadataObj), remoteSchemaPerms) -> do
                    permissionInfo <-
                      buildRemoteSchemaPermissions -< (remoteSchemaCtx, remoteSchemaPerms)
-                   returnA -< (RemoteSchemaCtxWithPermissions
+                   returnA -< (RemoteSchemaCtx
                      { _rscpName = rscName remoteSchemaCtx
                      , _rscpContext = remoteSchemaCtx
                      , _rscpPermissions = permissionInfo
@@ -369,7 +369,7 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
     buildRemoteSchemaPermissions
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
          , Inc.ArrowCache m arr, MonadTx m)
-      => (RemoteSchemaCtx, [CatalogRemoteSchemaPermission]) `arr` (M.HashMap RoleName IntrospectionResult)
+      => (PartialRemoteSchemaCtx, [CatalogRemoteSchemaPermission]) `arr` (M.HashMap RoleName IntrospectionResult)
     buildRemoteSchemaPermissions = buildInfoMap _arspRole mkRemoteSchemaPermissionMetadataObject buildRemoteSchemaPermission
       where
         buildRemoteSchemaPermission = proc (remoteSchemaCtx, remoteSchemaPerm) -> do
@@ -462,7 +462,7 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
          , Inc.ArrowCache m arr , MonadIO m, MonadUnique m, HasHttpManager m )
       => ( Inc.Dependency (HashMap RemoteSchemaName Inc.InvalidationKey)
          , [AddRemoteSchemaQuery]
-         ) `arr` HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
+         ) `arr` HashMap RemoteSchemaName (PartialRemoteSchemaCtx, MetadataObject)
     buildRemoteSchemas =
       buildInfoMapPreservingMetadata _arsqName mkRemoteSchemaMetadataObject buildRemoteSchema
       where

@@ -52,7 +52,7 @@ fetchRemoteSchema
   -> HTTP.Manager
   -> RemoteSchemaName
   -> RemoteSchemaInfo
-  -> m RemoteSchemaCtx
+  -> m PartialRemoteSchemaCtx
 fetchRemoteSchema env manager schemaName schemaInfo@(RemoteSchemaInfo url headerConf _ timeout) = do
   headers <- makeHeadersFromConf env headerConf
   let hdrsWithDefaults = addDefaultHeaders headers
@@ -84,7 +84,7 @@ fetchRemoteSchema env manager schemaName schemaInfo@(RemoteSchemaInfo url header
   -- the introspection result of the remote server. We store this in the
   -- 'RemoteSchemaCtx' because we can use this when the 'introspect_remote_schema'
   -- is called by simple encoding the result to JSON.
-  return $ RemoteSchemaCtx schemaName introspectRes schemaInfo respData $
+  return $ PartialRemoteSchemaCtx schemaName introspectRes schemaInfo respData $
     ParsedIntrospection queryParsers mutationParsers subscriptionParsers
   where
     remoteSchemaErr :: T.Text -> m a

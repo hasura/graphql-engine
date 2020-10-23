@@ -868,7 +868,7 @@ validateRemoteSchema  (RemoteSchemaIntrospection upstreamTypeDefns) = do
 resolveRoleBasedRemoteSchema
   :: (MonadError QErr m)
   => G.SchemaDocument
-  -> RemoteSchemaCtx
+  -> PartialRemoteSchemaCtx
   -> m (IntrospectionResult, [SchemaDependency])
 resolveRoleBasedRemoteSchema (G.SchemaDocument providedTypeDefns) upstreamRemoteCtx = do
   let providedSchemaDocWithDefaultScalars =
