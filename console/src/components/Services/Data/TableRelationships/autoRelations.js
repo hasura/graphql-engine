@@ -105,6 +105,26 @@ const suggestedRelationshipsRaw = (tableName, allSchemas, currentSchema) => {
     }
   });
 
+  const fk_is_also_primary_key = (o_fk_obj) => {
+    const fk_table = allSchemas.filter((table) => {
+      return table.table_schema === o_fk_obj.table_schema &&
+        table.table_name === o_fk_obj.table_name &&
+        table.table_type === "TABLE";
+    }).pop();
+
+    if (fk_table === undefined) {
+      return false;
+    }
+
+    const fk_columns = o_fk_obj.columns;
+    for (const [index, pk_column] of fk_table.primary_key.columns.entries()) {
+      if (fk_columns[index] !== pk_column) {
+        return false;
+      }
+    }
+    return true;
+  };
+
   currentTableSchema.opp_foreign_key_constraints.forEach(o_fk_obj => {
     if (!o_fk_obj.is_table_tracked) {
       return;
@@ -114,7 +134,7 @@ const suggestedRelationshipsRaw = (tableName, allSchemas, currentSchema) => {
     const lcol = Object.values(o_fk_obj.column_mapping);
     const rTable = o_fk_obj.table_name;
 
-    if (o_fk_obj.is_unique) {
+    if (o_fk_obj.is_unique || fk_is_also_primary_key(o_fk_obj)) {
       // if opp foreign key is also unique, make obj rel
       if (!isExistingObjRel(currentObjRels, lcol)) {
         objRels.push({

@@ -122,7 +122,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - server: fix bug which arised when renaming a table which had a manual relationship defined (close #4158)
 - server: limit the length of event trigger names (close #5786)
 - server: Configurable websocket keep-alive interval. Add `--websocket-keepalive` command-line flag
-          and handle `HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE` env variable (fix #3539) 
+          and handle `HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE` env variable (fix #3539)
 **NOTE:** If you have event triggers with names greater than 42 chars, then you should update their names to avoid running into Postgres identifier limit bug (#5786)
 - server: validate remote schema queries (fixes #4143)
 - server: fix issue with tracking custom functions that return `SETOF` materialized view (close #5294) (#5945)
@@ -142,6 +142,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - docs: add tabs for console / cli / api workflows (close #3593) (#4948)
 - docs: add postgres concepts page to docs (close #4440) (#4471)
 - docs: add guides on connecting hasura cloud to pg databases of different cloud vendors (#5948)
+- console: foreign key that is primary key becomes object relationship (close #6009) (#6069)
 
 ## `v1.3.2`
 
