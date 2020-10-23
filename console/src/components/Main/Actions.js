@@ -79,8 +79,12 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
   const consoleId = window.__env.consoleId;
   const consoleScope = getConsoleScope(serverVersion, consoleId);
   let userType = 'admin';
-  if (headers.hasOwnProperty(HASURA_COLLABORATOR_TOKEN)) {
-    const collabToken = headers[HASURA_COLLABORATOR_TOKEN];
+  const headerHasCollabToken = Object.keys(headers).find(
+    header => header.toLowerCase() === HASURA_COLLABORATOR_TOKEN
+  );
+
+  if (headerHasCollabToken) {
+    const collabToken = headers[headerHasCollabToken];
     userType = getUserType(collabToken);
   }
 

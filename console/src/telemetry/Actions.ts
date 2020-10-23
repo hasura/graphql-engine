@@ -159,10 +159,14 @@ const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
     const restState = getState().telemetry.console_opts;
     const headers = dataHeaders(getState);
     let userType = 'admin';
-    if (headers?.[HASURA_COLLABORATOR_TOKEN]) {
-      const collabToken = headers[HASURA_COLLABORATOR_TOKEN];
+    const headerHasAdminToken = Object.keys(headers).find(
+      header => header.toLowerCase() === HASURA_COLLABORATOR_TOKEN
+    );
+    if (headerHasAdminToken) {
+      const collabToken = headers[headerHasAdminToken];
       userType = getUserType(collabToken);
     }
+
     let composedUpdatedState: ConsoleState['console_opts'] = {
       ...restState,
       console_notifications: {
@@ -242,9 +246,15 @@ const loadConsoleOpts = () => {
       body: JSON.stringify(getConsoleOptsQuery()),
     };
     let userType = 'admin';
-    if (headers?.[HASURA_COLLABORATOR_TOKEN]) {
-      userType = headers[HASURA_COLLABORATOR_TOKEN];
+
+    const headerHasAdminToken = Object.keys(headers).find(
+      header => header.toLowerCase() === HASURA_COLLABORATOR_TOKEN
+    );
+    if (headerHasAdminToken) {
+      const collabToken = headers[headerHasAdminToken];
+      userType = getUserType(collabToken);
     }
+
     return dispatch(requestAction(url, options) as any).then(
       (data: Telemetry[]) => {
         if (data.length) {
@@ -369,4 +379,5 @@ export {
   setPreReleaseNotificationOptOutInDB,
   setTelemetryNotificationShownInDB,
   updateConsoleNotificationsState,
+  UPDATE_CONSOLE_NOTIFICATIONS,
 };
