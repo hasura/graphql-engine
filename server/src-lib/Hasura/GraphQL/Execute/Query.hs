@@ -1,4 +1,3 @@
-
 module Hasura.GraphQL.Execute.Query
   ( convertQuerySelSet
   -- , queryOpFromPlan
