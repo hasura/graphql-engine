@@ -15,10 +15,8 @@ import qualified Language.GraphQL.Draft.Syntax         as G
 import qualified Data.HashSet                          as S
 import qualified Data.List.NonEmpty                    as NE
 import qualified Data.Text                             as T
-import qualified Hasura.GraphQL.Parser                 as P
 
 import           Hasura.Session
-import           Debug.Pretty.Simple
 
 data FieldDefinitionType
   = ObjectField
@@ -118,8 +116,6 @@ data RoleBasedSchemaValidationError
   | NoPresetArgumentFound
   | InvalidPresetArgument !G.Name
   | MultipleArgumentsInPresetFound
-  | ExpectedListButGotNameType
-  | ExpectedNameTypeButGotListType
   | ExpectedInputTypeButGotOutputType !G.Name
   | EnumValueNotFound !G.Name !G.Name
   | ExpectedEnumValue !G.Name !(G.Value Void)
@@ -147,8 +143,7 @@ showRoleBasedSchemaValidationError = \case
   NonMatchingDefaultValue inpObjName inpValName expectedVal providedVal ->
     "expected default value of input value: " <> inpValName <<> "of input object "
     <> inpObjName <<> " to be "
-    -- FIXME: DO NOT use "show" below, write a DQuote instance for Value Void
-    <> (T.pack $ show expectedVal) <> " but recieved " <> (T.pack $ show providedVal)
+    <> expectedVal <<> " but recieved " <>> providedVal
   NonExistingInputArgument inpObjName inpArgName ->
     "input argument " <> inpArgName <<> " does not exist in the input object:" <>> inpObjName
   MissingNonNullableArguments fieldName nonNullableArgs ->
@@ -208,19 +203,17 @@ showRoleBasedSchemaValidationError = \case
   InvalidPresetArgument argName ->
     "expected preset argument \"value\" but found " <>> argName
   MultipleArgumentsInPresetFound -> "expected only one preset argument \"value\" but found multiple preset arguments"
-  ExpectedListButGotNameType -> "expected list type but got named type" -- TODO: improve error message, something related to the preset perhaps?
-  ExpectedNameTypeButGotListType -> "expected name type but got list type" -- TODO: improve error message, something related to the preset perhaps?
   ExpectedInputTypeButGotOutputType typeName -> "expected " <> typeName <<> " to be an input type, but it's an output type"
   EnumValueNotFound enumName enumValue -> enumValue <<> " not found in the enum: " <>> enumName
   ExpectedEnumValue typeName presetValue ->
-    "expected preset value " <> (T.pack $ show presetValue)
-    <> " of type " <> typeName <<> " to be an enum value"
+    "expected preset value " <> presetValue
+    <<> " of type " <> typeName <<> " to be an enum value"
   ExpectedScalarValue typeName presetValue ->
-    "expected preset value " <> (T.pack $ show presetValue)
-    <> " of type " <> typeName <<> " to be a scalar value"
+    "expected preset value " <> presetValue
+    <<> " of type " <> typeName <<> " to be a scalar value"
   ExpectedInputObject typeName presetValue ->
-    "expected preset value " <> (T.pack $ show presetValue)
-    <> " of type " <> typeName <<> " to be an input object value"
+    "expected preset value " <> presetValue
+    <<> " of type " <> typeName <<> " to be an input object value"
   KeyDoesNotExistInInputObject key' inpObjTypeName ->
     key' <<> " does not exist in the input object " <>> inpObjTypeName
 
@@ -297,7 +290,9 @@ validatePresetValue gType varName value = do
         Just (PresetEnum enumVals) ->
           case value of
             enumVal@(G.VEnum e) ->
-              bool (refute $ pure $ EnumValueNotFound typeName $ G.unEnumValue e) (pure $ G.literal enumVal) $ e `elem` enumVals
+              case e `elem` enumVals of
+                True -> pure $ G.literal enumVal
+                False -> refute $ pure $ EnumValueNotFound typeName $ G.unEnumValue e
             G.VString t ->
               case isSessionVariable t of
                 True -> pure $ G.VVariable $ SessionPresetVariable (mkSessionVariable t) gType varName

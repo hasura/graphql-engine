@@ -80,11 +80,12 @@ import           Data.Aeson.Types              (toJSONKeyText)
 import           Instances.TH.Lift             ()
 import           Language.Haskell.TH.Syntax    (Lift)
 
-import qualified Data.Text.Extended            as T
-import qualified Database.PostgreSQL.LibPQ     as PQ
-import qualified Language.GraphQL.Draft.Syntax as G
-import qualified PostgreSQL.Binary.Decoding    as PD
-import qualified Text.Builder                  as TB
+import qualified Data.Text.Extended             as T
+import qualified Database.PostgreSQL.LibPQ      as PQ
+import qualified Language.GraphQL.Draft.Syntax  as G
+import qualified Language.GraphQL.Draft.Printer as G
+import qualified PostgreSQL.Binary.Decoding     as PD
+import qualified Text.Builder                   as TB
 
 import           Hasura.Incremental            (Cacheable)
 
@@ -127,6 +128,13 @@ instance DQuote T.Text where
 
 instance DQuote G.Name where
   dquoteTxt = dquoteTxt . G.unName
+
+instance DQuote (G.Value Void) where
+  dquoteTxt = TB.run . G.value
+
+instance (DQuote a) => DQuote (Maybe a) where
+  dquoteTxt Nothing = ""
+  dquoteTxt (Just v) = dquoteTxt v
 
 deriving instance DQuote G.EnumValue
 
