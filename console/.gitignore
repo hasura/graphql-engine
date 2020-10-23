@@ -14,4 +14,5 @@ test
 **/.tern-port
 packages/console-oss/build/
 packages/console-oss-table/build/
-node_modules_1.2/
+**/.tern-port
+lib/
