@@ -321,9 +321,8 @@ unfurlAnnOrderByElement ::
      Ir.AnnOrderByElement 'Postgres Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) FieldName
 unfurlAnnOrderByElement =
   \case
-    Ir.AOCColumn pgColumnInfo -> do
-      fieldName <- lift (fromPGColumnInfo pgColumnInfo)
-      pure fieldName
+    Ir.AOCColumn pgColumnInfo ->
+      lift (fromPGColumnInfo pgColumnInfo)
     Ir.AOCObjectRelation Ir.RelInfo {riMapping = mapping, riRTable = table} annBoolExp annOrderByElementG -> do
       selectFrom <- lift (lift (fromQualifiedTable table))
       joinAliasEntity <-
