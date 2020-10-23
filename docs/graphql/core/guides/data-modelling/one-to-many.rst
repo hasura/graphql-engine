@@ -57,12 +57,12 @@ To access the nested objects via the GraphQL API, :ref:`create the following rel
 - Array relationship, ``articles`` from ``author`` table using  ``article :: author_id  ->  id``
 - Object relationship, ``author`` from ``article`` table using ``author_id -> author :: id``
 
-Step 3: Query using relationships
----------------------------------
+Query using one-to-many relationships
+-------------------------------------
 
 We can now:
 
-- fetch a list of authors with their ``articles``:
+- fetch a list of ``authors`` with their ``articles``:
 
   .. graphiql::
     :view_only:
@@ -114,7 +114,7 @@ We can now:
       }
 
 
-- fetch a list of articles with their ``author``:
+- fetch a list of ``articles`` with their ``author``:
 
   .. graphiql::
     :view_only:
@@ -153,8 +153,8 @@ We can now:
         }
       }
 
-Insert using relationships
---------------------------
+Insert using one-to-many relationships
+--------------------------------------
 
 We can now:
 
@@ -234,7 +234,7 @@ We can now:
             title: "Article 2",
             author: {
               data: {
-                name: "Kevin"
+                name: "Gary"
               }
             }
           }
@@ -270,7 +270,7 @@ We can now:
                 "author_id": 6,
                 "author": {
                   "id": 6,
-                  "name": "Kevin"
+                  "name": "Gary"
                 }
               }
             ]
