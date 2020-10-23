@@ -108,6 +108,8 @@ library
                      , validation
                      , lifted-base
                      , pg-client
+                     , odbc
+                     , http-conduit
                      , validation
                      , text
                      , text-builder >= 0.6
