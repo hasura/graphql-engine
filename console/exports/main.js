@@ -1,7 +1,6 @@
 const CommonScss = require('../src/components/Common/Common.scss');
 const filterQueryScss = require('../src/components/Common/FilterQuery/FilterQuery.scss');
 const tableScss = require('../src/components/Common/TableCommon/Table.scss');
-
 import * as EndpointNamedExps from '../src/Endpoints';
 
 export {
@@ -47,3 +46,6 @@ export {
 export * from '../src/telemetry';
 export { default as Endpoints } from '../src/Endpoints';
 export { EndpointNamedExps };
+
+export { updateRequestHeaders } from '../src/components/Main/Main';
+
