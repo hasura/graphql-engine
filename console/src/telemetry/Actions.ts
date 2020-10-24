@@ -257,7 +257,7 @@ const loadConsoleOpts = () => {
 
     return dispatch(requestAction(url, options) as any).then(
       (data: Telemetry[]) => {
-        if (data.length) {
+        if (data?.length) {
           const { hasura_uuid, console_state } = data[0];
 
           dispatch({

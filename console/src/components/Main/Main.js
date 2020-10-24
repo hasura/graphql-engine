@@ -52,18 +52,20 @@ const updateRequestHeaders = props => {
 
   if (collabTokenPresent) {
     const userID = getUserType(collabTokenPresent.value);
-    if (!props.console_opts.console_notifications[userID]) {
-      dispatch({
-        type: UPDATE_CONSOLE_NOTIFICATIONS,
-        data: {
-          ...props.console_opts.console_notifications,
-          [userID]: {
-            read: [],
-            date: null,
-            showBadge: true,
+    if (props.console_opts.console_notifications) {
+      if (!props.console_opts.console_notifications[userID]) {
+        dispatch({
+          type: UPDATE_CONSOLE_NOTIFICATIONS,
+          data: {
+            ...props.console_opts.console_notifications,
+            [userID]: {
+              read: [],
+              date: null,
+              showBadge: true,
+            },
           },
-        },
-      });
+        });
+      }
     }
   }
 };
