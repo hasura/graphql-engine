@@ -284,6 +284,20 @@ const loadConsoleOpts = () => {
                 },
               },
             });
+          } else if (
+            console_state.console_notifications &&
+            !console_state.console_notifications[userType]
+          ) {
+            dispatch({
+              type: UPDATE_CONSOLE_NOTIFICATIONS,
+              data: {
+                [userType]: {
+                  read: [],
+                  date: null,
+                  showBadge: true,
+                },
+              },
+            });
           }
 
           return Promise.resolve();
@@ -363,7 +377,10 @@ const telemetryReducer = (
         ...state,
         console_opts: {
           ...state.console_opts,
-          console_notifications: action.data,
+          console_notifications: {
+            ...state.console_opts?.console_notifications,
+            ...action.data,
+          },
         },
       };
     default:
