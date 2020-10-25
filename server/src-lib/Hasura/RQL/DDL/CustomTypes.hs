@@ -7,7 +7,8 @@ module Hasura.RQL.DDL.CustomTypes
   , lookupPGScalar
   ) where
 
-import           Control.Monad.Validate
+
+import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
@@ -16,8 +17,10 @@ import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 
+import           Control.Monad.Validate
+
+import           Data.Text.Extended
 import           Hasura.EncJSON
-import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -52,9 +55,9 @@ validateCustomTypeDefinitions
   :: (MonadValidate [CustomTypeValidationError] m)
   => TableCache
   -> CustomTypes
-  -> HashSet PGScalarType
+  -> HashSet (ScalarType 'Postgres)
   -- ^ all Postgres base types. See Note [Postgres scalars in custom types]
-  -> m AnnotatedCustomTypes
+  -> m (AnnotatedCustomTypes 'Postgres)
 validateCustomTypeDefinitions tableCache customTypes allPGScalars = do
   unless (null duplicateTypes) $ dispute $ pure $ DuplicateTypeNames duplicateTypes
   traverse_ validateEnum enumDefinitions
@@ -62,7 +65,7 @@ validateCustomTypeDefinitions tableCache customTypes allPGScalars = do
   annotatedObjects <- mapFromL (unObjectTypeName . _otdName) <$>
                       traverse validateObject objectDefinitions
   let scalarTypeMap = Map.map NOCTScalar $
-        Map.map ASTCustom scalarTypes <> Map.mapWithKey ASTReusedPgScalar reusedPGScalars
+        Map.map ASTCustom scalarTypes <> Map.mapWithKey ASTReusedScalar reusedPGScalars
       enumTypeMap = Map.map NOCTEnum enumTypes
       inputObjectTypeMap = Map.map NOCTInputObject inputObjectTypes
       nonObjectTypeMap = scalarTypeMap <> enumTypeMap <> inputObjectTypeMap
@@ -133,7 +136,7 @@ validateCustomTypeDefinitions tableCache customTypes allPGScalars = do
 
     validateObject
       :: (MonadValidate [CustomTypeValidationError] m)
-      => ObjectType -> m AnnotatedObjectType
+      => ObjectType -> m (AnnotatedObjectType 'Postgres)
     validateObject objectDefinition = do
       let objectTypeName = _otdName objectDefinition
           fieldNames = map (unObjectFieldName . _ofdName) $
@@ -171,7 +174,7 @@ validateCustomTypeDefinitions tableCache customTypes allPGScalars = do
                    refute $ pure $ ObjectFieldObjectBaseType
                      objectTypeName fieldName fieldBaseType
                | Just pgScalar <- lookupPGScalar allPGScalars fieldBaseType ->
-                   pure $ AOFTScalar $ ASTReusedPgScalar fieldBaseType pgScalar
+                   pure $ AOFTScalar $ ASTReusedScalar fieldBaseType pgScalar
                | otherwise ->
                    refute $ pure $ ObjectFieldTypeDoesNotExist
                      objectTypeName fieldName fieldBaseType
@@ -200,7 +203,7 @@ validateCustomTypeDefinitions tableCache customTypes allPGScalars = do
                   objectTypeName _trName fieldName
 
             -- the column should be a column of the table
-            case getPGColumnInfoM remoteTableInfo (fromPGCol columnName) of
+            case getColumnInfoM remoteTableInfo (fromPGCol columnName) of
               Nothing ->
                 refute $ pure $ ObjectRelationshipColumnDoesNotExist
                 objectTypeName _trName _trRemoteTable columnName
@@ -333,8 +336,8 @@ resolveCustomTypes
   :: (MonadError QErr m)
   => TableCache
   -> CustomTypes
-  -> HashSet PGScalarType
-  -> m AnnotatedCustomTypes
+  -> HashSet (ScalarType 'Postgres)
+  -> m (AnnotatedCustomTypes 'Postgres)
 resolveCustomTypes tableCache customTypes allPGScalars =
   either (throw400 ConstraintViolation . showErrors) pure
     =<< runValidateT (validateCustomTypeDefinitions tableCache customTypes allPGScalars)

@@ -7,18 +7,22 @@ module Hasura.RQL.DDL.RemoteRelationship.Validate
   , errorToText
   ) where
 
-import           Data.Foldable
-import           Hasura.GraphQL.Schema.Remote
-import           Hasura.GraphQL.Parser.Column
-import           Hasura.GraphQL.Utils          (getBaseTyWithNestedLevelsCount)
 import           Hasura.Prelude                hiding (first)
-import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.HashSet                  as HS
 import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
+
+import           Data.Foldable
+
+import           Data.Text.Extended
+import           Hasura.GraphQL.Parser.Column
+import           Hasura.GraphQL.Schema.Remote
+import           Hasura.GraphQL.Utils          (getBaseTyWithNestedLevelsCount)
+import           Hasura.RQL.Types
+import           Hasura.SQL.Types
+
 
 -- | An error validating the remote relationship.
 data ValidationError
@@ -32,13 +36,12 @@ data ValidationError
   | TableFieldNonexistent !QualifiedTable !FieldName
   | ExpectedTypeButGot !G.GType !G.GType
   | InvalidType !G.GType !T.Text
-  | InvalidVariable !G.Name !(HM.HashMap G.Name PGColumnInfo)
+  | InvalidVariable !G.Name !(HM.HashMap G.Name (ColumnInfo 'Postgres))
   | NullNotAllowedHere
   | InvalidGTypeForStripping !G.GType
   | UnsupportedMultipleElementLists
   | UnsupportedEnum
   | InvalidGraphQLName !T.Text
-  deriving (Show, Eq)
 
 errorToText :: ValidationError -> Text
 errorToText = \case
@@ -80,8 +83,8 @@ validateRemoteRelationship
   :: (MonadError ValidationError m)
   => RemoteRelationship
   -> RemoteSchemaMap
-  -> [PGColumnInfo]
-  -> m RemoteFieldInfo
+  -> [ColumnInfo 'Postgres]
+  -> m (RemoteFieldInfo 'Postgres)
 validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
   let remoteSchemaName = rtrRemoteSchema remoteRelationship
       table = rtrTable remoteRelationship
@@ -300,7 +303,7 @@ validateRemoteArguments
   :: (MonadError ValidationError m)
   => HM.HashMap G.Name G.InputValueDefinition
   -> HM.HashMap G.Name (G.Value G.Name)
-  -> HM.HashMap G.Name PGColumnInfo
+  -> HM.HashMap G.Name (ColumnInfo 'Postgres)
   -> G.SchemaIntrospection
   -> m ()
 validateRemoteArguments expectedArguments providedArguments permittedVariables schemaDocument = do
@@ -317,12 +320,12 @@ validateRemoteArguments expectedArguments providedArguments permittedVariables s
 unwrapGraphQLType :: G.GType -> G.GType
 unwrapGraphQLType = \case
   G.TypeList _ lt -> lt
-  nt -> nt
+  nt              -> nt
 
 -- | Validate a value against a type.
 validateType
   :: (MonadError ValidationError m)
-  => HM.HashMap G.Name PGColumnInfo
+  => HM.HashMap G.Name (ColumnInfo 'Postgres)
   -> G.Value G.Name
   -> G.GType
   -> G.SchemaIntrospection
@@ -388,7 +391,7 @@ validateType permittedVariables value expectedGType schemaDocument =
     mkScalarTy scalarType = do
       eitherScalar <- runExceptT $ mkScalarTypeName scalarType
       case eitherScalar of
-        Left _ -> throwError $ InvalidGraphQLName $ toSQLTxt scalarType
+        Left _  -> throwError $ InvalidGraphQLName $ toSQLTxt scalarType
         Right s -> pure s
 
 isTypeCoercible
@@ -421,13 +424,13 @@ assertListType actualType =
 -- | Convert a field info to a named type, if possible.
 columnInfoToNamedType
   :: (MonadError ValidationError m)
-  => PGColumnInfo
+  => ColumnInfo 'Postgres
   -> m G.Name
 columnInfoToNamedType pci =
   case pgiType pci of
     PGColumnScalar scalarType -> do
       eitherScalar <- runExceptT $ mkScalarTypeName scalarType
       case eitherScalar of
-        Left _ -> throwError $ InvalidGraphQLName $ toSQLTxt scalarType
+        Left _  -> throwError $ InvalidGraphQLName $ toSQLTxt scalarType
         Right s -> pure s
     _                         -> throwError UnsupportedEnum

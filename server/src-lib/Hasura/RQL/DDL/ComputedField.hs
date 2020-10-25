@@ -14,25 +14,27 @@ module Hasura.RQL.DDL.ComputedField
 
 import           Hasura.Prelude
 
-import           Hasura.EncJSON
-import           Hasura.Incremental                 (Cacheable)
-import           Hasura.RQL.DDL.Deps
-import           Hasura.RQL.DDL.Permission.Internal
-import           Hasura.RQL.DDL.Schema.Function     (RawFunctionInfo (..), mkFunctionArgs)
-import           Hasura.RQL.Types
-import           Hasura.Server.Utils                (makeReasonMessage)
-import           Hasura.SQL.Types
+import qualified Control.Monad.Validate             as MV
+import qualified Data.HashSet                       as S
+import qualified Data.Sequence                      as Seq
+import qualified Database.PG.Query                  as Q
+import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax         (Lift)
 
-import qualified Control.Monad.Validate             as MV
-import qualified Data.HashSet                       as S
-import qualified Data.Sequence                      as Seq
-import qualified Database.PG.Query                  as Q
-import qualified Language.GraphQL.Draft.Syntax      as G
+import           Data.Text.Extended
+import           Hasura.EncJSON
+import           Hasura.Incremental                 (Cacheable)
+import           Hasura.RQL.DDL.Deps
+import           Hasura.RQL.DDL.Permission.Internal
+import           Hasura.RQL.DDL.Schema.Function     (RawFunctionInfo (..), mkFunctionArgs)
+import           Hasura.RQL.Types
+import           Hasura.SQL.Types
+import           Hasura.Server.Utils                (makeReasonMessage)
+
 
 data ComputedFieldDefinition
   = ComputedFieldDefinition
@@ -110,7 +112,7 @@ showError qf = \case
     "the function " <> qf <<> " is of type VOLATILE; cannot be added as a computed field"
   where
     showFunctionTableArgument = \case
-      FTAFirst          -> "first argument of the function " <>> qf
+      FTAFirst           -> "first argument of the function " <>> qf
       FTANamed argName _ -> argName <<> " argument of the function " <>> qf
     showFunctionSessionArgument = \case
       FunctionSessionArgument argName _ -> argName <<> " argument of the function " <>> qf
@@ -124,7 +126,7 @@ addComputedFieldP2Setup
   -> ComputedFieldDefinition
   -> RawFunctionInfo
   -> Maybe Text
-  -> m ComputedFieldInfo
+  -> m (ComputedFieldInfo 'Postgres)
 addComputedFieldP2Setup trackedTables table computedField definition rawFunctionInfo comment =
   either (throw400 NotSupported . showErrors) pure =<< MV.runValidateT (mkComputedFieldInfo)
   where
@@ -137,7 +139,7 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
     computedFieldGraphQLName = G.mkName $ computedFieldNameToText computedField
 
     mkComputedFieldInfo :: (MV.MonadValidate [ComputedFieldValidateError] m)
-                          => m ComputedFieldInfo
+                          => m (ComputedFieldInfo 'Postgres)
     mkComputedFieldInfo = do
       -- Check if computed field name is a valid GraphQL name
       unless (isJust computedFieldGraphQLName) $

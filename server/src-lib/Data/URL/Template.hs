@@ -12,11 +12,12 @@ where
 
 import           Hasura.Prelude
 
-import qualified Data.Text                  as T
 import qualified Data.Environment           as Env
+import qualified Data.Text                  as T
 
 import           Data.Attoparsec.Combinator (lookAhead)
 import           Data.Attoparsec.Text
+import           Data.Text.Extended
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 import           Test.QuickCheck
@@ -68,7 +69,7 @@ renderURLTemplate env template =
   case errorVariables of
     [] -> Right $ T.concat $ rights eitherResults
     _  -> Left $ T.unpack $ "Value for environment variables not found: "
-          <> T.intercalate ", " errorVariables
+          <> commaSeparated errorVariables
   where
     eitherResults = map renderTemplateItem $ unURLTemplate template
     errorVariables = lefts eitherResults
