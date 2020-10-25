@@ -117,10 +117,10 @@ module Hasura.RQL.Types.SchemaCache
 
 import           Hasura.Prelude
 
-import qualified Data.ByteString.Lazy               as BL
-import qualified Data.HashMap.Strict                as M
-import qualified Data.HashSet                       as HS
-import qualified Language.GraphQL.Draft.Syntax      as G
+import qualified Data.ByteString.Lazy                as BL
+import qualified Data.HashMap.Strict                 as M
+import qualified Data.HashSet                        as HS
+import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Data.Aeson
 import           Data.Aeson.Casing
@@ -128,12 +128,12 @@ import           Data.Aeson.TH
 import           Data.Text.Extended
 import           System.Cron.Types
 
-import qualified Hasura.GraphQL.Parser              as P
+import qualified Hasura.GraphQL.Parser               as P
 
-import           Hasura.Backends.Postgres.Execution
-import           Hasura.Backends.Postgres.Types
-import           Hasura.GraphQL.Context             (GQLContext, RemoteField, RoleContext)
-import           Hasura.Incremental                 (Dependency, MonadDepend (..), selectKeyD)
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.GraphQL.Context              (GQLContext, RemoteField, RoleContext)
+import           Hasura.Incremental                  (Dependency, MonadDepend (..), selectKeyD)
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
@@ -151,7 +151,7 @@ import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
 import           Hasura.Session
-import           Hasura.Tracing                     (TraceT)
+import           Hasura.Tracing                      (TraceT)
 
 
 reportSchemaObjs :: [SchemaObjId] -> Text

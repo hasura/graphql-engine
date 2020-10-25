@@ -66,7 +66,7 @@ import           Control.Lens
 import qualified Hasura.GraphQL.Execute.LiveQuery.TMap    as TMap
 import qualified Hasura.Logging                           as L
 
-import           Hasura.Backends.Postgres.Execution
+import           Hasura.Backends.Postgres.Connection
 import           Hasura.GraphQL.Execute.LiveQuery.Options
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Transport.HTTP.Protocol

@@ -19,7 +19,7 @@ import qualified Data.HashSet                        as Set
 import qualified Data.Text                           as T
 import qualified Language.GraphQL.Draft.Syntax       as G
 
-import qualified Hasura.Backends.Postgres.DML        as S
+import qualified Hasura.Backends.Postgres.SQL.DML    as S
 import qualified Hasura.GraphQL.Parser               as P
 import qualified Hasura.RQL.DML.Delete.Types         as RQL
 import qualified Hasura.RQL.DML.Insert.Types         as RQL
@@ -28,7 +28,7 @@ import qualified Hasura.RQL.DML.Update               as RQL
 import qualified Hasura.RQL.DML.Update.Types         as RQL
 
 import           Data.Text.Extended
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Parser               (FieldParser, InputFieldsParser, Kind (..),
                                                       Parser, UnpreparedValue (..), mkParameter)
 import           Hasura.GraphQL.Parser.Class

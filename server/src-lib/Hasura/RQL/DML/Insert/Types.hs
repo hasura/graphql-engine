@@ -3,9 +3,9 @@ module Hasura.RQL.DML.Insert.Types where
 
 import           Hasura.Prelude
 
-import qualified Hasura.Backends.Postgres.DML   as S
+import qualified Hasura.Backends.Postgres.SQL.DML   as S
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.DML.Returning.Types
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column

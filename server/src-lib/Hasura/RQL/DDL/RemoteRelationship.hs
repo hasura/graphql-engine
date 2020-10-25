@@ -17,7 +17,7 @@ import qualified Database.PG.Query                          as Q
 
 import           Instances.TH.Lift                          ()
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.RemoteRelationship.Validate
 import           Hasura.RQL.Types

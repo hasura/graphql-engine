@@ -25,14 +25,14 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 
-import qualified Hasura.Backends.Postgres.DML           as S
+import qualified Hasura.Backends.Postgres.SQL.DML       as S
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.Logging                         as L
 import qualified Hasura.RQL.DML.Select                  as DS
 import qualified Hasura.Tracing                         as Tracing
 
-import           Hasura.Backends.Postgres.Execution
-import           Hasura.Backends.Postgres.Value
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action

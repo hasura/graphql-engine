@@ -12,8 +12,8 @@ import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 
 import           Data.Text.Extended
-import           Hasura.Backends.Postgres.Types
-import           Hasura.Backends.Postgres.Value
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser
@@ -22,7 +22,7 @@ import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
 import           Hasura.Session
 
-import qualified Hasura.Backends.Postgres.DML           as S
+import qualified Hasura.Backends.Postgres.SQL.DML       as S
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.Inline          as E
 import qualified Hasura.GraphQL.Execute.LiveQuery       as E

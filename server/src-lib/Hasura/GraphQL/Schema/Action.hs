@@ -17,8 +17,8 @@ import qualified Hasura.RQL.DML.Internal               as RQL
 import qualified Hasura.RQL.DML.Select.Types           as RQL
 
 import           Data.Text.Extended
-import           Hasura.Backends.Postgres.Types
-import           Hasura.Backends.Postgres.Value
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.GraphQL.Parser                 (FieldParser, InputFieldsParser, Kind (..),
                                                         Parser, UnpreparedValue (..))
 import           Hasura.GraphQL.Parser.Class

@@ -42,8 +42,8 @@ import qualified Data.Environment                     as Env
 import qualified Hasura.Logging                       as L
 import qualified Hasura.Tracing                       as Tracing
 
-import           Hasura.Backends.Postgres.Types
-import           Hasura.Backends.Postgres.Value       (PGScalarValue (..), toTxtValue)
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Value   (PGScalarValue (..), toTxtValue)
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Parser                hiding (column)

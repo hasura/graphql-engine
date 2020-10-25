@@ -2,10 +2,10 @@ module Hasura.RQL.DML.Returning.Types where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                   as J
-import qualified Data.HashMap.Strict.InsOrd   as OMap
+import qualified Data.Aeson                       as J
+import qualified Data.HashMap.Strict.InsOrd       as OMap
 
-import qualified Hasura.Backends.Postgres.DML as S
+import qualified Hasura.Backends.Postgres.SQL.DML as S
 
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Select.Types

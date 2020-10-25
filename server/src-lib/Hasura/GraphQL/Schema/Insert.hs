@@ -2,10 +2,10 @@ module Hasura.GraphQL.Schema.Insert where
 
 import           Hasura.Prelude
 
-import qualified Hasura.RQL.DML.Insert.Types    as RQL
-import qualified Hasura.RQL.DML.Returning.Types as RQL
+import qualified Hasura.RQL.DML.Insert.Types        as RQL
+import qualified Hasura.RQL.DML.Returning.Types     as RQL
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common

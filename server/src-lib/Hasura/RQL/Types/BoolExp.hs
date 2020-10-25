@@ -40,10 +40,10 @@ module Hasura.RQL.Types.BoolExp
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson.Types               as J
-import qualified Data.HashMap.Strict            as M
+import qualified Data.Aeson.Types                   as J
+import qualified Data.HashMap.Strict                as M
 
-import qualified Hasura.Backends.Postgres.DML   as S
+import qualified Hasura.Backends.Postgres.SQL.DML   as S
 
 import           Control.Lens.Plated
 import           Control.Lens.TH
@@ -52,11 +52,11 @@ import           Data.Aeson.Casing
 import           Data.Aeson.Internal
 import           Data.Aeson.TH
 import           Data.Typeable
-import           Instances.TH.Lift              ()
-import           Language.Haskell.TH.Syntax     (Lift)
+import           Instances.TH.Lift                  ()
+import           Language.Haskell.TH.Syntax         (Lift)
 
-import           Hasura.Backends.Postgres.Types
-import           Hasura.Incremental             (Cacheable)
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend

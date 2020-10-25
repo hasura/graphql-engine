@@ -53,7 +53,7 @@ import qualified Hasura.RQL.DDL.Relationship         as Relationship
 import qualified Hasura.RQL.DDL.Schema               as Schema
 import qualified Hasura.RQL.Types.RemoteRelationship as RemoteRelationship
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types
 
 data MetadataVersion

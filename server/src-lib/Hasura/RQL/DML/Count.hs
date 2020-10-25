@@ -8,16 +8,16 @@ module Hasura.RQL.DML.Count
 
 import           Hasura.Prelude
 
-import qualified Data.ByteString.Builder        as BB
-import qualified Data.Sequence                  as DS
+import qualified Data.ByteString.Builder            as BB
+import qualified Data.Sequence                      as DS
 
 import           Data.Aeson
-import           Instances.TH.Lift              ()
+import           Instances.TH.Lift                  ()
 
-import qualified Database.PG.Query              as Q
-import qualified Hasura.Backends.Postgres.DML   as S
+import qualified Database.PG.Query                  as Q
+import qualified Hasura.Backends.Postgres.SQL.DML   as S
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.GBoolExp

@@ -8,19 +8,19 @@ where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict              as HM
-import qualified Data.List.NonEmpty               as NE
-import qualified Data.Text                        as T
+import qualified Data.HashMap.Strict                  as HM
+import qualified Data.List.NonEmpty                   as NE
+import qualified Data.Text                            as T
 
-import           Control.Lens                     hiding (op)
+import           Control.Lens                         hiding (op)
 import           Control.Monad.Writer.Strict
 import           Data.Text.Extended
-import           Instances.TH.Lift                ()
+import           Instances.TH.Lift                    ()
 
-import qualified Hasura.Backends.Postgres.DML     as S
+import qualified Hasura.Backends.Postgres.SQL.DML     as S
 
-import           Hasura.Backends.Postgres.Rewrite
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Rewrite
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Select.Types

@@ -26,7 +26,7 @@ import           Data.Text.Extended
 import qualified Hasura.RQL.DDL.EventTrigger        as DS
 import qualified Hasura.RQL.DDL.RemoteRelationship  as RR
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Relationship.Types

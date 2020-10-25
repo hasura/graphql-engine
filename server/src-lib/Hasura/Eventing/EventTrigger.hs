@@ -70,7 +70,7 @@ import           Data.Time.Clock
 import qualified Hasura.Logging                       as L
 import qualified Hasura.Tracing                       as Tracing
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.HTTP
 import           Hasura.HTTP

@@ -7,16 +7,16 @@ module Hasura.RQL.GBoolExp
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict            as M
-import qualified Data.Text                      as T
+import qualified Data.HashMap.Strict                as M
+import qualified Data.Text                          as T
 
 import           Data.Aeson
 import           Data.Monoid
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.Postgres.DML   as S
+import qualified Hasura.Backends.Postgres.SQL.DML   as S
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types
 
 type OpRhsParser m v =

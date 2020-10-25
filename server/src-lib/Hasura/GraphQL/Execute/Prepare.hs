@@ -24,11 +24,11 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.Postgres.DML           as S
+import qualified Hasura.Backends.Postgres.SQL.DML       as S
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 
-import           Hasura.Backends.Postgres.Types
-import           Hasura.Backends.Postgres.Value
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.DML.Internal                (currentSession)

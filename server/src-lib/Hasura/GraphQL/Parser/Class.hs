@@ -13,7 +13,7 @@ import                          Data.Tuple.Extended
 import                          GHC.Stack                             (HasCallStack)
 import                          Type.Reflection                       (Typeable)
 
-import                          Hasura.Backends.Postgres.Types
+import                          Hasura.Backends.Postgres.SQL.Types
 import {-# SOURCE #-}           Hasura.GraphQL.Parser.Internal.Parser
 import                          Hasura.RQL.Types.Error
 import                          Hasura.RQL.Types.Table                (TableCache, TableInfo)

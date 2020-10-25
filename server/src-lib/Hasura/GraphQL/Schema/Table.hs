@@ -14,18 +14,18 @@ module Hasura.GraphQL.Schema.Table
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict            as Map
-import qualified Data.HashSet                   as Set
-import qualified Language.GraphQL.Draft.Syntax  as G
+import qualified Data.HashMap.Strict                as Map
+import qualified Data.HashSet                       as Set
+import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Data.Text.Extended
 
-import qualified Hasura.GraphQL.Parser          as P
+import qualified Hasura.GraphQL.Parser              as P
 
-import           Hasura.Backends.Postgres.Types
-import           Hasura.GraphQL.Parser          (Kind (..), Parser)
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.GraphQL.Parser              (Kind (..), Parser)
 import           Hasura.GraphQL.Parser.Class
-import           Hasura.RQL.DML.Internal        (getRolePermInfo)
+import           Hasura.RQL.DML.Internal            (getRolePermInfo)
 import           Hasura.RQL.Types
 
 -- | Table select columns enum

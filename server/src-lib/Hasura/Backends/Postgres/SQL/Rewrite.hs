@@ -1,4 +1,4 @@
-module Hasura.Backends.Postgres.Rewrite
+module Hasura.Backends.Postgres.SQL.Rewrite
   ( prefixNumToAliases
   , prefixNumToAliasesSelectWith
   ) where
@@ -8,9 +8,9 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict            as Map
 import qualified Data.Text                      as T
 
-import qualified Hasura.Backends.Postgres.DML   as S
+import qualified Hasura.Backends.Postgres.SQL.DML   as S
 
-import           Hasura.Backends.Postgres.Types (Identifier (..))
+import           Hasura.Backends.Postgres.SQL.Types (Identifier (..))
 
 {- Note [Postgres identifier length limitations]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

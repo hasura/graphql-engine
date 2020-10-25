@@ -21,17 +21,17 @@ module Hasura.RQL.DDL.EventTrigger
 
 import           Hasura.Prelude
 
-import qualified Data.Environment               as Env
-import qualified Data.Text                      as T
-import qualified Data.Text.Lazy                 as TL
-import qualified Database.PG.Query              as Q
-import qualified Text.Shakespeare.Text          as ST
+import qualified Data.Environment                   as Env
+import qualified Data.Text                          as T
+import qualified Data.Text.Lazy                     as TL
+import qualified Database.PG.Query                  as Q
+import qualified Text.Shakespeare.Text              as ST
 
 import           Data.Aeson
 
-import qualified Hasura.Backends.Postgres.DML   as S
+import qualified Hasura.Backends.Postgres.SQL.DML   as S
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DML.Internal

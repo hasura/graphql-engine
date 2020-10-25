@@ -25,9 +25,9 @@ import           Language.GraphQL.Draft.Syntax         (Description (..), Name (
 import qualified Hasura.RQL.Types.Column               as RQL
 import qualified Hasura.RQL.Types.CustomTypes          as RQL
 
-import           Hasura.Backends.Postgres.DML
-import           Hasura.Backends.Postgres.Types
-import           Hasura.Backends.Postgres.Value
+import           Hasura.Backends.Postgres.SQL.DML
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Internal.Parser
 import           Hasura.GraphQL.Parser.Schema

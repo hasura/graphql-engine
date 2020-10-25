@@ -299,12 +299,12 @@ library
                      , Data.Time.Clock.Units
                      , Data.URL.Template
                      , Hasura.App
-                     , Hasura.Backends.Postgres.DML
-                     , Hasura.Backends.Postgres.Error
-                     , Hasura.Backends.Postgres.Execution
-                     , Hasura.Backends.Postgres.Rewrite
-                     , Hasura.Backends.Postgres.Types
-                     , Hasura.Backends.Postgres.Value
+                     , Hasura.Backends.Postgres.SQL.DML
+                     , Hasura.Backends.Postgres.SQL.Error
+                     , Hasura.Backends.Postgres.Connection
+                     , Hasura.Backends.Postgres.SQL.Rewrite
+                     , Hasura.Backends.Postgres.SQL.Types
+                     , Hasura.Backends.Postgres.SQL.Value
                      -- Exposed for benchmark:
                      , Hasura.Cache.Bounded
                      , Hasura.Logging

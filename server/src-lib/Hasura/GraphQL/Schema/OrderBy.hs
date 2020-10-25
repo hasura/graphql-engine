@@ -4,18 +4,18 @@ module Hasura.GraphQL.Schema.OrderBy
 
 import           Hasura.Prelude
 
-import qualified Data.List.NonEmpty             as NE
-import qualified Language.GraphQL.Draft.Syntax  as G
+import qualified Data.List.NonEmpty                 as NE
+import qualified Language.GraphQL.Draft.Syntax      as G
 
-import           Hasura.Backends.Postgres.DML   as SQL
-import qualified Hasura.GraphQL.Parser          as P
-import qualified Hasura.RQL.DML.Select          as RQL
-import           Hasura.RQL.Types               as RQL
+import           Hasura.Backends.Postgres.SQL.DML   as SQL
+import qualified Hasura.GraphQL.Parser              as P
+import qualified Hasura.RQL.DML.Select              as RQL
+import           Hasura.RQL.Types                   as RQL
 
 import           Data.Text.Extended
-import           Hasura.Backends.Postgres.Types
-import           Hasura.GraphQL.Parser          (InputFieldsParser, Kind (..), Parser,
-                                                 UnpreparedValue)
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.GraphQL.Parser              (InputFieldsParser, Kind (..), Parser,
+                                                     UnpreparedValue)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Table

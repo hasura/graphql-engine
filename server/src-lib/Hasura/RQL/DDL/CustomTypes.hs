@@ -10,17 +10,17 @@ module Hasura.RQL.DDL.CustomTypes
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict            as Map
-import qualified Data.HashSet                   as Set
-import qualified Data.List.Extended             as L
-import qualified Data.Text                      as T
-import qualified Database.PG.Query              as Q
-import qualified Language.GraphQL.Draft.Syntax  as G
+import qualified Data.HashMap.Strict                as Map
+import qualified Data.HashSet                       as Set
+import qualified Data.List.Extended                 as L
+import qualified Data.Text                          as T
+import qualified Database.PG.Query                  as Q
+import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Control.Monad.Validate
 import           Data.Text.Extended
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types

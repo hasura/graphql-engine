@@ -1,4 +1,4 @@
-module Hasura.Backends.Postgres.DML where
+module Hasura.Backends.Postgres.SQL.DML where
 
 import           Hasura.Prelude
 
@@ -11,7 +11,7 @@ import           Data.String                    (fromString)
 import           Data.Text.Extended
 import           Language.Haskell.TH.Syntax     (Lift)
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Incremental             (Cacheable)
 import           Hasura.SQL.Types
 

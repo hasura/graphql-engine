@@ -20,7 +20,7 @@ import           Data.List.Extended                    (duplicates)
 import qualified Hasura.GraphQL.Parser                 as P
 
 import           Data.Text.Extended
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Types
 import           Hasura.GraphQL.Parser                 (Kind (..), Parser, Schema (..),

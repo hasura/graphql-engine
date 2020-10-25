@@ -15,9 +15,9 @@ import           Control.Lens.TH                     (makeLenses, makePrisms)
 import           Data.Aeson.Types
 import           Language.Haskell.TH.Syntax          (Lift)
 
-import qualified Hasura.Backends.Postgres.DML        as S
+import qualified Hasura.Backends.Postgres.SQL.DML    as S
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column

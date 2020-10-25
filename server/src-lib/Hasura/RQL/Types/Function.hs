@@ -2,18 +2,18 @@ module Hasura.RQL.Types.Function where
 
 import           Hasura.Prelude
 
-import qualified Data.Sequence                  as Seq
-import qualified Data.Text                      as T
+import qualified Data.Sequence                      as Seq
+import qualified Data.Text                          as T
 
 import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax     (Lift)
+import           Language.Haskell.TH.Syntax         (Lift)
 
-import           Hasura.Backends.Postgres.Types
-import           Hasura.Incremental             (Cacheable)
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.Types.Common
 
 

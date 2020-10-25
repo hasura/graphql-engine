@@ -6,17 +6,17 @@ module Hasura.RQL.Types.Permission
 
 import           Hasura.Prelude
 
-import qualified Data.Text                      as T
-import qualified Database.PG.Query              as Q
-import qualified PostgreSQL.Binary.Decoding     as PD
+import qualified Data.Text                          as T
+import qualified Database.PG.Query                  as Q
+import qualified PostgreSQL.Binary.Decoding         as PD
 
 import           Data.Aeson
 import           Data.Hashable
-import           Instances.TH.Lift              ()
-import           Language.Haskell.TH.Syntax     (Lift)
+import           Instances.TH.Lift                  ()
+import           Language.Haskell.TH.Syntax         (Lift)
 
-import           Hasura.Backends.Postgres.Types
-import           Hasura.Incremental             (Cacheable)
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Incremental                 (Cacheable)
 import           Hasura.Session
 
 data PermType

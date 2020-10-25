@@ -19,7 +19,7 @@ import           Data.Text.Extended
 
 import qualified Hasura.Incremental                 as Inc
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.RemoteRelationship

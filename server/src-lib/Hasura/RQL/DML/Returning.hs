@@ -2,11 +2,11 @@ module Hasura.RQL.DML.Returning where
 
 import           Hasura.Prelude
 
-import qualified Data.Text                      as T
+import qualified Data.Text                          as T
 
-import qualified Hasura.Backends.Postgres.DML   as S
+import qualified Hasura.Backends.Postgres.SQL.DML   as S
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Returning.Types
 import           Hasura.RQL.DML.Select

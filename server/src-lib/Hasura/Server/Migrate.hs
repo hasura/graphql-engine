@@ -25,29 +25,30 @@ module Hasura.Server.Migrate
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                     as A
-import qualified Data.Environment               as Env
-import qualified Data.HashMap.Strict            as HM
-import qualified Data.Text                      as T
-import qualified Data.Text.IO                   as TIO
-import qualified Database.PG.Query              as Q
-import qualified Database.PG.Query.Connection   as Q
-import qualified Language.Haskell.TH.Lib        as TH
-import qualified Language.Haskell.TH.Syntax     as TH
+import qualified Data.Aeson                         as A
+import qualified Data.Environment                   as Env
+import qualified Data.HashMap.Strict                as HM
+import qualified Data.Text                          as T
+import qualified Data.Text.IO                       as TIO
+import qualified Database.PG.Query                  as Q
+import qualified Database.PG.Query.Connection       as Q
+import qualified Language.Haskell.TH.Lib            as TH
+import qualified Language.Haskell.TH.Syntax         as TH
 
-import           Control.Lens                   (_2, view)
+import           Control.Lens                       (_2, view)
 import           Control.Monad.Unique
-import           Data.Time.Clock                (UTCTime)
-import           System.Directory               (doesFileExist)
+import           Data.Time.Clock                    (UTCTime)
+import           System.Directory                   (doesFileExist)
 
-import           Hasura.Backends.Postgres.Types
-import           Hasura.Logging                 (Hasura, LogLevel (..), ToEngineLog (..))
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Logging                     (Hasura, LogLevel (..), ToEngineLog (..))
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
-import           Hasura.Server.Init             (DowngradeOptions (..))
-import           Hasura.Server.Logging          (StartupLog (..))
-import           Hasura.Server.Migrate.Version  (latestCatalogVersion, latestCatalogVersionString)
+import           Hasura.Server.Init                 (DowngradeOptions (..))
+import           Hasura.Server.Logging              (StartupLog (..))
+import           Hasura.Server.Migrate.Version      (latestCatalogVersion,
+                                                     latestCatalogVersionString)
 import           Hasura.Server.Version
 
 dropCatalog :: (MonadTx m) => m ()

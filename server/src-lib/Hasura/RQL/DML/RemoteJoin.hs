@@ -28,7 +28,7 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 
-import qualified Hasura.Backends.Postgres.DML           as S
+import qualified Hasura.Backends.Postgres.SQL.DML       as S
 
 import qualified Data.Aeson                             as A
 import qualified Data.Aeson.Ordered                     as AO

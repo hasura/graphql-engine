@@ -1,5 +1,5 @@
 -- | Functions and datatypes for interpreting Postgres errors.
-module Hasura.Backends.Postgres.Error
+module Hasura.Backends.Postgres.SQL.Error
   ( PGErrorType(..)
   , _PGDataException
   , _PGIntegrityConstraintViolation

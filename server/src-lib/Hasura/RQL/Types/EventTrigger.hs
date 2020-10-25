@@ -26,21 +26,21 @@ module Hasura.RQL.Types.EventTrigger
 
 import           Hasura.Prelude
 
-import qualified Data.ByteString.Lazy           as LBS
-import qualified Data.Text                      as T
-import qualified Database.PG.Query              as Q
-import qualified Text.Regex.TDFA                as TDFA
+import qualified Data.ByteString.Lazy               as LBS
+import qualified Data.Text                          as T
+import qualified Database.PG.Query                  as Q
+import qualified Text.Regex.TDFA                    as TDFA
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax     (Lift)
+import           Language.Haskell.TH.Syntax         (Lift)
 
-import           Hasura.Backends.Postgres.Types
-import           Hasura.Incremental             (Cacheable)
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.Types.Common        (InputWebhook, NonEmptyText (..))
+import           Hasura.RQL.Types.Common            (InputWebhook, NonEmptyText (..))
 
 
 -- This change helps us create functions for the event triggers

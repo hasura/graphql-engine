@@ -1,4 +1,4 @@
-module Hasura.Backends.Postgres.Types
+module Hasura.Backends.Postgres.SQL.Types
   ( pgFmtLit
   , pgFmtIdentifier
   , isView

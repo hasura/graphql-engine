@@ -48,7 +48,7 @@ import           Data.Aeson.TH
 import           Data.Text.Extended
 import           Language.Haskell.TH.Syntax         (Lift)
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.DDL.Permission.Internal

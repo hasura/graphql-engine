@@ -25,7 +25,7 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           System.Cron.Types                   (CronSchedule (..))
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Incremental                  (Cacheable)
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.Schema.Function

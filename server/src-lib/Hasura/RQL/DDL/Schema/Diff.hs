@@ -23,16 +23,16 @@ module Hasura.RQL.DDL.Schema.Diff
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict            as M
-import qualified Data.HashSet                   as HS
-import qualified Data.List.NonEmpty             as NE
-import qualified Database.PG.Query              as Q
+import qualified Data.HashMap.Strict                as M
+import qualified Data.HashSet                       as HS
+import qualified Data.List.NonEmpty                 as NE
+import qualified Database.PG.Query                  as Q
 
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.List.Extended             (duplicates)
+import           Data.List.Extended                 (duplicates)
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 

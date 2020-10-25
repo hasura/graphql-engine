@@ -12,12 +12,12 @@ module Hasura.RQL.DDL.Schema.Catalog
 
 import           Hasura.Prelude
 
-import qualified Database.PG.Query                  as Q
+import qualified Database.PG.Query                   as Q
 
 import           Data.Aeson
 
-import           Hasura.Backends.Postgres.Execution
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Permission.Internal

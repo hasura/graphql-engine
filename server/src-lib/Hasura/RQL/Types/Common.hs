@@ -57,30 +57,30 @@ module Hasura.RQL.Types.Common
 
 import           Hasura.Prelude
 
-import qualified Data.Environment               as Env
-import qualified Data.HashMap.Strict            as HM
-import qualified Data.Text                      as T
-import qualified Database.PG.Query              as Q
-import qualified Language.GraphQL.Draft.Syntax  as G
-import qualified Language.Haskell.TH.Syntax     as TH
-import qualified PostgreSQL.Binary.Decoding     as PD
-import qualified Test.QuickCheck                as QC
+import qualified Data.Environment                   as Env
+import qualified Data.HashMap.Strict                as HM
+import qualified Data.Text                          as T
+import qualified Database.PG.Query                  as Q
+import qualified Language.GraphQL.Draft.Syntax      as G
+import qualified Language.Haskell.TH.Syntax         as TH
+import qualified PostgreSQL.Binary.Decoding         as PD
+import qualified Test.QuickCheck                    as QC
 
-import           Control.Lens                   (makeLenses)
+import           Control.Lens                       (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Bifunctor                 (bimap)
-import           Data.Scientific                (toBoundedInteger)
+import           Data.Bifunctor                     (bimap)
+import           Data.Scientific                    (toBoundedInteger)
 import           Data.Text.Extended
 import           Data.URL.Template
-import           Instances.TH.Lift              ()
-import           Language.Haskell.TH.Syntax     (Lift, Q, TExp)
+import           Instances.TH.Lift                  ()
+import           Language.Haskell.TH.Syntax         (Lift, Q, TExp)
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
-import           Hasura.Incremental             (Cacheable)
-import           Hasura.RQL.DDL.Headers         ()
+import           Hasura.Incremental                 (Cacheable)
+import           Hasura.RQL.DDL.Headers             ()
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
 

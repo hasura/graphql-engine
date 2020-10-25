@@ -2,15 +2,15 @@ module Hasura.RQL.DDL.Relationship.Types where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict            as HM
+import qualified Data.HashMap.Strict                as HM
 
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
-import           Instances.TH.Lift              ()
-import           Language.Haskell.TH.Syntax     (Lift)
+import           Instances.TH.Lift                  ()
+import           Language.Haskell.TH.Syntax         (Lift)
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types
 
 data RelDef a

@@ -42,7 +42,7 @@ import           Network.URI.Extended               ()
 
 import qualified Hasura.Incremental                 as Inc
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Schema.Common       (textToName)

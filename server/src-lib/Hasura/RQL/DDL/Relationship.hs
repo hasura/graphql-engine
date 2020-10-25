@@ -14,18 +14,18 @@ where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict               as HM
-import qualified Data.HashSet                      as HS
-import qualified Database.PG.Query                 as Q
+import qualified Data.HashMap.Strict                as HM
+import qualified Data.HashSet                       as HS
+import qualified Database.PG.Query                  as Q
 
 import           Data.Aeson.Types
-import           Data.Tuple                        (swap)
-import           Instances.TH.Lift                 ()
+import           Data.Tuple                         (swap)
+import           Instances.TH.Lift                  ()
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Deps
-import           Hasura.RQL.DDL.Permission         (purgePerm)
+import           Hasura.RQL.DDL.Permission          (purgePerm)
 import           Hasura.RQL.DDL.Relationship.Types
 import           Hasura.RQL.Types
 

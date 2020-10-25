@@ -2,18 +2,18 @@ module Hasura.GraphQL.Schema.Common where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                     as J
-import qualified Data.HashMap.Strict.InsOrd     as OMap
+import qualified Data.Aeson                         as J
+import qualified Data.HashMap.Strict.InsOrd         as OMap
 
 import           Data.Text.Extended
-import           Language.GraphQL.Draft.Syntax  as G
+import           Language.GraphQL.Draft.Syntax      as G
 
-import qualified Data.Text                      as T
-import qualified Hasura.GraphQL.Execute.Types   as ET (GraphQLQueryType)
-import qualified Hasura.GraphQL.Parser          as P
-import qualified Hasura.RQL.DML.Select.Types    as RQL (Fields)
+import qualified Data.Text                          as T
+import qualified Hasura.GraphQL.Execute.Types       as ET (GraphQLQueryType)
+import qualified Hasura.GraphQL.Parser              as P
+import qualified Hasura.RQL.DML.Select.Types        as RQL (Fields)
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types
 
 data QueryContext =

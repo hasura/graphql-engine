@@ -96,7 +96,7 @@ import           Data.Aeson.TH
 import           Data.Text.Extended
 import           Language.Haskell.TH.Syntax          (Lift)
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Incremental                  (Cacheable)
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column

@@ -20,21 +20,21 @@ module Hasura.GraphQL.Context
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                    as J
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.Aeson                       as J
+import qualified Language.GraphQL.Draft.Syntax    as G
 
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
-import qualified Hasura.Backends.Postgres.DML  as S
-import qualified Hasura.RQL.DML.Delete.Types   as RQL
-import qualified Hasura.RQL.DML.Select.Types   as RQL
-import qualified Hasura.RQL.DML.Update.Types   as RQL
-import qualified Hasura.RQL.Types.Action       as RQL
-import qualified Hasura.RQL.Types.RemoteSchema as RQL
+import qualified Hasura.Backends.Postgres.SQL.DML as S
+import qualified Hasura.RQL.DML.Delete.Types      as RQL
+import qualified Hasura.RQL.DML.Select.Types      as RQL
+import qualified Hasura.RQL.DML.Update.Types      as RQL
+import qualified Hasura.RQL.Types.Action          as RQL
+import qualified Hasura.RQL.Types.RemoteSchema    as RQL
 
 import           Hasura.GraphQL.Parser
-import           Hasura.GraphQL.Schema.Insert  (AnnInsert)
+import           Hasura.GraphQL.Schema.Insert     (AnnInsert)
 import           Hasura.SQL.Backend
 
 -- | For storing both a normal GQLContext and one for the backend variant.

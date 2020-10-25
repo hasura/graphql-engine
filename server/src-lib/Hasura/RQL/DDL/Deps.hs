@@ -9,13 +9,13 @@ module Hasura.RQL.DDL.Deps
 
 import           Hasura.Prelude
 
-import qualified Data.HashSet                   as HS
-import qualified Data.Text                      as T
-import qualified Database.PG.Query              as Q
+import qualified Data.HashSet                       as HS
+import qualified Data.Text                          as T
+import qualified Database.PG.Query                  as Q
 
 import           Data.Text.Extended
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types
 
 purgeRel :: QualifiedTable -> RelName -> Q.Tx ()

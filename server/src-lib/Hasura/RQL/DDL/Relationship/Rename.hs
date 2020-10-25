@@ -3,14 +3,14 @@ module Hasura.RQL.DDL.Relationship.Rename
 where
 
 import           Data.Text.Extended
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Relationship.Types
-import           Hasura.RQL.DDL.Schema             (renameRelInCatalog)
+import           Hasura.RQL.DDL.Schema              (renameRelInCatalog)
 import           Hasura.RQL.Types
 
-import qualified Data.HashMap.Strict               as Map
+import qualified Data.HashMap.Strict                as Map
 
 renameRelP2
   :: (QErrM m, MonadTx m, CacheRM m)

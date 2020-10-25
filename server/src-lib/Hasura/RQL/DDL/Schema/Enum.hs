@@ -16,28 +16,28 @@ module Hasura.RQL.DDL.Schema.Enum (
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                as M
-import qualified Data.List.NonEmpty                 as NE
-import qualified Data.Sequence                      as Seq
-import qualified Data.Sequence.NonEmpty             as NESeq
-import qualified Data.Text                          as T
-import qualified Database.PG.Query                  as Q
-import qualified Language.GraphQL.Draft.Syntax      as G
+import qualified Data.HashMap.Strict                 as M
+import qualified Data.List.NonEmpty                  as NE
+import qualified Data.Sequence                       as Seq
+import qualified Data.Sequence.NonEmpty              as NESeq
+import qualified Data.Text                           as T
+import qualified Database.PG.Query                   as Q
+import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Control.Monad.Validate
-import           Data.List                          (delete)
+import           Data.List                           (delete)
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.Postgres.DML       as S
+import qualified Hasura.Backends.Postgres.SQL.DML    as S
 
-import           Hasura.Backends.Postgres.Execution
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
-import           Hasura.Server.Utils                (makeReasonMessage)
+import           Hasura.Server.Utils                 (makeReasonMessage)
 
 
 -- | Given a map of enum tables, computes all enum references implied by the given set of foreign

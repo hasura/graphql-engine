@@ -29,7 +29,7 @@ import qualified Hasura.RQL.DDL.QueryCollection                as Collection
 import qualified Hasura.RQL.DDL.Relationship                   as Relationship
 import qualified Hasura.RQL.DDL.Schema                         as Schema
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Utils                          (simpleGraphQLQuery)
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.Metadata.Types

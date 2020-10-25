@@ -3,15 +3,15 @@ module Hasura.Server.SchemaUpdate
   (startSchemaSyncThreads)
 where
 
-import           Hasura.Backends.Postgres.Execution
+import           Hasura.Backends.Postgres.Connection
 import           Hasura.Logging
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Schema              (runCacheRWT)
+import           Hasura.RQL.DDL.Schema               (runCacheRWT)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.API.Query
-import           Hasura.Server.App                  (SchemaCacheRef (..), withSCUpdate)
-import           Hasura.Server.Init                 (InstanceId (..))
+import           Hasura.Server.App                   (SchemaCacheRef (..), withSCUpdate)
+import           Hasura.Server.Init                  (InstanceId (..))
 import           Hasura.Server.Logging
 import           Hasura.Session
 
@@ -23,14 +23,14 @@ import           Data.IORef
 import           GHC.AssertNF
 #endif
 
-import qualified Control.Concurrent.Extended        as C
-import qualified Control.Concurrent.STM             as STM
-import qualified Control.Immortal                   as Immortal
-import qualified Data.Text                          as T
-import qualified Data.Time                          as UTC
-import qualified Database.PG.Query                  as PG
-import qualified Database.PostgreSQL.LibPQ          as PQ
-import qualified Network.HTTP.Client                as HTTP
+import qualified Control.Concurrent.Extended         as C
+import qualified Control.Concurrent.STM              as STM
+import qualified Control.Immortal                    as Immortal
+import qualified Data.Text                           as T
+import qualified Data.Time                           as UTC
+import qualified Database.PG.Query                   as PG
+import qualified Database.PostgreSQL.LibPQ           as PQ
+import qualified Network.HTTP.Client                 as HTTP
 
 pgChannel :: PG.PGChannel
 pgChannel = "hasura_schema_update"

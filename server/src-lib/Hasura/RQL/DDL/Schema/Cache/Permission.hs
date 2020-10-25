@@ -7,17 +7,17 @@ module Hasura.RQL.DDL.Schema.Cache.Permission
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict.Extended       as M
-import qualified Data.Sequence                      as Seq
+import qualified Data.HashMap.Strict.Extended        as M
+import qualified Data.Sequence                       as Seq
 
 import           Control.Arrow.Extended
 import           Data.Aeson
 import           Data.Text.Extended
 
-import qualified Hasura.Incremental                 as Inc
+import qualified Hasura.Incremental                  as Inc
 
-import           Hasura.Backends.Postgres.Execution
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Schema.Cache.Common

@@ -40,24 +40,24 @@ module Hasura.RQL.Types.DML
 
 import           Hasura.Prelude
 
-import qualified Data.Attoparsec.Text           as AT
-import qualified Data.Attoparsec.Text           as Atto
-import qualified Data.Attoparsec.Types          as AttoT
-import qualified Data.HashMap.Strict            as M
-import qualified Data.Text                      as T
+import qualified Data.Attoparsec.Text               as AT
+import qualified Data.Attoparsec.Text               as Atto
+import qualified Data.Attoparsec.Types              as AttoT
+import qualified Data.HashMap.Strict                as M
+import qualified Data.Text                          as T
 
 import           Control.Lens.TH
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Instances.TH.Lift              ()
-import           Language.Haskell.TH.Syntax     (Lift)
+import           Instances.TH.Lift                  ()
+import           Language.Haskell.TH.Syntax         (Lift)
 
-import qualified Hasura.Backends.Postgres.DML   as S
+import qualified Hasura.Backends.Postgres.SQL.DML   as S
 
-import           Hasura.Backends.Postgres.Types
-import           Hasura.Incremental             (Cacheable)
-import           Hasura.RQL.Instances           ()
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Incremental                 (Cacheable)
+import           Hasura.RQL.Instances               ()
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
 

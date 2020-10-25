@@ -29,20 +29,20 @@ module Hasura.RQL.Types.Column
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict            as M
-import qualified Language.GraphQL.Draft.Syntax  as G
+import qualified Data.HashMap.Strict                as M
+import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Control.Lens.TH
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax     (Lift)
+import           Language.Haskell.TH.Syntax         (Lift)
 
-import           Hasura.Backends.Postgres.Types
-import           Hasura.Backends.Postgres.Value
-import           Hasura.Incremental             (Cacheable)
-import           Hasura.RQL.Instances           ()
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Value
+import           Hasura.Incremental                 (Cacheable)
+import           Hasura.RQL.Instances               ()
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend

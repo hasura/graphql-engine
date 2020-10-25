@@ -37,7 +37,7 @@ import qualified Data.Sequence.NonEmpty                as NESeq
 import qualified Data.Text                             as T
 import qualified Language.GraphQL.Draft.Syntax         as G
 
-import qualified Hasura.Backends.Postgres.DML          as SQL
+import qualified Hasura.Backends.Postgres.SQL.DML      as SQL
 import qualified Hasura.GraphQL.Execute.Types          as ET
 import qualified Hasura.GraphQL.Parser                 as P
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
@@ -45,8 +45,8 @@ import qualified Hasura.RQL.DML.Select                 as RQL
 import qualified Hasura.RQL.Types.BoolExp              as RQL
 
 import           Data.Text.Extended
-import           Hasura.Backends.Postgres.Types
-import           Hasura.Backends.Postgres.Value
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.GraphQL.Parser                 (FieldParser, InputFieldsParser, Kind (..),
                                                         Parser, UnpreparedValue (..), mkParameter)
 import           Hasura.GraphQL.Parser.Class

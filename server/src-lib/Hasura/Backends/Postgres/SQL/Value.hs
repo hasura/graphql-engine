@@ -1,4 +1,4 @@
-module Hasura.Backends.Postgres.Value
+module Hasura.Backends.Postgres.SQL.Value
   ( PGScalarValue(..)
   , pgColValueToInt
   , pgScalarValueToJson
@@ -37,9 +37,9 @@ import           Data.Int
 import           Data.Scientific
 import           Data.Time
 
-import qualified Hasura.Backends.Postgres.DML   as S
+import qualified Hasura.Backends.Postgres.SQL.DML   as S
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.SQL.GeoJSON
 import           Hasura.SQL.Time
 

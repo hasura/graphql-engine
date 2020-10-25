@@ -3,7 +3,7 @@
 
 -- A module for postgres execution related types and operations
 
-module Hasura.Backends.Postgres.Execution
+module Hasura.Backends.Postgres.Connection
   ( MonadTx(..)
   , LazyTx
 
@@ -34,10 +34,10 @@ import           Control.Monad.Unique
 import           Control.Monad.Validate
 import           Data.Either                    (isRight)
 
-import qualified Hasura.Backends.Postgres.DML   as S
+import qualified Hasura.Backends.Postgres.SQL.DML   as S
 import qualified Hasura.Tracing                 as Tracing
 
-import           Hasura.Backends.Postgres.Error
+import           Hasura.Backends.Postgres.SQL.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Types

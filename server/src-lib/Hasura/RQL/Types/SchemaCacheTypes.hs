@@ -9,7 +9,7 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.EventTrigger

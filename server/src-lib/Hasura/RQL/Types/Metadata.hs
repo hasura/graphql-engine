@@ -8,7 +8,7 @@ import           Data.Text.Extended
 import           Hasura.Prelude
 import           Hasura.Session
 
-import           Hasura.Backends.Postgres.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField

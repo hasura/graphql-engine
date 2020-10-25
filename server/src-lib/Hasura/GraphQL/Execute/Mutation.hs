@@ -23,7 +23,7 @@ import qualified Hasura.RQL.DML.Update                  as RQL
 import qualified Hasura.Tracing                         as Tracing
 
 
-import           Hasura.Backends.Postgres.Execution
+import           Hasura.Backends.Postgres.Connection
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
