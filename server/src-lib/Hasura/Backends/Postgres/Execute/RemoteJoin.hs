@@ -334,9 +334,6 @@ pathToAlias path counter = do
                  <> "__" <> (T.pack . show . unCounter) counter
 
 
-mapToNonEmpty :: RemoteJoinMap backend -> Maybe (RemoteJoins backend)
-mapToNonEmpty = NE.nonEmpty . Map.toList
-
 
 -- | Generate composite JSON ('CompositeValue') parameterised over 'RemoteJoinField'
 --   from remote join map and query response JSON from Postgres.

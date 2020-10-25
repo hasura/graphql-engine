@@ -3,10 +3,8 @@ module Hasura.Backends.Postgres.Execute.Query where
 import           Hasura.Prelude
 
 import qualified Data.Aeson                               as J
-import qualified Data.IntMap                              as IntMap
 import qualified Database.PG.Query                        as Q
 
-import qualified Hasura.Backends.Postgres.SQL.DML         as S
 
 import           Hasura.Backends.Postgres.Execute.Prepare
 import           Hasura.Backends.Postgres.SQL.Value

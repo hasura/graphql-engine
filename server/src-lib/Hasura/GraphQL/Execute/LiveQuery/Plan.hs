@@ -43,12 +43,10 @@ import qualified PostgreSQL.Binary.Encoding                    as PE
 import           Control.Lens
 import           Data.UUID                                     (UUID)
 
-import qualified Hasura.Backends.Postgres.Execute.RemoteJoin   as RR
 import qualified Hasura.Backends.Postgres.SQL.DML              as S
 import qualified Hasura.Backends.Postgres.Translate.RemoteJoin as RR
 import qualified Hasura.Backends.Postgres.Translate.Select     as DS
 import qualified Hasura.GraphQL.Parser.Schema                  as PS
-import qualified Hasura.RQL.DML.RemoteJoin.Types               as RR
 import qualified Hasura.RQL.DML.Select.Types                   as DS
 
 import           Hasura.Backends.Postgres.Connection

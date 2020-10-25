@@ -33,17 +33,11 @@ import qualified Hasura.RQL.DML.Select.Types                   as DS
 import qualified Hasura.Tracing                                as Tracing
 
 import           Hasura.Backends.Postgres.Connection
-import           Hasura.Backends.Postgres.Execute.Mutation
 import           Hasura.Backends.Postgres.Execute.Prepare
 import           Hasura.Backends.Postgres.Execute.Query
 import           Hasura.Backends.Postgres.Execute.RemoteJoin
-import           Hasura.Backends.Postgres.Translate.Delete
-import           Hasura.Backends.Postgres.Translate.Insert
-import           Hasura.Backends.Postgres.Translate.Mutation
 import           Hasura.Backends.Postgres.Translate.RemoteJoin
-import           Hasura.Backends.Postgres.Translate.Returning
 import           Hasura.Backends.Postgres.Translate.Select     (asSingleRowJsonResp)
-import           Hasura.Backends.Postgres.Translate.Update
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action

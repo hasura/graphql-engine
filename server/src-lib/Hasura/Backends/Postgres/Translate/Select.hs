@@ -11,15 +11,12 @@ module Hasura.Backends.Postgres.Translate.Select
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                  as HM
-import qualified Data.HashSet                         as HS
 import qualified Data.List.NonEmpty                   as NE
-import qualified Data.Sequence                        as DS
 import qualified Data.Text                            as T
 import qualified Database.PG.Query                    as Q
 
 import           Control.Lens                         hiding (op)
 import           Control.Monad.Writer.Strict
-import           Data.Aeson.Types
 import           Data.Text.Extended
 import           Instances.TH.Lift                    ()
 

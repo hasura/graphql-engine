@@ -5,31 +5,17 @@ where
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                    as Env
-import qualified Data.HashMap.Strict                 as Map
-import qualified Data.Sequence                       as DS
-import qualified Database.PG.Query                   as Q
-import qualified Network.HTTP.Client                 as HTTP
-import qualified Network.HTTP.Types                  as N
+import qualified Data.HashMap.Strict                as Map
 
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.Postgres.SQL.DML    as S
-import qualified Hasura.Tracing                      as Tracing
+import qualified Hasura.Backends.Postgres.SQL.DML   as S
 
-import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
-import           Hasura.EncJSON
-import           Hasura.RQL.DML.Internal
-import           Hasura.RQL.DML.RemoteJoin.Types
-import           Hasura.RQL.DML.Returning.Types
-import           Hasura.RQL.DML.Select
-import           Hasura.RQL.Instances                ()
+import           Hasura.RQL.Instances               ()
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.Server.Version               (HasVersion)
-import           Hasura.Session
 
 
 -- | Note:- Using sorted columns is necessary to enable casting the rows returned by VALUES expression to table type.

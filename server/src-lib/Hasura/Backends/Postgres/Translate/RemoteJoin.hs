@@ -7,27 +7,18 @@ module Hasura.Backends.Postgres.Translate.RemoteJoin
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashSet                           as HS
-import qualified Data.List.NonEmpty                     as NE
-import qualified Data.Text                              as T
-import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Data.HashMap.Strict              as Map
+import qualified Data.HashSet                     as HS
+import qualified Data.List.NonEmpty               as NE
 
 import           Control.Lens
-import           Data.Validation
 
-import qualified Hasura.Backends.Postgres.SQL.DML       as S
-import qualified Hasura.Tracing                         as Tracing
+import qualified Hasura.Backends.Postgres.SQL.DML as S
 
-import           Hasura.GraphQL.Parser                  hiding (field)
-import           Hasura.GraphQL.RemoteServer            (execRemoteGQ')
-import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.RQL.DML.RemoteJoin.Types
 import           Hasura.RQL.DML.Returning.Types
 import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.Types
-import           Hasura.Server.Version                  (HasVersion)
-import           Hasura.Session
 
 
 
@@ -174,12 +165,6 @@ transformAnnFields path fields = do
 
 appendPath :: FieldName -> FieldPath -> FieldPath
 appendPath fieldName = FieldPath . (<> [fieldName]) . unFieldPath
-
-
-parseGraphQLName :: (MonadError QErr m) => Text -> m G.Name
-parseGraphQLName txt = maybe (throw400 RemoteSchemaError $ errMsg) pure $ G.mkName txt
-  where
-    errMsg = txt <> " is not a valid GraphQL name"
 
 
 mapToNonEmpty :: RemoteJoinMap backend -> Maybe (RemoteJoins backend)

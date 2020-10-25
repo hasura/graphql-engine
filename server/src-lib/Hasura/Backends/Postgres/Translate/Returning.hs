@@ -19,18 +19,6 @@ import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.Types
 
 
-pgColsFromMutFld :: MutFld 'Postgres -> [(PGCol, ColumnType 'Postgres)]
-pgColsFromMutFld = \case
-  MCount -> []
-  MExp _ -> []
-  MRet selFlds ->
-    flip mapMaybe selFlds $ \(_, annFld) -> case annFld of
-    AFColumn (AnnColumnField (ColumnInfo col _ _ colTy _ _) _ _) -> Just (col, colTy)
-    _                                                            -> Nothing
-
-pgColsFromMutFlds :: MutFlds 'Postgres -> [(PGCol, PGColumnType)]
-pgColsFromMutFlds = concatMap (pgColsFromMutFld . snd)
-
 pgColsToSelFlds :: [ColumnInfo 'Postgres] -> [(FieldName, AnnField 'Postgres)]
 pgColsToSelFlds cols =
   flip map cols $

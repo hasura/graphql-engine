@@ -8,35 +8,13 @@ module Hasura.RQL.DML.RemoteJoin.Types
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashMap.Strict.Extended           as Map
-import qualified Data.HashMap.Strict.InsOrd             as OMap
-import qualified Data.HashSet                           as HS
-import qualified Data.List.NonEmpty                     as NE
-import qualified Data.Text                              as T
-import qualified Database.PG.Query                      as Q
-import qualified Language.GraphQL.Draft.Printer         as G
-import qualified Language.GraphQL.Draft.Syntax          as G
-import qualified Network.HTTP.Client                    as HTTP
-import qualified Network.HTTP.Types                     as N
+import qualified Data.HashMap.Strict           as Map
+import qualified Data.List.NonEmpty            as NE
+import qualified Language.GraphQL.Draft.Syntax as G
 
-import           Control.Lens
-import           Data.Text.Extended                     (commaSeparated, (<<>))
-import           Data.Validation
-
-import qualified Hasura.Backends.Postgres.SQL.DML       as S
-import qualified Hasura.Tracing                         as Tracing
-
-import           Hasura.EncJSON
-import           Hasura.GraphQL.Parser                  hiding (field)
-import           Hasura.GraphQL.RemoteServer            (execRemoteGQ')
-import           Hasura.GraphQL.Transport.HTTP.Protocol
-import           Hasura.RQL.DML.Internal
-import           Hasura.RQL.DML.Returning.Types
+import           Hasura.GraphQL.Parser         hiding (field)
 import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.Types
-import           Hasura.Server.Version                  (HasVersion)
-import           Hasura.Session
 
 
 -- | A 'RemoteJoin' represents the context of remote relationship to be extracted from 'AnnFieldG's.

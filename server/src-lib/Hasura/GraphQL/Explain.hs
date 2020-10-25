@@ -15,7 +15,6 @@ import qualified Language.GraphQL.Draft.Syntax                 as G
 
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.Postgres.Execute.RemoteJoin   as RR
 import qualified Hasura.Backends.Postgres.SQL.DML              as S
 import qualified Hasura.Backends.Postgres.Translate.RemoteJoin as RR
 import qualified Hasura.Backends.Postgres.Translate.Select     as DS
@@ -24,7 +23,6 @@ import qualified Hasura.GraphQL.Execute.Inline                 as E
 import qualified Hasura.GraphQL.Execute.LiveQuery              as E
 import qualified Hasura.GraphQL.Execute.Query                  as E
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol        as GH
-import qualified Hasura.RQL.DML.RemoteJoin.Types               as RR
 import qualified Hasura.RQL.DML.Select.Types                   as DS
 
 import           Hasura.Backends.Postgres.SQL.Types
