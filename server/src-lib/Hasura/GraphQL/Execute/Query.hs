@@ -14,25 +14,36 @@ module Hasura.GraphQL.Execute.Query
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                             as J
-import qualified Data.Environment                       as Env
-import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashMap.Strict.InsOrd             as OMap
-import qualified Data.IntMap                            as IntMap
-import qualified Data.Sequence.NonEmpty                 as NESeq
-import qualified Database.PG.Query                      as Q
-import qualified Language.GraphQL.Draft.Syntax          as G
-import qualified Network.HTTP.Client                    as HTTP
-import qualified Network.HTTP.Types                     as HTTP
+import qualified Data.Aeson                                    as J
+import qualified Data.Environment                              as Env
+import qualified Data.HashMap.Strict                           as Map
+import qualified Data.HashMap.Strict.InsOrd                    as OMap
+import qualified Data.IntMap                                   as IntMap
+import qualified Data.Sequence.NonEmpty                        as NESeq
+import qualified Database.PG.Query                             as Q
+import qualified Language.GraphQL.Draft.Syntax                 as G
+import qualified Network.HTTP.Client                           as HTTP
+import qualified Network.HTTP.Types                            as HTTP
 
-import qualified Hasura.Backends.Postgres.SQL.DML       as S
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
-import qualified Hasura.Logging                         as L
-import qualified Hasura.RQL.DML.Select                  as DS
-import qualified Hasura.Tracing                         as Tracing
+import qualified Hasura.Backends.Postgres.SQL.DML              as S
+import qualified Hasura.Backends.Postgres.Translate.Select     as DS
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol        as GH
+import qualified Hasura.Logging                                as L
+import qualified Hasura.RQL.DML.Select.Types                   as DS
+import qualified Hasura.Tracing                                as Tracing
 
 import           Hasura.Backends.Postgres.Connection
-import           Hasura.Backends.Postgres.SQL.Value
+import           Hasura.Backends.Postgres.Execute.Mutation
+import           Hasura.Backends.Postgres.Execute.Prepare
+import           Hasura.Backends.Postgres.Execute.Query
+import           Hasura.Backends.Postgres.Execute.RemoteJoin
+import           Hasura.Backends.Postgres.Translate.Delete
+import           Hasura.Backends.Postgres.Translate.Insert
+import           Hasura.Backends.Postgres.Translate.Mutation
+import           Hasura.Backends.Postgres.Translate.RemoteJoin
+import           Hasura.Backends.Postgres.Translate.Returning
+import           Hasura.Backends.Postgres.Translate.Select     (asSingleRowJsonResp)
+import           Hasura.Backends.Postgres.Translate.Update
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
@@ -40,25 +51,11 @@ import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
-import           Hasura.RQL.DML.RemoteJoin
-import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
+import           Hasura.RQL.DML.RemoteJoin.Types
 import           Hasura.RQL.Types
-import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Server.Version                         (HasVersion)
 import           Hasura.Session
 
-data PreparedSql
-  = PreparedSql
-  { _psQuery       :: !Q.Query
-  , _psPrepArgs    :: !PrepArgMap
-  , _psRemoteJoins :: !(Maybe (RemoteJoins 'Postgres))
-  }
-
--- | Required to log in `query-log`
-instance J.ToJSON PreparedSql where
-  toJSON (PreparedSql q prepArgs _) =
-    J.object [ "query" J..= Q.getQueryText q
-             , "prepared_arguments" J..= fmap (pgScalarValueToJson . snd) prepArgs
-             ]
 
 data RootFieldPlan
   = RFPPostgres !PreparedSql

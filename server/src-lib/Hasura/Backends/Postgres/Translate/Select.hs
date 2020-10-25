@@ -1,19 +1,25 @@
-module Hasura.RQL.DML.Select.Internal
-  ( mkSQLSelect
+module Hasura.Backends.Postgres.Translate.Select
+  ( selectQuerySQL
+  , selectAggregateQuerySQL
+  , connectionSelectQuerySQL
+  , asSingleRowJsonResp
+  , mkSQLSelect
   , mkAggregateSelect
   , mkConnectionSelect
-  , module Hasura.RQL.DML.Select.Types
-  )
-where
+  ) where
 
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                  as HM
+import qualified Data.HashSet                         as HS
 import qualified Data.List.NonEmpty                   as NE
+import qualified Data.Sequence                        as DS
 import qualified Data.Text                            as T
+import qualified Database.PG.Query                    as Q
 
 import           Control.Lens                         hiding (op)
 import           Control.Monad.Writer.Strict
+import           Data.Aeson.Types
 import           Data.Text.Extended
 import           Instances.TH.Lift                    ()
 
@@ -21,11 +27,31 @@ import qualified Hasura.Backends.Postgres.SQL.DML     as S
 
 import           Hasura.Backends.Postgres.SQL.Rewrite
 import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.EncJSON
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
+
+
+selectQuerySQL :: JsonAggSelect -> AnnSimpleSel 'Postgres -> Q.Query
+selectQuerySQL jsonAggSelect sel =
+  Q.fromBuilder $ toSQL $ mkSQLSelect jsonAggSelect sel
+
+selectAggregateQuerySQL :: AnnAggregateSelect 'Postgres -> Q.Query
+selectAggregateQuerySQL =
+  Q.fromBuilder . toSQL . mkAggregateSelect
+
+connectionSelectQuerySQL :: ConnectionSelect 'Postgres S.SQLExp -> Q.Query
+connectionSelectQuerySQL =
+  Q.fromBuilder . toSQL . mkConnectionSelect
+
+asSingleRowJsonResp :: Q.Query -> [Q.PrepArg] -> Q.TxE QErr EncJSON
+asSingleRowJsonResp query args =
+  encJFromBS . runIdentity . Q.getRow
+  <$> Q.rawQE dmlTxErrorHandler query args True
 
 
 -- Conversion of SelectQ happens in 2 Stages.

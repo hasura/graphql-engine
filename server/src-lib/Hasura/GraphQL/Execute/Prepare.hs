@@ -15,32 +15,28 @@ module Hasura.GraphQL.Execute.Prepare
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                             as J
-import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashSet                           as Set
-import qualified Data.IntMap                            as IntMap
-import qualified Database.PG.Query                      as Q
-import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Data.Aeson                               as J
+import qualified Data.HashMap.Strict                      as Map
+import qualified Data.HashSet                             as Set
+import qualified Data.IntMap                              as IntMap
+import qualified Language.GraphQL.Draft.Syntax            as G
 
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.Postgres.SQL.DML       as S
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+import qualified Hasura.Backends.Postgres.SQL.DML         as S
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol   as GH
 
+import           Hasura.Backends.Postgres.Execute.Prepare
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Parser.Schema
-import           Hasura.RQL.DML.Internal                (currentSession)
+import           Hasura.RQL.DML.Internal                  (currentSession)
 import           Hasura.RQL.Types
 import           Hasura.Session
 
 
 type PlanVariables = Map.HashMap G.Name Int
-
--- | The value is (Q.PrepArg, PGScalarValue) because we want to log the human-readable value of the
--- prepared argument and not the binary encoding in PG format
-type PrepArgMap = IntMap.IntMap (Q.PrepArg, PGScalarValue)
 
 -- | Full execution plan to process one GraphQL query.  Once we work on
 -- heterogeneous execution this will contain a mixture of things to run on the
@@ -115,12 +111,6 @@ retrieveAndFlagSessionVariableValue updateState sessVar currentSessionExp = do
   pure $ S.SEOpApp (S.SQLOp "->>")
     [currentSessionExp, S.SELit $ sessionVariableToText sessVar]
 
-withUserVars :: SessionVariables -> PrepArgMap -> PrepArgMap
-withUserVars usrVars list =
-  let usrVarsAsPgScalar = PGValJSON $ Q.JSON $ J.toJSON usrVars
-      prepArg = Q.toPrepVal (Q.AltJ usrVars)
-  in IntMap.insert 1 (prepArg, usrVarsAsPgScalar) list
-
 validateSessionVariables :: MonadError QErr m => Set.HashSet SessionVariable -> SessionVariables -> m ()
 validateSessionVariables requiredVariables sessionVariables = do
   let missingSessionVariables = requiredVariables `Set.difference` getSessionVariablesSet sessionVariables
@@ -138,7 +128,7 @@ getVarArgNum var = do
 
 addPrepArg
   :: (MonadState PlanningSt m)
-  => Int -> (Q.PrepArg, PGScalarValue) -> m ()
+  => Int -> PrepArg -> m ()
 addPrepArg argNum arg = do
   prepped <- gets _psPrepped
   modify \x -> x {_psPrepped = IntMap.insert argNum arg prepped}

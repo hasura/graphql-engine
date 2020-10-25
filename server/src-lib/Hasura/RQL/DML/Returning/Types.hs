@@ -38,3 +38,44 @@ buildEmptyMutResp = \case
       MCount -> J.toJSON (0 :: Int)
       MExp e -> J.toJSON e
       MRet _ -> J.toJSON ([] :: [J.Value])
+
+traverseMutFld
+  :: (Applicative f)
+  => (a -> f b)
+  -> MutFldG backend a
+  -> f (MutFldG backend b)
+traverseMutFld f = \case
+  MCount    -> pure MCount
+  MExp t    -> pure $ MExp t
+  MRet flds -> MRet <$> traverse (traverse (traverseAnnField f)) flds
+
+traverseMutationOutput
+  :: (Applicative f)
+  => (a -> f b)
+  -> MutationOutputG backend a -> f (MutationOutputG backend b)
+traverseMutationOutput f = \case
+  MOutMultirowFields mutationFields ->
+    MOutMultirowFields <$> traverse (traverse (traverseMutFld f)) mutationFields
+  MOutSinglerowObject annFields ->
+    MOutSinglerowObject <$> traverseAnnFields f annFields
+
+traverseMutFlds
+  :: (Applicative f)
+  => (a -> f b)
+  -> MutFldsG backend a
+  -> f (MutFldsG backend b)
+traverseMutFlds f =
+  traverse (traverse (traverseMutFld f))
+
+hasNestedFld :: MutationOutputG backend a -> Bool
+hasNestedFld = \case
+  MOutMultirowFields flds     -> any isNestedMutFld flds
+  MOutSinglerowObject annFlds -> any isNestedAnnField annFlds
+  where
+    isNestedMutFld (_, mutFld) = case mutFld of
+      MRet annFlds -> any isNestedAnnField annFlds
+      _            -> False
+    isNestedAnnField (_, annFld) = case annFld of
+      AFObjectRelation _ -> True
+      AFArrayRelation _  -> True
+      _                  -> False

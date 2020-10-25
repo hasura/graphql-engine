@@ -1,4 +1,7 @@
 module Hasura.RQL.DML.Internal where
+-- ( mkAdminRolePermInfo
+-- , SessVarBldr
+-- ) where
 
 import           Hasura.Prelude
 
