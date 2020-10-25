@@ -41,7 +41,7 @@ import qualified Hasura.Backends.Postgres.SQL.DML      as SQL
 import qualified Hasura.GraphQL.Execute.Types          as ET
 import qualified Hasura.GraphQL.Parser                 as P
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
-import qualified Hasura.RQL.DML.Select.Types           as RQL
+import qualified Hasura.RQL.IR.Select                  as RQL
 import qualified Hasura.RQL.Types.BoolExp              as RQL
 
 import           Data.Text.Extended

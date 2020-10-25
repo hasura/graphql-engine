@@ -22,7 +22,7 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.Select
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
-import           Hasura.RQL.DML.Select.Types
+import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 

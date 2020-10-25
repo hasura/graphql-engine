@@ -17,9 +17,9 @@ import qualified Network.HTTP.Types                        as HTTP
 import qualified Hasura.Backends.Postgres.Execute.Mutation as RQL
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
 import qualified Hasura.Logging                            as L
-import qualified Hasura.RQL.DML.Delete.Types               as RQL
-import qualified Hasura.RQL.DML.Returning.Types            as RQL
-import qualified Hasura.RQL.DML.Update.Types               as RQL
+import qualified Hasura.RQL.IR.Delete                      as RQL
+import qualified Hasura.RQL.IR.Returning                   as RQL
+import qualified Hasura.RQL.IR.Update                      as RQL
 import qualified Hasura.Tracing                            as Tracing
 
 import           Hasura.Backends.Postgres.Connection

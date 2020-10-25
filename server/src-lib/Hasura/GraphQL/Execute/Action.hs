@@ -39,7 +39,7 @@ import qualified Hasura.Backends.Postgres.Execute.RemoteJoin   as RJ
 import qualified Hasura.Backends.Postgres.Translate.RemoteJoin as RJ
 import qualified Hasura.Backends.Postgres.Translate.Select     as RS
 import qualified Hasura.Logging                                as L
-import qualified Hasura.RQL.DML.Select.Types                   as RS
+import qualified Hasura.RQL.IR.Select                          as RS
 import qualified Hasura.Tracing                                as Tracing
 
 import           Hasura.Backends.Postgres.SQL.Types

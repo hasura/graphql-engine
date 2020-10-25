@@ -35,13 +35,13 @@ import           Hasura.Backends.Postgres.Translate.Returning
 import           Hasura.Backends.Postgres.Translate.Select
 import           Hasura.Backends.Postgres.Translate.Update
 import           Hasura.EncJSON
-import           Hasura.RQL.DML.Delete.Types
-import           Hasura.RQL.DML.Insert.Types
 import           Hasura.RQL.DML.Internal
-import           Hasura.RQL.DML.RemoteJoin.Types
-import           Hasura.RQL.DML.Returning.Types
-import           Hasura.RQL.DML.Select.Types
-import           Hasura.RQL.DML.Update.Types
+import           Hasura.RQL.IR.Delete
+import           Hasura.RQL.IR.Insert
+import           Hasura.RQL.IR.RemoteJoin
+import           Hasura.RQL.IR.Returning
+import           Hasura.RQL.IR.Select
+import           Hasura.RQL.IR.Update
 import           Hasura.RQL.Instances                          ()
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types

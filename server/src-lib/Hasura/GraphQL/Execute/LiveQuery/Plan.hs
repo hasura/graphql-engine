@@ -47,7 +47,7 @@ import qualified Hasura.Backends.Postgres.SQL.DML              as S
 import qualified Hasura.Backends.Postgres.Translate.RemoteJoin as RR
 import qualified Hasura.Backends.Postgres.Translate.Select     as DS
 import qualified Hasura.GraphQL.Parser.Schema                  as PS
-import qualified Hasura.RQL.DML.Select.Types                   as DS
+import qualified Hasura.RQL.IR.Select                          as DS
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.SQL.Error

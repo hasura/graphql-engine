@@ -20,9 +20,9 @@ import qualified Hasura.Backends.Postgres.Translate.Insert     as RQL
 import qualified Hasura.Backends.Postgres.Translate.Mutation   as RQL
 import qualified Hasura.Backends.Postgres.Translate.RemoteJoin as RQL
 import qualified Hasura.Backends.Postgres.Translate.Returning  as RQL
-import qualified Hasura.RQL.DML.Insert.Types                   as RQL
-import qualified Hasura.RQL.DML.Returning.Types                as RQL
 import qualified Hasura.RQL.GBoolExp                           as RQL
+import qualified Hasura.RQL.IR.Insert                          as RQL
+import qualified Hasura.RQL.IR.Returning                       as RQL
 import qualified Hasura.Tracing                                as Tracing
 
 import           Hasura.Backends.Postgres.Connection

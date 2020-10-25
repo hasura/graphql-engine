@@ -1,4 +1,4 @@
-module Hasura.RQL.DML.Returning.Types where
+module Hasura.RQL.IR.Returning where
 
 import           Hasura.Prelude
 
@@ -8,7 +8,7 @@ import qualified Data.HashMap.Strict.InsOrd       as OMap
 import qualified Hasura.Backends.Postgres.SQL.DML as S
 
 import           Hasura.EncJSON
-import           Hasura.RQL.DML.Select.Types
+import           Hasura.RQL.IR.Select
 import           Hasura.SQL.Backend
 
 

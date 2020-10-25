@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings    #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Hasura.RQL.DML.Select.Types where
+module Hasura.RQL.IR.Select where
 
 import           Hasura.Prelude
 

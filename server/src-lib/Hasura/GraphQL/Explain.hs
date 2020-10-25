@@ -23,7 +23,7 @@ import qualified Hasura.GraphQL.Execute.Inline                 as E
 import qualified Hasura.GraphQL.Execute.LiveQuery              as E
 import qualified Hasura.GraphQL.Execute.Query                  as E
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol        as GH
-import qualified Hasura.RQL.DML.Select.Types                   as DS
+import qualified Hasura.RQL.IR.Select                          as DS
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value

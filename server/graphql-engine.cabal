@@ -427,15 +427,15 @@ library
                      , Hasura.RQL.DDL.ScheduledTrigger
                      , Hasura.RQL.DML.Count
                      , Hasura.RQL.DML.Delete
-                     , Hasura.RQL.DML.Delete.Types
                      , Hasura.RQL.DML.Insert
-                     , Hasura.RQL.DML.Insert.Types
                      , Hasura.RQL.DML.Internal
-                     , Hasura.RQL.DML.RemoteJoin.Types
-                     , Hasura.RQL.DML.Returning.Types
-                     , Hasura.RQL.DML.Select.Types
                      , Hasura.RQL.DML.Update
-                     , Hasura.RQL.DML.Update.Types
+                     , Hasura.RQL.IR.Delete
+                     , Hasura.RQL.IR.Insert
+                     , Hasura.RQL.IR.RemoteJoin
+                     , Hasura.RQL.IR.Returning
+                     , Hasura.RQL.IR.Select
+                     , Hasura.RQL.IR.Update
                      , Hasura.RQL.GBoolExp
                      , Hasura.GraphQL.Explain
                      , Hasura.GraphQL.Execute.Action

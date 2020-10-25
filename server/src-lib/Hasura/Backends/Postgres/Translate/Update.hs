@@ -10,8 +10,8 @@ import qualified Hasura.Backends.Postgres.SQL.DML          as S
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.Insert
-import           Hasura.RQL.DML.Update.Types
 import           Hasura.RQL.GBoolExp
+import           Hasura.RQL.IR.Update
 import           Hasura.RQL.Instances                      ()
 import           Hasura.RQL.Types
 

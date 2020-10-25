@@ -8,7 +8,7 @@ import qualified Database.PG.Query                        as Q
 
 import           Hasura.Backends.Postgres.Execute.Prepare
 import           Hasura.Backends.Postgres.SQL.Value
-import           Hasura.RQL.DML.RemoteJoin.Types
+import           Hasura.RQL.IR.RemoteJoin
 import           Hasura.SQL.Backend
 
 data PreparedSql = PreparedSql

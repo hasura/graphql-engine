@@ -1,4 +1,4 @@
-module Hasura.RQL.DML.RemoteJoin.Types
+module Hasura.RQL.IR.RemoteJoin
   ( RemoteJoins
   , RemoteJoinMap
   , Alias
@@ -13,7 +13,7 @@ import qualified Data.List.NonEmpty            as NE
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.GraphQL.Parser         hiding (field)
-import           Hasura.RQL.DML.Select.Types
+import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types
 
 

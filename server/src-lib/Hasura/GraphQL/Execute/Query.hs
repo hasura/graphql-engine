@@ -29,7 +29,7 @@ import qualified Hasura.Backends.Postgres.SQL.DML              as S
 import qualified Hasura.Backends.Postgres.Translate.Select     as DS
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol        as GH
 import qualified Hasura.Logging                                as L
-import qualified Hasura.RQL.DML.Select.Types                   as DS
+import qualified Hasura.RQL.IR.Select                          as DS
 import qualified Hasura.Tracing                                as Tracing
 
 import           Hasura.Backends.Postgres.Connection
@@ -45,7 +45,7 @@ import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
-import           Hasura.RQL.DML.RemoteJoin.Types
+import           Hasura.RQL.IR.RemoteJoin
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                         (HasVersion)
 import           Hasura.Session

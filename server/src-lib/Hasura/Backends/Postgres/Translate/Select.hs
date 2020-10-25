@@ -27,8 +27,8 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.RQL.DML.Internal
-import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.GBoolExp
+import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 

@@ -15,9 +15,9 @@ import           Control.Lens
 
 import qualified Hasura.Backends.Postgres.SQL.DML as S
 
-import           Hasura.RQL.DML.RemoteJoin.Types
-import           Hasura.RQL.DML.Returning.Types
-import           Hasura.RQL.DML.Select.Types
+import           Hasura.RQL.IR.RemoteJoin
+import           Hasura.RQL.IR.Returning
+import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types
 
 

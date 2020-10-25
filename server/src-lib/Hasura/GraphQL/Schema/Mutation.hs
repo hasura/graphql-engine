@@ -21,10 +21,10 @@ import qualified Language.GraphQL.Draft.Syntax       as G
 
 import qualified Hasura.Backends.Postgres.SQL.DML    as S
 import qualified Hasura.GraphQL.Parser               as P
-import qualified Hasura.RQL.DML.Delete.Types         as RQL
-import qualified Hasura.RQL.DML.Insert.Types         as RQL
-import qualified Hasura.RQL.DML.Returning.Types      as RQL
-import qualified Hasura.RQL.DML.Update.Types         as RQL
+import qualified Hasura.RQL.IR.Delete                as RQL
+import qualified Hasura.RQL.IR.Insert                as RQL
+import qualified Hasura.RQL.IR.Returning             as RQL
+import qualified Hasura.RQL.IR.Update                as RQL
 
 import           Data.Text.Extended
 import           Hasura.Backends.Postgres.SQL.Types

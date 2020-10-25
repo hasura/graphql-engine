@@ -21,8 +21,8 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.Insert
 import           Hasura.Backends.Postgres.Translate.Returning
 import           Hasura.EncJSON
-import           Hasura.RQL.DML.Insert.Types
 import           Hasura.RQL.DML.Internal
+import           Hasura.RQL.IR.Insert
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                        (HasVersion)
 import           Hasura.Session

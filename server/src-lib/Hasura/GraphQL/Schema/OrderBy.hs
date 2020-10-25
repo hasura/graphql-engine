@@ -9,7 +9,7 @@ import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Hasura.Backends.Postgres.SQL.DML   as SQL
 import qualified Hasura.GraphQL.Parser              as P
-import qualified Hasura.RQL.DML.Select.Types        as RQL
+import qualified Hasura.RQL.IR.Select               as RQL
 import           Hasura.RQL.Types                   as RQL
 
 import           Data.Text.Extended

@@ -8,8 +8,8 @@ import           Instances.TH.Lift                ()
 
 import qualified Hasura.Backends.Postgres.SQL.DML as S
 
-import           Hasura.RQL.DML.Delete.Types
 import           Hasura.RQL.GBoolExp
+import           Hasura.RQL.IR.Delete
 import           Hasura.RQL.Types
 
 
