@@ -56,7 +56,7 @@ data TableMeta
   { tmTable          :: !QualifiedTable
   , tmInfo           :: !CatalogTableInfo
   , tmComputedFields :: ![ComputedFieldMeta]
-  } deriving (Show, Eq)
+  } deriving (Eq)
 
 fetchTableMeta :: Q.Tx [TableMeta]
 fetchTableMeta = Q.listQ $(Q.sqlFromFile "src-rsr/table_meta.sql") () False <&>
@@ -82,12 +82,12 @@ data ComputedFieldDiff
   , _cfdOverloaded :: [(ComputedFieldName, QualifiedFunction)]
   } deriving (Show, Eq)
 
-data TableDiff
+data TableDiff (b :: Backend)
   = TableDiff
   { _tdNewName         :: !(Maybe QualifiedTable)
-  , _tdDroppedCols     :: ![PGCol]
-  , _tdAddedCols       :: ![PGRawColumnInfo]
-  , _tdAlteredCols     :: ![(PGRawColumnInfo, PGRawColumnInfo)]
+  , _tdDroppedCols     :: ![Column b]
+  , _tdAddedCols       :: ![RawColumnInfo b]
+  , _tdAlteredCols     :: ![(RawColumnInfo b, RawColumnInfo b)]
   , _tdDroppedFKeyCons :: ![ConstraintName]
   , _tdComputedFields  :: !ComputedFieldDiff
   -- The final list of uniq/primary constraint names
@@ -95,9 +95,9 @@ data TableDiff
   -- TODO: this ideally should't be part of TableDiff
   , _tdUniqOrPriCons   :: ![ConstraintName]
   , _tdNewDescription  :: !(Maybe PGDescription)
-  } deriving (Show, Eq)
+  }
 
-getTableDiff :: TableMeta -> TableMeta -> TableDiff
+getTableDiff :: TableMeta -> TableMeta -> TableDiff 'Postgres
 getTableDiff oldtm newtm =
   TableDiff mNewName droppedCols addedCols alteredCols
   droppedFKeyConstraints computedFieldDiff uniqueOrPrimaryCons mNewDesc
@@ -150,7 +150,7 @@ getTableDiff oldtm newtm =
 
 getTableChangeDeps
   :: (QErrM m, CacheRM m)
-  => QualifiedTable -> TableDiff -> m [SchemaObjId]
+  => QualifiedTable -> TableDiff 'Postgres -> m [SchemaObjId]
 getTableChangeDeps tn tableDiff = do
   sc <- askSchemaCache
   -- for all the dropped columns
@@ -166,13 +166,13 @@ getTableChangeDeps tn tableDiff = do
     TableDiff _ droppedCols _ _ droppedFKeyConstraints computedFieldDiff _ _ = tableDiff
     droppedComputedFieldDeps = map (SOTableObj tn . TOComputedField) $ _cfdDropped computedFieldDiff
 
-data SchemaDiff
+data SchemaDiff (b :: Backend)
   = SchemaDiff
   { _sdDroppedTables :: ![QualifiedTable]
-  , _sdAlteredTables :: ![(QualifiedTable, TableDiff)]
-  } deriving (Show, Eq)
+  , _sdAlteredTables :: ![(QualifiedTable, TableDiff b)]
+  }
 
-getSchemaDiff :: [TableMeta] -> [TableMeta] -> SchemaDiff
+getSchemaDiff :: [TableMeta] -> [TableMeta] -> SchemaDiff 'Postgres
 getSchemaDiff oldMeta newMeta =
   SchemaDiff droppedTables survivingTables
   where
@@ -183,7 +183,7 @@ getSchemaDiff oldMeta newMeta =
 
 getSchemaChangeDeps
   :: (QErrM m, CacheRM m)
-  => SchemaDiff -> m [SchemaObjId]
+  => SchemaDiff 'Postgres -> m [SchemaObjId]
 getSchemaChangeDeps schemaDiff = do
   -- Get schema cache
   sc <- askSchemaCache

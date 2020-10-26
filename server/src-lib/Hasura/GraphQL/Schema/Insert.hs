@@ -8,6 +8,7 @@ import qualified Hasura.RQL.DML.Returning.Types as RQL
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
+import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 
 
@@ -29,25 +30,25 @@ import           Hasura.SQL.Types
 -- quite likely that some of the information stored in those structures is
 -- redundant, and that they can be simplified.
 
-data AnnInsert v
+data AnnInsert (b :: Backend) v
   = AnnInsert
   { _aiFieldName :: !Text
   , _aiIsSingle  :: Bool
-  , _aiData      :: AnnMultiInsert v
+  , _aiData      :: AnnMultiInsert b v
   }
 
-data AnnIns a v
+data AnnIns (b :: Backend) a v
   = AnnIns
   { _aiInsObj         :: !a
   , _aiTableName      :: !QualifiedTable
-  , _aiConflictClause :: !(Maybe (RQL.ConflictClauseP1 v))
-  , _aiCheckCond      :: !(AnnBoolExp v, Maybe (AnnBoolExp v))
-  , _aiTableCols      :: ![PGColumnInfo]
-  , _aiDefVals        :: !(PreSetColsG v)
-  } deriving (Show, Eq)
+  , _aiConflictClause :: !(Maybe (RQL.ConflictClauseP1 b v))
+  , _aiCheckCond      :: !(AnnBoolExp b v, Maybe (AnnBoolExp b v))
+  , _aiTableCols      :: ![ColumnInfo b]
+  , _aiDefVals        :: !(PreSetColsG b v)
+  }
 
-type SingleObjIns v = AnnIns (AnnInsObj v) v
-type MultiObjIns  v = AnnIns [AnnInsObj v] v
+type SingleObjIns b v = AnnIns b (AnnInsObj b v) v
+type MultiObjIns  b v = AnnIns b [AnnInsObj b v] v
 
 data RelIns a
   = RelIns
@@ -55,22 +56,22 @@ data RelIns a
   , _riRelInfo :: !RelInfo
   } deriving (Show, Eq)
 
-type ObjRelIns v = RelIns (SingleObjIns v)
-type ArrRelIns v = RelIns (MultiObjIns  v)
+type ObjRelIns b v = RelIns (SingleObjIns b v)
+type ArrRelIns b v = RelIns (MultiObjIns  b v)
 
-data AnnInsObj v
+data AnnInsObj (b :: Backend) v
   = AnnInsObj
-  { _aioColumns :: ![(PGCol, v)]
-  , _aioObjRels :: ![ObjRelIns v]
-  , _aioArrRels :: ![ArrRelIns v]
-  } deriving (Show, Eq)
+  { _aioColumns :: ![(Column b, v)]
+  , _aioObjRels :: ![ObjRelIns b v]
+  , _aioArrRels :: ![ArrRelIns b v]
+  }
 
-type AnnSingleInsert v = (SingleObjIns v, RQL.MutationOutputG v)
-type AnnMultiInsert  v = (MultiObjIns  v, RQL.MutationOutputG v)
+type AnnSingleInsert b v = (SingleObjIns b v, RQL.MutationOutputG b v)
+type AnnMultiInsert  b v = (MultiObjIns  b v, RQL.MutationOutputG b v)
 
-instance Semigroup (AnnInsObj v) where
+instance Semigroup (AnnInsObj backend v) where
   (AnnInsObj col1 obj1 rel1) <> (AnnInsObj col2 obj2 rel2) =
     AnnInsObj (col1 <> col2) (obj1 <> obj2) (rel1 <> rel2)
 
-instance Monoid (AnnInsObj v) where
+instance Monoid (AnnInsObj backend v) where
   mempty = AnnInsObj [] [] []

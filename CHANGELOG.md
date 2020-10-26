@@ -83,6 +83,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - server: limit the length of event trigger names (close #5786)
 **NOTE:** If you have event triggers with names greater than 42 chars, then you should update their names to avoid running into Postgres identifier limit bug (#5786)
 - server: validate remote schema queries (fixes #4143)
+- server: fix issue with tracking custom functions that return `SETOF` materialized view (close #5294) (#5945)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - cli: add missing global flags for seed command (#5565)

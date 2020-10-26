@@ -24,15 +24,16 @@ import           Language.GraphQL.Draft.Syntax         (Description (..), Name (
 import qualified Hasura.RQL.Types.Column               as RQL
 import qualified Hasura.RQL.Types.CustomTypes          as RQL
 
+import           Data.Text.Extended
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Internal.Parser
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.Types.Column               hiding (EnumValue (..), EnumValueInfo (..))
 import           Hasura.RQL.Types.Error
-import           Hasura.Session                        (SessionVariable)
 import           Hasura.SQL.DML
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
+import           Hasura.Session                        (SessionVariable)
 
 -- -------------------------------------------------------------------------------------------------
 

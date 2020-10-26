@@ -126,9 +126,9 @@ func TestReadUp(t *testing.T, d source.Driver) {
 				t.Errorf("expected identifier not to be empty, in %v", i)
 			}
 
-			if v.expectUp == true && up == nil {
+			if v.expectUp && up == nil {
 				t.Errorf("expected up not to be nil, in %v", i)
-			} else if v.expectUp == false && up != nil {
+			} else if !v.expectUp && up != nil {
 				t.Errorf("expected up to be nil, got %v, in %v", up, i)
 			}
 		}
@@ -163,9 +163,9 @@ func TestReadDown(t *testing.T, d source.Driver) {
 				t.Errorf("expected identifier not to be empty, in %v", i)
 			}
 
-			if v.expectDown == true && down == nil {
+			if v.expectDown && down == nil {
 				t.Errorf("expected down not to be nil, in %v", i)
-			} else if v.expectDown == false && down != nil {
+			} else if !v.expectDown && down != nil {
 				t.Errorf("expected down to be nil, got %v, in %v", down, i)
 			}
 		}
@@ -200,9 +200,9 @@ func TestReadMetaUp(t *testing.T, d source.Driver) {
 				t.Errorf("expected identifier not to be empty, in %v", i)
 			}
 
-			if v.expectMetaUp == true && up == nil {
+			if v.expectMetaUp && up == nil {
 				t.Errorf("expected up not to be nil, in %v", i)
-			} else if v.expectMetaUp == false && up != nil {
+			} else if !v.expectMetaUp && up != nil {
 				t.Errorf("expected up to be nil, got %v, in %v", up, i)
 			}
 		}
@@ -237,9 +237,9 @@ func TestReadMetaDown(t *testing.T, d source.Driver) {
 				t.Errorf("expected identifier not to be empty, in %v", i)
 			}
 
-			if v.expectMetaDown == true && up == nil {
+			if v.expectMetaDown && up == nil {
 				t.Errorf("expected up not to be nil, in %v", i)
-			} else if v.expectMetaDown == false && up != nil {
+			} else if !v.expectMetaDown && up != nil {
 				t.Errorf("expected up to be nil, got %v, in %v", up, i)
 			}
 		}
