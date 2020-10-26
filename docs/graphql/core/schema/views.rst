@@ -25,15 +25,108 @@ Hasura GraphQL engine lets you expose views over the GraphQL API to allow queryi
 
 .. _create_views:
 
-Creating & exposing views
--------------------------
+Creating views
+--------------
 
-Views can be created using SQL which can be run in the Hasura console:
+.. rst-class:: api_tabs
+.. tabs::
 
-- Head to the ``Data -> SQL`` section of the Hasura console
-- Enter your `create view SQL statement <https://www.postgresql.org/docs/current/static/sql-createview.html>`__
-- Select the ``Track this`` checkbox to expose the new view over the GraphQL API
-- Hit the ``Run`` button
+  .. tab:: Console
+
+    Views can be created using SQL which can be run in the Hasura console:
+
+    - Head to the ``Data -> SQL`` section of the Hasura console
+    - Enter your `create view SQL statement <https://www.postgresql.org/docs/current/static/sql-createview.html>`__
+    - Hit the ``Run`` button
+
+  .. tab:: CLI
+
+    1. :ref:`Create a migration manually <manual_migrations>` and add your `create view SQL statement <https://www.postgresql.org/docs/current/static/sql-createview.html>`__ to the ``up.sql`` file. Also, add an SQL statement to the ``down.sql`` file that reverts the previous statement.
+
+    2. Apply the migration and metadata by running:
+
+       .. code-block:: bash
+
+          hasura migrate apply
+
+  .. tab:: API
+
+    You can add a view by using the :ref:`run_sql metadata API <run_sql>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "run_sql",
+        "args": {
+          "sql": "<create view statement>"
+        }
+      }
+
+Tracking views
+--------------
+
+Views can be present in the underlying Postgres database without being exposed over the GraphQL API.
+In order to expose a view over the GraphQL API, it needs to be **tracked**.
+
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    While creating views from the ``Data -> SQL`` page, selecting the ``Track this`` checkbox
+    will expose the new view over the GraphQL API right after creation.
+
+    You can track any existing views in your database from the ``Data -> Schema`` page:
+
+    .. thumbnail:: /img/graphql/core/schema/schema-track-views.png
+       :alt: Track views
+
+
+  .. tab:: CLI
+
+    1. To track the view and expose it over the GraphQL API, edit the ``tables.yaml`` file in the ``metadata`` directory as follows:
+
+       .. code-block:: yaml
+         :emphasize-lines: 7-9
+
+            - table:
+                schema: public
+                name: author
+            - table:
+                schema: public
+                name: article
+            - table:
+                schema: public
+                name: <name of view>
+
+    2. Apply the metadata by running:
+
+       .. code-block:: bash
+
+        hasura metadata apply
+
+  .. tab:: API
+
+    To track the view and expose it over the GraphQL API, make the following API call to the :ref:`track_table metadata API <track_table>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "track_table",
+        "args": {
+          "schema": "public",
+          "name": "<name of view>"
+        }
+      }
+
 
 Use cases
 ---------

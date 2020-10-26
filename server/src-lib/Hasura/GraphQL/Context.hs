@@ -23,6 +23,7 @@ import           Hasura.Prelude
 import qualified Data.Aeson                    as J
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Hasura.SQL.Backend
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import qualified Hasura.RQL.DML.Delete.Types   as RQL
@@ -86,31 +87,31 @@ traverseAction f = \case
   RFAction x -> RFAction <$> f x
   RFRaw x -> pure $ RFRaw x
 
-data QueryDB v
-  = QDBSimple      (RQL.AnnSimpleSelG       v)
-  | QDBPrimaryKey  (RQL.AnnSimpleSelG       v)
-  | QDBAggregation (RQL.AnnAggregateSelectG v)
-  | QDBConnection  (RQL.ConnectionSelect    v)
+data QueryDB b v
+  = QDBSimple      (RQL.AnnSimpleSelG       b v)
+  | QDBPrimaryKey  (RQL.AnnSimpleSelG       b v)
+  | QDBAggregation (RQL.AnnAggregateSelectG b v)
+  | QDBConnection  (RQL.ConnectionSelect    b v)
 
-data ActionQuery v
-  = AQQuery !(RQL.AnnActionExecution v)
-  | AQAsync !(RQL.AnnActionAsyncQuery v)
+data ActionQuery (b :: Backend) v
+  = AQQuery !(RQL.AnnActionExecution b v)
+  | AQAsync !(RQL.AnnActionAsyncQuery b v)
 
-type RemoteField = (RQL.RemoteSchemaInfo, G.Field G.NoFragments Variable)
+type RemoteField = (RQL.RemoteSchemaInfo, G.Field G.NoFragments G.Name)
 
-type QueryRootField v = RootField (QueryDB v) RemoteField (ActionQuery v) J.Value
+type QueryRootField v = RootField (QueryDB 'Postgres v) RemoteField (ActionQuery 'Postgres v) J.Value
 
-data MutationDB v
-  = MDBInsert (AnnInsert   v)
-  | MDBUpdate (RQL.AnnUpdG v)
-  | MDBDelete (RQL.AnnDelG v)
+data MutationDB (b :: Backend) v
+  = MDBInsert (AnnInsert   b v)
+  | MDBUpdate (RQL.AnnUpdG b v)
+  | MDBDelete (RQL.AnnDelG b v)
 
-data ActionMutation v
-  = AMSync !(RQL.AnnActionExecution v)
+data ActionMutation (b :: Backend) v
+  = AMSync !(RQL.AnnActionExecution b v)
   | AMAsync !RQL.AnnActionMutationAsync
 
 type MutationRootField v =
-  RootField (MutationDB v) RemoteField (ActionMutation v) J.Value
+  RootField (MutationDB 'Postgres v) RemoteField (ActionMutation 'Postgres v) J.Value
 
-type SubscriptionRootField v = RootField (QueryDB v) Void (RQL.AnnActionAsyncQuery v) Void
-type SubscriptionRootFieldResolved = RootField (QueryDB S.SQLExp) Void RQL.AnnSimpleSel Void
+type SubscriptionRootField v = RootField (QueryDB 'Postgres v) Void (RQL.AnnActionAsyncQuery 'Postgres v) Void
+type SubscriptionRootFieldResolved = RootField (QueryDB 'Postgres S.SQLExp) Void (RQL.AnnSimpleSel 'Postgres) Void

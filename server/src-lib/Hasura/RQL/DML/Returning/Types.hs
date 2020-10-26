@@ -1,5 +1,6 @@
 module Hasura.RQL.DML.Returning.Types where
 
+import           Hasura.SQL.Backend
 
 import           Hasura.Prelude
 
@@ -12,26 +13,24 @@ import           Hasura.EncJSON
 import           Hasura.RQL.DML.Select.Types
 
 
-data MutFldG v
+data MutFldG (b :: Backend) v
   = MCount
   | MExp !T.Text
-  | MRet !(AnnFieldsG v)
-  deriving (Show, Eq)
+  | MRet !(AnnFieldsG b v)
 
-type MutFld = MutFldG S.SQLExp
+type MutFld b = MutFldG b S.SQLExp
 
-type MutFldsG v = Fields (MutFldG v)
+type MutFldsG b v = Fields (MutFldG b v)
 
-data MutationOutputG v
-  = MOutMultirowFields !(MutFldsG v)
-  | MOutSinglerowObject !(AnnFieldsG v)
-  deriving (Show, Eq)
+data MutationOutputG (b :: Backend) v
+  = MOutMultirowFields !(MutFldsG b v)
+  | MOutSinglerowObject !(AnnFieldsG b v)
 
-type MutationOutput = MutationOutputG S.SQLExp
+type MutationOutput b = MutationOutputG b S.SQLExp
 
-type MutFlds = MutFldsG S.SQLExp
+type MutFlds b = MutFldsG b S.SQLExp
 
-buildEmptyMutResp :: MutationOutput -> EncJSON
+buildEmptyMutResp :: MutationOutput backend -> EncJSON
 buildEmptyMutResp = \case
   MOutMultirowFields mutFlds -> encJFromJValue $ OMap.fromList $ map (second convMutFld) mutFlds
   MOutSinglerowObject _      -> encJFromJValue $ J.Object mempty

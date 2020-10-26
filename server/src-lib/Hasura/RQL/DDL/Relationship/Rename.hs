@@ -2,6 +2,7 @@ module Hasura.RQL.DDL.Relationship.Rename
   (runRenameRel)
 where
 
+import           Data.Text.Extended
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Relationship.Types

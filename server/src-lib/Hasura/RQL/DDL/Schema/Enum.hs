@@ -24,6 +24,7 @@ import qualified Data.List.NonEmpty            as NE
 import qualified Data.Sequence                 as Seq
 import qualified Data.Sequence.NonEmpty        as NESeq
 import qualified Data.Text                     as T
+import           Data.Text.Extended
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 
@@ -31,8 +32,9 @@ import           Hasura.Db
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
-import           Hasura.Server.Utils           (makeReasonMessage)
+import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
+import           Hasura.Server.Utils           (makeReasonMessage)
 
 import qualified Hasura.SQL.DML                as S
 
@@ -59,18 +61,17 @@ resolveEnumReferences enumTables =
 data EnumTableIntegrityError
   = EnumTableMissingPrimaryKey
   | EnumTableMultiColumnPrimaryKey ![PGCol]
-  | EnumTableNonTextualPrimaryKey !PGRawColumnInfo
+  | EnumTableNonTextualPrimaryKey !(RawColumnInfo 'Postgres)
   | EnumTableNoEnumValues
   | EnumTableInvalidEnumValueNames !(NE.NonEmpty T.Text)
-  | EnumTableNonTextualCommentColumn !PGRawColumnInfo
+  | EnumTableNonTextualCommentColumn !(RawColumnInfo 'Postgres)
   | EnumTableTooManyColumns ![PGCol]
-  deriving (Show, Eq)
 
 fetchAndValidateEnumValues
   :: (MonadTx m)
   => QualifiedTable
-  -> Maybe (PrimaryKey PGRawColumnInfo)
-  -> [PGRawColumnInfo]
+  -> Maybe (PrimaryKey (RawColumnInfo 'Postgres))
+  -> [RawColumnInfo 'Postgres]
   -> m EnumValues
 fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
   either (throw400 ConstraintViolation . showErrors) pure =<< runValidateT fetchAndValidate
@@ -101,6 +102,7 @@ fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
         fetchEnumValues maybeCommentColumn primaryKeyColumn = do
           let nullExtr = S.Extractor S.SENull Nothing
               commentExtr = maybe nullExtr (S.mkExtr . prciName) maybeCommentColumn
+              -- FIXME: postgres-specific sql generation
               query = Q.fromBuilder $ toSQL S.mkSelect
                 { S.selFrom = Just $ S.mkSimpleFromExp tableName
                 , S.selExtr = [S.mkExtr (prciName primaryKeyColumn), commentExtr] }
@@ -133,7 +135,7 @@ fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
           EnumTableMissingPrimaryKey -> "the table must have a primary key"
           EnumTableMultiColumnPrimaryKey cols ->
             "the table’s primary key must not span multiple columns ("
-              <> T.intercalate ", " (map dquoteTxt $ sort cols) <> ")"
+              <> commaSeparated (sort cols) <> ")"
           EnumTableNonTextualPrimaryKey colInfo -> typeMismatch "primary key" colInfo PGText
           EnumTableNoEnumValues -> "the table must have at least one row"
           EnumTableInvalidEnumValueNames values ->
@@ -142,14 +144,14 @@ fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
                   value NE.:| [] -> "value " <> value <<> " is not a valid GraphQL enum value name"
                   value2 NE.:| [value1] -> "values " <> value1 <<> " and " <> value2 <<> pluralString
                   lastValue NE.:| otherValues ->
-                    "values " <> T.intercalate ", " (map dquoteTxt $ reverse otherValues) <> ", and "
+                    "values " <> commaSeparated (reverse otherValues) <> ", and "
                       <> lastValue <<> pluralString
             in "the " <> valuesString
           EnumTableNonTextualCommentColumn colInfo -> typeMismatch "comment column" colInfo PGText
           EnumTableTooManyColumns cols ->
             "the table must have exactly one primary key and optionally one comment column, not "
               <> T.pack (show $ length cols) <> " columns ("
-              <> T.intercalate ", " (map dquoteTxt $ sort cols) <> ")"
+              <> commaSeparated (sort cols) <> ")"
           where
             typeMismatch description colInfo expected =
               "the table’s " <> description <> " (" <> prciName colInfo <<> ") must have type "

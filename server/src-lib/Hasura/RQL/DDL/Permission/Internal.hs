@@ -3,6 +3,13 @@
 
 module Hasura.RQL.DDL.Permission.Internal where
 
+import           Hasura.Prelude
+
+import qualified Data.HashMap.Strict        as M
+import qualified Data.Text                  as T
+import qualified Database.PG.Query          as Q
+import qualified Hasura.SQL.DML             as S
+
 import           Control.Lens               hiding ((.=))
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -10,21 +17,16 @@ import           Data.Aeson.Types
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
-import qualified Data.HashMap.Strict        as M
-import qualified Data.Text.Extended         as T
-import qualified Hasura.SQL.DML             as S
-
+import           Data.Text.Extended
 import           Hasura.EncJSON
 import           Hasura.Incremental         (Cacheable)
-import           Hasura.Prelude
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils
-import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
+import           Hasura.Server.Utils
+import           Hasura.Session
 
-import qualified Database.PG.Query          as Q
 
 data PermColSpec
   = PCStar
@@ -40,20 +42,20 @@ instance ToJSON PermColSpec where
   toJSON (PCCols cols) = toJSON cols
   toJSON PCStar        = "*"
 
-convColSpec :: FieldInfoMap FieldInfo -> PermColSpec -> [PGCol]
+convColSpec :: FieldInfoMap (FieldInfo 'Postgres) -> PermColSpec -> [PGCol]
 convColSpec _ (PCCols cols) = cols
 convColSpec cim PCStar      = map pgiColumn $ getCols cim
 
 permissionIsDefined
-  :: Maybe RolePermInfo -> PermAccessor a -> Bool
+  :: Maybe (RolePermInfo backend) -> PermAccessor backend a -> Bool
 permissionIsDefined rpi pa =
   isJust $ join $ rpi ^? _Just.permAccToLens pa
 
 assertPermDefined
   :: (MonadError QErr m)
   => RoleName
-  -> PermAccessor a
-  -> TableInfo
+  -> PermAccessor backend a
+  -> TableInfo backend
   -> m ()
 assertPermDefined roleName pa tableInfo =
   unless (permissionIsDefined rpi pa) $ throw400 PermissionDenied $ mconcat
@@ -67,9 +69,9 @@ assertPermDefined roleName pa tableInfo =
 
 askPermInfo
   :: (MonadError QErr m)
-  => TableInfo
+  => TableInfo backend
   -> RoleName
-  -> PermAccessor c
+  -> PermAccessor backend c
   -> m c
 askPermInfo tabInfo roleName pa =
   case M.lookup roleName rpim >>= (^. paL) of
@@ -160,9 +162,9 @@ data CreatePermP1Res a
 procBoolExp
   :: (QErrM m, TableCoreInfoRM m)
   => QualifiedTable
-  -> FieldInfoMap FieldInfo
+  -> FieldInfoMap (FieldInfo 'Postgres)
   -> BoolExp
-  -> m (AnnBoolExpPartialSQL, [SchemaDependency])
+  -> m (AnnBoolExpPartialSQL 'Postgres, [SchemaDependency])
 procBoolExp tn fieldInfoMap be = do
   abe <- annBoolExp valueParser fieldInfoMap $ unBoolExp be
   let deps = getBoolExpDeps tn abe
@@ -191,7 +193,7 @@ getDependentHeaders (BoolExp boolExp) =
 
 valueParser
   :: (MonadError QErr m)
-  => PGType PGColumnType -> Value -> m PartialSQLExp
+  => PGType (ColumnType 'Postgres) -> Value -> m (PartialSQLExp 'Postgres)
 valueParser pgType = \case
   -- When it is a special variable
   String t
@@ -238,21 +240,21 @@ type family PermInfo a = r | r -> a
 class (ToJSON a) => IsPerm a where
 
   permAccessor
-    :: PermAccessor (PermInfo a)
+    :: PermAccessor 'Postgres (PermInfo a)
 
   buildPermInfo
     :: (QErrM m, TableCoreInfoRM m)
     => QualifiedTable
-    -> FieldInfoMap FieldInfo
+    -> FieldInfoMap (FieldInfo 'Postgres)
     -> PermDef a
     -> m (WithDeps (PermInfo a))
 
   getPermAcc1
-    :: PermDef a -> PermAccessor (PermInfo a)
+    :: PermDef a -> PermAccessor 'Postgres (PermInfo a)
   getPermAcc1 _ = permAccessor
 
   getPermAcc2
-    :: DropPerm a -> PermAccessor (PermInfo a)
+    :: DropPerm a -> PermAccessor 'Postgres (PermInfo a)
   getPermAcc2 _ = permAccessor
 
 addPermP2 :: (IsPerm a, MonadTx m, HasSystemDefined m) => QualifiedTable -> PermDef a -> m ()
