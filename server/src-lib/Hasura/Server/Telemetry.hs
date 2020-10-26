@@ -174,10 +174,10 @@ computeMetrics sc _mtServiceTimings _mtPgVersion =
     userTables = Map.filter (not . isSystemDefined . _tciSystemDefined . _tiCoreInfo) $ scTables sc
     countUserTables predicate = length . filter predicate $ Map.elems userTables
 
-    calcPerms :: (RolePermInfo -> Maybe a) -> [RolePermInfo] -> Int
+    calcPerms :: (RolePermInfo 'Postgres -> Maybe a) -> [RolePermInfo 'Postgres] -> Int
     calcPerms fn perms = length $ mapMaybe fn perms
 
-    permsOfTbl :: TableInfo -> [(RoleName, RolePermInfo)]
+    permsOfTbl :: TableInfo 'Postgres -> [(RoleName, RolePermInfo 'Postgres)]
     permsOfTbl = Map.toList . _tiRolePermInfoMap
 
 computeActionsMetrics :: ActionCache -> ActionMetric

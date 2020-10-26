@@ -16,6 +16,7 @@ import           Control.Lens
 
 import qualified Hasura.Incremental           as Inc
 
+import           Data.Text.Extended
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.RQL.Types.Run
@@ -52,15 +53,15 @@ data BuildInputs
 -- 'MonadWriter' side channel.
 data BuildOutputs
   = BuildOutputs
-  { _boTables            :: !TableCache
-  , _boActions           :: !ActionCache
-  , _boFunctions         :: !FunctionCache
-  , _boRemoteSchemas     :: !(HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject))
+  { _boTables        :: !TableCache
+  , _boActions       :: !ActionCache
+  , _boFunctions     :: !FunctionCache
+  , _boRemoteSchemas :: !(HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject))
   -- ^ We preserve the 'MetadataObject' from the original catalog metadata in the output so we can
   -- reuse it later if we need to mark the remote schema inconsistent during GraphQL schema
   -- generation (because of field conflicts).
   , _boAllowlist     :: !(HS.HashSet GQLQuery)
-  , _boCustomTypes   :: !AnnotatedCustomTypes
+  , _boCustomTypes   :: !(AnnotatedCustomTypes 'Postgres)
   , _boCronTriggers  :: !(M.HashMap TriggerName CronTriggerInfo)
   }
 $(makeLenses ''BuildOutputs)

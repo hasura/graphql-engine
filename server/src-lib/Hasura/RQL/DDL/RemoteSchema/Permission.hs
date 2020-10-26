@@ -6,9 +6,10 @@ module Hasura.RQL.DDL.RemoteSchema.Permission (
 import           Control.Monad.Validate
 
 import           Hasura.Prelude
-import           Hasura.SQL.Types
 import           Hasura.RQL.Types              hiding (GraphQLType, defaultScalars)
 import           Hasura.Server.Utils           (englishList, duplicates, isSessionVariable)
+import           Data.Text.Extended
+
 
 import qualified Data.HashMap.Strict                   as Map
 import qualified Language.GraphQL.Draft.Syntax         as G
@@ -24,8 +25,8 @@ data FieldDefinitionType
   | EnumField
   deriving (Show, Eq)
 
-instance DQuote FieldDefinitionType where
-  dquoteTxt = \case
+instance ToTxt FieldDefinitionType where
+  toTxt = \case
     ObjectField    -> "Object"
     InterfaceField -> "Interface"
     EnumField      -> "Enum"
@@ -35,8 +36,8 @@ data ArgumentDefinitionType
   | DirectiveArgument
   deriving (Show, Eq)
 
-instance DQuote ArgumentDefinitionType where
-  dquoteTxt = \case
+instance ToTxt ArgumentDefinitionType where
+  toTxt = \case
     InputObjectArgument -> "Input object"
     DirectiveArgument   -> "Directive"
 
@@ -58,8 +59,8 @@ data GraphQLType
   | Argument !ArgumentDefinitionType
   deriving (Show, Eq)
 
-instance DQuote GraphQLType where
-  dquoteTxt = \case
+instance ToTxt GraphQLType where
+  toTxt = \case
     Enum                         -> "Enum"
     InputObject                  -> "Input object"
     Object                       -> "Object"
@@ -155,14 +156,14 @@ showRoleBasedSchemaValidationError = \case
     "input argument " <> inpArgName <<> " does not exist in the input object:" <>> inpObjName
   MissingNonNullableArguments fieldName nonNullableArgs ->
     "field: " <> fieldName <<> " expects the following non nullable arguments to "
-    <> "be present: " <> (englishList "and" $ fmap dquoteTxt nonNullableArgs)
+    <> "be present: " <> (englishList "and" $ fmap dquote nonNullableArgs)
   NonExistingDirectiveArgument parentName parentType directiveName nonExistingArgs ->
     "the following directive argument(s) defined in the directive: "
     <> directiveName
     <<> " defined with the type name: "
     <> parentName <<> " of type "
     <> parentType <<> " do not exist in the corresponding upstream directive: "
-    <> (englishList "and" $ fmap dquoteTxt nonExistingArgs)
+    <> (englishList "and" $ fmap dquote nonExistingArgs)
   NonExistingField (fldDefnType, parentTypeName) providedName ->
     "field " <> providedName <<> " does not exist in the "
     <> fldDefnType <<> ": " <>> parentTypeName
@@ -171,36 +172,36 @@ showRoleBasedSchemaValidationError = \case
   NonExistingUnionMemberTypes unionName nonExistingMembers ->
     "union " <> unionName <<> " contains members which do not exist in the members"
     <> " of the remote schema union :"
-    <> (englishList "and" $ fmap dquoteTxt nonExistingMembers)
+    <> (englishList "and" $ fmap dquote nonExistingMembers)
   CustomInterfacesNotAllowed objName customInterfaces ->
     "custom interfaces are not supported. " <> "Object" <> objName
     <<> " implements the following custom interfaces: "
-    <> (englishList "and" $ fmap dquoteTxt customInterfaces)
+    <> (englishList "and" $ fmap dquote customInterfaces)
   ObjectImplementsNonExistingInterfaces objName nonExistentInterfaces ->
     "object " <> objName <<> " is trying to implement the following interfaces"
     <> " that do not exist in the corresponding upstream remote object: "
-    <> (englishList "and" $ fmap dquoteTxt nonExistentInterfaces)
+    <> (englishList "and" $ fmap dquote nonExistentInterfaces)
   NonExistingEnumValues enumName nonExistentEnumVals ->
     "enum " <> enumName <<> " contains the following enum values that do not exist "
     <> "in the corresponding upstream remote enum: " <>
-    (englishList "and" $ fmap dquoteTxt nonExistentEnumVals)
+    (englishList "and" $ fmap dquote nonExistentEnumVals)
   MissingQueryRoot -> "query root does not exist in the schema definition"
   MultipleSchemaDefinitionsFound -> "multiple schema definitions found"
   DuplicateTypeNames typeNames ->
     "duplicate type names found: "
-    <> (englishList "and" $ fmap dquoteTxt typeNames)
+    <> (englishList "and" $ fmap dquote typeNames)
   DuplicateDirectives (parentType, parentName) directiveNames ->
-    "duplicate directives: " <> (englishList "and" $ fmap dquoteTxt directiveNames)
+    "duplicate directives: " <> (englishList "and" $ fmap dquote directiveNames)
     <> "found in the " <> parentType <<> " " <>> parentName
   DuplicateFields (parentType, parentName) fieldNames ->
-    "duplicate fields: " <> (englishList "and" $ fmap dquoteTxt fieldNames)
+    "duplicate fields: " <> (englishList "and" $ fmap dquote fieldNames)
     <> "found in the " <> parentType <<> " " <>> parentName
   DuplicateArguments fieldName args ->
     "duplicate arguments: "
-    <> (englishList "and" $ fmap dquoteTxt args)
+    <> (englishList "and" $ fmap dquote args)
     <> "found in the field: " <>> fieldName
   DuplicateEnumValues enumName enumValues ->
-    "duplicate enum values: " <> (englishList "and" $ fmap dquoteTxt enumValues)
+    "duplicate enum values: " <> (englishList "and" $ fmap dquote enumValues)
     <> " found in the " <> enumName <<> " enum"
   InvalidPresetDirectiveLocation ->
     "Preset directives can be defined only on INPUT_FIELD_DEFINITION or ARGUMENT_DEFINITION"

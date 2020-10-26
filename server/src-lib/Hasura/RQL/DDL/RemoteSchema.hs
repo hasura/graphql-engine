@@ -16,25 +16,23 @@ module Hasura.RQL.DDL.RemoteSchema
   , runDropRemoteSchemaPermissions
   ) where
 
-import           Control.Monad.Unique
-import           Hasura.EncJSON
--- import           Hasura.GraphQL.NormalForm
-import           Hasura.GraphQL.RemoteServer
--- import           Hasura.GraphQL.Schema.Merge
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.RemoteSchema.Permission
 
-import qualified Data.Aeson                           as J
-import qualified Data.HashMap.Strict                  as Map
-import qualified Data.HashSet                         as S
-import qualified Database.PG.Query                    as Q
+import qualified Data.Aeson                  as J
+import qualified Data.Environment            as Env
+import qualified Data.HashMap.Strict         as Map
+import qualified Data.HashSet                as S
+import qualified Database.PG.Query           as Q
 
+import           Control.Monad.Unique
+
+import           Hasura.EncJSON
+import           Hasura.GraphQL.RemoteServer
+import           Data.Text.Extended
 import           Hasura.RQL.Types
-import           Hasura.Server.Version                (HasVersion)
-import           Hasura.SQL.Types
-
-import qualified Data.Environment                     as Env
+import           Hasura.Server.Version       (HasVersion)
 
 import           Hasura.Session
 

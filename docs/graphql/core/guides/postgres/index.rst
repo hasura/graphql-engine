@@ -2,10 +2,10 @@
    :description: Useful Postgres concepts for Hasura
    :keywords: hasura, docs, postgres
 
-.. _postgres_concepts:
+.. _postgres_basics:
 
-Postgres concepts
-=================
+Postgres basics
+===============
 
 .. contents:: Table of contents
   :backlinks: none

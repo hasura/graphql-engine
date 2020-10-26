@@ -1,16 +1,37 @@
-DROP VIEW hdb_catalog.hdb_role;
-
-CREATE VIEW hdb_catalog.hdb_role AS
-(
-SELECT DISTINCT role_name FROM (
-SELECT role_name FROM hdb_catalog.hdb_permission
-UNION ALL
-SELECT role_name FROM hdb_catalog.hdb_action_permission
-) q
+CREATE
+OR REPLACE VIEW hdb_catalog.hdb_function_info_agg AS (
+    SELECT
+        function_name,
+        function_schema,
+        row_to_json (
+            (
+                SELECT
+                    e
+                FROM
+                    (
+                        SELECT
+                            description,
+                            has_variadic,
+                            function_type,
+                            return_type_schema,
+                            return_type_name,
+                            return_type_type,
+                            returns_set,
+                            input_arg_types,
+                            input_arg_names,
+                            default_args,
+                            exists(
+                                SELECT
+                                    1
+                                FROM
+                                    information_schema.tables
+                                WHERE
+                                    table_schema = return_type_schema
+                                    AND table_name = return_type_name
+                            ) AS returns_table
+                    ) AS e
+            )
+        ) AS "function_info"
+    FROM
+        hdb_catalog.hdb_function_agg
 );
-
-DROP TABLE hdb_catalog.hdb_remote_schema_permission;
-
-DELETE FROM hdb_catalog.hdb_relationship where table_schema = 'hdb_catalog' and table_name = 'remote_schemas';
-DELETE FROM hdb_catalog.hdb_relationship where table_schema = 'hdb_catalog' and table_name = 'hdb_role' and rel_name = 'remote_schema_permissions';
-DELETE FROM hdb_catalog.hdb_table where table_schema = 'hdb_catalog' and table_name = 'hdb_remote_schema_permission';

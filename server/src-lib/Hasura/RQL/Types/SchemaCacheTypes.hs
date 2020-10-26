@@ -5,6 +5,7 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
 import           Hasura.Prelude
+import           Data.Text.Extended
 
 import qualified Data.Text                           as T
 
@@ -14,8 +15,8 @@ import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.RemoteSchema
-import           Hasura.SQL.Types
 import           Hasura.Session
+import           Hasura.SQL.Types
 
 data TableObjId
   = TOCol !PGCol

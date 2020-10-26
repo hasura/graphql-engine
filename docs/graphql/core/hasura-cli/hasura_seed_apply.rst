@@ -1,45 +1,43 @@
+
 .. meta::
-   :description: Use hasura seeds create to create a new seed file
-   :keywords: hasura, docs, CLI, hasura seed create
+   :description: Use hasura seeds apply to apply seed data
+   :keywords: hasura, docs, CLI, hasura seeds apply
 
-.. _hasura_seed_create:
+.. _hasura_seed_apply:
 
-Hasura CLI: hasura seed create
--------------------------------
+Hasura CLI: hasura seed apply
+-----------------------------
 
-Create a new seed file
+Apply seed data
 
 Synopsis
 ~~~~~~~~
 
 
-Create a new seed file
+Apply seed data
 
 ::
 
-  hasura seed create seed_name [flags]
+  hasura seed apply [flags]
 
 Examples
 ~~~~~~~~
 
 ::
 
-    # Create a new seed file and use editor to add SQL:
-    hasura seed create new_table_seed
+    # Apply all seeds on the database:
+    hasura seed apply
 
-    # Create a new seed by exporting data from tables already present in the database:
-    hasura seed create table1_seed --from-table table1
-
-    # Export data from multiple tables:
-    hasura seed create tables_seed --from-table table1 --from-table table2
+    # Apply only a particular file:
+    hasura seed apply --file seeds/1234_add_some_seed_data.sql
 
 Options
 ~~~~~~~
 
 ::
 
-      --from-table stringArray   name of table from which seed file has to be initialized
-  -h, --help                     help for create
+  -f, --file stringArray   seed file to apply
+  -h, --help               help for apply
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

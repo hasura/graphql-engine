@@ -176,3 +176,45 @@ args:
       name: get_session_var
     configuration:
       session_argument: hasura_session
+
+# track & query functions that return SETOF materialized views
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE author(
+        id SERIAL PRIMARY KEY,
+        first_name TEXT,
+        last_name TEXT
+      );
+
+      INSERT INTO author(first_name, last_name) VALUES
+        ('enid', 'blyton'),
+        ('ruskin', 'bond'),
+        ('franz', 'kafka');
+
+      CREATE MATERIALIZED VIEW author_mat_view AS
+        SELECT * FROM author;
+
+      CREATE FUNCTION search_author_mview(query text)
+      RETURNS SETOF author_mat_view AS $FUNCTION$
+          SELECT * FROM author_mat_view WHERE
+            first_name = query OR
+            last_name = query
+      $FUNCTION$ LANGUAGE sql STABLE;
+
+- type: track_table
+  args:
+    name: author
+    schema: public
+
+- type: track_table
+  args:
+    name: author_mat_view
+    schema: public
+
+- type: track_function
+  version: 2
+  args:
+    function:
+      schema: public
+      name: search_author_mview
