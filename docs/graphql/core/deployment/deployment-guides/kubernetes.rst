@@ -50,7 +50,7 @@ Edit ``deployment.yaml`` and set the right database url:
 Examples of ``HASURA_GRAPHQL_DATABASE_URL``:
 
 - ``postgres://<admin>:<password>@localhost:5432/<my-db>``
-- ``postgres://<admin>:@localhost:5432/<my-db>`` *(if there is no password)*
+- ``postgres://admin:@localhost:5432/my-db`` *(if there is no password)*
 
 .. note::
 
