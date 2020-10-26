@@ -35,7 +35,7 @@ On the SQL tab of the console, run the following command:
 
    TRUNCATE hdb_catalog.schema_migrations;
 
-Step 3: Pull the schema and metadata from server
+Step 3: Pull the schema and metadata from the server
 ------------------------------------------------
 
 We will set up fresh migrations by pulling the schema and metadata from the server using the following commands:
