@@ -46,6 +46,9 @@ The corresponding JWT config can be:
 **NOTE:** If you have event triggers with names greater than 42 chars, then you should update their names to avoid running into Postgres identifier limit bug (#5786)
 - server: fix issue with tracking custom functions that return `SETOF` materialized view (close #5294) (#5945)
 - server: allow remote relationships with union, interface and enum type fields as well (fixes #5875) (#6080)
+- server: Fix fine-grained incremental cache invalidation (fix #3759)
+
+  This issue could cause enum table values to sometimes not be properly reloaded without restarting `graphql-engine`. Now a `reload_metadata` API call (or clicking “Reload enum values” in the console) should consistently force a reload of all enum table values.
 - server: fix event trigger cleanup on deletion via replace_metadata (fix #5461) (#6137)
 - cli: fix bug in metadata apply which made the server aquire some redundant and unnecessary locks (close #6115)
 - cli: fix cli-migrations-v2 image failing to run as a non root user (close #4651, close #5333)
