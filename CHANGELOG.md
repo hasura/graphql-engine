@@ -80,7 +80,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 **NOTE:** If you have event triggers with names greater than 42 chars, then you should update their names to avoid running into Postgres identifier limit bug (#5786)
 - server: validate remote schema queries (fixes #4143)
 - server: fix issue with tracking custom functions that return `SETOF` materialized view (close #5294) (#5945)
-- server: introduce optional custom `identifier` in table configuration to track the table according to the identifier. The `set_table_custom_fields` API has been deprecated, A new API `set_table_configuration` has been added to set the configuration. (#3811)
+- server: introduce optional custom table name in table configuration to track the table according to the custom name. The `set_table_custom_fields` API has been deprecated, A new API `set_table_customization` has been added to set the configuration. (#3811)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - cli: add missing global flags for seed command (#5565)
