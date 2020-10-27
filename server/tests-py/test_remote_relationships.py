@@ -60,6 +60,9 @@ class TestCreateRemoteRelationship:
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_with_interface.yaml')
         assert st_code == 200, resp
 
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_with_union.yaml')
+        assert st_code == 200, resp
+
     def test_create_invalid(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_invalid_remote_rel_hasura_field.yaml')
         assert st_code == 400, resp
@@ -207,6 +210,11 @@ class TestExecution:
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'mixed_interface.yaml')
         check_query_f(hge_ctx, self.dir() + 'remote_rel_interface.yaml')
+
+    def test_with_union(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_with_union.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'remote_rel_union.yaml')
 
     def test_with_errors(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')

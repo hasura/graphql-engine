@@ -9,6 +9,12 @@ const allMessages = [
     { id: 3, name: "alice", msg: "Another alice"},
 ];
 
+const data = {
+    1: { title: 'Harry Porter and the prisoner of Azkaban' },
+    2: { name: 'J.K. Rowling' },
+    3: { title: "Harry Porter and the philoshoper's stone"}
+}
+
 const typeDefs = gql`
 
   type User {
@@ -27,6 +33,16 @@ const typeDefs = gql`
     name: String!
     msg: String!
     errorMsg: String
+  }
+
+  union SearchResult = Book | Author
+
+  type Book {
+    title: String
+  }
+
+  type Author {
+    name: String
   }
 
   input MessageWhereInpObj {
@@ -56,6 +72,7 @@ const typeDefs = gql`
     users(user_ids: [Int]!): [User]
     message(id: Int!) : Message
     communications(id: Int): [Communication]
+    search(id: Int!): SearchResult
   }
 `;
 
@@ -116,7 +133,6 @@ const resolvers = {
             }
         }
     },
-
     Message: {
         errorMsg : () => {
             throw new ApolloError("intentional-error", "you asked for it");
@@ -190,12 +206,28 @@ const resolvers = {
             }
             return result;
         },
+        search: (_, { id }) => {
+            return data[id]
+        }
     },
     Communication: {
         __resolveType(communication, context, info){
             if(communication.name) {
                 return "Message";
             }
+            return null;
+        }
+    },
+    SearchResult: {
+        __resolveType(obj, context, info) {
+            if(obj.name) {
+                return "Author";
+            }
+
+            if(obj.title) {
+                return "Book";
+            }
+
             return null;
         }
     }
