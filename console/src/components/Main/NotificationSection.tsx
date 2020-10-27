@@ -643,7 +643,7 @@ const HasuraNotifications: React.FC<
 
   useOnClickOutside([dropDownRef, wrapperRef], onClickOutside);
 
-  const onClickShareSection = () => {
+  const onClickNotificationButton = () => {
     if (showBadge) {
       if (console_opts?.console_notifications) {
         let updatedState = {};
@@ -722,11 +722,11 @@ const HasuraNotifications: React.FC<
   return (
     <>
       <div
-        className={`${styles.shareSection} ${
+        className={`${styles.shareSection} ${styles.headerRightNavbarBtn} ${
           isDropDownOpen ? styles.opened : ''
         } dropdown-toggle`}
         aria-expanded="false"
-        onClick={onClickShareSection}
+        onClick={onClickNotificationButton}
         ref={wrapperRef}
       >
         <i className={`fa fa-bell ${styles.bellIcon}`} />
