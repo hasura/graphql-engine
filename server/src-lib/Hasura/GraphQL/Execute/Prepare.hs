@@ -6,12 +6,10 @@ module Hasura.GraphQL.Execute.Prepare
   , ExecutionPlan
   , ExecutionStep(..)
   , initPlanningSt
-  , runPlan
   , prepareWithPlan
   , prepareWithoutPlan
   , validateSessionVariables
   , withUserVars
-  , buildTypedOperation
   ) where
 
 
@@ -21,20 +19,20 @@ import qualified Data.Aeson                             as J
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashSet                           as Set
 import qualified Data.IntMap                            as IntMap
-import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.SQL.DML                         as S
 
+import           Data.Text.Extended
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.DML.Internal                (currentSession)
 import           Hasura.RQL.Types
-import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
+import           Hasura.Session
 
 
 type PlanVariables = Map.HashMap G.Name Int
@@ -46,18 +44,18 @@ type PrepArgMap = IntMap.IntMap (Q.PrepArg, PGScalarValue)
 -- | Full execution plan to process one GraphQL query.  Once we work on
 -- heterogeneous execution this will contain a mixture of things to run on the
 -- database and things to run on remote schemas.
-type ExecutionPlan db remote raw = ExecutionStep db remote raw
+type ExecutionPlan db = InsOrdHashMap G.Name (ExecutionStep db)
 
 type RemoteCall = (RemoteSchemaInfo, G.TypedOperationDefinition G.NoFragments G.Name, Maybe GH.VariableValues)
 
 -- | One execution step to processing a GraphQL query (e.g. one root field).
 -- Polymorphic to allow the SQL to be generated in stages.
-data ExecutionStep db remote raw
+data ExecutionStep db
   = ExecStepDB db
   -- ^ A query to execute against the database
-  | ExecStepRemote remote -- !RemoteSchemaInfo !(G.Selection G.NoFragments G.Name)
+  | ExecStepRemote RemoteCall  -- !RemoteSchemaInfo !(G.Selection G.NoFragments G.Name)
   -- ^ A query to execute against a remote schema
-  | ExecStepRaw raw
+  | ExecStepRaw J.Value
   -- ^ Output a plain JSON object
 
 data PlanningSt
@@ -71,9 +69,6 @@ data PlanningSt
 initPlanningSt :: PlanningSt
 initPlanningSt =
   PlanningSt 2 Map.empty IntMap.empty Set.empty
-
-runPlan :: StateT PlanningSt m a -> m (a, PlanningSt)
-runPlan = flip runStateT initPlanningSt
 
 prepareWithPlan :: (MonadState PlanningSt m) => UnpreparedValue -> m S.SQLExp
 prepareWithPlan = \case
@@ -121,17 +116,17 @@ retrieveAndFlagSessionVariableValue updateState sessVar currentSessionExp = do
   pure $ S.SEOpApp (S.SQLOp "->>")
     [currentSessionExp, S.SELit $ sessionVariableToText sessVar]
 
-withUserVars :: SessionVariables -> [(Q.PrepArg, PGScalarValue)] -> [(Q.PrepArg, PGScalarValue)]
+withUserVars :: SessionVariables -> PrepArgMap -> PrepArgMap
 withUserVars usrVars list =
   let usrVarsAsPgScalar = PGValJSON $ Q.JSON $ J.toJSON usrVars
       prepArg = Q.toPrepVal (Q.AltJ usrVars)
-  in (prepArg, usrVarsAsPgScalar):list
+  in IntMap.insert 1 (prepArg, usrVarsAsPgScalar) list
 
 validateSessionVariables :: MonadError QErr m => Set.HashSet SessionVariable -> SessionVariables -> m ()
 validateSessionVariables requiredVariables sessionVariables = do
   let missingSessionVariables = requiredVariables `Set.difference` getSessionVariablesSet sessionVariables
   unless (null missingSessionVariables) do
-    throw400 NotFound $ "missing session variables: " <> T.intercalate ", " (dquote . sessionVariableToText <$> toList missingSessionVariables)
+    throw400 NotFound $ "missing session variables: " <> dquoteList (sessionVariableToText <$> toList missingSessionVariables)
 
 getVarArgNum :: (MonadState PlanningSt m) => G.Name -> m Int
 getVarArgNum var = do
@@ -146,42 +141,11 @@ addPrepArg
   :: (MonadState PlanningSt m)
   => Int -> (Q.PrepArg, PGScalarValue) -> m ()
 addPrepArg argNum arg = do
-  PlanningSt curArgNum vars prepped sessionVariables <- get
-  put $ PlanningSt curArgNum vars (IntMap.insert argNum arg prepped) sessionVariables
+  prepped <- gets _psPrepped
+  modify \x -> x {_psPrepped = IntMap.insert argNum arg prepped}
 
 getNextArgNum :: (MonadState PlanningSt m) => m Int
 getNextArgNum = do
-  PlanningSt curArgNum vars prepped sessionVariables <- get
-  put $ PlanningSt (curArgNum + 1) vars prepped sessionVariables
+  curArgNum <- gets _psArgNumber
+  modify \x -> x {_psArgNumber = curArgNum + 1}
   return curArgNum
-
-unresolveVariables
-  :: forall fragments
-   . Functor fragments
-  => G.SelectionSet fragments Variable
-  -> G.SelectionSet fragments G.Name
-unresolveVariables =
-  fmap (fmap (getName . vInfo))
-
-collectVariables
-  :: forall fragments var
-   . (Foldable fragments, Hashable var, Eq var)
-  => G.SelectionSet fragments var
-  -> Set.HashSet var
-collectVariables =
-  Set.unions . fmap (foldMap Set.singleton)
-
-buildTypedOperation
-  :: forall frag
-   . (Functor frag, Foldable frag)
-  => G.OperationType
-  -> [G.VariableDefinition]
-  -> G.SelectionSet frag Variable
-  -> Maybe GH.VariableValues
-  -> (G.TypedOperationDefinition frag G.Name, Maybe GH.VariableValues)
-buildTypedOperation tp varDefs selSet varValsM =
-  let unresolvedSelSet = unresolveVariables selSet
-      requiredVars = collectVariables unresolvedSelSet
-      restrictedDefs = filter (\varDef -> G._vdName varDef `Set.member` requiredVars) varDefs
-      restrictedValsM = flip Map.intersection (Set.toMap requiredVars) <$> varValsM
-  in (G.TypedOperationDefinition tp Nothing restrictedDefs [] unresolvedSelSet, restrictedValsM)

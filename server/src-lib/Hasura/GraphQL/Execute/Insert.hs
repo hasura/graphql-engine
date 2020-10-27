@@ -23,20 +23,21 @@ import qualified Hasura.RQL.GBoolExp            as RQL
 import qualified Hasura.SQL.DML                 as S
 import qualified Hasura.Tracing                 as Tracing
 
+import           Data.Text.Extended
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Schema.Insert
 import           Hasura.RQL.Types
-import           Hasura.Server.Version          (HasVersion)
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
+import           Hasura.Server.Version          (HasVersion)
 
 
 traverseAnnInsert
   :: (Applicative f)
   => (a -> f b)
-  -> AnnInsert a
-  -> f (AnnInsert b)
+  -> AnnInsert backend a
+  -> f (AnnInsert backend b)
 traverseAnnInsert f (AnnInsert fieldName isSingle (annIns, mutationOutput)) =
   AnnInsert fieldName isSingle
   <$> ( (,)
@@ -74,16 +75,16 @@ traverseAnnInsert f (AnnInsert fieldName isSingle (annIns, mutationOutput)) =
 convertToSQLTransaction
   :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m)
   => Env.Environment
-  -> AnnInsert S.SQLExp
+  -> AnnInsert 'Postgres S.SQLExp
   -> RQL.MutationRemoteJoinCtx
   -> Seq.Seq Q.PrepArg
   -> Bool
   -> m EncJSON
-convertToSQLTransaction env (AnnInsert fieldName isSingle (annIns, mutationOutput)) rjCtx planVars stringifyNum =
+convertToSQLTransaction env (AnnInsert fieldName isSingle (annIns, mutationOutput)) remoteJoinCtx planVars stringifyNum =
   if null $ _aiInsObj annIns
   then pure $ RQL.buildEmptyMutResp mutationOutput
   else withPaths ["selectionSet", fieldName, "args", suffix] $
-    insertMultipleObjects env annIns [] rjCtx mutationOutput planVars stringifyNum
+    insertMultipleObjects env annIns [] remoteJoinCtx mutationOutput planVars stringifyNum
   where
     withPaths p x = foldr ($) x $ withPathK <$> p
     suffix = bool "objects" "object" isSingle
@@ -91,14 +92,14 @@ convertToSQLTransaction env (AnnInsert fieldName isSingle (annIns, mutationOutpu
 insertMultipleObjects
   :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m)
   => Env.Environment
-  -> MultiObjIns S.SQLExp
+  -> MultiObjIns 'Postgres S.SQLExp
   -> [(PGCol, S.SQLExp)]
   -> RQL.MutationRemoteJoinCtx
-  -> RQL.MutationOutput
+  -> RQL.MutationOutput 'Postgres
   -> Seq.Seq Q.PrepArg
   -> Bool
   -> m EncJSON
-insertMultipleObjects env multiObjIns additionalColumns rjCtx mutationOutput planVars stringifyNum =
+insertMultipleObjects env multiObjIns additionalColumns remoteJoinCtx mutationOutput planVars stringifyNum =
     bool withoutRelsInsert withRelsInsert anyRelsToInsert
   where
     AnnIns insObjs table conflictClause checkCondition columnInfos defVals = multiObjIns
@@ -121,35 +122,35 @@ insertMultipleObjects env multiObjIns additionalColumns rjCtx mutationOutput pla
             columnInfos
           rowCount = T.pack . show . length $ _aiInsObj multiObjIns
       Tracing.trace ("Insert (" <> rowCount <> ") " <> qualObjectToText table) do
-        Tracing.attachMetadata [("count", rowCount)]  
-        RQL.execInsertQuery env stringifyNum (Just rjCtx) (insertQuery, planVars)
+        Tracing.attachMetadata [("count", rowCount)]
+        RQL.execInsertQuery env stringifyNum (Just remoteJoinCtx) (insertQuery, planVars)
 
     withRelsInsert = do
       insertRequests <- indexedForM insObjs \obj -> do
         let singleObj = AnnIns obj table conflictClause checkCondition columnInfos defVals
-        insertObject env singleObj additionalColumns rjCtx planVars stringifyNum
+        insertObject env singleObj additionalColumns remoteJoinCtx planVars stringifyNum
       let affectedRows = sum $ map fst insertRequests
           columnValues = mapMaybe snd insertRequests
       selectExpr <- RQL.mkSelCTEFromColVals table columnInfos columnValues
       let (mutOutputRJ, remoteJoins) = RQL.getRemoteJoinsMutationOutput mutationOutput
           sqlQuery = Q.fromBuilder $ toSQL $
                      RQL.mkMutationOutputExp table columnInfos (Just affectedRows) selectExpr mutOutputRJ stringifyNum
-      RQL.executeMutationOutputQuery env sqlQuery [] $ (,rjCtx) <$> remoteJoins
+      RQL.executeMutationOutputQuery env sqlQuery [] $ (,remoteJoinCtx) <$> remoteJoins
 
 insertObject
   :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m)
   => Env.Environment
-  -> SingleObjIns S.SQLExp
+  -> SingleObjIns 'Postgres S.SQLExp
   -> [(PGCol, S.SQLExp)]
   -> RQL.MutationRemoteJoinCtx
   -> Seq.Seq Q.PrepArg
   -> Bool
   -> m (Int, Maybe (ColumnValues TxtEncodedPGVal))
-insertObject env singleObjIns additionalColumns rjCtx planVars stringifyNum = Tracing.trace ("Insert " <> qualObjectToText table) do
+insertObject env singleObjIns additionalColumns remoteJoinCtx planVars stringifyNum = Tracing.trace ("Insert " <> qualObjectToText table) do
   validateInsert (map fst columns) (map _riRelInfo objectRels) (map fst additionalColumns)
 
   -- insert all object relations and fetch this insert dependent column values
-  objInsRes <- forM objectRels $ insertObjRel env planVars rjCtx stringifyNum
+  objInsRes <- forM objectRels $ insertObjRel env planVars remoteJoinCtx stringifyNum
 
   -- prepare final insert columns
   let objRelAffRows = sum $ map fst objInsRes
@@ -175,13 +176,13 @@ insertObject env singleObjIns additionalColumns rjCtx planVars stringifyNum = Tr
     withArrRels colValM = do
       colVal <- onNothing colValM $ throw400 NotSupported cannotInsArrRelErr
       arrDepColsWithVal <- fetchFromColVals colVal arrRelDepCols
-      arrInsARows <- forM arrayRels $ insertArrRel env arrDepColsWithVal rjCtx planVars stringifyNum
+      arrInsARows <- forM arrayRels $ insertArrRel env arrDepColsWithVal remoteJoinCtx planVars stringifyNum
       return $ sum arrInsARows
 
     asSingleObject = \case
-      [] -> pure Nothing
+      []  -> pure Nothing
       [r] -> pure $ Just r
-      _ -> throw500 "more than one row returned"
+      _   -> throw500 "more than one row returned"
 
     cannotInsArrRelErr =
       "cannot proceed to insert array relations since insert to table "
@@ -193,11 +194,11 @@ insertObjRel
   -> Seq.Seq Q.PrepArg
   -> RQL.MutationRemoteJoinCtx
   -> Bool
-  -> ObjRelIns S.SQLExp
+  -> ObjRelIns 'Postgres S.SQLExp
   -> m (Int, [(PGCol, S.SQLExp)])
-insertObjRel env planVars rjCtx stringifyNum objRelIns =
+insertObjRel env planVars remoteJoinCtx stringifyNum objRelIns =
   withPathK (relNameToTxt relName) $ do
-    (affRows, colValM) <- withPathK "data" $ insertObject env singleObjIns [] rjCtx planVars stringifyNum
+    (affRows, colValM) <- withPathK "data" $ insertObject env singleObjIns [] remoteJoinCtx planVars stringifyNum
     colVal <- onNothing colValM $ throw400 NotSupported errMsg
     retColsWithVals <- fetchFromColVals colVal rColInfos
     let columns = flip mapMaybe (Map.toList mapCols) \(column, target) -> do
@@ -223,15 +224,15 @@ insertArrRel
   -> RQL.MutationRemoteJoinCtx
   -> Seq.Seq Q.PrepArg
   -> Bool
-  -> ArrRelIns S.SQLExp
+  -> ArrRelIns 'Postgres S.SQLExp
   -> m Int
-insertArrRel env resCols rjCtx planVars stringifyNum arrRelIns =
+insertArrRel env resCols remoteJoinCtx planVars stringifyNum arrRelIns =
   withPathK (relNameToTxt $ riName relInfo) $ do
     let additionalColumns = flip mapMaybe resCols \(column, value) -> do
           target <- Map.lookup column mapping
           Just (target, value)
     resBS <- withPathK "data" $
-      insertMultipleObjects env multiObjIns additionalColumns rjCtx mutOutput planVars stringifyNum
+      insertMultipleObjects env multiObjIns additionalColumns remoteJoinCtx mutOutput planVars stringifyNum
     resObj <- decodeEncJSON resBS
     onNothing (Map.lookup ("affected_rows" :: T.Text) resObj) $
       throw500 "affected_rows not returned in array rel insert"
@@ -270,10 +271,10 @@ validateInsert insCols objRels addCols = do
 mkInsertQ
   :: MonadError QErr m
   => QualifiedTable
-  -> Maybe (RQL.ConflictClauseP1 S.SQLExp)
+  -> Maybe (RQL.ConflictClauseP1 'Postgres S.SQLExp)
   -> [(PGCol, S.SQLExp)]
   -> Map.HashMap PGCol S.SQLExp
-  -> (AnnBoolExpSQL, Maybe AnnBoolExpSQL)
+  -> (AnnBoolExpSQL 'Postgres, Maybe (AnnBoolExpSQL 'Postgres))
   -> m S.CTE
 mkInsertQ table onConflictM insCols defVals (insCheck, updCheck) = do
   let sqlConflict = RQL.toSQLConflict table <$> onConflictM
@@ -296,7 +297,7 @@ mkInsertQ table onConflictM insCols defVals (insCheck, updCheck) = do
 fetchFromColVals
   :: MonadError QErr m
   => ColumnValues TxtEncodedPGVal
-  -> [PGColumnInfo]
+  -> [ColumnInfo 'Postgres]
   -> m [(PGCol, S.SQLExp)]
 fetchFromColVals colVal reqCols =
   forM reqCols $ \ci -> do

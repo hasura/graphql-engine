@@ -1,16 +1,15 @@
-module Hasura.GraphQL.Execute.Mutation where
+module Hasura.GraphQL.Execute.Mutation
+  ( convertMutationSelectionSet
+  ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                             as J
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.HashSet                           as Set
-import qualified Data.IntMap                            as IntMap
 import qualified Data.Sequence                          as Seq
 import qualified Data.Sequence.NonEmpty                 as NE
-import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
@@ -30,6 +29,7 @@ import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Insert
 import           Hasura.GraphQL.Execute.Prepare
+import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
 import           Hasura.GraphQL.Schema.Insert
@@ -46,13 +46,13 @@ convertDelete
   => Env.Environment
   -> SessionVariables
   -> RQL.MutationRemoteJoinCtx
-  -> RQL.AnnDelG UnpreparedValue
+  -> RQL.AnnDelG 'Postgres UnpreparedValue
   -> Bool
   -> m (tx EncJSON)
-convertDelete env usrVars rjCtx deleteOperation stringifyNum = do
+convertDelete env usrVars remoteJoinCtx deleteOperation stringifyNum = do
   let (preparedDelete, expectedVariables) = flip runState Set.empty $ RQL.traverseAnnDel prepareWithoutPlan deleteOperation
   validateSessionVariables expectedVariables usrVars
-  pure $ RQL.execDeleteQuery env stringifyNum (Just rjCtx) (preparedDelete, Seq.empty)
+  pure $ RQL.execDeleteQuery env stringifyNum (Just remoteJoinCtx) (preparedDelete, Seq.empty)
 
 convertUpdate
   :: ( HasVersion
@@ -64,16 +64,16 @@ convertUpdate
   => Env.Environment
   -> SessionVariables
   -> RQL.MutationRemoteJoinCtx
-  -> RQL.AnnUpdG UnpreparedValue
+  -> RQL.AnnUpdG 'Postgres UnpreparedValue
   -> Bool
   -> m (tx EncJSON)
-convertUpdate env usrVars rjCtx updateOperation stringifyNum = do
+convertUpdate env usrVars remoteJoinCtx updateOperation stringifyNum = do
   let (preparedUpdate, expectedVariables) = flip runState Set.empty $ RQL.traverseAnnUpd prepareWithoutPlan updateOperation
   if null $ RQL.uqp1OpExps updateOperation
   then pure $ pure $ RQL.buildEmptyMutResp $ RQL.uqp1Output preparedUpdate
   else do
     validateSessionVariables expectedVariables usrVars
-    pure $ RQL.execUpdateQuery env stringifyNum (Just rjCtx) (preparedUpdate, Seq.empty)
+    pure $ RQL.execUpdateQuery env stringifyNum (Just remoteJoinCtx) (preparedUpdate, Seq.empty)
 
 convertInsert
   :: ( HasVersion
@@ -84,20 +84,38 @@ convertInsert
   => Env.Environment
   -> SessionVariables
   -> RQL.MutationRemoteJoinCtx
-  -> AnnInsert UnpreparedValue
+  -> AnnInsert 'Postgres UnpreparedValue
   -> Bool
   -> m (tx EncJSON)
-convertInsert env usrVars rjCtx insertOperation stringifyNum = do
+convertInsert env usrVars remoteJoinCtx insertOperation stringifyNum = do
   let (preparedInsert, expectedVariables) = flip runState Set.empty $ traverseAnnInsert prepareWithoutPlan insertOperation
   validateSessionVariables expectedVariables usrVars
-  pure $ convertToSQLTransaction env preparedInsert rjCtx Seq.empty stringifyNum
+  pure $ convertToSQLTransaction env preparedInsert remoteJoinCtx Seq.empty stringifyNum
 
-planVariablesSequence :: SessionVariables -> PlanningSt -> Seq.Seq Q.PrepArg
-planVariablesSequence usrVars = Seq.fromList . map fst . withUserVars usrVars . IntMap.elems . _psPrepped
+convertMutationDB
+  :: ( HasVersion
+     , MonadIO m
+     , MonadError QErr m
+     , Tracing.MonadTrace tx
+     , MonadIO tx
+     , MonadTx tx
+     )
+  => Env.Environment
+  -> SessionVariables
+  -> RQL.MutationRemoteJoinCtx
+  -> Bool
+  -> MutationDB 'Postgres UnpreparedValue
+  -> m (tx EncJSON, HTTP.ResponseHeaders)
+convertMutationDB env userSession remoteJoinCtx stringifyNum = \case
+  MDBInsert s -> noResponseHeaders <$> convertInsert env userSession remoteJoinCtx s stringifyNum
+  MDBUpdate s -> noResponseHeaders <$> convertUpdate env userSession remoteJoinCtx s stringifyNum
+  MDBDelete s -> noResponseHeaders <$> convertDelete env userSession remoteJoinCtx s stringifyNum
 
-convertMutationRootField
-  :: forall m tx
-  . ( HasVersion
+noResponseHeaders :: tx EncJSON -> (tx EncJSON, HTTP.ResponseHeaders)
+noResponseHeaders rTx = (rTx, [])
+
+convertMutationAction
+  ::( HasVersion
     , MonadIO m
     , MonadError QErr m
     , Tracing.MonadTrace m
@@ -110,25 +128,15 @@ convertMutationRootField
   -> UserInfo
   -> HTTP.Manager
   -> HTTP.RequestHeaders
-  -> Bool
-  -> MutationRootField UnpreparedValue
-  -> m (Either (tx EncJSON, HTTP.ResponseHeaders) RemoteField)
-convertMutationRootField env logger userInfo manager reqHeaders stringifyNum = \case
-  RFDB (MDBInsert s)  -> noResponseHeaders =<< convertInsert env userSession rjCtx s stringifyNum
-  RFDB (MDBUpdate s)  -> noResponseHeaders =<< convertUpdate env userSession rjCtx s stringifyNum
-  RFDB (MDBDelete s)  -> noResponseHeaders =<< convertDelete env userSession rjCtx s stringifyNum
-  RFRemote remote     -> pure $ Right remote
-  RFAction (AMSync s) -> Left . (_aerTransaction &&& _aerHeaders) <$> resolveActionExecution env logger userInfo s actionExecContext
-  RFAction (AMAsync s) -> noResponseHeaders =<< resolveActionMutationAsync s reqHeaders userSession
-  RFRaw s              -> noResponseHeaders $ pure $ encJFromJValue s
+  -> ActionMutation 'Postgres UnpreparedValue
+  -> m (tx EncJSON, HTTP.ResponseHeaders)
+convertMutationAction env logger userInfo manager reqHeaders = \case
+  AMSync s  -> (_aerTransaction &&& _aerHeaders) <$>
+    resolveActionExecution env logger userInfo s actionExecContext
+  AMAsync s -> noResponseHeaders <$> resolveActionMutationAsync s reqHeaders userSession
   where
-    noResponseHeaders :: tx EncJSON -> m (Either (tx EncJSON, HTTP.ResponseHeaders) RemoteField)
-    noResponseHeaders rTx = pure $ Left (rTx, [])
-
     userSession = _uiSession userInfo
     actionExecContext = ActionExecContext manager reqHeaders $ _uiSession userInfo
-
-    rjCtx = (manager, reqHeaders, userInfo)
 
 convertMutationSelectionSet
   :: forall m tx
@@ -150,7 +158,7 @@ convertMutationSelectionSet
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
-  -> m (ExecutionPlan (tx EncJSON, HTTP.ResponseHeaders) RemoteCall (G.Name, J.Value))
+  -> m (ExecutionPlan (tx EncJSON, HTTP.ResponseHeaders))
 convertMutationSelectionSet env logger gqlContext sqlGenCtx userInfo manager reqHeaders fields varDefs varValsM = do
   mutationParser <- onNothing (gqlMutationParser gqlContext) $
     throw400 ValidationFailed "no mutations exist"
@@ -161,25 +169,21 @@ convertMutationSelectionSet env logger gqlContext sqlGenCtx userInfo manager req
     >>= (mutationParser >>> (`onLeft` reportParseErrors))
 
   -- Transform the RQL AST into a prepared SQL query
-  txs <- for unpreparedQueries $ convertMutationRootField env logger userInfo manager reqHeaders (stringifyNum sqlGenCtx)
-  let txList = OMap.toList txs
-  case (mapMaybe takeTx txList, mapMaybe takeRemote txList) of
-    (dbPlans, []) -> do
-      let allHeaders = concatMap (snd . snd) dbPlans
-          combinedTx = toSingleTx $ map (G.unName *** fst) dbPlans
-      pure $ ExecStepDB (combinedTx, allHeaders)
-    ([], remotes@(firstRemote:_)) -> do
-      let (remoteOperation, varValsM') =
-            buildTypedOperation
-            G.OperationTypeMutation
-            varDefs
-            (map (G.SelectionField . snd . snd) remotes)
-            varValsM
-      if all (\remote' -> fst (snd firstRemote) == fst (snd remote')) remotes
-        then return $ ExecStepRemote (fst (snd firstRemote), remoteOperation, varValsM')
-        else throw400 NotSupported "Mixed remote schemas are not supported"
-    _ -> throw400 NotSupported "Heterogeneous execution of database and remote schemas not supported"
-  -- Build and return an executable action from the generated SQL
+  let userSession = _uiSession userInfo
+      remoteJoinCtx = (manager, reqHeaders, userInfo)
+  txs <- for unpreparedQueries \case
+    RFDB db             -> ExecStepDB <$> convertMutationDB env userSession remoteJoinCtx (stringifyNum sqlGenCtx) db
+    RFRemote (remoteSchemaInfo, remoteField) ->
+      pure $ buildExecStepRemote
+             remoteSchemaInfo
+             G.OperationTypeMutation
+             varDefs
+             [G.SelectionField remoteField]
+             varValsM
+    RFAction action     -> ExecStepDB <$> convertMutationAction env logger userInfo manager reqHeaders action
+    RFRaw s             -> pure $ ExecStepRaw s
+
+  return txs
   where
     reportParseErrors errs = case NE.head errs of
       -- TODO: Our error reporting machinery doesn’t currently support reporting
@@ -187,25 +191,3 @@ convertMutationSelectionSet env logger gqlContext sqlGenCtx userInfo manager req
       -- here. It would be nice to report all of them!
       ParseError{ pePath, peMessage, peCode } ->
         throwError (err400 peCode peMessage){ qePath = pePath }
-
-    -- | A list of aliased transactions for eg
-    --
-    -- > [("f1", Tx r1), ("f2", Tx r2)]
-    --
-    -- are converted into a single transaction as follows
-    --
-    -- > Tx {"f1": r1, "f2": r2}
-    toSingleTx :: [(Text, tx EncJSON)] -> tx EncJSON
-    toSingleTx aliasedTxs =
-      fmap encJFromAssocList $
-      forM aliasedTxs $ \(al, tx) -> (,) al <$> tx
-    takeTx
-      :: (G.Name, Either (tx EncJSON, HTTP.ResponseHeaders) RemoteField)
-      -> Maybe (G.Name, (tx EncJSON, HTTP.ResponseHeaders))
-    takeTx (name, Left tx) = Just (name, tx)
-    takeTx _               = Nothing
-    takeRemote
-      :: (G.Name, Either (tx EncJSON, HTTP.ResponseHeaders) RemoteField)
-      -> Maybe (G.Name, RemoteField)
-    takeRemote (name, Right remote) = Just (name, remote)
-    takeRemote _                    = Nothing

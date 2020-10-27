@@ -428,6 +428,7 @@ library
                      , Hasura.GraphQL.Execute.Plan
                      , Hasura.GraphQL.Execute.Types
                      , Hasura.GraphQL.Execute.Mutation
+                     , Hasura.GraphQL.Execute.Remote
                      , Hasura.GraphQL.Execute.Resolve
                      , Hasura.GraphQL.Execute.Prepare
                      , Hasura.GraphQL.Execute.LiveQuery.Options
@@ -461,6 +462,7 @@ library
                      , Hasura.Eventing.Common
                      , Data.GADT.Compare.Extended
                      , Data.Tuple.Extended
+                     , Hasura.SQL.Backend
                      , Hasura.SQL.DML
                      , Hasura.SQL.Error
                      , Hasura.SQL.GeoJSON

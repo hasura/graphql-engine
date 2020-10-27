@@ -115,11 +115,24 @@ module Hasura.RQL.Types.SchemaCache
   , CronTriggerInfo(..)
   ) where
 
-import           Hasura.Db
-import           Hasura.GraphQL.Context            (GQLContext, RoleContext)
-import qualified Hasura.GraphQL.Parser             as P
-import           Hasura.Incremental                (Dependency, MonadDepend (..), selectKeyD)
 import           Hasura.Prelude
+
+import qualified Data.ByteString.Lazy              as BL
+import qualified Data.HashMap.Strict               as M
+import qualified Data.HashSet                      as HS
+import qualified Data.Text                         as T
+import qualified Language.GraphQL.Draft.Syntax     as G
+
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
+import           System.Cron.Types
+
+import qualified Hasura.GraphQL.Parser             as P
+
+import           Hasura.Db
+import           Hasura.GraphQL.Context            (GQLContext, RemoteField, RoleContext)
+import           Hasura.Incremental                (Dependency, MonadDepend (..), selectKeyD)
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
@@ -130,29 +143,20 @@ import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Metadata
 --import           Hasura.RQL.Types.Permission
+import           Data.Text.Extended
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
-
 import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Table
-import           Hasura.Session
+import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
+import           Hasura.Session
 import           Hasura.Tracing                    (TraceT)
 
-import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
-import           System.Cron.Types
-
-import qualified Data.ByteString.Lazy              as BL
-import qualified Data.HashMap.Strict               as M
-import qualified Data.HashSet                      as HS
-import qualified Data.Text                         as T
-import qualified Language.GraphQL.Draft.Syntax     as G
 
 reportSchemaObjs :: [SchemaObjId] -> T.Text
-reportSchemaObjs = T.intercalate ", " . sort . map reportSchemaObj
+reportSchemaObjs = commaSeparated . sort . map reportSchemaObj
 
 mkParentDep :: QualifiedTable -> SchemaDependency
 mkParentDep tn = SchemaDependency (SOTable tn) DRTable
@@ -178,9 +182,9 @@ data IntrospectionResult
 
 data ParsedIntrospection
   = ParsedIntrospection
-  { piQuery        :: [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-  , piMutation     :: Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-  , piSubscription :: Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  { piQuery        :: [P.FieldParser (P.ParseT Identity) RemoteField]
+  , piMutation     :: Maybe [P.FieldParser (P.ParseT Identity) RemoteField]
+  , piSubscription :: Maybe [P.FieldParser (P.ParseT Identity) RemoteField]
   }
 
 data RemoteSchemaCtx
@@ -224,7 +228,7 @@ incSchemaCacheVer (SchemaCacheVer prev) =
   SchemaCacheVer $ prev + 1
 
 type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions
-type ActionCache = M.HashMap ActionName ActionInfo -- info of all actions
+type ActionCache = M.HashMap ActionName (ActionInfo 'Postgres) -- info of all actions
 
 data SchemaCache
   = SchemaCache
@@ -259,8 +263,8 @@ getAllRemoteSchemas sc =
 -- | A more limited version of 'CacheRM' that is used when building the schema cache, since the
 -- entire schema cache has not been built yet.
 class (Monad m) => TableCoreInfoRM m where
-  lookupTableCoreInfo :: QualifiedTable -> m (Maybe TableCoreInfo)
-  default lookupTableCoreInfo :: (CacheRM m) => QualifiedTable -> m (Maybe TableCoreInfo)
+  lookupTableCoreInfo :: QualifiedTable -> m (Maybe (TableCoreInfo 'Postgres))
+  default lookupTableCoreInfo :: (CacheRM m) => QualifiedTable -> m (Maybe (TableCoreInfo 'Postgres))
   lookupTableCoreInfo tableName = fmap _tiCoreInfo . M.lookup tableName . scTables <$> askSchemaCache
 
 instance (TableCoreInfoRM m) => TableCoreInfoRM (ReaderT r m) where

@@ -20,6 +20,8 @@ const Endpoints = {
   hasuractlMetadata: `${hasuractlUrl}/apis/metadata`,
   hasuractlMigrateSettings: `${hasuractlUrl}/apis/migrate/settings`,
   telemetryServer: 'wss://telemetry.hasura.io/v1/ws',
+  consoleNotificationsStg: 'https://data.hasura-stg.hasura-app.io/v1/query',
+  consoleNotificationsProd: 'https://data.hasura.io/v1/query',
 };
 
 const globalCookiePolicy = 'same-origin';
