@@ -104,15 +104,15 @@ The various types of queries are listed in the following table:
      - 2
      - Add a table/view with configuration
 
-   * - :ref:`set_table_configuration <set_table_configuration>`
-     - :ref:`set_table_configuration_args <set_table_configuration_syntax>`
+   * - :ref:`set_table_customization <set_table_customization>`
+     - :ref:`set_table_customization_args <set_table_customization_syntax>`
      - 1
-     - Set table configuration of an already tracked table
+     - Set table customization of an already tracked table
 
    * - :ref:`set_table_custom_fields <set_table_custom_fields>`
      - :ref:`set_table_custom_fields_args <set_table_custom_fields_args_syntax>`
      - 2
-     - Set custom fields to an already tracked table
+     - Set custom fields to an already tracked table (deprecated)
 
    * - :ref:`untrack_table`
      - :ref:`untrack_table_args <untrack_table_syntax>`

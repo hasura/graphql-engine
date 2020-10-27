@@ -378,7 +378,7 @@ Set configuration for table/view ``author``:
    X-Hasura-Role: admin
 
    {
-      "type": "set_table_configuration",
+      "type": "set_table_customization",
       "args": {
         "table": "author_details",
         "configuration": {
