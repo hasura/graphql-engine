@@ -846,7 +846,7 @@ parseLogHeadersFromEnv =
 parseEnableRemoteSchemaPerms :: Parser Bool
 parseEnableRemoteSchemaPerms =
   switch ( long "enable-remote-schema-permissions" <>
-           help (snd devModeEnv)
+           help (snd enableRemoteSchemaPermsEnv)
          )
 
 mxRefetchDelayEnv :: (String, String)
