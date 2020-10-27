@@ -216,14 +216,14 @@ query' allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
     selectPerms <- tableSelectPermissions table
     customRootFields <- _tcCustomRootFields . _tciCustomConfig . _tiCoreInfo <$> askTableInfo table
     for selectPerms \perms -> do
-      displayName <- getTableDisplayName table
+      tableGQLName <- getTableGQLName table
       let fieldsDesc = G.Description $ "fetch data from the table: " <>> table
-          aggName = displayName <> $$(G.litName "_aggregate")
+          aggName = tableGQLName <> $$(G.litName "_aggregate")
           aggDesc = G.Description $ "fetch aggregated fields from the table: " <>> table
-          pkName = displayName <> $$(G.litName "_by_pk")
+          pkName = tableGQLName <> $$(G.litName "_by_pk")
           pkDesc = G.Description $ "fetch data from the table: " <> table <<> " using primary key columns"
       catMaybes <$> sequenceA
-        [ requiredFieldParser (RFDB . QDBSimple)      $ selectTable          table (fromMaybe displayName $ _tcrfSelect          customRootFields) (Just fieldsDesc) perms
+        [ requiredFieldParser (RFDB . QDBSimple)      $ selectTable          table (fromMaybe tableGQLName $ _tcrfSelect          customRootFields) (Just fieldsDesc) perms
         , mapMaybeFieldParser (RFDB . QDBPrimaryKey)  $ selectTableByPk      table (fromMaybe pkName      $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms
         , mapMaybeFieldParser (RFDB . QDBAggregation) $ selectTableAggregate table (fromMaybe aggName     $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms
         ]
@@ -232,12 +232,12 @@ query' allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
         functionName = fiName function
     selectPerms <- tableSelectPermissions targetTable
     for selectPerms \perms -> do
-      displayName <- qualifiedObjectToName functionName
+      tableGQLName <- qualifiedObjectToName functionName
       let functionDesc = G.Description $ "execute function " <> functionName <<> " which returns " <>> targetTable
-          aggName = displayName <> $$(G.litName "_aggregate")
+          aggName = tableGQLName <> $$(G.litName "_aggregate")
           aggDesc = G.Description $ "execute function " <> functionName <<> " and query aggregates on result of table type " <>> targetTable
       catMaybes <$> sequenceA
-        [ requiredFieldParser (RFDB . QDBSimple)      $ selectFunction          function displayName (Just functionDesc) perms
+        [ requiredFieldParser (RFDB . QDBSimple)      $ selectFunction          function tableGQLName (Just functionDesc) perms
         , mapMaybeFieldParser (RFDB . QDBAggregation) $ selectFunctionAggregate function aggName     (Just aggDesc)      perms
         ]
   actionParsers <- for allActions $ \actionInfo ->
@@ -275,8 +275,8 @@ relayQuery' allTables allFunctions = do
       pkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns)
                      <$> askTableInfo table
       selectPerms <- MaybeT $ tableSelectPermissions table
-      displayName <- getTableDisplayName table
-      let fieldName = displayName <> $$(G.litName "_connection")
+      tableGQLName <- getTableGQLName table
+      let fieldName = tableGQLName <> $$(G.litName "_connection")
           fieldDesc = Just $ G.Description $ "fetch data from the table: " <>> table
       lift $ selectTableConnection table fieldName fieldDesc pkeyColumns selectPerms
 
@@ -287,8 +287,8 @@ relayQuery' allTables allFunctions = do
       pkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns)
                      <$> askTableInfo returnTable
       selectPerms <- MaybeT $ tableSelectPermissions returnTable
-      displayName <- qualifiedObjectToName functionName
-      let fieldName = displayName <> $$(G.litName "_connection")
+      tableGQLName <- qualifiedObjectToName functionName
+      let fieldName = tableGQLName <> $$(G.litName "_connection")
           fieldDesc = Just $ G.Description $ "execute function " <> functionName
                       <<> " which returns " <>> returnTable
       lift $ selectFunctionConnection function fieldName fieldDesc pkeyColumns selectPerms
@@ -485,7 +485,7 @@ mutation
 mutation allTables allRemotes allActions nonObjectCustomTypes = do
   mutationParsers <- for (toList allTables) \table -> do
     tableCoreInfo <- _tiCoreInfo <$> askTableInfo table
-    displayName   <- getTableDisplayName table
+    tableGQLName   <- getTableGQLName table
     tablePerms    <- tablePermissions table
     for tablePerms \permissions -> do
       let customRootFields = _tcCustomRootFields $ _tciCustomConfig tableCoreInfo
@@ -500,9 +500,9 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
               then Nothing
               else return insertPermission
       inserts <- fmap join $ whenMaybe (isMutable viIsInsertable viewInfo) $ for scenarioInsertPermissionM \insertPerms -> do
-        let insertName = $$(G.litName "insert_") <> displayName
+        let insertName = $$(G.litName "insert_") <> tableGQLName
             insertDesc = G.Description $ "insert data into the table: " <>> table
-            insertOneName = $$(G.litName "insert_") <> displayName <> $$(G.litName "_one")
+            insertOneName = $$(G.litName "insert_") <> tableGQLName <> $$(G.litName "_one")
             insertOneDesc = G.Description $ "insert a single row into the table: " <>> table
         insert <- insertIntoTable table (fromMaybe insertName $ _tcrfInsert customRootFields) (Just insertDesc) insertPerms selectPerms (_permUpd permissions)
         -- select permissions are required for InsertOne: the
@@ -514,9 +514,9 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
         pure $ fmap (RFDB . MDBInsert) insert : maybe [] (pure . fmap (RFDB . MDBInsert)) insertOne
 
       updates <- fmap join $ whenMaybe (isMutable viIsUpdatable viewInfo) $ for (_permUpd permissions) \updatePerms -> do
-        let updateName = $$(G.litName "update_") <> displayName
+        let updateName = $$(G.litName "update_") <> tableGQLName
             updateDesc = G.Description $ "update data of the table: " <>> table
-            updateByPkName = $$(G.litName "update_") <> displayName <> $$(G.litName "_by_pk")
+            updateByPkName = $$(G.litName "update_") <> tableGQLName <> $$(G.litName "_by_pk")
             updateByPkDesc = G.Description $ "update single row of the table: " <>> table
         update <- updateTable table (fromMaybe updateName $ _tcrfUpdate customRootFields) (Just updateDesc) updatePerms selectPerms
         -- likewise; furthermore, primary keys can only be tested in
@@ -527,9 +527,9 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
         pure $ fmap (RFDB . MDBUpdate) <$> catMaybes [update, updateByPk]
 
       deletes <- fmap join $ whenMaybe (isMutable viIsDeletable viewInfo) $ for (_permDel permissions) \deletePerms -> do
-        let deleteName = $$(G.litName "delete_") <> displayName
+        let deleteName = $$(G.litName "delete_") <> tableGQLName
             deleteDesc = G.Description $ "delete data from the table: " <>> table
-            deleteByPkName = $$(G.litName "delete_") <> displayName <> $$(G.litName "_by_pk")
+            deleteByPkName = $$(G.litName "delete_") <> tableGQLName <> $$(G.litName "_by_pk")
             deleteByPkDesc = G.Description $ "delete single row from the table: " <>> table
         delete <- deleteFromTable table (fromMaybe deleteName $ _tcrfDelete customRootFields) (Just deleteDesc) deletePerms selectPerms
 

@@ -114,7 +114,7 @@ tableFieldsInput
   -> InsPermInfo 'Postgres    -- ^ insert permissions of the table
   -> m (Parser 'Input n (AnnInsObj 'Postgres UnpreparedValue))
 tableFieldsInput table insertPerms = memoizeOn 'tableFieldsInput table do
-  displayName    <- getTableDisplayName table
+  tableGQLName    <- getTableGQLName table
   allFields    <- _tciFieldInfoMap . _tiCoreInfo <$> askTableInfo table
   objectFields <- catMaybes <$> for (Map.elems allFields) \case
     FIComputedField _ -> pure Nothing
@@ -144,7 +144,7 @@ tableFieldsInput table insertPerms = memoizeOn 'tableFieldsInput table do
           pure $ P.fieldOptional relFieldName Nothing parser <&> \arrRelIns -> do
             rel <- join arrRelIns
             Just $ AnnInsObj [] [] [RelIns rel relationshipInfo | not $ null $ _aiInsObj rel]
-  let objectName = displayName <> $$(G.litName "_insert_input")
+  let objectName = tableGQLName <> $$(G.litName "_insert_input")
       objectDesc = G.Description $ "input type for inserting data into table " <>> table
   pure $ P.object objectName (Just objectDesc) $ catMaybes <$> sequenceA objectFields
     <&> mconcat
@@ -159,12 +159,12 @@ objectRelationshipInput
   -> m (Parser 'Input n (SingleObjIns 'Postgres UnpreparedValue))
 objectRelationshipInput table insertPerms selectPerms updatePerms =
   memoizeOn 'objectRelationshipInput table do
-  displayName    <- getTableDisplayName table
+  tableGQLName    <- getTableGQLName table
   columns        <- tableColumns table
   objectParser   <- tableFieldsInput table insertPerms
   conflictParser <- fmap join $ sequenceA $ conflictObject table selectPerms <$> updatePerms
   let objectName   = $$(G.litName "data")
-      inputName    = displayName <> $$(G.litName "_obj_rel_insert_input")
+      inputName    = tableGQLName <> $$(G.litName "_obj_rel_insert_input")
       inputDesc    = G.Description $ "input type for inserting object relation for remote table " <>> table
       inputParser = do
         conflictClause <- mkConflictClause conflictParser
@@ -182,12 +182,12 @@ arrayRelationshipInput
   -> m (Parser 'Input n (MultiObjIns 'Postgres UnpreparedValue))
 arrayRelationshipInput table insertPerms selectPerms updatePerms =
   memoizeOn 'arrayRelationshipInput table do
-  displayName      <- getTableDisplayName table
+  tableGQLName      <- getTableGQLName table
   columns        <- tableColumns table
   objectParser   <- tableFieldsInput table insertPerms
   conflictParser <- fmap join $ sequenceA $ conflictObject table selectPerms <$> updatePerms
   let objectsName  = $$(G.litName "data")
-      inputName    = displayName <> $$(G.litName "_arr_rel_insert_input")
+      inputName    = tableGQLName <> $$(G.litName "_arr_rel_insert_input")
       inputDesc    = G.Description $ "input type for inserting array relation for remote table " <>> table
       inputParser = do
         conflictClause <- mkConflictClause conflictParser
@@ -224,12 +224,12 @@ conflictObject
   -> UpdPermInfo 'Postgres
   -> m (Maybe (Parser 'Input n (RQL.ConflictClauseP1 'Postgres UnpreparedValue)))
 conflictObject table selectPerms updatePerms = runMaybeT $ do
-  displayName      <- getTableDisplayName table
+  tableGQLName      <- getTableGQLName table
   columnsEnum      <- MaybeT $ tableUpdateColumnsEnum table updatePerms
   constraints      <- MaybeT $ tciUniqueOrPrimaryKeyConstraints . _tiCoreInfo <$> askTableInfo table
   constraintParser <- lift $ conflictConstraint constraints table
   whereExpParser   <- lift $ boolExp table selectPerms
-  let objectName = displayName <> $$(G.litName "_on_conflict")
+  let objectName = tableGQLName <> $$(G.litName "_on_conflict")
       objectDesc = G.Description $ "on conflict condition type for table " <>> table
       constraintName = $$(G.litName "constraint")
       columnsName    = $$(G.litName "update_columns")
@@ -251,13 +251,13 @@ conflictConstraint
   -> QualifiedTable
   -> m (Parser 'Both n ConstraintName)
 conflictConstraint constraints table = memoizeOn 'conflictConstraint table $ do
-  displayName <- getTableDisplayName table
+  tableGQLName <- getTableGQLName table
   constraintEnumValues <- for constraints \constraint -> do
     name <- textToName $ getConstraintTxt $ _cName constraint
     pure ( P.mkDefinition name (Just "unique or primary key constraint") P.EnumValueInfo
          , _cName constraint
          )
-  let enumName  = displayName <> $$(G.litName "_constraint")
+  let enumName  = tableGQLName <> $$(G.litName "_constraint")
       enumDesc  = G.Description $ "unique or primary key constraints on table " <>> table
   pure $ P.enum enumName (Just enumDesc) constraintEnumValues
 
@@ -299,14 +299,14 @@ updateTableByPk
   -> SelPermInfo 'Postgres          -- ^ select permissions of the table
   -> m (Maybe (FieldParser n (RQL.AnnUpdG 'Postgres UnpreparedValue)))
 updateTableByPk table fieldName description updatePerms selectPerms = runMaybeT $ do
-  displayName <- getTableDisplayName table
+  tableGQLName <- getTableGQLName table
   columns   <- lift   $ tableSelectColumns table selectPerms
   pkArgs    <- MaybeT $ primaryKeysArguments table selectPerms
   opArgs    <- MaybeT $ updateOperators table updatePerms
   selection <- lift $ tableSelectionSet table selectPerms
   let pkFieldName  = $$(G.litName "pk_columns")
-      pkObjectName = displayName <> $$(G.litName "_pk_columns_input")
-      pkObjectDesc = G.Description $ "primary key columns input for table: " <> G.unName displayName
+      pkObjectName = tableGQLName <> $$(G.litName "_pk_columns_input")
+      pkObjectDesc = G.Description $ "primary key columns input for table: " <> G.unName tableGQLName
       argsParser   = do
         operators <- opArgs
         primaryKeys <- P.field pkFieldName Nothing $ P.object pkObjectName (Just pkObjectDesc) pkArgs
@@ -343,40 +343,40 @@ updateOperators
   -> UpdPermInfo 'Postgres    -- ^ update permissions of the table
   -> m (Maybe (InputFieldsParser n [(PGCol, RQL.UpdOpExpG UnpreparedValue)]))
 updateOperators table updatePermissions = do
-  displayName <- getTableDisplayName table
+  tableGQLName <- getTableGQLName table
   columns   <- tableUpdateColumns table updatePermissions
   let numericCols = onlyNumCols   columns
       jsonCols    = onlyJSONBCols columns
   parsers <- catMaybes <$> sequenceA
-    [ updateOperator displayName $$(G.litName "_set")
+    [ updateOperator tableGQLName $$(G.litName "_set")
         columnParser RQL.UpdSet columns
         "sets the columns of the filtered rows to the given values"
         (G.Description $ "input type for updating data in table " <>> table)
 
-    , updateOperator displayName $$(G.litName "_inc")
+    , updateOperator tableGQLName $$(G.litName "_inc")
         columnParser RQL.UpdInc numericCols
         "increments the numeric columns with given value of the filtered values"
         (G.Description $"input type for incrementing numeric columns in table " <>> table)
 
     , let desc = "prepend existing jsonb value of filtered columns with new jsonb value"
-      in updateOperator displayName $$(G.litName "_prepend")
+      in updateOperator tableGQLName $$(G.litName "_prepend")
          columnParser RQL.UpdPrepend jsonCols desc desc
 
     , let desc = "append existing jsonb value of filtered columns with new jsonb value"
-      in updateOperator displayName $$(G.litName "_append")
+      in updateOperator tableGQLName $$(G.litName "_append")
          columnParser RQL.UpdAppend jsonCols desc desc
 
     , let desc = "delete key/value pair or string element. key/value pairs are matched based on their key value"
-      in updateOperator displayName $$(G.litName "_delete_key")
+      in updateOperator tableGQLName $$(G.litName "_delete_key")
          nullableTextParser RQL.UpdDeleteKey jsonCols desc desc
 
     , let desc = "delete the array element with specified index (negative integers count from the end). "
                  <> "throws an error if top level container is not an array"
-      in updateOperator displayName $$(G.litName "_delete_elem")
+      in updateOperator tableGQLName $$(G.litName "_delete_elem")
          nonNullableIntParser RQL.UpdDeleteElem jsonCols desc desc
 
     , let desc = "delete the field or element with specified path (for JSON arrays, negative integers count from the end)"
-      in updateOperator displayName $$(G.litName "_delete_at_path")
+      in updateOperator tableGQLName $$(G.litName "_delete_at_path")
          (fmap P.list . nonNullableTextParser) RQL.UpdDeleteAtPath jsonCols desc desc
     ]
   whenMaybe (not $ null parsers) do
@@ -413,7 +413,7 @@ updateOperators table updatePermissions = do
       -> G.Description
       -> G.Description
       -> m (Maybe (Text, InputFieldsParser n (Maybe [(PGCol, RQL.UpdOpExpG UnpreparedValue)])))
-    updateOperator displayName opName mkParser updOpExp columns opDesc objDesc =
+    updateOperator tableGQLName opName mkParser updOpExp columns opDesc objDesc =
       whenMaybe (not $ null columns) do
         fields <- for columns \columnInfo -> do
           let fieldName = pgiName columnInfo
@@ -421,7 +421,7 @@ updateOperators table updatePermissions = do
           fieldParser <- mkParser columnInfo
           pure $ P.fieldOptional fieldName fieldDesc fieldParser
             `mapField` \value -> (pgiColumn columnInfo, updOpExp value)
-        let objName = displayName <> opName <> $$(G.litName "_input")
+        let objName = tableGQLName <> opName <> $$(G.litName "_input")
         pure $ (G.unName opName,)
              $ P.fieldOptional opName (Just opDesc)
              $ P.object objName (Just objDesc)
@@ -495,7 +495,7 @@ mutationSelectionSet
   -> m (Parser 'Output n (RQL.MutFldsG 'Postgres UnpreparedValue))
 mutationSelectionSet table selectPerms =
   memoizeOn 'mutationSelectionSet table do
-  displayName <- getTableDisplayName table
+  tableGQLName <- getTableGQLName table
   returning <- runMaybeT do
     permissions <- MaybeT $ pure selectPerms
     tableSet    <- lift $ tableSelectionList table permissions
@@ -504,7 +504,7 @@ mutationSelectionSet table selectPerms =
     pure $ RQL.MRet <$> P.subselection_ returningName  (Just returningDesc) tableSet
   let affectedRowsName = $$(G.litName "affected_rows")
       affectedRowsDesc = "number of rows affected by the mutation"
-      selectionName    = displayName <> $$(G.litName "_mutation_response")
+      selectionName    = tableGQLName <> $$(G.litName "_mutation_response")
       selectionDesc    = G.Description $ "response of any mutation on the table " <>> table
 
       selectionFields  = catMaybes

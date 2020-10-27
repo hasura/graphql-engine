@@ -125,7 +125,7 @@ askTableInfo tableName = do
   -- supposed to ensure that all dependencies are resolved.
   tableInfo `onNothing` throw500 ("askTableInfo: no info for " <>> tableName)
 
--- | Helper function to get the table display name. A table may have an
+-- | Helper function to get the table GraphQL name. A table may have an
 -- identifier configured with it. When the identifier exists, the GraphQL nodes
 -- that are generated according to the identifier. For example: Let's say,
 -- we have a table called `users address`, the name of the table is not GraphQL
@@ -133,11 +133,11 @@ askTableInfo tableName = do
 -- say `users_address`
 -- The generated top-level nodes of this table will be like `users_address`,
 -- `insert_users_address` etc
-getTableDisplayName
+getTableGQLName
   :: MonadTableInfo r m
   => QualifiedTable
   -> m G.Name
-getTableDisplayName table = do
+getTableGQLName table = do
   tableInfo <- askTableInfo table
   let tableIdentifier = _tcIdentifier . _tciCustomConfig . _tiCoreInfo $ tableInfo
   maybe (qualifiedObjectToName table) pure tableIdentifier
