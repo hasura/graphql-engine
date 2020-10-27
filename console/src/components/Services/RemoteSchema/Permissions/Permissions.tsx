@@ -1,5 +1,6 @@
 import React from 'react';
 import Helmet from 'react-helmet';
+import { parse as sdlParse } from 'graphql';
 import {
   getRemoteSchemaPermissions,
   findRemoteSchemaPermission,
@@ -16,7 +17,9 @@ import {
   permSetRoleName,
   setDefaults,
   permSetBulkSelect,
+  setSchemaDefinition,
 } from './reducer';
+import { defaultSchemaDefSdl } from './state';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import { permRemoveMultipleRoles } from '../Actions';
 import Button from '../../../Common/Button/Button';
@@ -24,15 +27,14 @@ import Button from '../../../Common/Button/Button';
 const queryTypes = ['Permission'];
 
 const Permissions = ({
-  // TODO reduce args.
   currentRemoteSchema,
   allRoles,
   dispatch,
   permissionEdit,
   isEditing,
   isFetching,
-  schemaDefinition,
   bulkSelect,
+  schemaDefinition,
   readOnlyMode = false,
 }) => {
   React.useEffect(() => {
@@ -63,21 +65,7 @@ const Permissions = ({
       return <PermTableHeader headings={headings} />;
     };
 
-    // TODO : remove
-    const getTablePermissionsByRoles = () => {
-      const tablePermissionsByRoles: any = {};
-      console.log('all role is : ',allRoles);
-
-      allRoles.forEach((p: any) => {
-        tablePermissionsByRoles[p] = p;
-      });
-
-      return tablePermissionsByRoles;
-    };
-
     const getPermissionsTableBody = () => {
-      const rolePermission = getTablePermissionsByRoles();
-
       const dispatchRoleNameChange = e => {
         dispatch(permSetRoleName(e.target.value));
       };
@@ -97,7 +85,10 @@ const Permissions = ({
           dispatch(permSetBulkSelect(isChecked, selectedRole));
         };
 
-        const disableCheckbox = !Object.keys(rolePermission).includes(role);
+        const disableCheckbox = !findRemoteSchemaPermission(
+          allPermissions,
+          role
+        );
 
         return {
           showCheckbox: !(role === 'admin' || isNewRole),
@@ -125,6 +116,22 @@ const Permissions = ({
                 role
               );
               dispatch(permOpenEdit(role, isNewRole, !existingPerm));
+
+              if (existingPerm) {
+                const schemaDefinitionSdl = existingPerm.definition.schema;
+                dispatch(
+                  setSchemaDefinition(
+                    schemaDefinitionSdl,
+                    null,
+                    null,
+                    sdlParse(schemaDefinitionSdl)
+                  )
+                );
+              } else {
+                dispatch(
+                  setSchemaDefinition(defaultSchemaDefSdl, null, null, null)
+                );
+              }
             } else {
               document.getElementById('new-role-input').focus();
             }
@@ -132,6 +139,9 @@ const Permissions = ({
 
           const dispatchCloseEdit = () => {
             dispatch(permCloseEdit());
+            dispatch(
+              setSchemaDefinition(defaultSchemaDefSdl, null, null, null)
+            );
           };
 
           const isCurrEdit =
@@ -211,7 +221,6 @@ const Permissions = ({
       );
     };
 
-    console.log('read only: ', readOnlyMode);
     return (
       <div>
         {getPermissionsLegend()}
@@ -224,8 +233,7 @@ const Permissions = ({
   };
 
   const getBulkSection = () => {
-    let bulkSelectedRoles = bulkSelect;
-    bulkSelectedRoles = [];
+    const bulkSelectedRoles = bulkSelect;
 
     if (!bulkSelectedRoles.length) {
       return;
@@ -246,6 +254,7 @@ const Permissions = ({
         'This will remove all currently set permissions for the selected role(s)';
       const isOk = getConfirmation(confirmMessage);
       if (isOk) {
+        // TODO
         dispatch(permRemoveMultipleRoles());
       }
     };

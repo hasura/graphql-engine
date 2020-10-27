@@ -1,4 +1,5 @@
 import defaultState from './state';
+import { updateBulkSelect } from './utils';
 
 const SET_REMOTESCHEMA_PERMISSIONS =
   'RemoteSchemas/Permissions/SET_REMOTESCHEMA_PERMISSIONS';
@@ -39,40 +40,29 @@ export const setSchemaDefinition = (sdl, error = null, timer, ast) => ({
   definition: { sdl, error, timer, ast },
 });
 
-export const PERM_SELECT_BULK = 'RemoteSchemas/Permissions/PERM_SELECT_BULK';
+const PERM_SELECT_BULK = 'RemoteSchemas/Permissions/PERM_SELECT_BULK';
 export const permSelectBulk = selectedRole => ({
   type: PERM_SELECT_BULK,
   selectedRole,
 });
 
-export const PERM_DESELECT_BULK =
-  'RemoteSchemas/Permissions/PERM_DESELECT_BULK';
+const PERM_DESELECT_BULK = 'RemoteSchemas/Permissions/PERM_DESELECT_BULK';
 export const permDeslectBulk = selectedRole => ({
   type: PERM_DESELECT_BULK,
   selectedRole,
 });
 
-export const PERM_RESET_BULK_SELECT =
+const PERM_RESET_BULK_SELECT =
   'RemoteSchemas/Permissions/PERM_RESET_BULK_SELECT';
 
 export const permSetBulkSelect = (isChecked, selectedRole) => {
   return dispatch => {
     if (isChecked) {
-      dispatch({ type: PERM_SELECT_BULK, data: selectedRole });
+      dispatch(permSelectBulk(selectedRole));
     } else {
-      dispatch({ type: PERM_DESELECT_BULK, data: selectedRole });
+      dispatch(permDeslectBulk(selectedRole));
     }
   };
-};
-
-export const updateBulkSelect = (bulkSelect, selectedRole, isAdd) => {
-  let bulkRes = bulkSelect;
-  if (isAdd) {
-    bulkRes.push(selectedRole);
-  } else {
-    bulkRes = bulkRes.filter(e => e !== selectedRole);
-  }
-  return bulkRes;
 };
 
 const MAKE_REQUEST = 'RemoteSchemas/Permissions/MAKE_REQUEST';
@@ -153,6 +143,11 @@ const reducer = (state = defaultState, action) => {
           action.selectedRole,
           false
         ),
+      };
+    case PERM_RESET_BULK_SELECT:
+      return {
+        ...state,
+        bulkSelect: [],
       };
     case SET_DEFAULTS:
       return defaultState;

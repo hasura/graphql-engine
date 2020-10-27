@@ -21,4 +21,5 @@ const state = {
   bulkSelect: [],
 };
 
+export { defaultSchemaDefSdl };
 export default state;

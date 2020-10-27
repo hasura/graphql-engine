@@ -90,3 +90,13 @@ export const getRemoteSchemaPermissionQueries = (
     downQueries,
   };
 };
+
+export const updateBulkSelect = (bulkSelect, selectedRole, isAdd) => {
+  let bulkRes = bulkSelect;
+  if (isAdd) {
+    bulkRes.push(selectedRole);
+  } else {
+    bulkRes = bulkRes.filter(e => e !== selectedRole);
+  }
+  return bulkRes;
+};

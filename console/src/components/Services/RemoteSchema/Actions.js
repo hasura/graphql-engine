@@ -260,8 +260,8 @@ const removeRemoteSchemaPermission = (successCb, errorCb) => {
     if (!isOk) return;
 
     const {
-      common: { currentRemoteSchema },
-      permissions: { permissionEdit },
+      listData: { viewRemoteSchema: currentRemoteSchema },
+      permissions: { permissionEdit, schemaDefinition },
     } = getState().remoteSchemas;
 
     const { role, filter } = permissionEdit;
@@ -272,7 +272,8 @@ const removeRemoteSchemaPermission = (successCb, errorCb) => {
     );
     const downQuery = getCreateRemoteSchemaPermissionQuery(
       { role, filter },
-      currentRemoteSchema
+      currentRemoteSchema,
+      schemaDefinition
     );
 
     const migrationName = 'removing_remoteSchema_perm';

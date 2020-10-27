@@ -55,7 +55,6 @@ const RemoteSchemaContainer = ({
     React.cloneElement(child, { currentRemoteSchema })
   );
 
-  //   className={styles.view_stitch_schema_wrapper + ' ' + styles.addWrapper}
   return (
     <div>
       <CommonTabLayout

@@ -12,13 +12,19 @@ const PermissionEditor = ({
   permissionEdit,
   isEditing,
   isFetching,
-  dispatch,
   schemaDefinition,
+  dispatch,
   readOnlyMode,
 }) => {
   if (!isEditing) return null;
 
   const { isNewRole, isNewPerm } = permissionEdit;
+
+  const {
+    sdl: schemaDefinitionSdl,
+    error: schemaDefinitionError,
+    timer: schemaParseTimer,
+  } = schemaDefinition;
 
   const schemaDefinitionOnChange = (value, error, timer, ast) => {
     dispatch(setSchemaDefinition(value, error, timer, ast));
@@ -31,7 +37,6 @@ const PermissionEditor = ({
   };
 
   const getSaveButton = () => {
-    if (!isNewPerm && !isNewRole) return null;
     const saveFunc = () => {
       dispatch(saveRemoteSchemaPermission(closeEditor));
     };
@@ -42,7 +47,7 @@ const PermissionEditor = ({
         className={buttonStyle}
         disabled={isFetching}
       >
-        Save
+        Save Permissions
       </Button>
     );
   };
@@ -59,16 +64,10 @@ const PermissionEditor = ({
         className={buttonStyle}
         disabled={isFetching}
       >
-        Remove
+        Remove Permissions
       </Button>
     );
   };
-
-  const {
-    sdl: schemaDefinitionSdl,
-    error: schemaDefinitionError,
-    timer: schemaParseTimer,
-  } = schemaDefinition;
 
   const getCancelButton = () => {
     return (
@@ -88,7 +87,7 @@ const PermissionEditor = ({
           timer={schemaParseTimer}
           readOnlyMode={readOnlyMode}
           allowEmpty={false}
-          height='400px'
+          height="400px"
         />
       </div>
       {getSaveButton()}
