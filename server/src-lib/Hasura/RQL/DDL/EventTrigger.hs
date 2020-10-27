@@ -21,16 +21,17 @@ module Hasura.RQL.DDL.EventTrigger
 
 import           Hasura.Prelude
 
-import qualified Data.Environment        as Env
-import qualified Data.Text               as T
-import qualified Data.Text.Lazy          as TL
-import qualified Database.PG.Query       as Q
-import qualified Text.Shakespeare.Text   as ST
+import qualified Data.Environment                   as Env
+import qualified Data.Text                          as T
+import qualified Data.Text.Lazy                     as TL
+import qualified Database.PG.Query                  as Q
+import qualified Text.Shakespeare.Text              as ST
 
 import           Data.Aeson
 
-import qualified Hasura.SQL.DML          as S
+import qualified Hasura.Backends.Postgres.SQL.DML   as S
 
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DML.Internal
@@ -38,18 +39,16 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 
-
-
 data OpVar = OLD | NEW deriving (Show)
 
 -- pgIdenTrigger is a method used to construct the name of the pg function
 -- used for event triggers which are present in the hdb_views schema.
-pgIdenTrigger:: Ops -> TriggerName -> T.Text
+pgIdenTrigger:: Ops -> TriggerName -> Text
 pgIdenTrigger op trn = pgFmtIdentifier . qualifyTriggerName op $ triggerNameToTxt trn
   where
     qualifyTriggerName op' trn' = "notify_hasura_" <> trn' <> "_" <> T.pack (show op')
 
-getDropFuncSql :: Ops -> TriggerName -> T.Text
+getDropFuncSql :: Ops -> TriggerName -> Text
 getDropFuncSql op trn = "DROP FUNCTION IF EXISTS"
                         <> " hdb_views." <> pgIdenTrigger op trn <> "()"
                         <> " CASCADE"
@@ -344,7 +343,7 @@ getWebhookInfoFromConf env wc = case wc of
     envVal <- getEnv env we
     return $ WebhookConfInfo wc envVal
 
-getEnv :: QErrM m => Env.Environment -> T.Text -> m T.Text
+getEnv :: QErrM m => Env.Environment -> Text -> m Text
 getEnv env k = do
   let mEnv = Env.lookupEnv env (T.unpack k)
   case mEnv of

@@ -153,7 +153,7 @@ instance Q.FromRes RunSQLRes where
     csvRows <- resToCSV res
     return $ RunSQLRes "TuplesOk" $ toJSON csvRows
     where
-      resToCSV :: PQ.Result -> ExceptT T.Text IO [[Text]]
+      resToCSV :: PQ.Result -> ExceptT Text IO [[Text]]
       resToCSV r =  do
         nr  <- liftIO $ PQ.ntuples r
         nc  <- liftIO $ PQ.nfields r

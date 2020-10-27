@@ -1,14 +1,16 @@
 module Hasura.RQL.DML.Returning where
 
 import           Hasura.Prelude
+
+import qualified Data.Text                          as T
+
+import qualified Hasura.Backends.Postgres.SQL.DML   as S
+
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Returning.Types
 import           Hasura.RQL.DML.Select
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
-
-import qualified Data.Text                      as T
-import qualified Hasura.SQL.DML                 as S
 
 traverseMutFld
   :: (Applicative f)
