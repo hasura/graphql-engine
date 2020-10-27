@@ -67,6 +67,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: Include all CORS headers on preflight requests
 - server: Fix fine-grained incremental cache invalidation (fix #3759)
 
   This issue could cause enum table values to sometimes not be properly reloaded without restarting `graphql-engine`. Now a `reload_metadata` API call (or clicking “Reload enum values” in the console) should consistently force a reload of all enum table values.
