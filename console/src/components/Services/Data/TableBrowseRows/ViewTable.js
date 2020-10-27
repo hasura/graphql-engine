@@ -167,9 +167,7 @@ class ViewTable extends Component {
       <TableHeader
         count={isCountEstimated ? estimatedCount : count}
         isCountEstimated={isCountEstimated}
-        dispatch={dispatch}
         table={tableSchema}
-        source={currentSource}
         tabName="browse"
         migrationMode={migrationMode}
         readOnlyMode={readOnlyMode}

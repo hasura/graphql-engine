@@ -311,7 +311,6 @@ const Relationships = ({
   migrationMode,
   schemaList,
   readOnlyMode,
-  currentSource,
 }) => {
   useEffect(() => {
     dispatch(resetRelationshipForm());
@@ -455,9 +454,7 @@ const Relationships = ({
     <RightContainer>
       <div className={`${styles.container} container-fluid`}>
         <TableHeader
-          dispatch={dispatch}
           table={tableSchema}
-          source={currentSource}
           tabName="relationships"
           migrationMode={migrationMode}
         />

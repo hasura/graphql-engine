@@ -2,7 +2,7 @@ import { Driver } from '../dataSources';
 
 export type DataSource = {
   name: string;
-  url: string;
+  url: string | { from_env: string };
   fromEnv: boolean;
   driver: Driver;
   connection_pool_settings?: {

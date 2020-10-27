@@ -70,6 +70,7 @@ export const useFilterQuery = (
     let query = {};
     let endpoint = endpoints.metadata;
 
+    // FIXME: placing temp values until the API is fixed. the rest should be working fine.
     if (triggerType === 'scheduled') {
       if (triggerOp !== 'invocation') {
         query = getScheduledEvents(

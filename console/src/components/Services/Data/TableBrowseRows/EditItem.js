@@ -144,9 +144,7 @@ class EditItem extends Component {
         <div className={styles.container + ' container-fluid'}>
           <TableHeader
             count={count}
-            dispatch={dispatch}
             table={currentTable}
-            source={currentSource}
             tabName="edit"
             migrationMode={migrationMode}
             readOnlyMode={readOnlyMode}

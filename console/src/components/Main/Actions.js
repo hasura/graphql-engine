@@ -354,8 +354,8 @@ const loadLatestServerVersion = () => (dispatch, getState) => {
     credentials: globalCookiePolicy,
     headers: { 'content-type': 'application/json' },
   };
-  return dispatch(requestActionPlain(url, options)).then(
-    data => {
+  return dispatch(requestActionPlain(url, options))
+    .then(data => {
       try {
         dispatch({
           type: SET_LATEST_SERVER_VERSION_SUCCESS,
@@ -364,12 +364,11 @@ const loadLatestServerVersion = () => (dispatch, getState) => {
       } catch (e) {
         console.error(e);
       }
-    },
-    error => {
+    })
+    .catch(error => {
       console.error(error);
       dispatch({ type: SET_LATEST_SERVER_VERSION_ERROR, data: null });
-    }
-  );
+    });
 };
 
 const updateMigrationModeStatus = () => (dispatch, getState) => {

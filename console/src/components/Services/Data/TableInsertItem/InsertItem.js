@@ -60,7 +60,6 @@ class InsertItem extends Component {
       count,
       dispatch,
       enumOptions,
-      currentSource,
     } = this.props;
 
     const currentTable = findTable(
@@ -204,9 +203,7 @@ class InsertItem extends Component {
         <div className={styles.container + ' container-fluid'}>
           <TableHeader
             count={count}
-            dispatch={dispatch}
             table={currentTable}
-            source={currentSource}
             tabName="insert"
             migrationMode={migrationMode}
             readOnlyMode={readOnlyMode}
@@ -281,7 +278,6 @@ const mapStateToProps = (state, ownProps) => {
     migrationMode: state.main.migrationMode,
     readOnlyMode: state.main.readOnlyMode,
     currentSchema: state.tables.currentSchema,
-    currentSource: state.tables.currentDataSource,
   };
 };
 

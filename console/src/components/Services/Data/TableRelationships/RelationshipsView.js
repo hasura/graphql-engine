@@ -39,7 +39,6 @@ class RelationshipsView extends Component {
       readOnlyMode,
       schemaList,
       remoteSchemas,
-      currentSource,
     } = this.props;
 
     const styles = require('../TableModify/ModifyTable.scss');
@@ -147,9 +146,7 @@ class RelationshipsView extends Component {
       <RightContainer>
         <div className={`${styles.container} container-fluid`}>
           <TableHeader
-            dispatch={dispatch}
             table={tableSchema}
-            source={currentSource}
             tabName="relationships"
             migrationMode={migrationMode}
             readOnlyMode={readOnlyMode}
@@ -212,7 +209,6 @@ const mapStateToProps = (state, ownProps) => ({
   serverVersion: state.main.serverVersion,
   schemaList: state.tables.schemaList,
   remoteSchemas: getRemoteSchemasSelector(state).map(schema => schema.name),
-  currentSource: state.tables.currentDataSource,
   ...state.tables.modify,
 });
 

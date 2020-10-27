@@ -188,7 +188,6 @@ class Permissions extends Component {
       allRoles,
       nonTrackableFunctions,
       trackableFunctions,
-      currentSource,
     } = this.props;
 
     const { localFilterString, presetsOrdered } = this.state;
@@ -254,9 +253,7 @@ class Permissions extends Component {
     const getHeader = tableSchema => {
       return (
         <TableHeader
-          dispatch={dispatch}
           table={tableSchema}
-          source={currentSource}
           tabName="permissions"
           migrationMode={migrationMode}
           readOnlyMode={readOnlyMode}

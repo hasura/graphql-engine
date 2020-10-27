@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
+import { connect } from 'react-redux';
+
 import { changeTableName } from '../TableModify/ModifyActions';
 import { capitalize, exists } from '../../../Common/utils/jsUtils';
 import EditableHeading from '../../../Common/EditableHeading/EditableHeading';
@@ -25,8 +27,8 @@ const TableHeader = ({
   table,
   migrationMode,
   readOnlyMode,
-  source,
   dispatch,
+  ...props
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
 
@@ -35,9 +37,6 @@ const TableHeader = ({
   const isTableType = dataSource.isTable(table);
 
   let countDisplay = '';
-  // if (exists(count)) {
-  //   countDisplay = `(${isCountEstimated ? '~' : '' }${getReadableNumber(count)})`;
-  // }
   if (exists(count) && !isCountEstimated) {
     countDisplay = `(${getReadableNumber(count)})`;
   }
@@ -49,23 +48,30 @@ const TableHeader = ({
     );
   };
 
-  const getBreadCrumbs = () => {
+  const getBreadCrumbs = (currentSource, currentSchema) => {
     return [
       {
+        // change
         title: 'Data',
-        url: '/data',
+        url: `/data/${currentSource}/schema/${currentSchema}`,
       },
       {
+        // change
         title: 'Schema',
-        url: '/data/schema/',
+        url: `/data/${currentSource}/schema/${currentSchema}`,
       },
       {
         title: tableSchema,
-        url: getSchemaBaseRoute(tableSchema),
+        url: getSchemaBaseRoute(tableSchema, currentSource),
       },
       {
         title: tableName,
-        url: getTableBrowseRoute(tableSchema, source, tableName, isTableType),
+        url: getTableBrowseRoute(
+          tableSchema,
+          currentSource,
+          tableName,
+          isTableType
+        ),
       },
       {
         title: activeTab,
@@ -84,13 +90,16 @@ const TableHeader = ({
     );
   };
 
+  const crumbs = getBreadCrumbs(props.currentSource, props.currentSchema);
+  const { currentSource: currentDataSource } = props;
+
   return (
     <div>
       <Helmet
         title={capitalize(tabName) + ' - ' + tableName + ' - Data | Hasura'}
       />
       <div className={styles.subHeader}>
-        <BreadCrumb breadCrumbs={getBreadCrumbs()} />
+        <BreadCrumb breadCrumbs={crumbs} />
         <EditableHeading
           currentValue={tableName}
           save={saveTableNameChange}
@@ -103,7 +112,12 @@ const TableHeader = ({
           <ul className="nav nav-pills">
             {getTab(
               'browse',
-              getTableBrowseRoute(tableSchema, source, tableName, isTableType),
+              getTableBrowseRoute(
+                tableSchema,
+                currentDataSource,
+                tableName,
+                isTableType
+              ),
               `Browse Rows ${countDisplay}`,
               'table-browse-rows'
             )}
@@ -113,7 +127,7 @@ const TableHeader = ({
                 'insert',
                 getTableInsertRowRoute(
                   tableSchema,
-                  source,
+                  currentDataSource,
                   tableName,
                   isTableType
                 ),
@@ -125,7 +139,7 @@ const TableHeader = ({
                 'modify',
                 getTableModifyRoute(
                   tableSchema,
-                  source,
+                  currentDataSource,
                   tableName,
                   isTableType
                 ),
@@ -135,7 +149,7 @@ const TableHeader = ({
               'relationships',
               getTableRelationshipsRoute(
                 tableSchema,
-                source,
+                currentDataSource,
                 tableName,
                 isTableType
               ),
@@ -145,7 +159,7 @@ const TableHeader = ({
               'permissions',
               getTablePermissionsRoute(
                 tableSchema,
-                source,
+                currentDataSource,
                 tableName,
                 isTableType
               ),
@@ -156,7 +170,7 @@ const TableHeader = ({
                 'edit',
                 getTableEditRowRoute(
                   tableSchema,
-                  source,
+                  currentDataSource,
                   tableName,
                   isTableType
                 ),
@@ -169,4 +183,15 @@ const TableHeader = ({
     </div>
   );
 };
-export default TableHeader;
+
+const mapStateToProps = state => {
+  return {
+    currentSource: state.tables.currentDataSource,
+    currentSchema: state.tables.currentSchema,
+  };
+};
+
+const tableHeaderConnector = connect(mapStateToProps);
+const ConnectedTableHeader = tableHeaderConnector(TableHeader);
+
+export default ConnectedTableHeader;

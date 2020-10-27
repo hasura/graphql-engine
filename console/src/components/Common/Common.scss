@@ -1432,6 +1432,14 @@ code {
   flex-direction: column;
 }
 
+.db_item_actions {
+  width: 110px;
+  display: flex;
+  max-width: 120px;
+  justify-content: space-between;
+  margin-right: 10px;
+}
+
 /* container height subtracting top header and bottom scroll bar */
 $mainContainerHeight: calc(100vh - 50px - 20px);
 
