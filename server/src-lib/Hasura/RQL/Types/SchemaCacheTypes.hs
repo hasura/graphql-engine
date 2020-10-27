@@ -1,13 +1,15 @@
 module Hasura.RQL.Types.SchemaCacheTypes where
 
-import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
-import           Data.Aeson.Types
 import           Hasura.Prelude
 
 import qualified Data.Text                           as T
 
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
+import           Data.Aeson.Types
+
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.EventTrigger
@@ -15,7 +17,6 @@ import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.Session
-import           Hasura.SQL.Types
 
 data TableObjId
   = TOCol !PGCol
@@ -37,7 +38,7 @@ data SchemaObjId
 
 instance Hashable SchemaObjId
 
-reportSchemaObj :: SchemaObjId -> T.Text
+reportSchemaObj :: SchemaObjId -> Text
 reportSchemaObj (SOTable tn) = "table " <> qualifiedObjectToText tn
 reportSchemaObj (SOFunction fn) = "function " <> qualifiedObjectToText fn
 reportSchemaObj (SOTableObj tn (TOCol cn)) =

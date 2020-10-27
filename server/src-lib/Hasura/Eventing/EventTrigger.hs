@@ -40,6 +40,19 @@ module Hasura.Eventing.EventTrigger
   , EventEngineCtx(..)
   ) where
 
+import           Hasura.Prelude
+
+import qualified Control.Concurrent.Async.Lifted.Safe as LA
+import qualified Data.ByteString.Lazy                 as LBS
+import qualified Data.HashMap.Strict                  as M
+import qualified Data.TByteString                     as TBS
+import qualified Data.Text                            as T
+import qualified Data.Time.Clock                      as Time
+import qualified Database.PG.Query                    as Q
+import qualified Database.PG.Query.PTI                as PTI
+import qualified Network.HTTP.Client                  as HTTP
+import qualified PostgreSQL.Binary.Encoding           as PE
+
 import           Control.Concurrent.Extended          (sleep)
 import           Control.Concurrent.STM.TVar
 import           Control.Monad.Catch                  (MonadMask, bracket_)
@@ -53,28 +66,18 @@ import           Data.Int                             (Int64)
 import           Data.String
 import           Data.Text.Extended
 import           Data.Time.Clock
-import           Data.Word
+
+import qualified Hasura.Logging                       as L
+import qualified Hasura.Tracing                       as Tracing
+
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.HTTP
 import           Hasura.HTTP
-import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 import           Hasura.Server.Version                (HasVersion)
-import qualified Hasura.Tracing                       as Tracing
 
-import qualified Control.Concurrent.Async.Lifted.Safe as LA
-import qualified Data.ByteString.Lazy                 as LBS
-import qualified Data.HashMap.Strict                  as M
-import qualified Data.TByteString                     as TBS
-import qualified Data.Text                            as T
-import qualified Data.Time.Clock                      as Time
-import qualified Database.PG.Query                    as Q
-import qualified Database.PG.Query.PTI                as PTI
-import qualified Hasura.Logging                       as L
-import qualified Network.HTTP.Client                  as HTTP
-import qualified PostgreSQL.Binary.Encoding           as PE
 
 data TriggerMetadata
   = TriggerMetadata { tmName :: TriggerName }

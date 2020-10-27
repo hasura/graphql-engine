@@ -4,20 +4,21 @@ module Hasura.GraphQL.Schema.BoolExp
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict.Extended  as M
-import qualified Language.GraphQL.Draft.Syntax as G
-
-import qualified Hasura.GraphQL.Parser         as P
+import qualified Data.HashMap.Strict.Extended       as M
+import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Data.Text.Extended
-import           Hasura.GraphQL.Parser         (InputFieldsParser, Kind (..), Parser,
-                                                UnpreparedValue, mkParameter)
+
+import qualified Hasura.GraphQL.Parser              as P
+
+import           Hasura.Backends.Postgres.SQL.DML
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Value
+import           Hasura.GraphQL.Parser              (InputFieldsParser, Kind (..), Parser,
+                                                     UnpreparedValue, mkParameter)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
-import           Hasura.SQL.DML
-import           Hasura.SQL.Types
-import           Hasura.SQL.Value
 
 type ComparisonExp b = OpExpG b UnpreparedValue
 

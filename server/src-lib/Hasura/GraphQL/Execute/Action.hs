@@ -30,6 +30,7 @@ import           Control.Lens
 import           Data.Has
 import           Data.IORef
 import           Data.Int                             (Int64)
+import           Data.Text.Extended
 
 import qualified Hasura.RQL.DML.RemoteJoin            as RJ
 import qualified Hasura.RQL.DML.Select                as RS
@@ -41,7 +42,8 @@ import qualified Data.Environment                     as Env
 import qualified Hasura.Logging                       as L
 import qualified Hasura.Tracing                       as Tracing
 
-import           Data.Text.Extended
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Value   (PGScalarValue (..), toTxtValue)
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Parser                hiding (column)
@@ -53,10 +55,10 @@ import           Hasura.RQL.DML.Select                (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.SQL.Types
-import           Hasura.SQL.Value                     (PGScalarValue (..), toTxtValue)
 import           Hasura.Server.Utils                  (mkClientHeadersForward, mkSetCookieHeaders)
 import           Hasura.Server.Version                (HasVersion)
 import           Hasura.Session
+
 
 type ActionExecuteTx =
   forall tx. (MonadIO tx, MonadTx tx, Tracing.MonadTrace tx) => tx EncJSON
