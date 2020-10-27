@@ -38,8 +38,7 @@ corsMiddleware policy app req sendResp = do
 
     respondPreFlight :: B.ByteString -> Response
     respondPreFlight origin =
-      setHeaders (mkPreFlightHeaders requestedHeaders)
-        $ injectCorsHeaders origin emptyResponse
+      setHeaders ((mkPreFlightHeaders requestedHeaders) ++ (mkCorsHeaders origin)) emptyResponse
 
     emptyResponse = responseLBS H.status204 [] ""
     requestedHeaders =
