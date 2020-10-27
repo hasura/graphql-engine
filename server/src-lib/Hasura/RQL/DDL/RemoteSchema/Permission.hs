@@ -122,7 +122,6 @@ data RoleBasedSchemaValidationError
   | MultiplePresetDirectives !(GraphQLType, G.Name)
   | NoPresetArgumentFound
   | InvalidPresetArgument !G.Name
-  | MultipleArgumentsInPresetFound
   | ExpectedInputTypeButGotOutputType !G.Name
   | EnumValueNotFound !G.Name !G.Name
   | ExpectedEnumValue !G.Name !(G.Value Void)
@@ -130,6 +129,7 @@ data RoleBasedSchemaValidationError
   | ExpectedInputObject !G.Name !(G.Value Void)
   | ExpectedScalarValue !G.Name !(G.Value Void)
   | DisallowSessionVarForListType !G.Name
+  | InvalidStaticValue
   deriving (Show, Eq)
 
 convertTypeDef :: G.TypeDefinition [G.Name] a -> G.TypeDefinition () a
@@ -209,8 +209,7 @@ showRoleBasedSchemaValidationError = \case
     "found multiple preset directives at " <> parentType <<> " " <>> parentName
   NoPresetArgumentFound -> "no arguments found in the preset directive"
   InvalidPresetArgument argName ->
-    "expected preset argument \"value\" but found " <>> argName
-  MultipleArgumentsInPresetFound -> "expected only one preset argument \"value\" but found multiple preset arguments"
+    "preset argument \"value\" not found at " <>> argName
   ExpectedInputTypeButGotOutputType typeName -> "expected " <> typeName <<> " to be an input type, but it's an output type"
   EnumValueNotFound enumName enumValue -> enumValue <<> " not found in the enum: " <>> enumName
   ExpectedEnumValue typeName presetValue ->
@@ -226,6 +225,8 @@ showRoleBasedSchemaValidationError = \case
     key' <<> " does not exist in the input object " <>> inpObjTypeName
   DisallowSessionVarForListType name ->
     "illegal preset value at " <> name <<> ". Session arguments can only be set for singleton values"
+  InvalidStaticValue ->
+    "expected preset static value to be a Boolean value"
 
 presetValueScalar :: G.ScalarTypeDefinition
 presetValueScalar = G.ScalarTypeDefinition Nothing $$(G.litName "PresetValue") mempty
@@ -274,9 +275,10 @@ parsePresetValue
      )
   => G.GType
   -> G.Name
+  -> Bool
   -> G.Value Void
   -> m (G.Value RemoteSchemaVariable)
-parsePresetValue gType varName value = do
+parsePresetValue gType varName isStatic value = do
   schemaDoc <- ask
   case gType of
     G.TypeNamed _ typeName ->
@@ -286,7 +288,7 @@ parsePresetValue gType varName value = do
           case value of
             G.VEnum _ -> refute $ pure $ ExpectedScalarValue typeName value
             G.VString t ->
-              case isSessionVariable t of
+              case (isSessionVariable t && (not isStatic)) of
                 True ->
                   pure $
                     G.VVariable $
@@ -319,20 +321,20 @@ parsePresetValue gType varName value = do
                                inpVal <-
                                  onNothing (Map.lookup k inpValsMap)
                                    $ (refute $ pure $ KeyDoesNotExistInInputObject k typeName)
-                               parsePresetValue (G._ivdType inpVal) k val
+                               parsePresetValue (G._ivdType inpVal) k isStatic val
                             )
             _ -> refute $ pure $ ExpectedInputObject typeName value
     G.TypeList _ gType' ->
       case value of
-        G.VList lst -> G.VList <$> traverse (parsePresetValue gType' varName) lst
+        G.VList lst -> G.VList <$> traverse (parsePresetValue gType' varName isStatic) lst
         -- The below is valid because singleton GraphQL values can be "upgraded"
         -- to array types. For ex: An `Int` value can be provided as input to
         -- a type `[Int]` or `[[Int]]`
         s'@(G.VString s) ->
           case isSessionVariable s of
             True -> refute $ pure $ DisallowSessionVarForListType varName
-            False -> parsePresetValue gType' varName s'
-        v -> parsePresetValue gType' varName v
+            False -> parsePresetValue gType' varName isStatic s'
+        v -> parsePresetValue gType' varName isStatic v
 
 parsePresetDirective
   :: forall m
@@ -344,13 +346,15 @@ parsePresetDirective
   -> G.Directive Void
   -> m (G.Value RemoteSchemaVariable)
 parsePresetDirective gType parentArgName (G.Directive name args) = do
-  case (Map.toList args) of
-    [] -> refute $ pure $ NoPresetArgumentFound
-    [(argName, argVal)] -> do
-      unless (argName == $$(G.litName "value")) $ do
-        refute $ pure $ InvalidPresetArgument argName
-      parsePresetValue gType parentArgName argVal
-    _ -> refute $ pure $ MultipleArgumentsInPresetFound
+  if | Map.null args -> refute $ pure $ NoPresetArgumentFound
+     | otherwise -> do
+         val <- onNothing (Map.lookup $$(G.litName "value") args) $ refute $ pure $ InvalidPresetArgument parentArgName
+         isStatic <-
+           case (Map.lookup $$(G.litName "static") args) of
+             Nothing -> pure False
+             (Just (G.VBoolean b)) -> pure b
+             _ -> refute $ pure $ InvalidStaticValue
+         parsePresetValue gType parentArgName isStatic val
 
 -- | validateDirective checks if the arguments of a given directive
 --   is a subset of the corresponding upstream directive arguments
