@@ -307,7 +307,6 @@ library
                      , Hasura.Backends.Postgres.Translate.Delete
                      , Hasura.Backends.Postgres.Translate.Insert
                      , Hasura.Backends.Postgres.Translate.Mutation
-                     , Hasura.Backends.Postgres.Translate.RemoteJoin
                      , Hasura.Backends.Postgres.Translate.Returning
                      , Hasura.Backends.Postgres.Translate.Select
                      , Hasura.Backends.Postgres.Translate.Update

@@ -5,25 +5,25 @@ module Hasura.GraphQL.Explain
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                                    as J
-import qualified Data.Aeson.Casing                             as J
-import qualified Data.Aeson.TH                                 as J
-import qualified Data.HashMap.Strict                           as Map
-import qualified Data.HashMap.Strict.InsOrd                    as OMap
-import qualified Database.PG.Query                             as Q
-import qualified Language.GraphQL.Draft.Syntax                 as G
+import qualified Data.Aeson                                  as J
+import qualified Data.Aeson.Casing                           as J
+import qualified Data.Aeson.TH                               as J
+import qualified Data.HashMap.Strict                         as Map
+import qualified Data.HashMap.Strict.InsOrd                  as OMap
+import qualified Database.PG.Query                           as Q
+import qualified Language.GraphQL.Draft.Syntax               as G
 
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.Postgres.SQL.DML              as S
-import qualified Hasura.Backends.Postgres.Translate.RemoteJoin as RR
-import qualified Hasura.Backends.Postgres.Translate.Select     as DS
-import qualified Hasura.GraphQL.Execute                        as E
-import qualified Hasura.GraphQL.Execute.Inline                 as E
-import qualified Hasura.GraphQL.Execute.LiveQuery              as E
-import qualified Hasura.GraphQL.Execute.Query                  as E
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol        as GH
-import qualified Hasura.RQL.IR.Select                          as DS
+import qualified Hasura.Backends.Postgres.Execute.RemoteJoin as RR
+import qualified Hasura.Backends.Postgres.SQL.DML            as S
+import qualified Hasura.Backends.Postgres.Translate.Select   as DS
+import qualified Hasura.GraphQL.Execute                      as E
+import qualified Hasura.GraphQL.Execute.Inline               as E
+import qualified Hasura.GraphQL.Execute.LiveQuery            as E
+import qualified Hasura.GraphQL.Execute.Query                as E
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol      as GH
+import qualified Hasura.RQL.IR.Select                        as DS
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value

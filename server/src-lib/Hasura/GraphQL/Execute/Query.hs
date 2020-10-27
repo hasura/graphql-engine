@@ -14,29 +14,28 @@ module Hasura.GraphQL.Execute.Query
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                                    as J
-import qualified Data.Environment                              as Env
-import qualified Data.HashMap.Strict                           as Map
-import qualified Data.HashMap.Strict.InsOrd                    as OMap
-import qualified Data.IntMap                                   as IntMap
-import qualified Data.Sequence.NonEmpty                        as NESeq
-import qualified Database.PG.Query                             as Q
-import qualified Language.GraphQL.Draft.Syntax                 as G
-import qualified Network.HTTP.Client                           as HTTP
-import qualified Network.HTTP.Types                            as HTTP
+import qualified Data.Aeson                                  as J
+import qualified Data.Environment                            as Env
+import qualified Data.HashMap.Strict                         as Map
+import qualified Data.HashMap.Strict.InsOrd                  as OMap
+import qualified Data.IntMap                                 as IntMap
+import qualified Data.Sequence.NonEmpty                      as NESeq
+import qualified Database.PG.Query                           as Q
+import qualified Language.GraphQL.Draft.Syntax               as G
+import qualified Network.HTTP.Client                         as HTTP
+import qualified Network.HTTP.Types                          as HTTP
 
-import qualified Hasura.Backends.Postgres.SQL.DML              as S
-import qualified Hasura.Backends.Postgres.Translate.Select     as DS
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol        as GH
-import qualified Hasura.Logging                                as L
-import qualified Hasura.RQL.IR.Select                          as DS
-import qualified Hasura.Tracing                                as Tracing
+import qualified Hasura.Backends.Postgres.SQL.DML            as S
+import qualified Hasura.Backends.Postgres.Translate.Select   as DS
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol      as GH
+import qualified Hasura.Logging                              as L
+import qualified Hasura.RQL.IR.Select                        as DS
+import qualified Hasura.Tracing                              as Tracing
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.Execute.RemoteJoin
 import           Hasura.Backends.Postgres.SQL.Value
-import           Hasura.Backends.Postgres.Translate.RemoteJoin
-import           Hasura.Backends.Postgres.Translate.Select     (asSingleRowJsonResp)
+import           Hasura.Backends.Postgres.Translate.Select   (asSingleRowJsonResp)
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
@@ -44,9 +43,8 @@ import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
-import           Hasura.RQL.IR.RemoteJoin
 import           Hasura.RQL.Types
-import           Hasura.Server.Version                         (HasVersion)
+import           Hasura.Server.Version                       (HasVersion)
 import           Hasura.Session
 
 

@@ -1,15 +1,9 @@
 module Hasura.RQL.IR.RemoteJoin
-  ( RemoteJoins
-  , RemoteJoinMap
-  , Alias
-  , FieldPath(..)
-  , RemoteJoin(..)
+  ( RemoteJoin(..)
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.List.NonEmpty            as NE
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.GraphQL.Parser         hiding (field)
@@ -31,12 +25,3 @@ data RemoteJoin (b :: Backend)
     -- parameters to satisfy the remote join.
   }
 deriving instance Eq (RemoteJoin 'Postgres)
-
--- | Path to the remote join field in query response JSON from Postgres.
-newtype FieldPath = FieldPath {unFieldPath :: [FieldName]}
-  deriving (Show, Eq, Semigroup, Monoid, Hashable)
-
-type Alias = G.Name
-
-type RemoteJoins b = NE.NonEmpty (FieldPath, NE.NonEmpty (RemoteJoin b))
-type RemoteJoinMap b = Map.HashMap FieldPath (NE.NonEmpty (RemoteJoin b))

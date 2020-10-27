@@ -9,55 +9,54 @@ module Hasura.GraphQL.Execute.Action
 
 import           Hasura.Prelude
 
-import qualified Control.Concurrent.Async.Lifted.Safe          as LA
-import qualified Data.Aeson                                    as J
-import qualified Data.Aeson.Casing                             as J
-import qualified Data.Aeson.TH                                 as J
-import qualified Data.ByteString.Lazy                          as BL
-import qualified Data.CaseInsensitive                          as CI
-import qualified Data.Environment                              as Env
-import qualified Data.HashMap.Strict                           as Map
-import qualified Data.HashSet                                  as Set
-import qualified Data.Text                                     as T
-import qualified Data.UUID                                     as UUID
-import qualified Database.PG.Query                             as Q
-import qualified Language.GraphQL.Draft.Syntax                 as G
-import qualified Network.HTTP.Client                           as HTTP
-import qualified Network.HTTP.Types                            as HTTP
-import qualified Network.Wreq                                  as Wreq
+import qualified Control.Concurrent.Async.Lifted.Safe        as LA
+import qualified Data.Aeson                                  as J
+import qualified Data.Aeson.Casing                           as J
+import qualified Data.Aeson.TH                               as J
+import qualified Data.ByteString.Lazy                        as BL
+import qualified Data.CaseInsensitive                        as CI
+import qualified Data.Environment                            as Env
+import qualified Data.HashMap.Strict                         as Map
+import qualified Data.HashSet                                as Set
+import qualified Data.Text                                   as T
+import qualified Data.UUID                                   as UUID
+import qualified Database.PG.Query                           as Q
+import qualified Language.GraphQL.Draft.Syntax               as G
+import qualified Network.HTTP.Client                         as HTTP
+import qualified Network.HTTP.Types                          as HTTP
+import qualified Network.Wreq                                as Wreq
 
-import           Control.Concurrent                            (threadDelay)
-import           Control.Exception                             (try)
+import           Control.Concurrent                          (threadDelay)
+import           Control.Exception                           (try)
 import           Control.Lens
-import           Control.Monad.Trans.Control                   (MonadBaseControl)
+import           Control.Monad.Trans.Control                 (MonadBaseControl)
 import           Data.Has
 import           Data.IORef
-import           Data.Int                                      (Int64)
+import           Data.Int                                    (Int64)
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.Postgres.Execute.RemoteJoin   as RJ
-import qualified Hasura.Backends.Postgres.Translate.RemoteJoin as RJ
-import qualified Hasura.Backends.Postgres.Translate.Select     as RS
-import qualified Hasura.Logging                                as L
-import qualified Hasura.RQL.IR.Select                          as RS
-import qualified Hasura.Tracing                                as Tracing
+import qualified Hasura.Backends.Postgres.Execute.RemoteJoin as RJ
+import qualified Hasura.Backends.Postgres.Translate.Select   as RS
+import qualified Hasura.Logging                              as L
+import qualified Hasura.RQL.IR.Select                        as RS
+import qualified Hasura.Tracing                              as Tracing
 
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Backends.Postgres.SQL.Value            (PGScalarValue (..), toTxtValue)
-import           Hasura.Backends.Postgres.Translate.Select     (asSingleRowJsonResp)
+import           Hasura.Backends.Postgres.SQL.Value          (PGScalarValue (..), toTxtValue)
+import           Hasura.Backends.Postgres.Translate.Select   (asSingleRowJsonResp)
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Prepare
-import           Hasura.GraphQL.Parser                         hiding (column)
-import           Hasura.GraphQL.Utils                          (showNames)
+import           Hasura.GraphQL.Parser                       hiding (column)
+import           Hasura.GraphQL.Utils                        (showNames)
 import           Hasura.HTTP
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.SQL.Types
-import           Hasura.Server.Utils                           (mkClientHeadersForward,
-                                                                mkSetCookieHeaders)
-import           Hasura.Server.Version                         (HasVersion)
+import           Hasura.Server.Utils                         (mkClientHeadersForward,
+                                                              mkSetCookieHeaders)
+import           Hasura.Server.Version                       (HasVersion)
 import           Hasura.Session
 
 

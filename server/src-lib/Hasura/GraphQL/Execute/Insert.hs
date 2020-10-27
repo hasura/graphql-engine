@@ -5,25 +5,25 @@ module Hasura.GraphQL.Execute.Insert
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                                    as J
-import qualified Data.Environment                              as Env
-import qualified Data.HashMap.Strict                           as Map
-import qualified Data.Sequence                                 as Seq
-import qualified Data.Text                                     as T
-import qualified Database.PG.Query                             as Q
+import qualified Data.Aeson                                   as J
+import qualified Data.Environment                             as Env
+import qualified Data.HashMap.Strict                          as Map
+import qualified Data.Sequence                                as Seq
+import qualified Data.Text                                    as T
+import qualified Database.PG.Query                            as Q
 
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.Postgres.Execute.Mutation     as RQL
-import qualified Hasura.Backends.Postgres.SQL.DML              as S
-import qualified Hasura.Backends.Postgres.Translate.Insert     as RQL
-import qualified Hasura.Backends.Postgres.Translate.Mutation   as RQL
-import qualified Hasura.Backends.Postgres.Translate.RemoteJoin as RQL
-import qualified Hasura.Backends.Postgres.Translate.Returning  as RQL
-import qualified Hasura.RQL.GBoolExp                           as RQL
-import qualified Hasura.RQL.IR.Insert                          as RQL
-import qualified Hasura.RQL.IR.Returning                       as RQL
-import qualified Hasura.Tracing                                as Tracing
+import qualified Hasura.Backends.Postgres.Execute.Mutation    as RQL
+import qualified Hasura.Backends.Postgres.Execute.RemoteJoin  as RQL
+import qualified Hasura.Backends.Postgres.SQL.DML             as S
+import qualified Hasura.Backends.Postgres.Translate.Insert    as RQL
+import qualified Hasura.Backends.Postgres.Translate.Mutation  as RQL
+import qualified Hasura.Backends.Postgres.Translate.Returning as RQL
+import qualified Hasura.RQL.GBoolExp                          as RQL
+import qualified Hasura.RQL.IR.Insert                         as RQL
+import qualified Hasura.RQL.IR.Returning                      as RQL
+import qualified Hasura.Tracing                               as Tracing
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.SQL.Types
@@ -32,7 +32,7 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Schema.Insert
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.Server.Version                         (HasVersion)
+import           Hasura.Server.Version                        (HasVersion)
 
 
 traverseAnnInsert
