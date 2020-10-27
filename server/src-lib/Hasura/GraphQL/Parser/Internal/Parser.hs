@@ -269,8 +269,8 @@ There's a delicate balance between GraphQL types and Postgres types.
 
 The mapping is done in the 'column' parser. But we want to only have
 one source of truth for parsing postgres values, which happens to be
-the JSON parsing code in Backends.Postgres.SQL.Value. So here we reuse some of that code
-despite not having a JSON value.
+the JSON parsing code in Backends.Postgres.SQL.Value. So here we reuse
+some of that code despite not having a JSON value.
 
 -}
 
