@@ -212,7 +212,6 @@ data SetTableCustomFields
   { _stcfTable             :: !QualifiedTable
   , _stcfCustomRootFields  :: !TableCustomRootFields
   , _stcfCustomColumnNames :: !CustomColumnNames
-  , _stcfIdentifier        :: !(Maybe G.Name)
   } deriving (Show, Eq, Lift)
 $(deriveToJSON (aesonDrop 5 snakeCase) ''SetTableCustomFields)
 
@@ -222,13 +221,13 @@ instance FromJSON SetTableCustomFields where
     <$> o .: "table"
     <*> o .:? "custom_root_fields" .!= emptyCustomRootFields
     <*> o .:? "custom_column_names" .!= Map.empty
-    <*> o .:? "identifier"
 
 runSetTableCustomFieldsQV2
   :: (MonadTx m, CacheRWM m) => SetTableCustomFields -> m EncJSON
-runSetTableCustomFieldsQV2 (SetTableCustomFields tableName rootFields columnNames identifier) = do
+runSetTableCustomFieldsQV2 (SetTableCustomFields tableName rootFields columnNames) = do
   void $ askTabInfo tableName -- assert that table is tracked
-  updateTableConfig tableName (TableConfig rootFields columnNames identifier)
+  -- `Identifier` is set to `Nothing` below because this API doesn't accept it
+  updateTableConfig tableName (TableConfig rootFields columnNames Nothing)
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
 
