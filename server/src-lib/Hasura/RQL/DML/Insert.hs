@@ -19,6 +19,7 @@ import qualified Database.PG.Query           as Q
 
 import qualified Hasura.SQL.DML              as S
 
+import           Data.Text.Extended
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Insert.Types
 import           Hasura.RQL.DML.Internal
@@ -26,14 +27,15 @@ import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 import           Hasura.Server.Version       (HasVersion)
 import           Hasura.Session
-import           Hasura.SQL.Types
+
 
 import qualified Data.Environment            as Env
 import qualified Hasura.Tracing              as Tracing
 
-mkInsertCTE :: InsertQueryP1 -> S.CTE
+mkInsertCTE :: InsertQueryP1 'Postgres -> S.CTE
 mkInsertCTE (InsertQueryP1 tn cols vals conflict (insCheck, updCheck) _ _) =
     S.CTEInsert insert
   where
@@ -52,7 +54,7 @@ mkInsertCTE (InsertQueryP1 tn cols vals conflict (insCheck, updCheck) _ _) =
     toSQLBool = toSQLBoolExp $ S.QualTable tn
 
 
-toSQLConflict :: QualifiedTable -> ConflictClauseP1 S.SQLExp -> S.SQLConflict
+toSQLConflict :: QualifiedTable -> ConflictClauseP1 'Postgres S.SQLExp -> S.SQLConflict
 toSQLConflict tableName = \case
   CP1DoNothing ct -> S.DoNothing $ toSQLCT <$> ct
   CP1Update ct inpCols preSet filtr -> S.Update
@@ -65,10 +67,10 @@ toSQLConflict tableName = \case
 
 convObj
   :: (UserInfoM m, QErrM m)
-  => (PGColumnType -> Value -> m S.SQLExp)
+  => (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> HM.HashMap PGCol S.SQLExp
   -> HM.HashMap PGCol S.SQLExp
-  -> FieldInfoMap FieldInfo
+  -> FieldInfoMap (FieldInfo 'Postgres)
   -> InsObj
   -> m ([PGCol], [S.SQLExp])
 convObj prepFn defInsVals setInsVals fieldInfoMap insObj = do
@@ -99,11 +101,11 @@ validateInpCols inpCols updColsPerm = forM_ inpCols $ \inpCol ->
 
 buildConflictClause
   :: (UserInfoM m, QErrM m)
-  => SessVarBldr m
-  -> TableInfo
+  => SessVarBldr 'Postgres m
+  -> TableInfo 'Postgres
   -> [PGCol]
   -> OnConflict
-  -> m (ConflictClauseP1 S.SQLExp)
+  -> m (ConflictClauseP1 'Postgres S.SQLExp)
 buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) =
   case (mTCol, mTCons, act) of
     (Nothing, Nothing, CAIgnore)    -> return $ CP1DoNothing Nothing
@@ -160,10 +162,10 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
 convInsertQuery
   :: (UserInfoM m, QErrM m, CacheRM m)
   => (Value -> m [InsObj])
-  -> SessVarBldr m
-  -> (PGColumnType -> Value -> m S.SQLExp)
+  -> SessVarBldr 'Postgres m
+  -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> InsertQuery
-  -> m InsertQueryP1
+  -> m (InsertQueryP1 'Postgres)
 convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRetCols) = do
 
   insObjs <- objsParser val
@@ -234,7 +236,7 @@ decodeInsObjs v = do
 convInsQ
   :: (QErrM m, UserInfoM m, CacheRM m)
   => InsertQuery
-  -> m (InsertQueryP1, DS.Seq Q.PrepArg)
+  -> m (InsertQueryP1 'Postgres, DS.Seq Q.PrepArg)
 convInsQ =
   runDMLP1T .
   convInsertQuery (withPathK "objects" . decodeInsObjs)
@@ -250,7 +252,7 @@ execInsertQuery
   => Env.Environment
   -> Bool
   -> Maybe MutationRemoteJoinCtx
-  -> (InsertQueryP1, DS.Seq Q.PrepArg)
+  -> (InsertQueryP1 'Postgres, DS.Seq Q.PrepArg)
   -> m EncJSON
 execInsertQuery env strfyNum remoteJoinCtx (u, p) =
   runMutation env
@@ -309,7 +311,7 @@ insertCheckExpr errorMessage condExpr =
 -- the @xmax@ system column.
 insertOrUpdateCheckExpr
   :: QualifiedTable
-  -> Maybe (ConflictClauseP1 S.SQLExp)
+  -> Maybe (ConflictClauseP1 'Postgres S.SQLExp)
   -> S.BoolExp
   -> Maybe S.BoolExp
   -> S.SQLExp

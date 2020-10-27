@@ -1,23 +1,25 @@
 -- | Classes for monads used during schema construction and query parsing.
 module Hasura.GraphQL.Parser.Class where
 
-import           Hasura.Prelude
+import                          Hasura.Prelude
 
-import qualified Data.HashMap.Strict                   as Map
-import qualified Language.Haskell.TH                   as TH
-import qualified Language.GraphQL.Draft.Syntax         as G
+import                qualified Data.HashMap.Strict                   as Map
+import                qualified Language.Haskell.TH                   as TH
+import                qualified Language.GraphQL.Draft.Syntax         as G
 
-import           Data.Has
-import           Data.Parser.JSONPath
-import           Data.Tuple.Extended
-import           GHC.Stack                             (HasCallStack)
-import           Type.Reflection                       (Typeable)
+import                          Data.Has
+import                          Data.Parser.JSONPath
+import                          Data.Tuple.Extended
+import                          GHC.Stack                             (HasCallStack)
+import                          Type.Reflection                       (Typeable)
 
-import {-# SOURCE #-} Hasura.GraphQL.Parser.Internal.Parser
-import           Hasura.RQL.Types.Error
-import           Hasura.RQL.Types.Table
-import           Hasura.Session                        (RoleName)
-import           Hasura.SQL.Types
+import                          Data.Text.Extended
+import {-# SOURCE #-}           Hasura.GraphQL.Parser.Internal.Parser
+import                          Hasura.RQL.Types.Error
+import                          Hasura.RQL.Types.Table
+import                          Hasura.SQL.Backend
+import                          Hasura.SQL.Types
+import                          Hasura.Session                        (RoleName)
 
 {- Note [Tying the knot]
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -116,7 +118,7 @@ type MonadTableInfo r m = (MonadReader r m, Has TableCache r, MonadError QErr m)
 askTableInfo
   :: MonadTableInfo r m
   => QualifiedTable
-  -> m TableInfo
+  -> m (TableInfo 'Postgres)
 askTableInfo tableName = do
   tableInfo <- asks $ Map.lookup tableName . getter
   -- This should never fail, since the schema cache construction process is

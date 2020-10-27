@@ -72,6 +72,8 @@ module Hasura.Eventing.ScheduledTrigger
   , unlockAllLockedScheduledEvents
   ) where
 
+import           Hasura.Prelude
+
 import           Control.Arrow.Extended      (dup)
 import           Control.Concurrent.Extended (sleep)
 import           Control.Concurrent.STM.TVar
@@ -82,7 +84,6 @@ import           Data.Time.Clock
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.HTTP
 import           Hasura.HTTP
-import           Hasura.Prelude
 import           Hasura.RQL.DDL.EventTrigger (getHeaderInfosFromConf)
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
@@ -107,7 +108,6 @@ import qualified Hasura.Tracing              as Tracing
 import qualified Network.HTTP.Client         as HTTP
 import qualified PostgreSQL.Binary.Decoding  as PD
 import qualified PostgreSQL.Binary.Encoding  as PE
-import qualified Text.Builder                as TB (run)
 
 
 newtype ScheduledTriggerInternalErr
@@ -308,7 +308,7 @@ insertCronEventsFor cronTriggersWithStats = do
   case scheduledEvents of
     []     -> pure ()
     events -> do
-      let insertCronEventsSql = TB.run $ toSQL
+      let insertCronEventsSql = toSQLTxt
             SQLInsert
               { siTable    = cronEventsTable
               , siCols     = map unsafePGCol ["trigger_name", "scheduled_time"]
@@ -323,7 +323,7 @@ insertCronEventsFor cronTriggersWithStats = do
 
 insertCronEvents :: [CronEventSeed] -> Q.TxE QErr ()
 insertCronEvents events = do
-  let insertCronEventsSql = TB.run $ toSQL
+  let insertCronEventsSql = toSQLTxt
         SQLInsert
           { siTable    = cronEventsTable
           , siCols     = map unsafePGCol ["trigger_name", "scheduled_time"]
@@ -514,7 +514,7 @@ processScheduledEvent logEnv pgpool se@ScheduledEventFull {..} type' = Tracing.r
         (processSuccess pgpool se decodedHeaders type' webhookReqBodyJson)
         res
   where
-    traceNote = "Scheduled trigger" <> foldMap ((": " <>) . unNonEmptyText . unTriggerName) sefName
+    traceNote = "Scheduled trigger" <> foldMap ((": " <>) . triggerNameToTxt) sefName
 
 processError
   :: (MonadIO m, MonadError QErr m)
@@ -542,7 +542,7 @@ processError pgpool se decodedHeaders type' reqJson err = do
           let errMsg = (TBS.fromLBS $ J.encode detail)
           mkInvocation se 500 decodedHeaders errMsg [] reqJson
   liftExceptTIO $
-    Q.runTx pgpool (Q.RepeatableRead, Just Q.ReadWrite) $ do
+    Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) $ do
     insertInvocation invocation type'
     retryOrMarkError se err type'
 
@@ -610,14 +610,14 @@ processSuccess pgpool se decodedHeaders type' reqBodyJson resp = do
       respStatus = hrsStatus resp
       invocation = mkInvocation se respStatus decodedHeaders respBody respHeaders reqBodyJson
   liftExceptTIO $
-    Q.runTx pgpool (Q.RepeatableRead, Just Q.ReadWrite) $ do
+    Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) $ do
     insertInvocation invocation type'
     setScheduledEventStatus (sefId se) SESDelivered type'
 
 processDead :: (MonadIO m, MonadError QErr m) => Q.PGPool -> ScheduledEventFull -> ScheduledEventType -> m ()
 processDead pgpool se type' =
   liftExceptTIO $
-  Q.runTx pgpool (Q.RepeatableRead, Just Q.ReadWrite) $
+  Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) $
     setScheduledEventStatus (sefId se) SESDead type'
 
 setRetry :: ScheduledEventFull -> UTCTime -> ScheduledEventType ->  Q.TxE QErr ()

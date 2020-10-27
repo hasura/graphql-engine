@@ -8,23 +8,25 @@ import qualified Hasura.SQL.DML                 as S
 import           Hasura.RQL.DML.Returning.Types
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
+import           Hasura.RQL.Types.Common
+import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 
 
-data AnnUpdG v
+data AnnUpdG (b :: Backend) v
   = AnnUpd
   { uqp1Table   :: !QualifiedTable
-  , uqp1OpExps  :: ![(PGCol, UpdOpExpG v)]
-  , uqp1Where   :: !(AnnBoolExp v, AnnBoolExp v)
-  , uqp1Check   :: !(AnnBoolExp v)
+  , uqp1OpExps  :: ![(Column b, UpdOpExpG v)]
+  , uqp1Where   :: !(AnnBoolExp b v, AnnBoolExp b v)
+  , uqp1Check   :: !(AnnBoolExp b v)
   -- we don't prepare the arguments for returning
   -- however the session variable can still be
   -- converted as desired
-  , uqp1Output  :: !(MutationOutputG v)
-  , uqp1AllCols :: ![PGColumnInfo]
-  } deriving (Show, Eq)
+  , uqp1Output  :: !(MutationOutputG b v)
+  , uqp1AllCols :: ![ColumnInfo b]
+  }
 
-type AnnUpd = AnnUpdG S.SQLExp
+type AnnUpd b = AnnUpdG b S.SQLExp
 
 data UpdOpExpG v = UpdSet !v
                  | UpdInc !v
@@ -33,4 +35,4 @@ data UpdOpExpG v = UpdSet !v
                  | UpdDeleteKey !v
                  | UpdDeleteElem !v
                  | UpdDeleteAtPath ![v]
-                 deriving (Eq, Show, Functor, Foldable, Traversable, Generic, Data)
+                 deriving (Functor, Foldable, Traversable, Generic, Data)

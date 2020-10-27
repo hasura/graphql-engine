@@ -446,7 +446,7 @@ export const passDeleteRow = () => {
   cy.on('window:confirm', str => {
     expect(
       str.indexOf('This will permanently delete this row from this table') !==
-        -1
+      -1
     ).to.be.true;
   });
   cy.get(getElementFromAlias('table-browse-rows')).contains('20');

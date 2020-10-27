@@ -51,6 +51,7 @@ import           Data.Aeson.TH
 import           Data.Has
 import           Data.Int                             (Int64)
 import           Data.String
+import           Data.Text.Extended
 import           Data.Time.Clock
 import           Data.Word
 import           Hasura.Eventing.Common
@@ -59,8 +60,8 @@ import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
-import           Hasura.Server.Version                (HasVersion)
 import           Hasura.SQL.Types
+import           Hasura.Server.Version                (HasVersion)
 import qualified Hasura.Tracing                       as Tracing
 
 import qualified Control.Concurrent.Async.Lifted.Safe as LA
@@ -246,21 +247,21 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
       => Event -> io ()
     processEvent e = do
       cache <- liftIO getSchemaCache
-      
+
       tracingCtx <- liftIO (Tracing.extractEventContext (eEvent e))
       let spanName eti = "Event trigger: " <> unNonEmptyText (unTriggerName (etiName eti))
           runTraceT = maybe
             Tracing.runTraceT
             Tracing.runTraceTInContext
             tracingCtx
-      
+
       case getEventTriggerInfoFromEvent cache e of
         Left err -> do
           --  This rare error can happen in the following known cases:
           --  i) schema cache is not up-to-date (due to some bug, say during schema syncing across multiple instances)
           --  ii) the event trigger is dropped when this event was just fetched
           logQErr $ err500 Unexpected err
-          liftIO . runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
+          liftIO . runExceptT $ Q.runTx pool (Q.ReadCommitted, Just Q.ReadWrite) $ do
             currentTime <- liftIO getCurrentTime
             -- For such an event, we unlock the event and retry after a minute
             setRetry e (addUTCTime 60 currentTime)
@@ -324,7 +325,7 @@ processSuccess pool e decodedHeaders ep resp = do
       respHeaders = hrsHeaders resp
       respStatus = hrsStatus resp
       invocation = mkInvocation ep respStatus decodedHeaders respBody respHeaders
-  liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
+  liftIO $ runExceptT $ Q.runTx pool (Q.ReadCommitted, Just Q.ReadWrite) $ do
     insertInvocation invocation
     setSuccess e
 
@@ -348,7 +349,7 @@ processError pool e retryConf decodedHeaders ep err = do
         HOther detail -> do
           let errMsg = (TBS.fromLBS $ encode detail)
           mkInvocation ep 500 decodedHeaders errMsg []
-  liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
+  liftIO $ runExceptT $ Q.runTx pool (Q.ReadCommitted, Just Q.ReadWrite) $ do
     insertInvocation invocation
     retryOrSetError e retryConf err
 
@@ -421,7 +422,7 @@ fetchEvents limitI =
       SET locked = NOW()
       WHERE id IN ( SELECT l.id
                     FROM hdb_catalog.event_log l
-                    WHERE l.delivered = 'f' and l.error = 'f' 
+                    WHERE l.delivered = 'f' and l.error = 'f'
                           and (l.locked IS NULL or l.locked < (NOW() - interval '30 minute'))
                           and (l.next_retry_at is NULL or l.next_retry_at <= now())
                           and l.archived = 'f'

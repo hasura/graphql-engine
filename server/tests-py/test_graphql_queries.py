@@ -544,6 +544,10 @@ class TestGraphQLQueryFunctions:
     @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_query_get_test_session_id(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/query_get_test_session_id.yaml')
+    
+    @pytest.mark.parametrize("transport", ['http', 'websocket'])
+    def test_query_search_author_mview(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_search_author_mview.yaml')
 
     @classmethod
     def dir(cls):

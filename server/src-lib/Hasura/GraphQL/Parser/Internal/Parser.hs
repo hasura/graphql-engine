@@ -1,7 +1,6 @@
 {-# OPTIONS_HADDOCK not-home #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE StrictData          #-}
-{-# LANGUAGE ViewPatterns        #-}
 
 -- | Defines the 'Parser' type and its primitive combinators.
 module Hasura.GraphQL.Parser.Internal.Parser where
@@ -12,13 +11,14 @@ import qualified Data.Aeson                    as A
 import qualified Data.HashMap.Strict.Extended  as M
 import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.HashSet                  as S
-import qualified Data.Text                     as T
 import qualified Data.List.Extended            as LE
+import qualified Data.Text                     as T
 
 import           Control.Lens.Extended         hiding (enum, index)
 import           Data.Int                      (Int32, Int64)
-import           Data.Scientific               (toBoundedInteger)
 import           Data.Parser.JSONPath
+import           Data.Scientific               (toBoundedInteger)
+import           Data.Text.Extended
 import           Data.Type.Equality
 import           Language.GraphQL.Draft.Syntax hiding (Definition)
 
@@ -27,9 +27,8 @@ import           Hasura.GraphQL.Parser.Collect
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Error
-import           Hasura.Server.Utils           (englishList)
-import           Hasura.SQL.Types
 import           Hasura.SQL.Value
+import           Hasura.Server.Utils           (englishList)
 
 
 -- -----------------------------------------------------------------------------
@@ -247,9 +246,9 @@ scalar name description representation = Parser
         JSONValue    (A.Bool   b) -> pure b
         _                         -> typeMismatch name "a boolean" v
       SRInt -> case v of
-        GraphQLValue (VInt i)     -> convertWith scientificToInteger $ fromInteger i
-        JSONValue (A.Number n)    -> convertWith scientificToInteger n
-        _                         -> typeMismatch name "a 32-bit integer" v
+        GraphQLValue (VInt i)  -> convertWith scientificToInteger $ fromInteger i
+        JSONValue (A.Number n) -> convertWith scientificToInteger n
+        _                      -> typeMismatch name "a 32-bit integer" v
       SRFloat -> case v of
         GraphQLValue (VFloat f)   -> convertWith scientificToFloat f
         GraphQLValue (VInt   i)   -> convertWith scientificToFloat $ fromInteger i
@@ -349,7 +348,7 @@ enum name description values = Parser
     validate value = case M.lookup value valuesMap of
       Just result -> pure result
       Nothing -> parseError $ "expected one of the values "
-        <> englishList "or" (dquoteTxt . dName . fst <$> values) <> " for type "
+        <> englishList "or" (toTxt . dName . fst <$> values) <> " for type "
         <> name <<> ", but found " <>> value
 
 nullable :: forall k m a. (MonadParse m, 'Input <: k) => Parser k m a -> Parser k m (Maybe a)
@@ -688,7 +687,7 @@ safeSelectionSet
   -> n (Parser 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a)))
 safeSelectionSet name desc fields
   | S.null duplicates = pure $ selectionSetObject name desc fields []
-  | otherwise         = throw500 $ "found duplicate fields in selection set: " <> T.intercalate ", " (unName <$> toList duplicates)
+  | otherwise         = throw500 $ "found duplicate fields in selection set: " <> commaSeparated (unName <$> toList duplicates)
   where
     duplicates = LE.duplicates $ getName . fDefinition <$> fields
 
@@ -822,10 +821,23 @@ selection
   -> InputFieldsParser m a -- ^ parser for the input arguments
   -> Parser 'Both m b -- ^ type of the result
   -> FieldParser m a
-selection name description argumentsParser resultParser = FieldParser
+selection name description argumentsParser resultParser =
+  rawSelection name description argumentsParser resultParser
+  <&> \(_alias, _args, a) -> a
+
+rawSelection
+  :: forall m a b
+   . MonadParse m
+  => Name
+  -> Maybe Description
+  -> InputFieldsParser m a -- ^ parser for the input arguments
+  -> Parser 'Both m b -- ^ type of the result
+  -> FieldParser m (Maybe Name, HashMap Name (Value Variable), a)
+  -- ^ alias provided (if any), and the arguments
+rawSelection name description argumentsParser resultParser = FieldParser
   { fDefinition = mkDefinition name description $
       FieldInfo (ifDefinitions argumentsParser) (pType resultParser)
-  , fParser = \Field{ _fArguments, _fSelectionSet } -> do
+  , fParser = \Field{ _fAlias, _fArguments, _fSelectionSet } -> do
       unless (null _fSelectionSet) $
         parseError "unexpected subselection set for non-object field"
       -- check for extraneous arguments here, since the InputFieldsParser just
@@ -833,7 +845,7 @@ selection name description argumentsParser resultParser = FieldParser
       for_ (M.keys _fArguments) \argumentName ->
         unless (argumentName `S.member` argumentNames) $
           parseError $ name <<> " has no argument named " <>> argumentName
-      withPath (++[Key "args"]) $ ifParser argumentsParser $ GraphQLValue <$> _fArguments
+      fmap (_fAlias, _fArguments, ) $ withPath (++[Key "args"]) $ ifParser argumentsParser $ GraphQLValue <$> _fArguments
   }
   where
     argumentNames = S.fromList (dName <$> ifDefinitions argumentsParser)
@@ -850,17 +862,29 @@ subselection
   -> InputFieldsParser m a -- ^ parser for the input arguments
   -> Parser 'Output m b -- ^ parser for the subselection set
   -> FieldParser m (a, b)
-subselection name description argumentsParser bodyParser = FieldParser
+subselection name description argumentsParser bodyParser =
+  rawSubselection name description argumentsParser bodyParser
+  <&> \(_alias, _args, a, b) -> (a, b)
+
+rawSubselection
+  :: forall m a b
+   . MonadParse m
+  => Name
+  -> Maybe Description
+  -> InputFieldsParser m a -- ^ parser for the input arguments
+  -> Parser 'Output m b -- ^ parser for the subselection set
+  -> FieldParser m (Maybe Name, HashMap Name (Value Variable), a, b)
+rawSubselection name description argumentsParser bodyParser = FieldParser
   { fDefinition = mkDefinition name description $
       FieldInfo (ifDefinitions argumentsParser) (pType bodyParser)
-  , fParser = \Field{ _fArguments, _fSelectionSet } -> do
+  , fParser = \Field{ _fAlias, _fArguments, _fSelectionSet } -> do
       -- check for extraneous arguments here, since the InputFieldsParser just
       -- handles parsing the fields it cares about
       for_ (M.keys _fArguments) \argumentName ->
         unless (argumentName `S.member` argumentNames) $
           parseError $ name <<> " has no argument named " <>> argumentName
-      (,) <$> withPath (++[Key "args"]) (ifParser argumentsParser $ GraphQLValue <$> _fArguments)
-          <*> pParser bodyParser _fSelectionSet
+      (_fAlias,_fArguments,,) <$> withPath (++[Key "args"]) (ifParser argumentsParser $ GraphQLValue <$> _fArguments)
+        <*> pParser bodyParser _fSelectionSet
   }
   where
     argumentNames = S.fromList (dName <$> ifDefinitions argumentsParser)
@@ -883,7 +907,6 @@ subselection_
   -> FieldParser m a
 subselection_ name description bodyParser =
   snd <$> subselection name description (pure ()) bodyParser
-
 
 -- -----------------------------------------------------------------------------
 -- helpers

@@ -6,6 +6,9 @@ module Hasura.RQL.Types.Common
        , relTypeToTxt
        , RelInfo(..)
 
+       , ScalarType
+       , Column
+
        , FieldName(..)
        , fromPGCol
        , fromRel
@@ -37,46 +40,59 @@ module Hasura.RQL.Types.Common
        , isSystemDefined
 
        , successMsg
-       , NonNegativeDiffTime(..)
+       , NonNegativeDiffTime
+       , unNonNegativeDiffTime
+       , unsafeNonNegativeDiffTime
+       , mkNonNegativeDiffTime
        , InputWebhook(..)
        , ResolvedWebhook(..)
        , resolveWebhook
-
+       , NonNegativeInt
+       , getNonNegativeInt
+       , mkNonNegativeInt
+       , unsafeNonNegativeInt
        , Timeout(..)
        , defaultActionTimeoutSecs
        ) where
 
-import           Hasura.EncJSON
-import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Headers        ()
-import           Hasura.RQL.Types.Error
-import           Hasura.SQL.Types
-import           Hasura.RQL.DDL.Headers        ()
 
-
-
-import           Control.Lens                  (makeLenses)
-import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Bifunctor                (bimap)
-import           Data.Aeson.TH
-import           Data.Scientific               (toBoundedInteger)
-import           Data.URL.Template
-import           Instances.TH.Lift             ()
-import           Language.Haskell.TH.Syntax    (Lift, Q, TExp)
-
+import qualified Data.Environment              as Env
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.Text                     as T
-import qualified Data.Environment              as Env
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.Haskell.TH.Syntax    as TH
 import qualified PostgreSQL.Binary.Decoding    as PD
 import qualified Test.QuickCheck               as QC
 
+import           Control.Lens                  (makeLenses)
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
+import           Data.Bifunctor                (bimap)
+import           Data.Scientific               (toBoundedInteger)
+import           Data.Text.Extended
+import           Data.URL.Template
+import           Instances.TH.Lift             ()
+import           Language.Haskell.TH.Syntax    (Lift, Q, TExp)
+
+import           Hasura.EncJSON
+import           Hasura.Incremental            (Cacheable)
+import           Hasura.RQL.DDL.Headers        ()
+import           Hasura.RQL.Types.Error
+import           Hasura.SQL.Backend
+import           Hasura.SQL.Types
+
+
+type family ScalarType (b :: Backend) where
+  ScalarType 'Postgres = PGScalarType
+
+type family Column (b :: Backend)  where
+  Column 'Postgres = PGCol
+
 newtype NonEmptyText = NonEmptyText { unNonEmptyText :: T.Text }
-  deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, DQuote, Generic, NFData, Cacheable)
+  deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, ToTxt, Generic, NFData, Cacheable)
 
 instance Arbitrary NonEmptyText where
   arbitrary = NonEmptyText . T.pack <$> QC.listOf1 (QC.elements alphaNumerics)
@@ -119,8 +135,8 @@ newtype RelName
 instance IsIden RelName where
   toIden rn = Iden $ relNameToTxt rn
 
-instance DQuote RelName where
-  dquoteTxt = relNameToTxt
+instance ToTxt RelName where
+  toTxt = relNameToTxt
 
 rootRelName :: RelName
 rootRelName = RelName rootText
@@ -152,7 +168,7 @@ instance Q.FromCol RelType where
   fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case
     "object" -> Just ObjRel
     "array"  -> Just ArrRel
-    _   -> Nothing
+    _        -> Nothing
 
 data RelInfo
   = RelInfo
@@ -179,8 +195,8 @@ newtype FieldName
 instance IsIden FieldName where
   toIden (FieldName f) = Iden f
 
-instance DQuote FieldName where
-  dquoteTxt (FieldName c) = c
+instance ToTxt FieldName where
+  toTxt (FieldName c) = c
 
 fromPGCol :: PGCol -> FieldName
 fromPGCol c = FieldName $ getPGColTxt c
@@ -282,18 +298,47 @@ isSystemDefined = unSystemDefined
 successMsg :: EncJSON
 successMsg = "{\"message\":\"success\"}"
 
+newtype NonNegativeInt = NonNegativeInt { getNonNegativeInt :: Int }
+  deriving (Show, Eq, ToJSON, Generic, NFData, Cacheable, Num)
+
+mkNonNegativeInt :: Int -> Maybe NonNegativeInt
+mkNonNegativeInt x = case x >= 0 of
+  True  -> Just $ NonNegativeInt x
+  False -> Nothing
+
+unsafeNonNegativeInt :: Int -> NonNegativeInt
+unsafeNonNegativeInt = NonNegativeInt
+
+instance FromJSON NonNegativeInt where
+  parseJSON = withScientific "NonNegativeInt" $ \t -> do
+    case (t >= 0) of
+      True  -> NonNegativeInt <$> maybeInt (toBoundedInteger t)
+      False -> fail "negative value not allowed"
+    where
+      maybeInt x = case x of
+        Just v  -> return v
+        Nothing -> fail "integer passed is out of bounds"
+
 newtype NonNegativeDiffTime = NonNegativeDiffTime { unNonNegativeDiffTime :: DiffTime }
-  deriving (Show, Eq,ToJSON,Generic, NFData, Cacheable)
+  deriving (Show, Eq,ToJSON,Generic, NFData, Cacheable, Num)
+
+unsafeNonNegativeDiffTime :: DiffTime -> NonNegativeDiffTime
+unsafeNonNegativeDiffTime = NonNegativeDiffTime
+
+mkNonNegativeDiffTime :: DiffTime -> Maybe NonNegativeDiffTime
+mkNonNegativeDiffTime x = case x >= 0 of
+  True  -> Just $ NonNegativeDiffTime x
+  False -> Nothing
 
 instance FromJSON NonNegativeDiffTime where
   parseJSON = withScientific "NonNegativeDiffTime" $ \t -> do
-    case (t > 0) of
+    case (t >= 0) of
       True  -> return $ NonNegativeDiffTime . realToFrac $ t
       False -> fail "negative value not allowed"
 
 newtype ResolvedWebhook
   = ResolvedWebhook { unResolvedWebhook :: Text}
-  deriving ( Show, Eq, FromJSON, ToJSON, Hashable, DQuote, Lift)
+  deriving ( Show, Eq, FromJSON, ToJSON, Hashable, ToTxt, Lift)
 
 newtype InputWebhook
   = InputWebhook {unInputWebhook :: URLTemplate}
