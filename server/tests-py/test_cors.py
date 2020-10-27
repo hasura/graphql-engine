@@ -32,6 +32,14 @@ class TestCors():
         origin = 'https://app.foo.bar.com'
         resp = hge_ctx.http.get(url(hge_ctx), headers={'Origin': origin})
         self.assert_cors_headers(origin, resp)
+        
+    def test_cors_preflight_headers(self, hge_ctx):
+        origin = 'https://app.foo.bar.com'
+        resp = hge_ctx.http.options(url(hge_ctx), headers={
+            'Access-Control-Request-Method': 'GET',
+            'Access-Control-Request-Headers': 'content-type,x-hasura-admin-secret',
+        })
+        self.assert_cors_headers(origin, resp)
 
     def test_cors_foo_bar_sub_sub_domain_fails(self, hge_ctx):
         origin = 'https://inst1.app.foo.bar.com'
