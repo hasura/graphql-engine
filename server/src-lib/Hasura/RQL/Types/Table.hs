@@ -438,7 +438,7 @@ type TableCoreInfo b = TableCoreInfoG (FieldInfo b) (ColumnInfo b)
 tciUniqueOrPrimaryKeyConstraints :: TableCoreInfoG a b -> Maybe (NonEmpty Constraint)
 tciUniqueOrPrimaryKeyConstraints info = NE.nonEmpty $
   maybeToList (_pkConstraint <$> _tciPrimaryKey info)
-  <> (toList (_tciUniqueConstraints info))
+  <> toList (_tciUniqueConstraints info)
 
 data TableInfo (b :: Backend)
   = TableInfo
