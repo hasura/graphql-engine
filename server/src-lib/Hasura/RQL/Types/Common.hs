@@ -132,8 +132,8 @@ newtype RelName
   = RelName { getRelTxt :: NonEmptyText }
   deriving (Show, Eq, Hashable, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Lift, Generic, Arbitrary, NFData, Cacheable)
 
-instance IsIden RelName where
-  toIden rn = Iden $ relNameToTxt rn
+instance IsIdentifier RelName where
+  toIdentifier rn = Identifier $ relNameToTxt rn
 
 instance ToTxt RelName where
   toTxt = relNameToTxt
@@ -192,8 +192,8 @@ newtype FieldName
            , Semigroup
            )
 
-instance IsIden FieldName where
-  toIden (FieldName f) = Iden f
+instance IsIdentifier FieldName where
+  toIdentifier (FieldName f) = Identifier f
 
 instance ToTxt FieldName where
   toTxt (FieldName c) = c

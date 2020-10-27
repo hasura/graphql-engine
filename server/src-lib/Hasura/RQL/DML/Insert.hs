@@ -319,7 +319,7 @@ insertOrUpdateCheckExpr qt (Just _conflict) insCheck (Just updCheck) =
   S.SECond
     (S.BECompare
       S.SEQ
-      (S.SEQIden (S.QIden (S.mkQual qt) (Iden "xmax")))
+      (S.SEQIdentifier (S.QIdentifier (S.mkQual qt) (Identifier "xmax")))
       (S.SEUnsafe "0"))
     (insertCheckExpr "insert check constraint failed" insCheck)
     (insertCheckExpr "update check constraint failed" updCheck)

@@ -89,7 +89,7 @@ expandOperator infos (column, op) = S.SetExpItem $ (column,) $ case op of
   UpdDeleteElem   e -> S.mkSQLOpExp S.jsonbDeleteOp       identifier (asInt  e)
   UpdDeleteAtPath a -> S.mkSQLOpExp S.jsonbDeleteAtPathOp identifier (asArray a)
   where
-    identifier = S.SEIden $ toIden column
+    identifier = S.SEIdentifier $ toIdentifier column
     asInt  e   = S.SETyAnn e S.intTypeAnn
     asText e   = S.SETyAnn e S.textTypeAnn
     asJSON e   = S.SETyAnn e S.jsonbTypeAnn

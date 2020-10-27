@@ -126,7 +126,7 @@ parsePGScalarValue columnType value = case columnType of
         let enums = map getEnumValue $ M.keys enumValues
         unless (enumValueName `elem` enums) $ throw400 UnexpectedPayload
           $ "expected one of the values " <> dquoteList enums
-          <> " for type " <> snakeCaseQualObject tableName <<> ", given " <>> enumValueName
+          <> " for type " <> snakeCaseQualifiedObject tableName <<> ", given " <>> enumValueName
         pure $ PGValText $ G.unName enumValueName
 
 parsePGScalarValues

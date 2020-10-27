@@ -127,7 +127,7 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta schemas
     checkMultipleDecls "cron triggers" $ map ctName cronTriggers
 
   where
-    withTableName qt = withPathK (qualObjectToText qt)
+    withTableName qt = withPathK (qualifiedObjectToText qt)
 
     checkMultipleDecls t l = do
       let dups = getDups l
