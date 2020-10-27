@@ -186,10 +186,7 @@ the nodes generated will be:
 - ``delete_users_address_by_pk``
 
 .. note::
-  graphql-engine requires the constraint names (if any) of a table to be GraphQL compliant_ in order to be
-   able to track it.
-
-.. _compliant: https://spec.graphql.org/June2018/#sec-Names
+  graphql-engine requires the constraint names (if any) of a table to be GraphQL `compliant <https://spec.graphql.org/June2018/#sec-Names>`__ in order to be able to track it.
 
 .. _track_table_args_syntax_v2:
 
