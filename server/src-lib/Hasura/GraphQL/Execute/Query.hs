@@ -33,9 +33,8 @@ import qualified Hasura.RQL.IR.Select                          as DS
 import qualified Hasura.Tracing                                as Tracing
 
 import           Hasura.Backends.Postgres.Connection
-import           Hasura.Backends.Postgres.Execute.Prepare
-import           Hasura.Backends.Postgres.Execute.Query
 import           Hasura.Backends.Postgres.Execute.RemoteJoin
+import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.RemoteJoin
 import           Hasura.Backends.Postgres.Translate.Select     (asSingleRowJsonResp)
 import           Hasura.EncJSON
@@ -50,6 +49,20 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Version                         (HasVersion)
 import           Hasura.Session
 
+
+data PreparedSql
+  = PreparedSql
+  { _psQuery       :: !Q.Query
+  , _psPrepArgs    :: !PrepArgMap
+  , _psRemoteJoins :: !(Maybe (RemoteJoins 'Postgres))
+  }
+
+-- | Required to log in `query-log`
+instance J.ToJSON PreparedSql where
+  toJSON (PreparedSql q prepArgs _) =
+    J.object [ "query" J..= Q.getQueryText q
+             , "prepared_arguments" J..= fmap (pgScalarValueToJson . snd) prepArgs
+             ]
 
 data RootFieldPlan
   = RFPPostgres !PreparedSql

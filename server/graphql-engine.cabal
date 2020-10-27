@@ -302,8 +302,6 @@ library
                      , Hasura.App
 
                      , Hasura.Backends.Postgres.Connection
-                     , Hasura.Backends.Postgres.Execute.Query
-                     , Hasura.Backends.Postgres.Execute.Prepare
                      , Hasura.Backends.Postgres.Execute.Mutation
                      , Hasura.Backends.Postgres.Execute.RemoteJoin
                      , Hasura.Backends.Postgres.Translate.Delete
