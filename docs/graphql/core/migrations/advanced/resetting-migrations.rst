@@ -4,8 +4,8 @@
 
 .. _reset_migration:
 
-Reset Hasura migrations
-=======================
+Resetting Hasura migrations
+===========================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -15,7 +15,7 @@ Reset Hasura migrations
 Introduction
 ------------
 
-This page explains how to reset the state of migrations and create new migrations from the state that is on the server. This can be useful if the current migration state on your local machine is corrupted.
+If you have a lot of migrations and you need to squash them or your current migration state on the local machine is corrupted, you can reset the state and create new migrations from the state that is on the server.
 
 Step 1: Delete the local migrations
 -----------------------------------
