@@ -163,7 +163,7 @@ procBoolExp
   :: (QErrM m, TableCoreInfoRM m)
   => QualifiedTable
   -> FieldInfoMap (FieldInfo 'Postgres)
-  -> BoolExp
+  -> BoolExp 'Postgres
   -> m (AnnBoolExpPartialSQL 'Postgres, [SchemaDependency])
 procBoolExp tn fieldInfoMap be = do
   abe <- annBoolExp valueParser fieldInfoMap $ unBoolExp be
@@ -187,7 +187,7 @@ getDepHeadersFromVal val = case val of
     parseObject o =
       concatMap getDepHeadersFromVal (M.elems o)
 
-getDependentHeaders :: BoolExp -> [Text]
+getDependentHeaders :: BoolExp b -> [Text]
 getDependentHeaders (BoolExp boolExp) =
   flip foldMap boolExp $ \(ColExp _ v) -> getDepHeadersFromVal v
 

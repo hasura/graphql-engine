@@ -247,7 +247,7 @@ convBoolExp
   :: (UserInfoM m, QErrM m, CacheRM m)
   => FieldInfoMap (FieldInfo 'Postgres)
   -> SelPermInfo 'Postgres
-  -> BoolExp
+  -> BoolExp 'Postgres
   -> SessVarBldr 'Postgres m
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> m (AnnBoolExpSQL 'Postgres)

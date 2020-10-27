@@ -26,6 +26,7 @@ import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Backend
 
+
 data JsonAggSelect
   = JASMultipleRows
   | JASSingleObject
