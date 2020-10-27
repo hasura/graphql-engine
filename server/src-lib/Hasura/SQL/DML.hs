@@ -115,9 +115,9 @@ instance ToSQL FromExp where
   toSQL (FromExp items) =
     "FROM" <~> (", " <+> items)
 
-mkIdenFromExp :: (IsIden a) => a -> FromExp
+mkIdenFromExp :: (IsIdentifier a) => a -> FromExp
 mkIdenFromExp a =
-  FromExp [FIIden $ toIden a]
+  FromExp [FIIdentifier $ toIdentifier a]
 
 mkSimpleFromExp :: QualifiedTable -> FromExp
 mkSimpleFromExp qt =
@@ -127,7 +127,7 @@ mkSelFromExp :: Bool -> Select -> TableName -> FromItem
 mkSelFromExp isLateral sel tn =
   FISelect (Lateral isLateral) sel alias
   where
-    alias = Alias $ toIden tn
+    alias = Alias $ toIdentifier tn
 
 mkFuncFromItem :: QualifiedFunction -> FunctionArgs -> FromItem
 mkFuncFromItem qf args = FIFunc $ FunctionExp qf args Nothing
@@ -140,7 +140,7 @@ mkRowExp extrs = let
 
   -- SELECT r FROM (SELECT col1, col2, .. ) AS r
   outerSel = mkSelect
-             { selExtr = [Extractor (SERowIden $ toIden innerSelName) Nothing]
+             { selExtr = [Extractor (SERowIdentifier $ toIdentifier innerSelName) Nothing]
              , selFrom = Just $ FromExp
                          [mkSelFromExp False innerSel innerSelName]
              }
@@ -179,14 +179,14 @@ instance ToSQL Select where
     ctes -> toSQL $ SelectWith (map (CTESelect <$>) ctes) sel { selCTEs = [] }
 
 
-mkSIdenExp :: (IsIden a) => a -> SQLExp
-mkSIdenExp = SEIden . toIden
+mkSIdenExp :: (IsIdentifier a) => a -> SQLExp
+mkSIdenExp = SEIdentifier . toIdentifier
 
-mkQIdenExp :: (IsIden a, IsIden b) => a -> b -> SQLExp
-mkQIdenExp q t = SEQIden $ mkQIden q t
+mkQIdenExp :: (IsIdentifier a, IsIdentifier b) => a -> b -> SQLExp
+mkQIdenExp q t = SEQIdentifier $ mkQIdentifier q t
 
 data Qual
-  = QualIden !Iden !(Maybe TypeAnn)
+  = QualifiedIdentifier !Identifier !(Maybe TypeAnn)
   | QualTable !QualifiedTable
   | QualVar !Text
   deriving (Show, Eq, Generic, Data)
@@ -198,22 +198,22 @@ mkQual :: QualifiedTable -> Qual
 mkQual = QualTable
 
 instance ToSQL Qual where
-  toSQL (QualIden i tyM) = toSQL i <> toSQL tyM
-  toSQL (QualTable qt)   = toSQL qt
-  toSQL (QualVar v)      = TB.text v
+  toSQL (QualifiedIdentifier i tyM) = toSQL i <> toSQL tyM
+  toSQL (QualTable qt)              = toSQL qt
+  toSQL (QualVar v)                 = TB.text v
 
-mkQIden :: (IsIden a, IsIden b) => a -> b -> QIden
-mkQIden q t = QIden (QualIden (toIden q) Nothing) (toIden t)
+mkQIdentifier :: (IsIdentifier a, IsIdentifier b) => a -> b -> QIdentifier
+mkQIdentifier q t = QIdentifier (QualifiedIdentifier (toIdentifier q) Nothing) (toIdentifier t)
 
-data QIden
-  = QIden !Qual !Iden
+data QIdentifier
+  = QIdentifier !Qual !Identifier
   deriving (Show, Eq, Generic, Data)
-instance NFData QIden
-instance Cacheable QIden
-instance Hashable QIden
+instance NFData QIdentifier
+instance Cacheable QIdentifier
+instance Hashable QIdentifier
 
-instance ToSQL QIden where
-  toSQL (QIden qual iden) =
+instance ToSQL QIdentifier where
+  toSQL (QIdentifier qual iden) =
     mconcat [toSQL qual, TB.char '.', toSQL iden]
 
 newtype SQLOp
@@ -301,21 +301,21 @@ data SQLExp
   | SESelect !Select
   | SEStar !(Maybe Qual)
   -- ^ all fields (@*@) or all fields from relation (@iden.*@)
-  | SEIden !Iden
+  | SEIdentifier !Identifier
   -- iden and row identifier are distinguished for easier rewrite rules
-  | SERowIden !Iden
-  | SEQIden !QIden
+  | SERowIdentifier !Identifier
+  | SEQIdentifier !QIdentifier
   | SEFnApp !Text ![SQLExp] !(Maybe OrderByExp)
   | SEOpApp !SQLOp ![SQLExp]
   | SETyAnn !SQLExp !TypeAnn
   | SECond !BoolExp !SQLExp !SQLExp
   | SEBool !BoolExp
-  | SEExcluded !Iden
+  | SEExcluded !Identifier
   | SEArray ![SQLExp]
   | SEArrayIndex !SQLExp !SQLExp
   | SETuple !TupleExp
   | SECount !CountType
-  | SENamedArg !Iden !SQLExp
+  | SENamedArg !Identifier !SQLExp
   | SEFunction !FunctionExp
   deriving (Show, Eq, Generic, Data)
 instance NFData SQLExp
@@ -329,17 +329,17 @@ instance J.ToJSON SQLExp where
   toJSON = J.toJSON . toSQLTxt
 
 newtype Alias
-  = Alias { getAlias :: Iden }
+  = Alias { getAlias :: Identifier }
   deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
-instance IsIden Alias where
-  toIden (Alias iden) = iden
+instance IsIdentifier Alias where
+  toIdentifier (Alias iden) = iden
 
 instance ToSQL Alias where
   toSQL (Alias iden) = "AS" <~> toSQL iden
 
-toAlias :: (IsIden a) => a -> Alias
-toAlias = Alias . toIden
+toAlias :: (IsIdentifier a) => a -> Alias
+toAlias = Alias . toIdentifier
 
 countStar :: SQLExp
 countStar = SECount CTStar
@@ -359,12 +359,12 @@ instance ToSQL SQLExp where
     TB.char '*'
   toSQL (SEStar (Just qual)) =
     mconcat [parenB (toSQL qual), TB.char '.', TB.char '*']
-  toSQL (SEIden iden) =
+  toSQL (SEIdentifier iden) =
     toSQL iden
-  toSQL (SERowIden iden) =
+  toSQL (SERowIdentifier iden) =
     toSQL iden
-  toSQL (SEQIden qIden) =
-    toSQL qIden
+  toSQL (SEQIdentifier qIdentifier) =
+    toSQL qIdentifier
   -- https://www.postgresql.org/docs/10/static/sql-expressions.html#SYNTAX-AGGREGATES
   toSQL (SEFnApp name args mObe) =
     TB.text name <> parenB ((", " <+> args) <~> toSQL mObe)
@@ -430,15 +430,15 @@ applyRowToJson extrs =
 getExtrAlias :: Extractor -> Maybe Alias
 getExtrAlias (Extractor _ ma) = ma
 
-mkAliasedExtr :: (IsIden a, IsIden b) => a -> Maybe b -> Extractor
+mkAliasedExtr :: (IsIdentifier a, IsIdentifier b) => a -> Maybe b -> Extractor
 mkAliasedExtr t = mkAliasedExtrFromExp (mkSIdenExp t)
 
-mkAliasedExtrFromExp :: (IsIden a) => SQLExp -> Maybe a -> Extractor
+mkAliasedExtrFromExp :: (IsIdentifier a) => SQLExp -> Maybe a -> Extractor
 mkAliasedExtrFromExp sqlExp ma = Extractor sqlExp (aliasF <$> ma)
   where
-    aliasF = Alias . toIden
+    aliasF = Alias . toIdentifier
 
-mkExtr :: (IsIden a) => a -> Extractor
+mkExtr :: (IsIdentifier a) => a -> Extractor
 mkExtr t = Extractor (mkSIdenExp t) Nothing
 
 instance ToSQL Extractor where
@@ -470,7 +470,7 @@ instance Hashable FunctionArgs
 instance ToSQL FunctionArgs where
   toSQL (FunctionArgs positionalArgs namedArgsMap) =
     let namedArgs = flip map (HM.toList namedArgsMap) $
-                    \(argName, argVal) -> SENamedArg (Iden argName) argVal
+                    \(argName, argVal) -> SENamedArg (Identifier argName) argVal
     in parenB $ ", " <+> (positionalArgs <> namedArgs)
 
 data DefinitionListItem
@@ -488,18 +488,18 @@ instance ToSQL DefinitionListItem where
 
 data FunctionAlias
   = FunctionAlias
-  { _faIden           :: !Alias
+  { _faIdentifier     :: !Alias
   , _faDefinitionList :: !(Maybe [DefinitionListItem])
   } deriving (Show, Eq, Data, Generic)
 instance NFData FunctionAlias
 instance Cacheable FunctionAlias
 instance Hashable FunctionAlias
 
-mkSimpleFunctionAlias :: Iden -> FunctionAlias
+mkSimpleFunctionAlias :: Identifier -> FunctionAlias
 mkSimpleFunctionAlias identifier =
   FunctionAlias (toAlias identifier) Nothing
 
-mkFunctionAlias :: Iden -> Maybe [(PGCol, PGScalarType)] -> FunctionAlias
+mkFunctionAlias :: Identifier -> Maybe [(PGCol, PGScalarType)] -> FunctionAlias
 mkFunctionAlias identifier listM =
   FunctionAlias (toAlias identifier) $
   fmap (map (uncurry DefinitionListItem)) listM
@@ -526,7 +526,7 @@ instance ToSQL FunctionExp where
 
 data FromItem
   = FISimple !QualifiedTable !(Maybe Alias)
-  | FIIden !Iden
+  | FIIdentifier !Identifier
   | FIFunc !FunctionExp
   | FIUnnest ![SQLExp] !Alias ![SQLExp]
   | FISelect !Lateral !Select !Alias
@@ -549,12 +549,12 @@ mkLateralFromItem = FISelect (Lateral True)
 
 toColTupExp :: [PGCol] -> SQLExp
 toColTupExp =
-  SETuple . TupleExp . map (SEIden . Iden . getPGColTxt)
+  SETuple . TupleExp . map (SEIdentifier . Identifier . getPGColTxt)
 
 instance ToSQL FromItem where
   toSQL (FISimple qt mal) =
     toSQL qt <~> toSQL mal
-  toSQL (FIIden iden) =
+  toSQL (FIIdentifier iden) =
     toSQL iden
   toSQL (FIFunc funcExp) = toSQL funcExp
   -- unnest(expressions) alias(columns)
@@ -793,7 +793,7 @@ buildUpsertSetExp cols preSet =
   where
     setExps = HM.union preSet $ HM.fromList $
       flip map cols $ \col ->
-        (col, SEExcluded $ toIden col)
+        (col, SEExcluded $ toIdentifier col)
 
 
 newtype UsingExp = UsingExp [TableName]

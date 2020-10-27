@@ -153,14 +153,14 @@ mutateAndFetchCols qt cols (cte, p) strfyNum =
     -- See Note [Prepared statements in Mutations]
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sql) (toList p) False
   where
-    aliasIden = Iden $ qualObjectToText qt <> "__mutation_result"
-    tabFrom = FromIden aliasIden
+    aliasIdentifier = Identifier $ qualifiedObjectToText qt <> "__mutation_result"
+    tabFrom = FromIdentifier aliasIdentifier
     tabPerm = TablePerm annBoolExpTrue Nothing
     selFlds = flip map cols $
               \ci -> (fromPGCol $ pgiColumn ci, mkAnnColumnFieldAsText ci)
 
     sql = toSQL selectWith
-    selectWith = S.SelectWith [(S.Alias aliasIden, cte)] select
+    selectWith = S.SelectWith [(S.Alias aliasIdentifier, cte)] select
     select = S.mkSelect {S.selExtr = [S.Extractor extrExp Nothing]}
     extrExp = S.applyJsonBuildObj
               [ S.SELit "affected_rows", affRowsSel
@@ -170,7 +170,7 @@ mutateAndFetchCols qt cols (cte, p) strfyNum =
     affRowsSel = S.SESelect $
       S.mkSelect
       { S.selExtr = [S.Extractor S.countStar Nothing]
-      , S.selFrom = Just $ S.FromExp [S.FIIden aliasIden]
+      , S.selFrom = Just $ S.FromExp [S.FIIdentifier aliasIdentifier]
       }
     colSel = S.SESelect $ mkSQLSelect JASMultipleRows $
              AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum
@@ -193,8 +193,8 @@ mkSelCTEFromColVals qt allCols colVals =
         , S.selFrom = Just $ S.FromExp [fromItem]
         }
   where
-    rowAlias = Iden "row"
-    extractor = S.selectStar' $ S.QualIden rowAlias $ Just $ S.TypeAnn $ toSQLTxt qt
+    rowAlias = Identifier "row"
+    extractor = S.selectStar' $ S.QualifiedIdentifier rowAlias $ Just $ S.TypeAnn $ toSQLTxt qt
     sortedCols = sortCols allCols
     mkTupsFromColVal colVal =
       fmap S.TupleExp $ forM sortedCols $ \ci -> do

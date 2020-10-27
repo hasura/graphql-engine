@@ -361,7 +361,7 @@ type TableAggregateFieldsG b v = Fields (TableAggregateFieldG b v)
 type TableAggregateFields b = TableAggregateFieldsG b S.SQLExp
 
 data ArgumentExp a
-  = AETableRow !(Maybe Iden) -- ^ table row accessor
+  = AETableRow !(Maybe Identifier) -- ^ table row accessor
   | AESession !a -- ^ JSON/JSONB hasura session variable object
   | AEInput !a
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
@@ -371,7 +371,7 @@ type FunctionArgsExpTableRow v = FunctionArgsExpG (ArgumentExp v)
 
 data SelectFromG (b :: Backend) v
   = FromTable !QualifiedTable
-  | FromIden !Iden
+  | FromIdentifier !Identifier
   | FromFunction !QualifiedFunction
                  !(FunctionArgsExpTableRow v)
                  -- a definition list
@@ -519,8 +519,8 @@ insertFunctionArg argName idx value (FunctionArgsExp positional named) =
 
 data SourcePrefixes
   = SourcePrefixes
-  { _pfThis :: !Iden -- ^ Current source prefix
-  , _pfBase :: !Iden
+  { _pfThis :: !Identifier -- ^ Current source prefix
+  , _pfBase :: !Identifier
   -- ^ Base table source row identifier to generate
   -- the table's column identifiers for computed field
   -- function input parameters
@@ -529,7 +529,7 @@ instance Hashable SourcePrefixes
 
 data SelectSource
   = SelectSource
-  { _ssPrefix   :: !Iden
+  { _ssPrefix   :: !Identifier
   , _ssFrom     :: !S.FromItem
   , _ssDistinct :: !(Maybe S.DistinctExpr)
   , _ssWhere    :: !S.BoolExp
@@ -551,7 +551,7 @@ instance Semigroup (SelectNode 'Postgres) where
 
 data ObjectSelectSource
   = ObjectSelectSource
-  { _ossPrefix :: !Iden
+  { _ossPrefix :: !Identifier
   , _ossFrom   :: !S.FromItem
   , _ossWhere  :: !S.BoolExp
   } deriving (Show, Eq, Generic)

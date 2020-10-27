@@ -242,7 +242,7 @@ resolveAsyncActionQuery userInfo annAction =
         AsyncTypename t -> RS.AFExpression t
         AsyncOutput annFields ->
           -- See Note [Resolving async action query/subscription]
-          let inputTableArgument = RS.AETableRow $ Just $ Iden "response_payload"
+          let inputTableArgument = RS.AETableRow $ Just $ Identifier "response_payload"
               jsonAggSelect = mkJsonAggSelect outputType
           in RS.AFComputedField $ RS.CFSTable jsonAggSelect $
              processOutputSelectionSet inputTableArgument outputType
