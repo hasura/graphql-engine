@@ -27,6 +27,37 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 
+type SelectQExt = SelectG (ExtCol 'Postgres) BoolExp Int
+
+-- Columns in RQL
+data ExtCol
+  = ECSimple !PGCol
+  | ECRel !RelName !(Maybe RelName) !SelectQExt
+  deriving (Lift)
+
+instance ToJSON ExtCol where
+  toJSON (ECSimple s) = toJSON s
+  toJSON (ECRel rn mrn selq) =
+    object $ [ "name" .= rn
+             , "alias" .= mrn
+             ] ++ selectGToPairs selq
+
+instance FromJSON ExtCol where
+  parseJSON v@(Object o) =
+    ECRel
+    <$> o .:  "name"
+    <*> o .:? "alias"
+    <*> parseJSON v
+  parseJSON v@(String _) =
+    ECSimple <$> parseJSON v
+  parseJSON _ =
+    fail $ mconcat
+    [ "A column should either be a string or an "
+    , "object (relationship)"
+    ]
+
+
+
 convSelCol :: (UserInfoM m, QErrM m, CacheRM m)
            => FieldInfoMap (FieldInfo 'Postgres)
            -> SelPermInfo 'Postgres

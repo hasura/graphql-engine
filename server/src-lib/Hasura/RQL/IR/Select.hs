@@ -28,40 +28,11 @@ import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Backend
 
-type SelectQExt b = SelectG (ExtCol b) BoolExp Int
-
 data JsonAggSelect
   = JASMultipleRows
   | JASSingleObject
   deriving (Show, Eq, Generic)
 instance Hashable JsonAggSelect
-
--- Columns in RQL
-data ExtCol (b :: Backend)
-  = ECSimple !(Column b)
-  | ECRel !RelName !(Maybe RelName) !(SelectQExt b)
-deriving instance Lift (ExtCol 'Postgres)
-
-instance ToJSON (ExtCol 'Postgres) where
-  toJSON (ECSimple s) = toJSON s
-  toJSON (ECRel rn mrn selq) =
-    object $ [ "name" .= rn
-             , "alias" .= mrn
-             ] ++ selectGToPairs selq
-
-instance FromJSON (ExtCol 'Postgres) where
-  parseJSON v@(Object o) =
-    ECRel
-    <$> o .:  "name"
-    <*> o .:? "alias"
-    <*> parseJSON v
-  parseJSON v@(String _) =
-    ECSimple <$> parseJSON v
-  parseJSON _ =
-    fail $ mconcat
-    [ "A column should either be a string or an "
-    , "object (relationship)"
-    ]
 
 data AnnAggregateOrderBy (b :: Backend)
   = AAOCount
