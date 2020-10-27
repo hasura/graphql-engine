@@ -57,8 +57,8 @@ class TestCreateRemoteRelationship:
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_joining_singleton_with_array.yaml')
         assert st_code == 200, resp
 
-        # st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_with_interface.yaml')
-        # assert st_code == 200, resp
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_with_interface.yaml')
+        assert st_code == 200, resp
 
     def test_create_invalid(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_invalid_remote_rel_hasura_field.yaml')
@@ -202,10 +202,11 @@ class TestExecution:
     #     assert st_code == 200, resp
     #     check_query_f(hge_ctx, self.dir() + 'remote_rel_fragments.yaml')
 
-    # TODO: Support interface in remote relationships
-    # def test_with_interface(self, hge_ctx):
-    #     check_query_f(hge_ctx, self.dir() + 'mixed_interface.yaml')
-    #     check_query_f(hge_ctx, self.dir() + 'remote_rel_interface.yaml')
+    def test_with_interface(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_with_interface.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'mixed_interface.yaml')
+        check_query_f(hge_ctx, self.dir() + 'remote_rel_interface.yaml')
 
     def test_with_errors(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')

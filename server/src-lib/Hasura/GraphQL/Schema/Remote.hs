@@ -11,6 +11,7 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict                   as Map
 import qualified Data.HashMap.Strict.Extended          as Map
 import qualified Data.HashMap.Strict.InsOrd            as OMap
+import qualified Data.HashMap.Strict.InsOrd.Extended   as OMap
 import qualified Data.List.NonEmpty                    as NE
 
 import           Data.Foldable                         (sequenceA_)
@@ -278,9 +279,9 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
           -- selection set provided
           -- #1 of Note [Querying remote schema Interfaces]
           commonInterfaceFields =
-            Map.elems $
-            Map.mapMaybe allTheSame $
-            Map.groupOn G._fName $
+            OMap.elems $
+            OMap.mapMaybe (allTheSame . toList) $
+            OMap.groupListWith G._fName $
             concatMap (filter ((`elem` interfaceFieldNames) . G._fName) . snd) $
             objNameAndFields
 
