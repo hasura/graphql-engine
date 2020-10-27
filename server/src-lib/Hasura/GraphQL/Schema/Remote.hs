@@ -8,8 +8,6 @@ module Hasura.GraphQL.Schema.Remote
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                   as Map
-import qualified Data.HashMap.Strict.Extended          as Map
 import qualified Data.HashMap.Strict.InsOrd            as OMap
 import qualified Data.HashMap.Strict.InsOrd.Extended   as OMap
 import qualified Data.List.NonEmpty                    as NE
