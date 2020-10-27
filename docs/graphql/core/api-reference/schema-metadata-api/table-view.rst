@@ -149,9 +149,9 @@ Add a table/view ``author``:
       }
    }
 
-An ``identifier`` can be used to track a table with the identifier. This can
-be useful when a table name is not GraphQL compliant, like ``Users Address``.
-An ``identifier`` like ``users_address`` will complement the ``"Users Address"``
+A table can be tracked with a ``custom name``. This can be useful when a table
+name is not GraphQL compliant, like ``Users Address``. A ``custom name`` like
+``users_address`` will complement the ``"Users Address"``
 table, so that it can be added to the GraphQL schema.
 
 .. code-block:: http
@@ -166,7 +166,7 @@ table, so that it can be added to the GraphQL schema.
       "args": {
         "table": "Author Details",
         "configuration": {
-           "identifier": "author_details"
+           "custom_name": "author_details"
         }
       }
    }
@@ -224,11 +224,11 @@ Table Config
      - Required
      - Schema
      - Description
-   * - identifier
+   * - custom_name
      - false
      - ``String``
-     - Customise the ``<table-name>`` with the identifier. The GraphQL nodes for the table
-       will be generated according to the identifier.
+     - Customise the ``<table-name>`` with the provided custom name value
+       . The GraphQL nodes for the table will be generated according to the custom name.
    * - custom_root_fields
      - false
      - :ref:`Custom Root Fields <custom_root_fields>`
@@ -357,14 +357,14 @@ Args syntax
      - :ref:`CustomColumnNames`
      - Customise the column fields
 
-.. _set_table_configuration:
+.. _set_table_customization:
 
-set_table_configuration
+set_table_customization
 -----------------------
 
-``set_table_configuration`` sets the configuration of a table through which
-an identifier, custom root fields and custom column names of an already tracked
-table can be set. This will **replace** the already present configuration.
+``set_table_customization`` allows to customize any given table with
+a custom name, custom root fields and custom column names of an already tracked
+table. This will **replace** the already present customization.
 
 :ref:`set_table_custom_fields <set_table_custom_fields>` has been deprecated in
 favour of this API.
@@ -401,7 +401,7 @@ Set configuration for table/view ``author``:
       }
    }
 
-.. _set_table_configuration_syntax:
+.. _set_table_customization_syntax:
 
 Args syntax
 ^^^^^^^^^^^

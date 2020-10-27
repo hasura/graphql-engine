@@ -4,7 +4,7 @@
   response:
     message: success
   query:
-    type: set_table_configuration
+    type: set_table_customization
     args:
       table: article
       configuration:
@@ -41,7 +41,7 @@
   response:
     message: success
   query:
-    type: set_table_configuration
+    type: set_table_customization
     args:
       table: article
       configuration:

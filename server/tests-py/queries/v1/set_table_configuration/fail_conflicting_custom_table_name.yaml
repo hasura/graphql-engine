@@ -1,4 +1,4 @@
-description: set table identifier which conflicts with other nodes
+description: set custom table name which conflicts with other nodes
 status: 500
 url: /v1/query
 response:
@@ -6,8 +6,8 @@ response:
   code: unexpected
   path: $.args
 query:
-  type: set_table_configuration
+  type: set_table_customization
   args:
     table: author
     configuration:
-      identifier: article # article table has already been tracked
+      custom_name: article # article table has already been tracked

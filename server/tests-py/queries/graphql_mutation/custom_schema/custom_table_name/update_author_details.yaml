@@ -1,4 +1,4 @@
-description: updates in table "author details" with identifier "author_details"
+description: updates in table "author details" with custom name "author_details"
 status: 200
 url: /v1/graphql
 response:

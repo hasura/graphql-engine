@@ -4,7 +4,7 @@
   response:
     message: success
   query:
-    type: set_table_configuration
+    type: set_table_customization
     args:
       table: author
       configuration:
@@ -37,7 +37,7 @@
   response:
     message: success
   query:
-    type: set_table_configuration
+    type: set_table_customization
     args:
       table: author
       configuration:

@@ -23,7 +23,7 @@ args:
   args:
     table: author details
     configuration:
-      identifier: author_details
+      custom_name: author_details
 
 - type: track_table
   version: 2

@@ -17,4 +17,4 @@ args:
   args:
     table: user address
     configuration:
-      identifier: user_address
+      custom_name: user_address

@@ -42,10 +42,10 @@ def getTypeNameFromType(typeObject):
         raise Exception("typeObject doesn't have name and ofType is not an object")
 
 @pytest.mark.usefixtures('per_class_tests_db_state')
-class TestGraphqlIntrospectionWithCustomTableIdentifier:
+class TestGraphqlIntrospectionWithCustomTableName:
 
     # test to check some of the type names that are generated
-    # while tracking a table with an identifier
+    # while tracking a table with a custom name
     def test_introspection(self, hge_ctx):
         with open(self.dir() + "/introspection.yaml") as c:
             conf = yaml.safe_load(c)
@@ -97,4 +97,4 @@ class TestGraphqlIntrospectionWithCustomTableIdentifier:
 
     @classmethod
     def dir(cls):
-        return "queries/graphql_introspection/custom_table_identifier"
+        return "queries/graphql_introspection/custom_table_name"

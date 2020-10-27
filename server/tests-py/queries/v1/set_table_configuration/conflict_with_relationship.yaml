@@ -22,7 +22,7 @@ response:
   error: cannot continue due to new inconsistent metadata
   code: unexpected
 query:
-  type: set_table_configuration
+  type: set_table_customization
   args:
     table: author
     configuration:

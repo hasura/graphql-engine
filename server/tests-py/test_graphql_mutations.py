@@ -545,7 +545,7 @@ class TestGraphqlMutationCustomSchema:
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @use_mutation_fixtures
-class TestGraphqlMutationCustomGraphQLTableIdentifier:
+class TestGraphqlMutationCustomGraphQLTableName:
 
     def test_insert_author(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/insert_author_details.yaml', transport)
@@ -561,7 +561,7 @@ class TestGraphqlMutationCustomGraphQLTableIdentifier:
 
     @classmethod
     def dir(cls):
-        return "queries/graphql_mutation/custom_schema/custom_table_identifier"
+        return "queries/graphql_mutation/custom_schema/custom_table_name"
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @use_mutation_fixtures

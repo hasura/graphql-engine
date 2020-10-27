@@ -129,7 +129,7 @@ data RQLQueryV1
   | RQDumpInternalState !DumpInternalState
 
   | RQSetCustomTypes !CustomTypes
-  | RQSetTableConfiguration !SetTableConfiguration
+  | RQSetTableCustomization !SetTableCustomization
   deriving (Show, Eq)
 
 data RQLQueryV2
@@ -305,7 +305,7 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
 
   RQDumpInternalState _           -> False
   RQSetCustomTypes _              -> True
-  RQSetTableConfiguration _       -> True
+  RQSetTableCustomization _       -> True
 
   RQBulk qs                       -> any queryModifiesSchemaCache qs
 
@@ -442,7 +442,7 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQRunSql q                   -> runRunSQL q
 
       RQSetCustomTypes q           -> runSetCustomTypes q
-      RQSetTableConfiguration q    -> runSetTableConfiguration q
+      RQSetTableCustomization q    -> runSetTableCustomization q
 
       RQBulk qs                    -> encJFromList <$> indexedMapM (runQueryM env) qs
 
@@ -531,7 +531,7 @@ requiresAdmin = \case
 
     RQDumpInternalState _           -> True
     RQSetCustomTypes _              -> True
-    RQSetTableConfiguration _       -> True
+    RQSetTableCustomization _       -> True
 
     RQRunSql _                      -> True
 

@@ -392,7 +392,7 @@ data TableConfig
   = TableConfig
   { _tcCustomRootFields  :: !TableCustomRootFields
   , _tcCustomColumnNames :: !CustomColumnNames
-  , _tcIdentifier        :: !(Maybe G.Name)
+  , _tcCustomName        :: !(Maybe G.Name)
   } deriving (Show, Eq, Lift, Generic)
 instance NFData TableConfig
 instance Cacheable TableConfig
@@ -407,7 +407,7 @@ instance FromJSON TableConfig where
     TableConfig
     <$> obj .:? "custom_root_fields" .!= emptyCustomRootFields
     <*> obj .:? "custom_column_names" .!= M.empty
-    <*> obj .:? "identifier"
+    <*> obj .:? "custom_name"
 
 -- | The @field@ and @primaryKeyColumn@ type parameters vary as the schema cache is built and more
 -- information is accumulated. See 'TableRawInfo' and 'TableCoreInfo'.

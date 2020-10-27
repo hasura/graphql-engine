@@ -1,10 +1,10 @@
-- description: set table configuration with custom name
+- description: set table customization with custom name
   url: /v1/query
   status: 200
   response:
     message: success
   query:
-    type: set_table_configuration
+    type: set_table_customization
     args:
       table: author
       configuration:

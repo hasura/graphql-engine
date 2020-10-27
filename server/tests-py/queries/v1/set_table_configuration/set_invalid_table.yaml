@@ -6,7 +6,7 @@ response:
   error: table "author1" does not exist
   code: not-exists
 query:
-  type: set_table_configuration
+  type: set_table_customization
   args:
     table: author1
     configuration:

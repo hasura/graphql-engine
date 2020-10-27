@@ -17,8 +17,8 @@ module Hasura.RQL.DDL.Schema.Table
   , SetTableCustomFields(..)
   , runSetTableCustomFieldsQV2
 
-  , SetTableConfiguration(..)
-  , runSetTableConfiguration
+  , SetTableCustomization(..)
+  , runSetTableCustomization
 
   , buildTableCache
   , delTableAndDirectDeps
@@ -200,12 +200,12 @@ runSetExistingTableIsEnumQ (SetTableIsEnum tableName isEnum) = do
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
 
-data SetTableConfiguration
-  = SetTableConfiguration
+data SetTableCustomization
+  = SetTableCustomization
   { _stcTable         :: !QualifiedTable
   , _stcConfiguration :: !TableConfig
   } deriving (Show, Eq, Lift)
-$(deriveJSON (aesonDrop 4 snakeCase) ''SetTableConfiguration)
+$(deriveJSON (aesonDrop 4 snakeCase) ''SetTableCustomization)
 
 data SetTableCustomFields
   = SetTableCustomFields
@@ -231,9 +231,9 @@ runSetTableCustomFieldsQV2 (SetTableCustomFields tableName rootFields columnName
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
 
-runSetTableConfiguration
-  :: (MonadTx m, CacheRWM m) => SetTableConfiguration -> m EncJSON
-runSetTableConfiguration (SetTableConfiguration table config) = do
+runSetTableCustomization
+  :: (MonadTx m, CacheRWM m) => SetTableCustomization -> m EncJSON
+runSetTableCustomization (SetTableCustomization table config) = do
   void $ askTabInfo table
   updateTableConfig table config
   buildSchemaCacheFor (MOTable table)
@@ -291,8 +291,8 @@ processTableChanges ti tableDiff = do
         procAlteredCols sc tn
 
       withNewTabName newTN = do
-        let mIdentifierText = G.unName <$> (_tcIdentifier . _tciCustomConfig $ ti)
-            tnGQL = fromMaybe (snakeCaseQualObject newTN) mIdentifierText
+        let mCustomTableNameText = G.unName <$> (_tcCustomName . _tciCustomConfig $ ti)
+            tnGQL = fromMaybe (snakeCaseQualObject newTN) mCustomTableNameText
         -- check for GraphQL schema conflicts on new name
         checkConflictingNode sc tnGQL
         procAlteredCols sc tn
