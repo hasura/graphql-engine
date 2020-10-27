@@ -11,17 +11,17 @@ module Hasura.Backends.Postgres.Execute.Mutation
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                              as Env
-import qualified Data.Sequence                                 as DS
-import qualified Database.PG.Query                             as Q
-import qualified Network.HTTP.Client                           as HTTP
-import qualified Network.HTTP.Types                            as N
+import qualified Data.Environment                             as Env
+import qualified Data.Sequence                                as DS
+import qualified Database.PG.Query                            as Q
+import qualified Network.HTTP.Client                          as HTTP
+import qualified Network.HTTP.Types                           as N
 
 
-import           Instances.TH.Lift                             ()
+import           Instances.TH.Lift                            ()
 
-import qualified Hasura.Backends.Postgres.SQL.DML              as S
-import qualified Hasura.Tracing                                as Tracing
+import qualified Hasura.Backends.Postgres.SQL.DML             as S
+import qualified Hasura.Tracing                               as Tracing
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.Execute.RemoteJoin
@@ -30,7 +30,6 @@ import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.Delete
 import           Hasura.Backends.Postgres.Translate.Insert
 import           Hasura.Backends.Postgres.Translate.Mutation
-import           Hasura.Backends.Postgres.Translate.RemoteJoin
 import           Hasura.Backends.Postgres.Translate.Returning
 import           Hasura.Backends.Postgres.Translate.Select
 import           Hasura.Backends.Postgres.Translate.Update
@@ -38,18 +37,70 @@ import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.IR.Delete
 import           Hasura.RQL.IR.Insert
-import           Hasura.RQL.IR.RemoteJoin
 import           Hasura.RQL.IR.Returning
 import           Hasura.RQL.IR.Select
 import           Hasura.RQL.IR.Update
-import           Hasura.RQL.Instances                          ()
+import           Hasura.RQL.Instances                         ()
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.Server.Version                         (HasVersion)
+import           Hasura.Server.Version                        (HasVersion)
 import           Hasura.Session
 
 
 type MutationRemoteJoinCtx = (HTTP.Manager, [N.Header], UserInfo)
+
+data Mutation (b :: Backend)
+  = Mutation
+  { _mTable       :: !QualifiedTable
+  , _mQuery       :: !(S.CTE, DS.Seq Q.PrepArg)
+  , _mOutput      :: !(MutationOutput b)
+  , _mCols        :: ![ColumnInfo b]
+  , _mRemoteJoins :: !(Maybe (RemoteJoins b, MutationRemoteJoinCtx))
+  , _mStrfyNum    :: !Bool
+  }
+
+mkMutation
+  :: Maybe MutationRemoteJoinCtx
+  -> QualifiedTable
+  -> (S.CTE, DS.Seq Q.PrepArg)
+  -> MutationOutput 'Postgres
+  -> [ColumnInfo 'Postgres]
+  -> Bool
+  -> Mutation 'Postgres
+mkMutation ctx table query output' allCols strfyNum =
+  let (output, remoteJoins) = getRemoteJoinsMutationOutput output'
+      remoteJoinsCtx = (,) <$> remoteJoins <*> ctx
+  in Mutation table query output allCols remoteJoinsCtx strfyNum
+
+runMutation
+  ::
+  ( HasVersion
+  , MonadTx m
+  , MonadIO m
+  , Tracing.MonadTrace m
+  )
+  => Env.Environment
+  -> Mutation 'Postgres
+  -> m EncJSON
+runMutation env mut =
+  bool (mutateAndReturn env mut) (mutateAndSel env mut) $
+    hasNestedFld $ _mOutput mut
+
+mutateAndReturn
+  ::
+  ( HasVersion
+  , MonadTx m
+  , MonadIO m
+  , Tracing.MonadTrace m
+  )
+  => Env.Environment
+  -> Mutation 'Postgres
+  -> m EncJSON
+mutateAndReturn env (Mutation qt (cte, p) mutationOutput allCols remoteJoins strfyNum) =
+  executeMutationOutputQuery env sqlQuery (toList p) remoteJoins
+  where
+    sqlQuery = Q.fromBuilder $ toSQL $
+               mkMutationOutputExp qt allCols Nothing cte mutationOutput strfyNum
 
 
 execUpdateQuery
@@ -140,36 +191,6 @@ mutateAndSel env (Mutation qt q mutationOutput allCols remoteJoins strfyNum) = d
   -- Perform select query and fetch returning fields
   executeMutationOutputQuery env (Q.fromBuilder $ toSQL selWith) [] remoteJoins
 
-runMutation
-  ::
-  ( HasVersion
-  , MonadTx m
-  , MonadIO m
-  , Tracing.MonadTrace m
-  )
-  => Env.Environment
-  -> Mutation 'Postgres
-  -> m EncJSON
-runMutation env mut =
-  bool (mutateAndReturn env mut) (mutateAndSel env mut) $
-    hasNestedFld $ _mOutput mut
-
-mutateAndReturn
-  ::
-  ( HasVersion
-  , MonadTx m
-  , MonadIO m
-  , Tracing.MonadTrace m
-  )
-  => Env.Environment
-  -> Mutation 'Postgres
-  -> m EncJSON
-mutateAndReturn env (Mutation qt (cte, p) mutationOutput allCols remoteJoins strfyNum) =
-  executeMutationOutputQuery env sqlQuery (toList p) remoteJoins
-  where
-    sqlQuery = Q.fromBuilder $ toSQL $
-               mkMutationOutputExp qt allCols Nothing cte mutationOutput strfyNum
-
 executeMutationOutputQuery
   ::
   ( HasVersion
@@ -189,31 +210,6 @@ executeMutationOutputQuery env query prepArgs = \case
       <$> liftTx (Q.rawQE dmlTxErrorHandler query prepArgs False)
   Just (remoteJoins, (httpManager, reqHeaders, userInfo)) ->
     executeQueryWithRemoteJoins env httpManager reqHeaders userInfo query prepArgs remoteJoins
-
-
-
-data Mutation (b :: Backend)
-  = Mutation
-  { _mTable       :: !QualifiedTable
-  , _mQuery       :: !(S.CTE, DS.Seq Q.PrepArg)
-  , _mOutput      :: !(MutationOutput b)
-  , _mCols        :: ![ColumnInfo b]
-  , _mRemoteJoins :: !(Maybe (RemoteJoins b, MutationRemoteJoinCtx))
-  , _mStrfyNum    :: !Bool
-  }
-
-mkMutation
-  :: Maybe MutationRemoteJoinCtx
-  -> QualifiedTable
-  -> (S.CTE, DS.Seq Q.PrepArg)
-  -> MutationOutput 'Postgres
-  -> [ColumnInfo 'Postgres]
-  -> Bool
-  -> Mutation 'Postgres
-mkMutation ctx table query output' allCols strfyNum =
-  let (output, remoteJoins) = getRemoteJoinsMutationOutput output'
-      remoteJoinsCtx = (,) <$> remoteJoins <*> ctx
-  in Mutation table query output allCols remoteJoinsCtx strfyNum
 
 mutateAndFetchCols
   :: QualifiedTable
