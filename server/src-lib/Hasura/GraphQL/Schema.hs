@@ -177,7 +177,7 @@ buildGQLContext =
         buildRoleBasedRemoteSchemaParser role remoteSchemaCache = do
           let remoteSchemaIntroInfos = map fst $ toList remoteSchemaCache
           remoteSchemaPerms <-
-            flip traverse remoteSchemaIntroInfos $ \(RemoteSchemaCtx _ ctx perms) ->
+            for remoteSchemaIntroInfos $ \(RemoteSchemaCtx _ ctx perms) ->
               case Map.lookup role perms of
                 Nothing -> return Nothing
                 Just introspectRes -> do

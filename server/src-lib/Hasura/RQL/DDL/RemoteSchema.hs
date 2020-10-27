@@ -135,7 +135,7 @@ runRemoveRemoteSchema
 runRemoveRemoteSchema (RemoteSchemaNameQuery rsn) = do
   roles <- removeRemoteSchemaP1 rsn
   -- drop the permissions defined with this remote schema
-  flip traverse_ roles $ (liftTx . dropRemoteSchemaPermFromCatalog rsn)
+  for_ roles $ (liftTx . dropRemoteSchemaPermFromCatalog rsn)
   liftTx $ removeRemoteSchemaFromCatalog rsn
   withNewInconsistentObjsCheck buildSchemaCache
   pure successMsg

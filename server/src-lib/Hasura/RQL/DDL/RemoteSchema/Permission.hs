@@ -387,7 +387,7 @@ validateDirectives
 validateDirectives providedDirectives upstreamDirectives directiveLocation parentType = do
   onJust (NE.nonEmpty $ duplicates $ map G._dName nonPresetDirectives) $ \dups -> do
     refute $ pure $ DuplicateDirectives parentType dups
-  flip traverse_ nonPresetDirectives $ \dir -> do
+  for_ nonPresetDirectives $ \dir -> do
     let directiveName = G._dName dir
     upstreamDir <-
       onNothing (Map.lookup directiveName upstreamDirectivesMap) $
@@ -455,7 +455,7 @@ validateEnumTypeDefinitions
   -> [G.EnumTypeDefinition]
   -> m ()
 validateEnumTypeDefinitions providedEnums upstreamEnums = do
-  flip traverse_ providedEnums $ \providedEnum@(G.EnumTypeDefinition _ name _ _) -> do
+  for_ providedEnums $ \providedEnum@(G.EnumTypeDefinition _ name _ _) -> do
     upstreamEnum <-
       onNothing (Map.lookup name upstreamEnumsMap) $
         refute $ pure $ FieldDoesNotExist Enum name
@@ -508,7 +508,7 @@ validateArguments providedArgs upstreamArgs parentTypeName = do
   let argsDiff = getDifference nonNullableUpstreamArgs nonNullableProvidedArgs
   onJust (NE.nonEmpty $ S.toList argsDiff) $ \nonNullableArgs -> do
     refute $ pure $ MissingNonNullableArguments parentTypeName nonNullableArgs
-  flip traverse providedArgs $ \providedArg@(G.InputValueDefinition _ name _ _ _) -> do
+  for providedArgs $ \providedArg@(G.InputValueDefinition _ name _ _ _) -> do
     upstreamArg <-
       onNothing (Map.lookup name upstreamArgsMap) $
         refute $ pure $ NonExistingInputArgument parentTypeName name
@@ -544,7 +544,7 @@ validateInputObjectTypeDefinitions
   -> [G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition]
   -> m [G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition]
 validateInputObjectTypeDefinitions providedInputObjects upstreamInputObjects = do
-  flip traverse providedInputObjects $ \providedInputObject@(G.InputObjectTypeDefinition _ name _ _) -> do
+  for providedInputObjects $ \providedInputObject@(G.InputObjectTypeDefinition _ name _ _) -> do
     upstreamInputObject <-
       onNothing (Map.lookup name upstreamInputObjectsMap) $
         refute $ pure $ FieldDoesNotExist InputObject name
@@ -582,7 +582,7 @@ validateFieldDefinitions
 validateFieldDefinitions providedFldDefnitions upstreamFldDefinitions parentType = do
   onJust (NE.nonEmpty $ duplicates $ map G._fldName providedFldDefnitions) $ \dups -> do
     refute $ pure $ DuplicateFields parentType dups
-  flip traverse providedFldDefnitions $ \fldDefn@(G.FieldDefinition _ name _ _ _) -> do
+  for providedFldDefnitions $ \fldDefn@(G.FieldDefinition _ name _ _ _) -> do
     upstreamFldDefn <-
       onNothing (Map.lookup name upstreamFldDefinitionsMap) $
         refute $ pure $ NonExistingField parentType name
@@ -614,7 +614,7 @@ validateInterfaceDefinitions
   -> [G.InterfaceTypeDefinition () RemoteSchemaInputValueDefinition]
   -> m [(G.InterfaceTypeDefinition () RemoteSchemaInputValueDefinition)]
 validateInterfaceDefinitions providedInterfaces upstreamInterfaces = do
-  flip traverse providedInterfaces $ \providedInterface@(G.InterfaceTypeDefinition _ name _ _ _) -> do
+  for providedInterfaces $ \providedInterface@(G.InterfaceTypeDefinition _ name _ _ _) -> do
     upstreamInterface <-
       onNothing (Map.lookup name upstreamInterfacesMap) $
         refute $ pure $ FieldDoesNotExist Interface name
@@ -640,7 +640,7 @@ validateScalarDefinitions
   -> [G.ScalarTypeDefinition]
   -> m ()
 validateScalarDefinitions providedScalars upstreamScalars = do
-  flip traverse_ providedScalars $ \providedScalar@(G.ScalarTypeDefinition _ name _) -> do
+  for_ providedScalars $ \providedScalar@(G.ScalarTypeDefinition _ name _) -> do
     -- Avoid check for built-in scalar types
     unless (G.unName name `elem` ["ID","Int","Float","Boolean","String"]) $ do
       upstreamScalar <- do
@@ -672,7 +672,7 @@ validateUnionTypeDefinitions
   -> [G.UnionTypeDefinition]
   -> m ()
 validateUnionTypeDefinitions providedUnions upstreamUnions = do
-  flip traverse_ providedUnions $ \providedUnion@(G.UnionTypeDefinition _ name _ _) -> do
+  for_ providedUnions $ \providedUnion@(G.UnionTypeDefinition _ name _ _) -> do
     upstreamUnion <-
       onNothing (Map.lookup name upstreamUnionsMap) $
         refute $ pure $ FieldDoesNotExist Union name
@@ -723,7 +723,7 @@ validateObjectDefinitions
   -> S.HashSet G.Name
   -> m [G.ObjectTypeDefinition RemoteSchemaInputValueDefinition]
 validateObjectDefinitions providedObjects upstreamObjects providedInterfaces = do
-  flip traverse providedObjects $ \providedObject@(G.ObjectTypeDefinition _ name _ _ _) -> do
+  for providedObjects $ \providedObject@(G.ObjectTypeDefinition _ name _ _ _) -> do
     upstreamObject <-
       onNothing (Map.lookup name upstreamObjectsMap) $
         refute $ pure $ FieldDoesNotExist Object name

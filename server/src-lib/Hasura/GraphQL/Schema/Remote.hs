@@ -139,10 +139,10 @@ remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name inter
             <> " (" <> G.showGT (G._fldType interfaceField) <> ")"
           traverse_
             (validateArgument
-               (map _rsitdDefn (G._fldArgumentsDefinition f))) (map _rsitdDefn (G._fldArgumentsDefinition interfaceField))
+               (map _rsitdDefn (G._fldArgumentsDefinition f)) . _rsitdDefn) (G._fldArgumentsDefinition interfaceField)
           traverse_
             (validateNoExtraNonNull
-               (map _rsitdDefn (G._fldArgumentsDefinition interfaceField))) (map _rsitdDefn (G._fldArgumentsDefinition f))
+               (map _rsitdDefn (G._fldArgumentsDefinition interfaceField)) . _rsitdDefn) (G._fldArgumentsDefinition f)
             where
               validateArgument :: [G.InputValueDefinition] -> G.InputValueDefinition -> m ()
               validateArgument objectFieldArgs ifaceArgument =
