@@ -10,23 +10,26 @@ module Hasura.RQL.DML.Select
   )
 where
 
-import           Data.Aeson.Types
-import           Instances.TH.Lift              ()
-
-import qualified Data.HashSet                   as HS
-import qualified Data.List.NonEmpty             as NE
-import qualified Data.Sequence                  as DS
-
-import           Data.Text.Extended
-import           Hasura.EncJSON
 import           Hasura.Prelude
+
+import qualified Data.HashSet                       as HS
+import qualified Data.List.NonEmpty                 as NE
+import qualified Data.Sequence                      as DS
+import qualified Database.PG.Query                  as Q
+
+import           Data.Aeson.Types
+import           Data.Text.Extended
+import           Instances.TH.Lift                  ()
+
+import qualified Hasura.Backends.Postgres.SQL.DML   as S
+
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Select.Internal
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query              as Q
-import qualified Hasura.SQL.DML                 as S
 
 convSelCol :: (UserInfoM m, QErrM m, CacheRM m)
            => FieldInfoMap (FieldInfo 'Postgres)

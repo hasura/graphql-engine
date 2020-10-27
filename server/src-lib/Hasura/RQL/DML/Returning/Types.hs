@@ -1,21 +1,20 @@
 module Hasura.RQL.DML.Returning.Types where
 
-import           Hasura.SQL.Backend
-
 import           Hasura.Prelude
 
-import qualified Data.Aeson                  as J
-import qualified Data.HashMap.Strict.InsOrd  as OMap
-import qualified Data.Text                   as T
-import qualified Hasura.SQL.DML              as S
+import qualified Data.Aeson                       as J
+import qualified Data.HashMap.Strict.InsOrd       as OMap
+
+import qualified Hasura.Backends.Postgres.SQL.DML as S
 
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Select.Types
+import           Hasura.SQL.Backend
 
 
 data MutFldG (b :: Backend) v
   = MCount
-  | MExp !T.Text
+  | MExp !Text
   | MRet !(AnnFieldsG b v)
 
 type MutFld b = MutFldG b S.SQLExp

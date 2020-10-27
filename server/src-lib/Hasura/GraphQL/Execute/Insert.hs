@@ -5,32 +5,33 @@ module Hasura.GraphQL.Execute.Insert
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                     as J
-import qualified Data.Environment               as Env
-import qualified Data.HashMap.Strict            as Map
-import qualified Data.Sequence                  as Seq
-import qualified Data.Text                      as T
-import qualified Database.PG.Query              as Q
-
-
-import qualified Hasura.RQL.DML.Insert          as RQL
-import qualified Hasura.RQL.DML.Insert.Types    as RQL
-import qualified Hasura.RQL.DML.Mutation        as RQL
-import qualified Hasura.RQL.DML.RemoteJoin      as RQL
-import qualified Hasura.RQL.DML.Returning       as RQL
-import qualified Hasura.RQL.DML.Returning.Types as RQL
-import qualified Hasura.RQL.GBoolExp            as RQL
-import qualified Hasura.SQL.DML                 as S
-import qualified Hasura.Tracing                 as Tracing
+import qualified Data.Aeson                          as J
+import qualified Data.Environment                    as Env
+import qualified Data.HashMap.Strict                 as Map
+import qualified Data.Sequence                       as Seq
+import qualified Data.Text                           as T
+import qualified Database.PG.Query                   as Q
 
 import           Data.Text.Extended
-import           Hasura.Db
+
+import qualified Hasura.Backends.Postgres.SQL.DML    as S
+import qualified Hasura.RQL.DML.Insert               as RQL
+import qualified Hasura.RQL.DML.Insert.Types         as RQL
+import qualified Hasura.RQL.DML.Mutation             as RQL
+import qualified Hasura.RQL.DML.RemoteJoin           as RQL
+import qualified Hasura.RQL.DML.Returning            as RQL
+import qualified Hasura.RQL.DML.Returning.Types      as RQL
+import qualified Hasura.RQL.GBoolExp                 as RQL
+import qualified Hasura.Tracing                      as Tracing
+
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Schema.Insert
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.SQL.Value
-import           Hasura.Server.Version          (HasVersion)
+import           Hasura.Server.Version               (HasVersion)
 
 
 traverseAnnInsert
@@ -121,7 +122,7 @@ insertMultipleObjects env multiObjIns additionalColumns remoteJoinCtx mutationOu
             mutationOutput
             columnInfos
           rowCount = T.pack . show . length $ _aiInsObj multiObjIns
-      Tracing.trace ("Insert (" <> rowCount <> ") " <> qualObjectToText table) do
+      Tracing.trace ("Insert (" <> rowCount <> ") " <> qualifiedObjectToText table) do
         Tracing.attachMetadata [("count", rowCount)]
         RQL.execInsertQuery env stringifyNum (Just remoteJoinCtx) (insertQuery, planVars)
 
@@ -146,7 +147,7 @@ insertObject
   -> Seq.Seq Q.PrepArg
   -> Bool
   -> m (Int, Maybe (ColumnValues TxtEncodedPGVal))
-insertObject env singleObjIns additionalColumns remoteJoinCtx planVars stringifyNum = Tracing.trace ("Insert " <> qualObjectToText table) do
+insertObject env singleObjIns additionalColumns remoteJoinCtx planVars stringifyNum = Tracing.trace ("Insert " <> qualifiedObjectToText table) do
   validateInsert (map fst columns) (map _riRelInfo objectRels) (map fst additionalColumns)
 
   -- insert all object relations and fetch this insert dependent column values
@@ -234,7 +235,7 @@ insertArrRel env resCols remoteJoinCtx planVars stringifyNum arrRelIns =
     resBS <- withPathK "data" $
       insertMultipleObjects env multiObjIns additionalColumns remoteJoinCtx mutOutput planVars stringifyNum
     resObj <- decodeEncJSON resBS
-    onNothing (Map.lookup ("affected_rows" :: T.Text) resObj) $
+    onNothing (Map.lookup ("affected_rows" :: Text) resObj) $
       throw500 "affected_rows not returned in array rel insert"
   where
     RelIns multiObjIns relInfo = arrRelIns
