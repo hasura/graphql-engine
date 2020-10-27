@@ -87,7 +87,7 @@ fetchRemoteSchema env manager schemaName schemaInfo@(RemoteSchemaInfo url header
   return $ PartialRemoteSchemaCtx schemaName introspectRes schemaInfo respData $
     ParsedIntrospection queryParsers mutationParsers subscriptionParsers
   where
-    remoteSchemaErr :: T.Text -> m a
+    remoteSchemaErr :: Text -> m a
     remoteSchemaErr = throw400 RemoteSchemaError
 
     throwHttpErr :: HTTP.HttpException -> m a

@@ -20,6 +20,7 @@ import           Data.List.Extended                    (duplicates)
 import qualified Hasura.GraphQL.Parser                 as P
 
 import           Data.Text.Extended
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Types
 import           Hasura.GraphQL.Parser                 (Kind (..), Parser, Schema (..),
@@ -35,7 +36,6 @@ import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 import           Hasura.Session
 
 -- | Whether the request is sent with `x-hasura-use-backend-only-permissions` set to `true`.

@@ -34,7 +34,8 @@ import           Data.List                                (nub)
 import qualified Hasura.Incremental                       as Inc
 
 import           Data.Text.Extended
-import           Hasura.Db
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Execute.Types
 import           Hasura.GraphQL.Schema                    (buildGQLContext)
 import           Hasura.RQL.DDL.Action
@@ -56,7 +57,6 @@ import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DDL.Utils                     (clearHdbViews)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
-import           Hasura.SQL.Types
 import           Hasura.Server.Version                    (HasVersion)
 
 import           Hasura.Session

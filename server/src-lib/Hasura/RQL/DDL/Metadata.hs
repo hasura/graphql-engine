@@ -12,17 +12,30 @@ module Hasura.RQL.DDL.Metadata
   , module Hasura.RQL.DDL.Metadata.Types
   ) where
 
-import           Control.Lens                       hiding ((.=))
-import           Data.Aeson
+import           Hasura.Prelude
 
 import qualified Data.Aeson.Ordered                 as AO
 import qualified Data.HashMap.Strict.InsOrd         as HMIns
 import qualified Data.HashSet                       as HS
 import qualified Data.List                          as L
 import qualified Data.Text                          as T
+import qualified Database.PG.Query                  as Q
 
+import           Control.Lens                       hiding ((.=))
+import           Data.Aeson
+
+import qualified Hasura.RQL.DDL.Action              as Action
+import qualified Hasura.RQL.DDL.ComputedField       as ComputedField
+import qualified Hasura.RQL.DDL.CustomTypes         as CustomTypes
+import qualified Hasura.RQL.DDL.Permission          as Permission
+import qualified Hasura.RQL.DDL.QueryCollection     as Collection
+import qualified Hasura.RQL.DDL.Relationship        as Relationship
+import qualified Hasura.RQL.DDL.RemoteRelationship  as RemoteRelationship
+import qualified Hasura.RQL.DDL.RemoteSchema        as RemoteSchema
+import qualified Hasura.RQL.DDL.Schema              as Schema
+
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
-import           Hasura.Prelude
 import           Hasura.RQL.DDL.ComputedField       (dropComputedFieldFromCatalog)
 import           Hasura.RQL.DDL.EventTrigger        (delEventTriggerFromCatalog, subTableP2)
 import           Hasura.RQL.DDL.Metadata.Types
@@ -34,18 +47,6 @@ import           Hasura.RQL.DDL.ScheduledTrigger    (addCronTriggerToCatalog,
                                                      deleteCronTriggerFromCatalog)
 import           Hasura.RQL.DDL.Schema.Catalog      (saveTableToCatalog)
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
-
-import qualified Database.PG.Query                  as Q
-import qualified Hasura.RQL.DDL.Action              as Action
-import qualified Hasura.RQL.DDL.ComputedField       as ComputedField
-import qualified Hasura.RQL.DDL.CustomTypes         as CustomTypes
-import qualified Hasura.RQL.DDL.Permission          as Permission
-import qualified Hasura.RQL.DDL.QueryCollection     as Collection
-import qualified Hasura.RQL.DDL.Relationship        as Relationship
-import qualified Hasura.RQL.DDL.RemoteRelationship  as RemoteRelationship
-import qualified Hasura.RQL.DDL.RemoteSchema        as RemoteSchema
-import qualified Hasura.RQL.DDL.Schema              as Schema
 
 -- | Purge all user-defined metadata; metadata with is_system_defined = false
 clearUserMetadata :: MonadTx m => m ()
@@ -134,7 +135,7 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta remoteSchemas
     checkMultipleDecls "cron triggers" $ map ctName cronTriggers
 
   where
-    withTableName qt = withPathK (qualObjectToText qt)
+    withTableName qt = withPathK (qualifiedObjectToText qt)
 
     checkMultipleDecls t l = do
       let dups = getDups l

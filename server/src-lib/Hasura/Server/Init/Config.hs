@@ -35,7 +35,7 @@ data RawConnParams
   , rcpAllowPrepare :: !(Maybe Bool)
   } deriving (Show, Eq)
 
-type RawAuthHook = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
+type RawAuthHook = AuthHookG (Maybe Text) (Maybe AuthHookType)
 
 data RawServeOptions impl
   = RawServeOptions
@@ -115,7 +115,7 @@ data ServeOptions impl
 
 data DowngradeOptions
   = DowngradeOptions
-  { dgoTargetVersion :: !T.Text
+  { dgoTargetVersion :: !Text
   , dgoDryRun        :: !Bool
   } deriving (Show, Eq)
 

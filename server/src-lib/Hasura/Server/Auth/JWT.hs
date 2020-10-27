@@ -167,7 +167,7 @@ instance J.FromJSON JWTCustomClaimsMap where
 -- key in the JWT token.
 data JWTNamespace
   = ClaimNsPath JSONPath
-  | ClaimNs T.Text
+  | ClaimNs Text
   deriving (Show, Eq)
 
 instance J.ToJSON JWTNamespace where

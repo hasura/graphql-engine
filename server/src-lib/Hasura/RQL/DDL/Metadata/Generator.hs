@@ -15,7 +15,6 @@ import qualified Language.Haskell.TH.Syntax                    as TH
 import qualified Network.URI                                   as N
 import qualified System.Cron.Parser                            as Cr
 
-
 import           Data.List.Extended                            (duplicates)
 import           Data.Scientific
 import           System.Cron.Types
@@ -31,11 +30,11 @@ import qualified Hasura.RQL.DDL.QueryCollection                as Collection
 import qualified Hasura.RQL.DDL.Relationship                   as Relationship
 import qualified Hasura.RQL.DDL.Schema                         as Schema
 
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Utils                          (simpleGraphQLQuery)
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 
 genReplaceMetadata :: Gen ReplaceMetadata
 genReplaceMetadata = do

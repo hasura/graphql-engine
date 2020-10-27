@@ -22,23 +22,24 @@ module Hasura.GraphQL.Context
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                    as J
+import qualified Data.Aeson                       as J
+import qualified Language.GraphQL.Draft.Syntax    as G
+
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
 import           Hasura.SQL.Backend
-import qualified Language.GraphQL.Draft.Syntax as G
 
-import qualified Hasura.RQL.DML.Delete.Types   as RQL
-import qualified Hasura.RQL.DML.Select.Types   as RQL
-import qualified Hasura.RQL.DML.Update.Types   as RQL
-import qualified Hasura.RQL.Types.Action       as RQL
-import qualified Hasura.RQL.Types.Error        as RQL
-import qualified Hasura.RQL.Types.RemoteSchema as RQL
-import qualified Hasura.SQL.DML                as S
+import qualified Hasura.Backends.Postgres.SQL.DML as S
+import qualified Hasura.RQL.DML.Delete.Types      as RQL
+import qualified Hasura.RQL.DML.Select.Types      as RQL
+import qualified Hasura.RQL.DML.Update.Types      as RQL
+import qualified Hasura.RQL.Types.Action          as RQL
+import qualified Hasura.RQL.Types.Error           as RQL
+import qualified Hasura.RQL.Types.RemoteSchema    as RQL
 
 import           Hasura.GraphQL.Parser
-import           Hasura.GraphQL.Schema.Insert  (AnnInsert)
+import           Hasura.GraphQL.Schema.Insert     (AnnInsert)
 
 import qualified Data.Text                              as T
 
@@ -79,10 +80,10 @@ traverseDB :: forall db db' remote action raw f
        -> RootField db remote action raw
        -> f (RootField db' remote action raw)
 traverseDB f = \case
-  RFDB x -> RFDB <$> f x
+  RFDB x     -> RFDB <$> f x
   RFRemote x -> pure $ RFRemote x
   RFAction x -> pure $ RFAction x
-  RFRaw x -> pure $ RFRaw x
+  RFRaw x    -> pure $ RFRaw x
 
 traverseAction :: forall db remote action action' raw f
         . Applicative f
@@ -90,10 +91,10 @@ traverseAction :: forall db remote action action' raw f
        -> RootField db remote action raw
        -> f (RootField db remote action' raw)
 traverseAction f = \case
-  RFDB x -> pure $ RFDB x
+  RFDB x     -> pure $ RFDB x
   RFRemote x -> pure $ RFRemote x
   RFAction x -> RFAction <$> f x
-  RFRaw x -> pure $ RFRaw x
+  RFRaw x    -> pure $ RFRaw x
 
 traverseRemoteField :: forall db remote remote' action raw f
         . Applicative f
