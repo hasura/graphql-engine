@@ -72,3 +72,15 @@ class TestRemoteSchemaPermissionsExecution:
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'add_permission_with_valid_subset_of_arguments.yaml')
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'execution_with_partial_args_exposed_to_role.yaml')
+
+@use_test_fixtures
+class TestRemoteSchemaPermissionsArgumentPresets:
+
+    @classmethod
+    def dir(cls):
+        return "queries/remote_schemas/permissions/argument_presets/"
+
+    def test_execution_with_argument_preset(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'add_permission_with_static_preset_argument.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'execution_with_preset_args.yaml')
