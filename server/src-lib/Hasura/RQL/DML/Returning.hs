@@ -1,14 +1,16 @@
 module Hasura.RQL.DML.Returning where
 
 import           Hasura.Prelude
+
+import qualified Data.Text                          as T
+
+import qualified Hasura.Backends.Postgres.SQL.DML   as S
+
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Returning.Types
 import           Hasura.RQL.DML.Select
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
-
-import qualified Data.Text                      as T
-import qualified Hasura.SQL.DML                 as S
 
 traverseMutFld
   :: (Applicative f)
@@ -40,7 +42,7 @@ traverseMutFlds f =
 
 hasNestedFld :: MutationOutputG backend a -> Bool
 hasNestedFld = \case
-  MOutMultirowFields flds -> any isNestedMutFld flds
+  MOutMultirowFields flds     -> any isNestedMutFld flds
   MOutSinglerowObject annFlds -> any isNestedAnnField annFlds
   where
     isNestedMutFld (_, mutFld) = case mutFld of
@@ -58,7 +60,7 @@ pgColsFromMutFld = \case
   MRet selFlds ->
     flip mapMaybe selFlds $ \(_, annFld) -> case annFld of
     AFColumn (AnnColumnField (ColumnInfo col _ _ colTy _ _) _ _) -> Just (col, colTy)
-    _                                                              -> Nothing
+    _                                                            -> Nothing
 
 pgColsFromMutFlds :: MutFlds 'Postgres -> [(PGCol, PGColumnType)]
 pgColsFromMutFlds = concatMap (pgColsFromMutFld . snd)
@@ -75,18 +77,18 @@ mkDefaultMutFlds = MOutMultirowFields . \case
   where
     mutFlds = [("affected_rows", MCount)]
 
-mkMutFldExp :: Iden -> Maybe Int -> Bool -> MutFld 'Postgres -> S.SQLExp
+mkMutFldExp :: Identifier -> Maybe Int -> Bool -> MutFld 'Postgres -> S.SQLExp
 mkMutFldExp cteAlias preCalAffRows strfyNum = \case
   MCount ->
     let countExp = S.SESelect $
           S.mkSelect
           { S.selExtr = [S.Extractor S.countStar Nothing]
-          , S.selFrom = Just $ S.FromExp $ pure $ S.FIIden cteAlias
+          , S.selFrom = Just $ S.FromExp $ pure $ S.FIIdentifier cteAlias
           }
     in maybe countExp (S.SEUnsafe . T.pack . show) preCalAffRows
   MExp t -> S.SELit t
   MRet selFlds ->
-    let tabFrom = FromIden cteAlias
+    let tabFrom = FromIdentifier cteAlias
         tabPerm = TablePerm annBoolExpTrue Nothing
     in S.SESelect $ mkSQLSelect JASMultipleRows $
        AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum
@@ -132,8 +134,8 @@ mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
                , (S.Alias allColumnsAlias, allColumnsSelect)
                ] sel
   where
-    mutationResultAlias = Iden $ snakeCaseQualObject qt <> "__mutation_result_alias"
-    allColumnsAlias = Iden $ snakeCaseQualObject qt <> "__all_columns_alias"
+    mutationResultAlias = Identifier $ snakeCaseQualifiedObject qt <> "__mutation_result_alias"
+    allColumnsAlias = Identifier $ snakeCaseQualifiedObject qt <> "__all_columns_alias"
     allColumnsSelect = S.CTESelect $ S.mkSelect
                        { S.selExtr = map S.mkExtr $ map pgiColumn $ sortCols allCols
                        , S.selFrom = Just $ S.mkIdenFromExp mutationResultAlias
@@ -150,7 +152,7 @@ mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
                 in S.SEFnApp "json_build_object" jsonBuildObjArgs Nothing
 
               MOutSinglerowObject annFlds ->
-                let tabFrom = FromIden allColumnsAlias
+                let tabFrom = FromIdentifier allColumnsAlias
                     tabPerm = TablePerm annBoolExpTrue Nothing
                 in S.SESelect $ mkSQLSelect JASSingleObject $
                    AnnSelectG annFlds tabFrom tabPerm noSelectArgs strfyNum

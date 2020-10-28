@@ -67,6 +67,10 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: Fix fine-grained incremental cache invalidation (fix #3759)
+
+  This issue could cause enum table values to sometimes not be properly reloaded without restarting `graphql-engine`. Now a `reload_metadata` API call (or clicking “Reload enum values” in the console) should consistently force a reload of all enum table values.
+
 - server: add `--websocket-compression` command-line flag for enabling websocket compression (fix #3292)
 - server: some mutations that cannot be performed will no longer be in the schema (for instance, `delete_by_pk` mutations won't be shown to users that do not have select permissions on all primary keys) (#4111)
 - server: miscellaneous description changes (#4111)
