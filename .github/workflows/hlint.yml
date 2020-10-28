@@ -29,4 +29,11 @@ jobs:
 
       - name: Run hlint
         shell: bash
-        run: git diff --name-only origin/${{github.base_ref}}...${{github.sha}} -- ${{env.working-directory}} | grep -E '\.hs$|\.lhs$' | xargs -i -d '\n' sh -c 'ls -d {} 2>/dev/null || true' | xargs -d '\n' ${{env.working-directory}}/hlint --json --hint=${{env.working-directory}}/.hlint.yaml | jq -r '.[] | "::" + (if (.severity=="Warning" or .severity=="Error") then "error" else "warning" end) + " file=\(.file),line=\(.startLine),col=\(.startColumn)::\(.severity):" + " \(.hint)%0AFound:%0A  \(.from | gsub("\n";"%0A  "))%0A" + try ("Perhaps:%0A  " + (.to | gsub("\n";"%0A  "))) catch ""'
+        run: |
+          CHANGED_HS_FILES=$(git diff --name-only origin/${{github.base_ref}}...${{github.sha}} -- "${{env.working-directory}}/*.hs" | xargs -i -d '\n' sh -c 'ls -d {} 2>/dev/null || true')
+          echo "$CHANGED_HS_FILES"
+          JQ_SCRIPT='.[] | "::" + (if (.severity=="Warning" or .severity=="Error") then "error" else "warning" end) + " file=\(.file),line=\(.startLine),col=\(.startColumn)::\(.severity):" + " \(.hint)%0AFound:%0A  \(.from | gsub("\n";"%0A  "))%0A" + try ("Perhaps:%0A  " + (.to | gsub("\n";"%0A  "))) catch ""'
+          if [[ "$CHANGED_HS_FILES" ]]
+          then
+            echo "$CHANGED_HS_FILES" | xargs ${{env.working-directory}}/hlint --json --hint=${{env.working-directory}}/.hlint.yaml | jq -r "$JQ_SCRIPT"
+          fi
