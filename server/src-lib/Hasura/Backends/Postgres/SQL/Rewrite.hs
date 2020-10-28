@@ -1,13 +1,16 @@
-module Hasura.SQL.Rewrite
+module Hasura.Backends.Postgres.SQL.Rewrite
   ( prefixNumToAliases
   , prefixNumToAliasesSelectWith
   ) where
 
-import qualified Data.HashMap.Strict as Map
-import qualified Data.Text           as T
 import           Hasura.Prelude
-import qualified Hasura.SQL.DML      as S
-import           Hasura.SQL.Types    (Iden (..))
+
+import qualified Data.HashMap.Strict            as Map
+import qualified Data.Text                      as T
+
+import qualified Hasura.Backends.Postgres.SQL.DML   as S
+
+import           Hasura.Backends.Postgres.SQL.Types (Identifier (..))
 
 {- Note [Postgres identifier length limitations]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -31,14 +34,14 @@ type Rewrite a = State a
 data UniqSt
   = UniqSt
   { _uqVar   :: !Int
-  , _uqIdens :: !(Map.HashMap Iden Int)
+  , _uqIdens :: !(Map.HashMap Identifier Int)
   } deriving (Show, Eq)
 
 type Uniq = Rewrite UniqSt
 
-withNumPfx :: Iden -> Int -> Iden
+withNumPfx :: Identifier -> Int -> Identifier
 withNumPfx iden i =
-  Iden pfx <> iden
+  Identifier pfx <> iden
   where
     pfx = T.pack $ "_" <> show i <> "_"
 
@@ -48,8 +51,8 @@ addAlias (S.Alias iden) = do
   put $ UniqSt (var + 1) $ Map.insert iden var idens
   return $ S.Alias $ withNumPfx iden var
 
-getIden :: Iden -> Uniq Iden
-getIden iden = do
+getIdentifier :: Identifier -> Uniq Identifier
+getIdentifier iden = do
   UniqSt _ idens <- get
   let varNumM = Map.lookup iden idens
   return $ maybe iden (withNumPfx iden) varNumM
@@ -113,8 +116,8 @@ uFromItem :: S.FromItem -> Uniq S.FromItem
 uFromItem fromItem = case fromItem of
   S.FISimple t alM ->
     S.FISimple t <$> mapM addAlias alM
-  S.FIIden iden ->
-    S.FIIden <$> return iden
+  S.FIIdentifier iden ->
+    S.FIIdentifier <$> return iden
   S.FIFunc funcExp ->
     S.FIFunc <$> uFunctionExp funcExp
   S.FIUnnest args als cols ->
@@ -185,11 +188,11 @@ uSqlExp = restoringIdens . \case
   S.SEStar qual                 -> S.SEStar <$> traverse uQual qual
   -- this is for row expressions
   -- todo: check if this is always okay
-  S.SEIden iden                 -> return $ S.SEIden iden
-  S.SERowIden iden              -> S.SERowIden <$> getIden iden
-  S.SEQIden (S.QIden qual iden) -> do
+  S.SEIdentifier iden                 -> return $ S.SEIdentifier iden
+  S.SERowIdentifier iden              -> S.SERowIdentifier <$> getIdentifier iden
+  S.SEQIdentifier (S.QIdentifier qual iden) -> do
     newQual <- uQual qual
-    return $ S.SEQIden $ S.QIden newQual iden
+    return $ S.SEQIdentifier $ S.QIdentifier newQual iden
   S.SEFnApp fn args ordByM      ->
     S.SEFnApp
     <$> return fn
@@ -222,6 +225,6 @@ uSqlExp = restoringIdens . \case
   S.SEFunction funcExp          -> S.SEFunction <$> uFunctionExp funcExp
   where
     uQual = \case
-      S.QualIden iden ty -> S.QualIden <$> getIden iden <*> pure ty
-      S.QualTable t   -> return $ S.QualTable t
-      S.QualVar t     -> return $ S.QualVar t
+      S.QualifiedIdentifier iden ty -> S.QualifiedIdentifier <$> getIdentifier iden <*> pure ty
+      S.QualTable t                 -> return $ S.QualTable t
+      S.QualVar t                   -> return $ S.QualVar t

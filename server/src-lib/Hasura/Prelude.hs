@@ -44,10 +44,10 @@ import           Data.Foldable                     as M (asum, fold, foldrM, for
                                                          traverse_)
 import           Data.Function                     as M (on, (&))
 import           Data.Functor                      as M (($>), (<&>))
-import           Data.Hashable                     as M (Hashable)
 import           Data.HashMap.Strict               as M (HashMap)
 import           Data.HashMap.Strict.InsOrd        as M (InsOrdHashMap)
 import           Data.HashSet                      as M (HashSet)
+import           Data.Hashable                     as M (Hashable)
 import           Data.List                         as M (find, findIndex, foldl', group,
                                                          intercalate, intersect, lookup, sort,
                                                          sortBy, sortOn, union, unionBy, (\\))
@@ -74,8 +74,8 @@ import           Text.Read                         as M (readEither, readMaybe)
 
 import qualified Data.ByteString                   as B
 import qualified Data.ByteString.Base64.Lazy       as Base64
-import           Data.Coerce
 import qualified Data.ByteString.Lazy              as BL
+import           Data.Coerce
 import qualified Data.HashMap.Strict               as Map
 import qualified Data.Set                          as Set
 import qualified Data.Text                         as T
