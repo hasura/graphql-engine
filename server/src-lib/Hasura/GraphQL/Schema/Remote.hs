@@ -467,11 +467,19 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
       doNullability (G.Nullability True)  = void . P.nullable
       doNullability (G.Nullability False) = id
 
-      fieldConstructor''
+      inputObjectNullability
+        :: forall k . 'Input <: k
+        => G.Nullability
+        -> Parser k n (Maybe (HashMap G.Name (Value RemoteSchemaVariable)))
+        -> Parser k n (Maybe (HashMap G.Name (Value RemoteSchemaVariable)))
+      inputObjectNullability (G.Nullability True) = fmap join . P.nullable
+      inputObjectNullability (G.Nullability False) = id
+
+      inputObjectFieldConstructor
         :: forall k. 'Input <: k
         => Parser k n (Maybe (HashMap G.Name (Value RemoteSchemaVariable)))
         -> InputFieldsParser n ((Maybe (InputValue Variable)), Maybe (HashMap G.Name (Value RemoteSchemaVariable)))
-      fieldConstructor'' parser =
+      inputObjectFieldConstructor parser =
         let wrappedParser :: Parser k n (InputValue Variable, Maybe (HashMap G.Name (Value RemoteSchemaVariable)))
             wrappedParser =
               P.Parser
@@ -511,8 +519,8 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
                G.TypeDefinitionEnum defn ->
                  pure $ fieldConstructor' $ doNullability nullability $ remoteFieldEnumParser defn
                G.TypeDefinitionObject _ -> throw400 RemoteSchemaError "expected input type, but got output type" -- couldn't find the equivalent error in Validate/Types.hs, so using a new error message
-               G.TypeDefinitionInputObject defn ->
-                 fieldConstructor'' <$> remoteSchemaInputObject schemaDoc defn
+               G.TypeDefinitionInputObject defn -> do
+                 inputObjectFieldConstructor . inputObjectNullability nullability <$> remoteSchemaInputObject schemaDoc defn
                G.TypeDefinitionUnion _ -> throw400 RemoteSchemaError "expected input type, but got output type"
                G.TypeDefinitionInterface _ -> throw400 RemoteSchemaError "expected input type, but got output type"
        G.TypeList nullability subType -> buildField subType (fieldConstructor' . doNullability nullability . void . P.list)
