@@ -118,9 +118,25 @@ class TestDeleteRemoteRelationship:
 
     def test_deleting_column_with_remote_relationship_dependency(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + 'drop_col_with_remote_rel_dependency.yaml')
+        self._check_no_remote_relationships(hge_ctx, 'profiles')
+
 
     def test_deleting_table_with_remote_relationship_dependency(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + 'drop_table_with_remote_rel_dependency.yaml')
+        self._check_no_remote_relationships(hge_ctx, 'profiles')
+
+    def _check_no_remote_relationships(self, hge_ctx, table):
+        export_metadata_q = {
+            'type': 'export_metadata',
+            'args': {}
+        }
+        status_code, resp = hge_ctx.v1q(export_metadata_q)
+        assert status_code == 200, resp
+        default_tables = resp['sources'][0]['tables']
+        for t in default_tables:
+            if t['table']['name'] == table:
+                assert 'event_triggers' not in t
+
 
 @use_test_fixtures
 class TestUpdateRemoteRelationship:

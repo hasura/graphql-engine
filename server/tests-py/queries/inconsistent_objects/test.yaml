@@ -54,28 +54,19 @@ inconsistent_objects:
   type: table
 - definition:
     using:
-      foreign_key_constraint_on: author_id
-    name: author
-    comment:
-    table:
-      schema: public
-      name: article
-  reason: 'table "article" does not exist'
-  type: object_relation
-- definition:
-    using:
       foreign_key_constraint_on:
         column: author_id
         table:
           schema: public
           name: article
     name: articles
-    comment:
+    source: default
+    comment: null
     table:
       schema: public
       name: author
-  reason: >-
-    in table "author": in relationship "articles": table "article" does not exist
+  reason: 'in table "author": in relationship "articles": table "article" does not
+    exist'
   type: array_relation
 
 # Teardown

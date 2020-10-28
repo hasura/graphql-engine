@@ -11,7 +11,9 @@ class TestInconsistentObjects():
     }
     reload_metadata = {
         "type": "reload_metadata",
-        "args": {}
+        "args": {
+            "reload_sources": True
+        }
     }
     drop_inconsistent_metadata = {
         "type": "drop_inconsistent_metadata",

@@ -472,7 +472,7 @@ queryRootFromFields
   => [P.FieldParser n (QueryRootField UnpreparedValue)]
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 queryRootFromFields fps =
-  P.safeSelectionSet $$(G.litName "query_root") Nothing fps
+  P.safeSelectionSet queryRoot Nothing fps
     <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
 
 emptyIntrospection
@@ -695,7 +695,7 @@ buildMutationParser allRemotes allActions nonObjectCustomTypes pgMutationFields 
       ActionQuery -> pure Nothing
 
   let mutationFieldsParser = pgMutationFields <> catMaybes actionParsers <> fmap (fmap RFRemote) allRemotes
-  pure if null mutationFieldsParser
-       then Nothing
-       else Just $ P.selectionSet mutationRoot (Just $ G.Description "mutation root") mutationFieldsParser
-            <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
+  if null mutationFieldsParser then pure Nothing
+  else do
+    mutationRootFieldsP <- P.safeSelectionSet mutationRoot (Just $ G.Description "mutation root") mutationFieldsParser
+    pure $ Just $ mutationRootFieldsP <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
