@@ -15,6 +15,7 @@ import qualified Database.PG.Query                         as Q
 import           Data.Aeson.Types
 import           Data.Text.Extended
 import           Instances.TH.Lift                         ()
+import           Language.Haskell.TH.Syntax                (Lift)
 
 import qualified Hasura.Backends.Postgres.SQL.DML          as S
 
@@ -27,22 +28,26 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 
-type SelectQExt = SelectG (ExtCol 'Postgres) BoolExp Int
+type SelectQExt b = SelectG (ExtCol b) BoolExp Int
 
 -- Columns in RQL
-data ExtCol
-  = ECSimple !PGCol
-  | ECRel !RelName !(Maybe RelName) !SelectQExt
-  deriving (Lift)
+-- This technically doesn't need to be generalized to all backends as
+-- it is specific to this module; however the generalization work was
+-- already done, and there's no particular reason to force this to be
+-- specific.
+data ExtCol (b :: Backend)
+  = ECSimple !(Column b)
+  | ECRel !RelName !(Maybe RelName) !(SelectQExt b)
+deriving instance Lift (ExtCol 'Postgres)
 
-instance ToJSON ExtCol where
+instance ToJSON (ExtCol 'Postgres) where
   toJSON (ECSimple s) = toJSON s
   toJSON (ECRel rn mrn selq) =
     object $ [ "name" .= rn
              , "alias" .= mrn
              ] ++ selectGToPairs selq
 
-instance FromJSON ExtCol where
+instance FromJSON (ExtCol 'Postgres) where
   parseJSON v@(Object o) =
     ECRel
     <$> o .:  "name"
@@ -55,8 +60,6 @@ instance FromJSON ExtCol where
     [ "A column should either be a string or an "
     , "object (relationship)"
     ]
-
-
 
 convSelCol :: (UserInfoM m, QErrM m, CacheRM m)
            => FieldInfoMap (FieldInfo 'Postgres)

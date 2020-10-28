@@ -12,8 +12,6 @@ import qualified Data.Sequence                       as Seq
 import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Control.Lens.TH                     (makeLenses, makePrisms)
-import           Data.Aeson.Types
-import           Language.Haskell.TH.Syntax          (Lift)
 
 import qualified Hasura.Backends.Postgres.SQL.DML    as S
 
