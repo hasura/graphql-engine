@@ -7,19 +7,19 @@ module Hasura.RQL.DDL.RemoteRelationship.Validate
   , errorToText
   ) where
 
-import           Hasura.Prelude                hiding (first)
+import           Hasura.Prelude                     hiding (first)
 
-import qualified Data.HashMap.Strict           as HM
-import qualified Data.HashSet                  as HS
-import qualified Data.Text                     as T
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.HashMap.Strict                as HM
+import qualified Data.HashSet                       as HS
+import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Data.Foldable
-
 import           Data.Text.Extended
+
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Schema.Remote
-import           Hasura.GraphQL.Utils          (getBaseTyWithNestedLevelsCount)
+import           Hasura.GraphQL.Utils               (getBaseTyWithNestedLevelsCount)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -35,13 +35,13 @@ data ValidationError
   | TableNotFound !QualifiedTable
   | TableFieldNonexistent !QualifiedTable !FieldName
   | ExpectedTypeButGot !G.GType !G.GType
-  | InvalidType !G.GType !T.Text
+  | InvalidType !G.GType !Text
   | InvalidVariable !G.Name !(HM.HashMap G.Name (ColumnInfo 'Postgres))
   | NullNotAllowedHere
   | InvalidGTypeForStripping !G.GType
   | UnsupportedMultipleElementLists
   | UnsupportedEnum
-  | InvalidGraphQLName !T.Text
+  | InvalidGraphQLName !Text
 
 errorToText :: ValidationError -> Text
 errorToText = \case

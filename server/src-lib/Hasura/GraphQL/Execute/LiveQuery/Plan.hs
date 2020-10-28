@@ -25,42 +25,41 @@ module Hasura.GraphQL.Execute.LiveQuery.Plan
   ) where
 
 import           Hasura.Prelude
-import           Hasura.Session
 
-import qualified Data.Aeson.Casing             as J
-import qualified Data.Aeson.Extended           as J
-import qualified Data.Aeson.TH                 as J
-import qualified Data.ByteString               as B
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.HashMap.Strict.InsOrd    as OMap
-import qualified Data.Sequence                 as Seq
-import qualified Data.Text                     as T
-import qualified Data.UUID.V4                  as UUID
-import qualified Database.PG.Query             as Q
-import qualified Language.GraphQL.Draft.Syntax as G
-
--- remove these when array encoding is merged
-import qualified Database.PG.Query.PTI         as PTI
-import qualified PostgreSQL.Binary.Encoding    as PE
+import qualified Data.Aeson.Casing                   as J
+import qualified Data.Aeson.Extended                 as J
+import qualified Data.Aeson.TH                       as J
+import qualified Data.ByteString                     as B
+import qualified Data.HashMap.Strict                 as Map
+import qualified Data.HashMap.Strict.InsOrd          as OMap
+import qualified Data.Sequence                       as Seq
+import qualified Data.Text                           as T
+import qualified Data.UUID.V4                        as UUID
+import qualified Database.PG.Query                   as Q
+import qualified Database.PG.Query.PTI               as PTI
+import qualified Language.GraphQL.Draft.Syntax       as G
+import qualified PostgreSQL.Binary.Encoding          as PE
 
 import           Control.Lens
-import           Data.UUID                     (UUID)
+import           Data.UUID                           (UUID)
 
-import qualified Hasura.GraphQL.Parser.Schema  as PS
--- import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
-import qualified Hasura.RQL.DML.RemoteJoin     as RR
-import qualified Hasura.RQL.DML.Select         as DS
-import qualified Hasura.SQL.DML                as S
+import qualified Hasura.Backends.Postgres.SQL.DML    as S
+import qualified Hasura.GraphQL.Parser.Schema        as PS
+import qualified Hasura.RQL.DML.RemoteJoin           as RR
+import qualified Hasura.RQL.DML.Select               as DS
 
-import           Hasura.Db
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.Backends.Postgres.SQL.Error
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Query
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.RQL.Types
-import           Hasura.SQL.Error
 import           Hasura.SQL.Types
-import           Hasura.SQL.Value
+import           Hasura.Session
+
 
 -- -------------------------------------------------------------------------------------------------
 -- Multiplexed queries

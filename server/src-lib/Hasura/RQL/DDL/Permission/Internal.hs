@@ -5,25 +5,25 @@ module Hasura.RQL.DDL.Permission.Internal where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict        as M
-import qualified Data.Text                  as T
-import qualified Database.PG.Query          as Q
-import qualified Hasura.SQL.DML             as S
+import qualified Data.HashMap.Strict                as M
+import qualified Data.Text                          as T
+import qualified Database.PG.Query                  as Q
+import qualified Hasura.Backends.Postgres.SQL.DML   as S
 
-import           Control.Lens               hiding ((.=))
+import           Control.Lens                       hiding ((.=))
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
-import           Instances.TH.Lift          ()
-import           Language.Haskell.TH.Syntax (Lift)
-
 import           Data.Text.Extended
+import           Instances.TH.Lift                  ()
+import           Language.Haskell.TH.Syntax         (Lift)
+
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.EncJSON
-import           Hasura.Incremental         (Cacheable)
+import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
-import           Hasura.SQL.Value
 import           Hasura.Server.Utils
 import           Hasura.Session
 
@@ -138,7 +138,7 @@ data PermDef a =
   PermDef
   { pdRole       :: !RoleName
   , pdPermission :: !a
-  , pdComment    :: !(Maybe T.Text)
+  , pdComment    :: !(Maybe Text)
   } deriving (Show, Eq, Lift, Generic)
 instance (Cacheable a) => Cacheable (PermDef a)
 $(deriveFromJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''PermDef)
@@ -170,10 +170,10 @@ procBoolExp tn fieldInfoMap be = do
   let deps = getBoolExpDeps tn abe
   return (abe, deps)
 
-isReqUserId :: T.Text -> Bool
+isReqUserId :: Text -> Bool
 isReqUserId = (== "req_user_id") . T.toLower
 
-getDepHeadersFromVal :: Value -> [T.Text]
+getDepHeadersFromVal :: Value -> [Text]
 getDepHeadersFromVal val = case val of
   Object o -> parseObject o
   _        -> parseOnlyString val
@@ -187,7 +187,7 @@ getDepHeadersFromVal val = case val of
     parseObject o =
       concatMap getDepHeadersFromVal (M.elems o)
 
-getDependentHeaders :: BoolExp -> [T.Text]
+getDependentHeaders :: BoolExp -> [Text]
 getDependentHeaders (BoolExp boolExp) =
   flip foldMap boolExp $ \(ColExp _ v) -> getDepHeadersFromVal v
 
