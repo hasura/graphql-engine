@@ -43,10 +43,10 @@ instance (MonadBase IO m) => CacheRM (CacheRefT m) where
 instance (MonadIO m, MonadBaseControl IO m, MonadTx m, MonadMetadata m
          , HasHttpManager m, HasSQLGenCtx m) => CacheRWM (CacheRefT m) where
   buildSchemaCacheWithOptions reason invalidations metadataModifier = CacheRefT $ flip modifyMVar \schemaCache -> do
-    ((), cache, _) <- runCacheRWT schemaCache (buildSchemaCacheWithOptions reason invalidations metadataModifier)
+    ((), cache, _) <- runCacheRWT schemaCache APIMetadata (buildSchemaCacheWithOptions reason invalidations metadataModifier)
     pure (cache, ())
 
-  setPreResolvedSource _ _ = pure () -- No need for resolving a source beforehand
+  setPreResolvedSource _ _ _ = pure () -- No need for resolving a source beforehand
 
 instance Example (CacheRefT m ()) where
   type Arg (CacheRefT m ()) = CacheRefT m :~> IO
