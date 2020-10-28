@@ -11,38 +11,42 @@ where
 
 import           Hasura.Prelude
 
-import qualified Data.Environment          as Env
-import qualified Data.HashMap.Strict       as Map
-import qualified Data.Sequence             as DS
-import qualified Database.PG.Query         as Q
-import qualified Network.HTTP.Client       as HTTP
-import qualified Network.HTTP.Types        as N
+import qualified Data.Environment                   as Env
+import qualified Data.HashMap.Strict                as Map
+import qualified Data.Sequence                      as DS
+import qualified Database.PG.Query                  as Q
+import qualified Network.HTTP.Client                as HTTP
+import qualified Network.HTTP.Types                 as N
 
-import qualified Hasura.SQL.DML            as S
-import qualified Hasura.Tracing            as Tracing
+import           Data.Text.Extended
 
+import qualified Hasura.Backends.Postgres.SQL.DML   as S
+import qualified Hasura.Tracing                     as Tracing
+
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.RemoteJoin
 import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.DML.Returning.Types
 import           Hasura.RQL.DML.Select
-import           Hasura.RQL.Instances           ()
+import           Hasura.RQL.Instances               ()
 import           Hasura.RQL.Types
-import           Hasura.Server.Version          (HasVersion)
 import           Hasura.SQL.Types
-import           Hasura.SQL.Value
+import           Hasura.Server.Version              (HasVersion)
 import           Hasura.Session
+
 
 type MutationRemoteJoinCtx = (HTTP.Manager, [N.Header], UserInfo)
 
-data Mutation
+data Mutation (b :: Backend)
   = Mutation
   { _mTable       :: !QualifiedTable
   , _mQuery       :: !(S.CTE, DS.Seq Q.PrepArg)
-  , _mOutput      :: !MutationOutput
-  , _mCols        :: ![PGColumnInfo]
-  , _mRemoteJoins :: !(Maybe (RemoteJoins, MutationRemoteJoinCtx))
+  , _mOutput      :: !(MutationOutput b)
+  , _mCols        :: ![ColumnInfo b]
+  , _mRemoteJoins :: !(Maybe (RemoteJoins b, MutationRemoteJoinCtx))
   , _mStrfyNum    :: !Bool
   }
 
@@ -50,10 +54,10 @@ mkMutation
   :: Maybe MutationRemoteJoinCtx
   -> QualifiedTable
   -> (S.CTE, DS.Seq Q.PrepArg)
-  -> MutationOutput
-  -> [PGColumnInfo]
+  -> MutationOutput 'Postgres
+  -> [ColumnInfo 'Postgres]
   -> Bool
-  -> Mutation
+  -> Mutation 'Postgres
 mkMutation ctx table query output' allCols strfyNum =
   let (output, remoteJoins) = getRemoteJoinsMutationOutput output'
       remoteJoinsCtx = (,) <$> remoteJoins <*> ctx
@@ -67,7 +71,7 @@ runMutation
   , Tracing.MonadTrace m
   )
   => Env.Environment
-  -> Mutation
+  -> Mutation 'Postgres
   -> m EncJSON
 runMutation env mut =
   bool (mutateAndReturn env mut) (mutateAndSel env mut) $
@@ -81,7 +85,7 @@ mutateAndReturn
   , Tracing.MonadTrace m
   )
   => Env.Environment
-  -> Mutation
+  -> Mutation 'Postgres
   -> m EncJSON
 mutateAndReturn env (Mutation qt (cte, p) mutationOutput allCols remoteJoins strfyNum) =
   executeMutationOutputQuery env sqlQuery (toList p) remoteJoins
@@ -111,7 +115,7 @@ mutateAndSel
   , Tracing.MonadTrace m
   )
   => Env.Environment
-  -> Mutation
+  -> Mutation 'Postgres
   -> m EncJSON
 mutateAndSel env (Mutation qt q mutationOutput allCols remoteJoins strfyNum) = do
   -- Perform mutation and fetch unique columns
@@ -131,7 +135,7 @@ executeMutationOutputQuery
   => Env.Environment
   -> Q.Query -- ^ SQL query
   -> [Q.PrepArg] -- ^ Prepared params
-  -> Maybe (RemoteJoins, MutationRemoteJoinCtx)  -- ^ Remote joins context
+  -> Maybe (RemoteJoins 'Postgres, MutationRemoteJoinCtx)  -- ^ Remote joins context
   -> m EncJSON
 executeMutationOutputQuery env query prepArgs = \case
   Nothing ->
@@ -143,7 +147,7 @@ executeMutationOutputQuery env query prepArgs = \case
 
 mutateAndFetchCols
   :: QualifiedTable
-  -> [PGColumnInfo]
+  -> [ColumnInfo 'Postgres]
   -> (S.CTE, DS.Seq Q.PrepArg)
   -> Bool
   -> Q.TxE QErr (MutateResp TxtEncodedPGVal)
@@ -152,14 +156,14 @@ mutateAndFetchCols qt cols (cte, p) strfyNum =
     -- See Note [Prepared statements in Mutations]
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sql) (toList p) False
   where
-    aliasIden = Iden $ qualObjectToText qt <> "__mutation_result"
-    tabFrom = FromIden aliasIden
+    aliasIdentifier = Identifier $ qualifiedObjectToText qt <> "__mutation_result"
+    tabFrom = FromIdentifier aliasIdentifier
     tabPerm = TablePerm annBoolExpTrue Nothing
     selFlds = flip map cols $
               \ci -> (fromPGCol $ pgiColumn ci, mkAnnColumnFieldAsText ci)
 
     sql = toSQL selectWith
-    selectWith = S.SelectWith [(S.Alias aliasIden, cte)] select
+    selectWith = S.SelectWith [(S.Alias aliasIdentifier, cte)] select
     select = S.mkSelect {S.selExtr = [S.Extractor extrExp Nothing]}
     extrExp = S.applyJsonBuildObj
               [ S.SELit "affected_rows", affRowsSel
@@ -169,7 +173,7 @@ mutateAndFetchCols qt cols (cte, p) strfyNum =
     affRowsSel = S.SESelect $
       S.mkSelect
       { S.selExtr = [S.Extractor S.countStar Nothing]
-      , S.selFrom = Just $ S.FromExp [S.FIIden aliasIden]
+      , S.selFrom = Just $ S.FromExp [S.FIIdentifier aliasIdentifier]
       }
     colSel = S.SESelect $ mkSQLSelect JASMultipleRows $
              AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum
@@ -180,7 +184,7 @@ mutateAndFetchCols qt cols (cte, p) strfyNum =
 -- `SELECT ("row"::table).* VALUES (1, 'Robert', 23) AS "row"`.
 mkSelCTEFromColVals
   :: (MonadError QErr m)
-  => QualifiedTable -> [PGColumnInfo] -> [ColumnValues TxtEncodedPGVal] -> m S.CTE
+  => QualifiedTable -> [ColumnInfo 'Postgres] -> [ColumnValues TxtEncodedPGVal] -> m S.CTE
 mkSelCTEFromColVals qt allCols colVals =
   S.CTESelect <$> case colVals of
     [] -> return selNoRows
@@ -192,8 +196,8 @@ mkSelCTEFromColVals qt allCols colVals =
         , S.selFrom = Just $ S.FromExp [fromItem]
         }
   where
-    rowAlias = Iden "row"
-    extractor = S.selectStar' $ S.QualIden rowAlias $ Just $ S.TypeAnn $ toSQLTxt qt
+    rowAlias = Identifier "row"
+    extractor = S.selectStar' $ S.QualifiedIdentifier rowAlias $ Just $ S.TypeAnn $ toSQLTxt qt
     sortedCols = sortCols allCols
     mkTupsFromColVal colVal =
       fmap S.TupleExp $ forM sortedCols $ \ci -> do
