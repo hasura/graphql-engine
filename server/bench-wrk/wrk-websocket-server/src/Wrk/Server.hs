@@ -56,7 +56,7 @@ processReq conn msg lock = do
     catchIO :: IO (Either ErrorMessage a) -> IO (Either ErrorMessage a)
     catchIO f = do
       resIOE <- E.try f
-      either (return . Left . ioExToErr) return resIOE
+      return $ either (Left . ioExToErr) id resIOE
     ioExToErr :: E.SomeException -> ErrorMessage
     ioExToErr e = ErrorMessage $ J.object ["IOError" J..= show e ]
 
@@ -253,5 +253,5 @@ uptoFirstMatch str = fmap T.concat $ AT.manyTill nextPossibleMatch $ AT.string s
 takeIncludingFirstMatch :: T.Text -> AT.Parser T.Text
 takeIncludingFirstMatch str = withSubStr <|> errMsg
   where
-    withSubStr = fmap (`T.append` str) $ uptoFirstMatch str
+    withSubStr = (`T.append` str) <$> uptoFirstMatch str
     errMsg = fail $ "Could not find sub-string: " <> T.unpack str

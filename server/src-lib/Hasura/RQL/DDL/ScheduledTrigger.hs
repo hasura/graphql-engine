@@ -25,14 +25,14 @@ import qualified Database.PG.Query                   as Q
 --   be created
 runCreateCronTrigger :: (CacheRWM m, MonadTx m) => CreateCronTrigger ->  m EncJSON
 runCreateCronTrigger CreateCronTrigger {..} = do
-  let q = (CronTriggerMetadata cctName
+  let q = CronTriggerMetadata cctName
                                cctWebhook
                                cctCronSchedule
                                cctPayload
                                cctRetryConf
                                cctHeaders
                                cctIncludeInMetadata
-                               cctComment)
+                               cctComment
   case cctReplace of
     True -> updateCronTrigger q
     False -> do
@@ -41,7 +41,7 @@ runCreateCronTrigger CreateCronTrigger {..} = do
           Nothing -> pure ()
           Just _ -> throw400 AlreadyExists $
                     "cron trigger with name: "
-                    <> (triggerNameToTxt $ ctName q)
+                    <> triggerNameToTxt (ctName q)
                     <> " already exists"
 
         addCronTriggerToCatalog q
@@ -152,4 +152,4 @@ checkExists name = do
   cronTriggersMap <- scCronTriggers <$> askSchemaCache
   void $ onNothing (Map.lookup name cronTriggersMap) $
     throw400 NotExists $
-      "cron trigger with name: " <> (triggerNameToTxt name) <> " does not exist"
+      "cron trigger with name: " <> triggerNameToTxt name <> " does not exist"
