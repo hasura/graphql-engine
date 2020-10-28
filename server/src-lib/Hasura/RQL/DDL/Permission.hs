@@ -97,9 +97,9 @@ data InsPerm (b :: Backend)
   } deriving (Show, Eq, Lift, Generic)
 instance Cacheable (InsPerm 'Postgres)
 instance FromJSON (InsPerm 'Postgres) where
-  parseJSON = genericParseJSON $ aesonDrop 3 snakeCase
+  parseJSON = genericParseJSON $ aesonDrop 2 snakeCase
 instance ToJSON (InsPerm 'Postgres) where
-  toJSON = genericToJSON $ aesonDrop 3 snakeCase
+  toJSON = genericToJSON $ aesonDrop 2 snakeCase
 
 type InsPermDef    b = PermDef    (InsPerm b)
 type CreateInsPerm b = CreatePerm (InsPerm b)
@@ -169,7 +169,7 @@ data SelPerm (b :: Backend)
   } deriving (Show, Eq, Lift, Generic)
 instance Cacheable (SelPerm 'Postgres)
 instance ToJSON (SelPerm 'Postgres) where
-  toJSON = genericToJSON $ aesonDrop 3 snakeCase
+  toJSON = genericToJSON $ aesonDrop 2 snakeCase
 
 instance FromJSON (SelPerm 'Postgres) where
   parseJSON = withObject "SelPerm" $ \o ->
@@ -248,9 +248,9 @@ data UpdPerm b
   } deriving (Show, Eq, Lift, Generic)
 instance Cacheable (UpdPerm 'Postgres)
 instance FromJSON (UpdPerm 'Postgres) where
-  parseJSON = genericParseJSON $ aesonDrop 3 snakeCase
+  parseJSON = genericParseJSON $ aesonDrop 2 snakeCase
 instance ToJSON (UpdPerm 'Postgres) where
-  toJSON = genericToJSON $ aesonDrop 3 snakeCase
+  toJSON = genericToJSON $ aesonDrop 2 snakeCase
 
 type UpdPermDef    b = PermDef    (UpdPerm b)
 type CreateUpdPerm b = CreatePerm (UpdPerm b)
@@ -300,9 +300,9 @@ data DelPerm (b :: Backend)
   deriving (Show, Eq, Lift, Generic)
 instance Cacheable (DelPerm 'Postgres)
 instance FromJSON (DelPerm 'Postgres) where
-  parseJSON = genericParseJSON $ aesonDrop 3 snakeCase
+  parseJSON = genericParseJSON $ aesonDrop 2 snakeCase
 instance ToJSON (DelPerm 'Postgres) where
-  toJSON = genericToJSON $ aesonDrop 3 snakeCase
+  toJSON = genericToJSON $ aesonDrop 2 snakeCase
 
 type DelPermDef    b = PermDef    (DelPerm b)
 type CreateDelPerm b = CreatePerm (DelPerm b)
