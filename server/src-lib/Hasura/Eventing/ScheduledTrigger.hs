@@ -72,42 +72,45 @@ module Hasura.Eventing.ScheduledTrigger
   , unlockAllLockedScheduledEvents
   ) where
 
-import           Control.Arrow.Extended      (dup)
-import           Control.Concurrent.Extended (sleep)
+import           Hasura.Prelude
+
+import qualified Data.Aeson                         as J
+import qualified Data.Aeson.Casing                  as J
+import qualified Data.Aeson.TH                      as J
+import qualified Data.ByteString.Lazy               as BL
+import qualified Data.Environment                   as Env
+import qualified Data.HashMap.Strict                as Map
+import qualified Data.Set                           as Set
+import qualified Data.TByteString                   as TBS
+import qualified Data.Text                          as T
+import qualified Database.PG.Query                  as Q
+import qualified Database.PG.Query.PTI              as PTI
+import qualified Network.HTTP.Client                as HTTP
+import qualified PostgreSQL.Binary.Decoding         as PD
+import qualified PostgreSQL.Binary.Encoding         as PE
+
+import           Control.Arrow.Extended             (dup)
+import           Control.Concurrent.Extended        (sleep)
 import           Control.Concurrent.STM.TVar
 import           Data.Has
-import           Data.Int                    (Int64)
-import           Data.List                   (unfoldr)
+import           Data.Int                           (Int64)
+import           Data.List                          (unfoldr)
 import           Data.Time.Clock
+import           System.Cron
+
+import qualified Hasura.Logging                     as L
+import qualified Hasura.Tracing                     as Tracing
+
+import           Hasura.Backends.Postgres.SQL.DML
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.HTTP
 import           Hasura.HTTP
-import           Hasura.Prelude
-import           Hasura.RQL.DDL.EventTrigger (getHeaderInfosFromConf)
+import           Hasura.RQL.DDL.EventTrigger        (getHeaderInfosFromConf)
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
-import           Hasura.Server.Version       (HasVersion)
-import           Hasura.SQL.DML
 import           Hasura.SQL.Types
-import           System.Cron
-
-import qualified Data.Aeson                  as J
-import qualified Data.Aeson.Casing           as J
-import qualified Data.Aeson.TH               as J
-import qualified Data.ByteString.Lazy        as BL
-import qualified Data.Environment            as Env
-import qualified Data.HashMap.Strict         as Map
-import qualified Data.Set                    as Set
-import qualified Data.TByteString            as TBS
-import qualified Data.Text                   as T
-import qualified Database.PG.Query           as Q
-import qualified Database.PG.Query.PTI       as PTI
-import qualified Hasura.Logging              as L
-import qualified Hasura.Tracing              as Tracing
-import qualified Network.HTTP.Client         as HTTP
-import qualified PostgreSQL.Binary.Decoding  as PD
-import qualified PostgreSQL.Binary.Encoding  as PE
-import qualified Text.Builder                as TB (run)
+import           Hasura.Server.Version              (HasVersion)
 
 
 newtype ScheduledTriggerInternalErr
@@ -308,7 +311,7 @@ insertCronEventsFor cronTriggersWithStats = do
   case scheduledEvents of
     []     -> pure ()
     events -> do
-      let insertCronEventsSql = TB.run $ toSQL
+      let insertCronEventsSql = toSQLTxt
             SQLInsert
               { siTable    = cronEventsTable
               , siCols     = map unsafePGCol ["trigger_name", "scheduled_time"]
@@ -323,7 +326,7 @@ insertCronEventsFor cronTriggersWithStats = do
 
 insertCronEvents :: [CronEventSeed] -> Q.TxE QErr ()
 insertCronEvents events = do
-  let insertCronEventsSql = TB.run $ toSQL
+  let insertCronEventsSql = toSQLTxt
         SQLInsert
           { siTable    = cronEventsTable
           , siCols     = map unsafePGCol ["trigger_name", "scheduled_time"]
@@ -514,7 +517,7 @@ processScheduledEvent logEnv pgpool se@ScheduledEventFull {..} type' = Tracing.r
         (processSuccess pgpool se decodedHeaders type' webhookReqBodyJson)
         res
   where
-    traceNote = "Scheduled trigger" <> foldMap ((": " <>) . unNonEmptyText . unTriggerName) sefName
+    traceNote = "Scheduled trigger" <> foldMap ((": " <>) . triggerNameToTxt) sefName
 
 processError
   :: (MonadIO m, MonadError QErr m)
