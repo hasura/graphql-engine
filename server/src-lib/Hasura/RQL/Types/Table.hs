@@ -93,9 +93,10 @@ import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Text.Extended
 import           Language.Haskell.TH.Syntax          (Lift)
 
-import           Data.Text.Extended
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Incremental                  (Cacheable)
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
@@ -106,7 +107,6 @@ import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.SQL.Backend
-import           Hasura.SQL.Types
 import           Hasura.Server.Utils                 (duplicates, englishList)
 import           Hasura.Session
 
@@ -233,7 +233,7 @@ data InsPermInfo (b :: Backend)
   , ipiCheck           :: !(AnnBoolExpPartialSQL b)
   , ipiSet             :: !(PreSetColsPartial b)
   , ipiBackendOnly     :: !Bool
-  , ipiRequiredHeaders :: ![T.Text]
+  , ipiRequiredHeaders :: ![Text]
   } deriving (Generic)
 instance NFData (InsPermInfo 'Postgres)
 deriving instance Eq (InsPermInfo 'Postgres)
@@ -248,7 +248,7 @@ data SelPermInfo (b :: Backend)
   , spiFilter               :: !(AnnBoolExpPartialSQL b)
   , spiLimit                :: !(Maybe Int)
   , spiAllowAgg             :: !Bool
-  , spiRequiredHeaders      :: ![T.Text]
+  , spiRequiredHeaders      :: ![Text]
   } deriving (Generic)
 instance NFData (SelPermInfo 'Postgres)
 deriving instance Eq (SelPermInfo 'Postgres)
@@ -263,7 +263,7 @@ data UpdPermInfo (b :: Backend)
   , upiFilter          :: !(AnnBoolExpPartialSQL b)
   , upiCheck           :: !(Maybe (AnnBoolExpPartialSQL b))
   , upiSet             :: !(PreSetColsPartial b)
-  , upiRequiredHeaders :: ![T.Text]
+  , upiRequiredHeaders :: ![Text]
   } deriving (Generic)
 instance NFData (UpdPermInfo 'Postgres)
 deriving instance Eq (UpdPermInfo 'Postgres)
@@ -275,7 +275,7 @@ data DelPermInfo (b :: Backend)
   = DelPermInfo
   { dpiTable           :: !QualifiedTable
   , dpiFilter          :: !(AnnBoolExpPartialSQL b)
-  , dpiRequiredHeaders :: ![T.Text]
+  , dpiRequiredHeaders :: ![Text]
   } deriving (Generic)
 instance NFData (DelPermInfo 'Postgres)
 deriving instance Eq (DelPermInfo 'Postgres)
@@ -327,7 +327,7 @@ type EventTriggerInfoMap = M.HashMap TriggerName EventTriggerInfo
 --   | CTUNIQUE
 --   deriving Eq
 
--- constraintTyToTxt :: ConstraintType -> T.Text
+-- constraintTyToTxt :: ConstraintType -> Text
 -- constraintTyToTxt ty = case ty of
 --   CTCHECK      -> "CHECK"
 --   CTFOREIGNKEY -> "FOREIGN KEY"
@@ -383,7 +383,7 @@ isMutable f (Just vi) = f vi
 
 mutableView :: (MonadError QErr m) => QualifiedTable
             -> (ViewInfo -> Bool) -> Maybe ViewInfo
-            -> T.Text -> m ()
+            -> Text -> m ()
 mutableView qt f mVI operation =
   unless (isMutable f mVI) $ throw400 NotSupported $
   "view " <> qt <<> " is not " <> operation

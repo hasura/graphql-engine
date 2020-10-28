@@ -7,22 +7,22 @@ module Hasura.RQL.Types.ComputedField where
 
 import           Hasura.Prelude
 
-import qualified Data.Sequence              as Seq
-import qualified Database.PG.Query          as Q
+import qualified Data.Sequence                      as Seq
+import qualified Database.PG.Query                  as Q
 
-import           Control.Lens               hiding ((.=))
+import           Control.Lens                       hiding ((.=))
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
-import           Instances.TH.Lift          ()
-import           Language.Haskell.TH.Syntax (Lift)
+import           Instances.TH.Lift                  ()
+import           Language.Haskell.TH.Syntax         (Lift)
 
-import           Hasura.Incremental         (Cacheable)
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Function
 import           Hasura.SQL.Backend
-import           Hasura.SQL.Types
 
 
 newtype ComputedFieldName =

@@ -41,7 +41,7 @@ import qualified Network.Wai.Handler.Warp                  as Warp
 import qualified System.Log.FastLogger                     as FL
 import qualified Text.Mustache.Compile                     as M
 
-import           Hasura.Db
+import           Hasura.Backends.Postgres.Connection
 import           Hasura.EncJSON
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.EventTrigger

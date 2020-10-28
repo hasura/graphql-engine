@@ -4,18 +4,21 @@
 
 module Hasura.RQL.DML.Select.Types where
 
-import           Control.Lens.TH                     (makeLenses, makePrisms)
-import           Data.Aeson.Types
-import           Language.Haskell.TH.Syntax          (Lift)
+import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                 as HM
 import qualified Data.List.NonEmpty                  as NE
 import qualified Data.Sequence                       as Seq
-import qualified Data.Text                           as T
 import qualified Language.GraphQL.Draft.Syntax       as G
 
+import           Control.Lens.TH                     (makeLenses, makePrisms)
+import           Data.Aeson.Types
+import           Language.Haskell.TH.Syntax          (Lift)
+
+import qualified Hasura.Backends.Postgres.SQL.DML    as S
+
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Parser.Schema
-import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
@@ -24,8 +27,6 @@ import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Backend
-import qualified Hasura.SQL.DML                      as S
-import           Hasura.SQL.Types
 
 type SelectQExt b = SelectG (ExtCol b) BoolExp Int
 
@@ -64,7 +65,7 @@ instance FromJSON (ExtCol 'Postgres) where
 
 data AnnAggregateOrderBy (b :: Backend)
   = AAOCount
-  | AAOOp !T.Text !(ColumnInfo b)
+  | AAOOp !Text !(ColumnInfo b)
   deriving (Generic)
 deriving instance Eq (AnnAggregateOrderBy 'Postgres)
 instance Hashable (AnnAggregateOrderBy 'Postgres)
@@ -222,7 +223,7 @@ data AnnFieldG (b :: Backend) v
   | AFComputedField !(ComputedFieldSelect b v)
   | AFRemote !(RemoteSelect b)
   | AFNodeId !QualifiedTable !(PrimaryKeyColumns b)
-  | AFExpression !T.Text
+  | AFExpression !Text
 
 mkAnnColumnField :: ColumnInfo backend -> Maybe ColumnOp -> AnnFieldG backend v
 mkAnnColumnField ci colOpM =
@@ -236,13 +237,13 @@ traverseAnnField
   :: (Applicative f)
   => (a -> f b) -> AnnFieldG backend a -> f (AnnFieldG backend b)
 traverseAnnField f = \case
-  AFColumn colFld -> pure $ AFColumn colFld
+  AFColumn colFld      -> pure $ AFColumn colFld
   AFObjectRelation sel -> AFObjectRelation <$> traverse (traverseAnnObjectSelect f) sel
-  AFArrayRelation sel -> AFArrayRelation <$> traverseArraySelect f sel
-  AFComputedField sel -> AFComputedField <$> traverseComputedFieldSelect f sel
-  AFRemote s -> pure $ AFRemote s
-  AFNodeId qt pKeys -> pure $ AFNodeId qt pKeys
-  AFExpression t -> AFExpression <$> pure t
+  AFArrayRelation sel  -> AFArrayRelation <$> traverseArraySelect f sel
+  AFComputedField sel  -> AFComputedField <$> traverseComputedFieldSelect f sel
+  AFRemote s           -> pure $ AFRemote s
+  AFNodeId qt pKeys    -> pure $ AFNodeId qt pKeys
+  AFExpression t       -> AFExpression <$> pure t
 
 type AnnField b = AnnFieldG b S.SQLExp
 
@@ -276,7 +277,7 @@ noSelectArgs = SelectArgs Nothing Nothing Nothing Nothing Nothing
 
 data ColFld (b :: Backend)
   = CFCol !(Column b)
-  | CFExp !T.Text
+  | CFExp !Text
 {-
 deriving instance Eq (Column b) => Eq (ColFld b)
 deriving instance Show (Column b) => Show (ColFld b)
@@ -286,14 +287,14 @@ type ColumnFields b = Fields (ColFld b)
 
 data AggregateOp (b :: Backend)
   = AggregateOp
-  { _aoOp     :: !T.Text
+  { _aoOp     :: !Text
   , _aoFields :: !(ColumnFields b)
   }
 
 data AggregateField (b :: Backend)
   = AFCount !S.CountType
   | AFOp !(AggregateOp b)
-  | AFExp !T.Text
+  | AFExp !Text
 
 type AggregateFields b = Fields (AggregateField b)
 type AnnFieldsG b v = Fields (AnnFieldG b v)
@@ -308,7 +309,7 @@ type AnnFields b = AnnFieldsG b S.SQLExp
 data TableAggregateFieldG (b :: Backend) v
   = TAFAgg !(AggregateFields b)
   | TAFNodes !(AnnFieldsG b v)
-  | TAFExp !T.Text
+  | TAFExp !Text
 
 data PageInfoField
   = PageInfoTypename !Text
@@ -352,16 +353,16 @@ traverseTableAggregateField
   :: (Applicative f)
   => (a -> f b) -> TableAggregateFieldG backend a -> f (TableAggregateFieldG backend b)
 traverseTableAggregateField f = \case
-  TAFAgg aggFlds -> pure $ TAFAgg aggFlds
+  TAFAgg aggFlds   -> pure $ TAFAgg aggFlds
   TAFNodes annFlds -> TAFNodes <$> traverseAnnFields f annFlds
-  TAFExp t -> pure $ TAFExp t
+  TAFExp t         -> pure $ TAFExp t
 
 type TableAggregateField b = TableAggregateFieldG b S.SQLExp
 type TableAggregateFieldsG b v = Fields (TableAggregateFieldG b v)
 type TableAggregateFields b = TableAggregateFieldsG b S.SQLExp
 
 data ArgumentExp a
-  = AETableRow !(Maybe Iden) -- ^ table row accessor
+  = AETableRow !(Maybe Identifier) -- ^ table row accessor
   | AESession !a -- ^ JSON/JSONB hasura session variable object
   | AEInput !a
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
@@ -371,7 +372,7 @@ type FunctionArgsExpTableRow v = FunctionArgsExpG (ArgumentExp v)
 
 data SelectFromG (b :: Backend) v
   = FromTable !QualifiedTable
-  | FromIden !Iden
+  | FromIdentifier !Identifier
   | FromFunction !QualifiedFunction
                  !(FunctionArgsExpTableRow v)
                  -- a definition list
@@ -519,8 +520,8 @@ insertFunctionArg argName idx value (FunctionArgsExp positional named) =
 
 data SourcePrefixes
   = SourcePrefixes
-  { _pfThis :: !Iden -- ^ Current source prefix
-  , _pfBase :: !Iden
+  { _pfThis :: !Identifier -- ^ Current source prefix
+  , _pfBase :: !Identifier
   -- ^ Base table source row identifier to generate
   -- the table's column identifiers for computed field
   -- function input parameters
@@ -529,7 +530,7 @@ instance Hashable SourcePrefixes
 
 data SelectSource
   = SelectSource
-  { _ssPrefix   :: !Iden
+  { _ssPrefix   :: !Identifier
   , _ssFrom     :: !S.FromItem
   , _ssDistinct :: !(Maybe S.DistinctExpr)
   , _ssWhere    :: !S.BoolExp
@@ -551,7 +552,7 @@ instance Semigroup (SelectNode 'Postgres) where
 
 data ObjectSelectSource
   = ObjectSelectSource
-  { _ossPrefix :: !Iden
+  { _ossPrefix :: !Identifier
   , _ossFrom   :: !S.FromItem
   , _ossWhere  :: !S.BoolExp
   } deriving (Show, Eq, Generic)

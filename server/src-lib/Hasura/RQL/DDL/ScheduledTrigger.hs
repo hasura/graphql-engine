@@ -7,18 +7,18 @@ module Hasura.RQL.DDL.ScheduledTrigger
   , runCreateScheduledEvent
   ) where
 
-import           Hasura.Db
+import           Hasura.Backends.Postgres.Connection
 import           Hasura.EncJSON
-import           Hasura.Prelude
-import           Hasura.RQL.DDL.EventTrigger (getHeaderInfosFromConf)
-import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Catalog    (CatalogCronTrigger(..))
 import           Hasura.Eventing.ScheduledTrigger
+import           Hasura.Prelude
+import           Hasura.RQL.DDL.EventTrigger         (getHeaderInfosFromConf)
+import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Catalog            (CatalogCronTrigger (..))
 
-import qualified Database.PG.Query     as Q
-import qualified Data.Time.Clock       as C
-import qualified Data.HashMap.Strict   as Map
-import qualified Data.Environment      as Env
+import qualified Data.Environment                    as Env
+import qualified Data.HashMap.Strict                 as Map
+import qualified Data.Time.Clock                     as C
+import qualified Database.PG.Query                   as Q
 
 -- | runCreateCronTrigger will update a existing cron trigger when the 'replace'
 --   value is set to @true@ and when replace is @false@ a new cron trigger will
