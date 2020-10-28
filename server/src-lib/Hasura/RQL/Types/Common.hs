@@ -277,7 +277,7 @@ unsafeNonNegativeInt = NonNegativeInt
 
 instance FromJSON NonNegativeInt where
   parseJSON = withScientific "NonNegativeInt" $ \t -> do
-    case (t >= 0) of
+    case t >= 0 of
       True  -> NonNegativeInt <$> maybeInt (toBoundedInteger t)
       False -> fail "negative value not allowed"
     where
@@ -298,7 +298,7 @@ mkNonNegativeDiffTime x = case x >= 0 of
 
 instance FromJSON NonNegativeDiffTime where
   parseJSON = withScientific "NonNegativeDiffTime" $ \t -> do
-    case (t >= 0) of
+    case t >= 0 of
       True  -> return $ NonNegativeDiffTime . realToFrac $ t
       False -> fail "negative value not allowed"
 
@@ -338,7 +338,7 @@ newtype Timeout = Timeout { unTimeout :: Int }
 instance FromJSON Timeout where
   parseJSON = withScientific "Timeout" $ \t -> do
     timeout <- onNothing (toBoundedInteger t) $ fail (show t <> " is out of bounds")
-    case (timeout >= 0) of
+    case timeout >= 0 of
       True  -> return $ Timeout timeout
       False -> fail "timeout value cannot be negative"
 

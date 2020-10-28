@@ -351,7 +351,7 @@ processError pool e retryConf decodedHeaders ep err = do
               respStatus = hrsStatus errResp
           mkInvocation ep respStatus decodedHeaders respPayload respHeaders
         HOther detail -> do
-          let errMsg = (TBS.fromLBS $ encode detail)
+          let errMsg = TBS.fromLBS $ encode detail
           mkInvocation ep 500 decodedHeaders errMsg []
   liftIO $ runExceptT $ Q.runTx pool (Q.ReadCommitted, Just Q.ReadWrite) $ do
     insertInvocation invocation
@@ -382,7 +382,7 @@ retryOrSetError e retryConf err = do
 
 mkInvocation
   :: EventPayload -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf]
-  -> (Invocation 'EventType)
+  -> Invocation 'EventType
 mkInvocation ep status reqHeaders respBody respHeaders
   = let resp = if isClientError status
           then mkClientErr respBody
@@ -507,7 +507,7 @@ instance Q.ToPrepArg EventIdArray where
 --   when a graceful shutdown is initiated.
 unlockEvents :: [EventId] -> Q.TxE QErr Int
 unlockEvents eventIds =
-   (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
+   runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
    [Q.sql|
      WITH "cte" AS
      (UPDATE hdb_catalog.event_log

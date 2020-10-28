@@ -129,7 +129,7 @@ addComputedFieldP2Setup
   -> Maybe Text
   -> m (ComputedFieldInfo 'Postgres)
 addComputedFieldP2Setup trackedTables table computedField definition rawFunctionInfo comment =
-  either (throw400 NotSupported . showErrors) pure =<< MV.runValidateT (mkComputedFieldInfo)
+  either (throw400 NotSupported . showErrors) pure =<< MV.runValidateT mkComputedFieldInfo
   where
     inputArgNames = rfiInputArgNames rawFunctionInfo
     ComputedFieldDefinition function maybeTableArg maybeSessionArg = definition
@@ -168,7 +168,7 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
                          (rfiInputArgTypes rawFunctionInfo) inputArgNames
       tableArgument <- case maybeTableArg of
         Just argName ->
-          case findWithIndex (maybe False (argName ==) . faName) inputArgs of
+          case findWithIndex ((Just argName ==) . faName) inputArgs of
             Just (tableArg, index) -> do
               let functionTableArg = FTANamed argName index
               validateTableArgumentType functionTableArg $ faType tableArg
@@ -184,7 +184,7 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
 
       maybePGSessionArg <- sequence $ do
           argName <- maybeSessionArg
-          return $ case findWithIndex (maybe False (argName ==) . faName) inputArgs of
+          return $ case findWithIndex ((Just argName ==) . faName) inputArgs of
             Just (sessionArg, index) -> do
               let functionSessionArg = FunctionSessionArgument argName index
               validateSessionArgumentType functionSessionArg $ faType sessionArg
@@ -217,7 +217,7 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
                                 -> QualifiedPGType
                                 -> m ()
     validateSessionArgumentType sessionArg qpt = do
-      when (not . isJSONType . _qptName $ qpt) $
+      unless (isJSONType $ _qptName qpt) $
         MV.dispute $ pure $ CFVEInvalidSessionArgument $ ISANotJSON sessionArg
 
     showErrors :: [ComputedFieldValidateError] -> Text

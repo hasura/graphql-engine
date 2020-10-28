@@ -320,7 +320,7 @@ asyncActionsProcessor env logger cacheRef pgPool httpManager = forever $ do
     runTx :: (Monoid a) => Q.TxE QErr a -> IO a
     runTx q = do
       res <- runExceptT $ Q.runTx' pgPool q
-      either mempty return res
+      onLeft res mempty
 
     callHandler :: ActionCache -> ActionLogItem -> m ()
     callHandler actionCache actionLogItem = Tracing.runTraceT "async actions processor" do
@@ -427,7 +427,7 @@ callWebhook env manager outputType outputFields reqHeaders confHeaders
       requestBody = J.encode postPayload
       requestBodySize = BL.length requestBody
       url = unResolvedWebhook resolvedWebhook
-      responseTimeout = HTTP.responseTimeoutMicro $ (unTimeout timeoutSeconds) * 1000000
+      responseTimeout = HTTP.responseTimeoutMicro $ unTimeout timeoutSeconds * 1000000
   httpResponse <- do
     initReq <- liftIO $ HTTP.parseRequest (T.unpack url)
     let req = initReq { HTTP.method          = "POST"
@@ -475,7 +475,7 @@ callWebhook env manager outputType outputFields reqHeaders confHeaders
                    webhookResponse <- decodeValue responseValue
                    case webhookResponse of
                      AWRArray objs -> do
-                       when (not expectingArray) $
+                       unless expectingArray $
                          throwUnexpected "expecting object for action webhook response but got array"
                        mapM_ validateResponseObject objs
                      AWRObject obj -> do
@@ -503,12 +503,12 @@ callWebhook env manager outputType outputFields reqHeaders confHeaders
       validateResponseObject obj = do
         -- Fields not specified in the output type shouldn't be present in the response
         let extraFields = filter (not . flip Map.member outputFields) $ Map.keys obj
-        when (not $ null extraFields) $ throwUnexpected $
+        unless (null extraFields) $ throwUnexpected $
           "unexpected fields in webhook response: " <> showNames extraFields
 
         void $ flip Map.traverseWithKey outputFields $ \fieldName fieldTy ->
           -- When field is non-nullable, it has to present in the response with no null value
-          when (not $ G.isNullable fieldTy) $ case Map.lookup fieldName obj of
+          unless (G.isNullable fieldTy) $ case Map.lookup fieldName obj of
             Nothing -> throwUnexpected $
                        "field " <> fieldName <<> " expected in webhook response, but not found"
             Just v -> when (v == J.Null) $ throwUnexpected $

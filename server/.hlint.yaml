@@ -35,6 +35,10 @@
 # Will suggest replacing "wibbleMany [myvar]" with "wibbleOne myvar"
 # - error: {lhs: "wibbleMany [x]", rhs: wibbleOne x}
 
+- warn: {lhs: "maybe (f x) f", rhs: "f . fromMaybe x"}
+- warn: {lhs: "either (f . g) (f . h)", rhs: "f . either g h"}
+- warn: {lhs: "onNothing x (return y)", rhs: "return (fromMaybe y x)"}
+- warn: {lhs: "onLeft x (return . f)", rhs: "return (either f id x)"}
 
 # Turn on hints that are off by default
 #
@@ -52,50 +56,27 @@
 # - ignore: {name: Use let}
 # - ignore: {name: Use const, within: SpecialModule} # Only within certain modules
 
-- ignore: {name: Use <$>}
 - ignore: {name: Reduce duplication}
-- ignore: {name: Use fromMaybe}
 - ignore: {name: Redundant $}
 - ignore: {name: Redundant bracket}
 - ignore: {name: Use fmap}
 - ignore: {name: Use first}
 - ignore: {name: Use if}
 - ignore: {name: Redundant <$>}
-- ignore: {name: Functor law}
-- ignore: {name: Move brackets to avoid $}
-- ignore: {name: Use null}
-- ignore: {name: Use map once}
 - ignore: {name: Use ++}
-- ignore: {name: Use lambda-case}
 - ignore: {name: Use const}
 - ignore: {name: Eta reduce}
 - ignore: {name: Redundant multi-way if}
 - ignore: {name: Use newtype instead of data}
 - ignore: {name: Use bimap}
-- ignore: {name: Use section}
 - ignore: {name: Use $>}
-- ignore: {name: Use unless}
-- ignore: {name: Redundant $!}
 - ignore: {name: "Use ?~"}
-- ignore: {name: Use Just}
-- ignore: {name: Redundant flip}
-- ignore: {name: Use for_}
-- ignore: {name: Avoid lambda}
-- ignore: {name: Use mapM}
-- ignore: {name: Redundant lambda}
 - ignore: {name: Use <=<}
-- ignore: {name: Replace case with maybe}
 - ignore: {name: Use sequenceA}
 - ignore: {name: Use camelCase}
-- ignore: {name: Avoid lambda using `infix`}
-- ignore: {name: Redundant irrefutable pattern}
-- ignore: {name: Use tuple-section}
-- ignore: {name: Use mapMaybe}
-- ignore: {name: Use second}
-- ignore: {name: Use isNothing}
-- ignore: {name: Use maybe}
 - ignore: {name: Redundant return}
-- ignore: {name: Unused LANGUAGE pragma}
+- ignore: {name: Use <$>, within: Hasura.RQL.DDL.Metadata}
+- ignore: {name: Functor law, within: Hasura.Server.AuthSpec}
 
 # Define some custom infix operators
 # - fixity: infixr 3 ~^#^~
@@ -103,3 +84,22 @@
 
 # To generate a suitable file for HLint do:
 # $ hlint --default > .hlint.yaml
+
+
+- group:
+    name: hasura-prelude
+    enabled: true
+    imports:
+    - package base
+    rules:
+    - warn: {lhs: "maybe b return a", rhs: "onNothing a b"}
+    - warn: {lhs: "maybe (return ()) b a", rhs: "onJust a b"}
+    - warn: {lhs: "either b return a", rhs: "onLeft a b"}
+
+- group:
+    name: data-text-extended
+    enabled: true
+    imports:
+    - package base
+    rules:
+    - warn: {lhs: "Data.Text.intercalate \", \" x", rhs: "commaSeparated x", note: "From Data.Text.Extended"}
