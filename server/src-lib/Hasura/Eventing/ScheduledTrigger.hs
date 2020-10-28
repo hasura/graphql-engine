@@ -321,7 +321,7 @@ insertCronEventsFor cronTriggersWithStats = do
               }
       Q.unitQE defaultTxErrorHandler (Q.fromText insertCronEventsSql) () False
   where
-    toArr (CronEventSeed n t) = [(triggerNameToTxt n), (formatTime' t)]
+    toArr (CronEventSeed n t) = [triggerNameToTxt n, formatTime' t]
     toTupleExp = TupleExp . map SELit
 
 insertCronEvents :: [CronEventSeed] -> Q.TxE QErr ()
@@ -336,7 +336,7 @@ insertCronEvents events = do
           }
   Q.unitQE defaultTxErrorHandler (Q.fromText insertCronEventsSql) () False
   where
-    toArr (CronEventSeed n t) = [(triggerNameToTxt n), (formatTime' t)]
+    toArr (CronEventSeed n t) = [triggerNameToTxt n, formatTime' t]
     toTupleExp = TupleExp . map SELit
 
 generateCronEventsFrom :: UTCTime -> CronTriggerInfo-> [CronEventSeed]
@@ -542,7 +542,7 @@ processError pgpool se decodedHeaders type' reqJson err = do
               respStatus = hrsStatus errResp
           mkInvocation se respStatus decodedHeaders respPayload respHeaders reqJson
         HOther detail -> do
-          let errMsg = (TBS.fromLBS $ J.encode detail)
+          let errMsg = TBS.fromLBS $ J.encode detail
           mkInvocation se 500 decodedHeaders errMsg [] reqJson
   liftExceptTIO $
     Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) $ do
@@ -648,7 +648,7 @@ mkInvocation
   -> TBS.TByteString
   -> [HeaderConf]
   -> J.Value
-  -> (Invocation 'ScheduledType)
+  -> Invocation 'ScheduledType
 mkInvocation ScheduledEventFull {sefId} status reqHeaders respBody respHeaders reqBodyJson
   = let resp = if isClientError status
           then mkClientErr respBody
@@ -660,7 +660,7 @@ mkInvocation ScheduledEventFull {sefId} status reqHeaders respBody respHeaders r
       (mkWebhookReq reqBodyJson reqHeaders invocationVersionST)
       resp
 
-insertInvocation :: (Invocation 'ScheduledType) -> ScheduledEventType ->  Q.TxE QErr ()
+insertInvocation :: Invocation 'ScheduledType -> ScheduledEventType ->  Q.TxE QErr ()
 insertInvocation invo type' = do
   case type' of
     Cron -> do
@@ -784,7 +784,7 @@ instance Q.ToPrepArg ScheduledEventIdArray where
 
 unlockCronEvents :: [ScheduledEventId] -> Q.TxE QErr Int
 unlockCronEvents scheduledEventIds =
-   (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
+   runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
    [Q.sql|
      WITH "cte" AS
      (UPDATE hdb_catalog.hdb_cron_events
@@ -796,7 +796,7 @@ unlockCronEvents scheduledEventIds =
 
 unlockOneOffScheduledEvents :: [ScheduledEventId] -> Q.TxE QErr Int
 unlockOneOffScheduledEvents scheduledEventIds =
-   (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
+   runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
    [Q.sql|
      WITH "cte" AS
      (UPDATE hdb_catalog.hdb_scheduled_events

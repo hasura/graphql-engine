@@ -439,7 +439,7 @@ tciUniqueOrPrimaryKeyConstraints info = NE.nonEmpty $
 
 data TableInfo (b :: Backend)
   = TableInfo
-  { _tiCoreInfo            :: (TableCoreInfo b)
+  { _tiCoreInfo            :: TableCoreInfo b
   , _tiRolePermInfoMap     :: !(RolePermInfoMap b)
   , _tiEventTriggerInfoMap :: !EventTriggerInfoMap
   } deriving (Generic)

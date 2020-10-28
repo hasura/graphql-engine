@@ -16,7 +16,7 @@ import qualified Data.Text        as T
 instance {-# INCOHERENT #-} FromJSON URI where
   parseJSON (String uri) = do
     let mUrl = parseURI $ T.unpack uri
-    maybe (fail "not a valid URI") return mUrl
+    onNothing mUrl (fail "not a valid URI")
   parseJSON _ = fail "not a valid URI"
 
 instance {-# INCOHERENT #-} ToJSON URI where

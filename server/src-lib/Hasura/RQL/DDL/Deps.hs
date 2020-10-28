@@ -103,5 +103,5 @@ getIndirectDeps initDeps tx = do
   let (unparsedLines, parsedObjIds) = partitionEithers pgDeps
       indirectDeps = HS.fromList $ parsedObjIds <>
                      concatMap (getDependentObjs sc) parsedObjIds
-      newDeps = indirectDeps `HS.difference` (HS.fromList initDeps)
+      newDeps = indirectDeps `HS.difference` HS.fromList initDeps
   return (HS.toList newDeps, unparsedLines)
