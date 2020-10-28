@@ -126,8 +126,15 @@
     args:
       sql: |
         ALTER VIEW authors_view RENAME TO author_view;
-        ALTER VIEW articles_view RENAME TO article_view;
 
+- description: Rename tables back to the original name for the teardown process
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        ALTER VIEW articles_view RENAME TO article_view;
 
   #Drop object relationship
 - description: Drop object relationship
