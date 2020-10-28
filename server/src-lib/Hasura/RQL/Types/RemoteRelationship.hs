@@ -28,6 +28,7 @@ import           Data.Aeson.TH
 import           Data.Scientific
 import           Data.Set                           (Set)
 import           Data.Text.Extended
+import           Data.Text.NonEmpty
 import           Language.Haskell.TH.Syntax         (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types

@@ -65,6 +65,7 @@ import           Data.Has
 import           Data.Int                             (Int64)
 import           Data.String
 import           Data.Text.Extended
+import           Data.Text.NonEmpty
 import           Data.Time.Clock
 
 import qualified Hasura.Logging                       as L
