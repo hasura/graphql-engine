@@ -1,5 +1,5 @@
 {-# LANGUAGE UndecidableInstances #-}
-module Hasura.RQL.Types.BoolExp
+module Hasura.RQL.IR.BoolExp
        ( GBoolExp(..)
        , gBoolExpTrue
        , gBoolExpToJSON

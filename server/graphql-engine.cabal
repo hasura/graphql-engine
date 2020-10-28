@@ -373,7 +373,6 @@ library
                      , Hasura.RQL.Types.Table
                      , Hasura.RQL.Types.SchemaCache.Build
                      , Hasura.RQL.Types.SchemaCacheTypes
-                     , Hasura.RQL.Types.BoolExp
                      , Hasura.RQL.Types.Function
                      , Hasura.RQL.Types.Catalog
                      , Hasura.RQL.Types.Column
@@ -427,6 +426,7 @@ library
                      , Hasura.RQL.DML.Insert
                      , Hasura.RQL.DML.Internal
                      , Hasura.RQL.DML.Update
+                     , Hasura.RQL.IR.BoolExp
                      , Hasura.RQL.IR.Delete
                      , Hasura.RQL.IR.Insert
                      , Hasura.RQL.IR.RemoteJoin

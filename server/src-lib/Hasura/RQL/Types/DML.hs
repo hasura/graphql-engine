@@ -57,8 +57,8 @@ import qualified Hasura.Backends.Postgres.SQL.DML   as S
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Incremental                 (Cacheable)
+import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Instances               ()
-import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend
 
