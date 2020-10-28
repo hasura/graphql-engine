@@ -30,5 +30,8 @@ jobs:
       - name: Run hlint
         shell: bash
         run: |
-          CHANGED_HS_FILES=$(git diff --name-only origin/${{github.base_ref}}...${{github.sha}} -- ${{env.working-directory}} | grep -E '\.hs$|\.lhs$' | xargs -i -d '\n' sh -c 'ls -d {} 2>/dev/null || true')
+          git diff --name-only origin/${{github.base_ref}}...${{github.sha}} -- ${{env.working-directory}} | grep -E '\.hs$|\.lhs$' | xargs -i -d '\n' sh -c 'ls -d {} 2>/dev/null || true'
+          CHANGED_HS_FILES=""
+          echo "$CHANGED_HS_FILES"
+          CHANGED_HS_FILES="$(git diff --name-only origin/${{github.base_ref}}...${{github.sha}} -- ${{env.working-directory}} | grep -E '\.hs$|\.lhs$' | xargs -i -d '\n' sh -c 'ls -d {} 2>/dev/null || true')"
           echo "$CHANGED_HS_FILES"
