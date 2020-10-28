@@ -17,45 +17,45 @@ func Test(t *testing.T) {
 	}
 
 	m := source.NewMigrations()
-	errUp := m.Append(&source.Migration{Version: 1, Direction: source.Up})
-	if errUp != nil {
-		t.Fatal(errUp)
+	err = m.Append(&source.Migration{Version: 1, Direction: source.Up})
+	if err != nil {
+		t.Fatal(err)
 	}
-	errDown := m.Append(&source.Migration{Version: 1, Direction: source.Down})
-	if errDown != nil {
-		t.Fatal(errDown)
+	err = m.Append(&source.Migration{Version: 1, Direction: source.Down})
+	if err != nil {
+		t.Fatal(err)
 	}
-	errMetaUp := m.Append(&source.Migration{Version: 1, Direction: source.MetaUp})
-	if errMetaUp != nil {
-		t.Fatal(errMetaUp)
+	err = m.Append(&source.Migration{Version: 1, Direction: source.MetaUp})
+	if err != nil {
+		t.Fatal(err)
 	}
-	errMetaDown := m.Append(&source.Migration{Version: 1, Direction: source.MetaDown})
-	if errMetaDown != nil {
-		t.Fatal(errMetaDown)
+	err = m.Append(&source.Migration{Version: 1, Direction: source.MetaDown})
+	if err != nil {
+		t.Fatal(err)
 	}
-	errUpVer3 := m.Append(&source.Migration{Version: 3, Direction: source.Up})
-	if errUpVer3 != nil {
-		t.Fatal(errUpVer3)
+	err = m.Append(&source.Migration{Version: 3, Direction: source.Up})
+	if err != nil {
+		t.Fatal(err)
 	}
-	errMetaUpVer4 := m.Append(&source.Migration{Version: 4, Direction: source.MetaUp})
-	if errMetaUpVer4 != nil {
-		t.Fatal(errMetaUpVer4)
+	err = m.Append(&source.Migration{Version: 4, Direction: source.MetaUp})
+	if err != nil {
+		t.Fatal(err)
 	}
-	errDownVer5 := m.Append(&source.Migration{Version: 5, Direction: source.Down})
-	if errDownVer5 != nil {
-		t.Fatal(errDownVer5)
+	err = m.Append(&source.Migration{Version: 5, Direction: source.Down})
+	if err != nil {
+		t.Fatal(err)
 	}
-	errMetaDownVer6 := m.Append(&source.Migration{Version: 6, Direction: source.MetaDown})
-	if errMetaDownVer6 != nil {
-		t.Fatal(errMetaDownVer6)
+	err = m.Append(&source.Migration{Version: 6, Direction: source.MetaDown})
+	if err != nil {
+		t.Fatal(err)
 	}
-	errUpVer8 := m.Append(&source.Migration{Version: 8, Direction: source.Up})
-	if errUpVer8 != nil {
-		t.Fatal(errUpVer8)
+	err = m.Append(&source.Migration{Version: 8, Direction: source.Up})
+	if err != nil {
+		t.Fatal(err)
 	}
-	errDownVer8 := m.Append(&source.Migration{Version: 8, Direction: source.Down})
-	if errDownVer8 != nil {
-		t.Fatal(errDownVer8)
+	err = m.Append(&source.Migration{Version: 8, Direction: source.Down})
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	d.(*Stub).Migrations = m
