@@ -5,24 +5,24 @@ module Hasura.RQL.DDL.Permission.Internal where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                as M
-import qualified Data.Text                          as T
-import qualified Database.PG.Query                  as Q
-import qualified Hasura.Backends.Postgres.SQL.DML   as S
+import qualified Data.HashMap.Strict                        as M
+import qualified Data.Text                                  as T
+import qualified Database.PG.Query                          as Q
+import qualified Hasura.Backends.Postgres.SQL.DML           as S
 
-import           Control.Lens                       hiding ((.=))
+import           Control.Lens                               hiding ((.=))
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
 import           Data.Text.Extended
-import           Instances.TH.Lift                  ()
-import           Language.Haskell.TH.Syntax         (Lift)
+import           Instances.TH.Lift                          ()
+import           Language.Haskell.TH.Syntax                 (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
+import           Hasura.Backends.Postgres.Translate.BoolExp
 import           Hasura.EncJSON
-import           Hasura.Incremental                 (Cacheable)
-import           Hasura.RQL.GBoolExp
+import           Hasura.Incremental                         (Cacheable)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.Session

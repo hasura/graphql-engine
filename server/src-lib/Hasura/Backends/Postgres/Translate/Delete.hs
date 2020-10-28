@@ -4,11 +4,11 @@ module Hasura.Backends.Postgres.Translate.Delete
 
 import           Hasura.Prelude
 
-import           Instances.TH.Lift                ()
+import           Instances.TH.Lift                          ()
 
-import qualified Hasura.Backends.Postgres.SQL.DML as S
+import qualified Hasura.Backends.Postgres.SQL.DML           as S
 
-import           Hasura.RQL.GBoolExp
+import           Hasura.Backends.Postgres.Translate.BoolExp
 import           Hasura.RQL.IR.Delete
 import           Hasura.RQL.Types
 

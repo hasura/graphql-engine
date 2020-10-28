@@ -5,22 +5,22 @@ module Hasura.RQL.DML.Internal where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                as M
-import qualified Data.HashSet                       as HS
-import qualified Data.Sequence                      as DS
-import qualified Data.Text                          as T
-import qualified Database.PG.Query                  as Q
+import qualified Data.HashMap.Strict                        as M
+import qualified Data.HashSet                               as HS
+import qualified Data.Sequence                              as DS
+import qualified Data.Text                                  as T
+import qualified Database.PG.Query                          as Q
 
 import           Control.Lens
 import           Data.Aeson.Types
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.Postgres.SQL.DML   as S
+import qualified Hasura.Backends.Postgres.SQL.DML           as S
 
 import           Hasura.Backends.Postgres.SQL.Error
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
-import           Hasura.RQL.GBoolExp
+import           Hasura.Backends.Postgres.Translate.BoolExp
 import           Hasura.RQL.Types
 import           Hasura.Session
 

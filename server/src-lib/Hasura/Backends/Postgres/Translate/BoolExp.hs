@@ -1,5 +1,5 @@
 {-# LANGUAGE PartialTypeSignatures #-}
-module Hasura.RQL.GBoolExp
+module Hasura.Backends.Postgres.Translate.BoolExp
   ( toSQLBoolExp
   , getBoolExpDeps
   , annBoolExp
