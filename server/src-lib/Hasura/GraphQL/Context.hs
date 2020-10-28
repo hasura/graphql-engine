@@ -156,14 +156,14 @@ resolveRemoteVariable userInfo = \case
               case G.unName baseType of
                 "Int" -> G.VInt <$>
                   case readMaybe $ T.unpack sessionVarVal of
-                    Nothing -> Left $ "error in parsing " <> sessionVarVal <<> " Int value"
+                    Nothing -> Left $ sessionVarVal <<> " cannot be coerced into an Int value"
                     Just i -> Right i
                 "Boolean" ->
                   if | sessionVarVal `elem` ["true", "false"] -> Right $ G.VBoolean $ "true" == sessionVarVal
-                     | otherwise -> Left $ sessionVarVal <<> " is not a valid boolean value"
+                     | otherwise -> Left $ sessionVarVal <<> " cannot be coerced into a Boolean value"
                 "Float" -> G.VFloat <$>
                    case readMaybe $ T.unpack sessionVarVal of
-                     Nothing -> Left $ "error in parsing " <> sessionVarVal <<> " Float value"
+                     Nothing -> Left $ sessionVarVal <<> " cannot be coerced into a Float value"
                      Just i -> Right i
                 "String" -> pure $ G.VString sessionVarVal
                 "ID" -> pure $ G.VString sessionVarVal
@@ -175,11 +175,8 @@ resolveRemoteVariable userInfo = \case
                   Left $ sessionVarVal <<> " is not a valid GraphQL name")
               case find (== sessionVarEnumVal) enumVals of
                 Just enumVal -> Right $ G.VEnum enumVal
-                Nothing -> Left $ sessionVarEnumVal <<> " is not one of the valid enum valuesxs"
-    coercedValue' <- onLeft coercedValue $
-      \errMsg ->
-        let errMsg' = "error while coercing " <> sessionVar <<> ": " <> errMsg
-        in RQL.throw400 RQL.CoercionError errMsg'
+                Nothing -> Left $ sessionVarEnumVal <<> " is not one of the valid enum values"
+    coercedValue' <- onLeft coercedValue $ RQL.throw400 RQL.CoercionError
     pure $ Variable (VIRequired varName) gType (GraphQLValue coercedValue')
   RQL.RawVariable variable -> pure variable
 
