@@ -61,7 +61,6 @@ import           Hasura.RQL.Instances               ()
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend
-import           Instances.TH.Lift                  ()
 
 
 data ColExp
