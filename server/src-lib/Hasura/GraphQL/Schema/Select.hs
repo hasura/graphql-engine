@@ -1192,7 +1192,7 @@ functionArgs functionName (toList -> inputArgs) = do
 
 
 -- | The "path" argument for json column fields
-jsonPathArg :: MonadParse n => PGColumnType -> InputFieldsParser n (Maybe RQL.ColumnOp)
+jsonPathArg :: MonadParse n => PGColumnType -> InputFieldsParser n (Maybe (RQL.ColumnOp 'Postgres))
 jsonPathArg columnType
   | isScalarColumnWhere isJSONType columnType =
       P.fieldOptional fieldName description P.string `P.bindFields` fmap join . traverse toColExp
