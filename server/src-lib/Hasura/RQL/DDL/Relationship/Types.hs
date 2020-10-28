@@ -1,23 +1,23 @@
 module Hasura.RQL.DDL.Relationship.Types where
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types
-import           Hasura.SQL.Types
+
+import qualified Data.HashMap.Strict                as HM
 
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
-import           Instances.TH.Lift          ()
-import           Language.Haskell.TH.Syntax (Lift)
+import           Instances.TH.Lift                  ()
+import           Language.Haskell.TH.Syntax         (Lift)
 
-import qualified Data.HashMap.Strict        as HM
-import qualified Data.Text                  as T
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.RQL.Types
 
 data RelDef a
   = RelDef
   { rdName    :: !RelName
   , rdUsing   :: !a
-  , rdComment :: !(Maybe T.Text)
+  , rdComment :: !(Maybe Text)
   } deriving (Show, Eq, Lift, Generic)
 
 $(deriveFromJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RelDef)
@@ -106,7 +106,7 @@ data SetRelComment
   = SetRelComment
   { arTable        :: !QualifiedTable
   , arRelationship :: !RelName
-  , arComment      :: !(Maybe T.Text)
+  , arComment      :: !(Maybe Text)
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SetRelComment)

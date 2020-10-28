@@ -1,3 +1,4 @@
+{-# LANGUAGE UndecidableInstances #-}
 module Hasura.RQL.Types.BoolExp
        ( GBoolExp(..)
        , gBoolExpTrue
@@ -39,10 +40,10 @@ module Hasura.RQL.Types.BoolExp
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson.Types           as J
-import qualified Data.HashMap.Strict        as M
+import qualified Data.Aeson.Types                   as J
+import qualified Data.HashMap.Strict                as M
 
-import qualified Hasura.SQL.DML             as S
+import qualified Hasura.Backends.Postgres.SQL.DML   as S
 
 import           Control.Lens.Plated
 import           Control.Lens.TH
@@ -50,15 +51,17 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.Internal
 import           Data.Aeson.TH
-import           Instances.TH.Lift          ()
-import           Language.Haskell.TH.Syntax (Lift)
+import           Data.Typeable
+import           Instances.TH.Lift                  ()
+import           Language.Haskell.TH.Syntax         (Lift)
 
-import           Hasura.Incremental         (Cacheable)
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
-import           Hasura.Session
+import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
-
+import           Hasura.Session
 
 
 data GExists a
@@ -114,11 +117,11 @@ gBoolExpToJSON f be = case be of
   where
     kv = getKV be
     getKV = \case
-      BoolAnd bExps -> "_and" .= map (gBoolExpToJSON f) bExps
-      BoolOr bExps  -> "_or" .= map (gBoolExpToJSON f) bExps
-      BoolNot bExp  -> "_not" .= gBoolExpToJSON f bExp
+      BoolAnd bExps      -> "_and" .= map (gBoolExpToJSON f) bExps
+      BoolOr bExps       -> "_or" .= map (gBoolExpToJSON f) bExps
+      BoolNot bExp       -> "_not" .= gBoolExpToJSON f bExp
       BoolExists bExists -> "_exists" .= gExistsToJSON f bExists
-      BoolFld a     ->  f a
+      BoolFld a          ->  f a
 
 
 parseGBoolExp
@@ -182,10 +185,10 @@ instance (Cacheable a) => Cacheable (STIntersectsGeomminNband a)
 instance (Hashable a) => Hashable (STIntersectsGeomminNband a)
 $(deriveJSON (aesonDrop 4 snakeCase) ''STIntersectsGeomminNband)
 
-type CastExp a = M.HashMap PGScalarType [OpExpG a]
+type CastExp b a = M.HashMap (ScalarType b) [OpExpG b a]
 
-data OpExpG a
-  = ACast !(CastExp a)
+data OpExpG (b :: Backend) a
+  = ACast !(CastExp b a)
 
   | AEQ !Bool !a
   | ANE !Bool !a
@@ -201,8 +204,8 @@ data OpExpG a
   | ALIKE !a -- LIKE
   | ANLIKE !a -- NOT LIKE
 
-  | AILIKE !a -- ILIKE, case insensitive
-  | ANILIKE !a-- NOT ILIKE, case insensitive
+  | AILIKE (XAILIKE b) !a -- ILIKE, case insensitive
+  | ANILIKE (XANILIKE b) !a-- NOT ILIKE, case insensitive
 
   | ASIMILAR !a -- similar, regex
   | ANSIMILAR !a-- not similar, regex
@@ -230,18 +233,25 @@ data OpExpG a
   | ANISNULL -- IS NULL
   | ANISNOTNULL -- IS NOT NULL
 
-  | CEQ !PGCol
-  | CNE !PGCol
-  | CGT !PGCol
-  | CLT !PGCol
-  | CGTE !PGCol
-  | CLTE !PGCol
-  deriving (Eq, Show, Functor, Foldable, Traversable, Generic, Data)
-instance (NFData a) => NFData (OpExpG a)
-instance (Cacheable a) => Cacheable (OpExpG a)
-instance (Hashable a) => Hashable (OpExpG a)
+  | CEQ !(Column b)
+  | CNE !(Column b)
+  | CGT !(Column b)
+  | CLT !(Column b)
+  | CGTE !(Column b)
+  | CLTE !(Column b)
+  deriving (Functor, Foldable, Traversable, Generic)
+deriving instance (Eq a) => Eq (OpExpG 'Postgres a)
+instance (NFData a) => NFData (OpExpG 'Postgres a)
+instance (Cacheable a) => Cacheable (OpExpG 'Postgres a)
+instance (Hashable a) => Hashable (OpExpG 'Postgres a)
+type family XAILIKE (b :: Backend) where
+  XAILIKE 'Postgres = ()
+  XAILIKE 'MySQL = Void
+type family XANILIKE (b :: Backend) where
+  XANILIKE 'Postgres = ()
+  XANILIKE 'MySQL = Void
 
-opExpDepCol :: OpExpG a -> Maybe PGCol
+opExpDepCol :: OpExpG backend a -> Maybe (Column backend)
 opExpDepCol = \case
   CEQ c  -> Just c
   CNE c  -> Just c
@@ -251,78 +261,79 @@ opExpDepCol = \case
   CLTE c -> Just c
   _      -> Nothing
 
-opExpToJPair :: (a -> Value) -> OpExpG a -> (Text, Value)
+opExpToJPair :: (a -> Value) -> OpExpG 'Postgres a -> (Text, Value)
 opExpToJPair f = \case
-  ACast a        -> ("_cast", toJSON $ M.map opExpsToJSON a)
+  ACast a                  -> ("_cast", toJSON $ M.map opExpsToJSON a)
 
-  AEQ _ a          -> ("_eq", f a)
-  ANE _ a          -> ("_ne", f a)
+  AEQ _ a                  -> ("_eq", f a)
+  ANE _ a                  -> ("_ne", f a)
 
-  AIN a          -> ("_in", f a)
-  ANIN a         -> ("_nin", f a)
+  AIN a                    -> ("_in", f a)
+  ANIN a                   -> ("_nin", f a)
 
-  AGT a          -> ("_gt", f a)
-  ALT a          -> ("_lt", f a)
-  AGTE a         -> ("_gte", f a)
-  ALTE a         -> ("_lte", f a)
+  AGT a                    -> ("_gt", f a)
+  ALT a                    -> ("_lt", f a)
+  AGTE a                   -> ("_gte", f a)
+  ALTE a                   -> ("_lte", f a)
 
-  ALIKE a        -> ("_like", f a)
-  ANLIKE a       -> ("_nlike", f a)
+  ALIKE a                  -> ("_like", f a)
+  ANLIKE a                 -> ("_nlike", f a)
 
-  AILIKE a       -> ("_ilike", f a)
-  ANILIKE a      -> ("_nilike", f a)
+  AILIKE _ a               -> ("_ilike", f a)
+  ANILIKE _ a              -> ("_nilike", f a)
 
-  ASIMILAR a     -> ("_similar", f a)
-  ANSIMILAR a    -> ("_nsimilar", f a)
+  ASIMILAR a               -> ("_similar", f a)
+  ANSIMILAR a              -> ("_nsimilar", f a)
 
-  AContains a    -> ("_contains", f a)
-  AContainedIn a -> ("_contained_in", f a)
-  AHasKey a      -> ("_has_key", f a)
-  AHasKeysAny a  -> ("_has_keys_any", f a)
-  AHasKeysAll a  -> ("_has_keys_all", f a)
+  AContains a              -> ("_contains", f a)
+  AContainedIn a           -> ("_contained_in", f a)
+  AHasKey a                -> ("_has_key", f a)
+  AHasKeysAny a            -> ("_has_keys_any", f a)
+  AHasKeysAll a            -> ("_has_keys_all", f a)
 
-  ASTContains a    -> ("_st_contains", f a)
-  ASTCrosses a     -> ("_st_crosses", f a)
-  ASTDWithinGeom o -> ("_st_d_within", toJSON $ f <$> o)
-  ASTDWithinGeog o -> ("_st_d_within", toJSON $ f <$> o)
-  ASTEquals a      -> ("_st_equals", f a)
-  ASTIntersects a  -> ("_st_intersects", f a)
-  ASTOverlaps a    -> ("_st_overlaps", f a)
-  ASTTouches a     -> ("_st_touches", f a)
-  ASTWithin a      -> ("_st_within", f a)
+  ASTContains a            -> ("_st_contains", f a)
+  ASTCrosses a             -> ("_st_crosses", f a)
+  ASTDWithinGeom o         -> ("_st_d_within", toJSON $ f <$> o)
+  ASTDWithinGeog o         -> ("_st_d_within", toJSON $ f <$> o)
+  ASTEquals a              -> ("_st_equals", f a)
+  ASTIntersects a          -> ("_st_intersects", f a)
+  ASTOverlaps a            -> ("_st_overlaps", f a)
+  ASTTouches a             -> ("_st_touches", f a)
+  ASTWithin a              -> ("_st_within", f a)
 
   ASTIntersectsRast a      -> ("_st_intersects_rast", f a)
   ASTIntersectsNbandGeom a -> ("_st_intersects_nband_geom", toJSON $ f <$> a)
   ASTIntersectsGeomNband a -> ("_st_intersects_geom_nband", toJSON $ f <$> a)
 
-  ANISNULL       -> ("_is_null", toJSON True)
-  ANISNOTNULL    -> ("_is_null", toJSON False)
+  ANISNULL                 -> ("_is_null", toJSON True)
+  ANISNOTNULL              -> ("_is_null", toJSON False)
 
-  CEQ a          -> ("_ceq", toJSON a)
-  CNE a          -> ("_cne", toJSON a)
-  CGT a          -> ("_cgt", toJSON a)
-  CLT a          -> ("_clt", toJSON a)
-  CGTE a         -> ("_cgte", toJSON a)
-  CLTE a         -> ("_clte", toJSON a)
+  CEQ a                    -> ("_ceq", toJSON a)
+  CNE a                    -> ("_cne", toJSON a)
+  CGT a                    -> ("_cgt", toJSON a)
+  CLT a                    -> ("_clt", toJSON a)
+  CGTE a                   -> ("_cgte", toJSON a)
+  CLTE a                   -> ("_clte", toJSON a)
   where
     opExpsToJSON = object . map (opExpToJPair f)
 
-data AnnBoolExpFld a
-  = AVCol !PGColumnInfo ![OpExpG a]
-  | AVRel !RelInfo !(AnnBoolExp a)
-  deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
-instance (NFData a) => NFData (AnnBoolExpFld a)
-instance (Cacheable a) => Cacheable (AnnBoolExpFld a)
-instance (Hashable a) => Hashable (AnnBoolExpFld a)
+data AnnBoolExpFld (b :: Backend) a
+  = AVCol !(ColumnInfo b) ![OpExpG 'Postgres a]
+  | AVRel !RelInfo !(AnnBoolExp b a)
+  deriving (Functor, Foldable, Traversable, Generic)
+deriving instance Eq a => Eq (AnnBoolExpFld 'Postgres a)
+instance (NFData a) => NFData (AnnBoolExpFld 'Postgres a)
+instance (Cacheable a) => Cacheable (AnnBoolExpFld 'Postgres a)
+instance (Hashable a) => Hashable (AnnBoolExpFld 'Postgres a)
 
-type AnnBoolExp a
-  = GBoolExp (AnnBoolExpFld a)
+type AnnBoolExp b a
+  = GBoolExp (AnnBoolExpFld b a)
 
 traverseAnnBoolExp
   :: (Applicative f)
   => (a -> f b)
-  -> AnnBoolExp a
-  -> f (AnnBoolExp b)
+  -> AnnBoolExp backend a
+  -> f (AnnBoolExp backend b)
 traverseAnnBoolExp f =
   traverse $ \case
    AVCol pgColInfo opExps ->
@@ -332,46 +343,48 @@ traverseAnnBoolExp f =
 
 fmapAnnBoolExp
   :: (a -> b)
-  -> AnnBoolExp a
-  -> AnnBoolExp b
+  -> AnnBoolExp backend a
+  -> AnnBoolExp backend b
 fmapAnnBoolExp f =
   runIdentity . traverseAnnBoolExp (pure . f)
 
-annBoolExpTrue :: AnnBoolExp a
+annBoolExpTrue :: AnnBoolExp backend a
 annBoolExpTrue = gBoolExpTrue
 
-andAnnBoolExps :: AnnBoolExp a -> AnnBoolExp a -> AnnBoolExp a
+andAnnBoolExps :: AnnBoolExp backend a -> AnnBoolExp backend a -> AnnBoolExp backend a
 andAnnBoolExps l r =
   BoolAnd [l, r]
 
-type AnnBoolExpFldSQL = AnnBoolExpFld S.SQLExp
-type AnnBoolExpSQL = AnnBoolExp S.SQLExp
+type AnnBoolExpFldSQL b = AnnBoolExpFld b S.SQLExp
+type AnnBoolExpSQL b = AnnBoolExp b S.SQLExp
 
-type AnnBoolExpFldPartialSQL = AnnBoolExpFld PartialSQLExp
-type AnnBoolExpPartialSQL = AnnBoolExp PartialSQLExp
+type AnnBoolExpFldPartialSQL b = AnnBoolExpFld b (PartialSQLExp b)
+type AnnBoolExpPartialSQL b = AnnBoolExp b (PartialSQLExp b)
 
-type PreSetColsG v = M.HashMap PGCol v
-type PreSetColsPartial = M.HashMap PGCol PartialSQLExp
+type PreSetColsG b v = M.HashMap (Column b) v
+type PreSetColsPartial b = M.HashMap (Column b) (PartialSQLExp b)
 type PreSetCols = M.HashMap PGCol S.SQLExp
 
 -- doesn't resolve the session variable
-data PartialSQLExp
-  = PSESessVar !(PGType PGScalarType) !SessionVariable
+data PartialSQLExp (b :: Backend)
+  = PSESessVar !(PGType (ScalarType b)) !SessionVariable
   | PSESQLExp !S.SQLExp
-  deriving (Show, Eq, Generic, Data)
-instance NFData PartialSQLExp
-instance Cacheable PartialSQLExp
+  deriving (Generic)
+deriving instance Eq (PartialSQLExp 'Postgres)
+deriving instance (Typeable backend, Data (ScalarType backend)) => Data (PartialSQLExp backend)
+instance NFData (PartialSQLExp 'Postgres)
+instance Cacheable (PartialSQLExp 'Postgres)
 
-mkTypedSessionVar :: PGType PGColumnType -> SessionVariable -> PartialSQLExp
+mkTypedSessionVar :: PGType PGColumnType -> SessionVariable -> PartialSQLExp 'Postgres
 mkTypedSessionVar columnType =
   PSESessVar (unsafePGColumnToRepresentation <$> columnType)
 
-instance ToJSON PartialSQLExp where
+instance ToJSON (PartialSQLExp 'Postgres) where
   toJSON = \case
     PSESessVar colTy sessVar -> toJSON (colTy, sessVar)
-    PSESQLExp e -> toJSON $ toSQLTxt e
+    PSESQLExp e              -> toJSON $ toSQLTxt e
 
-instance ToJSON AnnBoolExpPartialSQL where
+instance ToJSON (AnnBoolExpPartialSQL 'Postgres) where
   toJSON = gBoolExpToJSON f
     where
       f annFld = case annFld of
@@ -383,11 +396,11 @@ instance ToJSON AnnBoolExpPartialSQL where
           ( relNameToTxt $ riName ri
           , toJSON (ri, toJSON relBoolExp)
           )
-      opExpSToJSON :: OpExpG PartialSQLExp -> Value
+      opExpSToJSON :: OpExpG 'Postgres (PartialSQLExp 'Postgres) -> Value
       opExpSToJSON =
         object . pure . opExpToJPair toJSON
 
-isStaticValue :: PartialSQLExp -> Bool
+isStaticValue :: PartialSQLExp backend -> Bool
 isStaticValue = \case
   PSESessVar _ _ -> False
   PSESQLExp _    -> True

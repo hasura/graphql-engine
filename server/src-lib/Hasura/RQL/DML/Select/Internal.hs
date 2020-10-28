@@ -6,52 +6,55 @@ module Hasura.RQL.DML.Select.Internal
   )
 where
 
-import           Instances.TH.Lift           ()
-import           Control.Lens                 hiding (op)
-import           Control.Monad.Writer.Strict
-
-import qualified Data.HashMap.Strict          as HM
-import qualified Data.List.NonEmpty           as NE
-import qualified Data.Text                    as T
-
-import           Hasura.GraphQL.Schema.Common
 import           Hasura.Prelude
+
+import qualified Data.HashMap.Strict                  as HM
+import qualified Data.List.NonEmpty                   as NE
+import qualified Data.Text                            as T
+
+import           Control.Lens                         hiding (op)
+import           Control.Monad.Writer.Strict
+import           Data.Text.Extended
+import           Instances.TH.Lift                    ()
+
+import qualified Hasura.Backends.Postgres.SQL.DML     as S
+
+import           Hasura.Backends.Postgres.SQL.Rewrite
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.GraphQL.Schema.Common
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
-import           Hasura.SQL.Rewrite
-import           Hasura.SQL.Types
 
-import qualified Hasura.SQL.DML               as S
 
 -- Conversion of SelectQ happens in 2 Stages.
 -- Stage 1 : Convert input query into an annotated AST
 -- Stage 2 : Convert annotated AST to SQL Select
 
-functionToIden :: QualifiedFunction -> Iden
-functionToIden = Iden . qualObjectToText
+functionToIdentifier :: QualifiedFunction -> Identifier
+functionToIdentifier = Identifier . qualifiedObjectToText
 
-selectFromToFromItem :: Iden -> SelectFrom -> S.FromItem
+selectFromToFromItem :: Identifier -> SelectFrom 'Postgres -> S.FromItem
 selectFromToFromItem pfx = \case
   FromTable tn -> S.FISimple tn Nothing
-  FromIden i   -> S.FIIden i
+  FromIdentifier i   -> S.FIIdentifier i
   FromFunction qf args defListM ->
     S.FIFunc $ S.FunctionExp qf (fromTableRowArgs pfx args) $
-    Just $ S.mkFunctionAlias (functionToIden qf) defListM
+    Just $ S.mkFunctionAlias (functionToIdentifier qf) defListM
 
 -- This function shouldn't be present ideally
 -- You should be able to retrieve this information
 -- from the FromItem generated with selectFromToFromItem
 -- however given from S.FromItem is modelled, it is not
 -- possible currently
-selectFromToQual :: SelectFrom -> S.Qual
+selectFromToQual :: SelectFrom backend -> S.Qual
 selectFromToQual = \case
-  FromTable tn         -> S.QualTable tn
-  FromIden i           -> S.QualIden i Nothing
-  FromFunction qf _ _  -> S.QualIden (functionToIden qf) Nothing
+  FromTable tn        -> S.QualTable tn
+  FromIdentifier i    -> S.QualifiedIdentifier i Nothing
+  FromFunction qf _ _ -> S.QualifiedIdentifier (functionToIdentifier qf) Nothing
 
-aggregateFieldToExp :: AggregateFields -> S.SQLExp
+aggregateFieldToExp :: AggregateFields 'Postgres -> S.SQLExp
 aggregateFieldToExp aggFlds = jsonRow
   where
     jsonRow = S.applyJsonBuildObj (concatMap aggToFlds aggFlds)
@@ -64,11 +67,11 @@ aggregateFieldToExp aggFlds = jsonRow
     aggOpToObj (AggregateOp opText flds) =
       S.applyJsonBuildObj $ concatMap (colFldsToExtr opText) flds
 
-    colFldsToExtr opText (FieldName t, PCFCol col) =
+    colFldsToExtr opText (FieldName t, CFCol col) =
       [ S.SELit t
-      , S.SEFnApp opText [S.SEIden $ toIden col] Nothing
+      , S.SEFnApp opText [S.SEIdentifier $ toIdentifier col] Nothing
       ]
-    colFldsToExtr _ (FieldName t, PCFExp e) =
+    colFldsToExtr _ (FieldName t, CFExp e) =
       [ S.SELit t , S.SELit e]
 
 asSingleRowExtr :: S.Alias -> S.SQLExp
@@ -76,7 +79,7 @@ asSingleRowExtr col =
   S.SEFnApp "coalesce" [jsonAgg, S.SELit "null"] Nothing
   where
     jsonAgg = S.SEOpApp (S.SQLOp "->")
-              [ S.SEFnApp "json_agg" [S.SEIden $ toIden col] Nothing
+              [ S.SEFnApp "json_agg" [S.SEIdentifier $ toIdentifier col] Nothing
               , S.SEUnsafe "0"
               ]
 
@@ -89,9 +92,9 @@ withJsonAggExtr permLimitSubQuery ordBy alias =
     PLSQNotRequired        -> simpleJsonAgg
   where
     simpleJsonAgg = mkSimpleJsonAgg rowIdenExp ordBy
-    rowIdenExp = S.SEIden $ S.getAlias alias
-    subSelAls = Iden "sub_query"
-    unnestTable = Iden "unnest_table"
+    rowIdenExp = S.SEIdentifier $ S.getAlias alias
+    subSelAls = Identifier "sub_query"
+    unnestTable = Identifier "unnest_table"
 
     mkSimpleJsonAgg rowExp ob =
       let jsonAggExp = S.SEFnApp "json_agg" [rowExp] ob
@@ -99,8 +102,8 @@ withJsonAggExtr permLimitSubQuery ordBy alias =
 
     withPermLimit limit =
       let subSelect = mkSubSelect limit
-          rowIden = S.mkQIdenExp subSelAls alias
-          extr = S.Extractor (mkSimpleJsonAgg rowIden newOrderBy) Nothing
+          rowIdentifier = S.mkQIdenExp subSelAls alias
+          extr = S.Extractor (mkSimpleJsonAgg rowIdentifier newOrderBy) Nothing
           fromExp = S.FromExp $ pure $
                     S.mkSelFromItem subSelect $ S.Alias subSelAls
       in S.SESelect $ S.mkSelect { S.selExtr = pure extr
@@ -122,15 +125,15 @@ withJsonAggExtr permLimitSubQuery ordBy alias =
       let arrayAggItems = flip map (rowIdenExp : obCols) $
                           \s -> S.SEFnApp "array_agg" [s] Nothing
       in S.FIUnnest arrayAggItems (S.Alias unnestTable) $
-         rowIdenExp : map S.SEIden newOBAliases
+         rowIdenExp : map S.SEIdentifier newOBAliases
 
     newOrderBy = S.OrderByExp <$> NE.nonEmpty newOBItems
 
     (newOBItems, obCols, newOBAliases) = maybe ([], [], []) transformOrderBy ordBy
     transformOrderBy (S.OrderByExp l) = unzip3 $
       flip map (zip (toList l) [1..]) $ \(obItem, i::Int) ->
-                 let iden = Iden $ "ob_col_" <> T.pack (show i)
-                 in ( obItem{S.oColumn = S.SEIden iden}
+                 let iden = Identifier $ "ob_col_" <> T.pack (show i)
+                 in ( obItem{S.oColumn = S.SEIdentifier iden}
                     , S.oColumn obItem
                     , iden
                     )
@@ -144,50 +147,50 @@ asJsonAggExtr jsonAggSelect als permLimitSubQuery ordByExpM =
 
 -- array relationships are not grouped, so have to be prefixed by
 -- parent's alias
-mkUniqArrayRelationAlias :: FieldName -> [FieldName] -> Iden
+mkUniqArrayRelationAlias :: FieldName -> [FieldName] -> Identifier
 mkUniqArrayRelationAlias parAls flds =
   let sortedFields = sort flds
-  in Iden $
+  in Identifier $
      getFieldNameTxt parAls <> "."
      <> T.intercalate "." (map getFieldNameTxt sortedFields)
 
-mkArrayRelationTableAlias :: Iden -> FieldName -> [FieldName] -> Iden
+mkArrayRelationTableAlias :: Identifier -> FieldName -> [FieldName] -> Identifier
 mkArrayRelationTableAlias pfx parAls flds =
-  pfx <> Iden ".ar." <> uniqArrRelAls
+  pfx <> Identifier ".ar." <> uniqArrRelAls
   where
     uniqArrRelAls = mkUniqArrayRelationAlias parAls flds
 
-mkObjectRelationTableAlias :: Iden -> RelName -> Iden
+mkObjectRelationTableAlias :: Identifier -> RelName -> Identifier
 mkObjectRelationTableAlias pfx relName =
-  pfx <> Iden ".or." <> toIden relName
+  pfx <> Identifier ".or." <> toIdentifier relName
 
-mkComputedFieldTableAlias :: Iden -> FieldName -> Iden
+mkComputedFieldTableAlias :: Identifier -> FieldName -> Identifier
 mkComputedFieldTableAlias pfx fldAls =
-  pfx <> Iden ".cf." <> toIden fldAls
+  pfx <> Identifier ".cf." <> toIdentifier fldAls
 
-mkBaseTableAlias :: Iden -> Iden
+mkBaseTableAlias :: Identifier -> Identifier
 mkBaseTableAlias pfx =
-  pfx <> Iden ".base"
+  pfx <> Identifier ".base"
 
-mkBaseTableColumnAlias :: Iden -> PGCol -> Iden
+mkBaseTableColumnAlias :: Identifier -> PGCol -> Identifier
 mkBaseTableColumnAlias pfx pgColumn =
-  pfx <> Iden ".pg." <> toIden pgColumn
+  pfx <> Identifier ".pg." <> toIdentifier pgColumn
 
 mkOrderByFieldName :: RelName -> FieldName
 mkOrderByFieldName relName =
   FieldName $ relNameToTxt relName <> "." <> "order_by"
 
-mkAggregateOrderByAlias :: AnnAggregateOrderBy -> S.Alias
-mkAggregateOrderByAlias = (S.Alias . Iden) . \case
-  AAOCount -> "count"
+mkAggregateOrderByAlias :: AnnAggregateOrderBy 'Postgres -> S.Alias
+mkAggregateOrderByAlias = (S.Alias . Identifier) . \case
+  AAOCount         -> "count"
   AAOOp opText col -> opText <> "." <> getPGColTxt (pgiColumn col)
 
 mkArrayRelationSourcePrefix
-  :: Iden
+  :: Identifier
   -> FieldName
   -> HM.HashMap FieldName [FieldName]
   -> FieldName
-  -> Iden
+  -> Identifier
 mkArrayRelationSourcePrefix parentSourcePrefix parentFieldName similarFieldsMap fieldName =
   mkArrayRelationTableAlias parentSourcePrefix parentFieldName $
   HM.lookupDefault [fieldName] fieldName similarFieldsMap
@@ -202,12 +205,12 @@ mkArrayRelationAlias parentFieldName similarFieldsMap fieldName =
   HM.lookupDefault [fieldName] fieldName similarFieldsMap
 
 fromTableRowArgs
-  :: Iden -> FunctionArgsExpTableRow S.SQLExp -> S.FunctionArgs
+  :: Identifier -> FunctionArgsExpTableRow S.SQLExp -> S.FunctionArgs
 fromTableRowArgs pfx = toFunctionArgs . fmap toSQLExp
   where
     toFunctionArgs (FunctionArgsExp positional named) =
       S.FunctionArgs positional named
-    toSQLExp (AETableRow Nothing)    = S.SERowIden $ mkBaseTableAlias pfx
+    toSQLExp (AETableRow Nothing)    = S.SERowIdentifier $ mkBaseTableAlias pfx
     toSQLExp (AETableRow (Just acc)) = S.mkQIdenExp (mkBaseTableAlias pfx) acc
     toSQLExp (AESession s)           = s
     toSQLExp (AEInput s)             = s
@@ -235,7 +238,7 @@ withForceAggregation tyAnn e =
   S.SEFnApp "coalesce" [e, S.SETyAnn (S.SEUnsafe "bool_or('true')") tyAnn] Nothing
 
 mkAggregateOrderByExtractorAndFields
-  :: AnnAggregateOrderBy -> (S.Extractor, AggregateFields)
+  :: AnnAggregateOrderBy 'Postgres -> (S.Extractor, AggregateFields 'Postgres)
 mkAggregateOrderByExtractorAndFields annAggOrderBy =
   case annAggOrderBy of
     AAOCount       ->
@@ -244,14 +247,14 @@ mkAggregateOrderByExtractorAndFields annAggOrderBy =
       )
     AAOOp opText pgColumnInfo ->
       let pgColumn = pgiColumn pgColumnInfo
-      in ( S.Extractor (S.SEFnApp opText [S.SEIden $ toIden pgColumn] Nothing) alias
-         , [(FieldName opText, AFOp $ AggregateOp opText [(fromPGCol pgColumn, PCFCol pgColumn)])]
+      in ( S.Extractor (S.SEFnApp opText [S.SEIdentifier $ toIdentifier pgColumn] Nothing) alias
+         , [(FieldName opText, AFOp $ AggregateOp opText [(fromPGCol pgColumn, CFCol pgColumn)])]
          )
   where
     alias = Just $ mkAggregateOrderByAlias annAggOrderBy
 
 mkAnnOrderByAlias
-  :: Iden -> FieldName -> SimilarArrayFields -> AnnOrderByElementG v -> S.Alias
+  :: Identifier -> FieldName -> SimilarArrayFields -> AnnOrderByElementG 'Postgres v -> S.Alias
 mkAnnOrderByAlias pfx parAls similarFields = \case
   AOCColumn pgColumnInfo ->
     let pgColumn = pgiColumn pgColumnInfo
@@ -268,11 +271,11 @@ mkAnnOrderByAlias pfx parAls similarFields = \case
     let rn = riName relInfo
         arrPfx = mkArrayRelationSourcePrefix pfx parAls similarFields $
                  mkOrderByFieldName rn
-        obAls = arrPfx <> Iden "." <> toIden (mkAggregateOrderByAlias aggOrderBy)
+        obAls = arrPfx <> Identifier "." <> toIdentifier (mkAggregateOrderByAlias aggOrderBy)
     in S.Alias obAls
 
 processDistinctOnColumns
-  :: Iden
+  :: Identifier
   -> NE.NonEmpty PGCol
   -> ( S.DistinctExpr
      , [(S.Alias, S.SQLExp)] -- additional column extractors
@@ -280,8 +283,8 @@ processDistinctOnColumns
 processDistinctOnColumns pfx neCols = (distOnExp, colExtrs)
   where
     cols = toList neCols
-    distOnExp = S.DistinctOn $ map (S.SEIden . toIden . mkQColAls) cols
-    mkQCol c = S.mkQIdenExp (mkBaseTableAlias pfx) $ toIden c
+    distOnExp = S.DistinctOn $ map (S.SEIdentifier . toIdentifier . mkQColAls) cols
+    mkQCol c = S.mkQIdenExp (mkBaseTableAlias pfx) $ toIdentifier c
     mkQColAls = S.Alias . mkBaseTableColumnAlias pfx
     colExtrs = flip map cols $ mkQColAls &&& mkQCol
 
@@ -289,8 +292,8 @@ type SimilarArrayFields = HM.HashMap FieldName [FieldName]
 
 mkSimilarArrayFields
   :: Eq v
-  => AnnFieldsG v
-  -> Maybe (NE.NonEmpty (AnnOrderByItemG v))
+  => AnnFieldsG 'Postgres v
+  -> Maybe (NE.NonEmpty (AnnOrderByItemG 'Postgres v))
   -> SimilarArrayFields
 mkSimilarArrayFields annFields maybeOrderBys =
   HM.fromList $ flip map allTuples $
@@ -314,13 +317,13 @@ mkSimilarArrayFields annFields maybeOrderBys =
       Just (riName ri, mkOrderByFieldName $ riName ri)
     fetchAggOrderByRels _               = Nothing
 
-getArrayRelNameAndSelectArgs :: ArraySelectG v -> (RelName, SelectArgsG v)
+getArrayRelNameAndSelectArgs :: ArraySelectG backend v -> (RelName, SelectArgsG backend v)
 getArrayRelNameAndSelectArgs = \case
-  ASSimple r -> (aarRelationshipName r, _asnArgs $ aarAnnSelect r)
-  ASAggregate r -> (aarRelationshipName r, _asnArgs $ aarAnnSelect r)
+  ASSimple r     -> (aarRelationshipName r, _asnArgs $ aarAnnSelect r)
+  ASAggregate r  -> (aarRelationshipName r, _asnArgs $ aarAnnSelect r)
   ASConnection r -> (aarRelationshipName r, _asnArgs $ _csSelect $ aarAnnSelect r)
 
-getAnnArr :: (a, AnnFieldG v) -> Maybe (a, ArraySelectG v)
+getAnnArr :: (a, AnnFieldG backend v) -> Maybe (a, ArraySelectG backend v)
 getAnnArr (f, annFld) = case annFld of
   AFArrayRelation (ASConnection _) -> Nothing
   AFArrayRelation ar               -> Just (f, ar)
@@ -328,8 +331,8 @@ getAnnArr (f, annFld) = case annFld of
 
 
 withWriteJoinTree
-  :: (MonadWriter JoinTree m)
-  => (JoinTree -> b -> JoinTree)
+  :: (MonadWriter (JoinTree backend) m)
+  => (JoinTree backend -> b -> JoinTree backend)
   -> m (a, b)
   -> m a
 withWriteJoinTree joinTreeUpdater action =
@@ -340,8 +343,8 @@ withWriteJoinTree joinTreeUpdater action =
     pure (out, fromJoinTree)
 
 withWriteObjectRelation
-  :: (MonadWriter JoinTree m)
-  => m ( ObjectRelationSource
+  :: (MonadWriter (JoinTree backend) m, Hashable (ObjectRelationSource backend))
+  => m ( ObjectRelationSource backend
        , HM.HashMap S.Alias S.SQLExp
        , a
        )
@@ -356,8 +359,8 @@ withWriteObjectRelation action =
       in mempty{_jtObjectRelations = HM.singleton source selectNode}
 
 withWriteArrayRelation
-  :: (MonadWriter JoinTree m)
-  => m ( ArrayRelationSource
+  :: (MonadWriter (JoinTree 'Postgres) m)
+  => m ( ArrayRelationSource 'Postgres
        , S.Extractor
        , HM.HashMap S.Alias S.SQLExp
        , a
@@ -374,8 +377,8 @@ withWriteArrayRelation action =
       in mempty{_jtArrayRelations = HM.singleton source arraySelectNode}
 
 withWriteArrayConnection
-  :: (MonadWriter JoinTree m)
-  => m ( ArrayConnectionSource
+  :: (MonadWriter (JoinTree 'Postgres) m)
+  => m ( ArrayConnectionSource 'Postgres
        , S.Extractor
        , HM.HashMap S.Alias S.SQLExp
        , a
@@ -392,7 +395,7 @@ withWriteArrayConnection action =
       in mempty{_jtArrayConnections = HM.singleton source arraySelectNode}
 
 withWriteComputedFieldTableSet
-  :: (MonadWriter JoinTree m)
+  :: (MonadWriter (JoinTree backend) m)
   => m ( ComputedFieldTableSetSource
        , HM.HashMap S.Alias S.SQLExp
        , a
@@ -409,13 +412,13 @@ withWriteComputedFieldTableSet action =
 
 
 processAnnSimpleSelect
-  :: forall m. ( MonadReader Bool m
-               , MonadWriter JoinTree m
+  :: forall m . ( MonadReader Bool m
+               , MonadWriter (JoinTree 'Postgres) m
                )
   => SourcePrefixes
   -> FieldName
   -> PermissionLimitSubQuery
-  -> AnnSimpleSel
+  -> AnnSimpleSel 'Postgres
   -> m ( SelectSource
        , HM.HashMap S.Alias S.SQLExp
        )
@@ -433,11 +436,11 @@ processAnnSimpleSelect sourcePrefixes fieldAlias permLimitSubQuery annSimpleSel 
 
 processAnnAggregateSelect
   :: forall m. ( MonadReader Bool m
-               , MonadWriter JoinTree m
+               , MonadWriter (JoinTree 'Postgres) m
                )
   => SourcePrefixes
   -> FieldName
-  -> AnnAggregateSelect
+  -> AnnAggregateSelect 'Postgres
   -> m ( SelectSource
        , HM.HashMap S.Alias S.SQLExp
        , S.Extractor
@@ -458,7 +461,7 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
         annFieldExtr <- processAnnFields thisSourcePrefix fieldName similarArrayFields annFields
         pure ( [annFieldExtr]
              , withJsonAggExtr permLimitSubQuery (_ssOrderBy selectSource) $
-               S.Alias $ toIden fieldName
+               S.Alias $ toIdentifier fieldName
              )
       TAFExp e ->
         pure ( []
@@ -466,7 +469,7 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
              )
 
   let topLevelExtractor =
-        flip S.Extractor (Just $ S.Alias $ toIden fieldAlias) $
+        flip S.Extractor (Just $ S.Alias $ toIdentifier fieldAlias) $
         S.applyJsonBuildObj $ flip concatMap (map (second snd) processedFields) $
         \(FieldName fieldText, fieldExp) -> [S.SELit fieldText, fieldExp]
       nodeExtractors = HM.fromList $
@@ -487,8 +490,8 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
 
 mkPermissionLimitSubQuery
   :: Maybe Int
-  -> TableAggregateFields
-  -> Maybe (NE.NonEmpty AnnOrderByItem)
+  -> TableAggregateFields backend
+  -> Maybe (NE.NonEmpty (AnnOrderByItem backend))
   -> PermissionLimitSubQuery
 mkPermissionLimitSubQuery permLimit aggFields orderBys =
   case permLimit of
@@ -507,16 +510,16 @@ mkPermissionLimitSubQuery permLimit aggFields orderBys =
       Just l -> flip any (concatMap toList $ toList l) $
                 \case
                   AOCArrayAggregation{} -> True
-                  _        -> False
+                  _                     -> False
 
 processArrayRelation
   :: forall m. ( MonadReader Bool m
-               , MonadWriter JoinTree m
+               , MonadWriter (JoinTree 'Postgres) m
                )
   => SourcePrefixes
   -> FieldName
   -> S.Alias
-  -> ArraySelect
+  -> ArraySelect 'Postgres
   -> m ()
 processArrayRelation sourcePrefixes fieldAlias relAlias arrSel =
   case arrSel of
@@ -554,15 +557,15 @@ processArrayRelation sourcePrefixes fieldAlias relAlias arrSel =
 
 processSelectParams
   :: forall m. ( MonadReader Bool m
-               , MonadWriter JoinTree m
+               , MonadWriter (JoinTree 'Postgres) m
                )
   => SourcePrefixes
   -> FieldName
   -> SimilarArrayFields
-  -> SelectFrom
+  -> SelectFrom 'Postgres
   -> PermissionLimitSubQuery
-  -> TablePerm
-  -> SelectArgs
+  -> TablePerm 'Postgres
+  -> SelectArgs 'Postgres
   -> m ( SelectSource
        , [(S.Alias, S.SQLExp)]
        , Maybe S.SQLExp -- Order by cursor
@@ -604,12 +607,12 @@ processSelectParams sourcePrefixes fieldAlias similarArrFields selectFrom
 
 processOrderByItems
   :: forall m. ( MonadReader Bool m
-               , MonadWriter JoinTree m
+               , MonadWriter (JoinTree 'Postgres) m
                )
-  => Iden
+  => Identifier
   -> FieldName
   -> SimilarArrayFields
-  -> NE.NonEmpty AnnOrderByItem
+  -> NE.NonEmpty (AnnOrderByItem 'Postgres)
   -> m ( [(S.Alias, S.SQLExp)] -- Order by Extractors
        , S.OrderByExp
        , S.SQLExp -- The cursor expression
@@ -621,18 +624,18 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields orderByItems = 
       cursor = mkCursorExp $ toList orderByItemExps
   pure (orderByExtractors, orderByExp, cursor)
   where
-    processAnnOrderByItem :: AnnOrderByItem -> m OrderByItemExp
+    processAnnOrderByItem :: AnnOrderByItem 'Postgres -> m (OrderByItemExp 'Postgres)
     processAnnOrderByItem orderByItem =
       forM orderByItem $ \ordByCol -> (ordByCol,) <$>
       processAnnOrderByElement sourcePrefix' fieldAlias' ordByCol
 
     processAnnOrderByElement
-      :: Iden -> FieldName -> AnnOrderByElement S.SQLExp -> m (S.Alias, S.SQLExp)
+      :: Identifier -> FieldName -> AnnOrderByElement 'Postgres S.SQLExp -> m (S.Alias, S.SQLExp)
     processAnnOrderByElement sourcePrefix fieldAlias annObCol = do
       let ordByAlias = mkAnnOrderByAlias sourcePrefix fieldAlias similarArrayFields annObCol
       (ordByAlias, ) <$> case annObCol of
         AOCColumn pgColInfo -> pure $
-          S.mkQIdenExp (mkBaseTableAlias sourcePrefix) $ toIden $ pgiColumn pgColInfo
+          S.mkQIdenExp (mkBaseTableAlias sourcePrefix) $ toIdentifier $ pgiColumn pgColInfo
 
         AOCObjectRelation relInfo relFilter rest -> withWriteObjectRelation $ do
           let RelInfo relName _ colMapping relTable _ _ = relInfo
@@ -667,13 +670,13 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields orderByItems = 
                , S.mkQIdenExp relSourcePrefix (mkAggregateOrderByAlias aggOrderBy)
                )
 
-    toOrderByExp :: OrderByItemExp -> S.OrderByItem
+    toOrderByExp :: OrderByItemExp 'Postgres -> S.OrderByItem
     toOrderByExp orderByItemExp =
       let OrderByItemG obTyM expAlias obNullsM = fst . snd <$> orderByItemExp
-      in S.OrderByItem (S.SEIden $ toIden expAlias)
+      in S.OrderByItem (S.SEIdentifier $ toIdentifier expAlias)
          (unOrderType <$> obTyM) (unNullsOrder <$> obNullsM)
 
-    mkCursorExp :: [OrderByItemExp] -> S.SQLExp
+    mkCursorExp :: [OrderByItemExp 'Postgres] -> S.SQLExp
     mkCursorExp orderByItemExps =
       S.applyJsonBuildObj $ flip concatMap orderByItemExps $
       \orderByItemExp ->
@@ -698,7 +701,7 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields orderByItems = 
             ]
 
 aggregateFieldsToExtractorExps
-  :: Iden -> AggregateFields -> [(S.Alias, S.SQLExp)]
+  :: Identifier -> AggregateFields 'Postgres -> [(S.Alias, S.SQLExp)]
 aggregateFieldsToExtractorExps sourcePrefix aggregateFields =
   flip concatMap aggregateFields $ \(_, field) ->
     case field of
@@ -709,23 +712,23 @@ aggregateFieldsToExtractorExps sourcePrefix aggregateFields =
       AFOp aggOp  -> aggOpToExps aggOp
       AFExp _     -> []
   where
-    colsToExps = mapMaybe (mkColExp . PCFCol)
+    colsToExps = mapMaybe (mkColExp . CFCol)
     aggOpToExps = mapMaybe (mkColExp . snd) . _aoFields
 
-    mkColExp (PCFCol c) =
-      let qualCol = S.mkQIdenExp (mkBaseTableAlias sourcePrefix) (toIden c)
-          colAls = toIden c
+    mkColExp (CFCol c) =
+      let qualCol = S.mkQIdenExp (mkBaseTableAlias sourcePrefix) (toIdentifier c)
+          colAls = toIdentifier c
       in Just (S.Alias colAls, qualCol)
     mkColExp _ = Nothing
 
 processAnnFields
-  :: forall m. ( MonadReader Bool m
-               , MonadWriter JoinTree m
+  :: forall m . ( MonadReader Bool m
+               , MonadWriter (JoinTree 'Postgres) m
                )
-  => Iden
+  => Identifier
   -> FieldName
   -> SimilarArrayFields
-  -> AnnFields
+  -> AnnFields 'Postgres
   -> m (S.Alias, S.SQLExp)
 processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
   fieldExps <- forM annFields $ \(fieldName, field) ->
@@ -791,7 +794,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
     toRowToJsonExtr (fieldName, fieldExp) =
       S.Extractor fieldExp $ Just $ S.toAlias fieldName
 
-    toSQLCol :: AnnColumnField -> m S.SQLExp
+    toSQLCol :: AnnColumnField 'Postgres -> m S.SQLExp
     toSQLCol (AnnColumnField col asText colOpM) = do
       strfyNum <- ask
       pure $ toJSONableExp strfyNum (pgiType col) asText $ withColumnOp colOpM $
@@ -810,7 +813,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
       Nothing                     -> sqlExp
       Just (ColumnOp opText cExp) -> S.mkSQLOpExp opText sqlExp cExp
 
-    mkNodeId :: QualifiedTable -> PrimaryKeyColumns -> S.SQLExp
+    mkNodeId :: QualifiedTable -> PrimaryKeyColumns 'Postgres -> S.SQLExp
     mkNodeId (QualifiedObject tableSchema tableName) pkeyColumns =
       let columnInfoToSQLExp pgColumnInfo =
             toJSONableExp False (pgiType pgColumnInfo) False $
@@ -837,7 +840,7 @@ mkJoinCond baseTablepfx colMapn =
 generateSQLSelect
   :: S.BoolExp -- ^ Pre join condition
   -> SelectSource
-  -> SelectNode
+  -> SelectNode 'Postgres
   -> S.Select
 generateSQLSelect joinCondition selectSource selectNode =
   S.mkSelect
@@ -877,7 +880,7 @@ generateSQLSelect joinCondition selectSource selectNode =
 
 
     objectRelationToFromItem
-      :: (ObjectRelationSource, SelectNode) -> S.FromItem
+      :: (ObjectRelationSource 'Postgres, SelectNode 'Postgres) -> S.FromItem
     objectRelationToFromItem (objectRelationSource, node) =
       let ObjectRelationSource _ colMapping objectSelectSource = objectRelationSource
           alias = S.Alias $ _ossPrefix objectSelectSource
@@ -886,7 +889,7 @@ generateSQLSelect joinCondition selectSource selectNode =
       in S.mkLateralFromItem select alias
 
     arrayRelationToFromItem
-      :: (ArrayRelationSource, ArraySelectNode) -> S.FromItem
+      :: (ArrayRelationSource 'Postgres, ArraySelectNode 'Postgres) -> S.FromItem
     arrayRelationToFromItem (arrayRelationSource, arraySelectNode) =
       let ArrayRelationSource _ colMapping source = arrayRelationSource
           alias = S.Alias $ _ssPrefix source
@@ -895,14 +898,14 @@ generateSQLSelect joinCondition selectSource selectNode =
       in S.mkLateralFromItem select alias
 
     arrayConnectionToFromItem
-      :: (ArrayConnectionSource, ArraySelectNode) -> S.FromItem
+      :: (ArrayConnectionSource 'Postgres, ArraySelectNode 'Postgres) -> S.FromItem
     arrayConnectionToFromItem (arrayConnectionSource, arraySelectNode) =
       let selectWith = connectionToSelectWith baseSelectAlias arrayConnectionSource arraySelectNode
           alias = S.Alias $ _ssPrefix $ _acsSource arrayConnectionSource
       in S.FISelectWith (S.Lateral True) selectWith alias
 
     computedFieldToFromItem
-      :: (ComputedFieldTableSetSource, SelectNode) -> S.FromItem
+      :: (ComputedFieldTableSetSource, SelectNode 'Postgres) -> S.FromItem
     computedFieldToFromItem (computedFieldTableSource, node) =
       let ComputedFieldTableSetSource fieldName selectTy source = computedFieldTableSource
           internalSelect = generateSQLSelect (S.BELit True) source node
@@ -917,7 +920,7 @@ generateSQLSelect joinCondition selectSource selectNode =
 
 generateSQLSelectFromArrayNode
   :: SelectSource
-  -> ArraySelectNode
+  -> ArraySelectNode 'Postgres
   -> S.BoolExp
   -> S.Select
 generateSQLSelectFromArrayNode selectSource arraySelectNode joinCondition =
@@ -931,7 +934,7 @@ generateSQLSelectFromArrayNode selectSource arraySelectNode joinCondition =
                  (generateSQLSelect joinCondition selectSource selectNode) $
                  S.Alias $ _ssPrefix selectSource
 
-mkAggregateSelect :: AnnAggregateSelect -> S.Select
+mkAggregateSelect :: AnnAggregateSelect 'Postgres -> S.Select
 mkAggregateSelect annAggSel =
   let ((selectSource, nodeExtractors, topExtractor), joinTree) =
         runWriter $ flip runReaderT strfyNum $
@@ -943,10 +946,10 @@ mkAggregateSelect annAggSel =
   where
     strfyNum = _asnStrfyNum annAggSel
     rootFieldName = FieldName "root"
-    rootIden = toIden rootFieldName
-    sourcePrefixes = SourcePrefixes rootIden rootIden
+    rootIdentifier = toIdentifier rootFieldName
+    sourcePrefixes = SourcePrefixes rootIdentifier rootIdentifier
 
-mkSQLSelect :: JsonAggSelect -> AnnSimpleSel -> S.Select
+mkSQLSelect :: JsonAggSelect -> AnnSimpleSel 'Postgres -> S.Select
 mkSQLSelect jsonAggSelect annSel =
   let permLimitSubQuery = PLSQNotRequired
       ((selectSource, nodeExtractors), joinTree) =
@@ -960,64 +963,64 @@ mkSQLSelect jsonAggSelect annSel =
      generateSQLSelectFromArrayNode selectSource arrayNode $ S.BELit True
   where
     strfyNum = _asnStrfyNum annSel
-    rootFldIden = toIden rootFldName
-    sourcePrefixes = SourcePrefixes rootFldIden rootFldIden
+    rootFldIdentifier = toIdentifier rootFldName
+    sourcePrefixes = SourcePrefixes rootFldIdentifier rootFldIdentifier
     rootFldName = FieldName "root"
-    rootFldAls  = S.Alias $ toIden rootFldName
+    rootFldAls  = S.Alias $ toIdentifier rootFldName
 
-mkConnectionSelect :: ConnectionSelect S.SQLExp -> S.SelectWithG S.Select
+mkConnectionSelect :: ConnectionSelect 'Postgres S.SQLExp -> S.SelectWithG S.Select
 mkConnectionSelect connectionSelect =
   let ((connectionSource, topExtractor, nodeExtractors), joinTree) =
         runWriter $ flip runReaderT strfyNum $
         processConnectionSelect sourcePrefixes rootFieldName
-        (S.Alias rootIden) mempty connectionSelect
+        (S.Alias rootIdentifier) mempty connectionSelect
       selectNode = ArraySelectNode [topExtractor] $
                        SelectNode nodeExtractors joinTree
   in prefixNumToAliasesSelectWith $
-     connectionToSelectWith (S.Alias rootIden) connectionSource selectNode
+     connectionToSelectWith (S.Alias rootIdentifier) connectionSource selectNode
   where
     strfyNum = _asnStrfyNum $ _csSelect connectionSelect
     rootFieldName = FieldName "root"
-    rootIden = toIden rootFieldName
-    sourcePrefixes = SourcePrefixes rootIden rootIden
+    rootIdentifier = toIdentifier rootFieldName
+    sourcePrefixes = SourcePrefixes rootIdentifier rootIdentifier
 
 -- | First element extractor expression from given record set
 -- For example:- To get first "id" column from given row set,
 -- the function generates the SQL expression AS `(array_agg("id"))[1]`
 mkFirstElementExp :: S.SQLExp -> S.SQLExp
-mkFirstElementExp expIden =
+mkFirstElementExp expIdentifier =
   -- For Example
-  S.SEArrayIndex (S.SEFnApp "array_agg" [expIden] Nothing) (S.intToSQLExp 1)
+  S.SEArrayIndex (S.SEFnApp "array_agg" [expIdentifier] Nothing) (S.intToSQLExp 1)
 
 -- | Last element extractor expression from given record set.
 -- For example:- To get first "id" column from given row set,
 -- the function generates the SQL expression AS `(array_agg("id"))[array_length(array_agg("id"), 1)]`
 mkLastElementExp :: S.SQLExp -> S.SQLExp
-mkLastElementExp expIden =
-  let arrayExp = S.SEFnApp "array_agg" [expIden] Nothing
+mkLastElementExp expIdentifier =
+  let arrayExp = S.SEFnApp "array_agg" [expIdentifier] Nothing
   in S.SEArrayIndex arrayExp $
      S.SEFnApp "array_length" [arrayExp, S.intToSQLExp 1] Nothing
 
-cursorIden :: Iden
-cursorIden = Iden "__cursor"
+cursorIdentifier :: Identifier
+cursorIdentifier = Identifier "__cursor"
 
-startCursorIden :: Iden
-startCursorIden = Iden "__start_cursor"
+startCursorIdentifier :: Identifier
+startCursorIdentifier = Identifier "__start_cursor"
 
-endCursorIden :: Iden
-endCursorIden = Iden "__end_cursor"
+endCursorIdentifier :: Identifier
+endCursorIdentifier = Identifier "__end_cursor"
 
-hasPreviousPageIden :: Iden
-hasPreviousPageIden = Iden "__has_previous_page"
+hasPreviousPageIdentifier :: Identifier
+hasPreviousPageIdentifier = Identifier "__has_previous_page"
 
-hasNextPageIden :: Iden
-hasNextPageIden = Iden "__has_next_page"
+hasNextPageIdentifier :: Identifier
+hasNextPageIdentifier = Identifier "__has_next_page"
 
-pageInfoSelectAliasIden :: Iden
-pageInfoSelectAliasIden = Iden "__page_info"
+pageInfoSelectAliasIdentifier :: Identifier
+pageInfoSelectAliasIdentifier = Identifier "__page_info"
 
-cursorsSelectAliasIden :: Iden
-cursorsSelectAliasIden = Iden "__cursors_select"
+cursorsSelectAliasIdentifier :: Identifier
+cursorsSelectAliasIdentifier = Identifier "__cursors_select"
 
 encodeBase64 :: S.SQLExp -> S.SQLExp
 encodeBase64 =
@@ -1033,14 +1036,14 @@ encodeBase64 =
 
 processConnectionSelect
   :: ( MonadReader Bool m
-     , MonadWriter JoinTree m
+     , MonadWriter (JoinTree 'Postgres) m
      )
   => SourcePrefixes
   -> FieldName
   -> S.Alias
   -> HM.HashMap PGCol PGCol
-  -> ConnectionSelect S.SQLExp
-  -> m ( ArrayConnectionSource
+  -> ConnectionSelect 'Postgres S.SQLExp
+  -> m ( ArrayConnectionSource 'Postgres
        , S.Extractor
        , HM.HashMap S.Alias S.SQLExp
        )
@@ -1049,7 +1052,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
     processSelectParams sourcePrefixes fieldAlias similarArrayFields selectFrom
     permLimitSubQuery tablePermissions tableArgs
 
-  let mkCursorExtractor = (S.Alias cursorIden,) . (`S.SETyAnn` S.textTypeAnn)
+  let mkCursorExtractor = (S.Alias cursorIdentifier,) . (`S.SETyAnn` S.textTypeAnn)
       cursorExtractors = case maybeOrderByCursor of
         Just orderByCursor -> [mkCursorExtractor orderByCursor]
         Nothing ->
@@ -1058,7 +1061,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
           mkCursorExtractor primaryKeyColumnsObjectExp : primaryKeyColumnExtractors
       orderByExp = _ssOrderBy selectSource
   (topExtractorExp, exps) <- flip runStateT [] $ processFields orderByExp
-  let topExtractor = S.Extractor topExtractorExp $ Just $ S.Alias fieldIden
+  let topExtractor = S.Extractor topExtractorExp $ Just $ S.Alias fieldIdentifier
       allExtractors = HM.fromList $ cursorExtractors <> exps <> orderByAndDistinctExtrs
       arrayConnectionSource = ArrayConnectionSource relAlias colMapping
                               (mkSplitBoolExp <$> maybeSplit) maybeSlice selectSource
@@ -1069,7 +1072,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
   where
     ConnectionSelect primaryKeyColumns maybeSplit maybeSlice select = connectionSelect
     AnnSelectG fields selectFrom tablePermissions tableArgs _ = select
-    fieldIden = toIden fieldAlias
+    fieldIdentifier = toIdentifier fieldAlias
     thisPrefix = _pfThis sourcePrefixes
     permLimitSubQuery = PLSQNotRequired
 
@@ -1105,12 +1108,12 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
                 (CSKAfter, S.OTDesc)  -> S.SLT
                 (CSKBefore, S.OTAsc)  -> S.SLT
                 (CSKBefore, S.OTDesc) -> S.SGT
-          in S.BECompare compareOp (S.SEIden $ toIden obAlias) v
+          in S.BECompare compareOp (S.SEIdentifier $ toIdentifier obAlias) v
 
         mkEqualityCompareExp (ConnectionSplit _ v orderByItem) =
           let obAlias = mkAnnOrderByAlias thisPrefix fieldAlias similarArrayFields $
                         obiColumn orderByItem
-          in S.BECompare S.SEQ (S.SEIden $ toIden obAlias) v
+          in S.BECompare S.SEQ (S.SEIdentifier $ toIdentifier obAlias) v
 
     similarArrayFields = HM.unions $
       flip map (map snd fields) $ \case
@@ -1129,7 +1132,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
 
     processFields
       :: ( MonadReader Bool m
-         , MonadWriter JoinTree m
+         , MonadWriter (JoinTree 'Postgres) m
          , MonadState [(S.Alias, S.SQLExp)] m
          )
       => Maybe S.OrderByExp -> m S.SQLExp
@@ -1145,63 +1148,63 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
             \(FieldName edgeText, edge) -> (S.SELit edgeText:) . pure <$>
             case edge of
               EdgeTypename t -> pure $ S.SELit t
-              EdgeCursor     -> pure $ encodeBase64 $ S.SEIden (toIden cursorIden)
+              EdgeCursor     -> pure $ encodeBase64 $ S.SEIdentifier (toIdentifier cursorIdentifier)
               EdgeNode annFields -> do
                 let edgeFieldName = FieldName $
                       getFieldNameTxt fieldAlias <> "." <> fieldText <> "." <> edgeText
-                    edgeFieldIden = toIden edgeFieldName
+                    edgeFieldIdentifier = toIdentifier edgeFieldName
                 annFieldsExtrExp <- processAnnFields thisPrefix edgeFieldName similarArrayFields annFields
                 modify' (<> [annFieldsExtrExp])
-                pure $ S.SEIden edgeFieldIden
+                pure $ S.SEIdentifier edgeFieldIdentifier
 
     processPageInfoFields infoFields =
       S.applyJsonBuildObj $ flip concatMap infoFields $
       \(FieldName fieldText, field) -> (:) (S.SELit fieldText) $ pure case field of
         PageInfoTypename t      -> withForceAggregation S.textTypeAnn $ S.SELit t
         PageInfoHasNextPage     -> withForceAggregation S.boolTypeAnn $
-          mkSingleFieldSelect (S.SEIden hasNextPageIden) pageInfoSelectAliasIden
+          mkSingleFieldSelect (S.SEIdentifier hasNextPageIdentifier) pageInfoSelectAliasIdentifier
         PageInfoHasPreviousPage -> withForceAggregation S.boolTypeAnn $
-          mkSingleFieldSelect (S.SEIden hasPreviousPageIden) pageInfoSelectAliasIden
+          mkSingleFieldSelect (S.SEIdentifier hasPreviousPageIdentifier) pageInfoSelectAliasIdentifier
         PageInfoStartCursor     -> withForceAggregation S.textTypeAnn $
-          encodeBase64 $ mkSingleFieldSelect (S.SEIden startCursorIden) cursorsSelectAliasIden
+          encodeBase64 $ mkSingleFieldSelect (S.SEIdentifier startCursorIdentifier) cursorsSelectAliasIdentifier
         PageInfoEndCursor       -> withForceAggregation S.textTypeAnn $
-          encodeBase64 $ mkSingleFieldSelect (S.SEIden endCursorIden) cursorsSelectAliasIden
+          encodeBase64 $ mkSingleFieldSelect (S.SEIdentifier endCursorIdentifier) cursorsSelectAliasIdentifier
       where
-        mkSingleFieldSelect field fromIden = S.SESelect
+        mkSingleFieldSelect field fromIdentifier = S.SESelect
           S.mkSelect { S.selExtr = [S.Extractor field Nothing]
-                     , S.selFrom = Just $ S.FromExp [S.FIIden fromIden]
+                     , S.selFrom = Just $ S.FromExp [S.FIIdentifier fromIdentifier]
                      }
 
 connectionToSelectWith
   :: S.Alias
-  -> ArrayConnectionSource
-  -> ArraySelectNode
+  -> ArrayConnectionSource 'Postgres
+  -> ArraySelectNode 'Postgres
   -> S.SelectWithG S.Select
 connectionToSelectWith baseSelectAlias arrayConnectionSource arraySelectNode =
   let extractionSelect = S.mkSelect
                          { S.selExtr = topExtractors
-                         , S.selFrom = Just $ S.FromExp [S.FIIden finalSelectIden]
+                         , S.selFrom = Just $ S.FromExp [S.FIIdentifier finalSelectIdentifier]
                          }
   in S.SelectWith fromBaseSelections extractionSelect
   where
     ArrayConnectionSource _ columnMapping maybeSplit maybeSlice selectSource =
       arrayConnectionSource
     ArraySelectNode topExtractors selectNode = arraySelectNode
-    baseSelectIden = Iden "__base_select"
-    splitSelectIden = Iden "__split_select"
-    sliceSelectIden = Iden "__slice_select"
-    finalSelectIden = Iden "__final_select"
+    baseSelectIdentifier = Identifier "__base_select"
+    splitSelectIdentifier = Identifier "__split_select"
+    sliceSelectIdentifier = Identifier "__slice_select"
+    finalSelectIdentifier = Identifier "__final_select"
 
-    rowNumberIden = Iden "__row_number"
+    rowNumberIdentifier = Identifier "__row_number"
     rowNumberExp = S.SEUnsafe "(row_number() over (partition by 1))"
-    startRowNumberIden = Iden "__start_row_number"
-    endRowNumberIden = Iden "__end_row_number"
+    startRowNumberIdentifier = Identifier "__start_row_number"
+    endRowNumberIdentifier = Identifier "__end_row_number"
 
-    startCursorExp = mkFirstElementExp $ S.SEIden cursorIden
-    endCursorExp = mkLastElementExp $ S.SEIden cursorIden
+    startCursorExp = mkFirstElementExp $ S.SEIdentifier cursorIdentifier
+    endCursorExp = mkLastElementExp $ S.SEIdentifier cursorIdentifier
 
-    startRowNumberExp = mkFirstElementExp $ S.SEIden rowNumberIden
-    endRowNumberExp = mkLastElementExp $ S.SEIden rowNumberIden
+    startRowNumberExp = mkFirstElementExp $ S.SEIdentifier rowNumberIdentifier
+    endRowNumberExp = mkLastElementExp $ S.SEIdentifier rowNumberIdentifier
 
     fromBaseSelections =
       let joinCond = mkJoinCond baseSelectAlias columnMapping
@@ -1210,23 +1213,23 @@ connectionToSelectWith baseSelectAlias arrayConnectionSource arraySelectNode =
                            $ S.Alias $ _ssPrefix selectSource
           select =
             S.mkSelect { S.selExtr = [ S.selectStar
-                                     , S.Extractor rowNumberExp $ Just $ S.Alias rowNumberIden
+                                     , S.Extractor rowNumberExp $ Just $ S.Alias rowNumberIdentifier
                                      ]
                        , S.selFrom = Just $ S.FromExp [baseSelectFrom]
                        }
-      in (S.Alias baseSelectIden, select):fromSplitSelection
+      in (S.Alias baseSelectIdentifier, select):fromSplitSelection
 
-    mkStarSelect fromIden =
+    mkStarSelect fromIdentifier =
       S.mkSelect { S.selExtr = [S.selectStar]
-                 , S.selFrom = Just $ S.FromExp [S.FIIden fromIden]
+                 , S.selFrom = Just $ S.FromExp [S.FIIdentifier fromIdentifier]
                  }
 
     fromSplitSelection = case maybeSplit of
-      Nothing        -> fromSliceSelection baseSelectIden
+      Nothing        -> fromSliceSelection baseSelectIdentifier
       Just splitBool ->
         let select =
-              (mkStarSelect baseSelectIden){S.selWhere = Just $ S.WhereFrag splitBool}
-        in (S.Alias splitSelectIden, select):fromSliceSelection splitSelectIden
+              (mkStarSelect baseSelectIdentifier){S.selWhere = Just $ S.WhereFrag splitBool}
+        in (S.Alias splitSelectIdentifier, select):fromSliceSelection splitSelectIdentifier
 
     fromSliceSelection prevSelect = case maybeSlice of
       Nothing    -> fromFinalSelect prevSelect
@@ -1238,7 +1241,7 @@ connectionToSelectWith baseSelectAlias arrayConnectionSource arraySelectNode =
               SliceLast limit ->
                 let mkRowNumberOrderBy obType =
                       let orderByItem =
-                            S.OrderByItem (S.SEIden rowNumberIden) (Just obType) Nothing
+                            S.OrderByItem (S.SEIdentifier rowNumberIdentifier) (Just obType) Nothing
                       in S.OrderByExp $ orderByItem NE.:| []
 
                     sliceLastSelect = (mkStarSelect prevSelect)
@@ -1246,46 +1249,46 @@ connectionToSelectWith baseSelectAlias arrayConnectionSource arraySelectNode =
                                       , S.selOrderBy = Just $ mkRowNumberOrderBy S.OTDesc
                                       }
                     sliceLastSelectFrom =
-                      S.mkSelFromItem sliceLastSelect $ S.Alias sliceSelectIden
+                      S.mkSelFromItem sliceLastSelect $ S.Alias sliceSelectIdentifier
                 in S.mkSelect { S.selExtr = [S.selectStar]
                               , S.selFrom = Just $ S.FromExp [sliceLastSelectFrom]
                               , S.selOrderBy = Just $ mkRowNumberOrderBy S.OTAsc
                               }
-        in (S.Alias sliceSelectIden, select):fromFinalSelect sliceSelectIden
+        in (S.Alias sliceSelectIdentifier, select):fromFinalSelect sliceSelectIdentifier
 
     fromFinalSelect prevSelect =
       let select = mkStarSelect prevSelect
-      in (S.Alias finalSelectIden, select):fromCursorSelection
+      in (S.Alias finalSelectIdentifier, select):fromCursorSelection
 
     fromCursorSelection =
-      let extrs = [ S.Extractor startCursorExp $ Just $ S.Alias startCursorIden
-                  , S.Extractor endCursorExp $ Just $ S.Alias endCursorIden
-                  , S.Extractor startRowNumberExp $ Just $ S.Alias startRowNumberIden
-                  , S.Extractor endRowNumberExp $ Just $ S.Alias endRowNumberIden
+      let extrs = [ S.Extractor startCursorExp $ Just $ S.Alias startCursorIdentifier
+                  , S.Extractor endCursorExp $ Just $ S.Alias endCursorIdentifier
+                  , S.Extractor startRowNumberExp $ Just $ S.Alias startRowNumberIdentifier
+                  , S.Extractor endRowNumberExp $ Just $ S.Alias endRowNumberIdentifier
                   ]
           select =
             S.mkSelect { S.selExtr = extrs
-                       , S.selFrom = Just $ S.FromExp [S.FIIden finalSelectIden]
+                       , S.selFrom = Just $ S.FromExp [S.FIIdentifier finalSelectIdentifier]
                        }
-      in (S.Alias cursorsSelectAliasIden, select):fromPageInfoSelection
+      in (S.Alias cursorsSelectAliasIdentifier, select):fromPageInfoSelection
 
     fromPageInfoSelection =
       let hasPrevPage = S.SEBool $
-            S.mkExists (S.FIIden baseSelectIden) $
-            S.BECompare S.SLT (S.SEIden rowNumberIden) $
-            S.SESelect $ S.mkSelect { S.selFrom = Just $ S.FromExp [S.FIIden cursorsSelectAliasIden]
-                                    , S.selExtr = [S.Extractor (S.SEIden startRowNumberIden) Nothing]
+            S.mkExists (S.FIIdentifier baseSelectIdentifier) $
+            S.BECompare S.SLT (S.SEIdentifier rowNumberIdentifier) $
+            S.SESelect $ S.mkSelect { S.selFrom = Just $ S.FromExp [S.FIIdentifier cursorsSelectAliasIdentifier]
+                                    , S.selExtr = [S.Extractor (S.SEIdentifier startRowNumberIdentifier) Nothing]
                                     }
           hasNextPage = S.SEBool $
-            S.mkExists (S.FIIden baseSelectIden) $
-            S.BECompare S.SGT (S.SEIden rowNumberIden) $
-            S.SESelect $ S.mkSelect { S.selFrom = Just $ S.FromExp [S.FIIden cursorsSelectAliasIden]
-                                    , S.selExtr = [S.Extractor (S.SEIden endRowNumberIden) Nothing]
+            S.mkExists (S.FIIdentifier baseSelectIdentifier) $
+            S.BECompare S.SGT (S.SEIdentifier rowNumberIdentifier) $
+            S.SESelect $ S.mkSelect { S.selFrom = Just $ S.FromExp [S.FIIdentifier cursorsSelectAliasIdentifier]
+                                    , S.selExtr = [S.Extractor (S.SEIdentifier endRowNumberIdentifier) Nothing]
                                     }
 
           select =
-            S.mkSelect { S.selExtr = [ S.Extractor hasPrevPage $ Just $ S.Alias hasPreviousPageIden
-                                     , S.Extractor hasNextPage $ Just $ S.Alias hasNextPageIden
+            S.mkSelect { S.selExtr = [ S.Extractor hasPrevPage $ Just $ S.Alias hasPreviousPageIdentifier
+                                     , S.Extractor hasNextPage $ Just $ S.Alias hasNextPageIdentifier
                                      ]
                        }
-      in pure (S.Alias pageInfoSelectAliasIden, select)
+      in pure (S.Alias pageInfoSelectAliasIdentifier, select)

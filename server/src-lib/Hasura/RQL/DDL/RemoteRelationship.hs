@@ -1,4 +1,3 @@
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE RecordWildCards #-}
 module Hasura.RQL.DDL.RemoteRelationship
   ( runCreateRemoteRelationship
@@ -11,17 +10,18 @@ module Hasura.RQL.DDL.RemoteRelationship
   , getRemoteRelDefFromCatalog
   ) where
 
-import           Hasura.EncJSON
 import           Hasura.Prelude
-import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Column                    ()
-import           Hasura.SQL.Types
-import           Hasura.RQL.DDL.RemoteRelationship.Validate
+
+import qualified Data.HashSet                               as HS
+import qualified Database.PG.Query                          as Q
 
 import           Instances.TH.Lift                          ()
 
-import qualified Database.PG.Query                          as Q
-import qualified Data.HashSet                               as HS
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.EncJSON
+import           Hasura.RQL.DDL.RemoteRelationship.Validate
+import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Column                    ()
 
 runCreateRemoteRelationship
   :: (MonadTx m, CacheRWM m) => RemoteRelationship -> m EncJSON
@@ -36,9 +36,9 @@ runCreateRemoteRelationship remoteRelationship = do
 resolveRemoteRelationship
   :: QErrM m
   => RemoteRelationship
-  -> [PGColumnInfo]
+  -> [ColumnInfo 'Postgres]
   -> RemoteSchemaMap
-  -> m (RemoteFieldInfo, [SchemaDependency])
+  -> m (RemoteFieldInfo 'Postgres, [SchemaDependency])
 resolveRemoteRelationship remoteRelationship
                           pgColumns
                           remoteSchemaMap = do
