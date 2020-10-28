@@ -65,6 +65,12 @@ const typeDefs = gql`
     name: [String]
   }
 
+  enum Occupation {
+    SINGER
+    COMEDIAN
+    ARTIST
+  }
+
   type Query {
     hello: String
     messages(where: MessageWhereInpObj, includes: IncludeInpObj): [Message]
@@ -73,6 +79,7 @@ const typeDefs = gql`
     message(id: Int!) : Message
     communications(id: Int): [Communication]
     search(id: Int!): SearchResult
+    getOccupation(name: String!): Occupation!
   }
 `;
 
@@ -208,6 +215,16 @@ const resolvers = {
         },
         search: (_, { id }) => {
             return data[id]
+        },
+        getOccupation: (_, { name }) => {
+            switch (name) {
+            case "alice":
+                return 'SINGER'
+            case "bob":
+                return 'ARTIST'
+            default:
+                throw new ApolloError("invalid argument - " + name, "invalid ");
+            }
         }
     },
     Communication: {
