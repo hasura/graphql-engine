@@ -142,18 +142,6 @@ const initQueries = {
         returns_set: true,
         return_type_type: 'c', // COMPOSITE type
         return_table_info: {},
-        $or: [
-          {
-            function_type: {
-              $ilike: '%stable%',
-            },
-          },
-          {
-            function_type: {
-              $ilike: '%immutable%',
-            },
-          },
-        ],
       },
     },
   },
@@ -187,18 +175,6 @@ const initQueries = {
           returns_set: true,
           return_type_type: 'c', // COMPOSITE type
           return_table_info: {},
-          $or: [
-            {
-              function_type: {
-                $ilike: '%stable%',
-              },
-            },
-            {
-              function_type: {
-                $ilike: '%immutable%',
-              },
-            },
-          ],
         },
       },
     },
