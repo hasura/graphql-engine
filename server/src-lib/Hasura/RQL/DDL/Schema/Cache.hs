@@ -20,10 +20,9 @@ module Hasura.RQL.DDL.Schema.Cache
 
 import           Hasura.Prelude
 
+import qualified Data.Environment                         as Env
 import qualified Data.HashMap.Strict.Extended             as M
 import qualified Data.HashSet                             as HS
-import qualified Data.Text                                as T
-import qualified Data.Environment                         as Env
 import qualified Database.PG.Query                        as Q
 
 import           Control.Arrow.Extended
@@ -34,7 +33,9 @@ import           Data.List                                (nub)
 
 import qualified Hasura.Incremental                       as Inc
 
-import           Hasura.Db
+import           Data.Text.Extended
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Execute.Types
 import           Hasura.GraphQL.Schema                    (buildGQLContext)
 import           Hasura.RQL.DDL.Action
@@ -56,7 +57,6 @@ import           Hasura.RQL.DDL.Utils                     (clearHdbViews)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.Server.Version                    (HasVersion)
-import           Hasura.SQL.Types
 
 buildRebuildableSchemaCache
   :: (HasVersion, MonadIO m, MonadUnique m, MonadTx m, HasHttpManager m, HasSQLGenCtx m)
@@ -322,7 +322,7 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
     buildTableEventTriggers
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
          , Inc.ArrowCache m arr, MonadTx m, MonadReader BuildReason m, HasSQLGenCtx m )
-      => (TableCoreInfo, [CatalogEventTrigger]) `arr` EventTriggerInfoMap
+      => (TableCoreInfo 'Postgres, [CatalogEventTrigger]) `arr` EventTriggerInfoMap
     buildTableEventTriggers = buildInfoMap _cetName mkEventTriggerMetadataObject buildEventTrigger
       where
         buildEventTrigger = proc (tableInfo, eventTrigger) -> do
@@ -369,9 +369,9 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
     buildActions
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
          , ArrowWriter (Seq CollectedInfo) arr)
-      => ( (AnnotatedCustomTypes, HashSet PGScalarType)
+      => ( (AnnotatedCustomTypes 'Postgres, HashSet PGScalarType)
          , [ActionMetadata]
-         ) `arr` HashMap ActionName ActionInfo
+         ) `arr` HashMap ActionName (ActionInfo 'Postgres)
     buildActions = buildInfoMap _amName mkActionMetadataObject buildAction
       where
         buildAction = proc ((resolvedCustomTypes, pgScalars), action) -> do
@@ -435,7 +435,7 @@ withMetadataCheck cascade action = do
   -- Do not allow overloading functions
   unless (null overloadedFuncs) $
     throw400 NotSupported $ "the following tracked function(s) cannot be overloaded: "
-    <> reportFuncs overloadedFuncs
+    <> commaSeparated overloadedFuncs
 
   indirectDeps <- getSchemaChangeDeps schemaDiff
 
@@ -479,9 +479,7 @@ withMetadataCheck cascade action = do
 
   return res
   where
-    reportFuncs = T.intercalate ", " . map dquoteTxt
-
-    processSchemaChanges :: (MonadTx m, CacheRM m) => SchemaDiff -> m ()
+    processSchemaChanges :: (MonadTx m, CacheRM m) => SchemaDiff 'Postgres -> m ()
     processSchemaChanges schemaDiff = do
       -- Purge the dropped tables
       mapM_ delTableAndDirectDeps droppedTables
