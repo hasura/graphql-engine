@@ -17,7 +17,6 @@ module Hasura.RQL.Types.QueryCollection
 
 import           Hasura.Prelude
 
-import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 
@@ -49,7 +48,7 @@ newtype GQLQuery
   deriving (Show, Eq, NFData, Hashable, Lift, ToJSON, FromJSON, Cacheable)
 
 newtype GQLQueryWithText
-  = GQLQueryWithText (T.Text, GQLQuery)
+  = GQLQueryWithText (Text, GQLQuery)
   deriving (Show, Eq, NFData, Lift, Generic, Cacheable)
 
 instance FromJSON GQLQueryWithText where
@@ -121,7 +120,7 @@ data CreateCollection
   = CreateCollection
   { _ccName       :: !CollectionName
   , _ccDefinition :: !CollectionDef
-  , _ccComment    :: !(Maybe T.Text)
+  , _ccComment    :: !(Maybe Text)
   } deriving (Show, Eq, Lift, Generic)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CreateCollection)
 

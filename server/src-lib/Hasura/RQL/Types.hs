@@ -41,13 +41,13 @@ module Hasura.RQL.Types
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                 as M
-import qualified Data.Text                           as T
 import qualified Network.HTTP.Client                 as HTTP
 
 import           Control.Monad.Unique
 import           Data.Text.Extended
 
-import           Hasura.Db                           as R
+import           Hasura.Backends.Postgres.Connection as R
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types.Action             as R
 import           Hasura.RQL.Types.BoolExp            as R
 import           Hasura.RQL.Types.Column             as R
@@ -68,7 +68,6 @@ import           Hasura.RQL.Types.SchemaCache        as R
 import           Hasura.RQL.Types.SchemaCache.Build  as R
 import           Hasura.RQL.Types.Table              as R
 import           Hasura.SQL.Backend                  as R
-import           Hasura.SQL.Types
 import           Hasura.Session
 import           Hasura.Tracing                      (TraceT)
 
@@ -216,7 +215,7 @@ askPGType
   :: (MonadError QErr m)
   => FieldInfoMap (FieldInfo 'Postgres)
   -> PGCol
-  -> T.Text
+  -> Text
   -> m PGColumnType
 askPGType m c msg =
   pgiType <$> askPGColInfo m c msg
@@ -225,7 +224,7 @@ askPGColInfo
   :: (MonadError QErr m)
   => FieldInfoMap (FieldInfo backend)
   -> PGCol
-  -> T.Text
+  -> Text
   -> m (ColumnInfo backend)
 askPGColInfo m c msg = do
   fieldInfo <- modifyErr ("column " <>) $
@@ -265,7 +264,7 @@ askComputedFieldInfo fields computedField = do
 
 assertPGCol :: (MonadError QErr m)
             => FieldInfoMap (FieldInfo backend)
-            -> T.Text
+            -> Text
             -> PGCol
             -> m ()
 assertPGCol m msg c = do
@@ -275,7 +274,7 @@ assertPGCol m msg c = do
 askRelType :: (MonadError QErr m)
            => FieldInfoMap (FieldInfo backend)
            -> RelName
-           -> T.Text
+           -> Text
            -> m RelInfo
 askRelType m r msg = do
   colInfo <- modifyErr ("relationship " <>) $
@@ -315,4 +314,4 @@ askRemoteRel fieldInfoMap relName = do
 askCurRole :: (UserInfoM m) => m RoleName
 askCurRole = _uiRole <$> askUserInfo
 
-type HeaderObj = M.HashMap T.Text T.Text
+type HeaderObj = M.HashMap Text Text
