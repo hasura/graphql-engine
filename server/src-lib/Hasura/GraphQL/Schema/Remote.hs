@@ -596,13 +596,47 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
         mkFieldParserWithSelectionSet argsParser
     _ -> throw400 RemoteSchemaError "expected output type, but got input type"
   where
+    -- | This function is used to merge two GraphQL Values. The function is
+    --   called from a `Map.union` function, which means that the arguments
+    --   to this function come from the same common key of the two HashMaps
+    --   that are being merged. The only time the function is called is
+    --   when some of the fields of an Input Object fields have preset set
+    --   and the remaining input object fields are queried by the user, then
+    --   the preset arguments and the user arguments are merged using this function.
+    --   For example:
+    --
+    --   input UserDetails {
+    --     id: Int! @preset(value: 1)
+    --     name: String!
+    --   }
+    --
+    --   type Mutation {
+    --     createUser(details: UserDetails): User
+    --   }
+    --
+    --   Now, since the `id` field already has a preset, the user will not be able
+    --   to provide value for it and can only be able to provide the value for `name`.
+    --
+    --   mutation {
+    --     createUser(details: {name: "foo"}) {
+    --       name
+    --     }
+    --   }
+    --
+    --  When we construct the remote query, we will have a HashMap of the preset
+    --  arguments and the user provided arguments. As mentioned earlier, this function
+    --  will be called when two maps share a common key, the common key here being
+    --  `details`. The preset argument hash map will be `{details: {id: 1}}`
+    --  and the user argument `{details: {name: "foo"}}`. Combining these two will
+    --  give `{details: {name: "foo", id: 1}}` and then the remote schema is queried
+    --  with the merged arguments.
     mergeValue :: G.Value RemoteSchemaVariable -> G.Value RemoteSchemaVariable -> G.Value RemoteSchemaVariable
     mergeValue userArgVal presetArgVal =
       case (userArgVal, presetArgVal) of
         (G.VList l, G.VList r) -> G.VList $ l <> r
         (G.VObject l, G.VObject r) ->
           G.VObject $ Map.unionWith mergeValue l r
-        (v',_) -> v'
+        _ -> error "only list or object values can be merged"
 
     mkField alias fldName userProvidedArgs presetArgs selSet =
       let userProvidedArgs' = fmap RawVariable <$> userProvidedArgs
