@@ -3,7 +3,7 @@
 
 -- A module for postgres execution related types and operations
 
-module Hasura.Db
+module Hasura.Backends.Postgres.Connection
   ( MonadTx(..)
   , LazyTx
 
@@ -22,25 +22,27 @@ module Hasura.Db
   , lazyTxToQTx
   ) where
 
+import           Hasura.Prelude
+
+import qualified Data.Aeson.Extended            as J
+import qualified Database.PG.Query              as Q
+import qualified Database.PG.Query.Connection   as Q
+
 import           Control.Lens
-import           Control.Monad.Trans.Control  (MonadBaseControl (..))
+import           Control.Monad.Trans.Control    (MonadBaseControl (..))
 import           Control.Monad.Unique
 import           Control.Monad.Validate
-import           Data.Either                  (isRight)
+import           Data.Either                    (isRight)
 
-import qualified Data.Aeson.Extended          as J
-import qualified Database.PG.Query            as Q
-import qualified Database.PG.Query.Connection as Q
+import qualified Hasura.Backends.Postgres.SQL.DML   as S
+import qualified Hasura.Tracing                 as Tracing
 
+import           Hasura.Backends.Postgres.SQL.Error
 import           Hasura.EncJSON
-import           Hasura.Prelude
 import           Hasura.RQL.Types.Error
-import           Hasura.Session
-import           Hasura.SQL.Error
 import           Hasura.SQL.Types
+import           Hasura.Session
 
-import qualified Hasura.SQL.DML               as S
-import qualified Hasura.Tracing               as Tracing
 
 data PGExecCtx
   = PGExecCtx
@@ -114,26 +116,26 @@ lazyTxToQTx = \case
   LTTx tx  -> tx
 
 runLazyTx
-  :: (MonadIO m)
+  :: (MonadIO m, MonadError QErr m)
   => PGExecCtx
   -> Q.TxAccess
-  -> LazyTx QErr a -> ExceptT QErr m a
+  -> LazyTx QErr a -> m a
 runLazyTx pgExecCtx txAccess = \case
   LTErr e  -> throwError e
   LTNoTx a -> return a
   LTTx tx  ->
     case txAccess of
-      Q.ReadOnly  -> ExceptT <$> liftIO $ runExceptT $ _pecRunReadOnly pgExecCtx tx
-      Q.ReadWrite -> ExceptT <$> liftIO $ runExceptT $ _pecRunReadWrite pgExecCtx tx
+      Q.ReadOnly  -> liftEither =<< liftIO (runExceptT $ _pecRunReadOnly pgExecCtx tx)
+      Q.ReadWrite -> liftEither =<< liftIO (runExceptT $ _pecRunReadWrite pgExecCtx tx)
 
 -- | This runs the given set of statements (Tx) without wrapping them in BEGIN
 -- and COMMIT. This should only be used for running a single statement query!
 runQueryTx
-  :: MonadIO m => PGExecCtx -> LazyTx QErr a -> ExceptT QErr m a
+  :: (MonadIO m, MonadError QErr m) => PGExecCtx -> LazyTx QErr a -> m a
 runQueryTx pgExecCtx = \case
   LTErr e  -> throwError e
   LTNoTx a -> return a
-  LTTx tx  -> ExceptT <$> liftIO $ runExceptT $ _pecRunReadNoTx pgExecCtx tx
+  LTTx tx  -> liftEither =<< liftIO (runExceptT $ _pecRunReadNoTx pgExecCtx tx)
 
 type RespTx = Q.TxE QErr EncJSON
 type LazyRespTx = LazyTx QErr EncJSON
@@ -166,12 +168,12 @@ mkTxErrorHandler isExpectedError txe = fromMaybe unexpectedError expectedError
         PGIntegrityConstraintViolation code ->
           let cv = (ConstraintViolation,)
               customMessage = (code ^? _Just._PGErrorSpecific) <&> \case
-                PGRestrictViolation -> cv "Can not delete or update due to data being referred. "
-                PGNotNullViolation -> cv "Not-NULL violation. "
+                PGRestrictViolation   -> cv "Can not delete or update due to data being referred. "
+                PGNotNullViolation    -> cv "Not-NULL violation. "
                 PGForeignKeyViolation -> cv "Foreign key violation. "
-                PGUniqueViolation -> cv "Uniqueness violation. "
-                PGCheckViolation -> (PermissionError, "Check constraint violation. ")
-                PGExclusionViolation -> cv "Exclusion violation. "
+                PGUniqueViolation     -> cv "Uniqueness violation. "
+                PGCheckViolation      -> (PermissionError, "Check constraint violation. ")
+                PGExclusionViolation  -> cv "Exclusion violation. "
           in maybe (ConstraintViolation, message) (fmap (<> message)) customMessage
 
         PGDataException code -> case code of
@@ -200,11 +202,11 @@ withTraceContext
 withTraceContext ctx = \case
   LTErr e  -> LTErr e
   LTNoTx a -> LTNoTx a
-  LTTx tx  -> 
+  LTTx tx  ->
     let sql = Q.fromText $
-          "SET LOCAL \"hasura.tracecontext\" = " <> 
+          "SET LOCAL \"hasura.tracecontext\" = " <>
             toSQLTxt (S.SELit . J.encodeToStrictText . Tracing.injectEventContext $ ctx)
-        setTraceContext = 
+        setTraceContext =
           Q.unitQE defaultTxErrorHandler sql () False
      in LTTx $ setTraceContext >> tx
 
@@ -217,11 +219,11 @@ instance Functor (LazyTx e) where
 instance Applicative (LazyTx e) where
   pure = LTNoTx
 
-  LTErr e   <*> _         = LTErr e
-  LTNoTx f  <*> r         = fmap f r
-  LTTx _    <*> LTErr e   = LTErr e
-  LTTx txf  <*> LTNoTx a  = LTTx $ txf <*> pure a
-  LTTx txf  <*> LTTx tx   = LTTx $ txf <*> tx
+  LTErr e   <*> _        = LTErr e
+  LTNoTx f  <*> r        = fmap f r
+  LTTx _    <*> LTErr e  = LTErr e
+  LTTx txf  <*> LTNoTx a = LTTx $ txf <*> pure a
+  LTTx txf  <*> LTTx tx  = LTTx $ txf <*> tx
 
 instance Monad (LazyTx e) where
   LTErr e >>= _  = LTErr e

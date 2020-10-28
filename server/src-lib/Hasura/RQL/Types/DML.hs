@@ -38,26 +38,28 @@ module Hasura.RQL.Types.DML
        , QueryT(..)
        ) where
 
-import qualified Hasura.SQL.DML             as S
-
-import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
-import           Hasura.RQL.Types.BoolExp
-import           Hasura.RQL.Types.Common
-import           Hasura.SQL.Types
+
+import qualified Data.Attoparsec.Text               as AT
+import qualified Data.Attoparsec.Text               as Atto
+import qualified Data.Attoparsec.Types              as AttoT
+import qualified Data.HashMap.Strict                as M
+import qualified Data.Text                          as T
 
 import           Control.Lens.TH
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import qualified Data.Attoparsec.Text       as Atto
-import qualified Data.Attoparsec.Text       as AT
-import qualified Data.Attoparsec.Types      as AttoT
-import qualified Data.HashMap.Strict        as M
-import qualified Data.Text                  as T
-import           Hasura.RQL.Instances       ()
-import           Instances.TH.Lift          ()
-import           Language.Haskell.TH.Syntax (Lift)
+import           Instances.TH.Lift                  ()
+import           Language.Haskell.TH.Syntax         (Lift)
+
+import qualified Hasura.Backends.Postgres.SQL.DML   as S
+
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Incremental                 (Cacheable)
+import           Hasura.RQL.Instances               ()
+import           Hasura.RQL.Types.BoolExp
+import           Hasura.RQL.Types.Common
 
 data ColExp
   = ColExp
@@ -143,7 +145,7 @@ data OrderByCol
 
 orderByColToTxt :: OrderByCol -> Text
 orderByColToTxt = \case
-  OCPG pgCol -> getFieldNameTxt pgCol
+  OCPG pgCol      -> getFieldNameTxt pgCol
   OCRel rel obCol -> getFieldNameTxt rel <> "." <> orderByColToTxt obCol
 
 instance ToJSON OrderByCol where
@@ -151,7 +153,7 @@ instance ToJSON OrderByCol where
 
 orderByColFromToks
   :: (MonadFail m)
-  => [T.Text] -> m OrderByCol
+  => [Text] -> m OrderByCol
 orderByColFromToks toks = do
   when (any T.null toks) $ fail "col/rel cannot be empty"
   case toks of
@@ -164,7 +166,7 @@ orderByColFromToks toks = do
 
 orderByColFromTxt
   :: (MonadFail m)
-  => T.Text -> m OrderByCol
+  => Text -> m OrderByCol
 orderByColFromTxt =
   orderByColFromToks . T.split (=='.')
 
@@ -214,7 +216,7 @@ instance FromJSON OrderByExp where
   parseJSON _ =
     fail "Expecting : array/string/object"
 
-orderByParser :: AttoT.Parser T.Text OrderByItem
+orderByParser :: AttoT.Parser Text OrderByItem
 orderByParser =
   OrderByItemG <$> otP <*> colP <*> return Nothing
   where
@@ -249,7 +251,7 @@ data Wildcard
   | StarDot !Wildcard
   deriving (Show, Eq, Ord, Lift)
 
-wcToText :: Wildcard -> T.Text
+wcToText :: Wildcard -> Text
 wcToText Star         = "*"
 wcToText (StarDot wc) = "*." <> wcToText wc
 
@@ -356,7 +358,7 @@ data InsertTxConflictCtx
   = InsertTxConflictCtx
   { itcAction        :: !ConflictAction
   , itcConstraint    :: !(Maybe ConstraintName)
-  , itcSetExpression :: !(Maybe T.Text)
+  , itcSetExpression :: !(Maybe Text)
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''InsertTxConflictCtx)
 

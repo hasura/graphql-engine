@@ -12,6 +12,7 @@ import time
 import pytest
 
 from validate import check_query_f, check_query
+from graphql import GraphQLError
 
 def mk_add_remote_q(name, url, headers=None, client_hdrs=False, timeout=None):
     return {
@@ -354,7 +355,7 @@ class TestRemoteSchemaQueriesOverWebsocket:
         query = """
         query {
           user(id: 2) {
-            blah
+            generateError
             username
           }
         }
@@ -368,7 +369,7 @@ class TestRemoteSchemaQueriesOverWebsocket:
             assert ev['type'] == 'data' and ev['id'] == query_id, ev
             assert 'errors' in ev['payload']
             assert ev['payload']['errors'][0]['message'] == \
-                'Cannot query field "blah" on type "User".'
+                'Cannot query field "generateError" on type "User".'
         finally:
             ws_client.stop(query_id)
 
@@ -598,3 +599,20 @@ class TestRemoteSchemaReload:
         # Delete remote schema
         st_code, resp = hge_ctx.v1q(mk_delete_remote_q('simple 1'))
         assert st_code == 200, resp
+
+@pytest.mark.usefixtures('per_class_tests_db_state')
+class TestValidateRemoteSchemaQuery:
+
+    @classmethod
+    def dir(cls):
+        return "queries/remote_schemas/validation/"
+
+    def test_remote_schema_argument_validation(self, hge_ctx):
+        """ test to check that the graphql-engine throws an validation error
+            when an remote object is queried with an unknown argument  """
+        check_query_f(hge_ctx, self.dir() + '/argument_validation.yaml')
+
+    def test_remote_schema_field_validation(self, hge_ctx):
+        """ test to check that the graphql-engine throws an validation error
+            when an remote object is queried with an unknown field  """
+        check_query_f(hge_ctx, self.dir() + '/field_validation.yaml')
