@@ -536,8 +536,7 @@ argumentsParser
 argumentsParser args schemaDoc = do
   nonPresetArgsParser <- sequenceA <$> for nonPresetArgs (inputValueDefinitionParser schemaDoc)
   let argsP' = (fmap . fmap) snd nonPresetArgsParser
-      argsP'' = mkPresetsMap <$> argsP'
-  pure argsP''
+  pure $ mkPresetsMap <$> argsP'
   where
     nonPresetArgs =
       map _rsitdDefn $
