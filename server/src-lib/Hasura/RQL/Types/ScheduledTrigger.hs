@@ -139,7 +139,7 @@ newtype ScheduledTriggerName
 
 $(deriveJSON (aesonDrop 2 snakeCase) ''ScheduledTriggerName)
 
-formatTime' :: UTCTime -> T.Text
+formatTime' :: UTCTime -> Text
 formatTime'= T.pack . iso8601Show
 
 data CreateScheduledEvent
