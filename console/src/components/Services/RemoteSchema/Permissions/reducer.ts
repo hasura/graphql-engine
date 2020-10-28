@@ -52,7 +52,7 @@ export const permDeslectBulk = selectedRole => ({
   selectedRole,
 });
 
-const PERM_RESET_BULK_SELECT =
+export const PERM_RESET_BULK_SELECT =
   'RemoteSchemas/Permissions/PERM_RESET_BULK_SELECT';
 
 export const permSetBulkSelect = (isChecked, selectedRole) => {

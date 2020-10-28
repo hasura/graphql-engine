@@ -14,6 +14,9 @@ import {
   makeRequest as makePermRequest,
   setRequestSuccess as setPermRequestSuccess,
   setRequestFailure as setPermRequestFailure,
+  permSetRoleName,
+  permCloseEdit,
+  PERM_RESET_BULK_SELECT,
 } from './Permissions/reducer';
 import { findRemoteSchema, getRemoteSchemaPermissions } from './utils';
 import {
@@ -21,6 +24,7 @@ import {
   getCreateRemoteSchemaPermissionQuery,
   getDropRemoteSchemaPermissionQuery,
 } from './Permissions/utils';
+import Migration from '../../../utils/migration/Migration';
 
 /* Action constants */
 
@@ -264,19 +268,19 @@ const removeRemoteSchemaPermission = (successCb, errorCb) => {
       permissions: { permissionEdit, schemaDefinition },
     } = getState().remoteSchemas;
 
-    const { role, filter } = permissionEdit;
+    const { role } = permissionEdit;
 
     const upQuery = getDropRemoteSchemaPermissionQuery(
       role,
       currentRemoteSchema
     );
     const downQuery = getCreateRemoteSchemaPermissionQuery(
-      { role, filter },
+      { role },
       currentRemoteSchema,
       schemaDefinition
     );
 
-    const migrationName = 'removing_remoteSchema_perm';
+    const migrationName = 'remove_remoteSchema_perm';
     const requestMsg = 'Removing permission...';
     const successMsg = 'Permission removed successfully';
     const errorMsg = 'Removing permission failed';
@@ -312,47 +316,45 @@ const removeRemoteSchemaPermission = (successCb, errorCb) => {
   };
 };
 
-const permRemoveMultipleRoles = tableSchema => {
+const permRemoveMultipleRoles = () => {
   return (dispatch, getState) => {
-    const currentSchema = getState().tables.currentSchema;
-    const permissionsState = getState().tables.modify.permissionsState;
+    const {
+      listData: {
+        remoteSchemas: allRemoteSchemas,
+        viewRemoteSchema: currentRemoteSchema,
+      },
+      permissions: { bulkSelect },
+    } = getState().remoteSchemas;
 
-    const table = tableSchema.table_name;
-    const roles = permissionsState.bulkSelect;
-
+    const currentPermissions = getRemoteSchemaPermissions(
+      findRemoteSchema(allRemoteSchemas, currentRemoteSchema)
+    );
+    const roles = bulkSelect;
     const migration = new Migration();
-    const currentPermissions = tableSchema.permissions;
 
     roles.map(role => {
       const currentRolePermission = currentPermissions.filter(el => {
         return el.role_name === role;
       });
-      Object.keys(currentRolePermission[0].permissions).forEach(type => {
-        const deleteQuery = {
-          type: 'drop_' + type + '_permission',
-          args: {
-            table: { name: table, schema: currentSchema },
-            role: role,
-          },
-        };
-        const createQuery = {
-          type: 'create_' + type + '_permission',
-          args: {
-            table: { name: table, schema: currentSchema },
-            role: role,
-            permission: currentRolePermission[0].permissions[type],
-          },
-        };
-        migration.add(deleteQuery, createQuery);
-      });
+
+      const upQuery = getDropRemoteSchemaPermissionQuery(
+        role,
+        currentRemoteSchema
+      );
+      const downQuery = getCreateRemoteSchemaPermissionQuery(
+        { role },
+        currentRemoteSchema,
+        currentRolePermission[0].definition.schema
+      );
+      migration.add(upQuery, downQuery);
     });
 
     // Apply migration
-    const migrationName = 'remove_roles_' + currentSchema + '_table_' + table;
 
+    const migrationName = 'bulk_remove_remoteSchema_perm';
     const requestMsg = 'Removing permissions...';
-    const successMsg = 'Permissions removed';
-    const errorMsg = 'Removing permissions failed';
+    const successMsg = 'Permission removed successfully';
+    const errorMsg = 'Removing permission failed';
 
     const customOnSuccess = () => {
       // reset new role name

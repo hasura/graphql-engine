@@ -100,7 +100,7 @@ const Permissions = ({
           onChange: dispatchBulkSelect,
           role,
           isNewRole,
-          checked: bulkSelect.filter(e => e === role).length,
+          checked: bulkSelect.find(e => e === role),
         };
       };
 
@@ -233,14 +233,12 @@ const Permissions = ({
   };
 
   const getBulkSection = () => {
-    const bulkSelectedRoles = bulkSelect;
-
-    if (!bulkSelectedRoles.length) {
+    if (!bulkSelect.length) {
       return;
     }
 
     const getSelectedRoles = () => {
-      return bulkSelectedRoles.map(r => {
+      return bulkSelect.map(r => {
         return (
           <span key={r} className={styles.add_pad_right}>
             <b>{r}</b>{' '}
