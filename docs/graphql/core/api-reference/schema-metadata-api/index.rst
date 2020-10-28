@@ -109,7 +109,7 @@ The various types of queries are listed in the following table:
      - 1
      - Set table customization of an already tracked table
 
-   * - :ref:`set_table_custom_fields <set_table_custom_fields>`
+   * - :ref:`set_table_custom_fields <set_table_custom_fields>` (deprecated)
      - :ref:`set_table_custom_fields_args <set_table_custom_fields_args_syntax>`
      - 2
      - Set custom fields to an already tracked table (deprecated)
