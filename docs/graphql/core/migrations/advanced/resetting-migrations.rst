@@ -24,7 +24,7 @@ In the local ``migrations`` directory, delete all its contents using the followi
 
 .. code-block:: bash
 
-   rm migrations/*
+   rm -r migrations/*
 
 Step 2: Reset the migration history on the server
 -------------------------------------------------
