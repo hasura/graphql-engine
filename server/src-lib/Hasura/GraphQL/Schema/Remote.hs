@@ -527,6 +527,43 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
 
   in buildField fieldType fieldConstructor
 
+-- | argumentsParser is used for creating an argument parser for remote fields,
+--   This function is called for field arguments and input object fields. This
+--   function works in the following way:
+--   1. All the non-preset arguments are collected and then each of these arguments will
+--      be used to call the `inputValueDefinitionParser` function, because we intend
+--      these arguments be exposed in the schema
+--   2. The preset arguments are collected and converted into a HashMap with the
+--      name of the field as the key and the preset value as the value of the hashmap
+--   3. Now, after #1, we have a input parser for the non-preset arguments, we combine
+--      the current presets with the presets of the non-preset arguments. This is
+--      confusing, because it is confusing!
+--
+--      For example, consider the following input objects:
+--
+--      input MessageWhereInpObj {
+--        id: IntCompareObj
+--        name: StringCompareObj
+--      }
+--
+--      input IntCompareObj {
+--        eq : Int @preset(value: 2)
+--        gt : Int
+--        lt : Int
+--      }
+--
+--     When parsing `MessageWhereInpObj`, we see that any of the fields don't have a
+--     preset, so we add both of them to the schema. When parsing the `id`
+--     field, we see that it's of the input object type, so now, `IntCompareObj` is parsed
+--     and one of its three fields have a preset set. So, we build a preset map for `IntCompareObj`
+--     which will be `{eq: 2}`. The input parser for `IntCompareObj` will contain this
+--     preset map with it. After `IntCompareObj` is parsed, the `MessageWhereInpObj`
+--     will continue parsing the `id` field and then it sees that the `IntCompareObj`
+--     has a preset associated with it, so now the preset of `IntCompareObj` will be
+--     associated with `id`. A new preset map pertinent to `MessageWhereInpObj` will
+--     be created, which will be `{id: {eq: 2}}`. So, whenever an incoming query queries
+--     for `MessageWhereInpObj` the preset associated will get added to the final arguments
+--     map.
 argumentsParser
   :: forall n m
   .  (MonadSchema n m, MonadError QErr m)
@@ -535,29 +572,28 @@ argumentsParser
   -> m (InputFieldsParser n (Maybe (HashMap G.Name (Value RemoteSchemaVariable))))
 argumentsParser args schemaDoc = do
   nonPresetArgsParser <- sequenceA <$> for nonPresetArgs (inputValueDefinitionParser schemaDoc)
-  let argsP' = (fmap . fmap) snd nonPresetArgsParser
-  pure $ mkPresetsMap <$> argsP'
+  let nonPresetArgsParser' = (fmap . fmap) snd nonPresetArgsParser
+  pure $ mkPresets <$> nonPresetArgsParser'
   where
     nonPresetArgs =
       map _rsitdDefn $
       filter (isNothing . _rsitdPresetArg) args
 
-    presetArgsMap :: Maybe (HashMap G.Name (Value RemoteSchemaVariable))
-    presetArgsMap =
+    currentPreset :: Maybe (HashMap G.Name (Value RemoteSchemaVariable))
+    currentPreset =
       let presetArgs' =
             flip mapMaybe args $ \(RemoteSchemaInputValueDefinition inpValDefn preset) ->
-            let argName = G._ivdName inpValDefn
-            in (argName, ) <$> preset
+                                   (G._ivdName inpValDefn, ) <$> preset
       in case presetArgs' of
            [] -> Nothing
            _  -> Just $ Map.fromList presetArgs'
 
-    mkPresetsMap
+    mkPresets
       :: [(Maybe (HashMap G.Name (Value RemoteSchemaVariable)))]
       -> Maybe (HashMap G.Name (Value RemoteSchemaVariable))
-    mkPresetsMap previousPresets =
-      let previousPreset = Map.unions <$> (sequenceA $ (filter isJust previousPresets))
-      in presetArgsMap <> previousPreset
+    mkPresets previousPresets =
+      let nestedPreset = Map.unions <$> (sequenceA $ (filter isJust previousPresets))
+      in currentPreset <> nestedPreset
 
 -- | 'remoteField' accepts a 'G.TypeDefinition' and will returns a 'FieldParser' for it.
 --   Note that the 'G.TypeDefinition' should be of the GraphQL 'Output' kind, when an
