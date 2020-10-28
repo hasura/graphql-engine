@@ -36,6 +36,7 @@ import {
   EventKind,
   InvocationLog,
   LOADING_TRIGGERS,
+  ETOperationColumn,
 } from './types';
 import {
   setScheduledTriggers,
@@ -387,6 +388,15 @@ export const modifyEventTrigger = (
 
   const errorMsg = 'Saving failed';
 
+  const newColumns = (inputCol: ETOperationColumn[]) => {
+    const inputLength = inputCol.length;
+    const enabledColumn = inputCol.filter(coll => !!coll.enabled);
+    if (inputLength === enabledColumn.length) {
+      return '*';
+    }
+    return enabledColumn.map(coll => coll.name);
+  };
+
   switch (property) {
     case 'webhook': {
       if (state.webhook.type === 'static' && !isValidURL(state.webhook.value)) {
@@ -406,9 +416,7 @@ export const modifyEventTrigger = (
         insert: state.operations.insert ? { columns: '*' } : null,
         update: state.operations.update
           ? {
-              columns: state.operationColumns
-                .filter(c => !!c.enabled)
-                .map(c => c.name),
+              columns: newColumns(state.operationColumns),
             }
           : null,
         delete: state.operations.delete ? { columns: '*' } : null,
