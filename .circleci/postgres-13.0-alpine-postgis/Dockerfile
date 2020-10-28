@@ -4,6 +4,7 @@ FROM alpine:latest
 
 FROM circleci/postgres:13.0-postgis
 
+ENV POSTGRES_PASSWORD="postgres"
 # this can be run like docker run -e POSTGRES_PASSWORD=randompassword (image-tag) for the user "postgres"
 
 # Keeping this here if we still need postgis v 3

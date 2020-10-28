@@ -244,7 +244,7 @@ jobs:
     docker:
     - image: *server_builder_image
     # - image: hasura/postgres-13.0-alpine-postgis3
-    - image: kolhar730/pg-13-postgis-alpine:v1 # temporary
+    - image: kolhar730/pg-13-postgis-alpine:v2 # temporary
       <<: *test_pg_env
 
   test_server_pg_12:
