@@ -127,7 +127,6 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
       let baseTy = G.getBaseType (G._fldType field)
       in
         case (lookupType schemaDoc baseTy) of
-          Nothing -> False
           Just (G.TypeDefinitionScalar _) -> True
           Just (G.TypeDefinitionInterface _) -> True
           Just (G.TypeDefinitionUnion _) -> True
@@ -151,7 +150,7 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
       (newParamMap, newTypeMap) <- onLeft eitherParamAndTypeMap $ throwError
       innerObjTyInfo <- onNothing (getObjTyInfoFromField schemaDoc objFldDefinition) $
         bool (throwError $
-                    (InvalidType (G._fldType objFldDefinition) "only objects,scalar,interface or union types expected"))
+                    (InvalidType (G._fldType objFldDefinition) "only objects, scalar, interface or union types expected"))
              (pure objTyInfo)
              (isValidType schemaDoc objFldDefinition)
       pure
