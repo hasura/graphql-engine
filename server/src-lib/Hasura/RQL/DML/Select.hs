@@ -28,7 +28,7 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 
-type SelectQExt b = SelectG (ExtCol b) BoolExp Int
+type SelectQExt b = SelectG (ExtCol b) (BoolExp b) Int
 
 -- Columns in RQL
 -- This technically doesn't need to be generalized to all backends as
