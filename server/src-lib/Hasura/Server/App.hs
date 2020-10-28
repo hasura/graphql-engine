@@ -602,9 +602,10 @@ mkWaiApp
   -> (RebuildableSchemaCache Run, Maybe UTCTime)
   -> EKG.Store
   -> WS.ConnectionOptions
+  -> KeepAliveDelay
   -> m HasuraApp
 mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpManager mode corsCfg enableConsole consoleAssetsDir
-         enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig liveQueryHook (schemaCache, cacheBuiltTime) ekgStore connectionOptions  = do
+         enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig liveQueryHook (schemaCache, cacheBuiltTime) ekgStore connectionOptions keepAliveDelay = do
 
     -- See Note [Temporarily disabling query plan caching]
     -- (planCache, schemaCacheRef) <- initialiseCache
@@ -617,7 +618,7 @@ mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpMana
 
     lqState <- liftIO $ EL.initLiveQueriesState lqOpts pgExecCtx postPollHook
     wsServerEnv <- WS.createWSServerEnv logger pgExecCtx lqState getSchemaCache httpManager
-                                        corsPolicy sqlGenCtx enableAL {- planCache -}
+                                        corsPolicy sqlGenCtx enableAL keepAliveDelay {- planCache -}
 
     let serverCtx = ServerCtx
                     { scPGExecCtx       =  pgExecCtx

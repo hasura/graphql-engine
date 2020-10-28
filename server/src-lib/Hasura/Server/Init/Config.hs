@@ -65,7 +65,8 @@ data RawServeOptions impl
   , rsoEventsHttpPoolSize    :: !(Maybe Int)
   , rsoEventsFetchInterval   :: !(Maybe Milliseconds)
   , rsoLogHeadersFromEnv     :: !Bool
-  , rsoWebSocketCompression :: !Bool
+  , rsoWebSocketCompression  :: !Bool
+  , rsoWebSocketKeepAlive    :: !(Maybe Integer)
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -82,6 +83,11 @@ shouldIncludeInternal role = \case
   InternalErrorsAllRequests -> True
   InternalErrorsAdminOnly   -> isAdmin role
   InternalErrorsDisabled    -> False
+
+newtype KeepAliveDelay
+  = KeepAliveDelay
+      { unKeepAliveDelay :: Seconds
+      } deriving (Eq, Show)
 
 data ServeOptions impl
   = ServeOptions
@@ -109,6 +115,7 @@ data ServeOptions impl
   , soEventsFetchInterval          :: !(Maybe Milliseconds)
   , soLogHeadersFromEnv            :: !Bool
   , soConnectionOptions            :: !WS.ConnectionOptions
+  , soWebsocketKeepAlive           :: !(Maybe KeepAliveDelay)
   }
 
 data DowngradeOptions
@@ -238,6 +245,9 @@ instance FromEnv AuthHookType where
 
 instance FromEnv Int where
   fromEnv = maybe (Left "Expecting Int value") Right . readMaybe
+
+instance FromEnv Integer where
+  fromEnv = maybe (Left "Expecting Integer value") Right . readMaybe
 
 instance FromEnv AdminSecretHash where
   fromEnv = Right . hashAdminSecret . T.pack

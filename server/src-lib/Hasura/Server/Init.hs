@@ -18,7 +18,7 @@ import qualified Language.Haskell.TH.Syntax          as TH
 import qualified Text.PrettyPrint.ANSI.Leijen        as PP
 
 import           Data.FileEmbed                      (embedStringFile)
-import           Data.Time                           (NominalDiffTime)
+import           Data.Time                           (NominalDiffTime, secondsToDiffTime)
 import           Network.Wai.Handler.Warp            (HostPreference)
 import qualified Network.WebSockets                  as WS
 import           Options.Applicative
@@ -180,13 +180,18 @@ mkServeOptions rso = do
                                 then WS.PermessageDeflateCompression WS.defaultPermessageDeflate
                                 else WS.NoCompression
                           }
+  webSocketKeepAlive <-
+    maybe
+      (Just . KeepAliveDelay $ Seconds (secondsToDiffTime 5)) -- default keep-alive interval is 5 seconds
+      (Just . KeepAliveDelay . Seconds . secondsToDiffTime)
+      <$> (withEnv (rsoWebSocketKeepAlive rso) (fst webSocketKeepAliveEnv))
 
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
                         enabledLogs serverLogLevel planCacheOptions
                         internalErrorsConfig eventsHttpPoolSize eventsFetchInterval
-                        logHeadersFromEnv connectionOptions
+                        logHeadersFromEnv connectionOptions webSocketKeepAlive
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -325,7 +330,7 @@ serveCmdFooter =
       , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, corsDisableEnv, enableConsoleEnv
       , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
       , enableAllowlistEnv, enabledLogsEnv, logLevelEnv, devModeEnv
-      , adminInternalErrorsEnv
+      , adminInternalErrorsEnv, webSocketKeepAliveEnv
       ]
 
     eventEnvs = [ eventsHttpPoolSizeEnv, eventsFetchIntervalEnv ]
@@ -943,6 +948,7 @@ serveOptsToLog so =
       , "log_level" J..= soLogLevel so
       , "plan_cache_options" J..= soPlanCacheOptions so
       , "websocket_compression_options" J..= show (WS.connectionCompressionOptions . soConnectionOptions $ so)
+      , "websockets_keep_alive" J..= show (soWebsocketKeepAlive so)
       ]
 
 mkGenericStrLog :: L.LogLevel -> Text -> String -> StartupLog
@@ -989,6 +995,7 @@ serveOptionsParser =
   <*> parseGraphqlEventsFetchInterval
   <*> parseLogHeadersFromEnv
   <*> parseWebSocketCompression
+  <*> parseWebSocketKeepAlive
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.
@@ -1034,4 +1041,18 @@ parseWebSocketCompression :: Parser Bool
 parseWebSocketCompression =
   switch ( long "websocket-compression" <>
            help (snd webSocketCompressionEnv)
+         )
+
+webSocketKeepAliveEnv :: (String, String)
+webSocketKeepAliveEnv =
+  ( "HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE"
+  , "Control websocket keep-alive timeout (default 5 seconds)"
+  )
+
+parseWebSocketKeepAlive :: Parser (Maybe Integer)
+parseWebSocketKeepAlive =
+  optional $
+  option (eitherReader readEither)
+         ( long "websockets-keepalive" <>
+           help (snd webSocketKeepAliveEnv)
          )
