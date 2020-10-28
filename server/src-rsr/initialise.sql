@@ -1,5 +1,8 @@
+CREATE FUNCTION hdb_catalog.gen_hasura_uuid() RETURNS uuid AS
+'select gen_random_uuid()' LANGUAGE SQL STABLE;
+
 CREATE TABLE hdb_catalog.hdb_version (
-    hasura_uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    hasura_uuid UUID PRIMARY KEY DEFAULT hdb_catalog.gen_hasura_uuid(),
     version TEXT NOT NULL,
     upgraded_on TIMESTAMPTZ NOT NULL,
     cli_state JSONB NOT NULL DEFAULT '{}'::jsonb,
@@ -293,7 +296,7 @@ CREATE TABLE hdb_catalog.event_triggers
 
 CREATE TABLE hdb_catalog.event_log
 (
-  id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
+  id TEXT DEFAULT hdb_catalog.gen_hasura_uuid() PRIMARY KEY,
   schema_name TEXT NOT NULL,
   table_name TEXT NOT NULL,
   trigger_name TEXT NOT NULL,
@@ -315,7 +318,7 @@ CREATE INDEX ON hdb_catalog.event_log (created_at);
 
 CREATE TABLE hdb_catalog.event_invocation_logs
 (
-  id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
+  id TEXT DEFAULT hdb_catalog.gen_hasura_uuid() PRIMARY KEY,
   event_id TEXT,
   status INTEGER,
   request JSON,
@@ -616,7 +619,7 @@ CREATE OR REPLACE FUNCTION
     server_version_num int;
     trace_context json;
   BEGIN
-    id := gen_random_uuid();
+    id := hdb_catalog.gen_hasura_uuid();
     server_version_num := current_setting('server_version_num');
     IF server_version_num >= 90600 THEN
       session_variables := current_setting('hasura.user', 't');
@@ -718,7 +721,7 @@ CREATE TABLE hdb_catalog.hdb_action_permission
 
 CREATE TABLE hdb_catalog.hdb_action_log
 (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT hdb_catalog.gen_hasura_uuid(),
   -- we deliberately do not reference the action name
   -- because sometimes we may want to retain history
   -- after dropping the action
@@ -762,7 +765,7 @@ CREATE TABLE hdb_catalog.hdb_cron_triggers
 
 CREATE TABLE hdb_catalog.hdb_cron_events
 (
-  id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
+  id TEXT DEFAULT hdb_catalog.gen_hasura_uuid() PRIMARY KEY,
   trigger_name TEXT NOT NULL,
   scheduled_time TIMESTAMPTZ NOT NULL,
   status TEXT NOT NULL DEFAULT 'scheduled',
@@ -779,7 +782,7 @@ CREATE INDEX hdb_cron_event_status ON hdb_catalog.hdb_cron_events (status);
 
 CREATE TABLE hdb_catalog.hdb_cron_event_invocation_logs
 (
-  id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
+  id TEXT DEFAULT hdb_catalog.gen_hasura_uuid() PRIMARY KEY,
   event_id TEXT,
   status INTEGER,
   request JSON,
@@ -805,7 +808,7 @@ CREATE VIEW hdb_catalog.hdb_cron_events_stats AS
 
 CREATE TABLE hdb_catalog.hdb_scheduled_events
 (
-  id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
+  id TEXT DEFAULT hdb_catalog.gen_hasura_uuid() PRIMARY KEY,
   webhook_conf JSON NOT NULL,
   scheduled_time TIMESTAMPTZ NOT NULL,
   retry_conf JSON,
@@ -823,7 +826,7 @@ CREATE INDEX hdb_scheduled_event_status ON hdb_catalog.hdb_scheduled_events (sta
 
 CREATE TABLE hdb_catalog.hdb_scheduled_event_invocation_logs
 (
-id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
+id TEXT DEFAULT hdb_catalog.gen_hasura_uuid() PRIMARY KEY,
 event_id TEXT,
 status INTEGER,
 request JSON,
