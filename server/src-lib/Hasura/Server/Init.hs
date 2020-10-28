@@ -47,7 +47,7 @@ newtype PGVersion = PGVersion { unPGVersion :: Int } deriving (Show, Eq, J.ToJSO
 
 getDbId :: Q.TxE QErr Text
 getDbId =
-  runIdentity . Q.getRow <$>
+  (runIdentity . Q.getRow) <$>
   Q.withQE defaultTxErrorHandler
   [Q.sql|
     SELECT (hasura_uuid :: text) FROM hdb_catalog.hdb_version

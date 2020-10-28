@@ -58,6 +58,7 @@
 
 - ignore: {name: Reduce duplication}
 - ignore: {name: Redundant $}
+- ignore: {name: Redundant bracket}
 - ignore: {name: Use fmap}
 - ignore: {name: Use first}
 - ignore: {name: Use if}
