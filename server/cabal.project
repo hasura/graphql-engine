@@ -48,7 +48,7 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/codingkarthik/graphql-parser-hs.git
-  tag: c9548bd243f3a5719547b95751faf41ff1779dbd
+  tag: 1093ba2f6b44d220f29184caba422adf800ae2f4
 
 source-repository-package
   type: git

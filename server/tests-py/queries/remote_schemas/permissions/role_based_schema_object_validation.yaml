@@ -66,7 +66,7 @@
       "validation for the given role-based schema failed for the following reasons:\n\
        \ • \"Interface\": \"FullName\" does not exist in the upstream remote schema\n\
        \ • custom interfaces are not supported. Object\"Person\" implements the following\
-       \ custom interfaces: FullName\n"
+       \ custom interfaces: \"FullName\"\n"
     code: invalid-role-based-remote-schema
 
 - description:
@@ -96,6 +96,6 @@
   response:
     path: $.args
     error:
-      'validation for the given role-based schema failed because field: "user"
-      expects the following non nullable arguments to be present: user_id'
+      "validation for the given role-based schema failed because field: \"user\"
+      expects the following non nullable arguments to be present: \"user_id\""
     code: invalid-role-based-remote-schema

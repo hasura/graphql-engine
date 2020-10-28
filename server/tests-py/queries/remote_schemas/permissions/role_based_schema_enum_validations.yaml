@@ -40,7 +40,7 @@
     error:
       'validation for the given role-based schema failed because enum "MessageStatus"
       contains the following enum values that do not exist in the corresponding upstream
-      remote enum: IDLE'
+      remote enum: "IDLE"'
     code: invalid-role-based-remote-schema
   query:
     type: add_remote_schema_permissions
@@ -76,7 +76,7 @@
     path: $.args
     error:
       'validation for the given role-based schema failed because duplicate enum
-      values: SENT found in the "MessageStatus" enum'
+      values: "SENT" found in the "MessageStatus" enum'
     code: invalid-role-based-remote-schema
   query:
     type: add_remote_schema_permissions

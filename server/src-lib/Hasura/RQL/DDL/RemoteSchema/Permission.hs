@@ -144,7 +144,7 @@ convertTypeDef (G.TypeDefinitionObject s) = G.TypeDefinitionObject $ s
 showRoleBasedSchemaValidationError :: RoleBasedSchemaValidationError -> Text
 showRoleBasedSchemaValidationError = \case
   NonMatchingType fldName fldType expectedType providedType ->
-    "expected type of " <> fldName <<> "(" <> fldType <<> ")" <>" to be " <>
+    "expected type of " <> dquote fldName <> "(" <> dquote fldType <> ")" <>" to be " <>
     (G.showGT expectedType) <> " but recieved " <> (G.showGT providedType)
   FieldDoesNotExist fldType fldName ->
     fldType <<> ": " <> fldName <<> " does not exist in the upstream remote schema"
