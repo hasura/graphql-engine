@@ -1,7 +1,5 @@
--- | Types and Functions for resolving remote join fields
-module Hasura.RQL.DML.RemoteJoin
-  ( executeQueryWithRemoteJoins
-  , getRemoteJoins
+module Hasura.Backends.Postgres.Execute.RemoteJoin
+  ( getRemoteJoins
   , getRemoteJoinsAggregateSelect
   , getRemoteJoinsMutationOutput
   , getRemoteJoinsConnectionSelect
@@ -9,26 +7,10 @@ module Hasura.RQL.DML.RemoteJoin
   -- * These are required in pro:
   , FieldPath(..)
   , RemoteJoin(..)
+  , executeQueryWithRemoteJoins
   ) where
 
 import           Hasura.Prelude
-
-import           Control.Lens
-import           Data.Validation
-
-import           Data.Text.Extended                     (commaSeparated, (<<>))
-import           Hasura.EncJSON
-import           Hasura.GraphQL.Parser                  hiding (field)
-import           Hasura.GraphQL.RemoteServer            (execRemoteGQ')
-import           Hasura.GraphQL.Transport.HTTP.Protocol
-import           Hasura.RQL.DML.Internal
-import           Hasura.RQL.DML.Returning.Types
-import           Hasura.RQL.DML.Select.Types
-import           Hasura.RQL.Types
-import           Hasura.Server.Version                  (HasVersion)
-import           Hasura.Session
-
-import qualified Hasura.Backends.Postgres.SQL.DML       as S
 
 import qualified Data.Aeson                             as A
 import qualified Data.Aeson.Ordered                     as AO
@@ -40,11 +22,31 @@ import qualified Data.HashSet                           as HS
 import qualified Data.List.NonEmpty                     as NE
 import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
-import qualified Hasura.Tracing                         as Tracing
 import qualified Language.GraphQL.Draft.Printer         as G
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
+
+import           Control.Lens
+import           Data.Text.Extended                     (commaSeparated, (<<>))
+import           Data.Validation
+
+import qualified Hasura.Backends.Postgres.SQL.DML       as S
+import qualified Hasura.Tracing                         as Tracing
+
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.EncJSON
+import           Hasura.GraphQL.Parser                  hiding (field)
+import           Hasura.GraphQL.RemoteServer            (execRemoteGQ')
+import           Hasura.GraphQL.Transport.HTTP.Protocol
+import           Hasura.RQL.DML.Internal
+import           Hasura.RQL.IR.RemoteJoin
+import           Hasura.RQL.IR.Returning
+import           Hasura.RQL.IR.Select
+import           Hasura.RQL.Types
+import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Session
+
 
 -- | Executes given query and fetch response JSON from Postgres. Substitutes remote relationship fields.
 executeQueryWithRemoteJoins
@@ -108,21 +110,6 @@ pathToAlias :: (MonadError QErr m) => FieldPath -> Counter -> m Alias
 pathToAlias path counter = do
   parseGraphQLName $ T.intercalate "_" (map getFieldNameTxt $ unFieldPath path)
                  <> "__" <> (T.pack . show . unCounter) counter
-
--- | A 'RemoteJoin' represents the context of remote relationship to be extracted from 'AnnFieldG's.
-data RemoteJoin (b :: Backend)
-  = RemoteJoin
-  { _rjName          :: !FieldName -- ^ The remote join field name.
-  , _rjArgs          :: ![RemoteFieldArgument] -- ^ User-provided arguments with variables.
-  , _rjSelSet        :: !(G.SelectionSet G.NoFragments Variable)  -- ^ User-provided selection set of remote field.
-  , _rjHasuraFields  :: !(HashSet FieldName) -- ^ Table fields.
-  , _rjFieldCall     :: !(NonEmpty FieldCall) -- ^ Remote server fields.
-  , _rjRemoteSchema  :: !RemoteSchemaInfo -- ^ The remote schema server info.
-  , _rjPhantomFields :: ![ColumnInfo b]
-    -- ^ Hasura fields which are not in the selection set, but are required as
-    -- parameters to satisfy the remote join.
-  }
-deriving instance Eq (RemoteJoin 'Postgres)
 
 type RemoteJoins b = NE.NonEmpty (FieldPath, NE.NonEmpty (RemoteJoin b))
 type RemoteJoinMap b = Map.HashMap FieldPath (NE.NonEmpty (RemoteJoin b))
