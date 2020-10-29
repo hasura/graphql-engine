@@ -1609,6 +1609,295 @@ Fetch all authors which have not written any articles:
       }
     }
 
+Filter many-to-many relationships
+----------------------------------
+
+The following examples use the schema defined in :ref:`the many-to-many guide <many_to_many_modelling>`.
+
+
+Fetch if all conditions are true
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Example:**
+
+Fetch all articles which have at least the selected tags:
+
+.. graphiql::
+  :view_only:
+  :query:
+    {
+      article (
+        where: {
+          _and: [
+            {
+              article_tags: {
+                tag: {
+                  tag_value: {
+                    _eq: "mystery"
+                  }
+                }
+              }
+            },
+            {
+              article_tags: {
+                tag: {
+                  tag_value: {
+                    _eq: "biography"
+                  }
+                }
+              }
+            },
+          ]
+        }
+      ) {
+        title
+        article_tags {
+          tag {
+            tag_value
+          }
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "title": "sit amet",
+            "article_tags": [
+              {
+                "tag": {
+                  "tag_value": "mystery"
+                }
+              },
+              {
+                "tag": {
+                  "tag_value": "biography"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+
+Fetch if all conditions are false
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Example:**
+
+Fetch all articles which haven't the selected tags:
+
+.. graphiql::
+  :view_only:
+  :query:
+    {
+      article (
+        where: {
+          _and: [
+            {
+              _not: {
+                article_tags: {
+                  tag: {
+                    tag_value: {
+                      _eq: "mystery"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              _not: {
+                article_tags: {
+                  tag: {
+                    tag_value: {
+                      _eq: "drama"
+                    }
+                  }
+                }
+              }
+            },
+          ]
+        }
+      ) {
+        title
+        article_tags {
+          tag {
+            tag_value
+          }
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "title": "a nibh",
+            "article_tags": [
+              {
+                "tag": {
+                  "tag_value": "biography"
+                }
+              },
+              {
+                "tag": {
+                  "tag_value": "technology"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+Fetch with mixed conditions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Example:**
+
+Fetch all articles which have some tags but haven't others:
+
+.. graphiql::
+  :view_only:
+  :query:
+    {
+      article (
+        where: {
+          _and: [
+            {
+              article_tags: {
+                tag: {
+                  tag_value: {
+                    _eq: "mystery"
+                  }
+                }
+              }
+            },
+            {
+              _not: {
+                article_tags: {
+                  tag: {
+                    tag_value: {
+                      _eq: "drama"
+                    }
+                  }
+                }
+              }
+            },
+          ]
+        }
+      ) {
+        title
+        article_tags {
+          tag {
+            tag_value
+          }
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "title": "sit amet",
+            "article_tags": [
+              {
+                "tag": {
+                  "tag_value": "mystery"
+                }
+              },
+              {
+                "tag": {
+                  "tag_value": "biography"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+Fetch exact result
+^^^^^^^^^^^^^^^^^^
+
+**Example:**
+
+Fetch all articles which have exactly the selected tags, no more, no less:
+
+.. graphiql::
+  :view_only:
+  :query:
+    {
+      article (
+        where: {
+          _and: [
+            {
+              article_tags: {
+                tag: {
+                  tag_value: {
+                    _eq: "mystery"
+                  }
+                }
+              }
+            },
+            {
+              article_tags: {
+                tag: {
+                  tag_value: {
+                    _eq: "biography"
+                  }
+                }
+              }
+            },
+            {
+              _not: {
+                article_tags: {
+                  tag: {
+                    tag_value: {
+                      _nin: ["mystery", "biography"]
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ) {
+        title
+        article_tags {
+          tag {
+            tag_value
+          }
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "title": "sit amet",
+            "article_tags": [
+              {
+                "tag": {
+                  "tag_value": "mystery"
+                }
+              },
+              {
+                "tag": {
+                  "tag_value": "biography"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+
 Cast a field to a different type before filtering (_cast)
 ---------------------------------------------------------
 
