@@ -20,7 +20,7 @@ If you have a lot of migrations and you need to squash them or your current migr
 Step 1: Delete the local migrations
 -----------------------------------
 
-In the local ``migrations`` directory, delete all its contents using the following command:
+In the local project directory, delete all its contents using the following command:
 
 .. code-block:: bash
 
