@@ -66,7 +66,7 @@ fetchRemoteSchema env manager schemaName schemaInfo@(RemoteSchemaInfo url header
            , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
            }
   res  <- liftIO $ try $ HTTP.httpLbs req manager
-  resp <- either throwHttpErr return res
+  resp <- onLeft res throwHttpErr
 
   let respData = resp ^. Wreq.responseBody
       statusCode = resp ^. Wreq.responseStatus . Wreq.statusCode
@@ -74,7 +74,7 @@ fetchRemoteSchema env manager schemaName schemaInfo@(RemoteSchemaInfo url header
 
   -- Parse the JSON into flat GraphQL type AST
   (FromIntrospection introspectRes) :: (FromIntrospection IntrospectionResult) <-
-    either (remoteSchemaErr . T.pack) return $ J.eitherDecode respData
+    onLeft (J.eitherDecode respData) (remoteSchemaErr . T.pack)
 
   -- Check that the parsed GraphQL type info is valid by running the schema generation
   (queryParsers, mutationParsers, subscriptionParsers) <-
@@ -197,7 +197,7 @@ instance J.FromJSON (FromIntrospection RemoteSchemaInputValueDefinition) where
 instance J.FromJSON (FromIntrospection (G.Value Void)) where
    parseJSON = J.withText "Value Void" $ \t ->
      let parseValueConst = G.runParser G.value
-     in fmap FromIntrospection $ either (fail . T.unpack) return $ parseValueConst t
+     in FromIntrospection <$> onLeft (parseValueConst t) (fail . T.unpack)
 
 instance (J.FromJSON (FromIntrospection a)) => J.FromJSON (FromIntrospection (G.InterfaceTypeDefinition [G.Name] a)) where
   parseJSON = J.withObject "InterfaceTypeDefinition" $ \o -> do
@@ -343,7 +343,7 @@ execRemoteGQ' env manager userInfo reqHdrs q rsi opType =  do
            }
   Tracing.tracedHttpRequest req \req' -> do
     (time, res)  <- withElapsedTime $ liftIO $ try $ HTTP.httpLbs req' manager
-    resp <- either httpThrow return res
+    resp <- onLeft res httpThrow
     pure (time, mkSetCookieHeaders resp, resp ^. Wreq.responseBody)
   where
     RemoteSchemaInfo url hdrConf fwdClientHdrs timeout = rsi

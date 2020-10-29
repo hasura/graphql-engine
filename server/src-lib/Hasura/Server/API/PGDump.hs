@@ -34,7 +34,7 @@ execPGDump
   -> m BL.ByteString
 execPGDump b ci = do
   eOutput <- liftIO $ try execProcess
-  output <- either throwException return eOutput
+  output <- onLeft eOutput throwException
   case output of
     Left err ->
       RTE.throw500 $ "error while executing pg_dump: " <> err
@@ -53,7 +53,7 @@ execPGDump b ci = do
     opts = connString : "--encoding=utf8" : prbOpts b
 
     clean str
-      | fromMaybe False (prbCleanOutput b) =
+      | Just True == prbCleanOutput b =
           unlines $ filter (not . shouldDropLine) (lines str)
       | otherwise = str
 

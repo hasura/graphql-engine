@@ -133,11 +133,12 @@ data RQLQueryV1
   | RQDumpInternalState !DumpInternalState
 
   | RQSetCustomTypes !CustomTypes
+  | RQSetTableCustomization !SetTableCustomization
   deriving (Show, Eq)
 
 data RQLQueryV2
   = RQV2TrackTable !TrackTableV2
-  | RQV2SetTableCustomFields !SetTableCustomFields
+  | RQV2SetTableCustomFields !SetTableCustomFields -- deprecated
   | RQV2TrackFunction !TrackFunctionV2
   deriving (Show, Eq)
 
@@ -312,6 +313,7 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
 
   RQDumpInternalState _           -> False
   RQSetCustomTypes _              -> True
+  RQSetTableCustomization _       -> True
 
   RQBulk qs                       -> any queryModifiesSchemaCache qs
 
@@ -321,7 +323,7 @@ queryModifiesSchemaCache (RQV2 qi) = case qi of
   RQV2TrackFunction _        -> True
 
 getQueryAccessMode :: (MonadError QErr m) => RQLQuery -> m Q.TxAccess
-getQueryAccessMode q = (fromMaybe Q.ReadOnly) <$> getQueryAccessMode' q
+getQueryAccessMode q = fromMaybe Q.ReadOnly <$> getQueryAccessMode' q
   where
     getQueryAccessMode' ::
          (MonadError QErr m) => RQLQuery -> m (Maybe Q.TxAccess)
@@ -339,12 +341,12 @@ getQueryAccessMode q = (fromMaybe Q.ReadOnly) <$> getQueryAccessMode' q
             throw400 BadRequest $
             "incompatible access mode requirements in bulk query, " <>
             "expected access mode: " <>
-            (T.pack $ maybe "ANY" show expectedMode) <>
+            T.pack (maybe "ANY" show expectedMode) <>
             " but " <>
             "$.args[" <>
-            (T.pack $ show i) <>
+            T.pack (show i) <>
             "] forces " <>
-            (T.pack $ show errMode)
+            T.pack (show errMode)
     getQueryAccessMode' (RQV2 _) = pure $ Just Q.ReadWrite
 
 -- | onRight, return reconciled access mode. onLeft, return conflicting access mode
@@ -452,6 +454,7 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQRunSql q                   -> runRunSQL q
 
       RQSetCustomTypes q           -> runSetCustomTypes q
+      RQSetTableCustomization q    -> runSetTableCustomization q
 
       RQBulk qs                    -> encJFromList <$> indexedMapM (runQueryM env) qs
 
@@ -543,6 +546,7 @@ requiresAdmin = \case
 
     RQDumpInternalState _           -> True
     RQSetCustomTypes _              -> True
+    RQSetTableCustomization _       -> True
 
     RQRunSql _                      -> True
 

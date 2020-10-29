@@ -72,7 +72,7 @@ unitSpecs = do
   describe "Hasura.Server.Auth" AuthSpec.spec
   describe "Hasura.Cache.Bounded" CacheBoundedSpec.spec
 
-buildPostgresSpecs :: (HasVersion) => RawConnInfo -> IO Spec
+buildPostgresSpecs :: HasVersion => RawConnInfo -> IO Spec
 buildPostgresSpecs pgConnOptions = do
   env <- getEnvironment
 

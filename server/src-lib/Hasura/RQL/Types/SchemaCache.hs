@@ -335,7 +335,7 @@ askFunctionInfo
   => QualifiedFunction ->  m FunctionInfo
 askFunctionInfo qf = do
   sc <- askSchemaCache
-  maybe throwNoFn return $ M.lookup qf $ scFunctions sc
+  onNothing (M.lookup qf $ scFunctions sc) throwNoFn
   where
     throwNoFn = throw400 NotExists $
       "function not found in cache " <>> qf

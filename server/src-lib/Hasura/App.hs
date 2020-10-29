@@ -139,7 +139,7 @@ parseArgs = do
   rawHGEOpts <- execParser opts
   env <- getEnvironment
   let eitherOpts = runWithEnv env $ mkHGEOptions rawHGEOpts
-  either (printErrExit InvalidEnvironmentVariableOptionsError) return eitherOpts
+  onLeft eitherOpts $ printErrExit InvalidEnvironmentVariableOptionsError
   where
     opts = info (helper <*> hgeOpts)
            ( fullDesc <>
@@ -224,7 +224,7 @@ initialiseCtx env hgeCmd rci = do
   pure (InitCtx httpManager instanceId loggers connInfo pool latch res, initTime)
   where
     procConnInfo =
-      either (printErrExit InvalidDatabaseConnectionParamsError . ("Fatal Error : " <>)) return $ mkConnInfo rci
+      onLeft (mkConnInfo rci) $ printErrExit InvalidDatabaseConnectionParamsError . ("Fatal Error : " <>)
 
     getMinimalPool pgLogger ci = do
       let connParams = Q.defaultConnParams { Q.cpConns = 1 }
@@ -264,7 +264,7 @@ migrateCatalogSchema env logger pool httpManager sqlGenCtx enableRSPermsCtx = do
 runTxIO :: Q.PGPool -> Q.TxMode -> Q.TxE QErr a -> IO a
 runTxIO pool isoLevel tx = do
   eVal <- liftIO $ runExceptT $ Q.runTx pool isoLevel tx
-  either (printErrJExit DatabaseMigrationError) return eVal
+  onLeft eVal (printErrJExit DatabaseMigrationError)
 
 -- | A latch for the graceful shutdown of a server process.
 newtype ShutdownLatch = ShutdownLatch { unShutdownLatch :: C.MVar () }
@@ -340,7 +340,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
   authModeRes <- runExceptT $ setupAuthMode soAdminSecret soAuthHook soJwtSecret soUnAuthRole
                               _icHttpManager logger
 
-  authMode <- either (printErrExit AuthConfigurationError . T.unpack) return authModeRes
+  authMode <- onLeft authModeRes (printErrExit AuthConfigurationError . T.unpack)
 
   _idleGCThread <- C.forkImmortal "ourIdleGC" logger $ liftIO $
     ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
@@ -465,7 +465,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
     prepareScheduledEvents pool (Logger logger) = do
       liftIO $ logger $ mkGenericStrLog LevelInfo "scheduled_triggers" "preparing data"
       res <- liftIO $ runTx pool (Q.ReadCommitted, Nothing) unlockAllLockedScheduledEvents
-      either (printErrJExit EventSubSystemError) return res
+      onLeft res (printErrJExit EventSubSystemError)
 
     -- | shutdownEvents will be triggered when a graceful shutdown has been inititiated, it will
     -- get the locked events from the event engine context and the scheduled event engine context

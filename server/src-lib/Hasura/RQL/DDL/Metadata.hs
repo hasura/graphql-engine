@@ -20,6 +20,7 @@ import qualified Data.HashSet                       as HS
 import qualified Data.List                          as L
 import qualified Data.Text                          as T
 import qualified Database.PG.Query                  as Q
+import           Data.Text.NonEmpty
 
 import           Control.Lens                       hiding ((.=))
 import           Data.Aeson
@@ -549,7 +550,7 @@ runExportMetadata
   :: (QErrM m, MonadTx m)
   => ExportMetadata -> m EncJSON
 runExportMetadata _ =
-  (AO.toEncJSON . replaceMetadataToOrdJSON) <$> liftTx fetchMetadata
+  AO.toEncJSON . replaceMetadataToOrdJSON <$> liftTx fetchMetadata
 
 runReloadMetadata :: (QErrM m, CacheRWM m) => ReloadMetadata -> m EncJSON
 runReloadMetadata (ReloadMetadata reloadRemoteSchemas) = do

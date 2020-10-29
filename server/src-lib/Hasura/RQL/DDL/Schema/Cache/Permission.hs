@@ -33,7 +33,7 @@ buildTablePermissions
      , QualifiedTable
      , FieldInfoMap (FieldInfo 'Postgres)
      , HashSet CatalogPermission
-     ) `arr` (RolePermInfoMap 'Postgres)
+     ) `arr` RolePermInfoMap 'Postgres
 buildTablePermissions = Inc.cache proc (tableCache, tableName, tableFields, tablePermissions) ->
   (| Inc.keyed (\_ rolePermissions -> do
        let (insertPerms, selectPerms, updatePerms, deletePerms) =

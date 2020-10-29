@@ -3,16 +3,17 @@ module Hasura.RQL.Types.RemoteSchema where
 import           Hasura.Prelude
 import           Language.Haskell.TH.Syntax (Lift)
 
-import qualified Data.Aeson                    as J
-import qualified Data.Aeson.Casing             as J
-import qualified Data.Aeson.TH                 as J
-import qualified Data.Environment              as Env
-import qualified Data.Text                     as T
-import qualified Text.Builder                  as TB
+import qualified Data.Aeson                     as J
+import qualified Data.Aeson.Casing              as J
+import qualified Data.Aeson.TH                  as J
+import qualified Data.Environment               as Env
+import qualified Data.Text                      as T
+import qualified Text.Builder                   as TB
 import           Data.Text.Extended
-import qualified Database.PG.Query             as Q
-import qualified Network.URI.Extended          as N
-import qualified Language.GraphQL.Draft.Syntax as G
+import           Data.Text.NonEmpty
+import qualified Database.PG.Query              as Q
+import qualified Network.URI.Extended           as N
+import qualified Language.GraphQL.Draft.Syntax  as G
 import qualified Language.GraphQL.Draft.Printer as G
 
 import           Hasura.Incremental         (Cacheable)
@@ -86,8 +87,8 @@ $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''RemoteSchemaNameQuery)
 getUrlFromEnv :: (MonadIO m, MonadError QErr m) => Env.Environment -> Text -> m N.URI
 getUrlFromEnv env urlFromEnv = do
   let mEnv = Env.lookupEnv env $ T.unpack urlFromEnv
-  uri <- maybe (throw400 InvalidParams $ envNotFoundMsg urlFromEnv) return mEnv
-  maybe (throw400 InvalidParams $ invalidUri uri) return $ N.parseURI uri
+  uri <- onNothing mEnv (throw400 InvalidParams $ envNotFoundMsg urlFromEnv)
+  onNothing (N.parseURI uri) (throw400 InvalidParams $ invalidUri uri)
   where
     invalidUri x = "not a valid URI: " <> T.pack x
     envNotFoundMsg e = "environment variable '" <> e <> "' not set"

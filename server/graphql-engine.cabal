@@ -297,6 +297,7 @@ library
                      , Data.Sequence.NonEmpty
                      , Data.TByteString
                      , Data.Text.Extended
+                     , Data.Text.NonEmpty
                      , Data.Time.Clock.Units
                      , Data.URL.Template
                      , Hasura.App

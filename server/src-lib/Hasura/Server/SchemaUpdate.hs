@@ -137,7 +137,7 @@ listener sqlGenCtx pool logger httpMgr updateEventRef
   forever $ do
     listenResE <-
       liftIO $ runExceptT $ PG.listen pool pgChannel notifyHandler
-    either onError return listenResE
+    onLeft listenResE onError
     logWarn
     C.sleep $ seconds 1
   where

@@ -24,11 +24,11 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
+import           Data.Text.NonEmpty
 import           Language.Haskell.TH.Syntax    (Lift)
 
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.Instances          ()
-import           Hasura.RQL.Types.Common       (NonEmptyText)
 
 
 
