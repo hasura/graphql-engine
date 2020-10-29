@@ -296,10 +296,16 @@ library
                      , Data.Sequence.NonEmpty
                      , Data.TByteString
                      , Data.Text.Extended
+                     , Data.Text.NonEmpty
                      , Data.Time.Clock.Units
                      , Data.URL.Template
                      , Hasura.App
-                     , Hasura.Db
+                     , Hasura.Backends.Postgres.SQL.DML
+                     , Hasura.Backends.Postgres.SQL.Error
+                     , Hasura.Backends.Postgres.Connection
+                     , Hasura.Backends.Postgres.SQL.Rewrite
+                     , Hasura.Backends.Postgres.SQL.Types
+                     , Hasura.Backends.Postgres.SQL.Value
                      -- Exposed for benchmark:
                      , Hasura.Cache.Bounded
                      , Hasura.Logging
@@ -462,13 +468,10 @@ library
                      , Hasura.Eventing.Common
                      , Data.GADT.Compare.Extended
                      , Data.Tuple.Extended
-                     , Hasura.SQL.DML
-                     , Hasura.SQL.Error
+                     , Hasura.SQL.Backend
                      , Hasura.SQL.GeoJSON
-                     , Hasura.SQL.Rewrite
                      , Hasura.SQL.Time
                      , Hasura.SQL.Types
-                     , Hasura.SQL.Value
                      , Hasura.Tracing
                      , Network.URI.Extended
                      , Network.Wai.Extended

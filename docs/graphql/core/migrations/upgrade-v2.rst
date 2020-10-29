@@ -43,8 +43,8 @@ For example,
 Upgrade steps
 -------------
 
-Before you begin
-^^^^^^^^^^^^^^^^
+Step 0: Take a backup
+^^^^^^^^^^^^^^^^^^^^^
 
 Make sure you take a backup of your Hasura project before upgrading to ``config v2``.
 

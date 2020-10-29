@@ -12,19 +12,19 @@ module Hasura.GraphQL.Parser.Collect
   ( collectFields
   ) where
 
-import           Hasura.Prelude
+import                          Hasura.Prelude
 
-import qualified Data.HashMap.Strict.Extended          as Map
-import qualified Data.HashMap.Strict.InsOrd            as OMap
+import                qualified Data.HashMap.Strict.Extended          as Map
+import                qualified Data.HashMap.Strict.InsOrd            as OMap
 
-import           Data.List.Extended                    (duplicates)
-import           Language.GraphQL.Draft.Syntax
+import                          Data.List.Extended                    (duplicates)
+import                          Language.GraphQL.Draft.Syntax
 
-import           Hasura.GraphQL.Parser.Class
-import {-# SOURCE #-} Hasura.GraphQL.Parser.Internal.Parser (boolean, runParser)
-import           Hasura.GraphQL.Parser.Schema
-import           Hasura.GraphQL.Utils                  (showNames)
-import           Hasura.SQL.Types
+import                          Data.Text.Extended
+import                          Hasura.GraphQL.Parser.Class
+import {-# SOURCE #-}           Hasura.GraphQL.Parser.Internal.Parser (boolean, runParser)
+import                          Hasura.GraphQL.Parser.Schema
+import                          Hasura.GraphQL.Utils                  (showNames)
 
 -- | Collects the effective set of fields queried by a selection set by
 -- flattening fragments and merging duplicate fields.

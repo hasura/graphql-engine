@@ -1,20 +1,22 @@
 module Hasura.RQL.DML.Returning where
 
 import           Hasura.Prelude
+
+import qualified Data.Text                          as T
+
+import qualified Hasura.Backends.Postgres.SQL.DML   as S
+
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Returning.Types
 import           Hasura.RQL.DML.Select
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
-
-import qualified Data.Text                      as T
-import qualified Hasura.SQL.DML                 as S
 
 traverseMutFld
   :: (Applicative f)
   => (a -> f b)
-  -> MutFldG a
-  -> f (MutFldG b)
+  -> MutFldG backend a
+  -> f (MutFldG backend b)
 traverseMutFld f = \case
   MCount    -> pure MCount
   MExp t    -> pure $ MExp t
@@ -23,7 +25,7 @@ traverseMutFld f = \case
 traverseMutationOutput
   :: (Applicative f)
   => (a -> f b)
-  -> MutationOutputG a -> f (MutationOutputG b)
+  -> MutationOutputG backend a -> f (MutationOutputG backend b)
 traverseMutationOutput f = \case
   MOutMultirowFields mutationFields ->
     MOutMultirowFields <$> traverse (traverse (traverseMutFld f)) mutationFields
@@ -33,14 +35,14 @@ traverseMutationOutput f = \case
 traverseMutFlds
   :: (Applicative f)
   => (a -> f b)
-  -> MutFldsG a
-  -> f (MutFldsG b)
+  -> MutFldsG backend a
+  -> f (MutFldsG backend b)
 traverseMutFlds f =
   traverse (traverse (traverseMutFld f))
 
-hasNestedFld :: MutationOutputG a -> Bool
+hasNestedFld :: MutationOutputG backend a -> Bool
 hasNestedFld = \case
-  MOutMultirowFields flds -> any isNestedMutFld flds
+  MOutMultirowFields flds     -> any isNestedMutFld flds
   MOutSinglerowObject annFlds -> any isNestedAnnField annFlds
   where
     isNestedMutFld (_, mutFld) = case mutFld of
@@ -51,42 +53,42 @@ hasNestedFld = \case
       AFArrayRelation _  -> True
       _                  -> False
 
-pgColsFromMutFld :: MutFld -> [(PGCol, PGColumnType)]
+pgColsFromMutFld :: MutFld 'Postgres -> [(PGCol, ColumnType 'Postgres)]
 pgColsFromMutFld = \case
   MCount -> []
   MExp _ -> []
   MRet selFlds ->
     flip mapMaybe selFlds $ \(_, annFld) -> case annFld of
-    AFColumn (AnnColumnField (PGColumnInfo col _ _ colTy _ _) _ _) -> Just (col, colTy)
-    _                                                              -> Nothing
+    AFColumn (AnnColumnField (ColumnInfo col _ _ colTy _ _) _ _) -> Just (col, colTy)
+    _                                                            -> Nothing
 
-pgColsFromMutFlds :: MutFlds -> [(PGCol, PGColumnType)]
+pgColsFromMutFlds :: MutFlds 'Postgres -> [(PGCol, PGColumnType)]
 pgColsFromMutFlds = concatMap (pgColsFromMutFld . snd)
 
-pgColsToSelFlds :: [PGColumnInfo] -> [(FieldName, AnnField)]
+pgColsToSelFlds :: [ColumnInfo 'Postgres] -> [(FieldName, AnnField 'Postgres)]
 pgColsToSelFlds cols =
   flip map cols $
   \pgColInfo -> (fromPGCol $ pgiColumn pgColInfo, mkAnnColumnField pgColInfo Nothing)
 
-mkDefaultMutFlds :: Maybe [PGColumnInfo] -> MutationOutput
+mkDefaultMutFlds :: Maybe [ColumnInfo 'Postgres] -> MutationOutput 'Postgres
 mkDefaultMutFlds = MOutMultirowFields . \case
   Nothing   -> mutFlds
   Just cols -> ("returning", MRet $ pgColsToSelFlds cols):mutFlds
   where
     mutFlds = [("affected_rows", MCount)]
 
-mkMutFldExp :: Iden -> Maybe Int -> Bool -> MutFld -> S.SQLExp
+mkMutFldExp :: Identifier -> Maybe Int -> Bool -> MutFld 'Postgres -> S.SQLExp
 mkMutFldExp cteAlias preCalAffRows strfyNum = \case
   MCount ->
     let countExp = S.SESelect $
           S.mkSelect
           { S.selExtr = [S.Extractor S.countStar Nothing]
-          , S.selFrom = Just $ S.FromExp $ pure $ S.FIIden cteAlias
+          , S.selFrom = Just $ S.FromExp $ pure $ S.FIIdentifier cteAlias
           }
     in maybe countExp (S.SEUnsafe . T.pack . show) preCalAffRows
   MExp t -> S.SELit t
   MRet selFlds ->
-    let tabFrom = FromIden cteAlias
+    let tabFrom = FromIdentifier cteAlias
         tabPerm = TablePerm annBoolExpTrue Nothing
     in S.SESelect $ mkSQLSelect JASMultipleRows $
        AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum
@@ -121,10 +123,10 @@ WITH "<table-name>__mutation_result_alias" AS (
 -- See Note [Mutation output expression].
 mkMutationOutputExp
   :: QualifiedTable
-  -> [PGColumnInfo]
+  -> [ColumnInfo 'Postgres]
   -> Maybe Int
   -> S.CTE
-  -> MutationOutput
+  -> MutationOutput 'Postgres
   -> Bool
   -> S.SelectWith
 mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
@@ -132,10 +134,10 @@ mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
                , (S.Alias allColumnsAlias, allColumnsSelect)
                ] sel
   where
-    mutationResultAlias = Iden $ snakeCaseQualObject qt <> "__mutation_result_alias"
-    allColumnsAlias = Iden $ snakeCaseQualObject qt <> "__all_columns_alias"
+    mutationResultAlias = Identifier $ snakeCaseQualifiedObject qt <> "__mutation_result_alias"
+    allColumnsAlias = Identifier $ snakeCaseQualifiedObject qt <> "__all_columns_alias"
     allColumnsSelect = S.CTESelect $ S.mkSelect
-                       { S.selExtr = map S.mkExtr $ map pgiColumn $ sortCols allCols
+                       { S.selExtr = map (S.mkExtr . pgiColumn) $ sortCols allCols
                        , S.selFrom = Just $ S.mkIdenFromExp mutationResultAlias
                        }
 
@@ -150,7 +152,7 @@ mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
                 in S.SEFnApp "json_build_object" jsonBuildObjArgs Nothing
 
               MOutSinglerowObject annFlds ->
-                let tabFrom = FromIden allColumnsAlias
+                let tabFrom = FromIdentifier allColumnsAlias
                     tabPerm = TablePerm annBoolExpTrue Nothing
                 in S.SESelect $ mkSQLSelect JASSingleObject $
                    AnnSelectG annFlds tabFrom tabPerm noSelectArgs strfyNum
@@ -158,10 +160,10 @@ mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
 
 checkRetCols
   :: (UserInfoM m, QErrM m)
-  => FieldInfoMap FieldInfo
-  -> SelPermInfo
+  => FieldInfoMap (FieldInfo 'Postgres)
+  -> SelPermInfo 'Postgres
   -> [PGCol]
-  -> m [PGColumnInfo]
+  -> m [ColumnInfo 'Postgres]
 checkRetCols fieldInfoMap selPermInfo cols = do
   mapM_ (checkSelOnCol selPermInfo) cols
   forM cols $ \col -> askPGColInfo fieldInfoMap col relInRetErr

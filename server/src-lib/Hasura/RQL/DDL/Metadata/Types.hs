@@ -35,19 +35,16 @@ module Hasura.RQL.DDL.Metadata.Types
 
 import           Hasura.Prelude
 
-import           Control.Lens                        hiding (set, (.=))
-import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax          (Lift)
-
 import qualified Data.Aeson.Ordered                  as AO
 import qualified Data.HashMap.Strict                 as HM
 import qualified Data.HashSet                        as HS
 import qualified Language.GraphQL.Draft.Syntax       as G
 
-import           Hasura.RQL.Types
-import           Hasura.SQL.Types
+import           Control.Lens                        hiding (set, (.=))
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
+import           Language.Haskell.TH.Syntax          (Lift)
 
 import qualified Hasura.RQL.DDL.ComputedField        as ComputedField
 import qualified Hasura.RQL.DDL.Permission           as Permission
@@ -55,6 +52,9 @@ import qualified Hasura.RQL.DDL.QueryCollection      as Collection
 import qualified Hasura.RQL.DDL.Relationship         as Relationship
 import qualified Hasura.RQL.DDL.Schema               as Schema
 import qualified Hasura.RQL.Types.RemoteRelationship as RemoteRelationship
+
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.RQL.Types
 
 data MetadataVersion
   = MVVersion1
@@ -177,15 +177,15 @@ instance FromJSON ClearMetadata where
 
 data ReplaceMetadata
   = ReplaceMetadata
-  { aqVersion           :: !MetadataVersion
-  , aqTables            :: ![TableMeta]
-  , aqFunctions         :: !FunctionsMetadata
-  , aqRemoteSchemas     :: ![AddRemoteSchemaQuery]
-  , aqQueryCollections  :: ![Collection.CreateCollection]
-  , aqAllowlist         :: ![Collection.CollectionReq]
-  , aqCustomTypes       :: !CustomTypes
-  , aqActions           :: ![ActionMetadata]
-  , aqCronTriggers      :: ![CronTriggerMetadata]
+  { aqVersion          :: !MetadataVersion
+  , aqTables           :: ![TableMeta]
+  , aqFunctions        :: !FunctionsMetadata
+  , aqRemoteSchemas    :: ![AddRemoteSchemaQuery]
+  , aqQueryCollections :: ![Collection.CreateCollection]
+  , aqAllowlist        :: ![Collection.CollectionReq]
+  , aqCustomTypes      :: !CustomTypes
+  , aqActions          :: ![ActionMetadata]
+  , aqCronTriggers     :: ![CronTriggerMetadata]
   } deriving (Show, Eq)
 
 instance FromJSON ReplaceMetadata where
@@ -465,7 +465,7 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
           | otherwise = Just retryConfig
 
         maybeHeader headerConfig
-          | headerConfig == [] = Nothing
+          | null headerConfig = Nothing
           | otherwise = Just headerConfig
 
     customTypesToOrdJSON :: CustomTypes -> AO.Value
@@ -504,7 +504,7 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
               AO.object $ [ ("name", AO.toOrdered fieldName)
                           , ("type", AO.toOrdered ty)
                           ]
-              <> catMaybes [ (("arguments", ) . AO.toOrdered) <$> argsValM
+              <> catMaybes [ ("arguments", ) . AO.toOrdered <$> argsValM
                            , maybeDescriptionToMaybeOrdPair fieldDescM
                            ]
 
@@ -552,7 +552,7 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
           <> catMaybes [ listToMaybeOrdPair "headers" AO.toOrdered headers
                        , listToMaybeOrdPair "arguments" argDefinitionToOrdJSON args]
           <> typeAndKind
-          <> (bool [("timeout",AO.toOrdered timeout)] mempty $ timeout == defaultActionTimeoutSecs)
+          <> bool [("timeout",AO.toOrdered timeout)] mempty (timeout == defaultActionTimeoutSecs)
 
         permToOrdJSON :: ActionPermissionMetadata -> AO.Value
         permToOrdJSON (ActionPermissionMetadata role permComment) =

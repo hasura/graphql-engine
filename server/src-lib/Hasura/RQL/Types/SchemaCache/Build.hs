@@ -24,7 +24,6 @@ import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict.Extended  as M
 import qualified Data.Sequence                 as Seq
-import qualified Data.Text                     as T
 
 import           Control.Arrow.Extended
 import           Control.Lens
@@ -32,6 +31,7 @@ import           Data.Aeson                    (toJSON)
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.List                     (nub)
+import           Data.Text.Extended
 
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Metadata
@@ -148,7 +148,7 @@ buildSchemaCacheFor objectId = do
       newInconsistentObjects = newSchemaCache `diffInconsistentObjects` oldSchemaCache
 
   for_ (M.lookup objectId newInconsistentObjects) $ \matchingObjects -> do
-    let reasons = T.intercalate ", " $ map imReason $ toList matchingObjects
+    let reasons = commaSeparated $ imReason <$> matchingObjects
     throwError (err400 ConstraintViolation reasons) { qeInternal = Just $ toJSON matchingObjects }
 
   unless (null newInconsistentObjects) $
