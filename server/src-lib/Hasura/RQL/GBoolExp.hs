@@ -5,17 +5,19 @@ module Hasura.RQL.GBoolExp
   ) where
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 
-import qualified Hasura.SQL.DML      as S
+import qualified Data.HashMap.Strict as M
+import qualified Data.Text           as T
 
 import           Control.Lens        (filtered, has)
 import           Data.Aeson
 import           Data.Data.Lens      (template)
 
-import qualified Data.HashMap.Strict as M
-import qualified Data.Text.Extended  as T
+import qualified Hasura.SQL.DML      as S
+
+import           Data.Text.Extended
+import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 
 type OpRhsParser m v =
   PGType PGColumnType -> Value -> m v
@@ -29,14 +31,14 @@ data ColumnReference
 
 columnReferenceType :: ColumnReference -> PGColumnType
 columnReferenceType = \case
-  ColumnReferenceColumn column -> pgiType column
+  ColumnReferenceColumn column     -> pgiType column
   ColumnReferenceCast _ targetType -> targetType
 
-instance DQuote ColumnReference where
-  dquoteTxt = \case
-    ColumnReferenceColumn column -> dquoteTxt $ pgiColumn column
+instance ToTxt ColumnReference where
+  toTxt = \case
+    ColumnReferenceColumn column -> toTxt $ pgiColumn column
     ColumnReferenceCast reference targetType ->
-      dquoteTxt reference <> "::" <> dquoteTxt targetType
+      toTxt reference <> "::" <> toTxt targetType
 
 parseOperationsExpression
   :: forall m v
@@ -57,7 +59,7 @@ parseOperationsExpression rhsParser fim columnInfo =
       where
         columnType = PGTypeScalar $ columnReferenceType column
 
-    parseOperation :: ColumnReference -> (T.Text, Value) -> m (OpExpG v)
+    parseOperation :: ColumnReference -> (Text, Value) -> m (OpExpG v)
     parseOperation column (opStr, val) = withPathK opStr $
       case opStr of
         "$cast"          -> parseCast

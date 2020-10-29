@@ -7,18 +7,22 @@ module Hasura.RQL.DDL.RemoteRelationship.Validate
   , errorToText
   ) where
 
-import           Data.Foldable
-import           Hasura.GraphQL.Schema.Remote
-import           Hasura.GraphQL.Parser.Column
-import           Hasura.GraphQL.Utils          (getBaseTyWithNestedLevelsCount)
 import           Hasura.Prelude                hiding (first)
-import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.HashSet                  as HS
 import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
+
+import           Data.Foldable
+
+import           Data.Text.Extended
+import           Hasura.GraphQL.Parser.Column
+import           Hasura.GraphQL.Schema.Remote
+import           Hasura.GraphQL.Utils          (getBaseTyWithNestedLevelsCount)
+import           Hasura.RQL.Types
+import           Hasura.SQL.Types
+
 
 -- | An error validating the remote relationship.
 data ValidationError
@@ -317,7 +321,7 @@ validateRemoteArguments expectedArguments providedArguments permittedVariables s
 unwrapGraphQLType :: G.GType -> G.GType
 unwrapGraphQLType = \case
   G.TypeList _ lt -> lt
-  nt -> nt
+  nt              -> nt
 
 -- | Validate a value against a type.
 validateType
@@ -388,7 +392,7 @@ validateType permittedVariables value expectedGType schemaDocument =
     mkScalarTy scalarType = do
       eitherScalar <- runExceptT $ mkScalarTypeName scalarType
       case eitherScalar of
-        Left _ -> throwError $ InvalidGraphQLName $ toSQLTxt scalarType
+        Left _  -> throwError $ InvalidGraphQLName $ toSQLTxt scalarType
         Right s -> pure s
 
 isTypeCoercible
@@ -428,6 +432,6 @@ columnInfoToNamedType pci =
     PGColumnScalar scalarType -> do
       eitherScalar <- runExceptT $ mkScalarTypeName scalarType
       case eitherScalar of
-        Left _ -> throwError $ InvalidGraphQLName $ toSQLTxt scalarType
+        Left _  -> throwError $ InvalidGraphQLName $ toSQLTxt scalarType
         Right s -> pure s
     _                         -> throwError UnsupportedEnum

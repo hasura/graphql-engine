@@ -15,31 +15,34 @@ module Hasura.RQL.Types.QueryCollection
   , stripTypenames
   ) where
 
-import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
-import           Hasura.RQL.Instances          ()
-import           Hasura.RQL.Types.Common       (NonEmptyText)
-import           Hasura.SQL.Types
-
-import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax    (Lift)
 
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
+import           Data.Text.Extended
+import           Language.Haskell.TH.Syntax    (Lift)
+
+import           Hasura.Incremental            (Cacheable)
+import           Hasura.RQL.Instances          ()
+import           Hasura.RQL.Types.Common       (NonEmptyText)
+
+
+
 newtype CollectionName
   = CollectionName {unCollectionName :: NonEmptyText}
   deriving ( Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift
-           , FromJSON, Q.FromCol, Q.ToPrepArg, DQuote
+           , FromJSON, Q.FromCol, Q.ToPrepArg, ToTxt
            , Generic, Arbitrary
            )
 
 newtype QueryName
   = QueryName {unQueryName :: NonEmptyText}
-  deriving (Show, Eq, Ord, NFData, Hashable, Lift, ToJSON, ToJSONKey, FromJSON, DQuote, Generic, Arbitrary, Cacheable)
+  deriving (Show, Eq, Ord, NFData, Hashable, Lift, ToJSON, ToJSONKey, FromJSON, ToTxt, Generic, Arbitrary, Cacheable)
 
 newtype GQLQuery
   = GQLQuery { unGQLQuery :: G.ExecutableDocument G.Name }

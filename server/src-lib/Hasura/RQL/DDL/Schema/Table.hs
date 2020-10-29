@@ -42,9 +42,10 @@ import           Network.URI.Extended               ()
 
 import qualified Hasura.Incremental                 as Inc
 
+import           Data.Text.Extended
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Schema.Common       (textToName)
 import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Schema.Common       (textToName)
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Catalog
@@ -53,8 +54,8 @@ import           Hasura.RQL.DDL.Schema.Enum
 import           Hasura.RQL.DDL.Schema.Rename
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
-import           Hasura.Server.Utils
 import           Hasura.SQL.Types
+import           Hasura.Server.Utils
 
 
 data TrackTable
@@ -487,12 +488,12 @@ buildTableCache = Inc.cache proc (catalogTables, reloadMetadataInvalidationKey) 
             Just enumReferences -> throw400 ConstraintViolation
               $ "column " <> prciName rawInfo <<> " in table " <> tableName
               <<> " references multiple enum tables ("
-              <> T.intercalate ", " (map (dquote . erTable) $ toList enumReferences) <> ")"
+              <> dquoteList (erTable <$> enumReferences) <> ")"
 
     assertNoDuplicateFieldNames columns =
       flip Map.traverseWithKey (Map.groupOn pgiName columns) \name columnsWithName ->
         case columnsWithName of
           one:two:more -> throw400 AlreadyExists $ "the definitions of columns "
-            <> englishList "and" (dquoteTxt . pgiColumn <$> (one:|two:more))
+            <> englishList "and" (toTxt . pgiColumn <$> (one:|two:more))
             <> " are in conflict: they are mapped to the same field name, " <>> name
           _ -> pure ()

@@ -31,7 +31,7 @@ the following columns:
   )
 
 .. thumbnail:: /img/graphql/core/getting-started/create-profile-table.png
-   :alt: Create a table
+   :alt: Create a table 
 
 Now, insert some sample data into the table using the ``Insert Row`` tab of the ``profile`` table.
 
