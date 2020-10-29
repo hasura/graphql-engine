@@ -826,3 +826,34 @@ export const getConsoleNotificationQuery = (
 
   return { query, variables };
 };
+
+export const getTrackFunctionQuery = (
+  name: string,
+  schema: string,
+  type: string,
+  configuration: Record<string, any> | undefined | null
+) => {
+  if (type.toLowerCase() === 'volatile' || configuration) {
+    return {
+      type: 'track_function',
+      version: 2,
+      args: {
+        function: {
+          name,
+          schema,
+        },
+        configuration: {
+          ...(type.toLowerCase() === 'volatile' && { as_mutation: true }),
+          ...configuration,
+        },
+      },
+    };
+  }
+  return {
+    type: 'track_function',
+    args: {
+      name,
+      schema,
+    },
+  };
+};

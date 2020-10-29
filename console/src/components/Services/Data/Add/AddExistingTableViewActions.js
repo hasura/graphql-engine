@@ -14,6 +14,7 @@ import {
 } from '../../../Common/utils/routesUtils';
 import { checkIfTable } from '../../../Common/utils/pgUtils';
 import Migration from '../../../../utils/migration/Migration';
+import { getTrackFunctionQuery } from '../../../Common/utils/v1QueryUtils';
 
 const SET_DEFAULTS = 'AddExistingTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddExistingTable/SET_TABLENAME';
@@ -96,14 +97,18 @@ const addExistingFunction = name => {
     dispatch(showSuccessNotification('Adding an function...'));
     const currentSchema = getState().tables.currentSchema;
 
-    const upMigration = {
-      type: 'track_function',
-      args: {
-        name,
-        schema: currentSchema,
-      },
-    };
-    const downMigration = {
+    const func =
+      getState().tables?.postgresFunctions?.find(
+        f => f.function_name === name && f.function_schema === currentSchema
+      ) || {};
+
+    const requestBodyUp = getTrackFunctionQuery(
+      name,
+      currentSchema,
+      func.function_type
+    );
+
+    const requestBodyDown = {
       type: 'untrack_function',
       args: {
         name,
@@ -111,7 +116,7 @@ const addExistingFunction = name => {
       },
     };
     const migration = new Migration();
-    migration.add(upMigration, downMigration);
+    migration.add(requestBodyUp, requestBodyDown);
 
     const migrationName = 'add_existing_function ' + currentSchema + '_' + name;
 

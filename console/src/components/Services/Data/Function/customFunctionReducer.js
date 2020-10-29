@@ -11,9 +11,12 @@ import { fetchTrackedFunctions } from '../DataActions';
 
 import _push from '../push';
 import { getSchemaBaseRoute } from '../../../Common/utils/routesUtils';
-import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import { makeRequest } from '../../RemoteSchema/Actions';
 import Migration from '../../../../utils/migration/Migration';
+import {
+  getRunSqlQuery,
+  getTrackFunctionQuery,
+} from '../../../Common/utils/v1QueryUtils';
 
 /* Constants */
 
@@ -188,13 +191,17 @@ const unTrackCustomFunction = () => {
         schema: currentSchema,
       },
     };
-    const downPayload = {
-      type: 'track_function',
-      args: {
-        name: functionName,
-        schema: currentSchema,
-      },
-    };
+
+    const func =
+      getState().tables?.postgresFunctions?.find(
+        f => f.function_name === name && f.function_schema === currentSchema
+      ) || {};
+
+    const downPayload = getTrackFunctionQuery(
+      name,
+      currentSchema,
+      func.function_type
+    );
 
     const migration = new Migration();
     migration.add(payload, downPayload);
@@ -245,36 +252,32 @@ const updateSessVar = session_argument => {
         schema: currentSchema,
       },
     };
-    const retrackPayloadDown = {
-      type: 'track_function',
-      version: 2,
-      args: {
-        function: {
-          name: functionName,
-          schema: currentSchema,
-        },
-        configuration: {
-          ...(oldConfiguration && oldConfiguration),
-        },
-      },
-    };
+
+    const func =
+      getState().tables?.postgresFunctions?.find(
+        f =>
+          f.function_name === functionName &&
+          f.function_schema === currentSchema
+      ) || {};
+
+    const retrackPayloadDown = getTrackFunctionQuery(
+      functionName,
+      currentSchema,
+      func.function_type || '',
+      oldConfiguration
+    );
 
     // retrack with sess arg config
-    const retrackPayloadUp = {
-      type: 'track_function',
-      version: 2,
-      args: {
-        function: {
-          name: functionName,
-          schema: currentSchema,
-        },
-        configuration: {
-          ...(session_argument && {
+    const retrackPayloadUp = getTrackFunctionQuery(
+      functionName,
+      currentSchema,
+      func.function_type || '',
+      session_argument
+        ? {
             session_argument,
-          }),
-        },
-      },
-    };
+          }
+        : null
+    );
 
     const untrackPayloadDown = {
       type: 'untrack_function',
@@ -298,7 +301,7 @@ const updateSessVar = session_argument => {
     const errorMsg = 'Updating Session argument variable failed';
 
     const customOnSuccess = () => {
-      dispatch(fetchCustomFunction());
+      dispatch(fetchCustomFunction(functionName, currentSchema));
     };
     const customOnError = error => {
       dispatch({ type: SESSVAR_CUSTOM_FUNCTION_ADD_FAIL, data: error });
