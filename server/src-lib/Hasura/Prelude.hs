@@ -11,9 +11,11 @@ module Hasura.Prelude
   , choice
   , afold
   , bsToTxt
+  , lbsToTxt
   , txtToBs
   , base64Decode
   , spanMaybeM
+  , liftEitherM
   -- * Efficient coercions
   , coerce
   , coerceSet
@@ -28,6 +30,7 @@ module Hasura.Prelude
 import           Control.Applicative               as M (Alternative (..), liftA2)
 import           Control.Arrow                     as M (first, second, (&&&), (***), (<<<), (>>>))
 import           Control.DeepSeq                   as M (NFData, deepseq, force)
+import           Control.Lens                      as M ((%~))
 import           Control.Monad.Base                as M
 import           Control.Monad.Except              as M
 import           Control.Monad.Identity            as M
@@ -44,10 +47,10 @@ import           Data.Foldable                     as M (asum, fold, foldrM, for
                                                          traverse_)
 import           Data.Function                     as M (on, (&))
 import           Data.Functor                      as M (($>), (<&>))
+import           Data.Hashable                     as M (Hashable)
 import           Data.HashMap.Strict               as M (HashMap)
 import           Data.HashMap.Strict.InsOrd        as M (InsOrdHashMap)
 import           Data.HashSet                      as M (HashSet)
-import           Data.Hashable                     as M (Hashable)
 import           Data.List                         as M (find, findIndex, foldl', group,
                                                          intercalate, intersect, lookup, sort,
                                                          sortBy, sortOn, union, unionBy, (\\))
@@ -116,12 +119,19 @@ afold = getAlt . foldMap pure
 bsToTxt :: B.ByteString -> Text
 bsToTxt = TE.decodeUtf8With TE.lenientDecode
 
+lbsToTxt :: BL.ByteString -> Text
+lbsToTxt = bsToTxt . BL.toStrict
+
 txtToBs :: Text -> B.ByteString
 txtToBs = TE.encodeUtf8
 
 base64Decode :: Text -> BL.ByteString
 base64Decode =
   Base64.decodeLenient . BL.fromStrict . txtToBs
+
+-- Like `liftEither`, but accepts a monadic action
+liftEitherM :: MonadError e m => m (Either e a) -> m a
+liftEitherM action = action >>= liftEither
 
 -- Like 'span', but monadic and with a function that produces 'Maybe' instead of 'Bool'
 spanMaybeM
