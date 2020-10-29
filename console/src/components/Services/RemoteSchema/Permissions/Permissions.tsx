@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { ChangeEvent } from 'react';
 import Helmet from 'react-helmet';
 import { parse as sdlParse } from 'graphql';
+
 import {
   getRemoteSchemaPermissions,
   findRemoteSchemaPermission,
@@ -23,8 +24,31 @@ import { defaultSchemaDefSdl } from './state';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import { permRemoveMultipleRoles } from '../Actions';
 import Button from '../../../Common/Button/Button';
+import { Dispatch } from '../../../../types';
 
 const queryTypes = ['Permission'];
+
+export type PermissionsProps = {
+  currentRemoteSchema: {
+    name: string;
+    permissions: Record<string, string>;
+  };
+  readOnlyMode: boolean;
+  dispatch: Dispatch;
+  isEditing: boolean;
+  isFetching: boolean;
+  allRoles: string[];
+  bulkSelect: string[];
+  permissionEdit: { isNewRole: boolean; role: string; newRole: string };
+  schemaDefinition: any; // TODO: provide the right type here
+};
+
+export type RolePermissions = {
+  roleName: string;
+  permTypes: Record<string, any>;
+  bulkSection: Record<string, any>;
+  isNewRole?: boolean;
+};
 
 const Permissions = ({
   currentRemoteSchema,
@@ -36,7 +60,7 @@ const Permissions = ({
   bulkSelect,
   schemaDefinition,
   readOnlyMode = false,
-}) => {
+}: PermissionsProps) => {
   React.useEffect(() => {
     dispatch(fetchRoleList());
     return () => {
@@ -66,7 +90,7 @@ const Permissions = ({
     };
 
     const getPermissionsTableBody = () => {
-      const dispatchRoleNameChange = e => {
+      const dispatchRoleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
         dispatch(permSetRoleName(e.target.value));
       };
 
@@ -78,8 +102,8 @@ const Permissions = ({
         );
       };
 
-      const getBulkCheckbox = (role, isNewRole) => {
-        const dispatchBulkSelect = e => {
+      const getBulkCheckbox = (role: string, isNewRole: boolean) => {
+        const dispatchBulkSelect = (e: ChangeEvent<HTMLInputElement>) => {
           const isChecked = e.target.checked;
           const selectedRole = e.target.getAttribute('data-role');
           dispatch(permSetBulkSelect(isChecked, selectedRole));
@@ -105,7 +129,7 @@ const Permissions = ({
       };
 
       // get root types for a given role
-      const getQueryTypes = (role, isNewRole) => {
+      const getQueryTypes = (role: string, isNewRole: boolean) => {
         return queryTypes.map(queryType => {
           const dispatchOpenEdit = () => () => {
             if (isNewRole && !!role) {
@@ -133,7 +157,11 @@ const Permissions = ({
                 );
               }
             } else {
-              document.getElementById('new-role-input').focus();
+              // FIXME: probably best if we handle the React way.
+              const inputFocusElem = document.getElementById('new-role-input');
+              if (inputFocusElem) {
+                inputFocusElem.focus();
+              }
             }
           };
 
@@ -148,7 +176,7 @@ const Permissions = ({
             isEditing &&
             (permissionEdit.role === role ||
               (permissionEdit.isNewRole && permissionEdit.newRole === role));
-          let editIcon = '';
+          let editIcon;
           let className = '';
           let onClick = () => {};
           if (role !== 'admin' && !readOnlyMode) {
@@ -156,31 +184,31 @@ const Permissions = ({
 
             if (isCurrEdit) {
               onClick = dispatchCloseEdit;
-              className += ` ${styles.currEdit}`;
+              className += styles.currEdit;
             } else {
               className += styles.clickableCell;
-              onClick = dispatchOpenEdit(queryType);
+              onClick = dispatchOpenEdit;
             }
           }
 
           const getRoleQueryPermission = () => {
-            let _permission;
+            let permissionAccess;
             if (role === 'admin') {
-              _permission = permissionsSymbols.fullAccess;
+              permissionAccess = permissionsSymbols.fullAccess;
             } else if (isNewRole) {
-              _permission = permissionsSymbols.noAccess;
+              permissionAccess = permissionsSymbols.noAccess;
             } else {
               const existingPerm = findRemoteSchemaPermission(
                 allPermissions,
                 role
               );
               if (!existingPerm) {
-                _permission = permissionsSymbols.noAccess;
+                permissionAccess = permissionsSymbols.noAccess;
               } else {
-                _permission = permissionsSymbols.fullAccess;
+                permissionAccess = permissionsSymbols.fullAccess;
               }
             }
-            return _permission;
+            return permissionAccess;
           };
 
           return {
@@ -195,8 +223,8 @@ const Permissions = ({
       };
 
       // form rolesList and permissions metadata associated with each role
-      const _roleList = ['admin', ...allRoles];
-      const rolePermissions = _roleList.map(r => {
+      const roleList = ['admin', ...allRoles];
+      const rolePermissions: RolePermissions[] = roleList.map(r => {
         return {
           roleName: r,
           permTypes: getQueryTypes(r, false),
@@ -258,7 +286,7 @@ const Permissions = ({
     };
 
     return (
-      <div id={'bulk-section'} className={styles.activeEdit}>
+      <div id="bulk-section" className={styles.activeEdit}>
         <div className={styles.editPermsHeading}>Apply Bulk Actions</div>
         <div>
           <span className={styles.add_pad_right}>Selected Roles</span>
