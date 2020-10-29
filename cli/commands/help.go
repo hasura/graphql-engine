@@ -70,7 +70,7 @@ func (o *helpOptions) run() {
 		c.Printf("Unknown help topic %#q\n", args)
 		err := c.Root().Usage()
 		if err != nil {
-			c.Printf("Error printing usage: %v", usageErr)
+			c.Printf("Error printing usage: %v", err)
 		}
 	} else {
 		if cmd.Name() == "hasura" {
