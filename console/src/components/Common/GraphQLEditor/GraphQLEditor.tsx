@@ -1,7 +1,7 @@
 import React from 'react';
 import { parse as sdlParser } from 'graphql/language/parser';
 import { GraphQLError } from 'graphql';
-import styles from './GraphQlEditor.scss';
+import styles from '../Common.scss';
 import CrossIcon from '../Icons/Cross';
 import AceEditor from '../AceEditor/BaseEditor';
 import { Nullable } from '../utils/tsUtils';
