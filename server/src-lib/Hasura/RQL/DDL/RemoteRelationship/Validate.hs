@@ -134,13 +134,13 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
                      innerObjTyInfo <-
                        if isObjType (GS._gTypes gctx) objFldInfo
                          then getTyInfoFromField (GS._gTypes gctx) objFldInfo
-                         else if isScalarType (GS._gTypes gctx) objFldInfo
+                         else if isValidType (GS._gTypes gctx) objFldInfo
                                 then pure objTyInfo
                                 else (Left
                                         (pure
                                            (InvalidType
                                               (_fiTy objFldInfo)
-                                              "only objects or scalar types expected")))
+                                              "only output type is expected")))
                      pure
                        ( innerObjTyInfo
                        , _fiTy objFldInfo
@@ -175,11 +175,14 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
             Just (TIObj _) -> True
             _              -> False
 
-    isScalarType types field =
+    isValidType types field =
       let baseTy = getBaseTy (_fiTy field)
           typeInfo = HM.lookup baseTy types
        in case typeInfo of
             Just (TIScalar _) -> True
+            Just (TIEnum   _) -> True
+            Just (TIIFace _)  -> True
+            Just (TIUnion _)  -> True
             _                 -> False
 
     remoteArgumentsToMap =

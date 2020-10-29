@@ -45,6 +45,7 @@ The corresponding JWT config can be:
 - server: limit the length of event trigger names (close #5786)
 **NOTE:** If you have event triggers with names greater than 42 chars, then you should update their names to avoid running into Postgres identifier limit bug (#5786)
 - server: fix issue with tracking custom functions that return `SETOF` materialized view (close #5294) (#5945)
+- server: allow remote relationships with union, interface and enum type fields as well (fixes #5875) (#6080)
 
 ### Breaking change
 
