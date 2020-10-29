@@ -4,8 +4,8 @@
 
 .. _postgres_import_data_from_csv:
 
-Import data from csv
-=====================
+Import data from csv into database
+===================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -61,4 +61,4 @@ Once you are connected successfully to the database, use the following command i
 
   \copy profile from '/Users/funmilayoolaiya/documents/dbhasura.csv' delimiter ',' CSV HEADER;
 
- Your data would have been successfully copied into a table in the database. 
+Your data would have been successfully copied into a table in the database. 
