@@ -3,6 +3,7 @@
 import ruamel.yaml as yaml
 from ruamel.yaml.compat import ordereddict, StringIO
 from ruamel.yaml.comments import CommentedMap
+from fuzzywuzzy import fuzz
 import json
 import copy
 import graphql
@@ -281,7 +282,7 @@ def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response):
 # Returns 'resp' and a bool indicating whether the test passed or not (this
 # will always be True unless we are `--accepting`)
 def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs={}, skip_if_err_msg=False):
-    # Prepare actual and respected responses so comparison takes into
+    # Prepare actual and expected responses so comparison takes into
     # consideration only the ordering that we care about:
     resp         = collapse_order_not_selset(resp_orig,         query)
     exp_response = collapse_order_not_selset(exp_response_orig, query)
@@ -345,7 +346,10 @@ def equal_CommentedMap(m1, m2):
                     for (k1,v1),(k2,v2) in zip(m1_l,m2_l)))
     # else this is a scalar:
     else:
-        return m1 == m2
+        ratioCheck = fuzz.ratio(m1, m2)   # there's a partial_ratio function too, if the check can be more casual
+        if ratioCheck >= 85:
+            return True
+        return False
 
 # Parse test case YAML file
 def get_conf_f(f):
