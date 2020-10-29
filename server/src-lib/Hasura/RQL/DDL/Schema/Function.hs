@@ -70,7 +70,7 @@ validateFuncArgs args =
       <> " are not in compliance with GraphQL spec"
   where
     funcArgsText = mapMaybe (fmap getFuncArgNameTxt . faName) args
-    invalidArgs = filter (not . isJust . G.mkName) funcArgsText
+    invalidArgs = filter (isNothing . G.mkName) funcArgsText
 
 data FunctionIntegrityError
   = FunctionNameNotGQLCompliant
@@ -125,18 +125,18 @@ mkFunctionInfo qf systemDefined config rawFuncInfo =
 
     validateFunctionArgNames = do
       let argNames = mapMaybe faName functionArgs
-          invalidArgs = filter (not . isJust . G.mkName . getFuncArgNameTxt) argNames
-      when (not $ null invalidArgs) $
+          invalidArgs = filter (isNothing . G.mkName . getFuncArgNameTxt) argNames
+      unless (null invalidArgs) $
         throwValidateError $ FunctionInvalidArgumentNames invalidArgs
 
     makeInputArguments =
       case _fcSessionArgument config of
         Nothing -> pure $ Seq.fromList $ map IAUserProvided functionArgs
         Just sessionArgName -> do
-          when (not $ any (\arg -> (Just sessionArgName) == faName arg) functionArgs) $
+          unless (any (\arg -> Just sessionArgName == faName arg) functionArgs) $
             throwValidateError $ FunctionInvalidSessionArgument sessionArgName
           fmap Seq.fromList $ forM functionArgs $ \arg ->
-            if (Just sessionArgName) == faName arg then do
+            if Just sessionArgName == faName arg then do
               let argTy = _qptName $ faType arg
               if argTy == PGJSON then pure $ IASessionVariables sessionArgName
               else MV.refute $ pure $ FunctionSessionArgumentNotJSON sessionArgName

@@ -831,7 +831,7 @@ tableAggregationFields table selectPermissions = do
             columns  <- maybe (pure Nothing) (P.fieldOptional columnsName Nothing . P.list) columnsEnum
             pure $ case columns of
                      Nothing   -> SQL.CTStar
-                     Just cols -> if fromMaybe False distinct
+                     Just cols -> if Just True == distinct
                                   then SQL.CTDistinct cols
                                   else SQL.CTSimple   cols
       pure $ RQL.AFCount <$> P.selection $$(G.litName "count") Nothing args P.int

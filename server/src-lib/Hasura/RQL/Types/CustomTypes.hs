@@ -174,7 +174,7 @@ idScalar     = $$(G.litName "ID")
 
 defaultScalars :: [ScalarTypeDefinition]
 defaultScalars =
-  map (flip ScalarTypeDefinition Nothing)
+  map (`ScalarTypeDefinition` Nothing)
   [intScalar, floatScalar, stringScalar, boolScalar, idScalar]
 
 newtype EnumTypeName
@@ -230,7 +230,7 @@ instance J.ToJSON AnnotatedScalarType where
   toJSON (ASTReusedScalar name st) = J.object ["name" J..= name, "type" J..= st]
 
 data NonObjectCustomType
-  = NOCTScalar !(AnnotatedScalarType)
+  = NOCTScalar !AnnotatedScalarType
   | NOCTEnum !EnumTypeDefinition
   | NOCTInputObject !InputObjectTypeDefinition
   deriving (Generic)
