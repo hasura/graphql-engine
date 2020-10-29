@@ -9,16 +9,16 @@ import                qualified Language.GraphQL.Draft.Syntax         as G
 
 import                          Data.Has
 import                          Data.Parser.JSONPath
+import                          Data.Text.Extended
 import                          Data.Tuple.Extended
 import                          GHC.Stack                             (HasCallStack)
 import                          Type.Reflection                       (Typeable)
 
-import                          Data.Text.Extended
+import                          Hasura.Backends.Postgres.SQL.Types
 import {-# SOURCE #-}           Hasura.GraphQL.Parser.Internal.Parser
 import                          Hasura.RQL.Types.Error
 import                          Hasura.RQL.Types.Table
 import                          Hasura.SQL.Backend
-import                          Hasura.SQL.Types
 import                          Hasura.Session                        (RoleName)
 
 {- Note [Tying the knot]

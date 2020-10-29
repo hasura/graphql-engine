@@ -12,16 +12,17 @@ import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 
 import           Data.Text.Extended
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
-import           Hasura.SQL.Value
 import           Hasura.Session
 
+import qualified Hasura.Backends.Postgres.SQL.DML       as S
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.Inline          as E
 import qualified Hasura.GraphQL.Execute.LiveQuery       as E
@@ -29,7 +30,6 @@ import qualified Hasura.GraphQL.Execute.Query           as E
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.RQL.DML.RemoteJoin              as RR
 import qualified Hasura.RQL.DML.Select                  as DS
-import qualified Hasura.SQL.DML                         as S
 
 data GQLExplain
   = GQLExplain
@@ -139,7 +139,7 @@ explainGQLQuery pgExecCtx sc (GQLExplain query userVarsRaw maybeIsRelay) = do
       (plan, _) <- E.buildLiveQueryPlan pgExecCtx userInfo validSubscriptionQueries
       runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where
-    queryType = bool E.QueryHasura E.QueryRelay $ fromMaybe False maybeIsRelay
+    queryType = bool E.QueryHasura E.QueryRelay $ Just True == maybeIsRelay
     sessionVariables = mkSessionVariablesText $ maybe [] Map.toList userVarsRaw
 
     runInTx :: LazyTx QErr EncJSON -> m EncJSON

@@ -34,7 +34,8 @@ import           Data.List                                (nub)
 import qualified Hasura.Incremental                       as Inc
 
 import           Data.Text.Extended
-import           Hasura.Db
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Execute.Types
 import           Hasura.GraphQL.Schema                    (buildGQLContext)
 import           Hasura.RQL.DDL.Action
@@ -55,7 +56,6 @@ import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DDL.Utils                     (clearHdbViews)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
-import           Hasura.SQL.Types
 import           Hasura.Server.Version                    (HasVersion)
 
 buildRebuildableSchemaCache
@@ -132,21 +132,21 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
   -- Step 3: Build the GraphQL schema.
   (gqlContext, gqlSchemaInconsistentObjects) <- runWriterA buildGQLContext -<
     ( QueryHasura
-    , (_boTables    resolvedOutputs)
-    , (_boFunctions resolvedOutputs)
-    , (_boRemoteSchemas resolvedOutputs)
-    , (_boActions resolvedOutputs)
-    , (_actNonObjects $ _boCustomTypes resolvedOutputs)
+    , _boTables    resolvedOutputs
+    , _boFunctions resolvedOutputs
+    , _boRemoteSchemas resolvedOutputs
+    , _boActions resolvedOutputs
+    , _actNonObjects $ _boCustomTypes resolvedOutputs
     )
 
   -- Step 4: Build the relay GraphQL schema
   (relayContext, relaySchemaInconsistentObjects) <- runWriterA buildGQLContext -<
     ( QueryRelay
-    , (_boTables    resolvedOutputs)
-    , (_boFunctions resolvedOutputs)
-    , (_boRemoteSchemas resolvedOutputs)
-    , (_boActions resolvedOutputs)
-    , (_actNonObjects $ _boCustomTypes resolvedOutputs)
+    , _boTables    resolvedOutputs
+    , _boFunctions resolvedOutputs
+    , _boRemoteSchemas resolvedOutputs
+    , _boActions resolvedOutputs
+    , _actNonObjects $ _boCustomTypes resolvedOutputs
     )
 
   returnA -< SchemaCache
@@ -446,10 +446,9 @@ withMetadataCheck cascade action = do
   mapM_ purgeDependentObject indirectDeps
 
   -- Purge all dropped functions
-  let purgedFuncs = flip mapMaybe indirectDeps $ \dep ->
-        case dep of
-          SOFunction qf -> Just qf
-          _             -> Nothing
+  let purgedFuncs = flip mapMaybe indirectDeps $ \case
+        SOFunction qf -> Just qf
+        _             -> Nothing
 
   forM_ (droppedFuncs \\ purgedFuncs) $ \qf -> do
     liftTx $ delFunctionFromCatalog qf

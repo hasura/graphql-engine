@@ -37,14 +37,16 @@ import qualified Data.Sequence.NonEmpty                as NESeq
 import qualified Data.Text                             as T
 import qualified Language.GraphQL.Draft.Syntax         as G
 
+import qualified Hasura.Backends.Postgres.SQL.DML      as SQL
 import qualified Hasura.GraphQL.Execute.Types          as ET
 import qualified Hasura.GraphQL.Parser                 as P
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
 import qualified Hasura.RQL.DML.Select                 as RQL
 import qualified Hasura.RQL.Types.BoolExp              as RQL
-import qualified Hasura.SQL.DML                        as SQL
 
 import           Data.Text.Extended
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.GraphQL.Parser                 (FieldParser, InputFieldsParser, Kind (..),
                                                         Parser, UnpreparedValue (..), mkParameter)
 import           Hasura.GraphQL.Parser.Class
@@ -55,8 +57,6 @@ import           Hasura.GraphQL.Schema.OrderBy
 import           Hasura.GraphQL.Schema.Remote
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
-import           Hasura.SQL.Value
 import           Hasura.Server.Utils                   (executeJSONPath)
 
 type SelectExp           b = RQL.AnnSimpleSelG b UnpreparedValue
@@ -833,7 +833,7 @@ tableAggregationFields table selectPermissions = do
             columns  <- maybe (pure Nothing) (P.fieldOptional columnsName Nothing . P.list) columnsEnum
             pure $ case columns of
                      Nothing   -> SQL.CTStar
-                     Just cols -> if fromMaybe False distinct
+                     Just cols -> if Just True == distinct
                                   then SQL.CTDistinct cols
                                   else SQL.CTSimple   cols
       pure $ RQL.AFCount <$> P.selection $$(G.litName "count") Nothing args P.int

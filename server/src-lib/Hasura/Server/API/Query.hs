@@ -315,7 +315,7 @@ queryModifiesSchemaCache (RQV2 qi) = case qi of
   RQV2TrackFunction _        -> True
 
 getQueryAccessMode :: (MonadError QErr m) => RQLQuery -> m Q.TxAccess
-getQueryAccessMode q = (fromMaybe Q.ReadOnly) <$> getQueryAccessMode' q
+getQueryAccessMode q = fromMaybe Q.ReadOnly <$> getQueryAccessMode' q
   where
     getQueryAccessMode' ::
          (MonadError QErr m) => RQLQuery -> m (Maybe Q.TxAccess)
@@ -333,12 +333,12 @@ getQueryAccessMode q = (fromMaybe Q.ReadOnly) <$> getQueryAccessMode' q
             throw400 BadRequest $
             "incompatible access mode requirements in bulk query, " <>
             "expected access mode: " <>
-            (T.pack $ maybe "ANY" show expectedMode) <>
+            T.pack (maybe "ANY" show expectedMode) <>
             " but " <>
             "$.args[" <>
-            (T.pack $ show i) <>
+            T.pack (show i) <>
             "] forces " <>
-            (T.pack $ show errMode)
+            T.pack (show errMode)
     getQueryAccessMode' (RQV2 _) = pure $ Just Q.ReadWrite
 
 -- | onRight, return reconciled access mode. onLeft, return conflicting access mode

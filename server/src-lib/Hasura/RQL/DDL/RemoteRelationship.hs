@@ -1,4 +1,3 @@
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE RecordWildCards #-}
 module Hasura.RQL.DDL.RemoteRelationship
   ( runCreateRemoteRelationship
@@ -11,17 +10,18 @@ module Hasura.RQL.DDL.RemoteRelationship
   , getRemoteRelDefFromCatalog
   ) where
 
-import           Hasura.EncJSON
 import           Hasura.Prelude
-import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Column                    ()
-import           Hasura.SQL.Types
-import           Hasura.RQL.DDL.RemoteRelationship.Validate
+
+import qualified Data.HashSet                               as HS
+import qualified Database.PG.Query                          as Q
 
 import           Instances.TH.Lift                          ()
 
-import qualified Database.PG.Query                          as Q
-import qualified Data.HashSet                               as HS
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.EncJSON
+import           Hasura.RQL.DDL.RemoteRelationship.Validate
+import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Column                    ()
 
 runCreateRemoteRelationship
   :: (MonadTx m, CacheRWM m) => RemoteRelationship -> m EncJSON
@@ -50,11 +50,8 @@ resolveRemoteRelationship remoteRelationship
         let tableDep = SchemaDependency (SOTable table) DRTable
             columnsDep =
               map
-                (\column ->
-                   SchemaDependency
-                     (SOTableObj table $ TOCol column)
-                     DRRemoteRelationship ) $
-              map pgiColumn $ HS.toList $ _rfiHasuraFields remoteField
+                (flip SchemaDependency DRRemoteRelationship . SOTableObj table . TOCol . pgiColumn)
+                $ HS.toList $ _rfiHasuraFields remoteField
             remoteSchemaDep =
               SchemaDependency (SORemoteSchema $ rtrRemoteSchema remoteRelationship) DRRemoteSchema
          in (tableDep : remoteSchemaDep : columnsDep)
@@ -120,7 +117,7 @@ delRemoteRelFromCatalog (QualifiedObject sn tn) (RemoteRelationshipName relName)
 
 getRemoteRelDefFromCatalog :: RemoteRelationshipName -> QualifiedTable ->  Q.TxE QErr RemoteRelationshipDef
 getRemoteRelDefFromCatalog relName (QualifiedObject schemaName tableName) = do
-  (Q.AltJ defn) <- (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
+  (Q.AltJ defn) <- runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
     [Q.sql|
      SELECT definition::json
      FROM hdb_catalog.hdb_remote_relationship

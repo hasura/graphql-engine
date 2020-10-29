@@ -12,23 +12,22 @@ module Hasura.RQL.DDL.Relationship
   )
 where
 
-import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.SchemaCacheTypes
-import           Hasura.EncJSON
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Deps
-import           Hasura.RQL.DDL.Permission                  (purgePerm)
-import           Hasura.RQL.DDL.Relationship.Types
-import           Hasura.RQL.Types
-import           Hasura.SQL.Types
+
+import qualified Data.HashMap.Strict                as HM
+import qualified Data.HashSet                       as HS
+import qualified Database.PG.Query                  as Q
 
 import           Data.Aeson.Types
-import           Data.Tuple                                 (swap)
-import           Instances.TH.Lift                          ()
+import           Data.Tuple                         (swap)
+import           Instances.TH.Lift                  ()
 
-import qualified Data.HashMap.Strict                        as HM
-import qualified Data.HashSet                               as HS
-import qualified Database.PG.Query                          as Q
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.EncJSON
+import           Hasura.RQL.DDL.Deps
+import           Hasura.RQL.DDL.Permission          (purgePerm)
+import           Hasura.RQL.DDL.Relationship.Types
+import           Hasura.RQL.Types
 
 runCreateRelationship
   :: (MonadTx m, CacheRWM m, HasSystemDefined m, ToJSON a)

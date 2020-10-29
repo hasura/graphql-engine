@@ -28,7 +28,7 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 
-import qualified Hasura.SQL.DML                         as S
+import qualified Hasura.Backends.Postgres.SQL.DML       as S
 
 import qualified Data.Aeson                             as A
 import qualified Data.Aeson.Ordered                     as AO
@@ -421,7 +421,7 @@ fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
     let batchList = toList batch
         gqlReq = fieldsToRequest G.OperationTypeQuery
                                  (map _rjfField batchList)
-        gqlReqUnparsed = (GQLQueryText . G.renderExecutableDoc . G.ExecutableDocument . unGQLExecDoc) <$> gqlReq
+        gqlReqUnparsed = GQLQueryText . G.renderExecutableDoc . G.ExecutableDocument . unGQLExecDoc <$> gqlReq
     -- NOTE: discard remote headers (for now):
     (_, _, respBody) <- execRemoteGQ' env manager userInfo reqHdrs gqlReqUnparsed rsi G.OperationTypeQuery
     case AO.eitherDecode respBody of

@@ -3,7 +3,7 @@
 
 -- A module for postgres execution related types and operations
 
-module Hasura.Db
+module Hasura.Backends.Postgres.Connection
   ( MonadTx(..)
   , LazyTx
 
@@ -22,35 +22,37 @@ module Hasura.Db
   , lazyTxToQTx
   ) where
 
+import           Hasura.Prelude
+
+import qualified Data.Aeson.Extended            as J
+import qualified Database.PG.Query              as Q
+import qualified Database.PG.Query.Connection   as Q
+
 import           Control.Lens
-import           Control.Monad.Trans.Control  (MonadBaseControl (..))
+import           Control.Monad.Trans.Control    (MonadBaseControl (..))
 import           Control.Monad.Unique
 import           Control.Monad.Validate
-import           Data.Either                  (isRight)
+import           Data.Either                    (isRight)
 
-import qualified Data.Aeson.Extended          as J
-import qualified Database.PG.Query            as Q
-import qualified Database.PG.Query.Connection as Q
+import qualified Hasura.Backends.Postgres.SQL.DML   as S
+import qualified Hasura.Tracing                 as Tracing
 
+import           Hasura.Backends.Postgres.SQL.Error
 import           Hasura.EncJSON
-import           Hasura.Prelude
 import           Hasura.RQL.Types.Error
-import           Hasura.Session
-import           Hasura.SQL.Error
 import           Hasura.SQL.Types
+import           Hasura.Session
 
-import qualified Hasura.SQL.DML               as S
-import qualified Hasura.Tracing               as Tracing
 
 data PGExecCtx
   = PGExecCtx
-  { _pecRunReadOnly  :: (forall a. Q.TxE QErr a -> ExceptT QErr IO a)
+  { _pecRunReadOnly  :: forall a. Q.TxE QErr a -> ExceptT QErr IO a
   -- ^ Run a Q.ReadOnly transaction
-  , _pecRunReadNoTx  :: (forall a. Q.TxE QErr a -> ExceptT QErr IO a)
+  , _pecRunReadNoTx  :: forall a. Q.TxE QErr a -> ExceptT QErr IO a
   -- ^ Run a read only statement without an explicit transaction block
-  , _pecRunReadWrite :: (forall a. Q.TxE QErr a -> ExceptT QErr IO a)
+  , _pecRunReadWrite :: forall a. Q.TxE QErr a -> ExceptT QErr IO a
   -- ^ Run a Q.ReadWrite transaction
-  , _pecCheckHealth  :: (IO Bool)
+  , _pecCheckHealth  :: IO Bool
   -- ^ Checks the health of this execution context
   }
 
@@ -58,9 +60,9 @@ data PGExecCtx
 mkPGExecCtx :: Q.TxIsolation -> Q.PGPool -> PGExecCtx
 mkPGExecCtx isoLevel pool =
   PGExecCtx
-  { _pecRunReadOnly = (Q.runTx pool (isoLevel, Just Q.ReadOnly))
-  , _pecRunReadNoTx = (Q.runTx' pool)
-  , _pecRunReadWrite = (Q.runTx pool (isoLevel, Just Q.ReadWrite))
+  { _pecRunReadOnly = Q.runTx pool (isoLevel, Just Q.ReadOnly)
+  , _pecRunReadNoTx = Q.runTx' pool
+  , _pecRunReadWrite = Q.runTx pool (isoLevel, Just Q.ReadWrite)
   , _pecCheckHealth = checkDbConnection
   }
   where
@@ -166,12 +168,12 @@ mkTxErrorHandler isExpectedError txe = fromMaybe unexpectedError expectedError
         PGIntegrityConstraintViolation code ->
           let cv = (ConstraintViolation,)
               customMessage = (code ^? _Just._PGErrorSpecific) <&> \case
-                PGRestrictViolation -> cv "Can not delete or update due to data being referred. "
-                PGNotNullViolation -> cv "Not-NULL violation. "
+                PGRestrictViolation   -> cv "Can not delete or update due to data being referred. "
+                PGNotNullViolation    -> cv "Not-NULL violation. "
                 PGForeignKeyViolation -> cv "Foreign key violation. "
-                PGUniqueViolation -> cv "Uniqueness violation. "
-                PGCheckViolation -> (PermissionError, "Check constraint violation. ")
-                PGExclusionViolation -> cv "Exclusion violation. "
+                PGUniqueViolation     -> cv "Uniqueness violation. "
+                PGCheckViolation      -> (PermissionError, "Check constraint violation. ")
+                PGExclusionViolation  -> cv "Exclusion violation. "
           in maybe (ConstraintViolation, message) (fmap (<> message)) customMessage
 
         PGDataException code -> case code of
@@ -217,11 +219,11 @@ instance Functor (LazyTx e) where
 instance Applicative (LazyTx e) where
   pure = LTNoTx
 
-  LTErr e   <*> _         = LTErr e
-  LTNoTx f  <*> r         = fmap f r
-  LTTx _    <*> LTErr e   = LTErr e
-  LTTx txf  <*> LTNoTx a  = LTTx $ txf <*> pure a
-  LTTx txf  <*> LTTx tx   = LTTx $ txf <*> tx
+  LTErr e   <*> _        = LTErr e
+  LTNoTx f  <*> r        = fmap f r
+  LTTx _    <*> LTErr e  = LTErr e
+  LTTx txf  <*> LTNoTx a = LTTx $ txf <*> pure a
+  LTTx txf  <*> LTTx tx  = LTTx $ txf <*> tx
 
 instance Monad (LazyTx e) where
   LTErr e >>= _  = LTErr e

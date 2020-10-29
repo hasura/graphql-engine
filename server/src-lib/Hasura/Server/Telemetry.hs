@@ -210,9 +210,9 @@ data TelemetryLog
 data TelemetryHttpError
   = TelemetryHttpError
   { tlheStatus        :: !(Maybe HTTP.Status)
-  , tlheUrl           :: !T.Text
+  , tlheUrl           :: !Text
   , tlheHttpException :: !(Maybe HttpException)
-  , tlheResponse      :: !(Maybe T.Text)
+  , tlheResponse      :: !(Maybe Text)
   } deriving (Show)
 
 instance A.ToJSON TelemetryLog where

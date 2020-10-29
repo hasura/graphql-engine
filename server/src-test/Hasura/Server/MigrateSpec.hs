@@ -72,7 +72,7 @@ spec pgConnInfo = do
     it "initializes the catalog" $ singleTransaction do
       env <- liftIO Env.getEnvironment
       time <- liftIO getCurrentTime
-      (dropAndInit env time) `shouldReturn` MRInitialized
+      dropAndInit env time `shouldReturn` MRInitialized
 
     it "is idempotent" \(NT transact) -> do
       let dumpSchema = execPGDump (PGDumpReqBody ["--schema-only"] (Just False)) pgConnInfo
@@ -116,7 +116,7 @@ spec pgConnInfo = do
     it "is idempotent" \(NT transact) -> do
       env <- Env.getEnvironment
       time <- getCurrentTime
-      (transact $ dropAndInit env time) `shouldReturn` MRInitialized
+      transact (dropAndInit env time) `shouldReturn` MRInitialized
       firstDump <- transact dumpMetadata
       transact recreateSystemMetadata
       secondDump <- transact dumpMetadata
@@ -125,7 +125,7 @@ spec pgConnInfo = do
     it "does not create any objects affected by ClearMetadata" \(NT transact) -> do
       env <- Env.getEnvironment
       time <- getCurrentTime
-      (transact $ dropAndInit env time) `shouldReturn` MRInitialized
+      transact (dropAndInit env time) `shouldReturn` MRInitialized
       firstDump <- transact dumpMetadata
       transact (runClearMetadata ClearMetadata) `shouldReturn` successMsg
       secondDump <- transact dumpMetadata
