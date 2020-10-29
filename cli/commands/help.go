@@ -68,8 +68,8 @@ func (o *helpOptions) run() {
 	cmd, _, e := c.Root().Find(args)
 	if cmd == nil || e != nil {
 		c.Printf("Unknown help topic %#q\n", args)
-		usageErr := c.Root().Usage()
-		if usageErr != nil {
+		err := c.Root().Usage()
+		if err != nil {
 			c.Printf("Error printing usage: %v", usageErr)
 		}
 	} else {
