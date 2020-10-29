@@ -29,7 +29,7 @@ From your local project directory, delete all the contents in the ``migrations``
 Step 2: Reset the migration history on the server
 -------------------------------------------------
 
-On the SQL tab of the console, run the following command:
+On the SQL tab of the Hasura console, run the following command:
 
 .. code-block:: bash
 
@@ -55,7 +55,7 @@ We will set up fresh migrations by pulling the schema and metadata from the serv
 
 .. note::
 
-   If you are using schemas other than ``public``, use ``--schema`` <schema_name> flag to indicate each one of them in the create command. This flag can be used multiple times.
+   If you are using schemas other than ``public``, use the ``--schema <schema_name>`` flag to indicate each one of them in the create command. This flag can be used multiple times.
 
 
 Step 4: Verify the status of the migrations
