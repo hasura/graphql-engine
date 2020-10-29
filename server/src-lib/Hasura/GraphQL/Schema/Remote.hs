@@ -36,21 +36,10 @@ buildRemoteParser
   -> m ( [P.FieldParser n RemoteField]
        , Maybe [P.FieldParser n RemoteField]
        , Maybe [P.FieldParser n RemoteField])
-buildRemoteParser (IntrospectionResult sdoc qRoot mRoot subRoot) info = do
-  (queryRoot, mutationRoot, subscriptionRoot) <-
-    case (qRoot, mRoot, subRoot) of
-      -- The spec says that if a Schema document's root operation names
-      -- for the query root, mutation root and the subscription root are
-      -- "Query", "Mutation" and "Subscription", then it can be omitted
-      -- from the schema document.
-      -- https://spec.graphql.org/June2018/#sec-Root-Operation-Types
-      (Nothing, Nothing, Nothing) ->
-        pure $ ($$(G.litName "Query"), Just $$(G.litName "Mutation"),Just $$(G.litName "Subscription"))
-      (Nothing, _, _) -> throw400 NotFound $ "query root not found"
-      (Just qRoot', mRoot', sRoot') -> pure $ (qRoot', mRoot', sRoot')
+buildRemoteParser (IntrospectionResult sdoc queryRoot mutationRoot subscriptionRoot) info = do
   queryT <- makeParsers queryRoot
-  mutationT <- traverse makeParsers mutationRoot
-  subscriptionT <- traverse makeParsers subscriptionRoot
+  mutationT <- makeNonQueryRootFieldParser mutationRoot $$(G.litName "Mutation")
+  subscriptionT <- makeNonQueryRootFieldParser subscriptionRoot $$(G.litName "Subscription")
   return (queryT, mutationT, subscriptionT)
   where
     makeFieldParser :: RemoteSchemaFieldDefinition -> m (P.FieldParser n RemoteField)
@@ -63,6 +52,21 @@ buildRemoteParser (IntrospectionResult sdoc qRoot mRoot subRoot) info = do
         Just (G.TypeDefinitionObject o) ->
           traverse makeFieldParser $ _otdFieldsDefinition o
         _ -> throw400 Unexpected $ rootName <<> " has to be an object type"
+
+    -- | The spec says that the `schema` definition can be omitted, if the root names
+    --   are the defaults (Query, Mutation and Subscription). This function is used
+    --   to constructor a `FieldParser` for the "mutation" and "subscription" roots.
+    --   If the user has given a custom Mutation/Subscription root name, then it will
+    --   look for that and if it's not found in the schema document, then an error is thrown.
+    --   If no root name has been provided, we lookup the schema document for an object with
+    --   the default name and if that's not found, we omit the said Root from the schema.
+    makeNonQueryRootFieldParser :: Maybe G.Name -> G.Name -> m (Maybe [P.FieldParser n RemoteField])
+    makeNonQueryRootFieldParser userProvidedRootName defaultRootName =
+      case userProvidedRootName of
+        Just _rootName -> traverse makeParsers userProvidedRootName
+        Nothing ->
+          let isDefaultRootObjectExists = isJust $ lookupObject sdoc defaultRootName
+          in bool (pure Nothing) (traverse makeParsers $ Just defaultRootName) $ isDefaultRootObjectExists
 
 remoteField'
   :: forall n m

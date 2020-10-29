@@ -42,7 +42,6 @@ data ValidationError
   | UnsupportedMultipleElementLists
   | UnsupportedEnum
   | InvalidGraphQLName !Text
-  | QueryRootNotFound
   deriving (Eq)
 
 errorToText :: ValidationError -> Text
@@ -79,8 +78,6 @@ errorToText = \case
     "enum value is not supported"
   InvalidGraphQLName t ->
     t <<> " is not a valid GraphQL identifier"
-  QueryRootNotFound ->
-    "query root not found"
 
 -- | Validate a remote relationship given a context.
 validateRemoteRelationship
@@ -105,10 +102,7 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
     onNothing (HM.lookup remoteSchemaName remoteSchemaMap) $
     throwError $ RemoteSchemaNotFound remoteSchemaName
   let schemaDoc@(RemoteSchemaIntrospection originalDefns) = irDoc introspectionResult
-      qRootName = irQueryRoot introspectionResult
-  -- The below case will never happen because without a query root
-  -- the remote server won't be added in the first place
-  queryRootName <- onNothing qRootName $ throwError QueryRootNotFound
+      queryRootName = irQueryRoot introspectionResult
   queryRoot <- onNothing (lookupObject schemaDoc queryRootName) $
     throwError $ TypeNotFound queryRootName
   (_, (leafParamMap, leafTypeMap)) <-

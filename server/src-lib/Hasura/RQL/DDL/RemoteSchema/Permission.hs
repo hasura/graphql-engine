@@ -804,7 +804,7 @@ getSchemaDocIntrospection scalars enums interfaces unions inpObjs objects (query
         <> interfaceTypeDefs <> unionTypeDefs
         <> enumTypeDefs <> inpObjTypeDefs
       schemaIntrospection = RemoteSchemaIntrospection modifiedTypeDefs
-  in IntrospectionResult schemaIntrospection queryRoot mutationRoot subscriptionRoot
+  in IntrospectionResult schemaIntrospection (fromMaybe $$(G.litName "Query") queryRoot) mutationRoot subscriptionRoot
 
 partitionTypeDefinition :: G.TypeDefinition () a  -> State (PartitionedTypeDefinitions a) ()
 partitionTypeDefinition (G.TypeDefinitionScalar scalarDefn) =

@@ -303,7 +303,7 @@ instance J.FromJSON (FromIntrospection IntrospectionResult) where
         subRoot <- subsType .: "name"
         return $ Just subRoot
     let r = IntrospectionResult (RemoteSchemaIntrospection (fmap fromIntrospection types))
-            (Just queryRoot) mutationRoot subsRoot
+            queryRoot mutationRoot subsRoot
     return $ FromIntrospection r
 
 execRemoteGQ'
