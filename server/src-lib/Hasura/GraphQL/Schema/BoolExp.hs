@@ -4,21 +4,23 @@ module Hasura.GraphQL.Schema.BoolExp
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict.Extended  as M
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.HashMap.Strict.Extended       as M
+import qualified Language.GraphQL.Draft.Syntax      as G
 
-import qualified Hasura.GraphQL.Parser         as P
+import           Data.Text.Extended
 
-import           Hasura.GraphQL.Parser         (InputFieldsParser, Kind (..), Parser,
-                                                UnpreparedValue, mkParameter)
+import qualified Hasura.GraphQL.Parser              as P
+
+import           Hasura.Backends.Postgres.SQL.DML
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Value
+import           Hasura.GraphQL.Parser              (InputFieldsParser, Kind (..), Parser,
+                                                     UnpreparedValue, mkParameter)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
-import           Hasura.SQL.DML
-import           Hasura.SQL.Types
-import           Hasura.SQL.Value
 
-type ComparisonExp = OpExpG UnpreparedValue
+type ComparisonExp b = OpExpG b UnpreparedValue
 
 -- |
 -- > input type_bool_exp {
@@ -31,10 +33,11 @@ type ComparisonExp = OpExpG UnpreparedValue
 boolExp
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
-  -> Maybe SelPermInfo
-  -> m (Parser 'Input n (AnnBoolExp UnpreparedValue))
+  -> Maybe (SelPermInfo 'Postgres)
+  -> m (Parser 'Input n (AnnBoolExp 'Postgres UnpreparedValue))
 boolExp table selectPermissions = memoizeOn 'boolExp table $ do
-  name <- qualifiedObjectToName table <&> (<> $$(G.litName "_bool_exp"))
+  tableGQLName <- getTableGQLName table
+  let name = tableGQLName <> $$(G.litName "_bool_exp")
   let description = G.Description $
         "Boolean expression to filter rows from the table " <> table <<>
         ". All fields are combined with a logical 'AND'."
@@ -58,7 +61,7 @@ boolExp table selectPermissions = memoizeOn 'boolExp table $ do
     pure (tableFields ++ specialFields)
   where
     mkField
-      :: FieldInfo -> m (Maybe (InputFieldsParser n (Maybe (AnnBoolExpFld UnpreparedValue))))
+      :: FieldInfo 'Postgres -> m (Maybe (InputFieldsParser n (Maybe (AnnBoolExpFld 'Postgres UnpreparedValue))))
     mkField fieldInfo = runMaybeT do
       fieldName <- MaybeT $ pure $ fieldInfoGraphQLName fieldInfo
       P.fieldOptional fieldName Nothing <$> case fieldInfo of
@@ -80,7 +83,7 @@ boolExp table selectPermissions = memoizeOn 'boolExp table $ do
 
 comparisonExps
   :: forall m n. (MonadSchema n m, MonadError QErr m)
-  => PGColumnType -> m (Parser 'Input n [ComparisonExp])
+  => PGColumnType -> m (Parser 'Input n [ComparisonExp 'Postgres])
 comparisonExps = P.memoize 'comparisonExps \columnType -> do
   geogInputParser <- geographyWithinDistanceInput
   geomInputParser <- geometryWithinDistanceInput
@@ -137,10 +140,10 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
         (ANLIKE    . mkParameter <$> columnParser)
       , P.fieldOptional $$(G.litName "_ilike")
         (Just "does the column match the given case-insensitive pattern")
-        (AILIKE    . mkParameter <$> columnParser)
+        (AILIKE () . mkParameter <$> columnParser)
       , P.fieldOptional $$(G.litName "_nilike")
         (Just "does the column NOT match the given case-insensitive pattern")
-        (ANILIKE   . mkParameter <$> columnParser)
+        (ANILIKE () . mkParameter <$> columnParser)
       , P.fieldOptional $$(G.litName "_similar")
         (Just "does the column match the given SQL regular expression")
         (ASIMILAR  . mkParameter <$> columnParser)
@@ -209,7 +212,7 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
       (SEArray $ txtEncoder . pstValue . P.pcvValue <$> columnValues)
       (mkTypeAnn $ PGTypeArray $ unsafePGColumnToRepresentation columnType)
 
-    castExp :: PGColumnType -> m (Maybe (Parser 'Input n (CastExp UnpreparedValue)))
+    castExp :: PGColumnType -> m (Maybe (Parser 'Input n (CastExp 'Postgres UnpreparedValue)))
     castExp sourceType = do
       let maybeScalars = case sourceType of
             PGColumnScalar PGGeography -> Just (PGGeography, PGGeometry)

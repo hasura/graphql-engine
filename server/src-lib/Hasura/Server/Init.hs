@@ -1,42 +1,43 @@
 -- | Types and functions related to the server initialisation
 {-# OPTIONS_GHC -O0 #-}
-{-# LANGUAGE CPP    #-}
+{-# LANGUAGE CPP #-}
 module Hasura.Server.Init
   ( module Hasura.Server.Init
   , module Hasura.Server.Init.Config
   ) where
 
-import qualified Data.Aeson                       as J
-import qualified Data.Aeson.Casing                as J
-import qualified Data.Aeson.TH                    as J
-import qualified Data.HashSet                     as Set
-import qualified Data.String                      as DataString
-import qualified Data.Text                        as T
-import qualified Data.Text.Encoding               as TE
-import qualified Database.PG.Query                as Q
-import qualified Language.Haskell.TH.Syntax       as TH
-import qualified Text.PrettyPrint.ANSI.Leijen     as PP
+import qualified Data.Aeson                          as J
+import qualified Data.Aeson.Casing                   as J
+import qualified Data.Aeson.TH                       as J
+import qualified Data.HashSet                        as Set
+import qualified Data.String                         as DataString
+import qualified Data.Text                           as T
+import qualified Data.Text.Encoding                  as TE
+import qualified Database.PG.Query                   as Q
+import qualified Language.Haskell.TH.Syntax          as TH
+import qualified Text.PrettyPrint.ANSI.Leijen        as PP
 
-import           Data.FileEmbed                   (embedStringFile)
-import           Data.Time                        (NominalDiffTime)
-import           Network.Wai.Handler.Warp         (HostPreference)
+import           Data.FileEmbed                      (embedStringFile)
+import           Data.Time                           (NominalDiffTime)
+import           Network.Wai.Handler.Warp            (HostPreference)
+import qualified Network.WebSockets                  as WS
 import           Options.Applicative
 
-import qualified Hasura.Cache.Bounded             as Cache
-import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
-import qualified Hasura.GraphQL.Execute.Plan      as E
-import qualified Hasura.Logging                   as L
+import qualified Hasura.Cache.Bounded                as Cache
+import qualified Hasura.GraphQL.Execute.LiveQuery    as LQ
+import qualified Hasura.GraphQL.Execute.Plan         as E
+import qualified Hasura.Logging                      as L
 
-import           Hasura.Db
+import           Hasura.Backends.Postgres.Connection
 import           Hasura.Prelude
-import           Hasura.RQL.Types                 (QErr, SchemaCache (..))
+import           Hasura.RQL.Types                    (QErr, SchemaCache (..))
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Server.Init.Config
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
 import           Hasura.Session
-import           Network.URI                      (parseURI)
+import           Network.URI                         (parseURI)
 
 newtype DbUid
   = DbUid { getDbUid :: Text }
@@ -99,7 +100,7 @@ withEnvBool bVal envVar =
   where
     considerEnv' = do
       mEnvVal <- considerEnv envVar
-      maybe (return False) return mEnvVal
+      return $ Just True == mEnvVal
 
 withEnvJwtConf :: Maybe JWTConfig -> String -> WithEnv (Maybe JWTConfig)
 withEnvJwtConf jVal envVar =
@@ -153,7 +154,7 @@ mkServeOptions rso = do
                      withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
   lqOpts <- mkLQOpts
   enableAL <- withEnvBool (rsoEnableAllowlist rso) $ fst enableAllowlistEnv
-  enabledLogs <- maybe L.defaultEnabledLogTypes (Set.fromList) <$>
+  enabledLogs <- maybe L.defaultEnabledLogTypes Set.fromList <$>
                  withEnv (rsoEnabledLogTypes rso) (fst enabledLogsEnv)
   serverLogLevel <- fromMaybe L.LevelInfo <$> withEnv (rsoLogLevel rso) (fst logLevelEnv)
   planCacheOptions <- E.PlanCacheOptions . fromMaybe 4000 <$>
@@ -170,12 +171,22 @@ mkServeOptions rso = do
   eventsFetchInterval <- withEnv (rsoEventsFetchInterval rso) (fst eventsFetchIntervalEnv)
   logHeadersFromEnv <- withEnvBool (rsoLogHeadersFromEnv rso) (fst logHeadersFromEnvEnv)
 
+  webSocketCompressionFromEnv <- withEnvBool (rsoWebSocketCompression rso) $
+                                 fst webSocketCompressionEnv
+
+  let connectionOptions = WS.defaultConnectionOptions {
+                            WS.connectionCompressionOptions =
+                              if webSocketCompressionFromEnv
+                                then WS.PermessageDeflateCompression WS.defaultPermessageDeflate
+                                else WS.NoCompression
+                          }
+
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
                         enabledLogs serverLogLevel planCacheOptions
                         internalErrorsConfig eventsHttpPoolSize eventsFetchInterval
-                        logHeadersFromEnv
+                        logHeadersFromEnv connectionOptions
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -195,7 +206,7 @@ mkServeOptions rso = do
     mkAuthHook (AuthHookG mUrl mType) = do
       mUrlEnv <- withEnv mUrl $ fst authHookEnv
       authModeM <- withEnv mType (fst authHookModeEnv)
-      ty <- maybe (authHookTyEnv mType) return authModeM
+      ty <- onNothing authModeM (authHookTyEnv mType)
       return (flip AuthHookG ty <$> mUrlEnv)
 
     -- Also support HASURA_GRAPHQL_AUTH_HOOK_TYPE
@@ -931,9 +942,10 @@ serveOptsToLog so =
       , "enabled_log_types" J..= soEnabledLogTypes so
       , "log_level" J..= soLogLevel so
       , "plan_cache_options" J..= soPlanCacheOptions so
+      , "websocket_compression_options" J..= show (WS.connectionCompressionOptions . soConnectionOptions $ so)
       ]
 
-mkGenericStrLog :: L.LogLevel -> T.Text -> String -> StartupLog
+mkGenericStrLog :: L.LogLevel -> Text -> String -> StartupLog
 mkGenericStrLog logLevel k msg =
   StartupLog logLevel k $ J.toJSON msg
 
@@ -976,6 +988,7 @@ serveOptionsParser =
   <*> parseGraphqlEventsHttpPoolSize
   <*> parseGraphqlEventsFetchInterval
   <*> parseLogHeadersFromEnv
+  <*> parseWebSocketCompression
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.
@@ -1010,3 +1023,15 @@ downgradeOptionsParser =
         ( long ("to-" <> v) <>
           help ("Downgrade to graphql-engine version " <> v <> " (equivalent to --to-catalog-version " <> catalogVersion <> ")")
         )
+
+webSocketCompressionEnv :: (String, String)
+webSocketCompressionEnv =
+  ( "HASURA_GRAPHQL_CONNECTION_COMPRESSION"
+  , "Enable WebSocket permessage-deflate compression (default: false)"
+  )
+
+parseWebSocketCompression :: Parser Bool
+parseWebSocketCompression =
+  switch ( long "websocket-compression" <>
+           help (snd webSocketCompressionEnv)
+         )

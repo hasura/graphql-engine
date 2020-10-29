@@ -7,20 +7,13 @@ import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import requestAction from '../../../../utils/requestAction';
 import dataHeaders from '../Common/Headers';
 
-import globals from '../../../../Globals';
-
-import returnMigrateUrl from '../Common/getMigrateUrl';
-import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../../constants';
-import { loadMigrationStatus } from '../../../Main/Actions';
-import { handleMigrationErrors } from '../../../../utils/migration';
-
-import { showSuccessNotification } from '../../Common/Notification';
-
 import { fetchTrackedFunctions } from '../DataActions';
 
 import _push from '../push';
 import { getSchemaBaseRoute } from '../../../Common/utils/routesUtils';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
+import { makeRequest } from '../../RemoteSchema/Actions';
+import Migration from '../../../../utils/migration/Migration';
 
 /* Constants */
 
@@ -46,71 +39,6 @@ const SESSVAR_CUSTOM_FUNCTION_ADD_SUCCESS =
   '@customFunction/SESSVAR_CUSTOM_FUNCTION_ADD_SUCCESS';
 
 /* */
-
-const makeRequest = (
-  upQueries,
-  downQueries,
-  migrationName,
-  customOnSuccess,
-  customOnError,
-  requestMsg,
-  successMsg,
-  errorMsg
-) => {
-  return (dispatch, getState) => {
-    const upQuery = {
-      type: 'bulk',
-      args: upQueries,
-    };
-
-    const downQuery = {
-      type: 'bulk',
-      args: downQueries,
-    };
-
-    const migrationBody = {
-      name: migrationName,
-      up: upQuery.args,
-      down: downQuery.args,
-    };
-
-    const currMigrationMode = getState().main.migrationMode;
-
-    const migrateUrl = returnMigrateUrl(currMigrationMode);
-
-    let finalReqBody;
-    if (globals.consoleMode === SERVER_CONSOLE_MODE) {
-      finalReqBody = upQuery;
-    } else if (globals.consoleMode === CLI_CONSOLE_MODE) {
-      finalReqBody = migrationBody;
-    }
-    const url = migrateUrl;
-    const options = {
-      method: 'POST',
-      credentials: globalCookiePolicy,
-      headers: dataHeaders(getState),
-      body: JSON.stringify(finalReqBody),
-    };
-
-    const onSuccess = data => {
-      if (globals.consoleMode === CLI_CONSOLE_MODE) {
-        dispatch(loadMigrationStatus()); // don't call for server mode
-      }
-      if (successMsg) {
-        dispatch(showSuccessNotification(successMsg));
-      }
-      customOnSuccess(data);
-    };
-
-    const onError = err => {
-      dispatch(handleMigrationErrors(errorMsg, err));
-      customOnError(err);
-    };
-
-    dispatch(showSuccessNotification(requestMsg));
-    return dispatch(requestAction(url, options)).then(onSuccess, onError);
-  };
-};
 
 /* Action creators */
 const fetchCustomFunction = (functionName, schema) => {
@@ -201,11 +129,15 @@ const deleteFunctionSql = () => {
     const sqlDropFunction =
       'DROP FUNCTION ' + functionNameWithSchema + functionArgString;
 
-    const sqlUpQueries = [getRunSqlQuery(sqlDropFunction)];
+    const migration = new Migration();
 
-    const sqlDownQueries = [];
     if (functionDefinition && functionDefinition.length > 0) {
-      sqlDownQueries.push(getRunSqlQuery(functionDefinition));
+      migration.add(
+        getRunSqlQuery(sqlDropFunction),
+        getRunSqlQuery(functionDefinition)
+      );
+    } else {
+      migration.add(getRunSqlQuery(sqlDropFunction)); // TODO Down queries
     }
 
     // Apply migrations
@@ -225,8 +157,8 @@ const deleteFunctionSql = () => {
     dispatch({ type: DELETING_CUSTOM_FUNCTION });
     return dispatch(
       makeRequest(
-        sqlUpQueries,
-        sqlDownQueries,
+        migration.upMigration,
+        migration.downMigration,
         migrationName,
         customOnSuccess,
         customOnError,
@@ -264,18 +196,9 @@ const unTrackCustomFunction = () => {
       },
     };
 
-    const upQueryArgs = [];
-    upQueryArgs.push(payload);
-    const downQueryArgs = [];
-    downQueryArgs.push(downPayload);
-    const upQuery = {
-      type: 'bulk',
-      args: upQueryArgs,
-    };
-    const downQuery = {
-      type: 'bulk',
-      args: downQueryArgs,
-    };
+    const migration = new Migration();
+    migration.add(payload, downPayload);
+
     const requestMsg = 'Deleting custom function...';
     const successMsg = 'Custom function deleted successfully';
     const errorMsg = 'Delete custom function failed';
@@ -294,8 +217,8 @@ const unTrackCustomFunction = () => {
     dispatch({ type: UNTRACKING_CUSTOM_FUNCTION });
     return dispatch(
       makeRequest(
-        upQuery.args,
-        downQuery.args,
+        migration.upMigration,
+        migration.downMigration,
         migrationName,
         customOnSuccess,
         customOnError,

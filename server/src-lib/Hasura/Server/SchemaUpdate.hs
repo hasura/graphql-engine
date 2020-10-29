@@ -3,17 +3,17 @@ module Hasura.Server.SchemaUpdate
   (startSchemaSyncThreads)
 where
 
-import           Hasura.Db
-import           Hasura.Prelude
-import           Hasura.Session
+import           Hasura.Backends.Postgres.Connection
 import           Hasura.Logging
-import           Hasura.RQL.DDL.Schema       (runCacheRWT)
+import           Hasura.Prelude
+import           Hasura.RQL.DDL.Schema               (runCacheRWT)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.API.Query
-import           Hasura.Server.App           (SchemaCacheRef (..), withSCUpdate)
-import           Hasura.Server.Init          (InstanceId (..))
+import           Hasura.Server.App                   (SchemaCacheRef (..), withSCUpdate)
+import           Hasura.Server.Init                  (InstanceId (..))
 import           Hasura.Server.Logging
+import           Hasura.Session
 
 import           Data.Aeson
 import           Data.Aeson.Casing
@@ -23,14 +23,14 @@ import           Data.IORef
 import           GHC.AssertNF
 #endif
 
-import qualified Control.Concurrent.Extended as C
-import qualified Control.Concurrent.STM      as STM
-import qualified Control.Immortal            as Immortal
-import qualified Data.Text                   as T
-import qualified Data.Time                   as UTC
-import qualified Database.PG.Query           as PG
-import qualified Database.PostgreSQL.LibPQ   as PQ
-import qualified Network.HTTP.Client         as HTTP
+import qualified Control.Concurrent.Extended         as C
+import qualified Control.Concurrent.STM              as STM
+import qualified Control.Immortal                    as Immortal
+import qualified Data.Text                           as T
+import qualified Data.Time                           as UTC
+import qualified Database.PG.Query                   as PG
+import qualified Database.PostgreSQL.LibPQ           as PQ
+import qualified Network.HTTP.Client                 as HTTP
 
 pgChannel :: PG.PGChannel
 pgChannel = "hasura_schema_update"
@@ -71,7 +71,7 @@ data EventPayload
 $(deriveJSON (aesonDrop 3 snakeCase) ''EventPayload)
 
 data ThreadError
-  = TEJsonParse !T.Text
+  = TEJsonParse !Text
   | TEQueryError !QErr
 $(deriveToJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 2
@@ -134,7 +134,7 @@ listener sqlGenCtx pool logger httpMgr updateEventRef
   forever $ do
     listenResE <-
       liftIO $ runExceptT $ PG.listen pool pgChannel notifyHandler
-    either onError return listenResE
+    onLeft listenResE onError
     logWarn
     C.sleep $ seconds 1
   where
@@ -219,7 +219,7 @@ refreshSchemaCache
   -> SchemaCacheRef
   -> CacheInvalidations
   -> ThreadType
-  -> T.Text -> IO ()
+  -> Text -> IO ()
 refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef invalidations threadType msg = do
   -- Reload schema cache from catalog
   resE <- liftIO $ runExceptT $ withSCUpdate cacheRef logger do

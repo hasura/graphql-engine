@@ -4,12 +4,16 @@ import { LocalAdhocEventState } from '../../Services/Events/AdhocEvents/Add/stat
 import { LocalEventTriggerState } from '../../Services/Events/EventTriggers/state';
 import { RemoteRelationshipPayload } from '../../Services/Data/TableRelationships/RemoteRelationships/utils';
 import { transformHeaders } from '../Headers/utils';
-import { generateTableDef } from './pgUtils';
+import {
+  generateTableDef,
+  BaseTableColumn,
+  PrimaryKey,
+  createPKClause,
+  arrayToPostgresArray,
+} from './pgUtils';
 import { Nullable } from './tsUtils';
-
-// TODO add type for the where clause
-
-// TODO extend all queries with v1 query type
+import { ConsoleState } from '../../../types';
+import { ConsoleScope } from '../../Main/ConsoleNotification';
 
 export type OrderByType = 'asc' | 'desc';
 export type OrderByNulls = 'first' | 'last';
@@ -55,15 +59,15 @@ export type Header = {
 
 export const getRunSqlQuery = (
   sql: string,
-  shouldCascade?: boolean,
-  readOnly?: boolean
+  cascade = false,
+  read_only = false
 ) => {
   return {
     type: 'run_sql',
     args: {
       sql: terminateSql(sql),
-      cascade: !!shouldCascade,
-      read_only: !!readOnly,
+      cascade,
+      read_only,
     },
   };
 };
@@ -96,6 +100,99 @@ export const getDropPermissionQuery = (
       role,
     },
   };
+};
+
+export type PGReturnValueType =
+  | 'null'
+  | null
+  | string
+  | unknown[]
+  | undefined
+  | Record<string, any>
+  | number;
+
+export const convertPGValue = (
+  value: PGReturnValueType,
+  columnInfo: BaseTableColumn
+): string | number => {
+  if (value === 'null' || value === null) {
+    return 'null';
+  }
+
+  if (typeof value === 'string') {
+    return `'${value}'`;
+  }
+
+  if (
+    Array.isArray(value) &&
+    columnInfo.data_type !== 'json' &&
+    columnInfo.data_type !== 'jsonb'
+  ) {
+    return `'${arrayToPostgresArray(value)}'`;
+  }
+
+  if (typeof value === 'object') {
+    return `'${JSON.stringify(value)}'`;
+  }
+
+  if (value === undefined) {
+    return '';
+  }
+
+  return value;
+};
+
+export const getInsertUpQuery = (
+  tableDef: TableDefinition,
+  insertion: Record<string, PGReturnValueType>,
+  columns: BaseTableColumn[]
+) => {
+  const columnValues = Object.keys(insertion)
+    .map(key => `"${key}"`)
+    .join(', ');
+
+  const values = Object.values(insertion)
+    .map((value, valIndex) => convertPGValue(value, columns[valIndex]))
+    .join(', ');
+
+  const sql = `INSERT INTO "${tableDef.schema}"."${tableDef.name}"(${columnValues}) VALUES (${values});`;
+
+  return getRunSqlQuery(sql);
+};
+
+export const convertPGPrimaryKeyValue = (
+  value: PGReturnValueType,
+  pk: string
+): string => {
+  if (typeof value === 'string') {
+    return `"${pk}" = '${value}'`;
+  }
+
+  if (Array.isArray(value)) {
+    return `"${pk}" = '${arrayToPostgresArray(value)}'`;
+  }
+
+  if (typeof value === 'object') {
+    return `"${pk}" = '${JSON.stringify(value)}'`;
+  }
+
+  return `"${pk}" = ${value}`;
+};
+
+export const getInsertDownQuery = (
+  tableDef: TableDefinition,
+  insertion: Record<string, PGReturnValueType>,
+  primaryKeyInfo: PrimaryKey,
+  columns: BaseTableColumn[]
+) => {
+  const whereClause = createPKClause(primaryKeyInfo, insertion, columns);
+  const clauses = Object.keys(whereClause).map(pk =>
+    convertPGPrimaryKeyValue(whereClause[pk], pk)
+  );
+  const condition = clauses.join(' AND ');
+  const sql = `DELETE FROM "${tableDef.schema}"."${tableDef.name}" WHERE ${condition};`;
+
+  return getRunSqlQuery(sql);
 };
 
 type CustomTypeScalar = {
@@ -209,7 +306,7 @@ export const getFetchCustomTypesQuery = () => {
   };
 };
 
-type CustomRootFields = {
+export type CustomRootFields = {
   select: string;
   select_by_pk: string;
   select_aggregate: string;
@@ -679,3 +776,66 @@ export const getConsoleOptsQuery = () =>
     null,
     null
   );
+
+export const getUpdateConsoleStateQuery = (
+  updatedConsoleState: ConsoleState['console_opts']
+) => {
+  return {
+    type: 'update',
+    args: {
+      table: { name: 'hdb_version', schema: 'hdb_catalog' },
+      $set: { console_state: updatedConsoleState },
+      where: {},
+      returning: ['console_state'],
+    },
+  };
+};
+
+export const getConsoleNotificationQuery = (
+  time: Date | string | number,
+  userType?: Nullable<ConsoleScope>
+) => {
+  let consoleUserScope = {
+    $ilike: `%${userType}%`,
+  };
+  if (!userType) {
+    consoleUserScope = {
+      $ilike: '%OSS%',
+    };
+  }
+
+  return {
+    args: {
+      table: 'console_notification',
+      columns: ['*'],
+      where: {
+        $or: [
+          {
+            expiry_date: {
+              $gte: time,
+            },
+          },
+          {
+            expiry_date: {
+              $eq: null,
+            },
+          },
+        ],
+        scope: consoleUserScope,
+        start_date: { $lte: time },
+      },
+      order_by: [
+        {
+          type: 'asc',
+          nulls: 'last',
+          column: 'priority',
+        },
+        {
+          type: 'desc',
+          column: 'start_date',
+        },
+      ],
+    },
+    type: 'select',
+  };
+};

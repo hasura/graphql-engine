@@ -15,7 +15,7 @@ Delete mutation
 Auto-generated delete mutation schema
 -------------------------------------
 
-**For example**, the auto-generated schema for the delete mutation field for a table ``article`` looks like this:
+**For example**, the auto-generated schema for the delete mutation field for a table ``article`` looks like the following:
 
 .. code-block:: graphql
 

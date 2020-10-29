@@ -23,27 +23,30 @@ module Hasura.RQL.DDL.Action
   , deleteActionPermissionFromCatalog
   ) where
 
+import           Hasura.Prelude
+
+import qualified Data.Aeson                         as J
+import qualified Data.Aeson.Casing                  as J
+import qualified Data.Aeson.TH                      as J
+import qualified Data.Environment                   as Env
+import qualified Data.HashMap.Strict                as Map
+import qualified Database.PG.Query                  as Q
+import qualified Language.GraphQL.Draft.Syntax      as G
+
+import           Data.Text.Extended
+import           Language.Haskell.TH.Syntax         (Lift)
+
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Utils
-import           Hasura.Prelude
-import           Hasura.RQL.DDL.CustomTypes    (lookupPGScalar)
+import           Hasura.RQL.DDL.CustomTypes         (lookupPGScalar)
 import           Hasura.RQL.Types
 import           Hasura.Session
-import           Hasura.SQL.Types
 
-import qualified Data.Aeson                    as J
-import qualified Data.Aeson.Casing             as J
-import qualified Data.Aeson.TH                 as J
-import qualified Data.Environment              as Env
-import qualified Data.HashMap.Strict           as Map
-import qualified Database.PG.Query             as Q
-import qualified Language.GraphQL.Draft.Syntax as G
-
-import           Language.Haskell.TH.Syntax    (Lift)
 
 getActionInfo
   :: (QErrM m, CacheRM m)
-  => ActionName -> m ActionInfo
+  => ActionName -> m (ActionInfo 'Postgres)
 getActionInfo actionName = do
   actionMap <- scActions <$> askSchemaCache
   case Map.lookup actionName actionMap of
@@ -96,11 +99,11 @@ referred scalars.
 resolveAction
   :: QErrM m
   => Env.Environment
-  -> AnnotatedCustomTypes
+  -> AnnotatedCustomTypes 'Postgres
   -> ActionDefinitionInput
   -> HashSet PGScalarType -- See Note [Postgres scalars in custom types]
   -> m ( ResolvedActionDefinition
-       , AnnotatedObjectType
+       , AnnotatedObjectType 'Postgres
        )
 resolveAction env AnnotatedCustomTypes{..} ActionDefinition{..} allPGScalars = do
   resolvedArguments <- forM _adArguments $ \argumentDefinition -> do
@@ -109,7 +112,7 @@ resolveAction env AnnotatedCustomTypes{..} ActionDefinition{..} allPGScalars = d
           argumentBaseType = G.getBaseType gType
       (gType,) <$>
         if | Just pgScalar <- lookupPGScalar allPGScalars argumentBaseType ->
-               pure $ NOCTScalar $ ASTReusedPgScalar argumentBaseType pgScalar
+               pure $ NOCTScalar $ ASTReusedScalar argumentBaseType pgScalar
            | Just nonObjectType <- Map.lookup argumentBaseType _actNonObjects ->
                pure nonObjectType
            | otherwise ->
@@ -125,7 +128,7 @@ resolveAction env AnnotatedCustomTypes{..} ActionDefinition{..} allPGScalars = d
     <> " is not an object type defined in custom types"
   resolvedWebhook <- resolveWebhook env _adHandler
   pure ( ActionDefinition resolvedArguments _adOutputType _adType
-         _adHeaders _adForwardClientHeaders resolvedWebhook
+         _adHeaders _adForwardClientHeaders _adTimeout resolvedWebhook
        , outputObject
        )
 

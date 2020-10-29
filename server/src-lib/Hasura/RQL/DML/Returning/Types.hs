@@ -1,37 +1,35 @@
 module Hasura.RQL.DML.Returning.Types where
 
-
 import           Hasura.Prelude
 
-import qualified Data.Aeson                  as J
-import qualified Data.HashMap.Strict.InsOrd  as OMap
-import qualified Data.Text                   as T
-import qualified Hasura.SQL.DML              as S
+import qualified Data.Aeson                       as J
+import qualified Data.HashMap.Strict.InsOrd       as OMap
+
+import qualified Hasura.Backends.Postgres.SQL.DML as S
 
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Select.Types
+import           Hasura.SQL.Backend
 
 
-data MutFldG v
+data MutFldG (b :: Backend) v
   = MCount
-  | MExp !T.Text
-  | MRet !(AnnFieldsG v)
-  deriving (Show, Eq)
+  | MExp !Text
+  | MRet !(AnnFieldsG b v)
 
-type MutFld = MutFldG S.SQLExp
+type MutFld b = MutFldG b S.SQLExp
 
-type MutFldsG v = Fields (MutFldG v)
+type MutFldsG b v = Fields (MutFldG b v)
 
-data MutationOutputG v
-  = MOutMultirowFields !(MutFldsG v)
-  | MOutSinglerowObject !(AnnFieldsG v)
-  deriving (Show, Eq)
+data MutationOutputG (b :: Backend) v
+  = MOutMultirowFields !(MutFldsG b v)
+  | MOutSinglerowObject !(AnnFieldsG b v)
 
-type MutationOutput = MutationOutputG S.SQLExp
+type MutationOutput b = MutationOutputG b S.SQLExp
 
-type MutFlds = MutFldsG S.SQLExp
+type MutFlds b = MutFldsG b S.SQLExp
 
-buildEmptyMutResp :: MutationOutput -> EncJSON
+buildEmptyMutResp :: MutationOutput backend -> EncJSON
 buildEmptyMutResp = \case
   MOutMultirowFields mutFlds -> encJFromJValue $ OMap.fromList $ map (second convMutFld) mutFlds
   MOutSinglerowObject _      -> encJFromJValue $ J.Object mempty

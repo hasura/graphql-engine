@@ -4,20 +4,21 @@ module Hasura.GraphQL.Schema.OrderBy
 
 import           Hasura.Prelude
 
-import qualified Data.List.NonEmpty            as NE
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.List.NonEmpty                 as NE
+import qualified Language.GraphQL.Draft.Syntax      as G
 
-import qualified Hasura.GraphQL.Parser         as P
-import qualified Hasura.RQL.DML.Select         as RQL
-import           Hasura.RQL.Types              as RQL
-import           Hasura.SQL.DML                as SQL
+import           Hasura.Backends.Postgres.SQL.DML   as SQL
+import qualified Hasura.GraphQL.Parser              as P
+import qualified Hasura.RQL.DML.Select              as RQL
+import           Hasura.RQL.Types                   as RQL
 
-import           Hasura.GraphQL.Parser         (InputFieldsParser, Kind (..), Parser,
-                                                UnpreparedValue)
+import           Data.Text.Extended
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.GraphQL.Parser              (InputFieldsParser, Kind (..), Parser,
+                                                     UnpreparedValue)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Table
-import           Hasura.SQL.Types
 
 
 -- | Corresponds to an object type for an order by.
@@ -33,10 +34,11 @@ import           Hasura.SQL.Types
 orderByExp
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
-  -> SelPermInfo
-  -> m (Parser 'Input n [RQL.AnnOrderByItemG UnpreparedValue])
+  -> SelPermInfo 'Postgres
+  -> m (Parser 'Input n [RQL.AnnOrderByItemG 'Postgres UnpreparedValue])
 orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
-  name <- qualifiedObjectToName table <&> (<> $$(G.litName "_order_by"))
+  tableGQLName <- getTableGQLName table
+  let name = tableGQLName <> $$(G.litName "_order_by")
   let description = G.Description $
         "Ordering options when selecting data from " <> table <<> "."
   tableFields  <- tableSelectFields table selectPermissions
@@ -44,8 +46,8 @@ orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
   pure $ concat . catMaybes <$> P.object name (Just description) fieldParsers
   where
     mkField
-      :: FieldInfo
-      -> m (Maybe (InputFieldsParser n (Maybe [RQL.AnnOrderByItemG UnpreparedValue])))
+      :: FieldInfo 'Postgres
+      -> m (Maybe (InputFieldsParser n (Maybe [RQL.AnnOrderByItemG 'Postgres UnpreparedValue])))
     mkField fieldInfo = runMaybeT $
       case fieldInfo of
         FIColumn columnInfo -> do
@@ -82,15 +84,15 @@ type OrderInfo = (SQL.OrderType, SQL.NullsOrder)
 orderByAggregation
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
-  -> SelPermInfo
-  -> m (Parser 'Input n [OrderByItemG RQL.AnnAggregateOrderBy])
+  -> SelPermInfo 'Postgres
+  -> m (Parser 'Input n [OrderByItemG (RQL.AnnAggregateOrderBy 'Postgres)])
 orderByAggregation table selectPermissions = do
   -- WIP NOTE
   -- there is heavy duplication between this and Select.tableAggregationFields
   -- it might be worth putting some of it in common, just to avoid issues when
   -- we change one but not the other?
-  tableName  <- qualifiedObjectToName table
-  allColumns <- tableSelectColumns table selectPermissions
+  tableGQLName <- getTableGQLName table
+  allColumns   <- tableSelectColumns table selectPermissions
   let numColumns  = onlyNumCols allColumns
       compColumns = onlyComparableCols allColumns
       numFields   = catMaybes <$> traverse mkField numColumns
@@ -102,17 +104,17 @@ orderByAggregation table selectPermissions = do
         , -- operators on numeric columns
           if null numColumns then Nothing else Just $
           for numericAggOperators \operator ->
-            parseOperator operator tableName numFields
+            parseOperator operator tableGQLName numFields
         , -- operators on comparable columns
           if null compColumns then Nothing else Just $
           for comparisonAggOperators \operator ->
-            parseOperator operator tableName compFields
+            parseOperator operator tableGQLName compFields
         ]
-  let objectName  = tableName <> $$(G.litName "_aggregate_order_by")
+  let objectName  = tableGQLName <> $$(G.litName "_aggregate_order_by")
       description = G.Description $ "order by aggregate values of table " <>> table
   pure $ P.object objectName (Just description) aggFields
   where
-    mkField :: PGColumnInfo -> InputFieldsParser n (Maybe (PGColumnInfo, OrderInfo))
+    mkField :: ColumnInfo 'Postgres -> InputFieldsParser n (Maybe (ColumnInfo 'Postgres, OrderInfo))
     mkField columnInfo =
       P.fieldOptional (pgiName columnInfo) (pgiDescription columnInfo) orderByOperator
         <&> fmap (columnInfo,) . join
@@ -120,16 +122,14 @@ orderByAggregation table selectPermissions = do
     parseOperator
       :: G.Name
       -> G.Name
-      -> InputFieldsParser n [(PGColumnInfo, OrderInfo)]
-      -> InputFieldsParser n (Maybe [OrderByItemG RQL.AnnAggregateOrderBy])
-    parseOperator operator tableName columns =
+      -> InputFieldsParser n [(ColumnInfo 'Postgres, OrderInfo)]
+      -> InputFieldsParser n (Maybe [OrderByItemG (RQL.AnnAggregateOrderBy 'Postgres)])
+    parseOperator operator tableGQLName columns =
       let opText     = G.unName operator
-          objectName = tableName <> $$(G.litName "_") <> operator <> $$(G.litName "_order_by")
+          objectName = tableGQLName <> $$(G.litName "_") <> operator <> $$(G.litName "_order_by")
           objectDesc = Just $ G.Description $ "order by " <> opText <> "() on columns of table " <>> table
       in  P.fieldOptional operator Nothing (P.object objectName objectDesc columns)
         `mapField` map (\(col, info) -> mkOrderByItemG (RQL.AAOOp opText col) info)
-
-
 
 orderByOperator :: MonadParse m => Parser 'Both m (Maybe OrderInfo)
 orderByOperator =

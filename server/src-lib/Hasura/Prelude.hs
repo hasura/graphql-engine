@@ -44,10 +44,10 @@ import           Data.Foldable                     as M (asum, fold, foldrM, for
                                                          traverse_)
 import           Data.Function                     as M (on, (&))
 import           Data.Functor                      as M (($>), (<&>))
-import           Data.Hashable                     as M (Hashable)
 import           Data.HashMap.Strict               as M (HashMap)
 import           Data.HashMap.Strict.InsOrd        as M (InsOrdHashMap)
 import           Data.HashSet                      as M (HashSet)
+import           Data.Hashable                     as M (Hashable)
 import           Data.List                         as M (find, findIndex, foldl', group,
                                                          intercalate, intersect, lookup, sort,
                                                          sortBy, sortOn, union, unionBy, (\\))
@@ -74,8 +74,8 @@ import           Text.Read                         as M (readEither, readMaybe)
 
 import qualified Data.ByteString                   as B
 import qualified Data.ByteString.Base64.Lazy       as Base64
-import           Data.Coerce
 import qualified Data.ByteString.Lazy              as BL
+import           Data.Coerce
 import qualified Data.HashMap.Strict               as Map
 import qualified Data.Set                          as Set
 import qualified Data.Text                         as T
@@ -158,7 +158,7 @@ mapFromL f = Map.fromList . map (\v -> (f v, v))
 -- result of the input action will be evaluated to WHNF.
 --
 -- The result 'DiffTime' is guarenteed to be >= 0.
-withElapsedTime :: MonadIO m=> m a -> m (DiffTime, a)
+withElapsedTime :: MonadIO m => m a -> m (DiffTime, a)
 withElapsedTime ma = do
   bef <- liftIO Clock.getMonotonicTimeNSec
   !a <- ma
@@ -175,7 +175,7 @@ withElapsedTime ma = do
 --   moreStuff
 --   elapsedBoth <- timer
 -- @
-startTimer :: (MonadIO m, MonadIO n)=> m (n DiffTime)
+startTimer :: (MonadIO m, MonadIO n) => m (n DiffTime)
 startTimer = do
   !bef <- liftIO Clock.getMonotonicTimeNSec
   return $ do
