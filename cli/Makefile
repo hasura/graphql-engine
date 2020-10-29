@@ -7,6 +7,7 @@ OUTPUT_DIR := _output
 
 HAS_GOX := $(shell command -v gox;)
 HAS_PKGER := $(shell command -v pkger;)
+HAS_GINKGO := $(shell command -v ginkgo;)
 
 # compile assets
 .PHONY: assets
@@ -22,6 +23,10 @@ deps:
 	go mod download
 ifndef HAS_GOX
 	go get github.com/mitchellh/gox
+endif
+ifndef HAS_GINKGO
+	go get github.com/onsi/ginkgo/ginkgo
+	go get github.com/onsi/gomega/...
 endif
 
 # build cli locally, for all given platform/arch
@@ -49,9 +54,13 @@ ci-copy-binary:
 # run tests
 .PHONY: test
 test:
-	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" `go list ./... | grep -v integration_test`
-	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" -run Commands/config=v1 ./integration_test
-	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" -run Commands/config=v2 ./integration_test
+	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" `go list ./... | grep -v integration | grep -v e2e`
+	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" -run Commands/config=v1 ./tests/integration
+	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" -run Commands/config=v2 ./tests/integration
+
+test-e2e-ci:
+	HASURA_CLI_E2E_TESTS_HGE_BINARY_PATH="/build/_server_output/graphql-engine" HASURA_CLI_E2E_TESTS_CLI_BINARY_PATH="/build/_cli_output/binaries/cli-hasura-linux-amd64" ginkgo tests/e2e
+
 
 # clean the output directory
 .PHONY: clean

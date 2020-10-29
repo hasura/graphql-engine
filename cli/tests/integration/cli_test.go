@@ -13,11 +13,11 @@ import (
 
 	"github.com/briandowns/spinner"
 	"github.com/hasura/graphql-engine/cli"
-	integrationtest "github.com/hasura/graphql-engine/cli/integration_test"
+	integrationtest "github.com/hasura/graphql-engine/cli/tests/integration"
 	"github.com/spf13/viper"
 
-	v1 "github.com/hasura/graphql-engine/cli/integration_test/v1"
-	v2 "github.com/hasura/graphql-engine/cli/integration_test/v2"
+	v1 "github.com/hasura/graphql-engine/cli/tests/integration/v1"
+	v2 "github.com/hasura/graphql-engine/cli/tests/integration/v2"
 	"github.com/sirupsen/logrus/hooks/test"
 )
 
