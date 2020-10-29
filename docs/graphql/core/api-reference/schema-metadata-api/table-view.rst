@@ -186,7 +186,7 @@ the nodes generated will be:
 - ``delete_users_address_by_pk``
 
 .. note::
-  graphql-engine requires the constraint names (if any) of a table to be GraphQL `compliant <https://spec.graphql.org/June2018/#sec-Names>`__ in order to be able to track it.
+  graphql-engine requires the constraint names (if any) of a table to be `GraphQL compliant <https://spec.graphql.org/June2018/#sec-Names>`__ in order to be able to track it.
 
 .. _track_table_args_syntax_v2:
 
@@ -224,8 +224,8 @@ Table Config
    * - custom_name
      - false
      - ``String``
-     - Customise the ``<table-name>`` with the provided custom name value
-       . The GraphQL nodes for the table will be generated according to the custom name.
+     - Customise the ``<table-name>`` with the provided custom name value.
+       The GraphQL nodes for the table will be generated according to the custom name.
    * - custom_root_fields
      - false
      - :ref:`Custom Root Fields <custom_root_fields>`
@@ -290,7 +290,7 @@ set_table_custom_fields (deprecated)
 ------------------------------------
 
 ``set_table_custom_fields`` has been deprecated. Use the
-:ref:`set_table_configuration <set_table_configuration>` API to set the custom
+:ref:`set_table_customization <set_table_customization>` API to set the custom
 table fields.
 
 ``set_table_custom_fields`` in version ``2`` sets the custom root fields and
@@ -359,14 +359,14 @@ Args syntax
 set_table_customization
 -----------------------
 
-``set_table_customization`` allows to customize any given table with
+``set_table_customization`` allows you to customize any given table with
 a custom name, custom root fields and custom column names of an already tracked
 table. This will **replace** the already present customization.
 
 :ref:`set_table_custom_fields <set_table_custom_fields>` has been deprecated in
 favour of this API.
 
-Set configuration for table/view ``author``:
+Set the configuration for a table/view called ``author``:
 
 .. code-block:: http
 
