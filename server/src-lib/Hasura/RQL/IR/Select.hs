@@ -18,9 +18,9 @@ import qualified Hasura.Backends.Postgres.SQL.DML    as S
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.IR.BoolExp
+import           Hasura.RQL.IR.OrderBy
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.DML
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.RemoteSchema

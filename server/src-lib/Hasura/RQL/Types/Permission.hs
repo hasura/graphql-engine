@@ -3,11 +3,11 @@ module Hasura.RQL.Types.Permission where
 import           Hasura.Backends.Postgres.SQL.Types (PGCol, TableName, getTableTxt)
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.Prelude
+import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
-import           Hasura.RQL.Types.DML
-import           Hasura.Session
 import           Hasura.SQL.Backend
+import           Hasura.Session
 
 import           Control.Lens                       (makeLenses)
 import           Data.Aeson
