@@ -38,25 +38,25 @@ module Hasura.RQL.DDL.Permission
 
 import           Hasura.Prelude
 
-import           Data.Text.Extended
-import           Hasura.EncJSON
-import           Hasura.Incremental                 (Cacheable)
-import           Hasura.RQL.DDL.Permission.Internal
-import           Hasura.RQL.DML.Internal            hiding (askPermInfo)
-import           Hasura.RQL.Types
-import           Hasura.SQL.Types
-import           Hasura.Session
-
+import qualified Data.HashMap.Strict                as HM
+import qualified Data.HashSet                       as HS
 import qualified Database.PG.Query                  as Q
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Text.Extended
 import           Language.Haskell.TH.Syntax         (Lift)
 
-import qualified Data.HashMap.Strict                as HM
-import qualified Data.HashSet                       as HS
-import qualified Data.Text                          as T
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.EncJSON
+import           Hasura.Incremental                 (Cacheable)
+import           Hasura.RQL.DDL.Permission.Internal
+import           Hasura.RQL.DML.Internal            hiding (askPermInfo)
+import           Hasura.RQL.Types
+import           Hasura.Session
+
+
 
 {- Note [Backend only permissions]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -142,9 +142,9 @@ buildInsPermInfo tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCols mBack
         insColsWithoutPresets = insCols \\ HM.keys setColsSQL
     return (InsPermInfo (HS.fromList insColsWithoutPresets) be setColsSQL backendOnly reqHdrs, deps)
   where
-    backendOnly = fromMaybe False mBackendOnly
+    backendOnly = Just True == mBackendOnly
     allCols = map pgiColumn $ getCols fieldInfoMap
-    insCols = fromMaybe allCols $ convColSpec fieldInfoMap <$> mCols
+    insCols = maybe allCols (convColSpec fieldInfoMap) mCols
 
 -- TODO this is a dirty hack, hardcoding permissions to postgres.  When
 -- implementing support for other backends, the type family 'PermInfo' probably
@@ -331,7 +331,7 @@ data SetPermComment
   { apTable      :: !QualifiedTable
   , apRole       :: !RoleName
   , apPermission :: !PermType
-  , apComment    :: !(Maybe T.Text)
+  , apComment    :: !(Maybe Text)
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase) ''SetPermComment)
@@ -387,9 +387,9 @@ fetchPermDef
   :: QualifiedTable
   -> RoleName
   -> PermType
-  -> Q.TxE QErr (Value, Maybe T.Text)
+  -> Q.TxE QErr (Value, Maybe Text)
 fetchPermDef (QualifiedObject sn tn) rn pt =
- (first Q.getAltJ .  Q.getRow) <$> Q.withQE defaultTxErrorHandler
+ first Q.getAltJ .  Q.getRow <$> Q.withQE defaultTxErrorHandler
       [Q.sql|
             SELECT perm_def::json, comment
               FROM hdb_catalog.hdb_permission

@@ -14,17 +14,18 @@ import qualified Language.GraphQL.Draft.Syntax         as G
 import qualified Hasura.GraphQL.Parser                 as P
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
 import qualified Hasura.RQL.DML.Internal               as RQL
-import qualified Hasura.RQL.DML.Select.Types           as RQL
+import qualified Hasura.RQL.IR.Select                  as RQL
 
 import           Data.Text.Extended
+import           Data.Text.NonEmpty
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.GraphQL.Parser                 (FieldParser, InputFieldsParser, Kind (..),
                                                         Parser, UnpreparedValue (..))
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
-import           Hasura.SQL.Value
 import           Hasura.Session
 
 
@@ -244,7 +245,7 @@ actionInputArguments nonObjectTypeMap arguments = do
       -> InputFieldsParser n J.Object
     inputFieldsToObject inputFields =
       let mkTuple (name, parser) = fmap (G.unName name,) <$> parser
-      in fmap (Map.fromList . catMaybes) $ traverse mkTuple inputFields
+      in Map.fromList . catMaybes <$> traverse mkTuple inputFields
 
     argumentParser
       :: G.Name

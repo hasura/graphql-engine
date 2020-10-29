@@ -22,19 +22,19 @@ module Hasura.RQL.DDL.Schema.Diff
   ) where
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Catalog
-import           Hasura.SQL.Types
 
-import qualified Database.PG.Query        as Q
+import qualified Data.HashMap.Strict                as M
+import qualified Data.HashSet                       as HS
+import qualified Data.List.NonEmpty                 as NE
+import qualified Database.PG.Query                  as Q
 
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.List.Extended       (duplicates)
+import           Data.List.Extended                 (duplicates)
 
-import qualified Data.HashMap.Strict      as M
-import qualified Data.HashSet             as HS
-import qualified Data.List.NonEmpty       as NE
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Catalog
 
 data FunctionMeta
   = FunctionMeta

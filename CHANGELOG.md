@@ -67,6 +67,10 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: Fix fine-grained incremental cache invalidation (fix #3759)
+
+  This issue could cause enum table values to sometimes not be properly reloaded without restarting `graphql-engine`. Now a `reload_metadata` API call (or clicking “Reload enum values” in the console) should consistently force a reload of all enum table values.
+
 - server: add `--websocket-compression` command-line flag for enabling websocket compression (fix #3292)
 - server: some mutations that cannot be performed will no longer be in the schema (for instance, `delete_by_pk` mutations won't be shown to users that do not have select permissions on all primary keys) (#4111)
 - server: miscellaneous description changes (#4111)
@@ -76,10 +80,13 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - server: change `created_at` column type from `timestamp` to `timestamptz` for scheduled triggers tables (fix #5722)
 - server: allow configuring timeouts for actions (fixes #4966)
 - server: accept only non-negative integers for batch size and refetch interval (close #5653) (#5759)
+- server: fix bug which arised when renaming a table which had a manual relationship defined (close #4158)
 - server: limit the length of event trigger names (close #5786)
 **NOTE:** If you have event triggers with names greater than 42 chars, then you should update their names to avoid running into Postgres identifier limit bug (#5786)
 - server: validate remote schema queries (fixes #4143)
 - server: fix issue with tracking custom functions that return `SETOF` materialized view (close #5294) (#5945)
+- server: introduce optional custom table name in table configuration to track the table according to the custom name. The `set_table_custom_fields` API has been deprecated, A new API `set_table_customization` has been added to set the configuration. (#3811)
+- server: allow remote relationships with union, interface and enum type fields as well (fixes #5875) (#6080)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - cli: add missing global flags for seed command (#5565)

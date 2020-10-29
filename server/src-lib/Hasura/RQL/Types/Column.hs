@@ -29,24 +29,23 @@ module Hasura.RQL.Types.Column
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict           as M
-import qualified Data.Text                     as T
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.HashMap.Strict                as M
+import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Control.Lens.TH
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax    (Lift)
+import           Language.Haskell.TH.Syntax         (Lift)
 
-import           Hasura.Incremental            (Cacheable)
-import           Hasura.RQL.Instances          ()
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Value
+import           Hasura.Incremental                 (Cacheable)
+import           Hasura.RQL.Instances               ()
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
-import           Hasura.SQL.Types
-import           Hasura.SQL.Value
 
 newtype EnumValue
   = EnumValue { getEnumValue :: G.Name }
@@ -54,7 +53,7 @@ newtype EnumValue
 
 newtype EnumValueInfo
   = EnumValueInfo
-  { evComment :: Maybe T.Text
+  { evComment :: Maybe Text
   } deriving (Show, Eq, Ord, Lift, NFData, Hashable, Cacheable)
 $(deriveJSON (aesonDrop 2 snakeCase) ''EnumValueInfo)
 
@@ -126,7 +125,7 @@ parsePGScalarValue columnType value = case columnType of
         let enums = map getEnumValue $ M.keys enumValues
         unless (enumValueName `elem` enums) $ throw400 UnexpectedPayload
           $ "expected one of the values " <> dquoteList enums
-          <> " for type " <> snakeCaseQualObject tableName <<> ", given " <>> enumValueName
+          <> " for type " <> snakeCaseQualifiedObject tableName <<> ", given " <>> enumValueName
         pure $ PGValText $ G.unName enumValueName
 
 parsePGScalarValues

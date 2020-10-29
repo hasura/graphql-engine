@@ -25,42 +25,42 @@ module Hasura.GraphQL.Execute.LiveQuery.Plan
   ) where
 
 import           Hasura.Prelude
-import           Hasura.Session
 
-import qualified Data.Aeson.Casing             as J
-import qualified Data.Aeson.Extended           as J
-import qualified Data.Aeson.TH                 as J
-import qualified Data.ByteString               as B
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.HashMap.Strict.InsOrd    as OMap
-import qualified Data.Sequence                 as Seq
-import qualified Data.Text                     as T
-import qualified Data.UUID.V4                  as UUID
-import qualified Database.PG.Query             as Q
-import qualified Language.GraphQL.Draft.Syntax as G
-
--- remove these when array encoding is merged
-import qualified Database.PG.Query.PTI         as PTI
-import qualified PostgreSQL.Binary.Encoding    as PE
+import qualified Data.Aeson.Casing                           as J
+import qualified Data.Aeson.Extended                         as J
+import qualified Data.Aeson.TH                               as J
+import qualified Data.ByteString                             as B
+import qualified Data.HashMap.Strict                         as Map
+import qualified Data.HashMap.Strict.InsOrd                  as OMap
+import qualified Data.Sequence                               as Seq
+import qualified Data.Text                                   as T
+import qualified Data.UUID.V4                                as UUID
+import qualified Database.PG.Query                           as Q
+import qualified Database.PG.Query.PTI                       as PTI
+import qualified Language.GraphQL.Draft.Syntax               as G
+import qualified PostgreSQL.Binary.Encoding                  as PE
 
 import           Control.Lens
-import           Data.UUID                     (UUID)
+import           Data.UUID                                   (UUID)
 
-import qualified Hasura.GraphQL.Parser.Schema  as PS
--- import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
-import qualified Hasura.RQL.DML.RemoteJoin     as RR
-import qualified Hasura.RQL.DML.Select         as DS
-import qualified Hasura.SQL.DML                as S
+import qualified Hasura.Backends.Postgres.Execute.RemoteJoin as RR
+import qualified Hasura.Backends.Postgres.SQL.DML            as S
+import qualified Hasura.Backends.Postgres.Translate.Select   as DS
+import qualified Hasura.GraphQL.Parser.Schema                as PS
+import qualified Hasura.RQL.IR.Select                        as DS
 
-import           Hasura.Db
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.Backends.Postgres.SQL.Error
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Query
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.RQL.Types
-import           Hasura.SQL.Error
 import           Hasura.SQL.Types
-import           Hasura.SQL.Value
+import           Hasura.Session
+
 
 -- -------------------------------------------------------------------------------------------------
 -- Multiplexed queries
@@ -82,8 +82,8 @@ mkMultiplexedQuery :: OMap.InsOrdHashMap G.Name SubscriptionRootFieldResolved ->
 mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkSelect
   { S.selExtr =
     -- SELECT _subs.result_id, _fld_resp.root AS result
-    [ S.Extractor (mkQualIden (Iden "_subs") (Iden "result_id")) Nothing
-    , S.Extractor (mkQualIden (Iden "_fld_resp") (Iden "root")) (Just . S.Alias $ Iden "result") ]
+    [ S.Extractor (mkQualifiedIdentifier (Identifier "_subs") (Identifier "result_id")) Nothing
+    , S.Extractor (mkQualifiedIdentifier (Identifier "_fld_resp") (Identifier "root")) (Just . S.Alias $ Identifier "result") ]
   , S.selFrom = Just $ S.FromExp [S.FIJoin $
       S.JoinExpr subsInputFromItem S.LeftOuter responseLateralFromItem (S.JoinOn $ S.BELit True)]
   }
@@ -91,26 +91,26 @@ mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkS
     -- FROM unnest($1::uuid[], $2::json[]) _subs (result_id, result_vars)
     subsInputFromItem = S.FIUnnest
       [S.SEPrep 1 `S.SETyAnn` S.TypeAnn "uuid[]", S.SEPrep 2 `S.SETyAnn` S.TypeAnn "json[]"]
-      (S.Alias $ Iden "_subs")
-      [S.SEIden $ Iden "result_id", S.SEIden $ Iden "result_vars"]
+      (S.Alias $ Identifier "_subs")
+      [S.SEIdentifier $ Identifier "result_id", S.SEIdentifier $ Identifier "result_vars"]
 
     -- LEFT OUTER JOIN LATERAL ( ... ) _fld_resp
-    responseLateralFromItem = S.mkLateralFromItem selectRootFields (S.Alias $ Iden "_fld_resp")
+    responseLateralFromItem = S.mkLateralFromItem selectRootFields (S.Alias $ Identifier "_fld_resp")
     selectRootFields = S.mkSelect
-      { S.selExtr = [S.Extractor rootFieldsJsonAggregate (Just . S.Alias $ Iden "root")]
+      { S.selExtr = [S.Extractor rootFieldsJsonAggregate (Just . S.Alias $ Identifier "root")]
       , S.selFrom = Just . S.FromExp $
           flip map (OMap.toList rootFields) $ \(fieldAlias, resolvedAST) ->
-            toSQLFromItem (S.Alias $ aliasToIden fieldAlias) resolvedAST
+            toSQLFromItem (S.Alias $ aliasToIdentifier fieldAlias) resolvedAST
       }
 
     -- json_build_object('field1', field1.root, 'field2', field2.root, ...)
     rootFieldsJsonAggregate = S.SEFnApp "json_build_object" rootFieldsJsonPairs Nothing
     rootFieldsJsonPairs = flip concatMap (OMap.keys rootFields) $ \fieldAlias ->
       [ S.SELit (G.unName fieldAlias)
-      , mkQualIden (aliasToIden fieldAlias) (Iden "root") ]
+      , mkQualifiedIdentifier (aliasToIdentifier fieldAlias) (Identifier "root") ]
 
-    mkQualIden prefix = S.SEQIden . S.QIden (S.QualIden prefix Nothing) -- TODO fix this Nothing of course
-    aliasToIden = Iden . G.unName
+    mkQualifiedIdentifier prefix = S.SEQIdentifier . S.QIdentifier (S.QualifiedIdentifier prefix Nothing) -- TODO fix this Nothing of course
+    aliasToIdentifier = Identifier . G.unName
 
 -- TODO fix this comment
 -- | Resolves an 'GR.UnresolvedVal' by converting 'GR.UVPG' values to SQL expressions that refer to
@@ -134,7 +134,7 @@ resolveMultiplexedValue = \case
   UVSession -> pure $ fromResVars (PGTypeScalar PGJSON) ["session"]
   where
     fromResVars pgType jPath = addTypeAnnotation pgType $ S.SEOpApp (S.SQLOp "#>>")
-      [ S.SEQIden $ S.QIden (S.QualIden (Iden "_subs") Nothing) (Iden "result_vars")
+      [ S.SEQIdentifier $ S.QIdentifier (S.QualifiedIdentifier (Identifier "_subs") Nothing) (Identifier "result_vars")
       , S.SEArray $ map S.SELit jPath
       ]
     addTypeAnnotation pgType = flip S.SETyAnn (S.mkTypeAnn pgType) . case pgType of
