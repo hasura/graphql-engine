@@ -88,8 +88,8 @@ func (o *helpOptions) run() {
 			fmt.Println(`Use "hasura [command] --help" for more information about a command.`)
 		} else {
 			cmd.InitDefaultHelpFlag() // make possible 'help' flag to be shown
-			helpErr := cmd.Help()
-			if helpErr != nil {
+			err := cmd.Help()
+			if err != nil {
 				c.Printf("Error printing usage: %v", helpErr)
 			}
 		}
