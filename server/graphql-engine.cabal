@@ -319,6 +319,7 @@ library
 
                      -- Exposed for benchmark:
                      , Hasura.Cache.Bounded
+                     , Hasura.Class
                      , Hasura.Logging
                      , Hasura.HTTP
                      , Hasura.Incremental
