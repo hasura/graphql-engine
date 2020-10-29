@@ -55,7 +55,7 @@ buildRemoteParser (IntrospectionResult sdoc queryRoot mutationRoot subscriptionR
 
     -- | The spec says that the `schema` definition can be omitted, if the root names
     --   are the defaults (Query, Mutation and Subscription). This function is used
-    --   to constructor a `FieldParser` for the "mutation" and "subscription" roots.
+    --   to constructor a `FieldParser` for the mutation and subscription roots.
     --   If the user has given a custom Mutation/Subscription root name, then it will
     --   look for that and if it's not found in the schema document, then an error is thrown.
     --   If no root name has been provided, we lookup the schema document for an object with
@@ -619,8 +619,7 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
       remoteSchemaObjFields <- remoteSchemaObject sdoc objTypeDefn
       -- converting [Field NoFragments Name] to (SelectionSet NoFragments G.Name)
       let remoteSchemaObjSelSet = fmap G.SelectionField <$> remoteSchemaObjFields
-      pure remoteSchemaObjSelSet
-        <&> mkFieldParserWithSelectionSet argsParser
+      pure remoteSchemaObjSelSet <&> mkFieldParserWithSelectionSet argsParser
     G.TypeDefinitionScalar scalarTypeDefn ->
       pure $ mkFieldParserWithoutSelectionSet argsParser
              $ remoteFieldScalarParser scalarTypeDefn
@@ -669,21 +668,44 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
     --  and the user argument `{details: {name: "foo"}}`. Combining these two will
     --  give `{details: {name: "foo", id: 1}}` and then the remote schema is queried
     --  with the merged arguments.
-    mergeValue :: G.Value RemoteSchemaVariable -> G.Value RemoteSchemaVariable -> G.Value RemoteSchemaVariable
+    mergeValue
+      :: Maybe (G.Value RemoteSchemaVariable)
+      -> Maybe (G.Value RemoteSchemaVariable)
+      -> Maybe (G.Value RemoteSchemaVariable)
     mergeValue userArgVal presetArgVal =
       case (userArgVal, presetArgVal) of
-        (G.VList l, G.VList r) -> G.VList $ l <> r
-        (G.VObject l, G.VObject r) ->
-          G.VObject $ Map.unionWith mergeValue l r
-        _ -> error "only list or object values can be merged"
+        (Just (G.VList   l), Just (G.VList   r)) -> Just $ G.VList $ l <> r
+        (Just (G.VObject l), Just (G.VObject r)) -> G.VObject <$> mergeMaps l r
+        _                                        -> Nothing
+      where
+        mergeMaps  l r = sequenceA $ Map.unionWith mergeValue (Just <$> l) (Just <$> r)
 
-    mkField alias fldName userProvidedArgs presetArgs selSet =
+    mergeArgs userArgMap presetArgMap =
+      sequenceA $ Map.unionWith mergeValue (Just <$> userArgMap) (Just <$> presetArgMap)
+
+    makeField
+      :: Maybe G.Name
+      -> G.Name
+      -> HashMap G.Name (G.Value Variable)
+      -> Maybe (HashMap G.Name (G.Value RemoteSchemaVariable))
+      -> SelectionSet NoFragments RemoteSchemaVariable
+      -> Maybe (G.Field NoFragments RemoteSchemaVariable)
+    makeField alias fldName userProvidedArgs presetArgs selSet = do
       let userProvidedArgs' = fmap RawVariable <$> userProvidedArgs
-          resolvedArgs =
-            case presetArgs of
-              Just presetArg' -> Map.unionWith mergeValue userProvidedArgs' presetArg'
-              Nothing -> userProvidedArgs'
-      in G.Field alias fldName resolvedArgs mempty selSet
+      resolvedArgs <-
+        case presetArgs of
+          Just presetArg' -> mergeArgs userProvidedArgs' presetArg'
+          Nothing -> Just userProvidedArgs'
+      Just $ G.Field alias fldName resolvedArgs mempty selSet
+
+    validateField
+      :: Maybe (G.Field NoFragments RemoteSchemaVariable)
+      -> n (G.Field NoFragments RemoteSchemaVariable)
+    validateField (Just fld) = pure fld
+    -- ideally, we should be throwing a 500 below
+    -- The below case, ideally will never happen, because such a query will
+    -- not be a valid one and it will fail at the validation stage
+    validateField Nothing = parseErrorWith Unexpected $ "only objects or lists can be merged"
 
     mkFieldParserWithoutSelectionSet
       :: InputFieldsParser n (Maybe (HashMap G.Name (G.Value RemoteSchemaVariable)))
@@ -692,9 +714,11 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
     mkFieldParserWithoutSelectionSet argsParser outputParser =
       -- 'rawSelection' is used here to get the alias and args data
       -- specified to be able to construct the `Field NoFragments G.Name`
-      P.rawSelection fieldName description argsParser outputParser
-      <&> (\(alias, userProvidedArgs, presetArgs) ->
-             mkField alias fieldName userProvidedArgs presetArgs [])
+      let fieldParser =
+            P.rawSelection fieldName description argsParser outputParser
+            <&> (\(alias, userProvidedArgs, presetArgs) ->
+                   makeField alias fieldName userProvidedArgs presetArgs [])
+      in fieldParser `P.bindField` validateField
 
     mkFieldParserWithSelectionSet
       :: InputFieldsParser n (Maybe (HashMap G.Name (G.Value RemoteSchemaVariable)))
@@ -703,9 +727,11 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
     mkFieldParserWithSelectionSet argsParser outputParser =
       -- 'rawSubselection' is used here to get the alias and args data
       -- specified to be able to construct the `Field NoFragments G.Name`
-      P.rawSubselection fieldName description argsParser outputParser
-      <&> (\(alias, userProvidedArgs, presetArgs, selSet) ->
-             mkField alias fieldName userProvidedArgs presetArgs selSet)
+      let fieldParser =
+            P.rawSubselection fieldName description argsParser outputParser
+            <&> (\(alias, userProvidedArgs, presetArgs, selSet) ->
+                   makeField alias fieldName userProvidedArgs presetArgs selSet)
+      in fieldParser `P.bindField` validateField
 
 remoteFieldScalarParser
   :: MonadParse n
