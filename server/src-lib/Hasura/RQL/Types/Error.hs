@@ -210,7 +210,7 @@ encodeJSONPath = format "$"
         specialChars []     = True
         -- first char must not be number
         specialChars (c:xs) = notElem c (alphabet ++ "_") ||
-          any (flip notElem (alphaNumerics ++ "_-")) xs
+          any (`notElem` (alphaNumerics ++ "_-")) xs
 
 instance Q.FromPGConnErr QErr where
   fromPGConnErr c =

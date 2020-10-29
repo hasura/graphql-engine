@@ -174,7 +174,7 @@ closeConnWithCode wsConn code bs = do
 -- writes to a queue instead of the raw connection
 -- so that sendMsg doesn't block
 sendMsg :: WSConn a -> WSQueueResponse -> IO ()
-sendMsg wsConn = \ !resp -> do
+sendMsg wsConn !resp = do
 #ifndef PROFILING
   $assertNFHere resp  -- so we don't write thunks to mutable vars
 #endif

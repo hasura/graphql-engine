@@ -204,7 +204,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
       )
     buildResult _telemType (Left (Right err)) _ = throwError err
     buildResult telemType (Right results) cacheHeaders = do
-      let responseData = encodeGQResp $ pure $ encJToLBS $ encJFromInsOrdHashMap $ fmap rfResponse $ OMap.mapKeys G.unName results
+      let responseData = encodeGQResp $ pure $ encJToLBS $ encJFromInsOrdHashMap $ rfResponse <$> OMap.mapKeys G.unName results
       pure
         ( telemType
         , sum (fmap rfTimeIO results)
