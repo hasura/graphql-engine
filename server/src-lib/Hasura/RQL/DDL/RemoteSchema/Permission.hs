@@ -880,7 +880,7 @@ resolveRoleBasedRemoteSchema (G.SchemaDocument providedTypeDefns) upstreamRemote
         G.SchemaDocument $
         providedTypeDefns <> (map (G.TypeSystemDefinitionType . G.TypeDefinitionScalar) defaultScalars)
   introspectionRes <-
-    either (throw400 InvalidRoleBasedRemoteSchema . showErrors) pure
+    either (throw400 InvalidCustomRemoteSchemaDocument . showErrors) pure
     =<< (runValidateT $ flip runReaderT providedSchemaDocWithDefaultScalars $ validateRemoteSchema $ irDoc $ rscIntro upstreamRemoteCtx)
   pure (introspectionRes, [schemaDependency])
   where

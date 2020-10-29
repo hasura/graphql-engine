@@ -26,4 +26,4 @@ response:
   error:
     'validation for the given role-based schema failed because union "SearchResult"
     contains members which do not exist in the members of the remote schema union :"Message"'
-  code: invalid-role-based-remote-schema
+  code: invalid-custom-remote-schema-document

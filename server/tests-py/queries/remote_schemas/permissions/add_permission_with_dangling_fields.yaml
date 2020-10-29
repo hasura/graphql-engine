@@ -5,7 +5,7 @@
     path: $.args
     error:
       'validation for the given role-based schema failed because "Enum": "Occupation" does not exist in the upstream remote schema'
-    code: invalid-role-based-remote-schema
+    code: invalid-custom-remote-schema-document
   query:
     type: add_remote_schema_permissions
     args:
@@ -41,7 +41,7 @@
       'validation for the given role-based schema failed because enum "MessageStatus"
       contains the following enum values that do not exist in the corresponding upstream
       remote enum: IDLE'
-    code: invalid-role-based-remote-schema
+    code: invalid-custom-remote-schema-document
   query:
     type: add_remote_schema_permissions
     args:
@@ -77,7 +77,7 @@
     error:
       'validation for the given role-based schema failed because duplicate enum
       values: SENT found in the "MessageStatus" enum'
-    code: invalid-role-based-remote-schema
+    code: invalid-custom-remote-schema-document
   query:
     type: add_remote_schema_permissions
     args:

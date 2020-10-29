@@ -26,4 +26,4 @@ response:
   path: $.args
   error:
     'validation for the given role-based schema failed because scalar "Time" does not exist in the upstream remote schema'
-  code: invalid-role-based-remote-schema
+  code: invalid-custom-remote-schema-document

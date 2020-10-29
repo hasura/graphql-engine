@@ -34,4 +34,4 @@ response:
     \ • expected type of \"eq\"(\"Input object argument\") to be Boolean but recieved\
     \ Int\n • expected type of \"gt\"(\"Input object argument\") to be Boolean but\
     \ recieved Int\n"
-  code: invalid-role-based-remote-schema
+  code: invalid-custom-remote-schema-document

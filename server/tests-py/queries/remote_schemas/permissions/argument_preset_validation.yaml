@@ -18,7 +18,7 @@
   response:
     path: $.args
     error: "validation for the given role-based schema failed because Preset directives can be defined only on INPUT_FIELD_DEFINITION or ARGUMENT_DEFINITION"
-    code: invalid-role-based-remote-schema
+    code: invalid-custom-remote-schema-document
 
 - description: adding an invalid directive preset value
   url: /v1/query
@@ -77,7 +77,7 @@
     error:
       'validation for the given role-based schema failed because expected preset
        value "2" of type "IntCompareObj" to be an input object value'
-    code: invalid-role-based-remote-schema
+    code: invalid-custom-remote-schema-document
 
 - description: adding an invalid directive preset value
   url: /v1/query
@@ -133,4 +133,4 @@
     error:
       'validation for the given role-based schema failed because "lte" does not
        exist in the input object "IntCompareObj"'
-    code: invalid-role-based-remote-schema
+    code: invalid-custom-remote-schema-document
