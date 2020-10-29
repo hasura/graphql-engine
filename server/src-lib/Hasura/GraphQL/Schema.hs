@@ -73,17 +73,17 @@ buildGQLContext =
         tableFilter    = not . isSystemDefined . _tciSystemDefined
         functionFilter = not . isSystemDefined . fiSystemDefined
 
+        graphQLTableFilter tableName tableInfo =
+          -- either the table name should be GraphQL compliant
+          -- or it should have a GraphQL custom name set with it
+          isGraphQLCompliantTableName tableName
+          || (isJust . _tcCustomName . _tciCustomConfig . _tiCoreInfo $ tableInfo)
+
         validTables = Map.filter (tableFilter . _tiCoreInfo) allTables
         -- Only tables that have GraphQL compliant names will be added to the schema.
         -- We allow tables which don't have GraphQL compliant names, so that RQL CRUD
         -- operations can be performed on them
-        graphQLTables = flip Map.filterWithKey validTables
-                             (\tableName tableInfo ->
-                                -- either the table name should be GraphQL compliant
-                                -- or it should have a GraphQL custom name set with it
-                                isGraphQLCompliantTableName tableName
-                                ||
-                                (isJust . _tcCustomName . _tciCustomConfig . _tiCoreInfo $ tableInfo))
+        graphQLTables = Map.filterWithKey graphQLTableFilter validTables
         validFunctions = Map.elems $ Map.filter functionFilter allFunctions
 
         allActionInfos = Map.elems allActions
