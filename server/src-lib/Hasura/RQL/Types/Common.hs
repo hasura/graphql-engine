@@ -28,11 +28,6 @@ module Hasura.RQL.Types.Common
        , InpValInfo(..)
        , CustomColumnNames
 
-       , NonEmptyText
-       , mkNonEmptyTextUnsafe
-       , mkNonEmptyText
-       , unNonEmptyText
-       , nonEmptyText
        , adminText
        , rootText
 
@@ -73,9 +68,10 @@ import           Data.Aeson.TH
 import           Data.Bifunctor                     (bimap)
 import           Data.Scientific                    (toBoundedInteger)
 import           Data.Text.Extended
+import           Data.Text.NonEmpty
 import           Data.URL.Template
 import           Instances.TH.Lift                  ()
-import           Language.Haskell.TH.Syntax         (Lift, Q, TExp)
+import           Language.Haskell.TH.Syntax         (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
@@ -91,42 +87,12 @@ type family ScalarType (b :: Backend) where
 type family Column (b :: Backend)  where
   Column 'Postgres = PGCol
 
-newtype NonEmptyText = NonEmptyText { unNonEmptyText :: Text }
-  deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, ToTxt, Generic, NFData, Cacheable)
-
-instance Arbitrary NonEmptyText where
-  arbitrary = NonEmptyText . T.pack <$> QC.listOf1 (QC.elements alphaNumerics)
-
-mkNonEmptyText :: Text -> Maybe NonEmptyText
-mkNonEmptyText ""   = Nothing
-mkNonEmptyText text = Just $ NonEmptyText text
-
-mkNonEmptyTextUnsafe :: Text -> NonEmptyText
-mkNonEmptyTextUnsafe = NonEmptyText
-
-parseNonEmptyText :: MonadFail m => Text -> m NonEmptyText
-parseNonEmptyText text = case mkNonEmptyText text of
-  Nothing     -> fail "empty string not allowed"
-  Just neText -> return neText
-
-nonEmptyText :: Text -> Q (TExp NonEmptyText)
-nonEmptyText = parseNonEmptyText >=> \text -> [|| text ||]
-
-instance FromJSON NonEmptyText where
-  parseJSON = withText "String" parseNonEmptyText
-
-instance FromJSONKey NonEmptyText where
-  fromJSONKey = FromJSONKeyTextParser parseNonEmptyText
-
-instance Q.FromCol NonEmptyText where
-  fromCol bs = mkNonEmptyText <$> Q.fromCol bs
-    >>= maybe (Left "empty string not allowed") Right
 
 adminText :: NonEmptyText
-adminText = NonEmptyText "admin"
+adminText = mkNonEmptyTextUnsafe "admin"
 
 rootText :: NonEmptyText
-rootText = NonEmptyText "root"
+rootText = mkNonEmptyTextUnsafe "root"
 
 newtype RelName
   = RelName { getRelTxt :: NonEmptyText }
