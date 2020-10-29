@@ -56,6 +56,9 @@ class TestAddRemoteSchemaPermissions:
     def test_role_based_schema_object_validation(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + 'role_based_schema_object_validation.yaml')
 
+    def test_preset_directive_validation(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + 'argument_preset_validation.yaml')
+
 @use_test_fixtures
 class TestRemoteSchemaPermissionsExecution:
 
