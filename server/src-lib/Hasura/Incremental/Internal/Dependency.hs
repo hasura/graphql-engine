@@ -18,10 +18,11 @@ import           Data.GADT.Compare
 import           Data.Int
 import           Data.Scientific               (Scientific)
 import           Data.Set                      (Set)
+import           Data.Text.NonEmpty
 import           Data.Time.Clock
 import           Data.Vector                   (Vector)
-import           GHC.Generics                  ((:*:) (..), (:+:) (..), Generic (..), K1 (..),
-                                                M1 (..), U1 (..), V1)
+import           GHC.Generics                  (Generic (..), K1 (..), M1 (..), U1 (..), V1,
+                                                (:*:) (..), (:+:) (..))
 import           System.Cron.Types
 
 import           Hasura.Incremental.Select
@@ -119,8 +120,8 @@ data Access a where
   AccessedParts :: (Select a) => !(DM.DMap (Selector a) Access) -> Access a
 
 instance Semigroup (Access a) where
-  AccessedAll <> _ = AccessedAll
-  _ <> AccessedAll = AccessedAll
+  AccessedAll <> _                   = AccessedAll
+  _ <> AccessedAll                   = AccessedAll
   AccessedParts a <> AccessedParts b = AccessedParts $ DM.unionWithKey (const (<>)) a b
 
 instance (Cacheable a) => Cacheable (Dependency a) where
@@ -137,7 +138,7 @@ instance (Cacheable a) => Cacheable (Dependency a) where
       lookupAccess = \case
         DependencyRoot key -> handleNoAccess $ DM.lookup key (unAccesses accesses)
         DependencyChild selector key -> lookupAccess key >>= \case
-          AccessedAll -> Left (unchanged accesses v1 v2)
+          AccessedAll         -> Left (unchanged accesses v1 v2)
           AccessedParts parts -> handleNoAccess $ DM.lookup selector parts
         where
           -- if this dependency was never accessed, then it’s certainly unchanged
@@ -163,6 +164,7 @@ instance Cacheable Int32 where unchanged _ = (==)
 instance Cacheable Integer where unchanged _ = (==)
 instance Cacheable Scientific where unchanged _ = (==)
 instance Cacheable Text where unchanged _ = (==)
+instance Cacheable NonEmptyText where unchanged _ = (==)
 instance Cacheable N.URIAuth where unchanged _ = (==)
 instance Cacheable G.Name where unchanged _ = (==)
 instance Cacheable DiffTime where unchanged _ = (==)

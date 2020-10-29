@@ -237,7 +237,7 @@ mapActionT
   => (m (MTC.StT (Spock.ActionCtxT ()) a) -> n (MTC.StT (Spock.ActionCtxT ()) a))
   -> Spock.ActionT m a
   -> Spock.ActionT n a
-mapActionT f tma = MTC.restoreT . pure =<< (MTC.liftWith $ \run -> f (run tma))
+mapActionT f tma = MTC.restoreT . pure =<< MTC.liftWith (\run -> f (run tma))
 
 
 mkSpockAction
@@ -280,8 +280,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
       lift $ Tracing.attachMetadata [("request_id", unRequestId requestId)]
 
       userInfoE <- fmap fst <$> lift (resolveUserInfo logger manager headers authMode)
-      userInfo  <- either (logErrorAndResp Nothing requestId req (reqBody, Nothing) False headers . qErrModifier)
-                   return userInfoE
+      userInfo  <- onLeft userInfoE (logErrorAndResp Nothing requestId req (reqBody, Nothing) False headers . qErrModifier)
 
       let handlerState = HandlerCtx serverCtx userInfo headers requestId ipAddress
           includeInternal = shouldIncludeInternal (_uiRole userInfo) $
@@ -293,8 +292,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
           return (res, Nothing)
         AHPost handler -> do
           parsedReqE <- runExceptT $ parseBody reqBody
-          parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) includeInternal headers . qErrModifier)
-                        return parsedReqE
+          parsedReq  <- onLeft parsedReqE (logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) includeInternal headers . qErrModifier)
           res <- lift $ runReaderT (runExceptT $ handler parsedReq) handlerState
           return (res, Just parsedReq)
 
@@ -657,7 +655,7 @@ mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpMana
       cacheLock <- liftIO $ newMVar ()
       cacheCell <- liftIO $ newIORef (schemaCache, initSchemaCacheVer)
       -- planCache <- liftIO $ E.initPlanCache planCacheOptions
-      let cacheRef = SchemaCacheRef cacheLock cacheCell (E.clearPlanCache {- planCache -})
+      let cacheRef = SchemaCacheRef cacheLock cacheCell E.clearPlanCache
       -- pure (planCache, cacheRef)
       pure cacheRef
 
@@ -699,9 +697,9 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       sc <- getSCFromRef $ scCacheRef serverCtx
       dbOk <- liftIO $ _pecCheckHealth $ scPGExecCtx serverCtx
       if dbOk
-        then Spock.setStatus HTTP.status200 >> (Spock.text $ if null (scInconsistentObjs sc)
-                                                 then "OK"
-                                                 else "WARN: inconsistent objects in schema")
+        then Spock.setStatus HTTP.status200 >> Spock.text (if null (scInconsistentObjs sc)
+                                               then "OK"
+                                               else "WARN: inconsistent objects in schema")
         else Spock.setStatus HTTP.status500 >> Spock.text "ERROR"
 
     Spock.get "v1/version" $ do
