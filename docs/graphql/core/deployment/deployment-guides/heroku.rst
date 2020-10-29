@@ -69,7 +69,7 @@ the app ``todo-hasura1``.
 
 .. code-block:: bash
 
-  # Replace graphql-on-postgres with whatever you'd like your app to be called
+  # Replace todo-hasura1 with whatever you'd like your app to be called
   $ heroku create todo-hasura1 --stack=container
 
   Creating ⬢ todo-hasura1... done, stack is container
