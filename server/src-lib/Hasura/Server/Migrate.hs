@@ -37,6 +37,7 @@ import qualified Language.Haskell.TH.Syntax         as TH
 
 import           Control.Lens                       (_2, view)
 import           Control.Monad.Unique
+import           Data.Text.NonEmpty
 import           Data.Time.Clock                    (UTCTime)
 import           System.Directory                   (doesFileExist)
 
