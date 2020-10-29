@@ -112,7 +112,7 @@ The various types of queries are listed in the following table:
    * - :ref:`set_table_custom_fields <set_table_custom_fields>` (deprecated)
      - :ref:`set_table_custom_fields_args <set_table_custom_fields_args_syntax>`
      - 2
-     - Set custom fields to an already tracked table (deprecated)
+     - Set custom fields of an already tracked table (deprecated)
 
    * - :ref:`untrack_table`
      - :ref:`untrack_table_args <untrack_table_syntax>`
