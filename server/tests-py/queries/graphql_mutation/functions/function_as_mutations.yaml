@@ -45,7 +45,7 @@
 
 - description: Sanity check that VOLATILE function didn't end up in query root too
   url: /v1/graphql
-  # TODO shouldnt this return fail status?
+  # FIXME: here and elsewhere: https://github.com/hasura/graphql-engine/issues/6106
   status: 200
   query:
     query: |

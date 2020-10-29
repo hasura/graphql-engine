@@ -148,7 +148,7 @@ Function Configuration
    (*terminology from* `Postgres docs <https://www.postgresql.org/docs/current/sql-createfunction.html>`__):
 
    - **Function behaviour**: ``STABLE`` or ``IMMUTABLE`` functions may *only* be exposed as queries 
-     (i.e. with ``as_mutation: false``), while ``VOLATILE`` functions may only be exposed as mutations.
+     (i.e. with ``as_mutation: false``), while ``VOLATILE`` functions may *only* be exposed as mutations.
    - **Return type**: MUST be ``SETOF <table-name>`` where ``<table-name>`` is already tracked
    - **Argument modes**: ONLY ``IN``
 

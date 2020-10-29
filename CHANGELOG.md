@@ -54,6 +54,28 @@ The corresponding JWT config can be:
   }
 ```
 
+### Support tracking VOLATILE SQL functions as mutations. (closing #1514)
+
+Previously we could only track `STABLE` or `IMMUTABLE` functions, and only as
+queries. Now the version 2 of `track_table` also supports tracking functions as
+mutations:
+
+```
+  {
+    "type": "track_function",
+    "version": 2,
+    "args": {
+        "function": {
+            "schema": "public",
+            "name": "some_volatile_function"
+        },
+        "configuration": {
+            "as_mutation": true
+        }
+      }
+    }
+```
+
 ### Breaking changes
 
 This release contains the [PDV refactor (#4111)](https://github.com/hasura/graphql-engine/pull/4111), a significant rewrite of the internals of the server, which did include some breaking changes:
@@ -78,7 +100,6 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - server: allow remote relationships joining `type` column with `[type]` input argument as spec allows this coercion (fixes #5133)
 - server: add action-like URL templating for event triggers and remote schemas (fixes #2483)
 - server: change `created_at` column type from `timestamp` to `timestamptz` for scheduled triggers tables (fix #5722)
-- server: Support tracking VOLATILE SQL functions as mutations. (closing #1514)
 - server: allow configuring timeouts for actions (fixes #4966)
 - server: accept only non-negative integers for batch size and refetch interval (close #5653) (#5759)
 - server: fix bug which arised when renaming a table which had a manual relationship defined (close #4158)
