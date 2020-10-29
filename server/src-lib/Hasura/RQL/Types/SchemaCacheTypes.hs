@@ -8,6 +8,7 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
+import           Data.Text.NonEmpty
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types.Common
