@@ -90,7 +90,7 @@ func (o *helpOptions) run() {
 			cmd.InitDefaultHelpFlag() // make possible 'help' flag to be shown
 			err := cmd.Help()
 			if err != nil {
-				c.Printf("Error printing usage: %v", helpErr)
+				c.Printf("Error printing usage: %v", err)
 			}
 		}
 	}
