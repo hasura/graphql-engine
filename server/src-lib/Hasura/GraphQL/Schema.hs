@@ -74,6 +74,10 @@ buildGQLContext =
         functionFilter = not . isSystemDefined . fiSystemDefined
 
         validTables = Map.filter (tableFilter . _tiCoreInfo) allTables
+        -- Only tables that have GraphQL compliant names will be added to the schema.
+        -- We allow tables which don't have GraphQL compliant names, so that RQL CRUD
+        -- operations can be performed on them
+        graphQLTables = Map.filterWithKey (\k _ -> isGraphQLCompliantTableName k) validTables
         validFunctions = Map.elems $ Map.filter functionFilter allFunctions
 
         allActionInfos = Map.elems allActions
@@ -87,12 +91,12 @@ buildGQLContext =
           SQLGenCtx{ stringifyNum } <- askSQLGenCtx
           let gqlContext =
                 (,)
-                <$> queryWithIntrospection (Set.fromMap $ validTables $> ())
+                <$> queryWithIntrospection (Set.fromMap $ graphQLTables $> ())
                       validFunctions mempty mempty
                       allActionInfos nonObjectCustomTypes
-                <*> mutation (Set.fromMap $ validTables $> ()) mempty
+                <*> mutation (Set.fromMap $ graphQLTables $> ()) mempty
                       allActionInfos nonObjectCustomTypes
-          flip runReaderT (adminRoleName, validTables, Frontend, QueryContext stringifyNum queryType queryRemotesMap) $
+          flip runReaderT (adminRoleName, graphQLTables, Frontend, QueryContext stringifyNum queryType queryRemotesMap) $
             P.runSchemaT gqlContext
 
     -- build the admin context so that we can check against name clashes with remotes
@@ -164,19 +168,19 @@ buildGQLContext =
         queryRemotes = concatMap (piQuery . snd) remotes
         mutationRemotes = concatMap (concat . piMutation . snd) remotes
         queryHasuraOrRelay = case queryType of
-          QueryHasura -> queryWithIntrospection (Set.fromMap $ validTables $> ())
+          QueryHasura -> queryWithIntrospection (Set.fromMap $ graphQLTables $> ())
                          validFunctions queryRemotes mutationRemotes
                          allActionInfos nonObjectCustomTypes
-          QueryRelay  -> relayWithIntrospection (Set.fromMap $ validTables $> ()) validFunctions
+          QueryRelay  -> relayWithIntrospection (Set.fromMap $ graphQLTables $> ()) validFunctions
 
         buildContextForRoleAndScenario :: RoleName -> Scenario -> m GQLContext
         buildContextForRoleAndScenario roleName scenario = do
           SQLGenCtx{ stringifyNum } <- askSQLGenCtx
           let gqlContext = GQLContext
                 <$> (finalizeParser <$> queryHasuraOrRelay)
-                <*> (fmap finalizeParser <$> mutation (Set.fromList $ Map.keys validTables) mutationRemotes
+                <*> (fmap finalizeParser <$> mutation (Set.fromList $ Map.keys graphQLTables) mutationRemotes
                      allActionInfos nonObjectCustomTypes)
-          flip runReaderT (roleName, validTables, scenario, QueryContext stringifyNum queryType queryRemotesMap) $
+          flip runReaderT (roleName, graphQLTables, scenario, QueryContext stringifyNum queryType queryRemotesMap) $
             P.runSchemaT gqlContext
 
         buildContextForRole :: RoleName -> m (RoleContext GQLContext)
