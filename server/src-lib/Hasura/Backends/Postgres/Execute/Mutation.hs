@@ -1,40 +1,49 @@
-module Hasura.RQL.DML.Mutation
-  ( Mutation(..)
-  , mkMutation
-  , MutationRemoteJoinCtx
-  , runMutation
+module Hasura.Backends.Postgres.Execute.Mutation
+  ( MutationRemoteJoinCtx
+  --
+  , execDeleteQuery
+  , execInsertQuery
+  , execUpdateQuery
+  --
   , executeMutationOutputQuery
   , mutateAndFetchCols
-  , mkSelCTEFromColVals
-  )
-where
+  ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                   as Env
-import qualified Data.HashMap.Strict                as Map
-import qualified Data.Sequence                      as DS
-import qualified Database.PG.Query                  as Q
-import qualified Network.HTTP.Client                as HTTP
-import qualified Network.HTTP.Types                 as N
+import qualified Data.Environment                             as Env
+import qualified Data.Sequence                                as DS
+import qualified Database.PG.Query                            as Q
+import qualified Network.HTTP.Client                          as HTTP
+import qualified Network.HTTP.Types                           as N
 
-import           Data.Text.Extended
 
-import qualified Hasura.Backends.Postgres.SQL.DML   as S
-import qualified Hasura.Tracing                     as Tracing
+import           Instances.TH.Lift                            ()
 
+import qualified Hasura.Backends.Postgres.SQL.DML             as S
+import qualified Hasura.Tracing                               as Tracing
+
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.Backends.Postgres.Execute.RemoteJoin
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
+import           Hasura.Backends.Postgres.Translate.Delete
+import           Hasura.Backends.Postgres.Translate.Insert
+import           Hasura.Backends.Postgres.Translate.Mutation
+import           Hasura.Backends.Postgres.Translate.Returning
+import           Hasura.Backends.Postgres.Translate.Select
+import           Hasura.Backends.Postgres.Translate.Update
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
-import           Hasura.RQL.DML.RemoteJoin
-import           Hasura.RQL.DML.Returning
-import           Hasura.RQL.DML.Returning.Types
-import           Hasura.RQL.DML.Select
-import           Hasura.RQL.Instances               ()
+import           Hasura.RQL.IR.Delete
+import           Hasura.RQL.IR.Insert
+import           Hasura.RQL.IR.Returning
+import           Hasura.RQL.IR.Select
+import           Hasura.RQL.IR.Update
+import           Hasura.RQL.Instances                         ()
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.Server.Version              (HasVersion)
+import           Hasura.Server.Version                        (HasVersion)
 import           Hasura.Session
 
 
@@ -92,6 +101,63 @@ mutateAndReturn env (Mutation qt (cte, p) mutationOutput allCols remoteJoins str
   where
     sqlQuery = Q.fromBuilder $ toSQL $
                mkMutationOutputExp qt allCols Nothing cte mutationOutput strfyNum
+
+
+execUpdateQuery
+  ::
+  ( HasVersion
+  , MonadTx m
+  , MonadIO m
+  , Tracing.MonadTrace m
+  )
+  => Env.Environment
+  -> Bool
+  -> Maybe MutationRemoteJoinCtx
+  -> (AnnUpd 'Postgres, DS.Seq Q.PrepArg)
+  -> m EncJSON
+execUpdateQuery env strfyNum remoteJoinCtx (u, p) =
+  runMutation env $ mkMutation remoteJoinCtx (uqp1Table u) (updateCTE, p)
+                (uqp1Output u) (uqp1AllCols u) strfyNum
+  where
+    updateCTE = mkUpdateCTE u
+
+execDeleteQuery
+  ::
+  ( HasVersion
+  , MonadTx m
+  , MonadIO m
+  , Tracing.MonadTrace m
+  )
+  => Env.Environment
+  -> Bool
+  -> Maybe MutationRemoteJoinCtx
+  -> (AnnDel 'Postgres, DS.Seq Q.PrepArg)
+  -> m EncJSON
+execDeleteQuery env strfyNum remoteJoinCtx (u, p) =
+  runMutation env $ mkMutation remoteJoinCtx (dqp1Table u) (deleteCTE, p)
+                (dqp1Output u) (dqp1AllCols u) strfyNum
+  where
+    deleteCTE = mkDeleteCTE u
+
+execInsertQuery
+  :: ( HasVersion
+     , MonadTx m
+     , MonadIO m
+     , Tracing.MonadTrace m
+     )
+  => Env.Environment
+  -> Bool
+  -> Maybe MutationRemoteJoinCtx
+  -> (InsertQueryP1 'Postgres, DS.Seq Q.PrepArg)
+  -> m EncJSON
+execInsertQuery env strfyNum remoteJoinCtx (u, p) =
+  runMutation env
+     $ mkMutation remoteJoinCtx (iqp1Table u) (insertCTE, p)
+                (iqp1Output u) (iqp1AllCols u) strfyNum
+  where
+    insertCTE = mkInsertCTE u
+
+
 
 {- Note: [Prepared statements in Mutations]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -177,42 +243,3 @@ mutateAndFetchCols qt cols (cte, p) strfyNum =
       }
     colSel = S.SESelect $ mkSQLSelect JASMultipleRows $
              AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum
-
--- | Note:- Using sorted columns is necessary to enable casting the rows returned by VALUES expression to table type.
--- For example, let's consider the table, `CREATE TABLE test (id serial primary key, name text not null, age int)`.
--- The generated values expression should be in order of columns;
--- `SELECT ("row"::table).* VALUES (1, 'Robert', 23) AS "row"`.
-mkSelCTEFromColVals
-  :: (MonadError QErr m)
-  => QualifiedTable -> [ColumnInfo 'Postgres] -> [ColumnValues TxtEncodedPGVal] -> m S.CTE
-mkSelCTEFromColVals qt allCols colVals =
-  S.CTESelect <$> case colVals of
-    [] -> return selNoRows
-    _  -> do
-      tuples <- mapM mkTupsFromColVal colVals
-      let fromItem = S.FIValues (S.ValuesExp tuples) (S.Alias rowAlias) Nothing
-      return S.mkSelect
-        { S.selExtr = [extractor]
-        , S.selFrom = Just $ S.FromExp [fromItem]
-        }
-  where
-    rowAlias = Identifier "row"
-    extractor = S.selectStar' $ S.QualifiedIdentifier rowAlias $ Just $ S.TypeAnn $ toSQLTxt qt
-    sortedCols = sortCols allCols
-    mkTupsFromColVal colVal =
-      fmap S.TupleExp $ forM sortedCols $ \ci -> do
-        let pgCol = pgiColumn ci
-        val <- onNothing (Map.lookup pgCol colVal) $
-          throw500 $ "column " <> pgCol <<> " not found in returning values"
-        pure $ txtEncodedToSQLExp (pgiType ci) val
-
-    selNoRows =
-      S.mkSelect { S.selExtr = [S.selectStar]
-                 , S.selFrom = Just $ S.mkSimpleFromExp qt
-                 , S.selWhere = Just $ S.WhereFrag $ S.BELit False
-                 }
-
-    txtEncodedToSQLExp colTy = \case
-      TENull          -> S.SENull
-      TELit textValue ->
-        S.withTyAnn (unsafePGColumnToRepresentation colTy) $ S.SELit textValue

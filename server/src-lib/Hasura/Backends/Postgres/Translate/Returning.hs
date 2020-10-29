@@ -1,69 +1,23 @@
-module Hasura.RQL.DML.Returning where
+module Hasura.Backends.Postgres.Translate.Returning
+  ( mkMutFldExp
+  , mkDefaultMutFlds
+  , mkMutationOutputExp
+  , checkRetCols
+  ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Text                          as T
+import qualified Data.Text                                 as T
 
-import qualified Hasura.Backends.Postgres.SQL.DML   as S
+import qualified Hasura.Backends.Postgres.SQL.DML          as S
 
 import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.Translate.Select
 import           Hasura.RQL.DML.Internal
-import           Hasura.RQL.DML.Returning.Types
-import           Hasura.RQL.DML.Select
+import           Hasura.RQL.IR.Returning
+import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types
 
-traverseMutFld
-  :: (Applicative f)
-  => (a -> f b)
-  -> MutFldG backend a
-  -> f (MutFldG backend b)
-traverseMutFld f = \case
-  MCount    -> pure MCount
-  MExp t    -> pure $ MExp t
-  MRet flds -> MRet <$> traverse (traverse (traverseAnnField f)) flds
-
-traverseMutationOutput
-  :: (Applicative f)
-  => (a -> f b)
-  -> MutationOutputG backend a -> f (MutationOutputG backend b)
-traverseMutationOutput f = \case
-  MOutMultirowFields mutationFields ->
-    MOutMultirowFields <$> traverse (traverse (traverseMutFld f)) mutationFields
-  MOutSinglerowObject annFields ->
-    MOutSinglerowObject <$> traverseAnnFields f annFields
-
-traverseMutFlds
-  :: (Applicative f)
-  => (a -> f b)
-  -> MutFldsG backend a
-  -> f (MutFldsG backend b)
-traverseMutFlds f =
-  traverse (traverse (traverseMutFld f))
-
-hasNestedFld :: MutationOutputG backend a -> Bool
-hasNestedFld = \case
-  MOutMultirowFields flds     -> any isNestedMutFld flds
-  MOutSinglerowObject annFlds -> any isNestedAnnField annFlds
-  where
-    isNestedMutFld (_, mutFld) = case mutFld of
-      MRet annFlds -> any isNestedAnnField annFlds
-      _            -> False
-    isNestedAnnField (_, annFld) = case annFld of
-      AFObjectRelation _ -> True
-      AFArrayRelation _  -> True
-      _                  -> False
-
-pgColsFromMutFld :: MutFld 'Postgres -> [(PGCol, ColumnType 'Postgres)]
-pgColsFromMutFld = \case
-  MCount -> []
-  MExp _ -> []
-  MRet selFlds ->
-    flip mapMaybe selFlds $ \(_, annFld) -> case annFld of
-    AFColumn (AnnColumnField (ColumnInfo col _ _ colTy _ _) _ _) -> Just (col, colTy)
-    _                                                            -> Nothing
-
-pgColsFromMutFlds :: MutFlds 'Postgres -> [(PGCol, PGColumnType)]
-pgColsFromMutFlds = concatMap (pgColsFromMutFld . snd)
 
 pgColsToSelFlds :: [ColumnInfo 'Postgres] -> [(FieldName, AnnField 'Postgres)]
 pgColsToSelFlds cols =

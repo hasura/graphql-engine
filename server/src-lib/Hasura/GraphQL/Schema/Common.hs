@@ -11,7 +11,7 @@ import           Language.GraphQL.Draft.Syntax      as G
 import qualified Data.Text                          as T
 import qualified Hasura.GraphQL.Execute.Types       as ET (GraphQLQueryType)
 import qualified Hasura.GraphQL.Parser              as P
-import qualified Hasura.RQL.DML.Select.Types        as RQL (Fields)
+import qualified Hasura.RQL.IR.Select               as RQL (Fields)
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types

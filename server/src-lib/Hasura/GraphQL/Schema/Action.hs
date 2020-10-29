@@ -14,7 +14,7 @@ import qualified Language.GraphQL.Draft.Syntax         as G
 import qualified Hasura.GraphQL.Parser                 as P
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
 import qualified Hasura.RQL.DML.Internal               as RQL
-import qualified Hasura.RQL.DML.Select.Types           as RQL
+import qualified Hasura.RQL.IR.Select                  as RQL
 
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
