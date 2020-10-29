@@ -489,7 +489,7 @@ runExportMetadata
   :: (QErrM m, MonadTx m)
   => ExportMetadata -> m EncJSON
 runExportMetadata _ =
-  (AO.toEncJSON . replaceMetadataToOrdJSON) <$> liftTx fetchMetadata
+  AO.toEncJSON . replaceMetadataToOrdJSON <$> liftTx fetchMetadata
 
 runReloadMetadata :: (QErrM m, CacheRWM m) => ReloadMetadata -> m EncJSON
 runReloadMetadata (ReloadMetadata reloadRemoteSchemas) = do

@@ -37,6 +37,7 @@ import qualified Language.Haskell.TH.Syntax         as TH
 
 import           Control.Lens                       (_2, view)
 import           Control.Monad.Unique
+import           Data.Text.NonEmpty
 import           Data.Time.Clock                    (UTCTime)
 import           System.Directory                   (doesFileExist)
 
@@ -171,21 +172,21 @@ migrateCatalog env migrationTime = do
       view _2 <$> runCacheRWT schemaCache recreateSystemMetadata
 
     doesSchemaExist schemaName =
-      liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
+      liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler [Q.sql|
         SELECT EXISTS
         ( SELECT 1 FROM information_schema.schemata
           WHERE schema_name = $1
         ) |] (Identity schemaName) False
 
     doesTableExist schemaName tableName =
-      liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
+      liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler [Q.sql|
         SELECT EXISTS
         ( SELECT 1 FROM pg_tables
           WHERE schemaname = $1 AND tablename = $2
         ) |] (schemaName, tableName) False
 
     isExtensionAvailable schemaName =
-      liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
+      liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler [Q.sql|
         SELECT EXISTS
         ( SELECT 1 FROM pg_catalog.pg_available_extensions
           WHERE name = $1
@@ -284,9 +285,9 @@ migrations dryRun =
                   ) |]
       in TH.listE
         -- version 0.8 is the only non-integral catalog version
-        $  [| ("0.8", (MigrationPair $(migrationFromFile "08" "1") Nothing)) |]
+        $  [| ("0.8", MigrationPair $(migrationFromFile "08" "1") Nothing) |]
         :  migrationsFromFile [2..3]
-        ++ [| ("3", (MigrationPair from3To4 Nothing)) |]
+        ++ [| ("3", MigrationPair from3To4 Nothing) |]
         :  migrationsFromFile [5..latestCatalogVersion])
   where
     runTxOrPrint :: Q.Query -> m ()
