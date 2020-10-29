@@ -20,7 +20,7 @@ This page explains how to reset the state of migrations and create new migration
 Step 1: Delete the local migrations
 -----------------------------------
 
-In the local project directory, delete all its contents using the following command:
+From your local project directory, delete all the contents in the ``migrations`` directory using the following command:
 
 .. code-block:: bash
 
