@@ -28,7 +28,6 @@ import qualified Hasura.RQL.DDL.RemoteRelationship  as RR
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
-import           Hasura.RQL.DDL.Relationship.Types
 import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.Types
 import           Hasura.Session

@@ -6,7 +6,6 @@ import           Data.Text.Extended
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Relationship.Types
 import           Hasura.RQL.DDL.Schema              (renameRelInCatalog)
 import           Hasura.RQL.Types
 
@@ -32,7 +31,7 @@ renameRelP2 qt newRN relInfo = withNewInconsistentObjsCheck $ do
 runRenameRel
   :: (MonadTx m, CacheRWM m)
   => RenameRel -> m EncJSON
-runRenameRel (RenameRel qt rn newRN) = do
+runRenameRel (RenameRel _source qt rn newRN) = do
   tabInfo <- askTableCoreInfo qt
   ri <- askRelType (_tciFieldInfoMap tabInfo) rn ""
   withNewInconsistentObjsCheck do

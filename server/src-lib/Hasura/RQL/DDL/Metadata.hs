@@ -30,6 +30,7 @@ import qualified Hasura.RQL.DDL.CustomTypes         as CustomTypes
 import qualified Hasura.RQL.DDL.Permission          as Permission
 import qualified Hasura.RQL.DDL.QueryCollection     as Collection
 import qualified Hasura.RQL.DDL.Relationship        as Relationship
+import qualified Hasura.RQL.Types.Relationship      as Relationship
 import qualified Hasura.RQL.DDL.RemoteRelationship  as RemoteRelationship
 import qualified Hasura.RQL.DDL.Schema              as Schema
 
@@ -85,17 +86,17 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta schemas
 
     -- process each table
     void $ indexedForM tables $ \table -> withTableName (table ^. tmTable) $ do
-      let allRels  = map Relationship.rdName (table ^. tmObjectRelationships) <>
-                     map Relationship.rdName (table ^. tmArrayRelationships)
+      {- TODO
+      let allRels  = map Relationship._rdName (table ^. tmObjectRelationships) <>
+                     map Relationship._rdName (table ^. tmArrayRelationships)
 
-          insPerms = map Permission.pdRole $ table ^. tmInsertPermissions
-          selPerms = map Permission.pdRole $ table ^. tmSelectPermissions
-          updPerms = map Permission.pdRole $ table ^. tmUpdatePermissions
-          delPerms = map Permission.pdRole $ table ^. tmDeletePermissions
+          insPerms = map Permission._pdRole $ table ^. tmInsertPermissions
+          selPerms = map Permission._pdRole $ table ^. tmSelectPermissions
+          updPerms = map Permission._pdRole $ table ^. tmUpdatePermissions
+          delPerms = map Permission._pdRole $ table ^. tmDeletePermissions
           eventTriggers = map etcName $ table ^. tmEventTriggers
           computedFields = map _cfmName $ table ^. tmComputedFields
           remoteRelationships = map _rrmName $ table ^. tmRemoteRelationships
-
       checkMultipleDecls "relationships" allRels
       checkMultipleDecls "insert permissions" insPerms
       checkMultipleDecls "select permissions" selPerms
@@ -104,13 +105,15 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta schemas
       checkMultipleDecls "event triggers" eventTriggers
       checkMultipleDecls "computed fields" computedFields
       checkMultipleDecls "remote relationships" remoteRelationships
+      -}
+      return ()
 
   withPathK "functions" $
     case functionsMeta of
       FMVersion1 qualifiedFunctions ->
         checkMultipleDecls "functions" qualifiedFunctions
       FMVersion2 functionsV2 ->
-        checkMultipleDecls "functions" $ map Schema._tfv2Function functionsV2
+        checkMultipleDecls "functions" $ map _tfv2Function functionsV2
 
   withPathK "remote_schemas" $
     checkMultipleDecls "remote schemas" $ map _arsqName schemas
@@ -151,7 +154,7 @@ saveMetadata (ReplaceMetadata _ tables functionsMeta
               schemas collections allowlist customTypes actions cronTriggers) = do
 
   withPathK "tables" $ do
-    indexedForM_ tables $ \TableMeta{..} -> do
+    indexedForM_ tables $ \TableMetadata{..} -> do
       -- Save table
       saveTableToCatalog _tmTable _tmIsEnum _tmConfiguration
 
@@ -166,7 +169,7 @@ saveMetadata (ReplaceMetadata _ tables functionsMeta
       -- Computed Fields
       withPathK "computed_fields" $
         indexedForM_ _tmComputedFields $
-          \(ComputedFieldMeta name definition comment) ->
+          \(ComputedFieldMetadata name definition comment) ->
             ComputedField.addComputedFieldToCatalog $
               ComputedField.AddComputedField _tmTable name definition comment
 
@@ -191,9 +194,9 @@ saveMetadata (ReplaceMetadata _ tables functionsMeta
   -- sql functions
   withPathK "functions" $ case functionsMeta of
     FMVersion1 qualifiedFunctions -> indexedForM_ qualifiedFunctions $
-      \qf -> Schema.saveFunctionToCatalog qf Schema.emptyFunctionConfig
+      \qf -> Schema.saveFunctionToCatalog qf emptyFunctionConfig
     FMVersion2 functionsV2 -> indexedForM_ functionsV2 $
-      \(Schema.TrackFunctionV2 function config) -> Schema.saveFunctionToCatalog function config
+      \(TrackFunctionV2 function config) -> Schema.saveFunctionToCatalog function config
 
   -- query collections
   systemDefined <- askSystemDefined
@@ -244,7 +247,7 @@ runReplaceMetadata q = do
   applyQP2 q
 
 fetchMetadata :: Q.TxE QErr ReplaceMetadata
-fetchMetadata = do
+fetchMetadata = undefined {- TODO do
   tables <- Q.catchE defaultTxErrorHandler fetchTables
   let tableMetaMap = HMIns.fromList . flip map tables $
         \(schema, name, isEnum, maybeConfig) ->
@@ -380,7 +383,7 @@ fetchMetadata = do
                 ORDER BY function_schema ASC, function_name ASC
                     |] () False
       pure $ flip map l $ \(sn, fn, Q.AltJ config) ->
-                            Schema.TrackFunctionV2 (QualifiedObject sn fn) config
+                            TrackFunctionV2 (QualifiedObject sn fn) config
 
     fetchCollections =
       map fromRow <$> Q.listQE defaultTxErrorHandler [Q.sql|
@@ -408,7 +411,7 @@ fetchMetadata = do
              |] () False
       pure $ flip map r $ \(schema, table, name, Q.AltJ definition, comment) ->
                           ( QualifiedObject schema table
-                          , ComputedFieldMeta name definition comment
+                          , ComputedFieldMetadata name definition comment
                           )
 
     fetchCronTriggers =
@@ -484,6 +487,7 @@ fetchMetadata = do
                           ( QualifiedObject schema table
                           , RemoteRelationshipMeta name definition
                           )
+-}
 
 runExportMetadata
   :: (QErrM m, MonadTx m)
@@ -492,7 +496,7 @@ runExportMetadata _ =
   AO.toEncJSON . replaceMetadataToOrdJSON <$> liftTx fetchMetadata
 
 runReloadMetadata :: (QErrM m, CacheRWM m) => ReloadMetadata -> m EncJSON
-runReloadMetadata (ReloadMetadata reloadRemoteSchemas) = do
+runReloadMetadata (ReloadMetadata reloadRemoteSchemas _reloadRemoteSources) = do
   sc <- askSchemaCache
   let remoteSchemaInvalidations =
         if reloadRemoteSchemas then HS.fromList (getAllRemoteSchemas sc) else mempty

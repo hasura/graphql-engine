@@ -23,24 +23,11 @@ import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.BoolExp
 import           Hasura.EncJSON
 import           Hasura.Incremental                         (Cacheable)
+import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.Session
 
-
-data PermColSpec
-  = PCStar
-  | PCCols ![PGCol]
-  deriving (Show, Eq, Lift, Generic)
-instance Cacheable PermColSpec
-
-instance FromJSON PermColSpec where
-  parseJSON (String "*") = return PCStar
-  parseJSON x            = PCCols <$> parseJSON x
-
-instance ToJSON PermColSpec where
-  toJSON (PCCols cols) = toJSON cols
-  toJSON PCStar        = "*"
 
 convColSpec :: FieldInfoMap (FieldInfo 'Postgres) -> PermColSpec -> [PGCol]
 convColSpec _ (PCCols cols) = cols
@@ -133,25 +120,6 @@ dropPermFromCatalog (QualifiedObject sn tn) rn pt =
                 |] (sn, tn, rn, permTypeToCode pt) True
 
 type CreatePerm a = WithTable (PermDef a)
-
-data PermDef a =
-  PermDef
-  { pdRole       :: !RoleName
-  , pdPermission :: !a
-  , pdComment    :: !(Maybe Text)
-  } deriving (Show, Eq, Lift, Generic)
-instance (Cacheable a) => Cacheable (PermDef a)
-$(deriveFromJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''PermDef)
-
-instance (ToJSON a) => ToJSON (PermDef a) where
-  toJSON = object . toAesonPairs
-
-instance (ToJSON a) => ToAesonPairs (PermDef a) where
- toAesonPairs (PermDef rn perm comment) =
-  [ "role" .= rn
-  , "permission" .= perm
-  , "comment" .= comment
-  ]
 
 data CreatePermP1Res a
   = CreatePermP1Res
@@ -269,7 +237,7 @@ runCreatePerm
 runCreatePerm (WithTable tn pd) = do
   addPermP2 tn pd
   let pt = permAccToType $ getPermAcc1 pd
-  buildSchemaCacheFor $ MOTableObj tn (MTOPerm (pdRole pd) pt)
+  buildSchemaCacheFor $ MOTableObj tn (MTOPerm (_pdRole pd) pt)
   pure successMsg
 
 dropPermP1

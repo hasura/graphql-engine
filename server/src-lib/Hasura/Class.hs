@@ -1,18 +1,19 @@
 module Hasura.Class
-  ( SchemaSyncEventProcessResult(..)
+{-  ( SchemaSyncEventProcessResult(..)
   , SchemaSyncEventPayload(..)
   , MetadataStorageT(..)
   , runMetadataStorageT
   , MonadMetadataStorage(..)
-  )
+  )-}
 where
 
-import           Hasura.Db
+import           Hasura.Backends.Postgres.Connection
 import           Hasura.Eventing.HTTP
-import           Hasura.Eventing.ScheduledTrigger.Types
+import           Hasura.Eventing.ScheduledTrigger
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.Server.Types
+import           Hasura.Server.Init
+import           Hasura.Server.Utils
 import           Hasura.Session
 
 import           Control.Monad.Morph                    (MFunctor, hoist)
@@ -23,7 +24,7 @@ import qualified Data.Aeson.TH                          as J
 import qualified Data.Time                              as UTC
 import qualified Hasura.Tracing                         as Tracing
 import qualified Network.HTTP.Types                     as HTTP
-
+{-
 data SchemaSyncEventProcessResult
   = SchemaSyncEventProcessResult
   { _sseprShouldReload       :: !Bool
@@ -205,3 +206,4 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (LazyTxT e m) where
   unlockAllLockedScheduledEvents     = (hoist lift) unlockAllLockedScheduledEvents
   clearFutureCronEvents              = (hoist lift) . clearFutureCronEvents
   deleteScheduledEvent a b           = (hoist lift) $ deleteScheduledEvent a b
+-}

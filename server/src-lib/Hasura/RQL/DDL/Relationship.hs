@@ -8,7 +8,6 @@ module Hasura.RQL.DDL.Relationship
   , delRelFromCatalog
 
   , runSetRelComment
-  , module Hasura.RQL.DDL.Relationship.Types
   )
 where
 
@@ -26,7 +25,6 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Permission          (purgePerm)
-import           Hasura.RQL.DDL.Relationship.Types
 import           Hasura.RQL.Types
 
 runCreateRelationship
@@ -34,7 +32,7 @@ runCreateRelationship
   => RelType -> WithTable (RelDef a) -> m EncJSON
 runCreateRelationship relType (WithTable tableName relDef) = do
   insertRelationshipToCatalog tableName relType relDef
-  buildSchemaCacheFor $ MOTableObj tableName (MTORel (rdName relDef) relType)
+  buildSchemaCacheFor $ MOTableObj tableName (MTORel (_rdName relDef) relType)
   pure successMsg
 
 insertRelationshipToCatalog
@@ -55,7 +53,7 @@ insertRelationshipToCatalog (QualifiedObject schema table) relType (RelDef name 
       VALUES ($1, $2, $3, $4, $5 :: jsonb, $6, $7) |]
 
 runDropRel :: (MonadTx m, CacheRWM m) => DropRel -> m EncJSON
-runDropRel (DropRel qt rn cascade) = do
+runDropRel (DropRel _source qt rn cascade) = do
   depObjs <- collectDependencies
   withNewInconsistentObjsCheck do
     traverse_ purgeRelDep depObjs
@@ -68,7 +66,7 @@ runDropRel (DropRel qt rn cascade) = do
       _       <- askRelType (_tciFieldInfoMap tabInfo) rn ""
       sc      <- askSchemaCache
       let depObjs = getDependentObjs sc (SOTableObj qt $ TORel rn)
-      when (depObjs /= [] && not (or cascade)) $ reportDeps depObjs
+      when (depObjs /= [] && not cascade) $ reportDeps depObjs
       pure depObjs
 
 delRelFromCatalog
@@ -165,11 +163,11 @@ runSetRelComment defn = do
   void $ validateRelP1 qt rn
   setRelCommentP2 defn
   where
-    SetRelComment qt rn _ = defn
+    SetRelComment _source qt rn _ = defn
 
 setRelComment :: SetRelComment
               -> Q.TxE QErr ()
-setRelComment (SetRelComment (QualifiedObject sn tn) rn comment) =
+setRelComment (SetRelComment _source (QualifiedObject sn tn) rn comment) =
   Q.unitQE defaultTxErrorHandler [Q.sql|
            UPDATE hdb_catalog.hdb_relationship
            SET comment = $1

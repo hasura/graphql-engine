@@ -13,6 +13,11 @@ module Hasura.RQL.Types.Table
        , tiRolePermInfoMap
        , tiEventTriggerInfoMap
 
+       , ForeignKeyMetadata(..)
+       , TableMetadataInfo(..)
+       , enumTable
+       , PostgresTablesMetadata
+
        , TableCoreInfoG(..)
        , TableRawInfo
        , TableCoreInfo
@@ -452,6 +457,62 @@ $(makeLenses ''TableInfo)
 
 type TableCoreCache = M.HashMap QualifiedTable (TableCoreInfo 'Postgres)
 type TableCache = M.HashMap QualifiedTable (TableInfo 'Postgres) -- info of all tables
+
+newtype ForeignKeyMetadata
+  = ForeignKeyMetadata
+  { unForeignKeyMetadata :: ForeignKey
+  } deriving (Show, Eq, NFData, Hashable, Cacheable)
+
+instance FromJSON ForeignKeyMetadata where
+  parseJSON = withObject "ForeignKeyMetadata" \o -> do
+    constraint <- o .: "constraint"
+    foreignTable <- o .: "foreign_table"
+
+    columns <- o .: "columns"
+    foreignColumns <- o .: "foreign_columns"
+    unless (length columns == length foreignColumns) $
+      fail "columns and foreign_columns differ in length"
+
+    pure $ ForeignKeyMetadata ForeignKey
+      { _fkConstraint = constraint
+      , _fkForeignTable = foreignTable
+      , _fkColumnMapping = M.fromList $ zip columns foreignColumns
+      }
+
+data TableMetadataInfo
+  = TableMetadataInfo
+  { _tmiOid               :: !OID
+  , _tmiColumns           :: ![RawColumnInfo 'Postgres]
+  , _tmiPrimaryKey        :: !(Maybe (PrimaryKey PGCol))
+  , _tmiUniqueConstraints :: !(HashSet Constraint)
+  -- ^ Does /not/ include the primary key!
+  , _tmiForeignKeys       :: !(HashSet ForeignKeyMetadata)
+  , _tmiViewInfo          :: !(Maybe ViewInfo)
+  , _tmiDescription       :: !(Maybe PGDescription)
+  } deriving (Eq, Generic)
+instance NFData TableMetadataInfo
+instance Cacheable TableMetadataInfo
+$(deriveFromJSON (aesonDrop 4 snakeCase) ''TableMetadataInfo)
+
+enumTable
+  :: TableMetadataInfo -> Maybe (RawColumnInfo 'Postgres, Maybe (RawColumnInfo 'Postgres))
+enumTable TableMetadataInfo{..} = do
+  guard $ length _tmiColumns <= 2
+  guard $ all ((== PGText) . prciType) _tmiColumns
+  pkey <- _tmiPrimaryKey
+  let pkeyCols = toList $ _pkColumns pkey
+  pkeyColumn <- case pkeyCols of
+    [col] -> M.lookup col rawColumnsMap
+    _     -> Nothing
+  let maybeDescriptionColumn =
+        case M.toList (M.delete (prciName pkeyColumn) rawColumnsMap) of
+          [(_, col)] -> Just col
+          _          -> Nothing
+  pure (pkeyColumn, maybeDescriptionColumn)
+  where
+    rawColumnsMap = mapFromL prciName _tmiColumns
+
+type PostgresTablesMetadata = HashMap QualifiedTable TableMetadataInfo
 
 getFieldInfoM
   :: TableInfo b -> FieldName -> Maybe (FieldInfo b)

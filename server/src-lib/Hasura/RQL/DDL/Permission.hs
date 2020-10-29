@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Hasura.RQL.DDL.Permission
     ( CreatePerm
     , runCreatePerm
@@ -50,7 +51,6 @@ import           Language.Haskell.TH.Syntax         (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
-import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DML.Internal            hiding (askPermInfo)
 import           Hasura.RQL.Types
@@ -87,21 +87,6 @@ TRUE            TRUE (OR NOT-SET)         FALSE                                 
 TRUE            TRUE (OR NOT-SET)         TRUE                                   Mutation is shown
 -}
 
--- Insert permission
-data InsPerm (b :: Backend)
-  = InsPerm
-  { ipCheck       :: !(BoolExp b)
-  , ipSet         :: !(Maybe (ColumnValues Value))
-  , ipColumns     :: !(Maybe PermColSpec)
-  , ipBackendOnly :: !(Maybe Bool) -- see Note [Backend only permissions]
-  } deriving (Show, Eq, Lift, Generic)
-instance Cacheable (InsPerm 'Postgres)
-instance FromJSON (InsPerm 'Postgres) where
-  parseJSON = genericParseJSON $ aesonDrop 2 snakeCase
-instance ToJSON (InsPerm 'Postgres) where
-  toJSON = genericToJSON (aesonDrop 2 snakeCase) {omitNothingFields=True}
-
-type InsPermDef    b = PermDef    (InsPerm b)
 type CreateInsPerm b = CreatePerm (InsPerm b)
 
 procSetObj
@@ -158,28 +143,6 @@ instance IsPerm (InsPerm 'Postgres) where
   permAccessor = PAInsert
   buildPermInfo = buildInsPermInfo
 
--- Select constraint
-data SelPerm (b :: Backend)
-  = SelPerm
-  { spColumns           :: !PermColSpec         -- ^ Allowed columns
-  , spFilter            :: !(BoolExp b)         -- ^ Filter expression
-  , spLimit             :: !(Maybe Int)         -- ^ Limit value
-  , spAllowAggregations :: !Bool                -- ^ Allow aggregation
-  , spComputedFields    :: ![ComputedFieldName] -- ^ Allowed computed fields
-  } deriving (Show, Eq, Lift, Generic)
-instance Cacheable (SelPerm 'Postgres)
-instance ToJSON (SelPerm 'Postgres) where
-  toJSON = genericToJSON (aesonDrop 2 snakeCase) {omitNothingFields=True}
-
-instance FromJSON (SelPerm 'Postgres) where
-  parseJSON = withObject "SelPerm" $ \o ->
-    SelPerm
-    <$> o .: "columns"
-    <*> o .: "filter"
-    <*> o .:? "limit"
-    <*> o .:? "allow_aggregations" .!= False
-    <*> o .:? "computed_fields" .!= []
-
 buildSelPermInfo
   :: (QErrM m, TableCoreInfoRM m)
   => QualifiedTable
@@ -223,7 +186,6 @@ buildSelPermInfo tn fieldInfoMap sp = withPathK "permission" $ do
     computedFields = spComputedFields sp
     autoInferredErr = "permissions for relationships are automatically inferred"
 
-type SelPermDef    b = PermDef    (SelPerm b)
 type CreateSelPerm b = CreatePerm (SelPerm b)
 
 -- TODO see TODO for PermInfo above.
@@ -234,27 +196,7 @@ instance IsPerm (SelPerm 'Postgres) where
   buildPermInfo tn fieldInfoMap (PermDef _ a _) =
     buildSelPermInfo tn fieldInfoMap a
 
--- Update constraint
-data UpdPerm b
-  = UpdPerm
-  { ucColumns :: !PermColSpec -- Allowed columns
-  , ucSet     :: !(Maybe (ColumnValues Value)) -- Preset columns
-  , ucFilter  :: !(BoolExp b) -- Filter expression (applied before update)
-  , ucCheck   :: !(Maybe (BoolExp b))
-  -- ^ Check expression, which must be true after update.
-  -- This is optional because we don't want to break the v1 API
-  -- but Nothing should be equivalent to the expression which always
-  -- returns true.
-  } deriving (Show, Eq, Lift, Generic)
-instance Cacheable (UpdPerm 'Postgres)
-instance FromJSON (UpdPerm 'Postgres) where
-  parseJSON = genericParseJSON $ aesonDrop 2 snakeCase
-instance ToJSON (UpdPerm 'Postgres) where
-  toJSON = genericToJSON (aesonDrop 2 snakeCase) {omitNothingFields=True}
-
-type UpdPermDef    b = PermDef    (UpdPerm b)
 type CreateUpdPerm b = CreatePerm (UpdPerm b)
-
 
 buildUpdPermInfo
   :: (QErrM m, TableCoreInfoRM m)
@@ -294,17 +236,6 @@ instance IsPerm (UpdPerm 'Postgres) where
   buildPermInfo tn fieldInfoMap (PermDef _ a _) =
     buildUpdPermInfo tn fieldInfoMap a
 
--- Delete permission
-data DelPerm (b :: Backend)
-  = DelPerm { dcFilter :: !(BoolExp b) }
-  deriving (Show, Eq, Lift, Generic)
-instance Cacheable (DelPerm 'Postgres)
-instance FromJSON (DelPerm 'Postgres) where
-  parseJSON = genericParseJSON $ aesonDrop 2 snakeCase
-instance ToJSON (DelPerm 'Postgres) where
-  toJSON = genericToJSON (aesonDrop 2 snakeCase) {omitNothingFields=True}
-
-type DelPermDef    b = PermDef    (DelPerm b)
 type CreateDelPerm b = CreatePerm (DelPerm b)
 
 buildDelPermInfo
