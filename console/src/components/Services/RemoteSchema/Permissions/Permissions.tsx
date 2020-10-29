@@ -187,7 +187,7 @@ const Permissions = ({
               className += styles.currEdit;
             } else {
               className += styles.clickableCell;
-              onClick = dispatchOpenEdit;
+              onClick = dispatchOpenEdit();
             }
           }
 
