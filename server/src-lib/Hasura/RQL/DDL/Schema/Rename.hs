@@ -19,7 +19,6 @@ import qualified Database.PG.Query                  as Q
 import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Control.Lens.Combinators
-import           Control.Lens.Operators
 import           Data.Aeson
 import           Data.Text.Extended
 
