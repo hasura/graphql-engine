@@ -46,13 +46,13 @@ import { UPDATE_CONSOLE_NOTIFICATIONS } from '../../telemetry/Actions';
 const updateRequestHeaders = props => {
   const { requestHeaders, dispatch } = props;
 
-  const collabTokenPresent = Object.keys(requestHeaders).find(
+  const collabTokenKey = Object.keys(requestHeaders).find(
     hdr => hdr.toLowerCase() === HASURA_COLLABORATOR_TOKEN
   );
 
-  if (collabTokenPresent) {
-    const userID = getUserType(collabTokenPresent.value);
-    if (props.console_opts.console_notifications) {
+  if (collabTokenKey) {
+    const userID = getUserType(requestHeaders[collabTokenKey]);
+    if (props.console_opts && props.console_opts.console_notifications) {
       if (!props.console_opts.console_notifications[userID]) {
         dispatch({
           type: UPDATE_CONSOLE_NOTIFICATIONS,
