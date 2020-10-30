@@ -19,8 +19,9 @@ import           Hasura.Prelude
 import qualified Database.PG.Query                as Q
 
 import           Data.List.Extended               (duplicates)
-
 import           Data.Text.Extended
+import           Data.Text.NonEmpty
+
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.QueryCollection
@@ -94,7 +95,7 @@ runDropQueryFromCollection
 runDropQueryFromCollection (DropQueryFromCollection collName queryName) = do
   CollectionDef qList <- getCollectionDef collName
   let queryExists = flip any qList $ \q -> _lqName q == queryName
-  when (not queryExists) $ throw400 NotFound $ "query with name "
+  unless queryExists $ throw400 NotFound $ "query with name "
     <> queryName <<> " not found in collection " <>> collName
   let collDef = CollectionDef $ flip filter qList $
                                 \q -> _lqName q /= queryName

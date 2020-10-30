@@ -171,7 +171,10 @@ updateObjRelDef qt rn (oldQT, newQT) = do
   let newDef = case oldDef of
         RUFKeyOn _ -> oldDef
         RUManual (RelManualConfig dbQT rmCols) ->
-          let updQT = bool oldQT newQT $ oldQT == dbQT
+          -- here `dbQT` is the remote table, we only need to
+          -- make changes in the relationship definition when the
+          -- remote table has been renamed
+          let updQT = bool dbQT newQT $ oldQT == dbQT
           in RUManual $ RelManualConfig updQT rmCols
   liftTx $ updateRel qt rn $ toJSON newDef
 
@@ -190,7 +193,10 @@ updateArrRelDef qt rn (oldQT, newQT) = do
           in RUManual $ RelManualConfig updQT rmCols
   liftTx $ updateRel qt rn $ toJSON newDef
   where
-    getUpdQT dbQT = bool oldQT newQT $ oldQT == dbQT
+    -- here `dbQT` is the remote table, we only need to
+    -- make changes in the relationship definition when the
+    -- remote table has been renamed
+    getUpdQT dbQT = bool dbQT newQT $ oldQT == dbQT
 
 -- | update fields in premissions
 updatePermFlds :: (MonadTx m, CacheRM m)
@@ -267,7 +273,7 @@ updateDelPermFlds refQT rename rn (DelPerm fltr) = do
   liftTx $ updatePermDefInCatalog PTDelete refQT rn $ DelPerm updFltr
 
 updatePreset
-  :: QualifiedTable -> RenameField -> (ColumnValues Value) -> (ColumnValues Value)
+  :: QualifiedTable -> RenameField -> ColumnValues Value -> ColumnValues Value
 updatePreset qt rf obj =
    case rf of
      RFCol (RenameItem opQT oCol nCol) ->
@@ -313,7 +319,7 @@ updateFieldInBoolExp qt rf be = BoolExp <$>
     BoolOr  exps -> BoolOr <$> procExps exps
     BoolNot e    -> BoolNot <$> updateBoolExp' e
     BoolExists (GExists refqt wh) ->
-      (BoolExists . GExists refqt . unBoolExp)
+      BoolExists . GExists refqt . unBoolExp
       <$> updateFieldInBoolExp refqt rf (BoolExp wh)
     BoolFld fld  -> BoolFld <$> updateColExp qt rf fld
   where
@@ -470,12 +476,12 @@ updateColMap fromQT toQT rnCol =
 possiblyUpdateCustomColumnNames
   :: MonadTx m => QualifiedTable -> PGCol -> PGCol -> m ()
 possiblyUpdateCustomColumnNames qt oCol nCol = do
-  TableConfig customRootFields customColumns <- getTableConfig qt
+  TableConfig customRootFields customColumns identifier <- getTableConfig qt
   let updatedCustomColumns =
         M.fromList $ flip map (M.toList customColumns) $
         \(dbCol, val) -> (, val) $ if dbCol == oCol then nCol else dbCol
   when (updatedCustomColumns /= customColumns) $
-    updateTableConfig qt $ TableConfig customRootFields updatedCustomColumns
+    updateTableConfig qt $ TableConfig customRootFields updatedCustomColumns identifier
 
 -- database functions for relationships
 getRelDef :: QualifiedTable -> RelName -> Q.TxE QErr Value
