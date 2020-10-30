@@ -45,6 +45,8 @@ import {
   tableColumnTypesNotif,
   tableColumnDefaultsNotif,
   tableMinPrimaryKeyNotif,
+  tableNameMaxLengthNotif,
+  tableColumnMaxLengthNotif,
 } from './AddWarning';
 
 import styles from '../../../Common/TableCommon/Table.scss';
@@ -112,10 +114,7 @@ class AddTable extends Component {
   };
 
   trimTableName = tableName => {
-    const maxLength = 63;
-    let trimmedName = tableName ? tableName.trim() : tableName;
-    trimmedName = trimmedName.substring(0, maxLength);
-
+    const trimmedName = tableName ? tableName.trim() : tableName;
     const { dispatch } = this.props;
     if (tableName !== trimmedName) {
       dispatch(setTableName(trimmedName));
@@ -207,6 +206,14 @@ class AddTable extends Component {
     }
   }
 
+  isValidLength(s) {
+    return s.length < 64;
+  }
+
+  validateTableNameLength(name) {
+    return this.isValidLength(name);
+  }
+
   tableNameEmptyCheck(name) {
     return name !== null;
   }
@@ -241,10 +248,8 @@ class AddTable extends Component {
   }
 
   trimColumnNames(columns) {
-    const maxLength = 63;
     const trimmedColumns = columns.map((column, index) => {
-      let trimmedColumn = column.name.trim();
-      trimmedColumn = trimmedColumn.substring(0, maxLength);
+      const trimmedColumn = column.name.trim();
       if (trimmedColumn !== column.name) {
         this.props.dispatch(setColName(trimmedColumn, index, column.nullable));
       }
@@ -295,6 +300,16 @@ class AddTable extends Component {
           cols[i].name.toString() +
           ')'
         );
+      }
+    }
+    return '';
+  }
+
+  validateColumnNameLengths(cols) {
+    const l = cols.length;
+    for (let i = 0; i < l; i++) {
+      if (!this.isValidLength(cols[i].name)) {
+        return false;
       }
     }
     return '';
@@ -402,12 +417,20 @@ class AddTable extends Component {
         gqlTableErrorNotif
       ) &&
       this.checkAndNotify(
+        this.validateTableNameLength(tableNameTrimmed),
+        tableNameMaxLengthNotif
+      ) &&
+      this.checkAndNotify(
         this.validateEnoughColumns(trimmedColumns),
         tableEnufColumnsNotif
       ) &&
       this.checkAndNotify(
         this.validateColumnNames(trimmedColumns),
         gqlColumnErrorNotif
+      ) &&
+      this.checkAndNotify(
+        this.validateColumnNameLengths(trimmedColumns),
+        tableColumnMaxLengthNotif
       ) &&
       this.checkAndNotify(
         this.validateNoDupNames(trimmedColumns),
