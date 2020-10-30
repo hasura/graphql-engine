@@ -650,9 +650,9 @@ onConnInit logger manager wsConn authMode connParamsM = do
       sendMsg wsConn $ SMConnErr connErr
 
     getIpAddress = \case
-      CSNotInitialised _ ip -> return ip
+      CSNotInitialised _ ip           -> return ip
       CSInitialised WsClientState{..} -> return wscsIpAddress
-      CSInitError e -> Left e
+      CSInitError e                   -> Left e
 
     mkHeaders st =
       paramHeaders ++ getClientHdrs st
