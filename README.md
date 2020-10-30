@@ -100,7 +100,7 @@ guides](https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html) or
 
 ## Architecture
 
-The Hasura GraphQL Engine fronts a Postgres database instance and can accept GraphQL requests from your client apps. It can be configured to work with your existing auth system and can handle access control using field-level rules with dynamic variables from your auth system.
+The Hasura GraphQL Engine fronts a Postgres database instance and can accept GraphQL requests from your client apps. It can be configured to work with your existing auth system and can handle access control using field-level rules with dynamic variables from your authorized system.
 
 You can also merge remote GraphQL schemas and provide a unified GraphQL API.
 
@@ -112,7 +112,7 @@ Hasura works with any GraphQL client. We recommend using [Apollo Client](https:/
 
 ## Add business logic
 
-GraphQL Engine provides easy-to-reason, scalable and performant methods for adding custom business logic to your backend:
+GraphQL Engine provides easy-to-reason, scalable and performance methods for adding custom business logic to your backend:
 
 ### Remote schemas
 
@@ -141,7 +141,7 @@ Check out all the example applications in the [community/sample-apps](community/
   - [Browse APIs](https://realtime-chat.demo.hasura.app/console)
 
 - Live location tracking app that shows a running vehicle changing current GPS
-  coordinates moving on a map.
+  co-ordinates moving on a map.
   - [Try it out](https://realtime-location-tracking.demo.hasura.app/)
   - [Tutorial](community/sample-apps/realtime-location-tracking)
   - [Browse APIs](https://realtime-location-tracking.demo.hasura.app/console)
