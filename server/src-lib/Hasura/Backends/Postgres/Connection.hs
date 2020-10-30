@@ -25,8 +25,6 @@ module Hasura.Backends.Postgres.Connection
   , doesSchemaExist
   , doesTableExist
   , isExtensionAvailable
-  , enablePgcryptoExtension
-  , dropHdbCatalogSchema
   ) where
 
 import           Hasura.Prelude
@@ -301,41 +299,3 @@ isExtensionAvailable extensionName =
     ( SELECT 1 FROM pg_catalog.pg_available_extensions
       WHERE name = $1
     ) |] (Identity extensionName) False
-
-enablePgcryptoExtension :: forall m. MonadTx m => m ()
-enablePgcryptoExtension = do
-  pgcryptoAvailable <- isExtensionAvailable "pgcrypto"
-  if pgcryptoAvailable then createPgcryptoExtension
-    else throw400 Unexpected $
-      "pgcrypto extension is required, but could not find the extension in the "
-      <> "PostgreSQL server. Please make sure this extension is available."
-  where
-    createPgcryptoExtension :: m ()
-    createPgcryptoExtension =
-      liftTx $ Q.unitQE needsPGCryptoError
-      "CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA public" () False
-      where
-        needsPGCryptoError e@(Q.PGTxErr _ _ _ err) =
-          case err of
-            Q.PGIUnexpected _ -> requiredError
-            Q.PGIStatement pgErr -> case Q.edStatusCode pgErr of
-              Just "42501" -> err500 PostgresError permissionsMessage
-              _            -> requiredError
-          where
-            requiredError =
-              (err500 PostgresError requiredMessage) { qeInternal = Just $ J.toJSON e }
-            requiredMessage =
-              "pgcrypto extension is required, but it could not be created;"
-              <> " encountered unknown postgres error"
-            permissionsMessage =
-              "pgcrypto extension is required, but the current user doesn’t have permission to"
-              <> " create it. Please grant superuser permission, or setup the initial schema via"
-              <> " https://hasura.io/docs/1.0/graphql/manual/deployment/postgres-permissions.html"
-
-
-dropHdbCatalogSchema :: (MonadTx m) => m ()
-dropHdbCatalogSchema = liftTx $ Q.catchE defaultTxErrorHandler $ do
-  -- This is where
-  -- 1. Metadata storage:- Metadata and its stateful information stored
-  -- 2. Postgres source:- Table event trigger related stuff & insert permission check function stored
-  Q.unitQ "DROP SCHEMA IF EXISTS hdb_catalog CASCADE" () False
