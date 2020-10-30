@@ -66,7 +66,7 @@ data RawServeOptions impl
   , rsoEventsFetchInterval   :: !(Maybe Milliseconds)
   , rsoLogHeadersFromEnv     :: !Bool
   , rsoWebSocketCompression  :: !Bool
-  , rsoWebSocketKeepAlive    :: !(Maybe Integer)
+  , rsoWebSocketKeepAlive    :: !(Maybe Int)
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -115,7 +115,7 @@ data ServeOptions impl
   , soEventsFetchInterval          :: !(Maybe Milliseconds)
   , soLogHeadersFromEnv            :: !Bool
   , soConnectionOptions            :: !WS.ConnectionOptions
-  , soWebsocketKeepAlive           :: !(Maybe KeepAliveDelay)
+  , soWebsocketKeepAlive           :: !KeepAliveDelay
   }
 
 data DowngradeOptions

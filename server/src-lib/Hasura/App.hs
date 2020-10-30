@@ -339,7 +339,6 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
 
   _idleGCThread <- C.forkImmortal "ourIdleGC" logger $ liftIO $
     ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
-  let defaultKeepAliveDelay = KeepAliveDelay $ Seconds (Clock.secondsToDiffTime 5)
   HasuraApp app cacheRef cacheInitTime stopWsServer <- flip onException (flushLogger loggerCtx) $
     mkWaiApp env
              soTxIso
@@ -364,7 +363,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
              _icSchemaCache
              ekgStore
              soConnectionOptions
-             (fromMaybe defaultKeepAliveDelay soWebsocketKeepAlive)
+             soWebsocketKeepAlive
 
   -- log inconsistent schema objects
   inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)

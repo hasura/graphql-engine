@@ -180,11 +180,13 @@ mkServeOptions rso = do
                                 then WS.PermessageDeflateCompression WS.defaultPermessageDeflate
                                 else WS.NoCompression
                           }
-  webSocketKeepAlive <-
-    maybe
-      (Just . KeepAliveDelay $ Seconds (secondsToDiffTime 5)) -- default keep-alive interval is 5 seconds
-      (Just . KeepAliveDelay . Seconds . secondsToDiffTime)
-      <$> (withEnv (rsoWebSocketKeepAlive rso) (fst webSocketKeepAliveEnv))
+  webSocketKeepAlive <- KeepAliveDelay . Seconds . secondsToDiffTime . fromIntegral . fromMaybe 5
+      <$> withEnv (rsoWebSocketKeepAlive rso) (fst webSocketKeepAliveEnv)
+
+    -- maybe
+    --   (Just . KeepAliveDelay $ Seconds (secondsToDiffTime 5)) -- default keep-alive interval is 5 seconds
+    --   (Just . KeepAliveDelay . Seconds . secondsToDiffTime)
+    --   <$> (withEnv (rsoWebSocketKeepAlive rso) (fst webSocketKeepAliveEnv))
 
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
@@ -1049,7 +1051,7 @@ webSocketKeepAliveEnv =
   , "Control websocket keep-alive timeout (default 5 seconds)"
   )
 
-parseWebSocketKeepAlive :: Parser (Maybe Integer)
+parseWebSocketKeepAlive :: Parser (Maybe Int)
 parseWebSocketKeepAlive =
   optional $
   option (eitherReader readEither)
