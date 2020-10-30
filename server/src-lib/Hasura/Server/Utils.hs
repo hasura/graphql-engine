@@ -6,6 +6,7 @@ import           Control.Lens               ((^..))
 import           Data.Aeson
 import           Data.Aeson.Internal
 import           Data.Char
+import           Data.Text.Extended
 import           Language.Haskell.TH.Syntax (Lift, Q, TExp)
 import           System.Environment
 import           System.Exit
@@ -235,7 +236,7 @@ englishList joiner = \case
   one :| [two] -> one <> " " <> joiner <> " " <> two
   several      ->
     let final :| initials = NE.reverse several
-    in T.intercalate ", " (reverse initials) <> ", " <> joiner <> " " <> final
+    in commaSeparated (reverse initials) <> ", " <> joiner <> " " <> final
 
 makeReasonMessage :: [a] -> (a -> Text) -> Text
 makeReasonMessage errors showError =

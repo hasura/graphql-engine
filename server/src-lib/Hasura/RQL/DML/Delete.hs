@@ -32,8 +32,8 @@ import qualified Hasura.SQL.DML              as S
 traverseAnnDel
   :: (Applicative f)
   => (a -> f b)
-  -> AnnDelG a
-  -> f (AnnDelG b)
+  -> AnnDelG backend a
+  -> f (AnnDelG backend b)
 traverseAnnDel f annUpd =
   AnnDel tn
   <$> ((,) <$> traverseAnnBoolExp f whr <*> traverseAnnBoolExp f fltr)
@@ -43,7 +43,7 @@ traverseAnnDel f annUpd =
     AnnDel tn (whr, fltr) mutOutput allCols = annUpd
 
 mkDeleteCTE
-  :: AnnDel -> S.CTE
+  :: AnnDel 'Postgres -> S.CTE
 mkDeleteCTE (AnnDel tn (fltr, wc) _ _) =
   S.CTEDelete delete
   where
@@ -53,10 +53,10 @@ mkDeleteCTE (AnnDel tn (fltr, wc) _ _) =
 
 validateDeleteQWith
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => SessVarBldr m
-  -> (PGColumnType -> Value -> m S.SQLExp)
+  => SessVarBldr 'Postgres m
+  -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> DeleteQuery
-  -> m AnnDel
+  -> m (AnnDel 'Postgres)
 validateDeleteQWith sessVarBldr prepValBldr
   (DeleteQuery tableName rqlBE mRetCols) = do
   tableInfo <- askTabInfo tableName
@@ -102,7 +102,7 @@ validateDeleteQWith sessVarBldr prepValBldr
 
 validateDeleteQ
   :: (QErrM m, UserInfoM m, CacheRM m)
-  => DeleteQuery -> m (AnnDel, DS.Seq Q.PrepArg)
+  => DeleteQuery -> m (AnnDel 'Postgres, DS.Seq Q.PrepArg)
 validateDeleteQ =
   runDMLP1T . validateDeleteQWith sessVarFromCurrentSetting binRHSBuilder
 
@@ -116,7 +116,7 @@ execDeleteQuery
   => Env.Environment
   -> Bool
   -> Maybe MutationRemoteJoinCtx
-  -> (AnnDel, DS.Seq Q.PrepArg)
+  -> (AnnDel 'Postgres, DS.Seq Q.PrepArg)
   -> m EncJSON
 execDeleteQuery env strfyNum remoteJoinCtx (u, p) =
   runMutation env $ mkMutation remoteJoinCtx (dqp1Table u) (deleteCTE, p)
