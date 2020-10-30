@@ -35,7 +35,7 @@ import qualified Database.PG.Query.Connection       as Q
 import qualified Language.Haskell.TH.Lib            as TH
 import qualified Language.Haskell.TH.Syntax         as TH
 
-import           Control.Lens                       (view, _2)
+import           Control.Lens                       (_2, view)
 import           Control.Monad.Unique
 import           Data.Text.NonEmpty
 import           Data.Time.Clock                    (UTCTime)
@@ -53,7 +53,9 @@ import           Hasura.Server.Migrate.Version      (latestCatalogVersion,
 import           Hasura.Server.Version
 
 dropCatalog :: (MonadTx m) => m ()
-dropCatalog = liftTx $ Q.catchE defaultTxErrorHandler $
+dropCatalog = liftTx $ Q.catchE defaultTxErrorHandler $ do
+  -- This is where the generated views and triggers are stored
+  Q.unitQ "DROP SCHEMA IF EXISTS hdb_views CASCADE" () False
   Q.unitQ "DROP SCHEMA IF EXISTS hdb_catalog CASCADE" () False
 
 data MigrationResult
@@ -108,7 +110,10 @@ migrateCatalog env migrationTime = do
     initialize :: Bool -> m (MigrationResult, RebuildableSchemaCache m)
     initialize createSchema =  do
       liftTx $ Q.catchE defaultTxErrorHandler $
-        when createSchema $ Q.unitQ "CREATE SCHEMA hdb_catalog" () False
+        when createSchema $ do
+          Q.unitQ "CREATE SCHEMA hdb_catalog" () False
+          -- This is where the generated views and triggers are stored
+          Q.unitQ "CREATE SCHEMA hdb_views" () False
 
       isExtensionAvailable "pgcrypto" >>= \case
         -- only if we created the schema, create the extension

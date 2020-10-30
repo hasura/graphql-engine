@@ -24,7 +24,7 @@ type OpRhsParser m v =
 
 -- | Represents a reference to a Postgres column, possibly casted an arbitrary
 -- number of times. Used within 'parseOperationsExpression' for bookkeeping.
-data ColumnReference (b :: BackendType)
+data ColumnReference (b :: Backend)
   = ColumnReferenceColumn !(ColumnInfo b)
   | ColumnReferenceCast !(ColumnReference b) !(ColumnType b)
 
@@ -258,14 +258,14 @@ parseOperationsExpression rhsParser fim columnInfo =
 
 -- This convoluted expression instead of col = val
 -- to handle the case of col : null
-equalsBoolExpBuilder :: SQLExp 'Postgres -> SQLExp 'Postgres -> S.BoolExp
+equalsBoolExpBuilder :: S.SQLExp -> S.SQLExp -> S.BoolExp
 equalsBoolExpBuilder qualColExp rhsExp =
   S.BEBin S.OrOp (S.BECompare S.SEQ qualColExp rhsExp)
     (S.BEBin S.AndOp
       (S.BENull qualColExp)
       (S.BENull rhsExp))
 
-notEqualsBoolExpBuilder :: SQLExp 'Postgres -> SQLExp 'Postgres -> S.BoolExp
+notEqualsBoolExpBuilder :: S.SQLExp -> S.SQLExp -> S.BoolExp
 notEqualsBoolExpBuilder qualColExp rhsExp =
   S.BEBin S.OrOp (S.BECompare S.SNE qualColExp rhsExp)
     (S.BEBin S.AndOp
@@ -377,13 +377,13 @@ foldBoolExp f = \case
   BoolFld ce           -> f ce
 
 mkFieldCompExp
-  :: S.Qual -> FieldName -> OpExpG 'Postgres (SQLExp 'Postgres) -> S.BoolExp
+  :: S.Qual -> FieldName -> OpExpG 'Postgres S.SQLExp -> S.BoolExp
 mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
   where
     mkQCol = S.SEQIdentifier . S.QIdentifier qual . toIdentifier
     mkQField = S.SEQIdentifier . S.QIdentifier qual . Identifier . getFieldNameTxt
 
-    mkCompExp :: SQLExp 'Postgres -> OpExpG 'Postgres (SQLExp 'Postgres) -> S.BoolExp
+    mkCompExp :: S.SQLExp -> OpExpG 'Postgres S.SQLExp -> S.BoolExp
     mkCompExp lhs = \case
       ACast casts      -> mkCastsExp casts
       AEQ False val    -> equalsBoolExpBuilder lhs val

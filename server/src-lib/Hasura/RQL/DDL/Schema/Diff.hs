@@ -33,8 +33,7 @@ import           Data.Aeson.TH
 import           Data.List.Extended                 (duplicates)
 
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.RQL.Types                   hiding (ConstraintName, fmFunction,
-                                                     tmComputedFields, tmTable)
+import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 
 data FunctionMeta
@@ -83,7 +82,7 @@ data ComputedFieldDiff
   , _cfdOverloaded :: [(ComputedFieldName, QualifiedFunction)]
   } deriving (Show, Eq)
 
-data TableDiff (b :: BackendType)
+data TableDiff (b :: Backend)
   = TableDiff
   { _tdNewName         :: !(Maybe QualifiedTable)
   , _tdDroppedCols     :: ![Column b]
@@ -167,7 +166,7 @@ getTableChangeDeps tn tableDiff = do
     TableDiff _ droppedCols _ _ droppedFKeyConstraints computedFieldDiff _ _ = tableDiff
     droppedComputedFieldDeps = map (SOTableObj tn . TOComputedField) $ _cfdDropped computedFieldDiff
 
-data SchemaDiff (b :: BackendType)
+data SchemaDiff (b :: Backend)
   = SchemaDiff
   { _sdDroppedTables :: ![QualifiedTable]
   , _sdAlteredTables :: ![(QualifiedTable, TableDiff b)]

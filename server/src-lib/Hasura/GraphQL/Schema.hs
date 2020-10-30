@@ -1,4 +1,3 @@
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE Arrows #-}
 module Hasura.GraphQL.Schema
   ( buildGQLContext
@@ -132,19 +131,19 @@ buildRoleContext
   -> [P.FieldParser (P.ParseT Identity) RemoteField]
   -> RoleName
   -> m (RoleContext GQLContext)
-buildRoleContext queryContext (takeValidTables -> allTables) (takeValidFunctions -> allFunctions)
-  allActionInfos nonObjectCustomTypes queryRemotes mutationRemotes roleName =
+buildRoleContext queryContext allTables allFunctions allActionInfos
+  nonObjectCustomTypes queryRemotes mutationRemotes roleName =
 
-  runMonadSchema roleName queryContext allTables $ do
+  runMonadSchema roleName queryContext validTables $ do
     mutationParserFrontend <-
-      buildPGMutationFields Frontend tableNames >>=
+      buildPGMutationFields Frontend validTableNames >>=
       buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes
 
     mutationParserBackend <-
-      buildPGMutationFields Backend tableNames >>=
+      buildPGMutationFields Backend validTableNames >>=
       buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes
 
-    queryPGFields <- buildPostgresQueryFields tableNames allFunctions
+    queryPGFields <- buildPostgresQueryFields validTableNames validFunctions
     subscriptionParser <- buildSubscriptionParser queryPGFields allActionInfos
 
     queryParserFrontend <- buildQueryParser queryPGFields queryRemotes
@@ -159,22 +158,13 @@ buildRoleContext queryContext (takeValidTables -> allTables) (takeValidFunctions
     pure $ RoleContext frontendContext $ Just backendContext
 
     where
-      tableNames = Map.keysSet allTables
 
-takeValidTables :: TableCache -> TableCache
-takeValidTables = Map.filterWithKey graphQLTableFilter . Map.filter tableFilter
-  where
-    tableFilter = not . isSystemDefined . _tciSystemDefined . _tiCoreInfo
-    graphQLTableFilter tableName tableInfo =
-      -- either the table name should be GraphQL compliant
-      -- or it should have a GraphQL custom name set with it
-      isGraphQLCompliantTableName tableName
-      || (isJust . _tcCustomName . _tciCustomConfig . _tiCoreInfo $ tableInfo)
+      tableFilter    = not . isSystemDefined . _tciSystemDefined
+      functionFilter = not . isSystemDefined . fiSystemDefined
 
-takeValidFunctions :: FunctionCache -> [FunctionInfo]
-takeValidFunctions = Map.elems . Map.filter functionFilter
-  where
-    functionFilter = not . isSystemDefined . fiSystemDefined
+      validTables = Map.filter (tableFilter . _tiCoreInfo) allTables
+      validTableNames = Map.keysSet validTables
+      validFunctions = Map.elems $ Map.filter functionFilter allFunctions
 
 buildFullestDBSchema
   :: (MonadError QErr m, MonadIO m, MonadUnique m)
@@ -182,14 +172,14 @@ buildFullestDBSchema
   -> m ( Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
        , Maybe (Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
        )
-buildFullestDBSchema queryContext (takeValidTables -> allTables) (takeValidFunctions -> allFunctions)
-  allActionInfos nonObjectCustomTypes = do
-  runMonadSchema adminRoleName queryContext allTables $ do
+buildFullestDBSchema queryContext allTables allFunctions allActionInfos
+  nonObjectCustomTypes = do
+  runMonadSchema adminRoleName queryContext validTables $ do
     mutationParserFrontend <-
-      buildPGMutationFields Frontend tableNames >>=
+      buildPGMutationFields Frontend validTableNames >>=
       buildMutationParser mempty allActionInfos nonObjectCustomTypes
 
-    queryPGFields <- buildPostgresQueryFields tableNames allFunctions
+    queryPGFields <- buildPostgresQueryFields validTableNames validFunctions
     subscriptionParser <- buildSubscriptionParser queryPGFields allActionInfos
 
     queryParserFrontend <- buildQueryParser queryPGFields mempty
@@ -198,7 +188,13 @@ buildFullestDBSchema queryContext (takeValidTables -> allTables) (takeValidFunct
     pure (queryParserFrontend, mutationParserFrontend)
 
     where
-      tableNames = Map.keysSet allTables
+
+      tableFilter    = not . isSystemDefined . _tciSystemDefined
+      functionFilter = not . isSystemDefined . fiSystemDefined
+
+      validTables = Map.filter (tableFilter . _tiCoreInfo) allTables
+      validTableNames = Map.keysSet validTables
+      validFunctions = Map.elems $ Map.filter functionFilter allFunctions
 
 buildRelayRoleContext
   :: (MonadError QErr m, MonadIO m, MonadUnique m)
@@ -206,19 +202,19 @@ buildRelayRoleContext
   -> [P.FieldParser (P.ParseT Identity) RemoteField]
   -> RoleName
   -> m (RoleContext GQLContext)
-buildRelayRoleContext queryContext (takeValidTables -> allTables) (takeValidFunctions -> allFunctions)
-  allActionInfos nonObjectCustomTypes mutationRemotes roleName =
+buildRelayRoleContext queryContext allTables allFunctions allActionInfos
+  nonObjectCustomTypes mutationRemotes roleName =
 
-  runMonadSchema roleName queryContext allTables $ do
+  runMonadSchema roleName queryContext validTables $ do
     mutationParserFrontend <-
-      buildPGMutationFields Frontend tableNames >>=
+      buildPGMutationFields Frontend validTableNames >>=
       buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes
 
     mutationParserBackend <-
-      buildPGMutationFields Backend tableNames >>=
+      buildPGMutationFields Backend validTableNames >>=
       buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes
 
-    queryPGFields <- buildRelayPostgresQueryFields tableNames allFunctions
+    queryPGFields <- buildRelayPostgresQueryFields validTableNames validFunctions
     subscriptionParser <- P.safeSelectionSet subscriptionRoot Nothing queryPGFields
                              <&> fmap (fmap (P.handleTypename (RFRaw . J.String. G.unName)))
     queryParserFrontend <- queryWithIntrospectionHelper queryPGFields
@@ -233,7 +229,13 @@ buildRelayRoleContext queryContext (takeValidTables -> allTables) (takeValidFunc
     pure $ RoleContext frontendContext $ Just backendContext
 
     where
-      tableNames = Map.keysSet allTables
+
+      tableFilter    = not . isSystemDefined . _tciSystemDefined
+      functionFilter = not . isSystemDefined . fiSystemDefined
+
+      validTables = Map.filter (tableFilter . _tiCoreInfo) allTables
+      validTableNames = Map.keysSet validTables
+      validFunctions = Map.elems $ Map.filter functionFilter allFunctions
 
 unauthenticatedContext
   :: forall m

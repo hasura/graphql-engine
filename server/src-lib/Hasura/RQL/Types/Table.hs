@@ -165,7 +165,7 @@ emptyCustomRootFields =
   , _tcrfDeleteByPk      = Nothing
   }
 
-data FieldInfo (b :: BackendType)
+data FieldInfo (b :: Backend)
   = FIColumn !(ColumnInfo b)
   | FIRelationship !RelInfo
   | FIComputedField !(ComputedFieldInfo b)
@@ -227,7 +227,7 @@ isPGColInfo :: FieldInfo backend -> Bool
 isPGColInfo (FIColumn _) = True
 isPGColInfo _            = False
 
-data InsPermInfo (b :: BackendType)
+data InsPermInfo (b :: Backend)
   = InsPermInfo
   { ipiCols            :: !(HS.HashSet (Column b))
   , ipiCheck           :: !(AnnBoolExpPartialSQL b)
@@ -241,7 +241,7 @@ instance Cacheable (InsPermInfo 'Postgres)
 instance ToJSON (InsPermInfo 'Postgres) where
   toJSON = genericToJSON $ aesonDrop 3 snakeCase
 
-data SelPermInfo (b :: BackendType)
+data SelPermInfo (b :: Backend)
   = SelPermInfo
   { spiCols                 :: !(HS.HashSet (Column b))
   , spiScalarComputedFields :: !(HS.HashSet ComputedFieldName)
@@ -256,7 +256,7 @@ instance Cacheable (SelPermInfo 'Postgres)
 instance ToJSON (SelPermInfo 'Postgres) where
   toJSON = genericToJSON $ aesonDrop 3 snakeCase
 
-data UpdPermInfo (b :: BackendType)
+data UpdPermInfo (b :: Backend)
   = UpdPermInfo
   { upiCols            :: !(HS.HashSet (Column b))
   , upiTable           :: !QualifiedTable
@@ -271,7 +271,7 @@ instance Cacheable (UpdPermInfo 'Postgres)
 instance ToJSON (UpdPermInfo 'Postgres) where
   toJSON = genericToJSON $ aesonDrop 3 snakeCase
 
-data DelPermInfo (b :: BackendType)
+data DelPermInfo (b :: Backend)
   = DelPermInfo
   { dpiTable           :: !QualifiedTable
   , dpiFilter          :: !(AnnBoolExpPartialSQL b)
@@ -286,7 +286,7 @@ instance ToJSON (DelPermInfo 'Postgres) where
 mkRolePermInfo :: RolePermInfo backend
 mkRolePermInfo = RolePermInfo Nothing Nothing Nothing Nothing
 
-data RolePermInfo (b :: BackendType)
+data RolePermInfo (b :: Backend)
   = RolePermInfo
   { _permIns :: !(Maybe (InsPermInfo b))
   , _permSel :: !(Maybe (SelPermInfo b))
@@ -440,7 +440,7 @@ tciUniqueOrPrimaryKeyConstraints info = NE.nonEmpty $
   maybeToList (_pkConstraint <$> _tciPrimaryKey info)
   <> toList (_tciUniqueConstraints info)
 
-data TableInfo (b :: BackendType)
+data TableInfo (b :: Backend)
   = TableInfo
   { _tiCoreInfo            :: TableCoreInfo b
   , _tiRolePermInfoMap     :: !(RolePermInfoMap b)

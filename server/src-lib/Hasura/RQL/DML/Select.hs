@@ -23,8 +23,6 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.Select
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
-import           Hasura.RQL.DML.Types
-import           Hasura.RQL.IR.OrderBy
 import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -37,7 +35,7 @@ type SelectQExt b = SelectG (ExtCol b) (BoolExp b) Int
 -- it is specific to this module; however the generalization work was
 -- already done, and there's no particular reason to force this to be
 -- specific.
-data ExtCol (b :: BackendType)
+data ExtCol (b :: Backend)
   = ECSimple !(Column b)
   | ECRel !RelName !(Maybe RelName) !(SelectQExt b)
 deriving instance Lift (ExtCol 'Postgres)
