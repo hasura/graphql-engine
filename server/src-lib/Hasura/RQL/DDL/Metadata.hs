@@ -30,9 +30,9 @@ import qualified Hasura.RQL.DDL.CustomTypes         as CustomTypes
 import qualified Hasura.RQL.DDL.Permission          as Permission
 import qualified Hasura.RQL.DDL.QueryCollection     as Collection
 import qualified Hasura.RQL.DDL.Relationship        as Relationship
-import qualified Hasura.RQL.Types.Relationship      as Relationship
 import qualified Hasura.RQL.DDL.RemoteRelationship  as RemoteRelationship
 import qualified Hasura.RQL.DDL.Schema              as Schema
+import qualified Hasura.RQL.Types.Relationship      as Relationship
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON

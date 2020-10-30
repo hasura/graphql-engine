@@ -1,8 +1,8 @@
 module Hasura.RQL.Types.Source where
 
-import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Connection
-import           Hasura.Incremental         (Cacheable (..))
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Incremental                  (Cacheable (..))
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
@@ -12,9 +12,9 @@ import           Hasura.RQL.Types.Table
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax (Lift)
+import           Language.Haskell.TH.Syntax          (Lift)
 
-import qualified Database.PG.Query          as Q
+import qualified Database.PG.Query                   as Q
 
 data PGSourceConfig
   = PGSourceConfig

@@ -1,19 +1,19 @@
 module Hasura.RQL.Types.Relationship where
 
-import           Hasura.Incremental         (Cacheable)
-import           Hasura.Prelude
 import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Incremental                 (Cacheable)
+import           Hasura.Prelude
 
-import           Control.Lens               (makeLenses)
+import           Control.Lens                       (makeLenses)
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
 import           Hasura.RQL.Types.Common
-import           Instances.TH.Lift          ()
-import           Language.Haskell.TH.Syntax (Lift)
+import           Instances.TH.Lift                  ()
+import           Language.Haskell.TH.Syntax         (Lift)
 
-import qualified Data.HashMap.Strict        as HM
-import qualified Data.Text                  as T
+import qualified Data.HashMap.Strict                as HM
+import qualified Data.Text                          as T
 
 data RelDef a
   = RelDef

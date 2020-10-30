@@ -1,5 +1,6 @@
 module Hasura.RQL.Types.Permission where
 
+import           Hasura.Backends.Postgres.SQL.Types (PGCol, TableName, getTableTxt)
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Common
@@ -18,7 +19,6 @@ import           Language.Haskell.TH.Syntax         (Lift)
 
 import qualified Data.Text                          as T
 import qualified Database.PG.Query                  as Q
-import           Hasura.Backends.Postgres.SQL.Types (PGCol, TableName, getTableTxt)
 import qualified PostgreSQL.Binary.Decoding         as PD
 
 data PermType
@@ -36,7 +36,7 @@ instance Q.FromCol PermType where
     "update" -> Just PTUpdate
     "select" -> Just PTSelect
     "delete" -> Just PTDelete
-    _   -> Nothing
+    _        -> Nothing
 
 permTypeToCode :: PermType -> T.Text
 permTypeToCode PTInsert = "insert"

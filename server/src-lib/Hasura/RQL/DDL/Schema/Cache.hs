@@ -54,7 +54,7 @@ import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DDL.Utils                     (clearHdbViews)
-import           Hasura.RQL.Types                         hiding (tmTable, fmFunction)
+import           Hasura.RQL.Types                         hiding (fmFunction, tmTable)
 import           Hasura.RQL.Types.Catalog
 import           Hasura.Server.Version                    (HasVersion)
 
