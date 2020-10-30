@@ -15,6 +15,7 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
+import           Data.Text.NonEmpty
 import           Instances.TH.Lift                  ()
 import           Language.Haskell.TH.Syntax         (Lift)
 

@@ -8,9 +8,8 @@ module Hasura.GraphQL.Schema.Remote
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                   as Map
-import qualified Data.HashMap.Strict.Extended          as Map
 import qualified Data.HashMap.Strict.InsOrd            as OMap
+import qualified Data.HashMap.Strict.InsOrd.Extended   as OMap
 import qualified Data.List.NonEmpty                    as NE
 
 import           Data.Foldable                         (sequenceA_)
@@ -95,11 +94,10 @@ remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name inter
   -- TODO: also check sub-interfaces, when these are supported in a future graphql spec
   traverse_ validateImplementsFields interfaceDefs
   pure $ P.selectionSetObject name description subFieldParsers implements <&>
-    toList . (OMap.mapWithKey $ \alias -> \case
+    toList . OMap.mapWithKey (\alias -> \case
         P.SelectField fld  -> fld
         P.SelectTypename _ ->
-          G.Field (Just alias) $$(G.litName "__typename") mempty mempty mempty
-    )
+          G.Field (Just alias) $$(G.litName "__typename") mempty mempty mempty)
   where
     getInterface :: G.Name -> m (G.InterfaceTypeDefinition [G.Name])
     getInterface interfaceName =
@@ -278,9 +276,9 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
           -- selection set provided
           -- #1 of Note [Querying remote schema Interfaces]
           commonInterfaceFields =
-            Map.elems $
-            Map.mapMaybe allTheSame $
-            Map.groupOn G._fName $
+            OMap.elems $
+            OMap.mapMaybe (allTheSame . toList) $
+            OMap.groupListWith G._fName $
             concatMap (filter ((`elem` interfaceFieldNames) . G._fName) . snd) $
             objNameAndFields
 
@@ -302,7 +300,7 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
               G.InlineFragment (Just objName) mempty selSet
 
       -- #5 of Note [Querying remote schema interface fields]
-      in (fmap G.SelectionField commonInterfaceFields) <> nonCommonInterfaceFields
+      in fmap G.SelectionField commonInterfaceFields <> nonCommonInterfaceFields
 
 -- | 'remoteSchemaUnion' returns a output parser for a given 'UnionTypeDefinition'.
 remoteSchemaUnion
@@ -515,7 +513,7 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
       -- 'rawSelection' is used here to get the alias and args data
       -- specified to be able to construct the `Field NoFragments G.Name`
       P.rawSelection fieldName description argsParser outputParser
-      <&> (\(alias, args, _) -> (G.Field alias fieldName (fmap getName <$> args) mempty []))
+      <&> (\(alias, args, _) -> G.Field alias fieldName (fmap getName <$> args) mempty [])
 
     mkFieldParserWithSelectionSet
       :: InputFieldsParser n ()
@@ -526,7 +524,7 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
       -- specified to be able to construct the `Field NoFragments G.Name`
       P.rawSubselection fieldName description argsParser outputParser
       <&> (\(alias, args, _, selSet) ->
-             (G.Field alias fieldName (fmap getName <$> args) mempty selSet))
+             G.Field alias fieldName (fmap getName <$> args) mempty selSet)
 
 remoteFieldScalarParser
   :: MonadParse n
