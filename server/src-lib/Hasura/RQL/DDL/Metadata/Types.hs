@@ -71,10 +71,12 @@ data ReplaceMetadataV2
 
 instance FromJSON ReplaceMetadataV2 where
   parseJSON = withObject "Object" $ \o -> do
+{-
     version <- o .:? "version" .!= MVVersion1
-{-    case version of
+    case version of
       MVVersion3 -> RMWithSources <$> parseJSON (Object o)
-      _          -> RMWithoutSources <$> parseJSON (Object o)-}
+      _          -> RMWithoutSources <$> parseJSON (Object o)
+-}
     RMWithoutSources <$> parseJSON (Object o)
 
 data DumpInternalState
