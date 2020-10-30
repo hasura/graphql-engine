@@ -246,9 +246,6 @@ instance FromEnv AuthHookType where
 instance FromEnv Int where
   fromEnv = maybe (Left "Expecting Int value") Right . readMaybe
 
-instance FromEnv Integer where
-  fromEnv = maybe (Left "Expecting Integer value") Right . readMaybe
-
 instance FromEnv AdminSecretHash where
   fromEnv = Right . hashAdminSecret . T.pack
 
