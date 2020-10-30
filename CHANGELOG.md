@@ -54,6 +54,44 @@ The corresponding JWT config can be:
   }
 ```
 
+### Metadata Types SDK
+
+The types and documentation comments for Metadata V2 have been converted into JSON/YAML Schema, and used to autogenerate type definitions for popular languages.
+
+This enables users to build type-safe tooling in the language of their choice around Metadata interactions and automations.
+
+Additionally, the JSON/YAML Schemas can be used to provide IntelliSense and autocomplete + documentation when interacting with Metadata YAML/JSON files.
+
+For a more comprehensive overview, please see [the readme located here](./contrib/metadata-types/README.md)
+
+**Sample Code**
+
+```ts
+import { TableEntry } from "../generated/HasuraMetadataV2"
+
+const newTable: TableEntry = {
+  table: { schema: "public", name: "user" },
+  select_permissions: [
+    {
+      role: "user",
+      permission: {
+        limit: 100,
+        allow_aggregations: false,
+        columns: ["id", "name", "etc"],
+        computed_fields: ["my_computed_field"],
+        filter: {
+          id: { _eq: "X-Hasura-User-ID" },
+        },
+      },
+    },
+  ],
+}
+```
+
+**IntelliSense Example**
+
+![](./contrib/metadata-types/json-schema-typecheck-demo.gif)
+
 ### Breaking changes
 
 This release contains the [PDV refactor (#4111)](https://github.com/hasura/graphql-engine/pull/4111), a significant rewrite of the internals of the server, which did include some breaking changes:
@@ -108,7 +146,6 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 
 - server: fixes column masking in select permission for computed fields regression (fix #5696)
 
-
 ## `v1.3.1`, `v1.3.1-beta.1`
 
 ### Breaking change
@@ -124,7 +161,7 @@ If you do have such headers configured, then you must update the header configur
 
 - server: fix failing introspection query when an enum column is part of a primary key (fixes #5200)
 - server: disallow headers from env variables starting with `HASURA_GRAPHQL_` in actions, event triggers & remote schemas (#5519)
-**WARNING**: This might break certain deployments. See `Breaking change` section above.
+  **WARNING**: This might break certain deployments. See `Breaking change` section above.
 - server: bugfix to allow HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE of 0 (#5363)
 - server: support only a bounded plan cache, with a default size of 4000 (closes #5363)
 - server: add logs for action handlers
@@ -163,7 +200,7 @@ If you do have such headers configured, then you must update the header configur
 - server: unlock locked scheduled events on graceful shutdown (#4928)
 - server: disable prepared statements for mutations as we end up with single-use objects which result in excessive memory consumption for mutation heavy workloads (#5255)
 - server: include scheduled event metadata (`created_at`,`scheduled_time`,`id`, etc) along with the configured payload in the request body to the webhook.
-**WARNING:** This is breaking for beta versions as the payload is now inside a key called `payload`.
+  **WARNING:** This is breaking for beta versions as the payload is now inside a key called `payload`.
 - console: allow configuring statement timeout on console RawSQL page (close #4998) (#5045)
 - console: support tracking partitioned tables (close #5071) (#5258)
 - console: add button to cancel one-off scheduled events and cron-trigger events (close #5161) (#5236)
@@ -172,7 +209,6 @@ If you do have such headers configured, then you must update the header configur
 - docs: add note for managed databases in postgres requirements (close #1677, #3783) (#5228)
 - docs: add 1-click deployment to Nhost page to the deployment guides (#5180)
 - docs: add hasura cloud to getting started section (close #5206) (#5208)
-
 
 ## `v1.3.0-beta.3`
 
@@ -276,9 +312,11 @@ Support for this is now added through the `add_computed_field` API.
 Read more about the session argument for computed fields in the [docs](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html).
 
 ### Manage seed migrations as SQL files
+
 A new `seeds` command is introduced in CLI, this will allow managing seed migrations as SQL files
 
 #### Creating seed
+
 ```
 # create a new seed file and use editor to add SQL content
 hasura seed create new_table_seed
@@ -289,7 +327,9 @@ hasura seed create table1_seed --from-table table1
 # create from data in multiple tables:
 hasura seed create tables_seed --from-table table1 --from-table table2
 ```
+
 #### Applying seed
+
 ```
 # apply all seeds on the database:
 hasura seed apply
