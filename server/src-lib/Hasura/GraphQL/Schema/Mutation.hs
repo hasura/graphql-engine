@@ -10,6 +10,7 @@ module Hasura.GraphQL.Schema.Mutation
   ) where
 
 
+import           Data.Has
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                 as Map
@@ -18,25 +19,24 @@ import qualified Data.HashSet                        as Set
 import qualified Data.Text                           as T
 import qualified Language.GraphQL.Draft.Syntax       as G
 
-import           Data.Has
-import           Data.Text.Extended
-
-import qualified Hasura.Backends.Postgres.SQL.DML    as PG
+import qualified Hasura.Backends.Postgres.SQL.DML    as S
 import qualified Hasura.GraphQL.Parser               as P
-import qualified Hasura.RQL.IR.Delete                as IR
-import qualified Hasura.RQL.IR.Insert                as IR
-import qualified Hasura.RQL.IR.Returning             as IR
-import qualified Hasura.RQL.IR.Update                as IR
+import qualified Hasura.RQL.IR.Delete                as RQL
+import qualified Hasura.RQL.IR.Insert                as RQL
+import qualified Hasura.RQL.IR.Returning             as RQL
+import qualified Hasura.RQL.IR.Update                as RQL
 
+import           Data.Text.Extended
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Parser               (FieldParser, InputFieldsParser, Kind (..),
                                                       Parser, UnpreparedValue (..), mkParameter)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
+import           Hasura.GraphQL.Schema.Insert
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
-import           Hasura.RQL.Types                    hiding (ConstraintName)
+import           Hasura.RQL.Types
 
 
 
@@ -51,7 +51,7 @@ insertIntoTable
   -> InsPermInfo 'Postgres          -- ^ insert permissions of the table
   -> Maybe (SelPermInfo 'Postgres)    -- ^ select permissions of the table (if any)
   -> Maybe (UpdPermInfo 'Postgres)    -- ^ update permissions of the table (if any)
-  -> m (FieldParser n (IR.AnnInsert 'Postgres UnpreparedValue))
+  -> m (FieldParser n (AnnInsert 'Postgres UnpreparedValue))
 insertIntoTable table fieldName description insertPerms selectPerms updatePerms = do
   columns         <- tableColumns table
   selectionParser <- mutationSelectionSet table selectPerms
@@ -64,10 +64,10 @@ insertIntoTable table fieldName description insertPerms selectPerms updatePerms 
         objects <- P.field objectsName (Just objectsDesc) objectsParser
         pure (conflictClause, objects)
   pure $ P.subselection fieldName description argsParser selectionParser
-    <&> \((conflictClause, objects), output) -> IR.AnnInsert (G.unName fieldName) False
-      ( mkInsertObject objects table columns conflictClause insertPerms updatePerms
-      , IR.MOutMultirowFields output
-      )
+    <&> \((conflictClause, objects), output) -> AnnInsert (G.unName fieldName) False
+       ( mkInsertObject objects table columns conflictClause insertPerms updatePerms
+       , RQL.MOutMultirowFields output
+       )
 
 mkConflictClause :: MonadParse n => Maybe (Parser 'Input n a) -> InputFieldsParser n (Maybe a)
 mkConflictClause conflictParser
@@ -88,7 +88,7 @@ insertOneIntoTable
   -> InsPermInfo 'Postgres          -- ^ insert permissions of the table
   -> SelPermInfo 'Postgres          -- ^ select permissions of the table
   -> Maybe (UpdPermInfo 'Postgres)    -- ^ update permissions of the table (if any)
-  -> m (FieldParser n (IR.AnnInsert 'Postgres UnpreparedValue))
+  -> m (FieldParser n (AnnInsert 'Postgres UnpreparedValue))
 insertOneIntoTable table fieldName description insertPerms selectPerms updatePerms  = do
   columns         <- tableColumns table
   selectionParser <- tableSelectionSet table selectPerms
@@ -101,9 +101,9 @@ insertOneIntoTable table fieldName description insertPerms selectPerms updatePer
         object <- P.field objectName (Just objectDesc) objectParser
         pure (conflictClause, object)
   pure $ P.subselection fieldName description argsParser selectionParser
-    <&> \((conflictClause, object), output) -> IR.AnnInsert (G.unName fieldName) True
+    <&> \((conflictClause, object), output) -> AnnInsert (G.unName fieldName) True
        ( mkInsertObject [object] table columns conflictClause insertPerms updatePerms
-       , IR.MOutSinglerowObject output
+       , RQL.MOutSinglerowObject output
        )
 
 -- | We specify the data of an individual row to insert through this input parser.
@@ -111,7 +111,7 @@ tableFieldsInput
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable -- ^ qualified name of the table
   -> InsPermInfo 'Postgres    -- ^ insert permissions of the table
-  -> m (Parser 'Input n (IR.AnnInsObj 'Postgres UnpreparedValue))
+  -> m (Parser 'Input n (AnnInsObj 'Postgres UnpreparedValue))
 tableFieldsInput table insertPerms = memoizeOn 'tableFieldsInput table do
   tableGQLName    <- getTableGQLName table
   allFields    <- _tciFieldInfoMap . _tiCoreInfo <$> askTableInfo table
@@ -124,7 +124,7 @@ tableFieldsInput table insertPerms = memoizeOn 'tableFieldsInput table do
             columnDesc = pgiDescription columnInfo
         fieldParser <- P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
         pure $ P.fieldOptional columnName columnDesc fieldParser `mapField`
-          \(mkParameter -> value) -> IR.AnnInsObj [(pgiColumn columnInfo, value)] [] []
+          \(mkParameter -> value) -> AnnInsObj [(pgiColumn columnInfo, value)] [] []
     FIRelationship relationshipInfo -> runMaybeT $ do
       let otherTable = riRTable  relationshipInfo
           relName    = riName    relationshipInfo
@@ -137,12 +137,12 @@ tableFieldsInput table insertPerms = memoizeOn 'tableFieldsInput table do
         ObjRel -> do
           parser <- objectRelationshipInput otherTable insPerms selPerms updPerms
           pure $ P.fieldOptional relFieldName Nothing parser `mapField`
-            \objRelIns -> IR.AnnInsObj [] [IR.RelIns objRelIns relationshipInfo] []
+            \objRelIns -> AnnInsObj [] [RelIns objRelIns relationshipInfo] []
         ArrRel -> do
           parser <- P.nullable <$> arrayRelationshipInput otherTable insPerms selPerms updPerms
           pure $ P.fieldOptional relFieldName Nothing parser <&> \arrRelIns -> do
             rel <- join arrRelIns
-            Just $ IR.AnnInsObj [] [] [IR.RelIns rel relationshipInfo | not $ null $ IR._aiInsObj rel]
+            Just $ AnnInsObj [] [] [RelIns rel relationshipInfo | not $ null $ _aiInsObj rel]
   let objectName = tableGQLName <> $$(G.litName "_insert_input")
       objectDesc = G.Description $ "input type for inserting data into table " <>> table
   pure $ P.object objectName (Just objectDesc) $ catMaybes <$> sequenceA objectFields
@@ -155,7 +155,7 @@ objectRelationshipInput
   -> InsPermInfo 'Postgres
   -> Maybe (SelPermInfo 'Postgres)
   -> Maybe (UpdPermInfo 'Postgres)
-  -> m (Parser 'Input n (IR.SingleObjIns 'Postgres UnpreparedValue))
+  -> m (Parser 'Input n (SingleObjIns 'Postgres UnpreparedValue))
 objectRelationshipInput table insertPerms selectPerms updatePerms =
   memoizeOn 'objectRelationshipInput table do
   tableGQLName    <- getTableGQLName table
@@ -178,7 +178,7 @@ arrayRelationshipInput
   -> InsPermInfo 'Postgres
   -> Maybe (SelPermInfo 'Postgres)
   -> Maybe (UpdPermInfo 'Postgres)
-  -> m (Parser 'Input n (IR.MultiObjIns 'Postgres UnpreparedValue))
+  -> m (Parser 'Input n (MultiObjIns 'Postgres UnpreparedValue))
 arrayRelationshipInput table insertPerms selectPerms updatePerms =
   memoizeOn 'arrayRelationshipInput table do
   tableGQLName      <- getTableGQLName table
@@ -198,22 +198,22 @@ mkInsertObject
   :: a
   -> QualifiedTable
   -> [ColumnInfo 'Postgres]
-  -> Maybe (IR.ConflictClauseP1 'Postgres UnpreparedValue)
+  -> Maybe (RQL.ConflictClauseP1 'Postgres UnpreparedValue)
   -> InsPermInfo 'Postgres
   -> Maybe (UpdPermInfo 'Postgres)
-  -> IR.AnnIns 'Postgres a UnpreparedValue
+  -> AnnIns 'Postgres a UnpreparedValue
 mkInsertObject objects table columns conflictClause insertPerms updatePerms =
-  IR.AnnIns { _aiInsObj         = objects
-            , _aiTableName      = table
-            , _aiConflictClause = conflictClause
-            , _aiCheckCond      = (insertCheck, updateCheck)
-            , _aiTableCols      = columns
-            , _aiDefVals        = defaultValues
-            }
+  AnnIns { _aiInsObj         = objects
+         , _aiTableName      = table
+         , _aiConflictClause = conflictClause
+         , _aiCheckCond      = (insertCheck, updateCheck)
+         , _aiTableCols      = columns
+         , _aiDefVals        = defaultValues
+         }
   where insertCheck = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ ipiCheck insertPerms
         updateCheck = fmapAnnBoolExp partialSQLExpToUnpreparedValue <$> (upiCheck =<< updatePerms)
         defaultValues = Map.union (partialSQLExpToUnpreparedValue <$> ipiSet insertPerms)
-          $ fmap UVLiteral $ PG.mkColDefValMap $ map pgiColumn columns
+          $ fmap UVLiteral $ S.mkColDefValMap $ map pgiColumn columns
 
 -- | Specifies the "ON CONFLICT" SQL clause
 conflictObject
@@ -221,7 +221,7 @@ conflictObject
   => QualifiedTable
   -> Maybe (SelPermInfo 'Postgres)
   -> UpdPermInfo 'Postgres
-  -> m (Maybe (Parser 'Input n (IR.ConflictClauseP1 'Postgres UnpreparedValue)))
+  -> m (Maybe (Parser 'Input n (RQL.ConflictClauseP1 'Postgres UnpreparedValue)))
 conflictObject table selectPerms updatePerms = runMaybeT $ do
   tableGQLName      <- getTableGQLName table
   columnsEnum      <- MaybeT $ tableUpdateColumnsEnum table updatePerms
@@ -234,12 +234,12 @@ conflictObject table selectPerms updatePerms = runMaybeT $ do
       columnsName    = $$(G.litName "update_columns")
       whereExpName   = $$(G.litName "where")
       fieldsParser = do
-        constraint <- IR.CTConstraint <$> P.field constraintName Nothing constraintParser
+        constraint <- RQL.CTConstraint <$> P.field constraintName Nothing constraintParser
         columns    <- P.field columnsName Nothing $ P.list columnsEnum
         whereExp   <- P.fieldOptional whereExpName Nothing whereExpParser
         pure $ case columns of
-          [] -> IR.CP1DoNothing $ Just constraint
-          _  -> IR.CP1Update constraint columns preSetColumns $
+          [] -> RQL.CP1DoNothing $ Just constraint
+          _  -> RQL.CP1Update constraint columns preSetColumns $
             BoolAnd $ catMaybes [whereExp, Just $ fmapAnnBoolExp partialSQLExpToUnpreparedValue $ upiFilter updatePerms]
   pure $ P.object objectName (Just objectDesc) fieldsParser
   where preSetColumns = partialSQLExpToUnpreparedValue <$> upiSet updatePerms
@@ -273,7 +273,7 @@ updateTable
   -> Maybe G.Description  -- ^ field description, if any
   -> UpdPermInfo 'Postgres          -- ^ update permissions of the table
   -> Maybe (SelPermInfo 'Postgres)    -- ^ select permissions of the table (if any)
-  -> m (Maybe (FieldParser n (IR.AnnUpdG 'Postgres UnpreparedValue)))
+  -> m (Maybe (FieldParser n (RQL.AnnUpdG 'Postgres UnpreparedValue)))
 updateTable table fieldName description updatePerms selectPerms = runMaybeT $ do
   let whereName = $$(G.litName "where")
       whereDesc = "filter the rows which have to be updated"
@@ -283,7 +283,7 @@ updateTable table fieldName description updatePerms selectPerms = runMaybeT $ do
   selection <- lift $ mutationSelectionSet table selectPerms
   let argsParser = liftA2 (,) opArgs whereArg
   pure $ P.subselection fieldName description argsParser selection
-    <&> mkUpdateObject table columns updatePerms . fmap IR.MOutMultirowFields
+    <&> mkUpdateObject table columns updatePerms . fmap RQL.MOutMultirowFields
 
 -- | Construct a root field, normally called update_tablename, that can be used
 -- to update a single in a DB table, specified by primary key. Only returns a
@@ -296,7 +296,7 @@ updateTableByPk
   -> Maybe G.Description  -- ^ field description, if any
   -> UpdPermInfo 'Postgres          -- ^ update permissions of the table
   -> SelPermInfo 'Postgres          -- ^ select permissions of the table
-  -> m (Maybe (FieldParser n (IR.AnnUpdG 'Postgres UnpreparedValue)))
+  -> m (Maybe (FieldParser n (RQL.AnnUpdG 'Postgres UnpreparedValue)))
 updateTableByPk table fieldName description updatePerms selectPerms = runMaybeT $ do
   tableGQLName <- getTableGQLName table
   columns   <- lift   $ tableSelectColumns table selectPerms
@@ -311,26 +311,26 @@ updateTableByPk table fieldName description updatePerms selectPerms = runMaybeT 
         primaryKeys <- P.field pkFieldName Nothing $ P.object pkObjectName (Just pkObjectDesc) pkArgs
         pure (operators, primaryKeys)
   pure $ P.subselection fieldName description argsParser selection
-    <&> mkUpdateObject table columns updatePerms . fmap IR.MOutSinglerowObject
+    <&> mkUpdateObject table columns updatePerms . fmap RQL.MOutSinglerowObject
 
 mkUpdateObject
   :: QualifiedTable
   -> [ColumnInfo 'Postgres]
   -> UpdPermInfo 'Postgres
-  -> ( ( [(PGCol, IR.UpdOpExpG UnpreparedValue)]
+  -> ( ( [(PGCol, RQL.UpdOpExpG UnpreparedValue)]
        , AnnBoolExp 'Postgres UnpreparedValue
        )
-     , IR.MutationOutputG 'Postgres UnpreparedValue
+     , RQL.MutationOutputG 'Postgres UnpreparedValue
      )
-  -> IR.AnnUpdG 'Postgres UnpreparedValue
+  -> RQL.AnnUpdG 'Postgres UnpreparedValue
 mkUpdateObject table columns updatePerms ((opExps, whereExp), mutationOutput) =
-  IR.AnnUpd { IR.uqp1Table   = table
-            , IR.uqp1OpExps  = opExps
-            , IR.uqp1Where   = (permissionFilter, whereExp)
-            , IR.uqp1Check   = checkExp
-            , IR.uqp1Output  = mutationOutput
-            , IR.uqp1AllCols = columns
-            }
+  RQL.AnnUpd { RQL.uqp1Table   = table
+             , RQL.uqp1OpExps  = opExps
+             , RQL.uqp1Where   = (permissionFilter, whereExp)
+             , RQL.uqp1Check   = checkExp
+             , RQL.uqp1Output  = mutationOutput
+             , RQL.uqp1AllCols = columns
+             }
   where
     permissionFilter = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ upiFilter updatePerms
     checkExp = maybe annBoolExpTrue (fmapAnnBoolExp partialSQLExpToUnpreparedValue) $ upiCheck updatePerms
@@ -340,7 +340,7 @@ updateOperators
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   => QualifiedTable -- ^ qualified name of the table
   -> UpdPermInfo 'Postgres    -- ^ update permissions of the table
-  -> m (Maybe (InputFieldsParser n [(PGCol, IR.UpdOpExpG UnpreparedValue)]))
+  -> m (Maybe (InputFieldsParser n [(PGCol, RQL.UpdOpExpG UnpreparedValue)]))
 updateOperators table updatePermissions = do
   tableGQLName <- getTableGQLName table
   columns   <- tableUpdateColumns table updatePermissions
@@ -348,42 +348,42 @@ updateOperators table updatePermissions = do
       jsonCols    = onlyJSONBCols columns
   parsers <- catMaybes <$> sequenceA
     [ updateOperator tableGQLName $$(G.litName "_set")
-        columnParser IR.UpdSet columns
+        columnParser RQL.UpdSet columns
         "sets the columns of the filtered rows to the given values"
         (G.Description $ "input type for updating data in table " <>> table)
 
     , updateOperator tableGQLName $$(G.litName "_inc")
-        columnParser IR.UpdInc numericCols
+        columnParser RQL.UpdInc numericCols
         "increments the numeric columns with given value of the filtered values"
         (G.Description $"input type for incrementing numeric columns in table " <>> table)
 
     , let desc = "prepend existing jsonb value of filtered columns with new jsonb value"
       in updateOperator tableGQLName $$(G.litName "_prepend")
-         columnParser IR.UpdPrepend jsonCols desc desc
+         columnParser RQL.UpdPrepend jsonCols desc desc
 
     , let desc = "append existing jsonb value of filtered columns with new jsonb value"
       in updateOperator tableGQLName $$(G.litName "_append")
-         columnParser IR.UpdAppend jsonCols desc desc
+         columnParser RQL.UpdAppend jsonCols desc desc
 
     , let desc = "delete key/value pair or string element. key/value pairs are matched based on their key value"
       in updateOperator tableGQLName $$(G.litName "_delete_key")
-         nullableTextParser IR.UpdDeleteKey jsonCols desc desc
+         nullableTextParser RQL.UpdDeleteKey jsonCols desc desc
 
     , let desc = "delete the array element with specified index (negative integers count from the end). "
                  <> "throws an error if top level container is not an array"
       in updateOperator tableGQLName $$(G.litName "_delete_elem")
-         nonNullableIntParser IR.UpdDeleteElem jsonCols desc desc
+         nonNullableIntParser RQL.UpdDeleteElem jsonCols desc desc
 
     , let desc = "delete the field or element with specified path (for JSON arrays, negative integers count from the end)"
       in updateOperator tableGQLName $$(G.litName "_delete_at_path")
-         (fmap P.list . nonNullableTextParser) IR.UpdDeleteAtPath jsonCols desc desc
+         (fmap P.list . nonNullableTextParser) RQL.UpdDeleteAtPath jsonCols desc desc
     ]
   whenMaybe (not $ null parsers) do
     let allowedOperators = fst <$> parsers
     pure $ fmap catMaybes (sequenceA $ snd <$> parsers)
       `P.bindFields` \opExps -> do
         -- there needs to be at least one operator in the update, even if it is empty
-        let presetColumns = Map.toList $ IR.UpdSet . partialSQLExpToUnpreparedValue <$> upiSet updatePermissions
+        let presetColumns = Map.toList $ RQL.UpdSet . partialSQLExpToUnpreparedValue <$> upiSet updatePermissions
         when (null opExps && null presetColumns) $ parseError $
           "at least any one of " <> commaSeparated allowedOperators <> " is expected"
 
@@ -392,7 +392,7 @@ updateOperators table updatePermissions = do
             erroneousExps = OMap.filter ((>1) . length) $ OMap.groupTuples flattenedExps
         unless (OMap.null erroneousExps) $ parseError $
           "column found in multiple operators; " <>
-          T.intercalate ". " [ dquote column <> " in " <> commaSeparated (IR.updateOperatorText <$> ops)
+          T.intercalate ". " [ dquote column <> " in " <> commaSeparated (RQL.updateOperatorText <$> ops)
                              | (column, ops) <- OMap.toList erroneousExps
                              ]
 
@@ -407,11 +407,11 @@ updateOperators table updatePermissions = do
       :: G.Name
       -> G.Name
       -> (ColumnInfo 'Postgres -> m (Parser 'Both n a))
-      -> (a -> IR.UpdOpExpG UnpreparedValue)
+      -> (a -> RQL.UpdOpExpG UnpreparedValue)
       -> [ColumnInfo 'Postgres]
       -> G.Description
       -> G.Description
-      -> m (Maybe (Text, InputFieldsParser n (Maybe [(PGCol, IR.UpdOpExpG UnpreparedValue)])))
+      -> m (Maybe (Text, InputFieldsParser n (Maybe [(PGCol, RQL.UpdOpExpG UnpreparedValue)])))
     updateOperator tableGQLName opName mkParser updOpExp columns opDesc objDesc =
       whenMaybe (not $ null columns) do
         fields <- for columns \columnInfo -> do
@@ -439,7 +439,7 @@ deleteFromTable
   -> Maybe G.Description  -- ^ field description, if any
   -> DelPermInfo 'Postgres -- ^ delete permissions of the table
   -> Maybe (SelPermInfo 'Postgres)    -- ^ select permissions of the table (if any)
-  -> m (FieldParser n (IR.AnnDelG 'Postgres UnpreparedValue))
+  -> m (FieldParser n (RQL.AnnDelG 'Postgres UnpreparedValue))
 deleteFromTable table fieldName description deletePerms selectPerms = do
   let whereName = $$(G.litName "where")
       whereDesc = "filter the rows which have to be deleted"
@@ -447,7 +447,7 @@ deleteFromTable table fieldName description deletePerms selectPerms = do
   selection <- mutationSelectionSet table selectPerms
   columns   <- tableColumns table
   pure $ P.subselection fieldName description whereArg selection
-    <&> mkDeleteObject table columns deletePerms . fmap IR.MOutMultirowFields
+    <&> mkDeleteObject table columns deletePerms . fmap RQL.MOutMultirowFields
 
 -- | Construct a root field, normally called delete_tablename, that can be used
 -- to delete an individual rows from a DB table, specified by primary key
@@ -458,26 +458,26 @@ deleteFromTableByPk
   -> Maybe G.Description  -- ^ field description, if any
   -> DelPermInfo 'Postgres  -- ^ delete permissions of the table
   -> SelPermInfo 'Postgres  -- ^ select permissions of the table
-  -> m (Maybe (FieldParser n (IR.AnnDelG 'Postgres UnpreparedValue)))
+  -> m (Maybe (FieldParser n (RQL.AnnDelG 'Postgres UnpreparedValue)))
 deleteFromTableByPk table fieldName description deletePerms selectPerms = runMaybeT $ do
   columns   <- lift   $ tableSelectColumns table selectPerms
   pkArgs    <- MaybeT $ primaryKeysArguments table selectPerms
   selection <- lift $ tableSelectionSet table selectPerms
   pure $ P.subselection fieldName description pkArgs selection
-    <&> mkDeleteObject table columns deletePerms . fmap IR.MOutSinglerowObject
+    <&> mkDeleteObject table columns deletePerms . fmap RQL.MOutSinglerowObject
 
 mkDeleteObject
   :: QualifiedTable
   -> [ColumnInfo 'Postgres]
   -> DelPermInfo 'Postgres
-  -> (AnnBoolExp 'Postgres UnpreparedValue, IR.MutationOutputG 'Postgres UnpreparedValue)
-  -> IR.AnnDelG 'Postgres UnpreparedValue
+  -> (AnnBoolExp 'Postgres UnpreparedValue, RQL.MutationOutputG 'Postgres UnpreparedValue)
+  -> RQL.AnnDelG 'Postgres UnpreparedValue
 mkDeleteObject table columns deletePerms (whereExp, mutationOutput) =
-  IR.AnnDel { IR.dqp1Table   = table
-            , IR.dqp1Where   = (permissionFilter, whereExp)
-            , IR.dqp1Output  = mutationOutput
-            , IR.dqp1AllCols = columns
-            }
+  RQL.AnnDel { RQL.dqp1Table   = table
+             , RQL.dqp1Where   = (permissionFilter, whereExp)
+             , RQL.dqp1Output  = mutationOutput
+             , RQL.dqp1AllCols = columns
+             }
   where
     permissionFilter = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ dpiFilter deletePerms
 
@@ -491,7 +491,7 @@ mutationSelectionSet
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => QualifiedTable
   -> Maybe (SelPermInfo 'Postgres)
-  -> m (Parser 'Output n (IR.MutFldsG 'Postgres UnpreparedValue))
+  -> m (Parser 'Output n (RQL.MutFldsG 'Postgres UnpreparedValue))
 mutationSelectionSet table selectPerms =
   memoizeOn 'mutationSelectionSet table do
   tableGQLName <- getTableGQLName table
@@ -500,19 +500,19 @@ mutationSelectionSet table selectPerms =
     tableSet    <- lift $ tableSelectionList table permissions
     let returningName = $$(G.litName "returning")
         returningDesc = "data from the rows affected by the mutation"
-    pure $ IR.MRet <$> P.subselection_ returningName  (Just returningDesc) tableSet
+    pure $ RQL.MRet <$> P.subselection_ returningName  (Just returningDesc) tableSet
   let affectedRowsName = $$(G.litName "affected_rows")
       affectedRowsDesc = "number of rows affected by the mutation"
       selectionName    = tableGQLName <> $$(G.litName "_mutation_response")
       selectionDesc    = G.Description $ "response of any mutation on the table " <>> table
 
       selectionFields  = catMaybes
-        [ Just $ IR.MCount <$
+        [ Just $ RQL.MCount <$
             P.selection_ affectedRowsName (Just affectedRowsDesc) P.int
         , returning
         ]
   pure $ P.selectionSet selectionName (Just selectionDesc) selectionFields
-    <&> parsedSelectionsToFields IR.MExp
+    <&> parsedSelectionsToFields RQL.MExp
 
 -- | How to specify a database row by primary key.
 primaryKeysArguments

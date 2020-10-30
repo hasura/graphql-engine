@@ -184,7 +184,7 @@ getActionOutputFields :: AnnotatedObjectType backend -> ActionOutputFields
 getActionOutputFields =
   Map.fromList . map ( (unObjectFieldName . _ofdName) &&& (fst . _ofdType)) . toList . _otdFields
 
-data ActionInfo (b :: BackendType)
+data ActionInfo (b :: Backend)
   = ActionInfo
   { _aiName         :: !ActionName
   , _aiOutputObject :: !(AnnotatedObjectType b)
@@ -236,7 +236,7 @@ data ActionPermissionMetadata
 instance NFData ActionPermissionMetadata
 instance Cacheable ActionPermissionMetadata
 
-$(J.deriveJSON
+$(J.deriveFromJSON
   (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True}
   ''ActionPermissionMetadata)
 
@@ -248,7 +248,6 @@ data ActionMetadata
   , _amDefinition  :: !ActionDefinitionInput
   , _amPermissions :: ![ActionPermissionMetadata]
   } deriving (Show, Eq, Lift, Generic)
-$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ActionMetadata)
 instance NFData ActionMetadata
 instance Cacheable ActionMetadata
 
@@ -262,7 +261,7 @@ instance J.FromJSON ActionMetadata where
 
 ----------------- Resolve Types ----------------
 
-data AnnActionExecution (b :: BackendType) v
+data AnnActionExecution (b :: Backend) v
   = AnnActionExecution
   { _aaeName                 :: !ActionName
   , _aaeOutputType           :: !GraphQLType -- ^ output type
@@ -284,7 +283,7 @@ data AnnActionMutationAsync
   , _aamaPayload :: !J.Value -- ^ jsonified input arguments
   } deriving (Show, Eq)
 
-data AsyncActionQueryFieldG (b :: BackendType) v
+data AsyncActionQueryFieldG (b :: Backend) v
   = AsyncTypename !Text
   | AsyncOutput !(AnnFieldsG b v)
   | AsyncId
@@ -293,7 +292,7 @@ data AsyncActionQueryFieldG (b :: BackendType) v
 
 type AsyncActionQueryFieldsG b v = Fields (AsyncActionQueryFieldG b v)
 
-data AnnActionAsyncQuery (b :: BackendType) v
+data AnnActionAsyncQuery (b :: Backend) v
   = AnnActionAsyncQuery
   { _aaaqName           :: !ActionName
   , _aaaqActionId       :: !v

@@ -71,7 +71,7 @@ instance J.ToJSON RootFieldPlan where
     RFPPostgres pgPlan -> J.toJSON pgPlan
     RFPActionQuery _   -> J.String "Action Execution Tx"
 
-data ActionQueryPlan (b :: BackendType)
+data ActionQueryPlan (b :: Backend)
   = AQPAsyncQuery !(DS.AnnSimpleSel b) -- ^ Cacheable plan
   | AQPQuery !ActionExecuteTx -- ^ Non cacheable transaction
 

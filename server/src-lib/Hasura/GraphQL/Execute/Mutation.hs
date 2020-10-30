@@ -14,13 +14,12 @@ import qualified Language.GraphQL.Draft.Syntax             as G
 import qualified Network.HTTP.Client                       as HTTP
 import qualified Network.HTTP.Types                        as HTTP
 
-import qualified Hasura.Backends.Postgres.Execute.Mutation as PGE
+import qualified Hasura.Backends.Postgres.Execute.Mutation as RQL
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
 import qualified Hasura.Logging                            as L
-import qualified Hasura.RQL.IR.Delete                      as IR
-import qualified Hasura.RQL.IR.Insert                      as IR
-import qualified Hasura.RQL.IR.Returning                   as IR
-import qualified Hasura.RQL.IR.Update                      as IR
+import qualified Hasura.RQL.IR.Delete                      as RQL
+import qualified Hasura.RQL.IR.Returning                   as RQL
+import qualified Hasura.RQL.IR.Update                      as RQL
 import qualified Hasura.Tracing                            as Tracing
 
 import           Hasura.Backends.Postgres.Connection
@@ -32,10 +31,10 @@ import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
+import           Hasura.GraphQL.Schema.Insert
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                     (HasVersion)
 import           Hasura.Session
-
 
 convertDelete
   :: ( HasVersion
@@ -45,14 +44,14 @@ convertDelete
      , MonadIO tx)
   => Env.Environment
   -> SessionVariables
-  -> PGE.MutationRemoteJoinCtx
-  -> IR.AnnDelG 'Postgres UnpreparedValue
+  -> RQL.MutationRemoteJoinCtx
+  -> RQL.AnnDelG 'Postgres UnpreparedValue
   -> Bool
   -> m (tx EncJSON)
 convertDelete env usrVars remoteJoinCtx deleteOperation stringifyNum = do
-  let (preparedDelete, expectedVariables) = flip runState Set.empty $ IR.traverseAnnDel prepareWithoutPlan deleteOperation
+  let (preparedDelete, expectedVariables) = flip runState Set.empty $ RQL.traverseAnnDel prepareWithoutPlan deleteOperation
   validateSessionVariables expectedVariables usrVars
-  pure $ PGE.execDeleteQuery env stringifyNum (Just remoteJoinCtx) (preparedDelete, Seq.empty)
+  pure $ RQL.execDeleteQuery env stringifyNum (Just remoteJoinCtx) (preparedDelete, Seq.empty)
 
 convertUpdate
   :: ( HasVersion
@@ -63,17 +62,17 @@ convertUpdate
      )
   => Env.Environment
   -> SessionVariables
-  -> PGE.MutationRemoteJoinCtx
-  -> IR.AnnUpdG 'Postgres UnpreparedValue
+  -> RQL.MutationRemoteJoinCtx
+  -> RQL.AnnUpdG 'Postgres UnpreparedValue
   -> Bool
   -> m (tx EncJSON)
 convertUpdate env usrVars remoteJoinCtx updateOperation stringifyNum = do
-  let (preparedUpdate, expectedVariables) = flip runState Set.empty $ IR.traverseAnnUpd prepareWithoutPlan updateOperation
-  if null $ IR.uqp1OpExps updateOperation
-  then pure $ pure $ IR.buildEmptyMutResp $ IR.uqp1Output preparedUpdate
+  let (preparedUpdate, expectedVariables) = flip runState Set.empty $ RQL.traverseAnnUpd prepareWithoutPlan updateOperation
+  if null $ RQL.uqp1OpExps updateOperation
+  then pure $ pure $ RQL.buildEmptyMutResp $ RQL.uqp1Output preparedUpdate
   else do
     validateSessionVariables expectedVariables usrVars
-    pure $ PGE.execUpdateQuery env stringifyNum (Just remoteJoinCtx) (preparedUpdate, Seq.empty)
+    pure $ RQL.execUpdateQuery env stringifyNum (Just remoteJoinCtx) (preparedUpdate, Seq.empty)
 
 convertInsert
   :: ( HasVersion
@@ -83,8 +82,8 @@ convertInsert
      , MonadIO tx)
   => Env.Environment
   -> SessionVariables
-  -> PGE.MutationRemoteJoinCtx
-  -> IR.AnnInsert 'Postgres UnpreparedValue
+  -> RQL.MutationRemoteJoinCtx
+  -> AnnInsert 'Postgres UnpreparedValue
   -> Bool
   -> m (tx EncJSON)
 convertInsert env usrVars remoteJoinCtx insertOperation stringifyNum = do
@@ -102,7 +101,7 @@ convertMutationDB
      )
   => Env.Environment
   -> SessionVariables
-  -> PGE.MutationRemoteJoinCtx
+  -> RQL.MutationRemoteJoinCtx
   -> Bool
   -> MutationDB 'Postgres UnpreparedValue
   -> m (tx EncJSON, HTTP.ResponseHeaders)

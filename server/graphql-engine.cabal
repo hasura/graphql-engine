@@ -372,29 +372,29 @@ library
                      , Hasura.Server.Auth.JWT.Logging
                      , Hasura.RQL.Instances
                      , Hasura.RQL.Types
-                     , Hasura.RQL.Types.Action
+                     , Hasura.RQL.Types.SchemaCache
+                     , Hasura.RQL.Types.Table
+                     , Hasura.RQL.Types.SchemaCache.Build
+                     , Hasura.RQL.Types.SchemaCacheTypes
+                     , Hasura.RQL.Types.Function
                      , Hasura.RQL.Types.Catalog
                      , Hasura.RQL.Types.Column
                      , Hasura.RQL.Types.Common
                      , Hasura.RQL.Types.ComputedField
-                     , Hasura.RQL.Types.CustomTypes
+                     , Hasura.RQL.Types.DML
                      , Hasura.RQL.Types.Error
                      , Hasura.RQL.Types.EventTrigger
-                     , Hasura.RQL.Types.Function
                      , Hasura.RQL.Types.Metadata
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.QueryCollection
-                     , Hasura.RQL.Types.Relationship
-                     , Hasura.RQL.Types.RemoteRelationship
+                     , Hasura.RQL.Types.Action
                      , Hasura.RQL.Types.RemoteSchema
+                     , Hasura.RQL.Types.RemoteRelationship
                      , Hasura.RQL.Types.ScheduledTrigger
-                     , Hasura.RQL.Types.SchemaCache
-                     , Hasura.RQL.Types.SchemaCache.Build
-                     , Hasura.RQL.Types.SchemaCacheTypes
-                     , Hasura.RQL.Types.Table
                      , Hasura.RQL.DDL.Action
                      , Hasura.RQL.DDL.ComputedField
                      , Hasura.RQL.DDL.CustomTypes
+                     , Hasura.RQL.Types.CustomTypes
                      , Hasura.RQL.DDL.Deps
                      , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DDL.Metadata
@@ -405,6 +405,7 @@ library
                      , Hasura.RQL.DDL.QueryCollection
                      , Hasura.RQL.DDL.Relationship
                      , Hasura.RQL.DDL.Relationship.Rename
+                     , Hasura.RQL.DDL.Relationship.Types
                      , Hasura.RQL.DDL.RemoteRelationship
                      , Hasura.RQL.DDL.RemoteRelationship.Validate
                      , Hasura.RQL.DDL.RemoteSchema
@@ -420,6 +421,7 @@ library
                      , Hasura.RQL.DDL.Schema.Function
                      , Hasura.RQL.DDL.Schema.Rename
                      , Hasura.RQL.DDL.Schema.Table
+                     , Hasura.RQL.DDL.Utils
                      , Hasura.RQL.DDL.EventTrigger
                      , Hasura.RQL.DDL.ScheduledTrigger
                      , Hasura.RQL.DML.Count
@@ -427,11 +429,9 @@ library
                      , Hasura.RQL.DML.Insert
                      , Hasura.RQL.DML.Internal
                      , Hasura.RQL.DML.Update
-                     , Hasura.RQL.DML.Types
                      , Hasura.RQL.IR.BoolExp
                      , Hasura.RQL.IR.Delete
                      , Hasura.RQL.IR.Insert
-                     , Hasura.RQL.IR.OrderBy
                      , Hasura.RQL.IR.RemoteJoin
                      , Hasura.RQL.IR.Returning
                      , Hasura.RQL.IR.Select
@@ -455,17 +455,16 @@ library
                      , Hasura.GraphQL.Context
                      , Hasura.GraphQL.Parser
                      , Hasura.GraphQL.Parser.Class
-                     , Hasura.GraphQL.Parser.Class.Parse
                      , Hasura.GraphQL.Parser.Collect
                      , Hasura.GraphQL.Parser.Column
                      , Hasura.GraphQL.Parser.Internal.Parser
-                     , Hasura.GraphQL.Parser.Internal.Types
                      , Hasura.GraphQL.Parser.Monad
                      , Hasura.GraphQL.Parser.Schema
                      , Hasura.GraphQL.Schema
                      , Hasura.GraphQL.Schema.Action
                      , Hasura.GraphQL.Schema.BoolExp
                      , Hasura.GraphQL.Schema.Common
+                     , Hasura.GraphQL.Schema.Insert
                      , Hasura.GraphQL.Schema.Introspect
                      , Hasura.GraphQL.Schema.Mutation
                      , Hasura.GraphQL.Schema.OrderBy
