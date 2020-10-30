@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Hasura.RQL.DDL.Permission
     ( CreatePerm
     , runCreatePerm
@@ -110,6 +109,64 @@ procSetObj tn fieldInfoMap mObj = do
       HM.fromList $ map (first getPGColTxt) $ HM.toList setObj
 
     getDepReason = bool DRSessionVariable DROnType . isStaticValue
+
+class (ToJSON a) => IsPerm a where
+
+  permAccessor
+    :: PermAccessor 'Postgres (PermInfo a)
+
+  buildPermInfo
+    :: (QErrM m, TableCoreInfoRM m)
+    => QualifiedTable
+    -> FieldInfoMap (FieldInfo 'Postgres)
+    -> PermDef a
+    -> m (WithDeps (PermInfo a))
+
+  getPermAcc1
+    :: PermDef a -> PermAccessor 'Postgres (PermInfo a)
+  getPermAcc1 _ = permAccessor
+
+  getPermAcc2
+    :: DropPerm a -> PermAccessor 'Postgres (PermInfo a)
+  getPermAcc2 _ = permAccessor
+
+addPermP2 :: (IsPerm a, MonadTx m, HasSystemDefined m) => QualifiedTable -> PermDef a -> m ()
+addPermP2 tn pd = do
+  let pt = permAccToType $ getPermAcc1 pd
+  systemDefined <- askSystemDefined
+  liftTx $ savePermToCatalog pt tn pd systemDefined
+
+runCreatePerm
+  :: (UserInfoM m, CacheRWM m, IsPerm a, MonadTx m, HasSystemDefined m)
+  => CreatePerm a -> m EncJSON
+runCreatePerm (WithTable tn pd) = do
+  addPermP2 tn pd
+  let pt = permAccToType $ getPermAcc1 pd
+  buildSchemaCacheFor $ MOTableObj tn (MTOPerm (_pdRole pd) pt)
+  pure successMsg
+
+dropPermP1
+  :: (QErrM m, CacheRM m, IsPerm a)
+  => DropPerm a -> m (PermInfo a)
+dropPermP1 dp@(DropPerm tn rn) = do
+  tabInfo <- askTabInfo tn
+  askPermInfo tabInfo rn $ getPermAcc2 dp
+
+dropPermP2 :: forall a m. (MonadTx m, IsPerm a) => DropPerm a -> m ()
+dropPermP2 dp@(DropPerm tn rn) =
+  liftTx $ dropPermFromCatalog tn rn pt
+  where
+    pa = getPermAcc2 dp
+    pt = permAccToType pa
+
+runDropPerm
+  :: (IsPerm a, UserInfoM m, CacheRWM m, MonadTx m)
+  => DropPerm a -> m EncJSON
+runDropPerm defn = do
+  dropPermP1 defn
+  dropPermP2 defn
+  withNewInconsistentObjsCheck buildSchemaCache
+  return successMsg
 
 buildInsPermInfo
   :: (QErrM m, TableCoreInfoRM m)
