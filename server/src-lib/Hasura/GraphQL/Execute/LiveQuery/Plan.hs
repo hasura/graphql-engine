@@ -256,7 +256,7 @@ data LiveQueryPlan
   = LiveQueryPlan
   { _lqpParameterizedPlan :: !ParameterizedLiveQueryPlan
   , _lqpVariables         :: !CohortVariables
-  } deriving Show
+  }
 
 data ParameterizedLiveQueryPlan
   = ParameterizedLiveQueryPlan

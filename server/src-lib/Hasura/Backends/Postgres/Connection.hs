@@ -67,9 +67,6 @@ data PGExecCtx
   -- ^ Checks the health of this execution context
   }
 
-instance Show PGExecCtx where
-  show _ = "PGExecCtx"
-
 -- | Creates a Postgres execution context for a single Postgres master pool
 mkPGExecCtx :: Q.TxIsolation -> Q.PGPool -> PGExecCtx
 mkPGExecCtx isoLevel pool =
@@ -117,7 +114,7 @@ data LazyTxT e m a
   = LTErr !e
   | LTNoTx !a
   | LTTx !(Q.TxET e m a)
-  deriving Show
+  deriving (Show, Functor)
 
 -- orphan:
 instance Show (Q.TxET e m a) where
@@ -227,12 +224,6 @@ withTraceContext ctx = \case
         setTraceContext =
           Q.unitQE defaultTxErrorHandler sql () False
      in LTTx $ setTraceContext >> tx
-
-instance (Functor m) => Functor (LazyTxT e m) where
-  fmap f = \case
-    LTErr e  -> LTErr e
-    LTNoTx a -> LTNoTx $ f a
-    LTTx tx  -> LTTx $ fmap f tx
 
 instance (Monad m) => Applicative (LazyTxT e m) where
   pure = LTNoTx
