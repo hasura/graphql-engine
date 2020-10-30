@@ -183,11 +183,6 @@ mkServeOptions rso = do
   webSocketKeepAlive <- KeepAliveDelay . Seconds . secondsToDiffTime . fromIntegral . fromMaybe 5
       <$> withEnv (rsoWebSocketKeepAlive rso) (fst webSocketKeepAliveEnv)
 
-    -- maybe
-    --   (Just . KeepAliveDelay $ Seconds (secondsToDiffTime 5)) -- default keep-alive interval is 5 seconds
-    --   (Just . KeepAliveDelay . Seconds . secondsToDiffTime)
-    --   <$> (withEnv (rsoWebSocketKeepAlive rso) (fst webSocketKeepAliveEnv))
-
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
