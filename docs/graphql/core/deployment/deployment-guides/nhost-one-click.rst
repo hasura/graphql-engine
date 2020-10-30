@@ -23,7 +23,7 @@ One-click deploy on Nhost
 .. note::
    Make sure to `create an Nhost account <https://nhost.io/register>`__ first. Nhost offers a 30-day trial with its starter plan.
 
-Once you're logged into your Nhost account, click the button bellow to configure your project.
+Once you're logged into your Nhost account, click the ``create project`` button below to configure your project.
 
 .. thumbnail:: /img/graphql/core/deployment/create-project-nhost.png
    :alt: Create a project
