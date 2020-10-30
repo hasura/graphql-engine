@@ -4,7 +4,6 @@
 module Hasura.RQL.DDL.Metadata.Types
   ( currentMetadataVersion
   , MetadataVersion(..)
-  , metadataToOrdJSON
   , ExportMetadata(..)
   , FunctionsMetadata(..)
   , ClearMetadata(..)
@@ -76,11 +75,6 @@ instance FromJSON ReplaceMetadataV2 where
     case version of
 --      MVVersion3 -> RMWithSources <$> parseJSON (Object o)
       _          -> RMWithoutSources <$> parseJSON (Object o)
-
-instance ToJSON ReplaceMetadataV2 where
-  toJSON = \case
-    RMWithSources v -> toJSON v
-    RMWithoutSources v -> toJSON v
 
 data DumpInternalState
   = DumpInternalState

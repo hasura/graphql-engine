@@ -86,7 +86,6 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta schemas
 
     -- process each table
     void $ indexedForM tables $ \table -> withTableName (table ^. tmTable) $ do
-      {- TODO
       let allRels  = map Relationship._rdName (table ^. tmObjectRelationships) <>
                      map Relationship._rdName (table ^. tmArrayRelationships)
 
@@ -105,8 +104,6 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta schemas
       checkMultipleDecls "event triggers" eventTriggers
       checkMultipleDecls "computed fields" computedFields
       checkMultipleDecls "remote relationships" remoteRelationships
-      -}
-      return ()
 
   withPathK "functions" $
     case functionsMeta of
@@ -247,7 +244,7 @@ runReplaceMetadata q = do
   applyQP2 q
 
 fetchMetadata :: Q.TxE QErr ReplaceMetadata
-fetchMetadata = undefined {- TODO do
+fetchMetadata = do
   tables <- Q.catchE defaultTxErrorHandler fetchTables
   let tableMetaMap = HMIns.fromList . flip map tables $
         \(schema, name, isEnum, maybeConfig) ->
@@ -487,7 +484,6 @@ fetchMetadata = undefined {- TODO do
                           ( QualifiedObject schema table
                           , RemoteRelationshipMeta name definition
                           )
--}
 
 runExportMetadata
   :: (QErrM m, MonadTx m)
