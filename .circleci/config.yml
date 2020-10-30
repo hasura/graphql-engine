@@ -243,8 +243,7 @@ jobs:
       POSTGIS_VERSION: "3.0.0"
     docker:
     - image: *server_builder_image
-    # - image: hasura/postgres-13.0-alpine-postgis3
-    - image: kolhar730/pg-13-postgis-alpine:v2 # temporary
+    - image: hasura/postgres-13.0-alpine-postgis3:latest
       <<: *test_pg_env
 
   test_server_pg_12:
