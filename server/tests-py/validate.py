@@ -346,10 +346,10 @@ def equal_CommentedMap(m1, m2):
                     for (k1,v1),(k2,v2) in zip(m1_l,m2_l)))
     # else this is a scalar:
     else:
-        ratioCheck = fuzz.ratio(m1, m2)   # there's a partial_ratio function too, if the check can be more casual
-        if ratioCheck >= 85:
-            return True
-        return False
+        if isinstance(m1, str) and isinstance(m2, str):
+            ratioCheck = fuzz.ratio(m1, m2)   # there's a partial_ratio function too, if the check can be more casual
+            return ratioCheck >= 85
+        return m1 == m2
 
 # Parse test case YAML file
 def get_conf_f(f):
