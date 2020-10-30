@@ -40,12 +40,12 @@ Postgres features
 
 The following are some Postgres features that can be used to manage your data and extend your Hasura GraphQL API:
 
-- :ref:`Constraints <postgres_constraints>`
-- :ref:`Views <postgres_views>`
-- :ref:`Functions <postgres_functions>`
-- :ref:`Triggers <postgres_triggers>`
-- :ref:`Indexes <postgres_indexes>`
-- :ref:`Import data <postgres_import_data_from_csv>`
+- :ref: `Constraints <postgres_constraints>`
+- :ref: `Views <postgres_views>`
+- :ref: `Functions <postgres_functions>`
+- :ref: `Triggers <postgres_triggers>`
+- :ref: `Indexes <postgres_indexes>`
+- :ref: `Import data <postgres_import_data_from_csv>`
 
 .. toctree::
   :maxdepth: 1
