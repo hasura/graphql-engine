@@ -34,12 +34,12 @@ instance ToJSON PGSourceConfig where
 runPgSourceReadTx
   :: (MonadIO m) => PGSourceConfig -> Q.TxE QErr a -> m (Either QErr a)
 runPgSourceReadTx psc =
-  liftIO . runExceptT . (_pecRunReadNoTx $ _pscExecCtx psc)
+  liftIO . runExceptT . _pecRunReadNoTx (_pscExecCtx psc)
 
 runPgSourceWriteTx
   :: (MonadIO m) => PGSourceConfig -> Q.TxE QErr a -> m (Either QErr a)
 runPgSourceWriteTx psc =
-  liftIO . runExceptT . (_pecRunReadWrite $ _pscExecCtx psc)
+  liftIO . runExceptT . _pecRunReadWrite (_pscExecCtx psc)
 
 data PGSourceSchemaCache
   = PGSourceSchemaCache
