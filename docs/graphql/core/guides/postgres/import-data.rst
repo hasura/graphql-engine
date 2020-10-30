@@ -48,7 +48,7 @@ You can connect to the postgres instance from ``psql`` on the command line like 
 
 .. code-block:: bash
 
-   psql <postgres://qubtcayr:bG66KOrqxrVLkBIk8LSOR3b-lHwmfgUH@lallah.db.elephantsql.com:5432/qubtcayr>
+   psql <postgres://kattykat:bG66KOrqxrVLkBIk8LSOR3b-lHwmfgUH@lallah.db.elephantsql.com:5432/kattykat>
 
 Step 4: Copy the data successfully
 -----------------------------------
