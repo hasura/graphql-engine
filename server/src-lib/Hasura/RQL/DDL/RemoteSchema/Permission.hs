@@ -1,3 +1,38 @@
+{-|
+= Remote Schema Permissions Validation
+
+This module parses the GraphQL IDL (Schema Document) that's provided by
+the user for configuring permissions for remote schemas to a schema
+introspection object, which is then used to construct the remote schema for
+the particular role.
+
+This module does two things essentially:
+
+1. Checks if the given schema document is a subset of the upstream remote
+   schema document. This is done by checking if all the objects, interfaces
+   , unions, enums, scalars and input objects provided in the schema document
+   exist in the upstream remote schema too. We validate the fields, directives
+   and arguments too, wherever applicable.
+2. Parse the `preset` directives (if any) on input object fields or argument fields.
+   A `preset` directive is used to specify any preset argument on a field, it can be
+   either a static value or session variable value. There is some validation done
+   on preset directives. For example:
+   - Preset directives can only be specified at
+     `ARGUMENT_DEFINITION` or `INPUT_FIELD_DEFINITION`
+   - A field expecting object cannot have a scalar/enum preset directive and vice versa.
+
+   If a preset directive value is a session variable (like `x-hasura-*`), then it's
+   considered to be a session variable value. In the case, the user wants to treat the
+   session variable value literally, they can add the `static` key to the preset directive
+   to indicate that the value provided should be considered literally. For example:
+
+   `user(id: Int @preset(value: "x-hasura-user-id", static: true))
+
+   In this case `x-hasura-user-id` will be considered literally.
+
+For validation, we use the `MonadValidate` monad transformer to collect as many errors
+as possible and then report all those errors at one go to the user.
+-}
 module Hasura.RQL.DDL.RemoteSchema.Permission (
     resolveRoleBasedRemoteSchema
   , partitionTypeDefinition
@@ -646,7 +681,7 @@ validateScalarDefinitions
 validateScalarDefinitions providedScalars upstreamScalars = do
   for_ providedScalars $ \providedScalar@(G.ScalarTypeDefinition _ name _) -> do
     -- Avoid check for built-in scalar types
-    unless (G.unName name `elem` ["ID","Int","Float","Boolean","String"]) $ do
+    unless (G.unName name `elem` ["ID", "Int", "Float", "Boolean", "String"]) $ do
       upstreamScalar <- do
         onNothing (Map.lookup name upstreamScalarsMap) $
             refute $ pure $ NonExistingScalar name
@@ -889,7 +924,6 @@ resolveRoleBasedRemoteSchema (G.SchemaDocument providedTypeDefns) upstreamRemote
       "validation for the given role-based schema failed " <> reasonsMessage
       where
         reasonsMessage = case errors of
-          [] -> "" -- this case is impossible
           [singleError] -> "because " <> showRoleBasedSchemaValidationError singleError
           _ -> "for the following reasons:\n" <> T.unlines
              (map ((" • " <>) . showRoleBasedSchemaValidationError) errors)
