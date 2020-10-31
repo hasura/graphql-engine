@@ -129,6 +129,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - cli: add missing global flags for seed command (#5565)
 - cli: allow seeds as alias for seed command (#5693)
+- cli: update `hasura metadata diff` to accept filepaths (close #5433) (#5695)
 - console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
 - console: add option to flag an insertion as a migration from `Data` section (close #1766) (#4933)
 - console: add notifications (#5070)

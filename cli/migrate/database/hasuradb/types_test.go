@@ -88,7 +88,7 @@ func TestInconsistentMetadataError_String(t *testing.T) {
 			"can generate error correctly when all fields are given",
 			fields{
 				Reason: "test reason",
-				Type: "test",
+				Type:   "test",
 				Definition: func() interface{} {
 					var m interface{}
 					err := json.Unmarshal([]byte(`{"test": "test"}`), &m)
@@ -112,8 +112,8 @@ definition:
 				Definition: func() interface{} {
 					return "test"
 				}(),
-				Reason:     "",
-				Type:       "",
+				Reason: "",
+				Type:   "",
 			},
 			`definition: 
 "test"`,
@@ -124,8 +124,8 @@ definition:
 				Definition: func() interface{} {
 					return 1
 				}(),
-				Reason:     "",
-				Type:       "",
+				Reason: "",
+				Type:   "",
 			},
 			`definition: 
 1`,
@@ -134,10 +134,10 @@ definition:
 			"will not panic when Definition is (struct Array)",
 			fields{
 				Definition: func() interface{} {
-					return []struct{Name string}{ { "test" } , { "test"} }
+					return []struct{ Name string }{{"test"}, {"test"}}
 				}(),
-				Reason:     "",
-				Type:       "",
+				Reason: "",
+				Type:   "",
 			},
 			`definition: 
 [
