@@ -296,10 +296,26 @@ library
                      , Data.Sequence.NonEmpty
                      , Data.TByteString
                      , Data.Text.Extended
+                     , Data.Text.NonEmpty
                      , Data.Time.Clock.Units
                      , Data.URL.Template
                      , Hasura.App
-                     , Hasura.Db
+
+                     , Hasura.Backends.Postgres.Connection
+                     , Hasura.Backends.Postgres.Execute.Mutation
+                     , Hasura.Backends.Postgres.Execute.RemoteJoin
+                     , Hasura.Backends.Postgres.Translate.Delete
+                     , Hasura.Backends.Postgres.Translate.Insert
+                     , Hasura.Backends.Postgres.Translate.Mutation
+                     , Hasura.Backends.Postgres.Translate.Returning
+                     , Hasura.Backends.Postgres.Translate.Select
+                     , Hasura.Backends.Postgres.Translate.Update
+                     , Hasura.Backends.Postgres.SQL.DML
+                     , Hasura.Backends.Postgres.SQL.Error
+                     , Hasura.Backends.Postgres.SQL.Rewrite
+                     , Hasura.Backends.Postgres.SQL.Types
+                     , Hasura.Backends.Postgres.SQL.Value
+
                      -- Exposed for benchmark:
                      , Hasura.Cache.Bounded
                      , Hasura.Logging
@@ -406,20 +422,17 @@ library
                      , Hasura.RQL.DDL.Utils
                      , Hasura.RQL.DDL.EventTrigger
                      , Hasura.RQL.DDL.ScheduledTrigger
-                     , Hasura.RQL.DML.Delete
-                     , Hasura.RQL.DML.Delete.Types
-                     , Hasura.RQL.DML.Internal
-                     , Hasura.RQL.DML.Insert
-                     , Hasura.RQL.DML.Insert.Types
-                     , Hasura.RQL.DML.Mutation
-                     , Hasura.RQL.DML.RemoteJoin
-                     , Hasura.RQL.DML.Returning
-                     , Hasura.RQL.DML.Returning.Types
-                     , Hasura.RQL.DML.Select.Internal
-                     , Hasura.RQL.DML.Select.Types
-                     , Hasura.RQL.DML.Update
-                     , Hasura.RQL.DML.Update.Types
                      , Hasura.RQL.DML.Count
+                     , Hasura.RQL.DML.Delete
+                     , Hasura.RQL.DML.Insert
+                     , Hasura.RQL.DML.Internal
+                     , Hasura.RQL.DML.Update
+                     , Hasura.RQL.IR.Delete
+                     , Hasura.RQL.IR.Insert
+                     , Hasura.RQL.IR.RemoteJoin
+                     , Hasura.RQL.IR.Returning
+                     , Hasura.RQL.IR.Select
+                     , Hasura.RQL.IR.Update
                      , Hasura.RQL.GBoolExp
                      , Hasura.GraphQL.Explain
                      , Hasura.GraphQL.Execute.Action
@@ -428,6 +441,7 @@ library
                      , Hasura.GraphQL.Execute.Plan
                      , Hasura.GraphQL.Execute.Types
                      , Hasura.GraphQL.Execute.Mutation
+                     , Hasura.GraphQL.Execute.Remote
                      , Hasura.GraphQL.Execute.Resolve
                      , Hasura.GraphQL.Execute.Prepare
                      , Hasura.GraphQL.Execute.LiveQuery.Options
@@ -461,13 +475,10 @@ library
                      , Hasura.Eventing.Common
                      , Data.GADT.Compare.Extended
                      , Data.Tuple.Extended
-                     , Hasura.SQL.DML
-                     , Hasura.SQL.Error
+                     , Hasura.SQL.Backend
                      , Hasura.SQL.GeoJSON
-                     , Hasura.SQL.Rewrite
                      , Hasura.SQL.Time
                      , Hasura.SQL.Types
-                     , Hasura.SQL.Value
                      , Hasura.Tracing
                      , Network.URI.Extended
                      , Network.Wai.Extended

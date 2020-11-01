@@ -25,27 +25,19 @@ import qualified Hasura.Logging                         as L
 data QueryLog
   = QueryLog
   { _qlQuery        :: !GQLReqUnparsed
-  , _qlGeneratedSql :: !(Maybe EQ.GeneratedSqlMap)
+  , _qlGeneratedSql :: !(Maybe (G.Name, EQ.PreparedSql))
   , _qlRequestId    :: !RequestId
   }
 
 instance J.ToJSON QueryLog where
   toJSON (QueryLog q sql reqId) =
     J.object [ "query" J..= q
-             , "generated_sql" J..= (encodeSql <$> sql)
+             , "generated_sql" J..= sql
              , "request_id" J..= reqId
              ]
 
 instance L.ToEngineLog QueryLog L.Hasura where
   toEngineLog ql = (L.LevelInfo, L.ELTQueryLog, J.toJSON ql)
-
--- | Helper function to convert the list of alias to generated SQL into a
--- | key-value map to be printed as JSON
-encodeSql :: EQ.GeneratedSqlMap -> J.Value
-encodeSql sql =
-  jValFromAssocList $ map (\(a, q) -> (G.unName a, fmap J.toJSON q)) sql
-  where
-    jValFromAssocList xs = J.object $ map (uncurry (J..=)) xs
 
 class Monad m => MonadQueryLog m where
   logQueryLog
@@ -53,9 +45,10 @@ class Monad m => MonadQueryLog m where
     -- ^ logger
     -> GQLReqUnparsed
     -- ^ GraphQL request
-    -> (Maybe EQ.GeneratedSqlMap)
+    -> Maybe (G.Name, EQ.PreparedSql)
     -- ^ Generated SQL if any
     -> RequestId
+    -- ^ unique identifier for a request. NOTE this can be spoofed!
     -> m ()
 
 instance MonadQueryLog m => MonadQueryLog (ExceptT e m) where

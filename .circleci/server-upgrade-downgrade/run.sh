@@ -172,6 +172,7 @@ get_server_upgrade_tests() {
                 --deselect test_graphql_mutations.py::TestGraphqlInsertPermission::test_backend_user_no_admin_secret_fail \
                 --deselect test_graphql_mutations.py::TestGraphqlMutationCustomSchema::test_update_article \
                 --deselect test_graphql_queries.py::TestGraphQLQueryEnums::test_introspect_user_role \
+                --deselect test_schema_stitching.py::TestRemoteSchemaQueriesOverWebsocket::test_remote_query_error \
 		"${args[@]}" 1>/dev/null 2>/dev/null
 	set +x
 	cat "$tmpfile"
