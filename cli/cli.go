@@ -83,11 +83,30 @@ const (
 
 // ServerAPIPaths has the custom paths defined for server api
 type ServerAPIPaths struct {
-	Query   string `yaml:"query,omitempty"`
-	GraphQL string `yaml:"graphql,omitempty"`
-	Config  string `yaml:"config,omitempty"`
-	PGDump  string `yaml:"pg_dump,omitempty"`
-	Version string `yaml:"version,omitempty"`
+	Query string `yaml:"query,omitempty"`
+	// Metadata relevant since v1.4.0-alpha.1
+	// since v1/query is now split into v1/metadata and v2/query to support multiple datasources
+	Metadata string `yaml:"query,omitempty"`
+	GraphQL  string `yaml:"graphql,omitempty"`
+	Config   string `yaml:"config,omitempty"`
+	PGDump   string `yaml:"pg_dump,omitempty"`
+	Version  string `yaml:"version,omitempty"`
+}
+
+// SetDefaults will set default config values for API Paths
+// This function depends on server feature flags and will panic
+func (s *ServerAPIPaths) SetDefaults(serverFeatureFlags *version.ServerFeatureFlags) {
+	if s.Query == "" {
+		if !serverFeatureFlags.HasDatasources {
+			s.Query = "v1/query"
+		} else {
+			s.Query = "v2/query"
+		}
+	}
+
+	if s.Metadata == "" && serverFeatureFlags.HasDatasources {
+		s.Metadata = "v1/metadata"
+	}
 }
 
 // GetQueryParams - encodes the values in url
@@ -589,6 +608,8 @@ func (ec *ExecutionContext) Validate() error {
 	if err != nil {
 		return errors.Wrap(err, "error in getting server feature flags")
 	}
+	// set default API Paths w.r.t to server feature flags
+	ec.Config.ServerConfig.APIPaths.SetDefaults(ec.Version.ServerFeatureFlags)
 
 	state := util.GetServerState(ec.Config.ServerConfig.GetQueryEndpoint(), ec.Config.ServerConfig.AdminSecret, ec.Config.ServerConfig.TLSConfig, ec.Version.ServerSemver, ec.Logger)
 	ec.ServerUUID = state.UUID
@@ -635,6 +656,8 @@ func (ec *ExecutionContext) WriteConfig(config *Config) error {
 	return ioutil.WriteFile(ec.ConfigFile, y, 0644)
 }
 
+type DefaultAPIPath string
+
 // readConfig reads the configuration from config file, flags and env vars,
 // through viper.
 func (ec *ExecutionContext) readConfig() error {
@@ -648,7 +671,8 @@ func (ec *ExecutionContext) readConfig() error {
 	v.SetDefault("endpoint", "http://localhost:8080")
 	v.SetDefault("admin_secret", "")
 	v.SetDefault("access_key", "")
-	v.SetDefault("api_paths.query", "v1/query")
+	v.SetDefault("api_paths.query", "")
+	v.SetDefault("api_paths.metadata", "")
 	v.SetDefault("api_paths.graphql", "v1/graphql")
 	v.SetDefault("api_paths.config", "v1alpha1/config")
 	v.SetDefault("api_paths.pg_dump", "v1alpha1/pg_dump")
@@ -719,7 +743,6 @@ func (ec *ExecutionContext) readConfig() error {
 		return errors.Wrap(err, "setting up TLS config failed")
 	}
 	return ec.Config.ServerConfig.SetHTTPClient()
-	return nil
 }
 
 // setupSpinner creates a default spinner if the context does not already have
