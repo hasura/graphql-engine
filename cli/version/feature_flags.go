@@ -12,11 +12,13 @@ type ServerFeatureFlags struct {
 
 	HasAction       bool
 	HasCronTriggers bool
+	HasDatasources  bool
 }
 
 const adminSecretVersion = "v1.0.0-alpha38"
 const actionVersion = "v1.2.0-beta.1"
 const cronTriggersVersion = "v1.3.0-beta.1"
+const datasourcesVersion = "v1.4.0-alpha.1"
 
 // GetServerFeatureFlags returns the feature flags for server.
 func (v *Version) GetServerFeatureFlags() error {
@@ -48,6 +50,15 @@ func (v *Version) GetServerFeatureFlags() error {
 		}
 		// check the current version with the constraint
 		flags.HasCronTriggers = cronTriggersConstraint.Check(v.ServerSemver)
+
+		// multiple datasources Constraint
+		multipleDatasourcesConstraint, err := semver.NewConstraint(">= " + datasourcesVersion)
+		if err != nil {
+			return errors.Wrap(err, "building cron triggers constraint failed")
+		}
+		// check the current version with the constraint
+		flags.HasDatasources = multipleDatasourcesConstraint.Check(v.ServerSemver)
+
 	}
 	v.ServerFeatureFlags = flags
 	return nil
