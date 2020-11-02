@@ -424,7 +424,7 @@ runExportMetadata _ =
   AO.toEncJSON . metadataToOrdJSON <$> fetchMetadataFromHdbTables
 
 runReloadMetadata :: (QErrM m, CacheRWM m) => ReloadMetadata -> m EncJSON
-runReloadMetadata (ReloadMetadata reloadRemoteSchemas _reloadRemoteSources) = do
+runReloadMetadata (ReloadMetadata reloadRemoteSchemas) = do
   sc <- askSchemaCache
   let remoteSchemaInvalidations =
         if reloadRemoteSchemas then HS.fromList (getAllRemoteSchemas sc) else mempty
