@@ -2,8 +2,6 @@
 
 ## Next release
 
-- console: select first operator by default on the browse rows screen (close #5729)
-
 ### Heterogeneous execution
 
 Previous releases have allowed queries to request data from either Postgres or remote schemas, but not both. This release removes that restriction, so multiple data sources may be mixed within a single query. For example, GraphQL Engine can execute a query like
@@ -69,6 +67,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - console: add option to flag an insertion as a migration from `Data` section (close #1766) (#4933)
 - console: down migrations improvements (close #3503, #4988) (#4790)
 - console: allow setting computed fields for views (close #6168) (#6174)
+- console: select first operator by default on the browse rows screen (close #5729) (#6032)
 - cli: add missing global flags for seed command (#5565)
 - cli: allow seeds as alias for seed command (#5693)
 
