@@ -37,8 +37,8 @@ Hasura Cloud needs to connect to a Postgres database.
    :alt: Connect new or existing database
    :width: 591px
 
-Step 2.1: Enter you database connection URL (for existing database)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 2.1: Enter database connection URL (for existing database)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you chose ``I have an existing Postgres database``, enter your database connection URL.
 
@@ -50,14 +50,14 @@ If your database is hosted via any of the following managed cloud database servi
 check out their respective detailed guides to get the database connection URL and
 any other steps required to ensure connectivity from Hasura Cloud:
 
+- :ref:`Aiven <cloud_db_aiven>`
+- :ref:`AWS RDS Aurora <cloud_db_aws_rds_aurora>`
 - :ref:`AWS RDS Postgres <cloud_db_aws_rds_postgres>`
-- :ref:`GCP <cloud_db_gcp>`
 - :ref:`Azure <cloud_db_azure>`
 - :ref:`Digital Ocean <cloud_db_digital_ocean>`
-- :ref:`Aiven <cloud_db_aiven>`
+- :ref:`GCP <cloud_db_gcp>`
 - :ref:`Timescale Cloud <cloud_db_timescale_cloud>`
 - :ref:`YugaByte <cloud_db_yugabyte>`
-- :ref:`AWS RDS Aurora <cloud_db_aws_rds_aurora>`
 
 Step 3: Create project
 ----------------------
