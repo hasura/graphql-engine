@@ -18,7 +18,7 @@ import qualified Language.Haskell.TH.Syntax          as TH
 import qualified Text.PrettyPrint.ANSI.Leijen        as PP
 
 import           Data.FileEmbed                      (embedStringFile)
-import           Data.Time                           (NominalDiffTime, secondsToDiffTime)
+import           Data.Time                           (NominalDiffTime)
 import           Network.Wai.Handler.Warp            (HostPreference)
 import qualified Network.WebSockets                  as WS
 import           Options.Applicative
@@ -180,7 +180,7 @@ mkServeOptions rso = do
                                 then WS.PermessageDeflateCompression WS.defaultPermessageDeflate
                                 else WS.NoCompression
                           }
-  webSocketKeepAlive <- KeepAliveDelay . Seconds . secondsToDiffTime . fromIntegral . fromMaybe 5
+  webSocketKeepAlive <- KeepAliveDelay . fromIntegral . fromMaybe 5
       <$> withEnv (rsoWebSocketKeepAlive rso) (fst webSocketKeepAliveEnv)
 
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
