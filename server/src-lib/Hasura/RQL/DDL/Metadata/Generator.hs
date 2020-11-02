@@ -45,7 +45,7 @@ genMetadata = do
   where
     genFunctionsMetadata :: MetadataVersion -> Gen Functions
     genFunctionsMetadata = \case
-      MVVersion1 -> OM.fromList . map (\qf -> (qf,) $ FunctionMetadata qf emptyFunctionConfig) <$> arbitrary
+      MVVersion1 -> OM.fromList . map (\qf -> (qf, FunctionMetadata qf emptyFunctionConfig)) <$> arbitrary
       MVVersion2 -> arbitrary
 
 instance (Arbitrary k, Eq k, Hashable k, Arbitrary v) => Arbitrary (InsOrdHashMap k v) where
