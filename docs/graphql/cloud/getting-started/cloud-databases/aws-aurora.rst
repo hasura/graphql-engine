@@ -92,7 +92,7 @@ When you're done, at the bottom, click the ``Create database`` button:
 Step 3: Allow connections to your DB from Hasura Cloud
 ------------------------------------------------------
 
-On the database dashboard, click on ``Connectivity & security``. On the right, click on the security group that you selected or added in :ref:`step 2 <create_pg_aws_aurora>`.
+On the database dashboard, click on ``Connectivity & security``. On the right, click on the security group that you selected or added in :ref:`step 2 <create_pg_aws_rds_aurora>`.
 
 .. thumbnail:: /img/graphql/cloud/cloud-dbs/aws/aurora/find-security-group.png
    :alt: Find the security group on AWS RDS
