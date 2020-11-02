@@ -25,29 +25,32 @@ module Hasura.Server.Migrate
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                    as A
-import qualified Data.HashMap.Strict           as HM
-import qualified Data.Text                     as T
-import qualified Data.Environment              as Env
-import qualified Data.Text.IO                  as TIO
-import qualified Database.PG.Query             as Q
-import qualified Database.PG.Query.Connection  as Q
-import qualified Language.Haskell.TH.Lib       as TH
-import qualified Language.Haskell.TH.Syntax    as TH
+import qualified Data.Aeson                         as A
+import qualified Data.Environment                   as Env
+import qualified Data.HashMap.Strict                as HM
+import qualified Data.Text                          as T
+import qualified Data.Text.IO                       as TIO
+import qualified Database.PG.Query                  as Q
+import qualified Database.PG.Query.Connection       as Q
+import qualified Language.Haskell.TH.Lib            as TH
+import qualified Language.Haskell.TH.Syntax         as TH
 
-import           Control.Lens                  (view, _2)
+import           Control.Lens                       (_2, view)
 import           Control.Monad.Unique
-import           Data.Time.Clock               (UTCTime)
-import           Hasura.Logging                (Hasura, LogLevel (..), ToEngineLog (..))
+import           Data.Text.NonEmpty
+import           Data.Time.Clock                    (UTCTime)
+import           System.Directory                   (doesFileExist)
+
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Logging                     (Hasura, LogLevel (..), ToEngineLog (..))
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Schema
-import           Hasura.Server.Init            (DowngradeOptions (..))
 import           Hasura.RQL.Types
-import           Hasura.Server.Logging         (StartupLog (..))
+import           Hasura.Server.Init                 (DowngradeOptions (..))
+import           Hasura.Server.Logging              (StartupLog (..))
+import           Hasura.Server.Migrate.Version      (latestCatalogVersion,
+                                                     latestCatalogVersionString)
 import           Hasura.Server.Version
-import           Hasura.Server.Migrate.Version (latestCatalogVersion, latestCatalogVersionString)
-import           Hasura.SQL.Types
-import           System.Directory              (doesFileExist)
 
 dropCatalog :: (MonadTx m) => m ()
 dropCatalog = liftTx $ Q.catchE defaultTxErrorHandler $ do
@@ -58,7 +61,7 @@ dropCatalog = liftTx $ Q.catchE defaultTxErrorHandler $ do
 data MigrationResult
   = MRNothingToDo
   | MRInitialized
-  | MRMigrated T.Text -- ^ old catalog version
+  | MRMigrated Text -- ^ old catalog version
   deriving (Show, Eq)
 
 instance ToEngineLog MigrationResult Hasura where
@@ -81,7 +84,7 @@ instance ToEngineLog MigrationResult Hasura where
 -- used in the `migrations` function below.
 data MigrationPair m = MigrationPair
   { mpMigrate :: m ()
-  , mpDown :: Maybe (m ())
+  , mpDown    :: Maybe (m ())
   }
 
 migrateCatalog
@@ -112,7 +115,7 @@ migrateCatalog env migrationTime = do
           -- This is where the generated views and triggers are stored
           Q.unitQ "CREATE SCHEMA hdb_views" () False
 
-      isExtensionAvailable (SchemaName "pgcrypto") >>= \case
+      isExtensionAvailable "pgcrypto" >>= \case
         -- only if we created the schema, create the extension
         True -> when createSchema $ liftTx $ Q.unitQE needsPGCryptoError
           "CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA public" () False
@@ -143,7 +146,7 @@ migrateCatalog env migrationTime = do
               <> " https://hasura.io/docs/1.0/graphql/manual/deployment/postgres-permissions.html"
 
     -- migrates an existing catalog to the latest version from an existing verion
-    migrateFrom :: T.Text -> m (MigrationResult, RebuildableSchemaCache m)
+    migrateFrom :: Text -> m (MigrationResult, RebuildableSchemaCache m)
     migrateFrom previousVersion
       | previousVersion == latestCatalogVersionString = do
           schemaCache <- buildRebuildableSchemaCache env
@@ -168,33 +171,12 @@ migrateCatalog env migrationTime = do
       schemaCache <- buildRebuildableSchemaCache env
       view _2 <$> runCacheRWT schemaCache recreateSystemMetadata
 
-    doesSchemaExist schemaName =
-      liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
-        SELECT EXISTS
-        ( SELECT 1 FROM information_schema.schemata
-          WHERE schema_name = $1
-        ) |] (Identity schemaName) False
-
-    doesTableExist schemaName tableName =
-      liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
-        SELECT EXISTS
-        ( SELECT 1 FROM pg_tables
-          WHERE schemaname = $1 AND tablename = $2
-        ) |] (schemaName, tableName) False
-
-    isExtensionAvailable schemaName =
-      liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
-        SELECT EXISTS
-        ( SELECT 1 FROM pg_catalog.pg_available_extensions
-          WHERE name = $1
-        ) |] (Identity schemaName) False
-
 downgradeCatalog :: forall m. (MonadIO m, MonadTx m) => DowngradeOptions -> UTCTime -> m MigrationResult
 downgradeCatalog opts time = do
     downgradeFrom =<< getCatalogVersion
   where
     -- downgrades an existing catalog to the specified version
-    downgradeFrom :: T.Text -> m MigrationResult
+    downgradeFrom :: Text -> m MigrationResult
     downgradeFrom previousVersion
         | previousVersion == dgoTargetVersion opts = do
             pure MRNothingToDo
@@ -219,10 +201,10 @@ downgradeCatalog opts time = do
             (reverse (migrations (dgoDryRun opts)))
 
         downgrade
-          :: T.Text
-          -> T.Text
-          -> [(T.Text, MigrationPair m)]
-          -> Either T.Text [m ()]
+          :: Text
+          -> Text
+          -> [(Text, MigrationPair m)]
+          -> Either Text [m ()]
         downgrade lower upper = skipFutureDowngrades where
           -- We find the list of downgrade scripts to run by first
           -- dropping any downgrades which correspond to newer versions
@@ -230,7 +212,7 @@ downgradeCatalog opts time = do
           -- Then we take migrations as needed until we reach the target
           -- version, dropping any remaining migrations from the end of the
           -- (reversed) list.
-          skipFutureDowngrades, dropOlderDowngrades :: [(T.Text, MigrationPair m)] -> Either T.Text [m ()]
+          skipFutureDowngrades, dropOlderDowngrades :: [(Text, MigrationPair m)] -> Either Text [m ()]
           skipFutureDowngrades xs | previousVersion == lower = dropOlderDowngrades xs
           skipFutureDowngrades [] = Left "the starting version is unrecognized."
           skipFutureDowngrades ((x, _):xs)
@@ -257,7 +239,7 @@ setCatalogVersion ver time = liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
     DO UPDATE SET version = $1, upgraded_on = $2
   |] (ver, time) False
 
-migrations :: forall m. (MonadIO m, MonadTx m) => Bool -> [(T.Text, MigrationPair m)]
+migrations :: forall m. (MonadIO m, MonadTx m) => Bool -> [(Text, MigrationPair m)]
 migrations dryRun =
     -- We need to build the list of migrations at compile-time so that we can compile the SQL
     -- directly into the executable using `Q.sqlFromFile`. The GHC stage restriction makes
@@ -282,9 +264,9 @@ migrations dryRun =
                   ) |]
       in TH.listE
         -- version 0.8 is the only non-integral catalog version
-        $  [| ("0.8", (MigrationPair $(migrationFromFile "08" "1") Nothing)) |]
+        $  [| ("0.8", MigrationPair $(migrationFromFile "08" "1") Nothing) |]
         :  migrationsFromFile [2..3]
-        ++ [| ("3", (MigrationPair from3To4 Nothing)) |]
+        ++ [| ("3", MigrationPair from3To4 Nothing) |]
         :  migrationsFromFile [5..latestCatalogVersion])
   where
     runTxOrPrint :: Q.Query -> m ()
@@ -352,7 +334,7 @@ recreateSystemMetadata = do
   runHasSystemDefinedT (SystemDefined True) $ for_ systemMetadata \(tableName, tableRels) -> do
     saveTableToCatalog tableName False emptyTableConfig
     for_ tableRels \case
-      Left relDef -> insertRelationshipToCatalog tableName ObjRel relDef
+      Left relDef  -> insertRelationshipToCatalog tableName ObjRel relDef
       Right relDef -> insertRelationshipToCatalog tableName ArrRel relDef
   buildSchemaCacheStrict
   where

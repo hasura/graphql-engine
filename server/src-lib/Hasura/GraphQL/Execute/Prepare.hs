@@ -19,20 +19,21 @@ import qualified Data.Aeson                             as J
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashSet                           as Set
 import qualified Data.IntMap                            as IntMap
-import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
-import qualified Hasura.SQL.DML                         as S
+import           Data.Text.Extended
 
+import qualified Hasura.Backends.Postgres.SQL.DML       as S
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.DML.Internal                (currentSession)
 import           Hasura.RQL.Types
 import           Hasura.Session
-import           Hasura.SQL.Types
-import           Hasura.SQL.Value
 
 
 type PlanVariables = Map.HashMap G.Name Int
@@ -73,9 +74,7 @@ initPlanningSt =
 prepareWithPlan :: (MonadState PlanningSt m) => UnpreparedValue -> m S.SQLExp
 prepareWithPlan = \case
   UVParameter PGColumnValue{ pcvValue = colVal } varInfoM -> do
-    argNum <- case fmap getName varInfoM of
-      Just var -> getVarArgNum var
-      Nothing  -> getNextArgNum
+    argNum <- maybe getNextArgNum (getVarArgNum . getName) varInfoM
     addPrepArg argNum (toBinaryValue colVal, pstValue colVal)
     return $ toPrepParam argNum (pstType colVal)
 
@@ -126,7 +125,7 @@ validateSessionVariables :: MonadError QErr m => Set.HashSet SessionVariable -> 
 validateSessionVariables requiredVariables sessionVariables = do
   let missingSessionVariables = requiredVariables `Set.difference` getSessionVariablesSet sessionVariables
   unless (null missingSessionVariables) do
-    throw400 NotFound $ "missing session variables: " <> T.intercalate ", " (dquote . sessionVariableToText <$> toList missingSessionVariables)
+    throw400 NotFound $ "missing session variables: " <> dquoteList (sessionVariableToText <$> toList missingSessionVariables)
 
 getVarArgNum :: (MonadState PlanningSt m) => G.Name -> m Int
 getVarArgNum var = do
