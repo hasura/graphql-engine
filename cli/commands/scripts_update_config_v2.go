@@ -343,6 +343,11 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			}
 			ec.Spinner.Stop()
 			ec.Logger.Infoln("Updated config to version 2")
+
+			err = os.Remove(filepath.Join(ec.MigrationDir, "metadata.yaml"))
+			if err != nil {
+				errors.Wrap(err, "cannot remove metadata.yaml file")
+			}
 			return nil
 		},
 	}
