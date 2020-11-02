@@ -389,7 +389,7 @@ queryRootFromFields
   => [P.FieldParser n (QueryRootField UnpreparedValue)]
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 queryRootFromFields fps =
-  P.safeSelectionSet $$(G.litName "query_root") Nothing fps
+  P.safeSelectionSet queryRoot Nothing fps
     <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
 
 emptyIntrospection
@@ -567,7 +567,7 @@ buildPGMutationFields scenario allTables = do
       deleteFromTableByPk table (fromMaybe fieldName customName) (Just fieldDescription) deletePermission
 
 subscriptionRoot :: G.Name
-subscriptionRoot = $$(G.litName "mutation_root")
+subscriptionRoot = $$(G.litName "subscription_root")
 
 mutationRoot :: G.Name
 mutationRoot = $$(G.litName "mutation_root")
@@ -584,7 +584,6 @@ buildMutationParser
   -> [P.FieldParser n (MutationRootField UnpreparedValue)]
   -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue))))
 buildMutationParser allRemotes allActions nonObjectCustomTypes pgMutationFields = do
-
   actionParsers <- for allActions $ \actionInfo ->
     case _adType (_aiDefinition actionInfo) of
       ActionMutation ActionSynchronous ->
@@ -592,7 +591,6 @@ buildMutationParser allRemotes allActions nonObjectCustomTypes pgMutationFields 
       ActionMutation ActionAsynchronous ->
         fmap (fmap (RFAction . AMAsync)) <$> actionAsyncMutation nonObjectCustomTypes actionInfo
       ActionQuery -> pure Nothing
-
   let mutationFieldsParser = pgMutationFields <> catMaybes actionParsers <> fmap (fmap RFRemote) allRemotes
   if null mutationFieldsParser
   then pure Nothing
