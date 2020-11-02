@@ -406,6 +406,8 @@ sampleCronSchedules = rights $ map Cr.parseCronSchedule $
   -- Every sunday at 00:00
   ]
 
+-- Hardcoding the values of `sampleDirectives` and `sampleGraphQLValues` because
+-- there's no `Arbitrary` instance of `Void`
 sampleDirectives :: [G.Directive Void]
 sampleDirectives = [ (G.Directive $$(G.litName "directive_1") mempty)
                    , (G.Directive $$(G.litName "directive_2") $

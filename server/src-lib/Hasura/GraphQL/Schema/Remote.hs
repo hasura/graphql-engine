@@ -142,10 +142,12 @@ remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name inter
             <> " (" <> G.showGT (G._fldType interfaceField) <> ")"
           traverse_
             (validateArgument
-               (map _rsitdDefn (G._fldArgumentsDefinition f)) . _rsitdDefn) (G._fldArgumentsDefinition interfaceField)
+               (map _rsitdDefinition (G._fldArgumentsDefinition f)) . _rsitdDefinition)
+            (G._fldArgumentsDefinition interfaceField)
           traverse_
             (validateNoExtraNonNull
-               (map _rsitdDefn (G._fldArgumentsDefinition interfaceField)) . _rsitdDefn) (G._fldArgumentsDefinition f)
+               (map _rsitdDefinition (G._fldArgumentsDefinition interfaceField)) . _rsitdDefinition)
+            (G._fldArgumentsDefinition f)
             where
               validateArgument :: [G.InputValueDefinition] -> G.InputValueDefinition -> m ()
               validateArgument objectFieldArgs ifaceArgument =
@@ -281,7 +283,7 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
   -- to 'possibleTypes'.
   pure $ P.selectionSetInterface name description subFieldParsers objs <&> constructInterfaceSelectionSet
   where
-    getObject :: G.Name -> m (G.ObjectTypeDefinition RemoteSchemaInputValueDefinition)
+    getObject :: G.Name -> m RemoteSchemaObjectDefinition
     getObject objectName =
       onNothing (lookupObject schemaDoc objectName) $
         case lookupInterface schemaDoc objectName of
@@ -579,8 +581,8 @@ argumentsParser args schemaDoc = do
   pure $ mkPresets <$> nonPresetArgsParser'
   where
     nonPresetArgs =
-      map _rsitdDefn $
-      filter (isNothing . _rsitdPresetArg) args
+      map _rsitdDefinition $
+      filter (isNothing . _rsitdPresetArgument) args
 
     currentPreset :: Maybe (HashMap G.Name (Value RemoteSchemaVariable))
     currentPreset =

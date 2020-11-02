@@ -184,10 +184,12 @@ data RemoteSchemaVariable
 instance Hashable RemoteSchemaVariable
 instance Cacheable RemoteSchemaVariable
 
+-- | This data type is an extension of the `G.InputValueDefinition`, it also
+--   may also contain a preset with it.
 data RemoteSchemaInputValueDefinition
   = RemoteSchemaInputValueDefinition
-  { _rsitdDefn      :: !G.InputValueDefinition
-  , _rsitdPresetArg :: !(Maybe (G.Value RemoteSchemaVariable))
+  { _rsitdDefinition      :: !G.InputValueDefinition
+  , _rsitdPresetArgument  :: !(Maybe (G.Value RemoteSchemaVariable))
   } deriving (Show, Eq, Generic, Ord)
 instance Hashable RemoteSchemaInputValueDefinition
 instance Cacheable RemoteSchemaInputValueDefinition

@@ -70,8 +70,6 @@ mkRemoteSchemaPermissionMetadataObject
   -> MetadataObject
 mkRemoteSchemaPermissionMetadataObject (AddRemoteSchemaPermissions rsName roleName defn _) =
   let objectId = MORemoteSchemaPermissions rsName roleName
-      -- FIXME: include the remote schema name and rolename in the defn
-      -- like used in `mkPermissionMetadataObject`
   in MetadataObject objectId $ toJSON defn
 
 withPermission

@@ -303,6 +303,14 @@ lookupInputType (G.SchemaDocument types) name = go types
             _ -> go tps
     go [] = Nothing
 
+-- | `parsePresetValue` constructs a GraphQL value when an input value definition
+--    contains a preset with it. This function checks if the given preset value
+--    is a legal value to the field that's specified it. For example: A scalar input
+--    value cannot contain an input object value. When the preset value is a session
+--    variable, we treat it as a session variable whose value will be resolved while
+--    the query is executed. In the case of session variables, we make the GraphQL
+--    value as a Variable value and during the execution we resolve all these
+--    "session variable" variable(s) and then query the remote server.
 parsePresetValue
   :: forall m
    . ( MonadValidate [RoleBasedSchemaValidationError] m
@@ -567,9 +575,9 @@ validateArguments providedArgs upstreamArgs parentTypeName = do
         refute $ pure $ NonExistingInputArgument parentTypeName name
     validateInputValueDefinition providedArg upstreamArg parentTypeName
   where
-    upstreamArgsMap = mapFromL G._ivdName $  map _rsitdDefn upstreamArgs
+    upstreamArgsMap = mapFromL G._ivdName $  map _rsitdDefinition upstreamArgs
 
-    nonNullableUpstreamArgs = map G._ivdName $ filter (not . G.isNullable . G._ivdType) $ map _rsitdDefn upstreamArgs
+    nonNullableUpstreamArgs = map G._ivdName $ filter (not . G.isNullable . G._ivdType) $ map _rsitdDefinition upstreamArgs
 
     nonNullableProvidedArgs = map G._ivdName $ filter (not . G.isNullable . G._ivdType) providedArgs
 

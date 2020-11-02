@@ -104,7 +104,7 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
   let schemaDoc@(RemoteSchemaIntrospection originalDefns) = irDoc introspectionResult
       queryRootName = irQueryRoot introspectionResult
   queryRoot <- onNothing (lookupObject schemaDoc queryRootName) $
-    throwError $ TypeNotFound queryRootName
+    throwError $ FieldNotFoundInRemoteSchema queryRootName
   (_, (leafParamMap, leafTypeMap)) <-
     foldlM
     (buildRelationshipTypeInfo pgColumnsVariablesMap schemaDoc)
@@ -120,7 +120,9 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
         -- schema document
         , _rfiSchemaIntrospect = RemoteSchemaIntrospection
                                     $ originalDefns
-                                    -- TODO: explain the below!
+                                    -- The preset part below is set to `Nothing` because preset values
+                                    -- are ignored for remote relationships and instead the argument
+                                    -- values comes from the parent query.
                                     <> (fmap (fmap (\inpValDef -> RemoteSchemaInputValueDefinition inpValDef Nothing)) $ HM.elems leafTypeMap)
         , _rfiRemoteSchemaName = rsName
         }
@@ -157,7 +159,7 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
       objFldDefinition <- lookupField (fcName fieldCall) objTyInfo
       let providedArguments = getRemoteArguments $ fcArguments fieldCall
       (validateRemoteArguments
-        (mapFromL (G._ivdName . _rsitdDefn) (G._fldArgumentsDefinition objFldDefinition))
+        (mapFromL (G._ivdName . _rsitdDefinition) (G._fldArgumentsDefinition objFldDefinition))
         providedArguments
         pgColumnsVariablesMap
         schemaDoc)
@@ -166,7 +168,7 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
               (stripInMap
                  remoteRelationship
                  schemaDoc
-                 (mapFromL (G._ivdName . _rsitdDefn) (G._fldArgumentsDefinition objFldDefinition))
+                 (mapFromL (G._ivdName . _rsitdDefinition) (G._fldArgumentsDefinition objFldDefinition))
                  providedArguments)
               $ typeMap
       (newParamMap, newTypeMap) <- onLeft eitherParamAndTypeMap $ throwError
@@ -209,7 +211,7 @@ stripInMap remoteRelationship types schemaArguments providedArguments =
                 (fmap
                    (\newGType -> inpValInfo {G._ivdType = newGType})
                    maybeNewGType))
-       (fmap _rsitdDefn schemaArguments))
+       (fmap _rsitdDefinition schemaArguments))
 
 -- | Strip a value type completely, or modify it, if the given value
 -- is atomic-ish.
@@ -274,7 +276,7 @@ stripObject remoteRelationshipName schemaDoc originalGtype templateArguments =
       case lookupType schemaDoc (G.getBaseType originalGtype) of
         Just (G.TypeDefinitionInputObject originalInpObjTyInfo) -> do
           let originalSchemaArguments =
-                mapFromL (G._ivdName . _rsitdDefn) $ G._iotdValueDefinitions originalInpObjTyInfo
+                mapFromL (G._ivdName . _rsitdDefinition) $ G._iotdValueDefinitions originalInpObjTyInfo
               newNamedType =
                 renameNamedType
                   (renameTypeForRelationship remoteRelationshipName)
@@ -347,7 +349,7 @@ validateRemoteArguments expectedArguments providedArguments permittedVariables s
     validateProvided (providedName, providedValue) =
       case HM.lookup providedName expectedArguments of
         Nothing -> throwError (NoSuchArgumentForRemote providedName)
-        Just (G._ivdType . _rsitdDefn -> expectedType) ->
+        Just (G._ivdType . _rsitdDefinition -> expectedType) ->
           validateType permittedVariables providedValue expectedType schemaDocument
 
 unwrapGraphQLType :: G.GType -> G.GType
@@ -407,11 +409,11 @@ validateType permittedVariables value expectedGType schemaDocument =
                case typeInfo of
                  G.TypeDefinitionInputObject inpObjTypeInfo ->
                    let objectTypeDefnsMap =
-                         mapFromL (G._ivdName . _rsitdDefn) $ (G._iotdValueDefinitions inpObjTypeInfo)
+                         mapFromL (G._ivdName . _rsitdDefinition) $ (G._iotdValueDefinitions inpObjTypeInfo)
                    in
                    case HM.lookup name objectTypeDefnsMap of
                      Nothing -> throwError $ NoSuchArgumentForRemote name
-                     Just (G._ivdType . _rsitdDefn -> expectedType) ->
+                     Just (G._ivdType . _rsitdDefinition -> expectedType) ->
                        validateType permittedVariables val expectedType schemaDocument
                  _ -> do
                    throwError $ InvalidType (mkGraphQLType name) "not an input object type")

@@ -188,12 +188,10 @@ buildGQLContext =
           let remoteSchemaIntroInfos = map fst $ toList remoteSchemaCache
           remoteSchemaPerms <-
             for remoteSchemaIntroInfos $ \(RemoteSchemaCtx _ ctx perms) ->
-              case Map.lookup role perms of
-                Nothing -> return Nothing
-                Just introspectRes -> do
-                  (queryParsers, mutationParsers, subscriptionParsers) <-
+              for (Map.lookup role perms) $ \introspectRes -> do
+                (queryParsers, mutationParsers, subscriptionParsers) <-
                      P.runSchemaT @m @(P.ParseT Identity) $ buildRemoteParser introspectRes $ rscInfo ctx
-                  return $ Just $ ParsedIntrospection queryParsers mutationParsers subscriptionParsers
+                return $ ParsedIntrospection queryParsers mutationParsers subscriptionParsers
           return $ catMaybes remoteSchemaPerms
 
         -- | The 'query' type of the remotes.
@@ -223,8 +221,11 @@ buildGQLContext =
         buildContextForRoleAndScenario roleName scenario = do
           SQLGenCtx{ stringifyNum } <- askSQLGenCtx
           roleBasedRemoteSchemas <-
-             if | (roleName == adminRoleName) || (not isEnabledRemoteSchemaPerms) -> pure $ map snd remotes
-                | otherwise -> buildRoleBasedRemoteSchemaParser roleName allRemoteSchemas
+             if | roleName == adminRoleName  -> pure $ snd <$> remotes
+                | isEnabledRemoteSchemaPerms -> buildRoleBasedRemoteSchemaParser roleName allRemoteSchemas
+                -- when remote schema permissions are not enabled, then remote schemas
+                -- are a public entity which is accesible to all the roles
+                | otherwise                  -> pure $ snd <$> remotes
           let qRemotes = queryRemotes roleBasedRemoteSchemas
               mRemotes = mutationRemotes roleBasedRemoteSchemas
           let gqlContext = GQLContext
