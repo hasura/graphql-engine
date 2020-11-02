@@ -19,18 +19,8 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax   (Lift)
 
-import qualified Hasura.RQL.DDL.ComputedField as ComputedField
-
 import           Hasura.RQL.Types
 
-
-data ComputedFieldMeta
-  = ComputedFieldMeta
-  { _cfmName       :: !ComputedFieldName
-  , _cfmDefinition :: !ComputedField.ComputedFieldDefinition
-  , _cfmComment    :: !(Maybe Text)
-  } deriving (Show, Eq, Lift, Generic)
-$(deriveJSON (aesonDrop 4 snakeCase) ''ComputedFieldMeta)
 
 data ClearMetadata
   = ClearMetadata

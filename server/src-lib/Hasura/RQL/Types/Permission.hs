@@ -168,7 +168,7 @@ instance ToJSON (DelPerm 'Postgres) where
 type DelPermDef    b = PermDef    (DelPerm b)
 
 -- Update constraint
-data UpdPerm b
+data UpdPerm (b :: Backend)
   = UpdPerm
   { ucColumns :: !PermColSpec -- Allowed columns
   , ucSet     :: !(Maybe (ColumnValues Value)) -- Preset columns
