@@ -4,26 +4,25 @@ module Hasura.GraphQL.Execute.Mutation
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                       as Env
-import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashMap.Strict.InsOrd             as OMap
-import qualified Data.HashSet                           as Set
-import qualified Data.Sequence                          as Seq
-import qualified Data.Sequence.NonEmpty                 as NE
-import qualified Language.GraphQL.Draft.Syntax          as G
-import qualified Network.HTTP.Client                    as HTTP
-import qualified Network.HTTP.Types                     as HTTP
+import qualified Data.Environment                          as Env
+import qualified Data.HashMap.Strict                       as Map
+import qualified Data.HashMap.Strict.InsOrd                as OMap
+import qualified Data.HashSet                              as Set
+import qualified Data.Sequence                             as Seq
+import qualified Data.Sequence.NonEmpty                    as NE
+import qualified Language.GraphQL.Draft.Syntax             as G
+import qualified Network.HTTP.Client                       as HTTP
+import qualified Network.HTTP.Types                        as HTTP
 
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
-import qualified Hasura.RQL.DML.Delete                  as RQL
-import qualified Hasura.RQL.DML.Mutation                as RQL
-import qualified Hasura.RQL.DML.Returning.Types         as RQL
-import qualified Hasura.RQL.DML.Update                  as RQL
-import qualified Hasura.Tracing                         as Tracing
-import qualified Hasura.Logging                         as L
+import qualified Hasura.Backends.Postgres.Execute.Mutation as RQL
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
+import qualified Hasura.Logging                            as L
+import qualified Hasura.RQL.IR.Delete                      as RQL
+import qualified Hasura.RQL.IR.Returning                   as RQL
+import qualified Hasura.RQL.IR.Update                      as RQL
+import qualified Hasura.Tracing                            as Tracing
 
-
-import           Hasura.Db
+import           Hasura.Backends.Postgres.Connection
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
@@ -34,7 +33,7 @@ import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
 import           Hasura.GraphQL.Schema.Insert
 import           Hasura.RQL.Types
-import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Server.Version                     (HasVersion)
 import           Hasura.Session
 
 convertDelete
@@ -46,7 +45,7 @@ convertDelete
   => Env.Environment
   -> SessionVariables
   -> RQL.MutationRemoteJoinCtx
-  -> RQL.AnnDelG UnpreparedValue
+  -> RQL.AnnDelG 'Postgres UnpreparedValue
   -> Bool
   -> m (tx EncJSON)
 convertDelete env usrVars remoteJoinCtx deleteOperation stringifyNum = do
@@ -64,7 +63,7 @@ convertUpdate
   => Env.Environment
   -> SessionVariables
   -> RQL.MutationRemoteJoinCtx
-  -> RQL.AnnUpdG UnpreparedValue
+  -> RQL.AnnUpdG 'Postgres UnpreparedValue
   -> Bool
   -> m (tx EncJSON)
 convertUpdate env usrVars remoteJoinCtx updateOperation stringifyNum = do
@@ -84,7 +83,7 @@ convertInsert
   => Env.Environment
   -> SessionVariables
   -> RQL.MutationRemoteJoinCtx
-  -> AnnInsert UnpreparedValue
+  -> AnnInsert 'Postgres UnpreparedValue
   -> Bool
   -> m (tx EncJSON)
 convertInsert env usrVars remoteJoinCtx insertOperation stringifyNum = do
@@ -104,7 +103,7 @@ convertMutationDB
   -> SessionVariables
   -> RQL.MutationRemoteJoinCtx
   -> Bool
-  -> MutationDB UnpreparedValue
+  -> MutationDB 'Postgres UnpreparedValue
   -> m (tx EncJSON, HTTP.ResponseHeaders)
 convertMutationDB env userSession remoteJoinCtx stringifyNum = \case
   MDBInsert s -> noResponseHeaders <$> convertInsert env userSession remoteJoinCtx s stringifyNum
@@ -128,7 +127,7 @@ convertMutationAction
   -> UserInfo
   -> HTTP.Manager
   -> HTTP.RequestHeaders
-  -> ActionMutation UnpreparedValue
+  -> ActionMutation 'Postgres UnpreparedValue
   -> m (tx EncJSON, HTTP.ResponseHeaders)
 convertMutationAction env logger userInfo manager reqHeaders = \case
   AMSync s  -> (_aerTransaction &&& _aerHeaders) <$>

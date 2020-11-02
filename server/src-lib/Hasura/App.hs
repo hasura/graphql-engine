@@ -5,12 +5,12 @@ module Hasura.App where
 
 import           Control.Concurrent.STM.TVar               (TVar, readTVarIO)
 import           Control.Exception                         (throwIO)
-import           Control.Lens                              (view, _2)
+import           Control.Lens                              (_2, view)
 import           Control.Monad.Base
 import           Control.Monad.Catch                       (Exception, MonadCatch, MonadMask,
                                                             MonadThrow, onException)
-import           Control.Monad.Stateless
 import           Control.Monad.STM                         (atomically)
+import           Control.Monad.Stateless
 import           Control.Monad.Trans.Control               (MonadBaseControl (..))
 import           Control.Monad.Unique
 import           Data.Aeson                                ((.=))
@@ -41,7 +41,7 @@ import qualified Network.Wai.Handler.Warp                  as Warp
 import qualified System.Log.FastLogger                     as FL
 import qualified Text.Mustache.Compile                     as M
 
-import           Hasura.Db
+import           Hasura.Backends.Postgres.Connection
 import           Hasura.EncJSON
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.EventTrigger
@@ -137,7 +137,7 @@ parseArgs = do
   rawHGEOpts <- execParser opts
   env <- getEnvironment
   let eitherOpts = runWithEnv env $ mkHGEOptions rawHGEOpts
-  either (printErrExit InvalidEnvironmentVariableOptionsError) return eitherOpts
+  onLeft eitherOpts $ printErrExit InvalidEnvironmentVariableOptionsError
   where
     opts = info (helper <*> hgeOpts)
            ( fullDesc <>
@@ -221,7 +221,7 @@ initialiseCtx env hgeCmd rci = do
   pure (InitCtx httpManager instanceId loggers connInfo pool latch res, initTime)
   where
     procConnInfo =
-      either (printErrExit InvalidDatabaseConnectionParamsError . ("Fatal Error : " <>)) return $ mkConnInfo rci
+      onLeft (mkConnInfo rci) $ printErrExit InvalidDatabaseConnectionParamsError . ("Fatal Error : " <>)
 
     getMinimalPool pgLogger ci = do
       let connParams = Q.defaultConnParams { Q.cpConns = 1 }
@@ -260,7 +260,7 @@ migrateCatalogSchema env logger pool httpManager sqlGenCtx = do
 runTxIO :: Q.PGPool -> Q.TxMode -> Q.TxE QErr a -> IO a
 runTxIO pool isoLevel tx = do
   eVal <- liftIO $ runExceptT $ Q.runTx pool isoLevel tx
-  either (printErrJExit DatabaseMigrationError) return eVal
+  onLeft eVal (printErrJExit DatabaseMigrationError)
 
 -- | A latch for the graceful shutdown of a server process.
 newtype ShutdownLatch = ShutdownLatch { unShutdownLatch :: C.MVar () }
@@ -335,7 +335,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
   authModeRes <- runExceptT $ setupAuthMode soAdminSecret soAuthHook soJwtSecret soUnAuthRole
                               _icHttpManager logger
 
-  authMode <- either (printErrExit AuthConfigurationError . T.unpack) return authModeRes
+  authMode <- onLeft authModeRes (printErrExit AuthConfigurationError . T.unpack)
 
   _idleGCThread <- C.forkImmortal "ourIdleGC" logger $ liftIO $
     ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
@@ -459,7 +459,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
     prepareScheduledEvents pool (Logger logger) = do
       liftIO $ logger $ mkGenericStrLog LevelInfo "scheduled_triggers" "preparing data"
       res <- liftIO $ runTx pool (Q.ReadCommitted, Nothing) unlockAllLockedScheduledEvents
-      either (printErrJExit EventSubSystemError) return res
+      onLeft res (printErrJExit EventSubSystemError)
 
     -- | shutdownEvents will be triggered when a graceful shutdown has been inititiated, it will
     -- get the locked events from the event engine context and the scheduled event engine context
