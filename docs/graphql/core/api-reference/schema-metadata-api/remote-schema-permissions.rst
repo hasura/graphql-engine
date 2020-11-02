@@ -17,7 +17,7 @@ Introduction
 
 The permission layer is designed to restrict the operations that can be
 performed by various users. Permissions can be defined to only expose a certain
-part of the upstram remote schema for each role. By default, the ``admin`` role
+part of the upstream remote schema for each role. By default, the ``admin`` role
 has unrestricted access to the upstream remote schema.
 
 .. _add_remote_schema_permissions:
@@ -25,8 +25,8 @@ has unrestricted access to the upstream remote schema.
 add_remote_schema_permissions
 -----------------------------
 
-A remote schema permission is used to enforce constraints on the query that's
-being queried to the remote schema. This is done by specifying the schema document
+A remote schema permission is used to enforce constraints on the queries
+to the remote schema. This is done by specifying the schema document
 (GraphQL language IDL) which should be a subset of the upstream remote schema.
 
 Suppose the following is the schema document of the upstream remote.
@@ -94,7 +94,7 @@ Let's say we want to impose some restrictions on the ``user`` role:
 1. Expose only the ``user_id``, ``name`` and the ``user_messages`` field in the ``User`` object.
 2. Allow filtering of the messages only by ``name`` in the ``whered`` argument
    of the ``user_messages`` field.
-3. Allow only ``hello``, ``messages`` and the ``user`` top level node in the ``Query`` object.
+3. Allow only the fields ``hello``, ``messages`` and the ``user`` top level node in the ``Query`` object.
 4. Expose only the ``query_root``.
 
 The schema document, implementing the above restrictions will look like:
@@ -192,7 +192,7 @@ Args syntax
    * - definition
      - true
      - RemoteSchemaPermission_
-     - The permission definition
+     - The remote schema permission definition
    * - comment
      - false
      - text
@@ -218,7 +218,7 @@ RemoteSchemaPermission
 .. note::
    ``add_remote_schema_permissions`` will only work when the graphql-engine has enabled remote
    schema permissions. Remote schema permissions can be enabled by running the graphql-engine
-   with ``--enable-remote-schema-permissions`` server flag or by setting the   ``HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS`` environment variable.
+   with the ``--enable-remote-schema-permissions`` server flag or by setting the   ``HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS`` environment variable.
 
 .. _drop_remote_schema_permissions:
 

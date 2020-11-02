@@ -474,7 +474,7 @@ See :ref:`server_flag_reference` for info on setting the above flag/env var.
   Custom Functions <custom-functions>
   Relationships <relationship>
   Permissions <permission>
-  Remote Schema Permission <remote-schema-permissions>
+  Remote Schema Permissions <remote-schema-permissions>
   Computed Fields <computed-field>
   Event Triggers <event-triggers>
   Scheduled Triggers <scheduled-triggers>
