@@ -53,7 +53,7 @@ insertRelationshipToCatalog (QualifiedObject schema table) relType (RelDef name 
       VALUES ($1, $2, $3, $4, $5 :: jsonb, $6, $7) |]
 
 runDropRel :: (MonadTx m, CacheRWM m) => DropRel -> m EncJSON
-runDropRel (DropRel _source qt rn cascade) = do
+runDropRel (DropRel qt rn cascade) = do
   depObjs <- collectDependencies
   withNewInconsistentObjsCheck do
     traverse_ purgeRelDep depObjs
@@ -163,11 +163,11 @@ runSetRelComment defn = do
   void $ validateRelP1 qt rn
   setRelCommentP2 defn
   where
-    SetRelComment _source qt rn _ = defn
+    SetRelComment qt rn _ = defn
 
 setRelComment :: SetRelComment
               -> Q.TxE QErr ()
-setRelComment (SetRelComment _source (QualifiedObject sn tn) rn comment) =
+setRelComment (SetRelComment (QualifiedObject sn tn) rn comment) =
   Q.unitQE defaultTxErrorHandler [Q.sql|
            UPDATE hdb_catalog.hdb_relationship
            SET comment = $1

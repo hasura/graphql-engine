@@ -101,8 +101,7 @@ type CreateObjRel = WithTable ObjRelDef
 
 data DropRel
   = DropRel
-  { drSource       :: !SourceName
-  , drTable        :: !QualifiedTable
+  { drTable        :: !QualifiedTable
   , drRelationship :: !RelName
   , drCascade      :: !Bool
   } deriving (Show, Eq, Lift)
@@ -111,15 +110,13 @@ $(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DropRel)
 instance FromJSON DropRel where
   parseJSON = withObject "Object" $ \o ->
     DropRel
-      <$> o .:? "source" .!= defaultSource
-      <*> o .: "table"
+      <$> o .: "table"
       <*> o .: "relationship"
       <*> o .:? "cascade" .!= False
 
 data SetRelComment
   = SetRelComment
-  { arSource       :: !SourceName
-  , arTable        :: !QualifiedTable
+  { arTable        :: !QualifiedTable
   , arRelationship :: !RelName
   , arComment      :: !(Maybe T.Text)
   } deriving (Show, Eq, Lift)
@@ -127,15 +124,13 @@ $(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SetRelComment)
 instance FromJSON SetRelComment where
   parseJSON = withObject "Object" $ \o ->
     SetRelComment
-      <$> o .:? "source" .!= defaultSource
-      <*> o .: "table"
+      <$> o .: "table"
       <*> o .: "relationship"
       <*> o .:? "comment"
 
 data RenameRel
   = RenameRel
-  { rrSource  :: !SourceName
-  , rrTable   :: !QualifiedTable
+  { rrTable   :: !QualifiedTable
   , rrName    :: !RelName
   , rrNewName :: !RelName
   } deriving (Show, Eq, Lift)
@@ -144,7 +139,6 @@ $(deriveToJSON (aesonDrop 2 snakeCase) ''RenameRel)
 instance FromJSON RenameRel where
   parseJSON = withObject "Object" $ \o ->
     RenameRel
-      <$> o .:? "source" .!= defaultSource
-      <*> o .: "table"
+      <$> o .: "table"
       <*> o .: "name"
       <*> o .: "new_name"

@@ -390,7 +390,6 @@ library
                      , Hasura.RQL.Types.RemoteSchema
                      , Hasura.RQL.Types.RemoteRelationship
                      , Hasura.RQL.Types.ScheduledTrigger
-                     , Hasura.RQL.Types.Source
                      , Hasura.RQL.DDL.Action
                      , Hasura.RQL.DDL.ComputedField
                      , Hasura.RQL.DDL.CustomTypes

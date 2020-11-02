@@ -21,9 +21,6 @@ import           Language.Haskell.TH.Syntax                 (Lift)
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.BoolExp
-import           Hasura.EncJSON
-import           Hasura.Incremental                         (Cacheable)
-import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.Session

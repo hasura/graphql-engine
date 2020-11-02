@@ -49,9 +49,6 @@ module Hasura.RQL.Types.Common
        , Timeout(..)
        , defaultActionTimeoutSecs
 
-       , SourceName(..)
-       , defaultSource
-
        , UrlConf(..)
        , resolveUrlConf
        , getEnv
@@ -182,14 +179,6 @@ fromRel = FieldName . relNameToTxt
 
 class ToAesonPairs a where
   toAesonPairs :: (KeyValue v) => a -> [v]
-
-newtype SourceName
-  = SourceName { unSourceName :: Text }
-  deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, ToJSONKey
-           , FromJSONKey, Lift, Data, Generic, Arbitrary, NFData, Cacheable, IsString, ToTxt)
-
-defaultSource :: SourceName
-defaultSource = SourceName "default"
 
 data WithTable a
   = WithTable

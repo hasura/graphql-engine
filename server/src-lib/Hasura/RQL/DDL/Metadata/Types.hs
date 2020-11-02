@@ -5,10 +5,8 @@ module Hasura.RQL.DDL.Metadata.Types
   ( currentMetadataVersion
   , MetadataVersion(..)
   , ExportMetadata(..)
-  , FunctionsMetadata(..)
   , ClearMetadata(..)
   , ReloadMetadata(..)
-  , ReplaceMetadata(..)
   , DumpInternalState(..)
   , GetInconsistentMetadata(..)
   , DropInconsistentMetadata(..)
@@ -63,21 +61,6 @@ instance FromJSON ReloadMetadata where
                 <$> o .:? "reload_remote_schemas" .!= False
                 <*> o .:? "reload_sources" .!= False
     _        -> pure $ ReloadMetadata False False
-
-data ReplaceMetadataV2
-  = RMWithSources !Metadata
-  | RMWithoutSources !MetadataNoSources
-  deriving (Show, Eq)
-
-instance FromJSON ReplaceMetadataV2 where
-  parseJSON = withObject "Object" $ \o -> do
-{-
-    version <- o .:? "version" .!= MVVersion1
-    case version of
-      MVVersion3 -> RMWithSources <$> parseJSON (Object o)
-      _          -> RMWithoutSources <$> parseJSON (Object o)
--}
-    RMWithoutSources <$> parseJSON (Object o)
 
 data DumpInternalState
   = DumpInternalState

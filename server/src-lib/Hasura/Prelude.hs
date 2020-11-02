@@ -20,6 +20,7 @@ module Hasura.Prelude
   , coerceSet
   , findWithIndex
   , mapFromL
+  , oMapFromL
   -- * Measuring and working with moments and durations
   , withElapsedTime
   , startTimer
@@ -46,10 +47,10 @@ import           Data.Foldable                     as M (asum, fold, foldrM, for
                                                          traverse_)
 import           Data.Function                     as M (on, (&))
 import           Data.Functor                      as M (($>), (<&>))
+import           Data.Hashable                     as M (Hashable)
 import           Data.HashMap.Strict               as M (HashMap)
 import           Data.HashMap.Strict.InsOrd        as M (InsOrdHashMap)
 import           Data.HashSet                      as M (HashSet)
-import           Data.Hashable                     as M (Hashable)
 import           Data.List                         as M (find, findIndex, foldl', group,
                                                          intercalate, intersect, lookup, sort,
                                                          sortBy, sortOn, union, unionBy, (\\))
@@ -79,6 +80,7 @@ import qualified Data.ByteString.Base64.Lazy       as Base64
 import qualified Data.ByteString.Lazy              as BL
 import           Data.Coerce
 import qualified Data.HashMap.Strict               as Map
+import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Data.Set                          as Set
 import qualified Data.Text                         as T
 import qualified Data.Text.Encoding                as TE
@@ -159,6 +161,9 @@ findWithIndex p l = do
 -- TODO (from master): Move to Data.HashMap.Strict.Extended; rename to fromListWith?
 mapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> Map.HashMap k a
 mapFromL f = Map.fromList . map (\v -> (f v, v))
+
+oMapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> InsOrdHashMap k a
+oMapFromL f = OMap.fromList . map (\v -> (f v, v))
 
 -- | Time an IO action, returning the time with microsecond precision. The
 -- result of the input action will be evaluated to WHNF.

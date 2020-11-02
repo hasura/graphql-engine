@@ -75,7 +75,7 @@ mkFunctionInfo qf systemDefined config rawFuncInfo =
     =<< MV.runValidateT validateFunction
   where
     functionArgs = mkFunctionArgs defArgsNo inpArgTyps inpArgNames
-    RawFunctionInfo _oid hasVariadic funTy retSn retN retTyTyp retSet
+    RawFunctionInfo hasVariadic funTy retSn retN retTyTyp retSet
                 inpArgTyps inpArgNames defArgsNo returnsTab descM
                 = rawFuncInfo
     returnType = QualifiedPGType retSn retN retTyTyp

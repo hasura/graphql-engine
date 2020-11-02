@@ -1,11 +1,13 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Hasura.RQL.DDL.Metadata.Generator
-  (genMetadata, genReplaceMetadata)
+  (genMetadata)
 where
 
 import           Hasura.Prelude
 
 import qualified Data.Aeson                                    as J
+import qualified Data.HashMap.Strict.InsOrd                    as OM
+import qualified Data.HashSet.InsOrd                           as SetIns
 import qualified Data.Text                                     as T
 import qualified Data.Vector                                   as V
 import qualified Language.GraphQL.Draft.Parser                 as G
@@ -28,10 +30,10 @@ import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.Types
 
-genReplaceMetadata :: Gen ReplaceMetadata
-genReplaceMetadata = do
+genMetadata :: Gen Metadata
+genMetadata = do
   version <- arbitrary
-  ReplaceMetadata version
+  Metadata
     <$> arbitrary
     <*> genFunctionsMetadata version
     <*> arbitrary
@@ -41,21 +43,16 @@ genReplaceMetadata = do
     <*> arbitrary
     <*> arbitrary
   where
-    genFunctionsMetadata :: MetadataVersion -> Gen FunctionsMetadata
+    genFunctionsMetadata :: MetadataVersion -> Gen Functions
     genFunctionsMetadata = \case
-      MVVersion1 -> FMVersion1 <$> arbitrary
-      MVVersion2 -> FMVersion2 <$> arbitrary
+      MVVersion1 -> OM.fromList . map (\qf -> (qf,) $ FunctionMetadata qf emptyFunctionConfig) <$> arbitrary
+      MVVersion2 -> arbitrary
 
-genMetadata :: Gen Metadata
-genMetadata =
-  Metadata
-    <$> arbitrary
-    <*> arbitrary
-    <*> arbitrary
-    <*> arbitrary
-    <*> arbitrary
-    <*> arbitrary
-    <*> arbitrary
+instance (Arbitrary k, Eq k, Hashable k, Arbitrary v) => Arbitrary (InsOrdHashMap k v) where
+  arbitrary = OM.fromList <$> arbitrary
+
+instance (Arbitrary a, Eq a, Hashable a) => Arbitrary (SetIns.InsOrdHashSet a) where
+  arbitrary = SetIns.fromList <$> arbitrary
 
 instance Arbitrary G.Name where
   arbitrary = G.unsafeMkName . T.pack <$> listOf1 (elements ['a'..'z'])
@@ -64,15 +61,6 @@ instance Arbitrary MetadataVersion where
   arbitrary = genericArbitrary
 
 instance Arbitrary FunctionMetadata where
-  arbitrary = genericArbitrary
-
-instance Arbitrary SourceConnSettings where
-  arbitrary = genericArbitrary
-
-instance Arbitrary SourceConfiguration where
-  arbitrary = genericArbitrary
-
-instance Arbitrary SourceMetadata where
   arbitrary = genericArbitrary
 
 instance Arbitrary TableCustomRootFields where
@@ -140,16 +128,16 @@ instance Arbitrary (BoolExp b) where
 instance Arbitrary PermColSpec where
   arbitrary = genericArbitrary
 
-instance Arbitrary (Permission.InsPerm b) where
+instance Arbitrary (InsPerm b) where
   arbitrary = genericArbitrary
 
-instance Arbitrary (Permission.SelPerm b) where
+instance Arbitrary (SelPerm b) where
   arbitrary = genericArbitrary
 
-instance Arbitrary (Permission.UpdPerm b) where
+instance Arbitrary (UpdPerm b) where
   arbitrary = genericArbitrary
 
-instance Arbitrary (Permission.DelPerm b) where
+instance Arbitrary (DelPerm b) where
   arbitrary = genericArbitrary
 
 instance Arbitrary SubscribeColumns where
@@ -323,7 +311,7 @@ deriving instance Arbitrary RemoteFields
 instance Arbitrary RemoteRelationshipDef where
   arbitrary = genericArbitrary
 
-instance Arbitrary RemoteRelationshipMeta where
+instance Arbitrary RemoteRelationshipMetadata where
   arbitrary = genericArbitrary
 
 instance Arbitrary CronTriggerMetadata where
