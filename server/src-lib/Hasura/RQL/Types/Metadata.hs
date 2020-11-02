@@ -157,7 +157,7 @@ parseListAsMap
 parseListAsMap t mapFn listP = do
   list <- listP
   let duplicates = toList $ L.duplicates $ map mapFn list
-  when (not $ null duplicates) $ fail $ T.unpack $
+  unless (null duplicates) $ fail $ T.unpack $
     "multiple declarations exist for the following " <> t <> " : "
     <> T.pack (show duplicates)
   pure $ oMapFromL mapFn list
@@ -241,15 +241,15 @@ instance FromJSON TableMetadata where
      <$> o .: tableKey
      <*> o .:? isEnumKey .!= False
      <*> o .:? configKey .!= emptyTableConfig
-     <*> (parseListAsMap "object relationships" _rdName  $ o .:? orKey .!= [])
-     <*> (parseListAsMap "array relationships" _rdName   $ o .:? arKey .!= [])
-     <*> (parseListAsMap "computed fields" _cfmName      $ o .:? cfKey .!= [])
-     <*> (parseListAsMap "remote relationships" _rrmName $ o .:? rrKey .!= [])
-     <*> (parseListAsMap "insert permissions" _pdRole    $ o .:? ipKey .!= [])
-     <*> (parseListAsMap "select permissions" _pdRole    $ o .:? spKey .!= [])
-     <*> (parseListAsMap "update permissions" _pdRole    $ o .:? upKey .!= [])
-     <*> (parseListAsMap "delete permissions" _pdRole    $ o .:? dpKey .!= [])
-     <*> (parseListAsMap "event triggers" etcName        $ o .:? etKey .!= [])
+     <*> parseListAsMap "object relationships" _rdName  (o .:? orKey .!= [])
+     <*> parseListAsMap "array relationships" _rdName   (o .:? arKey .!= [])
+     <*> parseListAsMap "computed fields" _cfmName      (o .:? cfKey .!= [])
+     <*> parseListAsMap "remote relationships" _rrmName (o .:? rrKey .!= [])
+     <*> parseListAsMap "insert permissions" _pdRole    (o .:? ipKey .!= [])
+     <*> parseListAsMap "select permissions" _pdRole    (o .:? spKey .!= [])
+     <*> parseListAsMap "update permissions" _pdRole    (o .:? upKey .!= [])
+     <*> parseListAsMap "delete permissions" _pdRole    (o .:? dpKey .!= [])
+     <*> parseListAsMap "event triggers" etcName        (o .:? etKey .!= [])
 
     where
       tableKey = "table"
