@@ -2,8 +2,6 @@
 
 ## Next release
 
-- console: show only compatible postgres functions in computed fields section (close #5155)
-
 ### Heterogeneous execution
 
 Previous releases have allowed queries to request data from either Postgres or remote schemas, but not both. This release removes that restriction, so multiple data sources may be mixed within a single query. For example, GraphQL Engine can execute a query like
@@ -89,6 +87,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - console: add option to flag an insertion as a migration from `Data` section (close #1766) (#4933)
 - console: add notifications (#5070)
 - console: down migrations improvements (close #3503, #4988) (#4790)
+- console: show only compatible postgres functions in computed fields section (close #5155) (#5978)
 - docs: add docs page on networking with docker (close #4346) (#4811)
 - docs: add tabs for console / cli / api workflows (close #3593) (#4948)
 - docs: add postgres concepts page to docs (close #4440) (#4471)
