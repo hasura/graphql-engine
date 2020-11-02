@@ -17,8 +17,9 @@ Introduction
 
 The permission layer is designed to restrict the operations that can be
 performed by various users. Permissions can be defined to only expose a certain
-part of the upstream remote schema for each role. By default, the ``admin`` role
-has unrestricted access to the upstream remote schema.
+part of the upstream remote schema for each role and can also be used to set preset
+values for input values. By default, the ``admin`` role has unrestricted access to
+the upstream remote schema.
 
 .. _add_remote_schema_permissions:
 
@@ -92,10 +93,12 @@ Suppose the following is the schema document of the upstream remote.
 Let's say we want to impose some restrictions on the ``user`` role:
 
 1. Expose only the ``user_id``, ``name`` and the ``user_messages`` field in the ``User`` object.
-2. Allow filtering of the messages only by ``name`` in the ``whered`` argument
+2. Add a preset value to the ``user_id`` argument of the ``user`` field defined in the ``Query`` object.
+   We want the value of the preset to come from a session variable called ``x-hasura-user-id``.
+3. Allow filtering of the messages only by ``name`` in the ``whered`` argument
    of the ``user_messages`` field.
-3. Allow only the fields ``hello``, ``messages`` and the ``user`` top level node in the ``Query`` object.
-4. Expose only the ``query_root``.
+4. Allow only the fields ``hello``, ``messages`` and the ``user`` top level node in the ``Query`` object.
+5. Expose only the ``query_root`` and not allow mutations of the role.
 
 The schema document, implementing the above restrictions will look like:
 
@@ -141,7 +144,7 @@ The schema document, implementing the above restrictions will look like:
   type Query {
     hello: String
     messages(where: MessageWhereInpObj, includes: IncludeInpObj): [Message]
-    user(user_id: Int!): User
+    user(user_id: Int! @preset(value: "x-hasura-user-id")): User
   }
 
   schema {
@@ -163,11 +166,60 @@ API should be called with the schema document.
            "remote_schema" : "user_messages",
            "role" : "user",
            "definition" : {
-               "schema" : "type User {     user_id: Int     name: String     userMessages(whered: MessageWhereInpObj, includes: IncludeInpObj): [Message]   }    interface Communication {     id: Int!     msg: String!   }    type Message implements Communication {     id: Int!     name: String!     msg: String!     errorMsg: String   }    input MessageWhereInpObj {     name: StringCompareObj   }    input IntCompareObj {     eq : Int     gt : Int     lt : Int   }    input StringCompareObj {     eq : String   }    input IncludeInpObj {     id: [Int]     name: [String]   }    type Query {     hello: String     messages(where: MessageWhereInpObj, includes: IncludeInpObj): [Message]     user(user_id: Int!): User   }    schema {     query: Query  }"
+               "schema" : "type User {     user_id: Int     name: String     userMessages(whered: MessageWhereInpObj, includes: IncludeInpObj): [Message]   }    interface Communication {     id: Int!     msg: String!   }    type Message implements Communication {     id: Int!     name: String!     msg: String!     errorMsg: String   }    input MessageWhereInpObj {     name: StringCompareObj   }    input IntCompareObj {     eq : Int     gt : Int     lt : Int   }    input StringCompareObj {     eq : String   }    input IncludeInpObj {     id: [Int]     name: [String]   }    type Query {     hello: String     messages(where: MessageWhereInpObj, includes: IncludeInpObj): [Message]     user(user_id: Int! @preset(value: \"x-hasura-user-id\")): User   }    schema {     query: Query  }"
            },
           "comment":"remote schema permissions for role: user"
        }
    }
+
+Arguments Presets
+^^^^^^^^^^^^^^^^^
+
+Argument presets are useful when we need to have the values automatically set instead
+of the user being able to explicitly specify the value for the field. Argument presets
+are of two types:
+
+1. Static Value
+2. Session Variable Value
+
+A preset value can be added to an input value via the ``preset`` directive.
+
+.. code-block:: graphql
+
+   type User {
+     name String
+     id   Int
+   }
+
+   type Query {
+     user(user_id: Int! @preset(value: 1))
+   }
+
+When an input field has a preset defined, it will be removed from the schema. So, following
+the above example, the user won't able to specify the ``user_id`` argument while querying
+the ``user`` field and whenever the role executes the ``user`` field, the preset value will
+get added by the graphql-engine before querying the remote schema.
+
+A preset value can also be a dynamic session variable value. When the preset value is a
+dynamic session variable value, then its value is read from the specified session variable
+value when the query is executed and then its value is substituted in the appropriate place.
+
+.. note::
+   By default, it's assumed that if a input value preset contains a session variable
+   then its value will be resolved when the query is executed. To treat the session
+   variable value as a literal value i.e avoiding resolving of the session variable
+   value can be done by specifying ``static`` as ``true`` while defining the preset.
+
+   For example:
+
+   .. code-block:: graphql
+
+      type Query {
+        hello(text: String! @preset(value: "x-hasura-hello", static: true))
+      }
+
+   In this case, the ``"x-hasura-hello"`` will be the argument to the ``hello`` field
+   whenever it's queried.
 
 .. _add_remote_schema_permissions_syntax:
 
