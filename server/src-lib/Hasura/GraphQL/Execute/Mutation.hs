@@ -19,6 +19,7 @@ import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
 import qualified Hasura.Logging                            as L
 import qualified Hasura.RQL.IR.Delete                      as RQL
 import qualified Hasura.RQL.IR.Returning                   as RQL
+import qualified Hasura.RQL.IR.Select                      as DS
 import qualified Hasura.RQL.IR.Update                      as RQL
 import qualified Hasura.Tracing                            as Tracing
 
@@ -26,10 +27,9 @@ import           Hasura.Backends.Postgres.Connection
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
+import           Hasura.GraphQL.Execute.Common
 import           Hasura.GraphQL.Execute.Insert
 import           Hasura.GraphQL.Execute.Prepare
--- We borrow some Query code to handle the case of VOLATILE functions:
-import           Hasura.GraphQL.Execute.Query
 import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
@@ -179,3 +179,32 @@ convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userIn
       -- here. It would be nice to report all of them!
       ParseError{ pePath, peMessage, peCode } ->
         throwError (err400 peCode peMessage){ qePath = pePath }
+
+-- | A pared-down version of 'Query.convertQuerySelSet', for use in execution of
+-- special case of SQL function mutations (see 'MDBFunction').
+convertFunction
+  :: forall m tx .
+     ( MonadError QErr m
+     , HasVersion
+     , MonadIO tx
+     , MonadTx tx
+     , Tracing.MonadTrace tx
+     )
+  => Env.Environment
+  -> UserInfo
+  -> HTTP.Manager
+  -> HTTP.RequestHeaders
+  -> DS.AnnSimpleSelG 'Postgres UnpreparedValue
+  -- ^ VOLATILE function as 'SelectExp'
+  -> m (tx EncJSON)
+convertFunction env userInfo manager reqHeaders unpreparedQuery = do
+  -- Transform the RQL AST into a prepared SQL query
+  (preparedQuery, PlanningSt _ _ planVals expectedVariables)
+    <- flip runStateT initPlanningSt
+       $ DS.traverseAnnSimpleSelect prepareWithPlan unpreparedQuery
+  validateSessionVariables expectedVariables $ _uiSession userInfo
+
+  pure $!
+    fst $ -- forget (Maybe PreparedSql)
+      mkCurPlanTx env manager reqHeaders userInfo id noProfile $
+        RFPPostgres $ irToRootFieldPlan planVals $ QDBSimple preparedQuery
