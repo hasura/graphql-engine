@@ -12,6 +12,11 @@ Getting Started with Hasura Cloud
   :depth: 1
   :local:
 
+Introduction
+------------
+
+This guide talks about setting up Hasura Cloud with a new or existing Postgres database.
+
 Step 1: Create an account
 -------------------------
 
@@ -23,12 +28,36 @@ Navigate to `cloud.hasura.io
 Step 2: Connect new/existing database
 -------------------------------------
 
-- To use an existing database, choose ``I have an existing Postgres database``. If you want to used managed cloud database services, you can follow :ref:`these guides <cloud_databases>`.
+Hasura Cloud needs to connect to a Postgres database.
+
+- To use an existing database, choose ``I have an existing Postgres database``.
 - To try out with a new database, choose ``Try a free database with Heroku``.
 
 .. thumbnail:: /img/graphql/cloud/getting-started/connect-db.png
    :alt: Connect new or existing database
    :width: 591px
+
+Step 2.1: Enter you database connection URL (for existing database)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you chose ``I have an existing Postgres database``, enter your database connection URL.
+
+.. thumbnail:: /img/graphql/cloud/getting-started/connect-existing-db.png
+   :alt: Enter URL for existing database
+   :width: 556px
+
+If your database is hosted via any of the following managed cloud database services,
+check out their respective detailed guides to get the database connection URL and
+any other steps required to ensure connectivity from Hasura Cloud:
+
+- :ref:`AWS RDS Postgres <cloud_db_aws_rds_postgres>`
+- :ref:`GCP <cloud_db_gcp>`
+- :ref:`Azure <cloud_db_azure>`
+- :ref:`Digital Ocean <cloud_db_digital_ocean>`
+- :ref:`Aiven <cloud_db_aiven>`
+- :ref:`Timescale Cloud <cloud_db_timescale_cloud>`
+- :ref:`YugaByte <cloud_db_yugabyte>`
+- :ref:`AWS RDS Aurora <cloud_db_aws_rds_aurora>`
 
 Step 3: Create project
 ----------------------
@@ -82,4 +111,4 @@ to make sure that your GraphQL endpoint and the Hasura console are not publicly 
    :titlesonly:
    :hidden:
 
-   Cloud databases <cloud-databases/index>
+   Cloud databases guides <cloud-databases/index>

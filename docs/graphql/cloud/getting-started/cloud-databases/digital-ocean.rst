@@ -2,7 +2,7 @@
    :description: Using Hasura with a DO Postgres database
    :keywords: hasura, docs, existing database, guide, digital ocean
 
-.. _cloud_db_do:
+.. _cloud_db_digital_ocean:
 
 Using Hasura Cloud with a Digital Ocean Postgres database
 =========================================================

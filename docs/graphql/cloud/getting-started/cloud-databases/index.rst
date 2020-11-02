@@ -4,24 +4,16 @@
 
 .. _cloud_databases:
 
-Connecting with different cloud databases
-=========================================
+Guides for connecting Hasura Cloud with different cloud databases
+=================================================================
 
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
   :local:
 
-Introduction
-------------
-
-When :ref:`creating a project on Hasura Cloud <cloud_getting_started>`, you need to link a database connection string.
-There are several cloud providers that offer Postgres databases.
-
-Guides
-------
-
-Check out the following guides for tutorials on how to use Hasura Cloud with a new or existing database provided by specific cloud vendors.
+Check out the following guides for tutorials on how to use Hasura Cloud with a
+new or existing database provided by specific cloud vendors.
 
 .. toctree::
    :maxdepth: 1
