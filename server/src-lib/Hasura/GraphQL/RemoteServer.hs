@@ -217,8 +217,6 @@ instance J.FromJSON (FromIntrospection G.UnionTypeDefinition) where
     kind  <- o .: "kind"
     name  <- o .:  "name"
     desc  <- o .:? "description"
-    -- TODO: maybe instead of using `RemoteSchemaInputValueDefinition` here
-    -- we can generalize it, like in other places?
     possibleTypes :: [FromIntrospection (G.ObjectTypeDefinition G.InputValueDefinition)] <- o .: "possibleTypes"
     let possibleTypes' = map G._otdName $ fmap fromIntrospection possibleTypes
         desc' = fmap fromIntrospection desc
