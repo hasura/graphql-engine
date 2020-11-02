@@ -1,35 +1,34 @@
 {-# OPTIONS_HADDOCK not-home #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE StrictData          #-}
-{-# LANGUAGE ViewPatterns        #-}
 
 -- | Defines the 'Parser' type and its primitive combinators.
 module Hasura.GraphQL.Parser.Internal.Parser where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                    as A
-import qualified Data.HashMap.Strict.Extended  as M
-import qualified Data.HashMap.Strict.InsOrd    as OMap
-import qualified Data.HashSet                  as S
-import qualified Data.Text                     as T
-import qualified Data.List.Extended            as LE
+import qualified Data.Aeson                         as A
+import qualified Data.HashMap.Strict.Extended       as M
+import qualified Data.HashMap.Strict.InsOrd         as OMap
+import qualified Data.HashSet                       as S
+import qualified Data.List.Extended                 as LE
+import qualified Data.Text                          as T
 
-import           Control.Lens.Extended         hiding (enum, index)
-import           Data.Int                      (Int32, Int64)
-import           Data.Scientific               (toBoundedInteger)
+import           Control.Lens.Extended              hiding (enum, index)
+import           Data.Int                           (Int32, Int64)
 import           Data.Parser.JSONPath
+import           Data.Scientific                    (toBoundedInteger)
+import           Data.Text.Extended
 import           Data.Type.Equality
-import           Language.GraphQL.Draft.Syntax hiding (Definition)
+import           Language.GraphQL.Draft.Syntax      hiding (Definition)
 
+import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Collect
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Error
-import           Hasura.Server.Utils           (englishList)
-import           Hasura.SQL.Types
-import           Hasura.SQL.Value
+import           Hasura.Server.Utils                (englishList)
 
 
 -- -----------------------------------------------------------------------------
@@ -247,9 +246,9 @@ scalar name description representation = Parser
         JSONValue    (A.Bool   b) -> pure b
         _                         -> typeMismatch name "a boolean" v
       SRInt -> case v of
-        GraphQLValue (VInt i)     -> convertWith scientificToInteger $ fromInteger i
-        JSONValue (A.Number n)    -> convertWith scientificToInteger n
-        _                         -> typeMismatch name "a 32-bit integer" v
+        GraphQLValue (VInt i)  -> convertWith scientificToInteger $ fromInteger i
+        JSONValue (A.Number n) -> convertWith scientificToInteger n
+        _                      -> typeMismatch name "a 32-bit integer" v
       SRFloat -> case v of
         GraphQLValue (VFloat f)   -> convertWith scientificToFloat f
         GraphQLValue (VInt   i)   -> convertWith scientificToFloat $ fromInteger i
@@ -270,8 +269,8 @@ There's a delicate balance between GraphQL types and Postgres types.
 
 The mapping is done in the 'column' parser. But we want to only have
 one source of truth for parsing postgres values, which happens to be
-the JSON parsing code in SQL.Value. So here we reuse some of that code
-despite not having a JSON value.
+the JSON parsing code in Backends.Postgres.SQL.Value. So here we reuse
+some of that code despite not having a JSON value.
 
 -}
 
@@ -349,7 +348,7 @@ enum name description values = Parser
     validate value = case M.lookup value valuesMap of
       Just result -> pure result
       Nothing -> parseError $ "expected one of the values "
-        <> englishList "or" (dquoteTxt . dName . fst <$> values) <> " for type "
+        <> englishList "or" (toTxt . dName . fst <$> values) <> " for type "
         <> name <<> ", but found " <>> value
 
 nullable :: forall k m a. (MonadParse m, 'Input <: k) => Parser k m a -> Parser k m (Maybe a)
@@ -688,7 +687,7 @@ safeSelectionSet
   -> n (Parser 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a)))
 safeSelectionSet name desc fields
   | S.null duplicates = pure $ selectionSetObject name desc fields []
-  | otherwise         = throw500 $ "found duplicate fields in selection set: " <> T.intercalate ", " (unName <$> toList duplicates)
+  | otherwise         = throw500 $ "found duplicate fields in selection set: " <> commaSeparated (unName <$> toList duplicates)
   where
     duplicates = LE.duplicates $ getName . fDefinition <$> fields
 

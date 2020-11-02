@@ -2,20 +2,7 @@
 
 module Hasura.Server.App where
 
-import           Control.Concurrent.MVar.Lifted
-import           Control.Exception                         (IOException, try)
-import           Control.Monad.Morph                       (hoist)
-import           Control.Monad.Trans.Control               (MonadBaseControl)
-import           Data.String                               (fromString)
 import           Hasura.Prelude                            hiding (get, put)
-
-import           Control.Monad.Stateless
-import           Data.Aeson                                hiding (json)
-import           Data.IORef
-import           Data.Time.Clock                           (UTCTime)
-import           Network.Mime                              (defaultMimeLookup)
-import           System.FilePath                           (joinPath, takeFileName)
-import           Web.Spock.Core                            ((<//>))
 
 import qualified Control.Concurrent.Async.Lifted.Safe      as LA
 import qualified Control.Monad.Trans.Control               as MTC
@@ -30,13 +17,42 @@ import qualified Database.PG.Query                         as Q
 import qualified Network.HTTP.Client                       as HTTP
 import qualified Network.HTTP.Types                        as HTTP
 import qualified Network.Wai.Extended                      as Wai
+import qualified Network.Wai.Handler.WebSockets.Custom     as WSC
 import qualified Network.WebSockets                        as WS
 import qualified System.Metrics                            as EKG
 import qualified System.Metrics.Json                       as EKG
 import qualified Text.Mustache                             as M
 import qualified Web.Spock.Core                            as Spock
 
-import           Hasura.Db
+import           Control.Concurrent.MVar.Lifted
+import           Control.Exception                         (IOException, try)
+import           Control.Monad.Morph                       (hoist)
+import           Control.Monad.Stateless
+import           Control.Monad.Trans.Control               (MonadBaseControl)
+import           Data.Aeson                                hiding (json)
+import           Data.IORef
+import           Data.String                               (fromString)
+import           Data.Time.Clock                           (UTCTime)
+import           Network.Mime                              (defaultMimeLookup)
+import           System.FilePath                           (joinPath, takeFileName)
+import           Web.Spock.Core                            ((<//>))
+
+import qualified Hasura.GraphQL.Execute                    as E
+import qualified Hasura.GraphQL.Execute.LiveQuery          as EL
+import qualified Hasura.GraphQL.Execute.LiveQuery.Poll     as EL
+import qualified Hasura.GraphQL.Execute.Plan               as E
+import qualified Hasura.GraphQL.Execute.Query              as EQ
+import qualified Hasura.GraphQL.Explain                    as GE
+import qualified Hasura.GraphQL.Transport.HTTP             as GH
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
+import qualified Hasura.GraphQL.Transport.WebSocket        as WS
+import qualified Hasura.GraphQL.Transport.WebSocket.Server as WS
+import qualified Hasura.Logging                            as L
+import qualified Hasura.Server.API.PGDump                  as PGD
+import qualified Hasura.Tracing                            as Tracing
+
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging                    (MonadQueryLog (..))
 import           Hasura.HTTP
@@ -54,22 +70,6 @@ import           Hasura.Server.Middleware                  (corsMiddleware)
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
 import           Hasura.Session
-import           Hasura.SQL.Types
-
-import qualified Hasura.GraphQL.Execute                    as E
-import qualified Hasura.GraphQL.Execute.LiveQuery          as EL
-import qualified Hasura.GraphQL.Execute.LiveQuery.Poll     as EL
-import qualified Hasura.GraphQL.Execute.Plan               as E
-import qualified Hasura.GraphQL.Execute.Query              as EQ
-import qualified Hasura.GraphQL.Explain                    as GE
-import qualified Hasura.GraphQL.Transport.HTTP             as GH
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
-import qualified Hasura.GraphQL.Transport.WebSocket        as WS
-import qualified Hasura.GraphQL.Transport.WebSocket.Server as WS
-import qualified Hasura.Logging                            as L
-import qualified Hasura.Server.API.PGDump                  as PGD
-import qualified Hasura.Tracing                            as Tracing
-import qualified Network.Wai.Handler.WebSockets.Custom     as WSC
 
 data SchemaCacheRef
   = SchemaCacheRef
@@ -132,10 +132,10 @@ data APIHandler m a
   | AHPost !(a -> Handler m APIResp)
 
 
-boolToText :: Bool -> T.Text
+boolToText :: Bool -> Text
 boolToText = bool "false" "true"
 
-isAdminSecretSet :: AuthMode -> T.Text
+isAdminSecretSet :: AuthMode -> Text
 isAdminSecretSet AMNoAuth = boolToText False
 isAdminSecretSet _        = boolToText True
 
@@ -237,7 +237,7 @@ mapActionT
   => (m (MTC.StT (Spock.ActionCtxT ()) a) -> n (MTC.StT (Spock.ActionCtxT ()) a))
   -> Spock.ActionT m a
   -> Spock.ActionT n a
-mapActionT f tma = MTC.restoreT . pure =<< (MTC.liftWith $ \run -> f (run tma))
+mapActionT f tma = MTC.restoreT . pure =<< MTC.liftWith (\run -> f (run tma))
 
 
 mkSpockAction
@@ -280,8 +280,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
       lift $ Tracing.attachMetadata [("request_id", unRequestId requestId)]
 
       userInfoE <- fmap fst <$> lift (resolveUserInfo logger manager headers authMode)
-      userInfo  <- either (logErrorAndResp Nothing requestId req (reqBody, Nothing) False headers . qErrModifier)
-                   return userInfoE
+      userInfo  <- onLeft userInfoE (logErrorAndResp Nothing requestId req (reqBody, Nothing) False headers . qErrModifier)
 
       let handlerState = HandlerCtx serverCtx userInfo headers requestId ipAddress
           includeInternal = shouldIncludeInternal (_uiRole userInfo) $
@@ -293,8 +292,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
           return (res, Nothing)
         AHPost handler -> do
           parsedReqE <- runExceptT $ parseBody reqBody
-          parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) includeInternal headers . qErrModifier)
-                        return parsedReqE
+          parsedReq  <- onLeft parsedReqE (logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) includeInternal headers . qErrModifier)
           res <- lift $ runReaderT (runExceptT $ handler parsedReq) handlerState
           return (res, Just parsedReq)
 
@@ -484,7 +482,7 @@ consoleAssetsHandler logger dir path = do
     headers = ("Content-Type", mimeType) : encHeader
 
 class (Monad m) => ConsoleRenderer m where
-  renderConsole :: HasVersion => T.Text -> AuthMode -> Bool -> Maybe Text -> m (Either String Text)
+  renderConsole :: HasVersion => Text -> AuthMode -> Bool -> Maybe Text -> m (Either String Text)
 
 instance ConsoleRenderer m => ConsoleRenderer (Tracing.TraceT m) where
   renderConsole a b c d = lift $ renderConsole a b c d
@@ -500,7 +498,7 @@ newtype LegacyQueryParser m
   = LegacyQueryParser
   { getLegacyQueryParser :: QualifiedTable -> Object -> Handler m RQLQueryV1 }
 
-queryParsers :: (Monad m) => M.HashMap T.Text (LegacyQueryParser m)
+queryParsers :: (Monad m) => M.HashMap Text (LegacyQueryParser m)
 queryParsers =
   M.fromList
   [ ("select", mkLegacyQueryParser RQSelect)
@@ -518,7 +516,7 @@ queryParsers =
 
 legacyQueryHandler
   :: (HasVersion, MonadIO m, MonadBaseControl IO m, MetadataApiAuthorization m, Tracing.MonadTrace m)
-  => TableName -> T.Text -> Object
+  => TableName -> Text -> Object
   -> Handler m (HttpResponse EncJSON)
 legacyQueryHandler tn queryType req =
   case M.lookup queryType queryParsers of
@@ -657,7 +655,7 @@ mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpMana
       cacheLock <- liftIO $ newMVar ()
       cacheCell <- liftIO $ newIORef (schemaCache, initSchemaCacheVer)
       -- planCache <- liftIO $ E.initPlanCache planCacheOptions
-      let cacheRef = SchemaCacheRef cacheLock cacheCell (E.clearPlanCache {- planCache -})
+      let cacheRef = SchemaCacheRef cacheLock cacheCell E.clearPlanCache
       -- pure (planCache, cacheRef)
       pure cacheRef
 
@@ -699,9 +697,9 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       sc <- getSCFromRef $ scCacheRef serverCtx
       dbOk <- liftIO $ _pecCheckHealth $ scPGExecCtx serverCtx
       if dbOk
-        then Spock.setStatus HTTP.status200 >> (Spock.text $ if null (scInconsistentObjs sc)
-                                                 then "OK"
-                                                 else "WARN: inconsistent objects in schema")
+        then Spock.setStatus HTTP.status200 >> Spock.text (if null (scInconsistentObjs sc)
+                                               then "OK"
+                                               else "WARN: inconsistent objects in schema")
         else Spock.setStatus HTTP.status500 >> Spock.text "ERROR"
 
     Spock.get "v1/version" $ do
