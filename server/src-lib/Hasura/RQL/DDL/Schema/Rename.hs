@@ -14,7 +14,7 @@ import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                as M
 import qualified Data.List.NonEmpty                 as NE
-import qualified Data.Set                           as Set
+import qualified Data.HashSet                       as Set
 import qualified Database.PG.Query                  as Q
 import qualified Language.GraphQL.Draft.Syntax      as G
 

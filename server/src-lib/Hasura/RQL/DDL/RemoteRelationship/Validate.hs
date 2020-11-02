@@ -84,10 +84,10 @@ validateRemoteRelationship
   :: forall m
   .  (MonadError ValidationError m)
   => RemoteRelationship
-  -> RemoteSchemaMap
+  -> (RemoteSchemaInfo, IntrospectionResult)
   -> [ColumnInfo 'Postgres]
   -> m (RemoteFieldInfo 'Postgres)
-validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
+validateRemoteRelationship remoteRelationship (remoteSchemaInfo, introspectionResult) pgColumns = do
   let remoteSchemaName = rtrRemoteSchema remoteRelationship
       table = rtrTable remoteRelationship
   hasuraFields <- forM (toList $ rtrHasuraFields remoteRelationship) $
@@ -98,9 +98,6 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
                                   pure $ (variableName,v)
                               ) $ HM.toList (mapFromL pgiColumn pgColumns)
   let pgColumnsVariablesMap = HM.fromList pgColumnsVariables
-  (PartialRemoteSchemaCtx rsName introspectionResult rsi _ _) <-
-    onNothing (HM.lookup remoteSchemaName remoteSchemaMap) $
-    throwError $ RemoteSchemaNotFound remoteSchemaName
   let schemaDoc@(RemoteSchemaIntrospection originalDefns) = irDoc introspectionResult
       queryRootName = irQueryRoot introspectionResult
   queryRoot <- onNothing (lookupObject schemaDoc queryRootName) $
@@ -115,7 +112,7 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
         , _rfiParamMap = leafParamMap
         , _rfiHasuraFields = HS.fromList hasuraFields
         , _rfiRemoteFields = rtrRemoteField remoteRelationship
-        , _rfiRemoteSchema = rsi
+        , _rfiRemoteSchema = remoteSchemaInfo
         -- adding the new types after stripping the values to the
         -- schema document
         , _rfiSchemaIntrospect = RemoteSchemaIntrospection
@@ -124,7 +121,7 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
                                     -- are ignored for remote relationships and instead the argument
                                     -- values comes from the parent query.
                                     <> (fmap (fmap (\inpValDef -> RemoteSchemaInputValueDefinition inpValDef Nothing)) $ HM.elems leafTypeMap)
-        , _rfiRemoteSchemaName = rsName
+        , _rfiRemoteSchemaName = remoteSchemaName
         }
   where
     getObjTyInfoFromField

@@ -220,7 +220,7 @@ instance ToJSON RemoteSchemaCtx where
       , "context" .= ctx
       ]
 
-type RemoteSchemaMap = M.HashMap RemoteSchemaName PartialRemoteSchemaCtx
+type RemoteSchemaMap = M.HashMap RemoteSchemaName RemoteSchemaCtx
 
 type DepMap = M.HashMap SchemaObjId (HS.HashSet SchemaDependency)
 

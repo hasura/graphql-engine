@@ -14,19 +14,20 @@ module Hasura.GraphQL.Schema.Table
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                as Map
-import qualified Data.HashSet                       as Set
-import qualified Language.GraphQL.Draft.Syntax      as G
+import qualified Data.HashMap.Strict                         as Map
+import qualified Data.HashSet                                as Set
+import qualified Language.GraphQL.Draft.Syntax               as G
 
 import           Data.Text.Extended
 
-import qualified Hasura.GraphQL.Parser              as P
+import qualified Hasura.GraphQL.Parser                       as P
 
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.GraphQL.Parser              (Kind (..), Parser)
+import           Hasura.GraphQL.Parser                       (Kind (..), Parser)
 import           Hasura.GraphQL.Parser.Class
-import           Hasura.RQL.DML.Internal            (getRolePermInfo)
+import           Hasura.RQL.DML.Internal                     (getRolePermInfo)
 import           Hasura.RQL.Types
+import           Hasura.RQL.DDL.RemoteRelationship.Validate
 
 -- | Table select columns enum
 --
@@ -133,7 +134,18 @@ tableSelectFields table permissions = do
         CFRSetofTable tableName ->
           isJust <$> tableSelectPermissions tableName
     -- TODO (from master): Derive permissions for remote relationships
-    canBeSelected (FIRemoteRelationship _) = pure True
+    canBeSelected (FIRemoteRelationship remoteFieldInfo) = do
+      -- let RemoteFieldInfo name _params hasuraFields remoteFields
+      --       remoteSchemaInfo schemaIntrospection remoteSchemaName = remoteFieldInfo
+      --     hasuraFieldNames = Set.fromList $ map (FieldName . G.unName . pgiName) $ Set.toList hasuraFields
+      --     remoteRelationship = RemoteRelationship name table hasuraFieldNames remoteSchemaName remoteFields
+      -- eitherRemoteField <-
+      --   runExceptT $
+      --   validateRemoteRelationship remoteRelationship (remoteSchemaInfo, schemaIntrospection) $ Set.toList hasuraFields
+      -- onLeft eitherRemoteField $ \err ->
+      --   throw400 RemoteSchemaError
+      --   $ "error in deriving permissions for remote relationship field " <> name <<> ": " <> errorToText err
+      pure True
 
 tableColumns
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m)

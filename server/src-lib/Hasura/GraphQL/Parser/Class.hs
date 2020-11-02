@@ -18,6 +18,8 @@ import                          Hasura.Backends.Postgres.SQL.Types
 import {-# SOURCE #-}           Hasura.GraphQL.Parser.Internal.Parser
 import                          Hasura.RQL.Types.Error
 import                          Hasura.RQL.Types.Table
+import                          Hasura.RQL.Types.RemoteSchema
+import {-# SOURCE #-}           Hasura.RQL.Types.SchemaCache          (RemoteSchemaMap, RemoteSchemaCtx)
 import                          Hasura.SQL.Backend
 import                          Hasura.Session                        (RoleName)
 
@@ -110,7 +112,8 @@ askRoleName
   => m RoleName
 askRoleName = asks getter
 
-type MonadTableInfo r m = (MonadReader r m, Has TableCache r, MonadError QErr m)
+-- FIXME: rename this type to something agonostic of the remote schema thing
+type MonadTableInfo r m = (MonadReader r m, Has TableCache r, MonadError QErr m, Has RemoteSchemaMap r)
 
 -- | Looks up table information for the given table name. This function
 -- should never fail, since the schema cache construction process is
@@ -124,6 +127,19 @@ askTableInfo tableName = do
   -- This should never fail, since the schema cache construction process is
   -- supposed to ensure that all dependencies are resolved.
   tableInfo `onNothing` throw500 ("askTableInfo: no info for " <>> tableName)
+
+-- | Looks up remote schema information for the given remote schema. This function
+-- should never fail, since the schema cache construction process is
+-- supposed to ensure all dependencies are resolved.
+askRemoteSchemaInfo
+  :: MonadTableInfo r m
+  => RemoteSchemaName
+  -> m RemoteSchemaCtx
+askRemoteSchemaInfo remoteSchemaName = do
+  remoteSchemaInfo <- asks $ Map.lookup remoteSchemaName . getter
+  -- This should never fail, since the schema cache construction process is
+  -- supposed to ensure that all dependencies are resolved.
+  remoteSchemaInfo `onNothing` throw500 ("askRemoteSchemaInfo: no info for " <>> remoteSchemaName)
 
 -- | Helper function to get the table GraphQL name. A table may have an
 -- identifier configured with it. When the identifier exists, the GraphQL nodes

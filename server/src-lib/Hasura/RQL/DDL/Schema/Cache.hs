@@ -227,7 +227,7 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
         >-> (| Inc.keyed (\_ (((tableRawInfo, tableRelationships), tableComputedFields), tableRemoteRelationships) -> do
                  let columns = _tciFieldInfoMap tableRawInfo
                  allFields <- addNonColumnFields -<
-                   (tableRawInfos, columns, M.map fst remoteSchemaMap, tableRelationships, tableComputedFields, tableRemoteRelationships)
+                   (tableRawInfos, columns, M.map fst remoteSchemaCache, tableRelationships, tableComputedFields, tableRemoteRelationships)
                  returnA -< (tableRawInfo { _tciFieldInfoMap = allFields })) |)
 
       -- permissions and event triggers

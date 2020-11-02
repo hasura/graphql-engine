@@ -26,7 +26,6 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Scientific
-import           Data.Set                           (Set)
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 import           Language.Haskell.TH.Syntax         (Lift)
@@ -251,7 +250,7 @@ data RemoteRelationship =
     -- ^ Field name to which we'll map the remote in hasura; this becomes part
     -- of the hasura schema.
     , rtrTable        :: !QualifiedTable
-    , rtrHasuraFields :: !(Set FieldName) -- TODO (from master)? change to PGCol
+    , rtrHasuraFields :: !(HashSet FieldName) -- TODO (from master)? change to PGCol
     -- ^ The hasura fields from 'rtrTable' that will be in scope when resolving
     -- the remote objects in 'rtrRemoteField'.
     , rtrRemoteSchema :: !RemoteSchemaName
@@ -265,7 +264,7 @@ $(deriveJSON (aesonDrop 3 snakeCase) ''RemoteRelationship)
 data RemoteRelationshipDef
   = RemoteRelationshipDef
   { _rrdRemoteSchema :: !RemoteSchemaName
-  , _rrdHasuraFields :: !(Set FieldName)
+  , _rrdHasuraFields :: !(HashSet FieldName)
   , _rrdRemoteField  :: !RemoteFields
   } deriving (Show, Eq, Generic, Lift)
 $(deriveJSON (aesonDrop 4 snakeCase) ''RemoteRelationshipDef)
