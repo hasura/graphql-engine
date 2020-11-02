@@ -17,10 +17,10 @@ import           Data.Text.Extended
 import qualified Hasura.Backends.Postgres.Execute.Mutation    as RQL
 import qualified Hasura.Backends.Postgres.Execute.RemoteJoin  as RQL
 import qualified Hasura.Backends.Postgres.SQL.DML             as S
+import qualified Hasura.Backends.Postgres.Translate.BoolExp   as RQL
 import qualified Hasura.Backends.Postgres.Translate.Insert    as RQL
 import qualified Hasura.Backends.Postgres.Translate.Mutation  as RQL
 import qualified Hasura.Backends.Postgres.Translate.Returning as RQL
-import qualified Hasura.RQL.GBoolExp                          as RQL
 import qualified Hasura.RQL.IR.Insert                         as RQL
 import qualified Hasura.RQL.IR.Returning                      as RQL
 import qualified Hasura.Tracing                               as Tracing

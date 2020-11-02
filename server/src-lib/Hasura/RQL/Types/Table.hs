@@ -98,7 +98,7 @@ import           Language.Haskell.TH.Syntax          (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Incremental                  (Cacheable)
-import           Hasura.RQL.Types.BoolExp
+import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
