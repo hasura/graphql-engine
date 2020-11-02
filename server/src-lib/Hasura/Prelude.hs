@@ -14,6 +14,7 @@ module Hasura.Prelude
   , txtToBs
   , base64Decode
   , spanMaybeM
+  , liftEitherM
   -- * Efficient coercions
   , coerce
   , coerceSet
@@ -28,6 +29,7 @@ module Hasura.Prelude
 import           Control.Applicative               as M (Alternative (..), liftA2)
 import           Control.Arrow                     as M (first, second, (&&&), (***), (<<<), (>>>))
 import           Control.DeepSeq                   as M (NFData, deepseq, force)
+import           Control.Lens                      as M ((%~))
 import           Control.Monad.Base                as M
 import           Control.Monad.Except              as M
 import           Control.Monad.Identity            as M
@@ -122,6 +124,10 @@ txtToBs = TE.encodeUtf8
 base64Decode :: Text -> BL.ByteString
 base64Decode =
   Base64.decodeLenient . BL.fromStrict . txtToBs
+
+-- Like `liftEither`, but accepts a monadic action
+liftEitherM :: MonadError e m => m (Either e a) -> m a
+liftEitherM action = action >>= liftEither
 
 -- Like 'span', but monadic and with a function that produces 'Maybe' instead of 'Bool'
 spanMaybeM

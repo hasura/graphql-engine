@@ -6,26 +6,26 @@ module Hasura.RQL.DDL.Schema.Function where
 
 import           Hasura.Prelude
 
-import qualified Control.Monad.Validate        as MV
-import qualified Data.HashMap.Strict           as M
-import qualified Data.Sequence                 as Seq
-import qualified Data.Text                     as T
-import qualified Database.PG.Query             as Q
+import qualified Control.Monad.Validate             as MV
+import qualified Data.HashMap.Strict                as M
+import qualified Data.Sequence                      as Seq
+import qualified Data.Text                          as T
+import qualified Database.PG.Query                  as Q
 
 import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax    (Lift)
-
-import qualified Language.GraphQL.Draft.Syntax as G
-
 import           Data.Text.Extended
+import           Language.Haskell.TH.Syntax         (Lift)
+
+import qualified Language.GraphQL.Draft.Syntax      as G
+
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
-import           Hasura.Incremental            (Cacheable)
+import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
-import           Hasura.Server.Utils           (englishList, makeReasonMessage)
+import           Hasura.Server.Utils                (englishList, makeReasonMessage)
 
 
 data RawFunctionInfo
@@ -70,7 +70,7 @@ validateFuncArgs args =
       <> " are not in compliance with GraphQL spec"
   where
     funcArgsText = mapMaybe (fmap getFuncArgNameTxt . faName) args
-    invalidArgs = filter (not . isJust . G.mkName) funcArgsText
+    invalidArgs = filter (isNothing . G.mkName) funcArgsText
 
 data FunctionIntegrityError
   = FunctionNameNotGQLCompliant
@@ -125,18 +125,18 @@ mkFunctionInfo qf systemDefined config rawFuncInfo =
 
     validateFunctionArgNames = do
       let argNames = mapMaybe faName functionArgs
-          invalidArgs = filter (not . isJust . G.mkName . getFuncArgNameTxt) argNames
-      when (not $ null invalidArgs) $
+          invalidArgs = filter (isNothing . G.mkName . getFuncArgNameTxt) argNames
+      unless (null invalidArgs) $
         throwValidateError $ FunctionInvalidArgumentNames invalidArgs
 
     makeInputArguments =
       case _fcSessionArgument config of
         Nothing -> pure $ Seq.fromList $ map IAUserProvided functionArgs
         Just sessionArgName -> do
-          when (not $ any (\arg -> (Just sessionArgName) == faName arg) functionArgs) $
+          unless (any (\arg -> Just sessionArgName == faName arg) functionArgs) $
             throwValidateError $ FunctionInvalidSessionArgument sessionArgName
           fmap Seq.fromList $ forM functionArgs $ \arg ->
-            if (Just sessionArgName) == faName arg then do
+            if Just sessionArgName == faName arg then do
               let argTy = _qptName $ faType arg
               if argTy == PGJSON then pure $ IASessionVariables sessionArgName
               else MV.refute $ pure $ FunctionSessionArgumentNotJSON sessionArgName

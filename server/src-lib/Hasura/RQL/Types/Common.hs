@@ -28,11 +28,6 @@ module Hasura.RQL.Types.Common
        , InpValInfo(..)
        , CustomColumnNames
 
-       , NonEmptyText
-       , mkNonEmptyTextUnsafe
-       , mkNonEmptyText
-       , unNonEmptyText
-       , nonEmptyText
        , adminText
        , rootText
 
@@ -57,83 +52,57 @@ module Hasura.RQL.Types.Common
 
 import           Hasura.Prelude
 
-import qualified Data.Environment              as Env
-import qualified Data.HashMap.Strict           as HM
-import qualified Data.Text                     as T
-import qualified Database.PG.Query             as Q
-import qualified Language.GraphQL.Draft.Syntax as G
-import qualified Language.Haskell.TH.Syntax    as TH
-import qualified PostgreSQL.Binary.Decoding    as PD
-import qualified Test.QuickCheck               as QC
+import qualified Data.Environment                   as Env
+import qualified Data.HashMap.Strict                as HM
+import qualified Data.Text                          as T
+import qualified Database.PG.Query                  as Q
+import qualified Language.GraphQL.Draft.Syntax      as G
+import qualified Language.Haskell.TH.Syntax         as TH
+import qualified PostgreSQL.Binary.Decoding         as PD
+import qualified Test.QuickCheck                    as QC
 
-import           Control.Lens                  (makeLenses)
+import           Control.Lens                       (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Bifunctor                (bimap)
-import           Data.Scientific               (toBoundedInteger)
+import           Data.Bifunctor                     (bimap)
+import           Data.Scientific                    (toBoundedInteger)
 import           Data.Text.Extended
+import           Data.Text.NonEmpty
 import           Data.URL.Template
-import           Instances.TH.Lift             ()
-import           Language.Haskell.TH.Syntax    (Lift, Q, TExp)
+import           Instances.TH.Lift                  ()
+import           Language.Haskell.TH.Syntax         (Lift)
 
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
-import           Hasura.Incremental            (Cacheable)
-import           Hasura.RQL.DDL.Headers        ()
+import           Hasura.Incremental                 (Cacheable)
+import           Hasura.RQL.DDL.Headers             ()
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
-import           Hasura.SQL.Types
 
 
 type family ScalarType (b :: Backend) where
   ScalarType 'Postgres = PGScalarType
 
-type family Column (b :: Backend)  where
+type family ColumnType (b :: Backend) where
+  ColumnType 'Postgres = PGType
+
+type family Column (b :: Backend) where
   Column 'Postgres = PGCol
 
-newtype NonEmptyText = NonEmptyText { unNonEmptyText :: T.Text }
-  deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, ToTxt, Generic, NFData, Cacheable)
-
-instance Arbitrary NonEmptyText where
-  arbitrary = NonEmptyText . T.pack <$> QC.listOf1 (QC.elements alphaNumerics)
-
-mkNonEmptyText :: T.Text -> Maybe NonEmptyText
-mkNonEmptyText ""   = Nothing
-mkNonEmptyText text = Just $ NonEmptyText text
-
-mkNonEmptyTextUnsafe :: T.Text -> NonEmptyText
-mkNonEmptyTextUnsafe = NonEmptyText
-
-parseNonEmptyText :: MonadFail m => Text -> m NonEmptyText
-parseNonEmptyText text = case mkNonEmptyText text of
-  Nothing     -> fail "empty string not allowed"
-  Just neText -> return neText
-
-nonEmptyText :: Text -> Q (TExp NonEmptyText)
-nonEmptyText = parseNonEmptyText >=> \text -> [|| text ||]
-
-instance FromJSON NonEmptyText where
-  parseJSON = withText "String" parseNonEmptyText
-
-instance FromJSONKey NonEmptyText where
-  fromJSONKey = FromJSONKeyTextParser parseNonEmptyText
-
-instance Q.FromCol NonEmptyText where
-  fromCol bs = mkNonEmptyText <$> Q.fromCol bs
-    >>= maybe (Left "empty string not allowed") Right
 
 adminText :: NonEmptyText
-adminText = NonEmptyText "admin"
+adminText = mkNonEmptyTextUnsafe "admin"
 
 rootText :: NonEmptyText
-rootText = NonEmptyText "root"
+rootText = mkNonEmptyTextUnsafe "root"
 
 newtype RelName
   = RelName { getRelTxt :: NonEmptyText }
   deriving (Show, Eq, Hashable, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Lift, Generic, Arbitrary, NFData, Cacheable)
 
-instance IsIden RelName where
-  toIden rn = Iden $ relNameToTxt rn
+instance IsIdentifier RelName where
+  toIdentifier rn = Identifier $ relNameToTxt rn
 
 instance ToTxt RelName where
   toTxt = relNameToTxt
@@ -141,10 +110,10 @@ instance ToTxt RelName where
 rootRelName :: RelName
 rootRelName = RelName rootText
 
-relNameToTxt :: RelName -> T.Text
+relNameToTxt :: RelName -> Text
 relNameToTxt = unNonEmptyText . getRelTxt
 
-relTypeToTxt :: RelType -> T.Text
+relTypeToTxt :: RelType -> Text
 relTypeToTxt ObjRel = "object"
 relTypeToTxt ArrRel = "array"
 
@@ -185,15 +154,15 @@ instance Hashable RelInfo
 $(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)
 
 newtype FieldName
-  = FieldName { getFieldNameTxt :: T.Text }
+  = FieldName { getFieldNameTxt :: Text }
   deriving ( Show, Eq, Ord, Hashable, FromJSON, ToJSON
            , FromJSONKey, ToJSONKey, Lift, Data, Generic
            , IsString, Arbitrary, NFData, Cacheable
            , Semigroup
            )
 
-instance IsIden FieldName where
-  toIden (FieldName f) = Iden f
+instance IsIdentifier FieldName where
+  toIdentifier (FieldName f) = Identifier f
 
 instance ToTxt FieldName where
   toTxt (FieldName c) = c
@@ -231,6 +200,7 @@ data MutateResp a
   , _mrReturningColumns :: ![ColumnValues a]
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''MutateResp)
+
 
 type ColMapping = HM.HashMap PGCol PGCol
 
@@ -311,7 +281,7 @@ unsafeNonNegativeInt = NonNegativeInt
 
 instance FromJSON NonNegativeInt where
   parseJSON = withScientific "NonNegativeInt" $ \t -> do
-    case (t >= 0) of
+    case t >= 0 of
       True  -> NonNegativeInt <$> maybeInt (toBoundedInteger t)
       False -> fail "negative value not allowed"
     where
@@ -332,7 +302,7 @@ mkNonNegativeDiffTime x = case x >= 0 of
 
 instance FromJSON NonNegativeDiffTime where
   parseJSON = withScientific "NonNegativeDiffTime" $ \t -> do
-    case (t >= 0) of
+    case t >= 0 of
       True  -> return $ NonNegativeDiffTime . realToFrac $ t
       False -> fail "negative value not allowed"
 
@@ -372,7 +342,7 @@ newtype Timeout = Timeout { unTimeout :: Int }
 instance FromJSON Timeout where
   parseJSON = withScientific "Timeout" $ \t -> do
     timeout <- onNothing (toBoundedInteger t) $ fail (show t <> " is out of bounds")
-    case (timeout >= 0) of
+    case timeout >= 0 of
       True  -> return $ Timeout timeout
       False -> fail "timeout value cannot be negative"
 

@@ -1,24 +1,27 @@
 module Hasura.RQL.DML.Internal where
+-- ( mkAdminRolePermInfo
+-- , SessVarBldr
+-- ) where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict as M
-import qualified Data.HashSet        as HS
-import qualified Data.Sequence       as DS
-import qualified Data.Text           as T
-import qualified Database.PG.Query   as Q
+import qualified Data.HashMap.Strict                        as M
+import qualified Data.HashSet                               as HS
+import qualified Data.Sequence                              as DS
+import qualified Data.Text                                  as T
+import qualified Database.PG.Query                          as Q
 
 import           Control.Lens
 import           Data.Aeson.Types
-
-import qualified Hasura.SQL.DML      as S
-
 import           Data.Text.Extended
-import           Hasura.RQL.GBoolExp
+
+import qualified Hasura.Backends.Postgres.SQL.DML           as S
+
+import           Hasura.Backends.Postgres.SQL.Error
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Value
+import           Hasura.Backends.Postgres.Translate.BoolExp
 import           Hasura.RQL.Types
-import           Hasura.SQL.Error
-import           Hasura.SQL.Types
-import           Hasura.SQL.Value
 import           Hasura.Session
 
 
@@ -244,7 +247,7 @@ convBoolExp
   :: (UserInfoM m, QErrM m, CacheRM m)
   => FieldInfoMap (FieldInfo 'Postgres)
   -> SelPermInfo 'Postgres
-  -> BoolExp
+  -> BoolExp 'Postgres
   -> SessVarBldr 'Postgres m
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> m (AnnBoolExpSQL 'Postgres)
@@ -285,7 +288,7 @@ toJSONableExp strfyNum colTy asText expn
   | otherwise = expn
 
 -- validate headers
-validateHeaders :: (UserInfoM m, QErrM m) => [T.Text] -> m ()
+validateHeaders :: (UserInfoM m, QErrM m) => [Text] -> m ()
 validateHeaders depHeaders = do
   headers <- getSessionVariables . _uiSession <$> askUserInfo
   forM_ depHeaders $ \hdr ->

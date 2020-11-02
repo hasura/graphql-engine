@@ -14,7 +14,6 @@ import qualified Language.Haskell.TH.Syntax                    as TH
 import qualified Network.URI                                   as N
 import qualified System.Cron.Parser                            as Cr
 
-
 import           Data.List.Extended                            (duplicates)
 import           Data.Scientific
 import           System.Cron.Types
@@ -30,11 +29,11 @@ import qualified Hasura.RQL.DDL.QueryCollection                as Collection
 import qualified Hasura.RQL.DDL.Relationship                   as Relationship
 import qualified Hasura.RQL.DDL.Schema                         as Schema
 
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Utils                          (simpleGraphQLQuery)
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 
 genReplaceMetadata :: Gen ReplaceMetadata
 genReplaceMetadata = do
@@ -113,28 +112,28 @@ instance Arbitrary J.Value where
 instance Arbitrary ColExp where
   arbitrary = genericArbitrary
 
-instance Arbitrary (GExists ColExp) where
+instance Arbitrary (GExists b ColExp) where
   arbitrary = genericArbitrary
 
-instance Arbitrary (GBoolExp ColExp) where
+instance Arbitrary (GBoolExp b ColExp) where
   arbitrary = genericArbitrary
 
-instance Arbitrary BoolExp where
+instance Arbitrary (BoolExp b) where
   arbitrary = genericArbitrary
 
 instance Arbitrary Permission.PermColSpec where
   arbitrary = genericArbitrary
 
-instance Arbitrary Permission.InsPerm where
+instance Arbitrary (Permission.InsPerm b) where
   arbitrary = genericArbitrary
 
-instance Arbitrary Permission.SelPerm where
+instance Arbitrary (Permission.SelPerm b) where
   arbitrary = genericArbitrary
 
-instance Arbitrary Permission.UpdPerm where
+instance Arbitrary (Permission.UpdPerm b) where
   arbitrary = genericArbitrary
 
-instance Arbitrary Permission.DelPerm where
+instance Arbitrary (Permission.DelPerm b) where
   arbitrary = genericArbitrary
 
 instance Arbitrary SubscribeColumns where

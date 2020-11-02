@@ -14,18 +14,19 @@ module Hasura.GraphQL.Schema.Table
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.HashSet                  as Set
-import qualified Language.GraphQL.Draft.Syntax as G
-
-import qualified Hasura.GraphQL.Parser         as P
+import qualified Data.HashMap.Strict                as Map
+import qualified Data.HashSet                       as Set
+import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Data.Text.Extended
-import           Hasura.GraphQL.Parser         (Kind (..), Parser)
+
+import qualified Hasura.GraphQL.Parser              as P
+
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.GraphQL.Parser              (Kind (..), Parser)
 import           Hasura.GraphQL.Parser.Class
-import           Hasura.RQL.DML.Internal       (getRolePermInfo)
+import           Hasura.RQL.DML.Internal            (getRolePermInfo)
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 
 -- | Table select columns enum
 --
@@ -41,9 +42,9 @@ tableSelectColumnsEnum
   -> SelPermInfo 'Postgres
   -> m (Maybe (Parser 'Both n PGCol))
 tableSelectColumnsEnum table selectPermissions = do
-  tableName <- qualifiedObjectToName table
-  columns   <- tableSelectColumns table selectPermissions
-  let enumName    = tableName <> $$(G.litName "_select_column")
+  tableGQLName <- getTableGQLName table
+  columns      <- tableSelectColumns table selectPermissions
+  let enumName    = tableGQLName <> $$(G.litName "_select_column")
       description = Just $ G.Description $
         "select columns of table " <>> table
   pure $ P.enum enumName description <$> nonEmpty
@@ -70,9 +71,9 @@ tableUpdateColumnsEnum
   -> UpdPermInfo 'Postgres
   -> m (Maybe (Parser 'Both n PGCol))
 tableUpdateColumnsEnum table updatePermissions = do
-  tableName <- qualifiedObjectToName table
-  columns   <- tableUpdateColumns table updatePermissions
-  let enumName    = tableName <> $$(G.litName "_update_column")
+  tableGQLName <- getTableGQLName table
+  columns      <- tableUpdateColumns table updatePermissions
+  let enumName    = tableGQLName <> $$(G.litName "_update_column")
       description = Just $ G.Description $
         "update columns of table " <>> table
   pure $ P.enum enumName description <$> nonEmpty

@@ -17,6 +17,7 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict.Extended          as M
 import qualified Database.PG.Query                     as Q
 
+import           Data.Text.Extended
 import           Language.GraphQL.Draft.Syntax         (Description (..), Name (..),
                                                         Nullability (..), Value (..), litName,
                                                         mkName)
@@ -24,15 +25,15 @@ import           Language.GraphQL.Draft.Syntax         (Description (..), Name (
 import qualified Hasura.RQL.Types.Column               as RQL
 import qualified Hasura.RQL.Types.CustomTypes          as RQL
 
-import           Data.Text.Extended
+import           Hasura.Backends.Postgres.SQL.DML
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Internal.Parser
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.Types.Column               hiding (EnumValue (..), EnumValueInfo (..))
 import           Hasura.RQL.Types.Error
-import           Hasura.SQL.DML
 import           Hasura.SQL.Types
-import           Hasura.SQL.Value
 import           Hasura.Session                        (SessionVariable)
 
 -- -------------------------------------------------------------------------------------------------
