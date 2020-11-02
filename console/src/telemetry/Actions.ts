@@ -149,6 +149,9 @@ const setPreReleaseNotificationOptOutInDB = () => (
   return dispatch(setConsoleOptsInDB(options, successCb, errorCb));
 };
 
+// TODO: We could fetch the latest `read` state from the DB everytime we
+// open the notifications dropdown. That way we can reach a more consistent behavior on notifications.
+// OR another option would be to provide a refresh button so that users can use it to refresh state
 const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
   return (
     dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>,
@@ -187,6 +190,7 @@ const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
 
           const dbReadState =
             current_console_state?.console_notifications?.[userType].read;
+          let combinedReadState: NotificationsState['read'] = [];
 
           if (
             !dbReadState ||
@@ -206,18 +210,19 @@ const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
               console_notifications: {
                 ...current_console_state?.console_notifications,
                 [userType]: {
-                  read: dbReadState,
+                  read: 'all',
                   date: updatedState.date,
                   showBadge: false,
                 },
               },
             };
           } else {
-            let combinedReadState: NotificationsState['read'] = [];
             if (typeof updatedState.read === 'string') {
+              // FIXME?: we shouldn't be setting the `error` or `default` case on the db.
               combinedReadState = updatedState.read;
             } else if (Array.isArray(updatedState.read)) {
-              // this is being done
+              // this is being done to ensure that there is a consistency between the read
+              // state of the users and the data present in the DB
               combinedReadState = dbReadState
                 .concat(updatedState.read)
                 .reduce((acc: string[], val) => {
@@ -243,9 +248,9 @@ const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
           if (
             currentNotifications &&
             Array.isArray(currentNotifications) &&
-            Array.isArray(updatedState.read)
+            Array.isArray(combinedReadState)
           ) {
-            if (isUpdateIDsEqual(currentNotifications, updatedState.read)) {
+            if (isUpdateIDsEqual(currentNotifications, combinedReadState)) {
               composedUpdatedState = {
                 ...current_console_state,
                 console_notifications: {
