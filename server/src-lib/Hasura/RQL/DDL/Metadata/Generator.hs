@@ -163,6 +163,9 @@ instance Arbitrary TableMeta where
 instance Arbitrary Schema.FunctionConfig where
   arbitrary = genericArbitrary
 
+instance Arbitrary Schema.IntendedFunctionPosition where
+  arbitrary = genericArbitrary
+
 instance Arbitrary Schema.TrackFunctionV2 where
   arbitrary = genericArbitrary
 

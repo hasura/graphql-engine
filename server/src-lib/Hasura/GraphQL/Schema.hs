@@ -424,6 +424,7 @@ queryWithIntrospection
      )
   => HashSet QualifiedTable
   -> ([FunctionInfo], [FunctionInfo])
+  -- ^ (volatile functions, non-volatile functions)
   -> [P.FieldParser n RemoteField]
   -> [P.FieldParser n RemoteField]
   -> [ActionInfo 'Postgres]
@@ -447,6 +448,7 @@ relayWithIntrospection
      )
   => HashSet QualifiedTable
   -> ([FunctionInfo], [FunctionInfo])
+  -- ^ (volatile functions, non-volatile functions)
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 relayWithIntrospection allTables (volatileFunctions, nonVolatileFunctions) = do
   nodeFP        <- fmap (RFDB . QDBPrimaryKey) <$> nodeField

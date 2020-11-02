@@ -12,7 +12,7 @@ import qualified Data.Sequence                      as Seq
 import qualified Data.Text                          as T
 import qualified Database.PG.Query                  as Q
 
-import           Control.Lens
+import           Control.Lens                       hiding ((.=))
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -78,12 +78,18 @@ data FunctionIntegrityError
   | FunctionReturnNotCompositeType
   | FunctionReturnNotSetof
   | FunctionReturnNotSetofTable
-  | FunctionVolatilityMismatch !Bool
-  -- ^ Bool indicates: user requested a mutation
+  | FunctionVolatilityMismatch !IntendedFunctionPosition
   | FunctionSessionArgumentNotJSON !FunctionArgName
   | FunctionInvalidSessionArgument !FunctionArgName
   | FunctionInvalidArgumentNames [FunctionArgName]
   deriving (Show, Eq)
+
+-- | IFPMutation means the user requested @as_mutation: true@ when tracking the function.
+data IntendedFunctionPosition = IFPQuery | IFPMutation 
+  deriving (Show, Eq, Lift, Generic)
+
+instance NFData IntendedFunctionPosition
+instance Cacheable IntendedFunctionPosition
 
 mkFunctionInfo
   :: (QErrM m)
@@ -97,7 +103,7 @@ mkFunctionInfo qf systemDefined FunctionConfig{..} rawFuncInfo =
     =<< MV.runValidateT validateFunction
   where
     functionArgs = mkFunctionArgs defArgsNo inpArgTyps inpArgNames
-    RawFunctionInfo hasVariadic funTy retSn retN retTyTyp retSet
+    RawFunctionInfo hasVariadic funVol retSn retN retTyTyp retSet
                 inpArgTyps inpArgNames defArgsNo returnsTab descM
                 = rawFuncInfo
     returnType = QualifiedPGType retSn retN retTyTyp
@@ -114,9 +120,9 @@ mkFunctionInfo qf systemDefined FunctionConfig{..} rawFuncInfo =
       -- Only VOLATILE functions can be exposed as mutations; after validating
       -- here we just use the volatility info in 'FunctionInfo' to decide
       -- whether it should go under the query or mutation root:
-      let askedMutation = _fcAsMutation == Just True
-      when (funTy == FTVOLATILE && not askedMutation || funTy /= FTVOLATILE && askedMutation) $
-        throwValidateError $ FunctionVolatilityMismatch askedMutation
+      when (funVol == FTVOLATILE && _fcIntendedPosition == IFPQuery 
+         || funVol /= FTVOLATILE && _fcIntendedPosition == IFPMutation) $
+        throwValidateError $ FunctionVolatilityMismatch _fcIntendedPosition
 
       -- validate function argument names
       validateFunctionArgNames
@@ -125,7 +131,7 @@ mkFunctionInfo qf systemDefined FunctionConfig{..} rawFuncInfo =
 
       let retTable = typeToTable returnType
 
-      pure ( FunctionInfo qf systemDefined funTy inputArguments retTable descM
+      pure ( FunctionInfo qf systemDefined funVol inputArguments retTable descM
            , SchemaDependency (SOTable retTable) DRTable
            )
 
@@ -158,9 +164,10 @@ mkFunctionInfo qf systemDefined FunctionConfig{..} rawFuncInfo =
       FunctionReturnNotCompositeType -> "the function does not return a \"COMPOSITE\" type"
       FunctionReturnNotSetof -> "the function does not return a SETOF"
       FunctionReturnNotSetofTable -> "the function does not return a SETOF table"
-      FunctionVolatilityMismatch requestedMutation 
-        | requestedMutation -> "only \"VOLATILE\" functions can be tracked as mutations"
-        | otherwise -> "the function is \"VOLATILE\" (the default) and can only be tracked as a mutation, with \"as_mutation: true\""
+      FunctionVolatilityMismatch IFPMutation -> 
+        "only \"VOLATILE\" functions can be tracked as mutations"
+      FunctionVolatilityMismatch IFPQuery  -> 
+        "the function is \"VOLATILE\" (the default) and can only be tracked as a mutation, with \"as_mutation: true\""
       FunctionSessionArgumentNotJSON argName ->
         "given session argument " <> argName <<> " is not of type json"
       FunctionInvalidSessionArgument argName ->
@@ -199,8 +206,9 @@ data FunctionConfig
   -- ^ The argument, if any, to the _tfv2Function to which we'll pass the
   -- user's session variables during execution. This must be a JSON type
   -- argument, and disappears from the resulting graphql schema.
-  , _fcAsMutation :: !(Maybe Bool)
-  -- ^ Do we intend this function to end up under the 'mutation' top-level field?
+  , _fcIntendedPosition :: !IntendedFunctionPosition
+  -- ^ Which top-level field the user intends for this function to end up, i.e.
+  -- should it be a query or mutation?
   --
   -- We require the 'as_mutation' parameter from users in order to verify their
   -- intent; since VOLATILE is the default when creating a function, it would
@@ -211,13 +219,29 @@ data FunctionConfig
   } deriving (Show, Eq, Generic, Lift)
 instance NFData FunctionConfig
 instance Cacheable FunctionConfig
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields = True} ''FunctionConfig)
--- ^ TODO consider rejectUnknownFields for this and all API JSON (this could
--- easily be hiding bugs in our test suite, for one thing)
+
+-- these instances written by hand to avoid a `Maybe Bool` having the semantics `False`
+-- see: https://github.com/hasura/graphql-engine/pull/5858#discussion_r514100511
+instance FromJSON FunctionConfig where
+  parseJSON = withObject "FunctionConfig" $ \o ->
+    FunctionConfig 
+      <$> o .:? "session_argument"
+      <*> fmap intendedFuncPos
+          (o .:? "as_mutation" .!= False)
+
+    where intendedFuncPos True  = IFPMutation
+          intendedFuncPos False = IFPQuery
+
+-- | equivalent to omitNothingFields=True:
+instance ToJSON FunctionConfig where
+  toJSON FunctionConfig{..} = object $
+    [ "session_argument" .= argName | Just argName <- [_fcSessionArgument] ] <>
+    [ "as_mutation"      .= True    | _fcIntendedPosition == IFPMutation ]
+    
 
 -- | The default function config; v1 of the API implies this.
 emptyFunctionConfig :: FunctionConfig
-emptyFunctionConfig = FunctionConfig Nothing Nothing
+emptyFunctionConfig = FunctionConfig Nothing IFPQuery
 
 -- | Track function, Phase 1:
 -- Validate function tracking operation. Fails if function is already being
@@ -278,7 +302,7 @@ data TrackFunctionV2
 $(deriveToJSON (aesonDrop 5 snakeCase) ''TrackFunctionV2)
 
 instance FromJSON TrackFunctionV2 where
-  parseJSON = withObject "Object" $ \o ->
+  parseJSON = withObject "TrackFunctionV2" $ \o ->
     TrackFunctionV2
     <$> o .: "function"
     <*> o .:? "configuration" .!= emptyFunctionConfig
