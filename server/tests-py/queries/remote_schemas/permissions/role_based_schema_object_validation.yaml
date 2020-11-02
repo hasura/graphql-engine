@@ -63,10 +63,8 @@
   response:
     path: $.args
     error:
-      "validation for the given role-based schema failed for the following reasons:\n\
-       \ • \"Interface\": \"FullName\" does not exist in the upstream remote schema\n\
-       \ • custom interfaces are not supported. Object\"Person\" implements the following\
-       \ custom interfaces: \"FullName\"\n"
+      'validation for the given role-based schema failed because "Interface": "FullName"
+      does not exist in the upstream remote schema'
     code: invalid-custom-remote-schema-document
 
 - description:
