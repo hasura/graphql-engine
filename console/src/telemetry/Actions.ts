@@ -189,7 +189,7 @@ const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
           }
 
           const dbReadState =
-            current_console_state?.console_notifications?.[userType].read;
+            current_console_state?.console_notifications?.[userType]?.read;
           let combinedReadState: NotificationsState['read'] = [];
 
           if (
