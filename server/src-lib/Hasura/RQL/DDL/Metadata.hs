@@ -202,7 +202,7 @@ fetchMetadataFromHdbTables = liftTx do
   -- Fetch all remote relationships
   remoteRelationships <- Q.catchE defaultTxErrorHandler fetchRemoteRelationships
 
-  let (_, postRelMap) = flip runState tableMetaMap $ do
+  let (_, fullTableMetaMap) = flip runState tableMetaMap $ do
         modMetaMap tmObjectRelationships _rdName objRelDefs
         modMetaMap tmArrayRelationships _rdName arrRelDefs
         modMetaMap tmInsertPermissions _pdRole insPermDefs
@@ -232,8 +232,7 @@ fetchMetadataFromHdbTables = liftTx do
 
   cronTriggers <- fetchCronTriggers
 
-  let tableMetadatas = oMapFromL _tmTable $ HMIns.elems postRelMap
-  pure $ Metadata tableMetadatas functions remoteSchemas collections
+  pure $ Metadata fullTableMetaMap functions remoteSchemas collections
                   allowlist customTypes actions cronTriggers
 
   where
