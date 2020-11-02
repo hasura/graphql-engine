@@ -1,6 +1,4 @@
 import React from 'react';
-import { TableDefinition } from '../../../Common/utils/v1QueryUtils';
-import { generateTableDef, Table } from '../../../Common/utils/pgUtils';
 import {
   URLConf,
   EventTriggerOperation,
@@ -16,15 +14,19 @@ import {
   findETTable,
 } from '../utils';
 import { parseServerHeaders } from '../../../Common/Headers/utils';
+import { Table } from '../../../../dataSources/types';
+import { generateTableDef } from '../../../../dataSources';
+import { QualifiedTable } from '../../../../metadata/types';
 
 export type LocalEventTriggerState = {
   name: string;
-  table: TableDefinition;
+  table: QualifiedTable;
   operations: Record<EventTriggerOperation, boolean>;
   operationColumns: ETOperationColumn[];
   webhook: URLConf;
   retryConf: RetryConf;
   headers: Header[];
+  source: string;
 };
 
 const defaultState: LocalEventTriggerState = {
@@ -48,14 +50,15 @@ const defaultState: LocalEventTriggerState = {
     num_retries: 0,
     interval_sec: 10,
     timeout_sec: 60,
-    tolerance_sec: null,
   },
   headers: [defaultHeader],
+  source: '',
 };
 
 export const parseServerETDefinition = (
   eventTrigger?: EventTrigger,
-  table?: Table
+  table?: Table,
+  source?: string
 ): LocalEventTriggerState => {
   if (!eventTrigger) {
     return defaultState;
@@ -71,6 +74,7 @@ export const parseServerETDefinition = (
 
   return {
     name: eventTrigger.name,
+    source: source ?? '',
     table: etTableDef,
     operations: parseEventTriggerOperations(etDef),
     operationColumns: table
@@ -94,6 +98,12 @@ export const useEventTrigger = (initState?: LocalEventTriggerState) => {
         setState(s => ({
           ...s,
           name,
+        }));
+      },
+      source: (chosenSource: string) => {
+        setState(s => ({
+          ...s,
+          source: chosenSource,
         }));
       },
       table: (tableName?: string, schemaName?: string) => {
@@ -157,17 +167,18 @@ export const useEventTrigger = (initState?: LocalEventTriggerState) => {
 
 export const useEventTriggerModify = (
   eventTrigger: EventTrigger,
-  allTables: Table[]
+  allTables: Table[],
+  source: string
 ) => {
   const table = findETTable(eventTrigger, allTables);
   const { state, setState } = useEventTrigger(
-    parseServerETDefinition(eventTrigger, table)
+    parseServerETDefinition(eventTrigger, table, source)
   );
 
   React.useEffect(() => {
     if (allTables.length) {
       const etTable = findETTable(eventTrigger, allTables);
-      setState.bulk(parseServerETDefinition(eventTrigger, etTable));
+      setState.bulk(parseServerETDefinition(eventTrigger, etTable, source));
     }
   }, [allTables]);
   return {

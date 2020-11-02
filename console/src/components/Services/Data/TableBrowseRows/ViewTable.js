@@ -2,19 +2,19 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import {
   vSetDefaults,
-  // vExpandHeading,
   fetchManualTriggers,
   UPDATE_TRIGGER_ROW,
   UPDATE_TRIGGER_FUNCTION,
   vMakeTableRequests,
 } from './ViewActions';
-import { checkIfTable } from '../../../Common/utils/pgUtils';
 import { setTable } from '../DataActions';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewRows from './ViewRows';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { exists } from '../../../Common/utils/jsUtils';
+import { dataSource } from '../../../../dataSources';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { getPersistedPageSize } from './tableUtils';
 
 class ViewTable extends Component {
@@ -111,6 +111,7 @@ class ViewTable extends Component {
       location,
       estimatedCount,
       isCountEstimated,
+      currentSource,
     } = this.props;
 
     // check if table exists
@@ -126,7 +127,7 @@ class ViewTable extends Component {
     const styles = require('../../../Common/Common.scss');
 
     // Is this a view
-    const isView = !checkIfTable(tableSchema);
+    const isView = !dataSource.isTable(tableSchema);
 
     // Are there any expanded columns
     const viewRows = (
@@ -157,6 +158,7 @@ class ViewTable extends Component {
         triggeredFunction={triggeredFunction}
         location={location}
         readOnlyMode={readOnlyMode}
+        currentSource={currentSource}
       />
     );
 
@@ -167,6 +169,7 @@ class ViewTable extends Component {
         isCountEstimated={isCountEstimated}
         dispatch={dispatch}
         table={tableSchema}
+        source={currentSource}
         tabName="browse"
         migrationMode={migrationMode}
         readOnlyMode={readOnlyMode}
@@ -185,11 +188,13 @@ class ViewTable extends Component {
     }
 
     return (
-      <div>
-        {header}
-        {comment}
-        <div>{viewRows}</div>
-      </div>
+      <RightContainer>
+        <div>
+          {header}
+          {comment}
+          <div>{viewRows}</div>
+        </div>
+      </RightContainer>
     );
   }
 }
@@ -218,6 +223,7 @@ const mapStateToProps = (state, ownProps) => {
   return {
     tableName: ownProps.params.table,
     currentSchema: state.tables.currentSchema,
+    currentSource: state.tables.currentDataSource,
     schemas: state.tables.allSchemas,
     tableComment: state.tables.tableComment,
     migrationMode: state.main.migrationMode,

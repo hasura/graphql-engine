@@ -1,8 +1,8 @@
 import React from 'react';
 import { OrderBy } from '../utils/v1QueryUtils';
 
-import { BaseTable } from '../utils/pgUtils';
 import styles from './FilterQuery.scss';
+import { BaseTable } from '../../../dataSources/types';
 
 type Props = {
   sorts: OrderBy[];

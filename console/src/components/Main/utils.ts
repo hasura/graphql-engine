@@ -1,8 +1,8 @@
 import jwt_decode from 'jwt-decode';
 import { ConsoleScope } from './ConsoleNotification';
 import { Nullable } from '../Common/utils/tsUtils';
-import { NotificationsState } from '../../types';
 import { setLSItem, getLSItem, LS_KEYS } from '../../utils/localStorage';
+import { NotificationsState } from '../../telemetry/state';
 
 const defaultProClickState = {
   isProClicked: false,

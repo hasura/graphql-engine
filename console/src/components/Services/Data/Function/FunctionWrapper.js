@@ -4,6 +4,8 @@ import PropTypes from 'prop-types';
 import { RESET } from './customFunctionReducer';
 
 import { setTable } from '../DataActions';
+import { getFunctionConfiguration } from '../../../../metadata/selector';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
 
 class FunctionWrapper extends React.Component {
   componentDidMount() {
@@ -16,7 +18,12 @@ class FunctionWrapper extends React.Component {
   }
   render() {
     const { children } = this.props;
-    return <div>{children && React.cloneElement(children, this.props)}</div>;
+    return (
+      <RightContainer>
+        {' '}
+        <div>{children && React.cloneElement(children, this.props)}</div>
+      </RightContainer>
+    );
   }
 }
 
@@ -29,7 +36,9 @@ const mapStateToProps = state => {
     functionList: state.tables.postgresFunctions,
     functions: {
       ...state.functions,
+      configuration: getFunctionConfiguration(state),
     },
+    currentSource: state.tables.currentDataSource,
     migrationMode: state.main.migrationMode,
   };
 };

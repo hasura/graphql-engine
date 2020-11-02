@@ -30,6 +30,10 @@ const Info = ({ currentTrigger, styles }: ETInfoProps) => (
               <td>Schema</td>
               <td>{currentTrigger.schema_name}</td>
             </tr>
+            <tr>
+              <td>Data source</td>
+              <td>{currentTrigger.source}</td>
+            </tr>
           </tbody>
         </table>
       </div>

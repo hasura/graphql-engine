@@ -35,7 +35,7 @@ const eventsHandler = (path: string) => {
 };
 
 const actionsHandler = (path: string) => {
-  return path.replace(/(\/manage\/)[^/]*\/(.*)+$/, '$1ACTION_NAME/$2');
+  return path.replace(/(\/manage\/)[^/]*\/(.*)+$/, '$ACTION_NAME/$2');
 };
 
 const sanitiseUrl = (rawPath: string) => {

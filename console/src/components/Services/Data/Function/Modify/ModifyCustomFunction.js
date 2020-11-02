@@ -18,9 +18,9 @@ import TextAreaWithCopy from '../../../../Common/TextAreaWithCopy/TextAreaWithCo
 
 import {
   fetchCustomFunction,
-  deleteFunctionSql,
   unTrackCustomFunction,
   updateSessVar,
+  deleteFunction,
 } from '../customFunctionReducer';
 
 import { NotFoundError } from '../../../../Error/PageNotFound';
@@ -56,7 +56,7 @@ class ModifyCustomFunction extends React.Component {
     }
     Promise.all([
       this.props
-        .dispatch(fetchCustomFunction(functionName, schema))
+        .dispatch(fetchCustomFunction(functionName, schema, '')) // todo: datasource
         .then(() => {
           this.setState({ funcFetchCompleted: true });
         }),
@@ -74,7 +74,8 @@ class ModifyCustomFunction extends React.Component {
           .dispatch(
             fetchCustomFunction(
               nextProps.params.functionName,
-              nextProps.params.schema
+              nextProps.params.schema,
+              ''
             )
           )
           .then(() => {
@@ -113,7 +114,7 @@ class ModifyCustomFunction extends React.Component {
     if (isOk) {
       try {
         this.updateDeleteConfirmationError(null);
-        this.props.dispatch(deleteFunctionSql());
+        this.props.dispatch(deleteFunction());
       } catch (err) {
         console.error('Delete custom function error: ', err);
       }
@@ -143,7 +144,11 @@ class ModifyCustomFunction extends React.Component {
 
     const { migrationMode, dispatch } = this.props;
 
-    const functionBaseUrl = getFunctionBaseRoute(schema, functionName);
+    const functionBaseUrl = getFunctionBaseRoute(
+      schema,
+      this.props.currentSource,
+      functionName
+    );
 
     const generateMigrateBtns = () => {
       return (

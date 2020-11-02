@@ -11,15 +11,12 @@ import { getTablePermissionsRoute } from '../../../Common/utils/routesUtils';
 import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
 import {
   findTable,
-  getTableSchema,
-  getTableName,
-  displayTableName,
   getTableNameWithSchema,
   getTableDef,
   getSchemaTables,
   getTrackedTables,
-  checkIfTable,
-} from '../../../Common/utils/pgUtils';
+  dataSource,
+} from '../../../../dataSources';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 import { updateSchemaInfo } from '../DataActions';
@@ -39,6 +36,7 @@ import {
 
 import Header from './Header';
 import RolesHeader from './RolesHeader';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
 
 class PermissionsSummary extends Component {
   initState = {
@@ -71,7 +69,7 @@ class PermissionsSummary extends Component {
 
   render() {
     const { currRole, currAction, currTable, copyState } = this.state;
-    const { dispatch } = this.props;
+    const { dispatch, currentSource } = this.props;
 
     // ------------------------------------------------------------------------------
 
@@ -83,6 +81,7 @@ class PermissionsSummary extends Component {
 
     const allActions = ['select', 'insert', 'update', 'delete'];
 
+    // todo ?
     let allRoles = getAllRoles(allSchemas);
 
     // add newly added roles
@@ -194,9 +193,10 @@ class PermissionsSummary extends Component {
         dispatch(
           push(
             getTablePermissionsRoute(
-              getTableSchema(table),
-              getTableName(table),
-              checkIfTable(table)
+              table.table_schema,
+              currentSource,
+              table.table_name,
+              dataSource.isTable(table)
             )
           )
         );
@@ -313,8 +313,8 @@ class PermissionsSummary extends Component {
         );
       } else {
         currSchemaTrackedTables.forEach((table, i) => {
-          const tableName = getTableName(table);
-          const tableSchema = getTableSchema(table);
+          const tableName = table.table_name;
+          const tableSchema = table.table_schema;
 
           const isCurrTable =
             currTable &&
@@ -330,7 +330,7 @@ class PermissionsSummary extends Component {
 
             return (
               <Header
-                content={displayTableName(table)}
+                content={dataSource.displayTableName(table)}
                 selectable={selectable}
                 isSelected={isCurrTable}
                 onClick={setTable}
@@ -751,7 +751,7 @@ class PermissionsSummary extends Component {
 
       const getFromTableOptions = () => {
         return currSchemaTrackedTables.map(table => {
-          const tableName = getTableName(table);
+          const tableName = table.table_name;
           const tableValue = getTableNameWithSchema(getTableDef(table));
 
           return (
@@ -985,20 +985,22 @@ class PermissionsSummary extends Component {
     };
 
     return (
-      <div
-        className={`${styles.clear_fix} ${styles.padd_left} ${styles.fit_content}`}
-      >
-        <Helmet title="Permissions Summary | Hasura" />
-        <div className={styles.add_mar_bottom}>
-          <h2 className={styles.heading_text}>
-            Permissions summary - {currentSchema}
-          </h2>
+      <RightContainer>
+        <div
+          className={`${styles.clear_fix} ${styles.padd_left} ${styles.fit_content}`}
+        >
+          <Helmet title="Permissions Summary | Hasura" />
+          <div className={styles.add_mar_bottom}>
+            <h2 className={styles.heading_text}>
+              Permissions summary - {currentSchema}
+            </h2>
+          </div>
+
+          {getTable()}
+
+          {getCopyModal()}
         </div>
-
-        {getTable()}
-
-        {getCopyModal()}
-      </div>
+      </RightContainer>
     );
   }
 }
@@ -1008,6 +1010,7 @@ const permissionsSummaryConnector = connect => {
     return {
       allSchemas: state.tables.allSchemas,
       currentSchema: state.tables.currentSchema,
+      currentSource: state.tables.currentDataSource,
     };
   };
   return connect(mapStateToProps)(PermissionsSummary);

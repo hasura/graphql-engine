@@ -1,4 +1,5 @@
 import React from 'react';
+import { dataSource } from '../../../../../dataSources';
 
 export const getUkeyPkeyConfig = columns => {
   const colLength = columns.length;
@@ -32,21 +33,13 @@ export const getForeignKeyConfig = (foreignKey, orderedColumns) => {
   return `${lCol} → ${refTableName} . ${rCol}`;
 };
 
-export const pgConfTypes = {
-  a: 'no action',
-  r: 'restrict',
-  c: 'cascade',
-  n: 'set null',
-  d: 'set default',
-};
-
 export const getExistingFKConstraints = (tableSchema, orderedColumns) => {
   return tableSchema.foreign_key_constraints.map(fkc => {
     const fk = {};
     fk.refTableName = fkc.ref_table;
     fk.refSchemaName = fkc.ref_table_table_schema;
-    fk.onUpdate = pgConfTypes[fkc.on_update];
-    fk.onDelete = pgConfTypes[fkc.on_delete];
+    fk.onUpdate = dataSource.getReferenceOption(fkc.on_update);
+    fk.onDelete = dataSource.getReferenceOption(fkc.on_delete);
     fk.constraintName = fkc.constraint_name;
     fk.colMappings = Object.keys(fkc.column_mapping).map(lc => ({
       column: orderedColumns.find(oc => oc.name === lc).index.toString(),

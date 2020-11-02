@@ -21,29 +21,15 @@ export const verifyLogin = ({
   errorCallback,
   dispatch,
 }: VerifyLoginOptions) => {
-  const url = Endpoints.getSchema;
-  const requestOptions: RequestInit = {
+  const options: RequestInit = {
+    method: 'GET',
     credentials: globalCookiePolicy,
-    method: 'POST',
     headers: {
       [ADMIN_SECRET_HEADER_KEY]: adminSecret,
       'content-type': 'application/json',
     },
-    body: JSON.stringify({
-      type: 'select',
-      args: {
-        table: {
-          name: 'hdb_table',
-          schema: 'hdb_catalog',
-        },
-        columns: ['table_schema'],
-        where: { table_schema: 'public' },
-        limit: 1,
-      },
-    }),
   };
-
-  dispatch(requestAction(url, requestOptions)).then(
+  return dispatch(requestAction(Endpoints.serverConfig, options)).then(
     () => {
       if (adminSecret) {
         if (globals.consoleMode !== CLI_CONSOLE_MODE) {

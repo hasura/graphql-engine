@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './ModifyCustomFunction.scss';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
 import Button from '../../../../Common/Button';
@@ -28,6 +28,10 @@ const SessionVarSection: React.FC<SessionVarSectionProps> = ({
   const [sessVar, setSessVar] = useState(configuration?.session_argument || '');
   const [isEditing, setIsEditing] = useState(false);
   const toggleIsEditting = () => setIsEditing(prev => !prev);
+
+  useEffect(() => {
+    setSessVar(prev => prev || configuration?.session_argument || '');
+  }, [configuration]);
 
   const onSessVarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSessVar(e.target.value);

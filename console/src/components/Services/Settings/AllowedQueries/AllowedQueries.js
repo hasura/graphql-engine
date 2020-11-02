@@ -5,18 +5,9 @@ import AddAllowedQuery from './AddAllowedQuery';
 import AllowedQueriesList from './AllowedQueriesList';
 
 import styles from './AllowedQueries.scss';
-
-import { loadAllowedQueries } from '../Actions';
+import { getAllowedQueries } from '../../../../metadata/selector';
 
 class AllowedQueries extends React.Component {
-  constructor(props) {
-    super(props);
-
-    const { dispatch } = this.props;
-
-    dispatch(loadAllowedQueries());
-  }
-
   render() {
     const { dispatch, allowedQueries } = this.props;
 
@@ -47,7 +38,7 @@ class AllowedQueries extends React.Component {
 
 const mapStateToProps = state => {
   return {
-    allowedQueries: state.metadata.allowedQueries,
+    allowedQueries: getAllowedQueries(state),
   };
 };
 

@@ -26,15 +26,15 @@ const PendingEvents: React.FC<Props> = props => {
 
   const onCancelCronTrigger = (
     id: string,
-    scheduledAt: string,
+    scheduledAt: string | Date | number,
     onSuccess: () => void
   ) => {
     const localeTime = convertDateTimeToLocale(scheduledAt);
     const shouldCancelEvent = getConfirmation(
-      `This will delete the "${triggerName}" cron event "${id}" scheduled for "${localeTime}"`
+      `This will delete the "${id}" of cron trigger "${triggerName}" scheduled for "${localeTime}"`
     );
     if (shouldCancelEvent) {
-      dispatch(cancelEvent('cron', 'hdb_cron_events', id, onSuccess));
+      dispatch(cancelEvent('cron', id, onSuccess));
     }
   };
 
@@ -61,6 +61,7 @@ const PendingEvents: React.FC<Props> = props => {
       ]}
       identifier={triggerName}
       onCancelEvent={onCancelCronTrigger}
+      triggerType="cron"
     />
   );
 
@@ -77,6 +78,9 @@ const PendingEvents: React.FC<Props> = props => {
         sorts: [makeOrderBy('scheduled_time', 'asc')],
       }}
       relationships={['cron_event_logs']}
+      triggerName={triggerName}
+      triggerType="cron"
+      triggerOp="pending"
     />
   );
 };

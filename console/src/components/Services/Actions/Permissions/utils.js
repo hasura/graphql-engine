@@ -1,8 +1,8 @@
+import { findActionPermission } from '../utils';
 import {
   getCreateActionPermissionQuery,
   getDropActionPermissionQuery,
-} from '../../../Common/utils/v1QueryUtils';
-import { findActionPermission } from '../utils';
+} from '../../../../metadata/queryUtils';
 import Migration from '../../../../utils/migration/Migration';
 
 export const getActionPermissionMigration = (

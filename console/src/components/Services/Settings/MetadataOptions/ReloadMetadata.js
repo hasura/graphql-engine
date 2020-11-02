@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Button from '../../../Common/Button/Button';
-import { reloadMetadata } from '../Actions';
 
 import {
   showSuccessNotification,
@@ -9,6 +8,7 @@ import {
 } from '../../Common/Notification';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import metaDataStyles from '../Settings.scss';
+import { reloadMetadata } from '../../../../metadata/actions';
 
 class ReloadMetadata extends Component {
   constructor(props) {

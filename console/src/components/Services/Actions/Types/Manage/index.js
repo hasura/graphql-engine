@@ -1,8 +1,9 @@
 import Manage from './Main';
+import { customTypesSelector } from '../../../../../metadata/selector';
 
 const mapStateToProps = state => {
   return {
-    allTypes: state.types.types,
+    allTypes: customTypesSelector(state),
     readOnlyMode: state.main.readOnlyMode,
     ...state.actions.types,
   };

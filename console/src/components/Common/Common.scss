@@ -907,6 +907,10 @@ code {
   text-align: center;
 }
 
+.w350 {
+  width: 350px;
+}
+
 .subheading_text {
   font-size: 15px;
   font-weight: bold;
@@ -914,6 +918,17 @@ code {
   margin-top: 0;
   margin-bottom: 0;
 
+  i {
+    margin-left: 5px;
+  }
+}
+
+.subheading_text_no_padd {
+  font-size: 15px;
+  font-weight: bold;
+  padding-bottom: 8px;
+  margin-top: 0;
+  margin-bottom: 0;
   i {
     margin-left: 5px;
   }
@@ -1384,6 +1399,37 @@ code {
   hyphens: auto;
   white-space: normal;
   display: block;
+}
+
+.permissionSummaryBtn {
+  margin: 0 auto;
+  margin-left: -23px;
+}
+
+.add_mar_40 {
+  margin-left: 40px;
+}
+
+.manage_dbs_page {
+  margin-right: 40px;
+}
+
+.manage_db_content {
+  margin-top: 20px;
+}
+
+.db_list_item {
+  display: flex;
+  margin-top: 20px;
+}
+
+.db_list_content {
+  margin-left: 10px;
+}
+
+.data_list_container {
+  display: flex;
+  flex-direction: column;
 }
 
 /* container height subtracting top header and bottom scroll bar */

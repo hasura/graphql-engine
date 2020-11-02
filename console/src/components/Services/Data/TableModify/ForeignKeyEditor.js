@@ -68,7 +68,7 @@ const ForeignKeyEditor = ({
       }
     });
 
-    const orderedSchemaList = schemaList.map(s => s.schema_name).sort();
+    const orderedSchemaList = schemaList.sort();
 
     const getFkConfigLabel = config => {
       let fkConfigLabel;

@@ -9,7 +9,7 @@ export const findType = (types, typeName) => {
 };
 
 export const getActionName = action => {
-  return action.action_name;
+  return action.name;
 };
 
 export const findAction = (actions, actionName) => {
@@ -17,7 +17,7 @@ export const findAction = (actions, actionName) => {
 };
 
 export const getActionOutputType = action => {
-  return action.action_defn.output_type;
+  return action.definition.output_type;
 };
 
 export const getActionOutputFields = (action, types) => {
@@ -29,15 +29,11 @@ export const getActionOutputFields = (action, types) => {
 };
 
 export const getActionArguments = action => {
-  return action.action_defn.arguments;
+  return action.definition.arguments || [];
 };
 
 export const getActionType = action => {
-  return action.action_defn.type;
-};
-
-export const getAllActions = getState => {
-  return getState().actions.common.actions;
+  return action.definition.type;
 };
 
 export const getActionPermissions = action => {
@@ -45,7 +41,7 @@ export const getActionPermissions = action => {
 };
 
 export const findActionPermission = (perms, role) => {
-  return perms.find(p => p.role_name === role);
+  return perms.find(p => p.role === role);
 };
 
 export const getActionComment = action => action.comment;

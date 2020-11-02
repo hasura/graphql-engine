@@ -140,7 +140,7 @@ const filterInconsistentMetadataObject = (
 };
 
 export const filterInconsistentMetadataObjects = (
-  metadataObjects: MetadataObject[],
+  metadataObjects: any[],
   inconsistentObjects: MetadataObject[],
   type: string
 ): MetadataObject[] => {

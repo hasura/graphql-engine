@@ -10,7 +10,6 @@ import {
   formRelName,
   getExistingFieldsMap,
 } from './Actions';
-import { findAllFromRel } from '../utils';
 import { showErrorNotification } from '../../Common/Notification';
 import { setTable } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
@@ -24,9 +23,11 @@ import RemoteRelationships from './RemoteRelationships/RemoteRelationships';
 import suggestedRelationshipsRaw from './autoRelations';
 import RelationshipEditor from './RelationshipEditor';
 import { NotFoundError } from '../../../Error/PageNotFound';
-import { fetchRemoteSchemas } from '../../RemoteSchema/Actions';
 import styles from '../TableModify/ModifyTable.scss';
 import tableStyles from '../../../Common/TableCommon/TableStyles.scss';
+import { findAllFromRel } from '../../../../dataSources';
+import { getRemoteSchemasSelector } from '../../../../metadata/selector';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
 
 const addRelationshipCellView = (
   dispatch,
@@ -310,11 +311,11 @@ const Relationships = ({
   migrationMode,
   schemaList,
   readOnlyMode,
+  currentSource,
 }) => {
   useEffect(() => {
     dispatch(resetRelationshipForm());
     dispatch(setTable(tableName));
-    dispatch(fetchRemoteSchemas());
   }, []);
 
   const tableSchema = allSchemas.find(
@@ -376,11 +377,7 @@ const Relationships = ({
                   dispatch={dispatch}
                   key={rel.objRel.rel_name}
                   readOnlyMode={readOnlyMode}
-                  relConfig={findAllFromRel(
-                    allSchemas,
-                    tableSchema,
-                    rel.objRel
-                  )}
+                  relConfig={findAllFromRel(tableSchema, rel.objRel)}
                 />
               ) : (
                 <td />
@@ -390,11 +387,7 @@ const Relationships = ({
                   key={rel.arrRel.rel_name}
                   dispatch={dispatch}
                   readOnlyMode={readOnlyMode}
-                  relConfig={findAllFromRel(
-                    allSchemas,
-                    tableSchema,
-                    rel.arrRel
-                  )}
+                  relConfig={findAllFromRel(tableSchema, rel.arrRel)}
                 />
               ) : (
                 <td />
@@ -459,38 +452,41 @@ const Relationships = ({
   const existingRemoteRelationships = tableSchema.remote_relationships;
 
   return (
-    <div className={`${styles.container} container-fluid`}>
-      <TableHeader
-        dispatch={dispatch}
-        table={tableSchema}
-        tabName="relationships"
-        migrationMode={migrationMode}
-      />
-      <br />
-      <div className={`${styles.padd_left_remove} container-fluid`}>
-        <div
-          className={`${styles.padd_left_remove} col-xs-10 col-md-10 ${styles.add_mar_bottom}`}
-        >
-          <h4 className={styles.subheading_text}>
-            Table Relationships
-            <ToolTip message={'Relationships to tables / views'} />
-            &nbsp;
-            <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/table-relationships/index.html" />
-          </h4>
-          {addedRelationshipsView}
-          {getAddRelSection()}
+    <RightContainer>
+      <div className={`${styles.container} container-fluid`}>
+        <TableHeader
+          dispatch={dispatch}
+          table={tableSchema}
+          source={currentSource}
+          tabName="relationships"
+          migrationMode={migrationMode}
+        />
+        <br />
+        <div className={`${styles.padd_left_remove} container-fluid`}>
+          <div
+            className={`${styles.padd_left_remove} col-xs-10 col-md-10 ${styles.add_mar_bottom}`}
+          >
+            <h4 className={styles.subheading_text}>
+              Table Relationships
+              <ToolTip message={'Relationships to tables / views'} />
+              &nbsp;
+              <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/table-relationships/index.html" />
+            </h4>
+            {addedRelationshipsView}
+            {getAddRelSection()}
+          </div>
+          <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
+            <RemoteRelationships
+              relationships={existingRemoteRelationships}
+              reduxDispatch={dispatch}
+              table={tableSchema}
+              remoteSchemas={remoteSchemas}
+            />
+          </div>
         </div>
-        <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
-          <RemoteRelationships
-            relationships={existingRemoteRelationships}
-            reduxDispatch={dispatch}
-            table={tableSchema}
-            remoteSchemas={remoteSchemas}
-          />
-        </div>
+        <div className={`${styles.fixed} hidden`}>{alert}</div>
       </div>
-      <div className={`${styles.fixed} hidden`}>{alert}</div>
-    </div>
+    </RightContainer>
   );
 };
 
@@ -520,8 +516,9 @@ const mapStateToProps = (state, ownProps) => ({
   readOnlyMode: state.main.readOnlyMode,
   serverVersion: state.main.serverVersion,
   schemaList: state.tables.schemaList,
-  remoteSchemas: state.remoteSchemas.listData.remoteSchemas.map(r => r.name),
+  remoteSchemas: getRemoteSchemasSelector(state).map(schema => schema.name),
   adminHeaders: state.tables.dataHeaders,
+  currentSource: state.tables.currentDataSource,
   ...state.tables.modify,
 });
 

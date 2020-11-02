@@ -12,6 +12,7 @@ import globals from '../../Globals';
 import styles from './App.scss';
 
 import { theme } from '../UIKit/theme';
+import { exportMetadata } from '../../metadata/actions';
 
 export const GlobalContext = React.createContext(globals);
 
@@ -40,7 +41,14 @@ const App = ({
       dispatch(telemetryNotificationShown());
       dispatch(showTelemetryNotification());
     }
-  }, [telemetry]);
+  }, [dispatch, telemetry]);
+
+  React.useEffect(() => {
+    console.log('fetch metadata');
+    // no sure yet, if this is the best place
+    // make it being triggered on each metadata update
+    dispatch(exportMetadata());
+  }, []);
 
   let connectionFailMsg = null;
   if (connectionFailed) {
@@ -56,6 +64,11 @@ const App = ({
       </div>
     );
   }
+
+  // if (!metadata.metadataObject AND logged in) {
+  //   // todo: should be loading state or error message in case of metadata fetch fail
+  //   return null;
+  // }
 
   return (
     <GlobalContext.Provider value={globals}>

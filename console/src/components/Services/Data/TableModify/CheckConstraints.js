@@ -1,13 +1,12 @@
 import React from 'react';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
-import { getCheckConstraintName } from '../../../Common/utils/pgUtils';
 import {
   setCheckConstraints,
   saveCheckConstraint,
   removeCheckConstraint,
 } from './ModifyActions';
-import { getCheckConstraintBoolExp } from '../../../Common/utils/sqlUtils';
 import { ConstraintExpandedContent } from '../Common/Components/ConstraintExpandedContent';
+import { getCheckConstraintBoolExp } from '../../../../dataSources';
 
 const CheckConstraints = ({
   constraints,
@@ -16,7 +15,7 @@ const CheckConstraints = ({
 }) => {
   const init = () => {
     const checkConstraintsState = constraints.map(c => ({
-      name: getCheckConstraintName(c),
+      name: c.constraint_name,
       check: getCheckConstraintBoolExp(c.check),
     }));
 
@@ -60,7 +59,7 @@ const CheckConstraints = ({
 
     const existingConstraintName = isLast
       ? 'new-constraint'
-      : getCheckConstraintName(constraints[i]);
+      : constraints[i].constraint_name;
 
     // constraint name as collapsed label
     const collapsedLabel = () => {

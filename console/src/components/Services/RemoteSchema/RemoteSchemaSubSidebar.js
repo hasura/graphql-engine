@@ -106,7 +106,7 @@ const RemoteSchemaSubSidebar = ({
     <LeftSubSidebar
       showAddBtn={!main.readOnlyMode}
       searchInput={getSearchInput()}
-      heading={`Remote Schemas (${dataList.length})`}
+      heading={`Remote Schemas (${dataList.length ?? 0})`}
       addLink={`${appPrefix}/manage/add`}
       addLabel={'Add'}
       addTestString={'remote-schema-sidebar-add-table'}

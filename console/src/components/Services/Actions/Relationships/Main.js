@@ -13,12 +13,13 @@ const Relationships = ({
   allTypes,
   schemaList,
   readOnlyMode,
+  dataSources,
 }) => {
   const { actionName } = params;
 
   const action = findAction(allActions, actionName);
 
-  const actionOutputTypeName = unwrapType(action.action_defn.output_type)
+  const actionOutputTypeName = unwrapType(action.definition.output_type)
     .typename;
 
   const actionOutputType = allTypes.find(t => t.name === actionOutputTypeName);
@@ -40,6 +41,7 @@ const Relationships = ({
             dispatch={dispatch}
             currentAction={action}
             readOnlyMode={readOnlyMode}
+            dataSources={dataSources}
           />
           <hr />
         </div>

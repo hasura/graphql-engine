@@ -292,7 +292,7 @@ export const passMTDeleteTable = () => {
   cy.get(getElementFromAlias('delete-table')).click();
   cy.window().its('prompt').should('be.called');
   cy.wait(5000);
-  cy.url().should('eq', `${baseUrl}/data/schema/public`);
+  cy.url().should('eq', `${baseUrl}/data/schema`);
   validateCT(getTableName(0, testName), ResultType.FAILURE);
 };
 

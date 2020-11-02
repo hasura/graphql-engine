@@ -1,11 +1,11 @@
 import { Header as HeaderClient, defaultHeader } from './Headers';
-import { Header as HeaderServer } from '../utils/v1QueryUtils';
+import { ServerHeader } from '../../../metadata/types';
 
 export const transformHeaders = (headers_?: HeaderClient[]) => {
   const headers = headers_ || [];
   return headers
     .map(h => {
-      const transformedHeader: HeaderServer = {
+      const transformedHeader: ServerHeader = {
         name: h.name,
       };
       if (h.type === 'static') {
@@ -30,7 +30,7 @@ export const addPlaceholderHeader = (newHeaders: HeaderClient[]) => {
   return newHeaders;
 };
 
-export const parseServerHeaders = (headers: HeaderServer[] = []) => {
+export const parseServerHeaders = (headers: ServerHeader[] = []) => {
   return addPlaceholderHeader(
     headers.map(h => {
       const parsedHeader: HeaderClient = {

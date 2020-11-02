@@ -6,11 +6,11 @@ import {
   showSuccessNotification,
   showErrorNotification,
 } from '../../Common/Notification';
-import { exportMetadata } from '../Actions';
 import {
   downloadObjectAsJsonFile,
   getCurrTimeForFileName,
 } from '../../../Common/utils/jsUtils';
+import { exportMetadata } from '../../../../metadata/actions';
 
 class ExportMetadata extends Component {
   constructor() {

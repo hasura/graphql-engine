@@ -2,15 +2,13 @@ import gqlPattern, { gqlSchemaErrorNotif } from '../Common/GraphQLValidation';
 import { showErrorNotification } from '../../Common/Notification';
 import { makeMigrationCall, fetchSchemaList } from '../DataActions';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { dataSource } from '../../../../dataSources';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import Migration from '../../../../utils/migration/Migration';
 
-const getDropSchemaSql = schemaName => `drop schema "${schemaName}" cascade;`;
-
-const getCreateSchemaSql = schemaName => `create schema "${schemaName}";`;
-
 export const createNewSchema = (schemaName, successCb, errorCb) => {
   return (dispatch, getState) => {
+    const source = getState().tables.currentDataSource;
     if (!gqlPattern.test(schemaName)) {
       return dispatch(
         showErrorNotification(
@@ -22,8 +20,8 @@ export const createNewSchema = (schemaName, successCb, errorCb) => {
     }
     const migration = new Migration();
     migration.add(
-      getRunSqlQuery(getCreateSchemaSql(schemaName)),
-      getRunSqlQuery(getDropSchemaSql(schemaName))
+      getRunSqlQuery(dataSource.getCreateSchemaSql(schemaName), source),
+      getRunSqlQuery(dataSource.getDropSchemaSql(schemaName), source)
     );
 
     const migrationName = `create_schema_${schemaName}`;
@@ -61,21 +59,20 @@ export const createNewSchema = (schemaName, successCb, errorCb) => {
 
 export const deleteCurrentSchema = (successCb, errorCb) => {
   return (dispatch, getState) => {
-    const { currentSchema } = getState().tables;
+    const { currentSchema, currentDataSource } = getState().tables;
 
-    if (currentSchema === 'public') {
-      return dispatch(
-        showErrorNotification('Dropping "public" schema is not supported')
-      );
-    }
-
-    const confirmMessage = `This will permanently delete the Postgres schema "${currentSchema}" from the database`;
+    const confirmMessage = `This will permanently delete schema "${currentSchema}" from the database`;
     const isOk = getConfirmation(confirmMessage, true, currentSchema);
     if (!isOk) {
       return;
     }
     const migration = new Migration();
-    migration.add(getRunSqlQuery(getDropSchemaSql(currentSchema)));
+    migration.add(
+      getRunSqlQuery(
+        dataSource.getDropSchemaSql(currentSchema),
+        currentDataSource
+      )
+    );
     const migrationName = `drop_schema_${currentSchema}`;
     const requestMsg = 'Dropping schema';
     const successMsg = 'Successfully dropped schema';

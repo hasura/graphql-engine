@@ -9,10 +9,12 @@ const Relationships = ({
   dispatch,
   currentAction,
   readOnlyMode,
+  dataSources,
 }) => {
   const existingRelationships = (objectType.relationships || []).map(r => {
     return (
       <TypeRelationship
+        key={r.name}
         dispatch={dispatch}
         relConfig={r}
         objectType={objectType}
@@ -20,6 +22,7 @@ const Relationships = ({
         allTables={allTables}
         schemaList={schemaList}
         readOnlyMode={readOnlyMode}
+        dataSources={dataSources}
       />
     );
   });
@@ -27,7 +30,7 @@ const Relationships = ({
   return (
     <div>
       <Helmet
-        title={`Relationships - ${currentAction.action_name} - Actions | Hasura`}
+        title={`Relationships - ${currentAction.name} - Actions | Hasura`}
       />
       {existingRelationships}
       <TypeRelationship
@@ -38,6 +41,7 @@ const Relationships = ({
         schemaList={schemaList}
         isNew
         readOnlyMode={readOnlyMode}
+        dataSources={dataSources}
       />
     </div>
   );

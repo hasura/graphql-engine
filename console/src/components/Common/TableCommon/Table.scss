@@ -22,13 +22,14 @@
     display: inline-block;
     width: 100%;
 
-    a {
+    a,
+    label {
       display: inline-block !important;
       font-weight: bold;
     }
 
     .changeSchema {
-      width: 50%;
+      width: 70%;
       margin-left: 10px;
       display: inline-block;
       font-weight: bold;

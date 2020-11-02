@@ -1,10 +1,14 @@
 import Modify from './Main';
+import {
+  actionsSelector,
+  customTypesSelector,
+} from '../../../../metadata/selector';
 
 const mapStateToProps = state => {
   return {
     ...state.actions.modify,
-    allActions: state.actions.common.actions,
-    allTypes: state.types.types,
+    allActions: actionsSelector(state),
+    allTypes: customTypesSelector(state),
     readOnlyMode: state.main.readOnlyMode,
   };
 };

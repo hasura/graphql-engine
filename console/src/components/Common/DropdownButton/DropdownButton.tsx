@@ -16,11 +16,12 @@ type DropDownButtonProps = {
   value?: string;
   inputVal: string;
   required: boolean;
-  id: string;
-  testId: string;
+  id?: string;
+  testId?: string;
   disabled?: boolean;
-  bsClass: string;
+  bsClass?: string;
   inputPlaceHolder: string;
+  inputStyle?: Record<string, string>;
 };
 
 const DDButton: React.FC<DropDownButtonProps> = props => {
@@ -46,7 +47,7 @@ const DDButton: React.FC<DropDownButtonProps> = props => {
         title={value || title}
         componentClass={InputGroup.Button}
         disabled={disabled}
-        id={id}
+        id={id || ''}
         data-test={`${testId}-dropdown-button`}
       >
         {dropdownOptions.map((d, i) => (
@@ -63,6 +64,7 @@ const DDButton: React.FC<DropDownButtonProps> = props => {
         ))}
       </DropdownButton>
       <input
+        style={props.inputStyle}
         type="text"
         data-key={dataKey}
         data-index-id={dataIndex}

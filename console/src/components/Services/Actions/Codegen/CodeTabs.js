@@ -24,7 +24,7 @@ const CodeTabs = ({
     setError(null);
     getFrameworkCodegen(
       framework,
-      currentAction.action_name,
+      currentAction.name,
       actionsSdl,
       shouldDerive ? parentMutation : null,
       dispatch

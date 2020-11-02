@@ -44,10 +44,8 @@ import {
 import {
   findTable,
   getRelationshipRefTable,
-  getTableName,
-  getTableSchema,
-  arrayToPostgresArray,
-} from '../../../Common/utils/pgUtils';
+  dataSource,
+} from '../../../../dataSources';
 import { updateSchemaInfo } from '../DataActions';
 import {
   persistColumnCollapseChange,
@@ -86,6 +84,7 @@ const ViewRows = ({
   location,
   readOnlyMode,
   shouldHidePagination,
+  currentSource,
 }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   useEffect(() => {
@@ -239,7 +238,7 @@ const ViewRows = ({
 
     Object.keys(pkClause).forEach(key => {
       if (Array.isArray(pkClause[key])) {
-        pkClause[key] = arrayToPostgresArray(pkClause[key]);
+        pkClause[key] = dataSource.arrayToPostgresArray(pkClause[key]);
       }
     });
 
@@ -329,7 +328,14 @@ const ViewRows = ({
           const handleEditClick = () => {
             dispatch({ type: E_SET_EDITITEM, oldItem: row, pkClause });
             dispatch(
-              _push(getTableEditRowRoute(currentSchema, curTableName, true))
+              _push(
+                getTableEditRowRoute(
+                  currentSchema,
+                  currentSource,
+                  curTableName,
+                  true
+                )
+              )
             );
           };
 
@@ -371,7 +377,14 @@ const ViewRows = ({
           const handleCloneClick = () => {
             dispatch({ type: I_SET_CLONE, clone: row });
             dispatch(
-              _push(getTableInsertRowRoute(currentSchema, curTableName, true))
+              _push(
+                getTableInsertRowRoute(
+                  currentSchema,
+                  currentSource,
+                  curTableName,
+                  true
+                )
+              )
             );
           };
 
@@ -769,8 +782,8 @@ const ViewRows = ({
           return (
             <ViewRows
               key={i}
-              curTableName={getTableName(childTable)}
-              currentSchema={getTableSchema(childTable)}
+              curTableName={childTable.table_name}
+              currentSchema={childTable.table_schema}
               curQuery={cq}
               curFilter={curFilter}
               curPath={[...curPath, rel.rel_name]}
@@ -785,6 +798,7 @@ const ViewRows = ({
               dispatch={dispatch}
               expandedRow={expandedRow}
               readOnlyMode={readOnlyMode}
+              currentSource={currentSource}
             />
           );
         }

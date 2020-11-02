@@ -11,85 +11,14 @@ import { showSuccessNotification } from '../Common/Notification';
 
 /* Action constants */
 
-const FETCH_REMOTE_SCHEMAS = '@remoteSchema/FETCH_REMOTE_SCHEMAS';
-const REMOTE_SCHEMAS_FETCH_SUCCESS =
-  '@remoteSchema/REMOTE_SCHEMAS_FETCH_SUCCESS';
 const FILTER_REMOTE_SCHEMAS = '@remoteSchema/FILTER_REMOTE_SCHEMAS';
-const REMOTE_SCHEMAS_FETCH_FAIL = '@remoteSchema/REMOTE_SCHEMAS_FETCH_FAIL';
 const RESET = '@remoteSchema/RESET';
-const SET_CONSISTENT_REMOTE_SCHEMAS =
-  '@remoteSchema/SET_CONSISTENT_REMOTE_SCHEMAS';
 
 const VIEW_REMOTE_SCHEMA = '@remoteSchema/VIEW_REMOTE_SCHEMA';
-
-/* */
-
-const fetchRemoteSchemas = () => {
-  return (dispatch, getState) => {
-    const url = Endpoints.getSchema;
-    const options = {
-      credentials: globalCookiePolicy,
-      method: 'POST',
-      headers: dataHeaders(getState),
-      body: JSON.stringify({
-        type: 'select',
-        args: {
-          table: {
-            name: 'remote_schemas',
-            schema: 'hdb_catalog',
-          },
-          columns: ['*'],
-          order_by: [{ column: 'name', type: 'asc', nulls: 'last' }],
-        },
-      }),
-    };
-    dispatch({ type: FETCH_REMOTE_SCHEMAS });
-    return dispatch(requestAction(url, options)).then(
-      data => {
-        dispatch({
-          type: REMOTE_SCHEMAS_FETCH_SUCCESS,
-          data,
-        });
-        return Promise.resolve();
-      },
-      error => {
-        console.error('Failed to load remote schemas' + JSON.stringify(error));
-        dispatch({ type: REMOTE_SCHEMAS_FETCH_FAIL, data: error });
-        return Promise.reject();
-      }
-    );
-  };
-};
-
-const setConsistentRemoteSchemas = data => ({
-  type: SET_CONSISTENT_REMOTE_SCHEMAS,
-  data,
-});
+const SET_REMOTE_SCHEMAS = '@remoteSchema/SET_REMOTE_SCHEMAS';
 
 const listReducer = (state = listState, action) => {
   switch (action.type) {
-    case FETCH_REMOTE_SCHEMAS:
-      return {
-        ...state,
-        isRequesting: true,
-        isError: false,
-      };
-
-    case REMOTE_SCHEMAS_FETCH_SUCCESS:
-      return {
-        ...state,
-        remoteSchemas: action.data,
-        isRequesting: false,
-        isError: false,
-      };
-
-    case REMOTE_SCHEMAS_FETCH_FAIL:
-      return {
-        ...state,
-        remoteSchemas: [],
-        isRequesting: false,
-        isError: action.data,
-      };
     case FILTER_REMOTE_SCHEMAS:
       return {
         ...state,
@@ -104,7 +33,7 @@ const listReducer = (state = listState, action) => {
         ...state,
         viewRemoteSchema: action.data,
       };
-    case SET_CONSISTENT_REMOTE_SCHEMAS:
+    case SET_REMOTE_SCHEMAS:
       return {
         ...state,
         remoteSchemas: action.data,
@@ -128,13 +57,16 @@ const makeRequest = (
   errorMsg
 ) => {
   return (dispatch, getState) => {
+    const source = getState().tables.currentDataSource;
     const upQuery = {
       type: 'bulk',
+      source,
       args: upQueries,
     };
 
     const downQuery = {
       type: 'bulk',
+      source,
       args: downQueries,
     };
 
@@ -146,11 +78,12 @@ const makeRequest = (
 
     const currMigrationMode = getState().main.migrationMode;
 
-    const migrateUrl = returnMigrateUrl(currMigrationMode);
+    let migrateUrl = returnMigrateUrl(currMigrationMode);
 
     let finalReqBody;
     if (globals.consoleMode === SERVER_CONSOLE_MODE) {
       finalReqBody = upQuery;
+      migrateUrl = Endpoints.metadata;
     } else if (globals.consoleMode === CLI_CONSOLE_MODE) {
       finalReqBody = migrationBody;
     }
@@ -164,7 +97,7 @@ const makeRequest = (
 
     const onSuccess = data => {
       if (globals.consoleMode === CLI_CONSOLE_MODE) {
-        dispatch(loadMigrationStatus()); // don't call for server mode
+        dispatch(loadMigrationStatus());
       }
       if (successMsg) {
         dispatch(showSuccessNotification(successMsg));
@@ -181,13 +114,11 @@ const makeRequest = (
     return dispatch(requestAction(url, options)).then(onSuccess, onError);
   };
 };
-/* */
 
 export {
-  fetchRemoteSchemas,
-  FILTER_REMOTE_SCHEMAS,
   VIEW_REMOTE_SCHEMA,
   makeRequest,
-  setConsistentRemoteSchemas,
+  FILTER_REMOTE_SCHEMAS,
+  SET_REMOTE_SCHEMAS,
 };
 export default listReducer;

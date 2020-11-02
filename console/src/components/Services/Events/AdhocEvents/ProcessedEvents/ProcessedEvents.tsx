@@ -31,6 +31,7 @@ const ProcessedEvents: React.FC<Props> = props => {
       runQuery={runQuery}
       columns={['id', 'status', 'scheduled_time', 'created_at', 'tries']}
       identifier="adhoc-events-processed"
+      triggerType="one_off"
     />
   );
 
@@ -44,6 +45,8 @@ const ProcessedEvents: React.FC<Props> = props => {
         sorts: [makeOrderBy('scheduled_time', 'desc')],
       }}
       relationships={['scheduled_event_logs']}
+      triggerType="scheduled"
+      triggerOp="processed"
     />
   );
 };

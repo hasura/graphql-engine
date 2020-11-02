@@ -1,14 +1,15 @@
 import React from 'react';
-import {
-  loadInconsistentObjects,
-  redirectToMetadataStatus,
-  isMetadataStatusPage,
-} from '../Services/Settings/Actions';
 import Spinner from '../Common/Spinner/Spinner';
 
 import PageNotFound, { NotFoundError } from './PageNotFound';
 import RuntimeError from './RuntimeError';
 import { registerRunTimeError } from '../Main/Actions';
+import { redirectToMetadataStatus } from '../Common/utils/routesUtils';
+import { loadInconsistentObjects } from '../../metadata/actions';
+
+const isMetadataStatusPage = () => {
+  return window.location.pathname.includes('/settings/metadata-status');
+};
 
 export interface Metadata {
   inconsistentObjects: Record<string, unknown>[];
