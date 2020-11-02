@@ -408,6 +408,7 @@ FROM (
       when pgc.relkind = 'f' then 'FOREIGN TABLE'
       when pgc.relkind = 'v' then 'VIEW'
       when pgc.relkind = 'm' then 'MATERIALIZED VIEW'
+      when pgc.relkind = 'p' then 'PARTITIONED TABLE'
     end as table_type,
     obj_description(pgc.oid) AS comment,
     COALESCE(json_agg(DISTINCT row_to_json(isc) :: jsonb || jsonb_build_object('comment', col_description(pga.attrelid, pga.attnum))) filter (WHERE isc.column_name IS NOT NULL), '[]' :: json) AS columns,
@@ -454,7 +455,7 @@ FROM (
       coalesce(bt.typname, t.typname) AS udt_name,
       a.attnum AS dtd_identifier,
       CASE WHEN c.relkind = 'r' OR
-                     (c.relkind IN ('v', 'f') AND
+                     (c.relkind IN ('v', 'f', 'p') AND
                       pg_column_is_updatable(c.oid, a.attnum, false))
            THEN 'YES' ELSE 'NO' END AS is_updatable
     FROM (pg_attribute a LEFT JOIN pg_attrdef ad ON attrelid = adrelid AND attnum = adnum)
@@ -465,7 +466,7 @@ FROM (
       LEFT JOIN (pg_collation co JOIN pg_namespace nco ON (co.collnamespace = nco.oid))
         ON a.attcollation = co.oid AND (nco.nspname, co.collname) <> ('pg_catalog', 'default')
     WHERE (NOT pg_is_other_temp_schema(nc.oid))
-      AND a.attnum > 0 AND NOT a.attisdropped AND c.relkind in ('r', 'v', 'm', 'f')
+      AND a.attnum > 0 AND NOT a.attisdropped AND c.relkind in ('r', 'v', 'm', 'f', 'p')
       AND (pg_has_role(c.relowner, 'USAGE')
            OR has_column_privilege(c.oid, a.attnum,
                                    'SELECT, INSERT, UPDATE, REFERENCES'))
@@ -514,7 +515,7 @@ FROM (
     AND isv.table_name   = pgc.relname
 
   WHERE
-    pgc.relkind IN ('r', 'v', 'f', 'm')
+    pgc.relkind IN ('r', 'v', 'f', 'm', 'p')
     ${whereQuery}
   GROUP BY pgc.oid, pgn.nspname, pgc.relname, table_type, isv.*
 ) AS info;
@@ -775,6 +776,8 @@ const postgresFunctionTester = /.*\(\)$/gm;
 export const isPostgresFunction = str =>
   new RegExp(postgresFunctionTester).test(str);
 
+export const isTypeCast = (str = '') => str.split('::').length > 1;
+
 export const getEstimateCountQuery = (schemaName, tableName) => {
   return `
 SELECT
@@ -790,13 +793,28 @@ WHERE
 export const isColTypeString = colType =>
   ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
 
-export const cascadeUpQueries = (upQueries = []) =>
+const isCascadable = sql => {
+  const regex = new RegExp(/(\s|^)drop\s/i); // all queries with drop (with space on both sides Ie:this would ignore names matches with "" or prefix/suffix)
+  return regex.test(sql);
+};
+const cascadePGSqlQuery = sql => {
+  if (!isCascadable(sql)) return sql;
+  if (sql[sql.length - 1] === ';')
+    return sql.substr(0, sql.length - 1) + ' CASCADE;';
+  // SQL might have  a " at the end
+  else if (sql[sql.length - 2] === ';')
+    return sql.substr(0, sql.length - 2) + ' CASCADE;';
+  return sql + ' CASCADE;';
+};
+
+export const cascadeUpQueries = (upQueries = [], isPgCascade = false) =>
   upQueries.map((i = {}) => {
     if (i.type === 'run_sql' || i.type === 'untrack_table') {
       return {
         ...i,
         args: {
           ...i.args,
+          ...(isPgCascade && { sql: cascadePGSqlQuery(i.args.sql) }),
           cascade: true,
         },
       };
@@ -807,14 +825,27 @@ export const cascadeUpQueries = (upQueries = []) =>
 export const getDependencyError = (err = {}) => {
   if (err.code == ERROR_CODES.dependencyError.code) {
     // direct dependency error
-    return err;
-  } else if (err.code == ERROR_CODES.dataApiError.code) {
-    // message is coming as error, further parssing willbe based on message key
-    const actualError = isJsonString(err.message)
-      ? JSON.parse(err.message)
-      : {};
-    if (actualError.code == ERROR_CODES.dependencyError.code) {
-      return { ...actualError, message: actualError.error };
-    }
+    return { dependencyError: err };
   }
+  if (err.code == ERROR_CODES.dataApiError.code) {
+    // with CLI mode, error is getting as a string with the key `message`
+    err = isJsonString(err.message) ? JSON.parse(err.message) : {};
+  }
+
+  if (err.code == ERROR_CODES.dependencyError.code)
+    return {
+      dependencyError: { ...err, message: err.error },
+    };
+  if (
+    err.code === ERROR_CODES.postgresError.code &&
+    err?.internal?.error?.status_code === '2BP01' // pg dependent error > https://www.postgresql.org/docs/current/errcodes-appendix.html
+  )
+    return {
+      pgDependencyError: {
+        ...err,
+        message: `${err?.internal?.error?.message}:\n
+         ${err?.internal?.error?.description || ''}`,
+      },
+    };
+  return {};
 };

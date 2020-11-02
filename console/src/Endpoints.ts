@@ -10,7 +10,7 @@ const Endpoints = {
   getSchema: `${baseUrl}/v1/query`,
   serverConfig: `${baseUrl}/v1alpha1/config`,
   graphQLUrl: `${baseUrl}/v1/graphql`,
-  relayURL: `${baseUrl}/v1/relay`,
+  relayURL: `${baseUrl}/v1beta1/relay`,
   schemaChange: `${baseUrl}/v1/query`,
   query: `${baseUrl}/v1/query`,
   rawSQL: `${baseUrl}/v1/query`,
@@ -20,6 +20,8 @@ const Endpoints = {
   hasuractlMetadata: `${hasuractlUrl}/apis/metadata`,
   hasuractlMigrateSettings: `${hasuractlUrl}/apis/migrate/settings`,
   telemetryServer: 'wss://telemetry.hasura.io/v1/ws',
+  consoleNotificationsStg: 'https://data.hasura-stg.hasura-app.io/v1/query',
+  consoleNotificationsProd: 'https://data.hasura.io/v1/query',
 };
 
 const globalCookiePolicy = 'same-origin';

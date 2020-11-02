@@ -25,6 +25,7 @@ import {
   generateReplaceMetadataQuery,
   resetMetadataQuery,
 } from '../../Common/utils/v1QueryUtils';
+import Migration from '../../../utils/migration/Migration';
 
 const LOAD_INCONSISTENT_OBJECTS = 'Metadata/LOAD_INCONSISTENT_OBJECTS';
 const LOADING_METADATA = 'Metadata/LOADING_METADATA';
@@ -85,8 +86,11 @@ export const replaceMetadata = (newMetadata, successCb, errorCb) => (
   getState
 ) => {
   const exportSuccessCb = oldMetadata => {
-    const upQuery = generateReplaceMetadataQuery(newMetadata);
-    const downQuery = generateReplaceMetadataQuery(oldMetadata);
+    const migration = new Migration();
+    migration.add(
+      generateReplaceMetadataQuery(newMetadata),
+      generateReplaceMetadataQuery(oldMetadata)
+    );
 
     const migrationName = 'replace_metadata';
 
@@ -104,8 +108,8 @@ export const replaceMetadata = (newMetadata, successCb, errorCb) => (
     makeMigrationCall(
       dispatch,
       getState,
-      [upQuery],
-      [downQuery],
+      migration.upMigration,
+      migration.downMigration,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -208,11 +212,6 @@ const handleInconsistentObjects = inconsistentObjects => {
         inconsistentObjects,
         'functions'
       );
-      const filteredRemoteSchemas = filterInconsistentMetadataObjects(
-        remoteSchemas,
-        inconsistentObjects,
-        'remote_schemas'
-      );
       const filteredActions = filterInconsistentMetadataObjects(
         actions,
         inconsistentObjects,
@@ -221,7 +220,7 @@ const handleInconsistentObjects = inconsistentObjects => {
 
       dispatch(setConsistentSchema(filteredSchema));
       dispatch(setConsistentFunctions(filteredFunctions));
-      dispatch(setConsistentRemoteSchemas(filteredRemoteSchemas));
+      dispatch(setConsistentRemoteSchemas(remoteSchemas));
       dispatch(setActions(filteredActions));
     }
   };
@@ -234,9 +233,7 @@ export const loadInconsistentObjects = (reloadConfig, successCb, failureCb) => {
     const { shouldReloadMetadata, shouldReloadRemoteSchemas } = reloadConfig;
 
     const loadQuery = shouldReloadMetadata
-      ? getReloadCacheAndGetInconsistentObjectsQuery(
-          shouldReloadRemoteSchemas === false ? false : true
-        )
+      ? getReloadCacheAndGetInconsistentObjectsQuery(shouldReloadRemoteSchemas)
       : inconsistentObjectsQuery;
 
     dispatch({ type: LOADING_METADATA });

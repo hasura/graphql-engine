@@ -10,7 +10,7 @@ import qualified Data.List                  as L
 
 import           Data.Hashable              (Hashable)
 
-import           Prelude                    (Eq, Foldable, Functor, fmap, ($))
+import           Prelude                    (Eq, Foldable, Functor, flip, fmap, ($), (<>))
 
 groupTuples
   :: (Eq k, Hashable k, Foldable t)
@@ -19,7 +19,7 @@ groupTuples =
   L.foldl' groupFlds OMap.empty
   where
     groupFlds m (k, v) =
-      OMap.insertWith (\_ c -> c NE.|> v) k (NE.init v) m
+      OMap.insertWith (flip (<>)) k (NE.singleton v) m
 
 groupListWith
   :: (Eq k, Hashable k, Foldable t, Functor t)

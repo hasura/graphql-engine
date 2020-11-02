@@ -1,0 +1,155 @@
+/*** landing.html ***/
+
+.landing_page_wrapper {
+  width: 100%;
+}
+
+.main_wrapper {
+  background-color: #F8FAFB;
+  padding-top: 28px;
+}
+
+.head_wrapper {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.body_content {
+  font-size: 15px;
+  color: #333;
+}
+
+.small_content {
+  font-size: 14px;
+  color: #333;
+}
+
+.small_content img {
+  max-width: 100%;
+}
+
+.landing_page_wrapper p {
+  margin-top: 0;
+  margin-bottom: 0;
+  line-height: 1.7;
+}
+
+.box_wrapper {
+  width: 89%;
+  margin: 0 auto;
+  margin-bottom: 28px;
+  text-align: center;
+  min-height: 240px;
+  padding: 10px;
+  background-color: #fff;
+  -webkit-box-shadow: 0px 2px 5px 0px rgba(0,0,0,0.2);
+  -moz-box-shadow: 0px 2px 5px 0px rgba(0,0,0,0.2);
+  box-shadow: 0px 2px 5px 0px rgba(0,0,0,0.2);
+}
+
+.box_head_wrapper {
+  display: flex;
+  align-items: center;
+  padding: 15px 0;
+  border-bottom: 1px solid #ccc;
+}
+
+.box_head {
+  width: 80%;
+  display: flex;
+  align-items: center;
+}
+
+.box_head img {
+  width: 30px;
+  display: inline-block;
+  padding-right: 15px;
+}
+
+.box_head h3 {
+  margin: 0 0 0;
+  display: inline-block;
+  color: #333;
+}
+
+.view_all_wrapper {
+  display: flex;
+  align-items: center;
+  width: 20%;
+  justify-content: flex-end;
+  color: #9c9c9c;
+  font-weight: 600;
+  margin-top: -9px;
+}
+
+.view_all_wrapper img {
+  display: inline-block;
+  width: 12px;
+  padding-right: 5px;
+  opacity: 0.5;
+}
+
+.view_all_wrapper a {
+  color: #1CD3C6 !important;
+  text-decoration: underline;
+}
+
+.space_wrapper {
+  padding: 15px 15px;
+  padding-bottom: 0;
+}
+
+.description {
+  margin-bottom: 20px;
+}
+
+.text_left {
+  text-align: left;
+}
+
+.sign_in_wrapper {
+  text-align: left;
+  display: flex;
+  align-items: center;
+}
+
+.sign_in_wrapper .get_start {
+  display: inline-block;
+  padding-right: 5px;
+}
+
+.get_start img {
+  width: 25px;
+}
+
+.docs_link {
+  display: inline;
+  color: #1CD3C6;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.docs_link img {
+  display: inline-block;
+  width: 12px;
+  padding-left: 5px;
+}
+
+.wd_80 {
+  margin: 0 auto;
+  width: 80%;
+}
+
+.hcl_half {
+  width: 50%;
+  float: left;
+}
+
+@media (max-width: 1024px) {
+  .hcl_half {
+    width: 100%;
+    float: left;
+  }
+}
+
+/*** landing.html END ***/

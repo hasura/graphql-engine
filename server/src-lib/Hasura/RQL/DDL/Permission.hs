@@ -36,25 +36,27 @@ module Hasura.RQL.DDL.Permission
     , fetchPermDef
     ) where
 
-import           Hasura.EncJSON
-import           Hasura.Incremental                 (Cacheable)
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Permission.Internal
-import           Hasura.RQL.DML.Internal            hiding (askPermInfo)
-import           Hasura.RQL.Types
-import           Hasura.Session
-import           Hasura.SQL.Types
 
+import qualified Data.HashMap.Strict                as HM
+import qualified Data.HashSet                       as HS
 import qualified Database.PG.Query                  as Q
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Text.Extended
 import           Language.Haskell.TH.Syntax         (Lift)
 
-import qualified Data.HashMap.Strict                as HM
-import qualified Data.HashSet                       as HS
-import qualified Data.Text                          as T
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.EncJSON
+import           Hasura.Incremental                 (Cacheable)
+import           Hasura.RQL.DDL.Permission.Internal
+import           Hasura.RQL.DML.Internal            hiding (askPermInfo)
+import           Hasura.RQL.Types
+import           Hasura.Session
+
+
 
 {- Note [Backend only permissions]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -86,25 +88,28 @@ TRUE            TRUE (OR NOT-SET)         TRUE                                  
 -}
 
 -- Insert permission
-data InsPerm
+data InsPerm (b :: Backend)
   = InsPerm
-  { ipCheck       :: !BoolExp
+  { ipCheck       :: !(BoolExp b)
   , ipSet         :: !(Maybe (ColumnValues Value))
   , ipColumns     :: !(Maybe PermColSpec)
   , ipBackendOnly :: !(Maybe Bool) -- see Note [Backend only permissions]
   } deriving (Show, Eq, Lift, Generic)
-instance Cacheable InsPerm
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''InsPerm)
+instance Cacheable (InsPerm 'Postgres)
+instance FromJSON (InsPerm 'Postgres) where
+  parseJSON = genericParseJSON $ aesonDrop 2 snakeCase
+instance ToJSON (InsPerm 'Postgres) where
+  toJSON = genericToJSON (aesonDrop 2 snakeCase) {omitNothingFields=True}
 
-type InsPermDef = PermDef InsPerm
-type CreateInsPerm = CreatePerm InsPerm
+type InsPermDef    b = PermDef    (InsPerm b)
+type CreateInsPerm b = CreatePerm (InsPerm b)
 
 procSetObj
   :: (QErrM m)
   => QualifiedTable
-  -> FieldInfoMap FieldInfo
+  -> FieldInfoMap (FieldInfo 'Postgres)
   -> Maybe (ColumnValues Value)
-  -> m (PreSetColsPartial, [Text], [SchemaDependency])
+  -> m (PreSetColsPartial 'Postgres, [Text], [SchemaDependency])
 procSetObj tn fieldInfoMap mObj = do
   (setColTups, deps) <- withPathK "set" $
     fmap unzip $ forM (HM.toList setObj) $ \(pgCol, val) -> do
@@ -124,9 +129,9 @@ procSetObj tn fieldInfoMap mObj = do
 buildInsPermInfo
   :: (QErrM m, TableCoreInfoRM m)
   => QualifiedTable
-  -> FieldInfoMap FieldInfo
-  -> PermDef InsPerm
-  -> m (WithDeps InsPermInfo)
+  -> FieldInfoMap (FieldInfo 'Postgres)
+  -> PermDef (InsPerm 'Postgres)
+  -> m (WithDeps (InsPermInfo 'Postgres))
 buildInsPermInfo tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCols mBackendOnly) _) =
   withPathK "permission" $ do
     (be, beDeps) <- withPathK "check" $ procBoolExp tn fieldInfoMap checkCond
@@ -140,31 +145,33 @@ buildInsPermInfo tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCols mBack
         insColsWithoutPresets = insCols \\ HM.keys setColsSQL
     return (InsPermInfo (HS.fromList insColsWithoutPresets) be setColsSQL backendOnly reqHdrs, deps)
   where
-    backendOnly = fromMaybe False mBackendOnly
+    backendOnly = Just True == mBackendOnly
     allCols = map pgiColumn $ getCols fieldInfoMap
-    insCols = fromMaybe allCols $ convColSpec fieldInfoMap <$> mCols
+    insCols = maybe allCols (convColSpec fieldInfoMap) mCols
 
-type instance PermInfo InsPerm = InsPermInfo
+-- TODO this is a dirty hack, hardcoding permissions to postgres.  When
+-- implementing support for other backends, the type family 'PermInfo' probably
+-- needs to be refactored.
+type instance PermInfo (InsPerm b) = InsPermInfo b
 
-instance IsPerm InsPerm where
-
+instance IsPerm (InsPerm 'Postgres) where
   permAccessor = PAInsert
-
   buildPermInfo = buildInsPermInfo
 
 -- Select constraint
-data SelPerm
+data SelPerm (b :: Backend)
   = SelPerm
   { spColumns           :: !PermColSpec         -- ^ Allowed columns
-  , spFilter            :: !BoolExp             -- ^ Filter expression
+  , spFilter            :: !(BoolExp b)         -- ^ Filter expression
   , spLimit             :: !(Maybe Int)         -- ^ Limit value
   , spAllowAggregations :: !Bool                -- ^ Allow aggregation
   , spComputedFields    :: ![ComputedFieldName] -- ^ Allowed computed fields
   } deriving (Show, Eq, Lift, Generic)
-instance Cacheable SelPerm
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SelPerm)
+instance Cacheable (SelPerm 'Postgres)
+instance ToJSON (SelPerm 'Postgres) where
+  toJSON = genericToJSON (aesonDrop 2 snakeCase) {omitNothingFields=True}
 
-instance FromJSON SelPerm where
+instance FromJSON (SelPerm 'Postgres) where
   parseJSON = withObject "SelPerm" $ \o ->
     SelPerm
     <$> o .: "columns"
@@ -176,9 +183,9 @@ instance FromJSON SelPerm where
 buildSelPermInfo
   :: (QErrM m, TableCoreInfoRM m)
   => QualifiedTable
-  -> FieldInfoMap FieldInfo
-  -> SelPerm
-  -> m (WithDeps SelPermInfo)
+  -> FieldInfoMap (FieldInfo 'Postgres)
+  -> SelPerm 'Postgres
+  -> m (WithDeps (SelPermInfo 'Postgres))
 buildSelPermInfo tn fieldInfoMap sp = withPathK "permission" $ do
   let pgCols     = convColSpec fieldInfoMap $ spColumns sp
 
@@ -216,43 +223,45 @@ buildSelPermInfo tn fieldInfoMap sp = withPathK "permission" $ do
     computedFields = spComputedFields sp
     autoInferredErr = "permissions for relationships are automatically inferred"
 
-type SelPermDef = PermDef SelPerm
-type CreateSelPerm = CreatePerm SelPerm
+type SelPermDef    b = PermDef    (SelPerm b)
+type CreateSelPerm b = CreatePerm (SelPerm b)
 
-type instance PermInfo SelPerm = SelPermInfo
+-- TODO see TODO for PermInfo above.
+type instance PermInfo (SelPerm b) = SelPermInfo b
 
-instance IsPerm SelPerm where
-
+instance IsPerm (SelPerm 'Postgres) where
   permAccessor = PASelect
-
   buildPermInfo tn fieldInfoMap (PermDef _ a _) =
     buildSelPermInfo tn fieldInfoMap a
 
 -- Update constraint
-data UpdPerm
+data UpdPerm b
   = UpdPerm
   { ucColumns :: !PermColSpec -- Allowed columns
   , ucSet     :: !(Maybe (ColumnValues Value)) -- Preset columns
-  , ucFilter  :: !BoolExp     -- Filter expression (applied before update)
-  , ucCheck   :: !(Maybe BoolExp)
+  , ucFilter  :: !(BoolExp b) -- Filter expression (applied before update)
+  , ucCheck   :: !(Maybe (BoolExp b))
   -- ^ Check expression, which must be true after update.
   -- This is optional because we don't want to break the v1 API
   -- but Nothing should be equivalent to the expression which always
   -- returns true.
   } deriving (Show, Eq, Lift, Generic)
-instance Cacheable UpdPerm
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''UpdPerm)
+instance Cacheable (UpdPerm 'Postgres)
+instance FromJSON (UpdPerm 'Postgres) where
+  parseJSON = genericParseJSON $ aesonDrop 2 snakeCase
+instance ToJSON (UpdPerm 'Postgres) where
+  toJSON = genericToJSON (aesonDrop 2 snakeCase) {omitNothingFields=True}
 
-type UpdPermDef = PermDef UpdPerm
-type CreateUpdPerm = CreatePerm UpdPerm
+type UpdPermDef    b = PermDef    (UpdPerm b)
+type CreateUpdPerm b = CreatePerm (UpdPerm b)
 
 
 buildUpdPermInfo
   :: (QErrM m, TableCoreInfoRM m)
   => QualifiedTable
-  -> FieldInfoMap FieldInfo
-  -> UpdPerm
-  -> m (WithDeps UpdPermInfo)
+  -> FieldInfoMap (FieldInfo 'Postgres)
+  -> UpdPerm 'Postgres
+  -> m (WithDeps (UpdPermInfo 'Postgres))
 buildUpdPermInfo tn fieldInfoMap (UpdPerm colSpec set fltr check) = do
   (be, beDeps) <- withPathK "filter" $
     procBoolExp tn fieldInfoMap fltr
@@ -277,31 +286,33 @@ buildUpdPermInfo tn fieldInfoMap (UpdPerm colSpec set fltr check) = do
     updCols     = convColSpec fieldInfoMap colSpec
     relInUpdErr = "relationships can't be used in update"
 
-type instance PermInfo UpdPerm = UpdPermInfo
+-- TODO see TODO for PermInfo above
+type instance PermInfo (UpdPerm b) = UpdPermInfo b
 
-instance IsPerm UpdPerm where
-
+instance IsPerm (UpdPerm 'Postgres) where
   permAccessor = PAUpdate
-
   buildPermInfo tn fieldInfoMap (PermDef _ a _) =
     buildUpdPermInfo tn fieldInfoMap a
 
 -- Delete permission
-data DelPerm
-  = DelPerm { dcFilter :: !BoolExp }
+data DelPerm (b :: Backend)
+  = DelPerm { dcFilter :: !(BoolExp b) }
   deriving (Show, Eq, Lift, Generic)
-instance Cacheable DelPerm
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DelPerm)
+instance Cacheable (DelPerm 'Postgres)
+instance FromJSON (DelPerm 'Postgres) where
+  parseJSON = genericParseJSON $ aesonDrop 2 snakeCase
+instance ToJSON (DelPerm 'Postgres) where
+  toJSON = genericToJSON (aesonDrop 2 snakeCase) {omitNothingFields=True}
 
-type DelPermDef = PermDef DelPerm
-type CreateDelPerm = CreatePerm DelPerm
+type DelPermDef    b = PermDef    (DelPerm b)
+type CreateDelPerm b = CreatePerm (DelPerm b)
 
 buildDelPermInfo
   :: (QErrM m, TableCoreInfoRM m)
   => QualifiedTable
-  -> FieldInfoMap FieldInfo
-  -> DelPerm
-  -> m (WithDeps DelPermInfo)
+  -> FieldInfoMap (FieldInfo 'Postgres)
+  -> DelPerm 'Postgres
+  -> m (WithDeps (DelPermInfo 'Postgres))
 buildDelPermInfo tn fieldInfoMap (DelPerm fltr) = do
   (be, beDeps) <- withPathK "filter" $
     procBoolExp tn fieldInfoMap  fltr
@@ -309,12 +320,11 @@ buildDelPermInfo tn fieldInfoMap (DelPerm fltr) = do
       depHeaders = getDependentHeaders fltr
   return (DelPermInfo tn be depHeaders, deps)
 
-type instance PermInfo DelPerm = DelPermInfo
+-- TODO see TODO for PermInfo above
+type instance PermInfo (DelPerm b) = DelPermInfo b
 
-instance IsPerm DelPerm where
-
+instance IsPerm (DelPerm 'Postgres) where
   permAccessor = PADelete
-
   buildPermInfo tn fieldInfoMap (PermDef _ a _) =
     buildDelPermInfo tn fieldInfoMap a
 
@@ -323,7 +333,7 @@ data SetPermComment
   { apTable      :: !QualifiedTable
   , apRole       :: !RoleName
   , apPermission :: !PermType
-  , apComment    :: !(Maybe T.Text)
+  , apComment    :: !(Maybe Text)
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase) ''SetPermComment)
@@ -367,10 +377,10 @@ setPermCommentTx (SetPermComment (QualifiedObject sn tn) rn pt comment) =
 purgePerm :: MonadTx m => QualifiedTable -> RoleName -> PermType -> m ()
 purgePerm qt rn pt =
     case pt of
-      PTInsert -> dropPermP2 @InsPerm dp
-      PTSelect -> dropPermP2 @SelPerm dp
-      PTUpdate -> dropPermP2 @UpdPerm dp
-      PTDelete -> dropPermP2 @DelPerm dp
+      PTInsert -> dropPermP2 @(InsPerm 'Postgres) dp
+      PTSelect -> dropPermP2 @(SelPerm 'Postgres) dp
+      PTUpdate -> dropPermP2 @(UpdPerm 'Postgres) dp
+      PTDelete -> dropPermP2 @(DelPerm 'Postgres) dp
   where
     dp :: DropPerm a
     dp = DropPerm qt rn
@@ -379,9 +389,9 @@ fetchPermDef
   :: QualifiedTable
   -> RoleName
   -> PermType
-  -> Q.TxE QErr (Value, Maybe T.Text)
+  -> Q.TxE QErr (Value, Maybe Text)
 fetchPermDef (QualifiedObject sn tn) rn pt =
- (first Q.getAltJ .  Q.getRow) <$> Q.withQE defaultTxErrorHandler
+ first Q.getAltJ .  Q.getRow <$> Q.withQE defaultTxErrorHandler
       [Q.sql|
             SELECT perm_def::json, comment
               FROM hdb_catalog.hdb_permission

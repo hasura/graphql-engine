@@ -2,6 +2,7 @@
 module Hasura.Server.Init.Config where
 
 import qualified Data.Aeson                       as J
+import qualified Data.Aeson.Casing                as J
 import qualified Data.Aeson.TH                    as J
 import qualified Data.HashSet                     as Set
 import qualified Data.String                      as DataString
@@ -11,10 +12,11 @@ import qualified Database.PG.Query                as Q
 import           Data.Char                        (toLower)
 import           Data.Time
 import           Network.Wai.Handler.Warp         (HostPreference)
+import qualified Network.WebSockets               as WS
 
-import qualified Hasura.Cache                     as Cache
-import qualified Hasura.GraphQL.Execute           as E
+import qualified Hasura.Cache.Bounded             as Cache
 import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
+import qualified Hasura.GraphQL.Execute.Plan      as E
 import qualified Hasura.Logging                   as L
 
 import           Hasura.Prelude
@@ -33,33 +35,37 @@ data RawConnParams
   , rcpAllowPrepare :: !(Maybe Bool)
   } deriving (Show, Eq)
 
-type RawAuthHook = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
+type RawAuthHook = AuthHookG (Maybe Text) (Maybe AuthHookType)
 
 data RawServeOptions impl
   = RawServeOptions
-  { rsoPort                :: !(Maybe Int)
-  , rsoHost                :: !(Maybe HostPreference)
-  , rsoConnParams          :: !RawConnParams
-  , rsoTxIso               :: !(Maybe Q.TxIsolation)
-  , rsoAdminSecret         :: !(Maybe AdminSecretHash)
-  , rsoAuthHook            :: !RawAuthHook
-  , rsoJwtSecret           :: !(Maybe JWTConfig)
-  , rsoUnAuthRole          :: !(Maybe RoleName)
-  , rsoCorsConfig          :: !(Maybe CorsConfig)
-  , rsoEnableConsole       :: !Bool
-  , rsoConsoleAssetsDir    :: !(Maybe Text)
-  , rsoEnableTelemetry     :: !(Maybe Bool)
-  , rsoWsReadCookie        :: !Bool
-  , rsoStringifyNum        :: !Bool
-  , rsoEnabledAPIs         :: !(Maybe [API])
-  , rsoMxRefetchInt        :: !(Maybe LQ.RefetchInterval)
-  , rsoMxBatchSize         :: !(Maybe LQ.BatchSize)
-  , rsoEnableAllowlist     :: !Bool
-  , rsoEnabledLogTypes     :: !(Maybe [L.EngineLogType impl])
-  , rsoLogLevel            :: !(Maybe L.LogLevel)
-  , rsoPlanCacheSize       :: !(Maybe Cache.CacheSize)
-  , rsoDevMode             :: !Bool
-  , rsoAdminInternalErrors :: !(Maybe Bool)
+  { rsoPort                  :: !(Maybe Int)
+  , rsoHost                  :: !(Maybe HostPreference)
+  , rsoConnParams            :: !RawConnParams
+  , rsoTxIso                 :: !(Maybe Q.TxIsolation)
+  , rsoAdminSecret           :: !(Maybe AdminSecretHash)
+  , rsoAuthHook              :: !RawAuthHook
+  , rsoJwtSecret             :: !(Maybe JWTConfig)
+  , rsoUnAuthRole            :: !(Maybe RoleName)
+  , rsoCorsConfig            :: !(Maybe CorsConfig)
+  , rsoEnableConsole         :: !Bool
+  , rsoConsoleAssetsDir      :: !(Maybe Text)
+  , rsoEnableTelemetry       :: !(Maybe Bool)
+  , rsoWsReadCookie          :: !Bool
+  , rsoStringifyNum          :: !Bool
+  , rsoEnabledAPIs           :: !(Maybe [API])
+  , rsoMxRefetchInt          :: !(Maybe LQ.RefetchInterval)
+  , rsoMxBatchSize           :: !(Maybe LQ.BatchSize)
+  , rsoEnableAllowlist       :: !Bool
+  , rsoEnabledLogTypes       :: !(Maybe [L.EngineLogType impl])
+  , rsoLogLevel              :: !(Maybe L.LogLevel)
+  , rsoPlanCacheSize         :: !(Maybe Cache.CacheSize)
+  , rsoDevMode               :: !Bool
+  , rsoAdminInternalErrors   :: !(Maybe Bool)
+  , rsoEventsHttpPoolSize    :: !(Maybe Int)
+  , rsoEventsFetchInterval   :: !(Maybe Milliseconds)
+  , rsoLogHeadersFromEnv     :: !Bool
+  , rsoWebSocketCompression :: !Bool
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -99,11 +105,15 @@ data ServeOptions impl
   , soLogLevel                     :: !L.LogLevel
   , soPlanCacheOptions             :: !E.PlanCacheOptions
   , soResponseInternalErrorsConfig :: !ResponseInternalErrorsConfig
+  , soEventsHttpPoolSize           :: !(Maybe Int)
+  , soEventsFetchInterval          :: !(Maybe Milliseconds)
+  , soLogHeadersFromEnv            :: !Bool
+  , soConnectionOptions            :: !WS.ConnectionOptions
   }
 
 data DowngradeOptions
   = DowngradeOptions
-  { dgoTargetVersion :: !T.Text
+  { dgoTargetVersion :: !Text
   , dgoDryRun        :: !Bool
   } deriving (Show, Eq)
 
@@ -135,10 +145,13 @@ data API
   | DEVELOPER
   | CONFIG
   deriving (Show, Eq, Read, Generic)
+
 $(J.deriveJSON (J.defaultOptions { J.constructorTagModifier = map toLower })
   ''API)
 
 instance Hashable API
+
+$(J.deriveJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True} ''RawConnInfo)
 
 type HGECommand impl = HGECommandG (ServeOptions impl)
 type RawHGECommand impl = HGECommandG (RawServeOptions impl)
@@ -247,10 +260,17 @@ instance FromEnv [API] where
   fromEnv = readAPIs
 
 instance FromEnv LQ.BatchSize where
-  fromEnv = fmap LQ.BatchSize . readEither
+  fromEnv s = do
+    val <- readEither s
+    maybe (Left "batch size should be a non negative integer") Right $ LQ.mkBatchSize val
 
 instance FromEnv LQ.RefetchInterval where
-  fromEnv = fmap (LQ.RefetchInterval . milliseconds . fromInteger) . readEither
+  fromEnv x = do
+    val <- fmap (milliseconds . fromInteger) . readEither $ x
+    maybe (Left "refetch interval should be a non negative integer") Right $ LQ.mkRefetchInterval val
+
+instance FromEnv Milliseconds where
+  fromEnv = fmap fromInteger . readEither
 
 instance FromEnv JWTConfig where
   fromEnv = readJson

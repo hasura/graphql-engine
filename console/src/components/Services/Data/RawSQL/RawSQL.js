@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
 import AceEditor from 'react-ace';
@@ -9,10 +9,10 @@ import Button from '../../../Common/Button/Button';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import Alert from '../../../Common/Alert';
-
+import StatementTimeout from './StatementTimeout';
 import { parseCreateSQL } from './utils';
 import { checkSchemaModification } from '../../../Common/utils/sqlUtils';
-
+import styles from '../../../Common/TableCommon/Table.scss';
 import {
   executeSQL,
   SET_SQL,
@@ -28,7 +28,7 @@ import {
 } from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 import NotesSection from './molecules/NotesSection';
-
+import { getLSItem, setLSItem, LS_KEYS } from '../../../../utils/localStorage';
 /**
  * # RawSQL React FC
  * ## renders raw SQL page on route `/data/sql`
@@ -67,37 +67,32 @@ const RawSQL = ({
   migrationMode,
   allSchemas,
 }) => {
-  const styles = require('../../../Common/TableCommon/Table.scss');
+  const [statementTimeout, setStatementTimeout] = useState(
+    Number(getLSItem(LS_KEYS.rawSqlStatementTimeout)) || 10
+  );
 
-  // local storage key for SQL
-  const LS_RAW_SQL_SQL = 'rawSql:sql';
-
-  /* hooks */
-
-  // set up sqlRef to use in unmount
-  const sqlRef = useRef(sql);
+  const [sqlText, onChangeSQLText] = useState(sql);
 
   useEffect(() => {
     if (!sql) {
-      const sqlFromLocalStorage = localStorage.getItem(LS_RAW_SQL_SQL);
+      const sqlFromLocalStorage = getLSItem(LS_KEYS.rawSQLKey);
       if (sqlFromLocalStorage) {
         dispatch({ type: SET_SQL, data: sqlFromLocalStorage });
+        onChangeSQLText(sqlFromLocalStorage);
       }
     }
     return () => {
-      localStorage.setItem(LS_RAW_SQL_SQL, sqlRef.current);
+      setLSItem(LS_KEYS.rawSQLKey, sqlText);
     };
-  }, []);
-  // set SQL to sqlRef
-  useEffect(() => {
-    sqlRef.current = sql;
-  }, [sql]);
-
-  /* hooks - end */
+  }, [dispatch, sql, sqlText]);
 
   const submitSQL = () => {
+    if (!sqlText) {
+      setLSItem(LS_KEYS.rawSQLKey, '');
+      return;
+    }
     // set SQL to LS
-    localStorage.setItem(LS_RAW_SQL_SQL, sql);
+    setLSItem(LS_KEYS.rawSQLKey, sqlText);
 
     // check migration mode global
     if (migrationMode) {
@@ -110,21 +105,15 @@ const RawSQL = ({
       }
       if (!isMigration && globals.consoleMode === CLI_CONSOLE_MODE) {
         // if migration is not checked, check if is schema modification
-        if (checkSchemaModification(sql)) {
+        if (checkSchemaModification(sqlText)) {
           dispatch(modalOpen());
-          const confirmation = false;
-          if (confirmation) {
-            dispatch(executeSQL(isMigration, migrationName));
-          }
-        } else {
-          dispatch(executeSQL(isMigration, migrationName));
+          return;
         }
-      } else {
-        dispatch(executeSQL(isMigration, migrationName));
       }
-    } else {
-      dispatch(executeSQL(false, ''));
+      dispatch(executeSQL(isMigration, migrationName, statementTimeout));
+      return;
     }
+    dispatch(executeSQL(false, '', statementTimeout));
   };
 
   const getMigrationWarningModal = () => {
@@ -161,6 +150,7 @@ const RawSQL = ({
 
   const getSQLSection = () => {
     const handleSQLChange = val => {
+      onChangeSQLText(val);
       dispatch({ type: SET_SQL, data: val });
 
       // set migration checkbox true
@@ -179,21 +169,19 @@ const RawSQL = ({
           return [schema.table_schema, schema.table_name].join('.');
         });
 
-        for (let i = 0; i < objects.length; i++) {
-          const object = objects[i];
-
+        allObjectsTrackable = objects.every(object => {
           if (object.type === 'function') {
-            allObjectsTrackable = false;
-            break;
-          } else {
-            const objectName = [object.schema, object.name].join('.');
-
-            if (trackedObjectNames.includes(objectName)) {
-              allObjectsTrackable = false;
-              break;
-            }
+            return false;
           }
-        }
+
+          const objectName = [object.schema, object.name].join('.');
+
+          if (trackedObjectNames.includes(objectName)) {
+            return false;
+          }
+
+          return true;
+        });
 
         if (allObjectsTrackable) {
           dispatch({ type: SET_TRACK_TABLE_CHECKED, data: true });
@@ -213,7 +201,7 @@ const RawSQL = ({
           theme={ACE_EDITOR_THEME}
           fontSize={ACE_EDITOR_FONT_SIZE}
           name="raw_sql"
-          value={sql}
+          value={sqlText}
           minLines={15}
           maxLines={100}
           width="100%"
@@ -223,7 +211,9 @@ const RawSQL = ({
               name: 'submit',
               bindKey: { win: 'Ctrl-Enter', mac: 'Command-Enter' },
               exec: () => {
-                submitSQL();
+                if (sqlText) {
+                  submitSQL();
+                }
               },
             },
           ]}
@@ -419,6 +409,13 @@ const RawSQL = ({
     return migrationSection;
   };
 
+  const updateStatementTimeout = value => {
+    const timeoutInSeconds = Number(value.trim());
+    const isValidTimeout = timeoutInSeconds > 0 && !isNaN(timeoutInSeconds);
+    setLSItem(LS_KEYS.rawSqlStatementTimeout, timeoutInSeconds);
+    setStatementTimeout(isValidTimeout ? timeoutInSeconds : 0);
+  };
+
   return (
     <div
       className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top}`}
@@ -445,6 +442,12 @@ const RawSQL = ({
           {getTrackThisSection()}
           {getMetadataCascadeSection()}
           {getMigrationSection()}
+
+          <StatementTimeout
+            statementTimeout={statementTimeout}
+            isMigrationChecked={isMigrationChecked}
+            updateStatementTimeout={updateStatementTimeout}
+          />
           <Button
             type="submit"
             className={styles.add_mar_top}
@@ -452,6 +455,7 @@ const RawSQL = ({
             color="yellow"
             size="sm"
             data-test="run-sql"
+            disabled={!sqlText.length}
           >
             Run!
           </Button>
@@ -493,6 +497,7 @@ RawSQL.propTypes = {
   isTableTrackChecked: PropTypes.bool.isRequired,
   migrationMode: PropTypes.bool.isRequired,
   currentSchema: PropTypes.string.isRequired,
+  statementTimeout: PropTypes.string.isRequired,
 };
 
 const mapStateToProps = state => ({

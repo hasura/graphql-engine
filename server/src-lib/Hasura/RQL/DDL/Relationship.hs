@@ -12,23 +12,22 @@ module Hasura.RQL.DDL.Relationship
   )
 where
 
-import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.SchemaCacheTypes
-import           Hasura.EncJSON
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Deps
-import           Hasura.RQL.DDL.Permission                  (purgePerm)
-import           Hasura.RQL.DDL.Relationship.Types
-import           Hasura.RQL.Types
-import           Hasura.SQL.Types
+
+import qualified Data.HashMap.Strict                as HM
+import qualified Data.HashSet                       as HS
+import qualified Database.PG.Query                  as Q
 
 import           Data.Aeson.Types
-import           Data.Tuple                                 (swap)
-import           Instances.TH.Lift                          ()
+import           Data.Tuple                         (swap)
+import           Instances.TH.Lift                  ()
 
-import qualified Data.HashMap.Strict                        as HM
-import qualified Data.HashSet                               as HS
-import qualified Database.PG.Query                          as Q
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.EncJSON
+import           Hasura.RQL.DDL.Deps
+import           Hasura.RQL.DDL.Permission          (purgePerm)
+import           Hasura.RQL.DDL.Relationship.Types
+import           Hasura.RQL.Types
 
 runCreateRelationship
   :: (MonadTx m, CacheRWM m, HasSystemDefined m, ToJSON a)
@@ -98,7 +97,7 @@ objRelP2Setup qt foreignKeys (RelDef rn ru _) = case ru of
         mkDependency tableName reason col = SchemaDependency (SOTableObj tableName $ TOCol col) reason
         dependencies = map (mkDependency qt DRLeftColumn) lCols
                     <> map (mkDependency refqt DRRightColumn) rCols
-    pure (RelInfo rn ObjRel (rmColumns rm) refqt True, dependencies)
+    pure (RelInfo rn ObjRel (rmColumns rm) refqt True True, dependencies)
   RUFKeyOn columnName -> do
     ForeignKey constraint foreignTable colMap <- getRequiredFkey columnName (HS.toList foreignKeys)
     let dependencies =
@@ -108,7 +107,10 @@ objRelP2Setup qt foreignKeys (RelDef rn ru _) = case ru of
           -- neither the using_col nor the constraint name will help.
           , SchemaDependency (SOTable foreignTable) DRRemoteTable
           ]
-    pure (RelInfo rn ObjRel colMap foreignTable False, dependencies)
+    -- TODO(PDV?): this is too optimistic. Some object relationships are nullable, but
+    -- we are marking some as non-nullable here.  This should really be done by
+    -- checking nullability in the SQL schema.
+    pure (RelInfo rn ObjRel colMap foreignTable False False, dependencies)
 
 arrRelP2Setup
   :: (QErrM m)
@@ -122,7 +124,7 @@ arrRelP2Setup foreignKeys qt (RelDef rn ru _) = case ru of
         (lCols, rCols) = unzip $ HM.toList $ rmColumns rm
         deps  = map (\c -> SchemaDependency (SOTableObj qt $ TOCol c) DRLeftColumn) lCols
                 <> map (\c -> SchemaDependency (SOTableObj refqt $ TOCol c) DRRightColumn) rCols
-    pure (RelInfo rn ArrRel (rmColumns rm) refqt True, deps)
+    pure (RelInfo rn ArrRel (rmColumns rm) refqt True True, deps)
   RUFKeyOn (ArrRelUsingFKeyOn refqt refCol) -> do
     foreignTableForeignKeys <- getTableInfo refqt foreignKeys
     let keysThatReferenceUs = filter ((== qt) . _fkForeignTable) (HS.toList foreignTableForeignKeys)
@@ -135,7 +137,7 @@ arrRelP2Setup foreignKeys qt (RelDef rn ru _) = case ru of
                , SchemaDependency (SOTable refqt) DRRemoteTable
                ]
         mapping = HM.fromList $ map swap $ HM.toList colMap
-    pure (RelInfo rn ArrRel mapping refqt False, deps)
+    pure (RelInfo rn ArrRel mapping refqt False False, deps)
 
 purgeRelDep :: (MonadTx m) => SchemaObjId -> m ()
 purgeRelDep (SOTableObj tn (TOPerm rn pt)) = purgePerm tn rn pt

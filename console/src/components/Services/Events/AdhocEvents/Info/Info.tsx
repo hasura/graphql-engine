@@ -37,7 +37,7 @@ const Info: React.FC = () => {
       <div className={styles.padd_left}>
         <TopicDescription
           title="What are Scheduled events?"
-          imgUrl={`${globals.assetsPath}/common/img/event-trigger.png`}
+          imgUrl={`${globals.assetsPath}/common/img/scheduled-event.png`}
           imgAlt={ADHOC_EVENTS_HEADING}
           description={topicDescription}
         />
