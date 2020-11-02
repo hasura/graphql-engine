@@ -193,8 +193,6 @@ data ParsedIntrospection
   , piSubscription :: Maybe [P.FieldParser (P.ParseT Identity) RemoteField]
   }
 
--- TODO: rename this to `PartialRemoteSchemaCtx` and after doing this
--- change `RemoteSchemaCtxWithPermissions` to `RemoteSchemaCtx`
 data PartialRemoteSchemaCtx
   = PartialRemoteSchemaCtx
   { rscName                   :: !RemoteSchemaName
