@@ -1,11 +1,9 @@
 module Hasura.GraphQL.Execute.Query
   ( convertQuerySelSet
-  , convertFunction
   -- , queryOpFromPlan
   -- , ReusableQueryPlan
   , PreparedSql(..)
   , traverseQueryRootField -- for live query planning
-  , irToRootFieldPlan
   , parseGraphQLQuery
 
   , MonadQueryInstrumentation(..)
@@ -19,14 +17,12 @@ import qualified Data.Aeson                                  as J
 import qualified Data.Environment                            as Env
 import qualified Data.HashMap.Strict                         as Map
 import qualified Data.HashMap.Strict.InsOrd                  as OMap
-import qualified Data.IntMap                                 as IntMap
 import qualified Data.Sequence.NonEmpty                      as NESeq
 import qualified Database.PG.Query                           as Q
 import qualified Language.GraphQL.Draft.Syntax               as G
 import qualified Network.HTTP.Client                         as HTTP
 import qualified Network.HTTP.Types                          as HTTP
 
-import qualified Hasura.Backends.Postgres.SQL.DML            as S
 import qualified Hasura.Backends.Postgres.Translate.Select   as DS
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol      as GH
 import qualified Hasura.Logging                              as L
@@ -34,12 +30,10 @@ import qualified Hasura.RQL.IR.Select                        as DS
 import qualified Hasura.Tracing                              as Tracing
 
 import           Hasura.Backends.Postgres.Connection
-import           Hasura.Backends.Postgres.Execute.RemoteJoin
-import           Hasura.Backends.Postgres.SQL.Value
-import           Hasura.Backends.Postgres.Translate.Select   (asSingleRowJsonResp)
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
+import           Hasura.GraphQL.Execute.Common
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
@@ -48,29 +42,6 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Version                       (HasVersion)
 import           Hasura.Session
 
-
-data PreparedSql
-  = PreparedSql
-  { _psQuery       :: !Q.Query
-  , _psPrepArgs    :: !PrepArgMap
-  , _psRemoteJoins :: !(Maybe (RemoteJoins 'Postgres))
-  }
-
--- | Required to log in `query-log`
-instance J.ToJSON PreparedSql where
-  toJSON (PreparedSql q prepArgs _) =
-    J.object [ "query" J..= Q.getQueryText q
-             , "prepared_arguments" J..= fmap (pgScalarValueToJson . snd) prepArgs
-             ]
-
-data RootFieldPlan
-  = RFPPostgres !PreparedSql
-  | RFPActionQuery !ActionExecuteTx
-
-instance J.ToJSON RootFieldPlan where
-  toJSON = \case
-    RFPPostgres pgPlan -> J.toJSON pgPlan
-    RFPActionQuery _   -> J.String "Action Execution Tx"
 
 data ActionQueryPlan (b :: BackendType)
   = AQPAsyncQuery !(DS.AnnSimpleSel b) -- ^ Cacheable plan
@@ -114,49 +85,6 @@ actionQueryToRootFieldPlan prepped = \case
 --       let prepVal = (toBinaryValue colVal, pstValue colVal)
 --       return $ IntMap.insert prepNo prepVal accum
 
--- turn the current plan into a transaction
-mkCurPlanTx
-  :: ( HasVersion
-     , MonadIO tx
-     , MonadTx tx
-     , Tracing.MonadTrace tx
-     )
-  => Env.Environment
-  -> HTTP.Manager
-  -> [HTTP.Header]
-  -> UserInfo
-  -> (Q.Query -> Q.Query)
-  -> ExtractProfile
-  -> RootFieldPlan
-  -> (tx EncJSON, Maybe PreparedSql)
-mkCurPlanTx env manager reqHdrs userInfo instrument ep = \case
-  -- generate the SQL and prepared vars or the bytestring
-    RFPPostgres ps@(PreparedSql q prepMap remoteJoinsM) ->
-      let args = withUserVars (_uiSession userInfo) prepMap
-          -- WARNING: this quietly assumes the intmap keys are contiguous
-          prepArgs = fst <$> IntMap.elems args
-      in (, Just ps) $ case remoteJoinsM of
-           Nothing -> do
-             Tracing.trace "Postgres" $ runExtractProfile ep =<< liftTx do
-               asSingleRowJsonResp (instrument q) prepArgs
-           Just remoteJoins ->
-             executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs remoteJoins
-    RFPActionQuery atx -> (atx, Nothing)
-
--- convert a query from an intermediate representation to... another
-irToRootFieldPlan
-  :: PrepArgMap
-  -> QueryDB 'Postgres S.SQLExp -> PreparedSql
-irToRootFieldPlan prepped = \case
-  QDBSimple s      -> mkPreparedSql getRemoteJoins (DS.selectQuerySQL DS.JASMultipleRows) s
-  QDBPrimaryKey s  -> mkPreparedSql getRemoteJoins (DS.selectQuerySQL DS.JASSingleObject) s
-  QDBAggregation s -> mkPreparedSql getRemoteJoinsAggregateSelect DS.selectAggregateQuerySQL s
-  QDBConnection s  -> mkPreparedSql getRemoteJoinsConnectionSelect DS.connectionSelectQuerySQL s
-  where
-    mkPreparedSql :: (s -> (t, Maybe (RemoteJoins 'Postgres))) -> (t -> Q.Query) -> s -> PreparedSql
-    mkPreparedSql getJoins f simpleSel =
-      let (simpleSel',remoteJoins) = getJoins simpleSel
-      in PreparedSql (f simpleSel') prepped remoteJoins
 
 traverseQueryRootField
   :: forall f a b c d h backend
@@ -189,15 +117,6 @@ parseGraphQLQuery gqlContext varDefs varValsM fields =
       -- here. It would be nice to report all of them!
       ParseError{ pePath, peMessage, peCode } ->
         throwError (err400 peCode peMessage){ qePath = pePath }
-
--- | A method for extracting profiling data from instrumented query results.
-newtype ExtractProfile = ExtractProfile
-  { runExtractProfile :: forall m. (MonadIO m, Tracing.MonadTrace m) => EncJSON -> m EncJSON
-  }
-
--- | A default implementation for queries with no instrumentation
-noProfile :: ExtractProfile
-noProfile = ExtractProfile pure
 
 -- | Monads which support query instrumentation
 class Monad m => MonadQueryInstrumentation m where
@@ -296,35 +215,6 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
         pure $ AQPQuery $ _aerTransaction result
       AQAsync s -> AQPAsyncQuery <$>
         DS.traverseAnnSimpleSelect prepareWithPlan (resolveAsyncActionQuery userInfo s)
-
--- | A pared-down version of 'convertQuerySelSet', for use in execution of
--- special case of SQL function mutations (see 'MDBFunction').
-convertFunction
-  :: forall m tx .
-     ( MonadError QErr m
-     , HasVersion
-     , MonadIO tx
-     , MonadTx tx
-     , Tracing.MonadTrace tx
-     )
-  => Env.Environment
-  -> UserInfo
-  -> HTTP.Manager
-  -> HTTP.RequestHeaders
-  -> DS.AnnSimpleSelG 'Postgres UnpreparedValue
-  -- ^ VOLATILE function as 'SelectExp'
-  -> m (tx EncJSON)
-convertFunction env userInfo manager reqHeaders unpreparedQuery = do
-  -- Transform the RQL AST into a prepared SQL query
-  (preparedQuery, PlanningSt _ _ planVals expectedVariables)
-    <- flip runStateT initPlanningSt
-       $ DS.traverseAnnSimpleSelect prepareWithPlan unpreparedQuery
-  validateSessionVariables expectedVariables $ _uiSession userInfo
-
-  pure $!
-    fst $ -- forget (Maybe PreparedSql)
-      mkCurPlanTx env manager reqHeaders userInfo id noProfile $
-        RFPPostgres $ irToRootFieldPlan planVals $ QDBSimple preparedQuery
 
 -- See Note [Temporarily disabling query plan caching]
 -- use the existing plan and new variables to create a pg query
