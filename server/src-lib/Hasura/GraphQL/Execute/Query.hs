@@ -1,4 +1,3 @@
-
 module Hasura.GraphQL.Execute.Query
   ( convertQuerySelSet
   -- , queryOpFromPlan
@@ -13,24 +12,30 @@ module Hasura.GraphQL.Execute.Query
   , noProfile
   ) where
 
-import qualified Data.Aeson                             as J
-import qualified Data.Environment                       as Env
-import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashMap.Strict.InsOrd             as OMap
-import qualified Data.IntMap                            as IntMap
-import qualified Data.Sequence.NonEmpty                 as NESeq
-import qualified Database.PG.Query                      as Q
-import qualified Language.GraphQL.Draft.Syntax          as G
-import qualified Network.HTTP.Client                    as HTTP
-import qualified Network.HTTP.Types                     as HTTP
+import           Hasura.Prelude
 
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
-import qualified Hasura.Logging                         as L
-import           Hasura.Server.Version                  (HasVersion)
-import qualified Hasura.SQL.DML                         as S
-import qualified Hasura.Tracing                         as Tracing
+import qualified Data.Aeson                                  as J
+import qualified Data.Environment                            as Env
+import qualified Data.HashMap.Strict                         as Map
+import qualified Data.HashMap.Strict.InsOrd                  as OMap
+import qualified Data.IntMap                                 as IntMap
+import qualified Data.Sequence.NonEmpty                      as NESeq
+import qualified Database.PG.Query                           as Q
+import qualified Language.GraphQL.Draft.Syntax               as G
+import qualified Network.HTTP.Client                         as HTTP
+import qualified Network.HTTP.Types                          as HTTP
 
-import           Hasura.Db
+import qualified Hasura.Backends.Postgres.SQL.DML            as S
+import qualified Hasura.Backends.Postgres.Translate.Select   as DS
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol      as GH
+import qualified Hasura.Logging                              as L
+import qualified Hasura.RQL.IR.Select                        as DS
+import qualified Hasura.Tracing                              as Tracing
+
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.Backends.Postgres.Execute.RemoteJoin
+import           Hasura.Backends.Postgres.SQL.Value
+import           Hasura.Backends.Postgres.Translate.Select   (asSingleRowJsonResp)
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
@@ -38,22 +43,17 @@ import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
-import           Hasura.Prelude
-import           Hasura.RQL.DML.RemoteJoin
-import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
 import           Hasura.RQL.Types
+import           Hasura.Server.Version                       (HasVersion)
 import           Hasura.Session
-import           Hasura.SQL.Value
 
-import qualified Hasura.RQL.DML.Select                  as DS
 
 data PreparedSql
   = PreparedSql
   { _psQuery       :: !Q.Query
   , _psPrepArgs    :: !PrepArgMap
-  , _psRemoteJoins :: !(Maybe RemoteJoins)
+  , _psRemoteJoins :: !(Maybe (RemoteJoins 'Postgres))
   }
-  deriving Show
 
 -- | Required to log in `query-log`
 instance J.ToJSON PreparedSql where
@@ -71,12 +71,12 @@ instance J.ToJSON RootFieldPlan where
     RFPPostgres pgPlan -> J.toJSON pgPlan
     RFPActionQuery _   -> J.String "Action Execution Tx"
 
-data ActionQueryPlan
-  = AQPAsyncQuery !DS.AnnSimpleSel -- ^ Cacheable plan
+data ActionQueryPlan (b :: Backend)
+  = AQPAsyncQuery !(DS.AnnSimpleSel b) -- ^ Cacheable plan
   | AQPQuery !ActionExecuteTx -- ^ Non cacheable transaction
 
 actionQueryToRootFieldPlan
-  :: PrepArgMap -> ActionQueryPlan -> RootFieldPlan
+  :: PrepArgMap -> ActionQueryPlan 'Postgres -> RootFieldPlan
 actionQueryToRootFieldPlan prepped = \case
   AQPAsyncQuery s -> RFPPostgres $
     PreparedSql (DS.selectQuerySQL DS.JASSingleObject s) prepped Nothing
@@ -145,29 +145,29 @@ mkCurPlanTx env manager reqHdrs userInfo instrument ep = \case
 -- convert a query from an intermediate representation to... another
 irToRootFieldPlan
   :: PrepArgMap
-  -> QueryDB S.SQLExp -> PreparedSql
+  -> QueryDB 'Postgres S.SQLExp -> PreparedSql
 irToRootFieldPlan prepped = \case
   QDBSimple s      -> mkPreparedSql getRemoteJoins (DS.selectQuerySQL DS.JASMultipleRows) s
   QDBPrimaryKey s  -> mkPreparedSql getRemoteJoins (DS.selectQuerySQL DS.JASSingleObject) s
   QDBAggregation s -> mkPreparedSql getRemoteJoinsAggregateSelect DS.selectAggregateQuerySQL s
   QDBConnection s  -> mkPreparedSql getRemoteJoinsConnectionSelect DS.connectionSelectQuerySQL s
   where
-    mkPreparedSql :: (s -> (t, Maybe RemoteJoins)) -> (t -> Q.Query) -> s -> PreparedSql
+    mkPreparedSql :: (s -> (t, Maybe (RemoteJoins 'Postgres))) -> (t -> Q.Query) -> s -> PreparedSql
     mkPreparedSql getJoins f simpleSel =
       let (simpleSel',remoteJoins) = getJoins simpleSel
       in PreparedSql (f simpleSel') prepped remoteJoins
 
 traverseQueryRootField
-  :: forall f a b c d h
+  :: forall f a b c d h backend
    . Applicative f
   => (a -> f b)
-  -> RootField (QueryDB a) c h d
-  -> f (RootField (QueryDB b) c h d)
+  -> RootField (QueryDB backend a) c h d
+  -> f (RootField (QueryDB backend b) c h d)
 traverseQueryRootField f = traverseDB \case
-  QDBSimple s       -> QDBSimple      <$> DS.traverseAnnSimpleSelect f s
-  QDBPrimaryKey s   -> QDBPrimaryKey  <$> DS.traverseAnnSimpleSelect f s
-  QDBAggregation s  -> QDBAggregation <$> DS.traverseAnnAggregateSelect f s
-  QDBConnection s   -> QDBConnection  <$> DS.traverseConnectionSelect f s
+  QDBSimple s      -> QDBSimple      <$> DS.traverseAnnSimpleSelect f s
+  QDBPrimaryKey s  -> QDBPrimaryKey  <$> DS.traverseAnnSimpleSelect f s
+  QDBAggregation s -> QDBAggregation <$> DS.traverseAnnAggregateSelect f s
+  QDBConnection s  -> QDBConnection  <$> DS.traverseConnectionSelect f s
 
 parseGraphQLQuery
   :: MonadError QErr m
@@ -288,7 +288,7 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
     usrVars = _uiSession userInfo
 
     convertActionQuery
-      :: ActionQuery UnpreparedValue -> StateT PlanningSt m ActionQueryPlan
+      :: ActionQuery 'Postgres UnpreparedValue -> StateT PlanningSt m (ActionQueryPlan 'Postgres)
     convertActionQuery = \case
       AQQuery s -> lift $ do
         result <- resolveActionExecution env logger userInfo s $ ActionExecContext manager reqHeaders usrVars
