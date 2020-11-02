@@ -15,13 +15,11 @@ const getSQLValue = value => {
 export const removeCommentsSQL = sql => {
   const regExp = commentsRegex;
   const comments = sql.match(new RegExp(regExp, 'gmi'));
-  
-  comments.forEach(commentString => {
-    sql = sql.replace(commentString, '');
-  });
-  
-  return sql;
-}
+
+  if (!comments || !comments.length) return sql;
+
+  return comments.reduce((acc, comment) => acc.replace(comment, ''), sql);
+};
 
 export const parseCreateSQL = sql => {
   const _objects = [];
