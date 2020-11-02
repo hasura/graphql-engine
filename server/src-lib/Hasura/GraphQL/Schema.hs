@@ -168,8 +168,8 @@ buildRelayRoleContext queryContext allTables allFunctions allActionInfos
       buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes
 
     queryPGFields <- buildRelayPostgresQueryFields validTableNames validFunctions
-    let subscriptionParser = P.selectionSet subscriptionRoot Nothing queryPGFields
-                             <&> fmap (P.handleTypename (RFRaw . J.String. G.unName))
+    subscriptionParser <- P.safeSelectionSet subscriptionRoot Nothing queryPGFields
+                             <&> fmap (fmap (P.handleTypename (RFRaw . J.String. G.unName)))
     queryParserFrontend <- queryWithIntrospectionHelper queryPGFields
       mutationParserFrontend subscriptionParser
     queryParserBackend <- queryWithIntrospectionHelper queryPGFields
@@ -201,17 +201,16 @@ unauthenticatedContext
   -> m GQLContext
 unauthenticatedContext queryRemotes mutationRemotes = P.runSchemaT $ do
   let queryFields = fmap (fmap RFRemote) queryRemotes
+  mutationParser <-
+    if null mutationRemotes
+    then pure Nothing
+    else P.safeSelectionSet mutationRoot Nothing (fmap (fmap RFRemote) mutationRemotes)
+         <&> Just . fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
+  subscriptionParser <-
+    P.safeSelectionSet subscriptionRoot Nothing []
+    <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
   queryParser <- queryWithIntrospectionHelper queryFields mutationParser subscriptionParser
   pure $ GQLContext (finalizeParser queryParser) (finalizeParser <$> mutationParser)
-  where
-    mutationParser =
-      if null mutationRemotes
-      then Nothing
-      else Just $ P.selectionSet mutationRoot Nothing (fmap (fmap RFRemote) mutationRemotes)
-           <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
-    subscriptionParser =
-      P.selectionSet subscriptionRoot Nothing []
-      <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
 
 finalizeParser :: Parser 'Output (P.ParseT Identity) a -> ParserFn a
 finalizeParser parser = runIdentity . P.runParseT . P.runParser parser
@@ -450,8 +449,8 @@ queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
         }
   let partialQueryFields =
         basicQueryFP ++ (fmap RFRaw <$> [schema partialSchema, typeIntrospection partialSchema])
-  pure $ P.selectionSet queryRoot Nothing partialQueryFields
-    <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
+  P.safeSelectionSet queryRoot Nothing partialQueryFields
+    <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
 
 -- | Prepare the parser for query-type GraphQL requests, but with introspection
 --   for queries, mutations and subscriptions built in.
@@ -490,8 +489,8 @@ buildSubscriptionParser
 buildSubscriptionParser pgQueryFields allActions = do
   actionSubscriptionFields <- buildActionSubscriptionFields allActions
   let subscriptionFields = pgQueryFields <> actionSubscriptionFields
-  pure $ P.selectionSet subscriptionRoot Nothing subscriptionFields
-         <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
+  P.safeSelectionSet subscriptionRoot Nothing subscriptionFields
+         <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
 
 -- buildRelayQueryParser
 --   :: forall m n r
@@ -609,7 +608,7 @@ buildMutationParser allRemotes allActions nonObjectCustomTypes pgMutationFields 
       ActionQuery -> pure Nothing
 
   let mutationFieldsParser = pgMutationFields <> catMaybes actionParsers <> fmap (fmap RFRemote) allRemotes
-  pure if null mutationFieldsParser
-       then Nothing
-       else Just $ P.selectionSet mutationRoot (Just $ G.Description "mutation root") mutationFieldsParser
-            <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
+  if null mutationFieldsParser
+  then pure Nothing
+  else P.safeSelectionSet mutationRoot (Just $ G.Description "mutation root") mutationFieldsParser
+            <&> Just . fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
