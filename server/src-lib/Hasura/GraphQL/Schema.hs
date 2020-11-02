@@ -492,20 +492,6 @@ buildSubscriptionParser pgQueryFields allActions = do
   P.safeSelectionSet subscriptionRoot Nothing subscriptionFields
          <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
 
--- buildRelayQueryParser
---   :: forall m n r
---    . ( MonadSchema n m
---      , MonadTableInfo r m
---      , MonadRole r m
---      , Has QueryContext r
---      )
---   => [P.FieldParser n (QueryRootField UnpreparedValue)]
---   -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
---   -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
---   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
--- buildRelayQueryParser queryFields mutationParser subscriptionParser = do
---   queryWithIntrospectionHelper queryFields mutationParser subscriptionParser
-
 buildPGMutationFields
   :: forall m n r
    . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
