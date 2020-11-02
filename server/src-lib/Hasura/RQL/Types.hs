@@ -48,8 +48,8 @@ import           Data.Text.Extended
 
 import           Hasura.Backends.Postgres.Connection as R
 import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.RQL.IR.BoolExp               as R
 import           Hasura.RQL.Types.Action             as R
-import           Hasura.RQL.Types.BoolExp            as R
 import           Hasura.RQL.Types.Column             as R
 import           Hasura.RQL.Types.Common             as R
 import           Hasura.RQL.Types.ComputedField      as R
