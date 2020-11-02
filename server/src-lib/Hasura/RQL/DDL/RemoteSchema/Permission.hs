@@ -307,6 +307,7 @@ parsePresetValue
   :: forall m
    . ( MonadValidate [RoleBasedSchemaValidationError] m
      , MonadReader G.SchemaDocument m
+     , MonadState Int m
      )
   => G.GType
   -> G.Name
@@ -324,10 +325,11 @@ parsePresetValue gType varName isStatic value = do
             G.VEnum _ -> refute $ pure $ ExpectedScalarValue typeName value
             G.VString t ->
               case (isSessionVariable t && (not isStatic)) of
-                True ->
+                True -> do
+                  variableName <- getVariableName
                   pure $
                     G.VVariable $
-                    SessionPresetVariable (mkSessionVariable t) gType varName SessionArgumentPresetScalar
+                    SessionPresetVariable (mkSessionVariable t) gType variableName SessionArgumentPresetScalar
                 False -> pure $ G.VString t
             G.VList _ -> refute $ pure $ ExpectedScalarValue typeName value
             G.VObject _ -> refute $ pure $ ExpectedScalarValue typeName value
@@ -340,10 +342,11 @@ parsePresetValue gType varName isStatic value = do
                 False -> refute $ pure $ EnumValueNotFound typeName $ G.unEnumValue e
             G.VString t ->
               case isSessionVariable t of
-                True ->
+                True -> do
+                  variableName <- getVariableName
                   pure $
                     G.VVariable $
-                    SessionPresetVariable (mkSessionVariable t) gType varName $
+                    SessionPresetVariable (mkSessionVariable t) gType variableName $
                     SessionArgumentPresetEnum enumVals
                 False -> refute $ pure $ ExpectedEnumValue typeName value
             _ -> refute $ pure $ ExpectedEnumValue typeName value
@@ -370,11 +373,20 @@ parsePresetValue gType varName isStatic value = do
             True -> refute $ pure $ DisallowSessionVarForListType varName
             False -> parsePresetValue gType' varName isStatic s'
         v -> parsePresetValue gType' varName isStatic v
+  where
+    -- We need to have distinct variable names to avoid clashes between
+    -- variable names.
+    getVariableName :: m G.Name
+    getVariableName = do
+      ctr <- get
+      modify (\c -> c + 1)
+      pure $ (G.unsafeMkName $ G.unName varName <> "__" <> (T.pack $ show ctr))
 
 parsePresetDirective
   :: forall m
   .  ( MonadValidate [RoleBasedSchemaValidationError] m
      , MonadReader G.SchemaDocument m
+     , MonadState Int m
      )
   => G.GType
   -> G.Name
@@ -509,6 +521,7 @@ validateEnumTypeDefinitions providedEnums upstreamEnums = do
 validateInputValueDefinition
   :: ( MonadValidate [RoleBasedSchemaValidationError] m
      , MonadReader G.SchemaDocument m
+     , MonadState Int m
      )
   => G.InputValueDefinition
   -> G.InputValueDefinition
@@ -536,6 +549,7 @@ validateInputValueDefinition providedDefn upstreamDefn inputObjectName = do
 validateArguments
   :: ( MonadValidate [RoleBasedSchemaValidationError] m
      , MonadReader G.SchemaDocument m
+     , MonadState Int m
      )
   => (G.ArgumentsDefinition G.InputValueDefinition)
   -> (G.ArgumentsDefinition RemoteSchemaInputValueDefinition)
@@ -562,6 +576,7 @@ validateArguments providedArgs upstreamArgs parentTypeName = do
 validateInputObjectTypeDefinition
   :: ( MonadValidate [RoleBasedSchemaValidationError] m
      , MonadReader G.SchemaDocument m
+     , MonadState Int m
      )
   => G.InputObjectTypeDefinition G.InputValueDefinition
   -> G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition
@@ -578,6 +593,7 @@ validateInputObjectTypeDefinition providedInputObj upstreamInputObj = do
 validateInputObjectTypeDefinitions
   :: ( MonadValidate [RoleBasedSchemaValidationError] m
      , MonadReader G.SchemaDocument m
+     , MonadState Int m
      )
   => [G.InputObjectTypeDefinition G.InputValueDefinition]
   -> [G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition]
@@ -594,6 +610,7 @@ validateInputObjectTypeDefinitions providedInputObjects upstreamInputObjects = d
 validateFieldDefinition
   :: ( MonadValidate [RoleBasedSchemaValidationError] m
      , MonadReader G.SchemaDocument m
+     , MonadState Int m
      )
   => (G.FieldDefinition G.InputValueDefinition)
   -> (G.FieldDefinition RemoteSchemaInputValueDefinition)
@@ -613,6 +630,7 @@ validateFieldDefinition providedFieldDefinition upstreamFieldDefinition (parentT
 validateFieldDefinitions
   :: ( MonadValidate [RoleBasedSchemaValidationError] m
      , MonadReader G.SchemaDocument m
+     , MonadState Int m
      )
   => [(G.FieldDefinition G.InputValueDefinition)]
   -> [(G.FieldDefinition RemoteSchemaInputValueDefinition)]
@@ -632,6 +650,7 @@ validateFieldDefinitions providedFldDefnitions upstreamFldDefinitions parentType
 validateInterfaceDefinition
   :: ( MonadValidate [RoleBasedSchemaValidationError] m
      , MonadReader G.SchemaDocument m
+     , MonadState Int m
      )
   => G.InterfaceTypeDefinition () G.InputValueDefinition
   -> G.InterfaceTypeDefinition () RemoteSchemaInputValueDefinition
@@ -648,6 +667,7 @@ validateInterfaceDefinition providedInterfaceDefn upstreamInterfaceDefn = do
 validateInterfaceDefinitions
   :: ( MonadValidate [RoleBasedSchemaValidationError] m
      , MonadReader G.SchemaDocument m
+     , MonadState Int m
      )
   => [G.InterfaceTypeDefinition () G.InputValueDefinition]
   -> [G.InterfaceTypeDefinition () RemoteSchemaInputValueDefinition]
@@ -722,6 +742,7 @@ validateUnionTypeDefinitions providedUnions upstreamUnions = do
 validateObjectDefinition
   :: ( MonadValidate [RoleBasedSchemaValidationError] m
      , MonadReader G.SchemaDocument m
+     , MonadState Int m
      )
   => G.ObjectTypeDefinition G.InputValueDefinition
   -> G.ObjectTypeDefinition RemoteSchemaInputValueDefinition
@@ -756,6 +777,7 @@ validateObjectDefinition providedObj upstreamObj interfacesDeclared = do
 validateObjectDefinitions
   :: ( MonadValidate [RoleBasedSchemaValidationError] m
      , MonadReader G.SchemaDocument m
+     , MonadState Int m
      )
   => [G.ObjectTypeDefinition G.InputValueDefinition]
   -> [G.ObjectTypeDefinition RemoteSchemaInputValueDefinition]
@@ -862,6 +884,7 @@ partitionTypeDefinition (G.TypeDefinitionInputObject inputObjectDefn) =
 validateRemoteSchema
   :: ( MonadValidate [RoleBasedSchemaValidationError] m
      , MonadReader G.SchemaDocument m
+     , MonadState Int m
      )
   => RemoteSchemaIntrospection
   -> m IntrospectionResult
@@ -916,7 +939,11 @@ resolveRoleBasedRemoteSchema (G.SchemaDocument providedTypeDefns) upstreamRemote
         providedTypeDefns <> (map (G.TypeSystemDefinitionType . G.TypeDefinitionScalar) defaultScalars)
   introspectionRes <-
     either (throw400 InvalidCustomRemoteSchemaDocument . showErrors) pure
-    =<< (runValidateT $ flip runReaderT providedSchemaDocWithDefaultScalars $ validateRemoteSchema $ irDoc $ rscIntro upstreamRemoteCtx)
+    =<< (runValidateT
+         $ fmap fst
+         $ flip runStateT 0
+         $ flip runReaderT providedSchemaDocWithDefaultScalars
+         $ validateRemoteSchema $ irDoc $ rscIntro upstreamRemoteCtx)
   pure (introspectionRes, [schemaDependency])
   where
     showErrors :: [RoleBasedSchemaValidationError] -> Text
