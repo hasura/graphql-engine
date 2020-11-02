@@ -276,16 +276,16 @@ buildPostgresQueryFields allTables allFunctions = do
     selectPerms <- tableSelectPermissions table
     customRootFields <- _tcCustomRootFields . _tciCustomConfig . _tiCoreInfo <$> askTableInfo table
     for selectPerms \perms -> do
-      displayName <- qualifiedObjectToName table
+      tableGQLName <- getTableGQLName table
       let fieldsDesc = G.Description $ "fetch data from the table: " <>> table
-          aggName = displayName <> $$(G.litName "_aggregate")
+          aggName = tableGQLName <> $$(G.litName "_aggregate")
           aggDesc = G.Description $ "fetch aggregated fields from the table: " <>> table
-          pkName = displayName <> $$(G.litName "_by_pk")
+          pkName = tableGQLName <> $$(G.litName "_by_pk")
           pkDesc = G.Description $ "fetch data from the table: " <> table <<> " using primary key columns"
       catMaybes <$> sequenceA
-        [ requiredFieldParser (RFDB . QDBSimple)      $ selectTable          table (fromMaybe displayName $ _tcrfSelect          customRootFields) (Just fieldsDesc) perms
-        , mapMaybeFieldParser (RFDB . QDBPrimaryKey)  $ selectTableByPk      table (fromMaybe pkName      $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms
-        , mapMaybeFieldParser (RFDB . QDBAggregation) $ selectTableAggregate table (fromMaybe aggName     $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms
+        [ requiredFieldParser (RFDB . QDBSimple)      $ selectTable          table (fromMaybe tableGQLName $ _tcrfSelect          customRootFields) (Just fieldsDesc) perms
+        , mapMaybeFieldParser (RFDB . QDBPrimaryKey)  $ selectTableByPk      table (fromMaybe pkName       $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms
+        , mapMaybeFieldParser (RFDB . QDBAggregation) $ selectTableAggregate table (fromMaybe aggName      $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms
         ]
   functionSelectExpParsers <- for allFunctions \function -> do
     let targetTable = fiReturnType function
@@ -362,8 +362,8 @@ buildRelayPostgresQueryFields allTables allFunctions = do
     pkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns)
                    <$> askTableInfo table
     selectPerms <- MaybeT $ tableSelectPermissions table
-    displayName <- qualifiedObjectToName table
-    let fieldName = displayName <> $$(G.litName "_connection")
+    tableGQLName <- getTableGQLName table
+    let fieldName = tableGQLName <> $$(G.litName "_connection")
         fieldDesc = Just $ G.Description $ "fetch data from the table: " <>> table
     lift $ selectTableConnection table fieldName fieldDesc pkeyColumns selectPerms
 
@@ -500,7 +500,7 @@ buildPGMutationFields
 buildPGMutationFields scenario allTables = do
   concat . catMaybes <$> for (toList allTables) \table -> do
     tableCoreInfo <- _tiCoreInfo <$> askTableInfo table
-    displayName   <- qualifiedObjectToName table
+    tableGQLName   <- getTableGQLName table
     tablePerms    <- tablePermissions table
     for tablePerms \RolePermInfo{..} -> do
       let customRootFields = _tcCustomRootFields $ _tciCustomConfig tableCoreInfo
@@ -514,9 +514,9 @@ buildPGMutationFields scenario allTables = do
               else return insertPermission
 
       inserts <- fmap join $ whenMaybe (isMutable viIsInsertable viewInfo) $ for scenarioInsertPermissionM \insertPerms -> do
-        let insertName = $$(G.litName "insert_") <> displayName
+        let insertName = $$(G.litName "insert_") <> tableGQLName
             insertDesc = G.Description $ "insert data into the table: " <>> table
-            insertOneName = $$(G.litName "insert_") <> displayName <> $$(G.litName "_one")
+            insertOneName = $$(G.litName "insert_") <> tableGQLName <> $$(G.litName "_one")
             insertOneDesc = G.Description $ "insert a single row into the table: " <>> table
         insert <- insertIntoTable table (fromMaybe insertName $ _tcrfInsert customRootFields) (Just insertDesc) insertPerms _permSel _permUpd
         -- select permissions are required for InsertOne: the
@@ -528,9 +528,9 @@ buildPGMutationFields scenario allTables = do
         pure $ fmap (RFDB . MDBInsert) <$> insert : maybeToList insertOne
 
       updates <- fmap join $ whenMaybe (isMutable viIsUpdatable viewInfo) $ for _permUpd \updatePerms -> do
-        let updateName = $$(G.litName "update_") <> displayName
+        let updateName = $$(G.litName "update_") <> tableGQLName
             updateDesc = G.Description $ "update data of the table: " <>> table
-            updateByPkName = $$(G.litName "update_") <> displayName <> $$(G.litName "_by_pk")
+            updateByPkName = $$(G.litName "update_") <> tableGQLName <> $$(G.litName "_by_pk")
             updateByPkDesc = G.Description $ "update single row of the table: " <>> table
         update <- updateTable table (fromMaybe updateName $ _tcrfUpdate customRootFields) (Just updateDesc) updatePerms _permSel
         -- likewise; furthermore, primary keys can only be tested in
@@ -543,26 +543,26 @@ buildPGMutationFields scenario allTables = do
       -- when the table/view is mutable and there exists a delete permission
       deletes <- fmap join $ whenMaybe (isMutable viIsDeletable viewInfo) $
         for _permDel $ \deletePermission -> do
-          delete <- buildDeleteField table displayName (_tcrfDelete customRootFields)
+          delete <- buildDeleteField table tableGQLName (_tcrfDelete customRootFields)
             deletePermission _permSel
           -- select permission is needed for deleteByPk field so that a return type
           -- for the field can be generated
           deleteByPk <- fmap join $ for _permSel $
-            buildDeleteByPkField table displayName (_tcrfDeleteByPk customRootFields) deletePermission
+            buildDeleteByPkField table tableGQLName (_tcrfDeleteByPk customRootFields) deletePermission
 
           pure $ fmap (RFDB . MDBDelete) <$> delete : maybeToList deleteByPk
 
       pure $ concat $ catMaybes [inserts, updates, deletes]
 
   where
-    buildDeleteField table displayName customName deletePermission selectPermission = do
-      let deleteName = $$(G.litName "delete_") <> displayName
+    buildDeleteField table tableGQLName customName deletePermission selectPermission = do
+      let deleteName = $$(G.litName "delete_") <> tableGQLName
           deleteDesc = G.Description $ "delete data from the table: " <>> table
       deleteFromTable table (fromMaybe deleteName customName) (Just deleteDesc)
         deletePermission selectPermission
 
-    buildDeleteByPkField table displayName customName deletePermission = do
-      let fieldName = $$(G.litName "delete_") <> displayName <> $$(G.litName "_by_pk")
+    buildDeleteByPkField table tableGQLName customName deletePermission = do
+      let fieldName = $$(G.litName "delete_") <> tableGQLName <> $$(G.litName "_by_pk")
           fieldDescription = G.Description $ "delete single row from the table: " <>> table
       deleteFromTableByPk table (fromMaybe fieldName customName) (Just fieldDescription) deletePermission
 
