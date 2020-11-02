@@ -78,8 +78,7 @@ Contains the metadata related to tables
           foreign_key_constraint_on: author_id
 
 
-In above example ``tables.yaml`` contains two tables authors and books. Here webhook_url can be http endpoint that should be triggered or environment variable
-which has http endpoints that should be triggered.
+In the above example, ``tables.yaml`` contains two tables ``authors`` and ``books``. The webhook_url can be an HTTP endpoint that should be triggered or an environment variable that has HTTP endpoints that should be triggered.
 
 remote_schemas.yaml
 ^^^^^^^^^^^^^^^^^^^
@@ -94,8 +93,7 @@ Contains the metadata related to :ref:`remote schemas<remote_schemas>`
         timeout_seconds: 40
 
 
-In above example ``remote_schemas.yaml`` contains information about remote schema local where local graphql urls are specified via
-REMOTE_SCHEMA environment variable.
+In the above example, ``remote_schemas.yaml`` contains some information about remote schema local where local GraphQL URLs are specified via the ``REMOTE_SCHEMA`` environment variable.
 
 ..  code-block::  yaml
 
@@ -105,7 +103,7 @@ REMOTE_SCHEMA environment variable.
         timeout_seconds: 40
 
 
-The above example is same to the previous except the url is specified directly not via environment variable.
+The above example is the same as the previous one except that the URL is specified directly and not via an environment variable.
 
 functions.yaml
 ^^^^^^^^^^^^^^
@@ -119,7 +117,7 @@ Contains the metadata related to :ref:`custom functions<custom_sql_functions>`
       name: search_books
 
 
-In the above example ``functions.yaml`` file consists of search_books custom sql function
+In the above example, the ``functions.yaml`` consists of ``search_books`` custom SQL function
 
 query_collections.yaml
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -149,7 +147,7 @@ Conatins the information about query query collections
               }
           }
     
-In above example there is only one collection ``allowed_queries`` which contains two queries ``test`` and ``test2`` .
+In the above example, there is only one collection called ``allowed_queries`` which contains two queries ``test`` and ``test2`` .
 
 
 allow_list.yaml
@@ -161,8 +159,7 @@ Contains the metadata related to :ref:`allow lists<allow_list>`
 
   - collection: allowed-queries
 
-The allowed queries are under the collection name ``allowed-queries``
-``allow_list.yaml`` contains collection name of allowed queries.
+The allowed queries are under the collection name ``allowed-queries`` and ``allow_list.yaml`` contains the collection name of allowed queries.
 
 
 
@@ -191,7 +188,7 @@ Contains the metadata related to :ref:`actions<actions>`
       scalars: []
 
 
-In above example the url is specified directly to handler field
+In the above example, the URL is specified directly to handler field
 
 ..  code-block::  yaml
 
@@ -213,7 +210,7 @@ In above example the url is specified directly to handler field
       scalars: []
 
 
-The above example is same to the previous except the url is specified directly not via environment variable.
+The above example is same to the previous except the URL is specified via environment variable.
 
 actions.graphql
 ^^^^^^^^^^^^^^^
@@ -235,7 +232,7 @@ Contains all the action definition and custom type definitions where the metadat
       }
 
 
-The above example actiions.graphql contains the definition of greet action and custom type  SampleOutput and SampleInput definitions.
+The above example ``actions.graphql`` contains the definition of greet action and custom type ``SampleOutput`` and ``SampleInput`` definitions.
 
 cron_triggers.yaml
 ^^^^^^^^^^^^^^^^^^
@@ -255,9 +252,8 @@ Contains metadata related to cron triggers
             tolerance_seconds: 21600
             retry_interval_seconds: 10
 
-In above example ``cron_triggers.yaml`` contains the information about the test cron trigger. Here webhook_url can be http endpoint that should be triggered or environment variable
-which has http endpoints that should be triggered.
+In the above example, ``cron_triggers.yaml`` contains the information about the test cron trigger. The webhook_url can be an HTTP endpoint that should be triggered or an environment variable that has HTTP endpoints that should be triggered.
 
 ..  note::
   
-  The metadata about cron triggers will not be stored if ``Include this trigger in Hasura Metadata`` is disabled in advanced option of event in console.
+  The metadata about cron triggers will not be stored if ``Include this trigger in Hasura Metadata`` is disabled in the advanced option of ``events`` on the console.
