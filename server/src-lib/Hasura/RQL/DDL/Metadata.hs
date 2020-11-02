@@ -223,7 +223,7 @@ fetchMetadataFromHdbTables = liftTx do
   collections <- oMapFromL _ccName <$> fetchCollections
 
   -- fetch allow list
-  allowlist <- (HSIns.fromList . map CollectionReq) <$> fetchAllowlists
+  allowlist <- HSIns.fromList . map CollectionReq <$> fetchAllowlists
 
   customTypes <- fetchCustomTypes
 
