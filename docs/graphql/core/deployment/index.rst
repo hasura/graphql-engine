@@ -45,7 +45,6 @@ to configure the Hasura GraphQL engine for your production environment:
 - :ref:`Updating GraphQL engine <update_hge>`
 - :ref:`Downgrading GraphQL engine <downgrade_hge>`
 
-
 Logs
 ----
 
@@ -75,6 +74,7 @@ If you're moving your Hasura GraphQL engine to production, consult the following
    allow-list
    HTTP Compression <compression>
    Production checklist <production-checklist>
+   Managing development environments <environments>
    Custom Docker images or binaries <custom-docker-images>
    Updating GraphQL engine <updating-graphql-engine>
    Downgrading GraphQL engine <downgrading>

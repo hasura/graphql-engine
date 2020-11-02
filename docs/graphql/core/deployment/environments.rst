@@ -1,11 +1,11 @@
 .. meta::
-   :description: Guide for moving between environments in Hasura Cloud
-   :keywords: hasura, docs, cloud, guide, local dev, staging, production, environment
+   :description: Guide for managing development environments for Hasura
+   :keywords: hasura, docs, guide, local dev, staging, production, environment
 
-.. _guide_environments_cloud:
+.. _guide_environments:
 
-Moving between environments
-===========================
+Managing development environments for Hasura
+============================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -15,7 +15,7 @@ Moving between environments
 Introduction
 ------------
 
-This guide will show how to approach various stages of development with Hasura Cloud.
+This guide will show how to approach various stages of development with Hasura.
 
 Local development
 -----------------
@@ -62,7 +62,7 @@ modify the Postgres schema, and the CLI will take care of creating the ``up`` an
 
 .. code-block:: bash
 
-  hasura migrate create init-schema --from-server
+    hasura migrate create init-schema --from-server
 
 This will take a ``pg_dump`` of the ``public`` schema and create an ``up`` migration to get started. 
 
@@ -70,13 +70,13 @@ Alternatively, if you have an SQL file with all the DDL statements, you can also
 
 .. code-block:: bash
 
-  hasura migrate create init-schema --sql-from-file ./file.sql
+    hasura migrate create init-schema --sql-from-file ./file.sql
 
 Once you set this up, you can continue to use the Hasura console served via the CLI and make any schema changes and migration files will be automatically created as you work along.
 
 .. note::
 
-  If you're interested in a more extensive guide on setting up migrations, see :ref:`this docs page <migrations_setup>`.
+    If you're interested in a more extensive guide on setting up migrations, see :ref:`this docs page <migrations_setup>`.
 
 Squashing migrations
 ********************
@@ -88,7 +88,8 @@ you can :ref:`squash the migration files into a single file <hasura_migrate_squa
 
 .. code-block:: bash
 
-  hasura migrate squash --from <version>
+    hasura migrate squash --from <version>
+
 
 Metadata
 ^^^^^^^^
@@ -109,7 +110,7 @@ so that you can roll back corresponding changes later, if required.
 Developing and testing business logic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Hasura lets you write business logic in a flexible way. 
+Hasura allows you to write business logic in a flexible way.
 If you are comfortable writing your own GraphQL server from scratch, you can add them as a :ref:`remote schema <remote_schemas>`. 
 If you are interested in (re)using REST API endpoints, you can map GraphQL types with :ref:`actions <actions>`.
 
@@ -138,7 +139,7 @@ For example, if all your REST API endpoints are running in a single server, you 
 
 .. code-block:: bash
 
-  {{ACTION_BASE_URL}}/createUser
+    {{ACTION_BASE_URL}}/createUser
 
 The ``{{ACTION_BASE_URL}}`` will typically have values like ``http://myserver.com`` or when running in localhost, 
 it will look something like ``http://localhost:3000``. All of this will be passed to the graphql-engine server as ENVs.
@@ -190,7 +191,7 @@ If an environment variable is being used by some part of the metadata and isn't 
 Before applying migrations/metadata, we need to ensure that the configuration is correct. 
 Additionally, you can check for the following:
 
-- The GraphQL endpoint needs to be :ref:`secured <securing_graphql_endpoint>`. You will need to add an ``HASURA_GRAPHQL_ADMIN_SECRET`` env var.
+- The GraphQL endpoint needs to be :ref:`secured <securing_graphql_endpoint>`. You will need to add a ``HASURA_GRAPHQL_ADMIN_SECRET`` env var.
 - Environment variables for various entities like :ref:`actions <actions>` / :ref:`remote schemas <remote_schemas>` / :ref:`event triggers <event_triggers>` need to be configured.
 
 Applying migrations and metadata
@@ -200,7 +201,8 @@ Migrations can be :ref:`manually applied <hasura_migrate_apply>` to any Hasura i
 
 .. code-block:: bash
 
-  hasura migrate apply --endpoint <graphql-engine-endpoint> --admin-secret <admin-secret>
+    hasura migrate apply --endpoint <graphql-engine-endpoint> --admin-secret <admin-secret>
+
 
 This will apply only migrations which have not been already applied to the instance.
 
@@ -208,21 +210,9 @@ Metadata can be :ref:`manually applied <hasura_metadata_apply>` via:
 
 .. code-block:: bash
 
-  hasura metadata apply --endpoint <graphql-engine-endpoint> --admin-secret <admin-secret>
+    hasura metadata apply --endpoint <graphql-engine-endpoint> --admin-secret <admin-secret>
 
 If you are self-hosting Hasura and have a CI/CD setup, you can also :ref:`auto-apply migrations/metadata <auto_apply_migrations>` when the graphql-engine server starts.
-
-Running tests - regression testing
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-A good development workflow would require that tests be run 1) early in the development process, 
-and 2) automatically with changes, to ensure changes to the schema don’t break functionality.
-
-As you keep making schema changes, running regression tests on Hasura Cloud will ensure you are not making unwanted breaking changes.
-
-.. note::
-
-    Read more about :ref:`regression testing with Hasura <regression_tests>`.
 
 Setting up CI/CD
 ^^^^^^^^^^^^^^^^
@@ -233,12 +223,12 @@ When you want to deploy your changes to staging, you may push your latest code t
 
 The process for CI/CD with Hasura instances is essentially a mirror of the manual local workflow you would use. 
 The CI/CD instance should download or be given the CLI as an artifact, and then run the series of commands you’d like to integrate. 
-This generally includes ``hasura migrate apply`` and ``hasura metadata apply``, and might also include ``hasura pro regression-tests run``.
+This generally includes ``hasura migrate apply`` and ``hasura metadata apply``.
 
 To do this, you would download the CLI either through wget/curl, or if in a Dockerfile and okay with using a static version number, 
 use ``COPY --from`` to extract the binary from ``hasura/graphql-engine:vX.X-cli-migrations``.
 
-Then run the migrate/metadata/regression tests commands, passing in the endpoint and admin secret for the remote.
+Then run the migrate/metadata commands, passing in the endpoint and admin secret for the remote.
 
 .. note::
 
@@ -246,6 +236,9 @@ Then run the migrate/metadata/regression tests commands, passing in the endpoint
 
 Going live / production
 -----------------------
+
+:ref:`Hasura Cloud <cloud_getting_started>` is the recommended hosting solution for Hasura as it takes care of Infrastructure management automatically (like auto-scaling), 
+apart from providing analytics/rate limiting and other advanced features.
 
 Like with staging, the migrations/metadata workflow needs to be repeated. Also, the following steps should be taken:
 
@@ -258,7 +251,7 @@ Like with staging, the migrations/metadata workflow needs to be repeated. Also, 
 
 .. note::
 
-  Read more about the above steps in the :ref:`production checklist <production_checklist>`.
+    Read more about the above steps in the :ref:`production checklist <production_checklist>`.
 
 Maintenance / updates
 ---------------------
@@ -268,34 +261,7 @@ After going live, you can continue to use the same migrations/metadata workflow 
 Updating Hasura version
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Hasura Cloud is automatically updated with the most recent stable version. 
+Instructions on how to update the Hasura version depend on where your Hasura container is hosted. But broadly what we need to update is the Docker image 
+``hasura/graphql-engine:<version>`` where the ``<version>`` will be replaced with the latest version (``v1.3.1`` for example).
 
-.. note::
-
-  In the future, it will be possible to downgrade to an earlier version, as well as upgrade to beta versions.
-
-Updating ENV via API
-^^^^^^^^^^^^^^^^^^^^
-
-Hasura Cloud exposes GraphQL APIs to update environment variables or even create projects from scratch. 
-For example, to update a few environment variables, you can make a mutation via the API like in the following example:
-
-.. code-block:: graphql
-
-    mutation updateTenantEnv {
-      updateTenantEnv(
-        tenantId: "7a79cf94-0e53-4520-a560-1b02bf522f08"
-        currentHash: "6902a395d70072fbf8d36288f0eacc36c9d82e68"
-        envs: [
-          { key: "HASURA_GRAPHQL_ENABLE_CONSOLE", value: "false" },
-          { key: "ACTIONS_ENDPOINT", value: "https://my-actions-endpoint.com/actions" }
-        ]
-      ) {
-          hash
-          envVars
-        }
-    }
-
-.. note::
-
-    Read more in the :ref:`API reference <cloud_api_reference>`.
+Hasura Cloud is automatically updated with the most recent stable version. For other popular vendors, check out :ref:`these updating guides <update_hge>`.

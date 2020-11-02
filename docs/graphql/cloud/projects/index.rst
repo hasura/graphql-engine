@@ -59,4 +59,5 @@ Dig deeper
    Switching pricing plans <pricing>
    Heroku database URL Sync <heroku-url-sync>
    Deleting projects <delete>
+   Managing development environments <environments>
    

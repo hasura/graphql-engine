@@ -29,7 +29,7 @@ realtime monitoring, caching, tracing, and rate-limiting. It supports both new a
       - :ref:`manage_project_collaborators`
       - :ref:`manage_project_env_vars`
       - :ref:`secure_project`
-      - :ref:`guide_environments`
+      - :ref:`Managing development environments <guide_environments_cloud>`
 
   .. container:: toc-list-section
 
@@ -76,4 +76,3 @@ realtime monitoring, caching, tracing, and rate-limiting. It supports both new a
   hasurapro-cli/index
   api-reference
   glossary
-  guides/index
