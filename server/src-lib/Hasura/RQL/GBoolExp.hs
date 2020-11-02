@@ -7,17 +7,17 @@ module Hasura.RQL.GBoolExp
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict as M
-import qualified Data.Text           as T
+import qualified Data.HashMap.Strict                as M
+import qualified Data.Text                          as T
 
 import           Data.Aeson
 import           Data.Monoid
-
-import qualified Hasura.SQL.DML      as S
-
 import           Data.Text.Extended
+
+import qualified Hasura.Backends.Postgres.SQL.DML   as S
+
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 
 type OpRhsParser m v =
   PGType PGColumnType -> Value -> m v
@@ -340,19 +340,19 @@ convColRhs tableQual = \case
     -- Convert the where clause on the relationship
     curVarNum <- get
     put $ curVarNum + 1
-    let newIden  = Iden $ "_be_" <> T.pack (show curVarNum) <> "_"
-                   <> snakeCaseQualObject relTN
-        newIdenQ = S.QualIden newIden Nothing
+    let newIdentifier  = Identifier $ "_be_" <> T.pack (show curVarNum) <> "_"
+                   <> snakeCaseQualifiedObject relTN
+        newIdenQ = S.QualifiedIdentifier newIdentifier Nothing
     annRelBoolExp <- convBoolRhs' newIdenQ nesAnn
     let backCompExp = foldr (S.BEBin S.AndOp) (S.BELit True) $
           flip map (M.toList colMapping) $ \(lCol, rCol) ->
             S.BECompare S.SEQ
-            (mkQCol (S.QualIden newIden Nothing) rCol)
+            (mkQCol (S.QualifiedIdentifier newIdentifier Nothing) rCol)
             (mkQCol tableQual lCol)
         innerBoolExp = S.BEBin S.AndOp backCompExp annRelBoolExp
-    return $ S.mkExists (S.FISimple relTN $ Just $ S.Alias newIden) innerBoolExp
+    return $ S.mkExists (S.FISimple relTN $ Just $ S.Alias newIdentifier) innerBoolExp
   where
-    mkQCol q = S.SEQIden . S.QIden q . toIden
+    mkQCol q = S.SEQIdentifier . S.QIdentifier q . toIdentifier
 
 foldExists :: GExists (AnnBoolExpFldSQL 'Postgres) -> State Word64 S.BoolExp
 foldExists (GExists qt wh) = do
@@ -380,8 +380,8 @@ mkFieldCompExp
   :: S.Qual -> FieldName -> OpExpG 'Postgres S.SQLExp -> S.BoolExp
 mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
   where
-    mkQCol = S.SEQIden . S.QIden qual . toIden
-    mkQField = S.SEQIden . S.QIden qual . Iden . getFieldNameTxt
+    mkQCol = S.SEQIdentifier . S.QIdentifier qual . toIdentifier
+    mkQField = S.SEQIdentifier . S.QIdentifier qual . Identifier . getFieldNameTxt
 
     mkCompExp :: S.SQLExp -> OpExpG 'Postgres S.SQLExp -> S.BoolExp
     mkCompExp lhs = \case

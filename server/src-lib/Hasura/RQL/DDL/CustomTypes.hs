@@ -10,16 +10,17 @@ module Hasura.RQL.DDL.CustomTypes
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.HashSet                  as Set
-import qualified Data.List.Extended            as L
-import qualified Data.Text                     as T
-import qualified Database.PG.Query             as Q
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.HashMap.Strict                as Map
+import qualified Data.HashSet                       as Set
+import qualified Data.List.Extended                 as L
+import qualified Data.Text                          as T
+import qualified Database.PG.Query                  as Q
+import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Control.Monad.Validate
-
 import           Data.Text.Extended
+
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -257,7 +258,7 @@ data CustomTypeValidationError
   deriving (Show, Eq)
 
 showCustomTypeValidationError
-  :: CustomTypeValidationError -> T.Text
+  :: CustomTypeValidationError -> Text
 showCustomTypeValidationError = \case
   DuplicateTypeNames types ->
     "duplicate type names: " <> dquoteList types
@@ -342,7 +343,7 @@ resolveCustomTypes tableCache customTypes allPGScalars =
   either (throw400 ConstraintViolation . showErrors) pure
     =<< runValidateT (validateCustomTypeDefinitions tableCache customTypes allPGScalars)
   where
-    showErrors :: [CustomTypeValidationError] -> T.Text
+    showErrors :: [CustomTypeValidationError] -> Text
     showErrors allErrors =
       "validation for the given custom types failed " <> reasonsMessage
       where

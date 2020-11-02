@@ -7,22 +7,22 @@ module Hasura.RQL.DDL.Schema.Cache.Permission
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict.Extended       as M
-import qualified Data.Sequence                      as Seq
+import qualified Data.HashMap.Strict.Extended        as M
+import qualified Data.Sequence                       as Seq
 
 import           Control.Arrow.Extended
 import           Data.Aeson
-
-import qualified Hasura.Incremental                 as Inc
-
 import           Data.Text.Extended
-import           Hasura.Db
+
+import qualified Hasura.Incremental                  as Inc
+
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
-import           Hasura.SQL.Types
 import           Hasura.Session
 
 buildTablePermissions
@@ -32,7 +32,7 @@ buildTablePermissions
      , QualifiedTable
      , FieldInfoMap (FieldInfo 'Postgres)
      , HashSet CatalogPermission
-     ) `arr` (RolePermInfoMap 'Postgres)
+     ) `arr` RolePermInfoMap 'Postgres
 buildTablePermissions = Inc.cache proc (tableCache, tableName, tableFields, tablePermissions) ->
   (| Inc.keyed (\_ rolePermissions -> do
        let (insertPerms, selectPerms, updatePerms, deletePerms) =

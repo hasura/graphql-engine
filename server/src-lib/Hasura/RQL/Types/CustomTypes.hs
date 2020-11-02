@@ -32,29 +32,29 @@ module Hasura.RQL.Types.CustomTypes
   , emptyAnnotatedCustomTypes
   ) where
 
-import           Control.Lens.TH                (makeLenses)
+import           Control.Lens.TH                    (makeLenses)
 import           Data.Text.Extended
-import           Instances.TH.Lift              ()
-import           Language.Haskell.TH.Syntax     (Lift)
+import           Instances.TH.Lift                  ()
+import           Language.Haskell.TH.Syntax         (Lift)
 
-import qualified Data.Aeson                     as J
-import qualified Data.Aeson.Casing              as J
-import qualified Data.Aeson.TH                  as J
-import qualified Data.HashMap.Strict            as Map
-import qualified Data.List.NonEmpty             as NEList
-import qualified Data.Text                      as T
-import qualified Language.GraphQL.Draft.Parser  as GParse
-import qualified Language.GraphQL.Draft.Printer as GPrint
-import qualified Language.GraphQL.Draft.Syntax  as G
-import qualified Text.Builder                   as T
+import qualified Data.Aeson                         as J
+import qualified Data.Aeson.Casing                  as J
+import qualified Data.Aeson.TH                      as J
+import qualified Data.HashMap.Strict                as Map
+import qualified Data.List.NonEmpty                 as NEList
+import qualified Data.Text                          as T
+import qualified Language.GraphQL.Draft.Parser      as GParse
+import qualified Language.GraphQL.Draft.Printer     as GPrint
+import qualified Language.GraphQL.Draft.Syntax      as G
+import qualified Text.Builder                       as T
 
-import           Hasura.Incremental             (Cacheable)
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Incremental                 (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Column
-import           Hasura.RQL.Types.Common        (RelType, ScalarType)
+import           Hasura.RQL.Types.Common            (RelType, ScalarType)
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
-import           Hasura.SQL.Types
 
 newtype GraphQLType
   = GraphQLType { unGraphQLType :: G.GType }
@@ -174,7 +174,7 @@ idScalar     = $$(G.litName "ID")
 
 defaultScalars :: [ScalarTypeDefinition]
 defaultScalars =
-  map (flip ScalarTypeDefinition Nothing)
+  map (`ScalarTypeDefinition` Nothing)
   [intScalar, floatScalar, stringScalar, boolScalar, idScalar]
 
 newtype EnumTypeName
@@ -226,11 +226,11 @@ data AnnotatedScalarType
   -- order words, the restriction (b ~ 'Postgres) should be relaxed.
 deriving instance Eq AnnotatedScalarType
 instance J.ToJSON AnnotatedScalarType where
-  toJSON (ASTCustom std) = J.toJSON std
+  toJSON (ASTCustom std)           = J.toJSON std
   toJSON (ASTReusedScalar name st) = J.object ["name" J..= name, "type" J..= st]
 
 data NonObjectCustomType
-  = NOCTScalar !(AnnotatedScalarType)
+  = NOCTScalar !AnnotatedScalarType
   | NOCTEnum !EnumTypeDefinition
   | NOCTInputObject !InputObjectTypeDefinition
   deriving (Generic)
