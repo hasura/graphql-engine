@@ -47,8 +47,7 @@ you should be able to (re)create the schema and apply metadata to replicate the 
 .. note::
 
     Using Hasura's migration system is optional. In case you are comfortable or familiar using other database migration tooling, 
-    you can continue to use that to manage your database schema. To disable Hasura's migrations, you can do so via the Console served by the CLI. 
-    Head to the ``Data`` -> ``Migrations`` tab and switch off the toggle ``Allow Postgres schema changes via console``.
+    you can continue to use that to manage your database schema.
 
 Setting up a project on the Hasura CLI
 **************************************

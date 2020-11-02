@@ -1,5 +1,5 @@
 .. meta::
-   :description: Guide for moving between environments in Hasura 
+   :description: Guide for moving between environments in Hasura
    :keywords: hasura, docs, guide, local dev, staging, production, environment
 
 .. _guide_environments:
@@ -47,8 +47,7 @@ you should be able to (re)create the schema and apply metadata to replicate the 
 .. note::
 
     Using Hasura's migration system is optional. In case you are comfortable or familiar using other database migration tooling, 
-    you can continue to use that to manage your database schema. To disable Hasura's migrations, you can do so via the Console served by the CLI. 
-    Head to the ``Data`` -> ``Migrations`` tab and switch off the toggle ``Allow Postgres schema changes via console``.
+    you can continue to use that to manage your database schema.
 
 Setting up a project on the Hasura CLI
 **************************************
@@ -229,7 +228,7 @@ This generally includes ``hasura migrate apply`` and ``hasura metadata apply``.
 To do this, you would download the CLI either through wget/curl, or if in a Dockerfile and okay with using a static version number, 
 use ``COPY --from`` to extract the binary from ``hasura/graphql-engine:vX.X-cli-migrations``.
 
-Then run the migrate/metadata/regression tests commands, passing in the endpoint and admin secret for the remote.
+Then run the migrate/metadata commands, passing in the endpoint and admin secret for the remote.
 
 .. note::
 
