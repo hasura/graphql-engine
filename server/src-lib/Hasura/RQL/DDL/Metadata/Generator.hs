@@ -112,28 +112,28 @@ instance Arbitrary J.Value where
 instance Arbitrary ColExp where
   arbitrary = genericArbitrary
 
-instance Arbitrary (GExists ColExp) where
+instance Arbitrary (GExists b ColExp) where
   arbitrary = genericArbitrary
 
-instance Arbitrary (GBoolExp ColExp) where
+instance Arbitrary (GBoolExp b ColExp) where
   arbitrary = genericArbitrary
 
-instance Arbitrary BoolExp where
+instance Arbitrary (BoolExp b) where
   arbitrary = genericArbitrary
 
 instance Arbitrary Permission.PermColSpec where
   arbitrary = genericArbitrary
 
-instance Arbitrary Permission.InsPerm where
+instance Arbitrary (Permission.InsPerm b) where
   arbitrary = genericArbitrary
 
-instance Arbitrary Permission.SelPerm where
+instance Arbitrary (Permission.SelPerm b) where
   arbitrary = genericArbitrary
 
-instance Arbitrary Permission.UpdPerm where
+instance Arbitrary (Permission.UpdPerm b) where
   arbitrary = genericArbitrary
 
-instance Arbitrary Permission.DelPerm where
+instance Arbitrary (Permission.DelPerm b) where
   arbitrary = genericArbitrary
 
 instance Arbitrary SubscribeColumns where

@@ -5,6 +5,7 @@
 
 module Hasura.Backends.Postgres.Connection
   ( MonadTx(..)
+  , LazyTxT
   , LazyTx
 
   , PGExecCtx(..)
@@ -20,39 +21,47 @@ module Hasura.Backends.Postgres.Connection
   , defaultTxErrorHandler
   , mkTxErrorHandler
   , lazyTxToQTx
+
+  , doesSchemaExist
+  , doesTableExist
+  , isExtensionAvailable
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson.Extended            as J
-import qualified Database.PG.Query              as Q
-import qualified Database.PG.Query.Connection   as Q
+import qualified Data.Aeson.Extended                as J
+import qualified Database.PG.Query                  as Q
+import qualified Database.PG.Query.Connection       as Q
 
 import           Control.Lens
-import           Control.Monad.Trans.Control    (MonadBaseControl (..))
+import           Control.Monad.Morph                (hoist)
+import           Control.Monad.Trans.Control        (MonadBaseControl (..))
 import           Control.Monad.Unique
 import           Control.Monad.Validate
-import           Data.Either                    (isRight)
+import           Data.Either                        (isRight)
 
 import qualified Hasura.Backends.Postgres.SQL.DML   as S
-import qualified Hasura.Tracing                 as Tracing
+import qualified Hasura.Tracing                     as Tracing
 
 import           Hasura.Backends.Postgres.SQL.Error
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Types
 import           Hasura.Session
 
+type RunTx =
+  forall m a. (MonadIO m, MonadBaseControl IO m) => Q.TxET QErr m a -> ExceptT QErr m a
 
 data PGExecCtx
   = PGExecCtx
-  { _pecRunReadOnly  :: forall a. Q.TxE QErr a -> ExceptT QErr IO a
+  { _pecRunReadOnly  :: RunTx
   -- ^ Run a Q.ReadOnly transaction
-  , _pecRunReadNoTx  :: forall a. Q.TxE QErr a -> ExceptT QErr IO a
+  , _pecRunReadNoTx  :: RunTx
   -- ^ Run a read only statement without an explicit transaction block
-  , _pecRunReadWrite :: forall a. Q.TxE QErr a -> ExceptT QErr IO a
+  , _pecRunReadWrite :: RunTx
   -- ^ Run a Q.ReadWrite transaction
-  , _pecCheckHealth  :: IO Bool
+  , _pecCheckHealth  :: (IO Bool)
   -- ^ Checks the health of this execution context
   }
 
@@ -60,10 +69,10 @@ data PGExecCtx
 mkPGExecCtx :: Q.TxIsolation -> Q.PGPool -> PGExecCtx
 mkPGExecCtx isoLevel pool =
   PGExecCtx
-  { _pecRunReadOnly = Q.runTx pool (isoLevel, Just Q.ReadOnly)
-  , _pecRunReadNoTx = Q.runTx' pool
-  , _pecRunReadWrite = Q.runTx pool (isoLevel, Just Q.ReadWrite)
-  , _pecCheckHealth = checkDbConnection
+  { _pecRunReadOnly       = (Q.runTx pool (isoLevel, Just Q.ReadOnly))
+  , _pecRunReadNoTx       = (Q.runTx' pool)
+  , _pecRunReadWrite      = (Q.runTx pool (isoLevel, Just Q.ReadWrite))
+  , _pecCheckHealth       = checkDbConnection
   }
   where
     checkDbConnection = do
@@ -97,36 +106,38 @@ instance (MonadTx m) => MonadTx (Tracing.TraceT m) where
 -- This is useful for certain code paths that only conditionally need database
 -- access. For example, although most queries will eventually hit Postgres,
 -- introspection queries or queries that exclusively use remote schemas never
--- will; using 'LazyTx' keeps those branches from unnecessarily allocating a
+-- will; using 'LazyTxT e m' keeps those branches from unnecessarily allocating a
 -- connection.
-data LazyTx e a
+data LazyTxT e m a
   = LTErr !e
   | LTNoTx !a
-  | LTTx !(Q.TxE e a)
-  deriving Show
+  | LTTx !(Q.TxET e m a)
+  deriving (Show, Functor)
 
 -- orphan:
-instance Show (Q.TxE e a) where
+instance Show (Q.TxET e m a) where
   show = const "(error \"TxE\")"
 
-lazyTxToQTx :: LazyTx e a -> Q.TxE e a
+lazyTxToQTx :: (Monad m) => LazyTxT e m a -> Q.TxET e m a
 lazyTxToQTx = \case
   LTErr e  -> throwError e
   LTNoTx r -> return r
   LTTx tx  -> tx
 
 runLazyTx
-  :: (MonadIO m, MonadError QErr m)
+  :: ( MonadIO m
+     , MonadBaseControl IO m
+     )
   => PGExecCtx
   -> Q.TxAccess
-  -> LazyTx QErr a -> m a
+  -> LazyTxT QErr m a -> ExceptT QErr m a
 runLazyTx pgExecCtx txAccess = \case
   LTErr e  -> throwError e
   LTNoTx a -> return a
   LTTx tx  ->
     case txAccess of
-      Q.ReadOnly  -> liftEither =<< liftIO (runExceptT $ _pecRunReadOnly pgExecCtx tx)
-      Q.ReadWrite -> liftEither =<< liftIO (runExceptT $ _pecRunReadWrite pgExecCtx tx)
+      Q.ReadOnly  -> _pecRunReadOnly pgExecCtx tx
+      Q.ReadWrite -> _pecRunReadWrite pgExecCtx tx
 
 -- | This runs the given set of statements (Tx) without wrapping them in BEGIN
 -- and COMMIT. This should only be used for running a single statement query!
@@ -138,9 +149,10 @@ runQueryTx pgExecCtx = \case
   LTTx tx  -> liftEither =<< liftIO (runExceptT $ _pecRunReadNoTx pgExecCtx tx)
 
 type RespTx = Q.TxE QErr EncJSON
+type LazyTx e a = LazyTxT e IO a
 type LazyRespTx = LazyTx QErr EncJSON
 
-setHeadersTx :: SessionVariables -> Q.TxE QErr ()
+setHeadersTx :: (MonadIO m) => SessionVariables -> Q.TxET QErr m ()
 setHeadersTx session = do
   Q.unitQE defaultTxErrorHandler setSess () False
   where
@@ -185,7 +197,7 @@ mkTxErrorHandler isExpectedError txe = fromMaybe unexpectedError expectedError
             "there is no unique or exclusion constraint on target column(s)"
           _ -> message
 
-withUserInfo :: UserInfo -> LazyTx QErr a -> LazyTx QErr a
+withUserInfo :: (MonadIO m) => UserInfo -> LazyTxT QErr m a -> LazyTxT QErr m a
 withUserInfo uInfo = \case
   LTErr e  -> LTErr e
   LTNoTx a -> LTNoTx a
@@ -196,9 +208,10 @@ withUserInfo uInfo = \case
 -- | Inject the trace context as a transaction-local variable,
 -- so that it can be picked up by any triggers (including event triggers).
 withTraceContext
-  :: Tracing.TraceContext
-  -> LazyTx QErr a
-  -> LazyTx QErr a
+  :: (MonadIO m)
+  => Tracing.TraceContext
+  -> LazyTxT QErr m a
+  -> LazyTxT QErr m a
 withTraceContext ctx = \case
   LTErr e  -> LTErr e
   LTNoTx a -> LTNoTx a
@@ -210,13 +223,7 @@ withTraceContext ctx = \case
           Q.unitQE defaultTxErrorHandler sql () False
      in LTTx $ setTraceContext >> tx
 
-instance Functor (LazyTx e) where
-  fmap f = \case
-    LTErr e  -> LTErr e
-    LTNoTx a -> LTNoTx $ f a
-    LTTx tx  -> LTTx $ fmap f tx
-
-instance Applicative (LazyTx e) where
+instance (Monad m) => Applicative (LazyTxT e m) where
   pure = LTNoTx
 
   LTErr e   <*> _        = LTErr e
@@ -225,35 +232,70 @@ instance Applicative (LazyTx e) where
   LTTx txf  <*> LTNoTx a = LTTx $ txf <*> pure a
   LTTx txf  <*> LTTx tx  = LTTx $ txf <*> tx
 
-instance Monad (LazyTx e) where
+instance (Monad m) => Monad (LazyTxT e m) where
   LTErr e >>= _  = LTErr e
   LTNoTx a >>= f = f a
   LTTx txa >>= f =
     LTTx $ txa >>= lazyTxToQTx . f
 
-instance MonadError e (LazyTx e) where
+instance (Monad m) => MonadError e (LazyTxT e m) where
   throwError = LTErr
   LTErr e  `catchError` f = f e
   LTNoTx a `catchError` _ = LTNoTx a
   LTTx txe `catchError` f =
     LTTx $ txe `catchError` (lazyTxToQTx . f)
 
-instance MonadTx (LazyTx QErr) where
-  liftTx = LTTx
+instance MonadTrans (LazyTxT e) where
+  lift = LTTx . lift
 
-instance MonadTx (Q.TxE QErr) where
-  liftTx = id
+instance (Tracing.MonadTrace m) => Tracing.MonadTrace (LazyTxT e m) where
+  trace t = \case
+    LTTx (Q.TxET tx) -> LTTx $ Q.TxET $ Tracing.trace t tx
+    v                -> v
+  currentContext  = lift Tracing.currentContext
+  currentReporter = lift Tracing.currentReporter
+  attachMetadata  = lift . Tracing.attachMetadata
 
-instance MonadIO (LazyTx e) where
+instance (MonadIO m) => MonadTx (LazyTxT QErr m) where
+  liftTx = LTTx . (hoist liftIO)
+
+instance (MonadIO m) => MonadTx (Q.TxET QErr m) where
+  liftTx = hoist liftIO
+
+instance (MonadIO m) => MonadIO (LazyTxT e m) where
   liftIO = LTTx . liftIO
 
-instance MonadBase IO (LazyTx e) where
+instance (MonadIO m) => MonadBase IO (LazyTxT e m) where
   liftBase = liftIO
 
-instance MonadBaseControl IO (LazyTx e) where
-  type StM (LazyTx e) a = StM (Q.TxE e) a
+instance (MonadIO m, MonadBaseControl IO m) => MonadBaseControl IO (LazyTxT e m) where
+  type StM (LazyTxT e m) a = StM (Q.TxET e m) a
   liftBaseWith f = LTTx $ liftBaseWith \run -> f (run . lazyTxToQTx)
   restoreM = LTTx . restoreM
 
-instance MonadUnique (LazyTx e) where
+instance (MonadIO m) => MonadUnique (LazyTxT e m) where
   newUnique = liftIO newUnique
+
+doesSchemaExist :: MonadTx m => SchemaName -> m Bool
+doesSchemaExist schemaName =
+  liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
+    SELECT EXISTS
+    ( SELECT 1 FROM information_schema.schemata
+      WHERE schema_name = $1
+    ) |] (Identity schemaName) False
+
+doesTableExist :: MonadTx m => SchemaName -> TableName -> m Bool
+doesTableExist schemaName tableName =
+  liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
+    SELECT EXISTS
+    ( SELECT 1 FROM pg_tables
+      WHERE schemaname = $1 AND tablename = $2
+    ) |] (schemaName, tableName) False
+
+isExtensionAvailable :: MonadTx m => Text -> m Bool
+isExtensionAvailable extensionName =
+  liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
+    SELECT EXISTS
+    ( SELECT 1 FROM pg_catalog.pg_available_extensions
+      WHERE name = $1
+    ) |] (Identity extensionName) False
