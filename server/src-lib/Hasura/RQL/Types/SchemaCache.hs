@@ -134,8 +134,8 @@ import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Context              (GQLContext, RemoteField, RoleContext)
 import           Hasura.Incremental                  (Dependency, MonadDepend (..), selectKeyD)
+import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Action
-import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
@@ -311,7 +311,7 @@ askFunctionInfo
   => QualifiedFunction ->  m FunctionInfo
 askFunctionInfo qf = do
   sc <- askSchemaCache
-  maybe throwNoFn return $ M.lookup qf $ scFunctions sc
+  onNothing (M.lookup qf $ scFunctions sc) throwNoFn
   where
     throwNoFn = throw400 NotExists $
       "function not found in cache " <>> qf

@@ -35,12 +35,13 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
+import           Data.Text.NonEmpty
 import           Language.Haskell.TH.Syntax         (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.Types.Common            (InputWebhook, NonEmptyText (..))
+import           Hasura.RQL.Types.Common            (InputWebhook)
 
 
 -- This change helps us create functions for the event triggers

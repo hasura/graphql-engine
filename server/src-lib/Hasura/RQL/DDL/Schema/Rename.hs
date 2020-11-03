@@ -19,7 +19,6 @@ import qualified Database.PG.Query                  as Q
 import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Control.Lens.Combinators
-import           Control.Lens.Operators
 import           Data.Aeson
 import           Data.Text.Extended
 
@@ -219,7 +218,7 @@ updatePermFlds refQT rn pt rename = do
 
 updateInsPermFlds
   :: (MonadTx m, CacheRM m)
-  => QualifiedTable -> Rename -> RoleName -> InsPerm -> m ()
+  => QualifiedTable -> Rename -> RoleName -> InsPerm 'Postgres -> m ()
 updateInsPermFlds refQT rename rn (InsPerm chk preset cols mBackendOnly) = do
   updatedPerm <- case rename of
     RTable rt -> do
@@ -234,7 +233,7 @@ updateInsPermFlds refQT rename rn (InsPerm chk preset cols mBackendOnly) = do
 
 updateSelPermFlds
   :: (MonadTx m, CacheRM m)
-  => QualifiedTable -> Rename -> RoleName -> SelPerm -> m ()
+  => QualifiedTable -> Rename -> RoleName -> SelPerm 'Postgres -> m ()
 updateSelPermFlds refQT rename rn (SelPerm cols fltr limit aggAllwd computedFields) = do
   updatedPerm <- case rename of
     RTable rt -> do
@@ -248,7 +247,7 @@ updateSelPermFlds refQT rename rn (SelPerm cols fltr limit aggAllwd computedFiel
 
 updateUpdPermFlds
   :: (MonadTx m, CacheRM m)
-  => QualifiedTable -> Rename -> RoleName -> UpdPerm -> m ()
+  => QualifiedTable -> Rename -> RoleName -> UpdPerm 'Postgres -> m ()
 updateUpdPermFlds refQT rename rn (UpdPerm cols preset fltr check) = do
   updatedPerm <- case rename of
     RTable rt -> do
@@ -265,7 +264,7 @@ updateUpdPermFlds refQT rename rn (UpdPerm cols preset fltr check) = do
 
 updateDelPermFlds
   :: (MonadTx m, CacheRM m)
-  => QualifiedTable -> Rename -> RoleName -> DelPerm -> m ()
+  => QualifiedTable -> Rename -> RoleName -> DelPerm 'Postgres -> m ()
 updateDelPermFlds refQT rename rn (DelPerm fltr) = do
   updFltr <- case rename of
     RTable rt -> return $ updateTableInBoolExp rt fltr
@@ -273,7 +272,7 @@ updateDelPermFlds refQT rename rn (DelPerm fltr) = do
   liftTx $ updatePermDefInCatalog PTDelete refQT rn $ DelPerm updFltr
 
 updatePreset
-  :: QualifiedTable -> RenameField -> (ColumnValues Value) -> (ColumnValues Value)
+  :: QualifiedTable -> RenameField -> ColumnValues Value -> ColumnValues Value
 updatePreset qt rf obj =
    case rf of
      RFCol (RenameItem opQT oCol nCol) ->
@@ -305,21 +304,21 @@ updateCols qt rf permSpec =
       PCCols c -> PCCols $ flip map c $
         \col -> if col == oCol then nCol else col
 
-updateTableInBoolExp :: RenameTable -> BoolExp -> BoolExp
+updateTableInBoolExp :: RenameTable -> BoolExp 'Postgres -> BoolExp 'Postgres
 updateTableInBoolExp (oldQT, newQT) =
   over _Wrapped . transform $ (_BoolExists . geTable) %~ \rqfQT ->
     if rqfQT == oldQT then newQT else rqfQT
 
 updateFieldInBoolExp
   :: (QErrM m, CacheRM m)
-  => QualifiedTable -> RenameField -> BoolExp -> m BoolExp
+  => QualifiedTable -> RenameField -> BoolExp 'Postgres -> m (BoolExp 'Postgres)
 updateFieldInBoolExp qt rf be = BoolExp <$>
   case unBoolExp be of
     BoolAnd exps -> BoolAnd <$> procExps exps
     BoolOr  exps -> BoolOr <$> procExps exps
     BoolNot e    -> BoolNot <$> updateBoolExp' e
     BoolExists (GExists refqt wh) ->
-      (BoolExists . GExists refqt . unBoolExp)
+      BoolExists . GExists refqt . unBoolExp
       <$> updateFieldInBoolExp refqt rf (BoolExp wh)
     BoolFld fld  -> BoolFld <$> updateColExp qt rf fld
   where
@@ -476,12 +475,12 @@ updateColMap fromQT toQT rnCol =
 possiblyUpdateCustomColumnNames
   :: MonadTx m => QualifiedTable -> PGCol -> PGCol -> m ()
 possiblyUpdateCustomColumnNames qt oCol nCol = do
-  TableConfig customRootFields customColumns <- getTableConfig qt
+  TableConfig customRootFields customColumns identifier <- getTableConfig qt
   let updatedCustomColumns =
         M.fromList $ flip map (M.toList customColumns) $
         \(dbCol, val) -> (, val) $ if dbCol == oCol then nCol else dbCol
   when (updatedCustomColumns /= customColumns) $
-    updateTableConfig qt $ TableConfig customRootFields updatedCustomColumns
+    updateTableConfig qt $ TableConfig customRootFields updatedCustomColumns identifier
 
 -- database functions for relationships
 getRelDef :: QualifiedTable -> RelName -> Q.TxE QErr Value

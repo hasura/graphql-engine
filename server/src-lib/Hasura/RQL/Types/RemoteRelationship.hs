@@ -1,4 +1,3 @@
-{-# LANGUAGE DisambiguateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns           #-}
 {-# LANGUAGE RecordWildCards          #-}
 
@@ -28,6 +27,7 @@ import           Data.Aeson.TH
 import           Data.Scientific
 import           Data.Set                           (Set)
 import           Data.Text.Extended
+import           Data.Text.NonEmpty
 import           Language.Haskell.TH.Syntax         (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types
@@ -116,7 +116,7 @@ instance ToJSON (RemoteFieldInfo 'Postgres) where
 -- over (brought into scope, e.g. in 'rtrHasuraFields'.
 newtype RemoteArguments =
   RemoteArguments
-    { getRemoteArguments :: (HashMap G.Name (G.Value G.Name))
+    { getRemoteArguments :: HashMap G.Name (G.Value G.Name)
     } deriving (Show, Eq, Lift, Cacheable, NFData)
 
 instance ToJSON RemoteArguments where

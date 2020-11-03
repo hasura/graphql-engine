@@ -98,7 +98,7 @@ import           Language.Haskell.TH.Syntax          (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Incremental                  (Cacheable)
-import           Hasura.RQL.Types.BoolExp
+import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
@@ -392,20 +392,22 @@ data TableConfig
   = TableConfig
   { _tcCustomRootFields  :: !TableCustomRootFields
   , _tcCustomColumnNames :: !CustomColumnNames
+  , _tcCustomName        :: !(Maybe G.Name)
   } deriving (Show, Eq, Lift, Generic)
 instance NFData TableConfig
 instance Cacheable TableConfig
-$(deriveToJSON (aesonDrop 3 snakeCase) ''TableConfig)
+$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''TableConfig)
 
 emptyTableConfig :: TableConfig
 emptyTableConfig =
-  TableConfig emptyCustomRootFields M.empty
+  TableConfig emptyCustomRootFields M.empty Nothing
 
 instance FromJSON TableConfig where
   parseJSON = withObject "TableConfig" $ \obj ->
     TableConfig
     <$> obj .:? "custom_root_fields" .!= emptyCustomRootFields
     <*> obj .:? "custom_column_names" .!= M.empty
+    <*> obj .:? "custom_name"
 
 -- | The @field@ and @primaryKeyColumn@ type parameters vary as the schema cache is built and more
 -- information is accumulated. See 'TableRawInfo' and 'TableCoreInfo'.
@@ -435,11 +437,12 @@ type TableCoreInfo b = TableCoreInfoG (FieldInfo b) (ColumnInfo b)
 
 tciUniqueOrPrimaryKeyConstraints :: TableCoreInfoG a b -> Maybe (NonEmpty Constraint)
 tciUniqueOrPrimaryKeyConstraints info = NE.nonEmpty $
-  maybeToList (_pkConstraint <$> _tciPrimaryKey info) <> toList (_tciUniqueConstraints info)
+  maybeToList (_pkConstraint <$> _tciPrimaryKey info)
+  <> toList (_tciUniqueConstraints info)
 
 data TableInfo (b :: Backend)
   = TableInfo
-  { _tiCoreInfo            :: (TableCoreInfo b)
+  { _tiCoreInfo            :: TableCoreInfo b
   , _tiRolePermInfoMap     :: !(RolePermInfoMap b)
   , _tiEventTriggerInfoMap :: !EventTriggerInfoMap
   } deriving (Generic)
