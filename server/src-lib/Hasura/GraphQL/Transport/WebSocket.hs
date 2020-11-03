@@ -389,8 +389,10 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           logQueryLog logger q Nothing requestId
           ctx <- Tracing.currentContext
           (telemTimeIO_DT, resp) <- Tracing.interpTraceT
-            (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx . withUserInfo userInfo)
-            $ withElapsedTime tx
+            (liftEitherM . liftIO . runExceptT
+             . runLazyTx pgExecCtx Q.ReadWrite
+             . withTraceContext ctx . withUserInfo userInfo
+            ) $ withElapsedTime tx
           return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
         E.ExecStepRemote (rsi, opDef, varValsM) -> do
           runRemoteGQ fieldName execCtx requestId userInfo reqHdrs opDef rsi varValsM
@@ -648,9 +650,9 @@ onConnInit logger manager wsConn authMode connParamsM = do
       sendMsg wsConn $ SMConnErr connErr
 
     getIpAddress = \case
-      CSNotInitialised _ ip -> return ip
+      CSNotInitialised _ ip           -> return ip
       CSInitialised WsClientState{..} -> return wscsIpAddress
-      CSInitError e -> Left e
+      CSInitError e                   -> Left e
 
     mkHeaders st =
       paramHeaders ++ getClientHdrs st
