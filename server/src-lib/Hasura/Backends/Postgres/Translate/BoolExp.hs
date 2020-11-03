@@ -1,5 +1,5 @@
 {-# LANGUAGE PartialTypeSignatures #-}
-module Hasura.RQL.GBoolExp
+module Hasura.Backends.Postgres.Translate.BoolExp
   ( toSQLBoolExp
   , getBoolExpDeps
   , annBoolExp
@@ -276,7 +276,7 @@ annBoolExp
   :: (QErrM m, TableCoreInfoRM m)
   => OpRhsParser m v
   -> FieldInfoMap (FieldInfo 'Postgres)
-  -> GBoolExp ColExp
+  -> GBoolExp 'Postgres ColExp
   -> m (AnnBoolExp 'Postgres v)
 annBoolExp rhsParser fim boolExp =
   case boolExp of
@@ -354,7 +354,7 @@ convColRhs tableQual = \case
   where
     mkQCol q = S.SEQIdentifier . S.QIdentifier q . toIdentifier
 
-foldExists :: GExists (AnnBoolExpFldSQL 'Postgres) -> State Word64 S.BoolExp
+foldExists :: GExists 'Postgres (AnnBoolExpFldSQL 'Postgres) -> State Word64 S.BoolExp
 foldExists (GExists qt wh) = do
   whereExp <- foldBoolExp (convColRhs (S.QualTable qt)) wh
   return $ S.mkExists (S.FISimple qt Nothing) whereExp

@@ -6,7 +6,7 @@ import qualified Hasura.RQL.IR.Insert               as RQL
 import qualified Hasura.RQL.IR.Returning            as RQL
 
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.RQL.Types.BoolExp
+import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend

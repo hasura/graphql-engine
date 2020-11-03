@@ -84,7 +84,10 @@ import           Hasura.SQL.Backend
 type family ScalarType (b :: Backend) where
   ScalarType 'Postgres = PGScalarType
 
-type family Column (b :: Backend)  where
+type family ColumnType (b :: Backend) where
+  ColumnType 'Postgres = PGType
+
+type family Column (b :: Backend) where
   Column 'Postgres = PGCol
 
 
@@ -197,6 +200,7 @@ data MutateResp a
   , _mrReturningColumns :: ![ColumnValues a]
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''MutateResp)
+
 
 type ColMapping = HM.HashMap PGCol PGCol
 

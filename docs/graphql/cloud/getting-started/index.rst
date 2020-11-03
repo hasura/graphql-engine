@@ -12,6 +12,11 @@ Getting Started with Hasura Cloud
   :depth: 1
   :local:
 
+Introduction
+------------
+
+This guide talks about setting up Hasura Cloud with a new or existing Postgres database.
+
 Step 1: Create an account
 -------------------------
 
@@ -23,6 +28,8 @@ Navigate to `cloud.hasura.io
 Step 2: Connect new/existing database
 -------------------------------------
 
+Hasura Cloud needs to connect to a Postgres database.
+
 - To use an existing database, choose ``I have an existing Postgres database``.
 - To try out with a new database, choose ``Try a free database with Heroku``.
 
@@ -30,15 +37,27 @@ Step 2: Connect new/existing database
    :alt: Connect new or existing database
    :width: 591px
 
-Step 2.1: Enter database URL (for existing database)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 2.1: Enter database connection URL (for existing database)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you chose ``I have an existing Postgres database`` in :ref:`Step 2 <cloud_connect_db>`, enter
-your database connection URL.
+If you chose ``I have an existing Postgres database``, enter your database connection URL.
 
 .. thumbnail:: /img/graphql/cloud/getting-started/connect-existing-db.png
    :alt: Enter URL for existing database
    :width: 556px
+
+If your database is hosted via any of the following managed cloud database services,
+check out their respective detailed guides to get the database connection URL and
+any other steps required to ensure connectivity from Hasura Cloud:
+
+- :ref:`Aiven <cloud_db_aiven>`
+- :ref:`AWS RDS Aurora <cloud_db_aws_rds_aurora>`
+- :ref:`AWS RDS Postgres <cloud_db_aws_rds_postgres>`
+- :ref:`Azure <cloud_db_azure>`
+- :ref:`Digital Ocean <cloud_db_digital_ocean>`
+- :ref:`GCP <cloud_db_gcp>`
+- :ref:`Timescale Cloud <cloud_db_timescale_cloud>`
+- :ref:`YugaByte <cloud_db_yugabyte>`
 
 Step 3: Create project
 ----------------------
@@ -87,3 +106,9 @@ to make sure that your GraphQL endpoint and the Hasura console are not publicly 
   :alt: Project actions
   :width: 860px
 
+.. toctree::
+   :maxdepth: 1
+   :titlesonly:
+   :hidden:
+
+   Cloud databases guides <cloud-databases/index>

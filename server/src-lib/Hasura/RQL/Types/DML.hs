@@ -57,9 +57,11 @@ import qualified Hasura.Backends.Postgres.SQL.DML   as S
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Incremental                 (Cacheable)
+import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Instances               ()
-import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
+import           Hasura.SQL.Backend
+
 
 data ColExp
   = ColExp
@@ -69,20 +71,20 @@ data ColExp
 instance NFData ColExp
 instance Cacheable ColExp
 
-newtype BoolExp
-  = BoolExp { unBoolExp :: GBoolExp ColExp }
+newtype BoolExp (b :: Backend)
+  = BoolExp { unBoolExp :: GBoolExp b ColExp }
   deriving (Show, Eq, Lift, Generic, NFData, Cacheable)
 
 $(makeWrapped ''BoolExp)
 
-instance ToJSON BoolExp where
+instance ToJSON (BoolExp 'Postgres) where
   toJSON (BoolExp gBoolExp) =
     gBoolExpToJSON f gBoolExp
     where
       f (ColExp k v) =
         (getFieldNameTxt k,  v)
 
-instance FromJSON BoolExp where
+instance FromJSON (BoolExp 'Postgres) where
   parseJSON =
     fmap BoolExp . parseGBoolExp f
     where
@@ -263,13 +265,15 @@ parseWildcard =
     fromList   = foldr1 (\_ x -> StarDot x)
 
 -- Columns in RQL
-data SelCol
+data SelCol b
   = SCStar !Wildcard
-  | SCExtSimple !PGCol
-  | SCExtRel !RelName !(Maybe RelName) !SelectQ
-  deriving (Show, Eq, Lift)
+  | SCExtSimple !(Column b)
+  | SCExtRel !RelName !(Maybe RelName) !(SelectQ b)
+deriving instance Eq   (SelCol 'Postgres)
+deriving instance Lift (SelCol 'Postgres)
+deriving instance Show (SelCol 'Postgres)
 
-instance FromJSON SelCol where
+instance FromJSON (SelCol 'Postgres) where
   parseJSON (String s) =
     case AT.parseOnly parseWildcard s of
     Left _  -> SCExtSimple <$> parseJSON (String s)
@@ -285,7 +289,7 @@ instance FromJSON SelCol where
     , "object (relationship)"
     ]
 
-instance ToJSON SelCol where
+instance ToJSON (SelCol 'Postgres) where
   toJSON (SCStar wc) = String $ wcToText wc
   toJSON (SCExtSimple s) = toJSON s
   toJSON (SCExtRel rn mrn selq) =
@@ -293,17 +297,13 @@ instance ToJSON SelCol where
              , "alias" .= mrn
              ] ++ selectGToPairs selq
 
-type SelectQ = SelectG SelCol BoolExp Int
-type SelectQT = SelectG SelCol BoolExp Value
+type SelectQ  b = SelectG (SelCol b) (BoolExp b) Int
+type SelectQT b = SelectG (SelCol b) (BoolExp b) Value
 
-type SelectQuery = DMLQuery SelectQ
-type SelectQueryT = DMLQuery SelectQT
+type SelectQuery  = DMLQuery (SelectQ  'Postgres)
+type SelectQueryT = DMLQuery (SelectQT 'Postgres)
 
-instance ToJSON SelectQuery where
-  toJSON (DMLQuery qt selQ) =
-    object $ "table" .= qt : selectGToPairs selQ
-
-instance ToJSON SelectQueryT where
+instance ToJSON a => ToJSON (DMLQuery (SelectG (SelCol 'Postgres) (BoolExp 'Postgres) a)) where
   toJSON (DMLQuery qt selQ) =
     object $ "table" .= qt : selectGToPairs selQ
 
@@ -367,7 +367,7 @@ type UpdVals = ColumnValues Value
 data UpdateQuery
   = UpdateQuery
   { uqTable     :: !QualifiedTable
-  , uqWhere     :: !BoolExp
+  , uqWhere     :: !(BoolExp 'Postgres)
   , uqSet       :: !UpdVals
   , uqInc       :: !UpdVals
   , uqMul       :: !UpdVals
@@ -402,7 +402,7 @@ instance ToJSON UpdateQuery where
 data DeleteQuery
   = DeleteQuery
   { doTable     :: !QualifiedTable
-  , doWhere     :: !BoolExp  -- where clause
+  , doWhere     :: !(BoolExp 'Postgres)  -- where clause
   , doReturning :: !(Maybe [PGCol]) -- columns returning
   } deriving (Show, Eq, Lift)
 
@@ -412,7 +412,7 @@ data CountQuery
   = CountQuery
   { cqTable    :: !QualifiedTable
   , cqDistinct :: !(Maybe [PGCol])
-  , cqWhere    :: !(Maybe BoolExp)
+  , cqWhere    :: !(Maybe (BoolExp 'Postgres))
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''CountQuery)
@@ -422,8 +422,8 @@ data QueryT
   | QTSelect !SelectQueryT
   | QTUpdate !UpdateQuery
   | QTDelete !DeleteQuery
-  | QTCount !CountQuery
-  | QTBulk ![QueryT]
+  | QTCount  !CountQuery
+  | QTBulk   ![QueryT]
   deriving (Show, Eq, Lift)
 
 $(deriveJSON
