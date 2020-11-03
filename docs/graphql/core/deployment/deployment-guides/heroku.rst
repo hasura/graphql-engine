@@ -144,7 +144,7 @@ Step 2: Delete the created Postgres add-on in the app
 Head to your Heroku dashboard and delete the Postgres add-on created in the previous step:
 
 .. thumbnail:: /img/graphql/core/deployment/delete-heroku-postgres-addon.png
-   :alt: Delete/Remove the Postgres add-on
+   :alt: Delete the Postgres add-on
 
 Step 3: Configure environment variables
 ***************************************
