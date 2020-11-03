@@ -220,7 +220,7 @@ const saveRemoteSchemaPermission = (successCb, errorCb) => {
       schemaDefinition
     );
 
-    const migrationName = 'save_remoteSchema_perm';
+    const migrationName = 'save_remote_schema_permission_${roleName}';
     const requestMsg = 'Saving permission...';
     const successMsg = 'Permission saved successfully';
     const errorMsg = 'Saving permission failed';
