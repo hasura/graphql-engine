@@ -28,7 +28,7 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 
-type SelectQExt b = SelectG (ExtCol b) BoolExp Int
+type SelectQExt b = SelectG (ExtCol b) (BoolExp b) Int
 
 -- Columns in RQL
 -- This technically doesn't need to be generalized to all backends as
@@ -64,7 +64,7 @@ instance FromJSON (ExtCol 'Postgres) where
 convSelCol :: (UserInfoM m, QErrM m, CacheRM m)
            => FieldInfoMap (FieldInfo 'Postgres)
            -> SelPermInfo 'Postgres
-           -> SelCol
+           -> SelCol 'Postgres
            -> m [ExtCol 'Postgres]
 convSelCol _ _ (SCExtSimple cn) =
   return [ECSimple cn]
@@ -113,7 +113,7 @@ convWildcard fieldInfoMap selPermInfo wildcard =
 resolveStar :: (UserInfoM m, QErrM m, CacheRM m)
             => FieldInfoMap (FieldInfo 'Postgres)
             -> SelPermInfo 'Postgres
-            -> SelectQ
+            -> SelectQ 'Postgres
             -> m (SelectQExt 'Postgres)
 resolveStar fim spi (SelectG selCols mWh mOb mLt mOf) = do
   procOverrides <- fmap (concat . catMaybes) $ withPathK "columns" $

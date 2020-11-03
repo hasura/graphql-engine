@@ -1,5 +1,5 @@
 {-# LANGUAGE UndecidableInstances #-}
-module Hasura.RQL.Types.BoolExp
+module Hasura.RQL.IR.BoolExp
        ( GBoolExp(..)
        , gBoolExpTrue
        , gBoolExpToJSON
@@ -33,7 +33,6 @@ module Hasura.RQL.Types.BoolExp
        , AnnBoolExpFldPartialSQL
        , AnnBoolExpPartialSQL
 
-       , PreSetCols
        , PreSetColsG
        , PreSetColsPartial
        ) where
@@ -64,24 +63,24 @@ import           Hasura.SQL.Types
 import           Hasura.Session
 
 
-data GExists a
+data GExists (b :: Backend) a
   = GExists
   { _geTable :: !QualifiedTable
-  , _geWhere :: !(GBoolExp a)
+  , _geWhere :: !(GBoolExp b a)
   } deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Data, Generic)
-instance (NFData a) => NFData (GExists a)
-instance (Data a) => Plated (GExists a)
-instance (Cacheable a) => Cacheable (GExists a)
-instance (Hashable a) => Hashable (GExists a)
+instance (NFData a) => NFData (GExists b a)
+instance (Data a, Typeable b) => Plated (GExists b a)
+instance (Cacheable a) => Cacheable (GExists b a)
+instance (Hashable a) => Hashable (GExists b a)
 
-gExistsToJSON :: (a -> (Text, Value)) -> GExists a -> Value
+gExistsToJSON :: (a -> (Text, Value)) -> GExists 'Postgres a -> Value
 gExistsToJSON f (GExists qt wh) =
   object [ "_table" .= qt
          , "_where" .= gBoolExpToJSON f wh
          ]
 
 parseGExists
-  :: ((Text, Value) -> J.Parser a) -> Value -> J.Parser (GExists a)
+  :: ((Text, Value) -> J.Parser a) -> Value -> J.Parser (GExists 'Postgres a)
 parseGExists f = \case
   Object o -> do
     qt <- o .: "_table"
@@ -89,22 +88,22 @@ parseGExists f = \case
     GExists qt <$> parseGBoolExp f wh
   _ -> fail "expecting an Object for _exists expression"
 
-data GBoolExp a
-  = BoolAnd ![GBoolExp a]
-  | BoolOr  ![GBoolExp a]
-  | BoolNot !(GBoolExp a)
-  | BoolExists !(GExists a)
+data GBoolExp (b :: Backend) a
+  = BoolAnd ![GBoolExp b a]
+  | BoolOr  ![GBoolExp b a]
+  | BoolNot !(GBoolExp b a)
+  | BoolExists !(GExists b a)
   | BoolFld !a
   deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Data, Generic)
-instance (NFData a) => NFData (GBoolExp a)
-instance (Data a) => Plated (GBoolExp a)
-instance (Cacheable a) => Cacheable (GBoolExp a)
-instance (Hashable a) => Hashable (GBoolExp a)
+instance (NFData a) => NFData (GBoolExp b a)
+instance (Data a, Typeable b) => Plated (GBoolExp b a)
+instance (Cacheable a) => Cacheable (GBoolExp b a)
+instance (Hashable a) => Hashable (GBoolExp b a)
 
-gBoolExpTrue :: GBoolExp a
+gBoolExpTrue :: GBoolExp b a
 gBoolExpTrue = BoolAnd []
 
-gBoolExpToJSON :: (a -> (Text, Value)) -> GBoolExp a -> Value
+gBoolExpToJSON :: (a -> (Text, Value)) -> GBoolExp 'Postgres a -> Value
 gBoolExpToJSON f be = case be of
   -- special encoding for _and
   BoolAnd bExps ->
@@ -125,7 +124,7 @@ gBoolExpToJSON f be = case be of
 
 
 parseGBoolExp
-  :: ((Text, Value) -> J.Parser a) -> Value -> J.Parser (GBoolExp a)
+  :: ((Text, Value) -> J.Parser a) -> Value -> J.Parser (GBoolExp 'Postgres a)
 parseGBoolExp f = \case
   Object o -> do
     boolExps <- forM (M.toList o) $ \(k, v) -> if
@@ -327,7 +326,7 @@ instance (Cacheable a) => Cacheable (AnnBoolExpFld 'Postgres a)
 instance (Hashable a) => Hashable (AnnBoolExpFld 'Postgres a)
 
 type AnnBoolExp b a
-  = GBoolExp (AnnBoolExpFld b a)
+  = GBoolExp b (AnnBoolExpFld b a)
 
 traverseAnnBoolExp
   :: (Applicative f)
@@ -363,7 +362,6 @@ type AnnBoolExpPartialSQL b = AnnBoolExp b (PartialSQLExp b)
 
 type PreSetColsG b v = M.HashMap (Column b) v
 type PreSetColsPartial b = M.HashMap (Column b) (PartialSQLExp b)
-type PreSetCols = M.HashMap PGCol S.SQLExp
 
 -- doesn't resolve the session variable
 data PartialSQLExp (b :: Backend)

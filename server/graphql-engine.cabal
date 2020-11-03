@@ -261,6 +261,8 @@ library
 
                      -- scheduled triggers
                      , cron >= 0.6.2
+                     -- needed for deriving via
+                     , semigroups >= 0.19
 
                      , random
                      , mmorph
@@ -304,6 +306,7 @@ library
                      , Hasura.Backends.Postgres.Connection
                      , Hasura.Backends.Postgres.Execute.Mutation
                      , Hasura.Backends.Postgres.Execute.RemoteJoin
+                     , Hasura.Backends.Postgres.Translate.BoolExp
                      , Hasura.Backends.Postgres.Translate.Delete
                      , Hasura.Backends.Postgres.Translate.Insert
                      , Hasura.Backends.Postgres.Translate.Mutation
@@ -373,7 +376,6 @@ library
                      , Hasura.RQL.Types.Table
                      , Hasura.RQL.Types.SchemaCache.Build
                      , Hasura.RQL.Types.SchemaCacheTypes
-                     , Hasura.RQL.Types.BoolExp
                      , Hasura.RQL.Types.Function
                      , Hasura.RQL.Types.Catalog
                      , Hasura.RQL.Types.Column
@@ -427,13 +429,13 @@ library
                      , Hasura.RQL.DML.Insert
                      , Hasura.RQL.DML.Internal
                      , Hasura.RQL.DML.Update
+                     , Hasura.RQL.IR.BoolExp
                      , Hasura.RQL.IR.Delete
                      , Hasura.RQL.IR.Insert
                      , Hasura.RQL.IR.RemoteJoin
                      , Hasura.RQL.IR.Returning
                      , Hasura.RQL.IR.Select
                      , Hasura.RQL.IR.Update
-                     , Hasura.RQL.GBoolExp
                      , Hasura.GraphQL.Explain
                      , Hasura.GraphQL.Execute.Action
                      , Hasura.GraphQL.Execute.Inline

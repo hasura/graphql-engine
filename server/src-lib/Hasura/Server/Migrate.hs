@@ -115,7 +115,7 @@ migrateCatalog env migrationTime = do
           -- This is where the generated views and triggers are stored
           Q.unitQ "CREATE SCHEMA hdb_views" () False
 
-      isExtensionAvailable (SchemaName "pgcrypto") >>= \case
+      isExtensionAvailable "pgcrypto" >>= \case
         -- only if we created the schema, create the extension
         True -> when createSchema $ liftTx $ Q.unitQE needsPGCryptoError
           "CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA public" () False
@@ -170,27 +170,6 @@ migrateCatalog env migrationTime = do
     buildCacheAndRecreateSystemMetadata = do
       schemaCache <- buildRebuildableSchemaCache env
       view _2 <$> runCacheRWT schemaCache recreateSystemMetadata
-
-    doesSchemaExist schemaName =
-      liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler [Q.sql|
-        SELECT EXISTS
-        ( SELECT 1 FROM information_schema.schemata
-          WHERE schema_name = $1
-        ) |] (Identity schemaName) False
-
-    doesTableExist schemaName tableName =
-      liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler [Q.sql|
-        SELECT EXISTS
-        ( SELECT 1 FROM pg_tables
-          WHERE schemaname = $1 AND tablename = $2
-        ) |] (schemaName, tableName) False
-
-    isExtensionAvailable schemaName =
-      liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler [Q.sql|
-        SELECT EXISTS
-        ( SELECT 1 FROM pg_catalog.pg_available_extensions
-          WHERE name = $1
-        ) |] (Identity schemaName) False
 
 downgradeCatalog :: forall m. (MonadIO m, MonadTx m) => DowngradeOptions -> UTCTime -> m MigrationResult
 downgradeCatalog opts time = do
