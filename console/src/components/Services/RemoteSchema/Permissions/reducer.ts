@@ -72,10 +72,6 @@ const reducer = (state = defaultState, action: any) => {
         isFetching: true,
       };
     case REQUEST_SUCCESS:
-      return {
-        ...state,
-        isFetching: false,
-      };
     case REQUEST_FAILURE:
       return {
         ...state,
