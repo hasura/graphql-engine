@@ -96,7 +96,7 @@ mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
     mutationResultAlias = Identifier $ snakeCaseQualifiedObject qt <> "__mutation_result_alias"
     allColumnsAlias = Identifier $ snakeCaseQualifiedObject qt <> "__all_columns_alias"
     allColumnsSelect = S.CTESelect $ S.mkSelect
-                       { S.selExtr = map S.mkExtr $ map pgiColumn $ sortCols allCols
+                       { S.selExtr = map (S.mkExtr . pgiColumn) (sortCols allCols)
                        , S.selFrom = Just $ S.mkIdenFromExp mutationResultAlias
                        }
 

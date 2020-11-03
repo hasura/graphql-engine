@@ -116,7 +116,7 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
       validateInpCols inpCols updCols
       return (updFiltr, preSet)
 
--- | Create an expression which will return non-null text with a check constraint violation fail
+-- | Create an expression which will return nullable text with a check constraint violation fail
 -- if the condition is not met on any of the inserted rows.
 --
 -- The resulting SQL will look something like this:
