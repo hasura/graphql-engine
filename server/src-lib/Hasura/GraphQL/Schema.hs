@@ -74,9 +74,25 @@ buildGQLContext =
           fmap (map fDefinition . piQuery . rscParsed . fst) allRemoteSchemas
         queryContext = QueryContext stringifyNum queryType queryRemotesMap
 
-    -- TODO: check for field name conflicts at the root level
-    let queryFieldNames = []
-        mutationFieldNames = []
+    -- build the admin DB-only context so that we can check against name clashes with remotes
+    adminHasuraDBContext <- bindA -<
+      buildFullestDBSchema queryContext allTables allFunctions allActionInfos nonObjectCustomTypes
+
+    queryFieldNames :: [G.Name] <- bindA -<
+      case P.discardNullability $ P.parserType $ fst adminHasuraDBContext of
+        -- It really ought to be this case; anything else is a programming error.
+        P.TNamed (P.Definition _ _ _ (P.TIObject (P.ObjectInfo rootFields _interfaces))) ->
+          pure $ fmap P.dName rootFields
+        _ -> throw500 "We encountered an root query of unexpected GraphQL type.  It should be an object type."
+    let mutationFieldNames :: [G.Name]
+        mutationFieldNames =
+          case P.discardNullability . P.parserType <$> snd adminHasuraDBContext of
+            Just (P.TNamed def) ->
+              case P.dInfo def of
+                -- It really ought to be this case; anything else is a programming error.
+                P.TIObject (P.ObjectInfo rootFields _interfaces) -> fmap P.dName rootFields
+                _                                                -> []
+            _ -> []
 
     -- This block of code checks that there are no conflicting root field names between remotes.
     remotes <- remoteSchemaFields -< (queryFieldNames, mutationFieldNames, allRemoteSchemas)
@@ -139,6 +155,36 @@ buildRoleContext queryContext allTables allFunctions allActionInfos
     let backendContext = GQLContext (finalizeParser queryParserBackend)
                          (finalizeParser <$> mutationParserBackend)
     pure $ RoleContext frontendContext $ Just backendContext
+
+    where
+
+      tableFilter    = not . isSystemDefined . _tciSystemDefined
+      functionFilter = not . isSystemDefined . fiSystemDefined
+
+      validTables = Map.filter (tableFilter . _tiCoreInfo) allTables
+      validTableNames = Map.keysSet validTables
+      validFunctions = Map.elems $ Map.filter functionFilter allFunctions
+
+buildFullestDBSchema
+  :: (MonadError QErr m, MonadIO m, MonadUnique m)
+  => QueryContext -> TableCache -> FunctionCache -> [ActionInfo 'Postgres] -> NonObjectTypeMap
+  -> m ( Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
+       , Maybe (Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
+       )
+buildFullestDBSchema queryContext allTables allFunctions allActionInfos
+  nonObjectCustomTypes = do
+  runMonadSchema adminRoleName queryContext validTables $ do
+    mutationParserFrontend <-
+      buildPGMutationFields Frontend validTableNames >>=
+      buildMutationParser mempty allActionInfos nonObjectCustomTypes
+
+    queryPGFields <- buildPostgresQueryFields validTableNames validFunctions
+    subscriptionParser <- buildSubscriptionParser queryPGFields allActionInfos
+
+    queryParserFrontend <- buildQueryParser queryPGFields mempty
+      allActionInfos nonObjectCustomTypes mutationParserFrontend subscriptionParser
+
+    pure (queryParserFrontend, mutationParserFrontend)
 
     where
 
