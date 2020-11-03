@@ -945,7 +945,7 @@ serveOptsToLog so =
       , "log_level" J..= soLogLevel so
       , "plan_cache_options" J..= soPlanCacheOptions so
       , "websocket_compression_options" J..= show (WS.connectionCompressionOptions . soConnectionOptions $ so)
-      , "websockets_keep_alive" J..= show (soWebsocketKeepAlive so)
+      , "websocket_keep_alive" J..= show (soWebsocketKeepAlive so)
       ]
 
 mkGenericStrLog :: L.LogLevel -> Text -> String -> StartupLog
