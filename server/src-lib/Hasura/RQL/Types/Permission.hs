@@ -4,19 +4,20 @@ module Hasura.RQL.Types.Permission
   , PermId(..)
   ) where
 
-import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
-import           Hasura.Session
-import           Hasura.SQL.Types
+
+import qualified Data.Text                          as T
+import qualified Database.PG.Query                  as Q
+import qualified PostgreSQL.Binary.Decoding         as PD
 
 import           Data.Aeson
 import           Data.Hashable
-import           Instances.TH.Lift          ()
-import           Language.Haskell.TH.Syntax (Lift)
+import           Instances.TH.Lift                  ()
+import           Language.Haskell.TH.Syntax         (Lift)
 
-import qualified Data.Text                  as T
-import qualified Database.PG.Query          as Q
-import qualified PostgreSQL.Binary.Decoding as PD
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Incremental                 (Cacheable)
+import           Hasura.Session
 
 data PermType
   = PTInsert
@@ -33,9 +34,9 @@ instance Q.FromCol PermType where
     "update" -> Just PTUpdate
     "select" -> Just PTSelect
     "delete" -> Just PTDelete
-    _   -> Nothing
+    _        -> Nothing
 
-permTypeToCode :: PermType -> T.Text
+permTypeToCode :: PermType -> Text
 permTypeToCode PTInsert = "insert"
 permTypeToCode PTSelect = "select"
 permTypeToCode PTUpdate = "update"
@@ -61,6 +62,7 @@ instance FromJSON PermType where
 instance ToJSON PermType where
   toJSON = String . permTypeToCode
 
+-- FIXME: qualify per backend
 data PermId
   = PermId
   { pidTable :: !TableName

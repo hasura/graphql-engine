@@ -17,6 +17,9 @@ module Hasura.RQL.DDL.Schema.Table
   , SetTableCustomFields(..)
   , runSetTableCustomFieldsQV2
 
+  , SetTableCustomization(..)
+  , runSetTableCustomization
+
   , buildTableCache
   , delTableAndDirectDeps
   , processTableChanges
@@ -27,7 +30,6 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict.Extended       as Map
 import qualified Data.HashMap.Strict.InsOrd         as OMap
 import qualified Data.HashSet                       as S
-import qualified Data.Text                          as T
 import qualified Database.PG.Query                  as Q
 import qualified Language.GraphQL.Draft.Syntax      as G
 
@@ -36,13 +38,14 @@ import           Control.Lens.Extended              hiding ((.=))
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Text.Extended
 import           Instances.TH.Lift                  ()
 import           Language.Haskell.TH.Syntax         (Lift)
 import           Network.URI.Extended               ()
 
 import qualified Hasura.Incremental                 as Inc
 
-import           Data.Text.Extended
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Schema.Common       (textToName)
@@ -54,7 +57,6 @@ import           Hasura.RQL.DDL.Schema.Enum
 import           Hasura.RQL.DDL.Schema.Rename
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
-import           Hasura.SQL.Types
 import           Hasura.Server.Utils
 
 
@@ -108,7 +110,7 @@ trackExistingTableOrViewP1 qt = do
 checkConflictingNode
   :: MonadError QErr m
   => SchemaCache
-  -> T.Text
+  -> Text
   -> m ()
 checkConflictingNode sc tnGQL = do
   let queryParser = gqlQueryParser $ scUnauthenticatedGQLContext sc
@@ -166,7 +168,7 @@ trackExistingTableOrViewP2 tableName isEnum config = do
   tables, and then clicking "track all" in the console.  Curiously, this high
   memory usage happens even when no substantial GraphQL schema is generated.
   -}
-  checkConflictingNode sc $ snakeCaseQualObject tableName
+  checkConflictingNode sc $ snakeCaseQualifiedObject tableName
   saveTableToCatalog tableName isEnum config
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
@@ -197,6 +199,13 @@ runSetExistingTableIsEnumQ (SetTableIsEnum tableName isEnum) = do
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
 
+data SetTableCustomization
+  = SetTableCustomization
+  { _stcTable         :: !QualifiedTable
+  , _stcConfiguration :: !TableConfig
+  } deriving (Show, Eq, Lift)
+$(deriveJSON (aesonDrop 4 snakeCase) ''SetTableCustomization)
+
 data SetTableCustomFields
   = SetTableCustomFields
   { _stcfTable             :: !QualifiedTable
@@ -216,8 +225,17 @@ runSetTableCustomFieldsQV2
   :: (MonadTx m, CacheRWM m) => SetTableCustomFields -> m EncJSON
 runSetTableCustomFieldsQV2 (SetTableCustomFields tableName rootFields columnNames) = do
   void $ askTabInfo tableName -- assert that table is tracked
-  updateTableConfig tableName (TableConfig rootFields columnNames)
+  -- `Identifier` is set to `Nothing` below because this API doesn't accept it
+  updateTableConfig tableName (TableConfig rootFields columnNames Nothing)
   buildSchemaCacheFor (MOTable tableName)
+  return successMsg
+
+runSetTableCustomization
+  :: (MonadTx m, CacheRWM m) => SetTableCustomization -> m EncJSON
+runSetTableCustomization (SetTableCustomization table config) = do
+  void $ askTabInfo table
+  updateTableConfig table config
+  buildSchemaCacheFor (MOTable table)
   return successMsg
 
 unTrackExistingTableOrViewP1
@@ -272,7 +290,8 @@ processTableChanges ti tableDiff = do
         procAlteredCols sc tn
 
       withNewTabName newTN = do
-        let tnGQL = snakeCaseQualObject newTN
+        let customTableNameText = G.unName <$> (_tcCustomName . _tciCustomConfig $ ti)
+            tnGQL = fromMaybe (snakeCaseQualifiedObject newTN) customTableNameText
         -- check for GraphQL schema conflicts on new name
         checkConflictingNode sc tnGQL
         procAlteredCols sc tn
@@ -288,10 +307,10 @@ processTableChanges ti tableDiff = do
     TableDiff mNewName droppedCols _ alteredCols _ computedFieldDiff _ _ = tableDiff
 
     possiblyDropCustomColumnNames tn = do
-      let TableConfig customFields customColumnNames = _tciCustomConfig ti
+      let TableConfig customFields customColumnNames identifier = _tciCustomConfig ti
           modifiedCustomColumnNames = foldl' (flip Map.delete) customColumnNames droppedCols
       when (modifiedCustomColumnNames /= customColumnNames) $
-        liftTx $ updateTableConfig tn $ TableConfig customFields modifiedCustomColumnNames
+        liftTx $ updateTableConfig tn $ TableConfig customFields modifiedCustomColumnNames identifier
 
     procAlteredCols sc tn = for_ alteredCols $
       \( RawColumnInfo oldName _ oldType _ _
