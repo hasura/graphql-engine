@@ -723,7 +723,7 @@ const permChangePermissions = changeType => {
     const limitEnabled = permissionsState.limitEnabled;
 
     const table = permissionsState.table;
-    const role = permissionsState.role.trim();
+    const role = permissionsState.role;
     const query = permissionsState.query;
 
     const tableSchema = allSchemas.find(

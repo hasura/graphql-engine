@@ -221,8 +221,8 @@ handleMultipleFunctions qf = \case
     throw400 NotSupported $
     "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
 
-fetchRawFunctionInfo :: MonadTx m => QualifiedFunction -> m RawFunctionInfo
-fetchRawFunctionInfo qf@(QualifiedObject sn fn) =
+fetchRawFunctioInfo :: MonadTx m => QualifiedFunction -> m RawFunctionInfo
+fetchRawFunctioInfo qf@(QualifiedObject sn fn) =
   handleMultipleFunctions qf =<< map (Q.getAltJ . runIdentity) <$> fetchFromDatabase
   where
     fetchFromDatabase = liftTx $

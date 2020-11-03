@@ -538,8 +538,7 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
           <> catMaybes [maybeAnyToMaybeOrdPair "description" AO.toOrdered descM]
 
         actionDefinitionToOrdJSON :: ActionDefinitionInput -> AO.Value
-        actionDefinitionToOrdJSON (ActionDefinition args outputType actionType
-                                   headers frwrdClientHdrs timeout handler) =
+        actionDefinitionToOrdJSON (ActionDefinition args outputType actionType headers frwrdClientHdrs handler) =
           let typeAndKind = case actionType of
                 ActionQuery -> [("type", AO.toOrdered ("query" :: String))]
                 ActionMutation kind -> [ ("type", AO.toOrdered ("mutation" :: String))
@@ -552,7 +551,6 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
           <> catMaybes [ listToMaybeOrdPair "headers" AO.toOrdered headers
                        , listToMaybeOrdPair "arguments" argDefinitionToOrdJSON args]
           <> typeAndKind
-          <> (bool [("timeout",AO.toOrdered timeout)] mempty $ timeout == defaultActionTimeoutSecs)
 
         permToOrdJSON :: ActionPermissionMetadata -> AO.Value
         permToOrdJSON (ActionPermissionMetadata role permComment) =

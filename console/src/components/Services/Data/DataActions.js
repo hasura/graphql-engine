@@ -689,7 +689,6 @@ const makeMigrationCall = (
                 successMsg,
                 errorMsg,
                 shouldSkipSchemaReload,
-                false,
                 true // prevent further retry
               ),
           },

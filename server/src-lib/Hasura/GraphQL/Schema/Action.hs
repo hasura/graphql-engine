@@ -71,7 +71,6 @@ mkQueryActionField actionName actionInfo definitionList =
       (_adHandler definition)
       (_adHeaders definition)
       (_adForwardClientHeaders definition)
-      (_adTimeout definition)
 
     description = mkDescriptionWith (PGDescription <$> _aiComment actionInfo) $
                   "perform the action: " <>> actionName
@@ -111,7 +110,6 @@ mkMutationActionField actionName actionInfo definitionList kind =
           (_adHandler definition)
           (_adHeaders definition)
           (_adForwardClientHeaders definition)
-          (_adTimeout definition)
         ActionAsynchronous -> ActionMutationAsync
 
     description = mkDescriptionWith (PGDescription <$> _aiComment actionInfo) $

@@ -157,7 +157,8 @@ setupAuthMode mAdminSecretHash mWebHook mJwtSecret mUnAuthRole httpManager logge
       jwkRef <- case jcKeyOrUrl of
         Left jwk  -> liftIO $ newIORef (JWKSet [jwk])
         Right url -> getJwkFromUrl url
-      return $ JWTCtx jwkRef jcAudience jcIssuer jcClaims
+      let claimsFmt = fromMaybe JCFJson jcClaimsFormat
+      return $ JWTCtx jwkRef jcClaimNs jcAudience claimsFmt jcIssuer
       where
         -- if we can't find any expiry time for the JWK (either in @Expires@ header or @Cache-Control@
         -- header), do not start a background thread for refreshing the JWK
@@ -242,7 +243,7 @@ getUserInfoWithExpTime_ userInfoFromAuthHook_ processJwt_ logger manager rawHead
       mkUserInfo (URBFromSessionVariablesFallback adminRoleName)
       adminSecretState sessionVariables
 
-    sessionVariables = mkSessionVariablesHeaders rawHeaders
+    sessionVariables = mkSessionVariables rawHeaders
 
     checkingSecretIfSent
       :: AdminSecretHash -> m (UserInfo, Maybe UTCTime) -> m (UserInfo, Maybe UTCTime)

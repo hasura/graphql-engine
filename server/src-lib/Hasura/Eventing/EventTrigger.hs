@@ -182,17 +182,7 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
   where
     fetchBatchSize = 100
     popEventsBatch = do
-      {-
-        SELECT FOR UPDATE .. SKIP LOCKED can throw serialization errors in RepeatableRead: https://stackoverflow.com/a/53289263/1911889
-        We can avoid this safely by running it in ReadCommitted as Postgres will recheck the
-        predicate condition if a row is updated concurrently: https://www.postgresql.org/docs/9.5/transaction-iso.html#XACT-READ-COMMITTED
-
-        Every other action on an event_log row (like post-processing, archival, etc) are single writes (no R-W or W-R)
-        so it is safe to perform them in ReadCommitted as well (the writes will then acquire some serial order).
-        Any serial order of updates to a row will lead to an eventually consistent state as the row will have
-        (delivered=t or error=t or archived=t) after a fixed number of tries (assuming it begins with locked='f').
-      -}
-      let run = liftIO . runExceptT . Q.runTx' pool
+      let run = liftIO . runExceptT . Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite)
       run (fetchEvents fetchBatchSize) >>= \case
           Left err -> do
             liftIO $ L.unLogger logger $ EventInternalErr err
@@ -264,17 +254,17 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
       cache <- liftIO getSchemaCache
       let meti = getEventTriggerInfoFromEvent cache e
       case meti of
-        Left err -> do
+        Nothing -> do
           --  This rare error can happen in the following known cases:
           --  i) schema cache is not up-to-date (due to some bug, say during schema syncing across multiple instances)
           --  ii) the event trigger is dropped when this event was just fetched
-          logQErr $ err500 Unexpected err
-          liftIO . runExceptT $ Q.runTx pool (Q.ReadCommitted, Just Q.ReadWrite) $ do
+          logQErr $ err500 Unexpected "table or event-trigger not found in schema cache"
+          liftIO . runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
             currentTime <- liftIO getCurrentTime
             -- For such an event, we unlock the event and retry after a minute
             setRetry e (addUTCTime 60 currentTime)
           >>= flip onLeft logQErr
-        Right eti -> do
+        Just eti -> do
           let webhook = T.unpack $ wciCachedValue $ etiWebhookInfo eti
               retryConf = etiRetryConf eti
               timeoutSeconds = fromMaybe defaultTimeoutSeconds (rcTimeoutSec retryConf)
@@ -333,7 +323,7 @@ processSuccess pool e decodedHeaders ep resp = do
       respHeaders = hrsHeaders resp
       respStatus = hrsStatus resp
       invocation = mkInvocation ep respStatus decodedHeaders respBody respHeaders
-  liftIO $ runExceptT $ Q.runTx pool (Q.ReadCommitted, Just Q.ReadWrite) $ do
+  liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
     insertInvocation invocation
     setSuccess e
 
@@ -357,7 +347,7 @@ processError pool e retryConf decodedHeaders ep err = do
         HOther detail -> do
           let errMsg = (TBS.fromLBS $ encode detail)
           mkInvocation ep 500 decodedHeaders errMsg []
-  liftIO $ runExceptT $ Q.runTx pool (Q.ReadCommitted, Just Q.ReadWrite) $ do
+  liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
     insertInvocation invocation
     retryOrSetError e retryConf err
 
@@ -403,16 +393,10 @@ logQErr err = do
   logger :: L.Logger L.Hasura <- asks getter
   L.unLogger logger $ EventInternalErr err
 
-getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Either Text EventTriggerInfo
-getEventTriggerInfoFromEvent sc e = do
-  let table = eTable e
-      mTableInfo = M.lookup table $ scTables sc
-  tableInfo <- onNothing mTableInfo $ Left ("table '" <> table <<> "' not found")
-  let triggerName = tmName $ eTrigger e
-      mEventTriggerInfo = M.lookup triggerName (_tiEventTriggerInfoMap tableInfo)
-  onNothing mEventTriggerInfo $ Left ("event trigger '" <> triggerNameToTxt triggerName
-    <> "' on table '" <> table <<> "' not found")
-
+getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Maybe EventTriggerInfo
+getEventTriggerInfoFromEvent sc e = let table = eTable e
+                                        tableInfo = M.lookup table $ scTables sc
+                                    in M.lookup ( tmName $ eTrigger e) =<< (_tiEventTriggerInfoMap <$> tableInfo)
 
 ---- DATABASE QUERIES ---------------------
 --

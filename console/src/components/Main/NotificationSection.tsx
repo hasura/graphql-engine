@@ -511,19 +511,15 @@ const HasuraNotifications: React.FC<
 
   let userType = 'admin';
 
-  const headerHasCollabToken = Object.keys(dataHeaders).find(
-    header => header.toLowerCase() === HASURA_COLLABORATOR_TOKEN
-  );
-
-  if (headerHasCollabToken) {
-    const collabToken = dataHeaders[headerHasCollabToken];
+  if (dataHeaders?.[HASURA_COLLABORATOR_TOKEN]) {
+    const collabToken = dataHeaders[HASURA_COLLABORATOR_TOKEN];
     userType = getUserType(collabToken);
   }
 
   const previouslyReadState = React.useMemo(
     () =>
       console_opts?.console_notifications &&
-      console_opts?.console_notifications[userType]?.read,
+      console_opts?.console_notifications[userType].read,
     [console_opts?.console_notifications, userType]
   );
   const showBadge = React.useMemo(
@@ -643,7 +639,7 @@ const HasuraNotifications: React.FC<
 
   useOnClickOutside([dropDownRef, wrapperRef], onClickOutside);
 
-  const onClickNotificationButton = () => {
+  const onClickShareSection = () => {
     if (showBadge) {
       if (console_opts?.console_notifications) {
         let updatedState = {};
@@ -722,11 +718,11 @@ const HasuraNotifications: React.FC<
   return (
     <>
       <div
-        className={`${styles.shareSection} ${styles.headerRightNavbarBtn} ${
+        className={`${styles.shareSection} ${
           isDropDownOpen ? styles.opened : ''
         } dropdown-toggle`}
         aria-expanded="false"
-        onClick={onClickNotificationButton}
+        onClick={onClickShareSection}
         ref={wrapperRef}
       >
         <i className={`fa fa-bell ${styles.bellIcon}`} />
@@ -754,7 +750,7 @@ const HasuraNotifications: React.FC<
           <Button
             title="Mark all as read"
             onClick={onClickMarkAllAsRead}
-            disabled={!numberNotifications || !consoleNotifications.length}
+            disabled={!numberNotifications}
             className={styles.markAllAsReadBtn}
           >
             mark all as read
