@@ -56,6 +56,10 @@ On the YugaByte Cloud dashboard, click on ``Create cluster``:
 
 Select a ``Cloud Provider`` and ``Region`` and then click ``Create Cluster``.
 
+.. note::
+
+   If you're using a database user other than the default one, make sure to give it the right :ref:`Postgres permissions <cloud_postgres_permissions>`.
+
 .. _construct_db_url_yugabyte:
 
 Step 3: Construct the database connection URL
