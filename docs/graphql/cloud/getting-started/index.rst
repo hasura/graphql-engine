@@ -112,3 +112,4 @@ to make sure that your GraphQL endpoint and the Hasura console are not publicly 
    :hidden:
 
    Cloud databases guides <cloud-databases/index>
+   Postgres permissions <postgres-permissions>
