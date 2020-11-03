@@ -261,6 +261,8 @@ library
 
                      -- scheduled triggers
                      , cron >= 0.6.2
+                     -- needed for deriving via
+                     , semigroups >= 0.19
 
                      , random
                      , mmorph
