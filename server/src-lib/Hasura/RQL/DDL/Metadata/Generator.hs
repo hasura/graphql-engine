@@ -1,4 +1,10 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+
+-- | This module generates a random 'Metadata' object, using a number of
+-- 'Arbitrary' instances.  This is used by the QuickCheck-based testing suite.
+-- This module is not used by the graphql-engine library itself, and we may wish
+-- to relocate it, for instance to Hasura.Generator.
+
 module Hasura.RQL.DDL.Metadata.Generator
   (genMetadata)
 where

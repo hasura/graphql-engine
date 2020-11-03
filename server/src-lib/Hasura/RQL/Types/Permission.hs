@@ -38,7 +38,7 @@ instance Q.FromCol PermType where
     "delete" -> Just PTDelete
     _        -> Nothing
 
-permTypeToCode :: PermType -> T.Text
+permTypeToCode :: PermType -> Text
 permTypeToCode PTInsert = "insert"
 permTypeToCode PTSelect = "select"
 permTypeToCode PTUpdate = "update"
