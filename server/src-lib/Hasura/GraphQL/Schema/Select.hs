@@ -19,45 +19,48 @@ module Hasura.GraphQL.Schema.Select
 
 import           Hasura.Prelude
 
-import           Control.Lens                          hiding (index)
+import           Control.Lens                                hiding (index)
 import           Data.Has
-import           Data.Int                              (Int32)
+import           Data.Int                                    (Int32)
 import           Data.Parser.JSONPath
-import           Data.Traversable                      (mapAccumL)
+import           Data.Traversable                            (mapAccumL)
 
-import qualified Data.Aeson                            as J
-import qualified Data.Aeson.Extended                   as J
-import qualified Data.Aeson.Internal                   as J
-import qualified Data.ByteString.Lazy                  as BL
-import qualified Data.HashMap.Strict                   as Map
-import qualified Data.HashSet                          as Set
-import qualified Data.List.NonEmpty                    as NE
-import qualified Data.Sequence                         as Seq
-import qualified Data.Sequence.NonEmpty                as NESeq
-import qualified Data.Text                             as T
-import qualified Language.GraphQL.Draft.Syntax         as G
+import qualified Data.Aeson                                  as J
+import qualified Data.Aeson.Extended                         as J
+import qualified Data.Aeson.Internal                         as J
+import qualified Data.ByteString.Lazy                        as BL
+import qualified Data.HashMap.Strict                         as Map
+import qualified Data.HashSet                                as Set
+import qualified Data.List.NonEmpty                          as NE
+import qualified Data.Sequence                               as Seq
+import qualified Data.Sequence.NonEmpty                      as NESeq
+import qualified Data.Text                                   as T
+import qualified Language.GraphQL.Draft.Syntax               as G
 
-import qualified Hasura.Backends.Postgres.SQL.DML      as SQL
-import qualified Hasura.GraphQL.Execute.Types          as ET
-import qualified Hasura.GraphQL.Parser                 as P
-import qualified Hasura.GraphQL.Parser.Internal.Parser as P
-import qualified Hasura.RQL.IR.BoolExp                 as RQL
-import qualified Hasura.RQL.IR.Select                  as RQL
+import qualified Hasura.Backends.Postgres.SQL.DML            as SQL
+import qualified Hasura.GraphQL.Execute.Types                as ET
+import qualified Hasura.GraphQL.Parser                       as P
+import qualified Hasura.GraphQL.Parser.Internal.Parser       as P
+import qualified Hasura.RQL.IR.BoolExp                       as RQL
+import qualified Hasura.RQL.IR.Select                        as RQL
 
 import           Data.Text.Extended
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
-import           Hasura.GraphQL.Parser                 (FieldParser, InputFieldsParser, Kind (..),
-                                                        Parser, UnpreparedValue (..), mkParameter)
+import           Hasura.GraphQL.Parser                       (FieldParser, InputFieldsParser, Kind (..),
+                                                              Parser, UnpreparedValue (..), mkParameter)
 import           Hasura.GraphQL.Parser.Class
-import           Hasura.GraphQL.Parser.Schema          (toGraphQLType)
+import           Hasura.GraphQL.Parser.Schema                (toGraphQLType)
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.OrderBy
 import           Hasura.GraphQL.Schema.Remote
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils                   (executeJSONPath)
+import           Hasura.RQL.DDL.RemoteRelationship.Validate
+import           Hasura.Server.Utils                         (executeJSONPath)
+
+import Debug.Pretty.Simple
 
 type SelectExp           b = RQL.AnnSimpleSelG b UnpreparedValue
 type AggSelectExp        b = RQL.AnnAggregateSelectG b UnpreparedValue
@@ -911,7 +914,7 @@ fieldSelection table maybePkeyColumns fieldInfo selectPermissions =
       maybeToList <$> computedField computedFieldInfo selectPermissions
 
     FIRemoteRelationship remoteFieldInfo  ->
-      concat . maybeToList <$> remoteRelationshipField remoteFieldInfo
+      concat . maybeToList <$> remoteRelationshipField table remoteFieldInfo
 
 -- | Field parsers for a table relationship
 relationshipField
@@ -1021,14 +1024,34 @@ computedField ComputedFieldInfo{..} selectPermissions = runMaybeT do
 -- | Remote relationship field parsers
 remoteRelationshipField
   :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
-  => RemoteFieldInfo 'Postgres -> m (Maybe [FieldParser n (AnnotatedField 'Postgres)])
-remoteRelationshipField remoteFieldInfo = runMaybeT do
+  => QualifiedTable
+  -> RemoteFieldInfo 'Postgres
+  -> m (Maybe [FieldParser n (AnnotatedField 'Postgres)])
+remoteRelationshipField table remoteFieldInfo = runMaybeT do
   queryType <- asks $ qcQueryType . getter
   -- https://github.com/hasura/graphql-engine/issues/5144
   -- The above issue is easily fixable by removing the following guard and 'MaybeT' monad transformation
   guard $ queryType == ET.QueryHasura
+  let RemoteFieldInfo name _params hasuraFields remoteFields
+        remoteSchemaInfo _schemaIntrospection remoteSchemaName = remoteFieldInfo
+  remoteSchemaCtx <- askRemoteSchemaInfo remoteSchemaName
+  role <- askRoleName
+  -- get the remote schema of the role
+  case Map.lookup role $ _rscpPermissions remoteSchemaCtx of
+    -- if the role doesn't have permissions configured, then don't allow
+    -- to select the remote relationship field
+    Nothing -> MaybeT $ pure Nothing
+    Just introspectionResult -> do
+      let hasuraFieldNames = Set.fromList $ map (FieldName . G.unName . pgiName) $ Set.toList hasuraFields
+          remoteRelationship = RemoteRelationship name table hasuraFieldNames remoteSchemaName remoteFields
+      -- validate the remote relationship against the remote schema of the given role
+      eitherRemoteField <-
+        runExceptT $
+        validateRemoteRelationship remoteRelationship (remoteSchemaInfo, introspectionResult) $ Set.toList hasuraFields
+      case eitherRemoteField of
+        Left err  -> pTrace ("error is " <> (show $ errorToText err)) $ MaybeT $ pure Nothing
+        Right _ -> pure ()
   remoteSchemasFieldDefns <- asks $ qcRemoteFields . getter
-  let remoteSchemaName = _rfiRemoteSchemaName remoteFieldInfo
   fieldDefns <-
     case Map.lookup remoteSchemaName remoteSchemasFieldDefns of
       -- we return `Nothing` here when a role doesn't have permissions
@@ -1038,11 +1061,11 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
 
   fieldName <- textToName $ remoteRelationshipNameToText $ _rfiName remoteFieldInfo
   remoteFieldsArgumentsParser <-
-    sequenceA <$> for (Map.toList $ _rfiParamMap remoteFieldInfo) \(name, inpValDefn) -> do
+    sequenceA <$> for (Map.toList $ _rfiParamMap remoteFieldInfo) \(argumentName, inpValDefn) -> do
       parser <- lift $ inputValueDefinitionParser (_rfiSchemaIntrospect remoteFieldInfo) inpValDefn
       -- The preset part are ignored for remote relationships because
       -- the argument value comes from the parent query
-      pure $ (fmap fst parser) `mapField` RQL.RemoteFieldArgument name
+      pure $ (fmap fst parser) `mapField` RQL.RemoteFieldArgument argumentName
 
   -- This selection set parser, should be of the remote node's selection set parser, which comes
   -- from the fieldCall

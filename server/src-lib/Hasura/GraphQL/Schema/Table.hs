@@ -27,7 +27,6 @@ import           Hasura.GraphQL.Parser                       (Kind (..), Parser)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.RQL.DML.Internal                     (getRolePermInfo)
 import           Hasura.RQL.Types
-import           Hasura.RQL.DDL.RemoteRelationship.Validate
 
 import           Hasura.Session
 
@@ -135,34 +134,8 @@ tableSelectFields table permissions = do
           pure $ Set.member (_cfiName computedFieldInfo) $ spiScalarComputedFields permissions
         CFRSetofTable tableName ->
           isJust <$> tableSelectPermissions tableName
-    canBeSelected (FIRemoteRelationship remoteFieldInfo) = do
-      -- The below code actually doesn't matter, because the functions
-      -- which call this function (`tableSelectFields`) discard the
-      -- `FIRemoteRelationship` part
-      let RemoteFieldInfo name _params hasuraFields remoteFields
-            remoteSchemaInfo _schemaIntrospection remoteSchemaName = remoteFieldInfo
-      remoteSchemaCtx <- askRemoteSchemaInfo remoteSchemaName
-      role <- askRoleName
-      -- get the remote schema of the role
-      case Map.lookup role $ _rscpPermissions remoteSchemaCtx of
-        -- if the role doesn't have permissions configured, then don't allow
-        -- to select the remote relationship field
-        Nothing -> pure False
-        Just introspectionResult -> do
-          let hasuraFieldNames = Set.fromList $ map (FieldName . G.unName . pgiName) $ Set.toList hasuraFields
-              remoteRelationship = RemoteRelationship name table hasuraFieldNames remoteSchemaName remoteFields
-          -- validate the remote relationship against the remote schema of the given role
-          eitherRemoteField <-
-            runExceptT $
-            validateRemoteRelationship remoteRelationship (remoteSchemaInfo, introspectionResult) $ Set.toList hasuraFields
-          onLeft eitherRemoteField $ \err ->
-            -- TODO: maybe we shouldn't throw an error here and instead we should log the error
-            -- at warning level
-            -- so that the user will be able to understand the reason why the remote relationship
-            -- was not able to derive
-            throw400 RemoteSchemaError
-            $ "error in deriving permissions for remote relationship field " <> name <<> ": " <> errorToText err
-          pure True
+    canBeSelected (FIRemoteRelationship remoteFieldInfo) =
+      pure True
 
 tableColumns
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
