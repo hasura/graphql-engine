@@ -184,10 +184,6 @@ func (h *HasuraDB) ApplyMetadata() error {
 		Type: "bulk",
 		Args: []interface{}{
 			HasuraInterfaceQuery{
-				Type: "clear_metadata",
-				Args: HasuraArgs{},
-			},
-			HasuraInterfaceQuery{
 				Type: "replace_metadata",
 				Args: obj,
 			},
