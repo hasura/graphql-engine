@@ -429,7 +429,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
                         , eventQueueThread
                         , scheduledEventsThread
                         , cronEventsThread
-                        ] <> maybe [] pure telemetryThread
+                        ] <> onNothing telemetryThread []
 
   finishTime <- liftIO Clock.getCurrentTime
   let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime

@@ -333,7 +333,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
       possiblyCompressedLazyBytes userInfo reqId waiReq req qTime respBytes respHeaders reqHeaders = do
         let (compressedResp, mEncodingHeader, mCompressionType) =
               compressResponse (Wai.requestHeaders waiReq) respBytes
-            encodingHeader = maybe [] pure mEncodingHeader
+            encodingHeader = onNothing mEncodingHeader []
             reqIdHeader = (requestIdHeader, txtToBs $ unRequestId reqId)
             allRespHeaders = pure reqIdHeader <> encodingHeader <> respHeaders
         lift $ logHttpSuccess logger userInfo reqId waiReq req respBytes compressedResp qTime mCompressionType reqHeaders
