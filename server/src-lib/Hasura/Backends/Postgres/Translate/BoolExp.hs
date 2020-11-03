@@ -383,7 +383,7 @@ mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
     mkQCol = S.SEQIdentifier . S.QIdentifier qual . toIdentifier
     mkQField = S.SEQIdentifier . S.QIdentifier qual . Identifier . getFieldNameTxt
 
-    mkCompExp :: (SQLExp 'Postgres) -> OpExpG 'Postgres (SQLExp 'Postgres) -> S.BoolExp
+    mkCompExp :: SQLExp 'Postgres -> OpExpG 'Postgres (SQLExp 'Postgres) -> S.BoolExp
     mkCompExp lhs = \case
       ACast casts      -> mkCastsExp casts
       AEQ False val    -> equalsBoolExpBuilder lhs val
