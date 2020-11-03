@@ -79,3 +79,18 @@ hasNestedFld = \case
       AFObjectRelation _ -> True
       AFArrayRelation _  -> True
       _                  -> False
+
+data MutationCTE
+  = MCPermissionCheck !S.CTE
+  | MCNoPermissionCheck !S.CTE
+  deriving (Show, Eq)
+
+getMutationCTE :: MutationCTE -> S.CTE
+getMutationCTE = \case
+  MCPermissionCheck c   -> c
+  MCNoPermissionCheck c -> c
+
+checkPermissionRequired :: MutationCTE -> Bool
+checkPermissionRequired = \case
+  MCPermissionCheck _   -> True
+  MCNoPermissionCheck _ -> False
