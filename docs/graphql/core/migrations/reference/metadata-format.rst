@@ -239,18 +239,18 @@ cron_triggers.yaml
 
 Contains metadata related to cron triggers
 
-..  code-block  yaml
+..  code-block::  yaml
 
-      - name: test
-          webhook: <webhook_url>
-          schedule: 0 12 * * 1-5
-          include_in_metadata: true
-          payload: {}
-          retry_conf:
-            num_retries: 1
-            timeout_seconds: 60
-            tolerance_seconds: 21600
-            retry_interval_seconds: 10
+  - name: test
+  webhook: <webhook_url>
+  schedule: 0 12 * * 1-5
+  include_in_metadata: true
+  payload: {}
+  retry_conf:
+    num_retries: 1
+    timeout_seconds: 60
+    tolerance_seconds: 21600
+    retry_interval_seconds: 10
 
 In the above example, ``cron_triggers.yaml`` contains the information about the test cron trigger. The webhook_url can be an HTTP endpoint that should be triggered or an environment variable that has HTTP endpoints that should be triggered.
 
