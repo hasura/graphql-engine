@@ -1,5 +1,5 @@
 .. meta::
-   :description: import data from csv in postgres
+   :description: import data from csv into postgres
    :keywords: hasura, docs, postgres, import, data
 
 .. _postgres_import_data_from_csv:
