@@ -4,7 +4,7 @@
 
 .. _postgres_import_data_from_csv:
 
-Import data from csv into database
+Import data from CSV into Postgres
 ===================================
 
 .. contents:: Table of contents
