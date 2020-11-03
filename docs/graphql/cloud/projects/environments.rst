@@ -12,6 +12,44 @@ Managing development environments for Hasura Cloud
   :depth: 2
   :local:
 
+
+Introduction
+------------
+
+Migrations & metadata
+---------------------
+
+- Set up your project with migrations / metadata (link)
+  (disable the console)
+- Explain how it helps to move to staging / prod
+
+Developing & testing business logic
+-----------------------------------
+
+- Link to all business logic sections (actions etc.)
+- Configuring handlers via environment variables
+- Debugging in development 
+
+Project configurations
+----------------------
+
+- Configure env variables (e.g. admin secret)
+- Use allow lists
+- Restrict CORS
+
+Running tests
+-------------
+
+- Regression testing (for cloud)
+
+In production
+-------------
+
+- Disable dev mode
+- Disable APIs
+- Link to production checklist
+
+
 Introduction
 ------------
 
