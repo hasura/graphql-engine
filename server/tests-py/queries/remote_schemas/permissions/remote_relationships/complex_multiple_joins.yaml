@@ -1,0 +1,90 @@
+- description: Many remote fields, etc with permissions, id=1
+  headers:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: '1'
+  url: /v1/graphql
+  status: 200
+  response:
+    errors:
+      - extensions:
+          path: $.selectionSet.profiles_by_pk.selectionSet.remoteUser
+          code: validation-failed
+        message: "field \"remoteUser\" not found in type: 'profiles'"
+  query:
+    query: |
+      query {
+        # A top-level object
+        p_1: profiles_by_pk(id: 1) {
+          id
+          name
+          remoteUser {
+            user_id
+          }
+        }
+        profiles {
+          # no `id`, so becomes rrPhantomFields
+          some_constant_text
+          messagesNestedArr {
+            name
+            msg
+          }
+          name
+          # use alias for kicks:
+          r_user: remoteUser {
+            user_id
+          }
+        }
+        # A top-level object (not permitted)
+        profiles_by_pk(id: 2) {
+          id
+          name
+          remoteUser {
+            user_id
+          }
+        }
+      }
+- description: Many remote fields, etc with permissions, id=2
+  headers:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: '2'
+  url: /v1/graphql
+  status: 200
+  response:
+    errors:
+      - extensions:
+          path: $.selectionSet.profiles_by_pk.selectionSet.remoteUser
+          code: validation-failed
+        message: "field \"remoteUser\" not found in type: 'profiles'"
+  query:
+    query: |
+      query {
+        # A top-level object
+        p_1: profiles_by_pk(id: 1) {
+          id
+          name
+          remoteUser {
+            user_id
+          }
+        }
+        profiles {
+          # no `id`, so becomes rrPhantomFields
+          some_constant_text
+          messagesNestedArr {
+            name
+            msg
+          }
+          name
+          # use alias for kicks:
+          r_user: remoteUser {
+            user_id
+          }
+        }
+        # A top-level object
+        profiles_by_pk(id: 2) {
+          id
+          name
+          remoteUser {
+            user_id
+          }
+        }
+      }

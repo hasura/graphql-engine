@@ -156,6 +156,10 @@ tableSelectFields table permissions = do
             runExceptT $
             validateRemoteRelationship remoteRelationship (remoteSchemaInfo, introspectionResult) $ Set.toList hasuraFields
           onLeft eitherRemoteField $ \err ->
+            -- TODO: maybe we shouldn't throw an error here and instead we should log the error
+            -- at warning level
+            -- so that the user will be able to understand the reason why the remote relationship
+            -- was not able to derive
             throw400 RemoteSchemaError
             $ "error in deriving permissions for remote relationship field " <> name <<> ": " <> errorToText err
           pure True

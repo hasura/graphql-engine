@@ -92,3 +92,30 @@ class TestRemoteSchemaPermissionsArgumentPresets:
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'add_permission_with_session_preset_argument.yaml')
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'execution_with_session_preset_args.yaml')
+
+class TestRemoteRelationshipPermissions:
+
+    @classmethod
+    def dir(cls):
+        return "queries/remote_schemas/permissions/remote_relationships/"
+
+    @pytest.fixture(autouse=True)
+    def transact(self, hge_ctx, graphql_service):
+        print("In setup method")
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_with_permissions.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'teardown.yaml')
+        assert st_code == 200, resp
+
+    def test_basic_relationship(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'basic_relationship_with_permissions1.yaml')
+
+    # Test queries that combine several remote relationships, nested in
+    # different ways, variously filtering different bits using permissions.
+    def test_complex_multiple_joins(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_multiple_remote_rel.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'complex_multiple_joins.yaml')
