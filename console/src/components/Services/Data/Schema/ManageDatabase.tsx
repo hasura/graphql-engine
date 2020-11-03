@@ -68,7 +68,11 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
         -
         <span style={{ paddingLeft: 5 }}>
           {showUrl ? (
-            dataSource.url
+            typeof dataSource.url === 'string' ? (
+              dataSource.url
+            ) : (
+              dataSource.url.from_env
+            )
           ) : (
             <ToolTip
               id="connection-string-show"
@@ -153,7 +157,7 @@ const ManageDatabase: React.FC<ManageDatabaseInjectedProps> = ({
                 retries: data.connection_pool_settings.retries,
               }),
             },
-            dbUrl: data.url,
+            dbUrl: typeof data.url === 'string' ? data.url : data.url.from_env,
           },
         },
         successCallback
