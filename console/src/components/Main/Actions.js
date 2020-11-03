@@ -98,12 +98,14 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
   }
 
   const now = new Date().toISOString();
-  const query = getConsoleNotificationQuery(now, consoleScope);
+  const payload = getConsoleNotificationQuery(now, consoleScope);
   const options = {
-    body: JSON.stringify(query),
+    body: JSON.stringify(payload),
     method: 'POST',
     headers: {
       'content-type': 'application/json',
+      // temp. change until Auth is added
+      'x-hasura-role': 'user',
     },
   };
 
@@ -112,94 +114,107 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
       const lastSeenNotifications = JSON.parse(
         window.localStorage.getItem('notifications:lastSeen')
       );
-      if (!data.length) {
-        dispatch({ type: FETCH_CONSOLE_NOTIFICATIONS_SET_DEFAULT });
-        dispatch(
-          updateConsoleNotificationsState({
-            read: 'default',
-            date: now,
-            showBadge: false,
-          })
-        );
-        if (!lastSeenNotifications) {
+      if (data.data.console_notifications) {
+        const fetchedData = data.data.console_notifications;
+
+        if (!fetchedData.length) {
+          dispatch({ type: FETCH_CONSOLE_NOTIFICATIONS_SET_DEFAULT });
+          dispatch(
+            updateConsoleNotificationsState({
+              read: 'default',
+              date: now,
+              showBadge: false,
+            })
+          );
+          if (!lastSeenNotifications) {
+            window.localStorage.setItem(
+              'notifications:lastSeen',
+              JSON.stringify(0)
+            );
+          }
+          return;
+        }
+
+        const uppercaseScopedData = makeUppercaseScopes(fetchedData);
+        let filteredData = filterScope(uppercaseScopedData, consoleScope);
+
+        if (
+          !lastSeenNotifications ||
+          lastSeenNotifications !== filteredData.length
+        ) {
           window.localStorage.setItem(
             'notifications:lastSeen',
-            JSON.stringify(0)
+            JSON.stringify(filteredData.length)
           );
         }
-        return;
-      }
 
-      const uppercaseScopedData = makeUppercaseScopes(data);
-      let filteredData = filterScope(uppercaseScopedData, consoleScope);
-
-      if (
-        !lastSeenNotifications ||
-        lastSeenNotifications !== filteredData.length
-      ) {
-        window.localStorage.setItem(
-          'notifications:lastSeen',
-          JSON.stringify(filteredData.length)
-        );
-      }
-
-      if (previousRead) {
-        if (!consoleStateDB.console_notifications) {
-          dispatch(
-            updateConsoleNotificationsState({
-              read: [],
-              date: now,
-              showBadge: true,
-            })
-          );
-        } else {
-          let newReadValue;
-
-          if (previousRead === 'default' || previousRead === 'error') {
-            newReadValue = [];
-            toShowBadge = false;
-          } else if (previousRead === 'all') {
-            const previousList = JSON.parse(
-              localStorage.getItem('notifications:data')
+        if (previousRead) {
+          if (!consoleStateDB.console_notifications) {
+            dispatch(
+              updateConsoleNotificationsState({
+                read: [],
+                date: now,
+                showBadge: true,
+              })
             );
-            if (previousList.length) {
-              const resDiff = filteredData.filter(
-                newNotif =>
-                  !previousList.find(oldNotif => oldNotif.id === newNotif.id)
+          } else {
+            let newReadValue;
+
+            if (previousRead === 'default' || previousRead === 'error') {
+              newReadValue = [];
+              toShowBadge = false;
+            } else if (previousRead === 'all') {
+              const previousList = JSON.parse(
+                localStorage.getItem('notifications:data')
               );
-              if (!resDiff.length) {
-                // since the data hasn't changed since the last call
-                newReadValue = previousRead;
+              if (previousList.length) {
+                const resDiff = filteredData.filter(
+                  newNotif =>
+                    !previousList.find(oldNotif => oldNotif.id === newNotif.id)
+                );
+                if (!resDiff.length) {
+                  // since the data hasn't changed since the last call
+                  newReadValue = previousRead;
+                  toShowBadge = false;
+                } else {
+                  newReadValue = [...previousList.map(notif => `${notif.id}`)];
+                  toShowBadge = true;
+                  filteredData = [...resDiff, ...previousList];
+                }
+              }
+            } else {
+              newReadValue = previousRead;
+              if (
+                previousRead.length &&
+                lastSeenNotifications === filteredData.length
+              ) {
                 toShowBadge = false;
-              } else {
-                newReadValue = [...previousList.map(notif => `${notif.id}`)];
-                toShowBadge = true;
-                filteredData = [...resDiff, ...previousList];
               }
             }
-          } else {
-            newReadValue = previousRead;
-            if (
-              previousRead.length &&
-              lastSeenNotifications === filteredData.length
-            ) {
-              toShowBadge = false;
-            }
+            dispatch(
+              updateConsoleNotificationsState({
+                read: newReadValue,
+                date: consoleStateDB.console_notifications[userType].date,
+                showBadge: toShowBadge,
+              })
+            );
           }
-          dispatch(
-            updateConsoleNotificationsState({
-              read: newReadValue,
-              date: consoleStateDB.console_notifications[userType].date,
-              showBadge: toShowBadge,
-            })
-          );
         }
-      }
 
-      dispatch({
-        type: FETCH_CONSOLE_NOTIFICATIONS_SUCCESS,
-        data: filteredData,
-      });
+        dispatch({
+          type: FETCH_CONSOLE_NOTIFICATIONS_SUCCESS,
+          data: filteredData,
+        });
+        return;
+      }
+      dispatch({ type: FETCH_CONSOLE_NOTIFICATIONS_ERROR });
+      dispatch(
+        updateConsoleNotificationsState({
+          read: 'error',
+          date: now,
+          showBadge: false,
+        })
+      );
     })
     .catch(err => {
       console.error(err);
