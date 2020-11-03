@@ -1050,6 +1050,6 @@ parseWebSocketKeepAlive :: Parser (Maybe Int)
 parseWebSocketKeepAlive =
   optional $
   option (eitherReader readEither)
-         ( long "websockets-keepalive" <>
+         ( long "websocket-keepalive" <>
            help (snd webSocketKeepAliveEnv)
          )
