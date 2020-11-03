@@ -240,7 +240,6 @@ buildGQLContext =
               , graphQLTables
               , scenario
               , QueryContext stringifyNum queryType roleBasedQueryRemotesMap
-              -- TODO: check what the below is used for? And maybe it should be `roleBasedQueryRemotesMap`
               , fmap fst allRemoteSchemas) $
             P.runSchemaT gqlContext
 

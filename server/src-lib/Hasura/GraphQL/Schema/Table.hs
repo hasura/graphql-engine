@@ -29,6 +29,8 @@ import           Hasura.RQL.DML.Internal                     (getRolePermInfo)
 import           Hasura.RQL.Types
 import           Hasura.RQL.DDL.RemoteRelationship.Validate
 
+import           Hasura.Session
+
 -- | Table select columns enum
 --
 -- Parser for an enum type that matches the columns of the given
@@ -133,19 +135,30 @@ tableSelectFields table permissions = do
           pure $ Set.member (_cfiName computedFieldInfo) $ spiScalarComputedFields permissions
         CFRSetofTable tableName ->
           isJust <$> tableSelectPermissions tableName
-    -- TODO (from master): Derive permissions for remote relationships
     canBeSelected (FIRemoteRelationship remoteFieldInfo) = do
-      -- let RemoteFieldInfo name _params hasuraFields remoteFields
-      --       remoteSchemaInfo schemaIntrospection remoteSchemaName = remoteFieldInfo
-      --     hasuraFieldNames = Set.fromList $ map (FieldName . G.unName . pgiName) $ Set.toList hasuraFields
-      --     remoteRelationship = RemoteRelationship name table hasuraFieldNames remoteSchemaName remoteFields
-      -- eitherRemoteField <-
-      --   runExceptT $
-      --   validateRemoteRelationship remoteRelationship (remoteSchemaInfo, schemaIntrospection) $ Set.toList hasuraFields
-      -- onLeft eitherRemoteField $ \err ->
-      --   throw400 RemoteSchemaError
-      --   $ "error in deriving permissions for remote relationship field " <> name <<> ": " <> errorToText err
-      pure True
+      -- The below code actually doesn't matter, because the functions
+      -- which call this function (`tableSelectFields`) discard the
+      -- `FIRemoteRelationship` part
+      let RemoteFieldInfo name _params hasuraFields remoteFields
+            remoteSchemaInfo _schemaIntrospection remoteSchemaName = remoteFieldInfo
+      remoteSchemaCtx <- askRemoteSchemaInfo remoteSchemaName
+      role <- askRoleName
+      -- get the remote schema of the role
+      case Map.lookup role $ _rscpPermissions remoteSchemaCtx of
+        -- if the role doesn't have permissions configured, then don't allow
+        -- to select the remote relationship field
+        Nothing -> pure False
+        Just introspectionResult -> do
+          let hasuraFieldNames = Set.fromList $ map (FieldName . G.unName . pgiName) $ Set.toList hasuraFields
+              remoteRelationship = RemoteRelationship name table hasuraFieldNames remoteSchemaName remoteFields
+          -- validate the remote relationship against the remote schema of the given role
+          eitherRemoteField <-
+            runExceptT $
+            validateRemoteRelationship remoteRelationship (remoteSchemaInfo, introspectionResult) $ Set.toList hasuraFields
+          onLeft eitherRemoteField $ \err ->
+            throw400 RemoteSchemaError
+            $ "error in deriving permissions for remote relationship field " <> name <<> ": " <> errorToText err
+          pure True
 
 tableColumns
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
