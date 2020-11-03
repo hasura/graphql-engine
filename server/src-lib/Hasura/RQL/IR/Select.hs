@@ -13,9 +13,9 @@ import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Control.Lens.TH                     (makeLenses, makePrisms)
 
-import qualified Hasura.Backends.Postgres.SQL.DML    as S
+import qualified Hasura.Backends.Postgres.SQL.DML    as PG
+import qualified Hasura.Backends.Postgres.SQL.Types  as PG
 
-import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.OrderBy
@@ -75,7 +75,7 @@ traverseAnnOrderByItem f =
 type AnnOrderByItem b = AnnOrderByItemG b (SQLExp b)
 
 type OrderByItemExp b =
-  OrderByItemG (AnnOrderByElement b (SQLExp b), (S.Alias, (SQLExp b)))
+  OrderByItemG (AnnOrderByElement b (SQLExp b), (PG.Alias, (SQLExp b)))
 
 data AnnRelationSelectG (b :: Backend) a
   = AnnRelationSelectG
@@ -92,7 +92,7 @@ type ArrayAggregateSelect b = ArrayAggregateSelectG b (SQLExp b)
 data AnnObjectSelectG (b :: Backend) v
   = AnnObjectSelectG
   { _aosFields      :: !(AnnFieldsG b v)
-  , _aosTableFrom   :: !QualifiedTable
+  , _aosTableFrom   :: !(TableName b)
   , _aosTableFilter :: !(AnnBoolExp b v)
   }
 
@@ -113,9 +113,9 @@ type ObjectRelationSelect b = ObjectRelationSelectG b (SQLExp b)
 
 data ComputedFieldScalarSelect (b :: Backend) v
   = ComputedFieldScalarSelect
-  { _cfssFunction  :: !QualifiedFunction
+  { _cfssFunction  :: !PG.QualifiedFunction
   , _cfssArguments :: !(FunctionArgsExpTableRow v)
-  , _cfssType      :: !PGScalarType
+  , _cfssType      :: !PG.PGScalarType
   , _cfssColumnOp  :: !(Maybe (ColumnOp b))
   } deriving (Functor, Foldable, Traversable)
 deriving instance Show v => Show (ComputedFieldScalarSelect 'Postgres v)
@@ -159,7 +159,7 @@ type ArraySelectFieldsG b v = Fields (ArraySelectG b v)
 
 data ColumnOp (b :: Backend)
   = ColumnOp
-  { _colOp  :: S.SQLOp
+  { _colOp  :: PG.SQLOp
   , _colExp :: (SQLExp b)
   }
 deriving instance Show (ColumnOp 'Postgres)
@@ -196,7 +196,7 @@ data AnnFieldG (b :: Backend) v
   | AFArrayRelation !(ArraySelectG b v)
   | AFComputedField !(ComputedFieldSelect b v)
   | AFRemote !(RemoteSelect b)
-  | AFNodeId !QualifiedTable !(PrimaryKeyColumns b)
+  | AFNodeId !(TableName b) !(PrimaryKeyColumns b)
   | AFExpression !Text
 
 mkAnnColumnField :: ColumnInfo backend -> Maybe (ColumnOp backend) -> AnnFieldG backend v
@@ -266,7 +266,7 @@ data AggregateOp (b :: Backend)
   }
 
 data AggregateField (b :: Backend)
-  = AFCount !S.CountType
+  = AFCount !PG.CountType
   | AFOp !(AggregateOp b)
   | AFExp !Text
 
@@ -336,7 +336,7 @@ type TableAggregateFieldsG b v = Fields (TableAggregateFieldG b v)
 type TableAggregateFields b = TableAggregateFieldsG b (SQLExp b)
 
 data ArgumentExp a
-  = AETableRow !(Maybe Identifier) -- ^ table row accessor
+  = AETableRow !(Maybe PG.Identifier) -- ^ table row accessor
   | AESession !a -- ^ JSON/JSONB hasura session variable object
   | AEInput !a
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
@@ -345,9 +345,9 @@ instance (Hashable v) => Hashable (ArgumentExp v)
 type FunctionArgsExpTableRow v = FunctionArgsExpG (ArgumentExp v)
 
 data SelectFromG (b :: Backend) v
-  = FromTable !QualifiedTable
-  | FromIdentifier !Identifier
-  | FromFunction !QualifiedFunction
+  = FromTable !(TableName b)
+  | FromIdentifier !PG.Identifier
+  | FromFunction !PG.QualifiedFunction
                  !(FunctionArgsExpTableRow v)
                  -- a definition list
                  !(Maybe [(Column b, ScalarType b)])
@@ -494,8 +494,8 @@ insertFunctionArg argName idx value (FunctionArgsExp positional named) =
 
 data SourcePrefixes
   = SourcePrefixes
-  { _pfThis :: !Identifier -- ^ Current source prefix
-  , _pfBase :: !Identifier
+  { _pfThis :: !PG.Identifier -- ^ Current source prefix
+  , _pfBase :: !PG.Identifier
   -- ^ Base table source row identifier to generate
   -- the table's column identifiers for computed field
   -- function input parameters
@@ -504,11 +504,11 @@ instance Hashable SourcePrefixes
 
 data SelectSource (b :: Backend)
   = SelectSource
-  { _ssPrefix   :: !Identifier
-  , _ssFrom     :: !S.FromItem
-  , _ssDistinct :: !(Maybe S.DistinctExpr)
-  , _ssWhere    :: !S.BoolExp
-  , _ssOrderBy  :: !(Maybe S.OrderByExp)
+  { _ssPrefix   :: !PG.Identifier
+  , _ssFrom     :: !PG.FromItem
+  , _ssDistinct :: !(Maybe PG.DistinctExpr)
+  , _ssWhere    :: !PG.BoolExp
+  , _ssOrderBy  :: !(Maybe PG.OrderByExp)
   , _ssLimit    :: !(Maybe Int)
   , _ssOffset   :: !(Maybe (SQLExp b))
   } deriving (Generic)
@@ -518,7 +518,7 @@ deriving instance Eq   (SelectSource 'Postgres)
 
 data SelectNode (b :: Backend)
   = SelectNode
-  { _snExtractors :: !(HM.HashMap S.Alias (SQLExp b))
+  { _snExtractors :: !(HM.HashMap PG.Alias (SQLExp b))
   , _snJoinTree   :: !(JoinTree b)
   }
 
@@ -528,9 +528,9 @@ instance Semigroup (SelectNode 'Postgres) where
 
 data ObjectSelectSource
   = ObjectSelectSource
-  { _ossPrefix :: !Identifier
-  , _ossFrom   :: !S.FromItem
-  , _ossWhere  :: !S.BoolExp
+  { _ossPrefix :: !PG.Identifier
+  , _ossFrom   :: !PG.FromItem
+  , _ossWhere  :: !PG.BoolExp
   } deriving (Show, Eq, Generic)
 instance Hashable ObjectSelectSource
 
@@ -549,7 +549,7 @@ deriving instance Eq (Column b) => Eq (ObjectRelationSource b)
 
 data ArrayRelationSource (b :: Backend)
   = ArrayRelationSource
-  { _arsAlias           :: !S.Alias
+  { _arsAlias           :: !PG.Alias
   , _arsRelationMapping :: !(HM.HashMap (Column b) (Column b))
   , _arsSelectSource    :: !(SelectSource b)
   } deriving (Generic)
@@ -558,7 +558,7 @@ deriving instance Eq (ArrayRelationSource 'Postgres)
 
 data ArraySelectNode (b :: Backend)
   = ArraySelectNode
-  { _asnTopExtractors :: ![S.Extractor]
+  { _asnTopExtractors :: ![PG.Extractor]
   , _asnSelectNode    :: !(SelectNode b)
   }
 
@@ -578,9 +578,9 @@ deriving instance Eq   (ComputedFieldTableSetSource 'Postgres)
 
 data ArrayConnectionSource (b :: Backend)
   = ArrayConnectionSource
-  { _acsAlias           :: !S.Alias
+  { _acsAlias           :: !PG.Alias
   , _acsRelationMapping :: !(HM.HashMap (Column b) (Column b))
-  , _acsSplitFilter     :: !(Maybe S.BoolExp)
+  , _acsSplitFilter     :: !(Maybe PG.BoolExp)
   , _acsSlice           :: !(Maybe ConnectionSlice)
   , _acsSource          :: !(SelectSource b)
   } deriving (Generic)

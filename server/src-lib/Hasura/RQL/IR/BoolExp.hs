@@ -54,7 +54,7 @@ import           Data.Typeable
 import           Instances.TH.Lift                  ()
 import           Language.Haskell.TH.Syntax         (Lift)
 
-import           Hasura.Backends.Postgres.SQL.Types
+import qualified Hasura.Backends.Postgres.SQL.Types as PG
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
@@ -74,13 +74,17 @@ instance Cacheable ColExp
 
 data GExists (b :: Backend) a
   = GExists
-  { _geTable :: !QualifiedTable
+  { _geTable :: !(TableName b)
   , _geWhere :: !(GBoolExp b a)
-  } deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Data, Generic)
-instance (NFData a) => NFData (GExists b a)
-instance (Data a, Typeable b) => Plated (GExists b a)
-instance (Cacheable a) => Cacheable (GExists b a)
-instance (Hashable a) => Hashable (GExists b a)
+  } deriving (Functor, Foldable, Traversable, Generic)
+deriving instance (Representation b, Show a) => Show (GExists b a)
+deriving instance (Representation b, Eq a) => Eq (GExists b a)
+deriving instance (Representation b, Lift a) => Lift (GExists b a)
+deriving instance (Representation b, Typeable a, Data a) => Data (GExists b a)
+instance (Representation b, NFData a) => NFData (GExists b a)
+instance (Representation b, Data a) => Plated (GExists b a)
+instance (Representation b, Cacheable a) => Cacheable (GExists b a)
+instance (Representation b, Hashable a) => Hashable (GExists b a)
 
 gExistsToJSON :: (a -> (Text, Value)) -> GExists 'Postgres a -> Value
 gExistsToJSON f (GExists qt wh) =
@@ -105,10 +109,10 @@ data GBoolExp (b :: Backend) a
   | BoolExists !(GExists b a)
   | BoolFld !a
   deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Data, Generic)
-instance (NFData a) => NFData (GBoolExp b a)
-instance (Data a, Typeable b) => Plated (GBoolExp b a)
-instance (Cacheable a) => Cacheable (GBoolExp b a)
-instance (Hashable a) => Hashable (GBoolExp b a)
+instance (Representation b, NFData a) => NFData (GBoolExp b a)
+instance (Representation b, Data a) => Plated (GBoolExp b a)
+instance (Representation b, Cacheable a) => Cacheable (GBoolExp b a)
+instance (Representation b, Hashable a) => Hashable (GBoolExp b a)
 
 gBoolExpTrue :: GBoolExp b a
 gBoolExpTrue = BoolAnd []
@@ -395,7 +399,7 @@ type PreSetColsPartial b = M.HashMap (Column b) (PartialSQLExp b)
 
 -- doesn't resolve the session variable
 data PartialSQLExp (b :: Backend)
-  = PSESessVar !(PGType (ScalarType b)) !SessionVariable
+  = PSESessVar !(PG.PGType (ScalarType b)) !SessionVariable
   | PSESQLExp !(SQLExp b)
   deriving (Generic)
 deriving instance Eq (PartialSQLExp 'Postgres)
@@ -403,7 +407,7 @@ deriving instance Data (PartialSQLExp 'Postgres)
 instance NFData (PartialSQLExp 'Postgres)
 instance Cacheable (PartialSQLExp 'Postgres)
 
-mkTypedSessionVar :: PGType PGColumnType -> SessionVariable -> PartialSQLExp 'Postgres
+mkTypedSessionVar :: PG.PGType PGColumnType -> SessionVariable -> PartialSQLExp 'Postgres
 mkTypedSessionVar columnType =
   PSESessVar (unsafePGColumnToRepresentation <$> columnType)
 
@@ -417,7 +421,7 @@ instance ToJSON (AnnBoolExpPartialSQL 'Postgres) where
     where
       f annFld = case annFld of
         AVCol pci opExps ->
-          ( getPGColTxt $ pgiColumn pci
+          ( PG.getPGColTxt $ pgiColumn pci
           , toJSON (pci, map opExpSToJSON opExps)
           )
         AVRel ri relBoolExp ->

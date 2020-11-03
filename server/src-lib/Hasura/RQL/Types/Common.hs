@@ -9,6 +9,7 @@ module Hasura.RQL.Types.Common
        , ScalarType
        , Column
        , SQLExp
+       , Representation (..)
 
        , FieldName(..)
        , fromPGCol
@@ -71,16 +72,18 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Bifunctor                     (bimap)
+import           Data.Kind                          (Type)
 import           Data.Scientific                    (toBoundedInteger)
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
+import           Data.Typeable
 import           Data.URL.Template
 import           Instances.TH.Lift                  ()
 import           Language.Haskell.TH.Syntax         (Lift)
 
-import qualified Hasura.Backends.Postgres.SQL.DML   as S
+import qualified Hasura.Backends.Postgres.SQL.DML   as PG
+import qualified Hasura.Backends.Postgres.SQL.Types as PG
 
-import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.DDL.Headers             ()
@@ -89,16 +92,31 @@ import           Hasura.SQL.Backend
 
 
 type family ScalarType (b :: Backend) where
-  ScalarType 'Postgres = PGScalarType
+  ScalarType 'Postgres = PG.PGScalarType
 
 type family ColumnType (b :: Backend) where
-  ColumnType 'Postgres = PGType
+  ColumnType 'Postgres = PG.PGType
 
 type family Column (b :: Backend) where
-  Column 'Postgres = PGCol
+  Column 'Postgres = PG.PGCol
 
 type family SQLExp (b :: Backend) where
-  SQLExp 'Postgres = S.SQLExp
+  SQLExp 'Postgres = PG.SQLExp
+
+class
+  ( Show (TableName b)
+  , Eq (TableName b)
+  , Lift (TableName b)
+  , NFData (TableName b)
+  , Cacheable (TableName b)
+  , Hashable (TableName b)
+  , Data (TableName b)
+  , Typeable b
+  ) => Representation (b :: Backend) where
+  type TableName b :: Type
+
+instance Representation 'Postgres where
+  type TableName 'Postgres = PG.QualifiedTable
 
 
 adminText :: NonEmptyText
@@ -111,8 +129,8 @@ newtype RelName
   = RelName { getRelTxt :: NonEmptyText }
   deriving (Show, Eq, Hashable, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, Q.FromCol, Lift, Generic, Arbitrary, NFData, Cacheable)
 
-instance IsIdentifier RelName where
-  toIdentifier rn = Identifier $ relNameToTxt rn
+instance PG.IsIdentifier RelName where
+  toIdentifier rn = PG.Identifier $ relNameToTxt rn
 
 instance ToTxt RelName where
   toTxt = relNameToTxt
@@ -153,8 +171,8 @@ data RelInfo
   = RelInfo
   { riName       :: !RelName
   , riType       :: !RelType
-  , riMapping    :: !(HashMap PGCol PGCol)
-  , riRTable     :: !QualifiedTable
+  , riMapping    :: !(HashMap PG.PGCol PG.PGCol)
+  , riRTable     :: !PG.QualifiedTable
   , riIsManual   :: !Bool
   , riIsNullable :: !Bool
   } deriving (Show, Eq, Generic)
@@ -171,14 +189,14 @@ newtype FieldName
            , Semigroup
            )
 
-instance IsIdentifier FieldName where
-  toIdentifier (FieldName f) = Identifier f
+instance PG.IsIdentifier FieldName where
+  toIdentifier (FieldName f) = PG.Identifier f
 
 instance ToTxt FieldName where
   toTxt (FieldName c) = c
 
-fromPGCol :: PGCol -> FieldName
-fromPGCol c = FieldName $ getPGColTxt c
+fromPGCol :: PG.PGCol -> FieldName
+fromPGCol c = FieldName $ PG.getPGColTxt c
 
 fromRel :: RelName -> FieldName
 fromRel = FieldName . relNameToTxt
@@ -188,7 +206,7 @@ class ToAesonPairs a where
 
 data WithTable a
   = WithTable
-  { wtName :: !QualifiedTable
+  { wtName :: !PG.QualifiedTable
   , wtInfo :: !a
   } deriving (Show, Eq, Lift)
 
@@ -202,7 +220,7 @@ instance (ToAesonPairs a) => ToJSON (WithTable a) where
   toJSON (WithTable tn rel) =
     object $ ("table" .= tn):toAesonPairs rel
 
-type ColumnValues a = HM.HashMap PGCol a
+type ColumnValues a = HM.HashMap PG.PGCol a
 
 data MutateResp a
   = MutateResp
@@ -212,7 +230,7 @@ data MutateResp a
 $(deriveJSON (aesonDrop 3 snakeCase) ''MutateResp)
 
 
-type ColMapping = HM.HashMap PGCol PGCol
+type ColMapping = HM.HashMap PG.PGCol PG.PGCol
 
 -- | Postgres OIDs. <https://www.postgresql.org/docs/12/datatype-oid.html>
 newtype OID = OID { unOID :: Int }
@@ -220,7 +238,7 @@ newtype OID = OID { unOID :: Int }
 
 data Constraint
   = Constraint
-  { _cName :: !ConstraintName
+  { _cName :: !PG.ConstraintName
   , _cOid  :: !OID
   } deriving (Show, Eq, Generic)
 instance NFData Constraint
@@ -241,7 +259,7 @@ $(deriveJSON (aesonDrop 3 snakeCase) ''PrimaryKey)
 data ForeignKey
   = ForeignKey
   { _fkConstraint    :: !Constraint
-  , _fkForeignTable  :: !QualifiedTable
+  , _fkForeignTable  :: !PG.QualifiedTable
   , _fkColumnMapping :: !ColMapping
   } deriving (Show, Eq, Generic)
 instance NFData ForeignKey
@@ -267,7 +285,7 @@ class EquatableGType a where
   type EqProps a
   getEqProps :: a -> EqProps a
 
-type CustomColumnNames = HM.HashMap PGCol G.Name
+type CustomColumnNames = HM.HashMap PG.PGCol G.Name
 
 newtype SystemDefined = SystemDefined { unSystemDefined :: Bool }
   deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg, NFData, Cacheable)
