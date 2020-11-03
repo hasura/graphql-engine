@@ -15,7 +15,7 @@ Project Details
 Introduction
 ------------
 
-You can view all the details about your project in the ``Details`` tab.
+You can view all the details about your project in the ``General`` tab.
 
 .. thumbnail:: /img/graphql/cloud/projects/project-details.png
    :alt: General tab
@@ -51,9 +51,7 @@ If you have added custom domain(s) to your project, you must update the DNS sett
 Region
 ------
 
-The region field shows the project's region of deployment. The default region of deployment is ``AWS, us-east-2 (Ohio)``. Hasura Cloud will soon support changing regions of the projects from the dashboard. 
-
-However, if you wish to change the region of your paid project to ``AWS, eu-central-1 (Frankfurt)``, please contact us and we can manually change your region.
+The region field shows the project's region of deployment. The default region of deployment is ``AWS, us-east-2 (Ohio)``. You can changge the region by clicking hte edt icon next to it.
 
 Pricing Plan
 ------------
