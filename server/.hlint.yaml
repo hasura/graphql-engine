@@ -35,11 +35,6 @@
 # Will suggest replacing "wibbleMany [myvar]" with "wibbleOne myvar"
 # - error: {lhs: "wibbleMany [x]", rhs: wibbleOne x}
 
-- warn: {lhs: "maybe (f x) f", rhs: "f . fromMaybe x"}
-- warn: {lhs: "either (f . g) (f . h)", rhs: "f . either g h"}
-- warn: {lhs: "onNothing x (return y)", rhs: "return (fromMaybe y x)"}
-- warn: {lhs: "onLeft x (return . f)", rhs: "return (either f id x)"}
-
 # Turn on hints that are off by default
 #
 # Ban "module X(module X) where", to require a real export list
@@ -93,8 +88,19 @@
     - package base
     rules:
     - warn: {lhs: "maybe b return a", rhs: "onNothing a b"}
+    - warn: {lhs: "maybe b pure a", rhs: "onNothing a b"}
     - warn: {lhs: "maybe (return ()) b a", rhs: "onJust a b"}
+    - warn: {lhs: "maybe (pure ()) b a", rhs: "onJust a b"}
     - warn: {lhs: "either b return a", rhs: "onLeft a b"}
+    - warn: {lhs: "either b pure a", rhs: "onLeft a b"}
+    - warn: {lhs: "maybe (f x) f", rhs: "f . fromMaybe x"}
+    - warn: {lhs: "maybe (f x) f", rhs: "f . fromMaybe x"}
+    - warn: {lhs: "either (f . g) (f . h)", rhs: "f . either g h"}
+    - warn: {lhs: "either (f . g) (f . h)", rhs: "f . either g h"}
+    - warn: {lhs: "onNothing x (return y)", rhs: "return (fromMaybe y x)"}
+    - warn: {lhs: "onNothing x (pure y)", rhs: "pure (fromMaybe y x)"}
+    - warn: {lhs: "onLeft x (return . f)", rhs: "return (either f id x)"}
+    - warn: {lhs: "onLeft x (pure . f)", rhs: "pure (either f id x)"}
 
 - group:
     name: data-text-extended
