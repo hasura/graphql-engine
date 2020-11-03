@@ -191,7 +191,7 @@ resolveActionMutationSync env field executionContext userInfo = do
   manager <- asks getter
   reqHeaders <- asks getter
   (webhookRes, respHeaders) <- callWebhook env manager outputType outputFields reqHeaders confHeaders
-                               forwardClientHeaders resolvedWebhook handlerPayload timeout
+                               forwardClientHeaders resolvedWebhook handlerPayload
   let webhookResponseExpression = RS.AEInput $ UVSQL $
         toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
   selSet <- asObjectSelectionSet $ _fSelSet field
@@ -212,7 +212,7 @@ resolveActionMutationSync env field executionContext userInfo = do
 
   where
     ActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
-      forwardClientHeaders timeout = executionContext
+      forwardClientHeaders = executionContext
 
 -- QueryActionExecuter is a type for a higher function, this is being used
 -- to allow or disallow where a query action can be executed. We would like
@@ -256,7 +256,7 @@ resolveActionQuery env field executionContext sessionVariables httpManager reqHe
       actionContext = ActionContext actionName
       handlerPayload = ActionWebhookPayload actionContext sessionVariables inputArgs
   (webhookRes, _) <- callWebhook env httpManager outputType outputFields reqHeaders confHeaders
-                               forwardClientHeaders resolvedWebhook handlerPayload timeout
+                               forwardClientHeaders resolvedWebhook handlerPayload
   let webhookResponseExpression = RS.AEInput $ UVSQL $
         toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
   selSet <- asObjectSelectionSet $ _fSelSet field
@@ -266,7 +266,7 @@ resolveActionQuery env field executionContext sessionVariables httpManager reqHe
   return selectAstUnresolved
   where
     ActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
-      forwardClientHeaders timeout = executionContext
+      forwardClientHeaders = executionContext
 
 {- Note: [Async action architecture]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -439,14 +439,12 @@ asyncActionsProcessor env logger cacheRef pgPool httpManager = forever $ do
               webhookUrl = _adHandler definition
               forwardClientHeaders = _adForwardClientHeaders definition
               confHeaders = _adHeaders definition
-              timeout = _adTimeout definition
               outputType = _adOutputType definition
               actionContext = ActionContext actionName
           eitherRes <- runExceptT $ flip runReaderT logger $
                        callWebhook env httpManager outputType outputFields reqHeaders confHeaders
-                       forwardClientHeaders webhookUrl
-                       (ActionWebhookPayload actionContext sessionVariables inputPayload)
-                       timeout
+                       forwardClientHeaders webhookUrl $
+                       ActionWebhookPayload actionContext sessionVariables inputPayload
           liftIO $ case eitherRes of
             Left e                     -> setError actionId e
             Right (responsePayload, _) -> setCompleted actionId $ J.toJSON responsePayload
@@ -518,10 +516,9 @@ callWebhook
   -> Bool
   -> ResolvedWebhook
   -> ActionWebhookPayload
-  -> Timeout
   -> m (ActionWebhookResponse, HTTP.ResponseHeaders)
 callWebhook env manager outputType outputFields reqHeaders confHeaders
-            forwardClientHeaders resolvedWebhook actionWebhookPayload timeoutSeconds = do
+            forwardClientHeaders resolvedWebhook actionWebhookPayload = do
   resolvedConfHeaders <- makeHeadersFromConf env confHeaders
   let clientHeaders = if forwardClientHeaders then mkClientHeadersForward reqHeaders else []
       contentType = ("Content-Type", "application/json")
@@ -532,13 +529,11 @@ callWebhook env manager outputType outputFields reqHeaders confHeaders
       requestBody = J.encode postPayload
       requestBodySize = BL.length requestBody
       url = unResolvedWebhook resolvedWebhook
-      responseTimeout = HTTP.responseTimeoutMicro $ (unTimeout timeoutSeconds) * 1000000
-  httpResponse <- do
+  httpResponse <-  do
     initReq <- liftIO $ HTTP.parseRequest (T.unpack url)
-    let req = initReq { HTTP.method          = "POST"
-                      , HTTP.requestHeaders  = addDefaultHeaders hdrs
-                      , HTTP.requestBody     = HTTP.RequestBodyLBS requestBody
-                      , HTTP.responseTimeout = responseTimeout
+    let req = initReq { HTTP.method         = "POST"
+                      , HTTP.requestHeaders = addDefaultHeaders hdrs
+                      , HTTP.requestBody    = HTTP.RequestBodyLBS requestBody
                       }
     Tracing.tracedHttpRequest req \req' ->
       liftIO . try $ HTTP.httpLbs req' manager
@@ -650,3 +645,4 @@ processOutputSelectionSet tableRowInput actionOutputType definitionList fldTy fl
 
     functionArgs = RS.FunctionArgsExp [tableRowInput] mempty
     selectFrom = RS.FromFunction jsonbToPostgresRecordFunction functionArgs $ Just definitionList
+

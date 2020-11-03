@@ -167,10 +167,7 @@ updateObjRelDef qt rn (oldQT, newQT) = do
   let newDef = case oldDef of
         RUFKeyOn _ -> oldDef
         RUManual (RelManualConfig dbQT rmCols) ->
-          -- here `dbQT` is the remote table, we only need to
-          -- make changes in the relationship definition when the
-          -- remote table has been renamed
-          let updQT = bool dbQT newQT $ oldQT == dbQT
+          let updQT = bool oldQT newQT $ oldQT == dbQT
           in RUManual $ RelManualConfig updQT rmCols
   liftTx $ updateRel qt rn $ toJSON newDef
 
@@ -189,10 +186,7 @@ updateArrRelDef qt rn (oldQT, newQT) = do
           in RUManual $ RelManualConfig updQT rmCols
   liftTx $ updateRel qt rn $ toJSON newDef
   where
-    -- here `dbQT` is the remote table, we only need to
-    -- make changes in the relationship definition when the
-    -- remote table has been renamed
-    getUpdQT dbQT = bool dbQT newQT $ oldQT == dbQT
+    getUpdQT dbQT = bool oldQT newQT $ oldQT == dbQT
 
 -- | update fields in premissions
 updatePermFlds :: (MonadTx m, CacheRM m)

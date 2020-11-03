@@ -729,16 +729,6 @@ class TestSetTableIsEnum:
     def test_relationship_with_inconsistent_enum_table(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/relationship_with_inconsistent_enum_table.yaml')
 
-# regression test for issue #3759
-@usefixtures('per_method_tests_db_state')
-class TestSetTableIsEnumSetAndDelayedReload:
-    @classmethod
-    def dir(cls):
-        return 'queries/v1/set_table_is_enum/set_and_delayed_reload'
-
-    def test_introspect_enum_values(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/introspect_enum_values.yaml')
-
 @usefixtures('per_method_tests_db_state')
 class TestSetTableCustomFields:
 

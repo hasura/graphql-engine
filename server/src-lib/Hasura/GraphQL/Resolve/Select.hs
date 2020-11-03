@@ -616,6 +616,10 @@ parseConnectionArgs pKeyColumns args = do
       where
         throwInvalidCursor = throwVE "the \"after\" or \"before\" cursor is invalid"
 
+        iResultToMaybe = \case
+          J.ISuccess v -> Just v
+          J.IError{}   -> Nothing
+
         getPathFromOrderBy = \case
           RS.AOCColumn pgColInfo ->
             let pathElement = J.Key $ getPGColTxt $ pgiColumn pgColInfo

@@ -6,7 +6,7 @@ module Hasura.RQL.Types.ScheduledTrigger
   , STRetryConf(..)
   , CreateScheduledEvent(..)
   , CronEventId
-  , OneOffScheduledEventId
+  , StandAloneScheduledEventId
   , formatTime'
   , defaultSTRetryConf
   ) where
@@ -29,7 +29,7 @@ import qualified Hasura.RQL.Types.EventTrigger as ET
 
 type CronEventId = Text
 
-type OneOffScheduledEventId = Text
+type StandAloneScheduledEventId = Text
 
 data STRetryConf
   = STRetryConf

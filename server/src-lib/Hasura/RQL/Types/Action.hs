@@ -24,7 +24,6 @@ module Hasura.RQL.Types.Action
   , aiPgScalars
   , aiPermissions
   , aiComment
-  , defaultActionTimeoutSecs
   , ActionPermissionInfo(..)
 
   , ActionPermissionMap
@@ -102,10 +101,7 @@ data ActionDefinition a
   , _adType                 :: !ActionType
   , _adHeaders              :: ![HeaderConf]
   , _adForwardClientHeaders :: !Bool
-  , _adTimeout              :: !Timeout
   , _adHandler              :: !a
-  -- ^ If the timeout is not provided by the user, then
-  -- the default timeout of 30 seconds will be used
   } deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Generic)
 instance (NFData a) => NFData (ActionDefinition a)
 instance (Cacheable a) => Cacheable (ActionDefinition a)
@@ -117,7 +113,6 @@ instance (J.FromJSON a) => J.FromJSON (ActionDefinition a) where
     _adHeaders <- o J..:? "headers" J..!= []
     _adForwardClientHeaders <- o J..:? "forward_client_headers" J..!= False
     _adHandler <- o J..:  "handler"
-    _adTimeout <- o J..:? "timeout" J..!= defaultActionTimeoutSecs
     actionType <- o J..:? "type" J..!= "mutation"
     _adType <- case actionType of
       "mutation" -> ActionMutation <$> o J..:? "kind" J..!= ActionSynchronous
@@ -126,7 +121,7 @@ instance (J.FromJSON a) => J.FromJSON (ActionDefinition a) where
     return ActionDefinition {..}
 
 instance (J.ToJSON a) => J.ToJSON (ActionDefinition a) where
-  toJSON (ActionDefinition args outputType actionType headers forwardClientHeaders timeout handler) =
+  toJSON (ActionDefinition args outputType actionType headers forwardClientHeaders handler) =
     let typeAndKind = case actionType of
           ActionQuery -> [ "type" J..= ("query" :: String)]
           ActionMutation kind -> [ "type" J..= ("mutation" :: String)
@@ -137,7 +132,6 @@ instance (J.ToJSON a) => J.ToJSON (ActionDefinition a) where
     , "headers"                J..= headers
     , "forward_client_headers" J..= forwardClientHeaders
     , "handler"                J..= handler
-    , "timeout"                J..= timeout
     ] <> typeAndKind
 
 type ResolvedActionDefinition = ActionDefinition ResolvedWebhook

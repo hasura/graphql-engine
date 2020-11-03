@@ -123,7 +123,6 @@ data ActionExecutionContext
   , _saecWebhook              :: !ResolvedWebhook
   , _saecHeaders              :: ![HeaderConf]
   , _saecForwardClientHeaders :: !Bool
-  , _saecTimeout              :: !Timeout
   } deriving (Show, Eq)
 
 data ActionMutationExecutionContext

@@ -16,7 +16,6 @@ import           Control.Lens                       hiding ((.=))
 import           Data.Aeson
 
 import qualified Data.Aeson.Ordered                 as AO
-import qualified Data.HashMap.Strict                as HM
 import qualified Data.HashMap.Strict.InsOrd         as HMIns
 import qualified Data.HashSet                       as HS
 import qualified Data.List                          as L
@@ -25,8 +24,7 @@ import qualified Data.Text                          as T
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.ComputedField       (dropComputedFieldFromCatalog)
-import           Hasura.RQL.DDL.EventTrigger        (delEventTriggerFromCatalog,
-                                                     replaceEventTriggersInCatalog)
+import           Hasura.RQL.DDL.EventTrigger        (delEventTriggerFromCatalog, subTableP2)
 import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.DDL.Permission.Internal (dropPermFromCatalog)
 import           Hasura.RQL.DDL.RemoteSchema        (addRemoteSchemaToCatalog, fetchRemoteSchemas,
@@ -50,11 +48,10 @@ import qualified Hasura.RQL.DDL.Schema              as Schema
 -- | Purge all user-defined metadata; metadata with is_system_defined = false
 clearUserMetadata :: MonadTx m => m ()
 clearUserMetadata = liftTx $ Q.catchE defaultTxErrorHandler $ do
-  -- Note: we don’t drop event triggers here because we update them a different
-  -- way; see Note [Diff-and-patch event triggers on replace] in Hasura.RQL.DDL.EventTrigger.
   Q.unitQ "DELETE FROM hdb_catalog.hdb_function WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_permission WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_relationship WHERE is_system_defined <> 'true'" () False
+  Q.unitQ "DELETE FROM hdb_catalog.event_triggers" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_computed_field" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_remote_relationship" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_table WHERE is_system_defined <> 'true'" () False
@@ -71,7 +68,6 @@ runClearMetadata
   => ClearMetadata -> m EncJSON
 runClearMetadata _ = do
   clearUserMetadata
-  replaceEventTriggersInCatalog mempty
   buildSchemaCacheStrict
   return successMsg
 
@@ -185,10 +181,9 @@ saveMetadata (ReplaceMetadata _ tables functionsMeta
       withPathK "update_permissions" $ processPerms _tmTable _tmUpdatePermissions
       withPathK "delete_permissions" $ processPerms _tmTable _tmDeletePermissions
 
-    -- Event triggers
-    let allEventTriggers = tables & map \table ->
-          (_tmTable table,) <$> mapFromL etcName (_tmEventTriggers table)
-    replaceEventTriggersInCatalog $ HM.unions allEventTriggers
+      -- Event triggers
+      withPathK "event_triggers" $
+        indexedForM_ _tmEventTriggers $ \etc -> subTableP2 _tmTable False etc
 
   -- sql functions
   withPathK "functions" $ case functionsMeta of

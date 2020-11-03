@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 	"sync"
 	"text/tabwriter"
 	"time"
@@ -1850,22 +1849,9 @@ func (m *Migrate) ApplySeed(q interface{}) error {
 func (m *Migrate) ExportDataDump(tableNames []string) ([]byte, error) {
 	// to support tables starting with capital letters
 	modifiedTableNames := make([]string, len(tableNames))
-	
 	for idx, val := range tableNames {
-		split := strings.Split(val, ".")
-		splitLen := len(split)
-		
-		if splitLen != 1 && splitLen != 2 {
-			return nil, fmt.Errorf(`invalid schema/table provided "%s"`, val)
-		}
-
-		if splitLen == 2 {
-			modifiedTableNames[idx] = fmt.Sprintf(`"%s"."%s"`, split[0], split[1])
-		} else {
-			modifiedTableNames[idx] = fmt.Sprintf(`"%s"`, val)
-		}
+		modifiedTableNames[idx] = fmt.Sprintf(`"%s"`, val) 
 	}
-	
 	return m.databaseDrv.ExportDataDump(modifiedTableNames)
 }
 

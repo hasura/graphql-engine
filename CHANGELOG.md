@@ -2,60 +2,6 @@
 
 ## Next release
 
-### Server - Support for mapping session variables to default JWT claims
-
-Some auth providers do not let users add custom claims in JWT. In such cases, the server can take a JWT configuration option called `claims_map` to specify a mapping of Hasura session variables to values in existing claims via JSONPath or literal values.
-
-Example:-
-
-Consider the following JWT claim:
-
-```
-  {
-    "sub": "1234567890",
-    "name": "John Doe",
-    "admin": true,
-    "iat": 1516239022,
-    "user": {
-      "id": "ujdh739kd",
-      "appRoles": ["user", "editor"]
-    }
-  }
-```
-
-The corresponding JWT config can be:
-
-```
-  {
-    "type":"RS512",
-    "key": "<The public Key>",
-    "claims_map": {
-      "x-hasura-allowed-roles": {"path":"$.user.appRoles"},
-      "x-hasura-default-role": {"path":"$.user.appRoles[0]","default":"user"},
-      "x-hasura-user-id": {"path":"$.user.id"}
-    }
-  }
-```
-
-- server: allow remote relationships joining `type` column with `[type]` input argument as spec allows this coercion (fixes #5133)
-- server: add action-like URL templating for event triggers and remote schemas (fixes #2483)
-- server: change `created_at` column type from `timestamp` to `timestamptz` for scheduled triggers tables (fix #5722)
-- server: allow configuring timeouts for actions (fixes #4966)
-- server: fix bug which arised when renaming a table which had a manual relationship defined (close #4158)
-- server: limit the length of event trigger names (close #5786)
-- server: enable HASURA_GRAPHQL_PG_CONN_LIFETIME by default to reclaim memory
-- server: Configurable websocket keep-alive interval. Add `--websocket-keepalive` command-line flag
-          and handle `HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE` env variable (fix #3539) 
-**NOTE:** If you have event triggers with names greater than 42 chars, then you should update their names to avoid running into Postgres identifier limit bug (#5786)
-- server: fix issue with tracking custom functions that return `SETOF` materialized view (close #5294) (#5945)
-- server: allow remote relationships with union, interface and enum type fields as well (fixes #5875) (#6080)
-- server: Fix fine-grained incremental cache invalidation (fix #3759)
-
-  This issue could cause enum table values to sometimes not be properly reloaded without restarting `graphql-engine`. Now a `reload_metadata` API call (or clicking “Reload enum values” in the console) should consistently force a reload of all enum table values.
-- server: fix event trigger cleanup on deletion via replace_metadata (fix #5461) (#6137)
-- cli: fix bug in metadata apply which made the server aquire some redundant and unnecessary locks (close #6115)
-- cli: fix cli-migrations-v2 image failing to run as a non root user (close #4651, close #5333)
-
 ### Breaking change
 
 Headers from environment variables starting with `HASURA_GRAPHQL_` are not allowed

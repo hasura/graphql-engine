@@ -286,29 +286,10 @@ CREATE TABLE hdb_catalog.event_triggers
   schema_name TEXT NOT NULL,
   table_name TEXT NOT NULL,
   configuration JSON,
-  comment TEXT
+  comment TEXT,
+  FOREIGN KEY (schema_name, table_name)
+  REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE
 );
-
--- since we do not have a foreign key constraint (with 'ON UPDATE CASCADE') with hdb_catalog.hdb_table
--- (see Note [Diff-and-patch event triggers on replace] in Hasura.RQL.DDL.EventTrigger), we perform the update using trigger
-CREATE OR REPLACE FUNCTION hdb_catalog.event_trigger_table_name_update()
-RETURNS TRIGGER
-LANGUAGE PLPGSQL
-AS
-$$
-BEGIN
-  IF (NEW.table_schema, NEW.table_name) <> (OLD.table_schema, OLD.table_name)  THEN
-    UPDATE hdb_catalog.event_triggers
-    SET schema_name = NEW.table_schema, table_name = NEW.table_name
-    WHERE (schema_name, table_name) = (OLD.table_schema, OLD.table_name);
-  END IF;
-  RETURN NEW;
-END;
-$$;
-
-CREATE TRIGGER event_trigger_table_name_update_trigger
-AFTER UPDATE ON hdb_catalog.hdb_table
-FOR EACH ROW EXECUTE PROCEDURE hdb_catalog.event_trigger_table_name_update();
 
 CREATE TABLE hdb_catalog.event_log
 (
@@ -586,42 +567,33 @@ CREATE VIEW hdb_catalog.hdb_function_info_agg AS (
       (
         SELECT
           e
-        FROM
-          (
-            SELECT
-              description,
-              has_variadic,
-              function_type,
-              return_type_schema,
-              return_type_name,
-              return_type_type,
-              returns_set,
-              input_arg_types,
-              input_arg_names,
-              default_args,
-              exists(
+          FROM
+              (
                 SELECT
-                  1
-                FROM
-                  information_schema.tables
-                WHERE
-                  table_schema = return_type_schema
-                  AND table_name = return_type_name
-              )
-              OR exists(
-                SELECT
-                  1
-                FROM
-                  pg_matviews
-                WHERE
-                  schemaname = return_type_schema
-                  AND matviewname = return_type_name
-              ) AS returns_table
-          ) AS e
+                  description,
+                  has_variadic,
+                  function_type,
+                  return_type_schema,
+                  return_type_name,
+                  return_type_type,
+                  returns_set,
+                  input_arg_types,
+                  input_arg_names,
+                  default_args,
+                  exists(
+                    SELECT
+                      1
+                      FROM
+                          information_schema.tables
+                     WHERE
+                table_schema = return_type_schema
+            AND table_name = return_type_name
+                  ) AS returns_table
+              ) AS e
       )
     ) AS "function_info"
-  FROM
-    hdb_catalog.hdb_function_agg
+    FROM
+        hdb_catalog.hdb_function_agg
 );
 
 CREATE OR REPLACE FUNCTION
@@ -785,7 +757,7 @@ CREATE TABLE hdb_catalog.hdb_cron_events
   scheduled_time TIMESTAMPTZ NOT NULL,
   status TEXT NOT NULL DEFAULT 'scheduled',
   tries INTEGER NOT NULL DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMP DEFAULT NOW(),
   next_retry_at TIMESTAMPTZ,
 
   FOREIGN KEY (trigger_name) REFERENCES hdb_catalog.hdb_cron_triggers(name)
@@ -802,7 +774,7 @@ CREATE TABLE hdb_catalog.hdb_cron_event_invocation_logs
   status INTEGER,
   request JSON,
   response JSON,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMP DEFAULT NOW(),
 
   FOREIGN KEY (event_id) REFERENCES hdb_catalog.hdb_cron_events (id)
     ON UPDATE CASCADE ON DELETE CASCADE
@@ -831,7 +803,7 @@ CREATE TABLE hdb_catalog.hdb_scheduled_events
   header_conf JSON,
   status TEXT NOT NULL DEFAULT 'scheduled',
   tries INTEGER NOT NULL DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMP DEFAULT NOW(),
   next_retry_at TIMESTAMPTZ,
   comment TEXT,
   CONSTRAINT valid_status CHECK (status IN ('scheduled','locked','delivered','error','dead'))
@@ -846,7 +818,7 @@ event_id TEXT,
 status INTEGER,
 request JSON,
 response JSON,
-created_at TIMESTAMPTZ DEFAULT NOW(),
+created_at TIMESTAMP DEFAULT NOW(),
 
 FOREIGN KEY (event_id) REFERENCES hdb_catalog.hdb_scheduled_events (id)
    ON DELETE CASCADE ON UPDATE CASCADE
