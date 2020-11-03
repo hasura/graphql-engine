@@ -1,4 +1,3 @@
-import { GraphQLError } from 'graphql';
 import { Dispatch } from '../../../../types';
 import { Nullable } from '../../../Common/utils/tsUtils';
 
@@ -22,22 +21,6 @@ export const REQUEST_FAILURE = 'RemoteSchemas/Permissions/REQUEST_FAILURE';
 /*
  * Common types for remote schema permissions
  */
-
-type GraphQLEditorProps = {
-  value: string;
-  onChange: (
-    value: Nullable<string>,
-    error: Nullable<Error>,
-    timer: Nullable<NodeJS.Timeout>,
-    ast: Nullable<Record<string, any>>
-  ) => void;
-  placeholder?: string;
-  error: GraphQLError;
-  timer: number;
-  readOnlyMode: boolean;
-  height?: string;
-  allowEmpty?: boolean;
-};
 
 export type SchemaDefinition = {
   value: Nullable<string>;

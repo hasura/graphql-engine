@@ -5,7 +5,6 @@ import Tooltip from './Tooltip';
 import { Nullable } from '../../../../Common/utils/tsUtils';
 import GraphQLEditor from '../../../../Common/GraphQLEditor/GraphQLEditor';
 
-// NOTE TODO ??
 type GraphQLEditorWrapperProps = {
   value: string;
   onChange: (
