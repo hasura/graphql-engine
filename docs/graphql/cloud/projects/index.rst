@@ -34,15 +34,15 @@ For each project, you can do the one of the following actions:
      :alt: Hasura Console: Pro tab
      :width: 900px
 
-.. note::
-
-   Please see the :ref:`API reference <cloud_api_reference>` to create and manage Hasura Cloud projects programmatically.
-
 - Click the gear icon to manage your project
 
   .. thumbnail:: /img/graphql/cloud/projects/project-details.png
      :alt: General tab
      :width: 900px
+
+.. note::
+
+   Please see the :ref:`API reference <cloud_api_reference>` to create and manage Hasura Cloud projects programmatically.
 
 Dig deeper
 ----------
