@@ -75,6 +75,7 @@ buildGQLContext =
         queryContext = QueryContext stringifyNum queryType queryRemotesMap
 
     -- build the admin DB-only context so that we can check against name clashes with remotes
+    -- TODO: Is there a better way to check for conflicts without actually building the admin schema?
     adminHasuraDBContext <- bindA -<
       buildFullestDBSchema queryContext allTables allFunctions allActionInfos nonObjectCustomTypes
 
