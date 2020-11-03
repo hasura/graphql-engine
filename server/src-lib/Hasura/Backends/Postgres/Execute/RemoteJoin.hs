@@ -86,7 +86,7 @@ processRemoteJoins
   -> m EncJSON
 processRemoteJoins env manager reqHdrs userInfo pgRes rjs = do
   -- Step 1: Decode the given bytestring as a JSON value
-  jsonRes <- either (throw500 . T.pack) pure $ AO.eitherDecode pgRes
+  jsonRes <- onLeft (AO.eitherDecode pgRes) $ throw500 . T.pack
   -- Step 2: Traverse through the JSON obtained in above step and generate composite JSON value with remote joins
   compositeJson <- traverseQueryResponseJSON rjMap jsonRes
   let remoteJoins = collectRemoteFields compositeJson
