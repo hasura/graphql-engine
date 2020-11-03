@@ -4,19 +4,59 @@ import ReactTable, {
   ComponentPropsGetter0,
 } from 'react-table';
 import 'react-table/react-table.css';
-import { FilterTableProps } from './types';
+import { FilterTableProps, GridHeadingProps } from './types';
 import { ordinalColSort } from '../../../Data/utils';
 import styles from '../../Events.scss';
 import EventsSubTable from './EventsSubTable';
+import ExpanderButton from './ExpanderButton';
 import { sanitiseRow } from '../../utils';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 import { getEventStatusIcon, getEventDeliveryIcon } from './utils';
+import Button from '../../../../Common/Button';
 
-type Props = FilterTableProps;
+type CancelButtonProps = {
+  id: string;
+  onClickHandler: (e: React.MouseEvent) => void;
+};
+
+const CancelEventButton: React.FC<CancelButtonProps> = ({
+  id,
+  onClickHandler,
+}) => (
+  <Button
+    key={id}
+    className={styles.add_mar_right_small}
+    onClick={onClickHandler}
+    color="white"
+    size="xs"
+    title="Cancel Event"
+    onMouseDown={e => {
+      e.preventDefault();
+    }}
+  >
+    <i className="fa fa-close" />
+  </Button>
+);
+
+interface Props extends FilterTableProps {
+  onCancelEvent?: (
+    id: string,
+    scheduledAt: string,
+    onSuccess: () => void
+  ) => void;
+}
 
 const EventsTable: React.FC<Props> = props => {
-  const { rows, count, filterState, runQuery, columns, identifier } = props;
+  const {
+    rows,
+    count,
+    filterState,
+    runQuery,
+    columns,
+    identifier,
+    onCancelEvent,
+  } = props;
 
   if (rows.length === 0) {
     return <div className={styles.add_mar_top}>No data available</div>;
@@ -57,37 +97,73 @@ const EventsTable: React.FC<Props> = props => {
     }
   };
 
-  const gridHeadings = sortedColumns.map(column => {
-    return {
-      Header: column,
-      accessor: column,
-    };
+  const onCancelHandler = (id: string, scheduledAt: string) => {
+    if (onCancelEvent) {
+      onCancelEvent(id, scheduledAt, runQuery);
+    }
+  };
+
+  const expanderActions: GridHeadingProps = {
+    expander: true,
+    Header: '',
+    accessor: 'expander',
+    Expander: ({ isExpanded, viewIndex }) => {
+      const row = rows[viewIndex];
+      return (
+        <>
+          {columns.includes('actions') && (
+            <CancelEventButton
+              id={row.id}
+              onClickHandler={event => {
+                onCancelHandler(row.id, row.scheduled_time);
+                event.stopPropagation();
+              }}
+            />
+          )}
+          <ExpanderButton isExpanded={isExpanded} />
+        </>
+      );
+    },
+  };
+
+  const gridHeadings = [expanderActions];
+
+  sortedColumns.forEach(column => {
+    if (column !== 'actions') {
+      gridHeadings.push({
+        Header: column,
+        accessor: column,
+      });
+    }
   });
 
   const invocationColumns = ['status', 'id', 'created_at'];
 
-  const invocationGridHeadings = invocationColumns.map(column => {
-    return {
+  const invocationGridHeadings: GridHeadingProps[] = [expanderActions];
+
+  invocationColumns.forEach(column => {
+    invocationGridHeadings.push({
       Header: column,
       accessor: column,
-    };
+    });
   });
-  const rowsFormatted = rows.map(r => {
-    const formattedRow = Object.keys(r).reduce((fr, col) => {
+
+  const rowsFormatted = rows.map(row => {
+    const formattedRow = Object.keys(row).reduce((fr, col) => {
       return {
         ...fr,
-        [col]: <div>{r[col]}</div>,
+        [col]: <div>{row[col]}</div>,
       };
     }, {});
     return {
       ...formattedRow,
-      delivered: getEventDeliveryIcon(r.delivered),
-      status: getEventStatusIcon(r.status),
-      scheduled_time: r.scheduled_time ? (
-        <div>{convertDateTimeToLocale(r.scheduled_time)}</div>
+      delivered: getEventDeliveryIcon(row.delivered),
+      status: getEventStatusIcon(row.status),
+      scheduled_time: row.scheduled_time ? (
+        <div>{convertDateTimeToLocale(row.scheduled_time)}</div>
       ) : undefined,
-      created_at: r.created_at ? (
-        <div>{convertDateTimeToLocale(r.created_at)}</div>
+      created_at: row.created_at ? (
+        <div>{convertDateTimeToLocale(row.created_at)}</div>
       ) : undefined,
     };
   });

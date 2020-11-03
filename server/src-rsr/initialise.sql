@@ -302,7 +302,8 @@ CREATE TABLE hdb_catalog.event_log
   error BOOLEAN NOT NULL DEFAULT FALSE,
   tries INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT NOW(),
-  locked BOOLEAN NOT NULL DEFAULT FALSE,
+  /* when locked IS NULL the event is unlocked and can be processed */
+  locked TIMESTAMPTZ,
   next_retry_at TIMESTAMP,
   archived BOOLEAN NOT NULL DEFAULT FALSE
 );
@@ -567,33 +568,42 @@ CREATE VIEW hdb_catalog.hdb_function_info_agg AS (
       (
         SELECT
           e
-          FROM
-              (
+        FROM
+          (
+            SELECT
+              description,
+              has_variadic,
+              function_type,
+              return_type_schema,
+              return_type_name,
+              return_type_type,
+              returns_set,
+              input_arg_types,
+              input_arg_names,
+              default_args,
+              exists(
                 SELECT
-                  description,
-                  has_variadic,
-                  function_type,
-                  return_type_schema,
-                  return_type_name,
-                  return_type_type,
-                  returns_set,
-                  input_arg_types,
-                  input_arg_names,
-                  default_args,
-                  exists(
-                    SELECT
-                      1
-                      FROM
-                          information_schema.tables
-                     WHERE
-                table_schema = return_type_schema
-            AND table_name = return_type_name
-                  ) AS returns_table
-              ) AS e
+                  1
+                FROM
+                  information_schema.tables
+                WHERE
+                  table_schema = return_type_schema
+                  AND table_name = return_type_name
+              )
+              OR exists(
+                SELECT
+                  1
+                FROM
+                  pg_matviews
+                WHERE
+                  schemaname = return_type_schema
+                  AND matviewname = return_type_name
+              ) AS returns_table
+          ) AS e
       )
     ) AS "function_info"
-    FROM
-        hdb_catalog.hdb_function_agg
+  FROM
+    hdb_catalog.hdb_function_agg
 );
 
 CREATE OR REPLACE FUNCTION
@@ -604,22 +614,30 @@ CREATE OR REPLACE FUNCTION
     payload json;
     session_variables json;
     server_version_num int;
+    trace_context json;
   BEGIN
     id := gen_random_uuid();
     server_version_num := current_setting('server_version_num');
     IF server_version_num >= 90600 THEN
       session_variables := current_setting('hasura.user', 't');
+      trace_context := current_setting('hasura.tracecontext', 't');
     ELSE
       BEGIN
         session_variables := current_setting('hasura.user');
       EXCEPTION WHEN OTHERS THEN
                   session_variables := NULL;
       END;
+      BEGIN
+        trace_context := current_setting('hasura.tracecontext');
+      EXCEPTION WHEN OTHERS THEN
+        trace_context := NULL;
+      END;
     END IF;
     payload := json_build_object(
       'op', op,
       'data', row_data,
-      'session_variables', session_variables
+      'session_variables', session_variables,
+      'trace_context', trace_context
     );
     INSERT INTO hdb_catalog.event_log
                 (id, schema_name, table_name, trigger_name, payload)
@@ -749,7 +767,7 @@ CREATE TABLE hdb_catalog.hdb_cron_events
   scheduled_time TIMESTAMPTZ NOT NULL,
   status TEXT NOT NULL DEFAULT 'scheduled',
   tries INTEGER NOT NULL DEFAULT 0,
-  created_at TIMESTAMP DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
   next_retry_at TIMESTAMPTZ,
 
   FOREIGN KEY (trigger_name) REFERENCES hdb_catalog.hdb_cron_triggers(name)
@@ -766,7 +784,7 @@ CREATE TABLE hdb_catalog.hdb_cron_event_invocation_logs
   status INTEGER,
   request JSON,
   response JSON,
-  created_at TIMESTAMP DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
 
   FOREIGN KEY (event_id) REFERENCES hdb_catalog.hdb_cron_events (id)
     ON UPDATE CASCADE ON DELETE CASCADE
@@ -795,7 +813,7 @@ CREATE TABLE hdb_catalog.hdb_scheduled_events
   header_conf JSON,
   status TEXT NOT NULL DEFAULT 'scheduled',
   tries INTEGER NOT NULL DEFAULT 0,
-  created_at TIMESTAMP DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
   next_retry_at TIMESTAMPTZ,
   comment TEXT,
   CONSTRAINT valid_status CHECK (status IN ('scheduled','locked','delivered','error','dead'))
@@ -810,7 +828,7 @@ event_id TEXT,
 status INTEGER,
 request JSON,
 response JSON,
-created_at TIMESTAMP DEFAULT NOW(),
+created_at TIMESTAMPTZ DEFAULT NOW(),
 
 FOREIGN KEY (event_id) REFERENCES hdb_catalog.hdb_scheduled_events (id)
    ON DELETE CASCADE ON UPDATE CASCADE

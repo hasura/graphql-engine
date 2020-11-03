@@ -1,5 +1,5 @@
 description: Use after and before arguments in the same query
-url: /v1/relay
+url: /v1beta1/relay
 status: 200
 query:
   query: |
@@ -16,6 +16,6 @@ query:
 response:
   errors:
   - extensions:
-      path: "$.selectionSet.author_connection"
+      path: $.selectionSet.author_connection.args
       code: validation-failed
     message: '"after" and "before" are not allowed at once'

@@ -43,6 +43,8 @@ import { fetchColumnTypesQuery, fetchColumnDefaultFunctions } from './utils';
 import { fetchColumnCastsQuery, convertArrayToJson } from './TableModify/utils';
 
 import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
+import { getDownQueryComments } from '../../../utils/migration/utils';
+import { isEmpty } from '../../Common/utils/jsUtils';
 
 const SET_TABLE = 'Data/SET_TABLE';
 const LOAD_FUNCTIONS = 'Data/LOAD_FUNCTIONS';
@@ -66,6 +68,8 @@ const RESET_COLUMN_TYPE_INFO = 'Data/RESET_COLUMN_TYPE_INFO';
 const MAKE_REQUEST = 'ModifyTable/MAKE_REQUEST';
 const REQUEST_SUCCESS = 'ModifyTable/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'ModifyTable/REQUEST_ERROR';
+
+const SET_ADDITIONAL_COLUMNS_INFO = 'Data/SET_ADDITIONAL_COLUMNS_INFO';
 
 export const SET_ALL_ROLES = 'Data/SET_ALL_ROLES';
 export const setAllRoles = roles => ({
@@ -376,8 +380,82 @@ const loadSchema = configOptions => {
   };
 };
 
+const fetchAdditionalColumnsInfo = () => (dispatch, getState) => {
+  const schemaName = getState().tables.currentSchema;
+  const query = {
+    type: 'select',
+    args: {
+      table: {
+        name: 'columns',
+        schema: 'information_schema',
+      },
+      columns: [
+        'column_name',
+        'table_name',
+        'is_generated',
+        'is_identity',
+        'identity_generation',
+      ],
+      where: {
+        table_schema: {
+          $eq: schemaName,
+        },
+      },
+    },
+  };
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify(query),
+  };
+
+  return dispatch(requestAction(Endpoints.query, options)).then(
+    result => {
+      if (result) {
+        let columnsInfo = {};
+        result
+          .filter(
+            info => info.is_generated !== 'NEVER' || info.is_identity !== 'NO'
+          )
+          .forEach(
+            ({
+              column_name,
+              table_name,
+              is_generated,
+              is_identity,
+              identity_generation,
+            }) => {
+              columnsInfo = {
+                ...columnsInfo,
+                [table_name]: {
+                  ...columnsInfo[table_name],
+                  [column_name]: {
+                    is_generated,
+                    is_identity,
+                    identity_generation,
+                  },
+                },
+              };
+            }
+          );
+        dispatch({
+          type: SET_ADDITIONAL_COLUMNS_INFO,
+          data: columnsInfo,
+        });
+      }
+    },
+    error => {
+      console.error(
+        'Failed to load additional columns information ' + JSON.stringify(error)
+      );
+    }
+  );
+};
+
 const updateSchemaInfo = options => dispatch => {
   return dispatch(loadSchema(options)).then(() => {
+    dispatch(fetchAdditionalColumnsInfo());
     dispatch(setUntrackedRelations());
   });
 };
@@ -524,7 +602,7 @@ const makeMigrationCall = (
   dispatch,
   getState,
   upQueries,
-  downQueries,
+  downQueries = [],
   migrationName,
   customOnSuccess,
   customOnError,
@@ -542,7 +620,8 @@ const makeMigrationCall = (
 
   const downQuery = {
     type: 'bulk',
-    args: downQueries,
+    args:
+      downQueries.length > 0 ? downQueries : getDownQueryComments(upQueries),
   };
 
   const migrationBody = {
@@ -582,7 +661,10 @@ const makeMigrationCall = (
     }
     customOnSuccess(data, globals.consoleMode, currMigrationMode);
   };
-  const retryMigration = (err = {}, errMsg = '') => {
+  const retryMigration = (err = {}, errMsg = '', isPgCascade = false) => {
+    const errorDetails = getErrorMessage('', err);
+    const errorDetailsLines = errorDetails.split('\n');
+
     dispatch(
       showNotification(
         {
@@ -590,8 +672,9 @@ const makeMigrationCall = (
           level: 'error',
           message: (
             <p>
-              {getErrorMessage('', err)}
-              <br />
+              {errorDetailsLines.map((m, i) => (
+                <div key={i}>{m}</div>
+              ))}
               <br />
               Do you want to drop the dependent items as well?
             </p>
@@ -603,7 +686,7 @@ const makeMigrationCall = (
               makeMigrationCall(
                 dispatch,
                 getState,
-                cascadeUpQueries(upQueries), // cascaded new up queries
+                cascadeUpQueries(upQueries, isPgCascade), // cascaded new up queries
                 downQueries,
                 migrationName,
                 customOnSuccess,
@@ -612,6 +695,7 @@ const makeMigrationCall = (
                 successMsg,
                 errorMsg,
                 shouldSkipSchemaReload,
+                false,
                 true // prevent further retry
               ),
           },
@@ -623,8 +707,10 @@ const makeMigrationCall = (
 
   const onError = err => {
     if (!isRetry) {
-      const dependecyError = getDependencyError(err);
-      if (dependecyError) return retryMigration(dependecyError, errorMsg);
+      const { dependencyError, pgDependencyError } = getDependencyError(err);
+      if (dependencyError) return retryMigration(dependencyError, errorMsg);
+      if (pgDependencyError)
+        return retryMigration(pgDependencyError, errorMsg, true);
     }
 
     dispatch(handleMigrationErrors(errorMsg, err));
@@ -868,6 +954,21 @@ const dataReducer = (state = defaultState, action) => {
         ...state,
         allRoles: action.roles,
       };
+    case SET_ADDITIONAL_COLUMNS_INFO:
+      if (isEmpty(action.data)) return state;
+      return {
+        ...state,
+        allSchemas: state.allSchemas.map(schema => {
+          if (!action.data[schema.table_name]) return schema;
+          return {
+            ...schema,
+            columns: schema.columns.map(column => ({
+              ...column,
+              ...action.data[schema.table_name][column.column_name],
+            })),
+          };
+        }),
+      };
     default:
       return state;
   }
@@ -899,4 +1000,6 @@ export {
   fetchColumnTypeInfo,
   RESET_COLUMN_TYPE_INFO,
   setUntrackedRelations,
+  SET_ADDITIONAL_COLUMNS_INFO,
+  fetchAdditionalColumnsInfo,
 };

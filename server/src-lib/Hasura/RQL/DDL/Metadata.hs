@@ -12,17 +12,29 @@ module Hasura.RQL.DDL.Metadata
   , module Hasura.RQL.DDL.Metadata.Types
   ) where
 
-import           Control.Lens                       hiding ((.=))
-import           Data.Aeson
+import           Hasura.Prelude
 
 import qualified Data.Aeson.Ordered                 as AO
 import qualified Data.HashMap.Strict.InsOrd         as HMIns
 import qualified Data.HashSet                       as HS
 import qualified Data.List                          as L
 import qualified Data.Text                          as T
+import qualified Database.PG.Query                  as Q
 
+import           Control.Lens                       hiding ((.=))
+import           Data.Aeson
+
+import qualified Hasura.RQL.DDL.Action              as Action
+import qualified Hasura.RQL.DDL.ComputedField       as ComputedField
+import qualified Hasura.RQL.DDL.CustomTypes         as CustomTypes
+import qualified Hasura.RQL.DDL.Permission          as Permission
+import qualified Hasura.RQL.DDL.QueryCollection     as Collection
+import qualified Hasura.RQL.DDL.Relationship        as Relationship
+import qualified Hasura.RQL.DDL.RemoteRelationship  as RemoteRelationship
+import qualified Hasura.RQL.DDL.Schema              as Schema
+
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
-import           Hasura.Prelude
 import           Hasura.RQL.DDL.ComputedField       (dropComputedFieldFromCatalog)
 import           Hasura.RQL.DDL.EventTrigger        (delEventTriggerFromCatalog, subTableP2)
 import           Hasura.RQL.DDL.Metadata.Types
@@ -33,17 +45,6 @@ import           Hasura.RQL.DDL.ScheduledTrigger    (addCronTriggerToCatalog,
                                                      deleteCronTriggerFromCatalog)
 import           Hasura.RQL.DDL.Schema.Catalog      (saveTableToCatalog)
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
-
-import qualified Database.PG.Query                  as Q
-import qualified Hasura.RQL.DDL.Action              as Action
-import qualified Hasura.RQL.DDL.ComputedField       as ComputedField
-import qualified Hasura.RQL.DDL.CustomTypes         as CustomTypes
-import qualified Hasura.RQL.DDL.Permission          as Permission
-import qualified Hasura.RQL.DDL.QueryCollection     as Collection
-import qualified Hasura.RQL.DDL.Relationship        as Relationship
-import qualified Hasura.RQL.DDL.RemoteRelationship  as RemoteRelationship
-import qualified Hasura.RQL.DDL.Schema              as Schema
 
 -- | Purge all user-defined metadata; metadata with is_system_defined = false
 clearUserMetadata :: MonadTx m => m ()
@@ -74,8 +75,10 @@ runClearMetadata _ = do
 applyQP1
   :: (QErrM m)
   => ReplaceMetadata -> m ()
-applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections
-          allowlist _ actions cronTriggers) = do
+applyQP1 (ReplaceMetadata _ tables functionsMeta schemas
+          collections
+          allowlist  _ actions
+          cronTriggers) = do
   withPathK "tables" $ do
 
     checkMultipleDecls "tables" $ map _tmTable tables
@@ -125,7 +128,7 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections
     checkMultipleDecls "cron triggers" $ map ctName cronTriggers
 
   where
-    withTableName qt = withPathK (qualObjectToText qt)
+    withTableName qt = withPathK (qualifiedObjectToText qt)
 
     checkMultipleDecls t l = do
       let dups = getDups l
@@ -299,11 +302,10 @@ fetchMetadata = do
 
   customTypes <- fetchCustomTypes
 
-  -- fetch actions
+  -- -- fetch actions
   actions <- fetchActions
 
   cronTriggers <- fetchCronTriggers
-
 
   return $ ReplaceMetadata currentMetadataVersion
                            (HMIns.elems postRelMap)
@@ -487,7 +489,7 @@ runExportMetadata
   :: (QErrM m, MonadTx m)
   => ExportMetadata -> m EncJSON
 runExportMetadata _ =
-  (AO.toEncJSON . replaceMetadataToOrdJSON) <$> liftTx fetchMetadata
+  AO.toEncJSON . replaceMetadataToOrdJSON <$> liftTx fetchMetadata
 
 runReloadMetadata :: (QErrM m, CacheRWM m) => ReloadMetadata -> m EncJSON
 runReloadMetadata (ReloadMetadata reloadRemoteSchemas) = do
@@ -533,15 +535,15 @@ runDropInconsistentMetadata _ = do
 
 purgeMetadataObj :: MonadTx m => MetadataObjId -> m ()
 purgeMetadataObj = liftTx . \case
-  MOTable qt                                 -> Schema.deleteTableFromCatalog qt
-  MOFunction qf                              -> Schema.delFunctionFromCatalog qf
-  MORemoteSchema rsn                         -> removeRemoteSchemaFromCatalog rsn
-  MOTableObj qt (MTORel rn _)                -> Relationship.delRelFromCatalog qt rn
-  MOTableObj qt (MTOPerm rn pt)              -> dropPermFromCatalog qt rn pt
-  MOTableObj _ (MTOTrigger trn)              -> delEventTriggerFromCatalog trn
-  MOTableObj qt (MTOComputedField ccn)       -> dropComputedFieldFromCatalog qt ccn
-  MOTableObj qt (MTORemoteRelationship rn)   -> RemoteRelationship.delRemoteRelFromCatalog qt rn
-  MOCustomTypes                              -> CustomTypes.clearCustomTypes
-  MOAction action                            -> Action.deleteActionFromCatalog action Nothing
-  MOActionPermission action role             -> Action.deleteActionPermissionFromCatalog action role
-  MOCronTrigger ctName                       -> deleteCronTriggerFromCatalog ctName
+  MOTable qt                               -> Schema.deleteTableFromCatalog qt
+  MOFunction qf                            -> Schema.delFunctionFromCatalog qf
+  MORemoteSchema rsn                       -> removeRemoteSchemaFromCatalog rsn
+  MOTableObj qt (MTORel rn _)              -> Relationship.delRelFromCatalog qt rn
+  MOTableObj qt (MTOPerm rn pt)            -> dropPermFromCatalog qt rn pt
+  MOTableObj _ (MTOTrigger trn)            -> delEventTriggerFromCatalog trn
+  MOTableObj qt (MTOComputedField ccn)     -> dropComputedFieldFromCatalog qt ccn
+  MOTableObj qt (MTORemoteRelationship rn) -> RemoteRelationship.delRemoteRelFromCatalog qt rn
+  MOCustomTypes                            -> CustomTypes.clearCustomTypes
+  MOAction action                          -> Action.deleteActionFromCatalog action Nothing
+  MOActionPermission action role           -> Action.deleteActionPermissionFromCatalog action role
+  MOCronTrigger ctName                     -> deleteCronTriggerFromCatalog ctName

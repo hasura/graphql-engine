@@ -1,0 +1,49 @@
+- description: Create custom object type for action return type
+  url: /v1/query
+  status: 200
+  query:
+    type: set_custom_types
+    args:
+      objects:
+      - name: UserId
+        fields:
+          - name: id
+            type: Int!
+
+- description: Create an action
+  url: /v1/query
+  status: 200
+  query:
+    type: create_action
+    args:
+      name: insert_user
+      definition:
+        kind: synchronous
+        arguments:
+        - name: email
+          type: Int!
+        - name: name
+          type: String!
+        output_type: UserId!
+        handler: http://127.0.0.1:5593/create-user
+
+- description: Track the table
+  url: /v1/query
+  status: 500
+  response:
+    path: "$.args"
+    code: unexpected
+    error: "found duplicate fields in selection set: insert_user"
+  query:
+    type: track_table
+    args:
+      table: user
+
+- description: Drop the custom types and action
+  url: /v1/query
+  status: 200
+  query:
+    type: drop_action
+    args:
+      name: insert_user
+      clear_data: true
