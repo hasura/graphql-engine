@@ -183,15 +183,16 @@ buildGQLContext =
           ucMutations <- fmap finalizeParser <$> unauthenticatedMutation mRemotes
           pure $ GQLContext ucQueries ucMutations
 
-        buildRoleBasedRemoteSchemaParser :: RoleName -> RemoteSchemaCache -> m [ParsedIntrospection]
+        buildRoleBasedRemoteSchemaParser :: RoleName -> RemoteSchemaCache -> m [(RemoteSchemaName, ParsedIntrospection)]
         buildRoleBasedRemoteSchemaParser role remoteSchemaCache = do
           let remoteSchemaIntroInfos = map fst $ toList remoteSchemaCache
           remoteSchemaPerms <-
-            for remoteSchemaIntroInfos $ \(RemoteSchemaCtx _ ctx perms) ->
+            for remoteSchemaIntroInfos $ \(RemoteSchemaCtx remoteSchemaName ctx perms) ->
               for (Map.lookup role perms) $ \introspectRes -> do
                 (queryParsers, mutationParsers, subscriptionParsers) <-
                      P.runSchemaT @m @(P.ParseT Identity) $ buildRemoteParser introspectRes $ rscInfo ctx
-                return $ ParsedIntrospection queryParsers mutationParsers subscriptionParsers
+                let parsedIntrospection = ParsedIntrospection queryParsers mutationParsers subscriptionParsers
+                return $ (remoteSchemaName, parsedIntrospection)
           return $ catMaybes remoteSchemaPerms
 
         -- | The 'query' type of the remotes.
@@ -221,18 +222,26 @@ buildGQLContext =
         buildContextForRoleAndScenario roleName scenario = do
           SQLGenCtx{ stringifyNum } <- askSQLGenCtx
           roleBasedRemoteSchemas <-
-             if | roleName == adminRoleName  -> pure $ snd <$> remotes
+             if | roleName == adminRoleName  -> pure remotes
                 | isEnabledRemoteSchemaPerms -> buildRoleBasedRemoteSchemaParser roleName allRemoteSchemas
                 -- when remote schema permissions are not enabled, then remote schemas
                 -- are a public entity which is accesible to all the roles
-                | otherwise                  -> pure $ snd <$> remotes
-          let qRemotes = queryRemotes roleBasedRemoteSchemas
-              mRemotes = mutationRemotes roleBasedRemoteSchemas
+                | otherwise                  -> pure remotes
+          let qRemotes = queryRemotes $ snd <$> roleBasedRemoteSchemas
+              mRemotes = mutationRemotes $ snd <$> roleBasedRemoteSchemas
+              roleBasedQueryRemotesMap =
+                fmap (map fDefinition . piQuery) $ Map.fromList roleBasedRemoteSchemas
           let gqlContext = GQLContext
                 <$> (finalizeParser <$> queryHasuraOrRelay (qRemotes,mRemotes))
                 <*> (fmap finalizeParser <$> mutation (Set.fromList $ Map.keys graphQLTables) adminMutationRemotes
                      allActionInfos nonObjectCustomTypes)
-          flip runReaderT (roleName, graphQLTables, scenario, QueryContext stringifyNum queryType queryRemotesMap, fmap fst allRemoteSchemas) $
+          flip runReaderT
+              ( roleName
+              , graphQLTables
+              , scenario
+              , QueryContext stringifyNum queryType roleBasedQueryRemotesMap
+              -- TODO: check what the below is used for? And maybe it should be `roleBasedQueryRemotesMap`
+              , fmap fst allRemoteSchemas) $
             P.runSchemaT gqlContext
 
         buildContextForRole :: RoleName -> m (RoleContext GQLContext)

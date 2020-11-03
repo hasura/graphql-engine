@@ -1031,10 +1031,9 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
   let remoteSchemaName = _rfiRemoteSchemaName remoteFieldInfo
   fieldDefns <-
     case Map.lookup remoteSchemaName remoteSchemasFieldDefns of
-      Nothing ->
-        throw500 $ "unexpected: remote schema "
-        <> remoteSchemaName
-        <<> " not found"
+      -- we return `Nothing` here when a role doesn't have permissions
+      -- to the said remote schema
+      Nothing -> MaybeT $ pure Nothing
       Just fieldDefns -> pure fieldDefns
 
   fieldName <- textToName $ remoteRelationshipNameToText $ _rfiName remoteFieldInfo
