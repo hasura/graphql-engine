@@ -1,6 +1,6 @@
 import Permissions from './Main';
 
-const mapStateToProps = state => {
+const mapStateToProps = (state: any) => {
   return {
     ...state.remoteSchemas.permissions,
     allRoles: state.tables.allRoles,
@@ -9,5 +9,4 @@ const mapStateToProps = state => {
   };
 };
 
-// TODO
-export default connect => connect(mapStateToProps)(Permissions);
+export default (connect: any) => connect(mapStateToProps)(Permissions);

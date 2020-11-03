@@ -1,9 +1,11 @@
+import { SchemaPermissionsState } from './types';
+
 const defaultSchemaDefSdl = `type SampleType {
   user_id: Int
   name: String
 }`;
 
-const state = {
+const state: SchemaPermissionsState = {
   isEditing: false,
   isFetching: false,
   permissionEdit: {
@@ -13,8 +15,8 @@ const state = {
     filter: '',
   },
   schemaDefinition: {
-    sdl: defaultSchemaDefSdl,
-    error: '',
+    value: defaultSchemaDefSdl,
+    error: null,
     timer: null,
     ast: null,
   },

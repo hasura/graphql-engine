@@ -1,0 +1,196 @@
+import React, { ChangeEvent } from 'react';
+import { parse as sdlParse } from 'graphql';
+import styles from '../../../Common/Permissions/PermissionStyles.scss';
+import PermTableHeader from '../../../Common/Permissions/TableHeader';
+import PermTableBody from '../../../Common/Permissions/TableBody';
+import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
+import { defaultSchemaDefSdl } from './state';
+import {
+  getRemoteSchemaPermissions,
+  findRemoteSchemaPermission,
+} from '../utils';
+import {
+  permOpenEdit,
+  permCloseEdit,
+  permSetRoleName,
+  permSetBulkSelect,
+  setSchemaDefinition,
+} from './reducer';
+import { RolePermissions } from './types';
+
+const queryTypes = ['Permission'];
+
+const PermissionsTable = ({ allRoles, ...props }: any) => {
+  const {
+    currentRemoteSchema,
+    dispatch,
+    permissionEdit,
+    isEditing,
+    bulkSelect,
+    readOnlyMode,
+  } = props;
+
+  const allPermissions = getRemoteSchemaPermissions(currentRemoteSchema);
+
+  const headings = ['Role', ...queryTypes];
+
+  const dispatchRoleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
+    dispatch(permSetRoleName(e.target.value));
+  };
+
+  const getEditIcon = () => {
+    return (
+      <span className={styles.editPermsIcon}>
+        <i className="fa fa-pencil" aria-hidden="true" />
+      </span>
+    );
+  };
+
+  const getBulkCheckbox = (role: string, isNewRole: boolean) => {
+    const dispatchBulkSelect = (e: ChangeEvent<HTMLInputElement>) => {
+      const isChecked = e.target.checked;
+      const selectedRole = e.target.getAttribute('data-role');
+      dispatch(permSetBulkSelect(isChecked, selectedRole));
+    };
+
+    const disableCheckbox = !findRemoteSchemaPermission(allPermissions, role);
+
+    return {
+      showCheckbox: !(role === 'admin' || isNewRole),
+      disableCheckbox,
+      title: disableCheckbox
+        ? 'No permissions exist'
+        : 'Select for bulk actions',
+      bulkSelect,
+      onChange: dispatchBulkSelect,
+      role,
+      isNewRole,
+      checked: bulkSelect.find((e: any) => e === role),
+    };
+  };
+
+  // get root types for a given role
+  const getQueryTypes = (role: string, isNewRole: boolean) => {
+    return queryTypes.map(queryType => {
+      const dispatchOpenEdit = () => () => {
+        if (isNewRole && !!role) {
+          dispatch(setSchemaDefinition({ value: defaultSchemaDefSdl }));
+          dispatch(permOpenEdit(role, isNewRole, true));
+        } else if (role) {
+          const existingPerm = findRemoteSchemaPermission(allPermissions, role);
+          dispatch(permOpenEdit(role, isNewRole, !existingPerm));
+
+          if (existingPerm) {
+            const schemaDefinitionSdl = existingPerm.definition.schema;
+            dispatch(
+              setSchemaDefinition({
+                value: schemaDefinitionSdl,
+                ast: sdlParse(schemaDefinitionSdl),
+              })
+            );
+          } else {
+            dispatch(setSchemaDefinition({ value: defaultSchemaDefSdl }));
+          }
+        } else {
+          // FIXME: probably best if we handle the React way.
+          const inputFocusElem = document.getElementById('new-role-input');
+          if (inputFocusElem) {
+            inputFocusElem.focus();
+          }
+        }
+      };
+
+      const dispatchCloseEdit = () => {
+        dispatch(permCloseEdit());
+        dispatch(setSchemaDefinition({ value: defaultSchemaDefSdl }));
+      };
+
+      const isCurrEdit =
+        isEditing &&
+        (permissionEdit.role === role ||
+          (permissionEdit.isNewRole && permissionEdit.newRole === role));
+      let editIcon;
+      let className = '';
+      let onClick = () => {};
+      if (role !== 'admin' && !readOnlyMode) {
+        editIcon = getEditIcon();
+
+        if (isCurrEdit) {
+          onClick = dispatchCloseEdit;
+          className += styles.currEdit;
+        } else {
+          className += styles.clickableCell;
+          onClick = dispatchOpenEdit();
+        }
+      }
+
+      const getRoleQueryPermission = () => {
+        let permissionAccess;
+        if (role === 'admin') {
+          permissionAccess = permissionsSymbols.fullAccess;
+        } else if (isNewRole) {
+          permissionAccess = permissionsSymbols.noAccess;
+        } else {
+          const existingPerm = findRemoteSchemaPermission(allPermissions, role);
+          if (!existingPerm) {
+            permissionAccess = permissionsSymbols.noAccess;
+          } else {
+            permissionAccess = permissionsSymbols.fullAccess;
+          }
+        }
+        return permissionAccess;
+      };
+
+      return {
+        permType: queryType,
+        className,
+        editIcon,
+        onClick,
+        dataTest: `${role}-${queryType}`,
+        access: getRoleQueryPermission(),
+      };
+    });
+  };
+
+  // form rolesList and permissions metadata associated with each role
+  const roleList = ['admin', ...allRoles];
+  const rolePermissions: RolePermissions[] = roleList.map(r => {
+    return {
+      roleName: r,
+      permTypes: getQueryTypes(r, false),
+      bulkSection: getBulkCheckbox(r, false),
+    };
+  });
+
+  // push permissions metadata associated with the new role
+  rolePermissions.push({
+    roleName: permissionEdit.newRole,
+    permTypes: getQueryTypes(permissionEdit.newRole, true),
+    bulkSection: getBulkCheckbox(permissionEdit.newRole, true),
+    isNewRole: true,
+  });
+
+  return (
+    <div>
+      <div>
+        <div className={styles.permissionsLegend}>
+          <span className={styles.permissionsLegendValue}>
+            {permissionsSymbols.fullAccess} : allowed
+          </span>
+          <span className={styles.permissionsLegendValue}>
+            {permissionsSymbols.noAccess} : not allowed
+          </span>
+        </div>
+      </div>
+      <table className={`table table-bordered ${styles.permissionsTable}`}>
+        <PermTableHeader headings={headings} />
+        <PermTableBody
+          rolePermissions={rolePermissions}
+          dispatchRoleNameChange={dispatchRoleNameChange}
+        />
+      </table>
+    </div>
+  );
+};
+
+export default PermissionsTable;

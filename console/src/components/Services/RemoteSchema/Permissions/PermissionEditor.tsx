@@ -8,26 +8,28 @@ import {
 import { permCloseEdit, setSchemaDefinition } from './reducer';
 import GraphQLEditor from '../../../Common/GraphQLEditor/GraphQLEditor';
 
-const PermissionEditor = ({
-  permissionEdit,
-  isEditing,
-  isFetching,
-  schemaDefinition,
-  dispatch,
-  readOnlyMode,
-}) => {
+const PermissionEditor = (props: any) => {
+  const {
+    permissionEdit,
+    isEditing,
+    isFetching,
+    schemaDefinition,
+    dispatch,
+    readOnlyMode,
+  } = props;
+
   if (!isEditing) return null;
 
   const { isNewRole, isNewPerm } = permissionEdit;
 
   const {
-    sdl: schemaDefinitionSdl,
+    value: schemaDefinitionSdl,
     error: schemaDefinitionError,
     timer: schemaParseTimer,
   } = schemaDefinition;
 
   const schemaDefinitionOnChange = (value, error, timer, ast) => {
-    dispatch(setSchemaDefinition(value, error, timer, ast));
+    dispatch(setSchemaDefinition({ value, error, timer, ast }));
   };
 
   const buttonStyle = styles.add_mar_right;
@@ -36,45 +38,12 @@ const PermissionEditor = ({
     dispatch(permCloseEdit());
   };
 
-  const getSaveButton = () => {
-    const saveFunc = () => {
-      dispatch(saveRemoteSchemaPermission(closeEditor));
-    };
-    return (
-      <Button
-        onClick={saveFunc}
-        color="yellow"
-        className={buttonStyle}
-        disabled={isFetching}
-      >
-        Save Permissions
-      </Button>
-    );
+  const saveFunc = () => {
+    dispatch(saveRemoteSchemaPermission(closeEditor));
   };
 
-  const getRemoveButton = () => {
-    if (isNewRole || isNewPerm) return;
-    const removeFunc = () => {
-      dispatch(removeRemoteSchemaPermission(closeEditor));
-    };
-    return (
-      <Button
-        onClick={removeFunc}
-        color="red"
-        className={buttonStyle}
-        disabled={isFetching}
-      >
-        Remove Permissions
-      </Button>
-    );
-  };
-
-  const getCancelButton = () => {
-    return (
-      <Button color="white" className={buttonStyle} onClick={closeEditor}>
-        Cancel
-      </Button>
-    );
+  const removeFunc = () => {
+    dispatch(removeRemoteSchemaPermission(closeEditor));
   };
 
   return (
@@ -90,9 +59,27 @@ const PermissionEditor = ({
           height="400px"
         />
       </div>
-      {getSaveButton()}
-      {getRemoveButton()}
-      {getCancelButton()}
+      <Button
+        onClick={saveFunc}
+        color="yellow"
+        className={buttonStyle}
+        disabled={isFetching}
+      >
+        Save Permissions
+      </Button>
+      {!(isNewRole || isNewPerm) && (
+        <Button
+          onClick={removeFunc}
+          color="red"
+          className={buttonStyle}
+          disabled={isFetching}
+        >
+          Remove Permissions
+        </Button>
+      )}
+      <Button color="white" className={buttonStyle} onClick={closeEditor}>
+        Cancel
+      </Button>
     </div>
   );
 };

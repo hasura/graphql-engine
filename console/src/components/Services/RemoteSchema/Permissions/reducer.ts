@@ -1,62 +1,61 @@
 import defaultState from './state';
+import { Dispatch } from '../../../../types';
 import { updateBulkSelect } from './utils';
+import {
+  PERMISSIONS_OPEN_EDIT,
+  PERMISSIONS_CLOSE_EDIT,
+  SET_ROLE_NAME,
+  SET_DEFAULTS,
+  SET_SCHEMA_DEFINITION,
+  PERM_DESELECT_BULK,
+  PERM_SELECT_BULK,
+  PERM_RESET_BULK_SELECT,
+  MAKE_REQUEST,
+  REQUEST_FAILURE,
+  REQUEST_SUCCESS,
+  SchemaDefinition,
+} from './types';
 
-const SET_REMOTESCHEMA_PERMISSIONS =
-  'RemoteSchemas/Permissions/SET_REMOTESCHEMA_PERMISSIONS';
-
-export const setRemoteSchemaPermission = perms => ({
-  type: SET_REMOTESCHEMA_PERMISSIONS,
-  perms,
-});
-
-const PERMISSIONS_OPEN_EDIT = 'RemoteSchemas/Permissions/PERMISSIONS_OPEN_EDIT';
-export const permOpenEdit = (role, isNewRole, isNewPerm) => ({
+export const permOpenEdit = (
+  role: string,
+  isNewRole: boolean,
+  isNewPerm: boolean
+) => ({
   type: PERMISSIONS_OPEN_EDIT,
   role,
   isNewRole,
   isNewPerm,
 });
-
-const PERMISSIONS_CLOSE_EDIT =
-  'RemoteSchemas/Permissions/PERMISSIONS_CLOSE_EDIT';
 export const permCloseEdit = () => ({
   type: PERMISSIONS_CLOSE_EDIT,
 });
-
-const SET_ROLE_NAME = 'RemoteSchemas/Permissions/SET_ROLE_NAME';
 export const permSetRoleName = (rolename: string) => ({
   type: SET_ROLE_NAME,
   rolename,
 });
-
-const SET_DEFAULTS = 'RemoteSchemas/Permissions/SET_DEFAULTS';
 export const setDefaults = () => ({
   type: SET_DEFAULTS,
 });
-
-const SET_SCHEMA_DEFINITION = 'RemoteSchemas/Permissions/SET_SCHEMA_DEFINITION';
-export const setSchemaDefinition = (sdl, error = null, timer, ast) => ({
+export const setSchemaDefinition = (definition: SchemaDefinition) => ({
   type: SET_SCHEMA_DEFINITION,
-  definition: { sdl, error, timer, ast },
+  definition,
 });
-
-const PERM_SELECT_BULK = 'RemoteSchemas/Permissions/PERM_SELECT_BULK';
-export const permSelectBulk = selectedRole => ({
+export const permSelectBulk = (selectedRole: string) => ({
   type: PERM_SELECT_BULK,
   selectedRole,
 });
-
-const PERM_DESELECT_BULK = 'RemoteSchemas/Permissions/PERM_DESELECT_BULK';
-export const permDeslectBulk = selectedRole => ({
+export const permDeslectBulk = (selectedRole: string) => ({
   type: PERM_DESELECT_BULK,
   selectedRole,
 });
-
-export const PERM_RESET_BULK_SELECT =
-  'RemoteSchemas/Permissions/PERM_RESET_BULK_SELECT';
-
-export const permSetBulkSelect = (isChecked, selectedRole) => {
-  return dispatch => {
+export const permResetBulkSelect = () => ({
+  type: PERM_RESET_BULK_SELECT,
+});
+export const makeRequest = () => ({ type: MAKE_REQUEST });
+export const setRequestSuccess = () => ({ type: REQUEST_SUCCESS });
+export const setRequestFailure = () => ({ type: REQUEST_FAILURE });
+export const permSetBulkSelect = (isChecked: boolean, selectedRole: any) => {
+  return (dispatch: Dispatch) => {
     if (isChecked) {
       dispatch(permSelectBulk(selectedRole));
     } else {
@@ -65,14 +64,7 @@ export const permSetBulkSelect = (isChecked, selectedRole) => {
   };
 };
 
-const MAKE_REQUEST = 'RemoteSchemas/Permissions/MAKE_REQUEST';
-export const makeRequest = () => ({ type: MAKE_REQUEST });
-const REQUEST_SUCCESS = 'RemoteSchemas/Permissions/REQUEST_SUCCESS';
-export const setRequestSuccess = () => ({ type: REQUEST_SUCCESS });
-const REQUEST_FAILURE = 'RemoteSchemas/Permissions/REQUEST_FAILURE';
-export const setRequestFailure = () => ({ type: REQUEST_FAILURE });
-
-const reducer = (state = defaultState, action) => {
+const reducer = (state = defaultState, action: any) => {
   switch (action.type) {
     case MAKE_REQUEST:
       return {
@@ -112,10 +104,10 @@ const reducer = (state = defaultState, action) => {
         ...state,
         schemaDefinition: {
           ...action.definition,
-          sdl:
-            action.definition.sdl !== null
-              ? action.definition.sdl
-              : state.schemaDefinition.sdl,
+          value:
+            action.definition.value !== null
+              ? action.definition.value
+              : state.schemaDefinition.value,
         },
       };
     case SET_ROLE_NAME:

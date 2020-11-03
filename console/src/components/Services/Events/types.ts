@@ -14,7 +14,7 @@ export const LOAD_PENDING_DATA_EVENTS = 'Events/LOAD_PENDING_DATA_EVENTS';
 /*
  * Common types for events service
  */
-
+ 
 export type Event = {
   id: string;
   payload: string;

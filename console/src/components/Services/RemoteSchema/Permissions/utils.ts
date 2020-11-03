@@ -1,9 +1,10 @@
 import { findRemoteSchemaPermission } from '../utils';
+import { PermissionEdit, SchemaDefinition } from './types';
 
 export const getCreateRemoteSchemaPermissionQuery = (
   def: { role: string },
   remoteSchemaName: string,
-  schemaDefinition: any
+  schemaDefinition: SchemaDefinition
 ) => {
   return {
     type: 'add_remote_schema_permissions',
@@ -11,7 +12,7 @@ export const getCreateRemoteSchemaPermissionQuery = (
       remote_schema: remoteSchemaName,
       role: def.role,
       definition: {
-        schema: schemaDefinition.sdl,
+        schema: schemaDefinition.value,
       },
     },
   };
@@ -30,12 +31,11 @@ export const getDropRemoteSchemaPermissionQuery = (
   };
 };
 
-// TODO
 export const getRemoteSchemaPermissionQueries = (
-  permissionEdit,
-  allPermissions,
-  remoteSchemaName,
-  schemaDefinition
+  permissionEdit: PermissionEdit,
+  allPermissions: any,
+  remoteSchemaName: string,
+  schemaDefinition: SchemaDefinition
 ) => {
   const { role, newRole } = permissionEdit;
 
@@ -45,6 +45,7 @@ export const getRemoteSchemaPermissionQueries = (
   const permRole = (newRole || role).trim();
 
   const existingPerm = findRemoteSchemaPermission(allPermissions, permRole);
+  // const existingPerm = allPermissions.find(p => p.role_name === permRole);
 
   if (newRole || (!newRole && !existingPerm)) {
     upQueries.push(
@@ -90,12 +91,13 @@ export const getRemoteSchemaPermissionQueries = (
   };
 };
 
-export const updateBulkSelect = (bulkSelect, selectedRole, isAdd) => {
-  let bulkRes;
-  if (isAdd) {
-    bulkRes = [...bulkSelect, selectedRole];
-  } else {
-    bulkRes = bulkSelect.filter(e => e !== selectedRole);
-  }
+export const updateBulkSelect = (
+  bulkSelect: string[],
+  selectedRole: string,
+  isAdd: boolean
+) => {
+  const bulkRes = isAdd
+    ? [...bulkSelect, selectedRole]
+    : bulkSelect.filter(e => e !== selectedRole);
   return bulkRes;
 };

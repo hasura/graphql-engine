@@ -16,7 +16,7 @@ import {
   setRequestFailure as setPermRequestFailure,
   permSetRoleName,
   permCloseEdit,
-  PERM_RESET_BULK_SELECT,
+  permResetBulkSelect,
 } from './Permissions/reducer';
 import { findRemoteSchema, getRemoteSchemaPermissions } from './utils';
 import {
@@ -362,7 +362,7 @@ const permRemoveMultipleRoles = () => {
       // close edit box
       dispatch(permCloseEdit());
       // reset checkbox selections
-      dispatch({ type: PERM_RESET_BULK_SELECT });
+      dispatch(permResetBulkSelect());
       // fetch all roles
       dispatch(fetchRoleList());
     };
