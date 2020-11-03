@@ -66,7 +66,7 @@ import           Language.Haskell.TH.Syntax    (Lift)
 
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.DML.Select.Types
+import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.SQL.Backend

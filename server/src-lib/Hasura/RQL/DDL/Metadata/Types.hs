@@ -120,10 +120,10 @@ data TableMeta
   , _tmArrayRelationships  :: ![Relationship.ArrRelDef]
   , _tmComputedFields      :: ![ComputedFieldMeta]
   , _tmRemoteRelationships :: ![RemoteRelationshipMeta]
-  , _tmInsertPermissions   :: ![Permission.InsPermDef]
-  , _tmSelectPermissions   :: ![Permission.SelPermDef]
-  , _tmUpdatePermissions   :: ![Permission.UpdPermDef]
-  , _tmDeletePermissions   :: ![Permission.DelPermDef]
+  , _tmInsertPermissions   :: ![Permission.InsPermDef 'Postgres]
+  , _tmSelectPermissions   :: ![Permission.SelPermDef 'Postgres]
+  , _tmUpdatePermissions   :: ![Permission.UpdPermDef 'Postgres]
+  , _tmDeletePermissions   :: ![Permission.DelPermDef 'Postgres]
   , _tmEventTriggers       :: ![EventTriggerConf]
   } deriving (Show, Eq, Lift, Generic)
 $(makeLenses ''TableMeta)
@@ -375,7 +375,7 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                       , ("definition", AO.toOrdered definition)
                       ] <> catMaybes [maybeCommentToMaybeOrdPair comment]
 
-        insPermDefToOrdJSON :: Permission.InsPermDef -> AO.Value
+        insPermDefToOrdJSON :: Permission.InsPermDef 'Postgres -> AO.Value
         insPermDefToOrdJSON = permDefToOrdJSON insPermToOrdJSON
           where
             insPermToOrdJSON (Permission.InsPerm check set columns mBackendOnly) =
@@ -384,7 +384,7 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
               in AO.object $ [("check", AO.toOrdered check)]
                  <> catMaybes [maybeSetToMaybeOrdPair set, columnsPair, backendOnlyPair]
 
-        selPermDefToOrdJSON :: Permission.SelPermDef -> AO.Value
+        selPermDefToOrdJSON :: Permission.SelPermDef 'Postgres -> AO.Value
         selPermDefToOrdJSON = permDefToOrdJSON selPermToOrdJSON
           where
             selPermToOrdJSON (Permission.SelPerm columns fltr limit allowAgg computedFieldsPerm) =
@@ -403,7 +403,7 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                                then Just ("allow_aggregations", AO.toOrdered allowAgg)
                                else Nothing
 
-        updPermDefToOrdJSON :: Permission.UpdPermDef -> AO.Value
+        updPermDefToOrdJSON :: Permission.UpdPermDef 'Postgres -> AO.Value
         updPermDefToOrdJSON = permDefToOrdJSON updPermToOrdJSON
           where
             updPermToOrdJSON (Permission.UpdPerm columns set fltr check) =
@@ -412,7 +412,7 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                           , ("check", AO.toOrdered check)
                           ] <> catMaybes [maybeSetToMaybeOrdPair set]
 
-        delPermDefToOrdJSON :: Permission.DelPermDef -> AO.Value
+        delPermDefToOrdJSON :: Permission.DelPermDef 'Postgres -> AO.Value
         delPermDefToOrdJSON = permDefToOrdJSON AO.toOrdered
 
         permDefToOrdJSON :: (a -> AO.Value) -> Permission.PermDef a -> AO.Value
