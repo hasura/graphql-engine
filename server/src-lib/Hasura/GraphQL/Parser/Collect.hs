@@ -22,7 +22,8 @@ import                          Language.GraphQL.Draft.Syntax
 
 import                          Data.Text.Extended
 import                          Hasura.GraphQL.Parser.Class
-import {-# SOURCE #-}           Hasura.GraphQL.Parser.Internal.Parser (boolean, runParser)
+import                          Hasura.GraphQL.Parser.Internal.Types
+import {-# SOURCE #-}           Hasura.GraphQL.Parser.Internal.Parser (boolean)
 import                          Hasura.GraphQL.Parser.Schema
 import                          Hasura.GraphQL.Utils                  (showNames)
 

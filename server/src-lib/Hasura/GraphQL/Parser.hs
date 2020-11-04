@@ -50,5 +50,6 @@ module Hasura.GraphQL.Parser
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Parser.Internal.Parser
+import           Hasura.GraphQL.Parser.Internal.Types
 import           Hasura.GraphQL.Parser.Monad
 import           Hasura.GraphQL.Parser.Schema
