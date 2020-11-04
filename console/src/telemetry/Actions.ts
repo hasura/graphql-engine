@@ -218,7 +218,6 @@ const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
             };
           } else {
             if (typeof updatedState.read === 'string') {
-              // FIXME?: we shouldn't be setting the `error` or `default` case on the db.
               combinedReadState = updatedState.read;
             } else if (Array.isArray(updatedState.read)) {
               // this is being done to ensure that there is a consistency between the read
