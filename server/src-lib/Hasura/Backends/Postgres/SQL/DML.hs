@@ -2,17 +2,17 @@ module Hasura.Backends.Postgres.SQL.DML where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                     as J
-import qualified Data.HashMap.Strict            as HM
-import qualified Data.Text                      as T
-import qualified Text.Builder                   as TB
+import qualified Data.Aeson                         as J
+import qualified Data.HashMap.Strict                as HM
+import qualified Data.Text                          as T
+import qualified Text.Builder                       as TB
 
-import           Data.String                    (fromString)
+import           Data.String                        (fromString)
 import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax     (Lift)
+import           Language.Haskell.TH.Syntax         (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Incremental             (Cacheable)
+import           Hasura.Incremental                 (Cacheable)
 import           Hasura.SQL.Types
 
 
@@ -205,6 +205,9 @@ instance ToSQL Qual where
 
 mkQIdentifier :: (IsIdentifier a, IsIdentifier b) => a -> b -> QIdentifier
 mkQIdentifier q t = QIdentifier (QualifiedIdentifier (toIdentifier q) Nothing) (toIdentifier t)
+
+mkQIdentifierTable :: (IsIdentifier a) => QualifiedTable -> a -> QIdentifier
+mkQIdentifierTable q = QIdentifier (mkQual q) . toIdentifier
 
 data QIdentifier
   = QIdentifier !Qual !Identifier

@@ -24,8 +24,8 @@ import qualified Data.Environment           as Env
 import qualified Database.PG.Query          as Q
 import qualified Hasura.Tracing             as Tracing
 import qualified System.Exit                as Sys
-import qualified System.Posix.Signals       as Signals
 import qualified System.Metrics             as EKG
+import qualified System.Posix.Signals       as Signals
 
 
 main :: IO ()
@@ -33,28 +33,28 @@ main = do
   tryExit $ do
     args <- parseArgs
     env  <- Env.getEnvironment
-    unAppM (runApp env args)
+    runApp env args
   where
     tryExit io = try io >>= \case
       Left (ExitException _code msg) -> BC.putStrLn msg >> Sys.exitFailure
       Right r -> return r
 
-runApp :: Env.Environment -> HGEOptions Hasura -> AppM ()
+runApp :: Env.Environment -> HGEOptions Hasura -> IO ()
 runApp env (HGEOptionsG rci hgeCmd) =
   withVersion $$(getVersionFromEnvironment) $ case hgeCmd of
     HCServe serveOptions -> do
       (initCtx, initTime) <- initialiseCtx env hgeCmd rci
-      
+
       ekgStore <- liftIO do
         s <- EKG.newStore
         EKG.registerGcMetrics s
-        
+
         let getTimeMs :: IO Int64
             getTimeMs = (round . (* 1000)) `fmap` getPOSIXTime
 
         EKG.registerCounter "ekg.server_timestamp_ms" getTimeMs s
         pure s
-        
+
       let shutdownApp = return ()
       -- Catches the SIGTERM signal and initiates a graceful shutdown.
       -- Graceful shutdown for regular HTTP requests is already implemented in
@@ -65,7 +65,8 @@ runApp env (HGEOptionsG rci hgeCmd) =
         Signals.sigTERM
         (Signals.CatchOnce (shutdownGracefully initCtx))
         Nothing
-      runHGEServer env serveOptions initCtx Nothing initTime shutdownApp Nothing ekgStore
+      flip runReaderT (_icPgPool initCtx) $ unServerAppM $
+        runHGEServer env serveOptions initCtx Nothing initTime shutdownApp Nothing ekgStore
 
     HCExport -> do
       (initCtx, _) <- initialiseCtx env hgeCmd rci

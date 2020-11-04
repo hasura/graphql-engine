@@ -11,8 +11,8 @@ import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.API.Query
 import           Hasura.Server.App                   (SchemaCacheRef (..), withSCUpdate)
-import           Hasura.Server.Init                  (InstanceId (..))
 import           Hasura.Server.Logging
+import           Hasura.Server.Types                 (InstanceId (..))
 import           Hasura.Session
 
 import           Data.Aeson

@@ -28,7 +28,7 @@ import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Init.Config
-import           Hasura.Server.Utils                    (RequestId)
+import           Hasura.Server.Types                    (RequestId)
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 import           Hasura.Tracing                         (MonadTrace, TraceT, trace)

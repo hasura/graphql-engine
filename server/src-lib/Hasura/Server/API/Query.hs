@@ -37,7 +37,7 @@ import           Hasura.RQL.DML.Select
 import           Hasura.RQL.DML.Update
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Init                 (InstanceId (..))
+import           Hasura.Server.Types                (InstanceId (..))
 import           Hasura.Server.Utils
 import           Hasura.Server.Version              (HasVersion)
 import           Hasura.Session

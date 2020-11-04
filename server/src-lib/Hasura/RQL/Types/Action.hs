@@ -69,8 +69,8 @@ import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.CustomTypes
-import           Hasura.SQL.Backend
 import           Hasura.Session
+import           Hasura.SQL.Backend
 
 
 newtype ActionName
