@@ -147,8 +147,8 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
         let filteredData = filterScope(uppercaseScopedData, consoleScope);
 
         if (
-          !lastSeenNotifications ||
-          lastSeenNotifications !== filteredData.length
+          lastSeenNotifications &&
+          lastSeenNotifications > filteredData.length
         ) {
           window.localStorage.setItem(
             'notifications:lastSeen',
@@ -175,7 +175,11 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
               const previousList = JSON.parse(
                 localStorage.getItem('notifications:data')
               );
-              if (previousList.length) {
+              if (!previousList) {
+                // we don't have a record of the IDs that were marked as read previously
+                newReadValue = [];
+                toShowBadge = true;
+              } else if (previousList.length) {
                 const resDiff = filteredData.filter(
                   newNotif =>
                     !previousList.find(oldNotif => oldNotif.id === newNotif.id)
@@ -194,9 +198,11 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
               newReadValue = previousRead;
               if (
                 previousRead.length &&
-                lastSeenNotifications === filteredData.length
+                lastSeenNotifications >= filteredData.length
               ) {
                 toShowBadge = false;
+              } else if (lastSeenNotifications < filteredData.length) {
+                toShowBadge = true;
               }
             }
             dispatch(
@@ -213,6 +219,17 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
           type: FETCH_CONSOLE_NOTIFICATIONS_SUCCESS,
           data: filteredData,
         });
+
+        // update/set the lastSeen value upon data is set
+        if (
+          !lastSeenNotifications ||
+          lastSeenNotifications !== filteredData.length
+        ) {
+          window.localStorage.setItem(
+            'notifications:lastSeen',
+            JSON.stringify(filteredData.length)
+          );
+        }
         return;
       }
       dispatch({ type: FETCH_CONSOLE_NOTIFICATIONS_ERROR });
