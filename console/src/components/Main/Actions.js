@@ -68,7 +68,7 @@ const makeUppercaseScopes = data => {
 
 // to fetch and filter notifications
 const fetchConsoleNotifications = () => (dispatch, getState) => {
-  const url = globals.isProduction
+  const url = !globals.isProduction
     ? Endpoints.consoleNotificationsStg
     : Endpoints.consoleNotificationsProd;
   const consoleStateDB = getState().telemetry.console_opts;
