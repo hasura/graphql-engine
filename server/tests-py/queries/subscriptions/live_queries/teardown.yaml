@@ -3,4 +3,5 @@ args:
 - type: run_sql
   args:
     sql: |
-      drop table hge_tests.test_t2
+      drop table hge_tests.test_t2;
+      drop table hge_tests.articles;
