@@ -12,38 +12,68 @@ Managing development environments for Hasura Cloud
   :depth: 2
   :local:
 
+Call Shahidh
+------------
+
+- Environment variables: deeper integration with CLI for cloud projects to list projects, manage the .env file, apply to cloud env
+
+Best practices to ensure smooth moving between environment
+- Concepts
+
+Recommendations about setting up / setup examples
+- Pros / cons in setting dev environment in cloud (allow list) - depending how large your team is (collaborators)
+- Completely offline: always have the docker compose
+- In any of the setup, we can use the concepts above
 
 Introduction
 ------------
 
+Best practices
+--------------
+
 Migrations & metadata
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 - Set up your project with migrations / metadata (link)
   (disable the console)
 - Explain how it helps to move to staging / prod
 
 Developing & testing business logic
------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Link to all business logic sections (actions etc.)
 - Configuring handlers via environment variables
 - Debugging in development 
 
 Project configurations
-----------------------
+^^^^^^^^^^^^^^^^^^^^^^
 
 - Configure env variables (e.g. admin secret)
 - Use allow lists
 - Restrict CORS
 
 Running tests
--------------
+^^^^^^^^^^^^^
 
 - Regression testing (for cloud)
 
+Recommended setups
+------------------
+
+Development Environment
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Online:
+- Use Cloud for development (to use allow list, analytics etc.)
+- Collaborators
+
+Offline:
+- Docker
+
+-> concepts above can be used in any environment
+
 In production
--------------
+^^^^^^^^^^^^^
 
 - Disable dev mode
 - Disable APIs
