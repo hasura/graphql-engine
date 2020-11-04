@@ -754,7 +754,7 @@ const HasuraNotifications: React.FC<
           <Button
             title="Mark all as read"
             onClick={onClickMarkAllAsRead}
-            disabled={!numberNotifications}
+            disabled={!numberNotifications || !consoleNotifications.length}
             className={styles.markAllAsReadBtn}
           >
             mark all as read
