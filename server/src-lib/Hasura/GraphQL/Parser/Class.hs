@@ -145,7 +145,7 @@ getTableGQLName
 getTableGQLName table = do
   tableInfo <- askTableInfo table
   let tableCustomName = _tcCustomName . _tciCustomConfig . _tiCoreInfo $ tableInfo
-  maybe (qualifiedObjectToName table) pure tableCustomName
+  tableCustomName `onNothing` qualifiedObjectToName table
 
 -- | A wrapper around 'memoizeOn' that memoizes a function by using its argument
 -- as the key.
