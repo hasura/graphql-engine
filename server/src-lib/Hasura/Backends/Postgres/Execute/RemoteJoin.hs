@@ -405,9 +405,7 @@ fetchRemoteJoinFields
   -> m AO.Object
 fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
   results <- forM (Map.toList remoteSchemaBatch) $ \(rsi, batch) -> do
-    let batchList = toList batch
-        gqlReq = fieldsToRequest G.OperationTypeQuery
-                                 (map _rjfField batchList)
+    let gqlReq = fieldsToRequest G.OperationTypeQuery $ _rjfField <$> batch
         gqlReqUnparsed = GQLQueryText . G.renderExecutableDoc . G.ExecutableDocument . unGQLExecDoc <$> gqlReq
     -- NOTE: discard remote headers (for now):
     (_, _, respBody) <- execRemoteGQ' env manager userInfo reqHdrs gqlReqUnparsed rsi G.OperationTypeQuery
@@ -429,45 +427,24 @@ fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
   where
     remoteSchemaBatch = Map.groupOnNE _rjfRemoteSchema remoteJoins
 
-    fieldsToRequest :: G.OperationType -> [G.Field G.NoFragments Variable] -> GQLReqParsed
-    fieldsToRequest opType gFields =
-      let variableInfos = Just <$> foldl Map.union mempty $ Map.elems $ fmap collectVariables $ G._fArguments $ head gFields
-          gFields' = map (G.fmapFieldFragment G.inline . convertFieldWithVariablesToName) gFields
-      in
-      case variableInfos of
-        Nothing ->
-          GQLReq
-            { _grOperationName = Nothing
-            , _grQuery =
-               GQLExecDoc
-                 [ G.ExecutableDefinitionOperation
-                     (G.OperationDefinitionTyped
-                       ( emptyOperationDefinition
-                           { G._todSelectionSet = map G.SelectionField gFields'
-                           }
-                       )
-                     )
-                  ]
-             , _grVariables = Nothing
-             }
-
-        Just vars' ->
-          GQLReq
-            { _grOperationName = Nothing
-            , _grQuery =
-               GQLExecDoc
-                 [ G.ExecutableDefinitionOperation
-                     (G.OperationDefinitionTyped
-                       ( emptyOperationDefinition
-                           { G._todSelectionSet = map G.SelectionField gFields'
-                           , G._todVariableDefinitions = map fst $ Map.toList vars'
-                           }
-                       )
-                     )
-                  ]
-             , _grVariables = Just $ Map.fromList
-                                      (map (\(varDef, val) -> (G._vdName varDef, val)) $ Map.toList vars')
-             }
+    fieldsToRequest :: G.OperationType -> NonEmpty (G.Field G.NoFragments Variable) -> GQLReqParsed
+    fieldsToRequest opType gFields@(headField :| _) =
+      let variableInfos =
+            -- only the `headField` is used for collecting the variables here because
+            -- the variable information of all the fields will be the same.
+            -- For example:
+            -- {
+            --   author {
+            --     name
+            --     remote_relationship (extra_arg: $extra_arg)
+            --   }
+            -- }
+            --
+            -- If there are 10 authors, then there are 10 fields that will be requested
+            -- each containing exactly the same variable info.
+            foldl Map.union mempty $ Map.elems $ fmap collectVariables $ G._fArguments $ headField
+          gFields' = NE.toList $ NE.map (G.fmapFieldFragment G.inline . convertFieldWithVariablesToName) gFields
+      in mkGQLRequest gFields' variableInfos
       where
         emptyOperationDefinition =
           G.TypedOperationDefinition {
@@ -475,7 +452,30 @@ fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
            , G._todName = Nothing
            , G._todVariableDefinitions = []
            , G._todDirectives = []
-           , G._todSelectionSet = [] }
+           , G._todSelectionSet = []
+           }
+
+        mkGQLRequest fields variableInfos =
+          let variableValues =
+                if (Map.null variableInfos)
+                then Nothing
+                else Just $ Map.fromList (map (\(varDef, val) -> (G._vdName varDef, val)) $ Map.toList variableInfos)
+          in
+          GQLReq
+            { _grOperationName = Nothing
+            , _grQuery =
+               GQLExecDoc
+                 [ G.ExecutableDefinitionOperation
+                     (G.OperationDefinitionTyped
+                       ( emptyOperationDefinition
+                           { G._todSelectionSet        = map G.SelectionField fields
+                           , G._todVariableDefinitions = map fst $ Map.toList variableInfos
+                           }
+                       )
+                     )
+                  ]
+             , _grVariables = variableValues
+            }
 
 -- | Replace 'RemoteJoinField' in composite JSON with it's json value from remote server response.
 replaceRemoteFields
