@@ -111,7 +111,6 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
   let url = Endpoints.query;
   const source = getState().tables.currentDataSource;
   const schemaChangesUp = [];
-  const schemaChangesDown = getDownQueryComments([sql], source);
 
   if (isStatementTimeout) {
     schemaChangesUp.push(
@@ -127,6 +126,8 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
   schemaChangesUp.push(
     getRunSqlQuery(sql, source, isCascadeChecked, readOnlyMode)
   );
+
+  const schemaChangesDown = getDownQueryComments(schemaChangesUp, source);
 
   let requestBody = {
     type: 'bulk',

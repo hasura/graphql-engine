@@ -338,6 +338,7 @@ export const getDownQueryComments = (
   upqueries: RunSqlType[],
   source: string
 ) => {
+  console.log({ upqueries });
   if (Array.isArray(upqueries) && upqueries.length >= 0) {
     let comment = `-- Could not auto-generate a down migration.
 -- Please write an appropriate down migration for the SQL below:`;

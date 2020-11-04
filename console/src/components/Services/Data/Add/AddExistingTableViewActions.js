@@ -130,7 +130,6 @@ const addExistingFunction = name => {
       dispatch(
         _push(getFunctionModifyRoute(currentSchema, currentDataSource, name))
       );
-      return;
     };
     const customOnError = err => {
       dispatch({ type: REQUEST_ERROR, data: err });

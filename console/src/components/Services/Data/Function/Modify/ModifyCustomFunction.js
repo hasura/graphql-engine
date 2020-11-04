@@ -56,7 +56,9 @@ class ModifyCustomFunction extends React.Component {
     }
     Promise.all([
       this.props
-        .dispatch(fetchCustomFunction(functionName, schema, '')) // todo: datasource
+        .dispatch(
+          fetchCustomFunction(functionName, schema, this.props.currentSource)
+        )
         .then(() => {
           this.setState({ funcFetchCompleted: true });
         }),
@@ -75,7 +77,7 @@ class ModifyCustomFunction extends React.Component {
             fetchCustomFunction(
               nextProps.params.functionName,
               nextProps.params.schema,
-              ''
+              this.props.currentSource
             )
           )
           .then(() => {

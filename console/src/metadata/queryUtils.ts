@@ -529,7 +529,7 @@ export const getTrackFunctionQuery = (
   name: string,
   schema: string,
   source: string
-) => getMetadataQuery('track_function', source, { name, schema });
+) => getMetadataQuery('track_function', source, { function: { name, schema } });
 
 export const getTrackFunctionV2Query = (
   name: string,

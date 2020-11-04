@@ -7,6 +7,7 @@ import { setTable } from '../DataActions';
 import { getFunctionConfiguration } from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 
+// TODO: GET RID OF THIS ASAP
 class FunctionWrapper extends React.Component {
   componentDidMount() {
     this.props.dispatch(setTable(''));
@@ -20,8 +21,7 @@ class FunctionWrapper extends React.Component {
     const { children } = this.props;
     return (
       <RightContainer>
-        {' '}
-        <div>{children && React.cloneElement(children, this.props)}</div>
+        {children && React.cloneElement(children, this.props)}
       </RightContainer>
     );
   }
