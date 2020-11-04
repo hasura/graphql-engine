@@ -15,27 +15,24 @@ Import data from CSV into Postgres
 Introduction
 -------------
 
-It is possible to import a set of data from a ``csv`` file into a postgres table. 
+You might have some existing data in a CSV file that you want to import into your PG database. The following
+guide will show how to do so.
 
-
-Step 1: Add a table to your PG database
------------------------------------------
-
-Let's create a table called ``profile`` with the following set of fields:
-
-.. code-block:: bash
-
-  CREATE TABLE profile (firstName text, lastName text, email varchar);
-
-
-Let's assume you have a set of data in your csv file like the following that you need to import into your PG database
+In this guide we will use the following CSV file as an example. Make sure it is saved as ``profile.csv``.
 
 .. thumbnail:: /img/graphql/core/guides/sample-data-csv-file.png
    :alt: .csv data file
 
-.. note::
+Step 1: Add a table to your PG database
+-----------------------------------------
 
-  Make sure the file is saved with the file extension ``.csv``   
+Let us create a table to match the data structure in your CSV file.
+
+For example:
+
+.. code-block:: bash
+
+  CREATE TABLE profile (firstName text, lastName text, email varchar);
 
 Step 2: Connect to the postgres instance
 ------------------------------------------
@@ -44,12 +41,16 @@ You can connect to the postgres instance from ``psql`` on the command line like 
 
 .. code-block:: bash
 
-   psql <postgres://kattykat:bG66KOrqxrVLkBIk8LSOR3b-lHwmfgUH@lallah.db.elephantsql.com:5432/kattykat>
+  psql 'postgres://<postgres>:<postgres>@localhost:<port>/<database>'
+
+  ## for example
+
+  psql <postgres://postgres:postgres@localhost:5432/kittykat>
 
 Step 3: Copy the data successfully
 -----------------------------------
 
-Once you are connected successfully to the database/instance, use the following command in the psql terminal to
+Once you are connected successfully to the database, use the following command in the psql terminal to
 copy the data:
 
 .. code-block:: bash
