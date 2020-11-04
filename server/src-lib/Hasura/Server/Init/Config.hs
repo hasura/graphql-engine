@@ -65,7 +65,8 @@ data RawServeOptions impl
   , rsoEventsHttpPoolSize    :: !(Maybe Int)
   , rsoEventsFetchInterval   :: !(Maybe Milliseconds)
   , rsoLogHeadersFromEnv     :: !Bool
-  , rsoWebSocketCompression :: !Bool
+  , rsoWebSocketCompression  :: !Bool
+  , rsoWebSocketKeepAlive    :: !(Maybe Int)
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -82,6 +83,11 @@ shouldIncludeInternal role = \case
   InternalErrorsAllRequests -> True
   InternalErrorsAdminOnly   -> isAdmin role
   InternalErrorsDisabled    -> False
+
+newtype KeepAliveDelay
+  = KeepAliveDelay
+      { unKeepAliveDelay :: Seconds
+      } deriving (Eq, Show)
 
 data ServeOptions impl
   = ServeOptions
@@ -109,6 +115,7 @@ data ServeOptions impl
   , soEventsFetchInterval          :: !(Maybe Milliseconds)
   , soLogHeadersFromEnv            :: !Bool
   , soConnectionOptions            :: !WS.ConnectionOptions
+  , soWebsocketKeepAlive           :: !KeepAliveDelay
   }
 
 data DowngradeOptions
