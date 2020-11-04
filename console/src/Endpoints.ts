@@ -22,7 +22,7 @@ const Endpoints = {
   telemetryServer: 'wss://telemetry.hasura.io/v1/ws',
   consoleNotificationsStg:
     'https://notifications.hasura-stg.hasura-app.io/v1/graphql',
-  consoleNotificationsProd: 'https://data.hasura.io/v1/query',
+  consoleNotificationsProd: 'https://notifications.hasura.io/v1/graphql',
 };
 
 const globalCookiePolicy = 'same-origin';
