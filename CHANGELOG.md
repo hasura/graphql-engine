@@ -120,6 +120,8 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - server: accept only non-negative integers for batch size and refetch interval (close #5653) (#5759)
 - server: fix bug which arised when renaming a table which had a manual relationship defined (close #4158)
 - server: limit the length of event trigger names (close #5786)
+- server: Configurable websocket keep-alive interval. Add `--websocket-keepalive` command-line flag
+          and handle `HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE` env variable (fix #3539) 
 **NOTE:** If you have event triggers with names greater than 42 chars, then you should update their names to avoid running into Postgres identifier limit bug (#5786)
 - server: validate remote schema queries (fixes #4143)
 - server: fix issue with tracking custom functions that return `SETOF` materialized view (close #5294) (#5945)
@@ -127,16 +129,16 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - server: allow remote relationships with union, interface and enum type fields as well (fixes #5875) (#6080)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
-- cli: add missing global flags for seed command (#5565)
-- cli: allow seeds as alias for seed command (#5693)
 - console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
 - console: add option to flag an insertion as a migration from `Data` section (close #1766) (#4933)
 - console: add notifications (#5070)
 - console: down migrations improvements (close #3503, #4988) (#4790)
+- cli: add missing global flags for seed command (#5565)
+- cli: allow seeds as alias for seed command (#5693)
 - docs: add docs page on networking with docker (close #4346) (#4811)
 - docs: add tabs for console / cli / api workflows (close #3593) (#4948)
 - docs: add postgres concepts page to docs (close #4440) (#4471)
-
+- docs: add guides on connecting hasura cloud to pg databases of different cloud vendors (#5948)
 
 ## `v1.3.2`
 

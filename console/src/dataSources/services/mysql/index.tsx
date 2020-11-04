@@ -120,7 +120,7 @@ const commonDataTypes = [
   },
 ];
 
-const createSQLRegex = /create\s*((?:|or\s*replace)\s*view|\s*(table|function|view))\s*(?:\s*if*\s*not\s*exists\s*)?(((\`?\w+\`?)\.(\`?\w+\`?))|(\`?\w+\`?))/; // eslint-disable-line
+const createSQLRegex = /create\s*((?:|or\s*replace)\s*view|\s*(table|function|view))\s*(?:\s*if*\s*not\s*exists\s*)?(((\`?\w+\`?)\.(\`?\w+\`?))|(\`?\w+\`?))/g; // eslint-disable-line
 
 export const mysql: DataSourcesAPI = {
   getFunctionSchema: () => {

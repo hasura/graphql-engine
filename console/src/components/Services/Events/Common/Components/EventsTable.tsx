@@ -4,6 +4,7 @@ import ReactTable, {
   ComponentPropsGetter0,
 } from 'react-table';
 import 'react-table/react-table.css';
+
 import { FilterTableProps, GridHeadingProps } from './types';
 import { ordinalColSort } from '../../../Data/utils';
 import styles from '../../Events.scss';
@@ -61,7 +62,10 @@ const EventsTable: React.FC<Props> = props => {
     triggerType,
   } = props;
 
-  if (rows.length === 0) {
+  const [currentPage, setCurrentPage] = React.useState(0);
+  const [pageSize, setPageSize] = React.useState(filterState.limit ?? 10);
+
+  if (!rows.length) {
     return <div className={styles.add_mar_top}>No data available</div>;
   }
 
@@ -86,6 +90,7 @@ const EventsTable: React.FC<Props> = props => {
 
   const changePage = (page: number) => {
     if (filterState.offset !== page * filterState.limit) {
+      setCurrentPage(page);
       runQuery({
         offset: page * filterState.limit,
       });
@@ -94,6 +99,7 @@ const EventsTable: React.FC<Props> = props => {
 
   const changePageSize = (size: number) => {
     if (filterState.limit !== size) {
+      setPageSize(size);
       runQuery({
         limit: size,
       });
@@ -143,16 +149,28 @@ const EventsTable: React.FC<Props> = props => {
     }
   });
 
-  const invocationColumns = ['status', 'id', 'created_at'];
+  const invocationColumns = ['status', 'invoid', 'created_at'];
+  const invocationDataTriggerColumns = [
+    'status',
+    'invocation_id',
+    'created_at',
+  ];
 
   const invocationGridHeadings: GridHeadingProps[] = [expanderActions];
-
-  invocationColumns.forEach(column => {
-    invocationGridHeadings.push({
-      Header: column,
-      accessor: column,
+  const addToGridHeadings = (headAccArr: string[]) => {
+    headAccArr.forEach(column => {
+      invocationGridHeadings.push({
+        Header: column,
+        accessor: column,
+      });
     });
-  });
+  };
+
+  if (triggerType) {
+    addToGridHeadings(invocationColumns);
+  } else {
+    addToGridHeadings(invocationDataTriggerColumns);
+  }
 
   const rowsFormatted = rows.map(row => {
     const formattedRow = Object.keys(row).reduce((fr, col) => {
@@ -204,6 +222,17 @@ const EventsTable: React.FC<Props> = props => {
     },
   });
 
+  const getNumOfPages = (
+    currentPageSize: number,
+    currentCount: number | undefined,
+    currentRowData: Record<string, any>[]
+  ) => {
+    if (currentCount) {
+      return Math.ceil(currentCount / currentPageSize);
+    }
+    return Math.ceil(currentRowData.length / currentPageSize);
+  };
+
   return (
     <ReactTable
       className="-highlight"
@@ -213,7 +242,8 @@ const EventsTable: React.FC<Props> = props => {
       resizable
       manual
       onPageChange={changePage}
-      pages={count ? Math.ceil(count / filterState.limit) : 1}
+      page={currentPage}
+      pages={getNumOfPages(pageSize, count, rowsFormatted)}
       showPagination={count ? count > 10 : false}
       onPageSizeChange={changePageSize}
       sortable={false}
@@ -235,15 +265,11 @@ const EventsTable: React.FC<Props> = props => {
             />
           );
         }
-        const logs =
-          currentRow.logs ||
-          currentRow.cron_event_logs ||
-          currentRow.scheduled_event_logs ||
-          [];
+        const logs = [currentRow];
         const invocationRows = logs.map((r: any) => {
           const newRow: Record<string, JSX.Element> = {};
           // Insert cells corresponding to all rows
-          invocationColumns.forEach(col => {
+          invocationDataTriggerColumns.forEach(col => {
             newRow[col] = (
               <div
                 className={styles.tableCellCenterAlignedOverflow}

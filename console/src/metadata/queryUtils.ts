@@ -475,12 +475,15 @@ export const getCreateScheduledEventQuery = (
   };
 };
 
-export const getRedeliverDataEventQuery = (eventId: string) => ({
-  type: 'redeliver_event',
-  args: {
+export const getRedeliverDataEventQuery = (
+  eventId: string,
+  tableDef: QualifiedTable,
+  source: string
+) =>
+  getMetadataQuery('redeliver_event', source, {
+    table: tableDef,
     event_id: eventId,
-  },
-});
+  });
 
 export const getSaveRemoteRelQuery = (
   args: RemoteRelationshipPayload,
@@ -640,7 +643,6 @@ export const getConsoleStateQuery = {
 
 export type SupportedEvents = 'cron' | 'one_off';
 
-// FIXME: this does not work anymore, new API needs to support this too, to make it work
 export const getEventInvocationsLogByID = (
   type: SupportedEvents,
   event_id: string

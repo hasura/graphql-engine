@@ -128,26 +128,38 @@ export const useFilterQuery = (
       (data: any) => {
         if (triggerType === 'data') {
           // formatting of the data
-          const allKeys = data.results[0];
-          const resultsData = data.results.slice(0);
-          const formattedData: any = [];
-          resultsData.forEach((values: any[]) => {
-            const dataObj: any = {};
+          const allKeys = data.result[0];
+          const resultsData = data.result.slice(1);
+          const formattedData: Record<string, any>[] = [];
+          resultsData.forEach((values: string[]) => {
+            const dataObj: Record<string, any> = {};
             allKeys.forEach((key: string, idx: number) => {
-              // FIXME: there may be duplicate keys here
-              dataObj[key] = values[idx];
+              if (!dataObj[key]) {
+                // to avoid duplicate keys in the results
+                if (triggerOp !== 'invocation' && key === 'event_id') {
+                  dataObj.invocation_id = dataObj.id;
+                  dataObj.id = values[idx];
+                } else if (key === 'request' || key === 'response') {
+                  try {
+                    dataObj[key] = JSON.parse(values[idx]);
+                  } catch {
+                    dataObj[key] = values[idx];
+                  }
+                } else {
+                  dataObj[key] = values[idx];
+                }
+              }
             });
             formattedData.push(dataObj);
           });
 
           if (limitValue && offsetValue) {
-            setRows(formattedData.slice(offsetValue, limitValue));
+            setRows(formattedData.slice(offsetValue, offsetValue + limitValue));
           } else {
             setRows(formattedData);
           }
-        }
-
-        if (triggerOp !== 'invocation' && triggerType !== 'data') {
+          setCount(formattedData.length);
+        } else if (triggerOp !== 'invocation') {
           setRows(data?.events ?? []);
         } else {
           setRows(data?.invocations ?? []);
@@ -166,8 +178,9 @@ export const useFilterQuery = (
             sorts: newSorts,
           }));
         }
-        // FIXME: 10 is the default size and hence using it here
-        setCount(data?.count ?? 10);
+        if (triggerType !== 'data') {
+          setCount(data?.count ?? 10);
+        }
       },
       () => {
         setError(true);

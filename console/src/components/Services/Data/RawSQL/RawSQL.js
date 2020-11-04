@@ -170,10 +170,6 @@ const RawSQL = ({
         });
 
         allObjectsTrackable = objects.every(object => {
-          if (object.type === 'function') {
-            return false;
-          }
-
           const objectName = [object.schema, object.name].join('.');
 
           if (trackedObjectNames.includes(objectName)) {
