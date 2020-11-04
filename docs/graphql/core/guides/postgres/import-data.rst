@@ -15,27 +15,25 @@ Import data from CSV into Postgres
 Introduction
 -------------
 
-CSV files are plain text files that makes it easy for any developer to create and add data. 
-Also, the data are easy to import into any database. 
+It is possible to import a set of data from a ``csv`` file into a postgres table. 
 
-Step 1: Create a Postgres instance
-------------------------------------
 
-Create a postgres database and run the command below on the console/terminal to create a table callled ``profile``
-with the following set of fields.
+Step 1: Add a table to your PG database
+-----------------------------------------
+
+Let's create a table called ``profile`` with the following set of fields:
 
 .. code-block:: bash
 
   CREATE TABLE profile (firstName text, lastName text, email varchar);
 
-Step 2: Let's create a new CSV file that holds some data
----------------------------------------------------------
+Step 2: A CSV file that holds some data
+-----------------------------------------
 
-On the microsoft excel sheet, let's create a new file called ``profile``. 
-In the file, let us add a set of data like below:
+Let's assume you have a set of data you want to import into your PG database like the following:
 
 .. thumbnail:: /img/graphql/core/guides/sample-data-csv-file.png
-   :alt: Add data to .csv file
+   :alt: .csv data file
 
 .. note::
 
