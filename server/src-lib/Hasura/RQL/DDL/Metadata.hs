@@ -2,7 +2,7 @@
 module Hasura.RQL.DDL.Metadata
   ( runReplaceMetadata
   , runExportMetadata
-  , fetchMetadata
+  , fetchMetadataFromHdbTables
   , runClearMetadata
   , runReloadMetadata
   , runDumpInternalState
@@ -17,8 +17,8 @@ import           Hasura.Prelude
 import qualified Data.Aeson.Ordered                 as AO
 import qualified Data.HashMap.Strict.InsOrd         as HMIns
 import qualified Data.HashSet                       as HS
+import qualified Data.HashSet.InsOrd                as HSIns
 import qualified Data.List                          as L
-import qualified Data.Text                          as T
 import qualified Database.PG.Query                  as Q
 
 import           Control.Lens                       hiding ((.=))
@@ -39,7 +39,7 @@ import           Hasura.RQL.DDL.ComputedField       (dropComputedFieldFromCatalo
 import           Hasura.RQL.DDL.EventTrigger        (delEventTriggerFromCatalog, subTableP2)
 import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.DDL.Permission.Internal (dropPermFromCatalog)
-import           Hasura.RQL.DDL.RemoteSchema        (addRemoteSchemaToCatalog, fetchRemoteSchemas,
+import           Hasura.RQL.DDL.RemoteSchema        (addRemoteSchemaToCatalog,
                                                      removeRemoteSchemaFromCatalog)
 import           Hasura.RQL.DDL.ScheduledTrigger    (addCronTriggerToCatalog,
                                                      deleteCronTriggerFromCatalog)
@@ -72,86 +72,12 @@ runClearMetadata _ = do
   buildSchemaCacheStrict
   return successMsg
 
-applyQP1
-  :: (QErrM m)
-  => ReplaceMetadata -> m ()
-applyQP1 (ReplaceMetadata _ tables functionsMeta schemas
-          collections
-          allowlist  _ actions
-          cronTriggers) = do
-  withPathK "tables" $ do
-
-    checkMultipleDecls "tables" $ map _tmTable tables
-
-    -- process each table
-    void $ indexedForM tables $ \table -> withTableName (table ^. tmTable) $ do
-      let allRels  = map Relationship.rdName (table ^. tmObjectRelationships) <>
-                     map Relationship.rdName (table ^. tmArrayRelationships)
-
-          insPerms = map Permission.pdRole $ table ^. tmInsertPermissions
-          selPerms = map Permission.pdRole $ table ^. tmSelectPermissions
-          updPerms = map Permission.pdRole $ table ^. tmUpdatePermissions
-          delPerms = map Permission.pdRole $ table ^. tmDeletePermissions
-          eventTriggers = map etcName $ table ^. tmEventTriggers
-          computedFields = map _cfmName $ table ^. tmComputedFields
-          remoteRelationships = map _rrmName $ table ^. tmRemoteRelationships
-
-      checkMultipleDecls "relationships" allRels
-      checkMultipleDecls "insert permissions" insPerms
-      checkMultipleDecls "select permissions" selPerms
-      checkMultipleDecls "update permissions" updPerms
-      checkMultipleDecls "delete permissions" delPerms
-      checkMultipleDecls "event triggers" eventTriggers
-      checkMultipleDecls "computed fields" computedFields
-      checkMultipleDecls "remote relationships" remoteRelationships
-
-  withPathK "functions" $
-    case functionsMeta of
-      FMVersion1 qualifiedFunctions ->
-        checkMultipleDecls "functions" qualifiedFunctions
-      FMVersion2 functionsV2 ->
-        checkMultipleDecls "functions" $ map Schema._tfv2Function functionsV2
-
-  withPathK "remote_schemas" $
-    checkMultipleDecls "remote schemas" $ map _arsqName schemas
-
-  withPathK "query_collections" $
-    checkMultipleDecls "query collections" $ map Collection._ccName collections
-
-  withPathK "allowlist" $
-    checkMultipleDecls "allow list" $ map Collection._crCollection allowlist
-
-  withPathK "actions" $
-    checkMultipleDecls "actions" $ map _amName actions
-
-  withPathK "cron_triggers" $
-    checkMultipleDecls "cron triggers" $ map ctName cronTriggers
-
-  where
-    withTableName qt = withPathK (qualifiedObjectToText qt)
-
-    checkMultipleDecls t l = do
-      let dups = getDups l
-      unless (null dups) $
-        throw400 AlreadyExists $ "multiple declarations exist for the following " <> t <> " : "
-        <> T.pack (show dups)
-
-    getDups l =
-      l L.\\ HS.toList (HS.fromList l)
-
-applyQP2 :: (CacheRWM m, MonadTx m, HasSystemDefined m) => ReplaceMetadata -> m EncJSON
-applyQP2 replaceMetadata = do
-  clearUserMetadata
-  saveMetadata replaceMetadata
-  buildSchemaCacheStrict
-  pure successMsg
-
-saveMetadata :: (MonadTx m, HasSystemDefined m) => ReplaceMetadata -> m ()
-saveMetadata (ReplaceMetadata _ tables functionsMeta
+saveMetadata :: (MonadTx m, HasSystemDefined m) => Metadata -> m ()
+saveMetadata (Metadata tables functions
               schemas collections allowlist customTypes actions cronTriggers) = do
 
   withPathK "tables" $ do
-    indexedForM_ tables $ \TableMeta{..} -> do
+    indexedForM_ tables $ \TableMetadata{..} -> do
       -- Save table
       saveTableToCatalog _tmTable _tmIsEnum _tmConfiguration
 
@@ -166,14 +92,14 @@ saveMetadata (ReplaceMetadata _ tables functionsMeta
       -- Computed Fields
       withPathK "computed_fields" $
         indexedForM_ _tmComputedFields $
-          \(ComputedFieldMeta name definition comment) ->
+          \(ComputedFieldMetadata name definition comment) ->
             ComputedField.addComputedFieldToCatalog $
               ComputedField.AddComputedField _tmTable name definition comment
 
       -- Remote Relationships
       withPathK "remote_relationships" $
         indexedForM_ _tmRemoteRelationships $
-          \(RemoteRelationshipMeta name def) -> do
+          \(RemoteRelationshipMetadata name def) -> do
              let RemoteRelationshipDef rs hf rf = def
              liftTx $ RemoteRelationship.persistRemoteRelationship $
                       RemoteRelationship name _tmTable hf rs rf
@@ -189,11 +115,8 @@ saveMetadata (ReplaceMetadata _ tables functionsMeta
         indexedForM_ _tmEventTriggers $ \etc -> subTableP2 _tmTable False etc
 
   -- sql functions
-  withPathK "functions" $ case functionsMeta of
-    FMVersion1 qualifiedFunctions -> indexedForM_ qualifiedFunctions $
-      \qf -> Schema.saveFunctionToCatalog qf Schema.emptyFunctionConfig
-    FMVersion2 functionsV2 -> indexedForM_ functionsV2 $
-      \(Schema.TrackFunctionV2 function config) -> Schema.saveFunctionToCatalog function config
+  withPathK "functions" $ indexedForM_ functions $
+    \(FunctionMetadata function config) -> Schema.saveFunctionToCatalog function config
 
   -- query collections
   systemDefined <- askSystemDefined
@@ -238,13 +161,15 @@ runReplaceMetadata
      , CacheRWM m
      , HasSystemDefined m
      )
-  => ReplaceMetadata -> m EncJSON
-runReplaceMetadata q = do
-  applyQP1 q
-  applyQP2 q
+  => Metadata -> m EncJSON
+runReplaceMetadata metadata = do
+  clearUserMetadata
+  saveMetadata metadata
+  buildSchemaCacheStrict
+  pure successMsg
 
-fetchMetadata :: Q.TxE QErr ReplaceMetadata
-fetchMetadata = do
+fetchMetadataFromHdbTables :: MonadTx m => m Metadata
+fetchMetadataFromHdbTables = liftTx do
   tables <- Q.catchE defaultTxErrorHandler fetchTables
   let tableMetaMap = HMIns.fromList . flip map tables $
         \(schema, name, isEnum, maybeConfig) ->
@@ -277,63 +202,55 @@ fetchMetadata = do
   -- Fetch all remote relationships
   remoteRelationships <- Q.catchE defaultTxErrorHandler fetchRemoteRelationships
 
-  let (_, postRelMap) = flip runState tableMetaMap $ do
-        modMetaMap tmObjectRelationships objRelDefs
-        modMetaMap tmArrayRelationships arrRelDefs
-        modMetaMap tmInsertPermissions insPermDefs
-        modMetaMap tmSelectPermissions selPermDefs
-        modMetaMap tmUpdatePermissions updPermDefs
-        modMetaMap tmDeletePermissions delPermDefs
-        modMetaMap tmEventTriggers triggerMetaDefs
-        modMetaMap tmComputedFields computedFields
-        modMetaMap tmRemoteRelationships remoteRelationships
+  let (_, fullTableMetaMap) = flip runState tableMetaMap $ do
+        modMetaMap tmObjectRelationships _rdName objRelDefs
+        modMetaMap tmArrayRelationships _rdName arrRelDefs
+        modMetaMap tmInsertPermissions _pdRole insPermDefs
+        modMetaMap tmSelectPermissions _pdRole selPermDefs
+        modMetaMap tmUpdatePermissions _pdRole updPermDefs
+        modMetaMap tmDeletePermissions _pdRole delPermDefs
+        modMetaMap tmEventTriggers etcName triggerMetaDefs
+        modMetaMap tmComputedFields _cfmName computedFields
+        modMetaMap tmRemoteRelationships _rrmName remoteRelationships
 
   -- fetch all functions
-  functions <- FMVersion2 <$> Q.catchE defaultTxErrorHandler fetchFunctions
+  functions <- Q.catchE defaultTxErrorHandler fetchFunctions
 
   -- fetch all remote schemas
-  remoteSchemas <- fetchRemoteSchemas
+  remoteSchemas <- oMapFromL _arsqName <$> fetchRemoteSchemas
 
   -- fetch all collections
-  collections <- fetchCollections
+  collections <- oMapFromL _ccName <$> fetchCollections
 
   -- fetch allow list
-  allowlist <- map Collection.CollectionReq <$> fetchAllowlists
+  allowlist <- HSIns.fromList . map CollectionReq <$> fetchAllowlists
 
   customTypes <- fetchCustomTypes
 
-  -- -- fetch actions
-  actions <- fetchActions
+  -- fetch actions
+  actions <- oMapFromL _amName <$> fetchActions
 
   cronTriggers <- fetchCronTriggers
 
-  return $ ReplaceMetadata currentMetadataVersion
-                           (HMIns.elems postRelMap)
-                           functions
-                           remoteSchemas
-                           collections
-                           allowlist
-                           customTypes
-                           actions
-                           cronTriggers
+  pure $ Metadata fullTableMetaMap functions remoteSchemas collections
+                  allowlist customTypes actions cronTriggers
 
   where
-
-    modMetaMap l xs = do
+    modMetaMap l f xs = do
       st <- get
-      put $ foldr (\(qt, dfn) b -> b & at qt._Just.l %~ (:) dfn) st xs
+      put $ foldl' (\b (qt, dfn) -> b & at qt._Just.l %~ HMIns.insert (f dfn) dfn) st xs
 
     mkPermDefs pt = mapM permRowToDef . filter (\pr -> pr ^. _4 == pt)
 
     permRowToDef (sn, tn, rn, _, Q.AltJ pDef, mComment) = do
       perm <- decodeValue pDef
-      return (QualifiedObject sn tn,  Permission.PermDef rn perm mComment)
+      return (QualifiedObject sn tn,  PermDef rn perm mComment)
 
     mkRelDefs rt = mapM relRowToDef . filter (\rr -> rr ^. _4 == rt)
 
     relRowToDef (sn, tn, rn, _, Q.AltJ rDef, mComment) = do
       using <- decodeValue rDef
-      return (QualifiedObject sn tn, Relationship.RelDef rn using mComment)
+      return (QualifiedObject sn tn, RelDef rn using mComment)
 
     mkTriggerMetaDefs = mapM trigRowToDef
 
@@ -379,8 +296,21 @@ fetchMetadata = do
                 WHERE is_system_defined = 'false'
                 ORDER BY function_schema ASC, function_name ASC
                     |] () False
-      pure $ flip map l $ \(sn, fn, Q.AltJ config) ->
-                            Schema.TrackFunctionV2 (QualifiedObject sn fn) config
+      pure $ oMapFromL _fmFunction $
+        flip map l $ \(sn, fn, Q.AltJ config) ->
+                       FunctionMetadata (QualifiedObject sn fn) config
+
+    fetchRemoteSchemas =
+      map fromRow <$> Q.listQE defaultTxErrorHandler
+        [Q.sql|
+         SELECT name, definition, comment
+           FROM hdb_catalog.remote_schemas
+         ORDER BY name ASC
+         |] () True
+      where
+        fromRow (name, Q.AltJ def, comment) =
+          AddRemoteSchemaQuery name def comment
+
 
     fetchCollections =
       map fromRow <$> Q.listQE defaultTxErrorHandler [Q.sql|
@@ -391,7 +321,7 @@ fetchMetadata = do
               |] () False
       where
         fromRow (name, Q.AltJ defn, mComment) =
-          Collection.CreateCollection name defn mComment
+          CreateCollection name defn mComment
 
     fetchAllowlists = map runIdentity <$>
       Q.listQE defaultTxErrorHandler [Q.sql|
@@ -408,11 +338,11 @@ fetchMetadata = do
              |] () False
       pure $ flip map r $ \(schema, table, name, Q.AltJ definition, comment) ->
                           ( QualifiedObject schema table
-                          , ComputedFieldMeta name definition comment
+                          , ComputedFieldMetadata name definition comment
                           )
 
     fetchCronTriggers =
-      map uncurryCronTrigger
+      (oMapFromL ctName . map uncurryCronTrigger)
               <$> Q.listQE defaultTxErrorHandler
       [Q.sql|
        SELECT ct.name, ct.webhook_conf, ct.cron_schedule, ct.payload,
@@ -440,6 +370,7 @@ fetchMetadata = do
       Q.rawQE defaultTxErrorHandler [Q.sql|
          select coalesce((select custom_types::json from hdb_catalog.hdb_custom_types), '{}'::json)
          |] [] False
+
     fetchActions =
       Q.getAltJ . runIdentity . Q.getRow <$> Q.rawQE defaultTxErrorHandler [Q.sql|
         select
@@ -482,14 +413,14 @@ fetchMetadata = do
              |] () False
       pure $ flip map r $ \(schema, table, name, Q.AltJ definition) ->
                           ( QualifiedObject schema table
-                          , RemoteRelationshipMeta name definition
+                          , RemoteRelationshipMetadata name definition
                           )
 
 runExportMetadata
   :: (QErrM m, MonadTx m)
   => ExportMetadata -> m EncJSON
 runExportMetadata _ =
-  AO.toEncJSON . replaceMetadataToOrdJSON <$> liftTx fetchMetadata
+  AO.toEncJSON . metadataToOrdJSON <$> fetchMetadataFromHdbTables
 
 runReloadMetadata :: (QErrM m, CacheRWM m) => ReloadMetadata -> m EncJSON
 runReloadMetadata (ReloadMetadata reloadRemoteSchemas) = do
