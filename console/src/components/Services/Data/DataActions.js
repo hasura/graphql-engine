@@ -437,10 +437,7 @@ export const getSchemaList = (sourceType, sourceName) => (
     body: JSON.stringify(query),
   };
   return dispatch(requestAction(url, options)).then(
-    data => {
-      // FIXME?: what exactly should be happening here?
-      return data;
-    },
+    data => data,
     error => {
       console.error('Failed to fetch schema ' + JSON.stringify(error));
       return error;

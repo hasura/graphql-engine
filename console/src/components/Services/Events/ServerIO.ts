@@ -541,14 +541,21 @@ export const createScheduledEvent = (
 
 export const redeliverDataEvent = (
   eventId: string,
+  tableDef: QualifiedTable,
+  eventTriggerSource: string,
   successCb?: CallableFunction,
   errorCb?: CallableFunction
 ): Thunk => (dispatch, getState) => {
   const url = Endpoints.metadata;
+  const payload = getRedeliverDataEventQuery(
+    eventId,
+    tableDef,
+    eventTriggerSource
+  );
   const options = {
     method: 'POST',
     headers: dataHeaders(getState),
-    body: JSON.stringify(getRedeliverDataEventQuery(eventId)),
+    body: JSON.stringify(payload),
   };
   return dispatch(
     requestAction(url, options, undefined, undefined, true, true)
@@ -576,6 +583,7 @@ export const redeliverDataEvent = (
 export const getEventLogs = (
   eventId: string,
   eventKind: EventKind,
+  eventDataSource: string,
   successCallback: (logs: InvocationLog[]) => void,
   errorCallback: (error: any) => void
 ): Thunk => dispatch => {
@@ -593,7 +601,7 @@ export const getEventLogs = (
     eventLogTable,
     eventId
   );
-  const query = getRunSqlQuery(sql, 'default');
+  const query = getRunSqlQuery(sql, eventDataSource);
 
   dispatch(
     requestAction(
@@ -607,19 +615,38 @@ export const getEventLogs = (
       true,
       true
     )
-  ).then((data: { result: string[][] }) => {
-    const resultData = data.result[0][1];
-    const formattedData: InvocationLog = {
-      event_id: resultData[1],
-      id: resultData[0],
-      status: parseInt(resultData[2], 10),
-      created_at: resultData[5],
-      request: resultData[3],
-      response: resultData[4],
-    };
-    // FIXME: I'm not sure if this is the only thing that is required.
-    successCallback([formattedData]);
-  }, errorCallback);
+  )
+    .then((data: any) => {
+      const allKeys = data.result[0];
+      const dataRows = data.result.slice(1);
+      const invocationsKeys = [
+        'id',
+        'event_id',
+        'status',
+        'created_at',
+        'request',
+        'response',
+      ];
+      const formattedData: InvocationLog[] = dataRows.reduce(
+        (acc: InvocationLog[], val: any) => {
+          const newObj: Record<string, any> = {};
+          allKeys.forEach((key: string, idx: number) => {
+            if (invocationsKeys.includes(key) && !newObj[key]) {
+              newObj[key] = val[idx];
+            }
+          });
+          if (Object.keys(newObj)) {
+            return [...acc, newObj];
+          }
+          return acc;
+        },
+        []
+      );
+      successCallback(formattedData);
+    })
+    .catch(err => {
+      errorCallback(err);
+    });
 };
 
 export const cancelEvent = (

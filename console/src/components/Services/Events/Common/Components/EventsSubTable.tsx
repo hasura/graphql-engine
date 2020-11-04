@@ -110,7 +110,6 @@ const EventsSubTable: React.FC<Props> = ({
     }
     // TODO: handle a "loading" state
     const url = Endpoints.metadata;
-    // FIXME: doesn't work in the current version
     const payload = getEventInvocationsLogByID(triggerType, props.event.id);
     const options = {
       method: 'POST',

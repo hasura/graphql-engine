@@ -1168,5 +1168,5 @@ export const getEventInvocationInfoByIDSql = (
   "${logTableDef.schema}"."${logTableDef.name}" original_table
   JOIN "${eventLogTable.schema}"."${eventLogTable.name}" event ON original_table.event_id = event.id
   WHERE original_table.event_id = '${eventId}'
-  ORDER BY original_table.created_at NULLS LAST DESC;
+  ORDER BY original_table.created_at DESC NULLS LAST;
 `;

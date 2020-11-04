@@ -85,20 +85,6 @@ const Add: React.FC<Props> = props => {
     setState.table(undefined, selectedSchemaName);
   };
 
-  // todo
-  // const handleDataSourceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-  //   const selectedSourceName = e.target.value;
-  //   dispatch(fetchSchemaList()).then((data: any) => {
-  //     const schemas = data.result;
-  //     if (schemas.length) {
-  //       dispatch(updateCurrentSchema(schemas[1][0], false, data));
-  //     } else {
-  //       dispatch(updateCurrentSchema('', false, []));
-  //     }
-  //   });
-  //   setState.source(selectedSourceName);
-  // };
-
   const handleTableChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedTableName = e.target.value;
     setState.table(selectedTableName);
@@ -224,33 +210,6 @@ const Add: React.FC<Props> = props => {
               maxLength={42}
             />
             <hr />
-            {/* <div className={styles.add_mar_bottom}>
-              <h4 className={styles.subheading_text_no_padd}>
-                Data Source &nbsp; &nbsp;
-                <OverlayTrigger
-                  placement="right"
-                  overlay={tooltip.dataSourceDescription}
-                >
-                  <i className="fa fa-question-circle" aria-hidden="true" />
-                </OverlayTrigger>{' '}
-              </h4>
-              <NotSupportedNote unsupported={['mysql']} />
-            </div>
-            <select
-              onChange={handleDataSourceChange}
-              data-test="select-datasource-event-trigger"
-              className={`${styles.selectTrigger} form-control`}
-              value={source}
-            >
-              {dataSourcesList.map(s => {
-                return (
-                  <option value={s.name} key={s.name}>
-                    {s.name}
-                  </option>
-                );
-              })}
-            </select>
-            <hr /> */}
             <h4 className={styles.subheading_text}>
               Schema/Table &nbsp; &nbsp;
               <OverlayTrigger
