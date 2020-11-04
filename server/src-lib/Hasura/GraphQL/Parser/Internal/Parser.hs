@@ -13,20 +13,20 @@ module Hasura.GraphQL.Parser.Internal.Parser
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                         as A
-import qualified Data.HashMap.Strict.Extended       as M
-import qualified Data.HashMap.Strict.InsOrd         as OMap
-import qualified Data.HashSet                       as S
-import qualified Data.List.Extended                 as LE
-import qualified Data.Text                          as T
+import qualified Data.Aeson                           as A
+import qualified Data.HashMap.Strict.Extended         as M
+import qualified Data.HashMap.Strict.InsOrd           as OMap
+import qualified Data.HashSet                         as S
+import qualified Data.List.Extended                   as LE
+import qualified Data.Text                            as T
 
-import           Control.Lens.Extended              hiding (enum, index)
-import           Data.Int                           (Int32, Int64)
+import           Control.Lens.Extended                hiding (enum, index)
+import           Data.Int                             (Int32, Int64)
 import           Data.Parser.JSONPath
-import           Data.Scientific                    (toBoundedInteger)
+import           Data.Scientific                      (toBoundedInteger)
 import           Data.Text.Extended
 import           Data.Type.Equality
-import           Language.GraphQL.Draft.Syntax      hiding (Definition)
+import           Language.GraphQL.Draft.Syntax        hiding (Definition)
 
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.GraphQL.Parser.Class.Parse
@@ -35,7 +35,7 @@ import           Hasura.GraphQL.Parser.Internal.Types
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Error
-import           Hasura.Server.Utils                (englishList)
+import           Hasura.Server.Utils                  (englishList)
 
 
 -- | The constraint @(''Input' '<:' k)@ entails @('ParserInput' k ~ 'Value')@,
@@ -602,7 +602,7 @@ selectionSetObject name description parsers implementsInterfaces = Parser
 
       -- TODO(PDV) This probably accepts invalid queries, namely queries that use
       -- type names that do not exist.
-      fields <- collectFields (name:parsedInterfaceNames) input
+      fields <- collectFields (name:parsedInterfaceNames) (runParser boolean) input
       for fields \selectionField@Field{ _fName, _fAlias } -> if
         | _fName == $$(litName "__typename") ->
             pure $ SelectTypename name
