@@ -6,7 +6,6 @@ import           Hasura.Prelude
 
 import qualified Language.GraphQL.Draft.Syntax as G
 
-import           Hasura.GraphQL.Parser         hiding (field)
 import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types
 

@@ -18,9 +18,10 @@ import           Hasura.RQL.Types
 
 data QueryContext =
   QueryContext
-  { qcStringifyNum :: !Bool
-  , qcQueryType    :: !ET.GraphQLQueryType
-  , qcRemoteFields :: !(HashMap RemoteSchemaName [P.Definition P.FieldInfo])
+  { qcStringifyNum            :: !Bool
+  , qcQueryType               :: !ET.GraphQLQueryType
+  , qcRemoteFields            :: !(HashMap RemoteSchemaName [P.Definition P.FieldInfo])
+  , qcRemoteSchemaPermissions :: !Bool
   }
 
 textToName :: MonadError QErr m => Text -> m G.Name

@@ -109,7 +109,12 @@ buildGQLContext =
                       allActionInfos nonObjectCustomTypes
                 <*> mutation (Set.fromMap $ graphQLTables $> ()) mempty
                       allActionInfos nonObjectCustomTypes
-          flip runReaderT (adminRoleName, graphQLTables, Frontend, QueryContext stringifyNum queryType queryRemotesMap, fmap fst allRemoteSchemas) $
+          flip runReaderT ( adminRoleName
+                          , graphQLTables
+                          , Frontend
+                          , QueryContext stringifyNum queryType queryRemotesMap isEnabledRemoteSchemaPerms
+                          , fmap fst allRemoteSchemas
+                          ) $
             P.runSchemaT gqlContext
 
     -- build the admin context so that we can check against name clashes with remotes
@@ -239,7 +244,7 @@ buildGQLContext =
               ( roleName
               , graphQLTables
               , scenario
-              , QueryContext stringifyNum queryType roleBasedQueryRemotesMap
+              , QueryContext stringifyNum queryType roleBasedQueryRemotesMap isEnabledRemoteSchemaPerms
               , fmap fst allRemoteSchemas) $
             P.runSchemaT gqlContext
 

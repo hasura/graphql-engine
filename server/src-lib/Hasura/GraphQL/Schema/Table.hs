@@ -28,8 +28,6 @@ import           Hasura.GraphQL.Parser.Class
 import           Hasura.RQL.DML.Internal                     (getRolePermInfo)
 import           Hasura.RQL.Types
 
-import           Hasura.Session
-
 -- | Table select columns enum
 --
 -- Parser for an enum type that matches the columns of the given
@@ -134,7 +132,7 @@ tableSelectFields table permissions = do
           pure $ Set.member (_cfiName computedFieldInfo) $ spiScalarComputedFields permissions
         CFRSetofTable tableName ->
           isJust <$> tableSelectPermissions tableName
-    canBeSelected (FIRemoteRelationship remoteFieldInfo) =
+    canBeSelected (FIRemoteRelationship _) =
       pure True
 
 tableColumns
