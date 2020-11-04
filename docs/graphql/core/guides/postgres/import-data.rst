@@ -28,7 +28,7 @@ Let's create a table called ``profile`` with the following set of fields:
   CREATE TABLE profile (firstName text, lastName text, email varchar);
 
 
-Let's assume you have a set of data in your csv file like the following and you want to import it into your PG database
+Let's assume you have a set of data in your csv file like the following that you need to import into your PG database
 
 .. thumbnail:: /img/graphql/core/guides/sample-data-csv-file.png
    :alt: .csv data file
@@ -37,7 +37,7 @@ Let's assume you have a set of data in your csv file like the following and you 
 
   Make sure the file is saved with the file extension ``.csv``   
 
-Step 3: Connect to the postgres instance
+Step 2: Connect to the postgres instance
 ------------------------------------------
 
 You can connect to the postgres instance from ``psql`` on the command line like the following: 
@@ -46,7 +46,7 @@ You can connect to the postgres instance from ``psql`` on the command line like 
 
    psql <postgres://kattykat:bG66KOrqxrVLkBIk8LSOR3b-lHwmfgUH@lallah.db.elephantsql.com:5432/kattykat>
 
-Step 4: Copy the data successfully
+Step 3: Copy the data successfully
 -----------------------------------
 
 Once you are connected successfully to the database/instance, use the following command in the psql terminal to
