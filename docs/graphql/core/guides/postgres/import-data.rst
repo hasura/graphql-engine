@@ -27,10 +27,8 @@ Let's create a table called ``profile`` with the following set of fields:
 
   CREATE TABLE profile (firstName text, lastName text, email varchar);
 
-Step 2: A CSV file that holds some data
------------------------------------------
 
-Let's assume you have a set of data you want to import into your PG database like the following:
+Let's assume you have a set of data in your csv file like the following and you want to import it into your PG database
 
 .. thumbnail:: /img/graphql/core/guides/sample-data-csv-file.png
    :alt: .csv data file
@@ -60,6 +58,6 @@ copy the data:
 
   ## for example
 
-  \copy profile from '/Users/funmilayoolaiya/documents/profile.csv' delimiter ',' CSV HEADER;
+  \copy profile from '/Users/sarahlewis/documents/profile.csv' delimiter ',' CSV HEADER;
 
-Your data would have been successfully copied into a table in the database. 
+Your data would have been successfully copied into a table in the PG database. 
