@@ -213,7 +213,7 @@ processCronEvents logger logEnv httpMgr cronEvents getSC lockedCronEvents = do
                    processScheduledEvent logEnv id' ctiHeaders retryCtx
                                          payload webhookUrl Cron
         removeEventFromLockedEvents id' lockedCronEvents
-        either logInternalError pure finally
+        onLeft finally logInternalError
   where
     logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
 
@@ -311,13 +311,12 @@ processScheduledEvent logEnv eventId eventHeaders retryCtx payload webhookUrl ty
           webhookReqBodyJson = J.toJSON payload
           webhookReqBody = J.encode webhookReqBodyJson
           requestDetails = RequestDetails $ BL.length webhookReqBody
-      res <- runExceptT $ tryWebhook headers httpTimeout webhookReqBody (T.unpack webhookUrl)
-      logHTTPForST res extraLogCtx requestDetails
+      eitherRes <- runExceptT $ tryWebhook headers httpTimeout webhookReqBody (T.unpack webhookUrl)
+      logHTTPForST eitherRes extraLogCtx requestDetails
       let decodedHeaders = map (decodeHeader logEnv eventHeaders) headers
-      either
-        (processError eventId retryCtx decodedHeaders type' webhookReqBodyJson)
-        (processSuccess eventId decodedHeaders type' webhookReqBodyJson)
-        res
+      case eitherRes of
+        Left e  -> processError eventId retryCtx decodedHeaders type' webhookReqBodyJson e
+        Right r -> processSuccess eventId decodedHeaders type' webhookReqBodyJson r
   where
     traceNote = "Scheduled trigger" <> foldMap ((": " <>) . triggerNameToTxt) (sewpName payload)
 
