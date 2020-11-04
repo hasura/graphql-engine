@@ -15,7 +15,7 @@ and other utility functions. Each of the above functionality are considered a mo
 
 ## Bundle
 
-The way the code is bundled is as follows, there are multiple entrypoints for each type of module
+An oss package build would comprise of following files each representing a webpack bundle
 1. hoc
   - routers
   - reducers
@@ -30,7 +30,7 @@ The way the code is bundled is as follows, there are multiple entrypoints for ea
 
 ### Config
 
-The webpack config which bundles above modules is located at `./webpack/bundle.config.js`. The key thing to note here is that the config explicitely removes the external library code from the bundle as that will bloat the bundle as the code is going to be used in another source code of similar structure and similar module dependency and hence.
+The webpack config which bundles above modules is located at `./webpack/bundle.config.js`. The key thing to note here is that the config explicitely removes the external library code from the bundle as that will bloat the bundle as the code is going to be used in another source code of similar structure and similar module dependency.
 
 ```
 16: externals: [nodeExternals()]
@@ -49,14 +49,18 @@ The above will update the `lib` directory with all the modules we spoke about
 
 ### Publish
 
+#### Prerequisites
+
+Modules are published to an npm account owned by `accounts@hasura.io` and the modules are scoped with `@hasura`
+
 ```bash
-npm publish --access=public --dry-run
+npm publish --dry-run
 ```
 
 to see what will be included in the bundle
 
 ```bash
-npm publish --access=public
+npm publish
 ```
 
 to publish it
