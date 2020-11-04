@@ -80,17 +80,23 @@ hasNestedFld = \case
       AFArrayRelation _  -> True
       _                  -> False
 
+-- | The postgres common table expression (CTE) for mutation queries.
+-- This CTE expression is used to generate mutation field output expression,
+-- see Note [Mutation output expression].
 data MutationCTE
-  = MCPermissionCheck !S.CTE
-  | MCNoPermissionCheck !S.CTE
+  = MCCheckConstraint !S.CTE -- ^ A Mutation with check constraint validation (Insert or Update)
+  | MCSelectValues !S.Select -- ^ A Select statement which emits mutated table rows
+  | MCDelete !S.SQLDelete -- ^ A Delete statement
   deriving (Show, Eq)
 
 getMutationCTE :: MutationCTE -> S.CTE
 getMutationCTE = \case
-  MCPermissionCheck c   -> c
-  MCNoPermissionCheck c -> c
+  MCCheckConstraint cte -> cte
+  MCSelectValues select -> S.CTESelect select
+  MCDelete delete       -> S.CTEDelete delete
 
 checkPermissionRequired :: MutationCTE -> Bool
 checkPermissionRequired = \case
-  MCPermissionCheck _   -> True
-  MCNoPermissionCheck _ -> False
+  MCCheckConstraint _ -> True
+  MCSelectValues _    -> False
+  MCDelete _          -> False

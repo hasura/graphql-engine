@@ -113,7 +113,7 @@ execUpdateQuery
   -> (AnnUpd 'Postgres, DS.Seq Q.PrepArg)
   -> m EncJSON
 execUpdateQuery env strfyNum remoteJoinCtx (u, p) =
-  runMutation env $ mkMutation remoteJoinCtx (uqp1Table u) (MCPermissionCheck updateCTE, p)
+  runMutation env $ mkMutation remoteJoinCtx (uqp1Table u) (MCCheckConstraint updateCTE, p)
                 (uqp1Output u) (uqp1AllCols u) strfyNum
   where
     updateCTE = mkUpdateCTE u
@@ -131,10 +131,10 @@ execDeleteQuery
   -> (AnnDel 'Postgres, DS.Seq Q.PrepArg)
   -> m EncJSON
 execDeleteQuery env strfyNum remoteJoinCtx (u, p) =
-  runMutation env $ mkMutation remoteJoinCtx (dqp1Table u) (MCNoPermissionCheck deleteCTE, p)
+  runMutation env $ mkMutation remoteJoinCtx (dqp1Table u) (MCDelete delete, p)
                 (dqp1Output u) (dqp1AllCols u) strfyNum
   where
-    deleteCTE = mkDeleteCTE u
+    delete = mkDelete u
 
 execInsertQuery
   :: ( HasVersion
@@ -149,7 +149,7 @@ execInsertQuery
   -> m EncJSON
 execInsertQuery env strfyNum remoteJoinCtx (u, p) =
   runMutation env
-     $ mkMutation remoteJoinCtx (iqp1Table u) (MCPermissionCheck insertCTE, p)
+     $ mkMutation remoteJoinCtx (iqp1Table u) (MCCheckConstraint insertCTE, p)
                 (iqp1Output u) (iqp1AllCols u) strfyNum
   where
     insertCTE = mkInsertCTE u
@@ -183,10 +183,10 @@ mutateAndSel
 mutateAndSel env (Mutation qt q mutationOutput allCols remoteJoins strfyNum) = do
   -- Perform mutation and fetch unique columns
   MutateResp _ columnVals <- liftTx $ mutateAndFetchCols qt allCols q strfyNum
-  selCTE <- mkSelCTEFromColVals qt allCols columnVals
+  select <- mkSelectExpFromColumnValues qt allCols columnVals
   -- Perform select query and fetch returning fields
   executeMutationOutputQuery env qt allCols Nothing
-    (MCNoPermissionCheck selCTE) mutationOutput strfyNum [] remoteJoins
+    (MCSelectValues select) mutationOutput strfyNum [] remoteJoins
 
 withCheckPermission :: (MonadError QErr m) => m (a, Maybe Text) -> m a
 withCheckPermission sqlTx = do
@@ -220,9 +220,10 @@ executeMutationOutputQuery env qt allCols preCalAffRows cte mutOutput strfyNum p
         -- See Note [Prepared statements in Mutations]
         liftTx (Q.rawQE dmlTxErrorHandler query prepArgs False)
 
-  rawResponse <- case cte of
-    MCPermissionCheck _   -> withCheckPermission $ Q.getRow <$> queryTx
-    MCNoPermissionCheck _ -> (runIdentity . Q.getRow) <$> queryTx
+  rawResponse <-
+    if checkPermissionRequired cte
+      then withCheckPermission $ Q.getRow <$> queryTx
+      else (runIdentity . Q.getRow) <$> queryTx
   case maybeRJ of
     Nothing -> pure $ encJFromLBS rawResponse
     Just (remoteJoins, (httpManager, reqHeaders, userInfo)) ->
@@ -240,11 +241,9 @@ mutateAndFetchCols qt cols (cte, p) strfyNum = do
         -- See Note [Prepared statements in Mutations]
         Q.rawQE dmlTxErrorHandler sqlText (toList p) False
 
-  case cte of
-    MCPermissionCheck _ ->
-      withCheckPermission $ (first Q.getAltJ . Q.getRow) <$> mutationTx
-    MCNoPermissionCheck _ ->
-      (Q.getAltJ . runIdentity . Q.getRow) <$> mutationTx
+  if checkPermissionRequired cte
+    then withCheckPermission $ (first Q.getAltJ . Q.getRow) <$> mutationTx
+    else (Q.getAltJ . runIdentity . Q.getRow) <$> mutationTx
   where
     aliasIdentifier = Identifier $ qualifiedObjectToText qt <> "__mutation_result"
     tabFrom = FromIdentifier aliasIdentifier

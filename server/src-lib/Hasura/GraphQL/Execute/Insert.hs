@@ -131,9 +131,9 @@ insertMultipleObjects env multiObjIns additionalColumns remoteJoinCtx mutationOu
         insertObject env singleObj additionalColumns remoteJoinCtx planVars stringifyNum
       let affectedRows = sum $ map fst insertRequests
           columnValues = mapMaybe snd insertRequests
-      selectExpr <- RQL.mkSelCTEFromColVals table columnInfos columnValues
+      selectExpr <- RQL.mkSelectExpFromColumnValues table columnInfos columnValues
       let (mutOutputRJ, remoteJoins) = RQL.getRemoteJoinsMutationOutput mutationOutput
-      RQL.executeMutationOutputQuery env table columnInfos (Just affectedRows) (RQL.MCNoPermissionCheck selectExpr)
+      RQL.executeMutationOutputQuery env table columnInfos (Just affectedRows) (RQL.MCSelectValues selectExpr)
         mutOutputRJ stringifyNum [] $ (, remoteJoinCtx) <$> remoteJoins
 
 insertObject
@@ -159,7 +159,7 @@ insertObject env singleObjIns additionalColumns remoteJoinCtx planVars stringify
   cte <- mkInsertQ table onConflict finalInsCols defaultValues checkCond
 
   MutateResp affRows colVals <- liftTx $
-    RQL.mutateAndFetchCols table allColumns (RQL.MCPermissionCheck cte, planVars) stringifyNum
+    RQL.mutateAndFetchCols table allColumns (RQL.MCCheckConstraint cte, planVars) stringifyNum
   colValM <- asSingleObject colVals
 
   arrRelAffRows <- bool (withArrRels colValM) (return 0) $ null arrayRels
