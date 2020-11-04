@@ -67,7 +67,7 @@ executeQueryWithRemoteJoins
 executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs rjs = do
   -- Step 1: Perform the query on database and fetch the response
   pgRes <- runIdentity . Q.getRow <$> Tracing.trace "Postgres" (liftTx (Q.rawQE dmlTxErrorHandler q prepArgs True))
-  jsonRes <- either (throw500 . T.pack) pure $ AO.eitherDecode pgRes
+  jsonRes <- onLeft (AO.eitherDecode pgRes) (throw500 . T.pack)
   -- Step 2: Traverse through the JSON obtained in above step and generate composite JSON value with remote joins
   compositeJson <- traverseQueryResponseJSON rjMap jsonRes
   let remoteJoins = collectRemoteFields compositeJson
@@ -102,7 +102,7 @@ getCounter = do
   pure c
 
 parseGraphQLName :: (MonadError QErr m) => Text -> m G.Name
-parseGraphQLName txt = maybe (throw400 RemoteSchemaError $ errMsg) pure $ G.mkName txt
+parseGraphQLName txt = onNothing (G.mkName txt) (throw400 RemoteSchemaError $ errMsg)
   where
     errMsg = txt <> " is not a valid GraphQL name"
 
@@ -416,18 +416,17 @@ fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
     case AO.eitherDecode respBody of
       Left e -> throw500 $ "Remote server response is not valid JSON: " <> T.pack e
       Right r -> do
-        respObj <- either throw500 pure $ AO.asObject r
+        respObj <- onLeft (AO.asObject r) throw500
         let errors = AO.lookup "errors" respObj
         if | isNothing errors || errors == Just AO.Null ->
                case AO.lookup "data" respObj of
                  Nothing -> throw400 Unexpected "\"data\" field not found in remote response"
-                 Just v  -> either throw500 pure $ AO.asObject v
+                 Just v  -> onLeft (AO.asObject v) throw500
 
            | otherwise ->
              throwError (err400 Unexpected "Errors from remote server")
              {qeInternal = Just $ A.object ["errors" A..= (AO.fromOrdered <$> errors)]}
-
-  either (throw500 . T.pack) pure $ foldM AO.safeUnion AO.empty results
+  onLeft (foldM AO.safeUnion AO.empty results) (throw500 . T.pack)
   where
     remoteSchemaBatch = Map.groupOnNE _rjfRemoteSchema remoteJoins
 
@@ -576,10 +575,9 @@ createArguments
   -> RemoteArguments
   -> m (HashMap G.Name (G.Value Void))
 createArguments variables (RemoteArguments arguments) =
-  either
-    (throw400 Unexpected . \errors -> "Found errors: " <> commaSeparated errors)
-    pure
+  onLeft
     (toEither (substituteVariables variables arguments))
+    (throw400 Unexpected . \errors -> "Found errors: " <> commaSeparated errors)
 
 -- | Substitute values in the argument list.
 substituteVariables
