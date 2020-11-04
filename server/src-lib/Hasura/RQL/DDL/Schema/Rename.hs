@@ -28,7 +28,6 @@ import qualified Hasura.RQL.DDL.RemoteRelationship  as RR
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
-import           Hasura.RQL.DDL.Relationship.Types
 import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.Types
 import           Hasura.Session
@@ -389,7 +388,7 @@ updateColInRemoteRelationship remoteRelationshipName renameCol = do
                                   ) $ fieldCalls
   liftTx $ RR.updateRemoteRelInCatalog (RemoteRelationship remoteRelationshipName qt modifiedHasuraFlds remoteSchemaName (RemoteFields modifiedFieldCalls))
   where
-    parseGraphQLName txt = maybe (throw400 ParseFailed $ errMsg) pure $ G.mkName txt
+    parseGraphQLName txt = onNothing (G.mkName txt) $ throw400 ParseFailed $ errMsg
       where
         errMsg = txt <> " is not a valid GraphQL name"
 

@@ -31,21 +31,11 @@ import           Hasura.EncJSON
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Permission.Internal
-import           Hasura.RQL.DDL.Schema.Function     (RawFunctionInfo (..), mkFunctionArgs)
+import           Hasura.RQL.DDL.Schema.Function     (mkFunctionArgs)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.Server.Utils                (makeReasonMessage)
 
-
-data ComputedFieldDefinition
-  = ComputedFieldDefinition
-  { _cfdFunction        :: !QualifiedFunction
-  , _cfdTableArgument   :: !(Maybe FunctionArgName)
-  , _cfdSessionArgument :: !(Maybe FunctionArgName)
-  } deriving (Show, Eq, Lift, Generic)
-instance NFData ComputedFieldDefinition
-instance Cacheable ComputedFieldDefinition
-$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields = True} ''ComputedFieldDefinition)
 
 data AddComputedField
   = AddComputedField
