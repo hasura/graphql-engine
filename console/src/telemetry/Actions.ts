@@ -205,6 +205,8 @@ const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
     };
     return dispatch(requestAction(url, options))
       .then((data: any) => {
+        // TODO: the response is message: success after this, need to perform getConsoleState again after this, to fetch the latest state.
+        console.log(data);
         dispatch({
           type: UPDATE_CONSOLE_NOTIFICATIONS,
           data: data.returning[0].console_state.console_notifications,
