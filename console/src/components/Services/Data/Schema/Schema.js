@@ -266,7 +266,6 @@ class Schema extends Component {
 
     const _getTrackableFunctions = () => {
       const trackedFuncNames = trackedFunctions.map(fn => fn.function_name);
-      console.log({ trackedFunctions, trackedFuncNames, functionsList });
 
       // Assuming schema for both function and tables are same
       // return function which are tracked

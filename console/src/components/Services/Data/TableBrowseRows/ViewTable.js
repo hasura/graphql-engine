@@ -2,7 +2,6 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import {
   vSetDefaults,
-  fetchManualTriggers,
   UPDATE_TRIGGER_ROW,
   UPDATE_TRIGGER_FUNCTION,
   vMakeTableRequests,
@@ -16,6 +15,7 @@ import { exists } from '../../../Common/utils/jsUtils';
 import { dataSource } from '../../../../dataSources';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { getPersistedPageSize } from './tableUtils';
+import { getManualEventsTriggers } from '../../../../metadata/selector';
 
 class ViewTable extends Component {
   constructor(props) {
@@ -42,7 +42,6 @@ class ViewTable extends Component {
       dispatch(setTable(tableName)),
       dispatch(vSetDefaults(limit)),
       dispatch(vMakeTableRequests()),
-      dispatch(fetchManualTriggers(tableName)),
     ]);
   }
 
@@ -230,6 +229,10 @@ const mapStateToProps = (state, ownProps) => {
     readOnlyMode: state.main.readOnlyMode,
     serverVersion: state.main.serverVersion,
     ...state.tables.view,
+    manualTriggers: getManualEventsTriggers(state)(
+      ownProps.params.table,
+      state.tables.currentSchema
+    ),
   };
 };
 

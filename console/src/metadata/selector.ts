@@ -237,6 +237,19 @@ export const getEventTriggers = createSelector(
   }
 );
 
+export const getManualEventsTriggers = createSelector(
+  getEventTriggers,
+  triggers => (tableName: string, schemaName: string) => {
+    const manula = triggers.filter(
+      t =>
+        t.table_name === tableName &&
+        t.schema_name === schemaName &&
+        t.configuration.definition.enable_manual
+    );
+    return manula;
+  }
+);
+
 export const getEventTriggerByName = createSelector(
   getEventTriggers,
   getMetadata,

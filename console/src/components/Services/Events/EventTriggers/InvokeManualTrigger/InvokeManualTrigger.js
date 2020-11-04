@@ -65,6 +65,7 @@ class InvokeManualTrigger extends React.Component {
     });
   }
   componentWillUnmount() {
+    console.log('UNMOUNT');
     const { dispatch } = this.props;
     clearInterval(this.state.pollId);
     dispatch({
@@ -151,16 +152,13 @@ class InvokeManualTrigger extends React.Component {
         </div>
       </div>
     );
-    const modalStyle = () => {
-      return {
-        minHeight: '100px',
-      };
-    };
     return (
       <div key={identifier}>
         <Modal
           show={isModalOpen}
-          style={modalStyle()}
+          style={{
+            minHeight: '100px',
+          }}
           onHide={this.onModalClose}
           dialogClassName={styles.invoke_trigger_modal}
           id="invokeEventTrigger"

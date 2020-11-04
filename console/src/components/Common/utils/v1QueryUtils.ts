@@ -1,8 +1,4 @@
-import {
-  dataSource,
-  generateTableDef,
-  terminateSql,
-} from '../../../dataSources';
+import { dataSource, terminateSql } from '../../../dataSources';
 import { QualifiedTable } from '../../../metadata/types';
 import { Nullable } from './tsUtils';
 import { ConsoleScope } from '../../Main/ConsoleNotification';
@@ -290,24 +286,3 @@ export const getConsoleNotificationQuery = (
     type: 'select',
   };
 };
-
-// todo
-export const getFetchManualTriggersQuery = (tableDef: QualifiedTable) =>
-  getSelectQuery(
-    'select',
-    generateTableDef('event_triggers', 'hdb_catalog'),
-    ['*'],
-    {
-      table_name: tableDef.name,
-      schema_name: tableDef.schema,
-    },
-    undefined,
-    undefined,
-    [
-      {
-        column: 'name',
-        type: 'asc',
-        nulls: 'last',
-      },
-    ]
-  );

@@ -264,7 +264,6 @@ const ViewRows = ({
         let cloneButton;
         let deleteButton;
         let expandButton;
-        let manualTriggersButton;
 
         const getActionButton = (
           type,
@@ -412,13 +411,11 @@ const ViewRows = ({
                     color="white"
                     size="xs"
                     data-test={`run_manual_trigger_${m.name}`}
-                    onClick={() =>
-                      invokeTrigger.apply(undefined, [m.name, rowIndex])
-                    }
+                    onClick={() => invokeTrigger(m.name, rowIndex)}
                   >
                     Invoke
                   </Button>
-                  {`${m.name}`}
+                  {m.name}
                 </div>
               ),
             };
@@ -434,29 +431,24 @@ const ViewRows = ({
             () => {}
           );
 
-          const invokeManualTrigger = r =>
-            triggeredRow === rowIndex && (
-              <InvokeManualTrigger
-                args={r}
-                name={`${triggeredFunction}`}
-                onClose={onCloseInvokeTrigger}
-                key={`invoke_function_${triggeredFunction}`}
-                identifier={`invoke_function_${triggeredFunction}`}
-              />
-            );
-
           return (
             <div className={styles.display_inline}>
               <Dropdown
                 testId={`data_browse_rows_trigger_${rowIndex}`}
                 options={triggerOptions}
                 position="right"
-                key={`invoke_data_dropdown_${rowIndex}`}
                 keyPrefix={`invoke_data_dropdown_${rowIndex}`}
               >
                 {triggerBtn}
               </Dropdown>
-              {invokeManualTrigger(row)}
+              {triggeredRow === rowIndex && (
+                <InvokeManualTrigger
+                  args={row}
+                  name={`${triggeredFunction}`}
+                  onClose={onCloseInvokeTrigger}
+                  identifier={`invoke_function_${triggeredFunction}`}
+                />
+              )}
             </div>
           );
         };
@@ -473,8 +465,6 @@ const ViewRows = ({
 
         // eslint-disable-next-line prefer-const
         expandButton = getExpandButton();
-        // eslint-disable-next-line prefer-const
-        manualTriggersButton = getManualTriggersButton();
 
         return (
           <div
@@ -485,7 +475,7 @@ const ViewRows = ({
             {editButton}
             {deleteButton}
             {expandButton}
-            {manualTriggersButton}
+            {getManualTriggersButton()}
           </div>
         );
       };

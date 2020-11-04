@@ -19,9 +19,9 @@ const RESET = '@invokeManualTrigger/RESET';
 /* */
 
 const invokeManualTrigger = (name, args) => (dispatch, getState) => {
-  const url = Endpoints.getSchema;
+  const url = Endpoints.metadata;
   const manualTriggerObj = {
-    type: 'invoke_event_trigger',
+    type: 'pg_invoke_event_trigger',
     args: {
       name: name,
       payload: {
@@ -131,13 +131,9 @@ const invokeManualTriggerReducer = (state = defaultState, action) => {
         statusFetchingErr: action.data,
       };
     case RESET:
-      return {
-        ...defaultState,
-      };
+      return defaultState;
     default:
-      return {
-        ...state,
-      };
+      return state;
   }
 };
 

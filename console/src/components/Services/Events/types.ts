@@ -93,7 +93,9 @@ export type EventTrigger = {
   source: string;
   comment: string | null;
   configuration: {
-    definition: Record<EventTriggerOperation, EventTriggerOperationDefinition>;
+    definition: {
+      [key in EventTriggerOperation]: EventTriggerOperationDefinition;
+    };
     headers: ServerHeader[];
     retry_conf: RetryConf;
     webhook: Nullable<string>;

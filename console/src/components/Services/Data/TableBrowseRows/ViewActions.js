@@ -13,7 +13,6 @@ import {
   getSelectQuery,
   getDeleteQuery,
   getRunSqlQuery,
-  getFetchManualTriggersQuery,
 } from '../../../Common/utils/v1QueryUtils';
 import { COUNT_LIMIT } from '../constants';
 import {
@@ -216,45 +215,6 @@ const vMakeTableRequests = () => (dispatch, getState) => {
       dispatch(vMakeCountRequest());
     }
   });
-};
-
-const fetchManualTriggers = tableName => {
-  return (dispatch, getState) => {
-    const url = Endpoints.query;
-    const { currentSchema } = getState().tables;
-    const body = getFetchManualTriggersQuery(
-      generateTableDef(tableName, currentSchema)
-    );
-
-    const options = {
-      credentials: globalCookiePolicy,
-      method: 'POST',
-      headers: dataHeaders(getState),
-      body: JSON.stringify(body),
-    };
-
-    dispatch({ type: FETCHING_MANUAL_TRIGGER });
-
-    return dispatch(requestAction(url, options)).then(
-      data => {
-        // Filter only triggers whose configuration has `enable_manual` key as true
-        const manualTriggers = data.filter(trigger => {
-          const triggerDef = trigger.configuration.definition;
-
-          return (
-            Object.keys(triggerDef).includes('enable_manual') &&
-            triggerDef.enable_manual
-          );
-        });
-
-        dispatch({ type: FETCH_MANUAL_TRIGGER_SUCCESS, data: manualTriggers });
-      },
-      error => {
-        dispatch({ type: FETCH_MANUAL_TRIGGER_FAIL, data: error });
-        console.error('Failed to load triggers' + JSON.stringify(error));
-      }
-    );
-  };
 };
 
 const deleteItem = (pkClause, tableName, tableSchema) => {
@@ -693,7 +653,6 @@ const viewReducer = (tableName, currentSchema, schemas, viewState, action) => {
 
 export default viewReducer;
 export {
-  fetchManualTriggers,
   vSetDefaults,
   vExpandRel,
   vCloseRel,
