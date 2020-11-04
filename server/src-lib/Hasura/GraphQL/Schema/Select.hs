@@ -720,15 +720,14 @@ tableConnectionArgs pkeyColumns table selectPermissions = do
       -> BL.ByteString
       -> n (NonEmpty (RQL.ConnectionSplit 'Postgres UnpreparedValue))
     parseConnectionSplit maybeOrderBys splitKind cursorSplit = do
-      cursorValue <- either (const throwInvalidCursor) pure $
-                      J.eitherDecode cursorSplit
+      cursorValue <- J.eitherDecode cursorSplit `onLeft` const throwInvalidCursor
       case maybeOrderBys of
         Nothing -> forM (NESeq.toNonEmpty pkeyColumns) $
           \pgColumnInfo -> do
             let columnJsonPath = [J.Key $ getPGColTxt $ pgiColumn pgColumnInfo]
                 columnType = pgiType pgColumnInfo
-            pgColumnValue <- maybe throwInvalidCursor pure $ iResultToMaybe $
-                             executeJSONPath columnJsonPath cursorValue
+            pgColumnValue <- iResultToMaybe (executeJSONPath columnJsonPath cursorValue)
+              `onNothing` throwInvalidCursor
             pgValue <- liftQErr $ parsePGScalarValue columnType pgColumnValue
             let unresolvedValue = flip UVParameter Nothing $ P.PGColumnValue columnType pgValue
             pure $ RQL.ConnectionSplit splitKind unresolvedValue $
@@ -737,8 +736,8 @@ tableConnectionArgs pkeyColumns table selectPermissions = do
           forM orderBys $ \orderBy -> do
             let OrderByItemG orderType annObCol nullsOrder = orderBy
                 columnType = getOrderByColumnType annObCol
-            orderByItemValue <- maybe throwInvalidCursor pure $ iResultToMaybe $
-                                executeJSONPath (getPathFromOrderBy annObCol) cursorValue
+            orderByItemValue <- iResultToMaybe (executeJSONPath (getPathFromOrderBy annObCol) cursorValue)
+              `onNothing` throwInvalidCursor
             pgValue <- liftQErr $ parsePGScalarValue columnType orderByItemValue
             let unresolvedValue = flip UVParameter Nothing $ P.PGColumnValue columnType pgValue
             pure $ RQL.ConnectionSplit splitKind unresolvedValue $
@@ -1192,7 +1191,7 @@ functionArgs functionName (toList -> inputArgs) = do
 
 
 -- | The "path" argument for json column fields
-jsonPathArg :: MonadParse n => PGColumnType -> InputFieldsParser n (Maybe RQL.ColumnOp)
+jsonPathArg :: MonadParse n => PGColumnType -> InputFieldsParser n (Maybe (RQL.ColumnOp 'Postgres))
 jsonPathArg columnType
   | isScalarColumnWhere isJSONType columnType =
       P.fieldOptional fieldName description P.string `P.bindFields` fmap join . traverse toColExp
@@ -1350,7 +1349,7 @@ nodeField = do
 
         let allTuples = (firstPkColumn, firstColumnValue):alignedTuples
 
-        either (parseErrorWith ParseFailed . qeError) pure $ runExcept $
+        flip onLeft (parseErrorWith ParseFailed . qeError) $ runExcept $
           fmap RQL.BoolAnd $ for allTuples $ \(columnInfo, columnValue) -> do
             let modifyErrFn t = "value of column " <> pgiColumn columnInfo
                                 <<> " in node id: " <> t

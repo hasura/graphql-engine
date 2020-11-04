@@ -261,6 +261,8 @@ library
 
                      -- scheduled triggers
                      , cron >= 0.6.2
+                     -- needed for deriving via
+                     , semigroups >= 0.19
 
                      , random
                      , mmorph
@@ -386,6 +388,7 @@ library
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.QueryCollection
                      , Hasura.RQL.Types.Action
+                     , Hasura.RQL.Types.Relationship
                      , Hasura.RQL.Types.RemoteSchema
                      , Hasura.RQL.Types.RemoteRelationship
                      , Hasura.RQL.Types.ScheduledTrigger
@@ -403,7 +406,6 @@ library
                      , Hasura.RQL.DDL.QueryCollection
                      , Hasura.RQL.DDL.Relationship
                      , Hasura.RQL.DDL.Relationship.Rename
-                     , Hasura.RQL.DDL.Relationship.Types
                      , Hasura.RQL.DDL.RemoteRelationship
                      , Hasura.RQL.DDL.RemoteRelationship.Validate
                      , Hasura.RQL.DDL.RemoteSchema
