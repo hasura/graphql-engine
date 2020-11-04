@@ -16,7 +16,7 @@ data RemoteJoin (b :: Backend)
   = RemoteJoin
   { _rjName          :: !FieldName -- ^ The remote join field name.
   , _rjArgs          :: ![RemoteFieldArgument] -- ^ User-provided arguments with variables.
-  , _rjSelSet        :: !(G.SelectionSet G.NoFragments Variable)  -- ^ User-provided selection set of remote field.
+  , _rjSelSet        :: !(G.SelectionSet G.NoFragments RemoteSchemaVariable)  -- ^ User-provided selection set of remote field.
   , _rjHasuraFields  :: !(HashSet FieldName) -- ^ Table fields.
   , _rjFieldCall     :: !(NonEmpty FieldCall) -- ^ Remote server fields.
   , _rjRemoteSchema  :: !RemoteSchemaInfo -- ^ The remote schema server info.

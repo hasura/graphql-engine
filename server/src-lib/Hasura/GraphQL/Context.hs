@@ -18,6 +18,7 @@ module Hasura.GraphQL.Context
   , SubscriptionRootField
   , SubscriptionRootFieldResolved
   , resolveRemoteField
+  , resolveRemoteVariable
   ) where
 
 import           Hasura.Prelude

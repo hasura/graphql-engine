@@ -4,6 +4,7 @@ module Hasura.GraphQL.Schema.Remote
   , lookupObject
   , lookupType
   , lookupScalar
+  , remoteField
   ) where
 
 import           Hasura.Prelude

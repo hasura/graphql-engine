@@ -174,13 +174,13 @@ data AnnColumnField (b :: Backend)
 data RemoteFieldArgument
   = RemoteFieldArgument
   { _rfaArgument :: !G.Name
-  , _rfaValue    :: !(InputValue Variable)
+  , _rfaValue    :: !(InputValue RemoteSchemaVariable)
   } deriving (Eq,Show)
 
 data RemoteSelect (b :: Backend)
   = RemoteSelect
   { _rselArgs          :: ![RemoteFieldArgument]
-  , _rselSelection     :: !(G.SelectionSet G.NoFragments Variable)
+  , _rselSelection     :: !(G.SelectionSet G.NoFragments RemoteSchemaVariable)
   , _rselHasuraColumns :: !(HashSet (ColumnInfo b))
   , _rselFieldCall     :: !(NonEmpty FieldCall)
   , _rselRemoteSchema  :: !RemoteSchemaInfo

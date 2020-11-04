@@ -38,6 +38,7 @@ import           Hasura.Backends.Postgres.Connection
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Parser                  hiding (field)
 import           Hasura.GraphQL.RemoteServer            (execRemoteGQ')
+import           Hasura.GraphQL.Context                 (resolveRemoteVariable)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.IR.RemoteJoin
@@ -285,7 +286,7 @@ data RemoteJoinField
   = RemoteJoinField
   { _rjfRemoteSchema :: !RemoteSchemaInfo -- ^ The remote schema server info.
   , _rjfAlias        :: !Alias -- ^ Top level alias of the field
-  , _rjfField        :: !(G.Field G.NoFragments Variable) -- ^ The field AST
+  , _rjfField        :: !(G.Field G.NoFragments RemoteSchemaVariable) -- ^ The field AST
   , _rjfFieldCall    :: ![G.Name] -- ^ Path to remote join value
   } deriving (Show, Eq)
 
@@ -406,8 +407,9 @@ fetchRemoteJoinFields
 fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
   results <- forM (Map.toList remoteSchemaBatch) $ \(rsi, batch) -> do
     let batchList = toList batch
-        gqlReq = fieldsToRequest G.OperationTypeQuery
-                                 (map _rjfField batchList)
+        remoteFields = map _rjfField batchList
+    resolvedRemoteFields <- traverse (traverse (resolveRemoteVariable userInfo)) remoteFields
+    let gqlReq = fieldsToRequest G.OperationTypeQuery resolvedRemoteFields
         gqlReqUnparsed = GQLQueryText . G.renderExecutableDoc . G.ExecutableDocument . unGQLExecDoc <$> gqlReq
     -- NOTE: discard remote headers (for now):
     (_, _, respBody) <- execRemoteGQ' env manager userInfo reqHdrs gqlReqUnparsed rsi G.OperationTypeQuery
@@ -508,21 +510,21 @@ replaceRemoteFields compositeJson remoteServerResponse =
 -- selection set at the leaf of the tree we construct.
 fieldCallsToField
   :: forall m. MonadError QErr m
-  => Map.HashMap G.Name (InputValue Variable)
+  => Map.HashMap G.Name (InputValue RemoteSchemaVariable)
   -- ^ user input arguments to the remote join field
   -> Map.HashMap G.Name (G.Value Void)
   -- ^ Contains the values of the variables that have been defined in the remote join definition
-  -> G.SelectionSet G.NoFragments Variable
+  -> G.SelectionSet G.NoFragments RemoteSchemaVariable
   -- ^ Inserted at leaf of nested FieldCalls
   -> Alias
   -- ^ Top-level name to set for this Field
   -> NonEmpty FieldCall
-  -> m (G.Field G.NoFragments Variable)
+  -> m (G.Field G.NoFragments RemoteSchemaVariable)
 fieldCallsToField rrArguments variables finalSelSet topAlias =
   fmap (\f -> f{G._fAlias = Just topAlias}) . nest
   where
     -- almost: `foldr nest finalSelSet`
-    nest :: NonEmpty FieldCall -> m (G.Field G.NoFragments Variable)
+    nest :: NonEmpty FieldCall -> m (G.Field G.NoFragments RemoteSchemaVariable)
     nest ((FieldCall name remoteArgs) :| rest) = do
       templatedArguments <- convert <$> createArguments variables remoteArgs
       graphQLarguments <- traverse peel rrArguments
@@ -539,10 +541,10 @@ fieldCallsToField rrArguments variables finalSelSet topAlias =
               in pure (arguments, finalSelSet)
       pure $ G.Field Nothing name args [] selSet
 
-    convert :: Map.HashMap G.Name (G.Value Void) -> Map.HashMap G.Name (G.Value Variable)
+    convert :: Map.HashMap G.Name (G.Value Void) -> Map.HashMap G.Name (G.Value RemoteSchemaVariable)
     convert = fmap G.literal
 
-    peel :: InputValue Variable -> m (G.Value Variable)
+    peel :: InputValue RemoteSchemaVariable -> m (G.Value RemoteSchemaVariable)
     peel = \case
       GraphQLValue v -> pure v
       JSONValue _ ->
@@ -558,7 +560,7 @@ fieldCallsToField rrArguments variables finalSelSet topAlias =
 -- `where: { id : 1}`
 -- And during execution, client also gives the input arg: `where: {name: "tiru"}`
 -- We need to merge the input argument to where: {id : 1, name: "tiru"}
-mergeValue :: G.Value Variable -> G.Value Variable -> G.Value Variable
+mergeValue :: G.Value RemoteSchemaVariable -> G.Value RemoteSchemaVariable -> G.Value RemoteSchemaVariable
 mergeValue lVal rVal = case (lVal, rVal) of
   (G.VList l, G.VList r) ->
     G.VList $ l <> r

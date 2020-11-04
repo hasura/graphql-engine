@@ -1033,52 +1033,50 @@ remoteRelationshipField table remoteFieldInfo = runMaybeT do
   -- The above issue is easily fixable by removing the following guard and 'MaybeT' monad transformation
   guard $ queryType == ET.QueryHasura
   let RemoteFieldInfo name _params hasuraFields remoteFields
-        remoteSchemaInfo _schemaIntrospection remoteSchemaName = remoteFieldInfo
+        remoteSchemaInfo schemaIntrospection remoteSchemaName = remoteFieldInfo
   remoteSchemaCtx <- askRemoteSchemaInfo remoteSchemaName
   role <- askRoleName
-  -- get the remote schema of the role
-  case Map.lookup role $ _rscpPermissions remoteSchemaCtx of
+  roleIntrospectionResult <-
     -- if the role doesn't have permissions configured, then don't allow
     -- to select the remote relationship field
-    Nothing -> MaybeT $ pure Nothing
-    Just introspectionResult -> do
-      let hasuraFieldNames = Set.fromList $ map (FieldName . G.unName . pgiName) $ Set.toList hasuraFields
-          remoteRelationship = RemoteRelationship name table hasuraFieldNames remoteSchemaName remoteFields
-      -- validate the remote relationship against the remote schema of the given role
-      eitherRemoteField <-
-        runExceptT $
-        validateRemoteRelationship remoteRelationship (remoteSchemaInfo, introspectionResult) $ Set.toList hasuraFields
-      case eitherRemoteField of
-        Left err  -> pTrace ("error is " <> (show $ errorToText err)) $ MaybeT $ pure Nothing
-        Right _ -> pure ()
+    onNothing (Map.lookup role $ _rscpPermissions remoteSchemaCtx) $ MaybeT $ pure Nothing
+  -- get the remote schema of the role
+  let hasuraFieldNames = Set.fromList $ map (FieldName . G.unName . pgiName) $ Set.toList hasuraFields
+      remoteRelationship = RemoteRelationship name table hasuraFieldNames remoteSchemaName remoteFields
+  -- validate the remote relationship against the remote schema of the given role
+  eitherRemoteField <-
+    runExceptT $
+    validateRemoteRelationship remoteRelationship (remoteSchemaInfo, roleIntrospectionResult) $ Set.toList hasuraFields
+  case eitherRemoteField of
+    Left _  -> MaybeT $ pure Nothing
+    Right _ -> pure ()
   remoteSchemasFieldDefns <- asks $ qcRemoteFields . getter
   fieldDefns <-
     case Map.lookup remoteSchemaName remoteSchemasFieldDefns of
       -- we return `Nothing` here when a role doesn't have permissions
       -- to the said remote schema
-      Nothing -> MaybeT $ pure Nothing
+      Nothing         -> MaybeT $ pure Nothing
       Just fieldDefns -> pure fieldDefns
 
   fieldName <- textToName $ remoteRelationshipNameToText $ _rfiName remoteFieldInfo
-  remoteFieldsArgumentsParser <-
-    sequenceA <$> for (Map.toList $ _rfiParamMap remoteFieldInfo) \(argumentName, inpValDefn) -> do
-      parser <- lift $ inputValueDefinitionParser (_rfiSchemaIntrospect remoteFieldInfo) inpValDefn
-      -- The preset part are ignored for remote relationships because
-      -- the argument value comes from the parent query
-      pure $ (fmap fst parser) `mapField` RQL.RemoteFieldArgument argumentName
-
   -- This selection set parser, should be of the remote node's selection set parser, which comes
   -- from the fieldCall
   nestedFieldInfo <- lift $ lookupRemoteField fieldDefns $ unRemoteFields $ _rfiRemoteFields remoteFieldInfo
-  let remoteFieldsArgumentsParser' = fmap catMaybes remoteFieldsArgumentsParser
   case nestedFieldInfo of
     P.FieldInfo{ P.fType = fieldType } -> do
-      let fieldInfo' = P.FieldInfo
-            { P.fArguments = P.ifDefinitions remoteFieldsArgumentsParser'
-            , P.fType = fieldType }
-      pure $ pure $ P.unsafeRawField (P.mkDefinition fieldName Nothing fieldInfo')
+      let typeName = P.getName fieldType
+      typeDefinition <- onNothing (lookupType (irDoc roleIntrospectionResult) typeName) $ throw500 "unexpected: type definition not found"
+      let remoteFieldArguments = map snd $ Map.toList $  _rfiParamMap remoteFieldInfo
+      let remoteFieldArguments' = map (`RemoteSchemaInputValueDefinition` Nothing) remoteFieldArguments
+      remoteFld <-
+        -- The below query should not be taking `schemaIntrospection`, because
+        -- the this introspection is of the admin, which will not have any preset
+        -- info and will have all the remote schema definitions available in it
+        lift $ remoteField schemaIntrospection fieldName Nothing remoteFieldArguments' typeDefinition
+      pure $ pure $ remoteFld
         `P.bindField` \G.Field{ G._fArguments = args, G._fSelectionSet = selSet } -> do
-          remoteArgs <- P.ifParser remoteFieldsArgumentsParser' $ P.GraphQLValue <$> args
+          let remoteArgs =
+                map (\(argName, argVal) -> RQL.RemoteFieldArgument argName $ P.GraphQLValue $ argVal) $ Map.toList args
           pure $ RQL.AFRemote $ RQL.RemoteSelect
             { _rselArgs          = remoteArgs
             , _rselSelection     = selSet
