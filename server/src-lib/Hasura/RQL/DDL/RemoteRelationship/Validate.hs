@@ -98,7 +98,7 @@ validateRemoteRelationship remoteRelationship (remoteSchemaInfo, introspectionRe
                                   pure $ (variableName,v)
                               ) $ HM.toList (mapFromL pgiColumn pgColumns)
   let pgColumnsVariablesMap = HM.fromList pgColumnsVariables
-  let schemaDoc@(RemoteSchemaIntrospection originalDefns) = irDoc introspectionResult
+  let schemaDoc = irDoc introspectionResult
       queryRootName = irQueryRoot introspectionResult
   queryRoot <- onNothing (lookupObject schemaDoc queryRootName) $
     throwError $ FieldNotFoundInRemoteSchema queryRootName
@@ -113,14 +113,9 @@ validateRemoteRelationship remoteRelationship (remoteSchemaInfo, introspectionRe
         , _rfiHasuraFields = HS.fromList hasuraFields
         , _rfiRemoteFields = rtrRemoteField remoteRelationship
         , _rfiRemoteSchema = remoteSchemaInfo
-        -- adding the new types after stripping the values to the
+        -- adding the new input types after stripping the values of the
         -- schema document
-        , _rfiSchemaIntrospect = RemoteSchemaIntrospection
-                                    $ originalDefns
-                                    -- The preset part below is set to `Nothing` because preset values
-                                    -- are ignored for remote relationships and instead the argument
-                                    -- values comes from the parent query.
-                                    <> (fmap (fmap (\inpValDef -> RemoteSchemaInputValueDefinition inpValDef Nothing)) $ HM.elems leafTypeMap)
+        , _rfiInputValueDefinitions = HM.elems leafTypeMap
         , _rfiRemoteSchemaName = remoteSchemaName
         }
   where

@@ -1033,7 +1033,7 @@ remoteRelationshipField table remoteFieldInfo = runMaybeT do
   -- The above issue is easily fixable by removing the following guard and 'MaybeT' monad transformation
   guard $ queryType == ET.QueryHasura
   let RemoteFieldInfo name _params hasuraFields remoteFields
-        remoteSchemaInfo schemaIntrospection remoteSchemaName = remoteFieldInfo
+        remoteSchemaInfo newInputValueDefns remoteSchemaName = remoteFieldInfo
   remoteSchemaCtx <- askRemoteSchemaInfo remoteSchemaName
   role <- askRoleName
   roleIntrospectionResult <-
@@ -1047,6 +1047,10 @@ remoteRelationshipField table remoteFieldInfo = runMaybeT do
   eitherRemoteField <-
     runExceptT $
     validateRemoteRelationship remoteRelationship (remoteSchemaInfo, roleIntrospectionResult) $ Set.toList hasuraFields
+  let remoteSchemaInputValueDefns = map (fmap (`RemoteSchemaInputValueDefinition` Nothing)) newInputValueDefns
+  let remoteRelationshipIntrospection =
+        let RemoteSchemaIntrospection typeDefns = irDoc roleIntrospectionResult
+        in RemoteSchemaIntrospection $ typeDefns <> remoteSchemaInputValueDefns
   case eitherRemoteField of
     Left _  -> MaybeT $ pure Nothing
     Right _ -> pure ()
@@ -1065,14 +1069,17 @@ remoteRelationshipField table remoteFieldInfo = runMaybeT do
   case nestedFieldInfo of
     P.FieldInfo{ P.fType = fieldType } -> do
       let typeName = P.getName fieldType
-      typeDefinition <- onNothing (lookupType (irDoc roleIntrospectionResult) typeName) $ throw500 "unexpected: type definition not found"
+      typeDefinition <- onNothing (lookupType (irDoc roleIntrospectionResult) typeName)
+                        -- the below case will never happen because we get the type name
+                        -- from the schema document itself
+                        $ throw500 $ "unexpected: " <> typeName <<> " not found "
       let remoteFieldArguments = map snd $ Map.toList $  _rfiParamMap remoteFieldInfo
       let remoteFieldArguments' = map (`RemoteSchemaInputValueDefinition` Nothing) remoteFieldArguments
       remoteFld <-
         -- The below query should not be taking `schemaIntrospection`, because
         -- the this introspection is of the admin, which will not have any preset
         -- info and will have all the remote schema definitions available in it
-        lift $ remoteField schemaIntrospection fieldName Nothing remoteFieldArguments' typeDefinition
+        lift $ remoteField remoteRelationshipIntrospection fieldName Nothing remoteFieldArguments' typeDefinition
       pure $ pure $ remoteFld
         `P.bindField` \G.Field{ G._fArguments = args, G._fSelectionSet = selSet } -> do
           let remoteArgs =
