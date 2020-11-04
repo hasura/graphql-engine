@@ -6,25 +6,25 @@ module Hasura.GraphQL.Parser.Class
   , module Hasura.GraphQL.Parser.Class
   ) where
 
-import                          Hasura.Prelude
+import           Hasura.Prelude
 
-import                qualified Data.HashMap.Strict                   as Map
-import                qualified Language.Haskell.TH                   as TH
-import                qualified Language.GraphQL.Draft.Syntax         as G
+import qualified Data.HashMap.Strict                  as Map
+import qualified Language.GraphQL.Draft.Syntax        as G
+import qualified Language.Haskell.TH                  as TH
 
-import                          Data.Has
-import                          Data.Text.Extended
-import                          Data.Tuple.Extended
-import                          GHC.Stack                             (HasCallStack)
-import                          Type.Reflection                       (Typeable)
+import           Data.Has
+import           Data.Text.Extended
+import           Data.Tuple.Extended
+import           GHC.Stack                            (HasCallStack)
+import           Type.Reflection                      (Typeable)
 
-import                          Hasura.Backends.Postgres.SQL.Types
-import                          Hasura.GraphQL.Parser.Class.Parse
-import                          Hasura.GraphQL.Parser.Internal.Types
-import                          Hasura.RQL.Types.Error
-import                          Hasura.RQL.Types.Table
-import                          Hasura.SQL.Backend
-import                          Hasura.Session                        (RoleName)
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.GraphQL.Parser.Class.Parse
+import           Hasura.GraphQL.Parser.Internal.Types
+import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.Table
+import           Hasura.SQL.Backend
+import           Hasura.Session                       (RoleName)
 
 {- Note [Tying the knot]
 ~~~~~~~~~~~~~~~~~~~~~~~~
