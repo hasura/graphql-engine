@@ -10,7 +10,6 @@ import qualified Hasura.Backends.Postgres.SQL.DML             as S
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.BoolExp
-import           Hasura.Backends.Postgres.Translate.Insert
 import           Hasura.Backends.Postgres.Translate.Returning
 import           Hasura.RQL.Instances                         ()
 import           Hasura.RQL.IR.Update
@@ -27,8 +26,7 @@ mkUpdateCTE (AnnUpd tn opExps (permFltr, wc) chk _ columnsInfo) =
         . Just
         . S.RetExp
         $ [ S.selectStar
-          , asCheckErrorExtractor $
-            insertCheckExpr "update check constraint failed" checkExpr
+          , asCheckErrorExtractor $ S.SEBool checkExpr
           ]
     setExp    = S.SetExp $ map (expandOperator columnsInfo) opExps
     tableFltr = Just $ S.WhereFrag tableFltrExpr

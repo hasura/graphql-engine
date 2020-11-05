@@ -188,12 +188,12 @@ mutateAndSel env (Mutation qt q mutationOutput allCols remoteJoins strfyNum) = d
   executeMutationOutputQuery env qt allCols Nothing
     (MCSelectValues select) mutationOutput strfyNum [] remoteJoins
 
-withCheckPermission :: (MonadError QErr m) => m (a, Maybe Text) -> m a
+withCheckPermission :: (MonadError QErr m) => m (a, Bool) -> m a
 withCheckPermission sqlTx = do
-  (rawResponse, maybeCheckError) <- sqlTx
-  case maybeCheckError of
-    Just err -> throw400 PermissionError $ "Check constraint violation. " <> err
-    Nothing  -> pure rawResponse
+  (rawResponse, checkConstraint) <- sqlTx
+  unless checkConstraint $ throw400 PermissionError $
+    "Check constraint violation. insert/update check constraint failed"
+  pure rawResponse
 
 executeMutationOutputQuery
   :: forall m.

@@ -1,6 +1,5 @@
 module Hasura.Backends.Postgres.Translate.Insert
  ( mkInsertCTE
- , insertCheckExpr
  , buildConflictClause
  , toSQLConflict
  , insertOrUpdateCheckExpr
@@ -116,23 +115,6 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
       validateInpCols inpCols updCols
       return (updFiltr, preSet)
 
--- | Create an expression which will return nullable text with a check constraint violation fail
--- if the condition is not met on any of the inserted rows.
---
--- The resulting SQL will look something like this:
---
--- > INSERT INTO
--- >   ...
--- > RETURNING
--- >   *,
--- >   CASE WHEN {cond}
--- >     THEN NULL
--- >     ELSE 'insert check constraint failed'
--- >   END
-insertCheckExpr :: Text -> S.BoolExp -> S.SQLExp
-insertCheckExpr errorMessage condExpr =
-  S.SECond condExpr S.SENull (S.SELit errorMessage)
-
 -- | When inserting data, we might need to also enforce the update
 -- check condition, because we might fall back to an update via an
 -- @ON CONFLICT@ clause.
@@ -146,16 +128,10 @@ insertCheckExpr errorMessage condExpr =
 -- > RETURNING
 -- >   *,
 -- >   CASE WHEN xmax = 0
--- >     THEN CASE WHEN {insert_cond}
--- >            THEN NULL
--- >            'insert check constraint failed'
--- >          END
--- >     ELSE CASE WHEN {update_cond}
--- >            THEN NULL
--- >            'update check constraint failed'
--- >          END
+-- >     THEN {insert_cond}
+-- >     ELSE {update_cond}
 -- >   END
--- >     AS "check__error"
+-- >     AS "check__constraint"
 --
 -- See @https://stackoverflow.com/q/34762732@ for more information on the use of
 -- the @xmax@ system column.
@@ -172,8 +148,8 @@ insertOrUpdateCheckExpr qt (Just _conflict) insCheck (Just updCheck) =
       S.SEQ
       (S.SEQIdentifier (S.QIdentifier (S.mkQual qt) (Identifier "xmax")))
       (S.SEUnsafe "0"))
-    (insertCheckExpr "insert check constraint failed" insCheck)
-    (insertCheckExpr "update check constraint failed" updCheck)
+    (S.SEBool insCheck)
+    (S.SEBool updCheck)
 insertOrUpdateCheckExpr _ _ insCheck _ =
   -- If we won't generate an ON CONFLICT clause, there is no point
   -- in testing xmax. In particular, views don't provide the xmax
@@ -183,5 +159,4 @@ insertOrUpdateCheckExpr _ _ insCheck _ =
   --
   -- Alternatively, if there is no update check constraint, we should
   -- use the insert check constraint, for backwards compatibility.
-  asCheckErrorExtractor $
-  insertCheckExpr "insert check constraint failed" insCheck
+  asCheckErrorExtractor $ S.SEBool insCheck

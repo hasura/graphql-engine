@@ -3,7 +3,7 @@ module Hasura.Backends.Postgres.Translate.Returning
   , mkDefaultMutFlds
   , mkCheckErrorExp
   , mkMutationOutputExp
-  , checkErrorIdentifier
+  , checkConstraintIdentifier
   , asCheckErrorExtractor
   , checkRetCols
   ) where
@@ -61,11 +61,7 @@ WITH "<table-name>__mutation_result_alias" AS (
     (<insert-value-row>[..])
     ON CONFLICT ON CONSTRAINT "<table-constraint-name>" DO NOTHING RETURNING *,
     -- An extra column expression which performs the 'CHECK' validation
-    CASE
-      WHEN (<CHECK Condition>) THEN NULL
-      ELSE 'insert check constraint failed'
-    END
-      AS "check__error"
+    (<CHECK Condition>) AS "check__constraint"
 ),
 "<table-name>__all_columns_alias" AS (
   -- Only extract columns from mutated rows. Columns sorted by ordinal position so that
@@ -75,7 +71,7 @@ WITH "<table-name>__mutation_result_alias" AS (
     "<table-name>__mutation_result_alias"
 )
 <SELECT statement to generate mutation response using '<table-name>__all_columns_alias' as FROM
- and string_agg("check__error", ',') from "<table-name>__mutation_result_alias">
+ and bool_and("check__constraint") from "<table-name>__mutation_result_alias">
 -}
 
 -- | Generate mutation output expression with given mutation CTE statement.
@@ -121,18 +117,20 @@ mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
 
 mkCheckErrorExp :: IsIdentifier a => a -> S.SQLExp
 mkCheckErrorExp alias =
-  let stringAggCheckError =
-        S.SEFnApp "string_agg" [S.SEIdentifier checkErrorIdentifier, S.SELit ","] Nothing
-  in S.SESelect $ S.mkSelect { S.selExtr = [S.Extractor stringAggCheckError Nothing]
-                             , S.selFrom = Just $ S.mkIdenFromExp alias
-                             }
+  let boolAndCheckConstraint =
+        S.handleIfNull (S.SEBool $ S.BELit True) $
+        S.SEFnApp "bool_and" [S.SEIdentifier checkConstraintIdentifier] Nothing
+  in S.SESelect $
+     S.mkSelect { S.selExtr = [S.Extractor boolAndCheckConstraint Nothing]
+                , S.selFrom = Just $ S.mkIdenFromExp alias
+                }
 
-checkErrorIdentifier :: Identifier
-checkErrorIdentifier = Identifier "check__error"
+checkConstraintIdentifier :: Identifier
+checkConstraintIdentifier = Identifier "check__constraint"
 
 asCheckErrorExtractor :: S.SQLExp -> S.Extractor
 asCheckErrorExtractor s =
-  S.Extractor s $ Just $ S.Alias checkErrorIdentifier
+  S.Extractor s $ Just $ S.Alias checkConstraintIdentifier
 
 checkRetCols
   :: (UserInfoM m, QErrM m)
