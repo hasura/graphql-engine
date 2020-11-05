@@ -1,20 +1,34 @@
-CREATE TABLE hdb_catalog.hdb_remote_schema_permission (
-remote_schema_name text,
-role_name text,
-definition jsonb,
-comment text,
-PRIMARY KEY (remote_schema_name, role_name)
-);
+CREATE FUNCTION hdb_catalog.gen_hasura_uuid() RETURNS uuid AS
+'select gen_random_uuid()' LANGUAGE SQL;
 
-DROP VIEW hdb_catalog.hdb_role;
+ALTER TABLE hdb_catalog.hdb_version
+ALTER COLUMN hasura_uuid
+SET DEFAULT hdb_catalog.gen_hasura_uuid();
 
-CREATE VIEW hdb_catalog.hdb_role AS
-(
-SELECT DISTINCT role_name FROM (
-SELECT role_name FROM hdb_catalog.hdb_permission
-UNION ALL
-SELECT role_name FROM hdb_catalog.hdb_action_permission
-UNION ALL
-SELECT role_name FROM hdb_catalog.hdb_remote_schema_permission
-) q
-);
+ALTER TABLE hdb_catalog.event_log
+ALTER COLUMN id
+SET DEFAULT hdb_catalog.gen_hasura_uuid();
+
+ALTER TABLE hdb_catalog.event_invocation_logs
+ALTER COLUMN id
+SET DEFAULT hdb_catalog.gen_hasura_uuid();
+
+ALTER TABLE hdb_catalog.hdb_action_log
+ALTER COLUMN id
+SET DEFAULT hdb_catalog.gen_hasura_uuid();
+
+ALTER TABLE hdb_catalog.hdb_cron_events
+ALTER COLUMN id
+SET DEFAULT hdb_catalog.gen_hasura_uuid();
+
+ALTER TABLE hdb_catalog.hdb_cron_event_invocation_logs
+ALTER COLUMN id
+SET DEFAULT hdb_catalog.gen_hasura_uuid();
+
+ALTER TABLE hdb_catalog.hdb_scheduled_events
+ALTER COLUMN id
+SET DEFAULT hdb_catalog.gen_hasura_uuid();
+
+ALTER TABLE hdb_catalog.hdb_scheduled_event_invocation_logs
+ALTER COLUMN id
+SET DEFAULT hdb_catalog.gen_hasura_uuid();

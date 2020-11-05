@@ -31,9 +31,9 @@ import           Data.Text.Extended
 import           Hasura.SQL.Backend
 
 import qualified Hasura.Backends.Postgres.SQL.DML as S
-import qualified Hasura.RQL.DML.Delete.Types      as RQL
-import qualified Hasura.RQL.DML.Select.Types      as RQL
-import qualified Hasura.RQL.DML.Update.Types      as RQL
+import qualified Hasura.RQL.IR.Delete             as RQL
+import qualified Hasura.RQL.IR.Select             as RQL
+import qualified Hasura.RQL.IR.Update             as RQL
 import qualified Hasura.RQL.Types.Action          as RQL
 import qualified Hasura.RQL.Types.Error           as RQL
 import qualified Hasura.RQL.Types.RemoteSchema    as RQL
