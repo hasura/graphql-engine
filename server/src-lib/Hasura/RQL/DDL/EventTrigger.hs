@@ -19,32 +19,36 @@ module Hasura.RQL.DDL.EventTrigger
   , updateEventTriggerInCatalog
   ) where
 
+import           Hasura.Prelude
+
+import qualified Data.Environment                   as Env
+import qualified Data.Text                          as T
+import qualified Data.Text.Lazy                     as TL
+import qualified Database.PG.Query                  as Q
+import qualified Text.Shakespeare.Text              as ST
+
 import           Data.Aeson
 
+import qualified Hasura.Backends.Postgres.SQL.DML   as S
+
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
-import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Hasura.SQL.DML          as S
-
-import qualified Data.Text               as T
-import qualified Data.Environment        as Env
-import qualified Data.Text.Lazy          as TL
-import qualified Database.PG.Query       as Q
-import qualified Text.Shakespeare.Text   as ST
-
 
 data OpVar = OLD | NEW deriving (Show)
 
-pgIdenTrigger:: Ops -> TriggerName -> T.Text
-pgIdenTrigger op trn = pgFmtIden . qualifyTriggerName op $ triggerNameToTxt trn
+-- pgIdenTrigger is a method used to construct the name of the pg function
+-- used for event triggers which are present in the hdb_views schema.
+pgIdenTrigger:: Ops -> TriggerName -> Text
+pgIdenTrigger op trn = pgFmtIdentifier . qualifyTriggerName op $ triggerNameToTxt trn
   where
     qualifyTriggerName op' trn' = "notify_hasura_" <> trn' <> "_" <> T.pack (show op')
 
-getDropFuncSql :: Ops -> TriggerName -> T.Text
+getDropFuncSql :: Ops -> TriggerName -> Text
 getDropFuncSql op trn = "DROP FUNCTION IF EXISTS"
                         <> " hdb_views." <> pgIdenTrigger op trn <> "()"
                         <> " CASCADE"
@@ -53,7 +57,7 @@ mkAllTriggersQ
   :: (MonadTx m, HasSQLGenCtx m)
   => TriggerName
   -> QualifiedTable
-  -> [PGColumnInfo]
+  -> [ColumnInfo 'Postgres]
   -> TriggerOpsDef
   -> m ()
 mkAllTriggersQ trn qt allCols fullspec = do
@@ -65,7 +69,7 @@ mkTriggerQ
   :: (MonadTx m, HasSQLGenCtx m)
   => TriggerName
   -> QualifiedTable
-  -> [PGColumnInfo]
+  -> [ColumnInfo 'Postgres]
   -> Ops
   -> SubscribeOpSpec
   -> m ()
@@ -74,7 +78,7 @@ mkTriggerQ trn qt allCols op (SubscribeOpSpec columns payload) = do
   liftTx $ Q.multiQE defaultTxErrorHandler $ Q.fromText . TL.toStrict $
     let payloadColumns = fromMaybe SubCStar payload
         mkQId opVar colInfo = toJSONableExp strfyNum (pgiType colInfo) False $
-          S.SEQIden $ S.QIden (opToQual opVar) $ toIden $ pgiColumn colInfo
+          S.SEQIdentifier $ S.QIdentifier (opToQual opVar) $ toIdentifier $ pgiColumn colInfo
         getRowExpression opVar = case payloadColumns of
           SubCStar -> applyRowToJson $ S.SEUnsafe $ opToTxt opVar
           SubCArray cols -> applyRowToJson $
@@ -338,13 +342,6 @@ getWebhookInfoFromConf env wc = case wc of
   WCEnv we -> do
     envVal <- getEnv env we
     return $ WebhookConfInfo wc envVal
-
-getEnv :: QErrM m => Env.Environment -> T.Text -> m T.Text
-getEnv env k = do
-  let mEnv = Env.lookupEnv env (T.unpack k)
-  case mEnv of
-    Nothing     -> throw400 NotFound $ "environment variable '" <> k <> "' not set"
-    Just envVal -> return (T.pack envVal)
 
 getEventTriggerDef
   :: TriggerName

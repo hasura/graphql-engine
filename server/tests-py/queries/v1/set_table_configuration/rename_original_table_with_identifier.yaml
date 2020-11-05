@@ -1,0 +1,55 @@
+- description: set table configuration with custom name
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: set_table_configuration
+    args:
+      table: author
+      configuration:
+        custom_name: author_alias
+        custom_root_fields: {}
+        custom_column_names: {}
+
+- description: Check that above query has changed the schema
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      author_alias_by_pk:
+        name: Clarke
+  query:
+    query: |
+      query {
+          author_alias_by_pk(id: 1){
+            name
+          }
+      }
+
+- description: rename the underlying table
+  url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result: null
+  query:
+    type: run_sql
+    args:
+      sql: |
+        ALTER TABLE author RENAME TO authors;
+
+- description: Check if the earlier query works after renaming the table
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      author_alias_by_pk:
+        name: Clarke
+  query:
+    query: |
+      query {
+          author_alias_by_pk(id: 1){
+            name
+          }
+      }

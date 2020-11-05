@@ -517,7 +517,11 @@ class TestActionTimeout:
             'query': query,
             'status': 200,
         }
-        # the action takes 2 seconds to complete
+        # Since, the above is an async action, we don't wait for the execution of the webhook.
+        # We need this sleep of 4 seconds here because only after 3 seconds (sleep duration in the handler)
+        # we will be getting the result, otherwise the following asserts will fail because the
+        # response will be empty. This 4 seconds sleep will be concurrent with the sleep duration
+        # of the handler's execution. So, total time taken for this test will be 4 seconds.
         time.sleep(4)
         response, _ = check_query(hge_ctx, conf)
         assert 'errors' in response['data']['create_user']

@@ -39,13 +39,14 @@ Available COMMANDs:
     Launch a postgres container suitable for use with graphql-engine, watch its logs,
     clean up nicely after
 
-  test [--integration [pytest_args...] | --unit]
+  test [--integration [pytest_args...] | --unit | --hlint]
     Run the unit and integration tests, handling spinning up all dependencies.
     This will force a recompile. A combined code coverage report will be
     generated for all test suites.
         Either integration or unit tests can be run individually with their
     respective flags. With '--integration' any arguments that follow will be
-    passed to the pytest invocation
+    passed to the pytest invocation. Run the hlint code linter individually using
+    '--hlint'.
 
 EOL
 exit 1
@@ -85,15 +86,23 @@ case "${1-}" in
       --unit)
       RUN_INTEGRATION_TESTS=false
       RUN_UNIT_TESTS=true
+      RUN_HLINT=false
       ;;
       --integration)
       PYTEST_ARGS="${@:3}"
       RUN_INTEGRATION_TESTS=true
       RUN_UNIT_TESTS=false
+      RUN_HLINT=false
+      ;;
+      --hlint)
+      RUN_INTEGRATION_TESTS=false
+      RUN_UNIT_TESTS=false
+      RUN_HLINT=true
       ;;
       "")
       RUN_INTEGRATION_TESTS=true
       RUN_UNIT_TESTS=true
+      RUN_HLINT=true
       ;;
       *)
       die_usage
@@ -471,6 +480,13 @@ elif [ "$MODE" = "test" ]; then
     wait "$GRAPHQL_ENGINE_PID" || true
     echo
   fi  # RUN_INTEGRATION_TESTS
+
+  if [ "$RUN_HLINT" = true ]; then
+
+    cd "$PROJECT_ROOT/server"
+    hlint src-*
+
+  fi # RUN_HLINT
 
   # If hpc available, combine any tix from haskell/unit tests:
   if command -v hpc >/dev/null; then
