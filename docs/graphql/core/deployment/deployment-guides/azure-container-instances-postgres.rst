@@ -209,9 +209,6 @@ Replace ``<dns-name-label>`` with the label given earlier.
    :class: no-shadow
    :alt: Hasura console
 
-You can create tables and test your GraphQL queries here. Check out :ref:`Making
-your first GraphQL Query <first_graphql_query>` for a detailed guide.
-
 Troubleshooting
 ---------------
 

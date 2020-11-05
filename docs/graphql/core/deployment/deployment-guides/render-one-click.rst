@@ -55,8 +55,6 @@ You can monitor the deployment of the Hasura web service from the **Logs** tab. 
 
 You can create tables and test your GraphQL queries here.
 
-Check out :ref:`making your first GraphQL query <first_graphql_query>` or :ref:`setting up your first event trigger <first_event_trigger>` for more.
-
 References
 ----------
 

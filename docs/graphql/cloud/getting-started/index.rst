@@ -76,11 +76,10 @@ Click ``Create Project``.
    :group: create
    :class: inline-block
 
-Step 4: Try Hasura out
+Step 4: Try out Hasura
 ----------------------
 
-Click ``Launch Console`` to open the Hasura console in your browser and
-:ref:`make your first GraphQL query <first_graphql_query>` or :ref:`set up your first event trigger <first_event_trigger>`.
+Click ``Launch Console`` to open the Hasura console in your browser:
 
 .. thumbnail:: /img/graphql/cloud/getting-started/project-launch-console.png
   :alt: Project actions
@@ -92,11 +91,98 @@ You can navigate to the ``Pro`` tab in the console to check out the Pro features
   :alt: Hasura Console: Pro tab
   :width: 1000px
 
+Create a table
+^^^^^^^^^^^^^^
+
+On the Hasura console, navigate to ``Data -> Create table`` and create a sample table called ``profile`` with
+the following columns:
+
+.. code-block:: sql
+
+  profile (
+    id SERIAL PRIMARY KEY, -- serial -> auto-incrementing integer
+    name TEXT
+  )
+
+.. thumbnail:: /img/graphql/core/getting-started/create-profile-table.png
+   :alt: Create a table
+
+Now, insert some sample data into the table using the ``Insert Row`` tab of the ``profile`` table.
+
+Try out a query
+^^^^^^^^^^^^^^^
+
+Head to the ``GraphiQL`` tab in the console and try running the following query:
+
+.. code-block:: graphql
+
+    query {
+      profile {
+        id
+        name
+      }
+    }
+
+You'll see that you get all the inserted data!
+
+.. thumbnail:: /img/graphql/core/getting-started/profile-query.png
+   :alt: Try out a query
+
 Next steps
 ----------
 
-You can check out our `30-Minute Hasura Basics Course <https://hasura.io/learn/graphql/hasura/introduction/>`__
-and other `GraphQL & Hasura Courses <https://hasura.io/learn/>`__ for a more detailed introduction to Hasura.
+Learn course
+^^^^^^^^^^^^
+
+For a full hands-on tour of Hasura, check out our `30-Minute Hasura Basics Course <https://hasura.io/learn/graphql/hasura/introduction/>`__.
+
+Database modelling
+^^^^^^^^^^^^^^^^^^
+
+Check out the :ref:`schema section <schema>` to learn about how to model your database schema, as well as how to extend it.
+
+Querying data
+^^^^^^^^^^^^^
+
+Learn how to use :ref:`GraphQL queries <queries>` to query data from your GraphQL API.
+
+Inserting data
+^^^^^^^^^^^^^^
+
+Learn how to insert data into your GraphQL API using :ref:`GraphQL mutations <mutations>`.
+
+Business logic
+^^^^^^^^^^^^^^
+
+There are several options for the implementation of business logic, depending on your use case.
+
+Actions
+*******
+
+:ref:`Actions <actions>` can be used if you'd like to extend your GraphQL schema by integrating with a REST endpoint.
+
+Remote schema
+*************
+
+If you have an existing GraphQL server or if you're comfortable with implementing one, you can use :ref:`remote schemas <remote_schemas>`.
+
+Event triggers
+**************
+
+To trigger a serverless function based on a database event, use :ref:`event triggers <event_triggers>`.
+
+Scheduled triggers
+******************
+
+:ref:`Scheduled triggers <scheduled_triggers>` are used to execute custom business logic at specific points in time.
+
+Migrations
+^^^^^^^^^^
+
+Set up :ref:`Hasura migrations <migrations_setup>` to track your database alterations. This will make it easier to move to a different environment (e.g. staging or prod) later.
+
+Manage Hasura Cloud project
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can also click the gear icon to manage your Hasura Cloud project. (e.g. add :ref:`collaborators <manage_project_collaborators>`,
 :ref:`env vars <manage_project_env_vars>` or :ref:`custom domains <manage_project_domains>`) and :ref:`add an admin secret <secure_project>`
