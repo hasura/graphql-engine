@@ -265,7 +265,7 @@ parseWildcard =
     fromList   = foldr1 (\_ x -> StarDot x)
 
 -- Columns in RQL
-data SelCol b
+data SelCol (b :: Backend)
   = SCStar !Wildcard
   | SCExtSimple !(Column b)
   | SCExtRel !RelName !(Maybe RelName) !(SelectQ b)

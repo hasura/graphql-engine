@@ -61,14 +61,15 @@ import           Hasura.RQL.Types.Function           as R
 import           Hasura.RQL.Types.Metadata           as R
 import           Hasura.RQL.Types.Permission         as R
 import           Hasura.RQL.Types.QueryCollection    as R
+import           Hasura.RQL.Types.Relationship       as R
 import           Hasura.RQL.Types.RemoteRelationship as R
 import           Hasura.RQL.Types.RemoteSchema       as R
 import           Hasura.RQL.Types.ScheduledTrigger   as R
 import           Hasura.RQL.Types.SchemaCache        as R
 import           Hasura.RQL.Types.SchemaCache.Build  as R
 import           Hasura.RQL.Types.Table              as R
-import           Hasura.SQL.Backend                  as R
 import           Hasura.Session
+import           Hasura.SQL.Backend                  as R
 import           Hasura.Tracing                      (TraceT)
 
 data QCtx

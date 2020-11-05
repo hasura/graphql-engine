@@ -23,21 +23,21 @@ The ``Projects`` page show a list of your projects.
 
 For each project, you can do the one of the following actions:
 
-.. thumbnail:: /img/graphql/cloud/getting-started/project-actions.png
+.. thumbnail:: /img/graphql/cloud/projects/project-actions.png
    :alt: Project actions
    :width: 860px
-
-- Click the gear icon to manage your project
-
-  .. thumbnail:: /img/graphql/cloud/projects/project-details.png
-     :alt: General tab
-     :width: 900px
 
 - Click ``Launch Console`` to open the Hasura console in your browser. The ``Pro`` tab
   lets you use the Pro features that Hasura Cloud has set up for you.
 
   .. thumbnail:: /img/graphql/cloud/metrics/pro-tab-overview.png
      :alt: Hasura Console: Pro tab
+     :width: 900px
+
+- Click the gear icon to manage your project
+
+  .. thumbnail:: /img/graphql/cloud/projects/project-details.png
+     :alt: General tab
      :width: 900px
 
 .. note::
@@ -52,6 +52,7 @@ Dig deeper
    :titlesonly:
 
    Creating projects <create>
+   Project Details <details>
    Project Collaborators <collaborators>
    Project Env vars <env-vars>
    Project Domains <domains>

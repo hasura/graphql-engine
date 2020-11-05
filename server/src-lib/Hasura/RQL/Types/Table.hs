@@ -106,9 +106,9 @@ import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteRelationship
-import           Hasura.SQL.Backend
 import           Hasura.Server.Utils                 (duplicates, englishList)
 import           Hasura.Session
+import           Hasura.SQL.Backend
 
 
 data TableCustomRootFields

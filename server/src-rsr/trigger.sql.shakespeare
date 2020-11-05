@@ -1,4 +1,4 @@
-CREATE OR REPLACE function hdb_views.#{qualifiedTriggerName}() RETURNS trigger
+CREATE OR REPLACE function hdb_catalog.#{qualifiedTriggerName}() RETURNS trigger
   LANGUAGE plpgsql
   AS $$
   DECLARE
@@ -32,4 +32,4 @@ CREATE OR REPLACE function hdb_views.#{qualifiedTriggerName}() RETURNS trigger
   END;
 $$;
 DROP TRIGGER IF EXISTS #{qualifiedTriggerName} ON #{qualifiedTable};
-CREATE TRIGGER #{qualifiedTriggerName} AFTER #{operation} ON #{qualifiedTable} FOR EACH ROW EXECUTE PROCEDURE hdb_views.#{qualifiedTriggerName}();
+CREATE TRIGGER #{qualifiedTriggerName} AFTER #{operation} ON #{qualifiedTable} FOR EACH ROW EXECUTE PROCEDURE hdb_catalog.#{qualifiedTriggerName}();
