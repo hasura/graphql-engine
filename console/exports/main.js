@@ -15,6 +15,7 @@ export { default as PageNotFound } from '../src/components/Error/PageNotFound';
 export { CONSOLE_ADMIN_SECRET } from '../src/components/AppState';
 export { default as dataHeaders } from '../src/components/Services/Data/Common/Headers';
 export { handleMigrationErrors } from '../src/components/Services/Data/TableModify/ModifyActions';
+export { loadMigrationStatus } from '../src/components/Main/Actions';
 export {
   fetchSchemaList,
   updateSchemaInfo,
