@@ -51,7 +51,7 @@ resolveRemoteRelationship remoteRelationship
   let PartialRemoteSchemaCtx _name introspectionResult remoteSchemaInfo _ _ = context
   eitherRemoteField <- runExceptT $
     validateRemoteRelationship remoteRelationship (remoteSchemaInfo, introspectionResult) pgColumns
-  remoteField <- either (throw400 RemoteSchemaError . errorToText) pure $ eitherRemoteField
+  remoteField <- onLeft eitherRemoteField (throw400 RemoteSchemaError . errorToText)
   let table = rtrTable remoteRelationship
       schemaDependencies =
         let tableDep = SchemaDependency (SOTable table) DRTable

@@ -233,7 +233,8 @@ runIntrospectRemoteSchema
 runIntrospectRemoteSchema (RemoteSchemaNameQuery rsName) = do
   sc <- askSchemaCache
   (PartialRemoteSchemaCtx _ _ _ introspectionByteString _) <-
-    _rscpContext <$> (onNothing (Map.lookup rsName (scRemoteSchemas sc)) $
-    throw400 NotExists $
-    "remote schema: " <> rsName <<> " not found")
+    _rscpContext <$>
+    onNothing
+      (Map.lookup rsName (scRemoteSchemas sc))
+      (throw400 NotExists $ "remote schema: " <> rsName <<> " not found")
   pure $ encJFromLBS introspectionByteString

@@ -395,7 +395,7 @@ collectVariablesFromValue = \case
 collectVariablesFromField :: G.Field G.NoFragments Variable -> HashMap G.VariableDefinition A.Value
 collectVariablesFromField (G.Field _ _ arguments _ selSet) =
   let argumentVariables = fmap collectVariablesFromValue arguments
-      selSetVariables   = fmap (fmap snd) $ collectVariablesFromSelectionSet selSet
+      selSetVariables   = (fmap snd <$> collectVariablesFromSelectionSet selSet)
   in foldl Map.union mempty (Map.elems argumentVariables) <> Map.fromList selSetVariables
 
 -- | Fetch remote join field value from remote servers by batching respective 'RemoteJoinField's

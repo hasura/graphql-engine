@@ -172,8 +172,10 @@ resolveRemoteVariable userInfo = \case
                 _ -> pure $ G.VString sessionVarVal
             RQL.SessionArgumentPresetEnum enumVals -> do
               sessionVarEnumVal <-
-                G.EnumValue <$> (onNothing (G.mkName sessionVarVal) $
-                  Left $ sessionVarVal <<> " is not a valid GraphQL name")
+                G.EnumValue <$>
+                  onNothing
+                    (G.mkName sessionVarVal)
+                    (Left $ sessionVarVal <<> " is not a valid GraphQL name")
               case find (== sessionVarEnumVal) enumVals of
                 Just enumVal -> Right $ G.VEnum enumVal
                 Nothing -> Left $ sessionVarEnumVal <<> " is not one of the valid enum values"
@@ -187,4 +189,4 @@ resolveRemoteField
   -> RemoteField
   -> m (RQL.RemoteSchemaInfo, G.Field G.NoFragments Variable)
 resolveRemoteField userInfo (RemoteField remoteSchemaInfo remoteField) =
-  traverse (resolveRemoteVariable userInfo) remoteField >>= pure . (remoteSchemaInfo,)
+  (remoteSchemaInfo,) <$> traverse (resolveRemoteVariable userInfo) remoteField

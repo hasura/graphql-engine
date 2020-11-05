@@ -191,14 +191,14 @@ showRoleBasedSchemaValidationError = \case
     "input argument " <> inpArgName <<> " does not exist in the input object:" <>> inpObjName
   MissingNonNullableArguments fieldName nonNullableArgs ->
     "field: " <> fieldName <<> " expects the following non nullable arguments to "
-    <> "be present: " <> (englishList "and" $ fmap dquote nonNullableArgs)
+    <> "be present: " <> englishList "and" (fmap dquote nonNullableArgs)
   NonExistingDirectiveArgument parentName parentType directiveName nonExistingArgs ->
     "the following directive argument(s) defined in the directive: "
     <> directiveName
     <<> " defined with the type name: "
     <> parentName <<> " of type "
     <> parentType <<> " do not exist in the corresponding upstream directive: "
-    <> (englishList "and" $ fmap dquote nonExistingArgs)
+    <> englishList "and" (fmap dquote nonExistingArgs)
   NonExistingField (fldDefnType, parentTypeName) providedName ->
     "field " <> providedName <<> " does not exist in the "
     <> fldDefnType <<> ": " <>> parentTypeName
@@ -207,36 +207,36 @@ showRoleBasedSchemaValidationError = \case
   NonExistingUnionMemberTypes unionName nonExistingMembers ->
     "union " <> unionName <<> " contains members which do not exist in the members"
     <> " of the remote schema union :"
-    <> (englishList "and" $ fmap dquote nonExistingMembers)
+    <> englishList "and" (fmap dquote nonExistingMembers)
   CustomInterfacesNotAllowed objName customInterfaces ->
     "custom interfaces are not supported. " <> "Object" <> objName
     <<> " implements the following custom interfaces: "
-    <> (englishList "and" $ fmap dquote customInterfaces)
+    <> englishList "and" (fmap dquote customInterfaces)
   ObjectImplementsNonExistingInterfaces objName nonExistentInterfaces ->
     "object " <> objName <<> " is trying to implement the following interfaces"
     <> " that do not exist in the corresponding upstream remote object: "
-    <> (englishList "and" $ fmap dquote nonExistentInterfaces)
+    <> englishList "and" (fmap dquote nonExistentInterfaces)
   NonExistingEnumValues enumName nonExistentEnumVals ->
     "enum " <> enumName <<> " contains the following enum values that do not exist "
-    <> "in the corresponding upstream remote enum: " <>
-    (englishList "and" $ fmap dquote nonExistentEnumVals)
+    <> "in the corresponding upstream remote enum: "
+    <> englishList "and" (fmap dquote nonExistentEnumVals)
   MissingQueryRoot -> "query root does not exist in the schema definition"
   MultipleSchemaDefinitionsFound -> "multiple schema definitions found"
   DuplicateTypeNames typeNames ->
     "duplicate type names found: "
-    <> (englishList "and" $ fmap dquote typeNames)
+    <> englishList "and" ( fmap dquote typeNames)
   DuplicateDirectives (parentType, parentName) directiveNames ->
-    "duplicate directives: " <> (englishList "and" $ fmap dquote directiveNames)
+    "duplicate directives: " <> englishList "and" (fmap dquote directiveNames)
     <> "found in the " <> parentType <<> " " <>> parentName
   DuplicateFields (parentType, parentName) fieldNames ->
-    "duplicate fields: " <> (englishList "and" $ fmap dquote fieldNames)
+    "duplicate fields: " <> englishList "and" (fmap dquote fieldNames)
     <> "found in the " <> parentType <<> " " <>> parentName
   DuplicateArguments fieldName args ->
     "duplicate arguments: "
-    <> (englishList "and" $ fmap dquote args)
+    <> englishList "and" (fmap dquote args)
     <> "found in the field: " <>> fieldName
   DuplicateEnumValues enumName enumValues ->
-    "duplicate enum values: " <> (englishList "and" $ fmap dquote enumValues)
+    "duplicate enum values: " <> englishList "and" (fmap dquote enumValues)
     <> " found in the " <> enumName <<> " enum"
   InvalidPresetDirectiveLocation ->
     "Preset directives can be defined only on INPUT_FIELD_DEFINITION or ARGUMENT_DEFINITION"
@@ -363,12 +363,14 @@ parsePresetValue gType varName isStatic value = do
           in
           case value of
             G.VObject obj ->
-              G.VObject <$> (flip Map.traverseWithKey obj $ \k val -> do
-                               inpVal <-
-                                 onNothing (Map.lookup k inpValsMap)
-                                   $ (refute $ pure $ KeyDoesNotExistInInputObject k typeName)
-                               parsePresetValue (G._ivdType inpVal) k isStatic val
-                            )
+              G.VObject <$> flip Map.traverseWithKey obj
+                             ( \k val -> do
+                                 inpVal <-
+                                   onNothing
+                                     (Map.lookup k inpValsMap)
+                                     (refute $ pure $ KeyDoesNotExistInInputObject k typeName)
+                                 parsePresetValue (G._ivdType inpVal) k isStatic val
+                             )
             _ -> refute $ pure $ ExpectedInputObject typeName value
     G.TypeList _ gType' ->
       case value of
@@ -387,8 +389,8 @@ parsePresetValue gType varName isStatic value = do
     getVariableName :: m G.Name
     getVariableName = do
       ctr <- get
-      modify (\c -> c + 1)
-      pure $ (G.unsafeMkName $ G.unName varName <> "__" <> (T.pack $ show ctr))
+      modify (+ 1)
+      pure $ G.unsafeMkName (G.unName varName <> "__" <> T.pack (show ctr))
 
 parsePresetDirective
   :: forall m
@@ -825,9 +827,8 @@ createPossibleTypesMap objDefns =
   in
   Map.foldlWithKey' (\acc objTypeName interfaces ->
                        let interfaceMap =
-                             Map.fromList $ map (\iface -> (iface, [objTypeName])) interfaces
-                       in
-                       Map.unionWith (<>) acc interfaceMap)
+                             Map.fromList $ map (, [objTypeName]) interfaces
+                       in Map.unionWith (<>) acc interfaceMap)
                     mempty
                     objMap
 
@@ -873,17 +874,17 @@ getSchemaDocIntrospection scalars enums interfaces unions inpObjs objects (query
 
 partitionTypeDefinition :: G.TypeDefinition () a  -> State (PartitionedTypeDefinitions a) ()
 partitionTypeDefinition (G.TypeDefinitionScalar scalarDefn) =
-  modify (\td -> td {_ptdScalars = ((:) scalarDefn) . _ptdScalars $ td})
+  modify (\td -> td {_ptdScalars = (scalarDefn :) . _ptdScalars $ td})
 partitionTypeDefinition (G.TypeDefinitionObject objectDefn) =
-  modify (\td -> td {_ptdObjects = ((:) objectDefn) . _ptdObjects $ td})
+  modify (\td -> td {_ptdObjects = (objectDefn :) . _ptdObjects $ td})
 partitionTypeDefinition (G.TypeDefinitionInterface interfaceDefn) =
-  modify (\td -> td {_ptdInterfaces = ((:) interfaceDefn) . _ptdInterfaces $ td})
+  modify (\td -> td {_ptdInterfaces = (interfaceDefn :) . _ptdInterfaces $ td})
 partitionTypeDefinition (G.TypeDefinitionUnion unionDefn) =
-  modify (\td -> td {_ptdUnions = ((:) unionDefn) . _ptdUnions $ td})
+  modify (\td -> td {_ptdUnions = (unionDefn :) . _ptdUnions $ td})
 partitionTypeDefinition (G.TypeDefinitionEnum enumDefn) =
-  modify (\td -> td {_ptdEnums = ((:) enumDefn) . _ptdEnums $ td})
+  modify (\td -> td {_ptdEnums = (enumDefn :) . _ptdEnums $ td})
 partitionTypeDefinition (G.TypeDefinitionInputObject inputObjectDefn) =
-  modify (\td -> td {_ptdInputObjects = ((:) inputObjectDefn) . _ptdInputObjects $ td})
+  modify (\td -> td {_ptdInputObjects = (inputObjectDefn :) . _ptdInputObjects $ td})
 
 -- | validateRemoteSchema accepts two arguments, the `SchemaDocument` of
 -- the role-based schema, that is provided by the user and the `SchemaIntrospection`
@@ -924,7 +925,7 @@ validateRemoteSchema  (RemoteSchemaIntrospection upstreamTypeDefns) = do
 
     partitionTypeSystemDefinitions :: G.TypeSystemDefinition -> State (PartitionedTypeDefinitions G.InputValueDefinition) ()
     partitionTypeSystemDefinitions (G.TypeSystemDefinitionSchema schemaDefn) =
-      modify (\td -> td {_ptdSchemaDef = ((:) schemaDefn) . _ptdSchemaDef $ td})
+      modify (\td -> td {_ptdSchemaDef = (schemaDefn :) . _ptdSchemaDef $ td})
     partitionTypeSystemDefinitions (G.TypeSystemDefinitionType typeDefn) =
       partitionTypeDefinition typeDefn
 
@@ -947,8 +948,8 @@ resolveRoleBasedRemoteSchema (G.SchemaDocument providedTypeDefns) upstreamRemote
         providedTypeDefns <> (map (G.TypeSystemDefinitionType . G.TypeDefinitionScalar) defaultScalars)
   introspectionRes <-
     either (throw400 InvalidCustomRemoteSchemaDocument . showErrors) pure
-    =<< (runValidateT
-         $ fmap fst
+    =<< runValidateT
+         (fmap fst
          $ flip runStateT 0
          $ flip runReaderT providedSchemaDocWithDefaultScalars
          $ validateRemoteSchema $ irDoc $ rscIntro upstreamRemoteCtx)
