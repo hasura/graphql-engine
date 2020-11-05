@@ -5,7 +5,7 @@ headers:
   X-Hasura-Role: student
 response:
   path: $.args
-  error: Check constraint violation. insert/update check constraint failed
+  error: Permission check violation. insert/update check constraint failed
   code: permission-error
 query:
   type: insert

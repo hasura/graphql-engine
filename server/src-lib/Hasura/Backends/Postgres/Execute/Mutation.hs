@@ -192,7 +192,7 @@ withCheckPermission :: (MonadError QErr m) => m (a, Bool) -> m a
 withCheckPermission sqlTx = do
   (rawResponse, checkConstraint) <- sqlTx
   unless checkConstraint $ throw400 PermissionError $
-    "Check constraint violation. insert/update check constraint failed"
+    "Permission check violation. insert/update check constraint failed"
   pure rawResponse
 
 executeMutationOutputQuery

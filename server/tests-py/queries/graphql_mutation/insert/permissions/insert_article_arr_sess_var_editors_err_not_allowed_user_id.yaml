@@ -9,7 +9,7 @@ response:
   - extensions:
       path: $.selectionSet.insert_article.args.objects
       code: permission-error
-    message: Check constraint violation. insert/update check constraint failed
+    message: Permission check violation. insert/update check constraint failed
 query:
   query: |
     mutation insert_article {

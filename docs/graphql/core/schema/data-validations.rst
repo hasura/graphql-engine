@@ -345,7 +345,7 @@ If we try to insert an article with ``title = ""``, we will get a ``permission-e
     {
       "errors": [
         {
-          "message": "Check constraint violation. insert/update check constraint failed",
+          "message": "Permission check violation. insert/update check constraint failed",
           "extensions": {
             "path": "$.selectionSet.insert_article.args.objects",
             "code": "permission-error"
@@ -449,7 +449,7 @@ will receive a ``permission-error`` :
     {
       "errors": [
         {
-          "message": "Check constraint violation. insert/update check constraint failed",
+          "message": "Permission check violation. insert/update check constraint failed",
           "extensions": {
             "path": "$.selectionSet.insert_article.args.objects",
             "code": "permission-error"
