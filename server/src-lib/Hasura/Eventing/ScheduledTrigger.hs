@@ -70,7 +70,6 @@ module Hasura.Eventing.ScheduledTrigger
   -- * Database interactions
   , getDeprivedCronTriggerStatsTx
   , getScheduledEventsForDeliveryTx
-  , scheduledTimeOrderBy
   , insertInvocationTx
   , setScheduledEventOpTx
   , unlockScheduledEventsTx
@@ -84,12 +83,10 @@ import qualified Data.Aeson                             as J
 import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
-import qualified Data.List.NonEmpty                     as NE
 import qualified Data.Set                               as Set
 import qualified Data.TByteString                       as TBS
 import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
-import qualified Hasura.Backends.Postgres.SQL.DML       as S
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Text.Builder                           as TB
 
@@ -512,12 +509,6 @@ getScheduledEventsForDeliveryTx =
           )
          SELECT row_to_json(t.*) FROM cte AS t
       |] () False
-
-scheduledTimeOrderBy :: S.OrderByExp
-scheduledTimeOrderBy =
-  let scheduledTimeCol = S.SEIdentifier $ Identifier "scheduled_time"
-  in S.OrderByExp $ flip (NE.:|) [] $ OrderByItem scheduledTimeCol
-     (Just S.OTAsc) Nothing
 
 insertInvocationTx :: Invocation 'ScheduledType -> ScheduledEventType -> Q.TxE QErr ()
 insertInvocationTx invo type' = do
