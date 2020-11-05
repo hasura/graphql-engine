@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import 'react-table/react-table.css';
 import '../../../Common/TableCommon/ReactTableOverrides.css';
 import DragFoldTable, {
@@ -57,35 +57,34 @@ import {
 import { compareRows, isTableWithPK } from './utils';
 import styles from '../../../Common/TableCommon/Table.scss';
 
-const ViewRows = ({
-  curTableName,
-  currentSchema,
-  curQuery,
-  curFilter,
-  curRows,
-  curPath,
-  parentTableName,
-  curDepth,
-  activePath,
-  schemas,
-  dispatch,
-  ongoingRequest,
-  isProgressing,
-  lastError,
-  lastSuccess,
-  isView,
-  count,
-  expandedRow,
-  manualTriggers = [],
-  updateInvocationRow,
-  updateInvocationFunction,
-  triggeredRow,
-  triggeredFunction,
-  location,
-  readOnlyMode,
-  shouldHidePagination,
-  currentSource,
-}) => {
+const ViewRows = props => {
+  const {
+    curTableName,
+    currentSchema,
+    curQuery,
+    curFilter,
+    curRows,
+    curPath = [],
+    parentTableName,
+    curDepth,
+    activePath,
+    schemas,
+    dispatch,
+    ongoingRequest,
+    isProgressing,
+    lastError,
+    lastSuccess,
+    isView,
+    count,
+    expandedRow,
+    manualTriggers = [],
+    location,
+    readOnlyMode,
+    shouldHidePagination,
+    currentSource,
+  } = props;
+  const [invokedRow, setInvokedRow] = useState(null);
+  const [invocationFunc, setInvocationFunc] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
   useEffect(() => {
     setSelectedRows([]);
@@ -95,13 +94,13 @@ const ViewRows = ({
 
   // Invoke manual trigger status
   const invokeTrigger = (trigger, row) => {
-    updateInvocationRow(row);
-    updateInvocationFunction(trigger);
+    setInvokedRow(row);
+    setInvocationFunc(trigger);
   };
 
   const onCloseInvokeTrigger = () => {
-    updateInvocationRow(-1);
-    updateInvocationFunction(null);
+    setInvokedRow(null);
+    setInvokedRow(null);
   };
 
   const handleAllCheckboxChange = e => {
@@ -441,12 +440,12 @@ const ViewRows = ({
               >
                 {triggerBtn}
               </Dropdown>
-              {triggeredRow === rowIndex && (
+              {invokedRow === rowIndex && (
                 <InvokeManualTrigger
                   args={row}
-                  name={`${triggeredFunction}`}
+                  name={`${invocationFunc}`}
                   onClose={onCloseInvokeTrigger}
-                  identifier={`invoke_function_${triggeredFunction}`}
+                  identifier={`invoke_function_${invocationFunc}`}
                 />
               )}
             </div>

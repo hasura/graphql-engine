@@ -44,6 +44,10 @@ const getCurrentSchema = (state: ReduxState) => {
   return state.tables.currentSchema;
 };
 
+const getCurrentTable = (state: ReduxState) => {
+  return state.tables.currentTable;
+};
+
 const getInconsistentObjects = (state: ReduxState) => {
   return state.metadata.inconsistentObjects;
 };
@@ -239,14 +243,15 @@ export const getEventTriggers = createSelector(
 
 export const getManualEventsTriggers = createSelector(
   getEventTriggers,
-  triggers => (tableName: string, schemaName: string) => {
-    const manula = triggers.filter(
+  getCurrentSchema,
+  getCurrentTable,
+  (triggers, schema, table) => {
+    return triggers.filter(
       t =>
-        t.table_name === tableName &&
-        t.schema_name === schemaName &&
+        t.table_name === table &&
+        t.schema_name === schema &&
         t.configuration.definition.enable_manual
     );
-    return manula;
   }
 );
 

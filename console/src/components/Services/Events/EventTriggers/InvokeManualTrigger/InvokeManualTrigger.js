@@ -47,11 +47,12 @@ class InvokeManualTrigger extends React.Component {
       .then(data => {
         const currThis = this;
         const pollId = setInterval(() => {
-          dispatch(loadEventInvocations(data.event_id)).then(d => {
-            if (d.length > 0) {
-              clearInterval(currThis.state.pollId);
-            }
-          });
+          // todo
+          // dispatch(loadEventInvocations(data.event_id)).then(d => {
+          //   if (d.length > 0) {
+          //     clearInterval(currThis.state.pollId);
+          //   }
+          // });
         }, 5000);
         this.setPoll(pollId);
       })
@@ -65,7 +66,6 @@ class InvokeManualTrigger extends React.Component {
     });
   }
   componentWillUnmount() {
-    console.log('UNMOUNT');
     const { dispatch } = this.props;
     clearInterval(this.state.pollId);
     dispatch({

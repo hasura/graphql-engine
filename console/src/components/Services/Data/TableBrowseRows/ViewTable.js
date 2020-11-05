@@ -1,11 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import {
-  vSetDefaults,
-  UPDATE_TRIGGER_ROW,
-  UPDATE_TRIGGER_FUNCTION,
-  vMakeTableRequests,
-} from './ViewActions';
+import { vSetDefaults, vMakeTableRequests } from './ViewActions';
 import { setTable } from '../DataActions';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewRows from './ViewRows';
@@ -70,22 +65,6 @@ class ViewTable extends Component {
     dispatch(vSetDefaults());
   }
 
-  updateInvocationRow = row => {
-    const { dispatch } = this.props;
-    dispatch({
-      type: UPDATE_TRIGGER_ROW,
-      data: row,
-    });
-  };
-
-  updateInvocationFunction = triggerFunc => {
-    const { dispatch } = this.props;
-    dispatch({
-      type: UPDATE_TRIGGER_FUNCTION,
-      data: triggerFunc,
-    });
-  };
-
   render() {
     const {
       tableName,
@@ -105,8 +84,6 @@ class ViewTable extends Component {
       expandedRow,
       currentSchema,
       manualTriggers = [],
-      triggeredRow,
-      triggeredFunction,
       location,
       estimatedCount,
       isCountEstimated,
@@ -135,7 +112,6 @@ class ViewTable extends Component {
         currentSchema={currentSchema}
         curQuery={query}
         curFilter={curFilter}
-        curPath={[]}
         curRows={rows}
         isView={isView}
         parentTableName={null}
@@ -151,10 +127,6 @@ class ViewTable extends Component {
         dispatch={dispatch}
         expandedRow={expandedRow}
         manualTriggers={manualTriggers}
-        updateInvocationRow={this.updateInvocationRow.bind(this)}
-        updateInvocationFunction={this.updateInvocationFunction.bind(this)}
-        triggeredRow={triggeredRow}
-        triggeredFunction={triggeredFunction}
         location={location}
         readOnlyMode={readOnlyMode}
         currentSource={currentSource}
@@ -219,6 +191,7 @@ ViewTable.propTypes = {
 };
 
 const mapStateToProps = (state, ownProps) => {
+  console.log('MAP_RERENDER');
   return {
     tableName: ownProps.params.table,
     currentSchema: state.tables.currentSchema,
@@ -229,10 +202,7 @@ const mapStateToProps = (state, ownProps) => {
     readOnlyMode: state.main.readOnlyMode,
     serverVersion: state.main.serverVersion,
     ...state.tables.view,
-    manualTriggers: getManualEventsTriggers(state)(
-      ownProps.params.table,
-      state.tables.currentSchema
-    ),
+    manualTriggers: getManualEventsTriggers(state),
   };
 };
 

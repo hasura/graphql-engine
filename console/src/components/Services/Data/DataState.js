@@ -20,8 +20,6 @@ const defaultViewState = {
   lastError: {},
   lastSuccess: {},
   manualTriggers: [],
-  triggeredRow: -1,
-  triggeredFunction: null,
   estimatedCount: 0,
   isCountEstimated: 0,
 };
