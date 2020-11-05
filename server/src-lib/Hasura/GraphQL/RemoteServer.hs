@@ -58,7 +58,7 @@ fetchRemoteSchema env manager schemaName schemaInfo@(RemoteSchemaInfo url header
   let hdrsWithDefaults = addDefaultHeaders headers
 
   initReqE <- liftIO $ try $ HTTP.parseRequest (show url)
-  initReq <- either throwHttpErr pure initReqE
+  initReq <- onLeft initReqE throwHttpErr
   let req = initReq
            { HTTP.method = "POST"
            , HTTP.requestHeaders = hdrsWithDefaults
@@ -306,7 +306,7 @@ instance J.FromJSON (FromIntrospection IntrospectionResult) where
           -- defined and the admin will be the one,
           -- who'll be adding the remote schema,
           -- hence presets are set to `Nothing`
-          (flip RemoteSchemaInputValueDefinition Nothing)
+          (`RemoteSchemaInputValueDefinition` Nothing)
           types
         r =
           IntrospectionResult
@@ -342,7 +342,7 @@ execRemoteGQ' env manager userInfo reqHdrs q rsi opType =  do
       headers  = Map.toList $ foldr Map.union Map.empty hdrMaps
       finalHeaders = addDefaultHeaders headers
   initReqE <- liftIO $ try $ HTTP.parseRequest (show url)
-  initReq <- either httpThrow pure initReqE
+  initReq <- onLeft initReqE httpThrow
   let req = initReq
            { HTTP.method = "POST"
            , HTTP.requestHeaders = finalHeaders

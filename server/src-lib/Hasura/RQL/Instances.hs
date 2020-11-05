@@ -109,7 +109,7 @@ instance (GCompare f, GCompare g) => GCompare (Product f g) where
 
 instance J.FromJSON CronSchedule where
   parseJSON = J.withText "CronSchedule" $ \t ->
-    either fail pure $ parseCronSchedule t
+    onLeft (parseCronSchedule t) fail
 
 instance J.ToJSON CronSchedule where
   toJSON = J.String . serializeCronSchedule

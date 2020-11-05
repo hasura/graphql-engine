@@ -316,7 +316,7 @@ renameNamedType rename =
 pgColumnToVariable :: (MonadError ValidationError m) => PGCol -> m G.Name
 pgColumnToVariable pgCol =
   let pgColText = getPGColTxt pgCol
-  in maybe (throwError $ InvalidGraphQLName pgColText) pure $ G.mkName pgColText
+  in onNothing (G.mkName pgColText) (throwError $ InvalidGraphQLName pgColText)
 
 -- | Lookup the field in the schema.
 lookupField

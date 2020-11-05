@@ -491,8 +491,7 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
                 { P.pType   = P.pType parser
                 , P.pParser = \value ->
                     let inputValP = castWith (P.inputParserInput @k) value
-                    in P.pParser parser value <&>
-                      (\presetVal -> (inputValP, presetVal))
+                    in P.pParser parser value <&> (inputValP,)
                 }
         in case maybeDefaultVal of
           Nothing ->
