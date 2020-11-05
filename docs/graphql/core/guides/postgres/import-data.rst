@@ -39,7 +39,7 @@ For example:
 Step 2: Connect to the postgres database
 ------------------------------------------
 
-You can connect to the postgres database from ``psql`` on the command line like the following: 
+You can connect to the postgres database using the ``psql`` command on the command line like the following: 
 
 .. code-block:: bash
 
