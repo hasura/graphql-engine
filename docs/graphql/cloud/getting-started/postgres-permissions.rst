@@ -73,6 +73,11 @@ You may notice the following commands throw warnings/errors:
 
 You can **ignore** these warnings/errors or skip granting these permission as usually all users have relevant access to ``information_schema`` and ``pg_catalog`` schemas by default (see keyword `PUBLIC <https://www.postgresql.org/docs/current/sql-grant.html>`_).
 
+.. note::
+
+   If you first connect Postgres with the default superuser, and afterwards with another user, you might get an error.
+   You then need to reset the permissions to the new user.
+
 Note for GCP
 ^^^^^^^^^^^^^
 
