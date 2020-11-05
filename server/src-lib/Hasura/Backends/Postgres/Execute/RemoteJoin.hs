@@ -40,6 +40,7 @@ import           Hasura.GraphQL.Parser                  hiding (field)
 import           Hasura.GraphQL.RemoteServer            (execRemoteGQ')
 import           Hasura.GraphQL.Context                 (resolveRemoteVariable)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
+import           Hasura.GraphQL.Execute.Remote          (collectVariablesFromSelectionSet)
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.IR.RemoteJoin
 import           Hasura.RQL.IR.Returning
@@ -375,21 +376,27 @@ defaultValue = \case
   JSONValue    _ -> Nothing
   GraphQLValue g -> Just g
 
-collectVariables :: G.Value Variable -> HashMap G.VariableDefinition A.Value
-collectVariables = \case
+collectVariablesFromValue :: G.Value Variable -> HashMap G.VariableDefinition A.Value
+collectVariablesFromValue = \case
   G.VNull          -> mempty
   G.VInt _         -> mempty
   G.VFloat _       -> mempty
   G.VString _      -> mempty
   G.VBoolean _     -> mempty
   G.VEnum _        -> mempty
-  G.VList values   -> foldl Map.union mempty $ map collectVariables values
-  G.VObject values -> foldl Map.union mempty $ map collectVariables $ Map.elems values
+  G.VList values   -> foldl Map.union mempty $ map collectVariablesFromValue values
+  G.VObject values -> foldl Map.union mempty $ map collectVariablesFromValue $ Map.elems values
   G.VVariable var@(Variable _ gType val) ->
     let name       = getName var
         jsonVal    = inputValueToJSON val
         defaultVal = defaultValue val
     in Map.singleton (G.VariableDefinition name gType defaultVal) jsonVal
+
+collectVariablesFromField :: G.Field G.NoFragments Variable -> HashMap G.VariableDefinition A.Value
+collectVariablesFromField (G.Field _ _ arguments _ selSet) =
+  let argumentVariables = fmap collectVariablesFromValue arguments
+      selSetVariables   = fmap (fmap snd) $ collectVariablesFromSelectionSet selSet
+  in foldl Map.union mempty (Map.elems argumentVariables) <> Map.fromList selSetVariables
 
 -- | Fetch remote join field value from remote servers by batching respective 'RemoteJoinField's
 fetchRemoteJoinFields
@@ -430,20 +437,19 @@ fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
 
     fieldsToRequest :: G.OperationType -> NonEmpty (G.Field G.NoFragments Variable) -> GQLReqParsed
     fieldsToRequest opType gFields@(headField :| _) =
-      let variableInfos =
-            -- only the `headField` is used for collecting the variables here because
-            -- the variable information of all the fields will be the same.
-            -- For example:
-            -- {
-            --   author {
-            --     name
-            --     remote_relationship (extra_arg: $extra_arg)
-            --   }
-            -- }
-            --
-            -- If there are 10 authors, then there are 10 fields that will be requested
-            -- each containing exactly the same variable info.
-            foldl Map.union mempty $ Map.elems $ fmap collectVariables $ G._fArguments $ headField
+      -- only the `headField` is used for collecting the variables here because
+      -- the variable information of all the fields will be the same.
+      -- For example:
+      -- {
+      --   author {
+      --     name
+      --     remote_relationship (extra_arg: $extra_arg)
+      --   }
+      -- }
+      --
+      -- If there are 10 authors, then there are 10 fields that will be requested
+      -- each containing exactly the same variable info.
+      let variableInfos = collectVariablesFromField headField
           gFields' = NE.toList $ NE.map (G.fmapFieldFragment G.inline . convertFieldWithVariablesToName) gFields
       in mkGQLRequest gFields' variableInfos
       where
