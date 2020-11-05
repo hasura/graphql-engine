@@ -101,7 +101,6 @@ class TestRemoteRelationshipPermissions:
 
     @pytest.fixture(autouse=True)
     def transact(self, hge_ctx, graphql_service):
-        print("In setup method")
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_with_permissions.yaml')
         assert st_code == 200, resp
         yield
@@ -111,7 +110,10 @@ class TestRemoteRelationshipPermissions:
     def test_basic_relationship(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
         assert st_code == 200, resp
-        check_query_f(hge_ctx, self.dir() + 'basic_relationship_with_permissions1.yaml')
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic_user.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'basic_remote_relationship_without_remote_schema_permissions_configured.yaml')
+        check_query_f(hge_ctx, self.dir() + 'basic_remote_relationship_with_remote_schema_permissions_configured.yaml')
 
     # Test queries that combine several remote relationships, nested in
     # different ways, variously filtering different bits using permissions.
@@ -119,3 +121,14 @@ class TestRemoteRelationshipPermissions:
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_multiple_remote_rel.yaml')
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'complex_multiple_joins.yaml')
+
+    def test_deriving_remote_relationship_permission(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'derive_remote_relationship_permissions.yaml')
+        check_query_f(hge_ctx, self.dir() + 'derive_remote_relationship_with_joining_field_containing_preset.yaml')
+
+    def test_partial_arguments_of_remote_relationship_from_preset(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_messages_single_field.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'partial_arguments_from_preset.yaml')

@@ -1,4 +1,4 @@
-description: Simple remote relationship query with permissions without any permissions configured for the role
+description: Simple remote relationship query without remote schema permissions configured
 url: /v1/graphql
 status: 200
 headers:

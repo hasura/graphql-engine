@@ -15,7 +15,7 @@ args:
     sql: |
       drop table if exists authors
 
-# also drops remote relationship as direct dep
+# also drops remote relationship and permissions as direct dependencies
 - type: remove_remote_schema
   args:
     name: my-remote-schema
