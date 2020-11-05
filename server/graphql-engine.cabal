@@ -302,7 +302,7 @@ library
                      , Data.Time.Clock.Units
                      , Data.URL.Template
                      , Hasura.App
-                     , Hasura.Class
+                     , Hasura.Metadata.Class
 
                      , Hasura.Backends.Postgres.Connection
                      , Hasura.Backends.Postgres.Execute.Mutation

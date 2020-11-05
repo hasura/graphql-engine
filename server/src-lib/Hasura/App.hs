@@ -43,7 +43,6 @@ import qualified System.Log.FastLogger                     as FL
 import qualified Text.Mustache.Compile                     as M
 
 import           Hasura.Backends.Postgres.Connection
-import           Hasura.Class
 import           Hasura.EncJSON
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.EventTrigger
@@ -57,6 +56,7 @@ import           Hasura.GraphQL.Logging                    (MonadQueryLog (..), 
 import           Hasura.GraphQL.Transport.HTTP             (MonadExecuteQuery (..))
 import           Hasura.GraphQL.Transport.HTTP.Protocol    (toParsed)
 import           Hasura.Logging
+import           Hasura.Metadata.Class
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.Types

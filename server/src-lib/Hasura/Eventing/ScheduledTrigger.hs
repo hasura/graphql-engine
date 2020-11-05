@@ -105,11 +105,11 @@ import qualified Hasura.Tracing                         as Tracing
 
 import           Hasura.Backends.Postgres.SQL.DML
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Class
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.HTTP
 import           Hasura.Eventing.ScheduledTrigger.Types
 import           Hasura.HTTP
+import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.EventTrigger            (getHeaderInfosFromConf)
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
