@@ -149,5 +149,5 @@ $(deriveJSON (aesonDrop 5 snakeCase) ''DropQueryFromCollection)
 newtype CollectionReq
   = CollectionReq
   {_crCollection :: CollectionName}
-  deriving (Show, Eq, Lift, Generic)
+  deriving (Show, Eq, Lift, Generic, Hashable)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CollectionReq)

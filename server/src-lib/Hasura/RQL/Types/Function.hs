@@ -78,3 +78,51 @@ $(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionInfo)
 getInputArgs :: FunctionInfo -> Seq.Seq FunctionArg
 getInputArgs =
   Seq.fromList . mapMaybe (^? _IAUserProvided) . toList . fiInputArgs
+
+type FunctionCache = HashMap QualifiedFunction FunctionInfo -- info of all functions
+
+-- Metadata requests related types
+data FunctionConfig
+  = FunctionConfig
+  { _fcSessionArgument :: !(Maybe FunctionArgName)
+  } deriving (Show, Eq, Generic, Lift)
+instance NFData FunctionConfig
+instance Cacheable FunctionConfig
+$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields = True} ''FunctionConfig)
+
+emptyFunctionConfig :: FunctionConfig
+emptyFunctionConfig = FunctionConfig Nothing
+
+data TrackFunctionV2
+  = TrackFunctionV2
+  { _tfv2Function      :: !QualifiedFunction
+  , _tfv2Configuration :: !FunctionConfig
+  } deriving (Show, Eq, Lift, Generic)
+$(deriveToJSON (aesonDrop 5 snakeCase) ''TrackFunctionV2)
+
+instance FromJSON TrackFunctionV2 where
+  parseJSON = withObject "Object" $ \o ->
+    TrackFunctionV2
+    <$> o .: "function"
+    <*> o .:? "configuration" .!= emptyFunctionConfig
+
+-- | Raw SQL function metadata from postgres
+data RawFunctionInfo
+  = RawFunctionInfo
+  { rfiHasVariadic      :: !Bool
+  , rfiFunctionType     :: !FunctionType
+  , rfiReturnTypeSchema :: !SchemaName
+  , rfiReturnTypeName   :: !PGScalarType
+  , rfiReturnTypeType   :: !PGTypeKind
+  , rfiReturnsSet       :: !Bool
+  , rfiInputArgTypes    :: ![QualifiedPGType]
+  , rfiInputArgNames    :: ![FunctionArgName]
+  , rfiDefaultArgs      :: !Int
+  , rfiReturnsTable     :: !Bool
+  , rfiDescription      :: !(Maybe PGDescription)
+  } deriving (Show, Eq, Generic)
+instance NFData RawFunctionInfo
+instance Cacheable RawFunctionInfo
+$(deriveJSON (aesonDrop 3 snakeCase) ''RawFunctionInfo)
+
+type PostgresFunctionsMetadata = HashMap QualifiedFunction [RawFunctionInfo]
