@@ -20,7 +20,7 @@ guide will show how to do so.
 
 In this guide we will use the following CSV file as an example. 
 
-Also, make sure it is saved as ``profile.csv``.
+Also, make sure the file is saved as ``profile.csv``.
 
 .. thumbnail:: /img/graphql/core/guides/sample-data-csv-file.png
    :alt: .csv data file
@@ -39,7 +39,7 @@ For example:
 Step 2: Connect to the postgres database
 ------------------------------------------
 
-You can connect to the postgres database using the ``psql`` command on the command line like the following: 
+You can connect to the postgres database using the ``psql`` command on the terminal like the following: 
 
 .. code-block:: bash
 
