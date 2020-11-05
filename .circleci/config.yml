@@ -79,7 +79,7 @@ refs:
 
   setup_remote_docker: &setup_remote_docker
     setup_remote_docker:
-      version: 18.06.3-ce
+      version: 19.03.13
       docker_layer_caching: true
 
   # ref pg environment for testing
