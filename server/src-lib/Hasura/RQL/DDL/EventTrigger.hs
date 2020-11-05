@@ -343,13 +343,6 @@ getWebhookInfoFromConf env wc = case wc of
     envVal <- getEnv env we
     return $ WebhookConfInfo wc envVal
 
-getEnv :: QErrM m => Env.Environment -> Text -> m Text
-getEnv env k = do
-  let mEnv = Env.lookupEnv env (T.unpack k)
-  case mEnv of
-    Nothing     -> throw400 NotFound $ "environment variable '" <> k <> "' not set"
-    Just envVal -> return (T.pack envVal)
-
 getEventTriggerDef
   :: TriggerName
   -> Q.TxE QErr (QualifiedTable, EventTriggerConf)

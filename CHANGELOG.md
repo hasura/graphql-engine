@@ -54,6 +54,44 @@ The corresponding JWT config can be:
   }
 ```
 
+### Metadata Types SDK
+
+The types and documentation comments for Metadata V2 have been converted into JSON/YAML Schema, and used to autogenerate type definitions for popular languages.
+
+This enables users to build type-safe tooling in the language of their choice around Metadata interactions and automations.
+
+Additionally, the JSON/YAML Schemas can be used to provide IntelliSense and autocomplete + documentation when interacting with Metadata YAML/JSON files.
+
+For a more comprehensive overview, please see [the readme located here](./contrib/metadata-types/README.md)
+
+**Sample Code**
+
+```ts
+import { TableEntry } from "../generated/HasuraMetadataV2"
+
+const newTable: TableEntry = {
+  table: { schema: "public", name: "user" },
+  select_permissions: [
+    {
+      role: "user",
+      permission: {
+        limit: 100,
+        allow_aggregations: false,
+        columns: ["id", "name", "etc"],
+        computed_fields: ["my_computed_field"],
+        filter: {
+          id: { _eq: "X-Hasura-User-ID" },
+        },
+      },
+    },
+  ],
+}
+```
+
+**IntelliSense Example**
+
+![](./contrib/metadata-types/json-schema-typecheck-demo.gif)
+
 ### Breaking changes
 
 This release contains the [PDV refactor (#4111)](https://github.com/hasura/graphql-engine/pull/4111), a significant rewrite of the internals of the server, which did include some breaking changes:
@@ -82,6 +120,8 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - server: accept only non-negative integers for batch size and refetch interval (close #5653) (#5759)
 - server: fix bug which arised when renaming a table which had a manual relationship defined (close #4158)
 - server: limit the length of event trigger names (close #5786)
+- server: Configurable websocket keep-alive interval. Add `--websocket-keepalive` command-line flag
+          and handle `HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE` env variable (fix #3539) 
 **NOTE:** If you have event triggers with names greater than 42 chars, then you should update their names to avoid running into Postgres identifier limit bug (#5786)
 - server: validate remote schema queries (fixes #4143)
 - server: fix issue with tracking custom functions that return `SETOF` materialized view (close #5294) (#5945)
@@ -89,16 +129,16 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - server: allow remote relationships with union, interface and enum type fields as well (fixes #5875) (#6080)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
-- cli: add missing global flags for seed command (#5565)
-- cli: allow seeds as alias for seed command (#5693)
 - console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
 - console: add option to flag an insertion as a migration from `Data` section (close #1766) (#4933)
 - console: add notifications (#5070)
 - console: down migrations improvements (close #3503, #4988) (#4790)
+- cli: add missing global flags for seed command (#5565)
+- cli: allow seeds as alias for seed command (#5693)
 - docs: add docs page on networking with docker (close #4346) (#4811)
 - docs: add tabs for console / cli / api workflows (close #3593) (#4948)
 - docs: add postgres concepts page to docs (close #4440) (#4471)
-
+- docs: add guides on connecting hasura cloud to pg databases of different cloud vendors (#5948)
 
 ## `v1.3.2`
 
@@ -107,7 +147,6 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 (Add entries here in the order of: server, console, cli, docs, others)
 
 - server: fixes column masking in select permission for computed fields regression (fix #5696)
-
 
 ## `v1.3.1`, `v1.3.1-beta.1`
 
@@ -124,7 +163,7 @@ If you do have such headers configured, then you must update the header configur
 
 - server: fix failing introspection query when an enum column is part of a primary key (fixes #5200)
 - server: disallow headers from env variables starting with `HASURA_GRAPHQL_` in actions, event triggers & remote schemas (#5519)
-**WARNING**: This might break certain deployments. See `Breaking change` section above.
+  **WARNING**: This might break certain deployments. See `Breaking change` section above.
 - server: bugfix to allow HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE of 0 (#5363)
 - server: support only a bounded plan cache, with a default size of 4000 (closes #5363)
 - server: add logs for action handlers
@@ -163,7 +202,7 @@ If you do have such headers configured, then you must update the header configur
 - server: unlock locked scheduled events on graceful shutdown (#4928)
 - server: disable prepared statements for mutations as we end up with single-use objects which result in excessive memory consumption for mutation heavy workloads (#5255)
 - server: include scheduled event metadata (`created_at`,`scheduled_time`,`id`, etc) along with the configured payload in the request body to the webhook.
-**WARNING:** This is breaking for beta versions as the payload is now inside a key called `payload`.
+  **WARNING:** This is breaking for beta versions as the payload is now inside a key called `payload`.
 - console: allow configuring statement timeout on console RawSQL page (close #4998) (#5045)
 - console: support tracking partitioned tables (close #5071) (#5258)
 - console: add button to cancel one-off scheduled events and cron-trigger events (close #5161) (#5236)
@@ -172,7 +211,6 @@ If you do have such headers configured, then you must update the header configur
 - docs: add note for managed databases in postgres requirements (close #1677, #3783) (#5228)
 - docs: add 1-click deployment to Nhost page to the deployment guides (#5180)
 - docs: add hasura cloud to getting started section (close #5206) (#5208)
-
 
 ## `v1.3.0-beta.3`
 
@@ -276,9 +314,11 @@ Support for this is now added through the `add_computed_field` API.
 Read more about the session argument for computed fields in the [docs](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html).
 
 ### Manage seed migrations as SQL files
+
 A new `seeds` command is introduced in CLI, this will allow managing seed migrations as SQL files
 
 #### Creating seed
+
 ```
 # create a new seed file and use editor to add SQL content
 hasura seed create new_table_seed
@@ -289,7 +329,9 @@ hasura seed create table1_seed --from-table table1
 # create from data in multiple tables:
 hasura seed create tables_seed --from-table table1 --from-table table2
 ```
+
 #### Applying seed
+
 ```
 # apply all seeds on the database:
 hasura seed apply

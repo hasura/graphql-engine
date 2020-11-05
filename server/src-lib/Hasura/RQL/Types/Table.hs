@@ -98,7 +98,7 @@ import           Language.Haskell.TH.Syntax          (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Incremental                  (Cacheable)
-import           Hasura.RQL.Types.BoolExp
+import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
@@ -106,9 +106,9 @@ import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteRelationship
-import           Hasura.SQL.Backend
 import           Hasura.Server.Utils                 (duplicates, englishList)
 import           Hasura.Session
+import           Hasura.SQL.Backend
 
 
 data TableCustomRootFields

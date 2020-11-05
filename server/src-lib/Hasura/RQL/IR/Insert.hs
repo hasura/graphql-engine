@@ -3,11 +3,9 @@ module Hasura.RQL.IR.Insert where
 
 import           Hasura.Prelude
 
-import qualified Hasura.Backends.Postgres.SQL.DML   as S
-
 import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.Returning
-import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend
@@ -29,8 +27,8 @@ data InsertQueryP1 (b :: Backend)
   = InsertQueryP1
   { iqp1Table     :: !QualifiedTable
   , iqp1Cols      :: ![Column b]
-  , iqp1Tuples    :: ![[S.SQLExp]]
-  , iqp1Conflict  :: !(Maybe (ConflictClauseP1 b S.SQLExp))
+  , iqp1Tuples    :: ![[SQLExp b]]
+  , iqp1Conflict  :: !(Maybe (ConflictClauseP1 b (SQLExp b)))
   , iqp1CheckCond :: !(AnnBoolExpSQL b, Maybe (AnnBoolExpSQL b))
   , iqp1Output    :: !(MutationOutput b)
   , iqp1AllCols   :: ![ColumnInfo b]

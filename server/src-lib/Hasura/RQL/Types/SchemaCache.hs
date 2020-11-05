@@ -134,8 +134,8 @@ import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Context              (GQLContext, RemoteField, RoleContext)
 import           Hasura.Incremental                  (Dependency, MonadDepend (..), selectKeyD)
+import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Action
-import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
@@ -226,7 +226,6 @@ incSchemaCacheVer :: SchemaCacheVer -> SchemaCacheVer
 incSchemaCacheVer (SchemaCacheVer prev) =
   SchemaCacheVer $ prev + 1
 
-type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions
 type ActionCache = M.HashMap ActionName (ActionInfo 'Postgres) -- info of all actions
 
 data SchemaCache

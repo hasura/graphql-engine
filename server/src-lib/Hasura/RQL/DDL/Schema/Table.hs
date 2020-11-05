@@ -55,7 +55,7 @@ import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Enum
 import           Hasura.RQL.DDL.Schema.Rename
-import           Hasura.RQL.Types
+import           Hasura.RQL.Types                   hiding (fmFunction)
 import           Hasura.RQL.Types.Catalog
 import           Hasura.Server.Utils
 

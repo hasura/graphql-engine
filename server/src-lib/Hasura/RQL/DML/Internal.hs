@@ -5,22 +5,22 @@ module Hasura.RQL.DML.Internal where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                as M
-import qualified Data.HashSet                       as HS
-import qualified Data.Sequence                      as DS
-import qualified Data.Text                          as T
-import qualified Database.PG.Query                  as Q
+import qualified Data.HashMap.Strict                        as M
+import qualified Data.HashSet                               as HS
+import qualified Data.Sequence                              as DS
+import qualified Data.Text                                  as T
+import qualified Database.PG.Query                          as Q
 
 import           Control.Lens
 import           Data.Aeson.Types
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.Postgres.SQL.DML   as S
+import qualified Hasura.Backends.Postgres.SQL.DML           as S
 
 import           Hasura.Backends.Postgres.SQL.Error
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
-import           Hasura.RQL.GBoolExp
+import           Hasura.Backends.Postgres.Translate.BoolExp
 import           Hasura.RQL.Types
 import           Hasura.Session
 
@@ -158,7 +158,7 @@ fetchRelTabInfo refTabName =
   -- Internal error
   modifyErrAndSet500 ("foreign " <> ) $ askTabInfo refTabName
 
-type SessVarBldr b m = PGType (ScalarType b) -> SessionVariable -> m S.SQLExp
+type SessVarBldr b m = PGType (ScalarType b) -> SessionVariable -> m (SQLExp b)
 
 fetchRelDet
   :: (UserInfoM m, QErrM m, CacheRM m)
@@ -211,7 +211,7 @@ convPartialSQLExp
   :: (Applicative f)
   => SessVarBldr backend f
   -> PartialSQLExp backend
-  -> f S.SQLExp
+  -> f (SQLExp backend)
 convPartialSQLExp f = \case
   PSESQLExp sqlExp                 -> pure sqlExp
   PSESessVar colTy sessionVariable -> f colTy sessionVariable
@@ -247,7 +247,7 @@ convBoolExp
   :: (UserInfoM m, QErrM m, CacheRM m)
   => FieldInfoMap (FieldInfo 'Postgres)
   -> SelPermInfo 'Postgres
-  -> BoolExp
+  -> BoolExp 'Postgres
   -> SessVarBldr 'Postgres m
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> m (AnnBoolExpSQL 'Postgres)
