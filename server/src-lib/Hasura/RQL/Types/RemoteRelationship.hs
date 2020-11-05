@@ -57,7 +57,7 @@ data RemoteFieldInfo (b :: Backend)
   { _rfiName             :: !RemoteRelationshipName
     -- ^ Field name to which we'll map the remote in hasura; this becomes part
     -- of the hasura schema.
-  , _rfiParamMap         :: !(HashMap G.Name G.InputValueDefinition)
+  , _rfiParamMap         :: !(HashMap G.Name RemoteSchemaInputValueDefinition)
   -- ^ Input arguments to the remote field info; The '_rfiParamMap' will only
   --   include the arguments to the remote field that is being joined. The
   --   names of the arguments here are modified, it will be in the format of
@@ -66,8 +66,8 @@ data RemoteFieldInfo (b :: Backend)
   -- ^ Hasura fields used to join the remote schema node
   , _rfiRemoteFields     :: !RemoteFields
   , _rfiRemoteSchema     :: !RemoteSchemaInfo
-  , _rfiInputValueDefinitions :: ![G.TypeDefinition [G.Name] G.InputValueDefinition]
-  -- ^ The introspection data is used to make parsers for the arguments and the selection set
+  , _rfiInputValueDefinitions :: ![G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition]
+  -- ^ The new input value definitions created for this remote field
   , _rfiRemoteSchemaName :: !RemoteSchemaName
   -- ^ Name of the remote schema, that's used for joining
   } deriving (Generic)
@@ -104,7 +104,7 @@ instance ToJSON (RemoteFieldInfo 'Postgres) where
     , "remote_schema" .= _rfiRemoteSchema
     ]
     where
-      toJsonInpValInfo (G.InputValueDefinition desc name type' defVal _directives)  =
+      toJsonInpValInfo (RemoteSchemaInputValueDefinition (G.InputValueDefinition desc name type' defVal _directives) _preset)  =
         object
           [ "desc" .= desc
           , "name" .= name

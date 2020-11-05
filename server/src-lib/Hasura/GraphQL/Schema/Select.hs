@@ -1035,7 +1035,7 @@ remoteRelationshipField table remoteFieldInfo = runMaybeT do
   -- The above issue is easily fixable by removing the following guard and 'MaybeT' monad transformation
   guard $ queryType == ET.QueryHasura
   let RemoteFieldInfo name _params hasuraFields remoteFields
-        remoteSchemaInfo newInputValueDefns remoteSchemaName = remoteFieldInfo
+        remoteSchemaInfo remoteSchemaInputValueDefns remoteSchemaName = remoteFieldInfo
   remoteSchemaCtx <- askRemoteSchemaInfo remoteSchemaName
   role <- askRoleName
   roleIntrospectionResult <-
@@ -1048,26 +1048,24 @@ remoteRelationshipField table remoteFieldInfo = runMaybeT do
   -- get the remote schema of the role
   let hasuraFieldNames = Set.fromList $ map (FieldName . G.unName . pgiName) $ Set.toList hasuraFields
       remoteRelationship = RemoteRelationship name table hasuraFieldNames remoteSchemaName remoteFields
-      remoteSchemaInputValueDefns = map (fmap (`RemoteSchemaInputValueDefinition` Nothing)) newInputValueDefns
-      remoteRelationshipIntrospection =
+  (newInpValDefns, remoteFieldParamMap) <-
+    case isAdmin role of
+      True -> pure (remoteSchemaInputValueDefns, _rfiParamMap remoteFieldInfo)
+      False -> do
+        eitherRemoteField <-
+          runExceptT $
+          validateRemoteRelationship remoteRelationship (remoteSchemaInfo, roleIntrospectionResult) $
+          Set.toList hasuraFields
+        case eitherRemoteField of
+          -- when there's an error while deriving the remote relationship
+          -- we don't add the remote relationship field for that role
+          Left _  -> MaybeT $ pure Nothing
+          Right roleRemoteField -> pure $ (_rfiInputValueDefinitions roleRemoteField, _rfiParamMap roleRemoteField)
+  let remoteRelationshipIntrospection =
         -- add the new input value definitions created by the remote relationship
         -- to the existing schema introspection of the role
         let RemoteSchemaIntrospection typeDefns = irDoc roleIntrospectionResult
-        in RemoteSchemaIntrospection $ typeDefns <> remoteSchemaInputValueDefns
-  -- when the role is admin, we don't validate the remote relationship
-  -- because the remote relationship has already been validated once
-  -- when the remote relationship is added to the graphql-engine.
-  unless (isAdmin role) $ do
-    -- validate the remote relationship against the remote schema of the given role
-    eitherRemoteField <-
-      runExceptT $
-      validateRemoteRelationship remoteRelationship (remoteSchemaInfo, roleIntrospectionResult) $
-      Set.toList hasuraFields
-    case eitherRemoteField of
-      -- when there's an error while deriving the remote relationship
-      -- we don't add the remote relationship field for that role
-      Left _  -> MaybeT $ pure Nothing
-      Right _ -> pure ()
+        in RemoteSchemaIntrospection $ typeDefns <> newInpValDefns
   fieldDefns <-
     case Map.lookup remoteSchemaName remoteSchemasFieldDefns of
       -- we return `Nothing` here when a role doesn't have permissions
@@ -1082,15 +1080,14 @@ remoteRelationshipField table remoteFieldInfo = runMaybeT do
   case nestedFieldInfo of
     P.FieldInfo{ P.fType = fieldType } -> do
       let typeName = P.getName fieldType
-      typeDefinition <- onNothing (lookupType (irDoc roleIntrospectionResult) typeName)
+      fieldTypeDefinition <- onNothing (lookupType (irDoc roleIntrospectionResult) typeName)
                         -- the below case will never happen because we get the type name
                         -- from the schema document itself
                         $ throw500 $ "unexpected: " <> typeName <<> " not found "
       -- These are the arguments that are given by the user while executing a query
-      let remoteFieldUserArguments = map snd $ Map.toList $  _rfiParamMap remoteFieldInfo
-      let remoteFieldUserArguments' = map (`RemoteSchemaInputValueDefinition` Nothing) remoteFieldUserArguments
+      let remoteFieldUserArguments = map snd $ Map.toList remoteFieldParamMap
       remoteFld <-
-        lift $ remoteField remoteRelationshipIntrospection fieldName Nothing remoteFieldUserArguments' typeDefinition
+        lift $ remoteField remoteRelationshipIntrospection fieldName Nothing remoteFieldUserArguments fieldTypeDefinition
       pure $ pure $ remoteFld
         `P.bindField` \G.Field{ G._fArguments = args, G._fSelectionSet = selSet } -> do
           let remoteArgs =

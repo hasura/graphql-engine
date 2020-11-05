@@ -141,12 +141,12 @@ validateRemoteRelationship remoteRelationship (remoteSchemaInfo, introspectionRe
       :: HashMap G.Name (ColumnInfo 'Postgres)
       -> RemoteSchemaIntrospection
       -> (G.ObjectTypeDefinition RemoteSchemaInputValueDefinition,
-           ( (HashMap G.Name G.InputValueDefinition)
-           , (HashMap G.Name (G.TypeDefinition [G.Name] G.InputValueDefinition))))
+           ( (HashMap G.Name RemoteSchemaInputValueDefinition)
+           , (HashMap G.Name (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition))))
       -> FieldCall
       -> m ( G.ObjectTypeDefinition RemoteSchemaInputValueDefinition
-           , ( HashMap G.Name G.InputValueDefinition
-             , HashMap G.Name (G.TypeDefinition [G.Name] G.InputValueDefinition)))
+           , ( HashMap G.Name RemoteSchemaInputValueDefinition
+             , HashMap G.Name (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition)))
     buildRelationshipTypeInfo pgColumnsVariablesMap schemaDoc (objTyInfo,(_,typeMap)) fieldCall = do
       objFldDefinition <- lookupField (fcName fieldCall) objTyInfo
       let providedArguments = getRemoteArguments $ fcArguments fieldCall
@@ -187,23 +187,26 @@ stripInMap
   -> HM.HashMap G.Name RemoteSchemaInputValueDefinition
   -> HM.HashMap G.Name (G.Value G.Name)
   -> StateT
-       (HashMap G.Name (G.TypeDefinition [G.Name] G.InputValueDefinition))
+       (HashMap G.Name (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition))
        (Either ValidationError)
-       (HM.HashMap G.Name G.InputValueDefinition)
+       (HM.HashMap G.Name RemoteSchemaInputValueDefinition)
 stripInMap remoteRelationship types schemaArguments providedArguments =
   fmap
     (HM.mapMaybe id)
     (HM.traverseWithKey
-       (\name inpValInfo ->
+       (\name remoteInpValDef@(RemoteSchemaInputValueDefinition inpValInfo _preset) ->
           case HM.lookup name providedArguments of
-            Nothing -> pure (Just inpValInfo)
+            Nothing -> pure $ Just remoteInpValDef
             Just value -> do
               maybeNewGType <- stripValue remoteRelationship types (G._ivdType inpValInfo) value
               pure
                 (fmap
-                   (\newGType -> inpValInfo {G._ivdType = newGType})
+                   (\newGType ->
+                      let newInpValInfo = inpValInfo {G._ivdType = newGType}
+                      in RemoteSchemaInputValueDefinition newInpValInfo Nothing
+                   )
                    maybeNewGType))
-       (fmap _rsitdDefinition schemaArguments))
+       schemaArguments)
 
 -- | Strip a value type completely, or modify it, if the given value
 -- is atomic-ish.
@@ -213,7 +216,7 @@ stripValue
   -> G.GType
   -> G.Value G.Name
   -> StateT
-       (HashMap G.Name (G.TypeDefinition [G.Name] G.InputValueDefinition))
+       (HashMap G.Name (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition))
        (Either ValidationError)
        (Maybe G.GType)
 stripValue remoteRelationshipName types gtype value = do
@@ -233,14 +236,14 @@ stripValue remoteRelationshipName types gtype value = do
     G.VObject keyPairs ->
       fmap Just (stripObject remoteRelationshipName types gtype keyPairs)
 
--- -- | Produce a new type for the list, or strip it entirely.
+-- | Produce a new type for the list, or strip it entirely.
 stripList
   :: RemoteRelationship
   -> RemoteSchemaIntrospection
   -> G.GType
   -> G.Value G.Name
   -> StateT
-       (HashMap G.Name (G.TypeDefinition [G.Name] G.InputValueDefinition))
+       (HashMap G.Name (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition))
        (Either ValidationError)
        (Maybe G.GType)
 stripList remoteRelationshipName types originalOuterGType value =
@@ -250,16 +253,16 @@ stripList remoteRelationshipName types originalOuterGType value =
       pure (G.TypeList nullability <$> maybeNewInnerGType)
     _ -> lift (Left (InvalidGTypeForStripping originalOuterGType))
 
--- -- | Produce a new type for the given InpValInfo, modified by
--- -- 'stripInMap'. Objects can't be deleted entirely, just keys of an
--- -- object.
+-- | Produce a new type for the given InpValInfo, modified by
+-- 'stripInMap'. Objects can't be deleted entirely, just keys of an
+-- object.
 stripObject
   :: RemoteRelationship
   -> RemoteSchemaIntrospection
   -> G.GType
   -> HashMap G.Name (G.Value G.Name)
   -> StateT
-       (HashMap G.Name (G.TypeDefinition [G.Name] G.InputValueDefinition))
+       (HashMap G.Name (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition))
        (Either ValidationError)
        G.GType
 stripObject remoteRelationshipName schemaDoc originalGtype templateArguments =
