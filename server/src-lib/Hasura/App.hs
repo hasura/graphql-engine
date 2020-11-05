@@ -307,7 +307,7 @@ runHGEServer
      , MonadExecuteQuery m
      , Tracing.HasReporter m
      , MonadQueryInstrumentation m
-     , MonadMetadataStorage m
+     , MonadMetadataStorage (MetadataStorageT m)
      )
   => Env.Environment
   -> ServeOptions impl
@@ -685,7 +685,7 @@ runTxInMetadataStorage tx = do
   liftEitherM $ liftIO $ runExceptT $
     Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) tx
 
-instance MonadMetadataStorage ServerAppM where
+instance MonadMetadataStorage (MetadataStorageT ServerAppM) where
 
   getDeprivedCronTriggerStats        = runTxInMetadataStorage getDeprivedCronTriggerStatsTx
   getScheduledEventsForDelivery      = runTxInMetadataStorage getScheduledEventsForDeliveryTx

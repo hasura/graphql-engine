@@ -66,6 +66,8 @@ module Hasura.Eventing.ScheduledTrigger
   , CronEventSeed(..)
   , initLockedEventsCtx
   , LockedEventsCtx(..)
+
+  -- * Database interactions
   , getDeprivedCronTriggerStatsTx
   , getScheduledEventsForDeliveryTx
   , scheduledTimeOrderBy
@@ -120,7 +122,7 @@ import           Hasura.SQL.Types
 --   have an adequate buffer of cron events.
 runCronEventsGenerator
   :: ( MonadIO m
-     , MonadMetadataStorage m
+     , MonadMetadataStorage (MetadataStorageT m)
      )
   => L.Logger L.Hasura
   -> IO SchemaCache
@@ -160,7 +162,7 @@ runCronEventsGenerator logger getSC = do
 insertCronEventsFor
   :: (MonadMetadataStorage m)
   => [(CronTriggerInfo, CronTriggerStats)]
-  -> MetadataStorageT m ()
+  -> m ()
 insertCronEventsFor cronTriggersWithStats = do
   let scheduledEvents = flip concatMap cronTriggersWithStats $ \(cti, stats) ->
         generateCronEventsFrom (ctsMaxScheduledTime stats) cti
@@ -183,7 +185,7 @@ processCronEvents
   :: ( HasVersion
      , MonadIO m
      , Tracing.HasReporter m
-     , MonadMetadataStorage m
+     , MonadMetadataStorage (MetadataStorageT m)
      )
   => L.Logger L.Hasura
   -> LogEnvHeaders
@@ -209,7 +211,7 @@ processCronEvents logger logEnv httpMgr cronEvents getSC lockedCronEvents = do
                       (fromMaybe J.Null ctiPayload) ctiComment
                       Nothing
             retryCtx = RetryContext tries ctiRetryConf
-        finally <- runExceptT $ flip runReaderT (logger, httpMgr) $
+        finally <- runMetadataStorageT $ flip runReaderT (logger, httpMgr) $
                    processScheduledEvent logEnv id' ctiHeaders retryCtx
                                          payload webhookUrl Cron
         removeEventFromLockedEvents id' lockedCronEvents
@@ -221,7 +223,7 @@ processOneOffScheduledEvents
   :: ( HasVersion
      , MonadIO m
      , Tracing.HasReporter m
-     , MonadMetadataStorage m
+     , MonadMetadataStorage (MetadataStorageT m)
      )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -236,7 +238,7 @@ processOneOffScheduledEvents env logger logEnv httpMgr oneOffEvents lockedOneOff
   -- graceful shutdown is initiated in midst of processing these events
   saveLockedEvents (map _ooseId oneOffEvents) lockedOneOffScheduledEvents
   for_ oneOffEvents $ \OneOffScheduledEvent{..} -> do
-    (either logInternalError pure) =<< runExceptT do
+    (either logInternalError pure) =<< runMetadataStorageT do
       webhookInfo <- resolveWebhook env _ooseWebhookConf
       headerInfo <- getHeaderInfosFromConf env _ooseHeaderConf
       let webhookUrl = unResolvedWebhook webhookInfo
@@ -255,7 +257,7 @@ processScheduledTriggers
   :: ( HasVersion
      , MonadIO m
      , Tracing.HasReporter m
-     , MonadMetadataStorage m
+     , MonadMetadataStorage (MetadataStorageT m)
      )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -282,7 +284,6 @@ processScheduledEvent
      , Has (L.Logger L.Hasura) r
      , HasVersion
      , MonadIO m
-     , MonadError QErr m
      , Tracing.HasReporter m
      , MonadMetadataStorage m
      )
@@ -322,7 +323,6 @@ processScheduledEvent logEnv eventId eventHeaders retryCtx payload webhookUrl ty
 
 processError
   :: ( MonadIO m
-     , MonadError QErr m
      , MonadMetadataStorage m
      )
   => ScheduledEventId
@@ -348,9 +348,8 @@ processError eventId retryCtx decodedHeaders type' reqJson err = do
         HOther detail -> do
           let errMsg = (TBS.fromLBS $ J.encode detail)
           mkInvocation eventId 500 decodedHeaders errMsg [] reqJson
-  liftEitherM $ runMetadataStorageT $ do
-    insertScheduledEventInvocation invocation type'
-    retryOrMarkError eventId retryCtx err type'
+  insertScheduledEventInvocation invocation type'
+  retryOrMarkError eventId retryCtx err type'
 
 retryOrMarkError
   :: (MonadIO m, MonadMetadataStorage m)
@@ -358,7 +357,7 @@ retryOrMarkError
   -> RetryContext
   -> HTTPErr a
   -> ScheduledEventType
-  -> MetadataStorageT m ()
+  -> m ()
 retryOrMarkError eventId retryCtx err type' = do
   let RetryContext tries retryConf = retryCtx
       mRetryHeader = getRetryAfterHeaderFromHTTPErr err
@@ -409,7 +408,7 @@ and it can transition to other states in the following ways:
 -}
 
 processSuccess
-  :: (MonadIO m, MonadError QErr m, MonadMetadataStorage m)
+  :: (MonadMetadataStorage m)
   => ScheduledEventId
   -> [HeaderConf]
   -> ScheduledEventType
@@ -421,16 +420,14 @@ processSuccess eventId decodedHeaders type' reqBodyJson resp = do
       respHeaders = hrsHeaders resp
       respStatus = hrsStatus resp
       invocation = mkInvocation eventId respStatus decodedHeaders respBody respHeaders reqBodyJson
-  liftEitherM $ runMetadataStorageT $ do
-    insertScheduledEventInvocation invocation type'
-    setScheduledEventOp eventId (SEOpStatus SESDelivered) type'
+  insertScheduledEventInvocation invocation type'
+  setScheduledEventOp eventId (SEOpStatus SESDelivered) type'
 
 processDead
-  :: (MonadError QErr m, MonadMetadataStorage m)
+  :: (MonadMetadataStorage m)
   => ScheduledEventId -> ScheduledEventType -> m ()
 processDead eventId type' =
-  liftEitherM $ runMetadataStorageT $
-    setScheduledEventOp eventId (SEOpStatus SESDead) type'
+  setScheduledEventOp eventId (SEOpStatus SESDead) type'
 
 mkInvocation
   :: ScheduledEventId
