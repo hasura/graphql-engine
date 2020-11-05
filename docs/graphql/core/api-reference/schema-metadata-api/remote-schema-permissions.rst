@@ -221,6 +221,94 @@ value when the query is executed and then its value is substituted in the approp
    In this case, the ``"x-hasura-hello"`` will be the argument to the ``hello`` field
    whenever it's queried.
 
+Remote Relationship Permissions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Permissions for remote relationships are derived from the role's remote schema permissions.
+When the permission for the remote relationship cannot be derived from the remote schema
+permissions configured, the remote relationship will not be accessible to that role.
+
+Some of the cases where the remote relationship cannot be derived are:
+
+1. There are no remote schema permissions configured for the role.
+2. The remote join field is not accessible to the role.
+3. The remote join field's arguments are not accesible to the role.
+
+Suppose, the remote joining field's argument has a preset defined, the preset value will
+be ignored and the value of the remote join argument will come from the parent query.
+
+For example:
+
+Let's say we have a table called ``customer`` and we have a remote schema called
+``payments`` and we have a remote relationship ``customer_transactions_history`` defined
+which joins ``customer`` to ``transactions`` field of the ``payments`` field.
+
+Suppose, the ``payments`` remote schema is defined in the following way:
+
+.. code-block:: graphql
+
+   type Transaction {
+     customer_id    Int!
+     amount         Int!
+     time           String!
+     merchant       String!
+   }
+
+   type Query {
+     transactions(customer_id: String!, limit: Int): [Transaction]
+   }
+
+And, the ``customer`` table is defined in the following manner.
+
+.. code-block:: sql
+
+   CREATE TABLE customer (
+     id SERIAL PRIMARY KEY,
+     name TEXT NOT NULL
+   );
+
+The remote relationship is defined to join the ``id`` field from the
+``customer`` table to the ``customer_id`` argument of the ``transactions``
+field.
+
+We define permissions for the ``user`` role for the ``payments`` remote schema
+in the following manner:
+
+.. code-block:: graphql
+
+   type Transaction {
+     amount Int!
+     time   String!
+   }
+
+   type Query {
+     transactions(customer_id: String!, limit: Int @preset(value: 10)): [Transaction]
+   }
+
+Two changes have been made for the ``user`` role:
+
+1. The ``merchant`` and ``customer_id`` fields are not accessible in the ``Transaction`` object.
+2. The ``limit`` argument has a preset of 10.
+
+Now, consider the following query:
+
+.. code-block:: graphql
+
+   query {
+     customer {
+       name
+       customer_transactions_history {
+         amount
+         time
+       }
+     }
+   }
+
+The ``user`` role won't be able to provide the value for the ``limit`` argument in
+the ``customer_transactions_history`` field because the ``limit`` has a preset set
+and the value will be added by the graphql-engine before it queries the remote schema.
+
+
 .. _add_remote_schema_permissions_syntax:
 
 Args syntax
