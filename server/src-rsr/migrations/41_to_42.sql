@@ -1,0 +1,2 @@
+ALTER TABLE hdb_catalog.event_triggers
+  DROP CONSTRAINT event_triggers_schema_name_table_name_fkey;

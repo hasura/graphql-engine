@@ -332,7 +332,7 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
           (| withRecordInconsistency (
              (| modifyErrA (do
                   etc <- bindErrorA -< decodeValue configuration
-                  (info, dependencies) <- bindErrorA -< subTableP2Setup env qt etc
+                  (info, dependencies) <- bindErrorA -< mkEventTriggerInfo env qt etc
                   let tableColumns = M.mapMaybe (^? _FIColumn) (_tciFieldInfoMap tableInfo)
                   recreateViewIfNeeded -< (qt, tableColumns, trn, etcDefinition etc)
                   recordDependencies -< (metadataObject, schemaObjectId, dependencies)
