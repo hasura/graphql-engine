@@ -8,6 +8,7 @@ module Hasura.RQL.Types.Common
 
        , ScalarType
        , Column
+       , SQLExp
 
        , FieldName(..)
        , fromPGCol
@@ -77,6 +78,8 @@ import           Data.URL.Template
 import           Instances.TH.Lift                  ()
 import           Language.Haskell.TH.Syntax         (Lift)
 
+import qualified Hasura.Backends.Postgres.SQL.DML   as S
+
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.Incremental                 (Cacheable)
@@ -93,6 +96,9 @@ type family ColumnType (b :: Backend) where
 
 type family Column (b :: Backend) where
   Column 'Postgres = PGCol
+
+type family SQLExp (b :: Backend) where
+  SQLExp 'Postgres = S.SQLExp
 
 
 adminText :: NonEmptyText
