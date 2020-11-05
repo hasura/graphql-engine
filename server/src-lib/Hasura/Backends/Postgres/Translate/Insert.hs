@@ -2,6 +2,7 @@ module Hasura.Backends.Postgres.Translate.Insert
  ( mkInsertCTE
  , buildConflictClause
  , toSQLConflict
+ , insertCheckConstraint
  , insertOrUpdateCheckExpr
  ) where
 
@@ -115,6 +116,12 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
       validateInpCols inpCols updCols
       return (updFiltr, preSet)
 
+-- | Annotates the check constraint expression with @boolean@
+-- (<check-condition>)::boolean
+insertCheckConstraint :: S.BoolExp -> S.SQLExp
+insertCheckConstraint boolExp =
+  S.SETyAnn (S.SEBool boolExp) S.boolTypeAnn
+
 -- | When inserting data, we might need to also enforce the update
 -- check condition, because we might fall back to an update via an
 -- @ON CONFLICT@ clause.
@@ -148,8 +155,8 @@ insertOrUpdateCheckExpr qt (Just _conflict) insCheck (Just updCheck) =
       S.SEQ
       (S.SEQIdentifier (S.QIdentifier (S.mkQual qt) (Identifier "xmax")))
       (S.SEUnsafe "0"))
-    (S.SEBool insCheck)
-    (S.SEBool updCheck)
+    (insertCheckConstraint insCheck)
+    (insertCheckConstraint updCheck)
 insertOrUpdateCheckExpr _ _ insCheck _ =
   -- If we won't generate an ON CONFLICT clause, there is no point
   -- in testing xmax. In particular, views don't provide the xmax
@@ -159,4 +166,4 @@ insertOrUpdateCheckExpr _ _ insCheck _ =
   --
   -- Alternatively, if there is no update check constraint, we should
   -- use the insert check constraint, for backwards compatibility.
-  asCheckErrorExtractor $ S.SEBool insCheck
+  asCheckErrorExtractor $ insertCheckConstraint insCheck

@@ -672,8 +672,8 @@ mkExists fromItem whereFrag =
   }
 
 instance ToSQL BoolExp where
-  toSQL (BELit True)  = TB.text "true"
-  toSQL (BELit False) = TB.text "false"
+  toSQL (BELit True)  = TB.text "'true'"
+  toSQL (BELit False) = TB.text "'false'"
   toSQL (BEBin bo bel ber) =
     parenB (toSQL bel) <~> toSQL bo <~> parenB (toSQL ber)
   toSQL (BENot be) =
