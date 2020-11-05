@@ -69,7 +69,7 @@ Step 4: Try out Hasura
 Create a table
 ^^^^^^^^^^^^^^
 
-Head to the Hasura console, navigate to ``Data -> Create table`` and create a sample table called ``profile`` with
+On the Hasura console, navigate to ``Data -> Create table`` and create a sample table called ``profile`` with
 the following columns:
 
 .. code-block:: sql
@@ -103,21 +103,58 @@ You'll see that you get all the inserted data!
 .. thumbnail:: /img/graphql/core/getting-started/profile-query.png
    :alt: Try out a query
 
-You can also check out our `30-Minute Hasura Basics Course <https://hasura.io/learn/graphql/hasura/introduction/>`__
-and other `GraphQL & Hasura Courses <https://hasura.io/learn/>`__ for a more detailed introduction to Hasura.
+Next steps
+----------
 
-Step 5: Implement business logic
---------------------------------
+Learn course
+^^^^^^^^^^^^
 
-- Actions (REST)
-- Remote schema (GraphQL server)
-- Event triggers
-- Scheduled triggers
+For a full hands-on tour of Hasura, check out our `30-Minute Hasura Basics Course <https://hasura.io/learn/graphql/hasura/introduction/>`__.
 
-Step 6: Set up migrations (optional)
-------------------------------------
+Database modelling
+^^^^^^^^^^^^^^^^^^
 
-- Helps to move to different environment
+Check out the :ref:`schema section <schema>` to learn about how to model your database schema, as well as how to extend it.
+
+Querying data
+^^^^^^^^^^^^^
+
+Learn how to use :ref:`GraphQL queries <queries>` to query data from your GraphQL API.
+
+Inserting data
+^^^^^^^^^^^^^^
+
+Learn how to insert data into your GraphQL API using :ref:`GraphQL mutations <mutations>`.
+
+Business logic
+^^^^^^^^^^^^^^
+
+There are several options for the implementation of business logic, depending on your use case.
+
+Actions
+*******
+
+:ref:`Actions <actions>` can be used if you'd like to extend your GraphQL schema by integrating with a REST endpoint.
+
+Remote schema
+*************
+
+If you have an existing GraphQL server or if you're comfortable with implementing one, you can use :ref:`remote schemas <remote_schemas>`.
+
+Event triggers
+**************
+
+To trigger a serverless function based on a database event, use :ref:`event triggers <event_triggers>`.
+
+Scheduled triggers
+******************
+
+:ref:`Scheduled triggers <scheduled_triggers>` are used to execute custom business logic at specific points in time.
+
+Migrations
+^^^^^^^^^^
+
+Set up :ref:`Hasura migrations <migrations_setup>` to track your database alterations. This will make it easier to move to a different environment (e.g. staging or prod) later.
 
 Advanced Docker setup
 ---------------------
