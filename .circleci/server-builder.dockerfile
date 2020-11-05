@@ -2,7 +2,6 @@
 # packager image of graphql-engine
 FROM haskell:8.10.2-stretch
 
-# ARG docker_ver="17.09.0-ce"
 ARG docker_ver="19.03.13"
 ARG postgres_ver="13"
 ARG node_ver="12.x"
