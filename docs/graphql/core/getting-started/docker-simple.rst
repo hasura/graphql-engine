@@ -25,8 +25,8 @@ to deploy the Hasura GraphQL engine as a standalone docker container and connect
 Prerequisites
 -------------
 
-- `Docker <https://docs.docker.com/install/>`_
-- `Docker Compose <https://docs.docker.com/compose/install/>`_
+- `Docker <https://docs.docker.com/install/>`__
+- `Docker Compose <https://docs.docker.com/compose/install/>`__
 
 Step 1: Get the docker-compose file
 ----------------------------------- 
@@ -63,17 +63,68 @@ Step 3: Open the Hasura console
 
 Head to ``http://localhost:8080/console`` to open the Hasura console.
 
-Step 4: Try Hasura out
+Step 4: Try out Hasura
 ----------------------
 
-Make your :ref:`first graphql query <first_graphql_query>` or set up your :ref:`first event trigger <first_event_trigger>`
+Create a table
+^^^^^^^^^^^^^^
+
+Head to the Hasura console, navigate to ``Data -> Create table`` and create a sample table called ``profile`` with
+the following columns:
+
+.. code-block:: sql
+
+  profile (
+    id SERIAL PRIMARY KEY, -- serial -> auto-incrementing integer
+    name TEXT
+  )
+
+.. thumbnail:: /img/graphql/core/getting-started/create-profile-table.png
+   :alt: Create a table
+
+Now, insert some sample data into the table using the ``Insert Row`` tab of the ``profile`` table.
+
+Try out a query
+^^^^^^^^^^^^^^^
+
+Head to the ``GraphiQL`` tab in the console and try running the following query:
+
+.. code-block:: graphql
+
+    query {
+      profile {
+        id
+        name
+      }
+    }
+
+You'll see that you get all the inserted data!
+
+.. thumbnail:: /img/graphql/core/getting-started/profile-query.png
+   :alt: Try out a query
 
 You can also check out our `30-Minute Hasura Basics Course <https://hasura.io/learn/graphql/hasura/introduction/>`__
 and other `GraphQL & Hasura Courses <https://hasura.io/learn/>`__ for a more detailed introduction to Hasura.
 
-Advanced
---------
+Step 5: Implement business logic
+--------------------------------
+
+- Actions (REST)
+- Remote schema (GraphQL server)
+- Event triggers
+- Scheduled triggers
+
+Step 6: Set up migrations (optional)
+------------------------------------
+
+- Helps to move to different environment
+
+Advanced Docker setup
+---------------------
 
 This was a quickstart guide to get the Hasura GraphQL engine up and running
 quickly. For more detailed instructions on deploying using Docker with an
 external database, check out :ref:`deployment_docker`.
+
+- :ref:`Using Docker <deployment_docker>`: Run as a docker container and connect to an existing Postgres
+  database.
