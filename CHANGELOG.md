@@ -127,6 +127,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - server: fix issue with tracking custom functions that return `SETOF` materialized view (close #5294) (#5945)
 - server: introduce optional custom table name in table configuration to track the table according to the custom name. The `set_table_custom_fields` API has been deprecated, A new API `set_table_customization` has been added to set the configuration. (#3811)
 - server: allow remote relationships with union, interface and enum type fields as well (fixes #5875) (#6080)
+- server: update the server to be built with pg_dump version 13 (close #5836) (#6070)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
@@ -139,6 +140,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - docs: add tabs for console / cli / api workflows (close #3593) (#4948)
 - docs: add postgres concepts page to docs (close #4440) (#4471)
 - docs: add guides on connecting hasura cloud to pg databases of different cloud vendors (#5948)
+- build: add `test_server_pg_13` to the CI to run the server tests on Postgres v13 (#6070) 
 
 ## `v1.3.2`
 
