@@ -15,10 +15,12 @@ Import data from CSV into Postgres
 Introduction
 -------------
 
-You might have some existing data in a CSV file that you want to import into your PG database. The following
+You might have some existing data in a CSV file that you need to import into your PG database. The following
 guide will show how to do so.
 
-In this guide we will use the following CSV file as an example. Make sure it is saved as ``profile.csv``.
+In this guide we will use the following CSV file as an example. 
+
+Also, make sure it is saved as ``profile.csv``.
 
 .. thumbnail:: /img/graphql/core/guides/sample-data-csv-file.png
    :alt: .csv data file
@@ -34,10 +36,10 @@ For example:
 
   CREATE TABLE profile (firstName text, lastName text, email varchar);
 
-Step 2: Connect to the postgres instance
+Step 2: Connect to the postgres database
 ------------------------------------------
 
-You can connect to the postgres instance from ``psql`` on the command line like the following: 
+You can connect to the postgres database from ``psql`` on the command line like the following: 
 
 .. code-block:: bash
 
