@@ -3,8 +3,6 @@ module Hasura.RQL.IR.Update where
 
 import           Hasura.Prelude
 
-import qualified Hasura.Backends.Postgres.SQL.DML   as S
-
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.Returning
@@ -26,7 +24,7 @@ data AnnUpdG (b :: Backend) v
   , uqp1AllCols :: ![ColumnInfo b]
   }
 
-type AnnUpd b = AnnUpdG b S.SQLExp
+type AnnUpd b = AnnUpdG b (SQLExp b)
 
 data UpdOpExpG v = UpdSet !v
                  | UpdInc !v
