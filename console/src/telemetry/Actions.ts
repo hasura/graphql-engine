@@ -205,17 +205,27 @@ const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
               },
             };
           } else if (dbReadState === 'all') {
-            composedUpdatedState = {
-              ...current_console_state,
-              console_notifications: {
-                ...current_console_state?.console_notifications,
-                [userType]: {
-                  read: 'all',
-                  date: updatedState.date,
-                  showBadge: false,
+            if (updatedState.read === 'all') {
+              composedUpdatedState = {
+                ...current_console_state,
+                console_notifications: {
+                  ...current_console_state?.console_notifications,
+                  [userType]: {
+                    read: 'all',
+                    date: updatedState.date,
+                    showBadge: false,
+                  },
                 },
-              },
-            };
+              };
+            } else {
+              composedUpdatedState = {
+                ...current_console_state,
+                console_notifications: {
+                  ...current_console_state?.console_notifications,
+                  [userType]: updatedState,
+                },
+              };
+            }
           } else {
             if (typeof updatedState.read === 'string') {
               combinedReadState = updatedState.read;
@@ -224,7 +234,7 @@ const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
               // state of the users and the data present in the DB
               combinedReadState = dbReadState
                 .concat(updatedState.read)
-                .reduce((acc: string[], val) => {
+                .reduce((acc: string[], val: string) => {
                   if (!acc.includes(val)) {
                     return [...acc, val];
                   }

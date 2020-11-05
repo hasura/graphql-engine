@@ -167,7 +167,6 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
             );
           } else {
             let newReadValue;
-
             if (previousRead === 'default' || previousRead === 'error') {
               newReadValue = [];
               toShowBadge = false;
@@ -180,18 +179,18 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
                 newReadValue = [];
                 toShowBadge = true;
               } else if (previousList.length) {
-                const resDiff = filteredData.filter(
+                const readNotificationsDiff = filteredData.filter(
                   newNotif =>
                     !previousList.find(oldNotif => oldNotif.id === newNotif.id)
                 );
-                if (!resDiff.length) {
+                if (!readNotificationsDiff.length) {
                   // since the data hasn't changed since the last call
                   newReadValue = previousRead;
                   toShowBadge = false;
                 } else {
                   newReadValue = [...previousList.map(notif => `${notif.id}`)];
                   toShowBadge = true;
-                  filteredData = [...resDiff, ...previousList];
+                  filteredData = [...readNotificationsDiff, ...previousList];
                 }
               }
             } else {
