@@ -45,10 +45,10 @@ You can connect to the Postgres database using the ``psql`` command on the termi
 
   ## for example
 
-  psql <postgres://postgres:postgres@localhost:5432/kittykat>
+  psql <postgres://postgres:postgres@localhost:5432/user>
 
 Step 3: Import the data
------------------------------------
+-------------------------
 
 Once connected to the database, use the following command from inside ``psql`` to
 import the data:
@@ -61,4 +61,4 @@ import the data:
 
   \copy profile from '/Users/sarahlewis/documents/profile.csv' delimiter ',' CSV HEADER;
 
-Your data would have been successfully copied into the ``profile`` table in the PG database. 
+Your data would have been successfully copied into a table in the Postgres database. 
