@@ -22,7 +22,7 @@ Let's assume we have the following CSV file, which is named ``profile.csv``:
 
 .. thumbnail:: /img/graphql/core/guides/sample-data-csv-file.png
    :alt: .csv data file
-   :width: 700px
+   :width: 500px
 
 Step 1: Add a corresponding table to your PG database
 -----------------------------------------------------
@@ -48,8 +48,8 @@ You can connect to the Postgres database using the ``psql`` command on the termi
 
   psql <postgres://postgres:postgres@localhost:5432/user>
 
-Step 3: Import the data
------------------------
+Step 3: Import the data from the CSV file
+-----------------------------------------
 
 Once connected to the database, use the following command from inside ``psql`` to
 import the data:
