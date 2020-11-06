@@ -5,25 +5,24 @@ module Hasura.GraphQL.Execute.Insert
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                                   as J
-import qualified Data.Environment                             as Env
-import qualified Data.HashMap.Strict                          as Map
-import qualified Data.Sequence                                as Seq
-import qualified Data.Text                                    as T
-import qualified Database.PG.Query                            as Q
+import qualified Data.Aeson                                  as J
+import qualified Data.Environment                            as Env
+import qualified Data.HashMap.Strict                         as Map
+import qualified Data.Sequence                               as Seq
+import qualified Data.Text                                   as T
+import qualified Database.PG.Query                           as Q
 
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.Postgres.Execute.Mutation    as RQL
-import qualified Hasura.Backends.Postgres.Execute.RemoteJoin  as RQL
-import qualified Hasura.Backends.Postgres.SQL.DML             as S
-import qualified Hasura.Backends.Postgres.Translate.BoolExp   as RQL
-import qualified Hasura.Backends.Postgres.Translate.Insert    as RQL
-import qualified Hasura.Backends.Postgres.Translate.Mutation  as RQL
-import qualified Hasura.Backends.Postgres.Translate.Returning as RQL
-import qualified Hasura.RQL.IR.Insert                         as RQL
-import qualified Hasura.RQL.IR.Returning                      as RQL
-import qualified Hasura.Tracing                               as Tracing
+import qualified Hasura.Backends.Postgres.Execute.Mutation   as RQL
+import qualified Hasura.Backends.Postgres.Execute.RemoteJoin as RQL
+import qualified Hasura.Backends.Postgres.SQL.DML            as S
+import qualified Hasura.Backends.Postgres.Translate.BoolExp  as RQL
+import qualified Hasura.Backends.Postgres.Translate.Insert   as RQL
+import qualified Hasura.Backends.Postgres.Translate.Mutation as RQL
+import qualified Hasura.RQL.IR.Insert                        as RQL
+import qualified Hasura.RQL.IR.Returning                     as RQL
+import qualified Hasura.Tracing                              as Tracing
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.SQL.Types
@@ -31,8 +30,7 @@ import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Schema.Insert
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
-import           Hasura.Server.Version                        (HasVersion)
+import           Hasura.Server.Version                       (HasVersion)
 
 
 traverseAnnInsert
@@ -133,11 +131,10 @@ insertMultipleObjects env multiObjIns additionalColumns remoteJoinCtx mutationOu
         insertObject env singleObj additionalColumns remoteJoinCtx planVars stringifyNum
       let affectedRows = sum $ map fst insertRequests
           columnValues = mapMaybe snd insertRequests
-      selectExpr <- RQL.mkSelCTEFromColVals table columnInfos columnValues
+      selectExpr <- RQL.mkSelectExpFromColumnValues table columnInfos columnValues
       let (mutOutputRJ, remoteJoins) = RQL.getRemoteJoinsMutationOutput mutationOutput
-          sqlQuery = Q.fromBuilder $ toSQL $
-                     RQL.mkMutationOutputExp table columnInfos (Just affectedRows) selectExpr mutOutputRJ stringifyNum
-      RQL.executeMutationOutputQuery env sqlQuery [] $ (,remoteJoinCtx) <$> remoteJoins
+      RQL.executeMutationOutputQuery env table columnInfos (Just affectedRows) (RQL.MCSelectValues selectExpr)
+        mutOutputRJ stringifyNum [] $ (, remoteJoinCtx) <$> remoteJoins
 
 insertObject
   :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m)
@@ -161,7 +158,8 @@ insertObject env singleObjIns additionalColumns remoteJoinCtx planVars stringify
 
   cte <- mkInsertQ table onConflict finalInsCols defaultValues checkCond
 
-  MutateResp affRows colVals <- liftTx $ RQL.mutateAndFetchCols table allColumns (cte, planVars) stringifyNum
+  MutateResp affRows colVals <- liftTx $
+    RQL.mutateAndFetchCols table allColumns (RQL.MCCheckConstraint cte, planVars) stringifyNum
   colValM <- asSingleObject colVals
 
   arrRelAffRows <- bool (withArrRels colValM) (return 0) $ null arrayRels
@@ -288,11 +286,9 @@ mkInsertQ table onConflictM insCols defVals (insCheck, updCheck) = do
           . Just
           $ S.RetExp
             [ S.selectStar
-            , S.Extractor
-                (RQL.insertOrUpdateCheckExpr table onConflictM
-                  (RQL.toSQLBoolExp (S.QualTable table) insCheck)
-                  (fmap (RQL.toSQLBoolExp (S.QualTable table)) updCheck))
-                Nothing
+            , RQL.insertOrUpdateCheckExpr table onConflictM
+              (RQL.toSQLBoolExp (S.QualTable table) insCheck)
+              (fmap (RQL.toSQLBoolExp (S.QualTable table)) updCheck)
             ]
   pure $ S.CTEInsert sqlInsert
 
