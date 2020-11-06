@@ -146,5 +146,5 @@ explainGQLQuery pgExecCtx sc (GQLExplain query userVarsRaw maybeIsRelay) = do
     queryType = bool E.QueryHasura E.QueryRelay $ Just True == maybeIsRelay
     sessionVariables = mkSessionVariablesText $ maybe [] Map.toList userVarsRaw
 
-    runInTx :: LazyTx QErr EncJSON -> m EncJSON
+    runInTx :: LazyTxT QErr IO EncJSON -> m EncJSON
     runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx Q.ReadOnly
