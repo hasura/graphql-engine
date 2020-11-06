@@ -15,7 +15,7 @@ Import data from CSV into Postgres
 Introduction
 -------------
 
-You might have some existing data in a CSV file that you need to import into your PG database. The following
+You might have existing data stored in a CSV file that you need to import into your Postgres database. The following
 guide will show how to do so.
 
 In this guide we will use the following CSV file as an example. 
