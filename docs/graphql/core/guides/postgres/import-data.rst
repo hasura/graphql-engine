@@ -18,7 +18,7 @@ Introduction
 You might have existing data stored in a CSV file that you need to import into your Postgres database. The following
 guide will show how to do so.
 
-In this guide we will use the following CSV file as an example. 
+Let's assume the following CSV file named ``profile.csv``:
 
 
 .. thumbnail:: /img/graphql/core/guides/sample-data-csv-file.png
