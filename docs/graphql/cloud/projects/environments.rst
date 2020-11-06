@@ -99,7 +99,7 @@ so that you can roll back corresponding changes later, if required.
 Applying migrations and metadata
 ********************************
 
-When you decide to move to another environment, such as staging or production, you can apply the migrations and metadata to your instance.
+When you decide to move to another environment, such as staging or production, you can apply the migrations and metadata to your new instance.
 This will allow you to have the same database schema with a clean state.
 
 Migrations can be :ref:`manually applied <hasura_migrate_apply>` to any Hasura instance through:
@@ -188,13 +188,8 @@ This can be highly useful, especially in the case of debugging errors in action 
 
 :ref:`Enable the dev mode debugging <dev-mode>` via the ``HASURA_GRAPHQL_DEV_MODE`` environment variable.
 
-
-
-Project configurations
-^^^^^^^^^^^^^^^^^^^^^^
-
 Configuring environment variables
-*********************************
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 There are various components of Hasura metadata which are dependent on environment variables. 
 This allows environment specific runtime without changing the metadata definition. 
@@ -204,10 +199,6 @@ Additionally, you can check for the following:
 
 - The GraphQL endpoint needs to be :ref:`secured <securing_graphql_endpoint>`. You will need to add an ``HASURA_GRAPHQL_ADMIN_SECRET`` env var.
 - Environment variables for various entities like :ref:`actions <actions>` / :ref:`remote schemas <remote_schemas>` / :ref:`event triggers <event_triggers>` need to be configured.
-
-- Configure env variables (e.g. admin secret)
-- Use allow lists
-- Restrict CORS
 
 Running tests - regression testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -244,14 +235,24 @@ Then run the migrate/metadata/regression tests commands, passing in the endpoint
 Recommended setups
 ------------------
 
+In the following, we'll provide you with recommended stups for the development environment and production environment.
+
 Development environment
 ^^^^^^^^^^^^^^^^^^^^^^^
+
+Our recommended development environment depends on if you want to host Hasura in the cloud or locally/
 
 Cloud development: Hasura Cloud
 *******************************
 
-- Use Cloud for development (to use allow list, analytics etc.)
-- Collaborators
+:ref:`Hasura Cloud <cloud_getting_started>` is our recommended deployment option if you're use case allows hosting your project in the cloud. 
+It will will allow you to use features that will help you in collaboration, monitoring, as well as in controlling requests to your API.
+These include:
+
+- :ref:`Managing collaborators <manage_project_collaborators>`
+- :ref:`Metrics <metrics>`
+- :ref:`Allos lists <allow_lists>`
+- :ref:`API limits <api_limits>`
 
 Local development: Docker
 *************************
@@ -266,7 +267,7 @@ the ``HASURA_GRAPHQL_DATABASE_URL`` to point to the right Postgres connection st
 Production environment
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Like with staging, the migrations/metadata workflow needs to be repeated. Also, the following steps should be taken:
+When moving to production, it's important to keep in mind the points below. Some of them you might already have configured with the project setup.
 
 - Secure the endpoint with an admin secret.
 - Disable the console - so that nobody will be able to modify schema/data directly.
