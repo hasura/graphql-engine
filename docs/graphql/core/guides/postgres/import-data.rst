@@ -34,7 +34,7 @@ Let us create a table to match the data structure in your CSV file.
 
   CREATE TABLE profile (firstName text, lastName text, email varchar);
 
-Step 2: Connect to the postgres database
+Step 2: Connect to your Postgres database
 ------------------------------------------
 
 You can connect to the postgres database using the ``psql`` command on the terminal like the following: 
