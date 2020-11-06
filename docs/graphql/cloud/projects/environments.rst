@@ -12,96 +12,18 @@ Managing development environments for Hasura Cloud
   :depth: 2
   :local:
 
-Call Shahidh
-------------
-
-- Environment variables: deeper integration with CLI for cloud projects to list projects, manage the .env file, apply to cloud env
-
-Best practices to ensure smooth moving between environment
-- Concepts
-
-Recommendations about setting up / setup examples
-- Pros / cons in setting dev environment in cloud (allow list) - depending how large your team is (collaborators)
-- Completely offline: always have the docker compose
-- In any of the setup, we can use the concepts above
-
 Introduction
 ------------
+
+This guide will show how to configure your Hasura project to make it easy to switch to other development environments.
 
 Best practices
 --------------
 
+In the following, we'll go over some best practices for the project setup that will help ensuring a smooth transition of environments later.
+
 Migrations & metadata
 ^^^^^^^^^^^^^^^^^^^^^
-
-- Set up your project with migrations / metadata (link)
-  (disable the console)
-- Explain how it helps to move to staging / prod
-
-Developing & testing business logic
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-- Link to all business logic sections (actions etc.)
-- Configuring handlers via environment variables
-- Debugging in development 
-
-Project configurations
-^^^^^^^^^^^^^^^^^^^^^^
-
-- Configure env variables (e.g. admin secret)
-- Use allow lists
-- Restrict CORS
-
-Running tests
-^^^^^^^^^^^^^
-
-- Regression testing (for cloud)
-
-Recommended setups
-------------------
-
-Development Environment
-^^^^^^^^^^^^^^^^^^^^^^^
-
-Online:
-- Use Cloud for development (to use allow list, analytics etc.)
-- Collaborators
-
-Offline:
-- Docker
-
--> concepts above can be used in any environment
-
-In production
-^^^^^^^^^^^^^
-
-- Disable dev mode
-- Disable APIs
-- Link to production checklist
-
-
-Introduction
-------------
-
-This guide will show how to approach various stages of development with Hasura Cloud.
-
-Local development
------------------
-
-When developing locally, there are some steps we can take to ensure a smooth transition to the next environment.
-
-Running Hasura via docker-compose
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The simplest setup to run Hasura locally is to use the :ref:`docker-compose <get_docker_compose_file>` setup 
-to run both graphql-engine and Postgres as Docker containers.
-
-In case you have an existing Postgres setup running locally through a different environment, 
-like the native Postgres Mac app or the Postgres binary installed on Linux, you can configure 
-the ``HASURA_GRAPHQL_DATABASE_URL`` to point to the right Postgres connection string and remove the Postgres container from the docker-compose setup.
-
-Migrations
-^^^^^^^^^^
 
 The state of your Postgres database is managed via incremental SQL migration files. 
 These migration files can be applied one after the other to produce the final DB schema.
@@ -159,7 +81,7 @@ you can :ref:`squash the migration files into a single file <hasura_migrate_squa
   hasura migrate squash --from <version>
 
 Metadata
-^^^^^^^^
+********
 
 The state of Hasura metadata is managed via snapshots of the metadata. Hasura stores this metadata to create the GraphQL API over Postgres and provide other functionalities like remote schemas, event triggers etc. 
 All the actions performed on the console, like tracking tables/views/functions, creating relationships, configuring permissions, 
@@ -174,8 +96,30 @@ so that you can roll back corresponding changes later, if required.
 
     Read more about Hasura metadata on :ref:`this docs page <manage_hasura_metadata>`.
 
-Developing and testing business logic
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Applying migrations and metadata
+********************************
+
+When you decide to move to another environment, such as staging or production, you can apply the migrations and metadata to your instance.
+This will allow you to have the same database schema with a clean state.
+
+Migrations can be :ref:`manually applied <hasura_migrate_apply>` to any Hasura instance through:
+
+.. code-block:: bash
+
+  hasura migrate apply --endpoint <graphql-engine-endpoint> --admin-secret <admin-secret>
+
+This will apply only migrations which have not been already applied to the instance.
+
+Metadata can be :ref:`manually applied <hasura_metadata_apply>` via:
+
+.. code-block:: bash
+
+  hasura metadata apply --endpoint <graphql-engine-endpoint> --admin-secret <admin-secret>
+
+If you are self-hosting Hasura and have a CI/CD setup, you can also :ref:`auto-apply migrations/metadata <auto_apply_migrations>` when the graphql-engine server starts.
+
+Developing & testing business logic
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Hasura lets you write business logic in a flexible way. 
 If you are comfortable writing your own GraphQL server from scratch, you can add them as a :ref:`remote schema <remote_schemas>`. 
@@ -244,13 +188,13 @@ This can be highly useful, especially in the case of debugging errors in action 
 
 :ref:`Enable the dev mode debugging <dev-mode>` via the ``HASURA_GRAPHQL_DEV_MODE`` environment variable.
 
-Moving to Staging
------------------
 
-Once you are done with local dev, you may want to move to a different environment, e.g. staging.
+
+Project configurations
+^^^^^^^^^^^^^^^^^^^^^^
 
 Configuring environment variables
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*********************************
 
 There are various components of Hasura metadata which are dependent on environment variables. 
 This allows environment specific runtime without changing the metadata definition. 
@@ -261,24 +205,9 @@ Additionally, you can check for the following:
 - The GraphQL endpoint needs to be :ref:`secured <securing_graphql_endpoint>`. You will need to add an ``HASURA_GRAPHQL_ADMIN_SECRET`` env var.
 - Environment variables for various entities like :ref:`actions <actions>` / :ref:`remote schemas <remote_schemas>` / :ref:`event triggers <event_triggers>` need to be configured.
 
-Applying migrations and metadata
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Migrations can be :ref:`manually applied <hasura_migrate_apply>` to any Hasura instance through:
-
-.. code-block:: bash
-
-  hasura migrate apply --endpoint <graphql-engine-endpoint> --admin-secret <admin-secret>
-
-This will apply only migrations which have not been already applied to the instance.
-
-Metadata can be :ref:`manually applied <hasura_metadata_apply>` via:
-
-.. code-block:: bash
-
-  hasura metadata apply --endpoint <graphql-engine-endpoint> --admin-secret <admin-secret>
-
-If you are self-hosting Hasura and have a CI/CD setup, you can also :ref:`auto-apply migrations/metadata <auto_apply_migrations>` when the graphql-engine server starts.
+- Configure env variables (e.g. admin secret)
+- Use allow lists
+- Restrict CORS
 
 Running tests - regression testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -312,8 +241,30 @@ Then run the migrate/metadata/regression tests commands, passing in the endpoint
 
     For a full CI/CD script and pre-made GitHub action, check out `this example <https://github.com/GavinRay97/hasura-ci-cd-action>`__.
 
-Going live / production
------------------------
+Recommended setups
+------------------
+
+Development environment
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Cloud development: Hasura Cloud
+*******************************
+
+- Use Cloud for development (to use allow list, analytics etc.)
+- Collaborators
+
+Local development: Docker
+*************************
+
+The simplest setup to run Hasura locally is to use the :ref:`docker-compose <get_docker_compose_file>` setup 
+to run both graphql-engine and Postgres as Docker containers.
+
+In case you have an existing Postgres setup running locally through a different environment, 
+like the native Postgres Mac app or the Postgres binary installed on Linux, you can configure 
+the ``HASURA_GRAPHQL_DATABASE_URL`` to point to the right Postgres connection string and remove the Postgres container from the docker-compose setup.
+
+Production environment
+^^^^^^^^^^^^^^^^^^^^^^
 
 Like with staging, the migrations/metadata workflow needs to be repeated. Also, the following steps should be taken:
 
@@ -329,12 +280,10 @@ Like with staging, the migrations/metadata workflow needs to be repeated. Also, 
   Read more about the above steps in the :ref:`production checklist <production_checklist>`.
 
 Maintenance / updates
----------------------
-
-After going live, you can continue to use the same migrations/metadata workflow via the CLI as part of incremental app building.
+^^^^^^^^^^^^^^^^^^^^^
 
 Updating Hasura version
-^^^^^^^^^^^^^^^^^^^^^^^
+***********************
 
 Hasura Cloud is automatically updated with the most recent stable version. 
 
@@ -343,7 +292,7 @@ Hasura Cloud is automatically updated with the most recent stable version.
   In the future, it will be possible to downgrade to an earlier version, as well as upgrade to beta versions.
 
 Updating ENV via API
-^^^^^^^^^^^^^^^^^^^^
+********************
 
 Hasura Cloud exposes GraphQL APIs to update environment variables or even create projects from scratch. 
 For example, to update a few environment variables, you can make a mutation via the API like in the following example:
