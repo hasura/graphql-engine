@@ -345,7 +345,7 @@ If we try to insert an article with ``title = ""``, we will get a ``permission-e
     {
       "errors": [
         {
-          "message": "Permission check violation. insert/update check constraint failed",
+          "message": "check constraint of an insert/update permission has failed",
           "extensions": {
             "path": "$.selectionSet.insert_article.args.objects",
             "code": "permission-error"
