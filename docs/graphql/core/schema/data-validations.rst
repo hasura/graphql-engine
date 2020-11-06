@@ -449,7 +449,7 @@ will receive a ``permission-error`` :
     {
       "errors": [
         {
-          "message": "Permission check violation. insert/update check constraint failed",
+          "message": "check constraint of an insert/update permission has failed",
           "extensions": {
             "path": "$.selectionSet.insert_article.args.objects",
             "code": "permission-error"
