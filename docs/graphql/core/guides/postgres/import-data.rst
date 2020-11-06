@@ -48,7 +48,7 @@ You can connect to the postgres database using the ``psql`` command on the termi
 
   psql <postgres://postgres:postgres@localhost:5432/kittykat>
 
-Step 3: Copy the data successfully
+Step 3: Import the data
 -----------------------------------
 
 Once you are connected successfully to the database, use the following command in the psql terminal to
