@@ -1,5 +1,5 @@
 module Hasura.Backends.Postgres.Translate.Mutation
-  ( mkSelCTEFromColVals
+  ( mkSelectExpFromColumnValues
   )
 where
 
@@ -22,19 +22,18 @@ import           Hasura.SQL.Types
 -- For example, let's consider the table, `CREATE TABLE test (id serial primary key, name text not null, age int)`.
 -- The generated values expression should be in order of columns;
 -- `SELECT ("row"::table).* VALUES (1, 'Robert', 23) AS "row"`.
-mkSelCTEFromColVals
+mkSelectExpFromColumnValues
   :: (MonadError QErr m)
-  => QualifiedTable -> [ColumnInfo 'Postgres] -> [ColumnValues TxtEncodedPGVal] -> m S.CTE
-mkSelCTEFromColVals qt allCols colVals =
-  S.CTESelect <$> case colVals of
-    [] -> return selNoRows
-    _  -> do
-      tuples <- mapM mkTupsFromColVal colVals
-      let fromItem = S.FIValues (S.ValuesExp tuples) (S.Alias rowAlias) Nothing
-      return S.mkSelect
-        { S.selExtr = [extractor]
-        , S.selFrom = Just $ S.FromExp [fromItem]
-        }
+  => QualifiedTable -> [ColumnInfo 'Postgres] -> [ColumnValues TxtEncodedPGVal] -> m S.Select
+mkSelectExpFromColumnValues qt allCols = \case
+  []       -> return selNoRows
+  colVals  -> do
+    tuples <- mapM mkTupsFromColVal colVals
+    let fromItem = S.FIValues (S.ValuesExp tuples) (S.Alias rowAlias) Nothing
+    return S.mkSelect
+      { S.selExtr = [extractor]
+      , S.selFrom = Just $ S.FromExp [fromItem]
+      }
   where
     rowAlias = Identifier "row"
     extractor = S.selectStar' $ S.QualifiedIdentifier rowAlias $ Just $ S.TypeAnn $ toSQLTxt qt

@@ -1,7 +1,10 @@
 module Hasura.Backends.Postgres.Translate.Returning
   ( mkMutFldExp
   , mkDefaultMutFlds
+  , mkCheckErrorExp
   , mkMutationOutputExp
+  , checkConstraintIdentifier
+  , asCheckErrorExtractor
   , checkRetCols
   ) where
 
@@ -58,10 +61,7 @@ WITH "<table-name>__mutation_result_alias" AS (
     (<insert-value-row>[..])
     ON CONFLICT ON CONSTRAINT "<table-constraint-name>" DO NOTHING RETURNING *,
     -- An extra column expression which performs the 'CHECK' validation
-    CASE
-      WHEN (<CHECK Condition>) THEN NULL
-      ELSE "hdb_catalog"."check_violation"('insert check constraint failed')
-    END
+    (<CHECK Condition>) AS "check__constraint"
 ),
 "<table-name>__all_columns_alias" AS (
   -- Only extract columns from mutated rows. Columns sorted by ordinal position so that
@@ -70,7 +70,8 @@ WITH "<table-name>__mutation_result_alias" AS (
   FROM
     "<table-name>__mutation_result_alias"
 )
-<SELECT statement to generate mutation response using '<table-name>__all_columns_alias' as FROM>
+<SELECT statement to generate mutation response using '<table-name>__all_columns_alias' as FROM
+ and bool_and("check__constraint") from "<table-name>__mutation_result_alias">
 -}
 
 -- | Generate mutation output expression with given mutation CTE statement.
@@ -79,24 +80,27 @@ mkMutationOutputExp
   :: QualifiedTable
   -> [ColumnInfo 'Postgres]
   -> Maybe Int
-  -> S.CTE
+  -> MutationCTE
   -> MutationOutput 'Postgres
   -> Bool
   -> S.SelectWith
 mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
-  S.SelectWith [ (S.Alias mutationResultAlias, cte)
+  S.SelectWith [ (S.Alias mutationResultAlias, getMutationCTE cte)
                , (S.Alias allColumnsAlias, allColumnsSelect)
                ] sel
   where
     mutationResultAlias = Identifier $ snakeCaseQualifiedObject qt <> "__mutation_result_alias"
     allColumnsAlias = Identifier $ snakeCaseQualifiedObject qt <> "__all_columns_alias"
     allColumnsSelect = S.CTESelect $ S.mkSelect
-                       { S.selExtr = map (S.mkExtr . pgiColumn) $ sortCols allCols
+                       { S.selExtr = map (S.mkExtr . pgiColumn) (sortCols allCols)
                        , S.selFrom = Just $ S.mkIdenFromExp mutationResultAlias
                        }
 
-    sel = S.mkSelect { S.selExtr = [S.Extractor extrExp Nothing] }
+    sel = S.mkSelect { S.selExtr = S.Extractor extrExp Nothing
+                                   : bool [] [S.Extractor checkErrorExp Nothing] (checkPermissionRequired cte)
+                     }
           where
+            checkErrorExp = mkCheckErrorExp mutationResultAlias
             extrExp = case mutOutput of
               MOutMultirowFields mutFlds ->
                 let jsonBuildObjArgs = flip concatMap mutFlds $
@@ -111,6 +115,22 @@ mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
                 in S.SESelect $ mkSQLSelect JASSingleObject $
                    AnnSelectG annFlds tabFrom tabPerm noSelectArgs strfyNum
 
+mkCheckErrorExp :: IsIdentifier a => a -> S.SQLExp
+mkCheckErrorExp alias =
+  let boolAndCheckConstraint =
+        S.handleIfNull (S.SEBool $ S.BELit True) $
+        S.SEFnApp "bool_and" [S.SEIdentifier checkConstraintIdentifier] Nothing
+  in S.SESelect $
+     S.mkSelect { S.selExtr = [S.Extractor boolAndCheckConstraint Nothing]
+                , S.selFrom = Just $ S.mkIdenFromExp alias
+                }
+
+checkConstraintIdentifier :: Identifier
+checkConstraintIdentifier = Identifier "check__constraint"
+
+asCheckErrorExtractor :: S.SQLExp -> S.Extractor
+asCheckErrorExtractor s =
+  S.Extractor s $ Just $ S.Alias checkConstraintIdentifier
 
 checkRetCols
   :: (UserInfoM m, QErrM m)
