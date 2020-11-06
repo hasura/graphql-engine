@@ -199,20 +199,18 @@ processCronEvents logger logEnv httpMgr cronEvents getSC lockedCronEvents = do
   saveLockedEvents (map _ceId cronEvents) lockedCronEvents
   -- The `createdAt` of a cron event is the `created_at` of the cron trigger
   for_ cronEvents $ \(CronEvent id' name st _ tries _ _)-> do
-    case Map.lookup name cronTriggersInfo of
-      Nothing ->  logInternalError $
-        err500 Unexpected "could not find cron trigger in cache"
-      Just CronTriggerInfo{..} -> do
-        let webhookUrl = unResolvedWebhook ctiWebhookInfo
-            payload = ScheduledEventWebhookPayload id' (Just name) st
-                      (fromMaybe J.Null ctiPayload) ctiComment
-                      Nothing
-            retryCtx = RetryContext tries ctiRetryConf
-        finally <- runMetadataStorageT $ flip runReaderT (logger, httpMgr) $
-                   processScheduledEvent logEnv id' ctiHeaders retryCtx
-                                         payload webhookUrl Cron
-        removeEventFromLockedEvents id' lockedCronEvents
-        onLeft finally logInternalError
+    CronTriggerInfo{..} <- onNothing (Map.lookup name cronTriggersInfo) $ 
+      logInternalError $ err500 Unexpected "could not find cron trigger in cache"
+    let webhookUrl = unResolvedWebhook ctiWebhookInfo
+        payload = ScheduledEventWebhookPayload id' (Just name) st
+                  (fromMaybe J.Null ctiPayload) ctiComment
+                  Nothing
+        retryCtx = RetryContext tries ctiRetryConf
+    finally <- runMetadataStorageT $ flip runReaderT (logger, httpMgr) $
+               processScheduledEvent logEnv id' ctiHeaders retryCtx
+                                     payload webhookUrl Cron
+    removeEventFromLockedEvents id' lockedCronEvents
+    onLeft finally logInternalError
   where
     logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
 

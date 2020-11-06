@@ -323,10 +323,8 @@ instance ToJSON ScheduledEventStatus where
   toJSON = String . scheduledEventStatusToText
 
 instance FromJSON ScheduledEventStatus where
-  parseJSON = withText "String" $ \s ->
-    case textToScheduledEventStatus s of
-      Nothing     -> fail $ T.unpack $ "unexpected status: " <> s
-      Just status -> pure status
+  parseJSON = withText "String" $ \s -> onNothing (textToScheduledEventStatus s) $
+    fail $ T.unpack $ "unexpected status: " <> s
 
 
 data OneOffScheduledEvent
