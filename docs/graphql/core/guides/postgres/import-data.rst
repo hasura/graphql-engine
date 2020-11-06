@@ -24,7 +24,7 @@ In this guide we will use the following CSV file as an example.
 .. thumbnail:: /img/graphql/core/guides/sample-data-csv-file.png
    :alt: .csv data file
 
-Step 1: Add a table to your PG database
+Step 1: Add a corresponding table to your PG database
 -----------------------------------------
 
 Let us create a table to match the data structure in your CSV file.
