@@ -35,10 +35,10 @@ On the Hasura console, on the Data tab, click on the SQL tab and add the followi
 
   CREATE TABLE profile (firstName text, lastName text, email varchar);
 
-Step 2: Connect to the Postgres database
------------------------------------------
+Step 2: Connect to your Postgres database
+------------------------------------------
 
-You can connect to the Postgres database using the ``psql`` command on the terminal like the following: 
+You can connect to your Postgres database using the ``psql`` command on the terminal like the following: 
 
 .. code-block:: bash
 
