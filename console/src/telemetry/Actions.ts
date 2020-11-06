@@ -204,11 +204,50 @@ const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
       body: JSON.stringify(updatedReadNotifications),
     };
     return dispatch(requestAction(url, options))
-      .then((data: any) => {
-        dispatch({
-          type: UPDATE_CONSOLE_NOTIFICATIONS,
-          data: data.returning[0].console_state.console_notifications,
-        });
+      .then((data: { message?: string }) => {
+        if (!data?.message || data.message !== 'success') {
+          console.error(
+            'There was an error in updating the state of console notifications.'
+          );
+          return;
+        }
+        // successfully updated the state, now we need to fetch the latest and update console_notifications in redux
+        const getStatePayload: RequestInit = {
+          credentials: globalCookiePolicy,
+          method: 'POST',
+          headers,
+          body: JSON.stringify(getConsoleStateQuery),
+        };
+        return dispatch(requestAction(url, getStatePayload))
+          .then((resData: ConsoleStateResponse) => {
+            try {
+              const latestNotificationsState =
+                resData.console_state?.console_notifications;
+              dispatch({
+                type: UPDATE_CONSOLE_NOTIFICATIONS,
+                data: latestNotificationsState,
+              });
+            } catch {
+              // there's a different or an error in extracting the response
+              dispatch({
+                type: UPDATE_CONSOLE_NOTIFICATIONS,
+                data: {
+                  [userType]: {
+                    read: 'error',
+                    date: null,
+                    showBadge: true,
+                  },
+                },
+              });
+            }
+          })
+          .catch((err: Error) => {
+            console.error(
+              'There was an error in fetching the latest notifications state.',
+              err
+            );
+            return err;
+          });
       })
       .catch(error => {
         console.error(

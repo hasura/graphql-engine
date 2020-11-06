@@ -1,8 +1,7 @@
-import { ThunkDispatch } from 'redux-thunk';
 import React, { useState } from 'react';
 import Helmet from 'react-helmet';
-
 import { connect, ConnectedProps } from 'react-redux';
+
 import Button from '../../../Common/Button/Button';
 import styles from '../../../Common/Common.scss';
 import { ReduxState } from '../../../../types';
@@ -19,6 +18,7 @@ import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { getDataSources } from '../../../../metadata/selector';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
 
 type DatabaseListItemProps = {
   dataSource: DataSource;
@@ -36,31 +36,35 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
 
   return (
     <div className={styles.db_list_item}>
-      <Button
-        size="xs"
-        color="white"
-        onClick={() => {
-          setReloading(true);
-          onReload(dataSource.name, dataSource.driver, () =>
-            setReloading(false)
-          );
-        }}
-      >
-        {reloading ? 'Reloading...' : 'Reload'}
-      </Button>
-      <Button
-        className={styles.db_list_content}
-        size="xs"
-        color="white"
-        onClick={() => {
-          setRemoving(true);
-          onRemove(dataSource.name, dataSource.driver, () =>
-            setRemoving(false)
-          );
-        }}
-      >
-        {removing ? 'Removing...' : 'Remove'}
-      </Button>
+      <div className={styles.db_item_actions}>
+        <Button
+          size="xs"
+          color="white"
+          onClick={() => {
+            setReloading(true);
+            onReload(dataSource.name, dataSource.driver, () =>
+              setReloading(false)
+            );
+          }}
+        >
+          {reloading ? 'Reloading...' : 'Reload'}
+        </Button>
+        {dataSource.name !== 'default' && (
+          <Button
+            className={styles.db_list_content}
+            size="xs"
+            color="white"
+            onClick={() => {
+              setRemoving(true);
+              onRemove(dataSource.name, dataSource.driver, () =>
+                setRemoving(false)
+              );
+            }}
+          >
+            {removing ? 'Removing...' : 'Remove'}
+          </Button>
+        )}
+      </div>
       <div className={styles.db_list_content}>
         <b>
           {dataSource.name} ({dataSource.driver})
@@ -106,21 +110,24 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
   );
 };
 
-const crumbs = [
-  {
-    title: 'Data',
-    url: '/data',
-  },
-  {
-    title: 'Manage',
-    url: '#',
-  },
-];
+interface ManageDatabaseProps extends InjectedProps {}
 
-const ManageDatabase: React.FC<ManageDatabaseInjectedProps> = ({
+const ManageDatabase: React.FC<ManageDatabaseProps> = ({
   dataSources,
   dispatch,
+  ...props
 }) => {
+  const crumbs = [
+    {
+      title: 'Data',
+      url: `/data/${props.currentDataSource}/schema/${props.currentSchema}`,
+    },
+    {
+      title: 'Manage',
+      url: '#',
+    },
+  ];
+
   const onRemove = (name: string, driver: Driver, cb: () => void) => {
     const confirmation = getConfirmation(
       `Your action will remove the "${name}" data source`,
@@ -213,16 +220,12 @@ const mapStateToProps = (state: ReduxState) => {
   return {
     schemaList: state.tables.schemaList,
     dataSources: getDataSources(state),
+    currentDataSource: state.tables.currentDataSource,
+    currentSchema: state.tables.currentSchema,
   };
 };
-const manageConnector = connect(
-  mapStateToProps,
-  (dispatch: ThunkDispatch<ReduxState, unknown, any>) => ({
-    dispatch,
-  })
-);
 
-type ManageDatabaseInjectedProps = ConnectedProps<typeof manageConnector>;
-
-const ConnectedDatabaseManagePage = manageConnector(ManageDatabase);
+const connector = connect(mapStateToProps, mapDispatchToPropsEmpty);
+type InjectedProps = ConnectedProps<typeof connector>;
+const ConnectedDatabaseManagePage = connector(ManageDatabase);
 export default ConnectedDatabaseManagePage;

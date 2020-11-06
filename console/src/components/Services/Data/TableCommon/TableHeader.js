@@ -61,7 +61,7 @@ const TableHeader = ({
       },
       {
         title: tableSchema,
-        url: getSchemaBaseRoute(tableSchema),
+        url: getSchemaBaseRoute(tableSchema, source),
       },
       {
         title: tableName,
