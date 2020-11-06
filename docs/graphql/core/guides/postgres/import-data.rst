@@ -52,7 +52,7 @@ Step 3: Import the data
 -----------------------------------
 
 Once connected to the database, use the following command from inside ``psql`` to
-copy the data:
+import the data:
 
 .. code-block:: bash
 
