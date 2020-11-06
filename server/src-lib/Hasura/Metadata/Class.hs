@@ -53,7 +53,8 @@ TODO: Reference to open issue or rfc?
 -- 2. Scheduled Triggers
 -- ---------------------
 -- Eventing sub-system for scheduled triggers is implemented via metadata storage.
--- All necessary functions are included in the type class. (TODO) The console has
+-- All necessary functions are included in the type class.
+-- (TODO):
 -- This also includes functions to fetch events and their invocations so that the
 -- console can show them in the UI.
 -- For more details, refer description in 'Hasura.Eventing.ScheduledTrigger' module.
