@@ -104,6 +104,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
+- cli: fix cli-migrations-v2 image failing to run as a non root user (close #4651, close #5333)
 
 - server: Fix fine-grained incremental cache invalidation (fix #3759)
 
