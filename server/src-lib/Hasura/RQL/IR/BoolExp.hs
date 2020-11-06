@@ -42,8 +42,6 @@ import           Hasura.Prelude
 import qualified Data.Aeson.Types                   as J
 import qualified Data.HashMap.Strict                as M
 
-import qualified Hasura.Backends.Postgres.SQL.DML   as S
-
 import           Control.Lens.Plated
 import           Control.Lens.TH
 import           Data.Aeson
@@ -354,8 +352,8 @@ andAnnBoolExps :: AnnBoolExp backend a -> AnnBoolExp backend a -> AnnBoolExp bac
 andAnnBoolExps l r =
   BoolAnd [l, r]
 
-type AnnBoolExpFldSQL b = AnnBoolExpFld b S.SQLExp
-type AnnBoolExpSQL b = AnnBoolExp b S.SQLExp
+type AnnBoolExpFldSQL b = AnnBoolExpFld b (SQLExp b)
+type AnnBoolExpSQL    b = AnnBoolExp    b (SQLExp b)
 
 type AnnBoolExpFldPartialSQL b = AnnBoolExpFld b (PartialSQLExp b)
 type AnnBoolExpPartialSQL b = AnnBoolExp b (PartialSQLExp b)
@@ -366,10 +364,10 @@ type PreSetColsPartial b = M.HashMap (Column b) (PartialSQLExp b)
 -- doesn't resolve the session variable
 data PartialSQLExp (b :: Backend)
   = PSESessVar !(PGType (ScalarType b)) !SessionVariable
-  | PSESQLExp !S.SQLExp
+  | PSESQLExp !(SQLExp b)
   deriving (Generic)
 deriving instance Eq (PartialSQLExp 'Postgres)
-deriving instance (Typeable backend, Data (ScalarType backend)) => Data (PartialSQLExp backend)
+deriving instance Data (PartialSQLExp 'Postgres)
 instance NFData (PartialSQLExp 'Postgres)
 instance Cacheable (PartialSQLExp 'Postgres)
 

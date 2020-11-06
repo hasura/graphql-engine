@@ -1,28 +1,46 @@
-# Table of Contents
+# @hasura/metadata
+
+`@hasura/metadata` contains TypeScript types for Hasura Metadata V2.
+
+## Installation
+
+```sh
+yarn add @hasura/metadata # npm i @hasura/metadata
+```
+
+## Usage
+
+```ts
+import { HasuraMetadataV2, Action, ComputedField } from "@hasura/metadata-types"
+```
+
+# Metadata SDK
+
+## Table of Contents
 
 - [Table of Contents](#table-of-contents)
 - [Introduction](#introduction)
 - [How to use this (aka TL;DR)](#how-to-use-this-aka-tldr)
 - [Demos](#demos)
-    - [TypeScript SDK](#typescript-sdk)
-    - [Type-Checking & Docs inside of Metadata YAML files](#type-checking--docs-inside-of-metadata-yaml-files)
+  - [TypeScript SDK](#typescript-sdk)
+  - [Type-Checking & Docs inside of Metadata YAML files](#type-checking--docs-inside-of-metadata-yaml-files)
 - [SDK Usage Examples (TypeScript)](#sdk-usage-examples-typescript)
-    - [Extending the Generated Class Functionality](#extending-the-generated-class-functionality)
-    - [Programmatically Interacting with Metadata](#programmatically-interacting-with-metadata)
+  - [Extending the Generated Class Functionality](#extending-the-generated-class-functionality)
+  - [Programmatically Interacting with Metadata](#programmatically-interacting-with-metadata)
 - [Generator Config File Options](#generator-config-file-options)
 - [Test Config File Options](#test-config-file-options)
 - [Programmatic Usage](#programmatic-usage)
 - [Metadata IDE Type-Checking Integration](#metadata-ide-type-checking-integration)
-    - [VS Code](#vs-code)
-    - [Jetbrains](#jetbrains)
+  - [VS Code](#vs-code)
+  - [Jetbrains](#jetbrains)
 
-# Introduction
+## Introduction
 
 This repo contains a script used to generate SDK's in various languages from either TypeScript or JSON Schema sources. The script is configurable and built to be consumed from something such as a Github Action or a git hook.
 
 It is being used to generate SDK's for Hasura Metadata V2
 
-# How to use this (aka TL;DR)
+## How to use this (aka TL;DR)
 
 _**"I want to..."**_
 
@@ -41,7 +59,7 @@ _**"I want to..."**_
   - `yarn install` or `npm install`
   - `yarn generate-types` or `npm run generate-types`
 
-# Demos
+## Demos
 
 ### TypeScript SDK
 
@@ -51,7 +69,7 @@ _**"I want to..."**_
 
 ![](json-schema-typecheck-demo.gif)
 
-# SDK Usage Examples (TypeScript)
+## SDK Usage Examples (TypeScript)
 
 ### Extending the Generated Class Functionality
 
@@ -71,10 +89,10 @@ This class can be extended from another file to add extra functionality. Here is
 
 ```ts
 // customMetadataConverter.ts
-import fs from 'fs'
-import { load, dump } from 'js-yaml'
-import { createPatch } from 'diff'
-import { detailedDiff } from 'deep-object-diff'
+import fs from "fs"
+import { load, dump } from "js-yaml"
+import { createPatch } from "diff"
+import { detailedDiff } from "deep-object-diff"
 import {
   Convert as _Convert,
   TableEntry,
@@ -82,7 +100,7 @@ import {
   CustomTypes,
   CronTrigger,
   HasuraMetadataV2,
-} from '../generated/HasuraMetadataV2'
+} from "../generated/HasuraMetadataV2"
 
 interface DiffOutput {
   structuralDiff: object
@@ -102,7 +120,7 @@ export class Convert extends _Convert {
   public static diffJson = detailedDiff
 
   public static clone(obj: any) {
-    if (obj == null || typeof obj != 'object') return obj
+    if (obj == null || typeof obj != "object") return obj
     let temp = new obj.constructor()
     for (var key in obj) {
       if (obj.hasOwnProperty(key)) {
@@ -116,7 +134,7 @@ export class Convert extends _Convert {
     const originalYaml = Convert.metadataToYaml(before)
     const updatedYaml = Convert.metadataToYaml(after)
     const structuralDiff = Convert.diffJson(before, after)
-    const textDiff = Convert.diffYaml('', originalYaml, updatedYaml)
+    const textDiff = Convert.diffYaml("", originalYaml, updatedYaml)
     return { structuralDiff, textDiff }
   }
 
@@ -149,22 +167,22 @@ Below is an example to demonstrate the common usecases you may encounter when wa
 - Repeating the above process for `metadata.json` (could be `metadata.yaml` as well)
 
 ```ts
-import { Convert } from './customMetadataConverter'
+import { Convert } from "./customMetadataConverter"
 import {
   TableEntry,
   Action,
   CustomTypes,
   HasuraMetadataV2,
-} from '../generated/HasuraMetadataV2'
+} from "../generated/HasuraMetadataV2"
 
 // Read "tables.yaml" file as text from filesystem
-const tablesMetadataFile = fs.readFileSync('./metadata/tables.yaml', 'utf8')
+const tablesMetadataFile = fs.readFileSync("./metadata/tables.yaml", "utf8")
 // Convert it to JSON object with type annotation using loadYAML utility
 const tablesMetadata: TableEntry[] = Convert.loadYAML(tablesMetadataFile)
 tablesMetadata.forEach(console.log)
 
 // Read "actions.yaml" file as text from filesystem
-const actionMetadataFile = fs.readFileSync('./metadata/actions.yaml', 'utf8')
+const actionMetadataFile = fs.readFileSync("./metadata/actions.yaml", "utf8")
 // Convert it to JSON object with type annotation using loadYAML utility
 const actionMetadata: {
   actions: Action[]
@@ -175,17 +193,17 @@ console.log(actionMetadata.custom_types)
 
 // Make a new table object
 const newTable: TableEntry = {
-  table: { schema: 'public', name: 'user' },
+  table: { schema: "public", name: "user" },
   select_permissions: [
     {
-      role: 'user',
+      role: "user",
       permission: {
         limit: 100,
         allow_aggregations: false,
-        columns: ['id', 'name', 'etc'],
-        computed_fields: ['my_computed_field'],
+        columns: ["id", "name", "etc"],
+        computed_fields: ["my_computed_field"],
         filter: {
-          id: { _eq: 'X-Hasura-User-ID' },
+          id: { _eq: "X-Hasura-User-ID" },
         },
       },
     },
@@ -200,15 +218,15 @@ tablesMetadata.push(newTable)
 // Generate a structural and text diff from the changes between original and now
 const tableDiff = Convert.diff(originalTablesMetadata, tablesMetadata)
 // Write the diffs to /diffs folder, will output "tables.json" and "tables.diff"
-Convert.writeDiff({ folder: 'diffs', file: 'tables', diffs: tableDiff })
+Convert.writeDiff({ folder: "diffs", file: "tables", diffs: tableDiff })
 // Ouput the updated "tables.yaml" to filesystem
 fs.writeFileSync(
-  './tables-updated.yaml',
+  "./tables-updated.yaml",
   Convert.metadataToYAML(tablesMetadata)
 )
 
 // Read "metadata.json"
-const metadataFile = fs.readFileSync('./metadata.json', 'utf-8')
+const metadataFile = fs.readFileSync("./metadata.json", "utf-8")
 // Convert.to<typeName> does runtime validation of the type
 const allMetadata: HasuraMetadataV2 = Convert.toHasuraMetadataV2(metadataFile)
 console.log(allMetadata)
@@ -219,10 +237,10 @@ allMetadata.tables.push(newTable)
 
 // Diff, write diff
 const metadataDiff = Convert.diff(beforeMetadataChanges, allMetadata)
-Convert.writeDiff({ folder: 'diffs', file: 'metadata', diffs: metadataDiff })
+Convert.writeDiff({ folder: "diffs", file: "metadata", diffs: metadataDiff })
 ```
 
-# Generator Config File Options
+## Generator Config File Options
 
 _Note: Run with `yarn generate-types`/`npm run generate-types`_
 
@@ -242,11 +260,11 @@ selected_input_language: TypeScript
 # Only the matching SELECTED INPUT LANGUAGE file expression will be used
 input_files:
   # Paths can be either a string, or an array of strings
-  JsonSchema: './src/types/**.schema.json'
-  TypeScript: ['./src/types/**.ts', './src/otherfolder/**.ts']
+  JsonSchema: "./src/types/**.schema.json"
+  TypeScript: ["./src/types/**.ts", "./src/otherfolder/**.ts"]
 
 # Output file directory
-output_directory: './generated'
+output_directory: "./generated"
 
 # Quicktype config per-language
 # Config is an object of type "rendererOptions"
@@ -269,7 +287,7 @@ quicktype_config:
   # objective-c: ~
   # pike: ~
   python:
-    python-version: '3.7'
+    python-version: "3.7"
   # ruby: ~
   # rust: ~
   schema: ~
@@ -279,7 +297,7 @@ quicktype_config:
   #   just-types: true
 ```
 
-# Test Config File Options
+## Test Config File Options
 
 _Note: Run with `yarn test`/`npm run test`_
 
@@ -309,16 +327,16 @@ This is what the definition looks like:
 
 ```yaml
 ---
-- typeDefinitionFile: './generated/HasuraMetadataV2.ts'
+- typeDefinitionFile: "./generated/HasuraMetadataV2.ts"
   jsonInputTests:
-    - files: './src/tests/**.json'
+    - files: "./src/tests/**.json"
       # This gets called as "Convert.to(expectType)" -> e.g "Convert.toHasuraMetadataV2" in generated TS SDK
       expectType: HasuraMetadataV2
 ```
 
 ![](test-output-sample.png)
 
-# Programmatic Usage
+## Programmatic Usage
 
 The type generator can in theory run both as a CLI executable, and as a library.
 This allows for customizing behavior, IE for CI/CD pipelines. Here is one example:
@@ -326,26 +344,26 @@ This allows for customizing behavior, IE for CI/CD pipelines. Here is one exampl
 ```ts
 generateTypes()
   .then((outputs) => {
-    console.log('Finished generateTypes(), outputs are', outputs)
+    console.log("Finished generateTypes(), outputs are", outputs)
     for (let output of outputs) {
       // This is the input file path
-      console.log('File:', output.file)
+      console.log("File:", output.file)
       // This contains the generated text
-      console.log('Results:', output.results)
+      console.log("Results:", output.results)
     }
   })
   .catch((err) => {
-    console.log('Got error', err)
+    console.log("Got error", err)
   })
   .finally(async () => {
     // Convert the generated JSON Schema to YAML, for example
-    const generatedFolder = path.join(pathFromRoot, 'generated', '/')
-    const jsonSchemas = await glob(generatedFolder + '**.json')
+    const generatedFolder = path.join(pathFromRoot, "generated", "/")
+    const jsonSchemas = await glob(generatedFolder + "**.json")
     jsonSchemas.forEach(jsonSchemaToYAML)
   })
 ```
 
-# Metadata IDE Type-Checking Integration
+## Metadata IDE Type-Checking Integration
 
 Ever tried (or wanted) to write Hasura Metadata YAML definitions by hand, but found yourself frequently pulled back to documentation for definitions, or fighting YAML's whitespace sensitivity? Well, no more!
 
