@@ -29,6 +29,8 @@ Step 1: Add a corresponding table to your PG database
 
 Let us create a table to match the data structure in your CSV file.
 
+On the Hasura console, on the Data tab, click on the SQL tab and add the following statement:
+
 .. code-block:: bash
 
   CREATE TABLE profile (firstName text, lastName text, email varchar);
