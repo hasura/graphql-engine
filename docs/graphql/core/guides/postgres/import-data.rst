@@ -23,6 +23,7 @@ Let's assume the following CSV file named ``profile.csv``:
 
 .. thumbnail:: /img/graphql/core/guides/sample-data-csv-file.png
    :alt: .csv data file
+   :width: 700px
 
 Step 1: Add a corresponding table to your PG database
 -----------------------------------------
