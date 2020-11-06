@@ -51,7 +51,7 @@ You can connect to the postgres database using the ``psql`` command on the termi
 Step 3: Import the data
 -----------------------------------
 
-Once you are connected successfully to the database, use the following command in the psql terminal to
+Once connected to the database, use the following command from inside ``psql`` to
 copy the data:
 
 .. code-block:: bash
