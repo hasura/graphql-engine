@@ -1,0 +1,417 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "definitions": {
+        "GenericOperator": {
+            "$ref": "#/definitions/GenericOperator<T>"
+        },
+        "NumberOperator": {
+            "description": "expression to compare columns of type Int. All fields are combined with logical 'AND'.",
+            "title": "NumberOperator",
+            "type": "object",
+            "properties": {
+                "_eq": {
+                    "type": "number",
+                    "title": "_eq"
+                },
+                "_gt": {
+                    "type": "number",
+                    "title": "_gt"
+                },
+                "_gte": {
+                    "type": "number",
+                    "title": "_gte"
+                },
+                "_in": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    },
+                    "title": "_in"
+                },
+                "_is_null": {
+                    "type": "boolean",
+                    "title": "_is_null"
+                },
+                "_lt": {
+                    "type": "number",
+                    "title": "_lt"
+                },
+                "_lte": {
+                    "type": "number",
+                    "title": "_lte"
+                },
+                "_ne": {
+                    "type": "number",
+                    "title": "_ne"
+                },
+                "_nin": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    },
+                    "title": "_nin"
+                }
+            }
+        },
+        "StringOperator": {
+            "description": "expression to compare columns of type String. All fields are combined with logical 'AND'.",
+            "title": "StringOperator",
+            "type": "object",
+            "properties": {
+                "_ilike": {
+                    "type": "string",
+                    "title": "_ilike"
+                },
+                "_like": {
+                    "type": "string",
+                    "title": "_like"
+                },
+                "_nilike": {
+                    "type": "string",
+                    "title": "_nilike"
+                },
+                "_nlike": {
+                    "type": "string",
+                    "title": "_nlike"
+                },
+                "_nsimilar": {
+                    "type": "string",
+                    "title": "_nsimilar"
+                },
+                "_similar": {
+                    "type": "string",
+                    "title": "_similar"
+                },
+                "_eq": {
+                    "type": "string",
+                    "title": "_eq"
+                },
+                "_gt": {
+                    "type": "string",
+                    "title": "_gt"
+                },
+                "_gte": {
+                    "type": "string",
+                    "title": "_gte"
+                },
+                "_in": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "title": "_in"
+                },
+                "_is_null": {
+                    "type": "boolean",
+                    "title": "_is_null"
+                },
+                "_lt": {
+                    "type": "string",
+                    "title": "_lt"
+                },
+                "_lte": {
+                    "type": "string",
+                    "title": "_lte"
+                },
+                "_ne": {
+                    "type": "string",
+                    "title": "_ne"
+                },
+                "_nin": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "title": "_nin"
+                }
+            }
+        },
+        "JsonOperator": {
+            "description": "expression to compare columns of type json. All fields are combined with logical 'AND'.",
+            "title": "JsonOperator",
+            "type": "object",
+            "properties": {
+                "_contained_in": {
+                    "type": "object",
+                    "properties": {},
+                    "additionalProperties": true,
+                    "title": "_contained_in"
+                },
+                "_contains": {
+                    "type": "object",
+                    "properties": {},
+                    "additionalProperties": true,
+                    "title": "_contains"
+                },
+                "_has_key": {
+                    "type": "string",
+                    "title": "_has_key"
+                },
+                "_has_keys_any": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "title": "_has_keys_any"
+                },
+                "_has_keys_all": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "title": "_has_keys_all"
+                },
+                "_eq": {
+                    "anyOf": [
+                        {
+                            "type": "object",
+                            "properties": {},
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": [
+                                "string",
+                                "number"
+                            ]
+                        }
+                    ],
+                    "title": "_eq"
+                },
+                "_gt": {
+                    "anyOf": [
+                        {
+                            "type": "object",
+                            "properties": {},
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": [
+                                "string",
+                                "number"
+                            ]
+                        }
+                    ],
+                    "title": "_gt"
+                },
+                "_gte": {
+                    "anyOf": [
+                        {
+                            "type": "object",
+                            "properties": {},
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": [
+                                "string",
+                                "number"
+                            ]
+                        }
+                    ],
+                    "title": "_gte"
+                },
+                "_in": {
+                    "type": "array",
+                    "items": {
+                        "anyOf": [
+                            {
+                                "type": "object",
+                                "properties": {},
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": [
+                                    "string",
+                                    "number"
+                                ]
+                            }
+                        ]
+                    },
+                    "title": "_in"
+                },
+                "_is_null": {
+                    "type": "boolean",
+                    "title": "_is_null"
+                },
+                "_lt": {
+                    "anyOf": [
+                        {
+                            "type": "object",
+                            "properties": {},
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": [
+                                "string",
+                                "number"
+                            ]
+                        }
+                    ],
+                    "title": "_lt"
+                },
+                "_lte": {
+                    "anyOf": [
+                        {
+                            "type": "object",
+                            "properties": {},
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": [
+                                "string",
+                                "number"
+                            ]
+                        }
+                    ],
+                    "title": "_lte"
+                },
+                "_ne": {
+                    "anyOf": [
+                        {
+                            "type": "object",
+                            "properties": {},
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": [
+                                "string",
+                                "number"
+                            ]
+                        }
+                    ],
+                    "title": "_ne"
+                },
+                "_nin": {
+                    "type": "array",
+                    "items": {
+                        "anyOf": [
+                            {
+                                "type": "object",
+                                "properties": {},
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": [
+                                    "string",
+                                    "number"
+                                ]
+                            }
+                        ]
+                    },
+                    "title": "_nin"
+                }
+            }
+        },
+        "Operator": {
+            "anyOf": [
+                {
+                    "$ref": "#/definitions/NumberOperator"
+                },
+                {
+                    "$ref": "#/definitions/StringOperator"
+                },
+                {
+                    "$ref": "#/definitions/JsonOperator"
+                }
+            ]
+        },
+        "BoolExp": {
+            "title": "BoolExp",
+            "type": "object",
+            "additionalProperties": {
+                "anyOf": [
+                    {
+                        "$ref": "#/definitions/NumberOperator"
+                    },
+                    {
+                        "$ref": "#/definitions/StringOperator"
+                    },
+                    {
+                        "$ref": "#/definitions/JsonOperator"
+                    },
+                    {
+                        "$ref": "#/definitions/BoolExp"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/BoolExp"
+                        }
+                    }
+                ]
+            },
+            "properties": {
+                "_and": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/BoolExp"
+                    },
+                    "title": "_and"
+                },
+                "_or": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/BoolExp"
+                    },
+                    "title": "_or"
+                },
+                "_not": {
+                    "$ref": "#/definitions/BoolExp",
+                    "title": "_not"
+                }
+            }
+        },
+        "GenericOperator<T>": {
+            "description": "Generic operators (all column types except json, jsonb)",
+            "title": "GenericOperator<T>",
+            "type": "object",
+            "properties": {
+                "_eq": {
+                    "$ref": "#/definitions/T",
+                    "title": "_eq"
+                },
+                "_gt": {
+                    "$ref": "#/definitions/T",
+                    "title": "_gt"
+                },
+                "_gte": {
+                    "$ref": "#/definitions/T",
+                    "title": "_gte"
+                },
+                "_in": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/T"
+                    },
+                    "title": "_in"
+                },
+                "_is_null": {
+                    "type": "boolean",
+                    "title": "_is_null"
+                },
+                "_lt": {
+                    "$ref": "#/definitions/T",
+                    "title": "_lt"
+                },
+                "_lte": {
+                    "$ref": "#/definitions/T",
+                    "title": "_lte"
+                },
+                "_ne": {
+                    "$ref": "#/definitions/T",
+                    "title": "_ne"
+                },
+                "_nin": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/T"
+                    },
+                    "title": "_nin"
+                }
+            }
+        },
+        "T": {
+            "title": "T",
+            "type": "object"
+        }
+    }
+}

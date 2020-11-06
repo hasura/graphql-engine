@@ -20,10 +20,9 @@ module Hasura.RQL.DDL.Schema.Cache
 
 import           Hasura.Prelude
 
+import qualified Data.Environment                         as Env
 import qualified Data.HashMap.Strict.Extended             as M
 import qualified Data.HashSet                             as HS
-import qualified Data.Text                                as T
-import qualified Data.Environment                         as Env
 import qualified Database.PG.Query                        as Q
 
 import           Control.Arrow.Extended
@@ -34,7 +33,9 @@ import           Data.List                                (nub)
 
 import qualified Hasura.Incremental                       as Inc
 
-import           Hasura.Db
+import           Data.Text.Extended
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Execute.Types
 import           Hasura.GraphQL.Schema                    (buildGQLContext)
 import           Hasura.RQL.DDL.Action
@@ -52,11 +53,9 @@ import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.DDL.Utils                     (clearHdbViews)
-import           Hasura.RQL.Types
+import           Hasura.RQL.Types                         hiding (fmFunction, tmTable)
 import           Hasura.RQL.Types.Catalog
 import           Hasura.Server.Version                    (HasVersion)
-import           Hasura.SQL.Types
 
 buildRebuildableSchemaCache
   :: (HasVersion, MonadIO m, MonadUnique m, MonadTx m, HasHttpManager m, HasSQLGenCtx m)
@@ -132,21 +131,21 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
   -- Step 3: Build the GraphQL schema.
   (gqlContext, gqlSchemaInconsistentObjects) <- runWriterA buildGQLContext -<
     ( QueryHasura
-    , (_boTables    resolvedOutputs)
-    , (_boFunctions resolvedOutputs)
-    , (_boRemoteSchemas resolvedOutputs)
-    , (_boActions resolvedOutputs)
-    , (_actNonObjects $ _boCustomTypes resolvedOutputs)
+    , _boTables    resolvedOutputs
+    , _boFunctions resolvedOutputs
+    , _boRemoteSchemas resolvedOutputs
+    , _boActions resolvedOutputs
+    , _actNonObjects $ _boCustomTypes resolvedOutputs
     )
 
   -- Step 4: Build the relay GraphQL schema
   (relayContext, relaySchemaInconsistentObjects) <- runWriterA buildGQLContext -<
     ( QueryRelay
-    , (_boTables    resolvedOutputs)
-    , (_boFunctions resolvedOutputs)
-    , (_boRemoteSchemas resolvedOutputs)
-    , (_boActions resolvedOutputs)
-    , (_actNonObjects $ _boCustomTypes resolvedOutputs)
+    , _boTables    resolvedOutputs
+    , _boFunctions resolvedOutputs
+    , _boRemoteSchemas resolvedOutputs
+    , _boActions resolvedOutputs
+    , _actNonObjects $ _boCustomTypes resolvedOutputs
     )
 
   returnA -< SchemaCache
@@ -322,7 +321,7 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
     buildTableEventTriggers
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
          , Inc.ArrowCache m arr, MonadTx m, MonadReader BuildReason m, HasSQLGenCtx m )
-      => (TableCoreInfo, [CatalogEventTrigger]) `arr` EventTriggerInfoMap
+      => (TableCoreInfo 'Postgres, [CatalogEventTrigger]) `arr` EventTriggerInfoMap
     buildTableEventTriggers = buildInfoMap _cetName mkEventTriggerMetadataObject buildEventTrigger
       where
         buildEventTrigger = proc (tableInfo, eventTrigger) -> do
@@ -369,9 +368,9 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
     buildActions
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
          , ArrowWriter (Seq CollectedInfo) arr)
-      => ( (AnnotatedCustomTypes, HashSet PGScalarType)
+      => ( (AnnotatedCustomTypes 'Postgres, HashSet PGScalarType)
          , [ActionMetadata]
-         ) `arr` HashMap ActionName ActionInfo
+         ) `arr` HashMap ActionName (ActionInfo 'Postgres)
     buildActions = buildInfoMap _amName mkActionMetadataObject buildAction
       where
         buildAction = proc ((resolvedCustomTypes, pgScalars), action) -> do
@@ -409,8 +408,11 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
 -- if not, incorporates them into the schema cache.
 withMetadataCheck :: (MonadTx m, CacheRWM m, HasSQLGenCtx m) => Bool -> m a -> m a
 withMetadataCheck cascade action = do
-  -- Drop hdb_views so no interference is caused to the sql query
-  liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
+  -- Drop event triggers so no interference is caused to the sql query
+  preActionTables <- scTables <$> askSchemaCache
+  forM_ (M.elems preActionTables) $ \tableInfo -> do
+    let eventTriggers = _tiEventTriggerInfoMap tableInfo
+    forM_ (M.keys eventTriggers) (liftTx . delTriggerQ)
 
   -- Get the metadata before the sql query, everything, need to filter this
   oldMetaU <- liftTx $ Q.catchE defaultTxErrorHandler fetchTableMeta
@@ -435,7 +437,7 @@ withMetadataCheck cascade action = do
   -- Do not allow overloading functions
   unless (null overloadedFuncs) $
     throw400 NotSupported $ "the following tracked function(s) cannot be overloaded: "
-    <> reportFuncs overloadedFuncs
+    <> commaSeparated overloadedFuncs
 
   indirectDeps <- getSchemaChangeDeps schemaDiff
 
@@ -446,10 +448,9 @@ withMetadataCheck cascade action = do
   mapM_ purgeDependentObject indirectDeps
 
   -- Purge all dropped functions
-  let purgedFuncs = flip mapMaybe indirectDeps $ \dep ->
-        case dep of
-          SOFunction qf -> Just qf
-          _             -> Nothing
+  let purgedFuncs = flip mapMaybe indirectDeps $ \case
+        SOFunction qf -> Just qf
+        _             -> Nothing
 
   forM_ (droppedFuncs \\ purgedFuncs) $ \qf -> do
     liftTx $ delFunctionFromCatalog qf
@@ -466,7 +467,7 @@ withMetadataCheck cascade action = do
   buildSchemaCache
   postSc <- askSchemaCache
 
-  -- Recreate event triggers in hdb_views
+  -- Recreate event triggers in hdb_catalog
   forM_ (M.elems $ scTables postSc) $ \(TableInfo coreInfo _ eventTriggers) -> do
           let table = _tciName coreInfo
               columns = getCols $ _tciFieldInfoMap coreInfo
@@ -479,9 +480,7 @@ withMetadataCheck cascade action = do
 
   return res
   where
-    reportFuncs = T.intercalate ", " . map dquoteTxt
-
-    processSchemaChanges :: (MonadTx m, CacheRM m) => SchemaDiff -> m ()
+    processSchemaChanges :: (MonadTx m, CacheRM m) => SchemaDiff 'Postgres -> m ()
     processSchemaChanges schemaDiff = do
       -- Purge the dropped tables
       mapM_ delTableAndDirectDeps droppedTables

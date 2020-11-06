@@ -1,5 +1,5 @@
 import React from 'react';
-import { RemoteRelationshipServer } from '../utils';
+import { RemoteRelationshipServer, parseRemoteRelationship } from '../utils';
 import styles from '../SchemaExplorer.scss';
 
 type Props = {
@@ -10,6 +10,11 @@ const Collapsed: React.FC<Props> = ({ relationship }) => {
   if (!relationship) {
     return null;
   }
+  const parseRelationship = parseRemoteRelationship(relationship);
+  const relationMap = () => {
+    const fields = parseRelationship.remoteFields.map(field => field.name);
+    return ['', ...fields].join(' . ');
+  };
   return (
     <div className={styles.display_flex}>
       <div>
@@ -19,7 +24,7 @@ const Collapsed: React.FC<Props> = ({ relationship }) => {
         <i>
           {`- ${relationship.table_name} → ${
             relationship.definition.remote_schema
-          } . ${Object.keys(relationship.definition.remote_field)}`}
+          }  ${relationMap()}`}
         </i>
       </div>
     </div>

@@ -1,0 +1,20 @@
+description: Simple remote relationship GraphQL query with union
+url: /v1/graphql
+status: 200
+response:
+  data:
+    profiles:
+      - id: 1
+        getOccupationEnum: "SINGER"
+      - id: 2
+        getOccupationEnum: "ARTIST"
+      - id: 3
+        getOccupationEnum: "SINGER"
+query:
+  query: |
+    query {
+      profiles {
+        id
+        getOccupationEnum
+      }
+    }
