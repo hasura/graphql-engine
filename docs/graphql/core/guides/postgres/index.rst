@@ -56,4 +56,4 @@ The following are some Postgres features that can be used to manage your data an
   Functions <functions>
   Triggers <triggers>
   Indexes <indexes>
-  Import data from CSV <import-data>
+  Import data from CSV <import-data-from-csv>

@@ -13,43 +13,41 @@ Import data from CSV into Postgres
   :local:
 
 Introduction
--------------
+------------
 
 You might have existing data stored in a CSV file that you need to import into your Postgres database. The following
 guide will show how to do so.
 
-Let's assume the following CSV file named ``profile.csv``:
-
+Let's assume we have the following CSV file, which is named ``profile.csv``:
 
 .. thumbnail:: /img/graphql/core/guides/sample-data-csv-file.png
    :alt: .csv data file
    :width: 700px
 
 Step 1: Add a corresponding table to your PG database
------------------------------------------
+-----------------------------------------------------
 
 Let us create a table to match the data structure in your CSV file.
-
 
 .. code-block:: bash
 
   CREATE TABLE profile (firstName text, lastName text, email varchar);
 
-Step 2: Connect to your Postgres database
-------------------------------------------
+Step 2: Connect to the Postgres database
+-----------------------------------------
 
 You can connect to the Postgres database using the ``psql`` command on the terminal like the following: 
 
 .. code-block:: bash
 
-  psql 'postgres://<postgres>:<postgres>@localhost:<port>/<database>'
+  psql postgres://<postgres>:<postgres>@localhost:<port>/<database>
 
   ## for example
 
   psql <postgres://postgres:postgres@localhost:5432/user>
 
 Step 3: Import the data
--------------------------
+-----------------------
 
 Once connected to the database, use the following command from inside ``psql`` to
 import the data:
