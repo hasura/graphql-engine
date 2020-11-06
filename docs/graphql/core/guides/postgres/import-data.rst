@@ -29,7 +29,6 @@ Step 1: Add a corresponding table to your PG database
 
 Let us create a table to match the data structure in your CSV file.
 
-For example:
 
 .. code-block:: bash
 
