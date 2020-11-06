@@ -20,7 +20,6 @@ guide will show how to do so.
 
 In this guide we will use the following CSV file as an example. 
 
-Also, make sure the file is saved as ``profile.csv``.
 
 .. thumbnail:: /img/graphql/core/guides/sample-data-csv-file.png
    :alt: .csv data file
