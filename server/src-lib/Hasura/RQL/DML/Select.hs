@@ -1,40 +1,70 @@
 module Hasura.RQL.DML.Select
   ( selectP2
   , convSelectQuery
-  , asSingleRowJsonResp
   , runSelect
-  , selectQuerySQL
-  , selectAggregateQuerySQL
-  , connectionSelectQuerySQL
-  , module Hasura.RQL.DML.Select.Internal
   )
 where
 
 import           Hasura.Prelude
 
-import qualified Data.HashSet                       as HS
-import qualified Data.List.NonEmpty                 as NE
-import qualified Data.Sequence                      as DS
-import qualified Database.PG.Query                  as Q
+import qualified Data.HashSet                              as HS
+import qualified Data.List.NonEmpty                        as NE
+import qualified Data.Sequence                             as DS
+import qualified Database.PG.Query                         as Q
 
 import           Data.Aeson.Types
 import           Data.Text.Extended
-import           Instances.TH.Lift                  ()
+import           Instances.TH.Lift                         ()
+import           Language.Haskell.TH.Syntax                (Lift)
 
-import qualified Hasura.Backends.Postgres.SQL.DML   as S
+import qualified Hasura.Backends.Postgres.SQL.DML          as S
 
 import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.Translate.Select
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
-import           Hasura.RQL.DML.Select.Internal
+import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 
+type SelectQExt b = SelectG (ExtCol b) (BoolExp b) Int
+
+-- Columns in RQL
+-- This technically doesn't need to be generalized to all backends as
+-- it is specific to this module; however the generalization work was
+-- already done, and there's no particular reason to force this to be
+-- specific.
+data ExtCol (b :: Backend)
+  = ECSimple !(Column b)
+  | ECRel !RelName !(Maybe RelName) !(SelectQExt b)
+deriving instance Lift (ExtCol 'Postgres)
+
+instance ToJSON (ExtCol 'Postgres) where
+  toJSON (ECSimple s) = toJSON s
+  toJSON (ECRel rn mrn selq) =
+    object $ [ "name" .= rn
+             , "alias" .= mrn
+             ] ++ selectGToPairs selq
+
+instance FromJSON (ExtCol 'Postgres) where
+  parseJSON v@(Object o) =
+    ECRel
+    <$> o .:  "name"
+    <*> o .:? "alias"
+    <*> parseJSON v
+  parseJSON v@(String _) =
+    ECSimple <$> parseJSON v
+  parseJSON _ =
+    fail $ mconcat
+    [ "A column should either be a string or an "
+    , "object (relationship)"
+    ]
+
 convSelCol :: (UserInfoM m, QErrM m, CacheRM m)
            => FieldInfoMap (FieldInfo 'Postgres)
            -> SelPermInfo 'Postgres
-           -> SelCol
+           -> SelCol 'Postgres
            -> m [ExtCol 'Postgres]
 convSelCol _ _ (SCExtSimple cn) =
   return [ECSimple cn]
@@ -83,7 +113,7 @@ convWildcard fieldInfoMap selPermInfo wildcard =
 resolveStar :: (UserInfoM m, QErrM m, CacheRM m)
             => FieldInfoMap (FieldInfo 'Postgres)
             -> SelPermInfo 'Postgres
-            -> SelectQ
+            -> SelectQ 'Postgres
             -> m (SelectQExt 'Postgres)
 resolveStar fim spi (SelectG selCols mWh mOb mLt mOf) = do
   procOverrides <- fmap (concat . catMaybes) $ withPathK "columns" $
@@ -283,23 +313,6 @@ selectP2 jsonAggSelect (sel, p) =
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
   where
     selectSQL = toSQL $ mkSQLSelect jsonAggSelect sel
-
-selectQuerySQL :: JsonAggSelect -> AnnSimpleSel 'Postgres -> Q.Query
-selectQuerySQL jsonAggSelect sel =
-  Q.fromBuilder $ toSQL $ mkSQLSelect jsonAggSelect sel
-
-selectAggregateQuerySQL :: AnnAggregateSelect 'Postgres -> Q.Query
-selectAggregateQuerySQL =
-  Q.fromBuilder . toSQL . mkAggregateSelect
-
-connectionSelectQuerySQL :: ConnectionSelect 'Postgres S.SQLExp -> Q.Query
-connectionSelectQuerySQL =
-  Q.fromBuilder . toSQL . mkConnectionSelect
-
-asSingleRowJsonResp :: Q.Query -> [Q.PrepArg] -> Q.TxE QErr EncJSON
-asSingleRowJsonResp query args =
-  encJFromBS . runIdentity . Q.getRow
-  <$> Q.rawQE dmlTxErrorHandler query args True
 
 phaseOne
   :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)

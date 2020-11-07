@@ -41,8 +41,8 @@ import qualified Hasura.Backends.Postgres.SQL.DML      as SQL
 import qualified Hasura.GraphQL.Execute.Types          as ET
 import qualified Hasura.GraphQL.Parser                 as P
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
-import qualified Hasura.RQL.DML.Select                 as RQL
-import qualified Hasura.RQL.Types.BoolExp              as RQL
+import qualified Hasura.RQL.IR.BoolExp                 as RQL
+import qualified Hasura.RQL.IR.Select                  as RQL
 
 import           Data.Text.Extended
 import           Hasura.Backends.Postgres.SQL.Types
@@ -207,11 +207,11 @@ selectTableAggregate
 selectTableAggregate table fieldName description selectPermissions = runMaybeT do
   guard $ spiAllowAgg selectPermissions
   stringifyNum    <- asks $ qcStringifyNum . getter
-  tableName       <- lift $ qualifiedObjectToName table
+  tableGQLName    <- lift $ getTableGQLName table
   tableArgsParser <- lift $ tableArgs table selectPermissions
   aggregateParser <- lift $ tableAggregationFields table selectPermissions
   nodesParser     <- lift $ tableSelectionList table selectPermissions
-  let selectionName = tableName <> $$(G.litName "_aggregate")
+  let selectionName = tableGQLName <> $$(G.litName "_aggregate")
       aggregationParser = P.nonNullableParser $
         parsedSelectionsToFields RQL.TAFExp <$>
         P.selectionSet selectionName (Just $ G.Description $ "aggregated selection of " <>> table)
@@ -300,7 +300,7 @@ tableSelectionSet
   -> m (Parser 'Output n (AnnotatedFields 'Postgres))
 tableSelectionSet table selectPermissions = memoizeOn 'tableSelectionSet table do
   tableInfo <- _tiCoreInfo <$> askTableInfo table
-  tableName <- qualifiedObjectToName table
+  tableGQLName <- getTableGQLName table
   let tableFields = Map.elems  $ _tciFieldInfoMap tableInfo
       tablePkeyColumns = _pkColumns <$> _tciPrimaryKey tableInfo
       description  = Just $ mkDescriptionWith (_tciDescription tableInfo) $
@@ -324,10 +324,10 @@ tableSelectionSet table selectPermissions = memoizeOn 'tableSelectionSet table d
             P.selection_ $$(G.litName "id") Nothing P.identifier $> RQL.AFNodeId table pkeyColumns
           allFieldParsers = fieldParsers <> [nodeIdFieldParser]
       nodeInterface <- node
-      pure $ P.selectionSetObject tableName description allFieldParsers [nodeInterface]
+      pure $ P.selectionSetObject tableGQLName description allFieldParsers [nodeInterface]
             <&> parsedSelectionsToFields RQL.AFExpression
     _                                 ->
-      pure $ P.selectionSetObject tableName description fieldParsers []
+      pure $ P.selectionSetObject tableGQLName description fieldParsers []
             <&> parsedSelectionsToFields RQL.AFExpression
 
 -- | List of table fields object.
@@ -378,9 +378,9 @@ tableConnectionSelectionSet
   -> SelPermInfo 'Postgres
   -> m (Parser 'Output n (RQL.ConnectionFields 'Postgres UnpreparedValue))
 tableConnectionSelectionSet table selectPermissions = do
-  tableName   <- qualifiedObjectToName table
-  edgesParser <- tableEdgesSelectionSet
-  let connectionTypeName = tableName <> $$(G.litName "Connection")
+  edgesParser  <- tableEdgesSelectionSet
+  tableGQLName <- getTableGQLName table
+  let connectionTypeName = tableGQLName <> $$(G.litName "Connection")
       pageInfo = P.subselection_ $$(G.litName "pageInfo") Nothing
                  pageInfoSelectionSet <&> RQL.ConnectionPageInfo
       edges = P.subselection_ $$(G.litName "edges") Nothing
@@ -407,12 +407,13 @@ tableConnectionSelectionSet table selectPermissions = do
       in P.nonNullableParser $ P.selectionSet $$(G.litName "PageInfo") Nothing allFields
          <&> parsedSelectionsToFields RQL.PageInfoTypename
 
+
     tableEdgesSelectionSet
       :: m (Parser 'Output n (RQL.EdgeFields 'Postgres UnpreparedValue))
     tableEdgesSelectionSet = do
-      tableName           <- qualifiedObjectToName table
+      tableGQLName        <- getTableGQLName table
       edgeNodeParser      <- P.nonNullableParser <$> tableSelectionSet table selectPermissions
-      let edgesType = tableName <> $$(G.litName "Edge")
+      let edgesType = tableGQLName <> $$(G.litName "Edge")
           cursor    = P.selection_ $$(G.litName "cursor") Nothing
                       P.string $> RQL.EdgeCursor
           edgeNode  = P.subselection_ $$(G.litName "node") Nothing
@@ -455,10 +456,11 @@ selectFunctionAggregate function fieldName description selectPermissions = runMa
   let table = fiReturnType function
   stringifyNum <- asks $ qcStringifyNum . getter
   guard $ spiAllowAgg selectPermissions
+  tableGQLName <- getTableGQLName table
   tableArgsParser    <- lift $ tableArgs table selectPermissions
   functionArgsParser <- lift $ customSQLFunctionArgs function
   aggregateParser    <- lift $ tableAggregationFields table selectPermissions
-  selectionName      <- lift $ qualifiedObjectToName table <&> (<> $$(G.litName "_aggregate"))
+  selectionName      <- lift $ pure tableGQLName <&> (<> $$(G.litName "_aggregate"))
   nodesParser        <- lift $ tableSelectionList table selectPermissions
   let argsParser = liftA2 (,) functionArgsParser tableArgsParser
       aggregationParser = fmap (parsedSelectionsToFields RQL.TAFExp) $
@@ -718,15 +720,14 @@ tableConnectionArgs pkeyColumns table selectPermissions = do
       -> BL.ByteString
       -> n (NonEmpty (RQL.ConnectionSplit 'Postgres UnpreparedValue))
     parseConnectionSplit maybeOrderBys splitKind cursorSplit = do
-      cursorValue <- either (const throwInvalidCursor) pure $
-                      J.eitherDecode cursorSplit
+      cursorValue <- J.eitherDecode cursorSplit `onLeft` const throwInvalidCursor
       case maybeOrderBys of
         Nothing -> forM (NESeq.toNonEmpty pkeyColumns) $
           \pgColumnInfo -> do
             let columnJsonPath = [J.Key $ getPGColTxt $ pgiColumn pgColumnInfo]
                 columnType = pgiType pgColumnInfo
-            pgColumnValue <- maybe throwInvalidCursor pure $ iResultToMaybe $
-                             executeJSONPath columnJsonPath cursorValue
+            pgColumnValue <- iResultToMaybe (executeJSONPath columnJsonPath cursorValue)
+              `onNothing` throwInvalidCursor
             pgValue <- liftQErr $ parsePGScalarValue columnType pgColumnValue
             let unresolvedValue = flip UVParameter Nothing $ P.PGColumnValue columnType pgValue
             pure $ RQL.ConnectionSplit splitKind unresolvedValue $
@@ -735,8 +736,8 @@ tableConnectionArgs pkeyColumns table selectPermissions = do
           forM orderBys $ \orderBy -> do
             let OrderByItemG orderType annObCol nullsOrder = orderBy
                 columnType = getOrderByColumnType annObCol
-            orderByItemValue <- maybe throwInvalidCursor pure $ iResultToMaybe $
-                                executeJSONPath (getPathFromOrderBy annObCol) cursorValue
+            orderByItemValue <- iResultToMaybe (executeJSONPath (getPathFromOrderBy annObCol) cursorValue)
+              `onNothing` throwInvalidCursor
             pgValue <- liftQErr $ parsePGScalarValue columnType orderByItemValue
             let unresolvedValue = flip UVParameter Nothing $ P.PGColumnValue columnType pgValue
             pure $ RQL.ConnectionSplit splitKind unresolvedValue $
@@ -785,11 +786,11 @@ tableAggregationFields
   -> SelPermInfo 'Postgres
   -> m (Parser 'Output n (RQL.AggregateFields 'Postgres))
 tableAggregationFields table selectPermissions = do
-  tableName  <- qualifiedObjectToName table
+  tableGQLName  <- getTableGQLName table
   allColumns <- tableSelectColumns table selectPermissions
   let numericColumns   = onlyNumCols allColumns
       comparableColumns  = onlyComparableCols allColumns
-      selectName   = tableName <> $$(G.litName "_aggregate_fields")
+      selectName   = tableGQLName <> $$(G.litName "_aggregate_fields")
       description  = G.Description $ "aggregate fields of " <>> table
   count     <- countField
   numericAndComparable <- fmap concat $ sequenceA $ catMaybes
@@ -797,12 +798,12 @@ tableAggregationFields table selectPermissions = do
       if null numericColumns then Nothing else Just $
         for numericAggOperators $ \operator -> do
           numFields <- mkNumericAggFields operator numericColumns
-          pure $ parseAggOperator operator tableName numFields
+          pure $ parseAggOperator operator tableGQLName numFields
     , -- operators on comparable columns
       if null comparableColumns then Nothing else Just $ do
         comparableFields <- traverse mkColumnAggField comparableColumns
         pure $ comparisonAggOperators & map \operator ->
-               parseAggOperator operator tableName comparableFields
+               parseAggOperator operator tableGQLName comparableFields
     ]
   let aggregateFields = count : numericAndComparable
   pure $ P.selectionSet selectName (Just description) aggregateFields
@@ -841,9 +842,9 @@ tableAggregationFields table selectPermissions = do
       -> G.Name
       -> [FieldParser n (RQL.ColFld 'Postgres)]
       -> FieldParser n (RQL.AggregateField 'Postgres)
-    parseAggOperator operator tableName columns =
+    parseAggOperator operator tableGQLName columns =
       let opText  = G.unName operator
-          setName = tableName <> $$(G.litName "_") <> operator <> $$(G.litName "_fields")
+          setName = tableGQLName <> $$(G.litName "_") <> operator <> $$(G.litName "_fields")
           setDesc = Just $ G.Description $ "aggregate " <> opText <> " on columns"
           subselectionParser = P.selectionSet setName setDesc columns
             <&> parsedSelectionsToFields RQL.CFExp
@@ -1190,7 +1191,7 @@ functionArgs functionName (toList -> inputArgs) = do
 
 
 -- | The "path" argument for json column fields
-jsonPathArg :: MonadParse n => PGColumnType -> InputFieldsParser n (Maybe RQL.ColumnOp)
+jsonPathArg :: MonadParse n => PGColumnType -> InputFieldsParser n (Maybe (RQL.ColumnOp 'Postgres))
 jsonPathArg columnType
   | isScalarColumnWhere isJSONType columnType =
       P.fieldOptional fieldName description P.string `P.bindFields` fmap join . traverse toColExp
@@ -1348,7 +1349,7 @@ nodeField = do
 
         let allTuples = (firstPkColumn, firstColumnValue):alignedTuples
 
-        either (parseErrorWith ParseFailed . qeError) pure $ runExcept $
+        flip onLeft (parseErrorWith ParseFailed . qeError) $ runExcept $
           fmap RQL.BoolAnd $ for allTuples $ \(columnInfo, columnValue) -> do
             let modifyErrFn t = "value of column " <> pgiColumn columnInfo
                                 <<> " in node id: " <> t

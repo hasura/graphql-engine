@@ -11,3 +11,28 @@ args:
   args:
     schema: hge_tests
     name: test_t2
+- type: run_sql
+  args:
+    sql: |
+      create table hge_tests.articles(
+        id serial primary key,
+        content text,
+        title text,
+        is_public bool default false
+      );
+- type: track_table
+  args:
+    schema: hge_tests
+    name: articles
+- type: create_select_permission
+  args:
+    table:
+      schema: hge_tests
+      name: articles
+    role: public
+    permission:
+      columns:
+        - title
+        - content
+      filter:
+        is_public: true

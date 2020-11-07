@@ -8,6 +8,7 @@ module Hasura.RQL.Types.Common
 
        , ScalarType
        , Column
+       , SQLExp
 
        , FieldName(..)
        , fromPGCol
@@ -48,6 +49,10 @@ module Hasura.RQL.Types.Common
        , unsafeNonNegativeInt
        , Timeout(..)
        , defaultActionTimeoutSecs
+
+       , UrlConf(..)
+       , resolveUrlConf
+       , getEnv
        ) where
 
 import           Hasura.Prelude
@@ -73,6 +78,8 @@ import           Data.URL.Template
 import           Instances.TH.Lift                  ()
 import           Language.Haskell.TH.Syntax         (Lift)
 
+import qualified Hasura.Backends.Postgres.SQL.DML   as S
+
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.Incremental                 (Cacheable)
@@ -84,8 +91,14 @@ import           Hasura.SQL.Backend
 type family ScalarType (b :: Backend) where
   ScalarType 'Postgres = PGScalarType
 
-type family Column (b :: Backend)  where
+type family ColumnType (b :: Backend) where
+  ColumnType 'Postgres = PGType
+
+type family Column (b :: Backend) where
   Column 'Postgres = PGCol
+
+type family SQLExp (b :: Backend) where
+  SQLExp 'Postgres = S.SQLExp
 
 
 adminText :: NonEmptyText
@@ -96,7 +109,7 @@ rootText = mkNonEmptyTextUnsafe "root"
 
 newtype RelName
   = RelName { getRelTxt :: NonEmptyText }
-  deriving (Show, Eq, Hashable, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Lift, Generic, Arbitrary, NFData, Cacheable)
+  deriving (Show, Eq, Hashable, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, Q.FromCol, Lift, Generic, Arbitrary, NFData, Cacheable)
 
 instance IsIdentifier RelName where
   toIdentifier rn = Identifier $ relNameToTxt rn
@@ -197,6 +210,7 @@ data MutateResp a
   , _mrReturningColumns :: ![ColumnValues a]
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''MutateResp)
+
 
 type ColMapping = HM.HashMap PGCol PGCol
 
@@ -347,3 +361,35 @@ instance Arbitrary Timeout where
 
 defaultActionTimeoutSecs :: Timeout
 defaultActionTimeoutSecs = Timeout 30
+
+data UrlConf
+  = UrlValue !InputWebhook
+  | UrlFromEnv !T.Text
+  deriving (Show, Eq, Generic, Lift)
+instance NFData UrlConf
+instance Cacheable UrlConf
+
+instance ToJSON UrlConf where
+  toJSON (UrlValue w)      = toJSON w
+  toJSON (UrlFromEnv wEnv) = object ["from_env" .= wEnv ]
+
+instance FromJSON UrlConf where
+  parseJSON (Object o) = UrlFromEnv <$> o .: "from_env"
+  parseJSON t@(String _) =
+    case (fromJSON t) of
+      Error s   -> fail s
+      Success a -> pure $ UrlValue a
+  parseJSON _          = fail "one of string or object must be provided for url/webhook"
+
+resolveUrlConf
+  :: MonadError QErr m => Env.Environment -> UrlConf -> m Text
+resolveUrlConf env = \case
+  UrlValue v        -> unResolvedWebhook <$> resolveWebhook env v
+  UrlFromEnv envVar -> getEnv env envVar
+
+getEnv :: QErrM m => Env.Environment -> T.Text -> m T.Text
+getEnv env k = do
+  let mEnv = Env.lookupEnv env (T.unpack k)
+  case mEnv of
+    Nothing     -> throw400 NotFound $ "environment variable '" <> k <> "' not set"
+    Just envVal -> return (T.pack envVal)

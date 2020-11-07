@@ -1,11 +1,19 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+
+-- | This module generates a random 'Metadata' object, using a number of
+-- 'Arbitrary' instances.  This is used by the QuickCheck-based testing suite.
+-- This module is not used by the graphql-engine library itself, and we may wish
+-- to relocate it, for instance to Hasura.Generator.
+
 module Hasura.RQL.DDL.Metadata.Generator
-  (genReplaceMetadata)
+  (genMetadata)
 where
 
 import           Hasura.Prelude
 
 import qualified Data.Aeson                                    as J
+import qualified Data.HashMap.Strict.InsOrd                    as OM
+import qualified Data.HashSet.InsOrd                           as SetIns
 import qualified Data.Text                                     as T
 import qualified Data.Vector                                   as V
 import qualified Language.GraphQL.Draft.Parser                 as G
@@ -22,23 +30,16 @@ import           Test.QuickCheck.Instances.Semigroup           ()
 import           Test.QuickCheck.Instances.Time                ()
 import           Test.QuickCheck.Instances.UnorderedContainers ()
 
-import qualified Hasura.RQL.DDL.ComputedField                  as ComputedField
-import qualified Hasura.RQL.DDL.Permission                     as Permission
-import qualified Hasura.RQL.DDL.Permission.Internal            as Permission
-import qualified Hasura.RQL.DDL.QueryCollection                as Collection
-import qualified Hasura.RQL.DDL.Relationship                   as Relationship
-import qualified Hasura.RQL.DDL.Schema                         as Schema
-
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Utils                          (simpleGraphQLQuery)
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.Types
 
-genReplaceMetadata :: Gen ReplaceMetadata
-genReplaceMetadata = do
+genMetadata :: Gen Metadata
+genMetadata = do
   version <- arbitrary
-  ReplaceMetadata version
+  Metadata
     <$> arbitrary
     <*> genFunctionsMetadata version
     <*> arbitrary
@@ -48,15 +49,24 @@ genReplaceMetadata = do
     <*> arbitrary
     <*> arbitrary
   where
-    genFunctionsMetadata :: MetadataVersion -> Gen FunctionsMetadata
+    genFunctionsMetadata :: MetadataVersion -> Gen Functions
     genFunctionsMetadata = \case
-      MVVersion1 -> FMVersion1 <$> arbitrary
-      MVVersion2 -> FMVersion2 <$> arbitrary
+      MVVersion1 -> OM.fromList . map (\qf -> (qf, FunctionMetadata qf emptyFunctionConfig)) <$> arbitrary
+      MVVersion2 -> arbitrary
+
+instance (Arbitrary k, Eq k, Hashable k, Arbitrary v) => Arbitrary (InsOrdHashMap k v) where
+  arbitrary = OM.fromList <$> arbitrary
+
+instance (Arbitrary a, Eq a, Hashable a) => Arbitrary (SetIns.InsOrdHashSet a) where
+  arbitrary = SetIns.fromList <$> arbitrary
 
 instance Arbitrary G.Name where
   arbitrary = G.unsafeMkName . T.pack <$> listOf1 (elements ['a'..'z'])
 
 instance Arbitrary MetadataVersion where
+  arbitrary = genericArbitrary
+
+instance Arbitrary FunctionMetadata where
   arbitrary = genericArbitrary
 
 instance Arbitrary TableCustomRootFields where
@@ -71,25 +81,25 @@ instance Arbitrary TableCustomRootFields where
 instance Arbitrary TableConfig where
   arbitrary = genericArbitrary
 
-instance (Arbitrary a) => Arbitrary (Relationship.RelUsing a) where
+instance (Arbitrary a) => Arbitrary (RelUsing a) where
   arbitrary = genericArbitrary
 
-instance (Arbitrary a) => Arbitrary (Relationship.RelDef a) where
+instance (Arbitrary a) => Arbitrary (RelDef a) where
   arbitrary = genericArbitrary
 
-instance Arbitrary Relationship.RelManualConfig where
+instance Arbitrary RelManualConfig where
   arbitrary = genericArbitrary
 
-instance Arbitrary Relationship.ArrRelUsingFKeyOn where
+instance Arbitrary ArrRelUsingFKeyOn where
   arbitrary = genericArbitrary
 
-instance (Arbitrary a) => Arbitrary (Permission.PermDef a) where
+instance (Arbitrary a) => Arbitrary (PermDef a) where
   arbitrary = genericArbitrary
 
-instance Arbitrary ComputedField.ComputedFieldDefinition where
+instance Arbitrary ComputedFieldDefinition where
   arbitrary = genericArbitrary
 
-instance Arbitrary ComputedFieldMeta where
+instance Arbitrary ComputedFieldMetadata where
   arbitrary = genericArbitrary
 
 instance Arbitrary Scientific where
@@ -112,28 +122,28 @@ instance Arbitrary J.Value where
 instance Arbitrary ColExp where
   arbitrary = genericArbitrary
 
-instance Arbitrary (GExists ColExp) where
+instance Arbitrary (GExists b ColExp) where
   arbitrary = genericArbitrary
 
-instance Arbitrary (GBoolExp ColExp) where
+instance Arbitrary (GBoolExp b ColExp) where
   arbitrary = genericArbitrary
 
-instance Arbitrary BoolExp where
+instance Arbitrary (BoolExp b) where
   arbitrary = genericArbitrary
 
-instance Arbitrary Permission.PermColSpec where
+instance Arbitrary PermColSpec where
   arbitrary = genericArbitrary
 
-instance Arbitrary Permission.InsPerm where
+instance Arbitrary (InsPerm b) where
   arbitrary = genericArbitrary
 
-instance Arbitrary Permission.SelPerm where
+instance Arbitrary (SelPerm b) where
   arbitrary = genericArbitrary
 
-instance Arbitrary Permission.UpdPerm where
+instance Arbitrary (UpdPerm b) where
   arbitrary = genericArbitrary
 
-instance Arbitrary Permission.DelPerm where
+instance Arbitrary (DelPerm b) where
   arbitrary = genericArbitrary
 
 instance Arbitrary SubscribeColumns where
@@ -157,13 +167,13 @@ instance Arbitrary HeaderConf where
 instance Arbitrary EventTriggerConf where
   arbitrary = genericArbitrary
 
-instance Arbitrary TableMeta where
+instance Arbitrary TableMetadata where
   arbitrary = genericArbitrary
 
-instance Arbitrary Schema.FunctionConfig where
+instance Arbitrary FunctionConfig where
   arbitrary = genericArbitrary
 
-instance Arbitrary Schema.TrackFunctionV2 where
+instance Arbitrary TrackFunctionV2 where
   arbitrary = genericArbitrary
 
 instance Arbitrary QualifiedTable where
@@ -185,23 +195,23 @@ instance Arbitrary AddRemoteSchemaQuery where
 
 -- FIXME:- The GraphQL AST has 'Gen' by Hedgehog testing package which lacks the
 -- 'Arbitrary' class implementation. For time being, a single query is generated every time.
-instance Arbitrary Collection.GQLQueryWithText where
-  arbitrary = pure $ Collection.GQLQueryWithText ( simpleGraphQLQuery
-                                                 , Collection.GQLQuery simpleQuery
-                                                 )
+instance Arbitrary GQLQueryWithText where
+  arbitrary = pure $ GQLQueryWithText ( simpleGraphQLQuery
+                                      , GQLQuery simpleQuery
+                                      )
     where
       simpleQuery = $(either (fail . T.unpack) TH.lift $ G.parseExecutableDoc simpleGraphQLQuery)
 
-instance Arbitrary Collection.ListedQuery where
+instance Arbitrary ListedQuery where
   arbitrary = genericArbitrary
 
-instance Arbitrary Collection.CollectionDef where
+instance Arbitrary CollectionDef where
   arbitrary = genericArbitrary
 
-instance Arbitrary Collection.CreateCollection where
+instance Arbitrary CreateCollection where
   arbitrary = genericArbitrary
 
-instance Arbitrary Collection.CollectionReq where
+instance Arbitrary CollectionReq where
   arbitrary = genericArbitrary
 
 instance Arbitrary G.Description where
@@ -307,13 +317,13 @@ deriving instance Arbitrary RemoteFields
 instance Arbitrary RemoteRelationshipDef where
   arbitrary = genericArbitrary
 
-instance Arbitrary RemoteRelationshipMeta where
+instance Arbitrary RemoteRelationshipMetadata where
   arbitrary = genericArbitrary
 
 instance Arbitrary CronTriggerMetadata where
   arbitrary = genericArbitrary
 
-instance Arbitrary WebhookConf where
+instance Arbitrary UrlConf where
   arbitrary = genericArbitrary
 
 instance Arbitrary STRetryConf where
@@ -326,7 +336,7 @@ instance Arbitrary CronSchedule where
   arbitrary = elements sampleCronSchedules
 
 sampleCronSchedules :: [CronSchedule]
-sampleCronSchedules = rights $ map Cr.parseCronSchedule $
+sampleCronSchedules = rights $ map Cr.parseCronSchedule
   [ "* * * * *"
   -- every minute
   , "5 * * * *"

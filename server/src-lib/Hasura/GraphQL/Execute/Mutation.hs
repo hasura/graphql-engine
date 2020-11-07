@@ -4,24 +4,23 @@ module Hasura.GraphQL.Execute.Mutation
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                       as Env
-import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashMap.Strict.InsOrd             as OMap
-import qualified Data.HashSet                           as Set
-import qualified Data.Sequence                          as Seq
-import qualified Data.Sequence.NonEmpty                 as NE
-import qualified Language.GraphQL.Draft.Syntax          as G
-import qualified Network.HTTP.Client                    as HTTP
-import qualified Network.HTTP.Types                     as HTTP
+import qualified Data.Environment                          as Env
+import qualified Data.HashMap.Strict                       as Map
+import qualified Data.HashMap.Strict.InsOrd                as OMap
+import qualified Data.HashSet                              as Set
+import qualified Data.Sequence                             as Seq
+import qualified Data.Sequence.NonEmpty                    as NE
+import qualified Language.GraphQL.Draft.Syntax             as G
+import qualified Network.HTTP.Client                       as HTTP
+import qualified Network.HTTP.Types                        as HTTP
 
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
-import qualified Hasura.Logging                         as L
-import qualified Hasura.RQL.DML.Delete                  as RQL
-import qualified Hasura.RQL.DML.Mutation                as RQL
-import qualified Hasura.RQL.DML.Returning.Types         as RQL
-import qualified Hasura.RQL.DML.Update                  as RQL
-import qualified Hasura.Tracing                         as Tracing
-
+import qualified Hasura.Backends.Postgres.Execute.Mutation as RQL
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
+import qualified Hasura.Logging                            as L
+import qualified Hasura.RQL.IR.Delete                      as RQL
+import qualified Hasura.RQL.IR.Returning                   as RQL
+import qualified Hasura.RQL.IR.Update                      as RQL
+import qualified Hasura.Tracing                            as Tracing
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.EncJSON
@@ -34,7 +33,7 @@ import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
 import           Hasura.GraphQL.Schema.Insert
 import           Hasura.RQL.Types
-import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Server.Version                     (HasVersion)
 import           Hasura.Session
 
 convertDelete
