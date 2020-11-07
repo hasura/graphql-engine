@@ -1,22 +1,23 @@
 module Hasura.Backends.Postgres.Translate.Insert
  ( mkInsertCTE
- , insertCheckExpr
  , buildConflictClause
  , toSQLConflict
+ , insertCheckConstraint
  , insertOrUpdateCheckExpr
  ) where
 
 import           Hasura.Prelude
 
-import qualified Data.HashSet                               as HS
+import qualified Data.HashSet                                 as HS
 
 import           Data.Text.Extended
-import           Instances.TH.Lift                          ()
+import           Instances.TH.Lift                            ()
 
-import qualified Hasura.Backends.Postgres.SQL.DML           as S
+import qualified Hasura.Backends.Postgres.SQL.DML             as S
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.BoolExp
+import           Hasura.Backends.Postgres.Translate.Returning
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.IR.Insert
 import           Hasura.RQL.Types
@@ -32,11 +33,9 @@ mkInsertCTE (InsertQueryP1 tn cols vals conflict (insCheck, updCheck) _ _) =
         . Just
         . S.RetExp
         $ [ S.selectStar
-          , S.Extractor
-              (insertOrUpdateCheckExpr tn conflict
-                (toSQLBool insCheck)
-                (fmap toSQLBool updCheck))
-              Nothing
+          , insertOrUpdateCheckExpr tn conflict
+            (toSQLBool insCheck)
+            (fmap toSQLBool updCheck)
           ]
     toSQLBool = toSQLBoolExp $ S.QualTable tn
 
@@ -117,28 +116,11 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
       validateInpCols inpCols updCols
       return (updFiltr, preSet)
 
--- | Create an expression which will fail with a check constraint violation error
--- if the condition is not met on any of the inserted rows.
---
--- The resulting SQL will look something like this:
---
--- > INSERT INTO
--- >   ...
--- > RETURNING
--- >   *,
--- >   CASE WHEN {cond}
--- >     THEN NULL
--- >     ELSE hdb_catalog.check_violation('insert check constraint failed')
--- >   END
-insertCheckExpr :: Text -> S.BoolExp -> S.SQLExp
-insertCheckExpr errorMessage condExpr =
-  S.SECond condExpr S.SENull
-    (S.SEFunction
-      (S.FunctionExp
-        (QualifiedObject (SchemaName "hdb_catalog") (FunctionName "check_violation"))
-        (S.FunctionArgs [S.SELit errorMessage] mempty)
-        Nothing)
-    )
+-- | Annotates the check constraint expression with @boolean@
+-- (<check-condition>)::boolean
+insertCheckConstraint :: S.BoolExp -> S.SQLExp
+insertCheckConstraint boolExp =
+  S.SETyAnn (S.SEBool boolExp) S.boolTypeAnn
 
 -- | When inserting data, we might need to also enforce the update
 -- check condition, because we might fall back to an update via an
@@ -153,15 +135,10 @@ insertCheckExpr errorMessage condExpr =
 -- > RETURNING
 -- >   *,
 -- >   CASE WHEN xmax = 0
--- >     THEN CASE WHEN {insert_cond}
--- >            THEN NULL
--- >            ELSE hdb_catalog.check_violation('insert check constraint failed')
--- >          END
--- >     ELSE CASE WHEN {update_cond}
--- >            THEN NULL
--- >            ELSE hdb_catalog.check_violation('update check constraint failed')
--- >          END
+-- >     THEN {insert_cond}
+-- >     ELSE {update_cond}
 -- >   END
+-- >     AS "check__constraint"
 --
 -- See @https://stackoverflow.com/q/34762732@ for more information on the use of
 -- the @xmax@ system column.
@@ -170,15 +147,16 @@ insertOrUpdateCheckExpr
   -> Maybe (ConflictClauseP1 'Postgres S.SQLExp)
   -> S.BoolExp
   -> Maybe S.BoolExp
-  -> S.SQLExp
+  -> S.Extractor
 insertOrUpdateCheckExpr qt (Just _conflict) insCheck (Just updCheck) =
+  asCheckErrorExtractor $
   S.SECond
     (S.BECompare
       S.SEQ
       (S.SEQIdentifier (S.QIdentifier (S.mkQual qt) (Identifier "xmax")))
       (S.SEUnsafe "0"))
-    (insertCheckExpr "insert check constraint failed" insCheck)
-    (insertCheckExpr "update check constraint failed" updCheck)
+    (insertCheckConstraint insCheck)
+    (insertCheckConstraint updCheck)
 insertOrUpdateCheckExpr _ _ insCheck _ =
   -- If we won't generate an ON CONFLICT clause, there is no point
   -- in testing xmax. In particular, views don't provide the xmax
@@ -188,4 +166,4 @@ insertOrUpdateCheckExpr _ _ insCheck _ =
   --
   -- Alternatively, if there is no update check constraint, we should
   -- use the insert check constraint, for backwards compatibility.
-  insertCheckExpr "insert check constraint failed" insCheck
+  asCheckErrorExtractor $ insertCheckConstraint insCheck
