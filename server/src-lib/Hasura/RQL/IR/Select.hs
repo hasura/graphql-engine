@@ -64,7 +64,7 @@ traverseAnnOrderByElement f = \case
     <$> traverseAnnBoolExp f annBoolExp
     <*> pure annAggOb
 
-type AnnOrderByItemG b v = OrderByItemG (AnnOrderByElement b v)
+type AnnOrderByItemG b v = OrderByItemG b (AnnOrderByElement b v)
 
 traverseAnnOrderByItem
   :: (Applicative f)
@@ -75,7 +75,7 @@ traverseAnnOrderByItem f =
 type AnnOrderByItem b = AnnOrderByItemG b (SQLExp b)
 
 type OrderByItemExp b =
-  OrderByItemG (AnnOrderByElement b (SQLExp b), (PG.Alias, (SQLExp b)))
+  OrderByItemG b (AnnOrderByElement b (SQLExp b), (PG.Alias, (SQLExp b)))
 
 data AnnRelationSelectG (b :: BackendType) a
   = AnnRelationSelectG
@@ -435,7 +435,7 @@ data ConnectionSplit (b :: BackendType) v
   = ConnectionSplit
   { _csKind    :: !ConnectionSplitKind
   , _csValue   :: !v
-  , _csOrderBy :: !(OrderByItemG (AnnOrderByElementG b ()))
+  , _csOrderBy :: !(OrderByItemG b (AnnOrderByElementG b ()))
   } deriving (Functor, Generic, Foldable, Traversable)
 instance (Hashable v) => Hashable (ConnectionSplit 'Postgres v)
 

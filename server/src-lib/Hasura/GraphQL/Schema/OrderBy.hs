@@ -91,7 +91,7 @@ orderByAggregation
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
   -> SelPermInfo 'Postgres
-  -> m (Parser 'Input n [IR.OrderByItemG (IR.AnnAggregateOrderBy 'Postgres)])
+  -> m (Parser 'Input n [IR.OrderByItemG 'Postgres (IR.AnnAggregateOrderBy 'Postgres)])
 orderByAggregation table selectPermissions = do
   -- WIP NOTE
   -- there is heavy duplication between this and Select.tableAggregationFields
@@ -129,7 +129,7 @@ orderByAggregation table selectPermissions = do
       :: G.Name
       -> G.Name
       -> InputFieldsParser n [(ColumnInfo 'Postgres, OrderInfo)]
-      -> InputFieldsParser n (Maybe [IR.OrderByItemG (IR.AnnAggregateOrderBy 'Postgres)])
+      -> InputFieldsParser n (Maybe [IR.OrderByItemG 'Postgres (IR.AnnAggregateOrderBy 'Postgres)])
     parseOperator operator tableGQLName columns =
       let opText     = G.unName operator
           objectName = tableGQLName <> $$(G.litName "_") <> operator <> $$(G.litName "_order_by")
@@ -166,12 +166,12 @@ orderByOperator =
 
 -- local helpers
 
-mkOrderByItemG :: a -> OrderInfo -> IR.OrderByItemG a
+mkOrderByItemG :: a -> OrderInfo -> IR.OrderByItemG 'Postgres a
 mkOrderByItemG column (orderType, nullsOrder) =
-  IR.OrderByItemG { obiType   = Just $ IR.OrderType orderType
-               , obiColumn = column
-               , obiNulls  = Just $ IR.NullsOrder nullsOrder
-               }
+  IR.OrderByItemG { obiType   = Just orderType
+                  , obiColumn = column
+                  , obiNulls  = Just  nullsOrder
+                  }
 
 aliasToName :: G.Name -> FieldName
 aliasToName = FieldName . G.unName
