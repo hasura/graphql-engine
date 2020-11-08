@@ -4,11 +4,8 @@ import Modal from 'react-bootstrap/lib/Modal';
 import AceEditor from 'react-ace';
 import { connect } from 'react-redux';
 
-import {
-  invokeManualTrigger,
-  loadEventInvocations,
-  RESET,
-} from './InvokeManualTriggerAction';
+import { invokeManualTrigger, RESET } from './InvokeManualTriggerAction';
+import { getEventLogs } from '../../ServerIO';
 
 /* This component accepts for following props
  *  1) Trigger name
@@ -47,12 +44,12 @@ class InvokeManualTrigger extends React.Component {
       .then(data => {
         const currThis = this;
         const pollId = setInterval(() => {
-          // todo
-          // dispatch(loadEventInvocations(data.event_id)).then(d => {
-          //   if (d.length > 0) {
-          //     clearInterval(currThis.state.pollId);
-          //   }
-          // });
+          dispatch(getEventLogs(data.event_id, 'data')).then(d => {
+            console.log({ d, data });
+            if (d.length > 0) {
+              clearInterval(currThis.state.pollId);
+            }
+          });
         }, 5000);
         this.setPoll(pollId);
       })
