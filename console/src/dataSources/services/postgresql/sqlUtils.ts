@@ -680,7 +680,7 @@ export const getAlterColumnTypeSql = (
   columnName: string,
   columnType: string
 ) => `
-  alter table "${schemaName}"."${tableName}" alter column "${columnName}" ${columnType}
+  alter table "${schemaName}"."${tableName}" alter column "${columnName}" type ${columnType}
 `;
 
 export const getDropColumnDefaultSql = (
