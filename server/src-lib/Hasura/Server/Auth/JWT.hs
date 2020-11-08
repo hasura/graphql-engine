@@ -49,7 +49,8 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
-import           Hasura.Server.Utils             (executeJSONPath, getRequestHeader, userRoleHeader, isSessionVariable)
+import           Hasura.Server.Utils             (executeJSONPath, getRequestHeader,
+                                                  isSessionVariable, userRoleHeader)
 import           Hasura.Server.Version           (HasVersion)
 import           Hasura.Session
 import qualified Hasura.Tracing                  as Tracing
@@ -153,7 +154,8 @@ instance J.FromJSON JWTCustomClaimsMap where
     let withNotFoundError sessionVariable =
           let errorMsg = T.unpack $
                 sessionVariableToText sessionVariable <> " is expected but not found"
-          in onNothing (Map.lookup (sessionVariableToText sessionVariable) obj) (fail errorMsg)
+          in Map.lookup (sessionVariableToText sessionVariable) obj
+             `onNothing` fail errorMsg
 
     allowedRoles <- withNotFoundError allowedRolesClaim  >>= J.parseJSON
     defaultRole <- withNotFoundError defaultRoleClaim  >>= J.parseJSON
@@ -314,7 +316,7 @@ updateJwkRef (Logger logger) manager url jwkRef = do
 
     getHttpExceptionMsg = \case
       HTTP.HttpExceptionRequest _ reason -> show reason
-      HTTP.InvalidUrlException _ reason -> show reason
+      HTTP.InvalidUrlException _ reason  -> show reason
 
 type ClaimsMap = Map.HashMap SessionVariable J.Value
 
@@ -431,10 +433,9 @@ parseClaimsMap
 parseClaimsMap unregisteredClaims jcxClaims =
   case jcxClaims of
     JCNamespace namespace claimsFormat -> do
-      claimsV <- flip onNothing (claimsNotFound namespace) $
-        case namespace of
-          ClaimNs k -> Map.lookup k unregisteredClaims
-          ClaimNsPath path -> iResultToMaybe $ executeJSONPath path (J.toJSON unregisteredClaims)
+      claimsV <- flip onNothing (claimsNotFound namespace) $ case namespace of
+        ClaimNs k        -> Map.lookup k unregisteredClaims
+        ClaimNsPath path -> iResultToMaybe $ executeJSONPath path (J.toJSON unregisteredClaims)
       -- get hasura claims value as an object. parse from string possibly
       claimsObject <- parseObjectFromString namespace claimsFormat claimsV
 
@@ -464,8 +465,9 @@ parseClaimsMap unregisteredClaims jcxClaims =
                             <> sessionVariableToText k <> " not found"
         case claimObj of
           JWTCustomClaimsMapJSONPath path defaultVal ->
-            onNothing (iResultToMaybe $ executeJSONPath path claimsObjValue) $
-            (onNothing (J.String <$> defaultVal) throwClaimErr)
+            iResultToMaybe (executeJSONPath path claimsObjValue)
+            `onNothing` (J.String <$> defaultVal)
+            `onNothing` throwClaimErr
           JWTCustomClaimsMapStatic claimStaticValue -> pure $ J.String claimStaticValue
 
       pure $  Map.fromList [
