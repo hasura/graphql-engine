@@ -86,10 +86,10 @@ instance ToSQL OrderType where
   toSQL OTDesc = "DESC"
 
 instance J.FromJSON OrderType where
-  parseJSON = J.genericParseJSON $ J.aesonDrop 2 J.snakeCase
+  parseJSON = J.genericParseJSON $ J.defaultOptions{J.constructorTagModifier = J.snakeCase . drop 2}
 
 instance J.ToJSON OrderType where
-  toJSON = J.genericToJSON $ J.aesonDrop 2 J.snakeCase
+  toJSON = J.genericToJSON $ J.defaultOptions{J.constructorTagModifier = J.snakeCase . drop 2}
 
 data NullsOrder
   = NFirst
@@ -104,10 +104,10 @@ instance ToSQL NullsOrder where
   toSQL NLast  = "NULLS LAST"
 
 instance J.FromJSON NullsOrder where
-  parseJSON = J.genericParseJSON $ J.aesonDrop 1 J.snakeCase
+  parseJSON = J.genericParseJSON $ J.defaultOptions{J.constructorTagModifier = J.snakeCase . drop 1}
 
 instance J.ToJSON NullsOrder where
-  toJSON = J.genericToJSON $ J.aesonDrop 1 J.snakeCase
+  toJSON = J.genericToJSON $ J.defaultOptions{J.constructorTagModifier = J.snakeCase . drop 1}
 
 instance ToSQL OrderByExp where
   toSQL (OrderByExp l) =
