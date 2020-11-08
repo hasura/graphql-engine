@@ -22,7 +22,7 @@ data JWTInfo
   , jwtiClaimsMap       :: !(Maybe JWTCustomClaimsMap)
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 4 snakeCase) ''JWTInfo)
+$(deriveToJSON (aesonPrefix snakeCase) ''JWTInfo)
 
 data ServerConfig
   = ServerConfig
@@ -36,7 +36,7 @@ data ServerConfig
   , scfgConsoleAssetsDir   :: !(Maybe Text)
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 4 snakeCase) ''ServerConfig)
+$(deriveToJSON (aesonPrefix snakeCase) ''ServerConfig)
 
 runGetConfig :: HasVersion => AuthMode -> Bool -> LQ.LiveQueriesOptions -> Maybe Text -> ServerConfig
 runGetConfig am isAllowListEnabled liveQueryOpts consoleAssetsDir = ServerConfig

@@ -197,14 +197,14 @@ data OperationLog
   , olError              :: !(Maybe QErr)
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields = True} ''OperationLog)
+$(deriveToJSON (aesonPrefix snakeCase){omitNothingFields = True} ''OperationLog)
 
 data HttpLogContext
   = HttpLogContext
   { hlcHttpInfo  :: !HttpInfoLog
   , hlcOperation :: !OperationLog
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 3 snakeCase) ''HttpLogContext)
+$(deriveToJSON (aesonPrefix snakeCase) ''HttpLogContext)
 
 mkHttpAccessLogContext
   :: Maybe UserInfo

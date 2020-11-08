@@ -169,7 +169,7 @@ data OperationDetails
   , _odOperationType :: !OpDetail
   , _odQuery         :: !(Maybe GQLReqUnparsed)
   } deriving (Show, Eq)
-$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''OperationDetails)
+$(J.deriveToJSON (J.aesonPrefix J.snakeCase) ''OperationDetails)
 
 data WSEvent
   = EAccepted
@@ -190,7 +190,7 @@ data WsConnInfo
   , _wsciTokenExpiry :: !(Maybe TC.UTCTime)
   , _wsciMsg         :: !(Maybe Text)
   } deriving (Show, Eq)
-$(J.deriveToJSON (J.aesonDrop 5 J.snakeCase) ''WsConnInfo)
+$(J.deriveToJSON (J.aesonPrefix J.snakeCase) ''WsConnInfo)
 
 data WSLogInfo
   = WSLogInfo
@@ -198,7 +198,7 @@ data WSLogInfo
   , _wsliConnectionInfo :: !WsConnInfo
   , _wsliEvent          :: !WSEvent
   } deriving (Show, Eq)
-$(J.deriveToJSON (J.aesonDrop 5 J.snakeCase) ''WSLogInfo)
+$(J.deriveToJSON (J.aesonPrefix J.snakeCase) ''WSLogInfo)
 
 data WSLog
   = WSLog

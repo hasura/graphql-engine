@@ -41,7 +41,7 @@ data RelationshipMetric
   { _rmManual :: !Int
   , _rmAuto   :: !Int
   } deriving (Show, Eq)
-$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''RelationshipMetric)
+$(A.deriveToJSON (A.aesonPrefix A.snakeCase) ''RelationshipMetric)
 
 data PermissionMetric
   = PermissionMetric
@@ -51,7 +51,7 @@ data PermissionMetric
   , _pmDelete :: !Int
   , _pmRoles  :: !Int
   } deriving (Show, Eq)
-$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''PermissionMetric)
+$(A.deriveToJSON (A.aesonPrefix A.snakeCase) ''PermissionMetric)
 
 data ActionMetric
     = ActionMetric
@@ -61,7 +61,7 @@ data ActionMetric
     , _amTypeRelationships :: !Int
     , _amCustomTypes       :: !Int
     } deriving (Show, Eq)
-$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''ActionMetric)
+$(A.deriveToJSON (A.aesonPrefix A.snakeCase) ''ActionMetric)
 
 data Metrics
   = Metrics
@@ -77,7 +77,7 @@ data Metrics
   , _mtPgVersion      :: !PGVersion
   , _mtActions        :: !ActionMetric
   } deriving (Show, Eq)
-$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''Metrics)
+$(A.deriveToJSON (A.aesonPrefix A.snakeCase) ''Metrics)
 
 data HasuraTelemetry
   = HasuraTelemetry
@@ -87,14 +87,14 @@ data HasuraTelemetry
   , _htCi          :: !(Maybe CI.CI)
   , _htMetrics     :: !Metrics
   } deriving (Show)
-$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''HasuraTelemetry)
+$(A.deriveToJSON (A.aesonPrefix A.snakeCase) ''HasuraTelemetry)
 
 data TelemetryPayload
   = TelemetryPayload
   { _tpTopic :: !Text
   , _tpData  :: !HasuraTelemetry
   } deriving (Show)
-$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''TelemetryPayload)
+$(A.deriveToJSON (A.aesonPrefix A.snakeCase) ''TelemetryPayload)
 
 telemetryUrl :: Text
 telemetryUrl = "https://telemetry.hasura.io/v1/http"

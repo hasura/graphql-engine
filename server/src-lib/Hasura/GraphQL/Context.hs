@@ -50,7 +50,7 @@ data RoleContext a
   { _rctxDefault :: !a -- ^ The default context for normal sessions
   , _rctxBackend :: !(Maybe a) -- ^ The context for sessions with backend privilege.
   } deriving (Show, Eq, Functor, Foldable, Traversable)
-$(deriveToJSON (aesonDrop 5 snakeCase) ''RoleContext)
+$(deriveToJSON (aesonPrefix snakeCase) ''RoleContext)
 
 data GQLContext = GQLContext
   { gqlQueryParser    :: ParserFn (InsOrdHashMap G.Name (QueryRootField (UnpreparedValue 'Postgres)))

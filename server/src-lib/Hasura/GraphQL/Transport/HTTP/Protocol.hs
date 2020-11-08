@@ -64,7 +64,7 @@ data GQLReq a
   , _grVariables     :: !(Maybe VariableValues)
   } deriving (Show, Eq, Generic, Functor, Lift)
 
-$(J.deriveJSON (J.aesonDrop 3 J.camelCase){J.omitNothingFields=True} ''GQLReq)
+$(J.deriveJSON (J.aesonPrefix J.camelCase){J.omitNothingFields=True} ''GQLReq)
 
 instance (Hashable a) => Hashable (GQLReq a)
 

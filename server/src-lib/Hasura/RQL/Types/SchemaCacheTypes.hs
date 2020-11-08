@@ -133,5 +133,5 @@ data SchemaDependency
   , sdReason :: !DependencyReason
   } deriving (Show, Eq, Generic)
 
-$(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaDependency)
+$(deriveToJSON (aesonPrefix snakeCase) ''SchemaDependency)
 instance Hashable SchemaDependency

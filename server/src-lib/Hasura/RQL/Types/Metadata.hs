@@ -207,7 +207,7 @@ data ComputedFieldMetadata
   , _cfmComment    :: !(Maybe Text)
   } deriving (Show, Eq, Generic)
 instance Cacheable ComputedFieldMetadata
-$(deriveJSON (aesonDrop 4 snakeCase) ''ComputedFieldMetadata)
+$(deriveJSON (aesonPrefix snakeCase) ''ComputedFieldMetadata)
 
 data RemoteRelationshipMetadata
   = RemoteRelationshipMetadata
@@ -215,7 +215,7 @@ data RemoteRelationshipMetadata
   , _rrmDefinition :: !RemoteRelationshipDef
   } deriving (Show, Eq, Generic)
 instance Cacheable RemoteRelationshipMetadata
-$(deriveJSON (aesonDrop 4 snakeCase) ''RemoteRelationshipMetadata)
+$(deriveJSON (aesonPrefix snakeCase) ''RemoteRelationshipMetadata)
 $(makeLenses ''RemoteRelationshipMetadata)
 
 data RemoteSchemaPermissionMetadata
@@ -225,7 +225,7 @@ data RemoteSchemaPermissionMetadata
   , _rspmComment    :: !(Maybe Text)
   } deriving (Show, Eq, Generic)
 instance Cacheable RemoteSchemaPermissionMetadata
-$(deriveJSON (aesonDrop 5 snakeCase){omitNothingFields=True} ''RemoteSchemaPermissionMetadata)
+$(deriveJSON (aesonPrefix snakeCase){omitNothingFields=True} ''RemoteSchemaPermissionMetadata)
 $(makeLenses ''RemoteSchemaPermissionMetadata)
 
 data RemoteSchemaMetadata
@@ -244,7 +244,7 @@ instance FromJSON RemoteSchemaMetadata where
     <*> obj .: "definition"
     <*> obj .:? "comment"
     <*> obj .:? "permissions" .!= mempty
-$(deriveToJSON (aesonDrop 4 snakeCase) ''RemoteSchemaMetadata)
+$(deriveToJSON (aesonPrefix snakeCase) ''RemoteSchemaMetadata)
 $(makeLenses ''RemoteSchemaMetadata)
 
 type Relationships a = InsOrdHashMap RelName a
@@ -269,7 +269,7 @@ data TableMetadata
   , _tmEventTriggers       :: !EventTriggers
   } deriving (Show, Eq, Generic)
 instance Cacheable TableMetadata
-$(deriveToJSON (aesonDrop 3 snakeCase) ''TableMetadata)
+$(deriveToJSON (aesonPrefix snakeCase) ''TableMetadata)
 $(makeLenses ''TableMetadata)
 
 mkTableMeta :: QualifiedTable -> Bool -> TableConfig -> TableMetadata
@@ -327,7 +327,7 @@ data FunctionMetadata
   } deriving (Show, Eq, Generic)
 instance Cacheable FunctionMetadata
 $(makeLenses ''FunctionMetadata)
-$(deriveToJSON (aesonDrop 3 snakeCase) ''FunctionMetadata)
+$(deriveToJSON (aesonPrefix snakeCase) ''FunctionMetadata)
 
 instance FromJSON FunctionMetadata where
   parseJSON = withObject "Object" $ \o ->
@@ -437,7 +437,7 @@ data MetadataNoSources
   , _mnsActions          :: !Actions
   , _mnsCronTriggers     :: !CronTriggers
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 4 snakeCase) ''MetadataNoSources)
+$(deriveToJSON (aesonPrefix snakeCase) ''MetadataNoSources)
 
 instance FromJSON MetadataNoSources where
   parseJSON = withObject "Object" $ \o -> do
@@ -836,7 +836,7 @@ data SetCatalogState
   { _scsType  :: !CatalogStateType
   , _scsState :: !Value
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 4 snakeCase) ''SetCatalogState)
+$(deriveJSON (aesonPrefix snakeCase) ''SetCatalogState)
 
 data CatalogState
   = CatalogState
@@ -844,7 +844,7 @@ data CatalogState
   , _csCliState     :: !Value
   , _csConsoleState :: !Value
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 3 snakeCase) ''CatalogState)
+$(deriveToJSON (aesonPrefix snakeCase) ''CatalogState)
 
 data GetCatalogState
   = GetCatalogState

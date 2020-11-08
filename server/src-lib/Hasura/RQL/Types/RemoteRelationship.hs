@@ -254,7 +254,7 @@ data RemoteRelationship =
     }  deriving (Show, Eq, Generic)
 instance NFData RemoteRelationship
 instance Cacheable RemoteRelationship
-$(deriveToJSON (aesonDrop 3 snakeCase) ''RemoteRelationship)
+$(deriveToJSON (aesonPrefix snakeCase) ''RemoteRelationship)
 
 instance FromJSON RemoteRelationship where
   parseJSON = withObject "Object" $ \o ->
@@ -273,7 +273,7 @@ data RemoteRelationshipDef
   , _rrdRemoteField  :: !RemoteFields
   } deriving (Show, Eq, Generic)
 instance Cacheable RemoteRelationshipDef
-$(deriveJSON (aesonDrop 4 snakeCase) ''RemoteRelationshipDef)
+$(deriveJSON (aesonPrefix snakeCase) ''RemoteRelationshipDef)
 $(makeLenses ''RemoteRelationshipDef)
 
 data DeleteRemoteRelationship
@@ -289,4 +289,4 @@ instance FromJSON DeleteRemoteRelationship where
       <*> o .: "table"
       <*> o .: "name"
 
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''DeleteRemoteRelationship)
+$(deriveToJSON (aesonPrefix snakeCase){omitNothingFields=True} ''DeleteRemoteRelationship)

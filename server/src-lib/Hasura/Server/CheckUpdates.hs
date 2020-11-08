@@ -2,9 +2,9 @@ module Hasura.Server.CheckUpdates
   ( checkForUpdates
   ) where
 
-import           Control.Exception     (try)
+import           Control.Exception           (try)
 import           Control.Lens
-import           Data.Text.Conversions (toText)
+import           Data.Text.Conversions       (toText)
 
 import qualified CI
 import qualified Control.Concurrent.Extended as C
@@ -18,9 +18,9 @@ import qualified Network.Wreq                as Wreq
 import qualified System.Log.FastLogger       as FL
 
 import           Hasura.HTTP
-import           Hasura.Logging        (LoggerCtx (..))
+import           Hasura.Logging              (LoggerCtx (..))
 import           Hasura.Prelude
-import           Hasura.Server.Version (HasVersion, Version, currentVersion)
+import           Hasura.Server.Version       (HasVersion, Version, currentVersion)
 
 
 newtype UpdateInfo
@@ -28,6 +28,8 @@ newtype UpdateInfo
   { _uiLatest :: Version
   } deriving (Show)
 
+-- note that this is erroneous and should drop three characters or use
+-- aesonPrefix, but needs to remain like this for backwards compatibility
 $(A.deriveJSON (A.aesonDrop 2 A.snakeCase) ''UpdateInfo)
 
 checkForUpdates :: HasVersion => LoggerCtx a -> H.Manager -> IO void

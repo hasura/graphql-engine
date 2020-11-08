@@ -478,7 +478,7 @@ data QualifiedPGType
   } deriving (Show, Eq, Generic)
 instance NFData QualifiedPGType
 instance Cacheable QualifiedPGType
-$(deriveJSON (aesonDrop 4 snakeCase) ''QualifiedPGType)
+$(deriveJSON (aesonPrefix snakeCase) ''QualifiedPGType)
 
 isBaseType :: QualifiedPGType -> Bool
 isBaseType (QualifiedPGType _ n ty) =

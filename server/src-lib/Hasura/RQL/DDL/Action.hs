@@ -149,7 +149,7 @@ data DropAction
   { _daName      :: !ActionName
   , _daClearData :: !(Maybe ClearActionData)
   } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''DropAction)
+$(J.deriveJSON (J.aesonPrefix J.snakeCase) ''DropAction)
 
 runDropAction
   :: ( CacheRWM m
@@ -198,7 +198,7 @@ data DropActionPermission
   { _dapAction :: !ActionName
   , _dapRole   :: !RoleName
   } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''DropActionPermission)
+$(J.deriveJSON (J.aesonPrefix J.snakeCase) ''DropActionPermission)
 
 runDropActionPermission
   :: (QErrM m, CacheRWM m, MetadataM m)

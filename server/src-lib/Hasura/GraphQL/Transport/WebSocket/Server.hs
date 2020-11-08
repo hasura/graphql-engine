@@ -74,7 +74,7 @@ data MessageDetails
   { _mdMessage     :: !TBS.TByteString
   , _mdMessageSize :: !Int64
   } deriving (Show, Eq)
-$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''MessageDetails)
+$(J.deriveToJSON (J.aesonPrefix J.snakeCase) ''MessageDetails)
 
 data WSEvent
   = EConnectionRequest

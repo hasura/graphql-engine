@@ -87,7 +87,7 @@ data SubscribeOpSpec
   } deriving (Show, Eq, Generic)
 instance NFData SubscribeOpSpec
 instance Cacheable SubscribeOpSpec
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''SubscribeOpSpec)
+$(deriveJSON (aesonPrefix snakeCase){omitNothingFields=True} ''SubscribeOpSpec)
 
 defaultNumRetries :: Int
 defaultNumRetries = 0
@@ -109,7 +109,7 @@ data RetryConf
   } deriving (Show, Eq, Generic)
 instance NFData RetryConf
 instance Cacheable RetryConf
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RetryConf)
+$(deriveJSON (aesonPrefix snakeCase){omitNothingFields=True} ''RetryConf)
 
 data EventHeaderInfo
   = EventHeaderInfo
@@ -117,7 +117,7 @@ data EventHeaderInfo
   , ehiCachedValue :: !Text
   } deriving (Show, Eq, Generic)
 instance NFData EventHeaderInfo
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventHeaderInfo)
+$(deriveToJSON (aesonPrefix snakeCase){omitNothingFields=True} ''EventHeaderInfo)
 
 data WebhookConf = WCValue InputWebhook | WCEnv Text
   deriving (Show, Eq, Generic)
@@ -142,7 +142,7 @@ data WebhookConfInfo
   , wciCachedValue :: !Text
   } deriving (Show, Eq, Generic)
 instance NFData WebhookConfInfo
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''WebhookConfInfo)
+$(deriveToJSON (aesonPrefix snakeCase){omitNothingFields=True} ''WebhookConfInfo)
 
 data CreateEventTriggerQuery
   = CreateEventTriggerQuery
@@ -198,7 +198,7 @@ instance FromJSON CreateEventTriggerQuery where
         _ -> return ()
   parseJSON _ = fail "expecting an object"
 
-$(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''CreateEventTriggerQuery)
+$(deriveToJSON (aesonPrefix snakeCase){omitNothingFields=True} ''CreateEventTriggerQuery)
 
 -- | The table operations on which the event trigger will be invoked.
 data TriggerOpsDef
@@ -210,7 +210,7 @@ data TriggerOpsDef
   } deriving (Show, Eq, Generic)
 instance NFData TriggerOpsDef
 instance Cacheable TriggerOpsDef
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerOpsDef)
+$(deriveJSON (aesonPrefix snakeCase){omitNothingFields=True} ''TriggerOpsDef)
 
 data DeleteEventTriggerQuery
   = DeleteEventTriggerQuery
@@ -224,7 +224,7 @@ instance FromJSON DeleteEventTriggerQuery where
       <$> o .:? "source" .!= defaultSource
       <*> o .: "name"
 
-$(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''DeleteEventTriggerQuery)
+$(deriveToJSON (aesonPrefix snakeCase){omitNothingFields=True} ''DeleteEventTriggerQuery)
 
 data EventTriggerConf
   = EventTriggerConf
@@ -236,7 +236,7 @@ data EventTriggerConf
   , etcHeaders        :: !(Maybe [HeaderConf])
   } deriving (Show, Eq, Generic)
 instance Cacheable EventTriggerConf
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventTriggerConf)
+$(deriveJSON (aesonPrefix snakeCase){omitNothingFields=True} ''EventTriggerConf)
 
 data RedeliverEventQuery
   = RedeliverEventQuery
@@ -244,7 +244,7 @@ data RedeliverEventQuery
   , rdeqSource  :: !SourceName
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''RedeliverEventQuery)
+$(deriveToJSON (aesonPrefix snakeCase){omitNothingFields=True} ''RedeliverEventQuery)
 
 instance FromJSON RedeliverEventQuery where
   parseJSON = withObject "Object" $ \o ->
@@ -259,7 +259,7 @@ data InvokeEventTriggerQuery
   , ietqPayload :: !Value
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''InvokeEventTriggerQuery)
+$(deriveToJSON (aesonPrefix snakeCase){omitNothingFields=True} ''InvokeEventTriggerQuery)
 
 instance FromJSON InvokeEventTriggerQuery where
   parseJSON = withObject "Object" $ \o ->

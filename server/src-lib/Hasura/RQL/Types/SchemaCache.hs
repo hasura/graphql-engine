@@ -236,7 +236,7 @@ data CronTriggerInfo
    , ctiComment     :: !(Maybe Text)
    } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 3 snakeCase) ''CronTriggerInfo)
+$(deriveToJSON (aesonPrefix snakeCase) ''CronTriggerInfo)
 
 newtype SchemaCacheVer
   = SchemaCacheVer { unSchemaCacheVer :: Word64 }
@@ -276,7 +276,7 @@ data SchemaCache
   , scInconsistentObjs            :: ![InconsistentMetadata]
   , scCronTriggers                :: !(M.HashMap TriggerName CronTriggerInfo)
   }
-$(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
+$(deriveToJSON (aesonPrefix snakeCase) ''SchemaCache)
 
 getFuncsOfTable :: QualifiedTable -> FunctionCache -> [FunctionInfo]
 getFuncsOfTable qt fc = flip filter allFuncs $ \f -> qt == fiReturnType f

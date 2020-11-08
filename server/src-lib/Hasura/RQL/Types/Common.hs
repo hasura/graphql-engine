@@ -351,7 +351,7 @@ data MutateResp a
   { _mrAffectedRows     :: !Int
   , _mrReturningColumns :: ![ColumnValues a]
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 3 snakeCase) ''MutateResp)
+$(deriveJSON (aesonPrefix snakeCase) ''MutateResp)
 
 -- | Postgres OIDs. <https://www.postgresql.org/docs/12/datatype-oid.html>
 newtype OID = OID { unOID :: Int }
@@ -365,7 +365,7 @@ data Constraint
 instance NFData Constraint
 instance Hashable Constraint
 instance Cacheable Constraint
-$(deriveJSON (aesonDrop 2 snakeCase) ''Constraint)
+$(deriveJSON (aesonPrefix snakeCase) ''Constraint)
 
 data PrimaryKey a
   = PrimaryKey
@@ -375,7 +375,7 @@ data PrimaryKey a
 instance (NFData a) => NFData (PrimaryKey a)
 instance (Cacheable a) => Cacheable (PrimaryKey a)
 $(makeLenses ''PrimaryKey)
-$(deriveJSON (aesonDrop 3 snakeCase) ''PrimaryKey)
+$(deriveJSON (aesonPrefix snakeCase) ''PrimaryKey)
 
 data ForeignKey (b :: BackendType)
   = ForeignKey
@@ -389,9 +389,9 @@ instance Backend b => NFData (ForeignKey b)
 instance Backend b => Hashable (ForeignKey b)
 instance Backend b => Cacheable (ForeignKey b)
 instance Backend b => ToJSON (ForeignKey b) where
-  toJSON = genericToJSON $ aesonDrop 3 snakeCase
+  toJSON = genericToJSON $ aesonPrefix snakeCase
 instance Backend b => FromJSON (ForeignKey b) where
-  parseJSON = genericParseJSON $ aesonDrop 3 snakeCase
+  parseJSON = genericParseJSON $ aesonPrefix snakeCase
 
 data InpValInfo
   = InpValInfo

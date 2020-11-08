@@ -75,7 +75,7 @@ data WebhookRequest
   , _rqHeaders :: [HeaderConf]
   , _rqVersion :: Text
   }
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''WebhookRequest)
+$(deriveToJSON (aesonPrefix snakeCase){omitNothingFields=True} ''WebhookRequest)
 
 data WebhookResponse
   = WebhookResponse
@@ -83,10 +83,10 @@ data WebhookResponse
   , _wrsHeaders :: [HeaderConf]
   , _wrsStatus  :: Int
   }
-$(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''WebhookResponse)
+$(deriveToJSON (aesonPrefix snakeCase){omitNothingFields=True} ''WebhookResponse)
 
 newtype ClientError =  ClientError { _ceMessage :: TBS.TByteString}
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''ClientError)
+$(deriveToJSON (aesonPrefix snakeCase){omitNothingFields=True} ''ClientError)
 
 type InvocationVersion = Text
 
@@ -141,7 +141,7 @@ data ExtraLogContext
   , elEventId        :: EventId
   } deriving (Show, Eq)
 
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ExtraLogContext)
+$(deriveJSON (aesonPrefix snakeCase){omitNothingFields=True} ''ExtraLogContext)
 
 data HTTPResp (a :: TriggerTypes)
    = HTTPResp
@@ -151,7 +151,7 @@ data HTTPResp (a :: TriggerTypes)
    , hrsSize    :: !Int64
    } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''HTTPResp)
+$(deriveToJSON (aesonPrefix snakeCase){omitNothingFields=True} ''HTTPResp)
 
 instance ToEngineLog (HTTPResp 'EventType) Hasura where
   toEngineLog resp = (LevelInfo, eventTriggerLogType, toJSON resp)
@@ -203,7 +203,7 @@ mkHTTPResp resp =
 
 newtype RequestDetails
   = RequestDetails { _rdSize :: Int64 }
-$(deriveToJSON (aesonDrop 3 snakeCase) ''RequestDetails)
+$(deriveToJSON (aesonPrefix snakeCase) ''RequestDetails)
 
 data HTTPRespExtra (a :: TriggerTypes)
   = HTTPRespExtra
@@ -262,7 +262,7 @@ data HTTPReq
   , _hrqDelay   :: !(Maybe Int)
   } deriving (Show, Eq)
 
-$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''HTTPReq)
+$(deriveJSON (aesonPrefix snakeCase){omitNothingFields=True} ''HTTPReq)
 
 instance ToEngineLog HTTPReq Hasura where
   toEngineLog req = (LevelInfo, eventTriggerLogType, toJSON req)

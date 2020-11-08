@@ -29,7 +29,7 @@ data PGDumpReqBody =
   , prbCleanOutput :: !Bool
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 3 snakeCase) ''PGDumpReqBody)
+$(deriveToJSON (aesonPrefix snakeCase) ''PGDumpReqBody)
 
 instance FromJSON PGDumpReqBody where
   parseJSON = withObject "Object" $ \o ->

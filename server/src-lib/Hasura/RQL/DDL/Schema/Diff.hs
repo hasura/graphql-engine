@@ -42,14 +42,14 @@ data FunctionMeta
   , fmFunction :: !QualifiedFunction
   , fmType     :: !FunctionVolatility
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 2 snakeCase) ''FunctionMeta)
+$(deriveJSON (aesonPrefix snakeCase) ''FunctionMeta)
 
 data ComputedFieldMeta
   = ComputedFieldMeta
   { ccmName         :: !ComputedFieldName
   , ccmFunctionMeta :: !FunctionMeta
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''ComputedFieldMeta)
+$(deriveJSON (aesonPrefix snakeCase){omitNothingFields=True} ''ComputedFieldMeta)
 
 data TableMeta (b :: BackendType)
   = TableMeta

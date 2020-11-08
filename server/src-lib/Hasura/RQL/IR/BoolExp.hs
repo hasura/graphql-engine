@@ -181,7 +181,7 @@ data DWithinGeomOp a =
 instance (NFData a) => NFData (DWithinGeomOp a)
 instance (Cacheable a) => Cacheable (DWithinGeomOp a)
 instance (Hashable a) => Hashable (DWithinGeomOp a)
-$(deriveJSON (aesonDrop 6 snakeCase) ''DWithinGeomOp)
+$(deriveJSON (aesonPrefix snakeCase) ''DWithinGeomOp)
 
 data DWithinGeogOp a =
   DWithinGeogOp
@@ -192,7 +192,7 @@ data DWithinGeogOp a =
 instance (NFData a) => NFData (DWithinGeogOp a)
 instance (Cacheable a) => Cacheable (DWithinGeogOp a)
 instance (Hashable a) => Hashable (DWithinGeogOp a)
-$(deriveJSON (aesonDrop 6 snakeCase) ''DWithinGeogOp)
+$(deriveJSON (aesonPrefix snakeCase) ''DWithinGeogOp)
 
 data STIntersectsNbandGeommin a =
   STIntersectsNbandGeommin
@@ -202,7 +202,7 @@ data STIntersectsNbandGeommin a =
 instance (NFData a) => NFData (STIntersectsNbandGeommin a)
 instance (Cacheable a) => Cacheable (STIntersectsNbandGeommin a)
 instance (Hashable a) => Hashable (STIntersectsNbandGeommin a)
-$(deriveJSON (aesonDrop 4 snakeCase) ''STIntersectsNbandGeommin)
+$(deriveJSON (aesonPrefix snakeCase) ''STIntersectsNbandGeommin)
 
 data STIntersectsGeomminNband a =
   STIntersectsGeomminNband
@@ -212,7 +212,7 @@ data STIntersectsGeomminNband a =
 instance (NFData a) => NFData (STIntersectsGeomminNband a)
 instance (Cacheable a) => Cacheable (STIntersectsGeomminNband a)
 instance (Hashable a) => Hashable (STIntersectsGeomminNband a)
-$(deriveJSON (aesonDrop 4 snakeCase) ''STIntersectsGeomminNband)
+$(deriveJSON (aesonPrefix snakeCase) ''STIntersectsGeomminNband)
 
 type CastExp b a = M.HashMap (ScalarType b) [OpExpG b a]
 

@@ -66,7 +66,7 @@ data ReloadMetadata
   { _rmReloadRemoteSchemas :: !ReloadRemoteSchemas
   , _rmReloadSources       :: !ReloadSources
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 3 snakeCase) ''ReloadMetadata)
+$(deriveToJSON (aesonPrefix snakeCase) ''ReloadMetadata)
 
 instance FromJSON ReloadMetadata where
   parseJSON = \case
@@ -116,5 +116,5 @@ instance FromJSON ReplaceMetadata where
 
 instance ToJSON ReplaceMetadata where
   toJSON = \case
-    RMWithSources v -> toJSON v
+    RMWithSources v    -> toJSON v
     RMWithoutSources v -> toJSON v

@@ -84,7 +84,7 @@ data TriggerMetadata
   = TriggerMetadata { tmName :: TriggerName }
   deriving (Show, Eq)
 
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerMetadata)
+$(deriveJSON (aesonPrefix snakeCase){omitNothingFields=True} ''TriggerMetadata)
 
 newtype EventInternalErr
   = EventInternalErr QErr
@@ -107,7 +107,7 @@ data Event
   , eCreatedAt :: !Time.UTCTime
   } deriving (Show, Eq)
 
-$(deriveFromJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''Event)
+$(deriveFromJSON (aesonPrefix snakeCase){omitNothingFields=True} ''Event)
 
 data EventEngineCtx
   = EventEngineCtx
@@ -121,7 +121,7 @@ data DeliveryInfo
   , diMaxRetries   :: Int
   } deriving (Show, Eq)
 
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DeliveryInfo)
+$(deriveJSON (aesonPrefix snakeCase){omitNothingFields=True} ''DeliveryInfo)
 
 newtype QualifiedTableStrict = QualifiedTableStrict
   { getQualifiedTable :: QualifiedTable
@@ -143,7 +143,7 @@ data EventPayload
   , epCreatedAt    :: Time.UTCTime
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''EventPayload)
+$(deriveToJSON (aesonPrefix snakeCase){omitNothingFields=True} ''EventPayload)
 
 defaultMaxEventThreads :: Int
 defaultMaxEventThreads = 100

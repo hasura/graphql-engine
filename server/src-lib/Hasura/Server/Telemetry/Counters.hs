@@ -176,8 +176,8 @@ data ServiceTimingMetric
   deriving (Show, Generic, Eq)
 
 
-$(A.deriveJSON (A.aesonDrop 5 A.snakeCase) ''RequestTimingsCount)
-$(A.deriveJSON (A.aesonDrop 5 A.snakeCase) ''RequestDimensions)
+$(A.deriveJSON (A.aesonPrefix A.snakeCase) ''RequestTimingsCount)
+$(A.deriveJSON (A.aesonPrefix A.snakeCase) ''RequestDimensions)
 
 instance A.ToJSON ServiceTimingMetric
 instance A.FromJSON ServiceTimingMetric

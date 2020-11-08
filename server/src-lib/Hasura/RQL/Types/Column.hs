@@ -54,7 +54,7 @@ newtype EnumValueInfo
   = EnumValueInfo
   { evComment :: Maybe Text
   } deriving (Show, Eq, Ord, NFData, Hashable, Cacheable)
-$(deriveJSON (aesonDrop 2 snakeCase) ''EnumValueInfo)
+$(deriveJSON (aesonPrefix snakeCase) ''EnumValueInfo)
 
 type EnumValues = M.HashMap EnumValue EnumValueInfo
 
@@ -172,9 +172,9 @@ deriving instance Backend b => Show (RawColumnInfo b)
 instance Backend b => NFData (RawColumnInfo b)
 instance Backend b => Cacheable (RawColumnInfo b)
 instance Backend b => ToJSON (RawColumnInfo b) where
-  toJSON = genericToJSON $ aesonDrop 4 snakeCase
+  toJSON = genericToJSON $ aesonPrefix snakeCase
 instance Backend b => FromJSON (RawColumnInfo b) where
-  parseJSON = genericParseJSON $ aesonDrop 4 snakeCase
+  parseJSON = genericParseJSON $ aesonPrefix snakeCase
 
 -- | “Resolved” column info, produced from a 'RawColumnInfo' value that has been combined with
 -- other schema information to produce a 'PGColumnType'.
@@ -193,8 +193,8 @@ instance Backend b => Cacheable (ColumnInfo b)
 instance Backend b => NFData (ColumnInfo b)
 instance Backend b => Hashable (ColumnInfo b)
 instance Backend b => ToJSON (ColumnInfo b) where
-  toJSON = genericToJSON $ aesonDrop 3 snakeCase
-  toEncoding = genericToEncoding $ aesonDrop 3 snakeCase
+  toJSON = genericToJSON $ aesonPrefix snakeCase
+  toEncoding = genericToEncoding $ aesonPrefix snakeCase
 
 type PrimaryKeyColumns b = NESeq (ColumnInfo b)
 

@@ -43,7 +43,7 @@ data ComputedFieldDefinition
   } deriving (Show, Eq, Generic)
 instance NFData ComputedFieldDefinition
 instance Cacheable ComputedFieldDefinition
-$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields = True} ''ComputedFieldDefinition)
+$(deriveJSON (aesonPrefix snakeCase){omitNothingFields = True} ''ComputedFieldDefinition)
 
 -- | The function table argument is either the very first argument or the named
 -- argument with an index. The index is 0 if the named argument is the first.
@@ -94,7 +94,7 @@ data ComputedFieldFunction
   , _cffDescription     :: !(Maybe PGDescription)
   } deriving (Show, Eq, Generic)
 instance Cacheable ComputedFieldFunction
-$(deriveToJSON (aesonDrop 4 snakeCase) ''ComputedFieldFunction)
+$(deriveToJSON (aesonPrefix snakeCase) ''ComputedFieldFunction)
 
 data ComputedFieldInfo (b :: BackendType)
   = ComputedFieldInfo

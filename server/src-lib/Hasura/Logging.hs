@@ -192,7 +192,7 @@ deriving instance Eq (EngineLogType impl) => Eq (EngineLog impl)
 $(pure [])
 
 instance J.ToJSON (EngineLogType impl) => J.ToJSON (EngineLog impl) where
-  toJSON = $(J.mkToJSON (J.aesonDrop 3 J.snakeCase) ''EngineLog)
+  toJSON = $(J.mkToJSON (J.aesonPrefix J.snakeCase) ''EngineLog)
 
 -- | Typeclass representing any data type that can be converted to @EngineLog@ for the purpose of
 -- logging

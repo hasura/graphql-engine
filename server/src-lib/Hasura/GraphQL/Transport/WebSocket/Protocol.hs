@@ -35,13 +35,13 @@ data StartMsg
   { _smId      :: !OperationId
   , _smPayload :: !GQLReqUnparsed
   } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''StartMsg)
+$(J.deriveJSON (J.aesonPrefix J.snakeCase) ''StartMsg)
 
 data StopMsg
   = StopMsg
   { _stId :: OperationId
   } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''StopMsg)
+$(J.deriveJSON (J.aesonPrefix J.snakeCase) ''StopMsg)
 
 data ClientMsg
   = CMConnInit !(Maybe ConnParams)
@@ -54,7 +54,7 @@ data ConnParams
   = ConnParams
   { _cpHeaders :: Maybe (Map.HashMap Text Text)
   } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''ConnParams)
+$(J.deriveJSON (J.aesonPrefix J.snakeCase) ''ConnParams)
 
 instance J.FromJSON ClientMsg where
   parseJSON = J.withObject "ClientMessage" $ \obj -> do

@@ -343,7 +343,7 @@ data SetPermComment
   , apComment    :: !(Maybe Text)
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 2 snakeCase) ''SetPermComment)
+$(deriveToJSON (aesonPrefix snakeCase) ''SetPermComment)
 
 instance FromJSON SetPermComment where
   parseJSON = withObject "Object" $ \o ->

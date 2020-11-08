@@ -44,7 +44,7 @@ data GQLExplain
   , _gqeIsRelay :: !(Maybe Bool)
   } deriving (Show, Eq)
 
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True}
+$(J.deriveJSON (J.aesonPrefix J.snakeCase){J.omitNothingFields=True}
   ''GQLExplain
  )
 
@@ -55,7 +55,7 @@ data FieldPlan
   , _fpPlan  :: !(Maybe [Text])
   } deriving (Show, Eq)
 
-$(J.deriveJSON (J.aesonDrop 3 J.camelCase) ''FieldPlan)
+$(J.deriveJSON (J.aesonPrefix J.camelCase) ''FieldPlan)
 
 resolveUnpreparedValue
   :: (MonadError QErr m)

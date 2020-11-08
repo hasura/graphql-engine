@@ -110,7 +110,7 @@ data SelectG a b c
   , sqOffset  :: !(Maybe c)          -- Offset
   } deriving (Show, Eq)
 
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SelectG)
+$(deriveJSON (aesonPrefix snakeCase){omitNothingFields=True} ''SelectG)
 
 selectGToPairs :: (KeyValue kv, ToJSON a, ToJSON b, ToJSON c)
                => SelectG a b c -> [kv]
@@ -215,7 +215,7 @@ data OnConflict
   , ocAction       :: !ConflictAction
   } deriving (Show, Eq)
 
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''OnConflict)
+$(deriveJSON (aesonPrefix snakeCase){omitNothingFields=True} ''OnConflict)
 
 data InsertQuery
   = InsertQuery
@@ -226,7 +226,7 @@ data InsertQuery
   , iqReturning  :: !(Maybe [PGCol])
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''InsertQuery)
+$(deriveToJSON (aesonPrefix snakeCase){omitNothingFields=True} ''InsertQuery)
 
 instance FromJSON InsertQuery where
   parseJSON = withObject "Object" $ \o ->
@@ -243,7 +243,7 @@ data InsertTxConflictCtx
   , itcConstraint    :: !(Maybe ConstraintName)
   , itcSetExpression :: !(Maybe Text)
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''InsertTxConflictCtx)
+$(deriveJSON (aesonPrefix snakeCase){omitNothingFields=True} ''InsertTxConflictCtx)
 
 type UpdVals = ColumnValues Value
 
@@ -293,7 +293,7 @@ data DeleteQuery
   , doReturning :: !(Maybe [PGCol]) -- columns returning
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DeleteQuery)
+$(deriveToJSON (aesonPrefix snakeCase){omitNothingFields=True} ''DeleteQuery)
 
 instance FromJSON DeleteQuery where
   parseJSON = withObject "Object" $ \o ->
@@ -311,7 +311,7 @@ data CountQuery
   , cqWhere    :: !(Maybe (BoolExp 'Postgres))
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''CountQuery)
+$(deriveToJSON (aesonPrefix snakeCase){omitNothingFields=True} ''CountQuery)
 
 instance FromJSON CountQuery where
   parseJSON = withObject "Object" $ \o ->

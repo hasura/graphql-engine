@@ -33,7 +33,7 @@ data DomainParts =
   , wdPort   :: !(Maybe Int)
   } deriving (Show, Eq, Generic, Hashable)
 
-$(J.deriveJSON (J.aesonDrop 2 J.snakeCase) ''DomainParts)
+$(J.deriveJSON (J.aesonPrefix J.snakeCase) ''DomainParts)
 
 data Domains
   = Domains
@@ -41,7 +41,7 @@ data Domains
   , dmWildcards :: !(Set.HashSet DomainParts)
   } deriving (Show, Eq)
 
-$(J.deriveJSON (J.aesonDrop 2 J.snakeCase) ''Domains)
+$(J.deriveJSON (J.aesonPrefix J.snakeCase) ''Domains)
 
 data CorsConfig
   = CCAllowAll

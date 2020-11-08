@@ -77,7 +77,7 @@ data ReusablePlan = ReusablePlan
 newtype PlanCacheOptions
   = PlanCacheOptions { unPlanCacheSize :: Cache.CacheSize }
   deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 2 J.snakeCase) ''PlanCacheOptions)
+$(J.deriveJSON (J.aesonPrefix J.snakeCase) ''PlanCacheOptions)
 
 mkPlanCacheOptions :: Cache.CacheSize -> PlanCacheOptions
 mkPlanCacheOptions = PlanCacheOptions

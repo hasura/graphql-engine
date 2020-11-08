@@ -59,7 +59,7 @@ data StartupTimeInfo
   { _stiMessage   :: !Text
   , _stiTimeTaken :: !Double
   }
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''StartupTimeInfo)
+$(J.deriveJSON (J.aesonPrefix J.snakeCase) ''StartupTimeInfo)
 
 returnJust :: Monad m => a -> m (Maybe a)
 returnJust = return . Just

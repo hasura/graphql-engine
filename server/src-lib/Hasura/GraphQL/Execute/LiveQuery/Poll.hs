@@ -328,7 +328,7 @@ data CohortExecutionDetails
   -- polled cycle
   } deriving (Show, Eq)
 
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''CohortExecutionDetails)
+$(J.deriveToJSON (J.aesonPrefix J.snakeCase) ''CohortExecutionDetails)
 
 -- | Execution information related to a single batched execution
 data BatchExecutionDetails
@@ -348,7 +348,7 @@ batchExecutionDetailMinimal BatchExecutionDetails{..} =
            , "push_time" J..= _bedPushTime
            ]
 
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''BatchExecutionDetails)
+$(J.deriveToJSON (J.aesonPrefix J.snakeCase) ''BatchExecutionDetails)
 
 data PollDetails
   = PollDetails
@@ -368,7 +368,7 @@ data PollDetails
   , _pdLiveQueryOptions :: !LiveQueriesOptions
   } deriving (Show, Eq)
 
-$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''PollDetails)
+$(J.deriveToJSON (J.aesonPrefix J.snakeCase) ''PollDetails)
 
 {- Note [Minimal LiveQuery Poller Log]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

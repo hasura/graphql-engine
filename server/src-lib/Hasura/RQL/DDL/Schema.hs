@@ -149,7 +149,7 @@ data RunSQLRes
   { rrResultType :: !Text
   , rrResult     :: !Value
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 2 snakeCase) ''RunSQLRes)
+$(deriveJSON (aesonPrefix snakeCase) ''RunSQLRes)
 
 instance Q.FromRes RunSQLRes where
   fromRes (Q.ResultOkEmpty _) =
