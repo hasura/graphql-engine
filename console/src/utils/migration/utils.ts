@@ -32,7 +32,7 @@ export interface SchemaType {
 }
 
 export interface OldColumnType {
-  udt_name: string;
+  data_type_name: string;
   data_type: string;
   column_default: string | null;
   comment: string | null;
@@ -54,7 +54,7 @@ const parseNewCol = (newColumn: NewColumnType) => ({
 });
 
 const parseOldColumns = (oldColumn: OldColumnType) => ({
-  originalColType: oldColumn.udt_name,
+  originalColType: oldColumn.data_type_name,
   originalData_type: oldColumn.data_type,
   originalColDefault: oldColumn.column_default || '',
   originalColComment: oldColumn.comment || '',
@@ -338,7 +338,6 @@ export const getDownQueryComments = (
   upqueries: RunSqlType[],
   source: string
 ) => {
-  console.log({ upqueries });
   if (Array.isArray(upqueries) && upqueries.length >= 0) {
     let comment = `-- Could not auto-generate a down migration.
 -- Please write an appropriate down migration for the SQL below:`;

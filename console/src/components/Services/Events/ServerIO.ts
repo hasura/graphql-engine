@@ -583,10 +583,10 @@ export const redeliverDataEvent = (
 export const getEventLogs = (
   eventId: string,
   eventKind: EventKind,
-  eventDataSource: string,
-  successCallback: (logs: InvocationLog[]) => void,
-  errorCallback: (error: any) => void
-): Thunk => dispatch => {
+  eventDataSource?: string,
+  successCallback?: (logs: InvocationLog[]) => void,
+  errorCallback?: (error: any) => void
+): Thunk => (dispatch, getState) => {
   const logTableDef = getLogsTableDef(eventKind);
   const eventLogTable: QualifiedTable = {
     schema: 'hdb_catalog',
@@ -601,9 +601,12 @@ export const getEventLogs = (
     eventLogTable,
     eventId
   );
-  const query = getRunSqlQuery(sql, eventDataSource);
+  const query = getRunSqlQuery(
+    sql,
+    eventDataSource || getState().tables.currentDataSource
+  );
 
-  dispatch(
+  return dispatch(
     requestAction(
       Endpoints.query,
       {
@@ -642,10 +645,12 @@ export const getEventLogs = (
         },
         []
       );
-      successCallback(formattedData);
+      if (successCallback) successCallback(formattedData);
+      return formattedData;
     })
     .catch(err => {
-      errorCallback(err);
+      if (errorCallback) errorCallback(err);
+      return null;
     });
 };
 

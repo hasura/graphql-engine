@@ -191,7 +191,6 @@ ViewTable.propTypes = {
 };
 
 const mapStateToProps = (state, ownProps) => {
-  console.log('MAP_RERENDER');
   return {
     tableName: ownProps.params.table,
     currentSchema: state.tables.currentSchema,
