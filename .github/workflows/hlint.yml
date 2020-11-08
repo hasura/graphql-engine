@@ -38,3 +38,32 @@ jobs:
           then
             echo "$CHANGED_HS_FILES" | xargs ${{env.working-directory}}/hlint --json --hint=${{env.working-directory}}/.hlint.yaml | jq -r "$JQ_SCRIPT"
           fi
+
+  import-checks:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Check imports
+        shell: bash
+        run: |
+          FOUND_ERRORS=0
+          function check_imports() {
+              rootfolder="$1"
+              forbidden="$2"
+              message="$3"
+              for match in $(find "server/src-lib/$rootfolder" -type f -iname "*.hs" | xargs grep -Hn -E "^import.*$forbidden" | cut -d ':' -f 1,2); do
+                  filename=$(echo $match | cut -d ':' -f 1)
+                  line=$(echo $match | cut -d ':' -f 2)
+                  echo "::error file=$filename,line=$line::Forbiden import: $message"
+                  FOUND_ERRORS=1
+              done
+          }
+          check_imports "Hasura/RQL/IR" "Hasura.RQL.DML"  "the IR is backend-agnostic and cannot use RQL's DML."
+          check_imports "Hasura/RQL/IR" "Hasura.Backends" "the IR is backend-agnostic."
+          check_imports "Hasura/SQL"    "Hasura.RQL"      "SQL is a dependency of RQL."
+          check_imports "Hasura/SQL"    "Hasura.GraphQL"  "SQL is a dependency of GraphQL."
+          exit $FOUND_ERRORS
