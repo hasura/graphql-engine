@@ -1,11 +1,10 @@
 import React from 'react';
-
 import Helmet from 'react-helmet';
-import CommonTabLayout from '../../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 import { Link } from 'react-router';
 import { push } from 'react-router-redux';
 import { connect } from 'react-redux';
 
+import CommonTabLayout from '../../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 import tabInfo from '../Modify/tabInfo';
 import globals from '../../../../../Globals';
 import { fetchCustomFunction } from '../customFunctionReducer';
@@ -22,6 +21,7 @@ import {
   getTablePermissionsRoute,
 } from '../../../../Common/utils/routesUtils';
 import { pageTitle } from '../Modify/ModifyCustomFunction';
+import styles from '../Modify/ModifyCustomFunction.scss';
 
 class Permission extends React.Component {
   constructor(props) {
@@ -51,7 +51,6 @@ class Permission extends React.Component {
     ]);
   }
   render() {
-    const styles = require('../Modify/ModifyCustomFunction.scss');
     const {
       functionSchema: schema,
       functionName,
