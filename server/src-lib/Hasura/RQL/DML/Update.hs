@@ -22,6 +22,8 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.Returning
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
+import           Hasura.RQL.DML.Types
+import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.Update
 import           Hasura.RQL.Instances                         ()
 import           Hasura.RQL.Types

@@ -104,6 +104,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
+- cli: fix cli-migrations-v2 image failing to run as a non root user (close #4651, close #5333)
 
 - server: Fix fine-grained incremental cache invalidation (fix #3759)
 
@@ -135,6 +136,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - console: down migrations improvements (close #3503, #4988) (#4790)
 - cli: add missing global flags for seed command (#5565)
 - cli: allow seeds as alias for seed command (#5693)
+- cli: fix bug in metadata apply which made the server aquire some redundant and unnecessary locks (close #6115)
 - docs: add docs page on networking with docker (close #4346) (#4811)
 - docs: add tabs for console / cli / api workflows (close #3593) (#4948)
 - docs: add postgres concepts page to docs (close #4440) (#4471)
