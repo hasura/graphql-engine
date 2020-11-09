@@ -3,22 +3,21 @@ import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLay
 import tabInfo from './remoteSchemaTabs';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { appPrefix } from '../constants';
-import { VIEW_REMOTE_SCHEMA } from '../Actions';
-
 import { findRemoteSchema } from '../utils';
 import styles from '../RemoteSchema.scss';
 
+// TODO : types
 const RemoteSchemaContainer = ({
   params: { remoteSchemaName },
   children,
   allRemoteSchemas,
   tabName,
-  dispatch,
-}) => {
+  viewRemoteSchema,
+}: any) => {
   React.useEffect(() => {
-    dispatch({ type: VIEW_REMOTE_SCHEMA, data: remoteSchemaName });
+    viewRemoteSchema(remoteSchemaName);
     return () => {
-      dispatch({ type: VIEW_REMOTE_SCHEMA, data: '' });
+      viewRemoteSchema('');
     };
   }, [remoteSchemaName]);
 
@@ -28,7 +27,7 @@ const RemoteSchemaContainer = ({
   );
 
   if (!currentRemoteSchema) {
-    dispatch({ type: VIEW_REMOTE_SCHEMA, data: '' });
+    viewRemoteSchema('');
     throw new NotFoundError();
   }
 
@@ -64,6 +63,8 @@ const RemoteSchemaContainer = ({
         tabsInfo={tabInfo}
         breadCrumbs={breadCrumbs}
         baseUrl={`${appPrefix}/manage/${remoteSchemaName}`}
+        showLoader={false}
+        testPrefix="remote-schema-container-tabs"
       />
       <div className={styles.add_pad_top}>{childrenWithProps}</div>
     </div>

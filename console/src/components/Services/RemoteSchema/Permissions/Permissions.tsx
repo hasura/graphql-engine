@@ -1,15 +1,12 @@
 import React from 'react';
 import Helmet from 'react-helmet';
 import PermissionsTable from './PermissionsTable';
-import { fetchRoleList } from '../../Data/DataActions';
-import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import PermissionEditor from './PermissionEditor';
-import { setDefaults } from './reducer';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
-import { permRemoveMultipleRoles } from '../Actions';
 import Button from '../../../Common/Button/Button';
+import styles from '../../../Common/Permissions/PermissionStyles.scss';
 
-const BulkSelectSection = ({ bulkSelect, dispatch }: any) => {
+const BulkSelectSection = ({ bulkSelect, permRemoveMultipleRoles }: any) => {
   const getSelectedRoles = () => {
     return bulkSelect.map((r: any) => {
       return (
@@ -25,7 +22,7 @@ const BulkSelectSection = ({ bulkSelect, dispatch }: any) => {
       'This will remove all currently set permissions for the selected role(s)';
     const isOk = getConfirmation(confirmMessage);
     if (isOk) {
-      dispatch(permRemoveMultipleRoles());
+      permRemoveMultipleRoles();
     }
   };
 
@@ -45,7 +42,7 @@ const BulkSelectSection = ({ bulkSelect, dispatch }: any) => {
   );
 };
 
-const Permissions = ({ allRoles, dispatch, ...props }: any) => {
+const Permissions = ({ allRoles, ...props }: any) => {
   const {
     currentRemoteSchema,
     permissionEdit,
@@ -54,12 +51,22 @@ const Permissions = ({ allRoles, dispatch, ...props }: any) => {
     bulkSelect,
     schemaDefinition,
     readOnlyMode = false,
+    fetchRoleList,
+    setDefaults,
+    permCloseEdit,
+    saveRemoteSchemaPermission,
+    removeRemoteSchemaPermission,
+    setSchemaDefinition,
+    permRemoveMultipleRoles,
+    permOpenEdit,
+    permSetBulkSelect,
+    permSetRoleName,
   } = props;
 
   React.useEffect(() => {
-    dispatch(fetchRoleList());
+    fetchRoleList();
     return () => {
-      dispatch(setDefaults());
+      setDefaults();
     };
   }, []);
 
@@ -68,19 +75,37 @@ const Permissions = ({ allRoles, dispatch, ...props }: any) => {
       <Helmet
         title={`Permissions - ${currentRemoteSchema.name} - Remote Schemas | Hasura`}
       />
-      <PermissionsTable allRoles={allRoles} dispatch={dispatch} {...props} />
+      <PermissionsTable
+        allRoles={allRoles}
+        currentRemoteSchema={currentRemoteSchema}
+        permissionEdit={permissionEdit}
+        isEditing={isEditing}
+        bulkSelect={bulkSelect}
+        readOnlyMode={readOnlyMode}
+        permSetRoleName={permSetRoleName}
+        permSetBulkSelect={permSetBulkSelect}
+        setSchemaDefinition={setSchemaDefinition}
+        permOpenEdit={permOpenEdit}
+        permCloseEdit={permCloseEdit}
+      />
       {bulkSelect.length && (
-        <BulkSelectSection bulkSelect={bulkSelect} dispatch={dispatch} />
+        <BulkSelectSection
+          bulkSelect={bulkSelect}
+          permRemoveMultipleRoles={permRemoveMultipleRoles}
+        />
       )}
       <div className={`${styles.add_mar_bottom}`}>
         {!readOnlyMode && (
           <PermissionEditor
             permissionEdit={permissionEdit}
-            dispatch={dispatch}
             isFetching={isFetching}
             isEditing={isEditing}
             readOnlyMode={readOnlyMode}
             schemaDefinition={schemaDefinition}
+            permCloseEdit={permCloseEdit}
+            saveRemoteSchemaPermission={saveRemoteSchemaPermission}
+            removeRemoteSchemaPermission={removeRemoteSchemaPermission}
+            setSchemaDefinition={setSchemaDefinition}
           />
         )}
       </div>

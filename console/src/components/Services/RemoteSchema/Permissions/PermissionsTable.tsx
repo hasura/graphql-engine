@@ -9,25 +9,24 @@ import {
   getRemoteSchemaPermissions,
   findRemoteSchemaPermission,
 } from '../utils';
-import {
-  permOpenEdit,
-  permCloseEdit,
-  permSetRoleName,
-  permSetBulkSelect,
-  setSchemaDefinition,
-} from './reducer';
 import { RolePermissions } from './types';
 
 const queryTypes = ['Permission'];
 
-const PermissionsTable = ({ allRoles, ...props }: any) => {
+// TODO : Types
+const PermissionsTable = ({ ...props }: any) => {
   const {
+    allRoles,
     currentRemoteSchema,
-    dispatch,
     permissionEdit,
     isEditing,
     bulkSelect,
     readOnlyMode,
+    permSetRoleName,
+    permSetBulkSelect,
+    setSchemaDefinition,
+    permOpenEdit,
+    permCloseEdit,
   } = props;
 
   const allPermissions = getRemoteSchemaPermissions(currentRemoteSchema);
@@ -35,7 +34,7 @@ const PermissionsTable = ({ allRoles, ...props }: any) => {
   const headings = ['Role', ...queryTypes];
 
   const dispatchRoleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
-    dispatch(permSetRoleName(e.target.value));
+    permSetRoleName(e.target.value);
   };
 
   const getEditIcon = () => {
@@ -50,7 +49,7 @@ const PermissionsTable = ({ allRoles, ...props }: any) => {
     const dispatchBulkSelect = (e: ChangeEvent<HTMLInputElement>) => {
       const isChecked = e.target.checked;
       const selectedRole = e.target.getAttribute('data-role');
-      dispatch(permSetBulkSelect(isChecked, selectedRole));
+      permSetBulkSelect(isChecked, selectedRole);
     };
 
     const disableCheckbox = !findRemoteSchemaPermission(allPermissions, role);
@@ -74,22 +73,20 @@ const PermissionsTable = ({ allRoles, ...props }: any) => {
     return queryTypes.map(queryType => {
       const dispatchOpenEdit = () => () => {
         if (isNewRole && !!role) {
-          dispatch(setSchemaDefinition({ value: defaultSchemaDefSdl }));
-          dispatch(permOpenEdit(role, isNewRole, true));
+          setSchemaDefinition({ value: defaultSchemaDefSdl });
+          permOpenEdit(role, isNewRole, true);
         } else if (role) {
           const existingPerm = findRemoteSchemaPermission(allPermissions, role);
-          dispatch(permOpenEdit(role, isNewRole, !existingPerm));
+          permOpenEdit(role, isNewRole, !existingPerm);
 
           if (existingPerm) {
             const schemaDefinitionSdl = existingPerm.definition.schema;
-            dispatch(
-              setSchemaDefinition({
-                value: schemaDefinitionSdl,
-                ast: sdlParse(schemaDefinitionSdl),
-              })
-            );
+            setSchemaDefinition({
+              value: schemaDefinitionSdl,
+              ast: sdlParse(schemaDefinitionSdl),
+            });
           } else {
-            dispatch(setSchemaDefinition({ value: defaultSchemaDefSdl }));
+            setSchemaDefinition({ value: defaultSchemaDefSdl });
           }
         } else {
           // FIXME: probably best if we handle the React way.
@@ -101,8 +98,8 @@ const PermissionsTable = ({ allRoles, ...props }: any) => {
       };
 
       const dispatchCloseEdit = () => {
-        dispatch(permCloseEdit());
-        dispatch(setSchemaDefinition({ value: defaultSchemaDefSdl }));
+        permCloseEdit();
+        setSchemaDefinition({ value: defaultSchemaDefSdl });
       };
 
       const isCurrEdit =
