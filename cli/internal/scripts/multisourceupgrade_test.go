@@ -223,15 +223,15 @@ func TestUpgradeProjectToMultipleSources(t *testing.T) {
 				opts: UpgradeToMuUpgradeProjectToMultipleSourcesOpts{
 					Fs: func() afero.Fs {
 						fs := afero.NewMemMapFs()
-						if err := fs.MkdirAll("hasura/migrations", os.ModePerm); err != nil {
+						if err := fs.MkdirAll("hasura/migrations/1604855964903_test", 0755); err != nil {
 							t.Fatal(err)
 						}
-						//if err := fs.MkdirAll("hasura/migrations/1604856103380_!test", 0755); err != nil {
-						//	t.Fatal(err)
-						//}
-						//if err := fs.MkdirAll("hasura/migrations/notamigration", 0755); err != nil {
-						//	t.Fatal(err)
-						//}
+						if err := fs.MkdirAll("hasura/migrations/1604856103380_!test", 0755); err != nil {
+							t.Fatal(err)
+						}
+						if err := fs.MkdirAll("hasura/migrations/notamigration", 0755); err != nil {
+							t.Fatal(err)
+						}
 						return fs
 					}(),
 					ProjectDirectory:     "hasura",

@@ -1,9 +1,10 @@
 package scripts
 
 import (
-	"fmt"
 	"path/filepath"
 	"regexp"
+
+	"fmt"
 
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
@@ -27,7 +28,7 @@ type UpgradeToMuUpgradeProjectToMultipleSourcesOpts struct {
 // The project is expected to be in Config V2
 func UpgradeProjectToMultipleSources(opts UpgradeToMuUpgradeProjectToMultipleSourcesOpts) error {
 	// create backup of project
-	var projectBackupPath = filepath.Join(opts.ProjectDirectory, fmt.Sprintf(opts.ProjectDirectory, "_backup"))
+	var projectBackupPath = fmt.Sprintf("%s_%s", opts.ProjectDirectory, "backup")
 	if err := util.CopyDirAfero(opts.Fs, opts.ProjectDirectory, projectBackupPath); err != nil {
 		return errors.Wrap(err, "creating project backup directory")
 	}
