@@ -45,7 +45,7 @@ import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.IR.RemoteJoin
 import           Hasura.RQL.IR.Returning
 import           Hasura.RQL.IR.Select
-import           Hasura.RQL.Types
+import           Hasura.RQL.Types                       hiding (Alias)
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 
