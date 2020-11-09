@@ -93,8 +93,8 @@ func Test_getMigrationDirectories(t *testing.T) {
 				rootMigrationsDir: "migrations",
 			},
 			[]string{
-				"1604255964903_test",
-				"1604855964903_test2",
+				"migrations/1604255964903_test",
+				"migrations/1604855964903_test2",
 			},
 			false,
 		},
@@ -235,7 +235,7 @@ func TestUpgradeProjectToMultipleSources(t *testing.T) {
 						return fs
 					}(),
 					ProjectDirectory:     "hasura",
-					MigrationsDirectory:  "migrations",
+					MigrationsDirectory:  "hasura/migrations",
 					TargetDatasourceName: func() string { return "ds" },
 					Logger:               logrus.New(),
 				},

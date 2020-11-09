@@ -16,7 +16,7 @@ type UpgradeToMuUpgradeProjectToMultipleSourcesOpts struct {
 	Fs afero.Fs
 	// Path to project directory
 	ProjectDirectory string
-	// Directory in which migrations are stored (relative to project directory)
+	// Directory in which migrations are stored
 	MigrationsDirectory string
 	// Name of the datasource which the current migrations belong to
 	TargetDatasourceName func() string
@@ -91,7 +91,7 @@ func getMigrationDirectories(fs afero.Fs, rootMigrationsDir string) ([]string, e
 				}
 				continue
 			}
-			migrationDirectories = append(migrationDirectories, info.Name())
+			migrationDirectories = append(migrationDirectories, filepath.Join(rootMigrationsDir, info.Name()))
 		}
 
 	}
