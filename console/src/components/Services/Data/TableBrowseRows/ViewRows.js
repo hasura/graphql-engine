@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'react-table/react-table.css';
 import '../../../Common/TableCommon/ReactTableOverrides.css';
 import DragFoldTable, {
@@ -442,6 +442,7 @@ const ViewRows = props => {
               </Dropdown>
               {invokedRow === rowIndex && (
                 <InvokeManualTrigger
+                  source={currentSource}
                   args={row}
                   name={`${invocationFunc}`}
                   onClose={onCloseInvokeTrigger}

@@ -39,13 +39,6 @@ const FETCHING_MANUAL_TRIGGER = 'ViewTable/FETCHING_MANUAL_TRIGGER';
 const FETCH_MANUAL_TRIGGER_SUCCESS = 'ViewTable/FETCH_MANUAL_TRIGGER_SUCCESS';
 const FETCH_MANUAL_TRIGGER_FAIL = 'ViewTable/FETCH_MANUAL_TRIGGER_SUCCESS';
 
-// const V_ADD_WHERE;
-// const V_REMOVE_WHERE;
-// const V_SET_LIMIT;
-// const V_SET_OFFSET;
-// const V_ADD_SORT;
-// const V_REMOVE_SORT;
-
 /* ****************** action creators *************/
 
 const vExpandRow = rowKey => ({

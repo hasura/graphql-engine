@@ -666,13 +666,28 @@ export const getSetCommentSql = (
   on: 'column' | 'table' | string,
   tableName: string,
   schemaName: string,
-  columnName: string,
-  comment: string | null
-) => `
+  comment: string | null,
+  columnName?: string,
+  columnType?: string
+) => {
+  if (columnName) {
+    return `
   comment on ${on} "${schemaName}"."${tableName}"."${columnName}" is ${
-  comment ? sqlEscapeText(comment) : 'NULL'
-}
+      comment ? sqlEscapeText(comment) : 'NULL'
+    }
 `;
+  }
+
+  if (columnType) {
+    // FIXME: do something, not sure what.
+  }
+
+  return `
+comment on ${on} "${schemaName}"."${tableName}" is ${
+    comment ? sqlEscapeText(comment) : 'NULL'
+  }
+`;
+};
 
 export const getAlterColumnTypeSql = (
   tableName: string,
@@ -680,7 +695,7 @@ export const getAlterColumnTypeSql = (
   columnName: string,
   columnType: string
 ) => `
-  alter table "${schemaName}"."${tableName}" alter column "${columnName}" type ${columnType}
+  ALTER TABLE "${schemaName}"."${tableName}" ALTER COLUMN "${columnName}" TYPE ${columnType};
 `;
 
 export const getDropColumnDefaultSql = (

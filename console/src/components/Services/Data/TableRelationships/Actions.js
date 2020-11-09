@@ -314,6 +314,7 @@ const generateRelationshipsQuery = (relMeta, currentDataSource) => {
             name: relMeta.rTable,
             schema: relMeta.rSchema,
           },
+          source: relMeta.source,
           column_mapping: columnMaps.reduce(columnReducer, {}),
         },
       };
@@ -358,6 +359,7 @@ const generateRelationshipsQuery = (relMeta, currentDataSource) => {
             name: relMeta.rTable,
             schema: relMeta.rSchema,
           },
+          source: currentDataSource,
           column_mapping: columnMaps.reduce(columnReducer, {}),
         },
       };

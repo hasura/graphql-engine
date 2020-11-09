@@ -26,14 +26,16 @@ const REQUEST_ERROR = 'AddExistingTable/REQUEST_ERROR';
 const setDefaults = () => ({ type: SET_DEFAULTS });
 const setTableName = value => ({ type: SET_TABLENAME, value });
 
-const addExistingTableSql = () => {
+const addExistingTableSql = (name, customSchema, skipRouting = false) => {
   return (dispatch, getState) => {
     dispatch({ type: MAKING_REQUEST });
     dispatch(showSuccessNotification('Adding an existing table...'));
     const state = getState().addTable.existingTableView;
-    const currentSchema = getState().tables.currentSchema;
+    const currentSchema = customSchema
+      ? customSchema
+      : getState().tables.currentSchema;
     const currentDataSource = getState().tables.currentDataSource;
-    const tableName = state.tableName.trim();
+    const tableName = name ? name : state.tableName.trim();
 
     const requestBodyUp = getTrackTableQuery(
       {
@@ -77,7 +79,9 @@ const addExistingTableSql = () => {
               tableName,
               isTableType
             );
-        dispatch(_push(nextRoute));
+        if (!skipRouting) {
+          dispatch(_push(nextRoute));
+        }
       });
       return;
     };
@@ -100,11 +104,13 @@ const addExistingTableSql = () => {
   };
 };
 
-const addExistingFunction = name => {
+const addExistingFunction = (name, customSchema, skipRouting = false) => {
   return (dispatch, getState) => {
     dispatch({ type: MAKING_REQUEST });
     dispatch(showSuccessNotification('Adding an function...'));
-    const currentSchema = getState().tables.currentSchema;
+    const currentSchema = customSchema
+      ? customSchema
+      : getState().tables.currentSchema;
     const currentDataSource = getState().tables.currentDataSource;
 
     const requestBodyUp = getTrackFunctionQuery(
@@ -127,9 +133,11 @@ const addExistingFunction = name => {
       dispatch({ type: REQUEST_SUCCESS });
       // Update the left side bar
       dispatch(exportMetadata());
-      dispatch(
-        _push(getFunctionModifyRoute(currentSchema, currentDataSource, name))
-      );
+      if (!skipRouting) {
+        dispatch(
+          _push(getFunctionModifyRoute(currentSchema, currentDataSource, name))
+        );
+      }
     };
     const customOnError = err => {
       dispatch({ type: REQUEST_ERROR, data: err });

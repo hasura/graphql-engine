@@ -33,6 +33,10 @@ const RelationshipEditor = ({
   const [relConfig, setRelConfig] = React.useState(
     existingRelConfig || defaultRelConfig
   );
+  const [relDBSelectValue, changeRelDBSelectValue] = React.useState('');
+  const [currentSchemaList, updateCurrentSchemaList] = React.useState(
+    schemaList
+  );
 
   // if it is an existing relationship, fetch the pg schema metadata
   React.useEffect(() => {
@@ -70,6 +74,7 @@ const RelationshipEditor = ({
 
   const setDBType = e => {
     const value = e.target.value;
+    changeRelDBSelectValue(value);
     let dbName;
     let dbDriver;
     try {
@@ -81,7 +86,9 @@ const RelationshipEditor = ({
       ...rc,
       refDb: dbName,
     }));
-    dispatch(getSchemaList(dbDriver, value));
+    return dispatch(getSchemaList(dbDriver, dbName)).then(data => {
+      updateCurrentSchemaList(data.result.slice(1));
+    });
   };
 
   // ref schema on change
@@ -200,6 +207,7 @@ const RelationshipEditor = ({
           data-test={'manual-relationship-db-choice'}
           onChange={setDBType}
           disabled={!name}
+          value={relDBSelectValue}
         >
           {type === '' && (
             <option value={''} disabled selected={!refDb}>
@@ -207,11 +215,7 @@ const RelationshipEditor = ({
             </option>
           )}
           {dataSources.map(s => (
-            <option
-              key={s.name}
-              value={JSON.stringify([s.name, s.driver])}
-              selected={s.name === refDb}
-            >
+            <option key={s.name} value={JSON.stringify([s.name, s.driver])}>
               {s.name} ({s.driver})
             </option>
           ))}
@@ -222,7 +226,7 @@ const RelationshipEditor = ({
 
   // ref schema select
   const refSchemaSelect = () => {
-    const orderedSchemaList = schemaList.sort();
+    const orderedSchemaList = currentSchemaList.sort();
     return (
       <div className={`${styles.add_mar_bottom}`}>
         <div className={`${styles.add_mar_bottom_mid}`}>
@@ -257,6 +261,10 @@ const RelationshipEditor = ({
   };
 
   // ref table select
+  // FIXME: because of `allTables` we don't have the information
+  // of the tables that belong to a particular schema, we need to
+  // make sure that we use the appropriate value to to show the correct
+  // tables for that particular schema and data source
   const refTableSelect = () => {
     return (
       <div className={`${styles.add_mar_bottom}`}>
@@ -475,6 +483,7 @@ const RelEditor = props => {
         showErrorNotification('Cannot create relationship', validationError)
       );
     }
+
     dispatch(
       addActionRel(
         { ...relConfigState, typename: objectType.name },

@@ -32,11 +32,11 @@ export interface SchemaType {
 }
 
 export interface OldColumnType {
-  data_type_name: string;
   data_type: string;
   column_default: string | null;
   comment: string | null;
   is_nullable?: string;
+  data_type_name?: string;
 }
 
 // utils
@@ -278,8 +278,8 @@ export const getColumnUpdateMigration = (
       'column',
       tableName,
       currentSchema,
-      colName,
       comment,
+      colName,
       colType
     );
 
@@ -287,8 +287,8 @@ export const getColumnUpdateMigration = (
       'column',
       tableName,
       currentSchema,
-      colName,
       originalColComment,
+      colName,
       colType
     );
 

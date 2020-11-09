@@ -311,7 +311,7 @@ const mapStateToProps = (state, ownProps) => {
     tableName,
     tableType,
     currentSchema: schemaName,
-    currentSource: state.table.currentDataSource,
+    currentSource: state.tables.currentDataSource,
     allSchemas: state.tables.allSchemas,
     migrationMode: state.main.migrationMode,
     readOnlyMode: state.main.readOnlyMode,

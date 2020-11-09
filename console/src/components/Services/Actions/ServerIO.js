@@ -64,7 +64,6 @@ export const createAction = () => (dispatch, getState) => {
   const { add: rawState } = getState().actions;
   const existingTypesList = customTypesSelector(getState());
   const allActions = actionsSelector(getState());
-
   const {
     name: actionName,
     arguments: args,
@@ -187,7 +186,6 @@ export const createAction = () => (dispatch, getState) => {
 export const saveAction = currentAction => (dispatch, getState) => {
   const { modify: rawState } = getState().actions;
   const existingTypesList = customTypesSelector(getState());
-
   const {
     name: actionName,
     arguments: args,
@@ -381,7 +379,6 @@ export const addActionRel = (relConfig, successCb, existingRelConfig) => (
   getState
 ) => {
   const existingTypes = customTypesSelector(getState());
-
   let typesWithRels = [...existingTypes];
 
   let validationError;
@@ -431,9 +428,11 @@ export const addActionRel = (relConfig, successCb, existingRelConfig) => (
     source: relConfig.refDb,
   });
 
-  const customTypesQueryDown = generateSetCustomTypesQuery(
-    reformCustomTypes(existingTypes)
-  );
+  const customTypesQueryDown = generateSetCustomTypesQuery({
+    ...reformCustomTypes(existingTypes),
+    source: relConfig.refDb,
+  });
+
   const migration = new Migration();
   migration.add(customTypesQueryUp, customTypesQueryDown);
 
@@ -479,17 +478,17 @@ export const removeActionRel = (relName, source, typename, successCb) => (
     source,
   });
 
-  const customTypesQueryDown = generateSetCustomTypesQuery(
-    reformCustomTypes(existingTypes),
-    source
-  );
+  const customTypesQueryDown = generateSetCustomTypesQuery({
+    ...reformCustomTypes(existingTypes),
+    source,
+  });
   const migration = new Migration();
   migration.add(customTypesQueryUp, customTypesQueryDown);
 
-  const migrationName = 'remove_action_rel'; // TODO: better migration name
-  const requestMsg = 'Removing relationship...';
+  const migrationName = `remove_action_relationship_${relName}_from_${typename}`;
+  const requestMsg = `Removing relationship ${relName}...`;
   const successMsg = 'Relationship removed successfully';
-  const errorMsg = 'Removing relationship failed';
+  const errorMsg = `Failed to remove the relationship: "${relName}"`;
 
   makeMigrationCall(
     dispatch,
@@ -525,10 +524,13 @@ export const saveActionPermission = (successCb, errorCb) => (
     currentAction
   );
 
-  const migrationName = 'save_action_perm';
+  const { role, newRole } = permissionEdit;
+  const roleName = (newRole || role).trim();
+
+  const migrationName = `save_action_permission_${currentAction}_${roleName}`;
   const requestMsg = 'Saving permission...';
   const successMsg = 'Permission saved successfully';
-  const errorMsg = 'Saving permission failed';
+  const errorMsg = `Failed to save permissions for role "${roleName}"`;
 
   const customOnSuccess = () => {
     dispatch(exportMetadata());

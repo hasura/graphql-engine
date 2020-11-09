@@ -119,22 +119,6 @@ const TableColumn = props => {
           colDefaultFunctions={defaultFunctions}
         />
       </span>
-      {/*
-      <input
-        placeholder={getPlaceholder(column)}
-        type="text"
-        value={getDefaultValue(column)}
-        className={`${styles.inputDefault} ${
-          styles.defaultWidth
-        } form-control ${styles.add_pad_left}`}
-        onChange={setColDefaultValue.bind(
-          undefined,
-          i,
-          column.nullable || false
-        )}
-        data-test={`col-default-${i}`}
-      />
-      */}{' '}
       <label>
         <input
           className={styles.inputCheckbox}

@@ -3,6 +3,7 @@ import { generateTableDef } from '../../../../dataSources';
 
 const reformRelationship = relConfig => {
   return {
+    source: relConfig.source || relConfig.refDb,
     name: relConfig.name,
     type: relConfig.type,
     remote_table: generateTableDef(relConfig.refTable, relConfig.refSchema),

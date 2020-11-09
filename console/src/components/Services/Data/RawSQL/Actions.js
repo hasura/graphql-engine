@@ -16,11 +16,11 @@ import requestAction from '../../../../utils/requestAction';
 import { dataSource } from '../../../../dataSources';
 import { exportMetadata } from '../../../../metadata/actions';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
-import {
-  getTrackFunctionQuery,
-  getTrackTableQuery,
-} from '../../../../metadata/queryUtils';
 import { getDownQueryComments } from '../../../../utils/migration/utils';
+import {
+  addExistingTableSql,
+  addExistingFunction,
+} from '../Add/AddExistingTableViewActions';
 
 const MAKING_REQUEST = 'RawSQL/MAKING_REQUEST';
 const SET_SQL = 'RawSQL/SET_SQL';
@@ -36,63 +36,21 @@ const MODAL_OPEN = 'EditItem/MODAL_OPEN';
 const modalOpen = () => ({ type: MODAL_OPEN });
 const modalClose = () => ({ type: MODAL_CLOSE });
 
-const executeSQLCallback = (isMigration, migrationName, url, sql) => (
-  dispatch,
-  getState
-) => {
-  const { currentDataSource } = getState().tables;
-
-  const upChanges = [];
+const executeSQLCallback = sql => dispatch => {
   const objects = parseCreateSQL(sql);
+  const upChanges = [];
 
   objects.forEach(object => {
     let req = {};
     if (object.type === 'function') {
-      req = getTrackFunctionQuery(
-        object.name,
-        object.schema,
-        currentDataSource
-      );
+      req = addExistingFunction(object.name, object.schema, true);
     } else {
-      req = getTrackTableQuery(
-        {
-          name: object.name,
-          schema: object.schema,
-        },
-        currentDataSource
-      );
+      req = addExistingTableSql(object.name, object.schema, true);
     }
-
     upChanges.push(req);
   });
 
-  let requestBody = {
-    type: 'bulk',
-    source: currentDataSource,
-    args: upChanges,
-  };
-
-  if (isMigration) {
-    requestBody = {
-      name: `track_${migrationName}`,
-      up: upChanges,
-      down: [],
-    };
-  } else {
-    url = Endpoints.metadata;
-  }
-
-  const options = {
-    method: 'POST',
-    credentials: globalCookiePolicy,
-    headers: dataHeaders(getState),
-    body: JSON.stringify(requestBody),
-  };
-
-  return dispatch(requestAction(url, options)).then(res => {
-    dispatch(showSuccessNotification('Changes tracked!'));
-    return res;
-  });
+  upChanges.forEach(change => dispatch(change));
 };
 
 const executeSQL = (isMigration, migrationName, statementTimeout) => (
@@ -169,9 +127,7 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
     .then(
       data => {
         if (isTableTrackChecked) {
-          dispatch(
-            executeSQLCallback(isMigration, migrationName, url, sql)
-          ).then(callback(data));
+          dispatch(executeSQLCallback(sql)).then(callback(data));
           return;
         }
         callback(data);

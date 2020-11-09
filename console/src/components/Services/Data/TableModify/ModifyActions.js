@@ -1197,8 +1197,8 @@ const deleteColumnSql = (column, tableSchema) => {
             'column',
             tableName,
             currentSchema,
-            name,
             comment,
+            name,
             col_type
           ),
           source

@@ -740,6 +740,8 @@ export interface CustomTypeObjectRelationship {
   field_mapping: {
     [ObjectFieldName: string]: string;
   };
+  /** Source name, where remote_table exists */
+  source?: string;
 }
 
 /**
