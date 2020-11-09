@@ -29,11 +29,15 @@ Step 1: Add a corresponding table to your PG database
 
 Let us create a table to match the data structure in your CSV file.
 
-On the Hasura console, on the Data tab, click on the SQL tab and add the following statement:
+Add a table as follows:
 
 .. code-block:: bash
 
-  CREATE TABLE profile (firstName text, lastName text, email varchar);
+  profile (
+    firstName TEXT, 
+    lastName TEXT, 
+    email VARCHAR
+  )
 
 Step 2: Connect to your Postgres database
 ------------------------------------------
