@@ -41,3 +41,4 @@ Hasura's remote joins architecture provides the following benefits.
 
   remote-schema-relationships
   action-relationships
+  remote-schema-relationship-permissions
