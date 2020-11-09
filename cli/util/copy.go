@@ -2,11 +2,12 @@ package util
 
 import (
 	"fmt"
-	"github.com/spf13/afero"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/spf13/afero"
 )
 
 // from https://gist.github.com/r0l1/92462b38df26839a3ca324697c8cba04
@@ -113,7 +114,6 @@ func CopyDir(src string, dst string) (err error) {
 	return
 }
 
-
 // CopyFile but with Afero
 func CopyFileAfero(fs afero.Fs, src, dst string) (err error) {
 	in, err := fs.Open(src)
@@ -180,7 +180,7 @@ func CopyDirAfero(fs afero.Fs, src string, dst string) (err error) {
 		return
 	}
 
-	entries, err := ioutil.ReadDir(src)
+	entries, err := afero.ReadDir(fs, src)
 	if err != nil {
 		return
 	}
