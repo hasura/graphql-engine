@@ -667,8 +667,7 @@ export const getSetCommentSql = (
   tableName: string,
   schemaName: string,
   comment: string | null,
-  columnName?: string,
-  columnType?: string
+  columnName?: string
 ) => {
   if (columnName) {
     return `
@@ -676,10 +675,6 @@ export const getSetCommentSql = (
       comment ? sqlEscapeText(comment) : 'NULL'
     }
 `;
-  }
-
-  if (columnType) {
-    // FIXME: do something, not sure what.
   }
 
   return `

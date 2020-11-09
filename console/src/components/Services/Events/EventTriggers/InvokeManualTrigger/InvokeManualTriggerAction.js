@@ -18,7 +18,10 @@ const invokeManualTrigger = (name, args, source) => (dispatch, getState) => {
   dispatch({ type: INVOKING_EVENT_TRIGGER });
 
   const url = Endpoints.metadata;
-  const query = invokeManualTriggerQuery({ name, source, { row: args }}, source);
+  const query = invokeManualTriggerQuery(
+    { name, source, payload: { row: args } },
+    source
+  );
   const options = {
     method: 'POST',
     headers: dataHeaders(getState),

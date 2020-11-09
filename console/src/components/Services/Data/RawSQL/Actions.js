@@ -38,7 +38,7 @@ const modalClose = () => ({ type: MODAL_CLOSE });
 
 const executeSQLCallback = sql => dispatch => {
   const objects = parseCreateSQL(sql);
-  const upChanges = [];
+  const requests = [];
 
   objects.forEach(object => {
     let req = {};
@@ -47,10 +47,10 @@ const executeSQLCallback = sql => dispatch => {
     } else {
       req = addExistingTableSql(object.name, object.schema, true);
     }
-    upChanges.push(req);
+    requests.push(req);
   });
 
-  upChanges.forEach(change => dispatch(change));
+  requests.forEach(dispatch);
 };
 
 const executeSQL = (isMigration, migrationName, statementTimeout) => (
