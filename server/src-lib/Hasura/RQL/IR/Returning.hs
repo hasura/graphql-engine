@@ -13,7 +13,7 @@ import           Hasura.SQL.Backend
 import qualified Hasura.Backends.Postgres.SQL.DML as S
 
 
-data MutFldG (b :: Backend) v
+data MutFldG (b :: BackendType) v
   = MCount
   | MExp !Text
   | MRet !(AnnFieldsG b v)
@@ -22,7 +22,7 @@ type MutFld b = MutFldG b (SQLExp b)
 
 type MutFldsG b v = Fields (MutFldG b v)
 
-data MutationOutputG (b :: Backend) v
+data MutationOutputG (b :: BackendType) v
   = MOutMultirowFields !(MutFldsG b v)
   | MOutSinglerowObject !(AnnFieldsG b v)
 

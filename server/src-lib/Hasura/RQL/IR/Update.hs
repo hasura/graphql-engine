@@ -10,7 +10,7 @@ import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend
 
 
-data AnnUpdG (b :: Backend) v
+data AnnUpdG (b :: BackendType) v
   = AnnUpd
   { uqp1Table   :: !(TableName b)
   , uqp1OpExps  :: ![(Column b, UpdOpExpG v)]

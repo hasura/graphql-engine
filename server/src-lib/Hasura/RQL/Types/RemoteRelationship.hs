@@ -52,7 +52,7 @@ fromRemoteRelationship :: RemoteRelationshipName -> FieldName
 fromRemoteRelationship = FieldName . remoteRelationshipNameToText
 
 -- | Resolved remote relationship
-data RemoteFieldInfo (b :: Backend)
+data RemoteFieldInfo (b :: BackendType)
   = RemoteFieldInfo
   { _rfiName             :: !RemoteRelationshipName
     -- ^ Field name to which we'll map the remote in hasura; this becomes part

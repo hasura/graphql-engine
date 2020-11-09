@@ -9,7 +9,7 @@ module Hasura.RQL.Types.Common
        , ScalarType
        , Column
        , SQLExp
-       , BackendImplementation (..)
+       , Backend (..)
 
        , FieldName(..)
        , fromPGCol
@@ -91,16 +91,16 @@ import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
 
 
-type family ScalarType (b :: Backend) where
+type family ScalarType (b :: BackendType) where
   ScalarType 'Postgres = PG.PGScalarType
 
-type family ColumnType (b :: Backend) where
+type family ColumnType (b :: BackendType) where
   ColumnType 'Postgres = PG.PGType
 
-type family Column (b :: Backend) where
+type family Column (b :: BackendType) where
   Column 'Postgres = PG.PGCol
 
-type family SQLExp (b :: Backend) where
+type family SQLExp (b :: BackendType) where
   SQLExp 'Postgres = PG.SQLExp
 
 
@@ -123,10 +123,10 @@ class
   , Hashable (TableName b)
   , Data (TableName b)
   , Typeable b
-  ) => BackendImplementation (b :: Backend) where
+  ) => Backend (b :: BackendType) where
   type TableName b :: Type
 
-instance BackendImplementation 'Postgres where
+instance Backend 'Postgres where
   type TableName 'Postgres = PG.QualifiedTable
 
 

@@ -82,7 +82,7 @@ data ComputedFieldDiff
   , _cfdOverloaded :: [(ComputedFieldName, QualifiedFunction)]
   } deriving (Show, Eq)
 
-data TableDiff (b :: Backend)
+data TableDiff (b :: BackendType)
   = TableDiff
   { _tdNewName         :: !(Maybe QualifiedTable)
   , _tdDroppedCols     :: ![Column b]
@@ -166,7 +166,7 @@ getTableChangeDeps tn tableDiff = do
     TableDiff _ droppedCols _ _ droppedFKeyConstraints computedFieldDiff _ _ = tableDiff
     droppedComputedFieldDeps = map (SOTableObj tn . TOComputedField) $ _cfdDropped computedFieldDiff
 
-data SchemaDiff (b :: Backend)
+data SchemaDiff (b :: BackendType)
   = SchemaDiff
   { _sdDroppedTables :: ![QualifiedTable]
   , _sdAlteredTables :: ![(QualifiedTable, TableDiff b)]

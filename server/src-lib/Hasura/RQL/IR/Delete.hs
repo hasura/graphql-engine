@@ -9,7 +9,7 @@ import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend
 
 
-data AnnDelG (b :: Backend) v
+data AnnDelG (b :: BackendType) v
   = AnnDel
   { dqp1Table   :: !(TableName b)
   , dqp1Where   :: !(AnnBoolExp b v, AnnBoolExp b v)

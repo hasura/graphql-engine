@@ -17,14 +17,14 @@ data ConflictTarget
   | CTConstraint !PG.ConstraintName
   deriving (Show, Eq)
 
-data ConflictClauseP1 (b :: Backend) v
+data ConflictClauseP1 (b :: BackendType) v
   = CP1DoNothing !(Maybe ConflictTarget)
   | CP1Update !ConflictTarget ![Column b] !(PreSetColsG b v) (AnnBoolExp b v)
   deriving (Functor, Foldable, Traversable)
 
 
 
-data InsertQueryP1 (b :: Backend)
+data InsertQueryP1 (b :: BackendType)
   = InsertQueryP1
   { iqp1Table     :: !(TableName b)
   , iqp1Cols      :: ![Column b]
