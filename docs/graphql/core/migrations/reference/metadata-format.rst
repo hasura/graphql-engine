@@ -30,7 +30,7 @@ The following files will be generated in the ``metadata/`` directory of your pro
 actions.graphql
 ^^^^^^^^^^^^^^^
 
-The ``actions.graphql`` file contains all the action definitions and custom type definitions.
+The ``actions.graphql`` file contains all the :ref:`action<actions>` definitions and :ref:`custom type<custom_types>` definitions.
 
 **Example**: A query action called ``greet`` and two custom types called ``SampleInput`` and ``SampleOutput``.
 
@@ -53,7 +53,7 @@ actions.yaml
 
 The ``actions.yaml`` file contains metadata related to :ref:`actions<actions>`.
 
-**Example**: An action called ``greet`` with the ``handler:`` set to ``<base_url>/greet`` and two custom types called ``SampleInput`` and ``SampleOutput``.
+**Example**: An action called ``greet`` with the ``handler`` set to ``<base_url>/greet`` and two custom types called ``SampleInput`` and ``SampleOutput``.
 
 .. code-block::  yaml
 
@@ -74,7 +74,7 @@ The ``actions.yaml`` file contains metadata related to :ref:`actions<actions>`.
     - name: SampleOutput
     scalars: []
 
-**Example**: Same example as above but with the base URL of the ``handler:`` passed as an environment variable.
+**Example**: Same example as above but with the base URL of the ``handler`` passed as an environment variable.
 
 .. code-block::  yaml
 
@@ -110,7 +110,7 @@ cron_triggers.yaml
 ^^^^^^^^^^^^^^^^^^
 
 The ``cron_triggers.yaml`` file contains metadata related to :ref:`cron triggers<creating_cron_trigger>`.
-The ``webhook:`` can be an HTTP endpoint or an environment variable containing the HTTP endpoint.
+The ``webhook`` can be an HTTP endpoint or an environment variable containing the HTTP endpoint.
 
 **Example**: A cron trigger called ``test-trigger``. 
 
@@ -149,11 +149,11 @@ query_collections.yaml
 
 The ``query_collections.yaml`` file conatins metadata information about :ref:`query collections<api_query_collections>`.
 
-**Example**: A query collection called ``allowed-queries`` which contains two queries ``test`` and ``test2``.
+**Example**: A query collection called ``sample-collection`` which contains two queries ``test`` and ``test2``.
 
 .. code-block::  yaml
 
-  - name: allowed-queries
+  - name: sample-collection
     definition:
       queries:
       - name: test
