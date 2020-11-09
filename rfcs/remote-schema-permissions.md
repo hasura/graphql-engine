@@ -105,7 +105,7 @@ Again, we will need to type check the preset values here. One problem to tackle 
 
 1. This will be a breaking change as we want to give default "deny" all fields for remote schemas. We need to introduce a flag (as was done in #2690) to enable remote schema permissions explicitly.
 2. The first version can skip allowing new types in the role-based schema (e.g. second example in Argument Presets section).
-3. For remote schema relationships, the relationship field should be available inside the table selection set only if the corresponding remote schema field is available in the role-based schema. All preset arguments are ignored for the remote schema field as the argument values will be assumed to be completely specified by the relationship definition.
+3. For remote schema relationships, the relationship field should be available inside the table selection set only if the corresponding remote schema field is available in the role-based schema. All preset arguments that are part of the join condition are ignored for the remote schema field as the argument values will be coming from the relationship definition. In other words, join condition takes precedence over argument presets.
 
 ## Future work
 
