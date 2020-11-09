@@ -1,6 +1,8 @@
 {-# LANGUAGE UndecidableInstances #-}
 module Hasura.RQL.IR.BoolExp
-       ( GBoolExp(..)
+       ( BoolExp(..)
+       , ColExp(..)
+       , GBoolExp(..)
        , gBoolExpTrue
        , gBoolExpToJSON
        , parseGBoolExp
@@ -61,6 +63,15 @@ import           Hasura.SQL.Types
 import           Hasura.Session
 
 
+data ColExp
+  = ColExp
+  { ceCol :: !FieldName
+  , ceVal :: !Value
+  } deriving (Show, Eq, Lift, Data, Generic)
+instance NFData ColExp
+instance Cacheable ColExp
+
+
 data GExists (b :: Backend) a
   = GExists
   { _geTable :: !QualifiedTable
@@ -85,6 +96,7 @@ parseGExists f = \case
     wh <- o .: "_where"
     GExists qt <$> parseGBoolExp f wh
   _ -> fail "expecting an Object for _exists expression"
+
 
 data GBoolExp (b :: Backend) a
   = BoolAnd ![GBoolExp b a]
@@ -120,7 +132,6 @@ gBoolExpToJSON f be = case be of
       BoolExists bExists -> "_exists" .= gExistsToJSON f bExists
       BoolFld a          ->  f a
 
-
 parseGBoolExp
   :: ((Text, Value) -> J.Parser a) -> Value -> J.Parser (GBoolExp 'Postgres a)
 parseGBoolExp f = \case
@@ -140,6 +151,27 @@ parseGBoolExp f = \case
   where
     parseGBoolExpL v =
       parseJSON v >>= mapM (parseGBoolExp f)
+
+
+newtype BoolExp (b :: Backend)
+  = BoolExp { unBoolExp :: GBoolExp b ColExp }
+  deriving (Show, Eq, Lift, Generic, NFData, Cacheable)
+
+$(makeWrapped ''BoolExp)
+
+instance ToJSON (BoolExp 'Postgres) where
+  toJSON (BoolExp gBoolExp) =
+    gBoolExpToJSON f gBoolExp
+    where
+      f (ColExp k v) =
+        (getFieldNameTxt k,  v)
+
+instance FromJSON (BoolExp 'Postgres) where
+  parseJSON =
+    fmap BoolExp . parseGBoolExp f
+    where
+      f (k, v) = ColExp (FieldName k) <$> parseJSON v
+
 
 data DWithinGeomOp a =
   DWithinGeomOp
