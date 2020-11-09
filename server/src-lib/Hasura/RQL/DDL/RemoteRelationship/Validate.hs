@@ -110,6 +110,11 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
     (buildRelationshipTypeInfo pgColumnsVariablesMap schemaDoc)
     (queryRoot,(mempty, mempty))
     (unRemoteFields $ rtrRemoteField remoteRelationship)
+  let newInputValueDefinitions =
+        -- The preset part below is set to `Nothing` because preset values
+        -- are ignored for remote relationships and instead the argument
+        -- values comes from the parent query.
+        fmap (`RemoteSchemaInputValueDefinition` Nothing) <$> HM.elems leafTypeMap
   pure $ RemoteFieldInfo
         { _rfiName = rtrName remoteRelationship
         , _rfiParamMap = leafParamMap
@@ -119,11 +124,7 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
         -- adding the new types after stripping the values to the
         -- schema document
         , _rfiSchemaIntrospect = RemoteSchemaIntrospection
-                                    $ originalDefns
-                                    -- The preset part below is set to `Nothing` because preset values
-                                    -- are ignored for remote relationships and instead the argument
-                                    -- values comes from the parent query.
-                                    <> (fmap (fmap (\inpValDef -> RemoteSchemaInputValueDefinition inpValDef Nothing)) $ HM.elems leafTypeMap)
+                                    $ originalDefns <> newInputValueDefinitions
         , _rfiRemoteSchemaName = rsName
         }
   where

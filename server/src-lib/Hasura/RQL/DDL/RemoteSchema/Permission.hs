@@ -360,17 +360,13 @@ parsePresetValue gType varName isStatic value = do
             _ -> refute $ pure $ ExpectedEnumValue typeName value
         Just (PresetInputObject inputValueDefinitions) ->
           let inpValsMap = mapFromL G._ivdName inputValueDefinitions
+              parseInputObjectField k val = do
+                inpVal <- onNothing (Map.lookup k inpValsMap) (refute $ pure $ KeyDoesNotExistInInputObject k typeName)
+                parsePresetValue (G._ivdType inpVal) k isStatic val
           in
           case value of
             G.VObject obj ->
-              G.VObject <$> flip Map.traverseWithKey obj
-                             ( \k val -> do
-                                 inpVal <-
-                                   onNothing
-                                     (Map.lookup k inpValsMap)
-                                     (refute $ pure $ KeyDoesNotExistInInputObject k typeName)
-                                 parsePresetValue (G._ivdType inpVal) k isStatic val
-                             )
+              G.VObject <$> Map.traverseWithKey parseInputObjectField obj
             _ -> refute $ pure $ ExpectedInputObject typeName value
     G.TypeList _ gType' ->
       case value of

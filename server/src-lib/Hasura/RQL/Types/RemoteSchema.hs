@@ -137,7 +137,7 @@ instance J.FromJSON RemoteSchemaPermissionDefinition where
 
 instance J.ToJSON RemoteSchemaPermissionDefinition where
   toJSON (RemoteSchemaPermissionDefinition schema) =
-    J.object $ [ "schema" J..= (J.String $ TB.run . G.schemaDocument $ schema)]
+    J.object $ [ "schema" J..= J.String (TB.run . G.schemaDocument $ schema)]
 
 data AddRemoteSchemaPermissions
   = AddRemoteSchemaPermissions
