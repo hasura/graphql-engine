@@ -491,7 +491,6 @@ library
                      , Hasura.SQL.Types
                      , Hasura.SQL.BigQuery.Plan
                      , Hasura.SQL.BigQuery.ToQuery
-                     , Hasura.SQL.BigQuery.PlanRoots
                      , Hasura.SQL.BigQuery.Types
                      , Hasura.SQL.BigQuery.FromIr
                      , Hasura.SQL.BigQuery.Execute

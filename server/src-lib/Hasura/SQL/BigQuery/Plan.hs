@@ -338,13 +338,15 @@ prettyProjection :: BigQuery.Projection -> LT.Builder
 prettyProjection =
   \case
     BigQuery.ExpressionProjection aliased ->
-      prettyAliased (fmap (\_e-> "<Expression" {- <> LT.fromText (T.pack (show e))-} <> ">") aliased)
+      prettyAliased (fmap (\_e -> "<Expression" <> ">") aliased)
     BigQuery.FieldNameProjection aliased ->
       prettyAliased (fmap prettyFieldName' aliased)
     BigQuery.AggregateProjection aliased ->
       prettyAliased (fmap (const "<Aggregate>") aliased)
     BigQuery.StarProjection -> "*"
-    BigQuery.ArrayAggProjection{} -> "<ArrayAgg>"
+    BigQuery.ArrayAggProjection {} -> "<ArrayAgg>"
+    BigQuery.EntityProjection aliased ->
+      prettyAliased (fmap (LT.fromText . joinAliasName) aliased)
 
 prettyAliased :: BigQuery.Aliased LT.Builder -> LT.Builder
 prettyAliased BigQuery.Aliased {aliasedThing, aliasedAlias} =

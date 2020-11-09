@@ -317,8 +317,7 @@ fromFrom =
 
 fromTableName :: TableName -> Printer
 fromTableName TableName {tableName, tableNameSchema} =
-  -- TODO: Put back after finished testing.
-  "chinook"{-fromNameText tableNameSchema-} <+> "." <+> fromNameText tableName
+  fromNameText tableNameSchema <+> "." <+> fromNameText tableName
 
 fromAliased :: Aliased Printer -> Printer
 fromAliased Aliased {..} =
