@@ -261,6 +261,8 @@ library
 
                      -- scheduled triggers
                      , cron >= 0.6.2
+                     -- needed for deriving via
+                     , semigroups >= 0.19
 
                      , random
                      , mmorph
@@ -304,6 +306,7 @@ library
                      , Hasura.Backends.Postgres.Connection
                      , Hasura.Backends.Postgres.Execute.Mutation
                      , Hasura.Backends.Postgres.Execute.RemoteJoin
+                     , Hasura.Backends.Postgres.Translate.BoolExp
                      , Hasura.Backends.Postgres.Translate.Delete
                      , Hasura.Backends.Postgres.Translate.Insert
                      , Hasura.Backends.Postgres.Translate.Mutation
@@ -373,7 +376,6 @@ library
                      , Hasura.RQL.Types.Table
                      , Hasura.RQL.Types.SchemaCache.Build
                      , Hasura.RQL.Types.SchemaCacheTypes
-                     , Hasura.RQL.Types.BoolExp
                      , Hasura.RQL.Types.Function
                      , Hasura.RQL.Types.Catalog
                      , Hasura.RQL.Types.Column
@@ -386,6 +388,7 @@ library
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.QueryCollection
                      , Hasura.RQL.Types.Action
+                     , Hasura.RQL.Types.Relationship
                      , Hasura.RQL.Types.RemoteSchema
                      , Hasura.RQL.Types.RemoteRelationship
                      , Hasura.RQL.Types.ScheduledTrigger
@@ -403,7 +406,6 @@ library
                      , Hasura.RQL.DDL.QueryCollection
                      , Hasura.RQL.DDL.Relationship
                      , Hasura.RQL.DDL.Relationship.Rename
-                     , Hasura.RQL.DDL.Relationship.Types
                      , Hasura.RQL.DDL.RemoteRelationship
                      , Hasura.RQL.DDL.RemoteRelationship.Validate
                      , Hasura.RQL.DDL.RemoteSchema
@@ -419,7 +421,6 @@ library
                      , Hasura.RQL.DDL.Schema.Function
                      , Hasura.RQL.DDL.Schema.Rename
                      , Hasura.RQL.DDL.Schema.Table
-                     , Hasura.RQL.DDL.Utils
                      , Hasura.RQL.DDL.EventTrigger
                      , Hasura.RQL.DDL.ScheduledTrigger
                      , Hasura.RQL.DML.Count
@@ -427,13 +428,13 @@ library
                      , Hasura.RQL.DML.Insert
                      , Hasura.RQL.DML.Internal
                      , Hasura.RQL.DML.Update
+                     , Hasura.RQL.IR.BoolExp
                      , Hasura.RQL.IR.Delete
                      , Hasura.RQL.IR.Insert
                      , Hasura.RQL.IR.RemoteJoin
                      , Hasura.RQL.IR.Returning
                      , Hasura.RQL.IR.Select
                      , Hasura.RQL.IR.Update
-                     , Hasura.RQL.GBoolExp
                      , Hasura.GraphQL.Explain
                      , Hasura.GraphQL.Execute.Action
                      , Hasura.GraphQL.Execute.Inline
@@ -453,9 +454,11 @@ library
                      , Hasura.GraphQL.Context
                      , Hasura.GraphQL.Parser
                      , Hasura.GraphQL.Parser.Class
+                     , Hasura.GraphQL.Parser.Class.Parse
                      , Hasura.GraphQL.Parser.Collect
                      , Hasura.GraphQL.Parser.Column
                      , Hasura.GraphQL.Parser.Internal.Parser
+                     , Hasura.GraphQL.Parser.Internal.Types
                      , Hasura.GraphQL.Parser.Monad
                      , Hasura.GraphQL.Parser.Schema
                      , Hasura.GraphQL.Schema

@@ -290,7 +290,7 @@ runQueryDB
   => RequestId
   -> GQLReqUnparsed
   -> G.Name -- ^ name of the root field we're fetching
-  -> Tracing.TraceT (LazyTx QErr) EncJSON
+  -> Tracing.TraceT (LazyTxT QErr IO) EncJSON
   -> Maybe EQ.PreparedSql
   -> m (DiffTime, EncJSON)
   -- ^ Also return the time spent in the PG query; for telemetry.
@@ -311,7 +311,7 @@ runMutationDB
   => RequestId
   -> GQLReqUnparsed
   -> UserInfo
-  -> Tracing.TraceT (LazyTx QErr) EncJSON
+  -> Tracing.TraceT (LazyTxT QErr IO) EncJSON
   -> m (DiffTime, EncJSON)
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
@@ -321,4 +321,9 @@ runMutationDB reqId query userInfo tx =  do
   logQueryLog logger query Nothing reqId
   ctx <- Tracing.currentContext
   withElapsedTime $ trace "Mutation" $
-    Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx .  withUserInfo userInfo)  tx
+    Tracing.interpTraceT (
+      liftEitherM . liftIO . runExceptT
+      . runLazyTx pgExecCtx Q.ReadWrite
+      . withTraceContext ctx
+      . withUserInfo userInfo
+      )  tx

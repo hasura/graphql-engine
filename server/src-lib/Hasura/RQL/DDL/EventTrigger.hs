@@ -42,16 +42,11 @@ import           Hasura.SQL.Types
 data OpVar = OLD | NEW deriving (Show)
 
 -- pgIdenTrigger is a method used to construct the name of the pg function
--- used for event triggers which are present in the hdb_views schema.
+-- used for event triggers which are present in the hdb_catalog schema.
 pgIdenTrigger:: Ops -> TriggerName -> Text
 pgIdenTrigger op trn = pgFmtIdentifier . qualifyTriggerName op $ triggerNameToTxt trn
   where
     qualifyTriggerName op' trn' = "notify_hasura_" <> trn' <> "_" <> T.pack (show op')
-
-getDropFuncSql :: Ops -> TriggerName -> Text
-getDropFuncSql op trn = "DROP FUNCTION IF EXISTS"
-                        <> " hdb_views." <> pgIdenTrigger op trn <> "()"
-                        <> " CASCADE"
 
 mkAllTriggersQ
   :: (MonadTx m, HasSQLGenCtx m)
@@ -121,9 +116,16 @@ mkTriggerQ trn qt allCols op (SubscribeOpSpec columns payload) = do
     opToTxt = T.pack . show
 
 delTriggerQ :: TriggerName -> Q.TxE QErr ()
-delTriggerQ trn = mapM_ (\op -> Q.unitQE
-                          defaultTxErrorHandler
-                          (Q.fromText $ getDropFuncSql op trn) () False) [INSERT, UPDATE, DELETE]
+delTriggerQ trn =
+  mapM_ (\op -> Q.unitQE
+                defaultTxErrorHandler
+          (Q.fromText $ getDropFuncSql op) () False) [INSERT, UPDATE, DELETE]
+  where
+    getDropFuncSql :: Ops -> T.Text
+    getDropFuncSql op =
+      "DROP FUNCTION IF EXISTS"
+      <> " hdb_catalog." <> pgIdenTrigger op trn <> "()"
+      <> " CASCADE"
 
 addEventTriggerToCatalog
   :: QualifiedTable
@@ -342,13 +344,6 @@ getWebhookInfoFromConf env wc = case wc of
   WCEnv we -> do
     envVal <- getEnv env we
     return $ WebhookConfInfo wc envVal
-
-getEnv :: QErrM m => Env.Environment -> Text -> m Text
-getEnv env k = do
-  let mEnv = Env.lookupEnv env (T.unpack k)
-  case mEnv of
-    Nothing     -> throw400 NotFound $ "environment variable '" <> k <> "' not set"
-    Just envVal -> return (T.pack envVal)
 
 getEventTriggerDef
   :: TriggerName
