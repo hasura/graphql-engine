@@ -77,14 +77,14 @@ data GExists (b :: Backend) a
   { _geTable :: !(TableName b)
   , _geWhere :: !(GBoolExp b a)
   } deriving (Functor, Foldable, Traversable, Generic)
-deriving instance (Representation b, Show a) => Show (GExists b a)
-deriving instance (Representation b, Eq a) => Eq (GExists b a)
-deriving instance (Representation b, Lift a) => Lift (GExists b a)
-deriving instance (Representation b, Typeable a, Data a) => Data (GExists b a)
-instance (Representation b, NFData a) => NFData (GExists b a)
-instance (Representation b, Data a) => Plated (GExists b a)
-instance (Representation b, Cacheable a) => Cacheable (GExists b a)
-instance (Representation b, Hashable a) => Hashable (GExists b a)
+deriving instance (BackendImplementation b, Show a) => Show (GExists b a)
+deriving instance (BackendImplementation b, Eq a) => Eq (GExists b a)
+deriving instance (BackendImplementation b, Lift a) => Lift (GExists b a)
+deriving instance (BackendImplementation b, Typeable a, Data a) => Data (GExists b a)
+instance (BackendImplementation b, NFData a) => NFData (GExists b a)
+instance (BackendImplementation b, Data a) => Plated (GExists b a)
+instance (BackendImplementation b, Cacheable a) => Cacheable (GExists b a)
+instance (BackendImplementation b, Hashable a) => Hashable (GExists b a)
 
 gExistsToJSON :: (a -> (Text, Value)) -> GExists 'Postgres a -> Value
 gExistsToJSON f (GExists qt wh) =
@@ -109,10 +109,10 @@ data GBoolExp (b :: Backend) a
   | BoolExists !(GExists b a)
   | BoolFld !a
   deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Data, Generic)
-instance (Representation b, NFData a) => NFData (GBoolExp b a)
-instance (Representation b, Data a) => Plated (GBoolExp b a)
-instance (Representation b, Cacheable a) => Cacheable (GBoolExp b a)
-instance (Representation b, Hashable a) => Hashable (GBoolExp b a)
+instance (BackendImplementation b, NFData a) => NFData (GBoolExp b a)
+instance (BackendImplementation b, Data a) => Plated (GBoolExp b a)
+instance (BackendImplementation b, Cacheable a) => Cacheable (GBoolExp b a)
+instance (BackendImplementation b, Hashable a) => Hashable (GBoolExp b a)
 
 gBoolExpTrue :: GBoolExp b a
 gBoolExpTrue = BoolAnd []

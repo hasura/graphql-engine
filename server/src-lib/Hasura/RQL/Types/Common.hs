@@ -9,7 +9,7 @@ module Hasura.RQL.Types.Common
        , ScalarType
        , Column
        , SQLExp
-       , Representation (..)
+       , BackendImplementation (..)
 
        , FieldName(..)
        , fromPGCol
@@ -103,6 +103,17 @@ type family Column (b :: Backend) where
 type family SQLExp (b :: Backend) where
   SQLExp 'Postgres = PG.SQLExp
 
+
+-- | Mapping from abstract types to concrete backend representation
+--
+-- The RQL IR, used as the output of GraphQL parsers and of the RQL parsers, is
+-- backend-agnostic: it uses an abstract representation of the structure of a
+-- query, and delegates to the backends the task of choosing an appropriate
+-- concrete representation.
+--
+-- Additionally, grouping all those types under one typeclass rather than having
+-- dedicated type families allows to explicitly list all typeclass requirements,
+-- which simplifies the instance declarations of all IR types.
 class
   ( Show (TableName b)
   , Eq (TableName b)
@@ -112,10 +123,10 @@ class
   , Hashable (TableName b)
   , Data (TableName b)
   , Typeable b
-  ) => Representation (b :: Backend) where
+  ) => BackendImplementation (b :: Backend) where
   type TableName b :: Type
 
-instance Representation 'Postgres where
+instance BackendImplementation 'Postgres where
   type TableName 'Postgres = PG.QualifiedTable
 
 
