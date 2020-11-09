@@ -337,10 +337,10 @@ export const deleteAction = currentAction => (dispatch, getState) => {
   const migration = new Migration();
 
   migration.add(
-    generateDropActionQuery(currentAction.action_name),
+    generateDropActionQuery(currentAction.name),
     generateCreateActionQuery(
-      currentAction.action_name,
-      currentAction.action_defn,
+      currentAction.name,
+      currentAction.definition,
       currentAction.comment
     )
   );
