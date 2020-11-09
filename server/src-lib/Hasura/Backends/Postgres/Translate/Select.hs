@@ -25,12 +25,13 @@ import qualified Hasura.Backends.Postgres.SQL.DML           as S
 import           Hasura.Backends.Postgres.SQL.Rewrite
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.BoolExp
+import           Hasura.Backends.Postgres.Translate.Types
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.IR.OrderBy
 import           Hasura.RQL.IR.Select
-import           Hasura.RQL.Types
+import           Hasura.RQL.Types                           hiding (Identifier)
 import           Hasura.SQL.Types
 
 
@@ -229,7 +230,7 @@ mkArrayRelationAlias parentFieldName similarFieldsMap fieldName =
   HM.lookupDefault [fieldName] fieldName similarFieldsMap
 
 fromTableRowArgs
-  :: Identifier -> FunctionArgsExpTableRow S.SQLExp -> S.FunctionArgs
+  :: Identifier -> FunctionArgsExpTableRow 'Postgres S.SQLExp -> S.FunctionArgs
 fromTableRowArgs pfx = toFunctionArgs . fmap toSQLExp
   where
     toFunctionArgs (FunctionArgsExp positional named) =

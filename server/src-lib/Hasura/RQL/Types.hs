@@ -51,7 +51,7 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.IR.BoolExp               as R
 import           Hasura.RQL.Types.Action             as R
 import           Hasura.RQL.Types.Column             as R
-import           Hasura.RQL.Types.Common             as R
+import           Hasura.RQL.Types.Common             as R hiding (FunctionName)
 import           Hasura.RQL.Types.ComputedField      as R
 import           Hasura.RQL.Types.CustomTypes        as R
 import           Hasura.RQL.Types.Error              as R
@@ -67,8 +67,8 @@ import           Hasura.RQL.Types.ScheduledTrigger   as R
 import           Hasura.RQL.Types.SchemaCache        as R
 import           Hasura.RQL.Types.SchemaCache.Build  as R
 import           Hasura.RQL.Types.Table              as R
-import           Hasura.Session
 import           Hasura.SQL.Backend                  as R
+import           Hasura.Session
 import           Hasura.Tracing                      (TraceT)
 
 data QCtx

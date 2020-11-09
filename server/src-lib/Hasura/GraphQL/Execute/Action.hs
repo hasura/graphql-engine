@@ -519,12 +519,12 @@ mkJsonAggSelect =
   bool RS.JASSingleObject RS.JASMultipleRows . isListType
 
 processOutputSelectionSet
-  :: RS.ArgumentExp v
+  :: RS.ArgumentExp 'Postgres v
   -> GraphQLType
-  -> [(Column backend, ScalarType backend)]
-  -> RS.AnnFieldsG backend v
+  -> [(Column 'Postgres, ScalarType 'Postgres)]
+  -> RS.AnnFieldsG 'Postgres v
   -> Bool
-  -> RS.AnnSimpleSelG backend v
+  -> RS.AnnSimpleSelG 'Postgres v
 processOutputSelectionSet tableRowInput actionOutputType definitionList annotatedFields =
   RS.AnnSelectG annotatedFields selectFrom RS.noTablePermissions RS.noSelectArgs
   where

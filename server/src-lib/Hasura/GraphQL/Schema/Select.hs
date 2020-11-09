@@ -1002,7 +1002,7 @@ computedField ComputedFieldInfo{..} selectPermissions = runMaybeT do
       in mkDescriptionWith (_cffDescription _cfiFunction) defaultDescription
 
     computedFieldFunctionArgs
-      :: ComputedFieldFunction -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow UnpreparedValue))
+      :: ComputedFieldFunction -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow 'Postgres UnpreparedValue))
     computedFieldFunctionArgs ComputedFieldFunction{..} =
       functionArgs _cffName (IAUserProvided <$> _cffInputArgs) <&> fmap addTableAndSessionArgument
       where
@@ -1069,7 +1069,7 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
 customSQLFunctionArgs
   :: (MonadSchema n m, MonadTableInfo r m)
   => FunctionInfo
-  -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow UnpreparedValue))
+  -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow 'Postgres UnpreparedValue))
 customSQLFunctionArgs FunctionInfo{..} = functionArgs fiName fiInputArgs
 
 -- | Parses the arguments to the underlying sql function of a computed field or
@@ -1087,7 +1087,7 @@ functionArgs
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   => QualifiedFunction
   -> Seq.Seq FunctionInputArgument
-  -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow UnpreparedValue))
+  -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow 'Postgres UnpreparedValue))
 functionArgs functionName (toList -> inputArgs) = do
   -- First, we iterate through the original sql arguments in order, to find the
   -- corresponding graphql names. At the same time, we create the input field
@@ -1137,16 +1137,16 @@ functionArgs functionName (toList -> inputArgs) = do
          pure $ P.field fieldName (Just fieldDesc) objectParser
 
   where
-    sessionPlaceholder :: IR.ArgumentExp UnpreparedValue
+    sessionPlaceholder :: IR.ArgumentExp 'Postgres UnpreparedValue
     sessionPlaceholder = IR.AEInput P.UVSession
 
     splitArguments
       :: Int
       -> FunctionInputArgument
       -> (Int, ( [Text] -- graphql names, in order
-               , [(Text, IR.ArgumentExp UnpreparedValue)] -- session argument
-               , [m (InputFieldsParser n (Maybe (Text, IR.ArgumentExp UnpreparedValue)))] -- optional argument
-               , [m (InputFieldsParser n (Maybe (Text, IR.ArgumentExp UnpreparedValue)))] -- mandatory argument
+               , [(Text, IR.ArgumentExp 'Postgres UnpreparedValue)] -- session argument
+               , [m (InputFieldsParser n (Maybe (Text, IR.ArgumentExp 'Postgres UnpreparedValue)))] -- optional argument
+               , [m (InputFieldsParser n (Maybe (Text, IR.ArgumentExp 'Postgres UnpreparedValue)))] -- mandatory argument
                )
          )
     splitArguments positionalIndex (IASessionVariables name) =
@@ -1160,7 +1160,7 @@ functionArgs functionName (toList -> inputArgs) = do
          then (newIndex, ([argName], [], [parseArgument arg argName], []))
          else (newIndex, ([argName], [], [], [parseArgument arg argName]))
 
-    parseArgument :: FunctionArg -> Text -> m (InputFieldsParser n (Maybe (Text, IR.ArgumentExp UnpreparedValue)))
+    parseArgument :: FunctionArg -> Text -> m (InputFieldsParser n (Maybe (Text, IR.ArgumentExp 'Postgres UnpreparedValue)))
     parseArgument arg name = do
       columnParser <- P.column (PGColumnScalar $ _qptName $ faType arg) (G.Nullability True)
       fieldName    <- textToName name
@@ -1179,9 +1179,9 @@ functionArgs functionName (toList -> inputArgs) = do
       pure $ argParser `mapField` ((name,) . IR.AEInput . mkParameter)
 
     namedArgument
-      :: HashMap Text (IR.ArgumentExp UnpreparedValue)
+      :: HashMap Text (IR.ArgumentExp 'Postgres UnpreparedValue)
       -> (Text, InputArgument FunctionArg)
-      -> n (Maybe (Text, IR.ArgumentExp UnpreparedValue))
+      -> n (Maybe (Text, IR.ArgumentExp 'Postgres UnpreparedValue))
     namedArgument dictionary (name, inputArgument) = case inputArgument of
       IASessionVariables _ -> pure $ Just (name, sessionPlaceholder)
       IAUserProvided arg   -> case Map.lookup name dictionary of
