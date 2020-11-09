@@ -79,6 +79,8 @@ const (
 	V1 ConfigVersion = iota + 1
 	// V2 represents config version 2
 	V2
+	//V3
+	//needed to
 )
 
 // ServerAPIPaths has the custom paths defined for server api

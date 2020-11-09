@@ -59,7 +59,7 @@ func suint64(n int64) uint64 {
 	return uint64(n)
 }
 
-/* 
+/*
 // newSlowReader turns an io.ReadCloser into a slow io.ReadCloser.
 // Use this to simulate a slow internet connection.
 func newSlowReader(r io.ReadCloser) io.ReadCloser {
@@ -173,6 +173,16 @@ func SetMetadataPluginsWithDir(ec *cli.ExecutionContext, drv *Migrate, dir ...st
 		plugins = append(plugins, remoteschemas.New(ec, metadataDir))
 		plugins = append(plugins, actions.New(ec, metadataDir))
 		plugins = append(plugins, crontriggers.New(ec, metadataDir))
+		//} else if ec.Config.Version == cli.V3 {
+		// 	plugins = append(plugins, version.New(ec, metadataDir))
+		// 	plugins = append(plugins, sources.New(ec, metadataDir))
+		// 	plugins = append(plugins, querycollections.New(ec, metadataDir))
+		// 	plugins = append(plugins, allowlist.New(ec, metadataDir))
+		// 	plugins = append(plugins, remoteschemas.New(ec, metadataDir))
+		// 	plugins = append(plugins, actions.New(ec, metadataDir))
+		// 	plugins = append(plugins, crontriggers.New(ec, metadataDir))
+		// }
+		// needed to change
 	} else {
 		plugins = append(plugins, metadata.New(ec, ec.MigrationDir))
 	}

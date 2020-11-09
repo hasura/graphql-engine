@@ -260,7 +260,31 @@ func (o *InitOptions) createFiles() error {
 				return errors.Wrap(err, "cannot create metadata files")
 			}
 		}
-	}
+	} // else if config.Version == cli.V3 // version 3 with multiple datasources
+	// 	// create metadata directory
+	// 	o.EC.MetadataDir = filepath.Join(o.EC.ExecutionDirectory, cli.DefaultMetadataDirectory)
+	// 	err = os.MkdirAll(o.EC.MetadataDir, os.ModePerm)
+	// 	if err != nil {
+	// 		return errors.Wrap(err, "cannot write migration directory")
+	// 	}
+
+	// 	// create metadata files
+	// 	plugins := make(metadataTypes.MetadataPlugins, 0)
+	// 	plugins = append(plugins, metadataVersion.New(o.EC, o.EC.MetadataDir))
+	// 	plugins = append(plugins, sources.New(o.EC, o.EC.MetadataDir))
+	// 	plugins = append(plugins, querycollections.New(o.EC, o.EC.MetadataDir))
+	// 	plugins = append(plugins, allowlist.New(o.EC, o.EC.MetadataDir))
+	// 	plugins = append(plugins, remoteschemas.New(o.EC, o.EC.MetadataDir))
+	// 	plugins = append(plugins, actions.New(o.EC, o.EC.MetadataDir))
+	// 	plugins = append(plugins, crontriggers.New(o.EC, o.EC.MetadataDir))
+	// 	for _, plg := range plugins {
+	// 		err := plg.CreateFiles()
+	// 		if err != nil {
+	// 			return errors.Wrap(err, "cannot create metadata files")
+	// 		}
+	// 	}
+	// }
+	// needed to change
 
 	// create seeds directory
 	o.EC.SeedsDirectory = filepath.Join(o.EC.ExecutionDirectory, cli.DefaultSeedsDirectory)
