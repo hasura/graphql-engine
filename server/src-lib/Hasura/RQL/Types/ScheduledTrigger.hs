@@ -326,7 +326,6 @@ instance FromJSON ScheduledEventStatus where
   parseJSON = withText "String" $ \s -> onNothing (textToScheduledEventStatus s) $
     fail $ T.unpack $ "unexpected status: " <> s
 
-
 data OneOffScheduledEvent
   = OneOffScheduledEvent
   { _ooseId            :: !OneOffScheduledEventId
