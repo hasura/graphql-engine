@@ -766,7 +766,7 @@ tableConnectionArgs pkeyColumns table selectPermissions = do
           IR.AOCObjectRelation _ _ obCol -> getOrderByColumnType obCol
           IR.AOCArrayAggregation _ _ aggOb ->
             case aggOb of
-              IR.AAOCount        -> PGColumnScalar PGInteger
+              IR.AAOCount        -> ColumnScalar PGInteger
               IR.AAOOp _ colInfo -> pgiType colInfo
 
 -- | Aggregation fields
@@ -973,14 +973,14 @@ computedField ComputedFieldInfo{..} selectPermissions = runMaybeT do
       guard $ _cfiName `Set.member` spiScalarComputedFields selectPermissions
       let fieldArgsParser = do
             args  <- functionArgsParser
-            colOp <- jsonPathArg $ PGColumnScalar scalarReturnType
+            colOp <- jsonPathArg $ ColumnScalar scalarReturnType
             pure $ IR.AFComputedField $ IR.CFSScalar $ IR.ComputedFieldScalarSelect
               { IR._cfssFunction  = _cffName _cfiFunction
               , IR._cfssType      = scalarReturnType
               , IR._cfssColumnOp  = colOp
               , IR._cfssArguments = args
               }
-      dummyParser <- lift $ P.column (PGColumnScalar scalarReturnType) (G.Nullability True)
+      dummyParser <- lift $ P.column (ColumnScalar scalarReturnType) (G.Nullability True)
       pure $ P.selection fieldName (Just fieldDescription) fieldArgsParser dummyParser
     CFRSetofTable tableName -> do
       remotePerms        <- MaybeT $ tableSelectPermissions tableName
@@ -1158,7 +1158,7 @@ functionArgs functionName (toList -> inputArgs) = do
 
     parseArgument :: FunctionArg -> Text -> m (InputFieldsParser n (Maybe (Text, IR.ArgumentExp 'Postgres UnpreparedValue)))
     parseArgument arg name = do
-      columnParser <- P.column (PGColumnScalar $ _qptName $ faType arg) (G.Nullability True)
+      columnParser <- P.column (ColumnScalar $ _qptName $ faType arg) (G.Nullability True)
       fieldName    <- textToName name
 
       -- While some arguments are "mandatory" (i.e. they don't have a default
@@ -1189,7 +1189,7 @@ functionArgs functionName (toList -> inputArgs) = do
 
 
 -- | The "path" argument for json column fields
-jsonPathArg :: MonadParse n => PGColumnType -> InputFieldsParser n (Maybe (IR.ColumnOp 'Postgres))
+jsonPathArg :: MonadParse n => ColumnType 'Postgres -> InputFieldsParser n (Maybe (IR.ColumnOp 'Postgres))
 jsonPathArg columnType
   | isScalarColumnWhere isJSONType columnType =
       P.fieldOptional fieldName description P.string `P.bindFields` fmap join . traverse toColExp
