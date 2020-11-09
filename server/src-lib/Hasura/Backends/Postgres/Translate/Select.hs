@@ -827,7 +827,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
     fromScalarComputedField :: ComputedFieldScalarSelect 'Postgres S.SQLExp -> m S.SQLExp
     fromScalarComputedField computedFieldScalar = do
       strfyNum <- ask
-      pure $ toJSONableExp strfyNum (PGColumnScalar ty) False $ withColumnOp colOpM $
+      pure $ toJSONableExp strfyNum (ColumnScalar ty) False $ withColumnOp colOpM $
              S.SEFunction $ S.FunctionExp fn (fromTableRowArgs sourcePrefix args) Nothing
       where
         ComputedFieldScalarSelect fn args ty colOpM = computedFieldScalar

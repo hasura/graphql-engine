@@ -216,7 +216,7 @@ askPGType
   => FieldInfoMap (FieldInfo 'Postgres)
   -> PGCol
   -> Text
-  -> m PGColumnType
+  -> m (ColumnType 'Postgres)
 askPGType m c msg =
   pgiType <$> askPGColInfo m c msg
 

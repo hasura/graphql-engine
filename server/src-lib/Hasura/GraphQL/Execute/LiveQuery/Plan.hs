@@ -28,21 +28,21 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson.Casing                           as J
 import qualified Data.Aeson.Extended                         as J
-import qualified Data.ByteString                             as B
-import qualified Data.HashSet                                as Set
 import qualified Data.Aeson.TH                               as J
+import qualified Data.ByteString                             as B
 import qualified Data.HashMap.Strict                         as Map
 import qualified Data.HashMap.Strict.InsOrd                  as OMap
+import qualified Data.HashSet                                as Set
 import qualified Data.Text                                   as T
 import qualified Data.UUID.V4                                as UUID
 import qualified Database.PG.Query                           as Q
-import qualified Language.GraphQL.Draft.Syntax               as G
 import qualified Database.PG.Query.PTI                       as PTI
+import qualified Language.GraphQL.Draft.Syntax               as G
 import qualified PostgreSQL.Binary.Encoding                  as PE
 
 import           Control.Lens
-import           Data.UUID                                   (UUID)
 import           Data.Semigroup.Generic
+import           Data.UUID                                   (UUID)
 
 import qualified Hasura.Backends.Postgres.Execute.RemoteJoin as RR
 import qualified Hasura.Backends.Postgres.SQL.DML            as S
@@ -337,7 +337,7 @@ data ReusableLiveQueryPlan
   { _rlqpParameterizedPlan        :: !ParameterizedLiveQueryPlan
   , _rlqpRequiredSessionVariables :: !(Set.HashSet SessionVariable)
   , _rlqpSyntheticVariableValues  :: !ValidatedSyntheticVariables
-  , _rlqpQueryVariableTypes       :: HashMap G.Name PGColumnType
+  , _rlqpQueryVariableTypes       :: HashMap G.Name (ColumnType 'Postgres)
   } deriving (Show)
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ReusableLiveQueryPlan)
 

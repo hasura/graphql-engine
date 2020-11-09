@@ -403,9 +403,9 @@ deriving instance Backend b => Data (PartialSQLExp b)
 instance Backend b => NFData (PartialSQLExp b)
 instance Backend b => Cacheable (PartialSQLExp b)
 
-mkTypedSessionVar :: PG.PGType PGColumnType -> SessionVariable -> PartialSQLExp 'Postgres
+mkTypedSessionVar :: PG.PGType (ColumnType 'Postgres) -> SessionVariable -> PartialSQLExp 'Postgres
 mkTypedSessionVar columnType =
-  PSESessVar (unsafePGColumnToRepresentation <$> columnType)
+  PSESessVar (unsafePGColumnToBackend <$> columnType)
 
 instance ToJSON (PartialSQLExp 'Postgres) where
   toJSON = \case

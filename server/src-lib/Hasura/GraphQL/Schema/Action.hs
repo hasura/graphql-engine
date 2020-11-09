@@ -115,9 +115,9 @@ actionAsyncQuery actionInfo = runMaybeT do
   actionId <- lift actionIdParser
   actionOutputParser <- lift $ actionOutputFields outputObject
   createdAtFieldParser <-
-    lift $ P.column (PGColumnScalar PGTimeStampTZ) (G.Nullability False)
+    lift $ P.column (ColumnScalar PGTimeStampTZ) (G.Nullability False)
   errorsFieldParser <-
-    lift $ P.column (PGColumnScalar PGJSON) (G.Nullability True)
+    lift $ P.column (ColumnScalar PGJSON) (G.Nullability True)
 
   let fieldName = unActionName actionName
       description = G.Description <$> comment
@@ -161,7 +161,7 @@ actionIdParser
   :: (MonadSchema n m, MonadError QErr m)
   => m (Parser 'Both n UnpreparedValue)
 actionIdParser =
-  fmap P.mkParameter <$> P.column (PGColumnScalar PGUUID) (G.Nullability False)
+  fmap P.mkParameter <$> P.column (ColumnScalar PGUUID) (G.Nullability False)
 
 actionOutputFields
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
@@ -185,7 +185,7 @@ actionOutputFields outputObject = do
           fieldName = unObjectFieldName name
           -- FIXME? (from master)
           pgColumnInfo = ColumnInfo (unsafePGCol $ G.unName fieldName)
-                         fieldName 0 (PGColumnScalar PGJSON) (G.isNullable gType) Nothing
+                         fieldName 0 (ColumnScalar PGJSON) (G.isNullable gType) Nothing
           fieldParser = case objectFieldType of
             AOFTScalar def -> customScalarParser def
             AOFTEnum def   -> customEnumParser def
@@ -222,7 +222,7 @@ mkDefinitionList ObjectTypeDefinition{..} =
     (unsafePGCol . G.unName . unObjectFieldName $ _ofdName,) $
     case Map.lookup _ofdName fieldReferences of
       Nothing         -> fieldTypeToScalarType $ snd _ofdType
-      Just columnInfo -> unsafePGColumnToRepresentation $ pgiType columnInfo
+      Just columnInfo -> unsafePGColumnToBackend $ pgiType columnInfo
   where
     fieldReferences =
       Map.unions $ map _trFieldMapping $ maybe [] toList _otdRelationships

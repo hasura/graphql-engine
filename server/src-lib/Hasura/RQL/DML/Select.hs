@@ -198,7 +198,7 @@ convSelectQ
   -> SelPermInfo 'Postgres   -- Additional select permission info
   -> SelectQExt 'Postgres     -- Given Select Query
   -> SessVarBldr 'Postgres m
-  -> (PGColumnType -> Value -> m S.SQLExp)
+  -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> m (AnnSimpleSel 'Postgres)
 convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
 
@@ -264,7 +264,7 @@ convExtRel
   -> Maybe RelName
   -> SelectQExt 'Postgres
   -> SessVarBldr 'Postgres m
-  -> (PGColumnType -> Value -> m S.SQLExp)
+  -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> m (Either (ObjectRelationSelect 'Postgres) (ArraySelect 'Postgres))
 convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
   -- Point to the name key

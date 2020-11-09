@@ -20,7 +20,7 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types
 
 type OpRhsParser m v =
-  PGType PGColumnType -> Value -> m v
+  PGType (ColumnType 'Postgres) -> Value -> m v
 
 -- | Represents a reference to a Postgres column, possibly casted an arbitrary
 -- number of times. Used within 'parseOperationsExpression' for bookkeeping.
@@ -115,13 +115,13 @@ parseOperationsExpression rhsParser fim columnInfo =
         "$contains"      -> guardType [PGJSONB] >> AContains <$> parseOne
         "_contained_in"  -> guardType [PGJSONB] >> AContainedIn <$> parseOne
         "$contained_in"  -> guardType [PGJSONB] >> AContainedIn <$> parseOne
-        "_has_key"       -> guardType [PGJSONB] >> AHasKey <$> parseWithTy (PGColumnScalar PGText)
-        "$has_key"       -> guardType [PGJSONB] >> AHasKey <$> parseWithTy (PGColumnScalar PGText)
+        "_has_key"       -> guardType [PGJSONB] >> AHasKey <$> parseWithTy (ColumnScalar PGText)
+        "$has_key"       -> guardType [PGJSONB] >> AHasKey <$> parseWithTy (ColumnScalar PGText)
 
-        "_has_keys_any"  -> guardType [PGJSONB] >> AHasKeysAny <$> parseManyWithType (PGColumnScalar PGText)
-        "$has_keys_any"  -> guardType [PGJSONB] >> AHasKeysAny <$> parseManyWithType (PGColumnScalar PGText)
-        "_has_keys_all"  -> guardType [PGJSONB] >> AHasKeysAll <$> parseManyWithType (PGColumnScalar PGText)
-        "$has_keys_all"  -> guardType [PGJSONB] >> AHasKeysAll <$> parseManyWithType (PGColumnScalar PGText)
+        "_has_keys_any"  -> guardType [PGJSONB] >> AHasKeysAny <$> parseManyWithType (ColumnScalar PGText)
+        "$has_keys_any"  -> guardType [PGJSONB] >> AHasKeysAny <$> parseManyWithType (ColumnScalar PGText)
+        "_has_keys_all"  -> guardType [PGJSONB] >> AHasKeysAll <$> parseManyWithType (ColumnScalar PGText)
+        "$has_keys_all"  -> guardType [PGJSONB] >> AHasKeysAll <$> parseManyWithType (ColumnScalar PGText)
 
         -- geometry types
         "_st_contains"   -> parseGeometryOp ASTContains
@@ -196,7 +196,7 @@ parseOperationsExpression rhsParser fim columnInfo =
           parsedCastOperations <-
             forM (M.toList castOperations) $ \(targetTypeName, castedComparisons) -> do
               let targetType = textToPGScalarType targetTypeName
-                  castedColumn = ColumnReferenceCast column (PGColumnScalar targetType)
+                  castedColumn = ColumnReferenceCast column (ColumnScalar targetType)
               checkValidCast targetType
               parsedCastedComparisons <- withPathK targetTypeName $
                 parseOperations castedColumn castedComparisons
@@ -204,8 +204,8 @@ parseOperationsExpression rhsParser fim columnInfo =
           return . ACast $ M.fromList parsedCastOperations
 
         checkValidCast targetType = case (colTy, targetType) of
-          (PGColumnScalar PGGeometry, PGGeography) -> return ()
-          (PGColumnScalar PGGeography, PGGeometry) -> return ()
+          (ColumnScalar PGGeometry, PGGeography) -> return ()
+          (ColumnScalar PGGeography, PGGeometry) -> return ()
           _ -> throw400 UnexpectedPayload $
             "cannot cast column of type " <> colTy <<> " to type " <>> targetType
 
@@ -215,16 +215,16 @@ parseOperationsExpression rhsParser fim columnInfo =
           guardType geoTypes >> f <$> parseOneNoSess colTy val
 
         parseSTDWithinObj = case colTy of
-          PGColumnScalar PGGeometry -> do
+          ColumnScalar PGGeometry -> do
             DWithinGeomOp distVal fromVal <- parseVal
-            dist <- withPathK "distance" $ parseOneNoSess (PGColumnScalar PGFloat) distVal
+            dist <- withPathK "distance" $ parseOneNoSess (ColumnScalar PGFloat) distVal
             from <- withPathK "from" $ parseOneNoSess colTy fromVal
             return $ ASTDWithinGeom $ DWithinGeomOp dist from
-          PGColumnScalar PGGeography -> do
+          ColumnScalar PGGeography -> do
             DWithinGeogOp distVal fromVal sphVal <- parseVal
-            dist <- withPathK "distance" $ parseOneNoSess (PGColumnScalar PGFloat) distVal
+            dist <- withPathK "distance" $ parseOneNoSess (ColumnScalar PGFloat) distVal
             from <- withPathK "from" $ parseOneNoSess colTy fromVal
-            useSpheroid <- withPathK "use_spheroid" $ parseOneNoSess (PGColumnScalar PGBoolean) sphVal
+            useSpheroid <- withPathK "use_spheroid" $ parseOneNoSess (ColumnScalar PGBoolean) sphVal
             return $ ASTDWithinGeog $ DWithinGeogOp dist from useSpheroid
           _ -> throwError $ buildMsg colTy [PGGeometry, PGGeography]
 
@@ -302,7 +302,7 @@ annColExp
 annColExp rhsParser colInfoMap (ColExp fieldName colVal) = do
   colInfo <- askFieldInfo colInfoMap fieldName
   case colInfo of
-    FIColumn (ColumnInfo _ _ _ (PGColumnScalar PGJSON) _ _) ->
+    FIColumn (ColumnInfo _ _ _ (ColumnScalar PGJSON) _ _) ->
       throwError (err400 UnexpectedPayload "JSON column can not be part of where clause")
     FIColumn pgi ->
       AVCol pgi <$> parseOperationsExpression rhsParser colInfoMap pgi colVal
