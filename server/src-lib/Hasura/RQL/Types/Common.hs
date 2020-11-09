@@ -136,6 +136,7 @@ class
   , ToJSON (NullsOrderType b)
   , Typeable b
   ) => Backend (b :: BackendType) where
+  type Alias          b :: Type
   type TableName      b :: Type
   type ConstraintName b :: Type
   type BasicOrderType b :: Type
@@ -143,6 +144,7 @@ class
   type Column         b :: Type
 
 instance Backend 'Postgres where
+  type Alias          'Postgres = PG.Alias
   type TableName      'Postgres = PG.QualifiedTable
   type ConstraintName 'Postgres = PG.ConstraintName
   type BasicOrderType 'Postgres = PG.OrderType

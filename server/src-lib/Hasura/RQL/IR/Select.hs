@@ -75,7 +75,7 @@ traverseAnnOrderByItem f =
 type AnnOrderByItem b = AnnOrderByItemG b (SQLExp b)
 
 type OrderByItemExp b =
-  OrderByItemG b (AnnOrderByElement b (SQLExp b), (PG.Alias, (SQLExp b)))
+  OrderByItemG b (AnnOrderByElement b (SQLExp b), (Alias b, (SQLExp b)))
 
 data AnnRelationSelectG (b :: BackendType) a
   = AnnRelationSelectG
@@ -518,7 +518,7 @@ deriving instance Eq   (SelectSource 'Postgres)
 
 data SelectNode (b :: BackendType)
   = SelectNode
-  { _snExtractors :: !(HM.HashMap PG.Alias (SQLExp b))
+  { _snExtractors :: !(HM.HashMap (Alias b) (SQLExp b))
   , _snJoinTree   :: !(JoinTree b)
   }
 
@@ -549,7 +549,7 @@ deriving instance Eq (Column b) => Eq (ObjectRelationSource b)
 
 data ArrayRelationSource (b :: BackendType)
   = ArrayRelationSource
-  { _arsAlias           :: !PG.Alias
+  { _arsAlias           :: !(Alias b)
   , _arsRelationMapping :: !(HM.HashMap (Column b) (Column b))
   , _arsSelectSource    :: !(SelectSource b)
   } deriving (Generic)
@@ -578,7 +578,7 @@ deriving instance Eq   (ComputedFieldTableSetSource 'Postgres)
 
 data ArrayConnectionSource (b :: BackendType)
   = ArrayConnectionSource
-  { _acsAlias           :: !PG.Alias
+  { _acsAlias           :: !(Alias b)
   , _acsRelationMapping :: !(HM.HashMap (Column b) (Column b))
   , _acsSplitFilter     :: !(Maybe PG.BoolExp)
   , _acsSlice           :: !(Maybe ConnectionSlice)
