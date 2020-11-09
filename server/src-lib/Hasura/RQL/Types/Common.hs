@@ -310,12 +310,8 @@ unsafeNonNegativeInt = NonNegativeInt
 instance FromJSON NonNegativeInt where
   parseJSON = withScientific "NonNegativeInt" $ \t -> do
     case t >= 0 of
-      True  -> NonNegativeInt <$> maybeInt (toBoundedInteger t)
+      True  -> maybe (fail "integer passed is out of bounds") (pure . NonNegativeInt) $ toBoundedInteger t
       False -> fail "negative value not allowed"
-    where
-      maybeInt x = case x of
-        Just v  -> return v
-        Nothing -> fail "integer passed is out of bounds"
 
 newtype NonNegativeDiffTime = NonNegativeDiffTime { unNonNegativeDiffTime :: DiffTime }
   deriving (Show, Eq,ToJSON,Generic, NFData, Cacheable, Num)
