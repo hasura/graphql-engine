@@ -74,8 +74,8 @@ data InsertQueryP1 (b :: BackendType)
   = InsertQueryP1
   { iqp1Table     :: !(TableName b)
   , iqp1Cols      :: ![Column b]
-  , iqp1Tuples    :: ![[SQLExp b]]
-  , iqp1Conflict  :: !(Maybe (ConflictClauseP1 b (SQLExp b)))
+  , iqp1Tuples    :: ![[SQLExpression b]]
+  , iqp1Conflict  :: !(Maybe (ConflictClauseP1 b (SQLExpression b)))
   , iqp1CheckCond :: !(AnnBoolExpSQL b, Maybe (AnnBoolExpSQL b))
   , iqp1Output    :: !(MutationOutput b)
   , iqp1AllCols   :: ![ColumnInfo b]
