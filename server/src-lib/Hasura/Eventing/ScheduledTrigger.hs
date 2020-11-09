@@ -139,10 +139,8 @@ runCronEventsGenerator logger getSC = do
         mapM (withCronTrigger cronTriggersCache) deprivedCronTriggerStats
       insertCronEventsFor cronTriggersForHydrationWithStats
 
-    case eitherRes of
-      Right _ -> pure ()
-      Left err -> L.unLogger logger $
-        ScheduledTriggerInternalErr $ err500 Unexpected (T.pack $ show err)
+    onLeft eitherRes $ L.unLogger logger .
+      ScheduledTriggerInternalErr . err500 Unexpected . T.pack . show
 
     liftIO $ sleep (minutes 1)
     where

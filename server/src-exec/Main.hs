@@ -65,7 +65,7 @@ runApp env (HGEOptionsG rci hgeCmd) =
         Signals.sigTERM
         (Signals.CatchOnce (shutdownGracefully initCtx))
         Nothing
-      flip runReaderT (_icPgPool initCtx) $ unServerAppM $
+      flip runPGMetadataStorageApp (_icPgPool initCtx) $
         runHGEServer env serveOptions initCtx Nothing initTime shutdownApp Nothing ekgStore
 
     HCExport -> do

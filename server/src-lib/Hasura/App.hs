@@ -176,13 +176,14 @@ data Loggers
   , _lsPgLogger  :: !Q.PGLogger
   }
 
-newtype ServerAppM a = ServerAppM { unServerAppM :: ReaderT Q.PGPool IO a }
+-- | An application with Postgres database as a metadata storage
+newtype PGMetadataStorageApp a
+  = PGMetadataStorageApp {runPGMetadataStorageApp :: Q.PGPool -> IO a}
   deriving ( Functor, Applicative, Monad
            , MonadIO, MonadBase IO, MonadBaseControl IO
            , MonadCatch, MonadThrow, MonadMask
-           , MonadReader Q.PGPool
-           , MonadUnique
-           )
+           , MonadUnique, MonadReader Q.PGPool
+           ) via (ReaderT Q.PGPool IO)
 
 -- | this function initializes the catalog and returns an @InitCtx@, based on the command given
 -- - for serve command it creates a proper PG connection pool
@@ -629,12 +630,12 @@ execQuery env queryBs = do
   buildSchemaCacheStrict
   encJToLBS <$> runQueryM env query
 
-instance Tracing.HasReporter ServerAppM
+instance Tracing.HasReporter PGMetadataStorageApp
 
-instance MonadQueryInstrumentation ServerAppM where
+instance MonadQueryInstrumentation PGMetadataStorageApp where
   askInstrumentQuery _ = pure (id, noProfile)
 
-instance HttpLog ServerAppM where
+instance HttpLog PGMetadataStorageApp where
   logHttpError logger userInfoM reqId waiReq req qErr headers =
     unLogger logger $ mkHttpLog $
       mkHttpErrorLogContext userInfoM reqId waiReq req qErr Nothing Nothing headers
@@ -643,15 +644,15 @@ instance HttpLog ServerAppM where
     unLogger logger $ mkHttpLog $
       mkHttpAccessLogContext userInfoM reqId waiReq compressedResponse qTime cType headers
 
-instance MonadExecuteQuery ServerAppM where
+instance MonadExecuteQuery PGMetadataStorageApp where
   cacheLookup _ _ = pure ([], Nothing)
   cacheStore  _ _ = pure ()
 
-instance UserAuthentication (Tracing.TraceT ServerAppM) where
+instance UserAuthentication (Tracing.TraceT PGMetadataStorageApp) where
   resolveUserInfo logger manager headers authMode =
     runExceptT $ getUserInfoWithExpTime logger manager headers authMode
 
-instance MetadataApiAuthorization ServerAppM where
+instance MetadataApiAuthorization PGMetadataStorageApp where
   authorizeMetadataApi query userInfo = do
     let currRole = _uiRole userInfo
     when (requiresAdmin query && currRole /= adminRoleName) $
@@ -659,41 +660,42 @@ instance MetadataApiAuthorization ServerAppM where
     where
       errMsg = "restricted access : admin only"
 
-instance ConsoleRenderer ServerAppM where
+instance ConsoleRenderer PGMetadataStorageApp where
   renderConsole path authMode enableTelemetry consoleAssetsDir =
     return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir
 
-instance MonadGQLExecutionCheck ServerAppM where
+instance MonadGQLExecutionCheck PGMetadataStorageApp where
   checkGQLExecution userInfo _ enableAL sc query = runExceptT $ do
     req <- toParsed query
     checkQueryInAllowlist enableAL userInfo req sc
     return req
 
-instance MonadConfigApiHandler ServerAppM where
+instance MonadConfigApiHandler PGMetadataStorageApp where
   runConfigApiHandler = configApiGetHandler
 
-instance MonadQueryLog ServerAppM where
+instance MonadQueryLog PGMetadataStorageApp where
   logQueryLog logger query genSqlM reqId =
     unLogger logger $ QueryLog query genSqlM reqId
 
-instance WS.MonadWSLog ServerAppM where
+instance WS.MonadWSLog PGMetadataStorageApp where
   logWSLog = unLogger
 
-runTxInMetadataStorage :: Q.TxE QErr a -> MetadataStorageT ServerAppM a
-runTxInMetadataStorage tx = do
-  pool <- lift ask
-  liftEitherM $ liftIO $ runExceptT $
-    Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) tx
+instance MonadTx (MetadataStorageT PGMetadataStorageApp) where
+  liftTx tx = do
+    pool <- lift ask
+    -- Each operation in metadata storage is executed in an isolated transaction.
+    -- No two operations are not necessarily executed together.
+    liftEitherM $ liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Nothing) tx
 
-instance MonadMetadataStorage (MetadataStorageT ServerAppM) where
+instance MonadMetadataStorage (MetadataStorageT PGMetadataStorageApp) where
 
-  getDeprivedCronTriggerStats        = runTxInMetadataStorage getDeprivedCronTriggerStatsTx
-  getScheduledEventsForDelivery      = runTxInMetadataStorage getScheduledEventsForDeliveryTx
-  insertScheduledEvent               = runTxInMetadataStorage . insertScheduledEventTx
-  insertScheduledEventInvocation a b = runTxInMetadataStorage $ insertInvocationTx a b
-  setScheduledEventOp a b c          = runTxInMetadataStorage $ setScheduledEventOpTx a b c
-  unlockScheduledEvents a b          = runTxInMetadataStorage $ unlockScheduledEventsTx a b
-  unlockAllLockedScheduledEvents     = runTxInMetadataStorage unlockAllLockedScheduledEventsTx
+  getDeprivedCronTriggerStats        = liftTx getDeprivedCronTriggerStatsTx
+  getScheduledEventsForDelivery      = liftTx getScheduledEventsForDeliveryTx
+  insertScheduledEvent               = liftTx . insertScheduledEventTx
+  insertScheduledEventInvocation a b = liftTx $ insertInvocationTx a b
+  setScheduledEventOp a b c          = liftTx $ setScheduledEventOpTx a b c
+  unlockScheduledEvents a b          = liftTx $ unlockScheduledEventsTx a b
+  unlockAllLockedScheduledEvents     = liftTx unlockAllLockedScheduledEventsTx
 
 --- helper functions ---
 

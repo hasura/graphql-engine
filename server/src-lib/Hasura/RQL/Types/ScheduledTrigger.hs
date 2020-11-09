@@ -17,10 +17,7 @@ module Hasura.RQL.Types.ScheduledTrigger
   , scheduledEventStatusToText
   , ScheduledEventType(..)
   , ScheduledEvent(..)
-  , GetInvocationsBy(..)
-  , ScheduledEventPagination(..)
   , ScheduledEventInvocation(..)
-  , GetEventInvocations(..)
   , OneOffScheduledEvent(..)
   , CronEvent(..)
   ) where
@@ -28,7 +25,6 @@ module Hasura.RQL.Types.ScheduledTrigger
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Aeson.Types
 import           Data.Time.Clock
 import           Data.Time.Clock.Units
 import           Data.Time.Format.ISO8601
@@ -221,61 +217,6 @@ data ScheduledEvent
   = SEOneOff
   | SECron !TriggerName
   deriving (Show, Eq)
-
-parseScheduledEvent :: Object -> Parser ScheduledEvent
-parseScheduledEvent o = do
-  ty <- o .: "type"
-  case ty of
-    Cron   -> SECron <$> o .: "trigger_name"
-    OneOff -> pure SEOneOff
-
-scheduledEventToPairs :: ScheduledEvent -> [Pair]
-scheduledEventToPairs = \case
-  SEOneOff    -> ["type" .= OneOff]
-  SECron name -> ["type" .= Cron, "trigger_name" .= name]
-
-data ScheduledEventPagination
-  = ScheduledEventPagination
-  { _sepLimit  :: !(Maybe Int)
-  , _sepOffset :: !(Maybe Int)
-  } deriving (Show, Eq)
-
-parseScheduledEventPagination :: Object -> Parser ScheduledEventPagination
-parseScheduledEventPagination o =
-  ScheduledEventPagination
-    <$> o .:? "limit"
-    <*> o .:? "offset"
-
-scheduledEventPaginationToPairs :: ScheduledEventPagination -> [Pair]
-scheduledEventPaginationToPairs ScheduledEventPagination{..} =
-  ["limit" .= _sepLimit, "offset" .= _sepOffset]
-
-data GetInvocationsBy
-  = GIBEventId !EventId !ScheduledEventType
-  | GIBEvent !ScheduledEvent
-  deriving (Show, Eq)
-
-data GetEventInvocations
-  = GetEventInvocations
-  { _geiInvocationsBy :: !GetInvocationsBy
-  , _geiPagination    :: !ScheduledEventPagination
-  } deriving (Eq, Show)
-
-instance FromJSON GetEventInvocations where
-  parseJSON = withObject "Object" $ \o ->
-    GetEventInvocations
-      <$> (parseEventId o <|> (GIBEvent <$> parseScheduledEvent o))
-      <*> parseScheduledEventPagination o
-    where
-      parseEventId o =
-        GIBEventId <$> o .: "event_id" <*> o .: "type"
-
-instance ToJSON GetEventInvocations where
-  toJSON GetEventInvocations{..} =
-    object $ case _geiInvocationsBy of
-             GIBEventId eventId eventType -> ["event_id" .= eventId, "type" .= eventType]
-             GIBEvent event               -> scheduledEventToPairs event
-          <> scheduledEventPaginationToPairs _geiPagination
 
 data CronEventSeed
   = CronEventSeed
