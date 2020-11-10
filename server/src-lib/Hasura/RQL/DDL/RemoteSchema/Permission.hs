@@ -844,19 +844,19 @@ validateRemoteSchema upstreamRemoteSchemaIntrospection = do
             upstreamScalarTypeDefn <-
               lookupScalar upstreamRemoteSchemaIntrospection (G._stdName providedScalarTypeDefn)
               `onNothing`
-              refute (pure $ TypeDoesNotExist Scalar (G._stdName providedScalarTypeDefn))
+              typeNotFound Scalar (G._stdName providedScalarTypeDefn)
             G.TypeDefinitionScalar <$> validateScalarDefinition providedScalarTypeDefn upstreamScalarTypeDefn
       G.TypeDefinitionInterface providedInterfaceTypeDefn -> do
         upstreamInterfaceTypeDefn <-
           lookupInterface upstreamRemoteSchemaIntrospection (G._itdName providedInterfaceTypeDefn)
           `onNothing`
-          refute (pure $ TypeDoesNotExist Interface (G._itdName providedInterfaceTypeDefn))
+          typeNotFound Interface (G._itdName providedInterfaceTypeDefn)
         G.TypeDefinitionInterface <$> validateInterfaceDefinition providedInterfaceTypeDefn upstreamInterfaceTypeDefn
       G.TypeDefinitionObject providedObjectTypeDefn -> do
         upstreamObjectTypeDefn <-
           lookupObject upstreamRemoteSchemaIntrospection (G._otdName providedObjectTypeDefn)
           `onNothing`
-          refute (pure $ TypeDoesNotExist Object (G._otdName providedObjectTypeDefn))
+          typeNotFound Object (G._otdName providedObjectTypeDefn)
         G.TypeDefinitionObject
           <$>
           validateObjectDefinition providedObjectTypeDefn upstreamObjectTypeDefn providedInterfacesTypes
@@ -864,19 +864,19 @@ validateRemoteSchema upstreamRemoteSchemaIntrospection = do
         upstreamUnionTypeDefn <-
           lookupUnion upstreamRemoteSchemaIntrospection (G._utdName providedUnionTypeDefn)
           `onNothing`
-          refute (pure $ TypeDoesNotExist Union (G._utdName providedUnionTypeDefn))
+          typeNotFound Union (G._utdName providedUnionTypeDefn)
         G.TypeDefinitionUnion <$> validateUnionDefinition providedUnionTypeDefn upstreamUnionTypeDefn
       G.TypeDefinitionEnum providedEnumTypeDefn -> do
         upstreamEnumTypeDefn <-
           lookupEnum upstreamRemoteSchemaIntrospection (G._etdName providedEnumTypeDefn)
           `onNothing`
-          refute (pure $ TypeDoesNotExist Enum (G._etdName providedEnumTypeDefn))
+          typeNotFound Enum (G._etdName providedEnumTypeDefn)
         G.TypeDefinitionEnum <$> validateEnumTypeDefinition providedEnumTypeDefn upstreamEnumTypeDefn
       G.TypeDefinitionInputObject providedInputObjectTypeDefn -> do
         upstreamInputObjectTypeDefn <-
           lookupInputObject upstreamRemoteSchemaIntrospection (G._iotdName providedInputObjectTypeDefn)
           `onNothing`
-          refute (pure $ TypeDoesNotExist InputObject (G._iotdName providedInputObjectTypeDefn))
+          typeNotFound InputObject (G._iotdName providedInputObjectTypeDefn)
         G.TypeDefinitionInputObject
           <$> validateInputObjectTypeDefinition providedInputObjectTypeDefn upstreamInputObjectTypeDefn
   pure $ getSchemaDocIntrospection validatedTypeDefinitions rootTypeNames
@@ -888,6 +888,8 @@ validateRemoteSchema upstreamRemoteSchemaIntrospection = do
       G.TypeDefinitionUnion union'       -> G._utdName union'
       G.TypeDefinitionInterface iface    -> G._itdName iface
       G.TypeDefinitionInputObject inpObj -> G._iotdName inpObj
+
+    typeNotFound gType name = refute (pure $ TypeDoesNotExist gType name)
 
 resolveRoleBasedRemoteSchema
   :: (MonadError QErr m)
