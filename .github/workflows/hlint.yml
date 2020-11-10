@@ -1,9 +1,9 @@
 name: server lint
 on:
-  label
-  pull_request:
-    paths:
-      - 'server/**'
+  - label
+  - pull_request:
+      paths:
+        - 'server/**'
 
 jobs:
   hlint:

@@ -1,6 +1,4 @@
-on:
-  label
-  pull_request
+on: [label, pull_request]
 name: changelog
 jobs:
   check:
