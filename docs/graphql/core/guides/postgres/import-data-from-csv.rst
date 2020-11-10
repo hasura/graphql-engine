@@ -41,7 +41,7 @@ Let us create a table to match the data structure in your CSV file.
 Step 2: Connect to your Postgres database
 ------------------------------------------
 
-You can connect to your Postgres database using the ``psql`` command on the terminal like the following: 
+Connect to your Postgres database by using the ``psql`` command on the terminal: 
 
 .. code-block:: bash
 
