@@ -44,12 +44,13 @@ import           Control.Monad.Validate
 import qualified Data.HashMap.Strict                   as Map
 import qualified Data.HashSet                          as S
 import qualified Data.List.NonEmpty                    as NE
+import           Data.List.Extended                    (duplicates)
 import qualified Data.Text                             as T
 import           Data.Text.Extended
 import qualified Language.GraphQL.Draft.Syntax         as G
 
 import           Hasura.RQL.Types              hiding (GraphQLType, defaultScalars)
-import           Hasura.Server.Utils                  (englishList, duplicates, isSessionVariable)
+import           Hasura.Server.Utils                  (englishList, isSessionVariable)
 import           Hasura.Session
 
 data FieldDefinitionType
@@ -440,7 +441,7 @@ validateDirectives
   -> (GraphQLType, G.Name)
   -> m (Maybe (G.Directive a))
 validateDirectives providedDirectives upstreamDirectives directiveLocation parentType = do
-  onJust (NE.nonEmpty $ duplicates $ map G._dName nonPresetDirectives) $ \dups -> do
+  onJust (NE.nonEmpty $ S.toList $ duplicates $ map G._dName nonPresetDirectives) $ \dups -> do
     refute $ pure $ DuplicateDirectives parentType dups
   for_ nonPresetDirectives $ \dir -> do
     let directiveName = G._dName dir
@@ -485,7 +486,7 @@ validateEnumTypeDefinition
   -> m ()
 validateEnumTypeDefinition providedEnum upstreamEnum = do
   validateDirectives providedDirectives upstreamDirectives G.TSDLENUM $ (Enum, providedName)
-  onJust (NE.nonEmpty $ duplicates providedEnumValNames) $ \dups -> do
+  onJust (NE.nonEmpty $ S.toList $ duplicates providedEnumValNames) $ \dups -> do
     refute $ pure $ DuplicateEnumValues providedName dups
   onJust (NE.nonEmpty $ S.toList fieldsDifference) $ \nonExistingEnumVals ->
     dispute $ pure $ NonExistingEnumValues providedName nonExistingEnumVals
@@ -560,7 +561,7 @@ validateArguments
   -> G.Name
   -> m [RemoteSchemaInputValueDefinition]
 validateArguments providedArgs upstreamArgs parentTypeName = do
-  onJust (NE.nonEmpty $ duplicates $ map G._ivdName providedArgs) $ \dups -> do
+  onJust (NE.nonEmpty $ S.toList $ duplicates $ map G._ivdName providedArgs) $ \dups -> do
     refute $ pure $ DuplicateArguments parentTypeName dups
   let argsDiff = getDifference nonNullableUpstreamArgs nonNullableProvidedArgs
   onJust (NE.nonEmpty $ S.toList argsDiff) $ \nonNullableArgs -> do
@@ -641,7 +642,7 @@ validateFieldDefinitions
   -> (FieldDefinitionType, G.Name) -- ^ parent type and name
   -> m [(G.FieldDefinition RemoteSchemaInputValueDefinition)]
 validateFieldDefinitions providedFldDefnitions upstreamFldDefinitions parentType = do
-  onJust (NE.nonEmpty $ duplicates $ map G._fldName providedFldDefnitions) $ \dups -> do
+  onJust (NE.nonEmpty $ S.toList $ duplicates $ map G._fldName providedFldDefnitions) $ \dups -> do
     refute $ pure $ DuplicateFields parentType dups
   for providedFldDefnitions $ \fldDefn@(G.FieldDefinition _ name _ _ _) -> do
     upstreamFldDefn <-
@@ -927,7 +928,7 @@ validateRemoteSchema  (RemoteSchemaIntrospection upstreamTypeDefns) = do
     partitionSchemaIntrospection typeDef = partitionTypeDefinition $ convertTypeDef typeDef
 
     duplicateTypes (PartitionedTypeDefinitions scalars objs ifaces unions enums inpObjs _) =
-      duplicates $
+      S.toList $ duplicates $
       (map G._stdName scalars) <> (map G._otdName objs) <> (map G._itdName ifaces)
       <> (map G._utdName unions) <> (map G._etdName enums) <> (map G._iotdName inpObjs)
 
