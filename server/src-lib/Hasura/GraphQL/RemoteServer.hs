@@ -181,7 +181,7 @@ instance J.FromJSON (FromIntrospection G.GType) where
         G.TypeNamed _ n -> G.TypeNamed (G.Nullability False) n
 
 instance J.FromJSON (FromIntrospection G.InputValueDefinition) where
-  parseJSON = J.withObject "RemoteSchemaInputValueDefinition" $ \o -> do
+  parseJSON = J.withObject "InputValueDefinition" $ \o -> do
     name  <- o .:  "name"
     desc  <- o .:? "description"
     _type <- o .: "type"
