@@ -113,8 +113,8 @@ data RoleBasedSchemaValidationError
   -- ^ error to indicate that a type provided by the user
   -- differs from the corresponding type defined in the upstream
   -- remote schema
-  | FieldDoesNotExist !GraphQLType !G.Name
-  -- ^ error to indicate when a field doesn't exist
+  | TypeDoesNotExist !GraphQLType !G.Name
+  -- ^ error to indicate when a type definition doesn't exist
   -- in the upstream remote schema
   | NonMatchingDefaultValue !G.Name !G.Name !(Maybe (G.Value Void)) !(Maybe (G.Value Void))
   -- ^ error to indicate when the default value of an argument
@@ -180,8 +180,8 @@ showRoleBasedSchemaValidationError = \case
   NonMatchingType fldName fldType expectedType providedType ->
     "expected type of " <> dquote fldName <> "(" <> dquote fldType <> ")" <>" to be " <>
     (G.showGT expectedType) <> " but recieved " <> (G.showGT providedType)
-  FieldDoesNotExist fldType fldName ->
-    fldType <<> ": " <> fldName <<> " does not exist in the upstream remote schema"
+  TypeDoesNotExist graphQLType typeName ->
+    graphQLType <<> ": " <> typeName <<> " does not exist in the upstream remote schema"
   NonMatchingDefaultValue inpObjName inpValName expectedVal providedVal ->
     "expected default value of input value: " <> inpValName <<> "of input object "
     <> inpObjName <<> " to be "
@@ -447,7 +447,7 @@ validateDirectives providedDirectives upstreamDirectives directiveLocation paren
     let directiveName = G._dName dir
     upstreamDir <-
       onNothing (Map.lookup directiveName upstreamDirectivesMap) $
-        refute $ pure $ FieldDoesNotExist Directive directiveName
+        refute $ pure $ TypeDoesNotExist Directive directiveName
     validateDirective dir upstreamDir parentType
   case presetDirectives of
     [] -> pure Nothing
@@ -511,7 +511,7 @@ validateEnumTypeDefinitions providedEnums upstreamEnums = do
   for_ providedEnums $ \providedEnum@(G.EnumTypeDefinition _ name _ _) -> do
     upstreamEnum <-
       onNothing (Map.lookup name upstreamEnumsMap) $
-        refute $ pure $ FieldDoesNotExist Enum name
+        refute $ pure $ TypeDoesNotExist Enum name
     validateEnumTypeDefinition providedEnum upstreamEnum
   where
     upstreamEnumsMap = mapFromL G._etdName $ upstreamEnums
@@ -604,7 +604,7 @@ validateInputObjectTypeDefinitions providedInputObjects upstreamInputObjects = d
   for providedInputObjects $ \providedInputObject@(G.InputObjectTypeDefinition _ name _ _) -> do
     upstreamInputObject <-
       onNothing (Map.lookup name upstreamInputObjectsMap) $
-        refute $ pure $ FieldDoesNotExist InputObject name
+        refute $ pure $ TypeDoesNotExist InputObject name
     validateInputObjectTypeDefinition providedInputObject upstreamInputObject
   where
     upstreamInputObjectsMap = mapFromL G._iotdName $ upstreamInputObjects
@@ -678,7 +678,7 @@ validateInterfaceDefinitions providedInterfaces upstreamInterfaces = do
   for providedInterfaces $ \providedInterface@(G.InterfaceTypeDefinition _ name _ _ _) -> do
     upstreamInterface <-
       onNothing (Map.lookup name upstreamInterfacesMap) $
-        refute $ pure $ FieldDoesNotExist Interface name
+        refute $ pure $ TypeDoesNotExist Interface name
     validateInterfaceDefinition providedInterface upstreamInterface
   where
     upstreamInterfacesMap = mapFromL G._itdName $ upstreamInterfaces
@@ -736,7 +736,7 @@ validateUnionTypeDefinitions providedUnions upstreamUnions = do
   for_ providedUnions $ \providedUnion@(G.UnionTypeDefinition _ name _ _) -> do
     upstreamUnion <-
       onNothing (Map.lookup name upstreamUnionsMap) $
-        refute $ pure $ FieldDoesNotExist Union name
+        refute $ pure $ TypeDoesNotExist Union name
     validateUnionDefinition providedUnion upstreamUnion
   where
     upstreamUnionsMap = mapFromL G._utdName $ upstreamUnions
@@ -789,7 +789,7 @@ validateObjectDefinitions providedObjects upstreamObjects providedInterfaces = d
   for providedObjects $ \providedObject@(G.ObjectTypeDefinition _ name _ _ _) -> do
     upstreamObject <-
       onNothing (Map.lookup name upstreamObjectsMap) $
-        refute $ pure $ FieldDoesNotExist Object name
+        refute $ pure $ TypeDoesNotExist Object name
     validateObjectDefinition providedObject upstreamObject providedInterfaces
   where
     upstreamObjectsMap = mapFromL G._otdName $ upstreamObjects
