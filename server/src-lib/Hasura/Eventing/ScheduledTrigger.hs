@@ -32,6 +32,10 @@ other. They can be split into different threads for a better performance.
 
 == Implementation
 
+The scheduled triggers eventing is being implemented in the metadata storage.
+All functions that make interaction to storage system are abstracted in
+the @'MonadMetadataStorage' class.
+
 During the startup, two threads are started:
 
 1. Generator: Fetches the list of scheduled triggers from cache and generates
@@ -68,6 +72,9 @@ module Hasura.Eventing.ScheduledTrigger
   , LockedEventsCtx(..)
 
   -- * Database interactions
+  -- Following function names are similar to those present in
+  -- 'MonadMetadataStorage' type class. To avoid duplication,
+  -- 'Tx' is suffixed to identify as database transactions
   , getDeprivedCronTriggerStatsTx
   , getScheduledEventsForDeliveryTx
   , insertInvocationTx
