@@ -35,7 +35,6 @@ as possible and then report all those errors at one go to the user.
 -}
 module Hasura.RQL.DDL.RemoteSchema.Permission (
     resolveRoleBasedRemoteSchema
-  , partitionTypeDefinition
   ) where
 
 import           Hasura.Prelude
@@ -752,20 +751,6 @@ createPossibleTypesMap objectDefinitions = do
     interface <- G._otdImplementsInterfaces objectDefinition
     pure (interface, [objectName])
 
-partitionTypeDefinition :: G.TypeDefinition () a  -> State (PartitionedTypeDefinitions a) ()
-partitionTypeDefinition (G.TypeDefinitionScalar scalarDefn) =
-  modify (\td -> td {_ptdScalars = (scalarDefn :) . _ptdScalars $ td})
-partitionTypeDefinition (G.TypeDefinitionObject objectDefn) =
-  modify (\td -> td {_ptdObjects = (objectDefn :) . _ptdObjects $ td})
-partitionTypeDefinition (G.TypeDefinitionInterface interfaceDefn) =
-  modify (\td -> td {_ptdInterfaces = (interfaceDefn :) . _ptdInterfaces $ td})
-partitionTypeDefinition (G.TypeDefinitionUnion unionDefn) =
-  modify (\td -> td {_ptdUnions = (unionDefn :) . _ptdUnions $ td})
-partitionTypeDefinition (G.TypeDefinitionEnum enumDefn) =
-  modify (\td -> td {_ptdEnums = (enumDefn :) . _ptdEnums $ td})
-partitionTypeDefinition (G.TypeDefinitionInputObject inputObjectDefn) =
-  modify (\td -> td {_ptdInputObjects = (inputObjectDefn :) . _ptdInputObjects $ td})
-
 partitionTypeSystemDefinitions
   :: [G.TypeSystemDefinition]
   -> ([G.SchemaDefinition], [G.TypeDefinition () G.InputValueDefinition])
@@ -788,10 +773,9 @@ getSchemaDocIntrospection
   -> (Maybe G.Name, Maybe G.Name, Maybe G.Name)
   -> IntrospectionResult
 getSchemaDocIntrospection providedTypeDefns (queryRoot, mutationRoot, subscriptionRoot) =
-  let (_, providedTypes) = flip runState emptySchemaDocTypeDefinitions $
-                      traverse partitionTypeDefinition providedTypeDefns
-      PartitionedTypeDefinitions scalars objects interfaces
-        unions enums inputObjects _schemaDefns = providedTypes
+  let objects = flip mapMaybe providedTypeDefns $ \case
+                  G.TypeDefinitionObject obj -> Just obj
+                  _                          -> Nothing
       possibleTypesMap = createPossibleTypesMap objects
       modifiedTypeDefns = do
         providedType <- providedTypeDefns
@@ -807,8 +791,6 @@ getSchemaDocIntrospection providedTypeDefns (queryRoot, mutationRoot, subscripti
           G.TypeDefinitionInputObject inpObj -> pure $ G.TypeDefinitionInputObject inpObj
       remoteSchemaIntrospection = RemoteSchemaIntrospection modifiedTypeDefns
   in IntrospectionResult remoteSchemaIntrospection (fromMaybe $$(G.litName "Query") queryRoot) mutationRoot subscriptionRoot
-  where
-    emptySchemaDocTypeDefinitions = PartitionedTypeDefinitions [] [] [] [] [] [] []
 
 -- | validateRemoteSchema accepts two arguments, the `SchemaDocument` of
 --   the role-based schema, that is provided by the user and the `SchemaIntrospection`

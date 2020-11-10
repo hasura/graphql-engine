@@ -159,17 +159,6 @@ instance NFData DropRemoteSchemaPermissions
 instance Cacheable DropRemoteSchemaPermissions
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''DropRemoteSchemaPermissions)
 
-data PartitionedTypeDefinitions a
-  = PartitionedTypeDefinitions
-  { _ptdScalars      :: ![G.ScalarTypeDefinition]
-  , _ptdObjects      :: ![G.ObjectTypeDefinition a]
-  , _ptdInterfaces   :: ![G.InterfaceTypeDefinition () a]
-  , _ptdUnions       :: ![G.UnionTypeDefinition]
-  , _ptdEnums        :: ![G.EnumTypeDefinition]
-  , _ptdInputObjects :: ![G.InputObjectTypeDefinition a]
-  , _ptdSchemaDef    :: ![G.SchemaDefinition]
-  } deriving (Show, Eq)
-
 data SessionArgumentPresetInfo
   = SessionArgumentPresetScalar
   | SessionArgumentPresetEnum ![G.EnumValue]
