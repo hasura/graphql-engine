@@ -487,9 +487,9 @@ withMetadataCheck cascade action = do
 
       sc <- askSchemaCache
       for_ alteredTables $ \(oldQtn, tableDiff) -> do
-        ti <- case M.lookup oldQtn $ scTables sc of
-          Just ti -> return ti
-          Nothing -> throw500 $ "old table metadata not found in cache : " <>> oldQtn
+        ti <- onNothing
+          (M.lookup oldQtn $ scTables sc)
+          (throw500 $ "old table metadata not found in cache : " <>> oldQtn)
         processTableChanges (_tiCoreInfo ti) tableDiff
       where
         SchemaDiff droppedTables alteredTables = schemaDiff
