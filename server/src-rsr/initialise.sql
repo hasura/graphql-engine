@@ -825,32 +825,32 @@ CREATE INDEX hdb_scheduled_event_status ON hdb_catalog.hdb_scheduled_events (sta
 
 CREATE TABLE hdb_catalog.hdb_scheduled_event_invocation_logs
 (
-id TEXT DEFAULT hdb_catalog.gen_hasura_uuid() PRIMARY KEY,
-event_id TEXT,
-status INTEGER,
-request JSON,
-response JSON,
-created_at TIMESTAMPTZ DEFAULT NOW(),
+  id TEXT DEFAULT hdb_catalog.gen_hasura_uuid() PRIMARY KEY,
+  event_id TEXT,
+  status INTEGER,
+  request JSON,
+  response JSON,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
 
-FOREIGN KEY (event_id) REFERENCES hdb_catalog.hdb_scheduled_events (id)
-   ON DELETE CASCADE ON UPDATE CASCADE
+  FOREIGN KEY (event_id) REFERENCES hdb_catalog.hdb_scheduled_events (id)
+     ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE hdb_catalog.hdb_remote_schema_permission (
-remote_schema_name text,
-role_name text,
-definition jsonb,
-comment text,
-PRIMARY KEY (remote_schema_name, role_name)
+  remote_schema_name text,
+  role_name text,
+  definition jsonb,
+  comment text,
+  PRIMARY KEY (remote_schema_name, role_name)
 );
 
 CREATE VIEW hdb_catalog.hdb_role AS
-(
-SELECT DISTINCT role_name FROM (
-SELECT role_name FROM hdb_catalog.hdb_permission
-UNION ALL
-SELECT role_name FROM hdb_catalog.hdb_action_permission
-UNION ALL
-SELECT role_name FROM hdb_catalog.hdb_remote_schema_permission
-) q
+  (
+    SELECT DISTINCT role_name FROM (
+      SELECT role_name FROM hdb_catalog.hdb_permission
+       UNION ALL
+      SELECT role_name FROM hdb_catalog.hdb_action_permission
+       UNION ALL
+      SELECT role_name FROM hdb_catalog.hdb_remote_schema_permission
+  ) q
 );
