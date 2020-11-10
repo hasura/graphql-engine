@@ -917,7 +917,7 @@ fieldSelection table maybePkeyColumns fieldInfo selectPermissions =
 -- | Field parsers for a table relationship
 relationshipField
   :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
-  => RelInfo -> m (Maybe [FieldParser n (AnnotatedField 'Postgres)])
+  => RelInfo 'Postgres -> m (Maybe [FieldParser n (AnnotatedField 'Postgres)])
 relationshipField relationshipInfo = runMaybeT do
   let otherTable = riRTable  relationshipInfo
       colMapping = riMapping relationshipInfo

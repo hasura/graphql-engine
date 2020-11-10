@@ -29,14 +29,14 @@ data AnnIns (b :: BackendType) a v
 type SingleObjIns b v = AnnIns b (AnnInsObj b v) v
 type MultiObjIns  b v = AnnIns b [AnnInsObj b v] v
 
-data RelIns a
+data RelIns (b :: BackendType) a
   = RelIns
   { _riAnnIns  :: !a
-  , _riRelInfo :: !RelInfo
+  , _riRelInfo :: !(RelInfo b)
   } deriving (Show, Eq)
 
-type ObjRelIns b v = RelIns (SingleObjIns b v)
-type ArrRelIns b v = RelIns (MultiObjIns  b v)
+type ObjRelIns b v = RelIns b (SingleObjIns b v)
+type ArrRelIns b v = RelIns b (MultiObjIns  b v)
 
 data AnnInsObj (b :: BackendType) v
   = AnnInsObj
