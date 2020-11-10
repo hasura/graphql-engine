@@ -9,12 +9,10 @@ import { ReduxState } from '../../../types';
 export const getSchemaBaseRoute = (
   schemaName: string,
   sourceName = 'default'
-) => {
-  // return `${globals.urlPrefix}/data/${source}/schema/${schemaName}`;
-  return `/data/${encodeURIComponent(sourceName)}/schema/${encodeURIComponent(
+) =>
+  `/data/${encodeURIComponent(sourceName)}/schema/${encodeURIComponent(
     schemaName
   )}`;
-};
 
 export const getSchemaAddTableRoute = (
   schemaName: string,
@@ -41,11 +39,10 @@ const getTableBaseRoute = (
   sourceName: string,
   tableName: string,
   isTable: boolean
-) => {
-  return `${getSchemaBaseRoute(schemaName, sourceName)}/${
+) =>
+  `${getSchemaBaseRoute(schemaName, sourceName)}/${
     isTable ? 'tables' : 'views'
   }/${encodeURIComponent(tableName)}`;
-};
 
 export const getTableBrowseRoute = (
   schemaName: string,
