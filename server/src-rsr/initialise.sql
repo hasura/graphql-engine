@@ -286,10 +286,29 @@ CREATE TABLE hdb_catalog.event_triggers
   schema_name TEXT NOT NULL,
   table_name TEXT NOT NULL,
   configuration JSON,
-  comment TEXT,
-  FOREIGN KEY (schema_name, table_name)
-  REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE
+  comment TEXT
 );
+
+-- since we do not have a foreign key constraint (with 'ON UPDATE CASCADE') with hdb_catalog.hdb_table
+-- (see Note [Diff-and-patch event triggers on replace] in Hasura.RQL.DDL.EventTrigger), we perform the update using trigger
+CREATE OR REPLACE FUNCTION hdb_catalog.event_trigger_table_name_update()
+RETURNS TRIGGER
+LANGUAGE PLPGSQL
+AS
+$$
+BEGIN
+  IF (NEW.table_schema, NEW.table_name) <> (OLD.table_schema, OLD.table_name)  THEN
+    UPDATE hdb_catalog.event_triggers
+    SET schema_name = NEW.table_schema, table_name = NEW.table_name
+    WHERE (schema_name, table_name) = (OLD.table_schema, OLD.table_name);
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER event_trigger_table_name_update_trigger
+AFTER UPDATE ON hdb_catalog.hdb_table
+FOR EACH ROW EXECUTE PROCEDURE hdb_catalog.event_trigger_table_name_update();
 
 CREATE TABLE hdb_catalog.event_log
 (
