@@ -1,10 +1,12 @@
 module Data.List.Extended
        ( duplicates
        , uniques
+       , getDifference
        , module L
        ) where
 
 import           Data.Hashable       (Hashable)
+import           Data.Function       (on)
 import           Prelude
 
 import qualified Data.HashMap.Strict as Map
@@ -18,3 +20,6 @@ duplicates =
 
 uniques :: Eq a => [a] -> [a]
 uniques = map NE.head . NE.group
+
+getDifference :: (Eq a, Hashable a) => [a] -> [a] -> Set.HashSet a
+getDifference = Set.difference `on` Set.fromList

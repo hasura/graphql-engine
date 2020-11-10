@@ -44,7 +44,7 @@ import           Control.Monad.Validate
 import qualified Data.HashMap.Strict                   as Map
 import qualified Data.HashSet                          as S
 import qualified Data.List.NonEmpty                    as NE
-import           Data.List.Extended                    (duplicates)
+import           Data.List.Extended                    (duplicates, getDifference)
 import qualified Data.Text                             as T
 import           Data.Text.Extended
 import qualified Language.GraphQL.Draft.Syntax         as G
@@ -467,9 +467,6 @@ validateDirectives providedDirectives upstreamDirectives directiveLocation paren
     presetDirectives = filter presetFilterFn providedDirectives
 
     nonPresetDirectives = filter (not . presetFilterFn) providedDirectives
-
-getDifference :: (Eq a, Hashable a) => [a] -> [a] -> S.HashSet a
-getDifference left right = S.difference (S.fromList left) (S.fromList right)
 
 -- |  `validateEnumTypeDefinition` checks the validity of an enum definition
 -- provided by the user against the corresponding upstream enum.
