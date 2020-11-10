@@ -223,7 +223,8 @@ const toggleAllFields = (permissions, allFields, fieldType) => {
   let allFieldsSelected = true;
 
   Object.keys(allFields).forEach(fType => {
-    const currSelected = permissions ? permissions[fType] : [];
+    const currSelected =
+      permissions && permissions[fType] ? permissions[fType] : [];
 
     const allSelected = currSelected.length === allFields[fType].length;
 
