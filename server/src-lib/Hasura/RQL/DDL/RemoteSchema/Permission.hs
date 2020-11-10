@@ -51,6 +51,7 @@ import qualified Language.GraphQL.Draft.Syntax         as G
 
 import           Hasura.RQL.Types              hiding (GraphQLType, defaultScalars)
 import           Hasura.Server.Utils                  (englishList, isSessionVariable)
+import           Hasura.GraphQL.Schema.Remote
 import           Hasura.Session
 
 data FieldDefinitionType
@@ -128,7 +129,6 @@ data RoleBasedSchemaValidationError
   -- doesn't exist in the corresponding upstream directive
   | NonExistingField !(FieldDefinitionType, G.Name) !G.Name
   -- ^ error to indicate when a given field doesn't exist in a field type (Object/Interface)
-  | NonExistingScalar !G.Name
   | NonExistingUnionMemberTypes !G.Name !(NE.NonEmpty G.Name)
   -- ^ error to indicate when member types of an Union don't exist in the
   -- corresponding upstream union
@@ -201,8 +201,6 @@ showRoleBasedSchemaValidationError = \case
   NonExistingField (fldDefnType, parentTypeName) providedName ->
     "field " <> providedName <<> " does not exist in the "
     <> fldDefnType <<> ": " <>> parentTypeName
-  NonExistingScalar scalarName ->
-    "scalar " <> scalarName <<> " does not exist in the upstream remote schema"
   NonExistingUnionMemberTypes unionName nonExistingMembers ->
     "union " <> unionName <<> " contains members which do not exist in the members"
     <> " of the remote schema union :"
@@ -480,13 +478,14 @@ validateEnumTypeDefinition
   :: ( MonadValidate [RoleBasedSchemaValidationError] m)
   => G.EnumTypeDefinition -- ^ provided enum type definition
   -> G.EnumTypeDefinition -- ^ upstream enum type definition
-  -> m ()
+  -> m G.EnumTypeDefinition
 validateEnumTypeDefinition providedEnum upstreamEnum = do
   validateDirectives providedDirectives upstreamDirectives G.TSDLENUM $ (Enum, providedName)
   onJust (NE.nonEmpty $ S.toList $ duplicates providedEnumValNames) $ \dups -> do
     refute $ pure $ DuplicateEnumValues providedName dups
   onJust (NE.nonEmpty $ S.toList fieldsDifference) $ \nonExistingEnumVals ->
     dispute $ pure $ NonExistingEnumValues providedName nonExistingEnumVals
+  pure providedEnum
   where
     G.EnumTypeDefinition _ providedName providedDirectives providedValueDefns = providedEnum
 
@@ -497,24 +496,6 @@ validateEnumTypeDefinition providedEnum upstreamEnum = do
     upstreamEnumValNames   = map (G.unEnumValue . G._evdName) $ upstreamValueDefns
 
     fieldsDifference       = getDifference providedEnumValNames upstreamEnumValNames
-
--- | `validateEnumTypeDefinitions` checks if the `providedEnums`
--- is a subset of `upstreamEnums`. Then, each enum provided by
--- the user is validated against the corresponding upstream enum
--- by calling the `validateEnumTypeDefinition`
-validateEnumTypeDefinitions
-  :: ( MonadValidate [RoleBasedSchemaValidationError] m)
-  => [G.EnumTypeDefinition]
-  -> [G.EnumTypeDefinition]
-  -> m ()
-validateEnumTypeDefinitions providedEnums upstreamEnums = do
-  for_ providedEnums $ \providedEnum@(G.EnumTypeDefinition _ name _ _) -> do
-    upstreamEnum <-
-      onNothing (Map.lookup name upstreamEnumsMap) $
-        refute $ pure $ TypeDoesNotExist Enum name
-    validateEnumTypeDefinition providedEnum upstreamEnum
-  where
-    upstreamEnumsMap = mapFromL G._etdName $ upstreamEnums
 
 -- | `validateInputValueDefinition` validates a given input value definition
 --   , against the corresponding upstream input value definition. Two things
@@ -592,23 +573,6 @@ validateInputObjectTypeDefinition providedInputObj upstreamInputObj = do
 
     G.InputObjectTypeDefinition _ _ upstreamDirectives upstreamArgs = upstreamInputObj
 
-validateInputObjectTypeDefinitions
-  :: ( MonadValidate [RoleBasedSchemaValidationError] m
-     , MonadReader G.SchemaDocument m
-     , MonadState Int m
-     )
-  => [G.InputObjectTypeDefinition G.InputValueDefinition]
-  -> [G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition]
-  -> m [G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition]
-validateInputObjectTypeDefinitions providedInputObjects upstreamInputObjects = do
-  for providedInputObjects $ \providedInputObject@(G.InputObjectTypeDefinition _ name _ _) -> do
-    upstreamInputObject <-
-      onNothing (Map.lookup name upstreamInputObjectsMap) $
-        refute $ pure $ TypeDoesNotExist InputObject name
-    validateInputObjectTypeDefinition providedInputObject upstreamInputObject
-  where
-    upstreamInputObjectsMap = mapFromL G._iotdName $ upstreamInputObjects
-
 validateFieldDefinition
   :: ( MonadValidate [RoleBasedSchemaValidationError] m
      , MonadReader G.SchemaDocument m
@@ -655,7 +619,7 @@ validateInterfaceDefinition
      , MonadState Int m
      )
   => G.InterfaceTypeDefinition () G.InputValueDefinition
-  -> G.InterfaceTypeDefinition () RemoteSchemaInputValueDefinition
+  -> G.InterfaceTypeDefinition [G.Name] RemoteSchemaInputValueDefinition
   -> m (G.InterfaceTypeDefinition () RemoteSchemaInputValueDefinition)
 validateInterfaceDefinition providedInterfaceDefn upstreamInterfaceDefn = do
   validateDirectives providedDirectives upstreamDirectives G.TSDLINTERFACE $ (Interface, providedName)
@@ -666,80 +630,35 @@ validateInterfaceDefinition providedInterfaceDefn upstreamInterfaceDefn = do
 
     G.InterfaceTypeDefinition _ _ upstreamDirectives upstreamFieldDefns _ = upstreamInterfaceDefn
 
-validateInterfaceDefinitions
-  :: ( MonadValidate [RoleBasedSchemaValidationError] m
-     , MonadReader G.SchemaDocument m
-     , MonadState Int m
-     )
-  => [G.InterfaceTypeDefinition () G.InputValueDefinition]
-  -> [G.InterfaceTypeDefinition () RemoteSchemaInputValueDefinition]
-  -> m [(G.InterfaceTypeDefinition () RemoteSchemaInputValueDefinition)]
-validateInterfaceDefinitions providedInterfaces upstreamInterfaces = do
-  for providedInterfaces $ \providedInterface@(G.InterfaceTypeDefinition _ name _ _ _) -> do
-    upstreamInterface <-
-      onNothing (Map.lookup name upstreamInterfacesMap) $
-        refute $ pure $ TypeDoesNotExist Interface name
-    validateInterfaceDefinition providedInterface upstreamInterface
-  where
-    upstreamInterfacesMap = mapFromL G._itdName $ upstreamInterfaces
-
 validateScalarDefinition
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => G.ScalarTypeDefinition
   -> G.ScalarTypeDefinition
-  -> m ()
+  -> m G.ScalarTypeDefinition
 validateScalarDefinition providedScalar upstreamScalar = do
   void $ validateDirectives providedDirectives upstreamDirectives G.TSDLSCALAR $ (Scalar, providedName)
+  pure providedScalar
   where
     G.ScalarTypeDefinition _ providedName providedDirectives = providedScalar
 
     G.ScalarTypeDefinition _ _ upstreamDirectives = upstreamScalar
 
-validateScalarDefinitions
-  :: (MonadValidate [RoleBasedSchemaValidationError] m)
-  => [G.ScalarTypeDefinition]
-  -> [G.ScalarTypeDefinition]
-  -> m ()
-validateScalarDefinitions providedScalars upstreamScalars = do
-  for_ providedScalars $ \providedScalar@(G.ScalarTypeDefinition _ name _) -> do
-    -- Avoid check for built-in scalar types
-    unless (G.unName name `elem` ["ID", "Int", "Float", "Boolean", "String"]) $ do
-      upstreamScalar <- do
-        onNothing (Map.lookup name upstreamScalarsMap) $
-            refute $ pure $ NonExistingScalar name
-      validateScalarDefinition providedScalar upstreamScalar
-  where
-    upstreamScalarsMap = mapFromL G._stdName upstreamScalars
-
 validateUnionDefinition
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
   => G.UnionTypeDefinition
   -> G.UnionTypeDefinition
-  -> m ()
+  -> m G.UnionTypeDefinition
 validateUnionDefinition providedUnion upstreamUnion = do
   void $ validateDirectives providedDirectives upstreamDirectives G.TSDLUNION $ (Union, providedName)
   onJust (NE.nonEmpty $ S.toList memberTypesDiff) $ \nonExistingMembers ->
     refute $ pure $ NonExistingUnionMemberTypes providedName nonExistingMembers
+  pure providedUnion
   where
     G.UnionTypeDefinition _ providedName providedDirectives providedMemberTypes = providedUnion
 
     G.UnionTypeDefinition _ _ upstreamDirectives upstreamMemberTypes = upstreamUnion
 
     memberTypesDiff = getDifference providedMemberTypes upstreamMemberTypes
-
-validateUnionTypeDefinitions
-  :: (MonadValidate [RoleBasedSchemaValidationError] m)
-  => [G.UnionTypeDefinition]
-  -> [G.UnionTypeDefinition]
-  -> m ()
-validateUnionTypeDefinitions providedUnions upstreamUnions = do
-  for_ providedUnions $ \providedUnion@(G.UnionTypeDefinition _ name _ _) -> do
-    upstreamUnion <-
-      onNothing (Map.lookup name upstreamUnionsMap) $
-        refute $ pure $ TypeDoesNotExist Union name
-    validateUnionDefinition providedUnion upstreamUnion
-  where
-    upstreamUnionsMap = mapFromL G._utdName $ upstreamUnions
 
 validateObjectDefinition
   :: ( MonadValidate [RoleBasedSchemaValidationError] m
@@ -774,26 +693,6 @@ validateObjectDefinition providedObj upstreamObj interfacesDeclared = do
 
     nonExistingInterfaces = S.toList $ S.difference interfacesDiff providedIfacesSet
 
--- | function to compare objects of the role based schema against the
--- objects of the upstream remote schema.
-validateObjectDefinitions
-  :: ( MonadValidate [RoleBasedSchemaValidationError] m
-     , MonadReader G.SchemaDocument m
-     , MonadState Int m
-     )
-  => [G.ObjectTypeDefinition G.InputValueDefinition]
-  -> [G.ObjectTypeDefinition RemoteSchemaInputValueDefinition]
-  -> S.HashSet G.Name
-  -> m [G.ObjectTypeDefinition RemoteSchemaInputValueDefinition]
-validateObjectDefinitions providedObjects upstreamObjects providedInterfaces = do
-  for providedObjects $ \providedObject@(G.ObjectTypeDefinition _ name _ _ _) -> do
-    upstreamObject <-
-      onNothing (Map.lookup name upstreamObjectsMap) $
-        refute $ pure $ TypeDoesNotExist Object name
-    validateObjectDefinition providedObject upstreamObject providedInterfaces
-  where
-    upstreamObjectsMap = mapFromL G._otdName $ upstreamObjects
-
 -- | helper function to validate the schema definitions mentioned in the schema
 -- document.
 validateSchemaDefinitions
@@ -824,46 +723,6 @@ createPossibleTypesMap objDefns =
                     mempty
                     objMap
 
--- | getSchemaDocIntrospection converts the `PartitionedTypeDefinitions` to
--- `IntrospectionResult` because the function `buildRemoteParser` function which
--- builds the remote schema parsers accepts an `IntrospectionResult`. The
--- conversion involves converting `G.TypeDefinition ()` to `G.TypeDefinition
--- [G.Name]`. The `[G.Name]` here being the list of object names that an
--- interface implements. This is needed to be done here by-hand because while
--- specifying the `SchemaDocument` through the GraphQL DSL, it doesn't include
--- the `possibleTypes` along with an object.
-getSchemaDocIntrospection
-  :: [G.ScalarTypeDefinition]
-  -> [G.EnumTypeDefinition]
-  -> [G.InterfaceTypeDefinition () RemoteSchemaInputValueDefinition]
-  -> [G.UnionTypeDefinition]
-  -> [G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition]
-  -> [G.ObjectTypeDefinition RemoteSchemaInputValueDefinition]
-  -> (Maybe G.Name, Maybe G.Name, Maybe G.Name)
-  -> IntrospectionResult
-getSchemaDocIntrospection scalars enums interfaces unions inpObjs objects (queryRoot, mutationRoot, subscriptionRoot) =
-  let scalarTypeDefs = map G.TypeDefinitionScalar scalars
-      objectTypeDefs = map G.TypeDefinitionObject objects
-      unionTypeDefs = map G.TypeDefinitionUnion unions
-      enumTypeDefs = map G.TypeDefinitionEnum enums
-      inpObjTypeDefs = map G.TypeDefinitionInputObject inpObjs
-
-      possibleTypesMap = createPossibleTypesMap objects
-      interfacesWithPossibleTypes = map (\iface ->
-                                           let name = G._itdName iface
-                                           in
-                                             iface
-                                               {G._itdPossibleTypes =
-                                                fromMaybe [] (Map.lookup name possibleTypesMap)})
-                                           interfaces
-      interfaceTypeDefs = map G.TypeDefinitionInterface $ interfacesWithPossibleTypes
-      modifiedTypeDefs =
-        scalarTypeDefs <> objectTypeDefs
-        <> interfaceTypeDefs <> unionTypeDefs
-        <> enumTypeDefs <> inpObjTypeDefs
-      schemaIntrospection = RemoteSchemaIntrospection modifiedTypeDefs
-  in IntrospectionResult schemaIntrospection (fromMaybe $$(G.litName "Query") queryRoot) mutationRoot subscriptionRoot
-
 partitionTypeDefinition :: G.TypeDefinition () a  -> State (PartitionedTypeDefinitions a) ()
 partitionTypeDefinition (G.TypeDefinitionScalar scalarDefn) =
   modify (\td -> td {_ptdScalars = (scalarDefn :) . _ptdScalars $ td})
@@ -878,10 +737,54 @@ partitionTypeDefinition (G.TypeDefinitionEnum enumDefn) =
 partitionTypeDefinition (G.TypeDefinitionInputObject inputObjectDefn) =
   modify (\td -> td {_ptdInputObjects = (inputObjectDefn :) . _ptdInputObjects $ td})
 
+partitionTypeSystemDefinitions
+  :: [G.TypeSystemDefinition]
+  -> ([G.SchemaDefinition], [G.TypeDefinition () G.InputValueDefinition])
+partitionTypeSystemDefinitions  = foldr f ([], [])
+  where
+    f d (schemaDefinitions, typeDefinitions) = case d of
+      G.TypeSystemDefinitionSchema schemaDefinition -> ((schemaDefinition: schemaDefinitions), typeDefinitions)
+      G.TypeSystemDefinitionType   typeDefinition   -> (schemaDefinitions, (typeDefinition: typeDefinitions))
+
+-- | getSchemaDocIntrospection converts the `PartitionedTypeDefinitions` to
+-- `IntrospectionResult` because the function `buildRemoteParser` function which
+-- builds the remote schema parsers accepts an `IntrospectionResult`. The
+-- conversion involves converting `G.TypeDefinition ()` to `G.TypeDefinition
+-- [G.Name]`. The `[G.Name]` here being the list of object names that an
+-- interface implements. This is needed to be done here by-hand because while
+-- specifying the `SchemaDocument` through the GraphQL DSL, it doesn't include
+-- the `possibleTypes` along with an object.
+getSchemaDocIntrospection
+  :: [G.TypeDefinition () RemoteSchemaInputValueDefinition]
+  -> (Maybe G.Name, Maybe G.Name, Maybe G.Name)
+  -> IntrospectionResult
+getSchemaDocIntrospection providedTypeDefns (queryRoot, mutationRoot, subscriptionRoot) =
+  let (_, providedTypes) = flip runState emptySchemaDocTypeDefinitions $
+                      traverse partitionTypeDefinition providedTypeDefns
+      PartitionedTypeDefinitions scalars objects interfaces
+        unions enums inputObjects _schemaDefns = providedTypes
+      possibleTypesMap = createPossibleTypesMap objects
+      modifiedTypeDefns = do
+        providedType <- providedTypeDefns
+        case providedType of
+          G.TypeDefinitionInterface interface@(G.InterfaceTypeDefinition _ name _ _ _) ->
+            pure $
+              G.TypeDefinitionInterface $
+              interface { G._itdPossibleTypes = concat $ maybeToList (Map.lookup name possibleTypesMap) }
+          G.TypeDefinitionScalar scalar -> pure $ G.TypeDefinitionScalar scalar
+          G.TypeDefinitionEnum enum -> pure $ G.TypeDefinitionEnum enum
+          G.TypeDefinitionObject obj -> pure $ G.TypeDefinitionObject obj
+          G.TypeDefinitionUnion union' -> pure $ G.TypeDefinitionUnion union'
+          G.TypeDefinitionInputObject inpObj -> pure $ G.TypeDefinitionInputObject inpObj
+      remoteSchemaIntrospection = RemoteSchemaIntrospection modifiedTypeDefns
+  in IntrospectionResult remoteSchemaIntrospection (fromMaybe $$(G.litName "Query") queryRoot) mutationRoot subscriptionRoot
+  where
+    emptySchemaDocTypeDefinitions = PartitionedTypeDefinitions [] [] [] [] [] [] []
+
 -- | validateRemoteSchema accepts two arguments, the `SchemaDocument` of
--- the role-based schema, that is provided by the user and the `SchemaIntrospection`
--- of the upstream remote schema. This function, in turn calls the other validation
--- functions for scalars, enums, unions, interfaces,input objects and objects.
+--   the role-based schema, that is provided by the user and the `SchemaIntrospection`
+--   of the upstream remote schema. This function, in turn calls the other validation
+--   functions for scalars, enums, unions, interfaces,input objects and objects.
 validateRemoteSchema
   :: ( MonadValidate [RoleBasedSchemaValidationError] m
      , MonadReader G.SchemaDocument m
@@ -889,45 +792,73 @@ validateRemoteSchema
      )
   => RemoteSchemaIntrospection
   -> m IntrospectionResult
-validateRemoteSchema  (RemoteSchemaIntrospection upstreamTypeDefns) = do
-  G.SchemaDocument providedTypeDefns <- ask
-  let
-    -- Converting `[G.TypeSystemDefinition]` into `PartitionedTypeDefinitions`
-    (_, providedTypes) = flip runState emptySchemaDocTypeDefinitions $
-                      traverse partitionTypeSystemDefinitions providedTypeDefns
-    -- Converting `[G.TypeDefinition [Name]]` into `PartitionedTypeDefinitions`
-    (_, upstreamTypes) = flip runState emptySchemaDocTypeDefinitions $
-                      traverse partitionSchemaIntrospection upstreamTypeDefns
-    providedInterfacesList = map G._itdName $ _ptdInterfaces providedTypes
-    duplicateTypesList = duplicateTypes providedTypes
-  -- check for duplicate type names
+validateRemoteSchema upstreamRemoteSchemaIntrospection = do
+  G.SchemaDocument providedTypeSystemDefinitions <- ask
+  let (providedSchemaDefinitions, providedTypeDefinitions) =
+        partitionTypeSystemDefinitions providedTypeSystemDefinitions
+      duplicateTypesList = S.toList $ duplicates (getTypeName <$> providedTypeDefinitions)
   onJust (NE.nonEmpty duplicateTypesList) $ \duplicateTypeNames ->
     refute $ pure $ DuplicateTypeNames duplicateTypeNames
-  rootTypeNames <- validateSchemaDefinitions $ _ptdSchemaDef providedTypes
-  validateScalarDefinitions (_ptdScalars providedTypes) (_ptdScalars upstreamTypes)
-  validateEnumTypeDefinitions (_ptdEnums providedTypes) (_ptdEnums upstreamTypes)
-  interfaceTypeDefns <- validateInterfaceDefinitions (_ptdInterfaces providedTypes) (_ptdInterfaces upstreamTypes)
-  validateUnionTypeDefinitions (_ptdUnions providedTypes) (_ptdUnions upstreamTypes)
-  inpObjTypeDefns <- validateInputObjectTypeDefinitions (_ptdInputObjects providedTypes) (_ptdInputObjects upstreamTypes)
-  objTypeDefns <- validateObjectDefinitions (_ptdObjects providedTypes) (_ptdObjects upstreamTypes) $ S.fromList providedInterfacesList
-  let PartitionedTypeDefinitions scalars _ _ unions enums _ _ = providedTypes
-  pure $ getSchemaDocIntrospection scalars enums interfaceTypeDefns unions inpObjTypeDefns objTypeDefns rootTypeNames
+  rootTypeNames <- validateSchemaDefinitions providedSchemaDefinitions
+  let providedInterfacesTypes =
+        S.fromList $
+        flip mapMaybe providedTypeDefinitions $ \case
+          G.TypeDefinitionInterface interface -> Just $ G._itdName interface
+          _                                   -> Nothing
+  validatedTypeDefinitions <-
+    for providedTypeDefinitions $ \case
+      G.TypeDefinitionScalar providedScalarTypeDefn -> do
+        let nameTxt = G.unName $ G._stdName providedScalarTypeDefn
+        case nameTxt `elem` ["ID", "Int", "Float", "Boolean", "String"] of
+          True -> pure $ G.TypeDefinitionScalar providedScalarTypeDefn
+          False -> do
+            upstreamScalarTypeDefn <-
+              lookupScalar upstreamRemoteSchemaIntrospection (G._stdName providedScalarTypeDefn)
+              `onNothing`
+              refute (pure $ TypeDoesNotExist Scalar (G._stdName providedScalarTypeDefn))
+            G.TypeDefinitionScalar <$> validateScalarDefinition providedScalarTypeDefn upstreamScalarTypeDefn
+      G.TypeDefinitionInterface providedInterfaceTypeDefn -> do
+        upstreamInterfaceTypeDefn <-
+          lookupInterface upstreamRemoteSchemaIntrospection (G._itdName providedInterfaceTypeDefn)
+          `onNothing`
+          refute (pure $ TypeDoesNotExist Interface (G._itdName providedInterfaceTypeDefn))
+        G.TypeDefinitionInterface <$> validateInterfaceDefinition providedInterfaceTypeDefn upstreamInterfaceTypeDefn
+      G.TypeDefinitionObject providedObjectTypeDefn -> do
+        upstreamObjectTypeDefn <-
+          lookupObject upstreamRemoteSchemaIntrospection (G._otdName providedObjectTypeDefn)
+          `onNothing`
+          refute (pure $ TypeDoesNotExist Object (G._otdName providedObjectTypeDefn))
+        G.TypeDefinitionObject
+          <$>
+          validateObjectDefinition providedObjectTypeDefn upstreamObjectTypeDefn providedInterfacesTypes
+      G.TypeDefinitionUnion providedUnionTypeDefn -> do
+        upstreamUnionTypeDefn <-
+          lookupUnion upstreamRemoteSchemaIntrospection (G._utdName providedUnionTypeDefn)
+          `onNothing`
+          refute (pure $ TypeDoesNotExist Union (G._utdName providedUnionTypeDefn))
+        G.TypeDefinitionUnion <$> validateUnionDefinition providedUnionTypeDefn upstreamUnionTypeDefn
+      G.TypeDefinitionEnum providedEnumTypeDefn -> do
+        upstreamEnumTypeDefn <-
+          lookupEnum upstreamRemoteSchemaIntrospection (G._etdName providedEnumTypeDefn)
+          `onNothing`
+          refute (pure $ TypeDoesNotExist Enum (G._etdName providedEnumTypeDefn))
+        G.TypeDefinitionEnum <$> validateEnumTypeDefinition providedEnumTypeDefn upstreamEnumTypeDefn
+      G.TypeDefinitionInputObject providedInputObjectTypeDefn -> do
+        upstreamInputObjectTypeDefn <-
+          lookupInputObject upstreamRemoteSchemaIntrospection (G._iotdName providedInputObjectTypeDefn)
+          `onNothing`
+          refute (pure $ TypeDoesNotExist InputObject (G._iotdName providedInputObjectTypeDefn))
+        G.TypeDefinitionInputObject
+          <$> validateInputObjectTypeDefinition providedInputObjectTypeDefn upstreamInputObjectTypeDefn
+  pure $ getSchemaDocIntrospection validatedTypeDefinitions rootTypeNames
   where
-    emptySchemaDocTypeDefinitions = PartitionedTypeDefinitions [] [] [] [] [] [] []
-
-    partitionTypeSystemDefinitions :: G.TypeSystemDefinition -> State (PartitionedTypeDefinitions G.InputValueDefinition) ()
-    partitionTypeSystemDefinitions (G.TypeSystemDefinitionSchema schemaDefn) =
-      modify (\td -> td {_ptdSchemaDef = (schemaDefn :) . _ptdSchemaDef $ td})
-    partitionTypeSystemDefinitions (G.TypeSystemDefinitionType typeDefn) =
-      partitionTypeDefinition typeDefn
-
-    partitionSchemaIntrospection :: G.TypeDefinition [G.Name] a  -> State (PartitionedTypeDefinitions a) ()
-    partitionSchemaIntrospection typeDef = partitionTypeDefinition $ convertTypeDef typeDef
-
-    duplicateTypes (PartitionedTypeDefinitions scalars objs ifaces unions enums inpObjs _) =
-      S.toList $ duplicates $
-      (map G._stdName scalars) <> (map G._otdName objs) <> (map G._itdName ifaces)
-      <> (map G._utdName unions) <> (map G._etdName enums) <> (map G._iotdName inpObjs)
+    getTypeName = \case
+      G.TypeDefinitionScalar scalar      -> G._stdName scalar
+      G.TypeDefinitionEnum enum          -> G._etdName enum
+      G.TypeDefinitionObject obj         -> G._otdName obj
+      G.TypeDefinitionUnion union'       -> G._utdName union'
+      G.TypeDefinitionInterface iface    -> G._itdName iface
+      G.TypeDefinitionInputObject inpObj -> G._iotdName inpObj
 
 resolveRoleBasedRemoteSchema
   :: (MonadError QErr m)

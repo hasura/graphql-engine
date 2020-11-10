@@ -4,6 +4,10 @@ module Hasura.GraphQL.Schema.Remote
   , lookupObject
   , lookupType
   , lookupScalar
+  , lookupInterface
+  , lookupUnion
+  , lookupEnum
+  , lookupInputObject
   ) where
 
 import           Hasura.Prelude
@@ -24,6 +28,7 @@ import           Hasura.GraphQL.Parser                 as P
 import           Hasura.RQL.Types
 
 type RemoteSchemaObjectDefinition = G.ObjectTypeDefinition RemoteSchemaInputValueDefinition
+type RemoteSchemaInputObjectDefinition = G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition
 type RemoteSchemaInterfaceDefinition = G.InterfaceTypeDefinition [G.Name] RemoteSchemaInputValueDefinition
 type RemoteSchemaFieldDefinition = G.FieldDefinition RemoteSchemaInputValueDefinition
 type RemoteSchemaTypeDefinition = G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition
@@ -420,6 +425,36 @@ lookupScalar (RemoteSchemaIntrospection types) name = go types
     go :: [TypeDefinition possibleTypes RemoteSchemaInputValueDefinition] -> Maybe G.ScalarTypeDefinition
     go ((G.TypeDefinitionScalar t):tps)
       | G._stdName t == name = Just t
+      | otherwise = go tps
+    go (_:tps) = go tps
+    go [] = Nothing
+
+lookupUnion :: RemoteSchemaIntrospection -> G.Name -> Maybe G.UnionTypeDefinition
+lookupUnion (RemoteSchemaIntrospection types) name = go types
+  where
+    go :: [TypeDefinition possibleTypes RemoteSchemaInputValueDefinition] -> Maybe G.UnionTypeDefinition
+    go ((G.TypeDefinitionUnion t):tps)
+      | G._utdName t == name = Just t
+      | otherwise = go tps
+    go (_:tps) = go tps
+    go [] = Nothing
+
+lookupEnum :: RemoteSchemaIntrospection -> G.Name -> Maybe G.EnumTypeDefinition
+lookupEnum (RemoteSchemaIntrospection types) name = go types
+  where
+    go :: [TypeDefinition possibleTypes RemoteSchemaInputValueDefinition] -> Maybe G.EnumTypeDefinition
+    go ((G.TypeDefinitionEnum t):tps)
+      | G._etdName t == name = Just t
+      | otherwise = go tps
+    go (_:tps) = go tps
+    go [] = Nothing
+
+lookupInputObject :: RemoteSchemaIntrospection -> G.Name -> Maybe RemoteSchemaInputObjectDefinition
+lookupInputObject (RemoteSchemaIntrospection types) name = go types
+  where
+    go :: [TypeDefinition possibleTypes RemoteSchemaInputValueDefinition] -> Maybe RemoteSchemaInputObjectDefinition
+    go ((G.TypeDefinitionInputObject t):tps)
+      | G._iotdName t == name = Just t
       | otherwise = go tps
     go (_:tps) = go tps
     go [] = Nothing
