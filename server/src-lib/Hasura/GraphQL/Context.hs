@@ -25,7 +25,6 @@ import           Hasura.Prelude
 import qualified Data.Aeson                          as J
 import qualified Language.GraphQL.Draft.Syntax       as G
 
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Hasura.SQL.Backend
 
@@ -50,7 +49,7 @@ data RoleContext a
   { _rctxDefault :: !a -- ^ The default context for normal sessions
   , _rctxBackend :: !(Maybe a) -- ^ The context for sessions with backend privilege.
   } deriving (Show, Eq, Functor, Foldable, Traversable)
-$(deriveToJSON (aesonPrefix snakeCase) ''RoleContext)
+$(deriveToJSON hasuraJSON ''RoleContext)
 
 data GQLContext = GQLContext
   { gqlQueryParser    :: ParserFn (InsOrdHashMap G.Name (QueryRootField (UnpreparedValue 'Postgres)))

@@ -27,7 +27,6 @@ import qualified Data.HashMap.Strict                as M
 import qualified Data.HashSet                       as HS
 import qualified Data.List.NonEmpty                 as NE
 
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.List.Extended                 (duplicates)
 
@@ -42,14 +41,14 @@ data FunctionMeta
   , fmFunction :: !QualifiedFunction
   , fmType     :: !FunctionVolatility
   } deriving (Show, Eq)
-$(deriveJSON (aesonPrefix snakeCase) ''FunctionMeta)
+$(deriveJSON hasuraJSON ''FunctionMeta)
 
 data ComputedFieldMeta
   = ComputedFieldMeta
   { ccmName         :: !ComputedFieldName
   , ccmFunctionMeta :: !FunctionMeta
   } deriving (Show, Eq)
-$(deriveJSON (aesonPrefix snakeCase){omitNothingFields=True} ''ComputedFieldMeta)
+$(deriveJSON hasuraJSON{omitNothingFields=True} ''ComputedFieldMeta)
 
 data TableMeta (b :: BackendType)
   = TableMeta

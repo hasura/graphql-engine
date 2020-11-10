@@ -7,7 +7,6 @@ module Hasura.Server.Init
   ) where
 
 import qualified Data.Aeson                          as J
-import qualified Data.Aeson.Casing                   as J
 import qualified Data.Aeson.TH                       as J
 import qualified Data.HashSet                        as Set
 import qualified Data.String                         as DataString
@@ -59,7 +58,7 @@ data StartupTimeInfo
   { _stiMessage   :: !Text
   , _stiTimeTaken :: !Double
   }
-$(J.deriveJSON (J.aesonPrefix J.snakeCase) ''StartupTimeInfo)
+$(J.deriveJSON hasuraJSON ''StartupTimeInfo)
 
 returnJust :: Monad m => a -> m (Maybe a)
 returnJust = return . Just

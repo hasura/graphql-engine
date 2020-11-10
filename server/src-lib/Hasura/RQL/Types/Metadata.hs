@@ -16,7 +16,6 @@ import qualified Data.Text                           as T
 import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Control.Lens                        hiding (set, (.=))
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
 
@@ -36,8 +35,8 @@ import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
-import           Hasura.Session
 import           Hasura.SQL.Backend
+import           Hasura.Session
 
 
 data TableMetadataObjId
@@ -207,7 +206,7 @@ data ComputedFieldMetadata
   , _cfmComment    :: !(Maybe Text)
   } deriving (Show, Eq, Generic)
 instance Cacheable ComputedFieldMetadata
-$(deriveJSON (aesonPrefix snakeCase) ''ComputedFieldMetadata)
+$(deriveJSON hasuraJSON ''ComputedFieldMetadata)
 
 data RemoteRelationshipMetadata
   = RemoteRelationshipMetadata
@@ -215,7 +214,7 @@ data RemoteRelationshipMetadata
   , _rrmDefinition :: !RemoteRelationshipDef
   } deriving (Show, Eq, Generic)
 instance Cacheable RemoteRelationshipMetadata
-$(deriveJSON (aesonPrefix snakeCase) ''RemoteRelationshipMetadata)
+$(deriveJSON hasuraJSON ''RemoteRelationshipMetadata)
 $(makeLenses ''RemoteRelationshipMetadata)
 
 data RemoteSchemaPermissionMetadata
@@ -269,7 +268,7 @@ data TableMetadata
   , _tmEventTriggers       :: !EventTriggers
   } deriving (Show, Eq, Generic)
 instance Cacheable TableMetadata
-$(deriveToJSON (aesonPrefix snakeCase) ''TableMetadata)
+$(deriveToJSON hasuraJSON ''TableMetadata)
 $(makeLenses ''TableMetadata)
 
 mkTableMeta :: QualifiedTable -> Bool -> TableConfig -> TableMetadata
@@ -327,7 +326,7 @@ data FunctionMetadata
   } deriving (Show, Eq, Generic)
 instance Cacheable FunctionMetadata
 $(makeLenses ''FunctionMetadata)
-$(deriveToJSON (aesonPrefix snakeCase) ''FunctionMetadata)
+$(deriveToJSON hasuraJSON ''FunctionMetadata)
 
 instance FromJSON FunctionMetadata where
   parseJSON = withObject "Object" $ \o ->

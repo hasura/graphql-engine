@@ -5,15 +5,16 @@ module Hasura.Server.API.Config
   , runGetConfig
   ) where
 
-import           Data.Aeson.Casing
+import           Hasura.Prelude
+
 import           Data.Aeson.TH
 
-import           Hasura.Prelude
+import qualified Hasura.GraphQL.Execute.LiveQuery.Options as LQ
+
 import           Hasura.Server.Auth
 import           Hasura.Server.Auth.JWT
 import           Hasura.Server.Version                    (HasVersion, Version, currentVersion)
 
-import qualified Hasura.GraphQL.Execute.LiveQuery.Options as LQ
 
 data JWTInfo
   = JWTInfo
@@ -22,7 +23,7 @@ data JWTInfo
   , jwtiClaimsMap       :: !(Maybe JWTCustomClaimsMap)
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonPrefix snakeCase) ''JWTInfo)
+$(deriveToJSON hasuraJSON ''JWTInfo)
 
 data ServerConfig
   = ServerConfig
@@ -36,7 +37,7 @@ data ServerConfig
   , scfgConsoleAssetsDir   :: !(Maybe Text)
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonPrefix snakeCase) ''ServerConfig)
+$(deriveToJSON hasuraJSON ''ServerConfig)
 
 runGetConfig :: HasVersion => AuthMode -> Bool -> LQ.LiveQueriesOptions -> Maybe Text -> ServerConfig
 runGetConfig am isAllowListEnabled liveQueryOpts consoleAssetsDir = ServerConfig

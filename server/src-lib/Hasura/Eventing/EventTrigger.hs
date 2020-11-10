@@ -59,7 +59,6 @@ import           Control.Monad.Catch                    (MonadMask, bracket_)
 import           Control.Monad.STM
 import           Control.Monad.Trans.Control            (MonadBaseControl)
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Has
 import           Data.Int                               (Int64)
@@ -84,7 +83,7 @@ data TriggerMetadata
   = TriggerMetadata { tmName :: TriggerName }
   deriving (Show, Eq)
 
-$(deriveJSON (aesonPrefix snakeCase){omitNothingFields=True} ''TriggerMetadata)
+$(deriveJSON hasuraJSON{omitNothingFields=True} ''TriggerMetadata)
 
 newtype EventInternalErr
   = EventInternalErr QErr
@@ -107,7 +106,7 @@ data Event
   , eCreatedAt :: !Time.UTCTime
   } deriving (Show, Eq)
 
-$(deriveFromJSON (aesonPrefix snakeCase){omitNothingFields=True} ''Event)
+$(deriveFromJSON hasuraJSON{omitNothingFields=True} ''Event)
 
 data EventEngineCtx
   = EventEngineCtx
@@ -121,7 +120,7 @@ data DeliveryInfo
   , diMaxRetries   :: Int
   } deriving (Show, Eq)
 
-$(deriveJSON (aesonPrefix snakeCase){omitNothingFields=True} ''DeliveryInfo)
+$(deriveJSON hasuraJSON{omitNothingFields=True} ''DeliveryInfo)
 
 newtype QualifiedTableStrict = QualifiedTableStrict
   { getQualifiedTable :: QualifiedTable
@@ -143,7 +142,7 @@ data EventPayload
   , epCreatedAt    :: Time.UTCTime
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonPrefix snakeCase){omitNothingFields=True} ''EventPayload)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''EventPayload)
 
 defaultMaxEventThreads :: Int
 defaultMaxEventThreads = 100

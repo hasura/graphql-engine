@@ -8,7 +8,6 @@ import qualified PostgreSQL.Binary.Decoding         as PD
 
 import           Control.Lens                       (makeLenses)
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Hashable
 
@@ -102,7 +101,7 @@ data PermDef a =
   , _pdComment    :: !(Maybe T.Text)
   } deriving (Show, Eq, Generic)
 instance (Cacheable a) => Cacheable (PermDef a)
-$(deriveFromJSON (aesonPrefix snakeCase){omitNothingFields=True} ''PermDef)
+$(deriveFromJSON hasuraJSON{omitNothingFields=True} ''PermDef)
 $(makeLenses ''PermDef)
 
 instance (ToJSON a) => ToJSON (PermDef a) where
@@ -125,9 +124,9 @@ data InsPerm (b :: BackendType)
   } deriving (Show, Eq, Generic)
 instance Cacheable (InsPerm 'Postgres)
 instance FromJSON (InsPerm 'Postgres) where
-  parseJSON = genericParseJSON (aesonPrefix snakeCase){omitNothingFields=True}
+  parseJSON = genericParseJSON hasuraJSON{omitNothingFields=True}
 instance ToJSON (InsPerm 'Postgres) where
-  toJSON = genericToJSON (aesonPrefix snakeCase){omitNothingFields=True}
+  toJSON = genericToJSON hasuraJSON{omitNothingFields=True}
 
 type InsPermDef    b = PermDef    (InsPerm b)
 
@@ -142,7 +141,7 @@ data SelPerm (b :: BackendType)
   } deriving (Show, Eq, Generic)
 instance Cacheable (SelPerm 'Postgres)
 instance ToJSON (SelPerm 'Postgres) where
-  toJSON = genericToJSON (aesonPrefix snakeCase) {omitNothingFields=True}
+  toJSON = genericToJSON hasuraJSON {omitNothingFields=True}
 
 instance FromJSON (SelPerm 'Postgres) where
   parseJSON = withObject "SelPerm" $ \o ->
@@ -161,9 +160,9 @@ data DelPerm (b :: BackendType)
   deriving (Show, Eq, Generic)
 instance Cacheable (DelPerm 'Postgres)
 instance FromJSON (DelPerm 'Postgres) where
-  parseJSON = genericParseJSON $ aesonPrefix snakeCase
+  parseJSON = genericParseJSON hasuraJSON
 instance ToJSON (DelPerm 'Postgres) where
-  toJSON = genericToJSON (aesonPrefix snakeCase) {omitNothingFields=True}
+  toJSON = genericToJSON hasuraJSON {omitNothingFields=True}
 
 type DelPermDef    b = PermDef    (DelPerm b)
 
@@ -181,8 +180,8 @@ data UpdPerm (b :: BackendType)
   } deriving (Show, Eq, Generic)
 instance Cacheable (UpdPerm 'Postgres)
 instance FromJSON (UpdPerm 'Postgres) where
-  parseJSON = genericParseJSON (aesonPrefix snakeCase){omitNothingFields=True}
+  parseJSON = genericParseJSON hasuraJSON{omitNothingFields=True}
 instance ToJSON (UpdPerm 'Postgres) where
-  toJSON = genericToJSON (aesonPrefix snakeCase){omitNothingFields=True}
+  toJSON = genericToJSON hasuraJSON{omitNothingFields=True}
 
 type UpdPermDef    b = PermDef    (UpdPerm b)

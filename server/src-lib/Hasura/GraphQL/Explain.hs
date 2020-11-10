@@ -44,7 +44,7 @@ data GQLExplain
   , _gqeIsRelay :: !(Maybe Bool)
   } deriving (Show, Eq)
 
-$(J.deriveJSON (J.aesonPrefix J.snakeCase){J.omitNothingFields=True}
+$(J.deriveJSON hasuraJSON{J.omitNothingFields=True}
   ''GQLExplain
  )
 

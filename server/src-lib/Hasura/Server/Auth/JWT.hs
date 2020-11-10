@@ -214,7 +214,7 @@ data HasuraClaims
   { _cmAllowedRoles :: ![RoleName]
   , _cmDefaultRole  :: !RoleName
   } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonPrefix J.snakeCase) ''HasuraClaims)
+$(J.deriveJSON hasuraJSON ''HasuraClaims)
 
 -- | An action that refreshes the JWK at intervals in an infinite loop.
 jwkRefreshCtrl

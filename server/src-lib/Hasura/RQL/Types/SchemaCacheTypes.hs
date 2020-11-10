@@ -5,7 +5,6 @@ import           Hasura.Prelude
 import qualified Data.Text                           as T
 
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
 import           Data.Text.Extended
@@ -133,5 +132,5 @@ data SchemaDependency
   , sdReason :: !DependencyReason
   } deriving (Show, Eq, Generic)
 
-$(deriveToJSON (aesonPrefix snakeCase) ''SchemaDependency)
+$(deriveToJSON hasuraJSON ''SchemaDependency)
 instance Hashable SchemaDependency
