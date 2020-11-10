@@ -1,6 +1,6 @@
 -- | Translate from the DML to the TSql dialect.
 
-module Hasura.SQL.Tsql.FromIr
+module Hasura.Backends.MSSQL.FromIr
   ( fromSelectRows
   , mkSQLSelect
   , fromRootField
@@ -17,31 +17,31 @@ import           Control.Monad.Trans.State.Strict
 import           Control.Monad.Validate
 import           Control.Monad.Writer.Strict
 import           Data.Foldable
-import           Data.HashMap.Strict (HashMap)
-import qualified Data.HashMap.Strict as HM
-import           Data.List.NonEmpty (NonEmpty(..))
-import qualified Data.List.NonEmpty as NE
-import           Data.Map.Strict (Map)
-import qualified Data.Map.Strict as M
+import           Data.HashMap.Strict              (HashMap)
+import qualified Data.HashMap.Strict              as HM
+import           Data.List.NonEmpty               (NonEmpty (..))
+import qualified Data.List.NonEmpty               as NE
+import           Data.Map.Strict                  (Map)
+import qualified Data.Map.Strict                  as M
 import           Data.Maybe
 import           Data.Proxy
-import           Data.Sequence (Seq)
-import           Data.Text (Text)
-import qualified Data.Text as T
-import qualified Data.Text.Read as T
+import           Data.Sequence                    (Seq)
+import           Data.Text                        (Text)
+import qualified Data.Text                        as T
+import qualified Data.Text.Read                   as T
 import           Data.Void
-import qualified Database.ODBC.SQLServer as Odbc
-import qualified Hasura.GraphQL.Context as Graphql
-import qualified Hasura.RQL.DML.Select as DS
-import qualified Hasura.RQL.DML.Select.Types as Ir
-import qualified Hasura.RQL.Types.BoolExp as Ir
-import qualified Hasura.RQL.Types.Column as Ir
-import qualified Hasura.RQL.Types.Common as Ir
-import qualified Hasura.RQL.Types.DML as Ir
+import qualified Database.ODBC.SQLServer          as Odbc
+import qualified Hasura.GraphQL.Context           as Graphql
+import qualified Hasura.RQL.DML.Select            as DS
+import qualified Hasura.RQL.DML.Select.Types      as Ir
+import qualified Hasura.RQL.Types.BoolExp         as Ir
+import qualified Hasura.RQL.Types.Column          as Ir
+import qualified Hasura.RQL.Types.Common          as Ir
+import qualified Hasura.RQL.Types.DML             as Ir
 import           Hasura.SQL.Backend
-import qualified Hasura.SQL.DML as Sql
-import           Hasura.SQL.Tsql.Types as Tsql
-import qualified Hasura.SQL.Types as Sql
+import qualified Hasura.SQL.DML                   as Sql
+import           Hasura.SQL.Tsql.Types            as Tsql
+import qualified Hasura.SQL.Types                 as Sql
 import           Prelude
 
 --------------------------------------------------------------------------------
@@ -137,7 +137,7 @@ fromSelectRows annSelectG = do
   selectFrom <-
     case from of
       Ir.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
-      _ -> refute (pure (FromTypeUnsupported from))
+      _                            -> refute (pure (FromTypeUnsupported from))
   Args { argsOrderBy
        , argsWhere
        , argsJoins
@@ -178,7 +178,7 @@ fromSelectRows annSelectG = do
     Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
     permissionBasedTop =
       case mPermLimit of
-        Nothing -> NoTop
+        Nothing    -> NoTop
         Just limit -> Top limit
     stringifyNumbers =
       if num
@@ -192,7 +192,7 @@ fromSelectAggregate annSelectG = do
   selectFrom <-
     case from of
       Ir.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
-      _ -> refute (pure (FromTypeUnsupported from))
+      _                            -> refute (pure (FromTypeUnsupported from))
   fieldSources <-
     runReaderT (traverse fromTableAggregateFieldG fields) (fromAlias selectFrom)
   filterExpression <-
@@ -230,24 +230,24 @@ fromSelectAggregate annSelectG = do
     Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
     permissionBasedTop =
       case mPermLimit of
-        Nothing -> NoTop
+        Nothing    -> NoTop
         Just limit -> Top limit
 
 --------------------------------------------------------------------------------
 -- GraphQL Args
 
 data Args = Args
-  { argsWhere :: Where
-  , argsOrderBy :: Maybe (NonEmpty OrderBy)
-  , argsJoins :: [Join]
-  , argsTop :: Top
-  , argsOffset :: Maybe Expression
-  , argsDistinct :: Proxy (Maybe (NonEmpty FieldName))
+  { argsWhere         :: Where
+  , argsOrderBy       :: Maybe (NonEmpty OrderBy)
+  , argsJoins         :: [Join]
+  , argsTop           :: Top
+  , argsOffset        :: Maybe Expression
+  , argsDistinct      :: Proxy (Maybe (NonEmpty FieldName))
   , argsExistingJoins :: Map Sql.QualifiedTable EntityAlias
   } deriving (Show)
 
 data UnfurledJoin = UnfurledJoin
-  { unfurledJoin :: Join
+  { unfurledJoin             :: Join
   , unfurledObjectTableAlias :: Maybe (Sql.QualifiedTable, EntityAlias)
     -- ^ Recorded if we joined onto an object relation.
   } deriving (Show)
@@ -300,7 +300,7 @@ fromAnnOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
   let morderByOrder =
         fmap
           (\case
-             Sql.OTAsc -> AscOrder
+             Sql.OTAsc  -> AscOrder
              Sql.OTDesc -> DescOrder)
           (fmap Ir.unOrderType obiType)
   let orderByNullsOrder =
@@ -309,10 +309,10 @@ fromAnnOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
           Just nullsOrder ->
             case nullsOrder of
               Sql.NFirst -> NullsFirst
-              Sql.NLast -> NullsLast
+              Sql.NLast  -> NullsLast
   case morderByOrder of
     Just orderByOrder -> pure OrderBy {..}
-    Nothing -> refute (pure NoOrderSpecifiedInOrderBy)
+    Nothing           -> refute (pure NoOrderSpecifiedInOrderBy)
 
 -- | Unfurl the nested set of object relations (tell'd in the writer)
 -- that are terminated by field name (Ir.AOCColumn and
@@ -580,7 +580,7 @@ fromAggregateField aggregateField =
           (\(_fieldName, pgColFld) ->
              case pgColFld of
                Ir.CFCol pgCol -> fmap ColumnExpression (fromPGCol pgCol)
-               Ir.CFExp text -> pure (ValueExpression (Odbc.TextValue text)))
+               Ir.CFExp text  -> pure (ValueExpression (Odbc.TextValue text)))
           fs
       pure (OpAggregate op args)
 
@@ -677,8 +677,8 @@ fieldSourceJoin :: FieldSource -> Maybe Join
 fieldSourceJoin =
   \case
     JoinFieldSource aliasedJoin -> pure (aliasedThing aliasedJoin)
-    ExpressionFieldSource {} -> Nothing
-    AggregateFieldSource {} -> Nothing
+    ExpressionFieldSource {}    -> Nothing
+    AggregateFieldSource {}     -> Nothing
 
 --------------------------------------------------------------------------------
 -- Joins
@@ -756,7 +756,7 @@ lookupTableFrom ::
 lookupTableFrom existingJoins tableFrom = do
   case M.lookup tableFrom existingJoins of
     Just entityAlias -> pure (Left entityAlias)
-    Nothing -> fmap Right (fromQualifiedTable tableFrom)
+    Nothing          -> fmap Right (fromQualifiedTable tableFrom)
 
 fromArraySelectG :: Ir.ArraySelectG 'Postgres Expression -> ReaderT EntityAlias FromIr Join
 fromArraySelectG =
@@ -864,8 +864,8 @@ fromOpExpG expression op =
     Ir.ANIN _val                 -> refute (pure (UnsupportedOpExpG op)) -- S.BENot $ S.BECompareAny S.SEQ lhs val
     Ir.ALIKE _val                -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLIKE lhs val
     Ir.ANLIKE _val               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNLIKE lhs val
-    Ir.AILIKE _ _val               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SILIKE lhs val
-    Ir.ANILIKE _ _val              -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNILIKE lhs val
+    Ir.AILIKE _ _val             -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SILIKE lhs val
+    Ir.ANILIKE _ _val            -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNILIKE lhs val
     Ir.ASIMILAR _val             -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SSIMILAR lhs val
     Ir.ANSIMILAR _val            -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNSIMILAR lhs val
     Ir.AContains _val            -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SContains lhs val
@@ -912,7 +912,7 @@ fromSQLExpAsInt =
     s@(Sql.SELit text) ->
       case T.decimal text of
         Right (d, "") -> pure (ValueExpression (Odbc.IntValue d))
-        _ -> refute (pure (InvalidIntegerishSql s))
+        _             -> refute (pure (InvalidIntegerishSql s))
     s -> refute (pure (InvalidIntegerishSql s))
 
 fromGBoolExp :: Ir.GBoolExp Expression -> ReaderT EntityAlias FromIr Expression
@@ -964,12 +964,12 @@ generateEntityAlias template = do
     prefix = T.take 20 rendered
     rendered =
       case template of
-        ArrayRelationTemplate sample -> "ar_" <> sample
+        ArrayRelationTemplate sample  -> "ar_" <> sample
         ArrayAggregateTemplate sample -> "aa_" <> sample
         ObjectRelationTemplate sample -> "or_" <> sample
-        TableTemplate sample -> "t_" <> sample
-        ForOrderAlias sample -> "order_" <> sample
+        TableTemplate sample          -> "t_" <> sample
+        ForOrderAlias sample          -> "order_" <> sample
 
 fromAlias :: From -> EntityAlias
 fromAlias (FromQualifiedTable Aliased {aliasedAlias}) = EntityAlias aliasedAlias
-fromAlias (FromOpenJson Aliased {aliasedAlias}) = EntityAlias aliasedAlias
+fromAlias (FromOpenJson Aliased {aliasedAlias})       = EntityAlias aliasedAlias

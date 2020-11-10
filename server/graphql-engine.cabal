@@ -25,6 +25,11 @@ flag profiling
   default: False
   manual: True
 
+-- flag mssql
+--   description: Enable support for MSSQL backend (requires odbc)
+--   default: True
+--   manual: True
+
 common common-all
   ghc-options:
     -fmax-simplifier-iterations=20 -foptimal-applicative-do
@@ -34,6 +39,8 @@ common common-all
     cpp-options: -DDeveloperAPIs
   if flag(profiling)
     cpp-options: -DPROFILING
+  -- if flag(mssql)
+  --   cpp-options: -DMSSQL
 
   default-language: Haskell2010
   default-extensions:
@@ -304,6 +311,11 @@ library
                      , Data.Time.Clock.Units
                      , Data.URL.Template
                      , Hasura.App
+
+                     , Hasura.Backends.MSSQL.FromIr
+                     , Hasura.Backends.MSSQL.Plan
+                     , Hasura.Backends.MSSQL.ToQuery
+                     , Hasura.Backends.MSSQL.Types
 
                      , Hasura.Backends.Postgres.Connection
                      , Hasura.Backends.Postgres.Execute.Mutation

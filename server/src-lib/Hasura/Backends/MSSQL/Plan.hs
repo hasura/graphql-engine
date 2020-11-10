@@ -1,6 +1,6 @@
 -- | Planning T-SQL queries and subscriptions.
 
-module Hasura.SQL.Tsql.Plan
+module Hasura.Backends.MSSQL.Plan
   ( planNoPlan
   , planNoPlanMap
   , planMultiplex
@@ -12,25 +12,25 @@ import           Control.Monad.Trans.State.Strict
 import           Control.Monad.Validate
 import           Data.Bifunctor
 import           Data.Functor
-import           Data.HashMap.Strict (HashMap)
-import qualified Data.HashMap.Strict as HM
-import qualified Data.HashMap.Strict.InsOrd as OMap
+import           Data.HashMap.Strict              (HashMap)
+import qualified Data.HashMap.Strict              as HM
+import qualified Data.HashMap.Strict.InsOrd       as OMap
 import           Data.Int
-import           Data.List.NonEmpty (NonEmpty(..))
-import qualified Data.List.NonEmpty as NE
-import qualified Data.Text as T
-import qualified Database.ODBC.SQLServer as Odbc
-import qualified Hasura.GraphQL.Context as Graphql
-import qualified Hasura.GraphQL.Execute.Query as Query
-import qualified Hasura.GraphQL.Parser.Column as Graphql
-import qualified Hasura.GraphQL.Parser.Schema as PS
-import qualified Hasura.SQL.DML as Sql
-import qualified Hasura.SQL.Tsql.FromIr as FromIr
-import qualified Hasura.SQL.Tsql.FromIr as Tsql
-import           Hasura.SQL.Tsql.Types as Tsql
-import qualified Hasura.SQL.Types as Sql
-import qualified Hasura.SQL.Value as Sql
-import qualified Language.GraphQL.Draft.Syntax as G
+import           Data.List.NonEmpty               (NonEmpty (..))
+import qualified Data.List.NonEmpty               as NE
+import qualified Data.Text                        as T
+import qualified Database.ODBC.SQLServer          as Odbc
+import qualified Hasura.GraphQL.Context           as Graphql
+import qualified Hasura.GraphQL.Execute.Query     as Query
+import qualified Hasura.GraphQL.Parser.Column     as Graphql
+import qualified Hasura.GraphQL.Parser.Schema     as PS
+import qualified Hasura.SQL.DML                   as Sql
+import qualified Hasura.SQL.Tsql.FromIr           as FromIr
+import qualified Hasura.SQL.Tsql.FromIr           as Tsql
+import           Hasura.SQL.Tsql.Types            as Tsql
+import qualified Hasura.SQL.Types                 as Sql
+import qualified Hasura.SQL.Value                 as Sql
+import qualified Language.GraphQL.Draft.Syntax    as G
 import           Prelude
 
 -- --------------------------------------------------------------------------------
@@ -50,7 +50,7 @@ planNoPlan unpreparedRoot = do
     select
       { selectFor =
           case selectFor select of
-            NoFor -> NoFor
+            NoFor           -> NoFor
             JsonFor forJson -> JsonFor forJson {jsonRoot = Root "root"}
       }
 
@@ -131,7 +131,7 @@ data PrepareError
 
 data PrepareState = PrepareState
   { positionalArguments :: !Integer
-  , namedArguments :: !(HashMap G.Name Graphql.PGColumnValue)
+  , namedArguments      :: !(HashMap G.Name Graphql.PGColumnValue)
   }
 
 emptyPrepareState :: PrepareState
@@ -148,7 +148,7 @@ prepareValueNoPlan =
     Graphql.UVSessionVar _typ _text -> Left SessionVarNotSupported
     Graphql.UVParameter Graphql.PGColumnValue {pcvValue = Sql.WithScalarType {pstValue}} _mVariableInfo ->
       case fromPgScalarValue pstValue of
-        Nothing -> Left (UnsupportedPgType pstValue)
+        Nothing    -> Left (UnsupportedPgType pstValue)
         Just value -> pure (ValueExpression value)
 
 -- | Prepare a value for multiplexed queries.

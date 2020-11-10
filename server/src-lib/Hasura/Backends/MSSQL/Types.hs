@@ -1,32 +1,32 @@
 -- | Types for Transact-SQL aka T-SQL; the language of SQL Server.
 
-module Hasura.SQL.Tsql.Types where
+module Hasura.Backends.MSSQL.Types where
 
-import           Data.List.NonEmpty (NonEmpty(..))
-import           Data.Text (Text)
+import           Data.List.NonEmpty      (NonEmpty (..))
+import           Data.Text               (Text)
 import qualified Database.ODBC.SQLServer as Odbc
 import           Prelude
 
 data Select = Select
-  { selectTop :: !Top
+  { selectTop         :: !Top
   , selectProjections :: !(NonEmpty Projection)
-  , selectFrom :: !From
-  , selectJoins :: ![Join]
-  , selectWhere :: !Where
-  , selectFor :: !For
-  , selectOrderBy :: !(Maybe (NonEmpty OrderBy))
-  , selectOffset :: !(Maybe Expression)
+  , selectFrom        :: !From
+  , selectJoins       :: ![Join]
+  , selectWhere       :: !Where
+  , selectFor         :: !For
+  , selectOrderBy     :: !(Maybe (NonEmpty OrderBy))
+  , selectOffset      :: !(Maybe Expression)
   } deriving (Eq, Show)
 
 data Reselect = Reselect
   { reselectProjections :: !(NonEmpty Projection)
-  , reselectFor :: !For
-  , reselectWhere :: !Where
+  , reselectFor         :: !For
+  , reselectWhere       :: !Where
   } deriving (Eq, Show)
 
 data OrderBy = OrderBy
-  { orderByFieldName :: FieldName
-  , orderByOrder :: Order
+  { orderByFieldName  :: FieldName
+  , orderByOrder      :: Order
   , orderByNullsOrder :: NullsOrder
   } deriving (Eq, Show)
 
@@ -48,7 +48,7 @@ data For
 
 data ForJson = ForJson
   { jsonCardinality :: JsonCardinality
-  , jsonRoot :: Root
+  , jsonRoot        :: Root
   } deriving (Eq, Show)
 
 data Root
@@ -69,7 +69,7 @@ data Projection
   deriving (Eq, Show)
 
 data Join = Join
-  { joinSource :: !JoinSource
+  { joinSource    :: !JoinSource
   , joinJoinAlias :: !JoinAlias
   } deriving (Eq, Show)
 
@@ -80,7 +80,7 @@ data JoinSource
 
 data JoinAlias = JoinAlias
   { joinAliasEntity :: Text
-  , joinAliasField :: Maybe Text
+  , joinAliasField  :: Maybe Text
   } deriving (Eq, Show)
 
 newtype Where =
@@ -103,8 +103,8 @@ instance Monoid Top where
 
 instance Semigroup Top where
   (<>) :: Top -> Top -> Top
-  (<>) NoTop x = x
-  (<>) x NoTop = x
+  (<>) NoTop x         = x
+  (<>) x NoTop         = x
   (<>) (Top x) (Top y) = Top (min x y)
 
 data Expression
@@ -155,7 +155,7 @@ data From
 
 data OpenJson = OpenJson
   { openJsonExpression :: Expression
-  , openJsonWith :: NonEmpty JsonFieldSpec
+  , openJsonWith       :: NonEmpty JsonFieldSpec
   } deriving (Eq, Show)
 
 data JsonFieldSpec
@@ -173,12 +173,12 @@ newtype SchemaName = SchemaName
   } deriving (Eq, Show)
 
 data TableName = TableName
-  { tableName :: Text
+  { tableName       :: Text
   , tableNameSchema :: Text
   } deriving (Eq, Show)
 
 data FieldName = FieldName
-  { fieldName :: Text
+  { fieldName       :: Text
   , fieldNameEntity :: !Text
   } deriving (Eq, Show)
 

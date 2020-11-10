@@ -3,7 +3,7 @@
 -- | Convert the simple T-SQL AST to an SQL query, ready to be passed
 -- to the odbc package's query/exec functions.
 
-module Hasura.SQL.Tsql.ToQuery
+module Hasura.Backends.MSSQL.ToQuery
   ( fromSelect
   , fromReselect
   , toQueryFlat
@@ -12,17 +12,17 @@ module Hasura.SQL.Tsql.ToQuery
   ) where
 
 import           Data.Foldable
-import           Data.List (intersperse)
-import           Data.List.NonEmpty (NonEmpty(..))
-import qualified Data.List.NonEmpty as NE
+import           Data.List                   (intersperse)
+import           Data.List.NonEmpty          (NonEmpty (..))
+import qualified Data.List.NonEmpty          as NE
 import           Data.Maybe
 import           Data.String
-import           Data.Text (Text)
-import qualified Data.Text as T
-import qualified Data.Text.Lazy as LT
-import qualified Data.Text.Lazy.Builder as LT
+import           Data.Text                   (Text)
+import qualified Data.Text                   as T
+import qualified Data.Text.Lazy              as LT
+import qualified Data.Text.Lazy.Builder      as LT
 import           Database.ODBC.SQLServer
-import           Hasura.SQL.Tsql.Types
+import           Hasura.Backends.MSSQL.Types
 import           Prelude
 
 --------------------------------------------------------------------------------
@@ -43,7 +43,7 @@ instance IsString Printer where
 (<+>) x y = SeqPrinter [x,y]
 
 (<+>?) :: Printer -> Maybe Printer -> Printer
-(<+>?) x Nothing = x
+(<+>?) x Nothing  = x
 (<+>?) x (Just y) = SeqPrinter [x,y]
 
 --------------------------------------------------------------------------------
@@ -91,8 +91,8 @@ fromExpression =
 fromOp :: Op -> Printer
 fromOp =
   \case
-    LessOp -> "<"
-    MoreOp -> ">"
+    LessOp        -> "<"
+    MoreOp        -> ">"
     MoreOrEqualOp -> ">="
     LessOrEqualOp -> "<="
 
@@ -104,7 +104,7 @@ fromPath path =
              ValueExpression . TextValue . LT.toStrict . LT.toLazyText . go
     go =
       \case
-        RootPath -> "$"
+        RootPath      -> "$"
         IndexPath r i -> go r <> "[" <> LT.fromString (show i) <> "]"
         FieldPath r f -> go r <> "." <> LT.fromText f
 
@@ -144,7 +144,7 @@ fromSelect Select {..} =
 fromJoinSource :: JoinSource -> Printer
 fromJoinSource =
   \case
-    JoinSelect select -> fromSelect select
+    JoinSelect select     -> fromSelect select
     JoinReselect reselect -> fromReselect reselect
 
 fromReselect :: Reselect -> Printer
@@ -201,15 +201,15 @@ fromOrderBy OrderBy {..} =
 fromOrder :: Order -> Printer
 fromOrder =
   \case
-    AscOrder -> "ASC"
+    AscOrder  -> "ASC"
     DescOrder -> "DESC"
 
 fromNullsOrder :: FieldName -> NullsOrder -> Printer
 fromNullsOrder fieldName =
   \case
     NullsAnyOrder -> ""
-    NullsFirst -> "IIF(" <+> fromFieldName fieldName <+> " IS NULL, 0, 1)"
-    NullsLast -> "IIF(" <+> fromFieldName fieldName <+> " IS NULL, 1, 0)"
+    NullsFirst    -> "IIF(" <+> fromFieldName fieldName <+> " IS NULL, 0, 1)"
+    NullsLast     -> "IIF(" <+> fromFieldName fieldName <+> " IS NULL, 1, 0)"
 
 fromJoinAlias :: JoinAlias -> Printer
 fromJoinAlias JoinAlias {..} =
@@ -227,7 +227,7 @@ fromFor =
         JsonSingleton ->
           ", WITHOUT_ARRAY_WRAPPER" <+>
           case root of
-            NoRoot -> ""
+            NoRoot    -> ""
             Root text -> "ROOT(" <+> QueryPrinter (toSql text) <+> ")"
 
 fromProjection :: Projection -> Printer
@@ -270,9 +270,9 @@ fromWhere =
           "WHERE " <+>
           IndentPrinter 6 (fromExpression (AndExpression collapsedExpressions))
       where collapse (AndExpression [x]) = collapse x
-            collapse (AndExpression []) = trueExpression
-            collapse (OrExpression [x]) = collapse x
-            collapse x = x
+            collapse (AndExpression [])  = trueExpression
+            collapse (OrExpression [x])  = collapse x
+            collapse x                   = x
 
 fromFrom :: From -> Printer
 fromFrom =
@@ -299,7 +299,7 @@ fromOpenJson OpenJson {openJsonExpression, openJsonWith} =
 fromJsonFieldSpec :: JsonFieldSpec -> Printer
 fromJsonFieldSpec =
   \case
-    IntField name -> fromNameText name <+> " INT"
+    IntField name  -> fromNameText name <+> " INT"
     JsonField name -> fromNameText name <+> " NVARCHAR(MAX) AS JSON"
 
 fromTableName :: TableName -> Printer
