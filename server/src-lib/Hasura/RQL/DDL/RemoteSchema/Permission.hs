@@ -9,8 +9,8 @@ the particular role.
 This module does two things essentially:
 
 1. Checks if the given schema document is a subset of the upstream remote
-   schema document. This is done by checking if all the objects, interfaces
-   , unions, enums, scalars and input objects provided in the schema document
+   schema document. This is done by checking if all the objects, interfaces,
+   unions, enums, scalars and input objects provided in the schema document
    exist in the upstream remote schema too. We validate the fields, directives
    and arguments too, wherever applicable.
 2. Parse the `preset` directives (if any) on input object fields or argument fields.
@@ -38,20 +38,18 @@ module Hasura.RQL.DDL.RemoteSchema.Permission (
   , partitionTypeDefinition
   ) where
 
-import           Control.Monad.Validate
-
 import           Hasura.Prelude
-import           Hasura.RQL.Types              hiding (GraphQLType, defaultScalars)
-import           Hasura.Server.Utils           (englishList, duplicates, isSessionVariable)
-import           Data.Text.Extended
 
-
+import           Control.Monad.Validate
 import qualified Data.HashMap.Strict                   as Map
-import qualified Language.GraphQL.Draft.Syntax         as G
 import qualified Data.HashSet                          as S
 import qualified Data.List.NonEmpty                    as NE
 import qualified Data.Text                             as T
+import           Data.Text.Extended
+import qualified Language.GraphQL.Draft.Syntax         as G
 
+import           Hasura.RQL.Types              hiding (GraphQLType, defaultScalars)
+import           Hasura.Server.Utils                  (englishList, duplicates, isSessionVariable)
 import           Hasura.Session
 
 data FieldDefinitionType
@@ -170,11 +168,11 @@ data RoleBasedSchemaValidationError
 convertTypeDef :: G.TypeDefinition [G.Name] a -> G.TypeDefinition () a
 convertTypeDef (G.TypeDefinitionInterface (G.InterfaceTypeDefinition desc name dirs flds _)) =
   G.TypeDefinitionInterface $ G.InterfaceTypeDefinition desc name dirs flds ()
-convertTypeDef (G.TypeDefinitionScalar s) = G.TypeDefinitionScalar $ s
-convertTypeDef (G.TypeDefinitionInputObject inpObj) = G.TypeDefinitionInputObject $ inpObj
-convertTypeDef (G.TypeDefinitionEnum s) = G.TypeDefinitionEnum $ s
-convertTypeDef (G.TypeDefinitionUnion s) = G.TypeDefinitionUnion $ s
-convertTypeDef (G.TypeDefinitionObject s) = G.TypeDefinitionObject $ s
+convertTypeDef (G.TypeDefinitionScalar s) = G.TypeDefinitionScalar s
+convertTypeDef (G.TypeDefinitionInputObject inpObj) = G.TypeDefinitionInputObject inpObj
+convertTypeDef (G.TypeDefinitionEnum s) = G.TypeDefinitionEnum s
+convertTypeDef (G.TypeDefinitionUnion s) = G.TypeDefinitionUnion s
+convertTypeDef (G.TypeDefinitionObject s) = G.TypeDefinitionObject s
 
 showRoleBasedSchemaValidationError :: RoleBasedSchemaValidationError -> Text
 showRoleBasedSchemaValidationError = \case

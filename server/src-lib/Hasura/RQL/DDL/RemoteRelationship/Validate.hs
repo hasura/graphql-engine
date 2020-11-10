@@ -108,7 +108,7 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
   (_, (leafParamMap, leafTypeMap)) <-
     foldlM
     (buildRelationshipTypeInfo pgColumnsVariablesMap schemaDoc)
-    (queryRoot,(mempty, mempty))
+    (queryRoot, (mempty, mempty))
     (unRemoteFields $ rtrRemoteField remoteRelationship)
   let newInputValueDefinitions =
         -- The preset part below is set to `Nothing` because preset values
