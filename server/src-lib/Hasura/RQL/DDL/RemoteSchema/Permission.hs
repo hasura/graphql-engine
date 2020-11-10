@@ -164,6 +164,10 @@ data RoleBasedSchemaValidationError
   | ExpectedScalarValue !G.Name !(G.Value Void)
   | DisallowSessionVarForListType !G.Name
   | InvalidStaticValue
+  | UnexpectedNonMatchingNames !G.Name !G.Name !GraphQLType
+  -- ^ Error to indicate we're comparing non corresponding
+  --   type definitions. Ideally, this error will never occur
+  --   unless there's a programming error
   deriving (Show, Eq)
 
 convertTypeDef :: G.TypeDefinition [G.Name] a -> G.TypeDefinition () a
@@ -259,6 +263,9 @@ showRoleBasedSchemaValidationError = \case
     "illegal preset value at " <> name <<> ". Session arguments can only be set for singleton values"
   InvalidStaticValue ->
     "expected preset static value to be a Boolean value"
+  UnexpectedNonMatchingNames providedName upstreamName gType ->
+    "unexpected: trying to compare " <> gType <<> " with name " <> providedName <<>
+    " with " <>> upstreamName
 
 presetValueScalar :: G.ScalarTypeDefinition
 presetValueScalar = G.ScalarTypeDefinition Nothing $$(G.litName "PresetValue") mempty
@@ -267,11 +274,11 @@ presetDirectiveDefn :: G.DirectiveDefinition G.InputValueDefinition
 presetDirectiveDefn =
   G.DirectiveDefinition Nothing $$(G.litName "preset") [directiveArg] directiveLocations
   where
-    gType = G.TypeNamed (G.Nullability False) $ G._stdName presetValueScalar
+    gType              = G.TypeNamed (G.Nullability False) $ G._stdName presetValueScalar
 
     directiveLocations = map G.DLTypeSystem [G.TSDLARGUMENT_DEFINITION, G.TSDLINPUT_FIELD_DEFINITION]
 
-    directiveArg = G.InputValueDefinition Nothing $$(G.litName "value") gType Nothing mempty
+    directiveArg       = G.InputValueDefinition Nothing $$(G.litName "value") gType Nothing mempty
 
 presetDirectiveName :: G.Name
 presetDirectiveName = $$(G.litName "preset")
@@ -417,16 +424,17 @@ validateDirective
   -> (GraphQLType, G.Name) -- ^ parent type and name
   -> m ()
 validateDirective providedDirective upstreamDirective (parentType, parentTypeName) = do
+  when (providedName /= upstreamName) $
+    dispute $ pure $
+      UnexpectedNonMatchingNames providedName upstreamName Directive
   onJust (NE.nonEmpty $ Map.keys argsDiff) $ \argNames ->
     dispute $ pure $
-      NonExistingDirectiveArgument parentTypeName parentType directiveName argNames
+      NonExistingDirectiveArgument parentTypeName parentType providedName argNames
   where
-    argsDiff = Map.difference providedDirectiveArgs upstreamDirectiveArgs
+    argsDiff              = Map.difference providedDirectiveArgs upstreamDirectiveArgs
 
-    providedDirectiveArgs = G._dArguments providedDirective
-    upstreamDirectiveArgs = G._dArguments upstreamDirective
-
-    directiveName = G._dName providedDirective
+    G.Directive providedName providedDirectiveArgs = providedDirective
+    G.Directive upstreamName upstreamDirectiveArgs = upstreamDirective
 
 -- | validateDirectives checks if the `providedDirectives`
 --   are a subset of `upstreamDirectives` and then validate
@@ -480,6 +488,9 @@ validateEnumTypeDefinition
   -> G.EnumTypeDefinition -- ^ upstream enum type definition
   -> m G.EnumTypeDefinition
 validateEnumTypeDefinition providedEnum upstreamEnum = do
+  when (providedName /= upstreamName) $
+    dispute $ pure $
+      UnexpectedNonMatchingNames providedName upstreamName Enum
   validateDirectives providedDirectives upstreamDirectives G.TSDLENUM $ (Enum, providedName)
   onJust (NE.nonEmpty $ S.toList $ duplicates providedEnumValNames) $ \dups -> do
     refute $ pure $ DuplicateEnumValues providedName dups
@@ -489,7 +500,7 @@ validateEnumTypeDefinition providedEnum upstreamEnum = do
   where
     G.EnumTypeDefinition _ providedName providedDirectives providedValueDefns = providedEnum
 
-    G.EnumTypeDefinition _ _ upstreamDirectives upstreamValueDefns = upstreamEnum
+    G.EnumTypeDefinition _ upstreamName upstreamDirectives upstreamValueDefns = upstreamEnum
 
     providedEnumValNames   = map (G.unEnumValue . G._evdName) $ providedValueDefns
 
@@ -511,6 +522,9 @@ validateInputValueDefinition
   -> G.Name
   -> m RemoteSchemaInputValueDefinition
 validateInputValueDefinition providedDefn upstreamDefn inputObjectName = do
+  when (providedName /= upstreamName) $
+    dispute $ pure $
+      UnexpectedNonMatchingNames providedName upstreamName (Argument InputObjectArgument)
   presetDirective <-
     validateDirectives providedDirectives upstreamDirectives G.TSDLINPUT_FIELD_DEFINITION
      $ (Argument InputObjectArgument, inputObjectName)
@@ -525,7 +539,7 @@ validateInputValueDefinition providedDefn upstreamDefn inputObjectName = do
   pure $ RemoteSchemaInputValueDefinition providedDefn presetArguments
   where
     G.InputValueDefinition _ providedName providedType providedDefaultValue providedDirectives  = providedDefn
-    G.InputValueDefinition _ _ upstreamType upstreamDefaultValue upstreamDirectives  = upstreamDefn
+    G.InputValueDefinition _ upstreamName upstreamType upstreamDefaultValue upstreamDirectives  = upstreamDefn
 
 -- | `validateArguments` validates the provided arguments against the corresponding
 --    upstream remote schema arguments.
@@ -565,13 +579,16 @@ validateInputObjectTypeDefinition
   -> G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition
   -> m (G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition)
 validateInputObjectTypeDefinition providedInputObj upstreamInputObj = do
+  when (providedName /= upstreamName) $
+    dispute $ pure $
+      UnexpectedNonMatchingNames providedName upstreamName InputObject
   validateDirectives providedDirectives upstreamDirectives G.TSDLINPUT_OBJECT $ (InputObject, providedName)
   args <- validateArguments providedArgs upstreamArgs $ providedName
   pure $ providedInputObj { G._iotdValueDefinitions = args }
   where
     G.InputObjectTypeDefinition _ providedName providedDirectives providedArgs = providedInputObj
 
-    G.InputObjectTypeDefinition _ _ upstreamDirectives upstreamArgs = upstreamInputObj
+    G.InputObjectTypeDefinition _ upstreamName upstreamDirectives upstreamArgs = upstreamInputObj
 
 validateFieldDefinition
   :: ( MonadValidate [RoleBasedSchemaValidationError] m
@@ -583,6 +600,9 @@ validateFieldDefinition
   -> (FieldDefinitionType, G.Name)
   -> m (G.FieldDefinition RemoteSchemaInputValueDefinition)
 validateFieldDefinition providedFieldDefinition upstreamFieldDefinition (parentType, parentTypeName) = do
+  when (providedName /= upstreamName) $
+    dispute $ pure $
+      UnexpectedNonMatchingNames providedName upstreamName (Field parentType)
   validateDirectives providedDirectives upstreamDirectives G.TSDLFIELD_DEFINITION $ (Field parentType, parentTypeName)
   when (providedType /= upstreamType) $
     dispute $ pure $ NonMatchingType providedName (Field parentType) upstreamType providedType
@@ -591,7 +611,7 @@ validateFieldDefinition providedFieldDefinition upstreamFieldDefinition (parentT
   where
     G.FieldDefinition _ providedName providedArgs providedType providedDirectives = providedFieldDefinition
 
-    G.FieldDefinition _ _ upstreamArgs upstreamType upstreamDirectives = upstreamFieldDefinition
+    G.FieldDefinition _ upstreamName upstreamArgs upstreamType upstreamDirectives = upstreamFieldDefinition
 
 validateFieldDefinitions
   :: ( MonadValidate [RoleBasedSchemaValidationError] m
@@ -622,13 +642,16 @@ validateInterfaceDefinition
   -> G.InterfaceTypeDefinition [G.Name] RemoteSchemaInputValueDefinition
   -> m (G.InterfaceTypeDefinition () RemoteSchemaInputValueDefinition)
 validateInterfaceDefinition providedInterfaceDefn upstreamInterfaceDefn = do
+  when (providedName /= upstreamName) $
+    dispute $ pure $
+      UnexpectedNonMatchingNames providedName upstreamName Interface
   validateDirectives providedDirectives upstreamDirectives G.TSDLINTERFACE $ (Interface, providedName)
   fieldDefinitions <- validateFieldDefinitions providedFieldDefns upstreamFieldDefns $ (InterfaceField, providedName)
   pure $ providedInterfaceDefn { G._itdFieldsDefinition = fieldDefinitions }
   where
     G.InterfaceTypeDefinition _ providedName providedDirectives providedFieldDefns _ = providedInterfaceDefn
 
-    G.InterfaceTypeDefinition _ _ upstreamDirectives upstreamFieldDefns _ = upstreamInterfaceDefn
+    G.InterfaceTypeDefinition _ upstreamName upstreamDirectives upstreamFieldDefns _ = upstreamInterfaceDefn
 
 validateScalarDefinition
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
@@ -636,12 +659,15 @@ validateScalarDefinition
   -> G.ScalarTypeDefinition
   -> m G.ScalarTypeDefinition
 validateScalarDefinition providedScalar upstreamScalar = do
+  when (providedName /= upstreamName) $
+    dispute $ pure $
+      UnexpectedNonMatchingNames providedName upstreamName Scalar
   void $ validateDirectives providedDirectives upstreamDirectives G.TSDLSCALAR $ (Scalar, providedName)
   pure providedScalar
   where
     G.ScalarTypeDefinition _ providedName providedDirectives = providedScalar
 
-    G.ScalarTypeDefinition _ _ upstreamDirectives = upstreamScalar
+    G.ScalarTypeDefinition _ upstreamName upstreamDirectives = upstreamScalar
 
 validateUnionDefinition
   :: (MonadValidate [RoleBasedSchemaValidationError] m)
@@ -649,6 +675,9 @@ validateUnionDefinition
   -> G.UnionTypeDefinition
   -> m G.UnionTypeDefinition
 validateUnionDefinition providedUnion upstreamUnion = do
+  when (providedName /= upstreamName) $
+    dispute $ pure $
+      UnexpectedNonMatchingNames providedName upstreamName Union
   void $ validateDirectives providedDirectives upstreamDirectives G.TSDLUNION $ (Union, providedName)
   onJust (NE.nonEmpty $ S.toList memberTypesDiff) $ \nonExistingMembers ->
     refute $ pure $ NonExistingUnionMemberTypes providedName nonExistingMembers
@@ -656,7 +685,7 @@ validateUnionDefinition providedUnion upstreamUnion = do
   where
     G.UnionTypeDefinition _ providedName providedDirectives providedMemberTypes = providedUnion
 
-    G.UnionTypeDefinition _ _ upstreamDirectives upstreamMemberTypes = upstreamUnion
+    G.UnionTypeDefinition _ upstreamName upstreamDirectives upstreamMemberTypes = upstreamUnion
 
     memberTypesDiff = getDifference providedMemberTypes upstreamMemberTypes
 
@@ -670,6 +699,9 @@ validateObjectDefinition
   -> S.HashSet G.Name -- ^ Interfaces declared by in the role-based schema
   -> m (G.ObjectTypeDefinition RemoteSchemaInputValueDefinition)
 validateObjectDefinition providedObj upstreamObj interfacesDeclared = do
+  when (providedName /= upstreamName) $
+    dispute $ pure $
+      UnexpectedNonMatchingNames providedName upstreamName Object
   validateDirectives providedDirectives upstreamDirectives G.TSDLOBJECT $ (Object, providedName)
   onJust (NE.nonEmpty $ S.toList customInterfaces) $ \ifaces ->
     dispute $ pure $ CustomInterfacesNotAllowed providedName ifaces
@@ -682,7 +714,7 @@ validateObjectDefinition providedObj upstreamObj interfacesDeclared = do
     G.ObjectTypeDefinition _ providedName
        providedIfaces providedDirectives providedFldDefnitions = providedObj
 
-    G.ObjectTypeDefinition _ _
+    G.ObjectTypeDefinition _ upstreamName
        upstreamIfaces upstreamDirectives upstreamFldDefnitions = upstreamObj
 
     interfacesDiff = getDifference providedIfaces upstreamIfaces
@@ -713,15 +745,12 @@ validateSchemaDefinitions _ = refute $ pure $ MultipleSchemaDefinitionsFound
 -- user provided Schema document, it doesn't include the `possibleTypes`, so
 -- constructing here, manually.
 createPossibleTypesMap :: [(G.ObjectTypeDefinition RemoteSchemaInputValueDefinition)] -> HashMap G.Name [G.Name]
-createPossibleTypesMap objDefns =
-  let objMap = Map.fromList $ map (G._otdName &&& G._otdImplementsInterfaces) objDefns
-  in
-  Map.foldlWithKey' (\acc objTypeName interfaces ->
-                       let interfaceMap =
-                             Map.fromList $ map (, [objTypeName]) interfaces
-                       in Map.unionWith (<>) acc interfaceMap)
-                    mempty
-                    objMap
+createPossibleTypesMap objectDefinitions = do
+  Map.fromListWith (<>) $ do
+    objectDefinition <- objectDefinitions
+    let objectName = G._otdName objectDefinition
+    interface <- G._otdImplementsInterfaces objectDefinition
+    pure (interface, [objectName])
 
 partitionTypeDefinition :: G.TypeDefinition () a  -> State (PartitionedTypeDefinitions a) ()
 partitionTypeDefinition (G.TypeDefinitionScalar scalarDefn) =
