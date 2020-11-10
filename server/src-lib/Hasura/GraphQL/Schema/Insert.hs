@@ -30,14 +30,14 @@ import           Hasura.SQL.Backend
 -- quite likely that some of the information stored in those structures is
 -- redundant, and that they can be simplified.
 
-data AnnInsert (b :: Backend) v
+data AnnInsert (b :: BackendType) v
   = AnnInsert
   { _aiFieldName :: !Text
   , _aiIsSingle  :: Bool
   , _aiData      :: AnnMultiInsert b v
   }
 
-data AnnIns (b :: Backend) a v
+data AnnIns (b :: BackendType) a v
   = AnnIns
   { _aiInsObj         :: !a
   , _aiTableName      :: !QualifiedTable
@@ -59,7 +59,7 @@ data RelIns a
 type ObjRelIns b v = RelIns (SingleObjIns b v)
 type ArrRelIns b v = RelIns (MultiObjIns  b v)
 
-data AnnInsObj (b :: Backend) v
+data AnnInsObj (b :: BackendType) v
   = AnnInsObj
   { _aioColumns :: ![(Column b, v)]
   , _aioObjRels :: ![ObjRelIns b v]

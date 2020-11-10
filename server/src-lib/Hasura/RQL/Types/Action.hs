@@ -184,7 +184,7 @@ getActionOutputFields :: AnnotatedObjectType backend -> ActionOutputFields
 getActionOutputFields =
   Map.fromList . map ( (unObjectFieldName . _ofdName) &&& (fst . _ofdType)) . toList . _otdFields
 
-data ActionInfo (b :: Backend)
+data ActionInfo (b :: BackendType)
   = ActionInfo
   { _aiName         :: !ActionName
   , _aiOutputObject :: !(AnnotatedObjectType b)
@@ -262,7 +262,7 @@ instance J.FromJSON ActionMetadata where
 
 ----------------- Resolve Types ----------------
 
-data AnnActionExecution (b :: Backend) v
+data AnnActionExecution (b :: BackendType) v
   = AnnActionExecution
   { _aaeName                 :: !ActionName
   , _aaeOutputType           :: !GraphQLType -- ^ output type
@@ -284,7 +284,7 @@ data AnnActionMutationAsync
   , _aamaPayload :: !J.Value -- ^ jsonified input arguments
   } deriving (Show, Eq)
 
-data AsyncActionQueryFieldG (b :: Backend) v
+data AsyncActionQueryFieldG (b :: BackendType) v
   = AsyncTypename !Text
   | AsyncOutput !(AnnFieldsG b v)
   | AsyncId
@@ -293,7 +293,7 @@ data AsyncActionQueryFieldG (b :: Backend) v
 
 type AsyncActionQueryFieldsG b v = Fields (AsyncActionQueryFieldG b v)
 
-data AnnActionAsyncQuery (b :: Backend) v
+data AnnActionAsyncQuery (b :: BackendType) v
   = AnnActionAsyncQuery
   { _aaaqName           :: !ActionName
   , _aaaqActionId       :: !v

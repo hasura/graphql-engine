@@ -146,7 +146,7 @@ instance NFData CatalogFunction
 instance Cacheable CatalogFunction
 $(deriveFromJSON (aesonDrop 3 snakeCase) ''CatalogFunction)
 
-data CatalogCustomTypes (b :: Backend)
+data CatalogCustomTypes (b :: BackendType)
   = CatalogCustomTypes
   { _cctCustomTypes :: !CustomTypes
   , _cctPgScalars   :: !(HashSet (ScalarType b))

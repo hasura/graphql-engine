@@ -37,6 +37,7 @@ import           Network.Mime                              (defaultMimeLookup)
 import           System.FilePath                           (joinPath, takeFileName)
 import           Web.Spock.Core                            ((<//>))
 
+import qualified Hasura.Backends.Postgres.SQL.Types        as PG
 import qualified Hasura.GraphQL.Execute                    as E
 import qualified Hasura.GraphQL.Execute.LiveQuery          as EL
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll     as EL
@@ -51,8 +52,6 @@ import qualified Hasura.Logging                            as L
 import qualified Hasura.Server.API.PGDump                  as PGD
 import qualified Hasura.Tracing                            as Tracing
 
-import           Hasura.Backends.Postgres.Connection
-import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging                    (MonadQueryLog (..))
 import           Hasura.HTTP
@@ -496,7 +495,7 @@ renderHtmlTemplate template jVal =
 
 newtype LegacyQueryParser m
   = LegacyQueryParser
-  { getLegacyQueryParser :: QualifiedTable -> Object -> Handler m RQLQueryV1 }
+  { getLegacyQueryParser :: PG.QualifiedTable -> Object -> Handler m RQLQueryV1 }
 
 queryParsers :: (Monad m) => M.HashMap Text (LegacyQueryParser m)
 queryParsers =
@@ -516,14 +515,14 @@ queryParsers =
 
 legacyQueryHandler
   :: (HasVersion, MonadIO m, MonadBaseControl IO m, MetadataApiAuthorization m, Tracing.MonadTrace m)
-  => TableName -> Text -> Object
+  => PG.TableName -> Text -> Object
   -> Handler m (HttpResponse EncJSON)
 legacyQueryHandler tn queryType req =
   case M.lookup queryType queryParsers of
     Just queryParser -> getLegacyQueryParser queryParser qt req >>= v1QueryHandler . RQV1
     Nothing          -> throw404 "No such resource exists"
   where
-    qt = QualifiedObject publicSchema tn
+    qt = PG.QualifiedObject PG.publicSchema tn
 
 -- | Default implementation of the 'MonadConfigApiHandler'
 configApiGetHandler
@@ -718,7 +717,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
 
       Spock.post ("api/1/table" <//> Spock.var <//> Spock.var) $ \tableName queryType ->
         mkSpockAction serverCtx encodeQErr id $ mkPostHandler $
-          mkAPIRespHandler $ legacyQueryHandler (TableName tableName) queryType
+          mkAPIRespHandler $ legacyQueryHandler (PG.TableName tableName) queryType
 
     when enablePGDump $
       Spock.post "v1alpha1/pg_dump" $ spockAction encodeQErr id $

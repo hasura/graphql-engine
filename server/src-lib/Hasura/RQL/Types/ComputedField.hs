@@ -72,7 +72,7 @@ instance Cacheable FunctionSessionArgument
 instance ToJSON FunctionSessionArgument where
   toJSON (FunctionSessionArgument argName _) = toJSON argName
 
-data ComputedFieldReturn (b :: Backend)
+data ComputedFieldReturn (b :: BackendType)
   = CFRScalar !(ScalarType b)
   | CFRSetofTable !QualifiedTable
   deriving (Generic)
@@ -101,7 +101,7 @@ data ComputedFieldFunction
 instance Cacheable ComputedFieldFunction
 $(deriveToJSON (aesonDrop 4 snakeCase) ''ComputedFieldFunction)
 
-data ComputedFieldInfo (b :: Backend)
+data ComputedFieldInfo (b :: BackendType)
   = ComputedFieldInfo
   { _cfiName       :: !ComputedFieldName
   , _cfiFunction   :: !ComputedFieldFunction
