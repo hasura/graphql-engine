@@ -1,6 +1,6 @@
 name: server lint
 on:
-  label:
+  label
   pull_request:
     paths:
       - 'server/**'
