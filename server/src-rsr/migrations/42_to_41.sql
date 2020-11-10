@@ -1,9 +1,33 @@
-DROP TRIGGER event_trigger_table_name_update_trigger ON hdb_catalog.hdb_table;
+ALTER TABLE hdb_catalog.hdb_version
+ALTER COLUMN hasura_uuid
+SET DEFAULT gen_random_uuid();
 
-DROP FUNCTION hdb_catalog.event_trigger_table_name_update();
+ALTER TABLE hdb_catalog.event_log
+ALTER COLUMN id
+SET DEFAULT gen_random_uuid();
 
-ALTER TABLE hdb_catalog.event_triggers
-  ADD CONSTRAINT event_triggers_schema_name_table_name_fkey
-    FOREIGN KEY (schema_name, table_name)
-    REFERENCES hdb_catalog.hdb_table(table_schema, table_name)
-    ON UPDATE CASCADE;
+ALTER TABLE hdb_catalog.event_invocation_logs
+ALTER COLUMN id
+SET DEFAULT gen_random_uuid();
+
+ALTER TABLE hdb_catalog.hdb_action_log
+ALTER COLUMN id
+SET DEFAULT gen_random_uuid();
+
+ALTER TABLE hdb_catalog.hdb_cron_events
+ALTER COLUMN id
+SET DEFAULT gen_random_uuid();
+
+ALTER TABLE hdb_catalog.hdb_cron_event_invocation_logs
+ALTER COLUMN id
+SET DEFAULT gen_random_uuid();
+
+ALTER TABLE hdb_catalog.hdb_scheduled_events
+ALTER COLUMN id
+SET DEFAULT gen_random_uuid();
+
+ALTER TABLE hdb_catalog.hdb_scheduled_event_invocation_logs
+ALTER COLUMN id
+SET DEFAULT gen_random_uuid();
+
+DROP FUNCTION hdb_catalog.gen_hasura_uuid();
