@@ -275,7 +275,7 @@ askRelType :: (MonadError QErr m)
            => FieldInfoMap (FieldInfo backend)
            -> RelName
            -> Text
-           -> m RelInfo
+           -> m (RelInfo backend)
 askRelType m r msg = do
   colInfo <- modifyErr ("relationship " <>) $
              askFieldInfo m (fromRel r)

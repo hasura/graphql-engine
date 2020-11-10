@@ -348,7 +348,7 @@ opExpToJPair f = \case
 
 data AnnBoolExpFld (b :: BackendType) a
   = AVCol !(ColumnInfo b) ![OpExpG b a]
-  | AVRel !RelInfo !(AnnBoolExp b a)
+  | AVRel !(RelInfo b) !(AnnBoolExp b a)
   deriving (Functor, Foldable, Traversable, Generic)
 deriving instance (Backend b, Eq (ColumnInfo b), Eq a) => Eq (AnnBoolExpFld b a)
 instance (Backend b, NFData (ColumnInfo b), NFData a) => NFData (AnnBoolExpFld b a)

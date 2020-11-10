@@ -37,8 +37,8 @@ instance (Backend b, Hashable (ColumnInfo b)) => Hashable (AnnAggregateOrderBy b
 
 data AnnOrderByElementG (b :: BackendType) v
   = AOCColumn !(ColumnInfo b)
-  | AOCObjectRelation !RelInfo !v !(AnnOrderByElementG b v)
-  | AOCArrayAggregation !RelInfo !v !(AnnAggregateOrderBy b)
+  | AOCObjectRelation !(RelInfo b) !v !(AnnOrderByElementG b v)
+  | AOCArrayAggregation !(RelInfo b) !v !(AnnAggregateOrderBy b)
   deriving (Generic, Functor)
 deriving instance (Backend b, Eq (ColumnInfo b), Eq v) => Eq (AnnOrderByElementG b v)
 instance (Backend b, Hashable (ColumnInfo b), Hashable v) => Hashable (AnnOrderByElementG b v)
