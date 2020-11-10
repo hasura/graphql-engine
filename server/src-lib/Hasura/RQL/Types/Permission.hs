@@ -23,7 +23,6 @@ import           Hasura.SQL.Backend
 import           Hasura.Session
 
 
-
 data PermType
   = PTInsert
   | PTSelect

@@ -33,7 +33,8 @@ import           Data.Aeson.TH
 import           Data.List.Extended                 (duplicates)
 
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.RQL.Types                   hiding (fmFunction, tmComputedFields, tmTable)
+import           Hasura.RQL.Types                   hiding (ConstraintName, fmFunction,
+                                                     tmComputedFields, tmTable)
 import           Hasura.RQL.Types.Catalog
 
 data FunctionMeta

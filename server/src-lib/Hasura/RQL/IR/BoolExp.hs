@@ -55,6 +55,7 @@ import           Instances.TH.Lift                  ()
 import           Language.Haskell.TH.Syntax         (Lift)
 
 import qualified Hasura.Backends.Postgres.SQL.Types as PG
+
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common

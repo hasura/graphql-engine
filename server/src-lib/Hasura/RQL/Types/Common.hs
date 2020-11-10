@@ -7,7 +7,6 @@ module Hasura.RQL.Types.Common
        , RelInfo(..)
 
        , ScalarType
-       , Column
        , SQLExp
        , Backend (..)
 
@@ -97,9 +96,6 @@ type family ScalarType (b :: BackendType) where
 type family ColumnType (b :: BackendType) where
   ColumnType 'Postgres = PG.PGType
 
-type family Column (b :: BackendType) where
-  Column 'Postgres = PG.PGCol
-
 type family SQLExp (b :: BackendType) where
   SQLExp 'Postgres = PG.SQLExp
 
@@ -116,7 +112,11 @@ type family SQLExp (b :: BackendType) where
 -- which simplifies the instance declarations of all IR types.
 class
   ( Show (TableName b)
+  , Show (ConstraintName b)
+  , Show (Column b)
   , Eq (TableName b)
+  , Eq (ConstraintName b)
+  , Eq (Column b)
   , Lift (TableName b)
   , NFData (TableName b)
   , Cacheable (TableName b)
@@ -124,10 +124,14 @@ class
   , Data (TableName b)
   , Typeable b
   ) => Backend (b :: BackendType) where
-  type TableName b :: Type
+  type TableName      b :: Type
+  type ConstraintName b :: Type
+  type Column         b :: Type
 
 instance Backend 'Postgres where
-  type TableName 'Postgres = PG.QualifiedTable
+  type TableName      'Postgres = PG.QualifiedTable
+  type ConstraintName 'Postgres = PG.ConstraintName
+  type Column         'Postgres = PG.PGCol
 
 
 adminText :: NonEmptyText
