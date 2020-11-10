@@ -293,12 +293,7 @@ askFieldInfo :: (MonadError QErr m)
              -> FieldName
              -> m fieldInfo
 askFieldInfo m f =
-  case M.lookup f m of
-  Just colInfo -> return colInfo
-  Nothing ->
-    throw400 NotExists $ mconcat
-    [ f <<> " does not exist"
-    ]
+  M.lookup f m `onNothing` throw400 NotExists (f <<> " does not exist")
 
 askRemoteRel :: (MonadError QErr m)
            => FieldInfoMap (FieldInfo backend)

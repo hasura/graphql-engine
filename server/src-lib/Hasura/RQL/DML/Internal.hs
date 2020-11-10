@@ -77,15 +77,13 @@ askPermInfo
   -> TableInfo 'Postgres
   -> m c
 askPermInfo pa tableInfo = do
-  roleName <- askCurRole
+  roleName  <- askCurRole
   mPermInfo <- askPermInfo' pa tableInfo
-  case mPermInfo of
-    Just c  -> return c
-    Nothing -> throw400 PermissionDenied $ mconcat
-      [ pt <> " on " <>> _tciName (_tiCoreInfo tableInfo)
-      , " for role " <>> roleName
-      , " is not allowed. "
-      ]
+  onNothing mPermInfo $ throw400 PermissionDenied $ mconcat
+    [ pt <> " on " <>> _tciName (_tiCoreInfo tableInfo)
+    , " for role " <>> roleName
+    , " is not allowed. "
+    ]
   where
     pt = permTypeToCode $ permAccToType pa
 
