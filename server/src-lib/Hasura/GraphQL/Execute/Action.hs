@@ -205,7 +205,7 @@ resolveActionMutationAsync
   -> [HTTP.Header]
   -> SessionVariables
   -> m (tx EncJSON)
-resolveActionMutationAsync annAction reqHeaders sessionVariables = do
+resolveActionMutationAsync annAction reqHeaders sessionVariables =
   pure $ liftTx do
     actionId <- runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler [Q.sql|
       INSERT INTO
