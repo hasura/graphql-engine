@@ -482,7 +482,7 @@ const makeMigrationCall = (
   errorMsg,
   shouldSkipSchemaReload,
   skipExecution = false,
-  isRetry
+  isRetry = false
 ) => {
   const source = getState().tables.currentDataSource;
   const upQuery = {
@@ -542,7 +542,7 @@ const makeMigrationCall = (
   const onSuccess = data => {
     if (!shouldSkipSchemaReload) {
       if (globals.consoleMode === CLI_CONSOLE_MODE) {
-        dispatch(loadMigrationStatus()); // don't call for server mode
+        dispatch(loadMigrationStatus());
       }
       dispatch(updateSchemaInfo());
     }
@@ -609,10 +609,9 @@ const makeMigrationCall = (
 
   dispatch({ type: MAKE_REQUEST });
   dispatch(showSuccessNotification(requestMsg));
-  dispatch(requestAction(url, options, REQUEST_SUCCESS, REQUEST_ERROR)).then(
-    onSuccess,
-    onError
-  );
+  return dispatch(
+    requestAction(url, options, REQUEST_SUCCESS, REQUEST_ERROR)
+  ).then(onSuccess, onError);
 };
 
 const getBulkColumnInfoFetchQuery = (schema, source) => {

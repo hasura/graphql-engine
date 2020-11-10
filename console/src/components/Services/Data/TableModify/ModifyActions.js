@@ -803,15 +803,14 @@ const changeTableName = (oldName, newName, isTable, tableType) => {
     const migrateUp = [getRunSqlQuery(upSql, source)];
     const migrateDown = [getRunSqlQuery(downSql, source)];
     // apply migrations
-    const migrationName =
-      `rename_${compositeName}_` + currentSchema + '_' + oldName;
+    const migrationName = `rename_${compositeName}_${currentSchema}_${oldName}`;
 
     const requestMsg = `Renaming ${property}...`;
     const successMsg = `Renaming ${property} successful`;
     const errorMsg = `Renaming ${property} failed`;
 
     const customOnSuccess = () => {
-      dispatch(_push(getSchemaBaseRoute(currentSchema))); // to avoid 404
+      dispatch(_push(getSchemaBaseRoute(currentSchema, source))); // to avoid 404
       dispatch(updateSchemaInfo()).then(() => {
         dispatch(
           _push(getTableModifyRoute(currentSchema, source, newName, isTable))
@@ -895,17 +894,15 @@ const deleteTableSql = tableName => {
 
     const migration = new Migration();
     migration.add(getRunSqlQuery(sqlDropTable, source));
-    // apply migrations
-    const migrationName = 'drop_table_' + currentSchema + '_' + tableName;
 
+    const migrationName = `drop_table_${currentSchema}_${tableName}`;
     const requestMsg = 'Deleting table...';
     const successMsg = 'Table deleted';
     const errorMsg = 'Deleting table failed';
 
     const customOnSuccess = () => {
       dispatch(updateSchemaInfo());
-
-      dispatch(_push('/data/'));
+      dispatch(_push(getSchemaBaseRoute(currentSchema, source)));
     };
 
     const customOnError = err => {
@@ -1051,7 +1048,7 @@ const deleteViewSql = (viewName, viewType) => {
     const errorMsg = `Deleting ${property} failed`;
 
     const customOnSuccess = () => {
-      dispatch(_push('/data/'));
+      dispatch(_push(getSchemaBaseRoute(currentSchema, source)));
     };
     const customOnError = () => {};
 

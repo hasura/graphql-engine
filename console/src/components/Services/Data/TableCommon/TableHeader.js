@@ -35,9 +35,6 @@ const TableHeader = ({
   const isTableType = dataSource.isTable(table);
 
   let countDisplay = '';
-  // if (exists(count)) {
-  //   countDisplay = `(${isCountEstimated ? '~' : '' }${getReadableNumber(count)})`;
-  // }
   if (exists(count) && !isCountEstimated) {
     countDisplay = `(${getReadableNumber(count)})`;
   }
@@ -53,11 +50,11 @@ const TableHeader = ({
     return [
       {
         title: 'Data',
-        url: '/data',
+        url: getSchemaBaseRoute(tableSchema, source),
       },
       {
         title: 'Schema',
-        url: '/data/schema/',
+        url: getSchemaBaseRoute(tableSchema, source),
       },
       {
         title: tableSchema,

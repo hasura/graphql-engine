@@ -53,8 +53,7 @@ const addExistingTableSql = (name, customSchema, skipRouting = false) => {
       currentDataSource
     );
 
-    const migrationName =
-      'add_existing_table_or_view_' + currentSchema + '_' + tableName;
+    const migrationName = `add_existing_table_or_view_${currentSchema}_${tableName}`;
 
     const requestMsg = 'Adding existing table/view...';
     const successMsg = 'Existing table/view added';
@@ -89,7 +88,7 @@ const addExistingTableSql = (name, customSchema, skipRouting = false) => {
       dispatch({ type: REQUEST_ERROR, data: err });
     };
 
-    makeMigrationCall(
+    return makeMigrationCall(
       dispatch,
       getState,
       [requestBodyUp],
@@ -124,7 +123,7 @@ const addExistingFunction = (name, customSchema, skipRouting = false) => {
       currentDataSource
     );
 
-    const migrationName = 'add_existing_function ' + currentSchema + '_' + name;
+    const migrationName = `add_existing_function_${currentSchema}_${name}`;
 
     const requestMsg = 'Adding existing function...';
     const successMsg = 'Existing function added';
@@ -143,7 +142,7 @@ const addExistingFunction = (name, customSchema, skipRouting = false) => {
       dispatch({ type: REQUEST_ERROR, data: err });
     };
 
-    makeMigrationCall(
+    return makeMigrationCall(
       dispatch,
       getState,
       [requestBodyUp],

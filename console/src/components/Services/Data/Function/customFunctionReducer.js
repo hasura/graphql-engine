@@ -106,7 +106,7 @@ const deleteFunction = () => (dispatch, getState) => {
   const errorMsg = 'Deleting function failed';
 
   const customOnSuccess = () =>
-    dispatch(_push(getSchemaBaseRoute(currentSchema)));
+    dispatch(_push(getSchemaBaseRoute(currentSchema, source)));
   const customOnError = () => dispatch({ type: DELETE_CUSTOM_FUNCTION_FAIL });
 
   dispatch({ type: DELETING_CUSTOM_FUNCTION });
@@ -147,7 +147,7 @@ const unTrackCustomFunction = () => {
     const errorMsg = 'Delete custom function failed';
 
     const customOnSuccess = () => {
-      dispatch(_push(getSchemaBaseRoute(currentSchema)));
+      dispatch(_push(getSchemaBaseRoute(currentSchema, currentDataSource)));
       dispatch({ type: RESET });
       dispatch(exportMetadata());
     };
