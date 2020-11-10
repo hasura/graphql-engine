@@ -62,21 +62,21 @@ orderByColFromTxt =
 
 -- order by item
 
-data OrderByItemG (b :: Backend) a
+data OrderByItemG (b :: BackendType) a
   = OrderByItemG
   { obiType   :: !(Maybe (BasicOrderType b))
   , obiColumn :: !a
   , obiNulls  :: !(Maybe (NullsOrderType b))
   } deriving (Functor, Foldable, Traversable, Generic)
-deriving instance (Representation b, Show a) => Show (OrderByItemG b a)
-deriving instance (Representation b, Eq a)   => Eq   (OrderByItemG b a)
-deriving instance (Representation b, Lift a) => Lift (OrderByItemG b a)
-instance (Representation b, Hashable a) => Hashable (OrderByItemG b a)
+deriving instance (Backend b, Show a) => Show (OrderByItemG b a)
+deriving instance (Backend b, Eq a)   => Eq   (OrderByItemG b a)
+deriving instance (Backend b, Lift a) => Lift (OrderByItemG b a)
+instance (Backend b, Hashable a) => Hashable (OrderByItemG b a)
 
 type OrderByItem b = OrderByItemG b OrderByCol
 
-instance (Representation b, FromJSON a) => FromJSON (OrderByItemG b a) where
-  parseJSON = genericParseJSON (aesonDrop 3 snakeCase){omitNothingFields=True}
+instance (Backend b, FromJSON a) => FromJSON (OrderByItemG b a) where
+  parseJSON = genericParseJSON (aesonPrefix snakeCase){omitNothingFields=True}
 
-instance ToJSON a => ToJSON (OrderByItemG 'Postgres a) where
-  toJSON = genericToJSON (aesonDrop 3 snakeCase){omitNothingFields=True}
+instance (Backend b, ToJSON a) => ToJSON (OrderByItemG b a) where
+  toJSON = genericToJSON (aesonPrefix snakeCase){omitNothingFields=True}
