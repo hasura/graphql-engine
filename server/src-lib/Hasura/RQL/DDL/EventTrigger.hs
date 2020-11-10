@@ -3,13 +3,12 @@ module Hasura.RQL.DDL.EventTrigger
   , runCreateEventTriggerQuery
   , DeleteEventTriggerQuery
   , runDeleteEventTriggerQuery
+  , dropEventTriggerInMetadata
   , RedeliverEventQuery
   , runRedeliverEvent
   , runInvokeEventTrigger
 
   -- TODO(from master): review
-  , delEventTriggerFromCatalog
-  , subTableP2
   , subTableP2Setup
   , mkAllTriggersQ
   , delTriggerQ
@@ -22,11 +21,15 @@ module Hasura.RQL.DDL.EventTrigger
 import           Hasura.Prelude
 
 import qualified Data.Environment                   as Env
+import qualified Data.HashMap.Strict                as HM
+import qualified Data.HashMap.Strict.InsOrd         as OMap
 import qualified Data.Text                          as T
+import qualified Data.Text.Extended                 as T
 import qualified Data.Text.Lazy                     as TL
 import qualified Database.PG.Query                  as Q
 import qualified Text.Shakespeare.Text              as ST
 
+import           Control.Lens                       ((.~))
 import           Data.Aeson
 
 import qualified Hasura.Backends.Postgres.SQL.DML   as S
@@ -127,31 +130,6 @@ delTriggerQ trn =
       <> " hdb_catalog." <> pgIdenTrigger op trn <> "()"
       <> " CASCADE"
 
-addEventTriggerToCatalog
-  :: QualifiedTable
-  -> EventTriggerConf
-  -> Q.TxE QErr ()
-addEventTriggerToCatalog qt etc = do
-  Q.unitQE defaultTxErrorHandler
-         [Q.sql|
-           INSERT into hdb_catalog.event_triggers
-                       (name, type, schema_name, table_name, configuration)
-           VALUES ($1, 'table', $2, $3, $4)
-         |] (name, sn, tn, Q.AltJ $ toJSON etc) False
-  where
-    QualifiedObject sn tn = qt
-    (EventTriggerConf name _ _ _ _ _) = etc
-
-delEventTriggerFromCatalog :: TriggerName -> Q.TxE QErr ()
-delEventTriggerFromCatalog trn = do
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-           DELETE FROM
-                  hdb_catalog.event_triggers
-           WHERE name = $1
-                |] (Identity trn) False
-  delTriggerQ trn
-  archiveEvents trn
-
 archiveEvents :: TriggerName -> Q.TxE QErr ()
 archiveEvents trn = do
   Q.unitQE defaultTxErrorHandler [Q.sql|
@@ -251,29 +229,43 @@ getTrigDefDeps qt (TriggerOpsDef mIns mUpd mDel _) =
       SubCStar         -> []
       SubCArray pgcols -> pgcols
 
-subTableP2
-  :: (MonadTx m)
-  => QualifiedTable -> Bool -> EventTriggerConf -> m ()
-subTableP2 qt replace etc = liftTx if replace
-  then updateEventTriggerInCatalog etc
-  else addEventTriggerToCatalog qt etc
-
 runCreateEventTriggerQuery
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
+  :: (QErrM m, UserInfoM m, CacheRWM m, MetadataM m)
   => CreateEventTriggerQuery -> m EncJSON
 runCreateEventTriggerQuery q = do
   (qt, replace, etc) <- subTableP1 q
-  subTableP2 qt replace etc
-  buildSchemaCacheFor $ MOTableObj qt (MTOTrigger $ etcName etc)
-  return successMsg
+  let triggerName = etcName etc
+      metadataObj = MOTableObj qt $ MTOTrigger triggerName
+  buildSchemaCacheFor metadataObj
+    $ MetadataModifier
+    $ metaTables.ix qt.tmEventTriggers %~
+      if replace then ix triggerName .~ etc
+      else OMap.insert triggerName etc
+  pure successMsg
 
 runDeleteEventTriggerQuery
-  :: (MonadTx m, CacheRWM m)
+  :: (MonadTx m, CacheRWM m, MetadataM m)
   => DeleteEventTriggerQuery -> m EncJSON
 runDeleteEventTriggerQuery (DeleteEventTriggerQuery name) = do
-  liftTx $ delEventTriggerFromCatalog name
-  withNewInconsistentObjsCheck buildSchemaCache
+  tables <- scTables <$> askSchemaCache
+  let maybeTable = HM.lookup name $ HM.unions $
+                   flip map (HM.toList tables) $ \(table, tableInfo) ->
+                   HM.map (const table) $ _tiEventTriggerInfoMap tableInfo
+  table <- onNothing maybeTable $ throw400 NotExists $
+           "event trigger with name " <> name T.<<> " not exists"
+
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ MetadataModifier
+    $ metaTables.ix table %~ dropEventTriggerInMetadata name
+  liftTx do
+    delTriggerQ name
+    archiveEvents name
   pure successMsg
+
+dropEventTriggerInMetadata :: TriggerName -> TableMetadata -> TableMetadata
+dropEventTriggerInMetadata name =
+  tmEventTriggers %~ OMap.delete name
 
 deliverEvent
   :: (QErrM m, MonadTx m)

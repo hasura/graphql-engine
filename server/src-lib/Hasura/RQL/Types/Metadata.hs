@@ -325,15 +325,16 @@ parseNonPostgresMetadata o = do
 -- exported/replaced via metadata queries.
 data Metadata
   = Metadata
-  { _mnsTables           :: !Tables
-  , _mnsFunctions        :: !Functions
-  , _mnsRemoteSchemas    :: !RemoteSchemas
-  , _mnsQueryCollections :: !QueryCollections
-  , _mnsAllowlist        :: !Allowlist
-  , _mnsCustomTypes      :: !CustomTypes
-  , _mnsActions          :: !Actions
-  , _mnsCronTriggers     :: !CronTriggers
+  { _metaTables           :: !Tables
+  , _metaFunctions        :: !Functions
+  , _metaRemoteSchemas    :: !RemoteSchemas
+  , _metaQueryCollections :: !QueryCollections
+  , _metaAllowlist        :: !Allowlist
+  , _metaCustomTypes      :: !CustomTypes
+  , _metaActions          :: !Actions
+  , _metaCronTriggers     :: !CronTriggers
   } deriving (Show, Eq)
+$(makeLenses ''Metadata)
 
 instance FromJSON Metadata where
   parseJSON = withObject "Object" $ \o -> do

@@ -36,6 +36,8 @@ module Hasura.RQL.Types.Common
        , SystemDefined(..)
        , isSystemDefined
 
+       , SQLGenCtx(..)
+
        , successMsg
        , NonNegativeDiffTime
        , unNonNegativeDiffTime
@@ -303,6 +305,11 @@ newtype SystemDefined = SystemDefined { unSystemDefined :: Bool }
 
 isSystemDefined :: SystemDefined -> Bool
 isSystemDefined = unSystemDefined
+
+newtype SQLGenCtx
+  = SQLGenCtx
+  { stringifyNum :: Bool
+  } deriving (Show, Eq)
 
 successMsg :: EncJSON
 successMsg = "{\"message\":\"success\"}"

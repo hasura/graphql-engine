@@ -9,7 +9,7 @@ where
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Logging
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Schema               (runCacheRWT)
+import           Hasura.RQL.DDL.Schema               (fetchMetadataTx, runCacheRWT)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.App                   (SchemaCacheRef (..), withSCUpdate)
@@ -252,7 +252,7 @@ refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef invalidations thre
   -- Reload schema cache from catalog
   resE <- liftIO $ runExceptT $ withSCUpdate cacheRef logger do
     rebuildableCache <- fst <$> liftIO (readIORef $ _scrCache cacheRef)
-    ((), cache, _) <- buildSchemaCacheWithOptions CatalogSync invalidations
+    ((), cache, _) <- fetchMetadataAndBuildCache
       & runCacheRWT rebuildableCache
       & peelRun runCtx pgCtx PG.ReadWrite Nothing
     pure ((), cache)
@@ -262,6 +262,10 @@ refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef invalidations thre
  where
   runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
   pgCtx = mkPGExecCtx PG.Serializable pool
+
+  fetchMetadataAndBuildCache = do
+    metadata <- liftTx fetchMetadataTx
+    buildSchemaCacheWithOptions CatalogSync invalidations metadata
 
 logInfo :: Logger Hasura -> ThreadType -> Value -> IO ()
 logInfo logger threadType val = unLogger logger $

@@ -104,7 +104,7 @@ isSchemaCacheBuildRequiredRunSQL RunSQL {..} =
         { TDFA.captureGroups = False }
         "\\balter\\b|\\bdrop\\b|\\breplace\\b|\\bcreate function\\b|\\bcomment on\\b")
 
-runRunSQL :: (MonadTx m, CacheRWM m, HasSQLGenCtx m) => RunSQL -> m EncJSON
+runRunSQL :: (MonadTx m, CacheRWM m, HasSQLGenCtx m, MetadataM m) => RunSQL -> m EncJSON
 runRunSQL q@RunSQL {..}
   -- see Note [Checking metadata consistency in run_sql]
   | isSchemaCacheBuildRequiredRunSQL q

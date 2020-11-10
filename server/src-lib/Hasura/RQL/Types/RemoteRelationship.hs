@@ -9,6 +9,9 @@ module Hasura.RQL.Types.RemoteRelationship
   , RemoteFieldInfo(..)
   , RemoteRelationship(..)
   , RemoteRelationshipDef(..)
+  , rrdRemoteSchema
+  , rrdHasuraFields
+  , rrdRemoteField
   , FieldCall(..)
   , RemoteArguments(..)
   , DeleteRemoteRelationship(..)
@@ -21,6 +24,7 @@ import qualified Data.Text                          as T
 import qualified Database.PG.Query                  as Q
 import qualified Language.GraphQL.Draft.Syntax      as G
 
+import           Control.Lens                       (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -266,6 +270,7 @@ data RemoteRelationshipDef
   } deriving (Show, Eq, Generic, Lift)
 instance Cacheable RemoteRelationshipDef
 $(deriveJSON (aesonDrop 4 snakeCase) ''RemoteRelationshipDef)
+$(makeLenses ''RemoteRelationshipDef)
 
 data DeleteRemoteRelationship =
   DeleteRemoteRelationship

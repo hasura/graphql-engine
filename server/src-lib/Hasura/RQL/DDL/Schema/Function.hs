@@ -8,6 +8,7 @@ import           Hasura.Prelude
 
 import qualified Control.Monad.Validate             as MV
 import qualified Data.HashMap.Strict                as M
+import qualified Data.HashMap.Strict.InsOrd         as OMap
 import qualified Data.Sequence                      as Seq
 import qualified Data.Text                          as T
 import qualified Database.PG.Query                  as Q
@@ -75,7 +76,7 @@ mkFunctionInfo qf systemDefined config rawFuncInfo =
     =<< MV.runValidateT validateFunction
   where
     functionArgs = mkFunctionArgs defArgsNo inpArgTyps inpArgNames
-    RawFunctionInfo hasVariadic funTy retSn retN retTyTyp retSet
+    RawFunctionInfo _ hasVariadic funTy retSn retN retTyTyp retSet
                 inpArgTyps inpArgNames defArgsNo returnsTab descM
                 = rawFuncInfo
     returnType = QualifiedPGType retSn retN retTyTyp
@@ -140,25 +141,6 @@ mkFunctionInfo qf systemDefined config rawFuncInfo =
         let argsText = T.intercalate "," $ map getFuncArgNameTxt args
         in "the function arguments " <> argsText <> " are not in compliance with GraphQL spec"
 
-saveFunctionToCatalog
-  :: (MonadTx m, HasSystemDefined m)
-  => QualifiedFunction -> FunctionConfig -> m ()
-saveFunctionToCatalog (QualifiedObject sn fn) config = do
-  systemDefined <- askSystemDefined
-  liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
-         INSERT INTO "hdb_catalog"."hdb_function"
-           (function_schema, function_name, configuration, is_system_defined)
-         VALUES ($1, $2, $3, $4)
-                 |] (sn, fn, Q.AltJ config, systemDefined) False
-
-delFunctionFromCatalog :: QualifiedFunction -> Q.TxE QErr ()
-delFunctionFromCatalog (QualifiedObject sn fn) =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-         DELETE FROM hdb_catalog.hdb_function
-         WHERE function_schema = $1
-           AND function_name = $2
-         |] (sn, fn) False
-
 newtype TrackFunction
   = TrackFunction
   { tfName :: QualifiedFunction}
@@ -177,12 +159,14 @@ trackFunctionP1 qf = do
   when (M.member qt $ scTables rawSchemaCache) $
     throw400 NotSupported $ "table with name " <> qf <<> " already exists"
 
-trackFunctionP2 :: (MonadTx m, CacheRWM m, HasSystemDefined m)
-                => QualifiedFunction -> FunctionConfig -> m EncJSON
+trackFunctionP2
+  :: (MonadError QErr m, CacheRWM m, MetadataM m)
+  => QualifiedFunction -> FunctionConfig -> m EncJSON
 trackFunctionP2 qf config = do
-  saveFunctionToCatalog qf config
-  buildSchemaCacheFor $ MOFunction qf
-  return successMsg
+  buildSchemaCacheFor (MOFunction qf)
+    $ MetadataModifier
+    $ metaFunctions %~ OMap.insert qf (FunctionMetadata qf config)
+  pure successMsg
 
 handleMultipleFunctions :: (QErrM m) => QualifiedFunction -> [a] -> m a
 handleMultipleFunctions qf = \case
@@ -206,16 +190,14 @@ fetchRawFunctionInfo qf@(QualifiedObject sn fn) =
           |] (sn, fn) True
 
 runTrackFunc
-  :: (MonadTx m, CacheRWM m, HasSystemDefined m)
+  :: (MonadTx m, CacheRWM m, MetadataM m)
   => TrackFunction -> m EncJSON
 runTrackFunc (TrackFunction qf)= do
   trackFunctionP1 qf
   trackFunctionP2 qf emptyFunctionConfig
 
 runTrackFunctionV2
-  :: ( QErrM m, CacheRWM m, HasSystemDefined m
-     , MonadTx m
-     )
+  :: (QErrM m, CacheRWM m, MetadataM m)
   => TrackFunctionV2 -> m EncJSON
 runTrackFunctionV2 (TrackFunctionV2 qf config) = do
   trackFunctionP1 qf
@@ -227,10 +209,16 @@ newtype UnTrackFunction
   deriving (Show, Eq, FromJSON, ToJSON, Lift)
 
 runUntrackFunc
-  :: (QErrM m, CacheRWM m, MonadTx m)
+  :: (CacheRWM m, MonadError QErr m, MetadataM m)
   => UnTrackFunction -> m EncJSON
 runUntrackFunc (UnTrackFunction qf) = do
   void $ askFunctionInfo qf
-  liftTx $ delFunctionFromCatalog qf
-  withNewInconsistentObjsCheck buildSchemaCache
-  return successMsg
+  -- Delete function from metadata
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ dropFunctionInMetadata qf
+  pure successMsg
+
+dropFunctionInMetadata :: QualifiedFunction -> MetadataModifier
+dropFunctionInMetadata function = MetadataModifier $
+  metaFunctions %~ OMap.delete function

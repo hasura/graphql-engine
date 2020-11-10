@@ -2,31 +2,25 @@
 module Hasura.RQL.DDL.RemoteSchema
   ( runAddRemoteSchema
   , runRemoveRemoteSchema
-  , removeRemoteSchemaFromCatalog
+  , dropRemoteSchemaInMetadata
   , runReloadRemoteSchema
-  , fetchRemoteSchemas
   , addRemoteSchemaP1
   , addRemoteSchemaP2Setup
-  , addRemoteSchemaP2
   , runIntrospectRemoteSchema
-  , addRemoteSchemaToCatalog
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                  as J
 import qualified Data.Environment            as Env
 import qualified Data.HashMap.Strict         as Map
+import qualified Data.HashMap.Strict.InsOrd  as OMap
 import qualified Data.HashSet                as S
-import qualified Database.PG.Query           as Q
 
 import           Control.Monad.Unique
 
-import           Hasura.EncJSON
--- import           Hasura.GraphQL.NormalForm
-import           Hasura.GraphQL.RemoteServer
--- import           Hasura.GraphQL.Schema.Merge
 import           Data.Text.Extended
+import           Hasura.EncJSON
+import           Hasura.GraphQL.RemoteServer
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.Types
 import           Hasura.Server.Version       (HasVersion)
@@ -40,14 +34,17 @@ runAddRemoteSchema
      , MonadIO m
      , MonadUnique m
      , HasHttpManager m
+     , MetadataM m
      )
   => Env.Environment
   -> AddRemoteSchemaQuery
   -> m EncJSON
 runAddRemoteSchema env q = do
   addRemoteSchemaP1 name
-  addRemoteSchemaP2 env q
-  buildSchemaCacheFor $ MORemoteSchema name
+  -- addRemoteSchemaP2 env q
+  void $ addRemoteSchemaP2Setup env q
+  buildSchemaCacheFor (MORemoteSchema name) $
+    MetadataModifier $ metaRemoteSchemas %~ OMap.insert name q
   pure successMsg
   where
     name = _arsqName q
@@ -70,19 +67,13 @@ addRemoteSchemaP2Setup env (AddRemoteSchemaQuery name def _) = do
   rsi <- validateRemoteSchemaDef env def
   fetchRemoteSchema env httpMgr name rsi
 
-addRemoteSchemaP2
-  :: (HasVersion, MonadTx m, MonadIO m, MonadUnique m, HasHttpManager m) => Env.Environment -> AddRemoteSchemaQuery -> m ()
-addRemoteSchemaP2 env q = do
-  void $ addRemoteSchemaP2Setup env q
-  liftTx $ addRemoteSchemaToCatalog q
-
 runRemoveRemoteSchema
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
+  :: (QErrM m, UserInfoM m, CacheRWM m, MetadataM m)
   => RemoteSchemaNameQuery -> m EncJSON
 runRemoveRemoteSchema (RemoteSchemaNameQuery rsn) = do
   removeRemoteSchemaP1 rsn
-  liftTx $ removeRemoteSchemaFromCatalog rsn
-  withNewInconsistentObjsCheck buildSchemaCache
+  withNewInconsistentObjsCheck $ buildSchemaCache $
+    dropRemoteSchemaInMetadata rsn
   pure successMsg
 
 removeRemoteSchemaP1
@@ -99,7 +90,7 @@ removeRemoteSchemaP1 rsn = do
     remoteSchemaDepId = SORemoteSchema rsn
 
 runReloadRemoteSchema
-  :: (QErrM m, CacheRWM m)
+  :: (QErrM m, CacheRWM m, MetadataM m)
   => RemoteSchemaNameQuery -> m EncJSON
 runReloadRemoteSchema (RemoteSchemaNameQuery name) = do
   remoteSchemas <- getAllRemoteSchemas <$> askSchemaCache
@@ -107,37 +98,14 @@ runReloadRemoteSchema (RemoteSchemaNameQuery name) = do
     "remote schema with name " <> name <<> " does not exist"
 
   let invalidations = mempty { ciRemoteSchemas = S.singleton name }
-  withNewInconsistentObjsCheck $ buildSchemaCacheWithOptions CatalogUpdate invalidations
+  metadata <- getMetadata
+  withNewInconsistentObjsCheck $
+    buildSchemaCacheWithOptions CatalogUpdate invalidations metadata
   pure successMsg
 
-addRemoteSchemaToCatalog
-  :: AddRemoteSchemaQuery
-  -> Q.TxE QErr ()
-addRemoteSchemaToCatalog (AddRemoteSchemaQuery name def comment) =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-    INSERT into hdb_catalog.remote_schemas
-      (name, definition, comment)
-      VALUES ($1, $2, $3)
-  |] (name, Q.AltJ $ J.toJSON def, comment) True
-
-removeRemoteSchemaFromCatalog :: RemoteSchemaName -> Q.TxE QErr ()
-removeRemoteSchemaFromCatalog name =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-    DELETE FROM hdb_catalog.remote_schemas
-      WHERE name = $1
-  |] (Identity name) True
-
-fetchRemoteSchemas :: Q.TxE QErr [AddRemoteSchemaQuery]
-fetchRemoteSchemas =
-  map fromRow <$> Q.listQE defaultTxErrorHandler
-    [Q.sql|
-     SELECT name, definition, comment
-       FROM hdb_catalog.remote_schemas
-     ORDER BY name ASC
-     |] () True
-  where
-    fromRow (name, Q.AltJ def, comment) =
-      AddRemoteSchemaQuery name def comment
+dropRemoteSchemaInMetadata :: RemoteSchemaName -> MetadataModifier
+dropRemoteSchemaInMetadata name =
+  MetadataModifier $ metaRemoteSchemas %~ OMap.delete name
 
 runIntrospectRemoteSchema
   :: (CacheRM m, QErrM m) => RemoteSchemaNameQuery -> m EncJSON

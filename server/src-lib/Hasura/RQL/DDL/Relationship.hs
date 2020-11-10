@@ -1,11 +1,10 @@
 module Hasura.RQL.DDL.Relationship
   ( runCreateRelationship
-  , insertRelationshipToCatalog
   , objRelP2Setup
   , arrRelP2Setup
 
   , runDropRel
-  , delRelFromCatalog
+  , dropRelationshipInMetadata
 
   , runSetRelComment
   )
@@ -14,9 +13,10 @@ where
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                as HM
+import qualified Data.HashMap.Strict.InsOrd         as OMap
 import qualified Data.HashSet                       as HS
-import qualified Database.PG.Query                  as Q
 
+import           Control.Lens                       ((.~))
 import           Data.Aeson.Types
 import           Data.Tuple                         (swap)
 import           Instances.TH.Lift                  ()
@@ -24,63 +24,53 @@ import           Instances.TH.Lift                  ()
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Deps
-import           Hasura.RQL.DDL.Permission          (purgePerm)
+import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.Types
 
 runCreateRelationship
-  :: (MonadTx m, CacheRWM m, HasSystemDefined m, ToJSON a)
+  :: (MonadError QErr m, CacheRWM m, ToJSON a, MetadataM m)
   => RelType -> WithTable (RelDef a) -> m EncJSON
 runCreateRelationship relType (WithTable tableName relDef) = do
-  insertRelationshipToCatalog tableName relType relDef
-  buildSchemaCacheFor $ MOTableObj tableName (MTORel (_rdName relDef) relType)
+  -- FIXME: Add relationship validation
+  let relName = _rdName relDef
+      comment = _rdComment relDef
+      metadataObj = MOTableObj tableName $ MTORel relName relType
+  addRelationshipToMetadata <- case relType of
+    ObjRel -> do
+      value <- decodeValue $ toJSON $ _rdUsing relDef
+      pure $ tmObjectRelationships %~ OMap.insert relName (RelDef relName value comment)
+    ArrRel -> do
+      value <- decodeValue $ toJSON $ _rdUsing relDef
+      pure $ tmArrayRelationships %~ OMap.insert relName (RelDef relName value comment)
+
+  buildSchemaCacheFor metadataObj
+    $ MetadataModifier
+    $ metaTables.ix tableName %~ addRelationshipToMetadata
   pure successMsg
 
-insertRelationshipToCatalog
-  :: (MonadTx m, HasSystemDefined m, ToJSON a)
-  => QualifiedTable
-  -> RelType
-  -> RelDef a
-  -> m ()
-insertRelationshipToCatalog (QualifiedObject schema table) relType (RelDef name using comment) = do
-  systemDefined <- askSystemDefined
-  let args = (schema, table, name, relTypeToTxt relType, Q.AltJ using, comment, systemDefined)
-  liftTx $ Q.unitQE defaultTxErrorHandler query args True
-  where
-    query = [Q.sql|
-      INSERT INTO
-        hdb_catalog.hdb_relationship
-        (table_schema, table_name, rel_name, rel_type, rel_def, comment, is_system_defined)
-      VALUES ($1, $2, $3, $4, $5 :: jsonb, $6, $7) |]
-
-runDropRel :: (MonadTx m, CacheRWM m) => DropRel -> m EncJSON
+runDropRel :: (MonadError QErr m, CacheRWM m, MetadataM m) => DropRel -> m EncJSON
 runDropRel (DropRel qt rn cascade) = do
-  depObjs <- collectDependencies
+  (relType, depObjs) <- collectDependencies
   withNewInconsistentObjsCheck do
-    traverse_ purgeRelDep depObjs
-    liftTx $ delRelFromCatalog qt rn
-    buildSchemaCache
+    metadataModifiers <- traverse purgeRelDep depObjs
+    buildSchemaCache $ MetadataModifier $
+      metaTables.ix qt %~
+      dropRelationshipInMetadata rn relType . foldr (.) id metadataModifiers
   pure successMsg
   where
     collectDependencies = do
       tabInfo <- askTableCoreInfo qt
-      _       <- askRelType (_tciFieldInfoMap tabInfo) rn ""
+      relType <- riType <$> askRelType (_tciFieldInfoMap tabInfo) rn ""
       sc      <- askSchemaCache
-      let depObjs = getDependentObjs sc (SOTableObj qt $ TORel rn)
+      let depObjs = getDependentObjs sc (SOTableObj qt $ TORel rn relType)
       when (depObjs /= [] && not cascade) $ reportDeps depObjs
-      pure depObjs
+      pure (relType, depObjs)
 
-delRelFromCatalog
-  :: QualifiedTable
-  -> RelName
-  -> Q.TxE QErr ()
-delRelFromCatalog (QualifiedObject sn tn) rn =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-           DELETE FROM
-                  hdb_catalog.hdb_relationship
-           WHERE table_schema =  $1
-             AND table_name = $2
-             AND rel_name = $3
-                |] (sn, tn, rn) True
+dropRelationshipInMetadata
+  :: RelName -> RelType -> TableMetadata -> TableMetadata
+dropRelationshipInMetadata rn = \case
+  ObjRel -> tmObjectRelationships %~ OMap.delete rn
+  ArrRel -> tmArrayRelationships %~ OMap.delete rn
 
 objRelP2Setup
   :: (QErrM m)
@@ -137,44 +127,28 @@ arrRelP2Setup foreignKeys qt (RelDef rn ru _) = case ru of
         mapping = HM.fromList $ map swap $ HM.toList colMap
     pure (RelInfo rn ArrRel mapping refqt False False, deps)
 
-purgeRelDep :: (MonadTx m) => SchemaObjId -> m ()
-purgeRelDep (SOTableObj tn (TOPerm rn pt)) = purgePerm tn rn pt
+purgeRelDep
+  :: (QErrM m)
+  => SchemaObjId -> m (TableMetadata -> TableMetadata)
+purgeRelDep (SOTableObj _ (TOPerm rn pt)) = pure $ dropPermissionInMetadata rn pt
 purgeRelDep d = throw500 $ "unexpected dependency of relationship : "
                 <> reportSchemaObj d
 
-validateRelP1
-  :: (UserInfoM m, QErrM m, TableCoreInfoRM m)
-  => QualifiedTable -> RelName -> m RelInfo
-validateRelP1 qt rn = do
-  tabInfo <- askTableCoreInfo qt
-  askRelType (_tciFieldInfoMap tabInfo) rn ""
-
-setRelCommentP2
-  :: (QErrM m, MonadTx m)
-  => SetRelComment -> m EncJSON
-setRelCommentP2 arc = do
-  liftTx $ setRelComment arc
-  return successMsg
-
 runSetRelComment
-  :: (QErrM m, CacheRM m, MonadTx m, UserInfoM m)
+  :: (CacheRWM m, MonadError QErr m, MetadataM m)
   => SetRelComment -> m EncJSON
 runSetRelComment defn = do
-  void $ validateRelP1 qt rn
-  setRelCommentP2 defn
+  tabInfo <- askTableCoreInfo qt
+  relType <- riType <$> askRelType (_tciFieldInfoMap tabInfo) rn ""
+  let metadataObj = MOTableObj qt $ MTORel rn relType
+  buildSchemaCacheFor metadataObj
+    $ MetadataModifier
+    $ metaTables.ix qt %~ case relType of
+      ObjRel -> tmObjectRelationships.ix rn.rdComment .~ comment
+      ArrRel -> tmArrayRelationships.ix rn.rdComment .~ comment
+  pure successMsg
   where
-    SetRelComment qt rn _ = defn
-
-setRelComment :: SetRelComment
-              -> Q.TxE QErr ()
-setRelComment (SetRelComment (QualifiedObject sn tn) rn comment) =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-           UPDATE hdb_catalog.hdb_relationship
-           SET comment = $1
-           WHERE table_schema =  $2
-             AND table_name = $3
-             AND rel_name = $4
-                |] (comment, sn, tn, rn) True
+    SetRelComment qt rn comment = defn
 
 getRequiredFkey
   :: (QErrM m)

@@ -109,7 +109,8 @@ instance FromJSON TrackFunctionV2 where
 -- | Raw SQL function metadata from postgres
 data RawFunctionInfo
   = RawFunctionInfo
-  { rfiHasVariadic      :: !Bool
+  { rfiOid              :: !OID
+  , rfiHasVariadic      :: !Bool
   , rfiFunctionType     :: !FunctionType
   , rfiReturnTypeSchema :: !SchemaName
   , rfiReturnTypeName   :: !PGScalarType

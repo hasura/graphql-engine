@@ -1,18 +1,6 @@
 module Hasura.RQL.Types
   ( MonadTx(..)
 
-  , UserInfoM(..)
-
-  , HasHttpManager (..)
-  -- , HasGCtxMap (..)
-
-  , SQLGenCtx(..)
-  , HasSQLGenCtx(..)
-
-  , HasSystemDefined(..)
-  , HasSystemDefinedT
-  , runHasSystemDefinedT
-
   , QCtx(..)
   , HasQCtx(..)
   , mkAdminQCtx
@@ -41,15 +29,14 @@ module Hasura.RQL.Types
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                 as M
-import qualified Network.HTTP.Client                 as HTTP
 
-import           Control.Monad.Unique
 import           Data.Text.Extended
 
 import           Hasura.Backends.Postgres.Connection as R
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.IR.BoolExp               as R
 import           Hasura.RQL.Types.Action             as R
+import           Hasura.RQL.Types.Class              as R
 import           Hasura.RQL.Types.Column             as R
 import           Hasura.RQL.Types.Common             as R
 import           Hasura.RQL.Types.ComputedField      as R
@@ -69,7 +56,6 @@ import           Hasura.RQL.Types.SchemaCache.Build  as R
 import           Hasura.RQL.Types.Table              as R
 import           Hasura.Session
 import           Hasura.SQL.Backend                  as R
-import           Hasura.Tracing                      (TraceT)
 
 data QCtx
   = QCtx
@@ -86,16 +72,6 @@ instance HasQCtx QCtx where
 
 mkAdminQCtx :: SQLGenCtx -> SchemaCache ->  QCtx
 mkAdminQCtx soc sc = QCtx adminUserInfo sc soc
-
-class (Monad m) => UserInfoM m where
-  askUserInfo :: m UserInfo
-
-instance (UserInfoM m) => UserInfoM (ReaderT r m) where
-  askUserInfo = lift askUserInfo
-instance (UserInfoM m) => UserInfoM (StateT s m) where
-  askUserInfo = lift askUserInfo
-instance (UserInfoM m) => UserInfoM (TraceT m) where
-  askUserInfo = lift askUserInfo
 
 askTabInfo
   :: (QErrM m, CacheRM m)
@@ -129,70 +105,6 @@ askEventTriggerInfo trn = do
   liftMaybe (err400 NotExists errMsg) $ M.lookup trn etim
   where
     errMsg = "event trigger " <> triggerNameToTxt trn <<> " does not exist"
-
-class (Monad m) => HasHttpManager m where
-  askHttpManager :: m HTTP.Manager
-
-instance (HasHttpManager m) => HasHttpManager (ExceptT e m) where
-  askHttpManager = lift askHttpManager
-instance (HasHttpManager m) => HasHttpManager (ReaderT r m) where
-  askHttpManager = lift askHttpManager
-instance (HasHttpManager m) => HasHttpManager (StateT s m) where
-  askHttpManager = lift askHttpManager
-instance (Monoid w, HasHttpManager m) => HasHttpManager (WriterT w m) where
-  askHttpManager = lift askHttpManager
-instance (HasHttpManager m) => HasHttpManager (TraceT m) where
-  askHttpManager = lift askHttpManager
-
--- class (Monad m) => HasGCtxMap m where
---   askGCtxMap :: m GC.GCtxMap
-
--- instance (HasGCtxMap m) => HasGCtxMap (ReaderT r m) where
---   askGCtxMap = lift askGCtxMap
--- instance (Monoid w, HasGCtxMap m) => HasGCtxMap (WriterT w m) where
---   askGCtxMap = lift askGCtxMap
-
-newtype SQLGenCtx
-  = SQLGenCtx
-  { stringifyNum :: Bool
-  } deriving (Show, Eq)
-
-class (Monad m) => HasSQLGenCtx m where
-  askSQLGenCtx :: m SQLGenCtx
-
-instance (HasSQLGenCtx m) => HasSQLGenCtx (ReaderT r m) where
-  askSQLGenCtx = lift askSQLGenCtx
-instance (HasSQLGenCtx m) => HasSQLGenCtx (StateT s m) where
-  askSQLGenCtx = lift askSQLGenCtx
-instance (Monoid w, HasSQLGenCtx m) => HasSQLGenCtx (WriterT w m) where
-  askSQLGenCtx = lift askSQLGenCtx
-instance (HasSQLGenCtx m) => HasSQLGenCtx (TableCoreCacheRT m) where
-  askSQLGenCtx = lift askSQLGenCtx
-instance (HasSQLGenCtx m) => HasSQLGenCtx (TraceT m) where
-  askSQLGenCtx = lift askSQLGenCtx
-
-class (Monad m) => HasSystemDefined m where
-  askSystemDefined :: m SystemDefined
-
-instance (HasSystemDefined m) => HasSystemDefined (ReaderT r m) where
-  askSystemDefined = lift askSystemDefined
-instance (HasSystemDefined m) => HasSystemDefined (StateT s m) where
-  askSystemDefined = lift askSystemDefined
-instance (Monoid w, HasSystemDefined m) => HasSystemDefined (WriterT w m) where
-  askSystemDefined = lift askSystemDefined
-instance (HasSystemDefined m) => HasSystemDefined (TraceT m) where
-  askSystemDefined = lift askSystemDefined
-
-newtype HasSystemDefinedT m a
-  = HasSystemDefinedT { unHasSystemDefinedT :: ReaderT SystemDefined m a }
-  deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO, MonadUnique, MonadError e, MonadTx
-           , HasHttpManager, HasSQLGenCtx, TableCoreInfoRM, CacheRM, CacheRWM, UserInfoM )
-
-runHasSystemDefinedT :: SystemDefined -> HasSystemDefinedT m a -> m a
-runHasSystemDefinedT systemDefined = flip runReaderT systemDefined . unHasSystemDefinedT
-
-instance (Monad m) => HasSystemDefined (HasSystemDefinedT m) where
-  askSystemDefined = HasSystemDefinedT ask
 
 liftMaybe :: (QErrM m) => QErr -> Maybe a -> m a
 liftMaybe e = maybe (throwError e) return
