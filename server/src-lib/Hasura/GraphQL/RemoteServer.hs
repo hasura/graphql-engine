@@ -189,7 +189,7 @@ instance J.FromJSON (FromIntrospection G.InputValueDefinition) where
     let desc' = fmap fromIntrospection desc
     let defVal' = fmap fromIntrospection defVal
         r = G.InputValueDefinition desc' name (fromIntrospection _type) defVal' []
-    return $ FromIntrospection $ r
+    return $ FromIntrospection r
 
 instance J.FromJSON (FromIntrospection (G.Value Void)) where
    parseJSON = J.withText "Value Void" $ \t ->
