@@ -244,7 +244,7 @@ The ``tables.yaml`` file contains metadata related to :ref:`tables<schema_tables
 
 version.yaml
 ^^^^^^^^^^^^
-The ``version.yaml`` file contains the version of the server.
+The ``version.yaml`` file contains the metadata format version.
 
 .. code-block:: yaml
 
