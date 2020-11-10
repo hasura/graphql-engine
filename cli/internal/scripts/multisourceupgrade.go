@@ -19,7 +19,7 @@ type UpgradeToMuUpgradeProjectToMultipleSourcesOpts struct {
 	// Directory in which migrations are stored
 	MigrationsDirectory string
 	// Name of the datasource which the current migrations belong to
-	TargetDatasourceName func() string
+	TargetDatasourceName string
 	Logger               *logrus.Logger
 }
 
@@ -40,7 +40,7 @@ func UpgradeProjectToMultipleSources(opts UpgradeToMuUpgradeProjectToMultipleSou
 		return errors.Wrap(err, "getting list of migrations to move")
 	}
 	// create a new directory for TargetDatasource
-	targetDatasourceDirectoryName := filepath.Join(opts.MigrationsDirectory, opts.TargetDatasourceName())
+	targetDatasourceDirectoryName := filepath.Join(opts.MigrationsDirectory, opts.TargetDatasourceName)
 	if err = opts.Fs.Mkdir(targetDatasourceDirectoryName, 0755); err != nil {
 		errors.Wrap(err, "creating target datasource name")
 	}

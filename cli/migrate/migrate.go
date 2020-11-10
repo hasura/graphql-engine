@@ -17,6 +17,8 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/hasura/graphql-engine/cli/version"
+
 	"github.com/hasura/graphql-engine/cli/util"
 
 	"github.com/hasura/graphql-engine/cli/metadata/types"
@@ -108,7 +110,7 @@ type Migrate struct {
 
 // New returns a new Migrate instance from a source URL and a database URL.
 // The URL scheme is defined by each driver.
-func New(sourceUrl string, databaseUrl string, cmd bool, configVersion int, tlsConfig *tls.Config, logger *log.Logger) (*Migrate, error) {
+func New(sourceUrl string, databaseUrl string, cmd bool, configVersion int, tlsConfig *tls.Config, logger *log.Logger, serverFeatureFlags version.ServerFeatureFlags) (*Migrate, error) {
 	m := newCommon(cmd)
 
 	sourceName, err := schemeFromUrl(sourceUrl)
@@ -142,7 +144,7 @@ func New(sourceUrl string, databaseUrl string, cmd bool, configVersion int, tlsC
 		m.sourceDrv.DefaultParser(source.DefaultParsev2)
 	}
 
-	databaseDrv, err := database.Open(databaseUrl, cmd, tlsConfig, logger)
+	databaseDrv, err := database.Open(databaseUrl, cmd, tlsConfig, logger, serverFeatureFlags)
 	if err != nil {
 		log.Debug(err)
 		return nil, err
@@ -1850,11 +1852,11 @@ func (m *Migrate) ApplySeed(q interface{}) error {
 func (m *Migrate) ExportDataDump(tableNames []string) ([]byte, error) {
 	// to support tables starting with capital letters
 	modifiedTableNames := make([]string, len(tableNames))
-	
+
 	for idx, val := range tableNames {
 		split := strings.Split(val, ".")
 		splitLen := len(split)
-		
+
 		if splitLen != 1 && splitLen != 2 {
 			return nil, fmt.Errorf(`invalid schema/table provided "%s"`, val)
 		}
@@ -1865,7 +1867,7 @@ func (m *Migrate) ExportDataDump(tableNames []string) ([]byte, error) {
 			modifiedTableNames[idx] = fmt.Sprintf(`"%s"`, val)
 		}
 	}
-	
+
 	return m.databaseDrv.ExportDataDump(modifiedTableNames)
 }
 

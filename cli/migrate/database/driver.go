@@ -6,6 +6,8 @@ import (
 	"io"
 	"sync"
 
+	"github.com/hasura/graphql-engine/cli/version"
+
 	nurl "net/url"
 
 	log "github.com/sirupsen/logrus"
@@ -44,7 +46,7 @@ type Driver interface {
 	// Open returns a new driver instance configured with parameters
 	// coming from the URL string. Migrate will call this function
 	// only once per instance.
-	Open(url string, isCMD bool, tlsConfig *tls.Config, logger *log.Logger) (Driver, error)
+	Open(url string, isCMD bool, tlsConfig *tls.Config, logger *log.Logger, serverFeatureFlags version.ServerFeatureFlags) (Driver, error)
 
 	// Close closes the underlying database instance managed by the driver.
 	// Migrate will call this function only once per instance.
@@ -118,7 +120,7 @@ type Driver interface {
 }
 
 // Open returns a new driver instance.
-func Open(url string, isCMD bool, tlsConfig *tls.Config, logger *log.Logger) (Driver, error) {
+func Open(url string, isCMD bool, tlsConfig *tls.Config, logger *log.Logger, serverFeatureFlags version.ServerFeatureFlags) (Driver, error) {
 	u, err := nurl.Parse(url)
 	if err != nil {
 		log.Debug(err)
@@ -140,7 +142,7 @@ func Open(url string, isCMD bool, tlsConfig *tls.Config, logger *log.Logger) (Dr
 		logger = log.New()
 	}
 
-	return d.Open(url, isCMD, tlsConfig, logger)
+	return d.Open(url, isCMD, tlsConfig, logger, serverFeatureFlags)
 }
 
 func Register(name string, driver Driver) {

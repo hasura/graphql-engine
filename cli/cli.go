@@ -86,7 +86,7 @@ type ServerAPIPaths struct {
 	Query string `yaml:"query,omitempty"`
 	// Metadata relevant since v1.4.0-alpha.1
 	// since v1/query is now split into v1/metadata and v2/query to support multiple datasources
-	Metadata string `yaml:"query,omitempty"`
+	Metadata string `yaml:"metadata,omitempty"`
 	GraphQL  string `yaml:"graphql,omitempty"`
 	Config   string `yaml:"config,omitempty"`
 	PGDump   string `yaml:"pg_dump,omitempty"`

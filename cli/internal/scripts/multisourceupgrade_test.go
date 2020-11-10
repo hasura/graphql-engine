@@ -236,7 +236,7 @@ func TestUpgradeProjectToMultipleSources(t *testing.T) {
 					}(),
 					ProjectDirectory:     "hasura",
 					MigrationsDirectory:  "hasura/migrations",
-					TargetDatasourceName: func() string { return "ds" },
+					TargetDatasourceName: "ds",
 					Logger:               logrus.New(),
 				},
 			},
@@ -249,7 +249,7 @@ func TestUpgradeProjectToMultipleSources(t *testing.T) {
 			if err := UpgradeProjectToMultipleSources(tt.args.opts); (err != nil) != tt.wantErr {
 				t.Errorf("UpgradeProjectToMultipleSources() error = %v, wantErr %v", err, tt.wantErr)
 				for _, want := range tt.want {
-					_, err := tt.args.opts.Fs.Stat(filepath.Join(tt.args.opts.TargetDatasourceName(), want))
+					_, err := tt.args.opts.Fs.Stat(filepath.Join(tt.args.opts.TargetDatasourceName, want))
 					assert.NoError(t, err)
 				}
 			}
