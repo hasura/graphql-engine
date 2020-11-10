@@ -3,6 +3,10 @@ package commands
 import (
 	"fmt"
 
+	"github.com/hasura/graphql-engine/cli/util"
+
+	"github.com/hasura/graphql-engine/cli/migrate"
+
 	"github.com/hasura/graphql-engine/cli/internal/scripts"
 	"github.com/spf13/afero"
 
@@ -39,12 +43,24 @@ func newUpdateMultipleSources(ec *cli.ExecutionContext) *cobra.Command {
 				return fmt.Errorf("server doesn't support multiple data sources")
 			}
 			//get the list of data sources
-			var datasources = func() []string { return []string{} }()
+			migrateDrv, err := migrate.NewMigrate(ec, true)
+			if err != nil {
+				return err
+			}
+			datasources, err := migrateDrv.GetDatasources()
+			if err != nil {
+				return err
+			}
+			targetDatasource, err := util.GetSelectPrompt("select datasource for which current migrations belong to", datasources)
+			if err != nil {
+				return err
+			}
+			fmt.Println(datasources)
 			opts := scripts.UpgradeToMuUpgradeProjectToMultipleSourcesOpts{
 				Fs:                   afero.NewOsFs(),
 				ProjectDirectory:     ec.ExecutionDirectory,
 				MigrationsDirectory:  ec.MigrationDir,
-				TargetDatasourceName: datasources[1],
+				TargetDatasourceName: targetDatasource,
 				Logger:               ec.Logger,
 			}
 			if err := scripts.UpgradeProjectToMultipleSources(opts); err != nil {

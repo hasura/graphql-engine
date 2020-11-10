@@ -248,3 +248,51 @@ func (h *HasuraDB) Query(data interface{}) error {
 	}
 	return nil
 }
+
+func (h *HasuraDB) GetDatasources() ([]string, error) {
+	if !h.serverFeatureFlags.HasDatasources {
+		return nil, fmt.Errorf("server version does not support datasources")
+	}
+	query := HasuraInterfaceQuery{
+		Type: "export_metadata",
+		Args: map[string]interface{}{},
+	}
+
+	resp, body, err := h.sendQueryOrMetadataRequest(query)
+	if err != nil {
+		h.logger.Debug(err)
+		return nil, err
+	}
+	h.logger.Debug("response: ", string(body))
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, NewHasuraError(body, h.config.isCMD)
+	}
+
+	var bodyAsMap map[string]interface{}
+	if err = json.Unmarshal(body, &bodyAsMap); err != nil {
+		return nil, errors.Wrap(err, "unmarshalling response from API")
+	}
+
+	sources, ok := bodyAsMap["sources"]
+	if !ok {
+		return nil, fmt.Errorf("no sources found")
+	}
+	sourcesMap, ok := sources.([]map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("error getting sources")
+	}
+	var sourceNames []string
+	for _, source := range sourcesMap {
+		v, ok := source["name"]
+		if !ok {
+			return nil, fmt.Errorf("error getting source name")
+		}
+		sourceName, ok := v.(string)
+		if !ok {
+			return nil, fmt.Errorf("error getting source name")
+		}
+		sourceNames = append(sourceNames, sourceName)
+	}
+	return sourceNames, nil
+}
