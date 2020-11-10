@@ -33,7 +33,7 @@ export const setCustomGraphQLTypes = (types, successCb, errorCb) => (
 
   const migrationName = 'set_custom_types';
   const requestMsg = 'Setting custom types...';
-  const successMsg = 'Setting custom types successfull';
+  const successMsg = 'Setting custom types successful';
   const errorMsg = 'Setting custom types failed';
 
   const customOnSuccess = () => {
