@@ -1,5 +1,8 @@
 ALTER TABLE hdb_catalog.event_triggers
-  DROP CONSTRAINT event_triggers_schema_name_table_name_fkey;
+  DROP CONSTRAINT IF EXISTS event_triggers_schema_name_fkey;
+
+ALTER TABLE hdb_catalog.event_triggers
+  DROP CONSTRAINT IF EXISTS event_triggers_schema_name_table_name_fkey;
 
 -- since we removed the foreign key constraint with hdb_catalog.hdb_table which had 'ON UPDATE CASCADE'
 -- (see Note [Diff-and-patch event triggers on replace] in Hasura.RQL.DDL.EventTrigger), we perform the update using trigger
