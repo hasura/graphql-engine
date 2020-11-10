@@ -46,7 +46,8 @@ Create a synchronous action with name ``create_user``:
                }
             ],
             "output_type":"User",
-            "handler":"https://action.my_app.com/create-user"
+            "handler":"https://action.my_app.com/create-user",
+            "timeout":60
          },
          "comment": "Custom action to create user"
       }
@@ -119,6 +120,11 @@ ActionDefinition
      - false
      - [ ``mutation`` | ``query`` ]
      - The type of the action (default: ``mutation``)
+   * - timeout
+     - false
+     - Integer
+     - Number of seconds to wait for response before timing out. Default: 30
+
 
 .. _InputArgument:
 
