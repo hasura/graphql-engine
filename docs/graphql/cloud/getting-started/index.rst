@@ -136,50 +136,22 @@ Learn course
 
 For a full hands-on tour of Hasura, check out our `30-Minute Hasura Basics Course <https://hasura.io/learn/graphql/hasura/introduction/>`__.
 
-Database modelling
-^^^^^^^^^^^^^^^^^^
+Database operations
+^^^^^^^^^^^^^^^^^^^
 
-Check out the :ref:`schema section <schema>` to learn about how to model your database schema, as well as how to extend it.
-
-Querying data
-^^^^^^^^^^^^^
-
-Learn how to use :ref:`GraphQL queries <queries>` to query data from your GraphQL API.
-
-Inserting data
-^^^^^^^^^^^^^^
-
-Learn how to insert data into your GraphQL API using :ref:`GraphQL mutations <mutations>`.
+- :ref:`Database modelling <schema>`: Learn how to model your database schema, as well as how to extend it.
+- :ref:`Querying data <queries>`: Use GraphQL queries to query data from your GraphQL API.
+- :ref:`Inserting data <mutations>`: Use GraphQL mutations to insert data into your GraphQL API using.
 
 Business logic
 ^^^^^^^^^^^^^^
 
 There are several options for the implementation of business logic, depending on your use case.
 
-Actions
-*******
-
-:ref:`Actions <actions>` can be used if you'd like to extend your GraphQL schema by integrating with a REST endpoint.
-
-Remote schema
-*************
-
-If you have an existing GraphQL server or if you're comfortable with implementing one, you can use :ref:`remote schemas <remote_schemas>`.
-
-Event triggers
-**************
-
-To trigger a serverless function based on a database event, use :ref:`event triggers <event_triggers>`.
-
-Scheduled triggers
-******************
-
-:ref:`Scheduled triggers <scheduled_triggers>` are used to execute custom business logic at specific points in time.
-
-Migrations
-^^^^^^^^^^
-
-Set up :ref:`Hasura migrations <migrations_setup>` to track your database alterations. This will make it easier to move to a different environment (e.g. staging or prod) later.
+- :ref:`Actions <actions>`: Actions can be used if you'd like to extend your GraphQL schema by integrating with a REST endpoint.
+- :ref:`Remote schemas <remote_schemas>`: If you have an existing GraphQL server or if you're comfortable with implementing one, you can use remote schemas.
+- :ref:`Event triggers <event_triggers>`: To trigger a serverless function based on a database event, use event triggers.
+- :ref:`Scheduled triggers <scheduled_triggers>` are used to execute custom business logic at specific points in time.
 
 Manage Hasura Cloud project
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
