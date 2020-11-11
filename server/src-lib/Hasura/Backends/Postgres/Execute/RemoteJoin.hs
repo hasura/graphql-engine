@@ -596,9 +596,8 @@ substituteVariables values = traverse go
   where
     go = \case
       G.VVariable variableName ->
-        case Map.lookup variableName values of
-          Nothing    -> Failure ["Value for variable " <> variableName <<> " not provided"]
-          Just value -> pure value
+        onNothing (Map.lookup variableName values) $
+        Failure ["Value for variable " <> variableName <<> " not provided"]
       G.VList listValue ->
         fmap G.VList (traverse go listValue)
       G.VObject objectValue ->

@@ -1031,12 +1031,8 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
   remoteSchemasFieldDefns <- asks $ qcRemoteFields . getter
   let remoteSchemaName = _rfiRemoteSchemaName remoteFieldInfo
   fieldDefns <-
-    case Map.lookup remoteSchemaName remoteSchemasFieldDefns of
-      Nothing ->
-        throw500 $ "unexpected: remote schema "
-        <> remoteSchemaName
-        <<> " not found"
-      Just fieldDefns -> pure fieldDefns
+    onNothing (Map.lookup remoteSchemaName remoteSchemasFieldDefns) $
+      throw500 $ "unexpected: remote schema "  <> remoteSchemaName <<> " not found"
 
   fieldName <- textToName $ remoteRelationshipNameToText $ _rfiName remoteFieldInfo
   remoteFieldsArgumentsParser <-
