@@ -1,6 +1,9 @@
 {-# LANGUAGE CPP #-}
 module Hasura.Server.SchemaUpdate
-  (startSchemaSyncThreads)
+  ( startSchemaSyncListenerThread
+  , startSchemaSyncProcessorThread
+  , SchemaSyncCtx(..)
+  )
 where
 
 import           Hasura.Backends.Postgres.Connection
@@ -9,7 +12,6 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema               (runCacheRWT)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.API.Query
 import           Hasura.Server.App                   (SchemaCacheRef (..), withSCUpdate)
 import           Hasura.Server.Init                  (InstanceId (..))
 import           Hasura.Server.Logging
@@ -70,6 +72,15 @@ data EventPayload
   }
 $(deriveJSON (aesonDrop 3 snakeCase) ''EventPayload)
 
+data SchemaSyncEvent
+  = SSEListenStart !UTC.UTCTime
+  | SSEPayload !EventPayload
+
+instance ToJSON SchemaSyncEvent where
+  toJSON = \case
+    SSEListenStart time -> String $ "event listening started at " <> T.pack (show time)
+    SSEPayload payload -> toJSON payload
+
 data ThreadError
   = TEJsonParse !Text
   | TEQueryError !QErr
@@ -79,57 +90,74 @@ $(deriveToJSON
                  }
  ''ThreadError)
 
--- | An IO action that enables metadata syncing
-startSchemaSyncThreads
+type SchemaSyncEventRef = STM.TVar (Maybe SchemaSyncEvent)
+
+-- | Context required for schema syncing. Listener thread id,
+-- event references and cache init time
+data SchemaSyncCtx
+  = SchemaSyncCtx
+  { _sscListenerThreadId :: !Immortal.Thread
+  , _sscSyncEventRef     :: !SchemaSyncEventRef
+  , _sscCacheInitTime    :: !UTC.UTCTime
+  }
+
+logThreadStarted
+  :: (MonadIO m)
+  => Logger Hasura -> InstanceId -> ThreadType -> Immortal.Thread -> m ()
+logThreadStarted logger instanceId threadType thread =
+  let msg = T.pack (show threadType) <> " thread started"
+  in unLogger logger $
+     StartupLog LevelInfo "schema-sync" $
+       object [ "instance_id" .= getInstanceId instanceId
+              , "thread_id" .= show (Immortal.threadId thread)
+              , "message" .= msg
+              ]
+
+-- | An async thread which listen to Postgres notify to enable schema syncing
+startSchemaSyncListenerThread
+  :: (MonadIO m)
+  => PG.PGPool
+  -> Logger Hasura
+  -> InstanceId
+  -> m (Immortal.Thread, SchemaSyncEventRef)
+startSchemaSyncListenerThread pool logger instanceId = do
+  -- only the latest event is recorded here
+  -- we don't want to store and process all the events, only the latest event
+  schemaSyncEventRef <- liftIO $ STM.newTVarIO Nothing
+
+  -- Start listener thread
+  listenerThread <- liftIO $ C.forkImmortal "SchemeUpdate.listener" logger $
+                    listener pool logger schemaSyncEventRef
+  logThreadStarted logger instanceId TTListener listenerThread
+  pure (listenerThread, schemaSyncEventRef)
+
+-- | An async thread which processes the schema sync events
+startSchemaSyncProcessorThread
   :: (MonadIO m)
   => SQLGenCtx
   -> PG.PGPool
   -> Logger Hasura
   -> HTTP.Manager
+  -> SchemaSyncEventRef
   -> SchemaCacheRef
   -> InstanceId
-  -> Maybe UTC.UTCTime
-  -> m (Immortal.Thread, Immortal.Thread)
-  -- ^ Returns: (listener handle, processor handle)
-startSchemaSyncThreads sqlGenCtx pool logger httpMgr cacheRef instanceId cacheInitTime = do
-  -- only the latest event is recorded here
-  -- we don't want to store and process all the events, only the latest event
-  updateEventRef <- liftIO $ STM.newTVarIO Nothing
-
-  -- Start listener thread
-  lTId <- liftIO $ C.forkImmortal "SchemeUpdate.listener" logger $
-    listener sqlGenCtx pool logger httpMgr updateEventRef cacheRef instanceId cacheInitTime
-  logThreadStarted TTListener lTId
-
+  -> UTC.UTCTime
+  -> m Immortal.Thread
+startSchemaSyncProcessorThread sqlGenCtx pool logger httpMgr
+  schemaSyncEventRef cacheRef instanceId cacheInitTime = do
   -- Start processor thread
-  pTId <- liftIO $ C.forkImmortal "SchemeUpdate.processor" logger $
-    processor sqlGenCtx pool logger httpMgr updateEventRef cacheRef instanceId
-  logThreadStarted TTProcessor pTId
-
-  return (lTId, pTId)
-
-  where
-    logThreadStarted threadType thread =
-      let msg = T.pack (show threadType) <> " thread started"
-      in unLogger logger $
-         StartupLog LevelInfo "schema-sync" $
-           object [ "instance_id" .= getInstanceId instanceId
-                  , "thread_id" .= show (Immortal.threadId thread)
-                  , "message" .= msg
-                  ]
+  processorThread <- liftIO $ C.forkImmortal "SchemeUpdate.processor" logger $
+    processor sqlGenCtx pool logger httpMgr schemaSyncEventRef cacheRef instanceId cacheInitTime
+  logThreadStarted logger instanceId TTProcessor processorThread
+  pure processorThread
 
 -- | An IO action that listens to postgres for events and pushes them to a Queue, in a loop forever.
 listener
-  :: SQLGenCtx
-  -> PG.PGPool
+  :: PG.PGPool
   -> Logger Hasura
-  -> HTTP.Manager
-  -> STM.TVar (Maybe EventPayload)
-  -> SchemaCacheRef
-  -> InstanceId
-  -> Maybe UTC.UTCTime -> IO void
-listener sqlGenCtx pool logger httpMgr updateEventRef
-  cacheRef instanceId cacheInitTime =
+  -> SchemaSyncEventRef
+  -> IO void
+listener pool logger updateEventRef =
   -- Never exits
   forever $ do
     listenResE <-
@@ -140,25 +168,10 @@ listener sqlGenCtx pool logger httpMgr updateEventRef
   where
     threadType = TTListener
 
-    shouldRefresh dbInstId accrdAt =
-      case cacheInitTime of
-        Nothing   -> True
-        Just time -> (dbInstId /= instanceId) && accrdAt > time
-
-    refreshCache Nothing = return ()
-    refreshCache (Just (dbInstId, accrdAt, invalidations)) =
-      when (shouldRefresh dbInstId accrdAt) $
-        refreshSchemaCache sqlGenCtx pool logger httpMgr cacheRef invalidations
-          threadType "schema cache reloaded after postgres listen init"
-
     notifyHandler = \case
-      PG.PNEOnStart -> do
-        eRes <- runExceptT $ PG.runTx pool
-          (PG.Serializable, Nothing) fetchLastUpdate
-        case eRes of
-          Left e         -> onError e
-          Right mLastUpd -> refreshCache mLastUpd
-
+      PG.PNEOnStart        -> do
+        time <- UTC.getCurrentTime
+        STM.atomically $ STM.writeTVar updateEventRef $ Just $ SSEListenStart time
       PG.PNEPQNotify notif ->
         case eitherDecodeStrict $ PQ.notifyExtra notif of
           Left e -> logError logger threadType $ TEJsonParse $ T.pack e
@@ -168,7 +181,7 @@ listener sqlGenCtx pool logger httpMgr updateEventRef
             $assertNFHere payload  -- so we don't write thunks to mutable vars
 #endif
             -- Push a notify event to Queue
-            STM.atomically $ STM.writeTVar updateEventRef $ Just payload
+            STM.atomically $ STM.writeTVar updateEventRef $ Just $ SSEPayload payload
 
     onError = logError logger threadType . TEQueryError
     -- NOTE: we handle expected error conditions here, while unexpected exceptions will result in
@@ -184,17 +197,19 @@ processor
   -> PG.PGPool
   -> Logger Hasura
   -> HTTP.Manager
-  -> STM.TVar (Maybe EventPayload)
+  -> SchemaSyncEventRef
   -> SchemaCacheRef
-  -> InstanceId -> IO void
+  -> InstanceId
+  -> UTC.UTCTime
+  -> IO void
 processor sqlGenCtx pool logger httpMgr updateEventRef
-  cacheRef instanceId =
+  cacheRef instanceId cacheInitTime =
   -- Never exits
   forever $ do
     event <- STM.atomically getLatestEvent
     logInfo logger threadType $ object ["processed_event" .= event]
     when (shouldReload event) $
-      refreshSchemaCache sqlGenCtx pool logger httpMgr cacheRef (_epInvalidations event)
+      refreshSchemaCache sqlGenCtx pool logger httpMgr cacheRef (getCacheInvalidations event)
         threadType "schema cache reloaded"
   where
     -- checks if there is an event
@@ -209,7 +224,20 @@ processor sqlGenCtx pool logger httpMgr updateEventRef
     threadType = TTProcessor
 
       -- If event is from another server
-    shouldReload payload = _epInstanceId payload /= instanceId
+    shouldReload = \case
+      SSEListenStart time ->
+        -- If listening started after cache initialization, just refresh the schema cache unconditionally.
+        -- Possible scenarios where listening start time > cache init time are:-
+        -- - More time spent on acquiring Postgres connection for listening
+        -- - Listening has restarted due to connection issues with the Postgres
+        time > cacheInitTime
+      SSEPayload payload  ->
+        -- When event is from other sever instance
+        _epInstanceId payload /= instanceId
+
+    getCacheInvalidations = \case
+      SSEListenStart _   -> mempty
+      SSEPayload payload -> _epInvalidations payload
 
 refreshSchemaCache
   :: SQLGenCtx

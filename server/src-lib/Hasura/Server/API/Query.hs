@@ -177,21 +177,17 @@ $(deriveJSON
   ''RQLQueryV2
  )
 
-fetchLastUpdate :: Q.TxE QErr (Maybe (InstanceId, UTCTime, CacheInvalidations))
-fetchLastUpdate = over (_Just._3) Q.getAltJ <$> Q.withQE defaultTxErrorHandler [Q.sql|
-  SELECT instance_id::text, occurred_at, invalidations
-  FROM hdb_catalog.hdb_schema_update_event
-  ORDER BY occurred_at DESC LIMIT 1
-  |] () True
-
-recordSchemaUpdate :: InstanceId -> CacheInvalidations -> Q.TxE QErr ()
-recordSchemaUpdate instanceId invalidations =
-  liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
-             INSERT INTO hdb_catalog.hdb_schema_update_event
-               (instance_id, occurred_at, invalidations) VALUES ($1::uuid, DEFAULT, $2::json)
-             ON CONFLICT ((occurred_at IS NOT NULL))
-             DO UPDATE SET instance_id = $1::uuid, occurred_at = DEFAULT, invalidations = $2::json
-            |] (instanceId, Q.AltJ invalidations) True
+notifySchemaCacheSync :: InstanceId -> CacheInvalidations -> Q.TxE QErr ()
+notifySchemaCacheSync instanceId invalidations = do
+  Q.Discard () <- Q.withQE defaultTxErrorHandler [Q.sql|
+      SELECT pg_notify('hasura_schema_update', json_build_object(
+        'instance_id', $1,
+        'occurred_at', NOW(),
+        'invalidations', $2
+        )::text
+      )
+    |] (instanceId, Q.AltJ invalidations) True
+  pure ()
 
 runQuery
   :: (HasVersion, MonadIO m, MonadError QErr m, Tracing.MonadTrace m)
@@ -216,7 +212,7 @@ runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query
     withReload (result, updatedCache, invalidations) = do
       when (queryModifiesSchemaCache query) $ do
         e <- liftIO $ runExceptT $ runLazyTx pgExecCtx Q.ReadWrite $ liftTx $
-          recordSchemaUpdate instanceId invalidations
+          notifySchemaCacheSync instanceId invalidations
         liftEither e
       return (result, updatedCache)
 
