@@ -65,4 +65,4 @@ import the data:
 
   \copy profile from '/Users/sarahlewis/documents/profile.csv' delimiter ',' CSV HEADER;
 
-Your data would have been successfully copied into a table in the Postgres database. 
+Your data would have been successfully copied into the Postgres database. 
