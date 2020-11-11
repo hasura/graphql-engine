@@ -62,7 +62,7 @@ spec
      , MonadUnique m
      , HasHttpManager m
      , HasSQLGenCtx m
-     , HasEnableRemoteSchemaPermsCtx m
+     , HasRemoteSchemaPermsCtx m
      )
   => Q.ConnInfo -> SpecWithCache m
 spec pgConnInfo = do
