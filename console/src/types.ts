@@ -27,6 +27,40 @@ export type ConsoleState = {
   hasura_uuid: string;
 };
 
+export type ApiExplorer = {
+  authApiExpanded: string;
+  currentTab: number;
+  headerFocus: boolean;
+  loading: boolean;
+  mode: string;
+  modalState: Record<string, string>;
+  explorerData: Record<string, string>;
+  displayedApi: DisplayedApiState;
+};
+
+export type DisplayedApiState = {
+  details: Record<string, string>;
+  id: string;
+  request: ApiExplorerRequest;
+};
+
+export type ApiExplorerRequest = {
+  bodyType: string;
+  headers: ApiExplorerHeader[];
+  headersInitialised: boolean;
+  method: string;
+  params: string;
+  url: string;
+};
+
+export type ApiExplorerHeader = {
+  key: string;
+  value: string;
+  isActive: boolean;
+  isNewHeader: boolean;
+  isDisabled: boolean;
+};
+
 // Redux Utils
 export type ReduxState = {
   tables: {
@@ -43,6 +77,7 @@ export type ReduxState = {
     consoleNotifications: ConsoleNotification[];
   };
   telemetry: ConsoleState;
+  apiexplorer: ApiExplorer;
 };
 
 export type ReduxAction = RAEvents | RouterAction;
@@ -65,3 +100,14 @@ export type ReduxStore = Store<ReduxState, ReduxAction>;
 
 // Router Utils
 export type ReplaceRouterState = (route: string) => void;
+
+// HGE common types
+export type RunSqlType = {
+  type: string;
+  version?: number;
+  args: {
+    cascade?: boolean;
+    read_only?: boolean;
+    sql: string;
+  };
+};

@@ -1,4 +1,4 @@
-{-# LANGUAGE DerivingStrategies         #-}
+{-# LANGUAGE DerivingStrategies #-}
 
 module Hasura.Server.Auth
   ( getUserInfo
@@ -24,28 +24,29 @@ module Hasura.Server.Auth
   , getUserInfoWithExpTime_
   ) where
 
-import qualified Control.Concurrent.Async.Lifted.Safe as LA
-import           Control.Concurrent.Extended          (forkImmortal)
-import           Control.Monad.Trans.Control          (MonadBaseControl)
-import           Data.IORef                           (newIORef)
-import           Data.Time.Clock                      (UTCTime)
-import           Hasura.Server.Version                (HasVersion)
+import           Hasura.Prelude
 
+import qualified Control.Concurrent.Async.Lifted.Safe as LA
 import qualified Crypto.Hash                          as Crypto
-import qualified Data.Text                            as T
 import qualified Data.Text.Encoding                   as T
 import qualified Network.HTTP.Client                  as H
 import qualified Network.HTTP.Types                   as N
 
-import           Hasura.Logging
-import           Hasura.Prelude
-import           Hasura.RQL.Types
+import           Control.Concurrent.Extended          (forkImmortal)
+import           Control.Monad.Trans.Control          (MonadBaseControl)
+import           Data.IORef                           (newIORef)
+import           Data.Time.Clock                      (UTCTime)
 
+import qualified Hasura.Tracing                       as Tracing
+
+import           Hasura.Logging
+import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT               hiding (processJwt_)
 import           Hasura.Server.Auth.WebHook
 import           Hasura.Server.Utils
+import           Hasura.Server.Version                (HasVersion)
 import           Hasura.Session
-import qualified Hasura.Tracing                       as Tracing
+
 
 -- | Typeclass representing the @UserInfo@ authorization and resolving effect
 class (Monad m) => UserAuthentication m where
@@ -78,7 +79,7 @@ newtype AdminSecretHash = AdminSecretHash (Crypto.Digest Crypto.SHA512)
 instance Show AdminSecretHash where
   show _ = "(error \"AdminSecretHash hidden\")"
 
-hashAdminSecret :: T.Text -> AdminSecretHash
+hashAdminSecret :: Text -> AdminSecretHash
 hashAdminSecret = AdminSecretHash . Crypto.hash . T.encodeUtf8
 
 -- | The methods we'll use to derive roles for authenticating requests.
@@ -153,7 +154,7 @@ setupAuthMode mAdminSecretHash mWebHook mJwtSecret mUnAuthRole httpManager logge
          , Tracing.HasReporter m
          )
       => JWTConfig
-      -> ExceptT T.Text m JWTCtx
+      -> ExceptT Text m JWTCtx
     mkJwtCtx JWTConfig{..} = do
       jwkRef <- case jcKeyOrUrl of
         Left jwk  -> liftIO $ newIORef (JWKSet [jwk])

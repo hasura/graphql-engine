@@ -8,34 +8,31 @@ module Hasura.RQL.DDL.Relationship
   , delRelFromCatalog
 
   , runSetRelComment
-  , module Hasura.RQL.DDL.Relationship.Types
   )
 where
 
-import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.SchemaCacheTypes
-import           Hasura.EncJSON
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Deps
-import           Hasura.RQL.DDL.Permission                  (purgePerm)
-import           Hasura.RQL.DDL.Relationship.Types
-import           Hasura.RQL.Types
-import           Hasura.SQL.Types
+
+import qualified Data.HashMap.Strict                as HM
+import qualified Data.HashSet                       as HS
+import qualified Database.PG.Query                  as Q
 
 import           Data.Aeson.Types
-import           Data.Tuple                                 (swap)
-import           Instances.TH.Lift                          ()
+import           Data.Tuple                         (swap)
+import           Instances.TH.Lift                  ()
 
-import qualified Data.HashMap.Strict                        as HM
-import qualified Data.HashSet                               as HS
-import qualified Database.PG.Query                          as Q
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.EncJSON
+import           Hasura.RQL.DDL.Deps
+import           Hasura.RQL.DDL.Permission          (purgePerm)
+import           Hasura.RQL.Types
 
 runCreateRelationship
   :: (MonadTx m, CacheRWM m, HasSystemDefined m, ToJSON a)
   => RelType -> WithTable (RelDef a) -> m EncJSON
 runCreateRelationship relType (WithTable tableName relDef) = do
   insertRelationshipToCatalog tableName relType relDef
-  buildSchemaCacheFor $ MOTableObj tableName (MTORel (rdName relDef) relType)
+  buildSchemaCacheFor $ MOTableObj tableName (MTORel (_rdName relDef) relType)
   pure successMsg
 
 insertRelationshipToCatalog
@@ -69,7 +66,7 @@ runDropRel (DropRel qt rn cascade) = do
       _       <- askRelType (_tciFieldInfoMap tabInfo) rn ""
       sc      <- askSchemaCache
       let depObjs = getDependentObjs sc (SOTableObj qt $ TORel rn)
-      when (depObjs /= [] && not (or cascade)) $ reportDeps depObjs
+      when (depObjs /= [] && not cascade) $ reportDeps depObjs
       pure depObjs
 
 delRelFromCatalog
