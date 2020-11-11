@@ -24,7 +24,6 @@ import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict.Extended  as M
 import qualified Data.Sequence                 as Seq
-import qualified Data.Text                     as T
 
 import           Control.Arrow.Extended
 import           Control.Lens
@@ -32,11 +31,13 @@ import           Data.Aeson                    (toJSON)
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.List                     (nub)
+import           Data.Text.Extended
 
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.RemoteSchema (RemoteSchemaName)
 import           Hasura.RQL.Types.SchemaCache
+import           Hasura.Tracing                (TraceT)
 
 -- ----------------------------------------------------------------------------
 -- types used during schema cache construction
@@ -104,11 +105,11 @@ class (CacheRM m) => CacheRWM m where
 data BuildReason
   -- | The build was triggered by an update this instance made to the catalog (in the
   -- currently-active transaction), so information in Postgres that needs to be kept in sync with
-  -- the catalog (i.e. anything in the @hdb_views@ schema) should be updated.
+  -- the catalog (i.e. table event triggers in @hdb_catalog@ schema) should be updated.
   = CatalogUpdate
   -- | The build was triggered by a notification that some other currently-running Hasura instance
-  -- updated the catalog. Since that instance already updated @hdb_views@, this build should be
-  -- read-only.
+  -- updated the catalog. Since that instance already updated table event triggers in @hdb_catalog@,
+  -- this build should be read-only.
   | CatalogSync
   deriving (Show, Eq)
 
@@ -129,6 +130,8 @@ instance Monoid CacheInvalidations where
 
 instance (CacheRWM m) => CacheRWM (ReaderT r m) where
   buildSchemaCacheWithOptions a b = lift $ buildSchemaCacheWithOptions a b
+instance (CacheRWM m) => CacheRWM (TraceT m) where
+  buildSchemaCacheWithOptions a b = lift $ buildSchemaCacheWithOptions a b
 
 buildSchemaCache :: (CacheRWM m) => m ()
 buildSchemaCache = buildSchemaCacheWithOptions CatalogUpdate mempty
@@ -145,7 +148,7 @@ buildSchemaCacheFor objectId = do
       newInconsistentObjects = newSchemaCache `diffInconsistentObjects` oldSchemaCache
 
   for_ (M.lookup objectId newInconsistentObjects) $ \matchingObjects -> do
-    let reasons = T.intercalate ", " $ map imReason $ toList matchingObjects
+    let reasons = commaSeparated $ imReason <$> matchingObjects
     throwError (err400 ConstraintViolation reasons) { qeInternal = Just $ toJSON matchingObjects }
 
   unless (null newInconsistentObjects) $

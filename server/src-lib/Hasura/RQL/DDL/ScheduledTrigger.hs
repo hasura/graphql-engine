@@ -7,31 +7,32 @@ module Hasura.RQL.DDL.ScheduledTrigger
   , runCreateScheduledEvent
   ) where
 
-import           Hasura.Db
+import           Hasura.Backends.Postgres.Connection
 import           Hasura.EncJSON
-import           Hasura.Prelude
-import           Hasura.RQL.DDL.EventTrigger (getHeaderInfosFromConf)
-import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Catalog    (CatalogCronTrigger(..))
 import           Hasura.Eventing.ScheduledTrigger
+import           Hasura.Prelude
+import           Hasura.RQL.DDL.EventTrigger         (getHeaderInfosFromConf)
+import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Catalog            (CatalogCronTrigger (..))
 
-import qualified Database.PG.Query     as Q
-import qualified Data.Time.Clock       as C
-import qualified Data.HashMap.Strict   as Map
+import qualified Data.Environment                    as Env
+import qualified Data.HashMap.Strict                 as Map
+import qualified Data.Time.Clock                     as C
+import qualified Database.PG.Query                   as Q
 
 -- | runCreateCronTrigger will update a existing cron trigger when the 'replace'
 --   value is set to @true@ and when replace is @false@ a new cron trigger will
 --   be created
 runCreateCronTrigger :: (CacheRWM m, MonadTx m) => CreateCronTrigger ->  m EncJSON
 runCreateCronTrigger CreateCronTrigger {..} = do
-  let q = (CronTriggerMetadata cctName
+  let q = CronTriggerMetadata cctName
                                cctWebhook
                                cctCronSchedule
                                cctPayload
                                cctRetryConf
                                cctHeaders
                                cctIncludeInMetadata
-                               cctComment)
+                               cctComment
   case cctReplace of
     True -> updateCronTrigger q
     False -> do
@@ -40,7 +41,7 @@ runCreateCronTrigger CreateCronTrigger {..} = do
           Nothing -> pure ()
           Just _ -> throw400 AlreadyExists $
                     "cron trigger with name: "
-                    <> (triggerNameToTxt $ ctName q)
+                    <> triggerNameToTxt (ctName q)
                     <> " already exists"
 
         addCronTriggerToCatalog q
@@ -61,11 +62,13 @@ addCronTriggerToCatalog CronTriggerMetadata {..} = liftTx $ do
   insertCronEvents $ map (CronEventSeed ctName) scheduleTimes
 
 resolveCronTrigger
-  :: (QErrM m, MonadIO m)
-  => CatalogCronTrigger -> m CronTriggerInfo
-resolveCronTrigger CatalogCronTrigger {..} = do
-  webhookInfo <- resolveWebhook _cctWebhookConf
-  headerInfo <- getHeaderInfosFromConf headers
+  :: (QErrM m)
+  => Env.Environment
+  -> CatalogCronTrigger
+  -> m CronTriggerInfo
+resolveCronTrigger env CatalogCronTrigger {..} = do
+  webhookInfo <- resolveWebhook env _cctWebhookConf
+  headerInfo <- getHeaderInfosFromConf env headers
   pure $
     CronTriggerInfo _cctName
                     _cctCronSchedule
@@ -149,4 +152,4 @@ checkExists name = do
   cronTriggersMap <- scCronTriggers <$> askSchemaCache
   void $ onNothing (Map.lookup name cronTriggersMap) $
     throw400 NotExists $
-      "cron trigger with name: " <> (triggerNameToTxt name) <> " does not exist"
+      "cron trigger with name: " <> triggerNameToTxt name <> " does not exist"

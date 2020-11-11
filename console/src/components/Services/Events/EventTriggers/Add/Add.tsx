@@ -198,6 +198,7 @@ const Add: React.FC<Props> = props => {
               className={`${styles.tableNameInput} form-control`}
               value={name}
               onChange={handleTriggerNameChange}
+              maxLength={42}
             />
             <hr />
             <h4 className={styles.subheading_text}>

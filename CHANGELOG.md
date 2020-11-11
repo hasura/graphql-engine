@@ -2,11 +2,194 @@
 
 ## Next release
 
+### Heterogeneous execution
+
+Previous releases have allowed queries to request data from either Postgres or remote schemas, but not both. This release removes that restriction, so multiple data sources may be mixed within a single query. For example, GraphQL Engine can execute a query like
+
+```
+query {
+  articles {
+    title
+  }
+  weather {
+    temperature
+  }
+}
+```
+
+where the articles are fetched from the database, and the weather is fetched from a remote server.
+
+### Server - Support for mapping session variables to default JWT claims
+
+Some auth providers do not let users add custom claims in JWT. In such cases, the server can take a JWT configuration option called `claims_map` to specify a mapping of Hasura session variables to values in existing claims via JSONPath or literal values.
+
+Example:-
+
+Consider the following JWT claim:
+
+```
+  {
+    "sub": "1234567890",
+    "name": "John Doe",
+    "admin": true,
+    "iat": 1516239022,
+    "user": {
+      "id": "ujdh739kd",
+      "appRoles": ["user", "editor"]
+    }
+  }
+```
+
+The corresponding JWT config can be:
+
+```
+  {
+    "type":"RS512",
+    "key": "<The public Key>",
+    "claims_map": {
+      "x-hasura-allowed-roles": {"path":"$.user.appRoles"},
+      "x-hasura-default-role": {"path":"$.user.appRoles[0]","default":"user"},
+      "x-hasura-user-id": {"path":"$.user.id"}
+    }
+  }
+```
+
+### Metadata Types SDK
+
+The types and documentation comments for Metadata V2 have been converted into JSON/YAML Schema, and used to autogenerate type definitions for popular languages.
+
+This enables users to build type-safe tooling in the language of their choice around Metadata interactions and automations.
+
+Additionally, the JSON/YAML Schemas can be used to provide IntelliSense and autocomplete + documentation when interacting with Metadata YAML/JSON files.
+
+For a more comprehensive overview, please see [the readme located here](./contrib/metadata-types/README.md)
+
+**Sample Code**
+
+```ts
+import { TableEntry } from "../generated/HasuraMetadataV2"
+
+const newTable: TableEntry = {
+  table: { schema: "public", name: "user" },
+  select_permissions: [
+    {
+      role: "user",
+      permission: {
+        limit: 100,
+        allow_aggregations: false,
+        columns: ["id", "name", "etc"],
+        computed_fields: ["my_computed_field"],
+        filter: {
+          id: { _eq: "X-Hasura-User-ID" },
+        },
+      },
+    },
+  ],
+}
+```
+
+**IntelliSense Example**
+
+![](./contrib/metadata-types/json-schema-typecheck-demo.gif)
+
+### Breaking changes
+
+This release contains the [PDV refactor (#4111)](https://github.com/hasura/graphql-engine/pull/4111), a significant rewrite of the internals of the server, which did include some breaking changes:
+
+- The semantics of explicit `null` values in `where` filters have changed according to the discussion in [issue 704](https://github.com/hasura/graphql-engine/issues/704#issuecomment-635571407): an explicit `null` value in a comparison input object will be treated as an error rather than resulting in the expression being evaluated to `True`. For instance: `delete_users(where: {id: {_eq: $userId}}) { name }` will yield an error if `$userId` is `null` instead of deleting all users.
+- The validation of required headers has been fixed (closing #14 and #3659):
+  - if a query selects table `bar` through table `foo` via a relationship, the required permissions headers will be the union of the required headers of table `foo` and table `bar` (we used to only check the headers of the root table);
+  - if an insert does not have an `on_conflict` clause, it will not require the update permissions headers.
+
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+- cli: fix cli-migrations-v2 image failing to run as a non root user (close #4651, close #5333)
+
+- server: Fix fine-grained incremental cache invalidation (fix #3759)
+
+  This issue could cause enum table values to sometimes not be properly reloaded without restarting `graphql-engine`. Now a `reload_metadata` API call (or clicking “Reload enum values” in the console) should consistently force a reload of all enum table values.
+
+- server: add `--websocket-compression` command-line flag for enabling websocket compression (fix #3292)
+- server: some mutations that cannot be performed will no longer be in the schema (for instance, `delete_by_pk` mutations won't be shown to users that do not have select permissions on all primary keys) (#4111)
+- server: miscellaneous description changes (#4111)
+- server: treat the absence of `backend_only` configuration and `backend_only: false` equally (closing #5059) (#4111)
+- server: allow remote relationships joining `type` column with `[type]` input argument as spec allows this coercion (fixes #5133)
+- server: add action-like URL templating for event triggers and remote schemas (fixes #2483)
+- server: change `created_at` column type from `timestamp` to `timestamptz` for scheduled triggers tables (fix #5722)
+- server: allow configuring timeouts for actions (fixes #4966)
+- server: accept only non-negative integers for batch size and refetch interval (close #5653) (#5759)
+- server: fix bug which arised when renaming a table which had a manual relationship defined (close #4158)
+- server: limit the length of event trigger names (close #5786)
+- server: Configurable websocket keep-alive interval. Add `--websocket-keepalive` command-line flag
+          and handle `HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE` env variable (fix #3539) 
+**NOTE:** If you have event triggers with names greater than 42 chars, then you should update their names to avoid running into Postgres identifier limit bug (#5786)
+- server: validate remote schema queries (fixes #4143)
+- server: fix issue with tracking custom functions that return `SETOF` materialized view (close #5294) (#5945)
+- server: introduce optional custom table name in table configuration to track the table according to the custom name. The `set_table_custom_fields` API has been deprecated, A new API `set_table_customization` has been added to set the configuration. (#3811)
+- server: allow remote relationships with union, interface and enum type fields as well (fixes #5875) (#6080)
+- server: fix event trigger cleanup on deletion via replace_metadata (fix #5461) (#6137)
+- console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
+- console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
+- console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
+- console: add option to flag an insertion as a migration from `Data` section (close #1766) (#4933)
+- console: add notifications (#5070)
+- console: down migrations improvements (close #3503, #4988) (#4790)
+- cli: add missing global flags for seed command (#5565)
+- cli: allow seeds as alias for seed command (#5693)
+- cli: fix bug in metadata apply which made the server aquire some redundant and unnecessary locks (close #6115)
+- docs: add docs page on networking with docker (close #4346) (#4811)
+- docs: add tabs for console / cli / api workflows (close #3593) (#4948)
+- docs: add postgres concepts page to docs (close #4440) (#4471)
+- docs: add guides on connecting hasura cloud to pg databases of different cloud vendors (#5948)
+
+## `v1.3.2`
+
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: fixes column masking in select permission for computed fields regression (fix #5696)
+
+## `v1.3.1`, `v1.3.1-beta.1`
+
+### Breaking change
+
+Headers from environment variables starting with `HASURA_GRAPHQL_` are not allowed
+in event triggers, actions & remote schemas.
+
+If you do have such headers configured, then you must update the header configuration before upgrading.
+
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+
+- server: fix failing introspection query when an enum column is part of a primary key (fixes #5200)
+- server: disallow headers from env variables starting with `HASURA_GRAPHQL_` in actions, event triggers & remote schemas (#5519)
+  **WARNING**: This might break certain deployments. See `Breaking change` section above.
+- server: bugfix to allow HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE of 0 (#5363)
+- server: support only a bounded plan cache, with a default size of 4000 (closes #5363)
+- server: add logs for action handlers
+- server: add request/response sizes in event triggers (and scheduled trigger) logs (#5463)
+- server: change startup log kind `db_migrate` to `catalog_migrate` (#5531)
+- console: handle nested fragments in allowed queries (close #5137) (#5252)
+- console: update sidebar icons for different action and trigger types (#5445)
+- console: make add column UX consistent with others (#5486)
+- console: add "identity" to frequently used columns (close #4279) (#5360)
+- cli: improve error messages thrown when metadata apply fails (#5513)
+- cli: fix issue with creating seed migrations while using tables with capital letters (closes #5532) (#5549)
+- build: introduce additional log kinds for cli-migrations image (#5529)
+
+## `v1.3.0`
+
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+
+- server: adjustments to idle GC to try to free memory more eagerly (related to #3388)
+- server: process events generated by the event triggers asynchronously (close #5189) (#5352)
 - console: display line number that error originated from in GraphQL editor (close #4849) (#4942)
+- docs: add page on created_at / updated_at timestamps (close #2880) (#5223)
 
 ## `v1.3.0-beta.4`
 
@@ -21,8 +204,8 @@
 - server: have haskell runtime release blocks of memory back to the OS eagerly (related to #3388)
 - server: unlock locked scheduled events on graceful shutdown (#4928)
 - server: disable prepared statements for mutations as we end up with single-use objects which result in excessive memory consumption for mutation heavy workloads (#5255)
-- server: include scheduled event metadata (`created_at`,`scheduled_time`,`id`, etc) along with the configured payload in the request body to the webhook. 
-**WARNING:** This is breaking for beta versions as the payload is now inside a key called `payload`.
+- server: include scheduled event metadata (`created_at`,`scheduled_time`,`id`, etc) along with the configured payload in the request body to the webhook.
+  **WARNING:** This is breaking for beta versions as the payload is now inside a key called `payload`.
 - console: allow configuring statement timeout on console RawSQL page (close #4998) (#5045)
 - console: support tracking partitioned tables (close #5071) (#5258)
 - console: add button to cancel one-off scheduled events and cron-trigger events (close #5161) (#5236)
@@ -32,9 +215,7 @@
 - docs: add 1-click deployment to Nhost page to the deployment guides (#5180)
 - docs: add hasura cloud to getting started section (close #5206) (#5208)
 
-
 ## `v1.3.0-beta.3`
-
 
 ### Bug fixes and improvements
 
@@ -136,9 +317,11 @@ Support for this is now added through the `add_computed_field` API.
 Read more about the session argument for computed fields in the [docs](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html).
 
 ### Manage seed migrations as SQL files
+
 A new `seeds` command is introduced in CLI, this will allow managing seed migrations as SQL files
 
 #### Creating seed
+
 ```
 # create a new seed file and use editor to add SQL content
 hasura seed create new_table_seed
@@ -149,7 +332,9 @@ hasura seed create table1_seed --from-table table1
 # create from data in multiple tables:
 hasura seed create tables_seed --from-table table1 --from-table table2
 ```
+
 #### Applying seed
+
 ```
 # apply all seeds on the database:
 hasura seed apply

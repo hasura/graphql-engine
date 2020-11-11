@@ -482,9 +482,9 @@ class Permissions extends Component {
         });
 
         const dispatchRoleNameChange = e => {
-          const newRole = e.target.value.trim();
+          const role = e.target.value;
 
-          dispatch(permSetRoleName(newRole));
+          dispatch(permSetRoleName(role));
         };
 
         return (
@@ -1766,7 +1766,7 @@ class Permissions extends Component {
               'Backend only',
               tooltip,
               backendStatus,
-              'https://docs.hasura.io/1.0/graphql/manual/auth/authorization/permission-rules.html#backend-only-inserts'
+              'https://hasura.io/docs/1.0/graphql/manual/auth/authorization/permission-rules.html#backend-only'
             )}
             useDefaultTitleStyle
             testId={'toggle-backend-only'}

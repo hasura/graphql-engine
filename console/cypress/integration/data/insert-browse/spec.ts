@@ -446,7 +446,7 @@ export const passDeleteRow = () => {
   cy.on('window:confirm', str => {
     expect(
       str.indexOf('This will permanently delete this row from this table') !==
-        -1
+      -1
     ).to.be.true;
   });
   cy.get(getElementFromAlias('table-browse-rows')).contains('20');
@@ -490,13 +490,14 @@ export const passArrayDataType = () => {
   // create new column
   cy.get(getElementFromAlias('table-modify')).click();
   cy.wait(1000);
+  cy.get(getElementFromAlias('modify-table-edit-add-new-column')).click();
   cy.get(getElementFromAlias('column-name')).type('array_column');
   cy.get(getElementFromAlias('col-type-0'))
     .children('div')
     .click()
     .find('input')
     .type('text[]', { force: true });
-  cy.get(getElementFromAlias('add-column-button')).click();
+  cy.get(getElementFromAlias('modify-table-add-new-column-save')).click();
 
   // insert new row
   cy.get(getElementFromAlias('table-insert-rows')).click();

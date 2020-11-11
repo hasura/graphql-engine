@@ -12,13 +12,14 @@ import qualified Data.HashMap.Strict.Extended       as M
 import qualified Data.HashSet                       as HS
 import qualified Data.Sequence                      as Seq
 import qualified Language.GraphQL.Draft.Syntax      as G
-import qualified Hasura.GraphQL.Validate.Types      as VT
 
 import           Control.Arrow.Extended
 import           Data.Aeson
+import           Data.Text.Extended
 
 import qualified Hasura.Incremental                 as Inc
 
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.RemoteRelationship
@@ -26,18 +27,17 @@ import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
-import           Hasura.SQL.Types
 
 addNonColumnFields
   :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
      , ArrowKleisli m arr, MonadError QErr m )
-  => ( HashMap QualifiedTable TableRawInfo
-     , FieldInfoMap PGColumnInfo
+  => ( HashMap QualifiedTable (TableRawInfo 'Postgres)
+     , FieldInfoMap (ColumnInfo 'Postgres)
      , RemoteSchemaMap
      , [CatalogRelation]
      , [CatalogComputedField]
      , [RemoteRelationship]
-     ) `arr` (FieldInfoMap FieldInfo, VT.TypeMap)
+     ) `arr` FieldInfoMap (FieldInfo 'Postgres)
 addNonColumnFields = proc (rawTableInfo, columns, remoteSchemaMap, relationships, computedFields, remoteRelationships) -> do
   relationshipInfos
     <- buildInfoMapPreservingMetadata _crRelName mkRelationshipMetadataObject buildRelationship
@@ -55,13 +55,11 @@ addNonColumnFields = proc (rawTableInfo, columns, remoteSchemaMap, relationships
   let mapKey f = M.fromList . map (first f) . M.toList
       relationshipFields = mapKey fromRel relationshipInfos
       computedFieldFields = mapKey fromComputedField computedFieldInfos
-      remoteRelationshipFields = mapKey fromRemoteRelationship $
-                                 M.map (\((rf, _), mo) -> (rf, mo)) rawRemoteRelationshipInfos
-      typeMap = mconcat $ map (snd . fst) $ M.elems rawRemoteRelationshipInfos
+      remoteRelationshipFields = mapKey fromRemoteRelationship rawRemoteRelationshipInfos
 
   -- First, check for conflicts between non-column fields, since we can raise a better error
   -- message in terms of the two metadata objects that define them.
-  fieldInfoMap <- (align relationshipFields computedFieldFields >- returnA)
+  (align relationshipFields computedFieldFields >- returnA)
     >-> (| Inc.keyed (\fieldName fields -> (fieldName, fields) >- noFieldConflicts FIRelationship FIComputedField) |)
     -- Second, align with remote relationship fields
     >-> (\fields -> align (M.catMaybes fields) remoteRelationshipFields >- returnA)
@@ -73,8 +71,6 @@ addNonColumnFields = proc (rawTableInfo, columns, remoteSchemaMap, relationships
     -- Finally, check for conflicts with the columns themselves.
     >-> (\fields -> align columns (M.catMaybes fields) >- returnA)
     >-> (| Inc.keyed (\_ fields -> fields >- noColumnConflicts) |)
-
-  returnA -< (fieldInfoMap, typeMap)
   where
     noFieldConflicts this that = proc (fieldName, fields) -> case fields of
       This (thisField, metadata) -> returnA -< Just (this thisField, metadata)
@@ -148,7 +144,7 @@ mkComputedFieldMetadataObject (CatalogComputedField column _) =
 buildComputedField
   :: ( ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr
      , ArrowKleisli m arr, MonadError QErr m )
-  => (HashSet QualifiedTable, CatalogComputedField) `arr` Maybe ComputedFieldInfo
+  => (HashSet QualifiedTable, CatalogComputedField) `arr` Maybe (ComputedFieldInfo 'Postgres)
 buildComputedField = proc (trackedTableNames, computedField) -> do
   let CatalogComputedField column funcDefs = computedField
       AddComputedField qt name def comment = column
@@ -168,7 +164,7 @@ mkRemoteRelationshipMetadataObject rr =
 buildRemoteRelationship
   :: ( ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr
      , ArrowKleisli m arr, MonadError QErr m )
-  => (([PGColumnInfo], RemoteSchemaMap), RemoteRelationship) `arr` Maybe (RemoteFieldInfo, VT.TypeMap)
+  => (([ColumnInfo 'Postgres], RemoteSchemaMap), RemoteRelationship) `arr` Maybe (RemoteFieldInfo 'Postgres)
 buildRemoteRelationship = proc ((pgColumns, remoteSchemaMap), remoteRelationship) -> do
   let relationshipName = rtrName remoteRelationship
       tableName = rtrTable remoteRelationship
@@ -177,8 +173,8 @@ buildRemoteRelationship = proc ((pgColumns, remoteSchemaMap), remoteRelationship
       addRemoteRelationshipContext e = "in remote relationship" <> relationshipName <<> ": " <> e
   (| withRecordInconsistency (
        (| modifyErrA (do
-          (remoteField, typeMap, dependencies) <- bindErrorA -< resolveRemoteRelationship remoteRelationship pgColumns remoteSchemaMap
+          (remoteField, dependencies) <- bindErrorA -< resolveRemoteRelationship remoteRelationship pgColumns remoteSchemaMap
           recordDependencies -< (metadataObject, schemaObj, dependencies)
-          returnA -< (remoteField, typeMap))
+          returnA -< remoteField)
         |)(addTableContext tableName . addRemoteRelationshipContext))
    |) metadataObject
