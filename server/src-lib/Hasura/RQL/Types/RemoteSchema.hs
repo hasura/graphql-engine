@@ -119,7 +119,7 @@ validateRemoteSchemaDef env (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout)
 
 newtype RemoteSchemaPermissionDefinition
   = RemoteSchemaPermissionDefinition
-  { _rspdSchema    :: !G.SchemaDocument
+  { _rspdSchema    :: G.SchemaDocument
   }  deriving (Show, Eq, Lift, Generic)
 instance NFData RemoteSchemaPermissionDefinition
 instance Cacheable RemoteSchemaPermissionDefinition
