@@ -25,10 +25,10 @@ flag profiling
   default: False
   manual: True
 
--- flag mssql
---   description: Enable support for MSSQL backend (requires odbc)
---   default: True
---   manual: True
+flag mssql
+  description: Enable support for MSSQL backend (requires odbc)
+  default: True
+  manual: True
 
 common common-all
   ghc-options:
@@ -39,8 +39,6 @@ common common-all
     cpp-options: -DDeveloperAPIs
   if flag(profiling)
     cpp-options: -DPROFILING
-  -- if flag(mssql)
-  --   cpp-options: -DMSSQL
 
   default-language: Haskell2010
   default-extensions:
@@ -115,7 +113,6 @@ library
                      , validation
                      , lifted-base
                      , pg-client
-                     , odbc
                      , http-conduit
                      , validation
                      , text
@@ -288,7 +285,13 @@ library
       -- 0.6.1 is supposedly not okay for ghc 8.6:
       --   https://github.com/nomeata/ghc-heap-view/issues/27
       ghc-heap-view
-
+  if flag(mssql) {
+    build-depends:     odbc
+    exposed-modules:   Hasura.Backends.MSSQL.FromIr
+                     , Hasura.Backends.MSSQL.Plan
+                     , Hasura.Backends.MSSQL.ToQuery
+                     , Hasura.Backends.MSSQL.Types
+  }
   exposed-modules:     Control.Arrow.Extended
                      , Control.Arrow.Trans
                      , Control.Concurrent.Extended
@@ -311,11 +314,6 @@ library
                      , Data.Time.Clock.Units
                      , Data.URL.Template
                      , Hasura.App
-
-                     , Hasura.Backends.MSSQL.FromIr
-                     , Hasura.Backends.MSSQL.Plan
-                     , Hasura.Backends.MSSQL.ToQuery
-                     , Hasura.Backends.MSSQL.Types
 
                      , Hasura.Backends.Postgres.Connection
                      , Hasura.Backends.Postgres.Execute.Mutation
