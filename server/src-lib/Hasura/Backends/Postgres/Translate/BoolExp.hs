@@ -24,7 +24,7 @@ type OpRhsParser m v =
 
 -- | Represents a reference to a Postgres column, possibly casted an arbitrary
 -- number of times. Used within 'parseOperationsExpression' for bookkeeping.
-data ColumnReference (b :: Backend)
+data ColumnReference (b :: BackendType)
   = ColumnReferenceColumn !(ColumnInfo b)
   | ColumnReferenceCast !(ColumnReference b) !(ColumnType b)
 

@@ -34,6 +34,7 @@ import           Hasura.RQL.DML.Count
 import           Hasura.RQL.DML.Delete
 import           Hasura.RQL.DML.Insert
 import           Hasura.RQL.DML.Select
+import           Hasura.RQL.DML.Types
 import           Hasura.RQL.DML.Update
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run

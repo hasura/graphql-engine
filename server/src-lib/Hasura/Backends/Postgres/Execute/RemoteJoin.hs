@@ -9,12 +9,14 @@ module Hasura.Backends.Postgres.Execute.RemoteJoin
   , RemoteJoin(..)
   , executeQueryWithRemoteJoins
   , graphQLValueToJSON
+  , processRemoteJoins
   ) where
 
 import           Hasura.Prelude
 
 import qualified Data.Aeson                             as A
 import qualified Data.Aeson.Ordered                     as AO
+import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.Extended           as Map
@@ -65,8 +67,26 @@ executeQueryWithRemoteJoins
   -> RemoteJoins 'Postgres
   -> m EncJSON
 executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs rjs = do
-  -- Step 1: Perform the query on database and fetch the response
+  -- Perform the query on database and fetch the response
   pgRes <- runIdentity . Q.getRow <$> Tracing.trace "Postgres" (liftTx (Q.rawQE dmlTxErrorHandler q prepArgs True))
+  -- Process remote joins in the response
+  processRemoteJoins env manager reqHdrs userInfo pgRes rjs
+
+processRemoteJoins
+  :: ( HasVersion
+     , MonadTx m
+     , MonadIO m
+     , Tracing.MonadTrace m
+     )
+  => Env.Environment
+  -> HTTP.Manager
+  -> [N.Header]
+  -> UserInfo
+  -> BL.ByteString
+  -> RemoteJoins 'Postgres
+  -> m EncJSON
+processRemoteJoins env manager reqHdrs userInfo pgRes rjs = do
+  -- Step 1: Decode the given bytestring as a JSON value
   jsonRes <- onLeft (AO.eitherDecode pgRes) (throw500 . T.pack)
   -- Step 2: Traverse through the JSON obtained in above step and generate composite JSON value with remote joins
   compositeJson <- traverseQueryResponseJSON rjMap jsonRes

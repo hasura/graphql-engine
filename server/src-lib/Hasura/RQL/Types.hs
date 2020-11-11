@@ -57,7 +57,6 @@ import           Hasura.RQL.Types.Column             as R
 import           Hasura.RQL.Types.Common             as R
 import           Hasura.RQL.Types.ComputedField      as R
 import           Hasura.RQL.Types.CustomTypes        as R
-import           Hasura.RQL.Types.DML                as R
 import           Hasura.RQL.Types.Error              as R
 import           Hasura.RQL.Types.EventTrigger       as R
 import           Hasura.RQL.Types.Function           as R

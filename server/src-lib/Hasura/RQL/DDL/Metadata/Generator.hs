@@ -123,28 +123,28 @@ instance Arbitrary J.Value where
 instance Arbitrary ColExp where
   arbitrary = genericArbitrary
 
-instance Arbitrary (GExists b ColExp) where
+instance Arbitrary (GExists 'Postgres ColExp) where
   arbitrary = genericArbitrary
 
-instance Arbitrary (GBoolExp b ColExp) where
+instance Arbitrary (GBoolExp 'Postgres ColExp) where
   arbitrary = genericArbitrary
 
-instance Arbitrary (BoolExp b) where
+instance Arbitrary (BoolExp 'Postgres) where
   arbitrary = genericArbitrary
 
 instance Arbitrary PermColSpec where
   arbitrary = genericArbitrary
 
-instance Arbitrary (InsPerm b) where
+instance Arbitrary (InsPerm 'Postgres) where
   arbitrary = genericArbitrary
 
-instance Arbitrary (SelPerm b) where
+instance Arbitrary (SelPerm 'Postgres) where
   arbitrary = genericArbitrary
 
-instance Arbitrary (UpdPerm b) where
+instance Arbitrary (UpdPerm 'Postgres) where
   arbitrary = genericArbitrary
 
-instance Arbitrary (DelPerm b) where
+instance Arbitrary (DelPerm 'Postgres) where
   arbitrary = genericArbitrary
 
 instance Arbitrary SubscribeColumns where

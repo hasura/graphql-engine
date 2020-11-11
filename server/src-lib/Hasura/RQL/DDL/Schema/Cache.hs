@@ -54,7 +54,6 @@ import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.DDL.Utils                     (clearHdbViews)
 import           Hasura.RQL.Types                         hiding (fmFunction, tmTable)
 import           Hasura.RQL.Types.Catalog
 import           Hasura.Server.Version                    (HasVersion)
@@ -403,7 +402,7 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
           (| withRecordInconsistency (
              (| modifyErrA (do
                   etc <- bindErrorA -< decodeValue configuration
-                  (info, dependencies) <- bindErrorA -< subTableP2Setup env qt etc
+                  (info, dependencies) <- bindErrorA -< mkEventTriggerInfo env qt etc
                   let tableColumns = M.mapMaybe (^? _FIColumn) (_tciFieldInfoMap tableInfo)
                   recreateViewIfNeeded -< (qt, tableColumns, trn, etcDefinition etc)
                   recordDependencies -< (metadataObject, schemaObjectId, dependencies)
@@ -479,8 +478,11 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
 -- if not, incorporates them into the schema cache.
 withMetadataCheck :: (MonadTx m, CacheRWM m, HasSQLGenCtx m) => Bool -> m a -> m a
 withMetadataCheck cascade action = do
-  -- Drop hdb_views so no interference is caused to the sql query
-  liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
+  -- Drop event triggers so no interference is caused to the sql query
+  preActionTables <- scTables <$> askSchemaCache
+  forM_ (M.elems preActionTables) $ \tableInfo -> do
+    let eventTriggers = _tiEventTriggerInfoMap tableInfo
+    forM_ (M.keys eventTriggers) (liftTx . delTriggerQ)
 
   -- Get the metadata before the sql query, everything, need to filter this
   oldMetaU <- liftTx $ Q.catchE defaultTxErrorHandler fetchTableMeta
@@ -535,7 +537,7 @@ withMetadataCheck cascade action = do
   buildSchemaCache
   postSc <- askSchemaCache
 
-  -- Recreate event triggers in hdb_views
+  -- Recreate event triggers in hdb_catalog
   forM_ (M.elems $ scTables postSc) $ \(TableInfo coreInfo _ eventTriggers) -> do
           let table = _tciName coreInfo
               columns = getCols $ _tciFieldInfoMap coreInfo
@@ -555,9 +557,9 @@ withMetadataCheck cascade action = do
 
       sc <- askSchemaCache
       for_ alteredTables $ \(oldQtn, tableDiff) -> do
-        ti <- case M.lookup oldQtn $ scTables sc of
-          Just ti -> return ti
-          Nothing -> throw500 $ "old table metadata not found in cache : " <>> oldQtn
+        ti <- onNothing
+          (M.lookup oldQtn $ scTables sc)
+          (throw500 $ "old table metadata not found in cache : " <>> oldQtn)
         processTableChanges (_tiCoreInfo ti) tableDiff
       where
         SchemaDiff droppedTables alteredTables = schemaDiff

@@ -12,7 +12,7 @@ import           Data.Text.Extended
 import           Data.Text.NonEmpty
 
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.Common             hiding (ConstraintName)
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
