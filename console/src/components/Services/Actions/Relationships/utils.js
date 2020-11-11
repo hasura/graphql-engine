@@ -58,6 +58,7 @@ export const getRelValidationError = relConfig => {
   }
   if (!relConfig.refSchema) return 'please select a reference schema';
   if (!relConfig.refTable) return 'please select a reference table';
+  if (!relConfig.refDb) return 'please select a reference data source';
   if (relConfig.fieldMapping.length < 2) {
     return 'please choose the mapping between table column(s) and type field(s)';
   }
@@ -86,9 +87,10 @@ export const getRelDef = relMeta => {
 export const removeTypeRelationship = (types, typename, relName) => {
   return types.map(t => {
     if (t.name === typename && t.kind === 'object') {
+      const newRel = (t.relationships || []).filter(r => r.name !== relName);
       return {
         ...t,
-        relationships: (t.relationships || []).filter(r => r.name !== relName),
+        relationships: newRel.length ? newRel : undefined,
       };
     }
     return t;

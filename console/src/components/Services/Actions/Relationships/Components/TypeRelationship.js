@@ -33,7 +33,6 @@ const RelationshipEditor = ({
   const [relConfig, setRelConfig] = React.useState(
     existingRelConfig || defaultRelConfig
   );
-  const [relDBSelectValue, changeRelDBSelectValue] = React.useState('');
   const [currentSchemaList, updateCurrentSchemaList] = React.useState(
     schemaList
   );
@@ -74,19 +73,11 @@ const RelationshipEditor = ({
 
   const setDBType = e => {
     const value = e.target.value;
-    changeRelDBSelectValue(value);
-    let dbName;
-    let dbDriver;
-    try {
-      [dbName, dbDriver] = JSON.parse(value);
-    } catch (err) {
-      return;
-    }
     setRelConfig(rc => ({
       ...rc,
-      refDb: dbName,
+      refDb: value,
     }));
-    return dispatch(getSchemaList(dbDriver, dbName)).then(data => {
+    return dispatch(getSchemaList('postgres', value)).then(data => {
       updateCurrentSchemaList(data.result.slice(1));
     });
   };
@@ -207,15 +198,15 @@ const RelationshipEditor = ({
           data-test={'manual-relationship-db-choice'}
           onChange={setDBType}
           disabled={!name}
-          value={relDBSelectValue}
+          value={refDb}
         >
-          {type === '' && (
-            <option value={''} disabled selected={!refDb}>
+          {refDb === '' && (
+            <option value={''} disabled>
               {'-- data source --'}
             </option>
           )}
           {dataSources.map(s => (
-            <option key={s.name} value={JSON.stringify([s.name, s.driver])}>
+            <option key={s.name} value={s.name}>
               {s.name} ({s.driver})
             </option>
           ))}
