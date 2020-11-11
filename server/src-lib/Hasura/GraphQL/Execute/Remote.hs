@@ -95,6 +95,10 @@ resolveRemoteVariable userInfo = \case
                    case readMaybe $ T.unpack sessionVarVal of
                      Nothing -> Left $ sessionVarVal <<> " cannot be coerced into a Float value"
                      Just i -> Right i
+                -- The `String`,`ID` and the default case all use the same code. But,
+                -- it will be better to not merge all of them into the default case
+                -- because it will be helpful to know how all the built-in scalars
+                -- are handled
                 "String" -> pure $ G.VString sessionVarVal
                 "ID" -> pure $ G.VString sessionVarVal
                 -- When we encounter a custom scalar, we just pass it as a string
