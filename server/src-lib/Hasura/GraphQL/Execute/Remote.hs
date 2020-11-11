@@ -30,7 +30,7 @@ mkVariableDefinitionAndValue var@(Variable varInfo gType varValue) =
     varJSONValue =
       case varValue of
         JSONValue v -> v
-        GraphQLValue val -> gValueToJSONValue val
+        GraphQLValue val -> graphQLValueToJSON val
 
 unresolveVariables
   :: forall fragments

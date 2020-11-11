@@ -12,7 +12,7 @@ module Hasura.RQL.Types.RemoteRelationship
   , FieldCall(..)
   , RemoteArguments(..)
   , DeleteRemoteRelationship(..)
-  , gValueToJSONValue
+  , graphQLValueToJSON
   ) where
 
 import           Hasura.Prelude
@@ -75,26 +75,16 @@ data RemoteFieldInfo (b :: Backend)
 deriving instance Eq (RemoteFieldInfo 'Postgres)
 instance Cacheable (RemoteFieldInfo 'Postgres)
 
-gValueToJSONValue :: G.Value Void -> Value
-gValueToJSONValue =
-  \case
-    G.VNull       -> Null
-    G.VInt i      -> toJSON i
-    G.VFloat f    -> toJSON f
-    G.VString s   -> toJSON s
-    G.VBoolean b  -> toJSON b
-    G.VEnum s     -> toJSON s
-    G.VList list  -> toJSON (map gValueToJSONValue list)
-    G.VObject obj -> fieldsToObject obj
-  where
-    fieldsToObject =
-      Object .
-      HM.fromList .
-      map
-        (\(name, val) ->
-           (G.unName name, gValueToJSONValue val)) .
-      HM.toList
-
+graphQLValueToJSON :: G.Value Void -> Value
+graphQLValueToJSON = \case
+  G.VNull                 -> Null
+  G.VInt i                -> toJSON i
+  G.VFloat f              -> toJSON f
+  G.VString t             -> toJSON t
+  G.VBoolean b            -> toJSON b
+  G.VEnum (G.EnumValue n) -> toJSON n
+  G.VList values          -> toJSON $ graphQLValueToJSON <$> values
+  G.VObject objects       -> toJSON $ graphQLValueToJSON <$> objects
 
 instance ToJSON (RemoteFieldInfo 'Postgres) where
   toJSON RemoteFieldInfo{..} = object
@@ -109,7 +99,7 @@ instance ToJSON (RemoteFieldInfo 'Postgres) where
         object
           [ "desc" .= desc
           , "name" .= name
-          , "def_val" .= fmap gValueToJSONValue defVal
+          , "def_val" .= fmap graphQLValueToJSON defVal
           , "type" .= type'
           ]
 
