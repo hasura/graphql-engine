@@ -5,13 +5,13 @@ headers:
   X-Hasura-Role: student
 response:
   path: $.args
-  error: Check constraint violation. insert check constraint failed
+  error: check constraint of an insert/update permission has failed
   code: permission-error
 query:
   type: insert
   args:
     table: author
     objects:
-      - id: 5
-        name: Student 1
-        is_registered: false
+    - id: 5
+      name: Student 1
+      is_registered: false

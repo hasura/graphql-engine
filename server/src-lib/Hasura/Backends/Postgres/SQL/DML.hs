@@ -3,6 +3,7 @@ module Hasura.Backends.Postgres.SQL.DML where
 import           Hasura.Prelude
 
 import qualified Data.Aeson                         as J
+import qualified Data.Aeson.Casing                  as J
 import qualified Data.HashMap.Strict                as HM
 import qualified Data.Text                          as T
 import qualified Text.Builder                       as TB
@@ -84,6 +85,12 @@ instance ToSQL OrderType where
   toSQL OTAsc  = "ASC"
   toSQL OTDesc = "DESC"
 
+instance J.FromJSON OrderType where
+  parseJSON = J.genericParseJSON $ J.defaultOptions{J.constructorTagModifier = J.snakeCase . drop 2}
+
+instance J.ToJSON OrderType where
+  toJSON = J.genericToJSON $ J.defaultOptions{J.constructorTagModifier = J.snakeCase . drop 2}
+
 data NullsOrder
   = NFirst
   | NLast
@@ -95,6 +102,12 @@ instance Hashable NullsOrder
 instance ToSQL NullsOrder where
   toSQL NFirst = "NULLS FIRST"
   toSQL NLast  = "NULLS LAST"
+
+instance J.FromJSON NullsOrder where
+  parseJSON = J.genericParseJSON $ J.defaultOptions{J.constructorTagModifier = J.snakeCase . drop 1}
+
+instance J.ToJSON NullsOrder where
+  toJSON = J.genericToJSON $ J.defaultOptions{J.constructorTagModifier = J.snakeCase . drop 1}
 
 instance ToSQL OrderByExp where
   toSQL (OrderByExp l) =

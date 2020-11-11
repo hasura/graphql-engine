@@ -10,7 +10,7 @@ import           Data.Time.Clock.POSIX      (getPOSIXTime)
 import           Hasura.App
 import           Hasura.Logging             (Hasura)
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
+import           Hasura.RQL.DDL.Metadata    (fetchMetadataFromHdbTables)
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.Server.Init
@@ -70,7 +70,7 @@ runApp env (HGEOptionsG rci hgeCmd) =
 
     HCExport -> do
       (initCtx, _) <- initialiseCtx env hgeCmd rci
-      res <- runTx' initCtx fetchMetadata Q.ReadCommitted
+      res <- runTx' initCtx fetchMetadataFromHdbTables Q.ReadCommitted
       either (printErrJExit MetadataExportError) printJSON res
 
     HCClean -> do
