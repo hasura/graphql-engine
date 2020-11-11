@@ -271,7 +271,7 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
 
   -- Transform the query plans into an execution plan
   let executionPlan = queryPlan <&> \case
-        RFRemote (remoteSchemaInfo, remoteField) -> do
+        RFRemote (RemoteFieldG remoteSchemaInfo remoteField) -> do
             buildExecStepRemote
               remoteSchemaInfo
               G.OperationTypeQuery

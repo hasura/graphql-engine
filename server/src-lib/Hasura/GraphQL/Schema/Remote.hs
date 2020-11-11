@@ -22,7 +22,7 @@ import           Data.Type.Equality
 import           Language.GraphQL.Draft.Syntax         as G
 
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
-import           Hasura.GraphQL.Context                (RemoteField(..))
+import           Hasura.GraphQL.Context                (RemoteFieldG (..), RemoteField)
 
 import           Hasura.GraphQL.Parser                 as P
 import           Hasura.RQL.Types
@@ -50,7 +50,7 @@ buildRemoteParser (IntrospectionResult sdoc queryRoot mutationRoot subscriptionR
     makeFieldParser :: RemoteSchemaFieldDefinition -> m (P.FieldParser n RemoteField)
     makeFieldParser fieldDef = do
       fldParser <- remoteField' sdoc fieldDef
-      pure $ (RemoteField info) <$> fldParser
+      pure $ (RemoteFieldG info) <$> fldParser
     makeParsers :: G.Name -> m [P.FieldParser n RemoteField]
     makeParsers rootName =
       case lookupType sdoc rootName of

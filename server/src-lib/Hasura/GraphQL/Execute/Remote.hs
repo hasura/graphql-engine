@@ -17,7 +17,7 @@ import           Data.Text.Extended
 
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Parser
-import           Hasura.GraphQL.Context                 (RemoteField (..))
+import           Hasura.GraphQL.Context                 (RemoteFieldG (..), RemoteField)
 import           Hasura.RQL.Types
 
 import           Hasura.Session
@@ -120,6 +120,5 @@ resolveRemoteField
   :: (MonadError QErr m)
   => UserInfo
   -> RemoteField
-  -> m (RemoteSchemaInfo, G.Field G.NoFragments Variable)
-resolveRemoteField userInfo (RemoteField remoteSchemaInfo remoteField) =
-  (remoteSchemaInfo,) <$> traverse (resolveRemoteVariable userInfo) remoteField
+  -> m (RemoteFieldG Variable)
+resolveRemoteField userInfo = traverse (resolveRemoteVariable userInfo)

@@ -8,7 +8,6 @@ module Hasura.GraphQL.Context
   , traverseDB
   , traverseAction
   , traverseRemoteField
-  , RemoteField(..)
   , QueryDB(..)
   , ActionQuery(..)
   , QueryRootField
@@ -17,6 +16,8 @@ module Hasura.GraphQL.Context
   , MutationRootField
   , SubscriptionRootField
   , SubscriptionRootFieldResolved
+  , RemoteFieldG (..)
+  , RemoteField
   ) where
 
 import           Hasura.Prelude
@@ -110,11 +111,13 @@ data ActionQuery (b :: Backend) v
   = AQQuery !(RQL.AnnActionExecution b v)
   | AQAsync !(RQL.AnnActionAsyncQuery b v)
 
-data RemoteField
-  = RemoteField
+data RemoteFieldG var
+  = RemoteFieldG
   { _rfRemoteSchemaInfo :: !RQL.RemoteSchemaInfo
-  , _rfField            :: !(G.Field G.NoFragments RQL.RemoteSchemaVariable)
-  } deriving (Show, Eq)
+  , _rfField            :: !(G.Field G.NoFragments var)
+  } deriving (Functor, Foldable, Traversable)
+
+type RemoteField = RemoteFieldG RQL.RemoteSchemaVariable
 
 type QueryRootField v = RootField (QueryDB 'Postgres v) RemoteField (ActionQuery 'Postgres v) J.Value
 
