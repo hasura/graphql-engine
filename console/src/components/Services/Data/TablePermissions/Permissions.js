@@ -78,6 +78,7 @@ import {
   getDefaultFilterType,
   getUpdateTooltip,
   getQuerySingleRowMutation,
+  getPermissionsIcon,
 } from './utils';
 import PermButtonSection from './PermButtonsSection';
 import { rolesSelector } from '../../../../metadata/selector';
@@ -365,66 +366,16 @@ class Permissions extends Component {
             );
           };
 
-          const getRoleQueryPermission = queryType => {
-            let _permission;
-
-            if (role === 'admin') {
-              _permission = permissionsSymbols.fullAccess;
-            } else if (!Object.keys(rolePermissions).includes(role)) {
-              _permission = permissionsSymbols.noAccess;
-            } else {
-              const permissions = rolePermissions[role][queryType];
-
-              if (permissions) {
-                let checkColumns;
-                let checkComputedFields;
-                let filterKey;
-
-                if (queryType === 'select') {
-                  checkColumns = true;
-                  checkComputedFields = true;
-                  filterKey = 'filter';
-                } else if (queryType === 'update') {
-                  checkColumns = true;
-                  checkComputedFields = false;
-                  filterKey = 'filter';
-                } else if (queryType === 'insert') {
-                  checkColumns = true;
-                  checkComputedFields = false;
-                  filterKey = 'check';
-                } else if (queryType === 'delete') {
-                  checkColumns = false;
-                  checkComputedFields = false;
-                  filterKey = 'filter';
-                }
-
-                if (JSON.stringify(permissions[filterKey]) === '{}') {
-                  if (
-                    (checkColumns &&
-                      (!permissions.columns ||
-                        (!permissions.columns.includes('*') &&
-                          permissions.columns.length !==
-                            tableSchema.columns.length))) ||
-                    (checkComputedFields &&
-                      (!permissions.computed_fields ||
-                        (!permissions.computed_fields.includes('*') &&
-                          permissions.computed_fields.length !==
-                            groupedComputedFields.scalar.length)))
-                  ) {
-                    _permission = permissionsSymbols.partialAccess;
-                  } else {
-                    _permission = permissionsSymbols.fullAccess;
-                  }
-                } else {
-                  _permission = permissionsSymbols.partialAccess;
-                }
-              } else {
-                _permission = permissionsSymbols.noAccess;
-              }
-            }
-
-            return _permission;
-          };
+          const getRoleQueryPermission = queryType =>
+            permissionsSymbols[
+              getPermissionsIcon(
+                role,
+                rolePermissions,
+                queryType,
+                tableSchema.columns,
+                groupedComputedFields
+              )
+            ];
           return supportedQueryTypes.map(queryType => {
             const isEditAllowed = role !== 'admin';
             const isCurrEdit =
