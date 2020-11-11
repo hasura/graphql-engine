@@ -172,7 +172,7 @@ jobs:
         command: |
           apt-get -y update
           apt-get -y install postgresql-client-12
-          apt-get -y install unixodbc freetds-dev
+          apt-get -y install unixodbc-dev freetds-dev
     - run:
         name: Build the binary
         working_directory: ./server
