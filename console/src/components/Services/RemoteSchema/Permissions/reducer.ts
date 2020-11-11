@@ -115,7 +115,6 @@ const reducer = (state = defaultState, action: any) => {
         },
       };
     case PERM_SELECT_BULK:
-    case PERM_DESELECT_BULK:
       return {
         ...state,
         bulkSelect: updateBulkSelect(
@@ -124,6 +123,7 @@ const reducer = (state = defaultState, action: any) => {
           true
         ),
       };
+    case PERM_DESELECT_BULK:
       return {
         ...state,
         bulkSelect: updateBulkSelect(

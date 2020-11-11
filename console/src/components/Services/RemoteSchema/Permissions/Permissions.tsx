@@ -69,7 +69,7 @@ const Permissions = ({ allRoles, dispatch, ...props }: any) => {
         title={`Permissions - ${currentRemoteSchema.name} - Remote Schemas | Hasura`}
       />
       <PermissionsTable allRoles={allRoles} dispatch={dispatch} {...props} />
-      {bulkSelect.length && (
+      {!!(bulkSelect.length) && (
         <BulkSelectSection bulkSelect={bulkSelect} dispatch={dispatch} />
       )}
       <div className={`${styles.add_mar_bottom}`}>
