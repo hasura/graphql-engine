@@ -2,10 +2,13 @@
 
 module Hasura.Backends.MSSQL.Types where
 
+import           Prelude
+
+import qualified Database.ODBC.SQLServer as Odbc
+
 import           Data.List.NonEmpty      (NonEmpty (..))
 import           Data.Text               (Text)
-import qualified Database.ODBC.SQLServer as Odbc
-import           Prelude
+
 
 data Select = Select
   { selectTop         :: !Top
