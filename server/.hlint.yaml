@@ -70,6 +70,7 @@
 - ignore: {name: Use sequenceA}
 - ignore: {name: Use camelCase}
 - ignore: {name: Redundant return}
+- ignore: {name: Replace case with maybe}
 - ignore: {name: Use <$>, within: Hasura.RQL.DDL.Metadata}
 - ignore: {name: Functor law, within: Hasura.Server.AuthSpec}
 
