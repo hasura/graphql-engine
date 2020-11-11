@@ -141,7 +141,7 @@ Database operations
 
 - :ref:`Database modelling <schema>`: Learn how to model your database schema, as well as how to extend it.
 - :ref:`Querying data <queries>`: Use GraphQL queries to query data from your GraphQL API.
-- :ref:`Inserting data <mutations>`: Use GraphQL mutations to insert data into your GraphQL API using.
+- :ref:`Inserting data <mutations>`: Use GraphQL mutations to insert data into your GraphQL API.
 
 Business logic
 ^^^^^^^^^^^^^^
@@ -151,14 +151,20 @@ There are several options for the implementation of business logic, depending on
 - :ref:`Actions <actions>`: Actions can be used if you'd like to extend your GraphQL schema by integrating with a REST endpoint.
 - :ref:`Remote schemas <remote_schemas>`: If you have an existing GraphQL server or if you're comfortable with implementing one, you can use remote schemas.
 - :ref:`Event triggers <event_triggers>`: To trigger a serverless function based on a database event, use event triggers.
-- :ref:`Scheduled triggers <scheduled_triggers>` are used to execute custom business logic at specific points in time.
+- :ref:`Scheduled triggers <scheduled_triggers>`: Scheduled triggers are used to execute custom business logic at specific points in time.
+
+Secure your endpoint
+^^^^^^^^^^^^^^^^^^^^
+
+:ref:`Add an admin secret <secure_project>`
+to make sure that your GraphQL endpoint and the Hasura console are not publicly accessible.
+
 
 Manage Hasura Cloud project
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can also click the gear icon to manage your Hasura Cloud project. (e.g. add :ref:`collaborators <manage_project_collaborators>`,
-:ref:`env vars <manage_project_env_vars>` or :ref:`custom domains <manage_project_domains>`) and :ref:`add an admin secret <secure_project>`
-to make sure that your GraphQL endpoint and the Hasura console are not publicly accessible.
+You can click the gear icon in the Hasura Cloud dashboard to manage your Hasura Cloud project (e.g. add :ref:`collaborators <manage_project_collaborators>`,
+:ref:`env vars <manage_project_env_vars>` or :ref:`custom domains <manage_project_domains>`).
 
 .. thumbnail:: /img/graphql/cloud/getting-started/project-manage.png
   :alt: Project actions
