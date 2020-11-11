@@ -1,8 +1,11 @@
 import React from 'react';
 import Helmet from 'react-helmet';
+import { parse } from 'graphql';
 import PermissionsTable from './PermissionsTable';
 import PermissionEditor from './PermissionEditor';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { useIntrospectionSchemaRemote } from '../graphqlUtils';
+import globals from '../../../../Globals';
 import Button from '../../../Common/Button/Button';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
 
@@ -51,6 +54,7 @@ const Permissions = ({ allRoles, ...props }: any) => {
     bulkSelect,
     schemaDefinition,
     readOnlyMode = false,
+    dispatch,
     fetchRoleList,
     setDefaults,
     permCloseEdit,
@@ -70,6 +74,26 @@ const Permissions = ({ allRoles, ...props }: any) => {
     };
   }, []);
 
+  const { loading, error, schema, introspect } = useIntrospectionSchemaRemote(
+    currentRemoteSchema.name,
+    {
+      'x-hasura-admin-secret': globals.adminSecret,
+    },
+    dispatch
+  );
+
+  if (error || !schema) {
+    return (
+      <div>
+        Error introspecting remote schema.{' '}
+        <a onClick={introspect} className={styles.cursorPointer} role="button">
+          {' '}
+          Try again{' '}
+        </a>
+      </div>
+    );
+  }
+
   return (
     <div>
       <Helmet
@@ -88,7 +112,7 @@ const Permissions = ({ allRoles, ...props }: any) => {
         permOpenEdit={permOpenEdit}
         permCloseEdit={permCloseEdit}
       />
-      {bulkSelect.length && (
+      {!!bulkSelect.length && (
         <BulkSelectSection
           bulkSelect={bulkSelect}
           permRemoveMultipleRoles={permRemoveMultipleRoles}

@@ -47,6 +47,7 @@ const mapStateToProps = (state: any) => {
 // TODO : types
 const mapDispatchToProps = (dispatch: Dispatch) => {
   return {
+    dispatch,
     permRemoveMultipleRoles: () => dispatch(permRemoveMultipleRoles()),
     viewRemoteSchema: (data: string) =>
       dispatch({ type: VIEW_REMOTE_SCHEMA, data }),
