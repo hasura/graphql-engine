@@ -238,8 +238,8 @@ data OpExpG (b :: BackendType) a
   | ALIKE !a -- LIKE
   | ANLIKE !a -- NOT LIKE
 
-  | AILIKE () !a -- ILIKE, case insensitive
-  | ANILIKE () !a-- NOT ILIKE, case insensitive
+  | AILIKE (XAILIKE b) !a -- ILIKE, case insensitive
+  | ANILIKE (XANILIKE b) !a-- NOT ILIKE, case insensitive
 
   | ASIMILAR !a -- similar, regex
   | ANSIMILAR !a-- not similar, regex
@@ -278,13 +278,6 @@ deriving instance (Backend b, Eq a) => Eq (OpExpG b a)
 instance (Backend b, NFData a) => NFData (OpExpG b a)
 instance (Backend b, Cacheable a) => Cacheable (OpExpG b a)
 instance (Backend b, Hashable a) => Hashable (OpExpG b a)
--- FIXME: this should be moved to Backend
--- type family XAILIKE (b :: Backend) where
---   XAILIKE 'Postgres = ()
---   XAILIKE 'MySQL = Void
--- type family XANILIKE (b :: Backend) where
---   XANILIKE 'Postgres = ()
---   XANILIKE 'MySQL = Void
 
 
 opExpDepCol :: OpExpG backend a -> Maybe (Column backend)

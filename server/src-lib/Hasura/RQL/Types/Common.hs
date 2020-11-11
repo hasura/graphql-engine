@@ -111,6 +111,8 @@ class
   , Representable (ScalarType b)
   , Representable (SQLExpression b)
   , Representable (SQLOperator b)
+  , Representable (XAILIKE b)
+  , Representable (XANILIKE b)
   , Lift (TableName b)
   , Lift (BasicOrderType b)
   , Lift (NullsOrderType b)
@@ -135,6 +137,8 @@ class
   type ScalarType     b :: Type
   type SQLExpression  b :: Type
   type SQLOperator    b :: Type
+  type XAILIKE        b :: Type
+  type XANILIKE       b :: Type
 
 instance Backend 'Postgres where
   type Identifier     'Postgres = PG.Identifier
@@ -149,6 +153,12 @@ instance Backend 'Postgres where
   type ScalarType     'Postgres = PG.PGScalarType
   type SQLExpression  'Postgres = PG.SQLExp
   type SQLOperator    'Postgres = PG.SQLOp
+  type XAILIKE        'Postgres = ()
+  type XANILIKE       'Postgres = ()
+
+-- instance Backend 'Mysql where
+--   type XAILIKE 'MySQL = Void
+--   type XANILIKE 'MySQL = Void
 
 
 adminText :: NonEmptyText
