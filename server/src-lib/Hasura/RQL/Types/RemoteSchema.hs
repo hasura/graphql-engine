@@ -117,7 +117,7 @@ validateRemoteSchemaDef env (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout)
 
     timeout = fromMaybe 60 mTimeout
 
-data RemoteSchemaPermissionDefinition
+newtype RemoteSchemaPermissionDefinition
   = RemoteSchemaPermissionDefinition
   { _rspdSchema    :: !G.SchemaDocument
   }  deriving (Show, Eq, Lift, Generic)
@@ -127,13 +127,7 @@ instance Hashable RemoteSchemaPermissionDefinition
 
 instance J.FromJSON RemoteSchemaPermissionDefinition where
   parseJSON = J.withObject "RemoteSchemaPermissionDefinition" $ \obj -> do
-    schema <- obj J..: "schema"
-    flip (J.withText "schema") schema $ \t ->
-      let schemaDoc = J.fromJSON $ J.String t
-      in
-      case schemaDoc of
-        J.Error err -> fail err
-        J.Success a -> return $ RemoteSchemaPermissionDefinition a
+    fmap RemoteSchemaPermissionDefinition $ obj J..: "schema"
 
 instance J.ToJSON RemoteSchemaPermissionDefinition where
   toJSON (RemoteSchemaPermissionDefinition schema) =
