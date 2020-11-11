@@ -26,7 +26,6 @@ import qualified Language.GraphQL.Draft.Syntax    as G
 
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Text.Extended
 import           Hasura.SQL.Backend
 
 import qualified Hasura.Backends.Postgres.SQL.DML as S
@@ -34,15 +33,10 @@ import qualified Hasura.RQL.IR.Delete             as RQL
 import qualified Hasura.RQL.IR.Select             as RQL
 import qualified Hasura.RQL.IR.Update             as RQL
 import qualified Hasura.RQL.Types.Action          as RQL
-import qualified Hasura.RQL.Types.Error           as RQL
 import qualified Hasura.RQL.Types.RemoteSchema    as RQL
 
 import           Hasura.GraphQL.Parser
 import           Hasura.GraphQL.Schema.Insert     (AnnInsert)
-
-import qualified Data.Text                              as T
-
-import           Hasura.Session
 
 -- | For storing both a normal GQLContext and one for the backend variant.
 -- Currently, this is to enable the backend variant to have certain insert
