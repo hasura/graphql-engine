@@ -2,3 +2,5 @@
 graphql-engine.prof*
 ws
 graphiql
+dist*
+dist-newstyle*
