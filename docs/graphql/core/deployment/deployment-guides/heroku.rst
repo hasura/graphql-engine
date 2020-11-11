@@ -65,20 +65,20 @@ Step 2: Create an app with **--stack=container**
 ************************************************
 
 Use the `Heroku CLI <https://devcenter.heroku.com/articles/heroku-cli>`__ to create a new Heroku app from inside the cloned directory. Let's call
-the app ``graphql-on-postgres``.
+the app ``todo-hasura1``.
 
 .. code-block:: bash
 
-  # Replace graphql-on-postgres with whatever you'd like your app to be called
-  $ heroku create graphql-on-postgres --stack=container
+  # Replace todo-hasura1 with whatever you'd like your app to be called
+  $ heroku create todo-hasura1 --stack=container
 
-  Creating ⬢ graphql-on-postgres... done, stack is container
-  https://graphql-on-postgres.herokuapp.com/ | https://git.heroku.com/graphql-on-postgres.git
+  Creating ⬢ todo-hasura1... done, stack is container
+  https://todo-hasura1.herokuapp.com/ | https://git.heroku.com/todo-hasura1.git
 
 **Note**:
 
-- ``HEROKU_GIT_REMOTE``: `https://git.heroku.com/graphql-on-postgres.git`
-- ``HEROKU_APP_URL``: `https://graphql-on-postgres.herokuapp.com/`
+- ``HEROKU_GIT_REMOTE``: `https://git.heroku.com/todo-hasura1.git`
+- ``HEROKU_APP_URL``: `https://todo-hasura1.herokuapp.com/`
 
 Step 3: Create the Heroku Postgres add-on
 *****************************************
@@ -87,9 +87,9 @@ Create the Postgres add-on in your Heroku app.
 
 .. code-block:: bash
 
-  $ heroku addons:create heroku-postgresql:hobby-dev -a graphql-on-postgres
+  $ heroku addons:create heroku-postgresql:hobby-dev -a todo-hasura1
 
-  Creating heroku-postgresql:hobby-dev on ⬢ graphql-on-postgres... free
+  Creating heroku-postgresql:hobby-dev on ⬢ todo-hasura1... free
   Database has been created and is available
    ! This database is empty. If upgrading, you can transfer
     ! data from another database with pg:copy
@@ -100,7 +100,7 @@ Step 4: **git push** to deploy
 ******************************
 
 Remember to change ``HEROKU_GIT_REMOTE`` to your git remote below. In our case:
-``https://git.heroku.com/graphql-on-postgres.git``.
+``https://git.heroku.com/todo-hasura1.git``.
 
 .. code-block:: bash
 
@@ -109,7 +109,7 @@ Remember to change ``HEROKU_GIT_REMOTE`` to your git remote below. In our case:
   $ git remote add heroku HEROKU_GIT_REMOTE
   $ git push heroku master
 
-Visit ``https://graphql-on-postgres.herokuapp.com`` (replace ``graphql-on-postgres`` with your app name) and
+Visit ``https://todo-hasura1.herokuapp.com`` (replace ``todo-hasura1`` with your app name) and
 you should see the Hasura console.
 
 .. _heroku_existing_db:
@@ -143,7 +143,7 @@ Step 2: Remove the created Postgres add-on in the app
 
 Head to your Heroku dashboard and delete the Postgres add-on created in the previous step:
 
-.. thumbnail:: /img/graphql/core/deployment/remove-heroku-postgres-addon.png
+.. thumbnail:: /img/graphql/core/deployment/delete-heroku-postgres-addon.png
    :alt: Delete the Postgres add-on
 
 Step 3: Configure environment variables
