@@ -5,7 +5,7 @@
 .. _postgres_import_data_from_csv:
 
 Import data from CSV into Postgres
-===================================
+==================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -39,7 +39,7 @@ Let us create a table to match the data structure in your CSV file.
   )
 
 Step 2: Connect to your Postgres database
-------------------------------------------
+-----------------------------------------
 
 Connect to your Postgres database by using the ``psql`` command on the terminal: 
 
