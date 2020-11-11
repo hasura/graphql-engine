@@ -147,9 +147,8 @@ fromSelectRows annSelectG = do
   filterExpression <-
     runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
   selectProjections <-
-    case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
-      Nothing -> refute (pure NoProjectionFields)
-      Just ne -> pure ne
+    NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources)
+    `onNothing` refute (pure NoProjectionFields)
   pure
     Select
       { selectOrderBy = argsOrderBy
@@ -199,9 +198,8 @@ fromSelectAggregate annSelectG = do
        , argsOffset
        } <- runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
   selectProjections <-
-    case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
-      Nothing -> refute (pure NoProjectionFields)
-      Just ne -> pure ne
+    NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources)
+    `onNothing` refute (pure NoProjectionFields)
   pure
     Select
       { selectProjections
@@ -564,9 +562,7 @@ fromAggregateField aggregateField =
                  fields'' <- traverse fromPGCol fields'
                  pure (DistinctCountable fields''))
     IR.AFOp IR.AggregateOp {_aoOp = op, _aoFields = fields} -> do
-      fs <- case NE.nonEmpty fields of
-              Nothing -> refute (pure MalformedAgg)
-              Just fs -> pure fs
+      fs <- NE.nonEmpty fields `onNothing` refute (pure MalformedAgg)
       args <-
         traverse
           (\(_fieldName, pgColFld) ->
@@ -687,9 +683,8 @@ fromObjectRelationSelectG existingJoins annRelationSelectG = do
       (const entityAlias)
       (traverse (fromAnnFieldsG mempty LeaveNumbersAlone) fields)
   selectProjections <-
-    case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
-      Nothing -> refute (pure NoProjectionFields)
-      Just ne -> pure ne
+    NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources)
+    `onNothing` refute (pure NoProjectionFields)
   joinJoinAlias <-
     do fieldName <- lift (fromRelName aarRelationshipName)
        alias <- lift (generateEntityAlias (ObjectRelationTemplate fieldName))
