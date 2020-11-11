@@ -152,7 +152,7 @@ Step 3: Configure environment variables
 Now configure the ``DATABASE_URL`` with your existing Heroku Postgres database URL and a ``HASURA_GRAPHQL_ADMIN_SECRET``
 if you want to :ref:`secure your endpoint <heroku_secure>`.
 
-.. thumbnail:: /img/graphql/core/deployment/heroku-database-url-access.png
+.. thumbnail:: /img/graphql/core/deployment/heroku-database-access-url.png
    :alt: Configure environment variables
 
 .. note::
