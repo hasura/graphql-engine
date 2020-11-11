@@ -25,6 +25,10 @@ import           Hasura.Backends.Postgres.Execute.Mutation
 import           Hasura.Backends.Postgres.Translate.Returning
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
+<<<<<<< HEAD
+=======
+import           Hasura.RQL.DML.Types
+>>>>>>> master
 import           Hasura.RQL.IR.Delete
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                        (HasVersion)

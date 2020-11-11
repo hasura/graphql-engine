@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 {-# LANGUAGE NamedFieldPuns           #-}
 {-# LANGUAGE RecordWildCards          #-}
+=======
+{-# LANGUAGE NamedFieldPuns  #-}
+{-# LANGUAGE RecordWildCards #-}
+>>>>>>> master
 
 module Hasura.RQL.Types.RemoteRelationship
   ( RemoteRelationshipName(..)
@@ -52,7 +57,11 @@ fromRemoteRelationship :: RemoteRelationshipName -> FieldName
 fromRemoteRelationship = FieldName . remoteRelationshipNameToText
 
 -- | Resolved remote relationship
+<<<<<<< HEAD
 data RemoteFieldInfo (b :: Backend)
+=======
+data RemoteFieldInfo (b :: BackendType)
+>>>>>>> master
   = RemoteFieldInfo
   { _rfiName             :: !RemoteRelationshipName
     -- ^ Field name to which we'll map the remote in hasura; this becomes part
@@ -152,9 +161,7 @@ instance FromJSON RemoteArguments where
         bleh <-
           traverse
           (\(key, value) -> do
-              name <- case G.mkName key of
-                Nothing    -> fail $ T.unpack key <> " is an invalid key name"
-                Just name' -> pure name'
+              name <- G.mkName key `onNothing` fail (T.unpack key <> " is an invalid key name")
               parsedValue <- parseValueAsGValue value
               pure (name,parsedValue))
              (HM.toList hashMap)
@@ -266,6 +273,7 @@ data RemoteRelationshipDef
   , _rrdHasuraFields :: !(Set FieldName)
   , _rrdRemoteField  :: !RemoteFields
   } deriving (Show, Eq, Generic, Lift)
+instance Cacheable RemoteRelationshipDef
 $(deriveJSON (aesonDrop 4 snakeCase) ''RemoteRelationshipDef)
 
 data DeleteRemoteRelationship =

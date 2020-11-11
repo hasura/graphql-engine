@@ -94,7 +94,11 @@ data QueryDB b v
   | QDBAggregation (RQL.AnnAggregateSelectG b v)
   | QDBConnection  (RQL.ConnectionSelect    b v)
 
+<<<<<<< HEAD
 data ActionQuery (b :: Backend) v
+=======
+data ActionQuery (b :: BackendType) v
+>>>>>>> master
   = AQQuery !(RQL.AnnActionExecution b v)
   | AQAsync !(RQL.AnnActionAsyncQuery b v)
 
@@ -102,12 +106,20 @@ type RemoteField = (RQL.RemoteSchemaInfo, G.Field G.NoFragments G.Name)
 
 type QueryRootField v = RootField (QueryDB 'Postgres v) RemoteField (ActionQuery 'Postgres v) J.Value
 
+<<<<<<< HEAD
 data MutationDB (b :: Backend) v
+=======
+data MutationDB (b :: BackendType) v
+>>>>>>> master
   = MDBInsert (AnnInsert   b v)
   | MDBUpdate (RQL.AnnUpdG b v)
   | MDBDelete (RQL.AnnDelG b v)
 
+<<<<<<< HEAD
 data ActionMutation (b :: Backend) v
+=======
+data ActionMutation (b :: BackendType) v
+>>>>>>> master
   = AMSync !(RQL.AnnActionExecution b v)
   | AMAsync !RQL.AnnActionMutationAsync
 

@@ -4,27 +4,6 @@
 module Hasura.RQL.DDL.Metadata.Types
   ( currentMetadataVersion
   , MetadataVersion(..)
-  , TableMeta(..)
-  , tmTable
-  , tmIsEnum
-  , tmConfiguration
-  , tmObjectRelationships
-  , tmArrayRelationships
-  , tmComputedFields
-  , tmRemoteRelationships
-  , tmInsertPermissions
-  , tmSelectPermissions
-  , tmUpdatePermissions
-  , tmDeletePermissions
-  , tmEventTriggers
-  , mkTableMeta
-  , ReplaceMetadata(..)
-  , replaceMetadataToOrdJSON
-  , ActionMetadata(..)
-  , ActionPermissionMetadata(..)
-  , ComputedFieldMeta(..)
-  , RemoteRelationshipMeta(..)
-  , FunctionsMetadata(..)
   , ExportMetadata(..)
   , ClearMetadata(..)
   , ReloadMetadata(..)
@@ -35,6 +14,7 @@ module Hasura.RQL.DDL.Metadata.Types
 
 import           Hasura.Prelude
 
+<<<<<<< HEAD
 import qualified Data.Aeson.Ordered                  as AO
 import qualified Data.HashMap.Strict                 as HM
 import qualified Data.HashSet                        as HS
@@ -148,24 +128,15 @@ instance FromJSON TableMeta where
 
       unexpectedKeys =
         HS.fromList (HM.keys o) `HS.difference` expectedKeySet
+=======
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
+import           Language.Haskell.TH.Syntax   (Lift)
 
-      expectedKeySet =
-        HS.fromList [ tableKey, isEnumKey, configKey, orKey
-                    , arKey , ipKey, spKey, upKey, dpKey, etKey
-                    , cfKey, rrKey
-                    ]
+import           Hasura.RQL.Types
+>>>>>>> master
 
-  parseJSON _ =
-    fail "expecting an Object for TableMetadata"
-
-data FunctionsMetadata
-  = FMVersion1 ![QualifiedFunction]
-  | FMVersion2 ![Schema.TrackFunctionV2]
-  deriving (Show, Eq, Lift, Generic)
-
-instance ToJSON FunctionsMetadata where
-  toJSON (FMVersion1 qualifiedFunctions) = toJSON qualifiedFunctions
-  toJSON (FMVersion2 functionsV2)        = toJSON functionsV2
 
 data ClearMetadata
   = ClearMetadata
@@ -175,6 +146,7 @@ $(deriveToJSON defaultOptions ''ClearMetadata)
 instance FromJSON ClearMetadata where
   parseJSON _ = return ClearMetadata
 
+<<<<<<< HEAD
 data ReplaceMetadata
   = ReplaceMetadata
   { aqVersion          :: !MetadataVersion
@@ -206,6 +178,8 @@ instance FromJSON ReplaceMetadata where
           MVVersion1 -> FMVersion1 <$> maybe (pure []) parseJSON maybeValue
           MVVersion2 -> FMVersion2 <$> maybe (pure []) parseJSON maybeValue
 
+=======
+>>>>>>> master
 data ExportMetadata
   = ExportMetadata
   deriving (Show, Eq, Lift)
@@ -214,15 +188,16 @@ $(deriveToJSON defaultOptions ''ExportMetadata)
 instance FromJSON ExportMetadata where
   parseJSON _ = return ExportMetadata
 
-newtype ReloadMetadata
+data ReloadMetadata
   = ReloadMetadata
-  { _rmReloadRemoteSchemas :: Bool}
-  deriving (Show, Eq, Lift)
+  { _rmReloadRemoteSchemas :: !Bool
+  } deriving (Show, Eq, Lift)
 $(deriveToJSON (aesonDrop 3 snakeCase) ''ReloadMetadata)
 
 instance FromJSON ReloadMetadata where
   parseJSON = \case
-    Object o -> ReloadMetadata <$> o .:? "reload_remote_schemas" .!= False
+    Object o -> ReloadMetadata
+                <$> o .:? "reload_remote_schemas" .!= False
     _        -> pure $ ReloadMetadata False
 
 data DumpInternalState
@@ -248,6 +223,7 @@ $(deriveToJSON defaultOptions ''DropInconsistentMetadata)
 
 instance FromJSON DropInconsistentMetadata where
   parseJSON _ = return DropInconsistentMetadata
+<<<<<<< HEAD
 
 instance ToJSON ReplaceMetadata where
   toJSON = AO.fromOrdered . replaceMetadataToOrdJSON
@@ -577,3 +553,5 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
 
     maybeAnyToMaybeOrdPair :: Text -> (a -> AO.Value) -> Maybe a -> Maybe (Text, AO.Value)
     maybeAnyToMaybeOrdPair name f = fmap ((name,) . f)
+=======
+>>>>>>> master

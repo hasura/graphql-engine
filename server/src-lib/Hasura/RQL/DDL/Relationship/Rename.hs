@@ -6,7 +6,10 @@ import           Data.Text.Extended
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.Prelude
+<<<<<<< HEAD
 import           Hasura.RQL.DDL.Relationship.Types
+=======
+>>>>>>> master
 import           Hasura.RQL.DDL.Schema              (renameRelInCatalog)
 import           Hasura.RQL.Types
 

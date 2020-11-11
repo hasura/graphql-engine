@@ -11,7 +11,11 @@ import           Data.Aeson.Types
 import           Data.Text.NonEmpty
 
 import           Hasura.Backends.Postgres.SQL.Types
+<<<<<<< HEAD
 import           Hasura.RQL.Types.Common
+=======
+import           Hasura.RQL.Types.Common             hiding (ConstraintName)
+>>>>>>> master
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission

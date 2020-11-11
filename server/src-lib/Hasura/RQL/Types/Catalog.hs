@@ -28,12 +28,12 @@ import           System.Cron.Types                   (CronSchedule (..))
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Incremental                  (Cacheable)
 import           Hasura.RQL.DDL.ComputedField
-import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.EventTrigger
+import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteRelationship
@@ -146,7 +146,11 @@ instance NFData CatalogFunction
 instance Cacheable CatalogFunction
 $(deriveFromJSON (aesonDrop 3 snakeCase) ''CatalogFunction)
 
+<<<<<<< HEAD
 data CatalogCustomTypes (b :: Backend)
+=======
+data CatalogCustomTypes (b :: BackendType)
+>>>>>>> master
   = CatalogCustomTypes
   { _cctCustomTypes :: !CustomTypes
   , _cctPgScalars   :: !(HashSet (ScalarType b))

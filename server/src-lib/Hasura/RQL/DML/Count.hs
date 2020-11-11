@@ -8,6 +8,7 @@ module Hasura.RQL.DML.Count
 
 import           Hasura.Prelude
 
+<<<<<<< HEAD
 import qualified Data.ByteString.Builder            as BB
 import qualified Data.Sequence                      as DS
 
@@ -18,9 +19,23 @@ import qualified Database.PG.Query                  as Q
 import qualified Hasura.Backends.Postgres.SQL.DML   as S
 
 import           Hasura.Backends.Postgres.SQL.Types
+=======
+import qualified Data.ByteString.Builder                    as BB
+import qualified Data.Sequence                              as DS
+
+import           Data.Aeson
+import           Instances.TH.Lift                          ()
+
+import qualified Database.PG.Query                          as Q
+import qualified Hasura.Backends.Postgres.SQL.DML           as S
+
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.Translate.BoolExp
+>>>>>>> master
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
-import           Hasura.RQL.GBoolExp
+import           Hasura.RQL.DML.Types
+import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 

@@ -36,7 +36,11 @@ import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Insert
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
+<<<<<<< HEAD
 import           Hasura.RQL.Types
+=======
+import           Hasura.RQL.Types                    hiding (ConstraintName)
+>>>>>>> master
 
 
 

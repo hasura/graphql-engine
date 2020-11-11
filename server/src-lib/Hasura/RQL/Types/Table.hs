@@ -98,7 +98,7 @@ import           Language.Haskell.TH.Syntax          (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Incremental                  (Cacheable)
-import           Hasura.RQL.Types.BoolExp
+import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
@@ -165,7 +165,11 @@ emptyCustomRootFields =
   , _tcrfDeleteByPk      = Nothing
   }
 
+<<<<<<< HEAD
 data FieldInfo (b :: Backend)
+=======
+data FieldInfo (b :: BackendType)
+>>>>>>> master
   = FIColumn !(ColumnInfo b)
   | FIRelationship !RelInfo
   | FIComputedField !(ComputedFieldInfo b)
@@ -227,7 +231,11 @@ isPGColInfo :: FieldInfo backend -> Bool
 isPGColInfo (FIColumn _) = True
 isPGColInfo _            = False
 
+<<<<<<< HEAD
 data InsPermInfo (b :: Backend)
+=======
+data InsPermInfo (b :: BackendType)
+>>>>>>> master
   = InsPermInfo
   { ipiCols            :: !(HS.HashSet (Column b))
   , ipiCheck           :: !(AnnBoolExpPartialSQL b)
@@ -241,7 +249,11 @@ instance Cacheable (InsPermInfo 'Postgres)
 instance ToJSON (InsPermInfo 'Postgres) where
   toJSON = genericToJSON $ aesonDrop 3 snakeCase
 
+<<<<<<< HEAD
 data SelPermInfo (b :: Backend)
+=======
+data SelPermInfo (b :: BackendType)
+>>>>>>> master
   = SelPermInfo
   { spiCols                 :: !(HS.HashSet (Column b))
   , spiScalarComputedFields :: !(HS.HashSet ComputedFieldName)
@@ -256,7 +268,11 @@ instance Cacheable (SelPermInfo 'Postgres)
 instance ToJSON (SelPermInfo 'Postgres) where
   toJSON = genericToJSON $ aesonDrop 3 snakeCase
 
+<<<<<<< HEAD
 data UpdPermInfo (b :: Backend)
+=======
+data UpdPermInfo (b :: BackendType)
+>>>>>>> master
   = UpdPermInfo
   { upiCols            :: !(HS.HashSet (Column b))
   , upiTable           :: !QualifiedTable
@@ -271,7 +287,11 @@ instance Cacheable (UpdPermInfo 'Postgres)
 instance ToJSON (UpdPermInfo 'Postgres) where
   toJSON = genericToJSON $ aesonDrop 3 snakeCase
 
+<<<<<<< HEAD
 data DelPermInfo (b :: Backend)
+=======
+data DelPermInfo (b :: BackendType)
+>>>>>>> master
   = DelPermInfo
   { dpiTable           :: !QualifiedTable
   , dpiFilter          :: !(AnnBoolExpPartialSQL b)
@@ -286,7 +306,11 @@ instance ToJSON (DelPermInfo 'Postgres) where
 mkRolePermInfo :: RolePermInfo backend
 mkRolePermInfo = RolePermInfo Nothing Nothing Nothing Nothing
 
+<<<<<<< HEAD
 data RolePermInfo (b :: Backend)
+=======
+data RolePermInfo (b :: BackendType)
+>>>>>>> master
   = RolePermInfo
   { _permIns :: !(Maybe (InsPermInfo b))
   , _permSel :: !(Maybe (SelPermInfo b))
@@ -440,7 +464,11 @@ tciUniqueOrPrimaryKeyConstraints info = NE.nonEmpty $
   maybeToList (_pkConstraint <$> _tciPrimaryKey info)
   <> toList (_tciUniqueConstraints info)
 
+<<<<<<< HEAD
 data TableInfo (b :: Backend)
+=======
+data TableInfo (b :: BackendType)
+>>>>>>> master
   = TableInfo
   { _tiCoreInfo            :: TableCoreInfo b
   , _tiRolePermInfoMap     :: !(RolePermInfoMap b)

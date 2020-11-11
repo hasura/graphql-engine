@@ -267,7 +267,11 @@ type AnnotatedObjectType b =
 
 type AnnotatedObjects b = Map.HashMap G.Name (AnnotatedObjectType b)
 
+<<<<<<< HEAD
 data AnnotatedCustomTypes (b :: Backend)
+=======
+data AnnotatedCustomTypes (b :: BackendType)
+>>>>>>> master
   = AnnotatedCustomTypes
     { _actNonObjects :: !NonObjectTypeMap
     , _actObjects    :: !(AnnotatedObjects b)

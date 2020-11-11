@@ -4,6 +4,7 @@ module Hasura.Backends.Postgres.Translate.Update
 
 import           Hasura.Prelude
 
+<<<<<<< HEAD
 import           Instances.TH.Lift                         ()
 
 import qualified Hasura.Backends.Postgres.SQL.DML          as S
@@ -13,6 +14,18 @@ import           Hasura.Backends.Postgres.Translate.Insert
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.IR.Update
 import           Hasura.RQL.Instances                      ()
+=======
+import           Instances.TH.Lift                            ()
+
+import qualified Hasura.Backends.Postgres.SQL.DML             as S
+
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.Translate.BoolExp
+import           Hasura.Backends.Postgres.Translate.Insert
+import           Hasura.Backends.Postgres.Translate.Returning
+import           Hasura.RQL.Instances                         ()
+import           Hasura.RQL.IR.Update
+>>>>>>> master
 import           Hasura.RQL.Types
 
 
@@ -26,7 +39,11 @@ mkUpdateCTE (AnnUpd tn opExps (permFltr, wc) chk _ columnsInfo) =
         . Just
         . S.RetExp
         $ [ S.selectStar
+<<<<<<< HEAD
           , S.Extractor (insertCheckExpr "update check constraint failed" checkExpr) Nothing
+=======
+          , asCheckErrorExtractor $ insertCheckConstraint checkExpr
+>>>>>>> master
           ]
     setExp    = S.SetExp $ map (expandOperator columnsInfo) opExps
     tableFltr = Just $ S.WhereFrag tableFltrExpr

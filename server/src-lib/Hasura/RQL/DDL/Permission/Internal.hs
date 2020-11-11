@@ -5,16 +5,26 @@ module Hasura.RQL.DDL.Permission.Internal where
 
 import           Hasura.Prelude
 
+<<<<<<< HEAD
 import qualified Data.HashMap.Strict                as M
 import qualified Data.Text                          as T
 import qualified Database.PG.Query                  as Q
 import qualified Hasura.Backends.Postgres.SQL.DML   as S
 
 import           Control.Lens                       hiding ((.=))
+=======
+import qualified Data.HashMap.Strict                        as M
+import qualified Data.Text                                  as T
+import qualified Database.PG.Query                          as Q
+import qualified Hasura.Backends.Postgres.SQL.DML           as S
+
+import           Control.Lens                               hiding ((.=))
+>>>>>>> master
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
 import           Data.Text.Extended
+<<<<<<< HEAD
 import           Instances.TH.Lift                  ()
 import           Language.Haskell.TH.Syntax         (Lift)
 
@@ -23,11 +33,20 @@ import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.EncJSON
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.GBoolExp
+=======
+import           Instances.TH.Lift                          ()
+import           Language.Haskell.TH.Syntax                 (Lift)
+
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Value
+import           Hasura.Backends.Postgres.Translate.BoolExp
+>>>>>>> master
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.Session
 
 
+<<<<<<< HEAD
 data PermColSpec
   = PCStar
   | PCCols ![PGCol]
@@ -42,6 +61,8 @@ instance ToJSON PermColSpec where
   toJSON (PCCols cols) = toJSON cols
   toJSON PCStar        = "*"
 
+=======
+>>>>>>> master
 convColSpec :: FieldInfoMap (FieldInfo 'Postgres) -> PermColSpec -> [PGCol]
 convColSpec _ (PCCols cols) = cols
 convColSpec cim PCStar      = map pgiColumn $ getCols cim
@@ -134,6 +155,7 @@ dropPermFromCatalog (QualifiedObject sn tn) rn pt =
 
 type CreatePerm a = WithTable (PermDef a)
 
+<<<<<<< HEAD
 data PermDef a =
   PermDef
   { pdRole       :: !RoleName
@@ -153,6 +175,8 @@ instance (ToJSON a) => ToAesonPairs (PermDef a) where
   , "comment" .= comment
   ]
 
+=======
+>>>>>>> master
 data CreatePermP1Res a
   = CreatePermP1Res
   { cprInfo :: !a
@@ -163,7 +187,11 @@ procBoolExp
   :: (QErrM m, TableCoreInfoRM m)
   => QualifiedTable
   -> FieldInfoMap (FieldInfo 'Postgres)
+<<<<<<< HEAD
   -> BoolExp
+=======
+  -> BoolExp 'Postgres
+>>>>>>> master
   -> m (AnnBoolExpPartialSQL 'Postgres, [SchemaDependency])
 procBoolExp tn fieldInfoMap be = do
   abe <- annBoolExp valueParser fieldInfoMap $ unBoolExp be
@@ -187,7 +215,11 @@ getDepHeadersFromVal val = case val of
     parseObject o =
       concatMap getDepHeadersFromVal (M.elems o)
 
+<<<<<<< HEAD
 getDependentHeaders :: BoolExp -> [Text]
+=======
+getDependentHeaders :: BoolExp b -> [Text]
+>>>>>>> master
 getDependentHeaders (BoolExp boolExp) =
   flip foldMap boolExp $ \(ColExp _ v) -> getDepHeadersFromVal v
 
@@ -236,6 +268,7 @@ data DropPerm a
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''DropPerm)
 
 type family PermInfo a = r | r -> a
+<<<<<<< HEAD
 
 class (ToJSON a) => IsPerm a where
 
@@ -294,3 +327,5 @@ runDropPerm defn = do
   dropPermP2 defn
   withNewInconsistentObjsCheck buildSchemaCache
   return successMsg
+=======
+>>>>>>> master

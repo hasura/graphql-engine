@@ -1,5 +1,9 @@
 {-# LANGUAGE PartialTypeSignatures #-}
+<<<<<<< HEAD:server/src-lib/Hasura/RQL/GBoolExp.hs
 module Hasura.RQL.GBoolExp
+=======
+module Hasura.Backends.Postgres.Translate.BoolExp
+>>>>>>> master:server/src-lib/Hasura/Backends/Postgres/Translate/BoolExp.hs
   ( toSQLBoolExp
   , getBoolExpDeps
   , annBoolExp
@@ -24,7 +28,11 @@ type OpRhsParser m v =
 
 -- | Represents a reference to a Postgres column, possibly casted an arbitrary
 -- number of times. Used within 'parseOperationsExpression' for bookkeeping.
+<<<<<<< HEAD:server/src-lib/Hasura/RQL/GBoolExp.hs
 data ColumnReference (b :: Backend)
+=======
+data ColumnReference (b :: BackendType)
+>>>>>>> master:server/src-lib/Hasura/Backends/Postgres/Translate/BoolExp.hs
   = ColumnReferenceColumn !(ColumnInfo b)
   | ColumnReferenceCast !(ColumnReference b) !(ColumnType b)
 
@@ -258,14 +266,14 @@ parseOperationsExpression rhsParser fim columnInfo =
 
 -- This convoluted expression instead of col = val
 -- to handle the case of col : null
-equalsBoolExpBuilder :: S.SQLExp -> S.SQLExp -> S.BoolExp
+equalsBoolExpBuilder :: SQLExp 'Postgres -> SQLExp 'Postgres -> S.BoolExp
 equalsBoolExpBuilder qualColExp rhsExp =
   S.BEBin S.OrOp (S.BECompare S.SEQ qualColExp rhsExp)
     (S.BEBin S.AndOp
       (S.BENull qualColExp)
       (S.BENull rhsExp))
 
-notEqualsBoolExpBuilder :: S.SQLExp -> S.SQLExp -> S.BoolExp
+notEqualsBoolExpBuilder :: SQLExp 'Postgres -> SQLExp 'Postgres -> S.BoolExp
 notEqualsBoolExpBuilder qualColExp rhsExp =
   S.BEBin S.OrOp (S.BECompare S.SNE qualColExp rhsExp)
     (S.BEBin S.AndOp
@@ -276,7 +284,11 @@ annBoolExp
   :: (QErrM m, TableCoreInfoRM m)
   => OpRhsParser m v
   -> FieldInfoMap (FieldInfo 'Postgres)
+<<<<<<< HEAD:server/src-lib/Hasura/RQL/GBoolExp.hs
   -> GBoolExp ColExp
+=======
+  -> GBoolExp 'Postgres ColExp
+>>>>>>> master:server/src-lib/Hasura/Backends/Postgres/Translate/BoolExp.hs
   -> m (AnnBoolExp 'Postgres v)
 annBoolExp rhsParser fim boolExp =
   case boolExp of
@@ -354,7 +366,11 @@ convColRhs tableQual = \case
   where
     mkQCol q = S.SEQIdentifier . S.QIdentifier q . toIdentifier
 
+<<<<<<< HEAD:server/src-lib/Hasura/RQL/GBoolExp.hs
 foldExists :: GExists (AnnBoolExpFldSQL 'Postgres) -> State Word64 S.BoolExp
+=======
+foldExists :: GExists 'Postgres (AnnBoolExpFldSQL 'Postgres) -> State Word64 S.BoolExp
+>>>>>>> master:server/src-lib/Hasura/Backends/Postgres/Translate/BoolExp.hs
 foldExists (GExists qt wh) = do
   whereExp <- foldBoolExp (convColRhs (S.QualTable qt)) wh
   return $ S.mkExists (S.FISimple qt Nothing) whereExp
@@ -377,13 +393,21 @@ foldBoolExp f = \case
   BoolFld ce           -> f ce
 
 mkFieldCompExp
+<<<<<<< HEAD:server/src-lib/Hasura/RQL/GBoolExp.hs
   :: S.Qual -> FieldName -> OpExpG 'Postgres S.SQLExp -> S.BoolExp
+=======
+  :: S.Qual -> FieldName -> OpExpG 'Postgres (SQLExp 'Postgres) -> S.BoolExp
+>>>>>>> master:server/src-lib/Hasura/Backends/Postgres/Translate/BoolExp.hs
 mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
   where
     mkQCol = S.SEQIdentifier . S.QIdentifier qual . toIdentifier
     mkQField = S.SEQIdentifier . S.QIdentifier qual . Identifier . getFieldNameTxt
 
+<<<<<<< HEAD:server/src-lib/Hasura/RQL/GBoolExp.hs
     mkCompExp :: S.SQLExp -> OpExpG 'Postgres S.SQLExp -> S.BoolExp
+=======
+    mkCompExp :: SQLExp 'Postgres -> OpExpG 'Postgres (SQLExp 'Postgres) -> S.BoolExp
+>>>>>>> master:server/src-lib/Hasura/Backends/Postgres/Translate/BoolExp.hs
     mkCompExp lhs = \case
       ACast casts      -> mkCastsExp casts
       AEQ False val    -> equalsBoolExpBuilder lhs val

@@ -5,22 +5,38 @@ module Hasura.RQL.DML.Internal where
 
 import           Hasura.Prelude
 
+<<<<<<< HEAD
 import qualified Data.HashMap.Strict                as M
 import qualified Data.HashSet                       as HS
 import qualified Data.Sequence                      as DS
 import qualified Data.Text                          as T
 import qualified Database.PG.Query                  as Q
+=======
+import qualified Data.HashMap.Strict                        as M
+import qualified Data.HashSet                               as HS
+import qualified Data.Sequence                              as DS
+import qualified Data.Text                                  as T
+import qualified Database.PG.Query                          as Q
+>>>>>>> master
 
 import           Control.Lens
 import           Data.Aeson.Types
 import           Data.Text.Extended
 
+<<<<<<< HEAD
 import qualified Hasura.Backends.Postgres.SQL.DML   as S
+=======
+import qualified Hasura.Backends.Postgres.SQL.DML           as S
+>>>>>>> master
 
 import           Hasura.Backends.Postgres.SQL.Error
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
+<<<<<<< HEAD
 import           Hasura.RQL.GBoolExp
+=======
+import           Hasura.Backends.Postgres.Translate.BoolExp
+>>>>>>> master
 import           Hasura.RQL.Types
 import           Hasura.Session
 
@@ -158,7 +174,11 @@ fetchRelTabInfo refTabName =
   -- Internal error
   modifyErrAndSet500 ("foreign " <> ) $ askTabInfo refTabName
 
+<<<<<<< HEAD
 type SessVarBldr b m = PGType (ScalarType b) -> SessionVariable -> m S.SQLExp
+=======
+type SessVarBldr b m = PGType (ScalarType b) -> SessionVariable -> m (SQLExp b)
+>>>>>>> master
 
 fetchRelDet
   :: (UserInfoM m, QErrM m, CacheRM m)
@@ -211,7 +231,11 @@ convPartialSQLExp
   :: (Applicative f)
   => SessVarBldr backend f
   -> PartialSQLExp backend
+<<<<<<< HEAD
   -> f S.SQLExp
+=======
+  -> f (SQLExp backend)
+>>>>>>> master
 convPartialSQLExp f = \case
   PSESQLExp sqlExp                 -> pure sqlExp
   PSESessVar colTy sessionVariable -> f colTy sessionVariable
@@ -247,7 +271,11 @@ convBoolExp
   :: (UserInfoM m, QErrM m, CacheRM m)
   => FieldInfoMap (FieldInfo 'Postgres)
   -> SelPermInfo 'Postgres
+<<<<<<< HEAD
   -> BoolExp
+=======
+  -> BoolExp 'Postgres
+>>>>>>> master
   -> SessVarBldr 'Postgres m
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> m (AnnBoolExpSQL 'Postgres)

@@ -73,6 +73,7 @@ import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
 import qualified Hasura.Logging                              as L
 import qualified Hasura.Server.Telemetry.Counters            as Telem
 import qualified Hasura.Tracing                              as Tracing
+import           Hasura.Server.Init.Config (KeepAliveDelay (..))
 
 -- | 'LQ.LiveQueryId' comes from 'Hasura.GraphQL.Execute.LiveQuery.State.addLiveQuery'. We use
 -- this to track a connection's operations so we can remove them from 'LiveQueryState', and
@@ -228,11 +229,12 @@ data WSServerEnv
   -- , _wseQueryCache      :: !E.PlanCache -- See Note [Temporarily disabling query plan caching]
   , _wseServer          :: !WSServer
   , _wseEnableAllowlist :: !Bool
+  , _wseKeepAliveDelay  :: !KeepAliveDelay
   }
 
-onConn :: (MonadIO m)
-       => L.Logger L.Hasura -> CorsPolicy -> WS.OnConnH m WSConnData
-onConn (L.Logger logger) corsPolicy wsId requestHead ipAddress = do
+onConn :: (MonadIO m, MonadReader WSServerEnv m)
+       => WS.OnConnH m WSConnData
+onConn wsId requestHead ipAddress = do
   res <- runExceptT $ do
     (errType, queryType) <- checkPath
     let reqHdrs = WS.requestHeaders requestHead
@@ -241,9 +243,10 @@ onConn (L.Logger logger) corsPolicy wsId requestHead ipAddress = do
   either reject accept res
 
   where
-    keepAliveAction wsConn = liftIO $ forever $ do
-      sendMsg wsConn SMConnKeepAlive
-      sleep $ seconds 5
+    keepAliveAction keepAliveDelay wsConn = do
+      liftIO $ forever $ do
+        sendMsg wsConn SMConnKeepAlive
+        sleep $ seconds (unKeepAliveDelay keepAliveDelay)
 
     tokenExpiryHandler wsConn = do
       expTime <- liftIO $ STM.atomically $ do
@@ -256,6 +259,8 @@ onConn (L.Logger logger) corsPolicy wsId requestHead ipAddress = do
       sleep $ convertDuration $ TC.diffUTCTime expTime currTime
 
     accept (hdrs, errType, queryType) = do
+      (L.Logger logger) <- asks _wseLogger
+      keepAliveDelay <- asks _wseKeepAliveDelay
       logger $ mkWsInfoLog Nothing (WsConnInfo wsId Nothing Nothing) EAccepted
       connData <- liftIO $ WSConnData
                   <$> STM.newTVarIO (CSNotInitialised hdrs ipAddress)
@@ -264,9 +269,9 @@ onConn (L.Logger logger) corsPolicy wsId requestHead ipAddress = do
                   <*> pure queryType
       let acceptRequest = WS.defaultAcceptRequest
                           { WS.acceptSubprotocol = Just "graphql-ws"}
-      return $ Right $ WS.AcceptWith connData acceptRequest keepAliveAction tokenExpiryHandler
-
+      return $ Right $ WS.AcceptWith connData acceptRequest (keepAliveAction keepAliveDelay) tokenExpiryHandler
     reject qErr = do
+      (L.Logger logger) <- asks _wseLogger
       logger $ mkWsErrorLog Nothing (WsConnInfo wsId Nothing Nothing) (ERejected qErr)
       return $ Left $ WS.RejectRequest
         (H.statusCode $ qeStatus qErr)
@@ -283,21 +288,24 @@ onConn (L.Logger logger) corsPolicy wsId requestHead ipAddress = do
     getOrigin =
       find ((==) "Origin" . fst) (WS.requestHeaders requestHead)
 
-    enforceCors origin reqHdrs = case cpConfig corsPolicy of
-      CCAllowAll -> return reqHdrs
-      CCDisabled readCookie ->
-        if readCookie
-        then return reqHdrs
-        else do
-          lift $ logger $ mkWsInfoLog Nothing (WsConnInfo wsId Nothing (Just corsNote)) EAccepted
-          return $ filter (\h -> fst h /= "Cookie") reqHdrs
-      CCAllowedOrigins ds
-        -- if the origin is in our cors domains, no error
-        | bsToTxt origin `elem` dmFqdns ds   -> return reqHdrs
-        -- if current origin is part of wildcard domain list, no error
-        | inWildcardList ds (bsToTxt origin) -> return reqHdrs
-        -- otherwise error
-        | otherwise                          -> corsErr
+    enforceCors origin reqHdrs = do
+      (L.Logger logger) <- asks _wseLogger
+      corsPolicy <- asks _wseCorsPolicy
+      case cpConfig corsPolicy of
+        CCAllowAll -> return reqHdrs
+        CCDisabled readCookie ->
+          if readCookie
+          then return reqHdrs
+          else do
+            lift $ logger $ mkWsInfoLog Nothing (WsConnInfo wsId Nothing (Just corsNote)) EAccepted
+            return $ filter (\h -> fst h /= "Cookie") reqHdrs
+        CCAllowedOrigins ds
+          -- if the origin is in our cors domains, no error
+          | bsToTxt origin `elem` dmFqdns ds   -> return reqHdrs
+          -- if current origin is part of wildcard domain list, no error
+          | inWildcardList ds (bsToTxt origin) -> return reqHdrs
+          -- otherwise error
+          | otherwise                          -> corsErr
 
     filterWsHeaders hdrs = flip filter hdrs $ \(n, _) ->
       n `notElem` [ "sec-websocket-key"
@@ -389,8 +397,10 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           logQueryLog logger q Nothing requestId
           ctx <- Tracing.currentContext
           (telemTimeIO_DT, resp) <- Tracing.interpTraceT
-            (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx . withUserInfo userInfo)
-            $ withElapsedTime tx
+            (liftEitherM . liftIO . runExceptT
+             . runLazyTx pgExecCtx Q.ReadWrite
+             . withTraceContext ctx . withUserInfo userInfo
+            ) $ withElapsedTime tx
           return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
         E.ExecStepRemote (rsi, opDef, varValsM) -> do
           runRemoteGQ fieldName execCtx requestId userInfo reqHdrs opDef rsi varValsM
@@ -442,7 +452,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       return $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) []
 
     WSServerEnv logger pgExecCtx lqMap getSchemaCache httpMgr _ sqlGenCtx {- planCache -}
-      _ enableAL = serverEnv
+      _ enableAL _keepAliveDelay = serverEnv
 
     WSConnData userInfoR opMap errRespTy queryType = WS.getData wsConn
 
@@ -648,9 +658,9 @@ onConnInit logger manager wsConn authMode connParamsM = do
       sendMsg wsConn $ SMConnErr connErr
 
     getIpAddress = \case
-      CSNotInitialised _ ip -> return ip
+      CSNotInitialised _ ip           -> return ip
       CSInitialised WsClientState{..} -> return wscsIpAddress
-      CSInitError e -> Left e
+      CSInitError e                   -> Left e
 
     mkHeaders st =
       paramHeaders ++ getClientHdrs st
@@ -688,14 +698,15 @@ createWSServerEnv
   -> CorsPolicy
   -> SQLGenCtx
   -> Bool
+  -> KeepAliveDelay
   -- -> E.PlanCache
   -> m WSServerEnv
 createWSServerEnv logger isPgCtx lqState getSchemaCache httpManager
-  corsPolicy sqlGenCtx enableAL {- planCache -} = do
+  corsPolicy sqlGenCtx enableAL keepAliveDelay {- planCache -} = do
   wsServer <- liftIO $ STM.atomically $ WS.createWSServer logger
   return $
     WSServerEnv logger isPgCtx lqState getSchemaCache httpManager corsPolicy
-    sqlGenCtx {- planCache -} wsServer enableAL
+    sqlGenCtx {- planCache -} wsServer enableAL keepAliveDelay
 
 createWSServerApp
   :: ( HasVersion
@@ -721,7 +732,7 @@ createWSServerApp env authMode serverEnv = \ !ipAddress !pendingConn ->
     handlers =
       WS.WSHandlers
       -- Mask async exceptions during event processing to help maintain integrity of mutable vars:
-      (\rid rh ip -> mask_ $ onConn (_wseLogger serverEnv) (_wseCorsPolicy serverEnv) rid rh ip)
+      (\rid rh ip -> mask_ $ flip runReaderT serverEnv $ onConn rid rh ip)
       (\conn bs -> mask_ $ onMessage env authMode serverEnv conn bs)
       (mask_ . onClose (_wseLogger serverEnv) (_wseLiveQMap serverEnv))
 

@@ -14,6 +14,7 @@ import qualified Database.PG.Query                            as Q
 
 import           Data.Text.Extended
 
+<<<<<<< HEAD
 import qualified Hasura.Backends.Postgres.Execute.Mutation    as RQL
 import qualified Hasura.Backends.Postgres.Execute.RemoteJoin  as RQL
 import qualified Hasura.Backends.Postgres.SQL.DML             as S
@@ -23,6 +24,17 @@ import qualified Hasura.Backends.Postgres.Translate.Returning as RQL
 import qualified Hasura.RQL.GBoolExp                          as RQL
 import qualified Hasura.RQL.IR.Insert                         as RQL
 import qualified Hasura.RQL.IR.Returning                      as RQL
+=======
+import qualified Hasura.Backends.Postgres.Execute.Mutation    as PGE
+import qualified Hasura.Backends.Postgres.Execute.RemoteJoin  as PGE
+import qualified Hasura.Backends.Postgres.SQL.DML             as S
+import qualified Hasura.Backends.Postgres.Translate.BoolExp   as PGT
+import qualified Hasura.Backends.Postgres.Translate.Insert    as PGT
+import qualified Hasura.Backends.Postgres.Translate.Mutation  as PGT
+import qualified Hasura.Backends.Postgres.Translate.Returning as PGT
+import qualified Hasura.RQL.IR.Insert                         as IR
+import qualified Hasura.RQL.IR.Returning                      as IR
+>>>>>>> master
 import qualified Hasura.Tracing                               as Tracing
 
 import           Hasura.Backends.Postgres.Connection
@@ -31,7 +43,10 @@ import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Schema.Insert
 import           Hasura.RQL.Types
+<<<<<<< HEAD
 import           Hasura.SQL.Types
+=======
+>>>>>>> master
 import           Hasura.Server.Version                        (HasVersion)
 
 
@@ -44,7 +59,7 @@ traverseAnnInsert f (AnnInsert fieldName isSingle (annIns, mutationOutput)) =
   AnnInsert fieldName isSingle
   <$> ( (,)
         <$> traverseMulti annIns
-        <*> RQL.traverseMutationOutput f mutationOutput
+        <*> IR.traverseMutationOutput f mutationOutput
       )
   where
     traverseMulti (AnnIns objs tableName conflictClause checkCond columns defaultValues) = AnnIns
@@ -78,13 +93,17 @@ convertToSQLTransaction
   :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m)
   => Env.Environment
   -> AnnInsert 'Postgres S.SQLExp
+<<<<<<< HEAD
   -> RQL.MutationRemoteJoinCtx
+=======
+  -> PGE.MutationRemoteJoinCtx
+>>>>>>> master
   -> Seq.Seq Q.PrepArg
   -> Bool
   -> m EncJSON
 convertToSQLTransaction env (AnnInsert fieldName isSingle (annIns, mutationOutput)) remoteJoinCtx planVars stringifyNum =
   if null $ _aiInsObj annIns
-  then pure $ RQL.buildEmptyMutResp mutationOutput
+  then pure $ IR.buildEmptyMutResp mutationOutput
   else withPaths ["selectionSet", fieldName, "args", suffix] $
     insertMultipleObjects env annIns [] remoteJoinCtx mutationOutput planVars stringifyNum
   where
@@ -96,8 +115,13 @@ insertMultipleObjects
   => Env.Environment
   -> MultiObjIns 'Postgres S.SQLExp
   -> [(PGCol, S.SQLExp)]
+<<<<<<< HEAD
   -> RQL.MutationRemoteJoinCtx
   -> RQL.MutationOutput 'Postgres
+=======
+  -> PGE.MutationRemoteJoinCtx
+  -> IR.MutationOutput 'Postgres
+>>>>>>> master
   -> Seq.Seq Q.PrepArg
   -> Bool
   -> m EncJSON
@@ -114,7 +138,7 @@ insertMultipleObjects env multiObjIns additionalColumns remoteJoinCtx mutationOu
         validateInsert (map fst column) [] (map fst additionalColumns)
       let columnValues = map (mkSQLRow defVals) $ union additionalColumns . _aioColumns <$> insObjs
           columnNames  = Map.keys defVals
-          insertQuery  = RQL.InsertQueryP1
+          insertQuery  = IR.InsertQueryP1
             table
             columnNames
             columnValues
@@ -125,7 +149,7 @@ insertMultipleObjects env multiObjIns additionalColumns remoteJoinCtx mutationOu
           rowCount = T.pack . show . length $ _aiInsObj multiObjIns
       Tracing.trace ("Insert (" <> rowCount <> ") " <> qualifiedObjectToText table) do
         Tracing.attachMetadata [("count", rowCount)]
-        RQL.execInsertQuery env stringifyNum (Just remoteJoinCtx) (insertQuery, planVars)
+        PGE.execInsertQuery env stringifyNum (Just remoteJoinCtx) (insertQuery, planVars)
 
     withRelsInsert = do
       insertRequests <- indexedForM insObjs \obj -> do
@@ -133,18 +157,17 @@ insertMultipleObjects env multiObjIns additionalColumns remoteJoinCtx mutationOu
         insertObject env singleObj additionalColumns remoteJoinCtx planVars stringifyNum
       let affectedRows = sum $ map fst insertRequests
           columnValues = mapMaybe snd insertRequests
-      selectExpr <- RQL.mkSelCTEFromColVals table columnInfos columnValues
-      let (mutOutputRJ, remoteJoins) = RQL.getRemoteJoinsMutationOutput mutationOutput
-          sqlQuery = Q.fromBuilder $ toSQL $
-                     RQL.mkMutationOutputExp table columnInfos (Just affectedRows) selectExpr mutOutputRJ stringifyNum
-      RQL.executeMutationOutputQuery env sqlQuery [] $ (,remoteJoinCtx) <$> remoteJoins
+      selectExpr <- PGT.mkSelectExpFromColumnValues table columnInfos columnValues
+      let (mutOutputRJ, remoteJoins) = PGE.getRemoteJoinsMutationOutput mutationOutput
+      PGE.executeMutationOutputQuery env table columnInfos (Just affectedRows) (PGT.MCSelectValues selectExpr)
+        mutOutputRJ stringifyNum [] $ (, remoteJoinCtx) <$> remoteJoins
 
 insertObject
   :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m)
   => Env.Environment
   -> SingleObjIns 'Postgres S.SQLExp
   -> [(PGCol, S.SQLExp)]
-  -> RQL.MutationRemoteJoinCtx
+  -> PGE.MutationRemoteJoinCtx
   -> Seq.Seq Q.PrepArg
   -> Bool
   -> m (Int, Maybe (ColumnValues TxtEncodedPGVal))
@@ -161,7 +184,8 @@ insertObject env singleObjIns additionalColumns remoteJoinCtx planVars stringify
 
   cte <- mkInsertQ table onConflict finalInsCols defaultValues checkCond
 
-  MutateResp affRows colVals <- liftTx $ RQL.mutateAndFetchCols table allColumns (cte, planVars) stringifyNum
+  MutateResp affRows colVals <- liftTx $
+    PGE.mutateAndFetchCols table allColumns (PGT.MCCheckConstraint cte, planVars) stringifyNum
   colValM <- asSingleObject colVals
 
   arrRelAffRows <- bool (withArrRels colValM) (return 0) $ null arrayRels
@@ -194,7 +218,7 @@ insertObjRel
   :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m)
   => Env.Environment
   -> Seq.Seq Q.PrepArg
-  -> RQL.MutationRemoteJoinCtx
+  -> PGE.MutationRemoteJoinCtx
   -> Bool
   -> ObjRelIns 'Postgres S.SQLExp
   -> m (Int, [(PGCol, S.SQLExp)])
@@ -223,7 +247,7 @@ insertArrRel
   :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m)
   => Env.Environment
   -> [(PGCol, S.SQLExp)]
-  -> RQL.MutationRemoteJoinCtx
+  -> PGE.MutationRemoteJoinCtx
   -> Seq.Seq Q.PrepArg
   -> Bool
   -> ArrRelIns 'Postgres S.SQLExp
@@ -241,7 +265,7 @@ insertArrRel env resCols remoteJoinCtx planVars stringifyNum arrRelIns =
   where
     RelIns multiObjIns relInfo = arrRelIns
     mapping   = riMapping relInfo
-    mutOutput = RQL.MOutMultirowFields [("affected_rows", RQL.MCount)]
+    mutOutput = IR.MOutMultirowFields [("affected_rows", IR.MCount)]
 
 -- | validate an insert object based on insert columns,
 -- | insert object relations and additional columns from parent
@@ -273,13 +297,17 @@ validateInsert insCols objRels addCols = do
 mkInsertQ
   :: MonadError QErr m
   => QualifiedTable
+<<<<<<< HEAD
   -> Maybe (RQL.ConflictClauseP1 'Postgres S.SQLExp)
+=======
+  -> Maybe (IR.ConflictClauseP1 'Postgres S.SQLExp)
+>>>>>>> master
   -> [(PGCol, S.SQLExp)]
   -> Map.HashMap PGCol S.SQLExp
   -> (AnnBoolExpSQL 'Postgres, Maybe (AnnBoolExpSQL 'Postgres))
   -> m S.CTE
 mkInsertQ table onConflictM insCols defVals (insCheck, updCheck) = do
-  let sqlConflict = RQL.toSQLConflict table <$> onConflictM
+  let sqlConflict = PGT.toSQLConflict table <$> onConflictM
       sqlExps = mkSQLRow defVals insCols
       valueExp = S.ValuesExp [S.TupleExp sqlExps]
       tableCols = Map.keys defVals
@@ -288,11 +316,9 @@ mkInsertQ table onConflictM insCols defVals (insCheck, updCheck) = do
           . Just
           $ S.RetExp
             [ S.selectStar
-            , S.Extractor
-                (RQL.insertOrUpdateCheckExpr table onConflictM
-                  (RQL.toSQLBoolExp (S.QualTable table) insCheck)
-                  (fmap (RQL.toSQLBoolExp (S.QualTable table)) updCheck))
-                Nothing
+            , PGT.insertOrUpdateCheckExpr table onConflictM
+              (PGT.toSQLBoolExp (S.QualTable table) insCheck)
+              (fmap (PGT.toSQLBoolExp (S.QualTable table)) updCheck)
             ]
   pure $ S.CTEInsert sqlInsert
 

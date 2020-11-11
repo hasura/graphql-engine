@@ -14,8 +14,11 @@ import qualified Database.PG.Query                  as Q
 
 import           Control.Lens
 import           Data.Aeson
+<<<<<<< HEAD
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+=======
+>>>>>>> master
 import           Data.Text.Extended
 import           Language.Haskell.TH.Syntax         (Lift)
 
@@ -23,6 +26,7 @@ import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
+<<<<<<< HEAD
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                (englishList, makeReasonMessage)
@@ -45,6 +49,11 @@ data RawFunctionInfo
 instance NFData RawFunctionInfo
 instance Cacheable RawFunctionInfo
 $(deriveJSON (aesonDrop 3 snakeCase) ''RawFunctionInfo)
+=======
+import           Hasura.RQL.Types
+import           Hasura.Server.Utils                (englishList, makeReasonMessage)
+
+>>>>>>> master
 
 mkFunctionArgs :: Int -> [QualifiedPGType] -> [FunctionArgName] -> [FunctionArg]
 mkFunctionArgs defArgsNo tys argNames =
@@ -185,17 +194,6 @@ newtype TrackFunction
   { tfName :: QualifiedFunction}
   deriving (Show, Eq, FromJSON, ToJSON, Lift)
 
-data FunctionConfig
-  = FunctionConfig
-  { _fcSessionArgument :: !(Maybe FunctionArgName)
-  } deriving (Show, Eq, Generic, Lift)
-instance NFData FunctionConfig
-instance Cacheable FunctionConfig
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields = True} ''FunctionConfig)
-
-emptyFunctionConfig :: FunctionConfig
-emptyFunctionConfig = FunctionConfig Nothing
-
 -- | Track function, Phase 1:
 -- Validate function tracking operation. Fails if function is already being
 -- tracked, or if a table with the same name is being tracked.
@@ -243,19 +241,6 @@ runTrackFunc
 runTrackFunc (TrackFunction qf)= do
   trackFunctionP1 qf
   trackFunctionP2 qf emptyFunctionConfig
-
-data TrackFunctionV2
-  = TrackFunctionV2
-  { _tfv2Function      :: !QualifiedFunction
-  , _tfv2Configuration :: !FunctionConfig
-  } deriving (Show, Eq, Lift, Generic)
-$(deriveToJSON (aesonDrop 5 snakeCase) ''TrackFunctionV2)
-
-instance FromJSON TrackFunctionV2 where
-  parseJSON = withObject "Object" $ \o ->
-    TrackFunctionV2
-    <$> o .: "function"
-    <*> o .:? "configuration" .!= emptyFunctionConfig
 
 runTrackFunctionV2
   :: ( QErrM m, CacheRWM m, HasSystemDefined m

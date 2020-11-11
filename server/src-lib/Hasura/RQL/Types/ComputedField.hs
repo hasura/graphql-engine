@@ -28,13 +28,23 @@ import           Hasura.SQL.Backend
 
 newtype ComputedFieldName =
   ComputedFieldName { unComputedFieldName :: NonEmptyText}
-  deriving (Show, Eq, NFData, Lift, FromJSON, ToJSON, Q.ToPrepArg, ToTxt, Hashable, Q.FromCol, Generic, Arbitrary, Cacheable)
+  deriving (Show, Eq, NFData, Lift, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, ToTxt, Hashable, Q.FromCol, Generic, Arbitrary, Cacheable)
 
 computedFieldNameToText :: ComputedFieldName -> Text
 computedFieldNameToText = unNonEmptyText . unComputedFieldName
 
 fromComputedField :: ComputedFieldName -> FieldName
 fromComputedField = FieldName . computedFieldNameToText
+
+data ComputedFieldDefinition
+  = ComputedFieldDefinition
+  { _cfdFunction        :: !QualifiedFunction
+  , _cfdTableArgument   :: !(Maybe FunctionArgName)
+  , _cfdSessionArgument :: !(Maybe FunctionArgName)
+  } deriving (Show, Eq, Lift, Generic)
+instance NFData ComputedFieldDefinition
+instance Cacheable ComputedFieldDefinition
+$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields = True} ''ComputedFieldDefinition)
 
 -- | The function table argument is either the very first argument or the named
 -- argument with an index. The index is 0 if the named argument is the first.
@@ -62,7 +72,11 @@ instance Cacheable FunctionSessionArgument
 instance ToJSON FunctionSessionArgument where
   toJSON (FunctionSessionArgument argName _) = toJSON argName
 
+<<<<<<< HEAD
 data ComputedFieldReturn (b :: Backend)
+=======
+data ComputedFieldReturn (b :: BackendType)
+>>>>>>> master
   = CFRScalar !(ScalarType b)
   | CFRSetofTable !QualifiedTable
   deriving (Generic)
@@ -91,7 +105,11 @@ data ComputedFieldFunction
 instance Cacheable ComputedFieldFunction
 $(deriveToJSON (aesonDrop 4 snakeCase) ''ComputedFieldFunction)
 
+<<<<<<< HEAD
 data ComputedFieldInfo (b :: Backend)
+=======
+data ComputedFieldInfo (b :: BackendType)
+>>>>>>> master
   = ComputedFieldInfo
   { _cfiName       :: !ComputedFieldName
   , _cfiFunction   :: !ComputedFieldFunction

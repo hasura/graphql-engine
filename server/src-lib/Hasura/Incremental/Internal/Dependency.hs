@@ -7,6 +7,8 @@ module Hasura.Incremental.Internal.Dependency where
 import           Hasura.Prelude
 
 import qualified Data.Dependent.Map            as DM
+import qualified Data.HashMap.Strict           as Map
+import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.URL.Template             as UT
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.URI.Extended          as N
@@ -196,6 +198,10 @@ instance (Cacheable a) => Cacheable (CI a) where
   unchanged _ = (==)
 instance (Cacheable a) => Cacheable (Set a) where
   unchanged = liftEq . unchanged
+instance (Hashable k, Cacheable k, Cacheable v) => Cacheable (InsOrdHashMap k v) where
+  unchanged accesses l r = unchanged accesses (toHashMap l) (toHashMap r)
+    where
+      toHashMap = Map.fromList . OMap.toList
 
 instance Cacheable ()
 instance (Cacheable a, Cacheable b) => Cacheable (a, b)

@@ -2,6 +2,7 @@ module Hasura.RQL.IR.Returning where
 
 import           Hasura.Prelude
 
+<<<<<<< HEAD
 import qualified Data.Aeson                       as J
 import qualified Data.HashMap.Strict.InsOrd       as OMap
 
@@ -13,10 +14,23 @@ import           Hasura.SQL.Backend
 
 
 data MutFldG (b :: Backend) v
+=======
+import qualified Data.Aeson                 as J
+import qualified Data.HashMap.Strict.InsOrd as OMap
+
+import           Hasura.EncJSON
+import           Hasura.RQL.IR.Select
+import           Hasura.RQL.Types.Common
+import           Hasura.SQL.Backend
+
+
+data MutFldG (b :: BackendType) v
+>>>>>>> master
   = MCount
   | MExp !Text
   | MRet !(AnnFieldsG b v)
 
+<<<<<<< HEAD
 type MutFld b = MutFldG b S.SQLExp
 
 type MutFldsG b v = Fields (MutFldG b v)
@@ -28,6 +42,19 @@ data MutationOutputG (b :: Backend) v
 type MutationOutput b = MutationOutputG b S.SQLExp
 
 type MutFlds b = MutFldsG b S.SQLExp
+=======
+type MutFld b = MutFldG b (SQLExp b)
+
+type MutFldsG b v = Fields (MutFldG b v)
+
+data MutationOutputG (b :: BackendType) v
+  = MOutMultirowFields !(MutFldsG b v)
+  | MOutSinglerowObject !(AnnFieldsG b v)
+
+type MutationOutput b = MutationOutputG b (SQLExp b)
+
+type MutFlds b = MutFldsG b (SQLExp b)
+>>>>>>> master
 
 buildEmptyMutResp :: MutationOutput backend -> EncJSON
 buildEmptyMutResp = \case

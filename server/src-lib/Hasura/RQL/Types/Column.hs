@@ -94,7 +94,11 @@ instance ToTxt PGColumnType where
     PGColumnScalar scalar                             -> toTxt scalar
     PGColumnEnumReference (EnumReference tableName _) -> toTxt tableName
 
+<<<<<<< HEAD
 type family ColumnType (b :: Backend) where
+=======
+type family ColumnType (b :: BackendType) where
+>>>>>>> master
   ColumnType 'Postgres = PGColumnType
   ColumnType 'MySQL    = Void -- TODO
 
@@ -147,7 +151,11 @@ parseTxtEncodedPGValue colTy val =
 -- | “Raw” column info, as stored in the catalog (but not in the schema cache). Instead of
 -- containing a 'PGColumnType', it only contains a 'PGScalarType', which is combined with the
 -- 'pcirReferences' field and other table data to eventually resolve the type to a 'PGColumnType'.
+<<<<<<< HEAD
 data RawColumnInfo (b :: Backend)
+=======
+data RawColumnInfo (b :: BackendType)
+>>>>>>> master
   = RawColumnInfo
   { prciName        :: !(Column b)
   , prciPosition    :: !Int
@@ -168,7 +176,11 @@ instance FromJSON (RawColumnInfo 'Postgres) where
 
 -- | “Resolved” column info, produced from a 'RawColumnInfo' value that has been combined with
 -- other schema information to produce a 'PGColumnType'.
+<<<<<<< HEAD
 data ColumnInfo (b :: Backend)
+=======
+data ColumnInfo (b :: BackendType)
+>>>>>>> master
   = ColumnInfo
   { pgiColumn      :: !(Column b)
   , pgiName        :: !G.Name

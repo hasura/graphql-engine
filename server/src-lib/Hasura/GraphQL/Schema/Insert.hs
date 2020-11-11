@@ -6,7 +6,11 @@ import qualified Hasura.RQL.IR.Insert               as RQL
 import qualified Hasura.RQL.IR.Returning            as RQL
 
 import           Hasura.Backends.Postgres.SQL.Types
+<<<<<<< HEAD
 import           Hasura.RQL.Types.BoolExp
+=======
+import           Hasura.RQL.IR.BoolExp
+>>>>>>> master
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend
@@ -30,14 +34,22 @@ import           Hasura.SQL.Backend
 -- quite likely that some of the information stored in those structures is
 -- redundant, and that they can be simplified.
 
+<<<<<<< HEAD
 data AnnInsert (b :: Backend) v
+=======
+data AnnInsert (b :: BackendType) v
+>>>>>>> master
   = AnnInsert
   { _aiFieldName :: !Text
   , _aiIsSingle  :: Bool
   , _aiData      :: AnnMultiInsert b v
   }
 
+<<<<<<< HEAD
 data AnnIns (b :: Backend) a v
+=======
+data AnnIns (b :: BackendType) a v
+>>>>>>> master
   = AnnIns
   { _aiInsObj         :: !a
   , _aiTableName      :: !QualifiedTable
@@ -59,7 +71,11 @@ data RelIns a
 type ObjRelIns b v = RelIns (SingleObjIns b v)
 type ArrRelIns b v = RelIns (MultiObjIns  b v)
 
+<<<<<<< HEAD
 data AnnInsObj (b :: Backend) v
+=======
+data AnnInsObj (b :: BackendType) v
+>>>>>>> master
   = AnnInsObj
   { _aioColumns :: ![(Column b, v)]
   , _aioObjRels :: ![ObjRelIns b v]

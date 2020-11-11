@@ -1,14 +1,7 @@
-module Hasura.RQL.Types.DML
-       ( BoolExp(..)
-       , ColExp(..)
-       , DMLQuery(..)
-       , OrderType(..)
-       , NullsOrder(..)
+module Hasura.RQL.DML.Types
+       ( OrderByExp(..)
 
-       , OrderByExp(..)
-       , OrderByItemG(..)
-       , OrderByItem
-       , OrderByCol(..)
+       , DMLQuery(..)
 
        , SelectG(..)
        , selectGToPairs
@@ -39,20 +32,26 @@ module Hasura.RQL.Types.DML
        ) where
 
 import           Hasura.Prelude
+<<<<<<< HEAD:server/src-lib/Hasura/RQL/Types/DML.hs
 
 import qualified Data.Attoparsec.Text               as AT
 import qualified Data.Attoparsec.Text               as Atto
 import qualified Data.Attoparsec.Types              as AttoT
 import qualified Data.HashMap.Strict                as M
 import qualified Data.Text                          as T
+=======
+>>>>>>> master:server/src-lib/Hasura/RQL/DML/Types.hs
 
-import           Control.Lens.TH
+import qualified Data.Attoparsec.Text               as AT
+import qualified Data.HashMap.Strict                as M
+
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Instances.TH.Lift                  ()
 import           Language.Haskell.TH.Syntax         (Lift)
 
+<<<<<<< HEAD:server/src-lib/Hasura/RQL/Types/DML.hs
 import qualified Hasura.Backends.Postgres.SQL.DML   as S
 
 import           Hasura.Backends.Postgres.SQL.Types
@@ -81,12 +80,51 @@ instance ToJSON BoolExp where
     where
       f (ColExp k v) =
         (getFieldNameTxt k,  v)
+=======
+import qualified Hasura.Backends.Postgres.SQL.DML   as PG
 
-instance FromJSON BoolExp where
-  parseJSON =
-    fmap BoolExp . parseGBoolExp f
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.RQL.IR.BoolExp
+import           Hasura.RQL.IR.OrderBy
+import           Hasura.RQL.Instances               ()
+import           Hasura.RQL.Types.Common            hiding (ConstraintName)
+import           Hasura.SQL.Backend
+
+
+newtype OrderByExp
+  = OrderByExp { getOrderByItems :: [OrderByItem 'Postgres] }
+  deriving (Show, Eq, Lift, ToJSON)
+>>>>>>> master:server/src-lib/Hasura/RQL/DML/Types.hs
+
+instance FromJSON OrderByExp where
+  parseJSON = \case
+    String s -> OrderByExp . pure <$> parseString s
+    Object o -> OrderByExp . pure <$> parseObject o
+    Array  a -> OrderByExp <$> for (toList a) \case
+      String s -> parseString s
+      Object o -> parseObject o
+      _        -> fail "expecting an object or string for order by"
+    _        -> fail "Expecting : array/string/object"
     where
-      f (k, v) = ColExp (FieldName k) <$> parseJSON v
+      parseString s = AT.parseOnly orderByParser s `onLeft`
+        const (fail "string format for 'order_by' entry : {+/-}column Eg : +posted")
+      parseObject o =
+        OrderByItemG
+        <$> o .:? "type"
+        <*> o .:  "column"
+        <*> o .:? "nulls"
+      orderByParser =
+        OrderByItemG
+        <$> orderTypeParser
+        <*> orderColumnParser
+        <*> pure Nothing
+      orderTypeParser = choice
+        [ "+" *> pure (Just PG.OTAsc)
+        , "-" *> pure (Just PG.OTDesc)
+        , pure Nothing
+        ]
+      orderColumnParser = AT.takeText >>= orderByColFromTxt
+
 
 data DMLQuery a
   = DMLQuery !QualifiedTable a
@@ -100,6 +138,7 @@ instance (FromJSON a) => FromJSON (DMLQuery a) where
   parseJSON _          =
     fail "Expected an object for query"
 
+<<<<<<< HEAD:server/src-lib/Hasura/RQL/Types/DML.hs
 newtype OrderType
   = OrderType { unOrderType :: S.OrderType }
   deriving (Show, Eq, Lift, Generic)
@@ -224,6 +263,8 @@ orderByParser =
            <|> ("-" *> return (Just $ OrderType S.OTDesc))
            <|> return Nothing
     colP = Atto.takeText >>= orderByColFromTxt
+=======
+>>>>>>> master:server/src-lib/Hasura/RQL/DML/Types.hs
 
 data SelectG a b c
   = SelectG
@@ -263,13 +304,15 @@ parseWildcard =
     fromList   = foldr1 (\_ x -> StarDot x)
 
 -- Columns in RQL
-data SelCol
+data SelCol (b :: BackendType)
   = SCStar !Wildcard
-  | SCExtSimple !PGCol
-  | SCExtRel !RelName !(Maybe RelName) !SelectQ
-  deriving (Show, Eq, Lift)
+  | SCExtSimple !(Column b)
+  | SCExtRel !RelName !(Maybe RelName) !(SelectQ b)
+deriving instance Eq   (SelCol 'Postgres)
+deriving instance Lift (SelCol 'Postgres)
+deriving instance Show (SelCol 'Postgres)
 
-instance FromJSON SelCol where
+instance FromJSON (SelCol 'Postgres) where
   parseJSON (String s) =
     case AT.parseOnly parseWildcard s of
     Left _  -> SCExtSimple <$> parseJSON (String s)
@@ -285,7 +328,7 @@ instance FromJSON SelCol where
     , "object (relationship)"
     ]
 
-instance ToJSON SelCol where
+instance ToJSON (SelCol 'Postgres) where
   toJSON (SCStar wc) = String $ wcToText wc
   toJSON (SCExtSimple s) = toJSON s
   toJSON (SCExtRel rn mrn selq) =
@@ -293,17 +336,13 @@ instance ToJSON SelCol where
              , "alias" .= mrn
              ] ++ selectGToPairs selq
 
-type SelectQ = SelectG SelCol BoolExp Int
-type SelectQT = SelectG SelCol BoolExp Value
+type SelectQ  b = SelectG (SelCol b) (BoolExp b) Int
+type SelectQT b = SelectG (SelCol b) (BoolExp b) Value
 
-type SelectQuery = DMLQuery SelectQ
-type SelectQueryT = DMLQuery SelectQT
+type SelectQuery  = DMLQuery (SelectQ  'Postgres)
+type SelectQueryT = DMLQuery (SelectQT 'Postgres)
 
-instance ToJSON SelectQuery where
-  toJSON (DMLQuery qt selQ) =
-    object $ "table" .= qt : selectGToPairs selQ
-
-instance ToJSON SelectQueryT where
+instance ToJSON a => ToJSON (DMLQuery (SelectG (SelCol 'Postgres) (BoolExp 'Postgres) a)) where
   toJSON (DMLQuery qt selQ) =
     object $ "table" .= qt : selectGToPairs selQ
 
@@ -367,7 +406,7 @@ type UpdVals = ColumnValues Value
 data UpdateQuery
   = UpdateQuery
   { uqTable     :: !QualifiedTable
-  , uqWhere     :: !BoolExp
+  , uqWhere     :: !(BoolExp 'Postgres)
   , uqSet       :: !UpdVals
   , uqInc       :: !UpdVals
   , uqMul       :: !UpdVals
@@ -402,7 +441,7 @@ instance ToJSON UpdateQuery where
 data DeleteQuery
   = DeleteQuery
   { doTable     :: !QualifiedTable
-  , doWhere     :: !BoolExp  -- where clause
+  , doWhere     :: !(BoolExp 'Postgres)  -- where clause
   , doReturning :: !(Maybe [PGCol]) -- columns returning
   } deriving (Show, Eq, Lift)
 
@@ -412,7 +451,7 @@ data CountQuery
   = CountQuery
   { cqTable    :: !QualifiedTable
   , cqDistinct :: !(Maybe [PGCol])
-  , cqWhere    :: !(Maybe BoolExp)
+  , cqWhere    :: !(Maybe (BoolExp 'Postgres))
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''CountQuery)
@@ -422,8 +461,8 @@ data QueryT
   | QTSelect !SelectQueryT
   | QTUpdate !UpdateQuery
   | QTDelete !DeleteQuery
-  | QTCount !CountQuery
-  | QTBulk ![QueryT]
+  | QTCount  !CountQuery
+  | QTBulk   ![QueryT]
   deriving (Show, Eq, Lift)
 
 $(deriveJSON

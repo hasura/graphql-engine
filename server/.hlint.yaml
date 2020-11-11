@@ -35,11 +35,14 @@
 # Will suggest replacing "wibbleMany [myvar]" with "wibbleOne myvar"
 # - error: {lhs: "wibbleMany [x]", rhs: wibbleOne x}
 
+<<<<<<< HEAD
 - warn: {lhs: "maybe (f x) f", rhs: "f . fromMaybe x"}
 - warn: {lhs: "either (f . g) (f . h)", rhs: "f . either g h"}
 - warn: {lhs: "onNothing x (return y)", rhs: "return (fromMaybe y x)"}
 - warn: {lhs: "onLeft x (return . f)", rhs: "return (either f id x)"}
 
+=======
+>>>>>>> master
 # Turn on hints that are off by default
 #
 # Ban "module X(module X) where", to require a real export list
@@ -93,8 +96,32 @@
     - package base
     rules:
     - warn: {lhs: "maybe b return a", rhs: "onNothing a b"}
+<<<<<<< HEAD
     - warn: {lhs: "maybe (return ()) b a", rhs: "onJust a b"}
     - warn: {lhs: "either b return a", rhs: "onLeft a b"}
+=======
+    - warn: {lhs: "maybe b pure a", rhs: "onNothing a b"}
+    - warn: {lhs: "maybe (return ()) b a", rhs: "onJust a b"}
+    - warn: {lhs: "maybe (pure ()) b a", rhs: "onJust a b"}
+    - warn: {lhs: "either b return a", rhs: "onLeft a b"}
+    - warn: {lhs: "either b pure a", rhs: "onLeft a b"}
+    - warn: {lhs: "maybe (f x) f", rhs: "f . fromMaybe x"}
+    - warn: {lhs: "maybe (f x) f", rhs: "f . fromMaybe x"}
+    - warn: {lhs: "either (f . g) (f . h)", rhs: "f . either g h"}
+    - warn: {lhs: "either (f . g) (f . h)", rhs: "f . either g h"}
+    - warn: {lhs: "onNothing x (return y)", rhs: "return (fromMaybe y x)"}
+    - warn: {lhs: "onNothing x (pure y)", rhs: "pure (fromMaybe y x)"}
+    - warn: {lhs: "onLeft x (return . f)", rhs: "return (either f id x)"}
+    - warn: {lhs: "onLeft x (pure . f)", rhs: "pure (either f id x)"}
+    - warn: {lhs: "case x of {Right a -> pure a; Left c -> d}", rhs: "onLeft x (\\ c -> d)"}
+    - warn: {lhs: "case x of {Left c -> d; Right a -> pure a}", rhs: "onLeft x (\\ c -> d)"}
+    - warn: {lhs: "case x of {Right a -> return a; Left c -> d}", rhs: "onLeft x (\\ c -> d)"}
+    - warn: {lhs: "case x of {Left c -> d; Right a -> return a}", rhs: "onLeft x (\\ c -> d)"}
+    - warn: {lhs: "case x of {Nothing -> a; Just b -> pure b}", rhs: "onNothing x a"}
+    - warn: {lhs: "case x of {Just b -> pure b; Nothing -> a}", rhs: "onNothing x a"}
+    - warn: {lhs: "case x of {Nothing -> a; Just b -> return b}", rhs: "onNothing x a"}
+    - warn: {lhs: "case x of {Just b -> return b; Nothing -> a}", rhs: "onNothing x a"}
+>>>>>>> master
 
 - group:
     name: data-text-extended

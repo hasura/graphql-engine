@@ -1,12 +1,19 @@
-module Hasura.RQL.DDL.Relationship.Types where
+module Hasura.RQL.Types.Relationship where
 
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Incremental                 (Cacheable)
 import           Hasura.Prelude
+<<<<<<< HEAD:server/src-lib/Hasura/RQL/DDL/Relationship/Types.hs
 
 import qualified Data.HashMap.Strict                as HM
+=======
+>>>>>>> master:server/src-lib/Hasura/RQL/Types/Relationship.hs
 
+import           Control.Lens                       (makeLenses)
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
+<<<<<<< HEAD:server/src-lib/Hasura/RQL/DDL/Relationship/Types.hs
 import           Instances.TH.Lift                  ()
 import           Language.Haskell.TH.Syntax         (Lift)
 
@@ -18,9 +25,24 @@ data RelDef a
   { rdName    :: !RelName
   , rdUsing   :: !a
   , rdComment :: !(Maybe Text)
-  } deriving (Show, Eq, Lift, Generic)
+=======
+import           Hasura.RQL.Types.Common
+import           Instances.TH.Lift                  ()
+import           Language.Haskell.TH.Syntax         (Lift)
 
-$(deriveFromJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RelDef)
+import qualified Data.HashMap.Strict                as HM
+import qualified Data.Text                          as T
+
+data RelDef a
+  = RelDef
+  { _rdName    :: !RelName
+  , _rdUsing   :: !a
+  , _rdComment :: !(Maybe T.Text)
+>>>>>>> master:server/src-lib/Hasura/RQL/Types/Relationship.hs
+  } deriving (Show, Eq, Lift, Generic)
+instance (Cacheable a) => Cacheable (RelDef a)
+$(deriveFromJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''RelDef)
+$(makeLenses ''RelDef)
 
 instance (ToJSON a) => ToJSON (RelDef a) where
   toJSON = object . toAesonPairs
@@ -37,6 +59,7 @@ data RelManualConfig
   { rmTable   :: !QualifiedTable
   , rmColumns :: !(HashMap PGCol PGCol)
   } deriving (Show, Eq, Lift, Generic)
+instance Cacheable RelManualConfig
 
 instance FromJSON RelManualConfig where
   parseJSON (Object v) =
@@ -57,6 +80,7 @@ data RelUsing a
   = RUFKeyOn !a
   | RUManual !RelManualConfig
   deriving (Show, Eq, Lift, Generic)
+instance (Cacheable a) => Cacheable (RelUsing a)
 
 instance (ToJSON a) => ToJSON (RelUsing a) where
   toJSON (RUFKeyOn fkey) =
@@ -82,6 +106,7 @@ data ArrRelUsingFKeyOn
   { arufTable  :: !QualifiedTable
   , arufColumn :: !PGCol
   } deriving (Show, Eq, Lift, Generic)
+instance Cacheable ArrRelUsingFKeyOn
 
 $(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''ArrRelUsingFKeyOn)
 
@@ -97,10 +122,16 @@ data DropRel
   = DropRel
   { drTable        :: !QualifiedTable
   , drRelationship :: !RelName
-  , drCascade      :: !(Maybe Bool)
+  , drCascade      :: !Bool
   } deriving (Show, Eq, Lift)
+$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DropRel)
 
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DropRel)
+instance FromJSON DropRel where
+  parseJSON = withObject "Object" $ \o ->
+    DropRel
+      <$> o .: "table"
+      <*> o .: "relationship"
+      <*> o .:? "cascade" .!= False
 
 data SetRelComment
   = SetRelComment
@@ -108,8 +139,13 @@ data SetRelComment
   , arRelationship :: !RelName
   , arComment      :: !(Maybe Text)
   } deriving (Show, Eq, Lift)
-
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SetRelComment)
+$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SetRelComment)
+instance FromJSON SetRelComment where
+  parseJSON = withObject "Object" $ \o ->
+    SetRelComment
+      <$> o .: "table"
+      <*> o .: "relationship"
+      <*> o .:? "comment"
 
 data RenameRel
   = RenameRel
@@ -117,5 +153,11 @@ data RenameRel
   , rrName    :: !RelName
   , rrNewName :: !RelName
   } deriving (Show, Eq, Lift)
+$(deriveToJSON (aesonDrop 2 snakeCase) ''RenameRel)
 
-$(deriveJSON (aesonDrop 2 snakeCase) ''RenameRel)
+instance FromJSON RenameRel where
+  parseJSON = withObject "Object" $ \o ->
+    RenameRel
+      <$> o .: "table"
+      <*> o .: "name"
+      <*> o .: "new_name"

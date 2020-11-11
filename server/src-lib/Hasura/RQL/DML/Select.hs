@@ -23,19 +23,32 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.Select
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
+<<<<<<< HEAD
+=======
+import           Hasura.RQL.DML.Types
+import           Hasura.RQL.IR.OrderBy
+>>>>>>> master
 import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 
+<<<<<<< HEAD
 type SelectQExt b = SelectG (ExtCol b) BoolExp Int
+=======
+type SelectQExt b = SelectG (ExtCol b) (BoolExp b) Int
+>>>>>>> master
 
 -- Columns in RQL
 -- This technically doesn't need to be generalized to all backends as
 -- it is specific to this module; however the generalization work was
 -- already done, and there's no particular reason to force this to be
 -- specific.
+<<<<<<< HEAD
 data ExtCol (b :: Backend)
+=======
+data ExtCol (b :: BackendType)
+>>>>>>> master
   = ECSimple !(Column b)
   | ECRel !RelName !(Maybe RelName) !(SelectQExt b)
 deriving instance Lift (ExtCol 'Postgres)
@@ -64,7 +77,11 @@ instance FromJSON (ExtCol 'Postgres) where
 convSelCol :: (UserInfoM m, QErrM m, CacheRM m)
            => FieldInfoMap (FieldInfo 'Postgres)
            -> SelPermInfo 'Postgres
+<<<<<<< HEAD
            -> SelCol
+=======
+           -> SelCol 'Postgres
+>>>>>>> master
            -> m [ExtCol 'Postgres]
 convSelCol _ _ (SCExtSimple cn) =
   return [ECSimple cn]
@@ -113,7 +130,11 @@ convWildcard fieldInfoMap selPermInfo wildcard =
 resolveStar :: (UserInfoM m, QErrM m, CacheRM m)
             => FieldInfoMap (FieldInfo 'Postgres)
             -> SelPermInfo 'Postgres
+<<<<<<< HEAD
             -> SelectQ
+=======
+            -> SelectQ 'Postgres
+>>>>>>> master
             -> m (SelectQExt 'Postgres)
 resolveStar fim spi (SelectG selCols mWh mOb mLt mOf) = do
   procOverrides <- fmap (concat . catMaybes) $ withPathK "columns" $
