@@ -18,7 +18,7 @@ import { setPromptValue } from '../../../helpers/common';
 const userId = 5555;
 
 export const createTable = (name: string, dict: TableFields) => {
-  cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
+  cy.url().should('eq', `${baseUrl}/data/default/schema/public/table/add`);
   cy.get(getElementFromAlias('tableName')).type(`${name}_table_vt`);
   const keys = Object.keys(dict).map(k => k);
   const values = Object.keys(dict).map(k => dict[k]);
@@ -34,7 +34,7 @@ export const createTable = (name: string, dict: TableFields) => {
   cy.wait(7000);
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${name}_table_vt/modify`
+    `${baseUrl}/data/default/schema/public/tables/${name}_table_vt/modify`
   );
 
   validateCT(`${name}_table_vt`, ResultType.SUCCESS);
@@ -69,7 +69,7 @@ export const passVCreateMaterializedViews = () => {
 };
 
 export const passTrackTable = () => {
-  cy.visit('/data');
+  cy.visit('/data/default/schema/public/');
   cy.wait(7000);
   cy.get(
     getElementFromAlias('add-track-table-author_average_rating_vt')
@@ -83,7 +83,7 @@ export const passMaterializedViewRoute = () => {
   cy.get(getElementFromAlias('author_average_rating_vt')).click();
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/views/author_average_rating_vt/browse`
+    `${baseUrl}/data/default/schema/public/views/author_average_rating_vt/browse`
   );
 };
 
