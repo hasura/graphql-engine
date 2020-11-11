@@ -76,6 +76,11 @@ const makeRequest = (
       down: downQuery.args,
     };
 
+    const upQueriesContainsRunSQL =
+      upQueries.filter(query => query.type === 'run_sql').length > 0;
+    const downQueriesContainsRunSQL =
+      downQueries.filter(query => query.type === 'run_sql').length > 0;
+
     const currMigrationMode = getState().main.migrationMode;
 
     let migrateUrl = returnMigrateUrl(currMigrationMode);
@@ -87,6 +92,11 @@ const makeRequest = (
     } else if (globals.consoleMode === CLI_CONSOLE_MODE) {
       finalReqBody = migrationBody;
     }
+
+    if (upQueriesContainsRunSQL || downQueriesContainsRunSQL) {
+      migrateUrl = Endpoints.queryV2;
+    }
+
     const url = migrateUrl;
     const options = {
       method: 'POST',
