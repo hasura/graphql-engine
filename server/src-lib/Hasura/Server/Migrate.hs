@@ -95,7 +95,7 @@ migrateCatalog
      , MonadUnique m
      , HasHttpManager m
      , HasSQLGenCtx m
-     , HasEnableRemoteSchemaPermsCtx m
+     , HasRemoteSchemaPermsCtx m
      )
   => Env.Environment
   -> UTCTime

@@ -81,8 +81,7 @@ runApp env (HGEOptionsG rci hgeCmd) =
       (InitCtx{..}, _) <- initialiseCtx env hgeCmd rci
       queryBs <- liftIO BL.getContents
       let sqlGenCtx = SQLGenCtx False
-          enableRSPermsCtx = EnableRemoteSchemaPermsCtx False
-      res <- runAsAdmin _icPgPool sqlGenCtx enableRSPermsCtx _icHttpManager  $ do
+      res <- runAsAdmin _icPgPool sqlGenCtx Disabled _icHttpManager  $ do
         schemaCache <- buildRebuildableSchemaCache env
         execQuery env queryBs
           & Tracing.runTraceTWithReporter Tracing.noReporter "execute"
@@ -94,9 +93,8 @@ runApp env (HGEOptionsG rci hgeCmd) =
     HCDowngrade opts -> do
       (InitCtx{..}, initTime) <- initialiseCtx env hgeCmd rci
       let sqlGenCtx = SQLGenCtx False
-          enableRSPermsCtx = EnableRemoteSchemaPermsCtx False
       res <- downgradeCatalog opts initTime
-             & runAsAdmin _icPgPool sqlGenCtx enableRSPermsCtx _icHttpManager
+             & runAsAdmin _icPgPool sqlGenCtx Disabled _icHttpManager
       either (printErrJExit DowngradeProcessError) (liftIO . print) res
 
     HCVersion -> liftIO $ putStrLn $ "Hasura GraphQL Engine: " ++ convertText currentVersion

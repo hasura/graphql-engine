@@ -53,7 +53,7 @@ buildGQLContext
      , MonadIO m
      , MonadUnique m
      , HasSQLGenCtx m
-     , HasEnableRemoteSchemaPermsCtx m
+     , HasRemoteSchemaPermsCtx m
      )
   => ( GraphQLQueryType
      , TableCache
@@ -70,15 +70,14 @@ buildGQLContext =
   proc (queryType, allTables, allFunctions, allRemoteSchemas, allActions, nonObjectCustomTypes) -> do
 
     SQLGenCtx{ stringifyNum } <- bindA -< askSQLGenCtx
-    isEnabledRemoteSchemaPerms <-
-      bindA -< enableRemoteSchemaPerms <$> askEnableRemoteSchemaPermsCtx
+    remoteSchemaPermsCtx <- bindA -< askRemoteSchemaPermsCtx
 
     let remoteSchemasRoles = concatMap (Map.keys . _rscpPermissions . fst . snd) $ Map.toList allRemoteSchemas
 
     let allRoles = Set.insert adminRoleName $
              (allTables ^.. folded.tiRolePermInfoMap.to Map.keys.folded)
           <> (allActionInfos ^.. folded.aiPermissions.to Map.keys.folded)
-          <> (Set.fromList $ (bool mempty remoteSchemasRoles $ isEnabledRemoteSchemaPerms))
+          <> (Set.fromList $ (bool mempty remoteSchemasRoles $ remoteSchemaPermsCtx == Enabled))
         allActionInfos = Map.elems allActions
         queryRemotesMap =
           fmap (map fDefinition . piQuery . rscParsed . _rscpContext . fst) allRemoteSchemas
@@ -117,12 +116,12 @@ buildGQLContext =
           case queryType of
             QueryHasura ->
               buildRoleContext queryContext allTables allFunctions allRemoteSchemas allActionInfos
-              nonObjectCustomTypes remotes roleName isEnabledRemoteSchemaPerms
+              nonObjectCustomTypes remotes roleName remoteSchemaPermsCtx
             QueryRelay ->
               buildRelayRoleContext queryContext allTables allFunctions allActionInfos
               nonObjectCustomTypes adminMutationRemotes roleName
       )
-    unauthenticated <- bindA -< unauthenticatedContext adminQueryRemotes adminMutationRemotes isEnabledRemoteSchemaPerms
+    unauthenticated <- bindA -< unauthenticatedContext adminQueryRemotes adminMutationRemotes remoteSchemaPermsCtx
     returnA -< (roleContexts, unauthenticated)
 
 runMonadSchema
@@ -158,17 +157,17 @@ buildRoleContext
   -> [ActionInfo 'Postgres] -> NonObjectTypeMap
   -> [( RemoteSchemaName , ParsedIntrospection)]
   -> RoleName
-  -> Bool
+  -> RemoteSchemaPermsCtx
   -> m (RoleContext GQLContext)
 buildRoleContext queryContext (takeValidTables -> allTables) (takeValidFunctions -> allFunctions)
-  allRemoteSchemas allActionInfos nonObjectCustomTypes remotes roleName isEnabledRemoteSchemaPerms = do
+  allRemoteSchemas allActionInfos nonObjectCustomTypes remotes roleName remoteSchemaPermsCtx = do
 
   roleBasedRemoteSchemas <-
-    if | roleName == adminRoleName  -> pure remotes
-       | isEnabledRemoteSchemaPerms -> buildRoleBasedRemoteSchemaParser roleName allRemoteSchemas
+    if | roleName == adminRoleName       -> pure remotes
+       | remoteSchemaPermsCtx == Enabled -> buildRoleBasedRemoteSchemaParser roleName allRemoteSchemas
        -- when remote schema permissions are not enabled, then remote schemas
        -- are a public entity which is accesible to all the roles
-       | otherwise                  -> pure remotes
+       | otherwise                       -> pure remotes
 
   let queryRemotes    = getQueryRemotes $ snd <$> roleBasedRemoteSchemas
       mutationRemotes = getMutationRemotes $ snd <$> roleBasedRemoteSchemas
@@ -297,11 +296,12 @@ unauthenticatedContext
      )
   => [P.FieldParser (P.ParseT Identity) RemoteField]
   -> [P.FieldParser (P.ParseT Identity) RemoteField]
-  -> Bool
+  -> RemoteSchemaPermsCtx
   -> m GQLContext
-unauthenticatedContext adminQueryRemotes adminMutationRemotes isEnabledRemoteSchemaPerms = P.runSchemaT $ do
-  let queryFields = bool (fmap (fmap RFRemote) adminQueryRemotes) [] isEnabledRemoteSchemaPerms
-      mutationFields = bool (fmap (fmap RFRemote) adminMutationRemotes) [] isEnabledRemoteSchemaPerms
+unauthenticatedContext adminQueryRemotes adminMutationRemotes remoteSchemaPermsCtx = P.runSchemaT $ do
+  let isRemoteSchemaPermsEnabled = remoteSchemaPermsCtx == Enabled
+      queryFields = bool (fmap (fmap RFRemote) adminQueryRemotes) [] isRemoteSchemaPermsEnabled
+      mutationFields = bool (fmap (fmap RFRemote) adminMutationRemotes) [] isRemoteSchemaPermsEnabled
   mutationParser <-
     if null adminMutationRemotes
     then pure Nothing

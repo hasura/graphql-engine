@@ -68,7 +68,7 @@ buildRebuildableSchemaCache
      , MonadTx m
      , HasHttpManager m
      , HasSQLGenCtx m
-     , HasEnableRemoteSchemaPermsCtx m
+     , HasRemoteSchemaPermsCtx m
      )
   => Env.Environment
   -> m (RebuildableSchemaCache m)
@@ -85,7 +85,7 @@ newtype CacheRWT m a
   = CacheRWT (StateT (RebuildableSchemaCache m, CacheInvalidations) m a)
   deriving
     ( Functor, Applicative, Monad, MonadIO, MonadUnique, MonadReader r, MonadError e, MonadTx
-    , UserInfoM, HasHttpManager, HasSQLGenCtx, HasSystemDefined, HasEnableRemoteSchemaPermsCtx )
+    , UserInfoM, HasHttpManager, HasSQLGenCtx, HasSystemDefined, HasRemoteSchemaPermsCtx )
 
 runCacheRWT
   :: Functor m
@@ -124,7 +124,7 @@ buildSchemaCacheRule
   -- what we want!
   :: ( HasVersion, ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
      , MonadIO m, MonadUnique m, MonadTx m
-     , MonadReader BuildReason m, HasHttpManager m, HasSQLGenCtx m, HasEnableRemoteSchemaPermsCtx m)
+     , MonadReader BuildReason m, HasHttpManager m, HasSQLGenCtx m, HasRemoteSchemaPermsCtx m)
   => Env.Environment
   -> (CatalogMetadata, InvalidationKeys) `arr` SchemaCache
 buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do

@@ -9,8 +9,8 @@ module Hasura.RQL.Types
   , SQLGenCtx(..)
   , HasSQLGenCtx(..)
 
-  , EnableRemoteSchemaPermsCtx(..)
-  , HasEnableRemoteSchemaPermsCtx(..)
+  , RemoteSchemaPermsCtx(..)
+  , HasRemoteSchemaPermsCtx(..)
 
   , HasSystemDefined(..)
   , HasSystemDefinedT
@@ -156,29 +156,26 @@ instance (HasHttpManager m) => HasHttpManager (TraceT m) where
 -- instance (Monoid w, HasGCtxMap m) => HasGCtxMap (WriterT w m) where
 --   askGCtxMap = lift askGCtxMap
 
-newtype EnableRemoteSchemaPermsCtx
-  = EnableRemoteSchemaPermsCtx
-  { enableRemoteSchemaPerms :: Bool
-  } deriving (Show, Eq)
+data RemoteSchemaPermsCtx = Enabled | Disabled deriving (Show, Eq)
 
-class (Monad m) => HasEnableRemoteSchemaPermsCtx m where
-  askEnableRemoteSchemaPermsCtx :: m EnableRemoteSchemaPermsCtx
+class (Monad m) => HasRemoteSchemaPermsCtx m where
+  askRemoteSchemaPermsCtx :: m RemoteSchemaPermsCtx
 
-instance (HasEnableRemoteSchemaPermsCtx m)
-         => HasEnableRemoteSchemaPermsCtx (ReaderT r m) where
-  askEnableRemoteSchemaPermsCtx = lift askEnableRemoteSchemaPermsCtx
-instance (HasEnableRemoteSchemaPermsCtx m)
-         => HasEnableRemoteSchemaPermsCtx (StateT s m) where
-  askEnableRemoteSchemaPermsCtx = lift askEnableRemoteSchemaPermsCtx
-instance (Monoid w, HasEnableRemoteSchemaPermsCtx m)
-         => HasEnableRemoteSchemaPermsCtx (WriterT w m) where
-  askEnableRemoteSchemaPermsCtx = lift askEnableRemoteSchemaPermsCtx
-instance (HasEnableRemoteSchemaPermsCtx m)
-         => HasEnableRemoteSchemaPermsCtx (TableCoreCacheRT m) where
-  askEnableRemoteSchemaPermsCtx = lift askEnableRemoteSchemaPermsCtx
-instance (HasEnableRemoteSchemaPermsCtx m)
-         => HasEnableRemoteSchemaPermsCtx (TraceT m) where
-  askEnableRemoteSchemaPermsCtx = lift askEnableRemoteSchemaPermsCtx
+instance (HasRemoteSchemaPermsCtx m)
+         => HasRemoteSchemaPermsCtx (ReaderT r m) where
+  askRemoteSchemaPermsCtx = lift askRemoteSchemaPermsCtx
+instance (HasRemoteSchemaPermsCtx m)
+         => HasRemoteSchemaPermsCtx (StateT s m) where
+  askRemoteSchemaPermsCtx = lift askRemoteSchemaPermsCtx
+instance (Monoid w, HasRemoteSchemaPermsCtx m)
+         => HasRemoteSchemaPermsCtx (WriterT w m) where
+  askRemoteSchemaPermsCtx = lift askRemoteSchemaPermsCtx
+instance (HasRemoteSchemaPermsCtx m)
+         => HasRemoteSchemaPermsCtx (TableCoreCacheRT m) where
+  askRemoteSchemaPermsCtx = lift askRemoteSchemaPermsCtx
+instance (HasRemoteSchemaPermsCtx m)
+         => HasRemoteSchemaPermsCtx (TraceT m) where
+  askRemoteSchemaPermsCtx = lift askRemoteSchemaPermsCtx
 
 newtype SQLGenCtx
   = SQLGenCtx
@@ -215,7 +212,7 @@ newtype HasSystemDefinedT m a
   = HasSystemDefinedT { unHasSystemDefinedT :: ReaderT SystemDefined m a }
   deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO, MonadUnique, MonadError e, MonadTx
            , HasHttpManager, HasSQLGenCtx, TableCoreInfoRM, CacheRM, CacheRWM, UserInfoM
-           , HasEnableRemoteSchemaPermsCtx)
+           , HasRemoteSchemaPermsCtx)
 
 runHasSystemDefinedT :: SystemDefined -> HasSystemDefinedT m a -> m a
 runHasSystemDefinedT systemDefined = flip runReaderT systemDefined . unHasSystemDefinedT

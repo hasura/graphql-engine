@@ -200,9 +200,9 @@ runQuery
   :: (HasVersion, MonadIO m, MonadError QErr m, Tracing.MonadTrace m)
   => Env.Environment -> PGExecCtx -> InstanceId
   -> UserInfo -> RebuildableSchemaCache Run -> HTTP.Manager
-  -> SQLGenCtx -> EnableRemoteSchemaPermsCtx -> SystemDefined
+  -> SQLGenCtx -> RemoteSchemaPermsCtx -> SystemDefined
   -> RQLQuery -> m (EncJSON, RebuildableSchemaCache Run)
-runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx enableRSPermsCtx systemDefined query = do
+runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx remoteSchemaPermsCtx systemDefined query = do
   accessMode <- getQueryAccessMode query
   traceCtx <- Tracing.currentContext
   resE <- runQueryM env query & Tracing.interpTraceT \x -> do
@@ -216,7 +216,7 @@ runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx enableRSPermsCtx sy
       (\((js, meta), rsc, ci) -> (Right (js, rsc, ci), meta)) a)
   either throwError withReload resE
   where
-    runCtx = RunCtx userInfo hMgr sqlGenCtx enableRSPermsCtx
+    runCtx = RunCtx userInfo hMgr sqlGenCtx remoteSchemaPermsCtx
     withReload (result, updatedCache, invalidations) = do
       when (queryModifiesSchemaCache query) $ do
         e <- liftIO $ runExceptT $ runLazyTx pgExecCtx Q.ReadWrite $ liftTx $
@@ -360,7 +360,7 @@ reconcileAccessModes (Just mode1) (Just mode2)
 runQueryM
   :: ( HasVersion, QErrM m, CacheRWM m, UserInfoM m, MonadTx m
      , MonadIO m, MonadUnique m, HasHttpManager m, HasSQLGenCtx m
-     , HasEnableRemoteSchemaPermsCtx m
+     , HasRemoteSchemaPermsCtx m
      , HasSystemDefined m
      , Tracing.MonadTrace m
      )

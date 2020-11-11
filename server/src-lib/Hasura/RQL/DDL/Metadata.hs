@@ -76,7 +76,7 @@ runClearMetadata _ = do
   buildSchemaCacheStrict
   return successMsg
 
-saveMetadata :: (MonadTx m, HasSystemDefined m, HasEnableRemoteSchemaPermsCtx m) => Metadata -> m ()
+saveMetadata :: (MonadTx m, HasSystemDefined m, HasRemoteSchemaPermsCtx m) => Metadata -> m ()
 saveMetadata (Metadata tables functions
               remoteSchemas collections allowlist customTypes actions cronTriggers) = do
 
@@ -142,8 +142,8 @@ saveMetadata (Metadata tables functions
             -- remote schema permissions should allowed to be added only
             -- when the graphql-engine is started with remote schema
             -- permissions enabled
-            isRSPermsEnabled <- enableRemoteSchemaPerms <$> askEnableRemoteSchemaPermsCtx
-            unless isRSPermsEnabled $ do
+            remoteSchemaPermsCtx <- askRemoteSchemaPermsCtx
+            unless (remoteSchemaPermsCtx == Enabled) $ do
               throw400 ConstraintViolation
                 $ "remote schema permissions can only be added when "
                 <> "remote schema permissions are enabled in the graphql-engine"
@@ -179,7 +179,7 @@ runReplaceMetadata
   :: ( MonadTx m
      , CacheRWM m
      , HasSystemDefined m
-     , HasEnableRemoteSchemaPermsCtx m
+     , HasRemoteSchemaPermsCtx m
      )
   => Metadata -> m EncJSON
 runReplaceMetadata metadata = do

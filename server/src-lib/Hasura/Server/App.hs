@@ -110,7 +110,7 @@ data ServerCtx
   , scEkgStore                     :: !EKG.Store
   , scResponseInternalErrorsConfig :: !ResponseInternalErrorsConfig
   , scEnvironment                  :: !Env.Environment
-  , scEnableRemoteSchemaPermsCtx   :: !EnableRemoteSchemaPermsCtx
+  , scRemoteSchemaPermsCtx   :: !RemoteSchemaPermsCtx
   }
 
 data HandlerCtx
@@ -363,8 +363,8 @@ v1QueryHandler query = do
       pgExecCtx        <- asks (scPGExecCtx . hcServerCtx)
       instanceId       <- asks (scInstanceId . hcServerCtx)
       env              <- asks (scEnvironment . hcServerCtx)
-      enableRSPermsCtx <- asks (scEnableRemoteSchemaPermsCtx . hcServerCtx)
-      runQuery env pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx enableRSPermsCtx (SystemDefined False) query
+      remoteSchemaPermsCtx <- asks (scRemoteSchemaPermsCtx . hcServerCtx)
+      runQuery env pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx remoteSchemaPermsCtx (SystemDefined False) query
 
 v1Alpha1GQHandler
   :: ( HasVersion
@@ -602,7 +602,7 @@ mkWaiApp
   -> Maybe EL.LiveQueryPostPollHook
   -> (RebuildableSchemaCache Run, Maybe UTCTime)
   -> EKG.Store
-  -> EnableRemoteSchemaPermsCtx
+  -> RemoteSchemaPermsCtx
   -> WS.ConnectionOptions
   -> KeepAliveDelay
   -> m HasuraApp
@@ -623,22 +623,22 @@ mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpMana
                                         corsPolicy sqlGenCtx enableAL keepAliveDelay {- planCache -}
 
     let serverCtx = ServerCtx
-                    { scPGExecCtx       =  pgExecCtx
-                    , scConnInfo        =  ci
-                    , scLogger          =  logger
-                    , scCacheRef        =  schemaCacheRef
-                    , scAuthMode        =  mode
-                    , scManager         =  httpManager
-                    , scSQLGenCtx       =  sqlGenCtx
-                    , scEnabledAPIs     =  apis
-                    , scInstanceId      =  instanceId
-                    -- , scPlanCache       =  planCache
-                    , scLQState         =  lqState
-                    , scEnableAllowlist =  enableAL
-                    , scEkgStore        =  ekgStore
-                    , scEnvironment     =  env
+                    { scPGExecCtx                    =  pgExecCtx
+                    , scConnInfo                     =  ci
+                    , scLogger                       =  logger
+                    , scCacheRef                     =  schemaCacheRef
+                    , scAuthMode                     =  mode
+                    , scManager                      =  httpManager
+                    , scSQLGenCtx                    =  sqlGenCtx
+                    , scEnabledAPIs                  =  apis
+                    , scInstanceId                   =  instanceId
+                    -- , scPlanCache                    =  planCache
+                    , scLQState                      =  lqState
+                    , scEnableAllowlist              =  enableAL
+                    , scEkgStore                     =  ekgStore
+                    , scEnvironment                  =  env
                     , scResponseInternalErrorsConfig = responseErrorsConfig
-                    , scEnableRemoteSchemaPermsCtx = enableRSPermsCtx
+                    , scRemoteSchemaPermsCtx         = enableRSPermsCtx
                     }
 
     spockApp <- liftWithStateless $ \lowerIO ->
