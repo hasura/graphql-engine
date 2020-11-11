@@ -3,12 +3,14 @@
 module Main where
 
 import           Control.Exception
+import           Data.Int                   (Int64)
 import           Data.Text.Conversions      (convertText)
+import           Data.Time.Clock.POSIX      (getPOSIXTime)
 
 import           Hasura.App
 import           Hasura.Logging             (Hasura)
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
+import           Hasura.RQL.DDL.Metadata    (fetchMetadataFromHdbTables)
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.Server.Init
@@ -22,8 +24,8 @@ import qualified Data.Environment           as Env
 import qualified Database.PG.Query          as Q
 import qualified Hasura.Tracing             as Tracing
 import qualified System.Exit                as Sys
-import qualified System.Posix.Signals       as Signals
 import qualified System.Metrics             as EKG
+import qualified System.Posix.Signals       as Signals
 
 
 main :: IO ()
@@ -42,7 +44,17 @@ runApp env (HGEOptionsG rci hgeCmd) =
   withVersion $$(getVersionFromEnvironment) $ case hgeCmd of
     HCServe serveOptions -> do
       (initCtx, initTime) <- initialiseCtx env hgeCmd rci
-      ekgStore <- liftIO EKG.newStore
+
+      ekgStore <- liftIO do
+        s <- EKG.newStore
+        EKG.registerGcMetrics s
+
+        let getTimeMs :: IO Int64
+            getTimeMs = (round . (* 1000)) `fmap` getPOSIXTime
+
+        EKG.registerCounter "ekg.server_timestamp_ms" getTimeMs s
+        pure s
+
       let shutdownApp = return ()
       -- Catches the SIGTERM signal and initiates a graceful shutdown.
       -- Graceful shutdown for regular HTTP requests is already implemented in
@@ -57,7 +69,7 @@ runApp env (HGEOptionsG rci hgeCmd) =
 
     HCExport -> do
       (initCtx, _) <- initialiseCtx env hgeCmd rci
-      res <- runTx' initCtx fetchMetadata Q.ReadCommitted
+      res <- runTx' initCtx fetchMetadataFromHdbTables Q.ReadCommitted
       either (printErrJExit MetadataExportError) printJSON res
 
     HCClean -> do

@@ -24,11 +24,6 @@ Additionally, you will need a way to run a Postgres database server. The `dev.sh
 - [PostgreSQL](https://www.postgresql.org) >= 9.5
 - [postgis](https://postgis.net)
 
-Additionally, you will need a way to run a Postgres database server. The `dev.sh` script (described below) can set up a Postgres instance for you via [Docker](https://www.docker.com), but if you want to run it yourself, you’ll need:
-
-- [PostgreSQL](https://www.postgresql.org) >= 9.5
-- [postgis](https://postgis.net)
-
 ### Upgrading npm
 
 If your npm is too old (>= 5.7 required):
@@ -62,6 +57,20 @@ After making your changes
 To set up the project configuration to coincide with the testing scripts below, thus avoiding recompilation when testing locally, rather use `cabal.project.dev-sh.local` instead of `cabal.project.dev`:
 
     $ ln -s cabal.project.dev-sh.local cabal.project.local
+
+### IDE Support
+
+You may want to use [hls](https://github.com/haskell/haskell-language-server)/[ghcide](https://github.com/haskell/ghcide) if your editor has LSP support. A sample configuration has been provided which can be used as follows:
+
+```
+ln -s sample.hie.yaml hie.yaml
+```
+
+If you have to customise any of the options for ghcide/hls, you should instead copy the sample file and make necessary changes in `hie.yaml` file. Note that `hie.yaml` is gitignored so the changes will be specific to your machine.
+
+```
+cp sample.hie.yaml hie.yaml
+```
 
 ### Run and test via `dev.sh`
 

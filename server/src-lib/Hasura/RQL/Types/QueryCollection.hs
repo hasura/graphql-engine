@@ -15,38 +15,40 @@ module Hasura.RQL.Types.QueryCollection
   , stripTypenames
   ) where
 
-import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
-import           Hasura.RQL.Instances          ()
-import           Hasura.RQL.Types.Common       (NonEmptyText)
-import           Hasura.SQL.Types
+
+import qualified Database.PG.Query             as Q
+import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Text.Extended
+import           Data.Text.NonEmpty
 import           Language.Haskell.TH.Syntax    (Lift)
 
-import qualified Data.Text                     as T
-import qualified Database.PG.Query             as Q
-import qualified Language.GraphQL.Draft.Syntax as G
+import           Hasura.Incremental            (Cacheable)
+import           Hasura.RQL.Instances          ()
+
+
 
 newtype CollectionName
   = CollectionName {unCollectionName :: NonEmptyText}
   deriving ( Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift
-           , FromJSON, Q.FromCol, Q.ToPrepArg, DQuote
+           , FromJSON, Q.FromCol, Q.ToPrepArg, ToTxt
            , Generic, Arbitrary
            )
 
 newtype QueryName
   = QueryName {unQueryName :: NonEmptyText}
-  deriving (Show, Eq, Ord, NFData, Hashable, Lift, ToJSON, ToJSONKey, FromJSON, DQuote, Generic, Arbitrary, Cacheable)
+  deriving (Show, Eq, Ord, NFData, Hashable, Lift, ToJSON, ToJSONKey, FromJSON, ToTxt, Generic, Arbitrary, Cacheable)
 
 newtype GQLQuery
   = GQLQuery { unGQLQuery :: G.ExecutableDocument G.Name }
   deriving (Show, Eq, NFData, Hashable, Lift, ToJSON, FromJSON, Cacheable)
 
 newtype GQLQueryWithText
-  = GQLQueryWithText (T.Text, GQLQuery)
+  = GQLQueryWithText (Text, GQLQuery)
   deriving (Show, Eq, NFData, Lift, Generic, Cacheable)
 
 instance FromJSON GQLQueryWithText where
@@ -118,7 +120,7 @@ data CreateCollection
   = CreateCollection
   { _ccName       :: !CollectionName
   , _ccDefinition :: !CollectionDef
-  , _ccComment    :: !(Maybe T.Text)
+  , _ccComment    :: !(Maybe Text)
   } deriving (Show, Eq, Lift, Generic)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CreateCollection)
 
@@ -147,5 +149,5 @@ $(deriveJSON (aesonDrop 5 snakeCase) ''DropQueryFromCollection)
 newtype CollectionReq
   = CollectionReq
   {_crCollection :: CollectionName}
-  deriving (Show, Eq, Lift, Generic)
+  deriving (Show, Eq, Lift, Generic, Hashable)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CollectionReq)

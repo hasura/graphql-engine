@@ -14,11 +14,12 @@ module Hasura.Prelude
   , txtToBs
   , base64Decode
   , spanMaybeM
+  , liftEitherM
   -- * Efficient coercions
   , coerce
-  , coerceSet
   , findWithIndex
   , mapFromL
+  , oMapFromL
   -- * Measuring and working with moments and durations
   , withElapsedTime
   , startTimer
@@ -28,6 +29,7 @@ module Hasura.Prelude
 import           Control.Applicative               as M (Alternative (..), liftA2)
 import           Control.Arrow                     as M (first, second, (&&&), (***), (<<<), (>>>))
 import           Control.DeepSeq                   as M (NFData, deepseq, force)
+import           Control.Lens                      as M ((%~))
 import           Control.Monad.Base                as M
 import           Control.Monad.Except              as M
 import           Control.Monad.Identity            as M
@@ -74,16 +76,15 @@ import           Text.Read                         as M (readEither, readMaybe)
 
 import qualified Data.ByteString                   as B
 import qualified Data.ByteString.Base64.Lazy       as Base64
-import           Data.Coerce
 import qualified Data.ByteString.Lazy              as BL
+import           Data.Coerce
 import qualified Data.HashMap.Strict               as Map
-import qualified Data.Set                          as Set
+import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Data.Text                         as T
 import qualified Data.Text.Encoding                as TE
 import qualified Data.Text.Encoding.Error          as TE
 import qualified GHC.Clock                         as Clock
 import qualified Test.QuickCheck                   as QC
-import           Unsafe.Coerce
 
 alphabet :: String
 alphabet = ['a'..'z'] ++ ['A'..'Z']
@@ -94,20 +95,20 @@ alphaNumerics = alphabet ++ "0123456789"
 instance Arbitrary Text where
   arbitrary = T.pack <$> QC.listOf (QC.elements alphaNumerics)
 
-onNothing :: (Monad m) => Maybe a -> m a -> m a
-onNothing m act = maybe act return m
+onNothing :: Applicative m => Maybe a -> m a -> m a
+onNothing m act = maybe act pure m
 
-onJust :: (Monad m) => Maybe a -> (a -> m ()) -> m ()
-onJust m action = maybe (return ()) action m
+onJust :: Applicative m => Maybe a -> (a -> m ()) -> m ()
+onJust m action = maybe (pure ()) action m
 
-onLeft :: (Monad m) => Either e a -> (e -> m a) -> m a
-onLeft e f = either f return e
+onLeft :: Applicative m => Either e a -> (e -> m a) -> m a
+onLeft e f = either f pure e
 
 whenMaybe :: Applicative m => Bool -> m a -> m (Maybe a)
 whenMaybe True  = fmap Just
 whenMaybe False = const $ pure Nothing
 
-choice :: (Alternative f) => [f a] -> f a
+choice :: Alternative f => [f a] -> f a
 choice = asum
 
 afold :: (Foldable t, Alternative f) => t a -> f a
@@ -123,6 +124,10 @@ base64Decode :: Text -> BL.ByteString
 base64Decode =
   Base64.decodeLenient . BL.fromStrict . txtToBs
 
+-- Like `liftEither`, but accepts a monadic action
+liftEitherM :: MonadError e m => m (Either e a) -> m a
+liftEitherM action = action >>= liftEither
+
 -- Like 'span', but monadic and with a function that produces 'Maybe' instead of 'Bool'
 spanMaybeM
   :: (Foldable f, Monad m)
@@ -134,16 +139,6 @@ spanMaybeM f = go . toList
       Just y  -> first (y:) <$> go xs
       Nothing -> pure ([], l)
 
--- | Efficiently coerce a set from one type to another.
---
--- This has the same safety properties as 'Set.mapMonotonic', and is equivalent
--- to @Set.mapMonotonic coerce@ but is more efficient. This is safe to use when
--- both @a@ and @b@ have automatically derived @Ord@ instances.
---
--- https://stackoverflow.com/q/57963881/176841
-coerceSet :: Coercible a b=> Set.Set a -> Set.Set b
-coerceSet = unsafeCoerce
-
 findWithIndex :: (a -> Bool) -> [a] -> Maybe (a, Int)
 findWithIndex p l = do
   v <- find p l
@@ -154,11 +149,14 @@ findWithIndex p l = do
 mapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> Map.HashMap k a
 mapFromL f = Map.fromList . map (\v -> (f v, v))
 
+oMapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> InsOrdHashMap k a
+oMapFromL f = OMap.fromList . map (\v -> (f v, v))
+
 -- | Time an IO action, returning the time with microsecond precision. The
 -- result of the input action will be evaluated to WHNF.
 --
 -- The result 'DiffTime' is guarenteed to be >= 0.
-withElapsedTime :: MonadIO m=> m a -> m (DiffTime, a)
+withElapsedTime :: MonadIO m => m a -> m (DiffTime, a)
 withElapsedTime ma = do
   bef <- liftIO Clock.getMonotonicTimeNSec
   !a <- ma
@@ -175,7 +173,7 @@ withElapsedTime ma = do
 --   moreStuff
 --   elapsedBoth <- timer
 -- @
-startTimer :: (MonadIO m, MonadIO n)=> m (n DiffTime)
+startTimer :: (MonadIO m, MonadIO n) => m (n DiffTime)
 startTimer = do
   !bef <- liftIO Clock.getMonotonicTimeNSec
   return $ do

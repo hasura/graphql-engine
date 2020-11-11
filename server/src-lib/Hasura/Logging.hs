@@ -237,7 +237,7 @@ defaultLoggerSettings isCached =
 
 getFormattedTime :: Maybe Time.TimeZone -> IO FormattedTime
 getFormattedTime tzM = do
-  tz <- maybe Time.getCurrentTimeZone return tzM
+  tz <- onNothing tzM Time.getCurrentTimeZone
   t  <- Time.getCurrentTime
   let zt = Time.utcToZonedTime tz t
   return $ FormattedTime $ T.pack $ formatTime zt
