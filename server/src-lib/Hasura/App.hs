@@ -381,7 +381,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
   inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)
   liftIO $ logInconsObjs logger inconsObjs
 
-  -- Start a background thread for processing schema sync event present in the 'schemaSyncEventRef'
+  -- Start a background thread for processing schema sync event present in the '_sscSyncEventRef'
   schemaSyncProcessorThread <- startSchemaSyncProcessorThread sqlGenCtx _icPgPool
                                logger _icHttpManager _sscSyncEventRef
                                cacheRef _icInstanceId _sscCacheInitTime

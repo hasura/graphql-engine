@@ -7,7 +7,6 @@ import           Control.Monad.Unique
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Time                          (UTCTime)
 
 import qualified Data.Environment                   as Env
 import qualified Data.HashMap.Strict                as HM
@@ -177,6 +176,8 @@ $(deriveJSON
   ''RQLQueryV2
  )
 
+-- | Using @pg_notify@ function to publish schema sync events to other server
+-- instances via 'hasura_schema_update' channel.
 notifySchemaCacheSync :: InstanceId -> CacheInvalidations -> Q.TxE QErr ()
 notifySchemaCacheSync instanceId invalidations = do
   Q.Discard () <- Q.withQE defaultTxErrorHandler [Q.sql|
