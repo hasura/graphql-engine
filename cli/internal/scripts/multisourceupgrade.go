@@ -35,7 +35,7 @@ func UpgradeProjectToMultipleSources(opts UpgradeToMuUpgradeProjectToMultipleSou
 	opts.Logger.Debugf("created project backup at %s", projectBackupPath)
 
 	// get directory names to move
-	directoriesToMove, err := getMigrationDirectories(opts.Fs, opts.MigrationsDirectory)
+	directoriesToMove, err := getMigrationDirectoryNames(opts.Fs, opts.MigrationsDirectory)
 	if err != nil {
 		return errors.Wrap(err, "getting list of migrations to move")
 	}
@@ -46,37 +46,37 @@ func UpgradeProjectToMultipleSources(opts UpgradeToMuUpgradeProjectToMultipleSou
 	}
 
 	// move migration directories to target datasource directory
-	if err := moveMigrationsToDatasourceDirectory(opts.Fs, directoriesToMove, targetDatasourceDirectoryName); err != nil {
+	if err := moveMigrationsToDatasourceDirectory(opts.Fs, directoriesToMove, opts.MigrationsDirectory, targetDatasourceDirectoryName); err != nil {
 		return errors.Wrap(err, "moving migrations to target datasource directory")
 	}
 
 	// delete original migrations
-	if err := removeDirectories(opts.Fs, directoriesToMove); err != nil {
+	if err := removeDirectories(opts.Fs, opts.MigrationsDirectory, directoriesToMove); err != nil {
 		return errors.Wrap(err, "removing up original migrations")
 	}
 
 	return nil
 }
 
-func removeDirectories(fs afero.Fs, dirs []string) error {
-	for _, d := range dirs {
-		if err := fs.RemoveAll(d); err != nil {
+func removeDirectories(fs afero.Fs, parentDirectory string, dirNames []string) error {
+	for _, d := range dirNames {
+		if err := fs.RemoveAll(filepath.Join(parentDirectory, d)); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func moveMigrationsToDatasourceDirectory(fs afero.Fs, dirs []string, target string) error {
+func moveMigrationsToDatasourceDirectory(fs afero.Fs, dirs []string, parentMigrationsDirectory, target string) error {
 	for _, dir := range dirs {
-		err := util.CopyDirAfero(fs, dir, filepath.Join(target, dir))
+		err := util.CopyDirAfero(fs, filepath.Join(parentMigrationsDirectory, dir), filepath.Join(target, dir))
 		if err != nil {
 			return errors.Wrapf(err, "moving %s to %s", dir, target)
 		}
 	}
 	return nil
 }
-func getMigrationDirectories(fs afero.Fs, rootMigrationsDir string) ([]string, error) {
+func getMigrationDirectoryNames(fs afero.Fs, rootMigrationsDir string) ([]string, error) {
 	// find migrations which are in the format <timestamp>_name
 	var migrationDirectories []string
 	dirs, err := afero.ReadDir(fs, rootMigrationsDir)
@@ -91,7 +91,7 @@ func getMigrationDirectories(fs afero.Fs, rootMigrationsDir string) ([]string, e
 				}
 				continue
 			}
-			migrationDirectories = append(migrationDirectories, filepath.Join(rootMigrationsDir, info.Name()))
+			migrationDirectories = append(migrationDirectories, filepath.Join(info.Name()))
 		}
 
 	}

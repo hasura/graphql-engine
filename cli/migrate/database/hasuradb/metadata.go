@@ -9,6 +9,7 @@ import (
 	gyaml "github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
+	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 
@@ -269,7 +270,7 @@ func (h *HasuraDB) GetDatasources() ([]string, error) {
 		return nil, NewHasuraError(body, h.config.isCMD)
 	}
 
-	var bodyAsMap map[string]interface{}
+	var bodyAsMap = map[string]interface{}{}
 	if err = json.Unmarshal(body, &bodyAsMap); err != nil {
 		return nil, errors.Wrap(err, "unmarshalling response from API")
 	}
@@ -278,12 +279,13 @@ func (h *HasuraDB) GetDatasources() ([]string, error) {
 	if !ok {
 		return nil, fmt.Errorf("no sources found")
 	}
-	sourcesMap, ok := sources.([]map[string]interface{})
-	if !ok {
-		return nil, fmt.Errorf("error getting sources")
+
+	var sourcesList []map[string]interface{}
+	if err := mapstructure.Decode(sources, &sourcesList); err != nil {
+		return nil, errors.Wrap(err, "error unmarshalling sources list")
 	}
 	var sourceNames []string
-	for _, source := range sourcesMap {
+	for _, source := range sourcesList {
 		v, ok := source["name"]
 		if !ok {
 			return nil, fmt.Errorf("error getting source name")

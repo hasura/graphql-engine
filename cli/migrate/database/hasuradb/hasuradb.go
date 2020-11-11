@@ -13,6 +13,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/mitchellh/mapstructure"
+
 	"github.com/hasura/graphql-engine/cli/version"
 
 	yaml "github.com/ghodss/yaml"
@@ -38,6 +40,15 @@ var (
 	ErrNoDatabaseName = fmt.Errorf("no database name")
 	ErrNoSchema       = fmt.Errorf("no schema")
 	ErrDatabaseDirty  = fmt.Errorf("database is dirty")
+
+	queryTypes    = []string{"select", "insert", "select", "update", "delete", "count", "run_sql", "bulk"}
+	queryTypesMap = func() map[string]bool {
+		var m = map[string]bool{}
+		for _, v := range queryTypes {
+			m[v] = true
+		}
+		return m
+	}()
 )
 
 type Config struct {
@@ -443,24 +454,23 @@ func (h *HasuraDB) sendQueryOrMetadataRequest(m interface{}) (resp *http.Respons
 	case !h.serverFeatureFlags.HasDatasources:
 		endpoint = h.config.queryURL.String()
 	case h.serverFeatureFlags.HasDatasources:
-		if v, ok := m.(map[string]interface{}); !ok {
-			if err != nil {
-				fmt.Errorf("bad request body")
-			}
+		// TODO: Make this better
+
+		// FIXME can also be an array
+		var v map[string]interface{}
+		if err := mapstructure.Decode(m, &v); err != nil {
+			return nil, nil, fmt.Errorf("unmarshalling request body failed")
 		} else {
-			var queryTypes map[string]bool
-			if v, ok := v["type"].(string); !ok {
-				return nil, nil, fmt.Errorf("error determining type of API request")
+			requestType := fmt.Sprintf("%v", v["Type"])
+			if _, ok := queryTypesMap[requestType]; ok {
+				endpoint = h.config.queryURL.String()
 			} else {
-				if _, ok := queryTypes[v]; ok {
-					endpoint = h.config.queryURL.String()
-				} else {
-					endpoint = h.config.metadataURL.String()
-				}
+				endpoint = h.config.metadataURL.String()
 			}
 		}
 
 	}
+
 	request := h.config.Req.Clone()
 	request = request.Post(endpoint).Send(m)
 	for headerName, headerValue := range h.config.Headers {

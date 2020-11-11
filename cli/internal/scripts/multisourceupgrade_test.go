@@ -50,7 +50,7 @@ func Test_checkIfDirectoryIsMigration(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := checkIfDirectoryIsMigration(tt.args.dirPath)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("getMigrationDirectories() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("getMigrationDirectoryNames() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			assert.Equal(t, tt.want, got)
@@ -58,7 +58,7 @@ func Test_checkIfDirectoryIsMigration(t *testing.T) {
 	}
 }
 
-func Test_getMigrationDirectories(t *testing.T) {
+func Test_getMigrationDirectoryNames(t *testing.T) {
 	type args struct {
 		fs                afero.Fs
 		rootMigrationsDir string
@@ -93,17 +93,17 @@ func Test_getMigrationDirectories(t *testing.T) {
 				rootMigrationsDir: "migrations",
 			},
 			[]string{
-				"migrations/1604255964903_test",
-				"migrations/1604855964903_test2",
+				"1604255964903_test",
+				"1604855964903_test2",
 			},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getMigrationDirectories(tt.args.fs, tt.args.rootMigrationsDir)
+			got, err := getMigrationDirectoryNames(tt.args.fs, tt.args.rootMigrationsDir)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("getMigrationDirectories() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("getMigrationDirectoryNames() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			assert.Equal(t, tt.want, got)
@@ -113,9 +113,10 @@ func Test_getMigrationDirectories(t *testing.T) {
 
 func Test_moveMigrationsToDatasourceDirectory(t *testing.T) {
 	type args struct {
-		fs     afero.Fs
-		dirs   []string
-		target string
+		fs                        afero.Fs
+		dirs                      []string
+		parentMigrationsDirectory string
+		target                    string
 	}
 	tests := []struct {
 		name    string
@@ -143,8 +144,9 @@ func Test_moveMigrationsToDatasourceDirectory(t *testing.T) {
 
 					return fs
 				}(),
-				dirs:   []string{"1", "2", "3"},
-				target: "moved",
+				dirs:                      []string{"1", "2", "3"},
+				parentMigrationsDirectory: ".",
+				target:                    "moved",
 			},
 			false,
 			[]string{"moved/1", "moved/2", "moved/3"},
@@ -152,7 +154,7 @@ func Test_moveMigrationsToDatasourceDirectory(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := moveMigrationsToDatasourceDirectory(tt.args.fs, tt.args.dirs, tt.args.target); (err != nil) != tt.wantErr {
+			if err := moveMigrationsToDatasourceDirectory(tt.args.fs, tt.args.dirs, tt.args.parentMigrationsDirectory, tt.args.target); (err != nil) != tt.wantErr {
 				assert.NoError(t, err)
 			}
 			for _, want := range tt.want {
@@ -165,8 +167,9 @@ func Test_moveMigrationsToDatasourceDirectory(t *testing.T) {
 
 func Test_removeDirectories(t *testing.T) {
 	type args struct {
-		fs   afero.Fs
-		dirs []string
+		fs              afero.Fs
+		parentDirectory string
+		dirs            []string
 	}
 	tests := []struct {
 		name    string
@@ -189,14 +192,15 @@ func Test_removeDirectories(t *testing.T) {
 					}
 					return fs
 				}(),
-				dirs: []string{"1", "2", "4"},
+				dirs:            []string{"1", "2", "4"},
+				parentDirectory: ".",
 			},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := removeDirectories(tt.args.fs, tt.args.dirs); (err != nil) != tt.wantErr {
+			if err := removeDirectories(tt.args.fs, tt.args.parentDirectory, tt.args.dirs); (err != nil) != tt.wantErr {
 				t.Errorf("removeDirectories() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			for _, d := range tt.args.dirs {

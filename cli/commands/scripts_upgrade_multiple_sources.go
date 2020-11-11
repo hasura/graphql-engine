@@ -37,7 +37,7 @@ func newUpdateMultipleSources(ec *cli.ExecutionContext) *cobra.Command {
 			// preconditions
 			// project should be using Config V2
 			// server should be >= v1.4
-			case ec.Config.Version > cli.V2:
+			case ec.Config.Version != cli.V2:
 				return fmt.Errorf("project should be using config V2 to be able to use multiple datasources")
 			case !ec.Version.ServerFeatureFlags.HasDatasources:
 				return fmt.Errorf("server doesn't support multiple data sources")
