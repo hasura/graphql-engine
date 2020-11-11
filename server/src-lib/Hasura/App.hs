@@ -680,22 +680,21 @@ instance MonadQueryLog PGMetadataStorageApp where
 instance WS.MonadWSLog PGMetadataStorageApp where
   logWSLog = unLogger
 
-instance MonadTx (MetadataStorageT PGMetadataStorageApp) where
-  liftTx tx = do
-    pool <- lift ask
-    -- Each operation in metadata storage is executed in an isolated transaction.
-    -- No two operations are not necessarily executed together.
-    liftEitherM $ liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Nothing) tx
+runInSeparateTx :: Q.TxE QErr a -> MetadataStorageT PGMetadataStorageApp a
+runInSeparateTx tx = do
+  pool <- lift ask
+  liftEitherM $ liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Nothing) tx
 
+-- | Each of the function in the type class is executed in a totally separate transaction.
 instance MonadMetadataStorage (MetadataStorageT PGMetadataStorageApp) where
 
-  getDeprivedCronTriggerStats        = liftTx getDeprivedCronTriggerStatsTx
-  getScheduledEventsForDelivery      = liftTx getScheduledEventsForDeliveryTx
-  insertScheduledEvent               = liftTx . insertScheduledEventTx
-  insertScheduledEventInvocation a b = liftTx $ insertInvocationTx a b
-  setScheduledEventOp a b c          = liftTx $ setScheduledEventOpTx a b c
-  unlockScheduledEvents a b          = liftTx $ unlockScheduledEventsTx a b
-  unlockAllLockedScheduledEvents     = liftTx unlockAllLockedScheduledEventsTx
+  getDeprivedCronTriggerStats        = runInSeparateTx getDeprivedCronTriggerStatsTx
+  getScheduledEventsForDelivery      = runInSeparateTx getScheduledEventsForDeliveryTx
+  insertScheduledEvent               = runInSeparateTx . insertScheduledEventTx
+  insertScheduledEventInvocation a b = runInSeparateTx $ insertInvocationTx a b
+  setScheduledEventOp a b c          = runInSeparateTx $ setScheduledEventOpTx a b c
+  unlockScheduledEvents a b          = runInSeparateTx $ unlockScheduledEventsTx a b
+  unlockAllLockedScheduledEvents     = runInSeparateTx unlockAllLockedScheduledEventsTx
 
 --- helper functions ---
 
