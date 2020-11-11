@@ -11,57 +11,51 @@ module Hasura.Backends.MSSQL.FromIr
   , jsonFieldName
   ) where
 
-import           Control.Monad
-import           Control.Monad.Reader
-import           Control.Monad.Trans.State.Strict
+import           Hasura.Prelude
+
+import qualified Data.HashMap.Strict                as HM
+import qualified Data.List.NonEmpty                 as NE
+import qualified Data.Map.Strict                    as M
+import qualified Data.Text                          as T
+import qualified Data.Text.Read                     as T
+import qualified Database.ODBC.SQLServer            as Odbc
+
+--import           Control.Monad.Trans.State.Strict   as S
 import           Control.Monad.Validate
-import           Control.Monad.Writer.Strict
-import           Data.Foldable
-import           Data.HashMap.Strict              (HashMap)
-import qualified Data.HashMap.Strict              as HM
-import           Data.List.NonEmpty               (NonEmpty (..))
-import qualified Data.List.NonEmpty               as NE
-import           Data.Map.Strict                  (Map)
-import qualified Data.Map.Strict                  as M
-import           Data.Maybe
+import           Data.Map.Strict                    (Map)
 import           Data.Proxy
-import           Data.Sequence                    (Seq)
-import           Data.Text                        (Text)
-import qualified Data.Text                        as T
-import qualified Data.Text.Read                   as T
-import           Data.Void
-import qualified Database.ODBC.SQLServer          as Odbc
-import qualified Hasura.GraphQL.Context           as Graphql
-import qualified Hasura.RQL.DML.Select            as DS
-import qualified Hasura.RQL.DML.Select.Types      as Ir
-import qualified Hasura.RQL.Types.BoolExp         as Ir
-import qualified Hasura.RQL.Types.Column          as Ir
-import qualified Hasura.RQL.Types.Common          as Ir
-import qualified Hasura.RQL.Types.DML             as Ir
+
+import qualified Hasura.Backends.Postgres.SQL.DML   as PG
+import qualified Hasura.Backends.Postgres.SQL.Types as PG
+import qualified Hasura.GraphQL.Context             as Graphql
+import qualified Hasura.RQL.IR.BoolExp              as IR
+import qualified Hasura.RQL.IR.OrderBy              as IR
+import qualified Hasura.RQL.IR.Select               as IR
+import qualified Hasura.RQL.Types.Column            as IR
+import qualified Hasura.RQL.Types.Common            as IR
+
+import           Hasura.Backends.MSSQL.Types        as Tsql
 import           Hasura.SQL.Backend
-import qualified Hasura.SQL.DML                   as Sql
-import           Hasura.SQL.Tsql.Types            as Tsql
-import qualified Hasura.SQL.Types                 as Sql
-import           Prelude
+
 
 --------------------------------------------------------------------------------
 -- Types
 
 -- | Most of these errors should be checked for legitimacy.
 data Error
-  = FromTypeUnsupported (Ir.SelectFromG 'Postgres Expression)
+  = FromTypeUnsupported (IR.SelectFromG 'Postgres Expression)
   | NoOrderSpecifiedInOrderBy
   | MalformedAgg
-  | FieldTypeUnsupportedForNow (Ir.AnnFieldG 'Postgres Expression)
-  | AggTypeUnsupportedForNow (Ir.TableAggregateFieldG 'Postgres Expression)
-  | NodesUnsupportedForNow (Ir.TableAggregateFieldG 'Postgres Expression)
+  | FieldTypeUnsupportedForNow (IR.AnnFieldG 'Postgres Expression)
+  | AggTypeUnsupportedForNow (IR.TableAggregateFieldG 'Postgres Expression)
+  | NodesUnsupportedForNow (IR.TableAggregateFieldG 'Postgres Expression)
   | NoProjectionFields
   | NoAggregatesMustBeABug
-  | UnsupportedArraySelect (Ir.ArraySelectG 'Postgres Expression)
-  | UnsupportedOpExpG (Ir.OpExpG 'Postgres Expression)
+  | UnsupportedArraySelect (IR.ArraySelectG 'Postgres Expression)
+  | UnsupportedOpExpG (IR.OpExpG 'Postgres Expression)
   | UnsupportedSQLExp Expression
   | UnsupportedDistinctOn
-  | InvalidIntegerishSql Sql.SQLExp
+  | InvalidIntegerishSql PG.SQLExp
   | DistinctIsn'tSupported
   | ConnectionsNotSupported
   | ActionsNotSupported
@@ -100,13 +94,13 @@ runFromIr fromIr = evalStateT (unFromIr fromIr) mempty
 -- Similar rendition of old API
 
 mkSQLSelect ::
-     Ir.JsonAggSelect
-  -> Ir.AnnSelectG 'Postgres (Ir.AnnFieldsG 'Postgres Expression) Expression
+     IR.JsonAggSelect
+  -> IR.AnnSelectG 'Postgres (IR.AnnFieldsG 'Postgres Expression) Expression
   -> FromIr Tsql.Select
 mkSQLSelect jsonAggSelect annSimpleSel =
   case jsonAggSelect of
-    Ir.JASMultipleRows -> fromSelectRows annSimpleSel
-    Ir.JASSingleObject -> do
+    IR.JASMultipleRows -> fromSelectRows annSimpleSel
+    IR.JASSingleObject -> do
       select <- fromSelectRows annSimpleSel
       pure
         select
@@ -122,8 +116,8 @@ fromRootField ::
   -> FromIr Select
 fromRootField =
   \case
-    Graphql.RFDB (Graphql.QDBPrimaryKey s) -> mkSQLSelect DS.JASSingleObject s
-    Graphql.RFDB (Graphql.QDBSimple s) -> mkSQLSelect DS.JASMultipleRows s
+    Graphql.RFDB (Graphql.QDBPrimaryKey s) -> mkSQLSelect IR.JASSingleObject s
+    Graphql.RFDB (Graphql.QDBSimple s) -> mkSQLSelect IR.JASMultipleRows s
     Graphql.RFDB (Graphql.QDBAggregation s) -> fromSelectAggregate s
     Graphql.RFDB (Graphql.QDBConnection {}) ->
       refute (pure ConnectionsNotSupported)
@@ -132,11 +126,11 @@ fromRootField =
 --------------------------------------------------------------------------------
 -- Top-level exported functions
 
-fromSelectRows :: Ir.AnnSelectG 'Postgres (Ir.AnnFieldsG 'Postgres Expression) Expression -> FromIr Tsql.Select
+fromSelectRows :: IR.AnnSelectG 'Postgres (IR.AnnFieldsG 'Postgres Expression) Expression -> FromIr Tsql.Select
 fromSelectRows annSelectG = do
   selectFrom <-
     case from of
-      Ir.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
+      IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
       _                            -> refute (pure (FromTypeUnsupported from))
   Args { argsOrderBy
        , argsWhere
@@ -169,13 +163,13 @@ fromSelectRows annSelectG = do
       , selectOffset = argsOffset
       }
   where
-    Ir.AnnSelectG { _asnFields = fields
+    IR.AnnSelectG { _asnFields = fields
                   , _asnFrom = from
                   , _asnPerm = perm
                   , _asnArgs = args
                   , _asnStrfyNum = num
                   } = annSelectG
-    Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
+    IR.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
     permissionBasedTop =
       case mPermLimit of
         Nothing    -> NoTop
@@ -186,12 +180,12 @@ fromSelectRows annSelectG = do
         else LeaveNumbersAlone
 
 fromSelectAggregate ::
-     Ir.AnnSelectG 'Postgres [(Ir.FieldName, Ir.TableAggregateFieldG 'Postgres Expression)] Expression
+     IR.AnnSelectG 'Postgres [(IR.FieldName, IR.TableAggregateFieldG 'Postgres Expression)] Expression
   -> FromIr Tsql.Select
 fromSelectAggregate annSelectG = do
   selectFrom <-
     case from of
-      Ir.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
+      IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
       _                            -> refute (pure (FromTypeUnsupported from))
   fieldSources <-
     runReaderT (traverse fromTableAggregateFieldG fields) (fromAlias selectFrom)
@@ -221,13 +215,13 @@ fromSelectAggregate annSelectG = do
       , selectOffset = argsOffset
       }
   where
-    Ir.AnnSelectG { _asnFields = fields
+    IR.AnnSelectG { _asnFields = fields
                   , _asnFrom = from
                   , _asnPerm = perm
                   , _asnArgs = args
                   , _asnStrfyNum = _num -- TODO: Do we ignore this for aggregates?
                   } = annSelectG
-    Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
+    IR.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
     permissionBasedTop =
       case mPermLimit of
         Nothing    -> NoTop
@@ -243,16 +237,16 @@ data Args = Args
   , argsTop           :: Top
   , argsOffset        :: Maybe Expression
   , argsDistinct      :: Proxy (Maybe (NonEmpty FieldName))
-  , argsExistingJoins :: Map Sql.QualifiedTable EntityAlias
+  , argsExistingJoins :: Map PG.QualifiedTable EntityAlias
   } deriving (Show)
 
 data UnfurledJoin = UnfurledJoin
   { unfurledJoin             :: Join
-  , unfurledObjectTableAlias :: Maybe (Sql.QualifiedTable, EntityAlias)
+  , unfurledObjectTableAlias :: Maybe (PG.QualifiedTable, EntityAlias)
     -- ^ Recorded if we joined onto an object relation.
   } deriving (Show)
 
-fromSelectArgsG :: Ir.SelectArgsG 'Postgres Expression -> ReaderT EntityAlias FromIr Args
+fromSelectArgsG :: IR.SelectArgsG 'Postgres Expression -> ReaderT EntityAlias FromIr Args
 fromSelectArgsG selectArgsG = do
   argsWhere <-
     maybe (pure mempty) (fmap (Where . pure) . fromAnnBoolExp) mannBoolExp
@@ -284,7 +278,7 @@ fromSelectArgsG selectArgsG = do
       , ..
       }
   where
-    Ir.SelectArgs { _saWhere = mannBoolExp
+    IR.SelectArgs { _saWhere = mannBoolExp
                   , _saLimit = mlimit
                   , _saOffset = moffset
                   , _saDistinct = mdistinct
@@ -294,36 +288,34 @@ fromSelectArgsG selectArgsG = do
 -- | Produce a valid ORDER BY construct, telling about any joins
 -- needed on the side.
 fromAnnOrderByItemG ::
-     Ir.AnnOrderByItemG 'Postgres Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) OrderBy
-fromAnnOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
+     IR.AnnOrderByItemG 'Postgres Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) OrderBy
+fromAnnOrderByItemG IR.OrderByItemG {obiType, obiColumn, obiNulls} = do
   orderByFieldName <- unfurlAnnOrderByElement obiColumn
   let morderByOrder =
-        fmap
-          (\case
-             Sql.OTAsc  -> AscOrder
-             Sql.OTDesc -> DescOrder)
-          (fmap Ir.unOrderType obiType)
+        obiType <&> \order -> case IR.unOrderType order of
+          PG.OTAsc  -> AscOrder
+          PG.OTDesc -> DescOrder
   let orderByNullsOrder =
-        case fmap Ir.unNullsOrder obiNulls of
+        case fmap IR.unNullsOrder obiNulls of
           Nothing -> NullsAnyOrder
           Just nullsOrder ->
             case nullsOrder of
-              Sql.NFirst -> NullsFirst
-              Sql.NLast  -> NullsLast
+              PG.NFirst -> NullsFirst
+              PG.NLast  -> NullsLast
   case morderByOrder of
     Just orderByOrder -> pure OrderBy {..}
     Nothing           -> refute (pure NoOrderSpecifiedInOrderBy)
 
 -- | Unfurl the nested set of object relations (tell'd in the writer)
--- that are terminated by field name (Ir.AOCColumn and
--- Ir.AOCArrayAggregation).
+-- that are terminated by field name (IR.AOCColumn and
+-- IR.AOCArrayAggregation).
 unfurlAnnOrderByElement ::
-     Ir.AnnOrderByElement 'Postgres Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) FieldName
+     IR.AnnOrderByElement 'Postgres Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) FieldName
 unfurlAnnOrderByElement =
   \case
-    Ir.AOCColumn pgColumnInfo ->
+    IR.AOCColumn pgColumnInfo ->
       lift (fromPGColumnInfo pgColumnInfo)
-    Ir.AOCObjectRelation Ir.RelInfo {riMapping = mapping, riRTable = table} annBoolExp annOrderByElementG -> do
+    IR.AOCObjectRelation IR.RelInfo {riMapping = mapping, riRTable = table} annBoolExp annOrderByElementG -> do
       selectFrom <- lift (lift (fromQualifiedTable table))
       joinAliasEntity <-
         lift (lift (generateEntityAlias (ForOrderAlias (tableNameText table))))
@@ -364,7 +356,7 @@ unfurlAnnOrderByElement =
       local
         (const (EntityAlias joinAliasEntity))
         (unfurlAnnOrderByElement annOrderByElementG)
-    Ir.AOCArrayAggregation Ir.RelInfo {riMapping = mapping, riRTable = table} annBoolExp annAggregateOrderBy -> do
+    IR.AOCArrayAggregation IR.RelInfo {riMapping = mapping, riRTable = table} annBoolExp annAggregateOrderBy -> do
       selectFrom <- lift (lift (fromQualifiedTable table))
       let alias = aggFieldName
       joinAliasEntity <-
@@ -377,8 +369,8 @@ unfurlAnnOrderByElement =
           (local
              (const (fromAlias selectFrom))
              (case annAggregateOrderBy of
-                Ir.AAOCount -> pure (CountAggregate StarCountable)
-                Ir.AAOOp text pgColumnInfo -> do
+                IR.AAOCount -> pure (CountAggregate StarCountable)
+                IR.AAOOp text pgColumnInfo -> do
                   fieldName <- fromPGColumnInfo pgColumnInfo
                   pure (OpAggregate text (pure (ColumnExpression fieldName)))))
       tell
@@ -417,14 +409,14 @@ unfurlAnnOrderByElement =
 --------------------------------------------------------------------------------
 -- Conversion functions
 
-tableNameText :: Sql.QualifiedObject Sql.TableName -> Text
+tableNameText :: PG.QualifiedObject PG.TableName -> Text
 tableNameText qualifiedObject = qname
   where
-    Sql.QualifiedObject {qName = Sql.TableName qname} = qualifiedObject
+    PG.QualifiedObject {qName = PG.TableName qname} = qualifiedObject
 
 -- | This is really the start where you query the base table,
 -- everything else is joins attached to it.
-fromQualifiedTable :: Sql.QualifiedObject Sql.TableName -> FromIr From
+fromQualifiedTable :: PG.QualifiedObject PG.TableName -> FromIr From
 fromQualifiedTable qualifiedObject = do
   alias <- generateEntityAlias (TableTemplate qname)
   pure
@@ -435,25 +427,25 @@ fromQualifiedTable qualifiedObject = do
           , aliasedAlias = alias
           }))
   where
-    Sql.QualifiedObject { qSchema = Sql.SchemaName schemaName
+    PG.QualifiedObject { qSchema = PG.SchemaName schemaName
                          -- TODO: Consider many x.y.z. in schema name.
-                        , qName = Sql.TableName qname
+                        , qName = PG.TableName qname
                         } = qualifiedObject
 
 fromAnnBoolExp ::
-     Ir.GBoolExp (Ir.AnnBoolExpFld 'Postgres Expression)
+     IR.GBoolExp 'Postgres (IR.AnnBoolExpFld 'Postgres Expression)
   -> ReaderT EntityAlias FromIr Expression
 fromAnnBoolExp = traverse fromAnnBoolExpFld >=> fromGBoolExp
 
 fromAnnBoolExpFld ::
-     Ir.AnnBoolExpFld 'Postgres Expression -> ReaderT EntityAlias FromIr Expression
+     IR.AnnBoolExpFld 'Postgres Expression -> ReaderT EntityAlias FromIr Expression
 fromAnnBoolExpFld =
   \case
-    Ir.AVCol pgColumnInfo opExpGs -> do
+    IR.AVCol pgColumnInfo opExpGs -> do
       expression <- fmap ColumnExpression (fromPGColumnInfo pgColumnInfo)
       expressions <- traverse (lift . fromOpExpG expression) opExpGs
       pure (AndExpression expressions)
-    Ir.AVRel Ir.RelInfo {riMapping = mapping, riRTable = table} annBoolExp -> do
+    IR.AVRel IR.RelInfo {riMapping = mapping, riRTable = table} annBoolExp -> do
       selectFrom <- lift (fromQualifiedTable table)
       foreignKeyConditions <- fromMapping selectFrom mapping
       whereExpression <-
@@ -478,15 +470,15 @@ fromAnnBoolExpFld =
              , selectOffset = Nothing
              })
 
-fromPGColumnInfo :: Ir.ColumnInfo 'Postgres -> ReaderT EntityAlias FromIr FieldName
-fromPGColumnInfo Ir.ColumnInfo {pgiColumn = pgCol} = do
+fromPGColumnInfo :: IR.ColumnInfo 'Postgres -> ReaderT EntityAlias FromIr FieldName
+fromPGColumnInfo IR.ColumnInfo {pgiColumn = pgCol} = do
   EntityAlias {entityAliasText} <- ask
   pure
     (FieldName
-       {fieldName = Sql.getPGColTxt pgCol, fieldNameEntity = entityAliasText})
+       {fieldName = PG.getPGColTxt pgCol, fieldNameEntity = entityAliasText})
 
-fromGExists :: Ir.GExists Expression -> ReaderT EntityAlias FromIr Select
-fromGExists Ir.GExists {_geTable, _geWhere} = do
+fromGExists :: IR.GExists 'Postgres Expression -> ReaderT EntityAlias FromIr Select
+fromGExists IR.GExists {_geTable, _geWhere} = do
   selectFrom <- lift (fromQualifiedTable _geTable)
   whereExpression <-
     local (const (fromAlias selectFrom)) (fromGBoolExp _geWhere)
@@ -525,10 +517,10 @@ data FieldSource
   deriving (Eq, Show)
 
 fromTableAggregateFieldG ::
-     (Ir.FieldName, Ir.TableAggregateFieldG 'Postgres Expression) -> ReaderT EntityAlias FromIr FieldSource
-fromTableAggregateFieldG (Ir.FieldName name, field) =
+     (IR.FieldName, IR.TableAggregateFieldG 'Postgres Expression) -> ReaderT EntityAlias FromIr FieldSource
+fromTableAggregateFieldG (IR.FieldName name, field) =
   case field of
-    Ir.TAFAgg (aggregateFields :: [(Ir.FieldName, Ir.AggregateField 'Postgres)]) ->
+    IR.TAFAgg (aggregateFields :: [(IR.FieldName, IR.AggregateField 'Postgres)]) ->
       case NE.nonEmpty aggregateFields of
         Nothing -> refute (pure NoAggregatesMustBeABug)
         Just fields -> do
@@ -537,41 +529,41 @@ fromTableAggregateFieldG (Ir.FieldName name, field) =
               (\(fieldName, aggregateField) -> do
                  fmap
                    (\aliasedThing ->
-                      Aliased {aliasedAlias = Ir.getFieldNameTxt fieldName, ..})
+                      Aliased {aliasedAlias = IR.getFieldNameTxt fieldName, ..})
                    (fromAggregateField aggregateField))
               fields
           pure (AggregateFieldSource aggregates)
-    Ir.TAFExp text ->
+    IR.TAFExp text ->
       pure
         (ExpressionFieldSource
            Aliased
              { aliasedThing = Tsql.ValueExpression (Odbc.TextValue text)
              , aliasedAlias = name
              })
-    Ir.TAFNodes {} -> refute (pure (NodesUnsupportedForNow field))
+    IR.TAFNodes {} -> refute (pure (NodesUnsupportedForNow field))
 
-fromAggregateField :: Ir.AggregateField 'Postgres -> ReaderT EntityAlias FromIr Aggregate
+fromAggregateField :: IR.AggregateField 'Postgres -> ReaderT EntityAlias FromIr Aggregate
 fromAggregateField aggregateField =
   case aggregateField of
-    Ir.AFExp text -> pure (TextAggregate text)
-    Ir.AFCount countType ->
+    IR.AFExp text -> pure (TextAggregate text)
+    IR.AFCount countType ->
       fmap
         CountAggregate
         (case countType of
-           Sql.CTStar -> pure StarCountable
-           Sql.CTSimple fields ->
+           PG.CTStar -> pure StarCountable
+           PG.CTSimple fields ->
              case NE.nonEmpty fields of
                Nothing -> refute (pure MalformedAgg)
                Just fields' -> do
                  fields'' <- traverse fromPGCol fields'
                  pure (NonNullFieldCountable fields'')
-           Sql.CTDistinct fields ->
+           PG.CTDistinct fields ->
              case NE.nonEmpty fields of
                Nothing -> refute (pure MalformedAgg)
                Just fields' -> do
                  fields'' <- traverse fromPGCol fields'
                  pure (DistinctCountable fields''))
-    Ir.AFOp Ir.AggregateOp {_aoOp = op, _aoFields = fields} -> do
+    IR.AFOp IR.AggregateOp {_aoOp = op, _aoFields = fields} -> do
       fs <- case NE.nonEmpty fields of
               Nothing -> refute (pure MalformedAgg)
               Just fs -> pure fs
@@ -579,72 +571,72 @@ fromAggregateField aggregateField =
         traverse
           (\(_fieldName, pgColFld) ->
              case pgColFld of
-               Ir.CFCol pgCol -> fmap ColumnExpression (fromPGCol pgCol)
-               Ir.CFExp text  -> pure (ValueExpression (Odbc.TextValue text)))
+               IR.CFCol pgCol -> fmap ColumnExpression (fromPGCol pgCol)
+               IR.CFExp text  -> pure (ValueExpression (Odbc.TextValue text)))
           fs
       pure (OpAggregate op args)
 
 -- | The main sources of fields, either constants, fields or via joins.
 fromAnnFieldsG ::
-     Map Sql.QualifiedTable EntityAlias
+     Map PG.QualifiedTable EntityAlias
   -> StringifyNumbers
-  -> (Ir.FieldName, Ir.AnnFieldG 'Postgres Expression)
+  -> (IR.FieldName, IR.AnnFieldG 'Postgres Expression)
   -> ReaderT EntityAlias FromIr FieldSource
-fromAnnFieldsG existingJoins stringifyNumbers (Ir.FieldName name, field) =
+fromAnnFieldsG existingJoins stringifyNumbers (IR.FieldName name, field) =
   case field of
-    Ir.AFColumn annColumnField -> do
+    IR.AFColumn annColumnField -> do
       expression <- fromAnnColumnField stringifyNumbers annColumnField
       pure
         (ExpressionFieldSource
            Aliased {aliasedThing = expression, aliasedAlias = name})
-    Ir.AFExpression text ->
+    IR.AFExpression text ->
       pure
         (ExpressionFieldSource
            Aliased
              { aliasedThing = Tsql.ValueExpression (Odbc.TextValue text)
              , aliasedAlias = name
              })
-    Ir.AFObjectRelation objectRelationSelectG ->
+    IR.AFObjectRelation objectRelationSelectG ->
       fmap
         (\aliasedThing ->
            JoinFieldSource (Aliased {aliasedThing, aliasedAlias = name}))
         (fromObjectRelationSelectG existingJoins objectRelationSelectG)
-    Ir.AFArrayRelation arraySelectG ->
+    IR.AFArrayRelation arraySelectG ->
       fmap
         (\aliasedThing ->
            JoinFieldSource (Aliased {aliasedThing, aliasedAlias = name}))
         (fromArraySelectG arraySelectG)
     -- TODO:
     -- Vamshi said to ignore these three for now:
-    Ir.AFNodeId {} -> refute (pure (FieldTypeUnsupportedForNow field))
-    Ir.AFRemote {} -> refute (pure (FieldTypeUnsupportedForNow field))
-    Ir.AFComputedField {} -> refute (pure (FieldTypeUnsupportedForNow field))
+    IR.AFNodeId {} -> refute (pure (FieldTypeUnsupportedForNow field))
+    IR.AFRemote {} -> refute (pure (FieldTypeUnsupportedForNow field))
+    IR.AFComputedField {} -> refute (pure (FieldTypeUnsupportedForNow field))
 
 -- | Here is where we project a field as a column expression. If
 -- number stringification is on, then we wrap it in a
 -- 'ToStringExpression' so that it's casted when being projected.
 fromAnnColumnField ::
      StringifyNumbers
-  -> Ir.AnnColumnField 'Postgres
+  -> IR.AnnColumnField 'Postgres
   -> ReaderT EntityAlias FromIr Expression
 fromAnnColumnField stringifyNumbers annColumnField = do
   fieldName <- fromPGCol pgCol
-  if asText || (Ir.isScalarColumnWhere Sql.isBigNum typ && stringifyNumbers == StringifyNumbers)
+  if asText || (IR.isScalarColumnWhere PG.isBigNum typ && stringifyNumbers == StringifyNumbers)
      then pure (ToStringExpression (ColumnExpression fieldName))
      else pure (ColumnExpression fieldName)
   where
-    Ir.AnnColumnField { _acfInfo = Ir.ColumnInfo{pgiColumn=pgCol,pgiType=typ}
+    IR.AnnColumnField { _acfInfo = IR.ColumnInfo{pgiColumn=pgCol,pgiType=typ}
                       , _acfAsText = asText :: Bool
-                      , _acfOp = _ :: Maybe Ir.ColumnOp -- TODO: What's this?
+                      , _acfOp = _ :: Maybe (IR.ColumnOp 'Postgres) -- TODO: What's this?
                       } = annColumnField
 
 -- | This is where a field name "foo" is resolved to a fully qualified
 -- field name [table].[foo]. The table name comes from EntityAlias in
 -- the ReaderT.
-fromPGCol :: Sql.PGCol -> ReaderT EntityAlias FromIr FieldName
+fromPGCol :: PG.PGCol -> ReaderT EntityAlias FromIr FieldName
 fromPGCol pgCol = do
   EntityAlias {entityAliasText} <- ask
-  pure (FieldName {fieldName = Sql.getPGColTxt pgCol, fieldNameEntity = entityAliasText})
+  pure (FieldName {fieldName = PG.getPGColTxt pgCol, fieldNameEntity = entityAliasText})
 
 fieldSourceProjections :: FieldSource -> NonEmpty Projection
 fieldSourceProjections =
@@ -684,8 +676,8 @@ fieldSourceJoin =
 -- Joins
 
 fromObjectRelationSelectG ::
-     Map Sql.QualifiedTable EntityAlias
-  -> Ir.ObjectRelationSelectG 'Postgres Expression
+     Map PG.QualifiedTable EntityAlias
+  -> IR.ObjectRelationSelectG 'Postgres Expression
   -> ReaderT EntityAlias FromIr Join
 fromObjectRelationSelectG existingJoins annRelationSelectG = do
   eitherAliasOrFrom <- lift (lookupTableFrom existingJoins tableFrom)
@@ -740,36 +732,36 @@ fromObjectRelationSelectG existingJoins annRelationSelectG = do
                   }
           }
   where
-    Ir.AnnObjectSelectG { _aosFields = fields :: Ir.AnnFieldsG 'Postgres Expression
-                        , _aosTableFrom = tableFrom :: Sql.QualifiedTable
-                        , _aosTableFilter = tableFilter :: Ir.AnnBoolExp 'Postgres Expression
+    IR.AnnObjectSelectG { _aosFields = fields :: IR.AnnFieldsG 'Postgres Expression
+                        , _aosTableFrom = tableFrom :: PG.QualifiedTable
+                        , _aosTableFilter = tableFilter :: IR.AnnBoolExp 'Postgres Expression
                         } = annObjectSelectG
-    Ir.AnnRelationSelectG { aarRelationshipName
-                          , aarColumnMapping = mapping :: HashMap Sql.PGCol Sql.PGCol
-                          , aarAnnSelect = annObjectSelectG :: Ir.AnnObjectSelectG 'Postgres Expression
+    IR.AnnRelationSelectG { aarRelationshipName
+                          , aarColumnMapping = mapping :: HashMap PG.PGCol PG.PGCol
+                          , aarAnnSelect = annObjectSelectG :: IR.AnnObjectSelectG 'Postgres Expression
                           } = annRelationSelectG
 
 lookupTableFrom ::
-     Map Sql.QualifiedTable EntityAlias
-  -> Sql.QualifiedTable
+     Map PG.QualifiedTable EntityAlias
+  -> PG.QualifiedTable
   -> FromIr (Either EntityAlias From)
 lookupTableFrom existingJoins tableFrom = do
   case M.lookup tableFrom existingJoins of
     Just entityAlias -> pure (Left entityAlias)
     Nothing          -> fmap Right (fromQualifiedTable tableFrom)
 
-fromArraySelectG :: Ir.ArraySelectG 'Postgres Expression -> ReaderT EntityAlias FromIr Join
+fromArraySelectG :: IR.ArraySelectG 'Postgres Expression -> ReaderT EntityAlias FromIr Join
 fromArraySelectG =
   \case
-    Ir.ASSimple arrayRelationSelectG ->
+    IR.ASSimple arrayRelationSelectG ->
       fromArrayRelationSelectG arrayRelationSelectG
-    Ir.ASAggregate arrayAggregateSelectG ->
+    IR.ASAggregate arrayAggregateSelectG ->
       fromArrayAggregateSelectG arrayAggregateSelectG
-    select@Ir.ASConnection {} ->
+    select@IR.ASConnection {} ->
       refute (pure (UnsupportedArraySelect select))
 
 fromArrayAggregateSelectG ::
-     Ir.AnnRelationSelectG 'Postgres (Ir.AnnAggregateSelectG 'Postgres Expression)
+     IR.AnnRelationSelectG 'Postgres (IR.AnnAggregateSelectG 'Postgres Expression)
   -> ReaderT EntityAlias FromIr Join
 fromArrayAggregateSelectG annRelationSelectG = do
   fieldName <- lift (fromRelName aarRelationshipName)
@@ -787,12 +779,12 @@ fromArrayAggregateSelectG annRelationSelectG = do
       , joinSource = JoinSelect joinSelect
       }
   where
-    Ir.AnnRelationSelectG { aarRelationshipName
-                          , aarColumnMapping = mapping :: HashMap Sql.PGCol Sql.PGCol
+    IR.AnnRelationSelectG { aarRelationshipName
+                          , aarColumnMapping = mapping :: HashMap PG.PGCol PG.PGCol
                           , aarAnnSelect = annSelectG
                           } = annRelationSelectG
 
-fromArrayRelationSelectG :: Ir.ArrayRelationSelectG 'Postgres Expression -> ReaderT EntityAlias FromIr Join
+fromArrayRelationSelectG :: IR.ArrayRelationSelectG 'Postgres Expression -> ReaderT EntityAlias FromIr Join
 fromArrayRelationSelectG annRelationSelectG = do
   fieldName <- lift (fromRelName aarRelationshipName)
   select <- lift (fromSelectRows annSelectG)
@@ -809,14 +801,14 @@ fromArrayRelationSelectG annRelationSelectG = do
       , joinSource = JoinSelect joinSelect
       }
   where
-    Ir.AnnRelationSelectG { aarRelationshipName
-                          , aarColumnMapping = mapping :: HashMap Sql.PGCol Sql.PGCol
+    IR.AnnRelationSelectG { aarRelationshipName
+                          , aarColumnMapping = mapping :: HashMap PG.PGCol PG.PGCol
                           , aarAnnSelect = annSelectG
                           } = annRelationSelectG
 
-fromRelName :: Ir.RelName -> FromIr Text
+fromRelName :: IR.RelName -> FromIr Text
 fromRelName relName =
-  pure (Ir.relNameToTxt relName)
+  pure (IR.relNameToTxt relName)
 
 -- | The context given by the reader is of the previous/parent
 -- "remote" table. The WHERE that we're generating goes in the child,
@@ -825,12 +817,12 @@ fromRelName relName =
 -- We should hope to see e.g. "post.category = category.id" for a
 -- local table of post and a remote table of category.
 --
--- The left/right columns in @HashMap Sql.PGCol Sql.PGCol@ corresponds
+-- The left/right columns in @HashMap PG.PGCol PG.PGCol@ corresponds
 -- to the left/right of @select ... join ...@. Therefore left=remote,
 -- right=local in this context.
 fromMapping ::
      From
-  -> HashMap Sql.PGCol Sql.PGCol
+  -> HashMap PG.PGCol PG.PGCol
   -> ReaderT EntityAlias FromIr [Expression]
 fromMapping localFrom =
   traverse
@@ -846,51 +838,51 @@ fromMapping localFrom =
 --------------------------------------------------------------------------------
 -- Basic SQL expression types
 
-fromOpExpG :: Expression -> Ir.OpExpG 'Postgres Expression -> FromIr Expression
+fromOpExpG :: Expression -> IR.OpExpG 'Postgres Expression -> FromIr Expression
 fromOpExpG expression op =
   case op of
-    Ir.ANISNULL                  -> pure (IsNullExpression expression)
-    Ir.ANISNOTNULL               -> pure (IsNotNullExpression expression)
-    Ir.AEQ False val             -> pure (nullableBoolEquality expression val)
-    Ir.AEQ True val              -> pure (EqualExpression expression val)
-    Ir.ANE False val             -> pure (nullableBoolInequality expression val)
-    Ir.ANE True val              -> pure (NotEqualExpression expression val)
-    Ir.AGT val                   -> pure (OpExpression MoreOp expression val)
-    Ir.ALT val                   -> pure (OpExpression LessOp expression val)
-    Ir.AGTE val                  -> pure (OpExpression MoreOrEqualOp expression val)
-    Ir.ALTE val                  -> pure (OpExpression LessOrEqualOp expression val)
-    Ir.ACast _casts              -> refute (pure (UnsupportedOpExpG op)) -- mkCastsExp casts
-    Ir.AIN _val                  -> refute (pure (UnsupportedOpExpG op)) -- S.BECompareAny S.SEQ lhs val
-    Ir.ANIN _val                 -> refute (pure (UnsupportedOpExpG op)) -- S.BENot $ S.BECompareAny S.SEQ lhs val
-    Ir.ALIKE _val                -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLIKE lhs val
-    Ir.ANLIKE _val               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNLIKE lhs val
-    Ir.AILIKE _ _val             -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SILIKE lhs val
-    Ir.ANILIKE _ _val            -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNILIKE lhs val
-    Ir.ASIMILAR _val             -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SSIMILAR lhs val
-    Ir.ANSIMILAR _val            -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNSIMILAR lhs val
-    Ir.AContains _val            -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SContains lhs val
-    Ir.AContainedIn _val         -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SContainedIn lhs val
-    Ir.AHasKey _val              -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SHasKey lhs val
-    Ir.AHasKeysAny _val          -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SHasKeysAny lhs val
-    Ir.AHasKeysAll _val          -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SHasKeysAll lhs val
-    Ir.ASTContains _val          -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Contains" val
-    Ir.ASTCrosses _val           -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Crosses" val
-    Ir.ASTEquals _val            -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Equals" val
-    Ir.ASTIntersects _val        -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Intersects" val
-    Ir.ASTOverlaps _val          -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Overlaps" val
-    Ir.ASTTouches _val           -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Touches" val
-    Ir.ASTWithin _val            -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Within" val
-    Ir.ASTDWithinGeom {}         -> refute (pure (UnsupportedOpExpG op)) -- applySQLFn "ST_DWithin" [lhs, val, r]
-    Ir.ASTDWithinGeog {}         -> refute (pure (UnsupportedOpExpG op)) -- applySQLFn "ST_DWithin" [lhs, val, r, sph]
-    Ir.ASTIntersectsRast _val    -> refute (pure (UnsupportedOpExpG op)) -- applySTIntersects [lhs, val]
-    Ir.ASTIntersectsNbandGeom {} -> refute (pure (UnsupportedOpExpG op)) -- applySTIntersects [lhs, nband, geommin]
-    Ir.ASTIntersectsGeomNband {} -> refute (pure (UnsupportedOpExpG op)) -- applySTIntersects [lhs, geommin, withSQLNull mNband]
-    Ir.CEQ _rhsCol               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SEQ lhs $ mkQCol rhsCol
-    Ir.CNE _rhsCol               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNE lhs $ mkQCol rhsCol
-    Ir.CGT _rhsCol               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGT lhs $ mkQCol rhsCol
-    Ir.CLT _rhsCol               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLT lhs $ mkQCol rhsCol
-    Ir.CGTE _rhsCol              -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGTE lhs $ mkQCol rhsCol
-    Ir.CLTE _rhsCol              -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLTE lhs $ mkQCol rhsCol
+    IR.ANISNULL                  -> pure (IsNullExpression expression)
+    IR.ANISNOTNULL               -> pure (IsNotNullExpression expression)
+    IR.AEQ False val             -> pure (nullableBoolEquality expression val)
+    IR.AEQ True val              -> pure (EqualExpression expression val)
+    IR.ANE False val             -> pure (nullableBoolInequality expression val)
+    IR.ANE True val              -> pure (NotEqualExpression expression val)
+    IR.AGT val                   -> pure (OpExpression MoreOp expression val)
+    IR.ALT val                   -> pure (OpExpression LessOp expression val)
+    IR.AGTE val                  -> pure (OpExpression MoreOrEqualOp expression val)
+    IR.ALTE val                  -> pure (OpExpression LessOrEqualOp expression val)
+    IR.ACast _casts              -> refute (pure (UnsupportedOpExpG op)) -- mkCastsExp casts
+    IR.AIN _val                  -> refute (pure (UnsupportedOpExpG op)) -- S.BECompareAny S.SEQ lhs val
+    IR.ANIN _val                 -> refute (pure (UnsupportedOpExpG op)) -- S.BENot $ S.BECompareAny S.SEQ lhs val
+    IR.ALIKE _val                -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLIKE lhs val
+    IR.ANLIKE _val               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNLIKE lhs val
+    IR.AILIKE _ _val             -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SILIKE lhs val
+    IR.ANILIKE _ _val            -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNILIKE lhs val
+    IR.ASIMILAR _val             -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SSIMILAR lhs val
+    IR.ANSIMILAR _val            -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNSIMILAR lhs val
+    IR.AContains _val            -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SContains lhs val
+    IR.AContainedIn _val         -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SContainedIn lhs val
+    IR.AHasKey _val              -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SHasKey lhs val
+    IR.AHasKeysAny _val          -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SHasKeysAny lhs val
+    IR.AHasKeysAll _val          -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SHasKeysAll lhs val
+    IR.ASTContains _val          -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Contains" val
+    IR.ASTCrosses _val           -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Crosses" val
+    IR.ASTEquals _val            -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Equals" val
+    IR.ASTIntersects _val        -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Intersects" val
+    IR.ASTOverlaps _val          -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Overlaps" val
+    IR.ASTTouches _val           -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Touches" val
+    IR.ASTWithin _val            -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Within" val
+    IR.ASTDWithinGeom {}         -> refute (pure (UnsupportedOpExpG op)) -- applySQLFn "ST_DWithin" [lhs, val, r]
+    IR.ASTDWithinGeog {}         -> refute (pure (UnsupportedOpExpG op)) -- applySQLFn "ST_DWithin" [lhs, val, r, sph]
+    IR.ASTIntersectsRast _val    -> refute (pure (UnsupportedOpExpG op)) -- applySTIntersects [lhs, val]
+    IR.ASTIntersectsNbandGeom {} -> refute (pure (UnsupportedOpExpG op)) -- applySTIntersects [lhs, nband, geommin]
+    IR.ASTIntersectsGeomNband {} -> refute (pure (UnsupportedOpExpG op)) -- applySTIntersects [lhs, geommin, withSQLNull mNband]
+    IR.CEQ _rhsCol               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SEQ lhs $ mkQCol rhsCol
+    IR.CNE _rhsCol               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNE lhs $ mkQCol rhsCol
+    IR.CGT _rhsCol               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGT lhs $ mkQCol rhsCol
+    IR.CLT _rhsCol               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLT lhs $ mkQCol rhsCol
+    IR.CGTE _rhsCol              -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGTE lhs $ mkQCol rhsCol
+    IR.CLTE _rhsCol              -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLTE lhs $ mkQCol rhsCol
 
 nullableBoolEquality :: Expression -> Expression -> Expression
 nullableBoolEquality x y =
@@ -906,25 +898,25 @@ nullableBoolInequality x y =
     , AndExpression [IsNotNullExpression x, IsNullExpression y]
     ]
 
-fromSQLExpAsInt :: Sql.SQLExp -> FromIr Expression
+fromSQLExpAsInt :: PG.SQLExp -> FromIr Expression
 fromSQLExpAsInt =
   \case
-    s@(Sql.SELit text) ->
+    s@(PG.SELit text) ->
       case T.decimal text of
         Right (d, "") -> pure (ValueExpression (Odbc.IntValue d))
         _             -> refute (pure (InvalidIntegerishSql s))
     s -> refute (pure (InvalidIntegerishSql s))
 
-fromGBoolExp :: Ir.GBoolExp Expression -> ReaderT EntityAlias FromIr Expression
+fromGBoolExp :: IR.GBoolExp 'Postgres Expression -> ReaderT EntityAlias FromIr Expression
 fromGBoolExp =
   \case
-    Ir.BoolAnd expressions ->
+    IR.BoolAnd expressions ->
       fmap AndExpression (traverse fromGBoolExp expressions)
-    Ir.BoolOr expressions ->
+    IR.BoolOr expressions ->
       fmap OrExpression (traverse fromGBoolExp expressions)
-    Ir.BoolNot expression -> fmap NotExpression (fromGBoolExp expression)
-    Ir.BoolExists gExists -> fmap ExistsExpression (fromGExists gExists)
-    Ir.BoolFld expression -> pure expression
+    IR.BoolNot expression -> fmap NotExpression (fromGBoolExp expression)
+    IR.BoolExists gExists -> fmap ExistsExpression (fromGExists gExists)
+    IR.BoolFld expression -> pure expression
 
 --------------------------------------------------------------------------------
 -- Misc combinators
