@@ -47,7 +47,7 @@ runApp env (HGEOptionsG rci hgeCmd) = do
 
   withVersion $$(getVersionFromEnvironment) $ case hgeCmd of
     HCServe serveOptions -> do
-      initCtx <- initialiseCtx env globalCtx serveOptions
+      serveCtx <- initialiseServeCtx env globalCtx serveOptions
 
       ekgStore <- liftIO do
         s <- EKG.newStore
@@ -67,9 +67,9 @@ runApp env (HGEOptionsG rci hgeCmd) = do
       -- once again, we terminate the process immediately.
       _ <- liftIO $ Signals.installHandler
         Signals.sigTERM
-        (Signals.CatchOnce (shutdownGracefully initCtx))
+        (Signals.CatchOnce (shutdownGracefully $ _scShutdownLatch serveCtx))
         Nothing
-      runHGEServer env serveOptions initCtx Nothing initTime shutdownApp Nothing ekgStore
+      runHGEServer env serveOptions serveCtx Nothing initTime shutdownApp Nothing ekgStore
 
     HCExport -> do
       res <- runTxWithMinimalPool _gcConnInfo fetchMetadataFromHdbTables

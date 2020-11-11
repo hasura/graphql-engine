@@ -155,11 +155,10 @@ mkPGLogger :: Logger Hasura -> Q.PGLogger
 mkPGLogger (Logger logger) (Q.PLERetryMsg msg) =
   logger $ PGLog LevelWarn msg
 
--- | Context required for all graphql-engine commands
+-- | Context required for all graphql-engine CLI commands
 data GlobalCtx
   = GlobalCtx
   { _gcHttpManager :: !HTTP.Manager
-  , _gcInstanceId  :: !InstanceId
   , _gcConnInfo    :: !Q.ConnInfo
   }
 
@@ -167,23 +166,22 @@ initGlobalCtx
   :: (MonadIO m) => RawConnInfo -> m GlobalCtx
 initGlobalCtx rawConnInfo = do
   _gcHttpManager <- liftIO $ HTTP.newManager HTTP.tlsManagerSettings
-  _gcInstanceId <- liftIO generateInstanceId
   _gcConnInfo <- liftIO $ onLeft (mkConnInfo rawConnInfo) $
     printErrExit InvalidDatabaseConnectionParamsError . ("Fatal Error : " <>)
   pure GlobalCtx{..}
 
 
--- | most of the required types for initializing graphql-engine
-data InitCtx
-  = InitCtx
-  { _icHttpManager   :: !HTTP.Manager
-  , _icInstanceId    :: !InstanceId
-  , _icLoggers       :: !Loggers
-  , _icConnInfo      :: !Q.ConnInfo
-  , _icPgPool        :: !Q.PGPool
-  , _icShutdownLatch :: !ShutdownLatch
-  , _icSchemaCache   :: !(RebuildableSchemaCache Run)
-  , _icSchemaSyncCtx :: !SchemaSyncCtx
+-- | Context required for the 'serve' CLI command.
+data ServeCtx
+  = ServeCtx
+  { _scHttpManager   :: !HTTP.Manager
+  , _scInstanceId    :: !InstanceId
+  , _scLoggers       :: !Loggers
+  , _scConnInfo      :: !Q.ConnInfo
+  , _scPgPool        :: !Q.PGPool
+  , _scShutdownLatch :: !ShutdownLatch
+  , _scSchemaCache   :: !(RebuildableSchemaCache Run)
+  , _scSchemaSyncCtx :: !SchemaSyncCtx
   }
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger
@@ -196,16 +194,21 @@ data Loggers
   }
 
 newtype AppM a = AppM { unAppM :: IO a }
-  deriving (Functor, Applicative, Monad, MonadIO, MonadBase IO, MonadBaseControl IO, MonadCatch, MonadThrow, MonadMask)
+  deriving ( Functor, Applicative, Monad
+           , MonadIO, MonadBase IO
+           , MonadBaseControl IO
+           , MonadCatch, MonadThrow, MonadMask
+           )
 
--- | Initializes the catalog and returns an @InitCtx@ for given @'ServeOptions'
-initialiseCtx
+-- | Initializes or migrates the catalog and returns the context required to start the server.
+initialiseServeCtx
   :: (HasVersion, MonadIO m, MonadCatch m)
   => Env.Environment
   -> GlobalCtx
   -> ServeOptions Hasura
-  -> m InitCtx
-initialiseCtx env GlobalCtx{..} so@ServeOptions{..} = do
+  -> m ServeCtx
+initialiseServeCtx env GlobalCtx{..} so@ServeOptions{..} = do
+  instanceId <- liftIO generateInstanceId
   latch <- liftIO newShutdownLatch
   loggers@(Loggers loggerCtx logger pgLogger) <- mkLoggers soEnabledLogTypes soLogLevel
   -- log serve options
@@ -222,13 +225,13 @@ initialiseCtx env GlobalCtx{..} so@ServeOptions{..} = do
   -- in @'runHGEServer'. These events are processed as soon as the processor thread starts
   -- and refreshes the schema cache. This will ensure the schema cache is in sync with the
   -- latest changes made to metadata present in catalog.
-  (schemaSyncListenerThread, schemaSyncEventRef) <- startSchemaSyncListenerThread pool logger _gcInstanceId
+  (schemaSyncListenerThread, schemaSyncEventRef) <- startSchemaSyncListenerThread pool logger instanceId
 
   (rebuildableSchemaCache, cacheInitTime) <-
     flip onException (flushLogger loggerCtx) $ migrateCatalogSchema env logger pool _gcHttpManager sqlGenCtx
 
   let schemaSyncCtx = SchemaSyncCtx schemaSyncListenerThread schemaSyncEventRef cacheInitTime
-      initCtx = InitCtx _gcHttpManager _gcInstanceId loggers _gcConnInfo pool latch
+      initCtx = ServeCtx _gcHttpManager instanceId loggers _gcConnInfo pool latch
                 rebuildableSchemaCache schemaSyncCtx
   pure initCtx
 
@@ -284,11 +287,8 @@ waitForShutdown = C.takeMVar . unShutdownLatch
 
 -- | Initiate a graceful shutdown of the server associated with the provided
 -- latch.
-shutdownGracefully :: InitCtx -> IO ()
-shutdownGracefully = shutdownGracefully' . _icShutdownLatch
-
-shutdownGracefully' :: ShutdownLatch -> IO ()
-shutdownGracefully' = flip C.putMVar () . unShutdownLatch
+shutdownGracefully :: ShutdownLatch -> IO ()
+shutdownGracefully = flip C.putMVar () . unShutdownLatch
 
 -- | If an exception is encountered , flush the log buffer and
 -- rethrow If we do not flush the log buffer on exception, then log lines
@@ -317,7 +317,7 @@ runHGEServer
      )
   => Env.Environment
   -> ServeOptions impl
-  -> InitCtx
+  -> ServeCtx
   -> Maybe PGExecCtx
   -- ^ An optional specialized pg exection context for executing queries
   -- and mutations
@@ -328,7 +328,7 @@ runHGEServer
   -> Maybe EL.LiveQueryPostPollHook
   -> EKG.Store
   -> m ()
-runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp postPollHook ekgStore = do
+runHGEServer env ServeOptions{..} ServeCtx{..} pgExecCtx initTime shutdownApp postPollHook ekgStore = do
   -- Comment this to enable expensive assertions from "GHC.AssertNF". These
   -- will log lines to STDOUT containing "not in normal form". In the future we
   -- could try to integrate this into our tests. For now this is a development
@@ -340,11 +340,11 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
 #endif
 
   let sqlGenCtx = SQLGenCtx soStringifyNum
-      Loggers loggerCtx logger _ = _icLoggers
-      SchemaSyncCtx{..} = _icSchemaSyncCtx
+      Loggers loggerCtx logger _ = _scLoggers
+      SchemaSyncCtx{..} = _scSchemaSyncCtx
 
   authModeRes <- runExceptT $ setupAuthMode soAdminSecret soAuthHook soJwtSecret soUnAuthRole
-                              _icHttpManager logger
+                              _scHttpManager logger
 
   authMode <- onLeft authModeRes (printErrExit AuthConfigurationError . T.unpack)
 
@@ -357,22 +357,22 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
              logger
              sqlGenCtx
              soEnableAllowlist
-             _icPgPool
+             _scPgPool
              pgExecCtx
-             _icConnInfo
-             _icHttpManager
+             _scConnInfo
+             _scHttpManager
              authMode
              soCorsConfig
              soEnableConsole
              soConsoleAssetsDir
              soEnableTelemetry
-             _icInstanceId
+             _scInstanceId
              soEnabledAPIs
              soLiveQueryOpts
              soPlanCacheOptions
              soResponseInternalErrorsConfig
              postPollHook
-             _icSchemaCache
+             _scSchemaCache
              ekgStore
              soConnectionOptions
              soWebsocketKeepAlive
@@ -382,9 +382,9 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
   liftIO $ logInconsObjs logger inconsObjs
 
   -- Start a background thread for processing schema sync event present in the '_sscSyncEventRef'
-  schemaSyncProcessorThread <- startSchemaSyncProcessorThread sqlGenCtx _icPgPool
-                               logger _icHttpManager _sscSyncEventRef
-                               cacheRef _icInstanceId _sscCacheInitTime
+  schemaSyncProcessorThread <- startSchemaSyncProcessorThread sqlGenCtx _scPgPool
+                               logger _scHttpManager _sscSyncEventRef
+                               cacheRef _scInstanceId _sscCacheInitTime
 
   let
     maxEvThrds    = fromMaybe defaultMaxEventThreads soEventsHttpPoolSize
@@ -399,37 +399,37 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
 
   eventQueueThread <- C.forkImmortal "processEventQueue" logger $
     processEventQueue logger logEnvHeaders
-    _icHttpManager _icPgPool (getSCFromRef cacheRef) eventEngineCtx lockedEventsCtx
+    _scHttpManager _scPgPool (getSCFromRef cacheRef) eventEngineCtx lockedEventsCtx
 
   -- start a backgroud thread to handle async actions
   asyncActionsThread <- C.forkImmortal "asyncActionsProcessor" logger $
-    asyncActionsProcessor env logger (_scrCache cacheRef) _icPgPool _icHttpManager
+    asyncActionsProcessor env logger (_scrCache cacheRef) _scPgPool _scHttpManager
 
   -- start a background thread to create new cron events
   cronEventsThread <- liftIO $ C.forkImmortal "runCronEventsGenerator" logger $
-    runCronEventsGenerator logger _icPgPool (getSCFromRef cacheRef)
+    runCronEventsGenerator logger _scPgPool (getSCFromRef cacheRef)
 
   -- prepare scheduled triggers
-  prepareScheduledEvents _icPgPool logger
+  prepareScheduledEvents _scPgPool logger
 
   -- start a background thread to deliver the scheduled events
   scheduledEventsThread <- C.forkImmortal "processScheduledTriggers" logger $
-    processScheduledTriggers env logger logEnvHeaders _icHttpManager _icPgPool (getSCFromRef cacheRef) lockedEventsCtx
+    processScheduledTriggers env logger logEnvHeaders _scHttpManager _scPgPool (getSCFromRef cacheRef) lockedEventsCtx
 
   -- start a background thread to check for updates
   updateThread <- C.forkImmortal "checkForUpdates" logger $ liftIO $
-    checkForUpdates loggerCtx _icHttpManager
+    checkForUpdates loggerCtx _scHttpManager
 
   -- start a background thread for telemetry
   telemetryThread <- if soEnableTelemetry
     then do
       unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
 
-      (dbId, pgVersion) <- liftIO $ runTxIO _icPgPool (Q.ReadCommitted, Nothing) $
+      (dbId, pgVersion) <- liftIO $ runTxIO _scPgPool (Q.ReadCommitted, Nothing) $
         (,) <$> getDbId <*> getPgVersion
 
       telemetryThread <- C.forkImmortal "runTelemetry" logger $ liftIO $
-        runTelemetry logger _icHttpManager (getSCFromRef cacheRef) dbId _icInstanceId pgVersion
+        runTelemetry logger _scHttpManager (getSCFromRef cacheRef) dbId _scInstanceId pgVersion
       return $ Just telemetryThread
     else return Nothing
 
@@ -450,7 +450,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
   let warpSettings = Warp.setPort soPort
                      . Warp.setHost soHost
                      . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
-                     . Warp.setInstallShutdownHandler (shutdownHandler _icLoggers immortalThreads stopWsServer lockedEventsCtx _icPgPool)
+                     . Warp.setInstallShutdownHandler (shutdownHandler _scLoggers immortalThreads stopWsServer lockedEventsCtx _scPgPool)
                      $ Warp.defaultSettings
   liftIO $ Warp.runSettings warpSettings app
 
@@ -529,7 +529,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
       -> IO ()
     shutdownHandler (Loggers loggerCtx (Logger logger) _) immortalThreads stopWsServer leCtx pool closeSocket =
       LA.link =<< LA.async do
-        waitForShutdown _icShutdownLatch
+        waitForShutdown _scShutdownLatch
         logger $ mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
         shutdownEvents pool (Logger logger) leCtx
         closeSocket
