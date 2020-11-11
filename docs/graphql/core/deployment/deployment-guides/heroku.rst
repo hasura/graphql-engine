@@ -42,7 +42,7 @@ Click the below button to deploy Hasura on Heroku in a few seconds:
    If you don't have an account on Heroku, you need to sign up on Heroku. You won't need a credit card, and once you
    sign up you'll be redirected to your Heroku app creation page automatically.
 
-.. thumbnail:: /img/graphql/core/guides/heroku-app.png
+.. thumbnail:: /img/graphql/core/deployment/heroku-app.png
    :alt: Deploy to Heroku 
 
 Heroku's free Postgres add-on is automatically provisioned.
