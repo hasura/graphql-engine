@@ -17,7 +17,6 @@ module Hasura.GraphQL.Context
   , MutationRootField
   , SubscriptionRootField
   , SubscriptionRootFieldResolved
-  , resolveRemoteField
   ) where
 
 import           Hasura.Prelude
@@ -139,53 +138,3 @@ type MutationRootField v =
 
 type SubscriptionRootField v = RootField (QueryDB 'Postgres v) Void (RQL.AnnActionAsyncQuery 'Postgres v) Void
 type SubscriptionRootFieldResolved = RootField (QueryDB 'Postgres S.SQLExp) Void (RQL.AnnSimpleSel 'Postgres) Void
-
-resolveRemoteVariable
-  :: (MonadError RQL.QErr m)
-  => UserInfo
-  -> RQL.RemoteSchemaVariable
-  -> m Variable
-resolveRemoteVariable userInfo = \case
-  RQL.SessionPresetVariable sessionVar gType varName presetType -> do
-    sessionVarVal <- onNothing (getSessionVariableValue sessionVar $ _uiSession userInfo)
-      $ RQL.throw400 RQL.NotFound $ sessionVar <<> " session variable expected, but not found"
-    let baseType = G.getBaseType gType
-        coercedValue =
-          case presetType of
-            RQL.SessionArgumentPresetScalar ->
-              case G.unName baseType of
-                "Int" -> G.VInt <$>
-                  case readMaybe $ T.unpack sessionVarVal of
-                    Nothing -> Left $ sessionVarVal <<> " cannot be coerced into an Int value"
-                    Just i -> Right i
-                "Boolean" ->
-                  if | sessionVarVal `elem` ["true", "false"] -> Right $ G.VBoolean $ "true" == sessionVarVal
-                     | otherwise -> Left $ sessionVarVal <<> " cannot be coerced into a Boolean value"
-                "Float" -> G.VFloat <$>
-                   case readMaybe $ T.unpack sessionVarVal of
-                     Nothing -> Left $ sessionVarVal <<> " cannot be coerced into a Float value"
-                     Just i -> Right i
-                "String" -> pure $ G.VString sessionVarVal
-                "ID" -> pure $ G.VString sessionVarVal
-                -- When we encounter a custom scalar, we just pass it as a string
-                _ -> pure $ G.VString sessionVarVal
-            RQL.SessionArgumentPresetEnum enumVals -> do
-              sessionVarEnumVal <-
-                G.EnumValue <$>
-                  onNothing
-                    (G.mkName sessionVarVal)
-                    (Left $ sessionVarVal <<> " is not a valid GraphQL name")
-              case find (== sessionVarEnumVal) enumVals of
-                Just enumVal -> Right $ G.VEnum enumVal
-                Nothing -> Left $ sessionVarEnumVal <<> " is not one of the valid enum values"
-    coercedValue' <- onLeft coercedValue $ RQL.throw400 RQL.CoercionError
-    pure $ Variable (VIRequired varName) gType (GraphQLValue coercedValue')
-  RQL.RawVariable variable -> pure variable
-
-resolveRemoteField
-  :: (MonadError RQL.QErr m)
-  => UserInfo
-  -> RemoteField
-  -> m (RQL.RemoteSchemaInfo, G.Field G.NoFragments Variable)
-resolveRemoteField userInfo (RemoteField remoteSchemaInfo remoteField) =
-  (remoteSchemaInfo,) <$> traverse (resolveRemoteVariable userInfo) remoteField
