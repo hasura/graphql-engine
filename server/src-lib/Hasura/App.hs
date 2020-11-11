@@ -686,6 +686,15 @@ runInSeparateTx tx = do
   liftEitherM $ liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Nothing) tx
 
 -- | Each of the function in the type class is executed in a totally separate transaction.
+--
+-- TODO: We are not quite sure about the role of `MetadataStorageT` and `PGMetadataStorageApp`.
+-- During the technical development, the following concerns got muddled a bit:
+-- 1. We need a way to acquire a Postgres connection.
+-- 2. We need a way to delimit the scope of a Postgres transaction.
+-- 3. We need a way to handle errors that result from executing queries against Postgres.
+-- 4. We need a way to select which implementation of metadata storage we want to use.
+-- In summary, it is not clear if this instance has a desirable shape, and it may undergo
+-- redesign at a later stage.
 instance MonadMetadataStorage (MetadataStorageT PGMetadataStorageApp) where
 
   getDeprivedCronTriggerStats        = runInSeparateTx getDeprivedCronTriggerStatsTx
