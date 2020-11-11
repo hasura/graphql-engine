@@ -1,6 +1,5 @@
--- | Funtions for fetching/saving @'Metadata' from catalog schema (@hdb_catalog@) prior to
--- metadata separation. These functions are useful for upgrading/downgrading
--- the catalog schema.
+-- | Funtions for fetching/saving @'Metadata' in @hdb_catalog@ schema prior to
+-- metadata separation (catalog version < 42).
 module Hasura.RQL.DDL.Schema.LegacyCatalog
   ( saveMetadataToHdbTables
   , fetchMetadataFromHdbTables

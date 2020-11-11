@@ -12,7 +12,7 @@ DROP VIEW hdb_catalog.hdb_function_info_agg;
 DROP VIEW hdb_catalog.hdb_table_info_agg;
 DROP TRIGGER hdb_schema_update_event_notifier ON hdb_catalog.hdb_schema_update_event;
 DROP FUNCTION hdb_catalog.hdb_schema_update_event_notifier();
-DROP TABLE hdb_catalog.hdb_schema_update_event;
+DROP TABLE hdb_catalog.hdb_schema_update_event; -- https://github.com/hasura/graphql-engine/pull/6173
 DROP TABLE hdb_catalog.remote_schemas;
 DROP VIEW hdb_catalog.hdb_function_agg;
 DROP TABLE hdb_catalog.hdb_function;
