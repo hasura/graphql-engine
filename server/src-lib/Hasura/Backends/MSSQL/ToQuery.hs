@@ -13,7 +13,6 @@ module Hasura.Backends.MSSQL.ToQuery
 
 import           Hasura.Prelude
 
-import qualified Data.List.NonEmpty          as NE
 import qualified Data.Text                   as T
 import qualified Data.Text.Lazy              as LT
 import qualified Data.Text.Lazy.Builder      as LT
@@ -62,14 +61,14 @@ fromExpression =
         (toList
            (fmap
               (\x -> "(" <+> fromExpression x <+> ")")
-              (fromMaybe (pure trueExpression) (NE.nonEmpty xs))))
+              (fromMaybe (pure trueExpression) (nonEmpty xs))))
     OrExpression xs ->
       SepByPrinter
         (NewlinePrinter <+> " OR ")
         (toList
            (fmap
               (\x -> "(" <+> fromExpression x <+> ")")
-              (fromMaybe (pure falseExpression) (NE.nonEmpty xs))))
+              (fromMaybe (pure falseExpression) (nonEmpty xs))))
     NotExpression expression -> "NOT " <+> (fromExpression expression)
     ExistsExpression select -> "EXISTS (" <+> fromSelect select <+> ")"
     IsNullExpression expression ->

@@ -147,7 +147,7 @@ fromSelectRows annSelectG = do
   filterExpression <-
     runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
   selectProjections <-
-    NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources)
+    nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources)
     `onNothing` refute (pure NoProjectionFields)
   pure
     Select
@@ -198,7 +198,7 @@ fromSelectAggregate annSelectG = do
        , argsOffset
        } <- runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
   selectProjections <-
-    NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources)
+    nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources)
     `onNothing` refute (pure NoProjectionFields)
   pure
     Select
@@ -272,7 +272,7 @@ fromSelectArgsG selectArgsG = do
   pure
     Args
       { argsJoins = toList (fmap unfurledJoin joins)
-      , argsOrderBy = NE.nonEmpty argsOrderBy
+      , argsOrderBy = nonEmpty argsOrderBy
       , ..
       }
   where
@@ -519,7 +519,7 @@ fromTableAggregateFieldG ::
 fromTableAggregateFieldG (IR.FieldName name, field) =
   case field of
     IR.TAFAgg (aggregateFields :: [(IR.FieldName, IR.AggregateField 'Postgres)]) ->
-      case NE.nonEmpty aggregateFields of
+      case nonEmpty aggregateFields of
         Nothing -> refute (pure NoAggregatesMustBeABug)
         Just fields -> do
           aggregates <-
@@ -550,19 +550,19 @@ fromAggregateField aggregateField =
         (case countType of
            PG.CTStar -> pure StarCountable
            PG.CTSimple fields ->
-             case NE.nonEmpty fields of
+             case nonEmpty fields of
                Nothing -> refute (pure MalformedAgg)
                Just fields' -> do
                  fields'' <- traverse fromPGCol fields'
                  pure (NonNullFieldCountable fields'')
            PG.CTDistinct fields ->
-             case NE.nonEmpty fields of
+             case nonEmpty fields of
                Nothing -> refute (pure MalformedAgg)
                Just fields' -> do
                  fields'' <- traverse fromPGCol fields'
                  pure (DistinctCountable fields''))
     IR.AFOp IR.AggregateOp {_aoOp = op, _aoFields = fields} -> do
-      fs <- NE.nonEmpty fields `onNothing` refute (pure MalformedAgg)
+      fs <- nonEmpty fields `onNothing` refute (pure MalformedAgg)
       args <-
         traverse
           (\(_fieldName, pgColFld) ->
@@ -683,7 +683,7 @@ fromObjectRelationSelectG existingJoins annRelationSelectG = do
       (const entityAlias)
       (traverse (fromAnnFieldsG mempty LeaveNumbersAlone) fields)
   selectProjections <-
-    NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources)
+    nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources)
     `onNothing` refute (pure NoProjectionFields)
   joinJoinAlias <-
     do fieldName <- lift (fromRelName aarRelationshipName)
