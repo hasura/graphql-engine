@@ -401,6 +401,7 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
             <div className={`${styles.add_mar_bottom_mid}`}>
               <b>Session argument:</b>
               <Tooltip message="The function argument into which Hasura session variables will be passed" />
+              &nbsp;
               <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/core/schema/computed-fields.html#accessing-hasura-session-variables-in-computed-fields" />
             </div>
             <input
