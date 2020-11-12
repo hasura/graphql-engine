@@ -171,11 +171,6 @@ jobs:
         - cabal-store-v2-{{ checksum "server/cabal.project" }}-
         - cabal-store-v2-
     - run:
-        name: Install latest postgresql client tools
-        command: |
-          apt-get -y update
-          apt-get -y install postgresql-client-12
-    - run:
         name: Build the binary
         working_directory: ./server
         command: |

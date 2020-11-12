@@ -31,6 +31,7 @@ TAGS
 # ws related
 ws/
 build/rootfs
+build/tmp
 
 random*.sql
 
