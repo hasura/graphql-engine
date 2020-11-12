@@ -122,7 +122,7 @@ const Options: React.FC<OptionsProps> = ({ opName, onChange, index }) => (
 type WhereSectionProps = {
   whereAnd: Where;
   tableSchema: TableSchema;
-  dispatch: ThunkDispatch<{}, {}, AnyAction>;
+  dispatch: ThunkDispatch<unknown, unknown, AnyAction>;
 };
 const WhereSection = ({
   whereAnd,
@@ -202,7 +202,7 @@ const WhereSection = ({
 type SortSectionProps = {
   orderBy: OrderBy;
   tableSchema: TableSchema;
-  dispatch: ThunkDispatch<{}, {}, AnyAction>;
+  dispatch: ThunkDispatch<unknown, unknown, AnyAction>;
 };
 const SortSection = ({ orderBy, tableSchema, dispatch }: SortSectionProps) => {
   const currentOrderBy = orderBy.map(o => o.column);
@@ -299,7 +299,7 @@ const setUrlParams = (whereQuery: Where, orderByQuery: OrderBy) => {
 
 export interface FilterQueryProps {
   tableSchema: TableSchema;
-  dispatch: ThunkDispatch<{}, {}, AnyAction>;
+  dispatch: ThunkDispatch<unknown, unknown, AnyAction>;
   curQuery: {
     limit?: number;
     offset?: number;
