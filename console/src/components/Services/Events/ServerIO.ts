@@ -139,7 +139,9 @@ export const addScheduledTrigger = (
         if (successCb) {
           successCb();
         }
-        dispatch(push(getSTModifyRoute(state.name, 'absolute')));
+        dispatch(
+          push(getSTModifyRoute(encodeURIComponent(state.name), 'absolute'))
+        );
       })
       .catch(() => {
         if (errorCb) {
@@ -233,8 +235,11 @@ export const saveScheduledTrigger = (
         }
         if (isRenamed) {
           const newHref = window.location.href.replace(
-            getSTModifyRoute(existingTrigger.name, 'relative'),
-            getSTModifyRoute(state.name, 'relative')
+            getSTModifyRoute(
+              encodeURIComponent(existingTrigger.name),
+              'relative'
+            ),
+            getSTModifyRoute(encodeURIComponent(state.name), 'relative')
           );
           dispatch(replace(newHref));
           dispatch(setCurrentTrigger(state.name));
