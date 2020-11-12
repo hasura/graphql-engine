@@ -48,8 +48,6 @@ import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
-import Debug.Pretty.Simple (pTrace, pTraceM)
-
 
 -- | Executes given query and fetch response JSON from Postgres. Substitutes remote relationship fields.
 executeQueryWithRemoteJoins
@@ -385,7 +383,6 @@ traverseQueryResponseJSON rjm =
                          case find ((== fieldName) . _rjName) remoteJoins of
                            Just rj -> Just . CVFromRemote <$> mkRemoteSchemaField fields rj
                            Nothing -> Just <$> traverseValue fieldPath value
-          pTraceM ("processedFields are " <> (show processedFields))
           pure $ CVObject $ OMap.fromList processedFields
 
 convertFieldWithVariablesToName :: G.Field G.NoFragments Variable -> G.Field G.NoFragments G.Name

@@ -186,6 +186,11 @@ class TestExecution:
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'basic_multiple_fields.yaml')
 
+    def test_remote_join_fields_with_null_joining_fields(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_null_joining_fields.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'remote_rel_with_null_joining_fields.yaml')
+
     def test_nested_fields(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_nested_fields.yaml')
         assert st_code == 200, resp
