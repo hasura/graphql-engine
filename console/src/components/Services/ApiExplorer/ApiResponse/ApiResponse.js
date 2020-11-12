@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import AceEditor from 'react-ace';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 
 import CopyToClipboard from 'react-copy-to-clipboard';
@@ -8,6 +7,7 @@ import CopyToClipboard from 'react-copy-to-clipboard';
 import generateSuggestionBox from './generateSuggestionBox';
 
 import suggestionFunctions from './suggestionFunctions';
+import Editor from '../../../Common/AceEditor/BaseEditor';
 
 class ApiResponse extends React.Component {
   constructor() {
@@ -180,11 +180,12 @@ class ApiResponse extends React.Component {
                     style={{ width: '100%', height: '100%' }}
                   />
                 ) : (
-                  <AceEditor
+                  <Editor
                     readOnly
                     showPrintMargin={false}
                     mode={responseMode}
                     showGutter={showGutter}
+                    fontSize={12}
                     theme="github"
                     name="api-explorer-request"
                     value={formattedResponse}

@@ -94,6 +94,7 @@ const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
           )}
         </div>
         <AceEditor
+          resizable
           name="sdl-editor"
           value={value}
           onChange={onChangeWithError}

@@ -1,5 +1,4 @@
 import React from 'react';
-import AceEditor from 'react-ace';
 
 import styles from './ModifyTable.scss';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
@@ -17,6 +16,7 @@ import {
 import { deleteComputedField, saveComputedField } from './ModifyActions';
 import { fetchFunctionInit } from '../DataActions';
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
+import Editor from '../../../Common/AceEditor/BaseEditor';
 
 const ComputedFieldsEditor = ({
   table,
@@ -177,7 +177,7 @@ const ComputedFieldsEditor = ({
               <b>Function definition: </b>
               {computedFieldFunctionDefinition && modifyFunctionBtn}
             </div>
-            <AceEditor
+            <Editor
               mode="sql"
               readOnly
               theme="github"

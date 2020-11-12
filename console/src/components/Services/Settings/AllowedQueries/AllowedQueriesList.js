@@ -1,5 +1,4 @@
 import React from 'react';
-import AceEditor from 'react-ace';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 
 import styles from './AllowedQueries.scss';
@@ -12,6 +11,7 @@ import {
 import Button from '../../../Common/Button/Button';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import Editor from '../../../Common/AceEditor/BaseEditor';
 
 class AllowedQueriesList extends React.Component {
   constructor(props) {
@@ -77,12 +77,13 @@ class AllowedQueriesList extends React.Component {
                 <div className={styles.add_mar_bottom_mid}>
                   <b>Operation:</b>
                 </div>
-                <AceEditor
+                <Editor
                   data-test="allowed_operation_editor"
                   mode="graphql"
                   theme="github"
                   name="allowed_operation_editor"
                   value={modifiedQuery.query}
+                  fontSize={12}
                   minLines={8}
                   maxLines={100}
                   width="100%"

@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
-import AceEditor from 'react-ace';
-import 'brace/mode/sql';
 
 import Modal from '../../../Common/Modal/Modal';
 import Button from '../../../Common/Button/Button';
@@ -34,6 +32,7 @@ import {
 } from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 import NotesSection from './molecules/NotesSection';
+import Editor from '../../../Common/AceEditor/BaseEditor';
 
 /**
  * # RawSQL React FC
@@ -217,8 +216,9 @@ const RawSQL = ({
 
     return (
       <div className={styles.add_mar_top}>
-        <AceEditor
+        <Editor
           data-test="sql-test-editor"
+          resizable
           mode="sql"
           theme={ACE_EDITOR_THEME}
           fontSize={ACE_EDITOR_FONT_SIZE}

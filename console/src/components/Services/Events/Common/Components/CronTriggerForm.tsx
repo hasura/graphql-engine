@@ -94,6 +94,7 @@ const Form: React.FC<Props> = props => {
         heading="Payload"
       >
         <AceEditor
+          resizable
           mode="json"
           value={payload}
           onChange={setState.payload}

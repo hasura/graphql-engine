@@ -2,7 +2,6 @@ import React from 'react';
 import InputGroup from 'react-bootstrap/lib/InputGroup';
 import DropdownButton from 'react-bootstrap/lib/DropdownButton';
 import MenuItem from 'react-bootstrap/lib/MenuItem';
-import styles from './DropdownButton.scss';
 
 type DropDownButtonProps = {
   title: string;
@@ -67,7 +66,7 @@ const DDButton: React.FC<DropDownButtonProps> = props => {
         type="text"
         data-key={dataKey}
         data-index-id={dataIndex}
-        className={`form-control ${styles.inputDropdown}`}
+        className="form-control"
         required={required}
         onChange={onInputChange}
         disabled={disabled}

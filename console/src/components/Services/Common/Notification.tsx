@@ -1,5 +1,4 @@
 import React from 'react';
-import AceEditor from 'react-ace';
 import {
   removeAll as removeNotifications,
   show as displayNotification,
@@ -13,6 +12,7 @@ import './Notification/NotificationOverrides.css';
 import { isObject, isString } from '../../Common/utils/jsUtils';
 
 import styles from './Notification/Notification.scss';
+import Editor from '../../Common/AceEditor/BaseEditor';
 
 export interface Notification {
   title?: string | JSX.Element;
@@ -58,7 +58,7 @@ const getNotificationDetails = (
 ) => {
   return (
     <div className="notification-details">
-      <AceEditor
+      <Editor
         readOnly
         showPrintMargin={false}
         mode="json"

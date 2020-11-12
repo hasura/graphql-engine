@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import AceEditor, { IAnnotation } from 'react-ace';
 import { isJsonString } from '../../../Common/utils/jsUtils';
 import { usePrevious } from '../../../../hooks/usePrevious';
+import Editor from '../../../Common/AceEditor/BaseEditor';
+import { IAnnotation } from 'react-ace';
 
 export interface JSONEditorProps {
   initData: string;
@@ -51,12 +52,13 @@ const JSONEditor: React.FC<JSONEditorProps> = ({
   ]);
 
   return (
-    <AceEditor
+    <Editor
       mode="json"
       onChange={onEditorValueChange}
       theme="github"
       height="5em"
       maxLines={15}
+      fontSize={12}
       width="100%"
       showPrintMargin={false}
       value={value}

@@ -1,10 +1,5 @@
 import React, { useState } from 'react';
-import AceEditor from 'react-ace';
-
-import 'brace/mode/html';
-import 'brace/mode/markdown';
-import 'brace/theme/github';
-import 'brace/theme/chrome';
+import Editor from '../AceEditor/BaseEditor';
 
 const styles = require('./CustomInput.scss');
 
@@ -96,9 +91,10 @@ const TextInput = props => {
 
   const getAceEditor = curmode => {
     return (
-      <AceEditor
+      <Editor
         key="ace_text_editor"
         {...allProps}
+        resizable
         mode={curmode}
         theme="chrome"
         name="texttoggler"

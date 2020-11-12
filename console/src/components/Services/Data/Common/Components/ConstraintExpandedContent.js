@@ -1,10 +1,10 @@
 import React from 'react';
-import AceEditor from 'react-ace';
 
 import styles from '../../../../Common/Common.scss';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
 import { checkConstraintExpression } from '../TooltipMessages';
+import Editor from '../../../../Common/AceEditor/BaseEditor';
 
 export const ConstraintExpandedContent = ({
   nameOnChange,
@@ -33,7 +33,7 @@ export const ConstraintExpandedContent = ({
           &nbsp;&nbsp;
           <KnowMoreLink href="https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-CHECK-CONSTRAINTS" />
         </div>
-        <AceEditor
+        <Editor
           mode="sql"
           theme="github"
           name={constraintName}

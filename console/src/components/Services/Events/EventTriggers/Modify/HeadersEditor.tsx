@@ -1,12 +1,12 @@
 import React from 'react';
-import AceEditor from 'react-ace';
-import Editor from '../../../../Common/Layout/ExpandableEditor/Editor';
 import Tooltip from '../../../../Common/Tooltip/Tooltip';
 
 import Headers, { Header } from '../../../../Common/Headers/Headers';
 import { parseServerHeaders } from '../../../../Common/Headers/utils';
 
 import { EventTrigger, VoidCallback } from '../../types';
+import AceEditor from '../../../../Common/AceEditor/BaseEditor';
+import Editor from '../../../../Common/Layout/ExpandableEditor/Editor';
 
 type HeaderEditorProps = {
   currentTrigger: EventTrigger;
@@ -43,6 +43,8 @@ const HeadersEditor = (props: HeaderEditorProps) => {
               null,
               4
             )}
+            fontSize={12}
+            tabSize={4}
             minLines={4}
             maxLines={100}
             width="100%"

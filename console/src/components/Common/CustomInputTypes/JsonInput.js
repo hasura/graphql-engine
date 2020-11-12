@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import ResizableAceEditor from '../ResizableAceEditor/ResizableAceEditor';
+import Editor from '../AceEditor/BaseEditor';
 
 const styles = require('./CustomInput.scss');
 
@@ -79,14 +79,16 @@ const JsonInput = props => {
 
   const getJsonEditor = () => {
     return (
-      <ResizableAceEditor
+      <Editor
         id="ace_json_editor"
-        allProps={allProps}
+        {...allProps}
+        resizable
         mode="json"
         theme="github"
         name="jsontoggler"
         minLines={10}
         maxLines={100}
+        width={270}
         value={data}
         showPrintMargin={false}
         onChange={handleTextAreaChangeAndPropagate}

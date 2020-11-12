@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Modal from 'react-bootstrap/lib/Modal';
-import AceEditor from 'react-ace';
 import { connect } from 'react-redux';
 
 import {
@@ -9,6 +8,7 @@ import {
   loadEventInvocations,
   RESET,
 } from './InvokeManualTriggerAction';
+import Editor from '../../../../Common/AceEditor/BaseEditor';
 
 /* This component accepts for following props
  *  1) Trigger name
@@ -93,10 +93,11 @@ class InvokeManualTrigger extends React.Component {
         <div className={styles.displayFlexContainer}>
           <div className={`${styles.padd_left_remove} col-md-6`}>
             <div> Request </div>
-            <AceEditor
+            <Editor
               mode="json"
               theme="github"
               name="event_payload"
+              fontSize={12}
               value={JSON.stringify(status[0].request, null, 2)}
               minLines={8}
               maxLines={15}
@@ -108,10 +109,11 @@ class InvokeManualTrigger extends React.Component {
           </div>
           <div className={`${styles.padd_right_remove} col-md-6`}>
             <div> Latest Invocation Response</div>
-            <AceEditor
+            <Editor
               mode="json"
               theme="github"
               name="event_payload"
+              fontSize={12}
               value={JSON.stringify(status[0].response, null, 2)}
               minLines={8}
               maxLines={15}

@@ -81,6 +81,7 @@ const Add: React.FC<Props> = ({ dispatch }) => {
         id="event-payload"
       >
         <AceEditor
+          resizable
           mode="json"
           value={payload}
           onChange={setState.payload}

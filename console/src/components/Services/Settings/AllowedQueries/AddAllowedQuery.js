@@ -1,5 +1,4 @@
 import React from 'react';
-import AceEditor from 'react-ace';
 import styles from './AllowedQueries.scss';
 
 import { addAllowedQueries } from '../Actions';
@@ -8,6 +7,7 @@ import Tooltip from '../../../Common/Tooltip/Tooltip';
 
 import { readFile, parseQueryString } from './utils';
 import { showErrorNotification } from '../../Common/Notification';
+import Editor from '../../../Common/AceEditor/BaseEditor';
 
 class AddAllowedQuery extends React.Component {
   constructor(props) {
@@ -90,7 +90,8 @@ class AddAllowedQuery extends React.Component {
             <div className={styles.add_mar_bottom_mid}>
               <b>Operation:</b>
             </div>
-            <AceEditor
+            <Editor
+              fontSize={12}
               data-test="allowed_operation_add"
               mode="graphql"
               theme="github"

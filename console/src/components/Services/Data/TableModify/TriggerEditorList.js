@@ -1,11 +1,11 @@
 import React from 'react';
-import AceEditor from 'react-ace';
 
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 
 import styles from './ModifyTable.scss';
 import { deleteTrigger } from './ModifyActions';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import Editor from '../../../Common/AceEditor/BaseEditor';
 
 const TriggerEditorList = ({ tableSchema, dispatch }) => {
   const triggers = tableSchema.triggers;
@@ -68,7 +68,7 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
               {trigger.action_timing} {trigger.event_manipulation}, FOR EACH{' '}
               {trigger.action_orientation}
             </i>
-            <AceEditor
+            <Editor
               mode="sql"
               theme="github"
               name="trigger_action"
