@@ -220,9 +220,9 @@ const RawSQL = ({
           data-test="sql-test-editor"
           resizable
           mode="sql"
-          theme={ACE_EDITOR_THEME}
-          fontSize={ACE_EDITOR_FONT_SIZE}
           name="raw_sql"
+          showGutter={false}
+          tabSize={undefined}
           value={sql}
           minLines={15}
           maxLines={100}

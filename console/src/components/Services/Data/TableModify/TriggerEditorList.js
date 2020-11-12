@@ -75,6 +75,7 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
               value={trigger.action_statement}
               minLines={3}
               maxLines={100}
+              fontSize={12}
               width="100%"
               showPrintMargin={false}
               className={styles.add_mar_top_small}

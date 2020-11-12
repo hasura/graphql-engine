@@ -103,10 +103,6 @@ const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
           mode="graphqlschema"
           width="600px"
           readOnly={readOnlyMode}
-          onLoad={editorInstance => {
-            editorInstance.container.style.resize = 'both';
-            document.addEventListener('mouseup', () => editorInstance.resize());
-          }}
         />
       </div>
     </div>

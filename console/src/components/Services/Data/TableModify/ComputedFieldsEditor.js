@@ -185,6 +185,7 @@ const ComputedFieldsEditor = ({
               value={computedFieldFunctionDefinition || '-- Function not found'}
               minLines={3}
               maxLines={100}
+              fontSize={12}
               width="100%"
               showPrintMargin={false}
               className={styles.add_mar_top_small}
