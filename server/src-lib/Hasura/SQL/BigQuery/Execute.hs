@@ -1,4 +1,6 @@
+{-# OPTIONS_GHC -fno-warn-type-defaults #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
 
 -- | Execute the plan given from .Plan.
 
@@ -26,14 +28,16 @@ import           Data.HashMap.Strict.InsOrd (InsOrdHashMap)
 import qualified Data.HashMap.Strict.InsOrd as OMap
 import           Data.Hashable (Hashable)
 import           Data.IORef
+import           Data.Int
+import           Data.List
 import           Data.Maybe
 import           Data.Sequence (Seq)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
-import qualified Data.Text.Lazy.IO as LT
 import qualified Data.Text.Lazy as LT
 import qualified Data.Text.Lazy.Builder as LT
+import qualified Data.Text.Lazy.IO as LT
 import qualified Data.Text.Read as T
 import           Data.Tree
 import           Data.Vector (Vector)
@@ -200,7 +204,7 @@ executePlannedAction =
                LT.toLazyText (fst (ToQuery.renderBuilderPretty
                    (ToQuery.fromSelect (Plan.selectQuery select))))))
             recordSet <-
-              runBigQuery
+              streamBigQuery
                 credentials
                 (selectToBigQuery
                    select
@@ -658,6 +662,179 @@ runBigQuery Credentials {..} BigQuery {..} =
            pure v
 
 --------------------------------------------------------------------------------
+-- Execute a query as a job and stream the results into a record set
+
+streamBigQuery :: MonadIO m => Credentials -> BigQuery -> m RecordSet
+streamBigQuery credentials bigquery = do
+  job <- createQueryJob credentials bigquery
+  liftIO (putStrLn ("Got job: " ++ show job))
+  jobResults <- getJobResults credentials job Fetch {pageToken = Nothing}
+  liftIO (print jobResults)
+  error "streamBigQuery: next!"
+
+--------------------------------------------------------------------------------
+-- Querying results from a job
+
+data JobResults = JobResults
+  { pageToken :: Maybe Text
+  , recordSet :: RecordSet
+  } deriving (Show)
+
+instance Aeson.FromJSON JobResults where
+  parseJSON =
+    Aeson.withObject
+      "JobResults"
+      (\o -> do
+         recordSet <- parseRecordSetPayload Nothing o
+         pure JobResults {pageToken = Nothing, ..})
+
+-- | Create a job asynchronously.
+
+data JobResultsResponse
+  = JobIncomplete
+  | JobComplete JobResults
+  deriving (Show)
+
+instance Aeson.FromJSON JobResultsResponse where
+  parseJSON j =
+    Aeson.withObject
+      "JobResultsResponse"
+      (\o -> do
+         kind <- o .: "kind"
+         if kind == ("bigquery#getQueryResultsResponse" :: Text)
+           then do
+             complete <- o .: "jobComplete"
+             if complete
+               then fmap JobComplete (Aeson.parseJSON j)
+               else pure JobIncomplete
+           else fail ("Invalid kind: " <> show kind)) j
+
+-- | Create a job asynchronously.
+
+data Fetch = Fetch
+  { pageToken :: Maybe Text
+  } deriving (Show)
+
+-- | Get results of a job.
+getJobResults :: MonadIO m => Credentials -> Job -> Fetch -> m JobResultsResponse
+getJobResults Credentials {..} Job {jobId} Fetch {pageToken} = liftIO run
+  where
+    run
+      -- TODO: build the URI manually for type-safety?
+     = do
+      let url =
+            ("https://bigquery.googleapis.com/bigquery/v2/projects/" <>
+             T.unpack projectName <>
+             "/queries/" <>
+             T.unpack jobId <>
+             "?alt=json&key=" <>
+             T.unpack apiToken <>
+             "&" <>
+             T.unpack (encodeParams extraParameters))
+      print url
+      req <- parseRequest url
+      let request =
+            req
+              { requestHeaders =
+                  [ ("Authorization", "Bearer " <> T.encodeUtf8 accessToken)
+                  , ("Content-Type", "application/json")
+                  , ("User-Agent", "curl/7.54")
+                  ]
+              , checkResponse = \_ _resp -> pure ()
+              , method = "GET"
+              }
+      mgr <- newManager tlsManagerSettings
+      resp <- httpLbs request mgr
+      -- putStrLn (show resp)
+      case Aeson.eitherDecode (responseBody resp) of
+        Left e -> error e
+        Right job -> pure job
+    extraParameters =
+      pageTokenParam <> [("timeoutMs", "1")]
+      where
+        pageTokenParam =
+          case pageToken of
+            Nothing -> []
+            Just token -> [("pageToken", token)]
+    encodeParams = T.intercalate "&" . map (\(k, v) -> k <> "=" <> v)
+
+--------------------------------------------------------------------------------
+-- Creating jobs
+
+data Job = Job
+  { state :: Text
+  , jobId :: Text
+  } deriving (Show)
+
+instance Aeson.FromJSON Job where
+  parseJSON =
+    Aeson.withObject
+      "Job"
+      (\o -> do
+         kind <- o .: "kind"
+         if kind == ("bigquery#job" :: Text)
+           then do
+             state <-
+               do status <- o .: "status"
+                  status .: "state"
+             jobId <-
+               do ref <- o .: "jobReference"
+                  ref .: "jobId"
+             pure Job {state, jobId}
+           else fail ("Invalid kind: " <> show kind))
+
+-- | Create a job asynchronously.
+createQueryJob :: MonadIO m => Credentials -> BigQuery -> m Job
+createQueryJob Credentials {..} BigQuery {..} = liftIO run
+  where
+    run = do
+      req <-
+        parseRequest
+          ("https://content-bigquery.googleapis.com/bigquery/v2/projects/" <>
+           T.unpack projectName <>
+           "/jobs?alt=json&key=" <>
+           T.unpack apiToken)
+      let request =
+            req
+              { requestHeaders =
+                  [ ("Authorization", "Bearer " <> T.encodeUtf8 accessToken)
+                  , ("Content-Type", "application/json")
+                  , ("User-Agent", "curl/7.54")
+                  ]
+              , checkResponse = \_ _resp -> pure ()
+              , method = "POST"
+              , requestBody = RequestBodyLBS body
+              }
+      mgr <- newManager tlsManagerSettings
+      resp <- httpLbs request mgr
+      case Aeson.eitherDecode (responseBody resp) of
+        Left e -> error e
+        Right job -> pure job
+    body =
+      Aeson.encode
+        (Aeson.object
+           [ "configuration" .=
+             Aeson.object
+               [ "jobType" .= "QUERY"
+               , "query" .=
+                 Aeson.object
+                   [ "query" .= query
+                   , "useLegacySql" .= False -- Important, it makes `quotes` work properly.
+                   , "parameterMode" .= "NAMED"
+                   , "queryParameters" .=
+                     map
+                       (\(name, Parameter {..}) ->
+                          Aeson.object
+                            [ "name" .= Aeson.toJSON name
+                            , "parameterType" .= Aeson.toJSON typ
+                            , "parameterValue" .= valueToBigQueryJson value
+                            ])
+                       (OMap.toList parameters)
+                   ]
+               ]
+           ])
+
+--------------------------------------------------------------------------------
 -- Consuming recordset from big query
 
 parseRecordSet :: Maybe Plan.PlannedAction -> Aeson.Value -> Aeson.Parser RecordSet
@@ -667,16 +844,19 @@ parseRecordSet origin =
     (\resp -> do
        kind <- resp .: "kind"
        if kind == ("bigquery#queryResponse" :: Text)
-         then do
-           schema <- resp .: "schema"
-           columns <- schema .: "fields" :: Aeson.Parser (Vector BigQueryField)
-           rowsJSON <- fmap (fromMaybe mempty) (resp .:? "rows" :: Aeson.Parser (Maybe (Vector Aeson.Value)))
-           rows <-
-             V.imapM
-               (\i row -> parseRow columns row Aeson.<?> Aeson.Index i)
-               rowsJSON Aeson.<?> Aeson.Key "rows"
-           pure RecordSet {origin, wantedFields = Nothing, {-columns-} rows}
+         then parseRecordSetPayload origin resp
          else fail ("Invalid response kind: " ++ show kind))
+
+parseRecordSetPayload :: Maybe Plan.PlannedAction -> Aeson.Object -> Aeson.Parser RecordSet
+parseRecordSetPayload origin resp = do
+  schema <- resp .: "schema"
+  columns <- schema .: "fields" :: Aeson.Parser (Vector BigQueryField)
+  rowsJSON <- fmap (fromMaybe mempty) (resp .:? "rows" :: Aeson.Parser (Maybe (Vector Aeson.Value)))
+  rows <-
+    V.imapM
+      (\i row -> parseRow columns row Aeson.<?> Aeson.Index i)
+      rowsJSON Aeson.<?> Aeson.Key "rows"
+  pure RecordSet {origin, wantedFields = Nothing, {-columns-} rows}
 
 --------------------------------------------------------------------------------
 -- Schema-driven JSON deserialization
