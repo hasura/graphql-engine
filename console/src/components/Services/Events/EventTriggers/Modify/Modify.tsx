@@ -88,7 +88,6 @@ const Modify: React.FC<Props> = props => {
           setOperations={setState.operations}
           operationColumns={state.operationColumns}
           setOperationColumns={setState.operationColumns}
-          styles={styles}
           save={saveWrapper('ops')}
         />
         <RetryConfEditor

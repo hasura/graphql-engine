@@ -12,6 +12,7 @@ import {
   parseEventTriggerOperations,
   getETOperationColumns,
 } from '../../utils';
+import styles from './ModifyEvent.scss';
 
 import Operations from '../Common/Operations';
 import Button from '../../../../Common/Button/Button';
@@ -23,14 +24,12 @@ type OperationEditorProps = {
   setOperations: (o: Record<EventTriggerOperation, boolean>) => void;
   operationColumns: ETOperationColumn[];
   setOperationColumns: (operationColumns: ETOperationColumn[]) => void;
-  styles: Record<string, string>;
   save: (success: VoidCallback, error: VoidCallback) => void;
 };
 
 const OperationEditor = (props: OperationEditorProps) => {
   const {
     allTableColumns,
-    styles,
     save,
     currentTrigger,
     operations,
@@ -51,15 +50,15 @@ const OperationEditor = (props: OperationEditorProps) => {
     setOperationColumns(existingOpColumns);
   };
 
-  const editorToggle = () => {
+  const toggleColumns = () => {
     const allSelected = operationColumns.every(({ enabled }) => enabled);
-    const newCols = operationColumns.map(oc => {
+    const toggledColumns = operationColumns.map(oc => {
       return {
         ...oc,
         enabled: !allSelected,
       };
     });
-    setOperationColumns(newCols);
+    setOperationColumns(toggledColumns);
   };
 
   const renderEditor = (
@@ -81,13 +80,13 @@ const OperationEditor = (props: OperationEditorProps) => {
       </div>
       <div className={styles.modifyOpsCollapsedContent}>
         <div className={`col-md-12 ${styles.padd_remove}`}>
-          Listen columns for update:&nbsp;
+          Listen columns for update:
           {ops.update && !readOnly ? (
             <Button
-              className={styles.toggle}
+              className={styles.toggleButton}
               color="white"
               size="xs"
-              onClick={editorToggle}
+              onClick={toggleColumns}
             >
               Toggle All
             </Button>
