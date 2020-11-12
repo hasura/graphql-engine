@@ -280,9 +280,18 @@ fromAggregate :: Aggregate -> Printer
 fromAggregate =
   \case
     CountAggregate countable -> "COUNT(" <+> fromCountable countable <+> ")"
-    OpAggregate text args ->
-      UnsafeTextPrinter text <+>
-      "(" <+> SepByPrinter ", " (map fromExpression (toList args)) <+> ")"
+    OpAggregate text arg ->
+      UnsafeTextPrinter text <+> "(" <+> fromExpression arg <+> ")"
+    OpAggregates text args ->
+      "STRUCT(" <+>
+      SepByPrinter
+        ", "
+        (map
+           (\(alias, arg) ->
+              UnsafeTextPrinter text <+>
+              "(" <+> fromExpression arg <+> ") AS " <+> fromNameText alias)
+           (toList args)) <+>
+      ")"
     TextAggregate text -> fromExpression (ValueExpression (TextValue text))
 
 fromCountable :: Countable -> Printer

@@ -379,7 +379,7 @@ unfurlAnnOrderByElement =
                 Ir.AAOCount -> pure (CountAggregate StarCountable)
                 Ir.AAOOp text pgColumnInfo -> do
                   fieldName <- fromPGColumnInfo pgColumnInfo
-                  pure (OpAggregate text (pure (ColumnExpression fieldName)))))
+                  pure (OpAggregate text (ColumnExpression fieldName))))
       tell
         (pure
            (UnfurledJoin
@@ -541,6 +541,49 @@ data FieldSource
   | AggregateFieldSource (NonEmpty (Aliased Aggregate))
   deriving (Eq, Show)
 
+-- Example:
+--
+-- @
+-- Track_aggregate {
+--   aggregate {
+--     count(columns: AlbumId)
+--     foo: count(columns: AlbumId)
+--     max {
+--       AlbumId
+--       TrackId
+--     }
+--   }
+-- }
+-- @
+--
+-- field =
+-- @
+-- TAFAgg
+--   [ ( FieldName {getFieldNameTxt = "count"}
+--     , AFCount (CTSimple [PGCol {getPGColTxt = "AlbumId"}]))
+--   , ( FieldName {getFieldNameTxt = "foo"}
+--     , AFCount (CTSimple [PGCol {getPGColTxt = "AlbumId"}]))
+--   , ( FieldName {getFieldNameTxt = "max"}
+--     , AFOp
+--         (AggregateOp
+--            { _aoOp = "max"
+--            , _aoFields =
+--                [ ( FieldName {getFieldNameTxt = "AlbumId"}
+--                  , CFCol (PGCol {getPGColTxt = "AlbumId"}))
+--                , ( FieldName {getFieldNameTxt = "TrackId"}
+--                  , CFCol (PGCol {getPGColTxt = "TrackId"}))
+--                ]
+--            }))
+--   ]
+-- @
+--
+-- should produce:
+--
+-- SELECT COUNT(`t_Track1`.`AlbumId`) AS `count`,
+--        COUNT(`t_Track1`.`AlbumId`) AS `foo`,
+--        struct(max(`t_Track1`.`AlbumId`) AS `AlbumId`, max(`t_Track1`.`TrackId`) as TrackId) as `max`
+-- FROM chinook.`Track` AS `t_Track1`
+--
 fromTableAggregateFieldG ::
      (Rql.FieldName, Ir.TableAggregateFieldG 'Postgres Expression) -> ReaderT EntityAlias FromIr FieldSource
 fromTableAggregateFieldG (Rql.FieldName name, field) =
@@ -589,17 +632,20 @@ fromAggregateField aggregateField =
                  fields'' <- traverse fromPGCol fields'
                  pure (DistinctCountable fields''))
     Ir.AFOp Ir.AggregateOp {_aoOp = op, _aoFields = fields} -> do
-      fs <- case NE.nonEmpty fields of
-              Nothing -> refute (pure MalformedAgg)
-              Just fs -> pure fs
+      fs <-
+        case NE.nonEmpty fields of
+          Nothing -> refute (pure MalformedAgg)
+          Just fs -> pure fs
       args <-
         traverse
-          (\(_fieldName, pgColFld) ->
-             case pgColFld of
-               Ir.CFCol pgCol -> fmap ColumnExpression (fromPGCol pgCol)
-               Ir.CFExp text -> pure (ValueExpression (TextValue text)))
+          (\(Rql.FieldName fieldName, pgColFld) -> do
+             expression' <-
+               case pgColFld of
+                 Ir.CFCol pgCol -> fmap ColumnExpression (fromPGCol pgCol)
+                 Ir.CFExp text -> pure (ValueExpression (TextValue text))
+             pure (fieldName, expression'))
           fs
-      pure (OpAggregate op args)
+      pure (OpAggregates op args)
 
 -- | The main sources of fields, either constants, fields or via joins.
 fromAnnFieldsG ::

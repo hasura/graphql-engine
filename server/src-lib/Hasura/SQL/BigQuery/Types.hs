@@ -163,7 +163,8 @@ data JsonPath
 
 data Aggregate
   = CountAggregate Countable
-  | OpAggregate !Text (NonEmpty Expression)
+  | OpAggregates !Text (NonEmpty (Text, Expression))
+  | OpAggregate !Text Expression
   | TextAggregate !Text
   deriving (Eq, Show)
 
