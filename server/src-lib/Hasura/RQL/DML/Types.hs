@@ -1,5 +1,7 @@
 module Hasura.RQL.DML.Types
-       ( DMLQuery(..)
+       ( OrderByExp(..)
+
+       , DMLQuery(..)
 
        , SelectG(..)
        , selectGToPairs
@@ -40,12 +42,48 @@ import           Data.Aeson.TH
 import           Instances.TH.Lift                  ()
 import           Language.Haskell.TH.Syntax         (Lift)
 
+import qualified Hasura.Backends.Postgres.SQL.DML   as PG
+
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.OrderBy
 import           Hasura.RQL.Instances               ()
 import           Hasura.RQL.Types.Common            hiding (ConstraintName)
 import           Hasura.SQL.Backend
+
+
+newtype OrderByExp
+  = OrderByExp { getOrderByItems :: [OrderByItem 'Postgres] }
+  deriving (Show, Eq, Lift, ToJSON)
+
+instance FromJSON OrderByExp where
+  parseJSON = \case
+    String s -> OrderByExp . pure <$> parseString s
+    Object o -> OrderByExp . pure <$> parseObject o
+    Array  a -> OrderByExp <$> for (toList a) \case
+      String s -> parseString s
+      Object o -> parseObject o
+      _        -> fail "expecting an object or string for order by"
+    _        -> fail "Expecting : array/string/object"
+    where
+      parseString s = AT.parseOnly orderByParser s `onLeft`
+        const (fail "string format for 'order_by' entry : {+/-}column Eg : +posted")
+      parseObject o =
+        OrderByItemG
+        <$> o .:? "type"
+        <*> o .:  "column"
+        <*> o .:? "nulls"
+      orderByParser =
+        OrderByItemG
+        <$> orderTypeParser
+        <*> orderColumnParser
+        <*> pure Nothing
+      orderTypeParser = choice
+        [ "+" *> pure (Just PG.OTAsc)
+        , "-" *> pure (Just PG.OTDesc)
+        , pure Nothing
+        ]
+      orderColumnParser = AT.takeText >>= orderByColFromTxt
 
 
 data DMLQuery a
@@ -59,7 +97,6 @@ instance (FromJSON a) => FromJSON (DMLQuery a) where
     <*> parseJSON o
   parseJSON _          =
     fail "Expected an object for query"
-
 
 
 data SelectG a b c
