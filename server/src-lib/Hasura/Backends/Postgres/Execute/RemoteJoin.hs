@@ -48,6 +48,7 @@ import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
+import Debug.Pretty.Simple (pTrace, pTraceM)
 
 
 -- | Executes given query and fetch response JSON from Postgres. Substitutes remote relationship fields.
@@ -89,7 +90,9 @@ processRemoteJoins env manager reqHdrs userInfo pgRes rjs = do
   jsonRes <- onLeft (AO.eitherDecode pgRes) (throw500 . T.pack)
   -- Step 2: Traverse through the JSON obtained in above step and generate composite JSON value with remote joins
   compositeJson <- traverseQueryResponseJSON rjMap jsonRes
-  let remoteJoins = collectRemoteFields compositeJson
+  -- The remote server is queried only when any of the joining
+  -- fields are *not* NULL
+  let remoteJoins = catMaybes $ collectRemoteFields compositeJson
   -- Step 3: Make queries to remote server and fetch graphql response
   remoteServerResp <- fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins
   -- Step 4: Replace remote fields in composite json with remote join values
@@ -313,7 +316,7 @@ data RemoteJoinField
 --   from remote join map and query response JSON from Postgres.
 traverseQueryResponseJSON
   :: (MonadError QErr m)
-  => RemoteJoinMap 'Postgres -> AO.Value -> m (CompositeValue RemoteJoinField)
+  => RemoteJoinMap 'Postgres -> AO.Value -> m (CompositeValue (Maybe RemoteJoinField))
 traverseQueryResponseJSON rjm =
   flip runReaderT rjm . flip evalStateT (Counter 0) . traverseValue mempty
   where
@@ -322,24 +325,38 @@ traverseQueryResponseJSON rjm =
     askRemoteJoins path = asks (Map.lookup path)
 
     traverseValue :: (MonadError QErr m, MonadReader (RemoteJoinMap 'Postgres) m, MonadState Counter m)
-                  => FieldPath -> AO.Value -> m (CompositeValue RemoteJoinField)
-    traverseValue path = \case
-      AO.Object obj -> traverseObject obj
-      AO.Array arr  -> CVObjectArray <$> mapM (traverseValue path) (toList arr)
-      v             -> pure $ CVOrdValue v
+                  => FieldPath -> AO.Value -> m (CompositeValue (Maybe RemoteJoinField))
+    traverseValue path val' = do
+      case val' of
+        AO.Object obj -> traverseObject obj
+        AO.Array arr  -> CVObjectArray <$> mapM (traverseValue path) (toList arr)
+        v             -> pure $ CVOrdValue v
 
       where
-        mkRemoteSchemaField siblingFields remoteJoin = do
+        mkRemoteSchemaField
+          :: (MonadError QErr m, MonadState Counter m)
+          => [(Text, AO.Value)]
+          -> RemoteJoin 'Postgres
+          -> m (Maybe RemoteJoinField)
+        mkRemoteSchemaField siblingFields remoteJoin = runMaybeT $ do
           counter <- getCounter
           let RemoteJoin fieldName inputArgs selSet hasuraFields fieldCall rsi _ = remoteJoin
-          hasuraFieldVariables <- mapM (parseGraphQLName . getFieldNameTxt) $ toList hasuraFields
-          siblingFieldArgsVars <- mapM (\(k,val) -> do
-                                          (,) <$> parseGraphQLName k <*> ordJSONValueToGValue val)
+          -- when any of the joining fields are `Null`, we don't query
+          -- the remote schema
+          for_ (toList hasuraFields) $ \(FieldName fieldNameTxt) ->
+            case (Map.lookup fieldNameTxt $ Map.fromList siblingFields) of
+              Nothing -> MaybeT $ pure Nothing
+              Just fldValue ->
+                if | fldValue == AO.Null -> MaybeT $ pure Nothing
+                   | otherwise -> pure ()
+          hasuraFieldVariables <- lift $ mapM (parseGraphQLName . getFieldNameTxt) $ toList hasuraFields
+          siblingFieldArgsVars <- lift $ mapM (\(k,val) -> do
+                                           (,) <$> parseGraphQLName k <*> ordJSONValueToGValue val)
                                   $ siblingFields
           let siblingFieldArgs = Map.fromList $ siblingFieldArgsVars
               hasuraFieldArgs = flip Map.filterWithKey siblingFieldArgs $ \k _ -> k `elem` hasuraFieldVariables
-          fieldAlias <- pathToAlias (appendPath fieldName path) counter
-          queryField <- fieldCallsToField (inputArgsToMap inputArgs) hasuraFieldArgs selSet fieldAlias fieldCall
+          fieldAlias <- lift $ pathToAlias (appendPath fieldName path) counter
+          queryField <- lift $ fieldCallsToField (inputArgsToMap inputArgs) hasuraFieldArgs selSet fieldAlias fieldCall
           pure $ RemoteJoinField rsi
                                  fieldAlias
                                  queryField
@@ -364,10 +381,11 @@ traverseQueryResponseJSON rjm =
                       phantomColumnFields = map (fromPGCol . pgiColumn) $
                                             concatMap _rjPhantomFields remoteJoins
                   if | fieldName `elem` phantomColumnFields -> pure Nothing
-                     | otherwise ->
+                     | otherwise -> do
                          case find ((== fieldName) . _rjName) remoteJoins of
                            Just rj -> Just . CVFromRemote <$> mkRemoteSchemaField fields rj
                            Nothing -> Just <$> traverseValue fieldPath value
+          pTraceM ("processedFields are " <> (show processedFields))
           pure $ CVObject $ OMap.fromList processedFields
 
 convertFieldWithVariablesToName :: G.Field G.NoFragments Variable -> G.Field G.NoFragments G.Name
@@ -499,15 +517,18 @@ fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
 -- | Replace 'RemoteJoinField' in composite JSON with it's json value from remote server response.
 replaceRemoteFields
   :: MonadError QErr m
-  => CompositeValue RemoteJoinField
+  => CompositeValue (Maybe RemoteJoinField)
   -> AO.Object
   -> m AO.Value
 replaceRemoteFields compositeJson remoteServerResponse =
   compositeValueToJSON <$> traverse replaceValue compositeJson
   where
-    replaceValue rj = do
-      let alias = _rjfAlias rj
-          fieldCall = _rjfFieldCall rj
+    -- `Nothing` below signfies that at-least one of the
+    -- joining fields was NULL, when that happens we
+    -- have to manually insert the `NULL` value for the
+    -- remoteField value in the response.
+    replaceValue Nothing = pure $ AO.Null
+    replaceValue (Just (RemoteJoinField _ alias _ fieldCall)) =
       extractAtPath (alias:fieldCall) $ AO.Object remoteServerResponse
 
     -- | 'FieldCall' is path to remote relationship value in remote server response.
