@@ -300,6 +300,17 @@ jobs:
     - checkout
     - *skip_server_tests
     - run:
+        name: Install dependencies
+        command: |
+          apt-get -y update
+          apt-get -y install postgresql-client-12
+          apt-get -y install unixodbc-dev freetds-dev
+          apt-get -y install gnupg apt-transport-https curl
+          curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
+          curl https://packages.microsoft.com/config/debian/9/prod.list > /etc/apt/sources.list.d/mssql-release.list
+          apt-get update
+          ACCEPT_EULA=Y apt-get -y install msodbcsql17
+    - run:
         name: Run unit tests
         environment:
           GHCRTS: -N2
