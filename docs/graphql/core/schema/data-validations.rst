@@ -279,7 +279,7 @@ Now, we can create a role ``user`` and add an insert validation rule as follows:
       :alt: validation using permission: title cannot be empty
 
   .. tab:: CLI
-  
+
     You can add roles and permissions in the ``tables.yaml`` file inside the ``metadata`` directory:
 
     .. code-block:: yaml
@@ -345,7 +345,7 @@ If we try to insert an article with ``title = ""``, we will get a ``permission-e
     {
       "errors": [
         {
-          "message": "Check constraint violation. insert check constraint failed",
+          "message": "check constraint of an insert/update permission has failed",
           "extensions": {
             "path": "$.selectionSet.insert_article.args.objects",
             "code": "permission-error"
@@ -449,7 +449,7 @@ will receive a ``permission-error`` :
     {
       "errors": [
         {
-          "message": "Check constraint violation. insert check constraint failed",
+          "message": "check constraint of an insert/update permission has failed",
           "extensions": {
             "path": "$.selectionSet.insert_article.args.objects",
             "code": "permission-error"
@@ -545,7 +545,7 @@ we get the following error message:
       InsertAuthor(author: { name: "Thanos" }) {
         id
       }
-    } 
+    }
   :response:
     {
       "errors": [

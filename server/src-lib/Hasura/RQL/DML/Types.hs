@@ -1,14 +1,7 @@
-module Hasura.RQL.Types.DML
-       ( BoolExp(..)
-       , ColExp(..)
-       , DMLQuery(..)
-       , OrderType(..)
-       , NullsOrder(..)
+module Hasura.RQL.DML.Types
+       ( OrderByExp(..)
 
-       , OrderByExp(..)
-       , OrderByItemG(..)
-       , OrderByItem
-       , OrderByCol(..)
+       , DMLQuery(..)
 
        , SelectG(..)
        , selectGToPairs
@@ -41,54 +34,57 @@ module Hasura.RQL.Types.DML
 import           Hasura.Prelude
 
 import qualified Data.Attoparsec.Text               as AT
-import qualified Data.Attoparsec.Text               as Atto
-import qualified Data.Attoparsec.Types              as AttoT
 import qualified Data.HashMap.Strict                as M
-import qualified Data.Text                          as T
 
-import           Control.Lens.TH
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Instances.TH.Lift                  ()
 import           Language.Haskell.TH.Syntax         (Lift)
 
-import qualified Hasura.Backends.Postgres.SQL.DML   as S
+import qualified Hasura.Backends.Postgres.SQL.DML   as PG
 
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.IR.BoolExp
+import           Hasura.RQL.IR.OrderBy
 import           Hasura.RQL.Instances               ()
-import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.Common            hiding (ConstraintName)
 import           Hasura.SQL.Backend
 
 
-data ColExp
-  = ColExp
-  { ceCol :: !FieldName
-  , ceVal :: !Value
-  } deriving (Show, Eq, Lift, Data, Generic)
-instance NFData ColExp
-instance Cacheable ColExp
+newtype OrderByExp
+  = OrderByExp { getOrderByItems :: [OrderByItem 'Postgres] }
+  deriving (Show, Eq, Lift, ToJSON)
 
-newtype BoolExp (b :: Backend)
-  = BoolExp { unBoolExp :: GBoolExp b ColExp }
-  deriving (Show, Eq, Lift, Generic, NFData, Cacheable)
-
-$(makeWrapped ''BoolExp)
-
-instance ToJSON (BoolExp 'Postgres) where
-  toJSON (BoolExp gBoolExp) =
-    gBoolExpToJSON f gBoolExp
+instance FromJSON OrderByExp where
+  parseJSON = \case
+    String s -> OrderByExp . pure <$> parseString s
+    Object o -> OrderByExp . pure <$> parseObject o
+    Array  a -> OrderByExp <$> for (toList a) \case
+      String s -> parseString s
+      Object o -> parseObject o
+      _        -> fail "expecting an object or string for order by"
+    _        -> fail "Expecting : array/string/object"
     where
-      f (ColExp k v) =
-        (getFieldNameTxt k,  v)
+      parseString s = AT.parseOnly orderByParser s `onLeft`
+        const (fail "string format for 'order_by' entry : {+/-}column Eg : +posted")
+      parseObject o =
+        OrderByItemG
+        <$> o .:? "type"
+        <*> o .:  "column"
+        <*> o .:? "nulls"
+      orderByParser =
+        OrderByItemG
+        <$> orderTypeParser
+        <*> orderColumnParser
+        <*> pure Nothing
+      orderTypeParser = choice
+        [ "+" *> pure (Just PG.OTAsc)
+        , "-" *> pure (Just PG.OTDesc)
+        , pure Nothing
+        ]
+      orderColumnParser = AT.takeText >>= orderByColFromTxt
 
-instance FromJSON (BoolExp 'Postgres) where
-  parseJSON =
-    fmap BoolExp . parseGBoolExp f
-    where
-      f (k, v) = ColExp (FieldName k) <$> parseJSON v
 
 data DMLQuery a
   = DMLQuery !QualifiedTable a
@@ -102,130 +98,6 @@ instance (FromJSON a) => FromJSON (DMLQuery a) where
   parseJSON _          =
     fail "Expected an object for query"
 
-newtype OrderType
-  = OrderType { unOrderType :: S.OrderType }
-  deriving (Show, Eq, Lift, Generic)
-instance Hashable OrderType
-
-instance FromJSON OrderType where
-  parseJSON =
-    fmap OrderType . f
-    where f = $(mkParseJSON
-                defaultOptions{constructorTagModifier = snakeCase . drop 2}
-                ''S.OrderType)
-
-newtype NullsOrder
-  = NullsOrder { unNullsOrder :: S.NullsOrder }
-  deriving (Show, Eq, Lift, Generic)
-instance Hashable NullsOrder
-
-instance FromJSON NullsOrder where
-  parseJSON =
-    fmap NullsOrder . f
-    where f = $(mkParseJSON
-                defaultOptions{constructorTagModifier = snakeCase . drop 1}
-                ''S.NullsOrder)
-
-instance ToJSON OrderType where
-  toJSON =
-    f . unOrderType
-    where f = $(mkToJSON
-                defaultOptions{constructorTagModifier = snakeCase . drop 2}
-                ''S.OrderType)
-
-instance ToJSON NullsOrder where
-  toJSON =
-    f . unNullsOrder
-    where f = $(mkToJSON
-                defaultOptions{constructorTagModifier = snakeCase . drop 1}
-                ''S.NullsOrder)
-
-data OrderByCol
-  = OCPG !FieldName
-  | OCRel !FieldName !OrderByCol
-  deriving (Show, Eq, Lift)
-
-orderByColToTxt :: OrderByCol -> Text
-orderByColToTxt = \case
-  OCPG pgCol      -> getFieldNameTxt pgCol
-  OCRel rel obCol -> getFieldNameTxt rel <> "." <> orderByColToTxt obCol
-
-instance ToJSON OrderByCol where
-  toJSON = toJSON . orderByColToTxt
-
-orderByColFromToks
-  :: (MonadFail m)
-  => [Text] -> m OrderByCol
-orderByColFromToks toks = do
-  when (any T.null toks) $ fail "col/rel cannot be empty"
-  case toks of
-    []   -> fail "failed to parse an OrderByCol: found empty cols"
-    x:xs -> return $ go (FieldName x) xs
-  where
-    go fld = \case
-      []   -> OCPG fld
-      x:xs -> OCRel fld $ go (FieldName x) xs
-
-orderByColFromTxt
-  :: (MonadFail m)
-  => Text -> m OrderByCol
-orderByColFromTxt =
-  orderByColFromToks . T.split (=='.')
-
-instance FromJSON OrderByCol where
-  parseJSON = \case
-    (String t) -> orderByColFromToks $ T.split (=='.') t
-    v          -> parseJSON v >>= orderByColFromToks
-
-data OrderByItemG a
-  = OrderByItemG
-  { obiType   :: !(Maybe OrderType)
-  , obiColumn :: !a
-  , obiNulls  :: !(Maybe NullsOrder)
-  } deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Generic)
-instance (Hashable a) => Hashable (OrderByItemG a)
-
-type OrderByItem = OrderByItemG OrderByCol
-
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''OrderByItemG)
-
--- Can either be string / object
-instance FromJSON OrderByItem where
-  parseJSON (String t) =
-    case Atto.parseOnly orderByParser t of
-    Right r -> return r
-    Left _  ->
-      fail "string format for 'order_by' entry : {+/-}column Eg : +posted"
-
-  parseJSON (Object o) =
-    OrderByItemG
-    <$> o .:? "type"
-    <*> o .:  "column"
-    <*> o .:? "nulls"
-  parseJSON _ = fail "expecting an object or string for order by"
-
-newtype OrderByExp
-  = OrderByExp { getOrderByItems :: [OrderByItem] }
-  deriving (Show, Eq, ToJSON, Lift)
-
-instance FromJSON OrderByExp where
-  parseJSON v@(String _) =
-    OrderByExp . (:[]) <$> parseJSON v
-  parseJSON v@(Array _) =
-    OrderByExp <$> parseJSON v
-  parseJSON v@(Object _) =
-    OrderByExp . (:[]) <$> parseJSON v
-  parseJSON _ =
-    fail "Expecting : array/string/object"
-
-orderByParser :: AttoT.Parser Text OrderByItem
-orderByParser =
-  OrderByItemG <$> otP <*> colP <*> return Nothing
-  where
-    otP  = ("+" *> return (Just $ OrderType S.OTAsc))
-           <|> ("-" *> return (Just $ OrderType S.OTDesc))
-           <|> return Nothing
-    colP = Atto.takeText >>= orderByColFromTxt
 
 data SelectG a b c
   = SelectG
@@ -265,7 +137,7 @@ parseWildcard =
     fromList   = foldr1 (\_ x -> StarDot x)
 
 -- Columns in RQL
-data SelCol b
+data SelCol (b :: BackendType)
   = SCStar !Wildcard
   | SCExtSimple !(Column b)
   | SCExtRel !RelName !(Maybe RelName) !(SelectQ b)

@@ -158,7 +158,7 @@ fetchRelTabInfo refTabName =
   -- Internal error
   modifyErrAndSet500 ("foreign " <> ) $ askTabInfo refTabName
 
-type SessVarBldr b m = PGType (ScalarType b) -> SessionVariable -> m S.SQLExp
+type SessVarBldr b m = PGType (ScalarType b) -> SessionVariable -> m (SQLExp b)
 
 fetchRelDet
   :: (UserInfoM m, QErrM m, CacheRM m)
@@ -211,7 +211,7 @@ convPartialSQLExp
   :: (Applicative f)
   => SessVarBldr backend f
   -> PartialSQLExp backend
-  -> f S.SQLExp
+  -> f (SQLExp backend)
 convPartialSQLExp f = \case
   PSESQLExp sqlExp                 -> pure sqlExp
   PSESessVar colTy sessionVariable -> f colTy sessionVariable

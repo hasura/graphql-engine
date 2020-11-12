@@ -7,12 +7,12 @@ module Hasura.Server.API.PGDump
 import           Control.Exception      (IOException, try)
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import qualified Data.ByteString.Lazy    as BL
-import           Data.Char               (isSpace)
-import qualified Data.List               as L
-import qualified Data.Text               as T
+import qualified Data.ByteString.Lazy   as BL
+import           Data.Char              (isSpace)
+import qualified Data.List              as L
+import qualified Data.Text              as T
 import           Data.Text.Conversions
-import qualified Database.PG.Query       as Q
+import qualified Database.PG.Query      as Q
 import           Hasura.Prelude
 import qualified Hasura.RQL.Types.Error as RTE
 import           System.Exit
@@ -91,5 +91,5 @@ execPGDump b ci = do
         -- These changes are also documented on the method pgIdenTrigger
             "^CREATE TRIGGER \"?notify_hasura_.+\"? AFTER [[:alnum:]]+ "
               <> "ON .+ FOR EACH ROW EXECUTE (FUNCTION|PROCEDURE) "
-              <> "\"?hdb_views\"?\\.\"?notify_hasura_.+\"?\\(\\);$"
+              <> "\"?hdb_catalog\"?\\.\"?notify_hasura_.+\"?\\(\\);$"
       in TDFA.makeRegex regexStr :: TDFA.Regex
