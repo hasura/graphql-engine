@@ -16,24 +16,25 @@ const ColumnsSelectorContent = ({
   onChange,
 }: ColumnsSelectorContentProps) => {
   return (
-    <>
+    <div className={styles.displayFlexContainer} style={{ flexWrap: 'wrap' }}>
       {allColumns.map(col => (
         <label
           key={col}
           htmlFor={col}
-          className={`${styles.add_mar_right_mid} ${styles.cursorPointer}`}
+          className={`${styles.add_mar_right_mid} ${styles.add_mar_top_small} ${styles.cursorPointer} ${styles.displayFlexContainer}`}
           onClick={() => onChange(col)}
         >
           <input
             type="checkbox"
-            className={`${styles.cursorPointer} ${styles.add_mar_right_small}`}
+            className={styles.cursorPointer}
+            style={{ margin: '3px 4px 0px 0px' }}
             checked={selectedColumns.includes(col)}
             readOnly
           />
           {col}
         </label>
       ))}
-    </>
+    </div>
   );
 };
 

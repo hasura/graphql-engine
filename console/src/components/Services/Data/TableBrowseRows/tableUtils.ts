@@ -91,18 +91,18 @@ export const persistSelectedColumns = (
   schemaName: string,
   columns: string[]
 ) => {
-  const selectedColumns = parseLSState(getLSState(selectedColumnsKey)) || {};
+  const selectedColumns = getParsedLSItem(selectedColumnsKey) || {};
   const newSelectedColumnsState = {
     ...selectedColumns,
     [`${schemaName}.${tableName}`]: columns,
   };
-  setLSState(selectedColumnsKey, JSON.stringify(newSelectedColumnsState));
+  setLSItem(selectedColumnsKey, JSON.stringify(newSelectedColumnsState));
 };
 
 export const getPersistedSelectedColumns = (
   tableName: string,
   schemaName: string
 ) => {
-  const selectedColumns = parseLSState(getLSState(selectedColumnsKey)) || {};
+  const selectedColumns = getParsedLSItem(selectedColumnsKey) || {};
   return selectedColumns[`${schemaName}.${tableName}`];
 };

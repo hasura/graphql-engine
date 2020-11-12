@@ -15,9 +15,9 @@ interface CollapsibleToggleProps {
   title: React.ReactNode;
   isOpen?: boolean;
   toggleHandler?: () => void;
-  testId: string;
+  testId?: string;
   useDefaultTitleStyle?: boolean;
-  className: string;
+  className?: string;
 }
 
 interface CollapsibleToggleState {
