@@ -107,6 +107,7 @@ data RetryConf
   , rcTimeoutSec  :: !(Maybe Int)
   } deriving (Show, Eq, Generic, Lift)
 instance NFData RetryConf
+instance Cacheable RetryConf
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RetryConf)
 
 data EventHeaderInfo
@@ -222,7 +223,7 @@ data EventTriggerConf
   , etcRetryConf      :: !RetryConf
   , etcHeaders        :: !(Maybe [HeaderConf])
   } deriving (Show, Eq, Lift, Generic)
-
+instance Cacheable EventTriggerConf
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventTriggerConf)
 
 newtype RedeliverEventQuery
