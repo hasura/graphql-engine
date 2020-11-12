@@ -26,7 +26,7 @@ import {
   getUniqueConstraintName,
 } from '../Common/Components/utils';
 
-import { wrapQuotes } from '../utils';
+import { quoteDefault } from '../utils';
 import {
   sqlEscapeText,
   getCreateCheckConstraintSql,
@@ -1198,7 +1198,7 @@ const addColSql = (
 ) => {
   let defWithQuotes = "''";
 
-  defWithQuotes = wrapQuotes(colDefault);
+  defWithQuotes = quoteDefault(colDefault);
 
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
@@ -1556,8 +1556,8 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
       );
     }
 
-    const colDefaultWithQuotes = wrapQuotes(colDefault);
-    const originalColDefaultWithQuotes = wrapQuotes(originalColDefault);
+    const colDefaultWithQuotes = quoteDefault(colDefault);
+    const originalColDefaultWithQuotes = quoteDefault(originalColDefault);
     /* column default up/down migration */
     let columnDefaultUpQuery;
     let columnDefaultDownQuery;

@@ -791,9 +791,8 @@ WHERE
 export const isColTypeString = colType =>
   ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
 
-export const wrapQuotes = colDefault => {
-  const checkIfFunctionFormat = isPostgresFunction(colDefault);
-  if (checkIfFunctionFormat) {
+export const quoteDefault = colDefault => {
+  if (isPostgresFunction(colDefault)) {
     return colDefault;
   }
   return `'${colDefault}'`;

@@ -9,7 +9,7 @@ import {
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { setTable } from '../DataActions.js';
 
-import { wrapQuotes } from '../utils';
+import { quoteDefault } from '../utils';
 import { sqlEscapeText } from '../../../Common/utils/sqlUtils';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import { getTableModifyRoute } from '../../../Common/utils/routesUtils';
@@ -192,7 +192,7 @@ const createTableSql = () => {
         currentCols[i].default !== undefined &&
         currentCols[i].default.value !== ''
       ) {
-        tableDefSql += ' DEFAULT ' + wrapQuotes(currentCols[i].default.value);
+        tableDefSql += ' DEFAULT ' + quoteDefault(currentCols[i].default.value);
 
         if (currentCols[i].type === 'uuid') {
           hasUUIDDefault = true;
