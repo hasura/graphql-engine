@@ -274,16 +274,11 @@ data OpExpG (b :: BackendType) a
   | CGTE !(Column b)
   | CLTE !(Column b)
   deriving (Functor, Foldable, Traversable, Generic)
-deriving instance (Eq a) => Eq (OpExpG 'Postgres a)
-instance (NFData a) => NFData (OpExpG 'Postgres a)
-instance (Cacheable a) => Cacheable (OpExpG 'Postgres a)
-instance (Hashable a) => Hashable (OpExpG 'Postgres a)
-type family XAILIKE (b :: BackendType) where
-  XAILIKE 'Postgres = ()
-  XAILIKE 'MySQL = Void
-type family XANILIKE (b :: BackendType) where
-  XANILIKE 'Postgres = ()
-  XANILIKE 'MySQL = Void
+deriving instance (Backend b, Eq a) => Eq (OpExpG b a)
+instance (Backend b, NFData a) => NFData (OpExpG b a)
+instance (Backend b, Cacheable a) => Cacheable (OpExpG b a)
+instance (Backend b, Hashable a) => Hashable (OpExpG b a)
+
 
 opExpDepCol :: OpExpG backend a -> Maybe (Column backend)
 opExpDepCol = \case
@@ -352,13 +347,13 @@ opExpToJPair f = \case
     opExpsToJSON = object . map (opExpToJPair f)
 
 data AnnBoolExpFld (b :: BackendType) a
-  = AVCol !(ColumnInfo b) ![OpExpG 'Postgres a]
-  | AVRel !RelInfo !(AnnBoolExp b a)
+  = AVCol !(ColumnInfo b) ![OpExpG b a]
+  | AVRel !(RelInfo b) !(AnnBoolExp b a)
   deriving (Functor, Foldable, Traversable, Generic)
-deriving instance Eq a => Eq (AnnBoolExpFld 'Postgres a)
-instance (NFData a) => NFData (AnnBoolExpFld 'Postgres a)
-instance (Cacheable a) => Cacheable (AnnBoolExpFld 'Postgres a)
-instance (Hashable a) => Hashable (AnnBoolExpFld 'Postgres a)
+deriving instance (Backend b, Eq (ColumnInfo b), Eq a) => Eq (AnnBoolExpFld b a)
+instance (Backend b, NFData (ColumnInfo b), NFData a) => NFData (AnnBoolExpFld b a)
+instance (Backend b, Cacheable (ColumnInfo b), Cacheable a) => Cacheable (AnnBoolExpFld b a)
+instance (Backend b, Hashable (ColumnInfo b), Hashable a) => Hashable (AnnBoolExpFld b a)
 
 type AnnBoolExp b a
   = GBoolExp b (AnnBoolExpFld b a)
@@ -389,8 +384,8 @@ andAnnBoolExps :: AnnBoolExp backend a -> AnnBoolExp backend a -> AnnBoolExp bac
 andAnnBoolExps l r =
   BoolAnd [l, r]
 
-type AnnBoolExpFldSQL b = AnnBoolExpFld b (SQLExp b)
-type AnnBoolExpSQL    b = AnnBoolExp    b (SQLExp b)
+type AnnBoolExpFldSQL b = AnnBoolExpFld b (SQLExpression b)
+type AnnBoolExpSQL    b = AnnBoolExp    b (SQLExpression b)
 
 type AnnBoolExpFldPartialSQL b = AnnBoolExpFld b (PartialSQLExp b)
 type AnnBoolExpPartialSQL b = AnnBoolExp b (PartialSQLExp b)
@@ -401,16 +396,16 @@ type PreSetColsPartial b = M.HashMap (Column b) (PartialSQLExp b)
 -- doesn't resolve the session variable
 data PartialSQLExp (b :: BackendType)
   = PSESessVar !(PG.PGType (ScalarType b)) !SessionVariable
-  | PSESQLExp !(SQLExp b)
+  | PSESQLExp !(SQLExpression b)
   deriving (Generic)
-deriving instance Eq (PartialSQLExp 'Postgres)
-deriving instance Data (PartialSQLExp 'Postgres)
-instance NFData (PartialSQLExp 'Postgres)
-instance Cacheable (PartialSQLExp 'Postgres)
+deriving instance Backend b => Eq (PartialSQLExp b)
+deriving instance Backend b => Data (PartialSQLExp b)
+instance Backend b => NFData (PartialSQLExp b)
+instance Backend b => Cacheable (PartialSQLExp b)
 
-mkTypedSessionVar :: PG.PGType PGColumnType -> SessionVariable -> PartialSQLExp 'Postgres
+mkTypedSessionVar :: PG.PGType (ColumnType 'Postgres) -> SessionVariable -> PartialSQLExp 'Postgres
 mkTypedSessionVar columnType =
-  PSESessVar (unsafePGColumnToRepresentation <$> columnType)
+  PSESessVar (unsafePGColumnToBackend <$> columnType)
 
 instance ToJSON (PartialSQLExp 'Postgres) where
   toJSON = \case

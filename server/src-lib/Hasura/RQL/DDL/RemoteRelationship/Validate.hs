@@ -127,11 +127,11 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
       let baseTy = G.getBaseType (G._fldType field)
       in
         case (lookupType schemaDoc baseTy) of
-          Just (G.TypeDefinitionScalar _) -> True
+          Just (G.TypeDefinitionScalar _)    -> True
           Just (G.TypeDefinitionInterface _) -> True
-          Just (G.TypeDefinitionUnion _) -> True
-          Just (G.TypeDefinitionEnum _) -> True
-          _ -> False
+          Just (G.TypeDefinitionUnion _)     -> True
+          Just (G.TypeDefinitionEnum _)      -> True
+          _                                  -> False
     buildRelationshipTypeInfo pgColumnsVariablesMap schemaDoc (objTyInfo,(_,typeMap)) fieldCall = do
       objFldDefinition <- lookupField (fcName fieldCall) objTyInfo
       let providedArguments = getRemoteArguments $ fcArguments fieldCall
@@ -284,7 +284,7 @@ renameNamedType rename =
 pgColumnToVariable :: (MonadError ValidationError m) => PGCol -> m G.Name
 pgColumnToVariable pgCol =
   let pgColText = getPGColTxt pgCol
-  in maybe (throwError $ InvalidGraphQLName pgColText) pure $ G.mkName pgColText
+  in G.mkName pgColText `onNothing` throwError (InvalidGraphQLName pgColText)
 
 -- | Lookup the field in the schema.
 lookupField
@@ -429,9 +429,9 @@ columnInfoToNamedType
   -> m G.Name
 columnInfoToNamedType pci =
   case pgiType pci of
-    PGColumnScalar scalarType -> do
+    ColumnScalar scalarType -> do
       eitherScalar <- runExceptT $ mkScalarTypeName scalarType
       case eitherScalar of
         Left _  -> throwError $ InvalidGraphQLName $ toSQLTxt scalarType
         Right s -> pure s
-    _                         -> throwError UnsupportedEnum
+    _                       -> throwError UnsupportedEnum

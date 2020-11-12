@@ -205,7 +205,7 @@ resolveActionMutationAsync
   -> [HTTP.Header]
   -> SessionVariables
   -> m (tx EncJSON)
-resolveActionMutationAsync annAction reqHeaders sessionVariables = do
+resolveActionMutationAsync annAction reqHeaders sessionVariables =
   pure $ liftTx do
     actionId <- runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler [Q.sql|
       INSERT INTO
@@ -268,15 +268,15 @@ resolveAsyncActionQuery userInfo annAction =
     -- TODO (from master):- Avoid using ColumnInfo
     mkAnnFldFromPGCol column' columnType =
       flip RS.mkAnnColumnField Nothing $
-      ColumnInfo (unsafePGCol column') (G.unsafeMkName column') 0 (PGColumnScalar columnType) True Nothing
+      ColumnInfo (unsafePGCol column') (G.unsafeMkName column') 0 (ColumnScalar columnType) True Nothing
 
     tableBoolExpression =
       let actionIdColumnInfo = ColumnInfo (unsafePGCol "id") $$(G.litName "id")
-                               0 (PGColumnScalar PGUUID) False Nothing
+                               0 (ColumnScalar PGUUID) False Nothing
           actionIdColumnEq = BoolFld $ AVCol actionIdColumnInfo [AEQ True actionId]
           sessionVarsColumnInfo = ColumnInfo (unsafePGCol "session_variables") $$(G.litName "session_variables")
-                                  0 (PGColumnScalar PGJSONB) False Nothing
-          sessionVarValue = flip UVParameter Nothing $ PGColumnValue (PGColumnScalar PGJSONB) $
+                                  0 (ColumnScalar PGJSONB) False Nothing
+          sessionVarValue = flip UVParameter Nothing $ PGColumnValue (ColumnScalar PGJSONB) $
                             WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON $ _uiSession userInfo
           sessionVarsColumnEq = BoolFld $ AVCol sessionVarsColumnInfo [AEQ True sessionVarValue]
 
@@ -519,12 +519,12 @@ mkJsonAggSelect =
   bool RS.JASSingleObject RS.JASMultipleRows . isListType
 
 processOutputSelectionSet
-  :: RS.ArgumentExp v
+  :: RS.ArgumentExp 'Postgres v
   -> GraphQLType
-  -> [(Column backend, ScalarType backend)]
-  -> RS.AnnFieldsG backend v
+  -> [(Column 'Postgres, ScalarType 'Postgres)]
+  -> RS.AnnFieldsG 'Postgres v
   -> Bool
-  -> RS.AnnSimpleSelG backend v
+  -> RS.AnnSimpleSelG 'Postgres v
 processOutputSelectionSet tableRowInput actionOutputType definitionList annotatedFields =
   RS.AnnSelectG annotatedFields selectFrom RS.noTablePermissions RS.noSelectArgs
   where

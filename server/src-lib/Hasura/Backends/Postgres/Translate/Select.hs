@@ -25,12 +25,13 @@ import qualified Hasura.Backends.Postgres.SQL.DML           as S
 import           Hasura.Backends.Postgres.SQL.Rewrite
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.BoolExp
+import           Hasura.Backends.Postgres.Translate.Types
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.IR.OrderBy
 import           Hasura.RQL.IR.Select
-import           Hasura.RQL.Types
+import           Hasura.RQL.Types                           hiding (Identifier)
 import           Hasura.SQL.Types
 
 
@@ -229,7 +230,7 @@ mkArrayRelationAlias parentFieldName similarFieldsMap fieldName =
   HM.lookupDefault [fieldName] fieldName similarFieldsMap
 
 fromTableRowArgs
-  :: Identifier -> FunctionArgsExpTableRow S.SQLExp -> S.FunctionArgs
+  :: Identifier -> FunctionArgsExpTableRow 'Postgres S.SQLExp -> S.FunctionArgs
 fromTableRowArgs pfx = toFunctionArgs . fmap toSQLExp
   where
     toFunctionArgs (FunctionArgsExp positional named) =
@@ -697,8 +698,7 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields orderByItems = 
     toOrderByExp :: OrderByItemExp 'Postgres -> S.OrderByItem
     toOrderByExp orderByItemExp =
       let OrderByItemG obTyM expAlias obNullsM = fst . snd <$> orderByItemExp
-      in S.OrderByItem (S.SEIdentifier $ toIdentifier expAlias)
-         (unOrderType <$> obTyM) (unNullsOrder <$> obNullsM)
+      in S.OrderByItem (S.SEIdentifier $ toIdentifier expAlias) obTyM obNullsM
 
     mkCursorExp :: [OrderByItemExp 'Postgres] -> S.SQLExp
     mkCursorExp orderByItemExps =
@@ -827,7 +827,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
     fromScalarComputedField :: ComputedFieldScalarSelect 'Postgres S.SQLExp -> m S.SQLExp
     fromScalarComputedField computedFieldScalar = do
       strfyNum <- ask
-      pure $ toJSONableExp strfyNum (PGColumnScalar ty) False $ withColumnOp colOpM $
+      pure $ toJSONableExp strfyNum (ColumnScalar ty) False $ withColumnOp colOpM $
              S.SEFunction $ S.FunctionExp fn (fromTableRowArgs sourcePrefix args) Nothing
       where
         ComputedFieldScalarSelect fn args ty colOpM = computedFieldScalar
@@ -1126,7 +1126,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
 
         mkSplitCompareExp (ConnectionSplit kind v (OrderByItemG obTyM obCol _)) =
           let obAlias = mkAnnOrderByAlias thisPrefix fieldAlias similarArrayFields obCol
-              obTy = maybe S.OTAsc unOrderType obTyM
+              obTy = fromMaybe S.OTAsc obTyM
               compareOp = case (kind, obTy) of
                 (CSKAfter, S.OTAsc)   -> S.SGT
                 (CSKAfter, S.OTDesc)  -> S.SLT

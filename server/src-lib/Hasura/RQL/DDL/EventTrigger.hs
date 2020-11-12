@@ -132,7 +132,7 @@ addEventTriggerToCatalog
   :: QualifiedTable
   -> EventTriggerConf
   -> Q.TxE QErr ()
-addEventTriggerToCatalog qt etc = do
+addEventTriggerToCatalog qt etc =
   Q.unitQE defaultTxErrorHandler
          [Q.sql|
            INSERT into hdb_catalog.event_triggers
@@ -154,7 +154,7 @@ delEventTriggerFromCatalog trn = do
   archiveEvents trn
 
 archiveEvents :: TriggerName -> Q.TxE QErr ()
-archiveEvents trn = do
+archiveEvents trn =
   Q.unitQE defaultTxErrorHandler [Q.sql|
            UPDATE hdb_catalog.event_log
            SET archived = 't'
