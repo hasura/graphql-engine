@@ -122,13 +122,14 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - server: fix bug which arised when renaming a table which had a manual relationship defined (close #4158)
 - server: limit the length of event trigger names (close #5786)
 - server: Configurable websocket keep-alive interval. Add `--websocket-keepalive` command-line flag
-          and handle `HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE` env variable (fix #3539) 
+          and handle `HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE` env variable (fix #3539)
 **NOTE:** If you have event triggers with names greater than 42 chars, then you should update their names to avoid running into Postgres identifier limit bug (#5786)
 - server: validate remote schema queries (fixes #4143)
 - server: fix issue with tracking custom functions that return `SETOF` materialized view (close #5294) (#5945)
 - server: introduce optional custom table name in table configuration to track the table according to the custom name. The `set_table_custom_fields` API has been deprecated, A new API `set_table_customization` has been added to set the configuration. (#3811)
 - server: allow remote relationships with union, interface and enum type fields as well (fixes #5875) (#6080)
 - server: fix event trigger cleanup on deletion via replace_metadata (fix #5461) (#6137)
+- server: in a remote relationship query, query the remote server only when all of the joining arguments are **not** null (fixes #5448)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
