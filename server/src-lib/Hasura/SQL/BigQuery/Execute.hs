@@ -8,7 +8,6 @@ module Hasura.SQL.BigQuery.Execute
   ( execute
   , runExecute
   , getCredentialsEnv
-  , parseSampleResponse
   , Credentials(..)
   , RecordSet(..)
   , Execute
@@ -16,11 +15,11 @@ module Hasura.SQL.BigQuery.Execute
   ) where
 
 import           Control.Applicative
+import           Control.Monad.Except
 import           Control.Monad.Reader
 import           Data.Aeson ((.=),(.:),(.:?))
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Types as Aeson
-import qualified Data.ByteString.Lazy as L
 import           Data.Foldable
 import           Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HM
@@ -29,7 +28,6 @@ import qualified Data.HashMap.Strict.InsOrd as OMap
 import           Data.Hashable (Hashable)
 import           Data.IORef
 import           Data.Int
-import           Data.List
 import           Data.Maybe
 import           Data.Sequence (Seq)
 import           Data.Text (Text)
@@ -37,12 +35,10 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Data.Text.Lazy as LT
 import qualified Data.Text.Lazy.Builder as LT
-import qualified Data.Text.Lazy.IO as LT
 import qualified Data.Text.Read as T
 import           Data.Tree
 import           Data.Vector (Vector)
 import qualified Data.Vector as V
-import           Debug.Trace
 import           GHC.Generics
 import qualified Hasura.SQL.BigQuery.Plan as Plan
 import qualified Hasura.SQL.BigQuery.Plan as Select (Select (..))
@@ -81,11 +77,23 @@ data ExecuteReader = ExecuteReader
   , credentials :: !Credentials
   }
 
+data ExecuteProblem
+  = GetJobDecodeProblem String
+  | CreateQueryJobDecodeProblem String
+  | RunBigQueryDecodeProblem String
+  deriving (Show)
+
 -- | Execute monad; as queries are performed, the record sets are
 -- stored in the map.
 newtype Execute a = Execute
-  { unExecute :: ReaderT ExecuteReader IO a
-  } deriving (Functor, Applicative, Monad, MonadReader ExecuteReader, MonadIO)
+  { unExecute :: ReaderT ExecuteReader (ExceptT ExecuteProblem IO) a
+  } deriving ( Functor
+             , Applicative
+             , Monad
+             , MonadReader ExecuteReader
+             , MonadIO
+             , MonadError ExecuteProblem
+             )
 
 -- | Big query parameters must be accompanied by an explicit type
 -- signature.
@@ -144,10 +152,6 @@ data IsNullable
   = IsNullable
   | IsRequired
 
-data JoinProblem =
-  JoinProblem
-  deriving (Show)
-
 --------------------------------------------------------------------------------
 -- Handy testing
 
@@ -158,28 +162,23 @@ getCredentialsEnv = do
   projectName <- getEnvUnline "BIGQUERYPROJECTNAME"
   pure Credentials {..}
   where
-    getEnvUnline key = do
-      value <- fmap (concat . take 1 . lines) (getEnv key)
-      -- putStrLn $ "Got credential from environment: " <> show key
-      pure (T.pack value)
-
-parseSampleResponse :: FilePath -> IO RecordSet
-parseSampleResponse fp = do
-  bytes <- L.readFile fp
-  case Aeson.eitherDecode bytes >>= Aeson.parseEither (parseRecordSet Nothing) of
-    Left e -> error ("Bad parse: " ++ e)
-    Right v -> pure v
+    getEnvUnline key = fmap (T.pack . concat . take 1 . lines) (getEnv key)
 
 --------------------------------------------------------------------------------
 -- Executing the planned actions forest
 
-runExecute :: MonadIO m => Credentials -> Plan.HeadAndTail -> Execute a -> m RecordSet
+runExecute ::
+     MonadIO m
+  => Credentials
+  -> Plan.HeadAndTail
+  -> Execute a
+  -> m (Either ExecuteProblem RecordSet)
 runExecute credentials headAndTail m = do
   recordSets <- liftIO (newIORef mempty)
   liftIO
-    (runReaderT
-       (unExecute (m >> getFinalRecordSet headAndTail))
-       (ExecuteReader {credentials, recordSets}))
+    (runExceptT (runReaderT
+        (unExecute (m >> getFinalRecordSet headAndTail))
+        (ExecuteReader {credentials, recordSets})))
 
 execute :: Forest Plan.PlannedAction -> Execute ()
 execute = traverse_ (traverse_ executePlannedAction)
@@ -187,9 +186,7 @@ execute = traverse_ (traverse_ executePlannedAction)
 executePlannedAction :: Plan.PlannedAction -> Execute ()
 executePlannedAction =
   \case
-    planned@Plan.PlannedAction {ref, action} -> do
-      liftIO (putStrLn ("\n" ++ replicate 80 '-' ++ "\n" ++ show ref))
-      liftIO (putStrLn ("\nexecuting = " <> show planned))
+    Plan.PlannedAction {ref, action} -> do
       recordSet <-
         case action of
           Plan.SelectAction select -> do
@@ -199,30 +196,22 @@ executePlannedAction =
                 (pure [])
                 makeRelationshipIn
                 (Plan.selectRelationship select)
-            liftIO
-              (LT.putStrLn ("\nquery = " <>
-               LT.toLazyText (fst (ToQuery.renderBuilderPretty
-                   (ToQuery.fromSelect (Plan.selectQuery select))))))
             recordSet <-
-              streamBigQuery
+              runBigQuery
                 credentials
                 (selectToBigQuery
                    select
                      { Plan.selectWhere =
                          Plan.selectWhere select <> Where relationshipIn
-                     })
+                     }) >>= liftEither
             maybe
               pure
               unwrapAggs
               (Plan.selectAggUnwrap select)
               recordSet {wantedFields = Select.wantedFields select}
           Plan.JoinAction Plan.Join {..} -> do
-            liftIO (putStrLn ("\nleft ref = " <> show leftRecordSet))
-            liftIO (putStrLn ("\nright ref = " <> show rightRecordSet))
             left <- getRecordSet leftRecordSet
             right <- getRecordSet rightRecordSet
-            liftIO (putStrLn ("\nleft record set = " <> show left))
-            liftIO (putStrLn ("\nright record set = " <> show right))
             case joinProvenance of
               ArrayJoinProvenance ->
                 case leftArrayJoin wantedFields joinFieldName joinOn left right of
@@ -237,7 +226,6 @@ executePlannedAction =
                   Left problem -> error ("Join problem: " ++ show problem)
                   Right recordSet -> pure recordSet
               p -> error ("Unacceptable join provenance: " ++ show p)
-      liftIO (putStrLn ("\nresult record set = " <> show recordSet))
       saveRecordSet ref recordSet
 
 unwrapAggs :: Text -> RecordSet -> Execute RecordSet
@@ -269,25 +257,23 @@ unwrapAggs aggField recordSet =
 
 makeRelationshipIn :: Plan.Relationship -> Execute [Expression]
 makeRelationshipIn Plan.Relationship {leftRecordSet, onFields, rightTable} = do
-  liftIO (putStrLn ("\nrelationship left = " <> show leftRecordSet))
-  liftIO (putStrLn ("\nrelationship fields = " <> show onFields))
-  recordset@RecordSet {rows} <- getRecordSet leftRecordSet
-  liftIO (putStrLn ("\nrelationship record set = " <> show recordset))
-  let inExpressions = map
-                        (\(leftField, rightField) ->
-                           InExpression
-                             (ColumnExpression
-                                (planFieldNameToQueryFieldName rightTable rightField))
-                             (ArrayValue
-                                (V.mapMaybe (lookupField' leftField >=> outputValueToValue) rows)))
-                        onFields
-  liftIO (putStrLn ("\nrelationship in_expressions = " <> show inExpressions))
-  pure
-    inExpressions
+  RecordSet {rows} <- getRecordSet leftRecordSet
+  let inExpressions =
+        map
+          (\(leftField, rightField) ->
+             InExpression
+               (ColumnExpression
+                  (planFieldNameToQueryFieldName rightTable rightField))
+               (ArrayValue
+                  (V.mapMaybe
+                     (lookupField' leftField >=> outputValueToValue)
+                     rows)))
+          onFields
+  pure inExpressions
   where
     lookupField' k row =
       case OMap.lookup k row of
-        Nothing -> trace ("WARNING: Couldn't find key " <> show k) Nothing
+        Nothing -> Nothing
         Just x -> Just x
 
 planFieldNameToQueryFieldName :: EntityAlias -> Plan.FieldName -> FieldName
@@ -301,10 +287,8 @@ outputValueToValue =
     TextOutputValue i -> pure (TextValue i)
     BoolOutputValue i -> pure (BoolValue i)
     ArrayOutputValue v -> fmap ArrayValue (mapM outputValueToValue v)
-    RecordOutputValue r ->
-      trace ("WARNING: Can't use record in BigQuery: " <> show r) Nothing
-    NullOutputValue ->
-      trace ("WARNING: Shouldn't be using NULL in BigQuery input (?)") Nothing
+    RecordOutputValue {} -> Nothing
+    NullOutputValue -> Nothing
 
 saveRecordSet :: Plan.Ref -> RecordSet -> Execute ()
 saveRecordSet ref recordSet = do
@@ -326,24 +310,17 @@ getFinalRecordSet Plan.HeadAndTail {..} = do
     if tail /= head
       then getRecordSet tail
       else pure headSet
-  trace
-    (unlines
-       [ "\n" ++ replicate 80 '-'
-       , "\nfinal record head = " <> show head
-       , "\nfinal record tail = " <> show tail
-       , "\nwanted fields = " <> show (wantedFields headSet)
-       ])
-    (pure
-       tailSet
-         { rows =
-             fmap
-               (\row ->
-                  OMap.filterWithKey
-                    (\(Plan.FieldName k) _ ->
-                       maybe True (elem k) (wantedFields headSet))
-                    row)
-               (rows tailSet)
-         })
+  pure
+    tailSet
+      { rows =
+          fmap
+            (\row ->
+               OMap.filterWithKey
+                 (\(Plan.FieldName k) _ ->
+                    maybe True (elem k) (wantedFields headSet))
+                 row)
+            (rows tailSet)
+      }
 
 --------------------------------------------------------------------------------
 -- Array joins
@@ -354,7 +331,7 @@ leftArrayJoin ::
   -> [(Plan.FieldName, Plan.FieldName)]
   -> RecordSet
   -> RecordSet
-  -> Either JoinProblem RecordSet
+  -> Either ExecuteProblem RecordSet
 leftArrayJoin = leftArrayJoinViaIndex
 
 -- | A naive, exponential reference implementation of a left join. It
@@ -366,7 +343,7 @@ _leftArrayJoinReferenceImpl ::
   -> [(Plan.FieldName, Plan.FieldName)]
   -> RecordSet
   -> RecordSet
-  -> Either JoinProblem RecordSet
+  -> Either ExecuteProblem RecordSet
 _leftArrayJoinReferenceImpl wantedFields joinAlias joinFields left right =
   pure
     RecordSet
@@ -403,7 +380,7 @@ leftArrayJoinViaIndex ::
   -> [(Plan.FieldName, Plan.FieldName)]
   -> RecordSet
   -> RecordSet
-  -> Either JoinProblem RecordSet
+  -> Either ExecuteProblem RecordSet
 leftArrayJoinViaIndex wantedFields joinAlias joinFields left right =
   pure
     RecordSet
@@ -484,7 +461,7 @@ leftObjectJoin ::
   -> [(Plan.FieldName, Plan.FieldName)]
   -> RecordSet
   -> RecordSet
-  -> Either JoinProblem RecordSet
+  -> Either ExecuteProblem RecordSet
 leftObjectJoin wantedFields joinAlias joinFields left right =
   pure
     RecordSet
@@ -513,15 +490,13 @@ leftObjectJoin wantedFields joinAlias joinFields left right =
             ]
       }
 
+-- | Handy way to insert logging while debugging.
 lookupField ::
-     String -> Plan.FieldName -> InsOrdHashMap Plan.FieldName OutputValue -> Maybe OutputValue
-lookupField direction name hash =
-  case OMap.lookup name hash of
-    Nothing ->
-      trace
-        ("WARNING: Missing fieldname on " ++ direction ++ ": " ++ show name)
-        Nothing
-    Just v -> pure v
+     String
+  -> Plan.FieldName
+  -> InsOrdHashMap Plan.FieldName OutputValue
+  -> Maybe OutputValue
+lookupField _direction name hash = OMap.lookup name hash
 
 -- | Join a row with another as an object join.
 --
@@ -611,7 +586,7 @@ valueToBigQueryJson = go
 --------------------------------------------------------------------------------
 -- HTTP request
 
-runBigQuery :: MonadIO m => Credentials -> BigQuery -> m RecordSet
+runBigQuery :: MonadIO m => Credentials -> BigQuery -> m (Either ExecuteProblem RecordSet)
 runBigQuery Credentials {..} BigQuery {..} =
   liftIO $ do
     req <-
@@ -648,29 +623,26 @@ runBigQuery Credentials {..} BigQuery {..} =
             , method = "POST"
             , requestBody = RequestBodyLBS body
             }
-    putStrLn ("\nparameters = " <> show parameters)
-    do mgr <- newManager tlsManagerSettings
-       resp <- httpLbs request mgr
-       -- L.putStr (responseBody resp)
-       case Aeson.eitherDecode (responseBody resp) >>=
-            Aeson.parseEither (parseRecordSet Nothing) of
-         Left e -> do
-           error ("Bad parse: " ++ e ++ "\n" <> show (responseBody resp))
-         Right v
-           -- print v
-          -> do
-           pure v
+    mgr <- newManager tlsManagerSettings
+    resp <- httpLbs request mgr
+    case Aeson.eitherDecode (responseBody resp) >>=
+         Aeson.parseEither (parseRecordSet Nothing) of
+      Left e -> pure (Left (RunBigQueryDecodeProblem e))
+      Right v -> pure (Right v)
 
 --------------------------------------------------------------------------------
 -- Execute a query as a job and stream the results into a record set
 
-streamBigQuery :: MonadIO m => Credentials -> BigQuery -> m RecordSet
-streamBigQuery credentials bigquery = do
-  job <- createQueryJob credentials bigquery
-  liftIO (putStrLn ("Got job: " ++ show job))
-  jobResults <- getJobResults credentials job Fetch {pageToken = Nothing}
-  liftIO (print jobResults)
-  error "streamBigQuery: next!"
+-- A work in progress function.
+_streamBigQuery ::
+     MonadIO m => Credentials -> BigQuery -> m (Either ExecuteProblem RecordSet)
+_streamBigQuery credentials bigquery = do
+  jobResult <- createQueryJob credentials bigquery
+  case jobResult of
+    Right job -> do
+      _results <- getJobResults credentials job Fetch {pageToken = Nothing}
+      pure (Right undefined) -- TODO:
+    Left e -> pure (Left e)
 
 --------------------------------------------------------------------------------
 -- Querying results from a job
@@ -716,12 +688,15 @@ data Fetch = Fetch
   } deriving (Show)
 
 -- | Get results of a job.
-getJobResults :: MonadIO m => Credentials -> Job -> Fetch -> m JobResultsResponse
+getJobResults ::
+     MonadIO m
+  => Credentials
+  -> Job
+  -> Fetch
+  -> m (Either ExecuteProblem JobResultsResponse)
 getJobResults Credentials {..} Job {jobId} Fetch {pageToken} = liftIO run
   where
-    run
-      -- TODO: build the URI manually for type-safety?
-     = do
+    run = do
       let url =
             ("https://bigquery.googleapis.com/bigquery/v2/projects/" <>
              T.unpack projectName <>
@@ -731,8 +706,7 @@ getJobResults Credentials {..} Job {jobId} Fetch {pageToken} = liftIO run
              T.unpack apiToken <>
              "&" <>
              T.unpack (encodeParams extraParameters))
-      print url
-      req <- parseRequest url
+      req <- parseRequest url -- TODO: build the URI manually for type-safety?
       let request =
             req
               { requestHeaders =
@@ -744,13 +718,13 @@ getJobResults Credentials {..} Job {jobId} Fetch {pageToken} = liftIO run
               , method = "GET"
               }
       mgr <- newManager tlsManagerSettings
+      -- TODO: Handle connection problem.
+      -- TODO: Retries framework.
       resp <- httpLbs request mgr
-      -- putStrLn (show resp)
       case Aeson.eitherDecode (responseBody resp) of
-        Left e -> error e
-        Right job -> pure job
-    extraParameters =
-      pageTokenParam <> [("timeoutMs", "1")]
+        Left e -> pure (Left (GetJobDecodeProblem e))
+        Right job -> pure (Right job)
+    extraParameters = pageTokenParam
       where
         pageTokenParam =
           case pageToken of
@@ -784,7 +758,7 @@ instance Aeson.FromJSON Job where
            else fail ("Invalid kind: " <> show kind))
 
 -- | Create a job asynchronously.
-createQueryJob :: MonadIO m => Credentials -> BigQuery -> m Job
+createQueryJob :: MonadIO m => Credentials -> BigQuery -> m (Either ExecuteProblem Job)
 createQueryJob Credentials {..} BigQuery {..} = liftIO run
   where
     run = do
@@ -808,8 +782,8 @@ createQueryJob Credentials {..} BigQuery {..} = liftIO run
       mgr <- newManager tlsManagerSettings
       resp <- httpLbs request mgr
       case Aeson.eitherDecode (responseBody resp) of
-        Left e -> error e
-        Right job -> pure job
+        Left e -> pure (Left (CreateQueryJobDecodeProblem e))
+        Right job -> pure (Right job)
     body =
       Aeson.encode
         (Aeson.object
