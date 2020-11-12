@@ -208,10 +208,10 @@ jobs:
         name: Build the docker image
         working_directory: ./server
         command: |
-          # copy console assets to the rootfs - packaging/build/rootfs
-          export ROOTFS=packaging/build/rootfs
-          mkdir -p "$ROOTFS/srv"
-          cp -r /build/_console_output/assets "$ROOTFS/srv/console-assets"
+          # copy console assets to the packaging dir - packaging/build/tmp
+          export PACKAGING_ROOT=packaging/build/tmp
+          mkdir -p "$PACKAGING_ROOT/srv"
+          cp -r /build/_console_output/assets "$PACKAGING_ROOT/srv/console-assets"
 
           # build and save the image
           make ci-image
