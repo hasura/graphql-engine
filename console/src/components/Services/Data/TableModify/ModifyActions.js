@@ -1183,9 +1183,7 @@ const addColSql = (
   colDependentSQLGenerator,
   callback
 ) => {
-  let defWithQuotes = "''";
-
-  defWithQuotes = quoteDefault(colDefault);
+  const defWithQuotes = quoteDefault(colDefault);
 
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
