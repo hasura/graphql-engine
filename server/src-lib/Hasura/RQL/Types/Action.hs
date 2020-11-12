@@ -79,7 +79,7 @@ import           Hasura.SQL.Backend
 
 newtype ActionName
   = ActionName { unActionName :: G.Name }
-  deriving ( Show, Eq, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey
+  deriving ( Show, Eq, Ord, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey
            , Hashable, ToTxt, Lift, Generic, NFData, Cacheable)
 
 instance Q.FromCol ActionName where

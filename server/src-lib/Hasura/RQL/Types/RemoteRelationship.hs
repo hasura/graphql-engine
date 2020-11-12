@@ -45,7 +45,7 @@ import           Hasura.SQL.Backend
 newtype RemoteRelationshipName
   = RemoteRelationshipName
   { unRemoteRelationshipName :: NonEmptyText}
-  deriving ( Show, Eq, Lift, Hashable, ToJSON, ToJSONKey, FromJSON
+  deriving ( Show, Eq, Ord, Lift, Hashable, ToJSON, ToJSONKey, FromJSON
            , Q.ToPrepArg, Q.FromCol, ToTxt, Cacheable, NFData, Arbitrary
            )
 

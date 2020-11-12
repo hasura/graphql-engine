@@ -51,10 +51,8 @@ runReplaceMetadata
      )
   => Metadata -> m EncJSON
 runReplaceMetadata metadata = do
-  withNewInconsistentObjsCheck
-    $ buildSchemaCache
-    $ MetadataModifier
-    $ const metadata
+  putMetadata metadata
+  buildSchemaCacheStrict
   pure successMsg
 
 runExportMetadata

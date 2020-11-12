@@ -140,7 +140,8 @@ rootText = mkNonEmptyTextUnsafe "root"
 
 newtype RelName
   = RelName { getRelTxt :: NonEmptyText }
-  deriving (Show, Eq, Hashable, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, Q.FromCol, Lift, Generic, Arbitrary, NFData, Cacheable)
+  deriving (Show, Eq, Ord, Hashable, FromJSON, ToJSON, ToJSONKey
+           , Q.ToPrepArg, Q.FromCol, Lift, Generic, Arbitrary, NFData, Cacheable)
 
 instance PG.IsIdentifier RelName where
   toIdentifier rn = PG.Identifier $ relNameToTxt rn

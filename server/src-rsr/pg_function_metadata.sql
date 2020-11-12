@@ -80,7 +80,7 @@ FROM (
         to_json(COALESCE(p.proargnames, ARRAY [] :: text [])) AS input_arg_names,
         p.pronargdefaults AS default_args,
         p.oid::integer AS function_oid,
-        exists(
+        (exists(
           SELECT
             1
             FROM
@@ -88,7 +88,17 @@ FROM (
             WHERE
               table_schema = rtn.nspname::text
               AND table_name = rt.typname::text
-          ) AS returns_table
+          ) OR
+         exists(
+           SELECT
+             1
+             FROM
+                 pg_matviews
+           WHERE
+                schemaname = rtn.nspname::text
+            AND matviewname = rt.typname::text
+          )
+        ) AS returns_table
       FROM
         pg_proc p
         JOIN pg_namespace pn ON (pn.oid = p.pronamespace)

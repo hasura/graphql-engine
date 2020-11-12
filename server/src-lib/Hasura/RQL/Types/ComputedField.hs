@@ -28,7 +28,8 @@ import           Hasura.SQL.Backend
 
 newtype ComputedFieldName =
   ComputedFieldName { unComputedFieldName :: NonEmptyText}
-  deriving (Show, Eq, NFData, Lift, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, ToTxt, Hashable, Q.FromCol, Generic, Arbitrary, Cacheable)
+  deriving (Show, Eq, Ord, NFData, Lift, FromJSON, ToJSON, ToJSONKey
+           , Q.ToPrepArg, ToTxt, Hashable, Q.FromCol, Generic, Arbitrary, Cacheable)
 
 computedFieldNameToText :: ComputedFieldName -> Text
 computedFieldNameToText = unNonEmptyText . unComputedFieldName

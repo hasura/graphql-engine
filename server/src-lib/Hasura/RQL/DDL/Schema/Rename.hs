@@ -80,12 +80,6 @@ renameTableInMetadata newQT oldQT = do
     \tableMeta -> OMap.delete oldQT $ OMap.insert newQT tableMeta{_tmTable = newQT} tables
   where
     errMsg = "cannot rename table " <> oldQT <<> " to " <>> newQT
-    -- updateTableInCatalog =
-    --   Q.unitQ [Q.sql|
-    --        UPDATE "hdb_catalog"."hdb_table"
-    --           SET table_schema = $1, table_name = $2
-    --         WHERE table_schema = $3 AND table_name = $4
-    --             |] (nsn, ntn, osn, otn) False
 
 renameColumnInMetadata
   :: ( MonadError QErr m
@@ -167,21 +161,21 @@ updateRelDefs qt rn renameTable = do
     updateObjRelDef (oldQT, newQT) =
       rdUsing %~ \case
       RUFKeyOn fk -> RUFKeyOn fk
-      RUManual (RelManualConfig dbQT rmCols) ->
-        let updQT = bool oldQT newQT $ oldQT == dbQT
+      RUManual (RelManualConfig origQT rmCols) ->
+        let updQT = bool origQT newQT $ oldQT == origQT
         in RUManual $ RelManualConfig updQT rmCols
 
     updateArrRelDef :: RenameTable -> ArrRelDef -> ArrRelDef
     updateArrRelDef (oldQT, newQT) =
       rdUsing %~ \case
-      RUFKeyOn (ArrRelUsingFKeyOn dbQT c) ->
-        let updQT = getUpdQT dbQT
+      RUFKeyOn (ArrRelUsingFKeyOn origQT c) ->
+        let updQT = getUpdQT origQT
         in RUFKeyOn $ ArrRelUsingFKeyOn updQT c
-      RUManual (RelManualConfig dbQT rmCols) ->
-        let updQT = getUpdQT dbQT
+      RUManual (RelManualConfig origQT rmCols) ->
+        let updQT = getUpdQT origQT
         in RUManual $ RelManualConfig updQT rmCols
       where
-        getUpdQT dbQT = bool oldQT newQT $ oldQT == dbQT
+        getUpdQT origQT = bool origQT newQT $ oldQT == origQT
 
 -- | update fields in premissions
 updatePermFlds
