@@ -1,5 +1,4 @@
 import React from 'react';
-import { connect, ConnectedProps } from 'react-redux';
 import AceEditor from 'react-ace';
 import { OptionTypeBase } from 'react-select';
 
