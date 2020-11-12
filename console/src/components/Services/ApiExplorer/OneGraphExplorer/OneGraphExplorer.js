@@ -254,9 +254,12 @@ class OneGraphExplorer extends React.Component {
         onMouseUp={this.handleExplorerResizeStop}
       >
         <div className="gqlexplorer">
-          {this.props.loading ? (
+          {!this.props.loading ? (
             <div
-              className={`${styles.height100} ${styles.display_flex} ${styles.wd300Px}`}
+              className={`${styles.height100} ${styles.display_flex}`}
+              style={{
+                width: explorerWidth,
+              }}
             >
               <Spinner />
             </div>
